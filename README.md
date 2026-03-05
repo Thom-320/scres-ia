@@ -1,11 +1,11 @@
-# MFSC Simulation (DES + RL)
+# MFSC Simulation (Hybrid DES + Neural Learning)
 
-Python rebuild of the Military Food Supply Chain (MFSC) simulation with SimPy and Gymnasium wrappers for RL experiments.
+Python rebuild of the Military Food Supply Chain (MFSC) discrete-event simulation with SimPy, based on Garrido-Rios (2017). Includes a hybrid simulation-neural framework for studying supply chain resilience (SCRES) as a learning-dependent capability.
 
 ## Project Structure
 
 ```
-supply_chain/          Core package (config, DES engine, Gym env)
+supply_chain/          Core package (config, DES engine, Gymnasium environments)
 scripts/               Diagnostic & analysis scripts
 tests/                 Pytest test suite
 docs/                  Reference PDFs, thesis, papers, planning docs
@@ -15,7 +15,7 @@ legacy/                Deprecated code (kept for reference)
 
 ## Recommended Python
 
-- Python `3.11` recommended for widest compatibility with `stable-baselines3`.
+- Python `3.11` recommended for widest package compatibility.
 
 ## Setup
 
@@ -47,13 +47,12 @@ python validation_report.py --official-basis thesis
 
 Artifacts are written to `outputs/validation/validation_table_dual_basis.csv`.
 
-## RL training (PPO)
+## Hybrid model training
 
 ```bash
 python train_agent.py --timesteps 20000 --n-envs 1 --seed 42 --year-basis thesis
 
-# With R_t v0 reward
-python train_agent.py --timesteps 500000 --n-envs 4 --reward-mode rt_v0 --rt-alpha 8
+python train_agent.py --timesteps 500000 --n-envs 4 --reward-mode ReT_thesis --env-variant shift_control
 ```
 
 Artifacts (model, normalization stats, curves, csv, json) are saved under `outputs/`.
