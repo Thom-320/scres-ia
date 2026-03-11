@@ -24,3 +24,13 @@ Current manuscript source map:
 - Table 8: `outputs/benchmarks/ret_ablation_static/transition_summary.csv`
 - Table 9: `outputs/benchmarks/ret_case_diagnostics/case_summary.csv`
 - Table 10: `outputs/benchmarks/control_reward/comparison_table.csv` and `outputs/benchmarks/control_reward/policy_summary.csv`
+
+Long-run 500k source-of-truth bundles for the current paper revision:
+
+- `docs/artifacts/control_reward/control_reward_500k_increased_stopt`
+- `docs/artifacts/control_reward/control_reward_500k_severe_stopt`
+
+Seed-level inferential summary for those runs:
+
+- `docs/artifacts/control_reward/control_reward_500k_seed_inference/seed_inference.json`
+- `docs/artifacts/control_reward/control_reward_500k_seed_inference/seed_inference.md`

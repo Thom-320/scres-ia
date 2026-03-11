@@ -18,6 +18,8 @@ The DES itself is validated and operational. Static shift-control baselines are 
 
 Static source: `/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/outputs/benchmarks/control_reward/policy_summary.csv` for `w_bo=4.0`, `w_cost=0.02`, `w_disr=0.0`.
 
-**What Is Still Being Tested**
+**What Is Already Emerging from the Long Runs**
 
-Current PPO results under `control_v1` are preliminary but promising in a narrow weight regime. The most favorable existing run (`w_bo=4.0`, `w_cost=0.02`, `w_disr=0.0`) suggests adaptive switching can match the service level of the best static baseline without collapsing to a single shift mode, but those gains are not yet globally validated. The next robustness lane is therefore scoped to longer runs, more seeds, and stochastic processing times, first under `risk_level="increased"` and then under `risk_level="severe"`. The goal of that lane is to test whether the adaptive signal remains stable under stronger training and harsher operational stress, not to pre-announce a definitive PPO win.
+The long-run benchmark lane (`500,000` PPO timesteps, `5` seeds, `stochastic_pt=True`) now shows a stress-dependent pattern. Under `risk_level="increased"`, PPO is competitive with the best fixed baseline (`static_s2`): service is effectively matched, but control reward is slightly lower. Under `risk_level="severe"`, PPO outperforms the best fixed baseline (`static_s3`) in control reward while maintaining comparable service. The prudent interpretation is therefore not that PPO wins uniformly, but that adaptive switching becomes valuable under strong operational stress, which is precisely the regime in which resilience-oriented control matters most.
+
+These results remain preliminary in the inferential sense. They should be read as auditable benchmark evidence rather than as a final significance claim, and they retain the current caveats of approximate Markovian control formulation and stress-regime specificity.

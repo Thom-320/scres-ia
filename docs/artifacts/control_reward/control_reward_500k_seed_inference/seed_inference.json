@@ -1,0 +1,87 @@
+{
+  "bootstrap_samples": 10000,
+  "results": [
+    {
+      "run_dir": "outputs/benchmarks/control_reward_500k_increased_stopt",
+      "best_static_policy": "static_s2",
+      "scenario": "control_reward_500k_increased_stopt",
+      "seed_count": 5,
+      "shared_seeds": [
+        "11",
+        "22",
+        "33",
+        "44",
+        "55"
+      ],
+      "ppo_seed_reward_means": {
+        "11": -175.4928756086802,
+        "22": -169.416547853333,
+        "33": -182.46262033082402,
+        "44": -171.93382609855493,
+        "55": -160.93401065205165
+      },
+      "best_static_seed_reward_means": {
+        "11": -164.37118652608874,
+        "22": -162.07297205825446,
+        "33": -172.3845616588445,
+        "44": -173.29220331807898,
+        "55": -178.3784501558378
+      },
+      "paired_reward_differences": {
+        "11": -11.121689082591473,
+        "22": -7.343575795078522,
+        "33": -10.078058671979534,
+        "44": 1.3583772195240442,
+        "55": 17.444439503786157
+      },
+      "mean_difference": -1.9481013652678656,
+      "bootstrap_ci95": [
+        -9.948614260844106,
+        8.514001329658209
+      ],
+      "exact_sign_flip_pvalue": 0.8125,
+      "summary": "PPO is worse than static_s2 by -1.948 control-reward points on shared seed means; bootstrap CI95 [-9.949, 8.514], exact sign-flip p=0.812."
+    },
+    {
+      "run_dir": "outputs/benchmarks/control_reward_500k_severe_stopt",
+      "best_static_policy": "static_s3",
+      "scenario": "control_reward_500k_severe_stopt",
+      "seed_count": 5,
+      "shared_seeds": [
+        "11",
+        "22",
+        "33",
+        "44",
+        "55"
+      ],
+      "ppo_seed_reward_means": {
+        "11": -391.0394184251853,
+        "22": -377.54059580246604,
+        "33": -382.9130266029046,
+        "44": -373.57158413677723,
+        "55": -379.8510434705962
+      },
+      "best_static_seed_reward_means": {
+        "11": -388.9151894148489,
+        "22": -379.82919354623743,
+        "33": -383.19923883619924,
+        "44": -384.2994979530719,
+        "55": -391.7120850802107
+      },
+      "paired_reward_differences": {
+        "11": -2.124229010336421,
+        "22": 2.2885977437713905,
+        "33": 0.2862122332946342,
+        "44": 10.727913816294688,
+        "55": 11.861041609614517
+      },
+      "mean_difference": 4.607907278527762,
+      "bootstrap_ci95": [
+        -0.27748716206243673,
+        9.49330171911796
+      ],
+      "exact_sign_flip_pvalue": 0.1875,
+      "summary": "PPO is better than static_s3 by 4.608 control-reward points on shared seed means; bootstrap CI95 [-0.277, 9.493], exact sign-flip p=0.188."
+    }
+  ]
+}
