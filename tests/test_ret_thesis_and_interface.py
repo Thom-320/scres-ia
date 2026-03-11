@@ -3,6 +3,7 @@ from __future__ import annotations
 import pytest
 
 from supply_chain.external_env_interface import (
+    get_shift_control_constraint_context,
     get_shift_control_env_spec,
     make_shift_control_env,
     spec_to_dict,
@@ -86,3 +87,23 @@ def test_external_interface_matches_shift_env_contract() -> None:
 
     payload = spec_to_dict(spec)
     assert payload["shift_mapping"]["signal_ge_0.33"] == 3
+
+
+def test_reset_info_exposes_action_constraints() -> None:
+    env = make_shift_control_env(max_steps=1)
+    _, info = env.reset(seed=7)
+    assert "action_constraints" in info
+    constraints = info["action_constraints"]
+    assert constraints["inventory_multiplier_range"]["min"] == pytest.approx(0.5)
+    assert constraints["shift_signal_bands"]["signal_ge_0.33"] == 3
+    assert constraints["base_control_parameters"]["op3_q"] > 0
+
+
+def test_external_constraint_context_exposes_base_parameters() -> None:
+    context = get_shift_control_constraint_context()
+    assert context["inventory_multiplier_range"]["max"] == pytest.approx(2.0)
+    assert context["shift_signal_bands"]["signal_lt_-0.33"] == 1
+    assert (
+        context["base_control_parameters"]["op9_q_max"]
+        >= context["base_control_parameters"]["op9_q_min"]
+    )

@@ -326,6 +326,26 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         info: dict[str, Any] = {
             "time": self.sim.env.now,
             "year_basis": self.year_basis,
+            "action_constraints": {
+                "action_bounds": [(-1.0, 1.0)] * 5,
+                "inventory_multiplier_range": {
+                    "min": 0.5,
+                    "max": 2.0,
+                    "mapping": "multiplier = 1.25 + 0.75 * signal",
+                },
+                "shift_signal_bands": {
+                    "signal_lt_-0.33": 1,
+                    "signal_ge_-0.33_and_lt_0.33": 2,
+                    "signal_ge_0.33": 3,
+                },
+                "base_control_parameters": {
+                    "op3_q": float(OPERATIONS[3]["q"]),
+                    "op3_rop": float(OPERATIONS[3]["rop"]),
+                    "op9_q_min": float(OPERATIONS[9]["q"][0]),
+                    "op9_q_max": float(OPERATIONS[9]["q"][1]),
+                    "op9_rop": float(OPERATIONS[9]["rop"]),
+                },
+            },
             "ret_thresholds": {
                 "autotomy_fill_rate_threshold": self.autotomy_threshold,
                 "nonrecovery_disruption_fraction_threshold": (
