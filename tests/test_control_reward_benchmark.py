@@ -7,8 +7,10 @@ import pytest
 
 from supply_chain.external_env_interface import make_shift_control_env
 from scripts.benchmark_control_reward import (
+    build_env_kwargs,
     build_comparison_rows,
     build_parser,
+    export_artifact_bundle,
     pick_survivors,
     run_benchmark,
     static_policy_action,
@@ -126,6 +128,20 @@ def test_pick_survivors_prefers_non_s1_fixed_baselines() -> None:
     assert survivors[0]["static_reward_gap_best_minus_s1"] == pytest.approx(2.5)
 
 
+def test_build_env_kwargs_passes_stochastic_pt() -> None:
+    args = build_parser().parse_args(["--stochastic-pt"])
+    env_kwargs = build_env_kwargs(
+        args,
+        {
+            "w_bo": 4.0,
+            "w_cost": 0.02,
+            "w_disr": 0.0,
+        },
+    )
+    assert env_kwargs["stochastic_pt"] is True
+    assert env_kwargs["reward_mode"] == "control_v1"
+
+
 def test_build_comparison_rows_marks_collapse_and_reward_wins() -> None:
     survivors = [
         {
@@ -174,6 +190,7 @@ def test_build_comparison_rows_marks_collapse_and_reward_wins() -> None:
 
 def test_run_benchmark_smoke_writes_expected_artifacts(tmp_path: Path) -> None:
     parser = build_parser()
+    artifact_root = tmp_path / "artifacts"
     args = parser.parse_args(
         [
             "--seeds",
@@ -192,23 +209,59 @@ def test_run_benchmark_smoke_writes_expected_artifacts(tmp_path: Path) -> None:
             "0.02",
             "--w-disr",
             "0.0",
+            "--stochastic-pt",
             "--output-dir",
             str(tmp_path),
+            "--artifact-root",
+            str(artifact_root),
         ]
     )
+    args.invocation = "python scripts/benchmark_control_reward.py --smoke"
     summary = run_benchmark(args)
 
     episode_csv = tmp_path / "episode_metrics.csv"
     policy_csv = tmp_path / "policy_summary.csv"
     comparison_csv = tmp_path / "comparison_table.csv"
     summary_json = tmp_path / "summary.json"
+    manifest_json = artifact_root / tmp_path.name / "manifest.json"
 
     assert episode_csv.exists()
     assert policy_csv.exists()
     assert comparison_csv.exists()
     assert summary_json.exists()
+    assert manifest_json.exists()
     assert "static_s3" in summary["policies"]
 
     payload = json.loads(summary_json.read_text(encoding="utf-8"))
     assert payload["config"]["train_timesteps"] == 32
     assert payload["config"]["w_disr"] == [0.0]
+    assert payload["config"]["stochastic_pt"] is True
+    assert "artifact_bundle_dir" in payload["artifacts"]
+
+    manifest = json.loads(manifest_json.read_text(encoding="utf-8"))
+    assert manifest["command"] == "python scripts/benchmark_control_reward.py --smoke"
+    assert manifest["source_benchmark_directory"] == str(tmp_path.resolve())
+    assert Path(manifest["files"]["comparison_table.csv"]).exists()
+
+
+def test_export_artifact_bundle_copies_expected_files(tmp_path: Path) -> None:
+    source_dir = tmp_path / "source"
+    source_dir.mkdir()
+    for filename in ("comparison_table.csv", "policy_summary.csv", "summary.json"):
+        (source_dir / filename).write_text(f"{filename}\n", encoding="utf-8")
+
+    bundle_dir = export_artifact_bundle(
+        source_dir=source_dir,
+        artifact_root=tmp_path / "artifacts",
+        label="control_reward_test",
+        summary={"config": {"train_timesteps": 10}},
+        command="python scripts/benchmark_control_reward.py --dummy",
+    )
+
+    assert (bundle_dir / "comparison_table.csv").exists()
+    assert (bundle_dir / "policy_summary.csv").exists()
+    assert (bundle_dir / "summary.json").exists()
+    manifest = json.loads((bundle_dir / "manifest.json").read_text(encoding="utf-8"))
+    assert manifest["command"] == "python scripts/benchmark_control_reward.py --dummy"
+    assert manifest["config"]["train_timesteps"] == 10
+    assert manifest["source_benchmark_directory"] == str(source_dir.resolve())

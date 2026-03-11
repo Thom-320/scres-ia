@@ -3,8 +3,11 @@ from __future__ import annotations
 
 import argparse
 import csv
+from datetime import datetime, timezone
 import json
 from pathlib import Path
+import shutil
+import subprocess
 import sys
 from typing import Any
 
@@ -126,6 +129,11 @@ def build_parser() -> argparse.ArgumentParser:
         default="increased",
     )
     parser.add_argument(
+        "--stochastic-pt",
+        action="store_true",
+        help="Enable stochastic processing times in the shift-control environment.",
+    )
+    parser.add_argument(
         "--year-basis",
         choices=YEAR_BASIS_OPTIONS,
         default=DEFAULT_YEAR_BASIS,
@@ -149,6 +157,23 @@ def build_parser() -> argparse.ArgumentParser:
         "--output-dir",
         type=Path,
         default=Path("outputs/benchmarks/control_reward"),
+    )
+    parser.add_argument(
+        "--artifact-root",
+        type=Path,
+        default=Path("docs/artifacts/control_reward"),
+        help="Tracked destination for auditable benchmark bundles.",
+    )
+    parser.add_argument(
+        "--artifact-label",
+        type=str,
+        default=None,
+        help="Optional subdirectory name under --artifact-root for exported artifacts.",
+    )
+    parser.add_argument(
+        "--skip-artifact-export",
+        action="store_true",
+        help="Skip copying the benchmark bundle into the tracked artifact directory.",
     )
     parser.add_argument("--learning-rate", type=float, default=3e-4)
     parser.add_argument("--n-steps", type=int, default=1024)
@@ -198,10 +223,67 @@ def build_env_kwargs(
         "reward_mode": "control_v1",
         "step_size_hours": args.step_size_hours,
         "risk_level": args.risk_level,
+        "stochastic_pt": args.stochastic_pt,
         "max_steps": args.max_steps,
         "year_basis": args.year_basis,
         **weight_combo,
     }
+
+
+def resolve_git_commit() -> str | None:
+    try:
+        completed = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except (FileNotFoundError, subprocess.CalledProcessError):
+        return None
+    return completed.stdout.strip() or None
+
+
+def resolve_invocation(args: argparse.Namespace) -> str:
+    invocation = getattr(args, "invocation", None)
+    if invocation:
+        return str(invocation)
+    return "python scripts/benchmark_control_reward.py (invocation unavailable)"
+
+
+def export_artifact_bundle(
+    *,
+    source_dir: Path,
+    artifact_root: Path,
+    label: str,
+    summary: dict[str, Any],
+    command: str,
+) -> Path:
+    bundle_dir = artifact_root / label
+    bundle_dir.mkdir(parents=True, exist_ok=True)
+
+    copied_files: dict[str, str] = {}
+    for filename in ("comparison_table.csv", "policy_summary.csv", "summary.json"):
+        src = source_dir / filename
+        if not src.exists():
+            raise FileNotFoundError(f"Missing benchmark artifact: {src}")
+        dst = bundle_dir / filename
+        shutil.copy2(src, dst)
+        copied_files[filename] = str(dst.resolve())
+
+    manifest = {
+        "artifact_type": "control_reward_benchmark",
+        "benchmark_date_utc": datetime.now(timezone.utc).isoformat(),
+        "git_commit": resolve_git_commit(),
+        "command": command,
+        "source_benchmark_directory": str(source_dir.resolve()),
+        "bundle_directory": str(bundle_dir.resolve()),
+        "config": summary.get("config", {}),
+        "files": copied_files,
+    }
+    manifest_path = bundle_dir / "manifest.json"
+    with manifest_path.open("w", encoding="utf-8") as file_obj:
+        json.dump(manifest, file_obj, indent=2)
+    return bundle_dir
 
 
 def make_monitored_training_env(
@@ -691,6 +773,7 @@ def run_benchmark(args: argparse.Namespace) -> dict[str, Any]:
             "step_size_hours": args.step_size_hours,
             "max_steps": args.max_steps,
             "risk_level": args.risk_level,
+            "stochastic_pt": args.stochastic_pt,
             "year_basis": args.year_basis,
             "w_bo": args.w_bo,
             "w_cost": args.w_cost,
@@ -721,13 +804,33 @@ def run_benchmark(args: argparse.Namespace) -> dict[str, Any]:
     }
     with summary_json.open("w", encoding="utf-8") as file_obj:
         json.dump(summary, file_obj, indent=2)
+
+    if not args.skip_artifact_export:
+        artifact_label = args.artifact_label or args.output_dir.name
+        bundle_dir = export_artifact_bundle(
+            source_dir=args.output_dir,
+            artifact_root=args.artifact_root,
+            label=artifact_label,
+            summary=summary,
+            command=resolve_invocation(args),
+        )
+        summary["artifacts"]["artifact_bundle_dir"] = str(bundle_dir)
+        with summary_json.open("w", encoding="utf-8") as file_obj:
+            json.dump(summary, file_obj, indent=2)
     return summary
 
 
 def main() -> None:
     args = build_parser().parse_args()
+    args.invocation = "python scripts/benchmark_control_reward.py " + " ".join(
+        sys.argv[1:]
+    )
     summary = run_benchmark(args)
     print(f"Wrote control reward benchmark artifacts to {args.output_dir}")
+    if "artifact_bundle_dir" in summary["artifacts"]:
+        print(
+            f"Exported auditable bundle to {summary['artifacts']['artifact_bundle_dir']}"
+        )
     print(f"Survivors forwarded to PPO: {len(summary['survivors'])}")
     for row in summary["comparison_table"]:
         print(
