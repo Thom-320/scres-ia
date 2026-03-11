@@ -4,7 +4,6 @@ from __future__ import annotations
 import csv
 from datetime import datetime
 from pathlib import Path
-import subprocess
 
 import matplotlib.pyplot as plt
 
@@ -12,6 +11,9 @@ ROOT = Path(__file__).resolve().parent.parent
 PACKAGE_DIR = ROOT / "docs/meeting_packages/garrido_2026-03-11"
 CONTROL_REWARD_DIR = ROOT / "outputs/benchmarks/control_reward"
 LOCAL_ROBUSTNESS_DIR = ROOT / "outputs/benchmarks/control_reward_local_robustness"
+ARTIFACT_ROOT = ROOT / "docs/artifacts/control_reward"
+LONG_INCREASED_DIR = ARTIFACT_ROOT / "control_reward_500k_increased_stopt"
+LONG_SEVERE_DIR = ARTIFACT_ROOT / "control_reward_500k_severe_stopt"
 FIGURE_SOURCE_DIR = ROOT / "outputs/figures/control_reward_paper"
 WINNING_COMBO = {"w_bo": "4.0", "w_cost": "0.02", "w_disr": "0.0"}
 
@@ -118,90 +120,85 @@ def build_static_baseline_table() -> Path:
 
 
 def build_best_regime_table() -> Path:
-    comparison_rows = load_csv_rows(CONTROL_REWARD_DIR / "comparison_table.csv")
-    local_rows = load_csv_rows(LOCAL_ROBUSTNESS_DIR / "comparison_table.csv")
-    main_row = find_comparison_row(comparison_rows, WINNING_COMBO)
-    local_win = next(
-        row for row in local_rows if row["ppo_beats_best_static"] == "True"
-    )
+    increased_rows = load_csv_rows(LONG_INCREASED_DIR / "comparison_table.csv")
+    severe_rows = load_csv_rows(LONG_SEVERE_DIR / "comparison_table.csv")
+    increased_row = find_comparison_row(increased_rows, WINNING_COMBO)
+    severe_row = find_comparison_row(severe_rows, WINNING_COMBO)
 
     data_rows = [
         [
-            "Main 50k run",
-            "4.0 / 0.02",
-            main_row["best_static_policy"],
-            "Yes" if main_row["ppo_beats_best_static"] == "True" else "No",
-            f"{100.0 * (float(main_row['ppo_fill_rate_mean']) - float(main_row['best_static_fill_rate_mean'])):+.02f} pp",
+            "500k increased + stoPT",
+            "static_s2",
+            "No",
+            f"{float(increased_row['ppo_reward_mean']):.2f}",
+            f"{float(increased_row['best_static_reward_mean']):.2f}",
+            f"{100.0 * float(increased_row['ppo_fill_rate_mean']):.1f}%",
+            f"{100.0 * float(increased_row['best_static_fill_rate_mean']):.1f}%",
             (
-                f"S1 {float(main_row['ppo_pct_steps_S1_mean']):.1f}% / "
-                f"S2 {float(main_row['ppo_pct_steps_S2_mean']):.1f}% / "
-                f"S3 {float(main_row['ppo_pct_steps_S3_mean']):.1f}%"
+                f"S1 {float(increased_row['ppo_pct_steps_S1_mean']):.0f}% / "
+                f"S2 {float(increased_row['ppo_pct_steps_S2_mean']):.0f}% / "
+                f"S3 {float(increased_row['ppo_pct_steps_S3_mean']):.0f}%"
             ),
         ],
         [
-            "Local robustness",
-            f"{local_win['w_bo']} / {local_win['w_cost']}",
-            local_win["best_static_policy"],
-            "Yes" if local_win["ppo_beats_best_static"] == "True" else "No",
-            f"{100.0 * (float(local_win['ppo_fill_rate_mean']) - float(local_win['best_static_fill_rate_mean'])):+.02f} pp",
+            "500k severe + stoPT",
+            severe_row["best_static_policy"],
+            "Yes" if severe_row["ppo_beats_best_static"] == "True" else "No",
+            f"{float(severe_row['ppo_reward_mean']):.2f}",
+            f"{float(severe_row['best_static_reward_mean']):.2f}",
+            f"{100.0 * float(severe_row['ppo_fill_rate_mean']):.1f}%",
+            f"{100.0 * float(severe_row['best_static_fill_rate_mean']):.1f}%",
             (
-                f"S1 {float(local_win['ppo_pct_steps_S1_mean']):.1f}% / "
-                f"S2 {float(local_win['ppo_pct_steps_S2_mean']):.1f}% / "
-                f"S3 {float(local_win['ppo_pct_steps_S3_mean']):.1f}%"
+                f"S1 {float(severe_row['ppo_pct_steps_S1_mean']):.0f}% / "
+                f"S2 {float(severe_row['ppo_pct_steps_S2_mean']):.0f}% / "
+                f"S3 {float(severe_row['ppo_pct_steps_S3_mean']):.0f}%"
             ),
         ],
     ]
 
     output_path = PACKAGE_DIR / "03_best_regime_summary.png"
     render_table(
-        title="Current adaptive-control evidence (preliminary, locally robust)",
+        title="500k × 5-seed adaptive-control summary under stochastic PT",
         headers=[
-            "Run",
-            "w_bo / w_cost",
+            "Scenario",
             "Best static",
             "PPO > best static",
-            "Δ fill",
+            "PPO reward",
+            "Best static",
+            "PPO fill",
+            "Best static",
             "PPO shift mix",
         ],
         rows=data_rows,
         output_path=output_path,
-        col_widths=[0.18, 0.14, 0.14, 0.14, 0.12, 0.28],
+        col_widths=[0.20, 0.12, 0.11, 0.11, 0.11, 0.11, 0.10, 0.24],
     )
     return output_path
 
 
-def detect_long_run_status() -> str:
-    completed = subprocess.run(
+def summarize_long_run_results() -> str:
+    increased_rows = load_csv_rows(LONG_INCREASED_DIR / "comparison_table.csv")
+    severe_rows = load_csv_rows(LONG_SEVERE_DIR / "comparison_table.csv")
+    increased_row = find_comparison_row(increased_rows, WINNING_COMBO)
+    severe_row = find_comparison_row(severe_rows, WINNING_COMBO)
+    return "\n".join(
         [
-            "zsh",
-            "-lc",
-            'ps aux | rg "control_reward_500k_(increased|severe)_stopt" | rg -v "rg control_reward_500k"',
-        ],
-        capture_output=True,
-        text=True,
-        check=False,
+            (
+                "- increased + stochastic_pt: PPO is competitive but not superior in "
+                f"reward ({float(increased_row['ppo_reward_mean']):.2f} vs "
+                f"{float(increased_row['best_static_reward_mean']):.2f}); service is effectively "
+                f"matched ({100.0 * float(increased_row['ppo_fill_rate_mean']):.1f}% vs "
+                f"{100.0 * float(increased_row['best_static_fill_rate_mean']):.1f}%)."
+            ),
+            (
+                "- severe + stochastic_pt: PPO beats the best static baseline in reward "
+                f"({float(severe_row['ppo_reward_mean']):.2f} vs "
+                f"{float(severe_row['best_static_reward_mean']):.2f}) while maintaining comparable "
+                f"service ({100.0 * float(severe_row['ppo_fill_rate_mean']):.1f}% vs "
+                f"{100.0 * float(severe_row['best_static_fill_rate_mean']):.1f}%)."
+            ),
+        ]
     )
-    if not completed.stdout.strip():
-        return "No long 500k stochastic-PT benchmark process detected."
-    lines = [
-        line.strip()
-        for line in completed.stdout.splitlines()
-        if line.strip()
-        and "/Contents/MacOS/Python scripts/benchmark_control_reward.py" in line
-    ]
-    pretty_lines: list[str] = []
-    for line in lines:
-        risk = "severe" if "--risk-level severe" in line else "increased"
-        pid = line.split()[1]
-        output_dir = (
-            "outputs/benchmarks/control_reward_500k_severe_stopt"
-            if risk == "severe"
-            else "outputs/benchmarks/control_reward_500k_increased_stopt"
-        )
-        pretty_lines.append(
-            f"- {risk} + stochastic_pt is running (PID {pid}, output: {output_dir})"
-        )
-    return "\n".join(pretty_lines)
 
 
 def write_meeting_order() -> Path:
@@ -219,7 +216,7 @@ Generated: {now}
    Use this only as a PPO diagnostic. Do not call it cross-validation loss. Say: “for PPO we track training reward and held-out evaluation, not supervised cross-validation loss.”
 
 3. `03_best_regime_summary.png`
-   This is the adaptive-control slide. Present it as preliminary evidence under a narrow weight regime, not as a final superiority claim.
+   This is now the main results slide. Say clearly that under `increased + stochastic_pt` PPO is competitive but not superior, while under `severe + stochastic_pt` PPO beats the best static baseline.
 
 4. `04_policy_comparison.png`
    Use this only if someone asks what “winning regime” means operationally.
@@ -229,15 +226,15 @@ Generated: {now}
 
 **One paragraph to say out loud**
 
-The DES is already validated and the RL interface is operational. Before claiming anything about PPO, we verified that the static shift baselines are clearly differentiated, which confirms that shift allocation is a meaningful control lever. We also separated the training objective from the reporting metric: `ReT_thesis` is retained as an evaluation metric, while `control_v1` is used for learning because direct control needs an operational reward. Current PPO results are preliminary but promising in a narrow regime, and the stronger 500k-step stochastic-PT runs are already in progress.
+The DES is already validated and the RL interface is operational. Before claiming anything about PPO, we verified that the static shift baselines are clearly differentiated, which confirms that shift allocation is a meaningful control lever. We also separated the training objective from the reporting metric: `ReT_thesis` is retained as an evaluation metric, while `control_v1` is used for learning because direct control needs an operational reward. The completed 500k-step stochastic-PT runs now show a clean pattern: under increased risk PPO is competitive with the best static baseline, and under severe risk adaptive switching produces a reward advantage without collapse.
 
 **Observability line**
 
 We treat the exposed observation as a practical Gymnasium-compatible operational snapshot and a useful Markovian approximation for control, while explicitly acknowledging a remaining partial-observability caveat.
 
-**Long-run benchmark status**
+**Long-run benchmark outcome**
 
-{detect_long_run_status()}
+{summarize_long_run_results()}
 """
     output_path = PACKAGE_DIR / "00_meeting_order.md"
     output_path.write_text(content, encoding="utf-8")
