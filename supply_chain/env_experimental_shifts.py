@@ -1,10 +1,12 @@
 """
-Gymnasium env with 5th action dimension (shift control) and ReT reward.
+Gymnasium env with 5th action dimension (shift control) and multiple rewards.
 
-Supports two reward modes:
+Supports three reward modes:
   - "rt_v0": Legacy R_t v0 (aggregated recovery/holding/service loss).
   - "ReT_thesis": Approximation of Garrido (2017) Eq. 5.5 at step level,
     with linear shift cost δ×(S−1).
+  - "control_v1": Operational control reward for RL benchmarking, while
+    still exposing corrected ReT_thesis as a reporting-only metric.
 
 Action space: 5-dimensional [-1, 1]
   [0-3]: Inventory policy multipliers (op3_q, op9_q, op3_rop, op9_rop)
@@ -62,7 +64,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
 
     Parameters
     ----------
-    reward_mode : {"ReT_thesis", "rt_v0"}
+    reward_mode : {"ReT_thesis", "rt_v0", "control_v1"}
         Which reward formulation to use.
     rt_delta : float
         Linear shift cost weight. Reward -= δ × (S − 1).
@@ -103,6 +105,10 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         rt_gamma: float = 7.0,
         rt_recovery_scale: float = 46.0,
         rt_inventory_scale: float = 17_200_000.0,
+        # --- control_v1 weights ---
+        w_bo: float = 1.0,
+        w_cost: float = 0.06,
+        w_disr: float = 0.0,
     ) -> None:
         super().__init__()
         if step_size_hours <= 0:
@@ -111,10 +117,10 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             raise ValueError(f"Invalid year_basis={year_basis!r}.")
         if risk_level not in ("current", "increased", "severe"):
             raise ValueError(f"Invalid risk_level={risk_level!r}.")
-        if reward_mode not in ("ReT_thesis", "rt_v0"):
+        if reward_mode not in ("ReT_thesis", "rt_v0", "control_v1"):
             raise ValueError(
                 f"Invalid reward_mode={reward_mode!r}. "
-                "Expected 'ReT_thesis' or 'rt_v0'."
+                "Expected 'ReT_thesis', 'rt_v0', or 'control_v1'."
             )
 
         self.step_size = float(step_size_hours)
@@ -133,6 +139,9 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self.rt_gamma = float(rt_gamma)
         self.rt_recovery_scale = float(rt_recovery_scale)
         self.rt_inventory_scale = float(rt_inventory_scale)
+        self.w_bo = float(w_bo)
+        self.w_cost = float(w_cost)
+        self.w_disr = float(w_disr)
 
         self.warmup_hours = float(WARMUP["estimated_deterministic_hrs"])
         if max_steps is None:
@@ -227,6 +236,22 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             "ret_value": fill_rate,
         }
 
+    def _compute_ret_thesis_corrected_components(
+        self, info: dict[str, Any], step_hours: float
+    ) -> dict[str, float | str]:
+        """
+        Reporting-only corrected ReT_thesis.
+
+        Keeps the same case split as the benchmarked thesis approximation, but
+        scores autotomy with the recovery formula to remove the local
+        non-monotonicity identified in diagnostics.
+        """
+        components = self._compute_ret_thesis_components(info, step_hours)
+        if components["ret_case"] == "autotomy":
+            disruption_fraction = float(components["disruption_fraction"])
+            components["ret_value"] = 1.0 / (1.0 + disruption_fraction)
+        return components
+
     # -----------------------------------------------------------------
     # Legacy R_t v0
     # -----------------------------------------------------------------
@@ -248,6 +273,33 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             + self.rt_gamma * service_loss
             + self.rt_delta * shift_cost
         )
+
+    def _compute_control_v1_components(
+        self, info: dict[str, Any], shifts: int
+    ) -> dict[str, float]:
+        """Operational control reward terms used for RL benchmarking."""
+        new_demanded = float(info.get("new_demanded", 0.0))
+        new_backorder_qty = float(info.get("new_backorder_qty", 0.0))
+        disruption_hours = float(info.get("step_disruption_hours", 0.0))
+        service_loss_step = new_backorder_qty / max(new_demanded, 1.0)
+        shift_cost_step = float(shifts - 1)
+        max_op_hours = self.step_size * NUM_TRACKED_OPS
+        disruption_fraction_step = min(1.0, disruption_hours / max(1.0, max_op_hours))
+        weighted_service_loss = self.w_bo * service_loss_step
+        weighted_shift_cost = self.w_cost * shift_cost_step
+        weighted_disruption = self.w_disr * disruption_fraction_step
+        reward_total = -(
+            weighted_service_loss + weighted_shift_cost + weighted_disruption
+        )
+        return {
+            "service_loss_step": service_loss_step,
+            "shift_cost_step": shift_cost_step,
+            "disruption_fraction_step": disruption_fraction_step,
+            "weighted_service_loss": weighted_service_loss,
+            "weighted_shift_cost": weighted_shift_cost,
+            "weighted_disruption": weighted_disruption,
+            "reward_total": reward_total,
+        }
 
     # -----------------------------------------------------------------
     # Gymnasium API
@@ -327,11 +379,19 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
 
         # Compute reward
         ret_components: dict[str, float | str] | None = None
+        corrected_ret_components: dict[str, float | str] | None = None
+        control_components: dict[str, float] | None = None
         if self.reward_mode == "ReT_thesis":
             ret_components = self._compute_ret_thesis_components(info, self.step_size)
             ReT = float(ret_components["ret_value"])
             shift_cost = self.rt_delta * (shifts - 1)
             reward = ReT - shift_cost
+        elif self.reward_mode == "control_v1":
+            control_components = self._compute_control_v1_components(info, shifts)
+            corrected_ret_components = self._compute_ret_thesis_corrected_components(
+                info, self.step_size
+            )
+            reward = float(control_components["reward_total"])
         else:
             reward = self._compute_rt_v0(info, shifts)
 
@@ -360,6 +420,37 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                     "nonrecovery_fill_rate_threshold": self.nonrecovery_fr_threshold,
                 },
                 "thresholds_source": "configurable_repo_approximation",
+            }
+        elif self.reward_mode == "control_v1":
+            out_info["service_loss_step"] = float(
+                control_components["service_loss_step"]
+            )
+            out_info["shift_cost_step"] = float(control_components["shift_cost_step"])
+            out_info["disruption_fraction_step"] = float(
+                control_components["disruption_fraction_step"]
+            )
+            out_info["control_components"] = {
+                **control_components,
+                "weights": {
+                    "w_bo": self.w_bo,
+                    "w_cost": self.w_cost,
+                    "w_disr": self.w_disr,
+                },
+            }
+            out_info["ret_thesis_corrected_step"] = float(
+                corrected_ret_components["ret_value"]
+            )
+            out_info["ret_thesis_corrected"] = {
+                **corrected_ret_components,
+                "thresholds": {
+                    "autotomy_fill_rate_threshold": self.autotomy_threshold,
+                    "nonrecovery_disruption_fraction_threshold": (
+                        self.nonrecovery_disruption_threshold
+                    ),
+                    "nonrecovery_fill_rate_threshold": self.nonrecovery_fr_threshold,
+                },
+                "thresholds_source": "configurable_repo_approximation",
+                "correction_mode": "autotomy_equals_recovery",
             }
 
         return out_obs, float(reward), bool(terminated), bool(truncated), out_info
