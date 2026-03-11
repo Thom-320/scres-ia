@@ -355,7 +355,48 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             },
             "ret_thresholds_source": "configurable_repo_approximation",
         }
+        info["state_constraint_context"] = self.get_state_constraint_context()
         return obs, info
+
+    def get_state_constraint_context(self) -> dict[str, Any]:
+        """
+        Return state-dependent operational constraint context.
+
+        This supplements the fixed action constraints with live simulator state
+        that affects what can be dispatched or processed at the current step.
+        The PPO observation remains unchanged; this method exists for external
+        models that need explicit state-conditioned feasibility signals.
+        """
+        if self.sim is None:
+            raise RuntimeError("Call reset() before requesting state constraints.")
+
+        obs = np.asarray(self.sim.get_observation(), dtype=np.float32)
+        inventory_detail = self.sim._inventory_detail()
+        total_inventory = float(sum(inventory_detail.values()))
+        num_raw_materials = float(OPERATIONS[2]["num_units"])
+        op3_total_dispatch_cap = float(inventory_detail["raw_material_wdc"])
+        op3_per_material_dispatch_cap = op3_total_dispatch_cap / max(
+            num_raw_materials, 1.0
+        )
+        op9_dispatch_cap = float(inventory_detail["rations_sb"])
+
+        return {
+            "time": float(self.sim.env.now),
+            "inventory_detail": inventory_detail,
+            "total_inventory": total_inventory,
+            "op3_total_dispatch_cap": op3_total_dispatch_cap,
+            "op3_per_material_dispatch_cap": op3_per_material_dispatch_cap,
+            "op9_dispatch_cap": op9_dispatch_cap,
+            "assembly_line_available": bool(obs[8] < 0.5),
+            "any_location_available": bool(obs[9] < 0.5),
+            "op9_available": bool(obs[10] < 0.5),
+            "op11_available": bool(obs[11] < 0.5),
+            "fill_rate": float(obs[6]),
+            "backorder_rate": float(obs[7]),
+            "time_fraction": float(obs[12]),
+            "pending_batch_fraction": float(obs[13]),
+            "contingent_demand_fraction": float(obs[14]),
+        }
 
     def step(
         self, action: np.ndarray
@@ -426,6 +467,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             "shift_cost_linear": self.rt_delta * (shifts - 1),
             "shift_cost_delta": self.rt_delta,
         }
+        out_info["state_constraint_context"] = self.get_state_constraint_context()
         if self.reward_mode == "ReT_thesis":
             out_info["ReT_raw"] = ReT
             out_info["ret_components"] = {

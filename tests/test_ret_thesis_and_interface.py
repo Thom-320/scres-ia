@@ -107,3 +107,16 @@ def test_external_constraint_context_exposes_base_parameters() -> None:
         context["base_control_parameters"]["op9_q_max"]
         >= context["base_control_parameters"]["op9_q_min"]
     )
+
+
+def test_state_constraint_context_is_exposed_on_reset_and_step() -> None:
+    env = make_shift_control_env(max_steps=1, reward_mode="control_v1")
+    _, info = env.reset(seed=7)
+    assert "state_constraint_context" in info
+    state_context = info["state_constraint_context"]
+    assert state_context["op3_total_dispatch_cap"] >= 0.0
+    assert "inventory_detail" in state_context
+
+    _, _, _, _, step_info = env.step([0.0, 0.0, 0.0, 0.0, 0.0])
+    assert "state_constraint_context" in step_info
+    assert step_info["state_constraint_context"]["total_inventory"] >= 0.0
