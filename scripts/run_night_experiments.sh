@@ -28,8 +28,12 @@ PPO_FS4_LABEL="control_reward_ppo_fs4"
 RECURRENT_DIR="outputs/benchmarks/control_reward_recurrent_ppo_fs1"
 RECURRENT_LABEL="control_reward_recurrent_ppo_fs1"
 
-# Include the existing PPO run in the final analysis
-PPO_BASELINE_DIR="outputs/benchmarks/control_reward"
+# Include the most recent PPO baseline run in the final analysis
+DEFAULT_PPO_BASELINE_CANDIDATES=(
+    "outputs/benchmarks/control_reward"
+    "outputs/benchmarks/control_reward_crosseval_check"
+)
+PPO_BASELINE_DIR=""
 
 # ---------- Mode handling ----------
 MODE="${1:-}"
@@ -59,6 +63,20 @@ case "$MODE" in
         ;;
 esac
 
+if [[ -z "$PPO_BASELINE_DIR" && "$MODE" != "--smoke" ]]; then
+    NEWEST_SUMMARY_TS=0
+    for candidate in "${DEFAULT_PPO_BASELINE_CANDIDATES[@]}"; do
+        summary_path="$candidate/summary.json"
+        if [[ -f "$summary_path" ]]; then
+            summary_ts="$(stat -f %m "$summary_path")"
+            if (( summary_ts > NEWEST_SUMMARY_TS )); then
+                NEWEST_SUMMARY_TS="$summary_ts"
+                PPO_BASELINE_DIR="$candidate"
+            fi
+        fi
+    done
+fi
+
 # ---------- Banner ----------
 NIGHT_START="$(date +%s)"
 echo ""
@@ -73,6 +91,9 @@ echo "  Timesteps    : $TIMESTEPS"
 echo "  Eval episodes: $EVAL_EPISODES"
 echo "  Risk level   : $RISK_LEVEL"
 echo "  Cross-eval   : $EVAL_LEVEL_ARGS"
+if [[ -n "$PPO_BASELINE_DIR" ]]; then
+    echo "  PPO baseline : $PPO_BASELINE_DIR"
+fi
 echo ""
 
 # ---------- Helper: elapsed time ----------
