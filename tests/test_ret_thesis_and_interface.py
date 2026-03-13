@@ -189,6 +189,9 @@ def test_state_constraint_context_is_exposed_on_reset_and_step() -> None:
     assert "inventory_detail" in state_context
     assert "cumulative_backorder_rate_by_inventory_node" in state_context
     assert "cumulative_disruption_fraction_by_operation" in state_context
+    assert "pending_backorders_count" in state_context
+    assert "pending_backorder_qty" in state_context
+    assert "unattended_orders_total" in state_context
     assert state_context["cumulative_backorder_rate_by_inventory_node"][
         "rations_theatre"
     ] == pytest.approx(0.0)
@@ -196,6 +199,7 @@ def test_state_constraint_context_is_exposed_on_reset_and_step() -> None:
     _, _, _, _, step_info = env.step([0.0, 0.0, 0.0, 0.0, 0.0])
     assert "state_constraint_context" in step_info
     assert step_info["state_constraint_context"]["total_inventory"] >= 0.0
+    assert step_info["state_constraint_context"]["pending_backorders_count"] >= 0.0
     disruption_vector = step_info["state_constraint_context"][
         "cumulative_disruption_fraction_by_operation"
     ]

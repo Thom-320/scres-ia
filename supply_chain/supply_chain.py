@@ -55,10 +55,13 @@ def resolve_hours_per_year(year_basis: str) -> int:
 class OrderRecord:
     j: int
     OPTj: float
-    quantity: int = 0
+    quantity: float = 0.0
     OATj: Optional[float] = None
     CTj: Optional[float] = None
     backorder: bool = False
+    remaining_qty: float = 0.0
+    contingent: bool = False
+    lost: bool = False
 
 
 @dataclass
@@ -156,6 +159,9 @@ class MFSCSimulation:
         self.total_demanded = 0
         self.total_backorders = 0
         self.cumulative_backorder_qty = 0
+        self.pending_backorders: list[OrderRecord] = []
+        self.pending_backorder_qty = 0.0
+        self.total_unattended_orders = 0
         self.warmup_complete = False
         self.warmup_time = 0.0
 
@@ -263,6 +269,9 @@ class MFSCSimulation:
         prev_delivered = self.total_delivered
         prev_demanded = self.total_demanded
         prev_backorder_qty = self.cumulative_backorder_qty
+        prev_unattended_orders = self.total_unattended_orders
+        prev_pending_backorders = len(self.pending_backorders)
+        prev_pending_backorder_qty = self.pending_backorder_qty
         prev_down_hours = self._cumulative_down_hours
         # Flush ongoing disruptions at step start
         for op_id in range(1, 14):
@@ -286,6 +295,7 @@ class MFSCSimulation:
         new_backorder_qty = (
             self.cumulative_backorder_qty - prev_backorder_qty
         )  # rations
+        new_unattended_orders = self.total_unattended_orders - prev_unattended_orders
         step_disruption_hours = self._cumulative_down_hours - prev_down_hours
 
         # Proxy reward (default — env.py may override)
@@ -302,9 +312,17 @@ class MFSCSimulation:
             "new_backorders": new_backorders,  # order count
             "new_demanded": new_demanded,  # rations
             "new_backorder_qty": new_backorder_qty,  # rations short
+            "new_unattended_orders": new_unattended_orders,  # order count
             "step_disruption_hours": step_disruption_hours,  # op-hours down
             "total_inventory": total_inventory,
             "inventory_detail": inventory_detail,
+            "pending_backorders": len(self.pending_backorders),
+            "pending_backorder_delta": len(self.pending_backorders)
+            - prev_pending_backorders,
+            "pending_backorder_qty": self.pending_backorder_qty,
+            "pending_backorder_qty_delta": self.pending_backorder_qty
+            - prev_pending_backorder_qty,
+            "unattended_orders_total": self.total_unattended_orders,
         }
         return obs, reward, done, info
 
@@ -320,6 +338,66 @@ class MFSCSimulation:
             "rations_theatre": float(self.rations_theatre.level),
         }
 
+    def _backorder_priority_key(
+        self, order: OrderRecord
+    ) -> tuple[int, float, float, int]:
+        """
+        Return the Garrido backlog priority key.
+
+        Contingent demand takes precedence over regular demand. Within each
+        priority class, delayed orders are sorted in increasing order of size
+        as a proxy for the SPT scheduling rule described in the thesis.
+        """
+        return (
+            0 if order.contingent else 1,
+            float(order.remaining_qty),
+            float(order.OPTj),
+            int(order.j),
+        )
+
+    def _refresh_pending_backorder_qty(self) -> None:
+        """Recompute the outstanding delayed-demand quantity."""
+        self.pending_backorder_qty = float(
+            sum(order.remaining_qty for order in self.pending_backorders)
+        )
+
+    def _enqueue_backorder(self, order: OrderRecord) -> None:
+        """Insert a delayed order into the capped Garrido-style backlog queue."""
+        self.pending_backorders.append(order)
+        self.pending_backorders.sort(key=self._backorder_priority_key)
+        while len(self.pending_backorders) > 60:
+            dropped = self.pending_backorders.pop()
+            dropped.lost = True
+            self.total_unattended_orders += 1
+        self._refresh_pending_backorder_qty()
+
+    def _serve_pending_backorders(self):
+        """
+        Serve delayed orders according to the queue head.
+
+        The queue is blocking: if the highest-priority delayed order cannot be
+        fully served from on-hand theatre inventory, lower-priority orders wait
+        behind it.
+        """
+        while self.pending_backorders:
+            next_order = self.pending_backorders[0]
+            if self.rations_theatre.level + 1e-9 < next_order.remaining_qty:
+                break
+            yield self.rations_theatre.get(next_order.remaining_qty)
+            next_order.OATj = self.env.now
+            next_order.CTj = self.env.now - next_order.OPTj
+            next_order.backorder = False
+            next_order.remaining_qty = 0.0
+            self.pending_backorders.pop(0)
+            self._refresh_pending_backorder_qty()
+
+    def _backorder_rate(self) -> float:
+        """Current delayed/lost-order fraction per Garrido's Bt + Ut logic."""
+        if not self.orders:
+            return 0.0
+        delayed_orders = len(self.pending_backorders) + self.total_unattended_orders
+        return min(1.0, delayed_orders / len(self.orders))
+
     def get_observation(self) -> np.ndarray:
         """
         Return normalized state vector for RL agent.
@@ -331,8 +409,8 @@ class MFSCSimulation:
           [3]  rations_sb / 1e5
           [4]  rations_cssu / 1e5
           [5]  rations_theatre / 1e5
-          [6]  fill_rate (0-1)
-          [7]  backorder_rate (backorders / total_orders)
+          [6]  fill_rate (served-or-recoverable orders / total_orders)
+          [7]  backorder_rate ((pending + unattended) / total_orders)
           [8]  assembly_line_down (0 or 1)
           [9]  any_loc_down (0 or 1)
           [10] op9_down (0 or 1)
@@ -341,7 +419,6 @@ class MFSCSimulation:
           [13] pending_batch / batch_size
           [14] contingent_demand_pending / 2600
         """
-        total_orders = max(1, len(self.orders))
         return np.array(
             [
                 self.raw_material_wdc.level / 1e6,
@@ -351,7 +428,7 @@ class MFSCSimulation:
                 self.rations_cssu.level / 1e5,
                 self.rations_theatre.level / 1e5,
                 self._fill_rate(),
-                self.total_backorders / total_orders,
+                self._backorder_rate(),
                 float(self._is_down(5) or self._is_down(6) or self._is_down(7)),
                 float(
                     self._is_down(4)
@@ -598,6 +675,7 @@ class MFSCSimulation:
         yield self.rations_theatre.put(qty)
         self.total_delivered += qty
         self.delivery_events.append((self.env.now, qty))
+        yield from self._serve_pending_backorders()
 
     # =====================================================================
     # DEMAND SINK: Op13
@@ -613,26 +691,34 @@ class MFSCSimulation:
             if day_of_week >= 6:
                 continue
 
-            demand_qty = self._select_uniform_discrete(DEMAND["a"], DEMAND["b"])
-            if self._contingent_demand_pending > 0:
-                demand_qty += self._contingent_demand_pending
+            demand_qty = float(self._select_uniform_discrete(DEMAND["a"], DEMAND["b"]))
+            contingent_qty = float(self._contingent_demand_pending)
+            if contingent_qty > 0:
+                demand_qty += contingent_qty
                 self._contingent_demand_pending = 0
 
             self.total_demanded += demand_qty
             order_num += 1
-            order = OrderRecord(j=order_num, OPTj=self.env.now, quantity=demand_qty)
+            order = OrderRecord(
+                j=order_num,
+                OPTj=self.env.now,
+                quantity=demand_qty,
+                remaining_qty=demand_qty,
+                contingent=contingent_qty > 0,
+            )
 
             available = self.rations_theatre.level
-            if available >= demand_qty:
+            if not self.pending_backorders and available >= demand_qty:
                 yield self.rations_theatre.get(demand_qty)
                 order.OATj = self.env.now
                 order.CTj = 0.0
+                order.remaining_qty = 0.0
             else:
                 order.backorder = True
                 self.total_backorders += 1
-                self.cumulative_backorder_qty += demand_qty - available
-                if available > 0:
-                    yield self.rations_theatre.get(available)
+                self.cumulative_backorder_qty += demand_qty
+                self._enqueue_backorder(order)
+                yield from self._serve_pending_backorders()
 
             self.orders.append(order)
             self.daily_demand.append((self.env.now, demand_qty))
@@ -672,7 +758,9 @@ class MFSCSimulation:
         base_lo = RISKS_CURRENT["R24"]["surge"]["lo"]
         base_hi = RISKS_CURRENT["R24"]["surge"]["hi"]
         if table and "R24" in table:
-            return table["R24"].get("surge_lo", base_lo), table["R24"].get("surge_hi", base_hi)
+            return table["R24"].get("surge_lo", base_lo), table["R24"].get(
+                "surge_hi", base_hi
+            )
         return base_lo, base_hi
 
     def _risk_R11(self):
@@ -927,6 +1015,8 @@ class MFSCSimulation:
         print(f"  Demanded:       {self.total_demanded:,}")
         print(f"  Orders:         {len(self.orders):,}")
         print(f"  Backorders:     {self.total_backorders:,}")
+        print(f"  Pending queue:  {len(self.pending_backorders):,}")
+        print(f"  Unattended Ut:  {self.total_unattended_orders:,}")
         print(f"  Fill rate:      {self._fill_rate():.1%}")
         print(f"  Avg ann. prod:  {self.total_produced / years:,.0f}")
         print(f"  Avg ann. del:   {self.total_delivered / years:,.0f}")
@@ -935,7 +1025,5 @@ class MFSCSimulation:
             self.risk_summary()
 
     def _fill_rate(self):
-        """Quantity-based fill rate per thesis Eq 5.1: FR = 1 - B/D."""
-        if self.total_demanded <= 0:
-            return 0.0
-        return max(0.0, 1.0 - self.cumulative_backorder_qty / self.total_demanded)
+        """Current fill rate per Garrido's order-based Bt + Ut formulation."""
+        return max(0.0, 1.0 - self._backorder_rate())

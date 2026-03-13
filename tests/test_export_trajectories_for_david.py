@@ -56,6 +56,9 @@ def test_export_trajectories_includes_state_constraints_and_reward_terms(
     assert metadata["reward_terms_shape"][1] == reward_terms.shape[1]
     assert metadata["obs_shape"][1] == 18
     assert len(state_fields["fields"]) == state_constraints.shape[1]
+    assert "pending_backorders_count" in state_fields["fields"]
+    assert "pending_backorder_qty" in state_fields["fields"]
+    assert "unattended_orders_total" in state_fields["fields"]
     assert "cum_backorder_rate_rations_theatre" in state_fields["fields"]
     assert "cum_disruption_fraction_op13" in state_fields["fields"]
     assert reward_fields["fields"][0] == "reward_total"

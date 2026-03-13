@@ -101,6 +101,9 @@ STATE_CONSTRAINT_FIELDS: tuple[str, ...] = (
         "contingent_demand_fraction",
         "cumulative_backorder_qty",
         "cumulative_disruption_hours",
+        "pending_backorders_count",
+        "pending_backorder_qty",
+        "unattended_orders_total",
     )
     + DKANA_BACKORDER_VECTOR_FIELDS
     + DKANA_DISRUPTION_VECTOR_FIELDS
@@ -267,6 +270,9 @@ def build_shift_control_state_constraint_vector(
         float(state_context["contingent_demand_fraction"]),
         float(state_context["cumulative_backorder_qty"]),
         float(state_context["cumulative_disruption_hours"]),
+        float(state_context["pending_backorders_count"]),
+        float(state_context["pending_backorder_qty"]),
+        float(state_context["unattended_orders_total"]),
     ]
     backorder_vector = state_context["cumulative_backorder_rate_by_inventory_node"]
     disruption_vector = state_context["cumulative_disruption_fraction_by_operation"]

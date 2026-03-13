@@ -608,6 +608,9 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             "contingent_demand_fraction": float(obs[14]),
             "cumulative_backorder_qty": float(self.sim.cumulative_backorder_qty),
             "cumulative_disruption_hours": float(self.sim._cumulative_down_hours),
+            "pending_backorders_count": float(len(self.sim.pending_backorders)),
+            "pending_backorder_qty": float(self.sim.pending_backorder_qty),
+            "unattended_orders_total": float(self.sim.total_unattended_orders),
             "cumulative_backorder_rate_by_inventory_node": (
                 self._cumulative_backorder_rate_by_inventory_node()
             ),
