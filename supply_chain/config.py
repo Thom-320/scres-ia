@@ -42,6 +42,7 @@ MAX_ORDERS = 6_000  # j = 1…6,000 (thesis notation)
 NUM_RAW_MATERIALS = 12  # rm1…rm12
 NUM_SUPPLIERS = 12  # cntr1…cntr12
 RATIONS_PER_BATCH = 5_000  # Batch size from Op7 → Op8
+BACKORDER_QUEUE_CAP = 60  # Max pending delayed orders (thesis Section 6.5.4)
 RATIONS_PER_SHIFT = int(ASSEMBLY_RATE * HOURS_PER_SHIFT)  # 2,564
 
 # Lead time: time from Op1 to Op13 under deterministic conditions (no risks).

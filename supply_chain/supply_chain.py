@@ -23,6 +23,7 @@ from supply_chain.config import (
     OPERATIONS,
     DEMAND,
     ASSEMBLY_RATE,
+    BACKORDER_QUEUE_CAP,
     CAPACITY_BY_SHIFTS,
     HOURS_PER_SHIFT,
     HOURS_PER_DAY,
@@ -365,7 +366,7 @@ class MFSCSimulation:
         """Insert a delayed order into the capped Garrido-style backlog queue."""
         self.pending_backorders.append(order)
         self.pending_backorders.sort(key=self._backorder_priority_key)
-        while len(self.pending_backorders) > 60:
+        while len(self.pending_backorders) > BACKORDER_QUEUE_CAP:
             dropped = self.pending_backorders.pop()
             dropped.lost = True
             self.total_unattended_orders += 1
