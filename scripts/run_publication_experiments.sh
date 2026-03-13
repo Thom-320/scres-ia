@@ -11,8 +11,10 @@ set -euo pipefail
 #   bash scripts/run_publication_experiments.sh --preflight  # short run with real training
 
 SEEDS="11 22 33 44 55 66 77 88 99 111"
+TUNING_SEEDS="11 22 33"
 TIMESTEPS=500000
 EVAL_EPISODES=10
+TUNE_EPISODES=3
 RISK_LEVEL="increased"
 EVAL_LEVEL_ARGS="--eval-risk-levels current increased severe"
 WEIGHT_ARGS="--w-bo 1.0 2.0 4.0 --w-cost 0.02 0.06 0.10 --w-disr 0.0"
@@ -31,8 +33,10 @@ case "$MODE" in
     "--smoke")
         echo "=== SMOKE TEST MODE ==="
         SEEDS="11"
+        TUNING_SEEDS="11"
         TIMESTEPS=256
         EVAL_EPISODES=2
+        TUNE_EPISODES=1
         COMMON_ARGS="--step-size-hours 24 --max-steps 8 --stochastic-pt"
         PHASE1_ARGS="--output-dir outputs/benchmarks/control_reward_tuning_smoke --artifact-label control_reward_tuning_smoke"
         PHASE2_ARGS="--output-dir outputs/benchmarks/control_reward_stopt_smoke --artifact-label control_reward_stopt_smoke"
@@ -44,8 +48,10 @@ case "$MODE" in
     "--preflight")
         echo "=== PREFLIGHT MODE ==="
         SEEDS="11 22"
+        TUNING_SEEDS="11 22"
         TIMESTEPS=2048
         EVAL_EPISODES=2
+        TUNE_EPISODES=2
         RISK_LEVEL="severe"
         EVAL_LEVEL_ARGS=""
         WEIGHT_ARGS="--w-bo 5.0 --w-cost 0.03 --w-disr 0.0 --max-survivors 1"
@@ -64,17 +70,20 @@ case "$MODE" in
 esac
 
 echo "Seeds: $SEEDS"
+echo "Tuning seeds: $TUNING_SEEDS"
 echo "Timesteps: $TIMESTEPS"
 echo "Eval episodes: $EVAL_EPISODES"
+echo "Tune episodes: $TUNE_EPISODES"
 
 # Phase 1: Tune heuristic parameters on training seeds
 echo ""
 echo "=== Phase 1: Heuristic tuning ==="
 python scripts/benchmark_control_reward.py \
     --tune-heuristic \
-    --seeds $SEEDS \
+    --seeds $TUNING_SEEDS \
     --train-timesteps "$TIMESTEPS" \
     --eval-episodes "$EVAL_EPISODES" \
+    --tune-episodes "$TUNE_EPISODES" \
     --risk-level "$RISK_LEVEL" \
     $WEIGHT_ARGS \
     --algo ppo \
