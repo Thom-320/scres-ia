@@ -15,6 +15,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from scripts.control_reward_seed_inference import (
     exact_sign_flip_pvalue,
     paired_bootstrap_ci,
+    paired_cohens_d,
 )
 
 DEFAULT_RUNS = (
@@ -57,10 +58,12 @@ COMPARISON_FIELDS = [
     "ci95_low_vs_best_static",
     "ci95_high_vs_best_static",
     "sign_flip_pvalue_vs_best_static",
+    "cohens_d_vs_best_static",
     "mean_diff_vs_best_heuristic",
     "ci95_low_vs_best_heuristic",
     "ci95_high_vs_best_heuristic",
     "sign_flip_pvalue_vs_best_heuristic",
+    "cohens_d_vs_best_heuristic",
 ]
 
 
@@ -200,6 +203,7 @@ def paired_stats(
         "ci95_low": ci_low,
         "ci95_high": ci_high,
         "sign_flip_pvalue": float(exact_sign_flip_pvalue(diffs)),
+        "cohens_d": float(paired_cohens_d(diffs)),
     }
 
 
@@ -327,6 +331,9 @@ def analyze_run(
                 "sign_flip_pvalue_vs_best_static": (
                     static_stats["sign_flip_pvalue"] if static_stats else None
                 ),
+                "cohens_d_vs_best_static": (
+                    static_stats["cohens_d"] if static_stats else None
+                ),
                 "mean_diff_vs_best_heuristic": (
                     heuristic_stats["mean_difference"] if heuristic_stats else None
                 ),
@@ -338,6 +345,9 @@ def analyze_run(
                 ),
                 "sign_flip_pvalue_vs_best_heuristic": (
                     heuristic_stats["sign_flip_pvalue"] if heuristic_stats else None
+                ),
+                "cohens_d_vs_best_heuristic": (
+                    heuristic_stats["cohens_d"] if heuristic_stats else None
                 ),
             }
         )
@@ -378,8 +388,8 @@ def render_markdown(
             "",
             "## Seed-Mean Comparisons",
             "",
-            "| Run | Scenario | Learned | Best static | Diff vs static | CI95 | Best heuristic | Diff vs heuristic | CI95 |",
-            "| --- | --- | --- | --- | ---: | --- | --- | ---: | --- |",
+            "| Run | Scenario | Learned | Best static | Diff vs static | CI95 | d | Best heuristic | Diff vs heuristic | CI95 | d |",
+            "| --- | --- | --- | --- | ---: | --- | ---: | --- | ---: | --- | ---: |",
         ]
     )
     for row in comparison_rows:
@@ -398,10 +408,20 @@ def render_markdown(
             if row["mean_diff_vs_best_heuristic"] is not None
             else "NA"
         )
+        static_d = (
+            f"{row['cohens_d_vs_best_static']:.2f}"
+            if row.get("cohens_d_vs_best_static") is not None
+            else "NA"
+        )
+        heuristic_d = (
+            f"{row['cohens_d_vs_best_heuristic']:.2f}"
+            if row.get("cohens_d_vs_best_heuristic") is not None
+            else "NA"
+        )
         lines.append(
             f"| `{row['run_label']}` | `{row['scenario']}` | `{row['learned_policy']}` | "
-            f"`{row['best_static_policy']}` | {row['mean_diff_vs_best_static']:.3f} | {static_ci} | "
-            f"`{row['best_heuristic_policy'] or 'NA'}` | {heuristic_diff} | {heuristic_ci} |"
+            f"`{row['best_static_policy']}` | {row['mean_diff_vs_best_static']:.3f} | {static_ci} | {static_d} | "
+            f"`{row['best_heuristic_policy'] or 'NA'}` | {heuristic_diff} | {heuristic_ci} | {heuristic_d} |"
         )
     lines.extend(
         [

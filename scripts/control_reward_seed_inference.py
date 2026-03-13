@@ -89,6 +89,13 @@ def exact_sign_flip_pvalue(diffs: np.ndarray) -> float:
     return float(np.mean(np.abs(flipped_means) >= observed))
 
 
+def paired_cohens_d(diffs: np.ndarray) -> float:
+    """Cohen's d for paired differences (effect size)."""
+    if diffs.size < 2:
+        return float("nan")
+    return float(diffs.mean() / diffs.std(ddof=1))
+
+
 def infer_run(
     run_dir: Path, *, bootstrap_samples: int, rng: np.random.Generator
 ) -> dict[str, Any]:
@@ -115,6 +122,7 @@ def infer_run(
 
     ci_low, ci_high = paired_bootstrap_ci(diffs, n_samples=bootstrap_samples, rng=rng)
     p_value = exact_sign_flip_pvalue(diffs)
+    cohens_d = paired_cohens_d(diffs)
 
     reward_direction = "better" if diffs.mean() > 0 else "worse"
     return {
@@ -133,10 +141,12 @@ def infer_run(
         "mean_difference": float(diffs.mean()),
         "bootstrap_ci95": [ci_low, ci_high],
         "exact_sign_flip_pvalue": p_value,
+        "cohens_d": cohens_d,
         "summary": (
             f"PPO is {reward_direction} than {best_static_policy} by "
             f"{float(diffs.mean()):.3f} control-reward points on shared seed means; "
-            f"bootstrap CI95 [{ci_low:.3f}, {ci_high:.3f}], exact sign-flip p={p_value:.3f}."
+            f"bootstrap CI95 [{ci_low:.3f}, {ci_high:.3f}], exact sign-flip p={p_value:.3f}, "
+            f"Cohen's d={cohens_d:.3f}."
         ),
     }
 
@@ -158,6 +168,7 @@ def render_markdown(results: list[dict[str, Any]]) -> str:
                 f"- Mean reward difference (`PPO - best_static`): {result['mean_difference']:.3f}",
                 f"- Bootstrap CI95: [{result['bootstrap_ci95'][0]:.3f}, {result['bootstrap_ci95'][1]:.3f}]",
                 f"- Exact sign-flip p-value: {result['exact_sign_flip_pvalue']:.3f}",
+                f"- Cohen's d: {result['cohens_d']:.3f}",
                 f"- Interpretation: {result['summary']}",
                 "",
             ]

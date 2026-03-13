@@ -49,9 +49,28 @@ Recommended paper language:
 
 The benchmark compares the learned policy against:
 
-- `static_s1`
-- `static_s2`
-- `static_s3`
-- `random`
+- `static_s1`, `static_s2`, `static_s3` — fixed-shift policies (no adaptation)
+- `random` — uniform random actions
+- `heuristic_hysteresis` — deadband shift control on backorder_rate with hysteresis bands
+- `heuristic_disruption` — reactive shift + inventory boost on disruption/low fill_rate
+- `heuristic_tuned` — combined hysteresis + disruption-aware with grid-searched parameters
 
-The main reproducible benchmark script is `scripts/benchmark_control_reward.py`, which exports static, random, and learned-policy summaries under a shared configuration.
+The main reproducible benchmark script is `scripts/benchmark_control_reward.py`, which exports static, heuristic, random, and learned-policy summaries under a shared configuration.
+
+## Reward shaping (PBRS)
+
+`control_v1_pbrs` adds a Potential-Based Reward Shaping bonus to the `control_v1` reward:
+
+`F(s, s') = γ × Φ(s') - Φ(s)`
+
+Two variants:
+
+- **Cumulative (main):** `Φ(s) = -α × max(0, τ - FR_cumulative) / τ`
+  Uses obs[6] (cumulative fill rate). Policy-invariant (Ng et al. 1999).
+- **Step-level (ablation):** `Φ(s) = -α × prev_step_backorder_qty_norm`
+  Uses obs[16] from v2 observation. Responds to recent service failures.
+  Requires `observation_version="v2"`. Also policy-invariant.
+
+Hyperparameters: `pbrs_alpha` (scale, default 1.0), `pbrs_tau` (target fill rate, default 0.95), `pbrs_gamma` (discount, must match SB3 gamma).
+
+PBRS experiment runner: `scripts/run_pbrs_experiments.sh`.

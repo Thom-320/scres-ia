@@ -697,3 +697,225 @@ def test_cross_scenario_evaluation(tmp_path: Path) -> None:
     assert "cross_eval_severe" in phases
     # The training risk level should NOT appear as a cross_eval phase
     assert "cross_eval_increased" not in phases
+
+
+# ---------------------------------------------------------------------------
+# PBRS (Potential-Based Reward Shaping) tests
+# ---------------------------------------------------------------------------
+
+
+def test_pbrs_phi_zero_above_target() -> None:
+    """When fill_rate >= tau, Φ should be 0 (no shaping above target)."""
+    from supply_chain.env_experimental_shifts import MFSCGymEnvShifts
+
+    env = MFSCGymEnvShifts(
+        reward_mode="control_v1_pbrs",
+        pbrs_alpha=1.0,
+        pbrs_tau=0.95,
+        pbrs_variant="cumulative",
+    )
+    obs = np.zeros(15, dtype=np.float32)
+    obs[6] = 0.98  # above tau
+    phi = env._compute_phi_cumulative(obs)
+    assert phi == 0.0
+
+
+def test_pbrs_phi_deficit_below_target() -> None:
+    """When fill_rate < tau, Φ should be -α * (τ - FR) / τ."""
+    from supply_chain.env_experimental_shifts import MFSCGymEnvShifts
+
+    env = MFSCGymEnvShifts(
+        reward_mode="control_v1_pbrs",
+        pbrs_alpha=2.0,
+        pbrs_tau=0.95,
+        pbrs_variant="cumulative",
+    )
+    obs = np.zeros(15, dtype=np.float32)
+    obs[6] = 0.80
+    phi = env._compute_phi_cumulative(obs)
+    expected = -2.0 * (0.95 - 0.80) / 0.95
+    assert abs(phi - expected) < 1e-6
+
+
+def test_pbrs_shaping_bonus_positive_on_improvement() -> None:
+    """When fill_rate improves, F = γΦ(s') - Φ(s) should be > 0."""
+    from supply_chain.env_experimental_shifts import MFSCGymEnvShifts
+
+    env = MFSCGymEnvShifts(
+        reward_mode="control_v1_pbrs",
+        risk_level="increased",
+        stochastic_pt=True,
+        step_size_hours=168,
+        max_steps=10,
+        pbrs_alpha=1.0,
+        pbrs_tau=0.95,
+        pbrs_gamma=0.99,
+    )
+    obs, _ = env.reset(seed=42)
+    # Run a few steps and collect shaping bonuses
+    bonuses = []
+    for _ in range(3):
+        action = np.array([0.0, 0.0, 0.0, 0.0, 1.0], dtype=np.float32)
+        obs, reward, _, _, info = env.step(action)
+        bonuses.append(info["pbrs_shaping_bonus"])
+    # At least one bonus should be non-zero (system is transitioning)
+    assert any(b != 0.0 for b in bonuses)
+
+
+def test_pbrs_step_level_requires_v2() -> None:
+    """Step-level PBRS variant must raise ValueError with v1 observations."""
+    from supply_chain.env_experimental_shifts import MFSCGymEnvShifts
+
+    with pytest.raises(
+        ValueError, match="step_level variant requires observation_version='v2'"
+    ):
+        MFSCGymEnvShifts(
+            reward_mode="control_v1_pbrs",
+            pbrs_variant="step_level",
+            observation_version="v1",
+        )
+
+
+def test_pbrs_prev_phi_initialized_in_reset() -> None:
+    """After reset, _prev_phi should be set to Φ(s₀), not left at 0."""
+    from supply_chain.env_experimental_shifts import MFSCGymEnvShifts
+
+    env = MFSCGymEnvShifts(
+        reward_mode="control_v1_pbrs",
+        risk_level="increased",
+        stochastic_pt=True,
+        step_size_hours=168,
+        max_steps=5,
+        pbrs_alpha=1.0,
+        pbrs_tau=0.95,
+    )
+    obs, _ = env.reset(seed=42)
+    # _prev_phi should equal _compute_phi(obs)
+    expected_phi = env._compute_phi(obs)
+    assert abs(env._prev_phi - expected_phi) < 1e-9
+
+
+def test_pbrs_step_level_env_runs() -> None:
+    """Step-level PBRS variant with v2 should run without errors."""
+    from supply_chain.env_experimental_shifts import MFSCGymEnvShifts
+
+    env = MFSCGymEnvShifts(
+        reward_mode="control_v1_pbrs",
+        risk_level="increased",
+        stochastic_pt=True,
+        step_size_hours=168,
+        max_steps=5,
+        observation_version="v2",
+        pbrs_alpha=0.5,
+        pbrs_tau=0.95,
+        pbrs_gamma=0.99,
+        pbrs_variant="step_level",
+    )
+    obs, _ = env.reset(seed=42)
+    assert obs.shape == (18,)
+    for _ in range(3):
+        action = env.action_space.sample()
+        obs, reward, term, trunc, info = env.step(action)
+        assert obs.shape == (18,)
+        assert "pbrs_phi" in info
+        assert "pbrs_shaping_bonus" in info
+        assert "pbrs_base_reward" in info
+        assert "pbrs_variant" in info
+        assert info["pbrs_variant"] == "step_level"
+
+
+def test_pbrs_base_reward_equals_control_v1() -> None:
+    """PBRS base reward should equal the control_v1 reward (before shaping)."""
+    from supply_chain.env_experimental_shifts import MFSCGymEnvShifts
+
+    env_pbrs = MFSCGymEnvShifts(
+        reward_mode="control_v1_pbrs",
+        risk_level="increased",
+        stochastic_pt=True,
+        step_size_hours=168,
+        max_steps=5,
+        pbrs_alpha=1.0,
+        pbrs_tau=0.95,
+    )
+    env_base = MFSCGymEnvShifts(
+        reward_mode="control_v1",
+        risk_level="increased",
+        stochastic_pt=True,
+        step_size_hours=168,
+        max_steps=5,
+    )
+    obs_p, _ = env_pbrs.reset(seed=42)
+    obs_b, _ = env_base.reset(seed=42)
+    np.testing.assert_array_almost_equal(obs_p, obs_b)
+
+    action = np.array([0.0, 0.0, 0.0, 0.0, 0.0], dtype=np.float32)
+    _, rew_p, _, _, info_p = env_pbrs.step(action)
+    _, rew_b, _, _, _ = env_base.step(action)
+    # Base reward component should match
+    assert abs(info_p["pbrs_base_reward"] - rew_b) < 1e-6
+    # Shaped reward = base + F
+    assert (
+        abs(rew_p - (info_p["pbrs_base_reward"] + info_p["pbrs_shaping_bonus"])) < 1e-6
+    )
+
+
+def test_pbrs_reward_decomposition_identity() -> None:
+    """reward = pbrs_base_reward + pbrs_shaping_bonus, exactly."""
+    from supply_chain.env_experimental_shifts import MFSCGymEnvShifts
+
+    env = MFSCGymEnvShifts(
+        reward_mode="control_v1_pbrs",
+        risk_level="increased",
+        stochastic_pt=True,
+        step_size_hours=168,
+        max_steps=10,
+    )
+    obs, _ = env.reset(seed=99)
+    for _ in range(5):
+        action = env.action_space.sample()
+        _, reward, _, _, info = env.step(action)
+        decomposed = info["pbrs_base_reward"] + info["pbrs_shaping_bonus"]
+        assert (
+            abs(reward - decomposed) < 1e-9
+        ), f"Decomposition failed: {reward} != {decomposed}"
+
+
+def test_benchmark_build_env_kwargs_pbrs(tmp_path: Path) -> None:
+    """build_env_kwargs should include PBRS params when reward_mode is control_v1_pbrs."""
+    args = build_parser().parse_args(
+        [
+            "--seeds",
+            "1",
+            "--train-timesteps",
+            "32",
+            "--eval-episodes",
+            "1",
+            "--step-size-hours",
+            "24",
+            "--max-steps",
+            "4",
+            "--w-bo",
+            "1.0",
+            "--w-cost",
+            "0.02",
+            "--w-disr",
+            "0.0",
+            "--risk-level",
+            "increased",
+            "--stochastic-pt",
+            "--reward-mode",
+            "control_v1_pbrs",
+            "--pbrs-alpha",
+            "2.0",
+            "--pbrs-variant",
+            "cumulative",
+            "--output-dir",
+            str(tmp_path),
+        ],
+    )
+    kwargs = build_env_kwargs(args, {"w_bo": 1.0, "w_cost": 0.02, "w_disr": 0.0})
+    assert kwargs["reward_mode"] == "control_v1_pbrs"
+    assert kwargs["pbrs_alpha"] == 2.0
+    assert kwargs["pbrs_variant"] == "cumulative"
+    assert kwargs["pbrs_tau"] == 0.95
+    assert kwargs["pbrs_gamma"] == 0.99

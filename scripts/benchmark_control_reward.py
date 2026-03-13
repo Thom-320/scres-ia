@@ -413,6 +413,36 @@ def build_parser() -> argparse.ArgumentParser:
         default=1,
         help="Episodes per parameter combo during heuristic tuning.",
     )
+    parser.add_argument(
+        "--reward-mode",
+        choices=["control_v1", "control_v1_pbrs"],
+        default="control_v1",
+        help="Reward mode for training and evaluation.",
+    )
+    parser.add_argument(
+        "--pbrs-alpha",
+        type=float,
+        default=1.0,
+        help="PBRS scaling hyperparameter (alpha).",
+    )
+    parser.add_argument(
+        "--pbrs-tau",
+        type=float,
+        default=0.95,
+        help="PBRS fill-rate target (tau).",
+    )
+    parser.add_argument(
+        "--pbrs-gamma",
+        type=float,
+        default=0.99,
+        help="PBRS discount factor (must match SB3 gamma).",
+    )
+    parser.add_argument(
+        "--pbrs-variant",
+        choices=["cumulative", "step_level"],
+        default="cumulative",
+        help="PBRS potential variant. step_level requires --observation-version v2.",
+    )
     parser.add_argument("--learning-rate", type=float, default=3e-4)
     parser.add_argument("--n-steps", type=int, default=1024)
     parser.add_argument("--batch-size", type=int, default=64)
@@ -463,8 +493,8 @@ def build_env_kwargs(
     weight_combo: dict[str, float],
     risk_level_override: str | None = None,
 ) -> dict[str, Any]:
-    return {
-        "reward_mode": "control_v1",
+    kwargs: dict[str, Any] = {
+        "reward_mode": getattr(args, "reward_mode", "control_v1"),
         "observation_version": args.observation_version,
         "step_size_hours": args.step_size_hours,
         "risk_level": risk_level_override or args.risk_level,
@@ -473,6 +503,13 @@ def build_env_kwargs(
         "year_basis": args.year_basis,
         **weight_combo,
     }
+    reward_mode = kwargs["reward_mode"]
+    if reward_mode == "control_v1_pbrs":
+        kwargs["pbrs_alpha"] = getattr(args, "pbrs_alpha", 1.0)
+        kwargs["pbrs_tau"] = getattr(args, "pbrs_tau", 0.95)
+        kwargs["pbrs_gamma"] = getattr(args, "pbrs_gamma", 0.99)
+        kwargs["pbrs_variant"] = getattr(args, "pbrs_variant", "cumulative")
+    return kwargs
 
 
 def learned_policy_name(args: argparse.Namespace) -> str:
@@ -1501,7 +1538,7 @@ def run_benchmark(args: argparse.Namespace) -> dict[str, Any]:
             "algo": args.algo,
             "frame_stack": int(args.frame_stack),
             "observation_version": str(args.observation_version),
-            "reward_mode": "control_v1",
+            "reward_mode": getattr(args, "reward_mode", "control_v1"),
             "seeds": args.seeds,
             "train_timesteps": args.train_timesteps,
             "eval_episodes": args.eval_episodes,

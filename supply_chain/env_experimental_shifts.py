@@ -1,12 +1,17 @@
 """
 Gymnasium env with 5th action dimension (shift control) and multiple rewards.
 
-Supports three reward modes:
+Supports four reward modes:
   - "rt_v0": Legacy R_t v0 (aggregated recovery/holding/service loss).
   - "ReT_thesis": Approximation of Garrido (2017) Eq. 5.5 at step level,
     with linear shift cost δ×(S−1).
   - "control_v1": Operational control reward for RL benchmarking, while
     still exposing corrected ReT_thesis as a reporting-only metric.
+  - "control_v1_pbrs": control_v1 + Potential-Based Reward Shaping (Ng et al.
+    1999). Adds F(s,s') = γΦ(s') - Φ(s) to control_v1, preserving optimal
+    policy. Two variants:
+      * cumulative: Φ(s) = -α·max(0, τ - FR_cum(s)) / τ
+      * step_level: Φ(s) = -α·prev_step_backorder_qty_norm(s)  [requires v2]
 
 Action space: 5-dimensional [-1, 1]
   [0-3]: Inventory policy multipliers (op3_q, op9_q, op3_rop, op9_rop)
@@ -54,6 +59,8 @@ from supply_chain.supply_chain import MFSCSimulation
 
 NUM_TRACKED_OPS = 13
 OBSERVATION_VERSION_OPTIONS = ("v1", "v2")
+REWARD_MODE_OPTIONS = ("ReT_thesis", "rt_v0", "control_v1", "control_v1_pbrs")
+PBRS_VARIANT_OPTIONS = ("cumulative", "step_level")
 BASE_OBSERVATION_DIM = 15
 V2_OBSERVATION_DIM = 18
 PREV_STEP_DEMAND_SCALE = 18_200.0
@@ -69,7 +76,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
 
     Parameters
     ----------
-    reward_mode : {"ReT_thesis", "rt_v0", "control_v1"}
+    reward_mode : {"ReT_thesis", "rt_v0", "control_v1", "control_v1_pbrs"}
         Which reward formulation to use.
     rt_delta : float
         Linear shift cost weight. Reward -= δ × (S − 1).
@@ -115,6 +122,11 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         w_bo: float = 1.0,
         w_cost: float = 0.06,
         w_disr: float = 0.0,
+        # --- PBRS parameters (control_v1_pbrs only) ---
+        pbrs_alpha: float = 1.0,
+        pbrs_tau: float = 0.95,
+        pbrs_gamma: float = 0.99,
+        pbrs_variant: str = "cumulative",
     ) -> None:
         super().__init__()
         if step_size_hours <= 0:
@@ -123,15 +135,29 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             raise ValueError(f"Invalid year_basis={year_basis!r}.")
         if risk_level not in ("current", "increased", "severe"):
             raise ValueError(f"Invalid risk_level={risk_level!r}.")
-        if reward_mode not in ("ReT_thesis", "rt_v0", "control_v1"):
+        if reward_mode not in REWARD_MODE_OPTIONS:
             raise ValueError(
                 f"Invalid reward_mode={reward_mode!r}. "
-                "Expected 'ReT_thesis', 'rt_v0', or 'control_v1'."
+                f"Expected one of {REWARD_MODE_OPTIONS}."
             )
         if observation_version not in OBSERVATION_VERSION_OPTIONS:
             raise ValueError(
                 f"Invalid observation_version={observation_version!r}. "
                 "Expected one of ('v1', 'v2')."
+            )
+        if pbrs_variant not in PBRS_VARIANT_OPTIONS:
+            raise ValueError(
+                f"Invalid pbrs_variant={pbrs_variant!r}. "
+                f"Expected one of {PBRS_VARIANT_OPTIONS}."
+            )
+        if (
+            reward_mode == "control_v1_pbrs"
+            and pbrs_variant == "step_level"
+            and observation_version != "v2"
+        ):
+            raise ValueError(
+                "PBRS step_level variant requires observation_version='v2' "
+                "because it uses prev_step_backorder_qty_norm (obs[16])."
             )
 
         self.step_size = float(step_size_hours)
@@ -154,6 +180,12 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self.w_bo = float(w_bo)
         self.w_cost = float(w_cost)
         self.w_disr = float(w_disr)
+
+        self.pbrs_alpha = float(pbrs_alpha)
+        self.pbrs_tau = float(pbrs_tau)
+        self.pbrs_gamma = float(pbrs_gamma)
+        self.pbrs_variant = pbrs_variant
+        self._prev_phi: float = 0.0
 
         self.warmup_hours = float(WARMUP["estimated_deterministic_hrs"])
         if max_steps is None:
@@ -342,6 +374,27 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         }
 
     # -----------------------------------------------------------------
+    # PBRS potential function (Ng et al. 1999)
+    # -----------------------------------------------------------------
+
+    def _compute_phi_cumulative(self, obs: np.ndarray) -> float:
+        """Cumulative target-deficit potential: Φ = -α·max(0, τ - FR) / τ."""
+        fill_rate = float(np.clip(obs[6], 0.0, 1.0))
+        deficit = max(0.0, self.pbrs_tau - fill_rate) / self.pbrs_tau
+        return -self.pbrs_alpha * deficit
+
+    def _compute_phi_step_level(self, obs: np.ndarray) -> float:
+        """Step-level potential using v2 prev_step_backorder_qty_norm (obs[16])."""
+        backorder_norm = float(np.clip(obs[16], 0.0, 1.0))
+        return -self.pbrs_alpha * backorder_norm
+
+    def _compute_phi(self, obs: np.ndarray) -> float:
+        """Dispatch to the active PBRS variant."""
+        if self.pbrs_variant == "step_level":
+            return self._compute_phi_step_level(obs)
+        return self._compute_phi_cumulative(obs)
+
+    # -----------------------------------------------------------------
     # Gymnasium API
     # -----------------------------------------------------------------
 
@@ -368,6 +421,8 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         obs = self._compose_observation(
             np.array(self.sim.get_observation(), dtype=np.float32)
         )
+        if self.reward_mode == "control_v1_pbrs":
+            self._prev_phi = self._compute_phi(obs)
         info: dict[str, Any] = {
             "time": self.sim.env.now,
             "year_basis": self.year_basis,
@@ -488,24 +543,49 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         ret_components: dict[str, float | str] | None = None
         corrected_ret_components: dict[str, float | str] | None = None
         control_components: dict[str, float] | None = None
+        pbrs_shaping_bonus: float = 0.0
+        pbrs_base_reward: float = 0.0
+        pbrs_phi: float = 0.0
         if self.reward_mode == "ReT_thesis":
             ret_components = self._compute_ret_thesis_components(info, self.step_size)
             ReT = float(ret_components["ret_value"])
             shift_cost = self.rt_delta * (shifts - 1)
             reward = ReT - shift_cost
-        elif self.reward_mode == "control_v1":
+        elif self.reward_mode in ("control_v1", "control_v1_pbrs"):
             control_components = self._compute_control_v1_components(info, shifts)
             corrected_ret_components = self._compute_ret_thesis_corrected_components(
                 info, self.step_size
             )
-            reward = float(control_components["reward_total"])
+            pbrs_base_reward = float(control_components["reward_total"])
+            reward = pbrs_base_reward
+            if self.reward_mode == "control_v1_pbrs":
+                # Compose obs for phi AFTER updating prev-step trackers
+                # so v2 features reflect the current transition.
+                self._prev_step_new_demanded = float(info.get("new_demanded", 0.0))
+                self._prev_step_new_backorder_qty = float(
+                    info.get("new_backorder_qty", 0.0)
+                )
+                self._prev_step_disruption_hours = float(
+                    info.get("step_disruption_hours", 0.0)
+                )
+                phi_obs = self._compose_observation(np.array(obs, dtype=np.float32))
+                pbrs_phi = self._compute_phi(phi_obs)
+                pbrs_shaping_bonus = self.pbrs_gamma * pbrs_phi - self._prev_phi
+                reward = pbrs_base_reward + pbrs_shaping_bonus
+                self._prev_phi = pbrs_phi
         else:
             reward = self._compute_rt_v0(info, shifts)
 
         truncated = self.current_step >= self.max_steps
-        self._prev_step_new_demanded = float(info.get("new_demanded", 0.0))
-        self._prev_step_new_backorder_qty = float(info.get("new_backorder_qty", 0.0))
-        self._prev_step_disruption_hours = float(info.get("step_disruption_hours", 0.0))
+        if self.reward_mode != "control_v1_pbrs":
+            # PBRS already updated these above (needed for phi_obs composition)
+            self._prev_step_new_demanded = float(info.get("new_demanded", 0.0))
+            self._prev_step_new_backorder_qty = float(
+                info.get("new_backorder_qty", 0.0)
+            )
+            self._prev_step_disruption_hours = float(
+                info.get("step_disruption_hours", 0.0)
+            )
         out_obs = self._compose_observation(np.array(obs, dtype=np.float32))
         out_info: dict[str, Any] = {
             **info,
@@ -533,7 +613,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                 },
                 "thresholds_source": "configurable_repo_approximation",
             }
-        elif self.reward_mode == "control_v1":
+        elif self.reward_mode in ("control_v1", "control_v1_pbrs"):
             out_info["service_loss_step"] = float(
                 control_components["service_loss_step"]
             )
@@ -564,5 +644,16 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                 "thresholds_source": "configurable_repo_approximation",
                 "correction_mode": "autotomy_equals_recovery",
             }
+            if self.reward_mode == "control_v1_pbrs":
+                out_info["pbrs_phi"] = pbrs_phi
+                out_info["pbrs_shaping_bonus"] = pbrs_shaping_bonus
+                out_info["pbrs_base_reward"] = pbrs_base_reward
+                out_info["pbrs_variant"] = self.pbrs_variant
+                out_info["pbrs_params"] = {
+                    "alpha": self.pbrs_alpha,
+                    "tau": self.pbrs_tau,
+                    "gamma": self.pbrs_gamma,
+                    "variant": self.pbrs_variant,
+                }
 
         return out_obs, float(reward), bool(terminated), bool(truncated), out_info
