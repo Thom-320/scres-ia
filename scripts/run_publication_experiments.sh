@@ -14,6 +14,12 @@ TIMESTEPS=500000
 EVAL_EPISODES=10
 RISK_LEVEL="increased"
 COMMON_ARGS="--step-size-hours 168 --max-steps 260 --stochastic-pt"
+PHASE1_ARGS="--output-dir outputs/benchmarks/control_reward_tuning --artifact-label control_reward_tuning"
+PHASE2_ARGS="--output-dir outputs/benchmarks/control_reward --artifact-label control_reward"
+PHASE3_ARGS="--output-dir outputs/benchmarks/control_reward_sac_fs1 --artifact-label control_reward_sac_fs1"
+PHASE4_ARGS="--output-dir outputs/benchmarks/control_reward_ppo_fs4 --artifact-label control_reward_ppo_fs4"
+PHASE5_ARGS="--output-dir outputs/benchmarks/control_reward_recurrent_ppo_fs1 --artifact-label control_reward_recurrent_ppo_fs1"
+SMOKE_ARGS=""
 
 if [[ "${1:-}" == "--smoke" ]]; then
     echo "=== SMOKE TEST MODE ==="
@@ -21,6 +27,12 @@ if [[ "${1:-}" == "--smoke" ]]; then
     TIMESTEPS=256
     EVAL_EPISODES=2
     COMMON_ARGS="--step-size-hours 24 --max-steps 8 --stochastic-pt"
+    PHASE1_ARGS="--output-dir outputs/benchmarks/control_reward_tuning_smoke --artifact-label control_reward_tuning_smoke"
+    PHASE2_ARGS="--output-dir outputs/benchmarks/control_reward_stopt_smoke --artifact-label control_reward_stopt_smoke"
+    PHASE3_ARGS="--output-dir outputs/benchmarks/control_reward_sac_smoke --artifact-label control_reward_sac_smoke"
+    PHASE4_ARGS="--output-dir outputs/benchmarks/control_reward_ppo_fs4_smoke --artifact-label control_reward_ppo_fs4_smoke"
+    PHASE5_ARGS="--output-dir outputs/benchmarks/control_reward_recurrent_ppo_smoke --artifact-label control_reward_recurrent_ppo_smoke"
+    SMOKE_ARGS="--skip-artifact-export"
 fi
 
 echo "Seeds: $SEEDS"
@@ -40,6 +52,8 @@ python scripts/benchmark_control_reward.py \
     --w-cost 0.02 0.06 0.10 \
     --w-disr 0.0 \
     --algo ppo \
+    $PHASE1_ARGS \
+    $SMOKE_ARGS \
     $COMMON_ARGS
 
 # Phase 2: PPO 500k x 10 seeds, trained on increased, cross-eval on all
@@ -55,6 +69,8 @@ python scripts/benchmark_control_reward.py \
     --w-cost 0.02 0.06 0.10 \
     --w-disr 0.0 \
     --algo ppo \
+    $PHASE2_ARGS \
+    $SMOKE_ARGS \
     $COMMON_ARGS
 
 # Phase 3: SAC 500k x 10 seeds
@@ -70,6 +86,8 @@ python scripts/benchmark_control_reward.py \
     --w-cost 0.02 0.06 0.10 \
     --w-disr 0.0 \
     --algo sac \
+    $PHASE3_ARGS \
+    $SMOKE_ARGS \
     $COMMON_ARGS
 
 # Phase 4: PPO + frame-stacking (fs=4, obs v2)
@@ -87,6 +105,8 @@ python scripts/benchmark_control_reward.py \
     --algo ppo \
     --frame-stack 4 \
     --observation-version v2 \
+    $PHASE4_ARGS \
+    $SMOKE_ARGS \
     $COMMON_ARGS
 
 # Phase 5: RecurrentPPO (optional — uncomment if frame-stack shows improvement)
@@ -103,6 +123,8 @@ python scripts/benchmark_control_reward.py \
 #     --w-disr 0.0 \
 #     --algo recurrent_ppo \
 #     --observation-version v2 \
+#     $PHASE5_ARGS \
+#     $SMOKE_ARGS \
 #     $COMMON_ARGS
 
 echo ""
