@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
-from typing import Any
+from typing import Any, Callable, Protocol
 
 import numpy as np
 
@@ -274,9 +274,6 @@ def make_shift_control_env(**overrides: Any) -> MFSCGymEnvShifts:
 # ---------------------------------------------------------------------------
 # Generic episode runner for any callable policy
 # ---------------------------------------------------------------------------
-
-from typing import Callable, Protocol
-
 
 class PolicyCallable(Protocol):
     """Any callable that maps (obs, info) -> action array."""
