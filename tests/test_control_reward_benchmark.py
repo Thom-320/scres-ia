@@ -7,6 +7,7 @@ import pytest
 
 from supply_chain.external_env_interface import make_shift_control_env
 import numpy as np
+import scripts.benchmark_control_reward as control_reward_benchmark
 
 from scripts.benchmark_control_reward import (
     HEURISTIC_DEFAULTS,
@@ -18,7 +19,9 @@ from scripts.benchmark_control_reward import (
     build_env_kwargs,
     build_comparison_rows,
     build_parser,
+    evaluate_policy,
     export_artifact_bundle,
+    learned_policy_name,
     pick_survivors,
     resolve_output_dir,
     run_benchmark,
@@ -651,7 +654,39 @@ def test_run_benchmark_with_tune_heuristic(tmp_path: Path) -> None:
     assert "tau_high" in summary["heuristic_tuning"]["best_params"]
 
 
-def test_cross_scenario_evaluation(tmp_path: Path) -> None:
+def test_cross_scenario_evaluation(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    class DummyModel:
+        def predict(
+            self, obs: np.ndarray, deterministic: bool = True
+        ) -> tuple[np.ndarray, None]:
+            return np.zeros(5, dtype=np.float32), None
+
+    class DummyVecEnv:
+        def close(self) -> None:
+            return None
+
+    monkeypatch.setattr(
+        control_reward_benchmark,
+        "pick_survivors",
+        lambda policy_rows, args: [
+            {
+                "w_bo": 4.0,
+                "w_cost": 0.02,
+                "w_disr": 0.0,
+                "best_static_policy": "static_s2",
+                "static_reward_gap_best_minus_s1": 1.0,
+                "static_fill_rate_gap_best_minus_s1": 0.1,
+            }
+        ],
+    )
+    monkeypatch.setattr(
+        control_reward_benchmark,
+        "train_model",
+        lambda args, seed, weight_combo: (DummyModel(), DummyVecEnv()),
+    )
+
     parser = build_parser()
     args = parser.parse_args(
         [
@@ -666,7 +701,7 @@ def test_cross_scenario_evaluation(tmp_path: Path) -> None:
             "--max-steps",
             "4",
             "--w-bo",
-            "1.0",
+            "4.0",
             "--w-cost",
             "0.02",
             "--w-disr",
@@ -692,11 +727,68 @@ def test_cross_scenario_evaluation(tmp_path: Path) -> None:
 
     with open(tmp_path / "episode_metrics.csv", newline="") as f:
         reader = csv.DictReader(f)
-        phases = {r["phase"] for r in reader}
+        rows = list(reader)
+        phases = {r["phase"] for r in rows}
     assert "cross_eval_current" in phases
     assert "cross_eval_severe" in phases
     # The training risk level should NOT appear as a cross_eval phase
     assert "cross_eval_increased" not in phases
+    learned = learned_policy_name(args)
+    cross_eval_policies = {
+        (r["phase"], r["policy"])
+        for r in rows
+        if r["phase"] in {"cross_eval_current", "cross_eval_severe"}
+    }
+    assert ("cross_eval_current", learned) in cross_eval_policies
+    assert ("cross_eval_severe", learned) in cross_eval_policies
+
+
+def test_evaluate_policy_accepts_custom_policy_adapter() -> None:
+    args = build_parser().parse_args(
+        [
+            "--seeds",
+            "1",
+            "--eval-episodes",
+            "1",
+            "--step-size-hours",
+            "24",
+            "--max-steps",
+            "4",
+            "--w-bo",
+            "1.0",
+            "--w-cost",
+            "0.02",
+            "--w-disr",
+            "0.0",
+            "--algo",
+            "ppo",
+            "--observation-version",
+            "v2",
+        ],
+    )
+
+    class CustomPolicy:
+        def reset(self) -> None:
+            self.calls = 0
+
+        def predict(self, obs: np.ndarray, deterministic: bool = True) -> np.ndarray:
+            self.calls += 1
+            return np.zeros(5, dtype=np.float32)
+
+    adapter = CustomPolicy()
+    rows = evaluate_policy(
+        "custom_eval",
+        "custom_policy",
+        args=args,
+        weight_combo={"w_bo": 1.0, "w_cost": 0.02, "w_disr": 0.0},
+        seed=1,
+        policy_adapter=adapter,
+    )
+
+    assert len(rows) == 1
+    assert rows[0]["policy"] == "custom_policy"
+    assert rows[0]["algo"] == "ppo"
+    assert adapter.calls > 0
 
 
 # ---------------------------------------------------------------------------

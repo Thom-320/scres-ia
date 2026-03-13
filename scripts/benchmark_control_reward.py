@@ -9,7 +9,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import sys
-from typing import Any
+from typing import Any, Protocol
 
 from gymnasium.wrappers import FrameStackObservation
 import numpy as np
@@ -40,6 +40,14 @@ FIXED_POLICY_ACTIONS: dict[str, np.ndarray] = {
 # ---------------------------------------------------------------------------
 
 SHIFT_SIGNAL = {1: -1.0, 2: 0.0, 3: 1.0}
+
+
+class PolicyAdapter(Protocol):
+    """Minimal prediction interface for custom benchmark policies."""
+
+    def reset(self) -> None: ...
+
+    def predict(self, obs: np.ndarray, *args: Any, **kwargs: Any) -> Any: ...
 
 
 def _latest_frame(obs: np.ndarray) -> np.ndarray:
@@ -735,6 +743,7 @@ def evaluate_policy(
     weight_combo: dict[str, float],
     seed: int,
     model: Any = None,
+    policy_adapter: PolicyAdapter | Any | None = None,
     risk_level_override: str | None = None,
 ) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
@@ -768,9 +777,37 @@ def evaluate_policy(
         heuristic = HEURISTIC_DEFAULTS.get(policy)
         if heuristic is not None:
             heuristic.reset()
+        if policy_adapter is not None and hasattr(policy_adapter, "reset"):
+            policy_adapter.reset()
 
         while not (terminated or truncated):
-            if policy == learned_policy_name(args):
+            if policy_adapter is not None:
+                if hasattr(policy_adapter, "predict"):
+                    try:
+                        prediction = policy_adapter.predict(
+                            obs,
+                            state=lstm_states,
+                            episode_start=episode_start,
+                            deterministic=True,
+                        )
+                    except TypeError:
+                        try:
+                            prediction = policy_adapter.predict(obs, deterministic=True)
+                        except TypeError:
+                            prediction = policy_adapter.predict(obs)
+                else:
+                    try:
+                        prediction = policy_adapter(obs, prev_info)
+                    except TypeError:
+                        prediction = policy_adapter(obs)
+                if isinstance(prediction, tuple):
+                    action = prediction[0]
+                    if len(prediction) > 1:
+                        lstm_states = prediction[1]
+                else:
+                    action = prediction
+                action = np.asarray(action, dtype=np.float32)
+            elif policy == learned_policy_name(args):
                 if model is None:
                     raise ValueError(
                         "Learned-policy evaluation requires a trained model."
@@ -1412,6 +1449,7 @@ def run_benchmark(args: argparse.Namespace) -> dict[str, Any]:
     weight_combos = make_weight_combos(args)
     episode_rows: list[dict[str, Any]] = []
     trained_models: list[dict[str, Any]] = []
+    trained_policy_evaluators: list[dict[str, Any]] = []
 
     for weight_combo in weight_combos:
         for seed in args.seeds:
@@ -1478,6 +1516,13 @@ def run_benchmark(args: argparse.Namespace) -> dict[str, Any]:
                     model=model,
                 )
             )
+            trained_policy_evaluators.append(
+                {
+                    "seed": seed,
+                    "weight_combo": weight_combo,
+                    "model": model,
+                }
+            )
             vec_env.close()
 
     # Cross-scenario evaluation: re-evaluate all policies on additional risk levels.
@@ -1519,6 +1564,18 @@ def run_benchmark(args: argparse.Namespace) -> dict[str, Any]:
                             risk_level_override=eval_rl,
                         )
                     )
+            for trained_policy in trained_policy_evaluators:
+                episode_rows.extend(
+                    evaluate_policy(
+                        cross_phase,
+                        learned_policy_name(args),
+                        args=args,
+                        weight_combo=trained_policy["weight_combo"],
+                        seed=int(trained_policy["seed"]),
+                        model=trained_policy["model"],
+                        risk_level_override=eval_rl,
+                    )
+                )
 
     seed_rows = aggregate_seed_metrics(episode_rows)
     policy_rows = aggregate_policy_metrics(seed_rows)
