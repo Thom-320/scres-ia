@@ -139,6 +139,34 @@ np.save("observations.npy", np.array(obs_list))   # shape (T, 15)
 np.save("rewards.npy", np.array(reward_list))      # shape (T,)
 ```
 
+### Option D: Build DKANA-ready causal windows inside this repo
+
+The repo now includes a starter implementation of the DKANA input pipeline:
+
+```bash
+python scripts/export_trajectories_for_david.py --episodes 100 --output-dir outputs/data_export
+python scripts/build_dkana_dataset.py --input-dir outputs/data_export --window-size 12
+```
+
+This writes:
+
+- `dkana_row_matrices.npy` with shape `(N, window, rows, 3)`
+- `dkana_config_context.npy` with shape `(N, window, config_dim)`
+- `dkana_action_targets.npy` with shape `(N, 5)`
+- `dkana_time_mask.npy` with shape `(N, window)`
+
+The PyTorch starter policy lives in `supply_chain/dkana.py` as `DKANAPolicy`.
+It implements:
+
+- row-wise MLP projection for each symbolic triplet
+- a local causal self-attention block inside each state matrix
+- a global causal self-attention block across state history
+- a distributional decoder that returns Gaussian action parameters
+
+This is a starter integration layer, not yet a publishable benchmark by itself.
+To compare against PPO fairly, train and evaluate DKANA with the same seeds,
+reward mode, risk level, and metrics used by the benchmark scripts.
+
 ---
 
 ## Machine-Readable Spec
