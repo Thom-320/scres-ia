@@ -3,19 +3,33 @@
 ## Quick Start
 
 ```python
-from supply_chain.external_env_interface import make_shift_control_env
+from supply_chain.external_env_interface import make_shift_control_env, run_episodes
+import numpy as np
 
-env = make_shift_control_env()
+# Option 1: Standard Gymnasium loop
+env = make_shift_control_env(reward_mode="control_v1", risk_level="increased",
+                              w_bo=4.0, w_cost=0.02, w_disr=0.0)
 obs, info = env.reset(seed=42)
-
-# obs is a numpy array of shape (15,)
-# action must be a numpy array of shape (5,), each value in [-1, 1]
 action = env.action_space.sample()
 obs, reward, done, truncated, info = env.step(action)
+
+# Option 2: Run any custom policy with one call (recommended for DKANA)
+def my_policy(obs, info):
+    return np.zeros(5, dtype=np.float32)  # replace with your model
+
+results = run_episodes(
+    my_policy,
+    n_episodes=10,
+    seed=42,
+    env_kwargs={"reward_mode": "control_v1", "risk_level": "increased",
+                "w_bo": 4.0, "w_cost": 0.02, "w_disr": 0.0},
+    policy_name="dkana_v1",
+)
+# results[0]["reward_total"], results[0]["fill_rate"], etc.
 ```
 
-This is a standard Gymnasium environment. Any RL algorithm that works with
-continuous observation and action spaces can plug in directly.
+This is a standard Gymnasium environment. `run_episodes()` accepts any callable
+`(obs, info) -> action` and returns per-episode metrics matching the benchmark format.
 
 ---
 
@@ -61,22 +75,17 @@ S=1 = 8h/day (~2,564 rations/day), S=2 = 16h/day (~5,128), S=3 = 24h/day (~7,692
 
 ## Reward
 
-Default mode is `ReT_thesis` — approximation of Garrido (2017) Eq. 5.5:
+**Primary reward**: `control_v1` (used for benchmarking and publication):
 
 ```
-Reward = ReT_step - delta * (shifts - 1)
+reward = -(w_bo * service_loss + w_cost * shift_cost + w_disr * disruption_fraction)
 ```
 
-Where `ReT_step` is in [0, 1] based on four thesis resilience cases:
-- **fill_rate_only**: No disruption active → ReT = fill_rate
-- **autotomy**: Disruption active but fill rate >= 0.95 → ReT = 1 - disruption_frac
-- **recovery**: Disruption active, fill rate < 0.95 → ReT = 1/(1 + disruption_frac)
-- **non_recovery**: High disruption + low fill rate → ReT = 0
+Default weights: `w_bo=4.0, w_cost=0.02, w_disr=0.0`. Components available in `info` after each step.
 
-The `delta * (shifts - 1)` term penalizes higher shift counts to prevent
-trivial S=3 solutions. Default delta = 0.06 (DOE-calibrated).
+**Legacy reward**: `ReT_thesis` (retained as a reporting-only metric, not used for training).
 
-Reward components are available in `info["ret_components"]` after each step.
+Reward components are available in `info` after each step (`service_loss_step`, `shift_cost_step`, `disruption_fraction_step`, `ret_thesis_corrected_step`).
 
 ---
 
@@ -91,55 +100,50 @@ Reward components are available in `info["ret_components"]` after each step.
 
 ## For DKANA Integration
 
-David's architecture expects `(batch, sequence, features)`. Two approaches:
+David's architecture expects `(batch, sequence, features)`. Three approaches:
 
-### Option A: Single-step (standard RL)
-Use the env directly. Each `step()` returns one obs of shape `(15,)`.
-Wrap with frame stacking if you want a history window:
+### Option A: Use `run_episodes()` with your trained DKANA model
 
-```python
-from gymnasium.wrappers import FrameStack
-env = FrameStack(make_shift_control_env(), num_stack=10)
-# obs shape becomes (10, 15)
-```
-
-### Option B: Collect trajectories, train offline
-Run episodes, collect `(obs, action, reward)` tuples, then train DKANA
-on batches of trajectories:
+The simplest path for evaluation. Wrap your DKANA model in a callable:
 
 ```python
-env = make_shift_control_env()
-trajectories = []
-for seed in range(100):
-    obs, _ = env.reset(seed=seed)
-    episode = []
-    done, truncated = False, False
-    while not (done or truncated):
-        action = env.action_space.sample()  # or your policy
-        next_obs, reward, done, truncated, info = env.step(action)
-        episode.append((obs, action, reward, info))
-        obs = next_obs
-    trajectories.append(episode)
+from supply_chain.external_env_interface import run_episodes
+
+class DKANAWrapper:
+    def __init__(self, model):
+        self.model = model
+
+    def __call__(self, obs, info):
+        # Your inference logic here
+        dist = self.model.predict(obs)
+        return dist.mean.detach().numpy()
+
+results = run_episodes(
+    DKANAWrapper(trained_model),
+    n_episodes=10,
+    seed=42,
+    env_kwargs={
+        "reward_mode": "control_v1",
+        "risk_level": "increased",
+        "w_bo": 4.0, "w_cost": 0.02, "w_disr": 0.0,
+        "step_size_hours": 168, "max_steps": 260,
+        "stochastic_pt": True,
+    },
+    policy_name="dkana_v1",
+    collect_trajectories=True,  # optional: captures per-step data
+)
 ```
 
-### Option C: Export to numpy for offline use
-```python
-import numpy as np
-env = make_shift_control_env()
-obs_list, reward_list = [], []
-obs, _ = env.reset(seed=42)
-done, truncated = False, False
-while not (done or truncated):
-    action = env.action_space.sample()
-    obs, reward, done, truncated, info = env.step(action)
-    obs_list.append(obs)
-    reward_list.append(reward)
+### Option B: Export to numpy for offline training
 
-np.save("observations.npy", np.array(obs_list))   # shape (T, 15)
-np.save("rewards.npy", np.array(reward_list))      # shape (T,)
+```bash
+python scripts/export_trajectories_for_david.py \
+    --episodes 100 --risk-level increased \
+    --reward-mode control_v1 --observation-version v2 \
+    --output-dir outputs/data_export
 ```
 
-### Option D: Build DKANA-ready causal windows inside this repo
+### Option C: Build DKANA-ready causal windows inside this repo
 
 The repo now includes a starter implementation of the DKANA input pipeline:
 
@@ -181,12 +185,33 @@ print(json.dumps(spec_to_dict(spec), indent=2))
 
 ---
 
+## State Constraint Context (22-dim, for external models)
+
+The `state_constraint_context` provides per-step operational state signals beyond
+the 15/18-dim observation. These flow automatically through the export pipeline
+into `state_constraint_context.npy` and DKANA `row_matrices`.
+
+| Index | Field | Description |
+|-------|-------|-------------|
+| 0-6 | inventory levels | Raw material and rations at each location |
+| 7 | total_inventory | Sum of all inventory |
+| 8-10 | dispatch capacities | Op3/Op9 dispatch limits |
+| 11-14 | availability flags | Assembly/location/op availability |
+| 15-19 | operational rates | fill_rate, backorder_rate, time/batch/demand fractions |
+| **20** | **cumulative_backorder_qty** | Total backorder quantity accumulated in episode |
+| **21** | **cumulative_disruption_hours** | Total op-hours of disruption accumulated in episode |
+
+Fields 20-21 are cumulative (non-stationary, grow monotonically). They provide
+episode-level memory that the 15-dim observation does not capture.
+
+---
+
 ## Comparison Benchmark
 
-PPO baseline results will be in:
+PPO baseline results are in:
 ```
-outputs/benchmarks/ppo_shift_control_ret_thesis/benchmark_summary.json
+outputs/benchmarks/control_reward/
 ```
 
-David's model should report the same metrics (mean reward, std, CI95, per-seed)
-for a fair comparison.
+Use `run_episodes()` with the same `env_kwargs` to get directly comparable metrics.
+David's model should report: `reward_total`, `fill_rate`, `pct_steps_S1/S2/S3` per seed.
