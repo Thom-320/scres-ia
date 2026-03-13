@@ -30,6 +30,7 @@ from supply_chain.config import (
     RISKS_CURRENT,
     RISKS_INCREASED,
     RISKS_SEVERE,
+    RISKS_SEVERE_EXTENDED,
     DEFAULT_YEAR_BASIS,
     HOURS_PER_YEAR_GREGORIAN,
     HOURS_PER_YEAR_THESIS,
@@ -630,6 +631,7 @@ class MFSCSimulation:
     _RISK_TABLES = {
         "increased": RISKS_INCREASED,
         "severe": RISKS_SEVERE,
+        "severe_extended": RISKS_SEVERE_EXTENDED,
     }
 
     def _get_risk_b(self, risk_id: str) -> float:
@@ -644,10 +646,26 @@ class MFSCSimulation:
             return table[risk_id].get("p", RISKS_CURRENT[risk_id]["occurrence"]["p"])
         return RISKS_CURRENT[risk_id]["occurrence"]["p"]
 
+    def _get_risk_recovery_mean(self, risk_id: str) -> float:
+        table = self._RISK_TABLES.get(self.risk_level)
+        if table and risk_id in table:
+            return table[risk_id].get(
+                "recovery_mean", RISKS_CURRENT[risk_id]["recovery"]["mean"]
+            )
+        return RISKS_CURRENT[risk_id]["recovery"]["mean"]
+
+    def _get_risk_surge(self) -> tuple[int, int]:
+        table = self._RISK_TABLES.get(self.risk_level)
+        base_lo = RISKS_CURRENT["R24"]["surge"]["lo"]
+        base_hi = RISKS_CURRENT["R24"]["surge"]["hi"]
+        if table and "R24" in table:
+            return table["R24"].get("surge_lo", base_lo), table["R24"].get("surge_hi", base_hi)
+        return base_lo, base_hi
+
     def _risk_R11(self):
         a = RISKS_CURRENT["R11"]["occurrence"]["a"]
         b_val = self._get_risk_b("R11")
-        beta = RISKS_CURRENT["R11"]["recovery"]["mean"]
+        beta = self._get_risk_recovery_mean("R11")
         while True:
             yield self.env.timeout(self.rng.integers(a, b_val + 1))
             start = self.env.now
@@ -776,7 +794,8 @@ class MFSCSimulation:
         b_val = self._get_risk_b("R24")
         while True:
             yield self.env.timeout(self.rng.integers(a, b_val + 1))
-            surge = self.rng.integers(2400, 2601)
+            surge_lo, surge_hi = self._get_risk_surge()
+            surge = self.rng.integers(surge_lo, surge_hi + 1)
             self._contingent_demand_pending += surge
             self.risk_events.append(
                 RiskEvent("R24", self.env.now, self.env.now, 0, [13], f"+{surge}")

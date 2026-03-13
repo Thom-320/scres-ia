@@ -3,6 +3,7 @@ from __future__ import annotations
 import pytest
 
 from supply_chain.external_env_interface import (
+    get_observation_fields,
     get_shift_control_constraint_context,
     get_shift_control_env_spec,
     make_shift_control_env,
@@ -87,6 +88,37 @@ def test_external_interface_matches_shift_env_contract() -> None:
 
     payload = spec_to_dict(spec)
     assert payload["shift_mapping"]["signal_ge_0.33"] == 3
+
+
+def test_v2_observation_contract_exposes_augmented_state() -> None:
+    spec = get_shift_control_env_spec(
+        reward_mode="control_v1", observation_version="v2"
+    )
+    env = make_shift_control_env(
+        max_steps=2,
+        reward_mode="control_v1",
+        observation_version="v2",
+        step_size_hours=24,
+    )
+    obs, info = env.reset(seed=7)
+
+    assert spec.observation_version == "v2"
+    assert tuple(spec.observation_fields) == get_observation_fields("v2")
+    assert len(spec.observation_fields) == 18
+    assert obs.shape == (18,)
+    assert info["observation_version"] == "v2"
+    assert obs[-3:].tolist() == pytest.approx([0.0, 0.0, 0.0])
+
+    next_obs, _, _, _, step_info = env.step([0.0, 0.0, 0.0, 0.0, 0.0])
+    assert step_info["observation_version"] == "v2"
+    assert next_obs.shape == (18,)
+    assert next_obs[-3] == pytest.approx(float(step_info["new_demanded"]) / 18_200.0)
+    assert next_obs[-2] == pytest.approx(
+        float(step_info["new_backorder_qty"]) / 18_200.0
+    )
+    assert next_obs[-1] == pytest.approx(
+        float(step_info["step_disruption_hours"]) / 312.0
+    )
 
 
 def test_reset_info_exposes_action_constraints() -> None:

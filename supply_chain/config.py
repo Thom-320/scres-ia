@@ -297,8 +297,9 @@ RISKS_CURRENT = {
         "name": "Contingent demand surge",
         "category": 2,
         "occurrence": {"dist": "uniform", "a": 1, "b": 672},  # hours between events
-        # Surge size: uniform distribution of additional rations (thesis doesn't
-        # specify exact bounds for the surge size; to be confirmed with Garrido)
+        # Surge size ~1 day of regular demand (2400–2600 rac). Garrido doesn't specify
+        # exact bounds; chosen to match daily demand scale for the baseline scenario.
+        "surge": {"lo": 2400, "hi": 2600},
         "affected_ops": [13],
     },
     # --- Category 3: Black-swan events (R3) ---
@@ -327,6 +328,7 @@ RISKS_INCREASED = {
 # Severe risk levels ('++') — extrapolated from increased for DOE stress testing.
 # Halves the inter-arrival window of each uniform risk (doubles frequency).
 # Binomial risks: probability doubled from increased level.
+# FROZEN: these values produced the audited 500k×5-seed benchmarks.
 RISKS_SEVERE = {
     "R11": {"dist": "uniform", "a": 1, "b": 21},
     "R12": {"dist": "binomial", "n": 12, "p": 8 / 11},
@@ -336,6 +338,23 @@ RISKS_SEVERE = {
     "R22": {"dist": "uniform", "a": 1, "b": 672},
     "R23": {"dist": "uniform", "a": 1, "b": 672},
     "R24": {"dist": "uniform", "a": 1, "b": 168},
+    "R3": {"dist": "uniform", "a": 1, "b": 40_320},
+}
+
+# Severe-extended ('+++') — phase-2 experimental profile.
+# Same frequencies as severe, but with scaled disruption magnitudes:
+#   R11: recovery 2h → 5h (degraded repair logistics under sustained stress)
+#   R24: surge size 1 day → 2–3 days demand per event (campaign-level demand pressure)
+# Use risk_level="severe_extended" to activate. Does NOT replace audited severe results.
+RISKS_SEVERE_EXTENDED = {
+    "R11": {"dist": "uniform", "a": 1, "b": 21, "recovery_mean": 5},
+    "R12": {"dist": "binomial", "n": 12, "p": 8 / 11},
+    "R13": {"dist": "binomial", "n": 12, "p": 8 / 10},
+    "R14": {"dist": "binomial", "n": 2564, "p": 12 / 100},
+    "R21": {"dist": "uniform", "a": 1, "b": 2_016},
+    "R22": {"dist": "uniform", "a": 1, "b": 672},
+    "R23": {"dist": "uniform", "a": 1, "b": 672},
+    "R24": {"dist": "uniform", "a": 1, "b": 168, "surge_lo": 4800, "surge_hi": 7200},
     "R3": {"dist": "uniform", "a": 1, "b": 40_320},
 }
 

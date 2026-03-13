@@ -53,6 +53,11 @@ from supply_chain.config import (
 from supply_chain.supply_chain import MFSCSimulation
 
 NUM_TRACKED_OPS = 13
+OBSERVATION_VERSION_OPTIONS = ("v1", "v2")
+BASE_OBSERVATION_DIM = 15
+V2_OBSERVATION_DIM = 18
+PREV_STEP_DEMAND_SCALE = 18_200.0
+PREV_STEP_BACKORDER_SCALE = 18_200.0
 
 
 class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
@@ -90,6 +95,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         risk_level: str = "current",
         stochastic_pt: bool = False,
         reward_mode: str = "ReT_thesis",
+        observation_version: str = "v1",
         # --- ReT_thesis parameters ---
         rt_delta: float = RET_SHIFT_COST_DELTA_DEFAULT,
         autotomy_threshold: float = RET_CASE_THRESHOLDS["autotomy_fill_rate_threshold"],
@@ -122,12 +128,18 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                 f"Invalid reward_mode={reward_mode!r}. "
                 "Expected 'ReT_thesis', 'rt_v0', or 'control_v1'."
             )
+        if observation_version not in OBSERVATION_VERSION_OPTIONS:
+            raise ValueError(
+                f"Invalid observation_version={observation_version!r}. "
+                "Expected one of ('v1', 'v2')."
+            )
 
         self.step_size = float(step_size_hours)
         self.year_basis = year_basis
         self.risk_level = risk_level
         self.stochastic_pt = stochastic_pt
         self.reward_mode = reward_mode
+        self.observation_version = observation_version
 
         self.rt_delta = float(rt_delta)
         self.autotomy_threshold = float(autotomy_threshold)
@@ -153,11 +165,39 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
 
         self.current_step = 0
         self.sim: Optional[MFSCSimulation] = None
+        self._prev_step_new_demanded = 0.0
+        self._prev_step_new_backorder_qty = 0.0
+        self._prev_step_disruption_hours = 0.0
 
+        obs_dim = self._observation_dim()
         self.observation_space = spaces.Box(
-            low=0.0, high=np.inf, shape=(15,), dtype=np.float32
+            low=0.0, high=np.inf, shape=(obs_dim,), dtype=np.float32
         )
         self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(5,), dtype=np.float32)
+
+    def _observation_dim(self) -> int:
+        if self.observation_version == "v2":
+            return V2_OBSERVATION_DIM
+        return BASE_OBSERVATION_DIM
+
+    def _compose_observation(self, base_obs: np.ndarray) -> np.ndarray:
+        if self.observation_version == "v1":
+            return np.array(base_obs, dtype=np.float32)
+        augmented_obs = np.concatenate(
+            [
+                np.asarray(base_obs, dtype=np.float32),
+                np.array(
+                    [
+                        self._prev_step_new_demanded / PREV_STEP_DEMAND_SCALE,
+                        self._prev_step_new_backorder_qty / PREV_STEP_BACKORDER_SCALE,
+                        self._prev_step_disruption_hours
+                        / max(1.0, self.step_size * NUM_TRACKED_OPS),
+                    ],
+                    dtype=np.float32,
+                ),
+            ]
+        )
+        return augmented_obs
 
     # -----------------------------------------------------------------
     # ReT approximation (Garrido 2017, Eq. 5.5)
@@ -311,6 +351,9 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         del options
         super().reset(seed=seed)
         self.current_step = 0
+        self._prev_step_new_demanded = 0.0
+        self._prev_step_new_backorder_qty = 0.0
+        self._prev_step_disruption_hours = 0.0
         self.sim = MFSCSimulation(
             shifts=1,
             risks_enabled=True,
@@ -322,10 +365,13 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         )
         self.sim._start_processes()
         self.sim.env.run(until=self.warmup_hours)
-        obs = np.array(self.sim.get_observation(), dtype=np.float32)
+        obs = self._compose_observation(
+            np.array(self.sim.get_observation(), dtype=np.float32)
+        )
         info: dict[str, Any] = {
             "time": self.sim.env.now,
             "year_basis": self.year_basis,
+            "observation_version": self.observation_version,
             "action_constraints": {
                 "action_bounds": [(-1.0, 1.0)] * 5,
                 "inventory_multiplier_range": {
@@ -457,12 +503,16 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             reward = self._compute_rt_v0(info, shifts)
 
         truncated = self.current_step >= self.max_steps
-        out_obs = np.array(obs, dtype=np.float32)
+        self._prev_step_new_demanded = float(info.get("new_demanded", 0.0))
+        self._prev_step_new_backorder_qty = float(info.get("new_backorder_qty", 0.0))
+        self._prev_step_disruption_hours = float(info.get("step_disruption_hours", 0.0))
+        out_obs = self._compose_observation(np.array(obs, dtype=np.float32))
         out_info: dict[str, Any] = {
             **info,
             "raw_action": action_arr.tolist(),
             "clipped_action": clipped.tolist(),
             "reward_mode": self.reward_mode,
+            "observation_version": self.observation_version,
             "shifts_active": shifts,
             "shift_cost_linear": self.rt_delta * (shifts - 1),
             "shift_cost_delta": self.rt_delta,
