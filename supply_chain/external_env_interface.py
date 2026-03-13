@@ -30,6 +30,10 @@ OBSERVATION_FIELDS_V2: tuple[str, ...] = OBSERVATION_FIELDS_V1 + (
     "prev_step_backorder_qty_norm",
     "prev_step_disruption_hours_norm",
 )
+OBSERVATION_FIELDS_V3: tuple[str, ...] = OBSERVATION_FIELDS_V2 + (
+    "cum_backorder_rate",
+    "cum_downhours_fraction",
+)
 OBSERVATION_FIELDS: tuple[str, ...] = OBSERVATION_FIELDS_V1
 
 ACTION_FIELDS: tuple[str, ...] = (
@@ -47,6 +51,21 @@ ACTION_BOUNDS: tuple[tuple[float, float], ...] = (
     (-1.0, 1.0),
     (-1.0, 1.0),
 )
+INVENTORY_NODE_FIELDS: tuple[str, ...] = (
+    "raw_material_wdc",
+    "raw_material_al",
+    "rations_al",
+    "rations_sb",
+    "rations_sb_dispatch",
+    "rations_cssu",
+    "rations_theatre",
+)
+DKANA_BACKORDER_VECTOR_FIELDS: tuple[str, ...] = tuple(
+    f"cum_backorder_rate_{field_name}" for field_name in INVENTORY_NODE_FIELDS
+)
+DKANA_DISRUPTION_VECTOR_FIELDS: tuple[str, ...] = tuple(
+    f"cum_disruption_fraction_op{op_id}" for op_id in range(1, 14)
+)
 CONTROL_CONTEXT_FIELDS: tuple[str, ...] = (
     "op3_q",
     "op3_rop",
@@ -59,28 +78,32 @@ CONTROL_CONTEXT_FIELDS: tuple[str, ...] = (
     "shift_signal_threshold_high",
 )
 STATE_CONSTRAINT_FIELDS: tuple[str, ...] = (
-    "raw_material_wdc",
-    "raw_material_al",
-    "rations_al",
-    "rations_sb",
-    "rations_sb_dispatch",
-    "rations_cssu",
-    "rations_theatre",
-    "total_inventory",
-    "op3_total_dispatch_cap",
-    "op3_per_material_dispatch_cap",
-    "op9_dispatch_cap",
-    "assembly_line_available",
-    "any_location_available",
-    "op9_available",
-    "op11_available",
-    "fill_rate",
-    "backorder_rate",
-    "time_fraction",
-    "pending_batch_fraction",
-    "contingent_demand_fraction",
-    "cumulative_backorder_qty",
-    "cumulative_disruption_hours",
+    (
+        "raw_material_wdc",
+        "raw_material_al",
+        "rations_al",
+        "rations_sb",
+        "rations_sb_dispatch",
+        "rations_cssu",
+        "rations_theatre",
+        "total_inventory",
+        "op3_total_dispatch_cap",
+        "op3_per_material_dispatch_cap",
+        "op9_dispatch_cap",
+        "assembly_line_available",
+        "any_location_available",
+        "op9_available",
+        "op11_available",
+        "fill_rate",
+        "backorder_rate",
+        "time_fraction",
+        "pending_batch_fraction",
+        "contingent_demand_fraction",
+        "cumulative_backorder_qty",
+        "cumulative_disruption_hours",
+    )
+    + DKANA_BACKORDER_VECTOR_FIELDS
+    + DKANA_DISRUPTION_VECTOR_FIELDS
 )
 REWARD_TERM_FIELDS: tuple[str, ...] = (
     "reward_total",
@@ -113,8 +136,10 @@ def get_observation_fields(observation_version: str = "v1") -> tuple[str, ...]:
         return OBSERVATION_FIELDS_V1
     if observation_version == "v2":
         return OBSERVATION_FIELDS_V2
+    if observation_version == "v3":
+        return OBSERVATION_FIELDS_V3
     raise ValueError(
-        f"Invalid observation_version={observation_version!r}. Expected 'v1' or 'v2'."
+        f"Invalid observation_version={observation_version!r}. Expected 'v1', 'v2', or 'v3'."
     )
 
 
@@ -143,6 +168,7 @@ def get_shift_control_env_spec(
         notes=(
             "Observation values are normalized continuous features emitted by the shift-control environment.",
             "observation_version=v2 adds previous-step demand, backorder, and disruption diagnostics to the observed state.",
+            "observation_version=v3 extends v2 with normalized cumulative backorder and disruption history since the end of warmup.",
             "The fifth action dimension selects assembly capacity through discrete shifts.",
             "Reward mode ReT_thesis emits ret_components inside info for downstream auditing.",
         ),
@@ -242,6 +268,14 @@ def build_shift_control_state_constraint_vector(
         float(state_context["cumulative_backorder_qty"]),
         float(state_context["cumulative_disruption_hours"]),
     ]
+    backorder_vector = state_context["cumulative_backorder_rate_by_inventory_node"]
+    disruption_vector = state_context["cumulative_disruption_fraction_by_operation"]
+    assert isinstance(backorder_vector, dict)
+    assert isinstance(disruption_vector, dict)
+    values.extend(
+        float(backorder_vector[field_name]) for field_name in INVENTORY_NODE_FIELDS
+    )
+    values.extend(float(disruption_vector[f"op{op_id}"]) for op_id in range(1, 14))
     return np.array(values, dtype=np.float32)
 
 
@@ -274,6 +308,7 @@ def make_shift_control_env(**overrides: Any) -> MFSCGymEnvShifts:
 # ---------------------------------------------------------------------------
 # Generic episode runner for any callable policy
 # ---------------------------------------------------------------------------
+
 
 class PolicyCallable(Protocol):
     """Any callable that maps (obs, info) -> action array."""

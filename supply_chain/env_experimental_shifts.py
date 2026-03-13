@@ -58,20 +58,33 @@ from supply_chain.config import (
 from supply_chain.supply_chain import MFSCSimulation
 
 NUM_TRACKED_OPS = 13
-OBSERVATION_VERSION_OPTIONS = ("v1", "v2")
+OBSERVATION_VERSION_OPTIONS = ("v1", "v2", "v3")
 REWARD_MODE_OPTIONS = ("ReT_thesis", "rt_v0", "control_v1", "control_v1_pbrs")
 PBRS_VARIANT_OPTIONS = ("cumulative", "step_level")
 BASE_OBSERVATION_DIM = 15
 V2_OBSERVATION_DIM = 18
+V3_OBSERVATION_DIM = 20
 PREV_STEP_DEMAND_SCALE = 18_200.0
 PREV_STEP_BACKORDER_SCALE = 18_200.0
+INVENTORY_NODE_FIELDS: tuple[str, ...] = (
+    "raw_material_wdc",
+    "raw_material_al",
+    "rations_al",
+    "rations_sb",
+    "rations_sb_dispatch",
+    "rations_cssu",
+    "rations_theatre",
+)
 
 
 class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
     """
     Gymnasium wrapper with dynamic shift control and ReT-based reward.
 
-    Observation: 15-dimensional continuous state vector (same as base env).
+    Observation:
+      - v1: 15-dimensional continuous state vector (historical contract).
+      - v2: v1 + previous-step demand/backorder/disruption diagnostics.
+      - v3: v2 + normalized cumulative backorder and disruption features.
     Action: 5-dimensional [-1, 1].
 
     Parameters
@@ -143,7 +156,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         if observation_version not in OBSERVATION_VERSION_OPTIONS:
             raise ValueError(
                 f"Invalid observation_version={observation_version!r}. "
-                "Expected one of ('v1', 'v2')."
+                "Expected one of ('v1', 'v2', 'v3')."
             )
         if pbrs_variant not in PBRS_VARIANT_OPTIONS:
             raise ValueError(
@@ -153,10 +166,11 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         if (
             reward_mode == "control_v1_pbrs"
             and pbrs_variant == "step_level"
-            and observation_version != "v2"
+            and observation_version not in ("v2", "v3")
         ):
             raise ValueError(
                 "PBRS step_level variant requires observation_version='v2' "
+                "or 'v3' "
                 "because it uses prev_step_backorder_qty_norm (obs[16])."
             )
 
@@ -200,6 +214,9 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self._prev_step_new_demanded = 0.0
         self._prev_step_new_backorder_qty = 0.0
         self._prev_step_disruption_hours = 0.0
+        self._warmup_cumulative_backorder_qty = 0.0
+        self._warmup_total_demanded = 0.0
+        self._warmup_cumulative_down_hours = 0.0
 
         obs_dim = self._observation_dim()
         self.observation_space = spaces.Box(
@@ -210,7 +227,92 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
     def _observation_dim(self) -> int:
         if self.observation_version == "v2":
             return V2_OBSERVATION_DIM
+        if self.observation_version == "v3":
+            return V3_OBSERVATION_DIM
         return BASE_OBSERVATION_DIM
+
+    def _normalized_cumulative_features(self) -> np.ndarray:
+        """Return normalized cumulative diagnostics measured since warmup end."""
+        if self.sim is None:
+            return np.zeros(2, dtype=np.float32)
+
+        cumulative_backorder_qty = max(
+            0.0,
+            float(self.sim.cumulative_backorder_qty)
+            - self._warmup_cumulative_backorder_qty,
+        )
+        cumulative_demanded = max(
+            0.0,
+            float(self.sim.total_demanded) - self._warmup_total_demanded,
+        )
+        cumulative_down_hours = max(
+            0.0,
+            float(self.sim._cumulative_down_hours) - self._warmup_cumulative_down_hours,
+        )
+        elapsed_post_warmup_hours = max(
+            0.0, float(self.sim.env.now) - self.warmup_hours
+        )
+
+        cum_backorder_rate = min(
+            1.0,
+            cumulative_backorder_qty / max(cumulative_demanded, 1.0),
+        )
+        cum_downhours_fraction = min(
+            1.0,
+            cumulative_down_hours
+            / max(elapsed_post_warmup_hours * NUM_TRACKED_OPS, 1.0),
+        )
+        return np.array(
+            [cum_backorder_rate, cum_downhours_fraction],
+            dtype=np.float32,
+        )
+
+    def _cumulative_backorder_rate_by_inventory_node(self) -> dict[str, float]:
+        """
+        Return a node-aligned cumulative backorder vector for external models.
+
+        In the current DES, unmet demand materializes only at the final theatre
+        sink, so upstream nodes remain zero by construction.
+        """
+        cumulative_features = self._normalized_cumulative_features()
+        cumulative_backorder_rate = float(cumulative_features[0])
+        return {
+            field_name: (
+                cumulative_backorder_rate if field_name == "rations_theatre" else 0.0
+            )
+            for field_name in INVENTORY_NODE_FIELDS
+        }
+
+    def _cumulative_disruption_fraction_by_operation(self) -> dict[str, float]:
+        """Return per-operation cumulative disruption fractions since warmup end."""
+        if self.sim is None:
+            return {f"op{op_id}": 0.0 for op_id in range(1, NUM_TRACKED_OPS + 1)}
+
+        current_time = float(self.sim.env.now)
+        elapsed_post_warmup_hours = max(0.0, current_time - self.warmup_hours)
+        disruption_hours_by_op = {f"op{op_id}": 0.0 for op_id in range(1, 14)}
+
+        for event in self.sim.risk_events:
+            overlap_start = max(float(event.start_time), self.warmup_hours)
+            overlap_end = min(float(event.end_time), current_time)
+            overlap_duration = max(0.0, overlap_end - overlap_start)
+            if overlap_duration <= 0.0:
+                continue
+            for op_id in event.affected_ops:
+                disruption_hours_by_op[f"op{int(op_id)}"] += overlap_duration
+
+        for op_id in range(1, 14):
+            down_since = self.sim._op_down_since[op_id]
+            if self.sim.op_down_count[op_id] > 0 and down_since is not None:
+                overlap_start = max(float(down_since), self.warmup_hours)
+                disruption_hours_by_op[f"op{op_id}"] += max(
+                    0.0, current_time - overlap_start
+                )
+
+        return {
+            op_name: min(1.0, down_hours / max(elapsed_post_warmup_hours, 1.0))
+            for op_name, down_hours in disruption_hours_by_op.items()
+        }
 
     def _compose_observation(self, base_obs: np.ndarray) -> np.ndarray:
         if self.observation_version == "v1":
@@ -229,6 +331,10 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                 ),
             ]
         )
+        if self.observation_version == "v3":
+            augmented_obs = np.concatenate(
+                [augmented_obs, self._normalized_cumulative_features()]
+            )
         return augmented_obs
 
     # -----------------------------------------------------------------
@@ -418,6 +524,9 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         )
         self.sim._start_processes()
         self.sim.env.run(until=self.warmup_hours)
+        self._warmup_cumulative_backorder_qty = float(self.sim.cumulative_backorder_qty)
+        self._warmup_total_demanded = float(self.sim.total_demanded)
+        self._warmup_cumulative_down_hours = float(self.sim._cumulative_down_hours)
         obs = self._compose_observation(
             np.array(self.sim.get_observation(), dtype=np.float32)
         )
@@ -499,6 +608,12 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             "contingent_demand_fraction": float(obs[14]),
             "cumulative_backorder_qty": float(self.sim.cumulative_backorder_qty),
             "cumulative_disruption_hours": float(self.sim._cumulative_down_hours),
+            "cumulative_backorder_rate_by_inventory_node": (
+                self._cumulative_backorder_rate_by_inventory_node()
+            ),
+            "cumulative_disruption_fraction_by_operation": (
+                self._cumulative_disruption_fraction_by_operation()
+            ),
         }
 
     def step(

@@ -124,6 +124,42 @@ def test_v2_observation_contract_exposes_augmented_state() -> None:
     )
 
 
+def test_v3_observation_contract_exposes_normalized_cumulative_history() -> None:
+    spec = get_shift_control_env_spec(
+        reward_mode="control_v1", observation_version="v3"
+    )
+    env = make_shift_control_env(
+        max_steps=2,
+        reward_mode="control_v1",
+        observation_version="v3",
+        step_size_hours=24,
+        risk_level="increased",
+        stochastic_pt=True,
+    )
+    obs, info = env.reset(seed=7)
+
+    assert spec.observation_version == "v3"
+    assert tuple(spec.observation_fields) == get_observation_fields("v3")
+    assert len(spec.observation_fields) == 20
+    assert obs.shape == (20,)
+    assert info["observation_version"] == "v3"
+    assert obs[-5:].tolist() == pytest.approx([0.0, 0.0, 0.0, 0.0, 0.0])
+
+    next_obs, _, _, _, step_info = env.step([0.0, 0.0, 0.0, 0.0, 0.0])
+    assert step_info["observation_version"] == "v3"
+    assert next_obs.shape == (20,)
+    assert 0.0 <= next_obs[-2] <= 1.0
+    assert 0.0 <= next_obs[-1] <= 1.0
+    assert next_obs[-2] == pytest.approx(
+        float(step_info["new_backorder_qty"])
+        / max(float(step_info["new_demanded"]), 1.0)
+    )
+    max_op_hours = 24.0 * NUM_TRACKED_OPS
+    assert next_obs[-1] == pytest.approx(
+        min(1.0, float(step_info["step_disruption_hours"]) / max_op_hours)
+    )
+
+
 def test_reset_info_exposes_action_constraints() -> None:
     env = make_shift_control_env(max_steps=1)
     _, info = env.reset(seed=7)
@@ -151,10 +187,19 @@ def test_state_constraint_context_is_exposed_on_reset_and_step() -> None:
     state_context = info["state_constraint_context"]
     assert state_context["op3_total_dispatch_cap"] >= 0.0
     assert "inventory_detail" in state_context
+    assert "cumulative_backorder_rate_by_inventory_node" in state_context
+    assert "cumulative_disruption_fraction_by_operation" in state_context
+    assert state_context["cumulative_backorder_rate_by_inventory_node"][
+        "rations_theatre"
+    ] == pytest.approx(0.0)
 
     _, _, _, _, step_info = env.step([0.0, 0.0, 0.0, 0.0, 0.0])
     assert "state_constraint_context" in step_info
     assert step_info["state_constraint_context"]["total_inventory"] >= 0.0
+    disruption_vector = step_info["state_constraint_context"][
+        "cumulative_disruption_fraction_by_operation"
+    ]
+    assert len(disruption_vector) == 13
 
 
 # ---------------------------------------------------------------------------

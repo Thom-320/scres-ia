@@ -10,7 +10,7 @@ from torch import Tensor, nn
 from supply_chain.external_env_interface import (
     ACTION_FIELDS,
     CONTROL_CONTEXT_FIELDS,
-    OBSERVATION_FIELDS,
+    OBSERVATION_FIELDS_V3,
     STATE_CONSTRAINT_FIELDS,
 )
 
@@ -117,7 +117,7 @@ def build_mfsc_relational_state(
     observation: np.ndarray | Sequence[float],
     state_constraint_vector: np.ndarray | Sequence[float],
     *,
-    observation_fields: Sequence[str] = OBSERVATION_FIELDS,
+    observation_fields: Sequence[str] = OBSERVATION_FIELDS_V3,
     state_constraint_fields: Sequence[str] = STATE_CONSTRAINT_FIELDS,
     enumeration_map: EnumerationMap | None = None,
 ) -> np.ndarray:
@@ -179,7 +179,7 @@ def build_dkana_windows(
     state_constraint_context: np.ndarray,
     rewards: np.ndarray | None = None,
     window_size: int,
-    observation_fields: Sequence[str] = OBSERVATION_FIELDS,
+    observation_fields: Sequence[str] = OBSERVATION_FIELDS_V3,
     state_constraint_fields: Sequence[str] = STATE_CONSTRAINT_FIELDS,
 ) -> DKANADataset:
     """Create fixed-length causal windows for offline DKANA training."""
@@ -328,7 +328,7 @@ class DKANAPolicy(nn.Module):
         local_layers: int = 2,
         global_layers: int = 2,
         dim_feedforward: int = 256,
-        max_rows: int = len(OBSERVATION_FIELDS) + len(STATE_CONSTRAINT_FIELDS) + 1,
+        max_rows: int = len(OBSERVATION_FIELDS_V3) + len(STATE_CONSTRAINT_FIELDS) + 1,
         max_sequence_length: int = 52,
     ) -> None:
         super().__init__()

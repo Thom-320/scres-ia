@@ -800,6 +800,7 @@ def aggregate_fill_rate_bucket_rows(
 
 def save_csv(path: Path, rows: list[dict[str, Any]]) -> None:
     if not rows:
+        path.touch()
         return
     with path.open("w", newline="", encoding="utf-8") as file_obj:
         writer = csv.DictWriter(file_obj, fieldnames=list(rows[0].keys()))

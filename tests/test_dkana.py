@@ -18,7 +18,7 @@ from supply_chain.dkana import (
 from supply_chain.external_env_interface import (
     ACTION_FIELDS,
     CONTROL_CONTEXT_FIELDS,
-    OBSERVATION_FIELDS,
+    OBSERVATION_FIELDS_V3,
     STATE_CONSTRAINT_FIELDS,
 )
 
@@ -27,7 +27,7 @@ def make_synthetic_export_arrays() -> dict[str, np.ndarray]:
     num_steps = 3
     observations = np.stack(
         [
-            np.linspace(0.0, 1.0, len(OBSERVATION_FIELDS), dtype=np.float32) + offset
+            np.linspace(0.0, 1.0, len(OBSERVATION_FIELDS_V3), dtype=np.float32) + offset
             for offset in (0.0, 1.0, 2.0)
         ],
         axis=0,
@@ -70,7 +70,7 @@ def make_synthetic_export_arrays() -> dict[str, np.ndarray]:
 
 
 def test_build_mfsc_relational_state_preserves_feature_order() -> None:
-    observation = np.linspace(0.0, 1.0, len(OBSERVATION_FIELDS), dtype=np.float32)
+    observation = np.linspace(0.0, 1.0, len(OBSERVATION_FIELDS_V3), dtype=np.float32)
     state_constraints = np.linspace(
         10.0,
         20.0,
@@ -80,7 +80,7 @@ def test_build_mfsc_relational_state_preserves_feature_order() -> None:
     row_matrix = build_mfsc_relational_state(observation, state_constraints)
 
     assert row_matrix.shape == (
-        len(OBSERVATION_FIELDS) + len(STATE_CONSTRAINT_FIELDS),
+        len(OBSERVATION_FIELDS_V3) + len(STATE_CONSTRAINT_FIELDS),
         3,
     )
     assert np.array_equal(
@@ -114,7 +114,7 @@ def test_build_previous_action_context_resets_per_episode() -> None:
 def test_build_dkana_windows_left_pads_history_and_context() -> None:
     export_arrays = make_synthetic_export_arrays()
     dataset = build_dkana_windows(window_size=2, **export_arrays)
-    row_count = len(OBSERVATION_FIELDS) + len(STATE_CONSTRAINT_FIELDS)
+    row_count = len(OBSERVATION_FIELDS_V3) + len(STATE_CONSTRAINT_FIELDS)
 
     assert dataset.row_matrices.shape == (3, 2, row_count, 3)
     assert dataset.config_context.shape == (3, 2, len(DKANA_CONFIG_FIELDS))
@@ -167,7 +167,7 @@ def test_build_dkana_dataset_script_writes_numpy_outputs(tmp_path: Path) -> None
     )
     np.save(export_dir / "rewards.npy", export_arrays["rewards"])
     (export_dir / "env_spec.json").write_text(
-        json.dumps({"observation_fields": list(OBSERVATION_FIELDS)}),
+        json.dumps({"observation_fields": list(OBSERVATION_FIELDS_V3)}),
         encoding="utf-8",
     )
     (export_dir / "state_constraint_fields.json").write_text(
@@ -198,7 +198,7 @@ def test_build_dkana_dataset_script_writes_numpy_outputs(tmp_path: Path) -> None
     assert metadata["row_matrices_shape"] == [
         3,
         2,
-        len(OBSERVATION_FIELDS) + len(STATE_CONSTRAINT_FIELDS),
+        len(OBSERVATION_FIELDS_V3) + len(STATE_CONSTRAINT_FIELDS),
         3,
     ]
     assert metadata["config_context_shape"] == [3, 2, len(DKANA_CONFIG_FIELDS)]

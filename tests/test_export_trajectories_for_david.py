@@ -43,6 +43,9 @@ def test_export_trajectories_includes_state_constraints_and_reward_terms(
     reward_fields = json.loads(
         (tmp_path / "reward_terms_fields.json").read_text(encoding="utf-8")
     )
+    state_fields = json.loads(
+        (tmp_path / "state_constraint_fields.json").read_text(encoding="utf-8")
+    )
 
     assert state_constraints.ndim == 2
     assert reward_terms.ndim == 2
@@ -52,4 +55,46 @@ def test_export_trajectories_includes_state_constraints_and_reward_terms(
     assert metadata["state_constraint_context_shape"][1] == state_constraints.shape[1]
     assert metadata["reward_terms_shape"][1] == reward_terms.shape[1]
     assert metadata["obs_shape"][1] == 18
+    assert len(state_fields["fields"]) == state_constraints.shape[1]
+    assert "cum_backorder_rate_rations_theatre" in state_fields["fields"]
+    assert "cum_disruption_fraction_op13" in state_fields["fields"]
     assert reward_fields["fields"][0] == "reward_total"
+
+
+def test_export_trajectories_supports_v3_observation_contract(tmp_path: Path) -> None:
+    cmd = [
+        sys.executable,
+        "scripts/export_trajectories_for_david.py",
+        "--episodes",
+        "1",
+        "--seed-start",
+        "7",
+        "--risk-level",
+        "increased",
+        "--reward-mode",
+        "control_v1",
+        "--observation-version",
+        "v3",
+        "--output-dir",
+        str(tmp_path),
+    ]
+    subprocess.run(
+        cmd,
+        cwd="/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia",
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    observations = np.load(tmp_path / "observations.npy")
+    metadata = json.loads((tmp_path / "metadata.json").read_text(encoding="utf-8"))
+    env_spec = json.loads((tmp_path / "env_spec.json").read_text(encoding="utf-8"))
+
+    assert metadata["observation_version"] == "v3"
+    assert metadata["obs_shape"][1] == 20
+    assert observations.shape[1] == 20
+    assert env_spec["observation_version"] == "v3"
+    assert env_spec["observation_fields"][-2:] == [
+        "cum_backorder_rate",
+        "cum_downhours_fraction",
+    ]

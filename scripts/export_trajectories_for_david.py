@@ -56,7 +56,7 @@ def main() -> None:
     parser.add_argument(
         "--observation-version",
         default="v1",
-        choices=["v1", "v2"],
+        choices=["v1", "v2", "v3"],
         help="Observation contract version used during collection.",
     )
     args = parser.parse_args()

@@ -347,9 +347,9 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--observation-version",
-        choices=["v1", "v2"],
+        choices=["v1", "v2", "v3"],
         default="v1",
-        help="Observation contract version. v1 preserves historical 15-d runs; v2 adds previous-step diagnostics.",
+        help="Observation contract version. v1 preserves historical 15-d runs; v2 adds previous-step diagnostics; v3 adds normalized cumulative history.",
     )
     parser.add_argument(
         "--risk-level",
@@ -449,7 +449,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--pbrs-variant",
         choices=["cumulative", "step_level"],
         default="cumulative",
-        help="PBRS potential variant. step_level requires --observation-version v2.",
+        help="PBRS potential variant. step_level requires --observation-version v2 or v3.",
     )
     parser.add_argument("--learning-rate", type=float, default=3e-4)
     parser.add_argument("--n-steps", type=int, default=1024)

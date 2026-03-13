@@ -23,6 +23,7 @@ from supply_chain.config import (
     OPERATIONS,
     DEMAND,
     ASSEMBLY_RATE,
+    CAPACITY_BY_SHIFTS,
     HOURS_PER_SHIFT,
     HOURS_PER_DAY,
     SIMULATION_HORIZON,
@@ -113,6 +114,7 @@ class MFSCSimulation:
             "op3_rop": OPERATIONS[3]["rop"],  # 168 hrs (weekly)
             "op3_pt": OPERATIONS[3]["pt"],  # 24 hrs
             "op3_q": OPERATIONS[3]["q"],  # 15,500 per RM
+            "op4_pt": OPERATIONS[4]["pt"],  # 24 hrs (transport WDC → AL)
             # Assembly
             "assembly_shifts": shifts,
             "batch_size": OPERATIONS[7]["q"],  # 5,000
@@ -245,6 +247,13 @@ class MFSCSimulation:
             for k, v in action.items():
                 if k in self.params:
                     self.params[k] = v
+
+            # Auto-couple shift-dependent batch size per Table 6.20:
+            # S=1/2 → 5,000 rations/batch, S=3 → 7,000 rations/batch.
+            new_shifts = int(self.params["assembly_shifts"])
+            if new_shifts in CAPACITY_BY_SHIFTS:
+                cap = CAPACITY_BY_SHIFTS[new_shifts]
+                self.params["batch_size"] = cap["op7_q"]
 
         # Advance simulation
         dt = step_hours or self._step_size
@@ -437,7 +446,7 @@ class MFSCSimulation:
     def _op3_wdc_dispatch(self):
         while True:
             yield self.env.timeout(self.params["op3_rop"])
-            while self._is_down(3) or self._is_down(4):
+            while self._is_down(3):
                 yield self.env.timeout(1)
             total_dispatch = self.params["op3_q"] * NUM_RAW_MATERIALS
             available = self.raw_material_wdc.level
@@ -445,6 +454,10 @@ class MFSCSimulation:
             if dispatch > 0:
                 yield self.raw_material_wdc.get(dispatch)
                 yield self.env.timeout(self._pt("op3_pt"))
+                # Op4: transport WDC → AL (separate operation per thesis)
+                while self._is_down(4):
+                    yield self.env.timeout(1)
+                yield self.env.timeout(self._pt("op4_pt"))
                 yield self.raw_material_al.put(dispatch)
 
     # =====================================================================
@@ -458,12 +471,11 @@ class MFSCSimulation:
         Each hour during work shifts on workdays (Mon-Sat):
         - Check if assembly line is down (Op5/6/7)
         - If up and raw materials available: produce RATIONS_PER_HOUR
-        - Accumulate into batches of 5,000
+        - Accumulate into batches (size read from params each tick)
 
         This correctly captures sub-day risks (R11 avg 2.2h).
         At S=1: 8 work hours/day × 320.5 = 2,564 rations/day (matches thesis).
         """
-        batch_size = self.params["batch_size"]
         week_hours = 7 * HOURS_PER_DAY  # 168
 
         while True:
@@ -494,7 +506,8 @@ class MFSCSimulation:
                 self._today_produced += can_produce
                 self.total_produced += can_produce
 
-                # Ship complete batches
+                # Ship complete batches (read batch_size live for shift changes)
+                batch_size = self.params["batch_size"]
                 while self._pending_batch >= batch_size:
                     self._pending_batch -= batch_size
                     yield self.rations_al.put(batch_size)
@@ -508,8 +521,8 @@ class MFSCSimulation:
     # =====================================================================
 
     def _op8_transport_to_sb(self):
-        batch_size = self.params["batch_size"]
         while True:
+            batch_size = self.params["batch_size"]
             yield self.rations_al.get(batch_size)
             self._in_transit += batch_size
             while self._is_down(8):
@@ -922,6 +935,7 @@ class MFSCSimulation:
             self.risk_summary()
 
     def _fill_rate(self):
-        if not self.orders:
+        """Quantity-based fill rate per thesis Eq 5.1: FR = 1 - B/D."""
+        if self.total_demanded <= 0:
             return 0.0
-        return sum(1 for o in self.orders if not o.backorder) / len(self.orders)
+        return max(0.0, 1.0 - self.cumulative_backorder_qty / self.total_demanded)
