@@ -10,14 +10,16 @@ set -euo pipefail
 #   bash scripts/run_publication_experiments.sh --smoke    # quick smoke test
 #   bash scripts/run_publication_experiments.sh --preflight  # short run with real training
 
-SEEDS="11 22 33 44 55 66 77 88 99 111"
+BASELINE_SEEDS="11 22 33 44 55 66 77 88 99 111"
+COMPARE_SEEDS="11 22 33 44 55"
 TUNING_SEEDS="11 22 33"
 TIMESTEPS=500000
 EVAL_EPISODES=10
 TUNE_EPISODES=3
 RISK_LEVEL="increased"
 EVAL_LEVEL_ARGS="--eval-risk-levels current increased severe"
-WEIGHT_ARGS="--w-bo 1.0 2.0 4.0 --w-cost 0.02 0.06 0.10 --w-disr 0.0"
+TUNING_WEIGHT_ARGS="--w-bo 1.0 2.0 4.0 --w-cost 0.02 0.06 0.10 --w-disr 0.0"
+RUN_WEIGHT_ARGS=""
 COMMON_ARGS="--step-size-hours 168 --max-steps 260 --stochastic-pt"
 PHASE1_ARGS="--output-dir outputs/benchmarks/control_reward_tuning --artifact-label control_reward_tuning"
 PHASE2_ARGS="--output-dir outputs/benchmarks/control_reward --artifact-label control_reward"
@@ -32,12 +34,15 @@ case "$MODE" in
         ;;
     "--smoke")
         echo "=== SMOKE TEST MODE ==="
-        SEEDS="11"
+        BASELINE_SEEDS="11"
+        COMPARE_SEEDS="11"
         TUNING_SEEDS="11"
         TIMESTEPS=256
         EVAL_EPISODES=2
         TUNE_EPISODES=1
         COMMON_ARGS="--step-size-hours 24 --max-steps 8 --stochastic-pt"
+        TUNING_WEIGHT_ARGS="--w-bo 1.0 2.0 4.0 --w-cost 0.02 0.06 0.10 --w-disr 0.0"
+        RUN_WEIGHT_ARGS="$TUNING_WEIGHT_ARGS --max-survivors 4"
         PHASE1_ARGS="--output-dir outputs/benchmarks/control_reward_tuning_smoke --artifact-label control_reward_tuning_smoke"
         PHASE2_ARGS="--output-dir outputs/benchmarks/control_reward_stopt_smoke --artifact-label control_reward_stopt_smoke"
         PHASE3_ARGS="--output-dir outputs/benchmarks/control_reward_sac_smoke --artifact-label control_reward_sac_smoke"
@@ -47,14 +52,16 @@ case "$MODE" in
         ;;
     "--preflight")
         echo "=== PREFLIGHT MODE ==="
-        SEEDS="11 22"
+        BASELINE_SEEDS="11 22"
+        COMPARE_SEEDS="11 22"
         TUNING_SEEDS="11 22"
         TIMESTEPS=2048
         EVAL_EPISODES=2
         TUNE_EPISODES=2
         RISK_LEVEL="severe"
         EVAL_LEVEL_ARGS=""
-        WEIGHT_ARGS="--w-bo 5.0 --w-cost 0.03 --w-disr 0.0 --max-survivors 1"
+        TUNING_WEIGHT_ARGS="--w-bo 5.0 --w-cost 0.03 --w-disr 0.0"
+        RUN_WEIGHT_ARGS="$TUNING_WEIGHT_ARGS --max-survivors 1"
         COMMON_ARGS="--step-size-hours 24 --max-steps 16 --stochastic-pt"
         PHASE1_ARGS="--output-dir outputs/benchmarks/control_reward_tuning_preflight --artifact-label control_reward_tuning_preflight"
         PHASE2_ARGS="--output-dir outputs/benchmarks/control_reward_preflight --artifact-label control_reward_preflight"
@@ -69,38 +76,75 @@ case "$MODE" in
         ;;
 esac
 
-echo "Seeds: $SEEDS"
+if [[ -z "$RUN_WEIGHT_ARGS" ]]; then
+    RUN_WEIGHT_ARGS="$TUNING_WEIGHT_ARGS --max-survivors 2"
+fi
+
+echo "Baseline seeds: $BASELINE_SEEDS"
+echo "Comparator seeds: $COMPARE_SEEDS"
 echo "Tuning seeds: $TUNING_SEEDS"
 echo "Timesteps: $TIMESTEPS"
 echo "Eval episodes: $EVAL_EPISODES"
 echo "Tune episodes: $TUNE_EPISODES"
 
+PHASE1_SUMMARY=""
+if [[ "$MODE" != "--smoke" && "$MODE" != "--preflight" ]]; then
+    PHASE1_SUMMARY="outputs/benchmarks/control_reward_tuning/summary.json"
+fi
+
 # Phase 1: Tune heuristic parameters on training seeds
 echo ""
 echo "=== Phase 1: Heuristic tuning ==="
-python scripts/benchmark_control_reward.py \
-    --tune-heuristic \
-    --seeds $TUNING_SEEDS \
-    --train-timesteps "$TIMESTEPS" \
-    --eval-episodes "$EVAL_EPISODES" \
-    --tune-episodes "$TUNE_EPISODES" \
-    --risk-level "$RISK_LEVEL" \
-    $WEIGHT_ARGS \
-    --algo ppo \
-    $PHASE1_ARGS \
-    $MODE_ARGS \
-    $COMMON_ARGS
+if [[ -n "$PHASE1_SUMMARY" && -f "$PHASE1_SUMMARY" ]]; then
+    echo "Reusing existing heuristic tuning summary: $PHASE1_SUMMARY"
+else
+    python scripts/benchmark_control_reward.py \
+        --tune-heuristic \
+        --seeds $TUNING_SEEDS \
+        --train-timesteps "$TIMESTEPS" \
+        --eval-episodes "$EVAL_EPISODES" \
+        --tune-episodes "$TUNE_EPISODES" \
+        --risk-level "$RISK_LEVEL" \
+        $TUNING_WEIGHT_ARGS \
+        --algo ppo \
+        $PHASE1_ARGS \
+        $MODE_ARGS \
+        $COMMON_ARGS
+fi
+
+if [[ "$MODE" != "--smoke" && "$MODE" != "--preflight" ]]; then
+    if [[ -f "$PHASE1_SUMMARY" ]]; then
+        BEST_ARGS="$(python - <<'PY'
+import json
+from pathlib import Path
+
+summary = json.loads(Path("outputs/benchmarks/control_reward_tuning/summary.json").read_text())
+survivors = summary.get("survivors", [])
+if not survivors:
+    raise SystemExit(1)
+best = survivors[0]
+print(
+    f"--w-bo {best['w_bo']} --w-cost {best['w_cost']} --w-disr {best['w_disr']} --max-survivors 1"
+)
+PY
+)"
+        RUN_WEIGHT_ARGS="$BEST_ARGS"
+        echo "Using tuned publication weight combo: $RUN_WEIGHT_ARGS"
+    else
+        echo "Phase 1 summary missing; falling back to $RUN_WEIGHT_ARGS"
+    fi
+fi
 
 # Phase 2: PPO 500k x 10 seeds, trained on increased, cross-eval on all
 echo ""
 echo "=== Phase 2: PPO baseline ==="
 python scripts/benchmark_control_reward.py \
-    --seeds $SEEDS \
+    --seeds $BASELINE_SEEDS \
     --train-timesteps "$TIMESTEPS" \
     --eval-episodes "$EVAL_EPISODES" \
     --risk-level "$RISK_LEVEL" \
     $EVAL_LEVEL_ARGS \
-    $WEIGHT_ARGS \
+    $RUN_WEIGHT_ARGS \
     --algo ppo \
     $PHASE2_ARGS \
     $MODE_ARGS \
@@ -110,12 +154,12 @@ python scripts/benchmark_control_reward.py \
 echo ""
 echo "=== Phase 3: SAC ==="
 python scripts/benchmark_control_reward.py \
-    --seeds $SEEDS \
+    --seeds $COMPARE_SEEDS \
     --train-timesteps "$TIMESTEPS" \
     --eval-episodes "$EVAL_EPISODES" \
     --risk-level "$RISK_LEVEL" \
     $EVAL_LEVEL_ARGS \
-    $WEIGHT_ARGS \
+    $RUN_WEIGHT_ARGS \
     --algo sac \
     $PHASE3_ARGS \
     $MODE_ARGS \
@@ -125,12 +169,12 @@ python scripts/benchmark_control_reward.py \
 echo ""
 echo "=== Phase 4: PPO + frame-stack 4 ==="
 python scripts/benchmark_control_reward.py \
-    --seeds $SEEDS \
+    --seeds $COMPARE_SEEDS \
     --train-timesteps "$TIMESTEPS" \
     --eval-episodes "$EVAL_EPISODES" \
     --risk-level "$RISK_LEVEL" \
     $EVAL_LEVEL_ARGS \
-    $WEIGHT_ARGS \
+    $RUN_WEIGHT_ARGS \
     --algo ppo \
     --frame-stack 4 \
     --observation-version v2 \
@@ -142,12 +186,12 @@ python scripts/benchmark_control_reward.py \
 echo ""
 echo "=== Phase 5: RecurrentPPO ==="
 python scripts/benchmark_control_reward.py \
-    --seeds $SEEDS \
+    --seeds $COMPARE_SEEDS \
     --train-timesteps "$TIMESTEPS" \
     --eval-episodes "$EVAL_EPISODES" \
     --risk-level "$RISK_LEVEL" \
     $EVAL_LEVEL_ARGS \
-    $WEIGHT_ARGS \
+    $RUN_WEIGHT_ARGS \
     --algo recurrent_ppo \
     --observation-version v2 \
     $PHASE5_ARGS \
