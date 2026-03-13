@@ -497,6 +497,8 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             "time_fraction": float(obs[12]),
             "pending_batch_fraction": float(obs[13]),
             "contingent_demand_fraction": float(obs[14]),
+            "cumulative_backorder_qty": float(self.sim.cumulative_backorder_qty),
+            "cumulative_disruption_hours": float(self.sim._cumulative_down_hours),
         }
 
     def step(

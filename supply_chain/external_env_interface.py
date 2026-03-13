@@ -79,6 +79,8 @@ STATE_CONSTRAINT_FIELDS: tuple[str, ...] = (
     "time_fraction",
     "pending_batch_fraction",
     "contingent_demand_fraction",
+    "cumulative_backorder_qty",
+    "cumulative_disruption_hours",
 )
 REWARD_TERM_FIELDS: tuple[str, ...] = (
     "reward_total",
@@ -237,6 +239,8 @@ def build_shift_control_state_constraint_vector(
         float(state_context["time_fraction"]),
         float(state_context["pending_batch_fraction"]),
         float(state_context["contingent_demand_fraction"]),
+        float(state_context["cumulative_backorder_qty"]),
+        float(state_context["cumulative_disruption_hours"]),
     ]
     return np.array(values, dtype=np.float32)
 
@@ -265,3 +269,165 @@ def make_shift_control_env(**overrides: Any) -> MFSCGymEnvShifts:
     }
     params.update(overrides)
     return MFSCGymEnvShifts(**params)
+
+
+# ---------------------------------------------------------------------------
+# Generic episode runner for any callable policy
+# ---------------------------------------------------------------------------
+
+from typing import Callable, Protocol
+
+
+class PolicyCallable(Protocol):
+    """Any callable that maps (obs, info) -> action array."""
+
+    def __call__(self, obs: np.ndarray, info: dict[str, Any]) -> np.ndarray: ...
+
+
+def run_episodes(
+    policy_fn: PolicyCallable | Callable[[np.ndarray, dict[str, Any]], np.ndarray],
+    *,
+    n_episodes: int = 10,
+    seed: int = 42,
+    env_kwargs: dict[str, Any] | None = None,
+    policy_name: str = "custom",
+    collect_trajectories: bool = False,
+) -> list[dict[str, Any]]:
+    """
+    Run *n_episodes* using any policy callable and return per-episode metrics.
+
+    This is the entry point for external models (DKANA, custom heuristics, etc.)
+    that want to evaluate against the same MFSC environment used in the
+    benchmark, without depending on the benchmark script internals.
+
+    Parameters
+    ----------
+    policy_fn :
+        Callable ``(obs, info) -> action``.  ``obs`` is an np.ndarray matching
+        the env observation space; ``info`` is the dict returned by
+        ``env.reset()`` or ``env.step()``.  Must return a 5-dim action array
+        in [-1, 1].
+    n_episodes :
+        Number of evaluation episodes.
+    seed :
+        Base random seed.  Episode *i* uses ``seed + i``.
+    env_kwargs :
+        Keyword arguments forwarded to ``make_shift_control_env()``.
+        Use this to set ``reward_mode``, ``risk_level``, ``w_bo``, etc.
+    policy_name :
+        Label stored in the ``"policy"`` field of each result row.
+    collect_trajectories :
+        If ``True``, each result row includes ``"trajectory"`` — a list of
+        per-step dicts with ``obs``, ``action``, ``reward``, ``info``.
+
+    Returns
+    -------
+    list[dict]
+        One dict per episode with keys: ``policy``, ``seed``, ``episode``,
+        ``steps``, ``reward_total``, ``fill_rate``, ``backorder_rate``,
+        ``service_loss_total``, ``shift_cost_total``, ``mean_disruption_fraction``,
+        ``pct_steps_S1/S2/S3``, and optionally ``trajectory``.
+
+    Example
+    -------
+    >>> from supply_chain.external_env_interface import run_episodes
+    >>> results = run_episodes(
+    ...     lambda obs, info: np.zeros(5, dtype=np.float32),  # neutral policy
+    ...     n_episodes=3,
+    ...     seed=1,
+    ...     env_kwargs={"reward_mode": "control_v1", "risk_level": "increased",
+    ...                 "w_bo": 4.0, "w_cost": 0.02, "w_disr": 0.0},
+    ... )
+    >>> print(results[0]["reward_total"], results[0]["fill_rate"])
+    """
+    env_kwargs = dict(env_kwargs or {})
+    results: list[dict[str, Any]] = []
+
+    for ep_idx in range(n_episodes):
+        ep_seed = seed + ep_idx
+        env = make_shift_control_env(**env_kwargs)
+        obs, info = env.reset(seed=ep_seed)
+
+        terminated = False
+        truncated = False
+        reward_total = 0.0
+        service_loss_total = 0.0
+        shift_cost_total = 0.0
+        disruption_fraction_total = 0.0
+        ret_thesis_corrected_total = 0.0
+        demanded_total = 0.0
+        delivered_total = 0.0
+        backorder_qty_total = 0.0
+        steps = 0
+        shift_counts = {1: 0, 2: 0, 3: 0}
+        trajectory: list[dict[str, Any]] = []
+
+        while not (terminated or truncated):
+            action = np.asarray(policy_fn(obs, info), dtype=np.float32)
+            prev_obs = obs
+
+            obs, reward, terminated, truncated, info = env.step(action)
+
+            reward_total += float(reward)
+            service_loss_total += float(info.get("service_loss_step", 0.0))
+            shift_cost_total += float(info.get("shift_cost_step", 0.0))
+            disruption_fraction_total += float(
+                info.get("disruption_fraction_step", 0.0)
+            )
+            ret_thesis_corrected_total += float(
+                info.get("ret_thesis_corrected_step", 0.0)
+            )
+            demanded_total += float(info.get("new_demanded", 0.0))
+            delivered_total += float(info.get("new_delivered", 0.0))
+            backorder_qty_total += float(info.get("new_backorder_qty", 0.0))
+            shift_counts[int(info.get("shifts_active", 1))] += 1
+            steps += 1
+
+            if collect_trajectories:
+                trajectory.append(
+                    {
+                        "obs": prev_obs.copy(),
+                        "action": action.copy(),
+                        "reward": float(reward),
+                        "info": {
+                            k: v
+                            for k, v in info.items()
+                            if isinstance(v, (int, float, str, bool))
+                        },
+                    }
+                )
+
+        env.close()
+
+        total_steps = max(1, steps)
+        if demanded_total > 0:
+            backorder_rate = backorder_qty_total / demanded_total
+            fill_rate = 1.0 - backorder_rate
+        else:
+            backorder_rate = 0.0
+            fill_rate = 1.0
+
+        row: dict[str, Any] = {
+            "policy": policy_name,
+            "seed": ep_seed,
+            "episode": ep_idx + 1,
+            "steps": steps,
+            "reward_total": reward_total,
+            "fill_rate": fill_rate,
+            "backorder_rate": backorder_rate,
+            "service_loss_total": service_loss_total,
+            "shift_cost_total": shift_cost_total,
+            "mean_disruption_fraction": disruption_fraction_total / total_steps,
+            "ret_thesis_corrected_total": ret_thesis_corrected_total,
+            "demanded_total": demanded_total,
+            "delivered_total": delivered_total,
+            "backorder_qty_total": backorder_qty_total,
+            "pct_steps_S1": 100.0 * shift_counts.get(1, 0) / total_steps,
+            "pct_steps_S2": 100.0 * shift_counts.get(2, 0) / total_steps,
+            "pct_steps_S3": 100.0 * shift_counts.get(3, 0) / total_steps,
+        }
+        if collect_trajectories:
+            row["trajectory"] = trajectory
+        results.append(row)
+
+    return results

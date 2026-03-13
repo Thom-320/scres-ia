@@ -2,11 +2,14 @@ from __future__ import annotations
 
 import pytest
 
+import numpy as np
+
 from supply_chain.external_env_interface import (
     get_observation_fields,
     get_shift_control_constraint_context,
     get_shift_control_env_spec,
     make_shift_control_env,
+    run_episodes,
     spec_to_dict,
 )
 from supply_chain.env_experimental_shifts import MFSCGymEnvShifts, NUM_TRACKED_OPS
@@ -152,3 +155,102 @@ def test_state_constraint_context_is_exposed_on_reset_and_step() -> None:
     _, _, _, _, step_info = env.step([0.0, 0.0, 0.0, 0.0, 0.0])
     assert "state_constraint_context" in step_info
     assert step_info["state_constraint_context"]["total_inventory"] >= 0.0
+
+
+# ---------------------------------------------------------------------------
+# run_episodes: generic callable-policy evaluation
+# ---------------------------------------------------------------------------
+
+
+def test_run_episodes_with_neutral_policy() -> None:
+    """A neutral (all-zeros) policy runs and returns structured metrics."""
+
+    def neutral_policy(obs: np.ndarray, info: dict) -> np.ndarray:
+        return np.zeros(5, dtype=np.float32)
+
+    results = run_episodes(
+        neutral_policy,
+        n_episodes=2,
+        seed=1,
+        env_kwargs={
+            "reward_mode": "control_v1",
+            "step_size_hours": 24,
+            "max_steps": 4,
+            "w_bo": 2.0,
+            "w_cost": 0.06,
+            "w_disr": 0.0,
+        },
+        policy_name="neutral_test",
+    )
+    assert len(results) == 2
+    for row in results:
+        assert row["policy"] == "neutral_test"
+        assert row["steps"] == 4
+        assert "reward_total" in row
+        assert "fill_rate" in row
+        assert 0.0 <= row["fill_rate"] <= 1.0
+        assert "pct_steps_S1" in row
+        assert "pct_steps_S2" in row
+        assert "pct_steps_S3" in row
+
+
+def test_run_episodes_with_custom_callable() -> None:
+    """Any callable that maps (obs, info) -> action works."""
+
+    class MyPolicy:
+        def __init__(self) -> None:
+            self.call_count = 0
+
+        def __call__(self, obs: np.ndarray, info: dict) -> np.ndarray:
+            self.call_count += 1
+            # shift to S3 based on backorder_rate
+            action = np.zeros(5, dtype=np.float32)
+            if obs[7] > 0.1:
+                action[4] = 1.0
+            return action
+
+    policy = MyPolicy()
+    results = run_episodes(
+        policy,
+        n_episodes=1,
+        seed=42,
+        env_kwargs={
+            "reward_mode": "control_v1",
+            "risk_level": "increased",
+            "step_size_hours": 24,
+            "max_steps": 5,
+            "w_bo": 2.0,
+            "w_cost": 0.06,
+            "w_disr": 0.0,
+            "stochastic_pt": True,
+        },
+        policy_name="my_custom",
+    )
+    assert len(results) == 1
+    assert results[0]["policy"] == "my_custom"
+    assert policy.call_count == 5
+
+
+def test_run_episodes_collect_trajectories() -> None:
+    """When collect_trajectories=True, per-step data is captured."""
+    results = run_episodes(
+        lambda obs, info: np.zeros(5, dtype=np.float32),
+        n_episodes=1,
+        seed=1,
+        env_kwargs={
+            "reward_mode": "control_v1",
+            "step_size_hours": 24,
+            "max_steps": 3,
+            "w_bo": 1.0,
+            "w_cost": 0.02,
+            "w_disr": 0.0,
+        },
+        collect_trajectories=True,
+    )
+    assert "trajectory" in results[0]
+    traj = results[0]["trajectory"]
+    assert len(traj) == 3
+    assert "obs" in traj[0]
+    assert "action" in traj[0]
+    assert "reward" in traj[0]
+    assert "info" in traj[0]
