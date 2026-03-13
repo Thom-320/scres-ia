@@ -22,6 +22,8 @@ def test_export_trajectories_includes_state_constraints_and_reward_terms(
         "increased",
         "--reward-mode",
         "control_v1",
+        "--observation-version",
+        "v2",
         "--output-dir",
         str(tmp_path),
     ]
@@ -46,6 +48,8 @@ def test_export_trajectories_includes_state_constraints_and_reward_terms(
     assert reward_terms.ndim == 2
     assert state_constraints.shape[0] == reward_terms.shape[0]
     assert metadata["reward_mode"] == "control_v1"
+    assert metadata["observation_version"] == "v2"
     assert metadata["state_constraint_context_shape"][1] == state_constraints.shape[1]
     assert metadata["reward_terms_shape"][1] == reward_terms.shape[1]
+    assert metadata["obs_shape"][1] == 18
     assert reward_fields["fields"][0] == "reward_total"

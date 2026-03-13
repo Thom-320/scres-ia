@@ -22,83 +22,17 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from supply_chain.external_env_interface import (
-    get_shift_control_constraint_context,
     get_shift_control_env_spec,
     make_shift_control_env,
+    CONTROL_CONTEXT_FIELDS,
+    REWARD_TERM_FIELDS,
+    STATE_CONSTRAINT_FIELDS,
+    build_reward_term_vector,
+    build_shift_control_constraint_vector,
+    build_shift_control_state_constraint_vector,
+    get_shift_control_constraint_context,
     spec_to_dict,
 )
-
-STATE_CONSTRAINT_FIELDS = (
-    "raw_material_wdc",
-    "raw_material_al",
-    "rations_al",
-    "rations_sb",
-    "rations_sb_dispatch",
-    "rations_cssu",
-    "rations_theatre",
-    "total_inventory",
-    "op3_total_dispatch_cap",
-    "op3_per_material_dispatch_cap",
-    "op9_dispatch_cap",
-    "assembly_line_available",
-    "any_location_available",
-    "op9_available",
-    "op11_available",
-    "fill_rate",
-    "backorder_rate",
-    "time_fraction",
-    "pending_batch_fraction",
-    "contingent_demand_fraction",
-)
-
-REWARD_TERM_FIELDS = (
-    "reward_total",
-    "service_loss_step",
-    "shift_cost_step",
-    "disruption_fraction_step",
-    "ret_thesis_corrected_step",
-)
-
-
-def build_state_constraint_vector(state_context: dict[str, object]) -> np.ndarray:
-    inventory_detail = state_context["inventory_detail"]
-    assert isinstance(inventory_detail, dict)
-    values = [
-        float(inventory_detail["raw_material_wdc"]),
-        float(inventory_detail["raw_material_al"]),
-        float(inventory_detail["rations_al"]),
-        float(inventory_detail["rations_sb"]),
-        float(inventory_detail["rations_sb_dispatch"]),
-        float(inventory_detail["rations_cssu"]),
-        float(inventory_detail["rations_theatre"]),
-        float(state_context["total_inventory"]),
-        float(state_context["op3_total_dispatch_cap"]),
-        float(state_context["op3_per_material_dispatch_cap"]),
-        float(state_context["op9_dispatch_cap"]),
-        float(bool(state_context["assembly_line_available"])),
-        float(bool(state_context["any_location_available"])),
-        float(bool(state_context["op9_available"])),
-        float(bool(state_context["op11_available"])),
-        float(state_context["fill_rate"]),
-        float(state_context["backorder_rate"]),
-        float(state_context["time_fraction"]),
-        float(state_context["pending_batch_fraction"]),
-        float(state_context["contingent_demand_fraction"]),
-    ]
-    return np.array(values, dtype=np.float32)
-
-
-def build_reward_term_vector(info: dict[str, object], reward: float) -> np.ndarray:
-    return np.array(
-        [
-            float(reward),
-            float(info.get("service_loss_step", 0.0)),
-            float(info.get("shift_cost_step", 0.0)),
-            float(info.get("disruption_fraction_step", 0.0)),
-            float(info.get("ret_thesis_corrected_step", 0.0)),
-        ],
-        dtype=np.float32,
-    )
 
 
 def main() -> None:
@@ -119,6 +53,12 @@ def main() -> None:
         choices=["ReT_thesis", "control_v1"],
         help="Reward mode used while collecting trajectories for external models.",
     )
+    parser.add_argument(
+        "--observation-version",
+        default="v1",
+        choices=["v1", "v2"],
+        help="Observation contract version used during collection.",
+    )
     args = parser.parse_args()
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
@@ -132,25 +72,13 @@ def main() -> None:
     all_reward_terms = []
     episode_lengths = []
     constraint_context = get_shift_control_constraint_context()
-    constraint_vector = np.array(
-        [
-            constraint_context["base_control_parameters"]["op3_q"],
-            constraint_context["base_control_parameters"]["op3_rop"],
-            constraint_context["base_control_parameters"]["op9_q_min"],
-            constraint_context["base_control_parameters"]["op9_q_max"],
-            constraint_context["base_control_parameters"]["op9_rop"],
-            constraint_context["inventory_multiplier_range"]["min"],
-            constraint_context["inventory_multiplier_range"]["max"],
-            -0.33,
-            0.33,
-        ],
-        dtype=np.float32,
-    )
+    constraint_vector = build_shift_control_constraint_vector(constraint_context)
 
     for ep in range(args.episodes):
         env = make_shift_control_env(
             risk_level=args.risk_level,
             reward_mode=args.reward_mode,
+            observation_version=args.observation_version,
         )
         obs, _ = env.reset(seed=args.seed_start + ep)
         ep_obs, ep_actions, ep_rewards = [obs.copy()], [], []
@@ -164,7 +92,7 @@ def main() -> None:
             ep_actions.append(action.copy())
             ep_rewards.append(reward)
             all_state_constraint_context.append(
-                build_state_constraint_vector(state_constraint_context)
+                build_shift_control_state_constraint_vector(state_constraint_context)
             )
             all_reward_terms.append(build_reward_term_vector(info, reward))
 
@@ -200,11 +128,16 @@ def main() -> None:
     )
 
     # Save env spec as JSON
-    spec = get_shift_control_env_spec()
+    spec = get_shift_control_env_spec(
+        reward_mode=args.reward_mode,
+        observation_version=args.observation_version,
+    )
     with (args.output_dir / "env_spec.json").open("w") as f:
         json.dump(spec_to_dict(spec), f, indent=2)
     with (args.output_dir / "constraint_context.json").open("w") as f:
         json.dump(constraint_context, f, indent=2)
+    with (args.output_dir / "constraint_context_fields.json").open("w") as f:
+        json.dump({"fields": list(CONTROL_CONTEXT_FIELDS)}, f, indent=2)
     with (args.output_dir / "state_constraint_fields.json").open("w") as f:
         json.dump({"fields": list(STATE_CONSTRAINT_FIELDS)}, f, indent=2)
     with (args.output_dir / "reward_terms_fields.json").open("w") as f:
@@ -230,7 +163,8 @@ def main() -> None:
         "episode_lengths": episode_lengths,
         "risk_level": args.risk_level,
         "reward_mode": args.reward_mode,
-        "obs_shape": [len(all_obs), 15],
+        "observation_version": args.observation_version,
+        "obs_shape": [len(all_obs), int(np.array(all_obs, dtype=np.float32).shape[1])],
         "action_shape": [len(all_actions), 5],
         "constraint_context_shape": [
             len(all_constraint_context),
@@ -254,7 +188,10 @@ def main() -> None:
         json.dump(meta, f, indent=2)
 
     print(f"\nExported {len(all_rewards):,} steps from {args.episodes} episodes")
-    print(f"  observations.npy  shape=({len(all_obs)}, 15)")
+    print(
+        "  observations.npy  "
+        f"shape=({len(all_obs)}, {int(np.array(all_obs, dtype=np.float32).shape[1])})"
+    )
     print(f"  actions.npy       shape=({len(all_actions)}, 5)")
     print(f"  rewards.npy       shape=({len(all_rewards)},)")
     print(f"  episode_ids.npy   shape=({len(all_episode_ids)},)")
