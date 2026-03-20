@@ -864,6 +864,10 @@ class MFSCSimulation:
                     if defects > 0:
                         self._pending_batch -= defects
                         self.total_produced -= defects
+                        # Thesis Table 6.6b: defects returned to Op6 for
+                        # re-processing. Model by feeding back to raw_material_al
+                        # so they re-enter the assembly pipeline as future production.
+                        yield self.raw_material_al.put(defects)
                         self.risk_events.append(
                             RiskEvent(
                                 "R14",
@@ -871,7 +875,7 @@ class MFSCSimulation:
                                 self.env.now,
                                 0,
                                 [7],
-                                f"{defects} defective",
+                                f"{defects} defective (returned to Op6)",
                             )
                         )
 
