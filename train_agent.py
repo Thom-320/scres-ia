@@ -29,7 +29,7 @@ import matplotlib.pyplot as plt  # noqa: E402
 from supply_chain.env_experimental_shifts import MFSCGymEnvShifts
 
 BASE_ENV_REWARD_MODES = {"proxy", "rt_v0"}
-SHIFT_ENV_REWARD_MODES = {"rt_v0", "ReT_thesis"}
+SHIFT_ENV_REWARD_MODES = {"rt_v0", "ReT_thesis", "control_v1", "control_v1_pbrs"}
 DEFAULT_REWARD_MODE_BY_ENV = {"base": "rt_v0", "shift_control": "ReT_thesis"}
 
 
@@ -95,13 +95,13 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--reward-mode",
-        choices=["proxy", "rt_v0", "ReT_thesis"],
+        choices=["proxy", "rt_v0", "ReT_thesis", "control_v1", "control_v1_pbrs"],
         default=None,
         help="Reward function for the selected environment variant.",
     )
     parser.add_argument(
         "--risk-level",
-        choices=["current", "increased", "severe"],
+        choices=["current", "increased", "severe", "severe_training"],
         default="current",
         help="Risk parameter level from thesis Table 6.12.",
     )
