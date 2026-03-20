@@ -164,7 +164,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         w_disr: float = 0.0,
         # --- PBRS parameters (control_v1_pbrs only) ---
         pbrs_alpha: float = 1.0,
-        pbrs_tau: float = 0.95,
+        pbrs_beta: float = 0.5,
         pbrs_gamma: float = 0.99,
         pbrs_variant: str = "cumulative",
     ) -> None:
@@ -173,7 +173,13 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             raise ValueError("step_size_hours must be > 0")
         if year_basis not in YEAR_BASIS_OPTIONS:
             raise ValueError(f"Invalid year_basis={year_basis!r}.")
-        if risk_level not in ("current", "increased", "severe"):
+        if risk_level not in (
+            "current",
+            "increased",
+            "severe",
+            "severe_extended",
+            "severe_training",
+        ):
             raise ValueError(f"Invalid risk_level={risk_level!r}.")
         if reward_mode not in REWARD_MODE_OPTIONS:
             raise ValueError(
@@ -223,7 +229,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self.w_disr = float(w_disr)
 
         self.pbrs_alpha = float(pbrs_alpha)
-        self.pbrs_tau = float(pbrs_tau)
+        self.pbrs_beta = float(pbrs_beta)
         self.pbrs_gamma = float(pbrs_gamma)
         self.pbrs_variant = pbrs_variant
         self._prev_phi: float = 0.0
@@ -517,10 +523,13 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
     # -----------------------------------------------------------------
 
     def _compute_phi_cumulative(self, obs: np.ndarray) -> float:
-        """Cumulative target-deficit potential: Φ = -α·max(0, τ - FR) / τ."""
+        """New potential function: Φ(s) = α * fill_rate - β * backorder_rate"""
         fill_rate = float(np.clip(obs[6], 0.0, 1.0))
-        deficit = max(0.0, self.pbrs_tau - fill_rate) / self.pbrs_tau
-        return -self.pbrs_alpha * deficit
+        # use prev_step_backorder_qty_norm if v2 or fallback to 0
+        backorder_rate = float(np.clip(obs[16], 0.0, 1.0)) if len(obs) > 16 else 0.0
+        alpha = getattr(self, "pbrs_alpha", 1.0)
+        beta = getattr(self, "pbrs_beta", 0.5)
+        return alpha * fill_rate - beta * backorder_rate
 
     def _compute_phi_step_level(self, obs: np.ndarray) -> float:
         """Step-level potential using v2 prev_step_backorder_qty_norm (obs[16])."""
@@ -804,7 +813,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                 out_info["pbrs_variant"] = self.pbrs_variant
                 out_info["pbrs_params"] = {
                     "alpha": self.pbrs_alpha,
-                    "tau": self.pbrs_tau,
+                    "beta": self.pbrs_beta,
                     "gamma": self.pbrs_gamma,
                     "variant": self.pbrs_variant,
                 }

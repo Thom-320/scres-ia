@@ -796,36 +796,39 @@ def test_evaluate_policy_accepts_custom_policy_adapter() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_pbrs_phi_zero_above_target() -> None:
-    """When fill_rate >= tau, Φ should be 0 (no shaping above target)."""
+def test_pbrs_phi_value() -> None:
+    """Φ should be α * fill_rate - β * backorder_rate."""
     from supply_chain.env_experimental_shifts import MFSCGymEnvShifts
 
     env = MFSCGymEnvShifts(
         reward_mode="control_v1_pbrs",
         pbrs_alpha=1.0,
-        pbrs_tau=0.95,
+        pbrs_beta=0.5,
         pbrs_variant="cumulative",
     )
-    obs = np.zeros(15, dtype=np.float32)
-    obs[6] = 0.98  # above tau
+    # create obs with length 17 so obs[16] is available
+    obs = np.zeros(17, dtype=np.float32)
+    obs[6] = 0.8  # fill_rate
+    obs[16] = 0.2  # backorder_rate
     phi = env._compute_phi_cumulative(obs)
-    assert phi == 0.0
+    expected = 1.0 * 0.8 - 0.5 * 0.2
+    assert abs(phi - expected) < 1e-6
 
 
-def test_pbrs_phi_deficit_below_target() -> None:
-    """When fill_rate < tau, Φ should be -α * (τ - FR) / τ."""
+def test_pbrs_phi_value_fallback() -> None:
+    """Φ should handle short obs safely."""
     from supply_chain.env_experimental_shifts import MFSCGymEnvShifts
 
     env = MFSCGymEnvShifts(
         reward_mode="control_v1_pbrs",
         pbrs_alpha=2.0,
-        pbrs_tau=0.95,
+        pbrs_beta=0.5,
         pbrs_variant="cumulative",
     )
     obs = np.zeros(15, dtype=np.float32)
     obs[6] = 0.80
     phi = env._compute_phi_cumulative(obs)
-    expected = -2.0 * (0.95 - 0.80) / 0.95
+    expected = 2.0 * 0.80 - 0.5 * 0.0 # fallback 0 for BO
     assert abs(phi - expected) < 1e-6
 
 
@@ -840,7 +843,7 @@ def test_pbrs_shaping_bonus_positive_on_improvement() -> None:
         step_size_hours=168,
         max_steps=10,
         pbrs_alpha=1.0,
-        pbrs_tau=0.95,
+        pbrs_beta=0.95,
         pbrs_gamma=0.99,
     )
     obs, _ = env.reset(seed=42)
@@ -879,7 +882,7 @@ def test_pbrs_prev_phi_initialized_in_reset() -> None:
         step_size_hours=168,
         max_steps=5,
         pbrs_alpha=1.0,
-        pbrs_tau=0.95,
+        pbrs_beta=0.95,
     )
     obs, _ = env.reset(seed=42)
     # _prev_phi should equal _compute_phi(obs)
@@ -899,7 +902,7 @@ def test_pbrs_step_level_env_runs() -> None:
         max_steps=5,
         observation_version="v2",
         pbrs_alpha=0.5,
-        pbrs_tau=0.95,
+        pbrs_beta=0.95,
         pbrs_gamma=0.99,
         pbrs_variant="step_level",
     )
@@ -927,7 +930,7 @@ def test_pbrs_base_reward_equals_control_v1() -> None:
         step_size_hours=168,
         max_steps=5,
         pbrs_alpha=1.0,
-        pbrs_tau=0.95,
+        pbrs_beta=0.95,
     )
     env_base = MFSCGymEnvShifts(
         reward_mode="control_v1",
@@ -1009,5 +1012,5 @@ def test_benchmark_build_env_kwargs_pbrs(tmp_path: Path) -> None:
     assert kwargs["reward_mode"] == "control_v1_pbrs"
     assert kwargs["pbrs_alpha"] == 2.0
     assert kwargs["pbrs_variant"] == "cumulative"
-    assert kwargs["pbrs_tau"] == 0.95
+    assert kwargs["pbrs_beta"] == 0.95
     assert kwargs["pbrs_gamma"] == 0.99

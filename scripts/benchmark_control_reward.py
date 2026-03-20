@@ -434,7 +434,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="PBRS scaling hyperparameter (alpha).",
     )
     parser.add_argument(
-        "--pbrs-tau",
+        "--pbrs-beta",
         type=float,
         default=0.95,
         help="PBRS fill-rate target (tau).",
@@ -514,7 +514,7 @@ def build_env_kwargs(
     reward_mode = kwargs["reward_mode"]
     if reward_mode == "control_v1_pbrs":
         kwargs["pbrs_alpha"] = getattr(args, "pbrs_alpha", 1.0)
-        kwargs["pbrs_tau"] = getattr(args, "pbrs_tau", 0.95)
+        kwargs["pbrs_beta"] = getattr(args, "pbrs_beta", 0.95)
         kwargs["pbrs_gamma"] = getattr(args, "pbrs_gamma", 0.99)
         kwargs["pbrs_variant"] = getattr(args, "pbrs_variant", "cumulative")
     return kwargs
