@@ -352,6 +352,21 @@ RISKS_SEVERE = {
 #   R11: recovery 2h → 5h (degraded repair logistics under sustained stress)
 #   R24: surge size 1 day → 2–3 days demand per event (campaign-level demand pressure)
 # Use risk_level="severe_extended" to activate. Does NOT replace audited severe results.
+
+# Severe Training Profile - Curriculum Learning
+# Extrema disrupción para forzar al RL a aprender robustness.
+RISKS_SEVERE_TRAINING = {
+    "R11": {"dist": "uniform", "a": 1, "b": 10, "recovery_mean": 6},  # 2x freq of severe (21->10), 3x recovery (2->6)
+    "R12": {"dist": "binomial", "n": 12, "p": 8 / 11},
+    "R13": {"dist": "binomial", "n": 12, "p": 8 / 10},
+    "R14": {"dist": "binomial", "n": 2564, "p": 12 / 100},
+    "R21": {"dist": "uniform", "a": 1, "b": 1008, "recovery_mean": 240}, # 2x freq of severe, 2x recovery
+    "R22": {"dist": "uniform", "a": 1, "b": 336, "recovery_mean": 48},   # 2x freq of severe, 2x recovery
+    "R23": {"dist": "uniform", "a": 1, "b": 672},
+    "R24": {"dist": "uniform", "a": 1, "b": 168, "surge_lo": 7200, "surge_hi": 7800}, # 3x surge
+    "R3": {"dist": "uniform", "a": 1, "b": 40_320}, # 4x more freq than current
+}
+
 RISKS_SEVERE_EXTENDED = {
     "R11": {"dist": "uniform", "a": 1, "b": 21, "recovery_mean": 5},
     "R12": {"dist": "binomial", "n": 12, "p": 8 / 11},

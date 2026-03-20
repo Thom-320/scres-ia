@@ -33,6 +33,7 @@ from supply_chain.config import (
     RISKS_INCREASED,
     RISKS_SEVERE,
     RISKS_SEVERE_EXTENDED,
+    RISKS_SEVERE_TRAINING,
     DEFAULT_YEAR_BASIS,
     HOURS_PER_YEAR_GREGORIAN,
     HOURS_PER_YEAR_THESIS,
@@ -797,6 +798,7 @@ class MFSCSimulation:
         "increased": RISKS_INCREASED,
         "severe": RISKS_SEVERE,
         "severe_extended": RISKS_SEVERE_EXTENDED,
+        "severe_training": RISKS_SEVERE_TRAINING,
     }
 
     def _get_risk_b(self, risk_id: str) -> float:
