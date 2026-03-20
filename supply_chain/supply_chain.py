@@ -846,6 +846,11 @@ class MFSCSimulation:
                 )
 
     def _risk_R14(self):
+        """R14 defective products — Binomial(n, p) per day (Table 6.6b).
+
+        n = actual daily production (shift-adjusted): S=1→2564, S=2→5128,
+        S=3→7692. Config n=2564 is the S=1 reference value from the thesis.
+        """
         p = self._get_risk_p("R14")
         while True:
             yield self.env.timeout(HOURS_PER_DAY)
