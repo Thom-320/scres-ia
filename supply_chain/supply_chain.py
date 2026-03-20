@@ -871,6 +871,14 @@ class MFSCSimulation:
                         )
 
     def _risk_R21(self):
+        """R21 natural disaster generator — non-blocking per thesis Table 6.7b.
+
+        Multiple R21 events may overlap. Each event takes down all affected
+        operations simultaneously; each operation recovers independently with
+        Exp(beta) hours. The generator yields only the inter-arrival time,
+        NOT the recovery duration, so the next event can fire while recovery
+        is still in progress.
+        """
         a = RISKS_CURRENT["R21"]["occurrence"]["a"]
         b_val = self._get_risk_b("R21")
         beta = RISKS_CURRENT["R21"]["recovery"]["mean"]
@@ -886,10 +894,14 @@ class MFSCSimulation:
                 recovery_times[op_id] = rt
                 self.env.process(self._delayed_bring_up(op_id, rt))
             max_rt = max(recovery_times.values())
-            yield self.env.timeout(max_rt)
-            self.risk_events.append(
-                RiskEvent("R21", start, self.env.now, max_rt, list(affected))
-            )
+            self.env.process(self._r21_record_event(start, max_rt, list(affected)))
+
+    def _r21_record_event(self, start: float, max_rt: float, affected: list):
+        """Record R21 risk event after longest recovery completes."""
+        yield self.env.timeout(max_rt)
+        self.risk_events.append(
+            RiskEvent("R21", start, self.env.now, max_rt, affected)
+        )
 
     def _risk_R22(self):
         a = RISKS_CURRENT["R22"]["occurrence"]["a"]
