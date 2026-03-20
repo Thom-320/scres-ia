@@ -1,0 +1,54 @@
+{
+  "artifact_type": "control_reward_benchmark",
+  "benchmark_date_utc": "2026-03-13T14:43:38.577156+00:00",
+  "git_commit": "0b653f1bda97a4893875cee4ea47d72c19862d23",
+  "command": "python scripts/benchmark_control_reward.py --seeds 11 22 33 44 55 --train-timesteps 200000 --eval-episodes 10 --risk-level increased --eval-risk-levels current increased severe --w-bo 4.0 --w-cost 0.02 --w-disr 0.0 --max-survivors 1 --algo ppo --output-dir outputs/benchmarks/control_reward_crosseval_check --artifact-label control_reward_crosseval_check --step-size-hours 168 --max-steps 260 --stochastic-pt",
+  "source_benchmark_directory": "/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/outputs/benchmarks/control_reward_crosseval_check",
+  "bundle_directory": "/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/docs/artifacts/control_reward/control_reward_crosseval_check",
+  "config": {
+    "algo": "ppo",
+    "frame_stack": 1,
+    "observation_version": "v1",
+    "reward_mode": "control_v1",
+    "seeds": [
+      11,
+      22,
+      33,
+      44,
+      55
+    ],
+    "train_timesteps": 200000,
+    "eval_episodes": 10,
+    "step_size_hours": 168.0,
+    "max_steps": 260,
+    "risk_level": "increased",
+    "stochastic_pt": true,
+    "year_basis": "thesis",
+    "w_bo": [
+      4.0
+    ],
+    "w_cost": [
+      0.02
+    ],
+    "w_disr": [
+      0.0
+    ],
+    "max_survivors": 1,
+    "learning_rate": 0.0003,
+    "n_steps": 1024,
+    "batch_size": 64,
+    "n_epochs": 10,
+    "gamma": 0.99,
+    "gae_lambda": 0.95,
+    "clip_range": 0.2,
+    "tau": 0.005,
+    "train_freq": 1,
+    "gradient_steps": 1,
+    "learning_starts": 5000
+  },
+  "files": {
+    "comparison_table.csv": "/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/docs/artifacts/control_reward/control_reward_crosseval_check/comparison_table.csv",
+    "policy_summary.csv": "/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/docs/artifacts/control_reward/control_reward_crosseval_check/policy_summary.csv",
+    "summary.json": "/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/docs/artifacts/control_reward/control_reward_crosseval_check/summary.json"
+  }
+}

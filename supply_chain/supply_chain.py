@@ -71,9 +71,9 @@ class OrderRecord:
     contingent: bool = False
     lost: bool = False
     # Thesis ReT sub-indicators (Garrido-Rios 2017, Eq. 5.1-5.5):
-    APj: float = 0.0   # Autotomy period (hours): CTj=LTj and risks impact in [OPTj,OATj]
-    RPj: float = 0.0   # Recovery period (hours): OATj - first R0cr detection
-    DPj: float = 0.0   # Disruption period (hours): CTj when CTj > LTj
+    APj: float = 0.0  # Autotomy period (hours): CTj=LTj and risks impact in [OPTj,OATj]
+    RPj: float = 0.0  # Recovery period (hours): OATj - first R0cr detection
+    DPj: float = 0.0  # Disruption period (hours): CTj when CTj > LTj
 
 
 @dataclass
@@ -427,9 +427,10 @@ class MFSCSimulation:
         if not self.orders:
             return 0.0
         now = self.env.now
-        delayed_orders = sum(
-            1 for o in self.pending_backorders if (now - o.OPTj) > o.LTj
-        ) + self.total_unattended_orders
+        delayed_orders = (
+            sum(1 for o in self.pending_backorders if (now - o.OPTj) > o.LTj)
+            + self.total_unattended_orders
+        )
         return min(1.0, delayed_orders / len(self.orders))
 
     def get_observation(self) -> np.ndarray:
@@ -902,13 +903,11 @@ class MFSCSimulation:
                         )
 
     def _risk_R21(self):
-        """R21 natural disaster generator — non-blocking per thesis Table 6.7b.
+        """R21 natural disaster generator — blocking mode (original behavior).
 
-        Multiple R21 events may overlap. Each event takes down all affected
-        operations simultaneously; each operation recovers independently with
-        Exp(beta) hours. The generator yields only the inter-arrival time,
-        NOT the recovery duration, so the next event can fire while recovery
-        is still in progress.
+        Each event takes down all affected operations simultaneously; each
+        operation recovers independently with Exp(beta) hours. The generator
+        waits for the slowest recovery before scheduling the next event.
         """
         a = RISKS_CURRENT["R21"]["occurrence"]["a"]
         b_val = self._get_risk_b("R21")
@@ -925,14 +924,10 @@ class MFSCSimulation:
                 recovery_times[op_id] = rt
                 self.env.process(self._delayed_bring_up(op_id, rt))
             max_rt = max(recovery_times.values())
-            self.env.process(self._r21_record_event(start, max_rt, list(affected)))
-
-    def _r21_record_event(self, start: float, max_rt: float, affected: list):
-        """Record R21 risk event after longest recovery completes."""
-        yield self.env.timeout(max_rt)
-        self.risk_events.append(
-            RiskEvent("R21", start, self.env.now, max_rt, affected)
-        )
+            yield self.env.timeout(max_rt)
+            self.risk_events.append(
+                RiskEvent("R21", start, self.env.now, max_rt, list(affected))
+            )
 
     def _risk_R22(self):
         a = RISKS_CURRENT["R22"]["occurrence"]["a"]
@@ -1061,22 +1056,22 @@ class MFSCSimulation:
         for e in self.risk_events:
             total_dt.setdefault(e.risk_id, 0)
             total_dt[e.risk_id] += e.duration
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print("  Risk Event Summary")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
         print(f"  {'Risk':<8} {'Count':>8} {'Total Down':>12} {'Avg':>10}")
-        print(f"  {'-'*40}")
+        print(f"  {'-' * 40}")
         for rid in sorted(counts.keys()):
             c = counts[rid]
             dt = total_dt[rid]
-            print(f"  {rid:<8} {c:>8} {dt:>11,.0f}h {dt/c:>9,.1f}h")
+            print(f"  {rid:<8} {c:>8} {dt:>11,.0f}h {dt / c:>9,.1f}h")
         print(f"\n  Total: {len(self.risk_events)} events")
-        print(f"{'='*60}\n")
+        print(f"{'=' * 60}\n")
 
     def summary(self) -> None:
         years = self.horizon / self.hours_per_year
         mode = f"ENABLED ({self.risk_level})" if self.risks_enabled else "DISABLED"
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print("  MFSC Simulation Summary")
         print(f"  Horizon: {self.horizon:,} hrs ({years:.1f} years)")
         print(f"  Shifts: S={self.shifts}  |  Risks: {mode}")
@@ -1084,7 +1079,7 @@ class MFSCSimulation:
             f"  Granularity: HOURLY (assembly)  |  Seed: {self.seed}  |"
             f"  Year basis: {self.year_basis} ({self.hours_per_year:,}h)"
         )
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
         print(f"  Warmup:         {self.warmup_time:,.0f} hrs")
         print(f"  Produced:       {self.total_produced:,}")
         print(f"  Delivered:      {self.total_delivered:,}")
@@ -1096,7 +1091,7 @@ class MFSCSimulation:
         print(f"  Fill rate:      {self._fill_rate():.1%}")
         print(f"  Avg ann. prod:  {self.total_produced / years:,.0f}")
         print(f"  Avg ann. del:   {self.total_delivered / years:,.0f}")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
         if self.risks_enabled:
             self.risk_summary()
 

@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MFSC + RL: Thesis Alignment &amp; Progress Report</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --card: #22262f;
+    --border: #2e3340;
+    --text: #e2e4e9;
+    --muted: #8b8fa3;
+    --accent: #6c8cff;
+    --accent2: #38bdf8;
+    --green: #4ade80;
+    --yellow: #fbbf24;
+    --red: #f87171;
+    --orange: #fb923c;
+  }
+
+  html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; }
+
+  .deck { position: relative; width: 100vw; height: 100vh; }
+  .slide {
+    position: absolute; inset: 0;
+    display: none; flex-direction: column;
+    padding: 3.5rem 5rem;
+    opacity: 0; transition: opacity 0.3s ease;
+  }
+  .slide.active { display: flex; opacity: 1; }
+
+  h1 { font-size: 2.6rem; font-weight: 700; line-height: 1.2; margin-bottom: 0.5rem; }
+  h2 { font-size: 1.8rem; font-weight: 600; margin-bottom: 1.2rem; color: var(--accent); }
+  h3 { font-size: 1.15rem; font-weight: 500; color: var(--muted); margin-bottom: 1.8rem; }
+  p, li { font-size: 1.05rem; line-height: 1.65; }
+  ul { list-style: none; padding: 0; }
+  ul li { padding: 0.35rem 0; padding-left: 1.4rem; position: relative; }
+  ul li::before { content: ''; position: absolute; left: 0; top: 0.75rem; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+  ul.checks li::before { content: '\2713'; background: none; color: var(--green); font-weight: 700; font-size: 1rem; top: 0.35rem; }
+  ul.crosses li::before { content: '\2717'; background: none; color: var(--red); font-weight: 700; font-size: 1rem; top: 0.35rem; }
+  ul.arrows li::before { content: '\2192'; background: none; color: var(--yellow); font-weight: 700; font-size: 1rem; top: 0.35rem; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; flex: 1; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem; flex: 1; }
+
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1.5rem;
+  }
+  .card h4 { font-size: 1rem; font-weight: 600; margin-bottom: 0.6rem; color: var(--accent2); }
+  .card p, .card li { font-size: 0.95rem; }
+
+  .stat { text-align: center; padding: 1.2rem; }
+  .stat .number { font-size: 2.5rem; font-weight: 700; color: var(--accent); }
+  .stat .label { font-size: 0.85rem; color: var(--muted); margin-top: 0.3rem; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th { text-align: left; padding: 0.6rem 0.8rem; border-bottom: 2px solid var(--border); color: var(--muted); font-weight: 500; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  td { padding: 0.55rem 0.8rem; border-bottom: 1px solid var(--border); }
+  tr:last-child td { border-bottom: none; }
+
+  .tag {
+    display: inline-block; padding: 0.15rem 0.55rem; border-radius: 4px;
+    font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .tag.green { background: rgba(74,222,128,0.15); color: var(--green); }
+  .tag.yellow { background: rgba(251,191,36,0.15); color: var(--yellow); }
+  .tag.red { background: rgba(248,113,113,0.15); color: var(--red); }
+  .tag.blue { background: rgba(108,140,255,0.15); color: var(--accent); }
+
+  .pipeline {
+    display: flex; align-items: center; gap: 0; flex-wrap: wrap;
+    justify-content: center; margin: 1rem 0;
+  }
+  .pipeline .box {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 8px; padding: 0.7rem 1.1rem; font-size: 0.85rem; font-weight: 500;
+    white-space: nowrap;
+  }
+  .pipeline .arrow { color: var(--muted); font-size: 1.3rem; padding: 0 0.4rem; }
+
+  .footer {
+    position: absolute; bottom: 1.5rem; left: 5rem; right: 5rem;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 0.75rem; color: var(--muted);
+  }
+  .footer .nav { display: flex; gap: 0.3rem; }
+  .footer .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--border); transition: background 0.2s;
+  }
+  .footer .dot.active { background: var(--accent); }
+
+  .title-slide { justify-content: center; align-items: center; text-align: center; }
+  .title-slide h1 { font-size: 3rem; margin-bottom: 0.8rem; }
+  .title-slide h3 { font-size: 1.2rem; max-width: 700px; }
+
+  .highlight { color: var(--accent); }
+  .highlight2 { color: var(--accent2); }
+  .highlight-green { color: var(--green); }
+  .highlight-yellow { color: var(--yellow); }
+
+  code { font-family: 'JetBrains Mono', 'Fira Code', monospace; background: var(--surface); padding: 0.1rem 0.4rem; border-radius: 4px; font-size: 0.88em; }
+
+  .two-col { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 2.5rem; flex: 1; align-items: start; }
+  .compact li { padding: 0.2rem 0; padding-left: 1.4rem; font-size: 0.95rem; }
+  .small { font-size: 0.88rem; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+<!-- ============================================================ -->
+<!-- SLIDE 1: Title -->
+<!-- ============================================================ -->
+<div class="slide title-slide active">
+  <h1>MFSC Simulation + RL<br><span class="highlight">Thesis Alignment Report</span></h1>
+  <h3>Python rebuild of Garrido (2017) 13-operation military food supply chain,<br>integrated with Gymnasium/PPO and DKANA-ready data pipeline</h3>
+  <p style="margin-top:2rem; color:var(--muted); font-size:0.95rem;">
+    Thom &amp; David &middot; March 2026
+  </p>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 2: Architecture Overview -->
+<!-- ============================================================ -->
+<div class="slide">
+  <h2>Architecture Overview</h2>
+  <h3>DES engine &rarr; Gymnasium wrapper &rarr; RL / DKANA</h3>
+  <div class="pipeline" style="margin-bottom:1.5rem;">
+    <div class="box">config.py<br><span class="small">Thesis tables</span></div>
+    <div class="arrow">&rarr;</div>
+    <div class="box">MFSCSimulation<br><span class="small">SimPy DES, 13 ops</span></div>
+    <div class="arrow">&rarr;</div>
+    <div class="box">MFSCGymEnvShifts<br><span class="small">Gymnasium wrapper</span></div>
+    <div class="arrow">&rarr;</div>
+    <div class="box" style="border-color:var(--accent);">PPO / SAC<br><span class="small">Stable-Baselines3</span></div>
+  </div>
+  <div class="pipeline" style="margin-bottom:1.5rem;">
+    <div class="box">MFSCGymEnvShifts</div>
+    <div class="arrow">&rarr;</div>
+    <div class="box">export_trajectories<br><span class="small">.npy files</span></div>
+    <div class="arrow">&rarr;</div>
+    <div class="box">build_dkana_dataset<br><span class="small">Sliding windows</span></div>
+    <div class="arrow">&rarr;</div>
+    <div class="box" style="border-color:var(--accent2);">DKANAPolicy<br><span class="small">David's architecture</span></div>
+  </div>
+  <div class="grid3" style="margin-top:0.5rem;">
+    <div class="card stat">
+      <div class="number">13</div>
+      <div class="label">Operations (Op1&ndash;Op13)</div>
+    </div>
+    <div class="card stat">
+      <div class="number">9</div>
+      <div class="label">Risk types (R11&ndash;R3)</div>
+    </div>
+    <div class="card stat">
+      <div class="number">88</div>
+      <div class="label">Tests passing</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 3: Thesis Parameter Audit -->
+<!-- ============================================================ -->
+<div class="slide">
+  <h2>Thesis Parameter Audit</h2>
+  <h3>All 13 operations cross-referenced against Tables 6.4, 6.10, 6.12, 6.16, 6.20</h3>
+  <div style="overflow-y:auto; flex:1;">
+  <table>
+    <tr><th>Category</th><th>Parameters Checked</th><th>Source</th><th>Status</th></tr>
+    <tr><td>Operations PT/Q/ROP</td><td>Op1&ndash;Op13 processing times, quantities, reorder points</td><td>Table 6.20, Fig 6.2</td><td><span class="tag green">Match</span></td></tr>
+    <tr><td>Assembly rate</td><td>&lambda; = 320.5 rations/hour, hourly granularity</td><td>Section 6.3.2</td><td><span class="tag green">Match</span></td></tr>
+    <tr><td>Demand</td><td>U(2400, 2600) rations/day, Mon&ndash;Sat</td><td>Table 6.4</td><td><span class="tag green">Match</span></td></tr>
+    <tr><td>Risk distributions (current)</td><td>R11&ndash;R3: all 9 occurrence + recovery distributions</td><td>Table 6.12 (&minus;)</td><td><span class="tag green">Match</span></td></tr>
+    <tr><td>Risk distributions (increased)</td><td>R11&ndash;R3: all 9 occurrence distributions</td><td>Table 6.12 (+)</td><td><span class="tag green">Match</span></td></tr>
+    <tr><td>Capacity by shifts</td><td>S=1/2/3: Q, batch size, ROP changes</td><td>Table 6.20</td><td><span class="tag green">Match</span></td></tr>
+    <tr><td>Inventory buffers</td><td>5 levels at Op3/Op5/Op9 (168h&ndash;1344h)</td><td>Table 6.16</td><td><span class="tag green">Match</span></td></tr>
+    <tr><td>Backorder queue</td><td>Cap = 60, SPT rule, contingent priority</td><td>Section 6.5.4</td><td><span class="tag green">Match</span></td></tr>
+    <tr><td>Warm-up trigger</td><td>First 5000-ration batch at Op9</td><td>Section 6.8.2</td><td><span class="tag green">Match</span></td></tr>
+  </table>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 4: Fixes Applied -->
+<!-- ============================================================ -->
+<div class="slide">
+  <h2>Alignment Fixes Applied</h2>
+  <h3>4 discrepancies found and corrected in this audit cycle</h3>
+  <div class="grid2">
+    <div class="card">
+      <h4>Fix 1: Op4 Transit Delay</h4>
+      <p>Op3 (reception, 24h) and Op4 (transport, 24h) were merged into one 24h step. Now correctly modeled as <strong>two separate operations</strong> totaling ~48h pipeline delay.</p>
+      <p class="small" style="margin-top:0.5rem;">supply_chain.py &mdash; _op3_wdc_dispatch()</p>
+    </div>
+    <div class="card">
+      <h4>Fix 2: Shift &harr; Batch Auto-Coupling</h4>
+      <p>Table 6.20: S=3 &rarr; batch_size=7,000. Previously static at 5,000. Now <strong>auto-updates</strong> via <code>CAPACITY_BY_SHIFTS</code> when assembly_shifts changes.</p>
+      <p class="small" style="margin-top:0.5rem;">supply_chain.py &mdash; step() + live batch_size read</p>
+    </div>
+    <div class="card">
+      <h4>Fix 3: Fill Rate (Eq 5.1)</h4>
+      <p>Was order-count based. Now <strong>quantity-based</strong> per thesis: <code>FR = 1 &minus; (B + U) / D</code> using the backorder queue state.</p>
+      <p class="small" style="margin-top:0.5rem;">supply_chain.py &mdash; _fill_rate() + _backorder_rate()</p>
+    </div>
+    <div class="card">
+      <h4>Fix 4: Backorder Queue (Sec 6.5.4)</h4>
+      <p>Implemented Garrido's <strong>60-order capped queue</strong> with SPT scheduling, contingent demand priority, and U<sub>t</sub> (unattended) tracking.</p>
+      <p class="small" style="margin-top:0.5rem;">supply_chain.py &mdash; _enqueue_backorder(), _serve_pending_backorders()</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 5: Scalar vs Vector -->
+<!-- ============================================================ -->
+<div class="slide">
+  <h2>Scalar vs Vector Representation</h2>
+  <h3>David's concern: "the implementation uses scalars where the thesis defines vectors"</h3>
+  <div class="two-col">
+    <div>
+      <p style="margin-bottom:1rem;">The thesis defines Q at Op3 as a <strong>12-element vector</strong>: {15,500 rm<sub>1</sub>, ..., 15,500 rm<sub>12</sub>}.</p>
+      <p style="margin-bottom:1rem;">Our implementation stores Q as a <strong>scalar per material</strong> (15,500) and multiplies by <code>NUM_RAW_MATERIALS = 12</code> when dispatching.</p>
+      <p style="margin-bottom:1rem;"><span class="highlight-green">Mathematically equivalent</span> &mdash; all 12 raw materials are identical in the thesis (same Q, PT, risk distributions).</p>
+      <p>For DKANA, the state constraint context already provides <strong>vector-structured data</strong>:</p>
+    </div>
+    <div>
+      <div class="card">
+        <h4>DKANA Vectors Provided</h4>
+        <ul class="checks compact">
+          <li>7-dim inventory by buffer node</li>
+          <li>7-dim backorder rate by node</li>
+          <li>13-dim disruption fraction by operation</li>
+          <li>3-dim backorder queue state</li>
+          <li>20-dim observation (v3)</li>
+          <li>9-dim control context</li>
+        </ul>
+        <p class="small" style="margin-top:0.8rem;">Total state constraint: <strong>45 dimensions</strong><br>Row matrix for DKANA: <strong>65 &times; 3</strong></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 6: Deterministic Baseline -->
+<!-- ============================================================ -->
+<div class="slide">
+  <h2>Deterministic Baseline (Phase 1)</h2>
+  <h3>Cf0 configuration: S=1, I<sub>t,1</sub>=0, no risks &mdash; validates against Table 6.10</h3>
+  <div class="grid2">
+    <div>
+      <div class="card stat" style="margin-bottom:1rem;">
+        <div class="number">738,432</div>
+        <div class="label">Annual production (rations) &mdash; steady state</div>
+      </div>
+      <div class="card stat" style="margin-bottom:1rem;">
+        <div class="number">100%</div>
+        <div class="label">Fill rate &mdash; no backorders</div>
+      </div>
+      <div class="card stat">
+        <div class="number">919 h</div>
+        <div class="label">Warm-up time (thesis est. 838.8h)</div>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="height:100%;">
+        <h4>Validation Notes</h4>
+        <ul class="compact">
+          <li>Production is <strong>perfectly steady</strong> across all 8 years (deterministic)</li>
+          <li>Thesis ECS range: 712k&ndash;889k (Table 6.10)</li>
+          <li>Our 738k falls <strong>within range</strong></li>
+          <li>Warm-up slightly higher (919h vs 838.8h) due to Op4 transit fix adding 24h to pipeline</li>
+          <li>Year basis: thesis (336 days = 8,064 hrs/year)</li>
+          <li>Assembly: 320.5 rac/hr &times; 8h &times; 6d &times; 48w = 738,432</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 7: Stochastic Baseline -->
+<!-- ============================================================ -->
+<div class="slide">
+  <h2>Stochastic Baseline (Phase 2)</h2>
+  <h3>S=1, increased risk level (+), 20-year horizon, seed=42</h3>
+  <div class="grid3">
+    <div class="card stat">
+      <div class="number" style="color:var(--orange);">551k</div>
+      <div class="label">Annual production</div>
+    </div>
+    <div class="card stat">
+      <div class="number" style="color:var(--red);">59.3%</div>
+      <div class="label">Fill rate</div>
+    </div>
+    <div class="card stat">
+      <div class="number">13,554</div>
+      <div class="label">Risk events (20 yrs)</div>
+    </div>
+  </div>
+  <div class="grid3" style="margin-top:1rem;">
+    <div class="card stat">
+      <div class="number">5,759</div>
+      <div class="label">Total backorders</div>
+    </div>
+    <div class="card stat">
+      <div class="number" style="color:var(--red);">2,285</div>
+      <div class="label">Unattended orders (U<sub>t</sub>)</div>
+    </div>
+    <div class="card stat">
+      <div class="number">59</div>
+      <div class="label">Pending queue at end</div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:1rem;">
+    <p>Under increased risk, S=1 capacity is <strong>insufficient</strong> &mdash; production drops 25%, fill rate collapses to 59%. This is the scenario where RL shift control adds value.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 8: RL Integration -->
+<!-- ============================================================ -->
+<div class="slide">
+  <h2>RL Integration</h2>
+  <h3>5-dimensional action space with 4 reward formulations</h3>
+  <div class="grid2">
+    <div>
+      <div class="card" style="margin-bottom:1rem;">
+        <h4>Action Space (5-dim)</h4>
+        <table>
+          <tr><td><code>a[0]</code></td><td>Op3 Q multiplier</td><td>[0.5, 2.0]</td></tr>
+          <tr><td><code>a[1]</code></td><td>Op9 Q multiplier</td><td>[0.5, 2.0]</td></tr>
+          <tr><td><code>a[2]</code></td><td>Op3 ROP multiplier</td><td>[0.5, 2.0]</td></tr>
+          <tr><td><code>a[3]</code></td><td>Op9 ROP multiplier</td><td>[0.5, 2.0]</td></tr>
+          <tr><td><code>a[4]</code></td><td>Shift selector</td><td>S=1/2/3</td></tr>
+        </table>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:1rem;">
+        <h4>Reward Modes</h4>
+        <table>
+          <tr><td><strong>control_v1</strong></td><td><span class="tag blue">Primary</span></td></tr>
+          <tr><td colspan="2" style="color:var(--muted); font-size:0.88rem;">&minus;w<sub>bo</sub>&middot;service_loss &minus; w<sub>cost</sub>&middot;shift_cost &minus; w<sub>disr</sub>&middot;disruption</td></tr>
+          <tr><td><strong>ReT_thesis</strong></td><td><span class="tag yellow">Report only</span></td></tr>
+          <tr><td colspan="2" style="color:var(--muted); font-size:0.88rem;">Eq 5.5 approximation (4-case piecewise)</td></tr>
+          <tr><td><strong>control_v1_pbrs</strong></td><td><span class="tag green">Shaping</span></td></tr>
+          <tr><td colspan="2" style="color:var(--muted); font-size:0.88rem;">+ PBRS (Ng et al. 1999) target-deficit potential</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:0.5rem;">
+    <p><strong>Key finding:</strong> ReT_thesis as training reward induces misalignment (agent collapses to S=1). Kept as <em>reporting-only</em> metric for audit. <code>control_v1</code> enables meaningful service-cost tradeoff.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 9: DKANA Data Contract -->
+<!-- ============================================================ -->
+<div class="slide">
+  <h2>DKANA Data Contract</h2>
+  <h3>End-to-end pipeline: environment &rarr; .npy export &rarr; DKANA-ready tensors</h3>
+  <div class="pipeline" style="margin-bottom:1.5rem;">
+    <div class="box">Gym env<br><span class="small">rollout episodes</span></div>
+    <div class="arrow">&rarr;</div>
+    <div class="box">export_trajectories<br><span class="small">obs, actions, rewards</span></div>
+    <div class="arrow">&rarr;</div>
+    <div class="box">build_dkana_dataset<br><span class="small">sliding windows</span></div>
+    <div class="arrow">&rarr;</div>
+    <div class="box" style="border-color:var(--accent2);">DKANAPolicy<br><span class="small">forward pass verified</span></div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <h4>Exported Arrays</h4>
+      <table>
+        <tr><td>observations</td><td><strong>(N, 20)</strong></td><td>v3 obs</td></tr>
+        <tr><td>actions</td><td><strong>(N, 5)</strong></td><td>policy outputs</td></tr>
+        <tr><td>state_constraints</td><td><strong>(N, 45)</strong></td><td>per-node vectors</td></tr>
+        <tr><td>constraint_context</td><td><strong>(N, 9)</strong></td><td>control params</td></tr>
+        <tr><td>rewards</td><td><strong>(N, 5)</strong></td><td>reward terms</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h4>DKANA Tensors (window=4)</h4>
+      <table>
+        <tr><td>row_matrices</td><td><strong>(N, 4, 65, 3)</strong></td><td>C(S<sub>i</sub>)</td></tr>
+        <tr><td>config_context</td><td><strong>(N, 4, 14)</strong></td><td>&theta;<sub>SC</sub></td></tr>
+        <tr><td>action_targets</td><td><strong>(N, 5)</strong></td><td>labels</td></tr>
+        <tr><td>time_mask</td><td><strong>(N, 4)</strong></td><td>causal mask</td></tr>
+      </table>
+      <p class="small" style="margin-top:0.5rem;">EC + MRC pre-processing implemented. David provides KAN layers + training loop.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 10: Preliminary Results -->
+<!-- ============================================================ -->
+<div class="slide">
+  <h2>Preliminary Results</h2>
+  <h3>Three-part bottleneck identified: reward alignment &rarr; sensitivity &rarr; regime dependence</h3>
+  <div class="grid2">
+    <div>
+      <div class="card" style="margin-bottom:1rem;">
+        <h4>PPO + ReT_thesis</h4>
+        <p><span class="tag red">Misaligned</span> &mdash; Agent collapses to S=1 (cheapest shift). Optimizes cost term, ignores service.</p>
+      </div>
+      <div class="card" style="margin-bottom:1rem;">
+        <h4>PPO + control_v1 (50k steps)</h4>
+        <p><span class="tag yellow">Weight-sensitive</span> &mdash; Narrow region of w<sub>bo</sub>/w<sub>cost</sub> where PPO outperforms static policies.</p>
+      </div>
+      <div class="card">
+        <h4>PPO + control_v1 (500k steps)</h4>
+        <p><span class="tag green">Competitive</span> &mdash; Matches best static under increased risk. Slight advantage under severe (p~0.19).</p>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="height:100%;">
+        <h4>Experimental Lanes</h4>
+        <ul class="compact">
+          <li><strong>SAC vs PPO</strong> &mdash; comparison pending</li>
+          <li><strong>Frame-stacking</strong> (VecFrameStack n=4) &mdash; tests POMDP hypothesis</li>
+          <li><strong>RecurrentPPO</strong> (LSTM) &mdash; if frame-stacking helps</li>
+          <li><strong>DKANA</strong> &mdash; justified after above comparisons</li>
+        </ul>
+        <div style="margin-top:1.5rem; padding:1rem; background:var(--surface); border-radius:8px;">
+          <p style="font-size:0.9rem;"><strong>Publication framing:</strong> Reward design and auditing for operational resilience control under disruptions. Not architectural novelty.</p>
+          <p class="small" style="margin-top:0.3rem;">Target: IJPR, IEEE TAI, or EJOR</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 11: Open Gap — SDM + Order-Level ReT -->
+<!-- ============================================================ -->
+<div class="slide">
+  <h2>Open Gap: SDM Output &amp; Order-Level Re<sub>T</sub></h2>
+  <h3>The simulation runs correctly, but does not yet produce the thesis output format</h3>
+  <div class="grid2">
+    <div>
+      <div class="card" style="margin-bottom:1rem;">
+        <h4>Table 6.25 &mdash; SDM Columns</h4>
+        <table>
+          <tr><th>Column</th><th>Description</th><th>Status</th></tr>
+          <tr><td><code>Cf<sub>i</sub></code></td><td>Configuration ID</td><td><span class="tag green">have</span></td></tr>
+          <tr><td><code>j</code></td><td>Order number</td><td><span class="tag green">have</span></td></tr>
+          <tr><td><code>OPT<sub>j</sub></code></td><td>Order placement time</td><td><span class="tag green">have</span></td></tr>
+          <tr><td><code>OAT<sub>j</sub></code></td><td>Order arrival time</td><td><span class="tag green">have</span></td></tr>
+          <tr><td><code>CT<sub>j</sub></code></td><td>Cycle time</td><td><span class="tag green">have</span></td></tr>
+          <tr><td><code>LT<sub>j</sub></code></td><td>Lead time (reference)</td><td><span class="tag yellow">static</span></td></tr>
+          <tr><td><code>B<sub>t</sub></code></td><td>Cumulative backorders</td><td><span class="tag green">have</span></td></tr>
+          <tr><td><code>U<sub>t</sub></code></td><td>Unattended orders</td><td><span class="tag green">have</span></td></tr>
+          <tr><td><code>AP<sub>j</sub></code></td><td>Autotomy period</td><td><span class="tag red">missing</span></td></tr>
+          <tr><td><code>RP<sub>j</sub></code></td><td>Recovery period</td><td><span class="tag red">missing</span></td></tr>
+          <tr><td><code>DP<sub>j</sub></code></td><td>Disruption period</td><td><span class="tag red">missing</span></td></tr>
+          <tr><td><code>R<sub>cr</sub>_Op</code></td><td>Risk type / affected op</td><td><span class="tag yellow">events only</span></td></tr>
+        </table>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:1rem;">
+        <h4>What we have now (step-level)</h4>
+        <p>Re<sub>T</sub> is computed <strong>per RL step</strong> (168h window) using aggregated fill rate and disruption fraction. This is a <em>publishable approximation</em> (assumptions A1&ndash;A4 documented).</p>
+        <p style="margin-top:0.5rem;">4-case classification works at step level:</p>
+        <ul class="compact" style="margin-top:0.3rem;">
+          <li>Case 1: fill_rate_only (no disruption)</li>
+          <li>Case 2: autotomy (high FR despite disruption)</li>
+          <li>Case 3: recovery (degraded FR + disruption)</li>
+          <li>Case 4: non-recovery (severe collapse)</li>
+        </ul>
+      </div>
+      <div class="card" style="border-color:var(--red);">
+        <h4>What's missing (order-level)</h4>
+        <p>The thesis computes AP<sub>j</sub>, RP<sub>j</sub>, DP<sub>j</sub> <strong>per order j</strong> by tracking which risk event(s) overlap each order's lifecycle (OPT<sub>j</sub> &rarr; OAT<sub>j</sub>). This requires:</p>
+        <ul class="compact" style="margin-top:0.3rem;">
+          <li>Linking each order to concurrent risk events</li>
+          <li>Computing disruption overlap per order</li>
+          <li>Classifying AP/RP/DP per order (not per step)</li>
+          <li>Producing full SDM matrix for validation</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:0.8rem;">
+    <p><strong>Question for Garrido:</strong> For the RL publication, is the step-level ReT approximation sufficient with the documented assumptions? Or do we need the full order-level SDM to validate the simulation before running RL experiments?</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 12: Next Steps -->
+<!-- ============================================================ -->
+<div class="slide">
+  <h2>Next Steps</h2>
+  <h3>Roadmap to publication</h3>
+  <div class="grid2">
+    <div>
+      <div class="card" style="margin-bottom:1rem;">
+        <h4>Simulation &amp; Environment</h4>
+        <ul class="checks compact">
+          <li>Thesis parameter audit &mdash; complete</li>
+          <li>Backorder queue (Sec 6.5.4) &mdash; implemented</li>
+          <li>Op4 transit + shift coupling &mdash; fixed</li>
+          <li>Fill rate aligned with Eq 5.1</li>
+          <li>v3 observation (20-dim) for DKANA</li>
+          <li>State constraints (45-dim) with vectors</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:1rem;">
+        <h4>Experiments Pending</h4>
+        <ul class="arrows compact">
+          <li>SAC vs PPO head-to-head (500k steps)</li>
+          <li>Frame-stacking ablation</li>
+          <li>RecurrentPPO if POMDP signal confirmed</li>
+          <li>DKANA training + evaluation (David)</li>
+          <li>Cross-scenario evaluation (current/increased/severe)</li>
+          <li>Formal Pareto front: service vs cost</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:0.5rem;">
+    <p><strong>Division of labor:</strong> Thom owns the simulation + RL benchmarks. David owns DKANA architecture + training. Environment contract is frozen at v3 (20 obs + 45 state constraints + 5 actions).</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 13: Thank You -->
+<!-- ============================================================ -->
+<div class="slide title-slide">
+  <h1>Questions?</h1>
+  <h3 style="margin-top:1rem;">Repository: <code>scres-ia</code> &middot; 88 tests &middot; 10 files changed in this audit cycle<br><br>
+  <span style="color:var(--accent);">All thesis parameters validated. Environment pristine for DKANA.</span></h3>
+</div>
+
+</div><!-- /deck -->
+
+<!-- Navigation -->
+<div class="footer" id="footer"></div>
+
+<script>
+const slides = document.querySelectorAll('.slide');
+let current = 0;
+const total = slides.length;
+
+function renderFooter() {
+  const footer = document.getElementById('footer');
+  footer.innerHTML = `
+    <span>MFSC + RL &middot; Garrido Thesis Alignment</span>
+    <div class="nav">${Array.from({length: total}, (_, i) =>
+      `<div class="dot${i === current ? ' active' : ''}"></div>`
+    ).join('')}</div>
+    <span>${current + 1} / ${total}</span>
+  `;
+}
+
+function goTo(n) {
+  slides[current].classList.remove('active');
+  current = Math.max(0, Math.min(n, total - 1));
+  slides[current].classList.add('active');
+  renderFooter();
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); goTo(current + 1); }
+  if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); goTo(current - 1); }
+  if (e.key === 'Home') goTo(0);
+  if (e.key === 'End') goTo(total - 1);
+});
+
+document.addEventListener('click', e => {
+  if (e.clientX > window.innerWidth / 2) goTo(current + 1);
+  else goTo(current - 1);
+});
+
+renderFooter();
+</script>
+</body>
+</html>
