@@ -34,6 +34,12 @@ OBSERVATION_FIELDS_V3: tuple[str, ...] = OBSERVATION_FIELDS_V2 + (
     "cum_backorder_rate",
     "cum_downhours_fraction",
 )
+OBSERVATION_FIELDS_V4: tuple[str, ...] = OBSERVATION_FIELDS_V3 + (
+    "rations_sb_dispatch_norm",
+    "assembly_shifts_active_norm",
+    "op1_down",
+    "op2_down",
+)
 OBSERVATION_FIELDS: tuple[str, ...] = OBSERVATION_FIELDS_V1
 
 ACTION_FIELDS: tuple[str, ...] = (
@@ -141,8 +147,11 @@ def get_observation_fields(observation_version: str = "v1") -> tuple[str, ...]:
         return OBSERVATION_FIELDS_V2
     if observation_version == "v3":
         return OBSERVATION_FIELDS_V3
+    if observation_version == "v4":
+        return OBSERVATION_FIELDS_V4
     raise ValueError(
-        f"Invalid observation_version={observation_version!r}. Expected 'v1', 'v2', or 'v3'."
+        f"Invalid observation_version={observation_version!r}. "
+        "Expected 'v1', 'v2', 'v3', or 'v4'."
     )
 
 

@@ -78,12 +78,13 @@ from supply_chain.config import (
 from supply_chain.supply_chain import MFSCSimulation
 
 NUM_TRACKED_OPS = 13
-OBSERVATION_VERSION_OPTIONS = ("v1", "v2", "v3")
+OBSERVATION_VERSION_OPTIONS = ("v1", "v2", "v3", "v4")
 REWARD_MODE_OPTIONS = ("ReT_thesis", "rt_v0", "control_v1", "control_v1_pbrs")
 PBRS_VARIANT_OPTIONS = ("cumulative", "step_level")
 BASE_OBSERVATION_DIM = 15
 V2_OBSERVATION_DIM = 18
 V3_OBSERVATION_DIM = 20
+V4_OBSERVATION_DIM = 24  # v3 (20) + rations_sb_dispatch + shifts + op1_down + op2_down
 PREV_STEP_DEMAND_SCALE = 18_200.0
 PREV_STEP_BACKORDER_SCALE = 18_200.0
 INVENTORY_NODE_FIELDS: tuple[str, ...] = (
@@ -176,7 +177,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         if observation_version not in OBSERVATION_VERSION_OPTIONS:
             raise ValueError(
                 f"Invalid observation_version={observation_version!r}. "
-                "Expected one of ('v1', 'v2', 'v3')."
+                f"Expected one of {OBSERVATION_VERSION_OPTIONS}."
             )
         if pbrs_variant not in PBRS_VARIANT_OPTIONS:
             raise ValueError(
@@ -186,7 +187,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         if (
             reward_mode == "control_v1_pbrs"
             and pbrs_variant == "step_level"
-            and observation_version not in ("v2", "v3")
+            and observation_version not in ("v2", "v3", "v4")
         ):
             raise ValueError(
                 "PBRS step_level variant requires observation_version='v2' "
@@ -245,10 +246,12 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(5,), dtype=np.float32)
 
     def _observation_dim(self) -> int:
-        if self.observation_version == "v2":
-            return V2_OBSERVATION_DIM
+        if self.observation_version == "v4":
+            return V4_OBSERVATION_DIM
         if self.observation_version == "v3":
             return V3_OBSERVATION_DIM
+        if self.observation_version == "v2":
+            return V2_OBSERVATION_DIM
         return BASE_OBSERVATION_DIM
 
     def _normalized_cumulative_features(self) -> np.ndarray:
@@ -351,9 +354,13 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                 ),
             ]
         )
-        if self.observation_version == "v3":
+        if self.observation_version in ("v3", "v4"):
             augmented_obs = np.concatenate(
                 [augmented_obs, self._normalized_cumulative_features()]
+            )
+        if self.observation_version == "v4" and self.sim is not None:
+            augmented_obs = np.concatenate(
+                [augmented_obs, self.sim.get_observation_v4_extra()]
             )
         return augmented_obs
 

@@ -458,6 +458,25 @@ class MFSCSimulation:
             dtype=np.float32,
         )
 
+    def get_observation_v4_extra(self) -> np.ndarray:
+        """
+        Return 4 additional state features for obs v4.
+
+        [0]  rations_sb_dispatch / 1e5  (intermediate buffer between Op9 and Op10)
+        [1]  assembly_shifts_active / 3  (current shifts normalized to [0,1])
+        [2]  op1_down (0 or 1)  (Military Logistics Agency, affected by R12)
+        [3]  op2_down (0 or 1)  (Suppliers, affected by R13)
+        """
+        return np.array(
+            [
+                self.rations_sb_dispatch.level / 1e5,
+                self.params["assembly_shifts"] / 3.0,
+                float(self._is_down(1)),
+                float(self._is_down(2)),
+            ],
+            dtype=np.float32,
+        )
+
     # =====================================================================
     # HELPERS
     # =====================================================================
