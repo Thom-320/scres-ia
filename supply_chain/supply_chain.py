@@ -37,6 +37,7 @@ from supply_chain.config import (
     HOURS_PER_YEAR_GREGORIAN,
     HOURS_PER_YEAR_THESIS,
     YEAR_BASIS_OPTIONS,
+    LEAD_TIME_PROMISE,
 )
 
 RATIONS_PER_HOUR = ASSEMBLY_RATE  # 320.5 rations/hr
@@ -59,10 +60,17 @@ class OrderRecord:
     quantity: float = 0.0
     OATj: Optional[float] = None
     CTj: Optional[float] = None
+    # LTj: fixed lead time promise per Garrido-Rios (2017) Section 6.8.2
+    # An order is a backorder if CTj > LTj (i.e., not delivered within 48h).
+    LTj: float = LEAD_TIME_PROMISE  # 48 hours — thesis-defined fixed lead time
     backorder: bool = False
     remaining_qty: float = 0.0
     contingent: bool = False
     lost: bool = False
+    # Thesis ReT sub-indicators (Garrido-Rios 2017, Eq. 5.1-5.5):
+    APj: float = 0.0   # Autotomy period (hours): CTj=LTj and risks impact in [OPTj,OATj]
+    RPj: float = 0.0   # Recovery period (hours): OATj - first R0cr detection
+    DPj: float = 0.0   # Disruption period (hours): CTj when CTj > LTj
 
 
 @dataclass
@@ -1028,3 +1036,23 @@ class MFSCSimulation:
     def _fill_rate(self):
         """Current fill rate per Garrido's order-based Bt + Ut formulation."""
         return max(0.0, 1.0 - self._backorder_rate())
+
+    def _order_level_fill_rate(self) -> float:
+        """
+        Thesis-exact fill rate (Garrido-Rios 2017, Equation 5.4):
+
+            Re(FRt) = 1 - (Bt + Ut) / Dt
+
+        where Bt = cumulative backorder *order count*, Ut = unattended order count,
+        and Dt = total orders demanded.
+
+        This uses order counts (not ration quantities), matching the thesis
+        formulation exactly. See also _fill_rate() which is equivalent for
+        the current RL reward computation.
+        """
+        total_orders = len(self.orders)
+        if total_orders == 0:
+            return 1.0
+        bt_count = len(self.pending_backorders)
+        ut_count = self.total_unattended_orders
+        return max(0.0, 1.0 - (bt_count + ut_count) / total_orders)
