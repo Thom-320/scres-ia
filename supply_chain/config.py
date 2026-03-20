@@ -33,7 +33,7 @@ HOURS_PER_WEEK = 168  # 7 × 24
 HOURS_PER_MONTH = 672  # 28 × 24 (thesis convention)
 HOURS_PER_YEAR_THESIS = 8_064  # Thesis basis: 336 days × 24
 HOURS_PER_YEAR_GREGORIAN = 8_760  # Gregorian basis: 365 days × 24
-DEFAULT_YEAR_BASIS = "thesis"
+DEFAULT_YEAR_BASIS = "gregorian"
 YEAR_BASIS_OPTIONS = ("thesis", "gregorian")
 # Backward-compatible alias (defaults to thesis basis).
 HOURS_PER_YEAR = HOURS_PER_YEAR_THESIS

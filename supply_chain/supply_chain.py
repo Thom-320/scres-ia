@@ -563,14 +563,24 @@ class MFSCSimulation:
             yield self.env.timeout(self.params["op1_rop"])
             while self._is_down(1):
                 yield self.env.timeout(1)
-            yield self.env.timeout(self._pt("op1_pt"))
+            pt_remaining = self._pt("op1_pt")
+            while pt_remaining > 0:
+                while self._is_down(1):
+                    yield self.env.timeout(1)
+                yield self.env.timeout(1)
+                pt_remaining -= 1
 
     def _op2_supplier_delivery(self):
         while True:
             yield self.env.timeout(self.params["op2_rop"])
             while self._is_down(2):
                 yield self.env.timeout(1)
-            yield self.env.timeout(self._pt("op2_pt"))
+            pt_remaining = self._pt("op2_pt")
+            while pt_remaining > 0:
+                while self._is_down(2):
+                    yield self.env.timeout(1)
+                yield self.env.timeout(1)
+                pt_remaining -= 1
             total_delivery = self.params["op2_q"] * NUM_RAW_MATERIALS
             yield self.raw_material_wdc.put(total_delivery)
 
@@ -903,11 +913,11 @@ class MFSCSimulation:
                         )
 
     def _risk_R21(self):
-        """R21 natural disaster generator — blocking mode (original behavior).
+        """R21 natural disaster generator — non-blocking mode.
 
         Each event takes down all affected operations simultaneously; each
         operation recovers independently with Exp(beta) hours. The generator
-        waits for the slowest recovery before scheduling the next event.
+        spawns a new process for each event so they can theoretically overlap.
         """
         a = RISKS_CURRENT["R21"]["occurrence"]["a"]
         b_val = self._get_risk_b("R21")
@@ -915,19 +925,22 @@ class MFSCSimulation:
         affected = RISKS_CURRENT["R21"]["affected_ops"]
         while True:
             yield self.env.timeout(self.rng.integers(a, b_val + 1))
-            start = self.env.now
-            for op_id in affected:
-                self._take_down(op_id)
-            recovery_times = {}
-            for op_id in affected:
-                rt = max(1, self.rng.exponential(beta))
-                recovery_times[op_id] = rt
-                self.env.process(self._delayed_bring_up(op_id, rt))
-            max_rt = max(recovery_times.values())
-            yield self.env.timeout(max_rt)
-            self.risk_events.append(
-                RiskEvent("R21", start, self.env.now, max_rt, list(affected))
-            )
+            self.env.process(self._r21_event(affected, beta))
+
+    def _r21_event(self, affected: list[int], beta: float):
+        start = self.env.now
+        for op_id in affected:
+            self._take_down(op_id)
+        recovery_times = {}
+        for op_id in affected:
+            rt = max(1, self.rng.exponential(beta))
+            recovery_times[op_id] = rt
+            self.env.process(self._delayed_bring_up(op_id, rt))
+        max_rt = max(recovery_times.values())
+        yield self.env.timeout(max_rt)
+        self.risk_events.append(
+            RiskEvent("R21", start, self.env.now, max_rt, list(affected))
+        )
 
     def _risk_R22(self):
         a = RISKS_CURRENT["R22"]["occurrence"]["a"]
