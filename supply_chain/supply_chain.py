@@ -38,6 +38,9 @@ from supply_chain.config import (
     HOURS_PER_YEAR_THESIS,
     YEAR_BASIS_OPTIONS,
     LEAD_TIME_PROMISE,
+    RET_RE_MAX,
+    RET_RE_RECOVERY,
+    RET_RE_MIN,
 )
 
 RATIONS_PER_HOUR = ASSEMBLY_RATE  # 320.5 rations/hr
@@ -397,6 +400,7 @@ class MFSCSimulation:
             next_order.CTj = self.env.now - next_order.OPTj
             next_order.backorder = False
             next_order.remaining_qty = 0.0
+            self._set_order_ret_indicators(next_order)
             self.pending_backorders.pop(0)
             self._refresh_pending_backorder_qty()
 
@@ -722,6 +726,7 @@ class MFSCSimulation:
                 order.OATj = self.env.now
                 order.CTj = 0.0
                 order.remaining_qty = 0.0
+                self._set_order_ret_indicators(order)
             else:
                 order.backorder = True
                 self.total_backorders += 1
@@ -1056,3 +1061,112 @@ class MFSCSimulation:
         bt_count = len(self.pending_backorders)
         ut_count = self.total_unattended_orders
         return max(0.0, 1.0 - (bt_count + ut_count) / total_orders)
+
+    def _set_order_ret_indicators(self, order: OrderRecord) -> None:
+        """
+        Populate ReT sub-indicators APj, RPj, DPj for a completed order.
+
+        Per Garrido-Rios (2017) Eq. 5.1-5.5:
+        - Autotomy (CTj <= LTj, disruptions present): APj = disruption overlap hours
+        - Recovery (CTj > LTj, disruptions present): RPj = OATj - earliest_risk_start
+        - Non-recovery (CTj > LTj, no recovery): DPj set, RPj=0
+        - Fill rate (no disruptions): APj=RPj=DPj=0
+        """
+        if order.OATj is None or order.CTj is None:
+            return
+
+        # Compute disruption overlap during [OPTj, OATj]
+        total_disruption_hours = 0.0
+        earliest_risk_start = float("inf")
+
+        for event in self.risk_events:
+            overlap_start = max(event.start_time, order.OPTj)
+            overlap_end = min(event.end_time, order.OATj)
+            if overlap_start < overlap_end:
+                total_disruption_hours += overlap_end - overlap_start
+                earliest_risk_start = min(earliest_risk_start, event.start_time)
+
+        # Include ongoing disruptions at fulfillment time
+        for op_id in range(1, 14):
+            down_since = self._op_down_since.get(op_id)
+            if self.op_down_count[op_id] > 0 and down_since is not None:
+                overlap_start = max(down_since, order.OPTj)
+                overlap_end = order.OATj
+                if overlap_start < overlap_end:
+                    total_disruption_hours += overlap_end - overlap_start
+                    earliest_risk_start = min(earliest_risk_start, down_since)
+
+        if total_disruption_hours <= 0:
+            return  # No disruption: fill_rate case
+
+        if order.CTj <= order.LTj:
+            # Autotomy: SC absorbed disruption, order still on time
+            order.APj = min(total_disruption_hours, order.LTj)
+        else:
+            # Recovery / Non-recovery: order delayed beyond lead time
+            order.DPj = order.CTj
+            eff_risk_start = max(earliest_risk_start, order.OPTj)
+            order.RPj = max(0.0, order.OATj - eff_risk_start)
+
+    def _order_ret_value(self, order: OrderRecord) -> tuple[float, str]:
+        """
+        Compute per-order ReT value per Garrido Eq. 5.1-5.5.
+
+        Returns (ret_value, case_label).
+        Uses thesis constants: Re^max=1.0, Re=0.5 (Figure 5.6), Re^min=0.0.
+        """
+        if order.OATj is None:
+            return 0.0, "unfulfilled"
+
+        if order.APj > 0 and order.CTj is not None and order.CTj <= order.LTj:
+            # Eq. 5.1: Re(APj) = Re^max * (APj / LT)
+            ret = RET_RE_MAX * (order.APj / order.LTj)
+            return min(ret, 1.0), "autotomy"
+
+        if order.CTj is not None and order.CTj > order.LTj:
+            if order.RPj > 0:
+                # Eq. 5.2: Re(RPj) = Re * (1 / RPj)
+                ret = RET_RE_RECOVERY * (1.0 / order.RPj)
+                return ret, "recovery"
+            else:
+                # Eq. 5.3: Re(DPj, RPj) = Re^min * (DPj - RPj) / CTj = 0
+                return 0.0, "non_recovery"
+
+        # No disruption: fill_rate case
+        return self._order_level_fill_rate(), "fill_rate"
+
+    def compute_order_level_ret(self) -> dict[str, Any]:
+        """
+        Compute thesis-exact order-level ReT per Garrido Eq. 5.1-5.5.
+
+        Returns dict with aggregate ReT metrics:
+        - mean_ret: average ReT across all completed orders
+        - fill_rate_order_level: Re(FRt) = 1 - (Bt+Ut)/Dt (order counts, Eq. 5.4)
+        - case_counts: orders per case (autotomy, recovery, non_recovery, fill_rate)
+        - n_orders, n_completed: total and completed order counts
+        """
+        case_counts: dict[str, int] = {
+            "fill_rate": 0,
+            "autotomy": 0,
+            "recovery": 0,
+            "non_recovery": 0,
+            "unfulfilled": 0,
+        }
+        ret_values: list[float] = []
+
+        for order in self.orders:
+            ret, case = self._order_ret_value(order)
+            case_counts[case] += 1
+            if case != "unfulfilled":
+                ret_values.append(ret)
+
+        fill_rate = self._order_level_fill_rate()
+        mean_ret = float(np.mean(ret_values)) if ret_values else fill_rate
+
+        return {
+            "mean_ret": mean_ret,
+            "fill_rate_order_level": fill_rate,
+            "case_counts": case_counts,
+            "n_orders": len(self.orders),
+            "n_completed": sum(1 for o in self.orders if o.OATj is not None),
+        }
