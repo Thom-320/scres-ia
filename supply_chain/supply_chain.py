@@ -383,6 +383,19 @@ class MFSCSimulation:
             self.total_unattended_orders += 1
         self._refresh_pending_backorder_qty()
 
+    def _delayed_backorder_check(self, order: OrderRecord):
+        """Wait LTj hours, then classify as backorder if still unfulfilled.
+
+        Per thesis Sec. 6.8.2: backorder = order not delivered within the
+        pre-set lead time of 48 hours. Orders fulfilled within LTj are
+        on-time (not backorders).
+        """
+        yield self.env.timeout(order.LTj)
+        if order.remaining_qty > 0:
+            order.backorder = True
+            self.total_backorders += 1
+            self.cumulative_backorder_qty += order.quantity
+
     def _serve_pending_backorders(self):
         """
         Serve delayed orders according to the queue head.
@@ -405,10 +418,18 @@ class MFSCSimulation:
             self._refresh_pending_backorder_qty()
 
     def _backorder_rate(self) -> float:
-        """Current delayed/lost-order fraction per Garrido's Bt + Ut logic."""
+        """Current delayed/lost-order fraction per Garrido's Bt + Ut logic.
+
+        Per thesis Sec. 6.8.2, only orders pending beyond LTj=48h count
+        as backorders (Bt). Orders still within their lead-time window
+        are not yet classified as backorders.
+        """
         if not self.orders:
             return 0.0
-        delayed_orders = len(self.pending_backorders) + self.total_unattended_orders
+        now = self.env.now
+        delayed_orders = sum(
+            1 for o in self.pending_backorders if (now - o.OPTj) > o.LTj
+        ) + self.total_unattended_orders
         return min(1.0, delayed_orders / len(self.orders))
 
     def get_observation(self) -> np.ndarray:
@@ -747,11 +768,12 @@ class MFSCSimulation:
                 order.remaining_qty = 0.0
                 self._set_order_ret_indicators(order)
             else:
-                order.backorder = True
-                self.total_backorders += 1
-                self.cumulative_backorder_qty += demand_qty
+                # Enqueue for future delivery. Per thesis Sec. 6.8.2,
+                # backorder classification deferred until LTj=48h elapses.
                 self._enqueue_backorder(order)
                 yield from self._serve_pending_backorders()
+                # Start 48h timer — only count as backorder if still pending
+                self.env.process(self._delayed_backorder_check(order))
 
             self.orders.append(order)
             self.daily_demand.append((self.env.now, demand_qty))
