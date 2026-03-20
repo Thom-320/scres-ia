@@ -22,6 +22,12 @@ class MFSCGymEnv(gym.Env[np.ndarray, np.ndarray]):
 
     Observation: 15-dimensional continuous state vector.
     Action: 4-dimensional policy multipliers in [-1, 1].
+
+    RL EXTENSION: The thesis (Garrido-Rios 2017, Sec. 6.7.3-6.7.4) controls
+    {It,S, S} via static simulation scenarios. Our RL extension generalises
+    this to continuous, per-step control of dispatch quantities (Q) and
+    reorder points (ROP). See MFSCGymEnvShifts for the 5-dim action variant
+    that also controls assembly shifts (S).
     """
 
     metadata = {"render_modes": ["human"]}

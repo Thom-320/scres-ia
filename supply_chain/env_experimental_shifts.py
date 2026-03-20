@@ -14,7 +14,13 @@ Supports four reward modes:
       * step_level: Φ(s) = -α·prev_step_backorder_qty_norm(s)  [requires v2]
 
 Action space: 5-dimensional [-1, 1]
+  RL EXTENSION: The thesis (Garrido-Rios 2017, Sec. 6.7.3-6.7.4) controls
+  {It,S, S} via static simulation scenarios. Our RL extension generalises
+  this to continuous, per-step control of dispatch quantities (Q), reorder
+  points (ROP), and shift count (S).
+
   [0-3]: Inventory policy multipliers (op3_q, op9_q, op3_rop, op9_rop)
+         — maps [-1,1] to [0.5, 2.0] via multiplier = 1.25 + 0.75*signal
   [4]:   Shift selector — mapped to {1, 2, 3} shifts
          action[4] < -0.33 → S=1 (single shift, 8h/day)
          -0.33 ≤ action[4] < 0.33 → S=2 (double shift, 16h/day)
