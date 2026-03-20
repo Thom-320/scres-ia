@@ -159,7 +159,11 @@ OPERATIONS = {
         "name": "Supply Battalion",
         "description": "Receipt, classification, and storage of combat rations (SPT rule)",
         "pt": 24,  # 1 day to process
-        "q": (2_400, 2_600),  # Range per thesis Figure 6.2: U(2400, 2600)
+        # NOTE: Thesis has an internal inconsistency.
+        # Section 6.3.3 (p.85) and Figure 6.2: Q = U(2400, 2600)
+        # Table 6.20 (p.108): Q = U(2000, 2500) — likely a transcription error.
+        # We follow the primary text description and Figure 6.2.
+        "q": (2_400, 2_600),  # Range per thesis Section 6.3.3 + Figure 6.2: U(2400, 2600)
         "rop": 24,  # Daily
         "init_inv": 0,  # It,1 = 0 for Cf0
         "risks": ["R21", "R3"],
@@ -298,8 +302,9 @@ RISKS_CURRENT = {
         "name": "Contingent demand surge",
         "category": 2,
         "occurrence": {"dist": "uniform", "a": 1, "b": 672},  # hours between events
-        # Surge size ~1 day of regular demand (2400–2600 rac). Garrido doesn't specify
-        # exact bounds; chosen to match daily demand scale for the baseline scenario.
+        # Surge size per Garrido-Rios (2017) Table 6.7b:
+        # U2(Dcn ∈ Z+, c: 2,400, d: 2,600) rations.
+        # Text (p.88): "contingency requirements also range from 2,400 to 2,600 rations/month".
         "surge": {"lo": 2400, "hi": 2600},
         "affected_ops": [13],
     },
@@ -471,6 +476,23 @@ RET_CASE_THRESHOLDS = {
     "nonrecovery_disruption_fraction_threshold": 0.5,
     "nonrecovery_fill_rate_threshold": 0.5,
 }
+
+# =============================================================================
+# ReT WEIGHTING FACTORS — Garrido-Rios (2017) Eq. 5.1–5.5, Figure 5.6
+# =============================================================================
+# The thesis defines three resilience levels (Figure 5.6, p. 72):
+#   Re^max = 1.0  — maximum resilience during autotomy period (APj)
+#   Re     = 0.5  — intermediate resilience during recovery period (RPj)
+#   Re^min = 0.0  — minimum resilience during non-recovery period (DPj − RPj)
+#
+# NOTE: The step-level approximation in env_experimental_shifts.py uses
+#   Re_max=1, Re=1, Re_min=0 (confirmed in communication with Prof. Garrido,
+#   who clarified that the Figure 5.6 re=0.5 is illustrative and the
+#   operational weighting should use re=1 for the recovery formula).
+#   This constant preserves the thesis-stated value for reference.
+RET_RE_MAX: float = 1.0  # Thesis Figure 5.6: resilience during APj
+RET_RE_RECOVERY: float = 0.5  # Thesis Figure 5.6: resilience during RPj (illustrative)
+RET_RE_MIN: float = 0.0  # Thesis Figure 5.6: resilience during (DPj - RPj)
 
 # DOE-calibrated provisional default for the linear shift cost in ReT_thesis.
 # Short calibration sweeps under increased risk showed a steep transition band
