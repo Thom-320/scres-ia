@@ -21,21 +21,41 @@ Action space: 5-dimensional [-1, 1]
          action[4] ≥ 0.33 → S=3 (triple shift, 24h/day)
 
 ReT Approximation (Eq. 5.5 mapped to step-level metrics):
-  Re_max = 1, Re = 1, Re_min = 0 (confirmed with Garrido).
+  IMPORTANT: This is a STEP-LEVEL APPROXIMATION of the thesis Eq. 5.5.
+  The thesis computes ReT per-order (indexed by j) using APj, RPj, DPj.
+  This implementation aggregates disruption hours at the step level.
 
-  Case 1 (No disruption):       Re(FR_t) = fill_rate
-  Case 2 (Autotomy):            Re(AP)   = 1 - disruption_frac
-  Case 3 (Recovery):            Re(RP)   = 1 / (1 + disruption_frac)
-  Case 4 (Non-recovery):        Re(DP)   = 0
+  Thesis values: Re^max=1 (APj), Re=0.5 (RPj per Figure 5.6), Re^min=0 (DPj-RPj).
+  Confirmed with Prof. Garrido: operational weighting uses Re^max=1, Re=1, Re^min=0.
+
+  Thesis Equations (Garrido-Rios 2017, Sec. 5.6.3):
+    Eq. 5.1: Re(APj) = Re^max × (APj/LT)          [not directly used in step approx.]
+    Eq. 5.2: Re(RPj) = Re × (1/RPj)               [not directly used in step approx.]
+    Eq. 5.3: Re(DPj,RPj) = Re^min × (DPj-RPj)/CTj [always 0]
+    Eq. 5.4: Re(FRt) = 1 - (Bt+Ut)/Dt             [order-count based fill rate]
+    Eq. 5.5: ReT = {Re(APj), Re(RPj), Re(DPj,RPj), Re(FRt)}
+
+  Step-level approximation (this implementation):
+    Case 1 (No disruption):       Re(FR_t) = fill_rate   [step-level FR, ration-qty]
+    Case 2 (Autotomy):            Re(AP)   = 1 - disruption_frac
+    Case 3 (Recovery):            Re(RP)   = 1 / (1 + disruption_frac)
+    Case 4 (Non-recovery):        Re(DP)   = 0
 
   Reward = ReT_step - δ × (S - 1)
 
   Assumptions (publishable):
     A1: Step-level aggregation approximates order-level ReT when
         step size coincides with the reorder cycle (168h).
-    A2: AP proxied by fraction of step without disruption.
-    A3: RP proxied inversely by disruption fraction.
+    A2: AP proxied by fraction of step without disruption (1 - disruption_frac).
+    A3: RP proxied inversely by disruption fraction: 1/(1+frac) ∈ (0.5, 1].
     A4: Disruption fraction normalized by op-hours (13 ops × step_hours).
+    A5: Fill rate computed from ration quantities (not order counts);
+        difference is negligible for narrow demand distribution U(2400,2600).
+
+  These approximations are necessary because the DES tracks order-level APj/RPj/DPj
+  implicitly through SimPy process timing, not through explicit per-order timestamps
+  at the step boundary. A thesis-exact order-level ReT calculator is available via
+  MFSCSimulation._order_level_fill_rate() and OrderRecord.(APj, RPj, DPj, LTj).
 """
 
 from __future__ import annotations
