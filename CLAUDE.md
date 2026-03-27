@@ -21,9 +21,9 @@ python run_static.py --year-basis thesis                # Both
 # Validation report
 python validation_report.py --official-basis thesis
 
-# RL training (default env is shift_control with ReT_thesis reward)
+# RL training (default env is shift_control with ReT_seq_v1 κ=0.20)
 python train_agent.py --timesteps 20000 --n-envs 1 --seed 42 --year-basis thesis
-python train_agent.py --timesteps 500000 --n-envs 4 --reward-mode ReT_thesis --env-variant shift_control
+python train_agent.py --timesteps 500000 --n-envs 4 --reward-mode ReT_seq_v1 --ret-seq-kappa 0.20 --env-variant shift_control
 python train_agent.py --timesteps 100000 --env-variant base --reward-mode rt_v0 --rt-alpha 8
 
 # Benchmarks
@@ -65,7 +65,7 @@ The simulation runs at hourly granularity internally. The Gym envs call `sim.ste
 - **`config.py`** -- Single source of truth for all simulation parameters. Every constant comes from thesis tables (6.4, 6.10, 6.12, 6.16, 6.20, 6.25). Never hardcode numbers elsewhere. Contains three risk-level dicts: `RISKS_CURRENT`, `RISKS_INCREASED`, `RISKS_SEVERE`.
 - **`supply_chain.py`** -- SimPy DES engine (`MFSCSimulation`). 13 operations at hourly granularity. Supports deterministic (Phase 1) and stochastic risk (Phase 2) modes. Key API: `step(action, step_hours)` returns `(obs, reward, terminated, info)`, `get_observation()` returns 15-dim list. Mutable params in `self.params` dict allow RL to adjust inventory quantities, reorder points, and assembly shifts at runtime. Also exposes `get_state_constraint_context()` for DKANA export.
 - **`env.py`** -- `MFSCGymEnv`: base Gymnasium wrapper. 15-dim obs, 4-dim action (policy multipliers in [-1,1] mapped to [0.5, 2.0] via `1.25 + 0.75 * action`). Actions control: op3_q, op9_q, op3_rop, op9_rop.
-- **`env_experimental_shifts.py`** -- `MFSCGymEnvShifts`: extended env adding a 5th action dimension for assembly shift control (1/2/3 shifts via tri-level thresholds at -0.33/+0.33). Implements four reward modes: `rt_v0`, `ReT_thesis`, `control_v1`, and `control_v1_pbrs`. The `control_v1` reward (`-w_bo*service_loss - w_cost*shift_cost - w_disr*disruption`) is the primary benchmarking reward; `control_v1_pbrs` adds Potential-Based Reward Shaping (Ng et al. 1999) with a target-deficit service potential `Φ(s) = -α·max(0, τ-FR)/τ`. Two PBRS variants: `cumulative` (uses obs[6] fill_rate) and `step_level` (uses obs[16] prev_step_backorder_qty_norm, requires v2). `ReT_thesis` is retained as a reporting-only metric.
+- **`env_experimental_shifts.py`** -- `MFSCGymEnvShifts`: extended env adding a 5th action dimension for assembly shift control (1/2/3 shifts via tri-level thresholds at -0.33/+0.33). **Primary reward: `ReT_seq_v1`** (Sequential Operational Resilience) — weighted geometric mean `r_t = SC_t^0.60 × BC_t^0.25 × AE_t^0.15` with κ=0.20, extending Garrido Eq. 5.5 into a smooth RL-trainable objective. Also supports `control_v1` (historical linear comparator), `control_v1_pbrs` (PBRS extension), `ReT_thesis` (audit-only piecewise approximation), and `rt_v0` (legacy).
 - **`external_env_interface.py`** -- `ExternalEnvSpec` dataclass and factory functions (`make_shift_control_env`, `get_shift_control_env_spec`) for external model integration. Defines the stable machine-readable contract: obs fields (15-dim), action fields (5-dim), control context (9-dim), state constraint fields (22-dim, includes `cumulative_backorder_qty` and `cumulative_disruption_hours`), and reward term fields. Also provides `run_episodes(policy_fn, ...)` for evaluating any callable policy without depending on benchmark internals. Used by the DKANA export pipeline.
 - **`dkana.py`** -- DKANA-compatible input pipeline and policy architecture. Contains `DKANADataset` dataclass, `DKANAPolicy` (PyTorch nn.Module with row-wise MLP encoder, local/global causal self-attention, distributional Gaussian decoder). Bridges exported trajectories to DKANA training. Helper functions: `build_mfsc_relational_state()`, `build_previous_action_context()`, `build_dkana_windows()`.
 
@@ -74,12 +74,13 @@ The simulation runs at hourly granularity internally. The Gym envs call `sim.ste
 | Env variant      | Class              | Actions | Supported rewards                    |
 |------------------|--------------------|---------|--------------------------------------|
 | `base`           | `MFSCGymEnv`       | 4-dim   | `proxy`, `rt_v0`                     |
-| `shift_control`  | `MFSCGymEnvShifts` | 5-dim   | `rt_v0`, `ReT_thesis`, `control_v1`, `control_v1_pbrs` |
+| `shift_control`  | `MFSCGymEnvShifts` | 5-dim   | **`ReT_seq_v1`**, `rt_v0`, `ReT_thesis`, `control_v1`, `control_v1_pbrs` |
 
-- **`ReT_thesis`**: Garrido Eq. 5.5 approximation at step level with linear shift cost `delta*(S-1)`. Four cases: fill_rate_only, autotomy, recovery, non_recovery. **Now reporting-only** -- kept for audit/comparison but NOT used as the training objective.
-- **`control_v1`**: Operational control reward (`-w_bo*service_loss - w_cost*shift_cost - w_disr*disruption`). **Primary benchmarking reward.** Configurable weights enable service-cost tradeoff analysis and Pareto front approximation.
-- **`control_v1_pbrs`**: control_v1 + PBRS shaping bonus `F = γΦ(s') - Φ(s)`. Target-deficit potential `Φ(s) = -α·max(0, τ-FR)/τ` (cumulative variant) or `Φ(s) = -α·prev_step_backorder_norm` (step_level variant, requires v2 obs). Params: `pbrs_alpha` (scale), `pbrs_tau` (target, default 0.95), `pbrs_gamma` (discount, must match SB3). Preserves optimal policy (Ng et al. 1999).
-- **`rt_v0`**: Legacy weighted sum of recovery/holding/service loss.
+- **`ReT_seq_v1`** (PRIMARY): Sequential Operational Resilience extending Garrido Eq. 5.5. `r_t = SC_t^0.60 × BC_t^0.25 × AE_t^0.15` where SC_t=step fill rate (Eq. 5.4), BC_t=backlog containment (recovery proxy, Eq. 5.2), AE_t=adaptive efficiency=`1-κ(S-1)/2` (cost extension per Section 8.6.2). Frozen κ=0.20. Geometric aggregation enforces non-compensability. See `_compute_ret_seq_v1` for formal thesis mapping.
+- **`control_v1`**: Historical linear control reward (`-w_bo*service_loss - w_cost*shift_cost`). Retained as comparator. Frozen weights: w_bo=4.0, w_cost=0.02, w_disr=0.0.
+- **`control_v1_pbrs`**: control_v1 + PBRS shaping bonus (Ng et al. 1999). Phase-2 extension.
+- **`ReT_thesis`**: Piecewise step-level approximation of Eq. 5.5. **Audit-only** -- NOT suitable as training objective (collapses to S1).
+- **`rt_v0`**: Legacy weighted sum.
 
 ### DKANA data pipeline
 
@@ -94,7 +95,7 @@ export_trajectories_for_david.py (rollouts → .npy)
 ### Benchmark framework
 
 Four evaluation lanes, each with its own script:
-1. **Control reward benchmark** (`scripts/benchmark_control_reward.py`) -- Multi-seed PPO/SAC vs static S1/S2/S3 + heuristic baselines under `control_v1` (or `control_v1_pbrs`). Supports weight-grid screening ("survivors") before training, cross-scenario evaluation (`--eval-risk-levels`), heuristic tuning (`--tune-heuristic`), frame-stacking (`--frame-stack`), and RecurrentPPO. Three heuristic policies: `HeuristicHysteresis` (deadband shift control), `HeuristicDisruptionAware` (reactive shift+inventory), `HeuristicTuned` (combined, grid-searchable). Outputs metrics CSV with CI95.
+1. **Control reward benchmark** (`scripts/benchmark_control_reward.py`) -- Multi-seed PPO/SAC vs static S1/S2/S3 + heuristic baselines. Default reward is now `ReT_seq_v1` (κ=0.20); also supports `control_v1` and `control_v1_pbrs`. Supports weight-grid screening ("survivors") before training, cross-scenario evaluation (`--eval-risk-levels`), heuristic tuning (`--tune-heuristic`), frame-stacking (`--frame-stack`), and RecurrentPPO. Three heuristic policies: `HeuristicHysteresis` (deadband shift control), `HeuristicDisruptionAware` (reactive shift+inventory), `HeuristicTuned` (combined, grid-searchable). Outputs metrics CSV with CI95.
 2. **Delta sweep** (`scripts/benchmark_delta_sweep_static.py`) -- Sweeps `rt_delta` shift-cost parameter over static policies to find S1/S2 optimality transition points.
 3. **ReT ablation** (`scripts/benchmark_ret_ablation_static.py`) -- Tests formula variants (`default`, `autotomy_equals_recovery`, `merged_recovery_formula`) and autotomy thresholds.
 4. **Minimal shift control** (`scripts/benchmark_minimal_shift_control.py`) -- Quick multi-seed PPO vs static comparison.
@@ -102,7 +103,7 @@ Four evaluation lanes, each with its own script:
 
 ### Entry points (root)
 - **`run_static.py`** -- Deterministic/stochastic baselines, validates against thesis.
-- **`train_agent.py`** -- PPO training pipeline. Default: `shift_control` env with `ReT_thesis`. Outputs models, normalization stats, learning curves, CSVs, JSON to `outputs/`.
+- **`train_agent.py`** -- PPO training pipeline. Default: `shift_control` env with `ReT_seq_v1` (κ=0.20). Outputs models, normalization stats, learning curves, CSVs, JSON to `outputs/`.
 - **`validation_report.py`** -- Dual-basis validation tables to `outputs/validation/`.
 
 ### Other directories
@@ -121,14 +122,15 @@ Four evaluation lanes, each with its own script:
 - **Buffers use `simpy.Container`** (continuous quantities), not `simpy.Store`.
 - **Gym step returns**: always `(observation, reward, terminated, truncated, info)`.
 - **Risk levels**: `current` (Table 6.12 '-'), `increased` ('+'), `severe` ('++' extrapolated). Base env supports current/increased only; shift_control supports all three.
-- **`control_v1` is the primary benchmarking reward**. `ReT_thesis` is kept as a reporting-only metric for audit. Do not train on `ReT_thesis` for publication results -- it induces misaligned incentives (collapses to S1).
+- **`ReT_seq_v1` (κ=0.20) is the primary training reward AND resilience metric**. It unifies the thesis ReT concept (Eq. 5.5) with RL trainability via geometric aggregation. `control_v1` is the historical comparator. `ReT_thesis` is audit-only. Do not train on `ReT_thesis` -- it collapses to S1.
 - **Benchmark reproducibility**: all benchmark scripts accept `--seeds`, output manifest JSON with commit hash, and support separate train/eval seed offsets.
 - Python 3.11 recommended for SB3 compatibility. Formatting: black. Linting: ruff. Types: mypy.
 
 ## Preliminary Results (frozen findings)
 
-- **PPO + ReT_thesis**: Misaligned objective -- agent collapses to S1 (cheapest shift, poor service). Not suitable as training reward.
-- **PPO + control_v1 (50k steps)**: Weight-sensitive; narrow region where PPO outperforms static.
-- **PPO + control_v1 (500k steps)**: Competitive with best static under `increased` risk; slight advantage under `severe` (p~0.19).
-- **Three-part bottleneck identified**: reward alignment → reward sensitivity → regime dependence.
-- **Next experimental steps**: SAC vs PPO comparison, frame-stacking (VecFrameStack n=4), then RecurrentPPO (LSTM) for POMDP. DKANA justified only after these comparisons.
+- **PPO + ReT_thesis**: Misaligned objective -- agent collapses to S1 (99.99% S1, fill rate 0.845). Not suitable as training reward.
+- **PPO + control_v1 (500k steps)**: Competitive with best static under `increased` risk; slight advantage under `severe` (p~0.19). Frozen weights w_bo=4.0, w_cost=0.02.
+- **PPO + ReT_seq_v1 (κ=0.20)**: S2-dominant shift mix (65% S2), fill rate ~0.79, balanced service-cost tradeoff. Selected as primary reward.
+- **κ sensitivity**: κ=0.10 too permissive (62% S3), κ=0.20 optimal shift mix, κ=0.30 collapses toward S1 (71%).
+- **Section 4.3 algorithm comparison**: PPO-v1, PPO-v2, PPO+frame-stack, RecurrentPPO evaluated under `increased`/`severe` stress.
+- **Next steps**: Production 500k runs with ReT_seq_v1 κ=0.20, SAC comparison, PBRS as phase-2 extension.

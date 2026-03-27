@@ -4,7 +4,7 @@ Python rebuild of the Military Food Supply Chain (MFSC) discrete-event simulatio
 
 ## Project Structure
 
-```
+```text
 supply_chain/          Core package (config, DES engine, Gymnasium environments)
 scripts/               Diagnostic & analysis scripts
 tests/                 Pytest test suite
@@ -50,12 +50,30 @@ Artifacts are written to `outputs/validation/validation_table_dual_basis.csv`.
 ## Hybrid model training
 
 ```bash
+# Quick smoke check with the paper-facing defaults:
+# shift_control + ReT_seq_v1 (kappa=0.20) + observation_version=v1
 python train_agent.py --timesteps 20000 --n-envs 1 --seed 42 --year-basis thesis
 
-python train_agent.py --timesteps 500000 --n-envs 4 --reward-mode ReT_thesis --env-variant shift_control
+# Frozen benchmark backbone used by the current manuscript lane
+python train_agent.py \
+  --timesteps 500000 \
+  --n-envs 4 \
+  --env-variant shift_control \
+  --reward-mode ReT_seq_v1 \
+  --ret-seq-kappa 0.20 \
+  --observation-version v1 \
+  --risk-level increased \
+  --stochastic-pt \
+  --w-bo 4.0 --w-cost 0.02 --w-disr 0.0
 ```
 
 Artifacts (model, normalization stats, curves, csv, json) are saved under `outputs/`.
+
+For the paper-facing benchmark lane and artifact map, see:
+
+- `docs/REPOSITORY_SOURCE_OF_TRUTH.md`
+- `docs/REPRODUCIBILITY.md`
+- `docs/artifacts/control_reward/README.md`
 
 ## Diagnostic scripts
 
@@ -79,3 +97,17 @@ black .
 ruff check . --fix
 mypy supply_chain/
 ```
+
+## Current benchmark defaults
+
+The current repository defaults are aligned with the frozen resilience-reward contract:
+
+- Training reward: `ReT_seq_v1`
+- Frozen kappa: `0.20`
+- Historical comparator: `control_v1`
+- Thesis-aligned audit metric: `ret_thesis_corrected`
+- Shift-control env: enabled by default
+- Observation version: `v1` for the frozen benchmark; `v2` is preferred for new ablations
+- Main paper scenarios:
+  - `increased + stochastic_pt`
+  - `severe + stochastic_pt`

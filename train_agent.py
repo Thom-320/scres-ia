@@ -17,6 +17,11 @@ from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 
 from supply_chain.config import (
+    BENCHMARK_OBSERVATION_VERSION,
+    BENCHMARK_REWARD_MODE,
+    BENCHMARK_W_BO,
+    BENCHMARK_W_COST,
+    BENCHMARK_W_DISR,
     DEFAULT_YEAR_BASIS,
     RET_SHIFT_COST_DELTA_DEFAULT,
     YEAR_BASIS_OPTIONS,
@@ -26,11 +31,22 @@ from supply_chain.env import MFSCGymEnv
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
-from supply_chain.env_experimental_shifts import MFSCGymEnvShifts
+from supply_chain.env_experimental_shifts import MFSCGymEnvShifts, RET_SEQ_KAPPA
 
 BASE_ENV_REWARD_MODES = {"proxy", "rt_v0"}
-SHIFT_ENV_REWARD_MODES = {"rt_v0", "ReT_thesis", "control_v1", "control_v1_pbrs"}
-DEFAULT_REWARD_MODE_BY_ENV = {"base": "rt_v0", "shift_control": "ReT_thesis"}
+SHIFT_ENV_REWARD_MODES = {
+    "rt_v0",
+    "ReT_thesis",
+    "ReT_corrected",
+    "ReT_corrected_cost",
+    "ReT_seq_v1",
+    "control_v1",
+    "control_v1_pbrs",
+}
+DEFAULT_REWARD_MODE_BY_ENV = {
+    "base": "rt_v0",
+    "shift_control": BENCHMARK_REWARD_MODE,
+}
 
 
 def resolve_reward_mode(args: argparse.Namespace) -> str:
@@ -71,6 +87,15 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--step-size-hours", type=float, default=168.0)
     parser.add_argument("--max-steps-per-episode", type=int, default=260)
+    parser.add_argument(
+        "--observation-version",
+        choices=["v1", "v2", "v3", "v4"],
+        default=BENCHMARK_OBSERVATION_VERSION,
+        help=(
+            "Observation contract for shift-control env. The frozen paper "
+            "benchmark uses v1; newer ablations may use v2+."
+        ),
+    )
     parser.add_argument("--learning-rate", type=float, default=3e-4)
     parser.add_argument("--n-steps", type=int, default=1024)
     parser.add_argument("--batch-size", type=int, default=64)
@@ -95,7 +120,16 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--reward-mode",
-        choices=["proxy", "rt_v0", "ReT_thesis", "control_v1", "control_v1_pbrs"],
+        choices=[
+            "proxy",
+            "rt_v0",
+            "ReT_thesis",
+            "ReT_corrected",
+            "ReT_corrected_cost",
+            "ReT_seq_v1",
+            "control_v1",
+            "control_v1_pbrs",
+        ],
         default=None,
         help="Reward function for the selected environment variant.",
     )
@@ -126,6 +160,30 @@ def build_parser() -> argparse.ArgumentParser:
         "--stochastic-pt",
         action="store_true",
         help="Enable stochastic processing times in the shift-control environment.",
+    )
+    parser.add_argument(
+        "--w-bo",
+        type=float,
+        default=BENCHMARK_W_BO,
+        help="Service-loss weight for control_v1/control_v1_pbrs.",
+    )
+    parser.add_argument(
+        "--w-cost",
+        type=float,
+        default=BENCHMARK_W_COST,
+        help="Shift-cost weight for control_v1/control_v1_pbrs.",
+    )
+    parser.add_argument(
+        "--w-disr",
+        type=float,
+        default=BENCHMARK_W_DISR,
+        help="Disruption-fraction weight for control_v1/control_v1_pbrs.",
+    )
+    parser.add_argument(
+        "--ret-seq-kappa",
+        type=float,
+        default=RET_SEQ_KAPPA,
+        help="Adaptive-efficiency scaling for reward_mode=ReT_seq_v1.",
     )
     return parser
 
@@ -169,10 +227,16 @@ def validate_args(parser: argparse.ArgumentParser, args: argparse.Namespace) -> 
     if args.env_variant == "base":
         if args.reward_mode not in BASE_ENV_REWARD_MODES:
             parser.error("Base env supports only reward modes: proxy, rt_v0.")
-        if args.risk_level == "severe":
+        if args.risk_level not in ("current", "increased"):
             parser.error("Base env supports only current or increased risk levels.")
+        if args.observation_version != "v1":
+            parser.error("Base env supports only observation_version=v1.")
     elif args.reward_mode not in SHIFT_ENV_REWARD_MODES:
-        parser.error("Shift-control env supports only reward modes: rt_v0, ReT_thesis.")
+        parser.error(
+            "Shift-control env supports only reward modes: "
+            "rt_v0, ReT_thesis, ReT_corrected, ReT_corrected_cost, ReT_seq_v1, "
+            "control_v1, control_v1_pbrs."
+        )
 
 
 def resolve_output_dir(args: argparse.Namespace) -> Path:
@@ -202,6 +266,11 @@ def build_env_instance(
             **common_kwargs,
             rt_delta=args.shift_delta,
             stochastic_pt=args.stochastic_pt,
+            observation_version=args.observation_version,
+            w_bo=args.w_bo,
+            w_cost=args.w_cost,
+            w_disr=args.w_disr,
+            ret_seq_kappa=args.ret_seq_kappa,
         )
     else:
         env = MFSCGymEnv(**common_kwargs)
@@ -427,6 +496,17 @@ def main() -> None:
             if args.reward_mode == "rt_v0"
             else ""
         )
+        + (
+            f" | obs={args.observation_version}"
+            if args.env_variant == "shift_control"
+            else ""
+        )
+        + (
+            f" | w_bo={args.w_bo} w_cost={args.w_cost} w_disr={args.w_disr}"
+            if args.reward_mode in ("control_v1", "control_v1_pbrs")
+            else ""
+        )
+        + (f" | κ={args.ret_seq_kappa}" if args.reward_mode == "ReT_seq_v1" else "")
         + (f" | δ={args.shift_delta}" if args.env_variant == "shift_control" else "")
     )
     print("=" * 70)
@@ -492,6 +572,7 @@ def main() -> None:
             "year_basis": args.year_basis,
             "env_variant": args.env_variant,
             "reward_mode": args.reward_mode,
+            "observation_version": args.observation_version,
             "risk_level": args.risk_level,
             "rt_alpha": args.rt_alpha,
             "rt_beta": args.rt_beta,
@@ -500,6 +581,10 @@ def main() -> None:
             "rt_inventory_scale": args.rt_inventory_scale,
             "shift_delta": args.shift_delta,
             "stochastic_pt": args.stochastic_pt,
+            "w_bo": args.w_bo,
+            "w_cost": args.w_cost,
+            "w_disr": args.w_disr,
+            "ret_seq_kappa": args.ret_seq_kappa,
         },
         "random_baseline": random_stats,
         "trained_eval": trained_stats,

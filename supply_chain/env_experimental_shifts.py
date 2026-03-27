@@ -1,17 +1,24 @@
 """
 Gymnasium env with 5th action dimension (shift control) and multiple rewards.
 
-Supports four reward modes:
-  - "rt_v0": Legacy R_t v0 (aggregated recovery/holding/service loss).
-  - "ReT_thesis": Approximation of Garrido (2017) Eq. 5.5 at step level,
-    with linear shift cost δ×(S−1).
-  - "control_v1": Operational control reward for RL benchmarking, while
-    still exposing corrected ReT_thesis as a reporting-only metric.
-  - "control_v1_pbrs": control_v1 + Potential-Based Reward Shaping (Ng et al.
-    1999). Adds F(s,s') = γΦ(s') - Φ(s) to control_v1, preserving optimal
-    policy. Two variants:
-      * cumulative: Φ(s) = -α·max(0, τ - FR_cum(s)) / τ
-      * step_level: Φ(s) = -α·prev_step_backorder_qty_norm(s)  [requires v2]
+Primary reward: ReT_seq_v1 (Sequential Operational Resilience)
+================================================================
+The repo's primary training reward is ``ReT_seq_v1`` with κ=0.20.  It extends
+Garrido-Rios (2017) Eq. 5.5 into a smooth, RL-trainable objective via weighted
+geometric aggregation of three resilience sub-indicators:
+
+    r_t = SC_t^w_sc × BC_t^w_bc × AE_t^w_ae
+
+See ``_compute_ret_seq_v1`` for the formal thesis mapping.
+
+Other reward modes (historical / auxiliary):
+  - "control_v1": Historical linear control reward.  Retained as comparator.
+  - "control_v1_pbrs": control_v1 + PBRS shaping (phase-2 extension).
+  - "ReT_thesis": Piecewise step-level approximation of Eq. 5.5, retained for
+    audit and thesis comparison.  NOT suitable as training objective (collapses
+    to S1 due to cost-avoidance incentive dominating the service signal).
+  - "ReT_corrected" / "ReT_corrected_cost": Corrected thesis-aligned ReT.
+  - "rt_v0": Legacy weighted sum.
 
 Action space: 5-dimensional [-1, 1]
   RL EXTENSION: The thesis (Garrido-Rios 2017, Sec. 6.7.3-6.7.4) controls
@@ -26,42 +33,17 @@ Action space: 5-dimensional [-1, 1]
          -0.33 ≤ action[4] < 0.33 → S=2 (double shift, 16h/day)
          action[4] ≥ 0.33 → S=3 (triple shift, 24h/day)
 
-ReT Approximation (Eq. 5.5 mapped to step-level metrics):
-  IMPORTANT: This is a STEP-LEVEL APPROXIMATION of the thesis Eq. 5.5.
-  The thesis computes ReT per-order (indexed by j) using APj, RPj, DPj.
-  This implementation aggregates disruption hours at the step level.
-
-  Thesis values: Re^max=1 (APj), Re=0.5 (RPj per Figure 5.6), Re^min=0 (DPj-RPj).
-  Confirmed with Prof. Garrido: operational weighting uses Re^max=1, Re=1, Re^min=0.
-
+ReT_thesis piecewise approximation (Eq. 5.5, audit-only):
   Thesis Equations (Garrido-Rios 2017, Sec. 5.6.3):
-    Eq. 5.1: Re(APj) = Re^max × (APj/LT)          [not directly used in step approx.]
-    Eq. 5.2: Re(RPj) = Re × (1/RPj)               [not directly used in step approx.]
-    Eq. 5.3: Re(DPj,RPj) = Re^min × (DPj-RPj)/CTj [always 0]
-    Eq. 5.4: Re(FRt) = 1 - (Bt+Ut)/Dt             [order-count based fill rate]
+    Eq. 5.1: Re(APj) = Re^max × (APj/LT)
+    Eq. 5.2: Re(RPj) = Re × (1/RPj)
+    Eq. 5.3: Re(DPj,RPj) = Re^min × (DPj-RPj)/CTj  [always 0]
+    Eq. 5.4: Re(FRt) = 1 - (Bt+Ut)/Dt
     Eq. 5.5: ReT = {Re(APj), Re(RPj), Re(DPj,RPj), Re(FRt)}
 
-  Step-level approximation (this implementation):
-    Case 1 (No disruption):       Re(FR_t) = fill_rate   [step-level FR, ration-qty]
-    Case 2 (Autotomy):            Re(AP)   = 1 - disruption_frac
-    Case 3 (Recovery):            Re(RP)   = 1 / (1 + disruption_frac)
-    Case 4 (Non-recovery):        Re(DP)   = 0
-
-  Reward = ReT_step - δ × (S - 1)
-
-  Assumptions (publishable):
-    A1: Step-level aggregation approximates order-level ReT when
-        step size coincides with the reorder cycle (168h).
-    A2: AP proxied by fraction of step without disruption (1 - disruption_frac).
-    A3: RP proxied inversely by disruption fraction: 1/(1+frac) ∈ (0.5, 1].
-    A4: Disruption fraction normalized by op-hours (13 ops × step_hours).
-    A5: Fill rate computed from ration quantities (not order counts);
-        difference is negligible for narrow demand distribution U(2400,2600).
-
-  These approximations are necessary because the DES tracks order-level APj/RPj/DPj
-  implicitly through SimPy process timing, not through explicit per-order timestamps
-  at the step boundary. A thesis-exact order-level ReT calculator is available via
-  MFSCSimulation._order_level_fill_rate() and OrderRecord.(APj, RPj, DPj, LTj).
+  This piecewise formulation is retained for audit but is NOT the training
+  objective.  See ``_compute_ret_thesis_components`` for the step-level
+  approximation and REWARD_DESIGN.md for why it fails as an RL reward.
 """
 
 from __future__ import annotations
@@ -85,7 +67,22 @@ from supply_chain.supply_chain import MFSCSimulation
 
 NUM_TRACKED_OPS = 13
 OBSERVATION_VERSION_OPTIONS = ("v1", "v2", "v3", "v4")
-REWARD_MODE_OPTIONS = ("ReT_thesis", "rt_v0", "control_v1", "control_v1_pbrs")
+REWARD_MODE_ALIAS_MAP = {"ReT_corrected_cost": "ReT_corrected"}
+REWARD_MODE_OPTIONS = (
+    "ReT_thesis",
+    "ReT_corrected",
+    "ReT_corrected_cost",
+    "ReT_seq_v1",
+    "rt_v0",
+    "control_v1",
+    "control_v1_pbrs",
+)
+
+# ReT_seq_v1 defaults (Sequential Operational Resilience)
+RET_SEQ_W_SC = 0.60  # service continuity weight
+RET_SEQ_W_BC = 0.25  # backlog containment weight
+RET_SEQ_W_AE = 0.15  # adaptive efficiency weight
+RET_SEQ_KAPPA = 0.20  # shift cost scaling
 PBRS_VARIANT_OPTIONS = ("cumulative", "step_level")
 BASE_OBSERVATION_DIM = 15
 V2_OBSERVATION_DIM = 18
@@ -112,15 +109,19 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
       - v1: 15-dimensional continuous state vector (historical contract).
       - v2: v1 + previous-step demand/backorder/disruption diagnostics.
       - v3: v2 + normalized cumulative backorder and disruption features.
+      - v4: v3 + current shift plus Op1/Op2 disruption state.
     Action: 5-dimensional [-1, 1].
 
     Parameters
     ----------
-    reward_mode : {"ReT_thesis", "rt_v0", "control_v1", "control_v1_pbrs"}
-        Which reward formulation to use.
+    reward_mode : {"ReT_thesis", "ReT_corrected", "ReT_corrected_cost", "ReT_seq_v1", "rt_v0", "control_v1", "control_v1_pbrs"}
+        Which reward formulation to use. ``ReT_corrected_cost`` is the
+        research-facing alias for the cost-extended corrected thesis lane and
+        maps internally to ``ReT_corrected``.
     rt_delta : float
-        Linear shift cost weight. Reward -= δ × (S − 1).
-        Must be calibrated via DOE for desired shift selection ratio.
+        Linear shift cost weight used by the thesis-aligned corrected lane.
+        Reward -= δ × (S − 1). Must be calibrated via DOE for desired shift
+        selection ratio.
     autotomy_threshold : float
         Fill-rate threshold above which a disrupted step counts as
         autotomy rather than recovery. Default 0.95.
@@ -167,6 +168,11 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         pbrs_beta: float = 0.5,
         pbrs_gamma: float = 0.99,
         pbrs_variant: str = "cumulative",
+        # --- ReT_seq_v1 parameters ---
+        ret_seq_w_sc: float = RET_SEQ_W_SC,
+        ret_seq_w_bc: float = RET_SEQ_W_BC,
+        ret_seq_w_ae: float = RET_SEQ_W_AE,
+        ret_seq_kappa: float = RET_SEQ_KAPPA,
     ) -> None:
         super().__init__()
         if step_size_hours <= 0:
@@ -196,8 +202,9 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                 f"Invalid pbrs_variant={pbrs_variant!r}. "
                 f"Expected one of {PBRS_VARIANT_OPTIONS}."
             )
+        canonical_reward_mode = REWARD_MODE_ALIAS_MAP.get(reward_mode, reward_mode)
         if (
-            reward_mode == "control_v1_pbrs"
+            canonical_reward_mode == "control_v1_pbrs"
             and pbrs_variant == "step_level"
             and observation_version not in ("v2", "v3", "v4")
         ):
@@ -212,6 +219,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self.risk_level = risk_level
         self.stochastic_pt = stochastic_pt
         self.reward_mode = reward_mode
+        self._canonical_reward_mode = canonical_reward_mode
         self.observation_version = observation_version
 
         self.rt_delta = float(rt_delta)
@@ -233,6 +241,12 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self.pbrs_gamma = float(pbrs_gamma)
         self.pbrs_variant = pbrs_variant
         self._prev_phi: float = 0.0
+
+        # ReT_seq_v1 params
+        self.ret_seq_w_sc = float(ret_seq_w_sc)
+        self.ret_seq_w_bc = float(ret_seq_w_bc)
+        self.ret_seq_w_ae = float(ret_seq_w_ae)
+        self.ret_seq_kappa = float(ret_seq_kappa)
 
         self.warmup_hours = float(WARMUP["estimated_deterministic_hrs"])
         if max_steps is None:
@@ -300,6 +314,22 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         return np.array(
             [cum_backorder_rate, cum_downhours_fraction],
             dtype=np.float32,
+        )
+
+    def _cumulative_demanded_post_warmup(self) -> float:
+        """Return total demanded quantity accrued since warmup end."""
+        if self.sim is None:
+            return 0.0
+        return max(0.0, float(self.sim.total_demanded) - self._warmup_total_demanded)
+
+    def _cumulative_backorder_qty_post_warmup(self) -> float:
+        """Return cumulative backorder quantity accrued since warmup end."""
+        if self.sim is None:
+            return 0.0
+        return max(
+            0.0,
+            float(self.sim.cumulative_backorder_qty)
+            - self._warmup_cumulative_backorder_qty,
         )
 
     def _cumulative_backorder_rate_by_inventory_node(self) -> dict[str, float]:
@@ -519,6 +549,129 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         }
 
     # -----------------------------------------------------------------
+    # ReT_seq_v1: Sequential Operational Resilience
+    # -----------------------------------------------------------------
+
+    def _compute_ret_seq_v1(
+        self, info: dict[str, Any], shifts: int
+    ) -> dict[str, float]:
+        """
+        Sequential Operational Resilience (ReT-Seq).
+
+        Primary training reward for the shift-control RL lane.  Extends
+        Garrido-Rios (2017) Eq. 5.5 into a smooth, RL-trainable objective
+        via weighted geometric aggregation:
+
+            r_t = SC_t^w_sc × BC_t^w_bc × AE_t^w_ae
+
+        Frozen defaults: w_sc=0.60, w_bc=0.25, w_ae=0.15, κ=0.20.
+
+        Sub-indicator definitions and thesis mapping
+        ---------------------------------------------
+
+        SC_t  (Service Continuity) = 1 - B_step / D_step
+
+            Maps to thesis Eq. 5.4: Re(FR_t) = 1 - (B_t + U_t) / D_t.
+            U_t = 0 in the MFSC because all unmet demand is backordered
+            (thesis assumption 6.5.4), so SC_t equals the step-level fill
+            rate.  This captures *inherent resilience* — the fraction of
+            demand satisfied regardless of disruption state.
+
+        BC_t  (Backlog Containment) = 1 - min(1, pending_BO / cumul_D)
+
+            Sequential proxy for the thesis recovery concept (Eq. 5.2:
+            Re(RP_j) = Re_bar / RP_j).  The thesis measures recovery by
+            *time* (shorter RP_j = higher resilience); at the step level,
+            recovery time is not directly observable because orders have not
+            yet completed.  Pending backorder stock relative to cumulative
+            demand is the most direct observable consequence of delayed
+            recovery: faster recovery drains the backlog, raising BC_t.
+            The cumulative denominator intentionally measures *overall
+            recovery health* across the episode rather than instantaneous
+            state, complementing SC_t which handles immediate service impact.
+
+        AE_t  (Adaptive Efficiency) = 1 - κ(S_t - 1) / 2
+
+            Addresses two explicit thesis gaps:
+            - Limitation 8.5.2: "the non-inclusion of the cost factor"
+            - Future work 8.6.2: "in search of an optimum level of SCRes"
+            Maps the discrete shift decision {1,2,3} to a cost penalty in
+            [0, κ].  At κ=0.20: AE(S=1)=1.00, AE(S=2)=0.90, AE(S=3)=0.80.
+
+        Thesis sub-indicators NOT explicitly represented
+        -------------------------------------------------
+        Re(AP_j) — autotomy (Eq. 5.1): manifests as SC_t ≈ 1 when the system
+            absorbs disruptions without service loss.  No separate term is
+            needed because RL rewards good outcomes regardless of whether
+            they arise from autotomy or calm periods.
+        Re(DP_j, RP_j) — non-recovery (Eq. 5.3): always zero in the thesis
+            (Re^min = 0).  Manifests as SC_t → 0 AND BC_t → 0 when the
+            system is fully disrupted and not recovering.
+
+        Why geometric aggregation instead of piecewise (Eq. 5.5)
+        ---------------------------------------------------------
+        The thesis Eq. 5.5 selects one sub-indicator per order based on the
+        disruption state.  This piecewise structure creates discontinuous
+        reward landscapes unsuitable for policy-gradient optimization.
+        Geometric aggregation is a smooth alternative that preserves the
+        key property: *non-compensability* — if any sub-indicator approaches
+        zero, the entire reward approaches zero, regardless of the others.
+        Precedent: the Human Development Index uses geometric aggregation
+        for the same reason (UNDP, 2010).
+
+        Weight justification (0.60 / 0.25 / 0.15)
+        -------------------------------------------
+        Weights sum to 1.0 (proper weighted geometric mean) and reflect the
+        thesis priority hierarchy:
+        - Service dominates (0.60): thesis assigns Re^max = 1.0 to autotomy
+          and no-disruption cases — both service-dominant states.
+        - Recovery is secondary (0.25): thesis assigns Re_bar ≈ 0.5 to
+          recovery, roughly half of Re^max (Figure 5.6).
+        - Cost efficiency is tertiary (0.15): new extension not in the
+          original thesis; given minimal weight as befits an auxiliary
+          dimension in military logistics where feeding troops >>
+          recovery speed >> operational cost.
+        """
+        EPS = 1e-6
+
+        new_demanded = float(info.get("new_demanded", 0.0))
+        new_backorder_qty = float(info.get("new_backorder_qty", 0.0))
+
+        # SC_t: service continuity (maps to Re(FRt) Eq. 5.4)
+        if new_demanded > 0:
+            sc_t = max(EPS, 1.0 - new_backorder_qty / new_demanded)
+        else:
+            sc_t = 1.0
+
+        # BC_t: backlog containment (captures recovery dynamics)
+        pending_bo_qty = float(info.get("pending_backorder_qty", 0.0))
+        cumulative_demanded = max(self._cumulative_demanded_post_warmup(), 1.0)
+        bc_t = max(EPS, 1.0 - min(1.0, pending_bo_qty / cumulative_demanded))
+
+        # AE_t: adaptive efficiency (cost dimension per Section 8.6.2)
+        ae_t = max(EPS, 1.0 - self.ret_seq_kappa * (shifts - 1) / 2.0)
+
+        # Geometric aggregation (reduces compensability)
+        ret_seq_t = (
+            sc_t**self.ret_seq_w_sc * bc_t**self.ret_seq_w_bc * ae_t**self.ret_seq_w_ae
+        )
+
+        return {
+            "service_continuity": sc_t,
+            "backlog_containment": bc_t,
+            "adaptive_efficiency": ae_t,
+            "ret_seq_step": ret_seq_t,
+            "cumulative_demanded_post_warmup": cumulative_demanded,
+            "pending_backorder_qty": pending_bo_qty,
+            "weights": {
+                "w_sc": self.ret_seq_w_sc,
+                "w_bc": self.ret_seq_w_bc,
+                "w_ae": self.ret_seq_w_ae,
+            },
+            "kappa": self.ret_seq_kappa,
+        }
+
+    # -----------------------------------------------------------------
     # PBRS potential function (Ng et al. 1999)
     # -----------------------------------------------------------------
 
@@ -572,7 +725,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         obs = self._compose_observation(
             np.array(self.sim.get_observation(), dtype=np.float32)
         )
-        if self.reward_mode == "control_v1_pbrs":
+        if self._canonical_reward_mode == "control_v1_pbrs":
             self._prev_phi = self._compute_phi(obs)
         info: dict[str, Any] = {
             "time": self.sim.env.now,
@@ -649,6 +802,10 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             "pending_batch_fraction": float(obs[13]),
             "contingent_demand_fraction": float(obs[14]),
             "cumulative_backorder_qty": float(self.sim.cumulative_backorder_qty),
+            "cumulative_backorder_qty_post_warmup": (
+                self._cumulative_backorder_qty_post_warmup()
+            ),
+            "cumulative_demanded_post_warmup": self._cumulative_demanded_post_warmup(),
             "cumulative_disruption_hours": float(self.sim._cumulative_down_hours),
             "pending_backorders_count": float(len(self.sim.pending_backorders)),
             "pending_backorder_qty": float(self.sim.pending_backorder_qty),
@@ -708,19 +865,36 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         pbrs_shaping_bonus: float = 0.0
         pbrs_base_reward: float = 0.0
         pbrs_phi: float = 0.0
-        if self.reward_mode == "ReT_thesis":
+        if self._canonical_reward_mode == "ReT_thesis":
             ret_components = self._compute_ret_thesis_components(info, self.step_size)
             ReT = float(ret_components["ret_value"])
             shift_cost = self.rt_delta * (shifts - 1)
             reward = ReT - shift_cost
-        elif self.reward_mode in ("control_v1", "control_v1_pbrs"):
+        elif self._canonical_reward_mode == "ReT_corrected":
+            # Extended ReT: uses corrected autotomy + shift cost.
+            # Fulfills Garrido-Rios (2017) Section 8.6.2 call for cost integration.
+            corrected_ret_components = self._compute_ret_thesis_corrected_components(
+                info, self.step_size
+            )
+            ReT_corr = float(corrected_ret_components["ret_value"])
+            shift_cost = self.rt_delta * (shifts - 1)
+            reward = ReT_corr - shift_cost
+            ret_components = self._compute_ret_thesis_components(info, self.step_size)
+        elif self._canonical_reward_mode == "ReT_seq_v1":
+            ret_seq_components = self._compute_ret_seq_v1(info, shifts)
+            reward = float(ret_seq_components["ret_seq_step"])
+            corrected_ret_components = self._compute_ret_thesis_corrected_components(
+                info, self.step_size
+            )
+            ret_components = self._compute_ret_thesis_components(info, self.step_size)
+        elif self._canonical_reward_mode in ("control_v1", "control_v1_pbrs"):
             control_components = self._compute_control_v1_components(info, shifts)
             corrected_ret_components = self._compute_ret_thesis_corrected_components(
                 info, self.step_size
             )
             pbrs_base_reward = float(control_components["reward_total"])
             reward = pbrs_base_reward
-            if self.reward_mode == "control_v1_pbrs":
+            if self._canonical_reward_mode == "control_v1_pbrs":
                 # Compose obs for phi AFTER updating prev-step trackers
                 # so v2 features reflect the current transition.
                 self._prev_step_new_demanded = float(info.get("new_demanded", 0.0))
@@ -739,7 +913,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             reward = self._compute_rt_v0(info, shifts)
 
         truncated = self.current_step >= self.max_steps
-        if self.reward_mode != "control_v1_pbrs":
+        if self._canonical_reward_mode != "control_v1_pbrs":
             # PBRS already updated these above (needed for phi_obs composition)
             self._prev_step_new_demanded = float(info.get("new_demanded", 0.0))
             self._prev_step_new_backorder_qty = float(
@@ -758,9 +932,13 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             "shifts_active": shifts,
             "shift_cost_linear": self.rt_delta * (shifts - 1),
             "shift_cost_delta": self.rt_delta,
+            "cumulative_demanded_post_warmup": self._cumulative_demanded_post_warmup(),
+            "cumulative_backorder_qty_post_warmup": (
+                self._cumulative_backorder_qty_post_warmup()
+            ),
         }
         out_info["state_constraint_context"] = self.get_state_constraint_context()
-        if self.reward_mode == "ReT_thesis":
+        if self._canonical_reward_mode == "ReT_thesis":
             out_info["ReT_raw"] = ReT
             out_info["ret_components"] = {
                 **ret_components,
@@ -775,7 +953,47 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                 },
                 "thresholds_source": "configurable_repo_approximation",
             }
-        elif self.reward_mode in ("control_v1", "control_v1_pbrs"):
+        elif self._canonical_reward_mode == "ReT_corrected":
+            out_info["ReT_corrected_raw"] = ReT_corr
+            out_info["ret_thesis_corrected_step"] = ReT_corr
+            out_info["ret_thesis_corrected"] = {
+                **corrected_ret_components,
+                "shift_cost": shift_cost,
+                "reward_total": reward,
+                "thresholds": {
+                    "autotomy_fill_rate_threshold": self.autotomy_threshold,
+                    "nonrecovery_disruption_fraction_threshold": (
+                        self.nonrecovery_disruption_threshold
+                    ),
+                    "nonrecovery_fill_rate_threshold": self.nonrecovery_fr_threshold,
+                },
+                "thresholds_source": "configurable_repo_approximation",
+                "correction_mode": "autotomy_equals_recovery",
+            }
+            # Also include uncorrected for comparison
+            out_info["ret_components"] = {
+                **ret_components,
+                "shift_cost": shift_cost,
+            }
+        elif self._canonical_reward_mode == "ReT_seq_v1":
+            out_info["ret_seq_step"] = float(ret_seq_components["ret_seq_step"])
+            out_info["ret_seq_components"] = ret_seq_components
+            out_info["service_continuity_step"] = float(
+                ret_seq_components["service_continuity"]
+            )
+            out_info["backlog_containment_step"] = float(
+                ret_seq_components["backlog_containment"]
+            )
+            out_info["adaptive_efficiency_step"] = float(
+                ret_seq_components["adaptive_efficiency"]
+            )
+            out_info["ret_seq_kappa"] = float(self.ret_seq_kappa)
+            out_info["ret_thesis_corrected_step"] = float(
+                corrected_ret_components["ret_value"]
+            )
+            out_info["ret_thesis_corrected"] = corrected_ret_components
+            out_info["ret_components"] = ret_components
+        elif self._canonical_reward_mode in ("control_v1", "control_v1_pbrs"):
             out_info["service_loss_step"] = float(
                 control_components["service_loss_step"]
             )
@@ -806,7 +1024,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                 "thresholds_source": "configurable_repo_approximation",
                 "correction_mode": "autotomy_equals_recovery",
             }
-            if self.reward_mode == "control_v1_pbrs":
+            if self._canonical_reward_mode == "control_v1_pbrs":
                 out_info["pbrs_phi"] = pbrs_phi
                 out_info["pbrs_shaping_bonus"] = pbrs_shaping_bonus
                 out_info["pbrs_base_reward"] = pbrs_base_reward

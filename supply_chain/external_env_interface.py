@@ -5,7 +5,16 @@ from typing import Any, Callable, Protocol
 
 import numpy as np
 
-from supply_chain.config import DEFAULT_YEAR_BASIS, OPERATIONS, WARMUP
+from supply_chain.config import (
+    BENCHMARK_OBSERVATION_VERSION,
+    BENCHMARK_REWARD_MODE,
+    BENCHMARK_W_BO,
+    BENCHMARK_W_COST,
+    BENCHMARK_W_DISR,
+    DEFAULT_YEAR_BASIS,
+    OPERATIONS,
+    WARMUP,
+)
 from supply_chain.env_experimental_shifts import MFSCGymEnvShifts
 
 OBSERVATION_FIELDS_V1: tuple[str, ...] = (
@@ -123,6 +132,53 @@ REWARD_TERM_FIELDS: tuple[str, ...] = (
 )
 
 
+def get_episode_terminal_metrics(env: Any) -> dict[str, float]:
+    """Return terminal service metrics from the underlying DES-backed env.
+
+    The benchmark and external helpers previously reconstructed fill rate from
+    step-level `new_backorder_qty/new_demanded` flows. That quantity-based
+    aggregate is useful for auditing transition flow, but it is not the same as
+    the thesis/order-level service metric already exposed by the simulator state.
+    This helper centralizes the paper-facing terminal metrics so all evaluation
+    paths use the same definitions.
+    """
+    base_env = getattr(env, "unwrapped", env)
+    sim = getattr(base_env, "sim", None)
+    if sim is None:
+        return {
+            "fill_rate_order_level": float("nan"),
+            "backorder_rate_order_level": float("nan"),
+            "fill_rate_state_terminal": float("nan"),
+            "backorder_rate_state_terminal": float("nan"),
+            "order_level_ret_mean": float("nan"),
+        }
+
+    order_summary: dict[str, Any] = {}
+    if hasattr(sim, "compute_order_level_ret"):
+        order_summary = sim.compute_order_level_ret()
+    fill_rate_order_level = float(
+        order_summary.get("fill_rate_order_level", getattr(sim, "_fill_rate")())
+    )
+    backorder_rate_order_level = float(max(0.0, 1.0 - fill_rate_order_level))
+    fill_rate_state_terminal = (
+        float(sim._fill_rate()) if hasattr(sim, "_fill_rate") else fill_rate_order_level
+    )
+    backorder_rate_state_terminal = (
+        float(sim._backorder_rate())
+        if hasattr(sim, "_backorder_rate")
+        else backorder_rate_order_level
+    )
+    return {
+        "fill_rate_order_level": fill_rate_order_level,
+        "backorder_rate_order_level": backorder_rate_order_level,
+        "fill_rate_state_terminal": fill_rate_state_terminal,
+        "backorder_rate_state_terminal": backorder_rate_state_terminal,
+        "order_level_ret_mean": float(
+            order_summary.get("mean_ret", fill_rate_order_level)
+        ),
+    }
+
+
 @dataclass(frozen=True)
 class ExternalEnvSpec:
     """Machine-readable contract for external models consuming the repo env."""
@@ -157,11 +213,11 @@ def get_observation_fields(observation_version: str = "v1") -> tuple[str, ...]:
 
 def get_shift_control_env_spec(
     *,
-    reward_mode: str = "ReT_thesis",
-    observation_version: str = "v1",
+    reward_mode: str = BENCHMARK_REWARD_MODE,
+    observation_version: str = BENCHMARK_OBSERVATION_VERSION,
     step_size_hours: float = 168.0,
 ) -> ExternalEnvSpec:
-    """Return the stable external contract for the thesis-aligned env."""
+    """Return the stable external contract for the benchmark shift env."""
     observation_fields = get_observation_fields(observation_version)
     return ExternalEnvSpec(
         env_variant="shift_control",
@@ -179,10 +235,11 @@ def get_shift_control_env_spec(
         },
         notes=(
             "Observation values are normalized continuous features emitted by the shift-control environment.",
+            "The default external spec freezes reward_mode=ReT_seq_v1 and observation_version=v1 for the current paper-facing benchmark contract.",
             "observation_version=v2 adds previous-step demand, backorder, and disruption diagnostics to the observed state.",
             "observation_version=v3 extends v2 with normalized cumulative backorder and disruption history since the end of warmup.",
             "The fifth action dimension selects assembly capacity through discrete shifts.",
-            "Reward mode ReT_thesis emits ret_components inside info for downstream auditing.",
+            "control_v1 remains available as the historical operational comparator, while ret_thesis_corrected remains the thesis-aligned audit metric.",
         ),
     )
 
@@ -309,12 +366,15 @@ def build_reward_term_vector(info: dict[str, Any], reward: float) -> np.ndarray:
 
 
 def make_shift_control_env(**overrides: Any) -> MFSCGymEnvShifts:
-    """Build the recommended thesis-aligned environment for external models."""
+    """Build the recommended benchmark environment for external models."""
     params: dict[str, Any] = {
-        "reward_mode": "ReT_thesis",
-        "observation_version": "v1",
+        "reward_mode": BENCHMARK_REWARD_MODE,
+        "observation_version": BENCHMARK_OBSERVATION_VERSION,
         "step_size_hours": 168.0,
         "year_basis": DEFAULT_YEAR_BASIS,
+        "w_bo": BENCHMARK_W_BO,
+        "w_cost": BENCHMARK_W_COST,
+        "w_disr": BENCHMARK_W_DISR,
     }
     params.update(overrides)
     return MFSCGymEnvShifts(**params)
@@ -444,15 +504,16 @@ def run_episodes(
                     }
                 )
 
-        env.close()
-
         total_steps = max(1, steps)
+        terminal_metrics = get_episode_terminal_metrics(env)
         if demanded_total > 0:
-            backorder_rate = backorder_qty_total / demanded_total
-            fill_rate = 1.0 - backorder_rate
+            flow_backorder_rate = backorder_qty_total / demanded_total
+            flow_fill_rate = 1.0 - flow_backorder_rate
         else:
-            backorder_rate = 0.0
-            fill_rate = 1.0
+            flow_backorder_rate = 0.0
+            flow_fill_rate = 1.0
+        fill_rate = float(terminal_metrics["fill_rate_order_level"])
+        backorder_rate = float(terminal_metrics["backorder_rate_order_level"])
 
         row: dict[str, Any] = {
             "policy": policy_name,
@@ -466,9 +527,18 @@ def run_episodes(
             "shift_cost_total": shift_cost_total,
             "mean_disruption_fraction": disruption_fraction_total / total_steps,
             "ret_thesis_corrected_total": ret_thesis_corrected_total,
+            "order_level_ret_mean": float(terminal_metrics["order_level_ret_mean"]),
             "demanded_total": demanded_total,
             "delivered_total": delivered_total,
             "backorder_qty_total": backorder_qty_total,
+            "flow_fill_rate": flow_fill_rate,
+            "flow_backorder_rate": flow_backorder_rate,
+            "fill_rate_state_terminal": float(
+                terminal_metrics["fill_rate_state_terminal"]
+            ),
+            "backorder_rate_state_terminal": float(
+                terminal_metrics["backorder_rate_state_terminal"]
+            ),
             "pct_steps_S1": 100.0 * shift_counts.get(1, 0) / total_steps,
             "pct_steps_S2": 100.0 * shift_counts.get(2, 0) / total_steps,
             "pct_steps_S3": 100.0 * shift_counts.get(3, 0) / total_steps,
@@ -476,5 +546,6 @@ def run_episodes(
         if collect_trajectories:
             row["trajectory"] = trajectory
         results.append(row)
+        env.close()
 
     return results

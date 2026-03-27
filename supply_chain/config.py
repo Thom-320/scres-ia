@@ -163,7 +163,10 @@ OPERATIONS = {
         # Section 6.3.3 (p.85) and Figure 6.2: Q = U(2400, 2600)
         # Table 6.20 (p.108): Q = U(2000, 2500) — likely a transcription error.
         # We follow the primary text description and Figure 6.2.
-        "q": (2_400, 2_600),  # Range per thesis Section 6.3.3 + Figure 6.2: U(2400, 2600)
+        "q": (
+            2_400,
+            2_600,
+        ),  # Range per thesis Section 6.3.3 + Figure 6.2: U(2400, 2600)
         "rop": 24,  # Daily
         "init_inv": 0,  # It,1 = 0 for Cf0
         "risks": ["R21", "R3"],
@@ -356,15 +359,36 @@ RISKS_SEVERE = {
 # Severe Training Profile - Curriculum Learning
 # Extrema disrupción para forzar al RL a aprender robustness.
 RISKS_SEVERE_TRAINING = {
-    "R11": {"dist": "uniform", "a": 1, "b": 10, "recovery_mean": 6},  # 2x freq of severe (21->10), 3x recovery (2->6)
+    "R11": {
+        "dist": "uniform",
+        "a": 1,
+        "b": 10,
+        "recovery_mean": 6,
+    },  # 2x freq of severe (21->10), 3x recovery (2->6)
     "R12": {"dist": "binomial", "n": 12, "p": 8 / 11},
     "R13": {"dist": "binomial", "n": 12, "p": 8 / 10},
     "R14": {"dist": "binomial", "n": 2564, "p": 12 / 100},
-    "R21": {"dist": "uniform", "a": 1, "b": 1008, "recovery_mean": 240}, # 2x freq of severe, 2x recovery
-    "R22": {"dist": "uniform", "a": 1, "b": 336, "recovery_mean": 48},   # 2x freq of severe, 2x recovery
+    "R21": {
+        "dist": "uniform",
+        "a": 1,
+        "b": 1008,
+        "recovery_mean": 240,
+    },  # 2x freq of severe, 2x recovery
+    "R22": {
+        "dist": "uniform",
+        "a": 1,
+        "b": 336,
+        "recovery_mean": 48,
+    },  # 2x freq of severe, 2x recovery
     "R23": {"dist": "uniform", "a": 1, "b": 672},
-    "R24": {"dist": "uniform", "a": 1, "b": 168, "surge_lo": 7200, "surge_hi": 7800}, # 3x surge
-    "R3": {"dist": "uniform", "a": 1, "b": 40_320}, # 4x more freq than current
+    "R24": {
+        "dist": "uniform",
+        "a": 1,
+        "b": 168,
+        "surge_lo": 7200,
+        "surge_hi": 7800,
+    },  # 3x surge
+    "R3": {"dist": "uniform", "a": 1, "b": 40_320},  # 4x more freq than current
 }
 
 RISKS_SEVERE_EXTENDED = {
@@ -514,6 +538,19 @@ RET_RE_MIN: float = 0.0  # Thesis Figure 5.6: resilience during (DPj - RPj)
 # between δ≈0.055 and δ≈0.060. We use 0.06 as a conservative default that still
 # activates shift choice without collapsing immediately to S=3.
 RET_SHIFT_COST_DELTA_DEFAULT = 0.06
+
+# -----------------------------------------------------------------------------
+# DEFAULT SHIFT-CONTROL INTERFACE SETTINGS
+# -----------------------------------------------------------------------------
+# These defaults freeze the current paper-facing reward contract around the
+# resilience-aligned sequential objective. The historical control surrogate
+# (`control_v1`) remains available for legacy comparison, but new benchmark-
+# facing entry points should default to `ReT_seq_v1` with the frozen κ=0.20.
+BENCHMARK_REWARD_MODE = "ReT_seq_v1"
+BENCHMARK_OBSERVATION_VERSION = "v1"
+BENCHMARK_W_BO = 4.0
+BENCHMARK_W_COST = 0.02
+BENCHMARK_W_DISR = 0.0
 
 
 # =============================================================================

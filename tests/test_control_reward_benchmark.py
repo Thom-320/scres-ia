@@ -18,10 +18,13 @@ from scripts.benchmark_control_reward import (
     HeuristicTuned,
     build_env_kwargs,
     build_comparison_rows,
+    build_backbone_metadata,
+    build_reward_contract_metadata,
     build_parser,
     evaluate_policy,
     export_artifact_bundle,
     learned_policy_name,
+    make_weight_combos,
     pick_survivors,
     resolve_output_dir,
     run_benchmark,
@@ -170,8 +173,86 @@ def test_build_env_kwargs_passes_stochastic_pt() -> None:
         },
     )
     assert env_kwargs["stochastic_pt"] is True
-    assert env_kwargs["reward_mode"] == "control_v1"
+    assert env_kwargs["reward_mode"] == "ReT_seq_v1"
     assert env_kwargs["observation_version"] == "v2"
+
+
+def test_control_reward_parser_defaults_to_ret_seq_v1_mainline() -> None:
+    args = build_parser().parse_args([])
+    assert args.reward_mode == "ReT_seq_v1"
+    assert args.ret_seq_kappa == pytest.approx(0.20)
+
+
+def test_build_env_kwargs_passes_ret_seq_kappa() -> None:
+    args = build_parser().parse_args(
+        [
+            "--reward-mode",
+            "ReT_seq_v1",
+            "--ret-seq-kappa",
+            "0.30",
+            "--observation-version",
+            "v4",
+        ]
+    )
+    env_kwargs = build_env_kwargs(
+        args,
+        {
+            "w_bo": 4.0,
+            "w_cost": 0.02,
+            "w_disr": 0.0,
+        },
+    )
+    assert env_kwargs["reward_mode"] == "ReT_seq_v1"
+    assert env_kwargs["observation_version"] == "v4"
+    assert env_kwargs["ret_seq_kappa"] == pytest.approx(0.30)
+
+
+def test_build_backbone_metadata_captures_experimental_tuple() -> None:
+    args = build_parser().parse_args(
+        [
+            "--algo",
+            "recurrent_ppo",
+            "--frame-stack",
+            "4",
+            "--observation-version",
+            "v4",
+            "--reward-mode",
+            "ReT_seq_v1",
+            "--risk-level",
+            "increased",
+            "--stochastic-pt",
+            "--year-basis",
+            "thesis",
+            "--step-size-hours",
+            "168",
+            "--max-steps",
+            "260",
+        ]
+    )
+    backbone = build_backbone_metadata(args, git_commit="abc123")
+    assert backbone == {
+        "env_variant": "shift_control",
+        "git_commit": "abc123",
+        "observation_version": "v4",
+        "frame_stack": 4,
+        "year_basis": "thesis",
+        "risk_level": "increased",
+        "stochastic_pt": True,
+        "step_size_hours": 168.0,
+        "max_steps": 260,
+        "reward_mode": "ReT_seq_v1",
+    }
+
+
+def test_build_reward_contract_metadata_marks_cross_mode_reward_as_noncomparable() -> (
+    None
+):
+    args = build_parser().parse_args(["--reward-mode", "ReT_seq_v1"])
+    reward_contract = build_reward_contract_metadata(args)
+
+    assert reward_contract["reward_mode"] == "ReT_seq_v1"
+    assert reward_contract["reward_family"] == "resilience_index"
+    assert reward_contract["cross_mode_reward_comparison_allowed"] is False
 
 
 def test_resolve_output_dir_disambiguates_algo_and_frame_stack() -> None:
@@ -184,6 +265,31 @@ def test_resolve_output_dir_supports_recurrent_ppo() -> None:
     args = build_parser().parse_args(["--algo", "recurrent_ppo"])
     output_dir = resolve_output_dir(args)
     assert output_dir.name == "control_reward_recurrent_ppo_fs1"
+
+
+def test_control_reward_parser_accepts_ret_seq_v1() -> None:
+    args = build_parser().parse_args(
+        ["--reward-mode", "ReT_seq_v1", "--ret-seq-kappa", "0.20"]
+    )
+    assert args.reward_mode == "ReT_seq_v1"
+    assert args.ret_seq_kappa == pytest.approx(0.20)
+
+
+def test_make_weight_combos_collapses_for_ret_seq_v1() -> None:
+    args = build_parser().parse_args(
+        [
+            "--reward-mode",
+            "ReT_seq_v1",
+            "--w-bo",
+            "1.0",
+            "2.0",
+            "--w-cost",
+            "0.02",
+            "0.06",
+        ]
+    )
+    combos = make_weight_combos(args)
+    assert combos == [{"w_bo": 1.0, "w_cost": 0.02, "w_disr": 0.0}]
 
 
 def test_build_comparison_rows_marks_collapse_and_reward_wins() -> None:
@@ -310,19 +416,32 @@ def test_run_benchmark_smoke_writes_expected_artifacts(tmp_path: Path) -> None:
     assert "random" in summary["policies"]
 
     payload = json.loads(summary_json.read_text(encoding="utf-8"))
+    episode_header = episode_csv.read_text(encoding="utf-8").splitlines()[0].split(",")
     assert payload["config"]["train_timesteps"] == 32
     assert payload["config"]["w_disr"] == [0.0]
     assert payload["config"]["algo"] == "sac"
     assert payload["config"]["frame_stack"] == 1
     assert payload["config"]["observation_version"] == "v2"
-    assert payload["config"]["reward_mode"] == "control_v1"
+    assert payload["config"]["reward_mode"] == "ReT_seq_v1"
     assert payload["config"]["stochastic_pt"] is True
+    assert payload["backbone"]["env_variant"] == "shift_control"
+    assert payload["reward_contract"]["reward_mode"] == "ReT_seq_v1"
+    assert payload["reward_contract"]["reward_family"] == "resilience_index"
+    assert payload["reward_contract"]["cross_mode_reward_comparison_allowed"] is False
+    assert payload["backbone"]["observation_version"] == "v2"
+    assert payload["backbone"]["frame_stack"] == 1
+    assert payload["backbone"]["risk_level"] == "increased"
     assert payload["benchmark_metadata"]["command"] == args.invocation
     assert "artifact_bundle_dir" in payload["artifacts"]
+    assert "order_level_ret_mean" in episode_header
+    assert "flow_fill_rate" in episode_header
+    assert "fill_rate_state_terminal" in episode_header
 
     manifest = json.loads(manifest_json.read_text(encoding="utf-8"))
     assert manifest["command"] == "python scripts/benchmark_control_reward.py --smoke"
     assert manifest["source_benchmark_directory"] == str(tmp_path.resolve())
+    assert manifest["backbone"]["env_variant"] == "shift_control"
+    assert manifest["backbone"]["observation_version"] == "v2"
     assert Path(manifest["files"]["comparison_table.csv"]).exists()
 
 
@@ -512,8 +631,17 @@ def test_heuristic_tuned_combines_strategies() -> None:
     h.reset()
     obs = _fake_obs({7: 0.20, 8: 1.0})  # high backorder + assembly_down
     action = h(obs, {})
-    assert action[4] == pytest.approx(1.0)  # S3 (hysteresis)
-    assert action[0] == pytest.approx(1.0)  # crisis boost
+    assert action[4] == pytest.approx(1.0)  # S3 (one-level escalation from S2)
+    assert action[0] == pytest.approx(0.0)  # neutral inventory multipliers
+
+
+def test_heuristic_tuned_deescalates_when_service_is_healthy() -> None:
+    h = HeuristicTuned(tau_up=0.22, tau_down=0.12, fr_low=0.84, fr_high=0.90)
+    h.reset()
+    # First escalate once to S3.
+    h(_fake_obs({7: 0.25}), {})
+    action = h(_fake_obs({7: 0.05, 6: 0.95}), {})
+    assert action[4] == pytest.approx(0.0)  # S2 after one-level de-escalation
 
 
 def test_all_heuristics_within_action_bounds() -> None:
@@ -609,11 +737,11 @@ def test_tune_heuristic_params_returns_best(tmp_path: Path) -> None:
     assert "best_params" in result
     assert "best_mean_reward" in result
     assert result["combos_evaluated"] > 0
-    assert "tau_high" in result["best_params"]
-    assert "boost_crisis" in result["best_params"]
+    assert "tau_up" in result["best_params"]
+    assert "fr_high" in result["best_params"]
     # Verify global default was updated
     tuned = HEURISTIC_DEFAULTS["heuristic_tuned"]
-    assert tuned.tau_high == result["best_params"]["tau_high"]
+    assert tuned.tau_up == result["best_params"]["tau_up"]
 
 
 def test_run_benchmark_with_tune_heuristic(tmp_path: Path) -> None:
@@ -651,7 +779,42 @@ def test_run_benchmark_with_tune_heuristic(tmp_path: Path) -> None:
 
     assert "heuristic_tuning" in summary
     assert summary["heuristic_tuning"]["combos_evaluated"] > 0
-    assert "tau_high" in summary["heuristic_tuning"]["best_params"]
+    assert "tau_up" in summary["heuristic_tuning"]["best_params"]
+
+
+def test_run_benchmark_learned_only_mode(tmp_path: Path) -> None:
+    parser = build_parser()
+    args = parser.parse_args(
+        [
+            "--seeds",
+            "1",
+            "--train-timesteps",
+            "32",
+            "--eval-episodes",
+            "1",
+            "--step-size-hours",
+            "24",
+            "--max-steps",
+            "4",
+            "--w-bo",
+            "4.0",
+            "--w-cost",
+            "0.02",
+            "--w-disr",
+            "0.0",
+            "--algo",
+            "ppo",
+            "--learned-only",
+            "--output-dir",
+            str(tmp_path),
+            "--skip-artifact-export",
+        ],
+    )
+    args.invocation = "python scripts/benchmark_control_reward.py --learned-only-smoke"
+    summary = run_benchmark(args)
+    assert summary["phases"] == ["ppo_eval"]
+    assert summary["policies"] == ["ppo"]
+    assert summary["comparison_table"] == []
 
 
 def test_cross_scenario_evaluation(
@@ -828,7 +991,7 @@ def test_pbrs_phi_value_fallback() -> None:
     obs = np.zeros(15, dtype=np.float32)
     obs[6] = 0.80
     phi = env._compute_phi_cumulative(obs)
-    expected = 2.0 * 0.80 - 0.5 * 0.0 # fallback 0 for BO
+    expected = 2.0 * 0.80 - 0.5 * 0.0  # fallback 0 for BO
     assert abs(phi - expected) < 1e-6
 
 

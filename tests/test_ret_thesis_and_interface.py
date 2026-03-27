@@ -5,6 +5,7 @@ import pytest
 import numpy as np
 
 from supply_chain.external_env_interface import (
+    get_episode_terminal_metrics,
     get_observation_fields,
     get_shift_control_constraint_context,
     get_shift_control_env_spec,
@@ -85,7 +86,7 @@ def test_external_interface_matches_shift_env_contract() -> None:
     env = make_shift_control_env(max_steps=1)
 
     assert spec.env_variant == "shift_control"
-    assert spec.reward_mode == "ReT_thesis"
+    assert spec.reward_mode == "ReT_seq_v1"
     assert len(spec.observation_fields) == env.observation_space.shape[0]
     assert len(spec.action_fields) == env.action_space.shape[0]
 
@@ -159,6 +160,40 @@ def test_v3_observation_contract_exposes_normalized_cumulative_history() -> None
     )
 
 
+def test_v4_observation_contract_exposes_shift_and_upstream_disruption_state() -> None:
+    spec = get_shift_control_env_spec(
+        reward_mode="control_v1", observation_version="v4"
+    )
+    env = make_shift_control_env(
+        max_steps=2,
+        reward_mode="control_v1",
+        observation_version="v4",
+        step_size_hours=24,
+        risk_level="increased",
+        stochastic_pt=True,
+    )
+    obs, info = env.reset(seed=7)
+
+    assert spec.observation_version == "v4"
+    assert tuple(spec.observation_fields) == get_observation_fields("v4")
+    assert len(spec.observation_fields) == 24
+    assert obs.shape == (24,)
+    assert info["observation_version"] == "v4"
+    assert obs[15:24].tolist() == pytest.approx(
+        [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0 / 3.0, 0.0, 0.0]
+    )
+
+    next_obs, _, _, _, step_info = env.step([0.0, 0.0, 0.0, 0.0, 0.0])
+    assert step_info["observation_version"] == "v4"
+    assert next_obs.shape == (24,)
+    assert next_obs[16] == pytest.approx(
+        float(step_info["new_backorder_qty"]) / 18_200.0
+    )
+    assert next_obs[21] == pytest.approx(float(step_info["shifts_active"]) / 3.0)
+    assert 0.0 <= next_obs[22] <= 1.0
+    assert 0.0 <= next_obs[23] <= 1.0
+
+
 def test_reset_info_exposes_action_constraints() -> None:
     env = make_shift_control_env(max_steps=1)
     _, info = env.reset(seed=7)
@@ -167,6 +202,7 @@ def test_reset_info_exposes_action_constraints() -> None:
     assert constraints["inventory_multiplier_range"]["min"] == pytest.approx(0.5)
     assert constraints["shift_signal_bands"]["signal_ge_0.33"] == 3
     assert constraints["base_control_parameters"]["op3_q"] > 0
+    assert info["observation_version"] == "v1"
 
 
 def test_external_constraint_context_exposes_base_parameters() -> None:
@@ -237,6 +273,9 @@ def test_run_episodes_with_neutral_policy() -> None:
         assert "reward_total" in row
         assert "fill_rate" in row
         assert 0.0 <= row["fill_rate"] <= 1.0
+        assert "flow_fill_rate" in row
+        assert 0.0 <= row["flow_fill_rate"] <= 1.0
+        assert "order_level_ret_mean" in row
         assert "pct_steps_S1" in row
         assert "pct_steps_S2" in row
         assert "pct_steps_S3" in row
@@ -302,3 +341,59 @@ def test_run_episodes_collect_trajectories() -> None:
     assert "action" in traj[0]
     assert "reward" in traj[0]
     assert "info" in traj[0]
+
+
+def test_terminal_metrics_match_env_order_level_definition() -> None:
+    env = make_shift_control_env(
+        reward_mode="control_v1",
+        observation_version="v1",
+        step_size_hours=168,
+        max_steps=32,
+        risk_level="increased",
+        stochastic_pt=True,
+        year_basis="thesis",
+        w_bo=4.0,
+        w_cost=0.02,
+        w_disr=0.0,
+    )
+    obs, info = env.reset(seed=123)
+    terminated = False
+    truncated = False
+    while not (terminated or truncated):
+        obs, _, terminated, truncated, info = env.step(np.zeros(5, dtype=np.float32))
+
+    metrics = get_episode_terminal_metrics(env)
+    assert metrics["fill_rate_order_level"] == pytest.approx(
+        env.sim._order_level_fill_rate()
+    )
+    assert metrics["fill_rate_state_terminal"] == pytest.approx(env.sim._fill_rate())
+    assert metrics["backorder_rate_order_level"] == pytest.approx(
+        1.0 - metrics["fill_rate_order_level"]
+    )
+    env.close()
+
+
+def test_run_episodes_uses_terminal_fill_rate_not_flow_ratio() -> None:
+    results = run_episodes(
+        lambda obs, info: np.zeros(5, dtype=np.float32),
+        n_episodes=1,
+        seed=123,
+        env_kwargs={
+            "reward_mode": "control_v1",
+            "observation_version": "v1",
+            "step_size_hours": 168,
+            "max_steps": 260,
+            "risk_level": "increased",
+            "stochastic_pt": True,
+            "year_basis": "thesis",
+            "w_bo": 4.0,
+            "w_cost": 0.02,
+            "w_disr": 0.0,
+        },
+        policy_name="static_s2_like",
+    )
+    row = results[0]
+    assert row["fill_rate"] == pytest.approx(1.0 - row["backorder_rate"], rel=1e-6)
+    assert row["fill_rate"] == pytest.approx(0.8137193203272498)
+    assert row["fill_rate_state_terminal"] == pytest.approx(0.8143486469477659)
+    assert row["fill_rate"] > row["flow_fill_rate"]

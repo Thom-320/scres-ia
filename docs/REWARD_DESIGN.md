@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document justifies the choice of `control_v1` as the training reward for the RL benchmark and explains why `ReT_thesis` was retained only as a reporting metric.
+The repository now freezes `ReT_seq_v1` with `κ=0.20` as the primary training reward for the shift-control benchmark lane. This document records why that sequential resilience reward replaced `control_v1` as the default while still keeping `control_v1` as a historical comparator and `ReT_thesis` as an audit metric.
 
 ## The Problem: Reward Misalignment
 
@@ -27,7 +27,34 @@ When used as the RL training reward, ReT creates a **cost-avoidance incentive** 
 
 The agent learns that running a single shift (S1) minimizes the cost component of ReT faster than the fill-rate penalty accumulates. This produces a **numerically high ReT score** but an **operationally poor policy**.
 
-## The Solution: control_v1
+## The Frozen Solution: ReT_seq_v1
+
+The selected reward is a sequential resilience index that reconciles Garrido's thesis metric with a trainable operational objective:
+
+```
+r_t = SC_t^0.60 × BC_t^0.25 × AE_t^0.15
+```
+
+Where:
+- `SC_t = 1 - new_backorder_qty / new_demanded`
+- `BC_t = 1 - min(1, pending_backorder_qty / cumulative_demanded_post_warmup)`
+- `AE_t = 1 - κ(S_t - 1) / 2`
+- `κ = 0.20`
+
+The theoretical mapping is:
+- `SC_t` → thesis Eq. 5.4 `Re(FRt)` as the step-level service-resilience term
+- `BC_t` → sequential recovery proxy aligned with thesis Eq. 5.2
+- `AE_t` → explicit cost-efficiency extension motivated by thesis Section 8.6.2
+- geometric aggregation → reduced compensability between service, recovery, and efficiency dimensions
+
+### Why κ = 0.20
+
+The current paper trio favors `κ=0.20` as the pragmatic leader against `static_s2` on cross-mode comparable metrics:
+- `κ=0.10` is too permissive toward `S3`
+- `κ=0.20` yields the most defensible shift mix and best comparable service/resilience profile
+- `κ=0.30` trends toward collapse-prone `S1` behavior and is not the repo default
+
+## Historical Comparator: control_v1
 
 The operational control reward was designed to directly penalize the two quantities the shift-control agent can influence:
 
@@ -78,7 +105,7 @@ A disruption penalty term `w_disr × disruption_fraction` was implemented but se
 
 ## Role of ReT in the Paper
 
-ReT_thesis is **retained as a reporting metric** for two reasons:
+`ReT_thesis` and `ret_thesis_corrected` are **retained as reporting and audit metrics** for two reasons:
 
 1. It provides thesis-aligned comparison with Garrido-Rios (2017)
 2. It captures the multi-dimensional resilience concept (autotomy, recovery, fill rate)

@@ -25,7 +25,11 @@ def test_analyze_run_builds_baseline_and_comparison_rows(tmp_path: Path) -> None
             "frame_stack": 1,
             "observation_version": "v1",
             "risk_level": "severe",
-        }
+            "reward_mode": "ReT_seq_v1",
+        },
+        "reward_contract": {
+            "reward_family": "resilience_index",
+        },
     }
     (run_dir / "summary.json").write_text(json.dumps(summary), encoding="utf-8")
 
@@ -193,5 +197,7 @@ def test_analyze_run_builds_baseline_and_comparison_rows(tmp_path: Path) -> None
     assert len(comparison_summary_rows) == 1
     assert comparison_summary_rows[0]["best_static_policy"] == "static_s2"
     assert comparison_summary_rows[0]["best_heuristic_policy"] == "heuristic_tuned"
+    assert comparison_summary_rows[0]["reward_mode"] == "ReT_seq_v1"
+    assert comparison_summary_rows[0]["reward_family"] == "resilience_index"
     assert comparison_summary_rows[0]["mean_diff_vs_best_static"] > 0.0
     assert comparison_summary_rows[0]["mean_diff_vs_best_heuristic"] > 0.0

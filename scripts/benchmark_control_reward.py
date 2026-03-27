@@ -24,8 +24,15 @@ from stable_baselines3.common.vec_env import DummyVecEnv
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from supply_chain.config import DEFAULT_YEAR_BASIS, YEAR_BASIS_OPTIONS
-from supply_chain.external_env_interface import make_shift_control_env
+from supply_chain.config import (
+    BENCHMARK_REWARD_MODE,
+    DEFAULT_YEAR_BASIS,
+    YEAR_BASIS_OPTIONS,
+)
+from supply_chain.external_env_interface import (
+    get_episode_terminal_metrics,
+    make_shift_control_env,
+)
 
 STATIC_POLICY_ORDER = ("static_s1", "static_s2", "static_s3")
 RANDOM_POLICY_NAME = "random"
@@ -124,29 +131,28 @@ class HeuristicDisruptionAware:
 
 
 class HeuristicTuned:
-    """Combined hysteresis + disruption-aware with tunable parameters.
+    """Hysteresis shift baseline aligned with the paper backlog.
 
-    Shift decision uses hysteresis on backorder_rate (like HeuristicHysteresis).
-    Inventory decision uses disruption/fill-rate rules (like HeuristicDisruptionAware).
-    Default parameters are reasonable fallbacks; use ``tune_heuristic_params()``
-    to optimise them via grid search.
+    The first four inventory-control dimensions stay neutral (`0.0`). Only the
+    fifth action controls shifts. The rule is:
+
+    - if assembly or LOC disruption is active, increase one shift level;
+    - else if backorder_rate >= tau_up or fill_rate <= fr_low, increase one level;
+    - else if backorder_rate <= tau_down and fill_rate >= fr_high, decrease one level;
+    - else keep the current shift.
     """
 
     def __init__(
         self,
-        tau_high: float = 0.12,
-        tau_low: float = 0.05,
-        fill_rate_caution: float = 0.90,
-        boost_normal: float = 0.0,
-        boost_caution: float = 0.5,
-        boost_crisis: float = 1.0,
+        tau_up: float = 0.18,
+        tau_down: float = 0.08,
+        fr_low: float = 0.80,
+        fr_high: float = 0.90,
     ) -> None:
-        self.tau_high = tau_high
-        self.tau_low = tau_low
-        self.fill_rate_caution = fill_rate_caution
-        self.boost_normal = boost_normal
-        self.boost_caution = boost_caution
-        self.boost_crisis = boost_crisis
+        self.tau_up = tau_up
+        self.tau_down = tau_down
+        self.fr_low = fr_low
+        self.fr_high = fr_high
         self._current_shift = 2
 
     def reset(self) -> None:
@@ -154,28 +160,24 @@ class HeuristicTuned:
 
     def __call__(self, obs: np.ndarray, info: dict[str, Any]) -> np.ndarray:
         frame = _latest_frame(obs)
+        fill_rate = float(frame[6])
         backorder_rate = float(frame[7])
-        if backorder_rate > self.tau_high:
-            self._current_shift = 3
-        elif backorder_rate < self.tau_low:
-            self._current_shift = 1
-
         assembly_down = float(frame[8]) > 0.5
         any_loc_down = float(frame[9]) > 0.5
-        fill_rate = float(frame[6])
+
         if assembly_down or any_loc_down:
-            inv_signal = self.boost_crisis
-        elif fill_rate < self.fill_rate_caution:
-            inv_signal = self.boost_caution
-        else:
-            inv_signal = self.boost_normal
+            self._current_shift = min(3, self._current_shift + 1)
+        elif backorder_rate >= self.tau_up or fill_rate <= self.fr_low:
+            self._current_shift = min(3, self._current_shift + 1)
+        elif backorder_rate <= self.tau_down and fill_rate >= self.fr_high:
+            self._current_shift = max(1, self._current_shift - 1)
 
         return np.array(
             [
-                inv_signal,
-                inv_signal,
-                inv_signal,
-                inv_signal,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
                 SHIFT_SIGNAL[self._current_shift],
             ],
             dtype=np.float32,
@@ -213,6 +215,7 @@ PRIMARY_METRICS = (
     "fill_rate",
     "backorder_rate",
     "ret_thesis_corrected_total",
+    "order_level_ret_mean",
     "pct_steps_S1",
     "pct_steps_S2",
     "pct_steps_S3",
@@ -221,6 +224,8 @@ EPISODE_FIELDNAMES = [
     "phase",
     "policy",
     "algo",
+    "reward_mode",
+    "reward_family",
     "frame_stack",
     "observation_version",
     "seed",
@@ -237,9 +242,14 @@ EPISODE_FIELDNAMES = [
     "fill_rate",
     "backorder_rate",
     "ret_thesis_corrected_total",
+    "order_level_ret_mean",
     "demanded_total",
     "delivered_total",
     "backorder_qty_total",
+    "flow_fill_rate",
+    "flow_backorder_rate",
+    "fill_rate_state_terminal",
+    "backorder_rate_state_terminal",
     "pct_steps_S1",
     "pct_steps_S2",
     "pct_steps_S3",
@@ -248,6 +258,8 @@ POLICY_SUMMARY_FIELDNAMES = [
     "phase",
     "policy",
     "algo",
+    "reward_mode",
+    "reward_family",
     "frame_stack",
     "observation_version",
     "w_bo",
@@ -266,6 +278,8 @@ for _metric in PRIMARY_METRICS:
     )
 COMPARISON_FIELDNAMES = [
     "algo",
+    "reward_mode",
+    "reward_family",
     "frame_stack",
     "observation_version",
     "learned_policy",
@@ -347,9 +361,13 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--observation-version",
-        choices=["v1", "v2", "v3"],
+        choices=["v1", "v2", "v3", "v4"],
         default="v1",
-        help="Observation contract version. v1 preserves historical 15-d runs; v2 adds previous-step diagnostics; v3 adds normalized cumulative history.",
+        help=(
+            "Observation contract version. v1 preserves historical 15-d runs; "
+            "v2 adds previous-step diagnostics; v3 adds normalized cumulative "
+            "history; v4 adds current shift plus op1/op2 disruption flags."
+        ),
     )
     parser.add_argument(
         "--risk-level",
@@ -416,6 +434,15 @@ def build_parser() -> argparse.ArgumentParser:
         help="Grid-search HeuristicTuned parameters before the main benchmark.",
     )
     parser.add_argument(
+        "--learned-only",
+        action="store_true",
+        help=(
+            "Skip static / heuristic / random evaluation and train only the learned "
+            "policy lane. Use when comparing learned variants against an existing "
+            "frozen baseline bundle."
+        ),
+    )
+    parser.add_argument(
         "--tune-episodes",
         type=int,
         default=1,
@@ -423,9 +450,15 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--reward-mode",
-        choices=["control_v1", "control_v1_pbrs"],
-        default="control_v1",
+        choices=["control_v1", "control_v1_pbrs", "ReT_seq_v1"],
+        default=BENCHMARK_REWARD_MODE,
         help="Reward mode for training and evaluation.",
+    )
+    parser.add_argument(
+        "--ret-seq-kappa",
+        type=float,
+        default=0.20,
+        help="Adaptive-efficiency scaling for reward_mode=ReT_seq_v1.",
     )
     parser.add_argument(
         "--pbrs-alpha",
@@ -449,7 +482,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--pbrs-variant",
         choices=["cumulative", "step_level"],
         default="cumulative",
-        help="PBRS potential variant. step_level requires --observation-version v2 or v3.",
+        help="PBRS potential variant. step_level requires --observation-version v2, v3, or v4.",
     )
     parser.add_argument("--learning-rate", type=float, default=3e-4)
     parser.add_argument("--n-steps", type=int, default=1024)
@@ -482,6 +515,14 @@ def static_policy_action(policy: str) -> np.ndarray:
 
 
 def make_weight_combos(args: argparse.Namespace) -> list[dict[str, float]]:
+    if args.reward_mode == "ReT_seq_v1":
+        return [
+            {
+                "w_bo": float(args.w_bo[0]),
+                "w_cost": float(args.w_cost[0]),
+                "w_disr": float(args.w_disr[0]),
+            }
+        ]
     combos: list[dict[str, float]] = []
     for w_bo in args.w_bo:
         for w_cost in args.w_cost:
@@ -517,6 +558,8 @@ def build_env_kwargs(
         kwargs["pbrs_beta"] = getattr(args, "pbrs_beta", 0.95)
         kwargs["pbrs_gamma"] = getattr(args, "pbrs_gamma", 0.99)
         kwargs["pbrs_variant"] = getattr(args, "pbrs_variant", "cumulative")
+    elif reward_mode == "ReT_seq_v1":
+        kwargs["ret_seq_kappa"] = getattr(args, "ret_seq_kappa", 0.20)
     return kwargs
 
 
@@ -563,6 +606,69 @@ def resolve_invocation(args: argparse.Namespace) -> str:
     return "python scripts/benchmark_control_reward.py (invocation unavailable)"
 
 
+def build_backbone_metadata(
+    args: argparse.Namespace,
+    *,
+    git_commit: str | None = None,
+) -> dict[str, Any]:
+    """Return the explicit experimental backbone tuple for audit-safe comparisons."""
+    return {
+        "env_variant": "shift_control",
+        "git_commit": git_commit if git_commit is not None else resolve_git_commit(),
+        "observation_version": str(args.observation_version),
+        "frame_stack": int(args.frame_stack),
+        "year_basis": str(args.year_basis),
+        "risk_level": str(args.risk_level),
+        "stochastic_pt": bool(args.stochastic_pt),
+        "step_size_hours": float(args.step_size_hours),
+        "max_steps": int(args.max_steps),
+        "reward_mode": str(getattr(args, "reward_mode", "control_v1")),
+    }
+
+
+def build_metric_contract_metadata() -> dict[str, Any]:
+    """Return the paper-facing metric contract for benchmark outputs."""
+    return {
+        "protocol_version": "paper_facing_v1",
+        "fill_rate_primary": "terminal_order_level",
+        "backorder_rate_primary": "terminal_order_level",
+        "fill_rate_audit_only": "flow_fill_rate",
+        "backorder_rate_audit_only": "flow_backorder_rate",
+    }
+
+
+def reward_family(reward_mode: str) -> str:
+    """Map reward modes to non-comparable objective families."""
+    if reward_mode in ("control_v1", "control_v1_pbrs"):
+        return "operational_penalty"
+    if reward_mode == "ReT_seq_v1":
+        return "resilience_index"
+    return "other"
+
+
+def build_reward_contract_metadata(args: argparse.Namespace) -> dict[str, Any]:
+    """Describe reward semantics and cross-run comparison constraints."""
+    mode = str(getattr(args, "reward_mode", "control_v1"))
+    family = reward_family(mode)
+    return {
+        "reward_mode": mode,
+        "reward_family": family,
+        "cross_mode_reward_comparison_allowed": False,
+        "within_run_reward_comparison_allowed": True,
+        "selection_metrics": [
+            "fill_rate",
+            "backorder_rate",
+            "order_level_ret_mean",
+            "reward_total_within_same_reward_mode_only",
+        ],
+        "note": (
+            "reward_total is only comparable within runs that share the same "
+            "reward_mode/reward_family. Use terminal service metrics and "
+            "order_level_ret_mean for cross-mode interpretation."
+        ),
+    }
+
+
 def export_artifact_bundle(
     *,
     source_dir: Path,
@@ -573,6 +679,7 @@ def export_artifact_bundle(
 ) -> Path:
     bundle_dir = artifact_root / label
     bundle_dir.mkdir(parents=True, exist_ok=True)
+    git_commit = resolve_git_commit()
 
     copied_files: dict[str, str] = {}
     for filename in ("comparison_table.csv", "policy_summary.csv", "summary.json"):
@@ -586,11 +693,14 @@ def export_artifact_bundle(
     manifest = {
         "artifact_type": "control_reward_benchmark",
         "benchmark_date_utc": datetime.now(timezone.utc).isoformat(),
-        "git_commit": resolve_git_commit(),
+        "git_commit": git_commit,
         "command": command,
         "source_benchmark_directory": str(source_dir.resolve()),
         "bundle_directory": str(bundle_dir.resolve()),
         "config": summary.get("config", {}),
+        "backbone": summary.get("backbone", {}),
+        "metric_contract": summary.get("metric_contract", {}),
+        "reward_contract": summary.get("reward_contract", {}),
         "files": copied_files,
     }
     manifest_path = bundle_dir / "manifest.json"
@@ -682,6 +792,8 @@ def finalize_episode_metrics(
     phase: str,
     policy: str,
     algo: str,
+    reward_mode: str,
+    reward_family_name: str,
     frame_stack: int,
     observation_version: str,
     seed: int,
@@ -698,18 +810,23 @@ def finalize_episode_metrics(
     delivered_total: float,
     backorder_qty_total: float,
     shift_counts: dict[int, int],
+    terminal_metrics: dict[str, float],
 ) -> dict[str, Any]:
     if demanded_total > 0:
-        backorder_rate = backorder_qty_total / demanded_total
-        fill_rate = 1.0 - backorder_rate
+        flow_backorder_rate = backorder_qty_total / demanded_total
+        flow_fill_rate = 1.0 - flow_backorder_rate
     else:
-        backorder_rate = 0.0
-        fill_rate = 1.0
+        flow_backorder_rate = 0.0
+        flow_fill_rate = 1.0
+    fill_rate = float(terminal_metrics["fill_rate_order_level"])
+    backorder_rate = float(terminal_metrics["backorder_rate_order_level"])
     total_steps = max(1, steps)
     return {
         "phase": phase,
         "policy": policy,
         "algo": algo,
+        "reward_mode": reward_mode,
+        "reward_family": reward_family_name,
         "frame_stack": frame_stack,
         "observation_version": observation_version,
         "seed": seed,
@@ -726,9 +843,16 @@ def finalize_episode_metrics(
         "fill_rate": fill_rate,
         "backorder_rate": backorder_rate,
         "ret_thesis_corrected_total": ret_thesis_corrected_total,
+        "order_level_ret_mean": float(terminal_metrics["order_level_ret_mean"]),
         "demanded_total": demanded_total,
         "delivered_total": delivered_total,
         "backorder_qty_total": backorder_qty_total,
+        "flow_fill_rate": flow_fill_rate,
+        "flow_backorder_rate": flow_backorder_rate,
+        "fill_rate_state_terminal": float(terminal_metrics["fill_rate_state_terminal"]),
+        "backorder_rate_state_terminal": float(
+            terminal_metrics["backorder_rate_state_terminal"]
+        ),
         "pct_steps_S1": 100.0 * shift_counts.get(1, 0) / total_steps,
         "pct_steps_S2": 100.0 * shift_counts.get(2, 0) / total_steps,
         "pct_steps_S3": 100.0 * shift_counts.get(3, 0) / total_steps,
@@ -847,11 +971,16 @@ def evaluate_policy(
             if is_recurrent:
                 episode_start = np.array([terminated or truncated], dtype=bool)
 
+        terminal_metrics = get_episode_terminal_metrics(env)
         rows.append(
             finalize_episode_metrics(
                 phase=phase,
                 policy=policy,
                 algo=args.algo,
+                reward_mode=str(getattr(args, "reward_mode", "control_v1")),
+                reward_family_name=reward_family(
+                    str(getattr(args, "reward_mode", "control_v1"))
+                ),
                 frame_stack=int(args.frame_stack),
                 observation_version=str(args.observation_version),
                 seed=seed,
@@ -868,6 +997,7 @@ def evaluate_policy(
                 delivered_total=delivered_total,
                 backorder_qty_total=backorder_qty_total,
                 shift_counts=shift_counts,
+                terminal_metrics=terminal_metrics,
             )
         )
         env.close()
@@ -877,13 +1007,28 @@ def evaluate_policy(
 
 def aggregate_seed_metrics(episode_rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     grouped: dict[
-        tuple[str, str, str, int, str, float, float, float, int], list[dict[str, Any]]
+        tuple[
+            str,
+            str,
+            str,
+            str,
+            str,
+            int,
+            str,
+            float,
+            float,
+            float,
+            int,
+        ],
+        list[dict[str, Any]],
     ] = {}
     for row in episode_rows:
         key = (
             str(row["phase"]),
             str(row["policy"]),
             str(row["algo"]),
+            str(row["reward_mode"]),
+            str(row["reward_family"]),
             int(row["frame_stack"]),
             str(row["observation_version"]),
             float(row["w_bo"]),
@@ -898,6 +1043,8 @@ def aggregate_seed_metrics(episode_rows: list[dict[str, Any]]) -> list[dict[str,
         phase,
         policy,
         algo,
+        reward_mode_name,
+        reward_family_name,
         frame_stack,
         observation_version,
         w_bo,
@@ -909,6 +1056,8 @@ def aggregate_seed_metrics(episode_rows: list[dict[str, Any]]) -> list[dict[str,
             "phase": phase,
             "policy": policy,
             "algo": algo,
+            "reward_mode": reward_mode_name,
+            "reward_family": reward_family_name,
             "frame_stack": frame_stack,
             "observation_version": observation_version,
             "w_bo": w_bo,
@@ -929,13 +1078,16 @@ def aggregate_seed_metrics(episode_rows: list[dict[str, Any]]) -> list[dict[str,
 
 def aggregate_policy_metrics(seed_rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     grouped: dict[
-        tuple[str, str, str, int, str, float, float, float], list[dict[str, Any]]
+        tuple[str, str, str, str, str, int, str, float, float, float],
+        list[dict[str, Any]],
     ] = {}
     for row in seed_rows:
         key = (
             str(row["phase"]),
             str(row["policy"]),
             str(row["algo"]),
+            str(row["reward_mode"]),
+            str(row["reward_family"]),
             int(row["frame_stack"]),
             str(row["observation_version"]),
             float(row["w_bo"]),
@@ -949,6 +1101,8 @@ def aggregate_policy_metrics(seed_rows: list[dict[str, Any]]) -> list[dict[str, 
         phase,
         policy,
         algo,
+        reward_mode_name,
+        reward_family_name,
         frame_stack,
         observation_version,
         w_bo,
@@ -959,6 +1113,8 @@ def aggregate_policy_metrics(seed_rows: list[dict[str, Any]]) -> list[dict[str, 
             "phase": phase,
             "policy": policy,
             "algo": algo,
+            "reward_mode": reward_mode_name,
+            "reward_family": reward_family_name,
             "frame_stack": frame_stack,
             "observation_version": observation_version,
             "w_bo": w_bo,
@@ -1213,6 +1369,10 @@ def build_comparison_rows(
         comparison_rows.append(
             {
                 "algo": args.algo,
+                "reward_mode": str(getattr(args, "reward_mode", "control_v1")),
+                "reward_family": reward_family(
+                    str(getattr(args, "reward_mode", "control_v1"))
+                ),
                 "frame_stack": int(args.frame_stack),
                 "observation_version": str(args.observation_version),
                 "learned_policy": learned_policy,
@@ -1356,12 +1516,10 @@ def build_comparison_rows(
 # ---------------------------------------------------------------------------
 
 TUNE_GRID: dict[str, list[float]] = {
-    "tau_high": [0.08, 0.12, 0.20],
-    "tau_low": [0.03, 0.05, 0.08],
-    "fill_rate_caution": [0.85, 0.90, 0.95],
-    "boost_normal": [-0.3, 0.0, 0.3],
-    "boost_caution": [0.3, 0.5, 0.7],
-    "boost_crisis": [0.7, 0.85, 1.0],
+    "tau_up": [0.18, 0.22, 0.26],
+    "tau_down": [0.08, 0.12, 0.16],
+    "fr_low": [0.80, 0.84],
+    "fr_high": [0.90, 0.93],
 }
 
 
@@ -1385,15 +1543,21 @@ def tune_heuristic_params(
     param_combos = list(itertools.product(*TUNE_GRID.values()))
 
     best_reward = float("-inf")
+    best_fill_rate = float("-inf")
+    best_backorder_rate = float("inf")
     best_params: dict[str, float] = {}
     results: list[dict[str, Any]] = []
 
     for combo_vals in param_combos:
         params = dict(zip(param_names, combo_vals))
-        if params["tau_low"] >= params["tau_high"]:
-            continue  # invalid: deadband must have tau_low < tau_high
+        if params["tau_down"] >= params["tau_up"]:
+            continue
+        if params["fr_low"] >= params["fr_high"]:
+            continue
         heuristic = HeuristicTuned(**params)
         rewards: list[float] = []
+        fill_rates: list[float] = []
+        backorder_rates: list[float] = []
         for seed in args.seeds:
             env_kwargs = build_env_kwargs(args, weight_combo)
             env = make_shift_control_env(**env_kwargs)
@@ -1414,14 +1578,28 @@ def tune_heuristic_params(
                     prev_info = info
                     reward_total += float(reward)
                 rewards.append(reward_total)
+                fill_rates.append(float(prev_info.get("fill_rate", 0.0)))
+                backorder_rates.append(float(prev_info.get("backorder_rate", 0.0)))
             env.close()
 
         mean_reward = float(np.mean(rewards))
+        mean_fill_rate = float(np.mean(fill_rates))
+        mean_backorder_rate = float(np.mean(backorder_rates))
         results.append(
-            {**params, "mean_reward": mean_reward, "n_episodes": len(rewards)}
+            {
+                **params,
+                "mean_reward": mean_reward,
+                "mean_fill_rate": mean_fill_rate,
+                "mean_backorder_rate": mean_backorder_rate,
+                "n_episodes": len(rewards),
+            }
         )
-        if mean_reward > best_reward:
+        candidate = (mean_reward, mean_fill_rate, -mean_backorder_rate)
+        incumbent = (best_reward, best_fill_rate, -best_backorder_rate)
+        if candidate > incumbent:
             best_reward = mean_reward
+            best_fill_rate = mean_fill_rate
+            best_backorder_rate = mean_backorder_rate
             best_params = params
 
     # Inject best params into the global defaults for use in the benchmark.
@@ -1430,10 +1608,13 @@ def tune_heuristic_params(
     return {
         "best_params": best_params,
         "best_mean_reward": best_reward,
+        "best_mean_fill_rate": best_fill_rate,
+        "best_mean_backorder_rate": best_backorder_rate,
         "combos_evaluated": len(results),
         "weight_combo_used": weight_combo,
         "seeds": args.seeds,
         "tune_episodes": args.tune_episodes,
+        "results": results,
     }
 
 
@@ -1451,41 +1632,56 @@ def run_benchmark(args: argparse.Namespace) -> dict[str, Any]:
     trained_models: list[dict[str, Any]] = []
     trained_policy_evaluators: list[dict[str, Any]] = []
 
-    for weight_combo in weight_combos:
-        for seed in args.seeds:
-            for policy in STATIC_POLICY_ORDER:
+    if args.learned_only:
+        if len(weight_combos) != 1:
+            raise ValueError("--learned-only requires exactly one weight combination.")
+        survivors = [
+            {
+                "w_bo": weight_combos[0]["w_bo"],
+                "w_cost": weight_combos[0]["w_cost"],
+                "w_disr": weight_combos[0]["w_disr"],
+                "best_static_policy": None,
+                "static_reward_gap_best_minus_s1": None,
+                "static_fill_rate_gap_best_minus_s1": None,
+            }
+        ]
+        policy_rows: list[dict[str, Any]] = []
+    else:
+        for weight_combo in weight_combos:
+            for seed in args.seeds:
+                for policy in STATIC_POLICY_ORDER:
+                    episode_rows.extend(
+                        evaluate_policy(
+                            "static_screen",
+                            policy,
+                            args=args,
+                            weight_combo=weight_combo,
+                            seed=seed,
+                        )
+                    )
                 episode_rows.extend(
                     evaluate_policy(
-                        "static_screen",
-                        policy,
+                        "random_eval",
+                        RANDOM_POLICY_NAME,
                         args=args,
                         weight_combo=weight_combo,
                         seed=seed,
                     )
                 )
-            episode_rows.extend(
-                evaluate_policy(
-                    "random_eval",
-                    RANDOM_POLICY_NAME,
-                    args=args,
-                    weight_combo=weight_combo,
-                    seed=seed,
-                )
-            )
-            for policy in HEURISTIC_POLICY_NAMES:
-                episode_rows.extend(
-                    evaluate_policy(
-                        "heuristic_eval",
-                        policy,
-                        args=args,
-                        weight_combo=weight_combo,
-                        seed=seed,
+                for policy in HEURISTIC_POLICY_NAMES:
+                    episode_rows.extend(
+                        evaluate_policy(
+                            "heuristic_eval",
+                            policy,
+                            args=args,
+                            weight_combo=weight_combo,
+                            seed=seed,
+                        )
                     )
-                )
 
-    seed_rows = aggregate_seed_metrics(episode_rows)
-    policy_rows = aggregate_policy_metrics(seed_rows)
-    survivors = pick_survivors(policy_rows, args)
+        seed_rows = aggregate_seed_metrics(episode_rows)
+        policy_rows = aggregate_policy_metrics(seed_rows)
+        survivors = pick_survivors(policy_rows, args)
 
     for survivor in survivors:
         weight_combo = {
@@ -1579,7 +1775,11 @@ def run_benchmark(args: argparse.Namespace) -> dict[str, Any]:
 
     seed_rows = aggregate_seed_metrics(episode_rows)
     policy_rows = aggregate_policy_metrics(seed_rows)
-    comparison_rows = build_comparison_rows(policy_rows, survivors, args=args)
+    comparison_rows = (
+        []
+        if args.learned_only
+        else build_comparison_rows(policy_rows, survivors, args=args)
+    )
 
     episode_csv = args.output_dir / "episode_metrics.csv"
     policy_csv = args.output_dir / "policy_summary.csv"
@@ -1589,6 +1789,7 @@ def run_benchmark(args: argparse.Namespace) -> dict[str, Any]:
     save_csv(episode_csv, episode_rows, EPISODE_FIELDNAMES)
     save_csv(policy_csv, policy_rows, POLICY_SUMMARY_FIELDNAMES)
     save_csv(comparison_csv, comparison_rows, COMPARISON_FIELDNAMES)
+    git_commit = resolve_git_commit()
 
     summary = {
         "config": {
@@ -1607,6 +1808,7 @@ def run_benchmark(args: argparse.Namespace) -> dict[str, Any]:
             "w_bo": args.w_bo,
             "w_cost": args.w_cost,
             "w_disr": args.w_disr,
+            "ret_seq_kappa": args.ret_seq_kappa,
             "max_survivors": args.max_survivors,
             "learning_rate": args.learning_rate,
             "n_steps": args.n_steps,
@@ -1620,21 +1822,28 @@ def run_benchmark(args: argparse.Namespace) -> dict[str, Any]:
             "gradient_steps": args.gradient_steps,
             "learning_starts": args.learning_starts,
         },
+        "backbone": build_backbone_metadata(args, git_commit=git_commit),
+        "metric_contract": build_metric_contract_metadata(),
+        "reward_contract": build_reward_contract_metadata(args),
         "benchmark_metadata": {
             "generated_at_utc": datetime.now(timezone.utc).isoformat(),
-            "git_commit": resolve_git_commit(),
+            "git_commit": git_commit,
             "command": resolve_invocation(args),
         },
         "phases": [
-            "static_screen",
-            "heuristic_eval",
-            "random_eval",
+            *(
+                []
+                if args.learned_only
+                else ["static_screen", "heuristic_eval", "random_eval"]
+            ),
             learned_phase_name(args),
         ],
         "policies": [
-            *STATIC_POLICY_ORDER,
-            *HEURISTIC_POLICY_NAMES,
-            RANDOM_POLICY_NAME,
+            *(
+                []
+                if args.learned_only
+                else [*STATIC_POLICY_ORDER, *HEURISTIC_POLICY_NAMES, RANDOM_POLICY_NAME]
+            ),
             learned_policy_name(args),
         ],
         "weight_combinations": weight_combos,

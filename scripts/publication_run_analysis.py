@@ -23,12 +23,22 @@ DEFAULT_RUNS = (
     "outputs/benchmarks/control_reward_sac_fs1",
     "outputs/benchmarks/control_reward_ppo_fs4",
     "outputs/benchmarks/control_reward_recurrent_ppo_fs1",
+    "outputs/benchmarks/section4_3_increased_ppo_v1_fs1",
+    "outputs/benchmarks/section4_3_increased_ppo_v2_fs1",
+    "outputs/benchmarks/section4_3_increased_ppo_v1_fs4",
+    "outputs/benchmarks/section4_3_increased_recurrent_v2_fs1",
+    "outputs/benchmarks/section4_3_severe_ppo_v1_fs1",
+    "outputs/benchmarks/section4_3_severe_ppo_v2_fs1",
+    "outputs/benchmarks/section4_3_severe_ppo_v1_fs4",
+    "outputs/benchmarks/section4_3_severe_recurrent_v2_fs1",
 )
 
 BASELINE_TABLE_FIELDS = [
     "run_label",
     "scenario",
     "algo",
+    "reward_mode",
+    "reward_family",
     "frame_stack",
     "observation_version",
     "w_bo",
@@ -46,6 +56,8 @@ COMPARISON_FIELDS = [
     "run_label",
     "scenario",
     "algo",
+    "reward_mode",
+    "reward_family",
     "frame_stack",
     "observation_version",
     "w_bo",
@@ -215,6 +227,7 @@ def analyze_run(
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]], dict[str, Any]]:
     summary = json.loads((run_dir / "summary.json").read_text(encoding="utf-8"))
     config = summary["config"]
+    reward_contract = summary.get("reward_contract", {})
     scenario = str(config["risk_level"])
     label = run_label(config)
     policy_rows = load_csv_rows(run_dir / "policy_summary.csv")
@@ -261,6 +274,10 @@ def analyze_run(
                     "run_label": label,
                     "scenario": scenario,
                     "algo": config["algo"],
+                    "reward_mode": str(config.get("reward_mode", "unknown")),
+                    "reward_family": str(
+                        reward_contract.get("reward_family", "unknown")
+                    ),
                     "frame_stack": int(config["frame_stack"]),
                     "observation_version": config["observation_version"],
                     "w_bo": weight_combo["w_bo"],
@@ -311,6 +328,8 @@ def analyze_run(
                 "run_label": label,
                 "scenario": scenario,
                 "algo": config["algo"],
+                "reward_mode": str(config.get("reward_mode", "unknown")),
+                "reward_family": str(reward_contract.get("reward_family", "unknown")),
                 "frame_stack": int(config["frame_stack"]),
                 "observation_version": config["observation_version"],
                 "w_bo": weight_combo["w_bo"],
@@ -356,6 +375,8 @@ def analyze_run(
         "run_dir": str(run_dir),
         "run_label": label,
         "scenario": scenario,
+        "reward_mode": str(config.get("reward_mode", "unknown")),
+        "reward_family": str(reward_contract.get("reward_family", "unknown")),
         "config": config,
         "comparison_count": len(comparison_rows),
     }
@@ -429,6 +450,7 @@ def render_markdown(
             "## Usage",
             "",
             "- Use this package for baseline tables and cautious seed-mean comparison language.",
+            "- Do not compare raw reward values across runs with different reward_mode/reward_family values.",
             "- Treat the intervals as support for direction and magnitude, not as a full significance section.",
         ]
     )
