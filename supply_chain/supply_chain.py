@@ -984,6 +984,14 @@ class MFSCSimulation:
             surge_lo, surge_hi = self._get_risk_surge()
             surge = self.rng.integers(surge_lo, surge_hi + 1)
             self._contingent_demand_pending += surge
+            # Cap accumulated contingent demand to prevent unbounded obs[14]
+            # spikes when multiple R24 events fire before demand is consumed.
+            # 5×2600 = 13000 ≈ 5 regular demand cycles, well above any
+            # realistic surge accumulation.
+            max_contingent = 5 * 2600
+            self._contingent_demand_pending = min(
+                self._contingent_demand_pending, max_contingent
+            )
             self.risk_events.append(
                 RiskEvent("R24", self.env.now, self.env.now, 0, [13], f"+{surge}")
             )

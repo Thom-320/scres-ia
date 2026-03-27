@@ -266,8 +266,13 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self._warmup_cumulative_down_hours = 0.0
 
         obs_dim = self._observation_dim()
+        # Observation bounds: inventory dims [0-5] are normalized by 1e6/1e5
+        # and rarely exceed ~10 in practice; rates [6-7] are in [0,1];
+        # flags [8-11] are binary; time/batch/demand [12-14] are in [0,~5].
+        # VecNormalize further normalizes during training, but finite bounds
+        # make the space definition correct for Gymnasium compliance.
         self.observation_space = spaces.Box(
-            low=0.0, high=np.inf, shape=(obs_dim,), dtype=np.float32
+            low=0.0, high=20.0, shape=(obs_dim,), dtype=np.float32
         )
         self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(5,), dtype=np.float32)
 
