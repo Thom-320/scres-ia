@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
+import shutil
 import sys
 import threading
 import traceback
@@ -20,8 +21,12 @@ from scripts.benchmark_control_reward import (  # noqa: E402
     build_parser as build_benchmark_parser,
     run_benchmark,
 )
+from scripts.generate_proof_of_learning_artifacts import (  # noqa: E402
+    generate_proof_of_learning_artifacts,
+)
 
 DEFAULT_SEEDS = (11, 22, 33, 44, 55)
+DEFAULT_EVAL_RISK_LEVELS = ("current", "increased", "severe")
 DEFAULT_TIMESTEPS = 500_000
 DEFAULT_EVAL_EPISODES = 10
 DEFAULT_STEP_SIZE_HOURS = 168.0
@@ -102,6 +107,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--train-timesteps", type=int, default=DEFAULT_TIMESTEPS)
     parser.add_argument("--eval-episodes", type=int, default=DEFAULT_EVAL_EPISODES)
     parser.add_argument(
+        "--eval-risk-levels",
+        nargs="+",
+        choices=["current", "increased", "severe"],
+        default=list(DEFAULT_EVAL_RISK_LEVELS),
+        help="Cross-evaluation risk levels to run after training.",
+    )
+    parser.add_argument(
         "--output-root",
         type=Path,
         default=DEFAULT_OUTPUT_ROOT,
@@ -161,6 +173,8 @@ def build_launcher_command(args: argparse.Namespace) -> str:
         str(args.train_timesteps),
         "--eval-episodes",
         str(args.eval_episodes),
+        "--eval-risk-levels",
+        *[str(level) for level in args.eval_risk_levels],
         "--output-root",
         str(args.output_root),
         "--w-bo",
@@ -189,6 +203,8 @@ def build_benchmark_cli_args(args: argparse.Namespace, run_dir: Path) -> list[st
         str(args.train_timesteps),
         "--eval-episodes",
         str(args.eval_episodes),
+        "--eval-risk-levels",
+        *[str(level) for level in args.eval_risk_levels],
         "--step-size-hours",
         str(FROZEN_BACKBONE["step_size_hours"]),
         "--max-steps",
@@ -287,6 +303,17 @@ def write_manifest(
             files[filename] = str(path.resolve())
     if artifacts.failed_json.exists():
         files["FAILED.json"] = str(artifacts.failed_json.resolve())
+    if summary is not None:
+        for key in (
+            "training_trace_csv",
+            "proof_trajectories_csv",
+            "proof_of_learning_dir",
+            "proof_of_learning_manifest_json",
+            "artifact_bundle_proof_of_learning_dir",
+        ):
+            value = summary.get("artifacts", {}).get(key)
+            if value:
+                files[key] = str(value)
 
     manifest = {
         "artifact_type": "paper_facing_benchmark_run",
@@ -334,6 +361,31 @@ def augment_summary(
     summary["artifacts"]["manifest_json"] = str(artifacts.manifest_json.resolve())
     write_json(summary_path, summary)
     return summary
+
+
+def proof_inputs_exist(run_dir: Path) -> bool:
+    return (run_dir / "training_trace.csv").exists() and (
+        run_dir / "proof_trajectories.csv"
+    ).exists()
+
+
+def sync_proof_artifacts_to_bundle(summary: dict[str, Any]) -> str | None:
+    artifacts = summary.get("artifacts", {})
+    bundle_dir_value = artifacts.get("artifact_bundle_dir")
+    proof_dir_value = artifacts.get("proof_of_learning_dir")
+    if not bundle_dir_value or not proof_dir_value:
+        return None
+
+    proof_dir = Path(str(proof_dir_value))
+    bundle_dir = Path(str(bundle_dir_value))
+    if not proof_dir.exists() or not bundle_dir.exists():
+        return None
+
+    target_dir = bundle_dir / "proof_of_learning"
+    if target_dir.exists():
+        shutil.rmtree(target_dir)
+    shutil.copytree(proof_dir, target_dir)
+    return str(target_dir.resolve())
 
 
 def invoke_benchmark(
@@ -467,6 +519,21 @@ def run_launcher(args: argparse.Namespace) -> int:
                     benchmark_command=benchmark_command,
                     artifacts=artifacts,
                 )
+                if proof_inputs_exist(run_dir) and summary.get("trained_models"):
+                    proof_manifest = generate_proof_of_learning_artifacts(run_dir)
+                    summary.setdefault("artifacts", {})
+                    summary["artifacts"]["proof_of_learning_dir"] = str(
+                        Path(proof_manifest["output_dir"]).resolve()
+                    )
+                    summary["artifacts"]["proof_of_learning_manifest_json"] = str(
+                        Path(proof_manifest["files"]["manifest_json"]).resolve()
+                    )
+                    bundle_proof_dir = sync_proof_artifacts_to_bundle(summary)
+                    if bundle_proof_dir is not None:
+                        summary["artifacts"][
+                            "artifact_bundle_proof_of_learning_dir"
+                        ] = bundle_proof_dir
+                    write_json(run_dir / "summary.json", summary)
                 write_manifest(
                     args=args,
                     artifacts=artifacts,

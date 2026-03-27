@@ -19,6 +19,7 @@ try:
 except ImportError:  # pragma: no cover - exercised via explicit runtime guard.
     RecurrentPPO = None
 from stable_baselines3 import PPO, SAC
+from stable_baselines3.common.callbacks import BaseCallback
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env import DummyVecEnv
 
@@ -325,6 +326,44 @@ COMPARISON_FIELDNAMES = [
     "collapsed_to_S1",
     "collapsed_to_S2",
     "collapsed_to_S3",
+]
+TRAINING_TRACE_FIELDNAMES = [
+    "seed",
+    "algo",
+    "reward_mode",
+    "reward_family",
+    "w_bo",
+    "w_cost",
+    "w_disr",
+    "episode_index",
+    "timesteps",
+    "progress_fraction",
+    "episode_reward",
+    "episode_length",
+    "time_elapsed_seconds",
+]
+PROOF_TRAJECTORY_FIELDNAMES = [
+    "phase",
+    "risk_level",
+    "policy",
+    "algo",
+    "reward_mode",
+    "reward_family",
+    "frame_stack",
+    "observation_version",
+    "seed",
+    "episode",
+    "eval_seed",
+    "w_bo",
+    "w_cost",
+    "w_disr",
+    "step",
+    "shifts_active",
+    "fill_rate",
+    "backorder_rate",
+    "disruption_fraction",
+    "reward",
+    "service_loss",
 ]
 
 SAC_POLICY_KWARGS: dict[str, Any] = {"net_arch": [256, 256]}
@@ -689,6 +728,17 @@ def export_artifact_bundle(
         dst = bundle_dir / filename
         shutil.copy2(src, dst)
         copied_files[filename] = str(dst.resolve())
+    for filename in (
+        "episode_metrics.csv",
+        "training_trace.csv",
+        "proof_trajectories.csv",
+    ):
+        src = source_dir / filename
+        if not src.exists():
+            continue
+        dst = bundle_dir / filename
+        shutil.copy2(src, dst)
+        copied_files[filename] = str(dst.resolve())
 
     manifest = {
         "artifact_type": "control_reward_benchmark",
@@ -730,11 +780,103 @@ def ensure_algo_dependencies(args: argparse.Namespace) -> None:
         )
 
 
+class TrainingTraceCallback(BaseCallback):
+    """Capture per-episode training rewards from the Monitor wrapper."""
+
+    def __init__(
+        self,
+        *,
+        seed: int,
+        args: argparse.Namespace,
+        weight_combo: dict[str, float],
+    ) -> None:
+        super().__init__()
+        self.seed = int(seed)
+        self.args = args
+        self.weight_combo = weight_combo
+        self.rows: list[dict[str, Any]] = []
+        self._episode_index = 0
+
+    def _on_step(self) -> bool:
+        infos = self.locals.get("infos", [])
+        for info in infos:
+            episode = info.get("episode")
+            if episode is None:
+                continue
+            self._episode_index += 1
+            total_timesteps = max(1, int(self.args.train_timesteps))
+            self.rows.append(
+                {
+                    "seed": self.seed,
+                    "algo": str(self.args.algo),
+                    "reward_mode": str(getattr(self.args, "reward_mode", "control_v1")),
+                    "reward_family": reward_family(
+                        str(getattr(self.args, "reward_mode", "control_v1"))
+                    ),
+                    "w_bo": float(self.weight_combo["w_bo"]),
+                    "w_cost": float(self.weight_combo["w_cost"]),
+                    "w_disr": float(self.weight_combo["w_disr"]),
+                    "episode_index": self._episode_index,
+                    "timesteps": int(self.num_timesteps),
+                    "progress_fraction": min(
+                        1.0, float(self.num_timesteps) / float(total_timesteps)
+                    ),
+                    "episode_reward": float(episode["r"]),
+                    "episode_length": int(episode["l"]),
+                    "time_elapsed_seconds": float(episode.get("t", 0.0)),
+                }
+            )
+        return True
+
+
+def _extract_state_metric(info: dict[str, Any], key: str) -> float:
+    if key in info:
+        return float(info.get(key, 0.0))
+    return float(info.get("state_constraint_context", {}).get(key, 0.0))
+
+
+def clone_args(args: argparse.Namespace, **overrides: Any) -> argparse.Namespace:
+    cloned = argparse.Namespace(**vars(args))
+    for key, value in overrides.items():
+        setattr(cloned, key, value)
+    return cloned
+
+
+def resolve_eval_risk_levels(args: argparse.Namespace) -> list[str]:
+    requested = [
+        str(level) for level in (getattr(args, "eval_risk_levels", None) or [])
+    ]
+    if not requested:
+        requested = [str(args.risk_level)]
+    elif str(args.risk_level) not in requested:
+        requested.append(str(args.risk_level))
+    deduped: list[str] = []
+    seen: set[str] = set()
+    for level in requested:
+        if level in seen:
+            continue
+        seen.add(level)
+        deduped.append(level)
+    return deduped
+
+
+def same_weight_combo(
+    left: dict[str, Any],
+    right: dict[str, Any],
+) -> bool:
+    return (
+        float(left["w_bo"]) == float(right["w_bo"])
+        and float(left["w_cost"]) == float(right["w_cost"])
+        and float(left["w_disr"]) == float(right["w_disr"])
+    )
+
+
 def train_model(
     args: argparse.Namespace, seed: int, weight_combo: dict[str, float]
-) -> tuple[Any, DummyVecEnv]:
+) -> tuple[Any, DummyVecEnv, list[dict[str, Any]]]:
     ensure_algo_dependencies(args)
     vec_env = DummyVecEnv([make_monitored_training_env(args, seed, weight_combo)])
+    callback = TrainingTraceCallback(seed=seed, args=args, weight_combo=weight_combo)
     if args.algo == "ppo":
         model: Any = PPO(
             "MlpPolicy",
@@ -783,8 +925,8 @@ def train_model(
             verbose=0,
             device="cpu",
         )
-    model.learn(total_timesteps=args.train_timesteps)
-    return model, vec_env
+    model.learn(total_timesteps=args.train_timesteps, callback=callback)
+    return model, vec_env, callback.rows
 
 
 def finalize_episode_metrics(
@@ -869,9 +1011,9 @@ def evaluate_policy(
     model: Any = None,
     policy_adapter: PolicyAdapter | Any | None = None,
     risk_level_override: str | None = None,
+    trajectory_sink: list[dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
-    trajectory_rows: list[dict[str, Any]] = []
     env_kwargs = build_env_kwargs(
         args, weight_combo, risk_level_override=risk_level_override
     )
@@ -896,7 +1038,7 @@ def evaluate_policy(
         backorder_qty_total = 0.0
         steps = 0
         shift_counts = {1: 0, 2: 0, 3: 0}
-        step_trajectory: list[dict[str, float]] = []
+        step_trajectory: list[dict[str, Any]] = []
         lstm_states: Any = None
         episode_start = np.ones((1,), dtype=bool)
 
@@ -969,16 +1111,20 @@ def evaluate_policy(
             delivered_total += float(info.get("new_delivered", 0.0))
             backorder_qty_total += float(info.get("new_backorder_qty", 0.0))
             shift_counts[int(info.get("shifts_active", 1))] += 1
-            step_trajectory.append({
-                "step": steps,
-                "shifts_active": int(info.get("shifts_active", 1)),
-                "fill_rate": float(info.get("fill_rate", 0.0)
-                    if "fill_rate" in info
-                    else info.get("state_constraint_context", {}).get("fill_rate", 0.0)),
-                "disruption_fraction": float(info.get("disruption_fraction_step", 0.0)),
-                "reward": float(reward),
-                "service_loss": float(info.get("service_loss_step", 0.0)),
-            })
+            if trajectory_sink is not None:
+                step_trajectory.append(
+                    {
+                        "step": steps,
+                        "shifts_active": int(info.get("shifts_active", 1)),
+                        "fill_rate": _extract_state_metric(info, "fill_rate"),
+                        "backorder_rate": _extract_state_metric(info, "backorder_rate"),
+                        "disruption_fraction": float(
+                            info.get("disruption_fraction_step", 0.0)
+                        ),
+                        "reward": float(reward),
+                        "service_loss": float(info.get("service_loss_step", 0.0)),
+                    }
+                )
             steps += 1
             if is_recurrent:
                 episode_start = np.array([terminated or truncated], dtype=bool)
@@ -1012,18 +1158,31 @@ def evaluate_policy(
                 terminal_metrics=terminal_metrics,
             )
         )
-        # Collect step-level trajectory for adaptive behavior analysis
-        for entry in step_trajectory:
-            entry["phase"] = phase
-            entry["policy"] = policy
-            entry["seed"] = seed
-            entry["episode"] = episode_idx + 1
-        trajectory_rows.extend(step_trajectory)
+        if trajectory_sink is not None:
+            for entry in step_trajectory:
+                trajectory_sink.append(
+                    {
+                        "phase": phase,
+                        "risk_level": str(env_kwargs["risk_level"]),
+                        "policy": policy,
+                        "algo": args.algo,
+                        "reward_mode": str(getattr(args, "reward_mode", "control_v1")),
+                        "reward_family": reward_family(
+                            str(getattr(args, "reward_mode", "control_v1"))
+                        ),
+                        "frame_stack": int(args.frame_stack),
+                        "observation_version": str(args.observation_version),
+                        "seed": seed,
+                        "episode": episode_idx + 1,
+                        "eval_seed": eval_seed,
+                        "w_bo": float(weight_combo["w_bo"]),
+                        "w_cost": float(weight_combo["w_cost"]),
+                        "w_disr": float(weight_combo["w_disr"]),
+                        **entry,
+                    }
+                )
         env.close()
 
-    if not hasattr(args, "_trajectory_rows"):
-        args._trajectory_rows = []
-    args._trajectory_rows.extend(trajectory_rows)
     return rows
 
 
@@ -1651,8 +1810,11 @@ def run_benchmark(args: argparse.Namespace) -> dict[str, Any]:
 
     weight_combos = make_weight_combos(args)
     episode_rows: list[dict[str, Any]] = []
+    training_trace_rows: list[dict[str, Any]] = []
+    proof_trajectory_rows: list[dict[str, Any]] = []
     trained_models: list[dict[str, Any]] = []
     trained_policy_evaluators: list[dict[str, Any]] = []
+    eval_risk_levels = resolve_eval_risk_levels(args)
 
     if args.learned_only:
         if len(weight_combos) != 1:
@@ -1712,7 +1874,13 @@ def run_benchmark(args: argparse.Namespace) -> dict[str, Any]:
             "w_disr": survivor["w_disr"],
         }
         for seed in args.seeds:
-            model, vec_env = train_model(args, seed, weight_combo)
+            train_result = train_model(args, seed, weight_combo)
+            if len(train_result) == 3:
+                model, vec_env, seed_training_trace = train_result
+            else:
+                model, vec_env = train_result
+                seed_training_trace = []
+            training_trace_rows.extend(seed_training_trace)
             trained_models.append(
                 {
                     "algo": args.algo,
@@ -1744,7 +1912,6 @@ def run_benchmark(args: argparse.Namespace) -> dict[str, Any]:
             vec_env.close()
 
     # Cross-scenario evaluation: re-evaluate all policies on additional risk levels.
-    eval_risk_levels = getattr(args, "eval_risk_levels", None) or []
     cross_eval_levels = [rl for rl in eval_risk_levels if rl != args.risk_level]
     for eval_rl in cross_eval_levels:
         cross_phase = f"cross_eval_{eval_rl}"
@@ -1795,6 +1962,53 @@ def run_benchmark(args: argparse.Namespace) -> dict[str, Any]:
                     )
                 )
 
+    primary_weight_combo: dict[str, float] | None = None
+    if survivors:
+        primary_weight_combo = {
+            "w_bo": float(survivors[0]["w_bo"]),
+            "w_cost": float(survivors[0]["w_cost"]),
+            "w_disr": float(survivors[0]["w_disr"]),
+        }
+    elif weight_combos:
+        primary_weight_combo = {
+            "w_bo": float(weight_combos[0]["w_bo"]),
+            "w_cost": float(weight_combos[0]["w_cost"]),
+            "w_disr": float(weight_combos[0]["w_disr"]),
+        }
+
+    if trained_policy_evaluators and primary_weight_combo is not None:
+        proof_args = clone_args(args, eval_episodes=1)
+        representative = next(
+            (
+                row
+                for row in trained_policy_evaluators
+                if same_weight_combo(row["weight_combo"], primary_weight_combo)
+            ),
+            trained_policy_evaluators[0],
+        )
+        for eval_rl in eval_risk_levels:
+            proof_phase = f"proof_{eval_rl}"
+            evaluate_policy(
+                proof_phase,
+                learned_policy_name(args),
+                args=proof_args,
+                weight_combo=representative["weight_combo"],
+                seed=int(representative["seed"]),
+                model=representative["model"],
+                risk_level_override=eval_rl,
+                trajectory_sink=proof_trajectory_rows,
+            )
+            if not args.learned_only:
+                evaluate_policy(
+                    proof_phase,
+                    "static_s2",
+                    args=proof_args,
+                    weight_combo=representative["weight_combo"],
+                    seed=int(representative["seed"]),
+                    risk_level_override=eval_rl,
+                    trajectory_sink=proof_trajectory_rows,
+                )
+
     seed_rows = aggregate_seed_metrics(episode_rows)
     policy_rows = aggregate_policy_metrics(seed_rows)
     comparison_rows = (
@@ -1806,25 +2020,19 @@ def run_benchmark(args: argparse.Namespace) -> dict[str, Any]:
     episode_csv = args.output_dir / "episode_metrics.csv"
     policy_csv = args.output_dir / "policy_summary.csv"
     comparison_csv = args.output_dir / "comparison_table.csv"
+    training_trace_csv = args.output_dir / "training_trace.csv"
+    proof_trajectories_csv = args.output_dir / "proof_trajectories.csv"
     summary_json = args.output_dir / "summary.json"
 
     save_csv(episode_csv, episode_rows, EPISODE_FIELDNAMES)
     save_csv(policy_csv, policy_rows, POLICY_SUMMARY_FIELDNAMES)
     save_csv(comparison_csv, comparison_rows, COMPARISON_FIELDNAMES)
-
-    # Save step-level trajectories for adaptive behavior analysis
-    trajectory_rows = getattr(args, "_trajectory_rows", [])
-    if trajectory_rows:
-        trajectory_fields = [
-            "phase", "policy", "seed", "episode", "step",
-            "shifts_active", "fill_rate", "disruption_fraction",
-            "reward", "service_loss",
-        ]
-        save_csv(
-            args.output_dir / "step_trajectories.csv",
-            trajectory_rows,
-            trajectory_fields,
-        )
+    save_csv(training_trace_csv, training_trace_rows, TRAINING_TRACE_FIELDNAMES)
+    save_csv(
+        proof_trajectories_csv,
+        proof_trajectory_rows,
+        PROOF_TRAJECTORY_FIELDNAMES,
+    )
     git_commit = resolve_git_commit()
 
     summary = {
@@ -1839,6 +2047,7 @@ def run_benchmark(args: argparse.Namespace) -> dict[str, Any]:
             "step_size_hours": args.step_size_hours,
             "max_steps": args.max_steps,
             "risk_level": args.risk_level,
+            "eval_risk_levels": eval_risk_levels,
             "stochastic_pt": args.stochastic_pt,
             "year_basis": args.year_basis,
             "w_bo": args.w_bo,
@@ -1873,6 +2082,8 @@ def run_benchmark(args: argparse.Namespace) -> dict[str, Any]:
                 else ["static_screen", "heuristic_eval", "random_eval"]
             ),
             learned_phase_name(args),
+            *[f"cross_eval_{risk_level}" for risk_level in cross_eval_levels],
+            *[f"proof_{risk_level}" for risk_level in eval_risk_levels],
         ],
         "policies": [
             *(
@@ -1890,6 +2101,8 @@ def run_benchmark(args: argparse.Namespace) -> dict[str, Any]:
             "episode_metrics_csv": str(episode_csv),
             "policy_summary_csv": str(policy_csv),
             "comparison_table_csv": str(comparison_csv),
+            "training_trace_csv": str(training_trace_csv),
+            "proof_trajectories_csv": str(proof_trajectories_csv),
             "summary_json": str(summary_json),
         },
         "policy_summary": policy_rows,

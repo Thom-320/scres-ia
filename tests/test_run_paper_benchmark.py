@@ -34,6 +34,7 @@ def test_build_benchmark_cli_args_freezes_paper_backbone(tmp_path: Path) -> None
     assert "--year-basis thesis" in command
     assert "--risk-level increased" in command
     assert "--stochastic-pt" in command
+    assert "--eval-risk-levels current increased severe" in command
     assert "--reward-mode ReT_seq_v1" in command
     assert "--ret-seq-kappa 0.1" in command
 
@@ -42,6 +43,7 @@ def test_run_paper_benchmark_defaults_to_ret_seq_v1() -> None:
     args = paper_benchmark.build_parser().parse_args(["--label", "default_run"])
     assert args.reward_mode == "ReT_seq_v1"
     assert args.kappa == 0.20
+    assert args.eval_risk_levels == ["current", "increased", "severe"]
 
 
 def test_run_launcher_writes_auditable_trail_on_success(

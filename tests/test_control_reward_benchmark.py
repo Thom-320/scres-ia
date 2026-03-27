@@ -404,12 +404,16 @@ def test_run_benchmark_smoke_writes_expected_artifacts(tmp_path: Path) -> None:
     episode_csv = tmp_path / "episode_metrics.csv"
     policy_csv = tmp_path / "policy_summary.csv"
     comparison_csv = tmp_path / "comparison_table.csv"
+    training_trace_csv = tmp_path / "training_trace.csv"
+    proof_trajectories_csv = tmp_path / "proof_trajectories.csv"
     summary_json = tmp_path / "summary.json"
     manifest_json = artifact_root / tmp_path.name / "manifest.json"
 
     assert episode_csv.exists()
     assert policy_csv.exists()
     assert comparison_csv.exists()
+    assert training_trace_csv.exists()
+    assert proof_trajectories_csv.exists()
     assert summary_json.exists()
     assert manifest_json.exists()
     assert "static_s3" in summary["policies"]
@@ -423,6 +427,7 @@ def test_run_benchmark_smoke_writes_expected_artifacts(tmp_path: Path) -> None:
     assert payload["config"]["frame_stack"] == 1
     assert payload["config"]["observation_version"] == "v2"
     assert payload["config"]["reward_mode"] == "ReT_seq_v1"
+    assert payload["config"]["eval_risk_levels"] == ["increased"]
     assert payload["config"]["stochastic_pt"] is True
     assert payload["backbone"]["env_variant"] == "shift_control"
     assert payload["reward_contract"]["reward_mode"] == "ReT_seq_v1"
@@ -433,6 +438,8 @@ def test_run_benchmark_smoke_writes_expected_artifacts(tmp_path: Path) -> None:
     assert payload["backbone"]["risk_level"] == "increased"
     assert payload["benchmark_metadata"]["command"] == args.invocation
     assert "artifact_bundle_dir" in payload["artifacts"]
+    assert "training_trace_csv" in payload["artifacts"]
+    assert "proof_trajectories_csv" in payload["artifacts"]
     assert "order_level_ret_mean" in episode_header
     assert "flow_fill_rate" in episode_header
     assert "fill_rate_state_terminal" in episode_header
@@ -443,6 +450,8 @@ def test_run_benchmark_smoke_writes_expected_artifacts(tmp_path: Path) -> None:
     assert manifest["backbone"]["env_variant"] == "shift_control"
     assert manifest["backbone"]["observation_version"] == "v2"
     assert Path(manifest["files"]["comparison_table.csv"]).exists()
+    assert Path(manifest["files"]["training_trace.csv"]).exists()
+    assert Path(manifest["files"]["proof_trajectories.csv"]).exists()
 
 
 def test_run_benchmark_smoke_supports_frame_stack(tmp_path: Path) -> None:
@@ -812,7 +821,7 @@ def test_run_benchmark_learned_only_mode(tmp_path: Path) -> None:
     )
     args.invocation = "python scripts/benchmark_control_reward.py --learned-only-smoke"
     summary = run_benchmark(args)
-    assert summary["phases"] == ["ppo_eval"]
+    assert summary["phases"] == ["ppo_eval", "proof_increased"]
     assert summary["policies"] == ["ppo"]
     assert summary["comparison_table"] == []
 
@@ -952,6 +961,56 @@ def test_evaluate_policy_accepts_custom_policy_adapter() -> None:
     assert rows[0]["policy"] == "custom_policy"
     assert rows[0]["algo"] == "ppo"
     assert adapter.calls > 0
+
+
+def test_run_benchmark_writes_proof_trajectories_for_requested_risk_levels(
+    tmp_path: Path,
+) -> None:
+    args = build_parser().parse_args(
+        [
+            "--seeds",
+            "1",
+            "--train-timesteps",
+            "32",
+            "--eval-episodes",
+            "1",
+            "--step-size-hours",
+            "24",
+            "--max-steps",
+            "4",
+            "--w-bo",
+            "1.0",
+            "--w-cost",
+            "0.02",
+            "--w-disr",
+            "0.0",
+            "--algo",
+            "ppo",
+            "--learned-only",
+            "--output-dir",
+            str(tmp_path),
+            "--eval-risk-levels",
+            "current",
+            "increased",
+            "severe",
+            "--skip-artifact-export",
+        ]
+    )
+    args.invocation = "python scripts/benchmark_control_reward.py --proof-smoke"
+    run_benchmark(args)
+
+    import csv
+
+    with open(tmp_path / "proof_trajectories.csv", newline="") as file_obj:
+        rows = list(csv.DictReader(file_obj))
+
+    risk_levels = {row["risk_level"] for row in rows}
+    policies = {(row["risk_level"], row["policy"]) for row in rows}
+
+    assert risk_levels == {"current", "increased", "severe"}
+    assert ("current", "ppo") in policies
+    assert ("increased", "ppo") in policies
+    assert ("severe", "ppo") in policies
 
 
 # ---------------------------------------------------------------------------
