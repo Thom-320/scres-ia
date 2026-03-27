@@ -871,6 +871,7 @@ def evaluate_policy(
     risk_level_override: str | None = None,
 ) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
+    trajectory_rows: list[dict[str, Any]] = []
     env_kwargs = build_env_kwargs(
         args, weight_combo, risk_level_override=risk_level_override
     )
@@ -895,6 +896,7 @@ def evaluate_policy(
         backorder_qty_total = 0.0
         steps = 0
         shift_counts = {1: 0, 2: 0, 3: 0}
+        step_trajectory: list[dict[str, float]] = []
         lstm_states: Any = None
         episode_start = np.ones((1,), dtype=bool)
 
@@ -967,6 +969,16 @@ def evaluate_policy(
             delivered_total += float(info.get("new_delivered", 0.0))
             backorder_qty_total += float(info.get("new_backorder_qty", 0.0))
             shift_counts[int(info.get("shifts_active", 1))] += 1
+            step_trajectory.append({
+                "step": steps,
+                "shifts_active": int(info.get("shifts_active", 1)),
+                "fill_rate": float(info.get("fill_rate", 0.0)
+                    if "fill_rate" in info
+                    else info.get("state_constraint_context", {}).get("fill_rate", 0.0)),
+                "disruption_fraction": float(info.get("disruption_fraction_step", 0.0)),
+                "reward": float(reward),
+                "service_loss": float(info.get("service_loss_step", 0.0)),
+            })
             steps += 1
             if is_recurrent:
                 episode_start = np.array([terminated or truncated], dtype=bool)
@@ -1000,8 +1012,18 @@ def evaluate_policy(
                 terminal_metrics=terminal_metrics,
             )
         )
+        # Collect step-level trajectory for adaptive behavior analysis
+        for entry in step_trajectory:
+            entry["phase"] = phase
+            entry["policy"] = policy
+            entry["seed"] = seed
+            entry["episode"] = episode_idx + 1
+        trajectory_rows.extend(step_trajectory)
         env.close()
 
+    if not hasattr(args, "_trajectory_rows"):
+        args._trajectory_rows = []
+    args._trajectory_rows.extend(trajectory_rows)
     return rows
 
 
@@ -1789,6 +1811,20 @@ def run_benchmark(args: argparse.Namespace) -> dict[str, Any]:
     save_csv(episode_csv, episode_rows, EPISODE_FIELDNAMES)
     save_csv(policy_csv, policy_rows, POLICY_SUMMARY_FIELDNAMES)
     save_csv(comparison_csv, comparison_rows, COMPARISON_FIELDNAMES)
+
+    # Save step-level trajectories for adaptive behavior analysis
+    trajectory_rows = getattr(args, "_trajectory_rows", [])
+    if trajectory_rows:
+        trajectory_fields = [
+            "phase", "policy", "seed", "episode", "step",
+            "shifts_active", "fill_rate", "disruption_fraction",
+            "reward", "service_loss",
+        ]
+        save_csv(
+            args.output_dir / "step_trajectories.csv",
+            trajectory_rows,
+            trajectory_fields,
+        )
     git_commit = resolve_git_commit()
 
     summary = {
