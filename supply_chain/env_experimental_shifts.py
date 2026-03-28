@@ -85,6 +85,7 @@ REWARD_MODE_OPTIONS = (
     "ReT_cd",
     "ReT_garrido2024_raw",
     "ReT_garrido2024",
+    "ReT_garrido2024_train",
     "rt_v0",
     "control_v1",
     "control_v1_pbrs",
@@ -533,7 +534,9 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             return {f"op{op_id}": 0.0 for op_id in range(1, NUM_TRACKED_OPS + 1)}
 
         current_time = float(self.sim.env.now)
-        elapsed_post_warmup_hours = max(0.0, current_time - self._post_warmup_start_time)
+        elapsed_post_warmup_hours = max(
+            0.0, current_time - self._post_warmup_start_time
+        )
         disruption_hours_by_op = {f"op{op_id}": 0.0 for op_id in range(1, 14)}
 
         for event in self.sim.risk_events:
@@ -557,6 +560,69 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             op_name: min(1.0, down_hours / max(elapsed_post_warmup_hours, 1.0))
             for op_name, down_hours in disruption_hours_by_op.items()
         }
+
+    def _set_sim_assembly_shifts(self, shifts: int) -> None:
+        """Apply a discrete shift count to the live DES and align batch size."""
+        if self.sim is None:
+            raise RuntimeError("Call reset() before setting assembly shifts.")
+
+        shifts = int(shifts)
+        self.sim.params["assembly_shifts"] = shifts
+        if shifts in CAPACITY_BY_SHIFTS:
+            self.sim.params["batch_size"] = CAPACITY_BY_SHIFTS[shifts]["op7_q"]
+
+    def _reset_operational_context(self) -> dict[str, float]:
+        """Return a compact readiness snapshot without post-warmup normalization."""
+        if self.sim is None:
+            raise RuntimeError("Call reset() before requesting reset context.")
+
+        inventory_detail = self.sim._inventory_detail()
+        return {
+            "time": float(self.sim.env.now),
+            "fill_rate": float(self.sim._fill_rate()),
+            "backorder_rate": float(self.sim._backorder_rate()),
+            "theatre_inventory": float(inventory_detail["rations_theatre"]),
+            "pending_backorders_count": float(len(self.sim.pending_backorders)),
+            "pending_backorder_qty": float(self.sim.pending_backorder_qty),
+        }
+
+    def _ready_fill_rate_threshold(self) -> float:
+        """Return the minimum operational fill rate required before episode start."""
+        return float(
+            self.operational_fill_rate_thresholds.get(
+                self.risk_level,
+                self.operational_fill_rate_thresholds["increased"],
+            )
+        )
+
+    def _is_operational_reset_state(self, context: dict[str, float]) -> bool:
+        """Check whether the startup transient has cleared enough for RL."""
+        has_theatre_inventory = context["theatre_inventory"] > 0.0
+        if self.require_theatre_inventory_for_reset and not has_theatre_inventory:
+            return False
+        return context["fill_rate"] >= self._ready_fill_rate_threshold()
+
+    def _prime_after_warmup(self) -> tuple[dict[str, float], bool]:
+        """
+        Advance the DES beyond the thesis warm-up until a minimally operational
+        state is reached, avoiding episodes that begin in startup backlog shock.
+        """
+        if self.sim is None:
+            raise RuntimeError("Call reset() before priming the simulation.")
+
+        self._set_sim_assembly_shifts(self.priming_shifts)
+        context = self._reset_operational_context()
+        primed_ready = self._is_operational_reset_state(context)
+        remaining_hours = max(0.0, self.max_priming_hours)
+
+        while not primed_ready and remaining_hours > 0.0:
+            dt = min(self.priming_step_hours, remaining_hours)
+            self.sim.step({"assembly_shifts": self.priming_shifts}, step_hours=dt)
+            remaining_hours -= dt
+            context = self._reset_operational_context()
+            primed_ready = self._is_operational_reset_state(context)
+
+        return context, primed_ready
 
     def _compose_observation(self, base_obs: np.ndarray) -> np.ndarray:
         if self.observation_version == "v1":
@@ -1075,8 +1141,20 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             - self.ret_g24_d_tau * np.log(tau_avg)
             - self.ret_g24_n_kappa * np.log(kappa_dot)
         )
+        # Training variant: drop κ̇ to avoid cost-domination bias.
+        # κ̇ is kept in the full index for audit but excluded from the
+        # training signal because n_kappa (~0.25) dominates all other
+        # exponents and biases PPO toward S1 cost-minimization.
+        log_score_train = float(
+            self.ret_g24_a_zeta * np.log(zeta_avg)
+            - self.ret_g24_b_epsilon * np.log(epsilon_avg)
+            + self.ret_g24_c_phi * np.log(phi_avg)
+            - self.ret_g24_d_tau * np.log(tau_avg)
+        )
         raw_product = float(np.exp(log_score))
+        raw_product_train = float(np.exp(log_score_train))
         sigmoid_index = float(1.0 / (1.0 + np.exp(-log_score)))
+        sigmoid_train = float(1.0 / (1.0 + np.exp(-log_score_train)))
 
         self._ret_g24_prev_finished_inventory = finished_inventory
         self._ret_g24_prev_pending_backorder_qty = pending_backorder_qty
@@ -1102,8 +1180,11 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             "tau_step": tau_step,
             "step_cost": step_cost,
             "ret_garrido2024_raw_step": raw_product,
+            "ret_garrido2024_train_step": raw_product_train,
             "ret_garrido2024_sigmoid_step": sigmoid_index,
+            "ret_garrido2024_sigmoid_train_step": sigmoid_train,
             "log_score": log_score,
+            "log_score_train": log_score_train,
             "exponents": {
                 "a_zeta": self.ret_g24_a_zeta,
                 "b_epsilon": self.ret_g24_b_epsilon,
@@ -1288,6 +1369,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self._ret_g24_sum_phi = 0.0
         self._ret_g24_sum_tau = 0.0
         self._ret_g24_sum_cost = 0.0
+        self._post_warmup_start_time = self.warmup_hours
         self.sim = MFSCSimulation(
             shifts=1,
             risks_enabled=True,
@@ -1299,18 +1381,13 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         )
         self.sim._start_processes()
         self.sim.env.run(until=self.warmup_hours)
-        # Snapshot warmup counters so post-warmup metrics start from zero.
+        reset_context, primed_ready = self._prime_after_warmup()
+        self._post_warmup_start_time = float(self.sim.env.now)
+        # Snapshot counters at the actual post-warmup start time so cumulative
+        # diagnostics begin after the startup transient has been cleared.
         self._warmup_cumulative_backorder_qty = float(self.sim.cumulative_backorder_qty)
         self._warmup_total_demanded = float(self.sim.total_demanded)
         self._warmup_cumulative_down_hours = float(self.sim._cumulative_down_hours)
-        # Clear pending backorder STOCK inherited from warmup.  Without this,
-        # the agent starts every episode with ~80k pending BO (fill_rate ≈ 0.03),
-        # which drowns all recovery/backlog signals and biases every C-D variant
-        # toward S1 cost-minimization.  The warmup backlog is a simulation
-        # artifact (demand arrived before production pipeline filled), not a
-        # reflection of the policy's performance.
-        self.sim.pending_backorders.clear()
-        self.sim.pending_backorder_qty = 0.0
         warmup_inventory_detail = self.sim._inventory_detail()
         self._ret_g24_prev_finished_inventory = self._finished_rations_inventory(
             warmup_inventory_detail
@@ -1353,6 +1430,16 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                 "nonrecovery_fill_rate_threshold": self.nonrecovery_fr_threshold,
             },
             "ret_thresholds_source": "configurable_repo_approximation",
+            "warmup_metadata": {
+                "estimated_warmup_hours": self.warmup_hours,
+                "post_warmup_start_time": self._post_warmup_start_time,
+                "priming_shifts": self.priming_shifts,
+                "priming_step_hours": self.priming_step_hours,
+                "max_priming_hours": self.max_priming_hours,
+                "operational_fill_rate_threshold": self._ready_fill_rate_threshold(),
+                "primed_ready": primed_ready,
+                "reset_operational_context": reset_context,
+            },
         }
         info["state_constraint_context"] = self.get_state_constraint_context()
         return obs, info
@@ -1381,6 +1468,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
 
         return {
             "time": float(self.sim.env.now),
+            "post_warmup_start_time": float(self._post_warmup_start_time),
             "inventory_detail": inventory_detail,
             "total_inventory": total_inventory,
             "op3_total_dispatch_cap": op3_total_dispatch_cap,
@@ -1523,6 +1611,13 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         elif self._canonical_reward_mode == "ReT_garrido2024":
             ret_g24_components = self._compute_ret_garrido2024(info, shifts)
             reward = float(ret_g24_components["ret_garrido2024_sigmoid_step"])
+            corrected_ret_components = self._compute_ret_thesis_corrected_components(
+                info, self.step_size
+            )
+            ret_components = self._compute_ret_thesis_components(info, self.step_size)
+        elif self._canonical_reward_mode == "ReT_garrido2024_train":
+            ret_g24_components = self._compute_ret_garrido2024(info, shifts)
+            reward = float(ret_g24_components["ret_garrido2024_train_step"])
             corrected_ret_components = self._compute_ret_thesis_corrected_components(
                 info, self.step_size
             )
@@ -1686,7 +1781,9 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             )
             out_info["ret_thesis_corrected"] = corrected_ret_components
             out_info["ret_components"] = ret_components
-        elif self._canonical_reward_mode in ("ReT_garrido2024_raw", "ReT_garrido2024"):
+        elif self._canonical_reward_mode in (
+            "ReT_garrido2024_raw", "ReT_garrido2024", "ReT_garrido2024_train",
+        ):
             out_info["ret_garrido2024_raw_step"] = float(
                 ret_g24_components["ret_garrido2024_raw_step"]
             )
