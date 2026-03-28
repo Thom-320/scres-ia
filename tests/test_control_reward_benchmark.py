@@ -255,6 +255,26 @@ def test_build_reward_contract_metadata_marks_cross_mode_reward_as_noncomparable
     assert reward_contract["cross_mode_reward_comparison_allowed"] is False
 
 
+def test_build_reward_contract_metadata_treats_ret_cd_v1_as_resilience_index() -> None:
+    args = build_parser().parse_args(["--reward-mode", "ReT_cd_v1"])
+    reward_contract = build_reward_contract_metadata(args)
+
+    assert reward_contract["reward_mode"] == "ReT_cd_v1"
+    assert reward_contract["reward_family"] == "resilience_index"
+    assert reward_contract["cross_mode_reward_comparison_allowed"] is False
+
+
+def test_build_reward_contract_metadata_treats_ret_garrido2024_as_resilience_index() -> (
+    None
+):
+    args = build_parser().parse_args(["--reward-mode", "ReT_garrido2024"])
+    reward_contract = build_reward_contract_metadata(args)
+
+    assert reward_contract["reward_mode"] == "ReT_garrido2024"
+    assert reward_contract["reward_family"] == "resilience_index"
+    assert reward_contract["cross_mode_reward_comparison_allowed"] is False
+
+
 def test_resolve_output_dir_disambiguates_algo_and_frame_stack() -> None:
     args = build_parser().parse_args(["--algo", "sac", "--frame-stack", "4"])
     output_dir = resolve_output_dir(args)
@@ -273,6 +293,41 @@ def test_control_reward_parser_accepts_ret_seq_v1() -> None:
     )
     assert args.reward_mode == "ReT_seq_v1"
     assert args.ret_seq_kappa == pytest.approx(0.20)
+
+
+def test_control_reward_parser_accepts_ret_cd_variants() -> None:
+    for reward_mode in ("ReT_cd_v1", "ReT_cd_sigmoid"):
+        args = build_parser().parse_args(["--reward-mode", reward_mode])
+        assert args.reward_mode == reward_mode
+
+
+def test_control_reward_parser_accepts_ret_garrido2024_variants() -> None:
+    for reward_mode in ("ReT_garrido2024_raw", "ReT_garrido2024"):
+        args = build_parser().parse_args(["--reward-mode", reward_mode])
+        assert args.reward_mode == reward_mode
+
+
+def test_build_env_kwargs_passes_ret_g24_calibration_path(tmp_path: Path) -> None:
+    calibration_path = tmp_path / "ret_g24.json"
+    calibration_path.write_text('{"a_zeta": 0.1, "kappa_ref": 10.0}', encoding="utf-8")
+    args = build_parser().parse_args(
+        [
+            "--reward-mode",
+            "ReT_garrido2024_raw",
+            "--ret-g24-calibration",
+            str(calibration_path),
+        ]
+    )
+    env_kwargs = build_env_kwargs(
+        args,
+        {
+            "w_bo": 4.0,
+            "w_cost": 0.02,
+            "w_disr": 0.0,
+        },
+    )
+    assert env_kwargs["reward_mode"] == "ReT_garrido2024_raw"
+    assert env_kwargs["ret_g24_calibration_path"] == str(calibration_path)
 
 
 def test_make_weight_combos_collapses_for_ret_seq_v1() -> None:

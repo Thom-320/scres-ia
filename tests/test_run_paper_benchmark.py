@@ -39,11 +39,74 @@ def test_build_benchmark_cli_args_freezes_paper_backbone(tmp_path: Path) -> None
     assert "--ret-seq-kappa 0.1" in command
 
 
+def test_build_benchmark_cli_args_supports_ret_cd_v1_without_kappa_flag(
+    tmp_path: Path,
+) -> None:
+    args = paper_benchmark.build_parser().parse_args(
+        [
+            "--label",
+            "ret_cd_v1_smoke",
+            "--reward-mode",
+            "ReT_cd_v1",
+            "--output-root",
+            str(tmp_path),
+        ]
+    )
+
+    cli_args = paper_benchmark.build_benchmark_cli_args(
+        args, paper_benchmark.resolve_run_dir(args)
+    )
+    command = paper_benchmark.build_benchmark_command(cli_args)
+
+    assert "--reward-mode ReT_cd_v1" in command
+    assert "--ret-seq-kappa" not in command
+
+
 def test_run_paper_benchmark_defaults_to_ret_seq_v1() -> None:
     args = paper_benchmark.build_parser().parse_args(["--label", "default_run"])
     assert args.reward_mode == "ReT_seq_v1"
     assert args.kappa == 0.20
     assert args.eval_risk_levels == ["current", "increased", "severe"]
+
+
+def test_run_paper_benchmark_parser_accepts_ret_cd_sigmoid() -> None:
+    args = paper_benchmark.build_parser().parse_args(
+        ["--label", "sigmoid_run", "--reward-mode", "ReT_cd_sigmoid"]
+    )
+    assert args.reward_mode == "ReT_cd_sigmoid"
+
+
+def test_run_paper_benchmark_parser_accepts_ret_garrido2024_variants() -> None:
+    for reward_mode in ("ReT_garrido2024_raw", "ReT_garrido2024"):
+        args = paper_benchmark.build_parser().parse_args(
+            ["--label", f"{reward_mode}_run", "--reward-mode", reward_mode]
+        )
+        assert args.reward_mode == reward_mode
+
+
+def test_build_benchmark_cli_args_passes_ret_g24_calibration(tmp_path: Path) -> None:
+    calibration_path = tmp_path / "ret_g24.json"
+    calibration_path.write_text('{"a_zeta": 0.1, "kappa_ref": 10.0}', encoding="utf-8")
+    args = paper_benchmark.build_parser().parse_args(
+        [
+            "--label",
+            "ret_g24_eval",
+            "--reward-mode",
+            "ReT_garrido2024",
+            "--ret-g24-calibration",
+            str(calibration_path),
+            "--output-root",
+            str(tmp_path),
+        ]
+    )
+
+    cli_args = paper_benchmark.build_benchmark_cli_args(
+        args, paper_benchmark.resolve_run_dir(args)
+    )
+    command = paper_benchmark.build_benchmark_command(cli_args)
+
+    assert "--reward-mode ReT_garrido2024" in command
+    assert f"--ret-g24-calibration {calibration_path}" in command
 
 
 def test_run_launcher_writes_auditable_trail_on_success(

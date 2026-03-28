@@ -17,7 +17,7 @@ if [ -f .venv/bin/activate ]; then
     source .venv/bin/activate
 fi
 
-COMMON="--seeds 3 --train-timesteps 100000 --eval-episodes 10 --step-size-hours 168 --max-steps 260 --risk-level increased --stochastic-pt --n-envs 1"
+COMMON="--seeds 11 22 33 --train-timesteps 100000 --eval-episodes 10 --step-size-hours 168 --max-steps 260 --risk-level increased --stochastic-pt"
 OUTDIR="outputs/benchmarks"
 
 echo "=== OVERNIGHT COMPARISON ==="

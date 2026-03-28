@@ -93,7 +93,14 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--label", required=True, help="Run directory label.")
     parser.add_argument(
         "--reward-mode",
-        choices=["control_v1", "ReT_seq_v1"],
+        choices=[
+            "control_v1",
+            "ReT_seq_v1",
+            "ReT_garrido2024_raw",
+            "ReT_garrido2024",
+            "ReT_cd_v1",
+            "ReT_cd_sigmoid",
+        ],
         default="ReT_seq_v1",
         help="Paper-facing training reward. Backbone fields remain frozen.",
     )
@@ -101,7 +108,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--kappa",
         type=float,
         default=0.20,
-        help="ReT_seq_v1 kappa. Ignored for control_v1.",
+        help="ReT_seq_v1 kappa. Ignored for control_v1 and Cobb-Douglas variants.",
     )
     parser.add_argument("--seeds", type=int, nargs="+", default=list(DEFAULT_SEEDS))
     parser.add_argument("--train-timesteps", type=int, default=DEFAULT_TIMESTEPS)
@@ -138,6 +145,15 @@ def build_parser() -> argparse.ArgumentParser:
         "--export-artifact-bundle",
         action="store_true",
         help="Also export the benchmark bundle through benchmark_control_reward.py.",
+    )
+    parser.add_argument(
+        "--ret-g24-calibration",
+        type=Path,
+        default=None,
+        help=(
+            "Optional Garrido-2024 calibration JSON for "
+            "ReT_garrido2024_raw / ReT_garrido2024."
+        ),
     )
     return parser
 
@@ -192,6 +208,8 @@ def build_launcher_command(args: argparse.Namespace) -> str:
         command.extend(["--artifact-root", str(args.artifact_root)])
     if args.export_artifact_bundle:
         command.append("--export-artifact-bundle")
+    if args.ret_g24_calibration is not None:
+        command.extend(["--ret-g24-calibration", str(args.ret_g24_calibration)])
     return " ".join(command)
 
 
@@ -221,8 +239,6 @@ def build_benchmark_cli_args(args: argparse.Namespace, run_dir: Path) -> list[st
         str(FROZEN_BACKBONE["year_basis"]),
         "--reward-mode",
         str(args.reward_mode),
-        "--ret-seq-kappa",
-        str(args.kappa),
         "--w-bo",
         str(args.w_bo),
         "--w-cost",
@@ -232,6 +248,13 @@ def build_benchmark_cli_args(args: argparse.Namespace, run_dir: Path) -> list[st
         "--output-dir",
         str(run_dir),
     ]
+    if str(args.reward_mode) == "ReT_seq_v1":
+        cli_args.extend(["--ret-seq-kappa", str(args.kappa)])
+    if (
+        str(args.reward_mode) in ("ReT_garrido2024_raw", "ReT_garrido2024")
+        and args.ret_g24_calibration is not None
+    ):
+        cli_args.extend(["--ret-g24-calibration", str(args.ret_g24_calibration)])
     if bool(FROZEN_BACKBONE["stochastic_pt"]):
         cli_args.append("--stochastic-pt")
     if not args.export_artifact_bundle:

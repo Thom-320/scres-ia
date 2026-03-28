@@ -240,6 +240,10 @@ def get_shift_control_env_spec(
             "observation_version=v3 extends v2 with normalized cumulative backorder and disruption history since the end of warmup.",
             "The fifth action dimension selects assembly capacity through discrete shifts.",
             "control_v1 remains available as the historical operational comparator, while ret_thesis_corrected remains the thesis-aligned audit metric.",
+            "ReT_garrido2024_raw is the paper-faithful five-variable Cobb-Douglas raw product (Eq. 3), intended only as a training-reward candidate.",
+            "ReT_garrido2024 is the paper-faithful five-variable sigmoid index (Eq. 6), intended as the evaluation/audit index rather than the main PPO reward.",
+            "ReT_cd_v1 is the continuous Cobb-Douglas bridge for the piecewise ReT_thesis (recommended over ReT_thesis for training).",
+            "ReT_cd_sigmoid is an experimental variant documented to show sigmoid bias when log-inputs are already in (0,1] — NOT recommended.",
         ),
     )
 

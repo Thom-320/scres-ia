@@ -112,6 +112,41 @@ A disruption penalty term `w_disr × disruption_fraction` was implemented but se
 
 However, it is explicitly **not the training objective** because its structure incentivizes cost minimization over service maintenance when used for RL.
 
+## Continuous Thesis Bridge: Cobb-Douglas
+
+The repository also keeps a continuous Cobb-Douglas bridge for the thesis resilience logic:
+
+```
+ReT_cd_v1 = FR_t^0.70 × AT_t^0.30
+```
+
+Where:
+- `FR_t = 1 - new_backorder_qty / new_demanded`
+- `AT_t = 1 - disruption_fraction`
+
+This lane is not the main paper contract, but it is the cleanest way to convert the piecewise thesis ReT into a smooth reward for PPO:
+- `FR_t` preserves the thesis service-resilience signal from Eq. 5.4
+- `AT_t` keeps the disruption-state effect in the reward rather than in a case split
+- weighted geometric aggregation preserves non-compensability while removing the original discontinuities
+
+### Why the raw Cobb-Douglas form is preferred
+
+For this repo, the bounded raw product is better than adding a sigmoid:
+
+```
+ReT_cd_sigmoid = σ(0.70 ln(FR_t) + 0.30 ln(AT_t))
+```
+
+Because `FR_t` and `AT_t` already live in `(0, 1]`, the log score is always `≤ 0`. That means the sigmoid output is always `≤ 0.5`, even in the best case (`FR_t = 1`, `AT_t = 1`). In practice:
+- `ReT_cd_v1` keeps the natural `(0, 1]` range of the bounded geometric mean
+- `ReT_cd_sigmoid` compresses the usable reward scale and weakens the learning signal
+
+### Repo recommendation
+
+- Keep `ReT_seq_v1` as the primary paper-facing reward because it aligns better with controllable shift decisions and explicit efficiency tradeoffs.
+- Keep `ReT_cd_v1` as the thesis-to-continuous ablation and methodological bridge.
+- Keep `ReT_cd_sigmoid` only as a documented comparison showing why the sigmoid wrapper is not the right default for this normalized DES setting.
+
 ## Future Extensions
 
 ### PBRS (Potential-Based Reward Shaping)

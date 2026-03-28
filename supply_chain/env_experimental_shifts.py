@@ -15,6 +15,11 @@ See ``_compute_ret_seq_v1`` for the formal thesis mapping.
 Other reward modes (historical / auxiliary):
   - "control_v1": Historical linear control reward.  Retained as comparator.
   - "control_v1_pbrs": control_v1 + PBRS shaping (phase-2 extension).
+  - "ReT_garrido2024_raw": Paper-faithful 5-variable Cobb-Douglas raw product
+    (Eq. 3) — recommended only as a training-reward candidate.
+  - "ReT_garrido2024": Paper-faithful 5-variable Cobb-Douglas sigmoid index
+    (Eq. 6) — recommended as the evaluation/audit index, not as the main PPO
+    reward.
   - "ReT_thesis": Piecewise step-level approximation of Eq. 5.5, retained for
     audit and thesis comparison.  NOT suitable as training objective (collapses
     to S1 due to cost-avoidance incentive dominating the service signal).
@@ -49,7 +54,9 @@ ReT_thesis piecewise approximation (Eq. 5.5, audit-only):
 
 from __future__ import annotations
 
+import json
 from typing import Any, Optional
+from pathlib import Path
 
 import gymnasium as gym
 import numpy as np
@@ -75,6 +82,7 @@ REWARD_MODE_OPTIONS = (
     "ReT_corrected_cost",
     "ReT_seq_v1",
     "ReT_cd",
+    "ReT_garrido2024_raw",
     "ReT_garrido2024",
     "rt_v0",
     "control_v1",
@@ -97,19 +105,24 @@ RET_CD_D = 0.15  # inverse cost exponent (inversely proportional)
 RET_CD_KAPPA = 0.20  # cost scaling (same as ret_seq_kappa)
 RET_CD_BO_NORM = 5000.0  # backorder normalization constant (typical demand scale)
 
-# ReT_garrido2024: faithful C-D with raw DES variables + sigmoid (Eq. 3-6)
-# Calibrated from 200 episodes (52,000 steps) under increased + stochastic_pt.
-# Method: Garrido et al. (2024, IJPR) Section 3.3 — equate each ln-argument to 1/5.
-G24_A_ZETA = 0.0118    # ζ (inventory) — directly proportional
-G24_B_EPSILON = 0.0167  # ε (backorders) — inversely proportional
-G24_C_PHI = 0.0184      # φ (production capacity) — directly proportional
-G24_D_TAU = 0.0857      # τ (backlog-to-demand ratio) — inversely proportional
-G24_N_KAPPA = 0.0390    # κ̇ (shift-hours cost) — inversely proportional
-G24_RATE_PER_HOUR = 320.5  # assembly rate (rations/hour)
+# ReT_garrido2024: faithful C-D with explicit paper variables (Eq. 3-6)
+G24_A_ZETA = 0.0240
+G24_B_EPSILON = 0.0260
+G24_C_PHI = 0.0400
+G24_D_TAU = 0.0600
+G24_N_KAPPA = 0.1771
+G24_EQUATED_TARGET = 0.20
+G24_COST_PRODUCTION = 1.0
+G24_COST_SPARE_CAPACITY = 1.0
+G24_COST_INVENTORY = 1.0
+G24_COST_BACKORDERS = 1.0
+G24_DEFAULT_CALIBRATION_PATH = (
+    Path(__file__).resolve().parent / "data" / "ret_garrido2024_calibration.json"
+)
 
 # ReT_cd_v1 defaults (Cobb-Douglas continuous bridge for ReT_thesis piecewise)
-RET_CD_W_FR = 0.70   # fill-rate weight (primary service signal)
-RET_CD_W_AT = 0.30   # availability (1 - disruption_frac) weight
+RET_CD_W_FR = 0.70  # fill-rate weight (primary service signal)
+RET_CD_W_AT = 0.30  # availability (1 - disruption_frac) weight
 
 PBRS_VARIANT_OPTIONS = ("cumulative", "step_level")
 BASE_OBSERVATION_DIM = 15
@@ -142,7 +155,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
 
     Parameters
     ----------
-    reward_mode : {"ReT_thesis", "ReT_corrected", "ReT_corrected_cost", "ReT_seq_v1", "rt_v0", "control_v1", "control_v1_pbrs"}
+    reward_mode : {"ReT_thesis", "ReT_corrected", "ReT_corrected_cost", "ReT_seq_v1", "ReT_garrido2024_raw", "ReT_garrido2024", "rt_v0", "control_v1", "control_v1_pbrs"}
         Which reward formulation to use. ``ReT_corrected_cost`` is the
         research-facing alias for the cost-extended corrected thesis lane and
         maps internally to ``ReT_corrected``.
@@ -209,6 +222,13 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         ret_cd_d: float = RET_CD_D,
         ret_cd_kappa: float = RET_CD_KAPPA,
         ret_cd_bo_norm: float = RET_CD_BO_NORM,
+        # --- ReT_garrido2024 parameters (paper-faithful 5-variable family) ---
+        ret_g24_calibration_path: str | None = None,
+        ret_g24_a_zeta: float = G24_A_ZETA,
+        ret_g24_b_epsilon: float = G24_B_EPSILON,
+        ret_g24_c_phi: float = G24_C_PHI,
+        ret_g24_d_tau: float = G24_D_TAU,
+        ret_g24_n_kappa: float = G24_N_KAPPA,
         # --- ReT_cd_v1 / ReT_cd_sigmoid parameters ---
         ret_cd_w_fr: float = RET_CD_W_FR,
         ret_cd_w_at: float = RET_CD_W_AT,
@@ -296,6 +316,35 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self.ret_cd_kappa = float(ret_cd_kappa)
         self.ret_cd_bo_norm = float(ret_cd_bo_norm)
 
+        calibration = self._load_ret_garrido2024_calibration(ret_g24_calibration_path)
+        self.ret_g24_calibration_path = calibration.get("calibration_path")
+        self.ret_g24_a_zeta = float(
+            calibration.get("a_zeta", calibration.get("zeta", ret_g24_a_zeta))
+        )
+        self.ret_g24_b_epsilon = float(
+            calibration.get(
+                "b_epsilon",
+                calibration.get("epsilon", ret_g24_b_epsilon),
+            )
+        )
+        self.ret_g24_c_phi = float(
+            calibration.get("c_phi", calibration.get("phi", ret_g24_c_phi))
+        )
+        self.ret_g24_d_tau = float(
+            calibration.get("d_tau", calibration.get("tau", ret_g24_d_tau))
+        )
+        self.ret_g24_n_kappa = float(
+            calibration.get("n_kappa", calibration.get("kappa_dot", ret_g24_n_kappa))
+        )
+        self.ret_g24_target = float(
+            calibration.get("target_contribution", G24_EQUATED_TARGET)
+        )
+        self.ret_g24_kappa_ref = float(calibration.get("kappa_ref", 1.0))
+        self.ret_g24_maxima = calibration.get("maxima", {})
+        self.ret_g24_calibration_source = str(
+            calibration.get("source", "built_in_paper_coefficients")
+        )
+
         # ReT_cd_v1 / ReT_cd_sigmoid params
         self.ret_cd_w_fr = float(ret_cd_w_fr)
         self.ret_cd_w_at = float(ret_cd_w_at)
@@ -316,6 +365,14 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self._warmup_cumulative_backorder_qty = 0.0
         self._warmup_total_demanded = 0.0
         self._warmup_cumulative_down_hours = 0.0
+        self._ret_g24_elapsed_steps = 0
+        self._ret_g24_sum_zeta = 0.0
+        self._ret_g24_sum_epsilon = 0.0
+        self._ret_g24_sum_phi = 0.0
+        self._ret_g24_sum_tau = 0.0
+        self._ret_g24_sum_cost = 0.0
+        self._ret_g24_prev_finished_inventory = 0.0
+        self._ret_g24_prev_pending_backorder_qty = 0.0
 
         obs_dim = self._observation_dim()
         # Observation bounds: inventory dims [0-5] are normalized by 1e6/1e5
@@ -336,6 +393,55 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         if self.observation_version == "v2":
             return V2_OBSERVATION_DIM
         return BASE_OBSERVATION_DIM
+
+    @staticmethod
+    def _load_ret_garrido2024_calibration(
+        calibration_path: str | None,
+    ) -> dict[str, Any]:
+        """
+        Load Garrido-2024 calibration metadata.
+
+        If ``calibration_path`` is omitted, the env looks for the tracked repo
+        calibration file. If it does not exist, the paper's reported exponents
+        are used as a defensible fallback and ``kappa_ref`` remains 1.0 until a
+        DES-specific calibration file is supplied.
+        """
+        resolved_path = (
+            Path(calibration_path).expanduser().resolve()
+            if calibration_path
+            else G24_DEFAULT_CALIBRATION_PATH
+        )
+        if resolved_path.exists():
+            payload = json.loads(resolved_path.read_text(encoding="utf-8"))
+            payload["calibration_path"] = str(resolved_path)
+            return payload
+        return {
+            "a_zeta": G24_A_ZETA,
+            "b_epsilon": G24_B_EPSILON,
+            "c_phi": G24_C_PHI,
+            "d_tau": G24_D_TAU,
+            "n_kappa": G24_N_KAPPA,
+            "kappa_ref": 1.0,
+            "target_contribution": G24_EQUATED_TARGET,
+            "source": "built_in_paper_coefficients",
+            "calibration_path": None,
+        }
+
+    @staticmethod
+    def _finished_rations_inventory(inventory_detail: dict[str, Any]) -> float:
+        """Return finished-goods ration inventory in standard-ration units."""
+        return float(
+            sum(
+                float(inventory_detail.get(field_name, 0.0))
+                for field_name in (
+                    "rations_al",
+                    "rations_sb",
+                    "rations_sb_dispatch",
+                    "rations_cssu",
+                    "rations_theatre",
+                )
+            )
+        )
 
     def _normalized_cumulative_features(self) -> np.ndarray:
         """Return normalized cumulative diagnostics measured since warmup end."""
@@ -745,9 +851,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
     # ReT_cd: Cobb-Douglas Resilience (Garrido et al. 2024 methodology)
     # -----------------------------------------------------------------
 
-    def _compute_ret_cd(
-        self, info: dict[str, Any], shifts: int
-    ) -> dict[str, float]:
+    def _compute_ret_cd(self, info: dict[str, Any], shifts: int) -> dict[str, float]:
         """
         Cobb-Douglas Resilience reward (ReT_cd).
 
@@ -857,73 +961,151 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         }
 
     # -----------------------------------------------------------------
-    # ReT_garrido2024: Faithful C-D with raw DES variables + sigmoid
+    # ReT_garrido2024: paper-faithful 5-variable C-D family
     # -----------------------------------------------------------------
 
     def _compute_ret_garrido2024(
         self, info: dict[str, Any], shifts: int
-    ) -> dict[str, float]:
+    ) -> dict[str, float | str | dict[str, float] | dict[str, Any]]:
         """
-        Faithful Cobb-Douglas resilience per Garrido et al. (2024, IJPR) Eq. 3-6.
+        Compute the Garrido et al. (2024) Cobb-Douglas resilience family.
 
-        Uses RAW DES output variables (not pre-normalized) and applies the
-        log-linear + sigmoid methodology exactly as described in the paper.
+        This is the explicit five-variable transformation requested by the
+        paper, adapted to the MFSC DES with simulator-compatible semantics:
 
-        Variables (Garrido 2024 mapping to MFSC):
-          ζ = total_inventory        (directly proportional to R)
-          ε = pending_backorder_qty  (inversely proportional)
-          φ = weekly_production_cap  (directly proportional)
-          τ = backlog/demand ratio   (inversely proportional)
-          κ̇ = shift-hours/week      (inversely proportional)
+            ζ = Σ I_t / T
+            ε = Σ B_t / T
+            φ = Σ U_t / T
+            τ = Σ (NR_t / min{GR_t, Θ_t}) / T
+            κ̇ = κ̄ / κ_ref
 
-        Log-linear form (Eq. 4):
-          z = a·ln(ζ) - b·ln(ε) + c·ln(φ) - d·ln(τ) - n·ln(κ̇)
+        DES mapping
+        -----------
+        I_t
+            Finished-goods ration inventory across the downstream rations
+            buffers (`rations_al`, `rations_sb`, `rations_sb_dispatch`,
+            `rations_cssu`, `rations_theatre`).
+        B_t
+            Outstanding delayed-demand stock (`pending_backorder_qty`).
+        U_t
+            Spare production capacity at the assembly line, computed as
+            `max(Θ_t - P_t, 0)` where Θ_t is the step's available assembly
+            capacity and P_t is the step's produced quantity.
+        NR_t
+            `max(GR_t - I_{t-1} + B_{t-1}, 0)`, using current gross demand
+            (`new_demanded`) and the previous step's finished-goods inventory
+            and pending-backorder stock as the closest DES analogues.
+        κ̄
+            Average step cost under the paper's equal-weight assumption:
+            `cp*P_t + cu*U_t + ci*I_t + cb*B_t`, with unavailable APP terms
+            (`H_t`, `L_t`, `O_t`) omitted because they are not modeled in the
+            DES. `κ_ref` comes from the Monte-Carlo calibration file.
 
-        Sigmoid-bounded (Eq. 6):
-          R = 1 / (1 + exp(-z))    ∈ (0, 1)
-
-        Exponents calibrated from 200 episodes (52,000 steps) following
-        Section 3.3: equate each ln-argument to 1/5 at its P99 maximum.
+        Two outputs are produced from the same five variables:
+          - raw product (Eq. 3): training reward candidate
+          - sigmoid(log score) (Eq. 6): paper-facing evaluation index
         """
-        import math
+        eps = 1e-6
+        inventory_detail = info.get("inventory_detail", {})
+        finished_inventory = self._finished_rations_inventory(inventory_detail)
+        pending_backorder_qty = max(0.0, float(info.get("pending_backorder_qty", 0.0)))
+        produced_step = max(0.0, float(info.get("new_produced", 0.0)))
+        available_capacity_step = max(
+            0.0, float(info.get("new_available_assembly_capacity", 0.0))
+        )
+        spare_capacity_step = max(available_capacity_step - produced_step, 0.0)
 
-        total_inv = max(1.0, float(info.get("total_inventory", 1.0)))
-        pending_bo = max(1.0, float(info.get("pending_backorder_qty", 1.0)))
-        new_demanded = max(1.0, float(info.get("new_demanded", 1.0)))
+        gross_requirements = max(0.0, float(info.get("new_demanded", 0.0)))
+        prev_inventory = max(0.0, self._ret_g24_prev_finished_inventory)
+        prev_backorders = max(0.0, self._ret_g24_prev_pending_backorder_qty)
+        net_requirements = max(
+            gross_requirements - prev_inventory + prev_backorders, 0.0
+        )
+        demand_proxy = (
+            gross_requirements if gross_requirements > eps else prev_backorders
+        )
+        tau_denom = max(
+            min(max(demand_proxy, 1.0), max(available_capacity_step, 1.0)),
+            1.0,
+        )
+        tau_step = max(net_requirements / tau_denom, 1.0)
 
-        # Raw C-D variables
-        zeta = total_inv
-        epsilon = pending_bo
-        phi = G24_RATE_PER_HOUR * shifts * 8.0 * 7.0  # weekly capacity
-        tau = max(1.0, pending_bo / new_demanded)
-        kappa_dot = max(1.0, shifts * 8.0 * 7.0)  # shift-hours/week
-
-        # Log-linear score (Garrido 2024 Eq. 4-5)
-        z_score = (
-            G24_A_ZETA * math.log(zeta)
-            - G24_B_EPSILON * math.log(epsilon)
-            + G24_C_PHI * math.log(phi)
-            - G24_D_TAU * math.log(tau)
-            - G24_N_KAPPA * math.log(kappa_dot)
+        step_cost = (
+            G24_COST_PRODUCTION * produced_step
+            + G24_COST_SPARE_CAPACITY * spare_capacity_step
+            + G24_COST_INVENTORY * finished_inventory
+            + G24_COST_BACKORDERS * pending_backorder_qty
         )
 
-        # Sigmoid bounding (Garrido 2024 Eq. 6)
-        r_sigmoid = 1.0 / (1.0 + math.exp(-z_score))
+        self._ret_g24_elapsed_steps += 1
+        self._ret_g24_sum_zeta += finished_inventory
+        self._ret_g24_sum_epsilon += pending_backorder_qty
+        self._ret_g24_sum_phi += spare_capacity_step
+        self._ret_g24_sum_tau += tau_step
+        self._ret_g24_sum_cost += step_cost
+
+        elapsed_steps = max(self._ret_g24_elapsed_steps, 1)
+        zeta_avg = max(eps, self._ret_g24_sum_zeta / elapsed_steps)
+        epsilon_avg = max(eps, self._ret_g24_sum_epsilon / elapsed_steps)
+        phi_avg = max(eps, self._ret_g24_sum_phi / elapsed_steps)
+        tau_avg = max(eps, self._ret_g24_sum_tau / elapsed_steps)
+        average_cost = max(eps, self._ret_g24_sum_cost / elapsed_steps)
+        kappa_dot = max(eps, average_cost / max(self.ret_g24_kappa_ref, eps))
+
+        log_score = float(
+            self.ret_g24_a_zeta * np.log(zeta_avg)
+            - self.ret_g24_b_epsilon * np.log(epsilon_avg)
+            + self.ret_g24_c_phi * np.log(phi_avg)
+            - self.ret_g24_d_tau * np.log(tau_avg)
+            - self.ret_g24_n_kappa * np.log(kappa_dot)
+        )
+        raw_product = float(np.exp(log_score))
+        sigmoid_index = float(1.0 / (1.0 + np.exp(-log_score)))
+
+        self._ret_g24_prev_finished_inventory = finished_inventory
+        self._ret_g24_prev_pending_backorder_qty = pending_backorder_qty
 
         return {
-            "zeta": zeta,
-            "epsilon": epsilon,
-            "phi": phi,
-            "tau": tau,
+            "reward_mode": "ReT_garrido2024",
+            "active_reward_mode": self.reward_mode,
+            "training_reward_recommendation": "ReT_garrido2024_raw",
+            "evaluation_index_recommendation": "ReT_garrido2024",
+            "zeta_avg": zeta_avg,
+            "epsilon_avg": epsilon_avg,
+            "phi_avg": phi_avg,
+            "tau_avg": tau_avg,
             "kappa_dot": kappa_dot,
-            "z_score": z_score,
-            "r_garrido2024": r_sigmoid,
-            "coefficients": {
-                "a_zeta": G24_A_ZETA,
-                "b_epsilon": G24_B_EPSILON,
-                "c_phi": G24_C_PHI,
-                "d_tau": G24_D_TAU,
-                "n_kappa": G24_N_KAPPA,
+            "average_cost": average_cost,
+            "inventory_finished_step": finished_inventory,
+            "pending_backorder_qty_step": pending_backorder_qty,
+            "produced_step": produced_step,
+            "available_capacity_step": available_capacity_step,
+            "spare_capacity_step": spare_capacity_step,
+            "gross_requirements_step": gross_requirements,
+            "net_requirements_step": net_requirements,
+            "tau_step": tau_step,
+            "step_cost": step_cost,
+            "ret_garrido2024_raw_step": raw_product,
+            "ret_garrido2024_sigmoid_step": sigmoid_index,
+            "log_score": log_score,
+            "exponents": {
+                "a_zeta": self.ret_g24_a_zeta,
+                "b_epsilon": self.ret_g24_b_epsilon,
+                "c_phi": self.ret_g24_c_phi,
+                "d_tau": self.ret_g24_d_tau,
+                "n_kappa": self.ret_g24_n_kappa,
+            },
+            "kappa_ref": self.ret_g24_kappa_ref,
+            "target_contribution": self.ret_g24_target,
+            "maxima": self.ret_g24_maxima,
+            "calibration_source": self.ret_g24_calibration_source,
+            "calibration_path": self.ret_g24_calibration_path,
+            "variable_mapping": {
+                "zeta": "avg finished-goods ration inventory since warmup",
+                "epsilon": "avg pending backorder quantity since warmup",
+                "phi": "avg spare assembly capacity since warmup",
+                "tau": "avg net-requirement coverage time proxy since warmup",
+                "kappa_dot": "avg cost normalized by Monte-Carlo reference cost",
             },
         }
 
@@ -1084,6 +1266,12 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self._prev_step_new_demanded = 0.0
         self._prev_step_new_backorder_qty = 0.0
         self._prev_step_disruption_hours = 0.0
+        self._ret_g24_elapsed_steps = 0
+        self._ret_g24_sum_zeta = 0.0
+        self._ret_g24_sum_epsilon = 0.0
+        self._ret_g24_sum_phi = 0.0
+        self._ret_g24_sum_tau = 0.0
+        self._ret_g24_sum_cost = 0.0
         self.sim = MFSCSimulation(
             shifts=1,
             risks_enabled=True,
@@ -1098,6 +1286,11 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self._warmup_cumulative_backorder_qty = float(self.sim.cumulative_backorder_qty)
         self._warmup_total_demanded = float(self.sim.total_demanded)
         self._warmup_cumulative_down_hours = float(self.sim._cumulative_down_hours)
+        warmup_inventory_detail = self.sim._inventory_detail()
+        self._ret_g24_prev_finished_inventory = self._finished_rations_inventory(
+            warmup_inventory_detail
+        )
+        self._ret_g24_prev_pending_backorder_qty = float(self.sim.pending_backorder_qty)
         obs = self._compose_observation(
             np.array(self.sim.get_observation(), dtype=np.float32)
         )
@@ -1240,6 +1433,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         control_components: dict[str, float] | None = None
         ret_cd_components: dict[str, float | str] | None = None
         ret_cd_4v_components: dict[str, float] | None = None
+        ret_g24_components: dict[str, Any] | None = None
         pbrs_shaping_bonus: float = 0.0
         pbrs_base_reward: float = 0.0
         pbrs_phi: float = 0.0
@@ -1261,13 +1455,6 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         elif self._canonical_reward_mode == "ReT_seq_v1":
             ret_seq_components = self._compute_ret_seq_v1(info, shifts)
             reward = float(ret_seq_components["ret_seq_step"])
-            corrected_ret_components = self._compute_ret_thesis_corrected_components(
-                info, self.step_size
-            )
-            ret_components = self._compute_ret_thesis_components(info, self.step_size)
-        elif self._canonical_reward_mode == "ReT_garrido2024":
-            g24_components = self._compute_ret_garrido2024(info, shifts)
-            reward = float(g24_components["r_garrido2024"])
             corrected_ret_components = self._compute_ret_thesis_corrected_components(
                 info, self.step_size
             )
@@ -1297,6 +1484,20 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         elif self._canonical_reward_mode == "ReT_cd":
             ret_cd_4v_components = self._compute_ret_cd(info, shifts)
             reward = float(ret_cd_4v_components["ret_cd_step"])
+            corrected_ret_components = self._compute_ret_thesis_corrected_components(
+                info, self.step_size
+            )
+            ret_components = self._compute_ret_thesis_components(info, self.step_size)
+        elif self._canonical_reward_mode == "ReT_garrido2024_raw":
+            ret_g24_components = self._compute_ret_garrido2024(info, shifts)
+            reward = float(ret_g24_components["ret_garrido2024_raw_step"])
+            corrected_ret_components = self._compute_ret_thesis_corrected_components(
+                info, self.step_size
+            )
+            ret_components = self._compute_ret_thesis_components(info, self.step_size)
+        elif self._canonical_reward_mode == "ReT_garrido2024":
+            ret_g24_components = self._compute_ret_garrido2024(info, shifts)
+            reward = float(ret_g24_components["ret_garrido2024_sigmoid_step"])
             corrected_ret_components = self._compute_ret_thesis_corrected_components(
                 info, self.step_size
             )
@@ -1399,15 +1600,6 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             )
             out_info["ret_thesis_corrected"] = corrected_ret_components
             out_info["ret_components"] = ret_components
-        elif self._canonical_reward_mode == "ReT_garrido2024":
-            out_info["ret_garrido2024_step"] = float(g24_components["r_garrido2024"])
-            out_info["ret_garrido2024_z_score"] = float(g24_components["z_score"])
-            out_info["ret_garrido2024_components"] = g24_components
-            out_info["ret_thesis_corrected_step"] = float(
-                corrected_ret_components["ret_value"]
-            )
-            out_info["ret_thesis_corrected"] = corrected_ret_components
-            out_info["ret_components"] = ret_components
         elif self._canonical_reward_mode in ("control_v1", "control_v1_pbrs"):
             out_info["service_loss_step"] = float(
                 control_components["service_loss_step"]
@@ -1453,9 +1645,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         elif self._canonical_reward_mode == "ReT_cd":
             out_info["ret_cd_step"] = float(ret_cd_4v_components["ret_cd_step"])
             out_info["ret_cd_components"] = ret_cd_4v_components
-            out_info["ret_cd_fill_rate_step"] = float(
-                ret_cd_4v_components["fill_rate"]
-            )
+            out_info["ret_cd_fill_rate_step"] = float(ret_cd_4v_components["fill_rate"])
             out_info["ret_cd_inverse_backlog_step"] = float(
                 ret_cd_4v_components["inverse_backlog"]
             )
@@ -1466,6 +1656,25 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                 ret_cd_4v_components["inverse_cost"]
             )
             out_info["ret_cd_kappa"] = float(self.ret_cd_kappa)
+            out_info["ret_thesis_corrected_step"] = float(
+                corrected_ret_components["ret_value"]
+            )
+            out_info["ret_thesis_corrected"] = corrected_ret_components
+            out_info["ret_components"] = ret_components
+        elif self._canonical_reward_mode in ("ReT_garrido2024_raw", "ReT_garrido2024"):
+            out_info["ret_garrido2024_raw_step"] = float(
+                ret_g24_components["ret_garrido2024_raw_step"]
+            )
+            out_info["ret_garrido2024_sigmoid_step"] = float(
+                ret_g24_components["ret_garrido2024_sigmoid_step"]
+            )
+            out_info["ret_garrido2024_step"] = float(reward)
+            out_info["ret_garrido2024_components"] = ret_g24_components
+            out_info["zeta_avg"] = float(ret_g24_components["zeta_avg"])
+            out_info["epsilon_avg"] = float(ret_g24_components["epsilon_avg"])
+            out_info["phi_avg"] = float(ret_g24_components["phi_avg"])
+            out_info["tau_avg"] = float(ret_g24_components["tau_avg"])
+            out_info["kappa_dot"] = float(ret_g24_components["kappa_dot"])
             out_info["ret_thesis_corrected_step"] = float(
                 corrected_ret_components["ret_value"]
             )

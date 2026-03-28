@@ -397,3 +397,217 @@ def test_run_episodes_uses_terminal_fill_rate_not_flow_ratio() -> None:
     assert row["fill_rate"] == pytest.approx(0.8137193203272498)
     assert row["fill_rate_state_terminal"] == pytest.approx(0.8143486469477659)
     assert row["fill_rate"] > row["flow_fill_rate"]
+
+
+# ---------------------------------------------------------------------------
+# ReT_cd: Cobb-Douglas Resilience (Garrido et al. 2024 methodology)
+# ---------------------------------------------------------------------------
+
+
+def test_ret_cd_bounded_runs_without_error() -> None:
+    """ReT_cd (bounded variant) runs a full episode without error."""
+    env = MFSCGymEnvShifts(
+        reward_mode="ReT_cd",
+        step_size_hours=24,
+        max_steps=5,
+        ret_cd_use_sigmoid=False,
+    )
+    obs, info = env.reset(seed=42)
+    for _ in range(5):
+        obs, reward, terminated, truncated, info = env.step(
+            np.zeros(5, dtype=np.float32)
+        )
+    env.close()
+
+
+def test_ret_cd_sigmoid_runs_without_error() -> None:
+    """ReT_cd (sigmoid variant) runs a full episode without error."""
+    env = MFSCGymEnvShifts(
+        reward_mode="ReT_cd",
+        step_size_hours=24,
+        max_steps=5,
+        ret_cd_use_sigmoid=True,
+    )
+    obs, info = env.reset(seed=42)
+    for _ in range(5):
+        obs, reward, terminated, truncated, info = env.step(
+            np.zeros(5, dtype=np.float32)
+        )
+    env.close()
+
+
+def test_ret_cd_bounded_output_range() -> None:
+    """Bounded ReT_cd reward is in [0, 1] for all steps."""
+    env = MFSCGymEnvShifts(
+        reward_mode="ReT_cd",
+        step_size_hours=24,
+        max_steps=10,
+        risk_level="increased",
+        stochastic_pt=True,
+        ret_cd_use_sigmoid=False,
+    )
+    env.reset(seed=7)
+    for _ in range(10):
+        _, reward, _, _, _ = env.step(np.zeros(5, dtype=np.float32))
+        assert 0.0 <= reward <= 1.0, f"Bounded reward out of range: {reward}"
+    env.close()
+
+
+def test_ret_cd_sigmoid_output_range() -> None:
+    """Sigmoid ReT_cd reward is in (0, 1) for all steps."""
+    env = MFSCGymEnvShifts(
+        reward_mode="ReT_cd",
+        step_size_hours=24,
+        max_steps=10,
+        risk_level="increased",
+        stochastic_pt=True,
+        ret_cd_use_sigmoid=True,
+    )
+    env.reset(seed=7)
+    for _ in range(10):
+        _, reward, _, _, _ = env.step(np.zeros(5, dtype=np.float32))
+        assert 0.0 < reward < 1.0, f"Sigmoid reward out of range: {reward}"
+    env.close()
+
+
+def test_ret_cd_sigmoid_always_leq_bounded() -> None:
+    """Sigmoid variant always produces a value <= bounded variant.
+
+    Because all C-D inputs are in (0, 1], the log-score z is always <= 0.
+    For z <= 0: sigmoid(z) = exp(z)/(1+exp(z)) <= exp(z) = bounded(z).
+    Additionally, sigmoid(z) <= 0.5 always.
+    """
+    env_bounded = MFSCGymEnvShifts(
+        reward_mode="ReT_cd",
+        step_size_hours=24,
+        max_steps=5,
+        risk_level="increased",
+        stochastic_pt=True,
+        ret_cd_use_sigmoid=False,
+    )
+    env_sigmoid = MFSCGymEnvShifts(
+        reward_mode="ReT_cd",
+        step_size_hours=24,
+        max_steps=5,
+        risk_level="increased",
+        stochastic_pt=True,
+        ret_cd_use_sigmoid=True,
+    )
+    env_bounded.reset(seed=42)
+    env_sigmoid.reset(seed=42)
+    for _ in range(5):
+        _, r_bounded, _, _, _ = env_bounded.step(np.zeros(5, dtype=np.float32))
+        _, r_sigmoid, _, _, _ = env_sigmoid.step(np.zeros(5, dtype=np.float32))
+        assert (
+            r_sigmoid <= r_bounded + 1e-9
+        ), f"Sigmoid ({r_sigmoid:.6f}) should be <= bounded ({r_bounded:.6f})"
+        assert r_sigmoid <= 0.5 + 1e-9, f"Sigmoid ({r_sigmoid:.6f}) should be <= 0.5"
+    env_bounded.close()
+    env_sigmoid.close()
+
+
+def test_ret_cd_component_breakdown_in_info() -> None:
+    """ReT_cd info contains the full component breakdown."""
+    env = MFSCGymEnvShifts(
+        reward_mode="ReT_cd",
+        step_size_hours=24,
+        max_steps=2,
+    )
+    env.reset(seed=7)
+    _, _, _, _, info = env.step(np.zeros(5, dtype=np.float32))
+
+    # Top-level component scalars
+    assert "ret_cd_step" in info
+    assert "ret_cd_fill_rate_step" in info
+    assert "ret_cd_inverse_backlog_step" in info
+    assert "ret_cd_spare_capacity_step" in info
+    assert "ret_cd_inverse_cost_step" in info
+    assert "ret_cd_kappa" in info
+
+    # Nested component dict
+    assert "ret_cd_components" in info
+    components = info["ret_cd_components"]
+    assert "fill_rate" in components
+    assert "inverse_backlog" in components
+    assert "spare_capacity" in components
+    assert "inverse_cost" in components
+    assert "log_score" in components
+    assert "ret_cd_step" in components
+    assert "variant" in components
+    assert "exponents" in components
+    assert "kappa" in components
+    assert "bo_norm" in components
+
+    # Audit comparison data
+    assert "ret_thesis_corrected_step" in info
+    assert "ret_components" in info
+
+    env.close()
+
+
+def test_ret_cd_with_varied_actions() -> None:
+    """ReT_cd responds to different shift levels via capacity/cost channels."""
+    env = MFSCGymEnvShifts(
+        reward_mode="ReT_cd",
+        step_size_hours=168,
+        max_steps=3,
+        ret_cd_use_sigmoid=False,
+    )
+    env.reset(seed=42)
+
+    # Action forcing S=1 (shift signal < -0.33)
+    action_s1 = np.array([0.0, 0.0, 0.0, 0.0, -1.0], dtype=np.float32)
+    _, r1, _, _, info1 = env.step(action_s1)
+    assert info1["shifts_active"] == 1
+    assert info1["ret_cd_spare_capacity_step"] == pytest.approx(1.0 / 3.0)
+    assert info1["ret_cd_inverse_cost_step"] == pytest.approx(1.0)
+
+    # Action forcing S=3 (shift signal >= 0.33)
+    action_s3 = np.array([0.0, 0.0, 0.0, 0.0, 1.0], dtype=np.float32)
+    _, r3, _, _, info3 = env.step(action_s3)
+    assert info3["shifts_active"] == 3
+    assert info3["ret_cd_spare_capacity_step"] == pytest.approx(1.0)
+    assert info3["ret_cd_inverse_cost_step"] == pytest.approx(
+        1.0 / (1.0 + 0.20 * (3 - 1) / 2.0)
+    )
+
+    env.close()
+
+
+def test_ret_garrido2024_raw_and_sigmoid_share_same_five_variable_breakdown() -> None:
+    env_raw = MFSCGymEnvShifts(
+        reward_mode="ReT_garrido2024_raw",
+        step_size_hours=24,
+        max_steps=2,
+    )
+    env_sigmoid = MFSCGymEnvShifts(
+        reward_mode="ReT_garrido2024",
+        step_size_hours=24,
+        max_steps=2,
+    )
+
+    env_raw.reset(seed=7)
+    env_sigmoid.reset(seed=7)
+    _, raw_reward, _, _, raw_info = env_raw.step(np.zeros(5, dtype=np.float32))
+    _, sigmoid_reward, _, _, sigmoid_info = env_sigmoid.step(
+        np.zeros(5, dtype=np.float32)
+    )
+
+    raw_components = raw_info["ret_garrido2024_components"]
+    sigmoid_components = sigmoid_info["ret_garrido2024_components"]
+
+    assert raw_info["ret_garrido2024_raw_step"] == pytest.approx(raw_reward)
+    assert sigmoid_info["ret_garrido2024_sigmoid_step"] == pytest.approx(sigmoid_reward)
+    assert 0.0 < sigmoid_reward < 1.0
+    assert raw_components["zeta_avg"] == pytest.approx(sigmoid_components["zeta_avg"])
+    assert raw_components["epsilon_avg"] == pytest.approx(
+        sigmoid_components["epsilon_avg"]
+    )
+    assert raw_components["phi_avg"] == pytest.approx(sigmoid_components["phi_avg"])
+    assert raw_components["tau_avg"] == pytest.approx(sigmoid_components["tau_avg"])
+    assert raw_components["kappa_dot"] == pytest.approx(sigmoid_components["kappa_dot"])
+    assert raw_components["evaluation_index_recommendation"] == "ReT_garrido2024"
+    assert raw_components["training_reward_recommendation"] == "ReT_garrido2024_raw"
+
+    env_raw.close()
+    env_sigmoid.close()

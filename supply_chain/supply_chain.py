@@ -41,7 +41,6 @@ from supply_chain.config import (
     LEAD_TIME_PROMISE,
     RET_RE_MAX,
     RET_RE_RECOVERY,
-    RET_RE_MIN,
 )
 
 RATIONS_PER_HOUR = ASSEMBLY_RATE  # 320.5 rations/hr
@@ -177,6 +176,7 @@ class MFSCSimulation:
         self.total_unattended_orders = 0
         self.warmup_complete = False
         self.warmup_time = 0.0
+        self._cumulative_available_assembly_hours = 0.0
 
         # Time-series (sampled daily)
         self.daily_production = []
@@ -281,10 +281,12 @@ class MFSCSimulation:
         prev_backorders = self.total_backorders
         prev_delivered = self.total_delivered
         prev_demanded = self.total_demanded
+        prev_produced = self.total_produced
         prev_backorder_qty = self.cumulative_backorder_qty
         prev_unattended_orders = self.total_unattended_orders
         prev_pending_backorders = len(self.pending_backorders)
         prev_pending_backorder_qty = self.pending_backorder_qty
+        prev_available_assembly_hours = self._cumulative_available_assembly_hours
         prev_down_hours = self._cumulative_down_hours
         # Flush ongoing disruptions at step start
         for op_id in range(1, 14):
@@ -305,10 +307,17 @@ class MFSCSimulation:
         new_backorders = self.total_backorders - prev_backorders  # order count
         new_delivered = self.total_delivered - prev_delivered  # rations
         new_demanded = self.total_demanded - prev_demanded  # rations
+        new_produced = self.total_produced - prev_produced  # rations
         new_backorder_qty = (
             self.cumulative_backorder_qty - prev_backorder_qty
         )  # rations
         new_unattended_orders = self.total_unattended_orders - prev_unattended_orders
+        new_available_assembly_hours = (
+            self._cumulative_available_assembly_hours - prev_available_assembly_hours
+        )
+        new_available_assembly_capacity = (
+            new_available_assembly_hours * RATIONS_PER_HOUR
+        )
         step_disruption_hours = self._cumulative_down_hours - prev_down_hours
 
         # Proxy reward (default — env.py may override)
@@ -324,8 +333,11 @@ class MFSCSimulation:
             "new_delivered": new_delivered,
             "new_backorders": new_backorders,  # order count
             "new_demanded": new_demanded,  # rations
+            "new_produced": new_produced,  # rations produced at Op5-Op7
             "new_backorder_qty": new_backorder_qty,  # rations short
             "new_unattended_orders": new_unattended_orders,  # order count
+            "new_available_assembly_hours": new_available_assembly_hours,
+            "new_available_assembly_capacity": new_available_assembly_capacity,
             "step_disruption_hours": step_disruption_hours,  # op-hours down
             "total_inventory": total_inventory,
             "inventory_detail": inventory_detail,
@@ -637,6 +649,8 @@ class MFSCSimulation:
             # Skip: assembly line down
             if self._is_down(5) or self._is_down(6) or self._is_down(7):
                 continue
+
+            self._cumulative_available_assembly_hours += 1.0
 
             # Produce
             rm_available = self.raw_material_al.level
