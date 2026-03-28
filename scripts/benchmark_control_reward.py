@@ -489,7 +489,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--reward-mode",
-        choices=["control_v1", "control_v1_pbrs", "ReT_seq_v1"],
+        choices=["control_v1", "control_v1_pbrs", "ReT_seq_v1", "ReT_cd_v1", "ReT_cd_sigmoid"],
         default=BENCHMARK_REWARD_MODE,
         help="Reward mode for training and evaluation.",
     )
@@ -554,7 +554,7 @@ def static_policy_action(policy: str) -> np.ndarray:
 
 
 def make_weight_combos(args: argparse.Namespace) -> list[dict[str, float]]:
-    if args.reward_mode == "ReT_seq_v1":
+    if args.reward_mode in ("ReT_seq_v1", "ReT_cd_v1", "ReT_cd_sigmoid"):
         return [
             {
                 "w_bo": float(args.w_bo[0]),
@@ -680,7 +680,7 @@ def reward_family(reward_mode: str) -> str:
     """Map reward modes to non-comparable objective families."""
     if reward_mode in ("control_v1", "control_v1_pbrs"):
         return "operational_penalty"
-    if reward_mode == "ReT_seq_v1":
+    if reward_mode in ("ReT_seq_v1", "ReT_cd_v1", "ReT_cd_sigmoid"):
         return "resilience_index"
     return "other"
 
