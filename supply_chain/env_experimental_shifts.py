@@ -74,9 +74,12 @@ REWARD_MODE_OPTIONS = (
     "ReT_corrected",
     "ReT_corrected_cost",
     "ReT_seq_v1",
+    "ReT_cd",
     "rt_v0",
     "control_v1",
     "control_v1_pbrs",
+    "ReT_cd_v1",
+    "ReT_cd_sigmoid",
 )
 
 # ReT_seq_v1 defaults (Sequential Operational Resilience)
@@ -84,6 +87,19 @@ RET_SEQ_W_SC = 0.60  # service continuity weight
 RET_SEQ_W_BC = 0.25  # backlog containment weight
 RET_SEQ_W_AE = 0.15  # adaptive efficiency weight
 RET_SEQ_KAPPA = 0.20  # shift cost scaling
+
+# ReT_cd defaults (Cobb-Douglas Resilience, Garrido et al. 2024 methodology)
+RET_CD_A = 0.60  # fill rate exponent (directly proportional)
+RET_CD_B = 0.15  # inverse backlog exponent (inversely proportional)
+RET_CD_C = 0.10  # spare capacity exponent (directly proportional)
+RET_CD_D = 0.15  # inverse cost exponent (inversely proportional)
+RET_CD_KAPPA = 0.20  # cost scaling (same as ret_seq_kappa)
+RET_CD_BO_NORM = 5000.0  # backorder normalization constant (typical demand scale)
+
+# ReT_cd_v1 defaults (Cobb-Douglas continuous bridge for ReT_thesis piecewise)
+RET_CD_W_FR = 0.70   # fill-rate weight (primary service signal)
+RET_CD_W_AT = 0.30   # availability (1 - disruption_frac) weight
+
 PBRS_VARIANT_OPTIONS = ("cumulative", "step_level")
 BASE_OBSERVATION_DIM = 15
 V2_OBSERVATION_DIM = 18
@@ -174,6 +190,17 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         ret_seq_w_bc: float = RET_SEQ_W_BC,
         ret_seq_w_ae: float = RET_SEQ_W_AE,
         ret_seq_kappa: float = RET_SEQ_KAPPA,
+        # --- ReT_cd parameters (Cobb-Douglas resilience) ---
+        ret_cd_use_sigmoid: bool = False,
+        ret_cd_a: float = RET_CD_A,
+        ret_cd_b: float = RET_CD_B,
+        ret_cd_c: float = RET_CD_C,
+        ret_cd_d: float = RET_CD_D,
+        ret_cd_kappa: float = RET_CD_KAPPA,
+        ret_cd_bo_norm: float = RET_CD_BO_NORM,
+        # --- ReT_cd_v1 / ReT_cd_sigmoid parameters ---
+        ret_cd_w_fr: float = RET_CD_W_FR,
+        ret_cd_w_at: float = RET_CD_W_AT,
     ) -> None:
         super().__init__()
         if step_size_hours <= 0:
@@ -248,6 +275,19 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self.ret_seq_w_bc = float(ret_seq_w_bc)
         self.ret_seq_w_ae = float(ret_seq_w_ae)
         self.ret_seq_kappa = float(ret_seq_kappa)
+
+        # ReT_cd params (Cobb-Douglas resilience, Garrido et al. 2024 methodology)
+        self.ret_cd_use_sigmoid = bool(ret_cd_use_sigmoid)
+        self.ret_cd_a = float(ret_cd_a)
+        self.ret_cd_b = float(ret_cd_b)
+        self.ret_cd_c = float(ret_cd_c)
+        self.ret_cd_d = float(ret_cd_d)
+        self.ret_cd_kappa = float(ret_cd_kappa)
+        self.ret_cd_bo_norm = float(ret_cd_bo_norm)
+
+        # ReT_cd_v1 / ReT_cd_sigmoid params
+        self.ret_cd_w_fr = float(ret_cd_w_fr)
+        self.ret_cd_w_at = float(ret_cd_w_at)
 
         self.warmup_hours = float(WARMUP["estimated_deterministic_hrs"])
         if max_steps is None:
@@ -691,6 +731,126 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         }
 
     # -----------------------------------------------------------------
+    # ReT_cd_v1 / ReT_cd_sigmoid: Cobb-Douglas continuous bridge
+    # -----------------------------------------------------------------
+
+    def _compute_ret_cd_v1(
+        self, info: dict[str, Any], step_hours: float
+    ) -> dict[str, float | str]:
+        """
+        ReT_cd_v1: Cobb-Douglas continuous bridge for the piecewise ReT_thesis.
+
+        Motivation
+        ----------
+        ReT_thesis (Garrido-Rios 2017, Eq. 5.5) selects one sub-indicator per
+        step based on disruption state, producing a **piecewise-discontinuous**
+        reward landscape that is theoretically ill-suited for policy-gradient
+        optimization (PPO).  The case-boundary discontinuities create sharp
+        gradients that destabilize training, and the autotomy branch
+        (R = 1 − d_frac) is locally non-monotone relative to the recovery
+        branch (R = 1/(1 + d_frac)).
+
+        The Cobb-Douglas (C-D) form is the standard continuous alternative for
+        multi-factor resilience indices (Garrido et al. 2024, IJPR; Fan et al.
+        2022).  It preserves non-compensability while providing smooth,
+        differentiable signals.
+
+        Formulation
+        -----------
+            FR_t = max(EPS, 1 − backorder_qty / demand)      [thesis Eq. 5.4]
+            AT_t = max(EPS, 1 − disruption_frac)             [availability]
+            R_t  = FR_t^w_fr × AT_t^w_at                    [raw C-D, ∈ (0,1]]
+
+        where w_fr + w_at = 1.0 (frozen: 0.70 / 0.30).
+
+        Why NOT sigmoid here
+        --------------------
+        A sigmoid wrapper is appropriate when the log-linear sum is UNBOUNDED
+        (e.g., Garrido 2024 with macroeconomic variables ζ, ε, φ, τ, κ̇ that
+        can take large values).  Here, FR_t and AT_t are already in [0, 1],
+        so their logs are NEGATIVE.  Sigmoid of a negative value is < 0.5,
+        meaning the best possible reward when FR=1 and disruption=0 would be
+        σ(0) = 0.5 — cutting the effective range in half and creating a
+        systematic negative bias.  Raw C-D is the correct form.
+
+        See `ReT_cd_sigmoid` for the sigmoid variant, included only to document
+        this failure mode empirically.
+
+        Weight justification (0.70 / 0.30)
+        -----------------------------------
+        - FR dominates (0.70): thesis assigns Re^max = 1.0 to no-disruption
+          cases, which are fully service-signal dominated.
+        - Availability secondary (0.30): thesis assigns Re_bar ≈ 0.5 to
+          recovery — partial weight to the disruption dimension.
+        - Weights sum to 1.0 → output is a proper weighted geometric mean
+          in (0, 1].  No additional rescaling required for RL training.
+        """
+        EPS = 1e-6
+
+        demanded = float(info.get("new_demanded", 0.0))
+        backorder_qty = float(info.get("new_backorder_qty", 0.0))
+        disruption_hrs = float(info.get("step_disruption_hours", 0.0))
+        max_op_hours = step_hours * NUM_TRACKED_OPS
+        disruption_frac = min(1.0, disruption_hrs / max(1.0, max_op_hours))
+
+        if demanded > 0:
+            fr_t = max(EPS, 1.0 - backorder_qty / demanded)
+        else:
+            fr_t = 1.0
+
+        at_t = max(EPS, 1.0 - disruption_frac)
+
+        # Raw Cobb-Douglas (log-linear form for numerical stability)
+        log_r = self.ret_cd_w_fr * np.log(fr_t) + self.ret_cd_w_at * np.log(at_t)
+        r_t = float(np.exp(log_r))
+
+        return {
+            "fill_rate_step": fr_t,
+            "availability_step": at_t,
+            "disruption_frac": disruption_frac,
+            "log_r": float(log_r),
+            "ret_cd_step": r_t,
+            "reward_mode": "ReT_cd_v1",
+            "weights": {"w_fr": self.ret_cd_w_fr, "w_at": self.ret_cd_w_at},
+        }
+
+    def _compute_ret_cd_sigmoid(
+        self, info: dict[str, Any], step_hours: float
+    ) -> dict[str, float | str]:
+        """
+        ReT_cd_sigmoid: experimental variant — sigmoid applied to C-D log score.
+
+        NOT RECOMMENDED FOR TRAINING.  Included solely as a comparison to
+        demonstrate the systematic downward bias of sigmoid when inputs are
+        already in [0, 1]:
+
+            FR=1.0, AT=1.0 → log_score = 0.0 → σ(0) = 0.50
+
+        The best achievable reward is 0.50, not 1.0.  This artificially
+        compresses the learning signal and makes convergence harder.
+
+        Formulation
+        -----------
+            log_score = w_fr·ln(FR_t) + w_at·ln(AT_t)   ← always ≤ 0
+            R_t = σ(log_score) = 1 / (1 + exp(−log_score))  ← always ≤ 0.5
+
+        Equivalent to ReT_cd_v1 with an extra sigmoid wrapper.  Uses the same
+        weights (0.70 / 0.30) to isolate the effect of sigmoid on scale.
+        """
+        components = self._compute_ret_cd_v1(info, step_hours)
+        log_r = float(components["log_r"])
+        r_sigmoid = float(1.0 / (1.0 + np.exp(-log_r)))
+        return {
+            **components,
+            "ret_cd_sigmoid_step": r_sigmoid,
+            "ret_cd_raw_step": float(components["ret_cd_step"]),
+            "reward_mode": "ReT_cd_sigmoid",
+            "sigmoid_bias_note": (
+                "sigmoid(log_r) ≤ 0.5 always because log_r ≤ 0 when inputs ∈ (0,1]"
+            ),
+        }
+
+    # -----------------------------------------------------------------
     # PBRS potential function (Ng et al. 1999)
     # -----------------------------------------------------------------
 
@@ -881,6 +1041,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         ret_components: dict[str, float | str] | None = None
         corrected_ret_components: dict[str, float | str] | None = None
         control_components: dict[str, float] | None = None
+        ret_cd_components: dict[str, float | str] | None = None
         pbrs_shaping_bonus: float = 0.0
         pbrs_base_reward: float = 0.0
         pbrs_phi: float = 0.0
@@ -928,6 +1089,20 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                 pbrs_shaping_bonus = self.pbrs_gamma * pbrs_phi - self._prev_phi
                 reward = pbrs_base_reward + pbrs_shaping_bonus
                 self._prev_phi = pbrs_phi
+        elif self._canonical_reward_mode == "ReT_cd_v1":
+            ret_cd_components = self._compute_ret_cd_v1(info, self.step_size)
+            reward = float(ret_cd_components["ret_cd_step"])
+            corrected_ret_components = self._compute_ret_thesis_corrected_components(
+                info, self.step_size
+            )
+            ret_components = self._compute_ret_thesis_components(info, self.step_size)
+        elif self._canonical_reward_mode == "ReT_cd_sigmoid":
+            ret_cd_components = self._compute_ret_cd_sigmoid(info, self.step_size)
+            reward = float(ret_cd_components["ret_cd_sigmoid_step"])
+            corrected_ret_components = self._compute_ret_thesis_corrected_components(
+                info, self.step_size
+            )
+            ret_components = self._compute_ret_thesis_components(info, self.step_size)
         else:
             reward = self._compute_rt_v0(info, shifts)
 
@@ -1054,5 +1229,24 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                     "gamma": self.pbrs_gamma,
                     "variant": self.pbrs_variant,
                 }
+        elif self._canonical_reward_mode in ("ReT_cd_v1", "ReT_cd_sigmoid"):
+            key = (
+                "ret_cd_step"
+                if self._canonical_reward_mode == "ReT_cd_v1"
+                else "ret_cd_sigmoid_step"
+            )
+            out_info["ret_cd_step"] = float(ret_cd_components[key])
+            out_info["ret_cd_components"] = ret_cd_components
+            out_info["ret_cd_fill_rate_step"] = float(
+                ret_cd_components["fill_rate_step"]
+            )
+            out_info["ret_cd_availability_step"] = float(
+                ret_cd_components["availability_step"]
+            )
+            out_info["ret_thesis_corrected_step"] = float(
+                corrected_ret_components["ret_value"]
+            )
+            out_info["ret_thesis_corrected"] = corrected_ret_components
+            out_info["ret_components"] = ret_components
 
         return out_obs, float(reward), bool(terminated), bool(truncated), out_info
