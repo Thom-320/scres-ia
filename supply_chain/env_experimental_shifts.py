@@ -75,6 +75,7 @@ REWARD_MODE_OPTIONS = (
     "ReT_corrected_cost",
     "ReT_seq_v1",
     "ReT_cd",
+    "ReT_garrido2024",
     "rt_v0",
     "control_v1",
     "control_v1_pbrs",
@@ -95,6 +96,16 @@ RET_CD_C = 0.10  # spare capacity exponent (directly proportional)
 RET_CD_D = 0.15  # inverse cost exponent (inversely proportional)
 RET_CD_KAPPA = 0.20  # cost scaling (same as ret_seq_kappa)
 RET_CD_BO_NORM = 5000.0  # backorder normalization constant (typical demand scale)
+
+# ReT_garrido2024: faithful C-D with raw DES variables + sigmoid (Eq. 3-6)
+# Calibrated from 200 episodes (52,000 steps) under increased + stochastic_pt.
+# Method: Garrido et al. (2024, IJPR) Section 3.3 — equate each ln-argument to 1/5.
+G24_A_ZETA = 0.0118    # ζ (inventory) — directly proportional
+G24_B_EPSILON = 0.0167  # ε (backorders) — inversely proportional
+G24_C_PHI = 0.0184      # φ (production capacity) — directly proportional
+G24_D_TAU = 0.0857      # τ (backlog-to-demand ratio) — inversely proportional
+G24_N_KAPPA = 0.0390    # κ̇ (shift-hours cost) — inversely proportional
+G24_RATE_PER_HOUR = 320.5  # assembly rate (rations/hour)
 
 # ReT_cd_v1 defaults (Cobb-Douglas continuous bridge for ReT_thesis piecewise)
 RET_CD_W_FR = 0.70   # fill-rate weight (primary service signal)
@@ -731,6 +742,192 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         }
 
     # -----------------------------------------------------------------
+    # ReT_cd: Cobb-Douglas Resilience (Garrido et al. 2024 methodology)
+    # -----------------------------------------------------------------
+
+    def _compute_ret_cd(
+        self, info: dict[str, Any], shifts: int
+    ) -> dict[str, float]:
+        """
+        Cobb-Douglas Resilience reward (ReT_cd).
+
+        Applies the Garrido et al. (2024, IJPR) Eq. 3-6 methodology to the
+        MFSC DES with four step-level variables:
+
+            r_t = FR^a * IB^b * SC_cap^c * IC^d
+
+        Or in log-linear form:
+
+            ln(r_t) = a*ln(FR) + b*ln(IB) + c*ln(SC_cap) + d*ln(IC)
+
+        **Variant A (bounded, default):** r_t = exp(z), already bounded
+        because all inputs are in (0, 1].
+
+        **Variant B (sigmoid):** r_t = 1 / (1 + exp(-z)), following
+        Garrido 2024 Eq. 6.
+
+        Variable definitions
+        --------------------
+        FR   (fill rate) -- directly proportional to R.
+             Source: 1 - new_backorder_qty / new_demanded.
+             Maps to thesis Eq. 5.4 Re(FRt).
+
+        IB   (inverse backlog) -- inversely proportional to pending BO.
+             Source: 1 / (1 + pending_bo_qty / bo_norm).
+             Maps to thesis Eq. 5.2 Re(RPj): shorter recovery = fewer
+             pending backorders.  Uses 1/(1+x) to maintain inverse
+             proportionality without division-by-zero risk.
+
+        SC_cap (spare capacity) -- directly proportional to R.
+             Source: shifts_active / 3.0 (fraction of max capacity).
+             Maps to thesis Sec. 6.7.4 short-term manufacturing capacity.
+
+        IC   (inverse cost) -- inversely proportional to cost deviation.
+             Source: 1 / (1 + kappa * (shifts - 1) / 2).
+             Maps to thesis Sec. 8.6.2 cost integration.
+
+        Key differences from ReT_seq_v1
+        --------------------------------
+        - 4 variables instead of 3 (separates capacity and cost).
+        - Backlog uses hyperbolic 1/(1+x) form (thesis Eq. 5.2) instead
+          of pre-normalized subtraction.
+        - Capacity enters as a *positive* factor (more shifts = better
+          service) while cost enters as a *negative* factor (more shifts =
+          higher cost).  ReT_seq_v1 combines both into a single AE penalty.
+        - Optional sigmoid bounding (Garrido 2024 Eq. 6).
+
+        Frozen defaults: a=0.60, b=0.15, c=0.10, d=0.15, kappa=0.20.
+        """
+        EPS = 1e-6
+
+        new_demanded = float(info.get("new_demanded", 0.0))
+        new_backorder_qty = float(info.get("new_backorder_qty", 0.0))
+        pending_bo_qty = float(info.get("pending_backorder_qty", 0.0))
+
+        # FR: fill rate (directly proportional)
+        if new_demanded > 0:
+            fr = max(EPS, 1.0 - new_backorder_qty / new_demanded)
+        else:
+            fr = 1.0
+
+        # IB: inverse backlog (inversely proportional, hyperbolic form)
+        ib = 1.0 / (1.0 + pending_bo_qty / self.ret_cd_bo_norm)
+
+        # SC_cap: spare capacity (directly proportional)
+        sc_cap = max(EPS, float(shifts) / 3.0)
+
+        # IC: inverse cost (inversely proportional)
+        ic = 1.0 / (1.0 + self.ret_cd_kappa * (shifts - 1) / 2.0)
+
+        # Log-linear Cobb-Douglas score
+        log_score = float(
+            self.ret_cd_a * np.log(max(EPS, fr))
+            + self.ret_cd_b * np.log(max(EPS, ib))
+            + self.ret_cd_c * np.log(max(EPS, sc_cap))
+            + self.ret_cd_d * np.log(max(EPS, ic))
+        )
+
+        if self.ret_cd_use_sigmoid:
+            # Variant B: sigmoid-bounded (Garrido 2024 Eq. 6)
+            ret_cd_t = float(1.0 / (1.0 + np.exp(-log_score)))
+            variant = "sigmoid"
+        else:
+            # Variant A: bounded C-D (inputs in (0,1] so product in (0,1])
+            ret_cd_t = float(np.exp(log_score))
+            variant = "bounded"
+
+        return {
+            "fill_rate": fr,
+            "inverse_backlog": ib,
+            "spare_capacity": sc_cap,
+            "inverse_cost": ic,
+            "log_score": log_score,
+            "ret_cd_step": ret_cd_t,
+            "variant": variant,
+            "use_sigmoid": self.ret_cd_use_sigmoid,
+            "pending_backorder_qty": pending_bo_qty,
+            "exponents": {
+                "a": self.ret_cd_a,
+                "b": self.ret_cd_b,
+                "c": self.ret_cd_c,
+                "d": self.ret_cd_d,
+            },
+            "kappa": self.ret_cd_kappa,
+            "bo_norm": self.ret_cd_bo_norm,
+        }
+
+    # -----------------------------------------------------------------
+    # ReT_garrido2024: Faithful C-D with raw DES variables + sigmoid
+    # -----------------------------------------------------------------
+
+    def _compute_ret_garrido2024(
+        self, info: dict[str, Any], shifts: int
+    ) -> dict[str, float]:
+        """
+        Faithful Cobb-Douglas resilience per Garrido et al. (2024, IJPR) Eq. 3-6.
+
+        Uses RAW DES output variables (not pre-normalized) and applies the
+        log-linear + sigmoid methodology exactly as described in the paper.
+
+        Variables (Garrido 2024 mapping to MFSC):
+          ζ = total_inventory        (directly proportional to R)
+          ε = pending_backorder_qty  (inversely proportional)
+          φ = weekly_production_cap  (directly proportional)
+          τ = backlog/demand ratio   (inversely proportional)
+          κ̇ = shift-hours/week      (inversely proportional)
+
+        Log-linear form (Eq. 4):
+          z = a·ln(ζ) - b·ln(ε) + c·ln(φ) - d·ln(τ) - n·ln(κ̇)
+
+        Sigmoid-bounded (Eq. 6):
+          R = 1 / (1 + exp(-z))    ∈ (0, 1)
+
+        Exponents calibrated from 200 episodes (52,000 steps) following
+        Section 3.3: equate each ln-argument to 1/5 at its P99 maximum.
+        """
+        import math
+
+        total_inv = max(1.0, float(info.get("total_inventory", 1.0)))
+        pending_bo = max(1.0, float(info.get("pending_backorder_qty", 1.0)))
+        new_demanded = max(1.0, float(info.get("new_demanded", 1.0)))
+
+        # Raw C-D variables
+        zeta = total_inv
+        epsilon = pending_bo
+        phi = G24_RATE_PER_HOUR * shifts * 8.0 * 7.0  # weekly capacity
+        tau = max(1.0, pending_bo / new_demanded)
+        kappa_dot = max(1.0, shifts * 8.0 * 7.0)  # shift-hours/week
+
+        # Log-linear score (Garrido 2024 Eq. 4-5)
+        z_score = (
+            G24_A_ZETA * math.log(zeta)
+            - G24_B_EPSILON * math.log(epsilon)
+            + G24_C_PHI * math.log(phi)
+            - G24_D_TAU * math.log(tau)
+            - G24_N_KAPPA * math.log(kappa_dot)
+        )
+
+        # Sigmoid bounding (Garrido 2024 Eq. 6)
+        r_sigmoid = 1.0 / (1.0 + math.exp(-z_score))
+
+        return {
+            "zeta": zeta,
+            "epsilon": epsilon,
+            "phi": phi,
+            "tau": tau,
+            "kappa_dot": kappa_dot,
+            "z_score": z_score,
+            "r_garrido2024": r_sigmoid,
+            "coefficients": {
+                "a_zeta": G24_A_ZETA,
+                "b_epsilon": G24_B_EPSILON,
+                "c_phi": G24_C_PHI,
+                "d_tau": G24_D_TAU,
+                "n_kappa": G24_N_KAPPA,
+            },
+        }
+
+    # -----------------------------------------------------------------
     # ReT_cd_v1 / ReT_cd_sigmoid: Cobb-Douglas continuous bridge
     # -----------------------------------------------------------------
 
@@ -1042,6 +1239,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         corrected_ret_components: dict[str, float | str] | None = None
         control_components: dict[str, float] | None = None
         ret_cd_components: dict[str, float | str] | None = None
+        ret_cd_4v_components: dict[str, float] | None = None
         pbrs_shaping_bonus: float = 0.0
         pbrs_base_reward: float = 0.0
         pbrs_phi: float = 0.0
@@ -1063,6 +1261,13 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         elif self._canonical_reward_mode == "ReT_seq_v1":
             ret_seq_components = self._compute_ret_seq_v1(info, shifts)
             reward = float(ret_seq_components["ret_seq_step"])
+            corrected_ret_components = self._compute_ret_thesis_corrected_components(
+                info, self.step_size
+            )
+            ret_components = self._compute_ret_thesis_components(info, self.step_size)
+        elif self._canonical_reward_mode == "ReT_garrido2024":
+            g24_components = self._compute_ret_garrido2024(info, shifts)
+            reward = float(g24_components["r_garrido2024"])
             corrected_ret_components = self._compute_ret_thesis_corrected_components(
                 info, self.step_size
             )
@@ -1089,6 +1294,13 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                 pbrs_shaping_bonus = self.pbrs_gamma * pbrs_phi - self._prev_phi
                 reward = pbrs_base_reward + pbrs_shaping_bonus
                 self._prev_phi = pbrs_phi
+        elif self._canonical_reward_mode == "ReT_cd":
+            ret_cd_4v_components = self._compute_ret_cd(info, shifts)
+            reward = float(ret_cd_4v_components["ret_cd_step"])
+            corrected_ret_components = self._compute_ret_thesis_corrected_components(
+                info, self.step_size
+            )
+            ret_components = self._compute_ret_thesis_components(info, self.step_size)
         elif self._canonical_reward_mode == "ReT_cd_v1":
             ret_cd_components = self._compute_ret_cd_v1(info, self.step_size)
             reward = float(ret_cd_components["ret_cd_step"])
@@ -1187,6 +1399,15 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             )
             out_info["ret_thesis_corrected"] = corrected_ret_components
             out_info["ret_components"] = ret_components
+        elif self._canonical_reward_mode == "ReT_garrido2024":
+            out_info["ret_garrido2024_step"] = float(g24_components["r_garrido2024"])
+            out_info["ret_garrido2024_z_score"] = float(g24_components["z_score"])
+            out_info["ret_garrido2024_components"] = g24_components
+            out_info["ret_thesis_corrected_step"] = float(
+                corrected_ret_components["ret_value"]
+            )
+            out_info["ret_thesis_corrected"] = corrected_ret_components
+            out_info["ret_components"] = ret_components
         elif self._canonical_reward_mode in ("control_v1", "control_v1_pbrs"):
             out_info["service_loss_step"] = float(
                 control_components["service_loss_step"]
@@ -1229,6 +1450,27 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                     "gamma": self.pbrs_gamma,
                     "variant": self.pbrs_variant,
                 }
+        elif self._canonical_reward_mode == "ReT_cd":
+            out_info["ret_cd_step"] = float(ret_cd_4v_components["ret_cd_step"])
+            out_info["ret_cd_components"] = ret_cd_4v_components
+            out_info["ret_cd_fill_rate_step"] = float(
+                ret_cd_4v_components["fill_rate"]
+            )
+            out_info["ret_cd_inverse_backlog_step"] = float(
+                ret_cd_4v_components["inverse_backlog"]
+            )
+            out_info["ret_cd_spare_capacity_step"] = float(
+                ret_cd_4v_components["spare_capacity"]
+            )
+            out_info["ret_cd_inverse_cost_step"] = float(
+                ret_cd_4v_components["inverse_cost"]
+            )
+            out_info["ret_cd_kappa"] = float(self.ret_cd_kappa)
+            out_info["ret_thesis_corrected_step"] = float(
+                corrected_ret_components["ret_value"]
+            )
+            out_info["ret_thesis_corrected"] = corrected_ret_components
+            out_info["ret_components"] = ret_components
         elif self._canonical_reward_mode in ("ReT_cd_v1", "ReT_cd_sigmoid"):
             key = (
                 "ret_cd_step"
