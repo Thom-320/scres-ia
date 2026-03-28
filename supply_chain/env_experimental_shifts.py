@@ -63,6 +63,7 @@ import numpy as np
 from gymnasium import spaces
 
 from supply_chain.config import (
+    CAPACITY_BY_SHIFTS,
     DEFAULT_YEAR_BASIS,
     OPERATIONS,
     RET_CASE_THRESHOLDS,
@@ -350,6 +351,21 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self.ret_cd_w_at = float(ret_cd_w_at)
 
         self.warmup_hours = float(WARMUP["estimated_deterministic_hrs"])
+        self._post_warmup_start_time = self.warmup_hours
+        self.priming_shifts = int(WARMUP.get("priming_shifts", 2))
+        self.priming_step_hours = float(WARMUP.get("priming_step_hours", 168.0))
+        self.max_priming_hours = float(WARMUP.get("max_priming_hours", 0.0))
+        self.require_theatre_inventory_for_reset = bool(
+            WARMUP.get("require_theatre_inventory", True)
+        )
+        threshold_map = WARMUP.get("operational_fill_rate_thresholds", {})
+        self.operational_fill_rate_thresholds = {
+            "current": float(threshold_map.get("current", 0.55)),
+            "increased": float(threshold_map.get("increased", 0.40)),
+            "severe": float(threshold_map.get("severe", 0.15)),
+            "severe_extended": float(threshold_map.get("severe_extended", 0.15)),
+            "severe_training": float(threshold_map.get("severe_training", 0.15)),
+        }
         if max_steps is None:
             self.max_steps = int(
                 (SIMULATION_HORIZON - self.warmup_hours) / self.step_size
@@ -462,7 +478,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             float(self.sim._cumulative_down_hours) - self._warmup_cumulative_down_hours,
         )
         elapsed_post_warmup_hours = max(
-            0.0, float(self.sim.env.now) - self.warmup_hours
+            0.0, float(self.sim.env.now) - self._post_warmup_start_time
         )
 
         cum_backorder_rate = min(
@@ -517,11 +533,11 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             return {f"op{op_id}": 0.0 for op_id in range(1, NUM_TRACKED_OPS + 1)}
 
         current_time = float(self.sim.env.now)
-        elapsed_post_warmup_hours = max(0.0, current_time - self.warmup_hours)
+        elapsed_post_warmup_hours = max(0.0, current_time - self._post_warmup_start_time)
         disruption_hours_by_op = {f"op{op_id}": 0.0 for op_id in range(1, 14)}
 
         for event in self.sim.risk_events:
-            overlap_start = max(float(event.start_time), self.warmup_hours)
+            overlap_start = max(float(event.start_time), self._post_warmup_start_time)
             overlap_end = min(float(event.end_time), current_time)
             overlap_duration = max(0.0, overlap_end - overlap_start)
             if overlap_duration <= 0.0:
@@ -532,7 +548,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         for op_id in range(1, 14):
             down_since = self.sim._op_down_since[op_id]
             if self.sim.op_down_count[op_id] > 0 and down_since is not None:
-                overlap_start = max(float(down_since), self.warmup_hours)
+                overlap_start = max(float(down_since), self._post_warmup_start_time)
                 disruption_hours_by_op[f"op{op_id}"] += max(
                     0.0, current_time - overlap_start
                 )
@@ -1283,9 +1299,18 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         )
         self.sim._start_processes()
         self.sim.env.run(until=self.warmup_hours)
+        # Snapshot warmup counters so post-warmup metrics start from zero.
         self._warmup_cumulative_backorder_qty = float(self.sim.cumulative_backorder_qty)
         self._warmup_total_demanded = float(self.sim.total_demanded)
         self._warmup_cumulative_down_hours = float(self.sim._cumulative_down_hours)
+        # Clear pending backorder STOCK inherited from warmup.  Without this,
+        # the agent starts every episode with ~80k pending BO (fill_rate ≈ 0.03),
+        # which drowns all recovery/backlog signals and biases every C-D variant
+        # toward S1 cost-minimization.  The warmup backlog is a simulation
+        # artifact (demand arrived before production pipeline filled), not a
+        # reflection of the policy's performance.
+        self.sim.pending_backorders.clear()
+        self.sim.pending_backorder_qty = 0.0
         warmup_inventory_detail = self.sim._inventory_detail()
         self._ret_g24_prev_finished_inventory = self._finished_rations_inventory(
             warmup_inventory_detail
