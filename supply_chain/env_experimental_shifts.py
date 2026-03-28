@@ -4,11 +4,12 @@ Gymnasium env with 5th action dimension (shift control) and multiple rewards.
 Primary reward: ReT_seq_v1 (Sequential Operational Resilience)
 ================================================================
 The repo's primary training reward is ``ReT_seq_v1`` with κ=0.20.  It extends
-Garrido-Rios (2017) Eq. 5.5 into a smooth, RL-trainable objective via weighted
-geometric aggregation of three resilience sub-indicators:
+Garrido-Rios (2017) Eq. 5.5 into a smooth, RL-trainable objective using a
+**Cobb-Douglas resilience function** (Garrido et al. 2024, IJPR):
 
-    r_t = SC_t^w_sc × BC_t^w_bc × AE_t^w_ae
+    r_t = SC_t^0.60 × BC_t^0.25 × AE_t^0.15
 
+The C-D form ensures non-compensability and smooth gradients for PPO.
 See ``_compute_ret_seq_v1`` for the formal thesis mapping.
 
 Other reward modes (historical / auxiliary):
@@ -565,9 +566,19 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
 
         Primary training reward for the shift-control RL lane.  Extends
         Garrido-Rios (2017) Eq. 5.5 into a smooth, RL-trainable objective
-        via weighted geometric aggregation:
+        using a **Cobb-Douglas (C-D) resilience function** following the
+        methodology of Garrido et al. (2024, IJPR):
 
             r_t = SC_t^w_sc × BC_t^w_bc × AE_t^w_ae
+
+        This is the standard C-D multiplicative form where each factor
+        captures one dimension of resilience.  In log-linear form:
+
+            ln(r_t) = 0.60·ln(SC_t) + 0.25·ln(BC_t) + 0.15·ln(AE_t)
+
+        The C-D form guarantees non-compensability (if any factor → 0,
+        the product → 0) and yields smooth gradients suitable for
+        policy-gradient optimization (PPO).
 
         Frozen defaults: w_sc=0.60, w_bc=0.25, w_ae=0.15, κ=0.20.
 
@@ -613,16 +624,19 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             (Re^min = 0).  Manifests as SC_t → 0 AND BC_t → 0 when the
             system is fully disrupted and not recovering.
 
-        Why geometric aggregation instead of piecewise (Eq. 5.5)
-        ---------------------------------------------------------
+        Why Cobb-Douglas instead of piecewise (Eq. 5.5)
+        --------------------------------------------------
         The thesis Eq. 5.5 selects one sub-indicator per order based on the
         disruption state.  This piecewise structure creates discontinuous
         reward landscapes unsuitable for policy-gradient optimization.
-        Geometric aggregation is a smooth alternative that preserves the
-        key property: *non-compensability* — if any sub-indicator approaches
-        zero, the entire reward approaches zero, regardless of the others.
-        Precedent: the Human Development Index uses geometric aggregation
-        for the same reason (UNDP, 2010).
+
+        The Cobb-Douglas (C-D) form is the standard continuous alternative
+        for multi-factor resilience indices (Garrido et al. 2024, IJPR;
+        Fan et al. 2022; Jandhana et al. 2018).  It preserves the key
+        property: *non-compensability* — if any sub-indicator approaches
+        zero, the entire product approaches zero, regardless of the others.
+        Additional precedent: the Human Development Index uses C-D
+        aggregation for the same reason (UNDP, 2010).
 
         Weight justification (0.60 / 0.25 / 0.15)
         -------------------------------------------
