@@ -231,6 +231,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         ret_g24_c_phi: float = G24_C_PHI,
         ret_g24_d_tau: float = G24_D_TAU,
         ret_g24_n_kappa: float = G24_N_KAPPA,
+        ret_g24_kappa_train_frac: float = 0.20,
         # --- ReT_cd_v1 / ReT_cd_sigmoid parameters ---
         ret_cd_w_fr: float = RET_CD_W_FR,
         ret_cd_w_at: float = RET_CD_W_AT,
@@ -338,6 +339,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self.ret_g24_n_kappa = float(
             calibration.get("n_kappa", calibration.get("kappa_dot", ret_g24_n_kappa))
         )
+        self.ret_g24_kappa_train_frac = float(ret_g24_kappa_train_frac)
         self.ret_g24_target = float(
             calibration.get("target_contribution", G24_EQUATED_TARGET)
         )
@@ -1141,15 +1143,21 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             - self.ret_g24_d_tau * np.log(tau_avg)
             - self.ret_g24_n_kappa * np.log(kappa_dot)
         )
-        # Training variant: drop κ̇ to avoid cost-domination bias.
-        # κ̇ is kept in the full index for audit but excluded from the
-        # training signal because n_kappa (~0.25) dominates all other
-        # exponents and biases PPO toward S1 cost-minimization.
+        # Training variant: include κ̇ at a reduced fraction to prevent
+        # both S1 collapse (full κ̇) and S3 collapse (no κ̇).
+        # ret_g24_kappa_train_frac controls how much of n_kappa to use:
+        #   0.0 → no cost signal (S3 collapse)
+        #   0.2 → light cost pressure (target: balanced mix)
+        #   1.0 → full cost signal (S1 collapse)
+        kappa_train_coeff = self.ret_g24_n_kappa * getattr(
+            self, "ret_g24_kappa_train_frac", 0.20
+        )
         log_score_train = float(
             self.ret_g24_a_zeta * np.log(zeta_avg)
             - self.ret_g24_b_epsilon * np.log(epsilon_avg)
             + self.ret_g24_c_phi * np.log(phi_avg)
             - self.ret_g24_d_tau * np.log(tau_avg)
+            - kappa_train_coeff * np.log(kappa_dot)
         )
         raw_product = float(np.exp(log_score))
         raw_product_train = float(np.exp(log_score_train))
@@ -1501,40 +1509,57 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         }
 
     def step(
-        self, action: np.ndarray
+        self, action: np.ndarray | dict[str, float | int]
     ) -> tuple[np.ndarray, float, bool, bool, dict[str, Any]]:
         if self.sim is None:
             raise RuntimeError("Call reset() before step().")
 
-        action_arr = np.asarray(action, dtype=np.float32)
-        if action_arr.shape != (5,):
-            raise ValueError(f"Action must have shape (5,), got {action_arr.shape}.")
-
-        clipped = np.clip(action_arr, -1.0, 1.0)
         self.current_step += 1
 
-        # Inventory multipliers (dims 0-3)
-        multipliers = 1.25 + 0.75 * clipped[:4]
-        base_op9_min = OPERATIONS[9]["q"][0]
-        base_op9_max = OPERATIONS[9]["q"][1]
-
-        # Shift decision (dim 4): tri-level with hysteresis-friendly bands
-        shift_signal = float(clipped[4])
-        if shift_signal < -0.33:
-            shifts = 1
-        elif shift_signal < 0.33:
-            shifts = 2
+        if isinstance(action, dict):
+            # Benchmark baselines may bypass the RL action mapping and provide
+            # exact thesis-inspired DES controls directly.
+            action_dict = dict(action)
+            shifts = int(
+                action_dict.get("assembly_shifts", self.sim.params["assembly_shifts"])
+            )
+            raw_action_payload: list[float] | dict[str, float | int] = dict(action_dict)
+            clipped_action_payload: list[float] | dict[str, float | int] = dict(
+                action_dict
+            )
         else:
-            shifts = 3
+            action_arr = np.asarray(action, dtype=np.float32)
+            if action_arr.shape != (5,):
+                raise ValueError(
+                    f"Action must have shape (5,), got {action_arr.shape}."
+                )
 
-        action_dict = {
-            "op3_q": OPERATIONS[3]["q"] * float(multipliers[0]),
-            "op9_q_min": base_op9_min * float(multipliers[1]),
-            "op9_q_max": base_op9_max * float(multipliers[1]),
-            "op3_rop": OPERATIONS[3]["rop"] * float(multipliers[2]),
-            "op9_rop": OPERATIONS[9]["rop"] * float(multipliers[3]),
-            "assembly_shifts": shifts,
-        }
+            clipped = np.clip(action_arr, -1.0, 1.0)
+
+            # Inventory multipliers (dims 0-3)
+            multipliers = 1.25 + 0.75 * clipped[:4]
+            base_op9_min = OPERATIONS[9]["q"][0]
+            base_op9_max = OPERATIONS[9]["q"][1]
+
+            # Shift decision (dim 4): tri-level with hysteresis-friendly bands
+            shift_signal = float(clipped[4])
+            if shift_signal < -0.33:
+                shifts = 1
+            elif shift_signal < 0.33:
+                shifts = 2
+            else:
+                shifts = 3
+
+            action_dict = {
+                "op3_q": OPERATIONS[3]["q"] * float(multipliers[0]),
+                "op9_q_min": base_op9_min * float(multipliers[1]),
+                "op9_q_max": base_op9_max * float(multipliers[1]),
+                "op3_rop": OPERATIONS[3]["rop"] * float(multipliers[2]),
+                "op9_rop": OPERATIONS[9]["rop"] * float(multipliers[3]),
+                "assembly_shifts": shifts,
+            }
+            raw_action_payload = action_arr.tolist()
+            clipped_action_payload = clipped.tolist()
         obs, _, terminated, info = self.sim.step(
             action=action_dict,
             step_hours=self.step_size,
@@ -1652,8 +1677,8 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         out_obs = self._compose_observation(np.array(obs, dtype=np.float32))
         out_info: dict[str, Any] = {
             **info,
-            "raw_action": action_arr.tolist(),
-            "clipped_action": clipped.tolist(),
+            "raw_action": raw_action_payload,
+            "clipped_action": clipped_action_payload,
             "reward_mode": self.reward_mode,
             "observation_version": self.observation_version,
             "shifts_active": shifts,
@@ -1782,7 +1807,9 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             out_info["ret_thesis_corrected"] = corrected_ret_components
             out_info["ret_components"] = ret_components
         elif self._canonical_reward_mode in (
-            "ReT_garrido2024_raw", "ReT_garrido2024", "ReT_garrido2024_train",
+            "ReT_garrido2024_raw",
+            "ReT_garrido2024",
+            "ReT_garrido2024_train",
         ):
             out_info["ret_garrido2024_raw_step"] = float(
                 ret_g24_components["ret_garrido2024_raw_step"]

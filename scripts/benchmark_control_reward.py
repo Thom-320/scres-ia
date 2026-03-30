@@ -27,7 +27,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from supply_chain.config import (
     BENCHMARK_REWARD_MODE,
+    CAPACITY_BY_SHIFTS,
     DEFAULT_YEAR_BASIS,
+    OPERATIONS,
     YEAR_BASIS_OPTIONS,
 )
 from supply_chain.external_env_interface import (
@@ -36,11 +38,40 @@ from supply_chain.external_env_interface import (
 )
 
 STATIC_POLICY_ORDER = ("static_s1", "static_s2", "static_s3")
+GARRIDO_POLICY_ORDER = ("garrido_cf_s1", "garrido_cf_s2", "garrido_cf_s3")
+ALL_STATIC_POLICY_ORDER = (*STATIC_POLICY_ORDER, *GARRIDO_POLICY_ORDER)
 RANDOM_POLICY_NAME = "random"
-FIXED_POLICY_ACTIONS: dict[str, np.ndarray] = {
+FIXED_POLICY_ACTIONS: dict[str, np.ndarray | dict[str, float | int]] = {
     "static_s1": np.array([0.0, 0.0, 0.0, 0.0, -1.0], dtype=np.float32),
     "static_s2": np.array([0.0, 0.0, 0.0, 0.0, 0.0], dtype=np.float32),
     "static_s3": np.array([0.0, 0.0, 0.0, 0.0, 1.0], dtype=np.float32),
+    "garrido_cf_s1": {
+        "assembly_shifts": 1,
+        "op3_q": float(CAPACITY_BY_SHIFTS[1]["op3_q"]),
+        "op3_rop": float(OPERATIONS[3]["rop"]),
+        "op9_q_min": float(OPERATIONS[9]["q"][0]),
+        "op9_q_max": float(OPERATIONS[9]["q"][1]),
+        "op9_rop": float(OPERATIONS[9]["rop"]),
+        "batch_size": float(CAPACITY_BY_SHIFTS[1]["op7_q"]),
+    },
+    "garrido_cf_s2": {
+        "assembly_shifts": 2,
+        "op3_q": float(CAPACITY_BY_SHIFTS[2]["op3_q"]),
+        "op3_rop": float(OPERATIONS[3]["rop"]),
+        "op9_q_min": float(OPERATIONS[9]["q"][0]),
+        "op9_q_max": float(OPERATIONS[9]["q"][1]),
+        "op9_rop": float(OPERATIONS[9]["rop"]),
+        "batch_size": float(CAPACITY_BY_SHIFTS[2]["op7_q"]),
+    },
+    "garrido_cf_s3": {
+        "assembly_shifts": 3,
+        "op3_q": float(CAPACITY_BY_SHIFTS[3]["op3_q"]),
+        "op3_rop": float(OPERATIONS[3]["rop"]),
+        "op9_q_min": float(OPERATIONS[9]["q"][0]),
+        "op9_q_max": float(OPERATIONS[9]["q"][1]),
+        "op9_rop": float(OPERATIONS[9]["rop"]),
+        "batch_size": float(CAPACITY_BY_SHIFTS[3]["op7_q"]),
+    },
 }
 
 # ---------------------------------------------------------------------------
@@ -299,19 +330,28 @@ COMPARISON_FIELDNAMES = [
     "learned_ret_thesis_corrected_total_mean",
     "ppo_reward_mean",
     "static_s2_reward_mean",
+    "garrido_cf_s2_reward_mean",
     "best_static_reward_mean",
+    "best_garrido_reward_mean",
     "ppo_fill_rate_mean",
     "static_s2_fill_rate_mean",
+    "garrido_cf_s2_fill_rate_mean",
     "best_static_fill_rate_mean",
+    "best_garrido_fill_rate_mean",
     "ppo_backorder_rate_mean",
     "static_s2_backorder_rate_mean",
+    "garrido_cf_s2_backorder_rate_mean",
     "best_static_backorder_rate_mean",
+    "best_garrido_backorder_rate_mean",
     "ppo_ret_thesis_corrected_total_mean",
     "static_s2_ret_thesis_corrected_total_mean",
+    "garrido_cf_s2_ret_thesis_corrected_total_mean",
     "best_static_ret_thesis_corrected_total_mean",
+    "best_garrido_ret_thesis_corrected_total_mean",
     "ppo_pct_steps_S1_mean",
     "ppo_pct_steps_S2_mean",
     "ppo_pct_steps_S3_mean",
+    "best_garrido_policy",
     "best_heuristic_policy",
     "best_heuristic_reward_mean",
     "best_heuristic_fill_rate_mean",
@@ -322,6 +362,8 @@ COMPARISON_FIELDNAMES = [
     "learned_beats_best_heuristic",
     "learned_beats_best_baseline",
     "ppo_beats_static_s2",
+    "ppo_beats_garrido_cf_s2",
+    "ppo_beats_best_garrido",
     "ppo_beats_best_static",
     "collapsed_to_S1",
     "collapsed_to_S2",
@@ -518,6 +560,16 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--ret-g24-kappa-train-frac",
+        type=float,
+        default=0.20,
+        help=(
+            "Fraction of n_kappa to include in ReT_garrido2024_train. "
+            "0.0 = no cost (S3 collapse), 1.0 = full cost (S1 collapse). "
+            "Default 0.20."
+        ),
+    )
+    parser.add_argument(
         "--pbrs-alpha",
         type=float,
         default=1.0,
@@ -565,10 +617,13 @@ def ci95(values: list[float]) -> tuple[float, float]:
     return float(mean - half), float(mean + half)
 
 
-def static_policy_action(policy: str) -> np.ndarray:
+def static_policy_action(policy: str) -> np.ndarray | dict[str, float | int]:
     if policy not in FIXED_POLICY_ACTIONS:
         raise ValueError(f"Unsupported fixed policy {policy!r}.")
-    return FIXED_POLICY_ACTIONS[policy].copy()
+    action = FIXED_POLICY_ACTIONS[policy]
+    if isinstance(action, np.ndarray):
+        return action.copy()
+    return dict(action)
 
 
 def make_weight_combos(args: argparse.Namespace) -> list[dict[str, float]]:
@@ -632,6 +687,9 @@ def build_env_kwargs(
         calibration_path = getattr(args, "ret_g24_calibration", None)
         kwargs["ret_g24_calibration_path"] = (
             str(calibration_path) if calibration_path is not None else None
+        )
+        kwargs["ret_g24_kappa_train_frac"] = float(
+            getattr(args, "ret_g24_kappa_train_frac", 0.20)
         )
     return kwargs
 
@@ -1436,9 +1494,22 @@ def pick_survivors(
         )
         if s1_row is None or s2_row is None or s3_row is None:
             continue
+        garrido_rows = [
+            policy_lookup(
+                policy_rows,
+                "static_screen",
+                policy,
+                weight_combo,
+                algo=args.algo,
+                frame_stack=int(args.frame_stack),
+                observation_version=str(args.observation_version),
+            )
+            for policy in GARRIDO_POLICY_ORDER
+        ]
 
         # Gather all baseline candidates (static + heuristic).
         baseline_candidates: list[dict[str, Any]] = [s1_row, s2_row, s3_row]
+        baseline_candidates.extend(row for row in garrido_rows if row is not None)
         for h_name in HEURISTIC_POLICY_NAMES:
             h_row = policy_lookup(
                 policy_rows,
@@ -1462,7 +1533,7 @@ def pick_survivors(
             s1_row["fill_rate_mean"]
         )
         if (
-            best_baseline["policy"] != "static_s1"
+            best_baseline["policy"] not in ("static_s1", "garrido_cf_s1")
             and reward_gap > SURVIVOR_REWARD_MARGIN
             and fill_gap > SURVIVOR_FILL_RATE_MARGIN
         ):
@@ -1536,6 +1607,33 @@ def build_comparison_rows(
             algo=args.algo,
             frame_stack=int(args.frame_stack),
             observation_version=str(args.observation_version),
+        )
+        garrido_cf_s2_row = policy_lookup(
+            policy_rows,
+            "static_screen",
+            "garrido_cf_s2",
+            weight_combo,
+            algo=args.algo,
+            frame_stack=int(args.frame_stack),
+            observation_version=str(args.observation_version),
+        )
+        garrido_rows = [
+            policy_lookup(
+                policy_rows,
+                "static_screen",
+                policy,
+                weight_combo,
+                algo=args.algo,
+                frame_stack=int(args.frame_stack),
+                observation_version=str(args.observation_version),
+            )
+            for policy in GARRIDO_POLICY_ORDER
+        ]
+        garrido_rows = [row for row in garrido_rows if row is not None]
+        best_garrido_row = (
+            max(garrido_rows, key=lambda row: float(row["reward_total_mean"]))
+            if garrido_rows
+            else None
         )
         best_row = policy_lookup(
             policy_rows,
@@ -1640,8 +1738,18 @@ def build_comparison_rows(
                 "static_s2_reward_mean": (
                     float(s2_row["reward_total_mean"]) if s2_row else None
                 ),
+                "garrido_cf_s2_reward_mean": (
+                    float(garrido_cf_s2_row["reward_total_mean"])
+                    if garrido_cf_s2_row
+                    else None
+                ),
                 "best_static_reward_mean": (
                     float(best_row["reward_total_mean"]) if best_row else None
+                ),
+                "best_garrido_reward_mean": (
+                    float(best_garrido_row["reward_total_mean"])
+                    if best_garrido_row
+                    else None
                 ),
                 "ppo_fill_rate_mean": (
                     float(learned_row["fill_rate_mean"]) if learned_row else None
@@ -1649,8 +1757,18 @@ def build_comparison_rows(
                 "static_s2_fill_rate_mean": (
                     float(s2_row["fill_rate_mean"]) if s2_row else None
                 ),
+                "garrido_cf_s2_fill_rate_mean": (
+                    float(garrido_cf_s2_row["fill_rate_mean"])
+                    if garrido_cf_s2_row
+                    else None
+                ),
                 "best_static_fill_rate_mean": (
                     float(best_row["fill_rate_mean"]) if best_row else None
+                ),
+                "best_garrido_fill_rate_mean": (
+                    float(best_garrido_row["fill_rate_mean"])
+                    if best_garrido_row
+                    else None
                 ),
                 "ppo_backorder_rate_mean": (
                     float(learned_row["backorder_rate_mean"]) if learned_row else None
@@ -1658,8 +1776,18 @@ def build_comparison_rows(
                 "static_s2_backorder_rate_mean": (
                     float(s2_row["backorder_rate_mean"]) if s2_row else None
                 ),
+                "garrido_cf_s2_backorder_rate_mean": (
+                    float(garrido_cf_s2_row["backorder_rate_mean"])
+                    if garrido_cf_s2_row
+                    else None
+                ),
                 "best_static_backorder_rate_mean": (
                     float(best_row["backorder_rate_mean"]) if best_row else None
+                ),
+                "best_garrido_backorder_rate_mean": (
+                    float(best_garrido_row["backorder_rate_mean"])
+                    if best_garrido_row
+                    else None
                 ),
                 "ppo_ret_thesis_corrected_total_mean": (
                     float(learned_row["ret_thesis_corrected_total_mean"])
@@ -1669,9 +1797,19 @@ def build_comparison_rows(
                 "static_s2_ret_thesis_corrected_total_mean": (
                     float(s2_row["ret_thesis_corrected_total_mean"]) if s2_row else None
                 ),
+                "garrido_cf_s2_ret_thesis_corrected_total_mean": (
+                    float(garrido_cf_s2_row["ret_thesis_corrected_total_mean"])
+                    if garrido_cf_s2_row
+                    else None
+                ),
                 "best_static_ret_thesis_corrected_total_mean": (
                     float(best_row["ret_thesis_corrected_total_mean"])
                     if best_row
+                    else None
+                ),
+                "best_garrido_ret_thesis_corrected_total_mean": (
+                    float(best_garrido_row["ret_thesis_corrected_total_mean"])
+                    if best_garrido_row
                     else None
                 ),
                 "ppo_pct_steps_S1_mean": (
@@ -1682,6 +1820,9 @@ def build_comparison_rows(
                 ),
                 "ppo_pct_steps_S3_mean": (
                     float(learned_row["pct_steps_S3_mean"]) if learned_row else None
+                ),
+                "best_garrido_policy": (
+                    str(best_garrido_row["policy"]) if best_garrido_row else None
                 ),
                 "best_heuristic_policy": (
                     str(best_heuristic_row["policy"]) if best_heuristic_row else None
@@ -1717,6 +1858,12 @@ def build_comparison_rows(
                     learned_row, best_baseline_row
                 ),
                 "ppo_beats_static_s2": compare_policy_to_baseline(learned_row, s2_row),
+                "ppo_beats_garrido_cf_s2": compare_policy_to_baseline(
+                    learned_row, garrido_cf_s2_row
+                ),
+                "ppo_beats_best_garrido": compare_policy_to_baseline(
+                    learned_row, best_garrido_row
+                ),
                 "ppo_beats_best_static": compare_policy_to_baseline(
                     learned_row, best_row
                 ),
@@ -1875,7 +2022,7 @@ def run_benchmark(args: argparse.Namespace) -> dict[str, Any]:
     else:
         for weight_combo in weight_combos:
             for seed in args.seeds:
-                for policy in STATIC_POLICY_ORDER:
+                for policy in ALL_STATIC_POLICY_ORDER:
                     episode_rows.extend(
                         evaluate_policy(
                             "static_screen",
@@ -1959,7 +2106,7 @@ def run_benchmark(args: argparse.Namespace) -> dict[str, Any]:
         cross_phase = f"cross_eval_{eval_rl}"
         for weight_combo_d in weight_combos:
             for seed in args.seeds:
-                for pol in STATIC_POLICY_ORDER:
+                for pol in ALL_STATIC_POLICY_ORDER:
                     episode_rows.extend(
                         evaluate_policy(
                             cross_phase,
@@ -2050,6 +2197,15 @@ def run_benchmark(args: argparse.Namespace) -> dict[str, Any]:
                     risk_level_override=eval_rl,
                     trajectory_sink=proof_trajectory_rows,
                 )
+                evaluate_policy(
+                    proof_phase,
+                    "garrido_cf_s2",
+                    args=proof_args,
+                    weight_combo=representative["weight_combo"],
+                    seed=int(representative["seed"]),
+                    risk_level_override=eval_rl,
+                    trajectory_sink=proof_trajectory_rows,
+                )
 
     seed_rows = aggregate_seed_metrics(episode_rows)
     policy_rows = aggregate_policy_metrics(seed_rows)
@@ -2131,7 +2287,11 @@ def run_benchmark(args: argparse.Namespace) -> dict[str, Any]:
             *(
                 []
                 if args.learned_only
-                else [*STATIC_POLICY_ORDER, *HEURISTIC_POLICY_NAMES, RANDOM_POLICY_NAME]
+                else [
+                    *ALL_STATIC_POLICY_ORDER,
+                    *HEURISTIC_POLICY_NAMES,
+                    RANDOM_POLICY_NAME,
+                ]
             ),
             learned_policy_name(args),
         ],
