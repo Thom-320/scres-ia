@@ -13,6 +13,9 @@ The C-D form ensures non-compensability and smooth gradients for PPO.
 See ``_compute_ret_seq_v1`` for the formal thesis mapping.
 
 Other reward modes (historical / auxiliary):
+  - "ReT_unified_v1": Paper-facing service-first unified resilience reward.
+    Uses thesis-aligned service/recovery terms plus a gated cost factor that
+    only activates when service and recovery are already acceptable.
   - "control_v1": Historical linear control reward.  Retained as comparator.
   - "control_v1_pbrs": control_v1 + PBRS shaping (phase-2 extension).
   - "ReT_garrido2024_raw": Paper-faithful 5-variable Cobb-Douglas raw product
@@ -75,12 +78,13 @@ from supply_chain.config import (
 from supply_chain.supply_chain import MFSCSimulation
 
 NUM_TRACKED_OPS = 13
-OBSERVATION_VERSION_OPTIONS = ("v1", "v2", "v3", "v4")
+OBSERVATION_VERSION_OPTIONS = ("v1", "v2", "v3", "v4", "v5")
 REWARD_MODE_ALIAS_MAP = {"ReT_corrected_cost": "ReT_corrected"}
 REWARD_MODE_OPTIONS = (
     "ReT_thesis",
     "ReT_corrected",
     "ReT_corrected_cost",
+    "ReT_unified_v1",
     "ReT_seq_v1",
     "ReT_cd",
     "ReT_garrido2024_raw",
@@ -98,6 +102,18 @@ RET_SEQ_W_SC = 0.60  # service continuity weight
 RET_SEQ_W_BC = 0.25  # backlog containment weight
 RET_SEQ_W_AE = 0.15  # adaptive efficiency weight
 RET_SEQ_KAPPA = 0.20  # shift cost scaling
+
+# ReT_unified_v1 defaults (paper-facing service-first resilience)
+RET_UNIFIED_W_FR = 0.60
+RET_UNIFIED_W_RC = 0.25
+RET_UNIFIED_W_CE = 0.15
+RET_UNIFIED_THETA_SC = 0.78
+RET_UNIFIED_THETA_BC = 0.78
+RET_UNIFIED_BETA = 12.0
+RET_UNIFIED_KAPPA = 0.20
+RET_UNIFIED_DEFAULT_CALIBRATION_PATH = (
+    Path(__file__).resolve().parent / "data" / "ret_unified_v1_calibration.json"
+)
 
 # ReT_cd defaults (Cobb-Douglas Resilience, Garrido et al. 2024 methodology)
 RET_CD_A = 0.60  # fill rate exponent (directly proportional)
@@ -131,6 +147,7 @@ BASE_OBSERVATION_DIM = 15
 V2_OBSERVATION_DIM = 18
 V3_OBSERVATION_DIM = 20
 V4_OBSERVATION_DIM = 24  # v3 (20) + rations_sb_dispatch + shifts + op1_down + op2_down
+V5_OBSERVATION_DIM = 30  # v4 (24) + 6 cycle-phase signals (sin/cos for op1, op2, week)
 PREV_STEP_DEMAND_SCALE = 18_200.0
 PREV_STEP_BACKORDER_SCALE = 18_200.0
 INVENTORY_NODE_FIELDS: tuple[str, ...] = (
@@ -153,11 +170,12 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
       - v2: v1 + previous-step demand/backorder/disruption diagnostics.
       - v3: v2 + normalized cumulative backorder and disruption features.
       - v4: v3 + current shift plus Op1/Op2 disruption state.
+      - v5: v4 + thesis-faithful cycle/calendar precursor features.
     Action: 5-dimensional [-1, 1].
 
     Parameters
     ----------
-    reward_mode : {"ReT_thesis", "ReT_corrected", "ReT_corrected_cost", "ReT_seq_v1", "ReT_garrido2024_raw", "ReT_garrido2024", "rt_v0", "control_v1", "control_v1_pbrs"}
+    reward_mode : {"ReT_thesis", "ReT_corrected", "ReT_corrected_cost", "ReT_unified_v1", "ReT_seq_v1", "ReT_garrido2024_raw", "ReT_garrido2024", "rt_v0", "control_v1", "control_v1_pbrs"}
         Which reward formulation to use. ``ReT_corrected_cost`` is the
         research-facing alias for the cost-extended corrected thesis lane and
         maps internally to ``ReT_corrected``.
@@ -216,6 +234,12 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         ret_seq_w_bc: float = RET_SEQ_W_BC,
         ret_seq_w_ae: float = RET_SEQ_W_AE,
         ret_seq_kappa: float = RET_SEQ_KAPPA,
+        # --- ReT_unified_v1 parameters ---
+        ret_unified_calibration_path: str | None = None,
+        ret_unified_theta_sc: float | None = None,
+        ret_unified_theta_bc: float | None = None,
+        ret_unified_beta: float | None = None,
+        ret_unified_kappa: float | None = None,
         # --- ReT_cd parameters (Cobb-Douglas resilience) ---
         ret_cd_use_sigmoid: bool = False,
         ret_cd_a: float = RET_CD_A,
@@ -268,11 +292,11 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         if (
             canonical_reward_mode == "control_v1_pbrs"
             and pbrs_variant == "step_level"
-            and observation_version not in ("v2", "v3", "v4")
+            and observation_version not in ("v2", "v3", "v4", "v5")
         ):
             raise ValueError(
                 "PBRS step_level variant requires observation_version='v2' "
-                "or 'v3' "
+                "or later "
                 "because it uses prev_step_backorder_qty_norm (obs[16])."
             )
 
@@ -309,6 +333,40 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self.ret_seq_w_bc = float(ret_seq_w_bc)
         self.ret_seq_w_ae = float(ret_seq_w_ae)
         self.ret_seq_kappa = float(ret_seq_kappa)
+
+        unified_calibration = self._load_ret_unified_calibration(
+            ret_unified_calibration_path
+        )
+        self.ret_unified_calibration_path = unified_calibration.get("calibration_path")
+        self.ret_unified_theta_sc = float(
+            ret_unified_theta_sc
+            if ret_unified_theta_sc is not None
+            else unified_calibration.get("theta_sc", RET_UNIFIED_THETA_SC)
+        )
+        self.ret_unified_theta_bc = float(
+            ret_unified_theta_bc
+            if ret_unified_theta_bc is not None
+            else unified_calibration.get("theta_bc", RET_UNIFIED_THETA_BC)
+        )
+        self.ret_unified_beta = float(
+            ret_unified_beta
+            if ret_unified_beta is not None
+            else unified_calibration.get("beta", RET_UNIFIED_BETA)
+        )
+        self.ret_unified_kappa = float(
+            ret_unified_kappa
+            if ret_unified_kappa is not None
+            else unified_calibration.get("kappa", RET_UNIFIED_KAPPA)
+        )
+        self.ret_unified_w_fr = float(unified_calibration.get("w_fr", RET_UNIFIED_W_FR))
+        self.ret_unified_w_rc = float(unified_calibration.get("w_rc", RET_UNIFIED_W_RC))
+        self.ret_unified_w_ce = float(unified_calibration.get("w_ce", RET_UNIFIED_W_CE))
+        self.ret_unified_selection_rule = str(
+            unified_calibration.get("selection_rule", "built_in_defaults")
+        )
+        self.ret_unified_calibration_source = str(
+            unified_calibration.get("source", "built_in_defaults")
+        )
 
         # ReT_cd params (Cobb-Douglas resilience, Garrido et al. 2024 methodology)
         self.ret_cd_use_sigmoid = bool(ret_cd_use_sigmoid)
@@ -405,6 +463,8 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(5,), dtype=np.float32)
 
     def _observation_dim(self) -> int:
+        if self.observation_version == "v5":
+            return V5_OBSERVATION_DIM
         if self.observation_version == "v4":
             return V4_OBSERVATION_DIM
         if self.observation_version == "v3":
@@ -445,6 +505,37 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             "source": "built_in_paper_coefficients",
             "calibration_path": None,
         }
+
+    @staticmethod
+    def _load_ret_unified_calibration(
+        calibration_path: str | None,
+    ) -> dict[str, Any]:
+        """Load the frozen paper-facing ReT_unified_v1 calibration metadata."""
+        resolved_path = (
+            Path(calibration_path).expanduser().resolve()
+            if calibration_path
+            else RET_UNIFIED_DEFAULT_CALIBRATION_PATH
+        )
+        if resolved_path.exists():
+            payload = json.loads(resolved_path.read_text(encoding="utf-8"))
+            payload["calibration_path"] = str(resolved_path)
+            return payload
+        return {
+            "theta_sc": RET_UNIFIED_THETA_SC,
+            "theta_bc": RET_UNIFIED_THETA_BC,
+            "beta": RET_UNIFIED_BETA,
+            "kappa": RET_UNIFIED_KAPPA,
+            "w_fr": RET_UNIFIED_W_FR,
+            "w_rc": RET_UNIFIED_W_RC,
+            "w_ce": RET_UNIFIED_W_CE,
+            "selection_rule": "built_in_defaults",
+            "source": "built_in_defaults",
+            "calibration_path": None,
+        }
+
+    @staticmethod
+    def _sigmoid(value: float) -> float:
+        return float(1.0 / (1.0 + np.exp(-value)))
 
     @staticmethod
     def _finished_rations_inventory(inventory_detail: dict[str, Any]) -> float:
@@ -643,13 +734,17 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                 ),
             ]
         )
-        if self.observation_version in ("v3", "v4"):
+        if self.observation_version in ("v3", "v4", "v5"):
             augmented_obs = np.concatenate(
                 [augmented_obs, self._normalized_cumulative_features()]
             )
-        if self.observation_version == "v4" and self.sim is not None:
+        if self.observation_version in ("v4", "v5") and self.sim is not None:
             augmented_obs = np.concatenate(
                 [augmented_obs, self.sim.get_observation_v4_extra()]
+            )
+        if self.observation_version == "v5" and self.sim is not None:
+            augmented_obs = np.concatenate(
+                [augmented_obs, self.sim.get_observation_v5_extra()]
             )
         return augmented_obs
 
@@ -793,6 +888,96 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             "weighted_shift_cost": weighted_shift_cost,
             "weighted_disruption": weighted_disruption,
             "reward_total": reward_total,
+        }
+
+    # -----------------------------------------------------------------
+    # ReT_unified_v1: service-first unified resilience
+    # -----------------------------------------------------------------
+
+    def _compute_ret_unified_v1(
+        self, info: dict[str, Any], shifts: int
+    ) -> dict[str, float | dict[str, float] | str]:
+        """
+        Service-first unified resilience reward aligned to Garrido-Rios (2017).
+
+        The function preserves the thesis priority hierarchy:
+            service continuity > recovery > cost efficiency
+
+        Formulation
+        -----------
+            gate_t = σ(β(FR_t - θ_sc)) · σ(β(RC_t - θ_bc))
+            ReT_t = FR_t^0.60 · RC_t^0.25 · CE_t^(0.15 · gate_t)
+
+        where:
+          FR_t
+              Step-level fill-rate term aligned to thesis Eq. 5.4.
+          RC_t
+              Hyperbolic recovery proxy aligned to thesis Eq. 5.2:
+              RC_t = 1 / (1 + pending_backorder_qty / cumulative_demanded)
+          CE_t
+              Cost-efficiency term from the discrete shift decision:
+              CE_t = max(EPS, 1 - κ(S_t - 1) / 2)
+
+        The gate suppresses cost whenever service or recovery are poor. This
+        keeps cost from buying resilience during crisis states while still
+        differentiating S2 from S3 once service is already acceptable.
+        """
+        eps = 1e-6
+        new_demanded = float(info.get("new_demanded", 0.0))
+        new_backorder_qty = float(info.get("new_backorder_qty", 0.0))
+        pending_bo_qty = float(info.get("pending_backorder_qty", 0.0))
+
+        if new_demanded > 0.0:
+            fr_t = max(eps, 1.0 - new_backorder_qty / new_demanded)
+        else:
+            fr_t = 1.0
+
+        cumulative_demanded = max(self._cumulative_demanded_post_warmup(), 1.0)
+        recovery_ratio = max(0.0, pending_bo_qty / cumulative_demanded)
+        rc_t = max(eps, 1.0 / (1.0 + recovery_ratio))
+
+        ce_t = max(eps, 1.0 - self.ret_unified_kappa * (shifts - 1) / 2.0)
+
+        gate_sc = self._sigmoid(
+            self.ret_unified_beta * (fr_t - self.ret_unified_theta_sc)
+        )
+        gate_rc = self._sigmoid(
+            self.ret_unified_beta * (rc_t - self.ret_unified_theta_bc)
+        )
+        gate_t = gate_sc * gate_rc
+        ce_exponent = self.ret_unified_w_ce * gate_t
+        log_ret = float(
+            self.ret_unified_w_fr * np.log(fr_t)
+            + self.ret_unified_w_rc * np.log(rc_t)
+            + ce_exponent * np.log(ce_t)
+        )
+        ret_t = float(np.exp(log_ret))
+
+        return {
+            "reward_mode": "ReT_unified_v1",
+            "ret_unified_step": ret_t,
+            "ret_unified_fr": fr_t,
+            "ret_unified_rc": rc_t,
+            "ret_unified_ce": ce_t,
+            "ret_unified_gate": gate_t,
+            "ret_unified_gate_sc": gate_sc,
+            "ret_unified_gate_rc": gate_rc,
+            "ret_unified_ce_exponent": ce_exponent,
+            "pending_backorder_qty": pending_bo_qty,
+            "cumulative_demanded_post_warmup": cumulative_demanded,
+            "recovery_ratio": recovery_ratio,
+            "theta_sc": self.ret_unified_theta_sc,
+            "theta_bc": self.ret_unified_theta_bc,
+            "beta": self.ret_unified_beta,
+            "kappa": self.ret_unified_kappa,
+            "weights": {
+                "w_fr": self.ret_unified_w_fr,
+                "w_rc": self.ret_unified_w_rc,
+                "w_ce": self.ret_unified_w_ce,
+            },
+            "calibration_source": self.ret_unified_calibration_source,
+            "calibration_path": self.ret_unified_calibration_path,
+            "selection_rule": self.ret_unified_selection_rule,
         }
 
     # -----------------------------------------------------------------
@@ -1170,7 +1355,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         return {
             "reward_mode": "ReT_garrido2024",
             "active_reward_mode": self.reward_mode,
-            "training_reward_recommendation": "ReT_garrido2024_raw",
+            "training_reward_recommendation": "ReT_garrido2024_train",
             "evaluation_index_recommendation": "ReT_garrido2024",
             "zeta_avg": zeta_avg,
             "epsilon_avg": epsilon_avg,
@@ -1473,6 +1658,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             num_raw_materials, 1.0
         )
         op9_dispatch_cap = float(inventory_detail["rations_sb"])
+        cycle_extra = self.sim.get_observation_v5_extra()
 
         return {
             "time": float(self.sim.env.now),
@@ -1506,6 +1692,14 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             "cumulative_disruption_fraction_by_operation": (
                 self._cumulative_disruption_fraction_by_operation()
             ),
+            "cycle_context": {
+                "op1_cycle_phase_norm": float(cycle_extra[0]),
+                "op2_cycle_phase_norm": float(cycle_extra[1]),
+                "workweek_phase_sin_norm": float(cycle_extra[2]),
+                "workweek_phase_cos_norm": float(cycle_extra[3]),
+                "workday_phase_sin_norm": float(cycle_extra[4]),
+                "workday_phase_cos_norm": float(cycle_extra[5]),
+            },
         }
 
     def step(
@@ -1569,6 +1763,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         ret_components: dict[str, float | str] | None = None
         corrected_ret_components: dict[str, float | str] | None = None
         control_components: dict[str, float] | None = None
+        ret_unified_components: dict[str, Any] | None = None
         ret_cd_components: dict[str, float | str] | None = None
         ret_cd_4v_components: dict[str, float] | None = None
         ret_g24_components: dict[str, Any] | None = None
@@ -1589,6 +1784,13 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             ReT_corr = float(corrected_ret_components["ret_value"])
             shift_cost = self.rt_delta * (shifts - 1)
             reward = ReT_corr - shift_cost
+            ret_components = self._compute_ret_thesis_components(info, self.step_size)
+        elif self._canonical_reward_mode == "ReT_unified_v1":
+            ret_unified_components = self._compute_ret_unified_v1(info, shifts)
+            reward = float(ret_unified_components["ret_unified_step"])
+            corrected_ret_components = self._compute_ret_thesis_corrected_components(
+                info, self.step_size
+            )
             ret_components = self._compute_ret_thesis_components(info, self.step_size)
         elif self._canonical_reward_mode == "ReT_seq_v1":
             ret_seq_components = self._compute_ret_seq_v1(info, shifts)
@@ -1690,6 +1892,37 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             ),
         }
         out_info["state_constraint_context"] = self.get_state_constraint_context()
+        if ret_g24_components is None:
+            # Always emit the Garrido 2024 family as an audit signal so
+            # different training rewards can be compared under one external
+            # resilience index.
+            ret_g24_components = self._compute_ret_garrido2024(info, shifts)
+        if ret_unified_components is None:
+            ret_unified_components = self._compute_ret_unified_v1(info, shifts)
+        out_info["ret_unified_step"] = float(ret_unified_components["ret_unified_step"])
+        out_info["ret_unified_fr"] = float(ret_unified_components["ret_unified_fr"])
+        out_info["ret_unified_rc"] = float(ret_unified_components["ret_unified_rc"])
+        out_info["ret_unified_ce"] = float(ret_unified_components["ret_unified_ce"])
+        out_info["ret_unified_gate"] = float(ret_unified_components["ret_unified_gate"])
+        out_info["ret_unified_components"] = ret_unified_components
+        out_info["ret_garrido2024_raw_step"] = float(
+            ret_g24_components["ret_garrido2024_raw_step"]
+        )
+        out_info["ret_garrido2024_train_step"] = float(
+            ret_g24_components["ret_garrido2024_train_step"]
+        )
+        out_info["ret_garrido2024_sigmoid_step"] = float(
+            ret_g24_components["ret_garrido2024_sigmoid_step"]
+        )
+        out_info["ret_garrido2024_sigmoid_train_step"] = float(
+            ret_g24_components["ret_garrido2024_sigmoid_train_step"]
+        )
+        out_info["ret_garrido2024_components"] = ret_g24_components
+        out_info["zeta_avg"] = float(ret_g24_components["zeta_avg"])
+        out_info["epsilon_avg"] = float(ret_g24_components["epsilon_avg"])
+        out_info["phi_avg"] = float(ret_g24_components["phi_avg"])
+        out_info["tau_avg"] = float(ret_g24_components["tau_avg"])
+        out_info["kappa_dot"] = float(ret_g24_components["kappa_dot"])
         if self._canonical_reward_mode == "ReT_thesis":
             out_info["ReT_raw"] = ReT
             out_info["ret_components"] = {
@@ -1727,6 +1960,12 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                 **ret_components,
                 "shift_cost": shift_cost,
             }
+        elif self._canonical_reward_mode == "ReT_unified_v1":
+            out_info["ret_thesis_corrected_step"] = float(
+                corrected_ret_components["ret_value"]
+            )
+            out_info["ret_thesis_corrected"] = corrected_ret_components
+            out_info["ret_components"] = ret_components
         elif self._canonical_reward_mode == "ReT_seq_v1":
             out_info["ret_seq_step"] = float(ret_seq_components["ret_seq_step"])
             out_info["ret_seq_components"] = ret_seq_components
@@ -1811,19 +2050,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             "ReT_garrido2024",
             "ReT_garrido2024_train",
         ):
-            out_info["ret_garrido2024_raw_step"] = float(
-                ret_g24_components["ret_garrido2024_raw_step"]
-            )
-            out_info["ret_garrido2024_sigmoid_step"] = float(
-                ret_g24_components["ret_garrido2024_sigmoid_step"]
-            )
             out_info["ret_garrido2024_step"] = float(reward)
-            out_info["ret_garrido2024_components"] = ret_g24_components
-            out_info["zeta_avg"] = float(ret_g24_components["zeta_avg"])
-            out_info["epsilon_avg"] = float(ret_g24_components["epsilon_avg"])
-            out_info["phi_avg"] = float(ret_g24_components["phi_avg"])
-            out_info["tau_avg"] = float(ret_g24_components["tau_avg"])
-            out_info["kappa_dot"] = float(ret_g24_components["kappa_dot"])
             out_info["ret_thesis_corrected_step"] = float(
                 corrected_ret_components["ret_value"]
             )

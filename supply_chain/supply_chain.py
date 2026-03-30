@@ -27,6 +27,7 @@ from supply_chain.config import (
     CAPACITY_BY_SHIFTS,
     HOURS_PER_SHIFT,
     HOURS_PER_DAY,
+    HOURS_PER_WEEK,
     SIMULATION_HORIZON,
     NUM_RAW_MATERIALS,
     RISKS_CURRENT,
@@ -508,6 +509,77 @@ class MFSCSimulation:
                 self.params["assembly_shifts"] / 3.0,
                 float(self._is_down(1)),
                 float(self._is_down(2)),
+            ],
+            dtype=np.float32,
+        )
+
+    def get_observation_v5_extra(self) -> np.ndarray:
+        """
+        Return 6 research-only cycle features for obs v5.
+
+        [0]  op1_cycle_phase_norm   = (env.now mod op1_rop) / op1_rop
+        [1]  op2_cycle_phase_norm   = (env.now mod op2_rop) / op2_rop
+        [2]  workweek_phase_sin_norm = (sin(2π·week_phase) + 1) / 2
+        [3]  workweek_phase_cos_norm = (cos(2π·week_phase) + 1) / 2
+        [4]  workday_phase_sin_norm  = (sin(2π·day_phase) + 1) / 2
+        [5]  workday_phase_cos_norm  = (cos(2π·day_phase) + 1) / 2
+
+        These features do not change the DES dynamics. They expose the
+        thesis-faithful operational calendar and reorder-cycle phases so
+        adaptive policies can exploit anticipation without modifying the
+        underlying stochastic processes.
+        """
+        op1_rop = max(float(self.params["op1_rop"]), 1.0)
+        op2_rop = max(float(self.params["op2_rop"]), 1.0)
+        now = float(self.env.now)
+        op1_phase = (now % op1_rop) / op1_rop
+        op2_phase = (now % op2_rop) / op2_rop
+        week_phase = (now % HOURS_PER_WEEK) / HOURS_PER_WEEK
+        day_phase = (now % HOURS_PER_DAY) / HOURS_PER_DAY
+        return np.array(
+            [
+                op1_phase,
+                op2_phase,
+                0.5 * (1.0 + float(np.sin(2.0 * np.pi * week_phase))),
+                0.5 * (1.0 + float(np.cos(2.0 * np.pi * week_phase))),
+                0.5 * (1.0 + float(np.sin(2.0 * np.pi * day_phase))),
+                0.5 * (1.0 + float(np.cos(2.0 * np.pi * day_phase))),
+            ],
+            dtype=np.float32,
+        )
+
+    def get_observation_v5_extra(self) -> np.ndarray:
+        """
+        Return anticipatory cycle-phase features for obs v5.
+
+        These are genuinely predictive signals derived from the DES's
+        deterministic cycle structure, NOT externalized memory.  R12 fires
+        on Op1's biannual cycle (ROP=4032h) and R13 fires on Op2's monthly
+        cycle (ROP=672h).  Exposing the phase within each cycle lets RL
+        anticipate when the next procurement/delivery window opens — and
+        therefore when the risk of delay is highest.
+
+        [0]  op1_cycle_phase_sin  — sin(2π × t / 4032)
+        [1]  op1_cycle_phase_cos  — cos(2π × t / 4032)
+        [2]  op2_cycle_phase_sin  — sin(2π × t / 672)
+        [3]  op2_cycle_phase_cos  — cos(2π × t / 672)
+        [4]  week_phase_sin       — sin(2π × t / 168)
+        [5]  week_phase_cos       — cos(2π × t / 168)
+        """
+        import math
+        t = self.env.now
+        OP1_ROP = 4032.0  # biannual procurement cycle
+        OP2_ROP = 672.0   # monthly delivery cycle
+        WEEK = 168.0      # weekly operational cycle
+
+        return np.array(
+            [
+                math.sin(2 * math.pi * t / OP1_ROP),
+                math.cos(2 * math.pi * t / OP1_ROP),
+                math.sin(2 * math.pi * t / OP2_ROP),
+                math.cos(2 * math.pi * t / OP2_ROP),
+                math.sin(2 * math.pi * t / WEEK),
+                math.cos(2 * math.pi * t / WEEK),
             ],
             dtype=np.float32,
         )
