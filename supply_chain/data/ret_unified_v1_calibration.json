@@ -1,0 +1,25 @@
+{
+  "theta_sc": 0.5,
+  "theta_bc": 0.2,
+  "beta": 12.0,
+  "kappa": 0.2,
+  "w_fr": 0.6,
+  "w_rc": 0.25,
+  "w_ce": 0.15,
+  "selection_rule": "1) garrido_cf_s2 > garrido_cf_s3 > garrido_cf_s1; 2) static_s2 > static_s3 > static_s1; 3) S2-S3 >= 1%",
+  "source": "manual_sweep_lower_thresholds",
+  "selection_status": "valid_candidate_s2_optimal",
+  "risk_level": "increased",
+  "stochastic_pt": true,
+  "observation_version": "v4",
+  "step_size_hours": 168.0,
+  "max_steps": 260,
+  "static_rankings": {
+    "S1_reward": 38.2,
+    "S2_reward": 51.9,
+    "S3_reward": 49.6,
+    "S2_minus_S3_margin": 2.4,
+    "ranking": "S2 > S3 > S1"
+  },
+  "rationale": "Original thresholds (0.78/0.78) were above the env operating range, causing gate=0 always. Lowered to match actual fill_rate/recovery levels under increased risk with priming."
+}
