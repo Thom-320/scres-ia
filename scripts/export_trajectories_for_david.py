@@ -49,14 +49,18 @@ def main() -> None:
     )
     parser.add_argument(
         "--reward-mode",
-        default="control_v1",
-        choices=["ReT_thesis", "control_v1"],
+        default="ReT_seq_v1",
+        choices=[
+            "ReT_thesis", "control_v1", "ReT_seq_v1",
+            "ReT_garrido2024_raw", "ReT_garrido2024", "ReT_garrido2024_train",
+            "ReT_unified_v1",
+        ],
         help="Reward mode used while collecting trajectories for external models.",
     )
     parser.add_argument(
         "--observation-version",
         default="v1",
-        choices=["v1", "v2", "v3"],
+        choices=["v1", "v2", "v3", "v4"],
         help="Observation contract version used during collection.",
     )
     args = parser.parse_args()
