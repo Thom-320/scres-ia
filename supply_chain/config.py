@@ -501,6 +501,20 @@ WARMUP = {
     "trigger_op": 9,
     "trigger_quantity": RATIONS_PER_BATCH,
     "estimated_deterministic_hrs": 838.8,
+    # After the thesis warm-up horizon, the RL env performs a short neutral
+    # priming phase so episodes start from an operational state rather than
+    # from the transient startup backlog crisis.
+    "priming_shifts": 2,
+    "priming_step_hours": 168.0,
+    "max_priming_hours": 2016.0,
+    "operational_fill_rate_thresholds": {
+        "current": 0.55,
+        "increased": 0.40,
+        "severe": 0.15,
+        "severe_extended": 0.15,
+        "severe_training": 0.15,
+    },
+    "require_theatre_inventory": True,
 }
 
 

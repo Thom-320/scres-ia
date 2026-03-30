@@ -98,6 +98,7 @@ def build_parser() -> argparse.ArgumentParser:
             "ReT_seq_v1",
             "ReT_garrido2024_raw",
             "ReT_garrido2024",
+            "ReT_garrido2024_train",
             "ReT_cd_v1",
             "ReT_cd_sigmoid",
         ],
@@ -152,7 +153,7 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help=(
             "Optional Garrido-2024 calibration JSON for "
-            "ReT_garrido2024_raw / ReT_garrido2024."
+            "ReT_garrido2024_raw / ReT_garrido2024 / ReT_garrido2024_train."
         ),
     )
     return parser
@@ -251,7 +252,12 @@ def build_benchmark_cli_args(args: argparse.Namespace, run_dir: Path) -> list[st
     if str(args.reward_mode) == "ReT_seq_v1":
         cli_args.extend(["--ret-seq-kappa", str(args.kappa)])
     if (
-        str(args.reward_mode) in ("ReT_garrido2024_raw", "ReT_garrido2024")
+        str(args.reward_mode)
+        in (
+            "ReT_garrido2024_raw",
+            "ReT_garrido2024",
+            "ReT_garrido2024_train",
+        )
         and args.ret_g24_calibration is not None
     ):
         cli_args.extend(["--ret-g24-calibration", str(args.ret_g24_calibration)])

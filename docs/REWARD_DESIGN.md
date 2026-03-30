@@ -147,6 +147,26 @@ Because `FR_t` and `AT_t` already live in `(0, 1]`, the log score is always `≤
 - Keep `ReT_cd_v1` as the thesis-to-continuous ablation and methodological bridge.
 - Keep `ReT_cd_sigmoid` only as a documented comparison showing why the sigmoid wrapper is not the right default for this normalized DES setting.
 
+## Garrido 2024 Paper-Faithful Family
+
+The repo now also includes a **paper-faithful** Garrido et al. (2024) five-variable Cobb-Douglas family, documented in [RET_GARRIDO2024_IMPLEMENTATION.md](/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/docs/RET_GARRIDO2024_IMPLEMENTATION.md).
+
+That family is intentionally split into:
+
+- `ReT_garrido2024_raw`
+  Raw Eq. 3 product, retained as a training-reward candidate
+
+- `ReT_garrido2024`
+  Sigmoid Eq. 6 index, retained as the evaluation/audit index
+
+The five variables are now computed with DES-compatible semantics:
+
+- `ζ`: average finished-goods ration inventory
+- `ε`: average pending backorder quantity
+- `φ`: average spare assembly capacity
+- `τ`: average net-requirement coverage-time proxy
+- `κ̇`: average cost normalized by Monte-Carlo reference cost
+
 ## Future Extensions
 
 ### PBRS (Potential-Based Reward Shaping)

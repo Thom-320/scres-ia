@@ -114,6 +114,31 @@ def test_shift_env_ret_garrido2024_sigmoid_is_bounded() -> None:
     assert info["ret_garrido2024_sigmoid_step"] == pytest.approx(reward)
 
 
+def test_shift_env_reset_primes_to_operational_state() -> None:
+    env = MFSCGymEnvShifts(
+        step_size_hours=168,
+        max_steps=2,
+        reward_mode="control_v1",
+        risk_level="current",
+        stochastic_pt=False,
+    )
+    _, info = env.reset(seed=42)
+    state_context = info["state_constraint_context"]
+    warmup_metadata = info["warmup_metadata"]
+
+    assert info["time"] > env.warmup_hours
+    assert warmup_metadata["primed_ready"] is True
+    assert warmup_metadata["post_warmup_start_time"] == pytest.approx(info["time"])
+    assert state_context["post_warmup_start_time"] == pytest.approx(info["time"])
+    assert (
+        warmup_metadata["reset_operational_context"]["fill_rate"]
+        >= warmup_metadata["operational_fill_rate_threshold"]
+    )
+    assert state_context["inventory_detail"]["rations_theatre"] > 0.0
+    assert state_context["cumulative_demanded_post_warmup"] == pytest.approx(0.0)
+    assert state_context["cumulative_backorder_qty_post_warmup"] == pytest.approx(0.0)
+
+
 def test_shift_env_ret_cd_v1_emits_continuous_resilience_metadata() -> None:
     env = MFSCGymEnvShifts(
         step_size_hours=24,
@@ -258,7 +283,11 @@ def test_train_agent_accepts_ret_cd_sigmoid_on_shift_env() -> None:
 
 def test_train_agent_accepts_ret_garrido2024_variants_on_shift_env() -> None:
     parser = build_parser()
-    for reward_mode in ("ReT_garrido2024_raw", "ReT_garrido2024"):
+    for reward_mode in (
+        "ReT_garrido2024_raw",
+        "ReT_garrido2024",
+        "ReT_garrido2024_train",
+    ):
         args = parser.parse_args(
             ["--env-variant", "shift_control", "--reward-mode", reward_mode]
         )
@@ -268,7 +297,13 @@ def test_train_agent_accepts_ret_garrido2024_variants_on_shift_env() -> None:
         assert env.reward_mode == reward_mode
 
 
-def test_train_agent_passes_ret_g24_calibration_path(tmp_path) -> None:
+@pytest.mark.parametrize(
+    "reward_mode",
+    ["ReT_garrido2024_raw", "ReT_garrido2024", "ReT_garrido2024_train"],
+)
+def test_train_agent_passes_ret_g24_calibration_path(
+    tmp_path, reward_mode: str
+) -> None:
     calibration_path = tmp_path / "ret_g24.json"
     calibration_path.write_text(
         json.dumps(
@@ -290,7 +325,7 @@ def test_train_agent_passes_ret_g24_calibration_path(tmp_path) -> None:
             "--env-variant",
             "shift_control",
             "--reward-mode",
-            "ReT_garrido2024_raw",
+            reward_mode,
             "--ret-g24-calibration",
             str(calibration_path),
         ]

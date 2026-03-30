@@ -179,9 +179,16 @@ def test_v4_observation_contract_exposes_shift_and_upstream_disruption_state() -
     assert len(spec.observation_fields) == 24
     assert obs.shape == (24,)
     assert info["observation_version"] == "v4"
-    assert obs[15:24].tolist() == pytest.approx(
-        [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0 / 3.0, 0.0, 0.0]
+    assert obs[15:20].tolist() == pytest.approx([0.0, 0.0, 0.0, 0.0, 0.0])
+    state_context = info["state_constraint_context"]
+    assert obs[20] == pytest.approx(
+        float(state_context["inventory_detail"]["rations_sb_dispatch"]) / 1e5
     )
+    assert obs[21] == pytest.approx(
+        float(info["warmup_metadata"]["priming_shifts"]) / 3.0
+    )
+    assert 0.0 <= obs[22] <= 1.0
+    assert 0.0 <= obs[23] <= 1.0
 
     next_obs, _, _, _, step_info = env.step([0.0, 0.0, 0.0, 0.0, 0.0])
     assert step_info["observation_version"] == "v4"

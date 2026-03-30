@@ -495,6 +495,7 @@ def build_parser() -> argparse.ArgumentParser:
             "ReT_seq_v1",
             "ReT_garrido2024_raw",
             "ReT_garrido2024",
+            "ReT_garrido2024_train",
             "ReT_cd_v1",
             "ReT_cd_sigmoid",
         ],
@@ -513,7 +514,7 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help=(
             "Optional Garrido-2024 calibration JSON for "
-            "ReT_garrido2024_raw / ReT_garrido2024."
+            "ReT_garrido2024_raw / ReT_garrido2024 / ReT_garrido2024_train."
         ),
     )
     parser.add_argument(
@@ -575,6 +576,7 @@ def make_weight_combos(args: argparse.Namespace) -> list[dict[str, float]]:
         "ReT_seq_v1",
         "ReT_garrido2024_raw",
         "ReT_garrido2024",
+        "ReT_garrido2024_train",
         "ReT_cd_v1",
         "ReT_cd_sigmoid",
     ):
@@ -622,7 +624,11 @@ def build_env_kwargs(
         kwargs["pbrs_variant"] = getattr(args, "pbrs_variant", "cumulative")
     elif reward_mode == "ReT_seq_v1":
         kwargs["ret_seq_kappa"] = getattr(args, "ret_seq_kappa", 0.20)
-    elif reward_mode in ("ReT_garrido2024_raw", "ReT_garrido2024"):
+    elif reward_mode in (
+        "ReT_garrido2024_raw",
+        "ReT_garrido2024",
+        "ReT_garrido2024_train",
+    ):
         calibration_path = getattr(args, "ret_g24_calibration", None)
         kwargs["ret_g24_calibration_path"] = (
             str(calibration_path) if calibration_path is not None else None
@@ -713,6 +719,7 @@ def reward_family(reward_mode: str) -> str:
         "ReT_cd",
         "ReT_garrido2024_raw",
         "ReT_garrido2024",
+        "ReT_garrido2024_train",
         "ReT_cd_v1",
         "ReT_cd_sigmoid",
     ):

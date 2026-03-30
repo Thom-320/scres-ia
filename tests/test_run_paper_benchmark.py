@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 import scripts.run_paper_benchmark as paper_benchmark
 
 
@@ -77,14 +79,24 @@ def test_run_paper_benchmark_parser_accepts_ret_cd_sigmoid() -> None:
 
 
 def test_run_paper_benchmark_parser_accepts_ret_garrido2024_variants() -> None:
-    for reward_mode in ("ReT_garrido2024_raw", "ReT_garrido2024"):
+    for reward_mode in (
+        "ReT_garrido2024_raw",
+        "ReT_garrido2024",
+        "ReT_garrido2024_train",
+    ):
         args = paper_benchmark.build_parser().parse_args(
             ["--label", f"{reward_mode}_run", "--reward-mode", reward_mode]
         )
         assert args.reward_mode == reward_mode
 
 
-def test_build_benchmark_cli_args_passes_ret_g24_calibration(tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    "reward_mode",
+    ["ReT_garrido2024", "ReT_garrido2024_train"],
+)
+def test_build_benchmark_cli_args_passes_ret_g24_calibration(
+    tmp_path: Path, reward_mode: str
+) -> None:
     calibration_path = tmp_path / "ret_g24.json"
     calibration_path.write_text('{"a_zeta": 0.1, "kappa_ref": 10.0}', encoding="utf-8")
     args = paper_benchmark.build_parser().parse_args(
@@ -92,7 +104,7 @@ def test_build_benchmark_cli_args_passes_ret_g24_calibration(tmp_path: Path) -> 
             "--label",
             "ret_g24_eval",
             "--reward-mode",
-            "ReT_garrido2024",
+            reward_mode,
             "--ret-g24-calibration",
             str(calibration_path),
             "--output-root",
@@ -105,7 +117,7 @@ def test_build_benchmark_cli_args_passes_ret_g24_calibration(tmp_path: Path) -> 
     )
     command = paper_benchmark.build_benchmark_command(cli_args)
 
-    assert "--reward-mode ReT_garrido2024" in command
+    assert f"--reward-mode {reward_mode}" in command
     assert f"--ret-g24-calibration {calibration_path}" in command
 
 
