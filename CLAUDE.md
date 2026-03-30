@@ -122,7 +122,13 @@ Four evaluation lanes, each with its own script:
 - **Buffers use `simpy.Container`** (continuous quantities), not `simpy.Store`.
 - **Gym step returns**: always `(observation, reward, terminated, truncated, info)`.
 - **Risk levels**: `current` (Table 6.12 '-'), `increased` ('+'), `severe` ('++' extrapolated). Base env supports current/increased only; shift_control supports all three.
+- **Warmup priming**: After DES warmup (~838h), the env runs an additional priming phase at S=2 (~2000h) to stabilize fill_rate before RL starts. Without this, ~80k pending backorders from warmup drown all reward signals. See `_prime_after_warmup()` in `env_experimental_shifts.py`.
+- **Observation space bounded**: `high=20.0` (not inf). VecNormalize further normalizes during training. R24 contingent demand capped at 5x2600.
 - **`ReT_seq_v1` (κ=0.20) is the primary training reward AND resilience metric**. It unifies the thesis ReT concept (Eq. 5.5) with RL trainability via geometric aggregation. `control_v1` is the historical comparator. `ReT_thesis` is audit-only. Do not train on `ReT_thesis` -- it collapses to S1.
+- **Garrido 2024 C-D family**: `ReT_garrido2024_raw` (5-var raw product), `ReT_garrido2024` (sigmoid eval index), `ReT_garrido2024_train` (cost-excluded training variant). Calibration JSON at `supply_chain/data/ret_garrido2024_calibration.json`. These provide the theoretical bridge to Garrido et al. (2024, IJPR) but do NOT train as well as ReT_seq_v1 due to intermediate-variable bias (spare capacity phi always favors S3).
+- **Reward function zoo**: Many modes exist from iterative development. Only 3 matter for the paper: `ReT_seq_v1` (train), `ReT_garrido2024` (eval), `control_v1` (comparator). The rest are ablation/history.
+- **Adding new reward modes**: Must wire into 4 files: `env_experimental_shifts.py` (REWARD_MODE_OPTIONS + compute + step dispatch + info), `benchmark_control_reward.py` (choices + reward_family + weight_combos + env_kwargs), `train_agent.py` (SHIFT_ENV_REWARD_MODES), `run_paper_benchmark.py` (choices).
+- **Known env issue**: R14 defects are recycled to raw materials instead of discarded. Affects all policies equally. Documented as known simplification.
 - **Benchmark reproducibility**: all benchmark scripts accept `--seeds`, output manifest JSON with commit hash, and support separate train/eval seed offsets.
 - Python 3.11 recommended for SB3 compatibility. Formatting: black. Linting: ruff. Types: mypy.
 
@@ -133,4 +139,5 @@ Four evaluation lanes, each with its own script:
 - **PPO + ReT_seq_v1 (κ=0.20)**: S2-dominant shift mix (65% S2), fill rate ~0.79, balanced service-cost tradeoff. Selected as primary reward.
 - **κ sensitivity**: κ=0.10 too permissive (62% S3), κ=0.20 optimal shift mix, κ=0.30 collapses toward S1 (71%).
 - **Section 4.3 algorithm comparison**: PPO-v1, PPO-v2, PPO+frame-stack, RecurrentPPO evaluated under `increased`/`severe` stress.
-- **Next steps**: Production 500k runs with ReT_seq_v1 κ=0.20, SAC comparison, PBRS as phase-2 extension.
+- **Reward function comparison (2026-03-30)**: ReT_garrido2024_train collapses to S3 (88%) because phi (spare capacity) is directly proportional to resilience. No kappa_train_frac value makes S2 optimal. Outcome-based C-D (ReT_seq_v1) > intermediate-variable C-D (Garrido raw) for training.
+- **Next steps**: Final 500k comparison ReT_seq_v1 vs control_v1 running overnight. SAC comparison, PBRS as phase-2 extension.
