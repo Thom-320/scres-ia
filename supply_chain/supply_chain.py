@@ -20,6 +20,15 @@ from typing import Any, Optional
 from collections import Counter
 
 from supply_chain.config import (
+    ADAPTIVE_BENCHMARK_INITIAL_REGIME,
+    ADAPTIVE_BENCHMARK_MAINTENANCE,
+    ADAPTIVE_BENCHMARK_REGIME_PARAMS,
+    ADAPTIVE_BENCHMARK_REGIMES,
+    ADAPTIVE_BENCHMARK_REVIEW_HOURS,
+    ADAPTIVE_BENCHMARK_TRANSITIONS,
+    ADAPTIVE_BENCHMARK_V2_RECOVERY_MULTIPLIERS,
+    ADAPTIVE_BENCHMARK_V2_RISK_MULTIPLIERS,
+    ADAPTIVE_BENCHMARK_V2_SURGE_SCALE_MULTIPLIER,
     OPERATIONS,
     DEMAND,
     ASSEMBLY_RATE,
@@ -35,6 +44,8 @@ from supply_chain.config import (
     RISKS_SEVERE,
     RISKS_SEVERE_EXTENDED,
     RISKS_SEVERE_TRAINING,
+    TRACK_B_QUEUE_PRESSURE_LOOKAHEAD_CYCLES,
+    TRACK_B_ROLLING_WINDOW_HOURS,
     DEFAULT_YEAR_BASIS,
     HOURS_PER_YEAR_GREGORIAN,
     HOURS_PER_YEAR_THESIS,
@@ -142,8 +153,12 @@ class MFSCSimulation:
             "op9_q_max": OPERATIONS[9]["q"][1],  # 2,600
             "op10_rop": OPERATIONS[10]["rop"],  # 24 hrs
             "op10_pt": OPERATIONS[10]["pt"],  # 24 hrs
+            "op10_q_min": OPERATIONS[10]["q"][0],  # 2,400
+            "op10_q_max": OPERATIONS[10]["q"][1],  # 2,600
             "op12_rop": OPERATIONS[12]["rop"],  # 24 hrs
             "op12_pt": OPERATIONS[12]["pt"],  # 24 hrs
+            "op12_q_min": OPERATIONS[12]["q"][0],  # 2,400
+            "op12_q_max": OPERATIONS[12]["q"][1],  # 2,600
         }
 
         # =================================================================
@@ -200,6 +215,15 @@ class MFSCSimulation:
         self.risk_events = []
         self._contingent_demand_pending = 0
         self._cumulative_down_hours = 0.0  # Accumulated op-hours of disruption
+        self.adaptive_benchmark_enabled = self.risk_level in (
+            "adaptive_benchmark_v1",
+            "adaptive_benchmark_v2",
+        )
+        self.adaptive_benchmark_v2_enabled = self.risk_level == "adaptive_benchmark_v2"
+        self.adaptive_regime = ADAPTIVE_BENCHMARK_INITIAL_REGIME
+        self.adaptive_risk_forecast_48h = 0.0
+        self.adaptive_risk_forecast_168h = 0.0
+        self.maintenance_debt = 0.0
 
         # =================================================================
         # STEP API STATE (Phase 3)
@@ -236,6 +260,8 @@ class MFSCSimulation:
             self.env.process(self._risk_R23())
             self.env.process(self._risk_R24())
             self.env.process(self._risk_R3())
+        if self.adaptive_benchmark_enabled:
+            self.env.process(self._adaptive_regime_controller())
 
         self._processes_started = True
 
@@ -420,6 +446,15 @@ class MFSCSimulation:
         """
         while self.pending_backorders:
             next_order = self.pending_backorders[0]
+            if next_order.remaining_qty <= 0.0:
+                # Order already fully served (edge case from partial fills)
+                next_order.OATj = self.env.now
+                next_order.CTj = self.env.now - next_order.OPTj
+                next_order.backorder = False
+                self._set_order_ret_indicators(next_order)
+                self.pending_backorders.pop(0)
+                self._refresh_pending_backorder_qty()
+                continue
             if self.rations_theatre.level + 1e-9 < next_order.remaining_qty:
                 break
             yield self.rations_theatre.get(next_order.remaining_qty)
@@ -548,38 +583,107 @@ class MFSCSimulation:
             dtype=np.float32,
         )
 
-    def get_observation_v5_extra(self) -> np.ndarray:
+    def get_observation_v6_extra(self) -> np.ndarray:
         """
-        Return anticipatory cycle-phase features for obs v5.
+        Return 10 Track-B adaptive-control features for obs v6.
 
-        These are genuinely predictive signals derived from the DES's
-        deterministic cycle structure, NOT externalized memory.  R12 fires
-        on Op1's biannual cycle (ROP=4032h) and R13 fires on Op2's monthly
-        cycle (ROP=672h).  Exposing the phase within each cycle lets RL
-        anticipate when the next procurement/delivery window opens — and
-        therefore when the risk of delay is highest.
-
-        [0]  op1_cycle_phase_sin  — sin(2π × t / 4032)
-        [1]  op1_cycle_phase_cos  — cos(2π × t / 4032)
-        [2]  op2_cycle_phase_sin  — sin(2π × t / 672)
-        [3]  op2_cycle_phase_cos  — cos(2π × t / 672)
-        [4]  week_phase_sin       — sin(2π × t / 168)
-        [5]  week_phase_cos       — cos(2π × t / 168)
+        [0:5]  operating regime one-hot: nominal, strained, pre_disruption,
+               disrupted, recovery
+        [5]    disruption forecast over next 48h (normalized)
+        [6]    disruption forecast over next 168h (normalized)
+        [7]    maintenance debt carried from sustained S3 usage
+        [8]    average pending-backorder age normalized by config horizon
+        [9]    theatre cover days normalized by config horizon
         """
-        import math
-        t = self.env.now
-        OP1_ROP = 4032.0  # biannual procurement cycle
-        OP2_ROP = 672.0   # monthly delivery cycle
-        WEEK = 168.0      # weekly operational cycle
+        regime_one_hot = np.zeros(len(ADAPTIVE_BENCHMARK_REGIMES), dtype=np.float32)
+        regime_index = ADAPTIVE_BENCHMARK_REGIMES.index(self.adaptive_regime)
+        regime_one_hot[regime_index] = 1.0
+        return np.concatenate(
+            [
+                regime_one_hot,
+                np.array(
+                    [
+                        float(np.clip(self.adaptive_risk_forecast_48h, 0.0, 1.0)),
+                        float(np.clip(self.adaptive_risk_forecast_168h, 0.0, 1.0)),
+                        float(np.clip(self.maintenance_debt, 0.0, 1.0)),
+                        float(np.clip(self._pending_backorder_age_norm(), 0.0, 1.0)),
+                        float(np.clip(self._theatre_cover_days_norm(), 0.0, 1.0)),
+                    ],
+                    dtype=np.float32,
+                ),
+            ]
+        )
 
+    def _rolling_service_metrics(self) -> tuple[float, float]:
+        """Return 4-week rolling fill and backorder rates for Track B."""
+        if not self.orders:
+            return float(self._fill_rate()), float(self._backorder_rate())
+
+        window_start = max(
+            0.0, float(self.env.now) - float(TRACK_B_ROLLING_WINDOW_HOURS)
+        )
+        recent_orders = [
+            order for order in self.orders if float(order.OPTj) >= window_start
+        ]
+        if not recent_orders:
+            return float(self._fill_rate()), float(self._backorder_rate())
+
+        demanded_qty = float(sum(order.quantity for order in recent_orders))
+        filled_qty = float(
+            sum(
+                max(0.0, float(order.quantity) - float(order.remaining_qty))
+                for order in recent_orders
+            )
+        )
+        fill_rate = min(1.0, filled_qty / max(demanded_qty, 1.0))
+        delayed_or_lost = sum(
+            1
+            for order in recent_orders
+            if order.lost
+            or order.backorder
+            or (
+                order.remaining_qty > 0.0
+                and (float(self.env.now) - float(order.OPTj)) > float(order.LTj)
+            )
+        )
+        backorder_rate = min(1.0, delayed_or_lost / max(len(recent_orders), 1))
+        return fill_rate, backorder_rate
+
+    @staticmethod
+    def _queue_pressure_norm(buffer_level: float, dispatch_q_max: float) -> float:
+        """Normalize downstream queue pressure against several dispatch cycles."""
+        norm_capacity = max(
+            1.0,
+            float(dispatch_q_max) * float(TRACK_B_QUEUE_PRESSURE_LOOKAHEAD_CYCLES),
+        )
+        return min(1.0, max(0.0, float(buffer_level)) / norm_capacity)
+
+    def get_observation_v7_extra(self) -> np.ndarray:
+        """
+        Return 6 Track-B bottleneck features for obs v7.
+
+        [0]    op10_down
+        [1]    op12_down
+        [2]    op10_queue_pressure_norm
+        [3]    op12_queue_pressure_norm
+        [4]    rolling_fill_rate_4w
+        [5]    rolling_backorder_rate_4w
+        """
+        rolling_fill_rate, rolling_backorder_rate = self._rolling_service_metrics()
         return np.array(
             [
-                math.sin(2 * math.pi * t / OP1_ROP),
-                math.cos(2 * math.pi * t / OP1_ROP),
-                math.sin(2 * math.pi * t / OP2_ROP),
-                math.cos(2 * math.pi * t / OP2_ROP),
-                math.sin(2 * math.pi * t / WEEK),
-                math.cos(2 * math.pi * t / WEEK),
+                float(self._is_down(10)),
+                float(self._is_down(12)),
+                self._queue_pressure_norm(
+                    self.rations_sb_dispatch.level,
+                    float(self.params["op10_q_max"]),
+                ),
+                self._queue_pressure_norm(
+                    self.rations_cssu.level,
+                    float(self.params["op12_q_max"]),
+                ),
+                float(np.clip(rolling_fill_rate, 0.0, 1.0)),
+                float(np.clip(rolling_backorder_rate, 0.0, 1.0)),
             ],
             dtype=np.float32,
         )
@@ -613,6 +717,115 @@ class MFSCSimulation:
     def _is_work_hour(self, hour_of_day: float) -> bool:
         """Work hours: 0-7 (8h shift for S=1), 0-15 (S=2), 0-23 (S=3)."""
         return hour_of_day < (HOURS_PER_SHIFT * self.params["assembly_shifts"])
+
+    def _adaptive_regime_params(self) -> dict[str, float]:
+        return ADAPTIVE_BENCHMARK_REGIME_PARAMS[self.adaptive_regime]
+
+    def _adaptive_expected_intensity(self, regime: str) -> float:
+        return float(
+            ADAPTIVE_BENCHMARK_REGIME_PARAMS[regime]["risk_intensity"]
+        ) / float(ADAPTIVE_BENCHMARK_REGIME_PARAMS["disrupted"]["risk_intensity"])
+
+    def _adaptive_risk_intensity_for(self, risk_id: str) -> float:
+        """Return adaptive risk intensity, with Track B v2 downstream uplift."""
+        intensity = float(self._adaptive_regime_params()["risk_intensity"])
+        if self.adaptive_benchmark_v2_enabled:
+            intensity *= float(ADAPTIVE_BENCHMARK_V2_RISK_MULTIPLIERS.get(risk_id, 1.0))
+        return intensity
+
+    def _adaptive_recovery_scale_for(self, risk_id: str) -> float:
+        """Return adaptive recovery scaling, with Track B v2 downstream uplift."""
+        recovery_scale = float(self._adaptive_regime_params()["recovery_scale"])
+        if self.adaptive_benchmark_v2_enabled:
+            recovery_scale *= float(
+                ADAPTIVE_BENCHMARK_V2_RECOVERY_MULTIPLIERS.get(risk_id, 1.0)
+            )
+        return recovery_scale
+
+    def _adaptive_surge_scale(self) -> float:
+        """Return adaptive surge scaling, with Track B v2 demand uplift."""
+        surge_scale = float(self._adaptive_regime_params()["surge_scale"])
+        if self.adaptive_benchmark_v2_enabled:
+            surge_scale *= float(ADAPTIVE_BENCHMARK_V2_SURGE_SCALE_MULTIPLIER)
+        return surge_scale
+
+    def _update_adaptive_forecasts(self) -> None:
+        """Refresh noisy but informative disruption forecasts for v6."""
+        current_params = self._adaptive_regime_params()
+        transitions = ADAPTIVE_BENCHMARK_TRANSITIONS[self.adaptive_regime]
+        next_intensity = 0.0
+        for next_regime, prob in transitions.items():
+            next_intensity += prob * self._adaptive_expected_intensity(next_regime)
+        current_intensity = self._adaptive_expected_intensity(self.adaptive_regime)
+        noise_std = float(ADAPTIVE_BENCHMARK_MAINTENANCE["forecast_noise_std"])
+        forecast_48h = next_intensity + float(self.rng.normal(0.0, noise_std))
+        forecast_168h = (
+            0.35 * current_intensity
+            + 0.65 * next_intensity
+            + 0.15 * float(current_params["forecast_base"])
+            + float(self.rng.normal(0.0, noise_std))
+        )
+        self.adaptive_risk_forecast_48h = float(np.clip(forecast_48h, 0.0, 1.0))
+        self.adaptive_risk_forecast_168h = float(np.clip(forecast_168h, 0.0, 1.0))
+
+    def _adaptive_regime_controller(self):
+        """Persistent regime process for the adaptive benchmark lane."""
+        self._update_adaptive_forecasts()
+        review_hours = float(ADAPTIVE_BENCHMARK_REVIEW_HOURS)
+        while True:
+            yield self.env.timeout(review_hours)
+            transitions = ADAPTIVE_BENCHMARK_TRANSITIONS[self.adaptive_regime]
+            next_regimes = tuple(transitions.keys())
+            probs = np.array(tuple(transitions.values()), dtype=float)
+            probs = probs / probs.sum()
+            self.adaptive_regime = str(self.rng.choice(next_regimes, p=probs))
+            self._update_adaptive_forecasts()
+
+    def _pending_backorder_age_norm(self) -> float:
+        if not self.pending_backorders:
+            return 0.0
+        avg_age = float(
+            np.mean(
+                [
+                    max(0.0, self.env.now - order.OPTj)
+                    for order in self.pending_backorders
+                ]
+            )
+        )
+        norm_hours = float(ADAPTIVE_BENCHMARK_MAINTENANCE["backlog_age_norm_hours"])
+        return min(1.0, avg_age / max(norm_hours, 1.0))
+
+    def _theatre_cover_days_norm(self) -> float:
+        mean_daily_demand = 0.5 * float(DEMAND["a"] + DEMAND["b"])
+        current_scale = (
+            float(self._adaptive_regime_params()["demand_scale"])
+            if self.adaptive_benchmark_enabled
+            else 1.0
+        )
+        effective_daily_demand = max(1.0, mean_daily_demand * current_scale)
+        cover_days = float(self.rations_theatre.level) / effective_daily_demand
+        norm_days = float(ADAPTIVE_BENCHMARK_MAINTENANCE["theatre_cover_norm_days"])
+        return min(1.0, cover_days / max(norm_days, 1.0))
+
+    def _apply_maintenance_debt(self, shifts: int) -> None:
+        if shifts >= 3:
+            self.maintenance_debt = min(
+                1.0,
+                self.maintenance_debt
+                + float(ADAPTIVE_BENCHMARK_MAINTENANCE["s3_debt_gain_per_hour"]),
+            )
+        elif shifts == 2:
+            self.maintenance_debt = max(
+                0.0,
+                self.maintenance_debt
+                - float(ADAPTIVE_BENCHMARK_MAINTENANCE["s2_debt_decay_per_hour"]),
+            )
+        else:
+            self.maintenance_debt = max(
+                0.0,
+                self.maintenance_debt
+                - float(ADAPTIVE_BENCHMARK_MAINTENANCE["s1_debt_decay_per_hour"]),
+            )
 
     # =====================================================================
     # STOCHASTIC PROCESSING TIMES
@@ -723,10 +936,18 @@ class MFSCSimulation:
                 continue
 
             self._cumulative_available_assembly_hours += 1.0
+            if self.adaptive_benchmark_enabled:
+                self._apply_maintenance_debt(int(shifts))
 
             # Produce
             rm_available = self.raw_material_al.level
-            can_produce = min(RATIONS_PER_HOUR, rm_available)
+            effective_rate = RATIONS_PER_HOUR
+            if self.adaptive_benchmark_enabled:
+                penalty = float(
+                    ADAPTIVE_BENCHMARK_MAINTENANCE["throughput_penalty_max"]
+                )
+                effective_rate *= max(0.0, 1.0 - penalty * self.maintenance_debt)
+            can_produce = min(effective_rate, rm_available)
 
             if can_produce > 0:
                 yield self.raw_material_al.get(can_produce)
@@ -787,8 +1008,8 @@ class MFSCSimulation:
             yield self.env.timeout(self.params["op10_rop"])
             if self._is_down(10):
                 continue
-            q_min = OPERATIONS[10]["q"][0]
-            q_max = OPERATIONS[10]["q"][1]
+            q_min = int(round(float(self.params["op10_q_min"])))
+            q_max = int(round(float(self.params["op10_q_max"])))
             available = self.rations_sb_dispatch.level
             if available > 0:
                 target = self._select_uniform_discrete(q_min, q_max)
@@ -809,8 +1030,8 @@ class MFSCSimulation:
             yield self.env.timeout(self.params["op12_rop"])
             if self._is_down(12) or self._is_down(11):
                 continue
-            q_min = OPERATIONS[12]["q"][0]
-            q_max = OPERATIONS[12]["q"][1]
+            q_min = int(round(float(self.params["op12_q_min"])))
+            q_max = int(round(float(self.params["op12_q_max"])))
             available = self.rations_cssu.level
             if available > 0:
                 target = self._select_uniform_discrete(q_min, q_max)
@@ -843,6 +1064,9 @@ class MFSCSimulation:
                 continue
 
             demand_qty = float(self._select_uniform_discrete(DEMAND["a"], DEMAND["b"]))
+            if self.adaptive_benchmark_enabled:
+                demand_scale = float(self._adaptive_regime_params()["demand_scale"])
+                demand_qty *= demand_scale
             contingent_qty = float(self._contingent_demand_pending)
             if contingent_qty > 0:
                 demand_qty += contingent_qty
@@ -889,31 +1113,52 @@ class MFSCSimulation:
 
     def _get_risk_b(self, risk_id: str) -> float:
         table = self._RISK_TABLES.get(self.risk_level)
+        base_a = RISKS_CURRENT[risk_id]["occurrence"]["a"]
         if table and risk_id in table:
-            return table[risk_id].get("b", RISKS_CURRENT[risk_id]["occurrence"]["b"])
-        return RISKS_CURRENT[risk_id]["occurrence"]["b"]
+            base_b = table[risk_id].get("b", RISKS_CURRENT[risk_id]["occurrence"]["b"])
+        else:
+            base_b = RISKS_CURRENT[risk_id]["occurrence"]["b"]
+        if self.adaptive_benchmark_enabled:
+            intensity = self._adaptive_risk_intensity_for(risk_id)
+            return max(float(base_a), round(float(base_b) / max(intensity, 1e-6)))
+        return float(base_b)
 
     def _get_risk_p(self, risk_id: str) -> float:
         table = self._RISK_TABLES.get(self.risk_level)
         if table and risk_id in table:
-            return table[risk_id].get("p", RISKS_CURRENT[risk_id]["occurrence"]["p"])
-        return RISKS_CURRENT[risk_id]["occurrence"]["p"]
+            base_p = table[risk_id].get("p", RISKS_CURRENT[risk_id]["occurrence"]["p"])
+        else:
+            base_p = RISKS_CURRENT[risk_id]["occurrence"]["p"]
+        if self.adaptive_benchmark_enabled:
+            intensity = self._adaptive_risk_intensity_for(risk_id)
+            return min(0.98, float(base_p) * intensity)
+        return float(base_p)
 
     def _get_risk_recovery_mean(self, risk_id: str) -> float:
         table = self._RISK_TABLES.get(self.risk_level)
         if table and risk_id in table:
-            return table[risk_id].get(
+            base_mean = table[risk_id].get(
                 "recovery_mean", RISKS_CURRENT[risk_id]["recovery"]["mean"]
             )
-        return RISKS_CURRENT[risk_id]["recovery"]["mean"]
+        else:
+            base_mean = RISKS_CURRENT[risk_id]["recovery"]["mean"]
+        if self.adaptive_benchmark_enabled:
+            recovery_scale = self._adaptive_recovery_scale_for(risk_id)
+            return float(base_mean) * recovery_scale
+        return float(base_mean)
 
     def _get_risk_surge(self) -> tuple[int, int]:
         table = self._RISK_TABLES.get(self.risk_level)
         base_lo = RISKS_CURRENT["R24"]["surge"]["lo"]
         base_hi = RISKS_CURRENT["R24"]["surge"]["hi"]
         if table and "R24" in table:
-            return table["R24"].get("surge_lo", base_lo), table["R24"].get(
-                "surge_hi", base_hi
+            base_lo = table["R24"].get("surge_lo", base_lo)
+            base_hi = table["R24"].get("surge_hi", base_hi)
+        if self.adaptive_benchmark_enabled:
+            surge_scale = self._adaptive_surge_scale()
+            return (
+                int(round(base_lo * surge_scale)),
+                int(round(base_hi * surge_scale)),
             )
         return base_lo, base_hi
 
@@ -1009,7 +1254,7 @@ class MFSCSimulation:
         """
         a = RISKS_CURRENT["R21"]["occurrence"]["a"]
         b_val = self._get_risk_b("R21")
-        beta = RISKS_CURRENT["R21"]["recovery"]["mean"]
+        beta = self._get_risk_recovery_mean("R21")
         affected = RISKS_CURRENT["R21"]["affected_ops"]
         while True:
             yield self.env.timeout(self.rng.integers(a, b_val + 1))
@@ -1033,7 +1278,7 @@ class MFSCSimulation:
     def _risk_R22(self):
         a = RISKS_CURRENT["R22"]["occurrence"]["a"]
         b_val = self._get_risk_b("R22")
-        beta = RISKS_CURRENT["R22"]["recovery"]["mean"]
+        beta = self._get_risk_recovery_mean("R22")
         loc_ops = RISKS_CURRENT["R22"]["affected_ops"]
         while True:
             yield self.env.timeout(self.rng.integers(a, b_val + 1))
@@ -1050,7 +1295,7 @@ class MFSCSimulation:
     def _risk_R23(self):
         a = RISKS_CURRENT["R23"]["occurrence"]["a"]
         b_val = self._get_risk_b("R23")
-        beta = RISKS_CURRENT["R23"]["recovery"]["mean"]
+        beta = self._get_risk_recovery_mean("R23")
         while True:
             yield self.env.timeout(self.rng.integers(a, b_val + 1))
             start = self.env.now
