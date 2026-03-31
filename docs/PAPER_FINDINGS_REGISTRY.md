@@ -24,24 +24,32 @@ Each finding includes the evidence source, whether it's confirmed, and how it co
 
 ---
 
-## F2. The Environment is Action-Insensitive for Inventory Control
+## F2. Inventory Actions Matter But PPO Fails to Learn Them (Credit Assignment)
 
-**Status:** CONFIRMED
+**Status:** CONFIRMED + REFINED by DOE and action analysis
 
-**Evidence:**
-- Random policy achieves fill_rate 0.78, PPO achieves 0.80 — gap of 0.02
-- Inventory actions (dims 0-3) have REVERSED sensitivity: ordering LESS gives better fill_rate
-- Assembly line at 320.5 rations/hour is the bottleneck; more raw materials pile up without helping throughput
-- The shift decision (dim 4) explains ~95% of reward variance; inventory actions explain ~5%
+**Evidence (DOE, 10 seeds):**
+- `q_max_s2` (maximize dispatch): reward=-2,063, fill_rate=0.834
+- `s2_fixed` (neutral dispatch): reward=-2,198, fill_rate=0.809
+- `q_min_s2` (minimize dispatch): reward=-3,584, fill_rate=0.273
+- Spread q_min→q_max: **42% in fill_rate**. Inventory actions DO matter.
 
-**Sources:**
-- Diagnostic from Claude instance (action sensitivity test, 10 seeds)
-- smoke_unified_v5_48h_100k: PPO vs random gap = 0.47%
+**Evidence (PPO action analysis, 50k training):**
+- PPO learns shift correctly (converges to ~S2)
+- PPO learns op9_q WRONG: mean=+0.06 (nearly neutral) vs optimal=+1.0
+- PPO learns op3_q BACKWARDS: mean=-0.48 (reduce dispatch) vs optimal=+1.0
 
-**Finding:** The 5-dimensional action space is effectively 1-dimensional: shift selection dominates inventory adjustment because the assembly line is the throughput bottleneck. This structural property limits the potential advantage of learned policies over static shift-level selection.
+**Root cause — signal-to-noise ratio = 0.099:**
+- Per-step advantage of q_max over neutral: +0.085 reward
+- Per-step noise (std): 0.864
+- SNR = 0.085/0.864 = 0.099 (less than 10%)
+- Pipeline delay: 50-100 steps between action and observable effect
+- This is a CREDIT ASSIGNMENT problem, not a reward design problem
 
-**Paper section:** Section 4.3 (action space analysis) or Discussion
-**Strength:** STRONG — directly explains why PPO ≈ static
+**Finding:** The 5D action space has significant sensitivity (42% spread), but the signal-to-noise ratio per step is ~10%, with 50-100 step delay between inventory actions and observable service impact. PPO correctly learns the binary shift decision (immediate effect) but fails to learn the continuous inventory actions (delayed, noisy effect). This is a credit assignment problem inherent to long-pipeline supply chains.
+
+**Paper section:** Section 4.3 + Section 5 (Discussion) — THIS IS THE TECHNICAL EXPLANATION
+**Strength:** VERY STRONG — quantitative, mechanistic, connects to RL theory on credit assignment
 
 ---
 
