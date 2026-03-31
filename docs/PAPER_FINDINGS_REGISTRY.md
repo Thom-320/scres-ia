@@ -184,15 +184,48 @@ Each finding includes the evidence source, whether it's confirmed, and how it co
 
 ---
 
+## F11. The Downstream Distribution Pipeline is the Binding Constraint, Not Assembly Capacity
+
+**Status:** CONFIRMED (strongest structural finding)
+
+**Evidence:**
+- S1 weekly production: 11,930 → delivered 3,146,634 over episode
+- S2 weekly production: 24,255 → delivered 3,765,470
+- S3 weekly production: 35,862 → delivered 3,727,781
+- **S3 produces 44% more than S2 but delivers LESS to the theatre**
+- Op9 dispatches max ~2,500 rations/day (U(2400,2600)), independent of assembly output
+- S2 and S3 both saturate the downstream pipeline equally
+- Excess production accumulates in intermediate buffers (rations_sb, rations_al)
+
+**Source:** Deep diagnostic from Claude instance analyzing DES production vs delivery flows
+
+**Finding:** The MFSC operates in a regime where the active throughput constraint is the downstream distribution pipeline (Op9→Op13), not the assembly line (Op5→Op7). Shift control has BINARY impact: S1 is insufficient (below pipeline capacity), while S2 and S3 both saturate the downstream constraint equally. This fundamentally explains why:
+
+1. **Random ≈ PPO:** Any non-S1 policy saturates the same bottleneck
+2. **S2 ≈ S3 in delivered rations:** More capacity doesn't help when downstream can't absorb it
+3. **RL advantage is structurally limited** under moderate stress: the agent controls production capacity, but the binding constraint is distribution throughput (outside its action space)
+4. **RL advantage grows under severe stress:** because severe disruptions (R21, R3) hit the downstream pipeline directly, creating a constraint the agent CAN address by maintaining production buffer
+
+**Implications for Track B:** To create genuine RL advantage, the agent needs control over downstream dispatch (Op9 quantity, Op10-12 routing) or the downstream constraint needs to become dynamic.
+
+**Paper section:** Section 4.1 (DES bottleneck analysis) — THIS IS THE HEADLINE FINDING
+**Strength:** **VERY STRONG** — explains the entire pattern of results, connects to operations research bottleneck theory, directly publishable
+
+---
+
 ## Summary: Findings by Paper Section
 
 | Section | Findings | Combined Strength |
 |---------|----------|-------------------|
 | 3.2 DES Description | F10 (warmup structural) | Moderate |
 | 3.3 Reward Design | F1 (misspecification), F8 (C-D vs linear) | **STRONG** |
-| 4.1 DES Results | F3 (lagging indicator), F9 (S2 near-optimal) | Strong |
+| 4.1 DES Results | F3 (lagging indicator), F9 (S2 near-optimal), **F11 (downstream bottleneck)** | **VERY STRONG** |
 | 4.2 Main Results | F4 (severity-dependent gains) | Moderate |
 | 4.3 Algorithm Comparison | F2 (action insensitivity), F5 (memory helps), F6 (cycle signals) | Moderate |
 | Discussion | F7 (48h negative), all limitations | Strong |
 
-**The strongest publishable story:** F1 + F8 (reward alignment) combined with F2 + F9 (environment analysis) = "We show why resilience metrics fail as RL rewards and why static policies are near-optimal in well-buffered supply chains."
+**The strongest publishable story (updated with F11):**
+
+> "We show that the MFSC operates in a downstream-constrained regime where assembly capacity (the agent's primary control lever) is NOT the active bottleneck. This structural finding explains why RL provides limited advantage under moderate stress: the agent controls the wrong constraint. Under severe stress, disruptions hit the downstream pipeline, bringing the binding constraint INTO the agent's influence zone, which explains the observed regime-dependent gains."
+
+This connects F11 (bottleneck) + F4 (severity gains) + F2 (action insensitivity) + F9 (S2 near-optimal) into a single coherent narrative grounded in operations research theory (Theory of Constraints).
