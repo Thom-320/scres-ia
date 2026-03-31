@@ -106,10 +106,15 @@ Each finding includes the evidence source, whether it's confirmed, and how it co
 - PPO+MLP does not beat static_s2 (137.78 vs 139.40)
 - Shift mix: RecurrentPPO 46/46/8 vs PPO+MLP 52/35/13
 
-**Finding:** Recurrent policies (LSTM) provide modest but real improvement over feedforward MLP, supporting the POMDP hypothesis: the agent benefits from temporal memory when observing a partially observable DES.
+**Evidence (500k × 5 seeds, COMPLETED):**
+- final_recurrent_ppo_v4_control_500k (increased): RecPPO fill=0.751 vs S2=0.794 → **LOSES by 4.3pp**
+- final_recurrent_ppo_v4_control_500k (severe): RecPPO fill=0.422 vs S2=0.499 → **LOSES by 7.7pp**
+- Shifts: 51% S1, 22% S2, 28% S3 (S1-dominant)
+
+**Finding (REVISED):** RecurrentPPO (LSTM) does NOT improve over static S2 at 500k × 5 seeds. The earlier 100k smoke suggested modest improvement, but the production run shows clear degradation. Memory alone does not solve the structural MDP limitation (F11). The POMDP hypothesis is not supported as a sufficient explanation.
 
 **Paper section:** Section 4.3 (algorithm comparison)
-**Strength:** MODERATE — only 100k smoke. RecurrentPPO 500k (PID 40460) running now will strengthen or weaken this.
+**Strength:** STRONG as negative result — definitively closes the "memory helps" hypothesis for Track A.
 
 ---
 
