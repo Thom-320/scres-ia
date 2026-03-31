@@ -220,8 +220,11 @@ def build_dkana_windows(
         )
     if constraint_context_array.shape[1] != len(CONTROL_CONTEXT_FIELDS):
         raise ValueError("constraint_context width does not match repo contract.")
-    if actions_array.shape[1] != len(ACTION_FIELDS):
-        raise ValueError("actions width does not match action contract.")
+    if actions_array.shape[1] not in (len(ACTION_FIELDS), 7):
+        raise ValueError(
+            f"actions width {actions_array.shape[1]} does not match any known "
+            f"action contract (Track A: {len(ACTION_FIELDS)}, Track B: 7)."
+        )
 
     variable_names = build_prefixed_variable_names(
         observation_fields,
@@ -229,7 +232,8 @@ def build_dkana_windows(
     )
     enumeration_map = build_enumeration_map(variable_names)
     row_count = len(variable_names)
-    config_dim = len(DKANA_CONFIG_FIELDS)
+    # config_dim is constraint_context + previous_actions (dynamic for Track B)
+    config_dim = constraint_context_array.shape[1] + actions_array.shape[1]
     row_matrices = np.stack(
         [
             build_mfsc_relational_state(
