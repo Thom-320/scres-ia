@@ -184,32 +184,31 @@ Each finding includes the evidence source, whether it's confirmed, and how it co
 
 ---
 
-## F11. The Downstream Distribution Pipeline is the Binding Constraint, Not Assembly Capacity
+## F11. Downstream Distribution Limits the Marginal Value of Extra Assembly Capacity
 
-**Status:** CONFIRMED (strongest structural finding)
+**Status:** CONFIRMED (strong structural finding, some claims need caution)
 
 **Evidence:**
-- S1 weekly production: 11,930 → delivered 3,146,634 over episode
-- S2 weekly production: 24,255 → delivered 3,765,470
-- S3 weekly production: 35,862 → delivered 3,727,781
-- **S3 produces 44% more than S2 but delivers LESS to the theatre**
-- Op9 dispatches max ~2,500 rations/day (U(2400,2600)), independent of assembly output
-- S2 and S3 both saturate the downstream pipeline equally
-- Excess production accumulates in intermediate buffers (rations_sb, rations_al)
+- S1 weekly production: ~12,000 → clearly insufficient (fill_rate ~0.62)
+- S2 weekly production: ~24,000 → delivered ~3.9M over episode
+- S3 weekly production: ~36,000 → delivered ~4.0M (only marginally more than S2 despite 44% more production)
+- Op9 dispatches max ~2,500 rations/day (U(2400,2600)), creating a downstream throughput ceiling
+- Excess production under S3 accumulates in intermediate buffers (rations_sb reaches ~2.1M)
 
-**Source:** Deep diagnostic from Claude instance analyzing DES production vs delivery flows
+**Source:** Deep diagnostic analyzing DES production vs delivery flows across shift levels
 
-**Finding:** The MFSC operates in a regime where the active throughput constraint is the downstream distribution pipeline (Op9→Op13), not the assembly line (Op5→Op7). Shift control has BINARY impact: S1 is insufficient (below pipeline capacity), while S2 and S3 both saturate the downstream constraint equally. This fundamentally explains why:
+**Finding:** The MFSC operates in a regime where increasing assembly capacity beyond S=2 yields sharply diminishing returns because downstream distribution absorbs only a small fraction of the extra production. This helps explain why:
 
-1. **Random ≈ PPO:** Any non-S1 policy saturates the same bottleneck
-2. **S2 ≈ S3 in delivered rations:** More capacity doesn't help when downstream can't absorb it
-3. **RL advantage is structurally limited** under moderate stress: the agent controls production capacity, but the binding constraint is distribution throughput (outside its action space)
-4. **RL advantage grows under severe stress:** because severe disruptions (R21, R3) hit the downstream pipeline directly, creating a constraint the agent CAN address by maintaining production buffer
+1. **Static S=2 is already strong** under moderate stress — it produces enough to keep the downstream pipeline near-saturated
+2. **S2 ≈ S3 in delivered rations** — more assembly capacity doesn't translate to proportionally more deliveries
+3. **RL's adaptive control gains remain modest** because the agent's primary lever (shifts) has diminishing marginal returns beyond S=2
 
-**Implications for Track B:** To create genuine RL advantage, the agent needs control over downstream dispatch (Op9 quantity, Op10-12 routing) or the downstream constraint needs to become dynamic.
+**Caution:** Assembly capacity DOES matter — S1 is clearly worse than S2. The finding is about diminishing returns beyond S=2, not that assembly is irrelevant. The severe-stress hypothesis (that disruptions bring the constraint back into the agent's zone) is plausible but not causally confirmed.
 
-**Paper section:** Section 4.1 (DES bottleneck analysis) — THIS IS THE HEADLINE FINDING
-**Strength:** **VERY STRONG** — explains the entire pattern of results, connects to operations research bottleneck theory, directly publishable
+**Implications for Track B:** To create genuine RL advantage, either expand the action space to include downstream control, or create conditions where the downstream constraint becomes dynamic.
+
+**Paper section:** Section 4.1 (DES bottleneck analysis) + Discussion
+**Strength:** STRONG — explains the main pattern of results, connects to diminishing returns / bottleneck theory. Partially confirmed (the mechanism is clear; the severe-stress explanation is hypothesis).
 
 ---
 
