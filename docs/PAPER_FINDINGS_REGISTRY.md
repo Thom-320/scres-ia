@@ -15,9 +15,10 @@ Each finding includes the evidence source, whether it's confirmed, and how it co
 - ReT_garrido2024_raw (5-var C-D) → S1 collapse (n_kappa dominates)
 - ReT_garrido2024_train (4-var, no cost) → S3 collapse (88% S3)
 - ReT_unified_v1 (gated cost) → competitive but no clear advantage over control_v1
-- control_v1 (linear, w_bo/w_cost=200) → best PPO policies (fill_rate 0.838, shift mix 12/25/63) [source: control_reward_500k_increased_stopt, 5 seeds]
+- control_v1 (linear, w_bo/w_cost=200) → PPO fill=0.782, shift mix 46/28/27, does NOT beat S2 [source: paper_control_v1_500k, 5 seeds, POST-AUDIT DES]
+- **NOTE:** Earlier claim of fill_rate=0.838 came from control_reward_500k_increased_stopt, which used the PRE-AUDIT DES (known bugs). That run is now classified as `historical_artifact`.
 
-**Finding:** Theoretically grounded resilience metrics (Cobb-Douglas, piecewise) systematically fail as RL training rewards because agents exploit the weakest dimension. Simple linear operational rewards with explicit service-cost ratios produce more trainable policies.
+**Finding:** Theoretically grounded resilience metrics (Cobb-Douglas, piecewise) systematically fail as RL training rewards because agents exploit the weakest dimension. However, the simpler linear control_v1 also fails to beat S2 on the corrected DES, suggesting the problem is structural (F11), not purely reward-related. The reward alignment finding remains valid: C-D rewards produce WORSE policies than linear rewards, but neither beats static S2 on service metrics.
 
 **Paper section:** Section 4.2 or dedicated subsection on reward alignment
 **Strength:** STRONG — reproducible, multi-variant, directly addresses a gap in the literature
@@ -78,16 +79,20 @@ Each finding includes the evidence source, whether it's confirmed, and how it co
 
 **Status:** PARTIALLY CONFIRMED (directional, not statistically significant)
 
-**Evidence:**
-- control_reward_500k_increased_stopt: PPO vs static_s2 = -1.95 (p=0.812, NOT significant)
-- control_reward_500k_severe_stopt: PPO vs static_s3 = +4.61 (p=0.188, NOT significant)
-- Pattern: PPO competitive under moderate stress, marginally better under severe
+**Evidence (valid, post-audit DES):**
+- paper_control_v1_500k (increased): PPO fill=0.782 vs S2=0.792 → PPO LOSES by 1.0pp
+- paper_ret_seq_k020_500k (increased): PPO fill=0.788 vs S2=0.792 → PPO LOSES by 0.4pp
+- paper_ret_seq_k020_500k (severe cross-eval): PPO fill=0.484 vs S2=0.495 → PPO LOSES by 1.1pp
+- **NOTE:** Earlier evidence from control_reward_500k_*_stopt is INVALID (pre-audit DES). The "PPO marginally better under severe" finding was based on those invalid runs.
 
-**Finding:** RL's relative advantage increases with disruption severity, consistent with the hypothesis that adaptive control has more value when static policies are further from optimal. However, the effect does not reach conventional significance (p<0.05) at 5 seeds.
+**Evidence (invalid, pre-audit DES — for historical context only):**
+- control_reward_500k_increased_stopt: PPO vs static_s2 = -1.95 (pre-audit DES, historical_artifact)
+- control_reward_500k_severe_stopt: PPO vs static_s3 = +4.61 (pre-audit DES, historical_artifact)
+
+**Finding (REVISED):** On the corrected, thesis-aligned DES, PPO does NOT show a clear advantage under any stress level tested so far. The earlier "severity-dependent gains" finding was an artifact of comparing against the pre-audit DES. This finding needs re-evaluation with valid severe-stress runs on the current DES.
 
 **Paper section:** Section 4.2 (main results table)
-**Strength:** MODERATE — directional finding, needs cautious language. "Suggestive" not "significant."
-**Caveat:** GPT correctly flagged that the p=0.008 I cited earlier was PPO vs static_s3 under INCREASED, not under severe. Don't confuse scenarios.
+**Strength:** WEAK — the directional pattern may still hold but is not confirmed on the corrected DES. Needs new severe-only runs to re-test.
 
 ---
 
@@ -164,8 +169,8 @@ Each finding includes the evidence source, whether it's confirmed, and how it co
 
 **Evidence:**
 - garrido_cf_s2 fill_rate = 0.787 and static_s2 fill_rate = 0.792 in `smoke_unified_v5_168h_100k`
-- PPO best fill_rate = 0.838 (with control_v1, 500k)
-- But PPO achieves this by using 63% S3 (more capacity = more cost)
+- PPO best fill_rate = 0.793 (with ReT_seq_v1 κ=0.20, final_ret_seq_v1_500k) — still below S2's 0.794
+- **NOTE:** Earlier claim of PPO fill=0.838 was from pre-audit DES (invalid)
 - Under increased risk, S=2 provides enough capacity (5,128 rations/day vs ~2,500 demand)
 
 **Finding:** Under the thesis's "increased" risk parameters, static S=2 operation already provides sufficient buffering capacity (2× demand rate), leaving limited room for adaptive improvement. This explains why RL's advantage is modest under moderate stress but emerges under severe stress where S=2 is no longer sufficient.
@@ -231,8 +236,8 @@ Each finding includes the evidence source, whether it's confirmed, and how it co
 | 4.3 Algorithm Comparison | F2 (asymmetric action sensitivity), F5 (memory helps), F6 (cycle signals) | Moderate |
 | Discussion | F7 (48h negative), all limitations | Strong |
 
-**The strongest publishable story (updated with F11):**
+**The strongest publishable story (updated after audit):**
 
-> "We show that the MFSC operates in a downstream-constrained regime where assembly capacity (the agent's primary control lever) is NOT the active bottleneck. This structural finding explains why RL provides limited advantage under moderate stress: the agent controls the wrong constraint. Under severe stress, disruptions hit the downstream pipeline, bringing the binding constraint INTO the agent's influence zone, which explains the observed regime-dependent gains."
+> "We present a validated DES benchmark for adaptive operational resilience control. On the thesis-aligned simulation, NO RL configuration (across 7 reward modes, 3 observation versions, 2 algorithms) beats static S=2 on fill_rate. We explain why through structural analysis: (1) downstream distribution limits the value of extra assembly capacity (F11), (2) inventory actions have extreme asymmetric sensitivity with only ~1% upside (F2), and (3) resilience metrics systematically fail as RL rewards (F1/F8). This is a benchmark contribution with honest negative results and mechanistic explanations."
 
-This connects F11 (bottleneck) + F4 (severity gains) + F2 (asymmetric action sensitivity) + F9 (S2 near-optimal) into a single coherent narrative grounded in operations research theory (Theory of Constraints).
+**CRITICAL AUDIT NOTE (2026-03-30):** Earlier versions of this registry cited evidence from pre-audit DES runs (control_reward_500k_*_stopt) that showed PPO competitive or marginally better than S2. Those runs are now classified as `historical_artifact` because they used a DES with known bugs (missing Op4 delay, R12/R13 bypass, R21 non-blocking). All paper-facing evidence must use post-audit bundles only (paper_benchmarks/ or benchmarks/ from March 27+).
