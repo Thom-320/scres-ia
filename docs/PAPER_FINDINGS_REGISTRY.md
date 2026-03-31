@@ -11,11 +11,11 @@ Each finding includes the evidence source, whether it's confirmed, and how it co
 
 **Evidence:**
 - ReT_thesis (piecewise Eq. 5.5) → S1 collapse (99.99% S1, fill_rate 0.845)
-- ReT_seq_v1 (C-D geometric) → S1-dominant at 500k (73% S1)
+- ReT_seq_v1 (C-D geometric) → S1-leaning at 500k (61.5% S1, 24.3% S2, 14.2% S3) [source: final_ret_seq_v1_500k/summary.json]
 - ReT_garrido2024_raw (5-var C-D) → S1 collapse (n_kappa dominates)
 - ReT_garrido2024_train (4-var, no cost) → S3 collapse (88% S3)
 - ReT_unified_v1 (gated cost) → competitive but no clear advantage over control_v1
-- control_v1 (linear, w_bo/w_cost=200) → best PPO policies (fill_rate 0.838, shift mix 12/25/63)
+- control_v1 (linear, w_bo/w_cost=200) → best PPO policies (fill_rate 0.838, shift mix 12/25/63) [source: control_reward_500k_increased_stopt, 5 seeds]
 
 **Finding:** Theoretically grounded resilience metrics (Cobb-Douglas, piecewise) systematically fail as RL training rewards because agents exploit the weakest dimension. Simple linear operational rewards with explicit service-cost ratios produce more trainable policies.
 
@@ -24,35 +24,34 @@ Each finding includes the evidence source, whether it's confirmed, and how it co
 
 ---
 
-## F2. Inventory Actions Matter But PPO Fails to Learn Them (Credit Assignment)
+## F2. Inventory Action Sensitivity is Asymmetric, and PPO Stays Near the Neutral Region
 
-**Status:** CONFIRMED + REFINED by DOE and action analysis
+**Status:** CONFIRMED (DOE) + SUGGESTIVE (action trace)
 
-**Evidence (DOE, 10 seeds, action_sensitivity_track_a_2026-03-30):**
+**Evidence (DOE, 10 seeds, `action_sensitivity_track_a_2026-03-30`):**
+- `shift_only_random`: reward=-2,154, fill_rate=0.821
 - `q_max_s2`: reward=-2,156, fill_rate=0.815
 - `s2_fixed`: reward=-2,175, fill_rate=0.814
 - `q_min_s2`: reward=-3,579, fill_rate=0.273
-- Spread q_min→q_max: **42% in fill_rate**. Inventory actions DO matter downside.
-- BUT upside is modest: q_max vs s2_fixed = only **0.9% reward improvement**.
-- `shift_only_random` (-2,154) is actually the best policy — slightly better than q_max.
+- `rop_max_s2`: reward=-3,137, fill_rate=0.518
+- Positive headroom above `s2_fixed` is small: the best simple policy is only about **1%** better in reward.
+- Downside is extreme: poor quantity/reorder settings reduce reward by roughly **44-65%** and can collapse fill rate.
 
-**Evidence (PPO action analysis, 50k training):**
-- PPO learns shift correctly (converges to ~S2)
-- PPO learns op9_q near-neutral: mean=-0.03 (×1.23) vs optimal +1.0 (×2.0)
-- PPO learns op3_q slightly positive: mean=+0.19 (×1.39)
-- Overall: PPO actions are near-neutral on inventory dimensions
+**Evidence (short control-reward action trace, 50k training, `w_bo=4.0`, `w_cost=0.02`):**
+- Global PPO action mean = `[-0.484, +0.059, +0.057, -0.093, -0.050]`
+- Shift remains near the `S2` region.
+- Inventory dimensions stay near-neutral or mixed rather than converging to a strong `q_max` / `rop_min` heuristic.
 
-**Hypothesis — credit assignment with weak signal:**
-- The upside of optimal inventory actions is small (~1% over neutral)
-- The per-step signal is noisy and delayed (pipeline effects)
-- PPO correctly learns the binary shift decision (immediate, large effect)
-- PPO does not reliably learn the continuous inventory optimization (delayed, small effect)
-- This is PLAUSIBLE as a credit assignment problem but not definitively confirmed as root cause
+**Interpretation:**
+- The 5D action space is **not** flat: destructive settings are easy to identify empirically.
+- However, under moderate stress the upside of "better-than-neutral" inventory control is small relative to the downside of bad settings.
+- PPO appears to learn the high-impact binary capacity choice (`S2`) while remaining close to the neutral region on inventory actions.
+- This pattern is consistent with a conservative response to asymmetric downside risk and delayed pipeline effects, but it does **not** by itself prove a specific credit-assignment mechanism.
 
-**Finding:** The 5D action space has extreme **asymmetric risk**: downside sensitivity is massive (q_min destroys fill_rate by 60%) but upside is modest (q_max improves only ~1% over neutral). PPO correctly identifies the high-impact binary decision (shift=S2) and adopts a conservative near-neutral stance on inventory actions — which is arguably RATIONAL given the 1% upside vs 60% downside asymmetry. The structural headroom for learned policies to improve over S2-neutral is ~1%, explaining why PPO ≈ static.
+**Finding:** Under the thesis-faithful moderate-stress regime, inventory control has strongly **asymmetric sensitivity**: bad settings are highly destructive, while the positive headroom above `S2`-neutral is small. This helps explain why PPO often looks close to static `S2`: the benchmark offers limited upside for aggressive inventory tuning, while penalizing poor settings heavily.
 
 **Paper section:** Section 4.3 + Section 5 (Discussion)
-**Strength:** STRONG (the pattern is real and reproducible; the mechanistic explanation is plausible but not definitively proven)
+**Strength:** STRONG for the asymmetric-sensitivity pattern; MODERATE for the proposed mechanism
 
 ---
 
@@ -64,10 +63,9 @@ Each finding includes the evidence source, whether it's confirmed, and how it co
 - After warmup+priming (2351h), fill_rate starts at 0.42, pending_bo = 124,125
 - System never fully recovers from warmup backlog — pending_bo grows from 124k to 145k over 260 steps
 - Fill rate climbs from 0.42 to 0.79 regardless of policy (dominated by cumulative history)
-- Only 14 of 946 steps (1.5%) have fully met demand
-- 98.5% of steps have service_loss > 0.1
+- NOTE: the "14 of 946 steps" and "98.5% service_loss" figures come from a diagnostic run WITHOUT max_steps=260, using the full ~946-step horizon. Under the paper-facing 260-step contract, the qualitative finding holds but the specific step counts differ.
 
-**Source:** Diagnostic from Claude instance (step-by-step trajectory analysis)
+**Source:** Diagnostic from Claude instance (step-by-step trajectory analysis). Specific step counts need re-verification under 260-step contract.
 
 **Finding:** The cumulative fill rate metric used for evaluation is dominated by inherited warmup backlog, not by the agent's decisions. This creates a floor effect where all policies converge to similar fill rates (~0.79) regardless of shift strategy, compressing the observable performance gap between learned and static policies.
 
@@ -165,8 +163,7 @@ Each finding includes the evidence source, whether it's confirmed, and how it co
 **Status:** CONFIRMED
 
 **Evidence:**
-- garrido_cf_s2 fill_rate = 0.793, reward competitive with all RL variants
-- static_s2 fill_rate = 0.792
+- garrido_cf_s2 fill_rate = 0.787 and static_s2 fill_rate = 0.792 in `smoke_unified_v5_168h_100k`
 - PPO best fill_rate = 0.838 (with control_v1, 500k)
 - But PPO achieves this by using 63% S3 (more capacity = more cost)
 - Under increased risk, S=2 provides enough capacity (5,128 rations/day vs ~2,500 demand)
@@ -231,11 +228,11 @@ Each finding includes the evidence source, whether it's confirmed, and how it co
 | 3.3 Reward Design | F1 (misspecification), F8 (C-D vs linear) | **STRONG** |
 | 4.1 DES Results | F3 (lagging indicator), F9 (S2 near-optimal), **F11 (downstream bottleneck)** | **VERY STRONG** |
 | 4.2 Main Results | F4 (severity-dependent gains) | Moderate |
-| 4.3 Algorithm Comparison | F2 (action insensitivity), F5 (memory helps), F6 (cycle signals) | Moderate |
+| 4.3 Algorithm Comparison | F2 (asymmetric action sensitivity), F5 (memory helps), F6 (cycle signals) | Moderate |
 | Discussion | F7 (48h negative), all limitations | Strong |
 
 **The strongest publishable story (updated with F11):**
 
 > "We show that the MFSC operates in a downstream-constrained regime where assembly capacity (the agent's primary control lever) is NOT the active bottleneck. This structural finding explains why RL provides limited advantage under moderate stress: the agent controls the wrong constraint. Under severe stress, disruptions hit the downstream pipeline, bringing the binding constraint INTO the agent's influence zone, which explains the observed regime-dependent gains."
 
-This connects F11 (bottleneck) + F4 (severity gains) + F2 (action insensitivity) + F9 (S2 near-optimal) into a single coherent narrative grounded in operations research theory (Theory of Constraints).
+This connects F11 (bottleneck) + F4 (severity gains) + F2 (asymmetric action sensitivity) + F9 (S2 near-optimal) into a single coherent narrative grounded in operations research theory (Theory of Constraints).
