@@ -49,7 +49,7 @@ Each finding includes the evidence source, whether it's confirmed, and how it co
 - PPO does not reliably learn the continuous inventory optimization (delayed, small effect)
 - This is PLAUSIBLE as a credit assignment problem but not definitively confirmed as root cause
 
-**Finding:** The 5D action space has extreme downside sensitivity (q_min destroys fill_rate) but modest upside (q_max improves only ~1% over neutral). PPO correctly identifies the high-impact binary decision (shift=S2) but converges to near-neutral on inventory actions where the signal is weaker and delayed. This pattern is consistent with credit assignment difficulty in long-pipeline supply chains, though the hypothesis requires further verification.
+**Finding:** The 5D action space has extreme **asymmetric risk**: downside sensitivity is massive (q_min destroys fill_rate by 60%) but upside is modest (q_max improves only ~1% over neutral). PPO correctly identifies the high-impact binary decision (shift=S2) and adopts a conservative near-neutral stance on inventory actions — which is arguably RATIONAL given the 1% upside vs 60% downside asymmetry. The structural headroom for learned policies to improve over S2-neutral is ~1%, explaining why PPO ≈ static.
 
 **Paper section:** Section 4.3 + Section 5 (Discussion)
 **Strength:** STRONG (the pattern is real and reproducible; the mechanistic explanation is plausible but not definitively proven)
