@@ -1,175 +1,253 @@
 # DKANA Contributor Handoff
 
-This document tells you everything you need to implement and evaluate DKANA in this repository. You should NOT need to modify the environment, reward function, or benchmark infrastructure.
+## Why Track B, Not Track A
 
-## Your Task
+We discovered empirically that **Track A (thesis-faithful, 5D actions) has ~1% adaptive headroom** — static S=2 is already near-optimal because the agent controls upstream production while the real bottleneck is downstream distribution. PPO, RecurrentPPO, and every reward variant we tested fail to beat S2 in Track A. The problem is structural, not algorithmic.
 
-Train a DKANA policy that **outperforms PPO+MLP** on the same environment, using the same reward and evaluation metrics. The environment, reward, baselines, and evaluation protocol are frozen.
+**Track B extends the action space to include downstream control (Op10, Op12)**, opening 2-3pp of real headroom. In a 100k smoke, PPO achieved fill_rate=1.000 vs best static=0.987. This is where DKANA can demonstrate value.
 
-## Quick Start (5 minutes)
+Your task: train a DKANA policy on Track B and show it outperforms PPO+MLP under the same contract.
+
+## Quick Start
 
 ```bash
 # 1. Setup
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 
-# 2. Generate training data (offline trajectories)
+# 2. Verify Track B env works
+python -c "
+from supply_chain.external_env_interface import make_track_b_env, get_track_b_env_spec
+spec = get_track_b_env_spec()
+print(f'Obs: {len(spec.observation_fields)} dims, Action: {len(spec.action_fields)} dims')
+env = make_track_b_env()
+obs, info = env.reset(seed=42)
+print(f'Obs shape: {obs.shape}, sample: {obs[:5]}')
+"
+
+# 3. Export Track B trajectories for offline training
 python scripts/export_trajectories_for_david.py \
   --episodes 200 \
   --reward-mode ReT_seq_v1 \
-  --observation-version v1 \
-  --risk-level increased \
-  --output-dir outputs/data_export
+  --observation-version v7 \
+  --risk-level adaptive_benchmark_v2 \
+  --stochastic-pt \
+  --output-dir outputs/data_export_track_b_v7
 
-# 3. Build DKANA-ready windows
+# 4. Build DKANA-ready windows
 python scripts/build_dkana_dataset.py \
-  --input-dir outputs/data_export \
+  --input-dir outputs/data_export_track_b_v7 \
   --window-size 12
 
-# 4. Evaluate your trained model
+# 5. Evaluate your trained model
 python -c "
 from supply_chain.external_env_interface import run_episodes
 import numpy as np
 
 def your_policy(obs, info):
-    # Replace with your trained DKANA model
-    return np.zeros(5, dtype=np.float32)
+    # Replace with your trained DKANA model.
+    # Track B has 7D actions, not 5D.
+    return np.zeros(7, dtype=np.float32)
 
 results = run_episodes(
     your_policy,
-    n_episodes=50,
+    n_episodes=20,
     seed=42,
     env_kwargs={
         'reward_mode': 'ReT_seq_v1',
-        'risk_level': 'increased',
+        'risk_level': 'adaptive_benchmark_v2',
         'stochastic_pt': True,
+        'observation_version': 'v7',
+        'action_contract': 'track_b_v1',
     },
     policy_name='dkana_v1',
 )
 for r in results[:3]:
-    print(f'reward={r[\"reward_total\"]:.2f}  fill_rate={r[\"fill_rate\"]:.3f}  shifts=S1:{r[\"pct_steps_S1\"]:.0f}/S2:{r[\"pct_steps_S2\"]:.0f}/S3:{r[\"pct_steps_S3\"]:.0f}')
+    print(
+        f\"reward={r['reward_total']:.2f}  fill_rate={r['fill_rate']:.3f}  \"
+        f\"shifts=S1:{r['pct_steps_S1']:.0f}/S2:{r['pct_steps_S2']:.0f}/S3:{r['pct_steps_S3']:.0f}\"
+    )
 "
 ```
 
-## Environment Contract
+## Track B Contract
 
-### Observation Space
+Use `make_track_b_env()` or `get_track_b_env_spec()` from `external_env_interface.py`.
 
-Default: **v1 (15 dimensions)**. Also available: v2 (18), v3 (20), v4 (24).
+| Parameter | Value |
+|-----------|-------|
+| `action_contract` | `track_b_v1` |
+| `observation_version` | `v7` |
+| `reward_mode` | `ReT_seq_v1` |
+| `risk_level` | `adaptive_benchmark_v2` |
+| `step_size_hours` | `168` |
+| `max_steps` | `260` |
+| `stochastic_pt` | `True` |
+| `year_basis` | `thesis` |
 
-| Index | Field | Range | Description |
-|-------|-------|-------|-------------|
-| 0-5 | Inventory levels | [0, ~20] | Raw materials and rations at 6 locations (normalized) |
-| 6 | fill_rate | [0, 1] | Fraction of demand satisfied |
-| 7 | backorder_rate | [0, 1] | Fraction of demand backordered |
-| 8-11 | Disruption flags | {0, 1} | Assembly line, LOC, Op9, Op11 down |
-| 12 | time_fraction | [0, 1] | Simulation progress |
-| 13 | pending_batch_norm | [0, ~5] | Pending batch / batch size |
-| 14 | contingent_demand_norm | [0, 5] | Contingent demand / 2600 |
+### Observation Space: v7 (46 dimensions)
 
-### Action Space (5 dimensions, continuous [-1, 1])
+| Dim | Field | Description |
+|-----|-------|-------------|
+| 0 | `raw_material_wdc_norm` | WDC raw material inventory |
+| 1 | `raw_material_al_norm` | Assembly line raw material inventory |
+| 2 | `rations_al_norm` | Finished rations at assembly |
+| 3 | `rations_sb_norm` | Rations at Supply Battalion |
+| 4 | `rations_cssu_norm` | Rations at Combat Service Support Units |
+| 5 | `rations_theatre_norm` | Rations at Theatre of Operations |
+| 6 | `fill_rate` | Cumulative fill rate (lagging indicator) |
+| 7 | `backorder_rate` | Cumulative backorder rate |
+| 8 | `assembly_line_down` | Binary: assembly line disrupted |
+| 9 | `any_location_down` | Binary: any location disrupted |
+| 10 | `op9_down` | Binary: Supply Battalion disrupted |
+| 11 | `op11_down` | Binary: CSSU disrupted |
+| 12 | `time_fraction` | Elapsed time / total horizon |
+| 13 | `pending_batch_fraction` | Pending batch progress |
+| 14 | `contingent_demand_fraction` | Contingent demand level |
+| 15-17 | `prev_step_*` | Previous step demand/backorder/disruption |
+| 18-19 | `cum_*` | Cumulative backorder rate and downtime |
+| 20 | `rations_sb_dispatch_norm` | SB dispatch rate |
+| 21 | `assembly_shifts_active_norm` | Current shift level (1/2/3 normalized) |
+| 22-23 | `op1_down`, `op2_down` | Procurement disruption flags |
+| 24-25 | `op1/op2_cycle_phase_norm` | Procurement cycle phase (anticipatory) |
+| 26-29 | `workweek/workday_phase_*` | Calendar cycle signals |
+| 30-34 | `regime_*` | Operational regime indicators (nominal/strained/pre_disruption/disrupted/recovery) |
+| 35-36 | `risk_forecast_*` | Short-term risk forecasts (48h, 168h) |
+| 37 | `maintenance_debt_norm` | Accumulated S3 maintenance debt |
+| 38 | `backlog_age_norm` | Age of oldest pending backorder |
+| 39 | `theatre_cover_days_norm` | Days of theatre inventory coverage |
+| **40** | **`op10_down`** | **Binary: Op10 transport disrupted (NEW)** |
+| **41** | **`op12_down`** | **Binary: Op12 transport disrupted (NEW)** |
+| **42** | **`op10_queue_pressure_norm`** | **Op10 queue pressure (NEW)** |
+| **43** | **`op12_queue_pressure_norm`** | **Op12 queue pressure (NEW)** |
+| **44** | **`rolling_fill_rate_4w`** | **4-week rolling fill rate (NEW, not lagging)** |
+| **45** | **`rolling_backorder_rate_4w`** | **4-week rolling backorder rate (NEW)** |
 
-| Dim | Control | Mapping |
-|-----|---------|---------|
-| 0 | op3_q (warehouse dispatch) | multiplier = 1.25 + 0.75 × signal |
-| 1 | op9_q (battalion dispatch) | multiplier = 1.25 + 0.75 × signal |
-| 2 | op3_rop (warehouse reorder point) | multiplier = 1.25 + 0.75 × signal |
-| 3 | op9_rop (battalion reorder point) | multiplier = 1.25 + 0.75 × signal |
-| 4 | shifts (assembly capacity) | < -0.33 → S1, [-0.33, 0.33) → S2, ≥ 0.33 → S3 |
+The NEW fields (40-45) are what make Track B different from Track A. They give the agent visibility into the downstream bottleneck.
 
-### Reward Function
+### Action Space: 7 dimensions (Track B)
 
-**Primary:** `ReT_seq_v1` (κ=0.20) — Cobb-Douglas resilience metric.
+| Dim | Field | Mapping |
+|-----|-------|---------|
+| 0 | `op3_q_multiplier_signal` | `multiplier = 1.25 + 0.75 * signal` |
+| 1 | `op9_q_multiplier_signal` | `multiplier = 1.25 + 0.75 * signal` |
+| 2 | `op3_rop_multiplier_signal` | `multiplier = 1.25 + 0.75 * signal` |
+| 3 | `op9_rop_multiplier_signal` | `multiplier = 1.25 + 0.75 * signal` |
+| 4 | `assembly_shift_signal` | `< -0.33 -> S1, [-0.33, 0.33) -> S2, >= 0.33 -> S3` |
+| **5** | **`op10_q_multiplier_signal`** | **`multiplier = 1.25 + 0.75 * signal` (NEW)** |
+| **6** | **`op12_q_multiplier_signal`** | **`multiplier = 1.25 + 0.75 * signal` (NEW)** |
+
+Dims 5-6 control downstream dispatch quantities. These are the actions that touch the active bottleneck.
+
+### Reward
 
 ```
-r_t = SC_t^0.60 × BC_t^0.25 × AE_t^0.15
+ReT_seq_v1 (Cobb-Douglas sequential resilience):
+  r_t = SC_t^0.60 x BC_t^0.25 x AE_t^0.15
+  with kappa=0.20 shift cost penalty
 ```
 
-This is both the training reward AND the resilience metric. Higher = better.
+## Baselines to Compare Against
 
-### Step Configuration
+| Baseline | Description |
+|----------|-------------|
+| `s2_d1.00` | Static S=2, downstream dispatch at 1.0x (default) |
+| `s3_d1.00` | Static S=3, downstream dispatch at 1.0x |
+| `s3_d2.00` | Static S=3, downstream dispatch at 2.0x |
+| `random` | Uniform random across all 7 dims |
+| **PPO+MLP** | **PPO baseline from smoke/500k benchmarks** |
 
-- Step size: 168 hours (1 week)
-- Episode length: 260 steps (20 years)
-- Warmup: ~838h + ~2000h priming at S=2
-- Risk level: `increased` (primary), also evaluate `current` and `severe`
+Smoke 100k results (your target to beat):
 
-## PPO Baseline (your target to beat)
-
-Results from PPO+MLP (64,64) trained for 500k steps:
-
-| Metric | PPO | static_s2 | garrido_cf_s2 |
-|--------|-----|-----------|---------------|
-| ReT_seq_v1 reward | ~133 | ~133 | ~131 |
-| Fill rate | ~0.79 | ~0.79 | ~0.79 |
-| Shift mix S1/S2/S3 | variable | 0/100/0 | 0/100/0 |
-
-*Note: PPO results are preliminary. Updated numbers will be provided once the production run completes.*
+| Policy | Reward | Fill Rate | Order ReT |
+|--------|--------|-----------|-----------|
+| PPO+MLP | 250.17 | 1.000 | 0.927 |
+| s3_d2.00 | 170.34 | 0.987 | 0.454 |
+| s2_d1.00 | 177.78 | 0.965 | 0.495 |
 
 ## Evaluation Protocol
-
-To be comparable with PPO results, your evaluation MUST use:
 
 ```python
 env_kwargs = {
     "reward_mode": "ReT_seq_v1",
-    "risk_level": "increased",      # primary scenario
+    "risk_level": "adaptive_benchmark_v2",
     "stochastic_pt": True,
     "step_size_hours": 168,
     "max_steps": 260,
     "year_basis": "thesis",
-    "observation_version": "v1",     # or v4 if you use richer obs
-    "ret_seq_kappa": 0.20,
+    "observation_version": "v7",
+    "action_contract": "track_b_v1",
 }
 ```
 
-**Metrics to report:**
-1. `reward_total` (ReT_seq_v1 sum over episode)
-2. `fill_rate` (terminal cumulative)
-3. `backorder_rate` (terminal cumulative)
-4. `pct_steps_S1/S2/S3` (shift distribution)
-5. `ret_thesis_corrected_total` (thesis audit metric)
+Primary metrics:
+1. `reward_total`
+2. `fill_rate`
+3. `backorder_rate`
+4. `order_level_ret_mean`
+5. `rolling_fill_rate_4w` (end-of-episode)
+6. Shift mix: `pct_steps_S1`, `pct_steps_S2`, `pct_steps_S3`
 
-**Cross-scenario evaluation:**
-- Train on `increased`
-- Evaluate on: `current`, `increased`, `severe`
+Seeds: `11, 22, 33, 44, 55`
 
-**Seeds:** Use seeds 11, 22, 33, 44, 55 (or more) for reproducibility.
+## Why DKANA Matters Here
+
+PPO+MLP already achieves fill_rate=1.000 in the smoke — but with 78% S1 shifts. A DKANA architecture with temporal attention could potentially:
+
+1. **Anticipate disruptions** using regime signals (dims 30-34) and risk forecasts (dims 35-36) to pre-position inventory
+2. **Coordinate upstream and downstream** actions jointly (the 7D action space has cross-dependencies that MLP may not capture)
+3. **Learn from disruption sequences** across episodes (the L_{t-1} in your paper's R_t = f(S_t, D_t, L_{t-1}) formulation)
+4. **Reduce S1 usage** while maintaining fill rate — proving that anticipatory control is more efficient than conservative excess capacity
+
+## Offline Contract
+
+Use `export_trajectories_for_david.py` with Track B settings:
+
+```bash
+python scripts/export_trajectories_for_david.py \
+  --episodes 200 \
+  --reward-mode ReT_seq_v1 \
+  --observation-version v7 \
+  --risk-level adaptive_benchmark_v2 \
+  --stochastic-pt \
+  --output-dir outputs/data_export_track_b_v7
+```
+
+Each export includes: `observations.npy`, `actions.npy`, `rewards.npy`, `reward_terms.npy`, `constraint_context.npy`, `state_constraint_context.npy`, `env_spec.json`, `metadata.json`.
+
+Then build DKANA windows:
+
+```bash
+python scripts/build_dkana_dataset.py \
+  --input-dir outputs/data_export_track_b_v7 \
+  --window-size 12
+```
 
 ## Key Files
 
 | File | Purpose |
 |------|---------|
-| `supply_chain/env_experimental_shifts.py` | Gymnasium environment with all reward modes |
-| `supply_chain/external_env_interface.py` | Stable external API: `make_shift_control_env()`, `run_episodes()` |
-| `supply_chain/dkana.py` | DKANA architecture starter: `DKANAPolicy`, `DKANADataset`, `build_dkana_windows()` |
-| `scripts/export_trajectories_for_david.py` | Export trajectories as .npy for offline training |
-| `scripts/build_dkana_dataset.py` | Convert trajectories to DKANA-ready windows |
-| `supply_chain/config.py` | All simulation parameters from Garrido thesis |
+| `supply_chain/env_experimental_shifts.py` | DES-backed Gymnasium env (Track A and B) |
+| `supply_chain/external_env_interface.py` | `make_track_b_env()`, `get_track_b_env_spec()` |
+| `supply_chain/dkana.py` | DKANA starter architecture (needs update for 7D/46D) |
+| `scripts/export_trajectories_for_david.py` | Offline trajectory export |
+| `scripts/build_dkana_dataset.py` | DKANA window construction |
+| `scripts/run_track_b_smoke.py` | Track B benchmark script |
+| `docs/TRACK_B_MINIMAL_SPEC.md` | Track B design rationale |
+| `docs/PAPER_FINDINGS_REGISTRY.md` | Why Track A doesn't work (F2, F11) |
 
-## DKANA Architecture (already implemented)
+## What Not to Change
 
-`supply_chain/dkana.py` contains a complete starter implementation:
+- Do not modify the DES engine (`supply_chain.py`) or risk distributions
+- Do not modify the reward function parameters
+- Do not alter the observation field order or action mapping
+- Do not change the benchmark baseline definitions
 
-```
-DKANAPolicy(config_dim=14, action_dim=5, latent_dim=128)
-  ├── Row Encoder (MLP: 3 → latent)
-  ├── Config Encoder (MLP: 14 → latent)
-  ├── Local Attention (causal, within-state rows)
-  ├── Global Attention (causal, across time steps)
-  └── Decoder (latent → Normal(mean, std) over 5 actions)
-```
+Your contribution is the DKANA training pipeline and policy architecture under the frozen Track B contract.
 
-Input: `DKANADataset` from `build_dkana_windows()`:
-- `row_matrices`: (batch, seq, rows, 3) — [var_id, relation_id, value] triplets
-- `config_context`: (batch, seq, 14) — control params + previous actions
-- `time_mask`: (batch, seq) — validity mask for padded sequences
+## Track A (Legacy Reference)
 
-## What NOT to Change
-
-- Do NOT modify the environment (`env_experimental_shifts.py`)
-- Do NOT modify the reward function
-- Do NOT modify the benchmark infrastructure
-- Do NOT change the static baseline implementations
-
-Your contribution is the DKANA model training and evaluation only.
+Track A is frozen as a benchmark with honest negative results. If you need Track A data for comparison:
+- `reward_mode="control_v1"`, `observation_version="v4"`, `risk_level="increased"`
+- PPO does NOT beat S2 in Track A (documented in PAPER_FINDINGS_REGISTRY.md)
+- Track A evidence is in `outputs/paper_benchmarks/`
