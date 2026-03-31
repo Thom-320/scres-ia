@@ -463,7 +463,11 @@ class MFSCSimulation:
             next_order.backorder = False
             next_order.remaining_qty = 0.0
             self._set_order_ret_indicators(next_order)
-            self.pending_backorders.pop(0)
+            # Guard: list may have been modified while yielded
+            if self.pending_backorders and self.pending_backorders[0] is next_order:
+                self.pending_backorders.pop(0)
+            elif next_order in self.pending_backorders:
+                self.pending_backorders.remove(next_order)
             self._refresh_pending_backorder_qty()
 
     def _backorder_rate(self) -> float:
