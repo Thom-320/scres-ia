@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 
+from supply_chain.config import CAPACITY_BY_SHIFTS, OPERATIONS
 from supply_chain.external_env_interface import make_shift_control_env
 import numpy as np
 import scripts.benchmark_control_reward as control_reward_benchmark
@@ -13,6 +14,7 @@ from scripts.benchmark_control_reward import (
     HEURISTIC_DEFAULTS,
     HEURISTIC_POLICY_NAMES,
     RANDOM_POLICY_NAME,
+    HeuristicCycleGuard,
     HeuristicDisruptionAware,
     HeuristicHysteresis,
     HeuristicTuned,
@@ -27,6 +29,7 @@ from scripts.benchmark_control_reward import (
     make_weight_combos,
     pick_survivors,
     resolve_output_dir,
+    resolve_episode_max_steps,
     run_benchmark,
     static_policy_action,
     tune_heuristic_params,
@@ -79,8 +82,34 @@ def test_static_policy_actions_cover_all_shift_modes() -> None:
     assert s3_info["shifts_active"] == 3
 
 
+def test_garrido_cf_s2_action_matches_thesis_capacity_table() -> None:
+    action = static_policy_action("garrido_cf_s2")
+    assert isinstance(action, dict)
+    assert action["assembly_shifts"] == 2
+    assert action["op3_q"] == pytest.approx(CAPACITY_BY_SHIFTS[2]["op3_q"])
+    assert action["batch_size"] == pytest.approx(CAPACITY_BY_SHIFTS[2]["op7_q"])
+    assert action["op3_rop"] == pytest.approx(OPERATIONS[3]["rop"])
+    assert action["op9_q_min"] == pytest.approx(OPERATIONS[9]["q"][0])
+    assert action["op9_q_max"] == pytest.approx(OPERATIONS[9]["q"][1])
+    assert action["op9_rop"] == pytest.approx(OPERATIONS[9]["rop"])
+
+
+def test_shift_env_accepts_direct_garrido_capacity_action() -> None:
+    env = make_shift_control_env(
+        reward_mode="control_v1",
+        step_size_hours=24,
+        max_steps=1,
+        risk_level="increased",
+    )
+    env.reset(seed=7)
+    _, _, _, _, info = env.step(static_policy_action("garrido_cf_s2"))
+    assert info["shifts_active"] == 2
+    assert env.sim.params["op3_q"] == pytest.approx(CAPACITY_BY_SHIFTS[2]["op3_q"])
+    assert env.sim.params["batch_size"] == pytest.approx(CAPACITY_BY_SHIFTS[2]["op7_q"])
+
+
 def test_pick_survivors_prefers_non_s1_fixed_baselines() -> None:
-    args = build_parser().parse_args([])
+    args = build_parser().parse_args(["--observation-version", "v1"])
     policy_rows = [
         {
             "phase": "static_screen",
@@ -162,6 +191,63 @@ def test_pick_survivors_prefers_non_s1_fixed_baselines() -> None:
     assert survivors[0]["static_reward_gap_best_minus_s1"] == pytest.approx(2.5)
 
 
+def test_pick_survivors_can_select_garrido_capacity_baseline() -> None:
+    args = build_parser().parse_args(["--observation-version", "v1"])
+    policy_rows = [
+        {
+            "phase": "static_screen",
+            "policy": "static_s1",
+            "algo": "ppo",
+            "frame_stack": 1,
+            "observation_version": "v1",
+            "w_bo": 1.0,
+            "w_cost": 0.02,
+            "w_disr": 0.0,
+            "reward_total_mean": 10.0,
+            "fill_rate_mean": 0.60,
+        },
+        {
+            "phase": "static_screen",
+            "policy": "static_s2",
+            "algo": "ppo",
+            "frame_stack": 1,
+            "observation_version": "v1",
+            "w_bo": 1.0,
+            "w_cost": 0.02,
+            "w_disr": 0.0,
+            "reward_total_mean": 11.0,
+            "fill_rate_mean": 0.74,
+        },
+        {
+            "phase": "static_screen",
+            "policy": "static_s3",
+            "algo": "ppo",
+            "frame_stack": 1,
+            "observation_version": "v1",
+            "w_bo": 1.0,
+            "w_cost": 0.02,
+            "w_disr": 0.0,
+            "reward_total_mean": 11.5,
+            "fill_rate_mean": 0.75,
+        },
+        {
+            "phase": "static_screen",
+            "policy": "garrido_cf_s2",
+            "algo": "ppo",
+            "frame_stack": 1,
+            "observation_version": "v1",
+            "w_bo": 1.0,
+            "w_cost": 0.02,
+            "w_disr": 0.0,
+            "reward_total_mean": 13.0,
+            "fill_rate_mean": 0.79,
+        },
+    ]
+    survivors = pick_survivors(policy_rows, args)
+    assert len(survivors) == 1
+    assert survivors[0]["best_static_policy"] == "garrido_cf_s2"
+
+
 def test_build_env_kwargs_passes_stochastic_pt() -> None:
     args = build_parser().parse_args(["--stochastic-pt", "--observation-version", "v2"])
     env_kwargs = build_env_kwargs(
@@ -173,14 +259,30 @@ def test_build_env_kwargs_passes_stochastic_pt() -> None:
         },
     )
     assert env_kwargs["stochastic_pt"] is True
-    assert env_kwargs["reward_mode"] == "ReT_seq_v1"
+    assert env_kwargs["reward_mode"] == "control_v1"
     assert env_kwargs["observation_version"] == "v2"
 
 
-def test_control_reward_parser_defaults_to_ret_seq_v1_mainline() -> None:
+def test_control_reward_parser_defaults_to_ret_unified_v1_mainline() -> None:
     args = build_parser().parse_args([])
-    assert args.reward_mode == "ReT_seq_v1"
-    assert args.ret_seq_kappa == pytest.approx(0.20)
+    assert args.reward_mode == "control_v1"
+    assert args.observation_version == "v4"
+
+
+def test_control_reward_parser_accepts_track_b_lane() -> None:
+    args = build_parser().parse_args(
+        [
+            "--observation-version",
+            "v6",
+            "--risk-level",
+            "adaptive_benchmark_v1",
+            "--step-size-hours",
+            "48",
+        ]
+    )
+    assert args.observation_version == "v6"
+    assert args.risk_level == "adaptive_benchmark_v1"
+    assert args.step_size_hours == pytest.approx(48.0)
 
 
 def test_build_env_kwargs_passes_ret_seq_kappa() -> None:
@@ -273,6 +375,50 @@ def test_build_reward_contract_metadata_treats_ret_garrido2024_as_resilience_ind
     assert reward_contract["reward_mode"] == "ReT_garrido2024"
     assert reward_contract["reward_family"] == "resilience_index"
     assert reward_contract["cross_mode_reward_comparison_allowed"] is False
+
+
+def test_build_reward_contract_metadata_treats_ret_unified_v1_as_resilience_index() -> (
+    None
+):
+    args = build_parser().parse_args(["--reward-mode", "ReT_unified_v1"])
+    reward_contract = build_reward_contract_metadata(args)
+
+    assert reward_contract["reward_mode"] == "ReT_unified_v1"
+    assert reward_contract["reward_family"] == "resilience_index"
+    assert reward_contract["cross_mode_reward_comparison_allowed"] is False
+
+
+def test_build_env_kwargs_passes_ret_unified_calibration(tmp_path: Path) -> None:
+    calibration_path = tmp_path / "ret_unified.json"
+    calibration_path.write_text(
+        json.dumps(
+            {
+                "theta_sc": 0.78,
+                "theta_bc": 0.75,
+                "beta": 12.0,
+                "kappa": 0.10,
+            }
+        ),
+        encoding="utf-8",
+    )
+    args = build_parser().parse_args(
+        [
+            "--reward-mode",
+            "ReT_unified_v1",
+            "--ret-unified-calibration",
+            str(calibration_path),
+        ]
+    )
+    env_kwargs = build_env_kwargs(
+        args,
+        {
+            "w_bo": 4.0,
+            "w_cost": 0.02,
+            "w_disr": 0.0,
+        },
+    )
+    assert env_kwargs["reward_mode"] == "ReT_unified_v1"
+    assert env_kwargs["ret_unified_calibration_path"] == str(calibration_path)
 
 
 def test_resolve_output_dir_disambiguates_algo_and_frame_stack() -> None:
@@ -376,6 +522,20 @@ def test_build_comparison_rows_marks_collapse_and_reward_wins() -> None:
             "ret_thesis_corrected_total_mean": 240.0,
         },
         {
+            "phase": "static_screen",
+            "policy": "garrido_cf_s2",
+            "algo": "ppo",
+            "frame_stack": 4,
+            "observation_version": "v2",
+            "w_bo": 2.0,
+            "w_cost": 0.02,
+            "w_disr": 0.0,
+            "reward_total_mean": 14.5,
+            "fill_rate_mean": 0.81,
+            "backorder_rate_mean": 0.19,
+            "ret_thesis_corrected_total_mean": 239.0,
+        },
+        {
             "phase": "random_eval",
             "policy": RANDOM_POLICY_NAME,
             "algo": "ppo",
@@ -412,8 +572,10 @@ def test_build_comparison_rows_marks_collapse_and_reward_wins() -> None:
     assert len(comparison_rows) == 1
     assert comparison_rows[0]["ppo_beats_static_s2"] is True
     assert comparison_rows[0]["ppo_beats_best_static"] is True
+    assert comparison_rows[0]["ppo_beats_garrido_cf_s2"] is True
     assert comparison_rows[0]["learned_beats_random"] is True
     assert comparison_rows[0]["learned_beats_best_static"] is True
+    assert comparison_rows[0]["best_garrido_policy"] == "garrido_cf_s2"
     assert comparison_rows[0]["collapsed_to_S1"] is True
     assert comparison_rows[0]["collapsed_to_S2"] is False
     assert comparison_rows[0]["algo"] == "ppo"
@@ -481,12 +643,12 @@ def test_run_benchmark_smoke_writes_expected_artifacts(tmp_path: Path) -> None:
     assert payload["config"]["algo"] == "sac"
     assert payload["config"]["frame_stack"] == 1
     assert payload["config"]["observation_version"] == "v2"
-    assert payload["config"]["reward_mode"] == "ReT_seq_v1"
+    assert payload["config"]["reward_mode"] == "control_v1"
     assert payload["config"]["eval_risk_levels"] == ["increased"]
     assert payload["config"]["stochastic_pt"] is True
     assert payload["backbone"]["env_variant"] == "shift_control"
-    assert payload["reward_contract"]["reward_mode"] == "ReT_seq_v1"
-    assert payload["reward_contract"]["reward_family"] == "resilience_index"
+    assert payload["reward_contract"]["reward_mode"] == "control_v1"
+    assert payload["reward_contract"]["reward_family"] == "operational_penalty"
     assert payload["reward_contract"]["cross_mode_reward_comparison_allowed"] is False
     assert payload["backbone"]["observation_version"] == "v2"
     assert payload["backbone"]["frame_stack"] == 1
@@ -708,6 +870,39 @@ def test_heuristic_tuned_deescalates_when_service_is_healthy() -> None:
     assert action[4] == pytest.approx(0.0)  # S2 after one-level de-escalation
 
 
+def test_heuristic_cycle_guard_escalates_in_v5_risk_window() -> None:
+    h = HeuristicCycleGuard()
+    h.reset()
+    obs = np.zeros(30, dtype=np.float32)
+    obs[6] = 0.90
+    obs[7] = 0.08
+    obs[24] = 0.90
+    obs[25] = 0.10
+    action = h(obs, {})
+    assert action[4] == pytest.approx(1.0)
+    assert action[0] == pytest.approx(0.5)
+
+
+def test_heuristic_cycle_guard_holds_s2_outside_risk_window() -> None:
+    h = HeuristicCycleGuard()
+    h.reset()
+    obs = np.zeros(30, dtype=np.float32)
+    obs[6] = 0.97
+    obs[7] = 0.01
+    obs[24] = 0.20
+    obs[25] = 0.25
+    action = h(obs, {})
+    assert action[4] == pytest.approx(0.0)
+    assert action[0] == pytest.approx(0.0)
+
+
+def test_resolve_episode_max_steps_preserves_physical_horizon() -> None:
+    assert resolve_episode_max_steps(168.0, None) == 260
+    assert resolve_episode_max_steps(48.0, None) == 910
+    assert resolve_episode_max_steps(24.0, None) == 1820
+    assert resolve_episode_max_steps(24.0, 7) == 7
+
+
 def test_all_heuristics_within_action_bounds() -> None:
     env = make_shift_control_env(
         reward_mode="control_v1",
@@ -764,6 +959,7 @@ def test_run_benchmark_smoke_with_heuristics(tmp_path: Path) -> None:
     assert "heuristic_hysteresis" in summary["policies"]
     assert "heuristic_disruption" in summary["policies"]
     assert "heuristic_tuned" in summary["policies"]
+    assert "heuristic_cycle_guard" in summary["policies"]
     assert "heuristic_eval" in summary["phases"]
 
     import csv
@@ -771,7 +967,7 @@ def test_run_benchmark_smoke_with_heuristics(tmp_path: Path) -> None:
     with open(tmp_path / "episode_metrics.csv", newline="") as f:
         reader = csv.DictReader(f)
         heuristic_rows = [r for r in reader if r["phase"] == "heuristic_eval"]
-    assert len(heuristic_rows) >= 3  # at least one episode per heuristic
+    assert len(heuristic_rows) >= 4  # at least one episode per heuristic
 
 
 def test_tune_heuristic_params_returns_best(tmp_path: Path) -> None:
@@ -889,6 +1085,9 @@ def test_cross_scenario_evaluation(
             self, obs: np.ndarray, deterministic: bool = True
         ) -> tuple[np.ndarray, None]:
             return np.zeros(5, dtype=np.float32), None
+
+        def save(self, path: str) -> None:
+            Path(path).write_text("dummy_model", encoding="utf-8")
 
     class DummyVecEnv:
         def close(self) -> None:
@@ -1066,6 +1265,32 @@ def test_run_benchmark_writes_proof_trajectories_for_requested_risk_levels(
     assert ("current", "ppo") in policies
     assert ("increased", "ppo") in policies
     assert ("severe", "ppo") in policies
+
+
+def test_evaluate_policy_records_garrido_sigmoid_total_for_train_mode() -> None:
+    args = build_parser().parse_args(
+        [
+            "--seeds",
+            "1",
+            "--eval-episodes",
+            "1",
+            "--step-size-hours",
+            "24",
+            "--max-steps",
+            "4",
+            "--reward-mode",
+            "ReT_garrido2024_train",
+        ]
+    )
+    rows = evaluate_policy(
+        "static_screen",
+        "garrido_cf_s2",
+        args=args,
+        weight_combo={"w_bo": 4.0, "w_cost": 0.02, "w_disr": 0.0},
+        seed=1,
+    )
+    assert len(rows) == 1
+    assert rows[0]["ret_garrido2024_sigmoid_total"] > 0.0
 
 
 # ---------------------------------------------------------------------------

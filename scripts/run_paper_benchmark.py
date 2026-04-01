@@ -36,7 +36,7 @@ REQUIRED_OUTPUTS = ("summary.json", "policy_summary.csv", "comparison_table.csv"
 FROZEN_BACKBONE = {
     "code_ref": "HEAD",
     "benchmark_protocol": "reward_benchmark_corrected",
-    "observation_version": "v1",
+    "observation_version": "v4",
     "frame_stack": 1,
     "year_basis": "thesis",
     "risk_level": "increased",
@@ -86,7 +86,7 @@ class RunArtifacts:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
-            "Run the frozen paper-facing benchmark backbone with an auditable "
+            "Run the frozen Track A paper benchmark backbone with an auditable "
             "launcher that always leaves a status trail."
         )
     )
@@ -95,6 +95,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--reward-mode",
         choices=[
             "control_v1",
+            "ReT_unified_v1",
             "ReT_seq_v1",
             "ReT_garrido2024_raw",
             "ReT_garrido2024",
@@ -102,8 +103,8 @@ def build_parser() -> argparse.ArgumentParser:
             "ReT_cd_v1",
             "ReT_cd_sigmoid",
         ],
-        default="ReT_seq_v1",
-        help="Paper-facing training reward. Backbone fields remain frozen.",
+        default="control_v1",
+        help="Track A training reward. Backbone fields remain frozen.",
     )
     parser.add_argument(
         "--kappa",
@@ -146,6 +147,12 @@ def build_parser() -> argparse.ArgumentParser:
         "--export-artifact-bundle",
         action="store_true",
         help="Also export the benchmark bundle through benchmark_control_reward.py.",
+    )
+    parser.add_argument(
+        "--ret-unified-calibration",
+        type=Path,
+        default=None,
+        help="Optional ReT_unified_v1 calibration JSON for exploratory unified runs.",
     )
     parser.add_argument(
         "--ret-g24-calibration",
@@ -209,6 +216,8 @@ def build_launcher_command(args: argparse.Namespace) -> str:
         command.extend(["--artifact-root", str(args.artifact_root)])
     if args.export_artifact_bundle:
         command.append("--export-artifact-bundle")
+    if args.ret_unified_calibration is not None:
+        command.extend(["--ret-unified-calibration", str(args.ret_unified_calibration)])
     if args.ret_g24_calibration is not None:
         command.extend(["--ret-g24-calibration", str(args.ret_g24_calibration)])
     return " ".join(command)
@@ -249,6 +258,10 @@ def build_benchmark_cli_args(args: argparse.Namespace, run_dir: Path) -> list[st
         "--output-dir",
         str(run_dir),
     ]
+    if str(args.reward_mode) == "ReT_unified_v1" and args.ret_unified_calibration:
+        cli_args.extend(
+            ["--ret-unified-calibration", str(args.ret_unified_calibration)]
+        )
     if str(args.reward_mode) == "ReT_seq_v1":
         cli_args.extend(["--ret-seq-kappa", str(args.kappa)])
     if (

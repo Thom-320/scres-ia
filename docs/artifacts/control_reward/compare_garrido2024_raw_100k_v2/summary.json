@@ -1,0 +1,208 @@
+{
+  "config": {
+    "algo": "ppo",
+    "frame_stack": 1,
+    "observation_version": "v1",
+    "reward_mode": "ReT_garrido2024_raw",
+    "seeds": [
+      11,
+      22,
+      33
+    ],
+    "train_timesteps": 100000,
+    "eval_episodes": 10,
+    "step_size_hours": 168.0,
+    "max_steps": 260,
+    "risk_level": "increased",
+    "eval_risk_levels": [
+      "increased"
+    ],
+    "stochastic_pt": true,
+    "year_basis": "gregorian",
+    "w_bo": [
+      1.0,
+      2.0,
+      4.0
+    ],
+    "w_cost": [
+      0.02,
+      0.06,
+      0.1
+    ],
+    "w_disr": [
+      0.0
+    ],
+    "ret_seq_kappa": 0.2,
+    "max_survivors": 4,
+    "learning_rate": 0.0003,
+    "n_steps": 1024,
+    "batch_size": 64,
+    "n_epochs": 10,
+    "gamma": 0.99,
+    "gae_lambda": 0.95,
+    "clip_range": 0.2,
+    "tau": 0.005,
+    "train_freq": 1,
+    "gradient_steps": 1,
+    "learning_starts": 5000
+  },
+  "backbone": {
+    "env_variant": "shift_control",
+    "git_commit": "5cb053ab9500a2141e212347e3f5d302181730c6",
+    "observation_version": "v1",
+    "frame_stack": 1,
+    "year_basis": "gregorian",
+    "risk_level": "increased",
+    "stochastic_pt": true,
+    "step_size_hours": 168.0,
+    "max_steps": 260,
+    "reward_mode": "ReT_garrido2024_raw"
+  },
+  "metric_contract": {
+    "protocol_version": "paper_facing_v1",
+    "fill_rate_primary": "terminal_order_level",
+    "backorder_rate_primary": "terminal_order_level",
+    "fill_rate_audit_only": "flow_fill_rate",
+    "backorder_rate_audit_only": "flow_backorder_rate"
+  },
+  "reward_contract": {
+    "reward_mode": "ReT_garrido2024_raw",
+    "reward_family": "resilience_index",
+    "cross_mode_reward_comparison_allowed": false,
+    "within_run_reward_comparison_allowed": true,
+    "selection_metrics": [
+      "fill_rate",
+      "backorder_rate",
+      "order_level_ret_mean",
+      "reward_total_within_same_reward_mode_only"
+    ],
+    "note": "reward_total is only comparable within runs that share the same reward_mode/reward_family. Use terminal service metrics and order_level_ret_mean for cross-mode interpretation."
+  },
+  "benchmark_metadata": {
+    "generated_at_utc": "2026-03-28T13:53:56.660843+00:00",
+    "git_commit": "5cb053ab9500a2141e212347e3f5d302181730c6",
+    "command": "python scripts/benchmark_control_reward.py --reward-mode ReT_garrido2024_raw --seeds 11 22 33 --train-timesteps 100000 --eval-episodes 10 --step-size-hours 168 --max-steps 260 --risk-level increased --stochastic-pt --learned-only --output-dir outputs/benchmarks/compare_garrido2024_raw_100k_v2"
+  },
+  "phases": [
+    "ppo_eval",
+    "proof_increased"
+  ],
+  "policies": [
+    "ppo"
+  ],
+  "weight_combinations": [
+    {
+      "w_bo": 1.0,
+      "w_cost": 0.02,
+      "w_disr": 0.0
+    }
+  ],
+  "survivors": [
+    {
+      "w_bo": 1.0,
+      "w_cost": 0.02,
+      "w_disr": 0.0,
+      "best_static_policy": null,
+      "static_reward_gap_best_minus_s1": null,
+      "static_fill_rate_gap_best_minus_s1": null
+    }
+  ],
+  "trained_models": [
+    {
+      "algo": "ppo",
+      "frame_stack": 1,
+      "seed": 11,
+      "w_bo": 1.0,
+      "w_cost": 0.02,
+      "w_disr": 0.0,
+      "train_timesteps": 100000
+    },
+    {
+      "algo": "ppo",
+      "frame_stack": 1,
+      "seed": 22,
+      "w_bo": 1.0,
+      "w_cost": 0.02,
+      "w_disr": 0.0,
+      "train_timesteps": 100000
+    },
+    {
+      "algo": "ppo",
+      "frame_stack": 1,
+      "seed": 33,
+      "w_bo": 1.0,
+      "w_cost": 0.02,
+      "w_disr": 0.0,
+      "train_timesteps": 100000
+    }
+  ],
+  "ppo_skipped": false,
+  "artifacts": {
+    "episode_metrics_csv": "outputs/benchmarks/compare_garrido2024_raw_100k_v2/episode_metrics.csv",
+    "policy_summary_csv": "outputs/benchmarks/compare_garrido2024_raw_100k_v2/policy_summary.csv",
+    "comparison_table_csv": "outputs/benchmarks/compare_garrido2024_raw_100k_v2/comparison_table.csv",
+    "training_trace_csv": "outputs/benchmarks/compare_garrido2024_raw_100k_v2/training_trace.csv",
+    "proof_trajectories_csv": "outputs/benchmarks/compare_garrido2024_raw_100k_v2/proof_trajectories.csv",
+    "summary_json": "outputs/benchmarks/compare_garrido2024_raw_100k_v2/summary.json"
+  },
+  "policy_summary": [
+    {
+      "phase": "ppo_eval",
+      "policy": "ppo",
+      "algo": "ppo",
+      "reward_mode": "ReT_garrido2024_raw",
+      "reward_family": "resilience_index",
+      "frame_stack": 1,
+      "observation_version": "v1",
+      "w_bo": 1.0,
+      "w_cost": 0.02,
+      "w_disr": 0.0,
+      "seed_count": 3,
+      "reward_total_mean": 382.26580037881087,
+      "reward_total_std": 36.48822596975443,
+      "reward_total_ci95_low": 340.9754856904672,
+      "reward_total_ci95_high": 423.5561150671545,
+      "service_loss_total_mean": 0.0,
+      "service_loss_total_std": 0.0,
+      "service_loss_total_ci95_low": 0.0,
+      "service_loss_total_ci95_high": 0.0,
+      "shift_cost_total_mean": 0.0,
+      "shift_cost_total_std": 0.0,
+      "shift_cost_total_ci95_low": 0.0,
+      "shift_cost_total_ci95_high": 0.0,
+      "mean_disruption_fraction_mean": 0.0,
+      "mean_disruption_fraction_std": 0.0,
+      "mean_disruption_fraction_ci95_low": 0.0,
+      "mean_disruption_fraction_ci95_high": 0.0,
+      "fill_rate_mean": 0.6379903503251522,
+      "fill_rate_std": 0.04285156696244111,
+      "fill_rate_ci95_low": 0.5894992374320653,
+      "fill_rate_ci95_high": 0.686481463218239,
+      "backorder_rate_mean": 0.3620096496748479,
+      "backorder_rate_std": 0.04285156696244102,
+      "backorder_rate_ci95_low": 0.3135185367817612,
+      "backorder_rate_ci95_high": 0.41050076256793455,
+      "ret_thesis_corrected_total_mean": 242.57127479620772,
+      "ret_thesis_corrected_total_std": 0.7182577033657227,
+      "ret_thesis_corrected_total_ci95_low": 241.7584896905717,
+      "ret_thesis_corrected_total_ci95_high": 243.38405990184373,
+      "order_level_ret_mean_mean": 0.14649498287631,
+      "order_level_ret_mean_std": 0.02234776893184815,
+      "order_level_ret_mean_ci95_low": 0.12120610167547342,
+      "order_level_ret_mean_ci95_high": 0.17178386407714658,
+      "pct_steps_S1_mean": 68.87179487179488,
+      "pct_steps_S1_std": 47.10670773058748,
+      "pct_steps_S1_ci95_low": 15.565536909567129,
+      "pct_steps_S1_ci95_high": 122.17805283402262,
+      "pct_steps_S2_mean": 28.49999999999999,
+      "pct_steps_S2_std": 42.6337956619438,
+      "pct_steps_S2_ci95_low": -19.74468146791757,
+      "pct_steps_S2_ci95_high": 76.74468146791754,
+      "pct_steps_S3_mean": 2.628205128205128,
+      "pct_steps_S3_std": 4.4857323673838225,
+      "pct_steps_S3_ci95_low": -2.4478788998453394,
+      "pct_steps_S3_ci95_high": 7.704289156255596
+    }
+  ],
+  "comparison_table": []
+}

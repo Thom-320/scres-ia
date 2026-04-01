@@ -220,6 +220,71 @@ def test_pending_backorders_are_served_once_theatre_inventory_arrives() -> None:
     assert sim.pending_backorder_qty == pytest.approx(0.0)
 
 
+def test_zero_qty_pending_backorders_are_dropped_without_container_get(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    sim = MFSCSimulation(seed=42, deterministic_baseline=True)
+    delayed_order = OrderRecord(
+        j=1,
+        OPTj=0.0,
+        quantity=1200.0,
+        remaining_qty=0.0,
+        backorder=True,
+    )
+    sim.orders.append(delayed_order)
+    sim._enqueue_backorder(delayed_order)
+
+    def _unexpected_get(amount: float):
+        raise AssertionError(f"Container.get should not be called for amount={amount}")
+
+    monkeypatch.setattr(sim.rations_theatre, "get", _unexpected_get)
+
+    sim.env.process(sim._serve_pending_backorders())
+    sim.env.run()
+
+    assert delayed_order.backorder is False
+    assert delayed_order.remaining_qty == pytest.approx(0.0)
+    assert len(sim.pending_backorders) == 0
+    assert sim.pending_backorder_qty == pytest.approx(0.0)
+
+
+def test_pending_backorder_removal_is_idempotent_during_service(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    sim = MFSCSimulation(seed=42, deterministic_baseline=True)
+    delayed_order = OrderRecord(
+        j=1,
+        OPTj=0.0,
+        quantity=1200.0,
+        remaining_qty=1200.0,
+        backorder=True,
+    )
+    sim.orders.append(delayed_order)
+    sim._enqueue_backorder(delayed_order)
+    sim.rations_theatre._level = 1500.0
+
+    def _fake_get(amount: float):
+        assert amount == pytest.approx(1200.0)
+
+        def _event():
+            if delayed_order in sim.pending_backorders:
+                sim.pending_backorders.remove(delayed_order)
+                sim._refresh_pending_backorder_qty()
+            yield sim.env.timeout(0.0)
+
+        return sim.env.process(_event())
+
+    monkeypatch.setattr(sim.rations_theatre, "get", _fake_get)
+
+    sim.env.process(sim._serve_pending_backorders())
+    sim.env.run()
+
+    assert delayed_order.backorder is False
+    assert delayed_order.remaining_qty == pytest.approx(0.0)
+    assert len(sim.pending_backorders) == 0
+    assert sim.pending_backorder_qty == pytest.approx(0.0)
+
+
 def test_env_rt_v0_reward_mode_emits_components() -> None:
     env = MFSCGymEnv(step_size_hours=24, max_steps=2, reward_mode="rt_v0")
     env.reset(seed=42)

@@ -405,6 +405,111 @@ RISKS_SEVERE_EXTENDED = {
 
 
 # =============================================================================
+# TRACK B — Adaptive Benchmark (research-only, not paper backbone)
+# =============================================================================
+# This lane keeps the thesis-faithful DES structure but adds a persistent
+# operating-regime process plus maintenance debt so anticipation and temporal
+# memory have operational value.
+
+ADAPTIVE_BENCHMARK_REVIEW_HOURS = 48.0
+ADAPTIVE_BENCHMARK_REGIMES = (
+    "nominal",
+    "strained",
+    "pre_disruption",
+    "disrupted",
+    "recovery",
+)
+ADAPTIVE_BENCHMARK_INITIAL_REGIME = "nominal"
+ADAPTIVE_BENCHMARK_TRANSITIONS = {
+    "nominal": {
+        "nominal": 0.68,
+        "strained": 0.24,
+        "pre_disruption": 0.08,
+    },
+    "strained": {
+        "nominal": 0.12,
+        "strained": 0.56,
+        "pre_disruption": 0.24,
+        "recovery": 0.08,
+    },
+    "pre_disruption": {
+        "strained": 0.10,
+        "pre_disruption": 0.42,
+        "disrupted": 0.38,
+        "recovery": 0.10,
+    },
+    "disrupted": {
+        "pre_disruption": 0.08,
+        "disrupted": 0.52,
+        "recovery": 0.40,
+    },
+    "recovery": {
+        "nominal": 0.34,
+        "strained": 0.12,
+        "recovery": 0.54,
+    },
+}
+ADAPTIVE_BENCHMARK_REGIME_PARAMS = {
+    "nominal": {
+        "risk_intensity": 0.90,
+        "recovery_scale": 0.95,
+        "surge_scale": 0.90,
+        "demand_scale": 0.95,
+        "forecast_base": 0.18,
+    },
+    "strained": {
+        "risk_intensity": 1.10,
+        "recovery_scale": 1.05,
+        "surge_scale": 1.05,
+        "demand_scale": 1.02,
+        "forecast_base": 0.38,
+    },
+    "pre_disruption": {
+        "risk_intensity": 1.35,
+        "recovery_scale": 1.15,
+        "surge_scale": 1.15,
+        "demand_scale": 1.08,
+        "forecast_base": 0.70,
+    },
+    "disrupted": {
+        "risk_intensity": 1.85,
+        "recovery_scale": 1.30,
+        "surge_scale": 1.35,
+        "demand_scale": 1.12,
+        "forecast_base": 0.92,
+    },
+    "recovery": {
+        "risk_intensity": 1.15,
+        "recovery_scale": 1.12,
+        "surge_scale": 1.00,
+        "demand_scale": 1.00,
+        "forecast_base": 0.42,
+    },
+}
+ADAPTIVE_BENCHMARK_MAINTENANCE = {
+    "s3_debt_gain_per_hour": 1.0 / 240.0,
+    "s2_debt_decay_per_hour": 1.0 / 480.0,
+    "s1_debt_decay_per_hour": 1.0 / 240.0,
+    "throughput_penalty_max": 0.35,
+    "forecast_noise_std": 0.05,
+    "backlog_age_norm_hours": 336.0,
+    "theatre_cover_norm_days": 7.0,
+}
+ADAPTIVE_BENCHMARK_V2_RISK_MULTIPLIERS = {
+    "R22": 1.35,
+    "R23": 1.15,
+    "R24": 1.25,
+}
+ADAPTIVE_BENCHMARK_V2_RECOVERY_MULTIPLIERS = {
+    "R22": 1.20,
+    "R23": 1.10,
+}
+ADAPTIVE_BENCHMARK_V2_SURGE_SCALE_MULTIPLIER = 1.20
+TRACK_B_ROLLING_WINDOW_HOURS = 4 * HOURS_PER_WEEK
+TRACK_B_QUEUE_PRESSURE_LOOKAHEAD_CYCLES = 4.0
+
+
+# =============================================================================
 # INVENTORY BUFFER LEVELS — Table 6.16 (Scenario II)
 # =============================================================================
 # On-hand inventory at critical storage points (Op3, Op5, Op9) for S=1.
@@ -556,15 +661,20 @@ RET_SHIFT_COST_DELTA_DEFAULT = 0.06
 # -----------------------------------------------------------------------------
 # DEFAULT SHIFT-CONTROL INTERFACE SETTINGS
 # -----------------------------------------------------------------------------
-# These defaults freeze the current paper-facing reward contract around the
-# resilience-aligned sequential objective. The historical control surrogate
-# (`control_v1`) remains available for legacy comparison, but new benchmark-
-# facing entry points should default to `ReT_seq_v1` with the frozen κ=0.20.
-BENCHMARK_REWARD_MODE = "ReT_seq_v1"
-BENCHMARK_OBSERVATION_VERSION = "v1"
+# These defaults freeze the Track A paper backbone around the thesis-faithful
+# shift-control benchmark: control_v1 + v4 + 168h. ReT_unified_v1 remains
+# available as an exploratory/audit lane, but paper-facing entry points should
+# default to control_v1.
+BENCHMARK_REWARD_MODE = "control_v1"
+BENCHMARK_OBSERVATION_VERSION = "v4"
 BENCHMARK_W_BO = 4.0
 BENCHMARK_W_COST = 0.02
 BENCHMARK_W_DISR = 0.0
+BENCHMARK_REFERENCE_STEP_SIZE_HOURS = HOURS_PER_WEEK
+BENCHMARK_REFERENCE_MAX_STEPS = 260
+BENCHMARK_EPISODE_HORIZON_HOURS = (
+    BENCHMARK_REFERENCE_STEP_SIZE_HOURS * BENCHMARK_REFERENCE_MAX_STEPS
+)
 
 
 # =============================================================================

@@ -49,16 +49,21 @@ Interpretation rule:
 
 The main auditable benchmark artifacts are:
 
-- `docs/artifacts/control_reward/control_reward_500k_increased_stopt`
-- `docs/artifacts/control_reward/control_reward_500k_severe_stopt`
-- `docs/artifacts/control_reward/control_reward_500k_seed_inference/seed_inference.md`
+- `outputs/paper_benchmarks/paper_ret_seq_k020_500k`
+- `outputs/paper_benchmarks/paper_ret_seq_k010_500k`
+- `outputs/paper_benchmarks/paper_control_v1_500k`
+- `outputs/benchmarks/final_ret_seq_v1_500k`
+
+Historical `control_reward_500k_*_stopt` bundles and the old seed-inference note remain useful only as legacy context. They were generated before the March 2026 DES audit/alignment fixes and must not be used as the primary evidence for the current repository state.
 
 Current headline reading:
 
 - The paper-trio comparison currently selects `ReT_seq_v1` with `κ=0.20` as the pragmatic leader against `static_s2` on cross-mode comparable metrics.
+- `paper_control_v1_500k` remains the valid operational comparator for the current repo, but it is not the leading lane.
 - `κ=0.10` remains a conservative ablation, not the repo default.
 - `κ=0.30` is not a candidate default because it trends toward collapse-prone shift behavior.
-- These results are preliminary and should be described with cautious inferential language.
+- `final_ret_seq_v1_500k` is an auditable post-audit comparator, but it uses `year_basis="gregorian"` and should not be conflated with the thesis-basis paper bundle family.
+- These results remain benchmark evidence, not a claim of universal superiority; use cautious inferential language.
 
 ## Public defaults
 

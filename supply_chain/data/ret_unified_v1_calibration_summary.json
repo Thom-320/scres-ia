@@ -1,0 +1,63 @@
+{
+  "selected": {
+    "theta_sc": 0.78,
+    "theta_bc": 0.7,
+    "beta": 12.0,
+    "kappa": 0.2,
+    "w_fr": 0.6,
+    "w_rc": 0.25,
+    "w_ce": 0.15,
+    "selection_rule": "1) garrido_cf_s2 > garrido_cf_s3 > garrido_cf_s1; 2) static_s2 > static_s3 > static_s1; 3) S2-S3 >= 1%; 4) lowest kappa; 5) tie-break theta_sc=0.78 then theta_bc=0.75",
+    "source": "scripts/calibrate_ret_unified_v1.py",
+    "selection_status": "selected",
+    "risk_level": "increased",
+    "stochastic_pt": true,
+    "observation_version": "v4",
+    "step_size_hours": 168.0,
+    "max_steps": 260,
+    "eval_episodes": 3,
+    "seeds": [
+      11,
+      22,
+      33
+    ],
+    "theta_sc_grid": [
+      0.5,
+      0.6,
+      0.7,
+      0.78
+    ],
+    "theta_bc_grid": [
+      0.7,
+      0.78,
+      0.85
+    ],
+    "kappa_grid": [
+      0.2,
+      0.4,
+      0.6,
+      0.8,
+      1.0
+    ]
+  },
+  "accepted_candidates": 51,
+  "total_candidates": 60,
+  "selection_status": "selected",
+  "best_candidate_metrics": {
+    "theta_sc": 0.78,
+    "theta_bc": 0.7,
+    "beta": 12.0,
+    "kappa": 0.2,
+    "garrido_cf_s1_reward_mean": 103.43678456546841,
+    "garrido_cf_s2_reward_mean": 139.9920108689069,
+    "garrido_cf_s3_reward_mean": 138.45215944281912,
+    "static_s1_reward_mean": 100.33912920395825,
+    "static_s2_reward_mean": 138.79461763776806,
+    "static_s3_reward_mean": 137.84009820114886,
+    "garrido_rank_ok": true,
+    "static_rank_ok": true,
+    "garrido_s2_minus_s3": 1.539851426087779,
+    "garrido_margin_ok": true,
+    "accepted": true
+  }
+}

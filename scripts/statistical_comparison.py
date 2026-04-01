@@ -160,6 +160,7 @@ BASELINE_PHASES = {
     "heuristic_hysteresis": "heuristic_eval",
     "heuristic_disruption": "heuristic_eval",
     "heuristic_tuned": "heuristic_eval",
+    "heuristic_cycle_guard": "heuristic_eval",
     "random": "random_eval",
 }
 

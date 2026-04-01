@@ -78,7 +78,7 @@ from supply_chain.config import (
 from supply_chain.supply_chain import MFSCSimulation
 
 NUM_TRACKED_OPS = 13
-OBSERVATION_VERSION_OPTIONS = ("v1", "v2", "v3", "v4", "v5")
+OBSERVATION_VERSION_OPTIONS = ("v1", "v2", "v3", "v4", "v5", "v6", "v7")
 REWARD_MODE_ALIAS_MAP = {"ReT_corrected_cost": "ReT_corrected"}
 REWARD_MODE_OPTIONS = (
     "ReT_thesis",
@@ -147,7 +147,9 @@ BASE_OBSERVATION_DIM = 15
 V2_OBSERVATION_DIM = 18
 V3_OBSERVATION_DIM = 20
 V4_OBSERVATION_DIM = 24  # v3 (20) + rations_sb_dispatch + shifts + op1_down + op2_down
-V5_OBSERVATION_DIM = 30  # v4 (24) + 6 cycle-phase signals (sin/cos for op1, op2, week)
+V5_OBSERVATION_DIM = 30  # v4 (24) + 6 cycle/calendar precursor features
+V6_OBSERVATION_DIM = 40  # v5 (30) + 10 adaptive benchmark features
+V7_OBSERVATION_DIM = 46  # v6 (40) + 6 downstream Track B bottleneck features
 PREV_STEP_DEMAND_SCALE = 18_200.0
 PREV_STEP_BACKORDER_SCALE = 18_200.0
 INVENTORY_NODE_FIELDS: tuple[str, ...] = (
@@ -159,6 +161,7 @@ INVENTORY_NODE_FIELDS: tuple[str, ...] = (
     "rations_cssu",
     "rations_theatre",
 )
+ACTION_CONTRACT_OPTIONS = ("track_a_v1", "track_b_v1")
 
 
 class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
@@ -171,7 +174,11 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
       - v3: v2 + normalized cumulative backorder and disruption features.
       - v4: v3 + current shift plus Op1/Op2 disruption state.
       - v5: v4 + thesis-faithful cycle/calendar precursor features.
-    Action: 5-dimensional [-1, 1].
+      - v6: v5 + Track-B adaptive benchmark regime/forecast/debt features.
+      - v7: v6 + downstream bottleneck state and rolling service features.
+    Action:
+      - Track A (`track_a_v1`): 5-dimensional [-1, 1]
+      - Track B (`track_b_v1`): 7-dimensional [-1, 1]
 
     Parameters
     ----------
@@ -259,6 +266,11 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         # --- ReT_cd_v1 / ReT_cd_sigmoid parameters ---
         ret_cd_w_fr: float = RET_CD_W_FR,
         ret_cd_w_at: float = RET_CD_W_AT,
+        # --- Action space configuration ---
+        action_contract: str = "track_a_v1",
+        action_mode: str = "full",  # "full" (5D), "shift_only" (1D), "shift_q9" (2D)
+        # --- Track B: MDP structural fixes ---
+        clear_backlog_after_priming: bool = False,  # Fix 3A: clear inherited backlog
     ) -> None:
         super().__init__()
         if step_size_hours <= 0:
@@ -271,6 +283,8 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             "severe",
             "severe_extended",
             "severe_training",
+            "adaptive_benchmark_v1",
+            "adaptive_benchmark_v2",
         ):
             raise ValueError(f"Invalid risk_level={risk_level!r}.")
         if reward_mode not in REWARD_MODE_OPTIONS:
@@ -288,11 +302,18 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                 f"Invalid pbrs_variant={pbrs_variant!r}. "
                 f"Expected one of {PBRS_VARIANT_OPTIONS}."
             )
+        if action_contract not in ACTION_CONTRACT_OPTIONS:
+            raise ValueError(
+                f"Invalid action_contract={action_contract!r}. "
+                f"Expected one of {ACTION_CONTRACT_OPTIONS}."
+            )
+        if action_contract == "track_b_v1" and action_mode != "full":
+            raise ValueError("track_b_v1 currently supports only action_mode='full'.")
         canonical_reward_mode = REWARD_MODE_ALIAS_MAP.get(reward_mode, reward_mode)
         if (
             canonical_reward_mode == "control_v1_pbrs"
             and pbrs_variant == "step_level"
-            and observation_version not in ("v2", "v3", "v4", "v5")
+            and observation_version not in ("v2", "v3", "v4", "v5", "v6", "v7")
         ):
             raise ValueError(
                 "PBRS step_level variant requires observation_version='v2' "
@@ -307,6 +328,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self.reward_mode = reward_mode
         self._canonical_reward_mode = canonical_reward_mode
         self.observation_version = observation_version
+        self.action_contract = action_contract
 
         self.rt_delta = float(rt_delta)
         self.autotomy_threshold = float(autotomy_threshold)
@@ -426,6 +448,12 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             "severe": float(threshold_map.get("severe", 0.15)),
             "severe_extended": float(threshold_map.get("severe_extended", 0.15)),
             "severe_training": float(threshold_map.get("severe_training", 0.15)),
+            "adaptive_benchmark_v1": float(
+                threshold_map.get("adaptive_benchmark_v1", 0.20)
+            ),
+            "adaptive_benchmark_v2": float(
+                threshold_map.get("adaptive_benchmark_v2", 0.20)
+            ),
         }
         if max_steps is None:
             self.max_steps = int(
@@ -460,9 +488,30 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self.observation_space = spaces.Box(
             low=0.0, high=20.0, shape=(obs_dim,), dtype=np.float32
         )
-        self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(5,), dtype=np.float32)
+        self.action_mode = action_mode
+        self.clear_backlog_after_priming = clear_backlog_after_priming
+        if self.action_contract == "track_b_v1":
+            self.action_space = spaces.Box(
+                low=-1.0, high=1.0, shape=(7,), dtype=np.float32
+            )
+        elif action_mode == "shift_only":
+            self.action_space = spaces.Box(
+                low=-1.0, high=1.0, shape=(1,), dtype=np.float32
+            )
+        elif action_mode == "shift_q9":
+            self.action_space = spaces.Box(
+                low=-1.0, high=1.0, shape=(2,), dtype=np.float32
+            )
+        else:
+            self.action_space = spaces.Box(
+                low=-1.0, high=1.0, shape=(5,), dtype=np.float32
+            )
 
     def _observation_dim(self) -> int:
+        if self.observation_version == "v7":
+            return V7_OBSERVATION_DIM
+        if self.observation_version == "v6":
+            return V6_OBSERVATION_DIM
         if self.observation_version == "v5":
             return V5_OBSERVATION_DIM
         if self.observation_version == "v4":
@@ -472,6 +521,40 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         if self.observation_version == "v2":
             return V2_OBSERVATION_DIM
         return BASE_OBSERVATION_DIM
+
+    def _action_constraints_payload(self) -> dict[str, Any]:
+        """Return the active action contract in a stable JSON-friendly form."""
+        base_control_parameters: dict[str, float] = {
+            "op3_q": float(OPERATIONS[3]["q"]),
+            "op3_rop": float(OPERATIONS[3]["rop"]),
+            "op9_q_min": float(OPERATIONS[9]["q"][0]),
+            "op9_q_max": float(OPERATIONS[9]["q"][1]),
+            "op9_rop": float(OPERATIONS[9]["rop"]),
+        }
+        if self.action_contract == "track_b_v1":
+            base_control_parameters.update(
+                {
+                    "op10_q_min": float(OPERATIONS[10]["q"][0]),
+                    "op10_q_max": float(OPERATIONS[10]["q"][1]),
+                    "op12_q_min": float(OPERATIONS[12]["q"][0]),
+                    "op12_q_max": float(OPERATIONS[12]["q"][1]),
+                }
+            )
+        return {
+            "action_contract": self.action_contract,
+            "action_bounds": [(-1.0, 1.0)] * int(self.action_space.shape[0]),
+            "inventory_multiplier_range": {
+                "min": 0.5,
+                "max": 2.0,
+                "mapping": "multiplier = 1.25 + 0.75 * signal",
+            },
+            "shift_signal_bands": {
+                "signal_lt_-0.33": 1,
+                "signal_ge_-0.33_and_lt_0.33": 2,
+                "signal_ge_0.33": 3,
+            },
+            "base_control_parameters": base_control_parameters,
+        }
 
     @staticmethod
     def _load_ret_garrido2024_calibration(
@@ -734,17 +817,28 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                 ),
             ]
         )
-        if self.observation_version in ("v3", "v4", "v5"):
+        if self.observation_version in ("v3", "v4", "v5", "v6", "v7"):
             augmented_obs = np.concatenate(
                 [augmented_obs, self._normalized_cumulative_features()]
             )
-        if self.observation_version in ("v4", "v5") and self.sim is not None:
+        if (
+            self.observation_version in ("v4", "v5", "v6", "v7")
+            and self.sim is not None
+        ):
             augmented_obs = np.concatenate(
                 [augmented_obs, self.sim.get_observation_v4_extra()]
             )
-        if self.observation_version == "v5" and self.sim is not None:
+        if self.observation_version in ("v5", "v6", "v7") and self.sim is not None:
             augmented_obs = np.concatenate(
                 [augmented_obs, self.sim.get_observation_v5_extra()]
+            )
+        if self.observation_version in ("v6", "v7") and self.sim is not None:
+            augmented_obs = np.concatenate(
+                [augmented_obs, self.sim.get_observation_v6_extra()]
+            )
+        if self.observation_version == "v7" and self.sim is not None:
+            augmented_obs = np.concatenate(
+                [augmented_obs, self.sim.get_observation_v7_extra()]
             )
         return augmented_obs
 
@@ -1575,6 +1669,14 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self.sim._start_processes()
         self.sim.env.run(until=self.warmup_hours)
         reset_context, primed_ready = self._prime_after_warmup()
+
+        # Fix 3A: Clear inherited backlog so RL episodes start clean.
+        # This removes the FIFO-blocking backorder queue that dominates
+        # cumulative metrics and masks the effect of the agent's actions.
+        if self.clear_backlog_after_priming and self.sim is not None:
+            self.sim.pending_backorders.clear()
+            self.sim.pending_backorder_qty = 0.0
+
         self._post_warmup_start_time = float(self.sim.env.now)
         # Snapshot counters at the actual post-warmup start time so cumulative
         # diagnostics begin after the startup transient has been cleared.
@@ -1595,26 +1697,8 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             "time": self.sim.env.now,
             "year_basis": self.year_basis,
             "observation_version": self.observation_version,
-            "action_constraints": {
-                "action_bounds": [(-1.0, 1.0)] * 5,
-                "inventory_multiplier_range": {
-                    "min": 0.5,
-                    "max": 2.0,
-                    "mapping": "multiplier = 1.25 + 0.75 * signal",
-                },
-                "shift_signal_bands": {
-                    "signal_lt_-0.33": 1,
-                    "signal_ge_-0.33_and_lt_0.33": 2,
-                    "signal_ge_0.33": 3,
-                },
-                "base_control_parameters": {
-                    "op3_q": float(OPERATIONS[3]["q"]),
-                    "op3_rop": float(OPERATIONS[3]["rop"]),
-                    "op9_q_min": float(OPERATIONS[9]["q"][0]),
-                    "op9_q_max": float(OPERATIONS[9]["q"][1]),
-                    "op9_rop": float(OPERATIONS[9]["rop"]),
-                },
-            },
+            "action_contract": self.action_contract,
+            "action_constraints": self._action_constraints_payload(),
             "ret_thresholds": {
                 "autotomy_fill_rate_threshold": self.autotomy_threshold,
                 "nonrecovery_disruption_fraction_threshold": (
@@ -1658,7 +1742,11 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             num_raw_materials, 1.0
         )
         op9_dispatch_cap = float(inventory_detail["rations_sb"])
+        op10_dispatch_cap = float(inventory_detail["rations_sb_dispatch"])
+        op12_dispatch_cap = float(inventory_detail["rations_cssu"])
         cycle_extra = self.sim.get_observation_v5_extra()
+        adaptive_extra = self.sim.get_observation_v6_extra()
+        track_b_extra = self.sim.get_observation_v7_extra()
 
         return {
             "time": float(self.sim.env.now),
@@ -1668,15 +1756,21 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             "op3_total_dispatch_cap": op3_total_dispatch_cap,
             "op3_per_material_dispatch_cap": op3_per_material_dispatch_cap,
             "op9_dispatch_cap": op9_dispatch_cap,
+            "op10_dispatch_cap": op10_dispatch_cap,
+            "op12_dispatch_cap": op12_dispatch_cap,
             "assembly_line_available": bool(obs[8] < 0.5),
             "any_location_available": bool(obs[9] < 0.5),
             "op9_available": bool(obs[10] < 0.5),
+            "op10_available": bool(track_b_extra[0] < 0.5),
             "op11_available": bool(obs[11] < 0.5),
+            "op12_available": bool(track_b_extra[1] < 0.5),
             "fill_rate": float(obs[6]),
             "backorder_rate": float(obs[7]),
             "time_fraction": float(obs[12]),
             "pending_batch_fraction": float(obs[13]),
             "contingent_demand_fraction": float(obs[14]),
+            "rolling_fill_rate_4w": float(track_b_extra[4]),
+            "rolling_backorder_rate_4w": float(track_b_extra[5]),
             "cumulative_backorder_qty": float(self.sim.cumulative_backorder_qty),
             "cumulative_backorder_qty_post_warmup": (
                 self._cumulative_backorder_qty_post_warmup()
@@ -1699,6 +1793,26 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                 "workweek_phase_cos_norm": float(cycle_extra[3]),
                 "workday_phase_sin_norm": float(cycle_extra[4]),
                 "workday_phase_cos_norm": float(cycle_extra[5]),
+            },
+            "adaptive_context": {
+                "regime_nominal": float(adaptive_extra[0]),
+                "regime_strained": float(adaptive_extra[1]),
+                "regime_pre_disruption": float(adaptive_extra[2]),
+                "regime_disrupted": float(adaptive_extra[3]),
+                "regime_recovery": float(adaptive_extra[4]),
+                "risk_forecast_48h_norm": float(adaptive_extra[5]),
+                "risk_forecast_168h_norm": float(adaptive_extra[6]),
+                "maintenance_debt_norm": float(adaptive_extra[7]),
+                "backlog_age_norm": float(adaptive_extra[8]),
+                "theatre_cover_days_norm": float(adaptive_extra[9]),
+            },
+            "track_b_context": {
+                "op10_down": float(track_b_extra[0]),
+                "op12_down": float(track_b_extra[1]),
+                "op10_queue_pressure_norm": float(track_b_extra[2]),
+                "op12_queue_pressure_norm": float(track_b_extra[3]),
+                "rolling_fill_rate_4w": float(track_b_extra[4]),
+                "rolling_backorder_rate_4w": float(track_b_extra[5]),
             },
         }
 
@@ -1723,12 +1837,33 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             )
         else:
             action_arr = np.asarray(action, dtype=np.float32)
-            if action_arr.shape != (5,):
-                raise ValueError(
-                    f"Action must have shape (5,), got {action_arr.shape}."
-                )
 
-            clipped = np.clip(action_arr, -1.0, 1.0)
+            # Expand reduced action modes to full 5D for Track A only.
+            if self.action_contract == "track_b_v1":
+                if action_arr.shape != (7,):
+                    raise ValueError(
+                        f"Action must have shape (7,), got {action_arr.shape}."
+                    )
+                full = action_arr
+            elif self.action_mode == "shift_only":
+                # 1D: [shift]. Inventory dims default to +1 (q_max).
+                full = np.array(
+                    [1.0, 1.0, 0.0, 0.0, float(action_arr[0])], dtype=np.float32
+                )
+            elif self.action_mode == "shift_q9":
+                # 2D: [op9_q, shift]. op3 defaults to +1, ROPs to 0.
+                full = np.array(
+                    [1.0, float(action_arr[0]), 0.0, 0.0, float(action_arr[1])],
+                    dtype=np.float32,
+                )
+            else:
+                if action_arr.shape != (5,):
+                    raise ValueError(
+                        f"Action must have shape (5,), got {action_arr.shape}."
+                    )
+                full = action_arr
+
+            clipped = np.clip(full, -1.0, 1.0)
 
             # Inventory multipliers (dims 0-3)
             multipliers = 1.25 + 0.75 * clipped[:4]
@@ -1752,6 +1887,20 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                 "op9_rop": OPERATIONS[9]["rop"] * float(multipliers[3]),
                 "assembly_shifts": shifts,
             }
+            if self.action_contract == "track_b_v1":
+                downstream_multipliers = 1.25 + 0.75 * clipped[5:7]
+                base_op10_min = OPERATIONS[10]["q"][0]
+                base_op10_max = OPERATIONS[10]["q"][1]
+                base_op12_min = OPERATIONS[12]["q"][0]
+                base_op12_max = OPERATIONS[12]["q"][1]
+                action_dict.update(
+                    {
+                        "op10_q_min": base_op10_min * float(downstream_multipliers[0]),
+                        "op10_q_max": base_op10_max * float(downstream_multipliers[0]),
+                        "op12_q_min": base_op12_min * float(downstream_multipliers[1]),
+                        "op12_q_max": base_op12_max * float(downstream_multipliers[1]),
+                    }
+                )
             raw_action_payload = action_arr.tolist()
             clipped_action_payload = clipped.tolist()
         obs, _, terminated, info = self.sim.step(
@@ -1883,6 +2032,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             "clipped_action": clipped_action_payload,
             "reward_mode": self.reward_mode,
             "observation_version": self.observation_version,
+            "action_contract": self.action_contract,
             "shifts_active": shifts,
             "shift_cost_linear": self.rt_delta * (shifts - 1),
             "shift_cost_delta": self.rt_delta,

@@ -19,6 +19,7 @@ from supply_chain.external_env_interface import (
     ACTION_FIELDS,
     CONTROL_CONTEXT_FIELDS,
     OBSERVATION_FIELDS_V3,
+    REWARD_TERM_FIELDS,
     STATE_CONSTRAINT_FIELDS,
 )
 
@@ -174,6 +175,28 @@ def test_build_dkana_dataset_script_writes_numpy_outputs(tmp_path: Path) -> None
         json.dumps({"fields": list(STATE_CONSTRAINT_FIELDS)}),
         encoding="utf-8",
     )
+    (export_dir / "constraint_context_fields.json").write_text(
+        json.dumps({"fields": list(CONTROL_CONTEXT_FIELDS)}),
+        encoding="utf-8",
+    )
+    (export_dir / "reward_terms_fields.json").write_text(
+        json.dumps({"fields": list(REWARD_TERM_FIELDS), "formula": "unit_test"}),
+        encoding="utf-8",
+    )
+    (export_dir / "action_fields.json").write_text(
+        json.dumps({"fields": list(ACTION_FIELDS)}),
+        encoding="utf-8",
+    )
+    (export_dir / "metadata.json").write_text(
+        json.dumps(
+            {
+                "reward_mode": "ReT_unified_v1",
+                "observation_version": "v3",
+                "frame_stack": 1,
+            }
+        ),
+        encoding="utf-8",
+    )
 
     command = [
         sys.executable,
@@ -202,3 +225,7 @@ def test_build_dkana_dataset_script_writes_numpy_outputs(tmp_path: Path) -> None
         3,
     ]
     assert metadata["config_context_shape"] == [3, 2, len(DKANA_CONFIG_FIELDS)]
+    assert metadata["reward_mode"] == "ReT_unified_v1"
+    assert metadata["observation_version"] == "v3"
+    assert metadata["action_fields"] == list(ACTION_FIELDS)
+    assert metadata["reward_term_fields"] == list(REWARD_TERM_FIELDS)

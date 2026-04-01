@@ -1,0 +1,91 @@
+{
+  "artifact_type": "control_reward_benchmark",
+  "benchmark_date_utc": "2026-03-27T15:41:49.565985+00:00",
+  "git_commit": "96f7edacb20af06ae8a01d018791d3f57bdf5d1c",
+  "command": "python scripts/benchmark_control_reward.py --seeds 11 --train-timesteps 64 --eval-episodes 2 --eval-risk-levels current increased severe --step-size-hours 168.0 --max-steps 260 --algo ppo --frame-stack 1 --observation-version v1 --risk-level increased --year-basis thesis --reward-mode ReT_seq_v1 --ret-seq-kappa 0.2 --w-bo 4.0 --w-cost 0.02 --w-disr 0.0 --output-dir outputs/paper_benchmarks/smoke_turnkey_proof_ret_seq_k020 --stochastic-pt --artifact-root docs/artifacts/control_reward",
+  "source_benchmark_directory": "/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/outputs/paper_benchmarks/smoke_turnkey_proof_ret_seq_k020",
+  "bundle_directory": "/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/docs/artifacts/control_reward/smoke_turnkey_proof_ret_seq_k020",
+  "config": {
+    "algo": "ppo",
+    "frame_stack": 1,
+    "observation_version": "v1",
+    "reward_mode": "ReT_seq_v1",
+    "seeds": [
+      11
+    ],
+    "train_timesteps": 64,
+    "eval_episodes": 2,
+    "step_size_hours": 168.0,
+    "max_steps": 260,
+    "risk_level": "increased",
+    "eval_risk_levels": [
+      "increased",
+      "current",
+      "severe"
+    ],
+    "stochastic_pt": true,
+    "year_basis": "thesis",
+    "w_bo": [
+      4.0
+    ],
+    "w_cost": [
+      0.02
+    ],
+    "w_disr": [
+      0.0
+    ],
+    "ret_seq_kappa": 0.2,
+    "max_survivors": 4,
+    "learning_rate": 0.0003,
+    "n_steps": 1024,
+    "batch_size": 64,
+    "n_epochs": 10,
+    "gamma": 0.99,
+    "gae_lambda": 0.95,
+    "clip_range": 0.2,
+    "tau": 0.005,
+    "train_freq": 1,
+    "gradient_steps": 1,
+    "learning_starts": 5000
+  },
+  "backbone": {
+    "env_variant": "shift_control",
+    "git_commit": "96f7edacb20af06ae8a01d018791d3f57bdf5d1c",
+    "observation_version": "v1",
+    "frame_stack": 1,
+    "year_basis": "thesis",
+    "risk_level": "increased",
+    "stochastic_pt": true,
+    "step_size_hours": 168.0,
+    "max_steps": 260,
+    "reward_mode": "ReT_seq_v1"
+  },
+  "metric_contract": {
+    "protocol_version": "paper_facing_v1",
+    "fill_rate_primary": "terminal_order_level",
+    "backorder_rate_primary": "terminal_order_level",
+    "fill_rate_audit_only": "flow_fill_rate",
+    "backorder_rate_audit_only": "flow_backorder_rate"
+  },
+  "reward_contract": {
+    "reward_mode": "ReT_seq_v1",
+    "reward_family": "resilience_index",
+    "cross_mode_reward_comparison_allowed": false,
+    "within_run_reward_comparison_allowed": true,
+    "selection_metrics": [
+      "fill_rate",
+      "backorder_rate",
+      "order_level_ret_mean",
+      "reward_total_within_same_reward_mode_only"
+    ],
+    "note": "reward_total is only comparable within runs that share the same reward_mode/reward_family. Use terminal service metrics and order_level_ret_mean for cross-mode interpretation."
+  },
+  "files": {
+    "comparison_table.csv": "/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/docs/artifacts/control_reward/smoke_turnkey_proof_ret_seq_k020/comparison_table.csv",
+    "policy_summary.csv": "/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/docs/artifacts/control_reward/smoke_turnkey_proof_ret_seq_k020/policy_summary.csv",
+    "summary.json": "/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/docs/artifacts/control_reward/smoke_turnkey_proof_ret_seq_k020/summary.json",
+    "episode_metrics.csv": "/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/docs/artifacts/control_reward/smoke_turnkey_proof_ret_seq_k020/episode_metrics.csv",
+    "training_trace.csv": "/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/docs/artifacts/control_reward/smoke_turnkey_proof_ret_seq_k020/training_trace.csv",
+    "proof_trajectories.csv": "/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/docs/artifacts/control_reward/smoke_turnkey_proof_ret_seq_k020/proof_trajectories.csv"
+  }
+}

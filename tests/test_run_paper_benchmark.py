@@ -16,11 +16,9 @@ def test_build_benchmark_cli_args_freezes_paper_backbone(tmp_path: Path) -> None
     args = paper_benchmark.build_parser().parse_args(
         [
             "--label",
-            "ret_kappa_010",
+            "ret_unified_smoke",
             "--reward-mode",
-            "ReT_seq_v1",
-            "--kappa",
-            "0.10",
+            "ReT_unified_v1",
             "--output-root",
             str(tmp_path),
         ]
@@ -31,14 +29,14 @@ def test_build_benchmark_cli_args_freezes_paper_backbone(tmp_path: Path) -> None
     )
     command = paper_benchmark.build_benchmark_command(cli_args)
 
-    assert "--observation-version v1" in command
+    assert "--observation-version v4" in command
     assert "--frame-stack 1" in command
     assert "--year-basis thesis" in command
     assert "--risk-level increased" in command
     assert "--stochastic-pt" in command
     assert "--eval-risk-levels current increased severe" in command
-    assert "--reward-mode ReT_seq_v1" in command
-    assert "--ret-seq-kappa 0.1" in command
+    assert "--reward-mode ReT_unified_v1" in command
+    assert "--ret-seq-kappa" not in command
 
 
 def test_build_benchmark_cli_args_supports_ret_cd_v1_without_kappa_flag(
@@ -64,11 +62,36 @@ def test_build_benchmark_cli_args_supports_ret_cd_v1_without_kappa_flag(
     assert "--ret-seq-kappa" not in command
 
 
-def test_run_paper_benchmark_defaults_to_ret_seq_v1() -> None:
+def test_run_paper_benchmark_defaults_to_ret_unified_v1() -> None:
     args = paper_benchmark.build_parser().parse_args(["--label", "default_run"])
-    assert args.reward_mode == "ReT_seq_v1"
+    assert args.reward_mode == "ReT_unified_v1"
     assert args.kappa == 0.20
     assert args.eval_risk_levels == ["current", "increased", "severe"]
+
+
+def test_run_paper_benchmark_parser_accepts_ret_unified_calibration(
+    tmp_path: Path,
+) -> None:
+    calibration_path = tmp_path / "ret_unified.json"
+    calibration_path.write_text(
+        '{"theta_sc": 0.78, "theta_bc": 0.75, "beta": 12.0, "kappa": 0.10}',
+        encoding="utf-8",
+    )
+    args = paper_benchmark.build_parser().parse_args(
+        [
+            "--label",
+            "unified_run",
+            "--reward-mode",
+            "ReT_unified_v1",
+            "--ret-unified-calibration",
+            str(calibration_path),
+        ]
+    )
+    cli_args = paper_benchmark.build_benchmark_cli_args(
+        args, paper_benchmark.resolve_run_dir(args)
+    )
+    command = paper_benchmark.build_benchmark_command(cli_args)
+    assert f"--ret-unified-calibration {calibration_path}" in command
 
 
 def test_run_paper_benchmark_parser_accepts_ret_cd_sigmoid() -> None:
@@ -132,7 +155,7 @@ def test_run_launcher_writes_auditable_trail_on_success(
             "config": {
                 "algo": "ppo",
                 "frame_stack": 1,
-                "observation_version": "v1",
+                "observation_version": "v4",
                 "reward_mode": benchmark_args.reward_mode,
                 "risk_level": "increased",
                 "stochastic_pt": True,
@@ -140,7 +163,7 @@ def test_run_launcher_writes_auditable_trail_on_success(
             },
             "backbone": {
                 "env_variant": "shift_control",
-                "observation_version": "v1",
+                "observation_version": "v4",
                 "frame_stack": 1,
                 "year_basis": "thesis",
                 "risk_level": "increased",
@@ -199,7 +222,7 @@ def test_run_launcher_writes_auditable_trail_on_success(
     assert summary["metric_contract"]["fill_rate_primary"] == "terminal_order_level"
     assert summary["launcher_metadata"]["label"] == "control_v1_500k"
     assert manifest["status"] == "completed"
-    assert manifest["backbone"]["observation_version"] == "v1"
+    assert manifest["backbone"]["observation_version"] == "v4"
     assert (
         manifest["frozen_backbone"]["benchmark_protocol"]
         == "reward_benchmark_corrected"
@@ -217,7 +240,7 @@ def test_run_launcher_marks_run_invalid_when_required_outputs_are_missing(
         run_dir = Path(benchmark_args.output_dir)
         summary = {
             "config": {"algo": "ppo"},
-            "backbone": {"observation_version": "v1"},
+            "backbone": {"observation_version": "v4"},
             "artifacts": {
                 "summary_json": str((run_dir / "summary.json").resolve()),
             },

@@ -6,7 +6,12 @@ import pytest
 
 from supply_chain.config import RET_SHIFT_COST_DELTA_DEFAULT
 from supply_chain.env_experimental_shifts import MFSCGymEnvShifts
-from train_agent import build_env_instance, build_parser, validate_args
+from train_agent import (
+    build_env_instance,
+    build_parser,
+    resolve_episode_max_steps,
+    validate_args,
+)
 
 
 def test_shift_env_ret_thesis_emits_ret_metadata() -> None:
@@ -70,6 +75,11 @@ def test_shift_env_ret_seq_v1_emits_operational_resilience_metadata() -> None:
     assert "backlog_containment_step" in info
     assert "adaptive_efficiency_step" in info
     assert info["ret_seq_kappa"] == pytest.approx(0.20)
+    assert "ret_garrido2024_components" in info
+    assert info["ret_garrido2024_sigmoid_step"] > 0.0
+    assert info["ret_garrido2024_components"]["evaluation_index_recommendation"] == (
+        "ReT_garrido2024"
+    )
     assert info["cumulative_demanded_post_warmup"] >= 0.0
     assert info["cumulative_backorder_qty_post_warmup"] >= 0.0
 
@@ -89,7 +99,7 @@ def test_shift_env_ret_garrido2024_raw_emits_paper_faithful_metadata() -> None:
     assert info["ret_garrido2024_raw_step"] == pytest.approx(reward)
     assert "ret_garrido2024_components" in info
     assert info["ret_garrido2024_components"]["training_reward_recommendation"] == (
-        "ReT_garrido2024_raw"
+        "ReT_garrido2024_train"
     )
     assert info["ret_garrido2024_components"]["evaluation_index_recommendation"] == (
         "ReT_garrido2024"
@@ -179,9 +189,8 @@ def test_train_agent_defaults_to_shift_control_variant() -> None:
     args = parser.parse_args([])
     validate_args(parser, args)
     assert args.env_variant == "shift_control"
-    assert args.reward_mode == "ReT_seq_v1"
-    assert args.ret_seq_kappa == pytest.approx(0.20)
-    assert args.observation_version == "v1"
+    assert args.reward_mode == "control_v1"
+    assert args.observation_version == "v4"
 
 
 def test_train_agent_build_env_instance_uses_shift_env() -> None:
@@ -191,9 +200,9 @@ def test_train_agent_build_env_instance_uses_shift_env() -> None:
     env = build_env_instance(args)
     assert isinstance(env, MFSCGymEnvShifts)
     assert env.rt_delta == RET_SHIFT_COST_DELTA_DEFAULT
-    assert env.reward_mode == "ReT_seq_v1"
-    assert env.ret_seq_kappa == pytest.approx(0.20)
-    assert env.observation_version == "v1"
+    assert env.reward_mode == "control_v1"
+    assert env.observation_version == "v4"
+    assert env.max_steps == 260
 
 
 def test_train_agent_base_variant_gets_legacy_default_reward() -> None:
@@ -210,6 +219,41 @@ def test_train_agent_shift_delta_default_matches_config() -> None:
     assert args.w_bo == pytest.approx(4.0)
     assert args.w_cost == pytest.approx(0.02)
     assert args.w_disr == pytest.approx(0.0)
+
+
+def test_train_agent_resolves_physical_horizon_for_faster_cadence() -> None:
+    parser = build_parser()
+    args = parser.parse_args(["--step-size-hours", "48", "--observation-version", "v5"])
+    validate_args(parser, args)
+    assert args.max_steps_per_episode == 910
+    env = build_env_instance(args)
+    assert env.max_steps == 910
+    assert env.observation_version == "v5"
+
+
+def test_train_agent_accepts_track_b_contract() -> None:
+    parser = build_parser()
+    args = parser.parse_args(
+        [
+            "--step-size-hours",
+            "48",
+            "--observation-version",
+            "v6",
+            "--risk-level",
+            "adaptive_benchmark_v1",
+        ]
+    )
+    validate_args(parser, args)
+    env = build_env_instance(args)
+    assert env.observation_version == "v6"
+    assert env.risk_level == "adaptive_benchmark_v1"
+
+
+def test_train_agent_resolve_episode_max_steps_preserves_reference_horizon() -> None:
+    assert resolve_episode_max_steps(168.0, None) == 260
+    assert resolve_episode_max_steps(48.0, None) == 910
+    assert resolve_episode_max_steps(24.0, None) == 1820
+    assert resolve_episode_max_steps(24.0, 12) == 12
 
 
 def test_train_agent_rejects_ret_thesis_on_base_env() -> None:
@@ -295,6 +339,80 @@ def test_train_agent_accepts_ret_garrido2024_variants_on_shift_env() -> None:
         env = build_env_instance(args)
         assert isinstance(env, MFSCGymEnvShifts)
         assert env.reward_mode == reward_mode
+
+
+def test_train_agent_accepts_ret_unified_v1_and_calibration_path(tmp_path) -> None:
+    calibration_path = tmp_path / "ret_unified.json"
+    calibration_path.write_text(
+        json.dumps(
+            {
+                "theta_sc": 0.76,
+                "theta_bc": 0.75,
+                "beta": 12.0,
+                "kappa": 0.15,
+                "w_fr": 0.60,
+                "w_rc": 0.25,
+                "w_ce": 0.15,
+                "selection_rule": "unit_test",
+                "source": "unit_test",
+            }
+        ),
+        encoding="utf-8",
+    )
+    parser = build_parser()
+    args = parser.parse_args(
+        [
+            "--env-variant",
+            "shift_control",
+            "--reward-mode",
+            "ReT_unified_v1",
+            "--ret-unified-calibration",
+            str(calibration_path),
+        ]
+    )
+    validate_args(parser, args)
+    env = build_env_instance(args)
+    assert env.reward_mode == "ReT_unified_v1"
+    assert env.ret_unified_calibration_path == str(calibration_path.resolve())
+    assert env.ret_unified_theta_sc == pytest.approx(0.76)
+    assert env.ret_unified_theta_bc == pytest.approx(0.75)
+    assert env.ret_unified_kappa == pytest.approx(0.15)
+
+
+def test_ret_unified_explicit_overrides_beat_calibration_file(tmp_path) -> None:
+    calibration_path = tmp_path / "ret_unified.json"
+    calibration_path.write_text(
+        json.dumps(
+            {
+                "theta_sc": 0.78,
+                "theta_bc": 0.78,
+                "beta": 12.0,
+                "kappa": 0.20,
+                "w_fr": 0.60,
+                "w_rc": 0.25,
+                "w_ce": 0.15,
+                "selection_rule": "unit_test",
+                "source": "unit_test",
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    env = MFSCGymEnvShifts(
+        reward_mode="ReT_unified_v1",
+        observation_version="v4",
+        ret_unified_calibration_path=str(calibration_path),
+        ret_unified_theta_sc=0.50,
+        ret_unified_theta_bc=0.20,
+        ret_unified_beta=20.0,
+        ret_unified_kappa=0.60,
+    )
+
+    assert env.ret_unified_calibration_path == str(calibration_path.resolve())
+    assert env.ret_unified_theta_sc == pytest.approx(0.50)
+    assert env.ret_unified_theta_bc == pytest.approx(0.20)
+    assert env.ret_unified_beta == pytest.approx(20.0)
+    assert env.ret_unified_kappa == pytest.approx(0.60)
 
 
 @pytest.mark.parametrize(
@@ -384,3 +502,77 @@ def test_ret_seq_v1_is_monotone_in_service_backlog_and_efficiency() -> None:
     assert good_service["ret_seq_step"] > bad_service["ret_seq_step"]
     assert good_service["ret_seq_step"] > bad_backlog["ret_seq_step"]
     assert good_service["ret_seq_step"] > inefficient["ret_seq_step"]
+
+
+def test_ret_unified_v1_cost_gate_turns_off_when_service_is_poor() -> None:
+    env = MFSCGymEnvShifts(
+        step_size_hours=24,
+        max_steps=2,
+        reward_mode="ReT_unified_v1",
+        observation_version="v4",
+        ret_unified_theta_sc=0.78,
+        ret_unified_theta_bc=0.78,
+        ret_unified_beta=12.0,
+        ret_unified_kappa=0.20,
+    )
+    env.reset(seed=42)
+    env.sim.total_demanded = env._warmup_total_demanded + 100.0
+    env.sim.pending_backorder_qty = 120.0
+
+    s2 = env._compute_ret_unified_v1(
+        {
+            "new_demanded": 100.0,
+            "new_backorder_qty": 70.0,
+            "pending_backorder_qty": 120.0,
+        },
+        shifts=2,
+    )
+    s3 = env._compute_ret_unified_v1(
+        {
+            "new_demanded": 100.0,
+            "new_backorder_qty": 70.0,
+            "pending_backorder_qty": 120.0,
+        },
+        shifts=3,
+    )
+
+    assert s2["ret_unified_gate"] < 0.05
+    assert s2["ret_unified_step"] == pytest.approx(s3["ret_unified_step"], rel=1e-3)
+
+
+def test_ret_unified_v1_cost_gate_activates_when_service_is_good() -> None:
+    env = MFSCGymEnvShifts(
+        step_size_hours=24,
+        max_steps=2,
+        reward_mode="ReT_unified_v1",
+        observation_version="v4",
+        ret_unified_theta_sc=0.78,
+        ret_unified_theta_bc=0.78,
+        ret_unified_beta=12.0,
+        ret_unified_kappa=0.20,
+    )
+    env.reset(seed=42)
+    env.sim.total_demanded = env._warmup_total_demanded + 100.0
+    env.sim.pending_backorder_qty = 1.0
+
+    s2 = env._compute_ret_unified_v1(
+        {
+            "new_demanded": 100.0,
+            "new_backorder_qty": 2.0,
+            "pending_backorder_qty": 1.0,
+        },
+        shifts=2,
+    )
+    s3 = env._compute_ret_unified_v1(
+        {
+            "new_demanded": 100.0,
+            "new_backorder_qty": 2.0,
+            "pending_backorder_qty": 1.0,
+        },
+        shifts=3,
+    )
+
+    assert s2["ret_unified_gate"] > 0.5
+    assert s2["ret_unified_step"] > s3["ret_unified_step"]
+    assert s2["ret_unified_fr"] > 0.0
+    assert s2["ret_unified_rc"] > 0.0

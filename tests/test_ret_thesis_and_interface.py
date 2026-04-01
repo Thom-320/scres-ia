@@ -86,7 +86,7 @@ def test_external_interface_matches_shift_env_contract() -> None:
     env = make_shift_control_env(max_steps=1)
 
     assert spec.env_variant == "shift_control"
-    assert spec.reward_mode == "ReT_seq_v1"
+    assert spec.reward_mode == "control_v1"
     assert len(spec.observation_fields) == env.observation_space.shape[0]
     assert len(spec.action_fields) == env.action_space.shape[0]
 
@@ -201,6 +201,76 @@ def test_v4_observation_contract_exposes_shift_and_upstream_disruption_state() -
     assert 0.0 <= next_obs[23] <= 1.0
 
 
+def test_v5_observation_contract_exposes_cycle_precursors() -> None:
+    spec = get_shift_control_env_spec(
+        reward_mode="control_v1", observation_version="v5"
+    )
+    env = make_shift_control_env(
+        max_steps=2,
+        reward_mode="control_v1",
+        observation_version="v5",
+        step_size_hours=24,
+        risk_level="increased",
+        stochastic_pt=True,
+    )
+    obs, info = env.reset(seed=7)
+
+    assert spec.observation_version == "v5"
+    assert tuple(spec.observation_fields) == get_observation_fields("v5")
+    assert len(spec.observation_fields) == 30
+    assert obs.shape == (30,)
+    assert info["observation_version"] == "v5"
+    cycle_context = info["state_constraint_context"]["cycle_context"]
+    assert obs[24] == pytest.approx(cycle_context["op1_cycle_phase_norm"])
+    assert obs[25] == pytest.approx(cycle_context["op2_cycle_phase_norm"])
+    for idx in range(24, 30):
+        assert 0.0 <= obs[idx] <= 1.0
+
+    next_obs, _, _, _, step_info = env.step([0.0, 0.0, 0.0, 0.0, 0.0])
+    next_cycle_context = step_info["state_constraint_context"]["cycle_context"]
+    assert next_obs.shape == (30,)
+    assert next_obs[24] == pytest.approx(next_cycle_context["op1_cycle_phase_norm"])
+    assert next_obs[25] == pytest.approx(next_cycle_context["op2_cycle_phase_norm"])
+    assert next_obs[24] > obs[24]
+
+
+def test_v6_observation_contract_exposes_adaptive_benchmark_state() -> None:
+    spec = get_shift_control_env_spec(
+        reward_mode="control_v1", observation_version="v6"
+    )
+    env = make_shift_control_env(
+        max_steps=2,
+        reward_mode="control_v1",
+        observation_version="v6",
+        step_size_hours=48,
+        risk_level="adaptive_benchmark_v1",
+        stochastic_pt=True,
+    )
+    obs, info = env.reset(seed=7)
+
+    assert spec.observation_version == "v6"
+    assert tuple(spec.observation_fields) == get_observation_fields("v6")
+    assert len(spec.observation_fields) == 40
+    assert obs.shape == (40,)
+    assert info["observation_version"] == "v6"
+
+    adaptive_context = info["state_constraint_context"]["adaptive_context"]
+    regime_slice = obs[30:35]
+    assert regime_slice.sum() == pytest.approx(1.0)
+    assert set(np.unique(regime_slice)).issubset({0.0, 1.0})
+    assert obs[35] == pytest.approx(adaptive_context["risk_forecast_48h_norm"])
+    assert obs[36] == pytest.approx(adaptive_context["risk_forecast_168h_norm"])
+    for idx in range(35, 40):
+        assert 0.0 <= obs[idx] <= 1.0
+
+    next_obs, _, _, _, step_info = env.step([0.0, 0.0, 0.0, 0.0, 1.0])
+    next_adaptive = step_info["state_constraint_context"]["adaptive_context"]
+    assert next_obs.shape == (40,)
+    assert next_obs[35] == pytest.approx(next_adaptive["risk_forecast_48h_norm"])
+    assert next_obs[37] == pytest.approx(next_adaptive["maintenance_debt_norm"])
+    assert next_obs[37] >= obs[37]
+
+
 def test_reset_info_exposes_action_constraints() -> None:
     env = make_shift_control_env(max_steps=1)
     _, info = env.reset(seed=7)
@@ -209,7 +279,7 @@ def test_reset_info_exposes_action_constraints() -> None:
     assert constraints["inventory_multiplier_range"]["min"] == pytest.approx(0.5)
     assert constraints["shift_signal_bands"]["signal_ge_0.33"] == 3
     assert constraints["base_control_parameters"]["op3_q"] > 0
-    assert info["observation_version"] == "v1"
+    assert info["observation_version"] == "v4"
 
 
 def test_external_constraint_context_exposes_base_parameters() -> None:
@@ -616,7 +686,7 @@ def test_ret_garrido2024_raw_and_sigmoid_share_same_five_variable_breakdown() ->
     assert raw_components["tau_avg"] == pytest.approx(sigmoid_components["tau_avg"])
     assert raw_components["kappa_dot"] == pytest.approx(sigmoid_components["kappa_dot"])
     assert raw_components["evaluation_index_recommendation"] == "ReT_garrido2024"
-    assert raw_components["training_reward_recommendation"] == "ReT_garrido2024_raw"
+    assert raw_components["training_reward_recommendation"] == "ReT_garrido2024_train"
 
     env_raw.close()
     env_sigmoid.close()

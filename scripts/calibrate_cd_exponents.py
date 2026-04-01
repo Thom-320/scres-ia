@@ -203,7 +203,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--max-steps", type=int, default=260)
     parser.add_argument(
         "--observation-version",
-        choices=["v1", "v2", "v3", "v4"],
+        choices=["v1", "v2", "v3", "v4", "v5"],
         default="v1",
     )
     parser.add_argument(

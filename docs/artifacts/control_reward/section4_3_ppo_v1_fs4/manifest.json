@@ -1,0 +1,59 @@
+{
+  "artifact_type": "control_reward_benchmark",
+  "benchmark_date_utc": "2026-03-21T03:57:01.028408+00:00",
+  "git_commit": "4fcdee736d0f80fc72bee8c440442137e41d331f",
+  "command": "python scripts/benchmark_control_reward.py --seeds 11 22 33 44 55 66 77 88 99 111 --train-timesteps 50000 --eval-episodes 10 --risk-level increased --eval-risk-levels current increased severe --w-bo 4.0 --w-cost 0.02 --w-disr 0.0 --learned-only --algo ppo --observation-version v1 --frame-stack 4 --output-dir outputs/benchmarks/section4_3_ppo_v1_fs4 --artifact-root docs/artifacts/control_reward --artifact-label section4_3_ppo_v1_fs4 --step-size-hours 168 --max-steps 260 --stochastic-pt",
+  "source_benchmark_directory": "/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/outputs/benchmarks/section4_3_ppo_v1_fs4",
+  "bundle_directory": "/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/docs/artifacts/control_reward/section4_3_ppo_v1_fs4",
+  "config": {
+    "algo": "ppo",
+    "frame_stack": 4,
+    "observation_version": "v1",
+    "reward_mode": "control_v1",
+    "seeds": [
+      11,
+      22,
+      33,
+      44,
+      55,
+      66,
+      77,
+      88,
+      99,
+      111
+    ],
+    "train_timesteps": 50000,
+    "eval_episodes": 10,
+    "step_size_hours": 168.0,
+    "max_steps": 260,
+    "risk_level": "increased",
+    "stochastic_pt": true,
+    "year_basis": "gregorian",
+    "w_bo": [
+      4.0
+    ],
+    "w_cost": [
+      0.02
+    ],
+    "w_disr": [
+      0.0
+    ],
+    "max_survivors": 4,
+    "learning_rate": 0.0003,
+    "n_steps": 1024,
+    "batch_size": 64,
+    "n_epochs": 10,
+    "gamma": 0.99,
+    "gae_lambda": 0.95,
+    "clip_range": 0.2,
+    "tau": 0.005,
+    "train_freq": 1,
+    "gradient_steps": 1,
+    "learning_starts": 5000
+  },
+  "files": {
+    "comparison_table.csv": "/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/docs/artifacts/control_reward/section4_3_ppo_v1_fs4/comparison_table.csv",
+    "policy_summary.csv": "/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/docs/artifacts/control_reward/section4_3_ppo_v1_fs4/policy_summary.csv",
+    "summary.json": "/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/docs/artifacts/control_reward/section4_3_ppo_v1_fs4/summary.json"
+  }
+}

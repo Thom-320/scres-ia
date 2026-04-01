@@ -49,6 +49,34 @@ OBSERVATION_FIELDS_V4: tuple[str, ...] = OBSERVATION_FIELDS_V3 + (
     "op1_down",
     "op2_down",
 )
+OBSERVATION_FIELDS_V5: tuple[str, ...] = OBSERVATION_FIELDS_V4 + (
+    "op1_cycle_phase_norm",
+    "op2_cycle_phase_norm",
+    "workweek_phase_sin_norm",
+    "workweek_phase_cos_norm",
+    "workday_phase_sin_norm",
+    "workday_phase_cos_norm",
+)
+OBSERVATION_FIELDS_V6: tuple[str, ...] = OBSERVATION_FIELDS_V5 + (
+    "regime_nominal",
+    "regime_strained",
+    "regime_pre_disruption",
+    "regime_disrupted",
+    "regime_recovery",
+    "risk_forecast_48h_norm",
+    "risk_forecast_168h_norm",
+    "maintenance_debt_norm",
+    "backlog_age_norm",
+    "theatre_cover_days_norm",
+)
+OBSERVATION_FIELDS_V7: tuple[str, ...] = OBSERVATION_FIELDS_V6 + (
+    "op10_down",
+    "op12_down",
+    "op10_queue_pressure_norm",
+    "op12_queue_pressure_norm",
+    "rolling_fill_rate_4w",
+    "rolling_backorder_rate_4w",
+)
 OBSERVATION_FIELDS: tuple[str, ...] = OBSERVATION_FIELDS_V1
 
 ACTION_FIELDS: tuple[str, ...] = (
@@ -58,11 +86,19 @@ ACTION_FIELDS: tuple[str, ...] = (
     "op9_rop_multiplier_signal",
     "assembly_shift_signal",
 )
+ACTION_FIELDS_TRACK_B_V1: tuple[str, ...] = ACTION_FIELDS + (
+    "op10_q_multiplier_signal",
+    "op12_q_multiplier_signal",
+)
 
 ACTION_BOUNDS: tuple[tuple[float, float], ...] = (
     (-1.0, 1.0),
     (-1.0, 1.0),
     (-1.0, 1.0),
+    (-1.0, 1.0),
+    (-1.0, 1.0),
+)
+ACTION_BOUNDS_TRACK_B_V1: tuple[tuple[float, float], ...] = ACTION_BOUNDS + (
     (-1.0, 1.0),
     (-1.0, 1.0),
 )
@@ -129,6 +165,12 @@ REWARD_TERM_FIELDS: tuple[str, ...] = (
     "shift_cost_step",
     "disruption_fraction_step",
     "ret_thesis_corrected_step",
+    "ret_unified_step",
+    "ret_unified_fr",
+    "ret_unified_rc",
+    "ret_unified_ce",
+    "ret_unified_gate",
+    "ret_garrido2024_sigmoid_step",
 )
 
 
@@ -205,9 +247,15 @@ def get_observation_fields(observation_version: str = "v1") -> tuple[str, ...]:
         return OBSERVATION_FIELDS_V3
     if observation_version == "v4":
         return OBSERVATION_FIELDS_V4
+    if observation_version == "v5":
+        return OBSERVATION_FIELDS_V5
+    if observation_version == "v6":
+        return OBSERVATION_FIELDS_V6
+    if observation_version == "v7":
+        return OBSERVATION_FIELDS_V7
     raise ValueError(
         f"Invalid observation_version={observation_version!r}. "
-        "Expected 'v1', 'v2', 'v3', or 'v4'."
+        "Expected 'v1', 'v2', 'v3', 'v4', 'v5', 'v6', or 'v7'."
     )
 
 
@@ -235,15 +283,52 @@ def get_shift_control_env_spec(
         },
         notes=(
             "Observation values are normalized continuous features emitted by the shift-control environment.",
-            "The default external spec freezes reward_mode=ReT_seq_v1 and observation_version=v1 for the current paper-facing benchmark contract.",
+            "The default external spec freezes reward_mode=control_v1 and observation_version=v4 for the current Track A paper benchmark contract.",
             "observation_version=v2 adds previous-step demand, backorder, and disruption diagnostics to the observed state.",
             "observation_version=v3 extends v2 with normalized cumulative backorder and disruption history since the end of warmup.",
+            "observation_version=v4 extends v3 with current shift plus Op1/Op2 disruption flags and is the frozen online contract for Track A and DKANA handoff.",
+            "observation_version=v5 extends v4 with thesis-faithful cycle/calendar precursor features and is intended only for research comparisons, not the frozen Track A contract.",
+            "observation_version=v6 extends v5 with Track-B adaptive benchmark features: regime state, imperfect disruption forecasts, maintenance debt, backlog age, and theatre cover days.",
             "The fifth action dimension selects assembly capacity through discrete shifts.",
-            "control_v1 remains available as the historical operational comparator, while ret_thesis_corrected remains the thesis-aligned audit metric.",
+            "control_v1 is the frozen Track A training reward; ret_thesis_corrected remains the thesis-aligned audit metric.",
+            "ReT_unified_v1 remains available as a service-first resilience reward for audit and exploratory research lanes.",
+            "risk_level=adaptive_benchmark_v1 activates the Track-B research lane with persistent regimes and deferred S3 maintenance costs; it does not change the Track A defaults.",
             "ReT_garrido2024_raw is the paper-faithful five-variable Cobb-Douglas raw product (Eq. 3), intended only as a training-reward candidate.",
             "ReT_garrido2024 is the paper-faithful five-variable sigmoid index (Eq. 6), intended as the evaluation/audit index rather than the main PPO reward.",
             "ReT_cd_v1 is the continuous Cobb-Douglas bridge for the piecewise ReT_thesis (recommended over ReT_thesis for training).",
             "ReT_cd_sigmoid is an experimental variant documented to show sigmoid bias when log-inputs are already in (0,1] — NOT recommended.",
+        ),
+    )
+
+
+def get_track_b_env_spec(
+    *,
+    reward_mode: str = "ReT_seq_v1",
+    observation_version: str = "v7",
+    step_size_hours: float = 168.0,
+) -> ExternalEnvSpec:
+    """Return the minimal Track B research contract with downstream control."""
+    observation_fields = get_observation_fields(observation_version)
+    return ExternalEnvSpec(
+        env_variant="track_b_adaptive_control",
+        reward_mode=reward_mode,
+        observation_version=observation_version,
+        step_size_hours=float(step_size_hours),
+        warmup_hours=float(WARMUP["estimated_deterministic_hrs"]),
+        observation_fields=observation_fields,
+        action_fields=ACTION_FIELDS_TRACK_B_V1,
+        action_bounds=ACTION_BOUNDS_TRACK_B_V1,
+        shift_mapping={
+            "signal_lt_-0.33": 1,
+            "signal_ge_-0.33_and_lt_0.33": 2,
+            "signal_ge_0.33": 3,
+        },
+        notes=(
+            "Track B keeps the thesis-faithful DES structure but exposes downstream transport control at Op10 and Op12.",
+            "observation_version=v7 extends v6 with downstream disruption state, queue pressure, and rolling 4-week service metrics.",
+            "The seventh action contract uses 7 dimensions: the Track A 5D controls plus Op10 and Op12 dispatch quantity multipliers.",
+            "risk_level=adaptive_benchmark_v2 is the intended Track B stress profile with stronger downstream transport and demand pressure.",
+            "This contract is research-only and must not replace the frozen Track A paper-facing benchmark.",
         ),
     )
 
@@ -364,6 +449,12 @@ def build_reward_term_vector(info: dict[str, Any], reward: float) -> np.ndarray:
             float(info.get("shift_cost_step", 0.0)),
             float(info.get("disruption_fraction_step", 0.0)),
             float(info.get("ret_thesis_corrected_step", 0.0)),
+            float(info.get("ret_unified_step", 0.0)),
+            float(info.get("ret_unified_fr", 0.0)),
+            float(info.get("ret_unified_rc", 0.0)),
+            float(info.get("ret_unified_ce", 0.0)),
+            float(info.get("ret_unified_gate", 0.0)),
+            float(info.get("ret_garrido2024_sigmoid_step", 0.0)),
         ],
         dtype=np.float32,
     )
@@ -384,19 +475,42 @@ def make_shift_control_env(**overrides: Any) -> MFSCGymEnvShifts:
     return MFSCGymEnvShifts(**params)
 
 
+def make_track_b_env(**overrides: Any) -> MFSCGymEnvShifts:
+    """Build the minimal Track B research environment with downstream control."""
+    params: dict[str, Any] = {
+        "reward_mode": "ReT_seq_v1",
+        "observation_version": "v7",
+        "action_contract": "track_b_v1",
+        "risk_level": "adaptive_benchmark_v2",
+        "step_size_hours": 168.0,
+        "year_basis": "thesis",
+        "stochastic_pt": True,
+        "w_bo": BENCHMARK_W_BO,
+        "w_cost": BENCHMARK_W_COST,
+        "w_disr": BENCHMARK_W_DISR,
+    }
+    params.update(overrides)
+    return MFSCGymEnvShifts(**params)
+
+
 # ---------------------------------------------------------------------------
 # Generic episode runner for any callable policy
 # ---------------------------------------------------------------------------
 
 
 class PolicyCallable(Protocol):
-    """Any callable that maps (obs, info) -> action array."""
+    """Any callable that maps (obs, info) -> action payload."""
 
-    def __call__(self, obs: np.ndarray, info: dict[str, Any]) -> np.ndarray: ...
+    def __call__(
+        self, obs: np.ndarray, info: dict[str, Any]
+    ) -> np.ndarray | dict[str, float | int]: ...
 
 
 def run_episodes(
-    policy_fn: PolicyCallable | Callable[[np.ndarray, dict[str, Any]], np.ndarray],
+    policy_fn: (
+        PolicyCallable
+        | Callable[[np.ndarray, dict[str, Any]], np.ndarray | dict[str, float | int]]
+    ),
     *,
     n_episodes: int = 10,
     seed: int = 42,
@@ -414,10 +528,10 @@ def run_episodes(
     Parameters
     ----------
     policy_fn :
-        Callable ``(obs, info) -> action``.  ``obs`` is an np.ndarray matching
+        Callable ``(obs, info) -> action``. ``obs`` is an np.ndarray matching
         the env observation space; ``info`` is the dict returned by
-        ``env.reset()`` or ``env.step()``.  Must return a 5-dim action array
-        in [-1, 1].
+        ``env.reset()`` or ``env.step()``. It may return either a 5-dim action
+        array in [-1, 1] or a direct DES action dict accepted by the env.
     n_episodes :
         Number of evaluation episodes.
     seed :
@@ -437,6 +551,7 @@ def run_episodes(
         One dict per episode with keys: ``policy``, ``seed``, ``episode``,
         ``steps``, ``reward_total``, ``fill_rate``, ``backorder_rate``,
         ``service_loss_total``, ``shift_cost_total``, ``mean_disruption_fraction``,
+        ``ret_unified_total``, ``ret_garrido2024_sigmoid_total``,
         ``pct_steps_S1/S2/S3``, and optionally ``trajectory``.
 
     Example
@@ -466,6 +581,8 @@ def run_episodes(
         shift_cost_total = 0.0
         disruption_fraction_total = 0.0
         ret_thesis_corrected_total = 0.0
+        ret_unified_total = 0.0
+        ret_garrido2024_sigmoid_total = 0.0
         demanded_total = 0.0
         delivered_total = 0.0
         backorder_qty_total = 0.0
@@ -474,10 +591,14 @@ def run_episodes(
         trajectory: list[dict[str, Any]] = []
 
         while not (terminated or truncated):
-            action = np.asarray(policy_fn(obs, info), dtype=np.float32)
+            action_payload = policy_fn(obs, info)
             prev_obs = obs
+            if isinstance(action_payload, dict):
+                env_action: np.ndarray | dict[str, float | int] = dict(action_payload)
+            else:
+                env_action = np.asarray(action_payload, dtype=np.float32)
 
-            obs, reward, terminated, truncated, info = env.step(action)
+            obs, reward, terminated, truncated, info = env.step(env_action)
 
             reward_total += float(reward)
             service_loss_total += float(info.get("service_loss_step", 0.0))
@@ -487,6 +608,10 @@ def run_episodes(
             )
             ret_thesis_corrected_total += float(
                 info.get("ret_thesis_corrected_step", 0.0)
+            )
+            ret_unified_total += float(info.get("ret_unified_step", 0.0))
+            ret_garrido2024_sigmoid_total += float(
+                info.get("ret_garrido2024_sigmoid_step", 0.0)
             )
             demanded_total += float(info.get("new_demanded", 0.0))
             delivered_total += float(info.get("new_delivered", 0.0))
@@ -498,7 +623,11 @@ def run_episodes(
                 trajectory.append(
                     {
                         "obs": prev_obs.copy(),
-                        "action": action.copy(),
+                        "action": (
+                            env_action.copy()
+                            if isinstance(env_action, np.ndarray)
+                            else dict(env_action)
+                        ),
                         "reward": float(reward),
                         "info": {
                             k: v
@@ -530,6 +659,8 @@ def run_episodes(
             "service_loss_total": service_loss_total,
             "shift_cost_total": shift_cost_total,
             "mean_disruption_fraction": disruption_fraction_total / total_steps,
+            "ret_unified_total": ret_unified_total,
+            "ret_garrido2024_sigmoid_total": ret_garrido2024_sigmoid_total,
             "ret_thesis_corrected_total": ret_thesis_corrected_total,
             "order_level_ret_mean": float(terminal_metrics["order_level_ret_mean"]),
             "demanded_total": demanded_total,

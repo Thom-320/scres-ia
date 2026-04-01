@@ -52,15 +52,18 @@ python train_agent.py   --env-variant shift_control   --reward-mode ReT_seq_v1  
 
 This command reproduces the current primary benchmark configuration, but not necessarily the exact archived model weights unless the same seeds and artifact collection pipeline are used.
 
-## Frozen artifact bundles
+## Auditable artifact bundles
 
 Reviewer-safe artifact references live under:
 
-- `docs/artifacts/control_reward/control_reward_500k_increased_stopt`
-- `docs/artifacts/control_reward/control_reward_500k_severe_stopt`
-- `docs/artifacts/control_reward/control_reward_500k_seed_inference`
+- `outputs/paper_benchmarks/paper_ret_seq_k020_500k`
+- `outputs/paper_benchmarks/paper_ret_seq_k010_500k`
+- `outputs/paper_benchmarks/paper_control_v1_500k`
+- `outputs/benchmarks/final_ret_seq_v1_500k`
 
-These should be cited instead of untracked local `outputs/` folders.
+Use these instead of the historical `*_stopt` bundles.
+
+The old `control_reward_500k_*_stopt` bundles and their seed-inference note predate the March 2026 DES audit/alignment fixes and should not be cited as the primary evidence for the current repository state.
 
 ## Full publication benchmark path
 

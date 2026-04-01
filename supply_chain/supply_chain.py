@@ -410,8 +410,31 @@ class MFSCSimulation:
     def _refresh_pending_backorder_qty(self) -> None:
         """Recompute the outstanding delayed-demand quantity."""
         self.pending_backorder_qty = float(
-            sum(order.remaining_qty for order in self.pending_backorders)
+            sum(
+                max(0.0, float(order.remaining_qty))
+                for order in self.pending_backorders
+            )
         )
+
+    def _remove_pending_backorder(self, order: OrderRecord) -> None:
+        """Remove a queued delayed order if it is still present.
+
+        The Track B transport lanes can trigger overlapping theatre-delivery
+        callbacks. Those callbacks may attempt to finalize the same queued order
+        in adjacent simulation events. Removal therefore needs to be idempotent
+        rather than assuming the current order is still the queue head.
+        """
+        if order in self.pending_backorders:
+            self.pending_backorders.remove(order)
+        self._refresh_pending_backorder_qty()
+
+    def _finalize_pending_backorder(self, order: OrderRecord) -> None:
+        """Mark a delayed order as fulfilled at the current simulation time."""
+        order.OATj = self.env.now
+        order.CTj = self.env.now - order.OPTj
+        order.backorder = False
+        order.remaining_qty = 0.0
+        self._set_order_ret_indicators(order)
 
     def _enqueue_backorder(self, order: OrderRecord) -> None:
         """Insert a delayed order into the capped Garrido-style backlog queue."""
@@ -446,29 +469,17 @@ class MFSCSimulation:
         """
         while self.pending_backorders:
             next_order = self.pending_backorders[0]
-            if next_order.remaining_qty <= 0.0:
-                # Order already fully served (edge case from partial fills)
-                next_order.OATj = self.env.now
-                next_order.CTj = self.env.now - next_order.OPTj
-                next_order.backorder = False
-                self._set_order_ret_indicators(next_order)
-                self.pending_backorders.pop(0)
-                self._refresh_pending_backorder_qty()
+            requested_qty = float(next_order.remaining_qty)
+            if requested_qty <= 1e-9:
+                # Order already fully served or numerically empty.
+                self._finalize_pending_backorder(next_order)
+                self._remove_pending_backorder(next_order)
                 continue
-            if self.rations_theatre.level + 1e-9 < next_order.remaining_qty:
+            if self.rations_theatre.level + 1e-9 < requested_qty:
                 break
-            yield self.rations_theatre.get(next_order.remaining_qty)
-            next_order.OATj = self.env.now
-            next_order.CTj = self.env.now - next_order.OPTj
-            next_order.backorder = False
-            next_order.remaining_qty = 0.0
-            self._set_order_ret_indicators(next_order)
-            # Guard: list may have been modified while yielded
-            if self.pending_backorders and self.pending_backorders[0] is next_order:
-                self.pending_backorders.pop(0)
-            elif next_order in self.pending_backorders:
-                self.pending_backorders.remove(next_order)
-            self._refresh_pending_backorder_qty()
+            yield self.rations_theatre.get(requested_qty)
+            self._finalize_pending_backorder(next_order)
+            self._remove_pending_backorder(next_order)
 
     def _backorder_rate(self) -> float:
         """Current delayed/lost-order fraction per Garrido's Bt + Ut logic.

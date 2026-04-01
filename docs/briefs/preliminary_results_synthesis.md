@@ -30,7 +30,7 @@ Interpretation:
 
 ### B. `control_v1` short robustness scan fixes part of the problem, but not all of it
 
-Source: `outputs/benchmarks/control_reward_local_robustness/summary.json`
+Source: historical local robustness scan under `control_v1` (pre-audit benchmark family).
 
 Benchmark setup:
 
@@ -53,13 +53,13 @@ Interpretation:
 - However, PPO does not improve uniformly across nearby reward weights.
 - The short-run lane says the reward is directionally better, but still sensitive enough that small coefficient changes alter the conclusion.
 
-### C. `control_v1` long runs are the current source of truth
+### C. `control_v1` long runs are now a comparator lane, not the primary source of truth
 
 Sources:
 
-- `docs/artifacts/control_reward/control_reward_500k_increased_stopt/summary.json`
-- `docs/artifacts/control_reward/control_reward_500k_severe_stopt/summary.json`
-- `docs/artifacts/control_reward/control_reward_500k_seed_inference/seed_inference.md`
+- `outputs/paper_benchmarks/paper_control_v1_500k/summary.json`
+- `outputs/paper_benchmarks/paper_ret_seq_k020_500k/summary.json`
+- `outputs/paper_benchmarks/paper_ret_seq_k010_500k/summary.json`
 - `docs/manuscript_notes/control_reward_500k_source_of_truth.md`
 
 Locked setup:
@@ -71,58 +71,46 @@ Locked setup:
 - `stochastic_pt=True`
 - `5` seeds
 
-#### `increased + stochastic_pt`
+#### `increased + stochastic_pt` (`control_v1`, auditable comparator)
 
 | Policy | Reward total mean | Fill rate | Backorder rate | Shift mix |
 | --- | ---: | ---: | ---: | --- |
-| `ppo` | `-172.05` | `0.8379` | `0.1621` | `12.0% S1`, `24.6% S2`, `63.4% S3` |
-| `static_s2` | `-170.10` | `0.8374` | `0.1626` | `0.0% S1`, `100.0% S2`, `0.0% S3` |
-| `static_s3` | `-178.47` | `0.8344` | `0.1656` | `0.0% S1`, `0.0% S2`, `100.0% S3` |
-
-Seed-level inference vs. best static (`static_s2`):
-
-- Mean reward difference: `-1.948`
-- Bootstrap CI95: `[-9.949, 8.514]`
-- Exact sign-flip `p=0.812`
+| `ppo` | `-629.37` | `0.7820` | `0.2180` | `45.5% S1`, `27.8% S2`, `26.6% S3` |
+| `static_s2` | `-617.98` | `0.7924` | `0.2076` | `0.0% S1`, `100.0% S2`, `0.0% S3` |
 
 Interpretation:
 
-- PPO matches service, but not reward.
-- Under moderate stress, adaptive control is not yet clearly better than the best fixed policy.
+- In the current auditable codebase, `control_v1` PPO is competitive but not better than `static_s2`.
+- This lane remains useful as an operational comparator, not as the current repo winner.
 
-#### `severe + stochastic_pt`
+#### Current winner under the post-audit paper-facing family
+
+`ReT_seq_v1, κ=0.20` is the current leading auditable lane:
 
 | Policy | Reward total mean | Fill rate | Backorder rate | Shift mix |
 | --- | ---: | ---: | ---: | --- |
-| `ppo` | `-380.98` | `0.6314` | `0.3686` | `41.3% S1`, `26.8% S2`, `32.0% S3` |
-| `static_s3` | `-385.59` | `0.6324` | `0.3676` | `0.0% S1`, `0.0% S2`, `100.0% S3` |
-| `static_s2` | `-385.85` | `0.6271` | `0.3729` | `0.0% S1`, `100.0% S2`, `0.0% S3` |
-
-Seed-level inference vs. best static (`static_s3`):
-
-- Mean reward difference: `+4.608`
-- Bootstrap CI95: `[-0.277, 9.493]`
-- Exact sign-flip `p=0.188`
+| `ppo` | `133.08` | `0.7883` | `0.2117` | `72.9% S1`, `13.4% S2`, `13.7% S3` |
+| `static_s2` | `132.53` | `0.7922` | `0.2078` | `0.0% S1`, `100.0% S2`, `0.0% S3` |
 
 Interpretation:
 
-- PPO becomes better than the best fixed baseline on reward while keeping service effectively comparable.
-- The effect is still preliminary inferentially, but it is the clearest sign in the repo that adaptive switching matters under high stress.
+- `ReT_seq_v1` with `κ=0.20` beats `control_v1` on the cross-mode comparable metrics inside the current auditable paper family.
+- The lane is still best described as competitive rather than conclusively dominant.
 
 ## 3. What these results say about the bottleneck
 
 The current evidence points to a three-part diagnosis:
 
 1. The first bottleneck was reward alignment. `ReT_thesis` as a training objective pushed PPO toward a cheap, low-service solution.
-2. After moving to `control_v1`, the next bottleneck became reward sensitivity. PPO can improve, but the conclusion depends on the exact service-cost tradeoff.
-3. After longer training, the remaining bottleneck is regime dependence. PPO is not uniformly superior; the advantage emerges mainly when stress is severe enough that fixed policies become insufficient.
+2. `control_v1` remains useful as an operational comparator, but the post-audit codebase does not support it as the leading lane.
+3. The remaining bottleneck is matched-family evaluation discipline: the repo still mixes historical bundles, current paper-facing bundles, and an unfinished `RecurrentPPO` lane.
 
 ## 4. Practical conclusion
 
 The repository does not support the claim that "PPO failed completely." A more precise reading is:
 
 - `PPO + ReT_thesis` is the wrong lane for control learning.
-- `PPO + control_v1` is the correct lane, but moderate-stress results are only competitive.
-- The strongest existing adaptive-control evidence is the `500k`, `severe`, `stochastic_pt=True` benchmark.
+- `control_v1` is now best treated as an operational comparator lane.
+- The strongest current auditable paper-facing evidence is the `ReT_seq_v1, κ=0.20` family under `v1 + thesis + stochastic_pt=True`.
 
-That means the next experiments should be judged against this already-frozen baseline, not by restarting the reward discussion from zero.
+That means the next experiments should be judged against the current auditable paper-facing bundles, not against the historical `*_stopt` artifacts.

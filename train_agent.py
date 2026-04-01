@@ -17,6 +17,7 @@ from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 
 from supply_chain.config import (
+    BENCHMARK_EPISODE_HORIZON_HOURS,
     BENCHMARK_OBSERVATION_VERSION,
     BENCHMARK_REWARD_MODE,
     BENCHMARK_W_BO,
@@ -39,6 +40,7 @@ SHIFT_ENV_REWARD_MODES = {
     "ReT_thesis",
     "ReT_corrected",
     "ReT_corrected_cost",
+    "ReT_unified_v1",
     "ReT_seq_v1",
     "control_v1",
     "control_v1_pbrs",
@@ -91,14 +93,24 @@ def build_parser() -> argparse.ArgumentParser:
         help="Number of parallel envs for PPO collection.",
     )
     parser.add_argument("--step-size-hours", type=float, default=168.0)
-    parser.add_argument("--max-steps-per-episode", type=int, default=260)
+    parser.add_argument(
+        "--max-steps-per-episode",
+        type=int,
+        default=None,
+        help=(
+            "Episode length in control steps. Defaults to the historical "
+            "260x168h physical horizon rescaled to the requested step size."
+        ),
+    )
     parser.add_argument(
         "--observation-version",
-        choices=["v1", "v2", "v3", "v4"],
+        choices=["v1", "v2", "v3", "v4", "v5", "v6"],
         default=BENCHMARK_OBSERVATION_VERSION,
         help=(
-            "Observation contract for shift-control env. The frozen paper "
-            "benchmark uses v1; newer ablations may use v2+."
+            "Observation contract for shift-control env. v4 remains the frozen "
+            "paper/DKANA contract; v5 is a research lane with thesis-faithful "
+            "cycle/calendar precursor features; v6 adds Track-B adaptive "
+            "benchmark regime and forecast features."
         ),
     )
     parser.add_argument("--learning-rate", type=float, default=3e-4)
@@ -131,6 +143,7 @@ def build_parser() -> argparse.ArgumentParser:
             "ReT_thesis",
             "ReT_corrected",
             "ReT_corrected_cost",
+            "ReT_unified_v1",
             "ReT_seq_v1",
             "control_v1",
             "control_v1_pbrs",
@@ -145,7 +158,13 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--risk-level",
-        choices=["current", "increased", "severe", "severe_training"],
+        choices=[
+            "current",
+            "increased",
+            "severe",
+            "severe_training",
+            "adaptive_benchmark_v1",
+        ],
         default="current",
         help="Risk parameter level from thesis Table 6.12.",
     )
@@ -196,6 +215,15 @@ def build_parser() -> argparse.ArgumentParser:
         help="Adaptive-efficiency scaling for reward_mode=ReT_seq_v1.",
     )
     parser.add_argument(
+        "--ret-unified-calibration",
+        type=Path,
+        default=None,
+        help=(
+            "Optional ReT_unified_v1 calibration JSON. "
+            "Recommended when using reward_mode=ReT_unified_v1."
+        ),
+    )
+    parser.add_argument(
         "--ret-g24-calibration",
         type=Path,
         default=None,
@@ -244,17 +272,24 @@ class RawRewardCallback(BaseCallback):
 
 def validate_args(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
     resolve_reward_mode(args)
+    args.max_steps_per_episode = resolve_episode_max_steps(
+        args.step_size_hours,
+        args.max_steps_per_episode,
+    )
     if args.env_variant == "base":
         if args.reward_mode not in BASE_ENV_REWARD_MODES:
             parser.error("Base env supports only reward modes: proxy, rt_v0.")
         if args.risk_level not in ("current", "increased"):
             parser.error("Base env supports only current or increased risk levels.")
         if args.observation_version != "v1":
-            parser.error("Base env supports only observation_version=v1.")
+            if args.observation_version == BENCHMARK_OBSERVATION_VERSION:
+                args.observation_version = "v1"
+            else:
+                parser.error("Base env supports only observation_version=v1.")
     elif args.reward_mode not in SHIFT_ENV_REWARD_MODES:
         parser.error(
             "Shift-control env supports only reward modes: "
-            "rt_v0, ReT_thesis, ReT_corrected, ReT_corrected_cost, ReT_seq_v1, "
+            "rt_v0, ReT_thesis, ReT_corrected, ReT_corrected_cost, ReT_unified_v1, ReT_seq_v1, "
             "control_v1, control_v1_pbrs, ReT_garrido2024_raw, "
             "ReT_garrido2024, ReT_garrido2024_train, ReT_cd_v1, "
             "ReT_cd_sigmoid."
@@ -265,6 +300,18 @@ def resolve_output_dir(args: argparse.Namespace) -> Path:
     if args.output_dir is not None:
         return args.output_dir
     return Path("outputs") / f"ppo_{args.env_variant}_{args.reward_mode}"
+
+
+def resolve_episode_max_steps(
+    step_size_hours: float,
+    explicit_max_steps: int | None,
+) -> int:
+    """Preserve the historical episode horizon when cadence changes."""
+    if explicit_max_steps is not None:
+        return int(explicit_max_steps)
+    if step_size_hours <= 0:
+        raise ValueError("step_size_hours must be > 0")
+    return max(1, int(round(BENCHMARK_EPISODE_HORIZON_HOURS / step_size_hours)))
 
 
 def build_env_instance(
@@ -292,6 +339,11 @@ def build_env_instance(
             w_bo=args.w_bo,
             w_cost=args.w_cost,
             w_disr=args.w_disr,
+            ret_unified_calibration_path=(
+                str(args.ret_unified_calibration)
+                if args.ret_unified_calibration is not None
+                else None
+            ),
             ret_seq_kappa=args.ret_seq_kappa,
             ret_g24_calibration_path=(
                 str(args.ret_g24_calibration)

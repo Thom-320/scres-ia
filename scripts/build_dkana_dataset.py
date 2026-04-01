@@ -19,6 +19,12 @@ def load_json(path: Path) -> dict[str, Any]:
         return json.load(file_obj)
 
 
+def load_json_if_exists(path: Path, default: dict[str, Any]) -> dict[str, Any]:
+    if path.exists():
+        return load_json(path)
+    return default
+
+
 def resolve_output_dir(
     input_dir: Path, output_dir: Path | None, window_size: int
 ) -> Path:
@@ -63,7 +69,27 @@ def main() -> None:
     rewards = np.load(rewards_path) if rewards_path.exists() else None
 
     env_spec = load_json(args.input_dir / "env_spec.json")
-    state_field_payload = load_json(args.input_dir / "state_constraint_fields.json")
+    metadata_payload = load_json_if_exists(args.input_dir / "metadata.json", {})
+    constraint_field_payload = load_json_if_exists(
+        args.input_dir / "constraint_context_fields.json",
+        {"fields": []},
+    )
+    state_field_payload = load_json_if_exists(
+        args.input_dir / "state_constraint_fields.json",
+        {"fields": []},
+    )
+    reward_field_payload = load_json_if_exists(
+        args.input_dir / "reward_terms_fields.json",
+        {"fields": [], "formula": None},
+    )
+    action_field_payload = load_json_if_exists(
+        args.input_dir / "action_fields.json",
+        {"fields": []},
+    )
+    direct_action_field_payload = load_json_if_exists(
+        args.input_dir / "direct_action_context_fields.json",
+        {"fields": []},
+    )
     dataset = build_dkana_windows(
         observations=observations,
         actions=actions,
@@ -86,6 +112,9 @@ def main() -> None:
     metadata = {
         "source_dir": str(args.input_dir),
         "window_size": args.window_size,
+        "reward_mode": metadata_payload.get("reward_mode"),
+        "observation_version": metadata_payload.get("observation_version"),
+        "frame_stack": metadata_payload.get("frame_stack", 1),
         "row_matrices_shape": list(dataset.row_matrices.shape),
         "config_context_shape": list(dataset.config_context.shape),
         "action_targets_shape": list(dataset.action_targets.shape),
@@ -97,7 +126,14 @@ def main() -> None:
         ),
         "variable_names": list(dataset.variable_names),
         "config_fields": list(dataset.config_fields),
+        "action_fields": list(action_field_payload["fields"]),
+        "constraint_context_fields": list(constraint_field_payload["fields"]),
+        "state_constraint_fields": list(state_field_payload["fields"]),
+        "reward_term_fields": list(reward_field_payload["fields"]),
+        "reward_formula": reward_field_payload.get("formula"),
+        "direct_action_context_fields": list(direct_action_field_payload["fields"]),
         "relation_to_index": dataset.relation_to_index,
+        "env_spec": env_spec,
     }
     with (output_dir / "metadata.json").open("w", encoding="utf-8") as file_obj:
         json.dump(metadata, file_obj, indent=2)

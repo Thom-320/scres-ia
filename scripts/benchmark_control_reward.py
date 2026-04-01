@@ -26,6 +26,8 @@ from stable_baselines3.common.vec_env import DummyVecEnv
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from supply_chain.config import (
+    BENCHMARK_EPISODE_HORIZON_HOURS,
+    BENCHMARK_OBSERVATION_VERSION,
     BENCHMARK_REWARD_MODE,
     CAPACITY_BY_SHIFTS,
     DEFAULT_YEAR_BASIS,
@@ -79,6 +81,8 @@ FIXED_POLICY_ACTIONS: dict[str, np.ndarray | dict[str, float | int]] = {
 # ---------------------------------------------------------------------------
 
 SHIFT_SIGNAL = {1: -1.0, 2: 0.0, 3: 1.0}
+V5_CYCLE_START = 24
+V5_OBS_DIM = 30
 
 
 class PolicyAdapter(Protocol):
@@ -216,12 +220,72 @@ class HeuristicTuned:
         )
 
 
-HeuristicPolicy = HeuristicHysteresis | HeuristicDisruptionAware | HeuristicTuned
+class HeuristicCycleGuard:
+    """Cycle-aware guard heuristic for v5 precursor features.
+
+    Holds the thesis-aligned S2 baseline by default, escalates temporarily to
+    S3 near Op1/Op2 reorder-cycle risk windows, and uses only v5 cycle signals
+    plus current service/backorder diagnostics.
+    """
+
+    def __init__(
+        self,
+        risk_window_start: float = 0.85,
+        backorder_guard: float = 0.05,
+        fill_guard: float = 0.92,
+        inventory_boost: float = 0.5,
+    ) -> None:
+        self.risk_window_start = risk_window_start
+        self.backorder_guard = backorder_guard
+        self.fill_guard = fill_guard
+        self.inventory_boost = inventory_boost
+
+    def reset(self) -> None:
+        return None
+
+    def __call__(self, obs: np.ndarray, info: dict[str, Any]) -> np.ndarray:
+        frame = _latest_frame(obs)
+        fill_rate = float(frame[6])
+        backorder_rate = float(frame[7])
+        assembly_down = float(frame[8]) > 0.5
+        any_loc_down = float(frame[9]) > 0.5
+        has_v5_cycle = frame.shape[0] >= V5_OBS_DIM
+        op1_phase = float(frame[V5_CYCLE_START]) if has_v5_cycle else 0.0
+        op2_phase = float(frame[V5_CYCLE_START + 1]) if has_v5_cycle else 0.0
+        risk_window = has_v5_cycle and (
+            op1_phase >= self.risk_window_start or op2_phase >= self.risk_window_start
+        )
+        escalate = (
+            assembly_down
+            or any_loc_down
+            or (
+                risk_window
+                and (
+                    backorder_rate >= self.backorder_guard
+                    or fill_rate <= self.fill_guard
+                )
+            )
+        )
+        shift_signal = 1.0 if escalate else 0.0
+        inv_signal = self.inventory_boost if escalate else 0.0
+        return np.array(
+            [inv_signal, inv_signal, inv_signal, inv_signal, shift_signal],
+            dtype=np.float32,
+        )
+
+
+HeuristicPolicy = (
+    HeuristicHysteresis
+    | HeuristicDisruptionAware
+    | HeuristicTuned
+    | HeuristicCycleGuard
+)
 
 HEURISTIC_POLICY_NAMES = (
     "heuristic_hysteresis",
     "heuristic_disruption",
     "heuristic_tuned",
+    "heuristic_cycle_guard",
 )
 
 
@@ -230,6 +294,7 @@ def _make_heuristic_defaults() -> dict[str, HeuristicPolicy]:
         "heuristic_hysteresis": HeuristicHysteresis(),
         "heuristic_disruption": HeuristicDisruptionAware(),
         "heuristic_tuned": HeuristicTuned(),
+        "heuristic_cycle_guard": HeuristicCycleGuard(),
     }
 
 
@@ -247,6 +312,10 @@ PRIMARY_METRICS = (
     "fill_rate",
     "backorder_rate",
     "ret_thesis_corrected_total",
+    "ret_unified_total",
+    "ret_garrido2024_raw_total",
+    "ret_garrido2024_train_total",
+    "ret_garrido2024_sigmoid_total",
     "order_level_ret_mean",
     "pct_steps_S1",
     "pct_steps_S2",
@@ -274,6 +343,10 @@ EPISODE_FIELDNAMES = [
     "fill_rate",
     "backorder_rate",
     "ret_thesis_corrected_total",
+    "ret_unified_total",
+    "ret_garrido2024_raw_total",
+    "ret_garrido2024_train_total",
+    "ret_garrido2024_sigmoid_total",
     "order_level_ret_mean",
     "demanded_total",
     "delivered_total",
@@ -348,6 +421,16 @@ COMPARISON_FIELDNAMES = [
     "garrido_cf_s2_ret_thesis_corrected_total_mean",
     "best_static_ret_thesis_corrected_total_mean",
     "best_garrido_ret_thesis_corrected_total_mean",
+    "ppo_ret_unified_total_mean",
+    "static_s2_ret_unified_total_mean",
+    "garrido_cf_s2_ret_unified_total_mean",
+    "best_static_ret_unified_total_mean",
+    "best_garrido_ret_unified_total_mean",
+    "ppo_ret_garrido2024_sigmoid_total_mean",
+    "static_s2_ret_garrido2024_sigmoid_total_mean",
+    "garrido_cf_s2_ret_garrido2024_sigmoid_total_mean",
+    "best_static_ret_garrido2024_sigmoid_total_mean",
+    "best_garrido_ret_garrido2024_sigmoid_total_mean",
     "ppo_pct_steps_S1_mean",
     "ppo_pct_steps_S2_mean",
     "ppo_pct_steps_S3_mean",
@@ -365,6 +448,9 @@ COMPARISON_FIELDNAMES = [
     "ppo_beats_garrido_cf_s2",
     "ppo_beats_best_garrido",
     "ppo_beats_best_static",
+    "ppo_meets_garrido_cf_s2_fill_rate",
+    "ppo_meets_unified_acceptance_gate",
+    "shift_collapse_flag",
     "collapsed_to_S1",
     "collapsed_to_S2",
     "collapsed_to_S3",
@@ -427,7 +513,15 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--train-timesteps", type=int, default=50_000)
     parser.add_argument("--eval-episodes", type=int, default=10)
     parser.add_argument("--step-size-hours", type=float, default=168.0)
-    parser.add_argument("--max-steps", type=int, default=260)
+    parser.add_argument(
+        "--max-steps",
+        type=int,
+        default=None,
+        help=(
+            "Episode length in control steps. Defaults to the historical "
+            "260x168h physical horizon rescaled to the requested cadence."
+        ),
+    )
     parser.add_argument(
         "--algo",
         choices=["ppo", "sac", "recurrent_ppo"],
@@ -442,17 +536,20 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--observation-version",
-        choices=["v1", "v2", "v3", "v4"],
-        default="v1",
+        choices=["v1", "v2", "v3", "v4", "v5", "v6"],
+        default=BENCHMARK_OBSERVATION_VERSION,
         help=(
             "Observation contract version. v1 preserves historical 15-d runs; "
             "v2 adds previous-step diagnostics; v3 adds normalized cumulative "
-            "history; v4 adds current shift plus op1/op2 disruption flags."
+            "history; v4 adds current shift plus op1/op2 disruption flags and "
+            "is the frozen paper-facing contract; v5 adds thesis-faithful "
+            "cycle/calendar precursor features for research comparisons; v6 "
+            "adds Track-B adaptive benchmark regime/forecast features."
         ),
     )
     parser.add_argument(
         "--risk-level",
-        choices=["current", "increased", "severe"],
+        choices=["current", "increased", "severe", "adaptive_benchmark_v1"],
         default="increased",
     )
     parser.add_argument(
@@ -534,6 +631,7 @@ def build_parser() -> argparse.ArgumentParser:
         choices=[
             "control_v1",
             "control_v1_pbrs",
+            "ReT_unified_v1",
             "ReT_seq_v1",
             "ReT_garrido2024_raw",
             "ReT_garrido2024",
@@ -543,6 +641,15 @@ def build_parser() -> argparse.ArgumentParser:
         ],
         default=BENCHMARK_REWARD_MODE,
         help="Reward mode for training and evaluation.",
+    )
+    parser.add_argument(
+        "--ret-unified-calibration",
+        type=Path,
+        default=None,
+        help=(
+            "Optional ReT_unified_v1 calibration JSON. "
+            "Recommended for the frozen paper-facing unified contract."
+        ),
     )
     parser.add_argument(
         "--ret-seq-kappa",
@@ -607,6 +714,18 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def resolve_episode_max_steps(
+    step_size_hours: float,
+    explicit_max_steps: int | None,
+) -> int:
+    """Preserve the historical episode horizon when cadence changes."""
+    if explicit_max_steps is not None:
+        return int(explicit_max_steps)
+    if step_size_hours <= 0:
+        raise ValueError("step_size_hours must be > 0")
+    return max(1, int(round(BENCHMARK_EPISODE_HORIZON_HOURS / step_size_hours)))
+
+
 def ci95(values: list[float]) -> tuple[float, float]:
     if len(values) < 2:
         value = float(values[0]) if values else float("nan")
@@ -628,6 +747,7 @@ def static_policy_action(policy: str) -> np.ndarray | dict[str, float | int]:
 
 def make_weight_combos(args: argparse.Namespace) -> list[dict[str, float]]:
     if args.reward_mode in (
+        "ReT_unified_v1",
         "ReT_seq_v1",
         "ReT_garrido2024_raw",
         "ReT_garrido2024",
@@ -667,7 +787,7 @@ def build_env_kwargs(
         "step_size_hours": args.step_size_hours,
         "risk_level": risk_level_override or args.risk_level,
         "stochastic_pt": args.stochastic_pt,
-        "max_steps": args.max_steps,
+        "max_steps": resolve_episode_max_steps(args.step_size_hours, args.max_steps),
         "year_basis": args.year_basis,
         **weight_combo,
     }
@@ -677,6 +797,11 @@ def build_env_kwargs(
         kwargs["pbrs_beta"] = getattr(args, "pbrs_beta", 0.95)
         kwargs["pbrs_gamma"] = getattr(args, "pbrs_gamma", 0.99)
         kwargs["pbrs_variant"] = getattr(args, "pbrs_variant", "cumulative")
+    elif reward_mode == "ReT_unified_v1":
+        calibration_path = getattr(args, "ret_unified_calibration", None)
+        kwargs["ret_unified_calibration_path"] = (
+            str(calibration_path) if calibration_path is not None else None
+        )
     elif reward_mode == "ReT_seq_v1":
         kwargs["ret_seq_kappa"] = getattr(args, "ret_seq_kappa", 0.20)
     elif reward_mode in (
@@ -752,7 +877,7 @@ def build_backbone_metadata(
         "risk_level": str(args.risk_level),
         "stochastic_pt": bool(args.stochastic_pt),
         "step_size_hours": float(args.step_size_hours),
-        "max_steps": int(args.max_steps),
+        "max_steps": resolve_episode_max_steps(args.step_size_hours, args.max_steps),
         "reward_mode": str(getattr(args, "reward_mode", "control_v1")),
     }
 
@@ -773,6 +898,7 @@ def reward_family(reward_mode: str) -> str:
     if reward_mode in ("control_v1", "control_v1_pbrs"):
         return "operational_penalty"
     if reward_mode in (
+        "ReT_unified_v1",
         "ReT_seq_v1",
         "ReT_cd",
         "ReT_garrido2024_raw",
@@ -1048,6 +1174,10 @@ def finalize_episode_metrics(
     shift_cost_total: float,
     disruption_fraction_total: float,
     ret_thesis_corrected_total: float,
+    ret_unified_total: float,
+    ret_garrido2024_raw_total: float,
+    ret_garrido2024_train_total: float,
+    ret_garrido2024_sigmoid_total: float,
     demanded_total: float,
     delivered_total: float,
     backorder_qty_total: float,
@@ -1085,6 +1215,10 @@ def finalize_episode_metrics(
         "fill_rate": fill_rate,
         "backorder_rate": backorder_rate,
         "ret_thesis_corrected_total": ret_thesis_corrected_total,
+        "ret_unified_total": ret_unified_total,
+        "ret_garrido2024_raw_total": ret_garrido2024_raw_total,
+        "ret_garrido2024_train_total": ret_garrido2024_train_total,
+        "ret_garrido2024_sigmoid_total": ret_garrido2024_sigmoid_total,
         "order_level_ret_mean": float(terminal_metrics["order_level_ret_mean"]),
         "demanded_total": demanded_total,
         "delivered_total": delivered_total,
@@ -1133,6 +1267,10 @@ def evaluate_policy(
         shift_cost_total = 0.0
         disruption_fraction_total = 0.0
         ret_thesis_corrected_total = 0.0
+        ret_unified_total = 0.0
+        ret_garrido2024_raw_total = 0.0
+        ret_garrido2024_train_total = 0.0
+        ret_garrido2024_sigmoid_total = 0.0
         demanded_total = 0.0
         delivered_total = 0.0
         backorder_qty_total = 0.0
@@ -1207,6 +1345,16 @@ def evaluate_policy(
             ret_thesis_corrected_total += float(
                 info.get("ret_thesis_corrected_step", 0.0)
             )
+            ret_unified_total += float(info.get("ret_unified_step", 0.0))
+            ret_garrido2024_raw_total += float(
+                info.get("ret_garrido2024_raw_step", 0.0)
+            )
+            ret_garrido2024_train_total += float(
+                info.get("ret_garrido2024_train_step", 0.0)
+            )
+            ret_garrido2024_sigmoid_total += float(
+                info.get("ret_garrido2024_sigmoid_step", 0.0)
+            )
             demanded_total += float(info.get("new_demanded", 0.0))
             delivered_total += float(info.get("new_delivered", 0.0))
             backorder_qty_total += float(info.get("new_backorder_qty", 0.0))
@@ -1251,6 +1399,10 @@ def evaluate_policy(
                 shift_cost_total=shift_cost_total,
                 disruption_fraction_total=disruption_fraction_total,
                 ret_thesis_corrected_total=ret_thesis_corrected_total,
+                ret_unified_total=ret_unified_total,
+                ret_garrido2024_raw_total=ret_garrido2024_raw_total,
+                ret_garrido2024_train_total=ret_garrido2024_train_total,
+                ret_garrido2024_sigmoid_total=ret_garrido2024_sigmoid_total,
                 demanded_total=demanded_total,
                 delivered_total=delivered_total,
                 backorder_qty_total=backorder_qty_total,
@@ -1575,6 +1727,15 @@ def build_comparison_rows(
     comparison_rows: list[dict[str, Any]] = []
     learned_policy = learned_policy_name(args)
     learned_phase = learned_phase_name(args)
+
+    def _metric_or_none(row: dict[str, Any] | None, key: str) -> float | None:
+        if row is None:
+            return None
+        value = row.get(key)
+        if value is None:
+            return None
+        return float(value)
+
     for survivor in survivors:
         weight_combo = {
             "w_bo": survivor["w_bo"],
@@ -1812,6 +1973,36 @@ def build_comparison_rows(
                     if best_garrido_row
                     else None
                 ),
+                "ppo_ret_unified_total_mean": _metric_or_none(
+                    learned_row, "ret_unified_total_mean"
+                ),
+                "static_s2_ret_unified_total_mean": _metric_or_none(
+                    s2_row, "ret_unified_total_mean"
+                ),
+                "garrido_cf_s2_ret_unified_total_mean": _metric_or_none(
+                    garrido_cf_s2_row, "ret_unified_total_mean"
+                ),
+                "best_static_ret_unified_total_mean": _metric_or_none(
+                    best_row, "ret_unified_total_mean"
+                ),
+                "best_garrido_ret_unified_total_mean": _metric_or_none(
+                    best_garrido_row, "ret_unified_total_mean"
+                ),
+                "ppo_ret_garrido2024_sigmoid_total_mean": _metric_or_none(
+                    learned_row, "ret_garrido2024_sigmoid_total_mean"
+                ),
+                "static_s2_ret_garrido2024_sigmoid_total_mean": _metric_or_none(
+                    s2_row, "ret_garrido2024_sigmoid_total_mean"
+                ),
+                "garrido_cf_s2_ret_garrido2024_sigmoid_total_mean": _metric_or_none(
+                    garrido_cf_s2_row, "ret_garrido2024_sigmoid_total_mean"
+                ),
+                "best_static_ret_garrido2024_sigmoid_total_mean": _metric_or_none(
+                    best_row, "ret_garrido2024_sigmoid_total_mean"
+                ),
+                "best_garrido_ret_garrido2024_sigmoid_total_mean": _metric_or_none(
+                    best_garrido_row, "ret_garrido2024_sigmoid_total_mean"
+                ),
                 "ppo_pct_steps_S1_mean": (
                     float(learned_row["pct_steps_S1_mean"]) if learned_row else None
                 ),
@@ -1866,6 +2057,41 @@ def build_comparison_rows(
                 ),
                 "ppo_beats_best_static": compare_policy_to_baseline(
                     learned_row, best_row
+                ),
+                "ppo_meets_garrido_cf_s2_fill_rate": bool(
+                    learned_row
+                    and garrido_cf_s2_row
+                    and float(learned_row["fill_rate_mean"])
+                    >= float(garrido_cf_s2_row["fill_rate_mean"])
+                ),
+                "ppo_meets_unified_acceptance_gate": bool(
+                    learned_row
+                    and garrido_cf_s2_row
+                    and float(learned_row["reward_total_mean"])
+                    >= float(garrido_cf_s2_row["reward_total_mean"])
+                    and float(learned_row["fill_rate_mean"])
+                    >= float(garrido_cf_s2_row["fill_rate_mean"])
+                    and max(
+                        float(learned_row["pct_steps_S1_mean"]),
+                        float(learned_row["pct_steps_S2_mean"]),
+                        float(learned_row["pct_steps_S3_mean"]),
+                    )
+                    <= 80.0
+                ),
+                "shift_collapse_flag": (
+                    "S1"
+                    if learned_row and float(learned_row["pct_steps_S1_mean"]) > 80.0
+                    else (
+                        "S2"
+                        if learned_row
+                        and float(learned_row["pct_steps_S2_mean"]) > 80.0
+                        else (
+                            "S3"
+                            if learned_row
+                            and float(learned_row["pct_steps_S3_mean"]) > 80.0
+                            else "none"
+                        )
+                    )
                 ),
                 "collapsed_to_S1": bool(
                     learned_row and float(learned_row["pct_steps_S1_mean"]) > 90.0
@@ -1990,6 +2216,7 @@ def tune_heuristic_params(
 
 def run_benchmark(args: argparse.Namespace) -> dict[str, Any]:
     ensure_algo_dependencies(args)
+    args.max_steps = resolve_episode_max_steps(args.step_size_hours, args.max_steps)
     args.output_dir = resolve_output_dir(args)
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -2004,6 +2231,8 @@ def run_benchmark(args: argparse.Namespace) -> dict[str, Any]:
     trained_models: list[dict[str, Any]] = []
     trained_policy_evaluators: list[dict[str, Any]] = []
     eval_risk_levels = resolve_eval_risk_levels(args)
+    model_dir = args.output_dir / "models"
+    model_dir.mkdir(parents=True, exist_ok=True)
 
     if args.learned_only:
         if len(weight_combos) != 1:
@@ -2081,6 +2310,12 @@ def run_benchmark(args: argparse.Namespace) -> dict[str, Any]:
                     "train_timesteps": args.train_timesteps,
                 }
             )
+            model_path = model_dir / (
+                f"{args.algo}_seed{seed}_wbo{survivor['w_bo']}_"
+                f"wcost{survivor['w_cost']}_wdisr{survivor['w_disr']}.zip"
+            )
+            model.save(str(model_path))
+            trained_models[-1]["model_path"] = str(model_path)
             episode_rows.extend(
                 evaluate_policy(
                     learned_phase_name(args),
@@ -2243,7 +2478,7 @@ def run_benchmark(args: argparse.Namespace) -> dict[str, Any]:
             "train_timesteps": args.train_timesteps,
             "eval_episodes": args.eval_episodes,
             "step_size_hours": args.step_size_hours,
-            "max_steps": args.max_steps,
+            "max_steps": int(args.max_steps),
             "risk_level": args.risk_level,
             "eval_risk_levels": eval_risk_levels,
             "stochastic_pt": args.stochastic_pt,
@@ -2251,7 +2486,17 @@ def run_benchmark(args: argparse.Namespace) -> dict[str, Any]:
             "w_bo": args.w_bo,
             "w_cost": args.w_cost,
             "w_disr": args.w_disr,
+            "ret_unified_calibration": (
+                str(args.ret_unified_calibration)
+                if args.ret_unified_calibration is not None
+                else None
+            ),
             "ret_seq_kappa": args.ret_seq_kappa,
+            "ret_g24_calibration": (
+                str(args.ret_g24_calibration)
+                if args.ret_g24_calibration is not None
+                else None
+            ),
             "max_survivors": args.max_survivors,
             "learning_rate": args.learning_rate,
             "n_steps": args.n_steps,

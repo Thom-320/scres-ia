@@ -1,0 +1,95 @@
+{
+  "artifact_type": "control_reward_benchmark",
+  "benchmark_date_utc": "2026-03-30T06:57:14.496623+00:00",
+  "git_commit": "321054f8150a1bb0f4ce826f28302a1841f5104b",
+  "command": "python scripts/benchmark_control_reward.py --reward-mode ReT_garrido2024_train --seeds 11 22 33 --train-timesteps 100000 --eval-episodes 10 --step-size-hours 168 --max-steps 260 --risk-level increased --stochastic-pt --output-dir outputs/benchmarks/compare_ret_garrido2024_train_100k_garrido_exact",
+  "source_benchmark_directory": "/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/outputs/benchmarks/compare_ret_garrido2024_train_100k_garrido_exact",
+  "bundle_directory": "/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/docs/artifacts/control_reward/compare_ret_garrido2024_train_100k_garrido_exact",
+  "config": {
+    "algo": "ppo",
+    "frame_stack": 1,
+    "observation_version": "v1",
+    "reward_mode": "ReT_garrido2024_train",
+    "seeds": [
+      11,
+      22,
+      33
+    ],
+    "train_timesteps": 100000,
+    "eval_episodes": 10,
+    "step_size_hours": 168.0,
+    "max_steps": 260,
+    "risk_level": "increased",
+    "eval_risk_levels": [
+      "increased"
+    ],
+    "stochastic_pt": true,
+    "year_basis": "gregorian",
+    "w_bo": [
+      1.0,
+      2.0,
+      4.0
+    ],
+    "w_cost": [
+      0.02,
+      0.06,
+      0.1
+    ],
+    "w_disr": [
+      0.0
+    ],
+    "ret_seq_kappa": 0.2,
+    "max_survivors": 4,
+    "learning_rate": 0.0003,
+    "n_steps": 1024,
+    "batch_size": 64,
+    "n_epochs": 10,
+    "gamma": 0.99,
+    "gae_lambda": 0.95,
+    "clip_range": 0.2,
+    "tau": 0.005,
+    "train_freq": 1,
+    "gradient_steps": 1,
+    "learning_starts": 5000
+  },
+  "backbone": {
+    "env_variant": "shift_control",
+    "git_commit": "321054f8150a1bb0f4ce826f28302a1841f5104b",
+    "observation_version": "v1",
+    "frame_stack": 1,
+    "year_basis": "gregorian",
+    "risk_level": "increased",
+    "stochastic_pt": true,
+    "step_size_hours": 168.0,
+    "max_steps": 260,
+    "reward_mode": "ReT_garrido2024_train"
+  },
+  "metric_contract": {
+    "protocol_version": "paper_facing_v1",
+    "fill_rate_primary": "terminal_order_level",
+    "backorder_rate_primary": "terminal_order_level",
+    "fill_rate_audit_only": "flow_fill_rate",
+    "backorder_rate_audit_only": "flow_backorder_rate"
+  },
+  "reward_contract": {
+    "reward_mode": "ReT_garrido2024_train",
+    "reward_family": "resilience_index",
+    "cross_mode_reward_comparison_allowed": false,
+    "within_run_reward_comparison_allowed": true,
+    "selection_metrics": [
+      "fill_rate",
+      "backorder_rate",
+      "order_level_ret_mean",
+      "reward_total_within_same_reward_mode_only"
+    ],
+    "note": "reward_total is only comparable within runs that share the same reward_mode/reward_family. Use terminal service metrics and order_level_ret_mean for cross-mode interpretation."
+  },
+  "files": {
+    "comparison_table.csv": "/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/docs/artifacts/control_reward/compare_ret_garrido2024_train_100k_garrido_exact/comparison_table.csv",
+    "policy_summary.csv": "/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/docs/artifacts/control_reward/compare_ret_garrido2024_train_100k_garrido_exact/policy_summary.csv",
+    "summary.json": "/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/docs/artifacts/control_reward/compare_ret_garrido2024_train_100k_garrido_exact/summary.json",
+    "episode_metrics.csv": "/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/docs/artifacts/control_reward/compare_ret_garrido2024_train_100k_garrido_exact/episode_metrics.csv",
+    "training_trace.csv": "/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/docs/artifacts/control_reward/compare_ret_garrido2024_train_100k_garrido_exact/training_trace.csv",
+    "proof_trajectories.csv": "/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/docs/artifacts/control_reward/compare_ret_garrido2024_train_100k_garrido_exact/proof_trajectories.csv"
+  }
+}
