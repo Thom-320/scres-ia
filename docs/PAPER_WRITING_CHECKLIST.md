@@ -33,12 +33,12 @@ Final paper claim:
 - [ ] one-line claim fixed
 - [ ] contribution list `C1-C4` frozen
 - [x] abstract drafted
-- [ ] introduction drafted
-- [ ] related work drafted
+- [x] introduction drafted
+- [x] related work drafted
 - [x] methodology drafted
 - [x] results drafted
-- [ ] discussion drafted
-- [ ] conclusion drafted
+- [x] discussion drafted
+- [x] conclusion drafted
 - [ ] limitations paragraph drafted
 
 ### B. Figures and tables
@@ -53,8 +53,8 @@ Final paper claim:
 ### C. Reproducibility and citation package
 
 - [x] `.bib` file created inside the repo
-- [ ] journal template selected and added to workflow
-- [ ] paper-facing manifests pin exact commit hashes instead of `HEAD`
+- [x] journal template selected and added to workflow
+- [x] paper-facing manifests pin exact commit hashes instead of `HEAD`
 - [ ] reproducibility appendix drafted
 - [ ] file-to-claim artifact map drafted
 
@@ -71,11 +71,11 @@ Final paper claim:
 
 ### Codex
 
-- [ ] kill or supersede the stale manuscript framing in the repo
-- [ ] write the manuscript text backbone
-- [ ] compute and report formal statistics
+- [x] kill or supersede the stale manuscript framing in the repo
+- [x] write the manuscript text backbone
+- [x] compute and report formal statistics
 - [x] create the bibliography package inside the repo
-- [ ] fix provenance and reproducibility gaps
+- [x] fix provenance and reproducibility gaps
 - [ ] align README / docs / manuscript notes with the final paper claim
 
 ---
@@ -84,10 +84,10 @@ Final paper claim:
 
 ### C1. Freeze the manuscript language
 
-- [ ] replace stale `control_v1`-centric framing in manuscript draft files
-- [ ] rewrite the paper around `Track A` negative evidence + `Track B` positive evidence
-- [ ] ensure the matched `5D vs 7D` ablation is described as supportive causal evidence, not universal proof
-- [ ] remove or quarantine obsolete notes that still imply the old storyline
+- [x] replace stale `control_v1`-centric framing in manuscript draft files
+- [x] rewrite the paper around `Track A` negative evidence + `Track B` positive evidence
+- [x] ensure the matched `5D vs 7D` ablation is described as supportive causal evidence, not universal proof
+- [x] remove or quarantine obsolete notes that still imply the old storyline
 
 Primary files to replace or supersede:
 
@@ -98,12 +98,12 @@ Primary files to replace or supersede:
 ### C2. Write the minimum viable manuscript
 
 - [x] `00_title_claim_abstract.md`
-- [ ] `01_introduction.md`
-- [ ] `02_related_work.md`
+- [x] `01_introduction.md`
+- [x] `02_related_work.md`
 - [x] `03_methodology.md`
 - [x] `04_results.md`
-- [ ] `05_discussion.md`
-- [ ] `06_conclusion.md`
+- [x] `05_discussion.md`
+- [x] `06_conclusion.md`
 
 Recommended writing order:
 
@@ -116,11 +116,11 @@ Recommended writing order:
 
 ### C3. Formal statistics
 
-- [ ] compute pairwise tests for Track B PPO vs `s2_d1.00`
-- [ ] compute pairwise tests for Track B PPO vs `s3_d2.00`
-- [ ] report effect sizes using a justified non-parametric or parametric measure
-- [ ] freeze wording for Track A negative controls separately from Track B positive result
-- [ ] add a compact stats table ready for the paper
+- [x] compute pairwise tests for Track B PPO vs `s2_d1.00`
+- [x] compute pairwise tests for Track B PPO vs `s3_d2.00`
+- [x] report effect sizes using a justified non-parametric or parametric measure
+- [x] freeze wording for Track A negative controls separately from Track B positive result
+- [x] add a compact stats table ready for the paper
 
 Minimum output:
 
@@ -131,6 +131,7 @@ Minimum output:
 ### C4. Bibliography and citations
 
 - [ ] create `references.bib` in-repo
+- [x] create `references.bib` in-repo
 - [ ] normalize citation keys
 - [ ] ensure Ding et al. (2026) is entered with verified metadata
 - [ ] convert the current literature notes into citeable manuscript references
@@ -138,7 +139,7 @@ Minimum output:
 
 ### C5. Provenance and reproducibility
 
-- [ ] replace `code_ref: "HEAD"` in paper-facing launchers with resolved git hashes
+- [x] replace `code_ref: "HEAD"` in paper-facing launchers with resolved git hashes
 - [ ] verify every cited artifact bundle has a manifest, command, and summary
 - [ ] add a concise reproducibility appendix tied to the frozen contracts
 - [ ] document exact commands for Track A, Track B, and the matched ablation
@@ -174,13 +175,13 @@ Primary files to patch:
 
 ### Session 4
 
-- [ ] draft related work
-- [ ] draft introduction
+- [x] draft related work
+- [x] draft introduction
 
 ### Session 5
 
-- [ ] draft discussion
-- [ ] draft conclusion
+- [x] draft discussion
+- [x] draft conclusion
 - [ ] assemble reproducibility appendix
 
 ---

@@ -1,0 +1,142 @@
+\hypertarget{4-results}{%
+\section{4. Results}\label{4-results}}
+
+\hypertarget{41-des-validation}{%
+\subsection{4.1 DES validation}\label{41-des-validation}}
+
+The reconstructed DES was first validated against the deterministic
+baseline (Cf0, single shift S=1) reported in Garrido-Rios (2017, Table
+6.10). Using the official thesis basis of 8,064 hours per year (48
+operational weeks), the simulation delivers 733,621 rations per year on
+average, compared with the thesis reference of 767,592 rations, yielding
+a relative gap of \$-4.43\%\$. This is comfortably within the accepted
+\$\textbackslash pm 15\%\$ validation threshold and supports the
+structural fidelity of the rebuilt DES. A secondary Gregorian-basis
+check (8,760 hours per year) produces 796,940 rations per year
+(\$+3.82\%\$ relative gap), confirming that the discrepancy is driven by
+year-basis conventions rather than model error (Table 4).
+
+Under deterministic conditions with risks disabled, the simulation
+produces 734,458 rations per year and delivers 733,621, with a fill rate
+of 99.3\% and only 41 backorders accumulated over the 20-year horizon.
+When stochastic risks are enabled at the current level, average annual
+delivery falls to 677,750 rations (\$-7.6\%\$ relative to the
+deterministic baseline), the fill rate drops to 68.3\%, and total
+backorders rise to 1,825. The model registers 8,247 disruptive events
+across the 20-year horizon, mainly driven by internal workstation
+breakdowns (R11: 1,868 events), defective products (R14: 5,591 events),
+and recurrent demand surges (R24: 478 events). Under the increased risk
+configuration used for the benchmark, average annual delivery decreases
+further to 549,250 rations, fill rate falls to 45.6\%, and total
+backorders increase to 3,132. The DES therefore shows a clear transition
+from a well-calibrated nominal system to a fragile network once
+disruption intensity escalates.
+
+\hypertarget{42-track-a-thesis-faithful-benchmark-negative-result}{%
+\subsection{4.2 Track A: thesis-faithful benchmark (negative
+result)}\label{42-track-a-thesis-faithful-benchmark-negative-result}}
+
+Under the thesis-faithful Track A contract, no RL configuration
+outperforms the strongest static baseline. Table 8 summarizes the
+primary results. PPO trained with ReT\_seq\_v1 (\$\textbackslash kappa =
+0.20\$) over 500,000 timesteps across 5-\/-10 seeds reaches a cumulative
+fill rate of 0.788, falling short of static S2 at 0.792 by 0.4
+percentage points. PPO trained with the linear control\_v1 reward
+achieves fill rate 0.782, losing by 1.0 percentage point. RecurrentPPO
+(LSTM-based) trained with control\_v1 performs worse still at fill rate
+0.751, losing by 4.1 percentage points. A tuned heuristic baseline
+reaches 0.795, approximately matching S2 but not materially exceeding
+it.
+
+The negative result is not an algorithmic failure in the conventional
+sense. A design-of-experiments analysis reveals that the Track A action
+space exhibits strongly asymmetric sensitivity: destructive inventory
+settings reduce reward by 44-\/-65\% and can collapse fill rate, while
+the positive headroom above S2-neutral inventory control is limited to
+approximately 1\% in reward. PPO's convergence to near-neutral action
+values on the inventory dimensions, combined with S2-region shift
+selection, is therefore a rational response to asymmetric downside risk.
+The structural explanation is the downstream distribution bottleneck
+identified in finding F11: Op10-\/-Op12 transport throughput
+(\$\textbackslash approx\$2,500 rations/day) approximately equals
+demand, so extra upstream production capacity from S3 yields sharply
+diminishing returns. S2 already saturates the downstream pipeline; S3
+produces more but delivers approximately the same. Because Track A does
+not expose downstream dispatch control to the agent, the active
+constraint lies outside the controllable interface.
+
+\hypertarget{43-track-b-extended-action-space-positive-result}{%
+\subsection{4.3 Track B: extended action space (positive
+result)}\label{43-track-b-extended-action-space-positive-result}}
+
+Track B extends the action space from 5 to 7 dimensions by adding
+downstream dispatch multipliers at Op10 and Op12, while preserving the
+DES backbone and reward family. Table 9 presents the Track B results
+from the production benchmark (500,000 timesteps, 5 seeds
+\$\textbackslash times\$ 20 evaluation episodes).
+
+PPO achieves fill rate 1.000 (zero backorders), cumulative reward
+254.21, and order-level resilience (ReT mean) 0.950. The S2 baseline
+with neutral dispatch (s2\_d1.00) reaches fill rate 0.966 and reward
+178.24; the best static policy (S3 with double dispatch, s3\_d2.00)
+reaches fill rate 0.988 and reward 171.06. PPO therefore exceeds
+s2\_d1.00 by +3.40 percentage points in fill rate and the best static
+policy by +1.23 percentage points. The reward gap versus the best static
+policy is +83.16, reflecting both service improvement and cost
+efficiency.
+
+The learned policy's shift utilization is 78\% S1 / 16\% S2 / 6\%
+S3-\/-\/-a marked contrast to static S2 (100\% S2) and static S3 (100\%
+S3). This indicates that PPO learned to operate at the lowest assembly
+cost (S1) for most of the episode while activating higher shifts
+selectively when downstream conditions require surge capacity. The
+combination of full fill rate with predominantly S1 operation represents
+a cost-efficient strategy that no static policy achieves: static
+S3+d2.00 reaches near-perfect fill but at permanently elevated assembly
+cost, while PPO matches or exceeds its fill rate at substantially lower
+average shift utilization.
+
+\hypertarget{44-matched-ablation-5d-versus-7d}{%
+\subsection{4.4 Matched ablation: 5D versus
+7D}\label{44-matched-ablation-5d-versus-7d}}
+
+To isolate the effect of downstream control from other differences
+between Track A and Track B (observation dimensionality, risk profile),
+we conduct a matched ablation holding all factors constant except the
+action contract. Both conditions use observation version v7 (46
+dimensions), reward ReT\_seq\_v1 (\$\textbackslash kappa = 0.20\$), risk
+level adaptive\_benchmark\_v2, and a training budget of 100,000
+timesteps across 3 seeds. The only difference is the action space: 5D
+(Track A actions) versus 7D (Track A actions + Op10/Op12 dispatch).
+
+Table 10 reports the results. Under the 5D condition, PPO reaches fill
+rate 0.607, losing to static S2 (fill rate 0.616) by 0.9 percentage
+points. Under the 7D condition, PPO reaches fill rate 0.964, winning by
++34.8 percentage points over the same S2 baseline. The fill-rate
+difference between conditions is +35.7 percentage points. The reward
+difference is +73.44.
+
+Because the observation space, reward function, risk profile, and
+training budget are identical across conditions, this matched comparison
+provides strong evidence that the downstream control
+dimensions-\/-\/-not the enriched observation space or the adaptive risk
+profile alone-\/-\/-are materially responsible for the observed Track B
+gain. The manuscript adopts careful language: this ablation
+\emph{indicates} and \emph{supports the interpretation} that
+action-space alignment with the active bottleneck determines RL
+effectiveness in this benchmark. We do not claim universal causal proof
+outside the frozen benchmark family, and we note that the ablation uses
+a shorter training horizon (100k versus 500k) and fewer seeds (3 versus
+5) than the production Track B run.
+
+\hypertarget{45-summary}{%
+\subsection{4.5 Summary}\label{45-summary}}
+
+Table 11 provides a unified comparison across all conditions. The
+experimental evidence forms a coherent narrative: Track A demonstrates a
+structural limitation, Track B demonstrates that a minimal action-space
+repair overcomes it, and the matched ablation localizes the effect to
+the downstream control dimensions. The contribution is not that RL is
+universally effective for supply chain resilience, but that its
+effectiveness depends critically on whether the controllable interface
+reaches the binding operational constraint.

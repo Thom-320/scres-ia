@@ -2,9 +2,9 @@
 
 This folder is the active manuscript workspace for the current paper cycle.
 
-It supersedes the older, partially stale material in:
+It supersedes the older, partially stale material now archived in:
 
-- `docs/manuscript_draft/`
+- `legacy/manuscript_draft_v0/`
 
 Use this folder for the paper that is now being written around:
 
@@ -22,3 +22,5 @@ Files:
 - `04_results.md`
 - `05_discussion.md`
 - `06_conclusion.md`
+- `references.bib`
+- `submission/` for the assembled review and LaTeX package

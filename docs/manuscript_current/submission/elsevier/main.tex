@@ -1,0 +1,56 @@
+\IfFileExists{elsarticle.cls}{%
+\documentclass[preprint,12pt]{elsarticle}
+\newif\ifuseelsevier
+\useelseviertrue
+}{%
+\documentclass[12pt]{article}
+\newif\ifuseelsevier
+\useelsevierfalse
+}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{hyperref}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{graphicx}
+
+\begin{document}
+\ifuseelsevier
+\begin{frontmatter}
+\title{When Does Reinforcement Learning Work for Supply Chain Resilience? Action-Space Alignment in a Military DES Benchmark}
+\begin{abstract}
+Supply chain resilience research increasingly uses reinforcement learning and hybrid simulation workflows, but much of the literature still emphasizes inventory cost optimization, abstract network reconfiguration, or generic benchmark environments rather than operational control on validated, domain-specific models. We present a reproducible discrete-event simulation plus reinforcement learning benchmark for resilience control in a 13-operation military food supply chain rebuilt from Garrido-Rios' (2017) thesis and exposed through a Gymnasium-compatible interface. We first report a negative result: under the thesis-faithful control contract, PPO trained with a Cobb--Douglas resilience reward reaches fill rate 0.788 versus 0.792 for the strongest static baseline, and RecurrentPPO does not recover the gap. We then introduce a minimal action-space extension that adds downstream dispatch control at Op10 and Op12 while keeping the DES backbone intact. Under this extended contract, PPO reaches fill rate 1.000, zero backorders, and order-level resilience 0.950, exceeding the baseline by 3.40 percentage points in fill rate and the best static policy by 1.23 percentage points. A matched 5D-versus-7D ablation with identical observation space, reward family, and risk profile further indicates that the added downstream control dimensions are materially responsible for the gain. The contribution is not architectural novelty but a benchmark-centered diagnosis of when reinforcement learning fails and when it works in supply chain resilience control.
+\end{abstract}
+\begin{keyword}
+Supply chain resilience \sep reinforcement learning \sep discrete-event simulation \sep military supply chain \sep bottleneck alignment
+\end{keyword}
+\end{frontmatter}
+\else
+\title{When Does Reinforcement Learning Work for Supply Chain Resilience? Action-Space Alignment in a Military DES Benchmark}
+\author{}
+\date{}
+\maketitle
+\begin{abstract}
+Supply chain resilience research increasingly uses reinforcement learning and hybrid simulation workflows, but much of the literature still emphasizes inventory cost optimization, abstract network reconfiguration, or generic benchmark environments rather than operational control on validated, domain-specific models. We present a reproducible discrete-event simulation plus reinforcement learning benchmark for resilience control in a 13-operation military food supply chain rebuilt from Garrido-Rios' (2017) thesis and exposed through a Gymnasium-compatible interface. We first report a negative result: under the thesis-faithful control contract, PPO trained with a Cobb--Douglas resilience reward reaches fill rate 0.788 versus 0.792 for the strongest static baseline, and RecurrentPPO does not recover the gap. We then introduce a minimal action-space extension that adds downstream dispatch control at Op10 and Op12 while keeping the DES backbone intact. Under this extended contract, PPO reaches fill rate 1.000, zero backorders, and order-level resilience 0.950, exceeding the baseline by 3.40 percentage points in fill rate and the best static policy by 1.23 percentage points. A matched 5D-versus-7D ablation with identical observation space, reward family, and risk profile further indicates that the added downstream control dimensions are materially responsible for the gain. The contribution is not architectural novelty but a benchmark-centered diagnosis of when reinforcement learning fails and when it works in supply chain resilience control.
+\end{abstract}
+\fi
+
+\input{sections/01_introduction.tex}
+\input{sections/02_related_work.tex}
+\input{sections/03_methodology.tex}
+\input{sections/04_results.tex}
+\input{sections/05_discussion.tex}
+\input{sections/06_conclusion.tex}
+
+\nocite{*}
+\ifuseelsevier
+\bibliographystyle{elsarticle-num}
+\else
+\bibliographystyle{plain}
+\fi
+\bibliography{references}
+
+\end{document}
