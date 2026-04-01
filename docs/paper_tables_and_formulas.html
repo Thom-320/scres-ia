@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Paper Tables &amp; Formulas — SCRES+RL Benchmark</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=STIX+Two+Text:ital,wght@0,400;0,600;0,700;1,400;1,600&family=STIX+Two+Math&display=swap" rel="stylesheet">
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['$','$'], ['\\(','\\)']], displayMath: [['$$','$$'], ['\\[','\\]']] },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+<style>
+  :root {
+    --ink: #1a1a1a;
+    --rule: #333;
+    --caption: #444;
+    --bg: #fff;
+    --accent: #0055a4;
+    --light-bg: #f8f8f8;
+    --note-bg: #fffbe6;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'STIX Two Text', 'Times New Roman', serif;
+    color: var(--ink);
+    background: var(--bg);
+    line-height: 1.55;
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 48px 32px 120px;
+    font-size: 11.5pt;
+  }
+
+  h1 {
+    font-size: 16pt;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 6px;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+  }
+
+  .subtitle {
+    text-align: center;
+    font-size: 10pt;
+    color: var(--caption);
+    margin-bottom: 40px;
+    font-style: italic;
+  }
+
+  h2 {
+    font-size: 12.5pt;
+    font-weight: 700;
+    margin: 40px 0 8px;
+    border-bottom: 1.5px solid var(--rule);
+    padding-bottom: 4px;
+  }
+
+  h3 {
+    font-size: 11.5pt;
+    font-weight: 600;
+    font-style: italic;
+    margin: 24px 0 6px;
+  }
+
+  p { margin: 8px 0; text-align: justify; }
+
+  /* ── Tables ── */
+  .table-wrap {
+    margin: 24px 0 32px;
+    overflow-x: auto;
+  }
+
+  .table-caption {
+    font-size: 10pt;
+    margin-bottom: 6px;
+    text-align: left;
+  }
+
+  .table-caption strong {
+    color: var(--accent);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10pt;
+    line-height: 1.4;
+  }
+
+  thead tr {
+    border-top: 2px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+  }
+
+  thead th {
+    padding: 6px 8px;
+    font-weight: 600;
+    text-align: center;
+    vertical-align: bottom;
+    white-space: nowrap;
+  }
+
+  thead th:first-child { text-align: left; }
+
+  tbody td {
+    padding: 5px 8px;
+    text-align: center;
+    vertical-align: top;
+    border-bottom: 0.5px solid #ddd;
+  }
+
+  tbody td:first-child { text-align: left; font-weight: 500; }
+
+  tbody tr:last-child { border-bottom: 2px solid var(--rule); }
+
+  tbody tr.highlight {
+    background: #eef4ff;
+    font-weight: 600;
+  }
+
+  tbody tr.highlight td { font-weight: 600; }
+
+  tbody tr.separator td {
+    border-top: 1px solid var(--rule);
+    padding-top: 8px;
+  }
+
+  .num { font-variant-numeric: tabular-nums; font-family: 'STIX Two Text', serif; }
+
+  .note {
+    font-size: 9pt;
+    color: #555;
+    margin-top: 4px;
+    line-height: 1.35;
+    font-style: italic;
+  }
+
+  /* ── Formula blocks ── */
+  .formula-block {
+    margin: 20px 0;
+    padding: 16px 20px;
+    background: var(--light-bg);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 4px 4px 0;
+  }
+
+  .formula-block .label {
+    font-size: 9pt;
+    font-weight: 600;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 8px;
+  }
+
+  .where-list {
+    margin: 8px 0 0 16px;
+    font-size: 10pt;
+    line-height: 1.6;
+  }
+
+  .where-list dt { float: left; width: 80px; font-style: italic; clear: left; }
+  .where-list dd { margin-left: 88px; }
+
+  /* ── Shift mapping visual ── */
+  .shift-visual {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin: 12px 0;
+    font-size: 10pt;
+  }
+
+  .shift-visual .segment {
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 600;
+    font-size: 9pt;
+    letter-spacing: 0.02em;
+  }
+
+  .shift-visual .s1 { background: #3b82f6; flex: 1; border-radius: 4px 0 0 4px; }
+  .shift-visual .s2 { background: #f59e0b; flex: 1; }
+  .shift-visual .s3 { background: #ef4444; flex: 1; border-radius: 0 4px 4px 0; }
+
+  .shift-labels {
+    display: flex;
+    font-size: 8.5pt;
+    color: #666;
+    margin-top: 2px;
+  }
+
+  .shift-labels span { flex: 1; text-align: center; }
+
+  /* ── Print ── */
+  @media print {
+    body { padding: 0; font-size: 10pt; }
+    .formula-block { break-inside: avoid; }
+    .table-wrap { break-inside: avoid; }
+  }
+
+  /* ── Result badge ── */
+  .badge {
+    display: inline-block;
+    padding: 1px 7px;
+    border-radius: 3px;
+    font-size: 8.5pt;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+  }
+  .badge-win { background: #dcfce7; color: #166534; }
+  .badge-lose { background: #fee2e2; color: #991b1b; }
+  .badge-causal { background: #dbeafe; color: #1e40af; }
+
+  .toc { margin: 20px 0 40px; font-size: 10pt; line-height: 1.8; }
+  .toc a { color: var(--accent); text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<h1>Action Space Alignment with Operational Constraints Determines<br>
+Reinforcement Learning Effectiveness for Supply Chain Resilience</h1>
+<p class="subtitle">Paper-facing tables, formulas, and visual elements &mdash; generated from repo data (April 2026)</p>
+
+<nav class="toc">
+  <strong>Contents</strong><br>
+  <a href="#sec3">Section 3</a>: Methodology &mdash;
+  <a href="#t4">Table 4</a> Validation &middot;
+  <a href="#t5">Table 5</a> MDP &middot;
+  <a href="#t6">Table 6</a> Reward Modes &middot;
+  <a href="#t7">Table 7</a> Experimental Config<br>
+  <a href="#sec4">Section 4</a>: Results &mdash;
+  <a href="#t8">Table 8</a> Track A &middot;
+  <a href="#t9">Table 9</a> Track B &middot;
+  <a href="#t10">Table 10</a> Ablation &middot;
+  <a href="#t11">Table 11</a> Unified Comparison<br>
+  <a href="#formulas">Formulas</a>: MDP &middot; Reward &middot; PPO Objective &middot; ReT<sup>T</sup>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<h2 id="sec3">Section 3 &mdash; Research Methodology</h2>
+
+<!-- ── Table 4: DES Validation ── -->
+<div class="table-wrap" id="t4">
+  <p class="table-caption"><strong>Table 4.</strong> Cf0 validation: simulated throughput vs. thesis reference (ECS)</p>
+  <table>
+    <thead>
+      <tr>
+        <th>Comparison basis</th>
+        <th>Hours/year</th>
+        <th>Our model</th>
+        <th>Thesis ECS</th>
+        <th>Relative gap</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Thesis basis (official)</td>
+        <td class="num">8,064</td>
+        <td class="num">733,621</td>
+        <td class="num">767,592</td>
+        <td class="num">&minus;4.43%</td>
+      </tr>
+      <tr>
+        <td>Gregorian basis (diagnostic)</td>
+        <td class="num">8,760</td>
+        <td class="num">796,940</td>
+        <td class="num">767,592</td>
+        <td class="num">+3.82%</td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="note">Thesis basis uses 336-day operational year (48 weeks &times; 7 days). Relative gap within &plusmn;15% acceptance threshold.</p>
+</div>
+
+<!-- ── Table 5: MDP Formulation ── -->
+<div class="table-wrap" id="t5">
+  <p class="table-caption"><strong>Table 5.</strong> MDP formulation: observation and action spaces</p>
+  <table>
+    <thead>
+      <tr>
+        <th>Component</th>
+        <th>Track A (thesis-faithful)</th>
+        <th>Track B (extended)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Observation version</td>
+        <td>v1 (15 dims)</td>
+        <td>v7 (46 dims)</td>
+      </tr>
+      <tr>
+        <td>Action dimensions</td>
+        <td>5D</td>
+        <td>7D</td>
+      </tr>
+      <tr>
+        <td style="padding-left:24px;font-weight:400;">Upstream inventory</td>
+        <td>Op3 Q, Op9 Q, Op3 ROP, Op9 ROP</td>
+        <td>Op3 Q, Op9 Q, Op3 ROP, Op9 ROP</td>
+      </tr>
+      <tr>
+        <td style="padding-left:24px;font-weight:400;">Assembly capacity</td>
+        <td>Shift signal (S&isin;{1,2,3})</td>
+        <td>Shift signal (S&isin;{1,2,3})</td>
+      </tr>
+      <tr>
+        <td style="padding-left:24px;font-weight:400;">Downstream dispatch</td>
+        <td>&mdash;</td>
+        <td>Op10 Q, Op12 Q</td>
+      </tr>
+      <tr>
+        <td>Action bounds</td>
+        <td>$a_i \in [-1, 1]$</td>
+        <td>$a_i \in [-1, 1]$</td>
+      </tr>
+      <tr>
+        <td>Reward function</td>
+        <td colspan="2" style="text-align:center;">ReT_seq_v1 ($\kappa = 0.20$)</td>
+      </tr>
+      <tr>
+        <td>Risk level</td>
+        <td>Increased</td>
+        <td>Adaptive benchmark v2</td>
+      </tr>
+      <tr>
+        <td>Step size</td>
+        <td colspan="2" style="text-align:center;">168 hours (1 week)</td>
+      </tr>
+      <tr>
+        <td>Episode length</td>
+        <td colspan="2" style="text-align:center;">260 steps (~5 years)</td>
+      </tr>
+      <tr>
+        <td>Year basis</td>
+        <td colspan="2" style="text-align:center;">Thesis (336 days, 8,064 hrs)</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ── Formulas ── -->
+<div id="formulas">
+
+<h3>MDP Formulation</h3>
+<div class="formula-block">
+  <div class="label">Definition 1 &mdash; Markov Decision Process</div>
+  $$\mathcal{M} = \langle \mathcal{S},\, \mathcal{A},\, P,\, r,\, \gamma \rangle$$
+  <dl class="where-list">
+    <dt>$\mathcal{S}$</dt><dd>observation space ($\mathbb{R}^{15}$ Track A, $\mathbb{R}^{46}$ Track B)</dd>
+    <dt>$\mathcal{A}$</dt><dd>continuous action space ($[-1,1]^5$ Track A, $[-1,1]^7$ Track B)</dd>
+    <dt>$P$</dt><dd>transition dynamics (DES engine, stochastic)</dd>
+    <dt>$r$</dt><dd>reward function (ReT_seq_v1)</dd>
+    <dt>$\gamma$</dt><dd>discount factor = 0.99</dd>
+  </dl>
+</div>
+
+<h3>Action Mapping</h3>
+<div class="formula-block">
+  <div class="label">Equation 1 &mdash; Inventory multiplier mapping</div>
+  $$q_{\text{eff}} = q_{\text{base}} \cdot \bigl(1.25 + 0.75\,a_i\bigr), \quad a_i \in [-1,\,1]$$
+  <p class="note" style="margin-top:10px;">Maps the continuous signal to a multiplier range of [0.50, 2.00] &times; base parameter.</p>
+</div>
+
+<div class="formula-block">
+  <div class="label">Equation 2 &mdash; Shift mapping (tri-level thresholds)</div>
+  $$S = \begin{cases} 1 & \text{if } a_5 < -0.33 \\ 2 & \text{if } -0.33 \leq a_5 < 0.33 \\ 3 & \text{if } a_5 \geq 0.33 \end{cases}$$
+  <div class="shift-visual">
+    <div class="segment s1">S = 1</div>
+    <div class="segment s2">S = 2</div>
+    <div class="segment s3">S = 3</div>
+  </div>
+  <div class="shift-labels">
+    <span>&minus;1.0 &nbsp;&nbsp;&nbsp;&nbsp; &minus;0.33</span>
+    <span>&minus;0.33 &nbsp;&nbsp;&nbsp;&nbsp; +0.33</span>
+    <span>+0.33 &nbsp;&nbsp;&nbsp;&nbsp; +1.0</span>
+  </div>
+</div>
+
+<h3>Reward Design</h3>
+<div class="formula-block">
+  <div class="label">Equation 3 &mdash; Cobb&ndash;Douglas resilience reward (ReT_seq_v1)</div>
+  $$r_t = \text{SC}_t^{\,0.60}\;\times\;\text{BC}_t^{\,0.25}\;\times\;\text{AE}_t^{\,0.15} - \kappa$$
+  <dl class="where-list">
+    <dt>$\text{SC}_t$</dt><dd>Service continuity &mdash; maps to Garrido Eq.&nbsp;5.4 (fill rate component)</dd>
+    <dt>$\text{BC}_t$</dt><dd>Backorder control &mdash; proxy for Eq.&nbsp;5.2 (recovery speed)</dd>
+    <dt>$\text{AE}_t$</dt><dd>Adaptive efficiency &mdash; extends Sec.&nbsp;8.6.2 (shift-cost penalty)</dd>
+    <dt>$\kappa$</dt><dd>Baseline offset = 0.20 (ensures near-static policies earn &asymp; 0)</dd>
+  </dl>
+  <p class="note" style="margin-top:10px;">Exponents reflect military service hierarchy: service (0.60) &gt;&gt; recovery (0.25) &gt;&gt; cost (0.15). The multiplicative Cobb&ndash;Douglas form ensures non-compensability: any factor approaching 0 collapses the entire reward.</p>
+</div>
+
+<div class="formula-block">
+  <div class="label">Equation 4 &mdash; Thesis piecewise resilience metric Re<sup>T</sup> (Garrido 2017, Eq.&nbsp;5.5)</div>
+  $$\text{Re}^T = \begin{cases}
+  \overline{\text{Re}}^{\,\max}\!\left(\dfrac{\text{AP}_j}{\text{LT}}\right) & \text{Autotomy period (AP}_j\text{)} \\[8pt]
+  \overline{\text{Re}}\!\left(\dfrac{1}{\text{RP}_j}\right) & \text{Recovery period (RP}_j\text{)} \\[8pt]
+  \overline{\text{Re}}^{\,\min}\!\left(\dfrac{\text{DP}_j - \text{RP}_j}{\text{CT}_j}\right) & \text{Disruption period (DP}_j - \text{RP}_j\text{)} \\[8pt]
+  1 - \dfrac{B_t + U_t}{D_t} & \text{Non-disruption period (N-DP}_j\text{)}
+  \end{cases}$$
+  <p class="note">This piecewise form is used for <strong>audit only</strong>, not as training reward. When used as RL objective, discontinuities cause S1 collapse (99.9% S=1 convergence).</p>
+</div>
+
+<div class="formula-block">
+  <div class="label">Equation 5 &mdash; PPO clipped objective</div>
+  $$L^{\text{CLIP}}(\theta) = \hat{\mathbb{E}}_t\!\left[\min\!\Big(r_t(\theta)\,\hat{A}_t,\;\text{clip}\big(r_t(\theta),\,1-\epsilon,\,1+\epsilon\big)\,\hat{A}_t\Big)\right]$$
+  <dl class="where-list">
+    <dt>$r_t(\theta)$</dt><dd>probability ratio $\pi_\theta(a_t|s_t) / \pi_{\theta_{\text{old}}}(a_t|s_t)$</dd>
+    <dt>$\hat{A}_t$</dt><dd>GAE advantage estimate ($\lambda = 0.95$)</dd>
+    <dt>$\epsilon$</dt><dd>clip range = 0.2</dd>
+  </dl>
+</div>
+
+</div><!-- /formulas -->
+
+<!-- ── Table 6: Reward Modes ── -->
+<div class="table-wrap" id="t6">
+  <p class="table-caption"><strong>Table 6.</strong> Reward modes explored during experimental development</p>
+  <table>
+    <thead>
+      <tr>
+        <th>Reward mode</th>
+        <th>Functional form</th>
+        <th>Track A result</th>
+        <th>Diagnosis</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>ReT_thesis</td>
+        <td>Piecewise (4 cases, Eq. 5.5)</td>
+        <td>S1 collapse (99.9%)</td>
+        <td>Discontinuities break gradient</td>
+      </tr>
+      <tr>
+        <td>rt_v0</td>
+        <td>$-(\alpha\cdot\text{rec} + \beta\cdot\text{hold} + \gamma\cdot\text{svc})$</td>
+        <td>Flat signal</td>
+        <td>Three competing scales</td>
+      </tr>
+      <tr>
+        <td>control_v1</td>
+        <td>$-(4.0\cdot\text{svc\_loss} + 0.02\cdot\text{shift\_cost})$</td>
+        <td>PPO $\approx$ S2</td>
+        <td>Linear, blind to recovery</td>
+      </tr>
+      <tr>
+        <td>control_v1_pbrs</td>
+        <td>control_v1 + $F(s,s')$</td>
+        <td>$\approx$ control_v1</td>
+        <td>PBRS preserves optimality, no headroom</td>
+      </tr>
+      <tr>
+        <td>ReT_garrido2024_raw</td>
+        <td>5-var C&ndash;D product</td>
+        <td>S1 collapse</td>
+        <td>$n_\kappa$ (spare capacity) dominates</td>
+      </tr>
+      <tr>
+        <td>ReT_garrido2024_train</td>
+        <td>4-var C&ndash;D, no cost</td>
+        <td>S3 collapse (88%)</td>
+        <td>No cost brake &rarr; maximize capacity</td>
+      </tr>
+      <tr>
+        <td>ReT_unified_v1</td>
+        <td>C&ndash;D + sigmoid gate</td>
+        <td>Competitive, no win</td>
+        <td>Gate adds complexity without improving gradient</td>
+      </tr>
+      <tr class="highlight">
+        <td>ReT_seq_v1 &#10003;</td>
+        <td>$\text{SC}^{0.60} \times \text{BC}^{0.25} \times \text{AE}^{0.15}$</td>
+        <td>Track A: $\approx$S2 &nbsp;|&nbsp; Track B: <span class="badge badge-win">WINS</span></td>
+        <td>Smooth, non-compensatory, clear gradient</td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="note">Only a representative subset of the 14 modes tested is shown. Full comparison in supplementary material. ReT_seq_v1 was selected as primary reward for both tracks based on gradient quality and thesis alignment.</p>
+</div>
+
+<!-- ── Table 7: Experimental Configuration ── -->
+<div class="table-wrap" id="t7">
+  <p class="table-caption"><strong>Table 7.</strong> PPO hyperparameters and training configuration</p>
+  <table>
+    <thead>
+      <tr>
+        <th>Parameter</th>
+        <th>Value</th>
+        <th>Source</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Algorithm</td><td>PPO (Schulman et al. 2017)</td><td>SB3 default</td></tr>
+      <tr><td>Network</td><td>MLP [64, 64]</td><td>SB3 default</td></tr>
+      <tr><td>Training timesteps</td><td class="num">500,000</td><td>Convergence analysis</td></tr>
+      <tr><td>Parallel envs</td><td class="num">4</td><td>VecNormalize</td></tr>
+      <tr><td>Learning rate</td><td class="num">3 &times; 10<sup>&minus;4</sup></td><td>SB3 default</td></tr>
+      <tr><td>Rollout steps</td><td class="num">1,024</td><td>SB3 default</td></tr>
+      <tr><td>Batch size</td><td class="num">64</td><td>SB3 default</td></tr>
+      <tr><td>Epochs per update</td><td class="num">10</td><td>SB3 default</td></tr>
+      <tr><td>Discount ($\gamma$)</td><td class="num">0.99</td><td>Standard</td></tr>
+      <tr><td>GAE ($\lambda$)</td><td class="num">0.95</td><td>Standard</td></tr>
+      <tr><td>Clip range ($\epsilon$)</td><td class="num">0.2</td><td>SB3 default</td></tr>
+      <tr><td>Seeds (Track A)</td><td class="num">5&ndash;10</td><td>Per experiment</td></tr>
+      <tr><td>Seeds (Track B)</td><td class="num">5</td><td>{11, 22, 33, 44, 55}</td></tr>
+      <tr><td>Eval episodes per seed</td><td class="num">20</td><td>&mdash;</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<h2 id="sec4">Section 4 &mdash; Analysis of Results</h2>
+
+<!-- ── Table 8: Track A ── -->
+<div class="table-wrap" id="t8">
+  <p class="table-caption"><strong>Table 8.</strong> Track A results: PPO vs. static baselines under thesis-faithful contract (500k steps, increased risk)</p>
+  <table>
+    <thead>
+      <tr>
+        <th>Policy</th>
+        <th>Reward</th>
+        <th>Fill rate</th>
+        <th>Backorder rate</th>
+        <th>vs. S2</th>
+        <th>Verdict</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Static S2 (baseline)</td>
+        <td class="num">&mdash;</td>
+        <td class="num">0.792</td>
+        <td class="num">0.208</td>
+        <td>&mdash;</td>
+        <td><span class="badge badge-win">WINS</span></td>
+      </tr>
+      <tr>
+        <td>PPO + ReT_seq_v1</td>
+        <td class="num">133.08</td>
+        <td class="num">0.788</td>
+        <td class="num">0.212</td>
+        <td class="num">&minus;0.4 pp</td>
+        <td><span class="badge badge-lose">LOSES</span></td>
+      </tr>
+      <tr>
+        <td>PPO + control_v1</td>
+        <td class="num">&minus;629.37</td>
+        <td class="num">0.782</td>
+        <td class="num">0.218</td>
+        <td class="num">&minus;1.0 pp</td>
+        <td><span class="badge badge-lose">LOSES</span></td>
+      </tr>
+      <tr>
+        <td>RecurrentPPO + control_v1</td>
+        <td class="num">&minus;652.36</td>
+        <td class="num">0.751</td>
+        <td class="num">0.249</td>
+        <td class="num">&minus;4.1 pp</td>
+        <td><span class="badge badge-lose">LOSES</span></td>
+      </tr>
+      <tr>
+        <td>Heuristic (tuned)</td>
+        <td class="num">130.78</td>
+        <td class="num">0.795</td>
+        <td class="num">0.205</td>
+        <td class="num">+0.3 pp</td>
+        <td>&asymp; S2</td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="note">Track A uses 5D action space (upstream inventory + assembly shifts only), observation v1, year basis = thesis, risk level = increased. Fill rates are cumulative order-level over 260-step episodes. No RL configuration outperforms S2. <strong>Note:</strong> reward totals are not comparable across tracks because Track A and Track B use different reward families and risk profiles; compare fill rate and order-level ReT instead.</p>
+</div>
+
+<!-- ── Table 9: Track B ── -->
+<div class="table-wrap" id="t9">
+  <p class="table-caption"><strong>Table 9.</strong> Track B results: PPO vs. static baselines under extended action contract (500k &times; 5 seeds, adaptive benchmark v2)</p>
+  <table>
+    <thead>
+      <tr>
+        <th>Policy</th>
+        <th>Reward</th>
+        <th>Fill rate</th>
+        <th>Backorder rate</th>
+        <th>Order ReT</th>
+        <th>Shift mix (S1/S2/S3)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="highlight">
+        <td>PPO (7D)</td>
+        <td class="num">254.21</td>
+        <td class="num">1.0000</td>
+        <td class="num">0.0000</td>
+        <td class="num">0.950</td>
+        <td class="num">78 / 16 / 6</td>
+      </tr>
+      <tr>
+        <td>S2 + d1.00 (baseline)</td>
+        <td class="num">178.24</td>
+        <td class="num">0.9659</td>
+        <td class="num">0.0341</td>
+        <td class="num">0.489</td>
+        <td class="num">0 / 100 / 0</td>
+      </tr>
+      <tr>
+        <td>S3 + d1.00</td>
+        <td class="num">176.17</td>
+        <td class="num">0.9669</td>
+        <td class="num">0.0331</td>
+        <td class="num">0.483</td>
+        <td class="num">0 / 0 / 100</td>
+      </tr>
+      <tr>
+        <td>S3 + d2.00 (best static)</td>
+        <td class="num">171.06</td>
+        <td class="num">0.9876</td>
+        <td class="num">0.0124</td>
+        <td class="num">0.458</td>
+        <td class="num">0 / 0 / 100</td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="note">Track B uses 7D action space (upstream + downstream transport dispatch at Op10/Op12), observation v7 (46 dims), adaptive_benchmark_v2 risk. PPO achieves zero backorders and 78% S1 utilization = learned cost efficiency when downstream flows are controlled. Fill gap vs. S2: <strong>+3.4 pp</strong>; reward gap vs. best static: <strong>+83.16</strong>. <strong>Note:</strong> reward totals in this table should be interpreted within Track B only and not compared directly against Track A reward totals.</p>
+</div>
+
+<!-- ── Table 10: Ablation ── -->
+<div class="table-wrap" id="t10">
+  <p class="table-caption"><strong>Table 10.</strong> Matched action-contract ablation: 5D vs. 7D action space (100k &times; 3 seeds, identical obs v7, reward, and risk)</p>
+  <table>
+    <thead>
+      <tr>
+        <th>Condition</th>
+        <th>Actions</th>
+        <th>Reward</th>
+        <th>Fill rate</th>
+        <th>vs. Static S2</th>
+        <th>Verdict</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>PPO 5D (no downstream)</td>
+        <td>5</td>
+        <td class="num">177.04</td>
+        <td class="num">0.607</td>
+        <td class="num">&minus;0.9 pp</td>
+        <td><span class="badge badge-lose">LOSES</span></td>
+      </tr>
+      <tr class="highlight">
+        <td>PPO 7D (with downstream)</td>
+        <td>7</td>
+        <td class="num">250.48</td>
+        <td class="num">0.964</td>
+        <td class="num">+34.8 pp</td>
+        <td><span class="badge badge-win">WINS</span></td>
+      </tr>
+      <tr class="separator">
+        <td colspan="2"><strong>Difference (7D &minus; 5D)</strong></td>
+        <td class="num"><strong>+73.44</strong></td>
+        <td class="num"><strong>+0.357</strong></td>
+        <td class="num"><strong>+35.7 pp</strong></td>
+        <td><span class="badge badge-causal">MATCHED</span></td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="note">Both conditions use identical observation space (v7, 46 dims), reward function (ReT_seq_v1, $\kappa$ = 0.20), risk profile (adaptive_benchmark_v2), and training budget (100k steps). The <strong>only</strong> difference is whether downstream dispatch actions (Op10/Op12) are included. Static S2 fill = 0.616 in this setting. This provides matched evidence that the downstream control dimensions&mdash;not enriched observations or risk profile alone&mdash;are materially responsible for the observed gain inside this benchmark family.</p>
+</div>
+
+<!-- ── Table 11: Unified Comparison ── -->
+<div class="table-wrap" id="t11">
+  <p class="table-caption"><strong>Table 11.</strong> Unified comparison across tracks and conditions</p>
+  <table>
+    <thead>
+      <tr>
+        <th>Track</th>
+        <th>Policy</th>
+        <th>Actions</th>
+        <th>Fill rate</th>
+        <th>Order ReT</th>
+        <th>Shift mix</th>
+        <th>Result</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td rowspan="2" style="vertical-align:middle;">A<br><span style="font-size:8pt;color:#888;">(thesis-faithful)</span></td>
+        <td>Static S2</td>
+        <td>&mdash;</td>
+        <td class="num">0.792</td>
+        <td class="num">&mdash;</td>
+        <td class="num">0/100/0</td>
+        <td><span class="badge badge-win">BEST</span></td>
+      </tr>
+      <tr>
+        <td>PPO (5D)</td>
+        <td>5</td>
+        <td class="num">0.788</td>
+        <td class="num">&mdash;</td>
+        <td class="num">62/24/14</td>
+        <td><span class="badge badge-lose">&minus;0.4pp</span></td>
+      </tr>
+      <tr class="separator">
+        <td rowspan="2" style="vertical-align:middle;">B<br><span style="font-size:8pt;color:#888;">(extended)</span></td>
+        <td>Best static (S3+d2)</td>
+        <td>&mdash;</td>
+        <td class="num">0.988</td>
+        <td class="num">0.458</td>
+        <td class="num">0/0/100</td>
+        <td>&mdash;</td>
+      </tr>
+      <tr>
+        <td><strong>PPO (7D)</strong></td>
+        <td><strong>7</strong></td>
+        <td class="num"><strong>1.000</strong></td>
+        <td class="num"><strong>0.950</strong></td>
+        <td class="num"><strong>78/16/6</strong></td>
+        <td><span class="badge badge-win">+1.2pp</span></td>
+      </tr>
+      <tr class="separator">
+        <td rowspan="2" style="vertical-align:middle;">Ablation<br><span style="font-size:8pt;color:#888;">(matched)</span></td>
+        <td>PPO 5D (same v7/risk)</td>
+        <td>5</td>
+        <td class="num">0.607</td>
+        <td class="num">&mdash;</td>
+        <td class="num">&mdash;</td>
+        <td><span class="badge badge-lose">LOSES</span></td>
+      </tr>
+      <tr>
+        <td>PPO 7D (same v7/risk)</td>
+        <td>7</td>
+        <td class="num">0.964</td>
+        <td class="num">&mdash;</td>
+        <td class="num">&mdash;</td>
+        <td><span class="badge badge-causal">+35.7pp MATCHED</span></td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="note">Under the thesis-faithful contract (Track A), no RL configuration beats S2. Under the extended contract (Track B), PPO achieves fill = 1.000. The matched ablation supports the interpretation that the added downstream control dimensions are materially responsible for the Track B gain.</p>
+</div>
+
+<!-- ── Contributions box ── -->
+<h2>Contribution Claims</h2>
+<div style="border:2px solid var(--accent); padding:16px 20px; border-radius:6px; margin:16px 0; background:#f0f5ff;">
+  <p><strong>C1 (Empirical&ndash;Negative):</strong> Under the thesis-faithful action contract, no RL configuration (across 14 reward modes, 5 observation versions, 2 algorithms including RecurrentPPO) outperforms static policies.</p>
+  <p><strong>C2 (Empirical&ndash;Positive):</strong> A minimal action-space extension adding downstream distribution control produces fill rate = 1.000, +3.4&nbsp;pp versus <code>s2_d1.00</code>, +1.2&nbsp;pp versus the best static policy, and +47% reward versus the best static policy.</p>
+  <p><strong>C3 (Structural diagnosis):</strong> RL effectiveness for SCRES depends on action-space-to-bottleneck alignment. The benchmark brings together bottleneck reasoning, RL control design, and action-contract selection in one empirically auditable setting.</p>
+  <p><strong>C4 (Methodological):</strong> The benchmark operationalizes a Cobb&ndash;Douglas resilience function as part of the RL reward and reporting pipeline, extending Garrido&nbsp;et&nbsp;al. (2024) into an auditable control benchmark.</p>
+</div>
+
+</body>
+</html>
