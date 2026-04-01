@@ -1595,4 +1595,5 @@ class MFSCSimulation:
             "case_counts": case_counts,
             "n_orders": len(self.orders),
             "n_completed": sum(1 for o in self.orders if o.OATj is not None),
+            "ret_values": ret_values,  # Individual order-level ReT for K-W/Wilcoxon tests
         }
