@@ -9,6 +9,7 @@ import json
 import os
 from pathlib import Path
 import shutil
+import subprocess
 import sys
 import threading
 import traceback
@@ -34,7 +35,7 @@ DEFAULT_MAX_STEPS = 260
 DEFAULT_OUTPUT_ROOT = Path("outputs/paper_benchmarks")
 REQUIRED_OUTPUTS = ("summary.json", "policy_summary.csv", "comparison_table.csv")
 FROZEN_BACKBONE = {
-    "code_ref": "HEAD",
+    "code_ref": subprocess.check_output(["git", "rev-parse", "HEAD"]).decode().strip(),
     "benchmark_protocol": "reward_benchmark_corrected",
     "observation_version": "v4",
     "frame_stack": 1,

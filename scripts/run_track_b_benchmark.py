@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
+import subprocess
 import sys
 import threading
 import traceback
@@ -28,7 +29,7 @@ DEFAULT_MAX_STEPS = 260
 DEFAULT_OUTPUT_ROOT = Path("outputs/track_b_benchmarks")
 REQUIRED_OUTPUTS = ("summary.json", "policy_summary.csv", "comparison_table.csv")
 FROZEN_BACKBONE = {
-    "code_ref": "HEAD",
+    "code_ref": subprocess.check_output(["git", "rev-parse", "HEAD"]).decode().strip(),
     "benchmark_protocol": "track_b_minimal_v1",
     "env_variant": "track_b_adaptive_control",
     "observation_version": "v7",

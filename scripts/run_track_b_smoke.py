@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import subprocess
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -921,7 +922,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
             "clip_range": float(args.clip_range),
         },
         "backbone": {
-            "code_ref": "HEAD",
+            "code_ref": subprocess.check_output(["git", "rev-parse", "HEAD"]).decode().strip(),
             "benchmark_protocol": "track_b_minimal_v1",
             "env_variant": "track_b_adaptive_control",
             "reward_mode": args.reward_mode,
