@@ -1,4 +1,3 @@
-import simpy
 from supply_chain.supply_chain import MFSCSimulation
 
 class TestSim(MFSCSimulation):
@@ -22,7 +21,6 @@ class TestSim(MFSCSimulation):
             delayed = self.rng.binomial(n, p)
             if delayed > 0:
                 delay = delayed * 24
-                start = self.env.now
                 print(f"[{self.env.now}] R13 taking down Op2 for {delay}")
                 self._take_down(2)
                 yield self.env.timeout(delay)

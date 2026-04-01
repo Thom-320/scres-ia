@@ -1,4 +1,3 @@
-import numpy as np
 
 with open("supply_chain/env.py", "r") as f:
     lines = f.readlines()

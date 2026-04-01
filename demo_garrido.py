@@ -19,11 +19,8 @@ import numpy as np
 sys.path.insert(0, ".")
 
 from supply_chain.config import (
-    OPERATIONS,
     SIMULATION_HORIZON,
-    WARMUP,
     VALIDATION_TABLE_6_10,
-    CAPACITY_BY_SHIFTS,
 )
 from supply_chain.supply_chain import MFSCSimulation
 from supply_chain.env_experimental_shifts import MFSCGymEnvShifts
@@ -97,18 +94,18 @@ def demo_validation():
     print(f"  Nuestro modelo:     {our_avg:>12,.0f} raciones/año")
     print(f"  Tesis (Table 6.10): {thesis_avg:>12,.0f} raciones/año")
     print(f"  Gap relativo:       {gap:>+11.2%}")
-    print(f"  Umbral aceptado:    ±15%")
+    print("  Umbral aceptado:    ±15%")
     print(f"  Estado:             {'PASS' if abs(gap) < 0.15 else 'FAIL'}")
     print()
     # Post-warmup summary (cleaner for presentation)
     warmup_t = sim.warmup_time
-    years_pw = (sim.horizon - warmup_t) / sim.hours_per_year
+    (sim.horizon - warmup_t) / sim.hours_per_year
     # Count post-warmup backorders: orders placed after warmup
     pw_orders = [o for o in sim.orders if o.OPTj >= warmup_t]
     pw_backorders = sum(1 for o in pw_orders if o.backorder)
     mode = f"ENABLED ({sim.risk_level})" if sim.risks_enabled else "DISABLED"
     print(f"  {'=' * 58}")
-    print(f"  MFSC Simulation Summary (POST-WARMUP)")
+    print("  MFSC Simulation Summary (POST-WARMUP)")
     print(f"  Horizon: {sim.horizon:,} hrs ({sim.horizon/sim.hours_per_year:.1f} years)")
     print(f"  Shifts: S={sim.shifts}  |  Risks: {mode}")
     print(f"  Warmup: {warmup_t:,.0f} hrs (excluded from metrics)")

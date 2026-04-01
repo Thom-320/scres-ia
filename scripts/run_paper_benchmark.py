@@ -104,7 +104,11 @@ def build_parser() -> argparse.ArgumentParser:
             "ReT_cd_sigmoid",
         ],
         default="control_v1",
-        help="Track A training reward. Backbone fields remain frozen.",
+        help=(
+            "Track A training reward. Defaults to the historical control_v1 "
+            "comparator lane; pass --reward-mode ReT_seq_v1 for the "
+            "paper-facing Track A rerun."
+        ),
     )
     parser.add_argument(
         "--kappa",

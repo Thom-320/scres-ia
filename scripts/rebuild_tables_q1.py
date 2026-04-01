@@ -15,8 +15,9 @@ Key requirements:
 """
 
 import os
+import subprocess
 from docx import Document
-from docx.shared import Pt, Cm, Emu
+from docx.shared import Pt
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.enum.table import WD_TABLE_ALIGNMENT, WD_ROW_HEIGHT_RULE
 from docx.oxml.ns import qn, nsdecls
@@ -216,7 +217,6 @@ def booktabs(table, col_pcts, aligns, bold_cells=None, group_after_rows=None):
 # =====================================================================
 
 # First regenerate the base document
-import subprocess
 base_dir = os.path.expanduser('~/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia')
 subprocess.run(['python3', 'scripts/edit_v0_inplace.py'], cwd=base_dir, capture_output=True)
 

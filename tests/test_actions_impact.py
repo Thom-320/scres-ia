@@ -1,5 +1,4 @@
 import numpy as np
-from stable_baselines3.common.env_util import make_vec_env
 from supply_chain.env import MFSCGymEnv
 
 def run_episode_with_action(action_array, description):

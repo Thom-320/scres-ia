@@ -12,8 +12,9 @@ Ensures:
 """
 
 import os
+import subprocess
 from docx import Document
-from docx.shared import Pt, Cm, Emu, Inches
+from docx.shared import Pt
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.enum.table import WD_TABLE_ALIGNMENT, WD_ROW_HEIGHT_RULE
 from docx.oxml.ns import qn, nsdecls
@@ -286,7 +287,6 @@ doc.save(output_path)
 print(f"\nSaved polished version to: {output_path}")
 
 # Also regenerate PDF
-import subprocess
 subprocess.run([
     '/Applications/LibreOffice.app/Contents/MacOS/soffice',
     '--headless', '--convert-to', 'pdf',

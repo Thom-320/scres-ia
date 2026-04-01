@@ -1,4 +1,3 @@
-import simpy
 from supply_chain.supply_chain import MFSCSimulation
 sim = MFSCSimulation(shifts=1, risks_enabled=True, seed=42, horizon=80640)
 sim.run()

@@ -129,7 +129,7 @@ def main():
                 )
 
             # Compute per-component spread
-            print(f"\n  Component spreads:")
+            print("\n  Component spreads:")
             for comp in ["recovery", "holding", "service"]:
                 means = {p: np.mean(all_components[p][comp]) for p in POLICIES}
                 comp_spread = max(means.values()) - min(means.values())

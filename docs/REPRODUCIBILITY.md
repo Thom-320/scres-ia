@@ -91,6 +91,22 @@ python train_agent.py --env-variant track_b \
 
 Artifact: `outputs/track_b_ablation_5d_vs_7d.json`
 
+## Posthoc Track B reporting
+
+Rebuild the posthoc resilience audit from an existing completed Track B run:
+
+```bash
+python scripts/posthoc_track_b_resilience_audit.py \
+  --run-dir outputs/track_b_benchmarks/track_b_ret_seq_k020_500k_rerun1
+```
+
+Generate the reviewer-facing results discussion package:
+
+```bash
+python scripts/generate_track_b_results_package.py \
+  --run-dir outputs/track_b_benchmarks/track_b_ret_seq_k020_500k_rerun1
+```
+
 ## Auditable artifact bundles
 
 Reviewer-safe artifact references live under:

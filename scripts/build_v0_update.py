@@ -15,10 +15,10 @@ Format spec (from v0 inspection):
 """
 
 from docx import Document
-from docx.shared import Pt, Cm, Emu, RGBColor
+from docx.shared import Pt, Cm, Emu
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.enum.table import WD_TABLE_ALIGNMENT
-from docx.oxml.ns import qn, nsdecls
+from docx.oxml.ns import nsdecls
 from docx.oxml import parse_xml
 import os
 

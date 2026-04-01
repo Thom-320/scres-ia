@@ -9,14 +9,12 @@ Replaces:
 """
 
 import os
-import re
+import subprocess
 from docx import Document
 from docx.shared import Pt, Emu
-from docx.oxml.ns import qn, nsdecls
+from docx.oxml.ns import nsdecls
 from docx.oxml import parse_xml
-from docx.enum.text import WD_ALIGN_PARAGRAPH
 from lxml import etree
-from copy import deepcopy
 
 FONT_NAME = 'Times New Roman'
 FONT_SIZE = Emu(165100)  # 13pt matching doc
@@ -76,7 +74,7 @@ def make_omml_fraction(num_elements, den_elements):
     f = etree.SubElement(etree.Element('temp'), f'{{{OMML_NS}}}f')
     
     # Fraction properties
-    fPr = etree.SubElement(f, f'{{{OMML_NS}}}fPr')
+    etree.SubElement(f, f'{{{OMML_NS}}}fPr')
     
     # Numerator
     num = etree.SubElement(f, f'{{{OMML_NS}}}num')
@@ -251,7 +249,6 @@ doc.save(doc_path)
 print(f"\nSaved finalized version to: {doc_path}")
 
 # Regenerate PDF
-import subprocess
 subprocess.run([
     '/Applications/LibreOffice.app/Contents/MacOS/soffice',
     '--headless', '--convert-to', 'pdf',

@@ -58,7 +58,6 @@ from supply_chain.external_env_interface import (
     build_shift_control_state_constraint_vector,
     get_shift_control_constraint_context,
     get_shift_control_env_spec,
-    get_track_b_env_spec,
     make_shift_control_env,
     make_track_b_env,
     spec_to_dict,

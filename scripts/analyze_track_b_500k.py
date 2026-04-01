@@ -13,7 +13,6 @@ from __future__ import annotations
 import argparse
 import csv
 import json
-import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
@@ -48,7 +47,7 @@ def safe_float(val: str | None, default: float = 0.0) -> float:
 
 def analyze(run_dir: Path) -> dict:
     policy_csv = run_dir / "policy_summary.csv"
-    summary_json = run_dir / "summary.json"
+    run_dir / "summary.json"
 
     if not policy_csv.exists():
         return {"error": f"No policy_summary.csv in {run_dir}. Run not finished?"}
@@ -168,7 +167,7 @@ def write_report(result: dict, output_dir: Path):
                 f"{m.get('s1_pct', 0):.1f}/{m.get('s2_pct', 0):.1f}/{m.get('s3_pct', 0):.1f} |"
             )
 
-        md_lines.append(f"\n## Deltas")
+        md_lines.append("\n## Deltas")
         md_lines.append(f"- PPO vs S2: fill {d_s2['fill_pp']:+.2f}pp, reward {d_s2['reward']:+.2f}")
         md_lines.append(f"- PPO vs best static: fill {d_best['fill_pp']:+.2f}pp, reward {d_best['reward']:+.2f}")
         md_lines.append(f"- PPO beats S2: **{result['ppo_beats_s2']}**")
@@ -177,19 +176,19 @@ def write_report(result: dict, output_dir: Path):
 
         if "smoke_100k_ppo" in result:
             d_smoke = result["delta_500k_vs_smoke"]
-            md_lines.append(f"\n## vs Smoke 100k")
+            md_lines.append("\n## vs Smoke 100k")
             md_lines.append(f"- 500k fill vs 100k fill: {d_smoke['fill_pp']:+.2f}pp")
             md_lines.append(f"- 500k reward vs 100k reward: {d_smoke['reward']:+.2f}")
 
         if "family_a_comparison" in result:
             fa = result["family_a_comparison"]
-            md_lines.append(f"\n## vs Family A (Track A)")
+            md_lines.append("\n## vs Family A (Track A)")
             md_lines.append(f"- Family A PPO fill: {fa['ppo_fill']:.4f}")
             md_lines.append(f"- Family A PPO beats S2: {fa['ppo_beats_s2']}")
             md_lines.append(f"- Track B PPO fill: {ppo['fill']:.4f}")
-            md_lines.append(f"- **Track B opened the headroom that Track A lacked.**")
+            md_lines.append("- **Track B opened the headroom that Track A lacked.**")
 
-        md_lines.append(f"\n## Verdict")
+        md_lines.append("\n## Verdict")
         if result["ppo_beats_best_static"] and not result["shift_collapse"]:
             md_lines.append("**PASS.** PPO beats best static without shift collapse. Track B is validated.")
         elif result["ppo_beats_s2"] and not result["shift_collapse"]:
@@ -201,8 +200,8 @@ def write_report(result: dict, output_dir: Path):
         f.write("\n".join(md_lines) + "\n")
 
     print(f"Analysis written to {output_dir}/")
-    print(f"  analysis.json")
-    print(f"  analysis.md")
+    print("  analysis.json")
+    print("  analysis.md")
 
 
 def main():

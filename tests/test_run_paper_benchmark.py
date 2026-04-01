@@ -62,9 +62,9 @@ def test_build_benchmark_cli_args_supports_ret_cd_v1_without_kappa_flag(
     assert "--ret-seq-kappa" not in command
 
 
-def test_run_paper_benchmark_defaults_to_ret_unified_v1() -> None:
+def test_run_paper_benchmark_defaults_to_control_v1_comparator_lane() -> None:
     args = paper_benchmark.build_parser().parse_args(["--label", "default_run"])
-    assert args.reward_mode == "ReT_unified_v1"
+    assert args.reward_mode == "control_v1"
     assert args.kappa == 0.20
     assert args.eval_risk_levels == ["current", "increased", "severe"]
 

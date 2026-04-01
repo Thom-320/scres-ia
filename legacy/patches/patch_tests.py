@@ -1,4 +1,3 @@
-import re
 with open('tests/test_control_reward_benchmark.py', 'r') as f:
     code = f.read()
 
