@@ -82,9 +82,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--seed", type=int, default=42, help="Main RNG seed.")
     parser.add_argument(
         "--env-variant",
-        choices=["base", "shift_control"],
+        choices=["base", "shift_control", "track_b"],
         default="shift_control",
-        help="Training environment: legacy 4-action env or recommended shift-control env.",
+        help="Training environment: legacy 4-action, shift-control (5D), or track_b (7D with downstream).",
     )
     parser.add_argument(
         "--n-envs",
@@ -104,7 +104,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--observation-version",
-        choices=["v1", "v2", "v3", "v4", "v5", "v6"],
+        choices=["v1", "v2", "v3", "v4", "v5", "v6", "v7"],
         default=BENCHMARK_OBSERVATION_VERSION,
         help=(
             "Observation contract for shift-control env. v4 remains the frozen "
@@ -330,12 +330,23 @@ def build_env_instance(
         "rt_recovery_scale": args.rt_recovery_scale,
         "rt_inventory_scale": args.rt_inventory_scale,
     }
-    if args.env_variant == "shift_control":
+    if args.env_variant in ("shift_control", "track_b"):
+        obs_version = args.observation_version
+        risk = args.risk_level
+        action_contract_kwarg = {}
+        if args.env_variant == "track_b":
+            action_contract_kwarg["action_contract"] = "track_b_v1"
+            if obs_version in ("v1", "v2", "v3", "v4"):
+                obs_version = "v7"
+            if risk in ("current", "increased"):
+                risk = "adaptive_benchmark_v2"
+            common_kwargs["risk_level"] = risk
         env = MFSCGymEnvShifts(
             **common_kwargs,
+            **action_contract_kwarg,
             rt_delta=args.shift_delta,
             stochastic_pt=args.stochastic_pt,
-            observation_version=args.observation_version,
+            observation_version=obs_version,
             w_bo=args.w_bo,
             w_cost=args.w_cost,
             w_disr=args.w_disr,
