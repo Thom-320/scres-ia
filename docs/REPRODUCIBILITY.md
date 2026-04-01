@@ -74,15 +74,33 @@ python scripts/run_paper_benchmark.py \
   --kappa 0.20
 ```
 
+Causal ablation (5D vs 7D, same v7/risk/reward):
+
+```bash
+# 5D (track_a actions, should LOSE to S2)
+python train_agent.py --env-variant shift_control \
+  --reward-mode ReT_seq_v1 --ret-seq-kappa 0.20 \
+  --observation-version v7 --risk-level adaptive_benchmark_v2 \
+  --timesteps 100000 --seed 42
+
+# 7D (track_b actions, should WIN vs S2)
+python train_agent.py --env-variant track_b \
+  --reward-mode ReT_seq_v1 --ret-seq-kappa 0.20 \
+  --timesteps 100000 --seed 42
+```
+
+Artifact: `outputs/track_b_ablation_5d_vs_7d.json`
+
 ## Auditable artifact bundles
 
 Reviewer-safe artifact references live under:
 
-- `outputs/track_b_benchmarks/track_b_ret_seq_k020_500k_rerun1`
-- `outputs/benchmarks/track_b_smoke_initial_2026-03-31`
-- `outputs/paper_benchmarks/paper_ret_seq_k020_500k`
-- `outputs/paper_benchmarks/paper_control_v1_500k`
-- `outputs/benchmarks/final_recurrent_ppo_v4_control_500k`
+- `outputs/track_b_benchmarks/track_b_ret_seq_k020_500k_rerun1` — Track B 500k primary
+- `outputs/benchmarks/track_b_smoke_initial_2026-03-31` — Track B 100k smoke
+- `outputs/track_b_ablation_5d_vs_7d.json` — Causal ablation (5D vs 7D)
+- `outputs/paper_benchmarks/paper_ret_seq_k020_500k` — Track A primary
+- `outputs/paper_benchmarks/paper_control_v1_500k` — Track A comparator
+- `outputs/benchmarks/final_recurrent_ppo_v4_control_500k` — RecurrentPPO negative
 
 Use these instead of the historical `*_stopt` bundles and incomplete Track B runs.
 
