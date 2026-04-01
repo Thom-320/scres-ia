@@ -4,76 +4,84 @@ This note freezes the current paper-facing repository story. Treat it as the pri
 
 ## Canonical scientific story
 
-The repository supports three distinct roles that must not be conflated:
+The repository now supports two paper-relevant benchmark families that must not be conflated:
 
-- `ReT_seq_v1`: primary training reward for the paper-facing benchmark family.
-- `control_v1` / `control_v1_pbrs`: historical operational comparators retained for legacy comparison.
-- `ReT_thesis` / `ret_thesis_corrected_step`: thesis-aligned resilience metrics for reporting and audit.
-- `rt_v0`: historical baseline retained for methodological comparison.
+- **Track A**: thesis-faithful upstream control only.
+  The agent controls production/inventory decisions but not downstream transport.
+  This family is the negative/diagnostic baseline.
+- **Track B**: minimal MDP repair through downstream transport control at `Op10` and `Op12`.
+  This family is the current positive result.
 
 The paper contribution is therefore:
 
-> A rigorous DES+RL benchmark for resilient control in a military food supply chain, with explicit treatment of reward alignment, partial observability, and stress-regime-dependent adaptive gains.
+> On the thesis-faithful MFSC DES, RL does not beat strong static baselines when the action space controls the wrong bottleneck. Once the MDP is minimally repaired so the agent can act on the active downstream constraint, PPO produces clearly superior policies.
 
-## Frozen benchmark backbone
+## Primary paper backbone
 
-Unless a new benchmark family is intentionally introduced, the current paper backbone is:
+The current primary paper backbone is **Track B minimal**:
 
-- Environment: `shift_control`
+- Environment: `track_b_adaptive_control`
 - Training reward: `ReT_seq_v1`
 - Frozen `ret_seq_kappa`: `0.20`
-- Historical comparator: `control_v1`
-- Reporting resilience metric: `ReT_thesis` / `ret_thesis_corrected_step`
+- Observation contract: `v7`
+- Action contract: `track_b_v1`
+- Risk profile: `adaptive_benchmark_v2`
 - Step size: `168` hours
 - Year basis: `thesis`
-- Benchmark observation version: `v1`
-- Main scenarios:
-  - `increased + stochastic_pt=True`
-  - `severe + stochastic_pt=True`
-- Official thesis-validation basis: `year_basis="thesis"`
-- Gregorian annualization may still appear in diagnostics, but thesis-facing
-  comparisons should use the thesis basis unless explicitly stated otherwise.
-- Frozen paper-facing weights and resilience settings:
-  - `w_bo = 4.0`
-  - `w_cost = 0.02`
-  - `w_disr = 0.0`
-  - `ret_seq_kappa = 0.20`
+- `stochastic_pt=True`
+- Benchmark protocol: `track_b_minimal_v1`
+
+Track A remains part of the paper, but as:
+
+- a thesis-faithful comparator family,
+- a negative result,
+- and the mechanistic explanation for why Track B was introduced.
 
 Interpretation rule:
 
-- `v1` remains the frozen benchmark contract for comparability with the existing 500k artifact bundles.
-- `v2` is the preferred next-step observation contract for new ablations (`frame_stack`, `RecurrentPPO`, richer temporal context).
-- Cross-mode reward totals remain non-comparable. Use `fill_rate`, `backorder_rate`, and `order_level_ret_mean` for `control_v1` vs `ReT_seq_v1` comparisons.
+- Within Track A and within Track B, `reward_total` is comparable only when `reward_mode` is shared.
+- Across reward families, use `fill_rate`, `backorder_rate`, and `order_level_ret_mean`.
+- Across Track A vs Track B, do **not** claim “same benchmark, better algorithm.” The correct claim is “different control contract, different MDP, different outcome.”
 
 ## Primary artifact bundles
 
-The main auditable benchmark artifacts are:
+The main auditable paper-facing artifact bundles are:
 
+- `outputs/track_b_benchmarks/track_b_ret_seq_k020_500k_rerun1`
+- `outputs/benchmarks/track_b_smoke_initial_2026-03-31`
 - `outputs/paper_benchmarks/paper_ret_seq_k020_500k`
-- `outputs/paper_benchmarks/paper_ret_seq_k010_500k`
 - `outputs/paper_benchmarks/paper_control_v1_500k`
-- `outputs/benchmarks/final_ret_seq_v1_500k`
+- `outputs/benchmarks/final_recurrent_ppo_v4_control_500k`
 
-Historical `control_reward_500k_*_stopt` bundles and the old seed-inference note remain useful only as legacy context. They were generated before the March 2026 DES audit/alignment fixes and must not be used as the primary evidence for the current repository state.
+Use them as follows:
+
+- `track_b_ret_seq_k020_500k_rerun1`: primary positive result.
+- `track_b_smoke_initial_2026-03-31`: preliminary Track B signal that motivated the long run.
+- `paper_ret_seq_k020_500k` and `paper_control_v1_500k`: valid post-audit Track A comparators.
+- `final_recurrent_ppo_v4_control_500k`: closes the “memory fixes Track A” hypothesis negatively.
+
+Do **not** use as primary evidence:
+
+- historical `control_reward_500k_*_stopt`
+- mixed-family `section4_3_*`
+- incomplete/failed Track B runs such as `track_b_ret_seq_k020_500k`
 
 Current headline reading:
 
-- The paper-trio comparison currently selects `ReT_seq_v1` with `κ=0.20` as the pragmatic leader against `static_s2` on cross-mode comparable metrics.
-- `paper_control_v1_500k` remains the valid operational comparator for the current repo, but it is not the leading lane.
-- `κ=0.10` remains a conservative ablation, not the repo default.
-- `κ=0.30` is not a candidate default because it trends toward collapse-prone shift behavior.
-- `final_ret_seq_v1_500k` is an auditable post-audit comparator, but it uses `year_basis="gregorian"` and should not be conflated with the thesis-basis paper bundle family.
-- These results remain benchmark evidence, not a claim of universal superiority; use cautious inferential language.
+- Track A is closed as a valid negative benchmark family.
+- Track B is the current repo winner.
+- In `track_b_ret_seq_k020_500k_rerun1`, PPO beats `s2_d1.00` by `+3.40 pp` fill and beats the best static policy (`s3_d2.00`) by `+1.23 pp`.
+- The Track B result is strong enough to support the manuscript’s main positive claim.
 
-## Public defaults
+## Public entry points
 
-Public entry points should align with the benchmark story:
+Public entry points should now be described this way:
 
-- `train_agent.py` default shift-control reward: `ReT_seq_v1`
-- `train_agent.py` default `ret_seq_kappa`: `0.20`
-- `train_agent.py` default observation version: `v1`
-- `external_env_interface.make_shift_control_env()` default reward: `ReT_seq_v1`
-- `external_env_interface.make_shift_control_env()` default observation version: `v1`
+- `scripts/run_track_b_benchmark.py`: primary paper-facing launcher.
+- `scripts/run_track_b_smoke.py`: short validation benchmark for the same Track B contract.
+- `scripts/run_paper_benchmark.py`: Track A comparator launcher.
+- `external_env_interface.make_track_b_env()`: primary research env constructor for the positive lane.
+- `external_env_interface.make_shift_control_env()`: comparator env constructor for Track A.
 
 ## ReT-Seq mapping
 
@@ -90,8 +98,9 @@ The following are valuable but secondary:
 
 - `ReT_thesis` as the primary training reward
 - `control_v1` as the primary training reward
-- PBRS as the main claim (phase-2 extension only)
+- PBRS as the main claim
 - DKANA / KAN / GNN as the main contribution
+- raw Track A “RL fails” without the Track B follow-up
 - `severe_training` as the main reported scenario
 
 ## Document hierarchy
@@ -110,9 +119,11 @@ Preferred phrases:
 
 - `POMDP-style control`
 - `reporting-only resilience metric`
-- `stress-regime-dependent gains`
-- `competitive under moderate stress`
-- `stronger under severe stress`
+- `structural action-space limitation`
+- `control contract`
+- `MDP repair through downstream control`
+- `Track A negative result`
+- `Track B positive result`
 
 Avoid:
 
@@ -120,3 +131,4 @@ Avoid:
 - `statistically significant`
 - `novel architecture contribution`
 - `ReT_thesis is the main training reward`
+- `Track A and Track B are directly interchangeable`

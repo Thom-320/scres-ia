@@ -1,14 +1,14 @@
 **Preliminary Results Synthesis**
 
-This note consolidates the three benchmark lanes that already exist in the repository so the current bottleneck is explicit.
+This note consolidates the benchmark lanes that now define the paper story after the Track B long run completed.
 
 ## 1. Executive read
 
 | Lane | Setup | Main outcome | What it means |
 | --- | --- | --- | --- |
-| `PPO + ReT_thesis` | `500k` timesteps, `risk_level="current"`, `stochastic_pt=False` | PPO raises `reward_total` to `254.97`, but drops `fill_rate` to `0.845` and collapses to `99.99% S1` | The training objective is misaligned for control learning. |
-| `PPO + control_v1` short scan | `50k` timesteps, `risk_level="increased"`, `3` seeds, weight sweep | PPO only wins in a narrow region, mainly `w_bo=5.0`, `w_cost=0.03` | The operational reward is better, but still weight-sensitive. |
-| `PPO + control_v1` long run | `500k` timesteps, `stochastic_pt=True`, `5` seeds | Under `increased`, PPO is competitive but not better than best static; under `severe`, PPO becomes better than best static on reward | Adaptation shows value mainly under stronger stress. |
+| Track A thesis-faithful | `v1/v4`, upstream control only, post-audit bundles | PPO and RecurrentPPO do not beat strong static baselines | RL failure is structural, not just an algorithm choice. |
+| Track B smoke | `100k`, `3` seeds, `v7 + track_b_v1` | PPO beats all static baselines decisively | Minimal downstream control opens real adaptive headroom. |
+| Track B long run | `500k`, `5` seeds, `v7 + track_b_v1` | PPO still beats `s2_d1.00` and `s3_d2.00` decisively | The positive Track B result is stable enough for the main paper claim. |
 
 ## 2. Evidence by lane
 
@@ -28,89 +28,77 @@ Interpretation:
 - Service deteriorates sharply while the policy collapses to the cheapest shift regime.
 - `ReT_thesis` remains useful as a reporting metric, but these results argue against using it as the main training objective.
 
-### B. `control_v1` short robustness scan fixes part of the problem, but not all of it
-
-Source: historical local robustness scan under `control_v1` (pre-audit benchmark family).
-
-Benchmark setup:
-
-- `train_timesteps=50_000`
-- `risk_level="increased"`
-- `seeds=[11, 22, 33]`
-- Weight sweep over `w_bo in {3, 4, 5}` and `w_cost in {0.01, 0.02, 0.03}`
-
-Most informative rows from the comparison table:
-
-| Weights | Best static | PPO reward | Best static reward | PPO fill rate | Best static fill rate | PPO wins? |
-| --- | --- | ---: | ---: | ---: | ---: | --- |
-| `w_bo=5.0`, `w_cost=0.01` | `static_s3` | `-268.42` | `-219.60` | `0.7908` | `0.8303` | `No` |
-| `w_bo=5.0`, `w_cost=0.02` | `static_s2` | `-239.19` | `-223.17` | `0.8152` | `0.8274` | `No` |
-| `w_bo=5.0`, `w_cost=0.03` | `static_s2` | `-219.80` | `-225.77` | `0.8304` | `0.8274` | `Yes` |
-
-Interpretation:
-
-- `control_v1` is clearly more usable than `ReT_thesis` for training.
-- However, PPO does not improve uniformly across nearby reward weights.
-- The short-run lane says the reward is directionally better, but still sensitive enough that small coefficient changes alter the conclusion.
-
-### C. `control_v1` long runs are now a comparator lane, not the primary source of truth
+### B. Track A remains a valid negative baseline family
 
 Sources:
 
 - `outputs/paper_benchmarks/paper_control_v1_500k/summary.json`
 - `outputs/paper_benchmarks/paper_ret_seq_k020_500k/summary.json`
-- `outputs/paper_benchmarks/paper_ret_seq_k010_500k/summary.json`
-- `docs/manuscript_notes/control_reward_500k_source_of_truth.md`
+- `outputs/benchmarks/final_recurrent_ppo_v4_control_500k/summary.json`
 
-Locked setup:
+Representative readings:
 
-- `train_timesteps=500_000`
-- `w_bo=4.0`
-- `w_cost=0.02`
-- `w_disr=0.0`
-- `stochastic_pt=True`
-- `5` seeds
-
-#### `increased + stochastic_pt` (`control_v1`, auditable comparator)
-
-| Policy | Reward total mean | Fill rate | Backorder rate | Shift mix |
-| --- | ---: | ---: | ---: | --- |
-| `ppo` | `-629.37` | `0.7820` | `0.2180` | `45.5% S1`, `27.8% S2`, `26.6% S3` |
-| `static_s2` | `-617.98` | `0.7924` | `0.2076` | `0.0% S1`, `100.0% S2`, `0.0% S3` |
+| Lane | Policy | Fill rate | Interpretation |
+| --- | --- | ---: | --- |
+| `paper_control_v1_500k` | PPO | `0.7820` | Worse than `static_s2` |
+| `paper_ret_seq_k020_500k` | PPO | `0.7883` | Competitive, but still below `static_s2` |
+| `final_recurrent_ppo_v4_control_500k` | RecurrentPPO | `0.7514` | Memory does not rescue Track A |
 
 Interpretation:
 
-- In the current auditable codebase, `control_v1` PPO is competitive but not better than `static_s2`.
-- This lane remains useful as an operational comparator, not as the current repo winner.
+- Track A is no longer a “which reward wins?” story.
+- It is now the negative result family showing that upstream-only control does not create enough leverage for RL to beat strong static baselines.
 
-#### Current winner under the post-audit paper-facing family
+### C. Track B changes the conclusion
 
-`ReT_seq_v1, κ=0.20` is the current leading auditable lane:
+Sources:
 
-| Policy | Reward total mean | Fill rate | Backorder rate | Shift mix |
+- `outputs/benchmarks/track_b_smoke_initial_2026-03-31/summary.json`
+- `outputs/track_b_benchmarks/track_b_ret_seq_k020_500k_rerun1/summary.json`
+- `outputs/track_b_benchmarks/track_b_ret_seq_k020_500k_rerun1/comparison_table.csv`
+
+Track B smoke (`100k x 3`):
+
+| Policy | Reward total mean | Fill rate | Order-level ReT |
+| --- | ---: | ---: | ---: |
+| `s2_d1.00` | `177.78` | `0.9649` | `0.4952` |
+| `s3_d2.00` | `170.34` | `0.9869` | `0.4544` |
+| `ppo` | `250.17` | `0.99996` | `0.9268` |
+
+Track B long run (`500k x 5`):
+
+| Policy | Reward total mean | Fill rate | Order-level ReT | Shift mix |
 | --- | ---: | ---: | ---: | --- |
-| `ppo` | `133.08` | `0.7883` | `0.2117` | `72.9% S1`, `13.4% S2`, `13.7% S3` |
-| `static_s2` | `132.53` | `0.7922` | `0.2078` | `0.0% S1`, `100.0% S2`, `0.0% S3` |
+| `s2_d1.00` | `178.24` | `0.9659` | `0.4886` | `0/100/0` |
+| `s3_d2.00` | `171.06` | `0.9876` | `0.4584` | `0/0/100` |
+| `ppo` | `254.21` | `0.99996` | `0.9503` | `77.8/15.7/6.5` |
 
 Interpretation:
 
-- `ReT_seq_v1` with `κ=0.20` beats `control_v1` on the cross-mode comparable metrics inside the current auditable paper family.
-- The lane is still best described as competitive rather than conclusively dominant.
+- The smoke was not a fluke.
+- PPO remains above the best static policy at `500k x 5`.
+- The positive result is large enough that Track B, not Track A, is now the main paper lane.
 
 ## 3. What these results say about the bottleneck
 
-The current evidence points to a three-part diagnosis:
+The current evidence now supports a four-part diagnosis:
 
 1. The first bottleneck was reward alignment. `ReT_thesis` as a training objective pushed PPO toward a cheap, low-service solution.
-2. `control_v1` remains useful as an operational comparator, but the post-audit codebase does not support it as the leading lane.
-3. The remaining bottleneck is matched-family evaluation discipline: the repo still mixes historical bundles, current paper-facing bundles, and an unfinished `RecurrentPPO` lane.
+2. `control_v1` remains useful as an operational comparator, but it does not rescue Track A.
+3. The structural bottleneck was the action/control contract: Track A controls upstream capacity while the active bottleneck is downstream.
+4. Once downstream control is exposed in Track B, PPO learns a genuinely superior policy.
 
 ## 4. Practical conclusion
 
-The repository does not support the claim that "PPO failed completely." A more precise reading is:
+The repository no longer supports a purely negative story. The precise reading is:
 
 - `PPO + ReT_thesis` is the wrong lane for control learning.
-- `control_v1` is now best treated as an operational comparator lane.
-- The strongest current auditable paper-facing evidence is the `ReT_seq_v1, κ=0.20` family under `v1 + thesis + stochastic_pt=True`.
+- Track A is a valid negative benchmark family and mechanistic diagnosis.
+- Track B is the strongest current auditable paper-facing evidence.
+- The strongest current evidence is `ReT_seq_v1, κ=0.20` under `v7 + track_b_v1 + adaptive_benchmark_v2`.
 
-That means the next experiments should be judged against the current auditable paper-facing bundles, not against the historical `*_stopt` artifacts.
+That means the paper should be written around:
+
+- Track A as the thesis-faithful failure mode,
+- Track B as the minimal MDP repair,
+- and the resulting PPO gain against strong static baselines.

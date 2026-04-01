@@ -1,15 +1,15 @@
 # Paper Experimental Checklist
 
 Source of truth for the remaining code and experimental work before the paper is submission-ready.
-Updated: 2026-03-30.
+Updated: 2026-03-31.
 
-This checklist now freezes the **Track A** paper backbone:
+This checklist now freezes the **Track B** paper backbone:
 
-1. thesis-faithful `shift_control`,
-2. `control_v1` as the primary training reward,
-3. `v4` as the paper-facing observation contract,
+1. `track_b_adaptive_control`,
+2. `ReT_seq_v1` with `κ=0.20`,
+3. `v7 + track_b_v1`,
 4. `168h` cadence,
-5. one final `RecurrentPPO 500k x 5` run before manuscript lock.
+5. `500k x 5` auditable benchmark completed.
 
 ---
 
@@ -45,18 +45,18 @@ This checklist now freezes the **Track A** paper backbone:
 
 ## B. Current Paper Contract Status
 
-### Frozen Track A contract
+### Frozen Track B contract
 
-- [x] Online contract frozen as `reward_mode="control_v1"` + `observation_version="v4"`
-- [x] Offline export contract frozen around the same observation contract
+- [x] Online contract frozen as `reward_mode="ReT_seq_v1"` + `observation_version="v7"` + `action_contract="track_b_v1"`
+- [x] Track B launcher is auditable
 - [x] `ReT_garrido2024` remains available as an audit/bridge metric
-- [x] `ReT_unified_v1` remains available only as an exploratory/audit lane
+- [x] `ReT_unified_v1` remains available only as an exploratory follow-up lane
 
 ### Deferred from the paper backbone
 
 - [x] `ReT_unified_v1` is implemented and usable
-- [x] `ReT_unified_v1` is **not** the frozen Track A paper contract
-- [x] `v5 + 48h` remains exploratory because random is too close and the cadence/reward story is not frozen enough for the main paper claim
+- [x] `ReT_unified_v1` is **not** the frozen main paper contract
+- [x] Track A remains part of the paper, but not as the primary positive result
 
 ---
 
@@ -64,59 +64,44 @@ This checklist now freezes the **Track A** paper backbone:
 
 These items block paper submission.
 
-### C1. Verify the frozen Track A lane still runs cleanly
+### C1. Freeze evidence
 
-- [ ] Smoke `RecurrentPPO + control_v1 + v4 + 168h`
-- [ ] Confirm the benchmark bundle is written cleanly
-- [ ] Confirm cross-eval still supports `current`, `increased`, `severe`
+- [x] Track A comparator bundles audited
+- [x] Track B smoke completed
+- [x] Track B `500k x 5` completed
+- [ ] Generate final figure/table bundle for the manuscript
 
-### C2. Final production experiment
-
-- [ ] Run exactly one final production benchmark:
-  - `algo=recurrent_ppo`
-  - `reward_mode=control_v1`
-  - `observation_version=v4`
-  - `step_size_hours=168`
-  - `risk_level=increased`
-  - `eval_risk_levels=current increased severe`
-  - `seeds=11 22 33 44 55`
-  - `train_timesteps=500000`
-- [ ] Write full benchmark bundle with `comparison_table.csv`, `policy_summary.csv`, `proof_trajectories.csv`, `summary.json`
-
-### C3. Formal statistical comparison
+### C2. Formal statistical comparison
 
 - [ ] Add p-value table
-- [ ] Add at least one formal pairwise test:
-  - Welch's t-test or Mann-Whitney U
+- [ ] Add pairwise tests for Track B PPO vs:
+  - `s2_d1.00`
+  - `s3_d2.00`
 - [ ] Add effect size:
-  - Cohen's d (or equivalent justified effect size)
-- [ ] Report tests for learned policy vs:
-  - `static_s2`
-  - best Garrido baseline
-  - best heuristic baseline
-  - `random`
+  - Cohen's d or non-parametric alternative if justified
+- [ ] Report Track A negative controls separately from Track B positive result
 
 ---
 
 ## D. Important but Not Blocking
 
-### D1. Algorithm comparison for the manuscript
+### D1. Manuscript framing for the manuscript
 
 - [ ] Freeze Section 4.3 around:
-  - PPO + MLP
-  - PPO + frame-stack
-  - RecurrentPPO
-  - optional PBRS comparator if already usable and non-distracting
+  - Track A failure across PPO / RecurrentPPO
+  - Track B success with PPO
+  - minimal MDP repair explanation
 
 ### D2. Exploratory lanes (not paper backbone)
 
-- [ ] Keep `ReT_unified_v1` as exploratory/audit evidence only
-- [ ] Keep `v5 + 48h` out of the core paper claim
+- [ ] Keep `ReT_unified_v1` in Track B as exploratory/audit evidence only
+- [ ] Keep `v5 + 48h` and other Track A variants out of the core paper claim
 
-### D3. Severe cross-evaluation story
+### D3. Track A as negative evidence
 
-- [ ] Verify whether PPO shows advantage, parity, or degradation under `severe`
-- [ ] Freeze the cross-scenario table used in the paper
+- [x] Verify Track A PPO does not beat strong static baselines
+- [x] Verify RecurrentPPO does not rescue Track A
+- [ ] Freeze the Track A negative-results table used in the paper
 
 ---
 
@@ -140,10 +125,10 @@ These items block paper submission.
 
 ### Corrected
 
-- [x] The paper no longer depends on proving `ReT_unified_v1` as the primary train reward
+- [x] The paper no longer depends on proving `control_v1` or `RecurrentPPO` as the winning lane
 - [x] The next step is not another reward redesign
 - [x] `final_ret_seq_v1_500k` remains a historical comparator, not the main paper lane
-- [x] The one remaining decisive experiment is `RecurrentPPO + control_v1 + v4 + 168h`
+- [x] The decisive positive result is now `Track B + ReT_seq_v1 κ=0.20`
 
 ---
 
@@ -151,15 +136,15 @@ These items block paper submission.
 
 ### STOP
 
-Stop changing the paper backbone if:
+Stop changing the paper backbone now that:
 
-- [ ] the final `RecurrentPPO 500k x 5` run has completed
+- [x] the final Track B `500k x 5` run has completed
 
-At that point:
+At this point:
 
 - no more reward redesign,
-- no more observation redesign,
-- no new Track B code before submission.
+- no more control-contract redesign for the main paper,
+- no new primary experiment unless it is strictly a statistical replicate.
 
 ---
 
@@ -168,11 +153,12 @@ At that point:
 The paper is experimentally done only when all items below are checked:
 
 - [x] Final Track A contract frozen
+- [x] Final Track B contract frozen
 - [x] Final weights frozen (`w_bo=4.0`, `w_cost=0.02`, `w_disr=0.0`)
-- [ ] Final RecurrentPPO production benchmark completed
-- [ ] Cross-scenario evaluation completed
+- [x] Final RecurrentPPO production benchmark completed
+- [ ] Statistical comparison table generated
 - [ ] Statistical test table generated
-- [ ] Proof-of-learning artifacts generated
+- [ ] Track A vs Track B manuscript tables generated
 - [ ] DKANA-ready handoff bundle generated
 - [ ] Historical comparator bundle retained
 
@@ -182,8 +168,8 @@ The paper is experimentally done only when all items below are checked:
 
 As of this update:
 
-- the repo is **close** to paper-ready;
-- the main blocker is **not** infrastructure;
-- the main blocker is completing one final long-run memory test under the frozen Track A contract.
+- the repo is experimentally **past** the main blocker;
+- the main blocker is now manuscript packaging, not infrastructure;
+- the core paper story is Track A negative result plus Track B positive result.
 
-After that run, the paper should move to manuscript production, not further backbone redesign.
+The next move should be manuscript production, not more backbone redesign.

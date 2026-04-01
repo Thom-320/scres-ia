@@ -42,46 +42,60 @@ Expected outputs:
 - validation CSV under `outputs/validation/`
 - deterministic throughput near the thesis reference with acceptable error band
 
-## Canonical training command
+## Canonical benchmark commands
 
-The public training default now matches the paper-facing benchmark family:
+Primary paper result:
 
 ```bash
-python train_agent.py   --env-variant shift_control   --reward-mode ReT_seq_v1   --ret-seq-kappa 0.20   --observation-version v1   --risk-level increased   --stochastic-pt   --w-bo 4.0 --w-cost 0.02 --w-disr 0.0   --timesteps 500000   --year-basis thesis
+python scripts/run_track_b_benchmark.py \
+  --label track_b_ret_seq_k020_500k \
+  --reward-mode ReT_seq_v1 \
+  --ret-seq-kappa 0.20
 ```
 
-This command reproduces the current primary benchmark configuration, but not necessarily the exact archived model weights unless the same seeds and artifact collection pipeline are used.
+Primary Track B smoke:
+
+```bash
+python scripts/run_track_b_smoke.py \
+  --output-dir outputs/benchmarks/track_b_smoke_manual \
+  --reward-mode ReT_seq_v1 \
+  --ret-seq-kappa 0.20 \
+  --train-timesteps 100000 \
+  --eval-episodes 10 \
+  --seeds 11 22 33
+```
+
+Track A comparator family:
+
+```bash
+python scripts/run_paper_benchmark.py \
+  --label paper_ret_seq_k020_500k \
+  --reward-mode ReT_seq_v1 \
+  --kappa 0.20
+```
 
 ## Auditable artifact bundles
 
 Reviewer-safe artifact references live under:
 
+- `outputs/track_b_benchmarks/track_b_ret_seq_k020_500k_rerun1`
+- `outputs/benchmarks/track_b_smoke_initial_2026-03-31`
 - `outputs/paper_benchmarks/paper_ret_seq_k020_500k`
-- `outputs/paper_benchmarks/paper_ret_seq_k010_500k`
 - `outputs/paper_benchmarks/paper_control_v1_500k`
-- `outputs/benchmarks/final_ret_seq_v1_500k`
+- `outputs/benchmarks/final_recurrent_ppo_v4_control_500k`
 
-Use these instead of the historical `*_stopt` bundles.
+Use these instead of the historical `*_stopt` bundles and incomplete Track B runs.
 
 The old `control_reward_500k_*_stopt` bundles and their seed-inference note predate the March 2026 DES audit/alignment fixes and should not be cited as the primary evidence for the current repository state.
 
-## Full publication benchmark path
+## Scope
 
-To reproduce the multi-phase publication run:
+The current paper story does **not** depend on reproducing every historical lane.
+It depends on reproducing:
 
-```bash
-bash scripts/run_publication_experiments.sh --preflight
-bash scripts/run_publication_experiments.sh
-```
-
-The script covers:
-
-1. heuristic tuning
-2. PPO benchmark lane
-3. SAC comparator
-4. PPO + frame stacking
-5. RecurrentPPO
-6. publication summary analysis
+1. Track A negative comparator bundles
+2. Track B smoke
+3. Track B long run
 
 ## Statistical unit
 

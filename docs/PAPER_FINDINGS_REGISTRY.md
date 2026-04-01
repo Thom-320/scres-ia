@@ -7,7 +7,7 @@ Each finding includes the evidence source, whether it's confirmed, and how it co
 
 ## F1. Reward Misspecification: Resilience Metrics Resist RL Optimization
 
-**Status:** CONFIRMED across 5+ reward variants
+**Status:** REVISED after Track B completion
 
 **Evidence:**
 - ReT_thesis (piecewise Eq. 5.5) → S1 collapse (99.99% S1, fill_rate 0.845)
@@ -18,7 +18,7 @@ Each finding includes the evidence source, whether it's confirmed, and how it co
 - control_v1 (linear, w_bo/w_cost=200) → PPO fill=0.782, shift mix 46/28/27, does NOT beat S2 [source: paper_control_v1_500k, 5 seeds, POST-AUDIT DES]
 - **NOTE:** Earlier claim of fill_rate=0.838 came from control_reward_500k_increased_stopt, which used the PRE-AUDIT DES (known bugs). That run is now classified as `historical_artifact`.
 
-**Finding:** Theoretically grounded resilience metrics (Cobb-Douglas, piecewise) systematically fail as RL training rewards because agents exploit the weakest dimension. However, the simpler linear control_v1 also fails to beat S2 on the corrected DES, suggesting the problem is structural (F11), not purely reward-related. The reward alignment finding remains valid: C-D rewards produce WORSE policies than linear rewards, but neither beats static S2 on service metrics.
+**Finding (REVISED):** Reward misspecification is real inside Track A, but it is not the whole story. On the corrected DES, both `control_v1` and `ReT_seq_v1` fail to beat strong static baselines when the action space controls upstream capacity only. However, `ReT_seq_v1` becomes a successful training reward in Track B once downstream control is exposed. The paper should therefore present reward alignment and control-contract design jointly, not as separate stories.
 
 **Paper section:** Section 4.2 or dedicated subsection on reward alignment
 **Strength:** STRONG — reproducible, multi-variant, directly addresses a gap in the literature
@@ -58,7 +58,7 @@ Each finding includes the evidence source, whether it's confirmed, and how it co
 
 ## F3. Cumulative Fill Rate is a Lagging Indicator That Masks Policy Quality
 
-**Status:** CONFIRMED
+**Status:** CONFIRMED, with stronger evidence after Track B
 
 **Evidence:**
 - After warmup+priming (2351h), fill_rate starts at 0.42, pending_bo = 124,125
@@ -223,7 +223,33 @@ Each finding includes the evidence source, whether it's confirmed, and how it co
 
 **Caution:** Assembly capacity DOES matter — S1 is clearly worse than S2. The finding is about diminishing returns beyond S=2, not that assembly is irrelevant. The severe-stress hypothesis (that disruptions bring the constraint back into the agent's zone) is plausible but not causally confirmed.
 
-**Implications for Track B:** To create genuine RL advantage, either expand the action space to include downstream control, or create conditions where the downstream constraint becomes dynamic.
+**Implications for Track B:** Confirmed. The successful Track B result supports the claim that exposing downstream control is the correct minimal MDP repair.
+
+---
+
+## F12. Track B Confirms that Controlling the Active Bottleneck Unlocks RL Advantage
+
+**Status:** CONFIRMED
+
+**Evidence (smoke):**
+- `outputs/benchmarks/track_b_smoke_initial_2026-03-31/summary.json`
+- PPO fill=`0.99996` vs `s2_d1.00=0.96489` and `s3_d2.00=0.98687`
+- PPO reward=`250.17` vs best static reward=`170.34`
+
+**Evidence (long run):**
+- `outputs/track_b_benchmarks/track_b_ret_seq_k020_500k_rerun1/comparison_table.csv`
+- PPO fill=`0.99996`
+- `s2_d1.00` fill=`0.96592`
+- `s3_d2.00` fill=`0.98765`
+- PPO fill gap vs `s2_d1.00` = `+3.40 pp`
+- PPO fill gap vs best static = `+1.23 pp`
+- PPO reward gap vs best static = `+83.16`
+- PPO order-level ReT gap vs best static = `+0.4919`
+
+**Finding:** The Track B minimal intervention validates the structural diagnosis from Track A. RL was not failing because PPO was too weak; it was failing because the control contract did not touch the active bottleneck. Once downstream transport control at `Op10/Op12` is exposed, PPO learns a clearly superior policy.
+
+**Paper section:** Main results + Discussion
+**Strength:** VERY STRONG
 
 **Paper section:** Section 4.1 (DES bottleneck analysis) + Discussion
 **Strength:** STRONG — explains the main pattern of results, connects to diminishing returns / bottleneck theory. Partially confirmed (the mechanism is clear; the severe-stress explanation is hypothesis).
@@ -237,12 +263,12 @@ Each finding includes the evidence source, whether it's confirmed, and how it co
 | 3.2 DES Description | F10 (warmup structural) | Moderate |
 | 3.3 Reward Design | F1 (misspecification), F8 (C-D vs linear) | **STRONG** |
 | 4.1 DES Results | F3 (lagging indicator), F9 (S2 near-optimal), **F11 (downstream bottleneck)** | **VERY STRONG** |
-| 4.2 Main Results | F4 (severity-dependent gains) | Moderate |
-| 4.3 Algorithm Comparison | F2 (asymmetric action sensitivity), F5 (memory helps), F6 (cycle signals) | Moderate |
+| 4.2 Main Results | F4 (Track A severe negative), F12 (Track B positive) | **VERY STRONG** |
+| 4.3 Algorithm Comparison | F2 (asymmetric action sensitivity), F5 (memory negative), F6 (cycle signals) | Moderate |
 | Discussion | F7 (48h negative), all limitations | Strong |
 
 **The strongest publishable story (updated after audit):**
 
-> "We present a validated DES benchmark for adaptive operational resilience control. On the thesis-aligned simulation, NO RL configuration (across 7 reward modes, 3 observation versions, 2 algorithms) beats static S=2 on fill_rate. We explain why through structural analysis: (1) downstream distribution limits the value of extra assembly capacity (F11), (2) inventory actions have extreme asymmetric sensitivity with only ~1% upside (F2), and (3) resilience metrics systematically fail as RL rewards (F1/F8). This is a benchmark contribution with honest negative results and mechanistic explanations."
+> "We present a validated DES benchmark for adaptive operational resilience control. On the thesis-aligned Track A simulation, no RL configuration beats the strongest static baseline, and we explain why through structural analysis: the control contract does not touch the active downstream bottleneck. We then introduce a minimal Track B repair that exposes downstream transport control, and PPO decisively beats strong static policies. The contribution is therefore both negative and positive: when RL fails, why it fails, and what minimal MDP repair makes it work."
 
 **CRITICAL AUDIT NOTE (2026-03-30):** Earlier versions of this registry cited evidence from pre-audit DES runs (control_reward_500k_*_stopt) that showed PPO competitive or marginally better than S2. Those runs are now classified as `historical_artifact` because they used a DES with known bugs (missing Op4 delay, R12/R13 bypass, R21 non-blocking). All paper-facing evidence must use post-audit bundles only (paper_benchmarks/ or benchmarks/ from March 27+).
