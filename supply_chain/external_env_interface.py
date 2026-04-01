@@ -193,6 +193,14 @@ def get_episode_terminal_metrics(env: Any) -> dict[str, float]:
             "fill_rate_state_terminal": float("nan"),
             "backorder_rate_state_terminal": float("nan"),
             "order_level_ret_mean": float("nan"),
+            "order_count": float("nan"),
+            "completed_order_count": float("nan"),
+            "completed_order_fraction": float("nan"),
+            "order_case_fill_rate_share": float("nan"),
+            "order_case_autotomy_share": float("nan"),
+            "order_case_recovery_share": float("nan"),
+            "order_case_non_recovery_share": float("nan"),
+            "order_case_unfulfilled_share": float("nan"),
         }
 
     order_summary: dict[str, Any] = {}
@@ -210,6 +218,15 @@ def get_episode_terminal_metrics(env: Any) -> dict[str, float]:
         if hasattr(sim, "_backorder_rate")
         else backorder_rate_order_level
     )
+    n_orders = float(order_summary.get("n_orders", 0.0))
+    n_completed = float(order_summary.get("n_completed", 0.0))
+    case_counts = order_summary.get("case_counts", {}) or {}
+
+    def case_share(case_name: str) -> float:
+        if n_orders <= 0.0:
+            return 0.0
+        return float(case_counts.get(case_name, 0.0)) / n_orders
+
     return {
         "fill_rate_order_level": fill_rate_order_level,
         "backorder_rate_order_level": backorder_rate_order_level,
@@ -218,6 +235,16 @@ def get_episode_terminal_metrics(env: Any) -> dict[str, float]:
         "order_level_ret_mean": float(
             order_summary.get("mean_ret", fill_rate_order_level)
         ),
+        "order_count": n_orders,
+        "completed_order_count": n_completed,
+        "completed_order_fraction": (
+            float(n_completed / n_orders) if n_orders > 0.0 else 0.0
+        ),
+        "order_case_fill_rate_share": case_share("fill_rate"),
+        "order_case_autotomy_share": case_share("autotomy"),
+        "order_case_recovery_share": case_share("recovery"),
+        "order_case_non_recovery_share": case_share("non_recovery"),
+        "order_case_unfulfilled_share": case_share("unfulfilled"),
     }
 
 

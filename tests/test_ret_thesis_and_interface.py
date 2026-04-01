@@ -447,6 +447,14 @@ def test_terminal_metrics_match_env_order_level_definition() -> None:
     assert metrics["backorder_rate_order_level"] == pytest.approx(
         1.0 - metrics["fill_rate_order_level"]
     )
+    assert metrics["order_count"] >= metrics["completed_order_count"]
+    assert (
+        metrics["order_case_fill_rate_share"]
+        + metrics["order_case_autotomy_share"]
+        + metrics["order_case_recovery_share"]
+        + metrics["order_case_non_recovery_share"]
+        + metrics["order_case_unfulfilled_share"]
+    ) == pytest.approx(1.0, abs=1e-6)
     env.close()
 
 

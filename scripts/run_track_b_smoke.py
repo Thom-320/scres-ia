@@ -40,10 +40,26 @@ PRIMARY_METRICS = (
     "fill_rate",
     "backorder_rate",
     "order_level_ret_mean",
+    "ret_thesis_corrected_total",
+    "ret_unified_total",
+    "ret_unified_fr_mean",
+    "ret_unified_rc_mean",
+    "ret_unified_ce_mean",
+    "ret_unified_gate_mean",
     "flow_fill_rate",
     "flow_backorder_rate",
+    "fill_rate_state_terminal",
+    "backorder_rate_state_terminal",
     "terminal_rolling_fill_rate_4w",
     "terminal_rolling_backorder_rate_4w",
+    "order_count",
+    "completed_order_count",
+    "completed_order_fraction",
+    "order_case_fill_rate_share",
+    "order_case_autotomy_share",
+    "order_case_recovery_share",
+    "order_case_non_recovery_share",
+    "order_case_unfulfilled_share",
     "pct_steps_S1",
     "pct_steps_S2",
     "pct_steps_S3",
@@ -59,10 +75,26 @@ EPISODE_FIELDS = [
     "fill_rate",
     "backorder_rate",
     "order_level_ret_mean",
+    "ret_thesis_corrected_total",
+    "ret_unified_total",
+    "ret_unified_fr_mean",
+    "ret_unified_rc_mean",
+    "ret_unified_ce_mean",
+    "ret_unified_gate_mean",
     "flow_fill_rate",
     "flow_backorder_rate",
+    "fill_rate_state_terminal",
+    "backorder_rate_state_terminal",
     "terminal_rolling_fill_rate_4w",
     "terminal_rolling_backorder_rate_4w",
+    "order_count",
+    "completed_order_count",
+    "completed_order_fraction",
+    "order_case_fill_rate_share",
+    "order_case_autotomy_share",
+    "order_case_recovery_share",
+    "order_case_non_recovery_share",
+    "order_case_unfulfilled_share",
     "pct_steps_S1",
     "pct_steps_S2",
     "pct_steps_S3",
@@ -82,18 +114,26 @@ COMPARISON_FIELDS = [
     "ppo_fill_rate_mean",
     "ppo_backorder_rate_mean",
     "ppo_order_level_ret_mean",
+    "ppo_ret_thesis_corrected_mean",
+    "ppo_ret_unified_mean",
     "baseline_reward_mean",
     "baseline_fill_rate_mean",
     "baseline_backorder_rate_mean",
     "baseline_order_level_ret_mean",
+    "baseline_ret_thesis_corrected_mean",
+    "baseline_ret_unified_mean",
     "best_static_reward_mean",
     "best_static_fill_rate_mean",
     "best_static_backorder_rate_mean",
     "best_static_order_level_ret_mean",
+    "best_static_ret_thesis_corrected_mean",
+    "best_static_ret_unified_mean",
     "ppo_fill_gap_vs_baseline_pp",
     "ppo_fill_gap_vs_best_static_pp",
     "ppo_reward_gap_vs_best_static",
     "ppo_order_level_ret_gap_vs_best_static",
+    "ppo_ret_thesis_corrected_gap_vs_best_static",
+    "ppo_ret_unified_gap_vs_best_static",
     "ppo_beats_s2_neutral_by_fill",
     "ppo_matches_best_static_by_fill",
     "promote_to_long_run",
@@ -234,6 +274,30 @@ def build_static_policy_action(policy: StaticPolicySpec) -> dict[str, float | in
     }
 
 
+def init_audit_accumulator() -> dict[str, float]:
+    return {
+        "ret_thesis_corrected_total": 0.0,
+        "ret_unified_total": 0.0,
+        "ret_unified_fr_sum": 0.0,
+        "ret_unified_rc_sum": 0.0,
+        "ret_unified_ce_sum": 0.0,
+        "ret_unified_gate_sum": 0.0,
+    }
+
+
+def update_audit_accumulator(
+    accumulator: dict[str, float], info: dict[str, Any]
+) -> None:
+    accumulator["ret_thesis_corrected_total"] += float(
+        info.get("ret_thesis_corrected_step", 0.0)
+    )
+    accumulator["ret_unified_total"] += float(info.get("ret_unified_step", 0.0))
+    accumulator["ret_unified_fr_sum"] += float(info.get("ret_unified_fr", 0.0))
+    accumulator["ret_unified_rc_sum"] += float(info.get("ret_unified_rc", 0.0))
+    accumulator["ret_unified_ce_sum"] += float(info.get("ret_unified_ce", 0.0))
+    accumulator["ret_unified_gate_sum"] += float(info.get("ret_unified_gate", 0.0))
+
+
 def make_monitored_training_env(
     args: argparse.Namespace, seed: int
 ) -> callable[[], Monitor]:
@@ -289,6 +353,7 @@ def _finalize_episode_row(
     demanded_total: float,
     backorder_qty_total: float,
     shift_counts: dict[int, int],
+    audit_accumulator: dict[str, float],
     track_b_context: dict[str, Any],
     terminal_metrics: dict[str, float],
 ) -> dict[str, Any]:
@@ -309,11 +374,45 @@ def _finalize_episode_row(
         "fill_rate": float(terminal_metrics["fill_rate_order_level"]),
         "backorder_rate": float(terminal_metrics["backorder_rate_order_level"]),
         "order_level_ret_mean": float(terminal_metrics["order_level_ret_mean"]),
+        "ret_thesis_corrected_total": float(
+            audit_accumulator["ret_thesis_corrected_total"]
+        ),
+        "ret_unified_total": float(audit_accumulator["ret_unified_total"]),
+        "ret_unified_fr_mean": float(audit_accumulator["ret_unified_fr_sum"])
+        / total_steps,
+        "ret_unified_rc_mean": float(audit_accumulator["ret_unified_rc_sum"])
+        / total_steps,
+        "ret_unified_ce_mean": float(audit_accumulator["ret_unified_ce_sum"])
+        / total_steps,
+        "ret_unified_gate_mean": float(audit_accumulator["ret_unified_gate_sum"])
+        / total_steps,
         "flow_fill_rate": flow_fill_rate,
         "flow_backorder_rate": flow_backorder_rate,
+        "fill_rate_state_terminal": float(terminal_metrics["fill_rate_state_terminal"]),
+        "backorder_rate_state_terminal": float(
+            terminal_metrics["backorder_rate_state_terminal"]
+        ),
         "terminal_rolling_fill_rate_4w": float(track_b_context["rolling_fill_rate_4w"]),
         "terminal_rolling_backorder_rate_4w": float(
             track_b_context["rolling_backorder_rate_4w"]
+        ),
+        "order_count": float(terminal_metrics["order_count"]),
+        "completed_order_count": float(terminal_metrics["completed_order_count"]),
+        "completed_order_fraction": float(terminal_metrics["completed_order_fraction"]),
+        "order_case_fill_rate_share": float(
+            terminal_metrics["order_case_fill_rate_share"]
+        ),
+        "order_case_autotomy_share": float(
+            terminal_metrics["order_case_autotomy_share"]
+        ),
+        "order_case_recovery_share": float(
+            terminal_metrics["order_case_recovery_share"]
+        ),
+        "order_case_non_recovery_share": float(
+            terminal_metrics["order_case_non_recovery_share"]
+        ),
+        "order_case_unfulfilled_share": float(
+            terminal_metrics["order_case_unfulfilled_share"]
         ),
         "pct_steps_S1": 100.0 * shift_counts.get(1, 0) / total_steps,
         "pct_steps_S2": 100.0 * shift_counts.get(2, 0) / total_steps,
@@ -340,6 +439,7 @@ def evaluate_static_policy(
         backorder_qty_total = 0.0
         steps = 0
         shift_counts = {1: 0, 2: 0, 3: 0}
+        audit_accumulator = init_audit_accumulator()
         final_info = info
 
         while not (terminated or truncated):
@@ -348,6 +448,7 @@ def evaluate_static_policy(
             demanded_total += float(final_info.get("new_demanded", 0.0))
             backorder_qty_total += float(final_info.get("new_backorder_qty", 0.0))
             shift_counts[int(final_info.get("shifts_active", 1))] += 1
+            update_audit_accumulator(audit_accumulator, final_info)
             steps += 1
 
         rows.append(
@@ -361,6 +462,7 @@ def evaluate_static_policy(
                 demanded_total=demanded_total,
                 backorder_qty_total=backorder_qty_total,
                 shift_counts=shift_counts,
+                audit_accumulator=audit_accumulator,
                 track_b_context=final_info["state_constraint_context"][
                     "track_b_context"
                 ],
@@ -389,6 +491,7 @@ def evaluate_trained_policy(
         backorder_qty_total = 0.0
         steps = 0
         shift_counts = {1: 0, 2: 0, 3: 0}
+        audit_accumulator = init_audit_accumulator()
         final_info = info
 
         while not (terminated or truncated):
@@ -403,6 +506,7 @@ def evaluate_trained_policy(
             demanded_total += float(final_info.get("new_demanded", 0.0))
             backorder_qty_total += float(final_info.get("new_backorder_qty", 0.0))
             shift_counts[int(final_info.get("shifts_active", 1))] += 1
+            update_audit_accumulator(audit_accumulator, final_info)
             steps += 1
 
         rows.append(
@@ -416,6 +520,7 @@ def evaluate_trained_policy(
                 demanded_total=demanded_total,
                 backorder_qty_total=backorder_qty_total,
                 shift_counts=shift_counts,
+                audit_accumulator=audit_accumulator,
                 track_b_context=final_info["state_constraint_context"][
                     "track_b_context"
                 ],
@@ -502,6 +607,12 @@ def build_decision_summary(policy_rows: list[dict[str, Any]]) -> dict[str, Any]:
         best_static["reward_total_mean"]
     )
     ret_gap_vs_best_static = ret_metric(ppo_row) - ret_metric(best_static)
+    ret_corr_gap_vs_best_static = float(ppo_row["ret_thesis_corrected_total_mean"]) - (
+        float(best_static["ret_thesis_corrected_total_mean"])
+    )
+    ret_unified_gap_vs_best_static = float(ppo_row["ret_unified_total_mean"]) - float(
+        best_static["ret_unified_total_mean"]
+    )
     return {
         "baseline_policy": "s2_d1.00",
         "best_static_policy": str(best_static["policy"]),
@@ -509,6 +620,8 @@ def build_decision_summary(policy_rows: list[dict[str, Any]]) -> dict[str, Any]:
         "ppo_fill_gap_vs_best_static_pp": fill_gap_vs_best_static_pp,
         "ppo_reward_gap_vs_best_static": reward_gap_vs_best_static,
         "ppo_order_level_ret_gap_vs_best_static": ret_gap_vs_best_static,
+        "ppo_ret_thesis_corrected_gap_vs_best_static": ret_corr_gap_vs_best_static,
+        "ppo_ret_unified_gap_vs_best_static": ret_unified_gap_vs_best_static,
         "ppo_beats_s2_neutral_by_fill": fill_gap_vs_baseline_pp > 0.0,
         "ppo_matches_best_static_by_fill": fill_gap_vs_best_static_pp >= -0.5,
         "promote_to_long_run": (
@@ -567,12 +680,20 @@ def build_comparison_rows(
             "ppo_fill_rate_mean": float(ppo_row["fill_rate_mean"]),
             "ppo_backorder_rate_mean": float(ppo_row["backorder_rate_mean"]),
             "ppo_order_level_ret_mean": float(ppo_row["order_level_ret_mean_mean"]),
+            "ppo_ret_thesis_corrected_mean": float(
+                ppo_row["ret_thesis_corrected_total_mean"]
+            ),
+            "ppo_ret_unified_mean": float(ppo_row["ret_unified_total_mean"]),
             "baseline_reward_mean": float(baseline["reward_total_mean"]),
             "baseline_fill_rate_mean": float(baseline["fill_rate_mean"]),
             "baseline_backorder_rate_mean": float(baseline["backorder_rate_mean"]),
             "baseline_order_level_ret_mean": float(
                 baseline["order_level_ret_mean_mean"]
             ),
+            "baseline_ret_thesis_corrected_mean": float(
+                baseline["ret_thesis_corrected_total_mean"]
+            ),
+            "baseline_ret_unified_mean": float(baseline["ret_unified_total_mean"]),
             "best_static_reward_mean": float(best_static["reward_total_mean"]),
             "best_static_fill_rate_mean": float(best_static["fill_rate_mean"]),
             "best_static_backorder_rate_mean": float(
@@ -580,6 +701,12 @@ def build_comparison_rows(
             ),
             "best_static_order_level_ret_mean": float(
                 best_static["order_level_ret_mean_mean"]
+            ),
+            "best_static_ret_thesis_corrected_mean": float(
+                best_static["ret_thesis_corrected_total_mean"]
+            ),
+            "best_static_ret_unified_mean": float(
+                best_static["ret_unified_total_mean"]
             ),
             "ppo_fill_gap_vs_baseline_pp": float(
                 100.0
@@ -599,6 +726,14 @@ def build_comparison_rows(
             "ppo_order_level_ret_gap_vs_best_static": float(
                 float(ppo_row["order_level_ret_mean_mean"])
                 - float(best_static["order_level_ret_mean_mean"])
+            ),
+            "ppo_ret_thesis_corrected_gap_vs_best_static": float(
+                float(ppo_row["ret_thesis_corrected_total_mean"])
+                - float(best_static["ret_thesis_corrected_total_mean"])
+            ),
+            "ppo_ret_unified_gap_vs_best_static": float(
+                float(ppo_row["ret_unified_total_mean"])
+                - float(best_static["ret_unified_total_mean"])
             ),
             "ppo_beats_s2_neutral_by_fill": bool(
                 float(ppo_row["fill_rate_mean"]) > float(baseline["fill_rate_mean"])
@@ -651,8 +786,8 @@ def render_markdown(summary: dict[str, Any]) -> str:
         "",
         "## Policy Summary",
         "",
-        "| Policy | Reward | Fill | Backorder | Order-level ReT | Rolling fill 4w | Shift mix |",
-        "| --- | ---: | ---: | ---: | ---: | ---: | --- |",
+        "| Policy | Reward | Fill | Backorder | Order-level ReT | ReT corrected | ReT unified | Rolling fill 4w | Shift mix |",
+        "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |",
     ]
     for row in summary["policy_summary"]:
         shift_mix = (
@@ -662,12 +797,14 @@ def render_markdown(summary: dict[str, Any]) -> str:
         )
         lines.append(
             "| {policy} | {reward:.2f} | {fill:.3f} | {backorder:.3f} | "
-            "{ret:.3f} | {rolling_fill:.3f} | {shift_mix} |".format(
+            "{ret:.3f} | {ret_corr:.2f} | {ret_unified:.2f} | {rolling_fill:.3f} | {shift_mix} |".format(
                 policy=row["policy"],
                 reward=float(row["reward_total_mean"]),
                 fill=float(row["fill_rate_mean"]),
                 backorder=float(row["backorder_rate_mean"]),
                 ret=float(row["order_level_ret_mean_mean"]),
+                ret_corr=float(row["ret_thesis_corrected_total_mean"]),
+                ret_unified=float(row["ret_unified_total_mean"]),
                 rolling_fill=float(row["terminal_rolling_fill_rate_4w_mean"]),
                 shift_mix=shift_mix,
             )
@@ -694,6 +831,14 @@ def render_markdown(summary: dict[str, Any]) -> str:
             (
                 f"- PPO order-level ReT gap vs best static: "
                 f"{float(decision['ppo_order_level_ret_gap_vs_best_static']):+.4f}"
+            ),
+            (
+                f"- PPO ReT corrected gap vs best static: "
+                f"{float(decision['ppo_ret_thesis_corrected_gap_vs_best_static']):+.2f}"
+            ),
+            (
+                f"- PPO ReT unified gap vs best static: "
+                f"{float(decision['ppo_ret_unified_gap_vs_best_static']):+.2f}"
             ),
             f"- Promote to long run: `{decision['promote_to_long_run']}`",
             "",
