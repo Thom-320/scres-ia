@@ -164,9 +164,10 @@ def build_parser() -> argparse.ArgumentParser:
             "severe",
             "severe_training",
             "adaptive_benchmark_v1",
+            "adaptive_benchmark_v2",
         ],
         default="current",
-        help="Risk parameter level from thesis Table 6.12.",
+        help="Risk parameter level. Use adaptive_benchmark_v2 for Track B.",
     )
     parser.add_argument(
         "--rt-alpha", type=float, default=8.0, help="R_t recovery weight."

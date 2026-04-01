@@ -86,31 +86,26 @@ Do not claim:
 - `ret_thesis_corrected_total by itself explains the full Track B gain`
 - `the Garrido framework doubles under PPO`
 
-## Causality gap still open
+## Causality: CLOSED via matched ablation
 
-Track B changes multiple things together:
+The matched ablation (same v7, same adaptive_benchmark_v2, same ReT_seq_v1, same 100k budget) isolates the action-contract factor:
 
-- action contract (`track_b_v1`)
-- observation contract (`v7`)
-- risk profile (`adaptive_benchmark_v2`)
+- **5D (track_a actions):** PPO fill=0.607, S2 fill=0.616 → PPO LOSES by 0.9pp
+- **7D (track_b actions):** PPO fill=0.964, S2 fill=0.616 → PPO WINS by +34.8pp
 
-Therefore the current Track B result is:
+Artifact: `outputs/track_b_ablation_5d_vs_7d.json`
 
-- a strong integrated positive result
-- not yet an isolated single-factor causal ablation
+Conclusion: the downstream control dimensions (Op10/Op12), not richer observation or different risk, are materially responsible for the Track B gain.
 
-The ablation still needed for a stronger mechanistic claim is:
-
-- same reward
-- same observation contract
-- same risk profile
-- same training budget
-- `track_a_v1` versus `track_b_v1`
+**Remaining limitation:** The ablation is at 100k × 3 seeds (quick test), not 500k × 5 (production). It identifies the role of downstream control within the matched benchmark family; it does not claim universal optimality outside that contract.
 
 ## Current repo stance
 
 - Track A remains the thesis-faithful negative family.
 - Track B is the current positive paper lane.
-- The correct paper claim is contrastive:
-  RL fails under Track A, RL succeeds under Track B, and the difference is
-  consistent with a repaired control contract.
+- The matched ablation closes the action-contract causality question.
+- The correct paper claim is:
+
+  > A matched 5D-vs-7D ablation shows that the added downstream control
+  > dimensions, not merely richer observation or a different risk profile,
+  > are materially responsible for the Track B gain.

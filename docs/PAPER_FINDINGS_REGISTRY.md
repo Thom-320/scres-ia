@@ -246,13 +246,22 @@ Each finding includes the evidence source, whether it's confirmed, and how it co
 - PPO reward gap vs best static = `+83.16`
 - PPO order-level ReT gap vs best static = `+0.4919`
 
-**Finding:** The Track B minimal intervention validates the structural diagnosis from Track A. RL was not failing because PPO was too weak; it was failing because the control contract did not touch the active bottleneck. Once downstream transport control at `Op10/Op12` is exposed, PPO learns a clearly superior policy.
+**Evidence (causal ablation, 100k × 3 seeds):**
+- `outputs/track_b_ablation_5d_vs_7d.json`
+- Same v7 obs, same adaptive_benchmark_v2 risk, same reward, same training budget
+- 5D (track_a actions): PPO fill=0.607, S2 fill=0.616 → **PPO LOSES by 0.9pp**
+- 7D (track_b actions): PPO fill=0.964, S2 fill=0.616 → **PPO WINS by +34.8pp**
+- Verdict: CAUSAL — downstream control is the differentiating factor, not obs or risk
+
+**Finding:** Track B produces a strong positive result that is consistent with the structural diagnosis from Track A. The matched ablation (same v7, same risk, 5D vs 7D) confirms that the downstream control dimensions (Op10/Op12) are the causal factor: with identical observation and risk, 5D PPO loses while 7D PPO wins by +34.8pp fill_rate.
+
+**Caveats:**
+- The ablation uses 100k × 3 seeds (quick test), not 500k × 5 seeds (production).
+- The strongest resilience gains appear in `order_level_ret_mean` (0.950 vs 0.489) and `ret_unified_total` (255.76 vs 182.96), NOT in `ret_thesis_corrected_total` (255.47 vs 255.13 — minimal separation).
+- Track B changes the thesis problem (Op10/Op12 are passive in Garrido 2017). This is a deliberate extension, not a thesis-faithful result.
 
 **Paper section:** Main results + Discussion
-**Strength:** VERY STRONG
-
-**Paper section:** Section 4.1 (DES bottleneck analysis) + Discussion
-**Strength:** STRONG — explains the main pattern of results, connects to diminishing returns / bottleneck theory. Partially confirmed (the mechanism is clear; the severe-stress explanation is hypothesis).
+**Strength:** VERY STRONG (integrated result) + STRONG (causal ablation at 100k)
 
 ---
 
