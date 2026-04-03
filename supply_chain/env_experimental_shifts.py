@@ -1912,6 +1912,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         ret_components: dict[str, float | str] | None = None
         corrected_ret_components: dict[str, float | str] | None = None
         control_components: dict[str, float] | None = None
+        ret_seq_components: dict[str, float] | None = None
         ret_unified_components: dict[str, Any] | None = None
         ret_cd_components: dict[str, float | str] | None = None
         ret_cd_4v_components: dict[str, float] | None = None
@@ -2042,19 +2043,45 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             ),
         }
         out_info["state_constraint_context"] = self.get_state_constraint_context()
+        if ret_components is None:
+            ret_components = self._compute_ret_thesis_components(info, self.step_size)
+        if corrected_ret_components is None:
+            corrected_ret_components = self._compute_ret_thesis_corrected_components(
+                info, self.step_size
+            )
         if ret_g24_components is None:
             # Always emit the Garrido 2024 family as an audit signal so
             # different training rewards can be compared under one external
             # resilience index.
             ret_g24_components = self._compute_ret_garrido2024(info, shifts)
+        if ret_seq_components is None:
+            ret_seq_components = self._compute_ret_seq_v1(info, shifts)
         if ret_unified_components is None:
             ret_unified_components = self._compute_ret_unified_v1(info, shifts)
+        out_info["ret_seq_step"] = float(ret_seq_components["ret_seq_step"])
+        out_info["ret_seq_components"] = ret_seq_components
+        out_info["service_continuity_step"] = float(
+            ret_seq_components["service_continuity"]
+        )
+        out_info["backlog_containment_step"] = float(
+            ret_seq_components["backlog_containment"]
+        )
+        out_info["adaptive_efficiency_step"] = float(
+            ret_seq_components["adaptive_efficiency"]
+        )
+        out_info["ret_seq_kappa"] = float(self.ret_seq_kappa)
         out_info["ret_unified_step"] = float(ret_unified_components["ret_unified_step"])
         out_info["ret_unified_fr"] = float(ret_unified_components["ret_unified_fr"])
         out_info["ret_unified_rc"] = float(ret_unified_components["ret_unified_rc"])
         out_info["ret_unified_ce"] = float(ret_unified_components["ret_unified_ce"])
         out_info["ret_unified_gate"] = float(ret_unified_components["ret_unified_gate"])
         out_info["ret_unified_components"] = ret_unified_components
+        out_info["ret_thesis_step"] = float(ret_components["ret_value"])
+        out_info["ret_components"] = ret_components
+        out_info["ret_thesis_corrected_step"] = float(
+            corrected_ret_components["ret_value"]
+        )
+        out_info["ret_thesis_corrected"] = corrected_ret_components
         out_info["ret_garrido2024_raw_step"] = float(
             ret_g24_components["ret_garrido2024_raw_step"]
         )

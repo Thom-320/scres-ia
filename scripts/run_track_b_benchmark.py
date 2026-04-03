@@ -15,6 +15,7 @@ from typing import Any, TextIO
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from supply_chain.env_experimental_shifts import REWARD_MODE_OPTIONS  # noqa: E402
 from scripts.run_track_b_smoke import (  # noqa: E402
     build_parser as build_track_b_parser,
     run_smoke,
@@ -86,9 +87,15 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--label", required=True, help="Run directory label.")
     parser.add_argument(
         "--reward-mode",
-        choices=["ReT_seq_v1", "ReT_unified_v1", "control_v1"],
+        choices=list(REWARD_MODE_OPTIONS),
         default="ReT_seq_v1",
         help="Track B training reward.",
+    )
+    parser.add_argument(
+        "--algo",
+        choices=["ppo", "recurrent_ppo"],
+        default="ppo",
+        help="Learned-policy algorithm to run on the frozen Track B backbone.",
     )
     parser.add_argument(
         "--ret-seq-kappa",
@@ -138,6 +145,8 @@ def build_launcher_command(args: argparse.Namespace) -> str:
             "scripts/run_track_b_benchmark.py",
             "--label",
             str(args.label),
+            "--algo",
+            str(args.algo),
             "--reward-mode",
             str(args.reward_mode),
             "--ret-seq-kappa",
@@ -160,6 +169,8 @@ def build_benchmark_cli_args(args: argparse.Namespace, run_dir: Path) -> list[st
     return [
         "--output-dir",
         str(run_dir),
+        "--algo",
+        str(args.algo),
         "--reward-mode",
         str(args.reward_mode),
         "--ret-seq-kappa",
@@ -209,6 +220,7 @@ def build_status_payload(
         "benchmark_command": benchmark_command,
         "required_outputs": list(REQUIRED_OUTPUTS),
         "frozen_backbone": dict(FROZEN_BACKBONE),
+        "algo": str(args.algo),
     }
     if invalid_reason is not None:
         payload["invalid_reason"] = invalid_reason

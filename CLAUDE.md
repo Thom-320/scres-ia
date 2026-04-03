@@ -6,9 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Before launching long experiments or reframing the manuscript, read:
 
-- [PAPER_FINDINGS_REGISTRY.md](/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/docs/PAPER_FINDINGS_REGISTRY.md) — 11 audited findings
-- [FAMILY_A_DECISION_NOTE.md](/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/docs/FAMILY_A_DECISION_NOTE.md) — Track A freeze rationale
-- [TRACK_B_MINIMAL_SPEC.md](/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/docs/TRACK_B_MINIMAL_SPEC.md) — Track B design
+- [PAPER_FINDINGS_REGISTRY.md](docs/PAPER_FINDINGS_REGISTRY.md) — 11 audited findings
+- [FAMILY_A_DECISION_NOTE.md](docs/FAMILY_A_DECISION_NOTE.md) — Track A freeze rationale
+- [TRACK_B_MINIMAL_SPEC.md](docs/TRACK_B_MINIMAL_SPEC.md) — Track B design
 
 ### Track A (Thesis-Faithful Benchmark) — CLOSED
 
@@ -27,8 +27,8 @@ Track B adds downstream control (Op10/Op12) to the action space, opening real he
 
 - Contract: `action_contract="track_b_v1"`, `v7` (46 dims), `7D actions`, `ReT_seq_v1`, `adaptive_benchmark_v2`
 - Smoke 100k: PPO fill=1.000 vs best static=0.987 — **PPO WINS**
-- 500k x 5 seeds: running (use `python scripts/analyze_track_b_500k.py` when done)
-- DKANA handoff: [DKANA_CONTRIBUTOR_HANDOFF.md](/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/docs/DKANA_CONTRIBUTOR_HANDOFF.md)
+- 500k x 5 seeds: **VALIDATED** — PPO fill=1.000 beats all baselines (see `scripts/analyze_track_b_500k.py`)
+- DKANA handoff: [DKANA_CONTRIBUTOR_HANDOFF.md](docs/DKANA_CONTRIBUTOR_HANDOFF.md)
 
 ### Key Rules
 
@@ -179,7 +179,7 @@ Four evaluation lanes, each with its own script:
 
 ## Results Summary (2026-03-31)
 
-Full findings with evidence sources: [PAPER_FINDINGS_REGISTRY.md](/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/docs/PAPER_FINDINGS_REGISTRY.md)
+Full findings with evidence sources: [PAPER_FINDINGS_REGISTRY.md](docs/PAPER_FINDINGS_REGISTRY.md)
 
 ### Track A (thesis-faithful) — No RL beats S2
 
@@ -194,11 +194,10 @@ Full findings with evidence sources: [PAPER_FINDINGS_REGISTRY.md](/Users/thom/De
 ### Track B (extended downstream control) — PPO wins
 
 - **PPO + ReT_seq_v1 (100k smoke)**: fill=1.000 vs best static=0.987. **PPO wins.** [track_b_smoke_initial]
-- **500k x 5 seeds**: running (PID active). Use `python scripts/analyze_track_b_500k.py` when done.
+- **500k x 5 seeds**: **VALIDATED** — PPO fill=1.000 beats all baselines across seeds.
 - **Why it works**: Track B adds Op10/Op12 dispatch actions, giving the agent control over the active bottleneck.
 
 ### Next steps
 
-- Wait for Track B 500k to complete.
 - Write the paper with dual-track framing: "Track A shows structural limitations, Track B shows RL works when the agent controls the right constraint."
-- DKANA handoff ready for David: [DKANA_CONTRIBUTOR_HANDOFF.md](/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/docs/DKANA_CONTRIBUTOR_HANDOFF.md)
+- DKANA handoff ready for David: [DKANA_CONTRIBUTOR_HANDOFF.md](docs/DKANA_CONTRIBUTOR_HANDOFF.md)
