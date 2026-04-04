@@ -25,7 +25,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from scripts.benchmark_control_reward import build_metric_contract_metadata
 from scripts.track_b_heuristics import HEURISTIC_POLICY_NAMES, make_heuristic_defaults
 from supply_chain.config import OPERATIONS
-from supply_chain.env_experimental_shifts import REWARD_MODE_OPTIONS
+from supply_chain.env_experimental_shifts import (
+    OBSERVATION_VERSION_OPTIONS,
+    REWARD_MODE_OPTIONS,
+)
 from supply_chain.external_env_interface import (
     get_episode_terminal_metrics,
     get_track_b_env_spec,
@@ -198,6 +201,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="Track B risk profile.",
     )
     parser.add_argument(
+        "--observation-version",
+        choices=list(OBSERVATION_VERSION_OPTIONS),
+        default="v7",
+        help="Observation contract for Track B training/eval.",
+    )
+    parser.add_argument(
         "--algo",
         choices=["ppo", "recurrent_ppo"],
         default="ppo",
@@ -280,6 +289,7 @@ def build_env_kwargs(args: argparse.Namespace) -> dict[str, Any]:
         "reward_mode": args.reward_mode,
         "ret_seq_kappa": args.ret_seq_kappa,
         "risk_level": args.risk_level,
+        "observation_version": args.observation_version,
         "step_size_hours": args.step_size_hours,
         "max_steps": args.max_steps,
     }
@@ -326,15 +336,28 @@ def make_monitored_training_env(
 ) -> callable[[], Monitor]:
     env_kwargs = build_env_kwargs(args)
     wrapper_cls = getattr(args, "_ablation_wrapper", None)
+    observation_wrapper_cls = getattr(args, "_observation_wrapper", None)
 
     def _init() -> Monitor:
         env = make_track_b_env(**env_kwargs)
         if wrapper_cls is not None:
             env = wrapper_cls(env)
+        if observation_wrapper_cls is not None:
+            env = observation_wrapper_cls(env)
         env.reset(seed=seed)
         return Monitor(env)
 
     return _init
+
+
+def apply_eval_wrappers(env: Any, args: argparse.Namespace) -> Any:
+    wrapper_cls = getattr(args, "_ablation_wrapper", None)
+    observation_wrapper_cls = getattr(args, "_observation_wrapper", None)
+    if wrapper_cls is not None:
+        env = wrapper_cls(env)
+    if observation_wrapper_cls is not None:
+        env = observation_wrapper_cls(env)
+    return env
 
 
 def train_ppo(
@@ -472,7 +495,7 @@ def evaluate_static_policy(
 
     for episode_idx in range(args.eval_episodes):
         eval_seed = seed + EVAL_EPISODE_SEED_OFFSET + episode_idx
-        env = make_track_b_env(**env_kwargs)
+        env = apply_eval_wrappers(make_track_b_env(**env_kwargs), args)
         obs, info = env.reset(seed=eval_seed)
         del obs
         terminated = False
@@ -531,7 +554,7 @@ def evaluate_trained_policy(
 
     for episode_idx in range(args.eval_episodes):
         eval_seed = seed + EVAL_EPISODE_SEED_OFFSET + episode_idx
-        env = make_track_b_env(**env_kwargs)
+        env = apply_eval_wrappers(make_track_b_env(**env_kwargs), args)
         obs, info = env.reset(seed=eval_seed)
         terminated = False
         truncated = False
@@ -609,7 +632,7 @@ def evaluate_heuristic_policy(
 
     for episode_idx in range(args.eval_episodes):
         eval_seed = seed + EVAL_EPISODE_SEED_OFFSET + episode_idx
-        env = make_track_b_env(**env_kwargs)
+        env = apply_eval_wrappers(make_track_b_env(**env_kwargs), args)
         obs, info = env.reset(seed=eval_seed)
         terminated = False
         truncated = False
@@ -810,7 +833,7 @@ def build_comparison_rows(
         "reward_mode": str(args.reward_mode),
         "reward_family": reward_contract["reward_family"],
         "action_contract": "track_b_v1",
-        "observation_version": "v7",
+        "observation_version": str(args.observation_version),
         "risk_level": str(args.risk_level),
         "learned_policy": learned_policy,
         "baseline_policy": "s2_d1.00",
@@ -1055,7 +1078,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
             "risk_level": args.risk_level,
             "step_size_hours": float(args.step_size_hours),
             "max_steps": int(args.max_steps),
-            "observation_version": "v7",
+            "observation_version": str(args.observation_version),
             "action_contract": "track_b_v1",
             "year_basis": "thesis",
             "stochastic_pt": True,
@@ -1073,7 +1096,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
             "env_variant": "track_b_adaptive_control",
             "algo": learned_policy,
             "reward_mode": args.reward_mode,
-            "observation_version": "v7",
+            "observation_version": str(args.observation_version),
             "action_contract": "track_b_v1",
             "risk_level": args.risk_level,
             "year_basis": "thesis",
@@ -1084,7 +1107,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
         "env_spec": spec_to_dict(
             get_track_b_env_spec(
                 reward_mode=args.reward_mode,
-                observation_version="v7",
+                observation_version=str(args.observation_version),
                 step_size_hours=args.step_size_hours,
             )
         ),

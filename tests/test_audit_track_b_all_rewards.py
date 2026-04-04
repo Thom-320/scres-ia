@@ -157,7 +157,7 @@ def test_build_manuscript_main_table_uses_curated_policy_labels() -> None:
             "pct_ret_case_non_recovery_mean": 0.0,
         },
         {
-            "policy": "s2_d2.00",
+            "policy": "s2_d1.50",
             "fill_rate_mean": 0.98,
             "backorder_rate_mean": 0.02,
             "order_level_ret_mean_mean": 0.45,
@@ -174,4 +174,4 @@ def test_build_manuscript_main_table_uses_curated_policy_labels() -> None:
 
     table = audit_track_b.build_manuscript_main_table(rows)
 
-    assert [row["policy"] for row in table] == ["PPO", "S2(d=2.0)"]
+    assert [row["policy"] for row in table] == ["PPO", "S2(d=1.5)"]

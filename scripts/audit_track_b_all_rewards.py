@@ -157,7 +157,7 @@ MANUSCRIPT_POLICY_ORDER = (
     "recurrent_ppo",
     "s1_d1.00",
     "s2_d1.00",
-    "s2_d2.00",
+    "s2_d1.50",
     "s3_d2.00",
 )
 
@@ -166,6 +166,7 @@ MANUSCRIPT_POLICY_LABELS = {
     "recurrent_ppo": "RecurrentPPO",
     "s1_d1.00": "S1",
     "s2_d1.00": "S2",
+    "s2_d1.50": "S2(d=1.5)",
     "s2_d2.00": "S2(d=2.0)",
     "s3_d2.00": "S3(d=2.0)",
 }
