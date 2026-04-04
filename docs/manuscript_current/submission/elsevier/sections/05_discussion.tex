@@ -1,0 +1,128 @@
+\hypertarget{5-discussion}{%
+\section{5. Discussion}\label{5-discussion}}
+
+\hypertarget{51-interpreting-track-a}{%
+\subsection{5.1 Interpreting the Track A negative result}\label{51-interpreting-track-a}}
+
+The Track A result should be read as evidence of a structural limitation
+rather than evidence that RL is ineffective for supply chains in general.
+Under the thesis-faithful contract, the static S2 policy already operates
+near the practical ceiling imposed by downstream distribution capacity:
+Op10--Op12 transport throughput of approximately 2,500 rations per day
+roughly matches demand, so additional upstream production capacity from S3
+generates excess inventory in intermediate buffers without proportionally
+increasing deliveries. A design-of-experiments analysis confirms an
+asymmetric action landscape: destructive inventory settings reduce reward by
+44--65\%, while positive headroom above S2-neutral is limited to
+approximately 1\%. PPO's convergence to near-neutral inventory actions with
+S2-region shift selection is therefore rational risk management rather than
+learning failure. Reward redesign (14 modes tested), memory (RecurrentPPO),
+and richer observations (v2--v6) do not overturn this structural limitation
+because the binding constraint lies outside the controllable interface.
+
+\hypertarget{52-what-track-b-changes}{%
+\subsection{5.2 What Track B changes}\label{52-what-track-b-changes}}
+
+Track B changes the controllable interface, not the underlying DES physics.
+By adding Op10 and Op12 dispatch multipliers to the action space, the agent
+gains leverage over the downstream bottleneck that constrains Track A. The
+learned policy exploits this by running predominantly at S1 (77\% of
+steps)---the lowest-cost assembly configuration---while modulating downstream
+dispatch to maintain perfect fill. This shift mix is a strategy that no
+static policy can replicate: static S3($d{=}2.0$) achieves near-perfect fill
+but at permanently elevated assembly cost, while PPO matches or exceeds it
+with 57\% fewer assembly hours.
+
+The causal ablation (Section 4.4) strengthens this interpretation at
+production scale. With 500,000 timesteps and 5 seeds, the
+\emph{shift\_only} condition reproduces Track A's failure (fill = 0.953,
+below the best static), while \emph{downstream\_only} reproduces Track B's
+success (fill = 1.000). The \emph{joint} configuration adds cost efficiency
+but not fill improvement. This three-way decomposition provides causal
+evidence that downstream dispatch---not shifts, not observation enrichment,
+not risk profile changes---is the materially responsible dimension.
+
+\hypertarget{53-action-space-alignment}{%
+\subsection{5.3 Action-space alignment as a design principle}\label{53-action-space-alignment}}
+
+The dual-track result connects three literatures that have not previously
+been linked empirically: the Theory of Constraints \cite{goldratt1984goal},
+which identifies the binding constraint as the lever that determines system
+throughput; RL agent design, which determines what the agent can control; and
+action-space architecture, which determines how decisions are represented.
+Our benchmark demonstrates a concrete instance of this connection: when the
+action space does not cover the active constraint (Track A), better
+algorithms and rewards cannot compensate; when it does (Track B), a standard
+PPO+MLP agent produces decisive advantage. The reward sweep (Section 4.5)
+reinforces this: 5 of 7 reward formulations converge to the same strong
+policy, whereas in Track A no reward formulation succeeds. This suggests a
+practical design principle: \emph{before investing in architectural novelty
+or reward engineering, verify that the agent's controllable interface reaches
+the binding operational bottleneck.}
+
+\hypertarget{54-positioning}{%
+\subsection{5.4 Positioning relative to the AI--SCRES literature}\label{54-positioning}}
+
+Recent work at the intersection of AI and supply chain resilience spans
+several paradigms. Rajagopal and Sivasakthivel (2024) use weighted
+feed-forward neural networks for resilience \emph{strategy selection}---a
+classification task fundamentally different from our online adaptive control.
+Rezki and Mansouri (2024) apply neural networks to \emph{predict} supplier
+risk, while Ordibazar et al.\ (2022) use counterfactual explanations for
+risk \emph{recommendation}. These contributions address complementary
+problems (prediction, classification, explanation) rather than the
+prescriptive operational control explored here. Kogler and Maxera (2026)
+review 72 papers combining DES with ML for supply chain analysis,
+confirming that DES+RL is the dominant hybrid paradigm; our work contributes
+a specific instance with validated thesis-grounded data, honest negative
+results, and causal ablation evidence that is rare in this literature.
+
+Among RL-specific competitors, Ding et al.\ (2026) apply MAPPO for dynamic
+reconfiguration of supply chain topology under disruption, operating at the
+strategic level with abstract network actions. Our single-agent approach
+asks a complementary question at the operational level: given a fixed
+topology, does expanding operational control scope change the outcome? The
+Track B result suggests that when the bottleneck can be identified and
+controlled by a single agent, centralized control with appropriate action
+scope suffices.
+
+\hypertarget{55-limitations}{%
+\subsection{5.5 Limitations}\label{55-limitations}}
+
+Several limitations bound the generalizability of these findings. First, the
+benchmark is one validated military supply chain; generalization to other
+topologies, demand patterns, or organizational structures requires further
+investigation. Second, the observation ablation was conducted at 50,000
+timesteps (3 seeds), a reduced budget compared to the main experiments;
+while preliminary results suggest observation design matters less than
+action-space alignment, stronger replication would increase confidence.
+Third, the problem is better described as partially observed control than a
+fully identified MDP: the agent observes a projection of the simulation
+state, not the full internal state. Fourth, the paper uses PPO exclusively
+(with RecurrentPPO as a comparator); other algorithms (SAC, TD3) were not
+tested, though the reward-insensitivity finding suggests algorithmic choice
+is secondary to action-space alignment in this regime. Fifth,
+ReT\_seq\_v1 is a training reward designed for gradient quality, not a
+theoretically complete resilience index; the paper-facing reporting
+therefore uses multiple complementary metrics. Finally, Track B's
+adaptive\_benchmark\_v2 risk profile differs from Track A's increased
+profile; the matched ablation controls for this, but the production
+comparison across tracks conflates action-contract and risk-profile changes.
+
+\hypertarget{56-future-work}{%
+\subsection{5.6 Future work}\label{56-future-work}}
+
+Three directions emerge. First, the action-space alignment principle should
+be tested on other validated supply chain DES models to assess
+generalizability beyond the MFSC topology. Second, more expressive policy
+architectures---including attention-based networks, graph neural networks,
+and emerging KAN-based designs as proposed by Garrido et al.\
+(2024b)---remain relevant for supply chains with variable topology or
+multi-agent coordination, but were excluded from this paper because the
+standard PPO+MLP architecture already achieves fill rate 1.000 under Track
+B. Third, training specialized policies for extreme scenarios
+(severe, severe\_extended) rather than relying on the increased-risk-trained
+policy could establish tighter upper bounds on RL effectiveness under
+catastrophic disruptions. The observation ablation at 50k suggests that
+observation design has a secondary effect; scaling this to 500k would
+strengthen the conclusion.

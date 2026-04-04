@@ -1,0 +1,130 @@
+\hypertarget{3-methodology}{%
+\section{3. Methodology}\label{3-methodology}}
+
+Status: draft prose base aligned to the frozen paper contracts.
+
+\hypertarget{31-mfsc-discrete-event-simulation}{%
+\subsection{3.1 MFSC discrete-event
+simulation}\label{31-mfsc-discrete-event-simulation}}
+
+The experimental platform is a 13-operation military food supply chain
+reconstructed in Python/SimPy from Garrido-Rios' thesis. The model
+preserves the original operational structure rather than replacing it
+with a stylized benchmark environment. This matters for the paper's
+positioning: the contribution is not a generic RL sandbox, but a
+thesis-grounded operational model whose buffers, transport stages, and
+disruption processes already carry domain meaning.
+
+The DES retains hourly granularity where the original supply chain
+requires sub-day behavior, especially around the assembly-line
+operations. This avoids collapsing operational effects that would
+disappear under daily aggregation, including short breakdowns and
+shift-sensitive capacity changes. The warm-up regime also follows the
+validated thesis lineage, with the first full batch reaching the
+downstream chain after roughly \texttt{838.8} simulated hours. The RL
+layer therefore sits on top of a model that is already operationally
+constrained before learning begins.
+
+The simulation backbone is not treated as a moving target. Deterministic
+and stochastic checks remain anchored to the thesis reference tables,
+and the benchmark story is built on the audited post-alignment DES
+rather than on earlier historical artifacts. This allows the paper to
+claim benchmark fidelity without claiming that the model is a universal
+representation of all supply chains.
+
+\hypertarget{32-control-formulation}{%
+\subsection{3.2 Control formulation}\label{32-control-formulation}}
+
+The learning problem is defined as weekly operational control over the
+DES. At each decision epoch, the agent observes a state vector derived
+from the simulation, selects a continuous action, and receives a
+resilience-oriented reward. Decisions are taken every \texttt{168}
+simulated hours, which matches the weekly planning cadence already
+embedded in procurement, disruption, and operating rhythms. For
+manuscript language, the problem should be described as an augmented
+observed-state control problem, or equivalently a practical
+\texttt{POMDP}, rather than as a fully sufficient MDP.
+
+The paper uses two control contracts. \texttt{Track\ A} is the
+thesis-faithful benchmark family. It uses observation version
+\texttt{v1} with \texttt{15} dimensions and a \texttt{5D} action
+contract covering upstream quantity and reorder multipliers together
+with assembly-shift selection. This is the negative paper lane: it asks
+whether RL can beat strong static policies when control remains limited
+to the original scope.
+
+\texttt{Track\ B} is a separate research lane rather than a retrofit of
+\texttt{Track\ A}. It uses observation version \texttt{v7} with
+\texttt{46} dimensions and a \texttt{7D} action contract. The first five
+actions keep the Track A controls, while the sixth and seventh actions
+add downstream dispatch multipliers at \texttt{Op10} and \texttt{Op12}.
+The paper's central question is whether this minimal extension changes
+the benchmark outcome by exposing the operational bottleneck that Track
+A leaves mostly outside the controllable interface.
+
+\hypertarget{33-reward-and-reporting-metrics}{%
+\subsection{3.3 Reward and reporting
+metrics}\label{33-reward-and-reporting-metrics}}
+
+The main paper lane uses \texttt{ReT\_seq\_v1} with
+\texttt{ret\_seq\_kappa\ =\ 0.20} as the training reward. The reason for
+centering this reward is not that it is the only reward ever tested in
+the repository, but that it is the best-aligned resilience-index family
+that remains smooth enough for policy-gradient learning while still
+preserving a visible link to the thesis resilience framing. In the
+current paper story, reward design and control-contract design are
+discussed jointly: Track A shows that a reasonable resilience-aware
+reward is not enough when the controllable action scope misses the
+binding downstream constraint, whereas Track B shows that the same
+reward can support strong learning once the action contract is repaired.
+
+The paper-facing comparison should therefore prioritize service and
+resilience outcomes rather than raw reward totals across incompatible
+families. The primary metrics for the main claim are
+\texttt{fill\_rate}, \texttt{backorder\_rate},
+\texttt{order\_level\_ret\_mean}, and
+\texttt{terminal\_rolling\_fill\_rate\_4w}. Secondary audit metrics such
+as \texttt{ret\_thesis\_corrected\_total}, \texttt{ret\_unified\_total},
+and the order-case shares remain useful for interpretation, but they
+should not replace the main service/resilience metrics when the paper
+compares policies across benchmark families.
+
+One language rule should stay explicit in the final manuscript:
+\texttt{reward\_total} is only comparable within a shared reward family.
+Whenever the paper compares Track A and Track B, or different reward
+families inside Track A, the argument should rely on service and
+resilience metrics rather than on raw cumulative reward.
+
+\hypertarget{34-experimental-protocol}{%
+\subsection{3.4 Experimental protocol}\label{34-experimental-protocol}}
+
+The experimental design contains two benchmark families and one matched
+ablation. \texttt{Track\ A} is the thesis-faithful benchmark lane. It
+retains the validated DES backbone, the original operational scope, and
+strong static baselines as the main comparators. Learned policies are
+reported honestly as negative evidence when they remain below the
+strongest static baseline; this includes PPO in the frozen
+\texttt{ReT\_seq\_v1} lane and RecurrentPPO in the corresponding
+recurrent comparator lane.
+
+\texttt{Track\ B} is the positive paper lane. Its frozen contract is
+\texttt{env\_variant="track\_b\_adaptive\_control"},
+\texttt{reward\_mode="ReT\_seq\_v1"}, \texttt{ret\_seq\_kappa=0.20},
+\texttt{observation\_version="v7"},
+\texttt{action\_contract="track\_b\_v1"},
+\texttt{risk\_level="adaptive\_benchmark\_v2"},
+\texttt{year\_basis="thesis"}, \texttt{step\_size\_hours=168}, and
+\texttt{stochastic\_pt=True}. The production benchmark is trained for
+\texttt{500000} timesteps with seeds \texttt{11\ 22\ 33\ 44\ 55} and
+evaluated over \texttt{20} episodes per seed. Static comparators are
+\texttt{s2\_d1.00}, \texttt{s3\_d1.00}, and \texttt{s3\_d2.00}.
+
+To separate the action-contract argument from broader environment
+changes, the paper also uses a matched \texttt{5D\ vs\ 7D} ablation.
+Within that ablation family, the observation version, reward family,
+risk profile, and training budget are held fixed while only the action
+contract changes. This is the cleanest evidence available inside the
+current repo for the claim that downstream control coverage is
+materially responsible for the Track B gain. The manuscript should still
+state the limitation clearly: the ablation is supportive causal evidence
+inside the frozen benchmark family, not universal proof outside it.

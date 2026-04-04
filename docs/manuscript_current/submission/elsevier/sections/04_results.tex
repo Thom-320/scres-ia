@@ -1,0 +1,264 @@
+\hypertarget{4-results}{%
+\section{4. Results}\label{4-results}}
+
+\hypertarget{41-des-validation}{%
+\subsection{4.1 DES validation}\label{41-des-validation}}
+
+The reconstructed DES was first validated against the deterministic
+baseline (Cf0, single shift S=1) reported in Garrido-Rios (2017, Table
+6.10). Using the official thesis basis of 8,064 hours per year (48
+operational weeks), the simulation delivers 733,621 rations per year on
+average, compared with the thesis reference of 767,592 rations, yielding
+a relative gap of $-4.43\%$. This is comfortably within the accepted
+$\pm 15\%$ validation threshold and supports the structural fidelity of
+the rebuilt DES. A secondary Gregorian-basis check (8,760 hours per
+year) produces 796,940 rations per year ($+3.82\%$ relative gap),
+confirming that the discrepancy is driven by year-basis conventions
+rather than model error.
+
+Under deterministic conditions with risks disabled, the simulation
+produces 734,458 rations per year and delivers 733,621, with a fill rate
+of 99.3\% and only 41 backorders accumulated over the 20-year horizon.
+When stochastic risks are enabled at the current level, average annual
+delivery falls to 677,750 rations ($-7.6\%$ relative to the
+deterministic baseline), the fill rate drops to 68.3\%, and total
+backorders rise to 1,825. Under the increased risk configuration used
+for the benchmark, average annual delivery decreases further to 549,250
+rations, fill rate falls to 45.6\%, and total backorders increase to
+3,132. The DES therefore shows a clear transition from a well-calibrated
+nominal system to a fragile network once disruption intensity escalates.
+
+\hypertarget{42-track-a}{%
+\subsection{4.2 Track A: thesis-faithful benchmark (negative
+result)}\label{42-track-a}}
+
+Under the thesis-faithful Track A contract, no RL configuration
+outperforms the strongest static baseline. PPO trained with
+ReT\_seq\_v1 ($\kappa = 0.20$) over 500,000 timesteps across 5 seeds
+reaches a cumulative fill rate of 0.788, falling short of static S2 at
+0.792 by 0.4 percentage points. PPO trained with the linear control\_v1
+reward achieves fill rate 0.782, losing by 1.0 percentage point.
+RecurrentPPO (LSTM-based) trained with control\_v1 performs worse still
+at fill rate 0.751, losing by 4.1 percentage points. A tuned heuristic
+baseline reaches 0.795, approximately matching S2 but not materially
+exceeding it.
+
+The negative result is not an algorithmic failure in the conventional
+sense. A design-of-experiments analysis reveals that the Track A action
+space exhibits strongly asymmetric sensitivity: destructive inventory
+settings reduce reward by 44--65\% and can collapse fill rate, while the
+positive headroom above S2-neutral inventory control is limited to
+approximately 1\% in reward. The structural explanation is the
+downstream distribution bottleneck: Op10--Op12 transport throughput
+($\approx$2,500 rations/day) approximately equals demand, so extra
+upstream production capacity from S3 yields sharply diminishing returns.
+Because Track A does not expose downstream dispatch control to the
+agent, the active constraint lies outside the controllable interface.
+
+\hypertarget{43-track-b}{%
+\subsection{4.3 Track B: extended action space (positive
+result)}\label{43-track-b}}
+
+Track B extends the action space from 5 to 7 dimensions by adding
+downstream dispatch multipliers at Op10 and Op12, while preserving the
+DES backbone and reward family. Table~\ref{tab:track_b_main} presents
+the Track B results from the production benchmark (500,000 timesteps, 5
+seeds $\times$ 20 evaluation episodes).
+
+\begin{table}[htbp]
+\centering
+\caption{Track B main results (increased risk, 500k $\times$ 5 seeds). CI95 in brackets.}
+\label{tab:track_b_main}
+\begin{tabular}{lcccc}
+\toprule
+Policy & Fill Rate & Order-level ReT & Shift Mix (S1/S2/S3) & Autotomy\% \\
+\midrule
+\textbf{PPO} & \textbf{1.000} [1.000, 1.000] & \textbf{0.950} [0.946, 0.954] & 77/17/6 & 96.8 \\
+RecurrentPPO & 1.000 [1.000, 1.000] & 0.949 [0.945, 0.953] & 78/14/7 & 96.6 \\
+S1 ($d{=}1.0$) & 0.830 [0.822, 0.837] & 0.332 & 100/0/0 & 4.0 \\
+S2 ($d{=}1.0$) & 0.958 [0.952, 0.964] & 0.469 & 0/100/0 & 14.7 \\
+S2 ($d{=}1.5$) & 0.990 [0.983, 0.996] & 0.479 & 0/100/0 & 15.4 \\
+S2 ($d{=}2.0$) & 0.985 [0.977, 0.993] & 0.463 & 0/100/0 & 12.7 \\
+S3 ($d{=}1.0$) & 0.960 [0.952, 0.969] & 0.505 & 0/0/100 & 15.1 \\
+S3 ($d{=}2.0$) & 0.985 [0.979, 0.991] & 0.449 & 0/0/100 & 10.6 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+PPO achieves fill rate 1.000 (zero backorders) and order-level
+resilience 0.950. The best static policy (S2 with $d{=}1.5$) reaches
+fill rate 0.990; PPO exceeds it by 1.0 percentage points. RecurrentPPO
+matches PPO's performance, confirming that recurrence does not add value
+when the action space is already aligned with the bottleneck.
+
+The learned policy's shift utilization is 77\% S1 / 17\% S2 / 6\%
+S3---a marked contrast to static S2 (100\% S2) and static S3 (100\%
+S3). PPO learned to operate at the lowest assembly cost (S1) for most of
+the episode while activating higher shifts selectively. The mean
+downstream dispatch multipliers are 1.36 (Op10) and 1.50 (Op12), with
+high dispatch ($\geq 1.9$) occurring on only 17\% of steps. This
+represents a cost-efficient strategy that no static policy achieves:
+PPO uses approximately 18,500 assembly hours versus $\approx$43,700 for
+S3($d{=}2.0$)---a 57\% reduction---while delivering higher fill rate.
+
+\hypertarget{44-causal-ablation}{%
+\subsection{4.4 Causal ablation: action-space decomposition}\label{44-causal-ablation}}
+
+To isolate the effect of downstream control, we conduct a production-grade
+ablation (500,000 timesteps, 5 seeds) holding all factors constant except the
+action contract. All conditions use observation version v7 (46 dimensions),
+reward ReT\_seq\_v1 ($\kappa = 0.20$), and risk level adaptive\_benchmark\_v2.
+Three configurations are compared: \emph{joint} (full 7D), \emph{shift\_only}
+(downstream frozen at $1.25\times$), and \emph{downstream\_only} (shift frozen
+at S2).
+
+\begin{table}[htbp]
+\centering
+\caption{Causal ablation (increased risk, 500k $\times$ 5 seeds).}
+\label{tab:ablation}
+\begin{tabular}{lcccc}
+\toprule
+Action Config & Fill Rate & Order-level ReT & Assembly Hours & Beats Best Static? \\
+\midrule
+\textbf{Joint (7D)} & \textbf{1.000} & 0.948 & 18,529 & Yes \\
+Downstream-only & 1.000 & 0.953 & 33,322 & Yes \\
+Shift-only & 0.953 & 0.686 & 26,295 & No \\
+Best static (S2, $d{=}1.5$) & 0.990 & 0.479 & $\approx$29,000 & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The results establish a clear causal story. Without downstream control
+(\emph{shift\_only}), PPO cannot beat the best static baseline---reproducing
+the Track A failure even with the enriched v7 observation space. With
+downstream control alone (\emph{downstream\_only}), PPO achieves fill rate
+1.000, confirming that downstream dispatch is the necessary and sufficient
+action dimension for fill improvement. The \emph{joint} configuration adds
+cost efficiency: 57\% fewer assembly hours than the best static, achieved by
+combining S1-dominant shifts with selective downstream dispatch. This
+decomposition provides the strongest causal evidence in the paper: the
+downstream control dimensions, not algorithmic sophistication or reward
+engineering, determine the benchmark outcome.
+
+\hypertarget{45-reward-sweep}{%
+\subsection{4.5 Reward insensitivity under Track B}\label{45-reward-sweep}}
+
+To assess the robustness of the Track B result to reward design, we train
+PPO under 7 distinct reward formulations (500,000 timesteps, 5 seeds each),
+all using the same Track B action contract and observation space.
+
+\begin{table}[htbp]
+\centering
+\caption{Reward sweep (Track B, PPO, 500k $\times$ 5 seeds).}
+\label{tab:reward_sweep}
+\begin{tabular}{lccc}
+\toprule
+Reward Mode & Fill Rate & Order-level ReT & Converges? \\
+\midrule
+ReT\_cd\_v1 & 1.000 & 0.954 & Yes \\
+control\_v1 & 1.000 & 0.953 & Yes \\
+ReT\_seq\_v1 & 1.000 & 0.951 & Yes \\
+ReT\_garrido2024\_train & 1.000 & 0.948 & Yes \\
+ReT\_unified\_v1 & 1.000 & 0.945 & Yes \\
+\midrule
+ReT\_corrected & 0.843 & 0.269 & No (S1 collapse) \\
+ReT\_thesis & 0.836 & 0.258 & No (S1 collapse) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Five of seven reward formulations converge to the same strong policy region
+(fill $\geq 0.999$, ReT $\geq 0.945$). The two failures
+(ReT\_corrected and ReT\_thesis) share a common structure: both implement
+piecewise step-level approximations of the thesis resilience function that
+produce sharp gradients encouraging S1 collapse. The convergence of five
+diverse rewards---including linear (control\_v1), sequential C-D
+(ReT\_seq\_v1), and intermediate-variable C-D
+(ReT\_garrido2024\_train)---demonstrates that when the action space covers
+the active bottleneck, the specific choice of training reward becomes
+almost irrelevant among well-calibrated formulations. This contrasts sharply
+with Track A, where reward choice appeared critical but could not overcome
+structural limitations.
+
+\hypertarget{46-cross-scenario}{%
+\subsection{4.6 Cross-scenario robustness}\label{46-cross-scenario}}
+
+We evaluate the frozen PPO policy (trained under adaptive\_benchmark\_v2)
+across four risk severity levels to characterize the boundary of RL
+effectiveness.
+
+\begin{table}[htbp]
+\centering
+\caption{Cross-scenario evaluation (frozen PPO, 5 seeds $\times$ 20 episodes).}
+\label{tab:cross_scenario}
+\begin{tabular}{lcccccc}
+\toprule
+Risk Level & PPO Fill & PPO ReT & Best Static Fill & Best Static ReT & $\Delta$ Fill (pp) \\
+\midrule
+Current & 1.000 & 0.915 & 0.9997 & 0.733 & +0.0 \\
+Increased & 0.993 & 0.748 & 0.901 & 0.202 & +9.2 \\
+Severe & 0.966 & 0.424 & 0.656 & 0.162 & +31.0 \\
+Severe extended & 0.558 & 0.147 & 0.282 & 0.152 & +27.6 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+PPO's advantage grows monotonically with disruption severity from current
+(+0.0pp) through severe (+31.0pp). Under severe\_extended conditions,
+PPO still wins in fill rate (+27.6pp) but loses marginally in order-level
+ReT (0.147 vs.\ 0.152 for the best static). This represents the
+operational boundary: under extreme stress, the policy enters permanent
+recovery mode (99.8\% of orders classified as recovery), and autotomy drops
+from 96.8\% (increased) to 0.1\%. The degradation curve provides honest
+evidence that PPO is not invincible---it has a definable failure regime.
+
+\hypertarget{47-forecast-sensitivity}{%
+\subsection{4.7 Forecast sensitivity}\label{47-forecast-sensitivity}}
+
+To determine whether PPO exploits the numerical content of risk forecasts
+in the observation vector, we evaluate the frozen policy under three
+conditions: full (unmodified), scrambled (randomly permuted across risk
+types), and zeroed (all forecasts set to 0).
+
+\begin{table}[htbp]
+\centering
+\caption{Forecast sensitivity (frozen PPO, 5 seeds $\times$ 20 episodes).}
+\label{tab:forecast}
+\begin{tabular}{lccc}
+\toprule
+Condition & Fill Rate & Order-level ReT & Autotomy\% \\
+\midrule
+Full forecasts & 1.000 & 0.950 & 96.8 \\
+Scrambled & 1.000 & 0.951 & 96.8 \\
+Zeroed & 1.000 & 0.913 & 90.6 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Scrambling forecasts produces no degradation (ReT 0.951 vs.\ 0.950),
+confirming that PPO does not use the numerical content of risk
+predictions. Zeroing forecasts causes mild degradation in ReT
+($-3.7$pp) and autotomy ($-6.2$pp) but no fill degradation, suggesting
+this reflects out-of-distribution observation effects rather than
+forecast dependence. A regime-conditioned analysis across 5 seeds shows
+that PPO escalates shift usage 2.6$\times$ during pre-disruption
+regimes compared to nominal periods ($P(S>1|\text{pre\_disruption}) =
+0.323$ vs.\ $P(S>1|\text{nominal}) = 0.126$), confirming
+regime-responsive behavior. The policy is therefore better characterized
+as a \emph{regime-responsive adaptive controller} than as an
+anticipatory predictor.
+
+\hypertarget{48-summary}{%
+\subsection{4.8 Summary}\label{48-summary}}
+
+The experimental evidence forms a coherent narrative across seven
+result dimensions: Track A demonstrates a structural limitation (Section
+4.2); Track B demonstrates that a minimal action-space repair overcomes
+it (Section 4.3); the causal ablation localizes the effect to downstream
+control (Section 4.4); the reward sweep shows insensitivity to reward
+choice when the action space is aligned (Section 4.5); cross-scenario
+evaluation establishes the boundary of effectiveness (Section 4.6); and
+forecast sensitivity reveals a regime-responsive policy mechanism
+(Section 4.7). The central finding is not that RL is universally
+effective, but that its effectiveness depends critically on whether the
+controllable interface reaches the binding operational constraint.

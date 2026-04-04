@@ -1,0 +1,118 @@
+\hypertarget{2-related-work}{%
+\section{2. Related Work}\label{2-related-work}}
+
+\hypertarget{21-reinforcement-learning-in-logistics-and-supply-chain-management}{%
+\subsection{2.1 Reinforcement learning in logistics and supply chain
+management}\label{21-reinforcement-learning-in-logistics-and-supply-chain-management}}
+
+Reinforcement learning has become an established paradigm for adaptive
+decision-making in supply chain management. Yan et al. (2022) provide a
+comprehensive review covering methodologies, state of the art, and
+opportunities for RL in logistics and SCM, documenting applications
+across inventory ordering, vehicle routing, and warehouse operations.
+Rolf et al. (2023) offer a semi-systematic review classifying RL
+algorithms and applications in SCM, noting that Q-learning variants have
+dominated historically but that policy-gradient methods such as PPO and
+A3C are gaining traction. Boute et al. (2022) establish a design roadmap
+for deep RL in inventory control, systematizing key choices around state
+representation, action formulation, and reward engineering. Powell
+(2022) provides the theoretical backdrop, arguing that RL's
+value-function approximation is only one of four policy classes and that
+simpler policy representations often outperform neural approaches in
+structured operations problems. These reviews confirm that RL in SCM is
+a mature field; our paper does not claim novelty in the \emph{idea} of
+applying RL to supply chains but rather contributes a benchmark-centered
+diagnosis of when RL succeeds and when it does not.
+
+\hypertarget{22-discrete-event-simulation-and-machine-learning-for-supply-chains}{%
+\subsection{2.2 Discrete-event simulation and machine learning for
+supply
+chains}\label{22-discrete-event-simulation-and-machine-learning-for-supply-chains}}
+
+The integration of discrete-event simulation with machine learning has
+accelerated sharply in recent years. Rolf et al. (2025) review 72 papers
+combining DES with ML for supply chain analysis, finding that 82\% were
+published in the last five years and that RL is the most frequent ML
+paradigm in these hybrid pipelines. Perez-Pena et al. (2025) develop a
+classification framework applied to 99 simulation-ML papers, revealing
+that optimization is rarely incorporated into hybrid workflows. Our work
+sits squarely in this family: a custom SimPy DES wrapped with a
+Gymnasium interface for RL training. What distinguishes this benchmark
+from the typical DES+RL study is its grounding in a validated PhD thesis
+model (Garrido-Rios, 2017) rather than a synthetic or stylized
+environment, and its explicit treatment of control-contract design as
+the central experimental variable.
+
+\hypertarget{23-rl-for-operational-and-inventory-control}{%
+\subsection{2.3 RL for operational and inventory
+control}\label{23-rl-for-operational-and-inventory-control}}
+
+The dominant application of RL in supply chains remains inventory and
+operational cost control. Gijsbrechts et al. (2022) apply A3C to
+lost-sales, dual-sourcing, and multi-echelon problems, achieving
+3-\/-6\% optimality gaps but failing to consistently outperform capped
+base-stock policies. De Moor et al. (2022) demonstrate that
+potential-based reward shaping can stabilize DRL training for perishable
+inventory but does not always help the agent surpass teacher heuristics.
+Dehaybe et al. (2024) train PPO on non-stationary demand using rolling
+forecast horizons and achieve near-optimal lot-sizing policies. Geevers
+et al. (2024) apply PPO with continuous actions via Stable-Baselines3 to
+multi-echelon networks, reporting 6.6-\/-16.4\% cost reductions over
+classical benchmarks. Temizoz et al. (2025) propose Deep Controlled
+Learning, achieving optimality gaps below 0.2\% and consistently
+outperforming all DRL baselines and heuristics. Vanvuchelen et al.
+(2025) address action-space scalability through continuous
+representations, finding that discrete formulations fail to scale to
+high-dimensional inventory problems.
+
+These papers collectively show that the primary challenge for RL in
+inventory control is not architectural novelty but careful formulation
+of the MDP-\/-\/-state representation, reward design, and action-space
+structure. Our work extends this insight in a different direction: we
+show that even with a well-designed reward and a standard PPO algorithm,
+RL fails when the action space does not cover the binding operational
+constraint. The issue in Track A is not algorithmic weakness or reward
+misspecification but structural bottleneck misalignment.
+
+\hypertarget{24-supply-chain-resilience-reconfiguration-and-marl}{%
+\subsection{2.4 Supply chain resilience, reconfiguration, and
+MARL}\label{24-supply-chain-resilience-reconfiguration-and-marl}}
+
+The closest competitor in the resilience literature is Ding et al.
+(2026), who apply MAPPO to dynamic reconfiguration of a supply chain
+system-of-systems under disruption risks, with macro-level actions
+(filling, repairing, recruiting) operating on an abstract network
+topology. Their contribution is strategic topology redesign; ours is
+operational control within a fixed, detailed DES. The distinction is not
+cosmetic: their state space represents network-level attributes (node
+density, clustering coefficients), while ours represents operational
+variables (inventory levels, disruption flags, shift configuration) at
+hourly granularity. Rolf et al. (2024) study supply chain recovery under
+disruptions using system dynamics coupled with RL, demonstrating that RL
+can learn robust order policies without historical data. Kim (2024)
+proposes cooperative MARL for inventory transshipment during
+disruptions. Liu et al. (2025) apply heterogeneous-agent PPO (HAPPO) to
+decentralized multi-echelon inventory, finding that hybrid rewards
+outperform purely self-interested or cooperative objectives. Kotecha and
+del Rio Chanona (2025) combine graph neural networks with MAPPO for
+inventory control in supply chain networks.
+
+These MARL and resilience papers address coordination across
+organizational boundaries or topology reconfiguration. Our single-agent
+approach asks a simpler but complementary question: given a fixed supply
+chain topology, does expanding the agent's operational control scope to
+include the active bottleneck change the benchmark outcome? The Track B
+result suggests that when the bottleneck can be identified and
+controlled by a single agent, centralized control with appropriate
+action scope suffices.
+
+\hypertarget{25-positioning-summary}{%
+\subsection{2.5 Positioning summary}\label{25-positioning-summary}}
+
+This paper does not claim to be the first RL-for-SCM or DES+RL study.
+Its contribution is a thesis-grounded benchmark and structural diagnosis
+showing that RL success in resilience control depends on action-space
+alignment with the active operational constraint-\/-\/-a finding that
+connects bottleneck reasoning from the Theory of Constraints (Goldratt)
+with RL agent design in a way that, to our knowledge, has not been
+demonstrated empirically in the published literature.
