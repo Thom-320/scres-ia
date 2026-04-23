@@ -19,11 +19,8 @@ import numpy as np
 sys.path.insert(0, ".")
 
 from supply_chain.config import (
-    OPERATIONS,
     SIMULATION_HORIZON,
-    WARMUP,
     VALIDATION_TABLE_6_10,
-    CAPACITY_BY_SHIFTS,
 )
 from supply_chain.supply_chain import MFSCSimulation
 from supply_chain.env_experimental_shifts import MFSCGymEnvShifts
@@ -97,19 +94,20 @@ def demo_validation():
     print(f"  Nuestro modelo:     {our_avg:>12,.0f} raciones/año")
     print(f"  Tesis (Table 6.10): {thesis_avg:>12,.0f} raciones/año")
     print(f"  Gap relativo:       {gap:>+11.2%}")
-    print(f"  Umbral aceptado:    ±15%")
+    print("  Umbral aceptado:    ±15%")
     print(f"  Estado:             {'PASS' if abs(gap) < 0.15 else 'FAIL'}")
     print()
     # Post-warmup summary (cleaner for presentation)
     warmup_t = sim.warmup_time
-    years_pw = (sim.horizon - warmup_t) / sim.hours_per_year
     # Count post-warmup backorders: orders placed after warmup
     pw_orders = [o for o in sim.orders if o.OPTj >= warmup_t]
     pw_backorders = sum(1 for o in pw_orders if o.backorder)
     mode = f"ENABLED ({sim.risk_level})" if sim.risks_enabled else "DISABLED"
     print(f"  {'=' * 58}")
-    print(f"  MFSC Simulation Summary (POST-WARMUP)")
-    print(f"  Horizon: {sim.horizon:,} hrs ({sim.horizon/sim.hours_per_year:.1f} years)")
+    print("  MFSC Simulation Summary (POST-WARMUP)")
+    print(
+        f"  Horizon: {sim.horizon:,} hrs ({sim.horizon/sim.hours_per_year:.1f} years)"
+    )
     print(f"  Shifts: S={sim.shifts}  |  Risks: {mode}")
     print(f"  Warmup: {warmup_t:,.0f} hrs (excluded from metrics)")
     print(f"  {'=' * 58}")
@@ -151,7 +149,9 @@ def demo_gymnasium_env():
 
     # Correr 5 steps con S2 fijo y parámetros default
     print("  Corriendo 5 semanas simuladas con S=2 fijo...")
-    print(f"  {'Step':>5} {'Reward':>8} {'Fill%':>7} {'Shift':>6} {'AL_down':>8} {'BO_rate':>8}")
+    print(
+        f"  {'Step':>5} {'Reward':>8} {'Fill%':>7} {'Shift':>6} {'AL_down':>8} {'BO_rate':>8}"
+    )
     print(f"  {'-'*50}")
 
     action_s2 = np.array([0.0, 0.0, 0.0, 0.0, 0.0], dtype=np.float32)  # S2
@@ -181,7 +181,9 @@ def demo_disruption_effect():
         ("Riesgo aumentado", True, "increased"),
     ]
 
-    print(f"  {'Configuración':<20} {'Raciones/año':>14} {'Fill rate':>10} {'Eventos':>10}")
+    print(
+        f"  {'Configuración':<20} {'Raciones/año':>14} {'Fill rate':>10} {'Eventos':>10}"
+    )
     print(f"  {'─'*60}")
 
     for label, risks, level in configs:
@@ -204,7 +206,11 @@ def demo_disruption_effect():
             fr = 1.0
 
         # event count
-        events = sum(sim.risk_event_counts.values()) if hasattr(sim, "risk_event_counts") else 0
+        events = (
+            sum(sim.risk_event_counts.values())
+            if hasattr(sim, "risk_event_counts")
+            else 0
+        )
 
         print(f"  {label:<20} {avg_del:>14,.0f} {fr:>9.1%} {events:>10,}")
 
@@ -239,7 +245,9 @@ def demo_action_space():
     print("  Comparación: S1 vs S2 vs S3 bajo riesgo aumentado")
     print("  (20 años simulados, 48 semanas/año)")
     print(f"  {'─'*55}")
-    print(f"  {'Turnos':<10} {'Fill rate':>10} {'Reward total':>14} {'Raciones/año':>14}")
+    print(
+        f"  {'Turnos':<10} {'Fill rate':>10} {'Reward total':>14} {'Raciones/año':>14}"
+    )
     print(f"  {'─'*55}")
 
     for shifts, signal in [(1, -1.0), (2, 0.0), (3, 1.0)]:

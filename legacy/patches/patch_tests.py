@@ -1,5 +1,4 @@
-import re
-with open('tests/test_control_reward_benchmark.py', 'r') as f:
+with open("tests/test_control_reward_benchmark.py", "r") as f:
     code = f.read()
 
 # I will replace the two tests
@@ -71,5 +70,5 @@ test_2_new = """def test_pbrs_phi_value_fallback() -> None:
 code = code.replace(test_1_old, test_1_new)
 code = code.replace(test_2_old, test_2_new)
 
-with open('tests/test_control_reward_benchmark.py', 'w') as f:
+with open("tests/test_control_reward_benchmark.py", "w") as f:
     f.write(code)

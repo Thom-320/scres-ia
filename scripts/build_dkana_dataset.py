@@ -55,6 +55,15 @@ def main() -> None:
         default=12,
         help="Number of historical steps per DKANA sequence window.",
     )
+    parser.add_argument(
+        "--relation-mode",
+        choices=["equality", "temporal_delta"],
+        default="equality",
+        help=(
+            "MRC relation encoding. 'equality' emits x = value rows. "
+            "'temporal_delta' also emits x <, =, or > previous_value rows."
+        ),
+    )
     args = parser.parse_args()
 
     output_dir = resolve_output_dir(args.input_dir, args.output_dir, args.window_size)
@@ -100,6 +109,7 @@ def main() -> None:
         window_size=args.window_size,
         observation_fields=tuple(env_spec["observation_fields"]),
         state_constraint_fields=tuple(state_field_payload["fields"]),
+        relation_mode=args.relation_mode,
     )
 
     np.save(output_dir / "dkana_row_matrices.npy", dataset.row_matrices)
@@ -112,6 +122,7 @@ def main() -> None:
     metadata = {
         "source_dir": str(args.input_dir),
         "window_size": args.window_size,
+        "relation_mode": dataset.relation_mode,
         "reward_mode": metadata_payload.get("reward_mode"),
         "observation_version": metadata_payload.get("observation_version"),
         "frame_stack": metadata_payload.get("frame_stack", 1),

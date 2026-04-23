@@ -6,6 +6,7 @@ For each (risk_level, alpha) config, shows how much of the spread
 comes from recovery_time, holding_cost, and service_loss individually.
 Also reports per-policy means with std across 10 seeds.
 """
+
 from __future__ import annotations
 
 import sys
@@ -36,10 +37,16 @@ STEP_SIZE = 168.0
 
 def run_episode(policy_action, seed, risk_level, alpha):
     env = MFSCGymEnv(
-        step_size_hours=STEP_SIZE, max_steps=MAX_STEPS, year_basis="thesis",
-        risk_level=risk_level, reward_mode="rt_v0",
-        rt_alpha=alpha, rt_beta=BETA, rt_gamma=GAMMA,
-        rt_recovery_scale=RECOVERY_SCALE, rt_inventory_scale=INVENTORY_SCALE,
+        step_size_hours=STEP_SIZE,
+        max_steps=MAX_STEPS,
+        year_basis="thesis",
+        risk_level=risk_level,
+        reward_mode="rt_v0",
+        rt_alpha=alpha,
+        rt_beta=BETA,
+        rt_gamma=GAMMA,
+        rt_recovery_scale=RECOVERY_SCALE,
+        rt_inventory_scale=INVENTORY_SCALE,
     )
     obs, _ = env.reset(seed=1000 + seed)
     rng = np.random.default_rng(seed + 99999)
@@ -52,7 +59,11 @@ def run_episode(policy_action, seed, risk_level, alpha):
     done, truncated = False, False
 
     while not (done or truncated):
-        action = rng.uniform(-1, 1, size=4).astype(np.float32) if policy_action is None else policy_action
+        action = (
+            rng.uniform(-1, 1, size=4).astype(np.float32)
+            if policy_action is None
+            else policy_action
+        )
         obs, reward, done, truncated, info = env.step(action)
         total_reward += reward
 
@@ -94,7 +105,9 @@ def main():
             print(f"\n{'='*95}")
             print(f"  Risk: {risk_level} | α={alpha} β={BETA} γ={GAMMA}")
             print(f"{'='*95}")
-            print(f"  {'Policy':>10s} | {'Reward':>16s} | {'Recovery':>14s} | {'Holding':>14s} | {'Service':>14s}")
+            print(
+                f"  {'Policy':>10s} | {'Reward':>16s} | {'Recovery':>14s} | {'Holding':>14s} | {'Service':>14s}"
+            )
             print(f"  {'-'*80}")
 
             all_rewards = {}
@@ -129,7 +142,7 @@ def main():
                 )
 
             # Compute per-component spread
-            print(f"\n  Component spreads:")
+            print("\n  Component spreads:")
             for comp in ["recovery", "holding", "service"]:
                 means = {p: np.mean(all_components[p][comp]) for p in POLICIES}
                 comp_spread = max(means.values()) - min(means.values())
@@ -137,15 +150,19 @@ def main():
                 worst_p = min(means, key=means.get)
                 total_mean = np.mean(list(means.values()))
                 pct = abs(comp_spread / total_mean) * 100 if total_mean != 0 else 0
-                print(f"    {comp:>10s}: spread={comp_spread:>8.1f} ({pct:>5.1f}% of mean)  "
-                      f"best={worst_p} worst={best_p}")  # Note: lower penalty = better
+                print(
+                    f"    {comp:>10s}: spread={comp_spread:>8.1f} ({pct:>5.1f}% of mean)  "
+                    f"best={worst_p} worst={best_p}"
+                )  # Note: lower penalty = better
 
             # Total reward spread
             reward_means = {p: np.mean(all_rewards[p]) for p in POLICIES}
             total_spread = max(reward_means.values()) - min(reward_means.values())
             mid = np.mean(list(reward_means.values()))
             total_pct = abs(total_spread / mid) * 100 if mid != 0 else 0
-            print(f"    {'TOTAL':>10s}: spread={total_spread:>8.1f} ({total_pct:>5.1f}% of mean)")
+            print(
+                f"    {'TOTAL':>10s}: spread={total_spread:>8.1f} ({total_pct:>5.1f}% of mean)"
+            )
 
 
 if __name__ == "__main__":

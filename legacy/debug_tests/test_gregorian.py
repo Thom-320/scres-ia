@@ -1,6 +1,6 @@
 import numpy as np
 from supply_chain.supply_chain import MFSCSimulation
-from supply_chain.config import SIMULATION_HORIZON, HOURS_PER_YEAR_GREGORIAN
+from supply_chain.config import SIMULATION_HORIZON
 
 seeds = [42, 123, 456, 789, 1000]
 results = []

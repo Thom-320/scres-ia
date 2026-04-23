@@ -1,17 +1,26 @@
 #!/usr/bin/env python3
+# ruff: noqa: E402
 from __future__ import annotations
 
 import argparse
 import csv
 import json
+import os
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 import statistics
 import sys
+import tempfile
 from typing import Any
 
+_CACHE_ROOT = Path(tempfile.gettempdir()) / "mfsc_runtime_cache"
+_CACHE_ROOT.mkdir(parents=True, exist_ok=True)
+os.environ.setdefault("MPLCONFIGDIR", str(_CACHE_ROOT / "matplotlib"))
+os.environ.setdefault("XDG_CACHE_HOME", str(_CACHE_ROOT / "xdg"))
+
 import numpy as np
+
 try:
     from sb3_contrib import RecurrentPPO
 except ImportError:  # pragma: no cover - runtime guard for optional dependency.
@@ -25,11 +34,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from scripts.benchmark_control_reward import build_metric_contract_metadata
 from scripts.track_b_heuristics import HEURISTIC_POLICY_NAMES, make_heuristic_defaults
 from supply_chain.config import OPERATIONS
+from supply_chain.dkana import DKANAOnlinePolicyAdapter, DKANAPolicy
 from supply_chain.env_experimental_shifts import (
     OBSERVATION_VERSION_OPTIONS,
     REWARD_MODE_OPTIONS,
 )
 from supply_chain.external_env_interface import (
+    STATE_CONSTRAINT_FIELDS,
     get_episode_terminal_metrics,
     get_track_b_env_spec,
     make_track_b_env,
@@ -232,6 +243,16 @@ def build_parser() -> argparse.ArgumentParser:
             "Additional risk levels for cross-scenario evaluation of the trained "
             "model. E.g. --eval-risk-levels current increased severe. "
             "The model is always trained on --risk-level; these are eval-only."
+        ),
+    )
+    parser.add_argument(
+        "--dkana-checkpoint",
+        type=Path,
+        default=None,
+        help=(
+            "Optional path to a DKANA .pt checkpoint. If provided, a DKANA lane "
+            "is evaluated alongside statics, heuristics, and PPO under the same "
+            "Track B contract and CI95 aggregation."
         ),
     )
     parser.add_argument("--learning-rate", type=float, default=3e-4)
@@ -476,12 +497,9 @@ def _finalize_episode_row(
             )
         ),
         "assembly_hours_total": sum(
-            shift_counts.get(s, 0) * s * HOURS_PER_SHIFT * 7.0
-            for s in (1, 2, 3)
+            shift_counts.get(s, 0) * s * HOURS_PER_SHIFT * 7.0 for s in (1, 2, 3)
         ),
-        "assembly_cost_index": sum(
-            shift_counts.get(s, 0) * s for s in (1, 2, 3)
-        )
+        "assembly_cost_index": sum(shift_counts.get(s, 0) * s for s in (1, 2, 3))
         / (3.0 * total_steps),
     }
 
@@ -683,6 +701,100 @@ def evaluate_heuristic_policy(
     return rows
 
 
+def load_dkana_adapter(
+    checkpoint_path: Path,
+) -> tuple[DKANAOnlinePolicyAdapter, dict[str, Any]]:
+    import torch
+
+    checkpoint = torch.load(
+        str(checkpoint_path), map_location="cpu", weights_only=False
+    )
+    model_config = dict(checkpoint["model_config"])
+    model = DKANAPolicy(**model_config)
+    model.load_state_dict(checkpoint["model_state_dict"])
+    dataset_metadata = checkpoint["dataset_metadata"]
+    observation_fields = tuple(dataset_metadata["env_spec"]["observation_fields"])
+    relation_mode = str(dataset_metadata.get("relation_mode", "equality"))
+    window_size = int(dataset_metadata["window_size"])
+    action_dim = int(model_config["action_dim"])
+    adapter = DKANAOnlinePolicyAdapter(
+        model,
+        window_size=window_size,
+        observation_fields=observation_fields,
+        state_constraint_fields=STATE_CONSTRAINT_FIELDS,
+        action_dim=action_dim,
+        relation_mode=relation_mode,
+    )
+    return adapter, {
+        "relation_mode": relation_mode,
+        "window_size": window_size,
+        "action_dim": action_dim,
+    }
+
+
+def evaluate_dkana_policy(
+    adapter: DKANAOnlinePolicyAdapter,
+    *,
+    args: argparse.Namespace,
+    seed: int,
+    label: str = "dkana",
+) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    env_kwargs = build_env_kwargs(args)
+
+    for episode_idx in range(args.eval_episodes):
+        eval_seed = seed + EVAL_EPISODE_SEED_OFFSET + episode_idx
+        env = apply_eval_wrappers(make_track_b_env(**env_kwargs), args)
+        obs, info = env.reset(seed=eval_seed)
+        adapter.reset()
+        terminated = False
+        truncated = False
+        reward_total = 0.0
+        demanded_total = 0.0
+        backorder_qty_total = 0.0
+        steps = 0
+        shift_counts = {1: 0, 2: 0, 3: 0}
+        op10_multipliers: list[float] = []
+        op12_multipliers: list[float] = []
+        final_info = info
+
+        while not (terminated or truncated):
+            action = adapter(np.asarray(obs, dtype=np.float32), final_info)
+            obs, reward, terminated, truncated, final_info = env.step(
+                np.asarray(action, dtype=np.float32)
+            )
+            reward_total += float(reward)
+            demanded_total += float(final_info.get("new_demanded", 0.0))
+            backorder_qty_total += float(final_info.get("new_backorder_qty", 0.0))
+            shift_counts[int(final_info.get("shifts_active", 1))] += 1
+            op10_mult, op12_mult = extract_downstream_multipliers(final_info)
+            op10_multipliers.append(op10_mult)
+            op12_multipliers.append(op12_mult)
+            steps += 1
+
+        rows.append(
+            _finalize_episode_row(
+                policy=label,
+                seed=seed,
+                episode=episode_idx + 1,
+                eval_seed=eval_seed,
+                steps=steps,
+                reward_total=reward_total,
+                demanded_total=demanded_total,
+                backorder_qty_total=backorder_qty_total,
+                shift_counts=shift_counts,
+                op10_multipliers=op10_multipliers,
+                op12_multipliers=op12_multipliers,
+                track_b_context=final_info["state_constraint_context"][
+                    "track_b_context"
+                ],
+                terminal_metrics=get_episode_terminal_metrics(env),
+            )
+        )
+        env.close()
+    return rows
+
+
 def aggregate_seed_metrics(episode_rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     grouped: dict[tuple[str, int], list[dict[str, Any]]] = {}
     for row in episode_rows:
@@ -713,7 +825,19 @@ def aggregate_policy_metrics(
         grouped.setdefault(str(row["policy"]), []).append(row)
 
     policy_rows: list[dict[str, Any]] = []
-    for policy in (*STATIC_POLICY_ORDER, *HEURISTIC_POLICY_NAMES, learned_policy):
+    extra_policies = tuple(
+        name
+        for name in sorted(grouped.keys())
+        if name not in STATIC_POLICY_ORDER
+        and name not in HEURISTIC_POLICY_NAMES
+        and name != learned_policy
+    )
+    for policy in (
+        *STATIC_POLICY_ORDER,
+        *HEURISTIC_POLICY_NAMES,
+        learned_policy,
+        *extra_policies,
+    ):
         rows = grouped.get(policy, [])
         if not rows:
             continue
@@ -785,8 +909,7 @@ def build_decision_summary(
                 "ppo_reward_gap_vs_best_static": reward_gap_vs_best_static,
                 "ppo_order_level_ret_gap_vs_best_static": ret_gap_vs_best_static,
                 "ppo_beats_s2_neutral_by_fill": fill_gap_vs_baseline_pp > 0.0,
-                "ppo_matches_best_static_by_fill": fill_gap_vs_best_static_pp
-                >= -0.5,
+                "ppo_matches_best_static_by_fill": fill_gap_vs_best_static_pp >= -0.5,
             }
         )
     return decision
@@ -841,15 +964,11 @@ def build_comparison_rows(
         "learned_reward_mean": float(learned_row["reward_total_mean"]),
         "learned_fill_rate_mean": float(learned_row["fill_rate_mean"]),
         "learned_backorder_rate_mean": float(learned_row["backorder_rate_mean"]),
-        "learned_order_level_ret_mean": float(
-            learned_row["order_level_ret_mean_mean"]
-        ),
+        "learned_order_level_ret_mean": float(learned_row["order_level_ret_mean_mean"]),
         "baseline_reward_mean": float(baseline["reward_total_mean"]),
         "baseline_fill_rate_mean": float(baseline["fill_rate_mean"]),
         "baseline_backorder_rate_mean": float(baseline["backorder_rate_mean"]),
-        "baseline_order_level_ret_mean": float(
-            baseline["order_level_ret_mean_mean"]
-        ),
+        "baseline_order_level_ret_mean": float(baseline["order_level_ret_mean_mean"]),
         "best_static_reward_mean": float(best_static["reward_total_mean"]),
         "best_static_fill_rate_mean": float(best_static["fill_rate_mean"]),
         "best_static_backorder_rate_mean": float(best_static["backorder_rate_mean"]),
@@ -858,9 +977,7 @@ def build_comparison_rows(
         ),
         "learned_fill_gap_vs_baseline_pp": float(
             100.0
-            * (
-                float(learned_row["fill_rate_mean"]) - float(baseline["fill_rate_mean"])
-            )
+            * (float(learned_row["fill_rate_mean"]) - float(baseline["fill_rate_mean"]))
         ),
         "learned_fill_gap_vs_best_static_pp": float(
             100.0
@@ -926,9 +1043,7 @@ def build_comparison_rows(
                 "ppo_order_level_ret_gap_vs_best_static": row[
                     "learned_order_level_ret_gap_vs_best_static"
                 ],
-                "ppo_beats_s2_neutral_by_fill": row[
-                    "learned_beats_s2_neutral_by_fill"
-                ],
+                "ppo_beats_s2_neutral_by_fill": row["learned_beats_s2_neutral_by_fill"],
                 "ppo_matches_best_static_by_fill": row[
                     "learned_matches_best_static_by_fill"
                 ],
@@ -1018,6 +1133,11 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
     trained_models: list[dict[str, Any]] = []
     learned_policy = learned_policy_name(args)
 
+    dkana_adapter: DKANAOnlinePolicyAdapter | None = None
+    dkana_metadata: dict[str, Any] | None = None
+    if args.dkana_checkpoint is not None:
+        dkana_adapter, dkana_metadata = load_dkana_adapter(args.dkana_checkpoint)
+
     for seed in args.seeds:
         run_dir = models_dir / f"seed{seed}"
         run_dir.mkdir(parents=True, exist_ok=True)
@@ -1038,15 +1158,17 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
             )
         for h_label, h_policy in make_heuristic_defaults().items():
             episode_rows.extend(
-                evaluate_heuristic_policy(
-                    h_label, h_policy, args=args, seed=int(seed)
-                )
+                evaluate_heuristic_policy(h_label, h_policy, args=args, seed=int(seed))
             )
         episode_rows.extend(
             evaluate_trained_policy(
                 args=args, seed=int(seed), model=model, vec_norm=vec_norm
             )
         )
+        if dkana_adapter is not None:
+            episode_rows.extend(
+                evaluate_dkana_policy(dkana_adapter, args=args, seed=int(seed))
+            )
         vec_norm.close()
 
     seed_rows = aggregate_seed_metrics(episode_rows)
@@ -1089,6 +1211,10 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
             "gamma": float(args.gamma),
             "gae_lambda": float(args.gae_lambda),
             "clip_range": float(args.clip_range),
+            "dkana_checkpoint": (
+                str(args.dkana_checkpoint) if args.dkana_checkpoint else None
+            ),
+            "dkana_metadata": dkana_metadata,
         },
         "backbone": {
             "code_ref": "HEAD",
@@ -1157,16 +1283,12 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
                     loaded_model = RecurrentPPO.load(str(model_path))
                 else:
                     loaded_model = PPO.load(str(model_path))
-                cross_env = DummyVecEnv(
-                    [make_monitored_training_env(cross_args, seed)]
-                )
+                cross_env = DummyVecEnv([make_monitored_training_env(cross_args, seed)])
                 loaded_vec = VecNormalize.load(str(vec_path), cross_env)
                 loaded_vec.training = False
                 for policy in STATIC_POLICY_SPECS:
                     cross_rows.extend(
-                        evaluate_static_policy(
-                            policy, args=cross_args, seed=seed
-                        )
+                        evaluate_static_policy(policy, args=cross_args, seed=seed)
                     )
                 for h_label, h_policy in make_heuristic_defaults().items():
                     cross_rows.extend(

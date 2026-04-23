@@ -31,43 +31,27 @@ python scripts/export_trajectories_for_david.py \
   --reward-mode ReT_seq_v1 \
   --observation-version v7 \
   --risk-level adaptive_benchmark_v2 \
+  --action-contract track_b_v1 \
   --stochastic-pt \
   --output-dir outputs/data_export_track_b_v7
 
-# 4. Build DKANA-ready windows
+# 4. Build DKANA-ready context windows with {=,<,>} temporal relations
 python scripts/build_dkana_dataset.py \
   --input-dir outputs/data_export_track_b_v7 \
-  --window-size 12
+  --window-size 12 \
+  --relation-mode temporal_delta
 
-# 5. Evaluate your trained model
-python -c "
-from supply_chain.external_env_interface import run_episodes
-import numpy as np
+# 5. Train the starter DKANA behavior-cloning policy
+python scripts/train_dkana_behavior_clone.py \
+  --dataset-dir outputs/data_export_track_b_v7/dkana_seq_w12 \
+  --output-dir outputs/dkana_track_b_v7_bc \
+  --epochs 25
 
-def your_policy(obs, info):
-    # Replace with your trained DKANA model.
-    # Track B has 7D actions, not 5D.
-    return np.zeros(7, dtype=np.float32)
-
-results = run_episodes(
-    your_policy,
-    n_episodes=20,
-    seed=42,
-    env_kwargs={
-        'reward_mode': 'ReT_seq_v1',
-        'risk_level': 'adaptive_benchmark_v2',
-        'stochastic_pt': True,
-        'observation_version': 'v7',
-        'action_contract': 'track_b_v1',
-    },
-    policy_name='dkana_v1',
-)
-for r in results[:3]:
-    print(
-        f\"reward={r['reward_total']:.2f}  fill_rate={r['fill_rate']:.3f}  \"
-        f\"shifts=S1:{r['pct_steps_S1']:.0f}/S2:{r['pct_steps_S2']:.0f}/S3:{r['pct_steps_S3']:.0f}\"
-    )
-"
+# 6. Evaluate DKANA against the same Track B static baselines
+python scripts/evaluate_dkana_track_b.py \
+  --checkpoint outputs/dkana_track_b_v7_bc/dkana_policy.pt \
+  --output-dir outputs/dkana_track_b_v7_eval \
+  --episodes 20
 ```
 
 ## Track B Contract
@@ -209,6 +193,7 @@ python scripts/export_trajectories_for_david.py \
   --reward-mode ReT_seq_v1 \
   --observation-version v7 \
   --risk-level adaptive_benchmark_v2 \
+  --action-contract track_b_v1 \
   --stochastic-pt \
   --output-dir outputs/data_export_track_b_v7
 ```
@@ -220,8 +205,11 @@ Then build DKANA windows:
 ```bash
 python scripts/build_dkana_dataset.py \
   --input-dir outputs/data_export_track_b_v7 \
-  --window-size 12
+  --window-size 12 \
+  --relation-mode temporal_delta
 ```
+
+This writes `dkana_row_matrices.npy` as `(N, window, rows, 3)`, `dkana_config_context.npy` as `(N, window, config_dim)`, and `dkana_time_mask.npy` as `(N, window)`. With `--relation-mode temporal_delta`, the MRC emits both equality rows and temporal relation rows where the relation index maps `{ "=": 0, "<": 1, ">": 2 }`.
 
 ## Key Files
 
@@ -229,9 +217,11 @@ python scripts/build_dkana_dataset.py \
 |------|---------|
 | `supply_chain/env_experimental_shifts.py` | DES-backed Gymnasium env (Track A and B) |
 | `supply_chain/external_env_interface.py` | `make_track_b_env()`, `get_track_b_env_spec()` |
-| `supply_chain/dkana.py` | DKANA starter architecture (needs update for 7D/46D) |
+| `supply_chain/dkana.py` | DKANA preprocessing, temporal relation MRC, starter architecture, and online context-window adapter |
 | `scripts/export_trajectories_for_david.py` | Offline trajectory export |
 | `scripts/build_dkana_dataset.py` | DKANA window construction |
+| `scripts/train_dkana_behavior_clone.py` | Starter DKANA training from DKANA-ready tensors |
+| `scripts/evaluate_dkana_track_b.py` | Online Track B DKANA evaluation against static baselines and optional PPO |
 | `scripts/run_track_b_smoke.py` | Track B benchmark script |
 | `docs/TRACK_B_MINIMAL_SPEC.md` | Track B design rationale |
 | `docs/PAPER_FINDINGS_REGISTRY.md` | Why Track A doesn't work (F2, F11) |
@@ -244,6 +234,33 @@ python scripts/build_dkana_dataset.py \
 - Do not change the benchmark baseline definitions
 
 Your contribution is the DKANA training pipeline and policy architecture under the frozen Track B contract.
+
+## Where the Context Window Lives
+
+The context window `SMS = [S_{k+1}, ..., S_{k+n}]` (paper's Enumeration + Matricial Representation block) is a **model-side** structure, not an env feature. The Gym env returns a flat 46-dim vector per step; the adapter builds the window.
+
+- **Offline training**: `build_dkana_windows()` in [dkana.py](../supply_chain/dkana.py) produces fixed-length windows with left-padding and a `time_mask` over exported trajectories.
+- **Online inference**: `DKANAOnlinePolicyAdapter` ([dkana.py:603](../supply_chain/dkana.py)) keeps a `deque(maxlen=window_size)` and reconstructs `(row_matrices, config_context, time_mask)` before every `forward`. Drop it in any `policy_fn(obs, info) → action` loop.
+
+Do **not** look for the window inside `env_experimental_shifts.py`. The env is intentionally windowless — separation of concerns from the paper's DKA block.
+
+### Activating `<, =, >` relations
+
+Pass `--relation-mode temporal_delta` to `scripts/build_dkana_dataset.py`. The resulting metadata is embedded in the checkpoint; `DKANAOnlinePolicyAdapter` reads it and emits matching equality + temporal-delta rows at inference time. The mapping is `{"=": 0, "<": 1, ">": 2}`.
+
+### Unified benchmark with statics + heuristics + PPO + DKANA
+
+`scripts/run_track_b_smoke.py` accepts an optional `--dkana-checkpoint PATH`. When set, DKANA is evaluated alongside the other lanes under the same seeds/CI95 aggregation. Example:
+
+```bash
+python scripts/run_track_b_smoke.py \
+  --seeds 11 22 33 \
+  --train-timesteps 100000 \
+  --eval-episodes 10 \
+  --dkana-checkpoint outputs/dkana_track_b_v7_bc/dkana_policy.pt
+```
+
+The resulting `policy_summary.csv` includes a `dkana` row with the same metrics (reward_total, fill_rate, backorder_rate, order_level_ret_mean, rolling_fill_rate_4w, shift mix, downstream multiplier percentiles, assembly cost index) as statics, heuristics, and PPO.
 
 ## Track A (Legacy Reference)
 

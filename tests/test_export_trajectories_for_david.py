@@ -153,6 +153,55 @@ def test_export_trajectories_supports_v5_cycle_contract(tmp_path: Path) -> None:
     ]
 
 
+def test_export_trajectories_supports_track_b_contract(tmp_path: Path) -> None:
+    cmd = [
+        sys.executable,
+        "scripts/export_trajectories_for_david.py",
+        "--episodes",
+        "1",
+        "--seed-start",
+        "13",
+        "--risk-level",
+        "adaptive_benchmark_v2",
+        "--reward-mode",
+        "ReT_seq_v1",
+        "--observation-version",
+        "v7",
+        "--action-contract",
+        "track_b_v1",
+        "--max-steps",
+        "2",
+        "--output-dir",
+        str(tmp_path),
+    ]
+    subprocess.run(
+        cmd,
+        cwd="/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia",
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    observations = np.load(tmp_path / "observations.npy")
+    actions = np.load(tmp_path / "actions.npy")
+    metadata = json.loads((tmp_path / "metadata.json").read_text(encoding="utf-8"))
+    env_spec = json.loads((tmp_path / "env_spec.json").read_text(encoding="utf-8"))
+    action_fields = json.loads(
+        (tmp_path / "action_fields.json").read_text(encoding="utf-8")
+    )
+
+    assert observations.shape[1] == 46
+    assert actions.shape[1] == 7
+    assert metadata["action_contract"] == "track_b_v1"
+    assert env_spec["env_variant"] == "track_b_adaptive_control"
+    assert len(env_spec["action_fields"]) == 7
+    assert env_spec["action_fields"][-2:] == [
+        "op10_q_multiplier_signal",
+        "op12_q_multiplier_signal",
+    ]
+    assert action_fields["fields"] == env_spec["action_fields"]
+
+
 def test_export_trajectories_preserves_direct_garrido_action_context(
     tmp_path: Path,
 ) -> None:

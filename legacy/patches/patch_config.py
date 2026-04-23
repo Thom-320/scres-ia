@@ -1,5 +1,4 @@
-import sys
-with open('supply_chain/config.py', 'r') as f:
+with open("supply_chain/config.py", "r") as f:
     content = f.read()
 
 new_profile = """
@@ -18,7 +17,9 @@ RISKS_SEVERE_TRAINING = {
 }
 """
 
-if 'RISKS_SEVERE_TRAINING' not in content:
-    content = content.replace("RISKS_SEVERE_EXTENDED = {", new_profile + "\nRISKS_SEVERE_EXTENDED = {")
-    with open('supply_chain/config.py', 'w') as f:
+if "RISKS_SEVERE_TRAINING" not in content:
+    content = content.replace(
+        "RISKS_SEVERE_EXTENDED = {", new_profile + "\nRISKS_SEVERE_EXTENDED = {"
+    )
+    with open("supply_chain/config.py", "w") as f:
         f.write(content)

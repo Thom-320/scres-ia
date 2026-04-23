@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# ruff: noqa: E402
 """
 Export MFSC trajectories for external model training (e.g., DKANA).
 
@@ -25,9 +26,16 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
 import sys
+import tempfile
 from typing import Any
+
+_CACHE_ROOT = Path(tempfile.gettempdir()) / "mfsc_runtime_cache"
+_CACHE_ROOT.mkdir(parents=True, exist_ok=True)
+os.environ.setdefault("MPLCONFIGDIR", str(_CACHE_ROOT / "matplotlib"))
+os.environ.setdefault("XDG_CACHE_HOME", str(_CACHE_ROOT / "xdg"))
 
 from gymnasium.wrappers import FrameStackObservation
 import numpy as np
@@ -47,9 +55,10 @@ from scripts.benchmark_control_reward import (
     HeuristicHysteresis,
     HeuristicTuned,
 )
-from supply_chain.config import BENCHMARK_EPISODE_HORIZON_HOURS
+from supply_chain.config import BENCHMARK_EPISODE_HORIZON_HOURS, OPERATIONS
 from supply_chain.external_env_interface import (
     ACTION_FIELDS,
+    ACTION_FIELDS_TRACK_B_V1,
     CONTROL_CONTEXT_FIELDS,
     REWARD_TERM_FIELDS,
     STATE_CONSTRAINT_FIELDS,
@@ -168,6 +177,7 @@ def action_vector_from_payload(
     action_payload: np.ndarray | dict[str, float | int],
     *,
     constraint_context: dict[str, Any],
+    action_contract: str | None = None,
 ) -> np.ndarray:
     if not isinstance(action_payload, dict):
         return np.asarray(action_payload, dtype=np.float32).copy()
@@ -179,20 +189,71 @@ def action_vector_from_payload(
     op9_max_ratio = float(action_payload["op9_q_max"]) / float(base["op9_q_max"])
     op9_rop_ratio = float(action_payload["op9_rop"]) / float(base["op9_rop"])
     op9_ratio = 0.5 * (op9_min_ratio + op9_max_ratio)
+    op10_ratio = 1.0
+    op12_ratio = 1.0
+    if action_contract == "track_b_v1":
+        op10_q_min = float(base.get("op10_q_min", OPERATIONS[10]["q"][0]))
+        op10_q_max = float(base.get("op10_q_max", OPERATIONS[10]["q"][1]))
+        op12_q_min = float(base.get("op12_q_min", OPERATIONS[12]["q"][0]))
+        op12_q_max = float(base.get("op12_q_max", OPERATIONS[12]["q"][1]))
+        op10_min_ratio = float(action_payload.get("op10_q_min", op10_q_min)) / float(
+            op10_q_min
+        )
+        op10_max_ratio = float(action_payload.get("op10_q_max", op10_q_max)) / float(
+            op10_q_max
+        )
+        op12_min_ratio = float(action_payload.get("op12_q_min", op12_q_min)) / float(
+            op12_q_min
+        )
+        op12_max_ratio = float(action_payload.get("op12_q_max", op12_q_max)) / float(
+            op12_q_max
+        )
+        op10_ratio = 0.5 * (op10_min_ratio + op10_max_ratio)
+        op12_ratio = 0.5 * (op12_min_ratio + op12_max_ratio)
 
     def inverse_inventory_signal(multiplier: float) -> float:
         return float(np.clip((multiplier - 1.25) / 0.75, -1.0, 1.0))
 
     shift_signal = SHIFT_SIGNAL_BY_COUNT[int(action_payload["assembly_shifts"])]
+    action_vector = [
+        inverse_inventory_signal(op3_ratio),
+        inverse_inventory_signal(op9_ratio),
+        inverse_inventory_signal(op3_rop_ratio),
+        inverse_inventory_signal(op9_rop_ratio),
+        float(shift_signal),
+    ]
+    if action_contract == "track_b_v1":
+        action_vector.extend(
+            [
+                inverse_inventory_signal(op10_ratio),
+                inverse_inventory_signal(op12_ratio),
+            ]
+        )
     return np.array(
-        [
-            inverse_inventory_signal(op3_ratio),
-            inverse_inventory_signal(op9_ratio),
-            inverse_inventory_signal(op3_rop_ratio),
-            inverse_inventory_signal(op9_rop_ratio),
-            float(shift_signal),
-        ],
+        action_vector,
         dtype=np.float32,
+    )
+
+
+def action_fields_for_contract(action_contract: str | None) -> tuple[str, ...]:
+    """Return the action schema for the selected export contract."""
+    if action_contract == "track_b_v1":
+        return ACTION_FIELDS_TRACK_B_V1
+    return ACTION_FIELDS
+
+
+def env_spec_for_args(args: argparse.Namespace) -> Any:
+    """Return the serialized environment spec that matches the actual export env."""
+    if args.action_contract == "track_b_v1":
+        return get_track_b_env_spec(
+            reward_mode=args.reward_mode,
+            observation_version=args.observation_version,
+            step_size_hours=args.step_size_hours,
+        )
+    return get_shift_control_env_spec(
+        reward_mode=args.reward_mode,
+        observation_version=args.observation_version,
+        step_size_hours=args.step_size_hours,
     )
 
 
@@ -315,6 +376,7 @@ def build_env(args: argparse.Namespace) -> Any:
         env = make_track_b_env(
             risk_level=args.risk_level,
             reward_mode=args.reward_mode,
+            observation_version=args.observation_version,
             step_size_hours=args.step_size_hours,
             max_steps=resolve_episode_max_steps(args.step_size_hours, args.max_steps),
             stochastic_pt=args.stochastic_pt,
@@ -351,7 +413,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output-dir", type=Path, default=Path("outputs/data_export"))
     parser.add_argument("--seed-start", type=int, default=0)
     parser.add_argument(
-        "--risk-level", default="current", choices=["current", "increased", "severe", "adaptive_benchmark_v1", "adaptive_benchmark_v2"]
+        "--risk-level",
+        default="current",
+        choices=[
+            "current",
+            "increased",
+            "severe",
+            "adaptive_benchmark_v1",
+            "adaptive_benchmark_v2",
+        ],
     )
     parser.add_argument(
         "--reward-mode",
@@ -451,6 +521,7 @@ def main() -> None:
             action_vector = action_vector_from_payload(
                 action_payload,
                 constraint_context=constraint_context,
+                action_contract=args.action_contract,
             )
             env_action: np.ndarray | dict[str, float | int]
             if isinstance(action_payload, dict):
@@ -497,11 +568,7 @@ def main() -> None:
     np.save(args.output_dir / "state_constraint_context.npy", state_constraint_context)
     np.save(args.output_dir / "reward_terms.npy", reward_terms)
 
-    spec = get_shift_control_env_spec(
-        reward_mode=args.reward_mode,
-        observation_version=args.observation_version,
-        step_size_hours=args.step_size_hours,
-    )
+    spec = env_spec_for_args(args)
     with (args.output_dir / "env_spec.json").open("w", encoding="utf-8") as file_obj:
         json.dump(spec_to_dict(spec), file_obj, indent=2)
     with (args.output_dir / "constraint_context.json").open(
@@ -531,7 +598,11 @@ def main() -> None:
     with (args.output_dir / "action_fields.json").open(
         "w", encoding="utf-8"
     ) as file_obj:
-        json.dump({"fields": list(ACTION_FIELDS)}, file_obj, indent=2)
+        json.dump(
+            {"fields": list(action_fields_for_contract(args.action_contract))},
+            file_obj,
+            indent=2,
+        )
     with (args.output_dir / "direct_action_context_fields.json").open(
         "w", encoding="utf-8"
     ) as file_obj:
@@ -544,6 +615,7 @@ def main() -> None:
         "risk_level": args.risk_level,
         "reward_mode": args.reward_mode,
         "observation_version": args.observation_version,
+        "action_contract": args.action_contract or "shift_control_v1",
         "frame_stack": int(args.frame_stack),
         "policy": args.policy,
         "model_path": str(args.model_path) if args.model_path is not None else None,
@@ -556,9 +628,10 @@ def main() -> None:
         "uses_direct_des_actions": bool(np.isfinite(direct_actions).any()),
         "note": (
             "The export preserves the online MFSC contract plus reward decomposition. "
-            "actions.npy always follows the 5D RL action schema. "
+            "actions.npy follows the selected RL action schema "
+            "(5D Track A or 7D Track B). "
             "direct_action_context.npy preserves exact DES control settings for "
-            "policies that bypass the 5D action map (e.g., garrido_cf_* baselines)."
+            "policies that bypass the RL action map (e.g., garrido_cf_* baselines)."
         ),
     }
     with (args.output_dir / "metadata.json").open("w", encoding="utf-8") as file_obj:

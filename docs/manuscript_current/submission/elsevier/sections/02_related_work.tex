@@ -30,8 +30,12 @@ supply
 chains}\label{22-discrete-event-simulation-and-machine-learning-for-supply-chains}}
 
 The integration of discrete-event simulation with machine learning has
-accelerated sharply in recent years. Rolf et al. (2025) review 72 papers
-combining DES with ML for supply chain analysis, finding that 82\% were
+accelerated sharply in recent years. Kogler and Maxera (2026) review 72
+research papers and 43 related studies combining discrete simulation with
+ML for supply chain analysis, confirming that ``a majority of the
+analysed models merge discrete event simulation with reinforcement
+learning to cover an operational planning horizon.'' Rolf et al. (2025)
+independently review papers combining DES with ML, finding that 82\% were
 published in the last five years and that RL is the most frequent ML
 paradigm in these hybrid pipelines. Perez-Pena et al. (2025) develop a
 classification framework applied to 99 simulation-ML papers, revealing
@@ -97,14 +101,27 @@ outperform purely self-interested or cooperative objectives. Kotecha and
 del Rio Chanona (2025) combine graph neural networks with MAPPO for
 inventory control in supply chain networks.
 
-These MARL and resilience papers address coordination across
-organizational boundaries or topology reconfiguration. Our single-agent
-approach asks a simpler but complementary question: given a fixed supply
-chain topology, does expanding the agent's operational control scope to
-include the active bottleneck change the benchmark outcome? The Track B
-result suggests that when the bottleneck can be identified and
-controlled by a single agent, centralized control with appropriate
-action scope suffices.
+A parallel stream of work applies neural networks and machine learning
+to supply chain resilience through prediction and classification rather
+than online control. Rajagopal and Sivasakthivel (2024) use weighted
+feed-forward neural networks to select among pre-defined resilience
+strategies---a classification task over static options rather than
+continuous adaptive control. Rezki and Mansouri (2024) apply ANNs to
+predict supplier risk scores, operating in the predictive rather than
+prescriptive paradigm. Ordibazar et al. (2022) use counterfactual
+explanation algorithms to recommend risk mitigation actions, contributing
+to the explainability literature rather than online control. These papers
+demonstrate active interest in AI for SCRES but occupy distinct
+methodological niches from our DES+RL control approach.
+
+These MARL, resilience, and AI-SCRES papers address coordination across
+organizational boundaries, topology reconfiguration, or offline
+analysis. Our single-agent approach asks a simpler but complementary
+question: given a fixed supply chain topology, does expanding the agent's
+operational control scope to include the active bottleneck change the
+benchmark outcome? The Track B result suggests that when the bottleneck
+can be identified and controlled by a single agent, centralized control
+with appropriate action scope suffices.
 
 \hypertarget{25-positioning-summary}{%
 \subsection{2.5 Positioning summary}\label{25-positioning-summary}}
