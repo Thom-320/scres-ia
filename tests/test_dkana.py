@@ -29,6 +29,7 @@ from supply_chain.external_env_interface import (
     REWARD_TERM_FIELDS,
     STATE_CONSTRAINT_FIELDS,
     get_track_b_env_spec,
+    make_dkana_track_b_env,
     make_track_b_env,
 )
 
@@ -340,6 +341,31 @@ def test_dkana_online_adapter_returns_track_b_action() -> None:
     assert action.shape == (len(ACTION_FIELDS_TRACK_B_V1),)
     assert np.all(action >= -1.0)
     assert np.all(action <= 1.0)
+    env.close()
+
+
+def test_dkana_track_b_env_emits_context_window_in_info() -> None:
+    env = make_dkana_track_b_env(max_steps=2, dkana_window_size=3)
+    obs, info = env.reset(seed=123)
+    row_count = 2 * (len(OBSERVATION_FIELDS_V7) + len(STATE_CONSTRAINT_FIELDS))
+    config_dim = len(CONTROL_CONTEXT_FIELDS) + len(ACTION_FIELDS_TRACK_B_V1)
+
+    assert obs.shape == (len(OBSERVATION_FIELDS_V7),)
+    assert info["dkana_row_matrices"].shape == (3, row_count, 3)
+    assert info["dkana_config_context"].shape == (3, config_dim)
+    assert info["dkana_time_mask"].tolist() == [False, False, True]
+    assert info["dkana_context"]["relation_to_index"] == {"=": 0, "<": 1, ">": 2}
+    assert info["dkana_context"]["relation_mode"] == "temporal_delta"
+
+    action = np.linspace(-1.0, 1.0, len(ACTION_FIELDS_TRACK_B_V1), dtype=np.float32)
+    _, _, _, _, step_info = env.step(action)
+
+    assert step_info["dkana_time_mask"].tolist() == [False, True, True]
+    np.testing.assert_allclose(
+        step_info["dkana_config_context"][-1, -len(ACTION_FIELDS_TRACK_B_V1) :],
+        action,
+        atol=1e-6,
+    )
     env.close()
 
 

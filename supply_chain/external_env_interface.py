@@ -493,6 +493,20 @@ def make_track_b_env(**overrides: Any) -> MFSCGymEnvShifts:
     return MFSCGymEnvShifts(**params)
 
 
+def make_dkana_track_b_env(**overrides: Any) -> Any:
+    """
+    Build Track B with DKANA context windows included in env ``info``.
+
+    This is the simplest entry point for external DKANA users: the returned
+    env behaves like the normal Track B Gymnasium env, but each reset/step info
+    includes ``dkana_row_matrices``, ``dkana_config_context``, and
+    ``dkana_time_mask``.
+    """
+    from supply_chain.dkana_env import make_dkana_track_b_env as _make_env
+
+    return _make_env(**overrides)
+
+
 # ---------------------------------------------------------------------------
 # Generic episode runner for any callable policy
 # ---------------------------------------------------------------------------

@@ -17,12 +17,15 @@ pip install -r requirements.txt
 
 # 2. Verify Track B env works
 python -c "
-from supply_chain.external_env_interface import make_track_b_env, get_track_b_env_spec
+from supply_chain.external_env_interface import make_dkana_track_b_env, get_track_b_env_spec
 spec = get_track_b_env_spec()
 print(f'Obs: {len(spec.observation_fields)} dims, Action: {len(spec.action_fields)} dims')
-env = make_track_b_env()
+env = make_dkana_track_b_env(dkana_window_size=12, relation_mode="temporal_delta")
 obs, info = env.reset(seed=42)
 print(f'Obs shape: {obs.shape}, sample: {obs[:5]}')
+print(f'DKANA rows: {info["dkana_row_matrices"].shape}')
+print(f'DKANA config: {info["dkana_config_context"].shape}')
+print(f'DKANA mask: {info["dkana_time_mask"]}')
 "
 
 # 3. Export Track B trajectories for offline training
@@ -216,7 +219,8 @@ This writes `dkana_row_matrices.npy` as `(N, window, rows, 3)`, `dkana_config_co
 | File | Purpose |
 |------|---------|
 | `supply_chain/env_experimental_shifts.py` | DES-backed Gymnasium env (Track A and B) |
-| `supply_chain/external_env_interface.py` | `make_track_b_env()`, `get_track_b_env_spec()` |
+| `supply_chain/external_env_interface.py` | `make_track_b_env()`, `make_dkana_track_b_env()`, `get_track_b_env_spec()` |
+| `supply_chain/dkana_env.py` | DKANA environment wrapper that emits the context window in `info` |
 | `supply_chain/dkana.py` | DKANA preprocessing, temporal relation MRC, starter architecture, and online context-window adapter |
 | `scripts/export_trajectories_for_david.py` | Offline trajectory export |
 | `scripts/build_dkana_dataset.py` | DKANA window construction |
@@ -237,16 +241,42 @@ Your contribution is the DKANA training pipeline and policy architecture under t
 
 ## Where the Context Window Lives
 
-The context window `SMS = [S_{k+1}, ..., S_{k+n}]` (paper's Enumeration + Matricial Representation block) is a **model-side** structure, not an env feature. The Gym env returns a flat 46-dim vector per step; the adapter builds the window.
+The context window `SMS = [S_{k+1}, ..., S_{k+n}]` (paper's Enumeration + Matricial Representation block) is now available directly through the DKANA environment wrapper. This keeps the base PPO env unchanged, but gives DKANA a one-call environment entry point.
 
+- **Environment entry point for David**: `make_dkana_track_b_env()` returns Track B with the DKANA context already attached to every `info`.
 - **Offline training**: `build_dkana_windows()` in [dkana.py](../supply_chain/dkana.py) produces fixed-length windows with left-padding and a `time_mask` over exported trajectories.
-- **Online inference**: `DKANAOnlinePolicyAdapter` ([dkana.py:603](../supply_chain/dkana.py)) keeps a `deque(maxlen=window_size)` and reconstructs `(row_matrices, config_context, time_mask)` before every `forward`. Drop it in any `policy_fn(obs, info) → action` loop.
+- **Online inference**: use `info["dkana_row_matrices"]`, `info["dkana_config_context"]`, and `info["dkana_time_mask"]` directly. `DKANAOnlinePolicyAdapter` still exists for older code that uses the normal Track B env.
 
-Do **not** look for the window inside `env_experimental_shifts.py`. The env is intentionally windowless — separation of concerns from the paper's DKA block.
+Minimal online usage:
+
+```python
+import torch
+from supply_chain.external_env_interface import make_dkana_track_b_env
+from supply_chain.dkana import DKANAPolicy
+
+env = make_dkana_track_b_env(dkana_window_size=12, relation_mode="temporal_delta")
+obs, info = env.reset(seed=42)
+
+row_matrices = torch.from_numpy(info["dkana_row_matrices"][None]).float()
+config_context = torch.from_numpy(info["dkana_config_context"][None]).float()
+time_mask = torch.from_numpy(info["dkana_time_mask"][None])
+
+# model = DKANAPolicy(...)
+# dist = model(row_matrices, config_context, time_mask)
+# action = dist.mean.squeeze(0).detach().numpy().clip(-1.0, 1.0)
+# obs, reward, terminated, truncated, info = env.step(action)
+```
+
+Shapes with the frozen Track B contract and `dkana_window_size=12`:
+
+- `obs`: `(46,)`
+- `info["dkana_row_matrices"]`: `(12, 182, 3)`
+- `info["dkana_config_context"]`: `(12, 16)`
+- `info["dkana_time_mask"]`: `(12,)`
 
 ### Activating `<, =, >` relations
 
-Pass `--relation-mode temporal_delta` to `scripts/build_dkana_dataset.py`. The resulting metadata is embedded in the checkpoint; `DKANAOnlinePolicyAdapter` reads it and emits matching equality + temporal-delta rows at inference time. The mapping is `{"=": 0, "<": 1, ">": 2}`.
+For the environment, call `make_dkana_track_b_env(relation_mode="temporal_delta")`. For offline datasets, pass `--relation-mode temporal_delta` to `scripts/build_dkana_dataset.py`. The mapping is `{"=": 0, "<": 1, ">": 2}`.
 
 ### Unified benchmark with statics + heuristics + PPO + DKANA
 
