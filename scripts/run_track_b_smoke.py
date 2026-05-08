@@ -715,6 +715,7 @@ def load_dkana_adapter(
     dataset_metadata = checkpoint["dataset_metadata"]
     observation_fields = tuple(dataset_metadata["env_spec"]["observation_fields"])
     relation_mode = str(dataset_metadata.get("relation_mode", "equality"))
+    include_prev_reward = bool(dataset_metadata.get("include_prev_reward", False))
     window_size = int(dataset_metadata["window_size"])
     action_dim = int(model_config["action_dim"])
     adapter = DKANAOnlinePolicyAdapter(
@@ -724,9 +725,11 @@ def load_dkana_adapter(
         state_constraint_fields=STATE_CONSTRAINT_FIELDS,
         action_dim=action_dim,
         relation_mode=relation_mode,
+        include_prev_reward=include_prev_reward,
     )
     return adapter, {
         "relation_mode": relation_mode,
+        "include_prev_reward": include_prev_reward,
         "window_size": window_size,
         "action_dim": action_dim,
     }
@@ -763,6 +766,7 @@ def evaluate_dkana_policy(
             obs, reward, terminated, truncated, final_info = env.step(
                 np.asarray(action, dtype=np.float32)
             )
+            final_info["previous_reward"] = float(reward)
             reward_total += float(reward)
             demanded_total += float(final_info.get("new_demanded", 0.0))
             backorder_qty_total += float(final_info.get("new_backorder_qty", 0.0))

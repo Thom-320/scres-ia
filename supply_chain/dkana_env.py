@@ -44,6 +44,7 @@ class DKANAContextEnvWrapper(gym.Wrapper):
         observation_fields: Sequence[str] | None = None,
         state_constraint_fields: Sequence[str] = STATE_CONSTRAINT_FIELDS,
         action_dim: int | None = None,
+        include_prev_reward: bool = False,
     ) -> None:
         super().__init__(env)
         if window_size <= 0:
@@ -69,7 +70,11 @@ class DKANAContextEnvWrapper(gym.Wrapper):
         )
         self.state_constraint_fields = tuple(state_constraint_fields)
         self.action_dim = int(action_dim)
-        self.config_fields = build_dkana_config_fields(self.action_dim)
+        self.include_prev_reward = bool(include_prev_reward)
+        self.config_fields = build_dkana_config_fields(
+            self.action_dim,
+            include_prev_reward=self.include_prev_reward,
+        )
         self.constraint_context_vector = build_shift_control_constraint_vector(
             get_shift_control_constraint_context()
         ).astype(np.float32)
@@ -119,6 +124,7 @@ class DKANAContextEnvWrapper(gym.Wrapper):
         info: dict[str, Any],
         *,
         previous_action: np.ndarray,
+        previous_reward: float = 0.0,
     ) -> None:
         obs_array = np.asarray(obs, dtype=np.float32)
         state_vector = self._state_vector_from_info(info)
@@ -132,10 +138,12 @@ class DKANAContextEnvWrapper(gym.Wrapper):
             previous_state_constraint_vector=self._previous_state_constraint_vector,
             relation_mode=self.relation_mode,
         )
-        config_context = np.concatenate(
-            [self.constraint_context_vector, previous_action],
-            axis=0,
-        ).astype(np.float32)
+        config_parts = [self.constraint_context_vector, previous_action]
+        if self.include_prev_reward:
+            config_parts.append(
+                np.asarray([float(previous_reward)], dtype=np.float32),
+            )
+        config_context = np.concatenate(config_parts, axis=0).astype(np.float32)
         self._rows.append(row_matrix)
         self._configs.append(config_context)
         self._previous_observation = obs_array.copy()
@@ -170,6 +178,7 @@ class DKANAContextEnvWrapper(gym.Wrapper):
             "relation_to_index": self.relation_to_index,
             "variable_names": self.variable_names,
             "config_fields": self.config_fields,
+            "include_prev_reward": self.include_prev_reward,
         }
         enriched_info = dict(info)
         enriched_info["dkana_context"] = dkana_context
@@ -187,20 +196,37 @@ class DKANAContextEnvWrapper(gym.Wrapper):
             obs,
             info,
             previous_action=np.zeros(self.action_dim, dtype=np.float32),
+            previous_reward=0.0,
         )
-        return obs, self._attach_dkana_info(info)
+        enriched_info = dict(info)
+        enriched_info["previous_reward"] = 0.0
+        return obs, self._attach_dkana_info(enriched_info)
 
     def step(self, action: Any) -> tuple[np.ndarray, float, bool, bool, dict[str, Any]]:
         obs, reward, terminated, truncated, info = self.env.step(action)
         previous_action = self._action_vector_from_payload(action, info)
-        self._append_state(obs, info, previous_action=previous_action)
-        return obs, reward, terminated, truncated, self._attach_dkana_info(info)
+        self._append_state(
+            obs,
+            info,
+            previous_action=previous_action,
+            previous_reward=float(reward),
+        )
+        enriched_info = dict(info)
+        enriched_info["previous_reward"] = float(reward)
+        return (
+            obs,
+            reward,
+            terminated,
+            truncated,
+            self._attach_dkana_info(enriched_info),
+        )
 
 
 def make_dkana_track_b_env(
     *,
     dkana_window_size: int = 12,
     relation_mode: str = "temporal_delta",
+    include_prev_reward: bool = False,
     **env_overrides: Any,
 ) -> DKANAContextEnvWrapper:
     """Build Track B with DKANA context windows emitted by the environment."""
@@ -209,6 +235,7 @@ def make_dkana_track_b_env(
         env,
         window_size=dkana_window_size,
         relation_mode=relation_mode,
+        include_prev_reward=include_prev_reward,
         observation_fields=get_observation_fields(
             str(env_overrides.get("observation_version", "v7"))
         ),

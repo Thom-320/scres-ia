@@ -27,7 +27,11 @@ DKANA_CONFIG_FIELDS: tuple[str, ...] = CONTROL_CONTEXT_FIELDS + tuple(
 MIN_STD = 1e-4
 
 
-def build_dkana_config_fields(action_dim: int) -> tuple[str, ...]:
+def build_dkana_config_fields(
+    action_dim: int,
+    *,
+    include_prev_reward: bool = False,
+) -> tuple[str, ...]:
     """Return control-context field names for the action contract width."""
     if action_dim == len(ACTION_FIELDS):
         action_fields = ACTION_FIELDS
@@ -38,9 +42,12 @@ def build_dkana_config_fields(action_dim: int) -> tuple[str, ...]:
             f"action_dim {action_dim} does not match any known action contract "
             f"(Track A: {len(ACTION_FIELDS)}, Track B: {len(ACTION_FIELDS_TRACK_B_V1)})."
         )
-    return CONTROL_CONTEXT_FIELDS + tuple(
+    fields = CONTROL_CONTEXT_FIELDS + tuple(
         f"prev_{field_name}" for field_name in action_fields
     )
+    if include_prev_reward:
+        fields += ("prev_reward",)
+    return fields
 
 
 @dataclass(frozen=True)
@@ -76,6 +83,7 @@ class DKANADataset:
     config_fields: tuple[str, ...]
     relation_to_index: dict[str, int]
     relation_mode: str
+    include_prev_reward: bool
 
 
 def build_prefixed_variable_names(
@@ -254,6 +262,34 @@ def build_previous_action_context(
     return previous_actions
 
 
+def build_previous_reward_context(
+    rewards: np.ndarray | Sequence[float],
+    episode_ids: np.ndarray | Sequence[int],
+) -> np.ndarray:
+    """
+    Shift rewards within each episode to expose r_(t-1) without leakage.
+
+    The first observation in each episode receives 0.0 because there is no
+    previous transition reward yet.
+    """
+    rewards_array = np.asarray(rewards, dtype=np.float32)
+    episode_ids_array = np.asarray(episode_ids, dtype=np.int32)
+    if rewards_array.ndim != 1:
+        raise ValueError("rewards must be a 1D array.")
+    if episode_ids_array.ndim != 1:
+        raise ValueError("episode_ids must be a 1D array.")
+    if rewards_array.shape[0] != episode_ids_array.shape[0]:
+        raise ValueError("rewards and episode_ids must have the same length.")
+
+    previous_rewards = np.zeros_like(rewards_array)
+    for episode_id in np.unique(episode_ids_array):
+        indices = np.flatnonzero(episode_ids_array == episode_id)
+        if indices.size <= 1:
+            continue
+        previous_rewards[indices[1:]] = rewards_array[indices[:-1]]
+    return previous_rewards
+
+
 def build_dkana_windows(
     *,
     observations: np.ndarray,
@@ -266,6 +302,7 @@ def build_dkana_windows(
     observation_fields: Sequence[str] = OBSERVATION_FIELDS_V3,
     state_constraint_fields: Sequence[str] = STATE_CONSTRAINT_FIELDS,
     relation_mode: str = "equality",
+    include_prev_reward: bool = False,
 ) -> DKANADataset:
     """Create fixed-length causal windows for offline DKANA training."""
     if window_size <= 0:
@@ -299,6 +336,8 @@ def build_dkana_windows(
         raise ValueError("state_constraint_context must align with observations.")
     if rewards_array is not None and rewards_array.shape[0] != num_steps:
         raise ValueError("rewards must align with observations.")
+    if include_prev_reward and rewards_array is None:
+        raise ValueError("include_prev_reward=True requires rewards.")
     if observations_array.shape[1] != len(observation_fields):
         raise ValueError("observations width does not match observation_fields.")
     if state_constraint_array.shape[1] != len(state_constraint_fields):
@@ -323,8 +362,12 @@ def build_dkana_windows(
     )
     enumeration_map = build_enumeration_map(variable_names)
     row_count = len(variable_names) * (2 if relation_mode == "temporal_delta" else 1)
-    # config_dim is constraint_context + previous_actions (dynamic for Track B)
-    config_dim = constraint_context_array.shape[1] + actions_array.shape[1]
+    # config_dim is constraint_context + previous_actions (+ optional prev reward).
+    config_dim = (
+        constraint_context_array.shape[1]
+        + actions_array.shape[1]
+        + int(include_prev_reward)
+    )
     row_matrices_by_step: list[tuple[int, np.ndarray]] = []
     for episode_id in np.unique(episode_ids_array):
         episode_indices = np.flatnonzero(episode_ids_array == episode_id)
@@ -358,10 +401,15 @@ def build_dkana_windows(
         [row_matrix for _, row_matrix in row_matrices_by_step], axis=0
     )
     previous_actions = build_previous_action_context(actions_array, episode_ids_array)
-    config_context_array = np.concatenate(
-        [constraint_context_array, previous_actions],
-        axis=1,
-    ).astype(np.float32)
+    config_parts = [constraint_context_array, previous_actions]
+    if include_prev_reward:
+        assert rewards_array is not None
+        previous_rewards = build_previous_reward_context(
+            rewards_array,
+            episode_ids_array,
+        )
+        config_parts.append(previous_rewards[:, None])
+    config_context_array = np.concatenate(config_parts, axis=1).astype(np.float32)
 
     window_rows = np.zeros(
         (num_steps, window_size, row_count, 3),
@@ -392,9 +440,13 @@ def build_dkana_windows(
         time_mask=time_mask,
         reward_targets=rewards_array,
         variable_names=variable_names,
-        config_fields=build_dkana_config_fields(actions_array.shape[1]),
+        config_fields=build_dkana_config_fields(
+            actions_array.shape[1],
+            include_prev_reward=include_prev_reward,
+        ),
         relation_to_index=dict(enumeration_map.relation_to_index),
         relation_mode=relation_mode,
+        include_prev_reward=include_prev_reward,
     )
 
 
@@ -612,6 +664,7 @@ class DKANAOnlinePolicyAdapter:
         state_constraint_fields: Sequence[str] = STATE_CONSTRAINT_FIELDS,
         action_dim: int,
         relation_mode: str = "equality",
+        include_prev_reward: bool = False,
         device: str | torch.device = "cpu",
         deterministic: bool = True,
     ) -> None:
@@ -628,6 +681,7 @@ class DKANAOnlinePolicyAdapter:
         self.state_constraint_fields = tuple(state_constraint_fields)
         self.action_dim = int(action_dim)
         self.relation_mode = relation_mode
+        self.include_prev_reward = bool(include_prev_reward)
         self.device = torch.device(device)
         self.deterministic = bool(deterministic)
         self.constraint_context_vector = build_shift_control_constraint_vector(
@@ -643,14 +697,16 @@ class DKANAOnlinePolicyAdapter:
         self._previous_observation: np.ndarray | None = None
         self._previous_state_constraint_vector: np.ndarray | None = None
         self._previous_action = np.zeros(self.action_dim, dtype=np.float32)
+        self._previous_reward = 0.0
 
     def reset(self) -> None:
-        """Clear the per-episode SMS and previous-action context."""
+        """Clear the per-episode SMS and previous transition context."""
         self._rows.clear()
         self._configs.clear()
         self._previous_observation = None
         self._previous_state_constraint_vector = None
         self._previous_action = np.zeros(self.action_dim, dtype=np.float32)
+        self._previous_reward = 0.0
 
     def _state_vector_from_info(self, info: dict[str, Any]) -> np.ndarray:
         state_context = info.get("state_constraint_context")
@@ -661,6 +717,13 @@ class DKANAOnlinePolicyAdapter:
         )
 
     def _append_current_state(self, obs: np.ndarray, info: dict[str, Any]) -> None:
+        if self.include_prev_reward:
+            self._previous_reward = float(
+                info.get(
+                    "previous_reward",
+                    info.get("reward_total", info.get("ret_seq_step", 0.0)),
+                )
+            )
         state_vector = self._state_vector_from_info(info)
         row_matrix = build_mfsc_relational_state(
             obs,
@@ -672,10 +735,12 @@ class DKANAOnlinePolicyAdapter:
             previous_state_constraint_vector=self._previous_state_constraint_vector,
             relation_mode=self.relation_mode,
         )
-        config_context = np.concatenate(
-            [self.constraint_context_vector, self._previous_action],
-            axis=0,
-        ).astype(np.float32)
+        config_parts = [self.constraint_context_vector, self._previous_action]
+        if self.include_prev_reward:
+            config_parts.append(
+                np.asarray([self._previous_reward], dtype=np.float32),
+            )
+        config_context = np.concatenate(config_parts, axis=0).astype(np.float32)
         self._rows.append(row_matrix)
         self._configs.append(config_context)
         self._previous_observation = obs.copy()

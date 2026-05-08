@@ -64,6 +64,14 @@ def main() -> None:
             "'temporal_delta' also emits x <, =, or > previous_value rows."
         ),
     )
+    parser.add_argument(
+        "--include-prev-reward",
+        action="store_true",
+        help=(
+            "Append the previous transition reward to the DKANA config context. "
+            "Requires rewards.npy in the export."
+        ),
+    )
     args = parser.parse_args()
 
     output_dir = resolve_output_dir(args.input_dir, args.output_dir, args.window_size)
@@ -110,6 +118,7 @@ def main() -> None:
         observation_fields=tuple(env_spec["observation_fields"]),
         state_constraint_fields=tuple(state_field_payload["fields"]),
         relation_mode=args.relation_mode,
+        include_prev_reward=args.include_prev_reward,
     )
 
     np.save(output_dir / "dkana_row_matrices.npy", dataset.row_matrices)
@@ -123,6 +132,7 @@ def main() -> None:
         "source_dir": str(args.input_dir),
         "window_size": args.window_size,
         "relation_mode": dataset.relation_mode,
+        "include_prev_reward": dataset.include_prev_reward,
         "reward_mode": metadata_payload.get("reward_mode"),
         "observation_version": metadata_payload.get("observation_version"),
         "frame_stack": metadata_payload.get("frame_stack", 1),

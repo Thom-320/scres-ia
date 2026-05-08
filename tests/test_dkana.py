@@ -19,6 +19,7 @@ from supply_chain.dkana import (
     build_mfsc_relational_state,
     build_prefixed_variable_names,
     build_previous_action_context,
+    build_previous_reward_context,
 )
 from supply_chain.external_env_interface import (
     ACTION_FIELDS,
@@ -153,6 +154,14 @@ def test_build_previous_action_context_resets_per_episode() -> None:
     assert np.allclose(previous_actions[2], 0.0)
 
 
+def test_build_previous_reward_context_resets_per_episode() -> None:
+    rewards = np.array([1.0, 0.5, -0.25], dtype=np.float32)
+    episode_ids = np.array([0, 0, 1], dtype=np.int32)
+    previous_rewards = build_previous_reward_context(rewards, episode_ids)
+
+    assert previous_rewards.tolist() == [0.0, 1.0, 0.0]
+
+
 def test_build_dkana_windows_left_pads_history_and_context() -> None:
     export_arrays = make_synthetic_export_arrays()
     dataset = build_dkana_windows(window_size=2, **export_arrays)
@@ -205,6 +214,26 @@ def test_build_dkana_windows_supports_track_b_context_fields() -> None:
     assert dataset.variable_names[: len(OBSERVATION_FIELDS_V7)] == tuple(
         f"obs::{field_name}" for field_name in OBSERVATION_FIELDS_V7
     )
+
+
+def test_build_dkana_windows_can_include_previous_reward_context() -> None:
+    export_arrays = make_synthetic_export_arrays()
+    dataset = build_dkana_windows(
+        window_size=2,
+        include_prev_reward=True,
+        **export_arrays,
+    )
+
+    expected_config_fields = build_dkana_config_fields(
+        len(ACTION_FIELDS),
+        include_prev_reward=True,
+    )
+    assert dataset.include_prev_reward is True
+    assert dataset.config_fields == expected_config_fields
+    assert dataset.config_context.shape == (3, 2, len(expected_config_fields))
+    assert dataset.config_context[0, -1, -1] == 0.0
+    assert dataset.config_context[1, -1, -1] == export_arrays["rewards"][0]
+    assert dataset.config_context[2, -1, -1] == 0.0
 
 
 def test_build_dkana_windows_temporal_delta_adds_relation_rows() -> None:
@@ -369,6 +398,28 @@ def test_dkana_track_b_env_emits_context_window_in_info() -> None:
     env.close()
 
 
+def test_dkana_track_b_env_can_include_previous_reward_context() -> None:
+    env = make_dkana_track_b_env(
+        max_steps=2,
+        dkana_window_size=3,
+        include_prev_reward=True,
+    )
+    _, info = env.reset(seed=123)
+    config_dim = len(CONTROL_CONTEXT_FIELDS) + len(ACTION_FIELDS_TRACK_B_V1) + 1
+
+    assert info["dkana_config_context"].shape == (3, config_dim)
+    assert info["dkana_context"]["include_prev_reward"] is True
+    assert info["dkana_context"]["config_fields"][-1] == "prev_reward"
+    assert info["dkana_config_context"][-1, -1] == 0.0
+    action = np.zeros(len(ACTION_FIELDS_TRACK_B_V1), dtype=np.float32)
+
+    _, reward, _, _, step_info = env.step(action)
+
+    assert step_info["previous_reward"] == reward
+    assert step_info["dkana_config_context"][-1, -1] == reward
+    env.close()
+
+
 def test_build_dkana_dataset_script_writes_numpy_outputs(tmp_path: Path) -> None:
     export_dir = tmp_path / "export"
     export_dir.mkdir(parents=True, exist_ok=True)
@@ -424,6 +475,7 @@ def test_build_dkana_dataset_script_writes_numpy_outputs(tmp_path: Path) -> None
         "2",
         "--relation-mode",
         "temporal_delta",
+        "--include-prev-reward",
     ]
     completed = subprocess.run(
         command,
@@ -442,7 +494,9 @@ def test_build_dkana_dataset_script_writes_numpy_outputs(tmp_path: Path) -> None
         3,
     ]
     assert metadata["relation_mode"] == "temporal_delta"
-    assert metadata["config_context_shape"] == [3, 2, len(DKANA_CONFIG_FIELDS)]
+    assert metadata["config_context_shape"] == [3, 2, len(DKANA_CONFIG_FIELDS) + 1]
+    assert metadata["include_prev_reward"] is True
+    assert metadata["config_fields"][-1] == "prev_reward"
     assert metadata["reward_mode"] == "ReT_unified_v1"
     assert metadata["observation_version"] == "v3"
     assert metadata["action_fields"] == list(ACTION_FIELDS)

@@ -143,6 +143,7 @@ def run_policy(
         while not (terminated or truncated):
             action = policy_fn(np.asarray(obs, dtype=np.float32), final_info)
             obs, reward, terminated, truncated, final_info = env.step(action)
+            final_info["previous_reward"] = float(reward)
             reward_total += float(reward)
             demanded_total += float(final_info.get("new_demanded", 0.0))
             backorder_qty_total += float(final_info.get("new_backorder_qty", 0.0))
@@ -213,6 +214,7 @@ def main() -> None:
     model_config = checkpoint["model_config"]
     observation_fields = tuple(dataset_metadata["env_spec"]["observation_fields"])
     relation_mode = str(dataset_metadata.get("relation_mode", "equality"))
+    include_prev_reward = bool(dataset_metadata.get("include_prev_reward", False))
     window_size = int(dataset_metadata["window_size"])
     action_dim = int(model_config["action_dim"])
     dkana_adapter = DKANAOnlinePolicyAdapter(
@@ -222,6 +224,7 @@ def main() -> None:
         state_constraint_fields=STATE_CONSTRAINT_FIELDS,
         action_dim=action_dim,
         relation_mode=relation_mode,
+        include_prev_reward=include_prev_reward,
     )
 
     all_rows = run_policy(
@@ -257,6 +260,7 @@ def main() -> None:
                 "reward_mode": args.reward_mode,
                 "observation_version": args.observation_version,
                 "relation_mode": relation_mode,
+                "include_prev_reward": include_prev_reward,
                 "window_size": window_size,
                 "action_dim": action_dim,
             },

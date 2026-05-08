@@ -1,10 +1,12 @@
 # DKANA Contributor Handoff
 
-## Why Track B, Not Track A
+## Why Track B, Not Thesis-Exact Track A
 
-We discovered empirically that **Track A (thesis-faithful, 5D actions) has ~1% adaptive headroom** — static S=2 is already near-optimal because the agent controls upstream production while the real bottleneck is downstream distribution. PPO, RecurrentPPO, and every reward variant we tested fail to beat S2 in Track A. The problem is structural, not algorithmic.
+We discovered empirically that **Track A (thesis-grounded, 5D actions) has ~1% adaptive headroom** — static S=2 is already near-optimal because the agent controls upstream production while the real bottleneck is downstream distribution. PPO, RecurrentPPO, and every reward variant we tested fail to beat S2 in Track A. The problem is structural, not algorithmic.
 
 **Track B extends the action space to include downstream control (Op10, Op12)**, opening 2-3pp of real headroom. In a 100k smoke, PPO achieved fill_rate=1.000 vs best static=0.987. This is where DKANA can demonstrate value.
+
+The literal Garrido thesis variables are `Q`, `ROP`, `I_{t,S}`, and `S` over the modeled supply-chain configurations. A thesis-exact adaptive lane should therefore be treated as an ablation or historical reference, not the main learning lane: if it fixes downstream Op10/Op12 distribution, it is expected to look worse because the active bottleneck is not controllable by the agent.
 
 Your task: train a DKANA policy on Track B and show it outperforms PPO+MLP under the same contract.
 
@@ -20,7 +22,11 @@ python -c "
 from supply_chain.external_env_interface import make_dkana_track_b_env, get_track_b_env_spec
 spec = get_track_b_env_spec()
 print(f'Obs: {len(spec.observation_fields)} dims, Action: {len(spec.action_fields)} dims')
-env = make_dkana_track_b_env(dkana_window_size=12, relation_mode="temporal_delta")
+env = make_dkana_track_b_env(
+    dkana_window_size=12,
+    relation_mode="temporal_delta",
+    include_prev_reward=True,  # David experimental context suggestion
+)
 obs, info = env.reset(seed=42)
 print(f'Obs shape: {obs.shape}, sample: {obs[:5]}')
 print(f'DKANA rows: {info["dkana_row_matrices"].shape}')
@@ -42,7 +48,8 @@ python scripts/export_trajectories_for_david.py \
 python scripts/build_dkana_dataset.py \
   --input-dir outputs/data_export_track_b_v7 \
   --window-size 12 \
-  --relation-mode temporal_delta
+  --relation-mode temporal_delta \
+  --include-prev-reward
 
 # 5. Train the starter DKANA behavior-cloning policy
 python scripts/train_dkana_behavior_clone.py \
@@ -212,7 +219,7 @@ python scripts/build_dkana_dataset.py \
   --relation-mode temporal_delta
 ```
 
-This writes `dkana_row_matrices.npy` as `(N, window, rows, 3)`, `dkana_config_context.npy` as `(N, window, config_dim)`, and `dkana_time_mask.npy` as `(N, window)`. With `--relation-mode temporal_delta`, the MRC emits both equality rows and temporal relation rows where the relation index maps `{ "=": 0, "<": 1, ">": 2 }`.
+This writes `dkana_row_matrices.npy` as `(N, window, rows, 3)`, `dkana_config_context.npy` as `(N, window, config_dim)`, and `dkana_time_mask.npy` as `(N, window)`. With `--relation-mode temporal_delta`, the MRC emits both equality rows and temporal relation rows where the relation index maps `{ "=": 0, "<": 1, ">": 2 }`. With `--include-prev-reward`, the final config-context column is `prev_reward`, aligned as the previous transition reward inside each episode and reset to `0.0` at episode starts.
 
 ## Key Files
 
@@ -254,7 +261,11 @@ import torch
 from supply_chain.external_env_interface import make_dkana_track_b_env
 from supply_chain.dkana import DKANAPolicy
 
-env = make_dkana_track_b_env(dkana_window_size=12, relation_mode="temporal_delta")
+env = make_dkana_track_b_env(
+    dkana_window_size=12,
+    relation_mode="temporal_delta",
+    include_prev_reward=True,
+)
 obs, info = env.reset(seed=42)
 
 row_matrices = torch.from_numpy(info["dkana_row_matrices"][None]).float()
@@ -271,12 +282,26 @@ Shapes with the frozen Track B contract and `dkana_window_size=12`:
 
 - `obs`: `(46,)`
 - `info["dkana_row_matrices"]`: `(12, 182, 3)`
-- `info["dkana_config_context"]`: `(12, 16)`
+- `info["dkana_config_context"]`: `(12, 16)` by default, or `(12, 17)` with `include_prev_reward=True`
 - `info["dkana_time_mask"]`: `(12,)`
 
 ### Activating `<, =, >` relations
 
 For the environment, call `make_dkana_track_b_env(relation_mode="temporal_delta")`. For offline datasets, pass `--relation-mode temporal_delta` to `scripts/build_dkana_dataset.py`. The mapping is `{"=": 0, "<": 1, ">": 2}`.
+
+### Activating Previous-Reward Context
+
+David's experimental request is supported with:
+
+```python
+env = make_dkana_track_b_env(
+    dkana_window_size=12,
+    relation_mode="temporal_delta",
+    include_prev_reward=True,
+)
+```
+
+For offline tensors, add `--include-prev-reward` to `scripts/build_dkana_dataset.py`. The checkpoint metadata records `include_prev_reward`, and both `scripts/evaluate_dkana_track_b.py` and `scripts/run_track_b_smoke.py --dkana-checkpoint ...` reconstruct the DKANA online adapter with the matching config dimension.
 
 ### Unified benchmark with statics + heuristics + PPO + DKANA
 
