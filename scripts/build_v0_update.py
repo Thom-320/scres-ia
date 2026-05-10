@@ -20,7 +20,11 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.enum.table import WD_TABLE_ALIGNMENT
 from docx.oxml.ns import nsdecls
 from docx.oxml import parse_xml
-import os
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+OUTPUT_DIR = REPO_ROOT / "output" / "doc"
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 doc = Document()
 
@@ -638,6 +642,6 @@ add_body(
 )
 
 # Save
-output_path = os.path.expanduser("~/Downloads/v0_update_sections_3_3_and_4_2.docx")
+output_path = OUTPUT_DIR / "v0_update_sections_3_3_and_4_2.docx"
 doc.save(output_path)
 print(f"Saved to {output_path}")

@@ -149,7 +149,7 @@ Because `FR_t` and `AT_t` already live in `(0, 1]`, the log score is always `≤
 
 ## Garrido 2024 Paper-Faithful Family
 
-The repo now also includes a **paper-faithful** Garrido et al. (2024) five-variable Cobb-Douglas family, documented in [RET_GARRIDO2024_IMPLEMENTATION.md](/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/docs/RET_GARRIDO2024_IMPLEMENTATION.md).
+The repo now also includes a **paper-faithful** Garrido et al. (2024) five-variable Cobb-Douglas family, documented in [RET_GARRIDO2024_IMPLEMENTATION.md](docs/RET_GARRIDO2024_IMPLEMENTATION.md).
 
 That family is intentionally split into:
 

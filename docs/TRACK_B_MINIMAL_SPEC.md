@@ -46,8 +46,8 @@ Current fixed downstream transport in the DES:
 
 Relevant code:
 
-- [external_env_interface.py](/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/supply_chain/external_env_interface.py)
-- [supply_chain.py](/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/supply_chain/supply_chain.py)
+- [external_env_interface.py](supply_chain/external_env_interface.py)
+- [supply_chain.py](supply_chain/supply_chain.py)
 
 This means RL mostly controls upstream inventory and capacity while the
 distribution bottleneck remains outside the action space.
@@ -55,7 +55,7 @@ distribution bottleneck remains outside the action space.
 The repo already records that positive action headroom above `S2` is small and
 downside from poor inventory settings is large:
 
-- [PAPER_FINDINGS_REGISTRY.md](/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/docs/PAPER_FINDINGS_REGISTRY.md)
+- [PAPER_FINDINGS_REGISTRY.md](docs/PAPER_FINDINGS_REGISTRY.md)
 
 Track B therefore should not start with another reward redesign. It should
 start by moving control toward the active bottleneck.
@@ -369,7 +369,7 @@ These are the exact repo files that should change when Track B coding starts.
 
 ### Core DES
 
-- [supply_chain/supply_chain.py](/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/supply_chain/supply_chain.py)
+- [supply_chain/supply_chain.py](supply_chain/supply_chain.py)
 
 Required changes:
 
@@ -382,7 +382,7 @@ Required changes:
 
 ### Environment wrapper
 
-- [supply_chain/env_experimental_shifts.py](/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/supply_chain/env_experimental_shifts.py)
+- [supply_chain/env_experimental_shifts.py](supply_chain/env_experimental_shifts.py)
 
 Required changes:
 
@@ -394,7 +394,7 @@ Required changes:
 
 ### External contract
 
-- [supply_chain/external_env_interface.py](/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/supply_chain/external_env_interface.py)
+- [supply_chain/external_env_interface.py](supply_chain/external_env_interface.py)
 
 Required changes:
 
@@ -406,7 +406,7 @@ Required changes:
 
 ### Config
 
-- [supply_chain/config.py](/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/supply_chain/config.py)
+- [supply_chain/config.py](supply_chain/config.py)
 
 Required changes:
 
@@ -417,8 +417,8 @@ Required changes:
 
 ### Training / benchmarking
 
-- [train_agent.py](/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/train_agent.py)
-- [scripts/benchmark_control_reward.py](/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/scripts/benchmark_control_reward.py)
+- [train_agent.py](train_agent.py)
+- [scripts/benchmark_control_reward.py](scripts/benchmark_control_reward.py)
 
 Required changes:
 

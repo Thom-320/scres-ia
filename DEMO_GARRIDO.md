@@ -12,7 +12,7 @@
 
 ### Correr baseline determinístico (Cf0, S=1)
 ```bash
-cd ~/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia
+cd <repo-root>
 python3 validation_report.py
 ```
 

@@ -14,8 +14,10 @@ Key requirements:
 - Times New Roman 10pt
 """
 
-import os
+import shutil
 import subprocess
+from pathlib import Path
+
 from docx import Document
 from docx.shared import Pt
 from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -26,6 +28,8 @@ from lxml import etree
 
 FONT_NAME = "Times New Roman"
 FONT_SIZE = Pt(10)
+REPO_ROOT = Path(__file__).resolve().parents[1]
+OUTPUT_DIR = REPO_ROOT / "output" / "doc"
 USABLE_EMU = 7773670 - 2 * 900430
 TOTAL_TWIPS = int(USABLE_EMU / 635)
 
@@ -220,12 +224,12 @@ def booktabs(table, col_pcts, aligns, bold_cells=None, group_after_rows=None):
 # Load fresh base
 # =====================================================================
 
-base_dir = os.path.expanduser("~/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia")
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 subprocess.run(
-    ["python3", "scripts/edit_v0_inplace.py"], cwd=base_dir, capture_output=True
+    ["python3", "scripts/edit_v0_inplace.py"], cwd=REPO_ROOT, capture_output=True
 )
 
-doc_path = os.path.expanduser("~/Downloads/v0_neuralNet-scres_UPDATED_2026-03-24.docx")
+doc_path = OUTPUT_DIR / "v0_neuralNet-scres_UPDATED_2026-03-24.docx"
 doc = Document(doc_path)
 
 # =====================================================================
@@ -349,16 +353,20 @@ doc.save(doc_path)
 print(f"\nSaved Q1-grade version to: {doc_path}")
 
 # Regenerate PDF
-subprocess.run(
-    [
-        "/Applications/LibreOffice.app/Contents/MacOS/soffice",
-        "--headless",
-        "--convert-to",
-        "pdf",
-        "--outdir",
-        os.path.expanduser("~/Downloads"),
-        doc_path,
-    ],
-    capture_output=True,
-)
-print("PDF regenerated.")
+soffice = shutil.which("soffice")
+if soffice:
+    subprocess.run(
+        [
+            soffice,
+            "--headless",
+            "--convert-to",
+            "pdf",
+            "--outdir",
+            str(OUTPUT_DIR),
+            str(doc_path),
+        ],
+        capture_output=True,
+    )
+    print("PDF regenerated.")
+else:
+    print("LibreOffice 'soffice' not found; skipped PDF regeneration.")

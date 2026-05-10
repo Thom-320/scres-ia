@@ -8,8 +8,10 @@ Replaces:
 - Variable references with proper italic + subscript formatting
 """
 
-import os
+import shutil
 import subprocess
+from pathlib import Path
+
 from docx import Document
 from docx.shared import Pt, Emu
 from docx.oxml.ns import nsdecls
@@ -18,8 +20,11 @@ from lxml import etree
 
 FONT_NAME = "Times New Roman"
 FONT_SIZE = Emu(165100)  # 13pt matching doc
+REPO_ROOT = Path(__file__).resolve().parents[1]
+OUTPUT_DIR = REPO_ROOT / "output" / "doc"
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-doc_path = os.path.expanduser("~/Downloads/v0_neuralNet-scres_UPDATED_2026-03-24.docx")
+doc_path = OUTPUT_DIR / "v0_neuralNet-scres_UPDATED_2026-03-24.docx"
 doc = Document(doc_path)
 
 # OMML namespace
@@ -248,16 +253,20 @@ fix_ci95_in_tables(doc)
 doc.save(doc_path)
 print(f"\nSaved finalized version to: {doc_path}")
 
-subprocess.run(
-    [
-        "/Applications/LibreOffice.app/Contents/MacOS/soffice",
-        "--headless",
-        "--convert-to",
-        "pdf",
-        "--outdir",
-        os.path.expanduser("~/Downloads"),
-        doc_path,
-    ],
-    capture_output=True,
-)
-print("PDF regenerated.")
+soffice = shutil.which("soffice")
+if soffice:
+    subprocess.run(
+        [
+            soffice,
+            "--headless",
+            "--convert-to",
+            "pdf",
+            "--outdir",
+            str(OUTPUT_DIR),
+            str(doc_path),
+        ],
+        capture_output=True,
+    )
+    print("PDF regenerated.")
+else:
+    print("LibreOffice 'soffice' not found; skipped PDF regeneration.")

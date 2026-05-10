@@ -3,7 +3,7 @@
 Demo para Garrido — DES + RL Environment
 =========================================
 Corre desde la raíz del proyecto:
-    cd ~/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia
+    cd <repo-root>
     python demo_garrido.py
 
 Muestra:
@@ -13,10 +13,7 @@ Muestra:
   4. Comparación rápida: S1 vs S2 vs S3
 """
 
-import sys
 import numpy as np
-
-sys.path.insert(0, ".")
 
 from supply_chain.config import (
     SIMULATION_HORIZON,

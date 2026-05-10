@@ -37,7 +37,7 @@ This checklist now freezes the **Track A** paper backbone:
 ### Historical reference runs
 
 - [x] Historical `ReT_seq_v1` long run completed:
-  [final_ret_seq_v1_500k](/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/outputs/benchmarks/final_ret_seq_v1_500k)
+  [final_ret_seq_v1_500k](outputs/benchmarks/final_ret_seq_v1_500k)
 - [x] Historical result is usable as a comparator/baseline
 - [ ] Historical result is **not** the final paper evidence, because it uses `ReT_seq_v1 + v1`, not the frozen paper contract
 

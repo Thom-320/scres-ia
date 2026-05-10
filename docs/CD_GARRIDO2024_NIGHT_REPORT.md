@@ -102,8 +102,8 @@ Garrido 2024 5-variable formulation with ζ, ε, φ, τ, κ̇).
 
 | File | Location |
 |------|----------|
-| Analysis doc | `docs/RET_CD_ANALYSIS.md` + `~/Downloads/RET_CD_ANALYSIS.md` |
-| Calibration JSON | `outputs/ret_cd_comparison/comparison_results.json` + `~/Downloads/RET_CD_COMPARISON.json` |
+| Analysis doc | `docs/RET_CD_ANALYSIS.md` |
+| Calibration JSON | `outputs/ret_cd_comparison/comparison_results.json` |
 | Calibration report | `outputs/ret_cd_comparison/comparison_report.txt` |
 | Training script | `scripts/run_ret_cd_v1_benchmark.sh` |
 | Env implementation | `supply_chain/env_experimental_shifts.py` (ReT_cd_v1, ReT_cd_sigmoid) |

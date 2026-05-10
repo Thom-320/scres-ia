@@ -34,6 +34,8 @@ from supply_chain.external_env_interface import (
     make_track_b_env,
 )
 
+REPO_ROOT = Path(__file__).resolve().parents[1]
+
 
 def make_synthetic_export_arrays() -> dict[str, np.ndarray]:
     num_steps = 3
@@ -479,7 +481,7 @@ def test_build_dkana_dataset_script_writes_numpy_outputs(tmp_path: Path) -> None
     ]
     completed = subprocess.run(
         command,
-        cwd="/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia",
+        cwd=REPO_ROOT,
         check=True,
         capture_output=True,
         text=True,

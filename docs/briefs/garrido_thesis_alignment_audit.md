@@ -4,15 +4,15 @@
 
 Source of truth audited against the repo:
 
-- [`docs/WRAP_Theses_Garrido_Rios_2017.pdf`](/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/docs/WRAP_Theses_Garrido_Rios_2017.pdf)
+- [`docs/WRAP_Theses_Garrido_Rios_2017.pdf`](docs/WRAP_Theses_Garrido_Rios_2017.pdf)
 
 Code paths audited:
 
-- [`supply_chain/config.py`](/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/supply_chain/config.py)
-- [`supply_chain/supply_chain.py`](/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/supply_chain/supply_chain.py)
-- [`supply_chain/env_experimental_shifts.py`](/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/supply_chain/env_experimental_shifts.py)
-- [`supply_chain/external_env_interface.py`](/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/supply_chain/external_env_interface.py)
-- [`supply_chain/dkana.py`](/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/supply_chain/dkana.py)
+- [`supply_chain/config.py`](supply_chain/config.py)
+- [`supply_chain/supply_chain.py`](supply_chain/supply_chain.py)
+- [`supply_chain/env_experimental_shifts.py`](supply_chain/env_experimental_shifts.py)
+- [`supply_chain/external_env_interface.py`](supply_chain/external_env_interface.py)
+- [`supply_chain/dkana.py`](supply_chain/dkana.py)
 
 ## Executive Verdict
 
@@ -48,7 +48,7 @@ The 13-operation chain in the thesis is reproduced in the repo:
   - Op1-Op12 process definitions
   - demand at Op13
   - Figure 6.2 initial configuration
-- The repo mirrors those operations in [`supply_chain/config.py`](/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/supply_chain/config.py) and [`supply_chain/supply_chain.py`](/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/supply_chain/supply_chain.py#L102).
+- The repo mirrors those operations in [`supply_chain/config.py`](supply_chain/config.py) and [`supply_chain/supply_chain.py`](supply_chain/supply_chain.py#L102).
 
 Examples of direct alignment:
 
@@ -65,7 +65,7 @@ These are consistent with thesis pages 84-88 and Table 6.20 on page 109.
 The repo matches Garrido's short-term capacity scenario:
 
 - Thesis Table 6.20, page 109
-- Repo implementation in [`supply_chain/config.py`](/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/supply_chain/config.py#L379)
+- Repo implementation in [`supply_chain/config.py`](supply_chain/config.py#L379)
 
 Direct matches:
 
@@ -80,7 +80,7 @@ The RL shift action is therefore grounded in Garrido's scenario-III capacity des
 The repo matches Garrido's strategic inventory reserve scenario:
 
 - Thesis Table 6.16, page 107
-- Repo implementation in [`supply_chain/config.py`](/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/supply_chain/config.py#L365)
+- Repo implementation in [`supply_chain/config.py`](supply_chain/config.py#L365)
 
 Matches:
 
@@ -94,7 +94,7 @@ Matches:
 The repo matches Garrido's current and increased risk coding:
 
 - Thesis Table 6.12, page 105
-- Repo implementation in [`supply_chain/config.py`](/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/supply_chain/config.py)
+- Repo implementation in [`supply_chain/config.py`](supply_chain/config.py)
 
 Examples:
 
@@ -119,7 +119,7 @@ The repo matches Garrido's warm-up concept:
 
 - Thesis Section 6.8.2, page 112
 - Garrido: first batch of `Q=5000` rations arriving at Op9, deterministic estimate `838.8` hours
-- Repo: [`supply_chain/config.py`](/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/supply_chain/config.py#L435) sets `estimated_deterministic_hrs = 838.8`
+- Repo: [`supply_chain/config.py`](supply_chain/config.py#L435) sets `estimated_deterministic_hrs = 838.8`
 
 ## What Only Partially Matches
 
@@ -157,8 +157,8 @@ The thesis is order-centric.
 
 The repo is mainly step-centric.
 
-- [`supply_chain/supply_chain.py`](/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/supply_chain/supply_chain.py#L314) exposes a 15-d aggregate observation
-- [`supply_chain/env_experimental_shifts.py`](/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/supply_chain/env_experimental_shifts.py) derives reward and diagnostics at step level
+- [`supply_chain/supply_chain.py`](supply_chain/supply_chain.py#L314) exposes a 15-d aggregate observation
+- [`supply_chain/env_experimental_shifts.py`](supply_chain/env_experimental_shifts.py) derives reward and diagnostics at step level
 
 Verdict:
 
@@ -190,7 +190,7 @@ The repo now implements that logic in the base DES:
 
 Code evidence:
 
-- [`supply_chain/supply_chain.py`](/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/supply_chain/supply_chain.py)
+- [`supply_chain/supply_chain.py`](supply_chain/supply_chain.py)
 
 Remaining mismatch:
 
@@ -215,7 +215,7 @@ Our RL action space is:
 
 Code:
 
-- [`supply_chain/env_experimental_shifts.py`](/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/supply_chain/env_experimental_shifts.py#L647)
+- [`supply_chain/env_experimental_shifts.py`](supply_chain/env_experimental_shifts.py#L647)
 
 Verdict:
 
@@ -240,8 +240,8 @@ Our observation is an engineered control state:
 
 Code:
 
-- [`supply_chain/supply_chain.py`](/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/supply_chain/supply_chain.py#L314)
-- [`supply_chain/external_env_interface.py`](/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/supply_chain/external_env_interface.py#L11)
+- [`supply_chain/supply_chain.py`](supply_chain/supply_chain.py#L314)
+- [`supply_chain/external_env_interface.py`](supply_chain/external_env_interface.py#L11)
 
 Verdict:
 
@@ -259,7 +259,7 @@ The repo:
 
 Code:
 
-- [`supply_chain/env_experimental_shifts.py`](/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/supply_chain/env_experimental_shifts.py#L288)
+- [`supply_chain/env_experimental_shifts.py`](supply_chain/env_experimental_shifts.py#L288)
 
 Verdict:
 
@@ -330,9 +330,9 @@ Those 45 dims include:
 
 Code:
 
-- [`supply_chain/env_experimental_shifts.py`](/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/supply_chain/env_experimental_shifts.py#L270)
-- [`supply_chain/external_env_interface.py`](/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/supply_chain/external_env_interface.py#L54)
-- [`supply_chain/dkana.py`](/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/supply_chain/dkana.py#L10)
+- [`supply_chain/env_experimental_shifts.py`](supply_chain/env_experimental_shifts.py#L270)
+- [`supply_chain/external_env_interface.py`](supply_chain/external_env_interface.py#L54)
+- [`supply_chain/dkana.py`](supply_chain/dkana.py#L10)
 
 Important limitation:
 
