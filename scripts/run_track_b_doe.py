@@ -193,7 +193,7 @@ def run_static_policy_episode(
     track_b_context = final_info["state_constraint_context"]["track_b_context"]
     if demanded_total > 0.0:
         flow_backorder_rate = backorder_qty_total / demanded_total
-        flow_fill_rate = 1.0 - flow_backorder_rate
+        flow_fill_rate = max(0.0, min(1.0, 1.0 - flow_backorder_rate))
     else:
         flow_backorder_rate = 0.0
         flow_fill_rate = 1.0

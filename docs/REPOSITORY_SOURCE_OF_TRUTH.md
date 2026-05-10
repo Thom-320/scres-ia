@@ -6,6 +6,8 @@ This note freezes the current paper-facing repository story. Treat it as the pri
 
 The repository supports three distinct roles that must not be conflated:
 
+- `thesis_1to1`: strict Garrido-Rios reproduction lane, no RL wrapper, no
+  reward shaping, no priming, and no action multipliers.
 - `ReT_seq_v1`: primary training reward for the paper-facing benchmark family.
 - `control_v1` / `control_v1_pbrs`: historical operational comparators retained for legacy comparison.
 - `ReT_thesis` / `ret_thesis_corrected_step`: thesis-aligned resilience metrics for reporting and audit.
@@ -14,6 +16,15 @@ The repository supports three distinct roles that must not be conflated:
 The paper contribution is therefore:
 
 > A rigorous DES+RL benchmark for resilient control in a military food supply chain, with explicit treatment of reward alignment, partial observability, and stress-regime-dependent adaptive gains.
+
+Strict thesis reproduction now lives in `docs/thesis_faithful/CONTRACT.md` and
+is executed through `scripts/run_thesis_faithful.py`. That lane is a validation
+gate for the DES, not a training benchmark.
+
+The paper-serious trainable bridge is `thesis_aligned_training`, built through
+`make_thesis_aligned_training_env()` and checked with
+`scripts/run_thesis_aligned_static_gate.py`. It inherits the thesis validation
+knobs but remains a Gym/RL extension.
 
 ## Frozen benchmark backbone
 

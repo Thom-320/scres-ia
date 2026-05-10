@@ -10,18 +10,19 @@ Strategy:
    - Tables: bordered with consistent styling
 """
 
+from pathlib import Path
+
 from docx import Document
 from docx.shared import Pt, Cm, Emu
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.enum.table import WD_TABLE_ALIGNMENT
 from docx.oxml.ns import nsdecls
 from docx.oxml import parse_xml
-import os
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
 
 # Load the document
-src = os.path.expanduser(
-    "~/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/v.0_neuralNet-scres latest.docx"
-)
+src = REPO_ROOT / "v.0_neuralNet-scres latest.docx"
 doc = Document(src)
 
 # The v0 uses size=165100 EMU = 13pt throughout, italic for subsection headings
@@ -880,12 +881,13 @@ print(f"Inserted {len(section_42_content)} elements into section 4.2")
 # STEP 5: Save
 # =====================================================================
 
-output_path = os.path.expanduser(
-    "~/Downloads/v0_neuralNet-scres_UPDATED_2026-03-24.docx"
+output_path = (
+    REPO_ROOT / "output" / "doc" / "v0_neuralNet-scres_UPDATED_2026-03-24.docx"
 )
+output_path.parent.mkdir(parents=True, exist_ok=True)
 doc.save(output_path)
 print(f"\nSaved updated v0 to: {output_path}")
 
 # Also save the standalone sections file as backup
-standalone_path = os.path.expanduser("~/Downloads/v0_update_sections_3_3_and_4_2.docx")
+standalone_path = REPO_ROOT / "output" / "doc" / "v0_update_sections_3_3_and_4_2.docx"
 print(f"Standalone sections file still at: {standalone_path}")

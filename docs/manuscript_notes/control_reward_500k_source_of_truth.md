@@ -35,7 +35,7 @@ The current auditable `control_v1` comparator uses:
 
 **Primary auditable sources**
 
-- `/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/outputs/paper_benchmarks/paper_control_v1_500k`
+- `outputs/paper_benchmarks/paper_control_v1_500k`
 
 **Historical-only sources**
 

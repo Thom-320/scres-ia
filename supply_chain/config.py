@@ -50,6 +50,38 @@ RATIONS_PER_SHIFT = int(ASSEMBLY_RATE * HOURS_PER_SHIFT)  # 2,564
 # But thesis uses LT = 48 hours for the last-mile (Op9→Op13) delivery promise.
 LEAD_TIME_PROMISE = 48  # Hours — thesis Section 6.3.4
 
+THESIS_FAITHFUL_PROTOCOL = {
+    "protocol": "thesis_1to1",
+    "year_basis": "thesis",
+    "horizon_hours": SIMULATION_HORIZON,
+    "warmup_trigger": "op9_arrival",
+    "downstream_q_source": "figure_6_2",
+    "r14_defect_mode": "thesis_strict_op6",
+    "ret_weights": {"max": 1.0, "mean": 0.5, "min": 0.0},
+    "rl_enabled": False,
+    "reward_mode": None,
+    "priming_enabled": False,
+    "action_multipliers_enabled": False,
+}
+
+THESIS_DOWNSTREAM_Q_RANGES = {
+    "figure_6_2": {
+        "source": "Figure 6.2 and Section 6.3.3",
+        "op9": (2_400, 2_600),
+        "op10": (2_400, 2_600),
+        "op12": (2_400, 2_600),
+    },
+    "table_6_20": {
+        "source": "Table 6.20",
+        "op9": (2_000, 2_500),
+        "op10": (2_000, 2_500),
+        "op12": (2_000, 2_500),
+    },
+}
+
+WARMUP_TRIGGER_OPTIONS = ("production", "op9_arrival")
+R14_DEFECT_MODE_OPTIONS = ("thesis_strict_op6", "reprocess", "discard")
+
 # =============================================================================
 # OPERATION DEFINITIONS — Cf0 Baseline (S=1, It,1=0)
 # =============================================================================

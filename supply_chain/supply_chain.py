@@ -49,10 +49,16 @@ from supply_chain.config import (
     DEFAULT_YEAR_BASIS,
     HOURS_PER_YEAR_GREGORIAN,
     HOURS_PER_YEAR_THESIS,
+    R14_DEFECT_MODE_OPTIONS,
     YEAR_BASIS_OPTIONS,
     LEAD_TIME_PROMISE,
-    RET_RE_MAX,
-    RET_RE_RECOVERY,
+    THESIS_FAITHFUL_PROTOCOL,
+    THESIS_DOWNSTREAM_Q_RANGES,
+    WARMUP_TRIGGER_OPTIONS,
+)
+from supply_chain.ret_thesis import (
+    compute_order_level_ret as compute_thesis_order_level_ret,
+    compute_ret_per_order,
 )
 
 RATIONS_PER_HOUR = ASSEMBLY_RATE  # 320.5 rations/hr
@@ -115,7 +121,28 @@ class MFSCSimulation:
         year_basis: str = DEFAULT_YEAR_BASIS,
         stochastic_pt: bool = False,
         deterministic_baseline: bool = False,
+        warmup_trigger: str = "production",
+        downstream_q_source: str = "figure_6_2",
+        r14_defect_mode: str = "reprocess",
+        enabled_risks: Optional[set[str]] = None,
+        risk_overrides: Optional[dict[str, str]] = None,
+        inventory_replenishment_period: Optional[float] = None,
     ) -> None:
+        if warmup_trigger not in WARMUP_TRIGGER_OPTIONS:
+            valid = ", ".join(WARMUP_TRIGGER_OPTIONS)
+            raise ValueError(
+                f"Invalid warmup_trigger={warmup_trigger!r}. Expected one of: {valid}."
+            )
+        if downstream_q_source not in THESIS_DOWNSTREAM_Q_RANGES:
+            valid = ", ".join(sorted(THESIS_DOWNSTREAM_Q_RANGES))
+            raise ValueError(
+                f"Invalid downstream_q_source={downstream_q_source!r}. Expected one of: {valid}."
+            )
+        if r14_defect_mode not in R14_DEFECT_MODE_OPTIONS:
+            valid = ", ".join(R14_DEFECT_MODE_OPTIONS)
+            raise ValueError(
+                f"Invalid r14_defect_mode={r14_defect_mode!r}. Expected one of: {valid}."
+            )
         self.env = simpy.Environment()
         self.shifts = shifts
         self.seed = seed
@@ -126,7 +153,17 @@ class MFSCSimulation:
         self.year_basis = year_basis
         self.stochastic_pt = stochastic_pt
         self.deterministic_baseline = deterministic_baseline
+        self.warmup_trigger = warmup_trigger
+        self.downstream_q_source = downstream_q_source
+        self.r14_defect_mode = r14_defect_mode
+        self.enabled_risks = set(enabled_risks) if enabled_risks is not None else None
+        self.risk_overrides = dict(risk_overrides or {})
+        self.inventory_replenishment_period = inventory_replenishment_period
         self.hours_per_year = resolve_hours_per_year(year_basis)
+        downstream_ranges = THESIS_DOWNSTREAM_Q_RANGES[downstream_q_source]
+        op9_q = downstream_ranges["op9"]
+        op10_q = downstream_ranges["op10"]
+        op12_q = downstream_ranges["op12"]
 
         # =================================================================
         # MUTABLE PARAMETERS — RL agent can modify these at runtime
@@ -149,17 +186,21 @@ class MFSCSimulation:
             "op8_pt": OPERATIONS[8]["pt"],  # 24 hrs
             "op9_rop": OPERATIONS[9]["rop"],  # 24 hrs
             "op9_pt": OPERATIONS[9]["pt"],  # 24 hrs
-            "op9_q_min": OPERATIONS[9]["q"][0],  # 2,400
-            "op9_q_max": OPERATIONS[9]["q"][1],  # 2,600
+            "op9_q_min": op9_q[0],
+            "op9_q_max": op9_q[1],
             "op10_rop": OPERATIONS[10]["rop"],  # 24 hrs
             "op10_pt": OPERATIONS[10]["pt"],  # 24 hrs
-            "op10_q_min": OPERATIONS[10]["q"][0],  # 2,400
-            "op10_q_max": OPERATIONS[10]["q"][1],  # 2,600
+            "op10_q_min": op10_q[0],
+            "op10_q_max": op10_q[1],
             "op12_rop": OPERATIONS[12]["rop"],  # 24 hrs
             "op12_pt": OPERATIONS[12]["pt"],  # 24 hrs
-            "op12_q_min": OPERATIONS[12]["q"][0],  # 2,400
-            "op12_q_max": OPERATIONS[12]["q"][1],  # 2,600
+            "op12_q_min": op12_q[0],
+            "op12_q_max": op12_q[1],
         }
+        if shifts in CAPACITY_BY_SHIFTS:
+            capacity = CAPACITY_BY_SHIFTS[shifts]
+            self.params["op3_q"] = capacity["op3_q"]
+            self.params["batch_size"] = capacity["op7_q"]
 
         # =================================================================
         # MATERIAL BUFFERS
@@ -167,6 +208,7 @@ class MFSCSimulation:
         INF = 10_000_000
         self.raw_material_wdc = simpy.Container(self.env, capacity=INF, init=0)
         self.raw_material_al = simpy.Container(self.env, capacity=INF, init=0)
+        self.rework_op6 = simpy.Container(self.env, capacity=INF, init=0)
         self.rations_al = simpy.Container(self.env, capacity=INF, init=0)
         self.rations_sb = simpy.Container(self.env, capacity=INF, init=0)
         self.rations_sb_dispatch = simpy.Container(self.env, capacity=INF, init=0)
@@ -177,6 +219,7 @@ class MFSCSimulation:
             self.raw_material_wdc.put(initial_buffers.get("op3_rm", 0))
             self.raw_material_al.put(initial_buffers.get("op5_rm", 0))
             self.rations_sb.put(initial_buffers.get("op9_rations", 0))
+        self.inventory_buffer_targets = dict(initial_buffers or {})
 
         # =================================================================
         # METRICS
@@ -231,6 +274,38 @@ class MFSCSimulation:
         self._processes_started = False
         self._step_size = HOURS_PER_DAY  # Default: 24h per step
 
+    def _mark_warmup_complete(self) -> None:
+        """Mark the first thesis warm-up trigger time once."""
+        if not self.warmup_complete:
+            self.warmup_complete = True
+            self.warmup_time = self.env.now
+
+    def _top_up_inventory_buffer(self, key: str, target: float) -> Any:
+        if key == "op3_rm":
+            container = self.raw_material_wdc
+        elif key == "op5_rm":
+            container = self.raw_material_al
+        elif key == "op9_rations":
+            container = self.rations_sb
+        else:
+            return None
+        shortfall = max(0.0, float(target) - float(container.level))
+        if shortfall > 0.0:
+            return container.put(shortfall)
+        return None
+
+    def _inventory_buffer_replenishment(self):
+        """Top up thesis strategic buffers to their target level every t hours."""
+        period = float(self.inventory_replenishment_period or 0.0)
+        if period <= 0.0:
+            return
+        while True:
+            yield self.env.timeout(period)
+            for key, target in self.inventory_buffer_targets.items():
+                event = self._top_up_inventory_buffer(key, float(target))
+                if event is not None:
+                    yield event
+
     # =====================================================================
     # RUN MODES
     # =====================================================================
@@ -249,17 +324,28 @@ class MFSCSimulation:
         self.env.process(self._op12_transport_to_theatre())
         self.env.process(self._op13_demand())
         self.env.process(self._daily_tracker())
+        if (
+            self.inventory_buffer_targets
+            and self.inventory_replenishment_period is not None
+        ):
+            self.env.process(self._inventory_buffer_replenishment())
 
         if self.risks_enabled:
-            self.env.process(self._risk_R11())
-            self.env.process(self._risk_R12())
-            self.env.process(self._risk_R13())
-            self.env.process(self._risk_R14())
-            self.env.process(self._risk_R21())
-            self.env.process(self._risk_R22())
-            self.env.process(self._risk_R23())
-            self.env.process(self._risk_R24())
-            self.env.process(self._risk_R3())
+            risk_processes = {
+                "R11": self._risk_R11,
+                "R12": self._risk_R12,
+                "R13": self._risk_R13,
+                "R14": self._risk_R14,
+                "R21": self._risk_R21,
+                "R22": self._risk_R22,
+                "R23": self._risk_R23,
+                "R24": self._risk_R24,
+                "R3": self._risk_R3,
+            }
+            enabled = self.enabled_risks or set(risk_processes)
+            for risk_id, process_factory in risk_processes.items():
+                if risk_id in enabled:
+                    self.env.process(process_factory())
         if self.adaptive_benchmark_enabled:
             self.env.process(self._adaptive_regime_controller())
 
@@ -383,6 +469,7 @@ class MFSCSimulation:
         return {
             "raw_material_wdc": float(self.raw_material_wdc.level),
             "raw_material_al": float(self.raw_material_al.level),
+            "rework_op6": float(self.rework_op6.level),
             "rations_al": float(self.rations_al.level),
             "rations_sb": float(self.rations_sb.level),
             "rations_sb_dispatch": float(self.rations_sb_dispatch.level),
@@ -954,7 +1041,9 @@ class MFSCSimulation:
             if self.adaptive_benchmark_enabled:
                 self._apply_maintenance_debt(int(shifts))
 
-            # Produce
+            # Produce. Thesis-strict R14 rework returns defects to Op6, so
+            # rework consumes assembly capacity before new raw material.
+            rework_available = self.rework_op6.level
             rm_available = self.raw_material_al.level
             effective_rate = RATIONS_PER_HOUR
             if self.adaptive_benchmark_enabled:
@@ -962,10 +1051,16 @@ class MFSCSimulation:
                     ADAPTIVE_BENCHMARK_MAINTENANCE["throughput_penalty_max"]
                 )
                 effective_rate *= max(0.0, 1.0 - penalty * self.maintenance_debt)
-            can_produce = min(effective_rate, rm_available)
+            rework_qty = min(effective_rate, rework_available)
+            raw_capacity = max(0.0, effective_rate - rework_qty)
+            raw_qty = min(raw_capacity, rm_available)
+            can_produce = rework_qty + raw_qty
 
             if can_produce > 0:
-                yield self.raw_material_al.get(can_produce)
+                if rework_qty > 0:
+                    yield self.rework_op6.get(rework_qty)
+                if raw_qty > 0:
+                    yield self.raw_material_al.get(raw_qty)
                 self._pending_batch += can_produce
                 self._today_produced += can_produce
                 self.total_produced += can_produce
@@ -976,9 +1071,11 @@ class MFSCSimulation:
                     self._pending_batch -= batch_size
                     yield self.rations_al.put(batch_size)
 
-                if not self.warmup_complete and self.total_produced >= batch_size:
-                    self.warmup_complete = True
-                    self.warmup_time = self.env.now
+                if (
+                    self.warmup_trigger == "production"
+                    and self.total_produced >= batch_size
+                ):
+                    self._mark_warmup_complete()
 
     # =====================================================================
     # DOWNSTREAM: Distribution (Op8-Op12)
@@ -994,6 +1091,8 @@ class MFSCSimulation:
             yield self.env.timeout(self._pt("op8_pt"))
             self._in_transit -= batch_size
             yield self.rations_sb.put(batch_size)
+            if self.warmup_trigger == "op9_arrival":
+                self._mark_warmup_complete()
 
     def _op9_sb_dispatch(self):
         """Op9: Supply Battalion — dispatch U(q_min, q_max), async PT=24h."""
@@ -1126,8 +1225,12 @@ class MFSCSimulation:
         "severe_training": RISKS_SEVERE_TRAINING,
     }
 
+    def _risk_table_for(self, risk_id: str) -> dict[str, Any] | None:
+        level = self.risk_overrides.get(risk_id, self.risk_level)
+        return self._RISK_TABLES.get(level)
+
     def _get_risk_b(self, risk_id: str) -> float:
-        table = self._RISK_TABLES.get(self.risk_level)
+        table = self._risk_table_for(risk_id)
         base_a = RISKS_CURRENT[risk_id]["occurrence"]["a"]
         if table and risk_id in table:
             base_b = table[risk_id].get("b", RISKS_CURRENT[risk_id]["occurrence"]["b"])
@@ -1139,7 +1242,7 @@ class MFSCSimulation:
         return float(base_b)
 
     def _get_risk_p(self, risk_id: str) -> float:
-        table = self._RISK_TABLES.get(self.risk_level)
+        table = self._risk_table_for(risk_id)
         if table and risk_id in table:
             base_p = table[risk_id].get("p", RISKS_CURRENT[risk_id]["occurrence"]["p"])
         else:
@@ -1150,7 +1253,7 @@ class MFSCSimulation:
         return float(base_p)
 
     def _get_risk_recovery_mean(self, risk_id: str) -> float:
-        table = self._RISK_TABLES.get(self.risk_level)
+        table = self._risk_table_for(risk_id)
         if table and risk_id in table:
             base_mean = table[risk_id].get(
                 "recovery_mean", RISKS_CURRENT[risk_id]["recovery"]["mean"]
@@ -1163,7 +1266,7 @@ class MFSCSimulation:
         return float(base_mean)
 
     def _get_risk_surge(self) -> tuple[int, int]:
-        table = self._RISK_TABLES.get(self.risk_level)
+        table = self._risk_table_for("R24")
         base_lo = RISKS_CURRENT["R24"]["surge"]["lo"]
         base_hi = RISKS_CURRENT["R24"]["surge"]["hi"]
         if table and "R24" in table:
@@ -1245,10 +1348,19 @@ class MFSCSimulation:
                     if defects > 0:
                         self._pending_batch -= defects
                         self.total_produced -= defects
-                        # Thesis Table 6.6b: defects returned to Op6 for
-                        # re-processing. Model by feeding back to raw_material_al
-                        # so they re-enter the assembly pipeline as future production.
-                        yield self.raw_material_al.put(defects)
+                        if self.r14_defect_mode == "thesis_strict_op6":
+                            yield self.rework_op6.put(defects)
+                            description = f"{defects} defective (returned to Op6)"
+                        elif self.r14_defect_mode == "reprocess":
+                            # Thesis Table 6.6b: defects returned to Op6 for
+                            # re-processing. Model by feeding back to raw material
+                            # so they re-enter the assembly pipeline later.
+                            yield self.raw_material_al.put(defects)
+                            description = (
+                                f"{defects} defective (returned to raw_material_al)"
+                            )
+                        else:
+                            description = f"{defects} defective (discarded)"
                         self.risk_events.append(
                             RiskEvent(
                                 "R14",
@@ -1256,7 +1368,7 @@ class MFSCSimulation:
                                 self.env.now,
                                 0,
                                 [7],
-                                f"{defects} defective (returned to Op6)",
+                                description,
                             )
                         )
 
@@ -1541,25 +1653,11 @@ class MFSCSimulation:
         Returns (ret_value, case_label).
         Uses thesis constants: Re^max=1.0, Re=0.5 (Figure 5.6), Re^min=0.0.
         """
-        if order.OATj is None:
-            return 0.0, "unfulfilled"
-
-        if order.APj > 0 and order.CTj is not None and order.CTj <= order.LTj:
-            # Eq. 5.1: Re(APj) = Re^max * (APj / LT)
-            ret = RET_RE_MAX * (order.APj / order.LTj)
-            return min(ret, 1.0), "autotomy"
-
-        if order.CTj is not None and order.CTj > order.LTj:
-            if order.RPj > 0:
-                # Eq. 5.2: Re(RPj) = Re * (1 / RPj)
-                ret = RET_RE_RECOVERY * (1.0 / order.RPj)
-                return ret, "recovery"
-            else:
-                # Eq. 5.3: Re(DPj, RPj) = Re^min * (DPj - RPj) / CTj = 0
-                return 0.0, "non_recovery"
-
-        # No disruption: fill_rate case
-        return self._order_level_fill_rate(), "fill_rate"
+        return compute_ret_per_order(
+            order,
+            fill_rate=self._order_level_fill_rate(),
+            ret_weights=THESIS_FAITHFUL_PROTOCOL["ret_weights"],
+        )
 
     def compute_order_level_ret(self) -> dict[str, Any]:
         """
@@ -1571,28 +1669,8 @@ class MFSCSimulation:
         - case_counts: orders per case (autotomy, recovery, non_recovery, fill_rate)
         - n_orders, n_completed: total and completed order counts
         """
-        case_counts: dict[str, int] = {
-            "fill_rate": 0,
-            "autotomy": 0,
-            "recovery": 0,
-            "non_recovery": 0,
-            "unfulfilled": 0,
-        }
-        ret_values: list[float] = []
-
-        for order in self.orders:
-            ret, case = self._order_ret_value(order)
-            case_counts[case] += 1
-            if case != "unfulfilled":
-                ret_values.append(ret)
-
-        fill_rate = self._order_level_fill_rate()
-        mean_ret = float(np.mean(ret_values)) if ret_values else fill_rate
-
-        return {
-            "mean_ret": mean_ret,
-            "fill_rate_order_level": fill_rate,
-            "case_counts": case_counts,
-            "n_orders": len(self.orders),
-            "n_completed": sum(1 for o in self.orders if o.OATj is not None),
-        }
+        return compute_thesis_order_level_ret(
+            self.orders,
+            fill_rate=self._order_level_fill_rate(),
+            ret_weights=THESIS_FAITHFUL_PROTOCOL["ret_weights"],
+        )

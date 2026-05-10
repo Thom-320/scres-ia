@@ -86,7 +86,7 @@ The key point is: Track B gives the agent control over the active bottleneck tha
 
 Show:
 
-- `/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/outputs/track_b_benchmarks/track_b_all_reward_audit_20260403T155227Z/paper_main_table_manuscript.md`
+- `outputs/track_b_benchmarks/track_b_all_reward_audit_20260403T155227Z/paper_main_table_manuscript.md`
 
 Suggested wording:
 
@@ -187,10 +187,10 @@ Prefer:
 
 ## Files to have open during the meeting
 
-- `/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/outputs/track_b_benchmarks/track_b_all_reward_audit_20260403T155227Z/paper_main_table_manuscript.md`
-- `/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/outputs/track_b_benchmarks/track_b_all_reward_audit_20260403T155227Z/paper_mechanism_table.csv`
-- `/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/docs/TRACK_B_MINIMAL_SPEC.md`
-- `/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/outputs/track_b_benchmarks/reward_sweeps/night_20260403T050823Z/ppo/runs/track_b_reward_sweep_ppo_ret_thesis_500k/summary.json`
-- `/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/outputs/track_b_benchmarks/reward_sweeps/night_20260403T050823Z/ppo/runs/track_b_reward_sweep_ppo_ret_seq_v1_500k/summary.json`
-- `/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/outputs/track_b_benchmarks/reward_sweeps/night_20260403T050823Z/ppo/runs/track_b_reward_sweep_ppo_ret_garrido2024_train_500k/summary.json`
+- `outputs/track_b_benchmarks/track_b_all_reward_audit_20260403T155227Z/paper_main_table_manuscript.md`
+- `outputs/track_b_benchmarks/track_b_all_reward_audit_20260403T155227Z/paper_mechanism_table.csv`
+- `docs/TRACK_B_MINIMAL_SPEC.md`
+- `outputs/track_b_benchmarks/reward_sweeps/night_20260403T050823Z/ppo/runs/track_b_reward_sweep_ppo_ret_thesis_500k/summary.json`
+- `outputs/track_b_benchmarks/reward_sweeps/night_20260403T050823Z/ppo/runs/track_b_reward_sweep_ppo_ret_seq_v1_500k/summary.json`
+- `outputs/track_b_benchmarks/reward_sweeps/night_20260403T050823Z/ppo/runs/track_b_reward_sweep_ppo_ret_garrido2024_train_500k/summary.json`
 

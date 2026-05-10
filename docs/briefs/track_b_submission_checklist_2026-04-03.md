@@ -2,8 +2,8 @@
 
 ## Must Have
 
-- Finish the `downstream_only` 500k ablation in [track_b_ablation_500k_production](/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/outputs/benchmarks/track_b_ablation_500k_production) and fold it into the main causal story.
-- Finish the observation ablation in [track_b_observation_ablation_smoke_20260403Tbogota](/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/outputs/benchmarks/track_b_observation_ablation_smoke_20260403Tbogota) or rerun it at publication-grade budget.
+- Finish the `downstream_only` 500k ablation in [track_b_ablation_500k_production](outputs/benchmarks/track_b_ablation_500k_production) and fold it into the main causal story.
+- Finish the observation ablation in [track_b_observation_ablation_smoke_20260403Tbogota](outputs/benchmarks/track_b_observation_ablation_smoke_20260403Tbogota) or rerun it at publication-grade budget.
 - Run the frozen PPO forecast-sensitivity check so we can say whether explicit forecasts matter at all.
 - Keep `Track A` in the paper as the negative control and `Track B` as the minimal diagnostic extension.
 - Report `current / increased / severe / severe_extended` so PPO is shown both in its strong regime and its failure regime.

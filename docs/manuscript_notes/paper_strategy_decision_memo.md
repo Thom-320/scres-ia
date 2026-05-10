@@ -32,9 +32,9 @@ The current repo already supports the backbone of the paper story:
 
 Supporting notes:
 
-- `/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/docs/briefs/shift_control_audit_note.md`
-- `/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/docs/briefs/preliminary_results_synthesis.md`
-- `/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/docs/manuscript_notes/phase2_algorithm_comparison_note.md`
+- `docs/briefs/shift_control_audit_note.md`
+- `docs/briefs/preliminary_results_synthesis.md`
+- `docs/manuscript_notes/phase2_algorithm_comparison_note.md`
 
 ## Official roadmap
 

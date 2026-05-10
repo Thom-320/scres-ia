@@ -2,7 +2,7 @@
 
 ## Status
 
-The repository now includes a paper-faithful Garrido et al. (2024) Cobb-Douglas reward/index family implemented in [env_experimental_shifts.py](/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/supply_chain/env_experimental_shifts.py).
+The repository now includes a paper-faithful Garrido et al. (2024) Cobb-Douglas reward/index family implemented in [env_experimental_shifts.py](supply_chain/env_experimental_shifts.py).
 
 This was added as a **separate family** and does **not** replace the frozen mainline `ReT_seq_v1` contract.
 
@@ -65,7 +65,7 @@ The five Garrido-2024 variables are now computed with explicit MFSC DES semantic
 
 ## Added DES Signals
 
-To support the faithful transformation, [supply_chain.py](/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/supply_chain/supply_chain.py) now exposes these step-level signals:
+To support the faithful transformation, [supply_chain.py](supply_chain/supply_chain.py) now exposes these step-level signals:
 
 - `new_produced`
 - `new_available_assembly_hours`
@@ -75,7 +75,7 @@ These are required to compute `φ` and `κ̇` from the simulator rather than fro
 
 ## Calibration Procedure
 
-The calibration script was rewritten in [calibrate_cd_exponents.py](/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/scripts/calibrate_cd_exponents.py).
+The calibration script was rewritten in [calibrate_cd_exponents.py](scripts/calibrate_cd_exponents.py).
 
 It now follows the Garrido 2024 maxima procedure:
 
@@ -90,7 +90,7 @@ exponent * ln(max_value) = 0.20
 
 The repo default calibration file is:
 
-- [ret_garrido2024_calibration.json](/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/supply_chain/data/ret_garrido2024_calibration.json)
+- [ret_garrido2024_calibration.json](supply_chain/data/ret_garrido2024_calibration.json)
 
 This file is automatically loaded by the environment unless another calibration path is passed through CLI.
 
@@ -128,9 +128,9 @@ The Garrido-2024 family should be treated as follows:
 
 The Garrido-2024 family is wired through:
 
-- [train_agent.py](/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/train_agent.py)
-- [benchmark_control_reward.py](/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/scripts/benchmark_control_reward.py)
-- [run_paper_benchmark.py](/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/scripts/run_paper_benchmark.py)
+- [train_agent.py](train_agent.py)
+- [benchmark_control_reward.py](scripts/benchmark_control_reward.py)
+- [run_paper_benchmark.py](scripts/run_paper_benchmark.py)
 
 The optional override flag is:
 

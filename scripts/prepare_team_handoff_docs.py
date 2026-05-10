@@ -252,7 +252,7 @@ def main() -> None:
     parser.add_argument(
         "--source-docx",
         type=Path,
-        default=Path("/Users/thom/Downloads/v.0_neuralNet-scres(1).docx"),
+        default=Path("docs/v.0_neuralNet-scres.docx"),
     )
     parser.add_argument(
         "--literature-md",

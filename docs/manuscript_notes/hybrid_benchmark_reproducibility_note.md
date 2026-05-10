@@ -4,8 +4,8 @@ Use the following note in the paper body or appendix:
 
 Supporting table-source map for the current draft:
 
-- Table 6: `/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/outputs/benchmarks/table6_minimal/policy_summary.csv`
-- Table 7: `/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/outputs/benchmarks/delta_sweep_static/delta_transition.csv`
-- Table 8: `/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/outputs/benchmarks/ret_ablation_static/transition_summary.csv`
-- Table 9: `/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/outputs/benchmarks/ret_case_diagnostics/case_summary.csv`
-- Table 10: `/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/outputs/benchmarks/control_reward/comparison_table.csv` plus `/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/outputs/benchmarks/control_reward/policy_summary.csv`
+- Table 6: `outputs/benchmarks/table6_minimal/policy_summary.csv`
+- Table 7: `outputs/benchmarks/delta_sweep_static/delta_transition.csv`
+- Table 8: `outputs/benchmarks/ret_ablation_static/transition_summary.csv`
+- Table 9: `outputs/benchmarks/ret_case_diagnostics/case_summary.csv`
+- Table 10: `outputs/benchmarks/control_reward/comparison_table.csv` plus `outputs/benchmarks/control_reward/policy_summary.csv`

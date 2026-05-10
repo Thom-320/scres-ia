@@ -69,10 +69,13 @@ from supply_chain.config import (
     CAPACITY_BY_SHIFTS,
     DEFAULT_YEAR_BASIS,
     OPERATIONS,
+    R14_DEFECT_MODE_OPTIONS,
     RET_CASE_THRESHOLDS,
     RET_SHIFT_COST_DELTA_DEFAULT,
     SIMULATION_HORIZON,
+    THESIS_DOWNSTREAM_Q_RANGES,
     WARMUP,
+    WARMUP_TRIGGER_OPTIONS,
     YEAR_BASIS_OPTIONS,
 )
 from supply_chain.supply_chain import MFSCSimulation
@@ -269,6 +272,10 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         # --- Action space configuration ---
         action_contract: str = "track_a_v1",
         action_mode: str = "full",  # "full" (5D), "shift_only" (1D), "shift_q9" (2D)
+        warmup_trigger: str = "production",
+        downstream_q_source: str = "figure_6_2",
+        r14_defect_mode: str = "reprocess",
+        priming_enabled: bool = True,
         # --- Track B: MDP structural fixes ---
         clear_backlog_after_priming: bool = False,  # Fix 3A: clear inherited backlog
     ) -> None:
@@ -309,6 +316,21 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             )
         if action_contract == "track_b_v1" and action_mode != "full":
             raise ValueError("track_b_v1 currently supports only action_mode='full'.")
+        if warmup_trigger not in WARMUP_TRIGGER_OPTIONS:
+            raise ValueError(
+                f"Invalid warmup_trigger={warmup_trigger!r}. "
+                f"Expected one of {WARMUP_TRIGGER_OPTIONS}."
+            )
+        if downstream_q_source not in THESIS_DOWNSTREAM_Q_RANGES:
+            raise ValueError(
+                f"Invalid downstream_q_source={downstream_q_source!r}. "
+                f"Expected one of {tuple(sorted(THESIS_DOWNSTREAM_Q_RANGES))}."
+            )
+        if r14_defect_mode not in R14_DEFECT_MODE_OPTIONS:
+            raise ValueError(
+                f"Invalid r14_defect_mode={r14_defect_mode!r}. "
+                f"Expected one of {R14_DEFECT_MODE_OPTIONS}."
+            )
         canonical_reward_mode = REWARD_MODE_ALIAS_MAP.get(reward_mode, reward_mode)
         if (
             canonical_reward_mode == "control_v1_pbrs"
@@ -325,6 +347,10 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self.year_basis = year_basis
         self.risk_level = risk_level
         self.stochastic_pt = stochastic_pt
+        self.warmup_trigger = warmup_trigger
+        self.downstream_q_source = downstream_q_source
+        self.r14_defect_mode = r14_defect_mode
+        self.priming_enabled = bool(priming_enabled)
         self.reward_mode = reward_mode
         self._canonical_reward_mode = canonical_reward_mode
         self.observation_version = observation_version
@@ -524,20 +550,21 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
 
     def _action_constraints_payload(self) -> dict[str, Any]:
         """Return the active action contract in a stable JSON-friendly form."""
+        downstream_ranges = THESIS_DOWNSTREAM_Q_RANGES[self.downstream_q_source]
         base_control_parameters: dict[str, float] = {
             "op3_q": float(OPERATIONS[3]["q"]),
             "op3_rop": float(OPERATIONS[3]["rop"]),
-            "op9_q_min": float(OPERATIONS[9]["q"][0]),
-            "op9_q_max": float(OPERATIONS[9]["q"][1]),
+            "op9_q_min": float(downstream_ranges["op9"][0]),
+            "op9_q_max": float(downstream_ranges["op9"][1]),
             "op9_rop": float(OPERATIONS[9]["rop"]),
         }
         if self.action_contract == "track_b_v1":
             base_control_parameters.update(
                 {
-                    "op10_q_min": float(OPERATIONS[10]["q"][0]),
-                    "op10_q_max": float(OPERATIONS[10]["q"][1]),
-                    "op12_q_min": float(OPERATIONS[12]["q"][0]),
-                    "op12_q_max": float(OPERATIONS[12]["q"][1]),
+                    "op10_q_min": float(downstream_ranges["op10"][0]),
+                    "op10_q_max": float(downstream_ranges["op10"][1]),
+                    "op12_q_min": float(downstream_ranges["op12"][0]),
+                    "op12_q_max": float(downstream_ranges["op12"][1]),
                 }
             )
         return {
@@ -1665,10 +1692,19 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             horizon=SIMULATION_HORIZON,
             year_basis=self.year_basis,
             stochastic_pt=self.stochastic_pt,
+            warmup_trigger=self.warmup_trigger,
+            downstream_q_source=self.downstream_q_source,
+            r14_defect_mode=self.r14_defect_mode,
         )
         self.sim._start_processes()
         self.sim.env.run(until=self.warmup_hours)
-        reset_context, primed_ready = self._prime_after_warmup()
+        while not self.sim.warmup_complete and self.sim.env.now < self.sim.horizon:
+            self.sim.env.run(until=min(self.sim.env.now + 1.0, self.sim.horizon))
+        if self.priming_enabled:
+            reset_context, primed_ready = self._prime_after_warmup()
+        else:
+            reset_context = self._reset_operational_context()
+            primed_ready = self.sim.warmup_complete
 
         # Fix 3A: Clear inherited backlog so RL episodes start clean.
         # This removes the FIFO-blocking backorder queue that dominates
@@ -1698,6 +1734,9 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             "year_basis": self.year_basis,
             "observation_version": self.observation_version,
             "action_contract": self.action_contract,
+            "training_protocol": (
+                "thesis_aligned_gym" if not self.priming_enabled else "rl_benchmark"
+            ),
             "action_constraints": self._action_constraints_payload(),
             "ret_thresholds": {
                 "autotomy_fill_rate_threshold": self.autotomy_threshold,
@@ -1713,6 +1752,9 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                 "priming_shifts": self.priming_shifts,
                 "priming_step_hours": self.priming_step_hours,
                 "max_priming_hours": self.max_priming_hours,
+                "priming_enabled": self.priming_enabled,
+                "warmup_trigger": self.warmup_trigger,
+                "sim_warmup_time": float(self.sim.warmup_time),
                 "operational_fill_rate_threshold": self._ready_fill_rate_threshold(),
                 "primed_ready": primed_ready,
                 "reset_operational_context": reset_context,

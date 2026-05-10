@@ -19,7 +19,7 @@ The new canonical audit shows:
 
 Source bundle:
 
-- `/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/outputs/track_b_benchmarks/track_b_all_reward_audit_20260403T203800Z`
+- `outputs/track_b_benchmarks/track_b_all_reward_audit_20260403T203800Z`
 
 ### Learned downstream control usage
 

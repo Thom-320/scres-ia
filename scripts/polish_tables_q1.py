@@ -12,8 +12,10 @@ Booktabs style:
 - Table captions: "Table X." bold + description in regular
 """
 
-import os
+import shutil
 import subprocess
+from pathlib import Path
+
 from docx import Document
 from docx.shared import Pt
 from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -23,6 +25,9 @@ from docx.oxml import parse_xml
 
 FONT_NAME = "Times New Roman"
 FONT_SIZE_TABLE = Pt(10)
+REPO_ROOT = Path(__file__).resolve().parents[1]
+OUTPUT_DIR = REPO_ROOT / "output" / "doc"
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 USABLE_WIDTH_EMU = 7773670 - 2 * 900430
 TOTAL_TWIPS = int(USABLE_WIDTH_EMU / 635)
@@ -260,7 +265,7 @@ def booktabs_polish(table, col_widths_pct, text_aligns=None, bold_cells=None):
 # Load and polish
 # =====================================================================
 
-doc_path = os.path.expanduser("~/Downloads/v0_neuralNet-scres_UPDATED_2026-03-24.docx")
+doc_path = OUTPUT_DIR / "v0_neuralNet-scres_UPDATED_2026-03-24.docx"
 doc = Document(doc_path)
 
 # Table 3: Observation vector (Table 5 in paper) - 16 rows x 4 cols
@@ -360,16 +365,20 @@ booktabs_polish(
 doc.save(doc_path)
 print(f"\nSaved Q1-polished version to: {doc_path}")
 
-subprocess.run(
-    [
-        "/Applications/LibreOffice.app/Contents/MacOS/soffice",
-        "--headless",
-        "--convert-to",
-        "pdf",
-        "--outdir",
-        os.path.expanduser("~/Downloads"),
-        doc_path,
-    ],
-    capture_output=True,
-)
-print("PDF regenerated.")
+soffice = shutil.which("soffice")
+if soffice:
+    subprocess.run(
+        [
+            soffice,
+            "--headless",
+            "--convert-to",
+            "pdf",
+            "--outdir",
+            str(OUTPUT_DIR),
+            str(doc_path),
+        ],
+        capture_output=True,
+    )
+    print("PDF regenerated.")
+else:
+    print("LibreOffice 'soffice' not found; skipped PDF regeneration.")

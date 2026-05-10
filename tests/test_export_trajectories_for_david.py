@@ -7,6 +7,8 @@ from pathlib import Path
 
 import numpy as np
 
+REPO_ROOT = Path(__file__).resolve().parents[1]
+
 
 def test_export_trajectories_includes_state_constraints_and_reward_terms(
     tmp_path: Path,
@@ -29,7 +31,7 @@ def test_export_trajectories_includes_state_constraints_and_reward_terms(
     ]
     completed = subprocess.run(
         cmd,
-        cwd="/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia",
+        cwd=REPO_ROOT,
         check=True,
         capture_output=True,
         text=True,
@@ -84,7 +86,7 @@ def test_export_trajectories_supports_v4_unified_contract(tmp_path: Path) -> Non
     ]
     subprocess.run(
         cmd,
-        cwd="/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia",
+        cwd=REPO_ROOT,
         check=True,
         capture_output=True,
         text=True,
@@ -128,7 +130,7 @@ def test_export_trajectories_supports_v5_cycle_contract(tmp_path: Path) -> None:
     ]
     subprocess.run(
         cmd,
-        cwd="/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia",
+        cwd=REPO_ROOT,
         check=True,
         capture_output=True,
         text=True,
@@ -176,7 +178,7 @@ def test_export_trajectories_supports_track_b_contract(tmp_path: Path) -> None:
     ]
     subprocess.run(
         cmd,
-        cwd="/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia",
+        cwd=REPO_ROOT,
         check=True,
         capture_output=True,
         text=True,
@@ -225,7 +227,7 @@ def test_export_trajectories_preserves_direct_garrido_action_context(
     ]
     subprocess.run(
         cmd,
-        cwd="/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia",
+        cwd=REPO_ROOT,
         check=True,
         capture_output=True,
         text=True,

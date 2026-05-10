@@ -39,7 +39,7 @@ These remain useful as repo-internal historical comparators.
 - `garrido_cf_s3`
 
 These use direct DES actions and pull their parameters from the thesis-backed
-capacity/config tables in [config.py](/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/supply_chain/config.py).
+capacity/config tables in [config.py](supply_chain/config.py).
 
 ## Parameter source
 

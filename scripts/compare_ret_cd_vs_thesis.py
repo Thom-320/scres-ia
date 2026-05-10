@@ -14,8 +14,8 @@ Reports:
 Saves:
   outputs/ret_cd_comparison/comparison_results.json
   outputs/ret_cd_comparison/comparison_report.txt
-  ~/Downloads/RET_CD_COMPARISON.json
 """
+
 from __future__ import annotations
 
 import json
@@ -33,7 +33,6 @@ from supply_chain.env_experimental_shifts import MFSCGymEnvShifts  # noqa: E402
 
 OUTPUT_DIR = REPO_ROOT / "outputs" / "ret_cd_comparison"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-DOWNLOADS = Path.home() / "Downloads"
 
 # --- Configuration ---
 RISK_LEVEL = "increased"
@@ -47,8 +46,8 @@ REWARD_MODES = ["ReT_thesis", "ReT_cd_v1", "ReT_cd_sigmoid"]
 
 STATIC_POLICIES = {
     "S1": [-1.0, -1.0, -1.0, -1.0, -1.0],  # shift_signal < -0.33 → S=1
-    "S2": [0.0, 0.0, 0.0, 0.0, 0.0],        # shift_signal in [-0.33,0.33) → S=2
-    "S3": [1.0, 1.0, 1.0, 1.0, 1.0],        # shift_signal ≥ 0.33 → S=3
+    "S2": [0.0, 0.0, 0.0, 0.0, 0.0],  # shift_signal in [-0.33,0.33) → S=2
+    "S3": [1.0, 1.0, 1.0, 1.0, 1.0],  # shift_signal ≥ 0.33 → S=3
 }
 
 
@@ -88,7 +87,11 @@ def run_episodes(
 
         # Terminal fill rate
         sim = getattr(getattr(env, "unwrapped", env), "sim", None)
-        fill_rate = float(sim._fill_rate()) if sim and hasattr(sim, "_fill_rate") else float("nan")
+        fill_rate = (
+            float(sim._fill_rate())
+            if sim and hasattr(sim, "_fill_rate")
+            else float("nan")
+        )
 
         all_episode_rewards.append(ep_reward)
         all_fill_rates.append(fill_rate)
@@ -100,9 +103,15 @@ def run_episodes(
         "step_rewards": all_step_rewards,
         "fill_rates": all_fill_rates,
         "mean_episode_reward": statistics.mean(all_episode_rewards),
-        "std_episode_reward": statistics.stdev(all_episode_rewards) if len(all_episode_rewards) > 1 else 0.0,
+        "std_episode_reward": (
+            statistics.stdev(all_episode_rewards)
+            if len(all_episode_rewards) > 1
+            else 0.0
+        ),
         "mean_step_reward": statistics.mean(all_step_rewards),
-        "std_step_reward": statistics.stdev(all_step_rewards) if len(all_step_rewards) > 1 else 0.0,
+        "std_step_reward": (
+            statistics.stdev(all_step_rewards) if len(all_step_rewards) > 1 else 0.0
+        ),
         "mean_fill_rate": statistics.mean(all_fill_rates),
         "p10_step_reward": float(np.percentile(all_step_rewards, 10)),
         "p50_step_reward": float(np.percentile(all_step_rewards, 50)),
@@ -156,11 +165,10 @@ def main() -> None:
     for policy_name in STATIC_POLICIES:
         corr_results[policy_name] = {}
         step_rewards = {
-            mode: results[policy_name][mode]["step_rewards"]
-            for mode in REWARD_MODES
+            mode: results[policy_name][mode]["step_rewards"] for mode in REWARD_MODES
         }
         for i, m1 in enumerate(REWARD_MODES):
-            for m2 in REWARD_MODES[i+1:]:
+            for m2 in REWARD_MODES[i + 1 :]:
                 key = f"{m1}_vs_{m2}"
                 corr = compute_correlation(step_rewards[m1], step_rewards[m2])
                 corr_results[policy_name][key] = corr
@@ -178,16 +186,19 @@ def main() -> None:
         sig_steps = results[policy_name]["ReT_cd_sigmoid"]["step_rewards"]
         ratio = (
             statistics.mean(sig_steps) / statistics.mean(raw_cd_steps)
-            if statistics.mean(raw_cd_steps) > 0 else float("nan")
+            if statistics.mean(raw_cd_steps) > 0
+            else float("nan")
         )
         sigmoid_bias[policy_name] = {
             "mean_raw_cd": statistics.mean(raw_cd_steps),
             "mean_sigmoid": statistics.mean(sig_steps),
             "ratio_sigmoid_over_raw": ratio,
         }
-        print(f"  {policy_name}: raw_CD={statistics.mean(raw_cd_steps):.4f} "
-              f"sigmoid={statistics.mean(sig_steps):.4f} "
-              f"ratio={ratio:.3f}")
+        print(
+            f"  {policy_name}: raw_CD={statistics.mean(raw_cd_steps):.4f} "
+            f"sigmoid={statistics.mean(sig_steps):.4f} "
+            f"ratio={ratio:.3f}"
+        )
 
     # Full results object
     full_results = {
@@ -203,7 +214,8 @@ def main() -> None:
         "results": {
             policy: {
                 mode: {
-                    k: v for k, v in data.items()
+                    k: v
+                    for k, v in data.items()
                     if k not in ("episode_rewards", "step_rewards", "fill_rates")
                 }
                 for mode, data in modes.items()
@@ -229,11 +241,6 @@ def main() -> None:
         json.dump(full_results, f, indent=2)
     print(f"\n✓ Saved: {json_path}")
 
-    downloads_path = DOWNLOADS / "RET_CD_COMPARISON.json"
-    with open(downloads_path, "w") as f:
-        json.dump(full_results, f, indent=2)
-    print(f"✓ Saved: {downloads_path}")
-
     # Text report
     lines = [
         "ReT_cd_v1 vs ReT_thesis vs ReT_cd_sigmoid Comparison Report",
@@ -245,7 +252,9 @@ def main() -> None:
         "MEAN STEP-LEVEL REWARDS",
         "-" * 50,
     ]
-    header = f"{'Policy':<6} {'ReT_thesis':<14} {'ReT_cd_v1':<14} {'ReT_cd_sigmoid':<15}"
+    header = (
+        f"{'Policy':<6} {'ReT_thesis':<14} {'ReT_cd_v1':<14} {'ReT_cd_sigmoid':<15}"
+    )
     lines.append(header)
     lines.append("-" * len(header))
     for policy_name in STATIC_POLICIES:

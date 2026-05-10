@@ -456,7 +456,7 @@ def _finalize_episode_row(
     total_steps = max(1, steps)
     if demanded_total > 0.0:
         flow_backorder_rate = backorder_qty_total / demanded_total
-        flow_fill_rate = 1.0 - flow_backorder_rate
+        flow_fill_rate = max(0.0, min(1.0, 1.0 - flow_backorder_rate))
     else:
         flow_backorder_rate = 0.0
         flow_fill_rate = 1.0

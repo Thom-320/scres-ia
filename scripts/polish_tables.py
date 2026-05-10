@@ -11,8 +11,10 @@ Ensures:
 - No auto-fit (fixed widths)
 """
 
-import os
+import shutil
 import subprocess
+from pathlib import Path
+
 from docx import Document
 from docx.shared import Pt
 from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -23,13 +25,16 @@ from docx.oxml import parse_xml
 FONT_NAME = "Times New Roman"
 FONT_SIZE_TABLE = Pt(10)  # Slightly smaller for tables = cleaner
 FONT_SIZE_HEADER = Pt(10)
+REPO_ROOT = Path(__file__).resolve().parents[1]
+OUTPUT_DIR = REPO_ROOT / "output" / "doc"
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # Page width minus margins = usable width
 # Page: 7773670 EMU, margins: 900430 each side
 USABLE_WIDTH_EMU = 7773670 - 2 * 900430  # = 5972810 EMU
 USABLE_WIDTH_CM = USABLE_WIDTH_EMU / 360000  # ~16.6 cm
 
-doc_path = os.path.expanduser("~/Downloads/v0_neuralNet-scres_UPDATED_2026-03-24.docx")
+doc_path = OUTPUT_DIR / "v0_neuralNet-scres_UPDATED_2026-03-24.docx"
 doc = Document(doc_path)
 
 
@@ -293,22 +298,24 @@ polish_table(
 )
 
 # Save
-output_path = os.path.expanduser(
-    "~/Downloads/v0_neuralNet-scres_UPDATED_2026-03-24.docx"
-)
+output_path = OUTPUT_DIR / "v0_neuralNet-scres_UPDATED_2026-03-24.docx"
 doc.save(output_path)
 print(f"\nSaved polished version to: {output_path}")
 
-subprocess.run(
-    [
-        "/Applications/LibreOffice.app/Contents/MacOS/soffice",
-        "--headless",
-        "--convert-to",
-        "pdf",
-        "--outdir",
-        os.path.expanduser("~/Downloads"),
-        output_path,
-    ],
-    capture_output=True,
-)
-print("PDF regenerated.")
+soffice = shutil.which("soffice")
+if soffice:
+    subprocess.run(
+        [
+            soffice,
+            "--headless",
+            "--convert-to",
+            "pdf",
+            "--outdir",
+            str(OUTPUT_DIR),
+            str(output_path),
+        ],
+        capture_output=True,
+    )
+    print("PDF regenerated.")
+else:
+    print("LibreOffice 'soffice' not found; skipped PDF regeneration.")

@@ -16,7 +16,7 @@ The DES itself is validated and operational. Static shift-control baselines are 
 | `static_s2` | -179.58 | 0.827 | 0.173 | 100% `S2` |
 | `static_s3` | -181.92 | 0.830 | 0.170 | 100% `S3` |
 
-Static source: `/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia/outputs/benchmarks/control_reward/policy_summary.csv` for `w_bo=4.0`, `w_cost=0.02`, `w_disr=0.0`.
+Static source: `outputs/benchmarks/control_reward/policy_summary.csv` for `w_bo=4.0`, `w_cost=0.02`, `w_disr=0.0`.
 
 **What Is Already Emerging from the Long Runs**
 

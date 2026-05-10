@@ -13,6 +13,7 @@ from supply_chain.config import (
     BENCHMARK_W_DISR,
     DEFAULT_YEAR_BASIS,
     OPERATIONS,
+    THESIS_FAITHFUL_PROTOCOL,
     WARMUP,
 )
 from supply_chain.env_experimental_shifts import MFSCGymEnvShifts
@@ -333,6 +334,38 @@ def get_track_b_env_spec(
     )
 
 
+def get_thesis_aligned_training_env_spec(
+    *,
+    reward_mode: str = "ReT_seq_v1",
+    observation_version: str = "v4",
+    step_size_hours: float = 168.0,
+) -> ExternalEnvSpec:
+    """Return the trainable Gym contract after the thesis_1to1 validation gate."""
+    observation_fields = get_observation_fields(observation_version)
+    return ExternalEnvSpec(
+        env_variant="thesis_aligned_training",
+        reward_mode=reward_mode,
+        observation_version=observation_version,
+        step_size_hours=float(step_size_hours),
+        warmup_hours=float(WARMUP["estimated_deterministic_hrs"]),
+        observation_fields=observation_fields,
+        action_fields=ACTION_FIELDS,
+        action_bounds=ACTION_BOUNDS,
+        shift_mapping={
+            "signal_lt_-0.33": 1,
+            "signal_ge_-0.33_and_lt_0.33": 2,
+            "signal_ge_0.33": 3,
+        },
+        notes=(
+            "This is a Gym training lane, not the strict thesis_1to1 reproduction lane.",
+            "It inherits the thesis validation knobs: year_basis=thesis, warmup_trigger=op9_arrival, downstream_q_source=figure_6_2, r14_defect_mode=thesis_strict_op6.",
+            "By default it disables post-warmup priming so episodes begin at the actual thesis warm-up trigger.",
+            "Actions remain an RL extension: continuous inventory/ROP multipliers plus a discrete shift selector.",
+            "Use direct DES action dictionaries for static Garrido baselines when comparing S1/S2/S3 without multiplier artifacts.",
+        ),
+    )
+
+
 def spec_to_dict(spec: ExternalEnvSpec) -> dict[str, Any]:
     """Serialize the environment contract for JSON export or external tooling."""
     return asdict(spec)
@@ -485,6 +518,28 @@ def make_track_b_env(**overrides: Any) -> MFSCGymEnvShifts:
         "step_size_hours": 168.0,
         "year_basis": "thesis",
         "stochastic_pt": True,
+        "w_bo": BENCHMARK_W_BO,
+        "w_cost": BENCHMARK_W_COST,
+        "w_disr": BENCHMARK_W_DISR,
+    }
+    params.update(overrides)
+    return MFSCGymEnvShifts(**params)
+
+
+def make_thesis_aligned_training_env(**overrides: Any) -> MFSCGymEnvShifts:
+    """Build the paper-serious trainable env gated by thesis-faithful settings."""
+    params: dict[str, Any] = {
+        "reward_mode": "ReT_seq_v1",
+        "observation_version": "v4",
+        "step_size_hours": 168.0,
+        "year_basis": THESIS_FAITHFUL_PROTOCOL["year_basis"],
+        "risk_level": "current",
+        "stochastic_pt": False,
+        "warmup_trigger": THESIS_FAITHFUL_PROTOCOL["warmup_trigger"],
+        "downstream_q_source": THESIS_FAITHFUL_PROTOCOL["downstream_q_source"],
+        "r14_defect_mode": THESIS_FAITHFUL_PROTOCOL["r14_defect_mode"],
+        "priming_enabled": False,
+        "clear_backlog_after_priming": False,
         "w_bo": BENCHMARK_W_BO,
         "w_cost": BENCHMARK_W_COST,
         "w_disr": BENCHMARK_W_DISR,
@@ -655,7 +710,7 @@ def run_episodes(
         terminal_metrics = get_episode_terminal_metrics(env)
         if demanded_total > 0:
             flow_backorder_rate = backorder_qty_total / demanded_total
-            flow_fill_rate = 1.0 - flow_backorder_rate
+            flow_fill_rate = max(0.0, min(1.0, 1.0 - flow_backorder_rate))
         else:
             flow_backorder_rate = 0.0
             flow_fill_rate = 1.0
