@@ -30,6 +30,7 @@ from supply_chain.external_env_interface import (
     REWARD_TERM_FIELDS,
     STATE_CONSTRAINT_FIELDS,
     get_track_b_env_spec,
+    make_dkana_thesis_faithful_env,
     make_dkana_track_b_env,
     make_track_b_env,
 )
@@ -419,6 +420,47 @@ def test_dkana_track_b_env_can_include_previous_reward_context() -> None:
 
     assert step_info["previous_reward"] == reward
     assert step_info["dkana_config_context"][-1, -1] == reward
+    env.close()
+
+
+def test_dkana_thesis_faithful_env_uses_18_decision_dims_and_reward_obs() -> None:
+    env = make_dkana_thesis_faithful_env(max_steps=1)
+    obs, info = env.reset(seed=123)
+
+    assert env.action_space.shape == (18,)
+    assert env.observation_space.shape == (19,)
+    assert obs.shape == (19,)
+    assert info["thesis_decision_action_fields"][:5] == [
+        "op3_I168_1",
+        "op3_I336_1",
+        "op3_I504_1",
+        "op3_I672_1",
+        "op3_I1344_1",
+    ]
+    assert info["thesis_decision_action_fields"][-3:] == ["S1", "S2", "S3"]
+    assert obs[-1] == 0.0
+
+    action = np.zeros(18, dtype=np.float32)
+    action[2] = 1.0
+    action[7] = 1.0
+    action[12] = 1.0
+    action[17] = 1.0
+
+    next_obs, reward, terminated, truncated, step_info = env.step(action)
+
+    assert next_obs.shape == (19,)
+    assert next_obs[-1] == reward
+    assert terminated or truncated
+    assert step_info["thesis_decision"]["inventory_period_hours"] == 504.0
+    assert step_info["thesis_decision"]["assembly_shifts"] == 3
+    assert step_info["action_contract"] == "thesis_faithful_dkana_v1"
+    assert env.unwrapped.sim is not None
+    assert env.unwrapped.sim.inventory_buffer_targets == {
+        "op3_rm": 46080.0,
+        "op5_rm": 46080.0,
+        "op9_rations": 47250.0,
+    }
+    assert env.unwrapped.sim.params["assembly_shifts"] == 3
     env.close()
 
 

@@ -65,9 +65,11 @@ from supply_chain.external_env_interface import (
     build_reward_term_vector,
     build_shift_control_constraint_vector,
     build_shift_control_state_constraint_vector,
+    get_dkana_thesis_faithful_env_spec,
     get_shift_control_constraint_context,
     get_shift_control_env_spec,
     get_track_b_env_spec,
+    make_dkana_thesis_faithful_env,
     make_shift_control_env,
     make_track_b_env,
     spec_to_dict,
@@ -239,6 +241,8 @@ def action_fields_for_contract(action_contract: str | None) -> tuple[str, ...]:
     """Return the action schema for the selected export contract."""
     if action_contract == "track_b_v1":
         return ACTION_FIELDS_TRACK_B_V1
+    if action_contract == "thesis_faithful_dkana_v1":
+        return get_dkana_thesis_faithful_env_spec().action_fields
     return ACTION_FIELDS
 
 
@@ -248,6 +252,11 @@ def env_spec_for_args(args: argparse.Namespace) -> Any:
         return get_track_b_env_spec(
             reward_mode=args.reward_mode,
             observation_version=args.observation_version,
+            step_size_hours=args.step_size_hours,
+        )
+    if args.action_contract == "thesis_faithful_dkana_v1":
+        return get_dkana_thesis_faithful_env_spec(
+            reward_mode=args.reward_mode,
             step_size_hours=args.step_size_hours,
         )
     return get_shift_control_env_spec(
@@ -381,6 +390,14 @@ def build_env(args: argparse.Namespace) -> Any:
             max_steps=resolve_episode_max_steps(args.step_size_hours, args.max_steps),
             stochastic_pt=args.stochastic_pt,
         )
+    elif action_contract == "thesis_faithful_dkana_v1":
+        env = make_dkana_thesis_faithful_env(
+            risk_level=args.risk_level,
+            reward_mode=args.reward_mode,
+            step_size_hours=args.step_size_hours,
+            max_steps=resolve_episode_max_steps(args.step_size_hours, args.max_steps),
+            stochastic_pt=args.stochastic_pt,
+        )
     else:
         env = make_shift_control_env(
             risk_level=args.risk_level,
@@ -467,8 +484,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--action-contract",
         default=None,
-        choices=["track_b_v1"],
-        help="Action contract. If set to track_b_v1, uses 7D actions with Op10/Op12 control.",
+        choices=["track_b_v1", "thesis_faithful_dkana_v1"],
+        help=(
+            "Action contract. track_b_v1 uses 7D actions with Op10/Op12 "
+            "control. thesis_faithful_dkana_v1 uses David's 18D thesis "
+            "decision-vector adapter."
+        ),
     )
     parser.add_argument(
         "--ret-unified-calibration",

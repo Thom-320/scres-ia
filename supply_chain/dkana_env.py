@@ -6,6 +6,7 @@ from typing import Any, Sequence
 import gymnasium as gym
 import numpy as np
 
+from .config import CAPACITY_BY_SHIFTS, INVENTORY_BUFFERS, OPERATIONS
 from .dkana import (
     RELATION_MODES,
     build_dkana_config_fields,
@@ -17,10 +18,14 @@ from .external_env_interface import (
     ACTION_FIELDS,
     ACTION_FIELDS_TRACK_B_V1,
     STATE_CONSTRAINT_FIELDS,
+    THESIS_DECISION_ACTION_FIELDS,
+    THESIS_DECISION_OBSERVATION_FIELDS,
+    THESIS_INVENTORY_PERIODS,
     build_shift_control_constraint_vector,
     build_shift_control_state_constraint_vector,
     get_observation_fields,
     get_shift_control_constraint_context,
+    make_thesis_aligned_training_env,
     make_track_b_env,
 )
 
@@ -241,3 +246,166 @@ def make_dkana_track_b_env(
         ),
         action_dim=len(ACTION_FIELDS_TRACK_B_V1),
     )
+
+
+class DKANAThesisFaithfulDecisionEnvWrapper(gym.Wrapper):
+    """
+    Expose Garrido-Rios thesis decision variables as a 18D DKANA contract.
+
+    The action vector is ordered as Table 6.16 inventory-buffer choices
+    (Op3, Op5, Op9 crossed with I168,1...I1344,1) followed by Table 6.20
+    capacity choices (S1, S2, S3). The observation mirrors the realized 18D
+    decision vector and appends the latest reward.
+    """
+
+    def __init__(self, env: gym.Env) -> None:
+        super().__init__(env)
+        self.action_fields = THESIS_DECISION_ACTION_FIELDS
+        self.observation_fields = THESIS_DECISION_OBSERVATION_FIELDS
+        self.action_space = gym.spaces.Box(
+            low=0.0,
+            high=1.0,
+            shape=(len(self.action_fields),),
+            dtype=np.float32,
+        )
+        self.observation_space = gym.spaces.Box(
+            low=-1_000_000.0,
+            high=1_000_000.0,
+            shape=(len(self.observation_fields),),
+            dtype=np.float32,
+        )
+        self._realized_decision = np.zeros(len(self.action_fields), dtype=np.float32)
+        self._realized_decision[-3] = 1.0
+        self._last_reward = 0.0
+
+    def _build_observation(self) -> np.ndarray:
+        return np.concatenate(
+            [
+                self._realized_decision.astype(np.float32),
+                np.asarray([self._last_reward], dtype=np.float32),
+            ],
+            axis=0,
+        )
+
+    def _select_inventory_period(self, action: np.ndarray) -> int | None:
+        inventory_scores = action[:15].reshape(3, 5)
+        period_scores = inventory_scores.mean(axis=0)
+        if float(period_scores.max()) <= 0.0:
+            return None
+        return int(THESIS_INVENTORY_PERIODS[int(period_scores.argmax())])
+
+    @staticmethod
+    def _select_shifts(action: np.ndarray) -> int:
+        return int(action[15:18].argmax()) + 1
+
+    def _set_inventory_targets(self, period: int | None) -> dict[str, float]:
+        base_env = self.unwrapped
+        sim = getattr(base_env, "sim", None)
+        if sim is None:
+            return {}
+        if period is None:
+            sim.inventory_buffer_targets = {}
+            return {}
+
+        targets = {
+            key: float(value) for key, value in INVENTORY_BUFFERS[int(period)].items()
+        }
+        sim.inventory_buffer_targets = dict(targets)
+        sim.inventory_replenishment_period = float(period)
+        for key, target in targets.items():
+            sim._top_up_inventory_buffer(key, target)
+        return targets
+
+    def _realized_vector(self, period: int | None, shifts: int) -> np.ndarray:
+        realized = np.zeros(len(self.action_fields), dtype=np.float32)
+        if period is not None:
+            period_index = THESIS_INVENTORY_PERIODS.index(int(period))
+            for node_index in range(3):
+                realized[node_index * 5 + period_index] = 1.0
+        realized[15 + shifts - 1] = 1.0
+        return realized
+
+    def _action_dict(self, shifts: int) -> dict[str, float | int]:
+        base_env = self.unwrapped
+        sim = getattr(base_env, "sim", None)
+        cap = CAPACITY_BY_SHIFTS[shifts]
+        op9_q_min = float(OPERATIONS[9]["q"][0])
+        op9_q_max = float(OPERATIONS[9]["q"][1])
+        if sim is not None:
+            op9_q_min = float(sim.params.get("op9_q_min", op9_q_min))
+            op9_q_max = float(sim.params.get("op9_q_max", op9_q_max))
+        return {
+            "assembly_shifts": shifts,
+            "op3_q": float(cap["op3_q"]),
+            "op3_rop": float(OPERATIONS[3]["rop"]),
+            "op9_q_min": op9_q_min,
+            "op9_q_max": op9_q_max,
+            "op9_rop": float(OPERATIONS[9]["rop"]),
+            "batch_size": float(cap["op7_q"]),
+        }
+
+    def _attach_info(
+        self,
+        info: dict[str, Any],
+        *,
+        period: int | None,
+        shifts: int,
+        targets: dict[str, float],
+    ) -> dict[str, Any]:
+        enriched = dict(info)
+        enriched["action_contract"] = "thesis_faithful_dkana_v1"
+        enriched["observation_contract"] = "thesis_decision_reward_v1"
+        enriched["thesis_decision_action_fields"] = list(self.action_fields)
+        enriched["thesis_decision_observation_fields"] = list(self.observation_fields)
+        enriched["thesis_decision"] = {
+            "inventory_period_hours": None if period is None else float(period),
+            "inventory_buffer_targets": dict(targets),
+            "assembly_shifts": int(shifts),
+        }
+        return enriched
+
+    def reset(
+        self, *, seed: int | None = None, options: dict[str, Any] | None = None
+    ) -> tuple[np.ndarray, dict[str, Any]]:
+        _, info = self.env.reset(seed=seed, options=options)
+        self._last_reward = 0.0
+        self._realized_decision = self._realized_vector(None, 1)
+        return self._build_observation(), self._attach_info(
+            info,
+            period=None,
+            shifts=1,
+            targets={},
+        )
+
+    def step(self, action: Any) -> tuple[np.ndarray, float, bool, bool, dict[str, Any]]:
+        action_array = np.asarray(action, dtype=np.float32)
+        if action_array.shape != (len(self.action_fields),):
+            raise ValueError(
+                f"Action must have shape ({len(self.action_fields)},), "
+                f"got {action_array.shape}."
+            )
+        clipped = np.clip(action_array, 0.0, 1.0)
+        period = self._select_inventory_period(clipped)
+        shifts = self._select_shifts(clipped)
+        targets = self._set_inventory_targets(period)
+        self._realized_decision = self._realized_vector(period, shifts)
+
+        _, reward, terminated, truncated, info = self.env.step(
+            self._action_dict(shifts)
+        )
+        self._last_reward = float(reward)
+        return (
+            self._build_observation(),
+            float(reward),
+            terminated,
+            truncated,
+            self._attach_info(info, period=period, shifts=shifts, targets=targets),
+        )
+
+
+def make_dkana_thesis_faithful_env(
+    **env_overrides: Any,
+) -> DKANAThesisFaithfulDecisionEnvWrapper:
+    """Build thesis-aligned Gym with the 18D/19D DKANA decision-vector contract."""
+    env = make_thesis_aligned_training_env(**env_overrides)
+    return DKANAThesisFaithfulDecisionEnvWrapper(env)

@@ -91,6 +91,16 @@ ACTION_FIELDS_TRACK_B_V1: tuple[str, ...] = ACTION_FIELDS + (
     "op10_q_multiplier_signal",
     "op12_q_multiplier_signal",
 )
+THESIS_INVENTORY_PERIODS: tuple[int, ...] = (168, 336, 504, 672, 1344)
+THESIS_INVENTORY_NODES: tuple[str, ...] = ("op3", "op5", "op9")
+THESIS_DECISION_ACTION_FIELDS: tuple[str, ...] = tuple(
+    f"{node}_I{period}_1"
+    for node in THESIS_INVENTORY_NODES
+    for period in THESIS_INVENTORY_PERIODS
+) + ("S1", "S2", "S3")
+THESIS_DECISION_OBSERVATION_FIELDS: tuple[str, ...] = THESIS_DECISION_ACTION_FIELDS + (
+    "reward",
+)
 
 ACTION_BOUNDS: tuple[tuple[float, float], ...] = (
     (-1.0, 1.0),
@@ -366,6 +376,42 @@ def get_thesis_aligned_training_env_spec(
     )
 
 
+def get_dkana_thesis_faithful_env_spec(
+    *,
+    reward_mode: str = "ReT_seq_v1",
+    step_size_hours: float = 168.0,
+) -> ExternalEnvSpec:
+    """Return David's 18D action / 19D observation thesis-faithful DKANA contract."""
+    return ExternalEnvSpec(
+        env_variant="dkana_thesis_faithful_decision",
+        reward_mode=reward_mode,
+        observation_version="thesis_decision_reward_v1",
+        step_size_hours=float(step_size_hours),
+        warmup_hours=float(WARMUP["estimated_deterministic_hrs"]),
+        observation_fields=THESIS_DECISION_OBSERVATION_FIELDS,
+        action_fields=THESIS_DECISION_ACTION_FIELDS,
+        action_bounds=((0.0, 1.0),) * len(THESIS_DECISION_ACTION_FIELDS),
+        shift_mapping={
+            "S1": 1,
+            "S2": 2,
+            "S3": 3,
+        },
+        notes=(
+            "Thesis-faithful DKANA adapter: 15 inventory-buffer dimensions "
+            "from Table 6.16 plus 3 capacity dimensions from Table 6.20.",
+            "Observation is the realized 18D thesis decision vector plus the "
+            "latest scalar reward.",
+            "Inventory dimensions are grouped by period I168,1, I336,1, "
+            "I504,1, I672,1, I1344,1 across Op3, Op5, and Op9; the dominant "
+            "period score selects the active strategic buffer target.",
+            "Capacity dimensions are one-of-three S1/S2/S3 scores; the "
+            "dominant score selects assembly shifts and Table 6.20 capacity.",
+            "This contract stays on the thesis-aligned Track A backbone and "
+            "does not expose Track B Op10/Op12 downstream controls.",
+        ),
+    )
+
+
 def spec_to_dict(spec: ExternalEnvSpec) -> dict[str, Any]:
     """Serialize the environment contract for JSON export or external tooling."""
     return asdict(spec)
@@ -558,6 +604,20 @@ def make_dkana_track_b_env(**overrides: Any) -> Any:
     ``dkana_time_mask``.
     """
     from .dkana_env import make_dkana_track_b_env as _make_env
+
+    return _make_env(**overrides)
+
+
+def make_dkana_thesis_faithful_env(**overrides: Any) -> Any:
+    """
+    Build a thesis-faithful DKANA decision-vector env.
+
+    This adapter exposes Garrido-Rios decision variables directly:
+    15 inventory-buffer dimensions from Table 6.16 plus 3 capacity-shift
+    dimensions from Table 6.20. Observations mirror the realized 18 decision
+    dimensions and append the latest reward, yielding 19 dimensions.
+    """
+    from .dkana_env import make_dkana_thesis_faithful_env as _make_env
 
     return _make_env(**overrides)
 

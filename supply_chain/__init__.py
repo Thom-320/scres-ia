@@ -4,8 +4,10 @@ from .env import MFSCGymEnv
 from .env_experimental_shifts import MFSCGymEnvShifts
 from .external_env_interface import (
     ExternalEnvSpec,
+    get_dkana_thesis_faithful_env_spec,
     get_track_b_env_spec,
     get_shift_control_env_spec,
+    make_dkana_thesis_faithful_env,
     make_dkana_track_b_env,
     make_track_b_env,
     make_shift_control_env,
@@ -18,8 +20,10 @@ __all__ = [
     "MFSCGymEnv",
     "MFSCGymEnvShifts",
     "MFSCSimulation",
+    "get_dkana_thesis_faithful_env_spec",
     "get_track_b_env_spec",
     "get_shift_control_env_spec",
+    "make_dkana_thesis_faithful_env",
     "make_dkana_track_b_env",
     "make_track_b_env",
     "make_shift_control_env",
