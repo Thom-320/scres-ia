@@ -8,7 +8,7 @@ import numpy as np
 import torch
 from torch import Tensor, nn
 
-from supply_chain.external_env_interface import (
+from .external_env_interface import (
     ACTION_FIELDS,
     ACTION_FIELDS_TRACK_B_V1,
     CONTROL_CONTEXT_FIELDS,

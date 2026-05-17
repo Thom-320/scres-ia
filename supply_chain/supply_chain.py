@@ -19,7 +19,7 @@ from dataclasses import dataclass
 from typing import Any, Optional
 from collections import Counter
 
-from supply_chain.config import (
+from .config import (
     ADAPTIVE_BENCHMARK_INITIAL_REGIME,
     ADAPTIVE_BENCHMARK_MAINTENANCE,
     ADAPTIVE_BENCHMARK_REGIME_PARAMS,
@@ -56,7 +56,7 @@ from supply_chain.config import (
     THESIS_DOWNSTREAM_Q_RANGES,
     WARMUP_TRIGGER_OPTIONS,
 )
-from supply_chain.ret_thesis import (
+from .ret_thesis import (
     compute_order_level_ret as compute_thesis_order_level_ret,
     compute_ret_per_order,
 )

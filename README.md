@@ -26,6 +26,25 @@ python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
 
+## Colab imports
+
+For notebooks, clone the repository into a folder named `scresia` and import
+from the repository-root namespace:
+
+```python
+!git clone https://github.com/Thom-320/scres-ia.git /content/scresia
+
+import sys
+sys.path.insert(0, "/content")
+
+from scresia.supply_chain import MFSCSimulation
+from scresia.supply_chain.config import SIMULATION_HORIZON
+from scresia.supply_chain.external_env_interface import make_track_b_env
+```
+
+If the notebook is already running from inside the repository directory, the
+same `scresia.*` imports are supported by the local compatibility namespace.
+
 ## Run simulation baselines
 
 ```bash

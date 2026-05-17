@@ -5,7 +5,7 @@ from typing import Any, Callable, Protocol
 
 import numpy as np
 
-from supply_chain.config import (
+from .config import (
     BENCHMARK_OBSERVATION_VERSION,
     BENCHMARK_REWARD_MODE,
     BENCHMARK_W_BO,
@@ -16,7 +16,7 @@ from supply_chain.config import (
     THESIS_FAITHFUL_PROTOCOL,
     WARMUP,
 )
-from supply_chain.env_experimental_shifts import MFSCGymEnvShifts
+from .env_experimental_shifts import MFSCGymEnvShifts
 
 OBSERVATION_FIELDS_V1: tuple[str, ...] = (
     "raw_material_wdc_norm",
@@ -557,7 +557,7 @@ def make_dkana_track_b_env(**overrides: Any) -> Any:
     includes ``dkana_row_matrices``, ``dkana_config_context``, and
     ``dkana_time_mask``.
     """
-    from supply_chain.dkana_env import make_dkana_track_b_env as _make_env
+    from .dkana_env import make_dkana_track_b_env as _make_env
 
     return _make_env(**overrides)
 
@@ -625,7 +625,7 @@ def run_episodes(
 
     Example
     -------
-    >>> from supply_chain.external_env_interface import run_episodes
+    >>> from scresia.supply_chain.external_env_interface import run_episodes
     >>> results = run_episodes(
     ...     lambda obs, info: np.zeros(5, dtype=np.float32),  # neutral policy
     ...     n_episodes=3,

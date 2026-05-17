@@ -65,7 +65,7 @@ import gymnasium as gym
 import numpy as np
 from gymnasium import spaces
 
-from supply_chain.config import (
+from .config import (
     CAPACITY_BY_SHIFTS,
     DEFAULT_YEAR_BASIS,
     OPERATIONS,
@@ -78,7 +78,7 @@ from supply_chain.config import (
     WARMUP_TRIGGER_OPTIONS,
     YEAR_BASIS_OPTIONS,
 )
-from supply_chain.supply_chain import MFSCSimulation
+from .supply_chain import MFSCSimulation
 
 NUM_TRACKED_OPS = 13
 OBSERVATION_VERSION_OPTIONS = ("v1", "v2", "v3", "v4", "v5", "v6", "v7")

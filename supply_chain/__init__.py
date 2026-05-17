@@ -1,8 +1,8 @@
 """MFSC supply chain simulation package."""
 
-from supply_chain.env import MFSCGymEnv
-from supply_chain.env_experimental_shifts import MFSCGymEnvShifts
-from supply_chain.external_env_interface import (
+from .env import MFSCGymEnv
+from .env_experimental_shifts import MFSCGymEnvShifts
+from .external_env_interface import (
     ExternalEnvSpec,
     get_track_b_env_spec,
     get_shift_control_env_spec,
@@ -11,7 +11,7 @@ from supply_chain.external_env_interface import (
     make_shift_control_env,
     spec_to_dict,
 )
-from supply_chain.supply_chain import MFSCSimulation, resolve_hours_per_year
+from .supply_chain import MFSCSimulation, resolve_hours_per_year
 
 __all__ = [
     "ExternalEnvSpec",

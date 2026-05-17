@@ -6,14 +6,14 @@ import gymnasium as gym
 import numpy as np
 from gymnasium import spaces
 
-from supply_chain.config import (
+from .config import (
     DEFAULT_YEAR_BASIS,
     OPERATIONS,
     SIMULATION_HORIZON,
     WARMUP,
     YEAR_BASIS_OPTIONS,
 )
-from supply_chain.supply_chain import MFSCSimulation
+from .supply_chain import MFSCSimulation
 
 
 class MFSCGymEnv(gym.Env[np.ndarray, np.ndarray]):

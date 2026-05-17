@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Literal
 
-from supply_chain.config import HOURS_PER_YEAR_THESIS, INVENTORY_BUFFERS
+from .config import HOURS_PER_YEAR_THESIS, INVENTORY_BUFFERS
 
 RiskLevel = Literal["current", "increased"]
 ScenarioFamily = Literal["risk_r1", "risk_r2", "risk_r3", "inventory", "capacity"]

@@ -6,14 +6,14 @@ from typing import Any, Sequence
 import gymnasium as gym
 import numpy as np
 
-from supply_chain.dkana import (
+from .dkana import (
     RELATION_MODES,
     build_dkana_config_fields,
     build_enumeration_map,
     build_mfsc_relational_state,
     build_prefixed_variable_names,
 )
-from supply_chain.external_env_interface import (
+from .external_env_interface import (
     ACTION_FIELDS,
     ACTION_FIELDS_TRACK_B_V1,
     STATE_CONSTRAINT_FIELDS,
