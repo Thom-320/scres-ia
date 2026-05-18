@@ -14,6 +14,7 @@ from .external_env_interface import (
     CONTROL_CONTEXT_FIELDS,
     OBSERVATION_FIELDS_V3,
     STATE_CONSTRAINT_FIELDS,
+    THESIS_DECISION_ACTION_FIELDS,
     build_shift_control_constraint_vector,
     build_shift_control_state_constraint_vector,
     get_shift_control_constraint_context,
@@ -37,10 +38,14 @@ def build_dkana_config_fields(
         action_fields = ACTION_FIELDS
     elif action_dim == len(ACTION_FIELDS_TRACK_B_V1):
         action_fields = ACTION_FIELDS_TRACK_B_V1
+    elif action_dim == len(THESIS_DECISION_ACTION_FIELDS):
+        action_fields = THESIS_DECISION_ACTION_FIELDS
     else:
         raise ValueError(
             f"action_dim {action_dim} does not match any known action contract "
-            f"(Track A: {len(ACTION_FIELDS)}, Track B: {len(ACTION_FIELDS_TRACK_B_V1)})."
+            f"(Track A: {len(ACTION_FIELDS)}, "
+            f"Track B: {len(ACTION_FIELDS_TRACK_B_V1)}, "
+            f"thesis-faithful: {len(THESIS_DECISION_ACTION_FIELDS)})."
         )
     fields = CONTROL_CONTEXT_FIELDS + tuple(
         f"prev_{field_name}" for field_name in action_fields
@@ -349,11 +354,13 @@ def build_dkana_windows(
     if actions_array.shape[1] not in (
         len(ACTION_FIELDS),
         len(ACTION_FIELDS_TRACK_B_V1),
+        len(THESIS_DECISION_ACTION_FIELDS),
     ):
         raise ValueError(
             f"actions width {actions_array.shape[1]} does not match any known "
             f"action contract (Track A: {len(ACTION_FIELDS)}, "
-            f"Track B: {len(ACTION_FIELDS_TRACK_B_V1)})."
+            f"Track B: {len(ACTION_FIELDS_TRACK_B_V1)}, "
+            f"thesis-faithful: {len(THESIS_DECISION_ACTION_FIELDS)})."
         )
 
     variable_names = build_prefixed_variable_names(

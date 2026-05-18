@@ -17,6 +17,7 @@ from .dkana import (
 from .external_env_interface import (
     ACTION_FIELDS,
     ACTION_FIELDS_TRACK_B_V1,
+    SDM_HISTORY_FIELDS,
     STATE_CONSTRAINT_FIELDS,
     THESIS_DECISION_ACTION_FIELDS,
     THESIS_DECISION_OBSERVATION_FIELDS,
@@ -258,27 +259,151 @@ class DKANAThesisFaithfulDecisionEnvWrapper(gym.Wrapper):
     decision vector and appends the latest reward.
     """
 
-    def __init__(self, env: gym.Env) -> None:
+    def __init__(
+        self,
+        env: gym.Env,
+        *,
+        observation_mode: str = "decision_reward",
+        action_space_mode: str = "onehot_18d",
+        inventory_period_mode: str = "thesis_strict",
+        initial_action: Any | None = None,
+        learn_initial_decision: bool = False,
+    ) -> None:
         super().__init__(env)
+        if observation_mode not in (
+            "decision_reward",
+            "env_reward",
+            "env_state_reward",
+            "env_sdm_history_reward",
+        ):
+            raise ValueError(
+                "observation_mode must be 'decision_reward', 'env_reward', "
+                "'env_state_reward', or 'env_sdm_history_reward'."
+            )
+        if action_space_mode not in ("onehot_18d", "factorized"):
+            raise ValueError("action_space_mode must be 'onehot_18d' or 'factorized'.")
+        if inventory_period_mode not in ("thesis_strict", "per_node"):
+            raise ValueError(
+                "inventory_period_mode must be 'thesis_strict' or 'per_node'."
+            )
         self.action_fields = THESIS_DECISION_ACTION_FIELDS
-        self.observation_fields = THESIS_DECISION_OBSERVATION_FIELDS
-        self.action_space = gym.spaces.Box(
-            low=0.0,
-            high=1.0,
-            shape=(len(self.action_fields),),
-            dtype=np.float32,
-        )
+        self.observation_mode = observation_mode
+        self.action_space_mode = action_space_mode
+        self.inventory_period_mode = inventory_period_mode
+        self.initial_action = initial_action
+        self.learn_initial_decision = bool(learn_initial_decision)
+        self._awaiting_initial_decision = False
+        self._pending_reset_seed: int | None = None
+        self._pending_reset_options: dict[str, Any] = {}
+        self.base_observation_version = str(getattr(env, "observation_version", "v4"))
+        if observation_mode == "decision_reward":
+            self.observation_fields = THESIS_DECISION_OBSERVATION_FIELDS
+            obs_shape = (len(self.observation_fields),)
+            obs_low = -1_000_000.0
+            obs_high = 1_000_000.0
+        else:
+            base_fields = get_observation_fields(self.base_observation_version)
+            self.observation_fields = base_fields + ("reward",)
+            obs_shape = (len(self.observation_fields),)
+            obs_low = 0.0
+            obs_high = 20.0
+        if observation_mode == "env_state_reward":
+            base_fields = get_observation_fields(self.base_observation_version)
+            self.observation_fields = (
+                base_fields + STATE_CONSTRAINT_FIELDS + ("reward",)
+            )
+            obs_shape = (len(self.observation_fields),)
+            obs_low = -1_000_000.0
+            obs_high = 1_000_000.0
+        if observation_mode == "env_sdm_history_reward":
+            base_fields = get_observation_fields(self.base_observation_version)
+            self.observation_fields = base_fields + SDM_HISTORY_FIELDS + ("reward",)
+            obs_shape = (len(self.observation_fields),)
+            obs_low = -1_000_000.0
+            obs_high = 1_000_000.0
+        if action_space_mode == "factorized":
+            # 0 means no strategic buffer for a node; 1..5 map to I168,1..I1344,1.
+            # The final categorical variable maps 0/1/2 to S1/S2/S3.
+            self.action_space = gym.spaces.MultiDiscrete([6, 6, 6, 3])
+        else:
+            self.action_space = gym.spaces.Box(
+                low=0.0,
+                high=1.0,
+                shape=(len(self.action_fields),),
+                dtype=np.float32,
+            )
         self.observation_space = gym.spaces.Box(
-            low=-1_000_000.0,
-            high=1_000_000.0,
-            shape=(len(self.observation_fields),),
+            low=obs_low,
+            high=obs_high,
+            shape=obs_shape,
             dtype=np.float32,
         )
         self._realized_decision = np.zeros(len(self.action_fields), dtype=np.float32)
         self._realized_decision[-3] = 1.0
+        self._latest_env_observation = np.zeros(
+            len(get_observation_fields(self.base_observation_version)), dtype=np.float32
+        )
+        self._latest_state_constraint_vector = np.zeros(
+            len(STATE_CONSTRAINT_FIELDS), dtype=np.float32
+        )
+        self._latest_sdm_history_vector = np.zeros(
+            len(SDM_HISTORY_FIELDS), dtype=np.float32
+        )
         self._last_reward = 0.0
 
+    def _empty_phase_info(self, phase: str) -> dict[str, Any]:
+        info = {
+            "action_phase": phase,
+            "action_contract": "thesis_faithful_dkana_v1",
+            "observation_contract": (
+                "thesis_decision_reward_v1"
+                if self.observation_mode == "decision_reward"
+                else f"{self.observation_mode}_{self.base_observation_version}"
+            ),
+            "action_space_mode": self.action_space_mode,
+            "inventory_period_mode": self.inventory_period_mode,
+            "thesis_decision_action_fields": list(self.action_fields),
+            "thesis_decision_observation_fields": list(self.observation_fields),
+            "thesis_decision": {
+                "inventory_period_hours": None,
+                "inventory_period_hours_by_node": {},
+                "inventory_buffer_targets": {},
+                "assembly_shifts": 1,
+            },
+        }
+        info["initial_decision"] = {
+            **info["thesis_decision"],
+            "applied_before_warmup": False,
+        }
+        return info
+
     def _build_observation(self) -> np.ndarray:
+        if self.observation_mode == "env_sdm_history_reward":
+            return np.concatenate(
+                [
+                    self._latest_env_observation.astype(np.float32),
+                    self._latest_sdm_history_vector.astype(np.float32),
+                    np.asarray([self._last_reward], dtype=np.float32),
+                ],
+                axis=0,
+            )
+        if self.observation_mode == "env_state_reward":
+            return np.concatenate(
+                [
+                    self._latest_env_observation.astype(np.float32),
+                    self._latest_state_constraint_vector.astype(np.float32),
+                    np.asarray([self._last_reward], dtype=np.float32),
+                ],
+                axis=0,
+            )
+        if self.observation_mode == "env_reward":
+            return np.concatenate(
+                [
+                    self._latest_env_observation.astype(np.float32),
+                    np.asarray([self._last_reward], dtype=np.float32),
+                ],
+                axis=0,
+            )
         return np.concatenate(
             [
                 self._realized_decision.astype(np.float32),
@@ -287,41 +412,135 @@ class DKANAThesisFaithfulDecisionEnvWrapper(gym.Wrapper):
             axis=0,
         )
 
-    def _select_inventory_period(self, action: np.ndarray) -> int | None:
+    def _update_state_constraint_vector(self, info: dict[str, Any]) -> None:
+        state_context = info.get("state_constraint_context")
+        if isinstance(state_context, dict):
+            self._latest_state_constraint_vector = (
+                build_shift_control_state_constraint_vector(state_context).astype(
+                    np.float32
+                )
+            )
+
+    def _update_sdm_history_vector(self) -> None:
+        sim = getattr(self.unwrapped, "sim", None)
+        if sim is None or not hasattr(sim, "get_sdm_history_context"):
+            return
+        context = sim.get_sdm_history_context()
+        self._latest_sdm_history_vector = np.asarray(
+            [float(context.get(field, 0.0)) for field in SDM_HISTORY_FIELDS],
+            dtype=np.float32,
+        )
+
+    def _select_inventory_period_by_node(self, action: np.ndarray) -> dict[str, int]:
         inventory_scores = action[:15].reshape(3, 5)
-        period_scores = inventory_scores.mean(axis=0)
-        if float(period_scores.max()) <= 0.0:
-            return None
-        return int(THESIS_INVENTORY_PERIODS[int(period_scores.argmax())])
+        selected: dict[str, int] = {}
+        for node_index, node_name in enumerate(("op3", "op5", "op9")):
+            node_scores = inventory_scores[node_index]
+            if float(node_scores.max()) > 0.0:
+                selected[node_name] = int(
+                    THESIS_INVENTORY_PERIODS[int(node_scores.argmax())]
+                )
+        return self._normalize_periods_by_node(selected)
+
+    def _normalize_periods_by_node(
+        self, periods_by_node: dict[str, int]
+    ) -> dict[str, int]:
+        if self.inventory_period_mode == "per_node" or not periods_by_node:
+            return dict(periods_by_node)
+        counts = {
+            period: list(periods_by_node.values()).count(period)
+            for period in set(periods_by_node.values())
+        }
+        chosen_period = max(
+            counts,
+            key=lambda period: (counts[period], THESIS_INVENTORY_PERIODS.index(period)),
+        )
+        return {node_name: int(chosen_period) for node_name in ("op3", "op5", "op9")}
 
     @staticmethod
     def _select_shifts(action: np.ndarray) -> int:
         return int(action[15:18].argmax()) + 1
 
-    def _set_inventory_targets(self, period: int | None) -> dict[str, float]:
+    def _decode_action(self, action: Any) -> tuple[dict[str, int], int, np.ndarray]:
+        action_array = np.asarray(action)
+        if self.action_space_mode == "factorized":
+            if action_array.shape != (4,):
+                raise ValueError(
+                    f"Action must have shape (4,), got {action_array.shape}."
+                )
+            discrete = np.asarray(action_array, dtype=np.int64)
+            if np.any(discrete < 0) or np.any(discrete > np.asarray([5, 5, 5, 2])):
+                raise ValueError("Factorized action values are out of bounds.")
+            periods_by_node = {}
+            for node_name, level in zip(
+                ("op3", "op5", "op9"), discrete[:3], strict=True
+            ):
+                if int(level) > 0:
+                    periods_by_node[node_name] = int(
+                        THESIS_INVENTORY_PERIODS[int(level) - 1]
+                    )
+            periods_by_node = self._normalize_periods_by_node(periods_by_node)
+            shifts = int(discrete[3]) + 1
+            return (
+                periods_by_node,
+                shifts,
+                self._realized_vector(periods_by_node, shifts),
+            )
+
+        action_array = np.asarray(action, dtype=np.float32)
+        if action_array.shape != (len(self.action_fields),):
+            raise ValueError(
+                f"Action must have shape ({len(self.action_fields)},), "
+                f"got {action_array.shape}."
+            )
+        clipped = np.clip(action_array, 0.0, 1.0)
+        periods_by_node = self._select_inventory_period_by_node(clipped)
+        shifts = self._select_shifts(clipped)
+        return periods_by_node, shifts, self._realized_vector(periods_by_node, shifts)
+
+    @staticmethod
+    def _buffer_targets_from_periods(
+        periods_by_node: dict[str, int],
+    ) -> dict[str, float]:
+        key_by_node = {
+            "op3": "op3_rm",
+            "op5": "op5_rm",
+            "op9": "op9_rations",
+        }
+        targets = {}
+        for node_name, period in periods_by_node.items():
+            target_key = key_by_node[node_name]
+            targets[target_key] = float(INVENTORY_BUFFERS[int(period)][target_key])
+        return targets
+
+    def _set_inventory_targets(
+        self, periods_by_node: dict[str, int]
+    ) -> dict[str, float]:
         base_env = self.unwrapped
         sim = getattr(base_env, "sim", None)
         if sim is None:
             return {}
-        if period is None:
+        if not periods_by_node:
             sim.inventory_buffer_targets = {}
             return {}
 
-        targets = {
-            key: float(value) for key, value in INVENTORY_BUFFERS[int(period)].items()
-        }
+        targets = self._buffer_targets_from_periods(periods_by_node)
         sim.inventory_buffer_targets = dict(targets)
-        sim.inventory_replenishment_period = float(period)
+        sim.inventory_replenishment_period = float(min(periods_by_node.values()))
         for key, target in targets.items():
             sim._top_up_inventory_buffer(key, target)
         return targets
 
-    def _realized_vector(self, period: int | None, shifts: int) -> np.ndarray:
+    def _realized_vector(
+        self, periods_by_node: dict[str, int], shifts: int
+    ) -> np.ndarray:
         realized = np.zeros(len(self.action_fields), dtype=np.float32)
-        if period is not None:
+        for node_index, node_name in enumerate(("op3", "op5", "op9")):
+            period = periods_by_node.get(node_name)
+            if period is None:
+                continue
             period_index = THESIS_INVENTORY_PERIODS.index(int(period))
-            for node_index in range(3):
-                realized[node_index * 5 + period_index] = 1.0
+            realized[node_index * 5 + period_index] = 1.0
         realized[15 + shifts - 1] = 1.0
         return realized
 
@@ -348,58 +567,147 @@ class DKANAThesisFaithfulDecisionEnvWrapper(gym.Wrapper):
         self,
         info: dict[str, Any],
         *,
-        period: int | None,
+        periods_by_node: dict[str, int],
         shifts: int,
         targets: dict[str, float],
     ) -> dict[str, Any]:
         enriched = dict(info)
         enriched["action_contract"] = "thesis_faithful_dkana_v1"
-        enriched["observation_contract"] = "thesis_decision_reward_v1"
+        enriched["observation_contract"] = (
+            "thesis_decision_reward_v1"
+            if self.observation_mode == "decision_reward"
+            else f"{self.observation_mode}_{self.base_observation_version}"
+        )
+        enriched["action_space_mode"] = self.action_space_mode
+        enriched["inventory_period_mode"] = self.inventory_period_mode
         enriched["thesis_decision_action_fields"] = list(self.action_fields)
         enriched["thesis_decision_observation_fields"] = list(self.observation_fields)
+        unique_periods = set(periods_by_node.values())
+        common_period = unique_periods.pop() if len(unique_periods) == 1 else None
         enriched["thesis_decision"] = {
-            "inventory_period_hours": None if period is None else float(period),
+            "inventory_period_hours": (
+                None if common_period is None else float(common_period)
+            ),
+            "inventory_period_hours_by_node": {
+                node_name: float(period)
+                for node_name, period in periods_by_node.items()
+            },
             "inventory_buffer_targets": dict(targets),
             "assembly_shifts": int(shifts),
         }
         return enriched
 
+    def _reset_underlying_with_initial_action(
+        self,
+        *,
+        seed: int | None,
+        wrapper_options: dict[str, Any],
+        initial_action: Any | None,
+    ) -> tuple[np.ndarray, dict[str, Any]]:
+        initial_periods_by_node: dict[str, int] = {}
+        initial_shifts = 1
+        initial_targets: dict[str, float] = {}
+        if initial_action is not None:
+            initial_periods_by_node, initial_shifts, realized_action = (
+                self._decode_action(initial_action)
+            )
+            initial_targets = self._buffer_targets_from_periods(initial_periods_by_node)
+            self._realized_decision = realized_action
+            wrapper_options["initial_buffers"] = dict(initial_targets)
+            wrapper_options["initial_shifts"] = int(initial_shifts)
+            wrapper_options["inventory_replenishment_period"] = (
+                None
+                if not initial_periods_by_node
+                else float(min(initial_periods_by_node.values()))
+            )
+        else:
+            self._realized_decision = self._realized_vector({}, 1)
+
+        obs, info = self.env.reset(seed=seed, options=wrapper_options)
+        self._latest_env_observation = np.asarray(obs, dtype=np.float32)
+        self._update_state_constraint_vector(info)
+        self._update_sdm_history_vector()
+        self._last_reward = 0.0
+        enriched_info = self._attach_info(
+            info,
+            periods_by_node=initial_periods_by_node,
+            shifts=initial_shifts,
+            targets=initial_targets,
+        )
+        enriched_info["action_phase"] = "weekly_decision"
+        enriched_info["initial_decision"] = dict(enriched_info["thesis_decision"])
+        enriched_info["initial_decision"]["applied_before_warmup"] = bool(
+            initial_action is not None
+        )
+        enriched_info["thesis_decision_action_vector"] = (
+            self._realized_decision.tolist()
+        )
+        return self._build_observation(), enriched_info
+
     def reset(
         self, *, seed: int | None = None, options: dict[str, Any] | None = None
     ) -> tuple[np.ndarray, dict[str, Any]]:
-        _, info = self.env.reset(seed=seed, options=options)
-        self._last_reward = 0.0
-        self._realized_decision = self._realized_vector(None, 1)
-        return self._build_observation(), self._attach_info(
-            info,
-            period=None,
-            shifts=1,
-            targets={},
+        wrapper_options = dict(options or {})
+        initial_action = wrapper_options.pop("initial_action", self.initial_action)
+        self._awaiting_initial_decision = (
+            self.learn_initial_decision and initial_action is None
+        )
+        if self._awaiting_initial_decision:
+            self._pending_reset_seed = seed
+            self._pending_reset_options = wrapper_options
+            self._realized_decision = self._realized_vector({}, 1)
+            self._latest_env_observation = np.zeros_like(self._latest_env_observation)
+            self._latest_state_constraint_vector = np.zeros_like(
+                self._latest_state_constraint_vector
+            )
+            self._latest_sdm_history_vector = np.zeros_like(
+                self._latest_sdm_history_vector
+            )
+            self._last_reward = 0.0
+            return self._build_observation(), self._empty_phase_info("initial_decision")
+
+        return self._reset_underlying_with_initial_action(
+            seed=seed,
+            wrapper_options=wrapper_options,
+            initial_action=initial_action,
         )
 
     def step(self, action: Any) -> tuple[np.ndarray, float, bool, bool, dict[str, Any]]:
-        action_array = np.asarray(action, dtype=np.float32)
-        if action_array.shape != (len(self.action_fields),):
-            raise ValueError(
-                f"Action must have shape ({len(self.action_fields)},), "
-                f"got {action_array.shape}."
+        if self._awaiting_initial_decision:
+            self._awaiting_initial_decision = False
+            obs, info = self._reset_underlying_with_initial_action(
+                seed=self._pending_reset_seed,
+                wrapper_options=dict(self._pending_reset_options),
+                initial_action=action,
             )
-        clipped = np.clip(action_array, 0.0, 1.0)
-        period = self._select_inventory_period(clipped)
-        shifts = self._select_shifts(clipped)
-        targets = self._set_inventory_targets(period)
-        self._realized_decision = self._realized_vector(period, shifts)
+            info["action_phase"] = "initial_decision"
+            return obs, 0.0, False, False, info
 
-        _, reward, terminated, truncated, info = self.env.step(
+        periods_by_node, shifts, realized_action = self._decode_action(action)
+        targets = self._set_inventory_targets(periods_by_node)
+        self._realized_decision = realized_action
+
+        obs, reward, terminated, truncated, info = self.env.step(
             self._action_dict(shifts)
         )
+        self._latest_env_observation = np.asarray(obs, dtype=np.float32)
+        self._update_state_constraint_vector(info)
+        self._update_sdm_history_vector()
         self._last_reward = float(reward)
+        enriched_info = self._attach_info(
+            info, periods_by_node=periods_by_node, shifts=shifts, targets=targets
+        )
+        enriched_info["action_phase"] = "weekly_decision"
+        enriched_info["weekly_decision"] = dict(enriched_info["thesis_decision"])
+        enriched_info["thesis_decision_action_vector"] = (
+            self._realized_decision.tolist()
+        )
         return (
             self._build_observation(),
             float(reward),
             terminated,
             truncated,
-            self._attach_info(info, period=period, shifts=shifts, targets=targets),
+            enriched_info,
         )
 
 
@@ -407,5 +715,19 @@ def make_dkana_thesis_faithful_env(
     **env_overrides: Any,
 ) -> DKANAThesisFaithfulDecisionEnvWrapper:
     """Build thesis-aligned Gym with the 18D/19D DKANA decision-vector contract."""
+    observation_mode = str(env_overrides.pop("observation_mode", "decision_reward"))
+    action_space_mode = str(env_overrides.pop("action_space_mode", "onehot_18d"))
+    inventory_period_mode = str(
+        env_overrides.pop("inventory_period_mode", "thesis_strict")
+    )
+    initial_action = env_overrides.pop("initial_action", None)
+    learn_initial_decision = bool(env_overrides.pop("learn_initial_decision", False))
     env = make_thesis_aligned_training_env(**env_overrides)
-    return DKANAThesisFaithfulDecisionEnvWrapper(env)
+    return DKANAThesisFaithfulDecisionEnvWrapper(
+        env,
+        observation_mode=observation_mode,
+        action_space_mode=action_space_mode,
+        inventory_period_mode=inventory_period_mode,
+        initial_action=initial_action,
+        learn_initial_decision=learn_initial_decision,
+    )

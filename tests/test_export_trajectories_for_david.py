@@ -204,6 +204,59 @@ def test_export_trajectories_supports_track_b_contract(tmp_path: Path) -> None:
     assert action_fields["fields"] == env_spec["action_fields"]
 
 
+def test_export_trajectories_supports_thesis_faithful_dkana_contract(
+    tmp_path: Path,
+) -> None:
+    cmd = [
+        sys.executable,
+        "scripts/export_trajectories_for_david.py",
+        "--episodes",
+        "1",
+        "--seed-start",
+        "17",
+        "--risk-level",
+        "increased",
+        "--reward-mode",
+        "ReT_seq_v1",
+        "--observation-version",
+        "v5",
+        "--action-contract",
+        "thesis_faithful_dkana_v1",
+        "--thesis-observation-mode",
+        "env_sdm_history_reward",
+        "--max-steps",
+        "2",
+        "--output-dir",
+        str(tmp_path),
+    ]
+    subprocess.run(
+        cmd,
+        cwd=REPO_ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    observations = np.load(tmp_path / "observations.npy")
+    actions = np.load(tmp_path / "actions.npy")
+    metadata = json.loads((tmp_path / "metadata.json").read_text(encoding="utf-8"))
+    env_spec = json.loads((tmp_path / "env_spec.json").read_text(encoding="utf-8"))
+    action_fields = json.loads(
+        (tmp_path / "action_fields.json").read_text(encoding="utf-8")
+    )
+
+    assert actions.shape[1] == 18
+    assert observations.shape[1] == len(env_spec["observation_fields"])
+    assert metadata["action_contract"] == "thesis_faithful_dkana_v1"
+    assert metadata["thesis_observation_mode"] == "env_sdm_history_reward"
+    assert metadata["thesis_inventory_period_mode"] == "thesis_strict"
+    assert env_spec["env_variant"] == "dkana_thesis_faithful_decision"
+    assert env_spec["observation_version"] == "env_sdm_history_reward_v5"
+    assert len(env_spec["action_fields"]) == 18
+    assert action_fields["fields"] == env_spec["action_fields"]
+    assert env_spec["action_fields"][-3:] == ["S1", "S2", "S3"]
+
+
 def test_export_trajectories_preserves_direct_garrido_action_context(
     tmp_path: Path,
 ) -> None:

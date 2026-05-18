@@ -258,6 +258,8 @@ def env_spec_for_args(args: argparse.Namespace) -> Any:
         return get_dkana_thesis_faithful_env_spec(
             reward_mode=args.reward_mode,
             step_size_hours=args.step_size_hours,
+            observation_version=args.observation_version,
+            observation_mode=args.thesis_observation_mode,
         )
     return get_shift_control_env_spec(
         reward_mode=args.reward_mode,
@@ -394,6 +396,9 @@ def build_env(args: argparse.Namespace) -> Any:
         env = make_dkana_thesis_faithful_env(
             risk_level=args.risk_level,
             reward_mode=args.reward_mode,
+            observation_version=args.observation_version,
+            observation_mode=args.thesis_observation_mode,
+            inventory_period_mode=args.thesis_inventory_period_mode,
             step_size_hours=args.step_size_hours,
             max_steps=resolve_episode_max_steps(args.step_size_hours, args.max_steps),
             stochastic_pt=args.stochastic_pt,
@@ -489,6 +494,32 @@ def parse_args() -> argparse.Namespace:
             "Action contract. track_b_v1 uses 7D actions with Op10/Op12 "
             "control. thesis_faithful_dkana_v1 uses David's 18D thesis "
             "decision-vector adapter."
+        ),
+    )
+    parser.add_argument(
+        "--thesis-observation-mode",
+        default="decision_reward",
+        choices=[
+            "decision_reward",
+            "env_reward",
+            "env_state_reward",
+            "env_sdm_history_reward",
+        ],
+        help=(
+            "Only used with --action-contract thesis_faithful_dkana_v1. "
+            "decision_reward is David's original 19D handoff; "
+            "env_sdm_history_reward exports the richer research surface with "
+            "Table 6.25-style history while keeping the 18D thesis action."
+        ),
+    )
+    parser.add_argument(
+        "--thesis-inventory-period-mode",
+        default="thesis_strict",
+        choices=["thesis_strict", "per_node"],
+        help=(
+            "Only used with --action-contract thesis_faithful_dkana_v1. "
+            "thesis_strict enforces one common It,S replenishment period across "
+            "Op3/Op5/Op9, matching the Garrido factorial design."
         ),
     )
     parser.add_argument(
@@ -636,6 +667,8 @@ def main() -> None:
         "risk_level": args.risk_level,
         "reward_mode": args.reward_mode,
         "observation_version": args.observation_version,
+        "thesis_observation_mode": args.thesis_observation_mode,
+        "thesis_inventory_period_mode": args.thesis_inventory_period_mode,
         "action_contract": args.action_contract or "shift_control_v1",
         "frame_stack": int(args.frame_stack),
         "policy": args.policy,
@@ -649,8 +682,8 @@ def main() -> None:
         "uses_direct_des_actions": bool(np.isfinite(direct_actions).any()),
         "note": (
             "The export preserves the online MFSC contract plus reward decomposition. "
-            "actions.npy follows the selected RL action schema "
-            "(5D Track A or 7D Track B). "
+            "actions.npy follows the selected action schema "
+            "(5D Track A, 7D Track B, or 18D thesis-faithful DKANA). "
             "direct_action_context.npy preserves exact DES control settings for "
             "policies that bypass the RL action map (e.g., garrido_cf_* baselines)."
         ),

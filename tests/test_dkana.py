@@ -28,7 +28,10 @@ from supply_chain.external_env_interface import (
     OBSERVATION_FIELDS_V3,
     OBSERVATION_FIELDS_V7,
     REWARD_TERM_FIELDS,
+    SDM_HISTORY_FIELDS,
     STATE_CONSTRAINT_FIELDS,
+    THESIS_DECISION_ACTION_FIELDS,
+    get_dkana_thesis_faithful_env_spec,
     get_track_b_env_spec,
     make_dkana_thesis_faithful_env,
     make_dkana_track_b_env,
@@ -216,6 +219,34 @@ def test_build_dkana_windows_supports_track_b_context_fields() -> None:
     assert dataset.config_fields == expected_config_fields
     assert dataset.variable_names[: len(OBSERVATION_FIELDS_V7)] == tuple(
         f"obs::{field_name}" for field_name in OBSERVATION_FIELDS_V7
+    )
+
+
+def test_build_dkana_windows_supports_thesis_faithful_18d_actions() -> None:
+    export_arrays = make_synthetic_export_arrays()
+    export_arrays["actions"] = np.stack(
+        [np.roll(np.eye(18, dtype=np.float32)[0], offset) for offset in (0, 1, 2)],
+        axis=0,
+    )
+
+    dataset = build_dkana_windows(
+        window_size=2,
+        include_prev_reward=True,
+        **export_arrays,
+    )
+
+    expected_config_fields = build_dkana_config_fields(
+        len(THESIS_DECISION_ACTION_FIELDS),
+        include_prev_reward=True,
+    )
+    assert dataset.config_context.shape == (3, 2, len(expected_config_fields))
+    assert dataset.action_targets.shape == (3, len(THESIS_DECISION_ACTION_FIELDS))
+    assert dataset.config_fields == expected_config_fields
+    assert dataset.config_fields[-4:] == (
+        "prev_S1",
+        "prev_S2",
+        "prev_S3",
+        "prev_reward",
     )
 
 
@@ -462,6 +493,247 @@ def test_dkana_thesis_faithful_env_uses_18_decision_dims_and_reward_obs() -> Non
     }
     assert env.unwrapped.sim.params["assembly_shifts"] == 3
     env.close()
+
+
+def test_dkana_thesis_faithful_env_can_use_rich_observation_for_ppo() -> None:
+    env = make_dkana_thesis_faithful_env(
+        max_steps=1,
+        observation_version="v5",
+        observation_mode="env_reward",
+        inventory_period_mode="per_node",
+    )
+    obs, info = env.reset(seed=123)
+
+    assert env.action_space.shape == (18,)
+    assert env.observation_space.shape == (31,)
+    assert obs.shape == (31,)
+    assert info["observation_contract"] == "env_reward_v5"
+
+    action = np.zeros(18, dtype=np.float32)
+    action[0] = 1.0
+    action[9] = 1.0
+    action[14] = 1.0
+    action[16] = 1.0
+
+    next_obs, reward, _, _, step_info = env.step(action)
+
+    assert next_obs.shape == (31,)
+    assert next_obs[-1] == reward
+    assert step_info["thesis_decision"]["inventory_period_hours_by_node"] == {
+        "op3": 168.0,
+        "op5": 1344.0,
+        "op9": 1344.0,
+    }
+    assert step_info["thesis_decision"]["assembly_shifts"] == 2
+    env.close()
+
+
+def test_dkana_thesis_faithful_env_supports_factored_categorical_actions() -> None:
+    env = make_dkana_thesis_faithful_env(
+        max_steps=1,
+        observation_version="v5",
+        observation_mode="env_reward",
+        action_space_mode="factorized",
+        inventory_period_mode="per_node",
+    )
+    obs, info = env.reset(seed=123)
+
+    assert env.action_space.nvec.tolist() == [6, 6, 6, 3]
+    assert obs.shape == (31,)
+    assert info["action_space_mode"] == "factorized"
+
+    next_obs, _, _, _, step_info = env.step(np.array([1, 3, 5, 1], dtype=np.int64))
+
+    assert next_obs.shape == (31,)
+    assert step_info["thesis_decision"]["inventory_period_hours_by_node"] == {
+        "op3": 168.0,
+        "op5": 504.0,
+        "op9": 1344.0,
+    }
+    assert step_info["thesis_decision"]["assembly_shifts"] == 2
+    assert step_info["thesis_decision_action_vector"] == [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        1.0,
+        0.0,
+    ]
+    env.close()
+
+
+def test_dkana_thesis_faithful_initial_action_applies_buffers_before_warmup() -> None:
+    initial_action = np.array([3, 3, 3, 2], dtype=np.int64)
+    env = make_dkana_thesis_faithful_env(
+        max_steps=1,
+        observation_version="v5",
+        observation_mode="env_state_reward",
+        action_space_mode="factorized",
+        initial_action=initial_action,
+    )
+    _, info = env.reset(seed=123)
+
+    assert info["initial_decision"]["applied_before_warmup"] is True
+    assert info["initial_decision"]["inventory_period_hours"] == 504.0
+    assert info["initial_decision"]["assembly_shifts"] == 3
+    assert info["warmup_metadata"]["initial_buffers"] == {
+        "op3_rm": 46080.0,
+        "op5_rm": 46080.0,
+        "op9_rations": 47250.0,
+    }
+    assert info["warmup_metadata"]["initial_shifts"] == 3
+    assert info["warmup_metadata"]["inventory_replenishment_period"] == 504.0
+    assert env.unwrapped.sim is not None
+    assert env.unwrapped.sim.inventory_buffer_targets == {
+        "op3_rm": 46080.0,
+        "op5_rm": 46080.0,
+        "op9_rations": 47250.0,
+    }
+    env.close()
+
+
+def test_dkana_thesis_faithful_can_learn_initial_decision_phase() -> None:
+    env = make_dkana_thesis_faithful_env(
+        max_steps=1,
+        observation_version="v5",
+        observation_mode="env_sdm_history_reward",
+        action_space_mode="factorized",
+        learn_initial_decision=True,
+    )
+    obs, info = env.reset(seed=123)
+
+    assert info["action_phase"] == "initial_decision"
+    assert info["initial_decision"]["applied_before_warmup"] is False
+    assert env.unwrapped.sim is None
+
+    obs, reward, terminated, truncated, info = env.step(
+        np.array([3, 3, 3, 2], dtype=np.int64)
+    )
+
+    assert reward == 0.0
+    assert not terminated
+    assert not truncated
+    assert info["action_phase"] == "initial_decision"
+    assert info["initial_decision"]["applied_before_warmup"] is True
+    assert info["initial_decision"]["inventory_period_hours"] == 504.0
+    assert info["initial_decision"]["assembly_shifts"] == 3
+    assert info["warmup_metadata"]["initial_buffers"] == {
+        "op3_rm": 46080.0,
+        "op5_rm": 46080.0,
+        "op9_rations": 47250.0,
+    }
+
+    obs, reward, terminated, truncated, info = env.step(
+        np.array([0, 0, 0, 1], dtype=np.int64)
+    )
+
+    assert info["action_phase"] == "weekly_decision"
+    assert info["weekly_decision"]["assembly_shifts"] == 2
+    assert obs[-1] == reward
+    env.close()
+
+
+def test_dkana_thesis_faithful_default_replenishment_is_thesis_strict() -> None:
+    env = make_dkana_thesis_faithful_env(
+        max_steps=1,
+        observation_version="v5",
+        observation_mode="env_reward",
+        action_space_mode="factorized",
+    )
+    env.reset(seed=123)
+
+    _, _, _, _, step_info = env.step(np.array([1, 3, 5, 1], dtype=np.int64))
+
+    assert step_info["inventory_period_mode"] == "thesis_strict"
+    assert step_info["thesis_decision"]["inventory_period_hours_by_node"] == {
+        "op3": 1344.0,
+        "op5": 1344.0,
+        "op9": 1344.0,
+    }
+    assert step_info["thesis_decision"]["inventory_buffer_targets"] == {
+        "op3_rm": 122880.0,
+        "op5_rm": 122880.0,
+        "op9_rations": 126000.0,
+    }
+    env.close()
+
+
+def test_dkana_thesis_faithful_env_can_observe_state_context_without_track_b_actions() -> (
+    None
+):
+    env = make_dkana_thesis_faithful_env(
+        max_steps=1,
+        observation_version="v5",
+        observation_mode="env_state_reward",
+        action_space_mode="factorized",
+    )
+    obs, info = env.reset(seed=123)
+
+    assert env.action_space.nvec.tolist() == [6, 6, 6, 3]
+    assert obs.shape == (30 + len(STATE_CONSTRAINT_FIELDS) + 1,)
+    assert info["observation_contract"] == "env_state_reward_v5"
+
+    next_obs, reward, _, _, step_info = env.step(np.array([0, 0, 0, 2], dtype=np.int64))
+
+    assert next_obs.shape == obs.shape
+    assert next_obs[-1] == reward
+    assert step_info["action_contract"] == "thesis_faithful_dkana_v1"
+    assert step_info["action_space_mode"] == "factorized"
+    assert step_info["thesis_decision"]["assembly_shifts"] == 3
+    env.close()
+
+
+def test_dkana_thesis_faithful_env_can_observe_sdm_history() -> None:
+    env = make_dkana_thesis_faithful_env(
+        max_steps=2,
+        observation_version="v5",
+        observation_mode="env_sdm_history_reward",
+        action_space_mode="factorized",
+    )
+    obs, info = env.reset(seed=123)
+
+    assert env.action_space.nvec.tolist() == [6, 6, 6, 3]
+    assert obs.shape == (30 + len(SDM_HISTORY_FIELDS) + 1,)
+    assert info["observation_contract"] == "env_sdm_history_reward_v5"
+
+    next_obs, reward, terminated, truncated, step_info = env.step(
+        np.array([1, 1, 1, 0], dtype=np.int64)
+    )
+
+    assert next_obs.shape == obs.shape
+    assert np.isfinite(next_obs).all()
+    assert next_obs[-1] == reward
+    assert not (terminated and truncated)
+    assert step_info["action_contract"] == "thesis_faithful_dkana_v1"
+    env.close()
+
+
+def test_dkana_thesis_faithful_spec_describes_rich_factorized_contract() -> None:
+    spec = get_dkana_thesis_faithful_env_spec(
+        reward_mode="control_v1",
+        observation_version="v5",
+        observation_mode="env_state_reward",
+        action_space_mode="factorized",
+    )
+
+    assert spec.env_variant == "dkana_thesis_faithful_decision"
+    assert spec.reward_mode == "control_v1"
+    assert spec.observation_version == "env_state_reward_v5"
+    assert len(spec.action_fields) == 18
+    assert len(spec.observation_fields) == 30 + len(STATE_CONSTRAINT_FIELDS) + 1
+    assert any("action_space_mode=factorized" in note for note in spec.notes)
 
 
 def test_build_dkana_dataset_script_writes_numpy_outputs(tmp_path: Path) -> None:

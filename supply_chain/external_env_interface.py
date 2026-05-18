@@ -170,6 +170,30 @@ STATE_CONSTRAINT_FIELDS: tuple[str, ...] = (
     + DKANA_BACKORDER_VECTOR_FIELDS
     + DKANA_DISRUPTION_VECTOR_FIELDS
 )
+SDM_HISTORY_FIELDS: tuple[str, ...] = (
+    "sdm_recent_order_count",
+    "sdm_completed_order_count",
+    "sdm_backorder_order_count",
+    "sdm_lost_order_count",
+    "sdm_recent_demand_qty",
+    "sdm_recent_remaining_qty",
+    "sdm_mean_ct_hours",
+    "sdm_max_ct_hours",
+    "sdm_sum_ap_hours",
+    "sdm_sum_rp_hours",
+    "sdm_sum_dp_hours",
+    "sdm_ret_case_fill_rate_count",
+    "sdm_ret_case_autotomy_count",
+    "sdm_ret_case_recovery_count",
+    "sdm_ret_case_non_recovery_count",
+    "sdm_r1_event_count",
+    "sdm_r2_event_count",
+    "sdm_r3_event_count",
+    "sdm_r1_duration_hours",
+    "sdm_r2_duration_hours",
+    "sdm_r3_duration_hours",
+    "sdm_risk_affected_ops_count",
+)
 REWARD_TERM_FIELDS: tuple[str, ...] = (
     "reward_total",
     "service_loss_step",
@@ -380,15 +404,45 @@ def get_dkana_thesis_faithful_env_spec(
     *,
     reward_mode: str = "ReT_seq_v1",
     step_size_hours: float = 168.0,
+    observation_version: str = "v5",
+    observation_mode: str = "decision_reward",
+    action_space_mode: str = "onehot_18d",
 ) -> ExternalEnvSpec:
     """Return David's 18D action / 19D observation thesis-faithful DKANA contract."""
+    if observation_mode == "decision_reward":
+        observation_fields = THESIS_DECISION_OBSERVATION_FIELDS
+        observation_contract = "thesis_decision_reward_v1"
+    elif observation_mode == "env_reward":
+        observation_fields = get_observation_fields(observation_version) + ("reward",)
+        observation_contract = f"env_reward_{observation_version}"
+    elif observation_mode == "env_state_reward":
+        observation_fields = (
+            get_observation_fields(observation_version)
+            + STATE_CONSTRAINT_FIELDS
+            + ("reward",)
+        )
+        observation_contract = f"env_state_reward_{observation_version}"
+    elif observation_mode == "env_sdm_history_reward":
+        observation_fields = (
+            get_observation_fields(observation_version)
+            + SDM_HISTORY_FIELDS
+            + ("reward",)
+        )
+        observation_contract = f"env_sdm_history_reward_{observation_version}"
+    else:
+        raise ValueError(
+            "observation_mode must be 'decision_reward', 'env_reward', "
+            "'env_state_reward', or 'env_sdm_history_reward'."
+        )
+    if action_space_mode not in ("onehot_18d", "factorized"):
+        raise ValueError("action_space_mode must be 'onehot_18d' or 'factorized'.")
     return ExternalEnvSpec(
         env_variant="dkana_thesis_faithful_decision",
         reward_mode=reward_mode,
-        observation_version="thesis_decision_reward_v1",
+        observation_version=observation_contract,
         step_size_hours=float(step_size_hours),
         warmup_hours=float(WARMUP["estimated_deterministic_hrs"]),
-        observation_fields=THESIS_DECISION_OBSERVATION_FIELDS,
+        observation_fields=observation_fields,
         action_fields=THESIS_DECISION_ACTION_FIELDS,
         action_bounds=((0.0, 1.0),) * len(THESIS_DECISION_ACTION_FIELDS),
         shift_mapping={
@@ -406,6 +460,13 @@ def get_dkana_thesis_faithful_env_spec(
             "period score selects the active strategic buffer target.",
             "Capacity dimensions are one-of-three S1/S2/S3 scores; the "
             "dominant score selects assembly shifts and Table 6.20 capacity.",
+            f"action_space_mode={action_space_mode}: onehot_18d exports the raw "
+            "18D thesis vector; factorized trains categorical decisions "
+            "over Op3, Op5, Op9, and S, then records the equivalent 18D vector.",
+            f"observation_mode={observation_mode}: decision_reward keeps the "
+            "19D David handoff; env_reward/env_state_reward/env_sdm_history_reward "
+            "are PPO research surfaces that keep actions fixed while enriching "
+            "observability.",
             "This contract stays on the thesis-aligned Track A backbone and "
             "does not expose Track B Op10/Op12 downstream controls.",
         ),

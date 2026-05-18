@@ -275,6 +275,11 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         warmup_trigger: str = "production",
         downstream_q_source: str = "figure_6_2",
         r14_defect_mode: str = "reprocess",
+        initial_buffers: dict[str, float] | None = None,
+        initial_shifts: int = 1,
+        inventory_replenishment_period: float | None = None,
+        enabled_risks: set[str] | tuple[str, ...] | list[str] | None = None,
+        risk_overrides: dict[str, str] | None = None,
         priming_enabled: bool = True,
         # --- Track B: MDP structural fixes ---
         clear_backlog_after_priming: bool = False,  # Fix 3A: clear inherited backlog
@@ -350,6 +355,11 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self.warmup_trigger = warmup_trigger
         self.downstream_q_source = downstream_q_source
         self.r14_defect_mode = r14_defect_mode
+        self.initial_buffers = dict(initial_buffers or {})
+        self.initial_shifts = int(initial_shifts)
+        self.initial_inventory_replenishment_period = inventory_replenishment_period
+        self.enabled_risks = set(enabled_risks) if enabled_risks is not None else None
+        self.risk_overrides = dict(risk_overrides or {})
         self.priming_enabled = bool(priming_enabled)
         self.reward_mode = reward_mode
         self._canonical_reward_mode = canonical_reward_mode
@@ -1671,7 +1681,15 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
     def reset(
         self, *, seed: Optional[int] = None, options: Optional[dict[str, Any]] = None
     ) -> tuple[np.ndarray, dict[str, Any]]:
-        del options
+        reset_options = dict(options or {})
+        initial_buffers = dict(
+            reset_options.get("initial_buffers", self.initial_buffers) or {}
+        )
+        initial_shifts = int(reset_options.get("initial_shifts", self.initial_shifts))
+        inventory_replenishment_period = reset_options.get(
+            "inventory_replenishment_period",
+            self.initial_inventory_replenishment_period,
+        )
         super().reset(seed=seed)
         self.current_step = 0
         self._prev_step_new_demanded = 0.0
@@ -1685,7 +1703,8 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self._ret_g24_sum_cost = 0.0
         self._post_warmup_start_time = self.warmup_hours
         self.sim = MFSCSimulation(
-            shifts=1,
+            shifts=initial_shifts,
+            initial_buffers=initial_buffers,
             risks_enabled=True,
             risk_level=self.risk_level,
             seed=seed,
@@ -1695,6 +1714,9 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             warmup_trigger=self.warmup_trigger,
             downstream_q_source=self.downstream_q_source,
             r14_defect_mode=self.r14_defect_mode,
+            enabled_risks=self.enabled_risks,
+            risk_overrides=self.risk_overrides,
+            inventory_replenishment_period=inventory_replenishment_period,
         )
         self.sim._start_processes()
         self.sim.env.run(until=self.warmup_hours)
@@ -1758,6 +1780,9 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                 "operational_fill_rate_threshold": self._ready_fill_rate_threshold(),
                 "primed_ready": primed_ready,
                 "reset_operational_context": reset_context,
+                "initial_buffers": initial_buffers,
+                "initial_shifts": initial_shifts,
+                "inventory_replenishment_period": inventory_replenishment_period,
             },
         }
         info["state_constraint_context"] = self.get_state_constraint_context()

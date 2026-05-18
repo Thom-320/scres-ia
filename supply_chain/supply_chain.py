@@ -296,15 +296,88 @@ class MFSCSimulation:
 
     def _inventory_buffer_replenishment(self):
         """Top up thesis strategic buffers to their target level every t hours."""
-        period = float(self.inventory_replenishment_period or 0.0)
-        if period <= 0.0:
-            return
         while True:
+            period = float(self.inventory_replenishment_period or 0.0)
+            if period <= 0.0:
+                return
             yield self.env.timeout(period)
             for key, target in self.inventory_buffer_targets.items():
                 event = self._top_up_inventory_buffer(key, float(target))
                 if event is not None:
                     yield event
+
+    def get_sdm_history_context(
+        self, window_hours: float = HOURS_PER_WEEK
+    ) -> dict[str, float]:
+        """Return compact Table 6.25-style order/risk history for recent operations."""
+        current_time = float(self.env.now)
+        window_start = max(0.0, current_time - float(window_hours))
+        recent_orders = [
+            order
+            for order in self.orders
+            if float(order.OPTj) >= window_start
+            or (order.OATj is not None and float(order.OATj) >= window_start)
+        ]
+        completed_orders = [order for order in recent_orders if order.OATj is not None]
+        backorder_orders = [order for order in recent_orders if order.backorder]
+        lost_orders = [order for order in recent_orders if order.lost]
+        cycle_times = [
+            float(order.CTj) for order in completed_orders if order.CTj is not None
+        ]
+        ret_case_counts: Counter[str] = Counter()
+        for order in completed_orders:
+            _, case = compute_ret_per_order(order, fill_rate=self._fill_rate())
+            ret_case_counts[str(case)] += 1
+
+        recent_risks = [
+            event
+            for event in self.risk_events
+            if float(event.end_time) >= window_start
+            and float(event.start_time) <= current_time
+        ]
+        risk_category_counts = Counter(
+            "R3" if event.risk_id == "R3" else event.risk_id[:2]
+            for event in recent_risks
+        )
+        risk_category_duration = Counter()
+        op_risk_counts = Counter()
+        for event in recent_risks:
+            overlap_start = max(float(event.start_time), window_start)
+            overlap_end = min(float(event.end_time), current_time)
+            overlap_duration = max(0.0, overlap_end - overlap_start)
+            category = "R3" if event.risk_id == "R3" else event.risk_id[:2]
+            risk_category_duration[category] += overlap_duration
+            for op_id in event.affected_ops:
+                op_risk_counts[f"op{int(op_id)}"] += 1
+
+        recent_demand_qty = sum(float(order.quantity) for order in recent_orders)
+        recent_remaining_qty = sum(
+            float(order.remaining_qty) for order in recent_orders
+        )
+        return {
+            "sdm_recent_order_count": float(len(recent_orders)),
+            "sdm_completed_order_count": float(len(completed_orders)),
+            "sdm_backorder_order_count": float(len(backorder_orders)),
+            "sdm_lost_order_count": float(len(lost_orders)),
+            "sdm_recent_demand_qty": float(recent_demand_qty),
+            "sdm_recent_remaining_qty": float(recent_remaining_qty),
+            "sdm_mean_ct_hours": float(np.mean(cycle_times)) if cycle_times else 0.0,
+            "sdm_max_ct_hours": float(np.max(cycle_times)) if cycle_times else 0.0,
+            "sdm_sum_ap_hours": float(sum(order.APj for order in recent_orders)),
+            "sdm_sum_rp_hours": float(sum(order.RPj for order in recent_orders)),
+            "sdm_sum_dp_hours": float(sum(order.DPj for order in recent_orders)),
+            "sdm_ret_case_fill_rate_count": float(ret_case_counts["fill_rate"]),
+            "sdm_ret_case_autotomy_count": float(ret_case_counts["autotomy"]),
+            "sdm_ret_case_recovery_count": float(ret_case_counts["recovery"]),
+            "sdm_ret_case_non_recovery_count": float(ret_case_counts["non_recovery"]),
+            "sdm_r1_event_count": float(risk_category_counts["R1"]),
+            "sdm_r2_event_count": float(risk_category_counts["R2"]),
+            "sdm_r3_event_count": float(risk_category_counts["R3"]),
+            "sdm_r1_duration_hours": float(risk_category_duration["R1"]),
+            "sdm_r2_duration_hours": float(risk_category_duration["R2"]),
+            "sdm_r3_duration_hours": float(risk_category_duration["R3"]),
+            "sdm_risk_affected_ops_count": float(sum(op_risk_counts.values())),
+        }
 
     # =====================================================================
     # RUN MODES
