@@ -1,21 +1,38 @@
-# MFSC Simulation (Hybrid DES + Neural Learning)
+# SCRES-IA: Supply Chain Resilience Simulation
 
-Python rebuild of the Military Food Supply Chain (MFSC) discrete-event simulation with SimPy, based on Garrido-Rios (2017). Includes a hybrid simulation-neural framework for studying supply chain resilience (SCRES) as a learning-dependent capability.
+SCRES-IA rebuilds the Military Food Supply Chain (MFSC) simulation from
+Garrido-Rios (2017) and extends it with reinforcement-learning experiments. The
+repository combines a SimPy discrete-event simulation, Gymnasium-compatible
+environments, validation scripts, and benchmark training runs for studying
+supply-chain resilience as a capability that can be learned under disruption.
 
-## Project Structure
+## Research Contribution
+
+The project has two layers:
+
+- a reproducible Python reconstruction of the original MFSC discrete-event
+  model;
+- a hybrid simulation-learning framework where policies can be trained and
+  compared under controlled disruption scenarios.
+
+The current manuscript lane focuses on resilience reward design, shift-control
+experiments, stochastic processing times, and benchmark comparators tied back to
+the thesis-aligned simulation outputs.
+
+## Repository Structure
 
 ```text
-supply_chain/          Core package (config, DES engine, Gymnasium environments)
-scripts/               Diagnostic & analysis scripts
-tests/                 Pytest test suite
-docs/                  Reference PDFs, thesis, papers, planning docs
-outputs/               Generated artifacts (plots, models, logs, reports)
-legacy/                Deprecated code (kept for reference)
+supply_chain/          Core package: config, DES engine, Gymnasium environments
+scripts/               Diagnostic and analysis scripts
+tests/                 Pytest suite
+docs/                  Reproducibility notes, artifact maps, source references
+outputs/               Generated plots, models, logs, reports
+legacy/                Deprecated code kept for reference
 ```
 
 ## Recommended Python
 
-- Python `3.11` recommended for widest package compatibility.
+Python `3.11` is recommended for package compatibility.
 
 ## Setup
 
@@ -26,7 +43,7 @@ python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
 
-## Colab imports
+## Colab Imports
 
 For notebooks, clone the repository into a folder named `scresia` and import
 from the repository-root namespace:
@@ -45,35 +62,42 @@ from scresia.supply_chain.external_env_interface import make_track_b_env
 If the notebook is already running from inside the repository directory, the
 same `scresia.*` imports are supported by the local compatibility namespace.
 
-## Run simulation baselines
+## Run Simulation Baselines
 
 ```bash
-# Deterministic baseline (Phase 1)
+# Deterministic baseline
 python run_static.py --det-only --year-basis thesis
 
-# Stochastic baseline (Phase 2)
+# Stochastic baseline
 python run_static.py --sto-only --year-basis thesis --seed 42
 
 # Combined comparison
 python run_static.py --year-basis thesis
 ```
 
-## Validation report (dual year basis)
+## Validation Report
 
 ```bash
 python validation_report.py --official-basis thesis
 ```
 
-Artifacts are written to `outputs/validation/validation_table_dual_basis.csv`.
+The validation table is written to:
 
-## Hybrid model training
+```text
+outputs/validation/validation_table_dual_basis.csv
+```
+
+## Hybrid Model Training
+
+Quick smoke run with the paper-facing defaults:
 
 ```bash
-# Quick smoke check with the paper-facing defaults:
-# shift_control + ReT_seq_v1 (kappa=0.20) + observation_version=v1
 python train_agent.py --timesteps 20000 --n-envs 1 --seed 42 --year-basis thesis
+```
 
-# Frozen benchmark backbone used by the current manuscript lane
+Frozen benchmark backbone used by the current manuscript lane:
+
+```bash
 python train_agent.py \
   --timesteps 500000 \
   --n-envs 4 \
@@ -86,7 +110,8 @@ python train_agent.py \
   --w-bo 4.0 --w-cost 0.02 --w-disr 0.0
 ```
 
-Artifacts (model, normalization stats, curves, csv, json) are saved under `outputs/`.
+Artifacts are saved under `outputs/`: models, normalization statistics,
+training curves, CSV files, and JSON summaries.
 
 For the paper-facing benchmark lane and artifact map, see:
 
@@ -94,13 +119,13 @@ For the paper-facing benchmark lane and artifact map, see:
 - `docs/REPRODUCIBILITY.md`
 - `docs/artifacts/control_reward/README.md`
 
-## Diagnostic scripts
+## Diagnostic Scripts
 
 ```bash
-python scripts/diagnostic_doe_alpha.py          # DOE alpha sensitivity
-python scripts/diagnostic_reward_spread.py      # Reward spread analysis
-python scripts/diagnostic_doe_decompose.py      # Reward decomposition
-python scripts/diagnostic_action_impact.py      # Action impact verification
+python scripts/diagnostic_doe_alpha.py
+python scripts/diagnostic_reward_spread.py
+python scripts/diagnostic_doe_decompose.py
+python scripts/diagnostic_action_impact.py
 ```
 
 ## Tests
@@ -109,7 +134,7 @@ python scripts/diagnostic_action_impact.py      # Action impact verification
 pytest tests/
 ```
 
-## Quality checks
+## Quality Checks
 
 ```bash
 black .
@@ -117,16 +142,12 @@ ruff check . --fix
 mypy supply_chain/
 ```
 
-## Current benchmark defaults
-
-The current repository defaults are aligned with the frozen resilience-reward contract:
+## Current Benchmark Defaults
 
 - Training reward: `ReT_seq_v1`
 - Frozen kappa: `0.20`
 - Historical comparator: `control_v1`
 - Thesis-aligned audit metric: `ret_thesis_corrected`
-- Shift-control env: enabled by default
-- Observation version: `v1` for the frozen benchmark; `v2` is preferred for new ablations
-- Main paper scenarios:
-  - `increased + stochastic_pt`
-  - `severe + stochastic_pt`
+- Shift-control environment: enabled by default
+- Observation version: `v1` for the frozen benchmark; `v2` for new ablations
+- Main paper scenarios: `increased + stochastic_pt`, `severe + stochastic_pt`
