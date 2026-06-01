@@ -19,6 +19,12 @@ The current manuscript lane focuses on resilience reward design, shift-control
 experiments, stochastic processing times, and benchmark comparators tied back to
 the thesis-aligned simulation outputs.
 
+## Visual Evidence
+
+| Learning curve | Disruption timeline | Policy comparison |
+| --- | --- | --- |
+| <img src="docs/artifacts/control_reward/paper_ret_seq_k020_500k/proof_of_learning/learning_curve.png" alt="PPO learning curve for the paper-facing reward setting" width="280"> | <img src="docs/artifacts/control_reward/paper_ret_seq_k020_500k/proof_of_learning/shift_vs_disruption_timeline.png" alt="Shift-control policy timeline under disruption" width="280"> | <img src="docs/meeting_packages/garrido_2026-03-11/04_policy_comparison.png" alt="Policy comparison summary for Garrido meeting package" width="280"> |
+
 ## Repository Structure
 
 ```text
