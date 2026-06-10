@@ -1,0 +1,33 @@
+# Ruff configuration for SCRES-IA.
+# Keep production code clean; ignore notebooks which are exploratory
+# and may contain intentionally incomplete cells during development.
+
+line-length = 100
+extend-exclude = [
+    "notebooks",
+    "legacy",
+    "outputs",
+    ".venv",
+    "build",
+    "dist",
+    "dev_notes",
+    "paper_results_package",
+    "docs/artifacts",
+]
+
+[lint]
+# Conservative defaults; can be tightened per package.
+# I001 (unsorted imports) is currently ignored because the existing
+# codebase predates the adoption of ruff and the import-order debt
+# should be fixed in a dedicated refactor pass, not blocked on CI.
+select = ["E", "F", "W"]
+ignore = [
+    "E501",  # line length - handled by formatter
+    "F401",  # imported but unused in notebooks/scripts
+    "I001",  # unsorted imports - see note above
+]
+
+[lint.per-file-ignores]
+"tests/*" = ["F811"]
+"scripts/*" = ["E402"]
+"docs/*" = ["ALL"]
