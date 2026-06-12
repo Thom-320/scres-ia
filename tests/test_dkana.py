@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import csv
 import json
 import subprocess
 import sys
@@ -850,6 +851,50 @@ def test_dkana_thesis_faithful_spec_describes_thesis_factorized_contract() -> No
     assert spec.action_bounds == ((0.0, 5.0), (0.0, 2.0))
     assert len(spec.observation_fields) == 30 + len(STATE_CONSTRAINT_FIELDS) + 1
     assert any("action_space_mode=thesis_factorized" in note for note in spec.notes)
+
+
+def test_run_thesis_decision_ladder_static_smoke(tmp_path: Path) -> None:
+    output_root = tmp_path / "ladder"
+    result = subprocess.run(
+        [
+            sys.executable,
+            "scripts/run_thesis_decision_ladder.py",
+            "--label",
+            "smoke",
+            "--output-root",
+            str(output_root),
+            "--levels",
+            "L0_garrido",
+            "L1a_uniform_IxS",
+            "--garrido-cfis",
+            "31",
+            "--replications",
+            "1",
+            "--max-steps",
+            "4",
+        ],
+        cwd=REPO_ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    run_dir = output_root / "smoke"
+    assert "Saved to:" in result.stdout
+    summary = json.loads((run_dir / "summary.json").read_text())
+    assert summary["levels"] == ["L0_garrido", "L1a_uniform_IxS"]
+    assert summary["policy_count"] == 19
+    assert summary["episode_count"] == 19
+
+    with (run_dir / "episode_metrics.csv").open(newline="", encoding="utf-8") as handle:
+        rows = list(csv.DictReader(handle))
+
+    assert len(rows) == 19
+    assert {row["ladder_level"] for row in rows} == {
+        "L0_garrido",
+        "L1a_uniform_IxS",
+    }
+    assert any(row["policy"] == "L1a_uniform_I504_S3" for row in rows)
 
 
 def test_build_dkana_dataset_script_writes_numpy_outputs(tmp_path: Path) -> None:

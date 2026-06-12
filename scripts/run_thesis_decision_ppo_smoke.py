@@ -39,7 +39,8 @@ INVENTORY_POLICIES = tuple(
     f"inventory_I{period}_S1" for period in THESIS_INVENTORY_PERIODS
 )
 ACTION_DIM = 18
-FACTORED_ACTION_DIM = 4
+FACTORIZED_ACTION_DIM = 4
+THESIS_FACTORIZED_ACTION_DIM = 2
 
 
 def utc_now_iso() -> str:
@@ -49,8 +50,8 @@ def utc_now_iso() -> str:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
-            "Train PPO+MLP with Garrido thesis decision variables as the "
-            "18D action space and a configurable observation surface."
+            "Train PPO with Garrido thesis decision variables and a "
+            "configurable observation surface."
         )
     )
     parser.add_argument("--label", default=None)
@@ -73,8 +74,18 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--action-space-mode",
-        choices=["onehot_18d", "factorized"],
-        default="factorized",
+        choices=["onehot_18d", "factorized", "thesis_factorized"],
+        default="thesis_factorized",
+    )
+    parser.add_argument(
+        "--inventory-period-mode",
+        choices=["thesis_strict", "per_node"],
+        default="thesis_strict",
+        help=(
+            "For action_space_mode=factorized, thesis_strict collapses Op3/Op5/Op9 "
+            "to one common thesis period; per_node declares the inventory-period "
+            "extension. Ignored by thesis_factorized."
+        ),
     )
     parser.add_argument(
         "--algo",
@@ -149,6 +160,7 @@ def env_kwargs(args: argparse.Namespace) -> dict[str, Any]:
         "observation_version": args.observation_version,
         "observation_mode": args.observation_mode,
         "action_space_mode": args.action_space_mode,
+        "inventory_period_mode": args.inventory_period_mode,
         "step_size_hours": args.step_size_hours,
         "max_steps": args.max_steps,
         "stochastic_pt": args.stochastic_pt,
@@ -235,6 +247,8 @@ def make_env(args: argparse.Namespace, seed: int) -> Callable[[], Monitor]:
 
 
 def static_action(shifts: int, *, action_space_mode: str) -> np.ndarray:
+    if action_space_mode == "thesis_factorized":
+        return np.array([0, shifts - 1], dtype=np.int64)
     if action_space_mode == "factorized":
         return np.array([0, 0, 0, shifts - 1], dtype=np.int64)
     action = np.zeros(ACTION_DIM, dtype=np.float32)
@@ -246,6 +260,8 @@ def inventory_action(
     period: int, *, shifts: int = 1, action_space_mode: str
 ) -> np.ndarray:
     period_index = THESIS_INVENTORY_PERIODS.index(int(period))
+    if action_space_mode == "thesis_factorized":
+        return np.array([period_index + 1, shifts - 1], dtype=np.int64)
     if action_space_mode == "factorized":
         level = period_index + 1
         return np.array([level, level, level, shifts - 1], dtype=np.int64)
@@ -608,9 +624,10 @@ def train_model(
 ) -> tuple[Any, VecNormalize | None]:
     if args.algo == "recurrent_ppo" and RecurrentPPO is None:
         raise RuntimeError("recurrent_ppo requested but sb3_contrib is not installed.")
-    if args.algo == "recurrent_ppo" and args.action_space_mode != "factorized":
+    if args.algo == "recurrent_ppo" and args.action_space_mode == "onehot_18d":
         raise ValueError(
-            "recurrent_ppo is supported only with action_space_mode=factorized."
+            "recurrent_ppo is supported only with categorical action spaces "
+            "(thesis_factorized or factorized)."
         )
 
     train_env = DummyVecEnv([make_env(args, args.seed)])
@@ -783,7 +800,18 @@ def run_single(args: argparse.Namespace, run_dir: Path) -> dict[str, Any]:
         )
     rng = np.random.default_rng(args.seed)
 
-    if args.action_space_mode == "factorized":
+    if args.action_space_mode == "thesis_factorized":
+
+        def random_action_fn(obs: np.ndarray, info: dict[str, Any]) -> np.ndarray:
+            return np.array(
+                [
+                    rng.integers(0, 6),
+                    rng.integers(0, 3),
+                ],
+                dtype=np.int64,
+            )
+
+    elif args.action_space_mode == "factorized":
 
         def random_action_fn(obs: np.ndarray, info: dict[str, Any]) -> np.ndarray:
             return np.array(
@@ -830,11 +858,12 @@ def run_single(args: argparse.Namespace, run_dir: Path) -> dict[str, Any]:
         "seed": args.seed,
         "action_contract": "thesis_faithful_dkana_v1",
         "action_space_mode": args.action_space_mode,
-        "action_dim": (
-            FACTORED_ACTION_DIM
-            if args.action_space_mode == "factorized"
-            else ACTION_DIM
-        ),
+        "inventory_period_mode": args.inventory_period_mode,
+        "action_dim": {
+            "thesis_factorized": THESIS_FACTORIZED_ACTION_DIM,
+            "factorized": FACTORIZED_ACTION_DIM,
+            "onehot_18d": ACTION_DIM,
+        }[args.action_space_mode],
         "algo": args.algo,
         "policy_net_arch": args.policy_net_arch,
         "best_static_garrido_by_fill_rate": gate_status[

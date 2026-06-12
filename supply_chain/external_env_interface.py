@@ -417,7 +417,7 @@ def get_dkana_thesis_faithful_env_spec(
     observation_mode: str = "decision_reward",
     action_space_mode: str = "onehot_18d",
 ) -> ExternalEnvSpec:
-    """Return David's 18D action / 19D observation thesis-faithful DKANA contract."""
+    """Return the DKANA thesis-decision contract for the requested action surface."""
     if observation_mode == "decision_reward":
         observation_fields = THESIS_DECISION_OBSERVATION_FIELDS
         observation_contract = "thesis_decision_reward_v1"
@@ -451,9 +451,27 @@ def get_dkana_thesis_faithful_env_spec(
     if action_space_mode == "thesis_factorized":
         action_fields = THESIS_FACTORIZED_ACTION_FIELDS
         action_bounds = ((0.0, 5.0), (0.0, 2.0))
+        action_notes = (
+            "Thesis-decision DKANA adapter: common I_t,S level from Table 6.16 "
+            "plus S from Table 6.20.",
+            "The common inventory level maps to Op3, Op5, and Op9 buffer "
+            "quantities using the thesis Table 6.16 rows; level 0 means no "
+            "strategic inventory buffer.",
+            "This is the action surface to use when the paper claims the "
+            "agent controls the same decision variables as Garrido-Rios.",
+        )
     else:
         action_fields = THESIS_DECISION_ACTION_FIELDS
         action_bounds = ((0.0, 1.0),) * len(THESIS_DECISION_ACTION_FIELDS)
+        action_notes = (
+            "DKANA adapter: 15 inventory-buffer dimensions from Table 6.16 "
+            "plus 3 capacity dimensions from Table 6.20.",
+            "Inventory dimensions are grouped by period I168,1, I336,1, "
+            "I504,1, I672,1, I1344,1 across Op3, Op5, and Op9.",
+            "The onehot_18d surface is a compatibility/export representation; "
+            "factorized is a categorical per-node extension unless collapsed "
+            "with inventory_period_mode=thesis_strict.",
+        )
     return ExternalEnvSpec(
         env_variant="dkana_thesis_faithful_decision",
         reward_mode=reward_mode,
@@ -469,15 +487,9 @@ def get_dkana_thesis_faithful_env_spec(
             "S3": 3,
         },
         notes=(
-            "Thesis-faithful DKANA adapter: 15 inventory-buffer dimensions "
-            "from Table 6.16 plus 3 capacity dimensions from Table 6.20.",
-            "Observation is the realized 18D thesis decision vector plus the "
-            "latest scalar reward.",
-            "Inventory dimensions are grouped by period I168,1, I336,1, "
-            "I504,1, I672,1, I1344,1 across Op3, Op5, and Op9; the dominant "
-            "period score selects the active strategic buffer target.",
-            "Capacity dimensions are one-of-three S1/S2/S3 scores; the "
-            "dominant score selects assembly shifts and Table 6.20 capacity.",
+            *action_notes,
+            "Observation is either the realized 18D decision handoff plus "
+            "reward, or a richer environment/history surface plus reward.",
             f"action_space_mode={action_space_mode}: onehot_18d exports the raw "
             "18D thesis vector; thesis_factorized trains the two thesis "
             "decision variables (common I_t,S level and S) directly; "

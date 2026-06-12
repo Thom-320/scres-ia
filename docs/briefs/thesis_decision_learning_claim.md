@@ -10,6 +10,17 @@ The paper should not be framed as "we added a neural network to a DES." The stro
 
 In Garrido-Rios (2017), the thesis model evaluates static configurations of inventory policy and assembly capacity under disruption. In the v0 draft, the intended theoretical advance is to add accumulated learning, `L_{t-1}`, as an endogenous element of resilience performance. The empirical job of this repo is therefore to test whether a learned policy can improve resilience outcomes while keeping the same decision-variable surface as the thesis.
 
+## Current Contract Correction
+
+The main thesis-decision action contract is `thesis_factorized`, implemented as `MultiDiscrete([6,3])`: one common `I_{t,S}` level plus one `S` level. This is the contract to use when the paper says the learned policy uses the same decision variables as Garrido-Rios.
+
+Two older surfaces remain useful only as ablations or declared extensions:
+
+- `onehot_18d` is a compatibility representation of the realized thesis decision vector, not the clean RL action space.
+- `factorized`, implemented as `MultiDiscrete([6,6,6,3])`, allows independent Op3/Op5/Op9 inventory periods and must be reported as a per-node inventory extension, not as thesis 1:1.
+
+The paper-facing ladder is therefore: reproduce the static Garrido DOE, test a static `I x S` interaction with the same thesis decision variables, test the per-node static extension separately, then compare adaptive PPO only against the best static policy in the same action space.
+
 ## Theoretical Contribution
 
 The contribution should be stated as:
