@@ -528,7 +528,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self.clear_backlog_after_priming = clear_backlog_after_priming
         if self.action_contract == "track_b_v1":
             self.action_space = spaces.Box(
-                low=-1.0, high=1.0, shape=(7,), dtype=np.float32
+                low=-1.0, high=1.0, shape=(8,), dtype=np.float32
             )
         elif action_mode == "shift_only":
             self.action_space = spaces.Box(
@@ -539,8 +539,10 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                 low=-1.0, high=1.0, shape=(2,), dtype=np.float32
             )
         else:
+            # Track A v6D: 4 inventory multipliers (Op3 Q, Op9 Q, Op3 ROP, Op9 ROP)
+            # + 1 Op5 Q multiplier (thesis-anchored I_{t,S} on Op5,j) + 1 shift signal.
             self.action_space = spaces.Box(
-                low=-1.0, high=1.0, shape=(5,), dtype=np.float32
+                low=-1.0, high=1.0, shape=(6,), dtype=np.float32
             )
 
     def _observation_dim(self) -> int:
@@ -1905,40 +1907,43 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         else:
             action_arr = np.asarray(action, dtype=np.float32)
 
-            # Expand reduced action modes to full 5D for Track A only.
+            # Expand reduced action modes to full 6D for Track A only.
             if self.action_contract == "track_b_v1":
-                if action_arr.shape != (7,):
+                if action_arr.shape != (8,):
                     raise ValueError(
-                        f"Action must have shape (7,), got {action_arr.shape}."
+                        f"Action must have shape (8,), got {action_arr.shape}."
                     )
                 full = action_arr
             elif self.action_mode == "shift_only":
                 # 1D: [shift]. Inventory dims default to +1 (q_max).
                 full = np.array(
-                    [1.0, 1.0, 0.0, 0.0, float(action_arr[0])], dtype=np.float32
+                    [1.0, 1.0, 0.0, 0.0, 1.0, float(action_arr[0])], dtype=np.float32
                 )
             elif self.action_mode == "shift_q9":
-                # 2D: [op9_q, shift]. op3 defaults to +1, ROPs to 0.
+                # 2D: [op9_q, shift]. op3/op5 defaults to +1, ROPs to 0.
                 full = np.array(
-                    [1.0, float(action_arr[0]), 0.0, 0.0, float(action_arr[1])],
+                    [1.0, float(action_arr[0]), 0.0, 0.0, 1.0, float(action_arr[1])],
                     dtype=np.float32,
                 )
             else:
-                if action_arr.shape != (5,):
+                if action_arr.shape != (6,):
                     raise ValueError(
-                        f"Action must have shape (5,), got {action_arr.shape}."
+                        f"Action must have shape (6,), got {action_arr.shape}. "
+                        f"Track A is now 6D: (op3_q, op9_q, op3_rop, op9_rop, op5_q, shift)."
                     )
                 full = action_arr
 
             clipped = np.clip(full, -1.0, 1.0)
 
-            # Inventory multipliers (dims 0-3)
-            multipliers = 1.25 + 0.75 * clipped[:4]
+            # Inventory multipliers (dims 0-3 use 1.25+0.75·x → [0.5, 2.0];
+            # dim 4 (op5) uses 1+0.5·x → [0.5, 1.5] to anchor neutral at 1.0x).
+            multipliers_q = 1.25 + 0.75 * clipped[:4]
             base_op9_min = OPERATIONS[9]["q"][0]
             base_op9_max = OPERATIONS[9]["q"][1]
+            op5_multiplier = 1.0 + 0.5 * float(clipped[4])
 
-            # Shift decision (dim 4): tri-level with hysteresis-friendly bands
-            shift_signal = float(clipped[4])
+            # Shift decision (dim 5): tri-level with hysteresis-friendly bands
+            shift_signal = float(clipped[5])
             if shift_signal < -0.33:
                 shifts = 1
             elif shift_signal < 0.33:
@@ -1947,15 +1952,16 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                 shifts = 3
 
             action_dict = {
-                "op3_q": OPERATIONS[3]["q"] * float(multipliers[0]),
-                "op9_q_min": base_op9_min * float(multipliers[1]),
-                "op9_q_max": base_op9_max * float(multipliers[1]),
-                "op3_rop": OPERATIONS[3]["rop"] * float(multipliers[2]),
-                "op9_rop": OPERATIONS[9]["rop"] * float(multipliers[3]),
+                "op3_q": OPERATIONS[3]["q"] * float(multipliers_q[0]),
+                "op9_q_min": base_op9_min * float(multipliers_q[1]),
+                "op9_q_max": base_op9_max * float(multipliers_q[1]),
+                "op3_rop": OPERATIONS[3]["rop"] * float(multipliers_q[2]),
+                "op9_rop": OPERATIONS[9]["rop"] * float(multipliers_q[3]),
+                "op5_q": op5_multiplier,
                 "assembly_shifts": shifts,
             }
             if self.action_contract == "track_b_v1":
-                downstream_multipliers = 1.25 + 0.75 * clipped[5:7]
+                downstream_multipliers = 1.25 + 0.75 * clipped[6:8]
                 base_op10_min = OPERATIONS[10]["q"][0]
                 base_op10_max = OPERATIONS[10]["q"][1]
                 base_op12_min = OPERATIONS[12]["q"][0]

@@ -46,7 +46,7 @@ REWARD_MODES = ["ReT_thesis", "ReT_cd_v1", "ReT_cd_sigmoid"]
 
 STATIC_POLICIES = {
     "S1": [-1.0, -1.0, -1.0, -1.0, -1.0],  # shift_signal < -0.33 → S=1
-    "S2": [0.0, 0.0, 0.0, 0.0, 0.0],  # shift_signal in [-0.33,0.33) → S=2
+    "S2": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],  # shift_signal in [-0.33,0.33) → S=2
     "S3": [1.0, 1.0, 1.0, 1.0, 1.0],  # shift_signal ≥ 0.33 → S=3
 }
 

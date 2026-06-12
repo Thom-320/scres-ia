@@ -214,7 +214,7 @@ def test_thesis_aligned_training_env_is_trainable_but_not_1to1() -> None:
 
     assert spec.env_variant == "thesis_aligned_training"
     assert spec.action_fields[-1] == "assembly_shift_signal"
-    assert env.action_space.shape == (5,)
+    assert env.action_space.shape == (6,)
     assert obs.shape == env.observation_space.shape
     assert info["training_protocol"] == "thesis_aligned_gym"
     assert info["year_basis"] == "thesis"

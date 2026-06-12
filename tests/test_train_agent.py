@@ -21,7 +21,7 @@ def test_shift_env_ret_thesis_emits_ret_metadata() -> None:
         reward_mode="ReT_thesis",
     )
     env.reset(seed=42)
-    _, reward, _, _, info = env.step(np.zeros(5, dtype=np.float32))
+    _, reward, _, _, info = env.step(np.zeros(6, dtype=np.float32))
     assert isinstance(reward, float)
     assert info["reward_mode"] == "ReT_thesis"
     assert "ReT_raw" in info
@@ -36,7 +36,7 @@ def test_shift_env_ret_corrected_cost_alias_preserves_lane_name() -> None:
         rt_delta=0.04,
     )
     env.reset(seed=42)
-    _, reward, _, _, info = env.step(np.zeros(5, dtype=np.float32))
+    _, reward, _, _, info = env.step(np.zeros(6, dtype=np.float32))
     assert isinstance(reward, float)
     assert env.reward_mode == "ReT_corrected_cost"
     assert info["reward_mode"] == "ReT_corrected_cost"
@@ -51,7 +51,7 @@ def test_shift_env_rt_v0_emits_shift_metadata() -> None:
         reward_mode="rt_v0",
     )
     env.reset(seed=42)
-    _, _, _, _, info = env.step(np.zeros(5, dtype=np.float32))
+    _, _, _, _, info = env.step(np.zeros(6, dtype=np.float32))
     assert info["reward_mode"] == "rt_v0"
     assert "shifts_active" in info
     assert "shift_cost_linear" in info
@@ -66,7 +66,7 @@ def test_shift_env_ret_seq_v1_emits_operational_resilience_metadata() -> None:
         ret_seq_kappa=0.20,
     )
     env.reset(seed=42)
-    _, reward, _, _, info = env.step(np.zeros(5, dtype=np.float32))
+    _, reward, _, _, info = env.step(np.zeros(6, dtype=np.float32))
     assert isinstance(reward, float)
     assert info["reward_mode"] == "ReT_seq_v1"
     assert info["ret_seq_step"] == pytest.approx(reward)
@@ -92,7 +92,7 @@ def test_shift_env_ret_garrido2024_raw_emits_paper_faithful_metadata() -> None:
         observation_version="v4",
     )
     env.reset(seed=42)
-    _, reward, _, _, info = env.step(np.zeros(5, dtype=np.float32))
+    _, reward, _, _, info = env.step(np.zeros(6, dtype=np.float32))
     assert isinstance(reward, float)
     assert info["reward_mode"] == "ReT_garrido2024_raw"
     assert info["ret_garrido2024_step"] == pytest.approx(reward)
@@ -116,7 +116,7 @@ def test_shift_env_ret_garrido2024_sigmoid_is_bounded() -> None:
         observation_version="v4",
     )
     env.reset(seed=42)
-    _, reward, _, _, info = env.step(np.zeros(5, dtype=np.float32))
+    _, reward, _, _, info = env.step(np.zeros(6, dtype=np.float32))
     assert isinstance(reward, float)
     assert 0.0 < reward < 1.0
     assert info["reward_mode"] == "ReT_garrido2024"
@@ -157,7 +157,7 @@ def test_shift_env_ret_cd_v1_emits_continuous_resilience_metadata() -> None:
         observation_version="v4",
     )
     env.reset(seed=42)
-    _, reward, _, _, info = env.step(np.zeros(5, dtype=np.float32))
+    _, reward, _, _, info = env.step(np.zeros(6, dtype=np.float32))
     assert isinstance(reward, float)
     assert info["reward_mode"] == "ReT_cd_v1"
     assert info["ret_cd_step"] == pytest.approx(reward)
@@ -175,7 +175,7 @@ def test_shift_env_ret_cd_sigmoid_keeps_sigmoid_metadata_and_scale() -> None:
         observation_version="v4",
     )
     env.reset(seed=42)
-    _, reward, _, _, info = env.step(np.zeros(5, dtype=np.float32))
+    _, reward, _, _, info = env.step(np.zeros(6, dtype=np.float32))
     assert isinstance(reward, float)
     assert info["reward_mode"] == "ReT_cd_sigmoid"
     assert info["ret_cd_step"] == pytest.approx(reward)

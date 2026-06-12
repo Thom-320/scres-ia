@@ -44,9 +44,9 @@ GARRIDO_POLICY_ORDER = ("garrido_cf_s1", "garrido_cf_s2", "garrido_cf_s3")
 ALL_STATIC_POLICY_ORDER = (*STATIC_POLICY_ORDER, *GARRIDO_POLICY_ORDER)
 RANDOM_POLICY_NAME = "random"
 FIXED_POLICY_ACTIONS: dict[str, np.ndarray | dict[str, float | int]] = {
-    "static_s1": np.array([0.0, 0.0, 0.0, 0.0, -1.0], dtype=np.float32),
-    "static_s2": np.array([0.0, 0.0, 0.0, 0.0, 0.0], dtype=np.float32),
-    "static_s3": np.array([0.0, 0.0, 0.0, 0.0, 1.0], dtype=np.float32),
+    "static_s1": np.array([0.0, 0.0, 0.0, 0.0, 0.0, -1.0], dtype=np.float32),
+    "static_s2": np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0], dtype=np.float32),
+    "static_s3": np.array([0.0, 0.0, 0.0, 0.0, 0.0, 1.0], dtype=np.float32),
     "garrido_cf_s1": {
         "assembly_shifts": 1,
         "op3_q": float(CAPACITY_BY_SHIFTS[1]["op3_q"]),
@@ -120,8 +120,10 @@ class HeuristicHysteresis:
             self._current_shift = 3
         elif backorder_rate < self.tau_low:
             self._current_shift = 1
+        # Track A 6D: (op3_q, op9_q, op3_rop, op9_rop, op5_q, shift).
+        # Inventory multipliers and Op5 buffer stay neutral.
         return np.array(
-            [0.0, 0.0, 0.0, 0.0, SHIFT_SIGNAL[self._current_shift]],
+            [0.0, 0.0, 0.0, 0.0, 0.0, SHIFT_SIGNAL[self._current_shift]],
             dtype=np.float32,
         )
 
@@ -161,7 +163,7 @@ class HeuristicDisruptionAware:
             shift_signal = -1.0  # S1
             inv_signal = 0.0
         return np.array(
-            [inv_signal, inv_signal, inv_signal, inv_signal, shift_signal],
+            [inv_signal, inv_signal, inv_signal, inv_signal, inv_signal, shift_signal],
             dtype=np.float32,
         )
 
@@ -210,6 +212,7 @@ class HeuristicTuned:
 
         return np.array(
             [
+                0.0,
                 0.0,
                 0.0,
                 0.0,
@@ -269,7 +272,7 @@ class HeuristicCycleGuard:
         shift_signal = 1.0 if escalate else 0.0
         inv_signal = self.inventory_boost if escalate else 0.0
         return np.array(
-            [inv_signal, inv_signal, inv_signal, inv_signal, shift_signal],
+            [inv_signal, inv_signal, inv_signal, inv_signal, inv_signal, shift_signal],
             dtype=np.float32,
         )
 
@@ -1328,7 +1331,8 @@ def evaluate_policy(
                 else:
                     action, _ = model.predict(obs, deterministic=True)
             elif policy == RANDOM_POLICY_NAME:
-                action = episode_rng.uniform(-1.0, 1.0, size=5).astype(np.float32)
+                # Track A is 6D: (op3_q, op9_q, op3_rop, op9_rop, op5_q, shift).
+                action = episode_rng.uniform(-1.0, 1.0, size=6).astype(np.float32)
             elif heuristic is not None:
                 action = heuristic(obs, prev_info)
             else:

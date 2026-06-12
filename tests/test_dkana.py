@@ -9,6 +9,7 @@ from pathlib import Path
 import numpy as np
 import torch
 
+from scripts import run_thesis_decision_ppo_smoke as ppo_smoke
 from supply_chain.dkana import (
     DKANA_CONFIG_FIELDS,
     DKANAOnlinePolicyAdapter,
@@ -851,6 +852,33 @@ def test_dkana_thesis_faithful_spec_describes_thesis_factorized_contract() -> No
     assert spec.action_bounds == ((0.0, 5.0), (0.0, 2.0))
     assert len(spec.observation_fields) == 30 + len(STATE_CONSTRAINT_FIELDS) + 1
     assert any("action_space_mode=thesis_factorized" in note for note in spec.notes)
+
+
+def test_run_thesis_decision_ppo_smoke_defaults_to_thesis_strict_period_mode() -> None:
+    args = ppo_smoke.build_parser().parse_args([])
+    kwargs = ppo_smoke.env_kwargs(args)
+
+    assert args.action_space_mode == "thesis_factorized"
+    assert args.inventory_period_mode == "thesis_strict"
+    assert kwargs["action_space_mode"] == "thesis_factorized"
+    assert kwargs["inventory_period_mode"] == "thesis_strict"
+
+
+def test_run_thesis_decision_ppo_smoke_accepts_per_node_period_mode() -> None:
+    args = ppo_smoke.build_parser().parse_args(
+        [
+            "--action-space-mode",
+            "factorized",
+            "--inventory-period-mode",
+            "per_node",
+        ]
+    )
+    kwargs = ppo_smoke.env_kwargs(args)
+
+    assert args.action_space_mode == "factorized"
+    assert args.inventory_period_mode == "per_node"
+    assert kwargs["action_space_mode"] == "factorized"
+    assert kwargs["inventory_period_mode"] == "per_node"
 
 
 def test_run_thesis_decision_ladder_static_smoke(tmp_path: Path) -> None:

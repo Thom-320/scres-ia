@@ -29,8 +29,8 @@ FORMULA_MODES = (
     "merged_recovery_formula",
 )
 FIXED_POLICY_ACTIONS: dict[str, np.ndarray] = {
-    "static_s1": np.array([0.0, 0.0, 0.0, 0.0, -1.0], dtype=np.float32),
-    "static_s2": np.array([0.0, 0.0, 0.0, 0.0, 0.0], dtype=np.float32),
+    "static_s1": np.array([0.0, 0.0, 0.0, 0.0, 0.0, -1.0], dtype=np.float32),
+    "static_s2": np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0], dtype=np.float32),
 }
 EVAL_EPISODE_SEED_OFFSET = 90_000
 FILL_RATE_BUCKET_EDGES = tuple(i / 10 for i in range(11))

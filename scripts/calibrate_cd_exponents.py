@@ -47,11 +47,11 @@ POLICY_CHOICES = ("static_s1", "static_s2", "static_s3", "random")
 def policy_action(policy_name: str, env: MFSCGymEnvShifts) -> np.ndarray:
     """Return the 5D action used for a calibration policy."""
     if policy_name == "static_s1":
-        return np.array([0.0, 0.0, 0.0, 0.0, -1.0], dtype=np.float32)
+        return np.array([0.0, 0.0, 0.0, 0.0, 0.0, -1.0], dtype=np.float32)
     if policy_name == "static_s2":
-        return np.array([0.0, 0.0, 0.0, 0.0, 0.0], dtype=np.float32)
+        return np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0], dtype=np.float32)
     if policy_name == "static_s3":
-        return np.array([0.0, 0.0, 0.0, 0.0, 1.0], dtype=np.float32)
+        return np.array([0.0, 0.0, 0.0, 0.0, 0.0, 1.0], dtype=np.float32)
     if policy_name == "random":
         return env.action_space.sample()
     raise ValueError(f"Unsupported policy {policy_name!r}.")

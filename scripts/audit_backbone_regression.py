@@ -110,9 +110,9 @@ except ImportError:  # legacy commits pre-date helper export
     run_episodes = None
 
 FIXED_POLICY_ACTIONS = {
-    "static_s1": np.array([0.0, 0.0, 0.0, 0.0, -1.0], dtype=np.float32),
-    "static_s2": np.array([0.0, 0.0, 0.0, 0.0, 0.0], dtype=np.float32),
-    "static_s3": np.array([0.0, 0.0, 0.0, 0.0, 1.0], dtype=np.float32),
+    "static_s1": np.array([0.0, 0.0, 0.0, 0.0, 0.0, -1.0], dtype=np.float32),
+    "static_s2": np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0], dtype=np.float32),
+    "static_s3": np.array([0.0, 0.0, 0.0, 0.0, 0.0, 1.0], dtype=np.float32),
 }
 
 def make_policy(name):

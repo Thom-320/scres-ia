@@ -80,8 +80,8 @@ def heuristic_disruption_policy():
         assembly_down = obs[8] > 0.5 if len(obs) > 8 else False
         any_down = obs[9] > 0.5 if len(obs) > 9 else False
         if assembly_down or any_down:
-            return np.array([0.0, 0.0, 0.0, 0.0, 1.0], dtype=np.float32)  # S3
-        return np.array([0.0, 0.0, 0.0, 0.0, 0.0], dtype=np.float32)  # S2
+            return np.array([0.0, 0.0, 0.0, 0.0, 0.0, 1.0], dtype=np.float32)  # S3
+        return np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0], dtype=np.float32)  # S2
 
     return policy
 

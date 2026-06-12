@@ -193,10 +193,10 @@ def test_export_trajectories_supports_track_b_contract(tmp_path: Path) -> None:
     )
 
     assert observations.shape[1] == 46
-    assert actions.shape[1] == 7
+    assert actions.shape[1] == 8
     assert metadata["action_contract"] == "track_b_v1"
     assert env_spec["env_variant"] == "track_b_adaptive_control"
-    assert len(env_spec["action_fields"]) == 7
+    assert len(env_spec["action_fields"]) == 8
     assert env_spec["action_fields"][-2:] == [
         "op10_q_multiplier_signal",
         "op12_q_multiplier_signal",

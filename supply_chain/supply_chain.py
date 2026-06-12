@@ -220,6 +220,18 @@ class MFSCSimulation:
             self.raw_material_al.put(initial_buffers.get("op5_rm", 0))
             self.rations_sb.put(initial_buffers.get("op9_rations", 0))
         self.inventory_buffer_targets = dict(initial_buffers or {})
+        # Cache the original Op5 buffer target as a separate attribute (do not pollute
+        # inventory_buffer_targets, which other tests compare as a strict dict).
+        # See Table 6.16 (Op5,j) — the agent's a5 multiplier scales this baseline.
+        self._op5_rm_base: Optional[float] = None
+        if "op5_rm" in self.inventory_buffer_targets:
+            self._op5_rm_base = float(self.inventory_buffer_targets["op5_rm"])
+        # Thesis-aligned Op5 multiplier rule: a5 in [-1, 1] maps linearly to
+        # m = 1 + 0.5 * a5 in [0.5, 1.5] (centre at 1.0x, neutral when a5 = 0).
+        # This is the one place the repo diverges from the generic 1.25 + 0.75
+        # rule used for op3/op9/op10/op12: op5 is anchored around 1.0x baseline
+        # so the agent can leave the thesis buffer unchanged by emitting a5 = 0.
+        self._op5_multiplier_rule: str = "thesis_anchored_centered"
 
         # =================================================================
         # METRICS
@@ -452,6 +464,14 @@ class MFSCSimulation:
             for k, v in action.items():
                 if k in self.params:
                     self.params[k] = v
+                # Thesis-aligned Op5 buffer target (Table 6.16 I_{t,S} on Op5,j).
+                # The thesis replenishes raw-material buffer at Op5 every
+                # 168/336/504/672/1344 h to a target level. Track A exposes
+                # this as a continuous multiplier on the Op5 target.
+                elif k == "op5_q" and "op5_rm" in self.inventory_buffer_targets:
+                    if self._op5_rm_base is not None and self._op5_rm_base > 0.0:
+                        new_target = self._op5_rm_base * float(v)
+                        self.inventory_buffer_targets["op5_rm"] = new_target
 
             # Auto-couple shift-dependent batch size per Table 6.20:
             # S=1/2 → 5,000 rations/batch, S=3 → 7,000 rations/batch.

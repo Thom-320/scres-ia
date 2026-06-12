@@ -803,8 +803,8 @@ def test_heuristic_hysteresis_escalates_on_high_backorder() -> None:
     h.reset()
     obs = _fake_obs({7: 0.20})  # above tau_high=0.15
     action = h(obs, {})
-    assert action.shape == (5,)
-    assert action[4] == pytest.approx(1.0)  # S3
+    assert action.shape == (6,)
+    assert action[5] == pytest.approx(1.0)  # S3
 
 
 def test_heuristic_hysteresis_maintains_in_deadband() -> None:
@@ -814,7 +814,7 @@ def test_heuristic_hysteresis_maintains_in_deadband() -> None:
     h(_fake_obs({7: 0.20}), {})
     # Then give a value inside the deadband — should stay S3
     action = h(_fake_obs({7: 0.10}), {})
-    assert action[4] == pytest.approx(1.0)  # still S3
+    assert action[5] == pytest.approx(1.0)  # still S3
 
 
 def test_heuristic_hysteresis_deescalates_below_low() -> None:
@@ -822,7 +822,7 @@ def test_heuristic_hysteresis_deescalates_below_low() -> None:
     h.reset()
     obs = _fake_obs({7: 0.03})  # below tau_low=0.05
     action = h(obs, {})
-    assert action[4] == pytest.approx(-1.0)  # S1
+    assert action[5] == pytest.approx(-1.0)  # S1
 
 
 def test_heuristic_disruption_responds_to_assembly_down() -> None:
@@ -830,7 +830,7 @@ def test_heuristic_disruption_responds_to_assembly_down() -> None:
     h.reset()
     obs = _fake_obs({8: 1.0})  # assembly_down
     action = h(obs, {})
-    assert action[4] == pytest.approx(1.0)  # S3
+    assert action[5] == pytest.approx(1.0)  # S3
     assert action[0] == pytest.approx(1.0)  # max inventory boost
 
 
@@ -839,7 +839,7 @@ def test_heuristic_disruption_caution_on_low_fill_rate() -> None:
     h.reset()
     obs = _fake_obs({6: 0.85})  # below fill_rate_caution=0.90
     action = h(obs, {})
-    assert action[4] == pytest.approx(0.0)  # S2
+    assert action[5] == pytest.approx(0.0)  # S2
     assert action[0] == pytest.approx(0.5)  # moderate boost
 
 
@@ -848,7 +848,7 @@ def test_heuristic_disruption_normal_mode() -> None:
     h.reset()
     obs = _fake_obs({6: 0.95})  # above caution
     action = h(obs, {})
-    assert action[4] == pytest.approx(-1.0)  # S1
+    assert action[5] == pytest.approx(-1.0)  # S1
     assert action[0] == pytest.approx(0.0)  # neutral
 
 
@@ -857,7 +857,7 @@ def test_heuristic_tuned_combines_strategies() -> None:
     h.reset()
     obs = _fake_obs({7: 0.20, 8: 1.0})  # high backorder + assembly_down
     action = h(obs, {})
-    assert action[4] == pytest.approx(1.0)  # S3 (one-level escalation from S2)
+    assert action[5] == pytest.approx(1.0)  # S3 (one-level escalation from S2)
     assert action[0] == pytest.approx(0.0)  # neutral inventory multipliers
 
 
@@ -867,7 +867,7 @@ def test_heuristic_tuned_deescalates_when_service_is_healthy() -> None:
     # First escalate once to S3.
     h(_fake_obs({7: 0.25}), {})
     action = h(_fake_obs({7: 0.05, 6: 0.95}), {})
-    assert action[4] == pytest.approx(0.0)  # S2 after one-level de-escalation
+    assert action[5] == pytest.approx(0.0)  # S2 after one-level de-escalation
 
 
 def test_heuristic_cycle_guard_escalates_in_v5_risk_window() -> None:
@@ -879,7 +879,7 @@ def test_heuristic_cycle_guard_escalates_in_v5_risk_window() -> None:
     obs[24] = 0.90
     obs[25] = 0.10
     action = h(obs, {})
-    assert action[4] == pytest.approx(1.0)
+    assert action[5] == pytest.approx(1.0)
     assert action[0] == pytest.approx(0.5)
 
 
@@ -892,7 +892,7 @@ def test_heuristic_cycle_guard_holds_s2_outside_risk_window() -> None:
     obs[24] = 0.20
     obs[25] = 0.25
     action = h(obs, {})
-    assert action[4] == pytest.approx(0.0)
+    assert action[5] == pytest.approx(0.0)
     assert action[0] == pytest.approx(0.0)
 
 
@@ -915,7 +915,7 @@ def test_all_heuristics_within_action_bounds() -> None:
         obs, info = env.reset(seed=42)
         for _ in range(5):
             action = heuristic(obs, info)
-            assert action.shape == (5,), f"{name}: bad shape {action.shape}"
+            assert action.shape == (6,), f"{name}: bad shape {action.shape}"
             assert np.all(action >= -1.0) and np.all(
                 action <= 1.0
             ), f"{name}: action out of bounds {action}"
@@ -1084,7 +1084,7 @@ def test_cross_scenario_evaluation(
         def predict(
             self, obs: np.ndarray, deterministic: bool = True
         ) -> tuple[np.ndarray, None]:
-            return np.zeros(5, dtype=np.float32), None
+            return np.zeros(6, dtype=np.float32), None
 
         def save(self, path: str) -> None:
             Path(path).write_text("dummy_model", encoding="utf-8")
@@ -1199,7 +1199,7 @@ def test_evaluate_policy_accepts_custom_policy_adapter() -> None:
 
         def predict(self, obs: np.ndarray, deterministic: bool = True) -> np.ndarray:
             self.calls += 1
-            return np.zeros(5, dtype=np.float32)
+            return np.zeros(6, dtype=np.float32)
 
     adapter = CustomPolicy()
     rows = evaluate_policy(
@@ -1352,7 +1352,7 @@ def test_pbrs_shaping_bonus_positive_on_improvement() -> None:
     # Run a few steps and collect shaping bonuses
     bonuses = []
     for _ in range(3):
-        action = np.array([0.0, 0.0, 0.0, 0.0, 1.0], dtype=np.float32)
+        action = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 1.0], dtype=np.float32)
         obs, reward, _, _, info = env.step(action)
         bonuses.append(info["pbrs_shaping_bonus"])
     # At least one bonus should be non-zero (system is transitioning)
@@ -1445,7 +1445,7 @@ def test_pbrs_base_reward_equals_control_v1() -> None:
     obs_b, _ = env_base.reset(seed=42)
     np.testing.assert_array_almost_equal(obs_p, obs_b)
 
-    action = np.array([0.0, 0.0, 0.0, 0.0, 0.0], dtype=np.float32)
+    action = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0], dtype=np.float32)
     _, rew_p, _, _, info_p = env_pbrs.step(action)
     _, rew_b, _, _, _ = env_base.step(action)
     # Base reward component should match

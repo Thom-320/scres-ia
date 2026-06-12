@@ -21,9 +21,9 @@ from supply_chain.external_env_interface import make_shift_control_env, run_epis
 
 STATIC_POLICIES = ("static_s1", "static_s2", "static_s3")
 FIXED_POLICY_ACTIONS: dict[str, np.ndarray] = {
-    "static_s1": np.array([0.0, 0.0, 0.0, 0.0, -1.0], dtype=np.float32),
-    "static_s2": np.array([0.0, 0.0, 0.0, 0.0, 0.0], dtype=np.float32),
-    "static_s3": np.array([0.0, 0.0, 0.0, 0.0, 1.0], dtype=np.float32),
+    "static_s1": np.array([0.0, 0.0, 0.0, 0.0, 0.0, -1.0], dtype=np.float32),
+    "static_s2": np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0], dtype=np.float32),
+    "static_s3": np.array([0.0, 0.0, 0.0, 0.0, 0.0, 1.0], dtype=np.float32),
 }
 POLICY_METRICS = (
     "reward_total",

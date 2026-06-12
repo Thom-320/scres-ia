@@ -72,7 +72,7 @@ def test_ret_thesis_components_cover_all_cases() -> None:
 def test_shift_env_ret_thesis_step_exposes_component_metadata() -> None:
     env = MFSCGymEnvShifts(step_size_hours=24, max_steps=2, reward_mode="ReT_thesis")
     env.reset(seed=7)
-    _, _, _, _, info = env.step([0.0, 0.0, 0.0, 0.0, 0.0])
+    _, _, _, _, info = env.step([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
     assert "ret_components" in info
     assert "ret_case" in info["ret_components"]
     assert "reward_total" in info["ret_components"]
@@ -113,7 +113,7 @@ def test_v2_observation_contract_exposes_augmented_state() -> None:
     assert info["observation_version"] == "v2"
     assert obs[-3:].tolist() == pytest.approx([0.0, 0.0, 0.0])
 
-    next_obs, _, _, _, step_info = env.step([0.0, 0.0, 0.0, 0.0, 0.0])
+    next_obs, _, _, _, step_info = env.step([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
     assert step_info["observation_version"] == "v2"
     assert next_obs.shape == (18,)
     assert next_obs[-3] == pytest.approx(float(step_info["new_demanded"]) / 18_200.0)
@@ -146,7 +146,7 @@ def test_v3_observation_contract_exposes_normalized_cumulative_history() -> None
     assert info["observation_version"] == "v3"
     assert obs[-5:].tolist() == pytest.approx([0.0, 0.0, 0.0, 0.0, 0.0])
 
-    next_obs, _, _, _, step_info = env.step([0.0, 0.0, 0.0, 0.0, 0.0])
+    next_obs, _, _, _, step_info = env.step([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
     assert step_info["observation_version"] == "v3"
     assert next_obs.shape == (20,)
     assert 0.0 <= next_obs[-2] <= 1.0
@@ -190,7 +190,7 @@ def test_v4_observation_contract_exposes_shift_and_upstream_disruption_state() -
     assert 0.0 <= obs[22] <= 1.0
     assert 0.0 <= obs[23] <= 1.0
 
-    next_obs, _, _, _, step_info = env.step([0.0, 0.0, 0.0, 0.0, 0.0])
+    next_obs, _, _, _, step_info = env.step([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
     assert step_info["observation_version"] == "v4"
     assert next_obs.shape == (24,)
     assert next_obs[16] == pytest.approx(
@@ -226,7 +226,7 @@ def test_v5_observation_contract_exposes_cycle_precursors() -> None:
     for idx in range(24, 30):
         assert 0.0 <= obs[idx] <= 1.0
 
-    next_obs, _, _, _, step_info = env.step([0.0, 0.0, 0.0, 0.0, 0.0])
+    next_obs, _, _, _, step_info = env.step([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
     next_cycle_context = step_info["state_constraint_context"]["cycle_context"]
     assert next_obs.shape == (30,)
     assert next_obs[24] == pytest.approx(next_cycle_context["op1_cycle_phase_norm"])
@@ -263,7 +263,7 @@ def test_v6_observation_contract_exposes_adaptive_benchmark_state() -> None:
     for idx in range(35, 40):
         assert 0.0 <= obs[idx] <= 1.0
 
-    next_obs, _, _, _, step_info = env.step([0.0, 0.0, 0.0, 0.0, 1.0])
+    next_obs, _, _, _, step_info = env.step([0.0, 0.0, 0.0, 0.0, 0.0, 1.0])
     next_adaptive = step_info["state_constraint_context"]["adaptive_context"]
     assert next_obs.shape == (40,)
     assert next_obs[35] == pytest.approx(next_adaptive["risk_forecast_48h_norm"])
@@ -308,7 +308,7 @@ def test_state_constraint_context_is_exposed_on_reset_and_step() -> None:
         "rations_theatre"
     ] == pytest.approx(0.0)
 
-    _, _, _, _, step_info = env.step([0.0, 0.0, 0.0, 0.0, 0.0])
+    _, _, _, _, step_info = env.step([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
     assert "state_constraint_context" in step_info
     assert step_info["state_constraint_context"]["total_inventory"] >= 0.0
     assert step_info["state_constraint_context"]["pending_backorders_count"] >= 0.0
@@ -327,7 +327,7 @@ def test_run_episodes_with_neutral_policy() -> None:
     """A neutral (all-zeros) policy runs and returns structured metrics."""
 
     def neutral_policy(obs: np.ndarray, info: dict) -> np.ndarray:
-        return np.zeros(5, dtype=np.float32)
+        return np.zeros(6, dtype=np.float32)
 
     results = run_episodes(
         neutral_policy,
@@ -368,9 +368,9 @@ def test_run_episodes_with_custom_callable() -> None:
         def __call__(self, obs: np.ndarray, info: dict) -> np.ndarray:
             self.call_count += 1
             # shift to S3 based on backorder_rate
-            action = np.zeros(5, dtype=np.float32)
+            action = np.zeros(6, dtype=np.float32)
             if obs[7] > 0.1:
-                action[4] = 1.0
+                action[5] = 1.0
             return action
 
     policy = MyPolicy()
@@ -398,7 +398,7 @@ def test_run_episodes_with_custom_callable() -> None:
 def test_run_episodes_collect_trajectories() -> None:
     """When collect_trajectories=True, per-step data is captured."""
     results = run_episodes(
-        lambda obs, info: np.zeros(5, dtype=np.float32),
+        lambda obs, info: np.zeros(6, dtype=np.float32),
         n_episodes=1,
         seed=1,
         env_kwargs={
@@ -437,7 +437,7 @@ def test_terminal_metrics_match_env_order_level_definition() -> None:
     terminated = False
     truncated = False
     while not (terminated or truncated):
-        obs, _, terminated, truncated, info = env.step(np.zeros(5, dtype=np.float32))
+        obs, _, terminated, truncated, info = env.step(np.zeros(6, dtype=np.float32))
 
     metrics = get_episode_terminal_metrics(env)
     assert metrics["fill_rate_order_level"] == pytest.approx(
@@ -452,7 +452,7 @@ def test_terminal_metrics_match_env_order_level_definition() -> None:
 
 def test_run_episodes_uses_terminal_fill_rate_not_flow_ratio() -> None:
     results = run_episodes(
-        lambda obs, info: np.zeros(5, dtype=np.float32),
+        lambda obs, info: np.zeros(6, dtype=np.float32),
         n_episodes=1,
         seed=123,
         env_kwargs={
@@ -494,7 +494,7 @@ def test_ret_cd_bounded_runs_without_error() -> None:
     obs, info = env.reset(seed=42)
     for _ in range(5):
         obs, reward, terminated, truncated, info = env.step(
-            np.zeros(5, dtype=np.float32)
+            np.zeros(6, dtype=np.float32)
         )
     env.close()
 
@@ -510,7 +510,7 @@ def test_ret_cd_sigmoid_runs_without_error() -> None:
     obs, info = env.reset(seed=42)
     for _ in range(5):
         obs, reward, terminated, truncated, info = env.step(
-            np.zeros(5, dtype=np.float32)
+            np.zeros(6, dtype=np.float32)
         )
     env.close()
 
@@ -527,7 +527,7 @@ def test_ret_cd_bounded_output_range() -> None:
     )
     env.reset(seed=7)
     for _ in range(10):
-        _, reward, _, _, _ = env.step(np.zeros(5, dtype=np.float32))
+        _, reward, _, _, _ = env.step(np.zeros(6, dtype=np.float32))
         assert 0.0 <= reward <= 1.0, f"Bounded reward out of range: {reward}"
     env.close()
 
@@ -544,7 +544,7 @@ def test_ret_cd_sigmoid_output_range() -> None:
     )
     env.reset(seed=7)
     for _ in range(10):
-        _, reward, _, _, _ = env.step(np.zeros(5, dtype=np.float32))
+        _, reward, _, _, _ = env.step(np.zeros(6, dtype=np.float32))
         assert 0.0 < reward < 1.0, f"Sigmoid reward out of range: {reward}"
     env.close()
 
@@ -575,8 +575,8 @@ def test_ret_cd_sigmoid_always_leq_bounded() -> None:
     env_bounded.reset(seed=42)
     env_sigmoid.reset(seed=42)
     for _ in range(5):
-        _, r_bounded, _, _, _ = env_bounded.step(np.zeros(5, dtype=np.float32))
-        _, r_sigmoid, _, _, _ = env_sigmoid.step(np.zeros(5, dtype=np.float32))
+        _, r_bounded, _, _, _ = env_bounded.step(np.zeros(6, dtype=np.float32))
+        _, r_sigmoid, _, _, _ = env_sigmoid.step(np.zeros(6, dtype=np.float32))
         assert (
             r_sigmoid <= r_bounded + 1e-9
         ), f"Sigmoid ({r_sigmoid:.6f}) should be <= bounded ({r_bounded:.6f})"
@@ -593,7 +593,7 @@ def test_ret_cd_component_breakdown_in_info() -> None:
         max_steps=2,
     )
     env.reset(seed=7)
-    _, _, _, _, info = env.step(np.zeros(5, dtype=np.float32))
+    _, _, _, _, info = env.step(np.zeros(6, dtype=np.float32))
 
     # Top-level component scalars
     assert "ret_cd_step" in info
@@ -634,15 +634,15 @@ def test_ret_cd_with_varied_actions() -> None:
     )
     env.reset(seed=42)
 
-    # Action forcing S=1 (shift signal < -0.33)
-    action_s1 = np.array([0.0, 0.0, 0.0, 0.0, -1.0], dtype=np.float32)
+    # Action forcing S=1 (shift signal < -0.33). 6D Track A: (op3_q, op9_q, op3_rop, op9_rop, op5_q, shift).
+    action_s1 = np.array([0.0, 0.0, 0.0, 0.0, 0.0, -1.0], dtype=np.float32)
     _, r1, _, _, info1 = env.step(action_s1)
     assert info1["shifts_active"] == 1
     assert info1["ret_cd_spare_capacity_step"] == pytest.approx(1.0 / 3.0)
     assert info1["ret_cd_inverse_cost_step"] == pytest.approx(1.0)
 
     # Action forcing S=3 (shift signal >= 0.33)
-    action_s3 = np.array([0.0, 0.0, 0.0, 0.0, 1.0], dtype=np.float32)
+    action_s3 = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 1.0], dtype=np.float32)
     _, r3, _, _, info3 = env.step(action_s3)
     assert info3["shifts_active"] == 3
     assert info3["ret_cd_spare_capacity_step"] == pytest.approx(1.0)
@@ -667,9 +667,9 @@ def test_ret_garrido2024_raw_and_sigmoid_share_same_five_variable_breakdown() ->
 
     env_raw.reset(seed=7)
     env_sigmoid.reset(seed=7)
-    _, raw_reward, _, _, raw_info = env_raw.step(np.zeros(5, dtype=np.float32))
+    _, raw_reward, _, _, raw_info = env_raw.step(np.zeros(6, dtype=np.float32))
     _, sigmoid_reward, _, _, sigmoid_info = env_sigmoid.step(
-        np.zeros(5, dtype=np.float32)
+        np.zeros(6, dtype=np.float32)
     )
 
     raw_components = raw_info["ret_garrido2024_components"]

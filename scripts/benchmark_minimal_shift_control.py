@@ -20,8 +20,8 @@ from supply_chain.external_env_interface import make_shift_control_env
 
 POLICY_ORDER = ("static_s1", "static_s2", "ppo")
 FIXED_POLICY_ACTIONS: dict[str, np.ndarray] = {
-    "static_s1": np.array([0.0, 0.0, 0.0, 0.0, -1.0], dtype=np.float32),
-    "static_s2": np.array([0.0, 0.0, 0.0, 0.0, 0.0], dtype=np.float32),
+    "static_s1": np.array([0.0, 0.0, 0.0, 0.0, 0.0, -1.0], dtype=np.float32),
+    "static_s2": np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0], dtype=np.float32),
 }
 EVAL_EPISODE_SEED_OFFSET = 50_000
 PRIMARY_METRICS = (

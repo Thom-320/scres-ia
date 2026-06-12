@@ -24,8 +24,8 @@ RET_CASES = (
     "no_demand",
 )
 FIXED_POLICY_ACTIONS: dict[str, np.ndarray] = {
-    "static_s1": np.array([0.0, 0.0, 0.0, 0.0, -1.0], dtype=np.float32),
-    "static_s2": np.array([0.0, 0.0, 0.0, 0.0, 0.0], dtype=np.float32),
+    "static_s1": np.array([0.0, 0.0, 0.0, 0.0, 0.0, -1.0], dtype=np.float32),
+    "static_s2": np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0], dtype=np.float32),
 }
 EVAL_EPISODE_SEED_OFFSET = 70_000
 DEFAULT_DELTAS = (
