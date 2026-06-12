@@ -80,12 +80,16 @@ OBSERVATION_FIELDS_V7: tuple[str, ...] = OBSERVATION_FIELDS_V6 + (
 )
 OBSERVATION_FIELDS: tuple[str, ...] = OBSERVATION_FIELDS_V1
 
+# Track A continuous-control contract. This is a trainable RL extension, not the
+# strict Garrido decision contract. The thesis-faithful discrete contract is
+# `thesis_factorized`: common I_{t,S} level plus S.
 ACTION_FIELDS: tuple[str, ...] = (
-    "op3_q_multiplier_signal",
-    "op9_q_multiplier_signal",
-    "op3_rop_multiplier_signal",
-    "op9_rop_multiplier_signal",
-    "assembly_shift_signal",
+    "op3_q_multiplier_signal",      # a1 — I_{t,S} on Op3,j (Table 6.16)
+    "op9_q_multiplier_signal",      # a2 — I_{t,S} on Op9,j (Table 6.16)
+    "op3_rop_multiplier_signal",    # a3 — repo extension (not in thesis)
+    "op9_rop_multiplier_signal",    # a4 — repo extension (not in thesis)
+    "op5_q_multiplier_signal",      # a5 — I_{t,S} on Op5,j (Table 6.16; added in v6D)
+    "assembly_shift_signal",        # a6 — S ∈ {1,2,3} (Table 6.20)
 )
 ACTION_FIELDS_TRACK_B_V1: tuple[str, ...] = ACTION_FIELDS + (
     "op10_q_multiplier_signal",
@@ -101,8 +105,13 @@ THESIS_DECISION_ACTION_FIELDS: tuple[str, ...] = tuple(
 THESIS_DECISION_OBSERVATION_FIELDS: tuple[str, ...] = THESIS_DECISION_ACTION_FIELDS + (
     "reward",
 )
+THESIS_FACTORIZED_ACTION_FIELDS: tuple[str, ...] = (
+    "common_inventory_period_level",
+    "assembly_shift_level",
+)
 
 ACTION_BOUNDS: tuple[tuple[float, float], ...] = (
+    (-1.0, 1.0),
     (-1.0, 1.0),
     (-1.0, 1.0),
     (-1.0, 1.0),
@@ -434,8 +443,17 @@ def get_dkana_thesis_faithful_env_spec(
             "observation_mode must be 'decision_reward', 'env_reward', "
             "'env_state_reward', or 'env_sdm_history_reward'."
         )
-    if action_space_mode not in ("onehot_18d", "factorized"):
-        raise ValueError("action_space_mode must be 'onehot_18d' or 'factorized'.")
+    if action_space_mode not in ("onehot_18d", "factorized", "thesis_factorized"):
+        raise ValueError(
+            "action_space_mode must be 'onehot_18d', 'factorized', "
+            "or 'thesis_factorized'."
+        )
+    if action_space_mode == "thesis_factorized":
+        action_fields = THESIS_FACTORIZED_ACTION_FIELDS
+        action_bounds = ((0.0, 5.0), (0.0, 2.0))
+    else:
+        action_fields = THESIS_DECISION_ACTION_FIELDS
+        action_bounds = ((0.0, 1.0),) * len(THESIS_DECISION_ACTION_FIELDS)
     return ExternalEnvSpec(
         env_variant="dkana_thesis_faithful_decision",
         reward_mode=reward_mode,
@@ -443,8 +461,8 @@ def get_dkana_thesis_faithful_env_spec(
         step_size_hours=float(step_size_hours),
         warmup_hours=float(WARMUP["estimated_deterministic_hrs"]),
         observation_fields=observation_fields,
-        action_fields=THESIS_DECISION_ACTION_FIELDS,
-        action_bounds=((0.0, 1.0),) * len(THESIS_DECISION_ACTION_FIELDS),
+        action_fields=action_fields,
+        action_bounds=action_bounds,
         shift_mapping={
             "S1": 1,
             "S2": 2,
@@ -461,8 +479,10 @@ def get_dkana_thesis_faithful_env_spec(
             "Capacity dimensions are one-of-three S1/S2/S3 scores; the "
             "dominant score selects assembly shifts and Table 6.20 capacity.",
             f"action_space_mode={action_space_mode}: onehot_18d exports the raw "
-            "18D thesis vector; factorized trains categorical decisions "
-            "over Op3, Op5, Op9, and S, then records the equivalent 18D vector.",
+            "18D thesis vector; thesis_factorized trains the two thesis "
+            "decision variables (common I_t,S level and S) directly; "
+            "factorized trains categorical decisions over Op3, Op5, Op9, "
+            "and S, then records the equivalent 18D vector.",
             f"observation_mode={observation_mode}: decision_reward keeps the "
             "19D David handoff; env_reward/env_state_reward/env_sdm_history_reward "
             "are PPO research surfaces that keep actions fixed while enriching "

@@ -280,8 +280,11 @@ class DKANAThesisFaithfulDecisionEnvWrapper(gym.Wrapper):
                 "observation_mode must be 'decision_reward', 'env_reward', "
                 "'env_state_reward', or 'env_sdm_history_reward'."
             )
-        if action_space_mode not in ("onehot_18d", "factorized"):
-            raise ValueError("action_space_mode must be 'onehot_18d' or 'factorized'.")
+        if action_space_mode not in ("onehot_18d", "factorized", "thesis_factorized"):
+            raise ValueError(
+                "action_space_mode must be 'onehot_18d', 'factorized', "
+                "or 'thesis_factorized'."
+            )
         if inventory_period_mode not in ("thesis_strict", "per_node"):
             raise ValueError(
                 "inventory_period_mode must be 'thesis_strict' or 'per_node'."
@@ -321,7 +324,12 @@ class DKANAThesisFaithfulDecisionEnvWrapper(gym.Wrapper):
             obs_shape = (len(self.observation_fields),)
             obs_low = -1_000_000.0
             obs_high = 1_000_000.0
-        if action_space_mode == "factorized":
+        if action_space_mode == "thesis_factorized":
+            # Direct thesis decision variables: common I_{t,S} level plus S.
+            # 0 means no strategic inventory buffer; 1..5 map to I168,1..I1344,1.
+            # The final categorical variable maps 0/1/2 to S1/S2/S3.
+            self.action_space = gym.spaces.MultiDiscrete([6, 3])
+        elif action_space_mode == "factorized":
             # 0 means no strategic buffer for a node; 1..5 map to I168,1..I1344,1.
             # The final categorical variable maps 0/1/2 to S1/S2/S3.
             self.action_space = gym.spaces.MultiDiscrete([6, 6, 6, 3])
@@ -463,6 +471,27 @@ class DKANAThesisFaithfulDecisionEnvWrapper(gym.Wrapper):
 
     def _decode_action(self, action: Any) -> tuple[dict[str, int], int, np.ndarray]:
         action_array = np.asarray(action)
+        if self.action_space_mode == "thesis_factorized":
+            if action_array.shape != (2,):
+                raise ValueError(
+                    f"Action must have shape (2,), got {action_array.shape}."
+                )
+            discrete = np.asarray(action_array, dtype=np.int64)
+            if np.any(discrete < 0) or np.any(discrete > np.asarray([5, 2])):
+                raise ValueError("Thesis-factorized action values are out of bounds.")
+            periods_by_node = {}
+            if int(discrete[0]) > 0:
+                period = int(THESIS_INVENTORY_PERIODS[int(discrete[0]) - 1])
+                periods_by_node = {
+                    node_name: period for node_name in ("op3", "op5", "op9")
+                }
+            shifts = int(discrete[1]) + 1
+            return (
+                periods_by_node,
+                shifts,
+                self._realized_vector(periods_by_node, shifts),
+            )
+
         if self.action_space_mode == "factorized":
             if action_array.shape != (4,):
                 raise ValueError(

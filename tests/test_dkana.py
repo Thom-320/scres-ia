@@ -52,9 +52,9 @@ def make_synthetic_export_arrays() -> dict[str, np.ndarray]:
     )
     actions = np.array(
         [
-            [0.1, 0.0, -0.1, 0.2, -1.0],
-            [0.2, 0.1, -0.2, 0.3, 0.0],
-            [0.3, 0.2, -0.3, 0.4, 1.0],
+            [0.1, 0.0, -0.1, 0.2, 0.05, -1.0],
+            [0.2, 0.1, -0.2, 0.3, -0.05, 0.0],
+            [0.3, 0.2, -0.3, 0.4, 0.0, 1.0],
         ],
         dtype=np.float32,
     )
@@ -574,6 +574,76 @@ def test_dkana_thesis_faithful_env_supports_factored_categorical_actions() -> No
     env.close()
 
 
+def test_dkana_thesis_faithful_env_supports_thesis_factorized_actions() -> None:
+    env = make_dkana_thesis_faithful_env(
+        max_steps=1,
+        observation_version="v5",
+        observation_mode="env_reward",
+        action_space_mode="thesis_factorized",
+    )
+    obs, info = env.reset(seed=123)
+
+    assert env.action_space.nvec.tolist() == [6, 3]
+    assert obs.shape == (31,)
+    assert info["action_space_mode"] == "thesis_factorized"
+
+    next_obs, reward, _, _, step_info = env.step(np.array([3, 2], dtype=np.int64))
+
+    assert next_obs.shape == (31,)
+    assert next_obs[-1] == reward
+    assert step_info["thesis_decision"]["inventory_period_hours"] == 504.0
+    assert step_info["thesis_decision"]["inventory_period_hours_by_node"] == {
+        "op3": 504.0,
+        "op5": 504.0,
+        "op9": 504.0,
+    }
+    assert step_info["thesis_decision"]["inventory_buffer_targets"] == {
+        "op3_rm": 46080.0,
+        "op5_rm": 46080.0,
+        "op9_rations": 47250.0,
+    }
+    assert step_info["thesis_decision"]["assembly_shifts"] == 3
+    assert step_info["thesis_decision_action_vector"] == [
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+    ]
+    env.close()
+
+
+def test_dkana_thesis_factorized_action_zero_means_no_inventory_buffer() -> None:
+    env = make_dkana_thesis_faithful_env(
+        max_steps=1,
+        observation_version="v5",
+        observation_mode="env_reward",
+        action_space_mode="thesis_factorized",
+    )
+    env.reset(seed=123)
+
+    _, _, _, _, step_info = env.step(np.array([0, 0], dtype=np.int64))
+
+    assert step_info["thesis_decision"]["inventory_period_hours"] is None
+    assert step_info["thesis_decision"]["inventory_period_hours_by_node"] == {}
+    assert step_info["thesis_decision"]["inventory_buffer_targets"] == {}
+    assert step_info["thesis_decision"]["assembly_shifts"] == 1
+    env.close()
+
+
 def test_dkana_thesis_faithful_initial_action_applies_buffers_before_warmup() -> None:
     initial_action = np.array([3, 3, 3, 2], dtype=np.int64)
     env = make_dkana_thesis_faithful_env(
@@ -597,6 +667,32 @@ def test_dkana_thesis_faithful_initial_action_applies_buffers_before_warmup() ->
     assert info["warmup_metadata"]["inventory_replenishment_period"] == 504.0
     assert env.unwrapped.sim is not None
     assert env.unwrapped.sim.inventory_buffer_targets == {
+        "op3_rm": 46080.0,
+        "op5_rm": 46080.0,
+        "op9_rations": 47250.0,
+    }
+    env.close()
+
+
+def test_dkana_thesis_factorized_initial_action_applies_common_buffer() -> None:
+    env = make_dkana_thesis_faithful_env(
+        max_steps=1,
+        observation_version="v5",
+        observation_mode="env_state_reward",
+        action_space_mode="thesis_factorized",
+        initial_action=np.array([3, 2], dtype=np.int64),
+    )
+    _, info = env.reset(seed=123)
+
+    assert info["initial_decision"]["applied_before_warmup"] is True
+    assert info["initial_decision"]["inventory_period_hours"] == 504.0
+    assert info["initial_decision"]["inventory_period_hours_by_node"] == {
+        "op3": 504.0,
+        "op5": 504.0,
+        "op9": 504.0,
+    }
+    assert info["initial_decision"]["assembly_shifts"] == 3
+    assert info["warmup_metadata"]["initial_buffers"] == {
         "op3_rm": 46080.0,
         "op5_rm": 46080.0,
         "op9_rations": 47250.0,
@@ -734,6 +830,26 @@ def test_dkana_thesis_faithful_spec_describes_rich_factorized_contract() -> None
     assert len(spec.action_fields) == 18
     assert len(spec.observation_fields) == 30 + len(STATE_CONSTRAINT_FIELDS) + 1
     assert any("action_space_mode=factorized" in note for note in spec.notes)
+
+
+def test_dkana_thesis_faithful_spec_describes_thesis_factorized_contract() -> None:
+    spec = get_dkana_thesis_faithful_env_spec(
+        reward_mode="control_v1",
+        observation_version="v5",
+        observation_mode="env_state_reward",
+        action_space_mode="thesis_factorized",
+    )
+
+    assert spec.env_variant == "dkana_thesis_faithful_decision"
+    assert spec.reward_mode == "control_v1"
+    assert spec.observation_version == "env_state_reward_v5"
+    assert spec.action_fields == (
+        "common_inventory_period_level",
+        "assembly_shift_level",
+    )
+    assert spec.action_bounds == ((0.0, 5.0), (0.0, 2.0))
+    assert len(spec.observation_fields) == 30 + len(STATE_CONSTRAINT_FIELDS) + 1
+    assert any("action_space_mode=thesis_factorized" in note for note in spec.notes)
 
 
 def test_build_dkana_dataset_script_writes_numpy_outputs(tmp_path: Path) -> None:
