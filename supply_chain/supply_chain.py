@@ -216,9 +216,15 @@ class MFSCSimulation:
         self.rations_theatre = simpy.Container(self.env, capacity=INF, init=0)
 
         if initial_buffers:
-            self.raw_material_wdc.put(initial_buffers.get("op3_rm", 0))
-            self.raw_material_al.put(initial_buffers.get("op5_rm", 0))
-            self.rations_sb.put(initial_buffers.get("op9_rations", 0))
+            op3_rm = float(initial_buffers.get("op3_rm", 0))
+            op5_rm = float(initial_buffers.get("op5_rm", 0))
+            op9_rations = float(initial_buffers.get("op9_rations", 0))
+            if op3_rm > 0:
+                self.raw_material_wdc.put(op3_rm)
+            if op5_rm > 0:
+                self.raw_material_al.put(op5_rm)
+            if op9_rations > 0:
+                self.rations_sb.put(op9_rations)
         self.inventory_buffer_targets = dict(initial_buffers or {})
         # Cache the original Op5 buffer target as a separate attribute (do not pollute
         # inventory_buffer_targets, which other tests compare as a strict dict).
