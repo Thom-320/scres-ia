@@ -95,21 +95,71 @@ crossing inventory with S3 does not significantly beat the simple thesis-pure
 `I672,S1` buffered policy; per-node granularity does not beat the uniform crossed
 policy. The old pre-fix headline should stay withdrawn.
 
+### Post-Fix Confirmatory PPO Local Rerun
+
+Completed locally with exit code `0`:
+
+- `outputs/benchmarks/confirmatory_ppo_ladder/postfix_confirmatory_ppo_full_20260615T230801Z/`
+
+Contract:
+
+- panel `Cf31-90`
+- `10` replications
+- `260` weekly steps
+- `reward_mode=ReT_thesis`
+- `raw_material_flow_mode=kit_equivalent_order_up_to`
+- common-seed paired panel, not strict CRN
+- evaluation-only loading of three pretrained 500k PPO best-shot models
+
+Summary:
+
+| policy | kind | fill | ReT | reward | n |
+|---|---|---:|---:|---:|---:|
+| `pure_inventory_I672_S1` | static | 0.9687 | 0.8834 | 243.54 | 600 |
+| `ppo500k_seed202` | ppo | 0.9687 | 0.8833 | 213.10 | 600 |
+| `ppo500k_seed303` | ppo | 0.9687 | 0.8833 | 237.39 | 600 |
+| `per_node_I1344_I504_I504_S3` | static | 0.9687 | 0.8833 | 212.32 | 600 |
+| `crossed_uniform_I504_S3` | static | 0.9687 | 0.8833 | 212.33 | 600 |
+| `ppo500k_seed101` | ppo | 0.9686 | 0.8833 | 242.48 | 600 |
+| `pure_capacity_I0_S3` | static | 0.9623 | 0.8295 | 206.24 | 600 |
+| `garrido_matched_DOE_baseline` | matched_doe | 0.9590 | 0.8386 | 231.28 | 600 |
+
+Primary PPO contrasts:
+
+- PPO seeds tie `pure_inventory_I672_S1` and `crossed_uniform_I504_S3` on fill
+  and ReT at practical scale.
+- Against `pure_inventory_I672_S1`, PPO fill deltas are `-0.0001` to `0.0000`;
+  ReT deltas are near zero; PPO reward is lower for all three seeds.
+- Against `crossed_uniform_I504_S3`, PPO fill/ReT remains tied; reward varies by
+  seed because the reward surface weights the static policies differently from
+  the loaded PPO actions.
+- PPO policies beat `garrido_matched_DOE_baseline` on fill/ReT, but the same is
+  already true for simple static buffered policies.
+
+Interpretation: the repaired local PPO comparison does not support a PPO
+improvement claim. The current usable claim is narrower: post-fix PPO evaluation
+does not outperform simple static buffering on fill or ReT; any paper or
+notebook wording should avoid presenting these pretrained PPO models as evidence
+of learned superiority in the repaired inventory environment.
+
 ### Kaggle State
 
-- Post-fix rerun code is published on branch `codex/garrido-postfix-reruns`
-  at commit `3c7f7eef1e4c803420b451ef9e99ae6a20edcb6a`.
+- Post-fix rerun code is published on branch `codex/garrido-postfix-reruns`.
 - `thomaschisica/scresia-garrido-fidelity-postfix` is still running. Do not
   claim the full Cf31-90 x 5-profile x 3-rep thesis-horizon panel complete until
   its artifacts are downloaded and post-processed.
-- `thomaschisica/scresia-garrido-fidelity-h2-thesis` version 1 completed and
-  its log reports 900/900 episodes with:
-  - inventory family: `I672-I0` fill `+0.0679`, ReT `+0.3029`;
-  - capacity family: `S3-S1` fill `+0.0594`, ReT `+0.2533`.
-  However, version 1 did not expose the expected run directory in downloadable
-  output, so it is log evidence only.
-- Version 2 of `thomaschisica/scresia-garrido-fidelity-h2-thesis` has been
-  pushed with explicit export into `scres-ia/kaggle_outputs/...` and is running.
+- `thomaschisica/scresia-garrido-fidelity-h2-thesis` version 2 completed and its
+  exported artifacts were downloaded to:
+  `outputs/kaggle_garrido_fidelity_h2_thesis_v2_latest/scres-ia/kaggle_outputs/kaggle_h2_thesis_20260615T223853Z/`
+- H2/H3 Kaggle thesis-pattern gate has 900 downloaded episode rows and
+  `FIDELITY_GATE_ANALYSIS.md` was regenerated locally against the downloaded
+  artifact:
+  - inventory family H2 (`I672-I0`): fill `+0.0679`, ReT `+0.3029`;
+  - capacity family H2 (`I672-I0`): fill `+0.0633`, ReT `+0.2947`;
+  - capacity family H3 (`S3-S1`): fill `+0.0594`, ReT `+0.2533`;
+  - inventory family H3 (`S3-S1`): fill `+0.0609`, ReT `+0.2586`.
+  This is now downloadable Kaggle evidence, not log-only evidence. It is still a
+  thesis-pattern minimal gate, not the full multi-profile fidelity panel.
 - `thomaschisica/scresia-confirmatory-static-postfix` has been launched from
   the post-fix branch and is running.
 - `thomaschisica/scresia-confirmatory-ppo-postfix` version 1 failed because the
@@ -148,22 +198,21 @@ Smoke artifacts generated under `kit_equivalent_order_up_to`:
 - `outputs/benchmarks/confirmatory_ppo_ladder/postfix_ppo_smoke_kit_equiv/`
 
 Local full confirmatory static has completed. Local full confirmatory PPO is
-running in tmux session `scres_ppo_postfix_230801`, output directory:
+also complete, output directory:
 
 - `outputs/benchmarks/confirmatory_ppo_ladder/postfix_confirmatory_ppo_full_20260615T230801Z/`
 
-Last observed local PPO progress: `1000/4800` evaluations completed. It has
-loaded three 500k PPO best-shot models and is still running; do not interpret
-its partial CSV as a final PPO result until `CONFIRMATORY_PPO_LADDER.md` and
-`exit_code.txt` are present.
+It wrote `4800` scenario rows plus header and `exit_code.txt` is `0`.
 
 These are readiness checks, not final scientific results. The serious rerun
 order is:
 
 1. finish/download/post-process the full Kaggle static thesis-horizon panel;
-2. rerun confirmatory static under the repaired raw-material mode;
-3. only then evaluate PPO against the repaired static baseline, without treating
-   pre-fix trained PPO as evidence of post-fix learning unless clearly labeled.
+2. download/post-process the Kaggle confirmatory static rerun;
+3. download/post-process the Kaggle confirmatory PPO rerun;
+4. treat the completed local static and PPO reruns above as current local
+   evidence, while labeling the loaded PPO models as pretrained pre-existing
+   artifacts evaluated under the repaired contract.
 
 ## Verification Run
 
