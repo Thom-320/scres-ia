@@ -26,6 +26,7 @@ moderation before it can be used for final Garrido comparisons.
 | Table 6.1 BOM semantics | Implemented as explicit mode | `supply_chain/supply_chain.py` scales raw targets by `NUM_RAW_MATERIALS` and consumes `_raw_units_per_ration`; `tests/test_thesis_faithful_lane.py::test_bom_total_units_mode_scales_raw_buffer_targets_only` | One ration is represented as a kit-equivalent draw over 12 raw-material components. |
 | Op1-Op13 DES backbone, Table 6.4 demand, and Figure 6.2 downstream ranges | Passed locally | `outputs/benchmarks/thesis_operations_table/current_codex/THESIS_OPERATIONS_BACKBONE.md`; `tests/test_thesis_faithful_lane.py::test_thesis_operations_table_reporter_writes_match_artifacts` | All 85 checked backbone rows match the extracted thesis constants: operation PT/Q/ROP/risks/units, demand process, downstream Q ranges, and core time constants. |
 | Cf1-Cf90 thesis design matrix | Passed locally | `outputs/benchmarks/thesis_design_matrix/current_codex/THESIS_DESIGN_MATRIX.md`; `tests/test_thesis_faithful_lane.py::test_thesis_design_matrix_reporter_writes_match_artifacts` | All 90 configurations match the expected family, source-Cf mapping, risk overrides, inventory period, shift level, initial buffers, and thesis horizon. |
+| Table 6.25 SDM schema and Eq. 5.5 ReT cases | Passed locally | `outputs/benchmarks/thesis_ret_schema/current_codex/THESIS_RET_SCHEMA.md`; `tests/test_thesis_faithful_lane.py::test_thesis_ret_schema_reporter_writes_match_artifacts` | All 12 SDM columns, thesis ReT weights, and five canonical Eq. 5.5 cases match the implemented order-level ReT module. |
 | Table 6.16 inventory buffers | Passed locally | `outputs/benchmarks/thesis_decision_tables/current_codex/THESIS_DECISION_TABLES.md`; `tests/test_thesis_faithful_lane.py::test_thesis_decision_tables_reporter_writes_match_artifacts` | All 15 Op3/Op5/Op9 buffer values match the extracted thesis table. |
 | Table 6.20 capacity by shifts | Passed locally | `outputs/benchmarks/thesis_decision_tables/current_codex/THESIS_DECISION_TABLES.md`; `tests/test_thesis_faithful_lane.py::test_thesis_decision_tables_reporter_writes_match_artifacts` | All 24 capacity/ROP/batch-size fields for S1/S2/S3 match the extracted thesis table. |
 | Table 6.12 risk distributions | Passed locally | `outputs/benchmarks/thesis_risk_tables/current_codex/THESIS_RISK_TABLES.md`; `tests/test_thesis_faithful_lane.py::test_thesis_risk_tables_reporter_writes_match_artifacts` | Current and increased risk distributions for R11-R14, R21-R24, and R3 match the extracted thesis table. |
@@ -80,6 +81,12 @@ To regenerate the design-matrix artifact:
 
 ```bash
 python scripts/report_thesis_design_matrix.py --label current_codex
+```
+
+To regenerate the SDM/ReT schema artifact:
+
+```bash
+python scripts/report_thesis_ret_schema.py --label current_codex
 ```
 
 When either Kaggle kernel finishes:

@@ -429,6 +429,36 @@ def test_thesis_design_matrix_reporter_writes_match_artifacts(tmp_path) -> None:
     assert (run_dir / "thesis_design_matrix.csv").exists()
 
 
+def test_thesis_ret_schema_reporter_writes_match_artifacts(tmp_path) -> None:
+    subprocess.run(
+        [
+            sys.executable,
+            "scripts/report_thesis_ret_schema.py",
+            "--label",
+            "pytest_ret_schema",
+            "--output-root",
+            str(tmp_path),
+        ],
+        check=True,
+    )
+    run_dir = tmp_path / "pytest_ret_schema"
+    payload = json.loads(
+        (run_dir / "thesis_ret_schema.json").read_text(encoding="utf-8")
+    )
+
+    assert payload["status"] == "PASS"
+    assert len(payload["rows"]) == 23
+    assert {row["section"] for row in payload["rows"]} == {
+        "ret_cases",
+        "ret_weights",
+        "sdm_schema",
+    }
+    assert sum(row["section"] == "sdm_schema" for row in payload["rows"]) == 12
+    assert sum(row["section"] == "ret_cases" for row in payload["rows"]) == 5
+    assert (run_dir / "THESIS_RET_SCHEMA.md").exists()
+    assert (run_dir / "thesis_ret_schema.csv").exists()
+
+
 def test_thesis_aligned_training_env_is_trainable_but_not_1to1() -> None:
     spec = get_thesis_aligned_training_env_spec()
     env = make_thesis_aligned_training_env(max_steps=1)
