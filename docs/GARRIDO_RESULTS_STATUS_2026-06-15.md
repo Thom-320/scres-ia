@@ -51,6 +51,41 @@ Current local post-fix gates are usable:
 The post-processor was rerun against these directories and rewrote
 `FIDELITY_GATE_ANALYSIS.md` / `fidelity_gate_analysis.json`.
 
+The local full static panel equivalent to the long Kaggle fidelity panel is:
+
+- `outputs/benchmarks/garrido_static_fidelity_stress/bom_order_up_to_full_cf31_90_260w_3reps_codex/`
+
+Contract:
+
+- panel `Cf31-90`
+- profiles `thesis_pattern,current,increased,severe,severe_extended`
+- `3` replications
+- `260` weekly steps
+- `policy_set=minimal`
+- `4500` local episode rows plus header
+- raw-material mode recorded as internal canonical
+  `bom_total_units_order_up_to` with multiplier `2.0`
+
+Local full static H1 risk degradation passes:
+
+| family | profile path | fill | ReT | disruption hours |
+|---|---|---|---|---|
+| capacity | current -> increased -> severe -> severe_extended | 0.9843 -> 0.9064 -> 0.7991 -> 0.7048 | 0.7947 -> 0.6321 -> 0.5601 -> 0.5401 | 3808.1 -> 14771.2 -> 27644.4 -> 32339.0 |
+| inventory | current -> increased -> severe -> severe_extended | 1.0000 -> 0.9371 -> 0.8379 -> 0.7496 | 0.9796 -> 0.7838 -> 0.7198 -> 0.6929 | 3999.9 -> 14397.6 -> 27897.1 -> 32037.8 |
+
+Local full static H2/H3 direction checks are positive across all five profiles
+and both families. Thesis-pattern means:
+
+| family | H2 `I672-I0` fill | H2 `I672-I0` ReT | H3 `S3-S1` fill | H3 `S3-S1` ReT |
+|---|---:|---:|---:|---:|
+| inventory | +0.0774 | +0.3540 | +0.0660 | +0.2710 |
+| capacity | +0.0739 | +0.3432 | +0.0656 | +0.2707 |
+
+Interpretation: locally, the repaired static panel supports the basic mechanism:
+more severe risk profiles degrade matched-DOE performance, while simple
+inventory and capacity interventions improve fill/ReT directionally. This does
+not rescue the older pre-fix PPO or per-node headline claims.
+
 ### Post-Fix Confirmatory Static Local Rerun
 
 Completed locally with exit code `0`:
