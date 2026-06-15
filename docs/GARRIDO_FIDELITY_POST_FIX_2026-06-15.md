@@ -3,6 +3,8 @@
 This note records the first post-fix evidence after adding the explicit raw
 material flow modes. It supersedes the pre-fix interpretation of L1b/unified
 decision-ladder nulls, but it does not replace a thesis-horizon replication.
+For the current gate-by-gate replication matrix, see
+`docs/GARRIDO_REPLICATION_MATRIX_2026-06-15.md`.
 
 ## Scope
 
