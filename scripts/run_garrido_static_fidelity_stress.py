@@ -49,7 +49,7 @@ RISK_PROFILES = (
     "severe_extended",
     "severe_training",
 )
-POLICY_SETS = ("minimal", "thesis_static", "with_crossed")
+POLICY_SETS = ("matched_only", "minimal", "thesis_static", "with_crossed")
 
 ROW_FIELDS = [
     "profile",
@@ -121,6 +121,8 @@ def policy_candidates(policy_set: str) -> list[dict[str, Any]]:
             "action": "matched",
         }
     ]
+    if policy_set == "matched_only":
+        return policies
 
     if policy_set in ("minimal", "thesis_static", "with_crossed"):
         for period in [None, *THESIS_INVENTORY_PERIODS]:

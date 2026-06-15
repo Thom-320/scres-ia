@@ -161,3 +161,40 @@ python scripts/run_garrido_static_fidelity_stress.py \
 ```
 
 If this is too slow locally, run it on Kaggle before resuming PPO/RL claims.
+
+### H1 Matched-Only Thesis-Horizon Gate
+
+For a faster risk-degradation check, the runner now supports
+`--policy-set matched_only`. This evaluates only
+`garrido_matched_DOE_baseline`, which is enough to test the thesis H1 direction
+before evaluating the full static policy set.
+
+Local command:
+
+```bash
+python scripts/run_garrido_static_fidelity_stress.py \
+  --label bom_order_up_to_h1_matched_only_cf31_90_thesis_horizon_1rep_codex \
+  --output-root outputs/benchmarks/garrido_static_fidelity_stress \
+  --panel-cfis 31-90 \
+  --profiles thesis_pattern,current,increased,severe,severe_extended \
+  --policy-set matched_only \
+  --replications 1 \
+  --horizon-mode thesis \
+  --reward-mode ReT_thesis \
+  --raw-material-flow-mode kit_equivalent_order_up_to \
+  --raw-material-order-up-to-multiplier 2.0 \
+  --progress-every 50
+```
+
+Output:
+
+- `outputs/benchmarks/garrido_static_fidelity_stress/bom_order_up_to_h1_matched_only_cf31_90_thesis_horizon_1rep_codex/GARRIDO_STATIC_FIDELITY_STRESS.md`
+
+Result: H1 passes in both families under thesis horizons. From `current` to
+`severe_extended`, fill and ReT decline monotonically while disruption hours
+increase monotonically.
+
+| family | current fill | increased fill | severe fill | severe_ext fill | current ReT | severe_ext ReT | current disr h | severe_ext disr h |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| inventory | 1.0000 | 0.9379 | 0.8389 | 0.7502 | 0.9895 | 0.6998 | 8373.0 | 60963.2 |
+| capacity | 0.9867 | 0.9164 | 0.8049 | 0.7083 | 0.8574 | 0.5686 | 8179.8 | 62349.5 |
