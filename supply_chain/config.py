@@ -45,6 +45,49 @@ RATIONS_PER_BATCH = 5_000  # Batch size from Op7 → Op8
 BACKORDER_QUEUE_CAP = 60  # Max pending delayed orders (thesis Section 6.5.4)
 RATIONS_PER_SHIFT = int(ASSEMBLY_RATE * HOURS_PER_SHIFT)  # 2,564
 
+# Table 6.1: raw materials required for one "Cold weather combat ration #1".
+# The model aggregates rm1..rm12 into raw-material containers; this table keeps
+# the one-kit = one-of-each-rm thesis semantics explicit.
+RAW_MATERIAL_COMPONENTS = [
+    {"id": "rm1", "item": "meat pastry", "quantity": "1 portion", "weight_gr": 150},
+    {
+        "id": "rm2",
+        "item": "chocolate with cheese",
+        "quantity": "1 bar",
+        "weight_gr": 25,
+    },
+    {"id": "rm3", "item": "wheat bread", "quantity": "1 piece", "weight_gr": 100},
+    {
+        "id": "rm4",
+        "item": "chickpeas soup",
+        "quantity": "1 portion",
+        "weight_gr": 180,
+    },
+    {
+        "id": "rm5",
+        "item": "hydrating drink",
+        "quantity": "1 sachet",
+        "weight_gr": 36,
+    },
+    {"id": "rm6", "item": "corn bread", "quantity": "1 piece", "weight_gr": 100},
+    {"id": "rm7", "item": "meat goulash", "quantity": "1 portion", "weight_gr": 180},
+    {"id": "rm8", "item": "fruit bread", "quantity": "1 piece", "weight_gr": 100},
+    {"id": "rm9", "item": "sugar cane", "quantity": "1 bar", "weight_gr": 125},
+    {
+        "id": "rm10",
+        "item": "condensed milk",
+        "quantity": "1 can",
+        "weight_gr": 100,
+    },
+    {
+        "id": "rm11",
+        "item": "peanuts with sesame",
+        "quantity": "1 bag",
+        "weight_gr": 100,
+    },
+    {"id": "rm12", "item": "mixed fruit", "quantity": "1 bag", "weight_gr": 50},
+]
+
 # Lead time: time from Op1 to Op13 under deterministic conditions (no risks).
 # Sum of processing times Op1–Op12 ≈ 672 + 24×9 + 0 + 0.00312×3×5000 ≈ ~935 hrs
 # But thesis uses LT = 48 hours for the last-mile (Op9→Op13) delivery promise.
@@ -97,6 +140,7 @@ RAW_MATERIAL_FLOW_MODE_ALIASES = {
 def canonical_raw_material_flow_mode(mode: str) -> str:
     """Return the canonical raw-material flow mode name."""
     return RAW_MATERIAL_FLOW_MODE_ALIASES.get(mode, mode)
+
 
 # =============================================================================
 # OPERATION DEFINITIONS — Cf0 Baseline (S=1, It,1=0)

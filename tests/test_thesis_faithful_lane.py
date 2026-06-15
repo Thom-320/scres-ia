@@ -13,6 +13,7 @@ from supply_chain.config import (
     HOURS_PER_YEAR_THESIS,
     R14_DEFECT_MODE_OPTIONS,
     RAW_MATERIAL_FLOW_MODE_OPTIONS,
+    RAW_MATERIAL_COMPONENTS,
     SIMULATION_HORIZON,
     THESIS_DOWNSTREAM_Q_RANGES,
     THESIS_FAITHFUL_PROTOCOL,
@@ -58,6 +59,9 @@ def test_extracted_thesis_constants_match_lane_contract() -> None:
     }
     assert THESIS_DOWNSTREAM_Q_RANGES["figure_6_2"]["op9"] == (2400, 2600)
     assert THESIS_DOWNSTREAM_Q_RANGES["table_6_20"]["op9"] == (2000, 2500)
+    assert len(RAW_MATERIAL_COMPONENTS) == 12
+    assert RAW_MATERIAL_COMPONENTS[0]["id"] == "rm1"
+    assert RAW_MATERIAL_COMPONENTS[-1]["id"] == "rm12"
 
 
 def test_warmup_can_be_marked_at_op9_arrival_instead_of_production() -> None:
@@ -457,6 +461,31 @@ def test_thesis_ret_schema_reporter_writes_match_artifacts(tmp_path) -> None:
     assert sum(row["section"] == "ret_cases" for row in payload["rows"]) == 5
     assert (run_dir / "THESIS_RET_SCHEMA.md").exists()
     assert (run_dir / "thesis_ret_schema.csv").exists()
+
+
+def test_thesis_bom_semantics_reporter_writes_match_artifacts(tmp_path) -> None:
+    subprocess.run(
+        [
+            sys.executable,
+            "scripts/report_thesis_bom_semantics.py",
+            "--label",
+            "pytest_bom_semantics",
+            "--output-root",
+            str(tmp_path),
+        ],
+        check=True,
+    )
+    run_dir = tmp_path / "pytest_bom_semantics"
+    payload = json.loads(
+        (run_dir / "thesis_bom_semantics.json").read_text(encoding="utf-8")
+    )
+
+    assert payload["status"] == "PASS"
+    assert len(payload["rows"]) == 16
+    assert sum(row["section"] == "table_6_1_component" for row in payload["rows"]) == 12
+    assert sum(row["section"] == "flow_semantics" for row in payload["rows"]) == 4
+    assert (run_dir / "THESIS_BOM_SEMANTICS.md").exists()
+    assert (run_dir / "thesis_bom_semantics.csv").exists()
 
 
 def test_thesis_aligned_training_env_is_trainable_but_not_1to1() -> None:

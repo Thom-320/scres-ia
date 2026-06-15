@@ -23,7 +23,7 @@ moderation before it can be used for final Garrido comparisons.
 
 | Thesis item | Current status | Evidence | Interpretation |
 |---|---|---|---|
-| Table 6.1 BOM semantics | Implemented as explicit mode | `supply_chain/supply_chain.py` scales raw targets by `NUM_RAW_MATERIALS` and consumes `_raw_units_per_ration`; `tests/test_thesis_faithful_lane.py::test_bom_total_units_mode_scales_raw_buffer_targets_only` | One ration is represented as a kit-equivalent draw over 12 raw-material components. |
+| Table 6.1 BOM semantics | Passed locally | `outputs/benchmarks/thesis_bom_semantics/current_codex/THESIS_BOM_SEMANTICS.md`; `tests/test_thesis_faithful_lane.py::test_thesis_bom_semantics_reporter_writes_match_artifacts`; `tests/test_thesis_faithful_lane.py::test_bom_total_units_mode_scales_raw_buffer_targets_only` | All 12 raw-material components match Table 6.1, and the repaired mode consumes 12 aggregate raw-material units per ration while legacy remains available. |
 | Op1-Op13 DES backbone, Table 6.4 demand, and Figure 6.2 downstream ranges | Passed locally | `outputs/benchmarks/thesis_operations_table/current_codex/THESIS_OPERATIONS_BACKBONE.md`; `tests/test_thesis_faithful_lane.py::test_thesis_operations_table_reporter_writes_match_artifacts` | All 85 checked backbone rows match the extracted thesis constants: operation PT/Q/ROP/risks/units, demand process, downstream Q ranges, and core time constants. |
 | Cf1-Cf90 thesis design matrix | Passed locally | `outputs/benchmarks/thesis_design_matrix/current_codex/THESIS_DESIGN_MATRIX.md`; `tests/test_thesis_faithful_lane.py::test_thesis_design_matrix_reporter_writes_match_artifacts` | All 90 configurations match the expected family, source-Cf mapping, risk overrides, inventory period, shift level, initial buffers, and thesis horizon. |
 | Table 6.25 SDM schema and Eq. 5.5 ReT cases | Passed locally | `outputs/benchmarks/thesis_ret_schema/current_codex/THESIS_RET_SCHEMA.md`; `tests/test_thesis_faithful_lane.py::test_thesis_ret_schema_reporter_writes_match_artifacts` | All 12 SDM columns, thesis ReT weights, and five canonical Eq. 5.5 cases match the implemented order-level ReT module. |
@@ -57,6 +57,12 @@ To regenerate the deterministic Table 6.10 artifact:
 python scripts/report_table_6_10_reproduction.py \
   --label kit_equivalent_order_up_to_codex \
   --raw-material-flow-mode kit_equivalent_order_up_to
+```
+
+To regenerate the BOM semantics artifact:
+
+```bash
+python scripts/report_thesis_bom_semantics.py --label current_codex
 ```
 
 To regenerate the decision-table constants artifact:
