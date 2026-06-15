@@ -67,7 +67,9 @@ def discover_ppo_runs(ppo_root: Path) -> list[dict[str, Any]]:
         model_zip = run_dir / "ppo_mlp_thesis_decision.zip"
         model_dir = run_dir / "ppo_mlp_thesis_decision"
         if not model_zip.exists() and model_dir.is_dir():
-            with zipfile.ZipFile(model_zip, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+            with zipfile.ZipFile(
+                model_zip, "w", compression=zipfile.ZIP_DEFLATED
+            ) as zf:
                 for file_path in model_dir.rglob("*"):
                     if file_path.is_file():
                         zf.write(file_path, file_path.relative_to(model_dir))
@@ -196,9 +198,21 @@ def paired_contrasts(
     for ppo_name in ppo_names:
         specs.extend(
             [
-                (f"{ppo_name}_minus_pure_inventory", ppo_name, "pure_inventory_I672_S1"),
-                (f"{ppo_name}_minus_crossed_uniform", ppo_name, "crossed_uniform_I504_S3"),
-                (f"{ppo_name}_minus_matched_DOE", ppo_name, "garrido_matched_DOE_baseline"),
+                (
+                    f"{ppo_name}_minus_pure_inventory",
+                    ppo_name,
+                    "pure_inventory_I672_S1",
+                ),
+                (
+                    f"{ppo_name}_minus_crossed_uniform",
+                    ppo_name,
+                    "crossed_uniform_I504_S3",
+                ),
+                (
+                    f"{ppo_name}_minus_matched_DOE",
+                    ppo_name,
+                    "garrido_matched_DOE_baseline",
+                ),
             ]
         )
     rng = np.random.default_rng(seed)
@@ -241,7 +255,9 @@ def paired_contrasts(
     return pd.DataFrame(rows)
 
 
-def write_outputs(out_dir: Path, args: argparse.Namespace, ppo_names: list[str]) -> None:
+def write_outputs(
+    out_dir: Path, args: argparse.Namespace, ppo_names: list[str]
+) -> None:
     df = pd.read_csv(out_dir / "confirmatory_ppo_per_scenario.csv")
     summary = (
         df.groupby(["policy", "kind", "space"])
@@ -323,6 +339,14 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--observation-version", default="v5")
     parser.add_argument("--observation-mode", default="env_sdm_history_reward")
     parser.add_argument("--stochastic-pt", action="store_true")
+    parser.add_argument(
+        "--raw-material-flow-mode",
+        default="legacy_validated",
+        help="Raw-material flow semantics for post-fix thesis-inventory reruns.",
+    )
+    parser.add_argument(
+        "--raw-material-order-up-to-multiplier", type=float, default=2.0
+    )
     parser.add_argument("--bootstrap-draws", type=int, default=5000)
     parser.add_argument("--bootstrap-seed", type=int, default=123)
     return parser
@@ -404,7 +428,9 @@ def main() -> int:
                 if done % max(1, len(static_names) + len(ppo_runs)) == 0:
                     stream.flush()
                 if done % 200 == 0:
-                    print(f"progress {done}/{total} ({100*done/total:.1f}%)", flush=True)
+                    print(
+                        f"progress {done}/{total} ({100*done/total:.1f}%)", flush=True
+                    )
 
     write_outputs(out_dir, args, ppo_names)
     print((out_dir / "CONFIRMATORY_PPO_LADDER.md").read_text(), flush=True)

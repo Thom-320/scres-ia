@@ -8,9 +8,8 @@ import shutil
 import subprocess
 import sys
 
-
 REPO_URL = "https://github.com/Thom-320/scres-ia.git"
-TARGET_COMMIT = "2ccdbf3df2bbfea2a8bf96b5faf6e476ca2db785"
+TARGET_COMMIT = "2ad6a62da11007fb0d7bf5dc91fbe14ba53627cc"
 REPO_DIR = Path("/kaggle/working/scres-ia")
 OUTPUT_ROOT = Path("/kaggle/working/scresia_garrido_fidelity_postfix_outputs")
 
@@ -66,7 +65,10 @@ def main() -> None:
     run(["git", "clone", "--depth", "1", REPO_URL, str(REPO_DIR)])
     run(["git", "fetch", "--depth", "1", "origin", TARGET_COMMIT], cwd=REPO_DIR)
     run(["git", "checkout", TARGET_COMMIT], cwd=REPO_DIR)
-    run([sys.executable, "-m", "pip", "install", "-q", "-r", "requirements.txt"], cwd=REPO_DIR)
+    run(
+        [sys.executable, "-m", "pip", "install", "-q", "-r", "requirements.txt"],
+        cwd=REPO_DIR,
+    )
 
     OUTPUT_ROOT.mkdir(parents=True, exist_ok=True)
     label = f"kaggle_{profile}_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}"
@@ -116,6 +118,13 @@ def main() -> None:
     report_path = run_dir / "GARRIDO_STATIC_FIDELITY_STRESS.md"
     if report_path.exists():
         print(report_path.read_text(encoding="utf-8"), flush=True)
+
+    export_dir = REPO_DIR / "kaggle_outputs" / label
+    if export_dir.exists():
+        shutil.rmtree(export_dir)
+    shutil.copytree(run_dir, export_dir)
+    shutil.copy2(OUTPUT_ROOT / "manifest.json", export_dir / "kernel_manifest.json")
+    print("exported:", export_dir, flush=True)
     print("outputs:", OUTPUT_ROOT, flush=True)
 
 

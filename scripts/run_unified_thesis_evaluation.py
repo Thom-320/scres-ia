@@ -89,6 +89,12 @@ def base_kwargs(args: argparse.Namespace) -> dict[str, Any]:
         "max_steps": args.max_steps,
         "stochastic_pt": args.stochastic_pt,
         "learn_initial_decision": False,
+        "raw_material_flow_mode": getattr(
+            args, "raw_material_flow_mode", "legacy_validated"
+        ),
+        "raw_material_order_up_to_multiplier": getattr(
+            args, "raw_material_order_up_to_multiplier", 2.0
+        ),
     }
 
 
@@ -257,6 +263,12 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--observation-version", default="v5")
     p.add_argument("--observation-mode", default="env_sdm_history_reward")
     p.add_argument("--stochastic-pt", action="store_true")
+    p.add_argument(
+        "--raw-material-flow-mode",
+        default="legacy_validated",
+        help="Raw-material flow semantics for post-fix thesis-inventory reruns.",
+    )
+    p.add_argument("--raw-material-order-up-to-multiplier", type=float, default=2.0)
     p.add_argument(
         "--l1b-screening-csv",
         default=None,

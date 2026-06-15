@@ -322,6 +322,14 @@ def main() -> int:
     parser.add_argument("--observation-version", default="v5")
     parser.add_argument("--observation-mode", default="env_sdm_history_reward")
     parser.add_argument("--stochastic-pt", action="store_true", default=True)
+    parser.add_argument(
+        "--raw-material-flow-mode",
+        default="legacy_validated",
+        help="Raw-material flow semantics for post-fix thesis-inventory reruns.",
+    )
+    parser.add_argument(
+        "--raw-material-order-up-to-multiplier", type=float, default=2.0
+    )
     parser.add_argument("--bootstrap-draws", type=int, default=10000)
     args = parser.parse_args()
 
