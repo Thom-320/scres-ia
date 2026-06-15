@@ -25,6 +25,7 @@ moderation before it can be used for final Garrido comparisons.
 |---|---|---|---|
 | Table 6.1 BOM semantics | Implemented as explicit mode | `supply_chain/supply_chain.py` scales raw targets by `NUM_RAW_MATERIALS` and consumes `_raw_units_per_ration`; `tests/test_thesis_faithful_lane.py::test_bom_total_units_mode_scales_raw_buffer_targets_only` | One ration is represented as a kit-equivalent draw over 12 raw-material components. |
 | Table 6.10 deterministic production | Passed locally | `tests/test_thesis_faithful_lane.py::test_bom_order_up_to_mode_passes_table_6_10_production_gate`; alias test also passes | The repair does not break the 738,432 rations/year deterministic production gate. |
+| Table 6.10 year-by-year comparison | Passed locally | `outputs/benchmarks/table_6_10_reproduction/kit_equivalent_order_up_to_codex/TABLE_6_10_REPRODUCTION.md`; `tests/test_thesis_faithful_lane.py::test_table_6_10_reporter_writes_year_by_year_artifacts` | Python Cf0 produces 738,432 rations/year; RMSE vs thesis ECS is 61,013.6, below the thesis reported RMSE 87,918. |
 | Historical reproducibility | Preserved | `tests/test_thesis_faithful_lane.py::test_legacy_validated_mode_preserves_raw_buffer_targets` | The default legacy path remains available for pre-fix artifact comparison. |
 | H1 risk degradation | Passed locally under thesis horizons | `outputs/benchmarks/garrido_static_fidelity_stress/bom_order_up_to_h1_matched_only_cf31_90_thesis_horizon_1rep_codex/GARRIDO_STATIC_FIDELITY_STRESS.md` | Matched DOE fill/ReT decline from `current` to `severe_extended`, while disruption hours increase. |
 | H2 inventory moderation | Passed locally under thesis horizons | `outputs/benchmarks/garrido_static_fidelity_stress/bom_order_up_to_h2_inventory_cf31_60_thesis_horizon_3reps_codex/GARRIDO_STATIC_FIDELITY_STRESS.md` | `I672 > I0` in 30/30 scenarios by ReT and 25/30 by fill; mean ReT delta `+0.3029`. |
@@ -43,6 +44,14 @@ moderation before it can be used for final Garrido comparisons.
   gates; the action semantics changed in the inventory lever.
 
 ## Next Gate
+
+To regenerate the deterministic Table 6.10 artifact:
+
+```bash
+python scripts/report_table_6_10_reproduction.py \
+  --label kit_equivalent_order_up_to_codex \
+  --raw-material-flow-mode kit_equivalent_order_up_to
+```
 
 When either Kaggle kernel finishes:
 

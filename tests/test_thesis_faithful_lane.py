@@ -293,6 +293,31 @@ def test_thesis_faithful_launcher_writes_auditable_artifacts(tmp_path) -> None:
     assert (run_dir / "risk_events_seed_42.csv").exists()
 
 
+def test_table_6_10_reporter_writes_year_by_year_artifacts(tmp_path) -> None:
+    subprocess.run(
+        [
+            sys.executable,
+            "scripts/report_table_6_10_reproduction.py",
+            "--label",
+            "pytest_table_6_10",
+            "--output-root",
+            str(tmp_path),
+            "--raw-material-flow-mode",
+            "kit_equivalent_order_up_to",
+        ],
+        check=True,
+    )
+    run_dir = tmp_path / "pytest_table_6_10"
+    summary = json.loads(
+        (run_dir / "table_6_10_comparison.json").read_text(encoding="utf-8")
+    )["summary"]
+
+    assert (run_dir / "TABLE_6_10_REPRODUCTION.md").exists()
+    assert (run_dir / "table_6_10_comparison.csv").exists()
+    assert summary["avg_python_production"] == pytest.approx(738_432, rel=0.02)
+    assert summary["rmse_vs_thesis_ecs"] <= VALIDATION_TABLE_6_10["RMSE"]
+
+
 def test_thesis_aligned_training_env_is_trainable_but_not_1to1() -> None:
     spec = get_thesis_aligned_training_env_spec()
     env = make_thesis_aligned_training_env(max_steps=1)
