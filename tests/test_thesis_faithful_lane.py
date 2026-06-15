@@ -396,6 +396,39 @@ def test_thesis_operations_table_reporter_writes_match_artifacts(tmp_path) -> No
     assert (run_dir / "thesis_operations_table.csv").exists()
 
 
+def test_thesis_design_matrix_reporter_writes_match_artifacts(tmp_path) -> None:
+    subprocess.run(
+        [
+            sys.executable,
+            "scripts/report_thesis_design_matrix.py",
+            "--label",
+            "pytest_design_matrix",
+            "--output-root",
+            str(tmp_path),
+        ],
+        check=True,
+    )
+    run_dir = tmp_path / "pytest_design_matrix"
+    payload = json.loads(
+        (run_dir / "thesis_design_matrix.json").read_text(encoding="utf-8")
+    )
+    summary = payload["summary"]
+
+    assert summary["status"] == "PASS"
+    assert summary["row_count"] == 90
+    assert summary["mismatch_count"] == 0
+    assert summary["family_counts"] == {
+        "capacity": 30,
+        "inventory": 30,
+        "risk_r1": 10,
+        "risk_r2": 10,
+        "risk_r3": 10,
+    }
+    assert summary["horizon_year_counts"] == {"10": 60, "20": 30}
+    assert (run_dir / "THESIS_DESIGN_MATRIX.md").exists()
+    assert (run_dir / "thesis_design_matrix.csv").exists()
+
+
 def test_thesis_aligned_training_env_is_trainable_but_not_1to1() -> None:
     spec = get_thesis_aligned_training_env_spec()
     env = make_thesis_aligned_training_env(max_steps=1)
