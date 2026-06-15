@@ -343,6 +343,30 @@ def test_thesis_decision_tables_reporter_writes_match_artifacts(tmp_path) -> Non
     assert (run_dir / "thesis_decision_tables.csv").exists()
 
 
+def test_thesis_risk_tables_reporter_writes_match_artifacts(tmp_path) -> None:
+    subprocess.run(
+        [
+            sys.executable,
+            "scripts/report_thesis_risk_tables.py",
+            "--label",
+            "pytest_risk_tables",
+            "--output-root",
+            str(tmp_path),
+        ],
+        check=True,
+    )
+    run_dir = tmp_path / "pytest_risk_tables"
+    payload = json.loads(
+        (run_dir / "thesis_risk_tables.json").read_text(encoding="utf-8")
+    )
+
+    assert payload["status"] == "PASS"
+    assert len(payload["rows"]) == 18
+    assert {row["level"] for row in payload["rows"]} == {"current", "increased"}
+    assert (run_dir / "THESIS_RISK_TABLES.md").exists()
+    assert (run_dir / "thesis_risk_tables.csv").exists()
+
+
 def test_thesis_aligned_training_env_is_trainable_but_not_1to1() -> None:
     spec = get_thesis_aligned_training_env_spec()
     env = make_thesis_aligned_training_env(max_steps=1)
