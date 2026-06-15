@@ -57,6 +57,7 @@ def test_parser_exposes_all_reward_modes() -> None:
 
     assert "ReT_seq_v1" in args.reward_modes
     assert "ReT_thesis" in args.reward_modes
+    assert "ReT_ladder_v1" in args.reward_modes
     assert "ReT_garrido2024" in args.reward_modes
 
 

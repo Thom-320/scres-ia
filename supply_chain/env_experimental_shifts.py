@@ -23,6 +23,8 @@ Other reward modes (historical / auxiliary):
   - "ReT_garrido2024": Paper-faithful 5-variable Cobb-Douglas sigmoid index
     (Eq. 6) — recommended as the evaluation/audit index, not as the main PPO
     reward.
+  - "ReT_ladder_v1": Thesis-decision ladder training candidate.  It combines
+    service continuity, backlog recovery, and lightly gated efficiency costs.
   - "ReT_thesis": Piecewise step-level approximation of Eq. 5.5, retained for
     audit and thesis comparison.  NOT suitable as training objective (collapses
     to S1 due to cost-avoidance incentive dominating the service signal).
@@ -68,6 +70,7 @@ from gymnasium import spaces
 from .config import (
     CAPACITY_BY_SHIFTS,
     DEFAULT_YEAR_BASIS,
+    INVENTORY_BUFFERS,
     OPERATIONS,
     R14_DEFECT_MODE_OPTIONS,
     RET_CASE_THRESHOLDS,
@@ -93,6 +96,7 @@ REWARD_MODE_OPTIONS = (
     "ReT_garrido2024_raw",
     "ReT_garrido2024",
     "ReT_garrido2024_train",
+    "ReT_ladder_v1",
     "rt_v0",
     "control_v1",
     "control_v1_pbrs",
@@ -105,6 +109,18 @@ RET_SEQ_W_SC = 0.60  # service continuity weight
 RET_SEQ_W_BC = 0.25  # backlog containment weight
 RET_SEQ_W_AE = 0.15  # adaptive efficiency weight
 RET_SEQ_KAPPA = 0.20  # shift cost scaling
+
+# ReT_ladder_v1 defaults (thesis-decision ladder reward candidate)
+RET_LADDER_W_SC = 0.65  # step service continuity weight
+RET_LADDER_W_RC = 0.30  # backlog recovery-containment weight
+RET_LADDER_W_EF = 0.05  # gated efficiency extension weight
+RET_LADDER_CAP_KAPPA = 0.10
+RET_LADDER_INV_KAPPA = 0.05
+RET_LADDER_GATE_BETA = 12.0
+RET_LADDER_GATE_SC_THRESHOLD = 0.95
+RET_LADDER_GATE_RC_THRESHOLD = 0.70
+RET_LADDER_EXPECTED_8W_DEMAND = 120_000.0
+RET_LADDER_I1344_TOTAL = float(sum(INVENTORY_BUFFERS[1344].values()))
 
 # ReT_unified_v1 defaults (paper-facing service-first resilience)
 RET_UNIFIED_W_FR = 0.60
@@ -185,7 +201,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
 
     Parameters
     ----------
-    reward_mode : {"ReT_thesis", "ReT_corrected", "ReT_corrected_cost", "ReT_unified_v1", "ReT_seq_v1", "ReT_garrido2024_raw", "ReT_garrido2024", "rt_v0", "control_v1", "control_v1_pbrs"}
+    reward_mode : {"ReT_thesis", "ReT_corrected", "ReT_corrected_cost", "ReT_unified_v1", "ReT_seq_v1", "ReT_ladder_v1", "ReT_garrido2024_raw", "ReT_garrido2024", "rt_v0", "control_v1", "control_v1_pbrs"}
         Which reward formulation to use. ``ReT_corrected_cost`` is the
         research-facing alias for the cost-extended corrected thesis lane and
         maps internally to ``ReT_corrected``.
@@ -244,6 +260,17 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         ret_seq_w_bc: float = RET_SEQ_W_BC,
         ret_seq_w_ae: float = RET_SEQ_W_AE,
         ret_seq_kappa: float = RET_SEQ_KAPPA,
+        # --- ReT_ladder_v1 parameters ---
+        ret_ladder_w_sc: float = RET_LADDER_W_SC,
+        ret_ladder_w_rc: float = RET_LADDER_W_RC,
+        ret_ladder_w_ef: float = RET_LADDER_W_EF,
+        ret_ladder_cap_kappa: float = RET_LADDER_CAP_KAPPA,
+        ret_ladder_inv_kappa: float = RET_LADDER_INV_KAPPA,
+        ret_ladder_gate_beta: float = RET_LADDER_GATE_BETA,
+        ret_ladder_gate_sc_threshold: float = RET_LADDER_GATE_SC_THRESHOLD,
+        ret_ladder_gate_rc_threshold: float = RET_LADDER_GATE_RC_THRESHOLD,
+        ret_ladder_expected_8w_demand: float = RET_LADDER_EXPECTED_8W_DEMAND,
+        ret_ladder_i1344_total: float = RET_LADDER_I1344_TOTAL,
         # --- ReT_unified_v1 parameters ---
         ret_unified_calibration_path: str | None = None,
         ret_unified_theta_sc: float | None = None,
@@ -391,6 +418,18 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self.ret_seq_w_bc = float(ret_seq_w_bc)
         self.ret_seq_w_ae = float(ret_seq_w_ae)
         self.ret_seq_kappa = float(ret_seq_kappa)
+
+        # ReT_ladder_v1 params
+        self.ret_ladder_w_sc = float(ret_ladder_w_sc)
+        self.ret_ladder_w_rc = float(ret_ladder_w_rc)
+        self.ret_ladder_w_ef = float(ret_ladder_w_ef)
+        self.ret_ladder_cap_kappa = float(ret_ladder_cap_kappa)
+        self.ret_ladder_inv_kappa = float(ret_ladder_inv_kappa)
+        self.ret_ladder_gate_beta = float(ret_ladder_gate_beta)
+        self.ret_ladder_gate_sc_threshold = float(ret_ladder_gate_sc_threshold)
+        self.ret_ladder_gate_rc_threshold = float(ret_ladder_gate_rc_threshold)
+        self.ret_ladder_expected_8w_demand = float(ret_ladder_expected_8w_demand)
+        self.ret_ladder_i1344_total = float(ret_ladder_i1344_total)
 
         unified_calibration = self._load_ret_unified_calibration(
             ret_unified_calibration_path
@@ -1250,6 +1289,105 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         }
 
     # -----------------------------------------------------------------
+    # ReT_ladder_v1: thesis-decision ladder training candidate
+    # -----------------------------------------------------------------
+
+    def _strategic_inventory_target_total(self) -> float:
+        """Return active thesis-buffer target quantity, not incidental stock."""
+        sim = getattr(self, "sim", None)
+        if sim is None:
+            return 0.0
+        targets = getattr(sim, "inventory_buffer_targets", None)
+        if not isinstance(targets, dict):
+            return 0.0
+        return float(sum(max(0.0, float(value)) for value in targets.values()))
+
+    def _compute_ret_ladder_v1(
+        self, info: dict[str, Any], shifts: int
+    ) -> dict[str, float | dict[str, float] | str]:
+        """
+        Thesis-decision ladder reward for resilient PPO training.
+
+        This reward translates Garrido-Rios (2017) Eq. 5.4-5.5 into a dense
+        weekly training signal for the discrete thesis-decision action space:
+
+            R_t = SC_t^0.65 * RC_t^0.30 * EF_t^(0.05 * gate_t)
+
+        SC_t is the step fill-rate term.  RC_t is a backlog-recovery proxy
+        scaled by an eight-week demand window.  EF_t combines shift and
+        strategic-buffer efficiency, but the efficiency exponent is gated so
+        cost cannot dominate when service or recovery is poor.
+        """
+        eps = 1e-6
+        new_demanded = float(info.get("new_demanded", 0.0))
+        new_backorder_qty = float(info.get("new_backorder_qty", 0.0))
+        pending_backorder_qty = max(0.0, float(info.get("pending_backorder_qty", 0.0)))
+
+        sc_t = max(eps, 1.0 - new_backorder_qty / max(new_demanded, 1.0))
+        eight_week_multiplier = max(1.0, (8.0 * 168.0) / max(self.step_size, 1.0))
+        rolling_demand_8w = max(0.0, new_demanded * eight_week_multiplier)
+        d8_t = max(rolling_demand_8w, self.ret_ladder_expected_8w_demand, 1.0)
+        rc_t = max(eps, 1.0 / (1.0 + pending_backorder_qty / d8_t))
+
+        cap_ef_t = max(
+            eps, 1.0 - self.ret_ladder_cap_kappa * (float(shifts) - 1.0) / 2.0
+        )
+        strategic_inventory = self._strategic_inventory_target_total()
+        inv_scale = max(self.ret_ladder_i1344_total, 1.0)
+        inv_ef_t = max(
+            eps,
+            1.0 / (1.0 + self.ret_ladder_inv_kappa * strategic_inventory / inv_scale),
+        )
+        ef_t = float(np.sqrt(cap_ef_t * inv_ef_t))
+
+        gate_sc = self._sigmoid(
+            self.ret_ladder_gate_beta * (sc_t - self.ret_ladder_gate_sc_threshold)
+        )
+        gate_rc = self._sigmoid(
+            self.ret_ladder_gate_beta * (rc_t - self.ret_ladder_gate_rc_threshold)
+        )
+        gate_t = gate_sc * gate_rc
+        ef_exponent = self.ret_ladder_w_ef * gate_t
+        log_reward = float(
+            self.ret_ladder_w_sc * np.log(sc_t)
+            + self.ret_ladder_w_rc * np.log(rc_t)
+            + ef_exponent * np.log(ef_t)
+        )
+        reward_t = float(np.exp(log_reward))
+
+        return {
+            "reward_mode": "ReT_ladder_v1",
+            "ret_ladder_step": reward_t,
+            "ret_ladder_service_continuity": sc_t,
+            "ret_ladder_recovery_containment": rc_t,
+            "ret_ladder_cap_efficiency": cap_ef_t,
+            "ret_ladder_inventory_efficiency": inv_ef_t,
+            "ret_ladder_efficiency": ef_t,
+            "ret_ladder_gate": gate_t,
+            "ret_ladder_gate_sc": gate_sc,
+            "ret_ladder_gate_rc": gate_rc,
+            "ret_ladder_efficiency_exponent": ef_exponent,
+            "ret_ladder_rolling_demand_8w": rolling_demand_8w,
+            "ret_ladder_d8_demand": d8_t,
+            "ret_ladder_pending_backorder_qty": pending_backorder_qty,
+            "ret_ladder_strategic_inventory": strategic_inventory,
+            "ret_ladder_i1344_total": inv_scale,
+            "weights": {
+                "w_sc": self.ret_ladder_w_sc,
+                "w_rc": self.ret_ladder_w_rc,
+                "w_ef": self.ret_ladder_w_ef,
+            },
+            "params": {
+                "cap_kappa": self.ret_ladder_cap_kappa,
+                "inv_kappa": self.ret_ladder_inv_kappa,
+                "gate_beta": self.ret_ladder_gate_beta,
+                "gate_sc_threshold": self.ret_ladder_gate_sc_threshold,
+                "gate_rc_threshold": self.ret_ladder_gate_rc_threshold,
+                "expected_8w_demand": self.ret_ladder_expected_8w_demand,
+            },
+        }
+
+    # -----------------------------------------------------------------
     # ReT_cd: Cobb-Douglas Resilience (Garrido et al. 2024 methodology)
     # -----------------------------------------------------------------
 
@@ -1987,6 +2125,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         control_components: dict[str, float] | None = None
         ret_seq_components: dict[str, float] | None = None
         ret_unified_components: dict[str, Any] | None = None
+        ret_ladder_components: dict[str, Any] | None = None
         ret_cd_components: dict[str, float | str] | None = None
         ret_cd_4v_components: dict[str, float] | None = None
         ret_g24_components: dict[str, Any] | None = None
@@ -2018,6 +2157,13 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         elif self._canonical_reward_mode == "ReT_seq_v1":
             ret_seq_components = self._compute_ret_seq_v1(info, shifts)
             reward = float(ret_seq_components["ret_seq_step"])
+            corrected_ret_components = self._compute_ret_thesis_corrected_components(
+                info, self.step_size
+            )
+            ret_components = self._compute_ret_thesis_components(info, self.step_size)
+        elif self._canonical_reward_mode == "ReT_ladder_v1":
+            ret_ladder_components = self._compute_ret_ladder_v1(info, shifts)
+            reward = float(ret_ladder_components["ret_ladder_step"])
             corrected_ret_components = self._compute_ret_thesis_corrected_components(
                 info, self.step_size
             )
@@ -2131,6 +2277,8 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             ret_seq_components = self._compute_ret_seq_v1(info, shifts)
         if ret_unified_components is None:
             ret_unified_components = self._compute_ret_unified_v1(info, shifts)
+        if ret_ladder_components is None:
+            ret_ladder_components = self._compute_ret_ladder_v1(info, shifts)
         out_info["ret_seq_step"] = float(ret_seq_components["ret_seq_step"])
         out_info["ret_seq_components"] = ret_seq_components
         out_info["service_continuity_step"] = float(
@@ -2149,6 +2297,18 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         out_info["ret_unified_ce"] = float(ret_unified_components["ret_unified_ce"])
         out_info["ret_unified_gate"] = float(ret_unified_components["ret_unified_gate"])
         out_info["ret_unified_components"] = ret_unified_components
+        out_info["ret_ladder_step"] = float(ret_ladder_components["ret_ladder_step"])
+        out_info["ret_ladder_components"] = ret_ladder_components
+        out_info["ret_ladder_service_continuity"] = float(
+            ret_ladder_components["ret_ladder_service_continuity"]
+        )
+        out_info["ret_ladder_recovery_containment"] = float(
+            ret_ladder_components["ret_ladder_recovery_containment"]
+        )
+        out_info["ret_ladder_efficiency"] = float(
+            ret_ladder_components["ret_ladder_efficiency"]
+        )
+        out_info["ret_ladder_gate"] = float(ret_ladder_components["ret_ladder_gate"])
         out_info["ret_thesis_step"] = float(ret_components["ret_value"])
         out_info["ret_components"] = ret_components
         out_info["ret_thesis_corrected_step"] = float(
@@ -2229,6 +2389,16 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                 ret_seq_components["adaptive_efficiency"]
             )
             out_info["ret_seq_kappa"] = float(self.ret_seq_kappa)
+            out_info["ret_thesis_corrected_step"] = float(
+                corrected_ret_components["ret_value"]
+            )
+            out_info["ret_thesis_corrected"] = corrected_ret_components
+            out_info["ret_components"] = ret_components
+        elif self._canonical_reward_mode == "ReT_ladder_v1":
+            out_info["ret_ladder_step"] = float(
+                ret_ladder_components["ret_ladder_step"]
+            )
+            out_info["ret_ladder_components"] = ret_ladder_components
             out_info["ret_thesis_corrected_step"] = float(
                 corrected_ret_components["ret_value"]
             )

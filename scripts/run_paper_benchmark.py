@@ -100,6 +100,7 @@ def build_parser() -> argparse.ArgumentParser:
             "ReT_garrido2024_raw",
             "ReT_garrido2024",
             "ReT_garrido2024_train",
+            "ReT_ladder_v1",
             "ReT_cd_v1",
             "ReT_cd_sigmoid",
         ],

@@ -639,6 +639,7 @@ def build_parser() -> argparse.ArgumentParser:
             "ReT_garrido2024_raw",
             "ReT_garrido2024",
             "ReT_garrido2024_train",
+            "ReT_ladder_v1",
             "ReT_cd_v1",
             "ReT_cd_sigmoid",
         ],
@@ -755,6 +756,7 @@ def make_weight_combos(args: argparse.Namespace) -> list[dict[str, float]]:
         "ReT_garrido2024_raw",
         "ReT_garrido2024",
         "ReT_garrido2024_train",
+        "ReT_ladder_v1",
         "ReT_cd_v1",
         "ReT_cd_sigmoid",
     ):
@@ -907,6 +909,7 @@ def reward_family(reward_mode: str) -> str:
         "ReT_garrido2024_raw",
         "ReT_garrido2024",
         "ReT_garrido2024_train",
+        "ReT_ladder_v1",
         "ReT_cd_v1",
         "ReT_cd_sigmoid",
     ):

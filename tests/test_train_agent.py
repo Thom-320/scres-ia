@@ -84,6 +84,27 @@ def test_shift_env_ret_seq_v1_emits_operational_resilience_metadata() -> None:
     assert info["cumulative_backorder_qty_post_warmup"] >= 0.0
 
 
+def test_shift_env_ret_ladder_v1_emits_ladder_reward_metadata() -> None:
+    env = MFSCGymEnvShifts(
+        step_size_hours=24,
+        max_steps=2,
+        reward_mode="ReT_ladder_v1",
+        observation_version="v5",
+    )
+    env.reset(seed=42)
+    _, reward, _, _, info = env.step(np.zeros(6, dtype=np.float32))
+    assert isinstance(reward, float)
+    assert 0.0 < reward <= 1.0
+    assert info["reward_mode"] == "ReT_ladder_v1"
+    assert info["ret_ladder_step"] == pytest.approx(reward)
+    assert "ret_ladder_components" in info
+    assert info["ret_ladder_components"]["reward_mode"] == "ReT_ladder_v1"
+    assert info["ret_ladder_service_continuity"] > 0.0
+    assert info["ret_ladder_recovery_containment"] > 0.0
+    assert info["ret_ladder_efficiency"] > 0.0
+    assert "ret_seq_components" in info
+
+
 def test_shift_env_ret_garrido2024_raw_emits_paper_faithful_metadata() -> None:
     env = MFSCGymEnvShifts(
         step_size_hours=24,
@@ -325,6 +346,17 @@ def test_train_agent_accepts_ret_cd_sigmoid_on_shift_env() -> None:
     assert env.reward_mode == "ReT_cd_sigmoid"
 
 
+def test_train_agent_accepts_ret_ladder_v1_on_shift_env() -> None:
+    parser = build_parser()
+    args = parser.parse_args(
+        ["--env-variant", "shift_control", "--reward-mode", "ReT_ladder_v1"]
+    )
+    validate_args(parser, args)
+    env = build_env_instance(args)
+    assert isinstance(env, MFSCGymEnvShifts)
+    assert env.reward_mode == "ReT_ladder_v1"
+
+
 def test_train_agent_accepts_ret_garrido2024_variants_on_shift_env() -> None:
     parser = build_parser()
     for reward_mode in (
@@ -502,6 +534,113 @@ def test_ret_seq_v1_is_monotone_in_service_backlog_and_efficiency() -> None:
     assert good_service["ret_seq_step"] > bad_service["ret_seq_step"]
     assert good_service["ret_seq_step"] > bad_backlog["ret_seq_step"]
     assert good_service["ret_seq_step"] > inefficient["ret_seq_step"]
+
+
+def test_ret_ladder_v1_is_monotone_in_service_and_backlog() -> None:
+    env = MFSCGymEnvShifts(
+        step_size_hours=168,
+        max_steps=2,
+        reward_mode="ReT_ladder_v1",
+    )
+    env.reset(seed=42)
+
+    good_service = env._compute_ret_ladder_v1(
+        {
+            "new_demanded": 15_000.0,
+            "new_backorder_qty": 0.0,
+            "pending_backorder_qty": 20_000.0,
+        },
+        shifts=2,
+    )
+    bad_service = env._compute_ret_ladder_v1(
+        {
+            "new_demanded": 15_000.0,
+            "new_backorder_qty": 7_500.0,
+            "pending_backorder_qty": 20_000.0,
+        },
+        shifts=2,
+    )
+    bad_backlog = env._compute_ret_ladder_v1(
+        {
+            "new_demanded": 15_000.0,
+            "new_backorder_qty": 0.0,
+            "pending_backorder_qty": 120_000.0,
+        },
+        shifts=2,
+    )
+
+    assert good_service["ret_ladder_step"] > bad_service["ret_ladder_step"]
+    assert good_service["ret_ladder_step"] > bad_backlog["ret_ladder_step"]
+    assert 0.0 < good_service["ret_ladder_step"] <= 1.0
+    assert 0.0 < bad_service["ret_ladder_step"] <= 1.0
+    assert 0.0 < bad_backlog["ret_ladder_step"] <= 1.0
+
+
+def test_ret_ladder_v1_gates_efficiency_when_service_or_recovery_is_poor() -> None:
+    env = MFSCGymEnvShifts(
+        step_size_hours=168,
+        max_steps=2,
+        reward_mode="ReT_ladder_v1",
+    )
+    env.reset(seed=42)
+    poor_transition = {
+        "new_demanded": 15_000.0,
+        "new_backorder_qty": 12_000.0,
+        "pending_backorder_qty": 500_000.0,
+    }
+
+    s1 = env._compute_ret_ladder_v1(poor_transition, shifts=1)
+    s3 = env._compute_ret_ladder_v1(poor_transition, shifts=3)
+
+    assert s1["ret_ladder_gate"] < 1e-4
+    assert s1["ret_ladder_step"] == pytest.approx(s3["ret_ladder_step"], rel=1e-4)
+
+
+def test_ret_ladder_v1_penalizes_efficiency_only_after_service_recovers() -> None:
+    env = MFSCGymEnvShifts(
+        step_size_hours=168,
+        max_steps=2,
+        reward_mode="ReT_ladder_v1",
+    )
+    env.reset(seed=42)
+    good_transition = {
+        "new_demanded": 15_000.0,
+        "new_backorder_qty": 0.0,
+        "pending_backorder_qty": 1_000.0,
+    }
+
+    s1 = env._compute_ret_ladder_v1(good_transition, shifts=1)
+    s3 = env._compute_ret_ladder_v1(good_transition, shifts=3)
+
+    assert s1["ret_ladder_gate"] > 0.5
+    assert s1["ret_ladder_step"] > s3["ret_ladder_step"]
+
+
+def test_ret_ladder_v1_penalizes_strategic_inventory_after_service_recovers() -> None:
+    env = MFSCGymEnvShifts(
+        step_size_hours=168,
+        max_steps=2,
+        reward_mode="ReT_ladder_v1",
+    )
+    env.reset(seed=42)
+    good_transition = {
+        "new_demanded": 15_000.0,
+        "new_backorder_qty": 0.0,
+        "pending_backorder_qty": 1_000.0,
+    }
+
+    env.sim.inventory_buffer_targets = {}
+    no_buffer = env._compute_ret_ladder_v1(good_transition, shifts=2)
+    env.sim.inventory_buffer_targets = {
+        "op3_rm": 122_880.0,
+        "op5_rm": 122_880.0,
+        "op9_rations": 126_000.0,
+    }
+    full_buffer = env._compute_ret_ladder_v1(good_transition, shifts=2)
+
+    assert no_buffer["ret_ladder_gate"] > 0.5
+    assert no_buffer["ret_ladder_step"] > full_buffer["ret_ladder_step"]
+    assert full_buffer["ret_ladder_strategic_inventory"] > 0.0
 
 
 def test_ret_unified_v1_cost_gate_turns_off_when_service_is_poor() -> None:

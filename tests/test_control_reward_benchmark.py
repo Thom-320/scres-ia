@@ -447,6 +447,13 @@ def test_control_reward_parser_accepts_ret_cd_variants() -> None:
         assert args.reward_mode == reward_mode
 
 
+def test_control_reward_parser_accepts_ret_ladder_v1() -> None:
+    args = build_parser().parse_args(["--reward-mode", "ReT_ladder_v1"])
+    assert args.reward_mode == "ReT_ladder_v1"
+    env_kwargs = build_env_kwargs(args, {"w_bo": 1.0, "w_cost": 0.0, "w_disr": 0.0})
+    assert env_kwargs["reward_mode"] == "ReT_ladder_v1"
+
+
 def test_control_reward_parser_accepts_ret_garrido2024_variants() -> None:
     for reward_mode in ("ReT_garrido2024_raw", "ReT_garrido2024"):
         args = build_parser().parse_args(["--reward-mode", reward_mode])

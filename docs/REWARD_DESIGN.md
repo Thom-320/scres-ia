@@ -172,6 +172,39 @@ Because `FR_t` and `AT_t` already live in `(0, 1]`, the log score is always `≤
 - Keep `ReT_cd_v1` as the thesis-to-continuous ablation and methodological bridge.
 - Keep `ReT_cd_sigmoid` only as a documented comparison showing why the sigmoid wrapper is not the right default for this normalized DES setting.
 
+## Thesis-Decision Ladder Candidate: ReT_ladder_v1
+
+`ReT_ladder_v1` is a training-reward candidate for the thesis-decision ladder,
+not a replacement for thesis reporting metrics.  It keeps the Garrido-Rios
+(2017) priority order while making the signal denser for PPO:
+
+```
+SC_t = max(eps, 1 - new_backorder_qty / max(new_demanded, 1))
+D8_t = max(new_demanded * eight_week_multiplier, expected_8w_demand)
+RC_t = max(eps, 1 / (1 + pending_backorder_qty / D8_t))
+
+CAP_EF_t = max(eps, 1 - 0.10 * (S_t - 1) / 2)
+INV_EF_t = max(eps, 1 / (1 + 0.05 * strategic_inventory / I1344_total))
+EF_t = sqrt(CAP_EF_t * INV_EF_t)
+
+gate_t = sigmoid(12 * (SC_t - 0.95)) * sigmoid(12 * (RC_t - 0.70))
+reward_t = SC_t^0.65 * RC_t^0.30 * EF_t^(0.05 * gate_t)
+```
+
+The mapping is:
+
+- `SC_t` is the weekly service-continuity form of thesis Eq. 5.4.
+- `RC_t` is a backlog-recovery proxy for the recovery dimension in Eq. 5.2.
+- `EF_t` is a light extension for the optimum-resilience question raised in
+  thesis Sections 8.5.2 and 8.6.2.
+- `gate_t` prevents cost efficiency from dominating while service or recovery
+  are poor.
+
+This mode is intentionally conservative: it should be evaluated as an ablation
+against `ReT_cd_v1`, `ReT_seq_v1`, `ReT_unified_v1`, and `control_v1`.  Raw
+`reward_total` should not be compared across reward modes; use fill rate,
+order-level ReT, pending backlog, and recovery diagnostics.
+
 ## Garrido 2024 Paper-Faithful Family
 
 The repo now also includes a **paper-faithful** Garrido et al. (2024) five-variable Cobb-Douglas family, documented in [RET_GARRIDO2024_IMPLEMENTATION.md](docs/RET_GARRIDO2024_IMPLEMENTATION.md).

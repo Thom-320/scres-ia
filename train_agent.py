@@ -47,6 +47,7 @@ SHIFT_ENV_REWARD_MODES = {
     "ReT_garrido2024_raw",
     "ReT_garrido2024",
     "ReT_garrido2024_train",
+    "ReT_ladder_v1",
     "ReT_cd_v1",
     "ReT_cd_sigmoid",
 }
@@ -150,6 +151,7 @@ def build_parser() -> argparse.ArgumentParser:
             "ReT_garrido2024_raw",
             "ReT_garrido2024",
             "ReT_garrido2024_train",
+            "ReT_ladder_v1",
             "ReT_cd_v1",
             "ReT_cd_sigmoid",
         ],
@@ -291,7 +293,7 @@ def validate_args(parser: argparse.ArgumentParser, args: argparse.Namespace) -> 
             "Shift-control env supports only reward modes: "
             "rt_v0, ReT_thesis, ReT_corrected, ReT_corrected_cost, ReT_unified_v1, ReT_seq_v1, "
             "control_v1, control_v1_pbrs, ReT_garrido2024_raw, "
-            "ReT_garrido2024, ReT_garrido2024_train, ReT_cd_v1, "
+            "ReT_garrido2024, ReT_garrido2024_train, ReT_ladder_v1, ReT_cd_v1, "
             "ReT_cd_sigmoid."
         )
 

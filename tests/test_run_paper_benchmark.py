@@ -101,6 +101,13 @@ def test_run_paper_benchmark_parser_accepts_ret_cd_sigmoid() -> None:
     assert args.reward_mode == "ReT_cd_sigmoid"
 
 
+def test_run_paper_benchmark_parser_accepts_ret_ladder_v1() -> None:
+    args = paper_benchmark.build_parser().parse_args(
+        ["--label", "ladder_run", "--reward-mode", "ReT_ladder_v1"]
+    )
+    assert args.reward_mode == "ReT_ladder_v1"
+
+
 def test_run_paper_benchmark_parser_accepts_ret_garrido2024_variants() -> None:
     for reward_mode in (
         "ReT_garrido2024_raw",
