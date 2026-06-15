@@ -291,7 +291,11 @@ def rollout(
         if sim is not None
         else 0.0,
         "cumulative_disruption_hours": float(
-            getattr(sim, "cumulative_disruption_hours", 0.0)
+            getattr(
+                sim,
+                "_cumulative_down_hours",
+                getattr(sim, "cumulative_disruption_hours", 0.0),
+            )
         )
         if sim is not None
         else 0.0,
@@ -370,6 +374,35 @@ def best_by(
     return max(candidates, key=lambda row: (row[metric], row["order_level_ret_mean"]))
 
 
+def summary_row(
+    summary: list[dict[str, Any]], *, profile: str, family: str, policy: str
+) -> dict[str, Any] | None:
+    for row in summary:
+        if (
+            row["profile"] == profile
+            and row["family"] == family
+            and row["policy"] == policy
+        ):
+            return row
+    return None
+
+
+def metric_delta(
+    summary: list[dict[str, Any]],
+    *,
+    profile: str,
+    family: str,
+    policy_hi: str,
+    policy_lo: str,
+    metric: str,
+) -> float | None:
+    hi = summary_row(summary, profile=profile, family=family, policy=policy_hi)
+    lo = summary_row(summary, profile=profile, family=family, policy=policy_lo)
+    if hi is None or lo is None:
+        return None
+    return float(hi[metric]) - float(lo[metric])
+
+
 def write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
     if not rows:
         path.write_text("", encoding="utf-8")
@@ -445,6 +478,58 @@ def write_report(out_dir: Path, args: argparse.Namespace, rows: list[dict[str, A
             f"{row['order_level_ret_mean']:.4f} | "
             f"{row['cumulative_disruption_hours_mean']:.1f} |"
         )
+
+    lines += [
+        "",
+        "## H2/H3 Static Moderation Smoke",
+        "",
+        "H2 is probed as `pure_inventory_I672_S1 - pure_inventory_I0_S1`. "
+        "H3 is probed as `pure_capacity_I0_S3 - pure_capacity_I0_S1`. "
+        "These are direction checks, not final thesis-horizon hypothesis tests.",
+        "",
+        "| profile | family | I672-I0 fill | I672-I0 ReT | S3-S1 fill | S3-S1 ReT |",
+        "|---|---|---:|---:|---:|---:|",
+    ]
+    for profile in args.profiles:
+        for family in ("inventory", "capacity", "risk_r1", "risk_r2", "risk_r3"):
+            inv_fill = metric_delta(
+                summary,
+                profile=profile,
+                family=family,
+                policy_hi="pure_inventory_I672_S1",
+                policy_lo="pure_inventory_I0_S1",
+                metric="fill_rate_order_level_mean",
+            )
+            inv_ret = metric_delta(
+                summary,
+                profile=profile,
+                family=family,
+                policy_hi="pure_inventory_I672_S1",
+                policy_lo="pure_inventory_I0_S1",
+                metric="order_level_ret_mean",
+            )
+            cap_fill = metric_delta(
+                summary,
+                profile=profile,
+                family=family,
+                policy_hi="pure_capacity_I0_S3",
+                policy_lo="pure_capacity_I0_S1",
+                metric="fill_rate_order_level_mean",
+            )
+            cap_ret = metric_delta(
+                summary,
+                profile=profile,
+                family=family,
+                policy_hi="pure_capacity_I0_S3",
+                policy_lo="pure_capacity_I0_S1",
+                metric="order_level_ret_mean",
+            )
+            if None in (inv_fill, inv_ret, cap_fill, cap_ret):
+                continue
+            lines.append(
+                f"| {profile} | {family} | {inv_fill:.4f} | {inv_ret:.4f} | "
+                f"{cap_fill:.4f} | {cap_ret:.4f} |"
+            )
 
     lines += [
         "",
