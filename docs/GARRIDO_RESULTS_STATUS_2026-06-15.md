@@ -148,7 +148,9 @@ Smoke artifacts generated under `kit_equivalent_order_up_to`:
 - `outputs/benchmarks/confirmatory_ppo_ladder/postfix_ppo_smoke_kit_equiv/`
 
 Local full confirmatory static has completed. Local full confirmatory PPO is
-the next local rerun needed to pair the Kaggle PPO job.
+running in tmux session `scres_ppo_postfix_230801`, output directory:
+
+- `outputs/benchmarks/confirmatory_ppo_ladder/postfix_confirmatory_ppo_full_20260615T230801Z/`
 
 These are readiness checks, not final scientific results. The serious rerun
 order is:
