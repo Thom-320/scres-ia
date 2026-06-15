@@ -318,6 +318,31 @@ def test_table_6_10_reporter_writes_year_by_year_artifacts(tmp_path) -> None:
     assert summary["rmse_vs_thesis_ecs"] <= VALIDATION_TABLE_6_10["RMSE"]
 
 
+def test_thesis_decision_tables_reporter_writes_match_artifacts(tmp_path) -> None:
+    subprocess.run(
+        [
+            sys.executable,
+            "scripts/report_thesis_decision_tables.py",
+            "--label",
+            "pytest_decision_tables",
+            "--output-root",
+            str(tmp_path),
+        ],
+        check=True,
+    )
+    run_dir = tmp_path / "pytest_decision_tables"
+    payload = json.loads(
+        (run_dir / "thesis_decision_tables.json").read_text(encoding="utf-8")
+    )
+
+    assert payload["status"] == "PASS"
+    assert payload["num_raw_materials"] == 12
+    assert len(payload["inventory"]) == 15
+    assert len(payload["capacity"]) == 24
+    assert (run_dir / "THESIS_DECISION_TABLES.md").exists()
+    assert (run_dir / "thesis_decision_tables.csv").exists()
+
+
 def test_thesis_aligned_training_env_is_trainable_but_not_1to1() -> None:
     spec = get_thesis_aligned_training_env_spec()
     env = make_thesis_aligned_training_env(max_steps=1)

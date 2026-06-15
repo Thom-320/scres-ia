@@ -24,6 +24,8 @@ moderation before it can be used for final Garrido comparisons.
 | Thesis item | Current status | Evidence | Interpretation |
 |---|---|---|---|
 | Table 6.1 BOM semantics | Implemented as explicit mode | `supply_chain/supply_chain.py` scales raw targets by `NUM_RAW_MATERIALS` and consumes `_raw_units_per_ration`; `tests/test_thesis_faithful_lane.py::test_bom_total_units_mode_scales_raw_buffer_targets_only` | One ration is represented as a kit-equivalent draw over 12 raw-material components. |
+| Table 6.16 inventory buffers | Passed locally | `outputs/benchmarks/thesis_decision_tables/current_codex/THESIS_DECISION_TABLES.md`; `tests/test_thesis_faithful_lane.py::test_thesis_decision_tables_reporter_writes_match_artifacts` | All 15 Op3/Op5/Op9 buffer values match the extracted thesis table. |
+| Table 6.20 capacity by shifts | Passed locally | `outputs/benchmarks/thesis_decision_tables/current_codex/THESIS_DECISION_TABLES.md`; `tests/test_thesis_faithful_lane.py::test_thesis_decision_tables_reporter_writes_match_artifacts` | All 24 capacity/ROP/batch-size fields for S1/S2/S3 match the extracted thesis table. |
 | Table 6.10 deterministic production | Passed locally | `tests/test_thesis_faithful_lane.py::test_bom_order_up_to_mode_passes_table_6_10_production_gate`; alias test also passes | The repair does not break the 738,432 rations/year deterministic production gate. |
 | Table 6.10 year-by-year comparison | Passed locally | `outputs/benchmarks/table_6_10_reproduction/kit_equivalent_order_up_to_codex/TABLE_6_10_REPRODUCTION.md`; `tests/test_thesis_faithful_lane.py::test_table_6_10_reporter_writes_year_by_year_artifacts` | Python Cf0 produces 738,432 rations/year; RMSE vs thesis ECS is 61,013.6, below the thesis reported RMSE 87,918. |
 | Historical reproducibility | Preserved | `tests/test_thesis_faithful_lane.py::test_legacy_validated_mode_preserves_raw_buffer_targets` | The default legacy path remains available for pre-fix artifact comparison. |
@@ -51,6 +53,12 @@ To regenerate the deterministic Table 6.10 artifact:
 python scripts/report_table_6_10_reproduction.py \
   --label kit_equivalent_order_up_to_codex \
   --raw-material-flow-mode kit_equivalent_order_up_to
+```
+
+To regenerate the decision-table constants artifact:
+
+```bash
+python scripts/report_thesis_decision_tables.py --label current_codex
 ```
 
 When either Kaggle kernel finishes:
