@@ -201,10 +201,23 @@ def markdown_table(rows: list[dict[str, object]], columns: list[str]) -> list[st
             value = row.get(column, "")
             if isinstance(value, float):
                 rendered.append(f"{value:.4f}")
+            elif isinstance(value, list):
+                rendered.append(format_list_cell(value))
             else:
                 rendered.append(str(value))
         lines.append("| " + " | ".join(rendered) + " |")
     return lines
+
+
+def format_list_cell(values: list[object]) -> str:
+    """Render compact list values for markdown tables."""
+    rendered = []
+    for value in values:
+        if isinstance(value, float):
+            rendered.append(f"{value:.4f}")
+        else:
+            rendered.append(str(value))
+    return " -> ".join(rendered)
 
 
 def analyze_run(run_dir: Path) -> dict[str, object]:

@@ -1,7 +1,11 @@
 import csv
 import json
 
-from scripts.analyze_garrido_fidelity_outputs import analyze_run, iter_run_dirs
+from scripts.analyze_garrido_fidelity_outputs import (
+    analyze_run,
+    format_list_cell,
+    iter_run_dirs,
+)
 from scripts.run_garrido_static_fidelity_stress import policy_candidates
 
 
@@ -105,3 +109,4 @@ def test_analyze_garrido_fidelity_outputs_writes_gate_summary(tmp_path) -> None:
     assert saved["h3"][0]["ret_positive"] == 1
     assert (run_dir / "FIDELITY_GATE_ANALYSIS.md").exists()
     assert iter_run_dirs([tmp_path]) == [run_dir]
+    assert format_list_cell([0.123456, "increased"]) == "0.1235 -> increased"
