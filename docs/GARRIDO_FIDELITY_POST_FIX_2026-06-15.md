@@ -1,0 +1,105 @@
+# Garrido Fidelity Post-Fix Status - 2026-06-15
+
+This note records the first post-fix evidence after adding the explicit raw
+material flow modes. It supersedes the pre-fix interpretation of L1b/unified
+decision-ladder nulls, but it does not replace a thesis-horizon replication.
+
+## Scope
+
+Mode evaluated:
+
+- `raw_material_flow_mode=bom_total_units_order_up_to`
+- `raw_material_order_up_to_multiplier=2.0`
+- `reward_mode=ReT_thesis`
+- `action_space_mode=thesis_factorized`
+- `inventory_period_mode=thesis_strict`
+
+This mode is opt-in. The default `legacy_validated` path remains unchanged for
+historical reproducibility.
+
+## Gates Passed
+
+### Gate 1 - Table 6.10 Production
+
+The new mode passes the deterministic Table 6.10 production gate in
+`tests/test_thesis_faithful_lane.py::test_bom_order_up_to_mode_passes_table_6_10_production_gate`.
+
+The important point is that the fix is not "remove the x12"; the accepted mode
+keeps a BOM-consistent total raw-material consumption and order-up-to
+replenishment. The naive `bom_total_units` mode remains available for audit, but
+it does not pass the production gate.
+
+### Gate 2 - H1/H2/H3 Direction Checks
+
+Full-panel 260-week static smoke:
+
+```bash
+python scripts/run_garrido_static_fidelity_stress.py \
+  --label bom_order_up_to_full_cf31_90_260w_3reps_codex \
+  --output-root outputs/benchmarks/garrido_static_fidelity_stress \
+  --panel-cfis 31-90 \
+  --profiles thesis_pattern,current,increased,severe,severe_extended \
+  --policy-set minimal \
+  --replications 3 \
+  --horizon-mode fixed \
+  --max-steps 260 \
+  --reward-mode ReT_thesis \
+  --raw-material-flow-mode bom_total_units_order_up_to \
+  --raw-material-order-up-to-multiplier 2.0 \
+  --progress-every 250
+```
+
+Output:
+
+- `outputs/benchmarks/garrido_static_fidelity_stress/bom_order_up_to_full_cf31_90_260w_3reps_codex/GARRIDO_STATIC_FIDELITY_STRESS.md`
+- `outputs/benchmarks/garrido_static_fidelity_stress/bom_order_up_to_full_cf31_90_260w_3reps_codex/episode_metrics.csv`
+
+Observed direction checks on Cf31-90, 3 replications, 260 weekly steps:
+
+| Check | Evidence |
+|---|---|
+| H1 risk degradation | Matched DOE fill/ReT decline monotonically from `current` to `severe_extended`; disruption hours increase. |
+| H2 inventory moderation | `pure_inventory_I672_S1 - pure_inventory_I0_S1` is positive for fill and ReT in all risk profiles/families; scenario-level positives are 58-60 / 60 depending on metric/profile. |
+| H3 capacity moderation | `pure_capacity_I0_S3 - pure_capacity_I0_S1` is positive for fill and ReT in all risk profiles/families; scenario-level positives are 55-60 / 60 depending on metric/profile. |
+
+Representative full-panel contrasts:
+
+| profile | family | I672-I0 fill | I672-I0 ReT | S3-S1 fill | S3-S1 ReT |
+|---|---|---:|---:|---:|---:|
+| thesis_pattern | inventory | 0.0774 | 0.3540 | 0.0660 | 0.2710 |
+| thesis_pattern | capacity | 0.0739 | 0.3432 | 0.0656 | 0.2707 |
+| increased | inventory | 0.0875 | 0.3600 | 0.0846 | 0.2991 |
+| increased | capacity | 0.0896 | 0.3588 | 0.0786 | 0.2891 |
+| severe_extended | inventory | 0.1458 | 0.3602 | 0.1440 | 0.2988 |
+| severe_extended | capacity | 0.1458 | 0.3686 | 0.1431 | 0.3042 |
+
+## Interpretation
+
+The post-fix environment now has a live inventory lever again. This explains why
+pre-fix L1b/per-node and unified-evaluation nulls should be treated as
+pre-fix artifacts, not final claims about the thesis decision space.
+
+The 260-week full-panel smoke supports moving to thesis-horizon fidelity runs.
+It is not itself a final replication of Garrido's 10/20-year design horizons.
+
+## Next Required Gate
+
+Run a thesis-horizon static replication with the same mode, at least for the
+minimal policy set first:
+
+```bash
+python scripts/run_garrido_static_fidelity_stress.py \
+  --label bom_order_up_to_full_cf31_90_thesis_horizon_minimal \
+  --output-root outputs/benchmarks/garrido_static_fidelity_stress \
+  --panel-cfis 31-90 \
+  --profiles thesis_pattern,current,increased,severe,severe_extended \
+  --policy-set minimal \
+  --replications 3 \
+  --horizon-mode thesis \
+  --reward-mode ReT_thesis \
+  --raw-material-flow-mode bom_total_units_order_up_to \
+  --raw-material-order-up-to-multiplier 2.0 \
+  --progress-every 250
+```
+
+If this is too slow locally, run it on Kaggle before resuming PPO/RL claims.
