@@ -1,5 +1,9 @@
 # DES Verification Audit Report
 
+> Historical audit note. Some implementation details referenced here were later
+> refined. Use `docs/REPOSITORY_SOURCE_OF_TRUTH.md` and the current code under
+> `supply_chain/` when you need the active repository contract.
+
 **Date:** 2026-03-18
 **Purpose:** Pre-meeting audit of Python DES implementation against Garrido-Rios (2017) PhD thesis
 **Scope:** Exhaustive cross-reference of `supply_chain/` package against Chapters 5 and 6

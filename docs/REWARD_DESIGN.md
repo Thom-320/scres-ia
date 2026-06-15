@@ -47,6 +47,31 @@ The theoretical mapping is:
 - `AE_t` → explicit cost-efficiency extension motivated by thesis Section 8.6.2
 - geometric aggregation → reduced compensability between service, recovery, and efficiency dimensions
 
+### Cobb-Douglas Reconciliation with Garrido et al. (2024)
+
+The 2024 IJPR paper on factory resilience is not a contradiction to the current
+repo reward. It is best understood as an explicit mathematical justification for
+the form we already use.
+
+`ReT_seq_v1` is already a bounded Cobb-Douglas resilience function:
+
+```
+r_t = exp(0.60 ln(SC_t) + 0.25 ln(BC_t) + 0.15 ln(AE_t))
+```
+
+This is numerically identical to the weighted geometric mean above. The
+difference versus the IJPR factory-resilience paper is that our three factors
+`SC_t`, `BC_t`, and `AE_t` are already normalized to `(0, 1]`. Because of that,
+the multiplicative index is already continuous and bounded in `(0, 1]`; an extra
+sigmoid wrapper is not required here to "make the reward continuous."
+
+The practical reconciliation is therefore:
+
+- Garrido-Rios (2017) provides the resilience meaning
+- Garrido et al. (2024) provides the Cobb-Douglas continuity bridge
+- `ReT_seq_v1` is the repo's sequential, DES-observable, PPO-trainable instance
+  of that bridge
+
 ### Why κ = 0.20
 
 The current paper trio favors `κ=0.20` as the pragmatic leader against `static_s2` on cross-mode comparable metrics:

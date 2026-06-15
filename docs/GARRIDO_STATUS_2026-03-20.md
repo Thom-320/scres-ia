@@ -3,6 +3,11 @@
 **Autor**: Thomas Chisica Londoño  
 **Repo**: `Thom-320/scres-ia`
 
+> Historical status note. For the current paper-facing repository defaults and
+> benchmark backbone, see `docs/REPOSITORY_SOURCE_OF_TRUTH.md`. This report
+> remains useful as a dated progress snapshot, but it is not the final source
+> of truth for reward choice, benchmark scenarios, or manuscript framing.
+
 ---
 
 ## Resumen Ejecutivo
