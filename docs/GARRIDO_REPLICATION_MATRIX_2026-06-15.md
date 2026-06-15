@@ -55,6 +55,14 @@ kaggle kernels output thomaschisica/scresia-garrido-fidelity-h2-thesis \
 ```
 
 Then compare the downloaded `GARRIDO_STATIC_FIDELITY_STRESS.md` and
-`episode_metrics.csv` against the local H1/H2/H3 gates in this matrix. Only
-after that should the repaired environment be used as the baseline for any
-post-fix PPO or decision-ladder claims.
+`episode_metrics.csv` against the local H1/H2/H3 gates in this matrix. Use the
+post-processor so the cloud artifacts are summarized by the same gate logic:
+
+```bash
+python scripts/analyze_garrido_fidelity_outputs.py \
+  outputs/kaggle_garrido_fidelity_postfix_latest \
+  outputs/kaggle_garrido_fidelity_h2_thesis_latest
+```
+
+Only after that should the repaired environment be used as the baseline for
+any post-fix PPO or decision-ladder claims.
