@@ -214,3 +214,37 @@ increase monotonically.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
 | inventory | 1.0000 | 0.9379 | 0.8389 | 0.7502 | 0.9895 | 0.6998 | 8373.0 | 60963.2 |
 | capacity | 0.9867 | 0.9164 | 0.8049 | 0.7083 | 0.8574 | 0.5686 | 8179.8 | 62349.5 |
+
+### H2 Inventory Thesis-Horizon Gate
+
+Local command:
+
+```bash
+python scripts/run_garrido_static_fidelity_stress.py \
+  --label bom_order_up_to_h2_inventory_cf31_60_thesis_horizon_3reps_codex \
+  --output-root outputs/benchmarks/garrido_static_fidelity_stress \
+  --panel-cfis 31-60 \
+  --profiles thesis_pattern \
+  --policy-set minimal \
+  --replications 3 \
+  --horizon-mode thesis \
+  --reward-mode ReT_thesis \
+  --raw-material-flow-mode kit_equivalent_order_up_to \
+  --raw-material-order-up-to-multiplier 2.0 \
+  --progress-every 50
+```
+
+Output:
+
+- `outputs/benchmarks/garrido_static_fidelity_stress/bom_order_up_to_h2_inventory_cf31_60_thesis_horizon_3reps_codex/GARRIDO_STATIC_FIDELITY_STRESS.md`
+
+Result: H2 passes under thesis horizons for Cf31-60 with 3 replications.
+
+| Metric | Scenario-level I672 > I0 | Mean delta | Episode-level I672 > I0 | Mean delta |
+|---|---:|---:|---:|---:|
+| fill | 25 / 30 | +0.0679 | 65 / 90 | +0.0679 |
+| ReT | 30 / 30 | +0.3029 | 89 / 90 | +0.3029 |
+
+The effect is much stronger in ReT than fill because the long horizon saturates
+fill in some configurations. This is consistent with the thesis objective:
+inventory buffering moderates resilience, not just immediate fill.
