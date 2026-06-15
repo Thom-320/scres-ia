@@ -51,6 +51,50 @@ Current local post-fix gates are usable:
 The post-processor was rerun against these directories and rewrote
 `FIDELITY_GATE_ANALYSIS.md` / `fidelity_gate_analysis.json`.
 
+### Post-Fix Confirmatory Static Local Rerun
+
+Completed locally with exit code `0`:
+
+- `outputs/benchmarks/confirmatory_static_ladder/postfix_confirmatory_static_full_20260615T224417Z/`
+
+Contract:
+
+- panel `Cf31-90`
+- `10` replications
+- `260` weekly steps
+- `reward_mode=ReT_thesis`
+- `raw_material_flow_mode=kit_equivalent_order_up_to`
+- common-seed paired panel, not strict CRN
+
+Summary:
+
+| policy | fill | ReT | reward | n |
+|---|---:|---:|---:|---:|
+| `crossed_uniform_I504_S3` | 0.9691 | 0.8460 | 209.60 | 600 |
+| `pure_inventory_I672_S1` | 0.9687 | 0.8450 | 240.82 | 600 |
+| `per_node_I1344_I504_I504_S3` | 0.9681 | 0.8436 | 209.38 | 600 |
+| `pure_capacity_I0_S3` | 0.9620 | 0.7720 | 202.46 | 600 |
+| `garrido_matched_DOE_baseline` | 0.9583 | 0.7785 | 226.17 | 600 |
+
+Key scenario-level contrasts:
+
+- `crossed_uniform_I504_S3` vs `garrido_matched_DOE_baseline`: fill `+0.0108`
+  with CI `[+0.0048, +0.0183]`, Wilcoxon `p=0.00002`; ReT `+0.0674` with
+  CI `[+0.0321, +0.1065]`, Wilcoxon `p=0.000001`.
+- `pure_inventory_I672_S1` vs `garrido_matched_DOE_baseline`: fill `+0.0104`,
+  Wilcoxon `p=0.00279`; ReT `+0.0665`, Wilcoxon `p=0.000002`.
+- `crossed_uniform_I504_S3` vs `pure_inventory_I672_S1`: fill `+0.0004` with
+  CI crossing zero and Wilcoxon `p=0.49378`; ReT `+0.0009` with CI crossing zero
+  and Wilcoxon `p=0.49358`.
+- `per_node_I1344_I504_I504_S3` vs `crossed_uniform_I504_S3`: fill `-0.0010`
+  and ReT `-0.0024`, both non-significant.
+
+Interpretation: after the inventory repair, the durable static result remains
+small and conservative. Non-zero buffering beats the matched DOE baseline, but
+crossing inventory with S3 does not significantly beat the simple thesis-pure
+`I672,S1` buffered policy; per-node granularity does not beat the uniform crossed
+policy. The old pre-fix headline should stay withdrawn.
+
 ### Kaggle State
 
 - Post-fix rerun code is published on branch `codex/garrido-postfix-reruns`
@@ -103,10 +147,8 @@ Smoke artifacts generated under `kit_equivalent_order_up_to`:
 - `outputs/benchmarks/confirmatory_static_ladder/postfix_smoke_kit_equiv/`
 - `outputs/benchmarks/confirmatory_ppo_ladder/postfix_ppo_smoke_kit_equiv/`
 
-Local full confirmatory static is running in tmux session
-`scres_static_postfix_224417`, output directory:
-
-- `outputs/benchmarks/confirmatory_static_ladder/postfix_confirmatory_static_full_20260615T224417Z/`
+Local full confirmatory static has completed. Local full confirmatory PPO is
+the next local rerun needed to pair the Kaggle PPO job.
 
 These are readiness checks, not final scientific results. The serious rerun
 order is:
