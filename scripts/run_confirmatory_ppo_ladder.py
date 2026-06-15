@@ -16,6 +16,7 @@ import json
 import math
 import re
 import sys
+import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -64,6 +65,12 @@ def discover_ppo_runs(ppo_root: Path) -> list[dict[str, Any]]:
             continue
         seen.add(run_dir)
         model_zip = run_dir / "ppo_mlp_thesis_decision.zip"
+        model_dir = run_dir / "ppo_mlp_thesis_decision"
+        if not model_zip.exists() and model_dir.is_dir():
+            with zipfile.ZipFile(model_zip, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+                for file_path in model_dir.rglob("*"):
+                    if file_path.is_file():
+                        zf.write(file_path, file_path.relative_to(model_dir))
         vecnorm = run_dir / "vecnormalize.pkl"
         summary = run_dir / "summary.json"
         if not (model_zip.exists() and vecnorm.exists() and summary.exists()):
