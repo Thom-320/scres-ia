@@ -81,6 +81,11 @@ THESIS_DOWNSTREAM_Q_RANGES = {
 
 WARMUP_TRIGGER_OPTIONS = ("production", "op9_arrival")
 R14_DEFECT_MODE_OPTIONS = ("thesis_strict_op6", "reprocess", "discard")
+RAW_MATERIAL_FLOW_MODE_OPTIONS = (
+    "legacy_validated",
+    "bom_total_units",
+    "bom_total_units_order_up_to",
+)
 
 # =============================================================================
 # OPERATION DEFINITIONS — Cf0 Baseline (S=1, It,1=0)

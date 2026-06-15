@@ -554,11 +554,15 @@ class DKANAThesisFaithfulDecisionEnvWrapper(gym.Wrapper):
             return {}
 
         targets = self._buffer_targets_from_periods(periods_by_node)
-        sim.inventory_buffer_targets = dict(targets)
+        if hasattr(sim, "_normalize_inventory_buffer_targets"):
+            internal_targets = sim._normalize_inventory_buffer_targets(targets)
+        else:
+            internal_targets = dict(targets)
+        sim.inventory_buffer_targets = dict(internal_targets)
         sim.inventory_replenishment_period = float(min(periods_by_node.values()))
-        for key, target in targets.items():
+        for key, target in internal_targets.items():
             sim._top_up_inventory_buffer(key, target)
-        return targets
+        return internal_targets
 
     def _realized_vector(
         self, periods_by_node: dict[str, int], shifts: int

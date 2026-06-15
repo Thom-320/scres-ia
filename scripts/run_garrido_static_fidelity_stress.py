@@ -238,6 +238,8 @@ def rollout(
         "action_space_mode": "thesis_factorized",
         "inventory_period_mode": "thesis_strict",
         "initial_action": action,
+        "raw_material_flow_mode": args.raw_material_flow_mode,
+        "raw_material_order_up_to_multiplier": args.raw_material_order_up_to_multiplier,
     }
     env_kwargs.update(
         risk_kwargs_for_profile(
@@ -390,6 +392,8 @@ def write_report(out_dir: Path, args: argparse.Namespace, rows: list[dict[str, A
         f"policy_set: `{args.policy_set}`; reps: `{args.replications}`.",
         f"Horizon mode: `{args.horizon_mode}`; fixed max_steps: `{args.max_steps}`; "
         f"reward_mode: `{args.reward_mode}`.",
+        f"Raw-material flow mode: `{args.raw_material_flow_mode}`.",
+        f"Order-up-to multiplier: `{args.raw_material_order_up_to_multiplier}`.",
         "",
         "Risk profile `thesis_pattern` preserves each Cf row's current/increased "
         "risk overrides from the thesis design. Other profiles keep the same "
@@ -470,6 +474,16 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--replications", type=int, default=30)
     parser.add_argument("--base-seed", type=int, default=721000)
     parser.add_argument("--reward-mode", default="ReT_thesis")
+    parser.add_argument(
+        "--raw-material-flow-mode",
+        default="legacy_validated",
+        choices=(
+            "legacy_validated",
+            "bom_total_units",
+            "bom_total_units_order_up_to",
+        ),
+    )
+    parser.add_argument("--raw-material-order-up-to-multiplier", type=float, default=2.0)
     parser.add_argument("--observation-version", default="v5")
     parser.add_argument("--observation-mode", default="env_sdm_history_reward")
     parser.add_argument("--step-size-hours", type=float, default=float(HOURS_PER_WEEK))
@@ -544,6 +558,8 @@ def main() -> int:
         "replications": args.replications,
         "base_seed": args.base_seed,
         "reward_mode": args.reward_mode,
+        "raw_material_flow_mode": args.raw_material_flow_mode,
+        "raw_material_order_up_to_multiplier": args.raw_material_order_up_to_multiplier,
         "horizon_mode": args.horizon_mode,
         "max_steps": args.max_steps,
         "step_size_hours": args.step_size_hours,

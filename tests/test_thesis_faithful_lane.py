@@ -99,6 +99,37 @@ def test_invalid_thesis_lane_options_fail_fast() -> None:
         MFSCSimulation(downstream_q_source="mixed")
     with pytest.raises(ValueError, match="r14_defect_mode"):
         MFSCSimulation(r14_defect_mode="silent_drop")
+    with pytest.raises(ValueError, match="raw_material_flow_mode"):
+        MFSCSimulation(raw_material_flow_mode="not_a_mode")
+
+
+def test_bom_total_units_mode_scales_raw_buffer_targets_only() -> None:
+    sim = MFSCSimulation(
+        initial_buffers={"op3_rm": 46_080, "op5_rm": 46_080, "op9_rations": 47_250},
+        raw_material_flow_mode="bom_total_units",
+    )
+
+    assert sim.inventory_buffer_targets == {
+        "op3_rm": pytest.approx(46_080 * 12),
+        "op5_rm": pytest.approx(46_080 * 12),
+        "op9_rations": pytest.approx(47_250),
+    }
+    assert sim.raw_material_wdc.level == pytest.approx(46_080 * 12)
+    assert sim.raw_material_al.level == pytest.approx(46_080 * 12)
+    assert sim.rations_sb.level == pytest.approx(47_250)
+
+
+def test_legacy_validated_mode_preserves_raw_buffer_targets() -> None:
+    sim = MFSCSimulation(
+        initial_buffers={"op3_rm": 46_080, "op5_rm": 46_080, "op9_rations": 47_250},
+        raw_material_flow_mode="legacy_validated",
+    )
+
+    assert sim.inventory_buffer_targets == {
+        "op3_rm": pytest.approx(46_080),
+        "op5_rm": pytest.approx(46_080),
+        "op9_rations": pytest.approx(47_250),
+    }
 
 
 def test_r14_thesis_strict_returns_defects_to_op6_rework_queue(monkeypatch) -> None:
@@ -173,6 +204,27 @@ def test_cf0_deterministic_gate_matches_table_6_10_average() -> None:
     assert rmse <= VALIDATION_TABLE_6_10["RMSE"] * 1.20
     assert -0.05 <= avg_delta <= 0.05
     assert throughput["avg_annual_production"] == pytest.approx(738_432, rel=0.02)
+
+
+def test_bom_order_up_to_mode_passes_table_6_10_production_gate() -> None:
+    sim = MFSCSimulation(
+        shifts=1,
+        risks_enabled=False,
+        seed=42,
+        horizon=SIMULATION_HORIZON,
+        year_basis="thesis",
+        deterministic_baseline=True,
+        warmup_trigger="op9_arrival",
+        downstream_q_source=THESIS_FAITHFUL_PROTOCOL["downstream_q_source"],
+        r14_defect_mode=THESIS_FAITHFUL_PROTOCOL["r14_defect_mode"],
+        raw_material_flow_mode="bom_total_units_order_up_to",
+        raw_material_order_up_to_multiplier=2.0,
+    ).run()
+    throughput = sim.get_annual_throughput(start_time=sim.warmup_time, num_years=8)
+
+    assert throughput["avg_annual_production"] == pytest.approx(738_432, rel=0.02)
+    inventory = sim._inventory_detail()
+    assert inventory["raw_material_al"] < 1_000_000
 
 
 def test_thesis_faithful_launcher_writes_auditable_artifacts(tmp_path) -> None:

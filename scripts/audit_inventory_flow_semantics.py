@@ -66,6 +66,8 @@ def run_policy(args: argparse.Namespace, *, period: int | None, rep: int) -> dic
         action_space_mode="thesis_factorized",
         inventory_period_mode="thesis_strict",
         initial_action=action,
+        raw_material_flow_mode=args.raw_material_flow_mode,
+        raw_material_order_up_to_multiplier=args.raw_material_order_up_to_multiplier,
         step_size_hours=args.step_size_hours,
         max_steps=args.max_steps,
         stochastic_pt=args.stochastic_pt,
@@ -168,6 +170,9 @@ def write_report(out_dir: Path, args: argparse.Namespace, rows: list[dict[str, A
         f"Created UTC: `{datetime.now(timezone.utc).isoformat()}`",
         f"Risk level: `{args.risk_level}`; max_steps: `{args.max_steps}`; reps: `{args.replications}`.",
         "",
+        f"Raw-material flow mode: `{args.raw_material_flow_mode}`.",
+        f"Order-up-to multiplier: `{args.raw_material_order_up_to_multiplier}`.",
+        "",
         "The DES aggregates rm1..rm12 into single raw-material containers. If Op2/Op3",
         "quantities are summed across all 12 raw materials, the monthly raw-material",
         "inflow is much larger than S1 assembly consumption.",
@@ -223,6 +228,16 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--seed", type=int, default=721031)
     parser.add_argument("--risk-level", default="increased")
     parser.add_argument("--reward-mode", default="ReT_thesis")
+    parser.add_argument(
+        "--raw-material-flow-mode",
+        default="legacy_validated",
+        choices=(
+            "legacy_validated",
+            "bom_total_units",
+            "bom_total_units_order_up_to",
+        ),
+    )
+    parser.add_argument("--raw-material-order-up-to-multiplier", type=float, default=2.0)
     parser.add_argument("--max-steps", type=int, default=260)
     parser.add_argument("--step-size-hours", type=float, default=168.0)
     parser.add_argument("--shifts", type=int, default=1)
@@ -258,6 +273,8 @@ def main() -> int:
         "seed": args.seed,
         "risk_level": args.risk_level,
         "reward_mode": args.reward_mode,
+        "raw_material_flow_mode": args.raw_material_flow_mode,
+        "raw_material_order_up_to_multiplier": args.raw_material_order_up_to_multiplier,
         "max_steps": args.max_steps,
         "step_size_hours": args.step_size_hours,
         "shifts": args.shifts,

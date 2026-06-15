@@ -50,6 +50,7 @@ from .config import (
     HOURS_PER_YEAR_GREGORIAN,
     HOURS_PER_YEAR_THESIS,
     R14_DEFECT_MODE_OPTIONS,
+    RAW_MATERIAL_FLOW_MODE_OPTIONS,
     YEAR_BASIS_OPTIONS,
     LEAD_TIME_PROMISE,
     THESIS_FAITHFUL_PROTOCOL,
@@ -127,6 +128,8 @@ class MFSCSimulation:
         enabled_risks: Optional[set[str]] = None,
         risk_overrides: Optional[dict[str, str]] = None,
         inventory_replenishment_period: Optional[float] = None,
+        raw_material_flow_mode: str = "legacy_validated",
+        raw_material_order_up_to_multiplier: float = 2.0,
     ) -> None:
         if warmup_trigger not in WARMUP_TRIGGER_OPTIONS:
             valid = ", ".join(WARMUP_TRIGGER_OPTIONS)
@@ -143,6 +146,12 @@ class MFSCSimulation:
             raise ValueError(
                 f"Invalid r14_defect_mode={r14_defect_mode!r}. Expected one of: {valid}."
             )
+        if raw_material_flow_mode not in RAW_MATERIAL_FLOW_MODE_OPTIONS:
+            valid = ", ".join(RAW_MATERIAL_FLOW_MODE_OPTIONS)
+            raise ValueError(
+                "Invalid raw_material_flow_mode="
+                f"{raw_material_flow_mode!r}. Expected one of: {valid}."
+            )
         self.env = simpy.Environment()
         self.shifts = shifts
         self.seed = seed
@@ -156,6 +165,17 @@ class MFSCSimulation:
         self.warmup_trigger = warmup_trigger
         self.downstream_q_source = downstream_q_source
         self.r14_defect_mode = r14_defect_mode
+        self.raw_material_flow_mode = raw_material_flow_mode
+        self.raw_material_order_up_to_multiplier = float(
+            raw_material_order_up_to_multiplier
+        )
+        if self.raw_material_order_up_to_multiplier <= 0.0:
+            raise ValueError("raw_material_order_up_to_multiplier must be > 0.")
+        self._raw_units_per_ration = (
+            float(NUM_RAW_MATERIALS)
+            if raw_material_flow_mode.startswith("bom_total_units")
+            else 1.0
+        )
         self.enabled_risks = set(enabled_risks) if enabled_risks is not None else None
         self.risk_overrides = dict(risk_overrides or {})
         self.inventory_replenishment_period = inventory_replenishment_period
@@ -215,17 +235,19 @@ class MFSCSimulation:
         self.rations_cssu = simpy.Container(self.env, capacity=INF, init=0)
         self.rations_theatre = simpy.Container(self.env, capacity=INF, init=0)
 
-        if initial_buffers:
-            op3_rm = float(initial_buffers.get("op3_rm", 0))
-            op5_rm = float(initial_buffers.get("op5_rm", 0))
-            op9_rations = float(initial_buffers.get("op9_rations", 0))
+        self.inventory_buffer_targets = self._normalize_inventory_buffer_targets(
+            initial_buffers or {}
+        )
+        if self.inventory_buffer_targets:
+            op3_rm = float(self.inventory_buffer_targets.get("op3_rm", 0))
+            op5_rm = float(self.inventory_buffer_targets.get("op5_rm", 0))
+            op9_rations = float(self.inventory_buffer_targets.get("op9_rations", 0))
             if op3_rm > 0:
                 self.raw_material_wdc.put(op3_rm)
             if op5_rm > 0:
                 self.raw_material_al.put(op5_rm)
             if op9_rations > 0:
                 self.rations_sb.put(op9_rations)
-        self.inventory_buffer_targets = dict(initial_buffers or {})
         # Cache the original Op5 buffer target as a separate attribute (do not pollute
         # inventory_buffer_targets, which other tests compare as a strict dict).
         # See Table 6.16 (Op5,j) — the agent's a5 multiplier scales this baseline.
@@ -298,6 +320,17 @@ class MFSCSimulation:
             self.warmup_complete = True
             self.warmup_time = self.env.now
 
+    def _normalize_inventory_buffer_targets(
+        self, targets: dict[str, float]
+    ) -> dict[str, float]:
+        """Convert external thesis buffer targets to internal container units."""
+        normalized = {key: float(value) for key, value in targets.items()}
+        if self.raw_material_flow_mode.startswith("bom_total_units"):
+            for key in ("op3_rm", "op5_rm"):
+                if key in normalized:
+                    normalized[key] *= float(NUM_RAW_MATERIALS)
+        return normalized
+
     def _top_up_inventory_buffer(self, key: str, target: float) -> Any:
         if key == "op3_rm":
             container = self.raw_material_wdc
@@ -311,6 +344,11 @@ class MFSCSimulation:
         if shortfall > 0.0:
             return container.put(shortfall)
         return None
+
+    def _target_for_raw_node(self, key: str, fallback: float) -> float:
+        """Return an order-up-to target for raw-material operating stock."""
+        operating_target = float(fallback) * self.raw_material_order_up_to_multiplier
+        return max(operating_target, float(self.inventory_buffer_targets.get(key, 0.0)))
 
     def _inventory_buffer_replenishment(self):
         """Top up thesis strategic buffers to their target level every t hours."""
@@ -1081,6 +1119,11 @@ class MFSCSimulation:
                 yield self.env.timeout(1)
                 pt_remaining -= 1
             total_delivery = self.params["op2_q"] * NUM_RAW_MATERIALS
+            if self.raw_material_flow_mode == "bom_total_units_order_up_to":
+                target = self._target_for_raw_node("op3_rm", total_delivery)
+                total_delivery = max(0.0, target - float(self.raw_material_wdc.level))
+                if total_delivery <= 0.0:
+                    continue
             yield self.raw_material_wdc.put(total_delivery)
 
     def _op3_wdc_dispatch(self):
@@ -1090,6 +1133,9 @@ class MFSCSimulation:
                 yield self.env.timeout(1)
             total_dispatch = self.params["op3_q"] * NUM_RAW_MATERIALS
             available = self.raw_material_wdc.level
+            if self.raw_material_flow_mode == "bom_total_units_order_up_to":
+                target = self._target_for_raw_node("op5_rm", total_dispatch)
+                total_dispatch = max(0.0, target - float(self.raw_material_al.level))
             dispatch = min(total_dispatch, available)
             if dispatch > 0:
                 yield self.raw_material_wdc.get(dispatch)
@@ -1152,14 +1198,16 @@ class MFSCSimulation:
                 effective_rate *= max(0.0, 1.0 - penalty * self.maintenance_debt)
             rework_qty = min(effective_rate, rework_available)
             raw_capacity = max(0.0, effective_rate - rework_qty)
-            raw_qty = min(raw_capacity, rm_available)
-            can_produce = rework_qty + raw_qty
+            raw_ration_capacity = rm_available / max(self._raw_units_per_ration, 1.0)
+            raw_produced_qty = min(raw_capacity, raw_ration_capacity)
+            raw_units_qty = raw_produced_qty * self._raw_units_per_ration
+            can_produce = rework_qty + raw_produced_qty
 
             if can_produce > 0:
                 if rework_qty > 0:
                     yield self.rework_op6.get(rework_qty)
-                if raw_qty > 0:
-                    yield self.raw_material_al.get(raw_qty)
+                if raw_units_qty > 0:
+                    yield self.raw_material_al.get(raw_units_qty)
                 self._pending_batch += can_produce
                 self._today_produced += can_produce
                 self.total_produced += can_produce

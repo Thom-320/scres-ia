@@ -73,6 +73,7 @@ from .config import (
     INVENTORY_BUFFERS,
     OPERATIONS,
     R14_DEFECT_MODE_OPTIONS,
+    RAW_MATERIAL_FLOW_MODE_OPTIONS,
     RET_CASE_THRESHOLDS,
     RET_SHIFT_COST_DELTA_DEFAULT,
     SIMULATION_HORIZON,
@@ -302,6 +303,8 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         warmup_trigger: str = "production",
         downstream_q_source: str = "figure_6_2",
         r14_defect_mode: str = "reprocess",
+        raw_material_flow_mode: str = "legacy_validated",
+        raw_material_order_up_to_multiplier: float = 2.0,
         initial_buffers: dict[str, float] | None = None,
         initial_shifts: int = 1,
         inventory_replenishment_period: float | None = None,
@@ -363,6 +366,11 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                 f"Invalid r14_defect_mode={r14_defect_mode!r}. "
                 f"Expected one of {R14_DEFECT_MODE_OPTIONS}."
             )
+        if raw_material_flow_mode not in RAW_MATERIAL_FLOW_MODE_OPTIONS:
+            raise ValueError(
+                f"Invalid raw_material_flow_mode={raw_material_flow_mode!r}. "
+                f"Expected one of {RAW_MATERIAL_FLOW_MODE_OPTIONS}."
+            )
         canonical_reward_mode = REWARD_MODE_ALIAS_MAP.get(reward_mode, reward_mode)
         if (
             canonical_reward_mode == "control_v1_pbrs"
@@ -382,6 +390,10 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self.warmup_trigger = warmup_trigger
         self.downstream_q_source = downstream_q_source
         self.r14_defect_mode = r14_defect_mode
+        self.raw_material_flow_mode = raw_material_flow_mode
+        self.raw_material_order_up_to_multiplier = float(
+            raw_material_order_up_to_multiplier
+        )
         self.initial_buffers = dict(initial_buffers or {})
         self.initial_shifts = int(initial_shifts)
         self.initial_inventory_replenishment_period = inventory_replenishment_period
@@ -1854,6 +1866,10 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             warmup_trigger=self.warmup_trigger,
             downstream_q_source=self.downstream_q_source,
             r14_defect_mode=self.r14_defect_mode,
+            raw_material_flow_mode=self.raw_material_flow_mode,
+            raw_material_order_up_to_multiplier=(
+                self.raw_material_order_up_to_multiplier
+            ),
             enabled_risks=self.enabled_risks,
             risk_overrides=self.risk_overrides,
             inventory_replenishment_period=inventory_replenishment_period,
