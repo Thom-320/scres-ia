@@ -74,6 +74,7 @@ from .config import (
     OPERATIONS,
     R14_DEFECT_MODE_OPTIONS,
     RAW_MATERIAL_FLOW_MODE_OPTIONS,
+    canonical_raw_material_flow_mode,
     RET_CASE_THRESHOLDS,
     RET_SHIFT_COST_DELTA_DEFAULT,
     SIMULATION_HORIZON,
@@ -371,6 +372,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                 f"Invalid raw_material_flow_mode={raw_material_flow_mode!r}. "
                 f"Expected one of {RAW_MATERIAL_FLOW_MODE_OPTIONS}."
             )
+        raw_material_flow_mode = canonical_raw_material_flow_mode(raw_material_flow_mode)
         canonical_reward_mode = REWARD_MODE_ALIAS_MAP.get(reward_mode, reward_mode)
         if (
             canonical_reward_mode == "control_v1_pbrs"

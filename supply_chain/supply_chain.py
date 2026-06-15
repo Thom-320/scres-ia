@@ -51,6 +51,7 @@ from .config import (
     HOURS_PER_YEAR_THESIS,
     R14_DEFECT_MODE_OPTIONS,
     RAW_MATERIAL_FLOW_MODE_OPTIONS,
+    canonical_raw_material_flow_mode,
     YEAR_BASIS_OPTIONS,
     LEAD_TIME_PROMISE,
     THESIS_FAITHFUL_PROTOCOL,
@@ -152,6 +153,7 @@ class MFSCSimulation:
                 "Invalid raw_material_flow_mode="
                 f"{raw_material_flow_mode!r}. Expected one of: {valid}."
             )
+        raw_material_flow_mode = canonical_raw_material_flow_mode(raw_material_flow_mode)
         self.env = simpy.Environment()
         self.shifts = shifts
         self.seed = seed

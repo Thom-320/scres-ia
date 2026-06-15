@@ -9,13 +9,16 @@ decision-ladder nulls, but it does not replace a thesis-horizon replication.
 Mode evaluated:
 
 - `raw_material_flow_mode=bom_total_units_order_up_to`
+- public alias: `raw_material_flow_mode=kit_equivalent_order_up_to`
 - `raw_material_order_up_to_multiplier=2.0`
 - `reward_mode=ReT_thesis`
 - `action_space_mode=thesis_factorized`
 - `inventory_period_mode=thesis_strict`
 
 This mode is opt-in. The default `legacy_validated` path remains unchanged for
-historical reproducibility.
+historical reproducibility. Use the public alias `kit_equivalent_order_up_to`
+when describing the scientific contract; it canonicalizes internally to
+`bom_total_units_order_up_to`.
 
 ## Gates Passed
 

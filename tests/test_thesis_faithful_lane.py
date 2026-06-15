@@ -12,10 +12,12 @@ from scripts.run_thesis_faithful import THESIS_BACKBONE
 from supply_chain.config import (
     HOURS_PER_YEAR_THESIS,
     R14_DEFECT_MODE_OPTIONS,
+    RAW_MATERIAL_FLOW_MODE_OPTIONS,
     SIMULATION_HORIZON,
     THESIS_DOWNSTREAM_Q_RANGES,
     THESIS_FAITHFUL_PROTOCOL,
     VALIDATION_TABLE_6_10,
+    canonical_raw_material_flow_mode,
 )
 from supply_chain.external_env_interface import (
     get_thesis_aligned_training_env_spec,
@@ -101,6 +103,19 @@ def test_invalid_thesis_lane_options_fail_fast() -> None:
         MFSCSimulation(r14_defect_mode="silent_drop")
     with pytest.raises(ValueError, match="raw_material_flow_mode"):
         MFSCSimulation(raw_material_flow_mode="not_a_mode")
+
+
+def test_raw_material_flow_mode_aliases_are_explicit_and_canonical() -> None:
+    assert "kit_equivalent" in RAW_MATERIAL_FLOW_MODE_OPTIONS
+    assert "kit_equivalent_order_up_to" in RAW_MATERIAL_FLOW_MODE_OPTIONS
+    assert canonical_raw_material_flow_mode("kit_equivalent") == "bom_total_units"
+    assert (
+        canonical_raw_material_flow_mode("kit_equivalent_order_up_to")
+        == "bom_total_units_order_up_to"
+    )
+
+    sim = MFSCSimulation(raw_material_flow_mode="kit_equivalent_order_up_to")
+    assert sim.raw_material_flow_mode == "bom_total_units_order_up_to"
 
 
 def test_bom_total_units_mode_scales_raw_buffer_targets_only() -> None:
@@ -225,6 +240,25 @@ def test_bom_order_up_to_mode_passes_table_6_10_production_gate() -> None:
     assert throughput["avg_annual_production"] == pytest.approx(738_432, rel=0.02)
     inventory = sim._inventory_detail()
     assert inventory["raw_material_al"] < 1_000_000
+
+
+def test_kit_equivalent_order_up_to_alias_passes_table_6_10_production_gate() -> None:
+    sim = MFSCSimulation(
+        shifts=1,
+        risks_enabled=False,
+        seed=42,
+        horizon=SIMULATION_HORIZON,
+        year_basis="thesis",
+        deterministic_baseline=True,
+        warmup_trigger="op9_arrival",
+        downstream_q_source=THESIS_FAITHFUL_PROTOCOL["downstream_q_source"],
+        r14_defect_mode=THESIS_FAITHFUL_PROTOCOL["r14_defect_mode"],
+        raw_material_flow_mode="kit_equivalent_order_up_to",
+        raw_material_order_up_to_multiplier=2.0,
+    ).run()
+    throughput = sim.get_annual_throughput(start_time=sim.warmup_time, num_years=8)
+
+    assert throughput["avg_annual_production"] == pytest.approx(738_432, rel=0.02)
 
 
 def test_thesis_faithful_launcher_writes_auditable_artifacts(tmp_path) -> None:

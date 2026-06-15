@@ -28,6 +28,7 @@ from supply_chain.config import (  # noqa: E402
     INVENTORY_BUFFERS,
     NUM_RAW_MATERIALS,
     OPERATIONS,
+    RAW_MATERIAL_FLOW_MODE_OPTIONS,
     RATIONS_PER_SHIFT,
 )
 from supply_chain.external_env_interface import (  # noqa: E402
@@ -231,11 +232,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--raw-material-flow-mode",
         default="legacy_validated",
-        choices=(
-            "legacy_validated",
-            "bom_total_units",
-            "bom_total_units_order_up_to",
-        ),
+        choices=RAW_MATERIAL_FLOW_MODE_OPTIONS,
     )
     parser.add_argument("--raw-material-order-up-to-multiplier", type=float, default=2.0)
     parser.add_argument("--max-steps", type=int, default=260)

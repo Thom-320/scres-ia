@@ -85,7 +85,18 @@ RAW_MATERIAL_FLOW_MODE_OPTIONS = (
     "legacy_validated",
     "bom_total_units",
     "bom_total_units_order_up_to",
+    "kit_equivalent",
+    "kit_equivalent_order_up_to",
 )
+RAW_MATERIAL_FLOW_MODE_ALIASES = {
+    "kit_equivalent": "bom_total_units",
+    "kit_equivalent_order_up_to": "bom_total_units_order_up_to",
+}
+
+
+def canonical_raw_material_flow_mode(mode: str) -> str:
+    """Return the canonical raw-material flow mode name."""
+    return RAW_MATERIAL_FLOW_MODE_ALIASES.get(mode, mode)
 
 # =============================================================================
 # OPERATION DEFINITIONS — Cf0 Baseline (S=1, It,1=0)

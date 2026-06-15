@@ -28,7 +28,7 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from supply_chain.config import HOURS_PER_WEEK  # noqa: E402
+from supply_chain.config import HOURS_PER_WEEK, RAW_MATERIAL_FLOW_MODE_OPTIONS  # noqa: E402
 from supply_chain.external_env_interface import (  # noqa: E402
     THESIS_INVENTORY_PERIODS,
     get_episode_terminal_metrics,
@@ -562,11 +562,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--raw-material-flow-mode",
         default="legacy_validated",
-        choices=(
-            "legacy_validated",
-            "bom_total_units",
-            "bom_total_units_order_up_to",
-        ),
+        choices=RAW_MATERIAL_FLOW_MODE_OPTIONS,
     )
     parser.add_argument("--raw-material-order-up-to-multiplier", type=float, default=2.0)
     parser.add_argument("--observation-version", default="v5")
