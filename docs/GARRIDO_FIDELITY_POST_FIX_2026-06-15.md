@@ -162,6 +162,22 @@ python scripts/run_garrido_static_fidelity_stress.py \
 
 If this is too slow locally, run it on Kaggle before resuming PPO/RL claims.
 
+Because the full 5-profile x minimal-policy thesis-horizon matrix is expensive,
+a smaller H2/H3 thesis-pattern gate is also launched:
+
+```bash
+kaggle kernels status thomaschisica/scresia-garrido-fidelity-h2-thesis
+```
+
+It runs Cf31-90, `thesis_pattern`, `policy-set=minimal`, 3 replications,
+`horizon-mode=thesis`, and `raw_material_flow_mode=kit_equivalent_order_up_to`.
+Download with:
+
+```bash
+kaggle kernels output thomaschisica/scresia-garrido-fidelity-h2-thesis \
+  -p outputs/kaggle_garrido_fidelity_h2_thesis_latest
+```
+
 ### H1 Matched-Only Thesis-Horizon Gate
 
 For a faster risk-degradation check, the runner now supports
