@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import json
 import math
 import re
@@ -67,12 +68,7 @@ def discover_ppo_runs(ppo_root: Path) -> list[dict[str, Any]]:
         model_zip = run_dir / "ppo_mlp_thesis_decision.zip"
         model_dir = run_dir / "ppo_mlp_thesis_decision"
         if not model_zip.exists() and model_dir.is_dir():
-            with zipfile.ZipFile(
-                model_zip, "w", compression=zipfile.ZIP_DEFLATED
-            ) as zf:
-                for file_path in model_dir.rglob("*"):
-                    if file_path.is_file():
-                        zf.write(file_path, file_path.relative_to(model_dir))
+            model_zip = repackage_model_dir(model_dir, model_zip)
         vecnorm = run_dir / "vecnormalize.pkl"
         summary = run_dir / "summary.json"
         if not (model_zip.exists() and vecnorm.exists() and summary.exists()):
@@ -101,6 +97,27 @@ def discover_ppo_runs(ppo_root: Path) -> list[dict[str, Any]]:
             }
         )
     return runs
+
+
+def repackage_model_dir(model_dir: Path, target_zip: Path) -> Path:
+    """Rebuild an SB3 zip, falling back to /tmp for read-only Kaggle inputs."""
+    try:
+        write_model_zip(model_dir, target_zip)
+        return target_zip
+    except OSError:
+        digest = hashlib.sha1(str(model_dir.resolve()).encode("utf-8")).hexdigest()[:10]
+        cache_dir = Path("/tmp/scresia_ppo_zips")
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        cached_zip = cache_dir / f"{model_dir.parent.name}_{digest}.zip"
+        write_model_zip(model_dir, cached_zip)
+        return cached_zip
+
+
+def write_model_zip(model_dir: Path, target_zip: Path) -> None:
+    with zipfile.ZipFile(target_zip, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+        for file_path in model_dir.rglob("*"):
+            if file_path.is_file():
+                zf.write(file_path, file_path.relative_to(model_dir))
 
 
 def rollout_with_action_fn(
