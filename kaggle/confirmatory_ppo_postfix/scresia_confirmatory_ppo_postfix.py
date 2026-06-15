@@ -28,9 +28,19 @@ def find_ppo_root() -> Path:
     for candidate in PPO_ROOT_CANDIDATES:
         if candidate.exists():
             return candidate
+    input_root = Path("/kaggle/input")
+    if input_root.exists():
+        if list(input_root.glob("**/kaggle_ppo_bestshot_seed*/summary.json")):
+            return input_root
+        if list(input_root.glob("**/ppo_adaptive/*/summary.json")):
+            return input_root
+        visible = sorted(str(path) for path in input_root.glob("*"))
+    else:
+        visible = []
     raise FileNotFoundError(
         "No PPO artifact dataset found. Checked: "
         + ", ".join(str(path) for path in PPO_ROOT_CANDIDATES)
+        + f". Visible /kaggle/input entries: {visible}"
     )
 
 
