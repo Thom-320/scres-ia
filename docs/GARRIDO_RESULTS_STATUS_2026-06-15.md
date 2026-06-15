@@ -152,6 +152,11 @@ running in tmux session `scres_ppo_postfix_230801`, output directory:
 
 - `outputs/benchmarks/confirmatory_ppo_ladder/postfix_confirmatory_ppo_full_20260615T230801Z/`
 
+Last observed local PPO progress: `1000/4800` evaluations completed. It has
+loaded three 500k PPO best-shot models and is still running; do not interpret
+its partial CSV as a final PPO result until `CONFIRMATORY_PPO_LADDER.md` and
+`exit_code.txt` are present.
+
 These are readiness checks, not final scientific results. The serious rerun
 order is:
 
