@@ -367,6 +367,35 @@ def test_thesis_risk_tables_reporter_writes_match_artifacts(tmp_path) -> None:
     assert (run_dir / "thesis_risk_tables.csv").exists()
 
 
+def test_thesis_operations_table_reporter_writes_match_artifacts(tmp_path) -> None:
+    subprocess.run(
+        [
+            sys.executable,
+            "scripts/report_thesis_operations_table.py",
+            "--label",
+            "pytest_operations_table",
+            "--output-root",
+            str(tmp_path),
+        ],
+        check=True,
+    )
+    run_dir = tmp_path / "pytest_operations_table"
+    payload = json.loads(
+        (run_dir / "thesis_operations_table.json").read_text(encoding="utf-8")
+    )
+
+    assert payload["status"] == "PASS"
+    assert len(payload["rows"]) == 85
+    assert {row["section"] for row in payload["rows"]} == {
+        "demand",
+        "downstream_q",
+        "operations",
+        "time_constants",
+    }
+    assert (run_dir / "THESIS_OPERATIONS_BACKBONE.md").exists()
+    assert (run_dir / "thesis_operations_table.csv").exists()
+
+
 def test_thesis_aligned_training_env_is_trainable_but_not_1to1() -> None:
     spec = get_thesis_aligned_training_env_spec()
     env = make_thesis_aligned_training_env(max_steps=1)
