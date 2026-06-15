@@ -53,6 +53,8 @@ The post-processor was rerun against these directories and rewrote
 
 ### Kaggle State
 
+- Post-fix rerun code is published on branch `codex/garrido-postfix-reruns`
+  at commit `8056bcff965bfc33daec05dc2fc5552f28765f4e`.
 - `thomaschisica/scresia-garrido-fidelity-postfix` is still running. Do not
   claim the full Cf31-90 x 5-profile x 3-rep thesis-horizon panel complete until
   its artifacts are downloaded and post-processed.
@@ -64,6 +66,11 @@ The post-processor was rerun against these directories and rewrote
   output, so it is log evidence only.
 - Version 2 of `thomaschisica/scresia-garrido-fidelity-h2-thesis` has been
   pushed with explicit export into `scres-ia/kaggle_outputs/...` and is running.
+- `thomaschisica/scresia-confirmatory-static-postfix` has been launched from
+  the post-fix branch and is running.
+- `thomaschisica/scresia-confirmatory-ppo-postfix` has been launched from the
+  post-fix branch and is running. It is evaluation-only and uses the
+  `thomaschisica/scresia-ppo-bestshot-artifacts` dataset.
 
 ## Superseded Results
 
@@ -92,6 +99,11 @@ Smoke artifacts generated under `kit_equivalent_order_up_to`:
 - `outputs/benchmarks/unified_evaluation/postfix_unified_smoke_kit_equiv/`
 - `outputs/benchmarks/confirmatory_static_ladder/postfix_smoke_kit_equiv/`
 - `outputs/benchmarks/confirmatory_ppo_ladder/postfix_ppo_smoke_kit_equiv/`
+
+Local full confirmatory static is running in tmux session
+`scres_static_postfix_224417`, output directory:
+
+- `outputs/benchmarks/confirmatory_static_ladder/postfix_confirmatory_static_full_20260615T224417Z/`
 
 These are readiness checks, not final scientific results. The serious rerun
 order is:
