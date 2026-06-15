@@ -488,6 +488,33 @@ def test_thesis_bom_semantics_reporter_writes_match_artifacts(tmp_path) -> None:
     assert (run_dir / "thesis_bom_semantics.csv").exists()
 
 
+def test_thesis_risk_frequency_reporter_exposes_current_gap(tmp_path) -> None:
+    subprocess.run(
+        [
+            sys.executable,
+            "scripts/report_thesis_risk_frequency.py",
+            "--label",
+            "pytest_risk_frequency",
+            "--output-root",
+            str(tmp_path),
+        ],
+        check=True,
+    )
+    run_dir = tmp_path / "pytest_risk_frequency"
+    payload = json.loads(
+        (run_dir / "thesis_risk_frequency.json").read_text(encoding="utf-8")
+    )
+    mismatched = {
+        row["risk_id"] for row in payload["rows"] if row["status"] == "MISMATCH"
+    }
+
+    assert payload["status"] == "FAIL"
+    assert len(payload["rows"]) == 9
+    assert {"R11", "R13", "R21", "R22", "R23", "R24", "R3"} <= mismatched
+    assert (run_dir / "THESIS_RISK_FREQUENCY.md").exists()
+    assert (run_dir / "thesis_risk_frequency.csv").exists()
+
+
 def test_thesis_aligned_training_env_is_trainable_but_not_1to1() -> None:
     spec = get_thesis_aligned_training_env_spec()
     env = make_thesis_aligned_training_env(max_steps=1)
