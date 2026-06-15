@@ -84,8 +84,63 @@ It is not itself a final replication of Garrido's 10/20-year design horizons.
 
 ## Next Required Gate
 
-Run a thesis-horizon static replication with the same mode, at least for the
-minimal policy set first:
+Run a thesis-horizon static replication with the same mode. A first local
+single-rep thesis-pattern gate has been completed; the full Kaggle run remains
+active.
+
+### Thesis-Horizon Interim Gate
+
+Local command:
+
+```bash
+python scripts/run_garrido_static_fidelity_stress.py \
+  --label bom_order_up_to_cf31_90_thesis_pattern_thesis_horizon_1rep_codex \
+  --output-root outputs/benchmarks/garrido_static_fidelity_stress \
+  --panel-cfis 31-90 \
+  --profiles thesis_pattern \
+  --policy-set minimal \
+  --replications 1 \
+  --horizon-mode thesis \
+  --reward-mode ReT_thesis \
+  --raw-material-flow-mode bom_total_units_order_up_to \
+  --raw-material-order-up-to-multiplier 2.0 \
+  --progress-every 50
+```
+
+Output:
+
+- `outputs/benchmarks/garrido_static_fidelity_stress/bom_order_up_to_cf31_90_thesis_pattern_thesis_horizon_1rep_codex/GARRIDO_STATIC_FIDELITY_STRESS.md`
+
+Result on Cf31-90, thesis horizons (`480` weekly decisions for 10-year rows and
+`960` for 20-year rows), one replication:
+
+| Check | Scenario-level evidence |
+|---|---|
+| H2 fill | `I672 > I0` in 42 / 60 scenarios; mean delta `+0.0657`. |
+| H2 ReT | `I672 > I0` in 59 / 60 scenarios; mean delta `+0.2953`. |
+| H3 fill | `S3 > S1` in 41 / 60 scenarios; mean delta `+0.0593`. |
+| H3 ReT | `S3 > S1` in 56 / 60 scenarios; mean delta `+0.2565`. |
+
+This is stronger for ReT than fill because the longer horizon saturates fill in
+some rows. It supports the post-fix thesis-horizon direction checks, but it is
+still a one-rep interim gate.
+
+### Full Thesis-Horizon Kaggle Gate
+
+The full 3-rep thesis-horizon run is launched as a Kaggle kernel:
+
+```bash
+kaggle kernels status thomaschisica/scresia-garrido-fidelity-postfix
+```
+
+When it finishes, download artifacts with:
+
+```bash
+kaggle kernels output thomaschisica/scresia-garrido-fidelity-postfix \
+  -p outputs/kaggle_garrido_fidelity_postfix_latest
+```
+
+The intended full command inside Kaggle is:
 
 ```bash
 python scripts/run_garrido_static_fidelity_stress.py \
