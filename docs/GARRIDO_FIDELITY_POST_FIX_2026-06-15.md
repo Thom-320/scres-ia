@@ -248,3 +248,38 @@ Result: H2 passes under thesis horizons for Cf31-60 with 3 replications.
 The effect is much stronger in ReT than fill because the long horizon saturates
 fill in some configurations. This is consistent with the thesis objective:
 inventory buffering moderates resilience, not just immediate fill.
+
+### H3 Capacity Thesis-Horizon Gate
+
+Local command:
+
+```bash
+python scripts/run_garrido_static_fidelity_stress.py \
+  --label bom_order_up_to_h3_capacity_cf61_90_thesis_horizon_3reps_codex \
+  --output-root outputs/benchmarks/garrido_static_fidelity_stress \
+  --panel-cfis 61-90 \
+  --profiles thesis_pattern \
+  --policy-set minimal \
+  --replications 3 \
+  --horizon-mode thesis \
+  --reward-mode ReT_thesis \
+  --raw-material-flow-mode kit_equivalent_order_up_to \
+  --raw-material-order-up-to-multiplier 2.0 \
+  --progress-every 50
+```
+
+Output:
+
+- `outputs/benchmarks/garrido_static_fidelity_stress/bom_order_up_to_h3_capacity_cf61_90_thesis_horizon_3reps_codex/GARRIDO_STATIC_FIDELITY_STRESS.md`
+
+Result: H3 passes under thesis horizons for Cf61-90 with 3 replications.
+
+| Metric | Scenario-level S3 > S1 | Mean delta | Episode-level S3 > S1 | Mean delta |
+|---|---:|---:|---:|---:|
+| fill | 18 / 30 | +0.0594 | 56 / 90 | +0.0594 |
+| ReT | 27 / 30 | +0.2533 | 83 / 90 | +0.2533 |
+
+As with H2, the capacity signal is stronger in ReT than fill under long thesis
+horizons. The post-fix model now reproduces all three qualitative thesis
+directions under thesis horizons: H1 risk degradation, H2 inventory moderation,
+and H3 capacity moderation.
