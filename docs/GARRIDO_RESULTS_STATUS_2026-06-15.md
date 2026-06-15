@@ -54,7 +54,7 @@ The post-processor was rerun against these directories and rewrote
 ### Kaggle State
 
 - Post-fix rerun code is published on branch `codex/garrido-postfix-reruns`
-  at commit `2dc1cd75f9c0111cf9f9082eed664e5a0e5cfce2`.
+  at commit `3c7f7eef1e4c803420b451ef9e99ae6a20edcb6a`.
 - `thomaschisica/scresia-garrido-fidelity-postfix` is still running. Do not
   claim the full Cf31-90 x 5-profile x 3-rep thesis-horizon panel complete until
   its artifacts are downloaded and post-processed.
@@ -69,9 +69,11 @@ The post-processor was rerun against these directories and rewrote
 - `thomaschisica/scresia-confirmatory-static-postfix` has been launched from
   the post-fix branch and is running.
 - `thomaschisica/scresia-confirmatory-ppo-postfix` version 1 failed because the
-  expected PPO dataset mount was not found. Version 2 adds recursive
-  `/kaggle/input` discovery and is running. It is evaluation-only and uses the
-  `thomaschisica/scresia-ppo-bestshot-artifacts` dataset when mounted.
+  expected PPO dataset mount was not found. Version 2 found the mount but failed
+  because Kaggle datasets are read-only and the runner tried to rebuild SB3
+  `.zip` files in `/kaggle/input`. Version 3 repackages those model directories
+  under `/tmp/scresia_ppo_zips` and is running. It is evaluation-only and uses
+  the `thomaschisica/scresia-ppo-bestshot-artifacts` dataset when mounted.
 
 ## Superseded Results
 
