@@ -200,6 +200,13 @@ of learned superiority in the repaired inventory environment.
 ### Kaggle State
 
 - Post-fix rerun code is published on branch `codex/garrido-postfix-reruns`.
+- Thesis-periodic risk rerun wrappers are published through commit `ea299bc`.
+  New Kaggle versions were launched after the Table 6.11 fix:
+  - `thomaschisica/scresia-garrido-fidelity-h2-thesis` version 3: `RUNNING`
+  - `thomaschisica/scresia-garrido-fidelity-postfix` version 3: `RUNNING`
+  - `thomaschisica/scresia-confirmatory-static-postfix` version 2: `RUNNING`
+  - `thomaschisica/scresia-confirmatory-ppo-postfix` version 5: `RUNNING`
+  These are the current Kaggle reruns for thesis-frequency risk timing.
 - `thomaschisica/scresia-garrido-fidelity-postfix` version 1 stayed `RUNNING`
   for hours without logs, files, or downloadable filtered artifacts. Version 2
   was pushed on 2026-06-16 at about `00:11 UTC` using the artifact-only export
