@@ -47,6 +47,28 @@ def profile_args() -> dict[str, str]:
     }
 
 
+def resolve_torch_device_arg() -> str:
+    import torch
+
+    if not torch.cuda.is_available():
+        raise RuntimeError(
+            "Kaggle GPU is not available. Enable GPU acceleration before running "
+            "the Track A history screen."
+        )
+    capability = torch.cuda.get_device_capability(0)
+    device_name = torch.cuda.get_device_name(0)
+    print("torch_cuda_available", True, flush=True)
+    print("torch_device", device_name, flush=True)
+    print("torch_cuda_capability", capability, flush=True)
+    if capability[0] < 7:
+        raise RuntimeError(
+            f"Kaggle assigned {device_name} with compute capability {capability}. "
+            "The current PyTorch build requires sm_70 or newer. Use "
+            "machine_shape=NvidiaTeslaT4 or select a T4/A100 GPU in the Kaggle UI."
+        )
+    return "cuda"
+
+
 def main() -> None:
     started_at = datetime.now(timezone.utc)
     label = (
@@ -78,19 +100,8 @@ def main() -> None:
         cwd=REPO_DIR,
     )
 
-    run(
-        [
-            sys.executable,
-            "-c",
-            (
-                "import torch; "
-                "print('torch_cuda_available', torch.cuda.is_available()); "
-                "print('torch_device', torch.cuda.get_device_name(0) "
-                "if torch.cuda.is_available() else 'cpu')"
-            ),
-        ],
-        cwd=REPO_DIR,
-    )
+    sys.path.insert(0, str(REPO_DIR))
+    device_arg = resolve_torch_device_arg()
 
     OUTPUT_ROOT.mkdir(parents=True, exist_ok=True)
     cmd = [
@@ -131,7 +142,7 @@ def main() -> None:
         "--history-window",
         os.environ.get("SCRESIA_HISTORY_WINDOW", "30"),
         "--device",
-        "auto",
+        device_arg,
         "--stop-on-error",
     ]
     run(cmd, cwd=REPO_DIR)
