@@ -178,6 +178,21 @@ def build_parser() -> argparse.ArgumentParser:
         help="MLP policy/value size for PPO.",
     )
     parser.add_argument("--learning-rate", type=float, default=3e-4)
+    parser.add_argument("--w-bo", type=float, default=1.0)
+    parser.add_argument("--w-cost", type=float, default=0.06)
+    parser.add_argument("--w-disr", type=float, default=0.0)
+    parser.add_argument("--ret-seq-w-sc", type=float, default=0.60)
+    parser.add_argument("--ret-seq-w-bc", type=float, default=0.25)
+    parser.add_argument("--ret-seq-w-ae", type=float, default=0.15)
+    parser.add_argument("--ret-seq-kappa", type=float, default=0.20)
+    parser.add_argument("--ret-ladder-w-sc", type=float, default=0.65)
+    parser.add_argument("--ret-ladder-w-rc", type=float, default=0.30)
+    parser.add_argument("--ret-ladder-w-ef", type=float, default=0.05)
+    parser.add_argument("--ret-ladder-cap-kappa", type=float, default=0.10)
+    parser.add_argument("--ret-ladder-inv-kappa", type=float, default=0.05)
+    parser.add_argument("--ret-ladder-gate-beta", type=float, default=12.0)
+    parser.add_argument("--ret-ladder-gate-sc-threshold", type=float, default=0.95)
+    parser.add_argument("--ret-ladder-gate-rc-threshold", type=float, default=0.70)
     parser.add_argument("--n-steps", type=int, default=1024)
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--n-epochs", type=int, default=10)
@@ -207,6 +222,21 @@ def env_kwargs(args: argparse.Namespace) -> dict[str, Any]:
         "raw_material_order_up_to_multiplier": args.raw_material_order_up_to_multiplier,
         "risk_occurrence_mode": args.risk_occurrence_mode,
         "learn_initial_decision": args.learn_initial_decision,
+        "w_bo": args.w_bo,
+        "w_cost": args.w_cost,
+        "w_disr": args.w_disr,
+        "ret_seq_w_sc": args.ret_seq_w_sc,
+        "ret_seq_w_bc": args.ret_seq_w_bc,
+        "ret_seq_w_ae": args.ret_seq_w_ae,
+        "ret_seq_kappa": args.ret_seq_kappa,
+        "ret_ladder_w_sc": args.ret_ladder_w_sc,
+        "ret_ladder_w_rc": args.ret_ladder_w_rc,
+        "ret_ladder_w_ef": args.ret_ladder_w_ef,
+        "ret_ladder_cap_kappa": args.ret_ladder_cap_kappa,
+        "ret_ladder_inv_kappa": args.ret_ladder_inv_kappa,
+        "ret_ladder_gate_beta": args.ret_ladder_gate_beta,
+        "ret_ladder_gate_sc_threshold": args.ret_ladder_gate_sc_threshold,
+        "ret_ladder_gate_rc_threshold": args.ret_ladder_gate_rc_threshold,
     }
 
 
