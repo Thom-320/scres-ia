@@ -180,9 +180,12 @@ of learned superiority in the repaired inventory environment.
 ### Kaggle State
 
 - Post-fix rerun code is published on branch `codex/garrido-postfix-reruns`.
-- `thomaschisica/scresia-garrido-fidelity-postfix` is still running. Do not
-  claim the full Cf31-90 x 5-profile x 3-rep thesis-horizon panel complete until
-  its artifacts are downloaded and post-processed.
+- `thomaschisica/scresia-garrido-fidelity-postfix` version 1 stayed `RUNNING`
+  for hours without logs, files, or downloadable filtered artifacts. Version 2
+  was pushed on 2026-06-16 at about `00:11 UTC` using the artifact-only export
+  wrapper from commit `e12ea05`. Do not claim the full Cf31-90 x 5-profile x
+  3-rep thesis-horizon panel complete until the version 2 artifacts are
+  downloaded and post-processed.
 - `thomaschisica/scresia-garrido-fidelity-h2-thesis` version 2 completed and its
   exported artifacts were downloaded to:
   `outputs/kaggle_garrido_fidelity_h2_thesis_v2_latest/scres-ia/kaggle_outputs/kaggle_h2_thesis_20260615T223853Z/`
@@ -211,9 +214,12 @@ of learned superiority in the repaired inventory environment.
 - `thomaschisica/scresia-confirmatory-ppo-postfix` version 1 failed because the
   expected PPO dataset mount was not found. Version 2 found the mount but failed
   because Kaggle datasets are read-only and the runner tried to rebuild SB3
-  `.zip` files in `/kaggle/input`. Version 3 repackages those model directories
-  under `/tmp/scresia_ppo_zips` and is running. It is evaluation-only and uses
-  the `thomaschisica/scresia-ppo-bestshot-artifacts` dataset when mounted.
+  `.zip` files in `/kaggle/input`. Version 3 repackaged those model directories
+  under `/tmp/scresia_ppo_zips`, but remained `RUNNING` without logs, files, or
+  downloadable filtered artifacts. Version 4 was pushed on 2026-06-16 at about
+  `00:11 UTC` using the artifact-only export wrapper from commit `e12ea05`. It
+  is evaluation-only and uses the
+  `thomaschisica/scresia-ppo-bestshot-artifacts` dataset when mounted.
 
 ## Superseded Results
 
