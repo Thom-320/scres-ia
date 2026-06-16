@@ -217,9 +217,15 @@ of learned superiority in the repaired inventory environment.
   `.zip` files in `/kaggle/input`. Version 3 repackaged those model directories
   under `/tmp/scresia_ppo_zips`, but remained `RUNNING` without logs, files, or
   downloadable filtered artifacts. Version 4 was pushed on 2026-06-16 at about
-  `00:11 UTC` using the artifact-only export wrapper from commit `e12ea05`. It
-  is evaluation-only and uses the
-  `thomaschisica/scresia-ppo-bestshot-artifacts` dataset when mounted.
+  `00:11 UTC` using the artifact-only export wrapper from commit `e12ea05`.
+  Version 4 completed and its exported artifacts were downloaded to:
+  `outputs/kaggle_confirmatory_ppo_postfix_v4_latest/kaggle_outputs/kaggle_confirmatory_ppo_postfix_20260616T001201Z/`
+- The Kaggle confirmatory PPO rerun has `4800` scenario rows plus header and
+  matches the local confirmatory PPO result. It is evaluation-only, uses the
+  `thomaschisica/scresia-ppo-bestshot-artifacts` dataset when mounted, and does
+  not support a PPO superiority claim under the repaired inventory contract:
+  PPO ties simple static buffered policies on fill/ReT and does not beat
+  `pure_inventory_I672_S1` at practical scale.
 
 ## Superseded Results
 
@@ -260,8 +266,7 @@ These are readiness checks, not final scientific results. The serious rerun
 order is:
 
 1. finish/download/post-process the full Kaggle static thesis-horizon panel;
-2. download/post-process the Kaggle confirmatory PPO rerun;
-3. treat the completed local static/PPO and Kaggle static reruns above as current
+2. treat the completed local static/PPO and Kaggle static/PPO reruns above as current
    evidence, while labeling the loaded PPO models as pretrained pre-existing
    artifacts evaluated under the repaired contract.
 
