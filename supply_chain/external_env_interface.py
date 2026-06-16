@@ -109,6 +109,10 @@ THESIS_FACTORIZED_ACTION_FIELDS: tuple[str, ...] = (
     "common_inventory_period_level",
     "assembly_shift_level",
 )
+CONTINUOUS_IT_S_ACTION_FIELDS: tuple[str, ...] = (
+    "continuous_inventory_buffer_fraction",
+    "assembly_shift_signal",
+)
 
 ACTION_BOUNDS: tuple[tuple[float, float], ...] = (
     (-1.0, 1.0),
@@ -443,10 +447,15 @@ def get_dkana_thesis_faithful_env_spec(
             "observation_mode must be 'decision_reward', 'env_reward', "
             "'env_state_reward', or 'env_sdm_history_reward'."
         )
-    if action_space_mode not in ("onehot_18d", "factorized", "thesis_factorized"):
+    if action_space_mode not in (
+        "onehot_18d",
+        "factorized",
+        "thesis_factorized",
+        "continuous_it_s",
+    ):
         raise ValueError(
             "action_space_mode must be 'onehot_18d', 'factorized', "
-            "or 'thesis_factorized'."
+            "'thesis_factorized', or 'continuous_it_s'."
         )
     if action_space_mode == "thesis_factorized":
         action_fields = THESIS_FACTORIZED_ACTION_FIELDS
@@ -459,6 +468,18 @@ def get_dkana_thesis_faithful_env_spec(
             "strategic inventory buffer.",
             "This is the action surface to use when the paper claims the "
             "agent controls the same decision variables as Garrido-Rios.",
+        )
+    elif action_space_mode == "continuous_it_s":
+        action_fields = CONTINUOUS_IT_S_ACTION_FIELDS
+        action_bounds = ((0.0, 1.0), (-1.0, 1.0))
+        action_notes = (
+            "Continuous Track A extension: de-discretizes Garrido-Rios' "
+            "common I_t,S buffer level while preserving the same buffer "
+            "locations (Op3, Op5, Op9) and the same S shift variable.",
+            "The first action is a fraction of I1344,1 from Table 6.16; "
+            "the second action is a continuous signal mapped to S1/S2/S3.",
+            "Use this surface for claims about continuous relaxation of "
+            "Garrido-Rios' decision variables, not for strict replication.",
         )
     else:
         action_fields = THESIS_DECISION_ACTION_FIELDS
@@ -493,6 +514,7 @@ def get_dkana_thesis_faithful_env_spec(
             f"action_space_mode={action_space_mode}: onehot_18d exports the raw "
             "18D thesis vector; thesis_factorized trains the two thesis "
             "decision variables (common I_t,S level and S) directly; "
+            "continuous_it_s de-discretizes the same common I_t,S variable; "
             "factorized trains categorical decisions over Op3, Op5, Op9, "
             "and S, then records the equivalent 18D vector.",
             f"observation_mode={observation_mode}: decision_reward keeps the "

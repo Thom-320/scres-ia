@@ -45,6 +45,7 @@ INVENTORY_POLICIES = tuple(
 ACTION_DIM = 18
 FACTORIZED_ACTION_DIM = 4
 THESIS_FACTORIZED_ACTION_DIM = 2
+CONTINUOUS_IT_S_ACTION_DIM = 2
 
 
 def utc_now_iso() -> str:
@@ -78,7 +79,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--action-space-mode",
-        choices=["onehot_18d", "factorized", "thesis_factorized"],
+        choices=["onehot_18d", "factorized", "thesis_factorized", "continuous_it_s"],
         default="thesis_factorized",
     )
     parser.add_argument(
@@ -290,6 +291,8 @@ def make_env(args: argparse.Namespace, seed: int) -> Callable[[], Monitor]:
 def static_action(shifts: int, *, action_space_mode: str) -> np.ndarray:
     if action_space_mode == "thesis_factorized":
         return np.array([0, shifts - 1], dtype=np.int64)
+    if action_space_mode == "continuous_it_s":
+        return np.array([0.0, shift_signal_for(shifts)], dtype=np.float32)
     if action_space_mode == "factorized":
         return np.array([0, 0, 0, shifts - 1], dtype=np.int64)
     action = np.zeros(ACTION_DIM, dtype=np.float32)
@@ -303,6 +306,14 @@ def inventory_action(
     period_index = THESIS_INVENTORY_PERIODS.index(int(period))
     if action_space_mode == "thesis_factorized":
         return np.array([period_index + 1, shifts - 1], dtype=np.int64)
+    if action_space_mode == "continuous_it_s":
+        return np.array(
+            [
+                float(period) / float(max(THESIS_INVENTORY_PERIODS)),
+                shift_signal_for(shifts),
+            ],
+            dtype=np.float32,
+        )
     if action_space_mode == "factorized":
         level = period_index + 1
         return np.array([level, level, level, shifts - 1], dtype=np.int64)
@@ -311,6 +322,16 @@ def inventory_action(
         action[node_index * 5 + period_index] = 1.0
     action[15 + shifts - 1] = 1.0
     return action
+
+
+def shift_signal_for(shifts: int) -> float:
+    if shifts == 1:
+        return -1.0
+    if shifts == 2:
+        return 0.0
+    if shifts == 3:
+        return 1.0
+    raise ValueError(f"Invalid shifts={shifts}; expected 1, 2, or 3.")
 
 
 def thesis_design_action(
@@ -852,6 +873,17 @@ def run_single(args: argparse.Namespace, run_dir: Path) -> dict[str, Any]:
                 dtype=np.int64,
             )
 
+    elif args.action_space_mode == "continuous_it_s":
+
+        def random_action_fn(obs: np.ndarray, info: dict[str, Any]) -> np.ndarray:
+            return np.array(
+                [
+                    rng.uniform(0.0, 1.0),
+                    rng.uniform(-1.0, 1.0),
+                ],
+                dtype=np.float32,
+            )
+
     elif args.action_space_mode == "factorized":
 
         def random_action_fn(obs: np.ndarray, info: dict[str, Any]) -> np.ndarray:
@@ -902,6 +934,7 @@ def run_single(args: argparse.Namespace, run_dir: Path) -> dict[str, Any]:
         "inventory_period_mode": args.inventory_period_mode,
         "action_dim": {
             "thesis_factorized": THESIS_FACTORIZED_ACTION_DIM,
+            "continuous_it_s": CONTINUOUS_IT_S_ACTION_DIM,
             "factorized": FACTORIZED_ACTION_DIM,
             "onehot_18d": ACTION_DIM,
         }[args.action_space_mode],

@@ -280,10 +280,15 @@ class DKANAThesisFaithfulDecisionEnvWrapper(gym.Wrapper):
                 "observation_mode must be 'decision_reward', 'env_reward', "
                 "'env_state_reward', or 'env_sdm_history_reward'."
             )
-        if action_space_mode not in ("onehot_18d", "factorized", "thesis_factorized"):
+        if action_space_mode not in (
+            "onehot_18d",
+            "factorized",
+            "thesis_factorized",
+            "continuous_it_s",
+        ):
             raise ValueError(
                 "action_space_mode must be 'onehot_18d', 'factorized', "
-                "or 'thesis_factorized'."
+                "'thesis_factorized', or 'continuous_it_s'."
             )
         if inventory_period_mode not in ("thesis_strict", "per_node"):
             raise ValueError(
@@ -329,6 +334,14 @@ class DKANAThesisFaithfulDecisionEnvWrapper(gym.Wrapper):
             # 0 means no strategic inventory buffer; 1..5 map to I168,1..I1344,1.
             # The final categorical variable maps 0/1/2 to S1/S2/S3.
             self.action_space = gym.spaces.MultiDiscrete([6, 3])
+        elif action_space_mode == "continuous_it_s":
+            # Continuous relaxation of the same thesis decisions:
+            # [0] buffer fraction of I1344,1; [1] signal mapped to S1/S2/S3.
+            self.action_space = gym.spaces.Box(
+                low=np.array([0.0, -1.0], dtype=np.float32),
+                high=np.array([1.0, 1.0], dtype=np.float32),
+                dtype=np.float32,
+            )
         elif action_space_mode == "factorized":
             # 0 means no strategic buffer for a node; 1..5 map to I168,1..I1344,1.
             # The final categorical variable maps 0/1/2 to S1/S2/S3.
@@ -439,20 +452,20 @@ class DKANAThesisFaithfulDecisionEnvWrapper(gym.Wrapper):
             dtype=np.float32,
         )
 
-    def _select_inventory_period_by_node(self, action: np.ndarray) -> dict[str, int]:
+    def _select_inventory_period_by_node(self, action: np.ndarray) -> dict[str, float]:
         inventory_scores = action[:15].reshape(3, 5)
-        selected: dict[str, int] = {}
+        selected: dict[str, float] = {}
         for node_index, node_name in enumerate(("op3", "op5", "op9")):
             node_scores = inventory_scores[node_index]
             if float(node_scores.max()) > 0.0:
-                selected[node_name] = int(
+                selected[node_name] = float(
                     THESIS_INVENTORY_PERIODS[int(node_scores.argmax())]
                 )
         return self._normalize_periods_by_node(selected)
 
     def _normalize_periods_by_node(
-        self, periods_by_node: dict[str, int]
-    ) -> dict[str, int]:
+        self, periods_by_node: dict[str, float]
+    ) -> dict[str, float]:
         if self.inventory_period_mode == "per_node" or not periods_by_node:
             return dict(periods_by_node)
         counts = {
@@ -461,15 +474,26 @@ class DKANAThesisFaithfulDecisionEnvWrapper(gym.Wrapper):
         }
         chosen_period = max(
             counts,
-            key=lambda period: (counts[period], THESIS_INVENTORY_PERIODS.index(period)),
+            key=lambda period: (
+                counts[period],
+                THESIS_INVENTORY_PERIODS.index(int(period)),
+            ),
         )
-        return {node_name: int(chosen_period) for node_name in ("op3", "op5", "op9")}
+        return {node_name: float(chosen_period) for node_name in ("op3", "op5", "op9")}
 
     @staticmethod
     def _select_shifts(action: np.ndarray) -> int:
         return int(action[15:18].argmax()) + 1
 
-    def _decode_action(self, action: Any) -> tuple[dict[str, int], int, np.ndarray]:
+    @staticmethod
+    def _select_shift_from_signal(signal: float) -> int:
+        if signal < -0.33:
+            return 1
+        if signal < 0.33:
+            return 2
+        return 3
+
+    def _decode_action(self, action: Any) -> tuple[dict[str, float], int, np.ndarray]:
         action_array = np.asarray(action)
         if self.action_space_mode == "thesis_factorized":
             if action_array.shape != (2,):
@@ -481,11 +505,36 @@ class DKANAThesisFaithfulDecisionEnvWrapper(gym.Wrapper):
                 raise ValueError("Thesis-factorized action values are out of bounds.")
             periods_by_node = {}
             if int(discrete[0]) > 0:
-                period = int(THESIS_INVENTORY_PERIODS[int(discrete[0]) - 1])
+                period = float(THESIS_INVENTORY_PERIODS[int(discrete[0]) - 1])
                 periods_by_node = {
                     node_name: period for node_name in ("op3", "op5", "op9")
                 }
             shifts = int(discrete[1]) + 1
+            return (
+                periods_by_node,
+                shifts,
+                self._realized_vector(periods_by_node, shifts),
+            )
+
+        if self.action_space_mode == "continuous_it_s":
+            action_array = np.asarray(action, dtype=np.float32)
+            if action_array.shape != (2,):
+                raise ValueError(
+                    f"Action must have shape (2,), got {action_array.shape}."
+                )
+            clipped = np.clip(
+                action_array,
+                np.array([0.0, -1.0], dtype=np.float32),
+                np.array([1.0, 1.0], dtype=np.float32),
+            )
+            buffer_fraction = float(clipped[0])
+            periods_by_node = {}
+            if buffer_fraction > 0.0:
+                period = buffer_fraction * float(max(THESIS_INVENTORY_PERIODS))
+                periods_by_node = {
+                    node_name: period for node_name in ("op3", "op5", "op9")
+                }
+            shifts = self._select_shift_from_signal(float(clipped[1]))
             return (
                 periods_by_node,
                 shifts,
@@ -505,7 +554,7 @@ class DKANAThesisFaithfulDecisionEnvWrapper(gym.Wrapper):
                 ("op3", "op5", "op9"), discrete[:3], strict=True
             ):
                 if int(level) > 0:
-                    periods_by_node[node_name] = int(
+                    periods_by_node[node_name] = float(
                         THESIS_INVENTORY_PERIODS[int(level) - 1]
                     )
             periods_by_node = self._normalize_periods_by_node(periods_by_node)
@@ -529,7 +578,7 @@ class DKANAThesisFaithfulDecisionEnvWrapper(gym.Wrapper):
 
     @staticmethod
     def _buffer_targets_from_periods(
-        periods_by_node: dict[str, int],
+        periods_by_node: dict[str, float],
     ) -> dict[str, float]:
         key_by_node = {
             "op3": "op3_rm",
@@ -539,11 +588,21 @@ class DKANAThesisFaithfulDecisionEnvWrapper(gym.Wrapper):
         targets = {}
         for node_name, period in periods_by_node.items():
             target_key = key_by_node[node_name]
-            targets[target_key] = float(INVENTORY_BUFFERS[int(period)][target_key])
+            period_value = float(period)
+            period_key = int(round(period_value))
+            if (
+                period_key in INVENTORY_BUFFERS
+                and abs(period_value - period_key) < 1e-6
+            ):
+                targets[target_key] = float(INVENTORY_BUFFERS[period_key][target_key])
+                continue
+            max_period = float(max(THESIS_INVENTORY_PERIODS))
+            max_target = float(INVENTORY_BUFFERS[int(max_period)][target_key])
+            targets[target_key] = max_target * max(0.0, period_value) / max_period
         return targets
 
     def _set_inventory_targets(
-        self, periods_by_node: dict[str, int]
+        self, periods_by_node: dict[str, float]
     ) -> dict[str, float]:
         base_env = self.unwrapped
         sim = getattr(base_env, "sim", None)
@@ -564,16 +623,38 @@ class DKANAThesisFaithfulDecisionEnvWrapper(gym.Wrapper):
             sim._top_up_inventory_buffer(key, target)
         return internal_targets
 
+    @staticmethod
+    def _period_weights(period: float) -> list[float]:
+        periods = [float(period_value) for period_value in THESIS_INVENTORY_PERIODS]
+        period_value = float(period)
+        if period_value <= 0.0:
+            return [0.0] * len(periods)
+        if period_value <= periods[0]:
+            weights = [0.0] * len(periods)
+            weights[0] = period_value / periods[0]
+            return weights
+        for index, upper in enumerate(periods[1:], start=1):
+            lower = periods[index - 1]
+            if period_value <= upper:
+                upper_weight = (period_value - lower) / (upper - lower)
+                weights = [0.0] * len(periods)
+                weights[index - 1] = 1.0 - upper_weight
+                weights[index] = upper_weight
+                return weights
+        weights = [0.0] * len(periods)
+        weights[-1] = 1.0
+        return weights
+
     def _realized_vector(
-        self, periods_by_node: dict[str, int], shifts: int
+        self, periods_by_node: dict[str, float], shifts: int
     ) -> np.ndarray:
         realized = np.zeros(len(self.action_fields), dtype=np.float32)
         for node_index, node_name in enumerate(("op3", "op5", "op9")):
             period = periods_by_node.get(node_name)
             if period is None:
                 continue
-            period_index = THESIS_INVENTORY_PERIODS.index(int(period))
-            realized[node_index * 5 + period_index] = 1.0
+            for period_index, weight in enumerate(self._period_weights(float(period))):
+                realized[node_index * 5 + period_index] = float(weight)
         realized[15 + shifts - 1] = 1.0
         return realized
 
@@ -600,7 +681,7 @@ class DKANAThesisFaithfulDecisionEnvWrapper(gym.Wrapper):
         self,
         info: dict[str, Any],
         *,
-        periods_by_node: dict[str, int],
+        periods_by_node: dict[str, float],
         shifts: int,
         targets: dict[str, float],
     ) -> dict[str, Any]:
@@ -621,6 +702,11 @@ class DKANAThesisFaithfulDecisionEnvWrapper(gym.Wrapper):
             "inventory_period_hours": (
                 None if common_period is None else float(common_period)
             ),
+            "inventory_buffer_fraction": (
+                None
+                if common_period is None
+                else float(common_period) / float(max(THESIS_INVENTORY_PERIODS))
+            ),
             "inventory_period_hours_by_node": {
                 node_name: float(period)
                 for node_name, period in periods_by_node.items()
@@ -637,7 +723,7 @@ class DKANAThesisFaithfulDecisionEnvWrapper(gym.Wrapper):
         wrapper_options: dict[str, Any],
         initial_action: Any | None,
     ) -> tuple[np.ndarray, dict[str, Any]]:
-        initial_periods_by_node: dict[str, int] = {}
+        initial_periods_by_node: dict[str, float] = {}
         initial_shifts = 1
         initial_targets: dict[str, float] = {}
         if initial_action is not None:

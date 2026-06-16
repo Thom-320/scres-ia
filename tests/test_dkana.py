@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 import numpy as np
+import pytest
 import torch
 
 from scripts import run_thesis_decision_ppo_smoke as ppo_smoke
@@ -646,6 +647,39 @@ def test_dkana_thesis_factorized_action_zero_means_no_inventory_buffer() -> None
     env.close()
 
 
+def test_dkana_continuous_it_s_action_sets_continuous_common_buffer() -> None:
+    env = make_dkana_thesis_faithful_env(
+        max_steps=1,
+        observation_version="v5",
+        observation_mode="env_reward",
+        action_space_mode="continuous_it_s",
+    )
+    env.reset(seed=123)
+
+    _, _, _, _, step_info = env.step(np.array([0.2, 0.8], dtype=np.float32))
+
+    assert env.action_space.shape == (2,)
+    assert step_info["action_space_mode"] == "continuous_it_s"
+    assert step_info["thesis_decision"]["inventory_period_hours"] == pytest.approx(
+        268.8
+    )
+    assert step_info["thesis_decision"]["inventory_buffer_fraction"] == pytest.approx(
+        0.2
+    )
+    assert step_info["thesis_decision"]["inventory_period_hours_by_node"] == {
+        "op3": pytest.approx(268.8),
+        "op5": pytest.approx(268.8),
+        "op9": pytest.approx(268.8),
+    }
+    assert step_info["thesis_decision"]["inventory_buffer_targets"] == {
+        "op3_rm": pytest.approx(24576.0),
+        "op5_rm": pytest.approx(24576.0),
+        "op9_rations": pytest.approx(25200.0),
+    }
+    assert step_info["thesis_decision"]["assembly_shifts"] == 3
+    env.close()
+
+
 def test_dkana_thesis_faithful_initial_action_applies_buffers_before_warmup() -> None:
     initial_action = np.array([3, 3, 3, 2], dtype=np.int64)
     env = make_dkana_thesis_faithful_env(
@@ -854,6 +888,23 @@ def test_dkana_thesis_faithful_spec_describes_thesis_factorized_contract() -> No
     assert any("action_space_mode=thesis_factorized" in note for note in spec.notes)
 
 
+def test_dkana_thesis_faithful_spec_describes_continuous_it_s_contract() -> None:
+    spec = get_dkana_thesis_faithful_env_spec(
+        reward_mode="control_v1",
+        observation_version="v5",
+        observation_mode="env_state_reward",
+        action_space_mode="continuous_it_s",
+    )
+
+    assert spec.env_variant == "dkana_thesis_faithful_decision"
+    assert spec.action_fields == (
+        "continuous_inventory_buffer_fraction",
+        "assembly_shift_signal",
+    )
+    assert spec.action_bounds == ((0.0, 1.0), (-1.0, 1.0))
+    assert any("continuous_it_s" in note for note in spec.notes)
+
+
 def test_run_thesis_decision_ppo_smoke_defaults_to_thesis_strict_period_mode() -> None:
     args = ppo_smoke.build_parser().parse_args([])
     kwargs = ppo_smoke.env_kwargs(args)
@@ -879,6 +930,27 @@ def test_run_thesis_decision_ppo_smoke_accepts_per_node_period_mode() -> None:
     assert args.inventory_period_mode == "per_node"
     assert kwargs["action_space_mode"] == "factorized"
     assert kwargs["inventory_period_mode"] == "per_node"
+
+
+def test_run_thesis_decision_ppo_smoke_accepts_continuous_it_s_mode() -> None:
+    args = ppo_smoke.build_parser().parse_args(
+        [
+            "--action-space-mode",
+            "continuous_it_s",
+        ]
+    )
+    kwargs = ppo_smoke.env_kwargs(args)
+
+    assert args.action_space_mode == "continuous_it_s"
+    assert kwargs["action_space_mode"] == "continuous_it_s"
+    np.testing.assert_allclose(
+        ppo_smoke.inventory_action(
+            672,
+            shifts=3,
+            action_space_mode="continuous_it_s",
+        ),
+        np.array([0.5, 1.0], dtype=np.float32),
+    )
 
 
 def test_run_thesis_decision_ppo_smoke_accepts_postfix_fidelity_modes() -> None:
