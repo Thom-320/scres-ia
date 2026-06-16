@@ -881,6 +881,24 @@ def test_run_thesis_decision_ppo_smoke_accepts_per_node_period_mode() -> None:
     assert kwargs["inventory_period_mode"] == "per_node"
 
 
+def test_run_thesis_decision_ppo_smoke_accepts_postfix_fidelity_modes() -> None:
+    args = ppo_smoke.build_parser().parse_args(
+        [
+            "--raw-material-flow-mode",
+            "kit_equivalent_order_up_to",
+            "--raw-material-order-up-to-multiplier",
+            "2.0",
+            "--risk-occurrence-mode",
+            "thesis_periodic",
+        ]
+    )
+    kwargs = ppo_smoke.env_kwargs(args)
+
+    assert kwargs["raw_material_flow_mode"] == "kit_equivalent_order_up_to"
+    assert kwargs["raw_material_order_up_to_multiplier"] == 2.0
+    assert kwargs["risk_occurrence_mode"] == "thesis_periodic"
+
+
 def test_run_thesis_decision_ladder_static_smoke(tmp_path: Path) -> None:
     output_root = tmp_path / "ladder"
     result = subprocess.run(

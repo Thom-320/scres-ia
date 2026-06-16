@@ -22,6 +22,10 @@ from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from supply_chain.config import (  # noqa: E402
+    RAW_MATERIAL_FLOW_MODE_OPTIONS,
+    RISK_OCCURRENCE_MODE_OPTIONS,
+)
 from supply_chain.external_env_interface import (  # noqa: E402
     THESIS_INVENTORY_PERIODS,
     get_episode_terminal_metrics,
@@ -101,6 +105,17 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--max-steps", type=int, default=260)
     parser.add_argument("--stochastic-pt", action="store_true")
     parser.add_argument(
+        "--raw-material-flow-mode",
+        default="legacy_validated",
+        choices=RAW_MATERIAL_FLOW_MODE_OPTIONS,
+    )
+    parser.add_argument("--raw-material-order-up-to-multiplier", type=float, default=2.0)
+    parser.add_argument(
+        "--risk-occurrence-mode",
+        default="legacy_renewal",
+        choices=RISK_OCCURRENCE_MODE_OPTIONS,
+    )
+    parser.add_argument(
         "--garrido-cfis",
         default="31-90",
         help="Comma/range list of Garrido thesis static Cf rows to evaluate.",
@@ -164,6 +179,9 @@ def env_kwargs(args: argparse.Namespace) -> dict[str, Any]:
         "step_size_hours": args.step_size_hours,
         "max_steps": args.max_steps,
         "stochastic_pt": args.stochastic_pt,
+        "raw_material_flow_mode": args.raw_material_flow_mode,
+        "raw_material_order_up_to_multiplier": args.raw_material_order_up_to_multiplier,
+        "risk_occurrence_mode": args.risk_occurrence_mode,
         "learn_initial_decision": args.learn_initial_decision,
     }
 
