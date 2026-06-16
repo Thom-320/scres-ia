@@ -28,6 +28,22 @@ def test_shift_env_ret_thesis_emits_ret_metadata() -> None:
     assert "shifts_active" in info
 
 
+def test_shift_env_passes_stochastic_pt_spread_to_simulation() -> None:
+    env = MFSCGymEnvShifts(
+        step_size_hours=24,
+        max_steps=1,
+        stochastic_pt=True,
+        stochastic_pt_spread=1.75,
+    )
+    env.reset(seed=42)
+
+    assert env.stochastic_pt_spread == pytest.approx(1.75)
+    assert env.stochastic_pt_mean_preserving is False
+    assert env.sim is not None
+    assert env.sim.stochastic_pt_spread == pytest.approx(1.75)
+    assert env.sim.stochastic_pt_mean_preserving is False
+
+
 def test_shift_env_ret_corrected_cost_alias_preserves_lane_name() -> None:
     env = MFSCGymEnvShifts(
         step_size_hours=24,

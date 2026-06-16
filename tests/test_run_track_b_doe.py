@@ -64,7 +64,9 @@ def test_main_writes_bundle_from_stubbed_episode_runner(
     def fake_run_static_policy_episode(
         policy: track_b_doe.PolicySpec, *, seed: int, env_kwargs: dict[str, object]
     ) -> dict[str, object]:
-        del env_kwargs
+        assert env_kwargs["risk_occurrence_mode"] == "thesis_periodic"
+        assert env_kwargs["raw_material_flow_mode"] == "kit_equivalent_order_up_to"
+        assert env_kwargs["stochastic_pt_spread"] == pytest.approx(1.5)
         reward = (
             100.0
             + (10.0 * policy.downstream_multiplier)
@@ -105,6 +107,8 @@ def test_main_writes_bundle_from_stubbed_episode_runner(
             "--downstream-multipliers",
             "1.0",
             "2.0",
+            "--stochastic-pt-spread",
+            "1.5",
         ],
     )
 
@@ -119,3 +123,6 @@ def test_main_writes_bundle_from_stubbed_episode_runner(
     assert payload["decision"]["baseline_policy"] == "s2_d1.00"
     assert len(summary_rows) == 4
     assert payload["decision"]["best_by_reward"] == "s3_d2.00"
+    assert payload["spec"]["stochastic_pt_spread"] == pytest.approx(1.5)
+    assert payload["spec"]["risk_occurrence_mode"] == "thesis_periodic"
+    assert payload["spec"]["raw_material_flow_mode"] == "kit_equivalent_order_up_to"

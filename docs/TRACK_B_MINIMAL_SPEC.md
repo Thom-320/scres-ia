@@ -150,17 +150,18 @@ Shared comparison metrics:
 Keep the existing 5D contract and add only the smallest downstream controls
 needed to touch the active bottleneck.
 
-### New action dimension
+### Action dimensions
 
-Track B minimal uses **7** action dimensions:
+Track B minimal currently uses **8** action dimensions:
 
 1. `op3_q_multiplier_signal`
 2. `op9_q_multiplier_signal`
 3. `op3_rop_multiplier_signal`
 4. `op9_rop_multiplier_signal`
-5. `assembly_shift_signal`
-6. `op10_q_multiplier_signal`
-7. `op12_q_multiplier_signal`
+5. `op5_q_multiplier_signal`
+6. `assembly_shift_signal`
+7. `op10_q_multiplier_signal`
+8. `op12_q_multiplier_signal`
 
 Bounds:
 
@@ -185,6 +186,7 @@ Deliberately deferred from `track_b_v1`:
 - `op12_rop`
 - transport PT control
 - explicit routing/prioritization policies
+- endogenous PT control
 
 Reason:
 
@@ -196,6 +198,26 @@ Escalation rule:
 
 - if `track_b_v1` still shows trivial headroom in static DOE, then `track_b_v2`
   should add `op10_rop` and `op12_rop`
+
+---
+
+## Stochastic PT Variability Axis
+
+Track B keeps `stochastic_pt=True` by default. The historical stochastic PT
+contract is:
+
+- `Tri(0.75 * PT, PT, 1.5 * PT)`
+
+For stress-response experiments, the code exposes `stochastic_pt_spread` while
+preserving the same deterministic mode at the thesis PT:
+
+- low: `(1 - 0.25 * spread) * PT`, clipped at zero
+- mode: `PT`
+- high: `(1 + 0.50 * spread) * PT`
+
+`spread=1.0` is the historical default. `spread=0.0` collapses stochastic PT to
+the deterministic processing time. This parameter changes exogenous process
+variability; it is not an additional agent action.
 
 ---
 

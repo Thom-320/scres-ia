@@ -31,7 +31,7 @@ Other reward modes (historical / auxiliary):
   - "ReT_corrected" / "ReT_corrected_cost": Corrected thesis-aligned ReT.
   - "rt_v0": Legacy weighted sum.
 
-Action space: 5-dimensional [-1, 1]
+Action space: Track A 6-dimensional [-1, 1], Track B 8-dimensional [-1, 1]
   RL EXTENSION: The thesis (Garrido-Rios 2017, Sec. 6.7.3-6.7.4) controls
   {It,S, S} via static simulation scenarios. Our RL extension generalises
   this to continuous, per-step control of dispatch quantities (Q), reorder
@@ -39,10 +39,12 @@ Action space: 5-dimensional [-1, 1]
 
   [0-3]: Inventory policy multipliers (op3_q, op9_q, op3_rop, op9_rop)
          — maps [-1,1] to [0.5, 2.0] via multiplier = 1.25 + 0.75*signal
-  [4]:   Shift selector — mapped to {1, 2, 3} shifts
-         action[4] < -0.33 → S=1 (single shift, 8h/day)
-         -0.33 ≤ action[4] < 0.33 → S=2 (double shift, 16h/day)
-         action[4] ≥ 0.33 → S=3 (triple shift, 24h/day)
+  [4]:   Op5 Q multiplier
+  [5]:   Shift selector — mapped to {1, 2, 3} shifts
+         action[5] < -0.33 -> S=1 (single shift, 8h/day)
+         -0.33 <= action[5] < 0.33 -> S=2 (double shift, 16h/day)
+         action[5] >= 0.33 -> S=3 (triple shift, 24h/day)
+  [6-7]: Track B only, Op10/Op12 dispatch quantity multipliers
 
 ReT_thesis piecewise approximation (Eq. 5.5, audit-only):
   Thesis Equations (Garrido-Rios 2017, Sec. 5.6.3):
@@ -84,7 +86,7 @@ from .config import (
     WARMUP_TRIGGER_OPTIONS,
     YEAR_BASIS_OPTIONS,
 )
-from .supply_chain import MFSCSimulation
+from .supply_chain import MFSCSimulation, STOCHASTIC_PT_DEFAULT_SPREAD
 
 NUM_TRACKED_OPS = 13
 OBSERVATION_VERSION_OPTIONS = ("v1", "v2", "v3", "v4", "v5", "v6", "v7")
@@ -199,8 +201,8 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
       - v6: v5 + Track-B adaptive benchmark regime/forecast/debt features.
       - v7: v6 + downstream bottleneck state and rolling service features.
     Action:
-      - Track A (`track_a_v1`): 5-dimensional [-1, 1]
-      - Track B (`track_b_v1`): 7-dimensional [-1, 1]
+      - Track A (`track_a_v1`): 6-dimensional [-1, 1]
+      - Track B (`track_b_v1`): 8-dimensional [-1, 1]
 
     Parameters
     ----------
@@ -232,6 +234,8 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         year_basis: str = DEFAULT_YEAR_BASIS,
         risk_level: str = "current",
         stochastic_pt: bool = False,
+        stochastic_pt_spread: float = STOCHASTIC_PT_DEFAULT_SPREAD,
+        stochastic_pt_mean_preserving: bool = False,
         reward_mode: str = "ReT_thesis",
         observation_version: str = "v1",
         # --- ReT_thesis parameters ---
@@ -379,7 +383,9 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                 f"Invalid risk_occurrence_mode={risk_occurrence_mode!r}. "
                 f"Expected one of {RISK_OCCURRENCE_MODE_OPTIONS}."
             )
-        raw_material_flow_mode = canonical_raw_material_flow_mode(raw_material_flow_mode)
+        raw_material_flow_mode = canonical_raw_material_flow_mode(
+            raw_material_flow_mode
+        )
         canonical_reward_mode = REWARD_MODE_ALIAS_MAP.get(reward_mode, reward_mode)
         if (
             canonical_reward_mode == "control_v1_pbrs"
@@ -396,6 +402,8 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self.year_basis = year_basis
         self.risk_level = risk_level
         self.stochastic_pt = stochastic_pt
+        self.stochastic_pt_spread = float(stochastic_pt_spread)
+        self.stochastic_pt_mean_preserving = bool(stochastic_pt_mean_preserving)
         self.warmup_trigger = warmup_trigger
         self.downstream_q_source = downstream_q_source
         self.r14_defect_mode = r14_defect_mode
@@ -410,6 +418,8 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self.enabled_risks = set(enabled_risks) if enabled_risks is not None else None
         self.risk_overrides = dict(risk_overrides or {})
         self.priming_enabled = bool(priming_enabled)
+        if self.stochastic_pt_spread < 0.0:
+            raise ValueError("stochastic_pt_spread must be >= 0.")
         self.reward_mode = reward_mode
         self._canonical_reward_mode = canonical_reward_mode
         self.observation_version = observation_version
@@ -1873,6 +1883,8 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             horizon=SIMULATION_HORIZON,
             year_basis=self.year_basis,
             stochastic_pt=self.stochastic_pt,
+            stochastic_pt_spread=self.stochastic_pt_spread,
+            stochastic_pt_mean_preserving=self.stochastic_pt_mean_preserving,
             warmup_trigger=self.warmup_trigger,
             downstream_q_source=self.downstream_q_source,
             r14_defect_mode=self.r14_defect_mode,

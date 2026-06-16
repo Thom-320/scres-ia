@@ -13,7 +13,11 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from supply_chain.config import OPERATIONS
+from supply_chain.config import (
+    OPERATIONS,
+    RAW_MATERIAL_FLOW_MODE_OPTIONS,
+    RISK_OCCURRENCE_MODE_OPTIONS,
+)
 from supply_chain.external_env_interface import (
     get_episode_terminal_metrics,
     get_track_b_env_spec,
@@ -88,6 +92,33 @@ def build_parser() -> argparse.ArgumentParser:
         "--risk-level",
         default="adaptive_benchmark_v2",
         help="Track B risk profile to evaluate.",
+    )
+    parser.add_argument(
+        "--risk-occurrence-mode",
+        choices=list(RISK_OCCURRENCE_MODE_OPTIONS),
+        default="thesis_periodic",
+        help="Risk timing semantics for new Track B DOE reruns.",
+    )
+    parser.add_argument(
+        "--raw-material-flow-mode",
+        choices=list(RAW_MATERIAL_FLOW_MODE_OPTIONS),
+        default="kit_equivalent_order_up_to",
+        help="Raw-material inventory semantics for new Track B DOE reruns.",
+    )
+    parser.add_argument(
+        "--raw-material-order-up-to-multiplier",
+        type=float,
+        default=2.0,
+        help="Order-up-to multiplier used by order-up-to raw material modes.",
+    )
+    parser.add_argument(
+        "--stochastic-pt-spread",
+        type=float,
+        default=1.0,
+        help=(
+            "Scales stochastic processing-time variability. The historical "
+            "default 1.0 is Tri(0.75*PT, PT, 1.5*PT)."
+        ),
     )
     parser.add_argument(
         "--seeds",
@@ -358,8 +389,14 @@ def main() -> None:
         "observation_version": "v7",
         "action_contract": "track_b_v1",
         "risk_level": args.risk_level,
+        "risk_occurrence_mode": args.risk_occurrence_mode,
         "year_basis": "thesis",
         "stochastic_pt": True,
+        "stochastic_pt_spread": float(args.stochastic_pt_spread),
+        "raw_material_flow_mode": args.raw_material_flow_mode,
+        "raw_material_order_up_to_multiplier": float(
+            args.raw_material_order_up_to_multiplier
+        ),
         "step_size_hours": float(args.step_size_hours),
         "max_steps": int(args.max_steps),
     }
@@ -378,6 +415,12 @@ def main() -> None:
             reward_mode=args.reward_mode, observation_version="v7"
         ).__dict__,
         "risk_level": args.risk_level,
+        "risk_occurrence_mode": args.risk_occurrence_mode,
+        "stochastic_pt_spread": float(args.stochastic_pt_spread),
+        "raw_material_flow_mode": args.raw_material_flow_mode,
+        "raw_material_order_up_to_multiplier": float(
+            args.raw_material_order_up_to_multiplier
+        ),
         "max_steps": int(args.max_steps),
         "seeds": list(args.seeds),
     }

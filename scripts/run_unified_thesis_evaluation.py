@@ -89,6 +89,10 @@ def base_kwargs(args: argparse.Namespace) -> dict[str, Any]:
         "step_size_hours": args.step_size_hours,
         "max_steps": args.max_steps,
         "stochastic_pt": args.stochastic_pt,
+        "stochastic_pt_spread": getattr(args, "stochastic_pt_spread", 1.0),
+        "stochastic_pt_mean_preserving": getattr(
+            args, "stochastic_pt_mean_preserving", False
+        ),
         "learn_initial_decision": False,
         "raw_material_flow_mode": getattr(
             args, "raw_material_flow_mode", "legacy_validated"

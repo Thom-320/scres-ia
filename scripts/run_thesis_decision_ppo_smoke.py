@@ -105,11 +105,32 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--max-steps", type=int, default=260)
     parser.add_argument("--stochastic-pt", action="store_true")
     parser.add_argument(
+        "--stochastic-pt-spread",
+        type=float,
+        default=1.0,
+        help=(
+            "Scales stochastic processing-time variability when --stochastic-pt "
+            "is enabled. Historical default 1.0 is Tri(0.75*PT, PT, 1.5*PT); "
+            "0.0 collapses to deterministic PT."
+        ),
+    )
+    parser.add_argument(
+        "--stochastic-pt-mean-preserving",
+        action="store_true",
+        help=(
+            "Use a symmetric triangular PT envelope around the thesis PT, so "
+            "changing --stochastic-pt-spread changes variance without changing "
+            "the expected processing time."
+        ),
+    )
+    parser.add_argument(
         "--raw-material-flow-mode",
         default="legacy_validated",
         choices=RAW_MATERIAL_FLOW_MODE_OPTIONS,
     )
-    parser.add_argument("--raw-material-order-up-to-multiplier", type=float, default=2.0)
+    parser.add_argument(
+        "--raw-material-order-up-to-multiplier", type=float, default=2.0
+    )
     parser.add_argument(
         "--risk-occurrence-mode",
         default="legacy_renewal",
@@ -179,6 +200,8 @@ def env_kwargs(args: argparse.Namespace) -> dict[str, Any]:
         "step_size_hours": args.step_size_hours,
         "max_steps": args.max_steps,
         "stochastic_pt": args.stochastic_pt,
+        "stochastic_pt_spread": args.stochastic_pt_spread,
+        "stochastic_pt_mean_preserving": args.stochastic_pt_mean_preserving,
         "raw_material_flow_mode": args.raw_material_flow_mode,
         "raw_material_order_up_to_multiplier": args.raw_material_order_up_to_multiplier,
         "risk_occurrence_mode": args.risk_occurrence_mode,

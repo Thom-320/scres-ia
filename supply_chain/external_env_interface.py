@@ -84,12 +84,12 @@ OBSERVATION_FIELDS: tuple[str, ...] = OBSERVATION_FIELDS_V1
 # strict Garrido decision contract. The thesis-faithful discrete contract is
 # `thesis_factorized`: common I_{t,S} level plus S.
 ACTION_FIELDS: tuple[str, ...] = (
-    "op3_q_multiplier_signal",      # a1 — I_{t,S} on Op3,j (Table 6.16)
-    "op9_q_multiplier_signal",      # a2 — I_{t,S} on Op9,j (Table 6.16)
-    "op3_rop_multiplier_signal",    # a3 — repo extension (not in thesis)
-    "op9_rop_multiplier_signal",    # a4 — repo extension (not in thesis)
-    "op5_q_multiplier_signal",      # a5 — I_{t,S} on Op5,j (Table 6.16; added in v6D)
-    "assembly_shift_signal",        # a6 — S ∈ {1,2,3} (Table 6.20)
+    "op3_q_multiplier_signal",  # a1 — I_{t,S} on Op3,j (Table 6.16)
+    "op9_q_multiplier_signal",  # a2 — I_{t,S} on Op9,j (Table 6.16)
+    "op3_rop_multiplier_signal",  # a3 — repo extension (not in thesis)
+    "op9_rop_multiplier_signal",  # a4 — repo extension (not in thesis)
+    "op5_q_multiplier_signal",  # a5 — I_{t,S} on Op5,j (Table 6.16; added in v6D)
+    "assembly_shift_signal",  # a6 — S ∈ {1,2,3} (Table 6.20)
 )
 ACTION_FIELDS_TRACK_B_V1: tuple[str, ...] = ACTION_FIELDS + (
     "op10_q_multiplier_signal",
@@ -370,7 +370,7 @@ def get_track_b_env_spec(
         notes=(
             "Track B keeps the thesis-faithful DES structure but exposes downstream transport control at Op10 and Op12.",
             "observation_version=v7 extends v6 with downstream disruption state, queue pressure, and rolling 4-week service metrics.",
-            "The seventh action contract uses 7 dimensions: the Track A 5D controls plus Op10 and Op12 dispatch quantity multipliers.",
+            "The Track B action contract uses 8 dimensions: the current Track A 6D controls plus Op10 and Op12 dispatch quantity multipliers.",
             "risk_level=adaptive_benchmark_v2 is the intended Track B stress profile with stronger downstream transport and demand pressure.",
             "This contract is research-only and must not replace the frozen Track A paper-facing benchmark.",
         ),

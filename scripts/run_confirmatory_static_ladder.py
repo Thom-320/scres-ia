@@ -324,6 +324,24 @@ def main() -> int:
     parser.add_argument("--observation-mode", default="env_sdm_history_reward")
     parser.add_argument("--stochastic-pt", action="store_true", default=True)
     parser.add_argument(
+        "--stochastic-pt-spread",
+        type=float,
+        default=1.0,
+        help=(
+            "Scales stochastic processing-time variability when --stochastic-pt "
+            "is enabled. Historical default 1.0 is Tri(0.75*PT, PT, 1.5*PT)."
+        ),
+    )
+    parser.add_argument(
+        "--stochastic-pt-mean-preserving",
+        action="store_true",
+        help=(
+            "Use a symmetric triangular PT envelope around the thesis PT, so "
+            "changing --stochastic-pt-spread changes variance without changing "
+            "the expected processing time."
+        ),
+    )
+    parser.add_argument(
         "--raw-material-flow-mode",
         default="legacy_validated",
         help="Raw-material flow semantics for post-fix thesis-inventory reruns.",

@@ -66,6 +66,10 @@ from .ret_thesis import (
 
 RATIONS_PER_HOUR = ASSEMBLY_RATE  # 320.5 rations/hr
 
+STOCHASTIC_PT_DEFAULT_SPREAD = 1.0
+STOCHASTIC_PT_LEFT_SPREAD = 0.25
+STOCHASTIC_PT_RIGHT_SPREAD = 0.50
+
 
 def resolve_hours_per_year(year_basis: str) -> int:
     """Resolve annualization basis to hours/year."""
@@ -123,6 +127,8 @@ class MFSCSimulation:
         risk_level: str = "current",
         year_basis: str = DEFAULT_YEAR_BASIS,
         stochastic_pt: bool = False,
+        stochastic_pt_spread: float = STOCHASTIC_PT_DEFAULT_SPREAD,
+        stochastic_pt_mean_preserving: bool = False,
         deterministic_baseline: bool = False,
         warmup_trigger: str = "production",
         downstream_q_source: str = "figure_6_2",
@@ -161,7 +167,9 @@ class MFSCSimulation:
                 "Invalid risk_occurrence_mode="
                 f"{risk_occurrence_mode!r}. Expected one of: {valid}."
             )
-        raw_material_flow_mode = canonical_raw_material_flow_mode(raw_material_flow_mode)
+        raw_material_flow_mode = canonical_raw_material_flow_mode(
+            raw_material_flow_mode
+        )
         self.env = simpy.Environment()
         self.shifts = shifts
         self.seed = seed
@@ -171,6 +179,8 @@ class MFSCSimulation:
         self.risk_level = risk_level
         self.year_basis = year_basis
         self.stochastic_pt = stochastic_pt
+        self.stochastic_pt_spread = float(stochastic_pt_spread)
+        self.stochastic_pt_mean_preserving = bool(stochastic_pt_mean_preserving)
         self.deterministic_baseline = deterministic_baseline
         self.warmup_trigger = warmup_trigger
         self.downstream_q_source = downstream_q_source
@@ -180,6 +190,8 @@ class MFSCSimulation:
             raw_material_order_up_to_multiplier
         )
         self.risk_occurrence_mode = risk_occurrence_mode
+        if self.stochastic_pt_spread < 0.0:
+            raise ValueError("stochastic_pt_spread must be >= 0.")
         if self.raw_material_order_up_to_multiplier <= 0.0:
             raise ValueError("raw_material_order_up_to_multiplier must be > 0.")
         self._raw_units_per_ration = (
@@ -1086,15 +1098,29 @@ class MFSCSimulation:
         Return processing time for the given param, optionally with noise.
 
         When stochastic_pt is enabled, applies a right-skewed triangular
-        distribution: Tri(0.75×base, base, 1.5×base). This models
-        realistic variability where delays are more likely than speed-ups.
+        distribution. The historical default is
+        Tri(0.75*base, base, 1.5*base); stochastic_pt_spread scales that
+        envelope while preserving the same mode at the thesis processing time.
+        If stochastic_pt_mean_preserving is enabled, the env instead uses a
+        symmetric triangular envelope around the thesis processing time so the
+        expected PT stays at the thesis value while variance changes.
 
         Returns the deterministic base value when stochastic_pt is False.
         """
         base = self.params[param_key]
         if not self.stochastic_pt or self.deterministic_baseline or base <= 0:
             return base
-        return float(self.rng.triangular(0.75 * base, base, 1.5 * base))
+        spread = self.stochastic_pt_spread
+        if spread == 0.0:
+            return base
+        if self.stochastic_pt_mean_preserving:
+            delta = STOCHASTIC_PT_LEFT_SPREAD * spread
+            low = max(0.0, (1.0 - delta) * base)
+            high = (1.0 + delta) * base
+            return float(self.rng.triangular(low, base, high))
+        low = max(0.0, (1.0 - STOCHASTIC_PT_LEFT_SPREAD * spread) * base)
+        high = (1.0 + STOCHASTIC_PT_RIGHT_SPREAD * spread) * base
+        return float(self.rng.triangular(low, base, high))
 
     def _select_uniform_discrete(self, lower: int, upper: int) -> int:
         """Return the midpoint for Cf0 validation or sample otherwise."""

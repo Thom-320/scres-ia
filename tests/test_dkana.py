@@ -890,6 +890,10 @@ def test_run_thesis_decision_ppo_smoke_accepts_postfix_fidelity_modes() -> None:
             "2.0",
             "--risk-occurrence-mode",
             "thesis_periodic",
+            "--stochastic-pt",
+            "--stochastic-pt-spread",
+            "1.5",
+            "--stochastic-pt-mean-preserving",
         ]
     )
     kwargs = ppo_smoke.env_kwargs(args)
@@ -897,6 +901,9 @@ def test_run_thesis_decision_ppo_smoke_accepts_postfix_fidelity_modes() -> None:
     assert kwargs["raw_material_flow_mode"] == "kit_equivalent_order_up_to"
     assert kwargs["raw_material_order_up_to_multiplier"] == 2.0
     assert kwargs["risk_occurrence_mode"] == "thesis_periodic"
+    assert kwargs["stochastic_pt"] is True
+    assert kwargs["stochastic_pt_spread"] == 1.5
+    assert kwargs["stochastic_pt_mean_preserving"] is True
 
 
 def test_run_thesis_decision_ladder_static_smoke(tmp_path: Path) -> None:

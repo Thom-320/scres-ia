@@ -24,7 +24,7 @@ def test_build_static_policy_action_scales_downstream_dispatch() -> None:
 
 
 def test_extract_downstream_multipliers_handles_learned_and_static_payloads() -> None:
-    learned = {"clipped_action": [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, -1.0]}
+    learned = {"clipped_action": [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, -1.0, 0.0]}
     static = {
         "raw_action": {
             "op10_q_min": 3600.0,
@@ -35,24 +35,95 @@ def test_extract_downstream_multipliers_handles_learned_and_static_payloads() ->
     learned_op10, learned_op12 = track_b_smoke.extract_downstream_multipliers(learned)
     static_op10, static_op12 = track_b_smoke.extract_downstream_multipliers(static)
 
-    assert learned_op10 == pytest.approx(2.0)
-    assert learned_op12 == pytest.approx(0.5)
+    assert learned_op10 == pytest.approx(0.5)
+    assert learned_op12 == pytest.approx(1.25)
     assert static_op10 == pytest.approx(1.5)
     assert static_op12 == pytest.approx(2.0)
 
 
+def test_build_env_kwargs_defaults_to_postfix_fidelity_modes() -> None:
+    args = track_b_smoke.build_parser().parse_args([])
+
+    kwargs = track_b_smoke.build_env_kwargs(args)
+
+    assert kwargs["risk_occurrence_mode"] == "thesis_periodic"
+    assert kwargs["raw_material_flow_mode"] == "kit_equivalent_order_up_to"
+    assert kwargs["raw_material_order_up_to_multiplier"] == pytest.approx(2.0)
+    assert kwargs["stochastic_pt_spread"] == pytest.approx(1.0)
+
+
 def test_build_decision_summary_flags_promotable_gap() -> None:
     policy_rows = [
-        {"policy": "s1_d1.00", "reward_total_mean": 96.0, "fill_rate_mean": 0.920, "backorder_rate_mean": 0.080, "order_level_ret_mean": 0.44},
-        {"policy": "s1_d1.50", "reward_total_mean": 97.0, "fill_rate_mean": 0.925, "backorder_rate_mean": 0.075, "order_level_ret_mean": 0.45},
-        {"policy": "s1_d2.00", "reward_total_mean": 98.0, "fill_rate_mean": 0.930, "backorder_rate_mean": 0.070, "order_level_ret_mean": 0.46},
-        {"policy": "s2_d1.00", "reward_total_mean": 100.0, "fill_rate_mean": 0.950, "backorder_rate_mean": 0.050, "order_level_ret_mean": 0.48},
-        {"policy": "s2_d1.50", "reward_total_mean": 100.3, "fill_rate_mean": 0.955, "backorder_rate_mean": 0.045, "order_level_ret_mean": 0.485},
-        {"policy": "s2_d2.00", "reward_total_mean": 100.5, "fill_rate_mean": 0.960, "backorder_rate_mean": 0.040, "order_level_ret_mean": 0.49},
-        {"policy": "s3_d1.00", "reward_total_mean": 101.0, "fill_rate_mean": 0.960, "backorder_rate_mean": 0.040, "order_level_ret_mean": 0.49},
-        {"policy": "s3_d1.50", "reward_total_mean": 100.8, "fill_rate_mean": 0.965, "backorder_rate_mean": 0.035, "order_level_ret_mean": 0.495},
-        {"policy": "s3_d2.00", "reward_total_mean": 99.5, "fill_rate_mean": 0.970, "backorder_rate_mean": 0.030, "order_level_ret_mean": 0.50},
-        {"policy": "ppo", "reward_total_mean": 100.5, "fill_rate_mean": 0.965, "backorder_rate_mean": 0.035, "order_level_ret_mean": 0.495},
+        {
+            "policy": "s1_d1.00",
+            "reward_total_mean": 96.0,
+            "fill_rate_mean": 0.920,
+            "backorder_rate_mean": 0.080,
+            "order_level_ret_mean": 0.44,
+        },
+        {
+            "policy": "s1_d1.50",
+            "reward_total_mean": 97.0,
+            "fill_rate_mean": 0.925,
+            "backorder_rate_mean": 0.075,
+            "order_level_ret_mean": 0.45,
+        },
+        {
+            "policy": "s1_d2.00",
+            "reward_total_mean": 98.0,
+            "fill_rate_mean": 0.930,
+            "backorder_rate_mean": 0.070,
+            "order_level_ret_mean": 0.46,
+        },
+        {
+            "policy": "s2_d1.00",
+            "reward_total_mean": 100.0,
+            "fill_rate_mean": 0.950,
+            "backorder_rate_mean": 0.050,
+            "order_level_ret_mean": 0.48,
+        },
+        {
+            "policy": "s2_d1.50",
+            "reward_total_mean": 100.3,
+            "fill_rate_mean": 0.955,
+            "backorder_rate_mean": 0.045,
+            "order_level_ret_mean": 0.485,
+        },
+        {
+            "policy": "s2_d2.00",
+            "reward_total_mean": 100.5,
+            "fill_rate_mean": 0.960,
+            "backorder_rate_mean": 0.040,
+            "order_level_ret_mean": 0.49,
+        },
+        {
+            "policy": "s3_d1.00",
+            "reward_total_mean": 101.0,
+            "fill_rate_mean": 0.960,
+            "backorder_rate_mean": 0.040,
+            "order_level_ret_mean": 0.49,
+        },
+        {
+            "policy": "s3_d1.50",
+            "reward_total_mean": 100.8,
+            "fill_rate_mean": 0.965,
+            "backorder_rate_mean": 0.035,
+            "order_level_ret_mean": 0.495,
+        },
+        {
+            "policy": "s3_d2.00",
+            "reward_total_mean": 99.5,
+            "fill_rate_mean": 0.970,
+            "backorder_rate_mean": 0.030,
+            "order_level_ret_mean": 0.50,
+        },
+        {
+            "policy": "ppo",
+            "reward_total_mean": 100.5,
+            "fill_rate_mean": 0.965,
+            "backorder_rate_mean": 0.035,
+            "order_level_ret_mean": 0.495,
+        },
     ]
 
     decision = track_b_smoke.build_decision_summary(policy_rows)
@@ -121,9 +192,15 @@ def test_main_writes_bundle_from_stubbed_training_and_eval(
                 "op12_multiplier_step_mean": policy.downstream_multiplier,
                 "op10_multiplier_step_p95": policy.downstream_multiplier,
                 "op12_multiplier_step_p95": policy.downstream_multiplier,
-                "pct_steps_op10_multiplier_ge_190": 100.0 if policy.downstream_multiplier >= 1.9 else 0.0,
-                "pct_steps_op12_multiplier_ge_190": 100.0 if policy.downstream_multiplier >= 1.9 else 0.0,
-                "pct_steps_both_downstream_ge_190": 100.0 if policy.downstream_multiplier >= 1.9 else 0.0,
+                "pct_steps_op10_multiplier_ge_190": (
+                    100.0 if policy.downstream_multiplier >= 1.9 else 0.0
+                ),
+                "pct_steps_op12_multiplier_ge_190": (
+                    100.0 if policy.downstream_multiplier >= 1.9 else 0.0
+                ),
+                "pct_steps_both_downstream_ge_190": (
+                    100.0 if policy.downstream_multiplier >= 1.9 else 0.0
+                ),
                 "assembly_hours_total": policy.assembly_shifts * 8.0 * 7.0 * 10,
                 "assembly_cost_index": policy.assembly_shifts / 3.0,
             }
@@ -168,9 +245,13 @@ def test_main_writes_bundle_from_stubbed_training_and_eval(
         label: str, heuristic: object, *, args: object, seed: int
     ) -> list[dict[str, object]]:
         del heuristic, args
-        fill = {"heur_hysteresis": 0.950, "heur_disruption_aware": 0.945,
-                "heur_tuned": 0.948, "heur_downstream_reactive": 0.935,
-                "heur_s1_max_downstream": 0.940}.get(label, 0.940)
+        fill = {
+            "heur_hysteresis": 0.950,
+            "heur_disruption_aware": 0.945,
+            "heur_tuned": 0.948,
+            "heur_downstream_reactive": 0.935,
+            "heur_s1_max_downstream": 0.940,
+        }.get(label, 0.940)
         return [
             {
                 "policy": label,
@@ -223,6 +304,8 @@ def test_main_writes_bundle_from_stubbed_training_and_eval(
             "22",
             "--eval-episodes",
             "1",
+            "--stochastic-pt-spread",
+            "1.5",
         ],
     )
 
@@ -237,3 +320,6 @@ def test_main_writes_bundle_from_stubbed_training_and_eval(
     assert payload["decision"]["best_static_policy"] == "s3_d2.00"
     assert payload["decision"]["ppo_beats_s2_neutral_by_fill"] is True
     assert len(payload["policy_summary"]) == 15  # 9 static + 5 heuristic + 1 ppo
+    assert payload["config"]["stochastic_pt_spread"] == pytest.approx(1.5)
+    assert payload["config"]["risk_occurrence_mode"] == "thesis_periodic"
+    assert payload["config"]["raw_material_flow_mode"] == "kit_equivalent_order_up_to"

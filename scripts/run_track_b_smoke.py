@@ -33,7 +33,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from scripts.benchmark_control_reward import build_metric_contract_metadata
 from scripts.track_b_heuristics import HEURISTIC_POLICY_NAMES, make_heuristic_defaults
-from supply_chain.config import OPERATIONS
+from supply_chain.config import (
+    OPERATIONS,
+    RAW_MATERIAL_FLOW_MODE_OPTIONS,
+    RISK_OCCURRENCE_MODE_OPTIONS,
+)
 from supply_chain.dkana import DKANAOnlinePolicyAdapter, DKANAPolicy
 from supply_chain.env_experimental_shifts import (
     OBSERVATION_VERSION_OPTIONS,
@@ -212,10 +216,38 @@ def build_parser() -> argparse.ArgumentParser:
         help="Track B risk profile.",
     )
     parser.add_argument(
+        "--risk-occurrence-mode",
+        choices=list(RISK_OCCURRENCE_MODE_OPTIONS),
+        default="thesis_periodic",
+        help="Risk timing semantics for new Track B reruns.",
+    )
+    parser.add_argument(
+        "--raw-material-flow-mode",
+        choices=list(RAW_MATERIAL_FLOW_MODE_OPTIONS),
+        default="kit_equivalent_order_up_to",
+        help="Raw-material inventory semantics for new Track B reruns.",
+    )
+    parser.add_argument(
+        "--raw-material-order-up-to-multiplier",
+        type=float,
+        default=2.0,
+        help="Order-up-to multiplier used by order-up-to raw material modes.",
+    )
+    parser.add_argument(
         "--observation-version",
         choices=list(OBSERVATION_VERSION_OPTIONS),
         default="v7",
         help="Observation contract for Track B training/eval.",
+    )
+    parser.add_argument(
+        "--stochastic-pt-spread",
+        type=float,
+        default=1.0,
+        help=(
+            "Scales stochastic processing-time variability. The historical "
+            "default 1.0 is Tri(0.75*PT, PT, 1.5*PT); 0.0 collapses to "
+            "deterministic PT when --stochastic-pt is enabled by Track B."
+        ),
     )
     parser.add_argument(
         "--algo",
@@ -310,7 +342,13 @@ def build_env_kwargs(args: argparse.Namespace) -> dict[str, Any]:
         "reward_mode": args.reward_mode,
         "ret_seq_kappa": args.ret_seq_kappa,
         "risk_level": args.risk_level,
+        "risk_occurrence_mode": args.risk_occurrence_mode,
+        "raw_material_flow_mode": args.raw_material_flow_mode,
+        "raw_material_order_up_to_multiplier": (
+            args.raw_material_order_up_to_multiplier
+        ),
         "observation_version": args.observation_version,
+        "stochastic_pt_spread": args.stochastic_pt_spread,
         "step_size_hours": args.step_size_hours,
         "max_steps": args.max_steps,
     }
@@ -334,10 +372,10 @@ def build_static_policy_action(policy: StaticPolicySpec) -> dict[str, float | in
 
 def extract_downstream_multipliers(final_info: dict[str, Any]) -> tuple[float, float]:
     clipped_action = final_info.get("clipped_action")
-    if isinstance(clipped_action, (list, tuple)) and len(clipped_action) >= 7:
+    if isinstance(clipped_action, (list, tuple)) and len(clipped_action) >= 8:
         return (
-            float(1.25 + 0.75 * float(clipped_action[5])),
             float(1.25 + 0.75 * float(clipped_action[6])),
+            float(1.25 + 0.75 * float(clipped_action[7])),
         )
 
     raw_action = final_info.get("raw_action")
@@ -1069,6 +1107,9 @@ def render_markdown(summary: dict[str, Any]) -> str:
         f"- Eval episodes: {config['eval_episodes']}",
         f"- Reward mode: {config['reward_mode']}",
         f"- Risk level: {config['risk_level']}",
+        f"- Risk occurrence mode: {config['risk_occurrence_mode']}",
+        f"- Raw material flow mode: {config['raw_material_flow_mode']}",
+        f"- Stochastic PT spread: {config['stochastic_pt_spread']}",
         "",
         "## Policy Summary",
         "",
@@ -1202,12 +1243,18 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
             "reward_mode": args.reward_mode,
             "ret_seq_kappa": float(args.ret_seq_kappa),
             "risk_level": args.risk_level,
+            "risk_occurrence_mode": args.risk_occurrence_mode,
+            "raw_material_flow_mode": args.raw_material_flow_mode,
+            "raw_material_order_up_to_multiplier": float(
+                args.raw_material_order_up_to_multiplier
+            ),
             "step_size_hours": float(args.step_size_hours),
             "max_steps": int(args.max_steps),
             "observation_version": str(args.observation_version),
             "action_contract": "track_b_v1",
             "year_basis": "thesis",
             "stochastic_pt": True,
+            "stochastic_pt_spread": float(args.stochastic_pt_spread),
             "learning_rate": float(args.learning_rate),
             "n_steps": int(args.n_steps),
             "batch_size": int(args.batch_size),
@@ -1229,8 +1276,14 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
             "observation_version": str(args.observation_version),
             "action_contract": "track_b_v1",
             "risk_level": args.risk_level,
+            "risk_occurrence_mode": args.risk_occurrence_mode,
+            "raw_material_flow_mode": args.raw_material_flow_mode,
+            "raw_material_order_up_to_multiplier": float(
+                args.raw_material_order_up_to_multiplier
+            ),
             "year_basis": "thesis",
             "stochastic_pt": True,
+            "stochastic_pt_spread": float(args.stochastic_pt_spread),
             "step_size_hours": float(args.step_size_hours),
             "max_steps": int(args.max_steps),
         },

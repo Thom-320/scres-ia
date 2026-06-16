@@ -117,6 +117,51 @@ def test_deterministic_baseline_is_seed_invariant() -> None:
     assert out_a["avg_annual_delivery"] == out_b["avg_annual_delivery"]
 
 
+def test_stochastic_pt_spread_zero_collapses_to_base_processing_time() -> None:
+    sim = MFSCSimulation(
+        seed=42,
+        risks_enabled=False,
+        stochastic_pt=True,
+        stochastic_pt_spread=0.0,
+    )
+
+    assert sim._pt("op1_pt") == pytest.approx(sim.params["op1_pt"])
+
+
+def test_stochastic_pt_rejects_negative_spread() -> None:
+    with pytest.raises(ValueError, match="stochastic_pt_spread"):
+        MFSCSimulation(stochastic_pt=True, stochastic_pt_spread=-0.1)
+
+
+def test_stochastic_pt_mean_preserving_uses_symmetric_bounds() -> None:
+    class FakeRng:
+        def __init__(self) -> None:
+            self.args: tuple[float, float, float] | None = None
+
+        def triangular(self, left: float, mode: float, right: float) -> float:
+            self.args = (left, mode, right)
+            return mode
+
+    sim = MFSCSimulation(
+        seed=42,
+        risks_enabled=False,
+        stochastic_pt=True,
+        stochastic_pt_spread=2.0,
+        stochastic_pt_mean_preserving=True,
+    )
+    fake_rng = FakeRng()
+    sim.rng = fake_rng  # type: ignore[assignment]
+
+    assert sim._pt("op1_pt") == pytest.approx(sim.params["op1_pt"])
+    assert fake_rng.args == pytest.approx(
+        (
+            0.5 * sim.params["op1_pt"],
+            sim.params["op1_pt"],
+            1.5 * sim.params["op1_pt"],
+        )
+    )
+
+
 def test_post_warmup_yearly_production_removes_first_year_startup_dip() -> None:
     horizon = HOURS_PER_YEAR_THESIS * 3
     sim = MFSCSimulation(

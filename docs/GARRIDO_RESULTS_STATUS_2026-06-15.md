@@ -205,7 +205,7 @@ of learned superiority in the repaired inventory environment.
   - `thomaschisica/scresia-garrido-fidelity-h2-thesis` version 3: `COMPLETE`
   - `thomaschisica/scresia-garrido-fidelity-postfix` version 3: `RUNNING`
   - `thomaschisica/scresia-confirmatory-static-postfix` version 2: `COMPLETE`
-  - `thomaschisica/scresia-confirmatory-ppo-postfix` version 5: `RUNNING`
+  - `thomaschisica/scresia-confirmatory-ppo-postfix` version 5: `COMPLETE`
   These are the current Kaggle reruns for thesis-frequency risk timing.
 - The Kaggle H2/H3 thesis-periodic gate v3 was downloaded to:
   `outputs/kaggle_garrido_fidelity_h2_thesis_v3_latest/kaggle_outputs/kaggle_h2_thesis_20260616T022622Z/`
@@ -226,6 +226,19 @@ of learned superiority in the repaired inventory environment.
   Interpretation: after both the inventory and risk-frequency repairs, simple
   static buffering is very strong and there is little headroom for adaptive PPO
   in the `[6,3]` thesis-factorized action contract.
+- The Kaggle confirmatory PPO thesis-periodic v5 was downloaded to:
+  `outputs/kaggle_confirmatory_ppo_postfix_v5_latest/kaggle_outputs/kaggle_confirmatory_ppo_postfix_20260616T022628Z/`.
+  The panel remains saturated:
+  - `pure_inventory_I672_S1`: fill `0.9983`, ReT `0.9650`, reward `251.59`;
+  - `ppo500k_seed303`: fill `0.9983`, ReT `0.9650`, reward `247.62`;
+  - `crossed_uniform_I504_S3`: fill `0.9983`, ReT `0.9650`, reward `220.39`;
+  - `ppo500k_seed202`: fill `0.9983`, ReT `0.9649`, reward `220.77`;
+  - `ppo500k_seed101`: fill `0.9982`, ReT `0.9649`, reward `251.05`;
+  - `garrido_matched_DOE_baseline`: fill `0.9894`, ReT `0.9114`, reward `237.10`.
+  Interpretation: the thesis-factorized PPO confirmatory rerun does not beat the
+  best simple static buffer on fill/ReT. It confirms the parsimonious `[6,3]`
+  result; the remaining positive RL lane must be Track B or another declared
+  extension, not the strict thesis-factorized contract.
 - A local severe-extended probe was run after exposing the same fidelity modes in
   `scripts/run_thesis_decision_ppo_smoke.py` (commit `6868988`):
   `outputs/benchmarks/thesis_decision_ppo_smoke/probe_severe_extended_thesis_periodic_30k_codex/`.
