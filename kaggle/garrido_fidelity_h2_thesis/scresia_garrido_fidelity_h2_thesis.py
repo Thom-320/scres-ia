@@ -60,6 +60,8 @@ def main() -> None:
         "kit_equivalent_order_up_to",
         "--raw-material-order-up-to-multiplier",
         "2.0",
+        "--risk-occurrence-mode",
+        "thesis_periodic",
         "--progress-every",
         "100",
     ]

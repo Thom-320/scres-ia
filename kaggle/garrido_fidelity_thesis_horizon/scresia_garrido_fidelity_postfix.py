@@ -98,6 +98,8 @@ def main() -> None:
         "bom_total_units_order_up_to",
         "--raw-material-order-up-to-multiplier",
         "2.0",
+        "--risk-occurrence-mode",
+        "thesis_periodic",
         "--progress-every",
         "250",
     ]
