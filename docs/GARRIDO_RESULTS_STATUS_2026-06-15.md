@@ -195,8 +195,19 @@ of learned superiority in the repaired inventory environment.
   - inventory family H3 (`S3-S1`): fill `+0.0609`, ReT `+0.2586`.
   This is now downloadable Kaggle evidence, not log-only evidence. It is still a
   thesis-pattern minimal gate, not the full multi-profile fidelity panel.
-- `thomaschisica/scresia-confirmatory-static-postfix` has been launched from
-  the post-fix branch and is running.
+- `thomaschisica/scresia-confirmatory-static-postfix` completed and its
+  exported artifacts were downloaded to:
+  `outputs/kaggle_probe_confirmatory_static_latest/scres-ia/kaggle_outputs/kaggle_confirmatory_static_postfix_20260615T224733Z/`
+- The Kaggle confirmatory static rerun has `3000` scenario rows plus header and
+  matches the local confirmatory static result:
+  - `crossed_uniform_I504_S3`: fill `0.9691`, ReT `0.8460`, reward `209.60`;
+  - `pure_inventory_I672_S1`: fill `0.9687`, ReT `0.8450`, reward `240.82`;
+  - `per_node_I1344_I504_I504_S3`: fill `0.9681`, ReT `0.8436`, reward `209.38`;
+  - `pure_capacity_I0_S3`: fill `0.9620`, ReT `0.7720`, reward `202.46`;
+  - `garrido_matched_DOE_baseline`: fill `0.9583`, ReT `0.7785`, reward `226.17`.
+  The same interpretation applies: buffering beats the matched DOE baseline, but
+  crossed uniform and per-node policies do not materially beat the simpler
+  `pure_inventory_I672_S1` static policy.
 - `thomaschisica/scresia-confirmatory-ppo-postfix` version 1 failed because the
   expected PPO dataset mount was not found. Version 2 found the mount but failed
   because Kaggle datasets are read-only and the runner tried to rebuild SB3
@@ -243,9 +254,8 @@ These are readiness checks, not final scientific results. The serious rerun
 order is:
 
 1. finish/download/post-process the full Kaggle static thesis-horizon panel;
-2. download/post-process the Kaggle confirmatory static rerun;
-3. download/post-process the Kaggle confirmatory PPO rerun;
-4. treat the completed local static and PPO reruns above as current local
+2. download/post-process the Kaggle confirmatory PPO rerun;
+3. treat the completed local static/PPO and Kaggle static reruns above as current
    evidence, while labeling the loaded PPO models as pretrained pre-existing
    artifacts evaluated under the repaired contract.
 
