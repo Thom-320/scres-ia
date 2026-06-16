@@ -12,6 +12,7 @@ REPO_URL = "https://github.com/Thom-320/scres-ia.git"
 TARGET_REF = os.environ.get("SCRESIA_TARGET_REF", "codex/garrido-postfix-reruns")
 REPO_DIR = Path("/kaggle/working/scres-ia")
 OUTPUT_ROOT = Path("/kaggle/working/scresia_confirmatory_ppo_postfix_outputs")
+EXPORT_ROOT = Path("/kaggle/working/kaggle_outputs")
 PPO_ROOT_CANDIDATES = [
     Path("/kaggle/input/scresia-ppo-bestshot-artifacts"),
     Path("/kaggle/input/scresia-ppo-bestshot"),
@@ -113,7 +114,7 @@ def main() -> None:
         json.dumps(manifest, indent=2, sort_keys=True), encoding="utf-8"
     )
 
-    export_dir = REPO_DIR / "kaggle_outputs" / label
+    export_dir = EXPORT_ROOT / label
     if export_dir.exists():
         shutil.rmtree(export_dir)
     shutil.copytree(run_dir, export_dir)
@@ -125,6 +126,8 @@ def main() -> None:
     if report_path.exists():
         print(report_path.read_text(encoding="utf-8"), flush=True)
     print("exported:", export_dir, flush=True)
+    shutil.rmtree(REPO_DIR, ignore_errors=True)
+    shutil.rmtree(OUTPUT_ROOT, ignore_errors=True)
 
 
 if __name__ == "__main__":

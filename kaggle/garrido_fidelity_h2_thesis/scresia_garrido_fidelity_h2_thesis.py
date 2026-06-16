@@ -11,6 +11,7 @@ REPO_URL = "https://github.com/Thom-320/scres-ia.git"
 TARGET_COMMIT = "2ad6a62da11007fb0d7bf5dc91fbe14ba53627cc"
 REPO_DIR = Path("/kaggle/working/scres-ia")
 OUTPUT_ROOT = Path("/kaggle/working/scresia_garrido_fidelity_h2_thesis_outputs")
+EXPORT_ROOT = Path("/kaggle/working/kaggle_outputs")
 
 
 def run(cmd: list[str], cwd: Path | None = None) -> None:
@@ -81,13 +82,15 @@ def main() -> None:
     if report_path.exists():
         print(report_path.read_text(encoding="utf-8"), flush=True)
 
-    export_dir = REPO_DIR / "kaggle_outputs" / label
+    export_dir = EXPORT_ROOT / label
     if export_dir.exists():
         shutil.rmtree(export_dir)
     shutil.copytree(run_dir, export_dir)
     shutil.copy2(OUTPUT_ROOT / "manifest.json", export_dir / "kernel_manifest.json")
     print("exported:", export_dir, flush=True)
     print("outputs:", OUTPUT_ROOT, flush=True)
+    shutil.rmtree(REPO_DIR, ignore_errors=True)
+    shutil.rmtree(OUTPUT_ROOT, ignore_errors=True)
 
 
 if __name__ == "__main__":
