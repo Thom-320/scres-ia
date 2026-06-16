@@ -44,6 +44,7 @@ from .config import (
     RISKS_SEVERE,
     RISKS_SEVERE_EXTENDED,
     RISKS_SEVERE_TRAINING,
+    RISKS_WAR_STRESS_V1,
     TRACK_B_QUEUE_PRESSURE_LOOKAHEAD_CYCLES,
     TRACK_B_ROLLING_WINDOW_HOURS,
     DEFAULT_YEAR_BASIS,
@@ -1407,6 +1408,7 @@ class MFSCSimulation:
         "severe": RISKS_SEVERE,
         "severe_extended": RISKS_SEVERE_EXTENDED,
         "severe_training": RISKS_SEVERE_TRAINING,
+        "war_stress_v1": RISKS_WAR_STRESS_V1,
     }
 
     def _risk_table_for(self, risk_id: str) -> dict[str, Any] | None:
@@ -1448,6 +1450,16 @@ class MFSCSimulation:
             recovery_scale = self._adaptive_recovery_scale_for(risk_id)
             return float(base_mean) * recovery_scale
         return float(base_mean)
+
+    def _get_risk_recovery_duration(self, risk_id: str) -> float:
+        table = self._risk_table_for(risk_id)
+        if table and risk_id in table:
+            return float(
+                table[risk_id].get(
+                    "duration", RISKS_CURRENT[risk_id]["recovery"]["duration"]
+                )
+            )
+        return float(RISKS_CURRENT[risk_id]["recovery"]["duration"])
 
     def _get_risk_surge(self) -> tuple[int, int]:
         table = self._risk_table_for("R24")
@@ -1661,7 +1673,7 @@ class MFSCSimulation:
             )
 
     def _risk_R3(self):
-        duration = RISKS_CURRENT["R3"]["recovery"]["duration"]
+        duration = self._get_risk_recovery_duration("R3")
         affected = RISKS_CURRENT["R3"]["affected_ops"]
         first = True
         while True:

@@ -52,6 +52,7 @@ RISK_PROFILES = (
     "severe",
     "severe_extended",
     "severe_training",
+    "war_stress_v1",
 )
 POLICY_SETS = ("matched_only", "minimal", "thesis_static", "with_crossed")
 
@@ -103,7 +104,9 @@ def thesis_factorized_action(period: int | None, shifts: int) -> np.ndarray:
 
 def thesis_design_action(spec: ThesisDesignSpec) -> np.ndarray:
     period = spec.inventory_replenishment_period
-    return thesis_factorized_action(None if period is None else int(period), spec.shifts)
+    return thesis_factorized_action(
+        None if period is None else int(period), spec.shifts
+    )
 
 
 def policy_candidates(policy_set: str) -> list[dict[str, Any]]:
@@ -291,25 +294,27 @@ def rollout(
         "pending_backorder_qty": float(
             sum(float(getattr(order, "remaining_qty", 0.0)) for order in pending_orders)
         ),
-        "total_demanded": float(getattr(sim, "total_demanded", 0.0))
-        if sim is not None
-        else 0.0,
-        "total_delivered": float(getattr(sim, "total_delivered", 0.0))
-        if sim is not None
-        else 0.0,
-        "cumulative_disruption_hours": float(
-            getattr(
-                sim,
-                "_cumulative_down_hours",
-                getattr(sim, "cumulative_disruption_hours", 0.0),
+        "total_demanded": (
+            float(getattr(sim, "total_demanded", 0.0)) if sim is not None else 0.0
+        ),
+        "total_delivered": (
+            float(getattr(sim, "total_delivered", 0.0)) if sim is not None else 0.0
+        ),
+        "cumulative_disruption_hours": (
+            float(
+                getattr(
+                    sim,
+                    "_cumulative_down_hours",
+                    getattr(sim, "cumulative_disruption_hours", 0.0),
+                )
             )
-        )
-        if sim is not None
-        else 0.0,
+            if sim is not None
+            else 0.0
+        ),
         "action": json.dumps(action.astype(int).tolist()),
-        "common_inventory_period": ""
-        if policy["period"] in (None, "matched")
-        else int(policy["period"]),
+        "common_inventory_period": (
+            "" if policy["period"] in (None, "matched") else int(policy["period"])
+        ),
         "shifts": "" if policy["shifts"] == "matched" else int(policy["shifts"]),
     }
     env.close()
@@ -355,7 +360,9 @@ def summarize_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 "cumulative_disruption_hours_mean": mean(
                     float(row["cumulative_disruption_hours"]) for row in bucket
                 ),
-                "max_steps_used_mean": mean(float(row["max_steps_used"]) for row in bucket),
+                "max_steps_used_mean": mean(
+                    float(row["max_steps_used"]) for row in bucket
+                ),
             }
         )
     return summary
@@ -420,7 +427,9 @@ def write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
         writer.writerows(rows)
 
 
-def write_report(out_dir: Path, args: argparse.Namespace, rows: list[dict[str, Any]]) -> None:
+def write_report(
+    out_dir: Path, args: argparse.Namespace, rows: list[dict[str, Any]]
+) -> None:
     summary = summarize_rows(rows)
     write_csv(out_dir / "policy_family_summary.csv", summary)
 
@@ -475,9 +484,7 @@ def write_report(out_dir: Path, args: argparse.Namespace, rows: list[dict[str, A
         "|---|---|---:|---:|---:|",
     ]
     matched = [
-        row
-        for row in summary
-        if row["policy"] == "garrido_matched_DOE_baseline"
+        row for row in summary if row["policy"] == "garrido_matched_DOE_baseline"
     ]
     for row in sorted(matched, key=lambda r: (r["family"], r["profile"])):
         lines.append(
@@ -572,7 +579,9 @@ def build_parser() -> argparse.ArgumentParser:
         default="legacy_validated",
         choices=RAW_MATERIAL_FLOW_MODE_OPTIONS,
     )
-    parser.add_argument("--raw-material-order-up-to-multiplier", type=float, default=2.0)
+    parser.add_argument(
+        "--raw-material-order-up-to-multiplier", type=float, default=2.0
+    )
     parser.add_argument(
         "--risk-occurrence-mode",
         choices=RISK_OCCURRENCE_MODE_OPTIONS,

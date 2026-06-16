@@ -97,6 +97,14 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--n-epochs", type=int, default=10)
     parser.add_argument(
+        "--algos",
+        nargs="+",
+        default=["ppo_mlp"],
+        choices=["ppo_mlp", "recurrent_ppo", "dmlpa_ppo"],
+    )
+    parser.add_argument("--device", default="cpu")
+    parser.add_argument("--history-window", type=int, default=30)
+    parser.add_argument(
         "--action-space-modes",
         nargs="+",
         default=["thesis_factorized", "continuous_it_s"],
@@ -118,6 +126,7 @@ def build_parser() -> argparse.ArgumentParser:
             "severe",
             "severe_extended",
             "severe_training",
+            "war_stress_v1",
             "adaptive_benchmark_v1",
             "adaptive_benchmark_v2",
         ],
@@ -129,6 +138,15 @@ def build_parser() -> argparse.ArgumentParser:
         choices=sorted(PT_PROFILES),
     )
     parser.add_argument("--max-runs", type=int, default=None)
+    parser.add_argument("--panel-cfis", default="31-90")
+    parser.add_argument(
+        "--use-cf-risk-profile",
+        action="store_true",
+        help=(
+            "Train/evaluate over --panel-cfis using the selected risk level as "
+            "a static-fidelity profile for each Cf row."
+        ),
+    )
     parser.add_argument("--skip-existing", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--stop-on-error", action="store_true")
@@ -138,6 +156,7 @@ def build_parser() -> argparse.ArgumentParser:
 def build_label(
     *,
     prefix: str,
+    algo: str,
     action_space_mode: str,
     reward_profile: str,
     risk_level: str,
@@ -147,6 +166,7 @@ def build_label(
     return "_".join(
         [
             prefix,
+            slug(algo),
             slug(action_space_mode),
             slug(reward_profile),
             slug(risk_level),
@@ -161,12 +181,13 @@ def build_command(
     args: argparse.Namespace,
     run_root: Path,
     label: str,
+    algo: str,
     action_space_mode: str,
     reward_profile: str,
     risk_level: str,
     pt_profile: str,
 ) -> list[str]:
-    return [
+    command = [
         sys.executable,
         "scripts/run_thesis_decision_ppo_smoke.py",
         "--label",
@@ -179,6 +200,12 @@ def build_command(
         str(args.eval_episodes),
         "--seed",
         str(args.seed),
+        "--algo",
+        algo,
+        "--device",
+        args.device,
+        "--history-window",
+        str(args.history_window),
         "--risk-level",
         risk_level,
         "--risk-occurrence-mode",
@@ -204,9 +231,23 @@ def build_command(
         *REWARD_PROFILES[reward_profile],
         *PT_PROFILES[pt_profile],
     ]
+    if args.use_cf_risk_profile:
+        command.extend(
+            [
+                "--train-cfis",
+                args.panel_cfis,
+                "--garrido-cfis",
+                args.panel_cfis,
+                "--train-risk-profile",
+                risk_level,
+                "--eval-risk-profile",
+                risk_level,
+            ]
+        )
+    return command
 
 
-def read_policy_summary(run_dir: Path) -> dict[str, Any]:
+def read_policy_summary(run_dir: Path, *, algo: str = "ppo_mlp") -> dict[str, Any]:
     path = run_dir / "policy_summary.csv"
     if not path.exists():
         return {}
@@ -218,7 +259,7 @@ def read_policy_summary(run_dir: Path) -> dict[str, Any]:
     def as_float(row: dict[str, str], key: str) -> float:
         return float(row.get(key) or 0.0)
 
-    ppo_rows = [row for row in rows if row.get("policy") == "ppo_mlp"]
+    ppo_rows = [row for row in rows if row.get("policy") == algo]
     static_rows = [
         row for row in rows if str(row.get("policy", "")).startswith("static_grid_")
     ]
@@ -236,6 +277,12 @@ def read_policy_summary(run_dir: Path) -> dict[str, Any]:
     static_fill = as_float(best_static, "fill_rate_order_level_mean")
     ppo_ret = as_float(ppo, "order_level_ret_mean")
     static_ret = as_float(best_static, "order_level_ret_mean")
+    ppo_ret_all = as_float(ppo, "ret_mean_all_orders_zero_unfulfilled_mean")
+    static_ret_all = as_float(best_static, "ret_mean_all_orders_zero_unfulfilled_mean")
+    ppo_flow_fill = as_float(ppo, "flow_fill_rate_mean")
+    static_flow_fill = as_float(best_static, "flow_fill_rate_mean")
+    ppo_stockout_week = as_float(ppo, "stockout_week_pct_mean")
+    static_stockout_week = as_float(best_static, "stockout_week_pct_mean")
     return {
         "ppo_fill": ppo_fill,
         "best_static_policy": best_static.get("policy", ""),
@@ -244,6 +291,29 @@ def read_policy_summary(run_dir: Path) -> dict[str, Any]:
         "ppo_ret": ppo_ret,
         "best_static_ret": static_ret,
         "delta_ret": ppo_ret - static_ret,
+        "ppo_ret_all_orders": ppo_ret_all,
+        "best_static_ret_all_orders": static_ret_all,
+        "delta_ret_all_orders": ppo_ret_all - static_ret_all,
+        "ppo_flow_fill": ppo_flow_fill,
+        "best_static_flow_fill": static_flow_fill,
+        "delta_flow_fill": ppo_flow_fill - static_flow_fill,
+        "ppo_stockout_week_pct": ppo_stockout_week,
+        "best_static_stockout_week_pct": static_stockout_week,
+        "delta_stockout_week_pct": ppo_stockout_week - static_stockout_week,
+        "ppo_re_fr_contribution": as_float(ppo, "re_fr_contribution_all_mean"),
+        "best_static_re_fr_contribution": as_float(
+            best_static, "re_fr_contribution_all_mean"
+        ),
+        "ppo_dynamic_ret_contribution": as_float(
+            ppo, "dynamic_ret_contribution_all_mean"
+        ),
+        "best_static_dynamic_ret_contribution": as_float(
+            best_static, "dynamic_ret_contribution_all_mean"
+        ),
+        "ppo_ret_p10_all": as_float(ppo, "ret_p10_all_mean"),
+        "best_static_ret_p10_all": as_float(best_static, "ret_p10_all_mean"),
+        "delta_ret_p10_all": as_float(ppo, "ret_p10_all_mean")
+        - as_float(best_static, "ret_p10_all_mean"),
         "ppo_reward": as_float(ppo, "reward_total_mean"),
         "best_static_reward": as_float(best_static, "reward_total_mean"),
     }
@@ -268,27 +338,30 @@ def main() -> int:
     run_root.mkdir(parents=True, exist_ok=True)
 
     planned: list[dict[str, Any]] = []
-    for action_space_mode in args.action_space_modes:
-        for reward_profile in args.reward_profiles:
-            for risk_level in args.risk_levels:
-                for pt_profile in args.pt_profiles:
-                    label = build_label(
-                        prefix=args.label_prefix,
-                        action_space_mode=action_space_mode,
-                        reward_profile=reward_profile,
-                        risk_level=risk_level,
-                        pt_profile=pt_profile,
-                        train_timesteps=args.train_timesteps,
-                    )
-                    planned.append(
-                        {
-                            "label": label,
-                            "action_space_mode": action_space_mode,
-                            "reward_profile": reward_profile,
-                            "risk_level": risk_level,
-                            "pt_profile": pt_profile,
-                        }
-                    )
+    for algo in args.algos:
+        for action_space_mode in args.action_space_modes:
+            for reward_profile in args.reward_profiles:
+                for risk_level in args.risk_levels:
+                    for pt_profile in args.pt_profiles:
+                        label = build_label(
+                            prefix=args.label_prefix,
+                            algo=algo,
+                            action_space_mode=action_space_mode,
+                            reward_profile=reward_profile,
+                            risk_level=risk_level,
+                            pt_profile=pt_profile,
+                            train_timesteps=args.train_timesteps,
+                        )
+                        planned.append(
+                            {
+                                "label": label,
+                                "algo": algo,
+                                "action_space_mode": action_space_mode,
+                                "reward_profile": reward_profile,
+                                "risk_level": risk_level,
+                                "pt_profile": pt_profile,
+                            }
+                        )
     if args.max_runs is not None:
         planned = planned[: args.max_runs]
 
@@ -300,6 +373,7 @@ def main() -> int:
             args=args,
             run_root=run_root,
             label=label,
+            algo=str(item["algo"]),
             action_space_mode=str(item["action_space_mode"]),
             reward_profile=str(item["reward_profile"]),
             risk_level=str(item["risk_level"]),
@@ -311,12 +385,16 @@ def main() -> int:
             results.append({**item_with_command, "status": "dry_run"})
             continue
         if args.skip_existing and (run_dir / "summary.json").exists():
-            metrics = read_policy_summary(run_dir)
+            metrics = read_policy_summary(run_dir, algo=str(item["algo"]))
             results.append({**item_with_command, **metrics, "status": "skipped"})
             continue
         completed = subprocess.run(command, check=False)
         status = "complete" if completed.returncode == 0 else "failed"
-        metrics = read_policy_summary(run_dir) if completed.returncode == 0 else {}
+        metrics = (
+            read_policy_summary(run_dir, algo=str(item["algo"]))
+            if completed.returncode == 0
+            else {}
+        )
         results.append(
             {
                 **item_with_command,

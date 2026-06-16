@@ -332,6 +332,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             "severe",
             "severe_extended",
             "severe_training",
+            "war_stress_v1",
             "adaptive_benchmark_v1",
             "adaptive_benchmark_v2",
         ):
@@ -555,6 +556,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             "severe": float(threshold_map.get("severe", 0.15)),
             "severe_extended": float(threshold_map.get("severe_extended", 0.15)),
             "severe_training": float(threshold_map.get("severe_training", 0.15)),
+            "war_stress_v1": float(threshold_map.get("war_stress_v1", 0.10)),
             "adaptive_benchmark_v1": float(
                 threshold_map.get("adaptive_benchmark_v1", 0.20)
             ),

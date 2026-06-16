@@ -484,6 +484,27 @@ RISKS_SEVERE_TRAINING = {
     "R3": {"dist": "uniform", "a": 1, "b": 40_320},  # 4x more freq than current
 }
 
+RISKS_WAR_STRESS_V1 = {
+    # Declared extension, not a thesis-fidelity lane: sustained campaign stress
+    # over the same Garrido risk IDs. It makes disruption response observable
+    # before spending PPO budget.
+    "R11": {"dist": "uniform", "a": 1, "b": 8, "recovery_mean": 10},
+    "R12": {"dist": "binomial", "n": 12, "p": 9 / 11},
+    "R13": {"dist": "binomial", "n": 12, "p": 9 / 10},
+    "R14": {"dist": "binomial", "n": 2564, "p": 18 / 100},
+    "R21": {"dist": "uniform", "a": 1, "b": 672, "recovery_mean": 336},
+    "R22": {"dist": "uniform", "a": 1, "b": 168, "recovery_mean": 96},
+    "R23": {"dist": "uniform", "a": 1, "b": 336, "recovery_mean": 240},
+    "R24": {
+        "dist": "uniform",
+        "a": 1,
+        "b": 84,
+        "surge_lo": 9600,
+        "surge_hi": 13000,
+    },
+    "R3": {"dist": "uniform", "a": 1, "b": 20_160, "duration": 1_344},
+}
+
 RISKS_SEVERE_EXTENDED = {
     "R11": {"dist": "uniform", "a": 1, "b": 21, "recovery_mean": 5},
     "R12": {"dist": "binomial", "n": 12, "p": 8 / 11},
