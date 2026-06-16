@@ -173,3 +173,47 @@ the best static `[6,3]` grid on external metrics. `control_pbrs_steep` improves
 the `severe_extended` fill gap relative to `ret_ladder_steep`, but still loses.
 The only positive cell is a tiny ReT gain under `ret_ladder_steep` +
 `severe_training`, paired with a large fill loss, so it is not promotable.
+
+## Continuous I_t,S Confirmation Gate
+
+After the strict `[6,3]` screen, we tested the nearest Track A extension:
+`continuous_it_s`. This keeps Garrido-Rios' two decision variables but
+de-discretizes the common `I_t,S` buffer level.
+
+Runner:
+`scripts/run_track_a_continuous_it_s_confirm.py`
+
+Configuration:
+
+- `action_space_mode=continuous_it_s`
+- `risk_level=severe`
+- `risk_occurrence_mode=thesis_periodic`
+- `raw_material_flow_mode=kit_equivalent_order_up_to`
+- `reward_profile=ret_ladder_steep`
+- `pt_profile=stoch_pt_hist`
+- `train_timesteps=40000`
+- seeds: `4242,4243,4244`
+- static continuous grid: `buffer_fraction in {0.0, 0.1, ..., 1.0}` and
+  `S in {1,2,3}`
+
+Artifact:
+`outputs/benchmarks/track_a_continuous_it_s_confirm/continuous_it_s_severe_ret_ladder_steep_histpt_40k_3seed/seed_summary.csv`
+
+| seed | PPO fill | best static continuous | static fill | delta fill | PPO ReT | static ReT | delta ReT |
+|---:|---:|---|---:|---:|---:|---:|---:|
+| 4242 | 0.7944 | `static_continuous_b0.800_S3` | 0.8396 | -0.0452 | 0.2536 | 0.2652 | -0.0116 |
+| 4243 | 0.8055 | `static_continuous_b0.200_S2` | 0.8396 | -0.0341 | 0.2541 | 0.2759 | -0.0218 |
+| 4244 | 0.7439 | `static_continuous_b0.700_S3` | 0.8310 | -0.0871 | 0.2367 | 0.2585 | -0.0219 |
+
+Overall:
+
+- positive fill seeds: `0/3`
+- positive ReT seeds: `0/3`
+- mean delta fill: `-0.0554`
+- mean delta ReT: `-0.0184`
+
+Interpretation: the directional single-seed result that suggested PPO
+continuous `I_t,S` could beat a static continuous policy is not confirmed when
+the static baseline is a broader continuous grid. The likely failure mode was a
+weak static comparator, not a real adaptive advantage. Track A is therefore
+still parsimonious under this gate.
