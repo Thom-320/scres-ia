@@ -35,6 +35,7 @@ except Exception:  # pragma: no cover
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from supply_chain.config import RISK_OCCURRENCE_MODE_OPTIONS  # noqa: E402
 from supply_chain.external_env_interface import (
     get_episode_terminal_metrics,
     make_dkana_thesis_faithful_env,
@@ -329,6 +330,11 @@ def main() -> int:
     )
     parser.add_argument(
         "--raw-material-order-up-to-multiplier", type=float, default=2.0
+    )
+    parser.add_argument(
+        "--risk-occurrence-mode",
+        choices=RISK_OCCURRENCE_MODE_OPTIONS,
+        default="legacy_renewal",
     )
     parser.add_argument("--bootstrap-draws", type=int, default=10000)
     args = parser.parse_args()

@@ -32,6 +32,7 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from supply_chain.config import RISK_OCCURRENCE_MODE_OPTIONS  # noqa: E402
 from supply_chain.external_env_interface import (  # noqa: E402
     THESIS_INVENTORY_PERIODS,
     get_episode_terminal_metrics,
@@ -95,6 +96,7 @@ def base_kwargs(args: argparse.Namespace) -> dict[str, Any]:
         "raw_material_order_up_to_multiplier": getattr(
             args, "raw_material_order_up_to_multiplier", 2.0
         ),
+        "risk_occurrence_mode": getattr(args, "risk_occurrence_mode", "legacy_renewal"),
     }
 
 
@@ -269,6 +271,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="Raw-material flow semantics for post-fix thesis-inventory reruns.",
     )
     p.add_argument("--raw-material-order-up-to-multiplier", type=float, default=2.0)
+    p.add_argument(
+        "--risk-occurrence-mode",
+        choices=RISK_OCCURRENCE_MODE_OPTIONS,
+        default="legacy_renewal",
+    )
     p.add_argument(
         "--l1b-screening-csv",
         default=None,

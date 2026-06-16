@@ -14,6 +14,8 @@ Regenerated locally on 2026-06-15:
 - `outputs/benchmarks/thesis_bom_semantics/current_codex/THESIS_BOM_SEMANTICS.md`
 - `outputs/benchmarks/thesis_decision_tables/current_codex/THESIS_DECISION_TABLES.md`
 - `outputs/benchmarks/thesis_risk_tables/current_codex/THESIS_RISK_TABLES.md`
+- `outputs/benchmarks/thesis_risk_frequency/thesis_periodic_codex/THESIS_RISK_FREQUENCY.md`
+- `outputs/benchmarks/thesis_risk_frequency/legacy_renewal_codex/THESIS_RISK_FREQUENCY.md`
 - `outputs/benchmarks/thesis_operations_table/current_codex/THESIS_OPERATIONS_BACKBONE.md`
 - `outputs/benchmarks/thesis_design_matrix/current_codex/THESIS_DESIGN_MATRIX.md`
 - `outputs/benchmarks/thesis_ret_schema/current_codex/THESIS_RET_SCHEMA.md`
@@ -22,12 +24,26 @@ Table 6.10 remains valid under `raw_material_flow_mode=kit_equivalent_order_up_t
 Python production is `738,432` rations/year, with RMSE vs thesis ECS `61,013.6`,
 below the thesis reported RMSE `87,918`.
 
-### Known Open Fidelity Gap
+### Risk-Frequency Fidelity
 
-`outputs/benchmarks/thesis_risk_frequency/current_codex/THESIS_RISK_FREQUENCY.md`
-still fails Table 6.11 frequency fidelity. This is a real DES process-semantics
-gap, not a missing-constant issue: Table 6.12 constants are present, but the
-current renewal/event process does not reproduce Table 6.11 frequencies.
+Table 6.11 now has an explicit mode gate:
+
+- `risk_occurrence_mode=legacy_renewal` preserves the historical/default DES
+  process and intentionally fails the Table 6.11 frequency audit.
+- `risk_occurrence_mode=thesis_periodic` passes the Table 6.11 frequency audit,
+  including the separate R13 fix from monthly to weekly supplier-delivery checks.
+
+Evidence:
+
+- Legacy gap artifact:
+  `outputs/benchmarks/thesis_risk_frequency/legacy_renewal_codex/THESIS_RISK_FREQUENCY.md`
+- Thesis-frequency artifact:
+  `outputs/benchmarks/thesis_risk_frequency/thesis_periodic_codex/THESIS_RISK_FREQUENCY.md`
+
+Interpretation: prior post-inventory reruns that did not set
+`risk_occurrence_mode=thesis_periodic` are still useful for inventory debugging
+and legacy comparability, but they are superseded for final thesis-frequency
+risk claims.
 
 ### Post-Fix Static Gates
 
@@ -36,8 +52,12 @@ The post-fix inventory contract is:
 - `raw_material_flow_mode=kit_equivalent_order_up_to`
 - internal canonical mode `bom_total_units_order_up_to`
 - `raw_material_order_up_to_multiplier=2.0`
+- for final thesis-frequency risk claims:
+  `risk_occurrence_mode=thesis_periodic`
 
-Current local post-fix gates are usable:
+Current local post-fix gates are usable as inventory-repair evidence, but they
+were run before the Table 6.11 occurrence-mode repair and should be rerun before
+being used as final thesis-frequency risk evidence:
 
 - H1 thesis-horizon matched-only gate:
   `outputs/benchmarks/garrido_static_fidelity_stress/bom_order_up_to_h1_matched_only_cf31_90_thesis_horizon_1rep_codex/`
@@ -185,7 +205,9 @@ of learned superiority in the repaired inventory environment.
   was pushed on 2026-06-16 at about `00:11 UTC` using the artifact-only export
   wrapper from commit `e12ea05`. Do not claim the full Cf31-90 x 5-profile x
   3-rep thesis-horizon panel complete until the version 2 artifacts are
-  downloaded and post-processed.
+  downloaded and post-processed. Because this run predates the
+  `risk_occurrence_mode=thesis_periodic` fix, treat it as a legacy-risk artifact
+  even if it finishes; it cannot be the final thesis-frequency risk panel.
 - `thomaschisica/scresia-garrido-fidelity-h2-thesis` version 2 completed and its
   exported artifacts were downloaded to:
   `outputs/kaggle_garrido_fidelity_h2_thesis_v2_latest/scres-ia/kaggle_outputs/kaggle_h2_thesis_20260615T223853Z/`

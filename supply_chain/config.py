@@ -135,6 +135,7 @@ RAW_MATERIAL_FLOW_MODE_ALIASES = {
     "kit_equivalent": "bom_total_units",
     "kit_equivalent_order_up_to": "bom_total_units_order_up_to",
 }
+RISK_OCCURRENCE_MODE_OPTIONS = ("legacy_renewal", "thesis_periodic")
 
 
 def canonical_raw_material_flow_mode(mode: str) -> str:

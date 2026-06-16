@@ -28,7 +28,11 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from supply_chain.config import HOURS_PER_WEEK, RAW_MATERIAL_FLOW_MODE_OPTIONS  # noqa: E402
+from supply_chain.config import (  # noqa: E402
+    HOURS_PER_WEEK,
+    RAW_MATERIAL_FLOW_MODE_OPTIONS,
+    RISK_OCCURRENCE_MODE_OPTIONS,
+)
 from supply_chain.external_env_interface import (  # noqa: E402
     THESIS_INVENTORY_PERIODS,
     get_episode_terminal_metrics,
@@ -242,6 +246,7 @@ def rollout(
         "initial_action": action,
         "raw_material_flow_mode": args.raw_material_flow_mode,
         "raw_material_order_up_to_multiplier": args.raw_material_order_up_to_multiplier,
+        "risk_occurrence_mode": args.risk_occurrence_mode,
     }
     env_kwargs.update(
         risk_kwargs_for_profile(
@@ -429,6 +434,7 @@ def write_report(out_dir: Path, args: argparse.Namespace, rows: list[dict[str, A
         f"reward_mode: `{args.reward_mode}`.",
         f"Raw-material flow mode: `{args.raw_material_flow_mode}`.",
         f"Order-up-to multiplier: `{args.raw_material_order_up_to_multiplier}`.",
+        f"Risk occurrence mode: `{args.risk_occurrence_mode}`.",
         "",
         "Risk profile `thesis_pattern` preserves each Cf row's current/increased "
         "risk overrides from the thesis design. Other profiles keep the same "
@@ -567,6 +573,11 @@ def build_parser() -> argparse.ArgumentParser:
         choices=RAW_MATERIAL_FLOW_MODE_OPTIONS,
     )
     parser.add_argument("--raw-material-order-up-to-multiplier", type=float, default=2.0)
+    parser.add_argument(
+        "--risk-occurrence-mode",
+        choices=RISK_OCCURRENCE_MODE_OPTIONS,
+        default="legacy_renewal",
+    )
     parser.add_argument("--observation-version", default="v5")
     parser.add_argument("--observation-mode", default="env_sdm_history_reward")
     parser.add_argument("--step-size-hours", type=float, default=float(HOURS_PER_WEEK))
@@ -643,6 +654,7 @@ def main() -> int:
         "reward_mode": args.reward_mode,
         "raw_material_flow_mode": args.raw_material_flow_mode,
         "raw_material_order_up_to_multiplier": args.raw_material_order_up_to_multiplier,
+        "risk_occurrence_mode": args.risk_occurrence_mode,
         "horizon_mode": args.horizon_mode,
         "max_steps": args.max_steps,
         "step_size_hours": args.step_size_hours,

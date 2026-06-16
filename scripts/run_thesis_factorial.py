@@ -14,6 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from supply_chain.config import (  # noqa: E402
     R14_DEFECT_MODE_OPTIONS,
+    RISK_OCCURRENCE_MODE_OPTIONS,
     THESIS_DOWNSTREAM_Q_RANGES,
     THESIS_FAITHFUL_PROTOCOL,
 )
@@ -102,6 +103,11 @@ def build_parser() -> argparse.ArgumentParser:
         default=str(THESIS_FAITHFUL_PROTOCOL["r14_defect_mode"]),
     )
     parser.add_argument(
+        "--risk-occurrence-mode",
+        choices=RISK_OCCURRENCE_MODE_OPTIONS,
+        default="legacy_renewal",
+    )
+    parser.add_argument(
         "--dry-run",
         action="store_true",
         help="Write only the design matrix and manifest; do not run SimPy.",
@@ -134,6 +140,7 @@ def run_one(
     seed: int,
     downstream_q_source: str,
     r14_defect_mode: str,
+    risk_occurrence_mode: str,
 ) -> MFSCSimulation:
     sim = MFSCSimulation(
         shifts=spec.shifts,
@@ -147,6 +154,7 @@ def run_one(
         warmup_trigger="op9_arrival",
         downstream_q_source=downstream_q_source,
         r14_defect_mode=r14_defect_mode,
+        risk_occurrence_mode=risk_occurrence_mode,
         enabled_risks=set(spec.enabled_risks),
         risk_overrides=spec.risk_overrides,
         inventory_replenishment_period=spec.inventory_replenishment_period,
@@ -172,6 +180,7 @@ def summarize_run(
         "orders": len(sim.orders),
         "total_backorders": int(sim.total_backorders),
         "unattended_orders": int(sim.total_unattended_orders),
+        "risk_occurrence_mode": sim.risk_occurrence_mode,
         "risk_events": len(sim.risk_events),
         "risk_event_counts": json.dumps(risk_counts, sort_keys=True),
         "avg_annual_delivery_post_warmup": float(throughput["avg_annual_delivery"]),
@@ -219,6 +228,7 @@ def main() -> int:
         "seeds": seeds,
         "downstream_q_source": args.downstream_q_source,
         "r14_defect_mode": args.r14_defect_mode,
+        "risk_occurrence_mode": args.risk_occurrence_mode,
     }
     write_json(run_dir / "manifest.json", manifest)
     (run_dir / "command.txt").write_text(command_line() + "\n", encoding="utf-8")
@@ -249,6 +259,7 @@ def main() -> int:
                     seed=seed,
                     downstream_q_source=args.downstream_q_source,
                     r14_defect_mode=args.r14_defect_mode,
+                    risk_occurrence_mode=args.risk_occurrence_mode,
                 )
                 summary_rows.append(summarize_run(sim, spec, seed))
                 event_rows.extend(risk_event_rows(sim, spec, seed))

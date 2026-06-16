@@ -13,11 +13,17 @@ The post-fix thesis-faithful inventory contract is explicit and opt-in:
 - Thesis-inventory repair lane: `raw_material_flow_mode=kit_equivalent_order_up_to`
 - Canonical internal mode: `bom_total_units_order_up_to`
 - `raw_material_order_up_to_multiplier=2.0`
+- Historical/default risk occurrence lane: `risk_occurrence_mode=legacy_renewal`
+- Thesis-frequency risk lane: `risk_occurrence_mode=thesis_periodic`
 
 The repair is not "remove x12." It preserves BOM-consistent raw-material
 semantics and adds order-up-to replenishment so the inventory buffers can bind.
 The mode must pass both deterministic production fidelity and inventory
 moderation before it can be used for final Garrido comparisons.
+
+The risk-occurrence repair is also explicit and opt-in. Legacy renewal semantics
+remain available for reproducing pre-fix artifacts, but final post-fix risk
+claims must use `risk_occurrence_mode=thesis_periodic`.
 
 ## Evidence Matrix
 
@@ -30,7 +36,7 @@ moderation before it can be used for final Garrido comparisons.
 | Table 6.16 inventory buffers | Passed locally | `outputs/benchmarks/thesis_decision_tables/current_codex/THESIS_DECISION_TABLES.md`; `tests/test_thesis_faithful_lane.py::test_thesis_decision_tables_reporter_writes_match_artifacts` | All 15 Op3/Op5/Op9 buffer values match the extracted thesis table. |
 | Table 6.20 capacity by shifts | Passed locally | `outputs/benchmarks/thesis_decision_tables/current_codex/THESIS_DECISION_TABLES.md`; `tests/test_thesis_faithful_lane.py::test_thesis_decision_tables_reporter_writes_match_artifacts` | All 24 capacity/ROP/batch-size fields for S1/S2/S3 match the extracted thesis table. |
 | Table 6.12 risk distributions | Passed locally | `outputs/benchmarks/thesis_risk_tables/current_codex/THESIS_RISK_TABLES.md`; `tests/test_thesis_faithful_lane.py::test_thesis_risk_tables_reporter_writes_match_artifacts` | Current and increased risk distributions for R11-R14, R21-R24, and R3 match the extracted thesis table. |
-| Table 6.11 current-risk frequencies | Open fidelity gap | `outputs/benchmarks/thesis_risk_frequency/current_codex/THESIS_RISK_FREQUENCY.md`; `tests/test_thesis_faithful_lane.py::test_thesis_risk_frequency_reporter_exposes_current_gap` | The code has the Table 6.12 parameters, but current DES process semantics do not reproduce Table 6.11 frequencies: uniform renewal roughly doubles R11/R21/R22/R23/R24/R3, and R13 is lower than the thesis frequency. |
+| Table 6.11 current-risk frequencies | Passed locally in thesis-periodic mode; legacy gap preserved | `outputs/benchmarks/thesis_risk_frequency/thesis_periodic_codex/THESIS_RISK_FREQUENCY.md`; `outputs/benchmarks/thesis_risk_frequency/legacy_renewal_codex/THESIS_RISK_FREQUENCY.md`; `tests/test_thesis_faithful_lane.py::test_thesis_risk_frequency_reporter_passes_thesis_periodic_mode`; `tests/test_thesis_faithful_lane.py::test_thesis_risk_frequency_reporter_exposes_current_gap` | `thesis_periodic` matches Table 6.11, including R13's weekly supplier-delivery cadence. `legacy_renewal` remains documented as FAIL because uniform renewal roughly doubles R11/R21/R22/R23/R24/R3 and monthly R13 undercounts the thesis frequency. |
 | Table 6.10 deterministic production | Passed locally | `tests/test_thesis_faithful_lane.py::test_bom_order_up_to_mode_passes_table_6_10_production_gate`; alias test also passes | The repair does not break the 738,432 rations/year deterministic production gate. |
 | Table 6.10 year-by-year comparison | Passed locally | `outputs/benchmarks/table_6_10_reproduction/kit_equivalent_order_up_to_codex/TABLE_6_10_REPRODUCTION.md`; `tests/test_thesis_faithful_lane.py::test_table_6_10_reporter_writes_year_by_year_artifacts` | Python Cf0 produces 738,432 rations/year; RMSE vs thesis ECS is 61,013.6, below the thesis reported RMSE 87,918. |
 | Historical reproducibility | Preserved | `tests/test_thesis_faithful_lane.py::test_legacy_validated_mode_preserves_raw_buffer_targets` | The default legacy path remains available for pre-fix artifact comparison. |
@@ -49,6 +55,8 @@ moderation before it can be used for final Garrido comparisons.
   static post-fix baselines are complete and RL is evaluated against them.
 - Do not compare pre-fix unified evaluation tables against post-fix static
   gates; the action semantics changed in the inventory lever.
+- Do not use post-inventory reruns that omit
+  `risk_occurrence_mode=thesis_periodic` as final thesis-frequency risk claims.
 
 ## Next Gate
 
@@ -81,7 +89,13 @@ python scripts/report_thesis_risk_tables.py --label current_codex
 To regenerate the risk-frequency audit:
 
 ```bash
-python scripts/report_thesis_risk_frequency.py --label current_codex
+python scripts/report_thesis_risk_frequency.py \
+  --label thesis_periodic_codex \
+  --risk-occurrence-mode thesis_periodic
+
+python scripts/report_thesis_risk_frequency.py \
+  --label legacy_renewal_codex \
+  --risk-occurrence-mode legacy_renewal
 ```
 
 To regenerate the operations-backbone artifact:

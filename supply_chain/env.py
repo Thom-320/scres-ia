@@ -9,6 +9,7 @@ from gymnasium import spaces
 from .config import (
     DEFAULT_YEAR_BASIS,
     OPERATIONS,
+    RISK_OCCURRENCE_MODE_OPTIONS,
     SIMULATION_HORIZON,
     WARMUP,
     YEAR_BASIS_OPTIONS,
@@ -38,6 +39,7 @@ class MFSCGymEnv(gym.Env[np.ndarray, np.ndarray]):
         max_steps: Optional[int] = None,
         year_basis: str = DEFAULT_YEAR_BASIS,
         risk_level: str = "current",
+        risk_occurrence_mode: str = "legacy_renewal",
         reward_mode: str = "proxy",
         rt_alpha: float = 1.0,
         rt_beta: float = 1.0,
@@ -60,10 +62,16 @@ class MFSCGymEnv(gym.Env[np.ndarray, np.ndarray]):
             raise ValueError(
                 f"Invalid risk_level={risk_level!r}. Expected 'current' or 'increased'."
             )
+        if risk_occurrence_mode not in RISK_OCCURRENCE_MODE_OPTIONS:
+            raise ValueError(
+                "Invalid risk_occurrence_mode="
+                f"{risk_occurrence_mode!r}. Expected one of {RISK_OCCURRENCE_MODE_OPTIONS}."
+            )
 
         self.step_size = float(step_size_hours)
         self.year_basis = year_basis
         self.risk_level = risk_level
+        self.risk_occurrence_mode = risk_occurrence_mode
         self.reward_mode = reward_mode
         self.rt_alpha = float(rt_alpha)
         self.rt_beta = float(rt_beta)
@@ -127,6 +135,7 @@ class MFSCGymEnv(gym.Env[np.ndarray, np.ndarray]):
             seed=seed,
             horizon=SIMULATION_HORIZON,
             year_basis=self.year_basis,
+            risk_occurrence_mode=self.risk_occurrence_mode,
         )
         self.sim._start_processes()
         self.sim.env.run(until=self.warmup_hours)

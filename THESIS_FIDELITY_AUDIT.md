@@ -1,7 +1,7 @@
 # Auditoría repo scres-ia vs tesis Garrido-Rios 2017
 
 **Fecha:** 2026-06-10
-**Repo:** `/Users/thom/Desktop/Universidad_Codigo/proyecto_grarrido_scres+ia` (commit local)
+**Repo:** repository root (commit local)
 **Tesis:** Garrido-Rios, J. A. (2017). *A quantitative methodology to assess the resilience of military food supply chains* — WRAP Theses (Univ. of Warwick), 12.9 MB, 4 capítulos analíticos.
 
 ## TL;DR

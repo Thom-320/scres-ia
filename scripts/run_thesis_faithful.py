@@ -19,6 +19,7 @@ from supply_chain.config import (  # noqa: E402
     HOURS_PER_YEAR_THESIS,
     INVENTORY_BUFFERS,
     R14_DEFECT_MODE_OPTIONS,
+    RISK_OCCURRENCE_MODE_OPTIONS,
     SIMULATION_HORIZON,
     THESIS_DOWNSTREAM_Q_RANGES,
     THESIS_FAITHFUL_PROTOCOL,
@@ -116,6 +117,11 @@ def build_parser() -> argparse.ArgumentParser:
         choices=R14_DEFECT_MODE_OPTIONS,
         default=str(THESIS_FAITHFUL_PROTOCOL["r14_defect_mode"]),
     )
+    parser.add_argument(
+        "--risk-occurrence-mode",
+        choices=RISK_OCCURRENCE_MODE_OPTIONS,
+        default="legacy_renewal",
+    )
     return parser
 
 
@@ -170,6 +176,7 @@ def run_one(
     horizon_hours: float,
     downstream_q_source: str,
     r14_defect_mode: str,
+    risk_occurrence_mode: str,
 ) -> MFSCSimulation:
     sim = MFSCSimulation(
         shifts=spec.shifts,
@@ -183,6 +190,7 @@ def run_one(
         warmup_trigger="op9_arrival",
         downstream_q_source=downstream_q_source,
         r14_defect_mode=r14_defect_mode,
+        risk_occurrence_mode=risk_occurrence_mode,
         inventory_replenishment_period=spec.inventory_replenishment_period,
     )
     return sim.run()
@@ -205,6 +213,7 @@ def summarize_run(sim: MFSCSimulation, spec: ScenarioSpec, seed: int) -> dict[st
         "warmup_time": float(sim.warmup_time),
         "downstream_q_source": sim.downstream_q_source,
         "r14_defect_mode": sim.r14_defect_mode,
+        "risk_occurrence_mode": sim.risk_occurrence_mode,
         "total_produced": float(sim.total_produced),
         "total_delivered": float(sim.total_delivered),
         "total_demanded": float(sim.total_demanded),
@@ -249,6 +258,9 @@ def main() -> int:
         "scenario_spec": spec.__dict__,
         "command": command_line(args),
         "pid": os.getpid(),
+        "downstream_q_source": args.downstream_q_source,
+        "r14_defect_mode": args.r14_defect_mode,
+        "risk_occurrence_mode": args.risk_occurrence_mode,
     }
     (run_dir / "command.txt").write_text(command_line(args) + "\n", encoding="utf-8")
     (run_dir / "pid.txt").write_text(f"{os.getpid()}\n", encoding="utf-8")
@@ -266,6 +278,7 @@ def main() -> int:
                 horizon_hours=args.horizon_hours,
                 downstream_q_source=args.downstream_q_source,
                 r14_defect_mode=args.r14_defect_mode,
+                risk_occurrence_mode=args.risk_occurrence_mode,
             )
             rows.append(summarize_run(sim, spec, seed))
             write_csv(run_dir / f"orders_seed_{seed}.csv", order_rows(sim, spec.cfi))

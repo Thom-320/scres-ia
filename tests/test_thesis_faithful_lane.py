@@ -13,6 +13,7 @@ from supply_chain.config import (
     HOURS_PER_YEAR_THESIS,
     R14_DEFECT_MODE_OPTIONS,
     RAW_MATERIAL_FLOW_MODE_OPTIONS,
+    RISK_OCCURRENCE_MODE_OPTIONS,
     RAW_MATERIAL_COMPONENTS,
     SIMULATION_HORIZON,
     THESIS_DOWNSTREAM_Q_RANGES,
@@ -52,6 +53,8 @@ def test_extracted_thesis_constants_match_lane_contract() -> None:
     )
     assert THESIS_FAITHFUL_PROTOCOL["r14_defect_mode"] in R14_DEFECT_MODE_OPTIONS
     assert THESIS_FAITHFUL_PROTOCOL["r14_defect_mode"] == "thesis_strict_op6"
+    assert "legacy_renewal" in RISK_OCCURRENCE_MODE_OPTIONS
+    assert "thesis_periodic" in RISK_OCCURRENCE_MODE_OPTIONS
     assert THESIS_FAITHFUL_PROTOCOL["ret_weights"] == {
         "max": 1.0,
         "mean": 0.5,
@@ -107,6 +110,8 @@ def test_invalid_thesis_lane_options_fail_fast() -> None:
         MFSCSimulation(r14_defect_mode="silent_drop")
     with pytest.raises(ValueError, match="raw_material_flow_mode"):
         MFSCSimulation(raw_material_flow_mode="not_a_mode")
+    with pytest.raises(ValueError, match="risk_occurrence_mode"):
+        MFSCSimulation(risk_occurrence_mode="not_a_mode")
 
 
 def test_raw_material_flow_mode_aliases_are_explicit_and_canonical() -> None:
@@ -511,6 +516,38 @@ def test_thesis_risk_frequency_reporter_exposes_current_gap(tmp_path) -> None:
     assert payload["status"] == "FAIL"
     assert len(payload["rows"]) == 9
     assert {"R11", "R13", "R21", "R22", "R23", "R24", "R3"} <= mismatched
+    assert (run_dir / "THESIS_RISK_FREQUENCY.md").exists()
+    assert (run_dir / "thesis_risk_frequency.csv").exists()
+
+
+def test_thesis_risk_frequency_reporter_passes_thesis_periodic_mode(
+    tmp_path,
+) -> None:
+    subprocess.run(
+        [
+            sys.executable,
+            "scripts/report_thesis_risk_frequency.py",
+            "--label",
+            "pytest_risk_frequency_periodic",
+            "--output-root",
+            str(tmp_path),
+            "--risk-occurrence-mode",
+            "thesis_periodic",
+        ],
+        check=True,
+    )
+    run_dir = tmp_path / "pytest_risk_frequency_periodic"
+    payload = json.loads(
+        (run_dir / "thesis_risk_frequency.json").read_text(encoding="utf-8")
+    )
+
+    assert payload["status"] == "PASS"
+    assert payload["risk_occurrence_mode"] == "thesis_periodic"
+    assert len(payload["rows"]) == 9
+    assert {row["status"] for row in payload["rows"]} == {"MATCH"}
+    r13 = next(row for row in payload["rows"] if row["risk_id"] == "R13")
+    assert r13["implementation_events_per_year"] == pytest.approx(57.6)
+    assert r13["implementation_events_per_run"] == pytest.approx(1152.0)
     assert (run_dir / "THESIS_RISK_FREQUENCY.md").exists()
     assert (run_dir / "thesis_risk_frequency.csv").exists()
 

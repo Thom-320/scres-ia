@@ -51,6 +51,7 @@ from .config import (
     HOURS_PER_YEAR_THESIS,
     R14_DEFECT_MODE_OPTIONS,
     RAW_MATERIAL_FLOW_MODE_OPTIONS,
+    RISK_OCCURRENCE_MODE_OPTIONS,
     canonical_raw_material_flow_mode,
     YEAR_BASIS_OPTIONS,
     LEAD_TIME_PROMISE,
@@ -131,6 +132,7 @@ class MFSCSimulation:
         inventory_replenishment_period: Optional[float] = None,
         raw_material_flow_mode: str = "legacy_validated",
         raw_material_order_up_to_multiplier: float = 2.0,
+        risk_occurrence_mode: str = "legacy_renewal",
     ) -> None:
         if warmup_trigger not in WARMUP_TRIGGER_OPTIONS:
             valid = ", ".join(WARMUP_TRIGGER_OPTIONS)
@@ -153,6 +155,12 @@ class MFSCSimulation:
                 "Invalid raw_material_flow_mode="
                 f"{raw_material_flow_mode!r}. Expected one of: {valid}."
             )
+        if risk_occurrence_mode not in RISK_OCCURRENCE_MODE_OPTIONS:
+            valid = ", ".join(RISK_OCCURRENCE_MODE_OPTIONS)
+            raise ValueError(
+                "Invalid risk_occurrence_mode="
+                f"{risk_occurrence_mode!r}. Expected one of: {valid}."
+            )
         raw_material_flow_mode = canonical_raw_material_flow_mode(raw_material_flow_mode)
         self.env = simpy.Environment()
         self.shifts = shifts
@@ -171,6 +179,7 @@ class MFSCSimulation:
         self.raw_material_order_up_to_multiplier = float(
             raw_material_order_up_to_multiplier
         )
+        self.risk_occurrence_mode = risk_occurrence_mode
         if self.raw_material_order_up_to_multiplier <= 0.0:
             raise ValueError("raw_material_order_up_to_multiplier must be > 0.")
         self._raw_units_per_ration = (
@@ -1429,12 +1438,34 @@ class MFSCSimulation:
             )
         return base_lo, base_hi
 
+    def _uniform_risk_interarrival(self, risk_id: str, *, first: bool) -> float:
+        """Return the next occurrence delay in hours for Table 6.12 uniform risks."""
+        a = int(RISKS_CURRENT[risk_id]["occurrence"]["a"])
+        b_val = int(round(self._get_risk_b(risk_id)))
+        if self.risk_occurrence_mode == "legacy_renewal":
+            return float(self.rng.integers(a, b_val + 1))
+        if first:
+            return float(self.rng.integers(a, b_val + 1))
+        return float(b_val)
+
+    def _binomial_risk_period(self, risk_id: str) -> float:
+        """Return the evaluation period in hours for Table 6.12 binomial risks."""
+        if risk_id == "R12":
+            return float(self.params["op1_rop"])
+        if risk_id == "R13":
+            if self.risk_occurrence_mode == "thesis_periodic":
+                return float(HOURS_PER_WEEK)
+            return float(self.params["op2_rop"])
+        if risk_id == "R14":
+            return float(HOURS_PER_DAY)
+        raise ValueError(f"Unsupported binomial risk_id={risk_id!r}.")
+
     def _risk_R11(self):
-        a = RISKS_CURRENT["R11"]["occurrence"]["a"]
-        b_val = self._get_risk_b("R11")
         beta = self._get_risk_recovery_mean("R11")
+        first = True
         while True:
-            yield self.env.timeout(self.rng.integers(a, b_val + 1))
+            yield self.env.timeout(self._uniform_risk_interarrival("R11", first=first))
+            first = False
             start = self.env.now
             self._take_down(5)
             self._take_down(6)
@@ -1450,7 +1481,7 @@ class MFSCSimulation:
         n = RISKS_CURRENT["R12"]["occurrence"]["n"]
         p = self._get_risk_p("R12")
         while True:
-            yield self.env.timeout(self.params["op1_rop"])
+            yield self.env.timeout(self._binomial_risk_period("R12"))
             delayed = self.rng.binomial(n, p)
             if delayed > 0:
                 delay = delayed * 168
@@ -1466,7 +1497,7 @@ class MFSCSimulation:
         n = RISKS_CURRENT["R13"]["occurrence"]["n"]
         p = self._get_risk_p("R13")
         while True:
-            yield self.env.timeout(self.params["op2_rop"])
+            yield self.env.timeout(self._binomial_risk_period("R13"))
             delayed = self.rng.binomial(n, p)
             if delayed > 0:
                 delay = delayed * 24
@@ -1486,7 +1517,7 @@ class MFSCSimulation:
         """
         p = self._get_risk_p("R14")
         while True:
-            yield self.env.timeout(HOURS_PER_DAY)
+            yield self.env.timeout(self._binomial_risk_period("R14"))
             produced = self._today_produced
             self._today_produced = 0  # Reset daily counter
             if produced > 0:
@@ -1528,12 +1559,12 @@ class MFSCSimulation:
         operation recovers independently with Exp(beta) hours. The generator
         spawns a new process for each event so they can theoretically overlap.
         """
-        a = RISKS_CURRENT["R21"]["occurrence"]["a"]
-        b_val = self._get_risk_b("R21")
         beta = self._get_risk_recovery_mean("R21")
         affected = RISKS_CURRENT["R21"]["affected_ops"]
+        first = True
         while True:
-            yield self.env.timeout(self.rng.integers(a, b_val + 1))
+            yield self.env.timeout(self._uniform_risk_interarrival("R21", first=first))
+            first = False
             self.env.process(self._r21_event(affected, beta))
 
     def _r21_event(self, affected: list[int], beta: float):
@@ -1552,12 +1583,12 @@ class MFSCSimulation:
         )
 
     def _risk_R22(self):
-        a = RISKS_CURRENT["R22"]["occurrence"]["a"]
-        b_val = self._get_risk_b("R22")
         beta = self._get_risk_recovery_mean("R22")
         loc_ops = RISKS_CURRENT["R22"]["affected_ops"]
+        first = True
         while True:
-            yield self.env.timeout(self.rng.integers(a, b_val + 1))
+            yield self.env.timeout(self._uniform_risk_interarrival("R22", first=first))
+            first = False
             target = int(self.rng.choice(loc_ops))
             start = self.env.now
             self._take_down(target)
@@ -1569,11 +1600,11 @@ class MFSCSimulation:
             )
 
     def _risk_R23(self):
-        a = RISKS_CURRENT["R23"]["occurrence"]["a"]
-        b_val = self._get_risk_b("R23")
         beta = self._get_risk_recovery_mean("R23")
+        first = True
         while True:
-            yield self.env.timeout(self.rng.integers(a, b_val + 1))
+            yield self.env.timeout(self._uniform_risk_interarrival("R23", first=first))
+            first = False
             start = self.env.now
             self._take_down(11)
             recovery = max(1, self.rng.exponential(beta))
@@ -1584,10 +1615,10 @@ class MFSCSimulation:
             )
 
     def _risk_R24(self):
-        a = RISKS_CURRENT["R24"]["occurrence"]["a"]
-        b_val = self._get_risk_b("R24")
+        first = True
         while True:
-            yield self.env.timeout(self.rng.integers(a, b_val + 1))
+            yield self.env.timeout(self._uniform_risk_interarrival("R24", first=first))
+            first = False
             surge_lo, surge_hi = self._get_risk_surge()
             surge = self.rng.integers(surge_lo, surge_hi + 1)
             self._contingent_demand_pending += surge
@@ -1604,12 +1635,12 @@ class MFSCSimulation:
             )
 
     def _risk_R3(self):
-        a = RISKS_CURRENT["R3"]["occurrence"]["a"]
-        b_val = self._get_risk_b("R3")
         duration = RISKS_CURRENT["R3"]["recovery"]["duration"]
         affected = RISKS_CURRENT["R3"]["affected_ops"]
+        first = True
         while True:
-            yield self.env.timeout(self.rng.integers(a, b_val + 1))
+            yield self.env.timeout(self._uniform_risk_interarrival("R3", first=first))
+            first = False
             start = self.env.now
             for op_id in affected:
                 self._take_down(op_id)

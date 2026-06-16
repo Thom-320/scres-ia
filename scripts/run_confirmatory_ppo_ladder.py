@@ -32,6 +32,7 @@ except Exception:  # pragma: no cover
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from supply_chain.config import RISK_OCCURRENCE_MODE_OPTIONS  # noqa: E402
 from scripts.run_confirmatory_static_ladder import (  # noqa: E402
     METRICS,
     POLICIES,
@@ -363,6 +364,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--raw-material-order-up-to-multiplier", type=float, default=2.0
+    )
+    parser.add_argument(
+        "--risk-occurrence-mode",
+        choices=RISK_OCCURRENCE_MODE_OPTIONS,
+        default="legacy_renewal",
     )
     parser.add_argument("--bootstrap-draws", type=int, default=5000)
     parser.add_argument("--bootstrap-seed", type=int, default=123)

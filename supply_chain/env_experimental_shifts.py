@@ -74,6 +74,7 @@ from .config import (
     OPERATIONS,
     R14_DEFECT_MODE_OPTIONS,
     RAW_MATERIAL_FLOW_MODE_OPTIONS,
+    RISK_OCCURRENCE_MODE_OPTIONS,
     canonical_raw_material_flow_mode,
     RET_CASE_THRESHOLDS,
     RET_SHIFT_COST_DELTA_DEFAULT,
@@ -306,6 +307,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         r14_defect_mode: str = "reprocess",
         raw_material_flow_mode: str = "legacy_validated",
         raw_material_order_up_to_multiplier: float = 2.0,
+        risk_occurrence_mode: str = "legacy_renewal",
         initial_buffers: dict[str, float] | None = None,
         initial_shifts: int = 1,
         inventory_replenishment_period: float | None = None,
@@ -372,6 +374,11 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                 f"Invalid raw_material_flow_mode={raw_material_flow_mode!r}. "
                 f"Expected one of {RAW_MATERIAL_FLOW_MODE_OPTIONS}."
             )
+        if risk_occurrence_mode not in RISK_OCCURRENCE_MODE_OPTIONS:
+            raise ValueError(
+                f"Invalid risk_occurrence_mode={risk_occurrence_mode!r}. "
+                f"Expected one of {RISK_OCCURRENCE_MODE_OPTIONS}."
+            )
         raw_material_flow_mode = canonical_raw_material_flow_mode(raw_material_flow_mode)
         canonical_reward_mode = REWARD_MODE_ALIAS_MAP.get(reward_mode, reward_mode)
         if (
@@ -396,6 +403,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self.raw_material_order_up_to_multiplier = float(
             raw_material_order_up_to_multiplier
         )
+        self.risk_occurrence_mode = risk_occurrence_mode
         self.initial_buffers = dict(initial_buffers or {})
         self.initial_shifts = int(initial_shifts)
         self.initial_inventory_replenishment_period = inventory_replenishment_period
@@ -1872,6 +1880,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             raw_material_order_up_to_multiplier=(
                 self.raw_material_order_up_to_multiplier
             ),
+            risk_occurrence_mode=self.risk_occurrence_mode,
             enabled_risks=self.enabled_risks,
             risk_overrides=self.risk_overrides,
             inventory_replenishment_period=inventory_replenishment_period,
