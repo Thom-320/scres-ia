@@ -9,7 +9,7 @@ import subprocess
 import sys
 
 REPO_URL = "https://github.com/Thom-320/scres-ia.git"
-TARGET_COMMIT = "2ad6a62da11007fb0d7bf5dc91fbe14ba53627cc"
+TARGET_REF = os.environ.get("SCRESIA_TARGET_REF", "codex/garrido-postfix-reruns")
 REPO_DIR = Path("/kaggle/working/scres-ia")
 OUTPUT_ROOT = Path("/kaggle/working/scresia_garrido_fidelity_postfix_outputs")
 EXPORT_ROOT = Path("/kaggle/working/kaggle_outputs")
@@ -58,14 +58,23 @@ def main() -> None:
 
     print("SCRESIA Garrido fidelity post-fix", flush=True)
     print("started_at", started_at.isoformat(), flush=True)
-    print("target_commit", TARGET_COMMIT, flush=True)
+    print("target_ref", TARGET_REF, flush=True)
     print("profile", profile, flush=True)
 
     if REPO_DIR.exists():
         shutil.rmtree(REPO_DIR)
-    run(["git", "clone", "--depth", "1", REPO_URL, str(REPO_DIR)])
-    run(["git", "fetch", "--depth", "1", "origin", TARGET_COMMIT], cwd=REPO_DIR)
-    run(["git", "checkout", TARGET_COMMIT], cwd=REPO_DIR)
+    run(
+        [
+            "git",
+            "clone",
+            "--depth",
+            "1",
+            "--branch",
+            TARGET_REF,
+            REPO_URL,
+            str(REPO_DIR),
+        ]
+    )
     run(
         [sys.executable, "-m", "pip", "install", "-q", "-r", "requirements.txt"],
         cwd=REPO_DIR,
@@ -109,7 +118,7 @@ def main() -> None:
     manifest = {
         "profile": profile,
         "profile_args": cfg,
-        "target_commit": TARGET_COMMIT,
+        "target_ref": TARGET_REF,
         "run_dir": str(run_dir),
         "started_at": started_at.isoformat(),
         "finished_at": datetime.now(timezone.utc).isoformat(),
