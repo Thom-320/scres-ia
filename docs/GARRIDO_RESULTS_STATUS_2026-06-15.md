@@ -202,11 +202,44 @@ of learned superiority in the repaired inventory environment.
 - Post-fix rerun code is published on branch `codex/garrido-postfix-reruns`.
 - Thesis-periodic risk rerun wrappers are published through commit `ea299bc`.
   New Kaggle versions were launched after the Table 6.11 fix:
-  - `thomaschisica/scresia-garrido-fidelity-h2-thesis` version 3: `RUNNING`
+  - `thomaschisica/scresia-garrido-fidelity-h2-thesis` version 3: `COMPLETE`
   - `thomaschisica/scresia-garrido-fidelity-postfix` version 3: `RUNNING`
-  - `thomaschisica/scresia-confirmatory-static-postfix` version 2: `RUNNING`
+  - `thomaschisica/scresia-confirmatory-static-postfix` version 2: `COMPLETE`
   - `thomaschisica/scresia-confirmatory-ppo-postfix` version 5: `RUNNING`
   These are the current Kaggle reruns for thesis-frequency risk timing.
+- The Kaggle H2/H3 thesis-periodic gate v3 was downloaded to:
+  `outputs/kaggle_garrido_fidelity_h2_thesis_v3_latest/kaggle_outputs/kaggle_h2_thesis_20260616T022622Z/`
+  It has `900` rows, records `risk_occurrence_mode=thesis_periodic`, and keeps
+  the H2/H3 direction checks positive:
+  - inventory family H2 (`I672-I0`): fill `+0.0517`, ReT `+0.3288`;
+  - capacity family H2 (`I672-I0`): fill `+0.0511`, ReT `+0.3318`;
+  - inventory family H3 (`S3-S1`): fill `+0.0498`, ReT `+0.2753`;
+  - capacity family H3 (`S3-S1`): fill `+0.0500`, ReT `+0.2785`.
+- The Kaggle confirmatory static thesis-periodic v2 was downloaded to:
+  `outputs/kaggle_confirmatory_static_postfix_v2_latest/kaggle_outputs/kaggle_confirmatory_static_postfix_20260616T022622Z/`
+  The panel is nearly saturated under faithful risk timing:
+  - `crossed_uniform_I504_S3`: fill `0.9982`, ReT `0.9459`, reward `218.50`;
+  - `per_node_I1344_I504_I504_S3`: fill `0.9981`, ReT `0.9453`, reward `218.28`;
+  - `pure_inventory_I672_S1`: fill `0.9978`, ReT `0.9431`, reward `249.41`;
+  - `pure_capacity_I0_S3`: fill `0.9954`, ReT `0.8481`, reward `207.55`;
+  - `garrido_matched_DOE_baseline`: fill `0.9891`, ReT `0.8583`, reward `232.68`.
+  Interpretation: after both the inventory and risk-frequency repairs, simple
+  static buffering is very strong and there is little headroom for adaptive PPO
+  in the `[6,3]` thesis-factorized action contract.
+- A local severe-extended probe was run after exposing the same fidelity modes in
+  `scripts/run_thesis_decision_ppo_smoke.py` (commit `6868988`):
+  `outputs/benchmarks/thesis_decision_ppo_smoke/probe_severe_extended_thesis_periodic_30k_codex/`.
+  Contract: `risk_level=severe_extended`,
+  `risk_occurrence_mode=thesis_periodic`,
+  `raw_material_flow_mode=kit_equivalent_order_up_to`, `30k` PPO timesteps,
+  `3` eval episodes, `80` weekly steps. Result:
+  - PPO MLP: fill `0.5639`, ReT `0.2543`, reward `67.68`;
+  - best static grid by fill, `I672,S3`: fill `0.6097`, ReT `0.2922`, reward `61.40`;
+  - delta PPO minus best static: fill `-0.0458`, ReT `-0.0378`, reward `+6.29`.
+  Interpretation: the earlier PPO `+0.04` fill signal from the legacy-risk probe
+  does not survive under faithful risk timing. `severe_extended` creates
+  headroom, but the short PPO probe still loses to the best static grid on
+  fill/ReT.
 - `thomaschisica/scresia-garrido-fidelity-postfix` version 1 stayed `RUNNING`
   for hours without logs, files, or downloadable filtered artifacts. Version 2
   was pushed on 2026-06-16 at about `00:11 UTC` using the artifact-only export
