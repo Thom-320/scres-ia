@@ -121,6 +121,28 @@ def test_shift_env_ret_ladder_v1_emits_ladder_reward_metadata() -> None:
     assert "ret_seq_components" in info
 
 
+def test_shift_env_ret_tail_v1_emits_tail_reward_metadata() -> None:
+    env = MFSCGymEnvShifts(
+        step_size_hours=24,
+        max_steps=2,
+        reward_mode="ReT_tail_v1",
+        observation_version="v5",
+    )
+    env.reset(seed=42)
+    _, reward, _, _, info = env.step(np.zeros(6, dtype=np.float32))
+
+    assert isinstance(reward, float)
+    assert 0.0 < reward <= 1.0
+    assert info["reward_mode"] == "ReT_tail_v1"
+    assert info["ret_tail_step"] == pytest.approx(reward)
+    assert "ret_tail_components" in info
+    assert info["ret_tail_components"]["reward_mode"] == "ReT_tail_v1"
+    assert info["ret_tail_service_continuity"] > 0.0
+    assert info["ret_tail_recovery_containment"] > 0.0
+    assert info["ret_tail_cost_efficiency"] > 0.0
+    assert info["ret_tail_stress"] >= 0.0
+
+
 def test_shift_env_ret_garrido2024_raw_emits_paper_faithful_metadata() -> None:
     env = MFSCGymEnvShifts(
         step_size_hours=24,
@@ -657,6 +679,72 @@ def test_ret_ladder_v1_penalizes_strategic_inventory_after_service_recovers() ->
     assert no_buffer["ret_ladder_gate"] > 0.5
     assert no_buffer["ret_ladder_step"] > full_buffer["ret_ladder_step"]
     assert full_buffer["ret_ladder_strategic_inventory"] > 0.0
+
+
+def test_ret_tail_v1_penalizes_efficiency_when_service_or_recovery_is_poor() -> None:
+    env = MFSCGymEnvShifts(
+        step_size_hours=168,
+        max_steps=2,
+        reward_mode="ReT_tail_v1",
+    )
+    env.reset(seed=42)
+    poor_transition = {
+        "new_demanded": 15_000.0,
+        "new_backorder_qty": 12_000.0,
+        "pending_backorder_qty": 500_000.0,
+    }
+
+    env.sim.inventory_buffer_targets = {}
+    cheap = env._compute_ret_tail_v1(poor_transition, shifts=1)
+    env.sim.inventory_buffer_targets = {
+        "op3_rm": 122_880.0,
+        "op5_rm": 122_880.0,
+        "op9_rations": 126_000.0,
+    }
+    expensive = env._compute_ret_tail_v1(poor_transition, shifts=3)
+
+    assert cheap["ret_tail_step"] > expensive["ret_tail_step"]
+    assert expensive["ret_tail_cost_efficiency"] < cheap["ret_tail_cost_efficiency"]
+
+
+def test_ret_tail_v1_is_monotone_in_service_and_backlog() -> None:
+    env = MFSCGymEnvShifts(
+        step_size_hours=168,
+        max_steps=2,
+        reward_mode="ReT_tail_v1",
+    )
+    env.reset(seed=42)
+
+    good_service = env._compute_ret_tail_v1(
+        {
+            "new_demanded": 15_000.0,
+            "new_backorder_qty": 0.0,
+            "pending_backorder_qty": 20_000.0,
+        },
+        shifts=2,
+    )
+    bad_service = env._compute_ret_tail_v1(
+        {
+            "new_demanded": 15_000.0,
+            "new_backorder_qty": 7_500.0,
+            "pending_backorder_qty": 20_000.0,
+        },
+        shifts=2,
+    )
+    bad_backlog = env._compute_ret_tail_v1(
+        {
+            "new_demanded": 15_000.0,
+            "new_backorder_qty": 0.0,
+            "pending_backorder_qty": 120_000.0,
+        },
+        shifts=2,
+    )
+
+    assert good_service["ret_tail_step"] > bad_service["ret_tail_step"]
+    assert good_service["ret_tail_step"] > bad_backlog["ret_tail_step"]
+    assert 0.0 < good_service["ret_tail_step"] <= 1.0
+    assert 0.0 < bad_service["ret_tail_step"] <= 1.0
+    assert 0.0 < bad_backlog["ret_tail_step"] <= 1.0
 
 
 def test_ret_unified_v1_cost_gate_turns_off_when_service_is_poor() -> None:

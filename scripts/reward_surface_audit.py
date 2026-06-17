@@ -35,6 +35,7 @@ TAIL_HIGHER = ["ret_p10_all", "flow_fill_rate", "ret_mean_all_orders_zero_unfulf
 TAIL_LOWER = ["stockout_week_pct"]
 DEFAULT_REWARDS = [
     "ReT_ladder_v1",
+    "ReT_tail_v1",
     "ReT_seq_v1",
     "ReT_garrido2024",
     "ReT_unified_v1",
@@ -96,9 +97,9 @@ def audit_reward(csv: Path, reward: str, profile: str, top_k: int,
     # best by reward and its tail rank
     best = g.loc[g["reward_total"].idxmax()]
     g_sorted = g.sort_values("ret_p10_all", ascending=False).reset_index(drop=True)
-    p10_rank = int(g_sorted.index[g_sorted["policy"] == best["policy"]][0]) + 1
     best_p10 = float(best["ret_p10_all"])
     top_p10 = float(g["ret_p10_all"].max())
+    p10_rank = int((g["ret_p10_all"] > best_p10 + 1e-9).sum()) + 1
     row["best_by_reward"] = best["policy"]
     row["best_reward_p10"] = round(best_p10, 4)
     row["best_p10_rank"] = p10_rank

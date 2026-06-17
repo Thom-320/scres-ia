@@ -27,6 +27,7 @@ REWARD_PROFILES: dict[str, list[str]] = {
         "--ret-ladder-gate-beta",
         "20.0",
     ],
+    "ret_tail": ["--reward-mode", "ReT_tail_v1"],
     "ret_seq": ["--reward-mode", "ReT_seq_v1"],
     "ret_cd_sigmoid": ["--reward-mode", "ReT_cd_sigmoid"],
     "control": ["--reward-mode", "control_v1"],

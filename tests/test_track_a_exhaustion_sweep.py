@@ -42,6 +42,37 @@ def test_thesis_smoke_forwards_reward_shaping_knobs() -> None:
     assert kwargs["ret_ladder_gate_beta"] == pytest.approx(20.0)
 
 
+def test_thesis_smoke_forwards_ret_tail_knobs() -> None:
+    args = thesis_smoke.build_parser().parse_args(
+        [
+            "--reward-mode",
+            "ReT_tail_v1",
+            "--ret-tail-w-sc",
+            "0.25",
+            "--ret-tail-w-rc",
+            "0.60",
+            "--ret-tail-w-ce",
+            "0.15",
+            "--ret-tail-cap-kappa",
+            "0.35",
+            "--ret-tail-inv-kappa",
+            "0.75",
+            "--ret-tail-boost",
+            "3.0",
+        ]
+    )
+
+    kwargs = thesis_smoke.env_kwargs(args)
+
+    assert kwargs["reward_mode"] == "ReT_tail_v1"
+    assert kwargs["ret_tail_w_sc"] == pytest.approx(0.25)
+    assert kwargs["ret_tail_w_rc"] == pytest.approx(0.60)
+    assert kwargs["ret_tail_w_ce"] == pytest.approx(0.15)
+    assert kwargs["ret_tail_cap_kappa"] == pytest.approx(0.35)
+    assert kwargs["ret_tail_inv_kappa"] == pytest.approx(0.75)
+    assert kwargs["ret_tail_boost"] == pytest.approx(3.0)
+
+
 def test_track_a_sweep_command_uses_faithful_fixes_and_profile_args(
     tmp_path: Path,
 ) -> None:
@@ -92,6 +123,29 @@ def test_track_a_sweep_command_uses_faithful_fixes_and_profile_args(
     assert "--stochastic-pt-mean-preserving" in command
     assert "--stochastic-pt-spread" in command
     assert command[command.index("--stochastic-pt-spread") + 1] == "2.0"
+
+
+def test_track_a_sweep_accepts_ret_tail_reward_profile(tmp_path: Path) -> None:
+    args = track_a_sweep.build_parser().parse_args(
+        [
+            "--output-root",
+            str(tmp_path),
+        ]
+    )
+
+    command = track_a_sweep.build_command(
+        args=args,
+        run_root=tmp_path / "runs",
+        label="probe",
+        algo="ppo_mlp",
+        action_space_mode="thesis_factorized",
+        reward_profile="ret_tail",
+        risk_level="increased",
+        pt_profile="stoch_pt_hist",
+    )
+
+    assert "--reward-mode" in command
+    assert command[command.index("--reward-mode") + 1] == "ReT_tail_v1"
 
 
 def test_track_a_sweep_can_use_cf_risk_profile_panel(tmp_path: Path) -> None:

@@ -25,6 +25,10 @@ Other reward modes (historical / auxiliary):
     reward.
   - "ReT_ladder_v1": Thesis-decision ladder training candidate.  It combines
     service continuity, backlog recovery, and lightly gated efficiency costs.
+  - "ReT_tail_v1": Tail/recovery-aligned Track A reward.  It keeps
+    service/recovery continuity but makes inventory and shift costs un-gated,
+    so the training optimum must be good on disruption tails rather than just
+    mean service.
   - "ReT_thesis": Piecewise step-level approximation of Eq. 5.5, retained for
     audit and thesis comparison.  NOT suitable as training objective (collapses
     to S1 due to cost-avoidance incentive dominating the service signal).
@@ -222,7 +226,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
 
     Parameters
     ----------
-    reward_mode : {"ReT_thesis", "ReT_corrected", "ReT_corrected_cost", "ReT_unified_v1", "ReT_seq_v1", "ReT_ladder_v1", "ReT_garrido2024_raw", "ReT_garrido2024", "rt_v0", "control_v1", "control_v1_pbrs"}
+    reward_mode : {"ReT_thesis", "ReT_corrected", "ReT_corrected_cost", "ReT_unified_v1", "ReT_seq_v1", "ReT_ladder_v1", "ReT_tail_v1", "ReT_garrido2024_raw", "ReT_garrido2024", "rt_v0", "control_v1", "control_v1_pbrs"}
         Which reward formulation to use. ``ReT_corrected_cost`` is the
         research-facing alias for the cost-extended corrected thesis lane and
         maps internally to ``ReT_corrected``.
@@ -2449,6 +2453,18 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             ret_tail_components = self._compute_ret_tail_v1(info, shifts)
         out_info["ret_tail_step"] = float(ret_tail_components["ret_tail_step"])
         out_info["ret_tail_components"] = ret_tail_components
+        out_info["ret_tail_service_continuity"] = float(
+            ret_tail_components["ret_tail_service_continuity"]
+        )
+        out_info["ret_tail_recovery_containment"] = float(
+            ret_tail_components["ret_tail_recovery_containment"]
+        )
+        out_info["ret_tail_cost_efficiency"] = float(
+            ret_tail_components["ret_tail_cost_efficiency"]
+        )
+        out_info["ret_tail_stress"] = float(
+            ret_tail_components["ret_tail_disruption_fraction"]
+        )
         out_info["ret_seq_step"] = float(ret_seq_components["ret_seq_step"])
         out_info["ret_seq_components"] = ret_seq_components
         out_info["service_continuity_step"] = float(
