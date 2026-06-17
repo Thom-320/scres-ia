@@ -35,7 +35,7 @@ from pathlib import Path
 
 GIT_BRANCH = "codex/garrido-postfix-reruns"  # tail wiring + faithful modes live here
 KERNEL_ID = "thomaschisica/scresia-tail-resilience-ppo-vs-static"
-KERNEL_TITLE = "SCRESIA Tail Resilience PPO vs Static (review + experiment)"
+KERNEL_TITLE = "scresia-tail-resilience-ppo-vs-static"
 OUT_DIR = Path("outputs/kaggle_tail_resilience")
 
 
@@ -137,7 +137,7 @@ CELL_KNOBS = code(
 
 CELL_SETUP = code(
     "# ---- portable Kaggle/Colab/local setup ----\n"
-    "import os, sys, subprocess, json\n"
+    "import os, sys, subprocess, json, shutil\n"
     "from pathlib import Path\n"
     "from datetime import datetime, timezone\n"
     "\n"
@@ -172,6 +172,7 @@ CELL_CONTRACT = code(
     "smoke_src = (repo_root / 'scripts/run_thesis_decision_ppo_smoke.py').read_text()\n"
     "assert 'ret_mean_all_orders_zero_unfulfilled_mean' in smoke_src, 'no tail wiring; wrong branch'\n"
     "assert 'order_metric_distribution' in smoke_src, 'no order_metric_distribution import'\n"
+    "assert '--norm-reward' in smoke_src, 'no reward-normalization flag; wrong branch'\n"
     "cfg_src = (repo_root / 'supply_chain/config.py').read_text()\n"
     "assert 'kit_equivalent_order_up_to' in cfg_src \\\n"
     "    or 'kit_equivalent_order_up_to' in (repo_root / 'supply_chain/supply_chain.py').read_text(), \\\n"
@@ -327,6 +328,13 @@ CELL_CONV = code(
     "    print('CONVERGENCE_BUDGETS empty — skipping convergence diagnostic.')\n"
 )
 
+CELL_CLEANUP = code(
+    "# ---- keep Kaggle output small: export only tail_resilience, not the cloned repo ----\n"
+    "if IN_KAGGLE:\n"
+    "    shutil.rmtree(repo_root, ignore_errors=True)\n"
+    "    print('cleaned cloned repo from Kaggle output:', repo_root)\n"
+)
+
 
 def main() -> None:
     nb = {
@@ -339,6 +347,7 @@ def main() -> None:
             CELL_RUN,
             CELL_ANALYSIS,
             CELL_CONV,
+            CELL_CLEANUP,
         ],
         "metadata": {
             "kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},
