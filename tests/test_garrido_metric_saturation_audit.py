@@ -84,6 +84,10 @@ def test_metric_saturation_audit_forwards_ret_tail_knobs() -> None:
             "0.8",
             "--ret-tail-boost",
             "3.0",
+            "--ret-tail-transform",
+            "exp_norm",
+            "--ret-tail-beta",
+            "4.0",
         ]
     )
 
@@ -102,3 +106,6 @@ def test_metric_saturation_audit_forwards_ret_tail_knobs() -> None:
     assert kwargs["ret_tail_cap_kappa"] == pytest.approx(0.35)
     assert kwargs["ret_tail_inv_kappa"] == pytest.approx(0.8)
     assert kwargs["ret_tail_boost"] == pytest.approx(3.0)
+    assert kwargs["ret_tail_transform"] == "exp_norm"
+    assert kwargs["ret_tail_gamma"] == pytest.approx(1.0)
+    assert kwargs["ret_tail_beta"] == pytest.approx(4.0)

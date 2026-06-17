@@ -40,6 +40,17 @@ from supply_chain.external_env_interface import (  # noqa: E402
     get_episode_terminal_metrics,
     make_dkana_thesis_faithful_env,
 )
+from supply_chain.env_experimental_shifts import (  # noqa: E402
+    RET_TAIL_BETA,
+    RET_TAIL_BOOST,
+    RET_TAIL_CAP_KAPPA,
+    RET_TAIL_GAMMA,
+    RET_TAIL_INV_KAPPA,
+    RET_TAIL_TRANSFORM,
+    RET_TAIL_W_CE,
+    RET_TAIL_W_RC,
+    RET_TAIL_W_SC,
+)
 from supply_chain.ret_thesis import compute_ret_per_order  # noqa: E402
 from supply_chain.thesis_design import (  # noqa: E402
     ThesisDesignSpec,
@@ -370,6 +381,9 @@ def build_env_kwargs(
         "ret_tail_cap_kappa": args.ret_tail_cap_kappa,
         "ret_tail_inv_kappa": args.ret_tail_inv_kappa,
         "ret_tail_boost": args.ret_tail_boost,
+        "ret_tail_transform": args.ret_tail_transform,
+        "ret_tail_gamma": args.ret_tail_gamma,
+        "ret_tail_beta": args.ret_tail_beta,
     }
     env_kwargs.update(
         risk_kwargs_for_profile(
@@ -734,12 +748,19 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--replications", type=int, default=1)
     parser.add_argument("--base-seed", type=int, default=935000)
     parser.add_argument("--reward-mode", default="ReT_thesis")
-    parser.add_argument("--ret-tail-w-sc", type=float, default=0.30)
-    parser.add_argument("--ret-tail-w-rc", type=float, default=0.55)
-    parser.add_argument("--ret-tail-w-ce", type=float, default=0.15)
-    parser.add_argument("--ret-tail-cap-kappa", type=float, default=0.25)
-    parser.add_argument("--ret-tail-inv-kappa", type=float, default=0.50)
-    parser.add_argument("--ret-tail-boost", type=float, default=2.0)
+    parser.add_argument("--ret-tail-w-sc", type=float, default=RET_TAIL_W_SC)
+    parser.add_argument("--ret-tail-w-rc", type=float, default=RET_TAIL_W_RC)
+    parser.add_argument("--ret-tail-w-ce", type=float, default=RET_TAIL_W_CE)
+    parser.add_argument("--ret-tail-cap-kappa", type=float, default=RET_TAIL_CAP_KAPPA)
+    parser.add_argument("--ret-tail-inv-kappa", type=float, default=RET_TAIL_INV_KAPPA)
+    parser.add_argument("--ret-tail-boost", type=float, default=RET_TAIL_BOOST)
+    parser.add_argument(
+        "--ret-tail-transform",
+        choices=["identity", "power", "exp_norm"],
+        default=RET_TAIL_TRANSFORM,
+    )
+    parser.add_argument("--ret-tail-gamma", type=float, default=RET_TAIL_GAMMA)
+    parser.add_argument("--ret-tail-beta", type=float, default=RET_TAIL_BETA)
     parser.add_argument(
         "--raw-material-flow-mode",
         default="kit_equivalent_order_up_to",
@@ -836,6 +857,9 @@ def main() -> int:
         "ret_tail_cap_kappa": args.ret_tail_cap_kappa,
         "ret_tail_inv_kappa": args.ret_tail_inv_kappa,
         "ret_tail_boost": args.ret_tail_boost,
+        "ret_tail_transform": args.ret_tail_transform,
+        "ret_tail_gamma": args.ret_tail_gamma,
+        "ret_tail_beta": args.ret_tail_beta,
         "raw_material_flow_mode": args.raw_material_flow_mode,
         "raw_material_order_up_to_multiplier": args.raw_material_order_up_to_multiplier,
         "risk_occurrence_mode": args.risk_occurrence_mode,

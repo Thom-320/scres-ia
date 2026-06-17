@@ -262,6 +262,18 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--ret-tail-inv-kappa", type=float, default=0.25)
     parser.add_argument("--ret-tail-boost", type=float, default=0.0)
     parser.add_argument(
+        "--ret-tail-transform",
+        choices=["identity", "power", "exp_norm"],
+        default="identity",
+        help=(
+            "Post-transform for ReT_tail_v1. identity keeps the tuned "
+            "Cobb-Douglas reward; power uses R^gamma; exp_norm uses "
+            "(exp(beta R)-1)/(exp(beta)-1)."
+        ),
+    )
+    parser.add_argument("--ret-tail-gamma", type=float, default=1.0)
+    parser.add_argument("--ret-tail-beta", type=float, default=2.0)
+    parser.add_argument(
         "--n-envs",
         type=int,
         default=1,
@@ -333,6 +345,9 @@ def env_kwargs(args: argparse.Namespace) -> dict[str, Any]:
         "ret_tail_cap_kappa": args.ret_tail_cap_kappa,
         "ret_tail_inv_kappa": args.ret_tail_inv_kappa,
         "ret_tail_boost": args.ret_tail_boost,
+        "ret_tail_transform": args.ret_tail_transform,
+        "ret_tail_gamma": args.ret_tail_gamma,
+        "ret_tail_beta": args.ret_tail_beta,
     }
 
 

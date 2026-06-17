@@ -50,6 +50,9 @@ The only candidate that passed both profiles was:
 | `ret_tail_cap_kappa` | 0.40 |
 | `ret_tail_inv_kappa` | 0.25 |
 | `ret_tail_boost` | 0.00 |
+| `ret_tail_transform` | `identity` |
+| `ret_tail_gamma` | 1.00 |
+| `ret_tail_beta` | 2.00 |
 
 Full-panel diagnostics for the selected candidate:
 
@@ -71,3 +74,23 @@ gate before running PPO/RecurrentPPO/DMLPA: the training reward now points
 toward the same tail objective used for evaluation.
 
 Training runs must still be judged by external metrics, not by `reward_total`.
+
+## Steepness Ablation
+
+`ReT_tail_v1` is already a Cobb-Douglas log-linear reward:
+
+```text
+R_base = exp(w_sc log(SC) + w_rc log(RC) + w_ce log(CE))
+```
+
+So `exp(R_base)` is not the right default way to make it steeper.  The supported
+auditable transforms are:
+
+- `identity`: `R = R_base`
+- `power`: `R = R_base^gamma`, with `gamma in {1.25, 1.5, 2.0}`
+- `exp_norm`: `R = (exp(beta * R_base) - 1) / (exp(beta) - 1)`,
+  with `beta in {2, 4}`
+
+The `power` family is preferred for the first Track A exhaustion pass because it
+preserves the static policy ordering and the `[0, 1]` range while penalizing
+departures from perfect resilience more sharply.

@@ -147,6 +147,10 @@ RET_TAIL_W_CE = 0.10  # un-gated cost-efficiency weight
 RET_TAIL_CAP_KAPPA = 0.40  # shift (capacity) cost scaling
 RET_TAIL_INV_KAPPA = 0.25  # strategic-inventory holding cost scaling
 RET_TAIL_BOOST = 0.0  # disruption-window emphasis on the recovery term
+RET_TAIL_TRANSFORM_OPTIONS = ("identity", "power", "exp_norm")
+RET_TAIL_TRANSFORM = "identity"
+RET_TAIL_GAMMA = 1.0
+RET_TAIL_BETA = 2.0
 
 # ReT_unified_v1 defaults (paper-facing service-first resilience)
 RET_UNIFIED_W_FR = 0.60
@@ -306,6 +310,9 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         ret_tail_cap_kappa: float = RET_TAIL_CAP_KAPPA,
         ret_tail_inv_kappa: float = RET_TAIL_INV_KAPPA,
         ret_tail_boost: float = RET_TAIL_BOOST,
+        ret_tail_transform: str = RET_TAIL_TRANSFORM,
+        ret_tail_gamma: float = RET_TAIL_GAMMA,
+        ret_tail_beta: float = RET_TAIL_BETA,
         # --- ReT_unified_v1 parameters ---
         ret_unified_calibration_path: str | None = None,
         ret_unified_theta_sc: float | None = None,
@@ -499,6 +506,18 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self.ret_tail_cap_kappa = float(ret_tail_cap_kappa)
         self.ret_tail_inv_kappa = float(ret_tail_inv_kappa)
         self.ret_tail_boost = float(ret_tail_boost)
+        if ret_tail_transform not in RET_TAIL_TRANSFORM_OPTIONS:
+            raise ValueError(
+                f"Unknown ret_tail_transform={ret_tail_transform!r}; "
+                f"expected one of {RET_TAIL_TRANSFORM_OPTIONS}"
+            )
+        self.ret_tail_transform = str(ret_tail_transform)
+        self.ret_tail_gamma = float(ret_tail_gamma)
+        self.ret_tail_beta = float(ret_tail_beta)
+        if self.ret_tail_gamma <= 0.0:
+            raise ValueError("ret_tail_gamma must be positive")
+        if self.ret_tail_beta <= 0.0:
+            raise ValueError("ret_tail_beta must be positive")
 
         unified_calibration = self._load_ret_unified_calibration(
             ret_unified_calibration_path
@@ -1516,11 +1535,26 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             + rc_exponent * np.log(rc_t)
             + self.ret_tail_w_ce * np.log(ce_t)
         )
-        reward_t = float(np.exp(log_reward))
+        base_reward_t = float(np.exp(log_reward))
+        if self.ret_tail_transform == "identity":
+            reward_t = base_reward_t
+        elif self.ret_tail_transform == "power":
+            reward_t = float(np.power(base_reward_t, self.ret_tail_gamma))
+        elif self.ret_tail_transform == "exp_norm":
+            numerator = float(np.expm1(self.ret_tail_beta * base_reward_t))
+            denominator = float(np.expm1(self.ret_tail_beta))
+            reward_t = numerator / denominator
+        else:  # pragma: no cover - guarded in __init__
+            raise ValueError(f"Unknown ret_tail_transform={self.ret_tail_transform!r}")
+        reward_t = float(np.clip(reward_t, eps, 1.0))
 
         return {
             "reward_mode": "ReT_tail_v1",
             "ret_tail_step": reward_t,
+            "ret_tail_base_step": base_reward_t,
+            "ret_tail_transform": self.ret_tail_transform,
+            "ret_tail_gamma": self.ret_tail_gamma,
+            "ret_tail_beta": self.ret_tail_beta,
             "ret_tail_service_continuity": sc_t,
             "ret_tail_recovery_containment": rc_t,
             "ret_tail_cap_efficiency": cap_ef_t,
@@ -1540,6 +1574,9 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                 "cap_kappa": self.ret_tail_cap_kappa,
                 "inv_kappa": self.ret_tail_inv_kappa,
                 "tail_boost": self.ret_tail_boost,
+                "transform": self.ret_tail_transform,
+                "gamma": self.ret_tail_gamma,
+                "beta": self.ret_tail_beta,
             },
         }
 
@@ -2453,6 +2490,10 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         if ret_tail_components is None:
             ret_tail_components = self._compute_ret_tail_v1(info, shifts)
         out_info["ret_tail_step"] = float(ret_tail_components["ret_tail_step"])
+        out_info["ret_tail_base_step"] = float(ret_tail_components["ret_tail_base_step"])
+        out_info["ret_tail_transform"] = str(ret_tail_components["ret_tail_transform"])
+        out_info["ret_tail_gamma"] = float(ret_tail_components["ret_tail_gamma"])
+        out_info["ret_tail_beta"] = float(ret_tail_components["ret_tail_beta"])
         out_info["ret_tail_components"] = ret_tail_components
         out_info["ret_tail_service_continuity"] = float(
             ret_tail_components["ret_tail_service_continuity"]

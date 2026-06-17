@@ -205,6 +205,47 @@ against `ReT_cd_v1`, `ReT_seq_v1`, `ReT_unified_v1`, and `control_v1`.  Raw
 `reward_total` should not be compared across reward modes; use fill rate,
 order-level ReT, pending backlog, and recovery diagnostics.
 
+## Tail-Recovery Track A Candidate: ReT_tail_v1
+
+`ReT_tail_v1` is the current Track A training reward for the Garrido decision
+variables `I_{t,S}` and `S`.  It exists because aggregate mean service can look
+good while tail resilience and recovery are poor.
+
+Base reward:
+
+```text
+SC_t = 1 - new_backorder_qty / max(new_demanded, 1)
+RC_t = 1 / (1 + pending_backorder_qty / D8_t)
+CE_t = sqrt(CAP_EF_t * INV_EF_t)
+R_base = SC_t^w_sc * RC_t^w_rc * CE_t^w_ce
+```
+
+Mapping:
+
+- `SC_t` is the step service-continuity analogue of thesis Eq. 5.4.
+- `RC_t` is a smooth recovery/backlog-memory proxy for the recovery dimension
+  of thesis Eq. 5.2.
+- `CE_t` is an un-gated cost-efficiency extension.  It is motivated by the
+  thesis limitation/future-work discussion on cost and by Garrido et al. (2024)
+  Cobb-Douglas cost-sensitive resilience.
+
+`ReT_tail_v1` is a training proxy, not the paper-facing ReT claim.  Every use
+must pass `scripts/reward_surface_audit.py`, which checks whether the
+best-by-reward static policy is also good on external metrics such as
+`ret_p10_all`, `flow_fill_rate`, and `stockout_week_pct`.
+
+Supported steepness ablations:
+
+```text
+identity: R = R_base
+power:   R = R_base^gamma
+exp_norm: R = (exp(beta * R_base) - 1) / (exp(beta) - 1)
+```
+
+The `power` family is the preferred first ablation because it preserves policy
+ordering and `[0, 1]` bounds while making the penalty for being below perfect
+resilience steeper.
+
 ## Garrido 2024 Paper-Faithful Family
 
 The repo now also includes a **paper-faithful** Garrido et al. (2024) five-variable Cobb-Douglas family, documented in [RET_GARRIDO2024_IMPLEMENTATION.md](docs/RET_GARRIDO2024_IMPLEMENTATION.md).

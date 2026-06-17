@@ -9,11 +9,15 @@ high-buffer + high-shift action) — the property the reward_surface_audit relie
 from __future__ import annotations
 
 import numpy as np
+import pytest
 
 from supply_chain.env_experimental_shifts import (
+    RET_TAIL_BETA,
     RET_TAIL_BOOST,
     RET_TAIL_CAP_KAPPA,
+    RET_TAIL_GAMMA,
     RET_TAIL_INV_KAPPA,
+    RET_TAIL_TRANSFORM,
     RET_TAIL_W_CE,
     RET_TAIL_W_RC,
     RET_TAIL_W_SC,
@@ -57,6 +61,9 @@ def test_ret_tail_v1_defaults_are_full_panel_tuned() -> None:
     assert RET_TAIL_CAP_KAPPA == 0.40
     assert RET_TAIL_INV_KAPPA == 0.25
     assert RET_TAIL_BOOST == 0.0
+    assert RET_TAIL_TRANSFORM == "identity"
+    assert RET_TAIL_GAMMA == 1.0
+    assert RET_TAIL_BETA == 2.0
 
 
 def test_ret_tail_v1_reward_is_finite_and_bounded() -> None:
@@ -74,6 +81,8 @@ def test_ret_tail_v1_reward_is_finite_and_bounded() -> None:
         assert np.isfinite(reward)
         assert 0.0 < reward <= 1.0
         assert "ret_tail_step" in info
+        assert info["ret_tail_transform"] == "identity"
+        assert info["ret_tail_step"] == pytest.approx(info["ret_tail_base_step"])
         if terminated or truncated:
             break
 
@@ -86,3 +95,74 @@ def test_ret_tail_v1_cost_bites_monotonically() -> None:
     mid_cost = _avg_reward(inv_kappa=0.5, cap_kappa=0.25, action=high_action)
     high_cost = _avg_reward(inv_kappa=1.5, cap_kappa=0.5, action=high_action)
     assert low_cost > mid_cost > high_cost
+
+
+def test_ret_tail_power_transform_steepens_without_reordering() -> None:
+    info = {
+        "new_demanded": 10_000.0,
+        "new_backorder_qty": 1_000.0,
+        "pending_backorder_qty": 20_000.0,
+        "step_disruption_hours": 0.0,
+    }
+    identity_env = make_dkana_thesis_faithful_env(
+        reward_mode="ReT_tail_v1",
+        action_space_mode="thesis_factorized",
+        risk_level="increased",
+        risk_occurrence_mode="thesis_periodic",
+        raw_material_flow_mode="kit_equivalent_order_up_to",
+        max_steps=5,
+    )
+    power_env = make_dkana_thesis_faithful_env(
+        reward_mode="ReT_tail_v1",
+        action_space_mode="thesis_factorized",
+        risk_level="increased",
+        risk_occurrence_mode="thesis_periodic",
+        raw_material_flow_mode="kit_equivalent_order_up_to",
+        ret_tail_transform="power",
+        ret_tail_gamma=2.0,
+        max_steps=5,
+    )
+
+    identity = identity_env.unwrapped._compute_ret_tail_v1(info, shifts=1)
+    powered = power_env.unwrapped._compute_ret_tail_v1(info, shifts=1)
+
+    assert 0.0 < identity["ret_tail_step"] < 1.0
+    assert powered["ret_tail_base_step"] == pytest.approx(identity["ret_tail_step"])
+    assert powered["ret_tail_step"] == pytest.approx(identity["ret_tail_step"] ** 2)
+    assert powered["ret_tail_step"] < identity["ret_tail_step"]
+    assert powered["ret_tail_transform"] == "power"
+
+
+def test_ret_tail_exp_norm_transform_is_bounded_and_monotone() -> None:
+    env = make_dkana_thesis_faithful_env(
+        reward_mode="ReT_tail_v1",
+        action_space_mode="thesis_factorized",
+        risk_level="increased",
+        risk_occurrence_mode="thesis_periodic",
+        raw_material_flow_mode="kit_equivalent_order_up_to",
+        ret_tail_transform="exp_norm",
+        ret_tail_beta=4.0,
+        max_steps=5,
+    )
+
+    low = env.unwrapped._compute_ret_tail_v1(
+        {
+            "new_demanded": 10_000.0,
+            "new_backorder_qty": 3_000.0,
+            "pending_backorder_qty": 30_000.0,
+            "step_disruption_hours": 0.0,
+        },
+        shifts=1,
+    )
+    high = env.unwrapped._compute_ret_tail_v1(
+        {
+            "new_demanded": 10_000.0,
+            "new_backorder_qty": 0.0,
+            "pending_backorder_qty": 0.0,
+            "step_disruption_hours": 0.0,
+        },
+        shifts=1,
+    )
+
+    assert 0.0 < low["ret_tail_step"] < high["ret_tail_step"] <= 1.0
+    assert low["ret_tail_transform"] == "exp_norm"

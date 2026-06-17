@@ -40,6 +40,14 @@ def test_parse_exact_candidates_normalizes_weights_only() -> None:
     ]
 
 
+def test_parse_transform_specs_accepts_power_and_exp_norm() -> None:
+    assert tuner.parse_transform_specs("identity,power:1.5,exp_norm:4") == [
+        ("identity", 1.0, 2.0),
+        ("power", 1.5, 2.0),
+        ("exp_norm", 1.0, 4.0),
+    ]
+
+
 def test_select_candidates_spreads_across_grid() -> None:
     candidates = [
         tuner.Candidate(
@@ -69,6 +77,8 @@ def test_tuner_auditor_command_forwards_candidate_knobs(tmp_path: Path) -> None:
             "with_crossed",
             "--replications",
             "1",
+            "--transforms",
+            "power:1.5",
         ]
     )
     candidate = tuner.Candidate(
@@ -78,6 +88,8 @@ def test_tuner_auditor_command_forwards_candidate_knobs(tmp_path: Path) -> None:
         cap_kappa=0.35,
         inv_kappa=0.75,
         boost=3.0,
+        transform="power",
+        gamma=1.5,
     )
 
     command = tuner.build_auditor_command(
@@ -94,3 +106,5 @@ def test_tuner_auditor_command_forwards_candidate_knobs(tmp_path: Path) -> None:
     assert command[command.index("--ret-tail-cap-kappa") + 1] == "0.35"
     assert command[command.index("--ret-tail-inv-kappa") + 1] == "0.75"
     assert command[command.index("--ret-tail-boost") + 1] == "3.0"
+    assert command[command.index("--ret-tail-transform") + 1] == "power"
+    assert command[command.index("--ret-tail-gamma") + 1] == "1.5"

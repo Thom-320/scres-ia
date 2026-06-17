@@ -59,6 +59,10 @@ def test_thesis_smoke_forwards_ret_tail_knobs() -> None:
             "0.75",
             "--ret-tail-boost",
             "3.0",
+            "--ret-tail-transform",
+            "power",
+            "--ret-tail-gamma",
+            "1.5",
         ]
     )
 
@@ -71,6 +75,9 @@ def test_thesis_smoke_forwards_ret_tail_knobs() -> None:
     assert kwargs["ret_tail_cap_kappa"] == pytest.approx(0.35)
     assert kwargs["ret_tail_inv_kappa"] == pytest.approx(0.75)
     assert kwargs["ret_tail_boost"] == pytest.approx(3.0)
+    assert kwargs["ret_tail_transform"] == "power"
+    assert kwargs["ret_tail_gamma"] == pytest.approx(1.5)
+    assert kwargs["ret_tail_beta"] == pytest.approx(2.0)
 
 
 def test_track_a_sweep_command_uses_faithful_fixes_and_profile_args(
@@ -142,6 +149,10 @@ def test_track_a_sweep_accepts_ret_tail_reward_profile(tmp_path: Path) -> None:
             "0.75",
             "--ret-tail-boost",
             "3.0",
+            "--ret-tail-transform",
+            "power",
+            "--ret-tail-gamma",
+            "1.5",
         ]
     )
 
@@ -164,6 +175,8 @@ def test_track_a_sweep_accepts_ret_tail_reward_profile(tmp_path: Path) -> None:
     assert command[command.index("--ret-tail-cap-kappa") + 1] == "0.35"
     assert command[command.index("--ret-tail-inv-kappa") + 1] == "0.75"
     assert command[command.index("--ret-tail-boost") + 1] == "3.0"
+    assert command[command.index("--ret-tail-transform") + 1] == "power"
+    assert command[command.index("--ret-tail-gamma") + 1] == "1.5"
 
 
 def test_track_a_sweep_can_use_cf_risk_profile_panel(tmp_path: Path) -> None:

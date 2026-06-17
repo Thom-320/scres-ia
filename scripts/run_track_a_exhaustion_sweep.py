@@ -81,6 +81,15 @@ def slug(value: str) -> str:
     )
 
 
+def ret_tail_variant_slug(args: argparse.Namespace) -> str:
+    transform = str(args.ret_tail_transform)
+    if transform == "power":
+        return f"tail_power_g{slug(args.ret_tail_gamma)}"
+    if transform == "exp_norm":
+        return f"tail_exp_b{slug(args.ret_tail_beta)}"
+    return "tail_identity"
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
@@ -185,6 +194,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--ret-tail-cap-kappa", type=float, default=0.40)
     parser.add_argument("--ret-tail-inv-kappa", type=float, default=0.25)
     parser.add_argument("--ret-tail-boost", type=float, default=0.0)
+    parser.add_argument(
+        "--ret-tail-transform",
+        choices=["identity", "power", "exp_norm"],
+        default="identity",
+    )
+    parser.add_argument("--ret-tail-gamma", type=float, default=1.0)
+    parser.add_argument("--ret-tail-beta", type=float, default=2.0)
     return parser
 
 
@@ -197,13 +213,17 @@ def build_label(
     risk_level: str,
     pt_profile: str,
     train_timesteps: int,
+    reward_variant: str | None = None,
 ) -> str:
+    reward_token = slug(reward_profile)
+    if reward_variant:
+        reward_token = f"{reward_token}_{reward_variant}"
     return "_".join(
         [
             prefix,
             slug(algo),
             slug(action_space_mode),
-            slug(reward_profile),
+            reward_token,
             slug(risk_level),
             slug(pt_profile),
             f"{int(train_timesteps / 1000)}k",
@@ -283,6 +303,12 @@ def build_command(
                 str(args.ret_tail_inv_kappa),
                 "--ret-tail-boost",
                 str(args.ret_tail_boost),
+                "--ret-tail-transform",
+                str(args.ret_tail_transform),
+                "--ret-tail-gamma",
+                str(args.ret_tail_gamma),
+                "--ret-tail-beta",
+                str(args.ret_tail_beta),
             ]
         )
     command.append("--norm-reward" if args.norm_reward else "--no-norm-reward")
@@ -408,6 +434,11 @@ def main() -> int:
                             risk_level=risk_level,
                             pt_profile=pt_profile,
                             train_timesteps=args.train_timesteps,
+                            reward_variant=(
+                                ret_tail_variant_slug(args)
+                                if reward_profile == "ret_tail"
+                                else None
+                            ),
                         )
                         planned.append(
                             {
@@ -424,6 +455,9 @@ def main() -> int:
                                 "ret_tail_cap_kappa": args.ret_tail_cap_kappa,
                                 "ret_tail_inv_kappa": args.ret_tail_inv_kappa,
                                 "ret_tail_boost": args.ret_tail_boost,
+                                "ret_tail_transform": args.ret_tail_transform,
+                                "ret_tail_gamma": args.ret_tail_gamma,
+                                "ret_tail_beta": args.ret_tail_beta,
                             }
                         )
     if args.max_runs is not None:

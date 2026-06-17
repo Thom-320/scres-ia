@@ -34,6 +34,9 @@ class Candidate:
     cap_kappa: float
     inv_kappa: float
     boost: float
+    transform: str = "identity"
+    gamma: float = 1.0
+    beta: float = 2.0
 
     @property
     def label(self) -> str:
@@ -45,6 +48,10 @@ class Candidate:
             f"inv{self.inv_kappa:.2f}",
             f"boost{self.boost:.2f}",
         ]
+        if self.transform == "power":
+            parts.append(f"pow{self.gamma:.2f}")
+        elif self.transform == "exp_norm":
+            parts.append(f"exp{self.beta:.2f}")
         return "ret_tail_" + "_".join(p.replace(".", "p") for p in parts)
 
 
@@ -98,6 +105,32 @@ def parse_exact_candidates(value: str) -> list[Candidate]:
     return candidates
 
 
+def parse_transform_specs(value: str) -> list[tuple[str, float, float]]:
+    transforms: list[tuple[str, float, float]] = []
+    for chunk in value.split(","):
+        raw = chunk.strip()
+        if not raw:
+            continue
+        if raw == "identity":
+            transforms.append(("identity", 1.0, 2.0))
+            continue
+        if ":" not in raw:
+            raise ValueError(
+                f"Expected transform spec identity, power:<gamma>, or exp_norm:<beta>; got {raw!r}"
+            )
+        kind, number_text = raw.split(":", 1)
+        number = float(number_text)
+        if number <= 0.0:
+            raise ValueError(f"Transform parameter must be positive: {raw!r}")
+        if kind == "power":
+            transforms.append(("power", number, 2.0))
+        elif kind == "exp_norm":
+            transforms.append(("exp_norm", 1.0, number))
+        else:
+            raise ValueError(f"Unknown transform kind {kind!r}")
+    return transforms or [("identity", 1.0, 2.0)]
+
+
 def generate_weight_grid(
     *,
     step: float,
@@ -124,8 +157,24 @@ def generate_weight_grid(
 
 
 def build_candidates(args: argparse.Namespace) -> list[Candidate]:
+    transforms = parse_transform_specs(args.transforms)
     if args.candidates:
-        return parse_exact_candidates(args.candidates)
+        base_candidates = parse_exact_candidates(args.candidates)
+        return [
+            Candidate(
+                w_sc=candidate.w_sc,
+                w_rc=candidate.w_rc,
+                w_ce=candidate.w_ce,
+                cap_kappa=candidate.cap_kappa,
+                inv_kappa=candidate.inv_kappa,
+                boost=candidate.boost,
+                transform=transform,
+                gamma=gamma,
+                beta=beta,
+            )
+            for candidate in base_candidates
+            for transform, gamma, beta in transforms
+        ]
     if args.weights:
         weights = parse_weight_triplets(args.weights)
     else:
@@ -143,11 +192,15 @@ def build_candidates(args: argparse.Namespace) -> list[Candidate]:
             cap_kappa=cap_kappa,
             inv_kappa=inv_kappa,
             boost=boost,
+            transform=transform,
+            gamma=gamma,
+            beta=beta,
         )
         for w_sc, w_rc, w_ce in weights
         for cap_kappa in parse_float_csv(args.cap_kappas)
         for inv_kappa in parse_float_csv(args.inv_kappas)
         for boost in parse_float_csv(args.boosts)
+        for transform, gamma, beta in transforms
     ]
     candidates = select_candidates(candidates, args.max_candidates)
     return candidates
@@ -208,6 +261,12 @@ def build_auditor_command(
         str(candidate.inv_kappa),
         "--ret-tail-boost",
         str(candidate.boost),
+        "--ret-tail-transform",
+        candidate.transform,
+        "--ret-tail-gamma",
+        str(candidate.gamma),
+        "--ret-tail-beta",
+        str(candidate.beta),
         "--label",
         candidate.label,
         "--output-root",
@@ -261,7 +320,9 @@ def score_profile(g: pd.DataFrame, *, top_k: int, p10_floor: float) -> dict[str,
     }
 
 
-def analyze_candidate(csv_path: Path, candidate: Candidate, args: argparse.Namespace) -> dict[str, object]:
+def analyze_candidate(
+    csv_path: Path, candidate: Candidate, args: argparse.Namespace
+) -> dict[str, object]:
     df = pd.read_csv(csv_path)
     profile_rows: list[dict[str, object]] = []
     for profile in [part.strip() for part in args.profiles.split(",") if part.strip()]:
@@ -390,6 +451,14 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--cap-kappas", default="0.10,0.25,0.40")
     parser.add_argument("--inv-kappas", default="0.25,0.50,0.75")
     parser.add_argument("--boosts", default="0.0,1.0,2.0")
+    parser.add_argument(
+        "--transforms",
+        default="identity",
+        help=(
+            "Comma-separated reward-shape transforms to test: "
+            "identity,power:<gamma>,exp_norm:<beta>."
+        ),
+    )
     parser.add_argument("--max-candidates", type=int, default=40)
     parser.add_argument("--top-k", type=int, default=3)
     parser.add_argument("--p10-floor", type=float, default=0.5)
