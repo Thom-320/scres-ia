@@ -25,6 +25,39 @@ def test_parse_weight_triplets_normalizes_user_supplied_weights() -> None:
     ]
 
 
+def test_parse_exact_candidates_normalizes_weights_only() -> None:
+    candidates = tuner.parse_exact_candidates("3:6:1:0.4:0.25:0")
+
+    assert candidates == [
+        tuner.Candidate(
+            w_sc=0.3,
+            w_rc=0.6,
+            w_ce=0.1,
+            cap_kappa=0.4,
+            inv_kappa=0.25,
+            boost=0.0,
+        )
+    ]
+
+
+def test_select_candidates_spreads_across_grid() -> None:
+    candidates = [
+        tuner.Candidate(
+            w_sc=0.1,
+            w_rc=0.5,
+            w_ce=0.4,
+            cap_kappa=0.1,
+            inv_kappa=0.25,
+            boost=float(index),
+        )
+        for index in range(10)
+    ]
+
+    selected = tuner.select_candidates(candidates, 4)
+
+    assert [candidate.boost for candidate in selected] == [0.0, 3.0, 6.0, 9.0]
+
+
 def test_tuner_auditor_command_forwards_candidate_knobs(tmp_path: Path) -> None:
     args = tuner.build_parser().parse_args(
         [

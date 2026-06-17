@@ -138,14 +138,15 @@ RET_LADDER_I1344_TOTAL = float(sum(INVENTORY_BUFFERS[1344].values()))
 # stress). This is the fix for ReT_ladder_v1's mean-tracking: its cost term is
 # gated off under stress (SC<0.95), so max-buffer + max-shift becomes "free" and
 # PPO learns the worst-tail policy. Cost kappas start higher than the ladder's
-# because the whole point is to make cost bite; final values set by
-# scripts/reward_surface_audit.py (acceptance: best static is also good on ret_p10).
+# because the whole point is to make cost bite. Defaults are the full-panel
+# winner from scripts/tune_ret_tail_reward.py on Cf31-90, increased/severe,
+# thesis-periodic risks, and m2.0 thesis-faithful raw-material flow.
 RET_TAIL_W_SC = 0.30  # service continuity weight (secondary)
-RET_TAIL_W_RC = 0.55  # recovery/backlog-memory weight (DOMINANT, tracks the tail)
-RET_TAIL_W_CE = 0.15  # un-gated cost-efficiency weight
-RET_TAIL_CAP_KAPPA = 0.25  # shift (capacity) cost scaling
-RET_TAIL_INV_KAPPA = 0.50  # strategic-inventory holding cost scaling
-RET_TAIL_BOOST = 2.0  # disruption-window emphasis on the recovery term
+RET_TAIL_W_RC = 0.60  # recovery/backlog-memory weight (DOMINANT, tracks the tail)
+RET_TAIL_W_CE = 0.10  # un-gated cost-efficiency weight
+RET_TAIL_CAP_KAPPA = 0.40  # shift (capacity) cost scaling
+RET_TAIL_INV_KAPPA = 0.25  # strategic-inventory holding cost scaling
+RET_TAIL_BOOST = 0.0  # disruption-window emphasis on the recovery term
 
 # ReT_unified_v1 defaults (paper-facing service-first resilience)
 RET_UNIFIED_W_FR = 0.60

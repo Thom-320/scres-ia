@@ -10,7 +10,15 @@ from __future__ import annotations
 
 import numpy as np
 
-from supply_chain.env_experimental_shifts import REWARD_MODE_OPTIONS
+from supply_chain.env_experimental_shifts import (
+    RET_TAIL_BOOST,
+    RET_TAIL_CAP_KAPPA,
+    RET_TAIL_INV_KAPPA,
+    RET_TAIL_W_CE,
+    RET_TAIL_W_RC,
+    RET_TAIL_W_SC,
+    REWARD_MODE_OPTIONS,
+)
 from supply_chain.external_env_interface import make_dkana_thesis_faithful_env
 
 
@@ -40,6 +48,15 @@ def _avg_reward(*, inv_kappa: float, cap_kappa: float, action) -> float:
 
 def test_ret_tail_v1_registered() -> None:
     assert "ReT_tail_v1" in REWARD_MODE_OPTIONS
+
+
+def test_ret_tail_v1_defaults_are_full_panel_tuned() -> None:
+    assert RET_TAIL_W_SC == 0.30
+    assert RET_TAIL_W_RC == 0.60
+    assert RET_TAIL_W_CE == 0.10
+    assert RET_TAIL_CAP_KAPPA == 0.40
+    assert RET_TAIL_INV_KAPPA == 0.25
+    assert RET_TAIL_BOOST == 0.0
 
 
 def test_ret_tail_v1_reward_is_finite_and_bounded() -> None:

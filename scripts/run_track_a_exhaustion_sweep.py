@@ -180,11 +180,11 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument("--ret-tail-w-sc", type=float, default=0.30)
-    parser.add_argument("--ret-tail-w-rc", type=float, default=0.55)
-    parser.add_argument("--ret-tail-w-ce", type=float, default=0.15)
-    parser.add_argument("--ret-tail-cap-kappa", type=float, default=0.25)
-    parser.add_argument("--ret-tail-inv-kappa", type=float, default=0.50)
-    parser.add_argument("--ret-tail-boost", type=float, default=2.0)
+    parser.add_argument("--ret-tail-w-rc", type=float, default=0.60)
+    parser.add_argument("--ret-tail-w-ce", type=float, default=0.10)
+    parser.add_argument("--ret-tail-cap-kappa", type=float, default=0.40)
+    parser.add_argument("--ret-tail-inv-kappa", type=float, default=0.25)
+    parser.add_argument("--ret-tail-boost", type=float, default=0.0)
     return parser
 
 

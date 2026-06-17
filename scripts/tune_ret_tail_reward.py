@@ -69,6 +69,35 @@ def parse_weight_triplets(value: str) -> list[tuple[float, float, float]]:
     return out
 
 
+def parse_exact_candidates(value: str) -> list[Candidate]:
+    """Parse `w_sc:w_rc:w_ce:cap_kappa:inv_kappa:boost;...`."""
+    candidates: list[Candidate] = []
+    for chunk in value.split(";"):
+        chunk = chunk.strip()
+        if not chunk:
+            continue
+        pieces = [float(part.strip()) for part in chunk.split(":")]
+        if len(pieces) != 6:
+            raise ValueError(
+                "Expected w_sc:w_rc:w_ce:cap_kappa:inv_kappa:boost, "
+                f"got {chunk!r}"
+            )
+        total = sum(pieces[:3])
+        if total <= 0.0:
+            raise ValueError(f"Candidate weights must have positive sum: {chunk!r}")
+        candidates.append(
+            Candidate(
+                w_sc=round(pieces[0] / total, 6),
+                w_rc=round(pieces[1] / total, 6),
+                w_ce=round(pieces[2] / total, 6),
+                cap_kappa=pieces[3],
+                inv_kappa=pieces[4],
+                boost=pieces[5],
+            )
+        )
+    return candidates
+
+
 def generate_weight_grid(
     *,
     step: float,
@@ -95,6 +124,8 @@ def generate_weight_grid(
 
 
 def build_candidates(args: argparse.Namespace) -> list[Candidate]:
+    if args.candidates:
+        return parse_exact_candidates(args.candidates)
     if args.weights:
         weights = parse_weight_triplets(args.weights)
     else:
@@ -118,9 +149,29 @@ def build_candidates(args: argparse.Namespace) -> list[Candidate]:
         for inv_kappa in parse_float_csv(args.inv_kappas)
         for boost in parse_float_csv(args.boosts)
     ]
-    if args.max_candidates and args.max_candidates > 0:
-        candidates = candidates[: args.max_candidates]
+    candidates = select_candidates(candidates, args.max_candidates)
     return candidates
+
+
+def select_candidates(candidates: list[Candidate], max_candidates: int | None) -> list[Candidate]:
+    """Return a deterministic spread over the full grid, not just the prefix.
+
+    Prefix truncation is biased because candidates are generated in nested-loop
+    order.  A spread keeps the scout cheap while covering the weight/kappa/boost
+    surface more evenly.
+    """
+    if not max_candidates or max_candidates <= 0 or len(candidates) <= max_candidates:
+        return candidates
+    if max_candidates == 1:
+        return [candidates[0]]
+    last = len(candidates) - 1
+    indices = sorted(
+        {
+            round(i * last / (max_candidates - 1))
+            for i in range(max_candidates)
+        }
+    )
+    return [candidates[index] for index in indices]
 
 
 def build_auditor_command(
@@ -326,6 +377,15 @@ def build_parser() -> argparse.ArgumentParser:
         "--weights",
         default=None,
         help="Optional semicolon list of normalized or unnormalized w_sc:w_rc:w_ce.",
+    )
+    parser.add_argument(
+        "--candidates",
+        default=None,
+        help=(
+            "Optional exact semicolon list: "
+            "w_sc:w_rc:w_ce:cap_kappa:inv_kappa:boost. "
+            "Use this for full-panel confirmation of scout winners."
+        ),
     )
     parser.add_argument("--cap-kappas", default="0.10,0.25,0.40")
     parser.add_argument("--inv-kappas", default="0.25,0.50,0.75")
