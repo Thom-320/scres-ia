@@ -253,6 +253,17 @@ def build_parser() -> argparse.ArgumentParser:
         default=True,
         help="Normalize observations during training and deterministic evaluation.",
     )
+    parser.add_argument(
+        "--norm-reward",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help=(
+            "Also normalize rewards by the running return std (VecNormalize "
+            "norm_reward). Scale-only transform: helps value-function fit and "
+            "convergence stability, does not change the optimal policy. Default "
+            "False preserves prior reproducible results."
+        ),
+    )
     return parser
 
 
@@ -1088,7 +1099,7 @@ def train_model(
         vec_normalize = VecNormalize(
             vec_env,
             norm_obs=True,
-            norm_reward=False,
+            norm_reward=bool(args.norm_reward),
             clip_obs=10.0,
         )
         vec_env = vec_normalize
