@@ -143,6 +143,7 @@ def main() -> None:
         os.environ.get("SCRESIA_HISTORY_WINDOW", "30"),
         "--device",
         device_arg,
+        "--norm-reward",
         "--stop-on-error",
     ]
     run(cmd, cwd=REPO_DIR)
@@ -169,6 +170,8 @@ def main() -> None:
             "stochastic_pt": True,
             "stochastic_pt_spread": 1.0,
             "reward_profile": "ret_ladder_steep",
+            "vec_normalize": True,
+            "norm_reward": True,
             "observation_version": "v5",
             "observation_mode": "env_sdm_history_reward",
         },

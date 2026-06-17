@@ -159,6 +159,30 @@ def test_track_a_sweep_command_forwards_algo_device_and_history(tmp_path: Path) 
     assert command[command.index("--history-window") + 1] == "30"
 
 
+def test_track_a_sweep_command_can_forward_reward_normalization(tmp_path: Path) -> None:
+    args = track_a_sweep.build_parser().parse_args(
+        [
+            "--output-root",
+            str(tmp_path),
+            "--norm-reward",
+        ]
+    )
+
+    command = track_a_sweep.build_command(
+        args=args,
+        run_root=tmp_path / "runs",
+        label="probe",
+        algo="recurrent_ppo",
+        action_space_mode="thesis_factorized",
+        reward_profile="ret_ladder_steep",
+        risk_level="severe_training",
+        pt_profile="stoch_pt_hist",
+    )
+
+    assert "--norm-reward" in command
+    assert "--no-norm-reward" not in command
+
+
 def test_dmlpa_extractor_uses_history_window() -> None:
     observation_space = gym.spaces.Box(-10.0, 10.0, shape=(90,), dtype=float)
     extractor = thesis_smoke.DMLPAPositionalExtractor(

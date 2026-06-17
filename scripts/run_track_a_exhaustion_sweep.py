@@ -150,6 +150,16 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--skip-existing", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--stop-on-error", action="store_true")
+    parser.add_argument(
+        "--norm-reward",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help=(
+            "Forward VecNormalize reward normalization to the PPO smoke runner. "
+            "This is a training-scale transform only; summaries must still be "
+            "judged on external resilience metrics, not reward_total."
+        ),
+    )
     return parser
 
 
@@ -231,6 +241,7 @@ def build_command(
         *REWARD_PROFILES[reward_profile],
         *PT_PROFILES[pt_profile],
     ]
+    command.append("--norm-reward" if args.norm_reward else "--no-norm-reward")
     if args.use_cf_risk_profile:
         command.extend(
             [
@@ -360,6 +371,7 @@ def main() -> int:
                                 "reward_profile": reward_profile,
                                 "risk_level": risk_level,
                                 "pt_profile": pt_profile,
+                                "norm_reward": bool(args.norm_reward),
                             }
                         )
     if args.max_runs is not None:
