@@ -244,6 +244,17 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--ret-ladder-gate-beta", type=float, default=12.0)
     parser.add_argument("--ret-ladder-gate-sc-threshold", type=float, default=0.95)
     parser.add_argument("--ret-ladder-gate-rc-threshold", type=float, default=0.70)
+    parser.add_argument(
+        "--n-envs",
+        type=int,
+        default=1,
+        help=(
+            "Number of parallel training envs (DummyVecEnv). Default 1 preserves "
+            "prior behavior; 8 gives lower-variance gradients and matters more for "
+            "recurrent_ppo. Each env gets a distinct base seed; per-episode "
+            "disruptions still re-randomize (default_rng(None) on auto-reset)."
+        ),
+    )
     parser.add_argument("--n-steps", type=int, default=1024)
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--n-epochs", type=int, default=10)
@@ -1090,7 +1101,10 @@ def train_model(
     if args.algo == "dmlpa_ppo" and args.history_window <= 1:
         raise ValueError("dmlpa_ppo requires --history-window greater than 1.")
 
-    train_env = DummyVecEnv([make_env(args, args.seed)])
+    n_envs = max(1, int(args.n_envs))
+    train_env = DummyVecEnv(
+        [make_env(args, args.seed + i) for i in range(n_envs)]
+    )
     vec_normalize: VecNormalize | None = None
     vec_env: Any = train_env
     if args.algo == "dmlpa_ppo":
