@@ -112,7 +112,13 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--rewards", default=",".join(DEFAULT_REWARDS))
     ap.add_argument("--profiles", default="increased,severe")
-    ap.add_argument("--policy-set", default="thesis_static")
+    ap.add_argument("--policy-set", default="with_crossed",
+                    help=(
+                        "Use with_crossed: it spans the FULL I x S grid incl. high-inventory "
+                        "x high-shift combos (e.g. I504_S3). thesis_static only varies "
+                        "inventory at S1 and gives FALSE PASSes because it never tests "
+                        "whether the reward over-rewards shifts at the cost of the tail."
+                    ))
     ap.add_argument("--multiplier", type=float, default=2.0,
                     help="2.0 = thesis-faithful backbone (Table 6.10).")
     ap.add_argument("--replications", type=int, default=2)
