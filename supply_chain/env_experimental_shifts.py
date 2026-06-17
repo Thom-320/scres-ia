@@ -102,6 +102,7 @@ REWARD_MODE_OPTIONS = (
     "ReT_garrido2024",
     "ReT_garrido2024_train",
     "ReT_ladder_v1",
+    "ReT_tail_v1",
     "rt_v0",
     "control_v1",
     "control_v1_pbrs",
@@ -126,6 +127,21 @@ RET_LADDER_GATE_SC_THRESHOLD = 0.95
 RET_LADDER_GATE_RC_THRESHOLD = 0.70
 RET_LADDER_EXPECTED_8W_DEMAND = 120_000.0
 RET_LADDER_I1344_TOTAL = float(sum(INVENTORY_BUFFERS[1344].values()))
+
+# ReT_tail_v1 defaults (tail/recovery-aligned reward).
+# Recovery-dominant Cobb-Douglas with an UN-GATED cost term, so that holding a
+# large buffer / running extra shifts always costs reward (in calm and under
+# stress). This is the fix for ReT_ladder_v1's mean-tracking: its cost term is
+# gated off under stress (SC<0.95), so max-buffer + max-shift becomes "free" and
+# PPO learns the worst-tail policy. Cost kappas start higher than the ladder's
+# because the whole point is to make cost bite; final values set by
+# scripts/reward_surface_audit.py (acceptance: best static is also good on ret_p10).
+RET_TAIL_W_SC = 0.30  # service continuity weight (secondary)
+RET_TAIL_W_RC = 0.55  # recovery/backlog-memory weight (DOMINANT, tracks the tail)
+RET_TAIL_W_CE = 0.15  # un-gated cost-efficiency weight
+RET_TAIL_CAP_KAPPA = 0.25  # shift (capacity) cost scaling
+RET_TAIL_INV_KAPPA = 0.50  # strategic-inventory holding cost scaling
+RET_TAIL_BOOST = 2.0  # disruption-window emphasis on the recovery term
 
 # ReT_unified_v1 defaults (paper-facing service-first resilience)
 RET_UNIFIED_W_FR = 0.60
@@ -278,6 +294,13 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         ret_ladder_gate_rc_threshold: float = RET_LADDER_GATE_RC_THRESHOLD,
         ret_ladder_expected_8w_demand: float = RET_LADDER_EXPECTED_8W_DEMAND,
         ret_ladder_i1344_total: float = RET_LADDER_I1344_TOTAL,
+        # --- ReT_tail_v1 parameters (tail/recovery-aligned, un-gated cost) ---
+        ret_tail_w_sc: float = RET_TAIL_W_SC,
+        ret_tail_w_rc: float = RET_TAIL_W_RC,
+        ret_tail_w_ce: float = RET_TAIL_W_CE,
+        ret_tail_cap_kappa: float = RET_TAIL_CAP_KAPPA,
+        ret_tail_inv_kappa: float = RET_TAIL_INV_KAPPA,
+        ret_tail_boost: float = RET_TAIL_BOOST,
         # --- ReT_unified_v1 parameters ---
         ret_unified_calibration_path: str | None = None,
         ret_unified_theta_sc: float | None = None,
@@ -463,6 +486,14 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self.ret_ladder_gate_rc_threshold = float(ret_ladder_gate_rc_threshold)
         self.ret_ladder_expected_8w_demand = float(ret_ladder_expected_8w_demand)
         self.ret_ladder_i1344_total = float(ret_ladder_i1344_total)
+
+        # ReT_tail_v1 params (tail/recovery-aligned, un-gated cost)
+        self.ret_tail_w_sc = float(ret_tail_w_sc)
+        self.ret_tail_w_rc = float(ret_tail_w_rc)
+        self.ret_tail_w_ce = float(ret_tail_w_ce)
+        self.ret_tail_cap_kappa = float(ret_tail_cap_kappa)
+        self.ret_tail_inv_kappa = float(ret_tail_inv_kappa)
+        self.ret_tail_boost = float(ret_tail_boost)
 
         unified_calibration = self._load_ret_unified_calibration(
             ret_unified_calibration_path
@@ -1421,6 +1452,92 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             },
         }
 
+    def _compute_ret_tail_v1(
+        self, info: dict[str, Any], shifts: int
+    ) -> dict[str, float | dict[str, float] | str]:
+        """
+        Tail/recovery-aligned reward for resilient PPO training.
+
+            R_t = SC_t^w_sc * RC_t^(w_rc * recovery_boost_t) * CE_t^w_ce
+
+        Unlike ReT_ladder_v1, the cost term CE_t is NOT gated: holding a large
+        strategic buffer or running extra shifts always costs reward, in calm and
+        under stress.  Recovery (RC_t) is the dominant term and is further
+        up-weighted inside disruption windows (recovery_boost_t), so the reward
+        tracks the TAIL (recovery after a shock) rather than mean service.  This
+        is what stops the optimum from collapsing to high-buffer + max-shift
+        (I504_S3), whose ret_p10 is floored.  Cost magnitude (cap/inv kappa) is
+        calibrated by scripts/reward_surface_audit.py so the best static policy
+        under this reward is also good on ret_p10.
+        """
+        eps = 1e-6
+        new_demanded = float(info.get("new_demanded", 0.0))
+        new_backorder_qty = float(info.get("new_backorder_qty", 0.0))
+        pending_backorder_qty = max(0.0, float(info.get("pending_backorder_qty", 0.0)))
+
+        # SC_t: step service continuity (secondary).
+        sc_t = max(eps, 1.0 - new_backorder_qty / max(new_demanded, 1.0))
+
+        # RC_t: recovery / backlog-memory (dominant, tracks the tail).
+        eight_week_multiplier = max(1.0, (8.0 * 168.0) / max(self.step_size, 1.0))
+        rolling_demand_8w = max(0.0, new_demanded * eight_week_multiplier)
+        d8_t = max(rolling_demand_8w, self.ret_ladder_expected_8w_demand, 1.0)
+        rc_t = max(eps, 1.0 / (1.0 + pending_backorder_qty / d8_t))
+
+        # CE_t: UN-GATED cost efficiency (shift capacity + strategic inventory).
+        cap_ef_t = max(
+            eps, 1.0 - self.ret_tail_cap_kappa * (float(shifts) - 1.0) / 2.0
+        )
+        strategic_inventory = self._strategic_inventory_target_total()
+        inv_scale = max(self.ret_ladder_i1344_total, 1.0)
+        inv_ef_t = max(
+            eps,
+            1.0 / (1.0 + self.ret_tail_inv_kappa * strategic_inventory / inv_scale),
+        )
+        ce_t = float(np.sqrt(cap_ef_t * inv_ef_t))
+
+        # Disruption-window emphasis on recovery: amplify RC's exponent when a
+        # shock is active (where the tail lives).  disruption_fraction in [0, 1].
+        step_disruption_hours = max(0.0, float(info.get("step_disruption_hours", 0.0)))
+        disruption_fraction = min(
+            1.0,
+            step_disruption_hours / max(self.step_size * float(NUM_TRACKED_OPS), 1.0),
+        )
+        recovery_boost_t = 1.0 + self.ret_tail_boost * disruption_fraction
+        rc_exponent = self.ret_tail_w_rc * recovery_boost_t
+
+        log_reward = float(
+            self.ret_tail_w_sc * np.log(sc_t)
+            + rc_exponent * np.log(rc_t)
+            + self.ret_tail_w_ce * np.log(ce_t)
+        )
+        reward_t = float(np.exp(log_reward))
+
+        return {
+            "reward_mode": "ReT_tail_v1",
+            "ret_tail_step": reward_t,
+            "ret_tail_service_continuity": sc_t,
+            "ret_tail_recovery_containment": rc_t,
+            "ret_tail_cap_efficiency": cap_ef_t,
+            "ret_tail_inventory_efficiency": inv_ef_t,
+            "ret_tail_cost_efficiency": ce_t,
+            "ret_tail_disruption_fraction": disruption_fraction,
+            "ret_tail_recovery_boost": recovery_boost_t,
+            "ret_tail_rc_exponent": rc_exponent,
+            "ret_tail_pending_backorder_qty": pending_backorder_qty,
+            "ret_tail_strategic_inventory": strategic_inventory,
+            "weights": {
+                "w_sc": self.ret_tail_w_sc,
+                "w_rc": self.ret_tail_w_rc,
+                "w_ce": self.ret_tail_w_ce,
+            },
+            "params": {
+                "cap_kappa": self.ret_tail_cap_kappa,
+                "inv_kappa": self.ret_tail_inv_kappa,
+                "tail_boost": self.ret_tail_boost,
+            },
+        }
+
     # -----------------------------------------------------------------
     # ReT_cd: Cobb-Douglas Resilience (Garrido et al. 2024 methodology)
     # -----------------------------------------------------------------
@@ -2167,6 +2284,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         ret_seq_components: dict[str, float] | None = None
         ret_unified_components: dict[str, Any] | None = None
         ret_ladder_components: dict[str, Any] | None = None
+        ret_tail_components: dict[str, Any] | None = None
         ret_cd_components: dict[str, float | str] | None = None
         ret_cd_4v_components: dict[str, float] | None = None
         ret_g24_components: dict[str, Any] | None = None
@@ -2205,6 +2323,13 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         elif self._canonical_reward_mode == "ReT_ladder_v1":
             ret_ladder_components = self._compute_ret_ladder_v1(info, shifts)
             reward = float(ret_ladder_components["ret_ladder_step"])
+            corrected_ret_components = self._compute_ret_thesis_corrected_components(
+                info, self.step_size
+            )
+            ret_components = self._compute_ret_thesis_components(info, self.step_size)
+        elif self._canonical_reward_mode == "ReT_tail_v1":
+            ret_tail_components = self._compute_ret_tail_v1(info, shifts)
+            reward = float(ret_tail_components["ret_tail_step"])
             corrected_ret_components = self._compute_ret_thesis_corrected_components(
                 info, self.step_size
             )
@@ -2320,6 +2445,10 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             ret_unified_components = self._compute_ret_unified_v1(info, shifts)
         if ret_ladder_components is None:
             ret_ladder_components = self._compute_ret_ladder_v1(info, shifts)
+        if ret_tail_components is None:
+            ret_tail_components = self._compute_ret_tail_v1(info, shifts)
+        out_info["ret_tail_step"] = float(ret_tail_components["ret_tail_step"])
+        out_info["ret_tail_components"] = ret_tail_components
         out_info["ret_seq_step"] = float(ret_seq_components["ret_seq_step"])
         out_info["ret_seq_components"] = ret_seq_components
         out_info["service_continuity_step"] = float(

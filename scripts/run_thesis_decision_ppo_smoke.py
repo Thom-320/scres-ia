@@ -254,6 +254,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--ret-ladder-gate-beta", type=float, default=12.0)
     parser.add_argument("--ret-ladder-gate-sc-threshold", type=float, default=0.95)
     parser.add_argument("--ret-ladder-gate-rc-threshold", type=float, default=0.70)
+    # ReT_tail_v1 (tail/recovery-aligned reward, un-gated cost)
+    parser.add_argument("--ret-tail-w-sc", type=float, default=0.30)
+    parser.add_argument("--ret-tail-w-rc", type=float, default=0.55)
+    parser.add_argument("--ret-tail-w-ce", type=float, default=0.15)
+    parser.add_argument("--ret-tail-cap-kappa", type=float, default=0.25)
+    parser.add_argument("--ret-tail-inv-kappa", type=float, default=0.50)
+    parser.add_argument("--ret-tail-boost", type=float, default=2.0)
     parser.add_argument(
         "--n-envs",
         type=int,
@@ -320,6 +327,12 @@ def env_kwargs(args: argparse.Namespace) -> dict[str, Any]:
         "ret_ladder_gate_beta": args.ret_ladder_gate_beta,
         "ret_ladder_gate_sc_threshold": args.ret_ladder_gate_sc_threshold,
         "ret_ladder_gate_rc_threshold": args.ret_ladder_gate_rc_threshold,
+        "ret_tail_w_sc": args.ret_tail_w_sc,
+        "ret_tail_w_rc": args.ret_tail_w_rc,
+        "ret_tail_w_ce": args.ret_tail_w_ce,
+        "ret_tail_cap_kappa": args.ret_tail_cap_kappa,
+        "ret_tail_inv_kappa": args.ret_tail_inv_kappa,
+        "ret_tail_boost": args.ret_tail_boost,
     }
 
 
