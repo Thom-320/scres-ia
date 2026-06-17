@@ -92,7 +92,25 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--train-timesteps", type=int, default=30_000)
     parser.add_argument("--eval-episodes", type=int, default=3)
     parser.add_argument("--seed", type=int, default=4242)
+    parser.add_argument(
+        "--eval-seed-base",
+        type=int,
+        default=None,
+        help=(
+            "Optional held-out evaluation seed base forwarded to "
+            "run_thesis_decision_ppo_smoke.py. Defaults to --seed."
+        ),
+    )
     parser.add_argument("--max-steps", type=int, default=80)
+    parser.add_argument(
+        "--n-envs",
+        type=int,
+        default=1,
+        help=(
+            "Parallel training envs forwarded to the PPO smoke runner. "
+            "Use >1 for lower-variance PPO gradients in serious convergence runs."
+        ),
+    )
     parser.add_argument("--n-steps", type=int, default=1024)
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--n-epochs", type=int, default=10)
@@ -230,6 +248,8 @@ def build_command(
         "thesis_strict",
         "--max-steps",
         str(args.max_steps),
+        "--n-envs",
+        str(args.n_envs),
         "--include-static-grid",
         "--no-eval-ai-on-garrido-cfis",
         "--n-steps",
@@ -242,6 +262,8 @@ def build_command(
         *PT_PROFILES[pt_profile],
     ]
     command.append("--norm-reward" if args.norm_reward else "--no-norm-reward")
+    if args.eval_seed_base is not None:
+        command.extend(["--eval-seed-base", str(args.eval_seed_base)])
     if args.use_cf_risk_profile:
         command.extend(
             [

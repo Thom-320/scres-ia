@@ -183,6 +183,37 @@ def test_track_a_sweep_command_can_forward_reward_normalization(tmp_path: Path) 
     assert "--no-norm-reward" not in command
 
 
+def test_track_a_sweep_forwards_parallel_envs_and_eval_seed_base(
+    tmp_path: Path,
+) -> None:
+    args = track_a_sweep.build_parser().parse_args(
+        [
+            "--output-root",
+            str(tmp_path),
+            "--n-envs",
+            "8",
+            "--eval-seed-base",
+            "990000",
+        ]
+    )
+
+    command = track_a_sweep.build_command(
+        args=args,
+        run_root=tmp_path / "runs",
+        label="probe",
+        algo="ppo_mlp",
+        action_space_mode="thesis_factorized",
+        reward_profile="ret_ladder_steep",
+        risk_level="increased",
+        pt_profile="stoch_pt_hist",
+    )
+
+    assert "--n-envs" in command
+    assert command[command.index("--n-envs") + 1] == "8"
+    assert "--eval-seed-base" in command
+    assert command[command.index("--eval-seed-base") + 1] == "990000"
+
+
 def test_dmlpa_extractor_uses_history_window() -> None:
     observation_space = gym.spaces.Box(-10.0, 10.0, shape=(90,), dtype=float)
     extractor = thesis_smoke.DMLPAPositionalExtractor(

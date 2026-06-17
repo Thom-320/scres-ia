@@ -76,6 +76,16 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--train-timesteps", type=int, default=10_000)
     parser.add_argument("--eval-episodes", type=int, default=5)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument(
+        "--eval-seed-base",
+        type=int,
+        default=None,
+        help=(
+            "Optional independent seed base for deterministic evaluation. "
+            "Defaults to --seed for backwards compatibility; set this to a "
+            "held-out value for paper-facing runs."
+        ),
+    )
     parser.add_argument("--output-root", type=Path, default=DEFAULT_OUTPUT_ROOT)
     parser.add_argument("--reward-mode", default="control_v1")
     parser.add_argument("--risk-level", default="increased")
@@ -690,6 +700,10 @@ def evaluate_action_policy(
     return rows
 
 
+def eval_seed_base(args: argparse.Namespace) -> int:
+    return int(args.eval_seed_base if args.eval_seed_base is not None else args.seed)
+
+
 def evaluate_model_policy(
     *,
     args: argparse.Namespace,
@@ -1008,7 +1022,7 @@ def evaluate_profile_panel(
                 args=args,
                 model=model,
                 policy_name=args.algo,
-                seed=args.seed + spec.cfi * 1_000_000,
+                seed=eval_seed_base(args) + spec.cfi * 1_000_000,
                 vec_normalize=vec_normalize,
                 episodes=1,
                 env_kwargs_override=profile_risk_env_kwargs(spec, args=args),
@@ -1028,7 +1042,7 @@ def evaluate_profile_panel(
                 args=args,
                 policy_name=policy_name,
                 action_fn=action_fn,
-                seed=args.seed + spec.cfi * 1_000_000 + seed_offset,
+                seed=eval_seed_base(args) + spec.cfi * 1_000_000 + seed_offset,
                 episodes=1,
                 env_kwargs_override=profile_risk_env_kwargs(spec, args=args),
                 policy_metadata=metadata(spec),
@@ -1197,7 +1211,7 @@ def run_single(args: argparse.Namespace, run_dir: Path) -> dict[str, Any]:
                 args=args,
                 model=model,
                 policy_name=args.algo,
-                seed=args.seed,
+                seed=eval_seed_base(args),
                 vec_normalize=vec_normalize,
             )
         )
@@ -1208,7 +1222,7 @@ def run_single(args: argparse.Namespace, run_dir: Path) -> dict[str, Any]:
                         args=args,
                         model=model,
                         policy_name=f"{args.algo}_on_{spec.label}_{spec.family}",
-                        seed=args.seed + spec.cfi * 1_000_000,
+                        seed=eval_seed_base(args) + spec.cfi * 1_000_000,
                         vec_normalize=vec_normalize,
                         episodes=1,
                         env_kwargs_override=thesis_risk_env_kwargs(spec),
@@ -1227,7 +1241,7 @@ def run_single(args: argparse.Namespace, run_dir: Path) -> dict[str, Any]:
                     action_fn=lambda obs, info, shifts=idx: static_action(
                         shifts, action_space_mode=args.action_space_mode
                     ),
-                    seed=args.seed,
+                    seed=eval_seed_base(args),
                     policy_metadata={
                         "baseline_family": "capacity_reference",
                         "cfi": "",
@@ -1245,7 +1259,7 @@ def run_single(args: argparse.Namespace, run_dir: Path) -> dict[str, Any]:
                     action_fn=lambda obs, info, p=period: inventory_action(
                         p, action_space_mode=args.action_space_mode
                     ),
-                    seed=args.seed,
+                    seed=eval_seed_base(args),
                     policy_metadata={
                         "baseline_family": "inventory_reference",
                         "cfi": "",
@@ -1265,7 +1279,7 @@ def run_single(args: argparse.Namespace, run_dir: Path) -> dict[str, Any]:
                                 shifts=s,
                                 action_space_mode=args.action_space_mode,
                             ),
-                            seed=args.seed,
+                            seed=eval_seed_base(args),
                             policy_metadata={
                                 "baseline_family": "static_inventory_capacity_grid",
                                 "cfi": "",
@@ -1290,7 +1304,7 @@ def run_single(args: argparse.Namespace, run_dir: Path) -> dict[str, Any]:
                     args=args,
                     policy_name=f"garrido_{spec.label}_{spec.family}",
                     action_fn=garrido_action_fn,
-                    seed=args.seed,
+                    seed=eval_seed_base(args),
                     env_kwargs_override=thesis_design_env_kwargs(
                         spec,
                         action_space_mode=args.action_space_mode,
@@ -1349,7 +1363,7 @@ def run_single(args: argparse.Namespace, run_dir: Path) -> dict[str, Any]:
                 args=args,
                 policy_name="random",
                 action_fn=random_action_fn,
-                seed=args.seed,
+                seed=eval_seed_base(args),
                 policy_metadata={
                     "baseline_family": "random",
                     "cfi": "",
@@ -1373,6 +1387,8 @@ def run_single(args: argparse.Namespace, run_dir: Path) -> dict[str, Any]:
         "train_timesteps": args.train_timesteps,
         "eval_episodes": args.eval_episodes,
         "seed": args.seed,
+        "eval_seed_base": eval_seed_base(args),
+        "n_envs": max(1, int(args.n_envs)),
         "action_contract": "thesis_faithful_dkana_v1",
         "action_space_mode": args.action_space_mode,
         "inventory_period_mode": args.inventory_period_mode,
