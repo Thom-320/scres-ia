@@ -356,6 +356,22 @@ def read_policy_summary(run_dir: Path, *, algo: str = "ppo_mlp") -> dict[str, An
             as_float(row, "order_level_ret_mean"),
         ),
     )
+    best_static_by_ret_all = max(
+        static_rows,
+        key=lambda row: as_float(row, "ret_mean_all_orders_zero_unfulfilled_mean"),
+    )
+    best_static_by_flow_fill = max(
+        static_rows,
+        key=lambda row: as_float(row, "flow_fill_rate_mean"),
+    )
+    best_static_by_ret_p10 = max(
+        static_rows,
+        key=lambda row: as_float(row, "ret_p10_all_mean"),
+    )
+    best_static_by_stockout = min(
+        static_rows,
+        key=lambda row: as_float(row, "stockout_week_pct_mean"),
+    )
     ppo_fill = as_float(ppo, "fill_rate_order_level_mean")
     static_fill = as_float(best_static, "fill_rate_order_level_mean")
     ppo_ret = as_float(ppo, "order_level_ret_mean")
@@ -397,6 +413,44 @@ def read_policy_summary(run_dir: Path, *, algo: str = "ppo_mlp") -> dict[str, An
         "best_static_ret_p10_all": as_float(best_static, "ret_p10_all_mean"),
         "delta_ret_p10_all": as_float(ppo, "ret_p10_all_mean")
         - as_float(best_static, "ret_p10_all_mean"),
+        "best_static_policy_by_ret_all_orders": best_static_by_ret_all.get(
+            "policy", ""
+        ),
+        "best_static_ret_all_orders_max": as_float(
+            best_static_by_ret_all, "ret_mean_all_orders_zero_unfulfilled_mean"
+        ),
+        "delta_ret_all_orders_vs_best_metric": ppo_ret_all
+        - as_float(
+            best_static_by_ret_all, "ret_mean_all_orders_zero_unfulfilled_mean"
+        ),
+        "best_static_policy_by_flow_fill": best_static_by_flow_fill.get(
+            "policy", ""
+        ),
+        "best_static_flow_fill_max": as_float(
+            best_static_by_flow_fill, "flow_fill_rate_mean"
+        ),
+        "delta_flow_fill_vs_best_metric": ppo_flow_fill
+        - as_float(best_static_by_flow_fill, "flow_fill_rate_mean"),
+        "best_static_policy_by_ret_p10_all": best_static_by_ret_p10.get(
+            "policy", ""
+        ),
+        "best_static_ret_p10_all_max": as_float(
+            best_static_by_ret_p10, "ret_p10_all_mean"
+        ),
+        "delta_ret_p10_all_vs_best_metric": as_float(ppo, "ret_p10_all_mean")
+        - as_float(best_static_by_ret_p10, "ret_p10_all_mean"),
+        "best_static_policy_by_stockout_week_pct": best_static_by_stockout.get(
+            "policy", ""
+        ),
+        "best_static_stockout_week_pct_min": as_float(
+            best_static_by_stockout, "stockout_week_pct_mean"
+        ),
+        "delta_stockout_week_pct_vs_best_metric": ppo_stockout_week
+        - as_float(best_static_by_stockout, "stockout_week_pct_mean"),
+        "improvement_stockout_week_pct_vs_best_metric": as_float(
+            best_static_by_stockout, "stockout_week_pct_mean"
+        )
+        - ppo_stockout_week,
         "ppo_reward": as_float(ppo, "reward_total_mean"),
         "best_static_reward": as_float(best_static, "reward_total_mean"),
     }

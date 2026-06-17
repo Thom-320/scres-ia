@@ -2,6 +2,15 @@
 
 ## Overview
 
+**2026-06-17 status note.**  The first sections of this document preserve the
+older shift-control reward history, where `ReT_seq_v1` was the primary
+paper-facing reward.  The current Track A exhaustion lane is narrower: it keeps
+Garrido's thesis decision variables (`I_{t,S}`, `S`) and uses `ReT_tail_v1` as
+the current tail/recovery-aligned training candidate.  See
+`docs/RET_TAIL_V1_TUNING_2026-06-17.md`,
+`docs/RET_TAIL_STEEPNESS_AUDIT_2026-06-17.md`, and
+`docs/TRACK_A_PREFLIGHT_REVIEW_2026-06-17.md` for the current Track A contract.
+
 The repository now freezes `ReT_seq_v1` with `κ=0.20` as the primary training reward for the shift-control benchmark lane. This document records why that sequential resilience reward replaced `control_v1` as the default while still keeping `control_v1` as a historical comparator and `ReT_thesis` as an audit metric.
 
 ## The Problem: Reward Misalignment

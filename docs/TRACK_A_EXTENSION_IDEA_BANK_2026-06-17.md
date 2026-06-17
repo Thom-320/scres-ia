@@ -26,7 +26,11 @@ scenario/reward/training extensions; they do not add new operational levers.
   before it is used for policy claims.
 - Variable cost scenarios inspired by Garrido et al. 2024:
   inventory holding `ci`, production/shift `cp`, backlog `cb`, and cancellation
-  or lost-order costs where available.
+  or lost-order costs where available.  Garrido et al. 2024 explicitly include
+  average inventory `zeta`, accumulated backorders `epsilon`, spare production
+  capacity `phi`, time-to-fulfill `tau`, and cost deviation `kappa` in a
+  Cobb-Douglas/sigmoid resilience index, so cost and demand variability are
+  defensible scenario/reward extensions.
 - Realistic disruption extensions, all evaluated against the same static
   baselines:
   - material shortages

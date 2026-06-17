@@ -399,3 +399,65 @@ def test_track_a_sweep_policy_summary_accepts_non_mlp_algo(tmp_path: Path) -> No
     assert summary["best_static_policy"] == "static_grid_I504_S2"
     assert summary["delta_fill"] == pytest.approx(0.01)
     assert summary["delta_ret_all_orders"] == pytest.approx(0.02)
+
+
+def test_track_a_sweep_reports_metric_specific_static_baselines(
+    tmp_path: Path,
+) -> None:
+    run_dir = tmp_path / "run"
+    run_dir.mkdir()
+    rows = [
+        {
+            "policy": "ppo_mlp",
+            "fill_rate_order_level_mean": "0.70",
+            "order_level_ret_mean": "0.60",
+            "ret_mean_all_orders_zero_unfulfilled_mean": "0.50",
+            "flow_fill_rate_mean": "0.55",
+            "ret_p10_all_mean": "0.20",
+            "stockout_week_pct_mean": "40.0",
+            "reward_total_mean": "12.0",
+        },
+        {
+            "policy": "static_grid_fill_winner",
+            "fill_rate_order_level_mean": "0.80",
+            "order_level_ret_mean": "0.50",
+            "ret_mean_all_orders_zero_unfulfilled_mean": "0.45",
+            "flow_fill_rate_mean": "0.50",
+            "ret_p10_all_mean": "0.10",
+            "stockout_week_pct_mean": "70.0",
+            "reward_total_mean": "10.0",
+        },
+        {
+            "policy": "static_grid_tail_winner",
+            "fill_rate_order_level_mean": "0.65",
+            "order_level_ret_mean": "0.55",
+            "ret_mean_all_orders_zero_unfulfilled_mean": "0.55",
+            "flow_fill_rate_mean": "0.60",
+            "ret_p10_all_mean": "0.35",
+            "stockout_week_pct_mean": "30.0",
+            "reward_total_mean": "9.0",
+        },
+    ]
+    with (run_dir / "policy_summary.csv").open(
+        "w", newline="", encoding="utf-8"
+    ) as handle:
+        writer = csv.DictWriter(handle, fieldnames=list(rows[0]))
+        writer.writeheader()
+        writer.writerows(rows)
+
+    summary = track_a_sweep.read_policy_summary(run_dir)
+
+    assert summary["best_static_policy"] == "static_grid_fill_winner"
+    assert summary["best_static_policy_by_ret_p10_all"] == "static_grid_tail_winner"
+    assert summary["best_static_ret_p10_all_max"] == pytest.approx(0.35)
+    assert summary["delta_ret_p10_all_vs_best_metric"] == pytest.approx(-0.15)
+    assert summary["best_static_policy_by_flow_fill"] == "static_grid_tail_winner"
+    assert summary["delta_flow_fill_vs_best_metric"] == pytest.approx(-0.05)
+    assert (
+        summary["best_static_policy_by_stockout_week_pct"]
+        == "static_grid_tail_winner"
+    )
+    assert summary["delta_stockout_week_pct_vs_best_metric"] == pytest.approx(10.0)
+    assert summary["improvement_stockout_week_pct_vs_best_metric"] == pytest.approx(
+        -10.0
+    )
