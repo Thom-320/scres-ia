@@ -179,6 +179,12 @@ def build_parser() -> argparse.ArgumentParser:
             "judged on external resilience metrics, not reward_total."
         ),
     )
+    parser.add_argument("--ret-tail-w-sc", type=float, default=0.30)
+    parser.add_argument("--ret-tail-w-rc", type=float, default=0.55)
+    parser.add_argument("--ret-tail-w-ce", type=float, default=0.15)
+    parser.add_argument("--ret-tail-cap-kappa", type=float, default=0.25)
+    parser.add_argument("--ret-tail-inv-kappa", type=float, default=0.50)
+    parser.add_argument("--ret-tail-boost", type=float, default=2.0)
     return parser
 
 
@@ -262,6 +268,23 @@ def build_command(
         *REWARD_PROFILES[reward_profile],
         *PT_PROFILES[pt_profile],
     ]
+    if reward_profile == "ret_tail":
+        command.extend(
+            [
+                "--ret-tail-w-sc",
+                str(args.ret_tail_w_sc),
+                "--ret-tail-w-rc",
+                str(args.ret_tail_w_rc),
+                "--ret-tail-w-ce",
+                str(args.ret_tail_w_ce),
+                "--ret-tail-cap-kappa",
+                str(args.ret_tail_cap_kappa),
+                "--ret-tail-inv-kappa",
+                str(args.ret_tail_inv_kappa),
+                "--ret-tail-boost",
+                str(args.ret_tail_boost),
+            ]
+        )
     command.append("--norm-reward" if args.norm_reward else "--no-norm-reward")
     if args.eval_seed_base is not None:
         command.extend(["--eval-seed-base", str(args.eval_seed_base)])
@@ -395,6 +418,12 @@ def main() -> int:
                                 "risk_level": risk_level,
                                 "pt_profile": pt_profile,
                                 "norm_reward": bool(args.norm_reward),
+                                "ret_tail_w_sc": args.ret_tail_w_sc,
+                                "ret_tail_w_rc": args.ret_tail_w_rc,
+                                "ret_tail_w_ce": args.ret_tail_w_ce,
+                                "ret_tail_cap_kappa": args.ret_tail_cap_kappa,
+                                "ret_tail_inv_kappa": args.ret_tail_inv_kappa,
+                                "ret_tail_boost": args.ret_tail_boost,
                             }
                         )
     if args.max_runs is not None:

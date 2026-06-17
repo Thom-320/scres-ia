@@ -340,22 +340,14 @@ def resolve_action(policy: dict[str, Any], spec: ThesisDesignSpec) -> np.ndarray
     return np.asarray(action, dtype=np.int64)
 
 
-def rollout(
+def build_env_kwargs(
     *,
     args: argparse.Namespace,
     profile: str,
     spec: ThesisDesignSpec,
-    policy: dict[str, Any],
-    replication: int,
-    seed: int,
+    action: np.ndarray,
+    max_steps: int,
 ) -> dict[str, Any]:
-    action = resolve_action(policy, spec)
-    max_steps = max_steps_for_spec(
-        spec,
-        horizon_mode=args.horizon_mode,
-        fixed_max_steps=args.max_steps,
-        step_size_hours=args.step_size_hours,
-    )
     env_kwargs = {
         "reward_mode": args.reward_mode,
         "observation_version": args.observation_version,
@@ -372,6 +364,12 @@ def rollout(
         "raw_material_flow_mode": args.raw_material_flow_mode,
         "raw_material_order_up_to_multiplier": args.raw_material_order_up_to_multiplier,
         "risk_occurrence_mode": args.risk_occurrence_mode,
+        "ret_tail_w_sc": args.ret_tail_w_sc,
+        "ret_tail_w_rc": args.ret_tail_w_rc,
+        "ret_tail_w_ce": args.ret_tail_w_ce,
+        "ret_tail_cap_kappa": args.ret_tail_cap_kappa,
+        "ret_tail_inv_kappa": args.ret_tail_inv_kappa,
+        "ret_tail_boost": args.ret_tail_boost,
     }
     env_kwargs.update(
         risk_kwargs_for_profile(
@@ -379,6 +377,32 @@ def rollout(
             profile=profile,
             thesis_pattern_risk_level=args.thesis_pattern_risk_level,
         )
+    )
+    return env_kwargs
+
+
+def rollout(
+    *,
+    args: argparse.Namespace,
+    profile: str,
+    spec: ThesisDesignSpec,
+    policy: dict[str, Any],
+    replication: int,
+    seed: int,
+) -> dict[str, Any]:
+    action = resolve_action(policy, spec)
+    max_steps = max_steps_for_spec(
+        spec,
+        horizon_mode=args.horizon_mode,
+        fixed_max_steps=args.max_steps,
+        step_size_hours=args.step_size_hours,
+    )
+    env_kwargs = build_env_kwargs(
+        args=args,
+        profile=profile,
+        spec=spec,
+        action=action,
+        max_steps=max_steps,
     )
 
     env = make_dkana_thesis_faithful_env(**env_kwargs)
@@ -710,6 +734,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--replications", type=int, default=1)
     parser.add_argument("--base-seed", type=int, default=935000)
     parser.add_argument("--reward-mode", default="ReT_thesis")
+    parser.add_argument("--ret-tail-w-sc", type=float, default=0.30)
+    parser.add_argument("--ret-tail-w-rc", type=float, default=0.55)
+    parser.add_argument("--ret-tail-w-ce", type=float, default=0.15)
+    parser.add_argument("--ret-tail-cap-kappa", type=float, default=0.25)
+    parser.add_argument("--ret-tail-inv-kappa", type=float, default=0.50)
+    parser.add_argument("--ret-tail-boost", type=float, default=2.0)
     parser.add_argument(
         "--raw-material-flow-mode",
         default="kit_equivalent_order_up_to",
@@ -800,6 +830,12 @@ def main() -> int:
         "replications": args.replications,
         "base_seed": args.base_seed,
         "reward_mode": args.reward_mode,
+        "ret_tail_w_sc": args.ret_tail_w_sc,
+        "ret_tail_w_rc": args.ret_tail_w_rc,
+        "ret_tail_w_ce": args.ret_tail_w_ce,
+        "ret_tail_cap_kappa": args.ret_tail_cap_kappa,
+        "ret_tail_inv_kappa": args.ret_tail_inv_kappa,
+        "ret_tail_boost": args.ret_tail_boost,
         "raw_material_flow_mode": args.raw_material_flow_mode,
         "raw_material_order_up_to_multiplier": args.raw_material_order_up_to_multiplier,
         "risk_occurrence_mode": args.risk_occurrence_mode,

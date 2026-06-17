@@ -43,13 +43,20 @@ DEFAULT_REWARDS = [
     "control_v1",
 ]
 
+RET_TAIL_FLAGS = [
+    ("--ret-tail-w-sc", "ret_tail_w_sc"),
+    ("--ret-tail-w-rc", "ret_tail_w_rc"),
+    ("--ret-tail-w-ce", "ret_tail_w_ce"),
+    ("--ret-tail-cap-kappa", "ret_tail_cap_kappa"),
+    ("--ret-tail-inv-kappa", "ret_tail_inv_kappa"),
+    ("--ret-tail-boost", "ret_tail_boost"),
+]
 
-def run_auditor(reward: str, out_root: Path, args: argparse.Namespace) -> Path:
+
+def build_auditor_command(
+    reward: str, out_root: Path, args: argparse.Namespace
+) -> list[str]:
     label = f"rwd_{reward}"
-    csv = out_root / label / "episode_metric_audit.csv"
-    if csv.exists() and csv.stat().st_size > 0 and not args.force:
-        print(f"[skip] {reward} (cached)")
-        return csv
     cmd = [
         sys.executable, str(AUDITOR),
         "--profiles", args.profiles,
@@ -62,6 +69,20 @@ def run_auditor(reward: str, out_root: Path, args: argparse.Namespace) -> Path:
         "--label", label,
         "--output-root", str(out_root),
     ]
+    for cli_flag, attr in RET_TAIL_FLAGS:
+        value = getattr(args, attr, None)
+        if value is not None:
+            cmd.extend([cli_flag, str(value)])
+    return cmd
+
+
+def run_auditor(reward: str, out_root: Path, args: argparse.Namespace) -> Path:
+    label = f"rwd_{reward}"
+    csv = out_root / label / "episode_metric_audit.csv"
+    if csv.exists() and csv.stat().st_size > 0 and not args.force:
+        print(f"[skip] {reward} (cached)")
+        return csv
+    cmd = build_auditor_command(reward, out_root, args)
     print(f"[run ] {reward} ...", flush=True)
     env_extra = {"KMP_DUPLICATE_LIB_OK": "TRUE", "OMP_NUM_THREADS": "1"}
     import os
@@ -127,6 +148,12 @@ def main() -> int:
                     help="best-by-reward must rank within top-K by ret_p10 to PASS.")
     ap.add_argument("--p10-floor", type=float, default=0.5,
                     help="and its p10 must be >= this fraction of the best p10.")
+    ap.add_argument("--ret-tail-w-sc", type=float, default=None)
+    ap.add_argument("--ret-tail-w-rc", type=float, default=None)
+    ap.add_argument("--ret-tail-w-ce", type=float, default=None)
+    ap.add_argument("--ret-tail-cap-kappa", type=float, default=None)
+    ap.add_argument("--ret-tail-inv-kappa", type=float, default=None)
+    ap.add_argument("--ret-tail-boost", type=float, default=None)
     ap.add_argument("--output-root", type=Path,
                     default=REPO / "outputs/benchmarks/reward_surface_audit")
     ap.add_argument("--force", action="store_true")

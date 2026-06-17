@@ -130,6 +130,18 @@ def test_track_a_sweep_accepts_ret_tail_reward_profile(tmp_path: Path) -> None:
         [
             "--output-root",
             str(tmp_path),
+            "--ret-tail-w-sc",
+            "0.2",
+            "--ret-tail-w-rc",
+            "0.6",
+            "--ret-tail-w-ce",
+            "0.2",
+            "--ret-tail-cap-kappa",
+            "0.35",
+            "--ret-tail-inv-kappa",
+            "0.75",
+            "--ret-tail-boost",
+            "3.0",
         ]
     )
 
@@ -146,6 +158,12 @@ def test_track_a_sweep_accepts_ret_tail_reward_profile(tmp_path: Path) -> None:
 
     assert "--reward-mode" in command
     assert command[command.index("--reward-mode") + 1] == "ReT_tail_v1"
+    assert command[command.index("--ret-tail-w-sc") + 1] == "0.2"
+    assert command[command.index("--ret-tail-w-rc") + 1] == "0.6"
+    assert command[command.index("--ret-tail-w-ce") + 1] == "0.2"
+    assert command[command.index("--ret-tail-cap-kappa") + 1] == "0.35"
+    assert command[command.index("--ret-tail-inv-kappa") + 1] == "0.75"
+    assert command[command.index("--ret-tail-boost") + 1] == "3.0"
 
 
 def test_track_a_sweep_can_use_cf_risk_profile_panel(tmp_path: Path) -> None:
