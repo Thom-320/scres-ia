@@ -207,6 +207,17 @@ def build_parser() -> argparse.ArgumentParser:
         help="Evaluate static I_t x S combinations as a stronger non-Garrido baseline.",
     )
     parser.add_argument(
+        "--continuous-buffer-steps",
+        type=int,
+        default=11,
+        help=(
+            "For action_space_mode=continuous_it_s, number of buffer-fraction "
+            "grid points in [0,1] for the static baseline (default 11 -> "
+            "0.0,0.1,...,1.0). Ensures the baseline is the best CONTINUOUS "
+            "static, not the coarse 5-level discrete grid."
+        ),
+    )
+    parser.add_argument(
         "--eval-ai-on-garrido-cfis",
         action=argparse.BooleanOptionalAction,
         default=True,
@@ -531,6 +542,54 @@ def static_action(shifts: int, *, action_space_mode: str) -> np.ndarray:
     action = np.zeros(ACTION_DIM, dtype=np.float32)
     action[15 + shifts - 1] = 1.0
     return action
+
+
+def continuous_buffer_action(buffer_fraction: float, *, shifts: int = 1) -> np.ndarray:
+    """continuous_it_s action for an arbitrary buffer fraction in [0, 1]."""
+    return np.array(
+        [float(np.clip(buffer_fraction, 0.0, 1.0)), shift_signal_for(shifts)],
+        dtype=np.float32,
+    )
+
+
+def static_grid_entries(
+    args: argparse.Namespace,
+) -> list[tuple[str, Callable[[np.ndarray, dict[str, Any]], np.ndarray]]]:
+    """Yield (policy_name, action_fn) for the static I x S baseline grid.
+
+    For continuous_it_s the inventory axis is a FINE buffer-fraction sweep (the
+    point of the continuous relaxation) so the baseline is the best CONTINUOUS
+    static, not the coarse 5-level discrete grid. For discrete action spaces it
+    is the thesis [6,3] grid.
+    """
+    entries: list[tuple[str, Callable[[np.ndarray, dict[str, Any]], np.ndarray]]] = []
+    if args.action_space_mode == "continuous_it_s":
+        steps = max(2, int(args.continuous_buffer_steps))
+        fractions = [round(i / (steps - 1), 4) for i in range(steps)]
+        for frac in fractions:
+            for shifts in (1, 2, 3):
+                name = f"static_grid_b{frac:.3f}_S{shifts}"
+                entries.append(
+                    (
+                        name,
+                        lambda obs, info, b=frac, s=shifts: continuous_buffer_action(
+                            b, shifts=s
+                        ),
+                    )
+                )
+        return entries
+    for period in THESIS_INVENTORY_PERIODS:
+        for shifts in (1, 2, 3):
+            name = f"static_grid_I{period}_S{shifts}"
+            entries.append(
+                (
+                    name,
+                    lambda obs, info, p=period, s=shifts: inventory_action(
+                        p, shifts=s, action_space_mode=args.action_space_mode
+                    ),
+                )
+            )
+    return entries
 
 
 def inventory_action(
@@ -1121,18 +1180,15 @@ def evaluate_profile_panel(
                 seed_offset=20_000 + int(period),
             )
         if args.include_static_grid:
-            for period in THESIS_INVENTORY_PERIODS:
-                for shifts in (1, 2, 3):
-                    add_action(
-                        spec,
-                        policy_name=f"static_grid_I{period}_S{shifts}",
-                        action_fn=lambda obs, info, p=period, s=shifts: inventory_action(
-                            p,
-                            shifts=s,
-                            action_space_mode=args.action_space_mode,
-                        ),
-                        seed_offset=30_000 + int(period) + shifts,
-                    )
+            for grid_index, (policy_name, grid_action_fn) in enumerate(
+                static_grid_entries(args)
+            ):
+                add_action(
+                    spec,
+                    policy_name=policy_name,
+                    action_fn=grid_action_fn,
+                    seed_offset=30_000 + grid_index,
+                )
 
         def garrido_action_fn(
             obs: np.ndarray,
@@ -1319,17 +1375,12 @@ def run_single(args: argparse.Namespace, run_dir: Path) -> dict[str, Any]:
                 )
             )
         if args.include_static_grid:
-            for period in THESIS_INVENTORY_PERIODS:
-                for shifts in (1, 2, 3):
+            for policy_name, grid_action_fn in static_grid_entries(args):
                     rows.extend(
                         evaluate_action_policy(
                             args=args,
-                            policy_name=f"static_grid_I{period}_S{shifts}",
-                            action_fn=lambda obs, info, p=period, s=shifts: inventory_action(
-                                p,
-                                shifts=s,
-                                action_space_mode=args.action_space_mode,
-                            ),
+                            policy_name=policy_name,
+                            action_fn=grid_action_fn,
                             seed=eval_seed_base(args),
                             policy_metadata={
                                 "baseline_family": "static_inventory_capacity_grid",
