@@ -698,6 +698,9 @@ def evaluate_action_policy(
         assembly_shift_hours = 0.0
         weekly_flow_fills: list[float] = []
         weekly_stockout_flags: list[bool] = []
+        # Garrido 2024 cost-aware index (emitted every step regardless of reward_mode).
+        g24_sigmoid_steps: list[float] = []
+        g24_components: dict[str, float] = {}
         while not (terminated or truncated):
             action = action_fn(np.asarray(obs, dtype=np.float32), info)
             obs, reward, terminated, truncated, info = env.step(action)
@@ -705,6 +708,12 @@ def evaluate_action_policy(
             if info.get("action_phase") == "initial_decision":
                 continue
             steps += 1
+            g24_sigmoid_steps.append(
+                float(info.get("ret_garrido2024_sigmoid_step", 0.0))
+            )
+            for _ck in ("zeta_avg", "epsilon_avg", "phi_avg", "tau_avg", "kappa_dot"):
+                if _ck in info:
+                    g24_components[_ck] = float(info[_ck])
             decision = info.get("thesis_decision", {})
             shift = int(decision.get("assembly_shifts", 1))
             shift_counts[shift] = shift_counts.get(shift, 0) + 1
@@ -771,6 +780,15 @@ def evaluate_action_policy(
             "unattended_orders_total": float(
                 getattr(sim, "total_unattended_orders", 0.0) if sim is not None else 0.0
             ),
+            # Garrido 2024 cost-aware resilience index (sigmoid) + its components.
+            "ret_garrido2024_sigmoid": (
+                float(np.mean(g24_sigmoid_steps)) if g24_sigmoid_steps else 0.0
+            ),
+            "zeta_avg": g24_components.get("zeta_avg", 0.0),
+            "epsilon_avg": g24_components.get("epsilon_avg", 0.0),
+            "phi_avg": g24_components.get("phi_avg", 0.0),
+            "tau_avg": g24_components.get("tau_avg", 0.0),
+            "kappa_dot": g24_components.get("kappa_dot", 0.0),
         }
         for key in (
             "re_fr_contribution_all",
@@ -969,6 +987,24 @@ def aggregate(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 ),
                 "unattended_orders_total_mean": float(
                     np.mean([row["unattended_orders_total"] for row in bucket])
+                ),
+                "ret_garrido2024_sigmoid_mean": float(
+                    np.mean([row.get("ret_garrido2024_sigmoid", 0.0) for row in bucket])
+                ),
+                "zeta_avg_mean": float(
+                    np.mean([row.get("zeta_avg", 0.0) for row in bucket])
+                ),
+                "epsilon_avg_mean": float(
+                    np.mean([row.get("epsilon_avg", 0.0) for row in bucket])
+                ),
+                "phi_avg_mean": float(
+                    np.mean([row.get("phi_avg", 0.0) for row in bucket])
+                ),
+                "tau_avg_mean": float(
+                    np.mean([row.get("tau_avg", 0.0) for row in bucket])
+                ),
+                "kappa_dot_mean": float(
+                    np.mean([row.get("kappa_dot", 0.0) for row in bucket])
                 ),
             }
         )
