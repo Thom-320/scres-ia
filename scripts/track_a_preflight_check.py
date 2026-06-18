@@ -48,6 +48,7 @@ def build_strict_args(args: argparse.Namespace) -> argparse.Namespace:
         eval_episodes=args.eval_episodes,
         seed=args.seed,
         eval_seed_base=args.eval_seed_base,
+        profile_eval_common_seed=args.profile_eval_common_seed,
         max_steps=args.max_steps,
         n_envs=args.n_envs,
         n_steps=args.n_steps,
@@ -117,7 +118,12 @@ def validate_command(command: list[str], args: argparse.Namespace) -> list[dict[
             f"expected {expected!r}, got {actual!r}",
         )
 
-    for flag in ["--stochastic-pt", "--include-static-grid", "--no-eval-ai-on-garrido-cfis"]:
+    for flag in [
+        "--stochastic-pt",
+        "--include-static-grid",
+        "--no-eval-ai-on-garrido-cfis",
+        "--profile-eval-common-seed",
+    ]:
         add_check(checks, f"command has {flag}", flag in command, "required flag")
 
     add_check(
@@ -249,6 +255,15 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--eval-episodes", type=int, default=20)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--eval-seed-base", type=int, default=900_000)
+    parser.add_argument(
+        "--profile-eval-common-seed",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help=(
+            "Require common-random-number profile evaluation for strict Track A "
+            "Kaggle/paper-facing runs."
+        ),
+    )
     parser.add_argument("--max-steps", type=int, default=260)
     parser.add_argument("--n-envs", type=int, default=8)
     parser.add_argument("--n-steps", type=int, default=1024)

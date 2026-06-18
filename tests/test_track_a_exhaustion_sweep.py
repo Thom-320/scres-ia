@@ -279,6 +279,7 @@ def test_track_a_sweep_forwards_parallel_envs_and_eval_seed_base(
             "8",
             "--eval-seed-base",
             "990000",
+            "--profile-eval-common-seed",
         ]
     )
 
@@ -297,6 +298,39 @@ def test_track_a_sweep_forwards_parallel_envs_and_eval_seed_base(
     assert command[command.index("--n-envs") + 1] == "8"
     assert "--eval-seed-base" in command
     assert command[command.index("--eval-seed-base") + 1] == "990000"
+    assert "--profile-eval-common-seed" in command
+
+
+def test_profile_eval_common_seed_removes_policy_offsets() -> None:
+    spec = thesis_smoke.design_spec_for_cfi(31)
+    args = thesis_smoke.build_parser().parse_args(
+        [
+            "--eval-seed-base",
+            "990000",
+            "--profile-eval-common-seed",
+        ]
+    )
+
+    base_seed = thesis_smoke.profile_eval_seed(args, spec)
+    offset_seed = thesis_smoke.profile_eval_seed(args, spec, seed_offset=40_000)
+
+    assert base_seed == offset_seed
+    assert base_seed == 990000 + 31 * 1_000_000
+
+
+def test_profile_eval_legacy_mode_keeps_policy_offsets() -> None:
+    spec = thesis_smoke.design_spec_for_cfi(31)
+    args = thesis_smoke.build_parser().parse_args(
+        [
+            "--eval-seed-base",
+            "990000",
+        ]
+    )
+
+    base_seed = thesis_smoke.profile_eval_seed(args, spec)
+    offset_seed = thesis_smoke.profile_eval_seed(args, spec, seed_offset=40_000)
+
+    assert offset_seed == base_seed + 40_000
 
 
 def test_dmlpa_extractor_uses_history_window() -> None:

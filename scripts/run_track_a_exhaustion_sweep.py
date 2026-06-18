@@ -111,6 +111,16 @@ def build_parser() -> argparse.ArgumentParser:
             "run_thesis_decision_ppo_smoke.py. Defaults to --seed."
         ),
     )
+    parser.add_argument(
+        "--profile-eval-common-seed",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help=(
+            "Forward paired panel evaluation to the smoke runner: PPO and every "
+            "static baseline are evaluated with the same held-out seed per Cf. "
+            "Use this for paper-facing Track A stop-rule comparisons."
+        ),
+    )
     parser.add_argument("--max-steps", type=int, default=80)
     parser.add_argument(
         "--n-envs",
@@ -314,6 +324,8 @@ def build_command(
     command.append("--norm-reward" if args.norm_reward else "--no-norm-reward")
     if args.eval_seed_base is not None:
         command.extend(["--eval-seed-base", str(args.eval_seed_base)])
+    if args.profile_eval_common_seed:
+        command.append("--profile-eval-common-seed")
     if args.use_cf_risk_profile:
         command.extend(
             [
@@ -512,6 +524,9 @@ def main() -> int:
                                 "ret_tail_transform": args.ret_tail_transform,
                                 "ret_tail_gamma": args.ret_tail_gamma,
                                 "ret_tail_beta": args.ret_tail_beta,
+                                "profile_eval_common_seed": bool(
+                                    args.profile_eval_common_seed
+                                ),
                             }
                         )
     if args.max_runs is not None:

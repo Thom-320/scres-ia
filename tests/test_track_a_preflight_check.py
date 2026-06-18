@@ -34,4 +34,5 @@ def test_track_a_preflight_builds_strict_thesis_factorized_command(tmp_path):
     assert "--stochastic-pt" in command
     assert command[command.index("--stochastic-pt-spread") + 1] == "1.0"
     assert "--norm-reward" in command
+    assert "--profile-eval-common-seed" in command
     assert "continuous_it_s" not in command

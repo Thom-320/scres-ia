@@ -86,6 +86,17 @@ def build_parser() -> argparse.ArgumentParser:
             "held-out value for paper-facing runs."
         ),
     )
+    parser.add_argument(
+        "--profile-eval-common-seed",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help=(
+            "When evaluating over --eval-risk-profile/--garrido-cfis, use the "
+            "same held-out random seed for PPO and every static baseline within "
+            "each Cf row. Default False preserves historical offset-per-policy "
+            "behavior; enable for paper-facing paired comparisons."
+        ),
+    )
     parser.add_argument("--output-root", type=Path, default=DEFAULT_OUTPUT_ROOT)
     parser.add_argument("--reward-mode", default="control_v1")
     parser.add_argument("--risk-level", default="increased")
@@ -732,6 +743,18 @@ def eval_seed_base(args: argparse.Namespace) -> int:
     return int(args.eval_seed_base if args.eval_seed_base is not None else args.seed)
 
 
+def profile_eval_seed(
+    args: argparse.Namespace,
+    spec: ThesisDesignSpec,
+    *,
+    seed_offset: int = 0,
+) -> int:
+    base = eval_seed_base(args) + spec.cfi * 1_000_000
+    if bool(getattr(args, "profile_eval_common_seed", False)):
+        return base
+    return base + seed_offset
+
+
 def evaluate_model_policy(
     *,
     args: argparse.Namespace,
@@ -1050,7 +1073,7 @@ def evaluate_profile_panel(
                 args=args,
                 model=model,
                 policy_name=args.algo,
-                seed=eval_seed_base(args) + spec.cfi * 1_000_000,
+                seed=profile_eval_seed(args, spec),
                 vec_normalize=vec_normalize,
                 episodes=1,
                 env_kwargs_override=profile_risk_env_kwargs(spec, args=args),
@@ -1070,7 +1093,7 @@ def evaluate_profile_panel(
                 args=args,
                 policy_name=policy_name,
                 action_fn=action_fn,
-                seed=eval_seed_base(args) + spec.cfi * 1_000_000 + seed_offset,
+                seed=profile_eval_seed(args, spec, seed_offset=seed_offset),
                 episodes=1,
                 env_kwargs_override=profile_risk_env_kwargs(spec, args=args),
                 policy_metadata=metadata(spec),
@@ -1416,6 +1439,7 @@ def run_single(args: argparse.Namespace, run_dir: Path) -> dict[str, Any]:
         "eval_episodes": args.eval_episodes,
         "seed": args.seed,
         "eval_seed_base": eval_seed_base(args),
+        "profile_eval_common_seed": bool(args.profile_eval_common_seed),
         "n_envs": max(1, int(args.n_envs)),
         "action_contract": "thesis_faithful_dkana_v1",
         "action_space_mode": args.action_space_mode,

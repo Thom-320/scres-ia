@@ -144,6 +144,7 @@ def main() -> None:
         device_arg,
         "--eval-seed-base",
         os.environ.get("SCRESIA_EVAL_SEED_BASE", "900000"),
+        "--profile-eval-common-seed",
         "--ret-tail-transform",
         os.environ.get("SCRESIA_RET_TAIL_TRANSFORM", "power"),
         "--ret-tail-gamma",
@@ -194,6 +195,7 @@ def main() -> None:
         "--norm-reward",
         "--eval-seed-base",
         os.environ.get("SCRESIA_EVAL_SEED_BASE", "900000"),
+        "--profile-eval-common-seed",
         "--ret-tail-transform",
         os.environ.get("SCRESIA_RET_TAIL_TRANSFORM", "power"),
         "--ret-tail-gamma",
@@ -237,6 +239,7 @@ def main() -> None:
             "device": device_arg,
             "panel_cfis": cfg["panel_cfis"],
             "eval_seed_base": int(os.environ.get("SCRESIA_EVAL_SEED_BASE", "900000")),
+            "profile_eval_common_seed": True,
         },
         "matrix": {
             "algos": algos,
