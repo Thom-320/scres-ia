@@ -10,10 +10,23 @@ calibration `supply_chain/data/ret_garrido2024_calibration.json`; generator
 
 ## Verdict (one line)
 
-The **formula is faithfully transcribed** (Eq 3–6), but the **calibration is STALE** — the offset
-exponents and `kappa_ref` were Monte-Carlo–derived on the *legacy/broken* env, so on the current
-faithful env the five resilience dimensions are mis-weighted. Re-calibrate before trusting the
-cost-aware verdict (it currently gates the running `scresia-track-a-continuous-costaware` experiment).
+The **formula is faithfully transcribed** (Eq 3–6); the calibration was run on the *legacy* env (a real
+fidelity gap), now fixed by re-calibrating on the faithful env + the decision grid. **RESOLVED 2026-06-18.**
+
+## Resolution (2026-06-18)
+
+`scripts/calibrate_cd_exponents.py` was fixed (faithful-mode flags + decision-spanning grid in the eval
+action contract) and re-run (continuous_it_s, thesis_periodic + kit_equivalent_order_up_to + m2.0, obs v5,
+increased+severe, 600 episodes). Outcome — **the re-derived exponents are nearly identical to the legacy
+ones** (Δ < 0.002 on a/b/d/n; c_phi 0.0258→0.0239; kappa_ref 1.41M→1.50M). Reason: the maxima are
+dominated by the DECISION-GRID extremes (max-buffer b1.0 → ζ_max≈2.95M in both worlds), not by the
+risk/flow dynamics the fixes changed. So F2 was a genuine fidelity gap but **low practical impact** — the
+index was not materially distorted, and the running cost-aware verdict is not meaningfully biased. The
+faithful calibration is adopted as the correct/defensible one. **Validation PASSED:** under the faithful
+calibration the index has an INTERIOR optimum on the continuous static grid (best = b0.4, not b1.0; b0.0
+lowest), reproducing Garrido's headline that low-inventory + spare-capacity beats buffer maximisation.
+Note (per Thom): Garrido's 2017 thesis does NOT cost shifts, so NO explicit shift/overtime cost is added
+— capacity stays free, which coherently makes the cost-aware index favour capacity over inventory.
 
 ## What the paper actually does
 
