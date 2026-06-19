@@ -699,7 +699,11 @@ def evaluate_action_policy(
         weekly_flow_fills: list[float] = []
         weekly_stockout_flags: list[bool] = []
         # Garrido 2024 cost-aware index (emitted every step regardless of reward_mode).
-        g24_sigmoid_steps: list[float] = []
+        # The paper's R is evaluated ONCE at the end-of-horizon averages (Eq 6), so we
+        # keep the TERMINAL per-step value (whose running averages == full-episode
+        # averages), NOT the mean over steps (which is biased by the warm-up transient
+        # where the running averages start near zero).
+        g24_sigmoid_terminal: float = 0.0
         g24_components: dict[str, float] = {}
         while not (terminated or truncated):
             action = action_fn(np.asarray(obs, dtype=np.float32), info)
@@ -708,9 +712,8 @@ def evaluate_action_policy(
             if info.get("action_phase") == "initial_decision":
                 continue
             steps += 1
-            g24_sigmoid_steps.append(
-                float(info.get("ret_garrido2024_sigmoid_step", 0.0))
-            )
+            if "ret_garrido2024_sigmoid_step" in info:
+                g24_sigmoid_terminal = float(info["ret_garrido2024_sigmoid_step"])
             for _ck in ("zeta_avg", "epsilon_avg", "phi_avg", "tau_avg", "kappa_dot"):
                 if _ck in info:
                     g24_components[_ck] = float(info[_ck])
@@ -780,10 +783,8 @@ def evaluate_action_policy(
             "unattended_orders_total": float(
                 getattr(sim, "total_unattended_orders", 0.0) if sim is not None else 0.0
             ),
-            # Garrido 2024 cost-aware resilience index (sigmoid) + its components.
-            "ret_garrido2024_sigmoid": (
-                float(np.mean(g24_sigmoid_steps)) if g24_sigmoid_steps else 0.0
-            ),
+            # Garrido 2024 cost-aware resilience index (sigmoid) at end-of-horizon.
+            "ret_garrido2024_sigmoid": g24_sigmoid_terminal,
             "zeta_avg": g24_components.get("zeta_avg", 0.0),
             "epsilon_avg": g24_components.get("epsilon_avg", 0.0),
             "phi_avg": g24_components.get("phi_avg", 0.0),
