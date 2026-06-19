@@ -587,6 +587,21 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             calibration.get("target_contribution", G24_EQUATED_TARGET)
         )
         self.ret_g24_kappa_ref = float(calibration.get("kappa_ref", 1.0))
+        # Balancing method for the five-variable index. Default 'max_offset' is the
+        # paper rule (0.20/ln(max)); 'variance_log' and 'minmax' are scale-robust
+        # alternatives so no single term dominates on this DES (see
+        # docs/RET_GARRIDO2024_BALANCE_2026-06-19.md). Params loaded from calibration.
+        self.ret_g24_balance_method = str(
+            calibration.get("balance_method", "max_offset")
+        )
+        self.ret_g24_balance_c = float(calibration.get("balance_c", 0.20))
+        self.ret_g24_log_mean = dict(calibration.get("log_mean", {}))
+        self.ret_g24_log_std = dict(calibration.get("log_std", {}))
+        self.ret_g24_minmax_min = dict(calibration.get("minmax_min", {}))
+        self.ret_g24_minmax_max = dict(calibration.get("minmax_max", {}))
+        self.ret_g24_minmax_utility_gmean = dict(
+            calibration.get("minmax_utility_gmean", {})
+        )
         self.ret_g24_maxima = calibration.get("maxima", {})
         self.ret_g24_calibration_source = str(
             calibration.get("source", "built_in_paper_coefficients")
@@ -1697,6 +1712,64 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
     # ReT_garrido2024: paper-faithful 5-variable C-D family
     # -----------------------------------------------------------------
 
+    # Fixed Cobb-Douglas signs (Garrido 2024 Eq. 3/4): inventory and spare
+    # capacity raise R; backorders, time-to-fulfill and cost lower it.
+    _G24_SIGNS = {
+        "zeta": 1.0,
+        "epsilon": -1.0,
+        "phi": 1.0,
+        "tau": -1.0,
+        "kappa_dot": -1.0,
+    }
+
+    def _g24_max_offset_exponent(self, key: str) -> float:
+        """Paper offset exponent (0.20/ln(max)) for the legacy max_offset method."""
+        return {
+            "zeta": self.ret_g24_a_zeta,
+            "epsilon": self.ret_g24_b_epsilon,
+            "phi": self.ret_g24_c_phi,
+            "tau": self.ret_g24_d_tau,
+            "kappa_dot": self.ret_g24_n_kappa,
+        }[key]
+
+    def _g24_log_score(
+        self, variables: dict[str, float], *, kappa_scale: float = 1.0
+    ) -> float:
+        """Build the Garrido-2024 log-score under the active balance_method.
+
+        - max_offset (paper/legacy): term = e_i * ln(x_i), e_i = 0.20/ln(max_i).
+        - variance_log: term = (c / std(ln x_i)) * ln(x_i / geometric_mean_i).
+        - minmax: term = (1/5) * ln(utility_i / geometric_mean_utility_i).
+        kappa_scale (<1 for the training variant) only scales the cost term.
+        """
+        eps = 1e-6
+        method = getattr(self, "ret_g24_balance_method", "max_offset")
+        score = 0.0
+        for key, x in variables.items():
+            sign = self._G24_SIGNS[key]
+            scale = kappa_scale if key == "kappa_dot" else 1.0
+            log_x = float(np.log(max(float(x), eps)))
+            if method == "variance_log":
+                mean = float(self.ret_g24_log_mean.get(key, 0.0))
+                std = max(float(self.ret_g24_log_std.get(key, 1.0)), eps)
+                value = (self.ret_g24_balance_c / std) * (log_x - mean)
+            elif method == "minmax":
+                lo = float(self.ret_g24_minmax_min.get(key, 0.0))
+                hi = float(self.ret_g24_minmax_max.get(key, 1.0))
+                norm = (float(x) - lo) / max(hi - lo, eps)
+                norm = min(max(norm, eps), 1.0)
+                utility = norm if sign > 0.0 else 1.0 - norm
+                utility = min(max(utility, eps), 1.0)
+                gmean = max(
+                    float(self.ret_g24_minmax_utility_gmean.get(key, 1.0)), eps
+                )
+                value = (1.0 / 5.0) * float(np.log(utility / gmean))
+                sign = 1.0
+            else:  # max_offset (paper/legacy) — reproduces prior behavior exactly
+                value = self._g24_max_offset_exponent(key) * log_x
+            score += sign * scale * value
+        return float(score)
+
     def _compute_ret_garrido2024(
         self, info: dict[str, Any], shifts: int
     ) -> dict[str, float | str | dict[str, float] | dict[str, Any]]:
@@ -1785,29 +1858,21 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         average_cost = max(eps, self._ret_g24_sum_cost / elapsed_steps)
         kappa_dot = max(eps, average_cost / max(self.ret_g24_kappa_ref, eps))
 
-        log_score = float(
-            self.ret_g24_a_zeta * np.log(zeta_avg)
-            - self.ret_g24_b_epsilon * np.log(epsilon_avg)
-            + self.ret_g24_c_phi * np.log(phi_avg)
-            - self.ret_g24_d_tau * np.log(tau_avg)
-            - self.ret_g24_n_kappa * np.log(kappa_dot)
-        )
-        # Training variant: include κ̇ at a reduced fraction to prevent
+        # The five C-D variables; the log-score is built by the active
+        # balance_method (max_offset = paper offsets; variance_log / minmax =
+        # scale-robust balancing so no single term dominates on this DES).
+        g24_vars = {
+            "zeta": zeta_avg,
+            "epsilon": epsilon_avg,
+            "phi": phi_avg,
+            "tau": tau_avg,
+            "kappa_dot": kappa_dot,
+        }
+        log_score = self._g24_log_score(g24_vars, kappa_scale=1.0)
+        # Training variant: scale the κ̇ (cost) term by kappa_train_frac to prevent
         # both S1 collapse (full κ̇) and S3 collapse (no κ̇).
-        # ret_g24_kappa_train_frac controls how much of n_kappa to use:
-        #   0.0 → no cost signal (S3 collapse)
-        #   0.2 → light cost pressure (target: balanced mix)
-        #   1.0 → full cost signal (S1 collapse)
-        kappa_train_coeff = self.ret_g24_n_kappa * getattr(
-            self, "ret_g24_kappa_train_frac", 0.20
-        )
-        log_score_train = float(
-            self.ret_g24_a_zeta * np.log(zeta_avg)
-            - self.ret_g24_b_epsilon * np.log(epsilon_avg)
-            + self.ret_g24_c_phi * np.log(phi_avg)
-            - self.ret_g24_d_tau * np.log(tau_avg)
-            - kappa_train_coeff * np.log(kappa_dot)
-        )
+        kappa_train_frac = float(getattr(self, "ret_g24_kappa_train_frac", 0.20))
+        log_score_train = self._g24_log_score(g24_vars, kappa_scale=kappa_train_frac)
         raw_product = float(np.exp(log_score))
         raw_product_train = float(np.exp(log_score_train))
         sigmoid_index = float(1.0 / (1.0 + np.exp(-log_score)))
@@ -1849,6 +1914,13 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                 "d_tau": self.ret_g24_d_tau,
                 "n_kappa": self.ret_g24_n_kappa,
             },
+            "balance_method": self.ret_g24_balance_method,
+            "balance_c": self.ret_g24_balance_c,
+            "log_mean": self.ret_g24_log_mean,
+            "log_std": self.ret_g24_log_std,
+            "minmax_min": self.ret_g24_minmax_min,
+            "minmax_max": self.ret_g24_minmax_max,
+            "minmax_utility_gmean": self.ret_g24_minmax_utility_gmean,
             "kappa_ref": self.ret_g24_kappa_ref,
             "target_contribution": self.ret_g24_target,
             "maxima": self.ret_g24_maxima,

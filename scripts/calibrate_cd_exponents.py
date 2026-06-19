@@ -105,6 +105,13 @@ def run_episode(
         "phi_avg": float(final_components["phi_avg"]),
         "tau_avg": float(final_components["tau_avg"]),
         "average_cost": float(final_components["average_cost"]),
+        "cumulative_demanded": float(
+            info.get("cumulative_demanded_post_warmup", 0.0)
+        ),
+        "cumulative_backorder_qty": float(
+            info.get("cumulative_backorder_qty_post_warmup", 0.0)
+        ),
+        "pending_backorder_qty": float(info.get("pending_backorder_qty", 0.0)),
     }
 
 
@@ -147,7 +154,13 @@ def collect_episode_rows(args: argparse.Namespace) -> list[dict[str, Any]]:
     return rows
 
 
-def calibrate_from_rows(rows: list[dict[str, Any]]) -> dict[str, Any]:
+SIGNS = {"zeta": 1.0, "epsilon": -1.0, "phi": 1.0, "tau": -1.0, "kappa_dot": -1.0}
+TARGET_LOGSCORE_STD = 1.0  # variance_log: scale so R spans ~[0.27, 0.73]
+
+
+def calibrate_from_rows(
+    rows: list[dict[str, Any]], *, balance_method: str = "max_offset"
+) -> dict[str, Any]:
     if not rows:
         raise ValueError("At least one episode row is required for calibration.")
     target = G24_EQUATED_TARGET
@@ -155,36 +168,92 @@ def calibrate_from_rows(rows: list[dict[str, Any]]) -> dict[str, Any]:
     if mean_cost <= 0.0:
         raise ValueError("average_cost mean must be > 0 to compute κ̇.")
     kappa_dot_values = [float(row["average_cost"]) / mean_cost for row in rows]
-    maxima = {
-        "zeta": float(max(float(row["zeta_avg"]) for row in rows)),
-        "epsilon": float(max(float(row["epsilon_avg"]) for row in rows)),
-        "phi": float(max(float(row["phi_avg"]) for row in rows)),
-        "tau": float(max(float(row["tau_avg"]) for row in rows)),
-        "kappa_dot": float(max(kappa_dot_values)),
+    # Per-variable value arrays over the policy sample (κ̇ = cost/mean).
+    var_values = {
+        "zeta": [float(r["zeta_avg"]) for r in rows],
+        "epsilon": [float(r["epsilon_avg"]) for r in rows],
+        "phi": [float(r["phi_avg"]) for r in rows],
+        "tau": [float(r["tau_avg"]) for r in rows],
+        "kappa_dot": kappa_dot_values,
     }
+    maxima = {k: float(max(v)) for k, v in var_values.items()}
 
-    def exponent_for(max_value: float) -> float:
-        if max_value <= 1.0:
-            raise ValueError(
-                f"Calibration requires max_value > 1.0 for paper-faithful logs; got {max_value:.6f}."
-            )
-        return float(target / math.log(max_value))
-
-    exponents = {
-        "a_zeta": exponent_for(maxima["zeta"]),
-        "b_epsilon": exponent_for(maxima["epsilon"]),
-        "c_phi": exponent_for(maxima["phi"]),
-        "d_tau": exponent_for(maxima["tau"]),
-        "n_kappa": exponent_for(maxima["kappa_dot"]),
-    }
-
-    return {
+    payload: dict[str, Any] = {
         "source": "garrido2024_monte_carlo_maxima",
+        "balance_method": balance_method,
         "target_contribution": target,
         "episode_count": len(rows),
         "kappa_ref": mean_cost,
         "maxima": maxima,
-        **exponents,
+    }
+
+    if balance_method == "variance_log":
+        # Centered log-ratio form:
+        #   term_i = (c/std(ln x_i)) * (ln x_i - mean(ln x_i)).
+        # This is equivalent to Cobb-Douglas on x_i / geometric_mean(x_i), so
+        # absolute DES units cannot dominate the index. Pick c so the combined
+        # log-score has a controlled, non-saturated spread on the calibration set.
+        log_arrays = {
+            k: np.log(np.maximum(np.asarray(v, dtype=float), 1e-6))
+            for k, v in var_values.items()
+        }
+        log_mean = {k: float(np.mean(arr)) for k, arr in log_arrays.items()}
+        log_std = {k: float(max(np.std(arr), 1e-6)) for k, arr in log_arrays.items()}
+        base_scores = []
+        for i in range(len(rows)):
+            s = sum(
+                SIGNS[k]
+                * (1.0 / log_std[k])
+                * (math.log(max(var_values[k][i], 1e-6)) - log_mean[k])
+                for k in var_values
+            )
+            base_scores.append(s)
+        base_std = float(max(np.std(base_scores), 1e-6))
+        balance_c = float(TARGET_LOGSCORE_STD / base_std)
+        payload["log_mean"] = log_mean
+        payload["log_std"] = log_std
+        payload["balance_c"] = balance_c
+    elif balance_method == "minmax":
+        # Min-max ablation in utility space. Positive variables use high-is-good;
+        # negative variables use low-is-good. We center each utility by its
+        # geometric mean so the best attainable policy is not artificially capped
+        # at sigmoid(0)=0.5.
+        lo = {k: float(min(v)) for k, v in var_values.items()}
+        hi = {k: float(max(v)) for k, v in var_values.items()}
+        utilities: dict[str, list[float]] = {k: [] for k in var_values}
+        for k, values in var_values.items():
+            span = max(hi[k] - lo[k], 1e-6)
+            for x in values:
+                norm = (float(x) - lo[k]) / span
+                norm = min(max(norm, 1e-6), 1.0)
+                utility = norm if SIGNS[k] > 0.0 else 1.0 - norm
+                utilities[k].append(min(max(utility, 1e-6), 1.0))
+        utility_gmean = {
+            k: float(np.exp(np.mean(np.log(np.asarray(v, dtype=float)))))
+            for k, v in utilities.items()
+        }
+        payload["minmax_min"] = lo
+        payload["minmax_max"] = hi
+        payload["minmax_utility_gmean"] = utility_gmean
+    else:  # max_offset (paper/legacy)
+        def exponent_for(max_value: float) -> float:
+            if max_value <= 1.0:
+                raise ValueError(
+                    f"max_offset requires max>1.0 for paper logs; got {max_value:.6f}."
+                )
+            return float(target / math.log(max_value))
+
+        payload.update(
+            {
+                "a_zeta": exponent_for(maxima["zeta"]),
+                "b_epsilon": exponent_for(maxima["epsilon"]),
+                "c_phi": exponent_for(maxima["phi"]),
+                "d_tau": exponent_for(maxima["tau"]),
+                "n_kappa": exponent_for(maxima["kappa_dot"]),
+            }
+        )
+
+    payload.update({
         "paper_reference_exponents": {
             "a_zeta": 0.0240,
             "b_epsilon": 0.0260,
@@ -201,7 +270,8 @@ def calibrate_from_rows(rows: list[dict[str, Any]]) -> dict[str, Any]:
             "(= paper 7k/Sum k)",
             "kappa_ref": "mean episode cost across the calibration Monte-Carlo sample",
         },
-    }
+    })
+    return payload
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -216,6 +286,16 @@ def build_parser() -> argparse.ArgumentParser:
         choices=["continuous_it_s", "thesis_factorized"],
         default="continuous_it_s",
         help="Decision contract; the grid spans inventory x shift in this contract.",
+    )
+    parser.add_argument(
+        "--balance-method",
+        choices=["max_offset", "variance_log", "minmax"],
+        default="max_offset",
+        help=(
+            "How to balance the five C-D terms. max_offset = paper rule "
+            "(0.20/ln(max)); variance_log / minmax = scale-robust so no term "
+            "dominates on this DES."
+        ),
     )
     parser.add_argument(
         "--risk-levels",
@@ -259,7 +339,7 @@ def main() -> dict[str, Any]:
     args = parser.parse_args()
 
     rows = collect_episode_rows(args)
-    calibration = calibrate_from_rows(rows)
+    calibration = calibrate_from_rows(rows, balance_method=args.balance_method)
     payload = {
         **calibration,
         "run_config": {
@@ -286,11 +366,26 @@ def main() -> dict[str, Any]:
 
     print("Garrido-2024 faithful-env calibration complete")
     print(f"  episodes: {len(rows)}  (action={args.action_space_mode}, risks={args.risk_levels})")
+    print(f"  balance_method: {payload['balance_method']}")
     print(f"  kappa_ref: {payload['kappa_ref']:.6f}")
     for key, value in payload["maxima"].items():
         print(f"  max {key}: {value:.6f}")
-    for key in ("a_zeta", "b_epsilon", "c_phi", "d_tau", "n_kappa"):
-        print(f"  {key}: {payload[key]:.6f}  (paper {payload['paper_reference_exponents'][key]})")
+    if payload["balance_method"] == "max_offset":
+        for key in ("a_zeta", "b_epsilon", "c_phi", "d_tau", "n_kappa"):
+            print(
+                f"  {key}: {payload[key]:.6f}  "
+                f"(paper {payload['paper_reference_exponents'][key]})"
+            )
+    elif payload["balance_method"] == "variance_log":
+        print(f"  balance_c: {payload['balance_c']:.6f}")
+        for key, value in payload["log_std"].items():
+            print(
+                f"  log_mean/std {key}: "
+                f"{payload['log_mean'][key]:.6f} / {value:.6f}"
+            )
+    elif payload["balance_method"] == "minmax":
+        for key, value in payload["minmax_utility_gmean"].items():
+            print(f"  utility_gmean {key}: {value:.6f}")
     print(f"  output: {args.output}")
     return payload
 
