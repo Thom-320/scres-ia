@@ -131,7 +131,7 @@ class MFSCSimulation:
         stochastic_pt_spread: float = STOCHASTIC_PT_DEFAULT_SPREAD,
         stochastic_pt_mean_preserving: bool = False,
         deterministic_baseline: bool = False,
-        warmup_trigger: str = "production",
+        warmup_trigger: str = "op9_arrival",
         downstream_q_source: str = "figure_6_2",
         r14_defect_mode: str = "reprocess",
         enabled_risks: Optional[set[str]] = None,
@@ -139,7 +139,7 @@ class MFSCSimulation:
         inventory_replenishment_period: Optional[float] = None,
         raw_material_flow_mode: str = "legacy_validated",
         raw_material_order_up_to_multiplier: float = 2.0,
-        risk_occurrence_mode: str = "legacy_renewal",
+        risk_occurrence_mode: str = "thesis_periodic",
     ) -> None:
         if warmup_trigger not in WARMUP_TRIGGER_OPTIONS:
             valid = ", ".join(WARMUP_TRIGGER_OPTIONS)
