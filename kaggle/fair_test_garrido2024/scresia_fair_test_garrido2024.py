@@ -25,9 +25,9 @@ EXPORT_ROOT = Path("/kaggle/working/kaggle_outputs")
 
 # (algo, train_timesteps). Recurrent/DMLPA get more steps than MLP.
 ALGOS = [
-    ("ppo_mlp", int(os.environ.get("SCRESIA_MLP_STEPS", "150000"))),
-    ("dmlpa_ppo", int(os.environ.get("SCRESIA_DMLPA_STEPS", "250000"))),
-    ("recurrent_ppo", int(os.environ.get("SCRESIA_RECURRENT_STEPS", "350000"))),
+    ("ppo_mlp", int(os.environ.get("SCRESIA_MLP_STEPS", "80000"))),
+    ("dmlpa_ppo", int(os.environ.get("SCRESIA_DMLPA_STEPS", "100000"))),
+    ("recurrent_ppo", int(os.environ.get("SCRESIA_RECURRENT_STEPS", "120000"))),
 ]
 ACTION_SPACES = os.environ.get(
     "SCRESIA_ACTION_SPACES", "thesis_factorized,continuous_it_s"
@@ -46,10 +46,13 @@ def run(cmd: list[str], cwd: Path | None = None, check: bool = True) -> int:
 
 
 def resolve_device() -> str:
+    want = os.environ.get("SCRESIA_DEVICE", "cpu").strip().lower()
+    if want == "cpu":
+        print("device: cpu (GPU quota exhausted; CPU confirmatory-scout)", flush=True)
+        return "cpu"
     import torch
-
     if not torch.cuda.is_available():
-        raise RuntimeError("Kaggle GPU unavailable; enable the T4 accelerator.")
+        raise RuntimeError("CUDA requested but unavailable; set SCRESIA_DEVICE=cpu.")
     cap = torch.cuda.get_device_capability(0)
     print("torch_device", torch.cuda.get_device_name(0), "cap", cap, flush=True)
     if cap[0] < 7:
