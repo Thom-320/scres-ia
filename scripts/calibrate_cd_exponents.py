@@ -155,7 +155,7 @@ def collect_episode_rows(args: argparse.Namespace) -> list[dict[str, Any]]:
 
 
 SIGNS = {"zeta": 1.0, "epsilon": -1.0, "phi": 1.0, "tau": -1.0, "kappa_dot": -1.0}
-TARGET_LOGSCORE_STD = 1.0  # variance_log: scale so R spans ~[0.27, 0.73]
+TARGET_LOGSCORE_STD = 0.30  # variance_log: scale so good static policies score ~0.85 (de-saturated)
 
 
 def calibrate_from_rows(
