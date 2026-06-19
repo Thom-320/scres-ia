@@ -39,7 +39,7 @@ class MFSCGymEnv(gym.Env[np.ndarray, np.ndarray]):
         max_steps: Optional[int] = None,
         year_basis: str = DEFAULT_YEAR_BASIS,
         risk_level: str = "current",
-        risk_occurrence_mode: str = "legacy_renewal",
+        risk_occurrence_mode: str = "thesis_periodic",
         reward_mode: str = "proxy",
         rt_alpha: float = 1.0,
         rt_beta: float = 1.0,

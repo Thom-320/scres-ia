@@ -341,12 +341,12 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         # --- Action space configuration ---
         action_contract: str = "track_a_v1",
         action_mode: str = "full",  # "full" (5D), "shift_only" (1D), "shift_q9" (2D)
-        warmup_trigger: str = "production",
+        warmup_trigger: str = "op9_arrival",
         downstream_q_source: str = "figure_6_2",
         r14_defect_mode: str = "reprocess",
         raw_material_flow_mode: str = "legacy_validated",
         raw_material_order_up_to_multiplier: float = 2.0,
-        risk_occurrence_mode: str = "legacy_renewal",
+        risk_occurrence_mode: str = "thesis_periodic",
         initial_buffers: dict[str, float] | None = None,
         initial_shifts: int = 1,
         inventory_replenishment_period: float | None = None,
