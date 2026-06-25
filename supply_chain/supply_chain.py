@@ -61,6 +61,7 @@ from .config import (
     WARMUP_TRIGGER_OPTIONS,
 )
 from .ret_thesis import (
+    compute_fill_rate_from_orders,
     compute_order_level_ret as compute_thesis_order_level_ret,
     compute_ret_per_order,
 )
@@ -134,9 +135,13 @@ class MFSCSimulation:
         risk_overrides: Optional[dict[str, str]] = None,
         risk_occurrence_mode: str = "legacy_renewal",
         inventory_replenishment_period: Optional[float] = None,
+        inventory_replenishment_lead_time: float = 0.0,
         raw_material_flow_mode: str = "legacy_validated",
         raw_material_order_up_to_multiplier: float = 2.0,
         demand_mean_multiplier: float = 1.0,
+        risk_frequency_multiplier: float = 1.0,
+        risk_impact_multiplier: float = 1.0,
+        strict_exogenous_crn: bool = False,
     ) -> None:
         if warmup_trigger not in WARMUP_TRIGGER_OPTIONS:
             valid = ", ".join(WARMUP_TRIGGER_OPTIONS)
@@ -169,7 +174,16 @@ class MFSCSimulation:
         self.env = simpy.Environment()
         self.shifts = shifts
         self.seed = seed
-        self.rng = np.random.default_rng(seed)
+        self.strict_exogenous_crn = bool(strict_exogenous_crn)
+        if self.strict_exogenous_crn:
+            general_ss, demand_ss, risk_ss = np.random.SeedSequence(seed).spawn(3)
+            self.rng = np.random.default_rng(general_ss)
+            self.demand_rng = np.random.default_rng(demand_ss)
+            self.risk_rng = np.random.default_rng(risk_ss)
+        else:
+            self.rng = np.random.default_rng(seed)
+            self.demand_rng = self.rng
+            self.risk_rng = self.rng
         self.horizon = horizon
         self.risks_enabled = risks_enabled
         self.risk_level = risk_level
@@ -189,6 +203,11 @@ class MFSCSimulation:
         # docs/PAPER_CONTRACT_2026-06-24.md). 1.0 = thesis baseline; >1 raises the
         # regular daily-demand mean. Independent of the adaptive_benchmark machinery.
         self.demand_mean_multiplier = float(demand_mean_multiplier)
+        # Garrido-authorized risk modulation (fine-tuning, frozen per calibrated regime):
+        # phi scales FREQUENCY (smaller window b, larger binomial p); psi scales IMPACT
+        # (longer recovery, bigger demand surge). 1.0 = thesis baseline.
+        self.risk_frequency_multiplier = max(1e-6, float(risk_frequency_multiplier))
+        self.risk_impact_multiplier = max(1e-6, float(risk_impact_multiplier))
         if self.demand_mean_multiplier <= 0.0:
             raise ValueError("demand_mean_multiplier must be > 0.")
         self._raw_units_per_ration = (
@@ -200,6 +219,10 @@ class MFSCSimulation:
         self.risk_overrides = dict(risk_overrides or {})
         self.risk_occurrence_mode = risk_occurrence_mode
         self.inventory_replenishment_period = inventory_replenishment_period
+        # Lead time to rebuild the strategic buffer (Ed.2 for inventory): the refill
+        # arrives this many hours after it is triggered, so a sustained disruption can
+        # drain the buffer faster than it refills -> anticipating the regime pays.
+        self.inventory_replenishment_lead_time = max(0.0, float(inventory_replenishment_lead_time))
         self.hours_per_year = resolve_hours_per_year(year_basis)
         downstream_ranges = THESIS_DOWNSTREAM_Q_RANGES[downstream_q_source]
         op9_q = downstream_ranges["op9"]
@@ -378,10 +401,23 @@ class MFSCSimulation:
             if period <= 0.0:
                 return
             yield self.env.timeout(period)
-            for key, target in self.inventory_buffer_targets.items():
-                event = self._top_up_inventory_buffer(key, float(target))
-                if event is not None:
-                    yield event
+            lead = float(self.inventory_replenishment_lead_time)
+            if lead > 0.0:
+                # Refill arrives `lead` hours later, without shifting the period clock.
+                self.env.process(self._delayed_buffer_top_up(lead))
+            else:
+                for key, target in self.inventory_buffer_targets.items():
+                    event = self._top_up_inventory_buffer(key, float(target))
+                    if event is not None:
+                        yield event
+
+    def _delayed_buffer_top_up(self, lead: float):
+        """Strategic-buffer refill that arrives after a rebuild lead time (Ed.2)."""
+        yield self.env.timeout(lead)
+        for key, target in self.inventory_buffer_targets.items():
+            event = self._top_up_inventory_buffer(key, float(target))
+            if event is not None:
+                yield event
 
     def get_sdm_history_context(
         self, window_hours: float = HOURS_PER_WEEK
@@ -548,6 +584,33 @@ class MFSCSimulation:
         # Advance simulation
         dt = step_hours or self._step_size
         target = min(self.env.now + dt, self.horizon)
+        if target <= self.env.now:
+            inventory_detail = self._inventory_detail()
+            total_inventory = sum(inventory_detail.values())
+            return (
+                self.get_observation(),
+                0.0,
+                True,
+                {
+                    "time": self.env.now,
+                    "new_delivered": 0.0,
+                    "new_backorders": 0.0,
+                    "new_demanded": 0.0,
+                    "new_produced": 0.0,
+                    "new_backorder_qty": 0.0,
+                    "new_unattended_orders": 0.0,
+                    "new_available_assembly_hours": 0.0,
+                    "new_available_assembly_capacity": 0.0,
+                    "step_disruption_hours": 0.0,
+                    "total_inventory": total_inventory,
+                    "inventory_detail": inventory_detail,
+                    "pending_backorders": len(self.pending_backorders),
+                    "pending_backorder_delta": 0.0,
+                    "pending_backorder_qty": self.pending_backorder_qty,
+                    "pending_backorder_qty_delta": 0.0,
+                    "unattended_orders_total": self.total_unattended_orders,
+                },
+            )
 
         prev_backorders = self.total_backorders
         prev_delivered = self.total_delivered
@@ -1345,7 +1408,9 @@ class MFSCSimulation:
             if day_of_week >= 6:
                 continue
 
-            demand_qty = float(self._select_uniform_discrete(DEMAND["a"], DEMAND["b"]))
+            demand_qty = float(
+                self.demand_rng.integers(int(DEMAND["a"]), int(DEMAND["b"]) + 1)
+            )
             # Operational-tempo scaling of regular demand (learning-extension lever).
             demand_qty *= self.demand_mean_multiplier
             if self.adaptive_benchmark_enabled:
@@ -1409,7 +1474,7 @@ class MFSCSimulation:
         if self.adaptive_benchmark_enabled:
             intensity = self._adaptive_risk_intensity_for(risk_id)
             return max(float(base_a), round(float(base_b) / max(intensity, 1e-6)))
-        return float(base_b)
+        return max(float(base_a), float(base_b) / self.risk_frequency_multiplier)
 
     def _get_risk_p(self, risk_id: str) -> float:
         table = self._risk_table_for(risk_id)
@@ -1420,7 +1485,7 @@ class MFSCSimulation:
         if self.adaptive_benchmark_enabled:
             intensity = self._adaptive_risk_intensity_for(risk_id)
             return min(0.98, float(base_p) * intensity)
-        return float(base_p)
+        return min(0.98, float(base_p) * self.risk_frequency_multiplier)
 
     def _get_risk_recovery_mean(self, risk_id: str) -> float:
         table = self._risk_table_for(risk_id)
@@ -1433,7 +1498,7 @@ class MFSCSimulation:
         if self.adaptive_benchmark_enabled:
             recovery_scale = self._adaptive_recovery_scale_for(risk_id)
             return float(base_mean) * recovery_scale
-        return float(base_mean)
+        return float(base_mean) * self.risk_impact_multiplier
 
     def _get_risk_surge(self) -> tuple[int, int]:
         table = self._risk_table_for("R24")
@@ -1448,13 +1513,14 @@ class MFSCSimulation:
                 int(round(base_lo * surge_scale)),
                 int(round(base_hi * surge_scale)),
             )
-        return base_lo, base_hi
+        psi = self.risk_impact_multiplier
+        return int(round(base_lo * psi)), int(round(base_hi * psi))
 
     def _sample_uniform_risk_window(self, risk_id: str) -> tuple[float, float]:
         """Sample the event offset for a thesis uniform-occurrence window."""
         a = int(RISKS_CURRENT[risk_id]["occurrence"]["a"])
         b_val = max(a, int(round(self._get_risk_b(risk_id))))
-        delay = float(self.rng.integers(a, b_val + 1))
+        delay = float(self.risk_rng.integers(a, b_val + 1))
         return delay, float(b_val)
 
     def _tail_after_uniform_occurrence(self, delay: float, window: float) -> float:
@@ -1474,10 +1540,10 @@ class MFSCSimulation:
                 yield from self._risk_R11_event(beta)
 
     def _risk_R11_event(self, beta: float):
-        target = int(self.rng.choice(RISKS_CURRENT["R11"]["affected_ops"]))
+        target = int(self.risk_rng.choice(RISKS_CURRENT["R11"]["affected_ops"]))
         start = self.env.now
         self._take_down(target)
-        repair = max(1, self.rng.exponential(beta))
+        repair = max(1, self.risk_rng.exponential(beta))
         yield self.env.timeout(repair)
         self._bring_up(target)
         self.risk_events.append(
@@ -1489,7 +1555,7 @@ class MFSCSimulation:
         p = self._get_risk_p("R12")
         while True:
             yield self.env.timeout(self.params["op1_rop"])
-            delayed = self.rng.binomial(n, p)
+            delayed = self.risk_rng.binomial(n, p)
             if delayed > 0:
                 delay = delayed * 168
                 if self.risk_occurrence_mode == "thesis_window":
@@ -1524,7 +1590,7 @@ class MFSCSimulation:
         )
         while True:
             yield self.env.timeout(interval)
-            delayed = self.rng.binomial(n, p)
+            delayed = self.risk_rng.binomial(n, p)
             if delayed > 0:
                 delay = delayed * 24
                 if self.risk_occurrence_mode == "thesis_window":
@@ -1617,7 +1683,7 @@ class MFSCSimulation:
             self._take_down(op_id)
         recovery_times = {}
         for op_id in affected:
-            rt = max(1, self.rng.exponential(beta))
+            rt = max(1, self.risk_rng.exponential(beta))
             recovery_times[op_id] = rt
             self.env.process(self._delayed_bring_up(op_id, rt))
         max_rt = max(recovery_times.values())
@@ -1639,10 +1705,10 @@ class MFSCSimulation:
                 yield from self._risk_R22_event(beta, loc_ops)
 
     def _risk_R22_event(self, beta: float, loc_ops: list[int]):
-        target = int(self.rng.choice(loc_ops))
+        target = int(self.risk_rng.choice(loc_ops))
         start = self.env.now
         self._take_down(target)
-        recovery = max(1, self.rng.exponential(beta))
+        recovery = max(1, self.risk_rng.exponential(beta))
         yield self.env.timeout(recovery)
         self._bring_up(target)
         self.risk_events.append(
@@ -1663,7 +1729,7 @@ class MFSCSimulation:
     def _risk_R23_event(self, beta: float):
         start = self.env.now
         self._take_down(11)
-        recovery = max(1, self.rng.exponential(beta))
+        recovery = max(1, self.risk_rng.exponential(beta))
         yield self.env.timeout(recovery)
         self._bring_up(11)
         self.risk_events.append(
@@ -1681,7 +1747,7 @@ class MFSCSimulation:
 
     def _apply_risk_R24_event(self) -> None:
         surge_lo, surge_hi = self._get_risk_surge()
-        surge = self.rng.integers(surge_lo, surge_hi + 1)
+        surge = self.risk_rng.integers(surge_lo, surge_hi + 1)
         self._contingent_demand_pending += surge
         # Cap accumulated contingent demand to prevent unbounded obs[14]
         # spikes when multiple R24 events fire before demand is consumed.
@@ -1849,12 +1915,7 @@ class MFSCSimulation:
         formulation exactly. See also _fill_rate() which is equivalent for
         the current RL reward computation.
         """
-        total_orders = len(self.orders)
-        if total_orders == 0:
-            return 1.0
-        bt_count = len(self.pending_backorders)
-        ut_count = self.total_unattended_orders
-        return max(0.0, 1.0 - (bt_count + ut_count) / total_orders)
+        return compute_fill_rate_from_orders(self.orders, current_time=self.env.now)
 
     def _set_order_ret_indicators(self, order: OrderRecord) -> None:
         """
