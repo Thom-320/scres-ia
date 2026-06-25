@@ -101,6 +101,10 @@ def main() -> int:
     p.add_argument("--pretrain-timesteps", type=int, default=0)
     p.add_argument("--learning-starts", type=int, default=50)
     p.add_argument("--buffer-size", type=int, default=10_000)
+    # Capacity inertia (Ed.2): make anticipation valuable so memory pays off.
+    p.add_argument("--surge-inertia", action="store_true")
+    p.add_argument("--surge-budget-hours", type=float, default=2016.0)
+    p.add_argument("--surge-ramp-per-step", type=int, default=1)
     cli = p.parse_args()
     seeds = [int(s) for s in cli.seeds.split(",") if s.strip()]
 
@@ -113,6 +117,9 @@ def main() -> int:
         a.learning_starts = cli.learning_starts; a.buffer_size = cli.buffer_size
         a.rho_disruption = cli.rho_disruption; a.rho_demand = None
         a.regime_seed = cli.regime_seed
+        a.surge_inertia = cli.surge_inertia
+        a.surge_budget_hours = cli.surge_budget_hours
+        a.surge_ramp_per_step = cli.surge_ramp_per_step
         return a
 
     tape = ev.build_tape(base_args(), cli.n_blocks, seed=cli.regime_seed)

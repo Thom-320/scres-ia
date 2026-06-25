@@ -337,6 +337,9 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         raw_material_flow_mode: str = "legacy_validated",
         raw_material_order_up_to_multiplier: float = 2.0,
         demand_mean_multiplier: float = 1.0,
+        surge_inertia: bool = False,
+        surge_ramp_per_step: int = 1,
+        surge_budget_hours: float = float("inf"),
         risk_occurrence_mode: str = "legacy_renewal",
         initial_buffers: dict[str, float] | None = None,
         initial_shifts: int = 1,
@@ -443,6 +446,12 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             raw_material_order_up_to_multiplier
         )
         self.demand_mean_multiplier = float(demand_mean_multiplier)
+        # Capacity inertia (Ed.2): surge ramps up slowly (activation lag), draws on a
+        # finite surge-hour budget, and de-mobilises instantly. Makes anticipating the
+        # shock (pre-positioning capacity before it hits) valuable -> rewards memory.
+        self.surge_inertia = bool(surge_inertia)
+        self.surge_ramp_per_step = int(surge_ramp_per_step)
+        self.surge_budget_hours = float(surge_budget_hours)
         self.risk_occurrence_mode = risk_occurrence_mode
         self.initial_buffers = dict(initial_buffers or {})
         self.initial_shifts = int(initial_shifts)
@@ -887,6 +896,25 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             op_name: min(1.0, down_hours / max(elapsed_post_warmup_hours, 1.0))
             for op_name, down_hours in disruption_hours_by_op.items()
         }
+
+    def _apply_surge_inertia(self, requested: int) -> int:
+        """Requested -> effective shift under capacity inertia (Ed.2).
+
+        Surge ramps UP at most ``surge_ramp_per_step`` levels/step (activation lag) and
+        de-mobilises instantly. Sustaining level L costs (L-1)*step_size surge-hours from
+        a finite budget; once exhausted, capacity is capped at S1. This makes it valuable
+        to request surge BEFORE the shock (anticipation), which rewards retained memory.
+        """
+        cur = int(self._effective_shift)
+        target = min(requested, cur + self.surge_ramp_per_step) if requested > cur else requested
+        surge_hours = max(0, target - 1) * float(self.step_size)
+        if surge_hours > self._surge_budget_remaining:
+            affordable = int(self._surge_budget_remaining // float(self.step_size))
+            target = min(target, 1 + max(0, affordable))
+            surge_hours = max(0, target - 1) * float(self.step_size)
+        self._surge_budget_remaining = max(0.0, self._surge_budget_remaining - surge_hours)
+        self._effective_shift = int(target)
+        return int(target)
 
     def _set_sim_assembly_shifts(self, shifts: int) -> None:
         """Apply a discrete shift count to the live DES and align batch size."""
@@ -2003,6 +2031,9 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         )
         super().reset(seed=seed)
         self.current_step = 0
+        # Capacity-inertia state (Ed.2): effective shift ramps toward the request.
+        self._effective_shift = int(initial_shifts)
+        self._surge_budget_remaining = float(self.surge_budget_hours)
         self._prev_step_new_demanded = 0.0
         self._prev_step_new_backorder_qty = 0.0
         self._prev_step_disruption_hours = 0.0
@@ -2297,6 +2328,14 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                 )
             raw_action_payload = action_arr.tolist()
             clipped_action_payload = clipped.tolist()
+        # Capacity inertia (Ed.2): convert the REQUESTED shift into the EFFECTIVE
+        # shift (activation lag + finite surge budget) before it reaches the sim.
+        if self.surge_inertia:
+            effective_shift = self._apply_surge_inertia(
+                int(action_dict.get("assembly_shifts", self._effective_shift))
+            )
+            action_dict["assembly_shifts"] = effective_shift
+            shifts = effective_shift  # reward/info use the shift actually running
         obs, _, terminated, info = self.sim.step(
             action=action_dict,
             step_hours=self.step_size,

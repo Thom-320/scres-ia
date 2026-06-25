@@ -34,6 +34,7 @@ from supply_chain.config import (  # noqa: E402
 )
 from supply_chain.external_env_interface import (  # noqa: E402
     get_episode_terminal_metrics,
+    get_observation_fields,
     make_discrete18_track_a_env,
     make_track_b_env,
 )
@@ -50,6 +51,35 @@ DEFAULT_EVAL_SEEDS = (2201, 2202, 2203)
 # Within-block adaptation uses a seed offset from the eval seed so an arm never
 # adapts on the exact realization it is evaluated on (same regime, different draw).
 ADAPT_SEED_OFFSET = 100_000
+PARTIAL_HIDE_OBS_FIELDS = (
+    "prev_step_disruption_hours_norm",
+    "cum_downhours_fraction",
+    "op2_down",
+)
+DIRECT_DISRUPTION_BLIND_OBS_FIELDS = (
+    "assembly_line_down",
+    "any_location_down",
+    "op9_down",
+    "op11_down",
+    "prev_step_disruption_hours_norm",
+    "cum_downhours_fraction",
+    "op1_down",
+    "op2_down",
+    "regime_nominal",
+    "regime_strained",
+    "regime_pre_disruption",
+    "regime_disrupted",
+    "regime_recovery",
+    "risk_forecast_48h_norm",
+    "risk_forecast_168h_norm",
+    "op10_down",
+    "op12_down",
+)
+MASK_PRESET_FIELDS = {
+    "none": (),
+    "partial_hide": PARTIAL_HIDE_OBS_FIELDS,
+    "direct_disruption_blind": DIRECT_DISRUPTION_BLIND_OBS_FIELDS,
+}
 
 
 def utc_stamp() -> str:
@@ -98,6 +128,24 @@ def build_parser() -> argparse.ArgumentParser:
         help=(
             "Comma-separated obs indices to zero (regime-observability ablation). "
             "Track A v5 direct disruption signals are 17,19,23."
+        ),
+    )
+    parser.add_argument(
+        "--mask-obs-fields",
+        default=None,
+        help=(
+            "Comma-separated observation field names to zero. Prefer this over "
+            "indices because it is stable across observation versions."
+        ),
+    )
+    parser.add_argument(
+        "--mask-preset",
+        choices=tuple(MASK_PRESET_FIELDS),
+        default="none",
+        help=(
+            "Named observation mask: partial_hide reproduces the earlier 17/19/23 "
+            "ablation by field name; direct_disruption_blind masks direct downstate, "
+            "regime, and forecast signals while leaving inventory/fill/backlog."
         ),
     )
     parser.add_argument("--risk-level", default="current")
@@ -205,6 +253,63 @@ def env_kwargs(
         "step_size_hours": args.step_size_hours,
         "max_steps": args.max_steps,
         "stochastic_pt": args.stochastic_pt,
+        **(
+            {
+                "surge_inertia": True,
+                "surge_budget_hours": float(getattr(args, "surge_budget_hours", float("inf"))),
+                "surge_ramp_per_step": int(getattr(args, "surge_ramp_per_step", 1)),
+            }
+            if getattr(args, "surge_inertia", False)
+            else {}
+        ),
+    }
+
+
+def parse_csv_values(value: str | None) -> list[str]:
+    if not value:
+        return []
+    return [part.strip() for part in str(value).split(",") if part.strip()]
+
+
+def resolve_observation_mask(args: argparse.Namespace) -> dict[str, Any]:
+    fields = tuple(get_observation_fields(args.observation_version))
+    field_to_index = {field: idx for idx, field in enumerate(fields)}
+
+    preset = getattr(args, "mask_preset", "none")
+    preset_fields = tuple(
+        field for field in MASK_PRESET_FIELDS.get(preset, ()) if field in field_to_index
+    )
+
+    explicit_fields = tuple(parse_csv_values(getattr(args, "mask_obs_fields", None)))
+    unknown_fields = [field for field in explicit_fields if field not in field_to_index]
+    if unknown_fields:
+        raise ValueError(
+            "Unknown mask observation field(s) for "
+            f"{args.observation_version}: {unknown_fields}. "
+            f"Available fields: {fields}"
+        )
+
+    explicit_indices = parse_ints(str(getattr(args, "mask_obs_indices", "") or ""))
+    invalid_indices = [idx for idx in explicit_indices if idx < 0 or idx >= len(fields)]
+    if invalid_indices:
+        raise ValueError(
+            f"Mask observation index out of range for {args.observation_version}: "
+            f"{invalid_indices}; observation has {len(fields)} fields."
+        )
+
+    requested_fields = tuple(dict.fromkeys((*preset_fields, *explicit_fields)))
+    resolved_indices = sorted(
+        set([field_to_index[field] for field in requested_fields] + explicit_indices)
+    )
+    resolved_fields = tuple(fields[idx] for idx in resolved_indices)
+    return {
+        "observation_version": args.observation_version,
+        "mask_preset": preset,
+        "requested_mask_obs_fields": list(explicit_fields),
+        "requested_mask_obs_indices": explicit_indices,
+        "mask_obs_fields": list(resolved_fields),
+        "mask_obs_indices": resolved_indices,
+        "available_observation_fields": list(fields),
     }
 
 
@@ -266,10 +371,7 @@ class ObservationMaskWrapper(gym.ObservationWrapper):
 
 
 def parse_mask_indices(args: argparse.Namespace) -> list[int]:
-    raw = getattr(args, "mask_obs_indices", None)
-    if not raw:
-        return []
-    return [int(x) for x in str(raw).split(",") if x.strip()]
+    return list(resolve_observation_mask(args)["mask_obs_indices"])
 
 
 def build_env(args: argparse.Namespace, *, regime: RegimePhase | None = None):
@@ -625,6 +727,7 @@ def main() -> int:
                 [p.demand_multiplier for p in eval_tape.blocks] if eval_tape else None
             ),
         },
+        "observation_mask": resolve_observation_mask(args),
         "robust_static_action": static_action,
         "robust_static_policy": static_action_name(static_action),
         "primary_estimand": (
