@@ -10,11 +10,11 @@
 \usepackage{xcolor}
 \usepackage{hyperref}
 \geometry{margin=2.4cm}
-\hypersetup{colorlinks=true,linkcolor=blue!50!black,urlcolor=blue!50!black}
+\hypersetup{colorlinks=true,linkcolor=blue!50!black,urlcolor=blue!50!black,citecolor=blue!50!black}
 \newcommand{\good}[1]{\textcolor{green!45!black}{\textbf{#1}}}
 \newcommand{\bad}[1]{\textcolor{red!60!black}{\textbf{#1}}}
-\title{\textbf{SCRES--IA: Estado del proyecto}\\[2pt]
-\large Qué intentamos, qué funcionó y qué falló\\
+\title{\textbf{SCRES--IA: ¿por qué no está funcionando?}\\[2pt]
+\large Diagnóstico iteración por iteración, con respaldo en la tesis\\
 \normalsize Documento de discusión para el Prof.\ Garrido}
 \author{Equipo SCRES--IA}
 \date{24 de junio de 2026}
@@ -23,178 +23,218 @@
 \maketitle
 
 \begin{abstract}
-\noindent Este documento resume, con números y gráficas, el estado de la
-implementación del marco \emph{simulación + aprendizaje} (DES + RL) que extiende
-Garrido et al.\ (2024). El objetivo del proyecto es endogenizar el aprendizaje
-$L_{t-1}$ y probar si la resiliencia mejora a través de disrupciones repetidas.
-\textbf{Mensaje central:} reconstruimos y \good{validamos} fielmente el DES de la
-tesis, y encontramos \good{margen real de control adaptativo} ($\sim$0.05 ReT). Sin
-embargo, el efecto específico de \emph{retención de aprendizaje} (retained vs.\
-reset) es \bad{prácticamente nulo} en todas las condiciones probadas. El diagnóstico
-indica que la causa \emph{no} es la función de recompensa, sino la
-\textbf{observabilidad del régimen} y el \textbf{alcance del espacio de acciones}.
-Pedimos su opinión sobre cómo reorientar la contribución.
+\noindent Reconstruimos fielmente el DES de la tesis \cite{tesis2017} y lo extendimos
+con aprendizaje de ciclo cerrado, siguiendo la agenda de \cite{garrido2024}. La meta es
+endogenizar el conocimiento $L_{t-1}$ y probar si la resiliencia mejora a través de
+disrupciones repetidas. \textbf{El problema:} el efecto de \emph{retención de
+aprendizaje} (retained vs.\ reset) es \bad{prácticamente nulo} en todas las iteraciones.
+Este documento muestra, \emph{paso a paso}, por qué falla ya en la línea base y por qué
+fallaron cada una de las iteraciones. La conclusión, respaldada por la propia estructura
+de la tesis, es que el cuello de botella \textbf{es el entorno}: la cadena militar de
+alimentos, tal como la describe la tesis, limita estructuralmente el valor de las
+palancas de decisión que ella misma expone. Pedimos su criterio para reorientar la
+contribución.
 \end{abstract}
 
-\section{Qué pregunta intentamos responder}
-La contribución teórica propuesta es introducir el conocimiento acumulado
+\section{La contribución que intentamos probar}
+La extensión teórica de \cite{garrido2024} es introducir el conocimiento acumulado
 $L_{t-1}$ como variable de estado endógena:
 \[
-R_t = f(S_t, D_t, L_{t-1}) \quad\text{vs.}\quad R_t = f(S_t, D_t)\ \text{(tradicional)}.
+R_t = f(S_t, D_t, L_{t-1}) \quad\text{vs.}\quad R_t = f(S_t, D_t)\ \text{(simulación tradicional)}.
 \]
-La prueba causal limpia de $L_{t-1}$ es el contraste \textbf{retained vs.\ reset}:
-la \emph{misma} política neuronal, con los \emph{mismos} datos, donde solo cambia si
-los parámetros se \emph{conservan} entre ciclos de disrupción o se \emph{reinician}.
-Si $\,\mathbb{E}[\text{retained}-\text{reset}]>0\,$, la retención aporta valor.
+La prueba causal limpia de $L_{t-1}$ es el contraste \textbf{retained vs.\ reset}: la
+\emph{misma} red neuronal, con los \emph{mismos} datos, donde solo cambia si los
+parámetros se \emph{conservan} entre ciclos de disrupción o se \emph{reinician}. Si
+$\mathbb{E}[\text{retained}-\text{reset}]>0$, la memoria aporta valor; si es $\approx 0$,
+no hay aprendizaje acumulado separable del control adaptativo.
 
-\section{Qué es diferente de la tesis}
-La tesis (Garrido-Rios 2017) usa reglas de decisión \emph{fijas} y parámetros
-\emph{estacionarios} por corrida. Nuestras extensiones, claramente etiquetadas como
-tales, son:
+\section{Qué reusamos de la tesis y qué cambiamos}
+Las \emph{acciones} y el \emph{entorno} provienen directamente de la tesis
+\cite{tesis2017}; el aprendizaje es la extensión:
 \begin{itemize}
-  \item \textbf{Aprendizaje de ciclo cerrado (RL).} Política PPO/DQN que se
-  actualiza entre disrupciones; el contraste retained/reset operacionaliza $L_{t-1}$.
-  \item \textbf{Demanda estocástica} ligada al tempo operacional (multiplicador de
-  demanda), en vez de demanda determinista.
-  \item \textbf{Régimen persistente} de disrupción (fases de campaña tipo Markov con
-  persistencia $\rho$), para que el pasado prediga el futuro.
-  \item \textbf{ReT como métrica de evaluación, no de entrenamiento.} El reward de
-  entrenamiento es operacional (servicio $-$ backlog $-$ costo). Usar ReT directo como
-  reward colapsa la política a S1 (lo confirmamos: 99.99\% S1).
-  \item \textbf{Superficie de acción $[6,3]$}: nivel de inventario (Tabla 6.16)
-  $\times$ turno S1/S2/S3 (Tabla 6.20).
-  \item \textbf{Track B (extensión):} control aguas abajo (Op10/Op12), fuera del
-  espacio de acción original.
-  \item \textbf{Programación de riesgos \texttt{thesis\_window}} (un evento por
-  ventana de $b$ horas) en lugar de renovación, para reproducir la Tabla 6.11.
+  \item \textbf{Entorno (idéntico):} la MFSC de 13 operaciones, con demanda
+  $U(2400,2600)$ raciones/día (Tabla 6.4) y despacho de Op9 acotado a $\sim$2500/día.
+  \item \textbf{Acciones (derivadas de la tesis):} nivel de inventario estratégico
+  (Tabla 6.16) $\times$ turnos S1/S2/S3 (Tabla 6.20). Es la superficie $[6,3]$ que la
+  tesis misma analiza.
+  \item \textbf{Frecuencias de riesgo (Tabla 6.11):} reproducidas exactamente
+  (Sección \ref{sec:g1}).
+  \item \textbf{Extensión (nuestra):} política RL que se actualiza entre disrupciones
+  (retained/reset), demanda estocástica por tempo, régimen persistente, y ReT como
+  métrica de evaluación (no de entrenamiento).
 \end{itemize}
 
-\section{Lo que funcionó \good{(bien)}}
+\section{El problema, iteración por iteración}
+Aquí está el núcleo: por qué no funciona en la base y por qué falló cada intento.
 
-\subsection{G1 --- Fidelidad de frecuencias de riesgo (Tabla 6.11)}
-La interpretación \texttt{thesis\_window} reproduce \good{exactamente} las
-frecuencias publicadas; la renovación uniforme (\texttt{legacy\_renewal}) las
-\emph{duplica}. Verificado empíricamente sobre una corrida completa de 20 años
-($161{,}280$ h) y fijado por 3 tests automáticos.
+\subsection{Línea base: la estructura de la tesis ya limita el aprendizaje}
+Antes de cualquier RL, la tesis ya determina poco margen. La tesis prueba operación a
+1, 2 y 3 turnos; bajo riesgo ``increased'', \textbf{S2 ya es casi óptima} porque entrega
+$\sim$2× la demanda (F9 \cite{findings}). El despacho aguas abajo (Op9 $\sim$2500/día,
+acotado por la demanda de la Tabla 6.4) crea un \textbf{cuello de botella estructural}:
+producir más con S3 no se traduce en más entregas (F11). En consecuencia, la palanca de
+\emph{inventario} de la tesis (Tabla 6.16) tiene apenas $\sim$1\% de mejora posible sobre
+S2, con caídas catastróficas si se elige mal (F2). \emph{Conclusión base:} en el espacio
+de decisión de la tesis hay muy poco que aprender.
 
-\begin{figure}[h]\centering
-\includegraphics[width=0.78\textwidth]{figures/fig1_risk_fidelity.png}
-\caption{Frecuencias por año: tesis vs.\ \texttt{thesis\_window} (nuestro) vs.\
-\texttt{legacy\_renewal}. El modo elegido coincide punto a punto con la Tabla 6.11.}
+\subsection{Iteración 1 --- RL congelado: pierde contra la estática}
+Primer intento: PPO entrenado con recompensa operacional (control\_v1) y evaluado
+congelado. Resultado: \bad{pierde} contra S2 (fill $0.782$ vs $0.792$, F1
+\cite{findings}). \emph{Por qué:} la acción de la tesis (inventario + turno) no alcanza
+el cuello de botella aguas abajo; no hay margen que explotar.
+
+\subsection{Iteración 2 --- ingeniería de recompensa: 15 variantes, ninguna gana}
+Sospechamos de la recompensa. Probamos $\sim$15 variantes: la ReT de la tesis usada como
+reward \bad{colapsa la política a S1} (99.99\%, porque minimizar costo domina la señal
+de servicio); las formas Cobb--Douglas (ReT\_seq\_v1, ReT\_cd) entrenan \emph{peor} que
+la lineal; ninguna supera a S2 (F1, F8 \cite{findings}). La evidencia de Track B muestra
+que, \textbf{cuando la acción alcanza el cuello de botella, la recompensa es casi
+irrelevante} (F13). \emph{Por qué:} la recompensa no es el cuello de botella.
+
+\subsection{Iteración 3 --- memoria (RecurrentPPO/LSTM): tampoco ayuda}
+¿Será un problema de observabilidad parcial (POMDP)? Probamos memoria explícita
+(LSTM). Resultado: \bad{también pierde} contra S2 (fill $0.751$, $-4.3$ pp; $-7.7$ pp en
+severo, F5 \cite{findings}). \emph{Por qué:} la memoria por sí sola no resuelve una
+limitación estructural del entorno.
+
+\subsection{Iteración 4 --- retención ($L_{t-1}$) en Track A: $\approx 0$}
+Implementamos el contraste limpio retained vs.\ reset sobre la superficie $[6,3]$.
+Resultado: el efecto de retención es \bad{indistinguible de cero} ($+0.0006$ / $-0.0015$
+ReT, 24 bloques $\times$ 3 cintas), y no crece con los bloques (la pendiente es plana).
+
+\subsection{Iteración 5 --- régimen persistente + demanda estocástica: $\approx 0$}
+Para que el pasado prediga el futuro, agregamos fases de campaña persistentes (Markov,
+$\rho$) y demanda estocástica por tempo. Aun así, retained $-$ reset $\approx 0$ y sin
+gradiente claro en $\rho$. \emph{Por qué:} el agente \emph{ve} el régimen, así que se
+adapta dentro del bloque sin necesidad de memoria.
+
+\subsection{Iteración 6 --- ocultar el régimen: aquí aparece la retención}
+Prueba de mecanismo: ocultamos las señales de severidad en la observación. Resultado
+\emph{direccionalmente} el predicho: con el régimen \emph{visible} la retención es inútil
+(incluso negativa, $-0.0046$); al \emph{ocultarlo}, empieza a ayudar ($+0.0075$). Es
+decir, \good{la retención solo importa bajo observabilidad parcial} --- pero el efecto es
+pequeño y aún no significativo (Fig.\ \ref{fig:obs}).
+
+\subsection{Iteración 7 --- Track B (control aguas abajo): control sí, retención no}
+Extendimos la acción al despacho aguas abajo (Op10/Op12), donde la tesis tiene margen
+real. El \good{control adaptativo} sí funciona (PPO alcanza fill $1.000$ vs.\ mejor
+estática $0.988$; F12, F16 \cite{findings}), y es \emph{mayor} con régimen oculto
+(retained$-$frozen $+0.020 \to +0.044$). Pero la \emph{retención específica}
+(retained$-$reset) sigue dominada por el ruido (Fig.\ \ref{fig:trackb}). Falta la corrida
+potente (10 semillas) para cerrar con intervalo de confianza.
+
+\begin{figure}[t]\centering
+\includegraphics[width=0.86\textwidth]{figures/fig6_iteration_ladder.png}
+\caption{En el espacio de acción de la tesis, \emph{todo} intento RL pierde contra la
+estática S2 (líneas base e iteraciones 1--3). Solo Track B, que extiende la acción más
+allá de la tesis, supera a la estática. Fuente: registro de hallazgos \cite{findings},
+DES post-auditoría, riesgo ``increased''.}
+\label{fig:ladder}
 \end{figure}
 
-\subsection{Existe margen real de control \emph{adaptativo}}
-La política estática óptima \emph{cambia con el régimen}: con poca disrupción conviene
-S3, pero bajo disrupción severa conviene S1 (los turnos extra producen raciones que el
-cuello de botella aguas abajo no puede despachar, y solo agregan costo). Esto da
-$\sim$0.05 ReT de margen para una política que se adapte al régimen --- un resultado
-\good{favorable} para una tesis de ``control adaptativo''.
-
-\begin{figure}[h]\centering
-\includegraphics[width=0.74\textwidth]{figures/fig2_headroom_shift.png}
-\caption{Mejor ReT por turno y régimen. El turno óptimo se invierte (S3$\to$S1) al
-aumentar la severidad. El inventario, en cambio, es casi plano.}
-\end{figure}
-
-\section{Lo que falló \bad{(el hallazgo central)}}
-El efecto de \textbf{retención} (retained $-$ reset) es \bad{indistinguible de cero}
-en todas las condiciones que probamos, aun cuando el control adaptativo sí funciona.
-
-\begin{table}[h]\centering
-\small
+\begin{table}[t]\centering\small
 \begin{tabular}{lcc}
 \toprule
-Experimento & retained $-$ reset & ¿significativo? \\
+Iteración & retained $-$ reset & ¿significativo? \\
 \midrule
-Track A, régimen visible, 24 bloques $\times$ 3 cintas & $+0.0006$ / $-0.0015$ & no ($\approx 0$) \\
-Track A, régimen \emph{oculto}, 3 cintas & $+0.0075$ & no (direccional) \\
-Track B, régimen visible, 3 semillas & $+0.004 \pm 0.024$ & no (ruido) \\
-Track B, régimen \emph{oculto}, 3 semillas & $-0.006 \pm 0.032$ & no (ruido) \\
+4. Track A, régimen visible, 24 bloques $\times$ 3 cintas & $+0.0006$ / $-0.0015$ & no ($\approx 0$) \\
+5--6. Track A, régimen \emph{oculto}, 3 cintas & $+0.0075$ & no (direccional) \\
+7. Track B, régimen visible, 3 semillas & $+0.004 \pm 0.024$ & no (ruido) \\
+7. Track B, régimen \emph{oculto}, 3 semillas & $-0.006 \pm 0.032$ & no (ruido) \\
 \bottomrule
 \end{tabular}
-\caption{El contraste retained--reset nunca es claramente positivo. En cambio, el
-control adaptativo (retained $-$ frozen) sí es positivo: $\sim$0.05 estático en Track A,
+\caption{El contraste retained$-$reset nunca es claramente positivo. En cambio, el
+control adaptativo (retained $-$ frozen) sí lo es: $\sim$0.05 estático en Track A,
 $+0.02$ a $+0.044$ en Track B.}
+\label{tab:synth}
 \end{table}
 
-\subsection{El diagnóstico: no es la recompensa, es la observabilidad}
-Hicimos una prueba de mecanismo: ocultar las señales de severidad del régimen en la
-observación (idx 17/19/23). El resultado es \emph{direccionalmente} el predicho: con el
-régimen visible la retención es inútil (incluso negativa); al ocultarlo, empieza a
-ayudar ($+0.0075$). Es decir, \textbf{la retención solo importa bajo observabilidad
-parcial}: si el agente \emph{ve} el régimen, la adaptación dentro del bloque (reset)
-ya captura el valor y la memoria no agrega nada.
-
-\begin{figure}[h]\centering
-\includegraphics[width=0.55\textwidth]{figures/fig3_observability.png}
-\caption{Track A: ocultar el régimen mueve retained$-$reset de negativo a positivo
-($+0.0075$). Direccionalmente correcto, pero pequeño y no significativo (3 cintas).}
-\end{figure}
-
-\begin{figure}[h]\centering
-\includegraphics[width=0.62\textwidth]{figures/fig4_track_b.png}
-\caption{Track B (probe, 3 semillas): el \emph{control adaptativo} (verde,
-retained$-$frozen) es positivo y mayor con régimen oculto; la \emph{retención} (azul,
-retained$-$reset) está dominada por el ruido. Falta la corrida potente (10 semillas).}
-\end{figure}
-
-\begin{figure}[h]\centering
-\includegraphics[width=0.62\textwidth]{figures/fig5_synthesis.png}
-\caption{Síntesis: retained$-$reset $\approx 0$ en Track A y Track B, visible u oculto.}
-\end{figure}
-
-\subsection{Por qué pasa (interpretación)}
+\section{Diagnóstico: el problema es el entorno}
+La causa no es el algoritmo, ni la recompensa, ni la memoria --- los descartamos uno a
+uno arriba. La causa es la \textbf{estructura del entorno reconstruido de la tesis}:
 \begin{enumerate}
-  \item \textbf{Observabilidad.} El régimen de severidad es observable (o se infiere
-  rápido dentro del episodio), así que la política que se adapta dentro del bloque
-  captura el valor sin necesidad de memoria entre bloques.
-  \item \textbf{Alcance de la acción.} En Track A, el espacio $[6,3]$ no alcanza el
-  cuello de botella aguas abajo (Op9 despacha $\sim$2500 raciones/día), por lo que más
-  capacidad no se traduce en más entregas. El valor de aprender es estructuralmente
-  pequeño.
-  \item \textbf{La recompensa no es el cuello de botella.} Probar más recompensas no
-  mueve el contraste retained--reset; el lever es la observabilidad y el alcance de la
-  acción, no la recompensa.
+  \item \textbf{Cuello de botella aguas abajo (Tabla 6.4, F11).} Op9 despacha
+  $\sim$2500 raciones/día; producir más con turnos extra solo acumula inventario sin
+  aumentar entregas. Las palancas que la tesis expone (inventario Tabla 6.16, turnos
+  Tabla 6.20) no alcanzan ese cuello de botella. Por eso S2 estática ya es casi óptima
+  (F9) y todo RL en Track A pierde (Fig.\ \ref{fig:ladder}).
+  \item \textbf{Régimen observable.} La severidad es observable (o se infiere rápido
+  dentro del episodio), así que la adaptación \emph{dentro} del bloque captura el valor
+  y no queda nada para la memoria \emph{entre} bloques. La retención solo reaparece
+  cuando ocultamos el régimen (It.\ 6).
 \end{enumerate}
+En una frase: \emph{la cadena de la tesis ya está bien resuelta por una política
+estática simple, y su régimen es observable; por eso ni el control adaptativo (en Track
+A) ni la memoria tienen mucho que aportar}. El aprendizaje solo cobra valor cuando (a)
+la acción alcanza el cuello de botella (Track B) y (b) el régimen no es directamente
+observable.
 
-\section{Qué tenemos, y qué falta}
-\paragraph{Activos sólidos.} (i) DES validado y \emph{congelado} (G1 verde);
-(ii) margen de control adaptativo real ($\sim$0.05 ReT); (iii) un mecanismo limpio:
-\emph{el valor de la retención depende de la observabilidad del régimen}.
-\paragraph{Lo que falta (en curso).} Una corrida \emph{potente} de Track B (10
-semillas, presupuesto PPO real, ambas condiciones de observabilidad) para cerrar con un
-intervalo de confianza si la retención emerge donde la acción sí alcanza el cuello de
-botella. Está lista para ejecutarse; reportaremos el resultado.
+\section{Lo que sí funcionó \good{(con respaldo en la tesis)}}
+\label{sec:g1}
+\paragraph{G1 --- Fidelidad de la Tabla 6.11.} La interpretación \texttt{thesis\_window}
+reproduce \good{exactamente} las frecuencias de la tesis (Fig.\ \ref{fig:g1}); la
+renovación uniforme las duplica. Verificado sobre 20 años simulados y fijado por tests.
+\paragraph{Margen de control adaptativo.} La política estática óptima \emph{cambia con el
+régimen}: S3 con poca disrupción, S1 bajo disrupción severa (Fig.\ \ref{fig:headroom}) ---
+coherente con la jerarquía de turnos de la Tabla 6.20 y el cuello de botella aguas abajo.
+Esto da $\sim$0.05 ReT de margen para ``control adaptativo''.
+
+\begin{figure}[t]\centering
+\includegraphics[width=0.66\textwidth]{figures/fig1_risk_fidelity.png}
+\caption{G1: frecuencias por año vs.\ Tabla 6.11. \texttt{thesis\_window} coincide punto
+a punto.}\label{fig:g1}
+\end{figure}
+\begin{figure}[t]\centering
+\includegraphics[width=0.66\textwidth]{figures/fig2_headroom_shift.png}
+\caption{Mejor ReT por turno y régimen: el turno óptimo se invierte (S3$\to$S1) con la
+severidad. El inventario es casi plano (F2).}\label{fig:headroom}
+\end{figure}
+\begin{figure}[t]\centering
+\includegraphics[width=0.5\textwidth]{figures/fig3_observability.png}
+\caption{It.\ 6: ocultar el régimen mueve retained$-$reset de negativo a positivo
+($+0.0075$). Direccional, pequeño, no significativo (3 cintas).}\label{fig:obs}
+\end{figure}
+\begin{figure}[t]\centering
+\includegraphics[width=0.58\textwidth]{figures/fig4_track_b.png}
+\caption{It.\ 7, Track B (probe, 3 semillas): el control adaptativo (verde) es positivo;
+la retención (azul) está dominada por el ruido.}\label{fig:trackb}
+\end{figure}
 
 \section{Preguntas para el Prof.\ Garrido}
 \begin{enumerate}
-  \item \textbf{Concepto de $L_{t-1}$.} ¿Está de acuerdo en que la retención de
-  parámetros de una política representa adecuadamente el aprendizaje history-dependent,
-  y en que su valor es \emph{condicional a la observabilidad} del régimen?
-  \item \textbf{Dónde vive el aprendizaje.} Dado que Track A (fiel a la tesis) tiene
-  poco margen para la retención, ¿es defendible mover la pregunta de aprendizaje a
-  Track B (control aguas abajo), donde sí hay margen?
-  \item \textbf{Contribución honesta.} ¿Acepta como contribución ``el control
-  adaptativo supera a la estática, y la retención es valiosa solo bajo observabilidad
-  parcial'' (un resultado condicional/negativo riguroso), en línea con su agenda 2024?
-  \item \textbf{Interpretaciones de la tesis} (no resueltas, sin sus archivos):
+  \item \textbf{El entorno.} ¿Está de acuerdo en que el cuello de botella aguas abajo
+  (Op9 vs.\ demanda de la Tabla 6.4) es la razón estructural por la que las palancas de
+  la tesis (Tablas 6.16/6.20) dejan poco margen para aprender? ¿Hay alguna palanca de la
+  tesis que estemos subestimando?
+  \item \textbf{Dónde vive el aprendizaje.} Dado que Track A (fiel a la tesis) tiene poco
+  margen, ¿es defendible mover la pregunta de aprendizaje a Track B (control aguas
+  abajo), o eso se aleja demasiado de la tesis?
+  \item \textbf{$L_{t-1}$ condicional.} ¿Acepta que el valor de la retención es
+  \emph{condicional a la observabilidad} del régimen, y que ``control adaptativo $>$
+  estática, retención solo bajo observabilidad parcial'' es una contribución honesta a su
+  agenda 2024?
+  \item \textbf{Interpretaciones de la tesis} (sin sus archivos originales):
   \begin{itemize}
-    \item Riesgos uniformes: ¿un evento por ventana fija de $b$ horas
-    (\texttt{thesis\_window}), o tiempo entre eventos desde el último?
+    \item Riesgos uniformes: ¿un evento por ventana fija de $b$ horas, o tiempo entre
+    eventos desde el último? (afecta la Tabla 6.11).
     \item Cantidad aguas abajo: ¿Figura 6.2 o Tabla 6.20? (cambia la política estática
     ``mejor'').
-    \item R13: la Tabla 6.11 implica 48 sorteos semanales de $B(12,0.1)$ ($\approx$58
-    entregas retrasadas/año), aunque Op2 se describe mensual. ¿Cómo estaba programado?
+    \item R13: la Tabla 6.11 implica 48 sorteos semanales de $B(12,0.1)$
+    ($\approx$58 entregas retrasadas/año), aunque Op2 se describe mensual.
   \end{itemize}
-  \item \textbf{Demanda y no estacionariedad.} ¿Qué patrón recurrente sería
-  operacionalmente defendible (fases de campaña, ataques agrupados, rampas de demanda)?
 \end{enumerate}
 
-\vspace{4pt}
-\noindent\rule{\linewidth}{0.4pt}\\
-\footnotesize Reproducibilidad: contrato congelado en
-\texttt{docs/PAPER\_CONTRACT\_2026-06-24.md}; decisiones de interpretación en
-\texttt{docs/THESIS\_INTERPRETATION\_DECISIONS\_2026-06-24.md}; figuras generadas por
-\texttt{docs/garrido\_meeting\_2026-06-24/make\_figures.py} a partir de los JSON de
-resultados.
+\begin{thebibliography}{9}
+\bibitem{tesis2017} Garrido-Rios. \emph{Modelo de simulación de eventos discretos para la
+resiliencia de una cadena de suministro militar de alimentos (MFSC)}. Tesis, 2017.
+(Tablas 6.4, 6.10, 6.11, 6.16, 6.20.)
+\bibitem{garrido2024} Garrido, Pongutá, Adarme. \emph{Integración de algoritmos de IA en
+modelos de simulación para la resiliencia de cadenas de suministro: un análisis
+exploratorio}. 2024.
+\bibitem{findings} Registro interno de hallazgos empíricos (F1--F16),
+\texttt{docs/PAPER\_FINDINGS\_REGISTRY.md}; contrato congelado
+\texttt{docs/PAPER\_CONTRACT\_2026-06-24.md}; decisiones de interpretación
+\texttt{docs/THESIS\_INTERPRETATION\_DECISIONS\_2026-06-24.md}.
+\end{thebibliography}
+
 \end{document}

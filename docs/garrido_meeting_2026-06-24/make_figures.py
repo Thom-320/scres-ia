@@ -115,6 +115,31 @@ def fig_synthesis():
     fig.tight_layout(); fig.savefig(FIG / "fig5_synthesis.png", dpi=150); plt.close(fig)
 
 
+# --- Fig 6: iteration ladder — every Track A RL attempt loses to static S2 ---
+def fig_iteration_ladder():
+    # Source: PAPER_FINDINGS_REGISTRY (post-audit DES, 'increased' risk).
+    rows = [
+        ("Estática S2\n(tesis, línea base)", 0.792, GRAY),
+        ("It.1 PPO\ncontrol_v1 (F1)", 0.782, RED),
+        ("It.2 PPO\nReT_seq_v1 (F4)", 0.788, RED),
+        ("It.3 Recurrent\nPPO/LSTM (F5)", 0.751, RED),
+        ("It.7 Track B\n+ aguas abajo (F12)", 1.000, GREEN),
+    ]
+    fig, ax = plt.subplots(figsize=(7.6, 3.7))
+    labels = [r[0] for r in rows]
+    vals = [r[1] for r in rows]
+    cols = [r[2] for r in rows]
+    ax.bar(labels, vals, color=cols)
+    ax.axhline(0.792, color=GRAY, ls="--", lw=1)
+    ax.set_ylim(0.70, 1.02); ax.set_ylabel("fill rate")
+    ax.set_title("En el espacio de acción de la tesis, todo RL pierde vs.\\ S2;\nsolo Track B (acción extendida) gana")
+    for i, v in enumerate(vals):
+        ax.text(i, v + 0.004, f"{v:.3f}", ha="center", fontsize=8)
+    ax.tick_params(axis="x", labelsize=7)
+    fig.tight_layout(); fig.savefig(FIG / "fig6_iteration_ladder.png", dpi=150); plt.close(fig)
+
+
 if __name__ == "__main__":
     fig_risk_fidelity(); fig_headroom(); fig_observability(); fig_track_b(); fig_synthesis()
+    fig_iteration_ladder()
     print("figures written to", FIG)
