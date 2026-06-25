@@ -88,9 +88,13 @@ def run_seed(args, seed: int, tape, n_blocks: int, train_per_block: int) -> dict
             r_reset = clean_eval(args, reset, regime, eval_seed)
             d_total.append(r_retained - r_frozen)   # any learning vs none
             d_mem.append(r_retained - r_reset)       # accumulation vs single block
-            # retained accumulates; reset keeps only the most recent block.
+            # L_{k-1} contract: retain WEIGHTS (+ target net), but clear the replay
+            # buffer so memory is compressed parametric routines, not a folder of old
+            # episodes. (--retain-buffer keeps the buffer as a secondary L^full lane.)
+            if not getattr(args, "retain_buffer", False):
+                retained.replay_buffer.reset()
             ev.online_update(args, retained, seed=data_seed, regime=regime)
-            reset = ev.load_model(args, init)
+            reset = ev.load_model(args, init)   # theta_0, fresh buffer
             ev.online_update(args, reset, seed=data_seed, regime=regime)
     return {"total": d_total, "mem": d_mem}
 
