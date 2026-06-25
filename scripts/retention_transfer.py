@@ -63,26 +63,36 @@ def clean_eval(args, model, regime, seed: int) -> float:
     return float(res["mean_ret"])
 
 
-def run_seed(args, seed: int, tape, n_blocks: int, train_per_block: int) -> list[float]:
+def run_seed(args, seed: int, tape, n_blocks: int, train_per_block: int) -> dict:
+    """Three arms, all evaluated COLD on each unseen block k (before block-k data):
+      frozen   = theta_0 (no learning);
+      reset    = theta_0 + ONLY the previous block (single-block learning);
+      retained = theta_0 + ALL prior blocks (accumulated learning).
+    retained - reset isolates cross-block MEMORY L_{k-1}; retained - frozen is total.
+    """
     args.seed = seed
     args.online_timesteps_per_cycle = train_per_block
     with tempfile.TemporaryDirectory() as tmp:
         init = Path(tmp) / "init.zip"
-        ev.build_initial_model(args, init)        # theta_0 (optional pretrain)
-        frozen = ev.load_model(args, init)         # never trains
-        retained = ev.load_model(args, init)       # accumulates across blocks
-        deltas = []
+        ev.build_initial_model(args, init)
+        frozen = ev.load_model(args, init)
+        retained = ev.load_model(args, init)
+        reset = ev.load_model(args, init)          # holds single-block training
+        d_total, d_mem = [], []
         for k in range(n_blocks):
             regime = tape[k]
             eval_seed = 90_000 + seed * 1000 + k
-            # COLD transfer eval BEFORE training on block k:
+            data_seed = eval_seed + ev.ADAPT_SEED_OFFSET
             r_frozen = clean_eval(args, frozen, regime, eval_seed)
             r_retained = clean_eval(args, retained, regime, eval_seed)
-            deltas.append(r_retained - r_frozen)
-            # THEN accumulate: train retained on block k, carry theta forward.
-            ev.online_update(args, retained,
-                             seed=eval_seed + ev.ADAPT_SEED_OFFSET, regime=regime)
-    return deltas
+            r_reset = clean_eval(args, reset, regime, eval_seed)
+            d_total.append(r_retained - r_frozen)   # any learning vs none
+            d_mem.append(r_retained - r_reset)       # accumulation vs single block
+            # retained accumulates; reset keeps only the most recent block.
+            ev.online_update(args, retained, seed=data_seed, regime=regime)
+            reset = ev.load_model(args, init)
+            ev.online_update(args, reset, seed=data_seed, regime=regime)
+    return {"total": d_total, "mem": d_mem}
 
 
 def main() -> int:
@@ -125,42 +135,49 @@ def main() -> int:
     tape = ev.build_tape(base_args(), cli.n_blocks, seed=cli.regime_seed)
     assert tape is not None, "regime tape required (set --rho-disruption)"
 
-    per_seed = []  # list of per-block delta lists
+    runs = []
     for s in seeds:
         print(f"[transfer] seed {s} ...", flush=True)
-        per_seed.append(run_seed(base_args(), s, tape, cli.n_blocks, cli.train_per_block))
-    arr = np.array(per_seed)  # [seeds, blocks]
+        runs.append(run_seed(base_args(), s, tape, cli.n_blocks, cli.train_per_block))
 
-    # Learning curve: per-block transfer clustered over seeds.
-    by_block = [cluster_stats(list(arr[:, k])) for k in range(cli.n_blocks)]
-    # Overall transfer (mean per seed over blocks), and early vs late halves.
-    seed_means = [float(np.nanmean(arr[i])) for i in range(len(seeds))]
-    half = cli.n_blocks // 2
-    early = [float(np.nanmean(arr[i, :half])) for i in range(len(seeds))]
-    late = [float(np.nanmean(arr[i, half:])) for i in range(len(seeds))]
-    slope = [float(np.polyfit(np.arange(cli.n_blocks), arr[i], 1)[0]) for i in range(len(seeds))]
+    def summarize(key: str) -> dict:
+        arr = np.array([r[key] for r in runs])  # [seeds, blocks]
+        half = cli.n_blocks // 2
+        seed_means = [float(np.nanmean(arr[i])) for i in range(len(seeds))]
+        early = [float(np.nanmean(arr[i, :half])) for i in range(len(seeds))]
+        late = [float(np.nanmean(arr[i, half:])) for i in range(len(seeds))]
+        slope = [float(np.polyfit(np.arange(cli.n_blocks), arr[i], 1)[0]) for i in range(len(seeds))]
+        return {
+            "overall": cluster_stats(seed_means),
+            "early_half": cluster_stats(early), "late_half": cluster_stats(late),
+            "learning_slope_per_block": cluster_stats(slope),
+            "by_block": [cluster_stats(list(arr[:, k])) for k in range(cli.n_blocks)],
+        }
+
+    mem = summarize("mem")       # retained - reset = cross-block MEMORY (L_{k-1})
+    total = summarize("total")   # retained - frozen = total learning value
 
     run_dir = cli.output_root / cli.label
     run_dir.mkdir(parents=True, exist_ok=True)
     payload = {
-        "estimand": "transfer: clean ReT(retained, cold) - ReT(theta_0, cold) on unseen block k",
+        "primary_estimand": "memory: clean ReT(retained, cold) - ReT(reset=theta_0+1block, cold)",
         "reward_mode": cli.reward_mode, "seeds": seeds, "n_blocks": cli.n_blocks,
         "train_per_block": cli.train_per_block, "rho_disruption": cli.rho_disruption,
-        "mask_preset": cli.mask_preset,
-        "overall_transfer": cluster_stats(seed_means),
-        "early_half": cluster_stats(early), "late_half": cluster_stats(late),
-        "learning_slope_per_block": cluster_stats(slope),
-        "transfer_by_block": by_block,
+        "mask_preset": cli.mask_preset, "surge_inertia": cli.surge_inertia,
+        "surge_budget_hours": cli.surge_budget_hours,
+        "memory_retained_minus_reset": mem,
+        "total_retained_minus_frozen": total,
     }
     (run_dir / "transfer.json").write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
-    ov = payload["overall_transfer"]; sl = payload["learning_slope_per_block"]
+    m = mem["overall"]; t = total["overall"]
     print("\nCORRECTED TRANSFER PROTOCOL (clean ReT, cold eval, seed-clustered)")
-    print(f"  overall transfer ΔR = {ov['mean']:+.4f} +/-{ov['sem']:.4f} "
-          f"ci95=[{ov['ci95_lo']:+.4f},{ov['ci95_hi']:+.4f}] (n={ov['n']})")
-    print(f"  early half = {payload['early_half']['mean']:+.4f}   "
-          f"late half = {payload['late_half']['mean']:+.4f}")
-    print(f"  learning slope/block = {sl['mean']:+.5f} +/-{sl['sem']:.5f}")
+    print(f"  MEMORY (retained - reset) ΔR = {m['mean']:+.4f} +/-{m['sem']:.4f} "
+          f"ci95=[{m['ci95_lo']:+.4f},{m['ci95_hi']:+.4f}] (n={m['n']})")
+    print(f"     early={mem['early_half']['mean']:+.4f} late={mem['late_half']['mean']:+.4f} "
+          f"slope/block={mem['learning_slope_per_block']['mean']:+.5f}")
+    print(f"  total  (retained - frozen) ΔR = {t['mean']:+.4f} +/-{t['sem']:.4f}")
+    print("  Read: MEMORY>0 with CI>0 => accumulating MORE than one block helps (L_{k-1}).")
     print(f"  Saved: {run_dir / 'transfer.json'}")
     print("  Read: ΔR>0 and CI>0 => accumulated learning gives a head-start on new shocks (H1/H4).")
     print("        late>early / slope>0 => the head-start grows with exposure (H2 learning curve).")
