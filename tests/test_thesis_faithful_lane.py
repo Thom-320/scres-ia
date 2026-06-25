@@ -17,6 +17,12 @@ from supply_chain.config import (
     SIMULATION_HORIZON,
     THESIS_DOWNSTREAM_Q_RANGES,
     THESIS_FAITHFUL_PROTOCOL,
+    THESIS_REPLICATION_DOWNSTREAM_Q_SOURCE,
+    THESIS_ROBUSTNESS_DOWNSTREAM_Q_SOURCE,
+    TRACK_A_TRAINING_DOWNSTREAM_Q_SOURCE,
+    TRACK_A_TRAINING_RAW_MATERIAL_FLOW_MODE,
+    TRACK_A_TRAINING_RAW_MATERIAL_ORDER_UP_TO_MULTIPLIER,
+    TRACK_A_TRAINING_RISK_OCCURRENCE_MODE,
     VALIDATION_TABLE_6_10,
     canonical_raw_material_flow_mode,
 )
@@ -52,6 +58,28 @@ def test_extracted_thesis_constants_match_lane_contract() -> None:
     )
     assert THESIS_FAITHFUL_PROTOCOL["r14_defect_mode"] in R14_DEFECT_MODE_OPTIONS
     assert THESIS_FAITHFUL_PROTOCOL["r14_defect_mode"] == "thesis_strict_op6"
+    assert THESIS_REPLICATION_DOWNSTREAM_Q_SOURCE == "figure_6_2"
+    assert THESIS_ROBUSTNESS_DOWNSTREAM_Q_SOURCE == "table_6_20"
+    assert TRACK_A_TRAINING_DOWNSTREAM_Q_SOURCE == THESIS_REPLICATION_DOWNSTREAM_Q_SOURCE
+    assert (
+        THESIS_FAITHFUL_PROTOCOL["downstream_q_source"]
+        == THESIS_REPLICATION_DOWNSTREAM_Q_SOURCE
+    )
+    assert (
+        THESIS_FAITHFUL_PROTOCOL["risk_occurrence_mode"]
+        == TRACK_A_TRAINING_RISK_OCCURRENCE_MODE
+        == "thesis_window"
+    )
+    assert (
+        THESIS_FAITHFUL_PROTOCOL["raw_material_flow_mode"]
+        == TRACK_A_TRAINING_RAW_MATERIAL_FLOW_MODE
+        == "kit_equivalent_order_up_to"
+    )
+    assert (
+        THESIS_FAITHFUL_PROTOCOL["raw_material_order_up_to_multiplier"]
+        == TRACK_A_TRAINING_RAW_MATERIAL_ORDER_UP_TO_MULTIPLIER
+        == 2.0
+    )
     assert THESIS_FAITHFUL_PROTOCOL["ret_weights"] == {
         "max": 1.0,
         "mean": 0.5,
@@ -488,7 +516,7 @@ def test_thesis_bom_semantics_reporter_writes_match_artifacts(tmp_path) -> None:
     assert (run_dir / "thesis_bom_semantics.csv").exists()
 
 
-def test_thesis_risk_frequency_reporter_exposes_current_gap(tmp_path) -> None:
+def test_thesis_risk_frequency_reporter_passes_thesis_window_gate(tmp_path) -> None:
     subprocess.run(
         [
             sys.executable,
@@ -504,15 +532,55 @@ def test_thesis_risk_frequency_reporter_exposes_current_gap(tmp_path) -> None:
     payload = json.loads(
         (run_dir / "thesis_risk_frequency.json").read_text(encoding="utf-8")
     )
+
+    assert payload["risk_occurrence_mode"] == "thesis_window"
+    assert payload["status"] == "PASS"
+    assert len(payload["rows"]) == 9
+    assert {row["status"] for row in payload["rows"]} == {"MATCH"}
+    assert (run_dir / "THESIS_RISK_FREQUENCY.md").exists()
+    assert (run_dir / "thesis_risk_frequency.csv").exists()
+
+
+def test_thesis_risk_frequency_reporter_preserves_legacy_gap(tmp_path) -> None:
+    subprocess.run(
+        [
+            sys.executable,
+            "scripts/report_thesis_risk_frequency.py",
+            "--label",
+            "pytest_legacy_risk_frequency",
+            "--output-root",
+            str(tmp_path),
+            "--risk-occurrence-mode",
+            "legacy_renewal",
+        ],
+        check=True,
+    )
+    run_dir = tmp_path / "pytest_legacy_risk_frequency"
+    payload = json.loads(
+        (run_dir / "thesis_risk_frequency.json").read_text(encoding="utf-8")
+    )
     mismatched = {
         row["risk_id"] for row in payload["rows"] if row["status"] == "MISMATCH"
     }
 
+    assert payload["risk_occurrence_mode"] == "legacy_renewal"
     assert payload["status"] == "FAIL"
-    assert len(payload["rows"]) == 9
     assert {"R11", "R13", "R21", "R22", "R23", "R24", "R3"} <= mismatched
-    assert (run_dir / "THESIS_RISK_FREQUENCY.md").exists()
-    assert (run_dir / "thesis_risk_frequency.csv").exists()
+
+
+def test_r11_incidents_affect_one_workstation_not_both() -> None:
+    sim = MFSCSimulation(
+        risks_enabled=True,
+        enabled_risks={"R11"},
+        risk_occurrence_mode="thesis_window",
+        seed=7,
+        horizon=500,
+    ).run()
+    r11_events = [event for event in sim.risk_events if event.risk_id == "R11"]
+
+    assert r11_events
+    assert all(len(event.affected_ops) == 1 for event in r11_events)
+    assert {event.affected_ops[0] for event in r11_events} <= {5, 6}
 
 
 def test_thesis_aligned_training_env_is_trainable_but_not_1to1() -> None:
@@ -526,6 +594,16 @@ def test_thesis_aligned_training_env_is_trainable_but_not_1to1() -> None:
     assert obs.shape == env.observation_space.shape
     assert info["training_protocol"] == "thesis_aligned_gym"
     assert info["year_basis"] == "thesis"
+    assert info["downstream_q_source"] == TRACK_A_TRAINING_DOWNSTREAM_Q_SOURCE
+    assert (
+        info["raw_material_flow_mode"]
+        == canonical_raw_material_flow_mode(TRACK_A_TRAINING_RAW_MATERIAL_FLOW_MODE)
+    )
+    assert (
+        info["raw_material_order_up_to_multiplier"]
+        == TRACK_A_TRAINING_RAW_MATERIAL_ORDER_UP_TO_MULTIPLIER
+    )
+    assert info["risk_occurrence_mode"] == TRACK_A_TRAINING_RISK_OCCURRENCE_MODE
     assert info["warmup_metadata"]["priming_enabled"] is False
     assert info["warmup_metadata"]["warmup_trigger"] == "op9_arrival"
     assert info["warmup_metadata"]["sim_warmup_time"] >= 943.0

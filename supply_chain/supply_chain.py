@@ -51,11 +51,13 @@ from .config import (
     HOURS_PER_YEAR_THESIS,
     R14_DEFECT_MODE_OPTIONS,
     RAW_MATERIAL_FLOW_MODE_OPTIONS,
+    RISK_OCCURRENCE_MODE_OPTIONS,
     canonical_raw_material_flow_mode,
     YEAR_BASIS_OPTIONS,
     LEAD_TIME_PROMISE,
     THESIS_FAITHFUL_PROTOCOL,
     THESIS_DOWNSTREAM_Q_RANGES,
+    THESIS_REPLICATION_DOWNSTREAM_Q_SOURCE,
     WARMUP_TRIGGER_OPTIONS,
 )
 from .ret_thesis import (
@@ -104,6 +106,8 @@ class RiskEvent:
     duration: float
     affected_ops: list
     description: str = ""
+    magnitude: float = 1.0
+    unit: str = "incidents"
 
 
 class MFSCSimulation:
@@ -124,13 +128,15 @@ class MFSCSimulation:
         stochastic_pt: bool = False,
         deterministic_baseline: bool = False,
         warmup_trigger: str = "production",
-        downstream_q_source: str = "figure_6_2",
+        downstream_q_source: str = THESIS_REPLICATION_DOWNSTREAM_Q_SOURCE,
         r14_defect_mode: str = "reprocess",
         enabled_risks: Optional[set[str]] = None,
         risk_overrides: Optional[dict[str, str]] = None,
+        risk_occurrence_mode: str = "legacy_renewal",
         inventory_replenishment_period: Optional[float] = None,
         raw_material_flow_mode: str = "legacy_validated",
         raw_material_order_up_to_multiplier: float = 2.0,
+        demand_mean_multiplier: float = 1.0,
     ) -> None:
         if warmup_trigger not in WARMUP_TRIGGER_OPTIONS:
             valid = ", ".join(WARMUP_TRIGGER_OPTIONS)
@@ -153,6 +159,12 @@ class MFSCSimulation:
                 "Invalid raw_material_flow_mode="
                 f"{raw_material_flow_mode!r}. Expected one of: {valid}."
             )
+        if risk_occurrence_mode not in RISK_OCCURRENCE_MODE_OPTIONS:
+            valid = ", ".join(RISK_OCCURRENCE_MODE_OPTIONS)
+            raise ValueError(
+                "Invalid risk_occurrence_mode="
+                f"{risk_occurrence_mode!r}. Expected one of: {valid}."
+            )
         raw_material_flow_mode = canonical_raw_material_flow_mode(raw_material_flow_mode)
         self.env = simpy.Environment()
         self.shifts = shifts
@@ -173,6 +185,12 @@ class MFSCSimulation:
         )
         if self.raw_material_order_up_to_multiplier <= 0.0:
             raise ValueError("raw_material_order_up_to_multiplier must be > 0.")
+        # Operational-tempo demand lever for `learning_extension_v1` (see
+        # docs/PAPER_CONTRACT_2026-06-24.md). 1.0 = thesis baseline; >1 raises the
+        # regular daily-demand mean. Independent of the adaptive_benchmark machinery.
+        self.demand_mean_multiplier = float(demand_mean_multiplier)
+        if self.demand_mean_multiplier <= 0.0:
+            raise ValueError("demand_mean_multiplier must be > 0.")
         self._raw_units_per_ration = (
             float(NUM_RAW_MATERIALS)
             if raw_material_flow_mode.startswith("bom_total_units")
@@ -180,6 +198,7 @@ class MFSCSimulation:
         )
         self.enabled_risks = set(enabled_risks) if enabled_risks is not None else None
         self.risk_overrides = dict(risk_overrides or {})
+        self.risk_occurrence_mode = risk_occurrence_mode
         self.inventory_replenishment_period = inventory_replenishment_period
         self.hours_per_year = resolve_hours_per_year(year_basis)
         downstream_ranges = THESIS_DOWNSTREAM_Q_RANGES[downstream_q_source]
@@ -1327,6 +1346,8 @@ class MFSCSimulation:
                 continue
 
             demand_qty = float(self._select_uniform_discrete(DEMAND["a"], DEMAND["b"]))
+            # Operational-tempo scaling of regular demand (learning-extension lever).
+            demand_qty *= self.demand_mean_multiplier
             if self.adaptive_benchmark_enabled:
                 demand_scale = float(self._adaptive_regime_params()["demand_scale"])
                 demand_qty *= demand_scale
@@ -1429,22 +1450,39 @@ class MFSCSimulation:
             )
         return base_lo, base_hi
 
+    def _sample_uniform_risk_window(self, risk_id: str) -> tuple[float, float]:
+        """Sample the event offset for a thesis uniform-occurrence window."""
+        a = int(RISKS_CURRENT[risk_id]["occurrence"]["a"])
+        b_val = max(a, int(round(self._get_risk_b(risk_id))))
+        delay = float(self.rng.integers(a, b_val + 1))
+        return delay, float(b_val)
+
+    def _tail_after_uniform_occurrence(self, delay: float, window: float) -> float:
+        if self.risk_occurrence_mode == "thesis_window":
+            return max(0.0, float(window) - float(delay))
+        return 0.0
+
     def _risk_R11(self):
-        a = RISKS_CURRENT["R11"]["occurrence"]["a"]
-        b_val = self._get_risk_b("R11")
         beta = self._get_risk_recovery_mean("R11")
         while True:
-            yield self.env.timeout(self.rng.integers(a, b_val + 1))
-            start = self.env.now
-            self._take_down(5)
-            self._take_down(6)
-            repair = max(1, self.rng.exponential(beta))
-            yield self.env.timeout(repair)
-            self._bring_up(5)
-            self._bring_up(6)
-            self.risk_events.append(
-                RiskEvent("R11", start, self.env.now, self.env.now - start, [5, 6])
-            )
+            delay, window = self._sample_uniform_risk_window("R11")
+            yield self.env.timeout(delay)
+            if self.risk_occurrence_mode == "thesis_window":
+                self.env.process(self._risk_R11_event(beta))
+                yield self.env.timeout(self._tail_after_uniform_occurrence(delay, window))
+            else:
+                yield from self._risk_R11_event(beta)
+
+    def _risk_R11_event(self, beta: float):
+        target = int(self.rng.choice(RISKS_CURRENT["R11"]["affected_ops"]))
+        start = self.env.now
+        self._take_down(target)
+        repair = max(1, self.rng.exponential(beta))
+        yield self.env.timeout(repair)
+        self._bring_up(target)
+        self.risk_events.append(
+            RiskEvent("R11", start, self.env.now, self.env.now - start, [target])
+        )
 
     def _risk_R12(self):
         n = RISKS_CURRENT["R12"]["occurrence"]["n"]
@@ -1454,29 +1492,62 @@ class MFSCSimulation:
             delayed = self.rng.binomial(n, p)
             if delayed > 0:
                 delay = delayed * 168
-                start = self.env.now
-                self._take_down(1)
-                yield self.env.timeout(delay)
-                self._bring_up(1)
-                self.risk_events.append(
-                    RiskEvent("R12", start, self.env.now, delay, [1])
-                )
+                if self.risk_occurrence_mode == "thesis_window":
+                    self.env.process(self._risk_R12_event(delay, delayed))
+                else:
+                    yield from self._risk_R12_event(delay, delayed)
+
+    def _risk_R12_event(self, delay: float, delayed: float):
+        start = self.env.now
+        self._take_down(1)
+        yield self.env.timeout(delay)
+        self._bring_up(1)
+        self.risk_events.append(
+            RiskEvent(
+                "R12",
+                start,
+                self.env.now,
+                delay,
+                [1],
+                magnitude=float(delayed),
+                unit="delayed_contracts",
+            )
+        )
 
     def _risk_R13(self):
         n = RISKS_CURRENT["R13"]["occurrence"]["n"]
         p = self._get_risk_p("R13")
+        interval = (
+            HOURS_PER_WEEK
+            if self.risk_occurrence_mode == "thesis_window"
+            else self.params["op2_rop"]
+        )
         while True:
-            yield self.env.timeout(self.params["op2_rop"])
+            yield self.env.timeout(interval)
             delayed = self.rng.binomial(n, p)
             if delayed > 0:
                 delay = delayed * 24
-                start = self.env.now
-                self._take_down(2)
-                yield self.env.timeout(delay)
-                self._bring_up(2)
-                self.risk_events.append(
-                    RiskEvent("R13", start, self.env.now, delay, [2])
-                )
+                if self.risk_occurrence_mode == "thesis_window":
+                    self.env.process(self._risk_R13_event(delay, delayed))
+                else:
+                    yield from self._risk_R13_event(delay, delayed)
+
+    def _risk_R13_event(self, delay: float, delayed: float):
+        start = self.env.now
+        self._take_down(2)
+        yield self.env.timeout(delay)
+        self._bring_up(2)
+        self.risk_events.append(
+            RiskEvent(
+                "R13",
+                start,
+                self.env.now,
+                delay,
+                [2],
+                magnitude=float(delayed),
+                unit="delayed_deliveries",
+            )
+        )
 
     def _risk_R14(self):
         """R14 defective products — Binomial(n, p) per day (Table 6.6b).
@@ -1518,6 +1589,8 @@ class MFSCSimulation:
                                 0,
                                 [7],
                                 description,
+                                magnitude=float(defects),
+                                unit="defective_products",
                             )
                         )
 
@@ -1528,13 +1601,15 @@ class MFSCSimulation:
         operation recovers independently with Exp(beta) hours. The generator
         spawns a new process for each event so they can theoretically overlap.
         """
-        a = RISKS_CURRENT["R21"]["occurrence"]["a"]
-        b_val = self._get_risk_b("R21")
         beta = self._get_risk_recovery_mean("R21")
         affected = RISKS_CURRENT["R21"]["affected_ops"]
         while True:
-            yield self.env.timeout(self.rng.integers(a, b_val + 1))
+            delay, window = self._sample_uniform_risk_window("R21")
+            yield self.env.timeout(delay)
             self.env.process(self._r21_event(affected, beta))
+            tail = self._tail_after_uniform_occurrence(delay, window)
+            if tail > 0:
+                yield self.env.timeout(tail)
 
     def _r21_event(self, affected: list[int], beta: float):
         start = self.env.now
@@ -1552,73 +1627,105 @@ class MFSCSimulation:
         )
 
     def _risk_R22(self):
-        a = RISKS_CURRENT["R22"]["occurrence"]["a"]
-        b_val = self._get_risk_b("R22")
         beta = self._get_risk_recovery_mean("R22")
         loc_ops = RISKS_CURRENT["R22"]["affected_ops"]
         while True:
-            yield self.env.timeout(self.rng.integers(a, b_val + 1))
-            target = int(self.rng.choice(loc_ops))
-            start = self.env.now
-            self._take_down(target)
-            recovery = max(1, self.rng.exponential(beta))
-            yield self.env.timeout(recovery)
-            self._bring_up(target)
-            self.risk_events.append(
-                RiskEvent("R22", start, self.env.now, recovery, [target])
-            )
+            delay, window = self._sample_uniform_risk_window("R22")
+            yield self.env.timeout(delay)
+            if self.risk_occurrence_mode == "thesis_window":
+                self.env.process(self._risk_R22_event(beta, loc_ops))
+                yield self.env.timeout(self._tail_after_uniform_occurrence(delay, window))
+            else:
+                yield from self._risk_R22_event(beta, loc_ops)
+
+    def _risk_R22_event(self, beta: float, loc_ops: list[int]):
+        target = int(self.rng.choice(loc_ops))
+        start = self.env.now
+        self._take_down(target)
+        recovery = max(1, self.rng.exponential(beta))
+        yield self.env.timeout(recovery)
+        self._bring_up(target)
+        self.risk_events.append(
+            RiskEvent("R22", start, self.env.now, recovery, [target])
+        )
 
     def _risk_R23(self):
-        a = RISKS_CURRENT["R23"]["occurrence"]["a"]
-        b_val = self._get_risk_b("R23")
         beta = self._get_risk_recovery_mean("R23")
         while True:
-            yield self.env.timeout(self.rng.integers(a, b_val + 1))
-            start = self.env.now
-            self._take_down(11)
-            recovery = max(1, self.rng.exponential(beta))
-            yield self.env.timeout(recovery)
-            self._bring_up(11)
-            self.risk_events.append(
-                RiskEvent("R23", start, self.env.now, recovery, [11])
-            )
+            delay, window = self._sample_uniform_risk_window("R23")
+            yield self.env.timeout(delay)
+            if self.risk_occurrence_mode == "thesis_window":
+                self.env.process(self._risk_R23_event(beta))
+                yield self.env.timeout(self._tail_after_uniform_occurrence(delay, window))
+            else:
+                yield from self._risk_R23_event(beta)
+
+    def _risk_R23_event(self, beta: float):
+        start = self.env.now
+        self._take_down(11)
+        recovery = max(1, self.rng.exponential(beta))
+        yield self.env.timeout(recovery)
+        self._bring_up(11)
+        self.risk_events.append(
+            RiskEvent("R23", start, self.env.now, recovery, [11])
+        )
 
     def _risk_R24(self):
-        a = RISKS_CURRENT["R24"]["occurrence"]["a"]
-        b_val = self._get_risk_b("R24")
         while True:
-            yield self.env.timeout(self.rng.integers(a, b_val + 1))
-            surge_lo, surge_hi = self._get_risk_surge()
-            surge = self.rng.integers(surge_lo, surge_hi + 1)
-            self._contingent_demand_pending += surge
-            # Cap accumulated contingent demand to prevent unbounded obs[14]
-            # spikes when multiple R24 events fire before demand is consumed.
-            # 5×2600 = 13000 ≈ 5 regular demand cycles, well above any
-            # realistic surge accumulation.
-            max_contingent = 5 * 2600
-            self._contingent_demand_pending = min(
-                self._contingent_demand_pending, max_contingent
+            delay, window = self._sample_uniform_risk_window("R24")
+            yield self.env.timeout(delay)
+            self._apply_risk_R24_event()
+            tail = self._tail_after_uniform_occurrence(delay, window)
+            if tail > 0:
+                yield self.env.timeout(tail)
+
+    def _apply_risk_R24_event(self) -> None:
+        surge_lo, surge_hi = self._get_risk_surge()
+        surge = self.rng.integers(surge_lo, surge_hi + 1)
+        self._contingent_demand_pending += surge
+        # Cap accumulated contingent demand to prevent unbounded obs[14]
+        # spikes when multiple R24 events fire before demand is consumed.
+        # 5×2600 = 13000 ≈ 5 regular demand cycles, well above any
+        # realistic surge accumulation.
+        max_contingent = 5 * 2600
+        self._contingent_demand_pending = min(
+            self._contingent_demand_pending, max_contingent
+        )
+        self.risk_events.append(
+            RiskEvent(
+                "R24",
+                self.env.now,
+                self.env.now,
+                0,
+                [13],
+                f"+{surge}",
+                magnitude=float(surge),
+                unit="rations",
             )
-            self.risk_events.append(
-                RiskEvent("R24", self.env.now, self.env.now, 0, [13], f"+{surge}")
-            )
+        )
 
     def _risk_R3(self):
-        a = RISKS_CURRENT["R3"]["occurrence"]["a"]
-        b_val = self._get_risk_b("R3")
         duration = RISKS_CURRENT["R3"]["recovery"]["duration"]
         affected = RISKS_CURRENT["R3"]["affected_ops"]
         while True:
-            yield self.env.timeout(self.rng.integers(a, b_val + 1))
-            start = self.env.now
-            for op_id in affected:
-                self._take_down(op_id)
-            yield self.env.timeout(duration)
-            for op_id in affected:
-                self._bring_up(op_id)
-            self.risk_events.append(
-                RiskEvent("R3", start, self.env.now, duration, list(affected))
-            )
+            delay, window = self._sample_uniform_risk_window("R3")
+            yield self.env.timeout(delay)
+            if self.risk_occurrence_mode == "thesis_window":
+                self.env.process(self._risk_R3_event(duration, affected))
+                yield self.env.timeout(self._tail_after_uniform_occurrence(delay, window))
+            else:
+                yield from self._risk_R3_event(duration, affected)
+
+    def _risk_R3_event(self, duration: float, affected: list[int]):
+        start = self.env.now
+        for op_id in affected:
+            self._take_down(op_id)
+        yield self.env.timeout(duration)
+        for op_id in affected:
+            self._bring_up(op_id)
+        self.risk_events.append(
+            RiskEvent("R3", start, self.env.now, duration, list(affected))
+        )
 
     # =====================================================================
     # REPORTING

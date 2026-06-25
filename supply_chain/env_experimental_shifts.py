@@ -74,11 +74,13 @@ from .config import (
     OPERATIONS,
     R14_DEFECT_MODE_OPTIONS,
     RAW_MATERIAL_FLOW_MODE_OPTIONS,
+    RISK_OCCURRENCE_MODE_OPTIONS,
     canonical_raw_material_flow_mode,
     RET_CASE_THRESHOLDS,
     RET_SHIFT_COST_DELTA_DEFAULT,
     SIMULATION_HORIZON,
     THESIS_DOWNSTREAM_Q_RANGES,
+    THESIS_REPLICATION_DOWNSTREAM_Q_SOURCE,
     WARMUP,
     WARMUP_TRIGGER_OPTIONS,
     YEAR_BASIS_OPTIONS,
@@ -99,6 +101,7 @@ REWARD_MODE_OPTIONS = (
     "ReT_garrido2024",
     "ReT_garrido2024_train",
     "ReT_ladder_v1",
+    "ReT_tail_v2",
     "rt_v0",
     "control_v1",
     "control_v1_pbrs",
@@ -123,6 +126,23 @@ RET_LADDER_GATE_SC_THRESHOLD = 0.95
 RET_LADDER_GATE_RC_THRESHOLD = 0.70
 RET_LADDER_EXPECTED_8W_DEMAND = 120_000.0
 RET_LADDER_I1344_TOTAL = float(sum(INVENTORY_BUFFERS[1344].values()))
+
+# ReT_tail_v2 defaults (tail/recovery-aligned reward candidate)
+#
+# The old ReT_tail_v1 lived on the postfix-reruns branch. ReT_tail_v2 keeps the
+# same scientific idea but is wired to the current Track A contract: service and
+# backlog recovery dominate, while inventory and shift costs are un-gated so
+# max-buffer/max-shift cannot become free under stress.
+RET_TAIL_W_SC = 0.30
+RET_TAIL_W_RC = 0.60
+RET_TAIL_W_CE = 0.10
+RET_TAIL_CAP_KAPPA = 0.40
+RET_TAIL_INV_KAPPA = 0.25
+RET_TAIL_BOOST = 0.0
+RET_TAIL_TRANSFORM_OPTIONS = ("identity", "power", "exp_norm")
+RET_TAIL_TRANSFORM = "identity"
+RET_TAIL_GAMMA = 1.0
+RET_TAIL_BETA = 2.0
 
 # ReT_unified_v1 defaults (paper-facing service-first resilience)
 RET_UNIFIED_W_FR = 0.60
@@ -273,6 +293,16 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         ret_ladder_gate_rc_threshold: float = RET_LADDER_GATE_RC_THRESHOLD,
         ret_ladder_expected_8w_demand: float = RET_LADDER_EXPECTED_8W_DEMAND,
         ret_ladder_i1344_total: float = RET_LADDER_I1344_TOTAL,
+        # --- ReT_tail_v2 parameters ---
+        ret_tail_w_sc: float = RET_TAIL_W_SC,
+        ret_tail_w_rc: float = RET_TAIL_W_RC,
+        ret_tail_w_ce: float = RET_TAIL_W_CE,
+        ret_tail_cap_kappa: float = RET_TAIL_CAP_KAPPA,
+        ret_tail_inv_kappa: float = RET_TAIL_INV_KAPPA,
+        ret_tail_boost: float = RET_TAIL_BOOST,
+        ret_tail_transform: str = RET_TAIL_TRANSFORM,
+        ret_tail_gamma: float = RET_TAIL_GAMMA,
+        ret_tail_beta: float = RET_TAIL_BETA,
         # --- ReT_unified_v1 parameters ---
         ret_unified_calibration_path: str | None = None,
         ret_unified_theta_sc: float | None = None,
@@ -302,10 +332,12 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         action_contract: str = "track_a_v1",
         action_mode: str = "full",  # "full" (5D), "shift_only" (1D), "shift_q9" (2D)
         warmup_trigger: str = "production",
-        downstream_q_source: str = "figure_6_2",
+        downstream_q_source: str = THESIS_REPLICATION_DOWNSTREAM_Q_SOURCE,
         r14_defect_mode: str = "reprocess",
         raw_material_flow_mode: str = "legacy_validated",
         raw_material_order_up_to_multiplier: float = 2.0,
+        demand_mean_multiplier: float = 1.0,
+        risk_occurrence_mode: str = "legacy_renewal",
         initial_buffers: dict[str, float] | None = None,
         initial_shifts: int = 1,
         inventory_replenishment_period: float | None = None,
@@ -372,6 +404,20 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                 f"Invalid raw_material_flow_mode={raw_material_flow_mode!r}. "
                 f"Expected one of {RAW_MATERIAL_FLOW_MODE_OPTIONS}."
             )
+        if risk_occurrence_mode not in RISK_OCCURRENCE_MODE_OPTIONS:
+            raise ValueError(
+                f"Invalid risk_occurrence_mode={risk_occurrence_mode!r}. "
+                f"Expected one of {RISK_OCCURRENCE_MODE_OPTIONS}."
+            )
+        if ret_tail_transform not in RET_TAIL_TRANSFORM_OPTIONS:
+            raise ValueError(
+                f"Invalid ret_tail_transform={ret_tail_transform!r}; "
+                f"expected one of {RET_TAIL_TRANSFORM_OPTIONS}."
+            )
+        if ret_tail_gamma <= 0:
+            raise ValueError("ret_tail_gamma must be > 0")
+        if ret_tail_beta <= 0:
+            raise ValueError("ret_tail_beta must be > 0")
         raw_material_flow_mode = canonical_raw_material_flow_mode(raw_material_flow_mode)
         canonical_reward_mode = REWARD_MODE_ALIAS_MAP.get(reward_mode, reward_mode)
         if (
@@ -396,6 +442,8 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self.raw_material_order_up_to_multiplier = float(
             raw_material_order_up_to_multiplier
         )
+        self.demand_mean_multiplier = float(demand_mean_multiplier)
+        self.risk_occurrence_mode = risk_occurrence_mode
         self.initial_buffers = dict(initial_buffers or {})
         self.initial_shifts = int(initial_shifts)
         self.initial_inventory_replenishment_period = inventory_replenishment_period
@@ -444,6 +492,17 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self.ret_ladder_gate_rc_threshold = float(ret_ladder_gate_rc_threshold)
         self.ret_ladder_expected_8w_demand = float(ret_ladder_expected_8w_demand)
         self.ret_ladder_i1344_total = float(ret_ladder_i1344_total)
+
+        # ReT_tail_v2 params
+        self.ret_tail_w_sc = float(ret_tail_w_sc)
+        self.ret_tail_w_rc = float(ret_tail_w_rc)
+        self.ret_tail_w_ce = float(ret_tail_w_ce)
+        self.ret_tail_cap_kappa = float(ret_tail_cap_kappa)
+        self.ret_tail_inv_kappa = float(ret_tail_inv_kappa)
+        self.ret_tail_boost = float(ret_tail_boost)
+        self.ret_tail_transform = ret_tail_transform
+        self.ret_tail_gamma = float(ret_tail_gamma)
+        self.ret_tail_beta = float(ret_tail_beta)
 
         unified_calibration = self._load_ret_unified_calibration(
             ret_unified_calibration_path
@@ -1402,6 +1461,104 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         }
 
     # -----------------------------------------------------------------
+    # ReT_tail_v2: tail/recovery-aligned reward candidate
+    # -----------------------------------------------------------------
+
+    def _compute_ret_tail_v2(
+        self, info: dict[str, Any], shifts: int
+    ) -> dict[str, float | dict[str, float] | str]:
+        """
+        Recovery-heavy Track A reward with un-gated resource cost.
+
+        The ladder reward is service-first and gates cost when service/recovery
+        are weak. That makes sense as a conservative mean-performance reward,
+        but it can under-price always-on S3/max-buffer policies in tail states.
+        ReT_tail_v2 tests the opposite design: backlog containment dominates
+        and shift/buffer costs always enter the Cobb-Douglas product.
+        """
+        eps = 1e-6
+        new_demanded = float(info.get("new_demanded", 0.0))
+        new_backorder_qty = float(info.get("new_backorder_qty", 0.0))
+        pending_backorder_qty = max(0.0, float(info.get("pending_backorder_qty", 0.0)))
+
+        sc_t = max(eps, 1.0 - new_backorder_qty / max(new_demanded, 1.0))
+        eight_week_multiplier = max(1.0, (8.0 * 168.0) / max(self.step_size, 1.0))
+        rolling_demand_8w = max(0.0, new_demanded * eight_week_multiplier)
+        d8_t = max(rolling_demand_8w, self.ret_ladder_expected_8w_demand, 1.0)
+        rc_t = max(eps, 1.0 / (1.0 + pending_backorder_qty / d8_t))
+
+        stress_t = min(
+            1.0,
+            max(
+                float(info.get("step_disruption_hours", 0.0)) / max(self.step_size, 1.0),
+                1.0 - sc_t,
+                min(1.0, pending_backorder_qty / d8_t),
+            ),
+        )
+        rc_exponent = self.ret_tail_w_rc * (1.0 + self.ret_tail_boost * stress_t)
+
+        cap_efficiency = max(
+            eps, 1.0 - self.ret_tail_cap_kappa * (float(shifts) - 1.0) / 2.0
+        )
+        strategic_inventory = self._strategic_inventory_target_total()
+        inv_scale = max(self.ret_ladder_i1344_total, 1.0)
+        inventory_efficiency = max(
+            eps,
+            1.0 / (1.0 + self.ret_tail_inv_kappa * strategic_inventory / inv_scale),
+        )
+        cost_efficiency = float(np.sqrt(cap_efficiency * inventory_efficiency))
+
+        log_base = float(
+            self.ret_tail_w_sc * np.log(sc_t)
+            + rc_exponent * np.log(rc_t)
+            + self.ret_tail_w_ce * np.log(cost_efficiency)
+        )
+        base_t = float(np.exp(log_base))
+
+        if self.ret_tail_transform == "power":
+            reward_t = float(base_t**self.ret_tail_gamma)
+        elif self.ret_tail_transform == "exp_norm":
+            reward_t = float(
+                (np.exp(self.ret_tail_beta * base_t) - 1.0)
+                / (np.exp(self.ret_tail_beta) - 1.0)
+            )
+        else:
+            reward_t = base_t
+
+        reward_t = float(np.clip(reward_t, eps, 1.0))
+
+        return {
+            "reward_mode": "ReT_tail_v2",
+            "ret_tail_step": reward_t,
+            "ret_tail_base_step": base_t,
+            "ret_tail_service_continuity": sc_t,
+            "ret_tail_recovery_containment": rc_t,
+            "ret_tail_cost_efficiency": cost_efficiency,
+            "ret_tail_cap_efficiency": cap_efficiency,
+            "ret_tail_inventory_efficiency": inventory_efficiency,
+            "ret_tail_stress": stress_t,
+            "ret_tail_recovery_exponent": rc_exponent,
+            "ret_tail_rolling_demand_8w": rolling_demand_8w,
+            "ret_tail_d8_demand": d8_t,
+            "ret_tail_pending_backorder_qty": pending_backorder_qty,
+            "ret_tail_strategic_inventory": strategic_inventory,
+            "ret_tail_i1344_total": inv_scale,
+            "ret_tail_transform": self.ret_tail_transform,
+            "ret_tail_gamma": self.ret_tail_gamma,
+            "ret_tail_beta": self.ret_tail_beta,
+            "weights": {
+                "w_sc": self.ret_tail_w_sc,
+                "w_rc": self.ret_tail_w_rc,
+                "w_ce": self.ret_tail_w_ce,
+            },
+            "params": {
+                "cap_kappa": self.ret_tail_cap_kappa,
+                "inv_kappa": self.ret_tail_inv_kappa,
+                "boost": self.ret_tail_boost,
+            },
+        }
+
+    # -----------------------------------------------------------------
     # ReT_cd: Cobb-Douglas Resilience (Garrido et al. 2024 methodology)
     # -----------------------------------------------------------------
 
@@ -1872,6 +2029,8 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             raw_material_order_up_to_multiplier=(
                 self.raw_material_order_up_to_multiplier
             ),
+            demand_mean_multiplier=self.demand_mean_multiplier,
+            risk_occurrence_mode=self.risk_occurrence_mode,
             enabled_risks=self.enabled_risks,
             risk_overrides=self.risk_overrides,
             inventory_replenishment_period=inventory_replenishment_period,
@@ -1914,6 +2073,12 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             "year_basis": self.year_basis,
             "observation_version": self.observation_version,
             "action_contract": self.action_contract,
+            "downstream_q_source": self.downstream_q_source,
+            "raw_material_flow_mode": self.raw_material_flow_mode,
+            "raw_material_order_up_to_multiplier": (
+                self.raw_material_order_up_to_multiplier
+            ),
+            "risk_occurrence_mode": self.risk_occurrence_mode,
             "training_protocol": (
                 "thesis_aligned_gym" if not self.priming_enabled else "rl_benchmark"
             ),
@@ -2144,6 +2309,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         ret_seq_components: dict[str, float] | None = None
         ret_unified_components: dict[str, Any] | None = None
         ret_ladder_components: dict[str, Any] | None = None
+        ret_tail_components: dict[str, Any] | None = None
         ret_cd_components: dict[str, float | str] | None = None
         ret_cd_4v_components: dict[str, float] | None = None
         ret_g24_components: dict[str, Any] | None = None
@@ -2182,6 +2348,13 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         elif self._canonical_reward_mode == "ReT_ladder_v1":
             ret_ladder_components = self._compute_ret_ladder_v1(info, shifts)
             reward = float(ret_ladder_components["ret_ladder_step"])
+            corrected_ret_components = self._compute_ret_thesis_corrected_components(
+                info, self.step_size
+            )
+            ret_components = self._compute_ret_thesis_components(info, self.step_size)
+        elif self._canonical_reward_mode == "ReT_tail_v2":
+            ret_tail_components = self._compute_ret_tail_v2(info, shifts)
+            reward = float(ret_tail_components["ret_tail_step"])
             corrected_ret_components = self._compute_ret_thesis_corrected_components(
                 info, self.step_size
             )
@@ -2297,6 +2470,8 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             ret_unified_components = self._compute_ret_unified_v1(info, shifts)
         if ret_ladder_components is None:
             ret_ladder_components = self._compute_ret_ladder_v1(info, shifts)
+        if ret_tail_components is None:
+            ret_tail_components = self._compute_ret_tail_v2(info, shifts)
         out_info["ret_seq_step"] = float(ret_seq_components["ret_seq_step"])
         out_info["ret_seq_components"] = ret_seq_components
         out_info["service_continuity_step"] = float(
@@ -2327,6 +2502,24 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             ret_ladder_components["ret_ladder_efficiency"]
         )
         out_info["ret_ladder_gate"] = float(ret_ladder_components["ret_ladder_gate"])
+        out_info["ret_tail_step"] = float(ret_tail_components["ret_tail_step"])
+        out_info["ret_tail_base_step"] = float(
+            ret_tail_components["ret_tail_base_step"]
+        )
+        out_info["ret_tail_components"] = ret_tail_components
+        out_info["ret_tail_service_continuity"] = float(
+            ret_tail_components["ret_tail_service_continuity"]
+        )
+        out_info["ret_tail_recovery_containment"] = float(
+            ret_tail_components["ret_tail_recovery_containment"]
+        )
+        out_info["ret_tail_cost_efficiency"] = float(
+            ret_tail_components["ret_tail_cost_efficiency"]
+        )
+        out_info["ret_tail_stress"] = float(ret_tail_components["ret_tail_stress"])
+        out_info["ret_tail_transform"] = str(ret_tail_components["ret_tail_transform"])
+        out_info["ret_tail_gamma"] = float(ret_tail_components["ret_tail_gamma"])
+        out_info["ret_tail_beta"] = float(ret_tail_components["ret_tail_beta"])
         out_info["ret_thesis_step"] = float(ret_components["ret_value"])
         out_info["ret_components"] = ret_components
         out_info["ret_thesis_corrected_step"] = float(
@@ -2417,6 +2610,14 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                 ret_ladder_components["ret_ladder_step"]
             )
             out_info["ret_ladder_components"] = ret_ladder_components
+            out_info["ret_thesis_corrected_step"] = float(
+                corrected_ret_components["ret_value"]
+            )
+            out_info["ret_thesis_corrected"] = corrected_ret_components
+            out_info["ret_components"] = ret_components
+        elif self._canonical_reward_mode == "ReT_tail_v2":
+            out_info["ret_tail_step"] = float(ret_tail_components["ret_tail_step"])
+            out_info["ret_tail_components"] = ret_tail_components
             out_info["ret_thesis_corrected_step"] = float(
                 corrected_ret_components["ret_value"]
             )

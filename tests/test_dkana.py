@@ -489,8 +489,8 @@ def test_dkana_thesis_faithful_env_uses_18_decision_dims_and_reward_obs() -> Non
     assert step_info["action_contract"] == "thesis_faithful_dkana_v1"
     assert env.unwrapped.sim is not None
     assert env.unwrapped.sim.inventory_buffer_targets == {
-        "op3_rm": 46080.0,
-        "op5_rm": 46080.0,
+        "op3_rm": 552960.0,
+        "op5_rm": 552960.0,
         "op9_rations": 47250.0,
     }
     assert env.unwrapped.sim.params["assembly_shifts"] == 3
@@ -669,8 +669,8 @@ def test_dkana_thesis_faithful_initial_action_applies_buffers_before_warmup() ->
     assert info["warmup_metadata"]["inventory_replenishment_period"] == 504.0
     assert env.unwrapped.sim is not None
     assert env.unwrapped.sim.inventory_buffer_targets == {
-        "op3_rm": 46080.0,
-        "op5_rm": 46080.0,
+        "op3_rm": 552960.0,
+        "op5_rm": 552960.0,
         "op9_rations": 47250.0,
     }
     env.close()

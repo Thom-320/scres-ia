@@ -22,6 +22,14 @@ from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from supply_chain.config import (  # noqa: E402
+    THESIS_DOWNSTREAM_Q_RANGES,
+    THESIS_ROBUSTNESS_DOWNSTREAM_Q_SOURCE,
+    TRACK_A_TRAINING_RAW_MATERIAL_FLOW_MODE,
+    TRACK_A_TRAINING_RAW_MATERIAL_ORDER_UP_TO_MULTIPLIER,
+    TRACK_A_TRAINING_RISK_OCCURRENCE_MODE,
+    TRACK_A_TRAINING_DOWNSTREAM_Q_SOURCE,
+)
 from supply_chain.external_env_interface import (  # noqa: E402
     THESIS_INVENTORY_PERIODS,
     get_episode_terminal_metrics,
@@ -61,6 +69,17 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--output-root", type=Path, default=DEFAULT_OUTPUT_ROOT)
     parser.add_argument("--reward-mode", default="control_v1")
     parser.add_argument("--risk-level", default="increased")
+    parser.add_argument(
+        "--downstream-q-source",
+        choices=tuple(sorted(THESIS_DOWNSTREAM_Q_RANGES)),
+        default=TRACK_A_TRAINING_DOWNSTREAM_Q_SOURCE,
+        help=(
+            "Downstream dispatch quantity source. The frozen Track A training "
+            f"default is {TRACK_A_TRAINING_DOWNSTREAM_Q_SOURCE}; use "
+            f"{THESIS_ROBUSTNESS_DOWNSTREAM_Q_SOURCE} only for explicit robustness "
+            "sensitivity runs."
+        ),
+    )
     parser.add_argument("--observation-version", default="v5")
     parser.add_argument(
         "--observation-mode",
@@ -157,6 +176,12 @@ def env_kwargs(args: argparse.Namespace) -> dict[str, Any]:
     return {
         "reward_mode": args.reward_mode,
         "risk_level": args.risk_level,
+        "downstream_q_source": args.downstream_q_source,
+        "raw_material_flow_mode": TRACK_A_TRAINING_RAW_MATERIAL_FLOW_MODE,
+        "raw_material_order_up_to_multiplier": (
+            TRACK_A_TRAINING_RAW_MATERIAL_ORDER_UP_TO_MULTIPLIER
+        ),
+        "risk_occurrence_mode": TRACK_A_TRAINING_RISK_OCCURRENCE_MODE,
         "observation_version": args.observation_version,
         "observation_mode": args.observation_mode,
         "action_space_mode": args.action_space_mode,
@@ -351,6 +376,9 @@ def evaluate_action_policy(
         total_steps = max(1, steps)
         row = {
             "policy": policy_name,
+            "downstream_q_source": args.downstream_q_source,
+            "raw_material_flow_mode": kwargs.get("raw_material_flow_mode", ""),
+            "risk_occurrence_mode": kwargs.get("risk_occurrence_mode", ""),
             "episode": episode,
             "seed": seed,
             "eval_seed": seed + 10_000 + episode,

@@ -26,8 +26,10 @@ from supply_chain.config import (  # noqa: E402
     HOURS_PER_WEEK,
     HOURS_PER_YEAR_THESIS,
     OPERATIONS,
+    RISK_OCCURRENCE_MODE_OPTIONS,
     RISKS_CURRENT,
     SIMULATION_HORIZON,
+    THESIS_FAITHFUL_PROTOCOL,
 )
 
 DEFAULT_OUTPUT_ROOT = Path("outputs/benchmarks/thesis_risk_frequency")
@@ -77,10 +79,12 @@ def annual_uniform_renewal_frequency(risk_id: str) -> float:
     return HOURS_PER_YEAR_THESIS / mean_interval
 
 
-def implementation_estimate(risk_id: str) -> float:
-    """Expected current implementation events/year under current code semantics."""
+def implementation_estimate(risk_id: str, *, risk_occurrence_mode: str) -> float:
+    """Expected implementation events/year under selected code semantics."""
     occurrence = RISKS_CURRENT[risk_id]["occurrence"]
     if occurrence["dist"] == "uniform":
+        if risk_occurrence_mode == "thesis_window":
+            return thesis_table_frequency_from_distribution(risk_id)
         return annual_uniform_renewal_frequency(risk_id)
 
     n = float(occurrence["n"])
@@ -89,7 +93,12 @@ def implementation_estimate(risk_id: str) -> float:
         cycles_per_year = HOURS_PER_YEAR_THESIS / float(OPERATIONS[1]["rop"])
         return cycles_per_year * n * p
     if risk_id == "R13":
-        cycles_per_year = HOURS_PER_YEAR_THESIS / float(OPERATIONS[2]["rop"])
+        cycle_hours = (
+            HOURS_PER_WEEK
+            if risk_occurrence_mode == "thesis_window"
+            else float(OPERATIONS[2]["rop"])
+        )
+        cycles_per_year = HOURS_PER_YEAR_THESIS / cycle_hours
         return cycles_per_year * n * p
     if risk_id == "R14":
         operating_days_per_year = HOURS_PER_YEAR_THESIS / HOURS_PER_WEEK * DAYS_PER_WEEK
@@ -111,10 +120,13 @@ def matches_table(actual_run: float, expected_run: float) -> bool:
     return math.isclose(actual_run, expected_run, rel_tol=0.0, abs_tol=tolerance)
 
 
-def rows() -> list[dict[str, Any]]:
+def rows(*, risk_occurrence_mode: str) -> list[dict[str, Any]]:
     output = []
     for risk_id, expected in EXPECTED_TABLE_6_11.items():
-        implementation_per_year = implementation_estimate(risk_id)
+        implementation_per_year = implementation_estimate(
+            risk_id,
+            risk_occurrence_mode=risk_occurrence_mode,
+        )
         implementation_per_run = implementation_per_year * RUN_YEARS
         table_formula_per_year = thesis_table_frequency_from_distribution(risk_id)
         table_formula_per_run = table_formula_per_year * RUN_YEARS
@@ -146,12 +158,18 @@ def write_csv(path: Path, risk_rows: list[dict[str, Any]]) -> None:
         writer.writerows(risk_rows)
 
 
-def write_markdown(path: Path, risk_rows: list[dict[str, Any]]) -> None:
+def write_markdown(
+    path: Path,
+    risk_rows: list[dict[str, Any]],
+    *,
+    risk_occurrence_mode: str,
+) -> None:
     status = "PASS" if all(row["status"] == "MATCH" for row in risk_rows) else "FAIL"
     lines = [
         "# Thesis Risk Frequency Report",
         "",
         f"Created UTC: `{datetime.now(timezone.utc).isoformat()}`",
+        f"Risk occurrence mode: `{risk_occurrence_mode}`",
         f"Overall status: `{status}`",
         "",
         "Table 6.11 is interpreted as a frequency gate. A `FAIL` here means the",
@@ -177,6 +195,15 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--label", default="current")
     parser.add_argument("--output-root", type=Path, default=DEFAULT_OUTPUT_ROOT)
+    parser.add_argument(
+        "--risk-occurrence-mode",
+        choices=RISK_OCCURRENCE_MODE_OPTIONS,
+        default=str(THESIS_FAITHFUL_PROTOCOL["risk_occurrence_mode"]),
+        help=(
+            "Occurrence semantics to audit. thesis_window is the paper-facing "
+            "Table 6.11 gate; legacy_renewal preserves the historical gap."
+        ),
+    )
     return parser
 
 
@@ -184,15 +211,27 @@ def main() -> int:
     args = build_parser().parse_args()
     out_dir = args.output_root / args.label
     out_dir.mkdir(parents=True, exist_ok=True)
-    risk_rows = rows()
+    risk_rows = rows(risk_occurrence_mode=args.risk_occurrence_mode)
     status = "PASS" if all(row["status"] == "MATCH" for row in risk_rows) else "FAIL"
 
     write_csv(out_dir / "thesis_risk_frequency.csv", risk_rows)
     (out_dir / "thesis_risk_frequency.json").write_text(
-        json.dumps({"status": status, "rows": risk_rows}, indent=2, sort_keys=True),
+        json.dumps(
+            {
+                "risk_occurrence_mode": args.risk_occurrence_mode,
+                "status": status,
+                "rows": risk_rows,
+            },
+            indent=2,
+            sort_keys=True,
+        ),
         encoding="utf-8",
     )
-    write_markdown(out_dir / "THESIS_RISK_FREQUENCY.md", risk_rows)
+    write_markdown(
+        out_dir / "THESIS_RISK_FREQUENCY.md",
+        risk_rows,
+        risk_occurrence_mode=args.risk_occurrence_mode,
+    )
     print(out_dir / "THESIS_RISK_FREQUENCY.md")
     return 0
 

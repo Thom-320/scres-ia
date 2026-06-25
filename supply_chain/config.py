@@ -93,13 +93,26 @@ RAW_MATERIAL_COMPONENTS = [
 # But thesis uses LT = 48 hours for the last-mile (Op9→Op13) delivery promise.
 LEAD_TIME_PROMISE = 48  # Hours — thesis Section 6.3.4
 
+THESIS_REPLICATION_DOWNSTREAM_Q_SOURCE = "figure_6_2"
+THESIS_ROBUSTNESS_DOWNSTREAM_Q_SOURCE = "table_6_20"
+TRACK_A_TRAINING_DOWNSTREAM_Q_SOURCE = THESIS_REPLICATION_DOWNSTREAM_Q_SOURCE
+RISK_OCCURRENCE_MODE_OPTIONS = ("legacy_renewal", "thesis_window")
+TRACK_A_TRAINING_RISK_OCCURRENCE_MODE = "thesis_window"
+TRACK_A_TRAINING_RAW_MATERIAL_FLOW_MODE = "kit_equivalent_order_up_to"
+TRACK_A_TRAINING_RAW_MATERIAL_ORDER_UP_TO_MULTIPLIER = 2.0
+
 THESIS_FAITHFUL_PROTOCOL = {
     "protocol": "thesis_1to1",
     "year_basis": "thesis",
     "horizon_hours": SIMULATION_HORIZON,
     "warmup_trigger": "op9_arrival",
-    "downstream_q_source": "figure_6_2",
+    "downstream_q_source": THESIS_REPLICATION_DOWNSTREAM_Q_SOURCE,
     "r14_defect_mode": "thesis_strict_op6",
+    "risk_occurrence_mode": TRACK_A_TRAINING_RISK_OCCURRENCE_MODE,
+    "raw_material_flow_mode": TRACK_A_TRAINING_RAW_MATERIAL_FLOW_MODE,
+    "raw_material_order_up_to_multiplier": (
+        TRACK_A_TRAINING_RAW_MATERIAL_ORDER_UP_TO_MULTIPLIER
+    ),
     "ret_weights": {"max": 1.0, "mean": 0.5, "min": 0.0},
     "rl_enabled": False,
     "reward_mode": None,

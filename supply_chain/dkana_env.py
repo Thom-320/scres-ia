@@ -562,7 +562,7 @@ class DKANAThesisFaithfulDecisionEnvWrapper(gym.Wrapper):
         sim.inventory_replenishment_period = float(min(periods_by_node.values()))
         for key, target in internal_targets.items():
             sim._top_up_inventory_buffer(key, target)
-        return internal_targets
+        return targets
 
     def _realized_vector(
         self, periods_by_node: dict[str, int], shifts: int
@@ -626,6 +626,9 @@ class DKANAThesisFaithfulDecisionEnvWrapper(gym.Wrapper):
                 for node_name, period in periods_by_node.items()
             },
             "inventory_buffer_targets": dict(targets),
+            "inventory_buffer_targets_internal": dict(
+                getattr(getattr(self.unwrapped, "sim", None), "inventory_buffer_targets", {})
+            ),
             "assembly_shifts": int(shifts),
         }
         return enriched

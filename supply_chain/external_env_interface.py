@@ -14,6 +14,10 @@ from .config import (
     DEFAULT_YEAR_BASIS,
     OPERATIONS,
     THESIS_FAITHFUL_PROTOCOL,
+    TRACK_A_TRAINING_RAW_MATERIAL_FLOW_MODE,
+    TRACK_A_TRAINING_RAW_MATERIAL_ORDER_UP_TO_MULTIPLIER,
+    TRACK_A_TRAINING_RISK_OCCURRENCE_MODE,
+    TRACK_A_TRAINING_DOWNSTREAM_Q_SOURCE,
     WARMUP,
 )
 from .env_experimental_shifts import MFSCGymEnvShifts
@@ -401,7 +405,7 @@ def get_thesis_aligned_training_env_spec(
         },
         notes=(
             "This is a Gym training lane, not the strict thesis_1to1 reproduction lane.",
-            "It inherits the thesis validation knobs: year_basis=thesis, warmup_trigger=op9_arrival, downstream_q_source=figure_6_2, r14_defect_mode=thesis_strict_op6.",
+            f"It inherits the thesis validation knobs: year_basis=thesis, warmup_trigger=op9_arrival, downstream_q_source={TRACK_A_TRAINING_DOWNSTREAM_Q_SOURCE}, r14_defect_mode=thesis_strict_op6, raw_material_flow_mode={TRACK_A_TRAINING_RAW_MATERIAL_FLOW_MODE}, risk_occurrence_mode={TRACK_A_TRAINING_RISK_OCCURRENCE_MODE}.",
             "By default it disables post-warmup priming so episodes begin at the actual thesis warm-up trigger.",
             "Actions remain an RL extension: continuous inventory/ROP multipliers plus a discrete shift selector.",
             "Use direct DES action dictionaries for static Garrido baselines when comparing S1/S2/S3 without multiplier artifacts.",
@@ -675,8 +679,13 @@ def make_thesis_aligned_training_env(**overrides: Any) -> MFSCGymEnvShifts:
         "risk_level": "current",
         "stochastic_pt": False,
         "warmup_trigger": THESIS_FAITHFUL_PROTOCOL["warmup_trigger"],
-        "downstream_q_source": THESIS_FAITHFUL_PROTOCOL["downstream_q_source"],
+        "downstream_q_source": TRACK_A_TRAINING_DOWNSTREAM_Q_SOURCE,
         "r14_defect_mode": THESIS_FAITHFUL_PROTOCOL["r14_defect_mode"],
+        "risk_occurrence_mode": TRACK_A_TRAINING_RISK_OCCURRENCE_MODE,
+        "raw_material_flow_mode": TRACK_A_TRAINING_RAW_MATERIAL_FLOW_MODE,
+        "raw_material_order_up_to_multiplier": (
+            TRACK_A_TRAINING_RAW_MATERIAL_ORDER_UP_TO_MULTIPLIER
+        ),
         "priming_enabled": False,
         "clear_backlog_after_priming": False,
         "w_bo": BENCHMARK_W_BO,
@@ -711,6 +720,31 @@ def make_dkana_thesis_faithful_env(**overrides: Any) -> Any:
     dimensions and append the latest reward, yielding 19 dimensions.
     """
     from .dkana_env import make_dkana_thesis_faithful_env as _make_env
+
+    return _make_env(**overrides)
+
+
+def make_thesis_factorized_track_a_env(**overrides: Any) -> Any:
+    """
+    Build the torch-free Track A thesis-decision env.
+
+    This exposes the Garrido-Rios action surface as ``MultiDiscrete([6, 3])``:
+    common inventory buffer level plus S1/S2/S3. It is intended for reward
+    audits and non-DKANA PPO-style experiments.
+    """
+    from .thesis_decision_env import make_thesis_factorized_track_a_env as _make_env
+
+    return _make_env(**overrides)
+
+
+def make_discrete18_track_a_env(**overrides: Any) -> Any:
+    """
+    Build the torch-free Track A thesis-decision env as ``Discrete(18)``.
+
+    This is the DQN-style view over the same 6 x 3 thesis action surface used by
+    ``make_thesis_factorized_track_a_env``.
+    """
+    from .thesis_decision_env import make_discrete18_track_a_env as _make_env
 
     return _make_env(**overrides)
 
