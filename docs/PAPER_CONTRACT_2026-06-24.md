@@ -89,19 +89,25 @@ It must be reported as such unless original model evidence later confirms it.
 - Default decision cadence: `block`. The policy chooses one of the 18
   configurations at the start of a disruption block and holds it for the block.
   Weekly reselection is a sensitivity lane, not the primary learning claim.
-- Online update timing (symmetric adapt-then-evaluate): within each block, every
-  online arm adapts on that block's regime and is then evaluated. The retained arm
-  carries policy state across blocks; the reset arm restores the common initial
-  checkpoint at the start of each block. Hence `retained - reset` isolates
-  cross-block retention (`L_{k-1}`); `reset - frozen` is within-block adaptation;
-  `retained - frozen` is total online value. Adaptation and evaluation use distinct
-  seeds within the same regime, so an arm never evaluates on the exact realization
-  it adapted to; within-block leakage is symmetric across arms and cancels in the
-  `retained - reset` contrast.
-- Reset condition is therefore NOT identical to frozen: it receives the same
-  within-block adaptation budget as retained but discards it between blocks.
-  (Rationale: a 2026-06-24 pilot showed that measuring strictly "before block k"
-  collapses reset onto frozen and makes the path-dependency contrast untestable.)
+- Online update timing (CORRECTED 2026-06-24 after audit --- TRANSFER estimand): the
+  previous "symmetric adapt-then-evaluate" design was WRONG. It let both arms re-learn
+  the current block before evaluation, measuring the asymptotic point where the
+  reset/no-memory arm catches up, where the effect is ~0 by construction. The correct
+  estimand is the COLD head-start: at the start of block `k`, evaluate the retained
+  learner (theta accumulated from blocks 0..k-1) and the frozen baseline (theta_0)
+  on block `k` BEFORE any block-`k` training. `ΔR_k = R_retained - R_frozen` is the
+  transfer that accumulated learning gives on an UNSEEN shock (H1/H4); its growth with
+  `k` is the learning curve (H2). The retained learner then trains incrementally on
+  block `k` and carries theta forward. Budget is expressed in BLOCKS (weekly cadence,
+  no block-collapsing wrapper), not in wrapper timesteps. (frozen = theta_0 evaluated
+  cold on an unseen block means "more training" cannot trivially explain a positive
+  `ΔR` --- it must generalise.)
+- Outcome is the TREATMENT-WINDOW order-level ReT (`supply_chain.clean_metrics`):
+  orders placed before the policy acts (`OPTj < warmup_time`) are excluded. The
+  warm-up backlog under (I0,S1) shifts ReT by ~0.08, an order of magnitude above the
+  retained-learning signal; the previous all-orders metric was contaminated.
+- Implementation: `scripts/retention_transfer.py`. Supersedes the adapt-then-eval
+  pilots, which are now historical.
 
 This design keeps Track A close to Garrido's static-configuration semantics
 while testing whether retained policy state, `L_{k-1}`, changes future
