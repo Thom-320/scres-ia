@@ -34,6 +34,8 @@ from .config import (
     DEMAND_SOURCE_OPTIONS,
     ASSEMBLY_RATE,
     BACKORDER_QUEUE_CAP,
+    BACKORDER_OVERFLOW_MODE,
+    BACKORDER_OVERFLOW_MODE_OPTIONS,
     CAPACITY_BY_SHIFTS,
     HOURS_PER_SHIFT,
     HOURS_PER_DAY,
@@ -48,10 +50,14 @@ from .config import (
     TRACK_B_QUEUE_PRESSURE_LOOKAHEAD_CYCLES,
     TRACK_B_ROLLING_WINDOW_HOURS,
     DEFAULT_YEAR_BASIS,
+    GARRIDO_FULFILLMENT_DELAY_HOURS,
+    GARRIDO_R14_RET_PERIOD_HOURS,
     HOURS_PER_YEAR_GREGORIAN,
     HOURS_PER_YEAR_THESIS,
     R14_DEFECT_MODE_OPTIONS,
     RAW_MATERIAL_FLOW_MODE_OPTIONS,
+    RET_RECOVERY_PERIOD_MODE,
+    RET_RECOVERY_PERIOD_MODE_OPTIONS,
     RISK_ATTRIBUTION_SOURCE_OPTIONS,
     RISK_OCCURRENCE_MODE_OPTIONS,
     SEED_STREAM_MODE_OPTIONS,
@@ -150,8 +156,10 @@ class MFSCSimulation:
         demand_mean_multiplier: float = 1.0,
         demand_source: str = "thesis_calendar",
         excel_order_tape: Optional[list[dict[str, Any]]] = None,
-        demand_on_hand_fulfillment_delay: float = 0.0,
+        demand_on_hand_fulfillment_delay: float = GARRIDO_FULFILLMENT_DELAY_HOURS,
         seed_stream_mode: Optional[str] = None,
+        ret_recovery_period_mode: str = RET_RECOVERY_PERIOD_MODE,
+        backorder_overflow_mode: str = BACKORDER_OVERFLOW_MODE,
         risk_frequency_multiplier: float = 1.0,
         risk_impact_multiplier: float = 1.0,
         strict_exogenous_crn: bool = False,
@@ -205,6 +213,18 @@ class MFSCSimulation:
             raise ValueError(
                 "Invalid seed_stream_mode="
                 f"{seed_stream_mode!r}. Expected one of: {valid}."
+            )
+        if ret_recovery_period_mode not in RET_RECOVERY_PERIOD_MODE_OPTIONS:
+            valid = ", ".join(RET_RECOVERY_PERIOD_MODE_OPTIONS)
+            raise ValueError(
+                "Invalid ret_recovery_period_mode="
+                f"{ret_recovery_period_mode!r}. Expected one of: {valid}."
+            )
+        if backorder_overflow_mode not in BACKORDER_OVERFLOW_MODE_OPTIONS:
+            valid = ", ".join(BACKORDER_OVERFLOW_MODE_OPTIONS)
+            raise ValueError(
+                "Invalid backorder_overflow_mode="
+                f"{backorder_overflow_mode!r}. Expected one of: {valid}."
             )
         raw_material_flow_mode = canonical_raw_material_flow_mode(raw_material_flow_mode)
         self.env = simpy.Environment()
@@ -263,6 +283,8 @@ class MFSCSimulation:
         self.risk_overrides = dict(risk_overrides or {})
         self.risk_occurrence_mode = risk_occurrence_mode
         self.risk_attribution_source = risk_attribution_source
+        self.ret_recovery_period_mode = ret_recovery_period_mode
+        self.backorder_overflow_mode = backorder_overflow_mode
         if self.risk_attribution_source == "excel_risk_tape":
             if self.demand_source != "excel_order_tape":
                 raise ValueError(
@@ -563,13 +585,19 @@ class MFSCSimulation:
                     "risk_id": risk_id,
                     "start_time": ref_start,
                     "end_time": float(order.OATj if order.OATj is not None else order.OPTj),
-                    "duration": 0.0,
+                    "duration": (
+                        float(GARRIDO_R14_RET_PERIOD_HOURS)
+                        if risk_id == "R14"
+                        else 0.0
+                    ),
                     "affected_ops": [7] if risk_id == "R14" else [13],
                     "magnitude": consumed,
                     "unit": "quantity_risk_attribution",
                 }
             )
-            contribution += 1.0
+            contribution += (
+                float(GARRIDO_R14_RET_PERIOD_HOURS) if risk_id == "R14" else 1.0
+            )
         return contribution, earliest
 
     def _mark_warmup_complete(self) -> None:
@@ -965,16 +993,63 @@ class MFSCSimulation:
         yield self.env.timeout(float(delay))
         order.OATj = self.env.now
         order.CTj = self.env.now - order.OPTj
+        order.backorder = False
         order.remaining_qty = 0.0
         self._set_order_ret_indicators(order)
 
+    def _finalize_order_after_fulfillment_delay(self, order: OrderRecord) -> None:
+        """Finalize a reserved order after the configured minimum fulfilment delay.
+
+        Garrido's order ledger records delivery after a downstream fulfilment
+        cycle, even when theatre stock is available.  The delay is a minimum
+        elapsed time from OPTj to OATj; orders that have already waited longer
+        than the delay are finalized immediately.
+        """
+        remaining_delay = max(
+            0.0,
+            float(self.demand_on_hand_fulfillment_delay)
+            - max(0.0, float(self.env.now) - float(order.OPTj)),
+        )
+        order.remaining_qty = 0.0
+        if remaining_delay > 0.0:
+            self.env.process(
+                self._finalize_reserved_on_hand_order_after_delay(
+                    order, remaining_delay
+                )
+            )
+        else:
+            self._finalize_pending_backorder(order)
+
     def _enqueue_backorder(self, order: OrderRecord) -> None:
-        """Insert a delayed order into the capped Garrido-style backlog queue."""
+        """Insert a delayed order into the capped Garrido-style backlog queue.
+
+        Serving priority is always SPT (contingent first, then increasing size).
+        Overflow handling follows ``backorder_overflow_mode``: "largest" drops
+        the SPT-tail, matching the thesis "last order in the list" rule once
+        the list is SPT-sorted. "oldest" drops the earliest OPTj as an
+        age-based sensitivity.
+        """
         self.pending_backorders.append(order)
         self.pending_backorders.sort(key=self._backorder_priority_key)
         while len(self.pending_backorders) > BACKORDER_QUEUE_CAP:
-            dropped = self.pending_backorders.pop()
+            if self.backorder_overflow_mode == "oldest":
+                # Evict the order that has waited longest (earliest OPTj).
+                drop_idx = max(
+                    range(len(self.pending_backorders)),
+                    key=lambda i: -float(self.pending_backorders[i].OPTj),
+                )
+                dropped = self.pending_backorders.pop(drop_idx)
+            else:
+                dropped = self.pending_backorders.pop()
             dropped.lost = True
+            # Lost orders were demanded during R14-ubiquitous production, so they
+            # carry the R14 risk gate like every Garrido order (AVERAGE(R..)>0).
+            # Without it they fall into the no-risk fill-rate branch and score ~1.0,
+            # inflating mean ReT ~30x; with the gate and no recovery they score ~0,
+            # matching Garrido's lost-order ReT (~0.002).
+            dropped.ret_risk_indicators["R14"] = max(
+                1.0, dropped.ret_risk_indicators.get("R14", 0.0)
+            )
             if not dropped.metrics_excluded:
                 self.total_unattended_orders += 1
         self._refresh_pending_backorder_qty()
@@ -1012,7 +1087,7 @@ class MFSCSimulation:
             if self.rations_theatre.level + 1e-9 < requested_qty:
                 break
             yield self.rations_theatre.get(requested_qty)
-            self._finalize_pending_backorder(next_order)
+            self._finalize_order_after_fulfillment_delay(next_order)
             self._remove_pending_backorder(next_order)
 
     def _backorder_rate(self) -> float:
@@ -1628,16 +1703,7 @@ class MFSCSimulation:
         available = self.rations_theatre.level
         if not self.pending_backorders and available >= order.quantity:
             yield self.rations_theatre.get(order.quantity)
-            order.remaining_qty = 0.0
-            delay = float(self.demand_on_hand_fulfillment_delay)
-            if delay > 0.0:
-                self.env.process(
-                    self._finalize_reserved_on_hand_order_after_delay(order, delay)
-                )
-            else:
-                order.OATj = self.env.now
-                order.CTj = self.env.now - order.OPTj
-                self._set_order_ret_indicators(order)
+            self._finalize_order_after_fulfillment_delay(order)
         else:
             # Enqueue for future delivery. Per thesis Sec. 6.8.2,
             # backorder classification deferred until LTj=48h elapses.
@@ -1784,6 +1850,8 @@ class MFSCSimulation:
         if self.adaptive_benchmark_enabled:
             intensity = self._adaptive_risk_intensity_for(risk_id)
             return max(float(base_a), round(float(base_b) / max(intensity, 1e-6)))
+        if risk_id == "R3":
+            return max(float(base_a), float(base_b))
         return max(float(base_a), float(base_b) / self.risk_frequency_multiplier)
 
     def _get_risk_p(self, risk_id: str) -> float:
@@ -2340,8 +2408,16 @@ class MFSCSimulation:
         else:
             # Recovery / Non-recovery: order delayed beyond lead time
             order.DPj = order.CTj
-            eff_risk_start = max(earliest_risk_start, order.OPTj)
-            order.RPj = max(0.0, order.OATj - eff_risk_start)
+            if self.ret_recovery_period_mode == "disruption":
+                # Garrido raw-workbook semantics (thesis Eq. 5.3): RPj is the
+                # recovery/disruption duration of the risk(s) affecting the
+                # order, NOT the elapsed wall-clock since the first risk onset.
+                # The elapsed mode lets plain queue wait inflate RPj up to CTj,
+                # which diverges from the bounded workbook RPj distribution.
+                order.RPj = max(0.0, total_disruption_hours)
+            else:
+                eff_risk_start = max(earliest_risk_start, order.OPTj)
+                order.RPj = max(0.0, order.OATj - eff_risk_start)
 
     def _set_order_ret_indicators_from_excel_tape(self, order: OrderRecord) -> None:
         """

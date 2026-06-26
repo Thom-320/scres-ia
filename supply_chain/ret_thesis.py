@@ -131,6 +131,15 @@ def compute_ret_per_order_excel_formula(
     if j <= 0:
         raise ValueError("j must be a positive 1-based order index.")
 
+    # Unfulfilled orders (never delivered: lost/dropped or still pending at the
+    # horizon) have no OATj. Garrido serves every order eventually (very late) and
+    # scores them ~0 via the recovery branch; our DES drops overflow orders, so
+    # without this guard they fall into the no-risk fill-rate branch and score ~1.0,
+    # inflating mean ReT. Score them 0 (unfulfilled), matching the thesis
+    # compute_ret_per_order and Garrido's lost-order ReT (~0.002).
+    if getattr(order, "OATj", None) is None:
+        return 0.0, "excel_unfulfilled"
+
     if risk_active is None:
         risk_active = order_has_ret_risk_indicator(order)
 
@@ -277,6 +286,7 @@ def compute_order_level_ret_excel_formula(
             "excel_autotomy": int(case_counts["excel_autotomy"]),
             "excel_recovery": int(case_counts["excel_recovery"]),
             "excel_risk_no_recovery": int(case_counts["excel_risk_no_recovery"]),
+            "excel_unfulfilled": int(case_counts["excel_unfulfilled"]),
         },
         "n_orders": len(order_list),
         "n_completed": sum(
