@@ -54,12 +54,25 @@ def clean_eval(args, model, regime, seed: int) -> float:
     env = ev.build_env(args, regime=regime)
     obs, _ = env.reset(seed=seed)
     done = False
+    cd_sigmoid_sum = 0.0
+    cd_train_sum = 0.0
+    n_steps = 0
     while not done:
         action, _ = model.predict(obs, deterministic=True)
-        obs, _r, term, trunc, _i = env.step(int(np.asarray(action).item()))
+        obs, _r, term, trunc, info = env.step(int(np.asarray(action).item()))
+        cd_sigmoid_sum += float(info.get("ret_garrido2024_sigmoid_step", 0.0))
+        cd_train_sum += float(info.get("ret_garrido2024_train_step", 0.0))
+        n_steps += 1
         done = bool(term or trunc)
     res = treatment_filtered_order_ret(env.unwrapped.sim)
     env.close()
+    # Cost-aware CD variants are separated because the sigmoid reporting index
+    # and the train-shaped index can prefer different static shifts.
+    outcome = getattr(args, "outcome", "excel_ret")
+    if outcome in {"cd_index", "cd_sigmoid_index"}:
+        return cd_sigmoid_sum / max(n_steps, 1)
+    if outcome == "cd_train_index":
+        return cd_train_sum / max(n_steps, 1)
     return float(res["mean_ret"])
 
 
@@ -119,6 +132,18 @@ def main() -> int:
     p.add_argument("--surge-inertia", action="store_true")
     p.add_argument("--surge-budget-hours", type=float, default=2016.0)
     p.add_argument("--surge-ramp-per-step", type=int, default=1)
+    # Cost-augmented Cobb-Douglas frontier env (frozen candidate from the joint 6x3 gate):
+    # the regime-dependent shift optimum lives in the CD index, so the OUTCOME is the CD
+    # index (cd_index), not the cost-free Excel ReT (which has no headroom).
+    p.add_argument("--risk-frequency-multiplier", type=float, default=1.0)
+    p.add_argument("--risk-impact-multiplier", type=float, default=1.0)
+    p.add_argument("--ret-g24-shift-cost", type=float, default=0.5)
+    p.add_argument("--ret-g24-kappa-train-frac", type=float, default=0.2)
+    p.add_argument(
+        "--outcome",
+        default="excel_ret",
+        choices=["excel_ret", "cd_index", "cd_sigmoid_index", "cd_train_index"],
+    )
     cli = p.parse_args()
     seeds = [int(s) for s in cli.seeds.split(",") if s.strip()]
 
@@ -134,6 +159,11 @@ def main() -> int:
         a.surge_inertia = cli.surge_inertia
         a.surge_budget_hours = cli.surge_budget_hours
         a.surge_ramp_per_step = cli.surge_ramp_per_step
+        a.risk_frequency_multiplier = cli.risk_frequency_multiplier
+        a.risk_impact_multiplier = cli.risk_impact_multiplier
+        a.ret_g24_shift_cost = cli.ret_g24_shift_cost
+        a.ret_g24_kappa_train_frac = cli.ret_g24_kappa_train_frac
+        a.outcome = cli.outcome
         return a
 
     tape = ev.build_tape(base_args(), cli.n_blocks, seed=cli.regime_seed)
@@ -169,6 +199,13 @@ def main() -> int:
         "train_per_block": cli.train_per_block, "rho_disruption": cli.rho_disruption,
         "mask_preset": cli.mask_preset, "surge_inertia": cli.surge_inertia,
         "surge_budget_hours": cli.surge_budget_hours,
+        "outcome": cli.outcome,
+        "frozen_env": {
+            "risk_frequency_multiplier": cli.risk_frequency_multiplier,
+            "risk_impact_multiplier": cli.risk_impact_multiplier,
+            "ret_g24_shift_cost": cli.ret_g24_shift_cost,
+            "ret_g24_kappa_train_frac": cli.ret_g24_kappa_train_frac,
+        },
         "memory_retained_minus_reset": mem,
         "total_retained_minus_frozen": total,
     }

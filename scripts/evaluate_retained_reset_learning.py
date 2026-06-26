@@ -262,6 +262,26 @@ def env_kwargs(
             if getattr(args, "surge_inertia", False)
             else {}
         ),
+        # Risk modulation (R3 protected inside the sim) — pass only when non-default.
+        **(
+            {"risk_frequency_multiplier": float(getattr(args, "risk_frequency_multiplier", 1.0))}
+            if float(getattr(args, "risk_frequency_multiplier", 1.0)) != 1.0
+            else {}
+        ),
+        **(
+            {"risk_impact_multiplier": float(getattr(args, "risk_impact_multiplier", 1.0))}
+            if float(getattr(args, "risk_impact_multiplier", 1.0)) != 1.0
+            else {}
+        ),
+        # Cost-augmented Cobb-Douglas params (only meaningful for the ReT_garrido2024 family).
+        **(
+            {
+                "ret_g24_shift_cost": float(getattr(args, "ret_g24_shift_cost", 0.5)),
+                "ret_g24_kappa_train_frac": float(getattr(args, "ret_g24_kappa_train_frac", 0.2)),
+            }
+            if str(args.reward_mode).startswith("ReT_garrido2024")
+            else {}
+        ),
     }
 
 
