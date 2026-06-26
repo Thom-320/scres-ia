@@ -8,11 +8,12 @@ from typing import Any, Iterable
 from openpyxl import load_workbook
 
 
+DEFAULT_DOWNLOADS_DIR = Path.home() / "Downloads"
 DEFAULT_RAW_WORKBOOKS = (
-    Path("/Users/thom/Downloads/Raw_data1+Re.xlsx"),
-    Path("/Users/thom/Downloads/Raw_data2+Re.xlsx"),
+    DEFAULT_DOWNLOADS_DIR / "Raw_data1+Re.xlsx",
+    DEFAULT_DOWNLOADS_DIR / "Raw_data2+Re.xlsx",
 )
-DEFAULT_RSULT_WORKBOOK = Path("/Users/thom/Downloads/Rsult_1.xlsx")
+DEFAULT_RSULT_WORKBOOK = DEFAULT_DOWNLOADS_DIR / "Rsult_1.xlsx"
 
 EXCEL_RET_FORMULA = (
     "IF(AVERAGE(risk_cols)>0, IF(APj>0, APj/LT, 0.5*(1/RPj)), "

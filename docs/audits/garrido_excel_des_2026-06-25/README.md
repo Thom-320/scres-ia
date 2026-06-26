@@ -109,9 +109,9 @@ Conclusion de replica: podemos afirmar que el entorno DES reproduce los numeros 
 
 ## Archivos auditados
 
-- `/Users/thom/Downloads/Raw_data1+Re.xlsx`
-- `/Users/thom/Downloads/Raw_data2+Re.xlsx`
-- `/Users/thom/Downloads/Rsult_1.xlsx`
+- `Raw_data1+Re.xlsx`
+- `Raw_data2+Re.xlsx`
+- `Rsult_1.xlsx`
 
 Salidas generadas:
 
