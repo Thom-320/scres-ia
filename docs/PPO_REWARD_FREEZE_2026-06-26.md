@@ -32,8 +32,9 @@ metrics panel + both bars regardless of which reward trained it.
 - **Calibration:** re-derived on the **faithful env** (thesis_window + kit_equivalent m2.0 +
   figure_6_2 + obs v4, shift_cost 0.5) →
   `supply_chain/data/ret_garrido2024_calibration_faithful_2026-06-26.json`. (Audit 2026-06-18: the
-  faithful exponents are ~identical to the legacy ones; kappa_ref 1.41M→~1.50M, low practical
-  impact — this freeze records the faithful provenance.)
+  faithful exponents remain close in sign and scale, but the faithful cost reference changes
+  materially: `kappa_ref = 752,609` vs the legacy `1,412,199`. The env default now points to this
+  faithful file so omitted flags do not silently load the stale calibration.)
 - **Training variant:** train on `ReT_garrido2024_train` (κ̇ at the reduced fraction, better
   gradient, same optimum) and evaluate on `cd_sigmoid_index`; OR train+eval both on the sigmoid for
   the strictest same-bar reading. The pilot used the latter.

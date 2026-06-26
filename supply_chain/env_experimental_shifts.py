@@ -176,7 +176,9 @@ G24_COST_SPARE_CAPACITY = 1.0
 G24_COST_INVENTORY = 1.0
 G24_COST_BACKORDERS = 1.0
 G24_DEFAULT_CALIBRATION_PATH = (
-    Path(__file__).resolve().parent / "data" / "ret_garrido2024_calibration.json"
+    Path(__file__).resolve().parent
+    / "data"
+    / "ret_garrido2024_calibration_faithful_2026-06-26.json"
 )
 
 # ReT_cd_v1 defaults (Cobb-Douglas continuous bridge for ReT_thesis piecewise)
