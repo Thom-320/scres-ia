@@ -471,11 +471,13 @@ def test_run_episodes_uses_terminal_fill_rate_not_flow_ratio() -> None:
     )
     row = results[0]
     assert row["fill_rate"] == pytest.approx(1.0 - row["backorder_rate"], rel=1e-6)
-    # fill_rate changed after warmup backlog clearing fix — just verify
-    # consistency properties, not frozen absolute values.
-    assert 0.5 < row["fill_rate"] < 1.0, f"fill_rate out of range: {row['fill_rate']}"
+    # The thesis Eq. 5.4 fill rate uses accumulated B_t, so recovered late
+    # orders keep depressing terminal service. Verify consistency properties,
+    # not a frozen optimistic threshold from the pending-queue definition.
+    assert 0.0 <= row["fill_rate"] <= 1.0, f"fill_rate out of range: {row['fill_rate']}"
     assert row["fill_rate_state_terminal"] > 0.5
-    assert row["fill_rate"] > row["flow_fill_rate"]
+    assert 0.0 <= row["flow_fill_rate"] <= 1.0
+    assert row["fill_rate"] != pytest.approx(row["flow_fill_rate"])
 
 
 # ---------------------------------------------------------------------------

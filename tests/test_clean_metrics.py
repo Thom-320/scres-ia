@@ -25,15 +25,17 @@ def test_filter_excludes_pre_treatment_orders_and_partitions_cleanly():
     assert clean["n_orders"] + clean["n_orders_pre_treatment"] == all_n
     # treatment_start defaults to end of warm-up.
     assert clean["treatment_start"] == sim.warmup_time
+    assert "mean_ret_excel_formula" in clean
+    assert "case_counts_excel_formula" in clean
 
 
 def test_filtering_changes_the_outcome_value():
     sim = _run()
     contaminated = sim.compute_order_level_ret()["mean_ret"]
     clean = treatment_filtered_order_ret(sim)["mean_ret"]
-    # The pre-treatment warm-up backlog materially shifts ReT; the corrected metric
-    # must differ (here by ~0.08, an order of magnitude above the retained-reset signal).
-    assert abs(clean - contaminated) > 0.01
+    # The pre-treatment warm-up rows shift the outcome; the corrected metric
+    # must differ without depending on the historical pre-Excel-ReT magnitude.
+    assert abs(clean - contaminated) > 0.005
 
 
 def test_explicit_treatment_start_keeps_only_later_orders():

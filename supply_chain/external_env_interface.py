@@ -241,6 +241,8 @@ def get_episode_terminal_metrics(env: Any) -> dict[str, float]:
             "fill_rate_state_terminal": float("nan"),
             "backorder_rate_state_terminal": float("nan"),
             "order_level_ret_mean": float("nan"),
+            "order_level_ret_excel_formula_mean": float("nan"),
+            "order_level_ret_text_formula_mean": float("nan"),
         }
 
     order_summary: dict[str, Any] = {}
@@ -265,6 +267,12 @@ def get_episode_terminal_metrics(env: Any) -> dict[str, float]:
         "backorder_rate_state_terminal": backorder_rate_state_terminal,
         "order_level_ret_mean": float(
             order_summary.get("mean_ret", fill_rate_order_level)
+        ),
+        "order_level_ret_excel_formula_mean": float(
+            order_summary.get("mean_ret_excel_formula", fill_rate_order_level)
+        ),
+        "order_level_ret_text_formula_mean": float(
+            order_summary.get("mean_ret_text_formula", fill_rate_order_level)
         ),
     }
 
@@ -919,6 +927,12 @@ def run_episodes(
             "ret_garrido2024_sigmoid_total": ret_garrido2024_sigmoid_total,
             "ret_thesis_corrected_total": ret_thesis_corrected_total,
             "order_level_ret_mean": float(terminal_metrics["order_level_ret_mean"]),
+            "order_level_ret_text_formula_mean": float(
+                terminal_metrics["order_level_ret_text_formula_mean"]
+            ),
+            "order_level_ret_excel_formula_mean": float(
+                terminal_metrics["order_level_ret_excel_formula_mean"]
+            ),
             "demanded_total": demanded_total,
             "delivered_total": delivered_total,
             "backorder_qty_total": backorder_qty_total,

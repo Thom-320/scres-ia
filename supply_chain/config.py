@@ -97,6 +97,13 @@ THESIS_REPLICATION_DOWNSTREAM_Q_SOURCE = "figure_6_2"
 THESIS_ROBUSTNESS_DOWNSTREAM_Q_SOURCE = "table_6_20"
 TRACK_A_TRAINING_DOWNSTREAM_Q_SOURCE = THESIS_REPLICATION_DOWNSTREAM_Q_SOURCE
 RISK_OCCURRENCE_MODE_OPTIONS = ("legacy_renewal", "thesis_window")
+RISK_ATTRIBUTION_SOURCE_OPTIONS = ("des_events", "excel_risk_tape")
+DEMAND_SOURCE_OPTIONS = (
+    "thesis_calendar",
+    "excel_order_tape",
+    "excel_order_tape_after_calendar_warmup",
+)
+SEED_STREAM_MODE_OPTIONS = ("single", "split")
 TRACK_A_TRAINING_RISK_OCCURRENCE_MODE = "thesis_window"
 TRACK_A_TRAINING_RAW_MATERIAL_FLOW_MODE = "kit_equivalent_order_up_to"
 TRACK_A_TRAINING_RAW_MATERIAL_ORDER_UP_TO_MULTIPLIER = 2.0

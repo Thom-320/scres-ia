@@ -92,6 +92,63 @@ def compute_ret_per_order(
     return max(0.0, min(1.0, float(fill_rate))), "fill_rate"
 
 
+def order_has_ret_risk_indicator(order: Any) -> bool:
+    """Infer the spreadsheet's per-order risk-indicator gate.
+
+    Garrido-Rios's raw Excel files compute ReT from a risk-active switch:
+    ``AVERAGE(R..)>0``.  Prefer explicit per-order DES risk indicators when
+    available; fall back to APj/RPj/DPj for older synthetic tests.
+    """
+    indicators = getattr(order, "ret_risk_indicators", None)
+    if indicators:
+        return any(float(value or 0.0) > 0.0 for value in indicators.values())
+    return any(
+        float(getattr(order, attr, 0.0) or 0.0) > 0.0
+        for attr in ("APj", "RPj", "DPj")
+    )
+
+
+def compute_ret_per_order_excel_formula(
+    order: Any,
+    *,
+    j: int,
+    cumulative_backorders: int,
+    cumulative_unattended: int,
+    risk_active: bool | None = None,
+) -> tuple[float, str]:
+    """Compute the operational ReT formula used in Garrido's raw Excel files.
+
+    The workbooks implement:
+
+    ``IF(AVERAGE(risk_cols)>0, IF(APj>0, APj/LT, 0.5*(1/RPj)), 1-((Bt+Ut)/j))``
+
+    Notes for exactness:
+    - no CTj<=LTj guard is applied before ``APj/LT``;
+    - DPj is not used directly by the visible spreadsheet formula;
+    - the no-risk branch uses the running order-count fill term at row ``j``;
+    - values are not clipped, matching Excel.
+    """
+    if j <= 0:
+        raise ValueError("j must be a positive 1-based order index.")
+
+    if risk_active is None:
+        risk_active = order_has_ret_risk_indicator(order)
+
+    ap = float(getattr(order, "APj", 0.0) or 0.0)
+    rp = float(getattr(order, "RPj", 0.0) or 0.0)
+    lt = float(getattr(order, "LTj", 0.0) or 0.0)
+
+    if risk_active:
+        if ap > 0.0:
+            return ap / max(lt, 1e-9), "excel_autotomy"
+        if rp > 0.0:
+            return 0.5 * (1.0 / rp), "excel_recovery"
+        return 0.0, "excel_risk_no_recovery"
+
+    value = 1.0 - ((int(cumulative_backorders) + int(cumulative_unattended)) / int(j))
+    return float(value), "excel_fill_rate"
+
+
 def compute_ret_periods_continuous_per_order(order: Any, *, tau_hours: float = 48.0) -> float:
     """Continuous resilience on the thesis periods AP/RP/DP (smooth, no case switch).
 
@@ -133,7 +190,7 @@ def compute_order_level_ret(
     fill_rate: float,
     ret_weights: Mapping[str, float] | None = None,
 ) -> dict[str, Any]:
-    """Aggregate Garrido-Rios order-level ReT values across completed orders."""
+    """Aggregate Garrido-Rios order-level ReT values across demanded orders."""
     order_list = list(orders)
     case_counts: Counter[str] = Counter()
     ret_values: list[float] = []
@@ -153,6 +210,73 @@ def compute_order_level_ret(
             "recovery": int(case_counts["recovery"]),
             "non_recovery": int(case_counts["non_recovery"]),
             "unfulfilled": int(case_counts["unfulfilled"]),
+        },
+        "n_orders": len(order_list),
+        "n_completed": sum(
+            1 for order in order_list if getattr(order, "OATj", None) is not None
+        ),
+    }
+
+
+def compute_order_level_ret_excel_formula(
+    orders: Iterable[Any],
+    *,
+    current_time: float | None = None,
+    j_source: str = "row_index",
+) -> dict[str, Any]:
+    """Aggregate the Excel-faithful Garrido ReT over demanded orders.
+
+    Orders are processed by their thesis order index ``j`` when available.  The
+    no-risk branch receives the running cumulative backorder and unattended
+    counts, mirroring the raw workbook columns ``sum(Bt)`` and ``sum(Ut)``.
+
+    ``j_source`` defaults to ``"row_index"`` for backwards compatibility with
+    the full DES ledger, where visible rows are consecutive.  Garrido's raw
+    workbooks preserve the original order number when rows are filtered, so
+    forensic workbook-visible ledgers should use ``j_source="order_j"``.
+    """
+    if j_source not in {"row_index", "order_j"}:
+        raise ValueError("j_source must be 'row_index' or 'order_j'.")
+    order_list = sorted(
+        list(orders),
+        key=lambda order: (
+            int(getattr(order, "j", 0) or 0),
+            float(getattr(order, "OPTj", 0.0) or 0.0),
+        ),
+    )
+    case_counts: Counter[str] = Counter()
+    ret_values: list[float] = []
+    cumulative_backorders = 0
+    cumulative_unattended = 0
+
+    for idx, order in enumerate(order_list, start=1):
+        if bool(getattr(order, "lost", False)):
+            cumulative_unattended += 1
+        elif order_counts_as_backorder_for_fill_rate(
+            order, current_time=current_time
+        ):
+            cumulative_backorders += 1
+
+        ret, case = compute_ret_per_order_excel_formula(
+            order,
+            j=(
+                int(getattr(order, "j", idx) or idx)
+                if j_source == "order_j"
+                else idx
+            ),
+            cumulative_backorders=cumulative_backorders,
+            cumulative_unattended=cumulative_unattended,
+        )
+        case_counts[case] += 1
+        ret_values.append(ret)
+
+    return {
+        "mean_ret_excel": float(np.mean(ret_values)) if ret_values else 1.0,
+        "case_counts": {
+            "excel_fill_rate": int(case_counts["excel_fill_rate"]),
+            "excel_autotomy": int(case_counts["excel_autotomy"]),
+            "excel_recovery": int(case_counts["excel_recovery"]),
+            "excel_risk_no_recovery": int(case_counts["excel_risk_no_recovery"]),
         },
         "n_orders": len(order_list),
         "n_completed": sum(

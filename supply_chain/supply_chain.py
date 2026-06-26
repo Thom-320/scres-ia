@@ -15,8 +15,8 @@ Key changes from v1:
 
 import simpy
 import numpy as np
-from dataclasses import dataclass
-from typing import Any, Optional
+from dataclasses import dataclass, field
+from typing import Any, Iterable, Optional
 from collections import Counter
 
 from .config import (
@@ -31,6 +31,7 @@ from .config import (
     ADAPTIVE_BENCHMARK_V2_SURGE_SCALE_MULTIPLIER,
     OPERATIONS,
     DEMAND,
+    DEMAND_SOURCE_OPTIONS,
     ASSEMBLY_RATE,
     BACKORDER_QUEUE_CAP,
     CAPACITY_BY_SHIFTS,
@@ -51,7 +52,9 @@ from .config import (
     HOURS_PER_YEAR_THESIS,
     R14_DEFECT_MODE_OPTIONS,
     RAW_MATERIAL_FLOW_MODE_OPTIONS,
+    RISK_ATTRIBUTION_SOURCE_OPTIONS,
     RISK_OCCURRENCE_MODE_OPTIONS,
+    SEED_STREAM_MODE_OPTIONS,
     canonical_raw_material_flow_mode,
     YEAR_BASIS_OPTIONS,
     LEAD_TIME_PROMISE,
@@ -62,6 +65,7 @@ from .config import (
 )
 from .ret_thesis import (
     compute_fill_rate_from_orders,
+    compute_order_level_ret_excel_formula,
     compute_order_level_ret as compute_thesis_order_level_ret,
     compute_ret_per_order,
 )
@@ -93,10 +97,14 @@ class OrderRecord:
     remaining_qty: float = 0.0
     contingent: bool = False
     lost: bool = False
+    metrics_excluded: bool = False
     # Thesis ReT sub-indicators (Garrido-Rios 2017, Eq. 5.1-5.5):
     APj: float = 0.0  # Autotomy period (hours): CTj=LTj and risks impact in [OPTj,OATj]
     RPj: float = 0.0  # Recovery period (hours): OATj - first R0cr detection
     DPj: float = 0.0  # Disruption period (hours): CTj when CTj > LTj
+    ret_risk_indicators: dict[str, float] = field(default_factory=dict)
+    ret_risk_event_refs: list[dict[str, Any]] = field(default_factory=list)
+    ret_attribution_override: Optional[dict[str, Any]] = None
 
 
 @dataclass
@@ -134,11 +142,16 @@ class MFSCSimulation:
         enabled_risks: Optional[set[str]] = None,
         risk_overrides: Optional[dict[str, str]] = None,
         risk_occurrence_mode: str = "legacy_renewal",
+        risk_attribution_source: str = "des_events",
         inventory_replenishment_period: Optional[float] = None,
         inventory_replenishment_lead_time: float = 0.0,
         raw_material_flow_mode: str = "legacy_validated",
         raw_material_order_up_to_multiplier: float = 2.0,
         demand_mean_multiplier: float = 1.0,
+        demand_source: str = "thesis_calendar",
+        excel_order_tape: Optional[list[dict[str, Any]]] = None,
+        demand_on_hand_fulfillment_delay: float = 0.0,
+        seed_stream_mode: Optional[str] = None,
         risk_frequency_multiplier: float = 1.0,
         risk_impact_multiplier: float = 1.0,
         strict_exogenous_crn: bool = False,
@@ -170,11 +183,35 @@ class MFSCSimulation:
                 "Invalid risk_occurrence_mode="
                 f"{risk_occurrence_mode!r}. Expected one of: {valid}."
             )
+        if risk_attribution_source not in RISK_ATTRIBUTION_SOURCE_OPTIONS:
+            valid = ", ".join(RISK_ATTRIBUTION_SOURCE_OPTIONS)
+            raise ValueError(
+                "Invalid risk_attribution_source="
+                f"{risk_attribution_source!r}. Expected one of: {valid}."
+            )
+        if demand_source not in DEMAND_SOURCE_OPTIONS:
+            valid = ", ".join(DEMAND_SOURCE_OPTIONS)
+            raise ValueError(
+                f"Invalid demand_source={demand_source!r}. Expected one of: {valid}."
+            )
+        if seed_stream_mode is None:
+            seed_stream_mode = "split" if strict_exogenous_crn else "single"
+        elif strict_exogenous_crn and seed_stream_mode != "split":
+            raise ValueError(
+                "strict_exogenous_crn=True is equivalent to seed_stream_mode='split'."
+            )
+        if seed_stream_mode not in SEED_STREAM_MODE_OPTIONS:
+            valid = ", ".join(SEED_STREAM_MODE_OPTIONS)
+            raise ValueError(
+                "Invalid seed_stream_mode="
+                f"{seed_stream_mode!r}. Expected one of: {valid}."
+            )
         raw_material_flow_mode = canonical_raw_material_flow_mode(raw_material_flow_mode)
         self.env = simpy.Environment()
         self.shifts = shifts
         self.seed = seed
-        self.strict_exogenous_crn = bool(strict_exogenous_crn)
+        self.seed_stream_mode = seed_stream_mode
+        self.strict_exogenous_crn = seed_stream_mode == "split"
         if self.strict_exogenous_crn:
             general_ss, demand_ss, risk_ss = np.random.SeedSequence(seed).spawn(3)
             self.rng = np.random.default_rng(general_ss)
@@ -197,6 +234,13 @@ class MFSCSimulation:
         self.raw_material_order_up_to_multiplier = float(
             raw_material_order_up_to_multiplier
         )
+        self.demand_source = demand_source
+        self.excel_order_tape = self._normalize_excel_order_tape(excel_order_tape)
+        if self.demand_source == "excel_order_tape" and not self.excel_order_tape:
+            raise ValueError("demand_source='excel_order_tape' requires excel_order_tape.")
+        self.demand_on_hand_fulfillment_delay = max(
+            0.0, float(demand_on_hand_fulfillment_delay)
+        )
         if self.raw_material_order_up_to_multiplier <= 0.0:
             raise ValueError("raw_material_order_up_to_multiplier must be > 0.")
         # Operational-tempo demand lever for `learning_extension_v1` (see
@@ -218,6 +262,23 @@ class MFSCSimulation:
         self.enabled_risks = set(enabled_risks) if enabled_risks is not None else None
         self.risk_overrides = dict(risk_overrides or {})
         self.risk_occurrence_mode = risk_occurrence_mode
+        self.risk_attribution_source = risk_attribution_source
+        if self.risk_attribution_source == "excel_risk_tape":
+            if self.demand_source != "excel_order_tape":
+                raise ValueError(
+                    "risk_attribution_source='excel_risk_tape' requires "
+                    "demand_source='excel_order_tape'."
+                )
+            missing = [
+                int(row["j"])
+                for row in self.excel_order_tape
+                if row.get("ret_attribution") is None
+            ]
+            if missing:
+                raise ValueError(
+                    "risk_attribution_source='excel_risk_tape' requires "
+                    f"ret_attribution on every tape row; missing j={missing[:5]}."
+                )
         self.inventory_replenishment_period = inventory_replenishment_period
         # Lead time to rebuild the strategic buffer (Ed.2 for inventory): the refill
         # arrives this many hours after it is triggered, so a sustained disruption can
@@ -340,6 +401,11 @@ class MFSCSimulation:
         self.op_down_count = {i: 0 for i in range(1, 14)}
         self._op_down_since = {i: None for i in range(1, 14)}  # Time when op went down
         self.risk_events = []
+        self._ret_quantity_risk_units = {"R14": 0.0, "R24": 0.0}
+        self._ret_quantity_risk_refs: dict[str, list[dict[str, Any]]] = {
+            "R14": [],
+            "R24": [],
+        }
         self._contingent_demand_pending = 0
         self._cumulative_down_hours = 0.0  # Accumulated op-hours of disruption
         self.adaptive_benchmark_enabled = self.risk_level in (
@@ -357,6 +423,154 @@ class MFSCSimulation:
         # =================================================================
         self._processes_started = False
         self._step_size = HOURS_PER_DAY  # Default: 24h per step
+
+    def _normalize_excel_order_tape(
+        self, tape: Optional[list[dict[str, Any]]]
+    ) -> list[dict[str, Any]]:
+        if not tape:
+            return []
+        normalized: list[dict[str, Any]] = []
+        for index, row in enumerate(tape, start=1):
+            if "OPTj" in row:
+                optj = row["OPTj"]
+            else:
+                optj = row.get("optj")
+            if "Q" in row:
+                quantity = row["Q"]
+            else:
+                quantity = row.get("q", row.get("quantity"))
+            if optj is None or quantity is None:
+                raise ValueError("Excel order tape rows require OPTj and Q.")
+            j_value = row.get("j", index)
+            quantity_float = float(quantity)
+            normalized_row = {
+                "j": int(j_value),
+                "OPTj": float(optj),
+                "Q": quantity_float,
+                "contingent": bool(
+                    row.get("contingent", quantity_float > float(DEMAND["b"]))
+                ),
+            }
+            attribution = row.get("ret_attribution")
+            if attribution is None and any(
+                key in row for key in ("APj", "apj", "RPj", "rpj", "DPj", "dpj", "risk_values")
+            ):
+                attribution = {
+                    "APj": row.get("APj", row.get("apj", 0.0)),
+                    "RPj": row.get("RPj", row.get("rpj", 0.0)),
+                    "DPj": row.get("DPj", row.get("dpj", 0.0)),
+                    "LTj": row.get("LTj", row.get("LT", row.get("ltj", LEAD_TIME_PROMISE))),
+                    "risk_values": row.get("risk_values", {}),
+                }
+            if attribution is not None:
+                risk_values = dict(attribution.get("risk_values", {}) or {})
+                normalized_row["ret_attribution"] = {
+                    "APj": float(attribution.get("APj", attribution.get("apj", 0.0)) or 0.0),
+                    "RPj": float(attribution.get("RPj", attribution.get("rpj", 0.0)) or 0.0),
+                    "DPj": float(attribution.get("DPj", attribution.get("dpj", 0.0)) or 0.0),
+                    "LTj": float(
+                        attribution.get("LTj", attribution.get("LT", LEAD_TIME_PROMISE))
+                        or LEAD_TIME_PROMISE
+                    ),
+                    "risk_values": {
+                        str(key): float(value or 0.0)
+                        for key, value in risk_values.items()
+                    },
+                }
+            normalized.append(normalized_row)
+        return sorted(normalized, key=lambda item: (float(item["OPTj"]), int(item["j"])))
+
+    def _add_ret_quantity_risk(self, event: RiskEvent) -> None:
+        """Track quantity-style risks for order-level Excel-ReT attribution.
+
+        R14 and R24 are not workstation downtime intervals.  The raw Garrido
+        workbooks nevertheless expose them as per-order risk indicators, often
+        across orders placed after the point event.  Keep a separate attribution
+        queue so affected quantities can be consumed by subsequent orders
+        without changing the physical DES flow.
+        """
+        risk_id = str(event.risk_id)
+        if risk_id not in self._ret_quantity_risk_units:
+            return
+        magnitude = max(0.0, float(event.magnitude or 0.0))
+        if magnitude <= 0.0:
+            return
+        # The workbook risk columns are used as order-level gates/counts, not
+        # ration-quantity terms in the ReT formula.  One R14 defect event can
+        # therefore mark a later order even if it contains many defective units.
+        # R24 retains approximate order-scale magnitude because its source is a
+        # surge of rations rather than a count of defective pieces.
+        if risk_id == "R14":
+            indicator_units = 1.0
+        else:
+            indicator_units = max(1.0, magnitude / max(float(DEMAND["b"]), 1.0))
+        cap = 10000.0
+        self._ret_quantity_risk_units[risk_id] = min(
+            cap, self._ret_quantity_risk_units[risk_id] + indicator_units
+        )
+        self._ret_quantity_risk_refs[risk_id].append(
+            {
+                "risk_id": risk_id,
+                "start_time": float(event.start_time),
+                "end_time": float(event.end_time),
+                "duration": float(event.duration),
+                "affected_ops": list(event.affected_ops),
+                "magnitude": indicator_units,
+                "unit": str(event.unit),
+                "raw_magnitude": magnitude,
+            }
+        )
+        # Avoid a stale reference list when a long run has many daily R14 events.
+        self._ret_quantity_risk_refs[risk_id] = self._ret_quantity_risk_refs[risk_id][-25:]
+
+    def _consume_ret_quantity_risk_for_order(
+        self, order: OrderRecord
+    ) -> tuple[float, float | None]:
+        """Apply queued quantity-risk attribution to an order.
+
+        Returns ``(period_contribution, earliest_start)`` for the AP/RP/DP
+        period logic.  The contribution is deliberately a small indicator-like
+        value because the Excel columns behave as risk gates, not as ration
+        quantities in the ReT formula.
+        """
+        contribution = 0.0
+        earliest: float | None = None
+        for risk_id in ("R14", "R24"):
+            available = float(self._ret_quantity_risk_units.get(risk_id, 0.0))
+            if available <= 0.0:
+                continue
+            consumed = min(available, 1.0)
+            if risk_id == "R14":
+                # R14 behaves like a persistent quality-risk gate in the raw
+                # Excel sheets: once defective-product risk appears, later
+                # orders continue to carry the R14 indicator rather than
+                # exhausting a ration-sized quantity bucket.
+                self._ret_quantity_risk_units[risk_id] = available
+            else:
+                self._ret_quantity_risk_units[risk_id] = max(0.0, available - consumed)
+            refs = self._ret_quantity_risk_refs.get(risk_id, [])
+            ref_start = (
+                min(float(ref["start_time"]) for ref in refs)
+                if refs
+                else float(order.OPTj)
+            )
+            earliest = ref_start if earliest is None else min(earliest, ref_start)
+            order.ret_risk_indicators[risk_id] = max(
+                1.0, order.ret_risk_indicators.get(risk_id, 0.0)
+            )
+            order.ret_risk_event_refs.append(
+                {
+                    "risk_id": risk_id,
+                    "start_time": ref_start,
+                    "end_time": float(order.OATj if order.OATj is not None else order.OPTj),
+                    "duration": 0.0,
+                    "affected_ops": [7] if risk_id == "R14" else [13],
+                    "magnitude": consumed,
+                    "unit": "quantity_risk_attribution",
+                }
+            )
+            contribution += 1.0
+        return contribution, earliest
 
     def _mark_warmup_complete(self) -> None:
         """Mark the first thesis warm-up trigger time once."""
@@ -744,6 +958,16 @@ class MFSCSimulation:
         order.remaining_qty = 0.0
         self._set_order_ret_indicators(order)
 
+    def _finalize_reserved_on_hand_order_after_delay(
+        self, order: OrderRecord, delay: float
+    ):
+        """Finalize a demand order reserved from on-hand stock after lead time."""
+        yield self.env.timeout(float(delay))
+        order.OATj = self.env.now
+        order.CTj = self.env.now - order.OPTj
+        order.remaining_qty = 0.0
+        self._set_order_ret_indicators(order)
+
     def _enqueue_backorder(self, order: OrderRecord) -> None:
         """Insert a delayed order into the capped Garrido-style backlog queue."""
         self.pending_backorders.append(order)
@@ -751,7 +975,8 @@ class MFSCSimulation:
         while len(self.pending_backorders) > BACKORDER_QUEUE_CAP:
             dropped = self.pending_backorders.pop()
             dropped.lost = True
-            self.total_unattended_orders += 1
+            if not dropped.metrics_excluded:
+                self.total_unattended_orders += 1
         self._refresh_pending_backorder_qty()
 
     def _delayed_backorder_check(self, order: OrderRecord):
@@ -764,8 +989,9 @@ class MFSCSimulation:
         yield self.env.timeout(order.LTj)
         if order.remaining_qty > 0:
             order.backorder = True
-            self.total_backorders += 1
-            self.cumulative_backorder_qty += order.quantity
+            if not order.metrics_excluded:
+                self.total_backorders += 1
+                self.cumulative_backorder_qty += order.quantity
 
     def _serve_pending_backorders(self):
         """
@@ -1398,7 +1624,119 @@ class MFSCSimulation:
     # DEMAND SINK: Op13
     # =====================================================================
 
+    def _place_demand_order(self, order: OrderRecord):
+        available = self.rations_theatre.level
+        if not self.pending_backorders and available >= order.quantity:
+            yield self.rations_theatre.get(order.quantity)
+            order.remaining_qty = 0.0
+            delay = float(self.demand_on_hand_fulfillment_delay)
+            if delay > 0.0:
+                self.env.process(
+                    self._finalize_reserved_on_hand_order_after_delay(order, delay)
+                )
+            else:
+                order.OATj = self.env.now
+                order.CTj = self.env.now - order.OPTj
+                self._set_order_ret_indicators(order)
+        else:
+            # Enqueue for future delivery. Per thesis Sec. 6.8.2,
+            # backorder classification deferred until LTj=48h elapses.
+            self._enqueue_backorder(order)
+            yield from self._serve_pending_backorders()
+            # Start 48h timer — only count as backorder if still pending
+            self.env.process(self._delayed_backorder_check(order))
+            if self.risk_attribution_source == "excel_risk_tape":
+                self._set_order_ret_indicators_from_excel_tape(order)
+
+        self.orders.append(order)
+        self.daily_demand.append((self.env.now, order.quantity))
+
+    def _op13_demand_from_excel_order_tape(self):
+        for row in self.excel_order_tape:
+            optj = float(row["OPTj"])
+            if optj > self.env.now:
+                yield self.env.timeout(optj - self.env.now)
+
+            demand_qty = float(row["Q"])
+            # In tape mode Q already includes any contingent surge visible in
+            # the workbook, so R24 must not add demand a second time.
+            self._contingent_demand_pending = 0
+            self.total_demanded += demand_qty
+            order = OrderRecord(
+                j=int(row["j"]),
+                OPTj=float(self.env.now),
+                quantity=demand_qty,
+                remaining_qty=demand_qty,
+                contingent=bool(row.get("contingent", False)),
+                ret_attribution_override=row.get("ret_attribution"),
+            )
+            yield from self._place_demand_order(order)
+
+    def _sample_calendar_demand_quantity(self) -> tuple[float, bool]:
+        demand_qty = float(
+            self.demand_rng.integers(int(DEMAND["a"]), int(DEMAND["b"]) + 1)
+        )
+        demand_qty *= self.demand_mean_multiplier
+        if self.adaptive_benchmark_enabled:
+            demand_scale = float(self._adaptive_regime_params()["demand_scale"])
+            demand_qty *= demand_scale
+        contingent_qty = float(self._contingent_demand_pending)
+        if contingent_qty > 0:
+            demand_qty += contingent_qty
+            self._contingent_demand_pending = 0
+        return demand_qty, contingent_qty > 0
+
+    def _exclude_current_order_ledger_from_metrics(self) -> None:
+        for order in self.orders:
+            order.metrics_excluded = True
+        for order in self.pending_backorders:
+            order.metrics_excluded = True
+        self.orders = []
+        self.daily_demand = []
+        self.total_demanded = 0
+        self.total_backorders = 0
+        self.total_unattended_orders = 0
+        self.cumulative_backorder_qty = 0.0
+
+    def _op13_demand_from_excel_order_tape_after_calendar_warmup(self):
+        first_optj = float(self.excel_order_tape[0]["OPTj"])
+        order_num = 0
+        hour_of_week = 0
+
+        while self.env.now + float(DEMAND["frequency_hrs"]) < first_optj:
+            yield self.env.timeout(DEMAND["frequency_hrs"])
+            hour_of_week = (hour_of_week + HOURS_PER_DAY) % HOURS_PER_WEEK
+            day_of_week = hour_of_week // HOURS_PER_DAY
+            if day_of_week >= 6:
+                continue
+
+            demand_qty, is_contingent = self._sample_calendar_demand_quantity()
+            self.total_demanded += demand_qty
+            order_num += 1
+            order = OrderRecord(
+                j=order_num,
+                OPTj=self.env.now,
+                quantity=demand_qty,
+                remaining_qty=demand_qty,
+                contingent=is_contingent,
+                metrics_excluded=True,
+            )
+            yield from self._place_demand_order(order)
+
+        if first_optj > self.env.now:
+            yield self.env.timeout(first_optj - self.env.now)
+
+        self._exclude_current_order_ledger_from_metrics()
+        yield from self._op13_demand_from_excel_order_tape()
+
     def _op13_demand(self):
+        if self.demand_source == "excel_order_tape":
+            yield from self._op13_demand_from_excel_order_tape()
+            return
+        if self.demand_source == "excel_order_tape_after_calendar_warmup":
+            yield from self._op13_demand_from_excel_order_tape_after_calendar_warmup()
+            return
+
         order_num = 0
         hour_of_week = 0
         while True:
@@ -1408,18 +1746,7 @@ class MFSCSimulation:
             if day_of_week >= 6:
                 continue
 
-            demand_qty = float(
-                self.demand_rng.integers(int(DEMAND["a"]), int(DEMAND["b"]) + 1)
-            )
-            # Operational-tempo scaling of regular demand (learning-extension lever).
-            demand_qty *= self.demand_mean_multiplier
-            if self.adaptive_benchmark_enabled:
-                demand_scale = float(self._adaptive_regime_params()["demand_scale"])
-                demand_qty *= demand_scale
-            contingent_qty = float(self._contingent_demand_pending)
-            if contingent_qty > 0:
-                demand_qty += contingent_qty
-                self._contingent_demand_pending = 0
+            demand_qty, is_contingent = self._sample_calendar_demand_quantity()
 
             self.total_demanded += demand_qty
             order_num += 1
@@ -1428,26 +1755,9 @@ class MFSCSimulation:
                 OPTj=self.env.now,
                 quantity=demand_qty,
                 remaining_qty=demand_qty,
-                contingent=contingent_qty > 0,
+                contingent=is_contingent,
             )
-
-            available = self.rations_theatre.level
-            if not self.pending_backorders and available >= demand_qty:
-                yield self.rations_theatre.get(demand_qty)
-                order.OATj = self.env.now
-                order.CTj = 0.0
-                order.remaining_qty = 0.0
-                self._set_order_ret_indicators(order)
-            else:
-                # Enqueue for future delivery. Per thesis Sec. 6.8.2,
-                # backorder classification deferred until LTj=48h elapses.
-                self._enqueue_backorder(order)
-                yield from self._serve_pending_backorders()
-                # Start 48h timer — only count as backorder if still pending
-                self.env.process(self._delayed_backorder_check(order))
-
-            self.orders.append(order)
-            self.daily_demand.append((self.env.now, demand_qty))
+            yield from self._place_demand_order(order)
 
     # =====================================================================
     # RISK PROCESSES
@@ -1647,18 +1957,18 @@ class MFSCSimulation:
                             )
                         else:
                             description = f"{defects} defective (discarded)"
-                        self.risk_events.append(
-                            RiskEvent(
-                                "R14",
-                                self.env.now,
-                                self.env.now,
-                                0,
-                                [7],
-                                description,
-                                magnitude=float(defects),
-                                unit="defective_products",
-                            )
+                        event = RiskEvent(
+                            "R14",
+                            self.env.now,
+                            self.env.now,
+                            0,
+                            [7],
+                            description,
+                            magnitude=float(defects),
+                            unit="defective_products",
                         )
+                        self.risk_events.append(event)
+                        self._add_ret_quantity_risk(event)
 
     def _risk_R21(self):
         """R21 natural disaster generator — non-blocking mode.
@@ -1757,18 +2067,18 @@ class MFSCSimulation:
         self._contingent_demand_pending = min(
             self._contingent_demand_pending, max_contingent
         )
-        self.risk_events.append(
-            RiskEvent(
-                "R24",
-                self.env.now,
-                self.env.now,
-                0,
-                [13],
-                f"+{surge}",
-                magnitude=float(surge),
-                unit="rations",
-            )
+        event = RiskEvent(
+            "R24",
+            self.env.now,
+            self.env.now,
+            0,
+            [13],
+            f"+{surge}",
+            magnitude=float(surge),
+            unit="rations",
         )
+        self.risk_events.append(event)
+        self._add_ret_quantity_risk(event)
 
     def _risk_R3(self):
         duration = RISKS_CURRENT["R3"]["recovery"]["duration"]
@@ -1921,25 +2231,56 @@ class MFSCSimulation:
         """
         Populate ReT sub-indicators APj, RPj, DPj for a completed order.
 
-        Per Garrido-Rios (2017) Eq. 5.1-5.5:
-        - Autotomy (CTj <= LTj, disruptions present): APj = disruption overlap hours
-        - Recovery (CTj > LTj, disruptions present): RPj = OATj - earliest_risk_start
-        - Non-recovery (CTj > LTj, no recovery): DPj set, RPj=0
-        - Fill rate (no disruptions): APj=RPj=DPj=0
+        The Garrido raw workbooks gate ReT with visible risk columns
+        (``AVERAGE(R..)>0``).  Duration events contribute by time overlap and
+        point events such as R14/R24 contribute when their timestamp falls
+        inside the order window.  Earlier code missed point events because it
+        required positive duration overlap, which suppressed the Excel risk
+        branch for defective-product rows.
         """
         if order.OATj is None or order.CTj is None:
             return
 
-        # Compute disruption overlap during [OPTj, OATj]
+        order.ret_risk_indicators.clear()
+        order.ret_risk_event_refs.clear()
+        if self.risk_attribution_source == "excel_risk_tape":
+            self._set_order_ret_indicators_from_excel_tape(order)
+            return
+
         total_disruption_hours = 0.0
         earliest_risk_start = float("inf")
 
+        def mark_event(event: RiskEvent, contribution: float) -> None:
+            nonlocal earliest_risk_start
+            key = str(event.risk_id)
+            order.ret_risk_indicators[key] = (
+                order.ret_risk_indicators.get(key, 0.0) + float(contribution)
+            )
+            order.ret_risk_event_refs.append(
+                {
+                    "risk_id": key,
+                    "start_time": float(event.start_time),
+                    "end_time": float(event.end_time),
+                    "duration": float(event.duration),
+                    "affected_ops": list(event.affected_ops),
+                    "magnitude": float(event.magnitude),
+                    "unit": str(event.unit),
+                }
+            )
+            earliest_risk_start = min(earliest_risk_start, float(event.start_time))
+
         for event in self.risk_events:
-            overlap_start = max(event.start_time, order.OPTj)
-            overlap_end = min(event.end_time, order.OATj)
+            if float(event.duration) <= 0.0:
+                if float(order.OPTj) <= float(event.start_time) <= float(order.OATj):
+                    mark_event(event, float(event.magnitude))
+                continue
+
+            overlap_start = max(float(event.start_time), float(order.OPTj))
+            overlap_end = min(float(event.end_time), float(order.OATj))
             if overlap_start < overlap_end:
-                total_disruption_hours += overlap_end - overlap_start
-                earliest_risk_start = min(earliest_risk_start, event.start_time)
+                overlap = overlap_end - overlap_start
+                total_disruption_hours += overlap
+                mark_event(event, overlap)
 
         # Include ongoing disruptions at fulfillment time
         for op_id in range(1, 14):
@@ -1949,9 +2290,48 @@ class MFSCSimulation:
                 overlap_end = order.OATj
                 if overlap_start < overlap_end:
                     total_disruption_hours += overlap_end - overlap_start
+                    key = f"ongoing_op{op_id}"
+                    order.ret_risk_indicators[key] = (
+                        order.ret_risk_indicators.get(key, 0.0)
+                        + overlap_end
+                        - overlap_start
+                    )
                     earliest_risk_start = min(earliest_risk_start, down_since)
 
-        if total_disruption_hours <= 0:
+        quantity_risk_hours, quantity_risk_start = self._consume_ret_quantity_risk_for_order(
+            order
+        )
+        if quantity_risk_hours > 0.0:
+            total_disruption_hours += quantity_risk_hours
+            earliest_risk_start = min(
+                earliest_risk_start,
+                float(quantity_risk_start)
+                if quantity_risk_start is not None
+                else float(order.OPTj),
+            )
+
+        # R24 is a point event that materializes as a contingent-demand order.
+        # If the event happened before OPTj, pure time-overlap attribution misses
+        # the order even though Garrido's spreadsheet marks the order-level risk
+        # column. Treat the contingent order itself as the R24 impact window.
+        if bool(getattr(order, "contingent", False)) and "R24" not in order.ret_risk_indicators:
+            contribution = max(1.0, min(float(order.CTj), float(order.LTj)))
+            total_disruption_hours += contribution
+            order.ret_risk_indicators["R24"] = contribution
+            order.ret_risk_event_refs.append(
+                {
+                    "risk_id": "R24",
+                    "start_time": float(order.OPTj),
+                    "end_time": float(order.OATj),
+                    "duration": 0.0,
+                    "affected_ops": [13],
+                    "magnitude": float(order.quantity),
+                    "unit": "contingent_order",
+                }
+            )
+            earliest_risk_start = min(earliest_risk_start, float(order.OPTj))
+
+        if not order.ret_risk_indicators:
             return  # No disruption: fill_rate case
 
         if order.CTj <= order.LTj:
@@ -1962,6 +2342,56 @@ class MFSCSimulation:
             order.DPj = order.CTj
             eff_risk_start = max(earliest_risk_start, order.OPTj)
             order.RPj = max(0.0, order.OATj - eff_risk_start)
+
+    def _set_order_ret_indicators_from_excel_tape(self, order: OrderRecord) -> None:
+        """
+        Replay Garrido workbook-visible risk attribution for replication mode.
+
+        This does not copy OATj, CTj, or ReT. It only imports the columns that
+        the raw workbook itself uses as the operational risk gate and periods:
+        APj, RPj, DPj, LTj, and the visible R... indicators for the same order.
+        """
+        attribution = order.ret_attribution_override
+        if attribution is None:
+            raise ValueError(
+                "risk_attribution_source='excel_risk_tape' requires an order "
+                "ret_attribution override."
+            )
+
+        order.ret_risk_indicators.clear()
+        order.ret_risk_event_refs.clear()
+        order.APj = float(attribution.get("APj", 0.0) or 0.0)
+        order.RPj = float(attribution.get("RPj", 0.0) or 0.0)
+        order.DPj = float(attribution.get("DPj", 0.0) or 0.0)
+        order.LTj = float(attribution.get("LTj", order.LTj) or order.LTj)
+        event_end = (
+            float(order.OATj)
+            if order.OATj is not None
+            else float(order.OPTj) + max(order.DPj, order.RPj, order.LTj)
+        )
+        event_duration = (
+            float(order.CTj)
+            if order.CTj is not None
+            else max(order.DPj, order.RPj, order.LTj)
+        )
+        for risk_id, value in (attribution.get("risk_values", {}) or {}).items():
+            risk_value = float(value or 0.0)
+            if risk_value <= 0.0:
+                continue
+            key = str(risk_id)
+            order.ret_risk_indicators[key] = risk_value
+            order.ret_risk_event_refs.append(
+                {
+                    "risk_id": key,
+                    "start_time": float(order.OPTj),
+                    "end_time": event_end,
+                    "duration": event_duration,
+                    "affected_ops": [],
+                    "magnitude": risk_value,
+                    "unit": "excel_visible_risk_indicator",
+                    "source": "excel_risk_tape",
+                }
+            )
 
     def _order_ret_value(self, order: OrderRecord) -> tuple[float, str]:
         """
@@ -1976,18 +2406,49 @@ class MFSCSimulation:
             ret_weights=THESIS_FAITHFUL_PROTOCOL["ret_weights"],
         )
 
-    def compute_order_level_ret(self) -> dict[str, Any]:
+    def compute_order_level_ret(
+        self,
+        *,
+        orders: Optional[Iterable[OrderRecord]] = None,
+        j_source: str = "row_index",
+    ) -> dict[str, Any]:
         """
-        Compute thesis-exact order-level ReT per Garrido Eq. 5.1-5.5.
+        Compute order-level ReT with Garrido's raw Excel formula as primary.
 
         Returns dict with aggregate ReT metrics:
-        - mean_ret: average ReT across all completed orders
+        - mean_ret: Excel-faithful raw workbook ReT
+        - mean_ret_text_formula: older textual Eq. 5.1-5.5 interpretation
         - fill_rate_order_level: Re(FRt) = 1 - (Bt+Ut)/Dt (order counts, Eq. 5.4)
-        - case_counts: orders per case (autotomy, recovery, non_recovery, fill_rate)
         - n_orders, n_completed: total and completed order counts
+
+        ``orders`` and ``j_source`` are optional forensic controls for matching
+        Garrido's workbook-visible ledgers.  The default remains the full DES
+        order ledger with consecutive visible rows.
         """
-        return compute_thesis_order_level_ret(
-            self.orders,
-            fill_rate=self._order_level_fill_rate(),
+        order_list = list(self.orders if orders is None else orders)
+        fill_rate = compute_fill_rate_from_orders(
+            order_list,
+            current_time=self.env.now,
+        )
+        text_summary = compute_thesis_order_level_ret(
+            order_list,
+            fill_rate=fill_rate,
             ret_weights=THESIS_FAITHFUL_PROTOCOL["ret_weights"],
         )
+        excel_summary = compute_order_level_ret_excel_formula(
+            order_list,
+            current_time=float(self.env.now),
+            j_source=j_source,
+        )
+        return {
+            "mean_ret": excel_summary["mean_ret_excel"],
+            "mean_ret_excel_formula": excel_summary["mean_ret_excel"],
+            "mean_ret_text_formula": text_summary["mean_ret"],
+            "fill_rate_order_level": text_summary["fill_rate_order_level"],
+            "case_counts": excel_summary["case_counts"],
+            "case_counts_excel_formula": excel_summary["case_counts"],
+            "case_counts_text_formula": text_summary["case_counts"],
+            "n_orders": excel_summary["n_orders"],
+            "n_completed": excel_summary["n_completed"],
+            "j_source": j_source,
+        }
