@@ -23,11 +23,19 @@ def test_replicate_garrido_excel_smoke_with_order_tape(tmp_path):
             "--demand-sources",
             "excel_order_tape",
             "--risk-occurrence-modes",
-            "legacy_renewal",
+            "thesis_window",
             "--risk-attribution-sources",
             "des_events,excel_risk_tape",
             "--seed-stream-modes",
             "split",
+            # The smoke validates forensic replication MECHANICS (extraction gate,
+            # order-tape, ReT formula, branch shares, exports) over a 2-CF subset.
+            # The delay=54 CTj calibration is provisional (see
+            # GARRIDO_ORIGINAL_RUNS_GATE) and only representative over the full
+            # CF1-20 thesis_window lane, so it is pinned to 0 here to keep the
+            # smoke fast, deterministic, and independent of that calibration.
+            "--demand-on-hand-fulfillment-delay",
+            "0",
             "--output-dir",
             str(output_dir),
         ],
@@ -42,7 +50,7 @@ def test_replicate_garrido_excel_smoke_with_order_tape(tmp_path):
     payload = json.loads((output_dir / "replication_audit.json").read_text())
     assert payload["best_config"] == {
         "demand_source": "excel_order_tape",
-        "risk_occurrence_mode": "legacy_renewal",
+        "risk_occurrence_mode": "thesis_window",
         "risk_attribution_source": "excel_risk_tape",
         "seed_stream_mode": "split",
     }

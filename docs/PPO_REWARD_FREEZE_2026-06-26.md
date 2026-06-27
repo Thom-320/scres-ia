@@ -1,5 +1,10 @@
 # PPO Reward Freeze (2026-06-26)
 
+> **SUPERSEDED (2026-06-26) by `docs/EXPERIMENT_CONTRACT_V2_2026-06-26.md`:** the primary training
+> reward is **`control_v1`** (operational) with `control_v2_backlog` as a pre-registered sensitivity;
+> `ReT_garrido2024` / Cobb-Douglas are **OUTCOME bars only**, not training rewards (no circularity).
+> The algorithm is **DQN**. The reward provenance/calibration notes below remain valid reference.
+
 Two **co-primary** reward designs (user decision 2026-06-26). Both are frozen here; weights are
 tuned on training-seed sensitivity only (anti-fishing). Every policy is **evaluated** on the full
 metrics panel + both bars regardless of which reward trained it.

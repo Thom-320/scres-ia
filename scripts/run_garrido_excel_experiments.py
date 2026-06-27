@@ -236,6 +236,7 @@ def run_one(
         raw_material_order_up_to_multiplier=resolved[
             "raw_material_order_up_to_multiplier"
         ],
+        demand_on_hand_fulfillment_delay=args.demand_on_hand_fulfillment_delay,
         demand_source=args.demand_source,
         excel_order_tape=target.order_tape(),
         seed_stream_mode=args.seed_stream_mode,
@@ -357,6 +358,11 @@ def main() -> int:
         "--raw-material-order-up-to-multiplier",
         type=float,
         default=float(P["raw_material_order_up_to_multiplier"]),
+    )
+    parser.add_argument(
+        "--demand-on-hand-fulfillment-delay",
+        type=float,
+        default=float(P["demand_on_hand_fulfillment_delay"]),
     )
     parser.add_argument("--stochastic-pt", action="store_true")
     parser.add_argument("--use-workbook-seed", action="store_true", default=True)

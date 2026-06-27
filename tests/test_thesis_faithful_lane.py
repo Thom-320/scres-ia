@@ -30,6 +30,7 @@ from supply_chain.external_env_interface import (
     get_thesis_aligned_training_env_spec,
     make_thesis_aligned_training_env,
 )
+from supply_chain.env_experimental_shifts import MFSCGymEnvShifts
 from supply_chain.ret_thesis import (
     compute_fill_rate_from_orders,
     compute_order_level_ret,
@@ -89,11 +90,53 @@ def test_extracted_thesis_constants_match_lane_contract() -> None:
         "mean": 0.5,
         "min": 0.0,
     }
+    assert THESIS_FAITHFUL_PROTOCOL["stochastic_pt"] is False
     assert THESIS_DOWNSTREAM_Q_RANGES["figure_6_2"]["op9"] == (2400, 2600)
     assert THESIS_DOWNSTREAM_Q_RANGES["table_6_20"]["op9"] == (2000, 2500)
     assert len(RAW_MATERIAL_COMPONENTS) == 12
     assert RAW_MATERIAL_COMPONENTS[0]["id"] == "rm1"
     assert RAW_MATERIAL_COMPONENTS[-1]["id"] == "rm12"
+
+
+def test_base_simulation_defaults_are_thesis_faithful_for_training() -> None:
+    sim = MFSCSimulation()
+
+    assert sim.warmup_trigger == THESIS_FAITHFUL_PROTOCOL["warmup_trigger"]
+    assert sim.downstream_q_source == THESIS_FAITHFUL_PROTOCOL["downstream_q_source"]
+    assert sim.r14_defect_mode == THESIS_FAITHFUL_PROTOCOL["r14_defect_mode"]
+    assert sim.risk_occurrence_mode == THESIS_FAITHFUL_PROTOCOL["risk_occurrence_mode"]
+    assert sim.raw_material_flow_mode == canonical_raw_material_flow_mode(
+        THESIS_FAITHFUL_PROTOCOL["raw_material_flow_mode"]
+    )
+    assert sim.raw_material_order_up_to_multiplier == pytest.approx(
+        THESIS_FAITHFUL_PROTOCOL["raw_material_order_up_to_multiplier"]
+    )
+    assert sim.demand_on_hand_fulfillment_delay == pytest.approx(
+        THESIS_FAITHFUL_PROTOCOL["demand_on_hand_fulfillment_delay"]
+    )
+
+
+def test_gym_shift_env_defaults_are_thesis_faithful_for_training() -> None:
+    env = MFSCGymEnvShifts(max_steps=1)
+
+    try:
+        assert env.warmup_trigger == THESIS_FAITHFUL_PROTOCOL["warmup_trigger"]
+        assert env.downstream_q_source == THESIS_FAITHFUL_PROTOCOL["downstream_q_source"]
+        assert env.r14_defect_mode == THESIS_FAITHFUL_PROTOCOL["r14_defect_mode"]
+        assert env.risk_occurrence_mode == THESIS_FAITHFUL_PROTOCOL[
+            "risk_occurrence_mode"
+        ]
+        assert env.raw_material_flow_mode == canonical_raw_material_flow_mode(
+            THESIS_FAITHFUL_PROTOCOL["raw_material_flow_mode"]
+        )
+        assert env.raw_material_order_up_to_multiplier == pytest.approx(
+            THESIS_FAITHFUL_PROTOCOL["raw_material_order_up_to_multiplier"]
+        )
+        assert env.demand_on_hand_fulfillment_delay == pytest.approx(
+            THESIS_FAITHFUL_PROTOCOL["demand_on_hand_fulfillment_delay"]
+        )
+    finally:
+        env.close()
 
 
 def test_warmup_can_be_marked_at_op9_arrival_instead_of_production() -> None:

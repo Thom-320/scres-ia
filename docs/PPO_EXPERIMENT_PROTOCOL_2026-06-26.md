@@ -1,5 +1,10 @@
 # PPO Experiment Protocol — Beat Garrido's Best Static (2026-06-26)
 
+> **SUPERSEDED (2026-06-26) by `docs/EXPERIMENT_CONTRACT_V2_2026-06-26.md`:** the algorithm is now
+> **DQN** (not PPO) and the primary claim is the **decision-frontier** claim (learning helps only
+> where a frontier exists). The **two-env design** (faithful + headroom) and the **win/dominance
+> definition** below are KEPT and carried into Contract v2 §6–§7. Read v2 first.
+
 Pre-registered protocol. Frozen **before** any confirmatory PPO run. No reward/observation/env/
 regime is changed using held-out results (anti-fishing).
 

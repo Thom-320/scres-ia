@@ -59,6 +59,7 @@ ReT_thesis piecewise approximation (Eq. 5.5, audit-only):
 
 from __future__ import annotations
 
+import collections
 import json
 from typing import Any, Optional
 from pathlib import Path
@@ -71,6 +72,7 @@ from .config import (
     BACKORDER_QUEUE_CAP,
     CAPACITY_BY_SHIFTS,
     DEFAULT_YEAR_BASIS,
+    GARRIDO_FULFILLMENT_DELAY_HOURS,
     INVENTORY_BUFFERS,
     OPERATIONS,
     R14_DEFECT_MODE_OPTIONS,
@@ -101,6 +103,8 @@ REWARD_MODE_OPTIONS = (
     "ReT_garrido2024_raw",
     "ReT_garrido2024",
     "ReT_garrido2024_train",
+    "ReT_cvar_cd",
+    "ReT_excel_delta",
     "ReT_ladder_v1",
     "ReT_tail_v2",
     "rt_v0",
@@ -177,6 +181,7 @@ G24_COST_PRODUCTION = 1.0
 G24_COST_SPARE_CAPACITY = 1.0
 G24_COST_INVENTORY = 1.0
 G24_COST_BACKORDERS = 1.0
+G24_COST_SHIFT = 1.0
 G24_DEFAULT_CALIBRATION_PATH = (
     Path(__file__).resolve().parent
     / "data"
@@ -342,22 +347,31 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         ret_g24_d_tau: float = G24_D_TAU,
         ret_g24_n_kappa: float = G24_N_KAPPA,
         ret_g24_kappa_train_frac: float = 0.20,
+        ret_g24_shift_cost: float = G24_COST_SHIFT,
         # --- ReT_cd_v1 / ReT_cd_sigmoid parameters ---
         ret_cd_w_fr: float = RET_CD_W_FR,
         ret_cd_w_at: float = RET_CD_W_AT,
+        # --- ReT_cvar_cd parameters (mean-CVaR over the garrido2024 CD index) ---
+        cvar_alpha: float = 0.05,
+        cvar_lambda: float = 0.0,
+        cvar_power: float = 1.0,
+        cvar_window: int = 50,
         # --- Action space configuration ---
         action_contract: str = "track_a_v1",
         action_mode: str = "full",  # "full" (5D), "shift_only" (1D), "shift_q9" (2D)
-        warmup_trigger: str = "production",
+        warmup_trigger: str = "op9_arrival",
         downstream_q_source: str = THESIS_REPLICATION_DOWNSTREAM_Q_SOURCE,
-        r14_defect_mode: str = "reprocess",
-        raw_material_flow_mode: str = "legacy_validated",
+        r14_defect_mode: str = "thesis_strict_op6",
+        raw_material_flow_mode: str = "kit_equivalent_order_up_to",
         raw_material_order_up_to_multiplier: float = 2.0,
         demand_mean_multiplier: float = 1.0,
+        demand_on_hand_fulfillment_delay: float = GARRIDO_FULFILLMENT_DELAY_HOURS,
         surge_inertia: bool = False,
         surge_ramp_per_step: int = 1,
         surge_budget_hours: float = float("inf"),
-        risk_occurrence_mode: str = "legacy_renewal",
+        risk_occurrence_mode: str = "thesis_window",
+        risk_frequency_multiplier: float = 1.0,
+        risk_impact_multiplier: float = 1.0,
         initial_buffers: dict[str, float] | None = None,
         initial_shifts: int = 1,
         inventory_replenishment_period: float | None = None,
@@ -463,6 +477,9 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             raw_material_order_up_to_multiplier
         )
         self.demand_mean_multiplier = float(demand_mean_multiplier)
+        self.demand_on_hand_fulfillment_delay = max(
+            0.0, float(demand_on_hand_fulfillment_delay)
+        )
         # Capacity inertia (Ed.2): surge ramps up slowly (activation lag), draws on a
         # finite surge-hour budget, and de-mobilises instantly. Makes anticipating the
         # shock (pre-positioning capacity before it hits) valuable -> rewards memory.
@@ -470,6 +487,8 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self.surge_ramp_per_step = int(surge_ramp_per_step)
         self.surge_budget_hours = float(surge_budget_hours)
         self.risk_occurrence_mode = risk_occurrence_mode
+        self.risk_frequency_multiplier = max(1e-6, float(risk_frequency_multiplier))
+        self.risk_impact_multiplier = max(1e-6, float(risk_impact_multiplier))
         self.initial_buffers = dict(initial_buffers or {})
         self.initial_shifts = int(initial_shifts)
         self.initial_inventory_replenishment_period = inventory_replenishment_period
@@ -600,6 +619,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             calibration.get("n_kappa", calibration.get("kappa_dot", ret_g24_n_kappa))
         )
         self.ret_g24_kappa_train_frac = float(ret_g24_kappa_train_frac)
+        self.ret_g24_shift_cost = max(0.0, float(ret_g24_shift_cost))
         self.ret_g24_target = float(
             calibration.get("target_contribution", G24_EQUATED_TARGET)
         )
@@ -612,6 +632,13 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         # ReT_cd_v1 / ReT_cd_sigmoid params
         self.ret_cd_w_fr = float(ret_cd_w_fr)
         self.ret_cd_w_at = float(ret_cd_w_at)
+
+        # ReT_cvar_cd params (mean-CVaR over the garrido2024 CD resilience index)
+        self.cvar_alpha = float(cvar_alpha)
+        self.cvar_lambda = float(cvar_lambda)
+        self.cvar_power = float(cvar_power)
+        self.cvar_window = int(max(2, cvar_window))
+        self._cvar_loss_buffer = collections.deque(maxlen=self.cvar_window)
 
         self.warmup_hours = float(WARMUP["estimated_deterministic_hrs"])
         self._post_warmup_start_time = self.warmup_hours
@@ -648,6 +675,8 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self._prev_step_new_backorder_qty = 0.0
         self._prev_step_disruption_hours = 0.0
         self._prev_control_v2_signature: tuple[int, float] | None = None
+        self._ret_excel_prev_total = 0.0
+        self._ret_excel_prev_n_orders = 0
         self._warmup_cumulative_backorder_qty = 0.0
         self._warmup_total_demanded = 0.0
         self._warmup_cumulative_down_hours = 0.0
@@ -1187,7 +1216,6 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             "reward_total": reward_total,
         }
 
-
     def _compute_control_v2_components(
         self, info: dict[str, Any], shifts: int
     ) -> dict[str, float]:
@@ -1214,7 +1242,9 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         shift_cost_step = max(0.0, float(shifts) - 1.0) / 2.0
         signature = (int(shifts), round(float(strategic_inventory), 6))
         switch_cost_step = (
-            0.0 if self._prev_control_v2_signature in (None, signature) else 1.0
+            0.0
+            if self._prev_control_v2_signature in (None, signature)
+            else 1.0
         )
         self._prev_control_v2_signature = signature
 
@@ -1848,12 +1878,18 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             1.0,
         )
         tau_step = max(net_requirements / tau_denom, 1.0)
+        shift_cost_step = (
+            self.ret_g24_shift_cost
+            * max(0.0, float(shifts) - 1.0)
+            * max(1.0, float(self.step_size))
+        )
 
         step_cost = (
             G24_COST_PRODUCTION * produced_step
             + G24_COST_SPARE_CAPACITY * spare_capacity_step
             + G24_COST_INVENTORY * finished_inventory
             + G24_COST_BACKORDERS * pending_backorder_qty
+            + shift_cost_step
         )
 
         self._ret_g24_elapsed_steps += 1
@@ -1922,6 +1958,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             "net_requirements_step": net_requirements,
             "tau_step": tau_step,
             "step_cost": step_cost,
+            "shift_cost_step": shift_cost_step,
             "ret_garrido2024_raw_step": raw_product,
             "ret_garrido2024_train_step": raw_product_train,
             "ret_garrido2024_sigmoid_step": sigmoid_index,
@@ -1945,13 +1982,77 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                 "epsilon": "avg pending backorder quantity since warmup",
                 "phi": "avg spare assembly capacity since warmup",
                 "tau": "avg net-requirement coverage time proxy since warmup",
-                "kappa_dot": "avg cost normalized by Monte-Carlo reference cost",
+                "kappa_dot": "avg cost incl. production, spare capacity, inventory, backorders, and shift-hours normalized by Monte-Carlo reference cost",
             },
         }
 
     # -----------------------------------------------------------------
-    # ReT_cd_v1 / ReT_cd_sigmoid: Cobb-Douglas continuous bridge
+    # ReT_cvar_cd: mean-CVaR over the garrido2024 CD resilience index
     # -----------------------------------------------------------------
+
+    def _compute_ret_cvar_cd(
+        self, info: dict[str, Any], shifts: int
+    ) -> dict[str, float | str | dict[str, float] | dict[str, Any]]:
+        """Mean-CVaR Cobb-Douglas resilience reward.
+
+        Resilience index = the bounded Cobb-Douglas sigmoid index from
+        ``_compute_ret_garrido2024`` (Garrido et al. 2024, Eq. 6), denoted CD_t
+        in (0, 1]. The per-step deficit is L_t = 1 - CD_t. The training reward
+        combines the mean objective (maximize CD_t) with a tail-risk penalty
+        aligned to the Conditional Value-at-Risk of the recent deficit stream:
+
+            reward_t = CD_t  -  lambda * ( max(0, L_t - VaR_{1-alpha}) )^p
+                                   / (1 - alpha)
+
+        where VaR_{1-alpha} is the (1-alpha) quantile of L over a rolling
+        window of recent steps. When lambda = 0 the reward reduces to the pure
+        CD index (the mean objective). When lambda > 0, steps whose deficit
+        falls in the worst alpha-tail are penalized super-linearly (p > 1),
+        implementing a within-episode CVaR aversion. This is the tractable
+        train-side proxy for the evaluation objective ``mean-CVaR(CD deficit)``
+        computed across episodes; the two share the same (alpha, lambda) knobs.
+
+        Parameters: ``cvar_alpha`` (tail level, default 0.05), ``cvar_lambda``
+        (risk aversion, default 0.0), ``cvar_power`` (1.0 linear / 2.0 super-
+        linear), ``cvar_window`` (rolling-buffer length, default 50 steps).
+        """
+        eps = 1e-9
+        g24 = self._compute_ret_garrido2024(info, shifts)
+        cd_step = float(g24["ret_garrido2024_sigmoid_step"])
+        loss = 1.0 - cd_step
+
+        self._cvar_loss_buffer.append(loss)
+        window = list(self._cvar_loss_buffer)
+        var_q = max(0.0, 1.0 - self.cvar_alpha)
+        var_threshold = float(np.quantile(window, var_q))
+        tail = [v for v in window if v >= var_threshold - eps]
+        cvar_estimate = float(np.mean(tail)) if tail else loss
+        excess = max(0.0, loss - var_threshold)
+        penalty = float(
+            (excess ** self.cvar_power) / max(1.0 - self.cvar_alpha, eps)
+        )
+        reward = cd_step - self.cvar_lambda * penalty
+
+        return {
+            "reward_mode": "ReT_cvar_cd",
+            "active_reward_mode": self.reward_mode,
+            "training_reward_recommendation": "ReT_cvar_cd",
+            "evaluation_index_recommendation": "ReT_garrido2024",
+            "ret_cvar_cd_step": float(reward),
+            "cd_index_step": cd_step,
+            "cd_loss_step": loss,
+            "cvar_alpha": self.cvar_alpha,
+            "cvar_lambda": self.cvar_lambda,
+            "cvar_power": self.cvar_power,
+            "cvar_window": self.cvar_window,
+            "cvar_var_threshold": var_threshold,
+            "cvar_estimate": cvar_estimate,
+            "cvar_excess": excess,
+            "cvar_penalty": penalty,
+            "g24_components": g24,
+        }
+
+
 
     def _compute_ret_cd_v1(
         self, info: dict[str, Any], step_hours: float
@@ -2069,6 +2170,32 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             ),
         }
 
+    def _compute_ret_excel_delta(self) -> dict[str, float]:
+        """Incremental reward aligned to the workbook ReT aggregate.
+
+        The evaluation metric is the terminal mean of Garrido's raw Excel
+        formula.  For learning, expose the step contribution as the change in
+        cumulative Excel ReT mass: ``mean_ret_excel * n_orders``.
+        """
+        if self.sim is None:
+            raise RuntimeError("Call reset() before computing ReT_excel_delta.")
+
+        summary = self.sim.compute_order_level_ret()
+        n_orders = int(summary["n_orders"])
+        mean_ret = float(summary["mean_ret_excel_formula"])
+        total_ret = mean_ret * float(n_orders)
+        delta_total = total_ret - float(self._ret_excel_prev_total)
+        delta_orders = n_orders - int(self._ret_excel_prev_n_orders)
+        self._ret_excel_prev_total = total_ret
+        self._ret_excel_prev_n_orders = n_orders
+        return {
+            "ret_excel_delta_step": float(delta_total),
+            "ret_excel_mean": mean_ret,
+            "ret_excel_total": float(total_ret),
+            "ret_excel_n_orders": float(n_orders),
+            "ret_excel_delta_orders": float(delta_orders),
+        }
+
     # -----------------------------------------------------------------
     # PBRS potential function (Ng et al. 1999)
     # -----------------------------------------------------------------
@@ -2118,12 +2245,15 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self._prev_step_new_backorder_qty = 0.0
         self._prev_step_disruption_hours = 0.0
         self._prev_control_v2_signature = None
+        self._ret_excel_prev_total = 0.0
+        self._ret_excel_prev_n_orders = 0
         self._ret_g24_elapsed_steps = 0
         self._ret_g24_sum_zeta = 0.0
         self._ret_g24_sum_epsilon = 0.0
         self._ret_g24_sum_phi = 0.0
         self._ret_g24_sum_tau = 0.0
         self._ret_g24_sum_cost = 0.0
+        self._cvar_loss_buffer = collections.deque(maxlen=self.cvar_window)
         self._post_warmup_start_time = self.warmup_hours
         self.sim = MFSCSimulation(
             shifts=initial_shifts,
@@ -2142,7 +2272,10 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                 self.raw_material_order_up_to_multiplier
             ),
             demand_mean_multiplier=self.demand_mean_multiplier,
+            demand_on_hand_fulfillment_delay=self.demand_on_hand_fulfillment_delay,
             risk_occurrence_mode=self.risk_occurrence_mode,
+            risk_frequency_multiplier=self.risk_frequency_multiplier,
+            risk_impact_multiplier=self.risk_impact_multiplier,
             enabled_risks=self.enabled_risks,
             risk_overrides=self.risk_overrides,
             inventory_replenishment_period=inventory_replenishment_period,
@@ -2175,6 +2308,12 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             warmup_inventory_detail
         )
         self._ret_g24_prev_pending_backorder_qty = float(self.sim.pending_backorder_qty)
+        ret_excel = self.sim.compute_order_level_ret()
+        self._ret_excel_prev_n_orders = int(ret_excel["n_orders"])
+        self._ret_excel_prev_total = (
+            float(ret_excel["mean_ret_excel_formula"])
+            * float(self._ret_excel_prev_n_orders)
+        )
         obs = self._compose_observation(
             np.array(self.sim.get_observation(), dtype=np.float32)
         )
@@ -2434,6 +2573,8 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         ret_cd_components: dict[str, float | str] | None = None
         ret_cd_4v_components: dict[str, float] | None = None
         ret_g24_components: dict[str, Any] | None = None
+        ret_cvar_components: dict[str, Any] | None = None
+        ret_excel_components: dict[str, float] | None = None
         pbrs_shaping_bonus: float = 0.0
         pbrs_base_reward: float = 0.0
         pbrs_phi: float = 0.0
@@ -2533,6 +2674,21 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         elif self._canonical_reward_mode == "ReT_garrido2024_train":
             ret_g24_components = self._compute_ret_garrido2024(info, shifts)
             reward = float(ret_g24_components["ret_garrido2024_train_step"])
+            corrected_ret_components = self._compute_ret_thesis_corrected_components(
+                info, self.step_size
+            )
+            ret_components = self._compute_ret_thesis_components(info, self.step_size)
+        elif self._canonical_reward_mode == "ReT_cvar_cd":
+            ret_cvar_components = self._compute_ret_cvar_cd(info, shifts)
+            reward = float(ret_cvar_components["ret_cvar_cd_step"])
+            ret_g24_components = ret_cvar_components["g24_components"]
+            corrected_ret_components = self._compute_ret_thesis_corrected_components(
+                info, self.step_size
+            )
+            ret_components = self._compute_ret_thesis_components(info, self.step_size)
+        elif self._canonical_reward_mode == "ReT_excel_delta":
+            ret_excel_components = self._compute_ret_excel_delta()
+            reward = float(ret_excel_components["ret_excel_delta_step"])
             corrected_ret_components = self._compute_ret_thesis_corrected_components(
                 info, self.step_size
             )
@@ -2672,6 +2828,32 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         out_info["phi_avg"] = float(ret_g24_components["phi_avg"])
         out_info["tau_avg"] = float(ret_g24_components["tau_avg"])
         out_info["kappa_dot"] = float(ret_g24_components["kappa_dot"])
+        if ret_cvar_components is not None:
+            out_info["ret_cvar_cd_step"] = float(ret_cvar_components["ret_cvar_cd_step"])
+            out_info["cd_index_step"] = float(ret_cvar_components["cd_index_step"])
+            out_info["cd_loss_step"] = float(ret_cvar_components["cd_loss_step"])
+            out_info["cvar_var_threshold"] = float(ret_cvar_components["cvar_var_threshold"])
+            out_info["cvar_estimate"] = float(ret_cvar_components["cvar_estimate"])
+            out_info["cvar_penalty"] = float(ret_cvar_components["cvar_penalty"])
+            out_info["ret_cvar_cd_components"] = ret_cvar_components
+        if ret_excel_components is None:
+            ret_excel_summary = self.sim.compute_order_level_ret()
+            n_orders = int(ret_excel_summary["n_orders"])
+            ret_excel_components = {
+                "ret_excel_delta_step": 0.0,
+                "ret_excel_mean": float(ret_excel_summary["mean_ret_excel_formula"]),
+                "ret_excel_total": (
+                    float(ret_excel_summary["mean_ret_excel_formula"])
+                    * float(n_orders)
+                ),
+                "ret_excel_n_orders": float(n_orders),
+                "ret_excel_delta_orders": 0.0,
+            }
+        out_info["ret_excel_delta_step"] = float(
+            ret_excel_components["ret_excel_delta_step"]
+        )
+        out_info["ret_excel_mean"] = float(ret_excel_components["ret_excel_mean"])
+        out_info["ret_excel_components"] = ret_excel_components
         if self._canonical_reward_mode == "ReT_thesis":
             out_info["ReT_raw"] = ReT
             out_info["ret_components"] = {
@@ -2793,7 +2975,6 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                     "gamma": self.pbrs_gamma,
                     "variant": self.pbrs_variant,
                 }
-
         elif self._canonical_reward_mode == "control_v2":
             out_info["service_loss_step"] = float(
                 control_v2_components["service_loss_step"]

@@ -21,8 +21,10 @@ def test_defaults_are_thesis_baseline():
 
 
 def test_frequency_multiplier_increases_events():
-    base = _sim(risk_frequency_multiplier=1.0); base.run()
-    more = _sim(risk_frequency_multiplier=3.0); more.run()
+    base = _sim(risk_frequency_multiplier=1.0)
+    base.run()
+    more = _sim(risk_frequency_multiplier=3.0)
+    more.run()
     assert len(more.risk_events) > len(base.risk_events)
 
 
@@ -41,3 +43,10 @@ def test_frequency_shortens_uniform_window():
     s1 = _sim(risk_frequency_multiplier=1.0)
     s3 = _sim(risk_frequency_multiplier=3.0)
     assert s3._get_risk_b("R11") < s1._get_risk_b("R11")
+
+
+def test_frequency_multiplier_does_not_change_black_swan_window():
+    s1 = _sim(risk_frequency_multiplier=1.0)
+    s3 = _sim(risk_frequency_multiplier=3.0)
+
+    assert s3._get_risk_b("R3") == s1._get_risk_b("R3")

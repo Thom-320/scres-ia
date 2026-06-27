@@ -15,6 +15,7 @@ from supply_chain.ret_thesis import (
     compute_order_level_ret_excel_formula,
     compute_ret_per_order_excel_formula,
 )
+from supply_chain.config import BACKORDER_QUEUE_CAP, GARRIDO_R14_RET_PERIOD_HOURS
 from supply_chain.supply_chain import MFSCSimulation, OrderRecord, RiskEvent
 
 
@@ -80,6 +81,21 @@ def test_excel_ret_uses_explicit_order_risk_indicators() -> None:
     assert value == 0.0
 
 
+def test_excel_fill_rate_branch_caps_backlog_like_garrido_ledger() -> None:
+    order = _order()
+
+    value, case = compute_ret_per_order_excel_formula(
+        order,
+        j=1000,
+        cumulative_backorders=1000,
+        cumulative_unattended=5,
+        risk_active=False,
+    )
+
+    assert case == "excel_fill_rate"
+    assert value == pytest.approx(1.0 - ((BACKORDER_QUEUE_CAP + 5) / 1000))
+
+
 def test_quantity_risk_attribution_marks_later_orders() -> None:
     sim = MFSCSimulation(risks_enabled=False)
     event = RiskEvent(
@@ -104,7 +120,23 @@ def test_quantity_risk_attribution_marks_later_orders() -> None:
     sim._set_order_ret_indicators(order)
 
     assert order.ret_risk_indicators["R14"] == pytest.approx(1.0)
-    assert order.APj > 0.0
+    assert order.APj == pytest.approx(
+        min(GARRIDO_R14_RET_PERIOD_HOURS, order.LTj)
+    )
+
+    delayed_order = OrderRecord(
+        j=2,
+        OPTj=96.0,
+        OATj=168.0,
+        CTj=72.0,
+        quantity=2500.0,
+        remaining_qty=0.0,
+    )
+
+    sim._set_order_ret_indicators(delayed_order)
+
+    assert delayed_order.ret_risk_indicators["R14"] == pytest.approx(1.0)
+    assert delayed_order.RPj == pytest.approx(GARRIDO_R14_RET_PERIOD_HOURS)
 
 
 def test_excel_order_level_ret_uses_running_order_count_fill_branch() -> None:
@@ -119,9 +151,10 @@ def test_excel_order_level_ret_uses_running_order_count_fill_branch() -> None:
     # Row-wise no-risk fill values:
     # j1: 1 - (0 + 0)/1 = 1
     # j2: 1 - (1 + 0)/2 = 0.5
-    # j3: 1 - (1 + 1)/3 = 1/3
-    assert summary["case_counts"]["excel_fill_rate"] == 3
-    assert summary["mean_ret_excel"] == pytest.approx((1.0 + 0.5 + (1.0 / 3.0)) / 3.0)
+    # j3: unfulfilled/lost order with no OATj = 0
+    assert summary["case_counts"]["excel_fill_rate"] == 2
+    assert summary["case_counts"]["excel_unfulfilled"] == 1
+    assert summary["mean_ret_excel"] == pytest.approx((1.0 + 0.5 + 0.0) / 3.0)
 
 
 def test_excel_order_level_ret_can_preserve_original_workbook_j() -> None:

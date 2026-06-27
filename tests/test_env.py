@@ -3,7 +3,11 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from supply_chain.config import HOURS_PER_YEAR_GREGORIAN, HOURS_PER_YEAR_THESIS
+from supply_chain.config import (
+    HOURS_PER_YEAR_GREGORIAN,
+    HOURS_PER_YEAR_THESIS,
+    RET_RECOVERY_PERIOD_MODE,
+)
 from supply_chain.env import MFSCGymEnv
 from supply_chain.supply_chain import MFSCSimulation, OrderRecord
 
@@ -167,6 +171,29 @@ def test_backorder_queue_enforces_sixty_order_cap_and_unattended_count() -> None
     assert any(order.lost for order in sim.orders)
 
 
+def test_backorder_queue_oldest_sensitivity_drops_earliest_order() -> None:
+    sim = MFSCSimulation(
+        seed=42,
+        deterministic_baseline=True,
+        backorder_overflow_mode="oldest",
+    )
+
+    for order_idx in range(61):
+        order = OrderRecord(
+            j=order_idx + 1,
+            OPTj=float(order_idx),
+            quantity=100.0,
+            remaining_qty=100.0,
+            backorder=True,
+        )
+        sim.orders.append(order)
+        sim._enqueue_backorder(order)
+
+    assert len(sim.pending_backorders) == 60
+    assert sim.orders[0].lost is True
+    assert all(order.j != 1 for order in sim.pending_backorders)
+
+
 def test_backorder_queue_prioritizes_contingent_then_shortest_orders() -> None:
     sim = MFSCSimulation(seed=42, deterministic_baseline=True)
 
@@ -192,8 +219,18 @@ def test_backorder_queue_prioritizes_contingent_then_shortest_orders() -> None:
     assert [order.j for order in sim.pending_backorders] == [3, 2, 1]
 
 
-def test_pending_backorders_are_served_once_theatre_inventory_arrives() -> None:
+def test_default_ret_recovery_period_mode_is_workbook_aligned() -> None:
     sim = MFSCSimulation(seed=42, deterministic_baseline=True)
+    assert RET_RECOVERY_PERIOD_MODE == "disruption"
+    assert sim.ret_recovery_period_mode == "disruption"
+
+
+def test_pending_backorders_are_served_once_theatre_inventory_arrives() -> None:
+    sim = MFSCSimulation(
+        seed=42,
+        deterministic_baseline=True,
+        demand_on_hand_fulfillment_delay=0.0,
+    )
     delayed_order = OrderRecord(
         j=1,
         OPTj=0.0,
@@ -218,6 +255,42 @@ def test_pending_backorders_are_served_once_theatre_inventory_arrives() -> None:
     assert delayed_order.remaining_qty == pytest.approx(0.0)
     assert len(sim.pending_backorders) == 0
     assert sim.pending_backorder_qty == pytest.approx(0.0)
+
+
+def test_pending_backorder_respects_on_hand_fulfillment_delay() -> None:
+    sim = MFSCSimulation(
+        seed=42,
+        deterministic_baseline=True,
+        demand_on_hand_fulfillment_delay=48.0,
+    )
+    delayed_order = OrderRecord(
+        j=1,
+        OPTj=0.0,
+        quantity=1200.0,
+        remaining_qty=1200.0,
+        backorder=True,
+    )
+    sim.orders.append(delayed_order)
+    sim._enqueue_backorder(delayed_order)
+
+    def deliver_and_serve():
+        yield sim.env.timeout(1.0)
+        yield sim.rations_theatre.put(1500.0)
+        yield from sim._serve_pending_backorders()
+
+    sim.env.process(deliver_and_serve())
+    sim.env.run(until=2.0)
+
+    assert delayed_order.OATj is None
+    assert delayed_order.remaining_qty == pytest.approx(0.0)
+    assert len(sim.pending_backorders) == 0
+    assert sim.pending_backorder_qty == pytest.approx(0.0)
+
+    sim.env.run(until=49.0)
+
+    assert delayed_order.backorder is False
+    assert delayed_order.OATj == pytest.approx(48.0)
+    assert delayed_order.CTj == pytest.approx(48.0)
 
 
 def test_zero_qty_pending_backorders_are_dropped_without_container_get(
@@ -251,7 +324,11 @@ def test_zero_qty_pending_backorders_are_dropped_without_container_get(
 def test_pending_backorder_removal_is_idempotent_during_service(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    sim = MFSCSimulation(seed=42, deterministic_baseline=True)
+    sim = MFSCSimulation(
+        seed=42,
+        deterministic_baseline=True,
+        demand_on_hand_fulfillment_delay=0.0,
+    )
     delayed_order = OrderRecord(
         j=1,
         OPTj=0.0,

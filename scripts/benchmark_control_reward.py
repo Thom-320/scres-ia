@@ -639,6 +639,7 @@ def build_parser() -> argparse.ArgumentParser:
             "ReT_garrido2024_raw",
             "ReT_garrido2024",
             "ReT_garrido2024_train",
+            "ReT_excel_delta",
             "ReT_ladder_v1",
             "ReT_cd_v1",
             "ReT_cd_sigmoid",
@@ -756,6 +757,7 @@ def make_weight_combos(args: argparse.Namespace) -> list[dict[str, float]]:
         "ReT_garrido2024_raw",
         "ReT_garrido2024",
         "ReT_garrido2024_train",
+        "ReT_excel_delta",
         "ReT_ladder_v1",
         "ReT_cd_v1",
         "ReT_cd_sigmoid",
@@ -796,6 +798,15 @@ def build_env_kwargs(
         "year_basis": args.year_basis,
         **weight_combo,
     }
+    for optional_key in (
+        "risk_occurrence_mode",
+        "risk_frequency_multiplier",
+        "risk_impact_multiplier",
+        "raw_material_flow_mode",
+        "raw_material_order_up_to_multiplier",
+    ):
+        if hasattr(args, optional_key):
+            kwargs[optional_key] = getattr(args, optional_key)
     reward_mode = kwargs["reward_mode"]
     if reward_mode == "control_v1_pbrs":
         kwargs["pbrs_alpha"] = getattr(args, "pbrs_alpha", 1.0)
@@ -821,6 +832,7 @@ def build_env_kwargs(
         kwargs["ret_g24_kappa_train_frac"] = float(
             getattr(args, "ret_g24_kappa_train_frac", 0.20)
         )
+        kwargs["ret_g24_shift_cost"] = float(getattr(args, "ret_g24_shift_cost", 1.0))
     return kwargs
 
 
@@ -909,6 +921,7 @@ def reward_family(reward_mode: str) -> str:
         "ReT_garrido2024_raw",
         "ReT_garrido2024",
         "ReT_garrido2024_train",
+        "ReT_excel_delta",
         "ReT_ladder_v1",
         "ReT_cd_v1",
         "ReT_cd_sigmoid",

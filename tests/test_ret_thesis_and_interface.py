@@ -81,6 +81,25 @@ def test_shift_env_ret_thesis_step_exposes_component_metadata() -> None:
     )
 
 
+def test_ret_excel_delta_reward_matches_incremental_excel_mass() -> None:
+    env = MFSCGymEnvShifts(
+        step_size_hours=24,
+        max_steps=2,
+        reward_mode="ReT_excel_delta",
+    )
+    env.reset(seed=7)
+    previous_total = env._ret_excel_prev_total
+    _, reward, _, _, info = env.step([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+
+    components = info["ret_excel_components"]
+    assert reward == pytest.approx(components["ret_excel_delta_step"])
+    assert components["ret_excel_total"] - previous_total == pytest.approx(reward)
+    assert info["ret_excel_mean"] == pytest.approx(
+        components["ret_excel_mean"]
+    )
+    env.close()
+
+
 def test_external_interface_matches_shift_env_contract() -> None:
     spec = get_shift_control_env_spec()
     env = make_shift_control_env(max_steps=1)
@@ -692,3 +711,35 @@ def test_ret_garrido2024_raw_and_sigmoid_share_same_five_variable_breakdown() ->
 
     env_raw.close()
     env_sigmoid.close()
+
+
+def test_ret_garrido2024_prices_shift_hours_in_kappa() -> None:
+    info = {
+        "inventory_detail": {},
+        "pending_backorder_qty": 0.0,
+        "new_produced": 0.0,
+        "new_available_assembly_capacity": 100.0,
+        "new_demanded": 0.0,
+    }
+    env_s1 = MFSCGymEnvShifts(
+        reward_mode="ReT_garrido2024_raw",
+        step_size_hours=168,
+        max_steps=1,
+        ret_g24_shift_cost=1.0,
+    )
+    env_s3 = MFSCGymEnvShifts(
+        reward_mode="ReT_garrido2024_raw",
+        step_size_hours=168,
+        max_steps=1,
+        ret_g24_shift_cost=1.0,
+    )
+
+    s1 = env_s1._compute_ret_garrido2024(info, shifts=1)
+    s3 = env_s3._compute_ret_garrido2024(info, shifts=3)
+
+    assert s1["shift_cost_step"] == pytest.approx(0.0)
+    assert s3["shift_cost_step"] == pytest.approx(336.0)
+    assert s3["step_cost"] > s1["step_cost"]
+    assert s3["kappa_dot"] > s1["kappa_dot"]
+    env_s1.close()
+    env_s3.close()

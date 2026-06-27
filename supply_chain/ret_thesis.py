@@ -5,6 +5,8 @@ from typing import Any, Iterable, Mapping
 
 import numpy as np
 
+from .config import BACKORDER_QUEUE_CAP
+
 DEFAULT_RET_WEIGHTS = {"max": 1.0, "mean": 0.5, "min": 0.0}
 
 
@@ -125,7 +127,7 @@ def compute_ret_per_order_excel_formula(
     Notes for exactness:
     - no CTj<=LTj guard is applied before ``APj/LT``;
     - DPj is not used directly by the visible spreadsheet formula;
-    - the no-risk branch uses the running order-count fill term at row ``j``;
+    - the no-risk branch uses the workbook's capped backlog-list size ``Bt``;
     - values are not clipped, matching Excel.
     """
     if j <= 0:
@@ -154,7 +156,11 @@ def compute_ret_per_order_excel_formula(
             return 0.5 * (1.0 / rp), "excel_recovery"
         return 0.0, "excel_risk_no_recovery"
 
-    value = 1.0 - ((int(cumulative_backorders) + int(cumulative_unattended)) / int(j))
+    # Garrido's backlog ledger is capped at 60 orders.  The DES accumulator can
+    # grow into the thousands over long runs, but the raw workbook ``sumBt``
+    # column behaves like the capped backlog-list size used in Sec. 6.5.4.
+    bt = min(int(cumulative_backorders), int(BACKORDER_QUEUE_CAP))
+    value = 1.0 - ((bt + int(cumulative_unattended)) / int(j))
     return float(value), "excel_fill_rate"
 
 
@@ -236,8 +242,8 @@ def compute_order_level_ret_excel_formula(
     """Aggregate the Excel-faithful Garrido ReT over demanded orders.
 
     Orders are processed by their thesis order index ``j`` when available.  The
-    no-risk branch receives the running cumulative backorder and unattended
-    counts, mirroring the raw workbook columns ``sum(Bt)`` and ``sum(Ut)``.
+    no-risk branch receives the running unattended count and a capped backlog
+    count, mirroring the raw workbook columns ``sum(Bt)`` and ``sum(Ut)``.
 
     ``j_source`` defaults to ``"row_index"`` for backwards compatibility with
     the full DES ledger, where visible rows are consecutive.  Garrido's raw

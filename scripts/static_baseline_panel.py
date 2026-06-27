@@ -44,7 +44,14 @@ POLICIES = [
 ]
 
 
-def run_policy(shifts: int, period: int, seed: int, risk: str):
+def run_policy(
+    shifts: int,
+    period: int,
+    seed: int,
+    risk: str,
+    *,
+    demand_on_hand_fulfillment_delay: float = P["demand_on_hand_fulfillment_delay"],
+):
     bufs = dict(INVENTORY_BUFFERS[period]) if period else None
     sim = MFSCSimulation(
         shifts=shifts, seed=seed, horizon=SIMULATION_HORIZON, risks_enabled=True,
@@ -52,6 +59,7 @@ def run_policy(shifts: int, period: int, seed: int, risk: str):
         warmup_trigger=P["warmup_trigger"], r14_defect_mode=P["r14_defect_mode"],
         downstream_q_source=DQ, raw_material_flow_mode=P["raw_material_flow_mode"],
         raw_material_order_up_to_multiplier=P["raw_material_order_up_to_multiplier"],
+        demand_on_hand_fulfillment_delay=float(demand_on_hand_fulfillment_delay),
         initial_buffers=bufs,
         inventory_replenishment_period=(float(period) if period else None),
     )
@@ -90,6 +98,11 @@ def main() -> int:
     ap.add_argument("--seeds", default="1,2,3,4,5")
     ap.add_argument("--regimes", default="current,increased,severe")
     ap.add_argument("--output", default="outputs/experiments/static_baseline_panel_2026-06-26")
+    ap.add_argument(
+        "--demand-on-hand-fulfillment-delay",
+        type=float,
+        default=P["demand_on_hand_fulfillment_delay"],
+    )
     args = ap.parse_args()
     seeds = [int(s) for s in args.seeds.split(",") if s.strip()]
     regimes = [r.strip() for r in args.regimes.split(",") if r.strip()]
@@ -102,7 +115,15 @@ def main() -> int:
         for regime in regimes:
             acc = {m: [] for m in metrics}
             for seed in seeds:
-                r = run_policy(S, period, seed, regime)
+                r = run_policy(
+                    S,
+                    period,
+                    seed,
+                    regime,
+                    demand_on_hand_fulfillment_delay=(
+                        args.demand_on_hand_fulfillment_delay
+                    ),
+                )
                 for m in metrics:
                     acc[m].append(r[m])
             row = {"policy": label, "shifts": S, "inventory": period, "regime": regime}

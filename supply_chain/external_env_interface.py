@@ -694,6 +694,9 @@ def make_thesis_aligned_training_env(**overrides: Any) -> MFSCGymEnvShifts:
         "raw_material_order_up_to_multiplier": (
             TRACK_A_TRAINING_RAW_MATERIAL_ORDER_UP_TO_MULTIPLIER
         ),
+        "demand_on_hand_fulfillment_delay": (
+            THESIS_FAITHFUL_PROTOCOL["demand_on_hand_fulfillment_delay"]
+        ),
         "priming_enabled": False,
         "clear_backlog_after_priming": False,
         "w_bo": BENCHMARK_W_BO,
