@@ -795,7 +795,11 @@ def build_best_static_by_metric(
         ]
         for metric, direction in metric_specs.items():
             field = f"{metric}_mean"
-            rows_with_metric = [row for row in static_rows if field in row]
+            rows_with_metric = [
+                row
+                for row in static_rows
+                if field in row and math.isfinite(float(row[field]))
+            ]
             if not rows_with_metric:
                 continue
             best = (
