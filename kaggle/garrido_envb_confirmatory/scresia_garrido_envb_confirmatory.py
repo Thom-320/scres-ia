@@ -74,9 +74,37 @@ def repo_root_from_context() -> Path:
     raise FileNotFoundError("Could not locate scres-ia repo root.")
 
 
+def find_payload() -> Path | None:
+    candidates = [PAYLOAD, LOCAL_PAYLOAD]
+    if is_kaggle():
+        candidates.extend(sorted(Path("/kaggle/input").glob("**/scres_ia_payload.tar.gz")))
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return None
+
+
+def describe_kaggle_input() -> str:
+    input_root = Path("/kaggle/input")
+    if not input_root.exists():
+        return "/kaggle/input does not exist"
+    lines = []
+    for path in sorted(input_root.rglob("*"))[:200]:
+        kind = "dir" if path.is_dir() else "file"
+        try:
+            rel = path.relative_to(input_root)
+        except ValueError:
+            rel = path
+        lines.append(f"{kind}: {rel}")
+    if not lines:
+        return "/kaggle/input is empty"
+    return "\n".join(lines)
+
+
 def extract_payload_or_use_local_repo() -> Path:
-    payload = PAYLOAD if PAYLOAD.exists() else LOCAL_PAYLOAD
-    if payload.exists():
+    payload = find_payload()
+    if payload is not None:
+        print(f"[kernel] Extracting payload from {payload}", flush=True)
         if KAGGLE_REPO_DIR.exists():
             shutil.rmtree(KAGGLE_REPO_DIR)
         KAGGLE_REPO_DIR.mkdir(parents=True, exist_ok=True)
@@ -84,7 +112,10 @@ def extract_payload_or_use_local_repo() -> Path:
             archive.extractall(KAGGLE_REPO_DIR)
         return KAGGLE_REPO_DIR
     if is_kaggle():
-        raise FileNotFoundError("Missing scres_ia_payload.tar.gz in Kaggle input.")
+        raise FileNotFoundError(
+            "Missing scres_ia_payload.tar.gz in Kaggle input.\n"
+            + describe_kaggle_input()
+        )
     return repo_root_from_context()
 
 
