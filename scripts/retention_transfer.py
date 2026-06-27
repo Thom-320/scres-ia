@@ -128,6 +128,13 @@ def main() -> int:
     p.add_argument("--pretrain-timesteps", type=int, default=0)
     p.add_argument("--learning-starts", type=int, default=50)
     p.add_argument("--buffer-size", type=int, default=10_000)
+    p.add_argument("--stochastic-pt", action="store_true")
+    p.add_argument("--control-v2-w-fill", type=float, default=1.0)
+    p.add_argument("--control-v2-w-service", type=float, default=4.0)
+    p.add_argument("--control-v2-w-lost", type=float, default=2.0)
+    p.add_argument("--control-v2-w-inventory", type=float, default=0.05)
+    p.add_argument("--control-v2-w-shift", type=float, default=0.08)
+    p.add_argument("--control-v2-w-switch", type=float, default=0.02)
     # Capacity inertia (Ed.2): make anticipation valuable so memory pays off.
     p.add_argument("--surge-inertia", action="store_true")
     p.add_argument("--surge-budget-hours", type=float, default=2016.0)
@@ -149,12 +156,24 @@ def main() -> int:
 
     def base_args():
         a = ev.build_parser().parse_args([])
-        a.track = "a"; a.algo = "dqn"; a.decision_cadence = "weekly"
-        a.reward_mode = cli.reward_mode; a.max_steps = cli.max_steps
+        a.track = "a"
+        a.algo = "dqn"
+        a.decision_cadence = "weekly"
+        a.reward_mode = cli.reward_mode
+        a.max_steps = cli.max_steps
         a.mask_preset = cli.mask_preset
         a.pretrain_timesteps = cli.pretrain_timesteps
-        a.learning_starts = cli.learning_starts; a.buffer_size = cli.buffer_size
-        a.rho_disruption = cli.rho_disruption; a.rho_demand = None
+        a.learning_starts = cli.learning_starts
+        a.buffer_size = cli.buffer_size
+        a.stochastic_pt = cli.stochastic_pt
+        a.control_v2_w_fill = cli.control_v2_w_fill
+        a.control_v2_w_service = cli.control_v2_w_service
+        a.control_v2_w_lost = cli.control_v2_w_lost
+        a.control_v2_w_inventory = cli.control_v2_w_inventory
+        a.control_v2_w_shift = cli.control_v2_w_shift
+        a.control_v2_w_switch = cli.control_v2_w_switch
+        a.rho_disruption = cli.rho_disruption
+        a.rho_demand = None
         a.regime_seed = cli.regime_seed
         a.surge_inertia = cli.surge_inertia
         a.surge_budget_hours = cli.surge_budget_hours
@@ -199,6 +218,15 @@ def main() -> int:
         "train_per_block": cli.train_per_block, "rho_disruption": cli.rho_disruption,
         "mask_preset": cli.mask_preset, "surge_inertia": cli.surge_inertia,
         "surge_budget_hours": cli.surge_budget_hours,
+        "stochastic_pt": cli.stochastic_pt,
+        "control_v2_weights": {
+            "w_fill": cli.control_v2_w_fill,
+            "w_service": cli.control_v2_w_service,
+            "w_lost": cli.control_v2_w_lost,
+            "w_inventory": cli.control_v2_w_inventory,
+            "w_shift": cli.control_v2_w_shift,
+            "w_switch": cli.control_v2_w_switch,
+        },
         "outcome": cli.outcome,
         "frozen_env": {
             "risk_frequency_multiplier": cli.risk_frequency_multiplier,
@@ -211,7 +239,8 @@ def main() -> int:
     }
     (run_dir / "transfer.json").write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
-    m = mem["overall"]; t = total["overall"]
+    m = mem["overall"]
+    t = total["overall"]
     print("\nCORRECTED TRANSFER PROTOCOL (clean ReT, cold eval, seed-clustered)")
     print(f"  MEMORY (retained - reset) ΔR = {m['mean']:+.4f} +/-{m['sem']:.4f} "
           f"ci95=[{m['ci95_lo']:+.4f},{m['ci95_hi']:+.4f}] (n={m['n']})")

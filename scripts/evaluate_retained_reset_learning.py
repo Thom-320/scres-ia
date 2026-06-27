@@ -1,6 +1,15 @@
 #!/usr/bin/env python3
 """Evaluate the Track A retained-learning win condition.
 
+DEPRECATED RUNNER (2026-06-26, Experiment Contract v2). The ``main()`` entrypoint below
+implements the OLD *adapt-then-eval* estimand: it adapts both retained and reset arms on the
+current block BEFORE evaluating (the asymptotic point where reset catches up), which is NOT the
+paper estimand. The paper runner is ``scripts/retention_transfer.py`` (cold transfer: evaluate
+retained/reset/frozen on block k BEFORE any block-k training). This module is retained ONLY as a
+helper library for that runner (``load_model``, ``online_update``, ``clean_eval``, static-policy
+selection). Do NOT use ``main()`` for any paper-facing run. See
+``docs/EXPERIMENT_CONTRACT_V2_2026-06-26.md`` §3.
+
 This is a smoke-scale, auditable evaluator for the primary paper contrast:
 retained online learner versus an otherwise identical reset-learning learner. It also
 selects the robust static Garrido-aligned policy from the 18-action thesis grid
@@ -205,6 +214,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--buffer-size", type=int, default=10_000)
     parser.add_argument("--learning-starts", type=int, default=100)
     parser.add_argument("--batch-size", type=int, default=32)
+    parser.add_argument("--control-v2-w-fill", type=float, default=1.0)
+    parser.add_argument("--control-v2-w-service", type=float, default=4.0)
+    parser.add_argument("--control-v2-w-lost", type=float, default=2.0)
+    parser.add_argument("--control-v2-w-inventory", type=float, default=0.05)
+    parser.add_argument("--control-v2-w-shift", type=float, default=0.08)
+    parser.add_argument("--control-v2-w-switch", type=float, default=0.02)
     parser.add_argument(
         "--n-steps",
         type=int,
@@ -280,6 +295,18 @@ def env_kwargs(
                 "ret_g24_kappa_train_frac": float(getattr(args, "ret_g24_kappa_train_frac", 0.2)),
             }
             if str(args.reward_mode).startswith("ReT_garrido2024")
+            else {}
+        ),
+        **(
+            {
+                "control_v2_w_fill": float(getattr(args, "control_v2_w_fill", 1.0)),
+                "control_v2_w_service": float(getattr(args, "control_v2_w_service", 4.0)),
+                "control_v2_w_lost": float(getattr(args, "control_v2_w_lost", 2.0)),
+                "control_v2_w_inventory": float(getattr(args, "control_v2_w_inventory", 0.05)),
+                "control_v2_w_shift": float(getattr(args, "control_v2_w_shift", 0.08)),
+                "control_v2_w_switch": float(getattr(args, "control_v2_w_switch", 0.02)),
+            }
+            if str(args.reward_mode) == "control_v2"
             else {}
         ),
     }
@@ -634,6 +661,13 @@ def paired_delta(
 
 
 def main() -> int:
+    import sys as _sys
+    print(
+        "WARNING: evaluate_retained_reset_learning.main() is DEPRECATED (adapt-then-eval "
+        "estimand). Use scripts/retention_transfer.py for paper-facing runs. "
+        "See docs/EXPERIMENT_CONTRACT_V2_2026-06-26.md §3.",
+        file=_sys.stderr,
+    )
     args = build_parser().parse_args()
     run_label = args.label or f"retained_reset_learning_{utc_stamp()}"
     run_dir = args.output_root / run_label
