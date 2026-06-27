@@ -84,6 +84,17 @@ def find_payload() -> Path | None:
     return None
 
 
+def find_mounted_repo() -> Path | None:
+    if not is_kaggle():
+        return None
+    for candidate in sorted(Path("/kaggle/input").glob("**")):
+        if not candidate.is_dir():
+            continue
+        if (candidate / "scripts" / "compare_garrido_dynamic_vs_static.py").exists():
+            return candidate
+    return None
+
+
 def describe_kaggle_input() -> str:
     input_root = Path("/kaggle/input")
     if not input_root.exists():
@@ -110,6 +121,13 @@ def extract_payload_or_use_local_repo() -> Path:
         KAGGLE_REPO_DIR.mkdir(parents=True, exist_ok=True)
         with tarfile.open(payload, "r:gz") as archive:
             archive.extractall(KAGGLE_REPO_DIR)
+        return KAGGLE_REPO_DIR
+    mounted_repo = find_mounted_repo()
+    if mounted_repo is not None:
+        print(f"[kernel] Copying mounted repo from {mounted_repo}", flush=True)
+        if KAGGLE_REPO_DIR.exists():
+            shutil.rmtree(KAGGLE_REPO_DIR)
+        shutil.copytree(mounted_repo, KAGGLE_REPO_DIR)
         return KAGGLE_REPO_DIR
     if is_kaggle():
         raise FileNotFoundError(
