@@ -18,7 +18,7 @@ import tarfile
 
 
 PAYLOAD_NAME = "scres_ia_payload.tar.gz"
-KAGGLE_REPO_DIR = Path("/kaggle/working/scres-ia")
+KAGGLE_REPO_DIR = Path("/kaggle/temp/scres-ia")
 KAGGLE_OUTPUT_ROOT = Path("/kaggle/working/scresia_garrido_dqn_frontier_outputs")
 LOCAL_OUTPUT_ROOT = Path("outputs/kaggle/garrido_dqn_frontier_ladder")
 
