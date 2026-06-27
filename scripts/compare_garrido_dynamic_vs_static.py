@@ -9,9 +9,9 @@ identified by the Garrido-2024 Cobb-Douglas gate:
 * current/increased: S1_I168
 * severe: S2_I168
 
-The primary resilience outcome is Garrido's 2017 Excel ReT.  The Garrido-2024
-Cobb-Douglas index is reported alongside it as the cost-aware composite metric
-used to judge resource efficiency and reward alignment.
+The primary same-bar outcome for this runner is the Garrido-2024 Cobb-Douglas
+sigmoid index. Garrido's 2017 Excel ReT is still reported as the continuity
+metric, but it is not the primary comparison lens in the C-D lane.
 """
 
 from __future__ import annotations
@@ -353,6 +353,9 @@ def evaluate_episode(
     cd_sigmoid_total = 0.0
     cd_train_total = 0.0
     raw_total = 0.0
+    ret_cvar_cd_total = 0.0
+    cd_loss_values: list[float] = []
+    cvar_estimates: list[float] = []
     demanded_total = 0.0
     delivered_total = 0.0
     backorder_qty_total = 0.0
@@ -398,6 +401,11 @@ def evaluate_episode(
         cd_sigmoid_total += float(info.get("ret_garrido2024_sigmoid_step", 0.0))
         cd_train_total += float(info.get("ret_garrido2024_train_step", 0.0))
         raw_total += float(info.get("ret_garrido2024_raw_step", 0.0))
+        ret_cvar_cd_total += float(info.get("ret_cvar_cd_step", 0.0))
+        if "cd_loss_step" in info:
+            cd_loss_values.append(float(info.get("cd_loss_step", 0.0)))
+        if "cvar_estimate" in info:
+            cvar_estimates.append(float(info.get("cvar_estimate", 0.0)))
         new_demanded = float(info.get("new_demanded", 0.0))
         new_backorder_qty = float(info.get("new_backorder_qty", 0.0))
         demanded_total += new_demanded
@@ -448,6 +456,17 @@ def evaluate_episode(
         "cd_train_mean": cd_train_total / total_steps,
         "cd_raw_total": raw_total,
         "cd_raw_mean": raw_total / total_steps,
+        "ret_cvar_cd_total": ret_cvar_cd_total,
+        "ret_cvar_cd_mean": ret_cvar_cd_total / total_steps,
+        "cd_loss_mean": _mean(cd_loss_values),
+        "cd_loss_cvar95": _cvar95(cd_loss_values),
+        "cd_cvar_estimate_terminal": float(final_info.get("cvar_estimate", 0.0)),
+        "cd_cvar_estimate_mean": _mean(cvar_estimates),
+        "cd_zeta_avg": float(final_info.get("zeta_avg", 0.0)),
+        "cd_epsilon_avg": float(final_info.get("epsilon_avg", 0.0)),
+        "cd_phi_avg": float(final_info.get("phi_avg", 0.0)),
+        "cd_tau_avg": float(final_info.get("tau_avg", 0.0)),
+        "cd_kappa_dot": float(final_info.get("kappa_dot", 0.0)),
         "mean_ret_excel_formula": float(
             terminal["order_level_ret_excel_formula_mean"]
         ),
@@ -512,6 +531,17 @@ def summarize(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
         "cd_train_total",
         "cd_raw_mean",
         "cd_raw_total",
+        "ret_cvar_cd_mean",
+        "ret_cvar_cd_total",
+        "cd_loss_mean",
+        "cd_loss_cvar95",
+        "cd_cvar_estimate_terminal",
+        "cd_cvar_estimate_mean",
+        "cd_zeta_avg",
+        "cd_epsilon_avg",
+        "cd_phi_avg",
+        "cd_tau_avg",
+        "cd_kappa_dot",
         "mean_ret_excel_formula",
         "mean_ret_text_formula",
         "fill_rate_order_level",
@@ -642,8 +672,8 @@ def build_comparison(
                             FROZEN_STATIC_BY_REGIME.get(regime, ("", 0, 0))[0]
                             == static_name
                         ),
-                        "primary_metric": "mean_ret_excel_formula",
-                        "secondary_metric": "cd_sigmoid_mean",
+                        "primary_metric": "cd_sigmoid_mean",
+                        "secondary_metric": "mean_ret_excel_formula",
                         "dynamic_cd_sigmoid_mean": dynamic["cd_sigmoid_mean_mean"],
                         "ppo_cd_sigmoid_mean": dynamic["cd_sigmoid_mean_mean"],
                         "static_cd_sigmoid_mean": static["cd_sigmoid_mean_mean"],
@@ -940,16 +970,21 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     write_csv(run_dir / "comparison_table.csv", comparison_rows)
     write_csv(run_dir / "best_static_by_metric.csv", best_static_by_metric_rows)
     payload = {
-        "description": "Track-A Discrete(18) PPO vs frozen efficient static frontier.",
+        "description": "Track-A Discrete(18) PPO vs static frontier on the Garrido-2024 C-D bar.",
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
-        "primary_metric": "mean_ret_excel_formula",
-        "primary_resilience_metric": "mean_ret_excel_formula",
-        "secondary_metric": "cd_sigmoid_mean",
+        "primary_metric": "cd_sigmoid_mean",
+        "primary_resilience_metric": "cd_sigmoid_mean",
+        "secondary_metric": "mean_ret_excel_formula",
         "secondary_metrics": [
             "mean_ret_text_formula",
             "mean_ret_excel_formula",
             "cd_sigmoid_mean",
             "cd_raw_mean",
+            "cd_train_mean",
+            "ret_cvar_cd_mean",
+            "cd_loss_cvar95",
+            "cd_cvar_estimate_terminal",
+            "cd_zeta_avg/epsilon_avg/phi_avg/tau_avg/kappa_dot",
             "fill_rate_order_level",
             "backorder_qty_total",
             "pending_backorder_qty_terminal",

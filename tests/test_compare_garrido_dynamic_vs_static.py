@@ -39,6 +39,25 @@ def test_dynamic_runner_defaults_to_garrido_fulfillment_delay() -> None:
     assert args.algo == "ppo"
 
 
+def test_dynamic_runner_accepts_cvar_cd_reward_and_war_knobs() -> None:
+    args = build_parser().parse_args(
+        [
+            "--reward-mode",
+            "ReT_cvar_cd",
+            "--risk-frequency-multiplier",
+            "2.0",
+            "--risk-impact-multiplier",
+            "1.5",
+            "--stochastic-pt",
+        ]
+    )
+
+    assert args.reward_mode == "ReT_cvar_cd"
+    assert args.risk_frequency_multiplier == pytest.approx(2.0)
+    assert args.risk_impact_multiplier == pytest.approx(1.5)
+    assert args.stochastic_pt is True
+
+
 def test_env_kwargs_can_seed_ppo_with_initial_static_policy() -> None:
     args = type(
         "Args",
@@ -130,8 +149,8 @@ def test_comparison_uses_cd_primary_and_excel_secondary() -> None:
 
     comparison = build_comparison(rows, excel_noninferiority_tol=0.02)[0]
 
-    assert comparison["primary_metric"] == "mean_ret_excel_formula"
-    assert comparison["secondary_metric"] == "cd_sigmoid_mean"
+    assert comparison["primary_metric"] == "cd_sigmoid_mean"
+    assert comparison["secondary_metric"] == "mean_ret_excel_formula"
     assert comparison["delta_cd_sigmoid_mean"] == pytest.approx(0.05)
     assert comparison["delta_excel_ret"] == pytest.approx(-0.01)
     assert comparison["ppo_beats_static_excel"] is False
