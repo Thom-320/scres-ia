@@ -27,7 +27,7 @@ from typing import Any
 
 PAYLOAD = Path("/kaggle/input/scres-ia-payload/scres_ia_payload.tar.gz")
 LOCAL_PAYLOAD = Path("scres_ia_payload.tar.gz")
-KAGGLE_REPO_DIR = Path("/kaggle/working/scres-ia")
+KAGGLE_REPO_DIR = Path("/kaggle/temp/scres-ia")
 KAGGLE_OUTPUT_ROOT = Path("/kaggle/working/scresia_garrido_envb_confirmatory_outputs")
 LOCAL_OUTPUT_ROOT = Path("outputs/kaggle/garrido_envb_confirmatory")
 
