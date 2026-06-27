@@ -46,6 +46,16 @@ DEFAULT_LANES = {
         "risk_impact_multiplier": 1.0,
         "stochastic_pt": False,
     },
+    "envb_impact1_25": {
+        "risk_frequency_multiplier": 1.0,
+        "risk_impact_multiplier": 1.25,
+        "stochastic_pt": False,
+    },
+    "envb_freq2_impact1_5": {
+        "risk_frequency_multiplier": 2.0,
+        "risk_impact_multiplier": 1.5,
+        "stochastic_pt": False,
+    },
 }
 
 
@@ -206,7 +216,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--lanes",
         default="faithful,headroom_freq1_5",
-        help="Comma-separated lanes: faithful, headroom_freq1_5.",
+        help=(
+            "Comma-separated lanes: faithful, headroom_freq1_5, "
+            "envb_impact1_25, envb_freq2_impact1_5."
+        ),
     )
     parser.add_argument("--regimes", default="current,increased,severe")
     parser.add_argument("--seeds", default="8201")
