@@ -115,12 +115,19 @@ def _compare_args(
     eval_episodes: int,
     max_steps: int,
     train_timesteps: int,
+    algo: str,
     risk_frequency_multiplier: float,
     risk_impact_multiplier: float,
     stochastic_pt: bool,
     w_bo: float,
     w_cost: float,
     w_disr: float,
+    control_v2_w_fill: float,
+    control_v2_w_service: float,
+    control_v2_w_lost: float,
+    control_v2_w_inventory: float,
+    control_v2_w_shift: float,
+    control_v2_w_switch: float,
 ) -> argparse.Namespace:
     argv = [
         "--output-dir",
@@ -139,6 +146,8 @@ def _compare_args(
         str(max_steps),
         "--train-timesteps",
         str(train_timesteps),
+        "--algo",
+        algo,
         "--risk-frequency-multiplier",
         str(risk_frequency_multiplier),
         "--risk-impact-multiplier",
@@ -149,6 +158,18 @@ def _compare_args(
         str(w_cost),
         "--w-disr",
         str(w_disr),
+        "--control-v2-w-fill",
+        str(control_v2_w_fill),
+        "--control-v2-w-service",
+        str(control_v2_w_service),
+        "--control-v2-w-lost",
+        str(control_v2_w_lost),
+        "--control-v2-w-inventory",
+        str(control_v2_w_inventory),
+        "--control-v2-w-shift",
+        str(control_v2_w_shift),
+        "--control-v2-w-switch",
+        str(control_v2_w_switch),
     ]
     if stochastic_pt:
         argv.append("--stochastic-pt")
@@ -192,9 +213,16 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--eval-episodes", type=int, default=1)
     parser.add_argument("--max-steps", type=int, default=52)
     parser.add_argument("--train-timesteps", type=int, default=2048)
+    parser.add_argument("--algo", choices=("ppo", "recurrent_ppo"), default="ppo")
     parser.add_argument("--w-bo", type=float, default=4.0)
     parser.add_argument("--w-cost", type=float, default=0.02)
     parser.add_argument("--w-disr", type=float, default=0.0)
+    parser.add_argument("--control-v2-w-fill", type=float, default=1.0)
+    parser.add_argument("--control-v2-w-service", type=float, default=4.0)
+    parser.add_argument("--control-v2-w-lost", type=float, default=2.0)
+    parser.add_argument("--control-v2-w-inventory", type=float, default=0.05)
+    parser.add_argument("--control-v2-w-shift", type=float, default=0.08)
+    parser.add_argument("--control-v2-w-switch", type=float, default=0.02)
     parser.add_argument(
         "--continue-on-error",
         action="store_true",
@@ -231,6 +259,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
                         eval_episodes=int(args.eval_episodes),
                         max_steps=int(args.max_steps),
                         train_timesteps=int(args.train_timesteps),
+                        algo=str(args.algo),
                         risk_frequency_multiplier=float(
                             lane_cfg["risk_frequency_multiplier"]
                         ),
@@ -239,6 +268,12 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
                         w_bo=float(args.w_bo),
                         w_cost=float(args.w_cost),
                         w_disr=float(args.w_disr),
+                        control_v2_w_fill=float(args.control_v2_w_fill),
+                        control_v2_w_service=float(args.control_v2_w_service),
+                        control_v2_w_lost=float(args.control_v2_w_lost),
+                        control_v2_w_inventory=float(args.control_v2_w_inventory),
+                        control_v2_w_shift=float(args.control_v2_w_shift),
+                        control_v2_w_switch=float(args.control_v2_w_switch),
                     )
                 )
             except Exception as exc:  # pragma: no cover - exercised in real screens.
@@ -280,9 +315,16 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             "eval_episodes": int(args.eval_episodes),
             "max_steps": int(args.max_steps),
             "train_timesteps": int(args.train_timesteps),
+            "algo": str(args.algo),
             "w_bo": float(args.w_bo),
             "w_cost": float(args.w_cost),
             "w_disr": float(args.w_disr),
+            "control_v2_w_fill": float(args.control_v2_w_fill),
+            "control_v2_w_service": float(args.control_v2_w_service),
+            "control_v2_w_lost": float(args.control_v2_w_lost),
+            "control_v2_w_inventory": float(args.control_v2_w_inventory),
+            "control_v2_w_shift": float(args.control_v2_w_shift),
+            "control_v2_w_switch": float(args.control_v2_w_switch),
         },
         "lane_configs": DEFAULT_LANES,
         "artifacts": {

@@ -31,6 +31,11 @@ from stable_baselines3 import PPO
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env import DummyVecEnv
 
+try:  # Optional dependency; installed in the project venv, absent in lean envs.
+    from sb3_contrib import RecurrentPPO
+except Exception:  # pragma: no cover - dependency availability is environment-specific.
+    RecurrentPPO = None  # type: ignore[assignment]
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from supply_chain.config import THESIS_FAITHFUL_PROTOCOL as P  # noqa: E402
@@ -249,6 +254,12 @@ def build_env_kwargs(args: argparse.Namespace, regime: str) -> dict[str, Any]:
         "w_bo": float(args.w_bo),
         "w_cost": float(args.w_cost),
         "w_disr": float(args.w_disr),
+        "control_v2_w_fill": float(args.control_v2_w_fill),
+        "control_v2_w_service": float(args.control_v2_w_service),
+        "control_v2_w_lost": float(args.control_v2_w_lost),
+        "control_v2_w_inventory": float(args.control_v2_w_inventory),
+        "control_v2_w_shift": float(args.control_v2_w_shift),
+        "control_v2_w_switch": float(args.control_v2_w_switch),
         "raw_material_flow_mode": args.raw_material_flow_mode,
         "raw_material_order_up_to_multiplier": float(
             args.raw_material_order_up_to_multiplier
@@ -287,22 +298,27 @@ def make_env_factory(args: argparse.Namespace, regime: str, seed: int):
     return _factory
 
 
-def train_ppo(args: argparse.Namespace, *, regime: str, seed: int) -> PPO:
+def train_ppo(args: argparse.Namespace, *, regime: str, seed: int) -> Any:
     vec_env = DummyVecEnv([make_env_factory(args, regime, seed)])
-    model = PPO(
-        "MlpPolicy",
-        vec_env,
-        learning_rate=float(args.learning_rate),
-        n_steps=int(args.n_steps),
-        batch_size=int(args.batch_size),
-        n_epochs=int(args.n_epochs),
-        gamma=float(args.gamma),
-        gae_lambda=float(args.gae_lambda),
-        clip_range=float(args.clip_range),
-        seed=int(seed),
-        verbose=0,
-        device="cpu",
-    )
+    common_kwargs = {
+        "env": vec_env,
+        "learning_rate": float(args.learning_rate),
+        "n_steps": int(args.n_steps),
+        "batch_size": int(args.batch_size),
+        "n_epochs": int(args.n_epochs),
+        "gamma": float(args.gamma),
+        "gae_lambda": float(args.gae_lambda),
+        "clip_range": float(args.clip_range),
+        "seed": int(seed),
+        "verbose": 0,
+        "device": "cpu",
+    }
+    if args.algo == "recurrent_ppo":
+        if RecurrentPPO is None:
+            raise RuntimeError("sb3_contrib.RecurrentPPO is not available.")
+        model = RecurrentPPO("MlpLstmPolicy", **common_kwargs)
+    else:
+        model = PPO("MlpPolicy", **common_kwargs)
     model.learn(total_timesteps=int(args.train_timesteps))
     vec_env.close()
     return model
@@ -314,7 +330,7 @@ def evaluate_episode(
     regime: str,
     seed: int,
     policy_name: str,
-    model: PPO | None = None,
+    model: Any | None = None,
     fixed_action: int | None = None,
 ) -> dict[str, Any]:
     initial_policy = (
@@ -350,6 +366,8 @@ def evaluate_episode(
     action_counts: dict[int, int] = {}
     final_info: dict[str, Any] = {}
     stress_hold_steps = 0
+    recurrent_state: Any = None
+    episode_start = np.ones((1,), dtype=bool)
 
     while not done:
         if fixed_action is not None:
@@ -359,9 +377,18 @@ def evaluate_episode(
         else:
             if model is None:
                 raise ValueError("model is required for dynamic policy evaluation")
-            predicted, _ = model.predict(obs, deterministic=True)
+            if args.algo == "recurrent_ppo":
+                predicted, recurrent_state = model.predict(
+                    obs,
+                    state=recurrent_state,
+                    episode_start=episode_start,
+                    deterministic=True,
+                )
+            else:
+                predicted, _ = model.predict(obs, deterministic=True)
             action = int(np.asarray(predicted).item())
         obs, reward, terminated, truncated, info = env.step(action)
+        episode_start = np.asarray([bool(terminated or truncated)], dtype=bool)
         if is_heuristic_policy(policy_name):
             if heuristic_is_stressed(info, args):
                 stress_hold_steps = int(args.heuristic_hold_steps)
@@ -800,6 +827,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--w-bo", type=float, default=4.0)
     parser.add_argument("--w-cost", type=float, default=0.02)
     parser.add_argument("--w-disr", type=float, default=0.0)
+    parser.add_argument("--control-v2-w-fill", type=float, default=1.0)
+    parser.add_argument("--control-v2-w-service", type=float, default=4.0)
+    parser.add_argument("--control-v2-w-lost", type=float, default=2.0)
+    parser.add_argument("--control-v2-w-inventory", type=float, default=0.05)
+    parser.add_argument("--control-v2-w-shift", type=float, default=0.08)
+    parser.add_argument("--control-v2-w-switch", type=float, default=0.02)
     parser.add_argument("--raw-material-flow-mode", default="kit_equivalent_order_up_to")
     parser.add_argument("--raw-material-order-up-to-multiplier", type=float, default=2.0)
     parser.add_argument(
@@ -808,6 +841,7 @@ def build_parser() -> argparse.ArgumentParser:
         default=P["demand_on_hand_fulfillment_delay"],
     )
     parser.add_argument("--learning-rate", type=float, default=3e-4)
+    parser.add_argument("--algo", choices=("ppo", "recurrent_ppo"), default="ppo")
     parser.add_argument("--n-steps", type=int, default=128)
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--n-epochs", type=int, default=4)
@@ -851,6 +885,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
                 model.save(str(model_path))
                 trained_models.append(
                     {
+                        "algo": args.algo,
                         "regime": regime,
                         "seed": int(seed),
                         "model_path": str(model_path),
@@ -937,6 +972,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             "max_steps": int(args.max_steps),
             "step_size_hours": float(args.step_size_hours),
             "reward_mode": args.reward_mode,
+            "algo": args.algo,
             "stochastic_pt": bool(args.stochastic_pt),
             "ppo_initial_static_policy": args.ppo_initial_static_policy,
             "risk_occurrence_mode": args.risk_occurrence_mode,
@@ -947,6 +983,12 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             "w_bo": float(args.w_bo),
             "w_cost": float(args.w_cost),
             "w_disr": float(args.w_disr),
+            "control_v2_w_fill": float(args.control_v2_w_fill),
+            "control_v2_w_service": float(args.control_v2_w_service),
+            "control_v2_w_lost": float(args.control_v2_w_lost),
+            "control_v2_w_inventory": float(args.control_v2_w_inventory),
+            "control_v2_w_shift": float(args.control_v2_w_shift),
+            "control_v2_w_switch": float(args.control_v2_w_switch),
             "excel_noninferiority_tol": float(args.excel_noninferiority_tol),
             "skip_ppo": bool(args.skip_ppo),
             "include_threshold_heuristics": bool(args.include_threshold_heuristics),

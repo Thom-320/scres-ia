@@ -36,6 +36,7 @@ def test_dynamic_runner_defaults_to_garrido_fulfillment_delay() -> None:
     ]
     assert args.stochastic_pt is False
     assert args.reward_mode == "ReT_garrido2024_raw"
+    assert args.algo == "ppo"
 
 
 def test_env_kwargs_can_seed_ppo_with_initial_static_policy() -> None:
@@ -44,6 +45,7 @@ def test_env_kwargs_can_seed_ppo_with_initial_static_policy() -> None:
         (),
         {
             "reward_mode": "ReT_garrido2024",
+            "algo": "ppo",
             "observation_version": "v4",
             "stochastic_pt": True,
             "step_size_hours": 168.0,
@@ -56,6 +58,12 @@ def test_env_kwargs_can_seed_ppo_with_initial_static_policy() -> None:
             "w_bo": 4.0,
             "w_cost": 0.02,
             "w_disr": 0.0,
+            "control_v2_w_fill": 1.0,
+            "control_v2_w_service": 4.0,
+            "control_v2_w_lost": 2.0,
+            "control_v2_w_inventory": 0.05,
+            "control_v2_w_shift": 0.08,
+            "control_v2_w_switch": 0.02,
             "raw_material_flow_mode": "kit_equivalent_order_up_to",
             "raw_material_order_up_to_multiplier": 2.0,
             "demand_on_hand_fulfillment_delay": 0.0,

@@ -68,6 +68,7 @@ import numpy as np
 from gymnasium import spaces
 
 from .config import (
+    BACKORDER_QUEUE_CAP,
     CAPACITY_BY_SHIFTS,
     DEFAULT_YEAR_BASIS,
     INVENTORY_BUFFERS,
@@ -105,6 +106,7 @@ REWARD_MODE_OPTIONS = (
     "rt_v0",
     "control_v1",
     "control_v1_pbrs",
+    "control_v2",
     "ReT_cd_v1",
     "ReT_cd_sigmoid",
 )
@@ -195,6 +197,12 @@ V6_OBSERVATION_DIM = 40  # v5 (30) + 10 adaptive benchmark features
 V7_OBSERVATION_DIM = 46  # v6 (40) + 6 downstream Track B bottleneck features
 PREV_STEP_DEMAND_SCALE = 18_200.0
 PREV_STEP_BACKORDER_SCALE = 18_200.0
+CONTROL_V2_W_FILL = 1.0
+CONTROL_V2_W_SERVICE = 4.0
+CONTROL_V2_W_LOST = 2.0
+CONTROL_V2_W_INVENTORY = 0.05
+CONTROL_V2_W_SHIFT = 0.08
+CONTROL_V2_W_SWITCH = 0.02
 INVENTORY_NODE_FIELDS: tuple[str, ...] = (
     "raw_material_wdc",
     "raw_material_al",
@@ -274,6 +282,13 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         w_bo: float = 1.0,
         w_cost: float = 0.06,
         w_disr: float = 0.0,
+        # --- control_v2 weights ---
+        control_v2_w_fill: float = CONTROL_V2_W_FILL,
+        control_v2_w_service: float = CONTROL_V2_W_SERVICE,
+        control_v2_w_lost: float = CONTROL_V2_W_LOST,
+        control_v2_w_inventory: float = CONTROL_V2_W_INVENTORY,
+        control_v2_w_shift: float = CONTROL_V2_W_SHIFT,
+        control_v2_w_switch: float = CONTROL_V2_W_SWITCH,
         # --- PBRS parameters (control_v1_pbrs only) ---
         pbrs_alpha: float = 1.0,
         pbrs_beta: float = 0.5,
@@ -479,6 +494,12 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self.w_bo = float(w_bo)
         self.w_cost = float(w_cost)
         self.w_disr = float(w_disr)
+        self.control_v2_w_fill = float(control_v2_w_fill)
+        self.control_v2_w_service = float(control_v2_w_service)
+        self.control_v2_w_lost = float(control_v2_w_lost)
+        self.control_v2_w_inventory = float(control_v2_w_inventory)
+        self.control_v2_w_shift = float(control_v2_w_shift)
+        self.control_v2_w_switch = float(control_v2_w_switch)
 
         self.pbrs_alpha = float(pbrs_alpha)
         self.pbrs_beta = float(pbrs_beta)
@@ -626,6 +647,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self._prev_step_new_demanded = 0.0
         self._prev_step_new_backorder_qty = 0.0
         self._prev_step_disruption_hours = 0.0
+        self._prev_control_v2_signature: tuple[int, float] | None = None
         self._warmup_cumulative_backorder_qty = 0.0
         self._warmup_total_demanded = 0.0
         self._warmup_cumulative_down_hours = 0.0
@@ -1162,6 +1184,62 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             "weighted_service_loss": weighted_service_loss,
             "weighted_shift_cost": weighted_shift_cost,
             "weighted_disruption": weighted_disruption,
+            "reward_total": reward_total,
+        }
+
+
+    def _compute_control_v2_components(
+        self, info: dict[str, Any], shifts: int
+    ) -> dict[str, float]:
+        """Dense service/resource reward for the Garrido Track-A lane.
+
+        ``control_v1`` is intentionally sparse: service loss plus shift cost.
+        ``control_v2`` keeps that operational core but adds the two missing
+        pressures needed for the current paper target: lost-order avoidance and
+        strategic-buffer efficiency.  It is a training reward only; Excel ReT
+        remains the primary evaluation metric.
+        """
+        new_demanded = float(info.get("new_demanded", 0.0))
+        new_delivered = float(info.get("new_delivered", 0.0))
+        new_backorder_qty = float(info.get("new_backorder_qty", 0.0))
+        new_unattended_orders = float(info.get("new_unattended_orders", 0.0))
+        fill_rate_step = min(1.0, max(0.0, new_delivered / max(new_demanded, 1.0)))
+        service_loss_step = max(0.0, new_backorder_qty / max(new_demanded, 1.0))
+        lost_order_pressure = min(
+            1.0, max(0.0, new_unattended_orders / max(1.0, float(BACKORDER_QUEUE_CAP)))
+        )
+        strategic_inventory = self._strategic_inventory_target_total()
+        inventory_scale = max(1.0, RET_LADDER_I1344_TOTAL)
+        inventory_pressure = min(2.0, max(0.0, strategic_inventory / inventory_scale))
+        shift_cost_step = max(0.0, float(shifts) - 1.0) / 2.0
+        signature = (int(shifts), round(float(strategic_inventory), 6))
+        switch_cost_step = (
+            0.0 if self._prev_control_v2_signature in (None, signature) else 1.0
+        )
+        self._prev_control_v2_signature = signature
+
+        reward_total = (
+            self.control_v2_w_fill * fill_rate_step
+            - self.control_v2_w_service * service_loss_step
+            - self.control_v2_w_lost * lost_order_pressure
+            - self.control_v2_w_inventory * inventory_pressure
+            - self.control_v2_w_shift * shift_cost_step
+            - self.control_v2_w_switch * switch_cost_step
+        )
+        return {
+            "fill_rate_step": fill_rate_step,
+            "service_loss_step": service_loss_step,
+            "lost_order_pressure": lost_order_pressure,
+            "inventory_pressure": inventory_pressure,
+            "strategic_inventory": strategic_inventory,
+            "shift_cost_step": shift_cost_step,
+            "switch_cost_step": switch_cost_step,
+            "weighted_fill": self.control_v2_w_fill * fill_rate_step,
+            "weighted_service_loss": self.control_v2_w_service * service_loss_step,
+            "weighted_lost": self.control_v2_w_lost * lost_order_pressure,
+            "weighted_inventory": self.control_v2_w_inventory * inventory_pressure,
+            "weighted_shift_cost": self.control_v2_w_shift * shift_cost_step,
+            "weighted_switch_cost": self.control_v2_w_switch * switch_cost_step,
             "reward_total": reward_total,
         }
 
@@ -2039,6 +2117,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self._prev_step_new_demanded = 0.0
         self._prev_step_new_backorder_qty = 0.0
         self._prev_step_disruption_hours = 0.0
+        self._prev_control_v2_signature = None
         self._ret_g24_elapsed_steps = 0
         self._ret_g24_sum_zeta = 0.0
         self._ret_g24_sum_epsilon = 0.0
@@ -2347,6 +2426,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         ret_components: dict[str, float | str] | None = None
         corrected_ret_components: dict[str, float | str] | None = None
         control_components: dict[str, float] | None = None
+        control_v2_components: dict[str, float] | None = None
         ret_seq_components: dict[str, float] | None = None
         ret_unified_components: dict[str, Any] | None = None
         ret_ladder_components: dict[str, Any] | None = None
@@ -2422,6 +2502,13 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                 pbrs_shaping_bonus = self.pbrs_gamma * pbrs_phi - self._prev_phi
                 reward = pbrs_base_reward + pbrs_shaping_bonus
                 self._prev_phi = pbrs_phi
+        elif self._canonical_reward_mode == "control_v2":
+            control_v2_components = self._compute_control_v2_components(info, shifts)
+            reward = float(control_v2_components["reward_total"])
+            corrected_ret_components = self._compute_ret_thesis_corrected_components(
+                info, self.step_size
+            )
+            ret_components = self._compute_ret_thesis_components(info, self.step_size)
         elif self._canonical_reward_mode == "ReT_cd":
             ret_cd_4v_components = self._compute_ret_cd(info, shifts)
             reward = float(ret_cd_4v_components["ret_cd_step"])
@@ -2706,6 +2793,28 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                     "gamma": self.pbrs_gamma,
                     "variant": self.pbrs_variant,
                 }
+
+        elif self._canonical_reward_mode == "control_v2":
+            out_info["service_loss_step"] = float(
+                control_v2_components["service_loss_step"]
+            )
+            out_info["shift_cost_step"] = float(control_v2_components["shift_cost_step"])
+            out_info["control_v2_components"] = {
+                **control_v2_components,
+                "weights": {
+                    "w_fill": self.control_v2_w_fill,
+                    "w_service": self.control_v2_w_service,
+                    "w_lost": self.control_v2_w_lost,
+                    "w_inventory": self.control_v2_w_inventory,
+                    "w_shift": self.control_v2_w_shift,
+                    "w_switch": self.control_v2_w_switch,
+                },
+            }
+            out_info["ret_thesis_corrected_step"] = float(
+                corrected_ret_components["ret_value"]
+            )
+            out_info["ret_thesis_corrected"] = corrected_ret_components
+            out_info["ret_components"] = ret_components
         elif self._canonical_reward_mode == "ReT_cd":
             out_info["ret_cd_step"] = float(ret_cd_4v_components["ret_cd_step"])
             out_info["ret_cd_components"] = ret_cd_4v_components
