@@ -48,3 +48,19 @@ buffer's delayed service benefit (anticipation is not credited).
 `outputs/experiments/cd_component_decomposition_2026-06-27/decomposition.json`,
 `outputs/experiments/audit_pepe_{fullcost,lowcost}_2026-06-27/audit.json`,
 `outputs/audits/des_garrido_format_2026-06-27.xlsx` (per-order ledger in Garrido Raw_data format).
+
+## A↔B contrast (Pepe Discrete(18), 2 seeds × 40k, war φ4/ψ1.5) — confirms the fix direction
+
+| metric | A (full-cost κ=1.0) | B (low-cost κ=0.2) | best_const S1_I0 |
+|---|---|---|---|
+| PPO cd_mean | 0.5796 | 0.5778 | — |
+| best_const_cd | 0.6133 (S1_I0) | 0.6133 (S1_I0) | — |
+| PPO − best_cd | **−0.0336** | **−0.0355** | — |
+| PPO flow_fill | 0.714 | 0.707 | 0.530 |
+| PPO lost_rate | 0.170 | 0.179 | 0.403 |
+| PPO ret_excel | 0.00182 | 0.00177 | 0.00112 |
+| PPO action_hist (seed 1) | S2_I168×160, S1_I504×76, S1_I0×24 | **S1_I336×136, S3_I672×107**, S1_I168×11 | — |
+
+**Key finding — even reduced-cost CD (κ=0.2) collapses to S1_I0** as the best constant (cd=0.6133). Why: the CD cost term (`n_kappa=0.31`) is the **largest exponent** in the 5-var Cobb-Douglas product, so the CD bar *always* rewards the cheap no-buffer constant regardless of κ. B's PPO learned a **buffer-heavy policy** (S1_I336 + S3_I672 — meaningful strategic buffers), which is the *right* RL behavior for real service, but the CD bar still picks S1_I0 as best (cd 0.6133 > 0.5778). Real service is good in both (PPO lost_rate 0.17–0.18 vs S1_I0 0.40 — ~2.3× better).
+
+**This confirms the user's resilience insight:** the CD bar (even reduced-cost) is the wrong eval because the cost term dominates. The correct fix is **eval = Excel ReT (the real Garrido metric) with a service-aligned reward** (reward ≠ eval), so the reward genuinely rewards anticipation/buffering without collapsing to the cheap constant. The A/B show that tuning the CD κ alone doesn't unlock a win; we need to change the bar.
