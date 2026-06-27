@@ -70,11 +70,11 @@ Conservative Pareto/resource route:
 Interpretation: all DQN retained-transfer ladders are null under the frozen
 Excel-ReT outcome. The paper should not lead with retained memory in Track A.
 
-## Running
+## Completed Confirmatory: PPO Dynamic-vs-Static Env B
 
-PPO dynamic-vs-static confirmatory:
+Kaggle kernel:
 
-- Kaggle kernel: `thomaschisica/scresia-garrido-envb-confirmatory`
+- `thomaschisica/scresia-garrido-envb-confirmatory`
 - first long run completed, but its kernel exported the full repo and nested
   payloads, making the output impractical to retrieve cleanly.
 - kernel was patched to copy the repo to `/kaggle/temp/scres-ia`; clean rerun
@@ -84,28 +84,92 @@ PPO dynamic-vs-static confirmatory:
   though the same authenticated session had just pushed/downloaded kernels
   earlier in the night. This looks like a Kaggle auth/session problem, not a repo
   or kernel-code failure.
-- next manual action: refresh Kaggle auth, then run:
-  `kaggle kernels status thomaschisica/scresia-garrido-envb-confirmatory` and
-  download `outputs/kaggle/garrido_envb_confirmatory_remote_clean_v5/`.
-- candidates:
-  - `envb_aggr_g24_raw_ppo`
-  - `envb_aggr_g24_raw_recurrent`
-  - `envb_cons_control_v2_ppo`
+- fallback: the same confirmatory profile was run locally to completion.
+
+Local output directory:
+
+- `outputs/kaggle/garrido_envb_confirmatory/`
+- `confirmatory_decision.json`
+- `confirmatory_summary.csv`
+- `confirmatory_all_statics.csv`
+- `confirmatory_report.md`
+- per-candidate folders under `runs/`
+
+Profile:
+
+- seeds: `8501-8510`
+- `eval_episodes=5`
+- `max_steps=52`
+- `train_timesteps=65536`
+- regime: `severe`
+
+Decision:
+
+- complete-win labels: none
+- partial Excel-win labels: none
+- partial Pareto/resource labels vs frozen efficient frontier: none
+- all three candidates dominate the weak `S3_I1344` resource baseline under the
+  relaxed report criterion, but none beats the efficient frontier.
+
+Candidate details:
+
+1. `envb_aggr_g24_raw_ppo`
+   - reward: `ReT_garrido2024_raw`
+   - `phi=2.0`, `psi=1.5`
+   - vs frozen efficient `static_S2_I168`:
+     - Excel delta: `+0.0000035`, CI95 `[-0.0000316, +0.0000386]`
+     - C-D delta: `+0.001778`, CI95 `[-0.003074, +0.006630]`
+     - resource delta: `+5,854,874` (uses more resource)
+   - strongest live candidate, but only a near-tie / weak positive against the
+     efficient frontier, not a paper-grade win.
+
+2. `envb_aggr_g24_raw_recurrent`
+   - reward: `ReT_garrido2024_raw`
+   - `phi=2.0`, `psi=1.5`
+   - vs frozen efficient `static_S2_I168`:
+     - Excel delta: `-0.0000689`, CI95 `[-0.0001183, -0.0000196]`
+     - C-D delta: `+0.001626`, CI95 `[-0.003505, +0.006757]`
+     - resource delta: `+3,700,343`
+   - recurrent history does not help; it is worse than PPO simple on the primary
+     Excel metric.
+
+3. `envb_cons_control_v2_ppo`
+   - reward: `control_v2`
+   - `phi=1.0`, `psi=1.25`
+   - service-heavy weights:
+     - fill `1.2`
+     - service `6.0`
+     - lost `4.0`
+     - inventory `0.04`
+     - shift `0.06`
+     - switch `0.01`
+   - vs frozen efficient `static_S2_I168`:
+     - Excel delta: `-0.000171`, CI95 `[-0.000312, -0.000030]`
+     - C-D delta: `-0.001890`, CI95 `[-0.007562, +0.003781]`
+     - resource delta: `+752,116`
+   - does not deliver the Pareto/resource win against the efficient frontier.
 
 ## Current Scientific Read
 
-The strongest remaining path for a paper is now the PPO dynamic-vs-static
-confirmatory. The retained-memory DQN result is null in the most defensible
-frontier cell and its two sensitivity cells, so the paper should not lead with
-a memory-retention win.
+The strongest result is now negative but useful:
+
+- Track-A retained memory is a clean null across DQN frontier and sensitivity
+  cells.
+- Recurrent PPO is not a useful rescue path.
+- PPO with `ReT_garrido2024_raw` is closest to a live paper result, because it is
+  Excel-noninferior and slightly positive on C-D against the frozen efficient
+  frontier, but it spends more resources and does not beat all static policies.
+- `control_v2` did not produce a Pareto/resource win.
+
+The paper should not claim that RL beats Garrido's efficient static frontier
+under the current Track-A action surface. The honest paper-facing path is either:
+
+1. A strong fidelity + benchmark paper: the thesis/Excel environment is
+   reconstructed, audited, and shown to leave very little headroom for Track-A
+   RL once the efficient static frontier is computed.
+2. A next control-surface paper: move to a richer action surface (Track B or
+   continuous operational control), where RL can control the actual bottleneck
+   instead of only choosing buffer and shifts.
 
 Operational note: no local training/download processes from this overnight run
-were left running after the Kaggle auth issue was detected.
-
-Potential claims after PPO:
-
-- Excel-only win: dynamic policy beats all static policies on Garrido Excel ReT.
-- Pareto/efficiency win: dynamic policy is Excel-noninferior and improves
-  resources/C-D/service metrics.
-- Null: if PPO also fails, the honest result is that the thesis-faithful and
-  frozen headroom Track-A benchmark is still dominated by simple static policies.
+were left running after the local fallback confirmatory completed.
