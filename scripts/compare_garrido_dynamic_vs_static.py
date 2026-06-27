@@ -246,6 +246,9 @@ def build_env_kwargs(args: argparse.Namespace, regime: str) -> dict[str, Any]:
         "risk_impact_multiplier": float(args.risk_impact_multiplier),
         "ret_g24_shift_cost": float(args.ret_g24_shift_cost),
         "ret_g24_kappa_train_frac": float(args.ret_g24_kappa_train_frac),
+        "w_bo": float(args.w_bo),
+        "w_cost": float(args.w_cost),
+        "w_disr": float(args.w_disr),
         "raw_material_flow_mode": args.raw_material_flow_mode,
         "raw_material_order_up_to_multiplier": float(
             args.raw_material_order_up_to_multiplier
@@ -794,6 +797,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--risk-impact-multiplier", type=float, default=1.0)
     parser.add_argument("--ret-g24-shift-cost", type=float, default=0.5)
     parser.add_argument("--ret-g24-kappa-train-frac", type=float, default=0.2)
+    parser.add_argument("--w-bo", type=float, default=4.0)
+    parser.add_argument("--w-cost", type=float, default=0.02)
+    parser.add_argument("--w-disr", type=float, default=0.0)
     parser.add_argument("--raw-material-flow-mode", default="kit_equivalent_order_up_to")
     parser.add_argument("--raw-material-order-up-to-multiplier", type=float, default=2.0)
     parser.add_argument(
@@ -938,6 +944,9 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             "risk_impact_multiplier": float(args.risk_impact_multiplier),
             "ret_g24_shift_cost": float(args.ret_g24_shift_cost),
             "ret_g24_kappa_train_frac": float(args.ret_g24_kappa_train_frac),
+            "w_bo": float(args.w_bo),
+            "w_cost": float(args.w_cost),
+            "w_disr": float(args.w_disr),
             "excel_noninferiority_tol": float(args.excel_noninferiority_tol),
             "skip_ppo": bool(args.skip_ppo),
             "include_threshold_heuristics": bool(args.include_threshold_heuristics),
