@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 import json
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -128,6 +129,30 @@ def torch_probe() -> dict[str, object]:
         return {"error": repr(exc)}
 
 
+def install_dependencies(repo: Path) -> None:
+    """Install the payload dependencies inside Kaggle's fresh kernel image."""
+    requirements = repo / "requirements.txt"
+    if requirements.exists():
+        run([sys.executable, "-m", "pip", "install", "-q", "-r", str(requirements)], cwd=repo)
+        return
+    run(
+        [
+            sys.executable,
+            "-m",
+            "pip",
+            "install",
+            "-q",
+            "stable-baselines3",
+            "sb3-contrib",
+            "gymnasium",
+            "simpy",
+            "numpy",
+            "pandas",
+        ],
+        cwd=repo,
+    )
+
+
 def run_frontier_ladder(repo: Path, out: Path, prof: dict[str, str]) -> Path:
     label = "kaggle_envb_frontier_v2_control_v1_dqn"
     cmd = [
@@ -208,11 +233,18 @@ def main() -> None:
     repo = extract_payload_or_use_local_repo()
     out = output_root()
     out.mkdir(parents=True, exist_ok=True)
+    if is_kaggle():
+        # Kaggle's P100 image can expose a CUDA device that the bundled torch
+        # wheel cannot execute on. The Track-A DQN job is CPU-light enough, and
+        # this keeps the confirmatory run deterministic instead of failing late.
+        os.environ.setdefault("CUDA_VISIBLE_DEVICES", "")
     print("SCRESIA DQN frontier ladder", datetime.now(timezone.utc).isoformat(), flush=True)
     print("profile", prof, flush=True)
     print("repo", repo, flush=True)
     print("output", out, flush=True)
     print("torch_cuda", torch_probe(), flush=True)
+    if is_kaggle():
+        install_dependencies(repo)
     transfer_path = run_frontier_ladder(repo, out, prof)
     write_report(out, transfer_path, prof)
     print("outputs", out, flush=True)
