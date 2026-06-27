@@ -78,7 +78,15 @@ PPO dynamic-vs-static confirmatory:
 - first long run completed, but its kernel exported the full repo and nested
   payloads, making the output impractical to retrieve cleanly.
 - kernel was patched to copy the repo to `/kaggle/temp/scres-ia`; clean rerun
-  pushed as version 5 and is running.
+  pushed as version 5.
+- after the clean rerun was launched, the local Kaggle CLI began returning
+  `Permission 'kernels.get' was denied` for both the PPO and DQN kernels, even
+  though the same authenticated session had just pushed/downloaded kernels
+  earlier in the night. This looks like a Kaggle auth/session problem, not a repo
+  or kernel-code failure.
+- next manual action: refresh Kaggle auth, then run:
+  `kaggle kernels status thomaschisica/scresia-garrido-envb-confirmatory` and
+  download `outputs/kaggle/garrido_envb_confirmatory_remote_clean_v5/`.
 - candidates:
   - `envb_aggr_g24_raw_ppo`
   - `envb_aggr_g24_raw_recurrent`
@@ -90,6 +98,9 @@ The strongest remaining path for a paper is now the PPO dynamic-vs-static
 confirmatory. The retained-memory DQN result is null in the most defensible
 frontier cell and its two sensitivity cells, so the paper should not lead with
 a memory-retention win.
+
+Operational note: no local training/download processes from this overnight run
+were left running after the Kaggle auth issue was detected.
 
 Potential claims after PPO:
 
