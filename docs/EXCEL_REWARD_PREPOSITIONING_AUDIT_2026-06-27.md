@@ -117,3 +117,57 @@ Then rerun the fast 2-seed Excel front:
   - `control_v1`
 
 Use common eval seeds for candidate comparisons before scaling.
+
+## Follow-Up: Forecast Visibility and Learned Initial Decision
+
+After this audit, `compare_garrido_dynamic_vs_static.py` was extended to support
+`--learn-initial-decision` on the `Discrete(18)` surface. The runner now lets PPO
+choose the pre-warmup Track-A action as its first action, then skips that
+zero-reward initial phase when aggregating weekly episode metrics.
+
+The same patch fixed a provenance bug: the runner used `--observation-version`
+for training/evaluation, but did not persist it in `summary.json`. This caused
+post-hoc tracing tools to reconstruct v7 models with a v4 observation shape.
+
+Fast v7-visible pilots show:
+
+- `forecast_v7_control_v1_phi2_h26_i1344init_2seed_2026-06-27`:
+  one seed became genuinely adaptive (`S3_I0/S3_I672` switching), while the
+  other collapsed to constant `S1_I672`. It nearly matched Excel ReT but did
+  not beat the best static.
+- `forecast_v7_excel_delta_phi2_h26_i1344init_2seed_2026-06-27`:
+  both seeds became constants (`S1_I1344` or `S3_I0`). This improved C-D
+  relative to many statics but did not beat the best Excel static.
+- `learned_init_v7_control_v1_phi2_h26_2seed_2026-06-27`:
+  failed. PPO often chose no-buffer initial actions (`S1_I0`/`S2_I0`), causing
+  one-step collapse.
+- `learned_init_v7_excel_delta_phi2_h26_2seed_2026-06-27`:
+  mixed. One seed learned a plausible preparation path (`S1_I672` initially,
+  then mostly `S1_I1344`) and matched the best S1-buffer static on common eval
+  seeds. The other seed collapsed to `S2_I0`.
+
+Interpretation: forecast visibility alone is not enough, and learned initial
+prepositioning is possible but unstable under vanilla PPO. The next narrow test
+is not another environment sweep; it is a higher-budget run of
+`ReT_excel_delta + v7 + learned-initial-decision` to see whether the first-action
+credit assignment stabilizes.
+
+That 20k follow-up did **not** stabilize it:
+
+- `learned_init_v7_excel_delta_phi2_h26_20k_2seed_2026-06-27`
+- dynamic Excel ReT: `0.000376`
+- best static Excel ReT: `static_S2_I168 = 0.000787`
+- dynamic C-D: `0.498`
+- best static C-D: `static_S1_I1344 = 0.606`
+
+Action traces explain the failure:
+
+- seed `9841`: initial `S3_I0`, then `S3_I1344`, collapsing to Excel `0`.
+- seed `9842`: initial and weekly `S2_I1344`, nonzero Excel but far below the
+  best static and with very high unattended orders.
+
+Conclusion: more vanilla PPO timesteps are not the fix. The agent can discover
+a plausible initial-preposition path in some seeds, but the first action has a
+long delayed-credit problem. The next high-probability route is a two-stage
+training protocol: choose or pretrain the initial prepositioning decision on
+the static surface, then train the weekly adaptive policy.

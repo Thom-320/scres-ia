@@ -92,3 +92,38 @@ def test_discrete18_track_a_env_maps_to_same_factorized_surface() -> None:
     assert step_info["thesis_factorized_action"] == [1, 2]
     assert step_info["thesis_decision"]["assembly_shifts"] == 3
     env.close()
+
+
+def test_discrete18_track_a_env_can_learn_initial_decision() -> None:
+    env = make_discrete18_track_a_env(
+        max_steps=1,
+        reward_mode="control_v1",
+        observation_version="v4",
+        priming_enabled=False,
+        learn_initial_decision=True,
+    )
+
+    _obs, info = env.reset(seed=17)
+    assert info["action_phase"] == "initial_decision"
+    assert info["initial_decision"]["applied_before_warmup"] is False
+
+    _obs, reward, terminated, truncated, info = env.step(
+        Discrete18TrackAEnv.encode_discrete_action(5, 2)
+    )
+    assert reward == pytest.approx(0.0)
+    assert not terminated
+    assert not truncated
+    assert info["action_phase"] == "initial_decision"
+    assert info["initial_decision"]["applied_before_warmup"] is True
+    assert info["initial_decision"]["inventory_period_hours"] == pytest.approx(1344.0)
+    assert info["initial_decision"]["assembly_shifts"] == 3
+
+    _obs, _reward, _terminated, _truncated, step_info = env.step(
+        Discrete18TrackAEnv.encode_discrete_action(1, 0)
+    )
+    assert step_info["action_phase"] == "weekly_decision"
+    assert step_info["thesis_decision"]["inventory_period_hours"] == pytest.approx(
+        168.0
+    )
+    assert step_info["thesis_decision"]["assembly_shifts"] == 1
+    env.close()

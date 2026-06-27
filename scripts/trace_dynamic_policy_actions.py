@@ -85,6 +85,9 @@ def _namespace_from_config(config: dict[str, Any]) -> argparse.Namespace:
 def _env_kwargs(config: dict[str, Any], regime: str) -> dict[str, Any]:
     args = _namespace_from_config(config)
     kwargs = build_env_kwargs(args, regime)
+    if bool(config.get("learn_initial_decision", False)):
+        kwargs["learn_initial_decision"] = True
+        return kwargs
     policy_name = str(config.get("ppo_initial_static_policy") or "")
     if policy_name:
         level, shift_index = STATIC_BASELINES[policy_name]
@@ -99,9 +102,16 @@ def _safe_float(value: Any) -> float:
         return 0.0
 
 
-def trace_run(run_dir: Path, eval_seeds: list[int]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+def trace_run(
+    run_dir: Path,
+    eval_seeds: list[int],
+    *,
+    observation_version: str | None = None,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     summary = json.loads((run_dir / "summary.json").read_text())
     config = dict(summary["config"])
+    if observation_version is not None:
+        config["observation_version"] = str(observation_version)
     regimes = list(config.get("regimes") or ["severe"])
     model_paths = sorted((run_dir / "models").glob("ppo_*_seed*.zip"))
     traces: list[dict[str, Any]] = []
@@ -141,6 +151,7 @@ def trace_run(run_dir: Path, eval_seeds: list[int]) -> tuple[list[dict[str, Any]
                         "eval_seed": int(eval_seed),
                         "regime": regime,
                         "step": step,
+                        "action_phase": str(info.get("action_phase", "")),
                         "action": action,
                         "action_label": _label_action(action),
                         "inventory_level": int(
@@ -230,12 +241,24 @@ def main() -> int:
         type=Path,
         default=Path("outputs/diagnostics/action_traces"),
     )
+    parser.add_argument(
+        "--observation-version",
+        default=None,
+        help=(
+            "Override the observation version when tracing older runs whose "
+            "summary.json did not persist it."
+        ),
+    )
     args = parser.parse_args()
     eval_seeds = [int(x) for x in args.eval_seeds.split(",") if x.strip()]
     traces: list[dict[str, Any]] = []
     episodes: list[dict[str, Any]] = []
     for run_dir in args.run_dir:
-        run_traces, run_episodes = trace_run(run_dir, eval_seeds)
+        run_traces, run_episodes = trace_run(
+            run_dir,
+            eval_seeds,
+            observation_version=args.observation_version,
+        )
         traces.extend(run_traces)
         episodes.extend(run_episodes)
     args.output_dir.mkdir(parents=True, exist_ok=True)

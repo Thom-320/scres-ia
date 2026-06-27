@@ -277,7 +277,9 @@ def _env_kwargs_with_initial_policy(
     policy_name: str | None,
 ) -> dict[str, Any]:
     kwargs = build_env_kwargs(args, regime)
-    if policy_name:
+    if bool(getattr(args, "learn_initial_decision", False)):
+        kwargs["learn_initial_decision"] = True
+    elif policy_name:
         level, shift_index = STATIC_BASELINES[str(policy_name)]
         kwargs["initial_action"] = static_action(level, shift_index)
     return kwargs
@@ -398,6 +400,9 @@ def evaluate_episode(
             else:
                 stress_hold_steps = max(0, stress_hold_steps - 1)
         reward_total += float(reward)
+        if info.get("action_phase") == "initial_decision":
+            done = bool(terminated or truncated)
+            continue
         cd_sigmoid_total += float(info.get("ret_garrido2024_sigmoid_step", 0.0))
         cd_train_total += float(info.get("ret_garrido2024_train_step", 0.0))
         raw_total += float(info.get("ret_garrido2024_raw_step", 0.0))
@@ -848,6 +853,14 @@ def build_parser() -> argparse.ArgumentParser:
         help="Initial Track-A decision used before PPO starts acting.",
     )
     parser.add_argument(
+        "--learn-initial-decision",
+        action="store_true",
+        help=(
+            "Let PPO choose the pre-warmup Track-A action as its first action "
+            "instead of using --ppo-initial-static-policy."
+        ),
+    )
+    parser.add_argument(
         "--stochastic-pt",
         action="store_true",
         default=bool(P.get("stochastic_pt", False)),
@@ -1016,8 +1029,10 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             "max_steps": int(args.max_steps),
             "step_size_hours": float(args.step_size_hours),
             "reward_mode": args.reward_mode,
+            "observation_version": args.observation_version,
             "algo": args.algo,
             "stochastic_pt": bool(args.stochastic_pt),
+            "learn_initial_decision": bool(args.learn_initial_decision),
             "ppo_initial_static_policy": args.ppo_initial_static_policy,
             "risk_occurrence_mode": args.risk_occurrence_mode,
             "risk_frequency_multiplier": float(args.risk_frequency_multiplier),
