@@ -7,6 +7,7 @@ import pytest
 from scripts.run_garrido2024_direct_rl import (
     add_direct_metric_aliases,
     add_policy_direct_metric_aliases,
+    build_parser,
     build_direct_comparison_rows,
 )
 
@@ -107,3 +108,20 @@ def test_direct_comparison_uses_cd_primary_and_excel_secondary() -> None:
     assert comparison["delta_excel_vs_best_baseline"] == pytest.approx(-0.05)
     assert comparison["learned_beats_static_s2_cd"] is True
     assert comparison["learned_beats_best_baseline_cd"] is False
+
+
+def test_direct_runner_accepts_cvar_cd_and_risk_multipliers() -> None:
+    args = build_parser().parse_args(
+        [
+            "--reward-mode",
+            "ReT_cvar_cd",
+            "--risk-frequency-multiplier",
+            "3.0",
+            "--risk-impact-multiplier",
+            "1.5",
+        ]
+    )
+
+    assert args.reward_mode == "ReT_cvar_cd"
+    assert args.risk_frequency_multiplier == pytest.approx(3.0)
+    assert args.risk_impact_multiplier == pytest.approx(1.5)

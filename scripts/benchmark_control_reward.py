@@ -654,6 +654,7 @@ def build_parser() -> argparse.ArgumentParser:
             "ReT_ladder_v1",
             "ReT_cd_v1",
             "ReT_cd_sigmoid",
+            "ReT_cvar_cd",
         ],
         default=BENCHMARK_REWARD_MODE,
         help="Reward mode for training and evaluation.",
@@ -772,6 +773,7 @@ def make_weight_combos(args: argparse.Namespace) -> list[dict[str, float]]:
         "ReT_ladder_v1",
         "ReT_cd_v1",
         "ReT_cd_sigmoid",
+        "ReT_cvar_cd",
     ):
         return [
             {
@@ -936,6 +938,7 @@ def reward_family(reward_mode: str) -> str:
         "ReT_ladder_v1",
         "ReT_cd_v1",
         "ReT_cd_sigmoid",
+        "ReT_cvar_cd",
     ):
         return "resilience_index"
     return "other"

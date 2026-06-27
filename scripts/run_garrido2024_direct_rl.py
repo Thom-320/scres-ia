@@ -396,6 +396,7 @@ def run_direct(args: argparse.Namespace) -> dict[str, Any]:
         "ReT_garrido2024_train",
         "ReT_garrido2024",
         "ReT_cd_v1",
+        "ReT_cvar_cd",
         "ReT_seq_v1",
         "control_v1",
         "ReT_excel_delta",
