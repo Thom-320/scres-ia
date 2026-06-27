@@ -311,7 +311,7 @@ def train_ppo(args: argparse.Namespace, *, regime: str, seed: int) -> Any:
         "clip_range": float(args.clip_range),
         "seed": int(seed),
         "verbose": 0,
-        "device": "cpu",
+        "device": str(getattr(args, "device", "auto")),
     }
     if args.algo == "recurrent_ppo":
         if RecurrentPPO is None:
@@ -872,6 +872,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--learning-rate", type=float, default=3e-4)
     parser.add_argument("--algo", choices=("ppo", "recurrent_ppo"), default="ppo")
+    parser.add_argument(
+        "--device",
+        default="auto",
+        help="Torch device for SB3 training (auto/cpu/cuda/mps).",
+    )
     parser.add_argument("--n-steps", type=int, default=128)
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--n-epochs", type=int, default=4)

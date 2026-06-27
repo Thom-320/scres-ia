@@ -37,6 +37,7 @@ def test_dynamic_runner_defaults_to_garrido_fulfillment_delay() -> None:
     assert args.stochastic_pt is False
     assert args.reward_mode == "ReT_garrido2024_raw"
     assert args.algo == "ppo"
+    assert args.device == "auto"
 
 
 def test_dynamic_runner_accepts_cvar_cd_reward_and_war_knobs() -> None:
