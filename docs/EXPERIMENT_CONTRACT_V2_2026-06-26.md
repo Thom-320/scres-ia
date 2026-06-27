@@ -84,6 +84,13 @@ before any block-k training):
   no clamp — the Garrido raw-Excel formula, gate-verified 0 mismatch over 47,546 rows).
 - **Secondary resilience:** Cobb-Douglas index `ReT_garrido2024` (cost-aware), `ret_thesis`
   (bounded), `ret_continuous`.
+- **Metric-lane rule:** Excel ReT and Cobb-Douglas are separate resilience bars. If the training
+  reward is operational (`control_v1`/`control_v2`), Excel ReT remains the primary Garrido continuity
+  bar and C-D is secondary. If the training reward is Cobb-Douglas or a derivative of it, then
+  Cobb-Douglas becomes the **same-bar** resilience metric: compute the Pareto frontier on C-D for
+  dynamic and static policies, and report Excel ReT only as a continuity / non-inferiority check.
+  Do **not** describe a C-D win as an Excel-ReT win unless the Excel-ReT comparison independently
+  passes.
 - **Full panel** (`supply_chain/episode_metrics.compute_episode_metrics`): `flow_fill_rate`,
   `lost_rate`, `service_loss_auc`, `ttr_mean/p95`, backlog age, CTj/RPj/DPj p50/p90/p99,
   `delivered_rations`, plus per-step service-loss mean/p95/**CVaR95**.
@@ -118,9 +125,10 @@ mutable tuning surface:
   memory paper line.
 - `envb_aggr_g24_raw`: `risk_frequency_multiplier=2.0`,
   `risk_impact_multiplier=1.5`, `stochastic_pt=false`, reward
-  `ReT_garrido2024_raw`. Purpose: **Partial Win A**, beat all static policies on the primary
-  Garrido Excel ReT bar. This is a Kaggle confirmatory sensitivity, not the primary DQN frontier
-  profile, because the full-horizon static grid marks it as too collapsed.
+  `ReT_garrido2024_raw`. Purpose: **Cobb-Douglas same-bar sensitivity**: train and evaluate on the
+  cost-aware C-D resilience frontier, while reporting Excel ReT as a continuity / non-inferiority
+  metric. This is a Kaggle confirmatory sensitivity, not the primary DQN frontier profile, because
+  the full-horizon static grid marks it as too collapsed.
 - `envb_cons_control_v2`: `risk_frequency_multiplier=1.0`,
   `risk_impact_multiplier=1.25`, `stochastic_pt=false`, reward `control_v2` with
   service-heavy weights (`fill=1.2`, `service=6.0`, `lost=4.0`, `inventory=0.04`,

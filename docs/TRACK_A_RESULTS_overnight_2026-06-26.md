@@ -11,8 +11,9 @@
   `S3_I1344` (resource −1.30M, Excel non-inferior). Robust. Partial Win A (Excel margin ~2e-4) is fragile.
 - **Reward gate:** `control_v1` validated (ρ_ReT=0.86, ρ_−loss=0.96, ρ_−backlog=0.73). `control_v2`
   ~equivalent (ρ_ReT=0.87, ρ_−loss=0.92). **Keep control_v1 primary; no reason to switch.**
-  `ReT_garrido2024` has **ρ_ReT=0.03** — the Cobb-Douglas index does NOT correlate with Excel ReT,
-  confirming it must stay an OUTCOME/separate lane, never a proxy for the Excel bar.
+  `ReT_garrido2024` has **ρ_ReT=0.03** — the Cobb-Douglas index does NOT correlate with Excel ReT.
+  Therefore C-D is **not an Excel proxy**. If it is used as reward, it must be evaluated as its own
+  same-bar resilience lane with its own C-D Pareto frontier.
 - **Run hygiene:** `aggr_inertia_rs505` hung → 100-min timeout (others ~8 min); that tape is missing.
   Investigate the φ2/ψ1.5+inertia long-episode pathology before any scaled re-run.
 
@@ -39,7 +40,11 @@ Reads:
 - Per-tape CIs are in each `outputs/benchmarks/retention_transfer/learn_*/transfer.json`; the
   hierarchical (seed×tape) bootstrap is the remaining morning analysis step.
 
-## Lane 2 (Codex) — dominance / Excel-ReT confirmatory (beat the statics)
+## Lane 2 (Codex) — dynamic-vs-static confirmatory
+
+Note: this table is the early overnight snapshot. The final paired `n=50` confirmatory is recorded in
+`docs/OVERNIGHT_HANDOFF_2026-06-27.md` and
+`outputs/kaggle/garrido_envb_confirmatory/confirmatory_summary.csv`.
 From `outputs/kaggle/garrido_envb_confirmatory/confirmatory_summary.csv` (paired_n small → CIs nan):
 
 | label | claim | vs static | strict | pareto | excel_noninf | excel Δ | resource Δ |

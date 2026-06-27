@@ -116,6 +116,8 @@ Candidate details:
 1. `envb_aggr_g24_raw_ppo`
    - reward: `ReT_garrido2024_raw`
    - `phi=2.0`, `psi=1.5`
+   - lane: Cobb-Douglas same-bar; C-D is the resilience metric for this lane, and Excel ReT is a
+     continuity / non-inferiority check.
    - vs frozen efficient `static_S2_I168`:
      - Excel delta: `+0.0000035`, CI95 `[-0.0000316, +0.0000386]`
      - C-D delta: `+0.001778`, CI95 `[-0.003074, +0.006630]`
@@ -156,9 +158,9 @@ The strongest result is now negative but useful:
 - Track-A retained memory is a clean null across DQN frontier and sensitivity
   cells.
 - Recurrent PPO is not a useful rescue path.
-- PPO with `ReT_garrido2024_raw` is closest to a live paper result, because it is
-  Excel-noninferior and slightly positive on C-D against the frozen efficient
-  frontier, but it spends more resources and does not beat all static policies.
+- PPO with `ReT_garrido2024_raw` is closest to a live Cobb-Douglas same-bar result, because it is
+  slightly positive on C-D and Excel-noninferior against the frozen efficient frontier, but it spends
+  more resources and does not beat all static policies.
 - `control_v2` did not produce a Pareto/resource win.
 
 The paper should not claim that RL beats Garrido's efficient static frontier

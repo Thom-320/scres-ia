@@ -2,7 +2,9 @@
 
 > **SUPERSEDED (2026-06-26) by `docs/EXPERIMENT_CONTRACT_V2_2026-06-26.md`:** the primary training
 > reward is **`control_v1`** (operational) with `control_v2_backlog` as a pre-registered sensitivity;
-> `ReT_garrido2024` / Cobb-Douglas are **OUTCOME bars only**, not training rewards (no circularity).
+> `ReT_garrido2024` / Cobb-Douglas are **not proxies for Excel ReT**. They are a separate same-bar
+> lane: if Cobb-Douglas is used as the training reward, the Pareto frontier and win claim must also
+> be evaluated on the Cobb-Douglas resilience index for both dynamic and static policies.
 > The algorithm is **DQN**. The reward provenance/calibration notes below remain valid reference.
 
 Two **co-primary** reward designs (user decision 2026-06-26). Both are frozen here; weights are
@@ -34,6 +36,10 @@ metrics panel + both bars regardless of which reward trained it.
   (Garrido 2024 Eq. 3/6): `R = ζ^a·ε^-b·φ^c·τ^-d·κ̇^-n` (ζ inventory+, ε backorders−, φ spare
   capacity+, τ time−, κ̇ cost−), **with the shift cost in κ̇** (`ret_g24_shift_cost = 0.5`,
   `ret_g24_kappa_train_frac = 0.2`). "Same bar": the objective IS the resilience index.
+- **Claim boundary:** a Cobb-Douglas-trained policy is judged on the Cobb-Douglas Pareto frontier
+  computed for **both** the dynamic policy and all static policies. It may also report Excel ReT for
+  continuity, but it cannot claim to have optimized or beaten the Excel-ReT frontier unless the Excel
+  comparison independently passes.
 - **Calibration:** re-derived on the **faithful env** (thesis_window + kit_equivalent m2.0 +
   figure_6_2 + obs v4, shift_cost 0.5) →
   `supply_chain/data/ret_garrido2024_calibration_faithful_2026-06-26.json`. (Audit 2026-06-18: the
@@ -49,3 +55,5 @@ Every run reports: `ret_excel`, `ret_thesis`, `ret_continuous`, the Cobb-Douglas
 `flow_fill_rate`, `lost_rate`, `ttr_mean/p95`, `service_loss_auc`, CTj/RPj/DPj quantiles, plus
 resources (shift/surge-hours, buffer-units, unit-cost-per-ration) and per-step CVaR95/p95
 service-loss (from the comparison harness).
+In the primary `control_v1` line, C-D appears as an outcome bar. In the Cobb-Douglas lane, the same
+C-D index is both the reward and the resilience metric.
