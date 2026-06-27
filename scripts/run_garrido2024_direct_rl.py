@@ -5,7 +5,7 @@ This runner deliberately bypasses the ``control_v1`` survivor filter used by
 ``benchmark_control_reward.py``.  The goal is not to select a reward by static
 control-v1 screens; the goal is to train directly on a chosen resilience reward
 candidate, then evaluate the learned policy against Garrido/static baselines on
-the Excel-faithful order-level ReT metric.
+the same Garrido-2024 Cobb-Douglas bar used by the reward family.
 """
 
 from __future__ import annotations
@@ -61,10 +61,15 @@ DIRECT_EPISODE_FIELDNAMES = [
     "w_disr",
     "steps",
     "reward_total",
+    "cd_sigmoid_mean",
+    "cd_raw_mean",
+    "cd_train_mean",
     "mean_ret_excel_formula",
     "order_level_ret_mean",
     "fill_rate",
     "backorder_rate",
+    "service_loss_total",
+    "shift_cost_total",
     "ret_garrido2024_raw_total",
     "ret_garrido2024_train_total",
     "ret_garrido2024_sigmoid_total",
@@ -75,6 +80,11 @@ DIRECT_EPISODE_FIELDNAMES = [
     "backorder_qty_total",
     "flow_fill_rate",
     "flow_backorder_rate",
+    "cd_zeta_avg",
+    "cd_epsilon_avg",
+    "cd_phi_avg",
+    "cd_tau_avg",
+    "cd_kappa_dot",
     "pct_steps_S1",
     "pct_steps_S2",
     "pct_steps_S3",
@@ -96,9 +106,25 @@ DIRECT_POLICY_FIELDNAMES = [
     "mean_ret_excel_formula_std",
     "mean_ret_excel_formula_ci95_low",
     "mean_ret_excel_formula_ci95_high",
+    "cd_sigmoid_mean_mean",
+    "cd_sigmoid_mean_std",
+    "cd_sigmoid_mean_ci95_low",
+    "cd_sigmoid_mean_ci95_high",
+    "cd_raw_mean_mean",
+    "cd_train_mean_mean",
     "reward_total_mean",
     "fill_rate_mean",
     "backorder_rate_mean",
+    "flow_fill_rate_mean",
+    "flow_fill_rate_ci95_low",
+    "flow_fill_rate_ci95_high",
+    "cd_zeta_avg_mean",
+    "cd_epsilon_avg_mean",
+    "cd_phi_avg_mean",
+    "cd_tau_avg_mean",
+    "cd_kappa_dot_mean",
+    "service_loss_total_mean",
+    "shift_cost_total_mean",
     "ret_garrido2024_train_total_mean",
     "ret_garrido2024_sigmoid_total_mean",
     "pct_steps_S1_mean",
@@ -112,34 +138,67 @@ DIRECT_COMPARISON_FIELDNAMES = [
     "risk_level",
     "eval_risk_level",
     "learned_policy",
+    "primary_metric",
+    "learned_cd_sigmoid_mean",
+    "static_s2_cd_sigmoid_mean",
+    "garrido_cf_s2_cd_sigmoid_mean",
+    "best_baseline_cd_policy",
+    "best_baseline_cd_sigmoid_mean",
+    "delta_cd_vs_static_s2",
+    "delta_cd_vs_garrido_cf_s2",
+    "delta_cd_vs_best_baseline",
+    "learned_beats_static_s2_cd",
+    "learned_beats_garrido_cf_s2_cd",
+    "learned_beats_best_baseline_cd",
     "learned_mean_ret_excel_formula",
     "static_s2_mean_ret_excel_formula",
     "garrido_cf_s2_mean_ret_excel_formula",
-    "best_baseline_policy",
+    "best_baseline_excel_policy",
     "best_baseline_mean_ret_excel_formula",
-    "delta_vs_static_s2",
-    "delta_vs_garrido_cf_s2",
-    "delta_vs_best_baseline",
-    "learned_beats_static_s2",
-    "learned_beats_garrido_cf_s2",
-    "learned_beats_best_baseline",
+    "delta_excel_vs_static_s2",
+    "delta_excel_vs_garrido_cf_s2",
+    "delta_excel_vs_best_baseline",
+    "learned_beats_static_s2_excel",
+    "learned_beats_garrido_cf_s2_excel",
+    "learned_beats_best_baseline_excel",
+    "learned_flow_fill_rate",
+    "best_baseline_cd_flow_fill_rate",
+    "learned_service_loss_total",
+    "best_baseline_cd_service_loss_total",
+    "learned_shift_cost_total",
+    "best_baseline_cd_shift_cost_total",
 ]
 
 
-def add_excel_aliases(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Add explicit Excel ReT aliases to rows produced by the shared benchmark."""
+def add_direct_metric_aliases(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Add C-D primary and Excel-continuity aliases to shared benchmark rows."""
     out: list[dict[str, Any]] = []
     for row in rows:
         copied = dict(row)
+        steps = max(1.0, float(copied.get("steps", 1.0) or 1.0))
+        copied["cd_sigmoid_mean"] = (
+            float(copied["ret_garrido2024_sigmoid_total"]) / steps
+        )
+        copied["cd_raw_mean"] = float(copied["ret_garrido2024_raw_total"]) / steps
+        copied["cd_train_mean"] = float(copied["ret_garrido2024_train_total"]) / steps
         copied["mean_ret_excel_formula"] = float(copied["order_level_ret_mean"])
         out.append(copied)
     return out
 
 
-def add_policy_excel_aliases(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def add_policy_direct_metric_aliases(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
     for row in rows:
         copied = dict(row)
+        for alias, source in (
+            ("cd_sigmoid_mean", "ret_garrido2024_sigmoid_total"),
+            ("cd_raw_mean", "ret_garrido2024_raw_total"),
+            ("cd_train_mean", "ret_garrido2024_train_total"),
+        ):
+            for suffix in ("mean", "std", "ci95_low", "ci95_high"):
+                source_key = f"{source}_{suffix}"
+                if source_key in copied:
+                    copied[f"{alias}_{suffix}"] = float(copied[source_key])
         for suffix in ("mean", "std", "ci95_low", "ci95_high"):
             copied[f"mean_ret_excel_formula_{suffix}"] = float(
                 copied[f"order_level_ret_mean_{suffix}"]
@@ -153,7 +212,7 @@ def _row_key(row: dict[str, Any]) -> tuple[str, str]:
 
 
 def _metric(row: dict[str, Any] | None, field: str) -> float | None:
-    if row is None:
+    if row is None or field not in row or row[field] in {"", None}:
         return None
     return float(row[field])
 
@@ -163,7 +222,7 @@ def build_direct_comparison_rows(
     *,
     args: argparse.Namespace,
 ) -> list[dict[str, Any]]:
-    """Compare the learned policy to Garrido/static baselines on Excel ReT."""
+    """Compare the learned policy to Garrido/static baselines on C-D first."""
     rows_by_key = {_row_key(row): row for row in policy_rows}
     learned_phase = learned_phase_name(args)
     learned_policy = learned_policy_name(args)
@@ -176,7 +235,15 @@ def build_direct_comparison_rows(
         for row in policy_rows
         if str(row["phase"]) in {"static_screen", "heuristic_eval", "random_eval"}
     ]
-    best_baseline = (
+    best_baseline_cd = (
+        max(
+            baseline_rows,
+            key=lambda row: float(row["cd_sigmoid_mean_mean"]),
+        )
+        if baseline_rows
+        else None
+    )
+    best_baseline_excel = (
         max(
             baseline_rows,
             key=lambda row: float(row["mean_ret_excel_formula_mean"]),
@@ -186,16 +253,20 @@ def build_direct_comparison_rows(
     )
     static_s2 = rows_by_key.get(("static_screen", "static_s2"))
     garrido_cf_s2 = rows_by_key.get(("static_screen", "garrido_cf_s2"))
+    learned_cd = float(learned["cd_sigmoid_mean_mean"])
+    static_s2_cd = _metric(static_s2, "cd_sigmoid_mean_mean")
+    garrido_cf_s2_cd = _metric(garrido_cf_s2, "cd_sigmoid_mean_mean")
+    best_cd = _metric(best_baseline_cd, "cd_sigmoid_mean_mean")
     learned_ret = float(learned["mean_ret_excel_formula_mean"])
     static_s2_ret = _metric(static_s2, "mean_ret_excel_formula_mean")
     garrido_cf_s2_ret = _metric(garrido_cf_s2, "mean_ret_excel_formula_mean")
-    best_ret = _metric(best_baseline, "mean_ret_excel_formula_mean")
+    best_ret = _metric(best_baseline_excel, "mean_ret_excel_formula_mean")
 
-    def delta(other: float | None) -> float | None:
-        return None if other is None else learned_ret - other
+    def delta(value: float, other: float | None) -> float | None:
+        return None if other is None else value - other
 
-    def beats(other: float | None) -> bool | None:
-        return None if other is None else learned_ret > other
+    def beats(value: float, other: float | None) -> bool | None:
+        return None if other is None else value > other
 
     return [
         {
@@ -204,19 +275,47 @@ def build_direct_comparison_rows(
             "risk_level": str(args.risk_level),
             "eval_risk_level": str(args.risk_level),
             "learned_policy": learned_policy,
+            "primary_metric": "cd_sigmoid_mean",
+            "learned_cd_sigmoid_mean": learned_cd,
+            "static_s2_cd_sigmoid_mean": static_s2_cd,
+            "garrido_cf_s2_cd_sigmoid_mean": garrido_cf_s2_cd,
+            "best_baseline_cd_policy": (
+                str(best_baseline_cd["policy"]) if best_baseline_cd else None
+            ),
+            "best_baseline_cd_sigmoid_mean": best_cd,
+            "delta_cd_vs_static_s2": delta(learned_cd, static_s2_cd),
+            "delta_cd_vs_garrido_cf_s2": delta(learned_cd, garrido_cf_s2_cd),
+            "delta_cd_vs_best_baseline": delta(learned_cd, best_cd),
+            "learned_beats_static_s2_cd": beats(learned_cd, static_s2_cd),
+            "learned_beats_garrido_cf_s2_cd": beats(learned_cd, garrido_cf_s2_cd),
+            "learned_beats_best_baseline_cd": beats(learned_cd, best_cd),
             "learned_mean_ret_excel_formula": learned_ret,
             "static_s2_mean_ret_excel_formula": static_s2_ret,
             "garrido_cf_s2_mean_ret_excel_formula": garrido_cf_s2_ret,
-            "best_baseline_policy": (
-                str(best_baseline["policy"]) if best_baseline else None
+            "best_baseline_excel_policy": (
+                str(best_baseline_excel["policy"]) if best_baseline_excel else None
             ),
             "best_baseline_mean_ret_excel_formula": best_ret,
-            "delta_vs_static_s2": delta(static_s2_ret),
-            "delta_vs_garrido_cf_s2": delta(garrido_cf_s2_ret),
-            "delta_vs_best_baseline": delta(best_ret),
-            "learned_beats_static_s2": beats(static_s2_ret),
-            "learned_beats_garrido_cf_s2": beats(garrido_cf_s2_ret),
-            "learned_beats_best_baseline": beats(best_ret),
+            "delta_excel_vs_static_s2": delta(learned_ret, static_s2_ret),
+            "delta_excel_vs_garrido_cf_s2": delta(learned_ret, garrido_cf_s2_ret),
+            "delta_excel_vs_best_baseline": delta(learned_ret, best_ret),
+            "learned_beats_static_s2_excel": beats(learned_ret, static_s2_ret),
+            "learned_beats_garrido_cf_s2_excel": beats(
+                learned_ret, garrido_cf_s2_ret
+            ),
+            "learned_beats_best_baseline_excel": beats(learned_ret, best_ret),
+            "learned_flow_fill_rate": _metric(learned, "flow_fill_rate_mean"),
+            "best_baseline_cd_flow_fill_rate": _metric(
+                best_baseline_cd, "flow_fill_rate_mean"
+            ),
+            "learned_service_loss_total": _metric(learned, "service_loss_total_mean"),
+            "best_baseline_cd_service_loss_total": _metric(
+                best_baseline_cd, "service_loss_total_mean"
+            ),
+            "learned_shift_cost_total": _metric(learned, "shift_cost_total_mean"),
+            "best_baseline_cd_shift_cost_total": _metric(
+                best_baseline_cd, "shift_cost_total_mean"
+            ),
         }
     ]
 
@@ -380,9 +479,9 @@ def run_direct(args: argparse.Namespace) -> dict[str, Any]:
         )
         vec_env.close()
 
-    episode_rows = add_excel_aliases(episode_rows)
+    episode_rows = add_direct_metric_aliases(episode_rows)
     seed_rows = aggregate_seed_metrics(episode_rows)
-    policy_rows = add_policy_excel_aliases(aggregate_policy_metrics(seed_rows))
+    policy_rows = add_policy_direct_metric_aliases(aggregate_policy_metrics(seed_rows))
     comparison_rows = build_direct_comparison_rows(policy_rows, args=args)
 
     episode_csv = args.output_dir / "episode_metrics.csv"
@@ -400,11 +499,19 @@ def run_direct(args: argparse.Namespace) -> dict[str, Any]:
     summary = {
         "description": (
             "Direct learned-policy run without control_v1 survivor filtering; "
-            "selection metric is mean_ret_excel_formula."
+            "selection metric is Garrido-2024 cd_sigmoid_mean."
         ),
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
         "git_commit": git_commit,
-        "primary_metric": "mean_ret_excel_formula",
+        "primary_metric": "cd_sigmoid_mean",
+        "secondary_metrics": [
+            "mean_ret_excel_formula",
+            "flow_fill_rate",
+            "service_loss_total",
+            "shift_cost_total",
+            "cd_raw_mean",
+            "cd_train_mean",
+        ],
         "reward_mode": str(args.reward_mode),
         "reward_family": reward_family(str(args.reward_mode)),
         "config": {
@@ -455,11 +562,12 @@ def main() -> None:
     print(f"Wrote direct Garrido-2024 RL artifacts to {args.output_dir}")
     for row in summary["comparison_table"]:
         print(
-            "mean_ret_excel_formula: "
-            f"learned={row['learned_mean_ret_excel_formula']:.6f}, "
-            f"garrido_cf_s2={row['garrido_cf_s2_mean_ret_excel_formula']:.6f}, "
-            f"best={row['best_baseline_policy']}:{row['best_baseline_mean_ret_excel_formula']:.6f}, "
-            f"delta_best={row['delta_vs_best_baseline']:.6f}"
+            "cd_sigmoid_mean: "
+            f"learned={row['learned_cd_sigmoid_mean']:.6f}, "
+            f"garrido_cf_s2={row['garrido_cf_s2_cd_sigmoid_mean']:.6f}, "
+            f"best={row['best_baseline_cd_policy']}:{row['best_baseline_cd_sigmoid_mean']:.6f}, "
+            f"delta_best={row['delta_cd_vs_best_baseline']:.6f}; "
+            f"excel_secondary={row['learned_mean_ret_excel_formula']:.6f}"
         )
 
 
