@@ -102,6 +102,31 @@ def repo_root_from_context() -> Path:
     raise FileNotFoundError("Could not locate scres-ia repo root.")
 
 
+def find_extracted_repo() -> Path | None:
+    candidates: list[Path] = []
+    if is_kaggle():
+        candidates.extend(
+            path
+            for path in Path("/kaggle/input").glob("**/scres_ia_payload")
+            if (path / "scripts" / "retention_transfer.py").exists()
+        )
+        candidates.extend(
+            path.parents[1]
+            for path in Path("/kaggle/input").glob(
+                "**/scres_ia_payload/scripts/retention_transfer.py"
+            )
+        )
+        candidates.extend(
+            path.parents[1]
+            for path in Path("/kaggle/input").glob("**/scripts/retention_transfer.py")
+            if "scres-ia-payload" in str(path)
+        )
+    for candidate in candidates:
+        if (candidate / "supply_chain").exists():
+            return candidate
+    return None
+
+
 def extract_payload_or_use_local_repo() -> Path:
     payload = find_payload()
     if payload is not None:
@@ -111,6 +136,13 @@ def extract_payload_or_use_local_repo() -> Path:
         KAGGLE_REPO_DIR.mkdir(parents=True, exist_ok=True)
         with tarfile.open(payload, "r:gz") as archive:
             archive.extractall(KAGGLE_REPO_DIR)
+        return KAGGLE_REPO_DIR
+    extracted = find_extracted_repo()
+    if extracted is not None:
+        print(f"[kernel] copying extracted repo {extracted}", flush=True)
+        if KAGGLE_REPO_DIR.exists():
+            shutil.rmtree(KAGGLE_REPO_DIR)
+        shutil.copytree(extracted, KAGGLE_REPO_DIR)
         return KAGGLE_REPO_DIR
     describe_kaggle_input()
     return repo_root_from_context()
