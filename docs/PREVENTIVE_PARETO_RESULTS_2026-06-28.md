@@ -1,6 +1,44 @@
 # Preventive Pareto Results (2026-06-28)
 
+## Dense-CRN Update: Previous Pareto Claim Falsified
+
+The later dense-frontier CRN Kaggle audit supersedes the earlier coarse-frontier result below.
+It tested the same dynamic lane against a 21-fraction static grid (`f0.00` to `f1.00` by 0.05,
+all S1/S2/S3) with common eval seeds.
+
+- Kernel: `thomaschisica/scresia-preventive-pareto-dense-crn`
+- Output: `outputs/kaggle/scresia-preventive-pareto-dense-crn_auto/scresia_preventive_pareto_dense_crn_outputs/decision.json`
+- Config: `ReT_excel_delta`, `phi=4`, `psi=1.5`, 10 learner seeds, `60000` timesteps, `n_envs=4`,
+  `eval_episodes=8`, `max_steps=104`, `n_fracs=21`, `crn_eval=true`, `eval_seed0=9000`.
+
+Kaggle dense-CRN decision:
+
+| metric | dynamic | best dense static at <= dynamic resource |
+|---|---:|---:|
+| Excel ReT | 0.0021291884 | 0.0022791952 (`f0.10_S1`) |
+| CVaR95 service loss | 5.30992345e9 | 4.87786161e9 (`f0.10_S1`) |
+| Resource composite | 0.1743905642 | 0.0500000007 (`f0.10_S1`) |
+| Buffer action std | 0.1982366640 | 0.0 |
+
+Verdict:
+
+| gate | result |
+|---|---|
+| Excel Pareto win | false |
+| CVaR Pareto win | false |
+| Dominated by static on Excel/resource | true |
+| Dominated by static on CVaR/resource | true |
+| Primary win | false |
+
+Interpretation: the learned policy is still adaptive (`frac_std≈0.20`) and uses realized-risk /
+state signals, but the earlier Pareto win was an artifact of an insufficiently dense static
+frontier. The cheap low-buffer static `f0.10_S1` dominates it on both resilience and resource.
+This lane should now be treated as a useful mechanism/near-miss, not as a paper win.
+
 ## Claim Boundary
+
+**Superseded by the dense-CRN update above.** The original boundary below was valid only relative
+to the coarse charged static frontier used in the first final Kaggle run.
 
 This is **not** a raw-resilience dominance claim against a free-spending static policy. The supported
 claim is narrower and stronger:
