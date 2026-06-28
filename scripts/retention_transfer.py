@@ -57,9 +57,12 @@ def clean_eval(args, model, regime, seed: int) -> float:
     cd_sigmoid_sum = 0.0
     cd_train_sum = 0.0
     n_steps = 0
+    continuous = getattr(args, "track", "a") == "continuous"
     while not done:
         action, _ = model.predict(obs, deterministic=True)
-        obs, _r, term, trunc, info = env.step(int(np.asarray(action).item()))
+        a = (np.asarray(action, dtype=np.float32).reshape(-1) if continuous
+             else int(np.asarray(action).item()))
+        obs, _r, term, trunc, info = env.step(a)
         cd_sigmoid_sum += float(info.get("ret_garrido2024_sigmoid_step", 0.0))
         cd_train_sum += float(info.get("ret_garrido2024_train_step", 0.0))
         n_steps += 1
@@ -104,7 +107,9 @@ def run_seed(args, seed: int, tape, n_blocks: int, train_per_block: int) -> dict
             # L_{k-1} contract: retain WEIGHTS (+ target net), but clear the replay
             # buffer so memory is compressed parametric routines, not a folder of old
             # episodes. (--retain-buffer keeps the buffer as a secondary L^full lane.)
-            if not getattr(args, "retain_buffer", False):
+            # DQN-only: clear replay buffer so memory is parametric, not stored episodes.
+            # PPO (continuous) has no replay buffer (on-policy rollouts refresh each learn()).
+            if not getattr(args, "retain_buffer", False) and hasattr(retained, "replay_buffer"):
                 retained.replay_buffer.reset()
             ev.online_update(args, retained, seed=data_seed, regime=regime)
             reset = ev.load_model(args, init)   # theta_0, fresh buffer
@@ -118,6 +123,19 @@ def main() -> int:
     p.add_argument("--output-root", type=Path,
                    default=Path("outputs/benchmarks/retention_transfer"))
     p.add_argument("--reward-mode", default="control_v1")
+    # Continuous_its (preventive-Pareto winner) lane: PPO Box action + hazard obs + holding cost.
+    p.add_argument("--track", choices=("a", "continuous"), default="a")
+    p.add_argument("--algo", choices=("dqn", "ppo"), default=None,
+                   help="default dqn for track a, ppo for continuous")
+    p.add_argument("--observation-version", default=None,
+                   help="default v5 for track a, v6 for continuous")
+    p.add_argument("--risk-obs", action="store_true", help="continuous: realized-risk + hazard obs")
+    p.add_argument("--holding-cost", type=float, default=0.0)
+    p.add_argument("--shift-cost", type=float, default=0.001)
+    p.add_argument("--init-frac", type=float, default=1.0)
+    p.add_argument("--n-steps", type=int, default=256, help="PPO rollout length (continuous)")
+    p.add_argument("--n-epochs", type=int, default=10, help="PPO epochs (continuous)")
+    p.add_argument("--learning-rate", type=float, default=3e-4)
     p.add_argument("--seeds", default="8201,8202,8203,8204,8205,8206,8207,8208,8209,8210")
     p.add_argument("--n-blocks", type=int, default=40)
     p.add_argument("--max-steps", type=int, default=12)
@@ -154,14 +172,27 @@ def main() -> int:
     cli = p.parse_args()
     seeds = [int(s) for s in cli.seeds.split(",") if s.strip()]
 
+    continuous = cli.track == "continuous"
+
     def base_args():
         a = ev.build_parser().parse_args([])
-        a.track = "a"
-        a.algo = "dqn"
+        a.track = cli.track
+        a.algo = cli.algo or ("ppo" if continuous else "dqn")
+        a.observation_version = cli.observation_version or ("v6" if continuous else "v5")
         a.decision_cadence = "weekly"
         a.reward_mode = cli.reward_mode
+        # continuous_its knobs (read via getattr in ev.build_env)
+        a.risk_obs = cli.risk_obs
+        a.holding_cost = cli.holding_cost
+        a.shift_cost = cli.shift_cost
+        a.init_frac = cli.init_frac
+        a.n_steps = cli.n_steps
+        a.n_epochs = cli.n_epochs
+        a.learning_rate = cli.learning_rate
         a.max_steps = cli.max_steps
-        a.mask_preset = cli.mask_preset
+        # the named masks zero discrete-obs fields; for continuous keep the hazard obs visible
+        # (it IS the winning lane). Retention is then tested on the faithful winning config.
+        a.mask_preset = "none" if continuous else cli.mask_preset
         a.pretrain_timesteps = cli.pretrain_timesteps
         a.learning_starts = cli.learning_starts
         a.buffer_size = cli.buffer_size

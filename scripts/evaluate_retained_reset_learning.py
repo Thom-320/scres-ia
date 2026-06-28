@@ -363,8 +363,11 @@ def resolve_observation_mask(args: argparse.Namespace) -> dict[str, Any]:
 class BlockDecisionEnv(gym.Wrapper):
     """Turn weekly Track A control into one held configuration per block."""
 
-    def step(self, action: int):
-        held_action = int(action)
+    def step(self, action):
+        if isinstance(self.env.action_space, gym.spaces.Discrete):
+            held_action = int(np.asarray(action).item())
+        else:
+            held_action = np.asarray(action, dtype=np.float32)
         terminated = truncated = False
         reward_total = 0.0
         service_loss_area = 0.0
@@ -387,7 +390,9 @@ class BlockDecisionEnv(gym.Wrapper):
             block_steps += 1
         enriched = dict(info)
         enriched["decision_cadence"] = "block"
-        enriched["held_action"] = held_action
+        enriched["held_action"] = (
+            held_action.tolist() if isinstance(held_action, np.ndarray) else held_action
+        )
         enriched["block_steps"] = block_steps
         enriched["block_service_loss_area"] = service_loss_area
         enriched["block_step_cost_total"] = step_cost_total
@@ -427,6 +432,19 @@ def build_env(args: argparse.Namespace, *, regime: RegimePhase | None = None):
         # v7 obs. The Track A scenario tape (current/increased/severe) does not apply;
         # regime is ignored here. Only reward + horizon are overridden.
         env = make_track_b_env(reward_mode=args.reward_mode, max_steps=args.max_steps)
+    elif getattr(args, "track", "a") == "continuous":
+        # continuous_its (the preventive-Pareto winner lane): buffer fraction × shift, with the
+        # realized-risk/hazard obs + balanced holding cost. The Track A scenario tape (regime)
+        # applies exactly as for discrete18, so the retained−reset transfer contrast is clean.
+        # Requires algo=ppo (continuous Box action). Knobs read via getattr (set in caller).
+        from supply_chain.continuous_its_env import make_continuous_its_track_a_env
+        kw = env_kwargs(args, regime=regime)
+        kw.pop("downstream_q_source", None)  # unused by the continuous Track A builder
+        env = make_continuous_its_track_a_env(
+            **kw, init_frac=getattr(args, "init_frac", 1.0),
+            risk_obs=getattr(args, "risk_obs", False),
+            holding_cost=getattr(args, "holding_cost", 0.0),
+            shift_cost=getattr(args, "shift_cost", 0.0))
     else:
         env = make_discrete18_track_a_env(**env_kwargs(args, regime=regime))
     mask = parse_mask_indices(args)

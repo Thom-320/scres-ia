@@ -61,6 +61,27 @@ Current: weekly (`step_size_hours=168`); risks are hourly; buffer top-up is inst
   Pareto / efficiency win on Track A** (same resilience at lower charged resource), which does not need to
   move the saturated fill.
 
+## Mechanism findings (2026-06-28, trained winner, 5 seeds)
+`scripts/audit_prevention_anticipation.py`, winner config (risk_obs/hazard, `ReT_excel_delta`, war,
+h104, 60k):
+- **Adaptive, not constant:** mean `frac_std=0.192`, so the policy is changing the buffer fraction.
+- **Mostly reactive/efficient:** mean `reactive_strength=0.130` is larger than
+  `hazard_strength=0.074`. The policy keys more on backlog/fill consequences than on the
+  hazard block.
+- **Weak hazard awareness:** `weeks_since_last_R2` is mildly positive (+0.033), but
+  `weeks_since_last_R3` (-0.158) and `ewma_risk_rate` (-0.099) are negative on average. The learned
+  policy is not a clean "risk overdue -> build buffer" controller.
+- **Lead/lag inconclusive:** lead sum (`k>0`) is -0.023 vs lag sum (`k<0`) -0.110, and the script's
+  boolean `anticipatory=true` comes from this weak relative comparison. Because both sums are
+  negative and active-risk counts are dominated by frequent risks, this is not strong evidence of
+  pre-shock anticipation.
+- **Verdict: resource-aware dynamic efficiency, not pure anticipation.** The Pareto win is earned
+  by spending less resource while preserving Excel/CVaR resilience. The mechanism should be described
+  as adaptive efficient allocation under realized risk/hazard, not as a clean forecast-like
+  prepositioning claim.
+- **Remaining strongest signal test:** Δmemory (`retained-reset`) on `continuous_its`, because it
+  tests learning across disruption blocks rather than within-episode timing.
+
 ## Bottom line for the paper
 The simulator faithfully reflects the agent's decisions (instant target, same-step raise, outcome
 changes). The reason Track A can't dominate on raw fill is structural action-authority (downstream

@@ -60,6 +60,34 @@ mechanism: risk/hazard features (`active/recent_R12/R22/R23/R24`, `weeks_since_l
 inventory and phase/time terms also contribute. The paper language should therefore say **preventive
 resource-aware dynamic allocation**, not pure risk-forecast anticipation.
 
+## Mechanism Audit
+
+Follow-up audit:
+
+- Script: `scripts/audit_prevention_anticipation.py`
+- Output: `outputs/audits/prevention_anticipation_excel_delta_5seed_60k_2026-06-28/summary.json`
+- Config: 5 seeds, 60k timesteps, h104, `risk_obs+hazard`, `ReT_excel_delta`,
+  `phi=4.0`, `psi=1.5`
+
+Summary:
+
+| diagnostic | value | interpretation |
+|---|---:|---|
+| mean buffer std | 0.192 | adaptive, not constant |
+| hazard strength | 0.074 | weak hazard conditioning |
+| reactive strength | 0.130 | backlog/fill consequences dominate |
+| lead sum (`k>0`) | -0.023 | not strong pre-shock build-up |
+| lag sum (`k<0`) | -0.110 | weak relative lead signal, but both signs are negative |
+
+The audit supports the Pareto claim but weakens any pure "anticipates the next disruption" claim.
+The best current wording is:
+
+> The learned controller uses dynamic buffer/shift allocation to preserve Excel/CVaR resilience at
+> lower charged resource. It is adaptive and resource-aware, but its measured mechanism is more
+> efficiency/reactive than clean pre-shock anticipation.
+
+The next strongest untested mechanism is Δmemory (`retained-reset`) on the same continuous lane.
+
 ## Related Nulls / Non-Claims
 
 - Old free-static `ReT_excel_delta` Kaggle lane is null: `primary_win=false`.

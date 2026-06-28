@@ -84,7 +84,8 @@ def main() -> int:
     ap.add_argument("--eval-episodes", type=int, default=10)
     ap.add_argument("--output", default="outputs/audits/prevention_anticipation_2026-06-27")
     args = ap.parse_args()
-    out = Path(args.output); out.mkdir(parents=True, exist_ok=True)
+    out = Path(args.output)
+    out.mkdir(parents=True, exist_ok=True)
     seeds = [int(s) for s in args.seeds.split(",") if s.strip()]
     fields = list(build(args.regime, args.phi, args.psi, args.max_steps,
                         args.holding_cost, args.shift_cost).obs_field_names)
@@ -113,18 +114,23 @@ def main() -> int:
             xs, ys = [], []
             for fr, on in per_ep:
                 if k >= 0:
-                    xs.append(fr[:len(fr) - k] if k else fr); ys.append(on[k:] if k else on)
+                    xs.append(fr[:len(fr) - k] if k else fr)
+                    ys.append(on[k:] if k else on)
                 else:
-                    xs.append(fr[-k:]); ys.append(on[:len(on) + k])
-            xs = np.concatenate(xs); ys = np.concatenate(ys)
+                    xs.append(fr[-k:])
+                    ys.append(on[:len(on) + k])
+            xs = np.concatenate(xs)
+            ys = np.concatenate(ys)
             leadlag[k] = corr(xs, ys)
         per_seed.append({"seed": seed, "conditioning": cond, "leadlag": leadlag,
                          "frac_std": float(np.std(FRAC))})
 
     def avg(d_key, sub):
         return {k: float(np.mean([ps[d_key][k] for ps in per_seed])) for k in per_seed[0][d_key]}
-    cond_avg = avg("conditioning", None); ll_avg = avg("leadlag", None)
-    lead = ll_avg[1] + ll_avg[2] + ll_avg[3]; lag = ll_avg[-1] + ll_avg[-2] + ll_avg[-3]
+    cond_avg = avg("conditioning", None)
+    ll_avg = avg("leadlag", None)
+    lead = ll_avg[1] + ll_avg[2] + ll_avg[3]
+    lag = ll_avg[-1] + ll_avg[-2] + ll_avg[-3]
     haz_strength = float(np.mean([abs(cond_avg[n]) for n in HAZARD if n in cond_avg]))
     reac_strength = float(np.mean([abs(cond_avg[n]) for n in REACTIVE if n in cond_avg]))
     anticipatory = lead > lag + 0.03
