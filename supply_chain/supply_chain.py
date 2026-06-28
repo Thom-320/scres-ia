@@ -77,6 +77,17 @@ from .ret_thesis import (
 )
 
 RATIONS_PER_HOUR = ASSEMBLY_RATE  # 320.5 rations/hr
+REALIZED_RISK_OBSERVATION_IDS = (
+    "R11",
+    "R12",
+    "R13",
+    "R14",
+    "R21",
+    "R22",
+    "R23",
+    "R24",
+    "R3",
+)
 
 
 def resolve_hours_per_year(year_basis: str) -> int:
@@ -1308,6 +1319,52 @@ class MFSCSimulation:
                 ),
                 float(np.clip(rolling_fill_rate, 0.0, 1.0)),
                 float(np.clip(rolling_backorder_rate, 0.0, 1.0)),
+            ],
+            dtype=np.float32,
+        )
+
+    def get_observation_v8_extra(self, window_hours: float = HOURS_PER_WEEK) -> np.ndarray:
+        """
+        Return realized risk-ID observability features for obs v8.
+
+        This is not a future oracle. It exposes what has actually occurred:
+
+        - active_<risk>: an event of this risk is active at ``env.now``.
+        - recent_<risk>: an event of this risk overlapped the recent window.
+        - recent_<risk>_duration_norm: overlapped duration / window_hours.
+
+        Zero-duration quantity risks such as R14 are represented in the recent
+        flag when their timestamp falls in the window.
+        """
+        now = float(self.env.now)
+        window = max(1.0, float(window_hours))
+        start = max(0.0, now - window)
+        active = {risk_id: 0.0 for risk_id in REALIZED_RISK_OBSERVATION_IDS}
+        recent = {risk_id: 0.0 for risk_id in REALIZED_RISK_OBSERVATION_IDS}
+        duration = {risk_id: 0.0 for risk_id in REALIZED_RISK_OBSERVATION_IDS}
+        for event in self.risk_events:
+            risk_id = str(event.risk_id)
+            if risk_id not in active:
+                continue
+            event_start = float(event.start_time)
+            event_end = float(event.end_time)
+            event_duration = max(0.0, float(event.duration))
+            if event_duration <= 1e-9:
+                if start <= event_start <= now:
+                    recent[risk_id] = 1.0
+                continue
+            if event_start <= now < event_end:
+                active[risk_id] = 1.0
+            overlap = max(0.0, min(now, event_end) - max(start, event_start))
+            if overlap > 0.0:
+                recent[risk_id] = 1.0
+                duration[risk_id] += overlap
+        return np.array(
+            [active[risk_id] for risk_id in REALIZED_RISK_OBSERVATION_IDS]
+            + [recent[risk_id] for risk_id in REALIZED_RISK_OBSERVATION_IDS]
+            + [
+                float(np.clip(duration[risk_id] / window, 0.0, 1.0))
+                for risk_id in REALIZED_RISK_OBSERVATION_IDS
             ],
             dtype=np.float32,
         )

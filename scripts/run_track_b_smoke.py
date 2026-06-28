@@ -33,7 +33,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from scripts.benchmark_control_reward import build_metric_contract_metadata
 from scripts.track_b_heuristics import HEURISTIC_POLICY_NAMES, make_heuristic_defaults
-from supply_chain.config import OPERATIONS
+from supply_chain.config import OPERATIONS, THESIS_FAITHFUL_PROTOCOL
 from supply_chain.dkana import DKANAOnlinePolicyAdapter, DKANAPolicy
 from supply_chain.env_experimental_shifts import (
     OBSERVATION_VERSION_OPTIONS,
@@ -255,6 +255,16 @@ def build_parser() -> argparse.ArgumentParser:
             "Track B contract and CI95 aggregation."
         ),
     )
+    parser.add_argument(
+        "--faithful",
+        action="store_true",
+        help=(
+            "Run Track B under the THESIS_FAITHFUL protocol (delay=54, thesis_window, "
+            "figure_6_2, kit_equivalent m2.0, r14_strict, warmup op9_arrival, stochastic_pt off) "
+            "instead of the legacy adaptive_benchmark Track B defaults. Garrido-comparable lane "
+            "(Contract v2)."
+        ),
+    )
     parser.add_argument("--learning-rate", type=float, default=3e-4)
     parser.add_argument("--n-steps", type=int, default=1024)
     parser.add_argument("--batch-size", type=int, default=64)
@@ -306,7 +316,7 @@ def ci95(values: list[float]) -> tuple[float, float]:
 
 
 def build_env_kwargs(args: argparse.Namespace) -> dict[str, Any]:
-    return {
+    kwargs: dict[str, Any] = {
         "reward_mode": args.reward_mode,
         "ret_seq_kappa": args.ret_seq_kappa,
         "risk_level": args.risk_level,
@@ -314,6 +324,24 @@ def build_env_kwargs(args: argparse.Namespace) -> dict[str, Any]:
         "step_size_hours": args.step_size_hours,
         "max_steps": args.max_steps,
     }
+    if getattr(args, "faithful", False):
+        P = THESIS_FAITHFUL_PROTOCOL
+        # Garrido-comparable Track B lane: overlay the faithful protocol on top of the
+        # track_b_v1 downstream-control action space. Mirrors make_thesis_aligned_training_env.
+        kwargs.update(
+            {
+                "year_basis": P["year_basis"],
+                "warmup_trigger": P["warmup_trigger"],
+                "r14_defect_mode": P["r14_defect_mode"],
+                "downstream_q_source": "figure_6_2",
+                "risk_occurrence_mode": "thesis_window",
+                "raw_material_flow_mode": P["raw_material_flow_mode"],
+                "raw_material_order_up_to_multiplier": P["raw_material_order_up_to_multiplier"],
+                "demand_on_hand_fulfillment_delay": P["demand_on_hand_fulfillment_delay"],
+                "stochastic_pt": False,
+            }
+        )
+    return kwargs
 
 
 def build_static_policy_action(policy: StaticPolicySpec) -> dict[str, float | int]:
@@ -1161,9 +1189,14 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
                 evaluate_static_policy(policy, args=args, seed=int(seed))
             )
         for h_label, h_policy in make_heuristic_defaults().items():
-            episode_rows.extend(
-                evaluate_heuristic_policy(h_label, h_policy, args=args, seed=int(seed))
-            )
+            try:
+                episode_rows.extend(
+                    evaluate_heuristic_policy(h_label, h_policy, args=args, seed=int(seed))
+                )
+            except ValueError as exc:
+                # Legacy heuristic defaults emit a 7-dim action; the track_b_v1 contract is 8-dim.
+                # Heuristics are a secondary baseline — skip rather than abort the PPO-vs-static run.
+                print(f"[warn] skipping heuristic {h_label}: {exc}", flush=True)
         episode_rows.extend(
             evaluate_trained_policy(
                 args=args, seed=int(seed), model=model, vec_norm=vec_norm

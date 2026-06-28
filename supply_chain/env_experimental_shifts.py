@@ -91,7 +91,7 @@ from .config import (
 from .supply_chain import MFSCSimulation
 
 NUM_TRACKED_OPS = 13
-OBSERVATION_VERSION_OPTIONS = ("v1", "v2", "v3", "v4", "v5", "v6", "v7")
+OBSERVATION_VERSION_OPTIONS = ("v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8")
 REWARD_MODE_ALIAS_MAP = {"ReT_corrected_cost": "ReT_corrected"}
 REWARD_MODE_OPTIONS = (
     "ReT_thesis",
@@ -103,8 +103,10 @@ REWARD_MODE_OPTIONS = (
     "ReT_garrido2024_raw",
     "ReT_garrido2024",
     "ReT_garrido2024_train",
+    "ReT_cd_balanced",
     "ReT_cvar_cd",
     "ReT_excel_delta",
+    "ReT_excel_plus_cvar",
     "ReT_ladder_v1",
     "ReT_tail_v2",
     "rt_v0",
@@ -149,6 +151,18 @@ RET_TAIL_TRANSFORM_OPTIONS = ("identity", "power", "exp_norm")
 RET_TAIL_TRANSFORM = "identity"
 RET_TAIL_GAMMA = 1.0
 RET_TAIL_BETA = 2.0
+
+# ReT_cd_balanced: same Garrido-2024 variables, intentionally light cost term.
+# Full-cost C-D has repeatedly crowned zero-buffer policies; this candidate is
+# a bounded same-bar C-D reward/eval index that keeps cost present but secondary.
+RET_CD_BALANCED_N_KAPPA = 0.05
+
+# ReT_excel_plus_cvar: direct Excel-ReT incremental signal with a rolling
+# service-loss tail penalty.  The alpha sweep is the user's current fast-tuning
+# knob for Excel+CVaR lanes.
+RET_EXCEL_CVAR_ALPHA = 0.50
+RET_EXCEL_CVAR_TAIL_LEVEL = 0.05
+RET_EXCEL_CVAR_WINDOW = 50
 
 # ReT_unified_v1 defaults (paper-facing service-first resilience)
 RET_UNIFIED_W_FR = 0.60
@@ -200,6 +214,7 @@ V4_OBSERVATION_DIM = 24  # v3 (20) + rations_sb_dispatch + shifts + op1_down + o
 V5_OBSERVATION_DIM = 30  # v4 (24) + 6 cycle/calendar precursor features
 V6_OBSERVATION_DIM = 40  # v5 (30) + 10 adaptive benchmark features
 V7_OBSERVATION_DIM = 46  # v6 (40) + 6 downstream Track B bottleneck features
+V8_OBSERVATION_DIM = 73  # v7 (46) + 27 realized-risk active/recent/duration features
 PREV_STEP_DEMAND_SCALE = 18_200.0
 PREV_STEP_BACKORDER_SCALE = 18_200.0
 CONTROL_V2_W_FILL = 1.0
@@ -232,6 +247,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
       - v5: v4 + thesis-faithful cycle/calendar precursor features.
       - v6: v5 + Track-B adaptive benchmark regime/forecast/debt features.
       - v7: v6 + downstream bottleneck state and rolling service features.
+      - v8: v7 + realized risk ID observability (active/recent/duration).
     Action:
       - Track A (`track_a_v1`): 5-dimensional [-1, 1]
       - Track B (`track_b_v1`): 7-dimensional [-1, 1]
@@ -348,6 +364,12 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         ret_g24_n_kappa: float = G24_N_KAPPA,
         ret_g24_kappa_train_frac: float = 0.20,
         ret_g24_shift_cost: float = G24_COST_SHIFT,
+        # --- ReT_cd_balanced parameters ---
+        ret_cd_balanced_n_kappa: float = RET_CD_BALANCED_N_KAPPA,
+        # --- ReT_excel_plus_cvar parameters ---
+        ret_excel_cvar_alpha: float = RET_EXCEL_CVAR_ALPHA,
+        ret_excel_cvar_tail_level: float = RET_EXCEL_CVAR_TAIL_LEVEL,
+        ret_excel_cvar_window: int = RET_EXCEL_CVAR_WINDOW,
         # --- ReT_cd_v1 / ReT_cd_sigmoid parameters ---
         ret_cd_w_fr: float = RET_CD_W_FR,
         ret_cd_w_at: float = RET_CD_W_AT,
@@ -457,7 +479,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         if (
             canonical_reward_mode == "control_v1_pbrs"
             and pbrs_variant == "step_level"
-            and observation_version not in ("v2", "v3", "v4", "v5", "v6", "v7")
+            and observation_version not in ("v2", "v3", "v4", "v5", "v6", "v7", "v8")
         ):
             raise ValueError(
                 "PBRS step_level variant requires observation_version='v2' "
@@ -629,6 +651,19 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             calibration.get("source", "built_in_paper_coefficients")
         )
 
+        # ReT_cd_balanced params
+        self.ret_cd_balanced_n_kappa = max(0.0, float(ret_cd_balanced_n_kappa))
+
+        # ReT_excel_plus_cvar params
+        self.ret_excel_cvar_alpha = max(0.0, float(ret_excel_cvar_alpha))
+        self.ret_excel_cvar_tail_level = min(
+            1.0, max(1e-6, float(ret_excel_cvar_tail_level))
+        )
+        self.ret_excel_cvar_window = int(max(2, ret_excel_cvar_window))
+        self._ret_excel_cvar_loss_buffer = collections.deque(
+            maxlen=self.ret_excel_cvar_window
+        )
+
         # ReT_cd_v1 / ReT_cd_sigmoid params
         self.ret_cd_w_fr = float(ret_cd_w_fr)
         self.ret_cd_w_at = float(ret_cd_w_at)
@@ -720,6 +755,8 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             )
 
     def _observation_dim(self) -> int:
+        if self.observation_version == "v8":
+            return V8_OBSERVATION_DIM
         if self.observation_version == "v7":
             return V7_OBSERVATION_DIM
         if self.observation_version == "v6":
@@ -1049,28 +1086,35 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                 ),
             ]
         )
-        if self.observation_version in ("v3", "v4", "v5", "v6", "v7"):
+        if self.observation_version in ("v3", "v4", "v5", "v6", "v7", "v8"):
             augmented_obs = np.concatenate(
                 [augmented_obs, self._normalized_cumulative_features()]
             )
         if (
-            self.observation_version in ("v4", "v5", "v6", "v7")
+            self.observation_version in ("v4", "v5", "v6", "v7", "v8")
             and self.sim is not None
         ):
             augmented_obs = np.concatenate(
                 [augmented_obs, self.sim.get_observation_v4_extra()]
             )
-        if self.observation_version in ("v5", "v6", "v7") and self.sim is not None:
+        if (
+            self.observation_version in ("v5", "v6", "v7", "v8")
+            and self.sim is not None
+        ):
             augmented_obs = np.concatenate(
                 [augmented_obs, self.sim.get_observation_v5_extra()]
             )
-        if self.observation_version in ("v6", "v7") and self.sim is not None:
+        if self.observation_version in ("v6", "v7", "v8") and self.sim is not None:
             augmented_obs = np.concatenate(
                 [augmented_obs, self.sim.get_observation_v6_extra()]
             )
-        if self.observation_version == "v7" and self.sim is not None:
+        if self.observation_version in ("v7", "v8") and self.sim is not None:
             augmented_obs = np.concatenate(
                 [augmented_obs, self.sim.get_observation_v7_extra()]
+            )
+        if self.observation_version == "v8" and self.sim is not None:
+            augmented_obs = np.concatenate(
+                [augmented_obs, self.sim.get_observation_v8_extra()]
             )
         return augmented_obs
 
@@ -2052,6 +2096,47 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             "g24_components": g24,
         }
 
+    def _compute_ret_cd_balanced(
+        self, info: dict[str, Any], shifts: int
+    ) -> dict[str, float | str | dict[str, float] | dict[str, Any]]:
+        """Balanced Garrido-2024 C-D reward/eval candidate.
+
+        Uses the same five running variables as ``ReT_garrido2024`` but replaces
+        the calibrated cost exponent with a small explicit value.  This keeps
+        the cost/resource term visible without letting it dominate service and
+        buffer preparation in the continuous Track-A lane.
+        """
+        g24 = self._compute_ret_garrido2024(info, shifts)
+        eps = 1e-6
+        n_kappa = max(0.0, float(self.ret_cd_balanced_n_kappa))
+        log_score = float(
+            self.ret_g24_a_zeta * np.log(max(eps, float(g24["zeta_avg"])))
+            - self.ret_g24_b_epsilon
+            * np.log(max(eps, float(g24["epsilon_avg"])))
+            + self.ret_g24_c_phi * np.log(max(eps, float(g24["phi_avg"])))
+            - self.ret_g24_d_tau * np.log(max(eps, float(g24["tau_avg"])))
+            - n_kappa * np.log(max(eps, float(g24["kappa_dot"])))
+        )
+        raw = float(np.exp(log_score))
+        sigmoid = float(1.0 / (1.0 + np.exp(-log_score)))
+        return {
+            "reward_mode": "ReT_cd_balanced",
+            "active_reward_mode": self.reward_mode,
+            "ret_cd_balanced_raw_step": raw,
+            "ret_cd_balanced_sigmoid_step": sigmoid,
+            "ret_cd_balanced_step": sigmoid,
+            "log_score": log_score,
+            "balanced_n_kappa": n_kappa,
+            "g24_components": g24,
+            "exponents": {
+                "a_zeta": self.ret_g24_a_zeta,
+                "b_epsilon": self.ret_g24_b_epsilon,
+                "c_phi": self.ret_g24_c_phi,
+                "d_tau": self.ret_g24_d_tau,
+                "n_kappa": n_kappa,
+            },
+        }
+
 
 
     def _compute_ret_cd_v1(
@@ -2196,6 +2281,44 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             "ret_excel_delta_orders": float(delta_orders),
         }
 
+    def _compute_ret_excel_plus_cvar(
+        self, info: dict[str, Any]
+    ) -> dict[str, float | str]:
+        """Excel-ReT incremental signal with a rolling tail-service penalty.
+
+        This is a train-side objective for the user's primary bar: maximize
+        Excel ReT while discouraging policies that win the mean by leaving a
+        bad tail.  The tail proxy is computed from step service-loss
+        ``new_backorder_qty / new_demanded`` over a rolling window.
+        """
+        excel = self._compute_ret_excel_delta()
+        service_loss = max(
+            0.0,
+            float(info.get("new_backorder_qty", 0.0))
+            / max(float(info.get("new_demanded", 0.0)), 1.0),
+        )
+        service_loss = min(1.0, service_loss)
+        self._ret_excel_cvar_loss_buffer.append(service_loss)
+        window = list(self._ret_excel_cvar_loss_buffer)
+        var_q = max(0.0, 1.0 - self.ret_excel_cvar_tail_level)
+        var_threshold = float(np.quantile(window, var_q))
+        tail = [value for value in window if value >= var_threshold - 1e-9]
+        cvar_estimate = float(np.mean(tail)) if tail else service_loss
+        penalty = self.ret_excel_cvar_alpha * cvar_estimate
+        reward = float(excel["ret_excel_delta_step"]) - penalty
+        return {
+            "reward_mode": "ReT_excel_plus_cvar",
+            "ret_excel_plus_cvar_step": reward,
+            "ret_excel_plus_cvar_alpha": self.ret_excel_cvar_alpha,
+            "ret_excel_plus_cvar_tail_level": self.ret_excel_cvar_tail_level,
+            "ret_excel_plus_cvar_window": float(self.ret_excel_cvar_window),
+            "ret_excel_plus_cvar_service_loss_step": service_loss,
+            "ret_excel_plus_cvar_var_threshold": var_threshold,
+            "ret_excel_plus_cvar_cvar_estimate": cvar_estimate,
+            "ret_excel_plus_cvar_penalty": penalty,
+            "ret_excel_components": excel,
+        }
+
     # -----------------------------------------------------------------
     # PBRS potential function (Ng et al. 1999)
     # -----------------------------------------------------------------
@@ -2254,6 +2377,9 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self._ret_g24_sum_tau = 0.0
         self._ret_g24_sum_cost = 0.0
         self._cvar_loss_buffer = collections.deque(maxlen=self.cvar_window)
+        self._ret_excel_cvar_loss_buffer = collections.deque(
+            maxlen=self.ret_excel_cvar_window
+        )
         self._post_warmup_start_time = self.warmup_hours
         self.sim = MFSCSimulation(
             shifts=initial_shifts,
@@ -2573,8 +2699,10 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         ret_cd_components: dict[str, float | str] | None = None
         ret_cd_4v_components: dict[str, float] | None = None
         ret_g24_components: dict[str, Any] | None = None
+        ret_cd_balanced_components: dict[str, Any] | None = None
         ret_cvar_components: dict[str, Any] | None = None
         ret_excel_components: dict[str, float] | None = None
+        ret_excel_cvar_components: dict[str, Any] | None = None
         pbrs_shaping_bonus: float = 0.0
         pbrs_base_reward: float = 0.0
         pbrs_phi: float = 0.0
@@ -2678,6 +2806,14 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                 info, self.step_size
             )
             ret_components = self._compute_ret_thesis_components(info, self.step_size)
+        elif self._canonical_reward_mode == "ReT_cd_balanced":
+            ret_cd_balanced_components = self._compute_ret_cd_balanced(info, shifts)
+            reward = float(ret_cd_balanced_components["ret_cd_balanced_step"])
+            ret_g24_components = ret_cd_balanced_components["g24_components"]
+            corrected_ret_components = self._compute_ret_thesis_corrected_components(
+                info, self.step_size
+            )
+            ret_components = self._compute_ret_thesis_components(info, self.step_size)
         elif self._canonical_reward_mode == "ReT_cvar_cd":
             ret_cvar_components = self._compute_ret_cvar_cd(info, shifts)
             reward = float(ret_cvar_components["ret_cvar_cd_step"])
@@ -2689,6 +2825,14 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         elif self._canonical_reward_mode == "ReT_excel_delta":
             ret_excel_components = self._compute_ret_excel_delta()
             reward = float(ret_excel_components["ret_excel_delta_step"])
+            corrected_ret_components = self._compute_ret_thesis_corrected_components(
+                info, self.step_size
+            )
+            ret_components = self._compute_ret_thesis_components(info, self.step_size)
+        elif self._canonical_reward_mode == "ReT_excel_plus_cvar":
+            ret_excel_cvar_components = self._compute_ret_excel_plus_cvar(info)
+            reward = float(ret_excel_cvar_components["ret_excel_plus_cvar_step"])
+            ret_excel_components = ret_excel_cvar_components["ret_excel_components"]
             corrected_ret_components = self._compute_ret_thesis_corrected_components(
                 info, self.step_size
             )
@@ -2828,6 +2972,20 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         out_info["phi_avg"] = float(ret_g24_components["phi_avg"])
         out_info["tau_avg"] = float(ret_g24_components["tau_avg"])
         out_info["kappa_dot"] = float(ret_g24_components["kappa_dot"])
+        if ret_cd_balanced_components is not None:
+            out_info["ret_cd_balanced_step"] = float(
+                ret_cd_balanced_components["ret_cd_balanced_step"]
+            )
+            out_info["ret_cd_balanced_sigmoid_step"] = float(
+                ret_cd_balanced_components["ret_cd_balanced_sigmoid_step"]
+            )
+            out_info["ret_cd_balanced_raw_step"] = float(
+                ret_cd_balanced_components["ret_cd_balanced_raw_step"]
+            )
+            out_info["ret_cd_balanced_n_kappa"] = float(
+                ret_cd_balanced_components["balanced_n_kappa"]
+            )
+            out_info["ret_cd_balanced_components"] = ret_cd_balanced_components
         if ret_cvar_components is not None:
             out_info["ret_cvar_cd_step"] = float(ret_cvar_components["ret_cvar_cd_step"])
             out_info["cd_index_step"] = float(ret_cvar_components["cd_index_step"])
@@ -2854,6 +3012,20 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         )
         out_info["ret_excel_mean"] = float(ret_excel_components["ret_excel_mean"])
         out_info["ret_excel_components"] = ret_excel_components
+        if ret_excel_cvar_components is not None:
+            out_info["ret_excel_plus_cvar_step"] = float(
+                ret_excel_cvar_components["ret_excel_plus_cvar_step"]
+            )
+            out_info["ret_excel_plus_cvar_alpha"] = float(
+                ret_excel_cvar_components["ret_excel_plus_cvar_alpha"]
+            )
+            out_info["ret_excel_plus_cvar_cvar_estimate"] = float(
+                ret_excel_cvar_components["ret_excel_plus_cvar_cvar_estimate"]
+            )
+            out_info["ret_excel_plus_cvar_penalty"] = float(
+                ret_excel_cvar_components["ret_excel_plus_cvar_penalty"]
+            )
+            out_info["ret_excel_plus_cvar_components"] = ret_excel_cvar_components
         if self._canonical_reward_mode == "ReT_thesis":
             out_info["ReT_raw"] = ReT
             out_info["ret_components"] = {

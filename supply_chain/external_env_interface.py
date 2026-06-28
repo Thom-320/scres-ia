@@ -82,6 +82,25 @@ OBSERVATION_FIELDS_V7: tuple[str, ...] = OBSERVATION_FIELDS_V6 + (
     "rolling_fill_rate_4w",
     "rolling_backorder_rate_4w",
 )
+REALIZED_RISK_OBSERVATION_IDS: tuple[str, ...] = (
+    "R11",
+    "R12",
+    "R13",
+    "R14",
+    "R21",
+    "R22",
+    "R23",
+    "R24",
+    "R3",
+)
+OBSERVATION_FIELDS_V8: tuple[str, ...] = OBSERVATION_FIELDS_V7 + tuple(
+    f"active_{risk_id.lower()}" for risk_id in REALIZED_RISK_OBSERVATION_IDS
+) + tuple(
+    f"recent_{risk_id.lower()}" for risk_id in REALIZED_RISK_OBSERVATION_IDS
+) + tuple(
+    f"recent_{risk_id.lower()}_duration_norm"
+    for risk_id in REALIZED_RISK_OBSERVATION_IDS
+)
 OBSERVATION_FIELDS: tuple[str, ...] = OBSERVATION_FIELDS_V1
 
 # Track A continuous-control contract. This is a trainable RL extension, not the
@@ -309,9 +328,11 @@ def get_observation_fields(observation_version: str = "v1") -> tuple[str, ...]:
         return OBSERVATION_FIELDS_V6
     if observation_version == "v7":
         return OBSERVATION_FIELDS_V7
+    if observation_version == "v8":
+        return OBSERVATION_FIELDS_V8
     raise ValueError(
         f"Invalid observation_version={observation_version!r}. "
-        "Expected 'v1', 'v2', 'v3', 'v4', 'v5', 'v6', or 'v7'."
+        "Expected 'v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7', or 'v8'."
     )
 
 
@@ -756,6 +777,19 @@ def make_discrete18_track_a_env(**overrides: Any) -> Any:
     ``make_thesis_factorized_track_a_env``.
     """
     from .thesis_decision_env import make_discrete18_track_a_env as _make_env
+
+    return _make_env(**overrides)
+
+
+def make_continuous_its_track_a_env(**overrides: Any) -> Any:
+    """
+    Build the Track A continuous I_t,S env as ``Box([0,-1], [1,1])``.
+
+    This is the nearest continuous relaxation of Garrido-Rios' two decision
+    variables: a common strategic buffer fraction and S1/S2/S3 capacity signal.
+    It does not expose Track B downstream controls or per-node buffers.
+    """
+    from .continuous_its_env import make_continuous_its_track_a_env as _make_env
 
     return _make_env(**overrides)
 

@@ -64,3 +64,20 @@ buffer's delayed service benefit (anticipation is not credited).
 **Key finding — even reduced-cost CD (κ=0.2) collapses to S1_I0** as the best constant (cd=0.6133). Why: the CD cost term (`n_kappa=0.31`) is the **largest exponent** in the 5-var Cobb-Douglas product, so the CD bar *always* rewards the cheap no-buffer constant regardless of κ. B's PPO learned a **buffer-heavy policy** (S1_I336 + S3_I672 — meaningful strategic buffers), which is the *right* RL behavior for real service, but the CD bar still picks S1_I0 as best (cd 0.6133 > 0.5778). Real service is good in both (PPO lost_rate 0.17–0.18 vs S1_I0 0.40 — ~2.3× better).
 
 **This confirms the user's resilience insight:** the CD bar (even reduced-cost) is the wrong eval because the cost term dominates. The correct fix is **eval = Excel ReT (the real Garrido metric) with a service-aligned reward** (reward ≠ eval), so the reward genuinely rewards anticipation/buffering without collapsing to the cheap constant. The A/B show that tuning the CD κ alone doesn't unlock a win; we need to change the bar.
+
+## PROMISING CASE (SAVE) — Pepe vs best static on the CORRECT bars (war current φ4/ψ1.5)
+
+Best static *per bar* (18 constants, 5 eval eps) vs Pepe (best seed, 40k):
+
+| bar | best static | value | Pepe | verdict |
+|---|---|---|---|---|
+| full-cost CD | S1_I0 (no buffer) | 0.613 | 0.58 | loses — but CD is perverse (S1_I0 lost_rate 0.40) |
+| **Excel ReT** | S2_I336 | 0.00188 | **~0.0019** | **tie/edge** |
+| **flow_fill** | S3_I0 | 0.718 | **~0.72** | **tie** |
+| **CVaR95 tail** | S3_I0 | 1.59e9 | **~1.45e9** | **Pepe wins (lower tail loss)** |
+
+So Pepe **matches the best static on Excel ReT + flow_fill and appears to WIN on CVaR (tail)** — Pepe
+learned anticipatory buffering (holds S2_I336/S1_I504/S2_I672) and cuts lost orders from the cheap
+corner's 40% to ~16%. This is the first genuine near-win, hidden until we stopped scoring on the
+cost-dominated CD bar. **Pilot scale (2 seeds × 40k × 5 eps); CVaR is a 1-sample tail → noisy.**
+Needs a confirmatory (≥10 seeds, ≥20 eps) on Excel ReT + CVaR before claiming the tail win.

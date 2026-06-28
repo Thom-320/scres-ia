@@ -13,6 +13,7 @@ from supply_chain.thesis_decision_env import (
     make_discrete18_track_a_env,
     make_thesis_factorized_track_a_env,
 )
+from supply_chain.continuous_its_env import make_continuous_its_track_a_env
 
 
 def test_thesis_factorized_track_a_env_applies_initial_decision() -> None:
@@ -126,4 +127,35 @@ def test_discrete18_track_a_env_can_learn_initial_decision() -> None:
         168.0
     )
     assert step_info["thesis_decision"]["assembly_shifts"] == 1
+    env.close()
+
+
+def test_continuous_its_track_a_env_sets_fractional_common_buffer() -> None:
+    env = make_continuous_its_track_a_env(
+        max_steps=1,
+        reward_mode="control_v1",
+        observation_version="v4",
+        priming_enabled=False,
+        init_frac=0.25,
+    )
+
+    assert env.action_space.shape == (2,)
+    _obs, info = env.reset(seed=23)
+    assert info["action_contract"] == "track_a_continuous_its_v1"
+    assert info["action_space_mode"] == "continuous_it_s"
+    assert info["continuous_its_frac"] == pytest.approx(0.25)
+    assert info["initial_decision"]["applied_before_warmup"] is True
+    assert info["inventory_buffer_targets"]["op9_rations"] == pytest.approx(
+        0.25 * INVENTORY_BUFFERS[1344]["op9_rations"]
+    )
+
+    _obs, _reward, _terminated, _truncated, step_info = env.step(
+        np.asarray([0.5, 1.0], dtype=np.float32)
+    )
+    assert step_info["action_phase"] == "weekly_decision"
+    assert step_info["continuous_its_frac"] == pytest.approx(0.5)
+    assert step_info["continuous_its_shift"] == 3
+    assert step_info["inventory_buffer_targets"]["op3_rm"] == pytest.approx(
+        0.5 * INVENTORY_BUFFERS[1344]["op3_rm"]
+    )
     env.close()

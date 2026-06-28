@@ -31,9 +31,9 @@ from stable_baselines3 import PPO, DQN
 from stable_baselines3.common.vec_env import DummyVecEnv
 
 
-def build(reward_mode, phi, psi, regime, max_steps, seed=None, kappa_train_frac=1.0):
+def build(reward_mode, phi, psi, regime, max_steps, seed=None, kappa_train_frac=1.0, obs_version="v4"):
     env = make_discrete18_track_a_env(
-        reward_mode=reward_mode, observation_version="v4", risk_level=regime,
+        reward_mode=reward_mode, observation_version=obs_version, risk_level=regime,
         risk_frequency_multiplier=float(phi), risk_impact_multiplier=float(psi),
         stochastic_pt=False, year_basis="thesis", warmup_trigger="op9_arrival",
         downstream_q_source="figure_6_2", r14_defect_mode="thesis_strict_op6",
@@ -100,6 +100,7 @@ def main() -> int:
     ap.add_argument("--kappa-train-frac", type=float, default=1.0,
                     help="cost weight in the CD reward; 1.0=full cost (rewards no-buffer), "
                          "0.2=light cost (rewards service/buffer).")
+    ap.add_argument("--observation-version", default="v4")
     ap.add_argument("--algo", default="ppo", choices=["ppo", "dqn"])
     ap.add_argument("--seeds", default="1,2")
     ap.add_argument("--timesteps", type=int, default=50000)
@@ -113,7 +114,7 @@ def main() -> int:
     out = Path(args.output); out.mkdir(parents=True, exist_ok=True)
 
     # decode the 18 actions -> (buffer, shift) labels
-    probe = build(args.reward_mode, args.phi, args.psi, args.regime, args.max_steps, seed=1, kappa_train_frac=KF)
+    probe = build(args.reward_mode, args.phi, args.psi, args.regime, args.max_steps, seed=1, kappa_train_frac=KF, obs_version=args.observation_version)
     decode = probe.decode_discrete_action if hasattr(probe, "decode_discrete_action") else None
     labels = {}
     for a in range(18):
@@ -126,7 +127,7 @@ def main() -> int:
     # --- constant-action baselines (the static lower bound the agent should match) ---
     const = {}
     for a in range(18):
-        env = build(args.reward_mode, args.phi, args.psi, args.regime, args.max_steps, kappa_train_frac=KF)
+        env = build(args.reward_mode, args.phi, args.psi, args.regime, args.max_steps, kappa_train_frac=KF, obs_version=args.observation_version)
         r = eval_policy(env, lambda o, aa=a: aa, args.eval_episodes, 5000)
         const[a] = {"label": labels[a], "cd": r["cd"], "real": r["real"],
                     "cvar95": r["service_loss_cvar95"]}
@@ -137,7 +138,7 @@ def main() -> int:
     curve = []
     for seed in seeds:
         venv = DummyVecEnv([lambda s=seed: build(args.reward_mode, args.phi, args.psi,
-                                                  args.regime, args.max_steps, seed=s, kappa_train_frac=KF)])
+                                                  args.regime, args.max_steps, seed=s, kappa_train_frac=KF, obs_version=args.observation_version)])
         Algo = PPO if args.algo == "ppo" else DQN
         kw = dict(seed=seed, verbose=0)
         if args.algo == "ppo":
@@ -150,12 +151,14 @@ def main() -> int:
         chunk = max(1, args.timesteps // args.checkpoints)
         for c in range(args.checkpoints):
             model.learn(total_timesteps=chunk, reset_num_timesteps=(c == 0))
-            ev = build(args.reward_mode, args.phi, args.psi, args.regime, args.max_steps, kappa_train_frac=KF)
+            ev = build(args.reward_mode, args.phi, args.psi, args.regime, args.max_steps, kappa_train_frac=KF, obs_version=args.observation_version)
             r = eval_policy(ev, lambda o: model.predict(o, deterministic=True)[0],
                             args.eval_episodes, seed * 100 + 7)
-            curve.append({"seed": seed, "ts": (c + 1) * chunk, "cd": r["cd"]})
+            curve.append({"seed": seed, "ts": (c + 1) * chunk, "cd": r["cd"],
+                          "excel": r["real"]["ret_excel"], "flow": r["real"]["flow_fill_rate"],
+                          "cvar": r["service_loss_cvar95"]})
         # final detailed eval
-        ev = build(args.reward_mode, args.phi, args.psi, args.regime, args.max_steps, kappa_train_frac=KF)
+        ev = build(args.reward_mode, args.phi, args.psi, args.regime, args.max_steps, kappa_train_frac=KF, obs_version=args.observation_version)
         r = eval_policy(ev, lambda o: model.predict(o, deterministic=True)[0],
                         args.eval_episodes, seed * 100 + 99)
         hist = Counter(labels[a] for a in r["actions"])
@@ -180,9 +183,10 @@ def main() -> int:
           f"flow_fill={bc['real']['flow_fill_rate']:.3f} lost={bc['real']['lost_rate']:.3f} "
           f"cvar95={bc['cvar95']:.0f}")
     print(f"LEARNED cd={learned_cd:.4f}  (learned - best_constant = {learned_cd - bc['cd']:+.4f})")
-    print("\nlearning curve (cd over timesteps):")
+    print("\nlearning curve (cd / Excel ReT / CVaR over timesteps) -- watch for signal decay:")
     for c in curve:
-        print(f"  seed{c['seed']} ts={c['ts']:>6} cd={c['cd']:.4f}")
+        print(f"  seed{c['seed']} ts={c['ts']:>6} cd={c['cd']:.4f} excel={c.get('excel',float('nan')):.5f} "
+              f"flow={c.get('flow',float('nan')):.3f} cvar={c.get('cvar',float('nan')):.2e}")
     print("\nlearned action histogram (what Pepe actually picks):")
     for run in learned_runs:
         print(f"  seed{run['seed']}: {run['action_hist']}  cd={run['cd']:.4f} "

@@ -1,0 +1,47 @@
+{
+  "description": "War-stress headroom cells for Cobb-Douglas same-bar Track-A training (paper A/B). Static-only selection; cells chosen to maximize the realistic dynamic headroom (mean_gap = oracle - robust on cd_sigmoid) before collapse. Risk escalation justified by military-mission framing (the chain must hold under war-grade stress, where resilience matters most). Reported transparently as a war-stress extension, NOT thesis-faithful.",
+  "primary_resilience_metric": "cd_sigmoid_mean",
+  "selection_rule": "argmax mean_gap(cd_sigmoid) subject to regime-dependent oracle and non-collapse; corner in a single regime tolerated if reported.",
+  "cells": {
+    "A_war_max_headroom": {
+      "risk_frequency_multiplier": 4.0,
+      "risk_impact_multiplier": 1.5,
+      "stochastic_pt": false,
+      "demand_mean_multiplier": 1.0,
+      "ret_g24_shift_cost": 1.0,
+      "ret_g24_kappa_train_frac": 1.0,
+      "mean_gap_cd_sigmoid_1seed": 0.0200,
+      "expected_oracle": {"current": "S1_I336", "increased": "S3_I1344", "severe": "S3_I168"},
+      "role": "primary lane - maximum dynamic headroom (~2.5x the minimal cell)",
+      "caveat": "increased-regime oracle is the S3_I1344 corner; RL value = match it in increased with less resource in milder regimes."
+    },
+    "B_war_clean_interior": {
+      "risk_frequency_multiplier": 4.0,
+      "risk_impact_multiplier": 1.0,
+      "stochastic_pt": false,
+      "demand_mean_multiplier": 1.0,
+      "ret_g24_shift_cost": 1.0,
+      "ret_g24_kappa_train_frac": 1.0,
+      "mean_gap_cd_sigmoid_1seed": 0.0104,
+      "expected_oracle": {"current": "S1_I168", "increased": "S2_I1344", "severe": "S3_I168"},
+      "role": "sensitivity lane - clean interior frontier, no corner"
+    },
+    "minimal_reference_phi2": {
+      "risk_frequency_multiplier": 2.0,
+      "risk_impact_multiplier": 1.0,
+      "stochastic_pt": false,
+      "demand_mean_multiplier": 1.0,
+      "ret_g24_shift_cost": 1.0,
+      "ret_g24_kappa_train_frac": 1.0,
+      "mean_gap_cd_sigmoid_1seed": 0.0081,
+      "expected_oracle": {"current": "S1_I168", "increased": "S1_I504", "severe": "S3_I336"},
+      "role": "fewest-change reference (phi2), shared with Codex cd_static_frontier"
+    }
+  },
+  "next_steps": [
+    "confirmatory 5-seed static frontier on cells A and B (freeze what-to-beat)",
+    "PPO training with reward ReT_garrido2024_raw on cells A and B",
+    "evaluation under cd_sigmoid Pareto + CVaR95/TTR/cross-regime lenses",
+    "Excel ReT reported as secondary continuity, never the selector"
+  ]
+}
