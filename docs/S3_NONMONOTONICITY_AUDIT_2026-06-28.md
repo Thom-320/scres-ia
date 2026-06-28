@@ -9,6 +9,14 @@ The effect is real in the current DES, not a reporting artifact. Under the dense
 (`9000..9007`), `f0.10_S3` is worse than `f0.10_S1` on Excel ReT, flow, lost orders, service-loss AUC,
 and TTR.
 
+The behavior is also plausible under the thesis contract. In Garrido-Rios (2017), Sec. 6.7.4 and
+Table 6.20 define short-term manufacturing capacity (`S`) as extra work shifts at the assembly line:
+S2 doubles the raw-material quantity sent from WDC to AL (`31,000` units of each raw material), and S3
+triples it (`47,000` units) and raises the AL-to-SB lot size to `7,000` rations. The downstream
+distribution quantities at Op9-Op12 remain `2,000 to 2,500` rations with 24h ROP. Therefore S3 is not
+"more capacity everywhere"; it is more upstream manufacturing/WIP pressure against mostly unchanged
+downstream distribution.
+
 | policy | Excel ReT | flow_fill | lost_rate | service AUC | TTR mean | resource |
 |---|---:|---:|---:|---:|---:|---:|
 | `f0.10_S1` | 0.002279 | 0.7876 | 0.1637 | 4.04e9 | 873.6h | 0.05 |
@@ -53,5 +61,13 @@ per-node buffer fractions instead of one common fraction:
 
 That would keep Garrido's Track-A decision family (inventory buffers + shifts) but let the agent avoid
 over-buffering/upstream overfeeding when the bottleneck is downstream.
+
+Saved next-lane idea:
+
+- keep the same broad thesis variables (`I_{t,S}` buffers and `S` shifts),
+- relax the common-buffer assumption into operation-specific continuous buffer fractions,
+- test whether the agent learns "low upstream buffer, higher Op9 buffer, selective shifts" under war
+  risks,
+- compare against a dense static frontier over the same per-node fractions before claiming a win.
 
 Audit artifact: `outputs/audits/s3_nonmonotonicity_2026-06-28/s3_nonmonotonicity_audit.json`.
