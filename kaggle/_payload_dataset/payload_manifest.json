@@ -1,8 +1,8 @@
 {
-  "created_at": "2026-06-28T14:53:18.497535+00:00",
-  "git_head": "cc0546136a80e84a894fd6ef936e0f741a7eaf48",
-  "git_status_short": "",
-  "purpose": "continuous retained-reset memory probe payload",
-  "kernel": "thomaschisica/scresia-continuous-dmemory-probe",
-  "command": "python scripts/retention_transfer.py --track continuous --algo ppo --observation-version v6 --reward-mode ReT_excel_delta --risk-obs --risk-frequency-multiplier 4.0 --risk-impact-multiplier 1.5 --holding-cost 0.0 --shift-cost 0.001 --init-frac 1.0 --outcome excel_ret --rho-disruption 0.85 --regime-seed 909"
+  "created_at": "2026-06-28T15:36:05.400344+00:00",
+  "git_head": "9540bb105cc10b5e2cef89077699e68bbfe4aaa5",
+  "git_status_short": " M scripts/run_preventive_pareto.py\n?? docs/RESEARCH_PROPOSALS_REGISTRY_2026-06-28.md\n?? docs/SCRES_BIBLIOGRAPHY_2026-06-28.md\n?? kaggle/preventive_pareto_dense_crn/\n?? scripts/run_ret_excel_max.py\n",
+  "purpose": "dense 21x3 CRN audit for preventive Pareto lane",
+  "kernel": "thomaschisica/scresia-preventive-pareto-dense-crn",
+  "command": "python scripts/run_preventive_pareto.py --reward-mode ReT_excel_delta --phi 4 --psi 1.5 --seeds 1,2,3,4,5,8501,8502,8503,8504,8505 --timesteps 60000 --n-envs 4 --eval-episodes 8 --max-steps 104 --n-fracs 21 --crn-eval --eval-seed0 9000 --holding-cost 0.0 --shift-cost 0.001"
 }

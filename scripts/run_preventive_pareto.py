@@ -158,6 +158,12 @@ def main() -> int:
     ap.add_argument("--n-envs", type=int, default=4)
     ap.add_argument("--timesteps", type=int, default=40000)
     ap.add_argument("--eval-episodes", type=int, default=8)
+    ap.add_argument("--eval-seed0", type=int, default=5000,
+                    help="first evaluation seed for static policies and, with --crn-eval, learned policies")
+    ap.add_argument("--crn-eval", action="store_true",
+                    help="evaluate learned policies on the same held-out seed block used by statics")
+    ap.add_argument("--n-fracs", type=int, default=5,
+                    help="static buffer grid size; 5 -> 0,.25,.5,.75,1; 21 -> dense .05 grid")
     ap.add_argument("--max-steps", type=int, default=104)
     ap.add_argument("--step-size-hours", type=float, default=168.0,
                     help="decision cadence in hours (168=weekly thesis; 24=daily)")
@@ -173,10 +179,11 @@ def main() -> int:
 
     # static grid: constant (frac, shift) — CHARGED its resource every week
     statics = []
-    for f in (0.0, 0.25, 0.5, 0.75, 1.0):
+    fracs = [round(i / max(1, args.n_fracs - 1), 4) for i in range(args.n_fracs)]
+    for f in fracs:
         for sh, sig in SHIFT_SIGS.items():
             r = eval_pol(lambda: build(**cfg), lambda o, ff=f, ss=sig: np.array([ff, ss], np.float32),
-                         args.eval_episodes, 5000)
+                         args.eval_episodes, args.eval_seed0)
             r["label"] = f"f{f}_S{sh}"
             statics.append(r)
 
@@ -189,8 +196,9 @@ def main() -> int:
         model = PPO("MlpPolicy", venv, seed=seed, verbose=0, n_steps=min(1024, args.max_steps * 4),
                     batch_size=64, learning_rate=3e-4, n_epochs=10)
         model.learn(total_timesteps=int(args.timesteps))
+        eval_seed0 = args.eval_seed0 if args.crn_eval else seed * 100 + 9
         r = eval_pol(lambda: build(**cfg), lambda o: model.predict(o, deterministic=True)[0],
-                     args.eval_episodes, seed * 100 + 9, trace_policy=f"learned_seed{seed}")
+                     args.eval_episodes, eval_seed0, trace_policy=f"learned_seed{seed}")
         seed_trace = r.pop("trace_rows", [])
         r.pop("field_names", None)
         r["seed"] = seed
@@ -205,7 +213,7 @@ def main() -> int:
     excel_verdict = pareto_win(dyn, statics, "resource", "excel", higher_better=True)
     cvar_verdict = pareto_win(dyn, statics, "resource", "cvar", higher_better=False)
 
-    summary = {"args": vars(args), "statics": statics, "learned_per_seed": learned,
+    summary = {"args": vars(args), "static_fracs": fracs, "statics": statics, "learned_per_seed": learned,
                "dynamic": dyn, "excel_pareto": excel_verdict, "cvar_pareto": cvar_verdict,
                "action_correlations": corr_by_seed}
     (out / "summary.json").write_text(json.dumps(summary, indent=2, default=float))
