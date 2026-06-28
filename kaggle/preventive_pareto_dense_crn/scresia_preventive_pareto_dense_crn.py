@@ -28,9 +28,11 @@ from typing import Any
 
 PAYLOAD = Path("/kaggle/input/scres-ia-payload/scres_ia_payload.tar.gz")
 LOCAL_PAYLOAD = Path("scres_ia_payload.tar.gz")
+SCRIPT_PAYLOAD = Path(__file__).resolve().with_name("scres_ia_payload.tar.gz")
 KAGGLE_REPO_DIR = Path("/kaggle/temp/scres-ia")
 KAGGLE_OUTPUT_ROOT = Path("/kaggle/working/scresia_preventive_pareto_dense_crn_outputs")
 LOCAL_OUTPUT_ROOT = Path("outputs/kaggle/preventive_pareto_dense_crn")
+LOCAL_REPO_DIR = LOCAL_OUTPUT_ROOT / "_payload_repo"
 
 DEBUG_PROFILE = {
     "seeds": "9901",
@@ -66,7 +68,7 @@ def ensure_dependencies(repo: Path) -> None:
 
 
 def find_payload() -> Path | None:
-    candidates = [PAYLOAD, LOCAL_PAYLOAD]
+    candidates = [SCRIPT_PAYLOAD, PAYLOAD, LOCAL_PAYLOAD]
     if is_kaggle():
         candidates.extend(sorted(Path("/kaggle/input").glob("**/scres_ia_payload.tar.gz")))
     for candidate in candidates:
@@ -127,12 +129,13 @@ def extract_payload_or_use_local_repo() -> Path:
     payload = find_payload()
     if payload is not None:
         print(f"[kernel] extracting payload {payload}", flush=True)
-        if KAGGLE_REPO_DIR.exists():
-            shutil.rmtree(KAGGLE_REPO_DIR)
-        KAGGLE_REPO_DIR.mkdir(parents=True, exist_ok=True)
+        repo_dir = KAGGLE_REPO_DIR if is_kaggle() else LOCAL_REPO_DIR
+        if repo_dir.exists():
+            shutil.rmtree(repo_dir)
+        repo_dir.mkdir(parents=True, exist_ok=True)
         with tarfile.open(payload, "r:gz") as archive:
-            archive.extractall(KAGGLE_REPO_DIR)
-        return KAGGLE_REPO_DIR
+            archive.extractall(repo_dir)
+        return repo_dir
     extracted = find_extracted_repo()
     if extracted is not None:
         print(f"[kernel] copying extracted repo {extracted}", flush=True)
