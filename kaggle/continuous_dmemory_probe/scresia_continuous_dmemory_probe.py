@@ -27,6 +27,7 @@ from typing import Any
 
 PAYLOAD = Path("/kaggle/input/scres-ia-payload/scres_ia_payload.tar.gz")
 LOCAL_PAYLOAD = Path("scres_ia_payload.tar.gz")
+SCRIPT_PAYLOAD = Path(__file__).resolve().with_name("scres_ia_payload.tar.gz")
 KAGGLE_REPO_DIR = Path("/kaggle/temp/scres-ia")
 KAGGLE_OUTPUT_ROOT = Path("/kaggle/working/scresia_continuous_dmemory_outputs")
 LOCAL_OUTPUT_ROOT = Path("outputs/kaggle/continuous_dmemory_probe")
@@ -69,13 +70,26 @@ def run(cmd: list[str], *, cwd: Path | None = None) -> None:
 
 
 def find_payload() -> Path | None:
-    candidates = [PAYLOAD, LOCAL_PAYLOAD]
+    candidates = [PAYLOAD, LOCAL_PAYLOAD, SCRIPT_PAYLOAD]
     if is_kaggle():
         candidates.extend(sorted(Path("/kaggle/input").glob("**/scres_ia_payload.tar.gz")))
     for candidate in candidates:
         if candidate.exists():
             return candidate
     return None
+
+
+def describe_kaggle_input() -> None:
+    if not is_kaggle():
+        return
+    root = Path("/kaggle/input")
+    print("[kernel] /kaggle/input listing:", flush=True)
+    if not root.exists():
+        print("[kernel]   MISSING /kaggle/input", flush=True)
+        return
+    for path in sorted(root.glob("**/*"))[:250]:
+        kind = "dir " if path.is_dir() else "file"
+        print(f"[kernel]   {kind} {path}", flush=True)
 
 
 def repo_root_from_context() -> Path:
@@ -98,6 +112,7 @@ def extract_payload_or_use_local_repo() -> Path:
         with tarfile.open(payload, "r:gz") as archive:
             archive.extractall(KAGGLE_REPO_DIR)
         return KAGGLE_REPO_DIR
+    describe_kaggle_input()
     return repo_root_from_context()
 
 
