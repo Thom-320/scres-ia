@@ -218,6 +218,9 @@ def run_memory_probe(repo: Path, out: Path, prof: dict[str, str]) -> Path:
 
 
 def main() -> int:
+    # This workload is SimPy/CPU bound. Kaggle's CUDA image can mismatch the
+    # bundled torch wheel, so force CPU even when the kernel has GPU enabled.
+    os.environ.setdefault("CUDA_VISIBLE_DEVICES", "")
     repo = extract_payload_or_use_local_repo()
     ensure_dependencies(repo)
     out = output_root()
