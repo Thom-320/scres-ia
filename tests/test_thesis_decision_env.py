@@ -13,7 +13,10 @@ from supply_chain.thesis_decision_env import (
     make_discrete18_track_a_env,
     make_thesis_factorized_track_a_env,
 )
-from supply_chain.continuous_its_env import make_continuous_its_track_a_env
+from supply_chain.continuous_its_env import (
+    make_continuous_its_track_a_env,
+    make_per_op_buffer_track_a_env,
+)
 
 
 def test_thesis_factorized_track_a_env_applies_initial_decision() -> None:
@@ -157,5 +160,52 @@ def test_continuous_its_track_a_env_sets_fractional_common_buffer() -> None:
     assert step_info["continuous_its_shift"] == 3
     assert step_info["inventory_buffer_targets"]["op3_rm"] == pytest.approx(
         0.5 * INVENTORY_BUFFERS[1344]["op3_rm"]
+    )
+    env.close()
+
+
+def test_per_op_buffer_track_a_env_sets_independent_buffer_targets() -> None:
+    env = make_per_op_buffer_track_a_env(
+        max_steps=1,
+        reward_mode="control_v1",
+        observation_version="v4",
+        priming_enabled=False,
+        init_fracs=[0.1, 0.2, 0.3],
+    )
+
+    assert env.action_space.shape == (4,)
+    _obs, info = env.reset(seed=29)
+    assert info["action_contract"] == "track_a_per_op_buffer_v1"
+    assert info["action_space_mode"] == "per_op_buffer"
+    assert info["initial_decision"]["applied_before_warmup"] is True
+    assert info["per_op_op3_frac"] == pytest.approx(0.1)
+    assert info["per_op_op5_frac"] == pytest.approx(0.2)
+    assert info["per_op_op9_frac"] == pytest.approx(0.3)
+    assert info["inventory_buffer_targets"]["op3_rm"] == pytest.approx(
+        0.1 * INVENTORY_BUFFERS[1344]["op3_rm"]
+    )
+    assert info["inventory_buffer_targets"]["op5_rm"] == pytest.approx(
+        0.2 * INVENTORY_BUFFERS[1344]["op5_rm"]
+    )
+    assert info["inventory_buffer_targets"]["op9_rations"] == pytest.approx(
+        0.3 * INVENTORY_BUFFERS[1344]["op9_rations"]
+    )
+
+    _obs, _reward, _terminated, _truncated, step_info = env.step(
+        np.asarray([0.05, 0.15, 0.35, 1.0], dtype=np.float32)
+    )
+    assert step_info["action_phase"] == "weekly_decision"
+    assert step_info["continuous_its_shift"] == 3
+    assert step_info["per_op_op3_frac"] == pytest.approx(0.05)
+    assert step_info["per_op_op5_frac"] == pytest.approx(0.15)
+    assert step_info["per_op_op9_frac"] == pytest.approx(0.35)
+    assert step_info["inventory_buffer_targets"]["op3_rm"] == pytest.approx(
+        0.05 * INVENTORY_BUFFERS[1344]["op3_rm"]
+    )
+    assert step_info["inventory_buffer_targets"]["op5_rm"] == pytest.approx(
+        0.15 * INVENTORY_BUFFERS[1344]["op5_rm"]
+    )
+    assert step_info["inventory_buffer_targets"]["op9_rations"] == pytest.approx(
+        0.35 * INVENTORY_BUFFERS[1344]["op9_rations"]
     )
     env.close()

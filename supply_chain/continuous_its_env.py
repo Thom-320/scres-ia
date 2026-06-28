@@ -263,6 +263,161 @@ class ContinuousItsTrackAEnv(gym.Wrapper):
         return self._augment(obs, update_ewma=True), float(reward), bool(terminated), bool(truncated), info
 
 
+class PerOpBufferTrackAEnv(ContinuousItsTrackAEnv):
+    """Box([op3,op5,op9,shift]) relaxation of Garrido's inventory-buffer + shift levers.
+
+    This keeps the same decision families as the thesis (strategic inventory buffers and
+    shifts) but removes the artificial common-fraction constraint from `continuous_it_s`.
+    """
+
+    action_contract = "track_a_per_op_buffer_v1"
+    action_space_mode = "per_op_buffer"
+
+    def __init__(
+        self,
+        env: gym.Env,
+        *,
+        init_fracs: Any = None,
+        init_frac: float | None = None,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(env, init_frac=None, **kwargs)
+        self.init_fracs = self._coerce_fracs(init_fracs, fallback=init_frac)
+        self.action_space = gym.spaces.Box(
+            low=np.array([0.0, 0.0, 0.0, -1.0], dtype=np.float32),
+            high=np.array([1.0, 1.0, 1.0, 1.0], dtype=np.float32),
+        )
+
+    @staticmethod
+    def _coerce_fracs(value: Any, *, fallback: Any = None) -> dict[str, float] | None:
+        if value is None:
+            value = fallback
+        if value is None:
+            return None
+        if isinstance(value, dict):
+            raw = {k: value.get(k, value.get(k.replace("_rm", ""), 0.0)) for k in _BUFFER_KEYS}
+            return {k: float(np.clip(raw[k], 0.0, 1.0)) for k in _BUFFER_KEYS}
+        arr = np.asarray(value, dtype=np.float32).reshape(-1)
+        if arr.shape == (1,):
+            arr = np.repeat(arr, 3)
+        if arr.shape != (3,):
+            raise ValueError(f"init_fracs must be scalar or shape (3,), got {arr.shape}.")
+        arr = np.clip(arr, 0.0, 1.0)
+        return {k: float(arr[i]) for i, k in enumerate(_BUFFER_KEYS)}
+
+    @staticmethod
+    def _validate_action(action: Any) -> np.ndarray:
+        action_array = np.asarray(action, dtype=np.float32).reshape(-1)
+        if action_array.shape != (4,):
+            raise ValueError(
+                f"Per-op buffer action must have shape (4,), got {action_array.shape}."
+            )
+        return np.clip(
+            action_array,
+            np.array([0.0, 0.0, 0.0, -1.0], dtype=np.float32),
+            np.array([1.0, 1.0, 1.0, 1.0], dtype=np.float32),
+        )
+
+    def _buffer_units_fraction(self, fracs: dict[str, float]) -> float:
+        units = sum(float(fracs.get(k, 0.0)) * float(_I1344[k]) for k in _BUFFER_KEYS)
+        return float(np.clip(units / max(self._max_buffer_units, 1.0), 0.0, 1.0))
+
+    def resource_composite_by_fracs(self, fracs: dict[str, float], shifts: int) -> float:
+        return 0.5 * self._buffer_units_fraction(fracs) + 0.5 * (float(int(shifts) - 1) / 2.0)
+
+    def _set_targets_by_fracs(self, fracs: dict[str, float]) -> dict[str, float]:
+        sim = getattr(self.unwrapped, "sim", None)
+        if sim is None:
+            return {}
+        clipped = {k: float(np.clip(fracs.get(k, 0.0), 0.0, 1.0)) for k in _BUFFER_KEYS}
+        targets = {
+            k: clipped[k] * float(_I1344[k])
+            for k in _BUFFER_KEYS
+            if clipped[k] > 1e-6
+        }
+        if not targets:
+            sim.inventory_buffer_targets = {}
+            sim.inventory_replenishment_period = None
+            return {}
+        if hasattr(sim, "_normalize_inventory_buffer_targets"):
+            internal = sim._normalize_inventory_buffer_targets(targets)
+        else:
+            internal = dict(targets)
+        sim.inventory_buffer_targets = dict(internal)
+        sim.inventory_replenishment_period = self.replenishment_period
+        for key, target in internal.items():
+            sim._top_up_inventory_buffer(key, float(target))
+        return targets
+
+    def _decision_payload_by_fracs(
+        self, *, fracs: dict[str, float], shifts: int, targets: dict[str, float], phase: str
+    ) -> dict[str, Any]:
+        clipped = {k: float(np.clip(fracs.get(k, 0.0), 0.0, 1.0)) for k in _BUFFER_KEYS}
+        return {
+            "action_contract": self.action_contract,
+            "action_space_mode": self.action_space_mode,
+            "action_phase": phase,
+            "per_op_buffer_fracs": dict(clipped),
+            "per_op_op3_frac": clipped["op3_rm"],
+            "per_op_op5_frac": clipped["op5_rm"],
+            "per_op_op9_frac": clipped["op9_rations"],
+            "assembly_shift_signal_level": int(shifts),
+            "inventory_buffer_targets": dict(targets),
+            "per_op_buffer_units_fraction": self._buffer_units_fraction(clipped),
+            "per_op_buffer_units": float(sum(targets.values())) if targets else 0.0,
+            "continuous_its_shift": int(shifts),
+        }
+
+    def reset(self, *, seed: int | None = None, options: dict[str, Any] | None = None):
+        self._ewma_rate = 0.0
+        obs, info = self.env.reset(seed=seed, options=options)
+        fracs0 = self.init_fracs
+        if options and "init_fracs" in options:
+            fracs0 = self._coerce_fracs(options["init_fracs"])
+        elif options and "init_frac" in options:
+            fracs0 = self._coerce_fracs(options["init_frac"])
+        info = dict(info)
+        if fracs0 is not None:
+            targets = self._set_targets_by_fracs(fracs0)
+            info.update(
+                self._decision_payload_by_fracs(
+                    fracs=fracs0, shifts=1, targets=targets, phase="reset"
+                )
+            )
+            info["initial_decision"] = {
+                "per_op_buffer_fracs": dict(fracs0),
+                "inventory_buffer_targets": dict(targets),
+                "applied_before_warmup": True,
+            }
+        else:
+            zero = {k: 0.0 for k in _BUFFER_KEYS}
+            info.update(
+                self._decision_payload_by_fracs(fracs=zero, shifts=1, targets={}, phase="reset")
+            )
+        return self._augment(obs), info
+
+    def step(self, action: Any):
+        a = self._validate_action(action)
+        fracs = {k: float(a[i]) for i, k in enumerate(_BUFFER_KEYS)}
+        shifts = self._shift_from_signal(a[3])
+        targets = self._set_targets_by_fracs(fracs)
+        obs, reward, terminated, truncated, info = self.env.step(self._action_dict(shifts))
+        buffer_frac = self._buffer_units_fraction(fracs)
+        reward = (
+            float(reward)
+            - self.holding_cost * buffer_frac
+            - self.shift_cost * (float(shifts - 1) / 2.0)
+        )
+        info = dict(info)
+        info.update(
+            self._decision_payload_by_fracs(
+                fracs=fracs, shifts=shifts, targets=targets, phase="weekly_decision"
+            )
+        )
+        info["resource_composite"] = self.resource_composite_by_fracs(fracs, shifts)
+        return self._augment(obs, update_ewma=True), float(reward), bool(terminated), bool(truncated), info
+
+
 def make_continuous_its_track_a_env(**overrides: Any) -> ContinuousItsTrackAEnv:
     """Build the continuous I_{t,S} Track-A env (faithful base + continuous buffer wrapper)."""
     init_frac = overrides.pop("init_frac", None)
@@ -286,3 +441,39 @@ def make_continuous_its_track_a_env(**overrides: Any) -> ContinuousItsTrackAEnv:
                                   base_field_names=base_field_names,
                                   holding_cost=holding_cost, shift_cost=shift_cost,
                                   replenishment_period=replenishment_period)
+
+
+def make_per_op_buffer_track_a_env(**overrides: Any) -> PerOpBufferTrackAEnv:
+    """Build the per-operation continuous buffer Track-A env.
+
+    Action = [op3_frac, op5_frac, op9_frac, shift_signal].
+    """
+    init_fracs = overrides.pop("init_fracs", None)
+    init_frac = overrides.pop("init_frac", None)
+    risk_obs = bool(overrides.pop("risk_obs", False))
+    risk_recent_window = float(overrides.pop("risk_recent_window", 336.0))
+    holding_cost = float(overrides.pop("holding_cost", 0.0))
+    shift_cost = float(overrides.pop("shift_cost", 0.0))
+    replenishment_period = float(overrides.pop("replenishment_period", 168.0))
+    overrides.pop("action_space_mode", None)
+    overrides.pop("learn_initial_decision", None)
+    obs_v = overrides.get("observation_version", "v6")
+    try:
+        from .external_env_interface import get_observation_fields
+        base_field_names = list(get_observation_fields(obs_v))
+    except Exception:
+        base_field_names = []
+    step_window = float(overrides.get("step_size_hours", 168.0))
+    base = make_thesis_aligned_training_env(**overrides)
+    return PerOpBufferTrackAEnv(
+        base,
+        init_fracs=init_fracs,
+        init_frac=init_frac,
+        risk_obs=risk_obs,
+        risk_recent_window=risk_recent_window,
+        step_window=step_window,
+        base_field_names=base_field_names,
+        holding_cost=holding_cost,
+        shift_cost=shift_cost,
+        replenishment_period=replenishment_period,
+    )

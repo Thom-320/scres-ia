@@ -794,6 +794,19 @@ def make_continuous_its_track_a_env(**overrides: Any) -> Any:
     return _make_env(**overrides)
 
 
+def make_per_op_buffer_track_a_env(**overrides: Any) -> Any:
+    """
+    Build the Track A per-operation continuous buffer env as
+    ``Box([op3_frac, op5_frac, op9_frac, shift_signal])``.
+
+    This keeps Garrido-Rios' inventory-buffer and shift decision families, but
+    does not force Op3, Op5 and Op9 to share one common buffer fraction.
+    """
+    from .continuous_its_env import make_per_op_buffer_track_a_env as _make_env
+
+    return _make_env(**overrides)
+
+
 # ---------------------------------------------------------------------------
 # Generic episode runner for any callable policy
 # ---------------------------------------------------------------------------
