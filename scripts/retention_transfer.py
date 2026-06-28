@@ -228,9 +228,16 @@ def main() -> int:
         arr = np.array([r[key] for r in runs])  # [seeds, blocks]
         half = cli.n_blocks // 2
         seed_means = [float(np.nanmean(arr[i])) for i in range(len(seeds))]
-        early = [float(np.nanmean(arr[i, :half])) for i in range(len(seeds))]
+        early_slice = slice(0, max(1, half))
+        early = [float(np.nanmean(arr[i, early_slice])) for i in range(len(seeds))]
         late = [float(np.nanmean(arr[i, half:])) for i in range(len(seeds))]
-        slope = [float(np.polyfit(np.arange(cli.n_blocks), arr[i], 1)[0]) for i in range(len(seeds))]
+        if cli.n_blocks >= 2:
+            slope = [
+                float(np.polyfit(np.arange(cli.n_blocks), arr[i], 1)[0])
+                for i in range(len(seeds))
+            ]
+        else:
+            slope = [0.0 for _ in seeds]
         return {
             "overall": cluster_stats(seed_means),
             "early_half": cluster_stats(early), "late_half": cluster_stats(late),
