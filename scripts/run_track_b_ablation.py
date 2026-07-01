@@ -109,8 +109,11 @@ def main() -> None:
     print(f"\n{'='*60}")
     print("ABLATION COMPARISON")
     print(f"{'='*60}")
-    print(f"{'Config':<20} {'PPO Fill':>10} {'PPO ReT':>10} {'S1%':>6} {'S2%':>6} {'S3%':>6}")
-    print("-" * 60)
+    print(
+        f"{'Config':<20} {'PPO ReT':>10} {'ΔReT':>10} "
+        f"{'RawWin':>7} {'PPO Fill':>10} {'S1%':>6} {'S2%':>6} {'S3%':>6}"
+    )
+    print("-" * 82)
     for config_name, summary in results.items():
         ppo_row = None
         for row in summary["policy_summary"]:
@@ -118,10 +121,13 @@ def main() -> None:
                 ppo_row = row
                 break
         if ppo_row:
+            decision = summary["decision"]
             print(
                 f"{config_name:<20} "
-                f"{float(ppo_row['fill_rate_mean']):>10.6f} "
                 f"{float(ppo_row['order_level_ret_mean_mean']):>10.4f} "
+                f"{float(decision['learned_order_level_ret_gap_vs_best_static']):>+10.6f} "
+                f"{str(decision['learned_raw_ret_win_vs_best_static']):>7} "
+                f"{float(ppo_row['fill_rate_mean']):>10.6f} "
                 f"{float(ppo_row['pct_steps_S1_mean']):>6.1f} "
                 f"{float(ppo_row['pct_steps_S2_mean']):>6.1f} "
                 f"{float(ppo_row['pct_steps_S3_mean']):>6.1f}"

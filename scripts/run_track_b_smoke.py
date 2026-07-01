@@ -1161,8 +1161,8 @@ def build_decision_summary(
     best_static = max(
         (by_policy[policy_name] for policy_name in STATIC_POLICY_ORDER),
         key=lambda row: (
-            float(row["fill_rate_mean"]),
             ret_metric(row),
+            float(row["fill_rate_mean"]),
             -float(row["backorder_rate_mean"]),
         ),
     )
@@ -1177,19 +1177,20 @@ def build_decision_summary(
         best_static["reward_total_mean"]
     )
     ret_gap_vs_best_static = ret_metric(learned_row) - ret_metric(best_static)
+    raw_ret_win = ret_gap_vs_best_static > 0.0
     decision = {
         "learned_policy": learned_policy,
         "baseline_policy": "s2_d1.00",
         "best_static_policy": str(best_static["policy"]),
+        "primary_metric": "order_level_ret_mean",
         "learned_fill_gap_vs_s2_neutral_pp": fill_gap_vs_baseline_pp,
         "learned_fill_gap_vs_best_static_pp": fill_gap_vs_best_static_pp,
         "learned_reward_gap_vs_best_static": reward_gap_vs_best_static,
         "learned_order_level_ret_gap_vs_best_static": ret_gap_vs_best_static,
+        "learned_raw_ret_win_vs_best_static": raw_ret_win,
         "learned_beats_s2_neutral_by_fill": fill_gap_vs_baseline_pp > 0.0,
         "learned_matches_best_static_by_fill": fill_gap_vs_best_static_pp >= -0.5,
-        "promote_to_long_run": (
-            fill_gap_vs_baseline_pp > 0.0 and fill_gap_vs_best_static_pp >= -1.0
-        ),
+        "promote_to_long_run": raw_ret_win,
     }
     if learned_policy == "ppo":
         decision.update(
@@ -1198,6 +1199,7 @@ def build_decision_summary(
                 "ppo_fill_gap_vs_best_static_pp": fill_gap_vs_best_static_pp,
                 "ppo_reward_gap_vs_best_static": reward_gap_vs_best_static,
                 "ppo_order_level_ret_gap_vs_best_static": ret_gap_vs_best_static,
+                "ppo_raw_ret_win_vs_best_static": raw_ret_win,
                 "ppo_beats_s2_neutral_by_fill": fill_gap_vs_baseline_pp > 0.0,
                 "ppo_matches_best_static_by_fill": fill_gap_vs_best_static_pp >= -0.5,
             }
@@ -1389,6 +1391,7 @@ def render_markdown(summary: dict[str, Any]) -> str:
             "## Decision",
             "",
             f"- Learned policy: `{decision['learned_policy']}`",
+            f"- Primary decision metric: `{decision['primary_metric']}`",
             f"- Best static policy: `{decision['best_static_policy']}`",
             (
                 f"- {decision['learned_policy']} fill gap vs `s2_d1.00`: "
@@ -1406,6 +1409,7 @@ def render_markdown(summary: dict[str, Any]) -> str:
                 f"- {decision['learned_policy']} order-level ReT gap vs best static: "
                 f"{float(decision['learned_order_level_ret_gap_vs_best_static']):+.4f}"
             ),
+            f"- Raw ReT win vs best static: `{decision['learned_raw_ret_win_vs_best_static']}`",
             f"- Promote to long run: `{decision['promote_to_long_run']}`",
             "",
         ]
@@ -1668,8 +1672,8 @@ def main() -> None:
     print(
         "Decision: "
         f"best_static={summary['decision']['best_static_policy']}, "
-        f"{learned_policy}_vs_s2_fill_pp={float(summary['decision']['learned_fill_gap_vs_s2_neutral_pp']):+.2f}, "
-        f"{learned_policy}_vs_best_fill_pp={float(summary['decision']['learned_fill_gap_vs_best_static_pp']):+.2f}, "
+        f"{learned_policy}_vs_best_ret={float(summary['decision']['learned_order_level_ret_gap_vs_best_static']):+.6f}, "
+        f"raw_ret_win={summary['decision']['learned_raw_ret_win_vs_best_static']}, "
         f"promote={summary['decision']['promote_to_long_run']}"
     )
 
