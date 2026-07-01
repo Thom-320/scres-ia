@@ -418,6 +418,74 @@ class PerOpBufferTrackAEnv(ContinuousItsTrackAEnv):
         return self._augment(obs, update_ewma=True), float(reward), bool(terminated), bool(truncated), info
 
 
+class PerOpBufferMultiDiscreteTrackAEnv(gym.Wrapper):
+    """Categorical per-operation Track-A wrapper.
+
+    MultiDiscrete([n_fracs, n_fracs, n_fracs, 3]) maps to the existing
+    [op3_frac, op5_frac, op9_frac, shift_signal] per-op contract. This keeps
+    Garrido's decision families but makes PPO optimize categories instead of
+    brittle continuous threshold bands.
+    """
+
+    action_contract = "track_a_per_op_buffer_multidiscrete_v1"
+    action_space_mode = "per_op_buffer_multidiscrete"
+
+    def __init__(self, env: PerOpBufferTrackAEnv, *, frac_grid: Any = None) -> None:
+        super().__init__(env)
+        grid = np.asarray(
+            frac_grid if frac_grid is not None else [0.0, 0.05, 0.10, 0.15, 0.25, 0.50],
+            dtype=np.float32,
+        ).reshape(-1)
+        if len(grid) < 1:
+            raise ValueError("frac_grid must contain at least one fraction.")
+        if np.any(grid < -1e-9) or np.any(grid > 1.0 + 1e-9):
+            raise ValueError("frac_grid values must be in [0, 1].")
+        self.frac_grid = np.asarray(np.clip(grid, 0.0, 1.0), dtype=np.float32)
+        self.action_space = gym.spaces.MultiDiscrete(
+            np.asarray([len(self.frac_grid), len(self.frac_grid), len(self.frac_grid), 3])
+        )
+        self.observation_space = env.observation_space
+        self.obs_field_names = getattr(env, "obs_field_names", [])
+
+    def decode_action(self, action: Any) -> np.ndarray:
+        idx = np.asarray(action, dtype=np.int64).reshape(-1)
+        if idx.shape != (4,):
+            raise ValueError(f"Per-op multidiscrete action must have shape (4,), got {idx.shape}.")
+        idx = np.clip(idx, 0, self.action_space.nvec - 1)
+        shift_idx = int(idx[3])
+        shift_signal = (-1.0, 0.0, 1.0)[shift_idx]
+        return np.asarray(
+            [
+                float(self.frac_grid[int(idx[0])]),
+                float(self.frac_grid[int(idx[1])]),
+                float(self.frac_grid[int(idx[2])]),
+                shift_signal,
+            ],
+            dtype=np.float32,
+        )
+
+    def encode_continuous_action(self, action: Any) -> np.ndarray:
+        a = PerOpBufferTrackAEnv._validate_action(action)
+        frac_idx = [int(np.argmin(np.abs(self.frac_grid - float(a[i])))) for i in range(3)]
+        shift = PerOpBufferTrackAEnv._shift_from_signal(float(a[3]))
+        return np.asarray(frac_idx + [shift - 1], dtype=np.int64)
+
+    def reset(self, *, seed: int | None = None, options: dict[str, Any] | None = None):
+        return self.env.reset(seed=seed, options=options)
+
+    def step(self, action: Any):
+        idx = np.asarray(action, dtype=np.int64).reshape(-1)
+        cont = self.decode_action(idx)
+        obs, reward, terminated, truncated, info = self.env.step(cont)
+        info = dict(info)
+        info["action_contract"] = self.action_contract
+        info["action_space_mode"] = self.action_space_mode
+        info["per_op_multidiscrete_indices"] = idx.astype(int).tolist()
+        info["per_op_multidiscrete_frac_grid"] = self.frac_grid.astype(float).tolist()
+        info["per_op_continuous_action"] = cont.astype(float).tolist()
+        return obs, reward, terminated, truncated, info
+
+
 def make_continuous_its_track_a_env(**overrides: Any) -> ContinuousItsTrackAEnv:
     """Build the continuous I_{t,S} Track-A env (faithful base + continuous buffer wrapper)."""
     init_frac = overrides.pop("init_frac", None)
@@ -477,3 +545,13 @@ def make_per_op_buffer_track_a_env(**overrides: Any) -> PerOpBufferTrackAEnv:
         shift_cost=shift_cost,
         replenishment_period=replenishment_period,
     )
+
+
+def make_per_op_buffer_multidiscrete_track_a_env(**overrides: Any) -> PerOpBufferMultiDiscreteTrackAEnv:
+    """Build a categorical per-operation Track-A env.
+
+    Action = MultiDiscrete([op3_frac_idx, op5_frac_idx, op9_frac_idx, shift_idx]).
+    """
+    frac_grid = overrides.pop("frac_grid", None)
+    per_op_env = make_per_op_buffer_track_a_env(**overrides)
+    return PerOpBufferMultiDiscreteTrackAEnv(per_op_env, frac_grid=frac_grid)

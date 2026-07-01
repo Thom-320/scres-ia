@@ -106,6 +106,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--seeds", type=int, nargs="+", default=list(DEFAULT_SEEDS))
     parser.add_argument("--train-timesteps", type=int, default=DEFAULT_TIMESTEPS)
     parser.add_argument("--eval-episodes", type=int, default=DEFAULT_EVAL_EPISODES)
+    parser.add_argument("--max-steps", type=int, default=DEFAULT_MAX_STEPS)
+    parser.add_argument("--learning-rate", type=float, default=3e-4)
+    parser.add_argument("--n-envs", type=int, default=1)
+    parser.add_argument("--n-steps", type=int, default=1024)
+    parser.add_argument("--batch-size", type=int, default=64)
+    parser.add_argument("--n-epochs", type=int, default=10)
     parser.add_argument(
         "--output-root",
         type=Path,
@@ -155,6 +161,18 @@ def build_launcher_command(args: argparse.Namespace) -> str:
             str(args.train_timesteps),
             "--eval-episodes",
             str(args.eval_episodes),
+            "--max-steps",
+            str(args.max_steps),
+            "--learning-rate",
+            str(args.learning_rate),
+            "--n-envs",
+            str(args.n_envs),
+            "--n-steps",
+            str(args.n_steps),
+            "--batch-size",
+            str(args.batch_size),
+            "--n-epochs",
+            str(args.n_epochs),
             "--output-root",
             str(args.output_root),
             "--heartbeat-interval-seconds",
@@ -180,11 +198,21 @@ def build_benchmark_cli_args(args: argparse.Namespace, run_dir: Path) -> list[st
         "--step-size-hours",
         str(FROZEN_BACKBONE["step_size_hours"]),
         "--max-steps",
-        str(FROZEN_BACKBONE["max_steps"]),
+        str(args.max_steps),
         "--train-timesteps",
         str(args.train_timesteps),
         "--eval-episodes",
         str(args.eval_episodes),
+        "--learning-rate",
+        str(args.learning_rate),
+        "--n-envs",
+        str(args.n_envs),
+        "--n-steps",
+        str(args.n_steps),
+        "--batch-size",
+        str(args.batch_size),
+        "--n-epochs",
+        str(args.n_epochs),
         "--seeds",
         *[str(seed) for seed in args.seeds],
     ]

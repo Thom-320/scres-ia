@@ -5,9 +5,9 @@ Trains PPO under three action-space configurations to determine which
 control dimension (assembly shifts vs downstream dispatch) matters most.
 
 Configurations:
-  joint           — full 7D action space (baseline, unchanged)
-  shift_only      — dims 5-6 (op10/op12) frozen at neutral (signal=0 → mult=1.25)
-  downstream_only — dim 4 (shift) frozen at S2 (signal=0)
+  joint           — full 8D action space (baseline, unchanged)
+  shift_only      — dims 6-7 (op10/op12) frozen at neutral (signal=0 → mult=1.25)
+  downstream_only — dim 5 (shift) frozen at S2 (signal=0)
 """
 from __future__ import annotations
 
@@ -20,33 +20,45 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from supply_chain.config import OPERATIONS
 from scripts.run_track_b_smoke import build_parser as smoke_build_parser, run_smoke
 
 
 class ShiftOnlyWrapper(gym.ActionWrapper):
     """Freeze downstream multiplier signals to neutral (0.0 → 1.25x).
 
-    The agent can only control dims 0-4 (inventory + shifts).
-    Dims 5-6 are forced to 0.0 each step.
+    The agent can only control dims 0-5 (Track A controls, including shifts).
+    Dims 6-7 are forced to 0.0 each step.
     """
 
     def action(self, action: np.ndarray) -> np.ndarray:
+        if isinstance(action, dict):
+            modified = dict(action)
+            for prefix in ("op10", "op12"):
+                op_id = 10 if prefix == "op10" else 12
+                modified[f"{prefix}_q_min"] = float(OPERATIONS[op_id]["q"][0]) * 1.25
+                modified[f"{prefix}_q_max"] = float(OPERATIONS[op_id]["q"][1]) * 1.25
+            return modified
         modified = np.array(action, dtype=np.float32)
-        modified[5] = 0.0
         modified[6] = 0.0
+        modified[7] = 0.0
         return modified
 
 
 class DownstreamOnlyWrapper(gym.ActionWrapper):
     """Freeze shift signal to S2 (0.0).
 
-    The agent can only control dims 0-3 (inventory) and dims 5-6 (downstream).
-    Dim 4 is forced to 0.0 (S2) each step.
+    The agent can control inventory and downstream dims, but not shifts.
+    Dim 5 is forced to 0.0 (S2) each step.
     """
 
     def action(self, action: np.ndarray) -> np.ndarray:
+        if isinstance(action, dict):
+            modified = dict(action)
+            modified["assembly_shifts"] = 2
+            return modified
         modified = np.array(action, dtype=np.float32)
-        modified[4] = 0.0
+        modified[5] = 0.0
         return modified
 
 

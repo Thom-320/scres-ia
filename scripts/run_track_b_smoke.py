@@ -35,9 +35,14 @@ from scripts.benchmark_control_reward import build_metric_contract_metadata
 from scripts.track_b_heuristics import HEURISTIC_POLICY_NAMES, make_heuristic_defaults
 from supply_chain.config import OPERATIONS, THESIS_FAITHFUL_PROTOCOL
 from supply_chain.dkana import DKANAOnlinePolicyAdapter, DKANAPolicy
+from supply_chain.episode_metrics import METRIC_KEYS, compute_episode_metrics
 from supply_chain.env_experimental_shifts import (
     OBSERVATION_VERSION_OPTIONS,
     REWARD_MODE_OPTIONS,
+)
+from supply_chain.ret_thesis import (
+    compute_ret_per_order_excel_formula,
+    order_counts_as_backorder_for_fill_rate,
 )
 from supply_chain.external_env_interface import (
     STATE_CONSTRAINT_FIELDS,
@@ -55,6 +60,7 @@ DEFAULT_MAX_STEPS = 260
 DEFAULT_RET_SEQ_KAPPA = 0.20
 EVAL_EPISODE_SEED_OFFSET = 50_000
 DOWNSTREAM_NEAR_MAX_THRESHOLD = 1.90
+RISK_COLS = ("R11", "R12", "R13", "R14", "R21", "R22", "R23", "R24", "R3")
 
 PRIMARY_METRICS = (
     "reward_total",
@@ -77,6 +83,16 @@ PRIMARY_METRICS = (
     "pct_steps_both_downstream_ge_190",
     "assembly_hours_total",
     "assembly_cost_index",
+    "ret_garrido2024_raw_total",
+    "ret_garrido2024_train_total",
+    "ret_garrido2024_sigmoid_total",
+    "ret_garrido2024_sigmoid_mean",
+    "terminal_zeta_avg",
+    "terminal_epsilon_avg",
+    "terminal_phi_avg",
+    "terminal_tau_avg",
+    "terminal_kappa_dot",
+    *tuple(f"order_{key}" for key in METRIC_KEYS),
 )
 
 HOURS_PER_SHIFT = 8.0
@@ -195,6 +211,14 @@ def build_parser() -> argparse.ArgumentParser:
         help="Evaluation episodes per policy and seed.",
     )
     parser.add_argument(
+        "--export-order-ledger",
+        action="store_true",
+        help=(
+            "Write a Garrido-style per-order ledger CSV for evaluated policies. "
+            "This can be large, so it is opt-in for confirmatory/audit runs."
+        ),
+    )
+    parser.add_argument(
         "--reward-mode",
         default="ReT_seq_v1",
         choices=list(REWARD_MODE_OPTIONS),
@@ -207,9 +231,53 @@ def build_parser() -> argparse.ArgumentParser:
         help="ReT_seq_v1 kappa. Ignored by other reward modes.",
     )
     parser.add_argument(
+        "--ret-excel-cvar-alpha",
+        type=float,
+        default=0.5,
+        help="Penalty weight for ReT_excel_plus_cvar.",
+    )
+    parser.add_argument(
+        "--ret-excel-cvar-tail-level",
+        type=float,
+        default=0.05,
+        help="Tail quantile used by ReT_excel_plus_cvar.",
+    )
+    parser.add_argument(
+        "--ret-excel-cvar-window",
+        type=int,
+        default=50,
+        help="Rolling service-loss window for ReT_excel_plus_cvar.",
+    )
+    parser.add_argument(
         "--risk-level",
         default="adaptive_benchmark_v2",
         help="Track B risk profile.",
+    )
+    parser.add_argument(
+        "--enabled-risks",
+        default=None,
+        help=(
+            "Optional comma-separated risk IDs to enable, e.g. R21,R22,R23,R24. "
+            "Leave unset to use the risk profile default."
+        ),
+    )
+    parser.add_argument(
+        "--risk-frequency-multiplier",
+        type=float,
+        default=1.0,
+        help="Multiplier for non-adaptive risk frequency in controlled Track B screens.",
+    )
+    parser.add_argument(
+        "--risk-impact-multiplier",
+        type=float,
+        default=1.0,
+        help="Multiplier for non-adaptive risk impact/duration in controlled Track B screens.",
+    )
+    parser.add_argument(
+        "--demand-mean-multiplier",
+        type=float,
+        default=1.0,
+        help="Multiplier for mean daily demand; useful for downstream headroom screens.",
     )
     parser.add_argument(
         "--observation-version",
@@ -266,6 +334,7 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument("--learning-rate", type=float, default=3e-4)
+    parser.add_argument("--n-envs", type=int, default=1)
     parser.add_argument("--n-steps", type=int, default=1024)
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--n-epochs", type=int, default=10)
@@ -319,11 +388,21 @@ def build_env_kwargs(args: argparse.Namespace) -> dict[str, Any]:
     kwargs: dict[str, Any] = {
         "reward_mode": args.reward_mode,
         "ret_seq_kappa": args.ret_seq_kappa,
+        "ret_excel_cvar_alpha": args.ret_excel_cvar_alpha,
+        "ret_excel_cvar_tail_level": args.ret_excel_cvar_tail_level,
+        "ret_excel_cvar_window": args.ret_excel_cvar_window,
         "risk_level": args.risk_level,
         "observation_version": args.observation_version,
         "step_size_hours": args.step_size_hours,
         "max_steps": args.max_steps,
+        "risk_frequency_multiplier": args.risk_frequency_multiplier,
+        "risk_impact_multiplier": args.risk_impact_multiplier,
+        "demand_mean_multiplier": args.demand_mean_multiplier,
     }
+    if args.enabled_risks:
+        kwargs["enabled_risks"] = tuple(
+            risk.strip() for risk in str(args.enabled_risks).split(",") if risk.strip()
+        )
     if getattr(args, "faithful", False):
         P = THESIS_FAITHFUL_PROTOCOL
         # Garrido-comparable Track B lane: overlay the faithful protocol on top of the
@@ -362,10 +441,10 @@ def build_static_policy_action(policy: StaticPolicySpec) -> dict[str, float | in
 
 def extract_downstream_multipliers(final_info: dict[str, Any]) -> tuple[float, float]:
     clipped_action = final_info.get("clipped_action")
-    if isinstance(clipped_action, (list, tuple)) and len(clipped_action) >= 7:
+    if isinstance(clipped_action, (list, tuple)) and len(clipped_action) >= 8:
         return (
-            float(1.25 + 0.75 * float(clipped_action[5])),
             float(1.25 + 0.75 * float(clipped_action[6])),
+            float(1.25 + 0.75 * float(clipped_action[7])),
         )
 
     raw_action = final_info.get("raw_action")
@@ -378,6 +457,94 @@ def extract_downstream_multipliers(final_info: dict[str, Any]) -> tuple[float, f
         )
 
     return 1.0, 1.0
+
+
+def init_cd_totals() -> dict[str, float]:
+    return {
+        "ret_garrido2024_raw_total": 0.0,
+        "ret_garrido2024_train_total": 0.0,
+        "ret_garrido2024_sigmoid_total": 0.0,
+    }
+
+
+def update_cd_totals(cd_totals: dict[str, float], info: dict[str, Any]) -> None:
+    cd_totals["ret_garrido2024_raw_total"] += float(
+        info.get("ret_garrido2024_raw_step", 0.0)
+    )
+    cd_totals["ret_garrido2024_train_total"] += float(
+        info.get("ret_garrido2024_train_step", 0.0)
+    )
+    cd_totals["ret_garrido2024_sigmoid_total"] += float(
+        info.get("ret_garrido2024_sigmoid_step", 0.0)
+    )
+
+
+def append_order_ledger_rows(
+    ledger_rows: list[dict[str, Any]] | None,
+    env: Any,
+    *,
+    policy: str,
+    seed: int,
+    episode: int,
+    eval_seed: int,
+) -> None:
+    if ledger_rows is None:
+        return
+    sim = env.unwrapped.sim
+    start = float(getattr(sim, "warmup_time", 0.0) or 0.0)
+    orders = sorted(
+        (
+            o
+            for o in sim.orders
+            if not bool(getattr(o, "metrics_excluded", False))
+            and float(getattr(o, "OPTj", 0.0) or 0.0) >= start
+        ),
+        key=lambda o: (
+            int(getattr(o, "j", 0) or 0),
+            float(getattr(o, "OPTj", 0.0) or 0.0),
+        ),
+    )
+    cum_bt = 0
+    cum_ut = 0
+    horizon = float(sim.env.now)
+    for idx, order in enumerate(orders, start=1):
+        if bool(getattr(order, "lost", False)):
+            cum_ut += 1
+        elif order_counts_as_backorder_for_fill_rate(order, current_time=horizon):
+            cum_bt += 1
+        ret_j, case = compute_ret_per_order_excel_formula(
+            order,
+            j=idx,
+            cumulative_backorders=cum_bt,
+            cumulative_unattended=cum_ut,
+        )
+        opt = getattr(order, "OPTj", None)
+        oat = getattr(order, "OATj", None)
+        row = {
+            "policy": policy,
+            "seed": int(seed),
+            "episode": int(episode),
+            "eval_seed": int(eval_seed),
+            "j": idx,
+            "Q": float(getattr(order, "quantity", getattr(order, "Q", 0.0)) or 0.0),
+            "OPTj": opt,
+            "OATj": oat,
+            "LT": getattr(order, "LTj", None),
+            "CTj": getattr(order, "CTj", None),
+            "APj": getattr(order, "APj", None),
+            "RPj": getattr(order, "RPj", None),
+            "DPj": getattr(order, "DPj", None),
+            "sumBt": cum_bt,
+            "sumUt": cum_ut,
+            "lost": int(bool(getattr(order, "lost", False))),
+            "backorder": int(bool(getattr(order, "backorder", False))),
+            "ReTj": ret_j,
+            "case": case,
+        }
+        risks = dict(getattr(order, "ret_risk_indicators", {}) or {})
+        for risk_col in RISK_COLS:
+            row[risk_col] = float(risks.get(risk_col, 0.0))
+        ledger_rows.append(row)
 
 
 def make_monitored_training_env(
@@ -413,7 +580,10 @@ def train_ppo(
     args: argparse.Namespace, seed: int, run_dir: Path
 ) -> tuple[Any, VecNormalize]:
     ensure_algo_dependencies(args)
-    vec_env = DummyVecEnv([make_monitored_training_env(args, seed)])
+    n_envs = max(1, int(getattr(args, "n_envs", 1)))
+    vec_env = DummyVecEnv(
+        [make_monitored_training_env(args, seed + i) for i in range(n_envs)]
+    )
     vec_norm = VecNormalize(
         vec_env,
         norm_obs=True,
@@ -480,6 +650,9 @@ def _finalize_episode_row(
     op12_multipliers: list[float],
     track_b_context: dict[str, Any],
     terminal_metrics: dict[str, float],
+    final_info: dict[str, Any] | None = None,
+    cd_totals: dict[str, float] | None = None,
+    full_episode_metrics: dict[str, float] | None = None,
 ) -> dict[str, Any]:
     total_steps = max(1, steps)
     if demanded_total > 0.0:
@@ -490,7 +663,7 @@ def _finalize_episode_row(
         flow_fill_rate = 1.0
     op10_arr = np.asarray(op10_multipliers or [1.0], dtype=np.float64)
     op12_arr = np.asarray(op12_multipliers or [1.0], dtype=np.float64)
-    return {
+    row = {
         "policy": policy,
         "seed": seed,
         "episode": episode,
@@ -530,10 +703,36 @@ def _finalize_episode_row(
         "assembly_cost_index": sum(shift_counts.get(s, 0) * s for s in (1, 2, 3))
         / (3.0 * total_steps),
     }
+    cd_totals = cd_totals or init_cd_totals()
+    final_info = final_info or {}
+    row.update(
+        {
+            "ret_garrido2024_raw_total": float(cd_totals["ret_garrido2024_raw_total"]),
+            "ret_garrido2024_train_total": float(cd_totals["ret_garrido2024_train_total"]),
+            "ret_garrido2024_sigmoid_total": float(
+                cd_totals["ret_garrido2024_sigmoid_total"]
+            ),
+            "ret_garrido2024_sigmoid_mean": float(
+                cd_totals["ret_garrido2024_sigmoid_total"] / total_steps
+            ),
+            "terminal_zeta_avg": float(final_info.get("zeta_avg", 0.0)),
+            "terminal_epsilon_avg": float(final_info.get("epsilon_avg", 0.0)),
+            "terminal_phi_avg": float(final_info.get("phi_avg", 0.0)),
+            "terminal_tau_avg": float(final_info.get("tau_avg", 0.0)),
+            "terminal_kappa_dot": float(final_info.get("kappa_dot", 0.0)),
+        }
+    )
+    for key in METRIC_KEYS:
+        row[f"order_{key}"] = float((full_episode_metrics or {}).get(key, 0.0))
+    return row
 
 
 def evaluate_static_policy(
-    policy: StaticPolicySpec, *, args: argparse.Namespace, seed: int
+    policy: StaticPolicySpec,
+    *,
+    args: argparse.Namespace,
+    seed: int,
+    order_ledger_rows: list[dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     env_kwargs = build_env_kwargs(args)
@@ -553,11 +752,13 @@ def evaluate_static_policy(
         shift_counts = {1: 0, 2: 0, 3: 0}
         op10_multipliers: list[float] = []
         op12_multipliers: list[float] = []
+        cd_totals = init_cd_totals()
         final_info = info
 
         while not (terminated or truncated):
             _, reward, terminated, truncated, final_info = env.step(action_payload)
             reward_total += float(reward)
+            update_cd_totals(cd_totals, final_info)
             demanded_total += float(final_info.get("new_demanded", 0.0))
             backorder_qty_total += float(final_info.get("new_backorder_qty", 0.0))
             shift_counts[int(final_info.get("shifts_active", 1))] += 1
@@ -583,14 +784,30 @@ def evaluate_static_policy(
                     "track_b_context"
                 ],
                 terminal_metrics=get_episode_terminal_metrics(env),
+                final_info=final_info,
+                cd_totals=cd_totals,
+                full_episode_metrics=compute_episode_metrics(env.unwrapped.sim),
             )
+        )
+        append_order_ledger_rows(
+            order_ledger_rows,
+            env,
+            policy=policy.label,
+            seed=seed,
+            episode=episode_idx + 1,
+            eval_seed=eval_seed,
         )
         env.close()
     return rows
 
 
 def evaluate_trained_policy(
-    *, args: argparse.Namespace, seed: int, model: Any, vec_norm: VecNormalize
+    *,
+    args: argparse.Namespace,
+    seed: int,
+    model: Any,
+    vec_norm: VecNormalize,
+    order_ledger_rows: list[dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     env_kwargs = build_env_kwargs(args)
@@ -611,6 +828,7 @@ def evaluate_trained_policy(
         shift_counts = {1: 0, 2: 0, 3: 0}
         op10_multipliers: list[float] = []
         op12_multipliers: list[float] = []
+        cd_totals = init_cd_totals()
         final_info = info
         lstm_states: Any = None
         episode_start = np.ones((1,), dtype=bool)
@@ -632,6 +850,7 @@ def evaluate_trained_policy(
                 np.asarray(action[0], dtype=np.float32)
             )
             reward_total += float(reward)
+            update_cd_totals(cd_totals, final_info)
             demanded_total += float(final_info.get("new_demanded", 0.0))
             backorder_qty_total += float(final_info.get("new_backorder_qty", 0.0))
             shift_counts[int(final_info.get("shifts_active", 1))] += 1
@@ -658,7 +877,18 @@ def evaluate_trained_policy(
                     "track_b_context"
                 ],
                 terminal_metrics=get_episode_terminal_metrics(env),
+                final_info=final_info,
+                cd_totals=cd_totals,
+                full_episode_metrics=compute_episode_metrics(env.unwrapped.sim),
             )
+        )
+        append_order_ledger_rows(
+            order_ledger_rows,
+            env,
+            policy=algo,
+            seed=seed,
+            episode=episode_idx + 1,
+            eval_seed=eval_seed,
         )
         env.close()
     return rows
@@ -670,8 +900,9 @@ def evaluate_heuristic_policy(
     *,
     args: argparse.Namespace,
     seed: int,
+    order_ledger_rows: list[dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
-    """Evaluate a Track B heuristic that takes (obs, info) → 7D action array."""
+    """Evaluate a Track B heuristic that takes (obs, info) -> 8D action array."""
     rows: list[dict[str, Any]] = []
     env_kwargs = build_env_kwargs(args)
     heuristic.reset()
@@ -689,6 +920,7 @@ def evaluate_heuristic_policy(
         shift_counts = {1: 0, 2: 0, 3: 0}
         op10_multipliers: list[float] = []
         op12_multipliers: list[float] = []
+        cd_totals = init_cd_totals()
         final_info = info
         heuristic.reset()
 
@@ -698,6 +930,7 @@ def evaluate_heuristic_policy(
                 np.asarray(action, dtype=np.float32)
             )
             reward_total += float(reward)
+            update_cd_totals(cd_totals, final_info)
             demanded_total += float(final_info.get("new_demanded", 0.0))
             backorder_qty_total += float(final_info.get("new_backorder_qty", 0.0))
             shift_counts[int(final_info.get("shifts_active", 1))] += 1
@@ -723,7 +956,18 @@ def evaluate_heuristic_policy(
                     "track_b_context"
                 ],
                 terminal_metrics=get_episode_terminal_metrics(env),
+                final_info=final_info,
+                cd_totals=cd_totals,
+                full_episode_metrics=compute_episode_metrics(env.unwrapped.sim),
             )
+        )
+        append_order_ledger_rows(
+            order_ledger_rows,
+            env,
+            policy=label,
+            seed=seed,
+            episode=episode_idx + 1,
+            eval_seed=eval_seed,
         )
         env.close()
     return rows
@@ -769,6 +1013,7 @@ def evaluate_dkana_policy(
     args: argparse.Namespace,
     seed: int,
     label: str = "dkana",
+    order_ledger_rows: list[dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     env_kwargs = build_env_kwargs(args)
@@ -787,6 +1032,7 @@ def evaluate_dkana_policy(
         shift_counts = {1: 0, 2: 0, 3: 0}
         op10_multipliers: list[float] = []
         op12_multipliers: list[float] = []
+        cd_totals = init_cd_totals()
         final_info = info
 
         while not (terminated or truncated):
@@ -796,6 +1042,7 @@ def evaluate_dkana_policy(
             )
             final_info["previous_reward"] = float(reward)
             reward_total += float(reward)
+            update_cd_totals(cd_totals, final_info)
             demanded_total += float(final_info.get("new_demanded", 0.0))
             backorder_qty_total += float(final_info.get("new_backorder_qty", 0.0))
             shift_counts[int(final_info.get("shifts_active", 1))] += 1
@@ -821,7 +1068,18 @@ def evaluate_dkana_policy(
                     "track_b_context"
                 ],
                 terminal_metrics=get_episode_terminal_metrics(env),
+                final_info=final_info,
+                cd_totals=cd_totals,
+                full_episode_metrics=compute_episode_metrics(env.unwrapped.sim),
             )
+        )
+        append_order_ledger_rows(
+            order_ledger_rows,
+            env,
+            policy=label,
+            seed=seed,
+            episode=episode_idx + 1,
+            eval_seed=eval_seed,
         )
         env.close()
     return rows
@@ -1162,6 +1420,9 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
     models_dir.mkdir(parents=True, exist_ok=True)
 
     episode_rows: list[dict[str, Any]] = []
+    order_ledger_rows: list[dict[str, Any]] | None = (
+        [] if bool(getattr(args, "export_order_ledger", False)) else None
+    )
     trained_models: list[dict[str, Any]] = []
     learned_policy = learned_policy_name(args)
 
@@ -1186,12 +1447,23 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
 
         for policy in STATIC_POLICY_SPECS:
             episode_rows.extend(
-                evaluate_static_policy(policy, args=args, seed=int(seed))
+                evaluate_static_policy(
+                    policy,
+                    args=args,
+                    seed=int(seed),
+                    order_ledger_rows=order_ledger_rows,
+                )
             )
         for h_label, h_policy in make_heuristic_defaults().items():
             try:
                 episode_rows.extend(
-                    evaluate_heuristic_policy(h_label, h_policy, args=args, seed=int(seed))
+                    evaluate_heuristic_policy(
+                        h_label,
+                        h_policy,
+                        args=args,
+                        seed=int(seed),
+                        order_ledger_rows=order_ledger_rows,
+                    )
                 )
             except ValueError as exc:
                 # Legacy heuristic defaults emit a 7-dim action; the track_b_v1 contract is 8-dim.
@@ -1199,12 +1471,21 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
                 print(f"[warn] skipping heuristic {h_label}: {exc}", flush=True)
         episode_rows.extend(
             evaluate_trained_policy(
-                args=args, seed=int(seed), model=model, vec_norm=vec_norm
+                args=args,
+                seed=int(seed),
+                model=model,
+                vec_norm=vec_norm,
+                order_ledger_rows=order_ledger_rows,
             )
         )
         if dkana_adapter is not None:
             episode_rows.extend(
-                evaluate_dkana_policy(dkana_adapter, args=args, seed=int(seed))
+                evaluate_dkana_policy(
+                    dkana_adapter,
+                    args=args,
+                    seed=int(seed),
+                    order_ledger_rows=order_ledger_rows,
+                )
             )
         vec_norm.close()
 
@@ -1217,6 +1498,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
     seed_csv = output_dir / "seed_metrics.csv"
     policy_csv = output_dir / "policy_summary.csv"
     comparison_csv = output_dir / "comparison_table.csv"
+    order_ledger_csv = output_dir / "order_ledger.csv"
     summary_json = output_dir / "summary.json"
     summary_md = output_dir / "summary.md"
 
@@ -1224,6 +1506,8 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
     save_csv(seed_csv, seed_rows)
     save_csv(policy_csv, policy_rows)
     save_csv(comparison_csv, comparison_rows)
+    if order_ledger_rows is not None:
+        save_csv(order_ledger_csv, order_ledger_rows)
     reward_contract = build_reward_contract(str(args.reward_mode))
 
     summary = {
@@ -1231,9 +1515,13 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
             "seeds": [int(seed) for seed in args.seeds],
             "train_timesteps": int(args.train_timesteps),
             "eval_episodes": int(args.eval_episodes),
+            "export_order_ledger": bool(getattr(args, "export_order_ledger", False)),
             "algo": learned_policy,
             "reward_mode": args.reward_mode,
             "ret_seq_kappa": float(args.ret_seq_kappa),
+            "ret_excel_cvar_alpha": float(args.ret_excel_cvar_alpha),
+            "ret_excel_cvar_tail_level": float(args.ret_excel_cvar_tail_level),
+            "ret_excel_cvar_window": int(args.ret_excel_cvar_window),
             "risk_level": args.risk_level,
             "step_size_hours": float(args.step_size_hours),
             "max_steps": int(args.max_steps),
@@ -1242,6 +1530,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
             "year_basis": "thesis",
             "stochastic_pt": True,
             "learning_rate": float(args.learning_rate),
+            "n_envs": int(getattr(args, "n_envs", 1)),
             "n_steps": int(args.n_steps),
             "batch_size": int(args.batch_size),
             "n_epochs": int(args.n_epochs),
@@ -1291,6 +1580,9 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
             "seed_metrics_csv": str(seed_csv.resolve()),
             "policy_summary_csv": str(policy_csv.resolve()),
             "comparison_table_csv": str(comparison_csv.resolve()),
+            "order_ledger_csv": (
+                str(order_ledger_csv.resolve()) if order_ledger_rows is not None else None
+            ),
             "summary_json": str(summary_json.resolve()),
             "summary_md": str(summary_md.resolve()),
         },

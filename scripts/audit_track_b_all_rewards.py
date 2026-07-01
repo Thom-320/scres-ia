@@ -288,6 +288,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="Track B risk profile.",
     )
     parser.add_argument(
+        "--observation-version",
+        default="v7",
+        help="Track B observation contract used by the frozen policy.",
+    )
+    parser.add_argument(
         "--step-size-hours",
         type=float,
         default=DEFAULT_STEP_SIZE_HOURS,
@@ -322,6 +327,7 @@ def build_env_kwargs(args: argparse.Namespace, reward_mode: str) -> dict[str, An
     return {
         "reward_mode": reward_mode,
         "risk_level": args.risk_level,
+        "observation_version": args.observation_version,
         "step_size_hours": args.step_size_hours,
         "max_steps": args.max_steps,
     }

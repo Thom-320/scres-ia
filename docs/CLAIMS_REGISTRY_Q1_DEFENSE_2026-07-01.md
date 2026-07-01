@@ -1,0 +1,235 @@
+# Claims Registry and Q1 Reviewer Defense (2026-07-01)
+
+This is the current source of truth for paper-facing claims. Older documents
+may still mention Track B as `7D`, "perfect fill", `500k`, or coarse-frontier
+wins; treat those as historical unless they are reconciled here.
+
+Primary evaluation bar: Garrido/Excel ReT. CVaR/tail, Cobb-Douglas, service,
+backlog/recovery, and resource are separate evidence columns, not substitutes.
+
+## Claim Registry
+
+| ID | Claim | Status | Current evidence | Before submission |
+|---|---|---|---|---|
+| C1 | Track B improves Garrido/Excel ReT when downstream dispatch is controllable. | **Supported** | 5-seed Track B confirm, dense CRN audit: PPO `0.005666` vs dense static `0.005251`, CI positive. | Keep paired dense-CRN table in final workbook; do not cite coarse frontier. |
+| C2 | Track B improves lower-tail resilience / CVaR. | **Supported** | Tail ReT CVaR05 delta about `+0.000506`; recovery tail metrics improve strongly. | Report CVaR05, ReT p05/p10, CTj/RPj/DPj p95/p99 with CI/effect size. |
+| C3 | Track B improves service and recovery, not just mean ReT. | **Supported** | Flow fill, service-loss AUC, backlog, CTj/RPj/DPj tails favor PPO in the rich audit. | Use Garrido-style workbook with PPO, best dense static, top statics, and order ledger. |
+| C4 | Track B also wins under the balanced/variance-log Cobb-Douglas evaluation lens. | **Supported as evaluation; not as a training-reward claim** | Balanced CD sigmoid mean PPO about `0.939` vs dense static about `0.754`; CI positive. `variance_log` is already ported in `ret_garrido2024_calibration.json`. | Name the CD variant exactly; do not use full-cost CD as headline unless separately confirmed. |
+| C5 | PPO is Pareto non-dominated in ReT/cost, but not strictly resource-efficient. | **Supported with wording constraint** | No dense static dominates PPO on ReT and cost; PPO cost is slightly higher than the best dense static by ReT. | Report `raw_ret_win`, `tail_win`, `pareto_ret_cost`, and `resource_efficient_win` separately. |
+| C6 | The Track B mechanism is adaptive recovery / backlog control. | **Supported, mechanism audit still needed** | PPO uses balanced shifts and lower average Op10/Op12 than aggressive static, with high p95 dispatch when pressure rises; queues and service loss improve. | Run lead/lag and action-trace correlations; avoid "anticipatory" unless pre-event action rises. |
+| C7 | RL value is frontier-dependent: action-space alignment with the downstream bottleneck explains Track A vs Track B. | **Supported as framing; causal ablation needs current rerun** | Track A dense frontiers null; Track B positive; older ablation supports downstream necessity. | Rerun `joint`, `downstream_only`, `shift_only` under current 8D contract and dense/CRN metrics. |
+| C8 | Track A is a boundary characterization: Garrido's buffer/shift family does not expose a publishable dynamic frontier. | **Supported with caveat** | Dense static frontiers, CRN, rich metrics, and repair attempts close current Track A claims. | Say "no publishable signal after dense frontier/CRN/rich metrics", not "mathematically impossible". |
+| C9 | Reward choice is secondary once Track B controls the right bottleneck. | **Needs verification** | Older 7D/500k reward-sweep docs are stale; current v7/v8/v9 sweep is running. | Use only the current adaptive sweep results; retire old reward-insensitivity numbers if inconsistent. |
+| C10 | v9 observation improves Track B headroom. | **Candidate only** | v9 implemented and smoke-checked: v7=`52`, v8=`79`, v9=`89` dimensions. No confirmatory win yet. | Promote only if v9 beats canonical v7 on Excel ReT delta or CVaR05 under dense CRN. |
+| C11 | Track B generalizes beyond one adaptive benchmark cell. | **Needs verification** | Not yet closed across current/increased/severe, R2/R24/mixed, h52/h104/h260. | Produce a cross-regime/horizon table against dense statics or matched strong baselines. |
+| C12 | Retained learning / `L_{t-1}` improves future campaigns. | **Deferred; not a current claim** | Track A retained/reset probes were null or underpowered; Track B H4 has not been run properly. | Claim only if retained-reset CI lower bound is positive, especially under `obs_hidden`. |
+| C13 | PPO is enough; SAC/TD3 are unnecessary. | **Reviewer defense only** | RecurrentPPO was negative in Track A; PPO wins Track B. | If time allows, run SAC as robustness; otherwise state algorithm comparison is secondary to action-space mechanism. |
+| C14 | A formal MDP/POMDP analysis supports the empirical result. | **Deferred appendix** | Not done. | Add a short appendix defining state/action/reward/partial observability and why empirical dense-frontier tests are primary. |
+
+## Retired Or Unsafe Claims
+
+| Retired claim | Reason |
+|---|---|
+| "Track B is thesis-faithful." | Track B is an operational extension; Garrido fixed downstream dispatch. |
+| "Track B is 7D." | Current `track_b_v1` contract is 8D; old 7D docs are historical. |
+| "Perfect fill / fill=1.000 is the headline." | Current primary metric is Excel ReT; fill can be saturated or misleading. |
+| "Strictly Pareto-dominates on all metrics." | Resource-efficient win is not confirmed; report verdicts separately. |
+| "PPO anticipates risks." | Current evidence supports adaptive recovery; anticipation requires lead/lag proof. |
+| "H4 is proven." | H4 is not proven on the winning Track B lane. |
+| "Track A preventive/coarse-frontier wins are publishable." | Dense CRN and rich metrics falsified those lanes. |
+
+## Q1 Verification Roadmap
+
+### 1. Canonical Track B Audit
+
+Goal: lock H1 under the paper's primary metric.
+
+Use the canonical run:
+
+```text
+outputs/experiments/track_b_gain_2026-06-30/top_tier_confirm_v3_output/track_b_top_tier_confirm_5seed_60k_h104/
+```
+
+Required outputs:
+
+- PPO vs dense static CRN table.
+- Garrido-style workbook with policy summary, metric deltas, APj/RPj/DPj/CTj/ReTj ledger, CVaR, CD, cost, action traces.
+- Bootstrap CI95 and Cohen's d for Excel ReT, CVaR05, flow fill, CD, service-loss AUC, cost.
+- Pareto figures: ReT-cost, ReT-CVaR/tail, ReT-flow.
+
+Current stats/figure bundle:
+
+```text
+outputs/audits/track_b_q1_stats_2026-07-01/
+```
+
+Primary dense-static comparator selected by Excel ReT:
+`S2_op10_2.00_op12_1.50`.
+
+Primary result:
+`order_ret_excel` PPO `0.005893` vs dense static `0.005466`,
+delta `+0.000426`, CI95 `[+0.000389, +0.000463]`,
+paired Cohen's d `2.87`.
+
+Pareto result:
+PPO is non-dominated versus the dense static frontier on
+Excel ReT, cost, CTj p99 tail, and flow fill.
+
+Command skeleton:
+
+```bash
+.venv/bin/python scripts/run_track_b_dense_crn_static.py \
+  --run-dir outputs/experiments/track_b_gain_2026-06-30/top_tier_confirm_v3_output/track_b_top_tier_confirm_5seed_60k_h104 \
+  --output-dir outputs/experiments/track_b_dense_crn_static_final \
+  --seeds 1,2,3,4,5 \
+  --eval-episodes 12 \
+  --reward-mode control_v1 \
+  --risk-level adaptive_benchmark_v2 \
+  --observation-version v7 \
+  --max-steps 104 \
+  --export-order-ledger
+```
+
+### 2. Mechanism Audit
+
+Goal: prove the mechanism is recovery/backlog control and set the language boundary.
+
+Required checks:
+
+- Op10/Op12 mean, p90, p95, p99 vs backlog, rolling fill, regime, risk/hazard.
+- Shift mix and switching frequency.
+- CTj/RPj/DPj p95/p99 and service-loss AUC.
+- Lead/lag windows: action before, during, after R22/R23/R24 or backlog spikes.
+
+Command skeleton:
+
+```bash
+.venv/bin/python scripts/audit_track_b_mechanism.py \
+  outputs/experiments/track_b_gain_2026-06-30/top_tier_confirm_v3_output/track_b_top_tier_confirm_5seed_60k_h104 \
+  --output-dir outputs/audits/track_b_mechanism_final
+```
+
+Decision rule:
+
+- If action rises before risk/backlog, allow limited "anticipatory" wording.
+- If action rises only after pressure appears, use "adaptive recovery / backlog control".
+
+### 3. Current-Contract Ablations
+
+Goal: answer "Track B just gives the agent more power" with the current 8D contract.
+
+Required arms:
+
+- `joint`
+- `downstream_only`
+- `shift_only`
+- fixed-shift variant if implemented or added as a small extension
+- no-risk/no-hazard or shuffled-hazard observation variant if available
+
+Command skeleton:
+
+```bash
+.venv/bin/python scripts/run_track_b_ablation.py \
+  --output-dir outputs/experiments/track_b_ablation_8d_final \
+  --ablation-configs joint downstream_only shift_only \
+  --reward-mode control_v1 \
+  --risk-level adaptive_benchmark_v2 \
+  --observation-version v7 \
+  --seeds 1 2 3 4 5 \
+  --train-timesteps 60000 \
+  --eval-episodes 12 \
+  --max-steps 104 \
+  --n-envs 4 \
+  --learning-rate 0.0001 \
+  --export-order-ledger
+```
+
+Important: this runner trains a learned policy for each ablation arm. It is not
+a free frozen-policy evaluation. Use it after the mechanism audit unless a
+lighter frozen-policy ablation runner is added.
+
+Decision rule:
+
+- If downstream-only keeps most of the win and shift-only loses, the bottleneck-alignment story is strong.
+- If joint is the only winner, the claim becomes "downstream plus capacity coordination" rather than downstream sufficiency.
+
+### 4. Generalization
+
+Goal: show the result is not a single-cell artifact.
+
+Minimum matrix:
+
+- Risk levels: `current`, `increased`, `severe`, `adaptive_benchmark_v2`.
+- Families: R2-only, R24-only, mixed/all-risks where supported.
+- Horizons: h52, h104, h260.
+
+Report:
+
+- Excel ReT delta vs best static.
+- CVaR05 delta.
+- Flow/service/tail deltas.
+- Cost delta.
+- Win/loss by cell; do not average away failures without showing them.
+
+Decision rule:
+
+- Strong Q1 claim if PPO is positive or non-inferior in most cells and never catastrophically worse.
+- If wins are concentrated in adaptive_benchmark_v2, frame as a stress-campaign result with generalization as future work.
+
+### 5. H4 Retained-vs-Reset
+
+Goal: optional upgrade from "adaptive control" to "retained operational learning".
+
+Run only after H1 and mechanism are locked.
+
+Required protocol:
+
+- Conditions: `obs_full` and `obs_hidden`.
+- Arms: frozen, reset, retained, retained-shuffled, no-update, wrong-history.
+- Primary estimand: `Delta_memory = ReT_retained - ReT_reset`.
+- Negative controls must be reported.
+- One-seed-per-kernel or partial writes, CPU forced, live watcher mandatory.
+
+Claim rule:
+
+- H4 claim only if CI95 lower bound > 0, preferably in `obs_hidden`.
+- If null, H4 is an open question, not a failed main paper.
+
+## Reviewer #2 Defense Package
+
+| Attack | Required response |
+|---|---|
+| Track B is just more powerful. | Show 8D ablations; emphasize action-space alignment, not dimension count. |
+| Track B is not Garrido-faithful. | Label Track B as operational extension; Track A is thesis-variable boundary evidence. |
+| Reward tuning/fishing. | Show pre-registered gates, held-out CRN, current sweep, and failed lanes in the registry. |
+| PPO only. | Say action-space mechanism is the primary tested variable; RecurrentPPO negative; SAC is robustness/future work unless run. |
+| No retained learning. | Do not claim H4 unless positive; paper's main claim is adaptive closed-loop recovery. |
+| Single topology. | Defend benchmark depth and thesis validation; add cross-regime/horizon generalization table. |
+| Excel ReT quirks. | Report full Garrido-style panel, tail/CVaR, service, cost, and order ledger; do not rely on one scalar. |
+| Static frontier too weak. | Use dense CRN in the same action space; no coarse-frontier claims. |
+| Mechanism is reactive, not anticipatory. | Agree unless lead/lag proves otherwise; use "adaptive recovery / backlog control". |
+
+## Corrections to Recent Draft Plans
+
+- The Track B observation audit is mostly correct, but the current code has
+  `v7=52`, `v8=79`, and `v9=89`; v9 adds **10** dimensions, not 7.
+- `variance_log` CD is already ported and active through
+  `supply_chain/data/ret_garrido2024_calibration.json`; what remains is not a
+  port, but final same-bar reporting and avoiding full-cost CD as the headline.
+- "CD same-bar" is supported as an **evaluation** claim; `ReT_cd_balanced` as a
+  training reward underperformed in the controlled campaign and should not be
+  promoted without a new sweep win.
+- The safest immediate work while Kaggle runs is mechanism analysis and
+  statistical/figure generation. Current 8D ablations are valuable but are not
+  zero-cost because the available runner trains each arm.
+
+## Submission Readiness Checklist
+
+- [ ] Final canonical Track B workbook rebuilt from current dense CRN and rich metrics.
+- [x] Cohen's d and CI95 table added for all headline metrics.
+- [x] Pareto figures generated.
+- [ ] Current 8D ablations completed or the causal claim softened.
+- [ ] Mechanism lead/lag audit completed or anticipation language removed.
+- [ ] Generalization table completed or scope narrowed.
+- [ ] H4 either confirmed and reported, or explicitly deferred as open.
+- [ ] Manuscript/docs scrubbed for retired claims: `7D`, `perfect fill`, `500k-only`, `strictly Pareto-dominates all metrics`, and `Track B thesis-faithful`.

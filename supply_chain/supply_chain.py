@@ -55,6 +55,7 @@ from .config import (
     HOURS_PER_YEAR_GREGORIAN,
     HOURS_PER_YEAR_THESIS,
     R14_DEFECT_MODE_OPTIONS,
+    RATIONS_PER_SHIFT,
     RAW_MATERIAL_FLOW_MODE_OPTIONS,
     RET_RECOVERY_PERIOD_MODE,
     RET_RECOVERY_PERIOD_MODE_OPTIONS,
@@ -174,6 +175,15 @@ class MFSCSimulation:
         risk_frequency_multiplier: float = 1.0,
         risk_impact_multiplier: float = 1.0,
         strict_exogenous_crn: bool = False,
+        risk_recovery_window_hours: float = 0.0,
+        risk_recovery_release_rations: float = 0.0,
+        risk_recovery_boost_downstream: bool = True,
+        risk_recovery_enabled_risks: tuple[str, ...] = (
+            "R21",
+            "R22",
+            "R23",
+            "R24",
+        ),
     ) -> None:
         if warmup_trigger not in WARMUP_TRIGGER_OPTIONS:
             valid = ", ".join(WARMUP_TRIGGER_OPTIONS)
@@ -414,6 +424,16 @@ class MFSCSimulation:
         self.warmup_complete = False
         self.warmup_time = 0.0
         self._cumulative_available_assembly_hours = 0.0
+        # v9 observation: backorder health, EWMA trends, and step throughput.
+        self._prev_step_produced: float = 0.0
+        self._prev_step_delivered: float = 0.0
+        self._prev_step_available_assembly_hours: float = 0.0
+        self._prev_step_fill_rate: float = 1.0
+        self._ewma_fill_rate: float = 1.0
+        self._ewma_backlog_growth: float = 0.0
+        self._delta_fill_rate: float = 0.0
+        self._delta_backlog_momentum: float = 0.0
+        self._prev_pending_backorder_qty: float = 0.0
 
         # Time-series (sampled daily)
         self.daily_production = []
@@ -456,6 +476,48 @@ class MFSCSimulation:
         # =================================================================
         self._processes_started = False
         self._step_size = HOURS_PER_DAY  # Default: 24h per step
+
+        # =================================================================
+        # R2 RECOVERY WINDOW (opt-in sensitivity, not freeze-default)
+        # =================================================================
+        # Bounded stock-release after R2 events. When `risk_recovery_window_hours`
+        # and `risk_recovery_release_rations` are both > 0, a simpy controller
+        # fires for each R2 event in `risk_recovery_enabled_risks`: at the end
+        # of the event + window, it injects `release_rations` to theatre and
+        # drains the pending backorder queue while the window is open.
+        # This is the diagnostic mechanism identified by
+        # `docs/R2_AUDIT_DECOMPOSITION_2026-06-29.md` §5. It is NOT a freeze
+        # default; the thesis-faithful lane keeps these at 0.
+        self.risk_recovery_window_hours = max(0.0, float(risk_recovery_window_hours))
+        self.risk_recovery_release_rations = max(
+            0.0, float(risk_recovery_release_rations)
+        )
+        self.risk_recovery_boost_downstream = bool(risk_recovery_boost_downstream)
+        self.risk_recovery_enabled_risks = tuple(
+            str(r) for r in risk_recovery_enabled_risks
+        )
+        self._risk_recovery_seen: set[tuple[str, float, float]] = set()
+        self._risk_recovery_window_until: float = 0.0
+        self._risk_recovery_release_emitted: float = 0.0
+        self._risk_recovery_base_params: dict[str, Any] = {}
+        self._risk_recovery_boosted: bool = False
+        if (
+            self.risk_recovery_window_hours > 0.0
+            and self.risk_recovery_release_rations > 0.0
+            and self.risk_recovery_boost_downstream
+        ):
+            for key in (
+                "op9_rop",
+                "op10_rop",
+                "op12_rop",
+                "op9_q_min",
+                "op9_q_max",
+                "op10_q_min",
+                "op10_q_max",
+                "op12_q_min",
+                "op12_q_max",
+            ):
+                self._risk_recovery_base_params[key] = self.params[key]
 
     def _normalize_excel_order_tape(
         self, tape: Optional[list[dict[str, Any]]]
@@ -790,6 +852,97 @@ class MFSCSimulation:
 
         self._processes_started = True
 
+        if (
+            self.risk_recovery_window_hours > 0.0
+            and self.risk_recovery_release_rations > 0.0
+        ):
+            self.env.process(self._r2_recovery_window_controller())
+
+    def _r2_recovery_window_controller(self):
+        """
+        Bounded stock-release after R2 events (opt-in sensitivity).
+
+        Mirrors the diagnostic `_r2_recovery_window_controller` in
+        `scripts/audit_garrido_r2_recovery_transient.py`, but reads its
+        configuration from the sim attributes set in `__init__`. The freeze
+        keeps `risk_recovery_window_hours=0` and
+        `risk_recovery_release_rations=0` so this controller never runs in the
+        default thesis-faithful lane.
+
+        Mechanism
+        ---------
+        For each R2 event whose end time has not yet been processed, when
+        `env.now >= event.end_time`, the controller:
+          1. injects `risk_recovery_release_rations` to `rations_theatre` (NOT
+             stock-conserving: the audit's "release" path was injection-based;
+             the "move" path was stock-conserving and underperformed, see
+             `R2_AUDIT_DECOMPOSITION_2026-06-29.md` §5),
+          2. extends the active window to `event.end_time + window_hours`,
+          3. if `risk_recovery_boost_downstream` is True, temporarily boosts
+             op9/op10/op12 ROP to 12 h and Q to 2x while the window is open
+             (reverts when it closes), matching the audit's window+release
+             combination that achieved CT p99 ratio 1.15x Excel at release=2,500.
+          4. yields to let `_serve_pending_backorders` consume the injection.
+        """
+        window_hours = self.risk_recovery_window_hours
+        release_qty = self.risk_recovery_release_rations
+        boost_downstream = self.risk_recovery_boost_downstream
+        enabled_risks = set(self.risk_recovery_enabled_risks)
+        if boost_downstream and not self._risk_recovery_base_params:
+            for key in (
+                "op9_rop",
+                "op10_rop",
+                "op12_rop",
+                "op9_q_min",
+                "op9_q_max",
+                "op10_q_min",
+                "op10_q_max",
+                "op12_q_min",
+                "op12_q_max",
+            ):
+                self._risk_recovery_base_params[key] = self.params[key]
+        while self.env.now < self.horizon:
+            activated = False
+            for event in list(self.risk_events):
+                risk_id = str(event.risk_id)
+                if risk_id not in enabled_risks:
+                    continue
+                key = (risk_id, float(event.start_time), float(event.end_time))
+                if key in self._risk_recovery_seen:
+                    continue
+                self._risk_recovery_seen.add(key)
+                yield self.rations_theatre.put(release_qty)
+                self._risk_recovery_window_until = max(
+                    self._risk_recovery_window_until,
+                    float(event.end_time) + window_hours,
+                )
+                self._risk_recovery_release_emitted += release_qty
+                activated = True
+            should_boost = (
+                boost_downstream
+                and self.env.now < self._risk_recovery_window_until
+            )
+            if should_boost and not self._risk_recovery_boosted:
+                for key in ("op9_rop", "op10_rop", "op12_rop"):
+                    self.params[key] = 12
+                for prefix in ("op9", "op10", "op12"):
+                    base_min = float(self._risk_recovery_base_params[f"{prefix}_q_min"])
+                    base_max = float(self._risk_recovery_base_params[f"{prefix}_q_max"])
+                    self.params[f"{prefix}_q_min"] = int(round(base_min * 2.0))
+                    self.params[f"{prefix}_q_max"] = int(round(base_max * 2.0))
+                self._risk_recovery_boosted = True
+            elif self._risk_recovery_boosted and not should_boost:
+                for key, value in self._risk_recovery_base_params.items():
+                    self.params[key] = value
+                self._risk_recovery_boosted = False
+            if (
+                (activated or should_boost)
+                and self.pending_backorders
+                and self.rations_theatre.level > 0
+            ):
+                yield self.env.process(self._serve_pending_backorders())
+            yield self.env.timeout(1.0)
+
     def run(self) -> "MFSCSimulation":
         """Full run (for validation and batch experiments)."""
         self._start_processes()
@@ -909,6 +1062,14 @@ class MFSCSimulation:
 
         # Proxy reward (default — env.py may override)
         reward = new_delivered - 10 * new_backorders
+
+        self._update_observation_v9_step_features(
+            new_delivered=float(new_delivered),
+            new_demanded=float(new_demanded),
+            new_produced=float(new_produced),
+            new_backorder_qty=float(new_backorder_qty),
+            new_available_assembly_hours=float(new_available_assembly_hours),
+        )
 
         inventory_detail = self._inventory_detail()
         total_inventory = sum(inventory_detail.values())
@@ -1220,7 +1381,7 @@ class MFSCSimulation:
 
     def get_observation_v6_extra(self) -> np.ndarray:
         """
-        Return 10 Track-B adaptive-control features for obs v6.
+        Return 12 Track-B adaptive-control + production-aware features for obs v6.
 
         [0:5]  operating regime one-hot: nominal, strained, pre_disruption,
                disrupted, recovery
@@ -1229,10 +1390,17 @@ class MFSCSimulation:
         [7]    maintenance debt carried from sustained S3 usage
         [8]    average pending-backorder age normalized by config horizon
         [9]    theatre cover days normalized by config horizon
+        [10]   daily production rate (normalized by S3 max capacity)
+        [11]   R14 defect probability (regime-dependent Binomial p)
         """
         regime_one_hot = np.zeros(len(ADAPTIVE_BENCHMARK_REGIMES), dtype=np.float32)
         regime_index = ADAPTIVE_BENCHMARK_REGIMES.index(self.adaptive_regime)
         regime_one_hot[regime_index] = 1.0
+        max_daily_capacity = 3.0 * RATIONS_PER_SHIFT  # S3 = 7,692 rations/day
+        production_rate = float(
+            np.clip(self._today_produced / max(1.0, max_daily_capacity), 0.0, 1.0)
+        )
+        r14_p = self._get_risk_p("R14") if self.risks_enabled else 0.0
         return np.concatenate(
             [
                 regime_one_hot,
@@ -1243,6 +1411,8 @@ class MFSCSimulation:
                         float(np.clip(self.maintenance_debt, 0.0, 1.0)),
                         float(np.clip(self._pending_backorder_age_norm(), 0.0, 1.0)),
                         float(np.clip(self._theatre_cover_days_norm(), 0.0, 1.0)),
+                        float(production_rate),
+                        float(np.clip(r14_p, 0.0, 1.0)),
                     ],
                     dtype=np.float32,
                 ),
@@ -1295,7 +1465,7 @@ class MFSCSimulation:
 
     def get_observation_v7_extra(self) -> np.ndarray:
         """
-        Return 6 Track-B bottleneck features for obs v7.
+        Return 10 Track-B bottleneck + hazard features for obs v7.
 
         [0]    op10_down
         [1]    op12_down
@@ -1303,8 +1473,32 @@ class MFSCSimulation:
         [3]    op12_queue_pressure_norm
         [4]    rolling_fill_rate_4w
         [5]    rolling_backorder_rate_4w
+        [6]    weeks_since_last_R22 (downstream LOC attack memory)
+        [7]    weeks_since_last_R23 (forward unit destruction memory)
+        [8]    weeks_since_last_R24 (demand surge memory)
+        [9]    ewma_downstream_risk_rate (EWMA of active downstream disruptions)
         """
         rolling_fill_rate, rolling_backorder_rate = self._rolling_service_metrics()
+        now = float(self.env.now)
+        # Compute weeks-since-last for downstream risks
+        def weeks_since(risk_id, window_hours=672.0):
+            last_end = 0.0
+            for ev in self.risk_events:
+                if str(ev.risk_id) == risk_id:
+                    last_end = max(last_end, float(ev.end_time))
+            return min(1.0, (now - last_end) / window_hours) if last_end > 0 else 1.0
+        
+        wsl_r22 = weeks_since("R22", 672.0)
+        wsl_r23 = weeks_since("R23", 672.0)
+        wsl_r24 = weeks_since("R24", 336.0)
+        # EWMA of active downstream risks
+        active_count = sum(1 for ev in self.risk_events 
+                          if str(ev.risk_id) in ("R22","R23","R24") 
+                          and float(ev.start_time) <= now <= float(ev.end_time))
+        # Also count op10/op12 down status
+        active_count += (1 if self._is_down(10) else 0) + (1 if self._is_down(12) else 0)
+        ewma_down = min(1.0, active_count / 4.0)  # normalize by max possible
+        
         return np.array(
             [
                 float(self._is_down(10)),
@@ -1319,6 +1513,10 @@ class MFSCSimulation:
                 ),
                 float(np.clip(rolling_fill_rate, 0.0, 1.0)),
                 float(np.clip(rolling_backorder_rate, 0.0, 1.0)),
+                float(np.clip(wsl_r22, 0.0, 1.0)),
+                float(np.clip(wsl_r23, 0.0, 1.0)),
+                float(np.clip(wsl_r24, 0.0, 1.0)),
+                float(np.clip(ewma_down, 0.0, 1.0)),
             ],
             dtype=np.float32,
         )
@@ -1365,6 +1563,104 @@ class MFSCSimulation:
             + [
                 float(np.clip(duration[risk_id] / window, 0.0, 1.0))
                 for risk_id in REALIZED_RISK_OBSERVATION_IDS
+            ],
+            dtype=np.float32,
+        )
+
+    def _expected_step_demand(self) -> float:
+        mean_daily_demand = 0.5 * float(DEMAND["a"] + DEMAND["b"])
+        return max(1.0, mean_daily_demand * max(1.0, float(self._step_size)) / HOURS_PER_DAY)
+
+    def _update_observation_v9_step_features(
+        self,
+        *,
+        new_delivered: float,
+        new_demanded: float,
+        new_produced: float,
+        new_backorder_qty: float,
+        new_available_assembly_hours: float,
+    ) -> None:
+        """Update v9 trend features once per simulation step."""
+        demand_scale = max(1.0, float(new_demanded), self._expected_step_demand())
+        step_fill = (
+            float(new_delivered) / max(1.0, float(new_demanded))
+            if float(new_demanded) > 0.0
+            else self._fill_rate()
+        )
+        step_backlog_growth = max(0.0, float(new_backorder_qty)) / demand_scale
+        pending_delta = float(self.pending_backorder_qty) - float(
+            self._prev_pending_backorder_qty
+        )
+
+        self._prev_step_produced = max(0.0, float(new_produced))
+        self._prev_step_delivered = max(0.0, float(new_delivered))
+        self._prev_step_available_assembly_hours = max(
+            0.0, float(new_available_assembly_hours)
+        )
+        self._ewma_fill_rate = 0.9 * float(self._ewma_fill_rate) + 0.1 * float(
+            step_fill
+        )
+        self._ewma_backlog_growth = 0.8 * float(self._ewma_backlog_growth) + 0.2 * float(
+            step_backlog_growth
+        )
+        self._delta_fill_rate = float(
+            np.clip(float(step_fill) - float(self._prev_step_fill_rate), -1.0, 1.0)
+        )
+        self._delta_backlog_momentum = float(
+            np.clip(pending_delta / demand_scale, -1.0, 1.0)
+        )
+        self._prev_step_fill_rate = float(step_fill)
+        self._prev_pending_backorder_qty = float(self.pending_backorder_qty)
+
+    def get_observation_v9_extra(self) -> np.ndarray:
+        """
+        Return 10 backorder-health, trend, and throughput features for obs v9.
+
+        [0]  backorder_queue_count_norm
+        [1]  unattended_total_norm
+        [2]  oldest_backorder_age_norm
+        [3]  ewma_fill_rate
+        [4]  ewma_backlog_growth
+        [5]  delta_fill_rate
+        [6]  delta_backlog_momentum
+        [7]  prev_step_produced_norm
+        [8]  prev_step_delivered_norm
+        [9]  prev_step_available_assembly_hours_norm
+        """
+        now = float(self.env.now)
+        oldest_age = 0.0
+        if self.pending_backorders:
+            oldest_opt = min(float(order.OPTj) for order in self.pending_backorders)
+            oldest_age = max(0.0, now - oldest_opt) / float(LEAD_TIME_PROMISE)
+
+        step_demand_scale = self._expected_step_demand()
+        max_step_production = (
+            3.0
+            * RATIONS_PER_HOUR
+            * max(1.0, float(self._step_size))
+            * (6.0 / 7.0)
+        )
+        max_assembly_hours = 3.0 * max(1.0, float(self._step_size)) * (6.0 / 7.0)
+
+        return np.array(
+            [
+                float(np.clip(len(self.pending_backorders) / BACKORDER_QUEUE_CAP, 0.0, 1.0)),
+                float(np.clip(self.total_unattended_orders / BACKORDER_QUEUE_CAP, 0.0, 1.0)),
+                float(np.clip(oldest_age, 0.0, 1.0)),
+                float(np.clip(self._ewma_fill_rate, 0.0, 1.0)),
+                float(np.clip(self._ewma_backlog_growth, 0.0, 1.0)),
+                float(np.clip(self._delta_fill_rate, -1.0, 1.0)),
+                float(np.clip(self._delta_backlog_momentum, -1.0, 1.0)),
+                float(np.clip(self._prev_step_produced / max(1.0, max_step_production), 0.0, 1.0)),
+                float(np.clip(self._prev_step_delivered / step_demand_scale, 0.0, 1.0)),
+                float(
+                    np.clip(
+                        self._prev_step_available_assembly_hours
+                        / max(1.0, max_assembly_hours),
+                        0.0,
+                        1.0,
+                    )
+                ),
             ],
             dtype=np.float32,
         )

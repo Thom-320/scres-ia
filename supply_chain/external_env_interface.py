@@ -73,6 +73,8 @@ OBSERVATION_FIELDS_V6: tuple[str, ...] = OBSERVATION_FIELDS_V5 + (
     "maintenance_debt_norm",
     "backlog_age_norm",
     "theatre_cover_days_norm",
+    "production_rate_norm",
+    "r14_defect_prob",
 )
 OBSERVATION_FIELDS_V7: tuple[str, ...] = OBSERVATION_FIELDS_V6 + (
     "op10_down",
@@ -81,6 +83,10 @@ OBSERVATION_FIELDS_V7: tuple[str, ...] = OBSERVATION_FIELDS_V6 + (
     "op12_queue_pressure_norm",
     "rolling_fill_rate_4w",
     "rolling_backorder_rate_4w",
+    "weeks_since_last_R22",
+    "weeks_since_last_R23",
+    "weeks_since_last_R24",
+    "ewma_downstream_risk",
 )
 REALIZED_RISK_OBSERVATION_IDS: tuple[str, ...] = (
     "R11",
@@ -100,6 +106,18 @@ OBSERVATION_FIELDS_V8: tuple[str, ...] = OBSERVATION_FIELDS_V7 + tuple(
 ) + tuple(
     f"recent_{risk_id.lower()}_duration_norm"
     for risk_id in REALIZED_RISK_OBSERVATION_IDS
+)
+OBSERVATION_FIELDS_V9: tuple[str, ...] = OBSERVATION_FIELDS_V8 + (
+    "backorder_queue_count_norm",
+    "unattended_total_norm",
+    "oldest_backorder_age_norm",
+    "ewma_fill_rate",
+    "ewma_backlog_growth",
+    "delta_fill_rate",
+    "delta_backlog_momentum",
+    "prev_step_produced_norm",
+    "prev_step_delivered_norm",
+    "prev_step_available_assembly_hours_norm",
 )
 OBSERVATION_FIELDS: tuple[str, ...] = OBSERVATION_FIELDS_V1
 
@@ -330,9 +348,11 @@ def get_observation_fields(observation_version: str = "v1") -> tuple[str, ...]:
         return OBSERVATION_FIELDS_V7
     if observation_version == "v8":
         return OBSERVATION_FIELDS_V8
+    if observation_version == "v9":
+        return OBSERVATION_FIELDS_V9
     raise ValueError(
         f"Invalid observation_version={observation_version!r}. "
-        "Expected 'v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7', or 'v8'."
+        "Expected 'v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7', 'v8', or 'v9'."
     )
 
 
@@ -403,7 +423,8 @@ def get_track_b_env_spec(
         notes=(
             "Track B keeps the thesis-faithful DES structure but exposes downstream transport control at Op10 and Op12.",
             "observation_version=v7 extends v6 with downstream disruption state, queue pressure, and rolling 4-week service metrics.",
-            "The seventh action contract uses 7 dimensions: the Track A 5D controls plus Op10 and Op12 dispatch quantity multipliers.",
+            "observation_version=v8 adds realized risk-ID state; v9 adds queue health, service trends, and previous-step throughput.",
+            "The track_b_v1 action contract uses 8 dimensions: Track A controls plus Op10 and Op12 dispatch quantity multipliers.",
             "risk_level=adaptive_benchmark_v2 is the intended Track B stress profile with stronger downstream transport and demand pressure.",
             "This contract is research-only and must not replace the frozen Track A paper-facing benchmark.",
         ),

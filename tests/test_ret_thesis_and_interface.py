@@ -269,8 +269,8 @@ def test_v6_observation_contract_exposes_adaptive_benchmark_state() -> None:
 
     assert spec.observation_version == "v6"
     assert tuple(spec.observation_fields) == get_observation_fields("v6")
-    assert len(spec.observation_fields) == 40
-    assert obs.shape == (40,)
+    assert len(spec.observation_fields) == len(get_observation_fields("v6"))
+    assert obs.shape == (len(get_observation_fields("v6")),)
     assert info["observation_version"] == "v6"
 
     adaptive_context = info["state_constraint_context"]["adaptive_context"]
@@ -284,7 +284,7 @@ def test_v6_observation_contract_exposes_adaptive_benchmark_state() -> None:
 
     next_obs, _, _, _, step_info = env.step([0.0, 0.0, 0.0, 0.0, 0.0, 1.0])
     next_adaptive = step_info["state_constraint_context"]["adaptive_context"]
-    assert next_obs.shape == (40,)
+    assert next_obs.shape == (len(get_observation_fields("v6")),)
     assert next_obs[35] == pytest.approx(next_adaptive["risk_forecast_48h_norm"])
     assert next_obs[37] == pytest.approx(next_adaptive["maintenance_debt_norm"])
     assert next_obs[37] >= obs[37]
