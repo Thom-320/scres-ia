@@ -1,10 +1,11 @@
-"""Track B heuristic baselines (7D action space).
+"""Track B heuristic baselines (8D action space).
 
-Each heuristic outputs a 7-dim action array in [-1, 1]:
+Each heuristic outputs an 8-dim action array in [-1, 1]:
   [0-3]: inventory multiplier signals (op3_q, op9_q, op3_rop, op9_rop)
-  [4]:   shift selector signal (-1→S1, 0→S2, +1→S3)
-  [5]:   op10 downstream multiplier signal
-  [6]:   op12 downstream multiplier signal
+  [4]:   op5 multiplier signal (neutral 0.0)
+  [5]:   shift selector signal (-1→S1, 0→S2, +1→S3)
+  [6]:   op10 downstream multiplier signal
+  [7]:   op12 downstream multiplier signal
 
 Multiplier mapping: signal ∈ [-1, 1] → multiplier = 1.25 + 0.75 * signal ∈ [0.5, 2.0]
 
@@ -51,7 +52,7 @@ class TrackBHysteresis:
         elif backorder_rate < self.tau_low:
             self._current_shift = 1
         return np.array(
-            [0.0, 0.0, 0.0, 0.0, SHIFT_SIGNAL[self._current_shift], 0.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 0.0, SHIFT_SIGNAL[self._current_shift], 0.0, 0.0],
             dtype=np.float32,
         )
 
@@ -95,7 +96,7 @@ class TrackBDisruptionAware:
             inv_signal = 0.0
             ds_signal = 0.0
         return np.array(
-            [inv_signal, inv_signal, inv_signal, inv_signal,
+            [inv_signal, inv_signal, inv_signal, inv_signal, 0.0,
              shift_signal, ds_signal, ds_signal],
             dtype=np.float32,
         )
@@ -136,7 +137,7 @@ class TrackBTuned:
 
         ds_signal = 0.5 if self._current_shift >= 2 else 0.0
         return np.array(
-            [0.0, 0.0, 0.0, 0.0, SHIFT_SIGNAL[self._current_shift],
+            [0.0, 0.0, 0.0, 0.0, 0.0, SHIFT_SIGNAL[self._current_shift],
              ds_signal, ds_signal],
             dtype=np.float32,
         )
@@ -176,7 +177,7 @@ class TrackBDownstreamReactive:
             op12_signal = self.boost_signal
 
         return np.array(
-            [0.0, 0.0, 0.0, 0.0, -1.0, op10_signal, op12_signal],
+            [0.0, 0.0, 0.0, 0.0, 0.0, -1.0, op10_signal, op12_signal],
             dtype=np.float32,
         )
 
@@ -194,7 +195,7 @@ class TrackBMaxDownstream:
 
     def __call__(self, obs: np.ndarray, info: dict[str, Any]) -> np.ndarray:
         return np.array(
-            [0.0, 0.0, 0.0, 0.0, -1.0, 1.0, 1.0],
+            [0.0, 0.0, 0.0, 0.0, 0.0, -1.0, 1.0, 1.0],
             dtype=np.float32,
         )
 

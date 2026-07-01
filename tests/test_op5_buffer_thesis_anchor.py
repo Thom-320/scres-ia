@@ -113,8 +113,11 @@ def test_op5_baseline_matches_thesis_table_6_16() -> None:
 
     base_op5 = env.sim._op5_rm_base
     assert base_op5 is not None
-    # Default should be the middle thesis level: 46,080 per RM (I_{504,1}).
-    assert base_op5 == pytest.approx(THESIS_OP5_DEFAULT, rel=1e-6)
+    # The thesis-faithful default aggregates the 12 raw-material streams into
+    # one container. Its internal target is therefore 12x the per-RM Table 6.16
+    # value, while the per-RM equivalent remains I_{504,1}=46,080.
+    assert base_op5 == pytest.approx(THESIS_OP5_DEFAULT * 12, rel=1e-6)
+    assert (base_op5 / 12) == pytest.approx(THESIS_OP5_DEFAULT, rel=1e-6)
 
 
 def test_op5_multiplier_persists_across_steps() -> None:

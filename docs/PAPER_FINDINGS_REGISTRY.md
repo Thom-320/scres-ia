@@ -1,5 +1,10 @@
 # Paper Findings Registry
 
+> **2026-07-01 status note:** This registry contains historical findings from
+> earlier Track A/Track B contracts. Use
+> `docs/CLAIMS_REGISTRY_Q1_DEFENSE_2026-07-01.md` for current claim wording,
+> retired claims, and Q1 reviewer gates.
+
 All empirical findings identified during the experimental campaign (2026-03-27 to 2026-03-30).
 Each finding includes the evidence source, whether it's confirmed, and how it could appear in the paper.
 

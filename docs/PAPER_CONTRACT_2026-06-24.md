@@ -1,5 +1,10 @@
 # Paper Contract 2026-06-24
 
+> **PARTIALLY SUPERSEDED (2026-06-26):** the **reward** clause (frozen `ReT_cd`, §"Reward,
+> Observation, and Outcomes") and the implied **algorithm** are superseded by
+> `docs/EXPERIMENT_CONTRACT_V2_2026-06-26.md` (primary reward `control_v1`, DQN, ReT as outcome).
+> The research position, fidelity gates, observation spec, and resource/cost rules below STILL HOLD.
+
 ## Research Position
 
 This paper uses the Garrido-Rios military food supply chain as a

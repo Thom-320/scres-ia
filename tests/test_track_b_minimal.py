@@ -18,37 +18,77 @@ def test_track_b_env_spec_matches_minimal_contract() -> None:
     assert spec.reward_mode == "ReT_seq_v1"
     assert spec.observation_version == "v7"
     assert tuple(spec.observation_fields) == get_observation_fields("v7")
-    assert len(spec.observation_fields) == 46
+    assert len(spec.observation_fields) == len(get_observation_fields("v7"))
     assert len(spec.action_fields) == 8
-    assert env.observation_space.shape == (46,)
+    assert env.observation_space.shape == (len(get_observation_fields("v7")),)
     assert env.action_space.shape == (8,)
 
 
 def test_v7_observation_exposes_track_b_features_and_contract_metadata() -> None:
     env = make_track_b_env(max_steps=2)
     obs, info = env.reset(seed=7)
+    fields = get_observation_fields("v7")
 
     assert info["action_contract"] == "track_b_v1"
-    assert obs.shape == (46,)
+    assert obs.shape == (len(fields),)
     track_b_context = info["state_constraint_context"]["track_b_context"]
-    assert obs[40] == pytest.approx(track_b_context["op10_down"])
-    assert obs[41] == pytest.approx(track_b_context["op12_down"])
-    assert obs[42] == pytest.approx(track_b_context["op10_queue_pressure_norm"])
-    assert obs[43] == pytest.approx(track_b_context["op12_queue_pressure_norm"])
-    assert obs[44] == pytest.approx(track_b_context["rolling_fill_rate_4w"])
-    assert obs[45] == pytest.approx(track_b_context["rolling_backorder_rate_4w"])
+    assert obs[fields.index("op10_down")] == pytest.approx(track_b_context["op10_down"])
+    assert obs[fields.index("op12_down")] == pytest.approx(track_b_context["op12_down"])
+    assert obs[fields.index("op10_queue_pressure_norm")] == pytest.approx(
+        track_b_context["op10_queue_pressure_norm"]
+    )
+    assert obs[fields.index("op12_queue_pressure_norm")] == pytest.approx(
+        track_b_context["op12_queue_pressure_norm"]
+    )
+    assert obs[fields.index("rolling_fill_rate_4w")] == pytest.approx(
+        track_b_context["rolling_fill_rate_4w"]
+    )
+    assert obs[fields.index("rolling_backorder_rate_4w")] == pytest.approx(
+        track_b_context["rolling_backorder_rate_4w"]
+    )
     assert "op10_q_max" in info["action_constraints"]["base_control_parameters"]
     assert "op12_q_max" in info["action_constraints"]["base_control_parameters"]
 
     next_obs, _, _, _, step_info = env.step([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
     next_track_b = step_info["state_constraint_context"]["track_b_context"]
-    assert next_obs.shape == (46,)
-    assert next_obs[40] == pytest.approx(next_track_b["op10_down"])
-    assert next_obs[41] == pytest.approx(next_track_b["op12_down"])
-    assert 0.0 <= next_obs[42] <= 1.0
-    assert 0.0 <= next_obs[43] <= 1.0
-    assert 0.0 <= next_obs[44] <= 1.0
-    assert 0.0 <= next_obs[45] <= 1.0
+    assert next_obs.shape == (len(fields),)
+    assert next_obs[fields.index("op10_down")] == pytest.approx(next_track_b["op10_down"])
+    assert next_obs[fields.index("op12_down")] == pytest.approx(next_track_b["op12_down"])
+    for name in (
+        "op10_queue_pressure_norm",
+        "op12_queue_pressure_norm",
+        "rolling_fill_rate_4w",
+        "rolling_backorder_rate_4w",
+    ):
+        assert 0.0 <= next_obs[fields.index(name)] <= 1.0
+
+
+def test_v9_observation_exposes_queue_trend_and_throughput_context() -> None:
+    env = make_track_b_env(max_steps=2, observation_version="v9")
+    obs, info = env.reset(seed=7)
+    fields = get_observation_fields("v9")
+
+    assert obs.shape == (len(fields),)
+    assert env.observation_space.shape == (len(fields),)
+    assert len(fields) == len(get_observation_fields("v8")) + 10
+
+    next_obs, _, _, _, step_info = env.step([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+    v9_context = step_info["state_constraint_context"]["v9_context"]
+    for name in (
+        "backorder_queue_count_norm",
+        "unattended_total_norm",
+        "oldest_backorder_age_norm",
+        "ewma_fill_rate",
+        "ewma_backlog_growth",
+        "prev_step_produced_norm",
+        "prev_step_delivered_norm",
+        "prev_step_available_assembly_hours_norm",
+    ):
+        assert next_obs[fields.index(name)] == pytest.approx(v9_context[name])
+        assert 0.0 <= next_obs[fields.index(name)] <= 1.0
+    for name in ("delta_fill_rate", "delta_backlog_momentum"):
+        assert next_obs[fields.index(name)] == pytest.approx(v9_context[name])
+        assert -1.0 <= next_obs[fields.index(name)] <= 1.0
 
 
 def test_track_b_action_updates_downstream_dispatch_parameters() -> None:

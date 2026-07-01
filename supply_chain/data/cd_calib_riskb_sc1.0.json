@@ -1,0 +1,58 @@
+{
+  "source": "garrido2024_monte_carlo_maxima",
+  "target_contribution": 0.2,
+  "episode_count": 200,
+  "kappa_ref": 251423.86105769232,
+  "maxima": {
+    "zeta": 241365.71153846153,
+    "epsilon": 225713.09615384616,
+    "phi": 35862.625,
+    "tau": 30037.22842735287,
+    "kappa_dot": 1.7192032200924507
+  },
+  "a_zeta": 0.016136751172088765,
+  "b_epsilon": 0.01622452143596202,
+  "c_phi": 0.019070411011528166,
+  "d_tau": 0.01939827926842682,
+  "n_kappa": 0.3690983894047687,
+  "paper_reference_exponents": {
+    "a_zeta": 0.024,
+    "b_epsilon": 0.026,
+    "c_phi": 0.04,
+    "d_tau": 0.06,
+    "n_kappa": 0.1771
+  },
+  "des_semantics": {
+    "zeta": "mean finished-goods ration inventory over the episode",
+    "epsilon": "mean pending backorder quantity over the episode",
+    "phi": "mean spare assembly capacity over the episode",
+    "tau": "mean net-requirement coverage time proxy over the episode",
+    "kappa_dot": "mean cost divided by the Monte-Carlo reference cost",
+    "kappa_ref": "mean episode cost across the calibration Monte-Carlo sample"
+  },
+  "run_config": {
+    "episodes": 200,
+    "seed_start": 42,
+    "policies": [
+      "static_s1",
+      "static_s2",
+      "static_s3",
+      "random"
+    ],
+    "risk_level": "increased",
+    "year_basis": "thesis",
+    "stochastic_pt": false,
+    "step_size_hours": 168.0,
+    "max_steps": 52,
+    "observation_version": "v1",
+    "warmup_trigger": "op9_arrival",
+    "downstream_q_source": "figure_6_2",
+    "r14_defect_mode": "thesis_strict_op6",
+    "risk_occurrence_mode": "thesis_window",
+    "risk_frequency_multiplier": 2.0,
+    "risk_impact_multiplier": 1.0,
+    "raw_material_flow_mode": "kit_equivalent_order_up_to",
+    "raw_material_order_up_to_multiplier": 2.0,
+    "ret_g24_shift_cost": 1.0
+  }
+}

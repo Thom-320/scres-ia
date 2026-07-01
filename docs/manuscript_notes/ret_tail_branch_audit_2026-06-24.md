@@ -25,7 +25,7 @@ origin/codex/garrido-postfix-reruns
 Worktrees:
 
 ```text
-/Users/thom/Projects/research/scres-ia      main @ 2ad6a62
+<repo>/scres-ia                            main @ 2ad6a62
 /private/tmp/scres-ia-reruns-review         detached @ e901f86
 ```
 

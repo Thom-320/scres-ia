@@ -30,7 +30,12 @@ from supply_chain.external_env_interface import (
     get_thesis_aligned_training_env_spec,
     make_thesis_aligned_training_env,
 )
-from supply_chain.ret_thesis import compute_ret_per_order
+from supply_chain.env_experimental_shifts import MFSCGymEnvShifts
+from supply_chain.ret_thesis import (
+    compute_fill_rate_from_orders,
+    compute_order_level_ret,
+    compute_ret_per_order,
+)
 from supply_chain.supply_chain import MFSCSimulation, OrderRecord
 from supply_chain.thesis_design import design_spec_for_cfi, parse_cf_range
 
@@ -85,11 +90,53 @@ def test_extracted_thesis_constants_match_lane_contract() -> None:
         "mean": 0.5,
         "min": 0.0,
     }
+    assert THESIS_FAITHFUL_PROTOCOL["stochastic_pt"] is False
     assert THESIS_DOWNSTREAM_Q_RANGES["figure_6_2"]["op9"] == (2400, 2600)
     assert THESIS_DOWNSTREAM_Q_RANGES["table_6_20"]["op9"] == (2000, 2500)
     assert len(RAW_MATERIAL_COMPONENTS) == 12
     assert RAW_MATERIAL_COMPONENTS[0]["id"] == "rm1"
     assert RAW_MATERIAL_COMPONENTS[-1]["id"] == "rm12"
+
+
+def test_base_simulation_defaults_are_thesis_faithful_for_training() -> None:
+    sim = MFSCSimulation()
+
+    assert sim.warmup_trigger == THESIS_FAITHFUL_PROTOCOL["warmup_trigger"]
+    assert sim.downstream_q_source == THESIS_FAITHFUL_PROTOCOL["downstream_q_source"]
+    assert sim.r14_defect_mode == THESIS_FAITHFUL_PROTOCOL["r14_defect_mode"]
+    assert sim.risk_occurrence_mode == THESIS_FAITHFUL_PROTOCOL["risk_occurrence_mode"]
+    assert sim.raw_material_flow_mode == canonical_raw_material_flow_mode(
+        THESIS_FAITHFUL_PROTOCOL["raw_material_flow_mode"]
+    )
+    assert sim.raw_material_order_up_to_multiplier == pytest.approx(
+        THESIS_FAITHFUL_PROTOCOL["raw_material_order_up_to_multiplier"]
+    )
+    assert sim.demand_on_hand_fulfillment_delay == pytest.approx(
+        THESIS_FAITHFUL_PROTOCOL["demand_on_hand_fulfillment_delay"]
+    )
+
+
+def test_gym_shift_env_defaults_are_thesis_faithful_for_training() -> None:
+    env = MFSCGymEnvShifts(max_steps=1)
+
+    try:
+        assert env.warmup_trigger == THESIS_FAITHFUL_PROTOCOL["warmup_trigger"]
+        assert env.downstream_q_source == THESIS_FAITHFUL_PROTOCOL["downstream_q_source"]
+        assert env.r14_defect_mode == THESIS_FAITHFUL_PROTOCOL["r14_defect_mode"]
+        assert env.risk_occurrence_mode == THESIS_FAITHFUL_PROTOCOL[
+            "risk_occurrence_mode"
+        ]
+        assert env.raw_material_flow_mode == canonical_raw_material_flow_mode(
+            THESIS_FAITHFUL_PROTOCOL["raw_material_flow_mode"]
+        )
+        assert env.raw_material_order_up_to_multiplier == pytest.approx(
+            THESIS_FAITHFUL_PROTOCOL["raw_material_order_up_to_multiplier"]
+        )
+        assert env.demand_on_hand_fulfillment_delay == pytest.approx(
+            THESIS_FAITHFUL_PROTOCOL["demand_on_hand_fulfillment_delay"]
+        )
+    finally:
+        env.close()
 
 
 def test_warmup_can_be_marked_at_op9_arrival_instead_of_production() -> None:
@@ -222,6 +269,32 @@ def test_order_level_ret_module_matches_thesis_cases() -> None:
         0.0,
         "non_recovery",
     )
+
+
+def test_thesis_fill_rate_counts_late_delivered_orders_as_accumulated_bt() -> None:
+    on_time = OrderRecord(j=1, OPTj=0, OATj=40, CTj=40, LTj=48)
+    recovered_late = OrderRecord(
+        j=2, OPTj=0, OATj=72, CTj=72, LTj=48, RPj=24, backorder=False
+    )
+    lost = OrderRecord(j=3, OPTj=0, OATj=None, CTj=None, LTj=48, lost=True)
+
+    # Eq. 5.4: Re(FR_t)=1-(B_t+U_t)/D_t. The recovered-late order still
+    # contributes to accumulated B_t even though the live queue flag is cleared.
+    assert compute_fill_rate_from_orders([on_time, recovered_late, lost]) == pytest.approx(
+        1.0 - (1 + 1) / 3
+    )
+
+
+def test_order_level_ret_includes_unfulfilled_orders_as_zero() -> None:
+    fulfilled = OrderRecord(j=1, OPTj=0, OATj=40, CTj=40, LTj=48)
+    unfulfilled = OrderRecord(j=2, OPTj=0, OATj=None, CTj=None, LTj=48, lost=True)
+
+    res = compute_order_level_ret([fulfilled, unfulfilled], fill_rate=0.5)
+
+    assert res["case_counts"]["unfulfilled"] == 1
+    assert res["n_orders"] == 2
+    assert res["n_completed"] == 1
+    assert res["mean_ret"] == pytest.approx((0.5 + 0.0) / 2)
 
 
 def test_cf0_deterministic_gate_matches_table_6_10_average() -> None:
@@ -456,7 +529,7 @@ def test_thesis_design_matrix_reporter_writes_match_artifacts(tmp_path) -> None:
         "risk_r2": 10,
         "risk_r3": 10,
     }
-    assert summary["horizon_year_counts"] == {"10": 60, "20": 30}
+    assert summary["horizon_year_counts"] == {"10": 54, "20": 36}
     assert (run_dir / "THESIS_DESIGN_MATRIX.md").exists()
     assert (run_dir / "thesis_design_matrix.csv").exists()
 
@@ -644,7 +717,10 @@ def test_thesis_factorial_design_matrix_maps_canonical_rows() -> None:
         "R13": "increased",
         "R14": "increased",
     }
-    assert cf1.horizon_hours == 10 * HOURS_PER_YEAR_THESIS
+    # Raw_data1+Re.xlsx shows CF1-CF2 running to the 20-year thesis horizon;
+    # CF3-CF20 remain 10-year risk windows.
+    assert cf1.horizon_hours == 20 * HOURS_PER_YEAR_THESIS
+    assert design_spec_for_cfi(3).horizon_hours == 10 * HOURS_PER_YEAR_THESIS
 
     cf47 = design_spec_for_cfi(47)
     assert cf47.source_cfi == 17

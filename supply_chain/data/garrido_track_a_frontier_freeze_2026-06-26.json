@@ -1,0 +1,56 @@
+{
+  "freeze_id": "garrido_track_a_cd_sigmoid_phi1_v1",
+  "date": "2026-06-26",
+  "status": "frozen_for_next_pilot",
+  "decision": {
+    "primary_reward_mode": "ReT_garrido2024",
+    "primary_outcome": "cd_sigmoid_index",
+    "secondary_outcomes": [
+      "cd_train_index",
+      "excel_ret"
+    ],
+    "policy_grid_gate": "joint_6x3",
+    "selection_reason": "Most parsimonious Track A frontier: no extra non-R3 frequency tuning, interior inventory optimum, and efficient shift movement S1 in calm regimes to S2 under severe disruption."
+  },
+  "environment": {
+    "track": "a",
+    "action_space": "Discrete(18): inventory level x shift level",
+    "risk_frequency_multiplier": 1.0,
+    "risk_impact_multiplier": 1.0,
+    "black_swan_R3": "fixed; not scaled by frequency multiplier",
+    "stochastic_pt": true,
+    "risk_occurrence_mode": "thesis_window",
+    "raw_material_flow_mode": "kit_equivalent_order_up_to",
+    "raw_material_order_up_to_multiplier": 2.0,
+    "ret_g24_shift_cost": 0.5,
+    "ret_g24_kappa_train_frac": 0.2,
+    "ret_g24_calibration_path": "supply_chain/data/ret_garrido2024_calibration.json",
+    "ret_g24_calibration_kappa_ref": 1412198.506144231,
+    "ret_g24_calibration_note": "Freeze uses the current repo calibration for reproducibility. Re-derived faithful calibration is a declared sensitivity, not part of this pilot freeze."
+  },
+  "primary_gate_evidence": {
+    "artifact": "outputs/experiments/garrido2024_joint_grid_2026-06-26/summary.json",
+    "metric": "ret_garrido2024_sigmoid_total",
+    "regime_argmax": {
+      "current": "S1_I168",
+      "increased": "S1_I168",
+      "severe": "S2_I168"
+    },
+    "criterion_1_interior": true,
+    "criterion_2_regime_dependent": true,
+    "criterion_2_robust_flip": true,
+    "shift_optimum_moves_with_regime": true,
+    "green_light_for_rl": true
+  },
+  "contrast_evidence": {
+    "codex_comparison_artifact": "outputs/experiments/garrido_cd_joint_claude_codex_comparison_2026-06-26/comparison.md",
+    "train_variant_artifact": "outputs/experiments/garrido_cd_joint_6x3_freq2_confirm_20seed_2026-06-26/summary.json",
+    "train_variant_note": "cd_train_index with risk_frequency_multiplier=2.0 gives a stronger S1-to-S3 frontier but is less parsimonious and less efficient in shift use; retain as sensitivity."
+  },
+  "smoke_validation": {
+    "artifact": "outputs/benchmarks/retention_transfer/garrido_cd_sigmoid_phi1_smoke_2026-06-26/transfer.json",
+    "purpose": "Pipeline validation only; two seeds and four blocks are not scientific evidence.",
+    "memory_retained_minus_reset_mean": 0.0
+  },
+  "pilot_command": "python scripts/retention_transfer.py --label garrido_cd_sigmoid_phi1_pilot_2026-06-26 --reward-mode ReT_garrido2024 --outcome cd_sigmoid_index --risk-frequency-multiplier 1.0 --risk-impact-multiplier 1.0 --ret-g24-shift-cost 0.5 --ret-g24-kappa-train-frac 0.2 --seeds 8201,8202,8203,8204,8205,8206,8207,8208,8209,8210 --n-blocks 24 --max-steps 12 --train-per-block 150 --rho-disruption 0.85 --regime-seed 909 --mask-preset direct_disruption_blind --learning-starts 50 --buffer-size 10000"
+}

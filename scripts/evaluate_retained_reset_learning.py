@@ -1,6 +1,15 @@
 #!/usr/bin/env python3
 """Evaluate the Track A retained-learning win condition.
 
+DEPRECATED RUNNER (2026-06-26, Experiment Contract v2). The ``main()`` entrypoint below
+implements the OLD *adapt-then-eval* estimand: it adapts both retained and reset arms on the
+current block BEFORE evaluating (the asymptotic point where reset catches up), which is NOT the
+paper estimand. The paper runner is ``scripts/retention_transfer.py`` (cold transfer: evaluate
+retained/reset/frozen on block k BEFORE any block-k training). This module is retained ONLY as a
+helper library for that runner (``load_model``, ``online_update``, ``clean_eval``, static-policy
+selection). Do NOT use ``main()`` for any paper-facing run. See
+``docs/EXPERIMENT_CONTRACT_V2_2026-06-26.md`` §3.
+
 This is a smoke-scale, auditable evaluator for the primary paper contrast:
 retained online learner versus an otherwise identical reset-learning learner. It also
 selects the robust static Garrido-aligned policy from the 18-action thesis grid
@@ -205,6 +214,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--buffer-size", type=int, default=10_000)
     parser.add_argument("--learning-starts", type=int, default=100)
     parser.add_argument("--batch-size", type=int, default=32)
+    parser.add_argument("--control-v2-w-fill", type=float, default=1.0)
+    parser.add_argument("--control-v2-w-service", type=float, default=4.0)
+    parser.add_argument("--control-v2-w-lost", type=float, default=2.0)
+    parser.add_argument("--control-v2-w-inventory", type=float, default=0.05)
+    parser.add_argument("--control-v2-w-shift", type=float, default=0.08)
+    parser.add_argument("--control-v2-w-switch", type=float, default=0.02)
     parser.add_argument(
         "--n-steps",
         type=int,
@@ -262,6 +277,38 @@ def env_kwargs(
             if getattr(args, "surge_inertia", False)
             else {}
         ),
+        # Risk modulation (R3 protected inside the sim) — pass only when non-default.
+        **(
+            {"risk_frequency_multiplier": float(getattr(args, "risk_frequency_multiplier", 1.0))}
+            if float(getattr(args, "risk_frequency_multiplier", 1.0)) != 1.0
+            else {}
+        ),
+        **(
+            {"risk_impact_multiplier": float(getattr(args, "risk_impact_multiplier", 1.0))}
+            if float(getattr(args, "risk_impact_multiplier", 1.0)) != 1.0
+            else {}
+        ),
+        # Cost-augmented Cobb-Douglas params (only meaningful for the ReT_garrido2024 family).
+        **(
+            {
+                "ret_g24_shift_cost": float(getattr(args, "ret_g24_shift_cost", 0.5)),
+                "ret_g24_kappa_train_frac": float(getattr(args, "ret_g24_kappa_train_frac", 0.2)),
+            }
+            if str(args.reward_mode).startswith("ReT_garrido2024")
+            else {}
+        ),
+        **(
+            {
+                "control_v2_w_fill": float(getattr(args, "control_v2_w_fill", 1.0)),
+                "control_v2_w_service": float(getattr(args, "control_v2_w_service", 4.0)),
+                "control_v2_w_lost": float(getattr(args, "control_v2_w_lost", 2.0)),
+                "control_v2_w_inventory": float(getattr(args, "control_v2_w_inventory", 0.05)),
+                "control_v2_w_shift": float(getattr(args, "control_v2_w_shift", 0.08)),
+                "control_v2_w_switch": float(getattr(args, "control_v2_w_switch", 0.02)),
+            }
+            if str(args.reward_mode) == "control_v2"
+            else {}
+        ),
     }
 
 
@@ -316,8 +363,11 @@ def resolve_observation_mask(args: argparse.Namespace) -> dict[str, Any]:
 class BlockDecisionEnv(gym.Wrapper):
     """Turn weekly Track A control into one held configuration per block."""
 
-    def step(self, action: int):
-        held_action = int(action)
+    def step(self, action):
+        if isinstance(self.env.action_space, gym.spaces.Discrete):
+            held_action = int(np.asarray(action).item())
+        else:
+            held_action = np.asarray(action, dtype=np.float32)
         terminated = truncated = False
         reward_total = 0.0
         service_loss_area = 0.0
@@ -340,7 +390,9 @@ class BlockDecisionEnv(gym.Wrapper):
             block_steps += 1
         enriched = dict(info)
         enriched["decision_cadence"] = "block"
-        enriched["held_action"] = held_action
+        enriched["held_action"] = (
+            held_action.tolist() if isinstance(held_action, np.ndarray) else held_action
+        )
         enriched["block_steps"] = block_steps
         enriched["block_service_loss_area"] = service_loss_area
         enriched["block_step_cost_total"] = step_cost_total
@@ -380,6 +432,19 @@ def build_env(args: argparse.Namespace, *, regime: RegimePhase | None = None):
         # v7 obs. The Track A scenario tape (current/increased/severe) does not apply;
         # regime is ignored here. Only reward + horizon are overridden.
         env = make_track_b_env(reward_mode=args.reward_mode, max_steps=args.max_steps)
+    elif getattr(args, "track", "a") == "continuous":
+        # continuous_its (the preventive-Pareto winner lane): buffer fraction × shift, with the
+        # realized-risk/hazard obs + balanced holding cost. The Track A scenario tape (regime)
+        # applies exactly as for discrete18, so the retained−reset transfer contrast is clean.
+        # Requires algo=ppo (continuous Box action). Knobs read via getattr (set in caller).
+        from supply_chain.continuous_its_env import make_continuous_its_track_a_env
+        kw = env_kwargs(args, regime=regime)
+        kw.pop("downstream_q_source", None)  # unused by the continuous Track A builder
+        env = make_continuous_its_track_a_env(
+            **kw, init_frac=getattr(args, "init_frac", 1.0),
+            risk_obs=getattr(args, "risk_obs", False),
+            holding_cost=getattr(args, "holding_cost", 0.0),
+            shift_cost=getattr(args, "shift_cost", 0.0))
     else:
         env = make_discrete18_track_a_env(**env_kwargs(args, regime=regime))
     mask = parse_mask_indices(args)
@@ -614,6 +679,13 @@ def paired_delta(
 
 
 def main() -> int:
+    import sys as _sys
+    print(
+        "WARNING: evaluate_retained_reset_learning.main() is DEPRECATED (adapt-then-eval "
+        "estimand). Use scripts/retention_transfer.py for paper-facing runs. "
+        "See docs/EXPERIMENT_CONTRACT_V2_2026-06-26.md §3.",
+        file=_sys.stderr,
+    )
     args = build_parser().parse_args()
     run_label = args.label or f"retained_reset_learning_{utc_stamp()}"
     run_dir = args.output_root / run_label

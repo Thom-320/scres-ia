@@ -1,0 +1,16 @@
+{
+  "created_at": "2026-07-01T17:16:00Z",
+  "purpose": "Track B adaptive_benchmark_v2 reward/observation sweep with v9 observation, Excel ReT target, fixed 8D Track B heuristics, and corrected Op10/Op12 action metrics",
+  "include_paths": [
+    "requirements.txt",
+    "scripts",
+    "supply_chain"
+  ],
+  "command": "python scripts/run_track_b_adaptive_sweep.py --reward-modes control_v1,ReT_excel_plus_cvar,ReT_tail_v2,ReT_garrido2024_train --observation-versions v7,v8,v9 --cvar-alphas 0.05,0.1,0.2 --seeds 1 2 --train-timesteps 40000 --eval-episodes 6 --max-steps 104 --n-envs 4 --learning-rate 0.0001",
+  "target_metric": "order_ret_excel / ledger ReTj from Garrido Excel formula",
+  "notes": [
+    "v9 is 89 dims: v8 plus 10 queue/trend/throughput features",
+    "promotion uses order_ret_excel first, CVaR05 second; resource is reported separately",
+    "Track B is an operational extension controlling downstream dispatch, not Garrido original variables"
+  ]
+}
