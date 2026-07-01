@@ -2,7 +2,7 @@
 
 ## Supporting the Q1 Paper: "Neural Reinforcement Learning for Supply Chain Resilience — Action Space Alignment as the Mechanism"
 
-### Repository: `github.com/anomalyco/scres-ia` (branch: `codex/garrido-replication-experiments`)
+### Repository: `github.com/Thom-320/scres-ia` (branch: `codex/garrido-replication-experiments`)
 
 ---
 

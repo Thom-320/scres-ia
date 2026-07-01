@@ -16,10 +16,13 @@ Primary files for ChatGPT Pro:
 2. Literature scouting brief:
    [`docs/chatgpt_pro_review_package_2026-07-01/LITERATURE_SCOUTING_BRIEF.md`](chatgpt_pro_review_package_2026-07-01/LITERATURE_SCOUTING_BRIEF.md)
 
-3. Q1 evidence bundle:
+3. Deep literature research request:
+   [`docs/LITERATURE_RESEARCH_REQUEST_2026-07-01.md`](LITERATURE_RESEARCH_REQUEST_2026-07-01.md)
+
+4. Q1 evidence bundle:
    [`docs/track_b_q1_stats_2026-07-01/README.md`](track_b_q1_stats_2026-07-01/README.md)
 
-4. Claim registry:
+5. Claim registry:
    [`docs/CLAIMS_REGISTRY_Q1_DEFENSE_2026-07-01.md`](CLAIMS_REGISTRY_Q1_DEFENSE_2026-07-01.md)
 
 Current headline evidence:
