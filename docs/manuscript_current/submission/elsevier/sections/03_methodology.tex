@@ -6,12 +6,14 @@
 simulation}\label{31-mfsc-discrete-event-simulation}}
 
 The experimental platform is a 13-operation military food supply chain
-reconstructed in Python/SimPy from Garrido-Rios' thesis~\cite{garrido2017}. The model
-preserves the original operational structure rather than replacing it
-with a stylized benchmark environment. This matters for the paper's
-positioning: the contribution is not a generic RL sandbox, but a
-thesis-grounded operational model whose buffers, transport stages, and
-disruption processes already carry domain meaning.
+reconstructed in Python/SimPy from Garrido-Rios' thesis~\cite{garrido2017}
+and checked against the original Garrido workbook artifacts used for
+raw order ledgers and APj/RPj/DPj/Re summaries. The model preserves the
+original operational structure rather than replacing it with a stylized
+benchmark environment. This matters for the paper's positioning: the
+contribution is not a generic RL sandbox, but a thesis-grounded
+operational model whose buffers, transport stages, and disruption
+processes already carry domain meaning.
 
 The DES retains hourly granularity where the original supply chain
 requires sub-day behavior, especially around the assembly-line
@@ -32,8 +34,8 @@ representation of all supply chains.
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.95\linewidth]{fig2_mfsc_topology.png}
-\caption{Simplified MFSC topology. Track B preserves the DES backbone but exposes downstream dispatch controls at Op10 and Op12, the operational recovery valves left fixed in Track A.}
+\includegraphics[width=\linewidth]{fig2_mfsc_topology.png}
+\caption{Simplified MFSC topology redrawn from Garrido-Rios' 13-operation military food supply chain. Track B preserves the DES backbone but exposes downstream dispatch controls at Op10 and Op12, the operational recovery valves left fixed in Track A.}
 \label{fig:mfsc_topology}
 \end{figure}
 
@@ -120,6 +122,13 @@ metric. \texttt{reward\_total} is only comparable within a shared reward
 family; comparisons across Track A and Track B, or across reward
 families within Track A, rely on the evaluation metric panel rather than
 on raw cumulative reward.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{fig7_ret_metric_lineage.png}
+\caption{Garrido/Excel ReT evaluation lineage redrawn from Garrido-Rios' resilience metric structure. The paper reports order-level ReT as the primary outcome, alongside service and recovery-tail metrics, while PPO is trained on a separate operational proxy reward.}
+\label{fig:ret_metric_lineage}
+\end{figure}
 
 \hypertarget{34-experimental-protocol}{%
 \subsection{Experimental protocol}\label{34-experimental-protocol}}
