@@ -150,11 +150,15 @@ Three directions emerge. First, the bottleneck-aligned recovery principle
 should be tested on other validated supply chain DES models to assess
 generalizability beyond the MFSC topology. Second, more expressive policy
 architectures---including attention-based networks, graph neural networks,
-and emerging KAN-based designs as proposed by Garrido et al.~\cite{garrido2024iccl}---remain relevant for supply chains with variable topology or
+and Kolmogorov--Arnold networks, which Garrido et
+al.~\cite{garrido2024iccl} name (alongside backpropagation networks and
+reinforcement learning) as candidate families for closing the
+learning gap in SCRES-DES models, though without ranking them or
+arguing for KAN-specific properties---remain relevant for supply chains with variable topology or
 multi-agent coordination, but were not required for this paper's result: a
 standard PPO+MLP architecture already produces a robust, adversarially-tested
 advantage under Track B. Third, the generalization matrix (Section~4.7)
-identifies severe disruption at short horizons as a genuine boundary case;
+identifies severe disruption at both evaluated horizons as a genuine boundary case;
 training specialized policies for that regime, rather than relying on the
 policy trained under \texttt{adaptive\_benchmark\_v2}, could establish
 tighter upper bounds on RL effectiveness under catastrophic disruption.

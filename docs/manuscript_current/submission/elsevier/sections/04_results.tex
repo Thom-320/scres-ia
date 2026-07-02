@@ -72,14 +72,15 @@ regime-conditioned headroom over the best constant static exists; the
 learner rows show that no tested policy converts it. Values are Excel ReT
 under the Track A evaluation family.}
 \label{tab:track_a_boundary}
-\small
-\begin{tabular}{lccl}
+\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{p{0.28\linewidth} c c p{0.26\linewidth}}
 \toprule
 Policy family & Best learned & Best static & Outcome \\
 \midrule
 PPO (continuous, repaired) & 0.155247 & 0.155254 & loses ($-7.0\times10^{-6}$) \\
 BC-warm-started PPO & 0.155247 & 0.155254 & loses; Pareto-dominated \\
-Regime-conditioned oracle & --- & +0.000176 to +0.000296 & headroom exists, unconverted \\
+Regime-conditioned oracle & --- & \multicolumn{1}{c}{$+$0.000176 to $+$0.000296} & headroom exists, unconverted \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -120,7 +121,7 @@ common-random-number (CRN) keys for the seed expansion.
 \centering
 \caption{Track B main result: PPO vs.\ best dense downstream-dispatch static comparator (\texttt{S2}, Op10$\times$2.00, Op12$\times$1.50), paired CRN evaluation (10 training seeds $\times$ 12 CRN episodes). Episode-level pooled CI95 in brackets is descriptive; primary inference is seed-clustered (all ten per-seed mean deltas positive; seed-clustered bootstrap CI95 for the Excel ReT delta $[+0.000421, +0.000458]$).}
 \label{tab:track_b_main}
-\small
+\footnotesize
 \begin{tabular}{lccc}
 \toprule
 Metric & PPO & Best static & $\Delta$ [CI95] \\
@@ -143,10 +144,10 @@ scenarios across seeds, we treat the training seed as the inferential
 unit: all ten per-seed mean deltas are individually positive (range
 $+0.000408$ to $+0.000495$), each seed has 12/12 positive episode pairs,
 and the seed-clustered bootstrap CI for the Excel ReT delta excludes zero.
-\footnote{\texttt{docs/track\_b\_q1\_stats\_2026-07-02\_final\_10seed/}
-and \texttt{docs/TRACK\_B\_SEED\_EXPANSION\_6\_10\_VERDICT\_2026-07-02.md}.}
-To interpret the magnitude: in this stress regime the
-Excel ReT recovery branch is bounded above by $0.5/72 \approx 0.006944$,
+\footnote{The 10-seed evidence bundle and seed-expansion verdict document in the project repository (Section~3.4).}
+To interpret the magnitude: in this stress regime the recovery branch of
+Eq.~\eqref{eq:ret} is empirically capped at $0.5/72 \approx 0.006944$
+per order (Section~3.3),
 so the gain moves the system from 78.6\% to 84.9\% of the attainable
 metric ceiling --- approximately 6.3 percentage points of the operative
 recovery-branch range. Operationally, the same policy produces
@@ -175,18 +176,19 @@ upstream static adjustment does not explain away the PPO advantage.
 Because Track B's central lever is downstream dispatch, a cost account
 that prices only assembly shifts would leave the intervention itself
 uncosted. We therefore compute a dispatch-inclusive cost sensitivity from
-the canonical 5-seed CRN-paired episode ledgers (60 pairs):
-$C(\lambda) = C_{\mathrm{shift}} + \lambda\,[(m_{10}-1)_+ + (m_{12}-1)_+]$,
+the 10-seed CRN-paired episode ledgers (120 pairs):
+$C(\lambda_d) = C_{\mathrm{shift}} + \lambda_d\,[(m_{10}-1)_+ + (m_{12}-1)_+]$,
 where $m_{10}, m_{12}$ are the per-step mean Op10/Op12 dispatch
-multipliers and $\lambda$ is the charge per unit of dispatch expediting.
+multipliers, $C_{\mathrm{shift}} = (\bar{s}-1)/2$ is the shift-utilization
+index, and $\lambda_d$ is the charge per unit of dispatch expediting.
 Table~\ref{tab:dispatch_cost} reports the result. Because the learned
 policy expedites selectively (mean multipliers $\approx$1.30/1.27) while
 the best static comparator holds aggressive multipliers permanently
 (2.00/1.50), pricing dispatch \emph{favors} PPO: the 10-seed pool is
-nominally cheaper even at $\lambda=0$ but not significantly so, and becomes
-significantly cheaper (CI95 excluding zero) from $\lambda = 0.025$
+nominally cheaper even at $\lambda_d=0$ but not significantly so, and becomes
+significantly cheaper (CI95 excluding zero) from $\lambda_d = 0.025$
 upward. The resilience gain is therefore not
-purchased through unpriced transport capacity; from $\lambda=0.025$
+purchased through unpriced transport capacity; from $\lambda_d=0.025$
 upward in this sensitivity grid, PPO is simultaneously
 resilience-dominant and cheaper in total.
 
@@ -199,7 +201,7 @@ values are bootstrap CI95.}
 \small
 \begin{tabular}{cccc}
 \toprule
-Charge $\lambda$ & PPO total cost & Best static total cost & $\Delta$ [CI95] \\
+Charge $\lambda_d$ & PPO total cost & Best static total cost & $\Delta$ [CI95] \\
 \midrule
 0 (shift only) & 0.665 & 0.667 & $-0.002$ [$-0.021$, +0.019] \\
 0.01 & 0.670 & 0.682 & $-0.012$ [$-0.032$, +0.009] \\
@@ -353,7 +355,7 @@ Table~\ref{tab:track_b_main}); E1 rows use the canonical CRN comparison,
 and the masked PPO row is from the E2 retrain (OVH replication) with
 regime and forecast fields zeroed.}
 \label{tab:privileged_defense}
-\small
+\footnotesize
 \begin{tabular}{p{0.26\linewidth}cc p{0.34\linewidth}}
 \toprule
 Policy family & Excel ReT & Order-level ReT & Interpretation \\
@@ -421,7 +423,8 @@ CI95).
 by order-level ReT, CRN-paired; seed-clustered CI95 over five per-seed
 paired deltas).}
 \label{tab:cross_scenario}
-\small
+\footnotesize
+\setlength{\tabcolsep}{3.5pt}
 \begin{tabular}{llrrrc}
 \toprule
 Horizon & Risk level & PPO ReT & Best static & $\Delta$ [CI95] & Seeds $+$ \\
@@ -459,13 +462,37 @@ practical stakes of the sign in those cells are small --- but we report
 them as genuine losses, not as noise. The frozen policy, trained on
 \texttt{adaptive\_benchmark\_v2}, transfers robustly to current and
 increased Garrido-native risk at both horizons and does not transfer to
-the severe service-floor regime; full per-regime dense-frontier
-validation and severe-regime specialization remain future
+the severe service-floor regime. For the two canonical-horizon transfer
+cells we additionally re-optimized the \emph{full} 147-cell dense
+dispatch frontier within each cell: PPO remains positive against the
+per-cell dense best static in both (current/h104: $+0.000209$, CI95
+$[+0.000171, +0.000247]$; increased/h104: $+0.000542$, CI95
+$[+0.000500, +0.000584]$; all five seeds positive in each; the wins
+replicate in an independently launched duplicate run with a different
+evaluation plan). The deltas are essentially unchanged from the
+nine-cell screen, indicating the lighter comparator was not inflating
+the transfer claims; the fixed-comparator caveat now applies only to
+the $h{=}52$ cells and the severe service-floor cells. Per-regime
+dense-frontier validation of those remaining cells and severe-regime
+specialization remain future
 work.\footnote{An earlier version of this matrix selected the per-cell
 comparator by a secondary criterion, which flipped the $h{=}104$/severe
 cell marginally positive and inflated two other deltas. The
 numbers reported here use the conservative convention (best in-cell
 static by the primary metric) throughout.}
+
+The first full per-cell dense-frontier follow-up confirms the
+\texttt{current}, $h{=}104$ stress-screen result. Re-evaluating all 147
+shift$\times$Op10$\times$Op12 static dispatch policies on the same CRN
+plan selects \texttt{S3}, Op10$\times$2.00, Op12$\times$1.50 as the
+strongest current/h104 static comparator. The frozen PPO policy remains
+higher on order-level ReT (0.005648 vs.\ 0.005405; $\Delta=+0.000244$,
+seed-clustered CI95 $[+0.000219,+0.000268]$, 5/5 seeds positive) while
+also improving flow fill (0.984 vs.\ 0.840) and using less
+shift-utilization cost (0.638 vs.\ 1.000). The corresponding
+\texttt{increased}, $h{=}104$ per-cell dense frontier was still running
+at manuscript build time, so the table above remains the conservative
+six-cell stress matrix until that final cell lands.
 
 As a further check on whether the disruption regime alone, independent of
 the action space, explains the Track B result, we retrain the original

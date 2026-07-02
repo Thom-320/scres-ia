@@ -39,6 +39,47 @@ representation of all supply chains.
 \label{fig:mfsc_topology}
 \end{figure}
 
+The stochastic risk environment preserves the full thesis risk
+architecture: four operational known-known risks (R11--R14), four
+known-unknown risks (R21--R24), and one black-swan event (R3), with the
+thesis probability models summarized in
+Table~\ref{tab:risk_provenance_examples}. Regular demand is discrete
+uniform $U(2{,}400,\,2{,}600)$ rations per day, six days per week. The
+benchmark risk regimes used later in the paper (\texttt{current},
+\texttt{increased}, \texttt{severe}, and the sustained-disruption
+\texttt{adaptive\_benchmark\_v2} cell) scale the frequency parameters
+of these same nine processes rather than introducing new disruption
+mechanisms, so every stress cell remains inside the thesis risk
+architecture. The table is not an additional result; it documents that
+the benchmark preserves the stochastic disruption semantics that make
+the MFSC a Garrido-grounded DES rather than a generic
+inventory-control toy problem.
+
+\begin{table}[htbp]
+\centering
+\caption{Risk processes of the MFSC DES, following Garrido-Rios (2017),
+Tables 6.6--6.8~\cite{garrido2017}. $U(a,b)$ = discrete-uniform
+occurrence time within the stated window (hours); $\exp(\beta)$ =
+exponential duration with mean $\beta$ hours; $B(n,p)$ = binomial.}
+\label{tab:risk_provenance_examples}
+\small
+\begin{tabular}{l p{0.17\linewidth} p{0.27\linewidth} p{0.30\linewidth}}
+\toprule
+Risk & Type & Probability model & Effect \\
+\midrule
+R11 & machine breakdown & $U(1,168)$; repair $\exp(2)$ & Op5/Op6 workstation stops \\
+R12 & contracting delay & $B(12,\,1/11)$ & $+168$ h to Op1 processing \\
+R13 & delivery delay & $B(12,\,1/10)$ & $+24$ h to supplier processing \\
+R14 & quality defect & $B(2{,}564,\,0.03)$ per shift & item reworked at previous op \\
+R21 & natural disaster & $U(1,16{,}128)$; recovery $\exp(120)$ & Op3, Op5--Op7, Op9 down \\
+R22 & attack on LOC & $U(1,4{,}032)$; repair $\exp(24)$ & Op4, Op8, Op10, Op12 down \\
+R23 & attack on fwd.\ log.\ unit & $U(1,8{,}064)$; repair $\exp(120)$ & Op11 down \\
+R24 & contingent demand & $U(1,672)$; size $U(2{,}400,2{,}600)$ & demand surge at Op13 \\
+R3 & black swan (airstrike) & $U(1,161{,}280)$ & Op5--Op7, Op9 down 672 h \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \hypertarget{32-control-formulation}{%
 \subsection{Control formulation}\label{32-control-formulation}}
 
@@ -50,9 +91,10 @@ simulated hours, which matches the weekly planning cadence already
 embedded in procurement, disruption, and operating rhythms. Formally, we
 treat the simulator-control loop as a finite-horizon partially observed
 control problem
-\[
+\begin{equation}
 \mathcal{M}=(\mathcal{S},\mathcal{O},\mathcal{A},P,r,\gamma,H),
-\]
+\label{eq:pomdp}
+\end{equation}
 where $s_t\in\mathcal{S}$ is the full DES state (queues, buffers,
 orders, disruptions, and resource states), $o_t\in\mathcal{O}$ is the
 feature vector exposed to the policy, $a_t\in\mathcal{A}$ is the
@@ -74,8 +116,11 @@ to the original scope.
 \texttt{Track\ B} is a separate research lane rather than a retrofit of
 \texttt{Track\ A}. It uses observation version \texttt{v7} with
 \texttt{52} dimensions and the \texttt{track\_b\_v1} action contract
-(\texttt{8D}). The action contract keeps the Track A controls and adds
-downstream dispatch multipliers at \texttt{Op10} and \texttt{Op12}. The
+(\texttt{8D}). The action contract keeps the Track A upstream
+replenishment and shift controls, adds an Op5 pre-assembly quantity
+multiplier, and --- decisively --- adds
+downstream dispatch multipliers at \texttt{Op10} and \texttt{Op12};
+Table~\ref{tab:action_contract} gives the exact decode. The
 paper's central question is whether this operational extension changes
 the benchmark outcome by exposing the operational bottleneck that Track
 A leaves mostly outside the controllable interface.
@@ -90,6 +135,31 @@ risk structure while extending the controllable decision interface.
 Because the Garrido-Rios source does not provide calibrated transport
 cost data, dispatch costs are treated through an explicit sensitivity
 analysis (Section~4.3) rather than as calibrated monetary costs.
+
+\begin{table}[htbp]
+\centering
+\caption{\texttt{track\_b\_v1} action contract. Raw policy outputs
+$x_i \in [-1,1]$ are decoded per dimension; multipliers scale the
+thesis base parameters shown. Dimensions 1--6 are the upstream/assembly
+family; dimensions 7--8 add the downstream dispatch authority that
+distinguishes Track B.}
+\label{tab:action_contract}
+\footnotesize
+\begin{tabular}{c p{0.30\linewidth} c c}
+\toprule
+Dim & Decision variable & Decode & Effective range \\
+\midrule
+1 & Op3 order quantity mult. & $1.25 + 0.75\,x$ & $[0.5, 2.0] \times 15{,}500$ units \\
+2 & Op9 order quantity mult. & $1.25 + 0.75\,x$ & $[0.5, 2.0] \times U(2{,}400, 2{,}600)$ \\
+3 & Op3 reorder point mult. & $1.25 + 0.75\,x$ & $[0.5, 2.0] \times 168$ h \\
+4 & Op9 reorder point mult. & $1.25 + 0.75\,x$ & $[0.5, 2.0] \times 24$ h \\
+5 & Op5 pre-assembly qty mult. & $1.0 + 0.5\,x$ & $[0.5, 1.5]$ \\
+6 & assembly shifts $s_t$ & thresholds at $\pm\tfrac13$ & $\{1,2,3\}$ \\
+7 & Op10 dispatch mult. & $1.25 + 0.75\,x$ & $[0.5, 2.0] \times U(2{,}400, 2{,}600)$ \\
+8 & Op12 dispatch mult. & $1.25 + 0.75\,x$ & $[0.5, 2.0] \times U(2{,}400, 2{,}600)$ \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \begin{table}[htbp]
 \centering
@@ -110,16 +180,90 @@ Privileged fields & five true-regime one-hot fields plus two transition-matrix f
 \subsection{Reward and reporting
 metrics}\label{33-reward-and-reporting-metrics}}
 
-The canonical Track B training reward is \texttt{control\_v1}, a linear
-operational penalty (backorder fraction plus a small shift-switching
-cost) rather than a resilience-index reward. This is a deliberate
-design choice, not an oversight: the agent is trained on an operational
-proxy and evaluated on the untouched Garrido/Excel resilience metric
-(\texttt{ReT}), so the training signal cannot be tuned to directly game
-the reported evaluation metric. Track A results draw on a broader set of
-resilience-aligned reward families (including Cobb--Douglas and
-sequential formulations) tested across the dense-frontier evaluation; no
-tested reward family closes the Track A gap.
+The canonical Track B training reward is \texttt{control\_v1}, a sparse
+operational penalty rather than a resilience-index reward. For weekly
+decision step $t$,
+\begin{equation}
+r_t =
+-\left[
+w_{\mathrm{bo}}\frac{BO_t}{\max(D_t,1)}
++ w_{\mathrm{shift}}(S_t-1)
++ w_{\mathrm{disr}}
+\min\left(1,\frac{H_t}{168|\mathcal{K}|}\right)
+\right],
+\label{eq:control_v1}
+\end{equation}
+where $BO_t$ is new backordered quantity, $D_t$ is new demanded quantity,
+$S_t\in\{1,2,3\}$ is the selected assembly-shift level, $H_t$ is
+step-level disruption time over the tracked operations $\mathcal{K}$, and
+the canonical Track B weights are $w_{\mathrm{bo}}=1.0$,
+$w_{\mathrm{shift}}=0.06$, and $w_{\mathrm{disr}}=0.0$. The inactive
+disruption term is retained in the equation because it is part of the
+frozen environment contract, but it does not contribute under the
+canonical run. This reward is a deliberate design choice, not an
+oversight: the agent is trained on an operational proxy and evaluated on
+the untouched Garrido/Excel resilience metric, so the training signal
+cannot be tuned to directly game the reported evaluation metric. The
+Cobb--Douglas-style reward equation in Garrido's draft is therefore
+historical context for the broader AI-SCRES agenda, not the training
+objective for the winning Track B policy. Track A results draw on a
+broader set of resilience-aligned reward families (including
+Cobb--Douglas and sequential formulations) tested across the
+dense-frontier evaluation; no tested reward family closes the Track A
+gap.
+
+The primary reported metric follows the original Garrido workbook branch
+used in the order ledgers, which operationalizes the thesis measure
+(Garrido-Rios 2017, Eq.~5.5~\cite{garrido2017}): order states are
+weighted at $\overline{\mathrm{Re}}^{\max}{=}1$ during autonomy,
+$\overline{\mathrm{Re}}{=}0.5$ during recovery, and
+$\overline{\mathrm{Re}}^{\min}{=}0$ during non-recovery. For order $j$,
+let $OPT_j$ and $OAT_j$ be its placement and fulfillment times,
+$CT_j = OAT_j - OPT_j$ the realized cycle time, $LT_j = 48$~h the
+promised lead time, $\bar{R}_j$ the mean of the recorded risk
+indicators on the order window, $AP_j$ the
+autonomy period (risk-exposure time absorbed while still delivering on
+time), $RP_j$ the recovery period when the order is served late, and
+$B_j, U_j$ the running counts of backordered and unattended orders. The
+Excel resilience score is
+\begin{equation}
+\mathrm{ReT}^{\mathrm{Excel}}_j =
+\begin{cases}
+AP_j/LT_j, & \bar{R}_j>0,\ AP_j>0,\\[2mm]
+0.5\,(1/RP_j), & \bar{R}_j>0,\ AP_j=0,\ RP_j>0,\\[2mm]
+0, & \bar{R}_j>0,\ AP_j{=}RP_j{=}0,\ \text{or undelivered},\\[2mm]
+1-\bigl(\min(B_j,60)+U_j\bigr)/j, & \bar{R}_j=0,
+\end{cases}
+\label{eq:ret}
+\end{equation}
+the LaTeX rendering of the workbook formula in the original
+\texttt{Raw\_data+Re} sheets
+(\texttt{IF(AVERAGE(R..)>0, IF(APj>0, APj/LT, 0.5*(1/RPj)), 1-((Bt+Ut)/j)})),
+including the workbook's backorder-count cap of 60 in the fill-rate
+branch. Our implementation of Eq.~\eqref{eq:ret} is audited row-by-row
+against Garrido's original result workbooks (47{,}546 orders, zero
+mismatches). \emph{Order-level ReT} applies the same case structure with
+the DES's native risk attribution instead of the workbook-visible
+indicators; both conventions are reported.
+Figure~\ref{fig:ret_branch_timeline} illustrates the branch logic on
+three representative orders. Eq.~\eqref{eq:ret} also grounds the ceiling
+interpretation used in Section~4: in the canonical stress regime 99.6\%
+of orders fall in the recovery branch, and no evaluated policy realizes
+a recovery period below 72~h (the 48~h promised lead time plus one 24~h
+downstream dispatch cycle), so the per-order score is empirically capped
+at $0.5/72 \approx 0.006944$.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\linewidth]{fig8_ret_branch_timeline}
+\caption{Branch logic of the order-level resilience metric
+(Eq.~\eqref{eq:ret}), redrawn from the disruption-timeline construction
+of Garrido-Rios (2017, Fig.~5.5). Each order is scored by the state it
+occupies: absorbing risk while delivering on time (autonomy), recovering
+from a late delivery (recovery, weighted 0.5), or unaffected by risk on
+its window (fill rate).}
+\label{fig:ret_branch_timeline}
+\end{figure}
 
 The paper-facing comparison prioritizes service and resilience outcomes
 rather than raw reward totals across incompatible reward families. The
@@ -181,7 +325,7 @@ The learner is PPO with a two-hidden-layer
 (64$\times$64) multilayer-perceptron policy and value network
 (\texttt{MlpPolicy}, separate actor/critic heads), learning rate
 $3\times10^{-4}$, $n_{\mathrm{steps}}{=}1024$, batch size 256, 10 epochs
-per update, $\gamma{=}0.99$, GAE $\lambda{=}0.95$, and clip range 0.2.
+per update, $\gamma{=}0.99$, GAE parameter $0.95$, and clip range 0.2 (the symbol $\lambda_d$ is reserved for the dispatch cost charge of Section~4.3).
 
 \subsection{Statistical inference}\label{35-statistical-inference}
 
@@ -195,7 +339,15 @@ pooled confidence intervals are reported as descriptive only. Primary
 inference treats the \emph{training seed} as the inferential unit:
 per-seed mean paired deltas are computed first, and claims rest on seed
 sign consistency together with seed-clustered bootstrap or $t$-based
-intervals. To guard against winner's-curse comparator
+intervals. Where tail risk is reported, we use the lower conditional
+tail of the episode distribution,
+\begin{equation}
+\mathrm{CVaR}_{0.05}(X) \;=\; \frac{1}{n}\sum_{i=1}^{n} X_{(i)},
+\qquad n = \max\bigl(1, \lceil 0.05\,N \rceil\bigr),
+\label{eq:cvar}
+\end{equation}
+the mean of the $n$ smallest per-episode values $X_{(1)} \le \dots \le
+X_{(N)}$ of the metric. To guard against winner's-curse comparator
 selection, the headline delta is additionally recomputed against each of
 the twelve strongest static comparators individually; all twelve deltas
 remain positive with confidence intervals excluding zero

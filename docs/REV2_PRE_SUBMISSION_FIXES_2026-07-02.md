@@ -24,7 +24,8 @@ evidence upgrades are now IN the manuscript
    severe negative at BOTH horizons (−0.000060, −0.000075) = boundary
    *regime*, disclosed in a footnote. Table 7 now carries CIs. fig5
    regenerated. Abstract/summary/conclusion updated; registry C11
-   corrected (old 5/6 and +0.000742 must never be cited again).
+   corrected (obsolete majority-win and inflated severe-cell values must
+   never be cited again).
 3. **Comparator scope renamed everywhere**: "dense downstream-dispatch
    static grid/frontier (shift × Op10 × Op12)"; Methods states upstream
    dims held at canonical settings and points to Track A frontier as the
@@ -102,4 +103,47 @@ evidence upgrades are now IN the manuscript
 ## Remaining compute upgrades (P1/P2, in order of value)
 
 1. **Per-cell dense frontier for current/h104 + increased/h104** —
-   upgrades E3 from stress screen toward real generalization.
+   upgrades E3 from stress screen toward real generalization. `current/h104`
+   is complete and remains positive against the full 147-cell per-cell
+   dense frontier (`+0.000244`, CI95 `[+0.000219,+0.000268]` vs
+   `S3_op10_2.00_op12_1.50`). `increased/h104` is still running and must
+   land before the full E3 dense-frontier upgrade is closed.
+
+## Addendum 2026-07-02 (equations & Garrido-source pass)
+
+Deep-read of Garrido's draft (v.0), the 2024 ICCL AI-SCRES paper, the
+2024 IJPR factory-resilience paper, and the 2017 thesis (metric chapter
++ risk tables), reconciled with code ground truth:
+
+- **Equations added (all numbered):** POMDP tuple (eq:pomdp, promoted),
+  exact `control_v1` reward (eq:control_v1; also FIXED a prose error --
+  the reward has a shift-utilization term 0.06(s-1), not a
+  "shift-switching cost"), the order-level Garrido/Excel ReT case
+  formula (eq:ret, thesis Eq. 5.5 weights 1/0.5/0 + workbook
+  operationalization incl. backorder cap 60 and denominator j, audited
+  47,546 orders / 0 mismatches), CVaR05 (eq:cvar), C(lambda_d) dispatch
+  cost (symbol renamed from lambda to avoid the GAE collision).
+- **Ceiling substantiated empirically:** canonical ledger shows 99.64%
+  of orders in the recovery branch and min RP_j = 72.0 h exactly across
+  ALL policies (48 h lead time + one 24 h dispatch cycle) -> per-order
+  cap 0.5/72 = 0.006944 observed to the digit.
+- **New tables:** complete thesis risk architecture R11-R3 (upgraded
+  Codex's R11-R14 representative table), 8D track_b_v1 action-contract
+  decode table.
+- **New figure fig8:** ReT branch-logic order timeline (redrawn from
+  thesis Fig. 5.5).
+- **KAN verdict (deep-read):** Garrido et al. 2024 name KAN exactly
+  twice, as an unranked, uncited, property-free alternative alongside
+  backprop NN and RL/sim-opt; no KAN-specific argument exists in that
+  paper. Manuscript future-work wording corrected to say "named ...
+  without ranking them or arguing for KAN-specific properties".
+  Decision: do NOT implement KAN for Paper 1; candidate for future
+  interpretable policy distillation.
+- **Fixed in Codex's parallel equation block:** "anticipation period" ->
+  autonomy period (thesis term; 'anticipation' is on the banned list),
+  fill-rate denominator Q_j -> running order index j (per
+  ret_thesis.py:125) + backorder cap 60, "calibrated minimum recovery
+  period" -> empirical 72 h floor with ledger evidence.
+- Dispatch-cost sensitivity re-verified on the 10-seed pool (Codex's
+  recompute): lambda_d=0 delta -0.00198 matches my independent check;
+  significantly cheaper from lambda_d >= 0.025 (was 0.075 on 5-seed).
