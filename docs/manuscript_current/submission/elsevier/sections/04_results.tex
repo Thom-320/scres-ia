@@ -166,7 +166,8 @@ The local upstream bound does not overturn this result. Holding the best
 downstream cell fixed (S2, Op10$\times$2.00, Op12$\times$1.50) and
 varying Op3 and Op9 quantity multipliers over a 3$\times$3 grid, the best
 static bound policy is Op3$\times$1.00, Op9$\times$1.25 with order-level
-ReT 0.005612. PPO remains higher at 0.005666, a seed-paired delta of
+ReT 0.005612 (5-seed canonical pool). PPO remains higher at 0.005666 in
+the same pool, a seed-paired delta of
 +0.000054 (CI95 [+0.000042, +0.000066]). This is a local bound rather
 than an exhaustive 8D static frontier, but it shows that the nearest
 upstream static adjustment does not explain away the PPO advantage.
@@ -174,7 +175,7 @@ upstream static adjustment does not explain away the PPO advantage.
 Because Track B's central lever is downstream dispatch, a cost account
 that prices only assembly shifts would leave the intervention itself
 uncosted. We therefore compute a dispatch-inclusive cost sensitivity from
-the same CRN-paired episode ledgers:
+the canonical 5-seed CRN-paired episode ledgers (60 pairs):
 $C(\lambda) = C_{\mathrm{shift}} + \lambda\,[(m_{10}-1)_+ + (m_{12}-1)_+]$,
 where $m_{10}, m_{12}$ are the per-step mean Op10/Op12 dispatch
 multipliers and $\lambda$ is the charge per unit of dispatch expediting.
@@ -185,8 +186,8 @@ the best static comparator holds aggressive multipliers permanently
 nominally cheaper even at $\lambda=0$ but not significantly so, and becomes
 significantly cheaper (CI95 excluding zero) from $\lambda = 0.025$
 upward. The resilience gain is therefore not
-purchased through unpriced transport capacity; under any positive dispatch
-charge at or above modest levels, PPO is simultaneously
+purchased through unpriced transport capacity; from $\lambda=0.025$
+upward in this sensitivity grid, PPO is simultaneously
 resilience-dominant and cheaper in total.
 
 \begin{table}[htbp]
@@ -346,9 +347,11 @@ performance.
 \begin{table}[htbp]
 \centering
 \caption{Privileged-observation defense, reported on both ReT conventions
-to avoid metric ambiguity. E1 rows use the canonical CRN comparison; the
-masked PPO row is from the E2 retrain (OVH replication) with regime and
-forecast fields zeroed.}
+to avoid metric ambiguity. All rows use the original 5-seed canonical
+evaluation pool (hence the small differences from the 10-seed values in
+Table~\ref{tab:track_b_main}); E1 rows use the canonical CRN comparison,
+and the masked PPO row is from the E2 retrain (OVH replication) with
+regime and forecast fields zeroed.}
 \label{tab:privileged_defense}
 \small
 \begin{tabular}{p{0.26\linewidth}cc p{0.34\linewidth}}

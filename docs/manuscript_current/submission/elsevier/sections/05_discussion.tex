@@ -28,16 +28,15 @@ By adding Op10 and Op12 dispatch multipliers to the action space, the agent
 gains leverage over the downstream bottleneck that constrains Track A. The
 learned policy achieves higher Excel ReT, service continuity, and
 recovery-tail metrics than the best of a dense downstream-dispatch grid of static comparators,
-but it is not a strict cost win on the shift dimension: its
-shift-utilization cost index is marginally
-higher than the best comparator selected by ReT, and this difference is
-not statistically distinguishable from zero. We report the result as
-Pareto non-dominated on the ReT--cost--tail--flow frontier. The
+but it is not a strict cost win on the shift dimension alone: its
+shift-utilization cost index is not statistically distinguishable from
+the best comparator selected by ReT at zero dispatch charge. We report
+the result as Pareto non-dominated on the ReT--cost--tail--flow frontier. The
 dispatch-inclusive cost sensitivity (Section~4.3) sharpens the managerial
 reading: because the learned policy expedites selectively rather than
 holding aggressive dispatch permanently, PPO becomes cheaper in total than
-the best static once dispatch expediting carries a moderate positive
-charge --- the policy buys recovery with \emph{targeted}, not free,
+the best static once dispatch expediting carries a positive charge at the
+tested threshold --- the policy buys recovery with \emph{targeted}, not free,
 transport flexibility.
 
 The action-space decomposition (Section~4.4) strengthens this

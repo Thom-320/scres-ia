@@ -287,6 +287,62 @@ def write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
         writer.writerows(rows)
 
 
+def derive_shift_cost(row: pd.Series | dict[str, Any]) -> float:
+    try:
+        if pd.notna(row["assembly_cost_index_mean"]):
+            return float(row["assembly_cost_index_mean"])
+    except (KeyError, TypeError):
+        pass
+    try:
+        if pd.notna(row["assembly_cost_index"]):
+            return float(row["assembly_cost_index"])
+    except (KeyError, TypeError):
+        pass
+    try:
+        return (
+            float(row["pct_steps_S1_mean"])
+            + 2.0 * float(row["pct_steps_S2_mean"])
+            + 3.0 * float(row["pct_steps_S3_mean"])
+        ) / 300.0
+    except (KeyError, TypeError, ValueError):
+        return float("nan")
+
+
+def metric_value(row: pd.Series | dict[str, Any], *names: str, default: float = float("nan")) -> float:
+    for name in names:
+        try:
+            value = row[name]
+        except (KeyError, TypeError):
+            continue
+        if pd.notna(value):
+            return float(value)
+    return default
+
+
+def synthesize_dynamic_seed_metrics(dynamic_run_dir: Path) -> pd.DataFrame:
+    episode = pd.read_csv(dynamic_run_dir / "episode_metrics.csv")
+    episode = episode.loc[episode["policy"].astype(str) == "ppo"].copy()
+    numeric_cols = [
+        col
+        for col in episode.columns
+        if col not in {"seed", "episode", "eval_seed"}
+        and pd.api.types.is_numeric_dtype(episode[col])
+    ]
+    rows: list[dict[str, Any]] = []
+    for seed, bucket in episode.groupby("seed", sort=True):
+        row: dict[str, Any] = {
+            "policy": "ppo",
+            "seed": int(seed),
+            "episodes": int(len(bucket)),
+        }
+        for col in numeric_cols:
+            row[f"{col}_mean"] = float(bucket[col].mean())
+        if "assembly_cost_index_mean" not in row:
+            row["assembly_cost_index_mean"] = derive_shift_cost(row)
+        rows.append(row)
+    return pd.DataFrame(rows)
+
+
 def build_verdict(
     *,
     dynamic_run_dir: Path,
@@ -295,7 +351,8 @@ def build_verdict(
     static_policy_rows: list[dict[str, Any]],
 ) -> dict[str, Any]:
     dyn_policy = pd.read_csv(dynamic_run_dir / "policy_summary.csv")
-    dyn_seed = pd.read_csv(dynamic_run_dir / "seed_metrics.csv")
+    seed_path = dynamic_run_dir / "seed_metrics.csv"
+    dyn_seed = pd.read_csv(seed_path) if seed_path.exists() else synthesize_dynamic_seed_metrics(dynamic_run_dir)
     dyn_episode = pd.read_csv(dynamic_run_dir / "episode_metrics.csv")
     dyn = dyn_policy.loc[dyn_policy["policy"].astype(str) == "ppo"].iloc[0]
     best_static = max(static_policy_rows, key=lambda r: float(r["order_level_ret_mean_mean"]))
@@ -303,7 +360,7 @@ def build_verdict(
     static_seed = [r for r in static_seed_rows if r["policy"] == best_static["policy"]]
 
     dyn_ret = float(dyn["order_level_ret_mean_mean"])
-    dyn_cost = float(dyn["assembly_cost_index_mean"])
+    dyn_cost = derive_shift_cost(dyn)
     sta_ret = float(best_static["order_level_ret_mean_mean"])
     sta_cost = float(best_static["assembly_cost_index_mean"])
 
@@ -312,16 +369,20 @@ def build_verdict(
         lower_tail=True,
     )
     sta_ret_tail = cvar([float(r["order_level_ret_mean"]) for r in static_episode], lower_tail=True)
-    dyn_loss_tail = cvar(
-        dyn_episode.loc[
-            dyn_episode["policy"].astype(str) == "ppo", "order_service_loss_auc_per_order"
-        ].tolist(),
-        lower_tail=False,
-    )
-    sta_loss_tail = cvar(
-        [float(r["order_service_loss_auc_per_order"]) for r in static_episode],
-        lower_tail=False,
-    )
+    if "order_service_loss_auc_per_order" in dyn_episode.columns:
+        dyn_loss_tail = cvar(
+            dyn_episode.loc[
+                dyn_episode["policy"].astype(str) == "ppo", "order_service_loss_auc_per_order"
+            ].tolist(),
+            lower_tail=False,
+        )
+        sta_loss_tail = cvar(
+            [float(r["order_service_loss_auc_per_order"]) for r in static_episode],
+            lower_tail=False,
+        )
+    else:
+        dyn_loss_tail = float("nan")
+        sta_loss_tail = float("nan")
 
     dominated_by = [
         row["policy"]
@@ -347,10 +408,10 @@ def build_verdict(
         seed_flow_deltas.append(
             float(drow["flow_fill_rate_mean"]) - float(srow["flow_fill_rate_mean"])
         )
-        seed_cd_deltas.append(
-            float(drow["ret_garrido2024_sigmoid_mean_mean"])
-            - float(srow["ret_garrido2024_sigmoid_mean_mean"])
-        )
+        d_cd = metric_value(drow, "ret_garrido2024_sigmoid_mean_mean")
+        s_cd = metric_value(srow, "ret_garrido2024_sigmoid_mean_mean")
+        if pd.notna(d_cd) and pd.notna(s_cd):
+            seed_cd_deltas.append(d_cd - s_cd)
     ret_low, ret_high = ci95(seed_deltas)
     flow_low, flow_high = ci95(seed_flow_deltas)
     cd_low, cd_high = ci95(seed_cd_deltas)
@@ -363,7 +424,7 @@ def build_verdict(
             "service_loss_cvar95": dyn_loss_tail,
             "assembly_cost_index": dyn_cost,
             "flow_fill_rate": float(dyn["flow_fill_rate_mean"]),
-            "cd_sigmoid_mean": float(dyn["ret_garrido2024_sigmoid_mean_mean"]),
+            "cd_sigmoid_mean": metric_value(dyn, "ret_garrido2024_sigmoid_mean_mean"),
         },
         "best_static": {
             "order_level_ret": sta_ret,
@@ -371,7 +432,7 @@ def build_verdict(
             "service_loss_cvar95": sta_loss_tail,
             "assembly_cost_index": sta_cost,
             "flow_fill_rate": float(best_static["flow_fill_rate_mean"]),
-            "cd_sigmoid_mean": float(best_static["ret_garrido2024_sigmoid_mean_mean"]),
+            "cd_sigmoid_mean": metric_value(best_static, "ret_garrido2024_sigmoid_mean_mean"),
             "shift": int(best_static["shift"]),
             "op10_mult": float(best_static["op10_mult"]),
             "op12_mult": float(best_static["op12_mult"]),
@@ -389,8 +450,8 @@ def build_verdict(
             "service_loss_cvar95_signed_win": sta_loss_tail - dyn_loss_tail,
             "assembly_cost_index": dyn_cost - sta_cost,
             "flow_fill_rate": float(dyn["flow_fill_rate_mean"]) - float(best_static["flow_fill_rate_mean"]),
-            "cd_sigmoid_mean": float(dyn["ret_garrido2024_sigmoid_mean_mean"])
-            - float(best_static["ret_garrido2024_sigmoid_mean_mean"]),
+            "cd_sigmoid_mean": metric_value(dyn, "ret_garrido2024_sigmoid_mean_mean")
+            - metric_value(best_static, "ret_garrido2024_sigmoid_mean_mean"),
         },
         "seed_paired_ci95": {
             "order_level_ret_delta": [ret_low, ret_high],
