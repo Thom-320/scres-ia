@@ -1,12 +1,17 @@
 # Q1 Evidence Synthesis - 2026-07-02
 
-This is the manuscript-facing evidence contract after the E1-E6 recovery plan.
-All numeric claims below trace to `docs/track_b_q1_stats_2026-07-02_final/`
-or the cited experiment directories. Older manuscript numbers are superseded.
+This is the manuscript-facing evidence contract after the E1-E6 recovery plan
+and the completed 10-seed Track B expansion. Headline Track B numbers now trace
+to `docs/track_b_q1_stats_2026-07-02_final_10seed/`; mechanism, E1-E4, E6, and
+appendix robustness numbers trace to the cited experiment directories and the
+5-seed final bundle where noted. Older manuscript numbers are superseded.
 
 ## Source of Truth
 
 Primary stats bundle:
+`docs/track_b_q1_stats_2026-07-02_final_10seed/`
+
+Supporting 5-seed mechanism/robustness bundle:
 `docs/track_b_q1_stats_2026-07-02_final/`
 
 Core artifact roots:
@@ -21,7 +26,9 @@ Core artifact roots:
 - E4 final action-space ablation:
   `outputs/experiments/track_b_ablation_8d_final_2026-07-01/`
 - E5 zero-compute inference/statistics:
-  `docs/track_b_q1_stats_2026-07-02_final/`
+  `docs/track_b_q1_stats_2026-07-02_final_10seed/` for the headline
+  comparison; `docs/track_b_q1_stats_2026-07-02_final/` for E1-E4 support
+  tables and the top-12 appendix.
 - E6 fidelity flow-mode reconciliation:
   `outputs/benchmarks/garrido_static_fidelity_stress/paired_h2_h3_full_cf1_30_thesis_1rep_2026_07_02_e6_kit_equiv/`
 
@@ -104,31 +111,36 @@ more controllable dimensions is not the explanation.
 
 ### E5 - Main Inference and Robustness
 
-From `effect_sizes.csv`, `seed_level_inference.csv`, `top12_static_robustness.csv`,
-`cvar05_effect.csv`, and `dispatch_cost_sensitivity.csv`:
+From `effect_sizes.csv`, `seed_level_inference.csv`,
+`dispatch_cost_sensitivity.csv`, and `summary.json` in the 10-seed bundle,
+plus the 5-seed `top12_static_robustness.csv` appendix check:
 
-- Main Excel ReT: PPO `0.005893` vs best static
-  `S2_op10_2.00_op12_1.50` at `0.005466`, delta `+0.000426`,
-  CI95 `[+0.000389, +0.000463]`.
-- Order-level ReT: PPO `0.005666` vs static `0.005251`, delta `+0.000415`,
-  CI95 `[+0.000378, +0.000450]`.
-- Seed-level deltas are all positive: seeds 1-5 =
-  `0.000434`, `0.000408`, `0.000447`, `0.000429`, `0.000414`.
-- Flow fill: PPO `0.961320` vs static `0.668667`, delta `+0.292653`.
-- CTj p99: PPO `1206.94h` vs static `8112.92h`, reduction `6905.98h`.
-- Assembly cost index is not a primary win: PPO `0.682051` vs static
-  `0.666667`; CI crosses zero and `ci95_directional_win=False`.
-- Dispatch-inclusive cost sensitivity becomes directionally cheaper for PPO
-  once dispatch charge reaches `0.025` per multiplier-step and has CI95 below
-  zero from `0.075` upward. This is a sensitivity result, not a headline cost
-  claim.
+- Main Excel ReT: PPO `0.0058977` vs best static
+  `S2_op10_2.00_op12_1.50` at `0.0054596`, delta `+0.0004382`,
+  pooled CI95 `[+0.0004094, +0.0004676]`, seed-clustered CI95
+  `[+0.0004207, +0.0004582]`.
+- Order-level ReT: PPO `0.0056727` vs static `0.0052465`, delta
+  `+0.0004262`, CI95 `[+0.0003985, +0.0004546]`.
+- Seed-level deltas are all positive across seeds 1-10:
+  `0.000434`, `0.000408`, `0.000447`, `0.000429`, `0.000414`,
+  `0.000408`, `0.000424`, `0.000429`, `0.000495`, `0.000494`;
+  each seed has `12/12` positive episode pairs.
+- Flow fill: PPO `0.960453` vs static `0.665418`, delta `+0.295035`.
+- CTj p99: PPO `1201.65h` vs static `8396.17h`, reduction `7194.52h`.
+- Shift-utilization cost index is not a primary win: PPO `0.664690` vs
+  static `0.666667`; CI crosses zero and `ci95_directional_win=False`.
+- Dispatch-inclusive cost sensitivity is nominally cheaper for PPO even at
+  `lambda=0` in the 10-seed pool but not significantly so; it becomes
+  significantly cheaper once dispatch charge reaches `0.025` per
+  multiplier-step. This is a sensitivity result, not a headline cost claim.
 - CVaR05 of Excel ReT: PPO `0.0056449` vs static `0.0051103`, delta
   `+0.0005346`, CI95 `[+0.0004696, +0.0005978]`.
 - Local 3x3 upstream static bound at the best downstream cell:
   best bound policy `S2_op3_1.00_op9_1.25_op10_2.00_op12_1.50`,
   order-level ReT `0.0056120` vs PPO `0.0056660`, delta `+0.0000540`,
-  seed-paired CI95 `[+0.0000424, +0.0000656]`. This does not prove a full
-  8D static frontier, but it closes the nearest op3/op9 static-bound attack.
+  seed-paired CI95 `[+0.0000424, +0.0000656]`. This does not prove an
+  exhaustive eight-dimensional static frontier, but it closes the nearest
+  op3/op9 static-bound attack.
 
 ### E6 - Fidelity Flow-Mode Reconciliation
 
@@ -173,9 +185,10 @@ gate for r1/r2 and partially for r3. Do not claim broad fill-rate fidelity.
 
 ## Claims That Must Not Appear
 
-- PPO achieves perfect fill or zero backorders.
-- PPO is 57% cheaper or a strict assembly-hours/cost win.
-- The action space is 7D; the canonical Track B contract is 8D.
+- PPO achieves a perfect-fill/zero-backorder headline.
+- PPO is a strict assembly-hours/cost win at zero dispatch charge.
+- The action space uses the retired seven-dimensional description; the
+  canonical Track B contract is 8D.
 - Cross-scenario generalization is universally closed across all regimes.
 - The agent "anticipates" disruptions. Use "adaptive response" unless a
   separate lead/lag mechanism audit supports anticipation.

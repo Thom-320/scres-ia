@@ -108,55 +108,59 @@ Track B extends the action contract (\texttt{track\_b\_v1}, 8 dimensions)
 by adding downstream dispatch multipliers at Op10 and Op12 on top of the
 Track A buffer/shift variables, while preserving the DES backbone and
 reward family (\texttt{control\_v1}). Table~\ref{tab:track_b_main} presents
-the canonical confirmatory result (5 seeds $\times$ 60{,}000 timesteps
+the confirmatory 10-seed result (10 seeds $\times$ 60{,}000 timesteps
 $\times$ 12 evaluation episodes, \texttt{adaptive\_benchmark\_v2} risk
-level, $h{=}104$ weeks), comparing the learned policy against the best of a
-dense grid of 147 static dispatch policies (3 shift levels $\times$ 7 Op10
-multipliers $\times$ 7 Op12 multipliers) under paired common-random-number
-(CRN) evaluation.
+level, $h{=}104$ weeks), comparing the learned policy against the best
+dense downstream-dispatch static comparator (\texttt{S2}, Op10$\times$2.00,
+Op12$\times$1.50), selected from the 147-cell grid used in the canonical
+5-seed dense-frontier audit and re-evaluated under paired
+common-random-number (CRN) keys for the seed expansion.
 
 \begin{table}[htbp]
 \centering
-\caption{Track B main result: PPO vs.\ best dense static comparator (\texttt{S2}, Op10$\times$2.00, Op12$\times$1.50), paired CRN evaluation (5 training seeds $\times$ 12 CRN episodes). Episode-level pooled CI95 in brackets, reported descriptively; primary inference is seed-clustered (all five per-seed mean deltas positive; seed-clustered bootstrap CI95 for the Excel ReT delta $[+0.000414, +0.000438]$).}
+\caption{Track B main result: PPO vs.\ best dense downstream-dispatch static comparator (\texttt{S2}, Op10$\times$2.00, Op12$\times$1.50), paired CRN evaluation (10 training seeds $\times$ 12 CRN episodes). Episode-level pooled CI95 in brackets is descriptive; primary inference is seed-clustered (all ten per-seed mean deltas positive; seed-clustered bootstrap CI95 for the Excel ReT delta $[+0.000421, +0.000458]$).}
 \label{tab:track_b_main}
 \small
 \begin{tabular}{lccc}
 \toprule
 Metric & PPO & Best static & $\Delta$ [CI95] \\
 \midrule
-Excel ReT & 0.005893 & 0.005466 & +0.000426 [0.000389, 0.000463] \\
-Order-level ReT & 0.005666 & 0.005251 & +0.000415 [0.000378, 0.000450] \\
-Flow fill rate & 0.961 & 0.669 & +0.293 [0.281, 0.304] \\
-Rolling fill (4w) & 0.996 & 0.909 & +0.087 [0.034, 0.154] \\
-CTj p99 (hours) & 1{,}207 & 8{,}113 & $-6{,}906$ [$-7{,}276$, $-6{,}538$] \\
-Service-loss AUC/order & 113{,}170 & 1{,}125{,}480 & $-1{,}012{,}310$ \\
-Shift-utilization cost index & 0.682 & 0.667 & +0.015 [$-0.048$, 0.015] (n.s.) \\
+Excel ReT & 0.005898 & 0.005460 & +0.000438 [0.000409, 0.000468] \\
+Order-level ReT & 0.005673 & 0.005247 & +0.000426 [0.000398, 0.000455] \\
+Flow fill rate & 0.960 & 0.665 & +0.295 [0.287, 0.303] \\
+Rolling fill (4w) & 0.998 & 0.937 & +0.061 [0.034, 0.095] \\
+CTj p99 (hours) & 1{,}202 & 8{,}396 & $-7{,}195$ [$-7{,}462$, $-6{,}931$] \\
+Service-loss AUC/order & 116{,}131 & 1{,}190{,}307 & $-1{,}074{,}176$ [$-1{,}147{,}737$, $-1{,}008{,}612$] \\
+Shift-utilization cost index & 0.665 & 0.667 & $-0.002$ [$-0.021$, 0.017] (n.s.) \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-PPO improves Garrido/Excel ReT by 0.000426 over the best of the 147
-dense downstream-dispatch static comparators. Because the 60 CRN pairs
-share only 16 distinct
-evaluation scenarios across seeds, we treat the training seed as the
-inferential unit: all five per-seed mean deltas are individually positive
-(range $+0.000408$ to $+0.000447$), and the seed-clustered bootstrap CI
-excludes zero. To interpret the magnitude: in this stress regime the
+PPO improves Garrido/Excel ReT by 0.000438 over the best dense
+downstream-dispatch static comparator; the order-level ReT gain is
+0.000426. Because the 120 CRN pairs reuse a finite set of evaluation
+scenarios across seeds, we treat the training seed as the inferential
+unit: all ten per-seed mean deltas are individually positive (range
+$+0.000408$ to $+0.000495$), each seed has 12/12 positive episode pairs,
+and the seed-clustered bootstrap CI for the Excel ReT delta excludes zero.
+\footnote{\texttt{docs/track\_b\_q1\_stats\_2026-07-02\_final\_10seed/}
+and \texttt{docs/TRACK\_B\_SEED\_EXPANSION\_6\_10\_VERDICT\_2026-07-02.md}.}
+To interpret the magnitude: in this stress regime the
 Excel ReT recovery branch is bounded above by $0.5/72 \approx 0.006944$,
-so the gain moves the system from 78.7\% to 84.9\% of the attainable
-metric ceiling --- approximately 6.1 percentage points of the operative
+so the gain moves the system from 78.6\% to 84.9\% of the attainable
+metric ceiling --- approximately 6.3 percentage points of the operative
 recovery-branch range. Operationally, the same policy produces
 larger-magnitude
 improvements in flow fill rate, rolling fill, and
-recovery-tail cycle time (CTj p99 falls from 8{,}113 to 1{,}207 hours).
+recovery-tail cycle time (CTj p99 falls from 8{,}396 to 1{,}202 hours).
 The policy is Pareto non-dominated on the ReT--cost--tail--flow frontier:
 no static policy in the dense dispatch grid jointly matches or exceeds PPO on Excel
 ReT, cost, CTj p99, and flow fill simultaneously. It is \emph{not},
 however, a strict cost win on the shift dimension: the shift-utilization
-cost index is marginally higher
-for PPO than the best static comparator by ReT, and this difference is not
-statistically distinguishable from zero (CI95 crosses zero). We therefore
-report the result as non-dominated, not shift-cost-dominant.
+cost index is nominally lower for PPO in the 10-seed pool, but this
+difference is not statistically distinguishable from zero (CI95 crosses
+zero). We therefore report the result as non-dominated, not
+shift-cost-dominant.
 
 The local upstream bound does not overturn this result. Holding the best
 downstream cell fixed (S2, Op10$\times$2.00, Op12$\times$1.50) and
@@ -177,17 +181,17 @@ multipliers and $\lambda$ is the charge per unit of dispatch expediting.
 Table~\ref{tab:dispatch_cost} reports the result. Because the learned
 policy expedites selectively (mean multipliers $\approx$1.30/1.27) while
 the best static comparator holds aggressive multipliers permanently
-(2.00/1.50), pricing dispatch \emph{favors} PPO: the break-even charge
-lies between $\lambda = 0.01$ and $\lambda = 0.025$, PPO is nominally
-cheaper for $\lambda \ge 0.025$, and significantly cheaper (CI95 excluding
-zero) for $\lambda \ge 0.075$. The resilience gain is therefore not
+(2.00/1.50), pricing dispatch \emph{favors} PPO: the 10-seed pool is
+nominally cheaper even at $\lambda=0$ but not significantly so, and becomes
+significantly cheaper (CI95 excluding zero) from $\lambda = 0.025$
+upward. The resilience gain is therefore not
 purchased through unpriced transport capacity; under any positive dispatch
 charge at or above modest levels, PPO is simultaneously
 resilience-dominant and cheaper in total.
 
 \begin{table}[htbp]
 \centering
-\caption{Dispatch-inclusive cost sensitivity, CRN-paired (60 pairs).
+\caption{Dispatch-inclusive cost sensitivity, CRN-paired (120 pairs).
 $\Delta = $ PPO $-$ best static total cost; negative favors PPO. Bracketed
 values are bootstrap CI95.}
 \label{tab:dispatch_cost}
@@ -196,13 +200,13 @@ values are bootstrap CI95.}
 \toprule
 Charge $\lambda$ & PPO total cost & Best static total cost & $\Delta$ [CI95] \\
 \midrule
-0 (shift only) & 0.682 & 0.667 & +0.015 [$-0.014$, +0.046] \\
-0.01 & 0.688 & 0.682 & +0.006 [$-0.025$, +0.038] \\
-0.025 & 0.696 & 0.704 & $-0.008$ [$-0.040$, +0.025] \\
-0.05 & 0.711 & 0.742 & $-0.031$ [$-0.064$, +0.003] \\
-0.075 & 0.725 & 0.779 & $-0.054$ [$-0.089$, $-0.019$] \\
-0.10 & 0.740 & 0.817 & $-0.077$ [$-0.113$, $-0.041$] \\
-0.20 & 0.797 & 0.967 & $-0.169$ [$-0.212$, $-0.125$] \\
+0 (shift only) & 0.665 & 0.667 & $-0.002$ [$-0.021$, +0.019] \\
+0.01 & 0.670 & 0.682 & $-0.012$ [$-0.032$, +0.009] \\
+0.025 & 0.677 & 0.704 & $-0.027$ [$-0.048$, $-0.006$] \\
+0.05 & 0.690 & 0.742 & $-0.052$ [$-0.072$, $-0.030$] \\
+0.075 & 0.702 & 0.779 & $-0.077$ [$-0.100$, $-0.054$] \\
+0.10 & 0.715 & 0.817 & $-0.102$ [$-0.124$, $-0.078$] \\
+0.20 & 0.765 & 0.967 & $-0.202$ [$-0.228$, $-0.175$] \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -370,9 +374,8 @@ current 8-dimensional action contract: reward modes \texttt{control\_v1},
 0.2\}$), \texttt{ReT\_tail\_v2}, and \texttt{ReT\_garrido2024\_train},
 crossed with observation versions v7, v8, and v9, each trained for
 2 seeds $\times$ 40{,}000 timesteps (a screening budget, smaller than the
-5-seed $\times$ 60{,}000-timestep confirmatory scale used for the
-canonical result) and evaluated CRN-paired against the best dense static
-comparator.
+10-seed headline and the 5-seed mechanism checks) and evaluated
+CRN-paired against the best dense static comparator.
 
 All 18 cells show a positive Excel ReT delta
 (range $+0.000195$ to $+0.000452$), and every cell registers a directional
@@ -481,8 +484,8 @@ dimensions. Track A demonstrates a structural limitation under
 dense-frontier evaluation (Section~4.2). Track B demonstrates that an
 operational action-space extension overcomes it under paired
 common-random-number evaluation against a 147-cell dense
-downstream-dispatch static grid, and remains cheaper in total once
-dispatch expediting is priced at moderate charges
+downstream-dispatch static grid across 10 training seeds, and remains
+cheaper in total once dispatch expediting is priced at positive charges
 (Section~4.3). A 5-seed action-space decomposition shows downstream
 dispatch access is sufficient to recover the largest in-arm advantage,
 ruling out ``more actuators''

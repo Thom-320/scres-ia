@@ -174,8 +174,9 @@ alone is separately bounded by the Track A dense-frontier negative result
 3$\times$3 grid over Op3 and Op9 quantity multipliers
 (\{0.75, 1.00, 1.25\}) at the best downstream-dispatch cell
 (S2, Op10$\times$2.00, Op12$\times$1.50) under the same CRN protocol.
-This bound is not a full 8D frontier, but it tests whether the nearest
-upstream static degrees of freedom overturn the downstream-grid result.
+This bound is not an exhaustive eight-dimensional frontier, but it tests
+whether the nearest upstream static degrees of freedom overturn the
+downstream-grid result.
 The learner is PPO with a two-hidden-layer
 (64$\times$64) multilayer-perceptron policy and value network
 (\texttt{MlpPolicy}, separate actor/critic heads), learning rate
@@ -187,13 +188,14 @@ per update, $\gamma{=}0.99$, GAE $\lambda{=}0.95$, and clip range 0.2.
 All learned-versus-static comparisons are paired under common random
 numbers~\cite{law2015simulation}: every policy is evaluated on identical
 disruption and demand realizations, so policy differences are isolated
-from scenario noise. Because the 60 evaluation pairs (5 seeds $\times$ 12
-episodes) share only 16 distinct CRN scenarios, episode-level pooled
-confidence intervals are reported as descriptive only. Primary inference
-treats the \emph{training seed} as the inferential unit: per-seed mean
-paired deltas are computed first, and claims rest on the sign consistency
-of the five per-seed deltas together with seed-clustered bootstrap or
-$t$-based intervals. To guard against winner's-curse comparator
+from scenario noise. The promoted Track B headline uses 120 evaluation
+pairs (10 seeds $\times$ 12 episodes); the E1-E4 mechanism checks and
+top-12 appendix use their original 5-seed paired designs. Episode-level
+pooled confidence intervals are reported as descriptive only. Primary
+inference treats the \emph{training seed} as the inferential unit:
+per-seed mean paired deltas are computed first, and claims rest on seed
+sign consistency together with seed-clustered bootstrap or $t$-based
+intervals. To guard against winner's-curse comparator
 selection, the headline delta is additionally recomputed against each of
 the twelve strongest static comparators individually; all twelve deltas
 remain positive with confidence intervals excluding zero

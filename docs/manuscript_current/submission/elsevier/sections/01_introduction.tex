@@ -52,9 +52,10 @@ operationalizes the operational-control part of this proposal: we rebuild
 the thesis DES in Python/SimPy, validate it against the original
 reference targets ($-4.43\%$ relative gap), wrap it in a
 Gymnasium-compatible interface, and evaluate PPO-based closed-loop
-control against dense static frontiers. Retained cross-campaign learning
-is not claimed in this paper; it remains a future-work question once the
-winning controllable interface is fixed.
+control against dense static frontiers. Cross-campaign organizational
+memory is not claimed in this paper; a small online-retention probe is
+reported only as a future-work extension once the winning controllable
+interface is fixed.
 
 Our core empirical finding is dual. Under Track A---the original
 buffer/shift decision family, where the agent controls upstream
@@ -65,9 +66,9 @@ leave no publishable dynamic-control advantage: no tested learner
 converts the small measured headroom over the best static policy. Under
 Track B---a DES-preserving operational extension that adds downstream
 transport dispatch control at Op10 and Op12 (an 8-dimensional action
-contract)---PPO improves Garrido/Excel resilience (ReT) by 0.000426
-(95\% CI entirely positive) over the best of a dense downstream-dispatch grid of 147 static
-dispatch comparators under paired common-random-number evaluation, with
+contract)---PPO improves Garrido/Excel resilience (ReT) by 0.000438
+across 10 training seeds (95\% CI entirely positive) over the best dense
+downstream-dispatch static comparator under paired common-random-number evaluation, with
 matching gains in service continuity and recovery-tail metrics. A
 5-seed action-space ablation shows the gain concentrates in
 downstream-dispatch access rather than in the number of controllable

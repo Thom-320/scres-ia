@@ -1,7 +1,8 @@
 # Claims Registry and Q1 Reviewer Defense (2026-07-01)
 
 This is the current source of truth for paper-facing claims. Older documents
-may still mention Track B as `7D`, "perfect fill", `500k`, or coarse-frontier
+may still mention retired dimension counts, perfect-fill headlines, old
+training-budget claims, or coarse-frontier
 wins; treat those as historical unless they are reconciled here.
 
 Primary evaluation bar: Garrido/Excel ReT. CVaR/tail, Cobb-Douglas, service,
@@ -11,7 +12,7 @@ backlog/recovery, and resource are separate evidence columns, not substitutes.
 
 | ID | Claim | Status | Current evidence | Before submission |
 |---|---|---|---|---|
-| C1 | Track B improves Garrido/Excel ReT when downstream dispatch is controllable. | **Supported** | 5-seed Track B confirm, dense CRN audit: Excel ReT PPO `0.005893` vs dense static `0.005466` (order-level mean ReT `0.005666` vs `0.005251`; both rows CI-positive in `effect_sizes.csv`). | Keep paired dense-CRN table in final workbook; do not cite coarse frontier. |
+| C1 | Track B improves Garrido/Excel ReT when downstream dispatch is controllable. | **Supported** | 10-seed Track B confirm, dense CRN audit: Excel ReT PPO `0.005898` vs dense static `0.005460`, delta `+0.000438`, seed-clustered CI95 `[+0.000421,+0.000458]`; order-level mean ReT PPO `0.005673` vs static `0.005247`, delta `+0.000426`. See `docs/track_b_q1_stats_2026-07-02_final_10seed/`. | Keep paired dense-CRN table in final workbook; do not cite coarse frontier. |
 | C2 | Track B improves lower-tail resilience / CVaR. | **Supported** | Tail ReT CVaR05 delta about `+0.000506`; recovery tail metrics improve strongly. | Report CVaR05, ReT p05/p10, CTj/RPj/DPj p95/p99 with CI/effect size. |
 | C3 | Track B improves service and recovery, not just mean ReT. | **Supported** | Flow fill, service-loss AUC, backlog, CTj/RPj/DPj tails favor PPO in the rich audit. | Use Garrido-style workbook with PPO, best dense static, top statics, and order ledger. |
 | C4 | Track B also wins under the balanced/variance-log Cobb-Douglas evaluation lens. | **Supported as evaluation; not as a training-reward claim** | Balanced CD sigmoid mean PPO about `0.939` vs dense static about `0.754`; CI positive. `variance_log` is already ported in `ret_garrido2024_calibration.json`. | Name the CD variant exactly; do not use full-cost CD as headline unless separately confirmed. |
@@ -23,7 +24,7 @@ backlog/recovery, and resource are separate evidence columns, not substitutes.
 | C10 | v9 observation improves Track B headroom. | **Candidate only** | v9 implemented and smoke-checked: v7=`52`, v8=`79`, v9=`89` dimensions. No confirmatory win yet. | Promote only if v9 beats canonical v7 on Excel ReT delta or CVaR05 under dense CRN. |
 | C11 | Track B transfers beyond one adaptive benchmark cell (cross-regime stress evaluation). | **Supported for current/increased; severe is the boundary regime** | CORRECTED 2026-07-02 (manuscript rev): an earlier count used a per-cell comparator selected by a secondary criterion, which flipped severe/h104 marginally positive and inflated h52 deltas. Against the conservative convention (best in-cell static by the primary metric, order-level ReT; `docs/track_b_q1_stats_2026-07-02_final/e3_per_cell_seed_ci.csv`), PPO wins 4/6 cells with fully positive seed-clustered CI95 (current h52 +0.000359, increased h52 +0.000537, current h104 +0.000209, increased h104 +0.000552; 5/5 seeds positive in each) and loses narrowly in BOTH severe cells (h52 −0.000060, h104 −0.000075; service-floor regime, fill ~0.1% for all policies). R2/R24/mixed families and h260 still not covered. | Report as "cross-regime stress evaluation," 4/6 with severe as the boundary regime; never cite superseded positive severe/h104 or inflated h52 numbers. |
 | C15 | The `adaptive_benchmark_v2` regime alone (not the downstream-dispatch action space) explains the Track B win. | **Refuted** | Track A's original buffer/shift family, retrained fresh on `adaptive_benchmark_v2` itself (2026-07-02, `docs/E3_GENERALIZATION_VERDICT_2026-07-02.md`), loses to the best static comparator (Excel ReT 0.00530 vs 0.00539; CVaR also loses). The regime is not sufficient by itself; the win requires downstream-dispatch action-space access. | Cite as the direct rebuttal to the "regime was engineered to win" reviewer attack. |
-| C12 | Retained learning / `L_{t-1}` improves future campaigns. | **Deferred; not a current claim** | Track A retained/reset probes were null or underpowered; Track B H4 has not been run properly. | Claim only if retained-reset CI lower bound is positive, especially under `obs_hidden`. |
+| C12 | Retained learning / `L_{t-1}` improves future campaigns. | **Supported at small effect size, both observation arms** | RESOLVED 2026-07-02: `docs/H4_RETAINED_VS_RESET_VERDICT_2026-07-02.md`. 10 seeds, 8 online-adaptation cycles, `obs_full` retained-minus-reset CI95 [+0.0000095,+0.0000525]; `obs_hidden` (preferred, privileged fields masked) CI95 [+0.0000167,+0.0000819], 9/10 seeds positive. Effect is real but ~10x smaller than the Track B headline gain and ~100x smaller than the Track A oracle headroom. | State as a small, disclosed future-work extension in one sentence (see verdict doc for exact safe wording); do NOT reframe the paper's central claim around it or call it cross-campaign organizational learning. |
 | C13 | PPO is enough; SAC/TD3 are unnecessary. | **Reviewer defense only** | RecurrentPPO was negative in Track A; PPO wins Track B. | If time allows, run SAC as robustness; otherwise state algorithm comparison is secondary to action-space mechanism. |
 | C14 | A formal MDP/POMDP analysis supports the empirical result. | **Deferred appendix** | Not done. | Add a short appendix defining state/action/reward/partial observability and why empirical dense-frontier tests are primary. |
 | C16 | PPO's Track B advantage does not depend on privileged simulator observation fields (true regime one-hot + true-transition-matrix forecasts). | **Supported** | Obs-masked retrain (2026-07-02, Kaggle, `docs/E2_PRIVILEGED_OBSERVATION_VERDICT_2026-07-02.md`): with those 7 fields zeroed, PPO retains ~95% of the canonical delta (+0.000395 vs +0.000415) and still beats every static/heuristic comparator. Resolves the T3 privileged-observation attack, the single highest-priority open threat from the 2026-07-01 audit. A second independent VPS run of the same experiment is in flight for corroboration. | Cite as the direct answer to "the agent just reads the oracle regime state" attacks. |
@@ -34,8 +35,8 @@ backlog/recovery, and resource are separate evidence columns, not substitutes.
 | Retired claim | Reason |
 |---|---|
 | "Track B is thesis-faithful." | Track B is an operational extension; Garrido fixed downstream dispatch. |
-| "Track B is 7D." | Current `track_b_v1` contract is 8D; old 7D docs are historical. |
-| "Perfect fill / fill=1.000 is the headline." | Current primary metric is Excel ReT; fill can be saturated or misleading. |
+| "Track B uses the retired seven-dimensional label." | Current `track_b_v1` contract is 8D; old dimension-count docs are historical. |
+| "Perfect-fill or fill=1.000 is the headline." | Current primary metric is Excel ReT; fill can be saturated or misleading. |
 | "Strictly Pareto-dominates on all metrics." | Resource-efficient win is not confirmed; report verdicts separately. |
 | "PPO anticipates risks." | Current evidence supports adaptive recovery; anticipation requires lead/lag proof. |
 | "H4 is proven." | H4 is not proven on the winning Track B lane. |
@@ -70,9 +71,9 @@ Primary dense-static comparator selected by Excel ReT:
 `S2_op10_2.00_op12_1.50`.
 
 Primary result:
-`order_ret_excel` PPO `0.005893` vs dense static `0.005466`,
-delta `+0.000426`, CI95 `[+0.000389, +0.000463]`,
-paired Cohen's d `2.87`.
+`order_ret_excel` PPO `0.005898` vs dense static `0.005460`,
+delta `+0.000438`, CI95 `[+0.000409, +0.000468]`,
+seed-clustered CI95 `[+0.000421, +0.000458]`.
 
 Pareto result:
 PPO is non-dominated versus the dense static frontier on
@@ -206,7 +207,7 @@ Claim rule:
 | Track B is not Garrido-faithful. | Label Track B as operational extension; Track A is thesis-variable boundary evidence. |
 | Reward tuning/fishing. | Show pre-registered gates, held-out CRN, current sweep, and failed lanes in the registry. |
 | PPO only. | Say action-space mechanism is the primary tested variable; RecurrentPPO negative; SAC is robustness/future work unless run. |
-| No retained learning. | Do not claim H4 unless positive; paper's main claim is adaptive closed-loop recovery. |
+| No retained-adaptation evidence. | H4 is now positive at small effect size, but the paper's main claim remains adaptive closed-loop recovery/action-space alignment. |
 | Single topology. | Defend benchmark depth and thesis validation; add cross-regime/horizon generalization table. |
 | Excel ReT quirks. | Report full Garrido-style panel, tail/CVaR, service, cost, and order ledger; do not rely on one scalar. |
 | Static frontier too weak. | Use dense CRN in the same action space; no coarse-frontier claims. |
@@ -235,7 +236,8 @@ Claim rule:
 - [ ] Mechanism lead/lag audit completed or anticipation language removed.
 - [ ] Generalization table completed or scope narrowed.
 - [ ] H4 either confirmed and reported, or explicitly deferred as open.
-- [ ] Manuscript/docs scrubbed for retired claims: `7D`, `perfect fill`, `500k-only`, `strictly Pareto-dominates all metrics`, and `Track B thesis-faithful`.
-| C18 | Dispatch-inclusive costing favors PPO: pricing dispatch expediting at λ≥0.025 makes PPO nominally cheaper in total than the best static, significantly cheaper (CI95<0) at λ≥0.075; break-even λ*∈(0.01,0.025). | **Supported** | `docs/track_b_q1_stats_2026-07-02_final/dispatch_cost_sensitivity.csv` (Codex-built, independently verified 2026-07-02): C(λ)=shift cost+λ[(m10−1)++(m12−1)+], 60 CRN pairs; PPO mean multipliers ≈1.30/1.27 vs static 2.00/1.50 constant. In manuscript Table (dispatch_cost) §4.3. | Do NOT claim cost dominance at λ=0 (shift-only index remains n.s. worse); claim conditional cost advantage under positive dispatch charges. |
+- [ ] Manuscript/docs scrubbed for retired dimension labels, perfect-fill headlines, old training-budget-only claims, strict all-metric dominance claims, and Track-B-as-thesis-faithful wording.
+| C18 | Dispatch-inclusive costing favors PPO: pricing dispatch expediting at λ≥0.025 makes PPO significantly cheaper in total than the best static (CI95<0). | **Supported** | `docs/track_b_q1_stats_2026-07-02_final_10seed/dispatch_cost_sensitivity.csv`: C(λ)=shift cost+λ[(m10−1)++(m12−1)+], 120 CRN pairs; PPO mean multipliers ≈1.30/1.27 vs static 2.00/1.50 constant. At λ=0 PPO is nominally cheaper but CI crosses zero; from λ=0.025 upward CI95 is fully negative. In manuscript Table (dispatch_cost) §4.3. | Do NOT claim strict cost dominance at λ=0; claim conditional cost advantage under positive dispatch charges. |
 | C19 | PPO beats each of the top-12 statics individually (winner's-curse defense). | **Supported** | `docs/track_b_q1_stats_2026-07-02_final/top12_static_robustness.csv`: all 12 deltas +0.000426..+0.000465, CI95 all positive; delta grows down-ranking. Manuscript Appendix A. | — |
-| C20 | Local upstream static bound does not overturn the Track B PPO advantage. | **Supported as a local bound, not a full 8D frontier** | `outputs/experiments/track_b_upstream_bound_3x3_2026-07-02/` and mirrored `docs/track_b_q1_stats_2026-07-02_final/upstream_bound_3x3_*`: 3x3 eval-only grid over Op3/Op9 quantity multipliers `{0.75,1.00,1.25}` at S2, Op10×2.00, Op12×1.50; best bound policy ReT `0.0056120`, PPO `0.0056660`, seed-paired delta `+0.0000540` CI95 `[+0.0000424,+0.0000656]`; CRN keys verified across 9 policies × 60 episodes. | Say "dense downstream-dispatch grid plus local upstream bound"; do NOT claim a full exhaustive 8D static frontier. |
+| C20 | Local upstream static bound does not overturn the Track B PPO advantage. | **Supported as a local bound, not an exhaustive eight-dimensional frontier** | `outputs/experiments/track_b_upstream_bound_3x3_2026-07-02/` and mirrored `docs/track_b_q1_stats_2026-07-02_final/upstream_bound_3x3_*`: 3x3 eval-only grid over Op3/Op9 quantity multipliers `{0.75,1.00,1.25}` at S2, Op10×2.00, Op12×1.50; best bound policy ReT `0.0056120`, PPO `0.0056660`, seed-paired delta `+0.0000540` CI95 `[+0.0000424,+0.0000656]`; CRN keys verified across 9 policies × 60 episodes. | Say "dense downstream-dispatch grid plus local upstream bound"; do NOT claim an exhaustive eight-dimensional static frontier. |
+| C21 | Track B headline result holds at 10 training seeds, not just 5. | **Supported** | `docs/TRACK_B_SEED_EXPANSION_6_10_VERDICT_2026-07-02.md` + `docs/track_b_q1_stats_2026-07-02_final_10seed/`: seeds 6-10 CRN-paired against the exact canonical best static (S2_op10_2.00_op12_1.50, 147-cell convention), 120 total pairs. Authoritative Excel ReT delta +0.000438, CI95 [+0.000409,+0.000468], seed-clustered CI95 [+0.000421,+0.000458], 10/10 seeds positive; order-level ReT delta +0.000426. | Cited in manuscript sections/04_results.tex §4.3; Table 4 now uses the 10-seed headline comparison. |

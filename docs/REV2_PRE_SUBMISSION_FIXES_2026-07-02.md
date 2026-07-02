@@ -9,9 +9,10 @@ evidence upgrades are now IN the manuscript
 
 1. **Dispatch-inclusive cost sensitivity added (§4.3, Table `tab:dispatch_cost`).**
    The single biggest attack ("dispatch is free") is now a *win*: from
-   `docs/track_b_q1_stats_2026-07-02_final/dispatch_cost_sensitivity.csv`,
-   break-even λ* ∈ (0.01, 0.025); PPO nominally cheaper at λ≥0.025 and
-   significantly cheaper (CI95 fully negative) at λ≥0.075. Mechanism: PPO
+   `docs/track_b_q1_stats_2026-07-02_final_10seed/dispatch_cost_sensitivity.csv`,
+   PPO is nominally cheaper even at λ=0 in the 10-seed pool but CI overlaps
+   zero; it becomes significantly cheaper (CI95 fully negative) at λ≥0.025.
+   Mechanism: PPO
    expedites selectively (mean m10/m12 ≈ 1.30/1.27) vs static 2.00/1.50
    held permanently. Also in abstract + discussion. Registry C18.
 2. **E3 corrected and reframed as "Cross-regime stress evaluation" (§4.7).**
@@ -81,21 +82,24 @@ evidence upgrades are now IN the manuscript
     cell (S2, Op10×2.00, Op12×1.50). Best bound policy ReT `0.0056120`;
     PPO remains higher at `0.0056660`, seed-paired delta `+0.0000540`
     CI95 `[+0.0000424,+0.0000656]`. This supports "dense
-    downstream-dispatch grid plus local upstream bound," not a full 8D
-    static frontier claim.
+    downstream-dispatch grid plus local upstream bound," not an exhaustive
+    eight-dimensional static frontier claim.
+18. **10-seed canonical Track B expansion completed and promoted (§4.3).**
+    `docs/track_b_q1_stats_2026-07-02_final_10seed/` merges seeds 1-5 with
+    the VPS seed expansion 6-10 and CRN-pairs all ten seeds against the
+    exact headline static comparator. Excel ReT delta `+0.000438`, pooled
+    CI95 `[+0.000409,+0.000468]`, seed-clustered CI95
+    `[+0.000421,+0.000458]`; order-level ReT delta `+0.000426`; all ten
+    seed-level deltas positive.
 
 ## Deliberately NOT done (per reviewer docs' own "don't" lists)
 
-- No H4/retained-learning reframing (H4 VPS run remains background,
-  non-gating).
+- No H4 reframing (the VPS run is positive at small effect size, but remains
+  a non-gating future-work extension).
 - No SAC/TD3 runs before submission (response-letter ammunition only).
 - No new reward sweeps; no Track A reopening; no architecture zoo.
 
 ## Remaining compute upgrades (P1/P2, in order of value)
 
-1. **Seeds 6–10 canonical Track B** (10-seed headline) — launch via
-   `scripts/run_track_b_benchmark.py --seeds 6 7 8 9 10` with canonical
-   args (lr 3e-4, n_steps 1024, batch 256, 60k, v7/control_v1/
-   adaptive_benchmark_v2/h104) on the VPS.
-2. **Per-cell dense frontier for current/h104 + increased/h104** —
+1. **Per-cell dense frontier for current/h104 + increased/h104** —
    upgrades E3 from stress screen toward real generalization.

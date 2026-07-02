@@ -131,9 +131,18 @@ risk/horizon cell. Seventh, the added 3$\times$3 upstream bound tests
 nearby Op3/Op9 static quantity choices at the best downstream cell and
 does not overturn PPO, but it is still a local bound rather than an
 exhaustive 8D static frontier. Finally, the evidence supports adaptive recovery and
-backlog control, not unqualified anticipation, retained cross-campaign
+backlog control, not unqualified anticipation, cross-campaign organizational
 learning, universal cost reduction, or a universal law that bottleneck access
-alone is sufficient for RL success.
+alone is sufficient for RL success. A separate, confirmatory-scale probe
+(10 seeds, 8 sequential online-adaptation cycles) finds a small positive
+retained-versus-reset advantage in Excel ReT ($+0.0000493$, 95\% CI
+$[+0.0000167, +0.0000819]$, masked-observation arm), roughly an order of
+magnitude smaller than the Track B headline gain and robust to masking
+the same privileged regime/forecast fields removed in
+Section~\ref{45-privileged-obs}; this is preliminary evidence for a
+retained-adaptation channel distinct from the action-space alignment
+mechanism studied here, not a claim of cross-campaign organizational
+learning, and is not part of the paper's central result.
 
 \hypertarget{56-future-work}{%
 \subsection{Future work}\label{56-future-work}}
@@ -150,7 +159,8 @@ identifies severe disruption at short horizons as a genuine boundary case;
 training specialized policies for that regime, rather than relying on the
 policy trained under \texttt{adaptive\_benchmark\_v2}, could establish
 tighter upper bounds on RL effectiveness under catastrophic disruption.
-Retained cross-campaign learning, off-policy algorithm comparisons
+Cross-campaign organizational learning at longer horizons than the
+8-cycle probe reported above, off-policy algorithm comparisons
 (SAC/TD3), and a full 147-candidate regime-table fit (the current
 privileged-observation test used a trimmed 75-candidate grid) remain open
 for future work.
