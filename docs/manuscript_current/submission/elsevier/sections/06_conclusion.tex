@@ -20,20 +20,25 @@ algorithmic sophistication.
 Under the DES-preserving Track B operational extension, which adds downstream transport
 dispatch at Op10 and Op12 (an 8-dimensional action contract) while
 preserving the DES backbone, PPO improves Garrido/Excel resilience over
-the best of a dense grid of static comparators under paired
+the best of a dense downstream-dispatch grid of static comparators under paired
 common-random-number evaluation (+0.000426, 95\% CI entirely positive),
 with matching gains in service continuity and recovery-tail metrics. A
+local 3$\times$3 bound over the nearest upstream static quantity controls
+at the best downstream cell narrows but does not overturn the PPO
+advantage. A
 5-seed action-space ablation shows the gain concentrates in
 downstream-dispatch access rather than in action-space size; the
 advantage holds for current and increased Garrido-native risk levels at
-both evaluated horizons, while severe risk remains mixed; and two
+both evaluated horizons with fully positive seed-clustered confidence
+intervals, while the severe service-floor regime is a disclosed boundary
+where the frozen policy loses narrowly; and two
 independent tests --- an observation-masked retrain and a
 privileged-access static comparator --- rule out that the effect depends
 on the learned policy exploiting simulator-only regime information
 unavailable to any static or heuristic baseline.
 
-The central lesson is conditional rather than universal: RL value appears
-in this benchmark when the controllable interface reaches the binding
+The central lesson is conditional rather than universal: RL value is
+observed in this benchmark when the controllable interface reaches the binding
 operational constraint and the policy can convert that authority into
 recovery performance. This finding survives adversarial checks for the
 two most common alternative explanations --- larger action spaces and

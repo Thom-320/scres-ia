@@ -27,21 +27,31 @@ Track B changes the controllable interface, not the underlying DES physics.
 By adding Op10 and Op12 dispatch multipliers to the action space, the agent
 gains leverage over the downstream bottleneck that constrains Track A. The
 learned policy achieves higher Excel ReT, service continuity, and
-recovery-tail metrics than the best of a dense grid of static comparators,
-but it is not a strict cost win: its assembly cost index is marginally
+recovery-tail metrics than the best of a dense downstream-dispatch grid of static comparators,
+but it is not a strict cost win on the shift dimension: its
+shift-utilization cost index is marginally
 higher than the best comparator selected by ReT, and this difference is
 not statistically distinguishable from zero. We report the result as
-Pareto non-dominated on the ReT--cost--tail--flow frontier rather than as
-resource-efficient.
+Pareto non-dominated on the ReT--cost--tail--flow frontier. The
+dispatch-inclusive cost sensitivity (Section~4.3) sharpens the managerial
+reading: because the learned policy expedites selectively rather than
+holding aggressive dispatch permanently, PPO becomes cheaper in total than
+the best static once dispatch expediting carries a moderate positive
+charge --- the policy buys recovery with \emph{targeted}, not free,
+transport flexibility.
 
-The causal ablation (Section~4.4) strengthens this interpretation. At
+The action-space decomposition (Section~4.4) strengthens this
+interpretation. At
 matched 5-seed, 60{,}000-timestep scale, the \emph{shift\_only} condition
 achieves a comparable advantage over its own best evaluated comparator
 (+0.000377) to the full \emph{joint} contract (+0.000367), while
 \emph{downstream\_only} exceeds both (+0.000429). This decomposition
-provides causal evidence that downstream dispatch access, not the number
-of controllable dimensions, is the mechanism responsible for the Track B
-advantage.
+provides mechanism evidence that downstream dispatch access is sufficient
+to recover the largest observed advantage and that the number
+of controllable dimensions is not what drives the Track B
+advantage; it does not establish downstream dispatch as the only useful
+control surface, since shift-only control also captures part of the
+dynamic effect.
 
 \hypertarget{53-action-space-alignment}{%
 \subsection{Action-space alignment as a design principle}\label{53-action-space-alignment}}
@@ -77,10 +87,10 @@ risk, while Ordibazar et al.~\cite{ordibazar2022} use counterfactual explanation
 risk \emph{recommendation}. These contributions address complementary
 problems (prediction, classification, explanation) rather than the
 prescriptive operational control explored here. Kogler and Maxera~\cite{kogler2026}
-review 72 papers combining DES with ML for supply chain analysis,
-confirming that DES+RL is the dominant hybrid paradigm; our work contributes
+review 72 papers combining DES with ML for supply chain analysis, in
+which DES+RL emerges as the most common hybrid pairing; our work contributes
 a specific instance with validated thesis-grounded data, honest negative
-results, and causal ablation evidence that is rare in this literature.
+results, and mechanism-ablation evidence that is rare in this literature.
 
 Among RL-specific competitors, Ding et al.~\cite{ding2026} apply MAPPO for dynamic
 reconfiguration of supply chain topology under disruption, operating at the
@@ -109,12 +119,18 @@ not prove full field deployability of every state variable.
 Fourth, the problem is better described as partially observed control than a
 fully identified MDP: the agent observes a projection of the simulation state,
 not the full internal state. Fifth, the paper uses PPO exclusively (with
-RecurrentPPO as a comparator); other algorithms (SAC, TD3) were not tested,
-though the reward-insensitivity finding suggests algorithmic choice is
-secondary to action-space alignment in this regime. Sixth, the
+RecurrentPPO as a comparator) as a stable continuous-control baseline; we
+claim action-space alignment, not algorithmic superiority, and off-policy
+continuous-control algorithms such as SAC and TD3 are natural robustness
+extensions. Algorithmic choice is not the mechanism tested in this paper,
+and the reward-insensitivity screen suggests the effect is not tied to
+one training configuration. Sixth, the
 cross-regime/horizon matrix uses a fixed dense-comparable static comparator
 set rather than a fully reoptimized 147-cell dense frontier in every
-risk/horizon cell. Finally, the evidence supports adaptive recovery and
+risk/horizon cell. Seventh, the added 3$\times$3 upstream bound tests
+nearby Op3/Op9 static quantity choices at the best downstream cell and
+does not overturn PPO, but it is still a local bound rather than an
+exhaustive 8D static frontier. Finally, the evidence supports adaptive recovery and
 backlog control, not unqualified anticipation, retained cross-campaign
 learning, universal cost reduction, or a universal law that bottleneck access
 alone is sufficient for RL success.

@@ -12,7 +12,7 @@ work applying RL to inventory ordering, transportation scheduling, and
 multi-echelon coordination, while Boute et al.~\cite{boute2022} provide a design
 roadmap for deep RL in inventory control. More recent DES+ML reviews,
 including Kogler and Maxera~\cite{kogler2026}, document papers combining discrete-event simulation (DES) with
-machine learning, confirming that DES+RL is now the dominant hybrid
+machine learning, in which DES+RL emerges as the most common hybrid
 paradigm for operational supply chain analysis. This paper therefore
 does not claim novelty in the idea of applying RL to supply chains;
 instead, it contributes a benchmark-centered investigation of
@@ -66,7 +66,7 @@ converts the small measured headroom over the best static policy. Under
 Track B---a DES-preserving operational extension that adds downstream
 transport dispatch control at Op10 and Op12 (an 8-dimensional action
 contract)---PPO improves Garrido/Excel resilience (ReT) by 0.000426
-(95\% CI entirely positive) over the best of a dense grid of 147 static
+(95\% CI entirely positive) over the best of a dense downstream-dispatch grid of 147 static
 dispatch comparators under paired common-random-number evaluation, with
 matching gains in service continuity and recovery-tail metrics. A
 5-seed action-space ablation shows the gain concentrates in

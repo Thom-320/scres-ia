@@ -61,23 +61,28 @@ drive the result. The policy still wins when the privileged fields are zeroed.
 
 ### E3 - Scope and Generalization
 
-**Verdict: supported for current/increased, mixed for severe.**
+**Verdict: supported for current/increased, negative for severe.**
 
-From `e3_cross_regime_horizon_matrix.csv`:
+From `e3_per_cell_seed_ci.csv`, using the conservative comparator convention
+now adopted by the manuscript (best in-cell static by the primary metric,
+order-level ReT):
 
 | Horizon | Risk level | PPO ReT | Best static ReT | Delta |
 |---|---|---:|---:|---:|
-| h52 | current | 0.0053155 | 0.0048324 | +0.0004831 |
-| h52 | increased | 0.0032588 | 0.0025172 | +0.0007416 |
-| h52 | severe | 0.0001193 | 0.0001797 | -0.0000604 |
-| h104 | current | 0.0056481 | 0.0054393 | +0.0002089 |
-| h104 | increased | 0.0036601 | 0.0030952 | +0.0005649 |
-| h104 | severe | 0.0001282 | 0.0001188 | +0.0000094 |
+| h52 | current | -- | -- | +0.0003594 |
+| h52 | increased | -- | -- | +0.0005375 |
+| h52 | severe | -- | -- | -0.0000604 |
+| h104 | current | -- | -- | +0.0002089 |
+| h104 | increased | -- | -- | +0.0005516 |
+| h104 | severe | -- | -- | -0.0000747 |
 
 Allowed claim: the result generalizes beyond the designed
 `adaptive_benchmark_v2` cell to current and increased Garrido-native risk
-levels at h52 and h104. Severe is a boundary case and must be reported as
-mixed, not a clean win.
+levels at h52 and h104. Severe is the boundary regime and must be reported
+as negative at both tested horizons under the primary-metric comparator
+convention. Do not cite the older h104/severe marginal-positive value or
+the older majority-win count; those came from selecting the per-cell
+comparator by a secondary criterion and are superseded.
 
 ### E4 - Action-Space Ablation
 
@@ -119,6 +124,11 @@ From `effect_sizes.csv`, `seed_level_inference.csv`, `top12_static_robustness.cs
   claim.
 - CVaR05 of Excel ReT: PPO `0.0056449` vs static `0.0051103`, delta
   `+0.0005346`, CI95 `[+0.0004696, +0.0005978]`.
+- Local 3x3 upstream static bound at the best downstream cell:
+  best bound policy `S2_op3_1.00_op9_1.25_op10_2.00_op12_1.50`,
+  order-level ReT `0.0056120` vs PPO `0.0056660`, delta `+0.0000540`,
+  seed-paired CI95 `[+0.0000424, +0.0000656]`. This does not prove a full
+  8D static frontier, but it closes the nearest op3/op9 static-bound attack.
 
 ### E6 - Fidelity Flow-Mode Reconciliation
 
@@ -143,13 +153,18 @@ gate for r1/r2 and partially for r3. Do not claim broad fill-rate fidelity.
 - PPO improves adaptive recovery in the designed sustained-disruption Track B
   cell under common-random-number paired evaluation against dense static
   comparators.
+- A local upstream op3/op9 static bound at the best downstream-dispatch cell
+  does not overturn the PPO advantage; the safe comparator phrase remains
+  "dense downstream-dispatch grid plus local upstream bound," not "full 8D
+  static frontier."
 - The main Track B result is an Excel/order-level ReT, service-continuity,
   backlog, and recovery-tail win, not a strict assembly-cost win.
 - The privileged-observation confound is closed from both directions:
   masked PPO still wins, and a regime-conditioned lookup table still cannot
   match PPO.
 - Generalization holds for current/increased risk levels at both h52 and h104,
-  but severe is mixed and should define the scope boundary.
+  but severe is negative at both tested horizons and defines the scope
+  boundary.
 - The ablation supports downstream dispatch/bottleneck access as the key
   mechanism. It does not prove a universal "RL wins iff bottleneck is
   controllable" law.
@@ -175,7 +190,8 @@ Defensible IJPR framing:
 > PPO improves adaptive recovery in a thesis-grounded military supply-chain
 > DES when the control interface reaches the downstream dispatch bottleneck.
 > The result survives regime-table and masked-observation controls, holds
-> across current/increased risk regimes, and is mixed under severe stress.
+> across current/increased risk regimes, and fails narrowly under severe
+> service-floor stress.
 
 This should be the claim boundary for the manuscript rewrite and response
 package.

@@ -80,6 +80,17 @@ paper's central question is whether this operational extension changes
 the benchmark outcome by exposing the operational bottleneck that Track
 A leaves mostly outside the controllable interface.
 
+Operationally, the Op10/Op12 dispatch multipliers represent short-term
+downstream transport expediting authority --- additional dispatch
+frequency, vehicle allocation, or priority release at the two
+line-of-communication stages feeding the combat service support units and
+the theatre of operations. They do not alter demand, risk realization, or
+upstream production physics; Track B preserves the DES process logic and
+risk structure while extending the controllable decision interface.
+Because the Garrido-Rios source does not provide calibrated transport
+cost data, dispatch costs are treated through an explicit sensitivity
+analysis (Section~4.3) rather than as calibrated monetary costs.
+
 \begin{table}[htbp]
 \centering
 \caption{Observation classes relevant to the privileged-observation audit.}
@@ -116,7 +127,9 @@ primary metric for the headline claim is \texttt{order\_ret\_excel}
 (Garrido/Excel ReT), with \texttt{order\_level\_ret\_mean},
 \texttt{flow\_fill\_rate}, \texttt{terminal\_rolling\_fill\_rate\_4w},
 recovery-tail metrics (\texttt{order\_ctj\_p99},
-\texttt{order\_rpj\_p99}), service-loss AUC, and the assembly cost index
+\texttt{order\_rpj\_p99}), service-loss AUC, and a shift-utilization cost
+index (an assembly-labor proxy; it does not price dispatch, which is
+costed separately through the sensitivity in Section~4.3)
 reported as a secondary evidence panel, not substitutes for the primary
 metric. \texttt{reward\_total} is only comparable within a shared reward
 family; comparisons across Track A and Track B, or across reward
@@ -149,19 +162,54 @@ the risk level (\texttt{adaptive\_benchmark\_v2}), the thesis year basis,
 a 168-hour decision step, and stochastic processing times. The confirmatory benchmark is trained for
 \texttt{60{,}000} timesteps per seed with seeds \texttt{1--5} and
 evaluated over \texttt{12} common-random-number episodes per seed against
-a dense grid of 147 static dispatch comparators (3 shift levels $\times$
+a dense downstream-dispatch static grid of 147 comparators (3 shift
+levels $\times$
 7 Op10 multipliers $\times$ 7 Op12 multipliers, each in $\{0.5, 0.75,
-1.0, 1.25, 1.5, 2.0, 2.5\}$).
+1.0, 1.25, 1.5, 2.0, 2.5\}$). The grid is dense over the dispatch/shift
+family that Track B is designed to test; the remaining upstream
+buffer/reorder dimensions are held at their canonical Track B settings
+for all static comparators, and learned control over that upstream family
+alone is separately bounded by the Track A dense-frontier negative result
+(Section~4.2). As a local static-comparator bound, we also evaluate a
+3$\times$3 grid over Op3 and Op9 quantity multipliers
+(\{0.75, 1.00, 1.25\}) at the best downstream-dispatch cell
+(S2, Op10$\times$2.00, Op12$\times$1.50) under the same CRN protocol.
+This bound is not a full 8D frontier, but it tests whether the nearest
+upstream static degrees of freedom overturn the downstream-grid result.
+The learner is PPO with a two-hidden-layer
+(64$\times$64) multilayer-perceptron policy and value network
+(\texttt{MlpPolicy}, separate actor/critic heads), learning rate
+$3\times10^{-4}$, $n_{\mathrm{steps}}{=}1024$, batch size 256, 10 epochs
+per update, $\gamma{=}0.99$, GAE $\lambda{=}0.95$, and clip range 0.2.
+
+\subsection{Statistical inference}\label{35-statistical-inference}
+
+All learned-versus-static comparisons are paired under common random
+numbers~\cite{law2015simulation}: every policy is evaluated on identical
+disruption and demand realizations, so policy differences are isolated
+from scenario noise. Because the 60 evaluation pairs (5 seeds $\times$ 12
+episodes) share only 16 distinct CRN scenarios, episode-level pooled
+confidence intervals are reported as descriptive only. Primary inference
+treats the \emph{training seed} as the inferential unit: per-seed mean
+paired deltas are computed first, and claims rest on the sign consistency
+of the five per-seed deltas together with seed-clustered bootstrap or
+$t$-based intervals. To guard against winner's-curse comparator
+selection, the headline delta is additionally recomputed against each of
+the twelve strongest static comparators individually; all twelve deltas
+remain positive with confidence intervals excluding zero
+(Appendix~\ref{appendix-robustness}). Secondary metrics (fill, tails,
+cost) are reported as an evidence panel without multiplicity adjustment
+and are not used as stand-alone claims.
 
 To separate the action-contract argument from action-space size, the
 paper uses a matched action-space ablation at the same 5-seed,
 60{,}000-timestep scale, comparing the full \texttt{joint} 8D contract
 against \texttt{downstream\_only} (shift frozen) and \texttt{shift\_only}
 (dispatch frozen) variants, with observation version, reward family,
-risk profile, and training budget held fixed. This is the primary causal
-evidence for the claim that downstream control access, not action-space
-size, is responsible for the Track B gain; it is supportive causal
-evidence inside the studied benchmark family, not universal proof outside
+risk profile, and training budget held fixed. This decomposition provides
+mechanism evidence that downstream control access, not action-space
+size, drives the Track B gain; it is supportive evidence inside the
+studied benchmark family, not causal proof outside
 it.
 
 \begin{table}[htbp]
@@ -176,8 +224,16 @@ Track A & Original buffer/shift control against dense static frontiers & Boundar
 Track B canonical & PPO vs 147 dense static dispatch policies under CRN & Main adaptive-recovery result \\
 E1 & Static, heuristic, and true-regime lookup-table comparators & PPO win is not reproduced by zero-learning privileged regime access \\
 E2 & PPO retrained with privileged regime/forecast fields masked & PPO win does not require oracle observation fields \\
-E3 & Frozen PPO across risk levels and horizons & Current/increased generalization; severe boundary case \\
+E3 & Frozen PPO across risk levels and horizons & Cross-regime stress transfer; severe service-floor boundary \\
 E4 & Joint, downstream-only, and shift-only ablation & Mechanism evidence for downstream bottleneck authority \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+All DES code, Gymnasium wrappers, training and evaluation scripts, static
+frontier definitions, and the frozen evidence bundles behind every table
+in this paper are available in the project repository
+(\texttt{github.com/Thom-320/scres-ia}, branch
+\texttt{codex/garrido-replication-experiments}); each reported number
+traces to a dated artifact directory and the training seeds are stated
+explicitly throughout.

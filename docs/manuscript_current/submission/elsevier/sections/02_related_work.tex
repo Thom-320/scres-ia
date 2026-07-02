@@ -58,7 +58,7 @@ frontier to exploit.
 Hybrid simulation and machine-learning workflows are now common in
 supply-chain analysis. Kogler and Maxera~\cite{kogler2026} review 72
 papers and 43 related studies combining discrete simulation with machine
-learning, while Perez-Pena et al.~\cite{perezpena2025} show that many
+learning, while Badakhshan et al.~\cite{badakhshan2024} show that many
 simulation-ML workflows emphasize prediction or classification rather
 than optimization. In resilience-oriented AI, Ding et al.~\cite{ding2026}
 use MAPPO for strategic topology reconfiguration under disruption,
@@ -75,7 +75,7 @@ against dense static frontiers on a thesis-grounded resilience metric.
 
 \begin{table}[htbp]
 \centering
-\caption{Positioning of the present benchmark relative to adjacent literatures.}
+\caption{Positioning of the present benchmark relative to adjacent literatures. The table is a conceptual positioning matrix over representative papers discussed in this section, not a systematic coding of the full literature.}
 \label{tab:literature_gap}
 \small
 \begin{tabular}{p{0.24\linewidth}>{\centering\arraybackslash}p{0.10\linewidth}>{\centering\arraybackslash}p{0.10\linewidth}>{\centering\arraybackslash}p{0.12\linewidth}>{\centering\arraybackslash}p{0.12\linewidth}>{\centering\arraybackslash}p{0.13\linewidth}}
@@ -94,12 +94,29 @@ This paper & Yes & Yes & Yes & Yes & Yes \\
 \hypertarget{25-gap-action-space-alignment}{%
 \subsection{Gap: action-space alignment and bottleneck authority}\label{25-gap-action-space-alignment}}
 
+This literature also motivates our evaluation standard. Deep RL for
+inventory control repeatedly finds that strong structured policies and
+classical heuristics remain hard to beat: Gijsbrechts et
+al.~\cite{gijsbrechts2022} report that DRL matches but often does not
+decisively exceed state-of-the-art heuristics, Stranieri et
+al.~\cite{stranieri2024} find PPO excels in complex, variable
+pharmaceutical settings without dominating every classical policy, and
+structure-informed designs~\cite{maggiar2025} argue that exploiting known
+problem structure matters more than generic architecture. The relevant
+question for a learned policy is therefore not whether it beats a naive
+static rule, but whether it beats a densely sampled family of strong
+static and heuristic policies under paired stochastic evaluation --- the
+standard adopted throughout this paper.
+
 The gap is therefore conditional rather than categorical. Prior work
 shows that RL can be used in supply chains and that DES can represent
 SCRES dynamics. What remains under-tested is whether the learned policy's
 action space actually reaches the constraint that governs recovery.
 Theory-of-Constraints reasoning treats the binding bottleneck as the
-lever that determines system throughput \cite{goldratt1984goal}; RL
+lever that determines system throughput \cite{goldratt1984goal}, and the
+factory-physics tradition formalizes why buffer and capacity
+interventions away from the binding constraint yield sharply diminishing
+returns \cite{hopp2011factory}; RL
 agent design determines whether that lever is even available to the
 policy. This paper connects the two: Track A tests learned control when
 the original buffer/shift surface leaves the downstream recovery

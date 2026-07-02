@@ -24,7 +24,7 @@
 \begin{frontmatter}
 \title{When Does Reinforcement Learning Improve Supply Chain Resilience? Action-Space Alignment in a Garrido-Grounded DES Benchmark}
 \begin{abstract}
-Supply chain resilience studies increasingly combine simulation and reinforcement learning, yet it remains unclear when neural control improves resilience beyond strong static baselines. We develop a Garrido-grounded discrete-event simulation benchmark of a 13-operation military food supply chain and evaluate learned policies under dense static frontiers, common random numbers, and order-level Garrido/Excel resilience metrics. Under Track A, which preserves the original buffer/shift decision family, dense-frontier evaluation reveals no publishable dynamic-control advantage: learned policies fail to convert the small measured headroom over the best static policy. Under Track B, a DES-preserving operational extension that adds downstream dispatch control at Op10 and Op12, PPO improves Excel ReT over the best of 147 dense static dispatch comparators by +0.000426, with a fully positive 95\% confidence interval. The gain is accompanied by large improvements in flow fill, service-loss AUC, backlog, and CTj/RPj/DPj recovery tails, but not by a strict assembly-cost win. Action-space ablations show that the advantage concentrates in downstream dispatch access rather than in action-space size. Two privileged-observation tests show that the result does not depend on oracle regime information: PPO retains most of its advantage when regime and forecast fields are masked, while a non-learning regime-conditioned lookup table fails to approach PPO. Cross-regime evaluation shows positive gains in current and increased risk regimes at both horizons, with severe short-horizon disruption as a boundary case. The contribution is not architectural novelty, but a benchmark-centered diagnosis: reinforcement learning improves SCRES when the controllable interface reaches the binding operational bottleneck and the resulting headroom is dynamically convertible into recovery performance.
+Supply chain resilience studies increasingly combine simulation and reinforcement learning, yet it remains unclear when neural control improves resilience beyond strong static baselines. We develop a Garrido-grounded discrete-event simulation benchmark of a 13-operation military food supply chain and evaluate learned policies under dense static frontiers, common random numbers, and order-level Garrido/Excel resilience metrics. Under Track A, which preserves the original buffer/shift decision family, dense-frontier evaluation reveals no publishable dynamic-control advantage: learned policies fail to convert the small measured headroom over the best static policy. Under Track B, a DES-preserving operational extension that adds downstream dispatch control at Op10 and Op12, PPO improves Excel ReT over the best of 147 dense static dispatch comparators by +0.000426, with a fully positive 95\% confidence interval. The gain corresponds to roughly six percentage points of the attainable metric ceiling and is accompanied by large improvements in flow fill, service-loss AUC, backlog, and CTj/RPj/DPj recovery tails; a dispatch-inclusive cost sensitivity shows the policy also becomes cheaper in total than the best static once downstream expediting carries a moderate positive charge. Action-space ablations show downstream dispatch access is sufficient to recover the largest observed advantage, ruling out action-space size as the explanation. Two privileged-observation tests show that the result does not depend on oracle regime information: PPO retains most of its advantage when regime and forecast fields are masked, while a non-learning regime-conditioned lookup table fails to approach PPO. A cross-regime stress evaluation shows positive gains with fully positive seed-clustered confidence intervals in current and increased risk regimes at both horizons, with the severe service-floor regime as the disclosed boundary. The contribution is not architectural novelty, but a benchmark-centered diagnosis: reinforcement learning improves SCRES when the controllable interface reaches the binding operational bottleneck and the resulting headroom is dynamically convertible into recovery performance.
 \end{abstract}
 \begin{keyword}
 Supply chain resilience \sep reinforcement learning \sep discrete-event simulation \sep military supply chain \sep bottleneck alignment
@@ -36,7 +36,7 @@ Supply chain resilience \sep reinforcement learning \sep discrete-event simulati
 \date{}
 \maketitle
 \begin{abstract}
-Supply chain resilience studies increasingly combine simulation and reinforcement learning, yet it remains unclear when neural control improves resilience beyond strong static baselines. We develop a Garrido-grounded discrete-event simulation benchmark of a 13-operation military food supply chain and evaluate learned policies under dense static frontiers, common random numbers, and order-level Garrido/Excel resilience metrics. Under Track A, which preserves the original buffer/shift decision family, dense-frontier evaluation reveals no publishable dynamic-control advantage: learned policies fail to convert the small measured headroom over the best static policy. Under Track B, a DES-preserving operational extension that adds downstream dispatch control at Op10 and Op12, PPO improves Excel ReT over the best of 147 dense static dispatch comparators by +0.000426, with a fully positive 95\% confidence interval. The gain is accompanied by large improvements in flow fill, service-loss AUC, backlog, and CTj/RPj/DPj recovery tails, but not by a strict assembly-cost win. Action-space ablations show that the advantage concentrates in downstream dispatch access rather than in action-space size. Two privileged-observation tests show that the result does not depend on oracle regime information: PPO retains most of its advantage when regime and forecast fields are masked, while a non-learning regime-conditioned lookup table fails to approach PPO. Cross-regime evaluation shows positive gains in current and increased risk regimes at both horizons, with severe short-horizon disruption as a boundary case. The contribution is not architectural novelty, but a benchmark-centered diagnosis: reinforcement learning improves SCRES when the controllable interface reaches the binding operational bottleneck and the resulting headroom is dynamically convertible into recovery performance.
+Supply chain resilience studies increasingly combine simulation and reinforcement learning, yet it remains unclear when neural control improves resilience beyond strong static baselines. We develop a Garrido-grounded discrete-event simulation benchmark of a 13-operation military food supply chain and evaluate learned policies under dense static frontiers, common random numbers, and order-level Garrido/Excel resilience metrics. Under Track A, which preserves the original buffer/shift decision family, dense-frontier evaluation reveals no publishable dynamic-control advantage: learned policies fail to convert the small measured headroom over the best static policy. Under Track B, a DES-preserving operational extension that adds downstream dispatch control at Op10 and Op12, PPO improves Excel ReT over the best of 147 dense static dispatch comparators by +0.000426, with a fully positive 95\% confidence interval. The gain corresponds to roughly six percentage points of the attainable metric ceiling and is accompanied by large improvements in flow fill, service-loss AUC, backlog, and CTj/RPj/DPj recovery tails; a dispatch-inclusive cost sensitivity shows the policy also becomes cheaper in total than the best static once downstream expediting carries a moderate positive charge. Action-space ablations show downstream dispatch access is sufficient to recover the largest observed advantage, ruling out action-space size as the explanation. Two privileged-observation tests show that the result does not depend on oracle regime information: PPO retains most of its advantage when regime and forecast fields are masked, while a non-learning regime-conditioned lookup table fails to approach PPO. A cross-regime stress evaluation shows positive gains with fully positive seed-clustered confidence intervals in current and increased risk regimes at both horizons, with the severe service-floor regime as the disclosed boundary. The contribution is not architectural novelty, but a benchmark-centered diagnosis: reinforcement learning improves SCRES when the controllable interface reaches the binding operational bottleneck and the resulting headroom is dynamically convertible into recovery performance.
 \end{abstract}
 \fi
 
@@ -46,6 +46,47 @@ Supply chain resilience studies increasingly combine simulation and reinforcemen
 \input{sections/04_results.tex}
 \input{sections/05_discussion.tex}
 \input{sections/06_conclusion.tex}
+
+\appendix
+
+\section{Comparator-selection robustness}\label{appendix-robustness}
+
+Because the headline comparator (the strongest of 147 statics) is
+selected on the same evaluation episodes used to score PPO, comparator
+selection could in principle inflate the reported delta (a
+winner's-curse concern). Table~\ref{tab:top12_robustness} recomputes the
+canonical paired delta against each of the twelve strongest static
+comparators individually. All twelve deltas are positive with confidence
+intervals excluding zero, and the delta \emph{grows} down the ranking ---
+the opposite of the pattern selection bias would produce. Comparator
+selection cannot flip the sign of the result.
+
+\begin{table}[htbp]
+\centering
+\caption{PPO Excel ReT delta against each of the top-12 static dispatch
+comparators (60 CRN pairs each; bootstrap CI95). Every pairwise delta is
+positive with a fully positive interval.}
+\label{tab:top12_robustness}
+\small
+\begin{tabular}{clccc}
+\toprule
+Rank & Static policy & Static Excel ReT & $\Delta$ & CI95 \\
+\midrule
+1 & S2\_op10\_2.00\_op12\_1.50 & 0.005466 & +0.000426 & [+0.000388, +0.000463] \\
+2 & S2\_op10\_1.25\_op12\_2.50 & 0.005466 & +0.000427 & [+0.000380, +0.000475] \\
+3 & S3\_op10\_2.50\_op12\_2.50 & 0.005465 & +0.000428 & [+0.000389, +0.000467] \\
+4 & S3\_op10\_1.25\_op12\_2.00 & 0.005450 & +0.000443 & [+0.000396, +0.000494] \\
+5 & S2\_op10\_1.00\_op12\_2.00 & 0.005445 & +0.000447 & [+0.000404, +0.000489] \\
+6 & S3\_op10\_1.25\_op12\_1.50 & 0.005442 & +0.000450 & [+0.000404, +0.000497] \\
+7 & S3\_op10\_2.00\_op12\_2.50 & 0.005442 & +0.000451 & [+0.000411, +0.000491] \\
+8 & S3\_op10\_1.00\_op12\_2.50 & 0.005441 & +0.000452 & [+0.000410, +0.000493] \\
+9 & S2\_op10\_2.50\_op12\_1.25 & 0.005438 & +0.000454 & [+0.000422, +0.000488] \\
+10 & S3\_op10\_2.50\_op12\_2.00 & 0.005438 & +0.000455 & [+0.000424, +0.000487] \\
+11 & S2\_op10\_2.50\_op12\_2.00 & 0.005433 & +0.000460 & [+0.000419, +0.000504] \\
+12 & S2\_op10\_1.50\_op12\_1.50 & 0.005428 & +0.000465 & [+0.000422, +0.000507] \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \bibliographystyle{elsarticle-num}
 \bibliography{references}
