@@ -7,11 +7,32 @@ matching the canonical protocol except learning rate — see caveat below).
 
 ## Result
 
+Two comparator definitions, both reported to avoid any apparent
+inconsistency between this doc and the manuscript (the manuscript uses the
+stronger one):
+
+**vs best STATIC in-arm** (comparison_table.csv):
+
 | Arm | PPO order-level ReT | Best static (in-arm) | Δ vs best static | RawWin |
 |---|---:|---:|---:|---|
 | joint (full 8D) | 0.005587 | 0.005172 (`s3_d1.50`) | **+0.000415** | True |
 | downstream_only | 0.005678 | 0.005112 (shift frozen; statics collapse) | **+0.000566** | True |
 | shift_only | 0.005607 | 0.005191 (`s2_d1.00`) | **+0.000416** | True |
+
+**vs best EVALUATED comparator in-arm (statics + heuristics — the stronger,
+manuscript-facing bar)** (per-arm policy_summary.csv):
+
+| Arm | PPO | Best non-PPO (in-arm) | Δ | RawWin |
+|---|---:|---:|---:|---|
+| joint (full 8D) | 0.005587 | 0.005221 (`heur_tuned`) | **+0.000367** | True |
+| downstream_only | 0.005678 | 0.005249 (`heur_s1_max_downstream`) | **+0.000429** | True |
+| shift_only | 0.005607 | 0.005231 (`heur_forecast_threshold`) | **+0.000377** | True |
+
+The ordering conclusion is identical under both definitions
+(`downstream_only` > `joint` ≈ `shift_only`), and the heuristic-inclusive
+definition also resolves the degenerate-static caveat for the
+downstream_only arm (heuristics act dynamically, so that arm's comparator
+is a real dynamic policy, not a collapsed constant).
 
 Confirms the 2-seed/30k screen (2026-07-01) at full confirmatory scale:
 `downstream_only ≥ shift_only ≥ joint` in ΔReT — **downstream-only access

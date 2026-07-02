@@ -158,9 +158,10 @@ only shift controllable).
 \centering
 \caption{Action-space ablation, 5 seeds $\times$ 60k timesteps. $\Delta$ is order-level ReT versus each arm's own best evaluated comparator in that arm, including heuristic comparators.}
 \label{tab:ablation}
+\small
 \begin{tabular}{lccc}
 \toprule
-Action config & PPO order-level ReT & Best comparator (in-arm) & $\Delta$ \\
+Action config & PPO ReT & Best in-arm comparator & $\Delta$ \\
 \midrule
 Joint (8D) & 0.005587 & 0.005221 & +0.000367 \\
 \textbf{Downstream-only} & \textbf{0.005678} & 0.005249 & \textbf{+0.000429} \\
@@ -244,9 +245,10 @@ performance.
 \centering
 \caption{Privileged-observation defense. E1 values use the canonical CRN comparison; the masked PPO row is from the E2 retrain with regime and forecast fields zeroed.}
 \label{tab:privileged_defense}
-\begin{tabular}{lcl}
+\small
+\begin{tabular}{p{0.30\linewidth}c p{0.40\linewidth}}
 \toprule
-Policy family & Order-level / Excel ReT & Interpretation \\
+Policy family & ReT & Interpretation \\
 \midrule
 Common dense static & 0.005466 & Best 147-cell constant dispatch comparator \\
 Best E1 heuristic & 0.005436 & Reactive rule family does not match PPO \\

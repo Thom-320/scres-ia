@@ -142,13 +142,11 @@ strongest static baseline; this includes PPO in the frozen
 \texttt{ReT\_seq\_v1} lane and RecurrentPPO in the corresponding
 recurrent comparator lane.
 
-\texttt{Track\ B} is the positive paper lane. Its canonical contract is
-\texttt{reward\_mode="control\_v1"},
-\texttt{observation\_version="v7"} (52 dimensions),
-\texttt{action\_contract="track\_b\_v1"} (8 dimensions),
-\texttt{risk\_level="adaptive\_benchmark\_v2"},
-\texttt{year\_basis="thesis"}, \texttt{step\_size\_hours=168}, and
-\texttt{stochastic\_pt=True}. The confirmatory benchmark is trained for
+\texttt{Track\ B} is the positive paper lane. Its canonical contract fixes
+the reward (\texttt{control\_v1}), the observation version (\texttt{v7},
+52 dimensions), the action contract (\texttt{track\_b\_v1}, 8 dimensions),
+the risk level (\texttt{adaptive\_benchmark\_v2}), the thesis year basis,
+a 168-hour decision step, and stochastic processing times. The confirmatory benchmark is trained for
 \texttt{60{,}000} timesteps per seed with seeds \texttt{1--5} and
 evaluated over \texttt{12} common-random-number episodes per seed against
 a dense grid of 147 static dispatch comparators (3 shift levels $\times$
