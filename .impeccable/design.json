@@ -1,0 +1,119 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-02T15:24:00-05:00",
+  "title": "Design System: SCRES-IA Q1 Manuscript",
+  "extensions": {
+    "colorMeta": {
+      "evidence-blue": {
+        "role": "primary",
+        "displayName": "Evidence Blue",
+        "canonical": "#0072B2",
+        "tonalRamp": ["#002638", "#00415f", "#005c87", "#0072B2", "#2d8dcc", "#65aee0", "#abd4ef", "#e5f4fb"]
+      },
+      "recovery-green": {
+        "role": "primary",
+        "displayName": "Recovery Green",
+        "canonical": "#009E73",
+        "tonalRamp": ["#002c20", "#00513b", "#007657", "#009E73", "#35b891", "#76d1b3", "#b9ead8", "#e8f8f1"]
+      },
+      "boundary-vermilion": {
+        "role": "tertiary",
+        "displayName": "Boundary Vermilion",
+        "canonical": "#D55E00",
+        "tonalRamp": ["#3d1700", "#6b2b00", "#9a4300", "#D55E00", "#ee7d2b", "#f3aa72", "#f8d3b8", "#fff0e4"]
+      },
+      "neutral-ink": {
+        "role": "neutral",
+        "displayName": "Neutral Ink",
+        "canonical": "#1F2933",
+        "tonalRamp": ["#111820", "#1F2933", "#3b4651", "#5f6b76", "#8b949e", "#bcc3ca", "#e1e5e8", "#f7f8f9"]
+      }
+    },
+    "typographyMeta": {
+      "manuscript-body": {
+        "displayName": "Manuscript Body",
+        "purpose": "Long-form scholarly prose in LaTeX and Word ports."
+      },
+      "figure-title": {
+        "displayName": "Figure Title",
+        "purpose": "One concise claim-framing sentence inside generated figures."
+      },
+      "code-label": {
+        "displayName": "Code Label",
+        "purpose": "Metric names, action contracts, seeds, and artifact paths."
+      }
+    },
+    "shadows": [],
+    "motion": [],
+    "breakpoints": []
+  },
+  "components": [
+    {
+      "name": "Manuscript Figure Node",
+      "kind": "custom",
+      "refersTo": "figure-node",
+      "description": "A labeled thesis/DES operation or metric node in generated manuscript figures.",
+      "html": "<div class=\"ds-figure-node\"><strong>Op10</strong><span>Line of communication</span></div>",
+      "css": ".ds-figure-node { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; min-width: 120px; min-height: 54px; padding: 8px 12px; border: 1px solid #0072B2; border-radius: 6px; background: #FFFFFF; color: #1F2933; font-family: STIXGeneral, DejaVu Serif, serif; text-align: center; } .ds-figure-node strong { font-size: 14px; line-height: 1.05; } .ds-figure-node span { font-size: 10px; line-height: 1.15; }"
+    },
+    {
+      "name": "Boundary Callout",
+      "kind": "custom",
+      "refersTo": "boundary-callout",
+      "description": "A compact warning label for severe-regime or claim-boundary evidence.",
+      "html": "<div class=\"ds-boundary-callout\">severe/h52 boundary case</div>",
+      "css": ".ds-boundary-callout { display: inline-block; padding: 8px 12px; border: 1px solid #D55E00; border-radius: 8px; background: #FFFFFF; color: #D55E00; font-family: STIXGeneral, DejaVu Serif, serif; font-size: 12px; font-weight: 700; }"
+    },
+    {
+      "name": "Evidence Table",
+      "kind": "custom",
+      "refersTo": "evidence-table",
+      "description": "A booktabs-style compact evidence table for metric/comparator panels.",
+      "html": "<table class=\"ds-evidence-table\"><thead><tr><th>Metric</th><th>PPO</th><th>Comparator</th></tr></thead><tbody><tr><td>Excel ReT</td><td>0.005893</td><td>0.005466</td></tr></tbody></table>",
+      "css": ".ds-evidence-table { border-collapse: collapse; color: #1F2933; font-family: Latin Modern Roman, Computer Modern, Times New Roman, serif; font-size: 12px; } .ds-evidence-table th, .ds-evidence-table td { padding: 6px 8px; text-align: left; } .ds-evidence-table thead { border-top: 1.2px solid #1F2933; border-bottom: 0.8px solid #1F2933; } .ds-evidence-table tbody tr:last-child { border-bottom: 1.2px solid #1F2933; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Forensic Benchmark Brief",
+    "overview": "The manuscript should read like a precise engineering brief, not a promotional AI paper. Its visual system exists to make the evidence chain hard to miss: Garrido-Rios thesis lineage, final Q1 evidence bundle, comparator hierarchy, uncertainty, and claim boundary.",
+    "keyCharacteristics": [
+      "Evidence-first hierarchy",
+      "Thesis-grounded visuals",
+      "Colorblind-safe semantic colors",
+      "No motion or decorative AI/SaaS tropes",
+      "Reproducible figure code"
+    ],
+    "rules": [
+      {
+        "name": "The Semantic Color Rule",
+        "body": "Colors must encode meaning, not decoration.",
+        "section": "colors"
+      },
+      {
+        "name": "The Boundary Is Visible Rule",
+        "body": "Severe/h52 and other claim boundaries must be marked with redundant labels.",
+        "section": "colors"
+      },
+      {
+        "name": "The No Hero Type Rule",
+        "body": "This is a journal article, not a landing page.",
+        "section": "typography"
+      },
+      {
+        "name": "The Print-First Rule",
+        "body": "If a figure depends on shadow, blur, or transparency to communicate structure, redesign it.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do make every visual claim trace to the final Q1 stats bundle or named E1-E6 artifact.",
+      "Do keep Track A boundary evidence and Track B positive evidence visually distinct.",
+      "Do regenerate figures through scripts/build_manuscript_figures.py."
+    ],
+    "donts": [
+      "Don't use perfect-fill, zero-backorder, 57% cost-win, universal RL-law, anticipation, retained-learning, or closed-generalization wording.",
+      "Don't use SaaS/pitch-deck visual language.",
+      "Don't encode findings by color alone."
+    ]
+  }
+}

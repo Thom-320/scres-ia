@@ -131,17 +131,8 @@ def fig2_mfsc_topology() -> None:
     """Publication redraw of the Garrido-Rios 13-operation MFSC topology."""
     fig, ax = plt.subplots(figsize=(10.4, 5.8))
     ax.set_xlim(0, 13.9)
-    ax.set_ylim(0.0, 8.8)
+    ax.set_ylim(0.0, 7.6)
     ax.axis("off")
-
-    ax.text(0.15, 8.45, "Garrido-grounded MFSC topology and Track B bottleneck controls", fontsize=17, fontweight="bold")
-    ax.text(
-        0.15,
-        8.12,
-        "Simplified redraw from Garrido-Rios Figure 6.2. Orange nodes are downstream dispatch controls exposed in Track B.",
-        fontsize=10.5,
-        color="0.35",
-    )
 
     def band(x, y, w, h, label):
         ax.add_patch(
@@ -233,10 +224,12 @@ def fig2_mfsc_topology() -> None:
 
     for a, b in [(1, 2), (2, 3), (3, 4)]:
         arrow(right(a), left(b))
-    arrow(bottom(4), top(5))
+    x4, y4, *_ = ops[4]; x5, y5, *_ = ops[5]
+    arrow((x4 + W * 0.88, y4), (x5 + W * 0.88, y5 + H))
     for a, b in [(5, 6), (6, 7), (7, 8)]:
         arrow(left(a), right(b))
-    arrow(bottom(8), top(9))
+    x8, y8, *_ = ops[8]; x9, y9, *_ = ops[9]
+    arrow((x8 + W * 0.88, y8), (x9 + W * 0.88, y9 + H))
     for a, b in [(9, 10), (10, 11), (11, 12)]:
         arrow(right(a), left(b))
     arrow(bottom(12), top(13))
@@ -389,17 +382,8 @@ def fig7_ret_metric_lineage() -> None:
     """Evaluation-metric lineage redrawn from Garrido-Rios Figure 5.11."""
     fig, ax = plt.subplots(figsize=(9.0, 5.6))
     ax.set_xlim(0, 10.5)
-    ax.set_ylim(0, 7.7)
+    ax.set_ylim(0, 6.6)
     ax.axis("off")
-
-    ax.text(0.15, 7.35, "Garrido/Excel ReT lineage used for evaluation", fontsize=17, fontweight="bold")
-    ax.text(
-        0.15,
-        7.02,
-        "Redrawn from Garrido-Rios Figure 5.11. The manuscript reports ReT and service/tail metrics; raw PPO reward is a separate training signal.",
-        fontsize=10.0,
-        color="0.35",
-    )
 
     def box(x, y, w, h, text, fc="white", fontsize=8.5, ec="0.3", lw=0.9, weight="normal"):
         ax.add_patch(

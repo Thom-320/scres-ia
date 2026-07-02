@@ -87,11 +87,12 @@ multipliers $\times$ 7 Op12 multipliers) under paired common-random-number
 
 \begin{table}[htbp]
 \centering
-\caption{Track B main result: PPO vs. best dense static comparator, paired CRN evaluation (5 training seeds $\times$ 12 CRN episodes). Episode-level pooled CI95 in brackets, reported descriptively; primary inference is seed-clustered (all five per-seed mean deltas positive; seed-clustered bootstrap CI95 for the Excel ReT delta $[+0.000414, +0.000438]$).}
+\caption{Track B main result: PPO vs.\ best dense static comparator (\texttt{S2}, Op10$\times$2.00, Op12$\times$1.50), paired CRN evaluation (5 training seeds $\times$ 12 CRN episodes). Episode-level pooled CI95 in brackets, reported descriptively; primary inference is seed-clustered (all five per-seed mean deltas positive; seed-clustered bootstrap CI95 for the Excel ReT delta $[+0.000414, +0.000438]$).}
 \label{tab:track_b_main}
+\small
 \begin{tabular}{lccc}
 \toprule
-Metric & PPO & Best static (\texttt{S2}, Op10$\times$2.00, Op12$\times$1.50) & $\Delta$ [CI95] \\
+Metric & PPO & Best static & $\Delta$ [CI95] \\
 \midrule
 Excel ReT & 0.005893 & 0.005466 & +0.000426 [0.000389, 0.000463] \\
 Order-level ReT & 0.005666 & 0.005251 & +0.000415 [0.000378, 0.000450] \\
@@ -186,7 +187,7 @@ arms (identical hyperparameters in all three) is valid.}
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.78\linewidth]{fig6_action_space_ablation.png}
+\includegraphics[width=0.78\linewidth]{fig6_action_space_ablation}
 \caption{E4 action-space ablation. Deltas are computed against each arm's own best evaluated comparator, including heuristics, and support the mechanism claim that downstream dispatch authority is central to the Track B gain.}
 \label{fig:ablation}
 \end{figure}
@@ -229,7 +230,7 @@ every one of 60 comparisons.
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.78\linewidth]{fig3_gap_decomposition.png}
+\includegraphics[width=0.78\linewidth]{fig3_gap_decomposition}
 \caption{E1 gap decomposition. Direct access to the true disruption regime improves a non-learning static table only modestly, while PPO remains far above the common static, heuristic, and regime-table comparators.}
 \label{fig:gap_decomposition}
 \end{figure}
@@ -312,7 +313,7 @@ h104 & severe & 0.0001282 & 0.0001188 & +0.0000094 \\
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.70\linewidth]{fig5_generalization_heatmap.png}
+\includegraphics[width=0.70\linewidth]{fig5_generalization_heatmap}
 \caption{E3 cross-regime/horizon matrix. PPO gains are positive for current and increased risk at both horizons; severe short-horizon disruption is the disclosed boundary case.}
 \label{fig:generalization_heatmap}
 \end{figure}
