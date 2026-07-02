@@ -3,6 +3,7 @@ import json
 
 from scripts.analyze_garrido_fidelity_outputs import (
     analyze_run,
+    binomial_positive_p_value,
     format_list_cell,
     iter_run_dirs,
 )
@@ -104,9 +105,16 @@ def test_analyze_garrido_fidelity_outputs_writes_gate_summary(tmp_path) -> None:
     assert payload["episode_count"] == len(rows)
     assert saved["h1"][0]["status"] == "passed"
     assert saved["h2"][0]["fill_positive"] == 1
+    assert saved["h2"][0]["fill_positive_p_binom_one_sided"] == 0.5
     assert saved["h2"][0]["ret_positive"] == 1
+    assert saved["h2"][0]["ret_positive_p_binom_one_sided"] == 0.5
     assert saved["h3"][0]["fill_positive"] == 1
     assert saved["h3"][0]["ret_positive"] == 1
     assert (run_dir / "FIDELITY_GATE_ANALYSIS.md").exists()
     assert iter_run_dirs([tmp_path]) == [run_dir]
     assert format_list_cell([0.123456, "increased"]) == "0.1235 -> increased"
+
+
+def test_binomial_positive_p_value_is_one_sided_sign_test() -> None:
+    assert binomial_positive_p_value(10, 10) == 1 / 1024
+    assert binomial_positive_p_value(9, 10) == 11 / 1024

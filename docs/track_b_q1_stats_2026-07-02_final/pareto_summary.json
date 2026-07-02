@@ -1,0 +1,88 @@
+{
+  "best_dense_static_by_primary": "S2_op10_2.00_op12_1.50",
+  "comparator_scope": {
+    "dense_static_frontier_dims": [
+      "assembly_shifts",
+      "op10_multiplier",
+      "op12_multiplier"
+    ],
+    "inventory_constant_bound_status": "pending separate bounded grid",
+    "not_varied_in_dense_static_frontier": [
+      "op3_q",
+      "op3_rop",
+      "op9_q_min",
+      "op9_q_max",
+      "op9_rop"
+    ],
+    "paper_safe_wording": "best static over the shift x op10 x op12 family",
+    "unsafe_wording": "best 8D static frontier"
+  },
+  "cvar05_effect": {
+    "ci95_directional_win": true,
+    "definition": "conditional mean of the lowest 5% of per-episode order_ret_excel",
+    "direction": "higher",
+    "label": "Excel ReT CVaR05",
+    "learned_policy": "ppo",
+    "metric": "order_ret_excel_cvar05",
+    "n_pairs": 60,
+    "ppo_mean": 0.0056449438290801,
+    "raw_delta_ci95_high": 0.0005977522040058339,
+    "raw_delta_ci95_low": 0.0004696269958773345,
+    "raw_delta_ppo_minus_static": 0.0005346226938171671,
+    "static_mean": 0.005110321135262933,
+    "static_policy": "S2_op10_2.00_op12_1.50",
+    "win": true
+  },
+  "dense_dir": "outputs/experiments/track_b_dense_crn_static_2026-06-30",
+  "learned_policy": "ppo",
+  "outputs": {
+    "comparator_scope": "docs/track_b_q1_stats_2026-07-02/comparator_scope.json",
+    "cvar05_effect": "docs/track_b_q1_stats_2026-07-02/cvar05_effect.csv",
+    "dispatch_cost_sensitivity": "docs/track_b_q1_stats_2026-07-02/dispatch_cost_sensitivity.csv",
+    "effect_sizes": "docs/track_b_q1_stats_2026-07-02/effect_sizes.csv",
+    "pareto_points": "docs/track_b_q1_stats_2026-07-02/pareto_points.csv",
+    "pareto_ret_cost": "docs/track_b_q1_stats_2026-07-02/pareto_ret_cost.png",
+    "pareto_ret_flow": "docs/track_b_q1_stats_2026-07-02/pareto_ret_flow.png",
+    "pareto_ret_tail_ctj": "docs/track_b_q1_stats_2026-07-02/pareto_ret_tail_ctj.png",
+    "seed_level_inference": "docs/track_b_q1_stats_2026-07-02/seed_level_inference.csv",
+    "top12_static_robustness": "docs/track_b_q1_stats_2026-07-02/top12_static_robustness.csv"
+  },
+  "ppo_pareto_nondominated_ret_cost_tail_flow": true,
+  "primary_effect": [
+    {
+      "ci95_directional_win": true,
+      "direction": "higher",
+      "directional_gain": 0.00042639652820165836,
+      "directional_gain_ci95_high": 0.0004630431845628497,
+      "directional_gain_ci95_low": 0.00038864857959113784,
+      "label": "Excel ReT",
+      "learned_policy": "ppo",
+      "metric": "order_ret_excel",
+      "n_pairs": 60,
+      "oriented_paired_cohens_d": 2.8705474060737086,
+      "paired_cohens_d": 2.8705474060737086,
+      "ppo_mean": 0.005892652189433801,
+      "raw_delta_ci95_high": 0.0004630431845628497,
+      "raw_delta_ci95_low": 0.00038864857959113784,
+      "raw_delta_ppo_minus_static": 0.00042639652820165836,
+      "static_mean": 0.005466255661232143,
+      "static_policy": "S2_op10_2.00_op12_1.50",
+      "unpaired_cohens_d": 3.1175919987398815,
+      "win": true
+    }
+  ],
+  "primary_metric": "order_ret_excel",
+  "run_dir": "outputs/experiments/track_b_gain_2026-06-30/top_tier_confirm_v3_output/track_b_top_tier_confirm_5seed_60k_h104",
+  "seed_level_inference_summary": {
+    "all_seed_deltas_positive": true,
+    "mean_seed_delta": 0.00042639652820165836,
+    "seed_cluster_bootstrap_ci95_high": 0.0004381950608438949,
+    "seed_cluster_bootstrap_ci95_low": 0.00041419966710881504,
+    "seed_count": 5
+  },
+  "statics_dominating_ppo_ret_cost_tail_flow": [],
+  "top12_static_robustness": {
+    "all_top12_ci95_positive": true,
+    "min_delta_ci95_low": 0.0003795666562574594
+  }
+}

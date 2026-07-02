@@ -1,14 +1,12 @@
 \hypertarget{3-methodology}{%
 \section{3. Methodology}\label{3-methodology}}
 
-Status: draft prose base aligned to the frozen paper contracts.
-
 \hypertarget{31-mfsc-discrete-event-simulation}{%
 \subsection{3.1 MFSC discrete-event
 simulation}\label{31-mfsc-discrete-event-simulation}}
 
 The experimental platform is a 13-operation military food supply chain
-reconstructed in Python/SimPy from Garrido-Rios' thesis. The model
+reconstructed in Python/SimPy from Garrido-Rios' thesis~\cite{garrido2017}. The model
 preserves the original operational structure rather than replacing it
 with a stylized benchmark environment. This matters for the paper's
 positioning: the contribution is not a generic RL sandbox, but a
@@ -40,10 +38,13 @@ DES. At each decision epoch, the agent observes a state vector derived
 from the simulation, selects a continuous action, and receives a
 resilience-oriented reward. Decisions are taken every \texttt{168}
 simulated hours, which matches the weekly planning cadence already
-embedded in procurement, disruption, and operating rhythms. For
-manuscript language, the problem should be described as an augmented
-observed-state control problem, or equivalently a practical
-\texttt{POMDP}, rather than as a fully sufficient MDP.
+embedded in procurement, disruption, and operating rhythms. The problem
+is an augmented observed-state control problem, or equivalently a
+practical \texttt{POMDP}: the agent observes derived state features
+(inventory levels, backlog, rolling service history, and, in some
+observation versions, disruption-regime indicators and forecasts) rather
+than the DES's full internal state, and the transition dynamics are
+implicit in the simulator rather than specified analytically.
 
 The paper uses two control contracts. \texttt{Track\ A} is the
 thesis-faithful benchmark family. It uses observation version
@@ -55,10 +56,10 @@ to the original scope.
 
 \texttt{Track\ B} is a separate research lane rather than a retrofit of
 \texttt{Track\ A}. It uses observation version \texttt{v7} with
-\texttt{46} dimensions and a \texttt{7D} action contract. The first five
-actions keep the Track A controls, while the sixth and seventh actions
-add downstream dispatch multipliers at \texttt{Op10} and \texttt{Op12}.
-The paper's central question is whether this minimal extension changes
+\texttt{52} dimensions and the \texttt{track\_b\_v1} action contract
+(\texttt{8D}). The action contract keeps the Track A controls and adds
+downstream dispatch multipliers at \texttt{Op10} and \texttt{Op12}. The
+paper's central question is whether this operational extension changes
 the benchmark outcome by exposing the operational bottleneck that Track
 A leaves mostly outside the controllable interface.
 
@@ -66,34 +67,29 @@ A leaves mostly outside the controllable interface.
 \subsection{3.3 Reward and reporting
 metrics}\label{33-reward-and-reporting-metrics}}
 
-The main paper lane uses \texttt{ReT\_seq\_v1} with
-\texttt{ret\_seq\_kappa\ =\ 0.20} as the training reward. The reason for
-centering this reward is not that it is the only reward ever tested in
-the repository, but that it is the best-aligned resilience-index family
-that remains smooth enough for policy-gradient learning while still
-preserving a visible link to the thesis resilience framing. In the
-current paper story, reward design and control-contract design are
-discussed jointly: Track A shows that a reasonable resilience-aware
-reward is not enough when the controllable action scope misses the
-binding downstream constraint, whereas Track B shows that the same
-reward can support strong learning once the action contract is repaired.
+The canonical Track B training reward is \texttt{control\_v1}, a linear
+operational penalty (backorder fraction plus a small shift-switching
+cost) rather than a resilience-index reward. This is a deliberate
+design choice, not an oversight: the agent is trained on an operational
+proxy and evaluated on the untouched Garrido/Excel resilience metric
+(\texttt{ReT}), so the training signal cannot be tuned to directly game
+the reported evaluation metric. Track A results draw on a broader set of
+resilience-aligned reward families (including Cobb--Douglas and
+sequential formulations) tested across the dense-frontier evaluation; no
+tested reward family closes the Track A gap.
 
-The paper-facing comparison should therefore prioritize service and
-resilience outcomes rather than raw reward totals across incompatible
-families. The primary metrics for the main claim are
-\texttt{fill\_rate}, \texttt{backorder\_rate},
-\texttt{order\_level\_ret\_mean}, and
-\texttt{terminal\_rolling\_fill\_rate\_4w}. Secondary audit metrics such
-as \texttt{ret\_thesis\_corrected\_total}, \texttt{ret\_unified\_total},
-and the order-case shares remain useful for interpretation, but they
-should not replace the main service/resilience metrics when the paper
-compares policies across benchmark families.
-
-One language rule should stay explicit in the final manuscript:
-\texttt{reward\_total} is only comparable within a shared reward family.
-Whenever the paper compares Track A and Track B, or different reward
-families inside Track A, the argument should rely on service and
-resilience metrics rather than on raw cumulative reward.
+The paper-facing comparison prioritizes service and resilience outcomes
+rather than raw reward totals across incompatible reward families. The
+primary metric for the headline claim is \texttt{order\_ret\_excel}
+(Garrido/Excel ReT), with \texttt{order\_level\_ret\_mean},
+\texttt{flow\_fill\_rate}, \texttt{terminal\_rolling\_fill\_rate\_4w},
+recovery-tail metrics (\texttt{order\_ctj\_p99},
+\texttt{order\_rpj\_p99}), service-loss AUC, and the assembly cost index
+reported as a secondary evidence panel, not substitutes for the primary
+metric. \texttt{reward\_total} is only comparable within a shared reward
+family; comparisons across Track A and Track B, or across reward
+families within Track A, rely on the evaluation metric panel rather than
+on raw cumulative reward.
 
 \hypertarget{34-experimental-protocol}{%
 \subsection{3.4 Experimental protocol}\label{34-experimental-protocol}}
@@ -107,24 +103,26 @@ strongest static baseline; this includes PPO in the frozen
 \texttt{ReT\_seq\_v1} lane and RecurrentPPO in the corresponding
 recurrent comparator lane.
 
-\texttt{Track\ B} is the positive paper lane. Its frozen contract is
-\texttt{env\_variant="track\_b\_adaptive\_control"},
-\texttt{reward\_mode="ReT\_seq\_v1"}, \texttt{ret\_seq\_kappa=0.20},
-\texttt{observation\_version="v7"},
-\texttt{action\_contract="track\_b\_v1"},
+\texttt{Track\ B} is the positive paper lane. Its canonical contract is
+\texttt{reward\_mode="control\_v1"},
+\texttt{observation\_version="v7"} (52 dimensions),
+\texttt{action\_contract="track\_b\_v1"} (8 dimensions),
 \texttt{risk\_level="adaptive\_benchmark\_v2"},
 \texttt{year\_basis="thesis"}, \texttt{step\_size\_hours=168}, and
-\texttt{stochastic\_pt=True}. The production benchmark is trained for
-\texttt{500000} timesteps with seeds \texttt{11\ 22\ 33\ 44\ 55} and
-evaluated over \texttt{20} episodes per seed. Static comparators are
-\texttt{s2\_d1.00}, \texttt{s3\_d1.00}, and \texttt{s3\_d2.00}.
+\texttt{stochastic\_pt=True}. The confirmatory benchmark is trained for
+\texttt{60{,}000} timesteps per seed with seeds \texttt{1--5} and
+evaluated over \texttt{12} common-random-number episodes per seed against
+a dense grid of 147 static dispatch comparators (3 shift levels $\times$
+7 Op10 multipliers $\times$ 7 Op12 multipliers, each in $\{0.5, 0.75,
+1.0, 1.25, 1.5, 2.0, 2.5\}$).
 
-To separate the action-contract argument from broader environment
-changes, the paper also uses a matched \texttt{5D\ vs\ 7D} ablation.
-Within that ablation family, the observation version, reward family,
-risk profile, and training budget are held fixed while only the action
-contract changes. This is the cleanest evidence available inside the
-current repo for the claim that downstream control coverage is
-materially responsible for the Track B gain. The manuscript should still
-state the limitation clearly: the ablation is supportive causal evidence
-inside the frozen benchmark family, not universal proof outside it.
+To separate the action-contract argument from action-space size, the
+paper uses a matched action-space ablation at the same 5-seed,
+60{,}000-timestep scale, comparing the full \texttt{joint} 8D contract
+against \texttt{downstream\_only} (shift frozen) and \texttt{shift\_only}
+(dispatch frozen) variants, with observation version, reward family,
+risk profile, and training budget held fixed. This is the primary causal
+evidence for the claim that downstream control access, not action-space
+size, is responsible for the Track B gain; it is supportive causal
+evidence inside the studied benchmark family, not universal proof outside
+it.

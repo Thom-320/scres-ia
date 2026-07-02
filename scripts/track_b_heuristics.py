@@ -200,6 +200,60 @@ class TrackBMaxDownstream:
         )
 
 
+class TrackBForecastThreshold:
+    """Forecast-threshold rule using the simulator-exposed v7 forecast fields."""
+
+    def __init__(
+        self,
+        forecast_high: float = 0.55,
+        forecast_low: float = 0.30,
+        fill_caution: float = 0.92,
+        backorder_caution: float = 0.08,
+    ) -> None:
+        self.forecast_high = forecast_high
+        self.forecast_low = forecast_low
+        self.fill_caution = fill_caution
+        self.backorder_caution = backorder_caution
+
+    def reset(self) -> None:
+        pass
+
+    def __call__(self, obs: np.ndarray, info: dict[str, Any]) -> np.ndarray:
+        frame = _latest_frame(obs)
+        forecast_48h = float(frame[35]) if len(frame) > 35 else 0.0
+        forecast_168h = float(frame[36]) if len(frame) > 36 else 0.0
+        fill_rate = float(frame[6]) if len(frame) > 6 else 1.0
+        backorder_rate = float(frame[7]) if len(frame) > 7 else 0.0
+        pressure = max(forecast_48h, 0.75 * forecast_168h)
+
+        if pressure >= self.forecast_high or fill_rate < self.fill_caution:
+            shift_signal = 1.0
+            downstream_signal = 1.0
+            inventory_signal = 0.5
+        elif pressure >= self.forecast_low or backorder_rate > self.backorder_caution:
+            shift_signal = 0.0
+            downstream_signal = 0.5
+            inventory_signal = 0.0
+        else:
+            shift_signal = -1.0
+            downstream_signal = 0.0
+            inventory_signal = 0.0
+
+        return np.array(
+            [
+                inventory_signal,
+                inventory_signal,
+                inventory_signal,
+                inventory_signal,
+                0.0,
+                shift_signal,
+                downstream_signal,
+                downstream_signal,
+            ],
+            dtype=np.float32,
+        )
+
+
 HEURISTIC_SPECS: dict[str, TrackBHeuristicPolicy] = {}
 
 
@@ -210,6 +264,7 @@ def make_heuristic_defaults() -> dict[str, TrackBHeuristicPolicy]:
         "heur_tuned": TrackBTuned(),
         "heur_downstream_reactive": TrackBDownstreamReactive(),
         "heur_s1_max_downstream": TrackBMaxDownstream(),
+        "heur_forecast_threshold": TrackBForecastThreshold(),
     }
 
 

@@ -333,6 +333,13 @@ def build_env_kwargs(args: argparse.Namespace, reward_mode: str) -> dict[str, An
     }
 
 
+def apply_eval_wrappers(env: Any, args: argparse.Namespace) -> Any:
+    observation_wrapper_cls = getattr(args, "_observation_wrapper", None)
+    if observation_wrapper_cls is not None:
+        env = observation_wrapper_cls(env)
+    return env
+
+
 def model_filename(algo: str) -> str:
     return "ppo_model.zip" if algo == "ppo" else "recurrent_ppo_model.zip"
 
@@ -391,7 +398,7 @@ def load_vec_normalize(
     env_kwargs = build_env_kwargs(args, reward_mode)
 
     def _init() -> Any:
-        return make_track_b_env(**env_kwargs)
+        return apply_eval_wrappers(make_track_b_env(**env_kwargs), args)
 
     vec_norm = VecNormalize.load(str(vec_norm_path), DummyVecEnv([_init]))
     vec_norm.training = False
@@ -770,7 +777,7 @@ def evaluate_static_policy(
 
     for episode_idx in range(args.eval_episodes):
         eval_seed = seed + EVAL_EPISODE_SEED_OFFSET + episode_idx
-        env = make_track_b_env(**env_kwargs)
+        env = apply_eval_wrappers(make_track_b_env(**env_kwargs), args)
         _, info = env.reset(seed=eval_seed)
         terminated = False
         truncated = False
@@ -914,7 +921,7 @@ def evaluate_learned_policy(
 
     for episode_idx in range(args.eval_episodes):
         eval_seed = seed + EVAL_EPISODE_SEED_OFFSET + episode_idx
-        env = make_track_b_env(**env_kwargs)
+        env = apply_eval_wrappers(make_track_b_env(**env_kwargs), args)
         obs, info = env.reset(seed=eval_seed)
         terminated = False
         truncated = False

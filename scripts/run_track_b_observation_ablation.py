@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Track B observation ablation: full v7 vs no-forecast vs v5.
+"""Track B observation ablation: full v7 vs privileged-field masks vs v5.
 
-This isolates whether PPO's gains come from explicit forward-looking signals
-(`risk_forecast_48h_norm`, `risk_forecast_168h_norm`) or mainly from adaptive
-reaction to downstream state.
+This isolates whether PPO's gains come from simulator-privileged fields
+(`regime_*`, `risk_forecast_48h_norm`, `risk_forecast_168h_norm`) or mainly
+from adaptive reaction to downstream state.
 """
 from __future__ import annotations
 
@@ -22,21 +22,43 @@ from supply_chain.external_env_interface import get_observation_fields
 
 
 FORECAST_FIELD_NAMES = ("risk_forecast_48h_norm", "risk_forecast_168h_norm")
+REGIME_FIELD_NAMES = (
+    "regime_nominal",
+    "regime_strained",
+    "regime_pre_disruption",
+    "regime_disrupted",
+    "regime_recovery",
+)
+PRIVILEGED_FIELD_NAMES = (*REGIME_FIELD_NAMES, *FORECAST_FIELD_NAMES)
 
 
-class ForecastMaskWrapper(gym.ObservationWrapper):
-    """Mask only the explicit risk-forecast channels while preserving shape."""
+class FieldMaskWrapper(gym.ObservationWrapper):
+    """Mask selected v7 observation channels while preserving shape."""
+
+    field_names: tuple[str, ...] = ()
 
     def __init__(self, env: gym.Env[np.ndarray, np.ndarray]) -> None:
         super().__init__(env)
         fields = tuple(get_observation_fields("v7"))
-        self._forecast_indices = tuple(fields.index(name) for name in FORECAST_FIELD_NAMES)
+        self._mask_indices = tuple(fields.index(name) for name in self.field_names)
 
     def observation(self, observation: np.ndarray) -> np.ndarray:
         masked = np.array(observation, dtype=np.float32, copy=True)
-        for idx in self._forecast_indices:
+        for idx in self._mask_indices:
             masked[idx] = 0.0
         return masked
+
+
+class ForecastMaskWrapper(FieldMaskWrapper):
+    """Mask only the explicit risk-forecast channels."""
+
+    field_names = FORECAST_FIELD_NAMES
+
+
+class PrivilegedObservationMaskWrapper(FieldMaskWrapper):
+    """Mask true regime one-hot plus true-transition forecast channels."""
+
+    field_names = PRIVILEGED_FIELD_NAMES
 
 
 @dataclass(frozen=True)
@@ -57,6 +79,11 @@ OBS_ABLATION_CONFIGS: dict[str, ObservationAblationConfig] = {
         observation_version="v7",
         wrapper=ForecastMaskWrapper,
     ),
+    "v7_no_regime_forecast": ObservationAblationConfig(
+        label="v7_no_regime_forecast",
+        observation_version="v7",
+        wrapper=PrivilegedObservationMaskWrapper,
+    ),
     "v5_7d": ObservationAblationConfig(
         label="v5_7d",
         observation_version="v5",
@@ -68,8 +95,8 @@ OBS_ABLATION_CONFIGS: dict[str, ObservationAblationConfig] = {
 def build_parser() -> argparse.ArgumentParser:
     parser = smoke_build_parser()
     parser.description = (
-        "Track B observation ablation: compare v7 full, v7 with forecast inputs "
-        "masked, and v5 with the same 7D action contract."
+        "Track B observation ablation: compare v7 full, v7 with privileged "
+        "inputs masked, and v5 with the same action contract."
     )
     parser.add_argument(
         "--obs-configs",

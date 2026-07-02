@@ -302,14 +302,21 @@ def run_cross_scenario(args: argparse.Namespace) -> dict[str, Any]:
                 )
             if args.include_heuristics:
                 for label, heuristic in make_heuristic_defaults().items():
-                    episode_rows.extend(
-                        evaluate_heuristic_policy(
-                            label,
-                            heuristic,
-                            args=risk_args,
-                            seed=int(seed),
-                        )
+                    heuristic_rows = evaluate_heuristic_policy(
+                        label,
+                        heuristic,
+                        args=risk_args,
+                        seed=int(seed),
                     )
+                    # evaluate_heuristic_policy (run_track_b_smoke.py) builds rows
+                    # via a different row-builder than evaluate_static_policy /
+                    # evaluate_learned_policy (audit_track_b_all_rewards.py) and
+                    # does not stamp reward_mode, which aggregate_policy_rows
+                    # requires on every row.
+                    for row in heuristic_rows:
+                        row.setdefault("reward_mode", args.reward_mode)
+                        row.setdefault("algo", "heuristic")
+                    episode_rows.extend(heuristic_rows)
             for bundle in bundles:
                 episode_rows.extend(
                     evaluate_learned_policy(

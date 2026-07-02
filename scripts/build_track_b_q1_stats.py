@@ -195,6 +195,176 @@ def build_effect_sizes(
     return pd.DataFrame(rows)
 
 
+def cvar_tail(values: np.ndarray, *, frac: float = 0.05, lower_tail: bool = True) -> float:
+    values = np.asarray(values, dtype=float)
+    values = values[np.isfinite(values)]
+    if values.size == 0:
+        return float("nan")
+    values = np.sort(values)
+    n = max(1, int(math.ceil(values.size * frac)))
+    tail = values[:n] if lower_tail else values[-n:]
+    return float(tail.mean())
+
+
+def build_cvar05_effect_row(
+    learned_rows: pd.DataFrame,
+    static_rows: pd.DataFrame,
+    best_static: str,
+) -> dict[str, Any]:
+    keys = ["seed", "episode", "eval_seed"]
+    pairs = learned_rows[keys + [PRIMARY_METRIC]].rename(
+        columns={PRIMARY_METRIC: "learned"}
+    ).merge(
+        static_rows[keys + [PRIMARY_METRIC]].rename(columns={PRIMARY_METRIC: "static"}),
+        on=keys,
+        how="inner",
+    )
+    learned = pairs["learned"].to_numpy(dtype=float)
+    static = pairs["static"].to_numpy(dtype=float)
+    learned_cvar = cvar_tail(learned, frac=0.05, lower_tail=True)
+    static_cvar = cvar_tail(static, frac=0.05, lower_tail=True)
+    rng = np.random.default_rng(20260701)
+    reps = []
+    if len(pairs) > 0:
+        for _ in range(5000):
+            idx = rng.integers(0, len(pairs), size=len(pairs))
+            reps.append(
+                cvar_tail(learned[idx], frac=0.05, lower_tail=True)
+                - cvar_tail(static[idx], frac=0.05, lower_tail=True)
+            )
+    lo, hi = np.quantile(reps, [0.025, 0.975]) if reps else (float("nan"), float("nan"))
+    return {
+        "metric": "order_ret_excel_cvar05",
+        "label": "Excel ReT CVaR05",
+        "definition": "conditional mean of the lowest 5% of per-episode order_ret_excel",
+        "learned_policy": "ppo",
+        "static_policy": best_static,
+        "n_pairs": int(len(pairs)),
+        "ppo_mean": learned_cvar,
+        "static_mean": static_cvar,
+        "raw_delta_ppo_minus_static": float(learned_cvar - static_cvar),
+        "raw_delta_ci95_low": float(lo),
+        "raw_delta_ci95_high": float(hi),
+        "direction": "higher",
+        "win": bool(learned_cvar > static_cvar),
+        "ci95_directional_win": bool(float(lo) > 0.0),
+    }
+
+
+def build_seed_level_inference(
+    learned_rows: pd.DataFrame,
+    static_rows: pd.DataFrame,
+) -> pd.DataFrame:
+    pairs = paired_rows(learned_rows, static_rows, PRIMARY_METRIC)
+    rows = []
+    for seed, bucket in pairs.groupby("seed", sort=True):
+        delta = bucket["learned"].to_numpy(dtype=float) - bucket["static"].to_numpy(dtype=float)
+        rows.append(
+            {
+                "seed": int(seed),
+                "episode_count": int(len(bucket)),
+                "mean_delta": float(delta.mean()),
+                "min_delta": float(delta.min()),
+                "positive_pairs": int((delta > 0.0).sum()),
+            }
+        )
+    out = pd.DataFrame(rows)
+    if not out.empty:
+        seed_deltas = out["mean_delta"].to_numpy(dtype=float)
+        lo, hi = bootstrap_ci(seed_deltas, reps=5000, seed=20260702)
+        out.attrs["summary"] = {
+            "seed_count": int(len(out)),
+            "all_seed_deltas_positive": bool((seed_deltas > 0.0).all()),
+            "mean_seed_delta": float(seed_deltas.mean()),
+            "seed_cluster_bootstrap_ci95_low": lo,
+            "seed_cluster_bootstrap_ci95_high": hi,
+        }
+    return out
+
+
+def build_top_static_robustness(
+    learned_rows: pd.DataFrame,
+    dense_episode: pd.DataFrame,
+    dense_summary: pd.DataFrame,
+    *,
+    top_n: int = 12,
+) -> pd.DataFrame:
+    statics = dense_summary[dense_summary["policy"].astype(str).str.startswith(STATIC_PREFIXES)].copy()
+    statics = statics.sort_values(f"{PRIMARY_METRIC}_mean", ascending=False).head(top_n)
+    rows = []
+    for rank, (_, static_summary) in enumerate(statics.iterrows(), start=1):
+        label = str(static_summary["policy"])
+        static_rows = dense_episode[dense_episode["policy"].astype(str) == label].copy()
+        pairs = paired_rows(learned_rows, static_rows, PRIMARY_METRIC)
+        delta = pairs["learned"].to_numpy(dtype=float) - pairs["static"].to_numpy(dtype=float)
+        lo, hi = bootstrap_ci(delta, seed=20260701 + rank)
+        rows.append(
+            {
+                "rank": rank,
+                "static_policy": label,
+                "static_order_ret_excel_mean": float(static_summary[f"{PRIMARY_METRIC}_mean"]),
+                "n_pairs": int(len(pairs)),
+                "ppo_delta_mean": float(delta.mean()) if len(delta) else float("nan"),
+                "delta_ci95_low": lo,
+                "delta_ci95_high": hi,
+                "all_pairs_positive": bool((delta > 0.0).all()) if len(delta) else False,
+            }
+        )
+    return pd.DataFrame(rows)
+
+
+def build_dispatch_cost_sensitivity(
+    learned_rows: pd.DataFrame,
+    static_rows: pd.DataFrame,
+    *,
+    charges: list[float] | None = None,
+) -> pd.DataFrame:
+    charges = charges or [0.0, 0.01, 0.025, 0.05, 0.075, 0.10, 0.15, 0.20]
+    keys = ["seed", "episode", "eval_seed"]
+    cols = keys + ["assembly_cost_index", "op10_multiplier_step_mean", "op12_multiplier_step_mean"]
+    pairs = learned_rows[cols].rename(
+        columns={
+            "assembly_cost_index": "ppo_assembly_cost_index",
+            "op10_multiplier_step_mean": "ppo_op10",
+            "op12_multiplier_step_mean": "ppo_op12",
+        }
+    ).merge(
+        static_rows[cols].rename(
+            columns={
+                "assembly_cost_index": "static_assembly_cost_index",
+                "op10_multiplier_step_mean": "static_op10",
+                "op12_multiplier_step_mean": "static_op12",
+            }
+        ),
+        on=keys,
+        how="inner",
+    )
+    rows = []
+    for charge in charges:
+        ppo_cost = (
+            pairs["ppo_assembly_cost_index"]
+            + charge * ((pairs["ppo_op10"] - 1.0).clip(lower=0.0) + (pairs["ppo_op12"] - 1.0).clip(lower=0.0))
+        )
+        static_cost = (
+            pairs["static_assembly_cost_index"]
+            + charge * ((pairs["static_op10"] - 1.0).clip(lower=0.0) + (pairs["static_op12"] - 1.0).clip(lower=0.0))
+        )
+        delta = ppo_cost.to_numpy(dtype=float) - static_cost.to_numpy(dtype=float)
+        lo, hi = bootstrap_ci(delta, seed=20260801 + int(charge * 1000))
+        rows.append(
+            {
+                "dispatch_charge_per_multiplier_step": float(charge),
+                "ppo_dispatch_inclusive_cost_mean": float(ppo_cost.mean()),
+                "static_dispatch_inclusive_cost_mean": float(static_cost.mean()),
+                "ppo_minus_static_delta": float(delta.mean()),
+                "delta_ci95_low": lo,
+                "delta_ci95_high": hi,
+                "ppo_cheaper": bool(delta.mean() < 0.0),
+            }
+        )
+    return pd.DataFrame(rows)
+
+
 def collect_pareto_points(
     learned_summary: pd.DataFrame,
     dense_summary: pd.DataFrame,
@@ -322,6 +492,8 @@ def write_markdown(
     best_static: str,
     effects: pd.DataFrame,
     points: pd.DataFrame,
+    seed_summary: dict[str, Any],
+    cvar05: dict[str, Any],
 ) -> None:
     primary = effects.loc[effects["metric"] == PRIMARY_METRIC].iloc[0]
     ppo = points[points["kind"] == "ppo"].iloc[0]
@@ -379,6 +551,30 @@ def write_markdown(
         "",
         f"- PPO non-dominated vs dense static frontier on ReT/cost/tail/flow: `{not dominated_by_static}`.",
         "- Figures use `order_ret_excel` as the y-axis resilience metric.",
+        "- PPO is not claimed as resource-efficient on assembly cost alone; dispatch-inclusive cost is reported as sensitivity.",
+        "",
+        "## Seed-Level Primary Inference",
+        "",
+        f"- Seed count: `{seed_summary.get('seed_count', 0)}`.",
+        f"- All seed mean deltas positive: `{seed_summary.get('all_seed_deltas_positive', False)}`.",
+        (
+            f"- Seed-clustered bootstrap CI95 for mean delta: "
+            f"[{seed_summary.get('seed_cluster_bootstrap_ci95_low', float('nan')):+.6f}, "
+            f"{seed_summary.get('seed_cluster_bootstrap_ci95_high', float('nan')):+.6f}]."
+        ),
+        "",
+        "## Unified Tail Metric",
+        "",
+        (
+            f"- CVaR05 definition: {cvar05['definition']}; PPO `{cvar05['ppo_mean']:.6f}` "
+            f"vs static `{cvar05['static_mean']:.6f}`, delta "
+            f"`{cvar05['raw_delta_ppo_minus_static']:+.6f}`."
+        ),
+        "",
+        "## Comparator Scope",
+        "",
+        "- The dense static frontier varies `shift x op10 x op12`; it is not an 8D static frontier.",
+        "- Inventory-dimension constants require a separate bounded grid before any best-8D-static wording.",
         "",
         "## Effect Size Table",
         "",
@@ -392,6 +588,11 @@ def write_markdown(
         "- `pareto_ret_tail_ctj.png`",
         "- `pareto_ret_flow.png`",
         "- `pareto_summary.json`",
+        "- `seed_level_inference.csv`",
+        "- `top12_static_robustness.csv`",
+        "- `cvar05_effect.csv`",
+        "- `dispatch_cost_sensitivity.csv`",
+        "- `comparator_scope.json`",
         "",
     ]
     path.write_text("\n".join(lines), encoding="utf-8")
@@ -415,7 +616,36 @@ def main() -> int:
         raise ValueError(f"No rows for best static policy {best_static!r}")
 
     effects = build_effect_sizes(learned_rows, static_rows, best_static)
+    cvar05 = build_cvar05_effect_row(learned_rows, static_rows, best_static)
     effects.to_csv(args.output_dir / "effect_sizes.csv", index=False)
+    pd.DataFrame([cvar05]).to_csv(args.output_dir / "cvar05_effect.csv", index=False)
+
+    seed_level = build_seed_level_inference(learned_rows, static_rows)
+    seed_summary = dict(seed_level.attrs.get("summary", {}))
+    seed_level.to_csv(args.output_dir / "seed_level_inference.csv", index=False)
+
+    top12 = build_top_static_robustness(learned_rows, dense_episode, dense_summary, top_n=12)
+    top12.to_csv(args.output_dir / "top12_static_robustness.csv", index=False)
+
+    dispatch_cost = build_dispatch_cost_sensitivity(learned_rows, static_rows)
+    dispatch_cost.to_csv(args.output_dir / "dispatch_cost_sensitivity.csv", index=False)
+
+    comparator_scope = {
+        "dense_static_frontier_dims": ["assembly_shifts", "op10_multiplier", "op12_multiplier"],
+        "not_varied_in_dense_static_frontier": [
+            "op3_q",
+            "op3_rop",
+            "op9_q_min",
+            "op9_q_max",
+            "op9_rop",
+        ],
+        "paper_safe_wording": "best static over the shift x op10 x op12 family",
+        "unsafe_wording": "best 8D static frontier",
+        "inventory_constant_bound_status": "pending separate bounded grid",
+    }
+    (args.output_dir / "comparator_scope.json").write_text(
+        json.dumps(comparator_scope, indent=2, sort_keys=True), encoding="utf-8"
+    )
 
     points = collect_pareto_points(learned_summary, dense_summary, args.learned_policy)
     points = add_pareto_flags(points)
@@ -472,8 +702,20 @@ def main() -> int:
         "ppo_pareto_nondominated_ret_cost_tail_flow": len(dominated_by_static) == 0,
         "statics_dominating_ppo_ret_cost_tail_flow": dominated_by_static,
         "primary_effect": effects[effects["metric"] == args.primary_metric].to_dict(orient="records"),
+        "cvar05_effect": cvar05,
+        "seed_level_inference_summary": seed_summary,
+        "top12_static_robustness": {
+            "all_top12_ci95_positive": bool((top12["delta_ci95_low"] > 0.0).all()) if not top12.empty else False,
+            "min_delta_ci95_low": float(top12["delta_ci95_low"].min()) if not top12.empty else float("nan"),
+        },
+        "comparator_scope": comparator_scope,
         "outputs": {
             "effect_sizes": str(args.output_dir / "effect_sizes.csv"),
+            "cvar05_effect": str(args.output_dir / "cvar05_effect.csv"),
+            "seed_level_inference": str(args.output_dir / "seed_level_inference.csv"),
+            "top12_static_robustness": str(args.output_dir / "top12_static_robustness.csv"),
+            "dispatch_cost_sensitivity": str(args.output_dir / "dispatch_cost_sensitivity.csv"),
+            "comparator_scope": str(args.output_dir / "comparator_scope.json"),
             "pareto_points": str(args.output_dir / "pareto_points.csv"),
             "pareto_ret_cost": str(args.output_dir / "pareto_ret_cost.png"),
             "pareto_ret_tail_ctj": str(args.output_dir / "pareto_ret_tail_ctj.png"),
@@ -484,7 +726,14 @@ def main() -> int:
         json.dumps(summary, indent=2, sort_keys=True),
         encoding="utf-8",
     )
-    write_markdown(args.output_dir / "README.md", best_static=best_static, effects=effects, points=points)
+    write_markdown(
+        args.output_dir / "README.md",
+        best_static=best_static,
+        effects=effects,
+        points=points,
+        seed_summary=seed_summary,
+        cvar05=cvar05,
+    )
     print(json.dumps(summary, indent=2, sort_keys=True))
     return 0
 

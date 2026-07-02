@@ -6,17 +6,17 @@
 management}\label{21-reinforcement-learning-in-logistics-and-supply-chain-management}}
 
 Reinforcement learning has become an established paradigm for adaptive
-decision-making in supply chain management. Yan et al. (2022) provide a
+decision-making in supply chain management. Yan et al.~\cite{yan2022} provide a
 comprehensive review covering methodologies, state of the art, and
 opportunities for RL in logistics and SCM, documenting applications
 across inventory ordering, vehicle routing, and warehouse operations.
-Rolf et al. (2023) offer a semi-systematic review classifying RL
+Rolf et al.~\cite{rolf2023} offer a semi-systematic review classifying RL
 algorithms and applications in SCM, noting that Q-learning variants have
 dominated historically but that policy-gradient methods such as PPO and
-A3C are gaining traction. Boute et al. (2022) establish a design roadmap
+A3C are gaining traction. Boute et al.~\cite{boute2022} establish a design roadmap
 for deep RL in inventory control, systematizing key choices around state
-representation, action formulation, and reward engineering. Powell
-(2022) provides the theoretical backdrop, arguing that RL's
+representation, action formulation, and reward engineering. Powell~\cite{powell2022}
+provides the theoretical backdrop, arguing that RL's
 value-function approximation is only one of four policy classes and that
 simpler policy representations often outperform neural approaches in
 structured operations problems. These reviews confirm that RL in SCM is
@@ -30,20 +30,17 @@ supply
 chains}\label{22-discrete-event-simulation-and-machine-learning-for-supply-chains}}
 
 The integration of discrete-event simulation with machine learning has
-accelerated sharply in recent years. Kogler and Maxera (2026) review 72
+accelerated sharply in recent years. Kogler and Maxera~\cite{kogler2026} review 72
 research papers and 43 related studies combining discrete simulation with
 ML for supply chain analysis, confirming that ``a majority of the
 analysed models merge discrete event simulation with reinforcement
-learning to cover an operational planning horizon.'' Rolf et al. (2025)
-independently review papers combining DES with ML, finding that 82\% were
-published in the last five years and that RL is the most frequent ML
-paradigm in these hybrid pipelines. Perez-Pena et al. (2025) develop a
+learning to cover an operational planning horizon.'' Perez-Pena et al.~\cite{perezpena2025} develop a
 classification framework applied to 99 simulation-ML papers, revealing
 that optimization is rarely incorporated into hybrid workflows. Our work
 sits squarely in this family: a custom SimPy DES wrapped with a
 Gymnasium interface for RL training. What distinguishes this benchmark
 from the typical DES+RL study is its grounding in a validated PhD thesis
-model (Garrido-Rios, 2017) rather than a synthetic or stylized
+model \cite{garrido2017} rather than a synthetic or stylized
 environment, and its explicit treatment of control-contract design as
 the central experimental variable.
 
@@ -52,20 +49,20 @@ the central experimental variable.
 control}\label{23-rl-for-operational-and-inventory-control}}
 
 The dominant application of RL in supply chains remains inventory and
-operational cost control. Gijsbrechts et al. (2022) apply A3C to
+operational cost control. Gijsbrechts et al.~\cite{gijsbrechts2022} apply A3C to
 lost-sales, dual-sourcing, and multi-echelon problems, achieving
 3-\/-6\% optimality gaps but failing to consistently outperform capped
-base-stock policies. De Moor et al. (2022) demonstrate that
+base-stock policies. De Moor et al.~\cite{demoor2022} demonstrate that
 potential-based reward shaping can stabilize DRL training for perishable
 inventory but does not always help the agent surpass teacher heuristics.
-Dehaybe et al. (2024) train PPO on non-stationary demand using rolling
+Dehaybe et al.~\cite{dehaybe2024} train PPO on non-stationary demand using rolling
 forecast horizons and achieve near-optimal lot-sizing policies. Geevers
-et al. (2024) apply PPO with continuous actions via Stable-Baselines3 to
+et al.~\cite{geevers2024} apply PPO with continuous actions via Stable-Baselines3 to
 multi-echelon networks, reporting 6.6-\/-16.4\% cost reductions over
-classical benchmarks. Temizoz et al. (2025) propose Deep Controlled
+classical benchmarks. Temizoz et al.~\cite{temizoz2025} propose Deep Controlled
 Learning, achieving optimality gaps below 0.2\% and consistently
-outperforming all DRL baselines and heuristics. Vanvuchelen et al.
-(2025) address action-space scalability through continuous
+outperforming all DRL baselines and heuristics. Vanvuchelen et al.~\cite{vanvuchelen2025}
+address action-space scalability through continuous
 representations, finding that discrete formulations fail to scale to
 high-dimensional inventory problems.
 
@@ -82,8 +79,8 @@ misspecification but structural bottleneck misalignment.
 \subsection{2.4 Supply chain resilience, reconfiguration, and
 MARL}\label{24-supply-chain-resilience-reconfiguration-and-marl}}
 
-The closest competitor in the resilience literature is Ding et al.
-(2026), who apply MAPPO to dynamic reconfiguration of a supply chain
+The closest competitor in the resilience literature is Ding et al.~\cite{ding2026},
+who apply MAPPO to dynamic reconfiguration of a supply chain
 system-of-systems under disruption risks, with macro-level actions
 (filling, repairing, recruiting) operating on an abstract network
 topology. Their contribution is strategic topology redesign; ours is
@@ -91,24 +88,24 @@ operational control within a fixed, detailed DES. The distinction is not
 cosmetic: their state space represents network-level attributes (node
 density, clustering coefficients), while ours represents operational
 variables (inventory levels, disruption flags, shift configuration) at
-hourly granularity. Rolf et al. (2024) study supply chain recovery under
+hourly granularity. Bussieweke et al.~\cite{bussieweke2024recovery} study supply chain recovery under
 disruptions using system dynamics coupled with RL, demonstrating that RL
-can learn robust order policies without historical data. Kim (2024)
+can learn robust order policies without historical data. Kim~\cite{kim2024}
 proposes cooperative MARL for inventory transshipment during
-disruptions. Liu et al. (2025) apply heterogeneous-agent PPO (HAPPO) to
+disruptions. Liu et al.~\cite{liu2025pom} apply heterogeneous-agent PPO (HAPPO) to
 decentralized multi-echelon inventory, finding that hybrid rewards
 outperform purely self-interested or cooperative objectives. Kotecha and
-del Rio Chanona (2025) combine graph neural networks with MAPPO for
+del Rio Chanona~\cite{kotecha2025} combine graph neural networks with MAPPO for
 inventory control in supply chain networks.
 
 A parallel stream of work applies neural networks and machine learning
 to supply chain resilience through prediction and classification rather
-than online control. Rajagopal and Sivasakthivel (2024) use weighted
+than online control. Rajagopal and Sivasakthivel~\cite{rajagopal2024} use weighted
 feed-forward neural networks to select among pre-defined resilience
 strategies---a classification task over static options rather than
-continuous adaptive control. Rezki and Mansouri (2024) apply ANNs to
+continuous adaptive control. Rezki and Mansouri~\cite{rezki2024} apply ANNs to
 predict supplier risk scores, operating in the predictive rather than
-prescriptive paradigm. Ordibazar et al. (2022) use counterfactual
+prescriptive paradigm. Ordibazar et al.~\cite{ordibazar2022} use counterfactual
 explanation algorithms to recommend risk mitigation actions, contributing
 to the explainability literature rather than online control. These papers
 demonstrate active interest in AI for SCRES but occupy distinct
@@ -130,6 +127,6 @@ This paper does not claim to be the first RL-for-SCM or DES+RL study.
 Its contribution is a thesis-grounded benchmark and structural diagnosis
 showing that RL success in resilience control depends on action-space
 alignment with the active operational constraint-\/-\/-a finding that
-connects bottleneck reasoning from the Theory of Constraints (Goldratt)
+connects bottleneck reasoning from the Theory of Constraints \cite{goldratt1984goal}
 with RL agent design in a way that, to our knowledge, has not been
 demonstrated empirically in the published literature.
