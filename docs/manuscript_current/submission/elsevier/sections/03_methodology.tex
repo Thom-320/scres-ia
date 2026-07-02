@@ -1,8 +1,8 @@
 \hypertarget{3-methodology}{%
-\section{3. Methodology}\label{3-methodology}}
+\section{Methodology}\label{3-methodology}}
 
 \hypertarget{31-mfsc-discrete-event-simulation}{%
-\subsection{3.1 MFSC discrete-event
+\subsection{MFSC discrete-event
 simulation}\label{31-mfsc-discrete-event-simulation}}
 
 The experimental platform is a 13-operation military food supply chain
@@ -30,24 +30,39 @@ rather than on earlier historical artifacts. This allows the paper to
 claim benchmark fidelity without claiming that the model is a universal
 representation of all supply chains.
 
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\linewidth]{fig2_mfsc_topology.png}
+\caption{Simplified MFSC topology. Track B preserves the DES backbone but exposes downstream dispatch controls at Op10 and Op12, the operational recovery valves left fixed in Track A.}
+\label{fig:mfsc_topology}
+\end{figure}
+
 \hypertarget{32-control-formulation}{%
-\subsection{3.2 Control formulation}\label{32-control-formulation}}
+\subsection{Control formulation}\label{32-control-formulation}}
 
 The learning problem is defined as weekly operational control over the
 DES. At each decision epoch, the agent observes a state vector derived
 from the simulation, selects a continuous action, and receives a
 resilience-oriented reward. Decisions are taken every \texttt{168}
 simulated hours, which matches the weekly planning cadence already
-embedded in procurement, disruption, and operating rhythms. The problem
-is an augmented observed-state control problem, or equivalently a
-practical \texttt{POMDP}: the agent observes derived state features
-(inventory levels, backlog, rolling service history, and, in some
-observation versions, disruption-regime indicators and forecasts) rather
-than the DES's full internal state, and the transition dynamics are
-implicit in the simulator rather than specified analytically.
+embedded in procurement, disruption, and operating rhythms. Formally, we
+treat the simulator-control loop as a finite-horizon partially observed
+control problem
+\[
+\mathcal{M}=(\mathcal{S},\mathcal{O},\mathcal{A},P,r,\gamma,H),
+\]
+where $s_t\in\mathcal{S}$ is the full DES state (queues, buffers,
+orders, disruptions, and resource states), $o_t\in\mathcal{O}$ is the
+feature vector exposed to the policy, $a_t\in\mathcal{A}$ is the
+weekly operational-control action, $P$ is the simulator transition
+kernel induced by SimPy events and stochastic disruptions, $r$ is the
+training reward, $\gamma$ is the discount factor, and $H$ is the
+evaluation horizon (52 or 104 weeks in the generalization study). The
+paper-facing outcome is not raw training reward but a trajectory-level
+metric panel $G(\tau)$ headed by Garrido/Excel ReT.
 
 The paper uses two control contracts. \texttt{Track\ A} is the
-thesis-faithful benchmark family. It uses observation version
+thesis-grounded benchmark family. It uses observation version
 \texttt{v1} with \texttt{15} dimensions and a \texttt{5D} action
 contract covering upstream quantity and reorder multipliers together
 with assembly-shift selection. This is the negative paper lane: it asks
@@ -63,8 +78,23 @@ paper's central question is whether this operational extension changes
 the benchmark outcome by exposing the operational bottleneck that Track
 A leaves mostly outside the controllable interface.
 
+\begin{table}[htbp]
+\centering
+\caption{Observation classes relevant to the privileged-observation audit.}
+\label{tab:observation_classes}
+\begin{tabular}{p{0.25\linewidth}p{0.32\linewidth}p{0.30\linewidth}}
+\toprule
+Class & Examples & Manuscript role \\
+\midrule
+Operational feedback & backlog, queues, rolling fill, inventory pressure & Plausibly measurable state for closed-loop recovery \\
+Derived simulator summaries & smoothed service and risk-pressure features & Reported as part of the benchmark contract \\
+Privileged fields & five true-regime one-hot fields plus two transition-matrix forecast fields & Removed in E2; also tested by the E1 regime-table comparator \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \hypertarget{33-reward-and-reporting-metrics}{%
-\subsection{3.3 Reward and reporting
+\subsection{Reward and reporting
 metrics}\label{33-reward-and-reporting-metrics}}
 
 The canonical Track B training reward is \texttt{control\_v1}, a linear
@@ -92,10 +122,10 @@ families within Track A, rely on the evaluation metric panel rather than
 on raw cumulative reward.
 
 \hypertarget{34-experimental-protocol}{%
-\subsection{3.4 Experimental protocol}\label{34-experimental-protocol}}
+\subsection{Experimental protocol}\label{34-experimental-protocol}}
 
 The experimental design contains two benchmark families and one matched
-ablation. \texttt{Track\ A} is the thesis-faithful benchmark lane. It
+ablation. \texttt{Track\ A} is the thesis-grounded benchmark lane. It
 retains the validated DES backbone, the original operational scope, and
 strong static baselines as the main comparators. Learned policies are
 reported honestly as negative evidence when they remain below the
@@ -126,3 +156,21 @@ evidence for the claim that downstream control access, not action-space
 size, is responsible for the Track B gain; it is supportive causal
 evidence inside the studied benchmark family, not universal proof outside
 it.
+
+\begin{table}[htbp]
+\centering
+\caption{Experimental evidence map used in the manuscript.}
+\label{tab:evidence_map}
+\begin{tabular}{p{0.18\linewidth}p{0.38\linewidth}p{0.30\linewidth}}
+\toprule
+Lane & Purpose & Claim supported \\
+\midrule
+Track A & Original buffer/shift control against dense static frontiers & Boundary/null: original action surface does not yield a publishable dynamic-control win \\
+Track B canonical & PPO vs 147 dense static dispatch policies under CRN & Main adaptive-recovery result \\
+E1 & Static, heuristic, and true-regime lookup-table comparators & PPO win is not reproduced by zero-learning privileged regime access \\
+E2 & PPO retrained with privileged regime/forecast fields masked & PPO win does not require oracle observation fields \\
+E3 & Frozen PPO across risk levels and horizons & Current/increased generalization; severe boundary case \\
+E4 & Joint, downstream-only, and shift-only ablation & Mechanism evidence for downstream bottleneck authority \\
+\bottomrule
+\end{tabular}
+\end{table}

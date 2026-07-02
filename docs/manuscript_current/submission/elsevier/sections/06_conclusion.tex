@@ -1,5 +1,5 @@
 \hypertarget{6-conclusion}{%
-\section{6. Conclusion}\label{6-conclusion}}
+\section{Conclusion}\label{6-conclusion}}
 
 This paper presented a reproducible DES+RL benchmark for operational
 resilience control in a military food supply chain, grounded in
@@ -8,7 +8,7 @@ experimental design uses two matched benchmark families to answer a
 structural question: when does reinforcement learning outperform strong
 static baselines in resilience-oriented operational control?
 
-Under the thesis-faithful Track A contract, where the agent controls
+Under the thesis-grounded Track A contract, where the agent controls
 upstream inventory and assembly shifts, dense common-random-number
 static frontiers and multiple RL configurations across reward modes,
 observation versions, and algorithms leave no publishable dynamic-control
@@ -17,7 +17,7 @@ distribution bottleneck lies outside the agent's controllable interface,
 limiting the marginal value of upstream optimization regardless of
 algorithmic sophistication.
 
-Under the extended Track B contract, which adds downstream transport
+Under the DES-preserving Track B operational extension, which adds downstream transport
 dispatch at Op10 and Op12 (an 8-dimensional action contract) while
 preserving the DES backbone, PPO improves Garrido/Excel resilience over
 the best of a dense grid of static comparators under paired
@@ -32,15 +32,16 @@ privileged-access static comparator --- rule out that the effect depends
 on the learned policy exploiting simulator-only regime information
 unavailable to any static or heuristic baseline.
 
-The central lesson is that RL effectiveness in this benchmark depends
-not on algorithmic novelty or reward engineering but on whether the
-controllable interface reaches the binding operational constraint, and
-that this dependence survives adversarial checks for the two most common
-alternative explanations --- larger action spaces and privileged
-observation access. This finding connects bottleneck reasoning from the
+The central lesson is conditional rather than universal: RL value appears
+in this benchmark when the controllable interface reaches the binding
+operational constraint and the policy can convert that authority into
+recovery performance. This finding survives adversarial checks for the
+two most common alternative explanations --- larger action spaces and
+privileged observation access. It connects bottleneck reasoning from the
 Theory of Constraints with RL action-space design---a connection that, to
 our knowledge, has not been demonstrated empirically in the supply chain
 literature. For practitioners and researchers designing RL-based supply
 chain control systems, the implication is direct: before investing in
 architectural complexity, verify that the agent can act on the
-constraint that actually limits system performance.
+constraint that actually limits system performance and that this action
+surface exposes a recoverable dynamic frontier.

@@ -1,12 +1,12 @@
 \hypertarget{5-discussion}{%
-\section{5. Discussion}\label{5-discussion}}
+\section{Discussion}\label{5-discussion}}
 
 \hypertarget{51-interpreting-track-a}{%
-\subsection{5.1 Interpreting the Track A negative result}\label{51-interpreting-track-a}}
+\subsection{Interpreting the Track A negative result}\label{51-interpreting-track-a}}
 
 The Track A result should be read as evidence of a structural limitation
 rather than evidence that RL is ineffective for supply chains in general.
-Under the thesis-faithful contract, the static S2 policy already operates
+Under the thesis-grounded contract, the static S2 policy already operates
 near the practical ceiling imposed by downstream distribution capacity:
 Op10--Op12 transport throughput of approximately 2,500 rations per day
 roughly matches demand, so additional upstream production capacity from S3
@@ -21,7 +21,7 @@ and richer observations (v2--v6) do not overturn this structural limitation
 because the binding constraint lies outside the controllable interface.
 
 \hypertarget{52-what-track-b-changes}{%
-\subsection{5.2 What Track B changes}\label{52-what-track-b-changes}}
+\subsection{What Track B changes}\label{52-what-track-b-changes}}
 
 Track B changes the controllable interface, not the underlying DES physics.
 By adding Op10 and Op12 dispatch multipliers to the action space, the agent
@@ -44,7 +44,7 @@ of controllable dimensions, is the mechanism responsible for the Track B
 advantage.
 
 \hypertarget{53-action-space-alignment}{%
-\subsection{5.3 Action-space alignment as a design principle}\label{53-action-space-alignment}}
+\subsection{Action-space alignment as a design principle}\label{53-action-space-alignment}}
 
 The dual-track result connects three literatures that have not previously
 been linked empirically: the Theory of Constraints \cite{goldratt1984goal},
@@ -55,17 +55,18 @@ agent can control; and action-space architecture, which determines how
 decisions are represented.
 Our benchmark demonstrates a concrete instance of this connection: when the
 action space does not cover the active constraint (Track A), better
-algorithms and rewards cannot compensate; when it does (Track B), a standard
-PPO+MLP agent can produce a decisive advantage in the designed sustained-disruption
-cell. The reward sweep (Section~4.6) reinforces this: all 18 screened
-reward/observation cells show positive Excel ReT deltas, whereas in Track A
-no reward formulation succeeds. This suggests a
-practical design principle: \emph{before investing in architectural novelty
-or reward engineering, verify that the agent's controllable interface reaches
-the binding operational bottleneck.}
+algorithms and rewards do not convert the measured headroom; when downstream
+dispatch authority is exposed (Track B), a standard PPO+MLP agent can produce
+a decisive advantage in the designed sustained-disruption cell. The reward
+sweep (Section~4.6) reinforces this: all 18 screened reward/observation cells
+show positive Excel ReT deltas, whereas in Track A no reward formulation
+succeeds. This suggests a practical design principle: \emph{before investing
+in architectural novelty or reward engineering, verify that the agent's
+controllable interface reaches the binding operational bottleneck and that
+the resulting headroom is dynamically convertible into recovery performance.}
 
 \hypertarget{54-positioning}{%
-\subsection{5.4 Positioning relative to the AI--SCRES literature}\label{54-positioning}}
+\subsection{Positioning relative to the AI--SCRES literature}\label{54-positioning}}
 
 Recent work at the intersection of AI and supply chain resilience spans
 several paradigms. Rajagopal and Sivasakthivel~\cite{rajagopal2024} use weighted
@@ -86,39 +87,43 @@ reconfiguration of supply chain topology under disruption, operating at the
 strategic level with abstract network actions. Our single-agent approach
 asks a complementary question at the operational level: given a fixed
 topology, does expanding operational control scope change the outcome? The
-Track B result suggests that when the bottleneck can be identified and
-controlled by a single agent, centralized control with appropriate action
-scope suffices.
+Track B result suggests that, in a fixed-topology supply chain where the
+binding downstream bottleneck can be identified, centralized control with
+appropriate action scope can be a strong benchmark before moving to more
+complex multi-agent architectures.
 
 \hypertarget{55-limitations}{%
-\subsection{5.5 Limitations}\label{55-limitations}}
+\subsection{Limitations}\label{55-limitations}}
 
 Several limitations bound the generalizability of these findings. First, the
 benchmark is one validated military supply chain; generalization to other
 topologies, demand patterns, or organizational structures requires further
-investigation. Second, the observation ablation removes the seven explicitly
-privileged regime/forecast fields, but the remaining state still contains
-rich operational feedback; the experiment rules out the strongest privileged
-observation confound but does not prove full field deployability of every
-state variable.
-Third, the problem is better described as partially observed control than a
-fully identified MDP: the agent observes a projection of the simulation
-state, not the full internal state. Fourth, the paper uses PPO exclusively
-(with RecurrentPPO as a comparator); other algorithms (SAC, TD3) were not
-tested, though the reward-insensitivity finding suggests algorithmic choice
-is secondary to action-space alignment in this regime. Fifth,
-ReT\_seq\_v1 is a training reward designed for gradient quality, not a
-theoretically complete resilience index; the paper-facing reporting
-therefore uses multiple complementary metrics. Finally, Track B's
-adaptive\_benchmark\_v2 risk profile differs from Track A's increased
-profile; the matched ablation controls for this, but the production
-comparison across tracks conflates action-contract and risk-profile changes.
+investigation. Second, Track B is not a thesis-grounded decision-variable
+replication of Garrido-Rios: it preserves the DES backbone and resilience
+measurement structure, but extends the controllable surface to downstream
+dispatch valves that the original experiment held fixed. Third, the
+observation ablation removes the seven explicitly privileged regime/forecast
+fields, but the remaining state still contains rich operational feedback; the
+experiment rules out the strongest privileged observation confound but does
+not prove full field deployability of every state variable.
+Fourth, the problem is better described as partially observed control than a
+fully identified MDP: the agent observes a projection of the simulation state,
+not the full internal state. Fifth, the paper uses PPO exclusively (with
+RecurrentPPO as a comparator); other algorithms (SAC, TD3) were not tested,
+though the reward-insensitivity finding suggests algorithmic choice is
+secondary to action-space alignment in this regime. Sixth, the
+cross-regime/horizon matrix uses a fixed dense-comparable static comparator
+set rather than a fully reoptimized 147-cell dense frontier in every
+risk/horizon cell. Finally, the evidence supports adaptive recovery and
+backlog control, not unqualified anticipation, retained cross-campaign
+learning, universal cost reduction, or a universal law that bottleneck access
+alone is sufficient for RL success.
 
 \hypertarget{56-future-work}{%
-\subsection{5.6 Future work}\label{56-future-work}}
+\subsection{Future work}\label{56-future-work}}
 
-Three directions emerge. First, the action-space alignment principle should
-be tested on other validated supply chain DES models to assess
+Three directions emerge. First, the bottleneck-aligned recovery principle
+should be tested on other validated supply chain DES models to assess
 generalizability beyond the MFSC topology. Second, more expressive policy
 architectures---including attention-based networks, graph neural networks,
 and emerging KAN-based designs as proposed by Garrido et al.~\cite{garrido2024iccl}---remain relevant for supply chains with variable topology or

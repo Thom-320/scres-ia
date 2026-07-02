@@ -1,8 +1,8 @@
 \hypertarget{4-results}{%
-\section{4. Results}\label{4-results}}
+\section{Results}\label{4-results}}
 
 \hypertarget{41-des-validation}{%
-\subsection{4.1 DES validation}\label{41-des-validation}}
+\subsection{DES validation}\label{41-des-validation}}
 
 The reconstructed DES was first validated against the deterministic
 baseline (Cf0, single shift S=1) reported in Garrido-Rios (2017, Table
@@ -29,10 +29,10 @@ rations, fill rate falls to 45.6\%, and total backorders increase to
 nominal system to a fragile network once disruption intensity escalates.
 
 \hypertarget{42-track-a}{%
-\subsection{4.2 Track A: thesis-faithful benchmark (negative
+\subsection{Track A: thesis-grounded benchmark (negative
 result)}\label{42-track-a}}
 
-Under the thesis-faithful Track A contract, we first ask whether a
+Under the thesis-grounded Track A contract, we first ask whether a
 regime-conditioned oracle over the static decision space (inventory
 buffer fraction and shift level) exposes any exploitable structure. A
 dense grid search over five risk families, five frequency multipliers,
@@ -71,7 +71,7 @@ controllable interface --- motivating the Track B extension in
 Section~4.3.
 
 \hypertarget{43-track-b}{%
-\subsection{4.3 Track B: extended action space (positive
+\subsection{Track B: extended action space (positive
 result)}\label{43-track-b}}
 
 Track B extends the action contract (\texttt{track\_b\_v1}, 8 dimensions)
@@ -87,7 +87,7 @@ multipliers $\times$ 7 Op12 multipliers) under paired common-random-number
 
 \begin{table}[htbp]
 \centering
-\caption{Track B main result: PPO vs. best dense static comparator, paired CRN evaluation (5 seeds $\times$ 12 episodes, $n=60$ paired episodes). CI95 in brackets.}
+\caption{Track B main result: PPO vs. best dense static comparator, paired CRN evaluation (5 training seeds $\times$ 12 CRN episodes). Episode-level pooled CI95 in brackets, reported descriptively; primary inference is seed-clustered (all five per-seed mean deltas positive; seed-clustered bootstrap CI95 for the Excel ReT delta $[+0.000414, +0.000438]$).}
 \label{tab:track_b_main}
 \begin{tabular}{lccc}
 \toprule
@@ -104,9 +104,13 @@ Assembly cost index & 0.682 & 0.667 & +0.015 [$-0.048$, 0.015] (n.s.) \\
 \end{tabular}
 \end{table}
 
-PPO improves Garrido/Excel ReT by 0.000426 (CI95 entirely positive,
-paired Cohen's $d = 2.87$) over the best of 147 dense static comparators,
-with matching, larger-magnitude gains in flow fill rate, rolling fill, and
+PPO improves Garrido/Excel ReT by 0.000426 over the best of 147 dense
+static comparators. Because the 60 CRN pairs share only 16 distinct
+evaluation scenarios across seeds, we treat the training seed as the
+inferential unit: all five per-seed mean deltas are individually positive
+(range $+0.000408$ to $+0.000447$), and the seed-clustered bootstrap CI
+excludes zero. The gain is accompanied by matching, larger-magnitude
+improvements in flow fill rate, rolling fill, and
 recovery-tail cycle time (CTj p99 falls from 8{,}113 to 1{,}207 hours).
 The policy is Pareto non-dominated on the ReT--cost--tail--flow frontier:
 no static policy in the dense grid jointly matches or exceeds PPO on Excel
@@ -115,6 +119,13 @@ however, a strict cost win: the assembly cost index is marginally higher
 for PPO than the best static comparator by ReT, and this difference is not
 statistically distinguishable from zero (CI95 crosses zero). We therefore
 report the result as non-dominated, not resource-efficient.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.78\linewidth]{fig4_pareto_ret_tail_ctj.png}
+\caption{Track B ReT--tail Pareto view from the final Q1 bundle. PPO is not a strict assembly-cost winner, but it is non-dominated on the resilience/tail frontier relative to the dense static dispatch family.}
+\label{fig:pareto_ret_tail}
+\end{figure}
 
 A companion masking experiment addresses whether this advantage could
 instead reflect the learned policy exploiting privileged simulator
@@ -130,7 +141,7 @@ still falls far short of PPO. The advantage is not an artifact of
 privileged observation access.
 
 \hypertarget{44-causal-ablation}{%
-\subsection{4.4 Causal ablation: action-space decomposition}\label{44-causal-ablation}}
+\subsection{Causal ablation: action-space decomposition}\label{44-causal-ablation}}
 
 To test whether the Track B advantage reflects access to the downstream
 bottleneck specifically, or simply a larger action space, we run a
@@ -144,7 +155,7 @@ only shift controllable).
 
 \begin{table}[htbp]
 \centering
-\caption{Action-space ablation, 5 seeds $\times$ 60k timesteps. $\Delta$ is order-level ReT versus each arm's own best evaluated comparator in that arm.}
+\caption{Action-space ablation, 5 seeds $\times$ 60k timesteps. $\Delta$ is order-level ReT versus each arm's own best evaluated comparator in that arm, including heuristic comparators.}
 \label{tab:ablation}
 \begin{tabular}{lccc}
 \toprule
@@ -173,8 +184,15 @@ absolute ReT values are therefore not directly comparable to
 Table~\ref{tab:track_b_main}, but the within-ablation comparison across
 arms (identical hyperparameters in all three) is valid.}
 
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.78\linewidth]{fig6_action_space_ablation.png}
+\caption{E4 action-space ablation. Deltas are computed against each arm's own best evaluated comparator, including heuristics, and support the mechanism claim that downstream dispatch authority is central to the Track B gain.}
+\label{fig:ablation}
+\end{figure}
+
 \hypertarget{45-privileged-obs}{%
-\subsection{4.5 Ruling out privileged observation access}\label{45-privileged-obs}}
+\subsection{Ruling out privileged observation access}\label{45-privileged-obs}}
 
 Observation version v7 includes, alongside operationally observable state
 (backlog, queue pressure, rolling fill history), a one-hot encoding of the
@@ -209,13 +227,37 @@ beats all 75 static candidates, all six heuristics, and the fitted regime
 table individually, with 95\% confidence intervals excluding zero in
 every one of 60 comparisons.
 
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.78\linewidth]{fig3_gap_decomposition.png}
+\caption{E1 gap decomposition. Direct access to the true disruption regime improves a non-learning static table only modestly, while PPO remains far above the common static, heuristic, and regime-table comparators.}
+\label{fig:gap_decomposition}
+\end{figure}
+
 Together these results indicate the Track B advantage is not explained by
 access to privileged simulator state: PPO does not require it to win, and
 a non-learning policy that has it still cannot approach PPO's
 performance.
 
+\begin{table}[htbp]
+\centering
+\caption{Privileged-observation defense. E1 values use the canonical CRN comparison; the masked PPO row is from the E2 retrain with regime and forecast fields zeroed.}
+\label{tab:privileged_defense}
+\begin{tabular}{lcl}
+\toprule
+Policy family & Order-level / Excel ReT & Interpretation \\
+\midrule
+Common dense static & 0.005466 & Best 147-cell constant dispatch comparator \\
+Best E1 heuristic & 0.005436 & Reactive rule family does not match PPO \\
+Regime-conditioned table & 0.005494 & True-regime lookup gives only a small gain \\
+Masked PPO & 0.005613 & Wins after seven privileged fields are removed \\
+Canonical PPO & 0.005893 & Full Track B policy \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \hypertarget{46-reward-sweep}{%
-\subsection{4.6 Reward sensitivity under Track B}\label{46-reward-sweep}}
+\subsection{Reward sensitivity under Track B}\label{46-reward-sweep}}
 
 To assess whether the Track B advantage depends on the specific choice of
 training reward, we screen 18 reward/observation combinations under the
@@ -240,7 +282,7 @@ configurations is evidence against the concern that the canonical result
 depends on a fortuitously tuned reward.
 
 \hypertarget{47-cross-scenario}{%
-\subsection{4.7 Cross-scenario and cross-horizon generalization}\label{47-cross-scenario}}
+\subsection{Cross-scenario and cross-horizon generalization}\label{47-cross-scenario}}
 
 To test whether the Track B advantage is specific to the single
 \texttt{adaptive\_benchmark\_v2} stress cell used for the canonical result,
@@ -267,6 +309,13 @@ h104 & severe & 0.0001282 & 0.0001188 & +0.0000094 \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.70\linewidth]{fig5_generalization_heatmap.png}
+\caption{E3 cross-regime/horizon matrix. PPO gains are positive for current and increased risk at both horizons; severe short-horizon disruption is the disclosed boundary case.}
+\label{fig:generalization_heatmap}
+\end{figure}
 
 The Track B advantage is positive in five of the six evaluated cells,
 including the current and increased Garrido-native risk levels at both horizons, with deltas
@@ -297,7 +346,7 @@ result additionally requires action-space coverage of the downstream
 bottleneck.
 
 \hypertarget{48-summary}{%
-\subsection{4.8 Summary}\label{48-summary}}
+\subsection{Summary}\label{48-summary}}
 
 The experimental evidence forms a coherent narrative across six result
 dimensions. Track A demonstrates a structural limitation under
@@ -315,6 +364,6 @@ cells, with the one exception (severe disruption at the shorter horizon)
 disclosed as a service-floor boundary case, and a companion experiment
 shows the disruption regime alone is not sufficient for a win without
 downstream-dispatch access (Section~4.7). The central finding is not
-that RL is universally effective, but that its effectiveness depends on
-whether the controllable action space reaches the operational
-bottleneck the disruption regime binds against.
+that RL is universally effective, but that RL value appears when the
+controllable interface reaches the operational bottleneck and the policy
+can convert that authority into recovery performance.
