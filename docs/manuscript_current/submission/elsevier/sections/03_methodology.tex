@@ -106,24 +106,36 @@ paper-facing outcome is not raw training reward but a trajectory-level
 metric panel $G(\tau)$ headed by Garrido/Excel ReT.
 
 The paper uses two control contracts. \texttt{Track\ A} is the
-thesis-grounded benchmark family. It uses observation version
-\texttt{v1} with \texttt{15} dimensions and a \texttt{5D} action
-contract covering upstream quantity and reorder multipliers together
-with assembly-shift selection. This is the negative paper lane: it asks
-whether RL can beat strong static policies when control remains limited
-to the original scope.
+thesis-grounded benchmark family. Its headline result (Section~4.2) uses
+observation version \texttt{v1} with \texttt{15} dimensions and a
+\texttt{4D} continuous action contract (\texttt{track\_a\_per\_op\_buffer\_v1}):
+one buffer-target fraction per decision point (Op3, Op5, Op9, each
+independently, as a fraction of the thesis-scale $I_{1344}$ buffer level)
+plus one continuous shift signal mapped to $\{S_1,S_2,S_3\}$. This is a
+direct continuous relaxation of Garrido-Rios' own buffer/shift decision
+family (Section~4.2 gives the full derivation from the thesis' discrete
+design); it is the negative paper lane: it asks whether RL can beat
+strong static policies when control remains limited to the original
+scope, parameterized continuously rather than over the thesis' five
+discrete levels.
 
 \texttt{Track\ B} is a separate research lane rather than a retrofit of
 \texttt{Track\ A}. It uses observation version \texttt{v7} with
 \texttt{52} dimensions and the \texttt{track\_b\_v1} action contract
-(\texttt{8D}). The action contract keeps the Track A upstream
-replenishment and shift controls, adds an Op5 pre-assembly quantity
-multiplier, and --- decisively --- adds
-downstream dispatch multipliers at \texttt{Op10} and \texttt{Op12};
-Table~\ref{tab:action_contract} gives the exact decode. The
-paper's central question is whether this operational extension changes
-the benchmark outcome by exposing the operational bottleneck that Track
-A leaves mostly outside the controllable interface.
+(\texttt{8D}): a per-operation quantity/reorder-point multiplier
+parameterization of the same upstream decision family (Op3 and Op9
+order-quantity and reorder-point multipliers, an Op5 pre-assembly
+quantity multiplier, and assembly-shift selection --- 6 dimensions)
+extended with --- decisively --- downstream dispatch multipliers at
+\texttt{Op10} and \texttt{Op12};
+Table~\ref{tab:action_contract} gives the exact decode. Track A's
+fraction-based contract and Track B's multiplier-based upstream
+dimensions are two distinct, richer-than-thesis parameterizations of the
+same conceptual buffer/shift decision points; the paper's central
+question is whether adding downstream dispatch authority on top of
+either changes the benchmark outcome by exposing the operational
+bottleneck that Track A leaves mostly outside the controllable
+interface.
 
 Operationally, the Op10/Op12 dispatch multipliers represent short-term
 downstream transport expediting authority --- additional dispatch

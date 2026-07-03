@@ -1,0 +1,390 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\graphicspath{{figures/}}
+\emergencystretch=3em
+
+\definecolor{vermil}{HTML}{D55E00}
+\definecolor{recgreen}{HTML}{009E73}
+\definecolor{stdblue}{HTML}{0072B2}
+
+\title{Action-Space Design in the Garrido-Grounded DES/RL Benchmark:\\
+What We Changed, Why, and What It Produced}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent This note documents, precisely and with full traceability to code
+and data, the action-space decisions behind the two experimental lanes of
+our reinforcement-learning benchmark on Garrido-Rios' (2017) military food
+supply chain (MFSC) model. It answers three questions directly: (1) what
+action contract did we actually use, and how does it relate to Garrido's
+original discrete buffer/shift design; (2) why did the resulting learned
+policies fail to beat the best static policy under the original decision
+scope (Track A); and (3) what extension made a learned policy win, and why
+do we believe that result. Every number cited here traces to a dated
+artifact in the project repository; none are illustrative.
+\end{abstract}
+
+\section{Purpose}
+
+Garrido-Rios' thesis studies two decision families for the MFSC: strategic
+inventory buffers at three points in the chain (Op3, Op5, Op9) and
+short-term manufacturing capacity via assembly shifts. Both were varied
+\emph{discretely} and \emph{one factor at a time} in the original design of
+experiments (DOE). Our starting proposal --- communicated directly to
+Garrido --- was that this design-of-experiments grid could be replaced by a
+much smaller, continuous parameterization: one continuous buffer variable
+and one (effectively discrete, three-level) shift variable, instead of the
+original 15 buffer configurations and 3 shift levels examined separately.
+This note explains exactly what we built from that idea, what happened
+when we trained a learned policy on it, why it did not win, and what we
+changed afterward to obtain a genuine, robustly-tested win.
+
+\section{Garrido-Rios' original decision variables}
+\label{sec:garrido}
+
+Table~\ref{tab:garrido_design} summarizes the thesis' design (Chapter 6,
+Scenarios II--III). Three locations (Op3: raw-material warehouse, Op5:
+pre-assembly buffer, Op9: ration supply battalion) can each hold a
+strategic inventory buffer, replenished at one of five fixed intervals.
+Separately, the assembly line can run at one of three shift levels. The
+two families were never varied jointly: Scenario II fixes $S=1$ and varies
+buffer levels (configurations Cf31--Cf60); Scenario III fixes buffer at
+zero and varies shift level (Cf61--Cf90). This is a valid, efficient
+one-factor-at-a-time DOE for a discrete-event simulation study, but it
+means the thesis never directly observed what happens when buffer and
+shift are adjusted together, and it never expressed either variable on a
+continuous scale.
+
+\begin{table}[htbp]
+\centering
+\caption{Garrido-Rios (2017) buffer/shift design (Tables 6.16, 6.20--6.23).
+Buffer quantities in rations/raw-material units; interval in hours.}
+\label{tab:garrido_design}
+\small
+\begin{tabular}{lccccc}
+\toprule
+Interval (h) & 168 & 336 & 504 & 672 & 1{,}344 \\
+\midrule
+Op3 (raw material) & 15{,}360 & 30{,}720 & 46{,}080 & 61{,}440 & 122{,}880 \\
+Op5 (pre-assembly) & 15{,}360 & 30{,}720 & 46{,}080 & 61{,}440 & 122{,}880 \\
+Op9 (rations) & 15{,}750 & 31{,}500 & 47{,}250 & 63{,}000 & 126{,}000 \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.4em}
+\begin{tabular}{lccc}
+\toprule
+Shift level $S$ & 1 & 2 & 3 \\
+\midrule
+Annual capacity (rations) & 738{,}432 & 1{,}476{,}864 & 2{,}215{,}296 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+This gives $3 \times 5 = 15$ discrete buffer configurations and 3 discrete
+shift levels --- the ``15 buffers and 3 shifts'' referred to in our
+discussion with Garrido --- examined one factor at a time (30 buffer
+configurations across the two replicate/risk blocks plus 30 shift
+configurations, Cf31--Cf90 in the thesis' numbering).
+
+\section{From Garrido's grid to a trainable action space}
+\label{sec:reduction}
+
+A reinforcement-learning agent needs a differentiable, low-cardinality
+action interface; training directly on Garrido's 15-cell buffer grid (or
+worse, the full $15 \times 3 = 45$-cell joint grid he never populated)
+would starve a policy-gradient method of usable signal between grid
+points. The reduction we proposed to Garrido, and the further refinement
+we made after testing it, proceeded in three steps (Figure~\ref{fig:chain}).
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{fig_reduction_chain}
+\caption{The action-space reduction chain actually implemented, from
+Garrido's discrete design of experiments to the two experimental lanes of
+the paper. Every stage keeps Garrido's own decision points; only the final
+stage (Track B) adds a genuinely new lever.}
+\label{fig:chain}
+\end{figure}
+
+\subsection{Step 1: \texttt{continuous\_its} --- the idea we proposed}
+
+Our first implementation (\texttt{continuous\_its\_env.py},
+contract \texttt{track\_a\_continuous\_its\_v1}) is exactly the
+simplification described to Garrido: a single continuous scalar
+$f \in [0,1]$, representing the fraction of the largest buffer level
+($I_{1{,}344}$) applied \emph{commonly} to Op3, Op5, and Op9 simultaneously,
+plus a single continuous shift signal mapped through fixed thresholds to
+$S \in \{1,2,3\}$. This is a genuine two-dimensional action space: one
+buffer dial, one shift dial. An early, small-scale screen (2 training
+seeds) showed a promising adaptive signal on Excel ReT and CVaR, but a
+3-seed confirmatory rerun and a subsequent dense common-random-number
+(CRN) evaluation against a matching static frontier both failed to
+reproduce it: the apparent win did not survive denser, fairer
+static comparison. We record this honestly as an unconfirmed, superseded
+exploratory lane, not as evidence for or against the central claim.
+
+\subsection{Step 2: \texttt{per\_op\_buffer} --- the actual Track A
+contract}
+
+The single shared buffer fraction in Step 1 has a real limitation: it
+forces the policy to raise or lower inventory at Op3, Op5, and Op9
+together, even though Garrido's own design treats them as three
+independent decision points. We removed this constraint
+(\texttt{supply\_chain/continuous\_its\_env.py}, class
+\texttt{PerOpBufferTrackAEnv}, contract
+\texttt{track\_a\_per\_op\_buffer\_v1}): the action space becomes
+\begin{equation}
+a = (f_{\mathrm{Op3}},\, f_{\mathrm{Op5}},\, f_{\mathrm{Op9}},\, s) \in [0,1]^3 \times [-1,1],
+\end{equation}
+three independent continuous buffer-target fractions (each still expressed
+relative to Garrido's own $I_{1{,}344}$ scale from Table~\ref{tab:garrido_design})
+plus one continuous shift signal --- four dimensions in total. This is the
+contract actually used for the paper's Track A headline result
+(Section~\ref{sec:tracka}): it is strictly richer than the shared-fraction
+version, and it preserves every one of Garrido's own decision points while
+removing both his discretization into five fixed levels \emph{and} the
+one-factor-at-a-time restriction (buffer and shift are now free to move
+together). Table~\ref{tab:dof} compares the three designs directly.
+
+\begin{table}[htbp]
+\centering
+\caption{Degrees of freedom, Garrido's design vs.\ our two continuous
+reductions.}
+\label{tab:dof}
+\small
+\begin{tabular}{p{0.22\linewidth}p{0.72\linewidth}}
+\toprule
+Design & Decision variables \\
+\midrule
+Garrido-Rios (thesis) & 15 discrete buffer configurations (3 locations
+$\times$ 5 levels) + 3 discrete shift levels; varied one factor at a time \\
+\texttt{continuous\_its} & 1 continuous buffer fraction (shared across all
+three locations) + 1 continuous shift signal; de-discretized, but the
+three locations cannot be set independently \\
+\texttt{per\_op\_buffer} (Track A) & 3 independent continuous buffer
+fractions (Op3, Op5, Op9) + 1 continuous shift signal; Garrido's full
+granularity preserved, discretization removed \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Track A: why the continuous relaxation still does not win}
+\label{sec:tracka}
+
+Before training any learner, we first asked whether the \emph{static}
+decision space itself contains exploitable structure: a regime-conditioned
+oracle (the best buffer/shift combination \emph{per disruption regime}) is
+compared against the single best regime-agnostic constant policy over a
+dense grid (five risk families $\times$ five frequency multipliers
+$\times$ three impact multipliers). The oracle beats the best constant
+policy by \textbf{+0.000176 to +0.000296 Excel ReT} (95\% CI lower bound
+positive) --- a small but genuine, non-zero headroom. The question that
+matters is whether a learned policy can capture it.
+
+None of the tested learners do. We tried continuous PPO directly on the
+\texttt{per\_op\_buffer} contract, PPO warm-started via behavior cloning on
+the oracle's own action table, and PPO trained under a
+family-conflict variant of the same contract with a
+\texttt{ReT\_excel\_plus\_cvar} reward (5 seeds). The closest approach ---
+behavior-cloning-warm-started PPO --- misses the best static comparator by
+\[
+-6.99\times10^{-6}\ \text{Excel ReT} \quad (0.155247\ \text{vs.}\ 0.155254),
+\]
+a gap two orders of magnitude smaller than the measured oracle headroom,
+and is Pareto-dominated by ten static configurations on the joint
+Excel-ReT/resource frontier (Table~\ref{tab:tracka}).
+
+\begin{table}[htbp]
+\centering
+\caption{Track A boundary summary. Values are Excel ReT under the Track A
+evaluation family; oracle headroom uses the same metric.}
+\label{tab:tracka}
+\small
+\begin{tabular}{p{0.28\linewidth}p{0.14\linewidth}p{0.16\linewidth}p{0.28\linewidth}}
+\toprule
+Policy family & Best learned & Best static & Outcome \\
+\midrule
+PPO (continuous, repaired) & 0.155247 & 0.155254 & loses ($-7.0\times10^{-6}$) \\
+BC-warm-started PPO & 0.155247 & 0.155254 & loses; Pareto-dominated \\
+Regime-conditioned oracle & --- & $+0.000176$ to $+0.000296$ & headroom exists, unconverted \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{The structural reason}
+
+The reason is not that the buffer/shift decision space is poorly
+parameterized. It is that the decision the agent controls is not the
+constraint that governs recovery. Figure~\ref{fig:topology} marks the
+binding bottleneck directly on the MFSC topology: downstream transport
+throughput at Op10 and Op12 (line-of-communication dispatch to the combat
+service support units and onward to theatre) runs at approximately 2,400--2,600
+rations/day --- essentially equal to demand. Once a modest buffer is in
+place, additional upstream inventory or additional assembly-line capacity
+from a higher shift level cannot increase what actually reaches the
+theatre, because the downstream pipe is already running near its ceiling.
+Buffer and shift levers, however finely parameterized, sit entirely
+upstream of this constraint. This is a direct instance of the
+Theory-of-Constraints principle that system throughput is governed by its
+binding constraint, not by average-case improvement elsewhere in the
+chain --- and it explains why \emph{every} tested parameterization of the
+buffer/shift family (discrete, shared-fraction continuous, and per-operation
+continuous) converges to the same negative result.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{fig2_mfsc_topology}
+\caption{The MFSC topology with the Track A control surface (buffer
+$\bigtriangleup$, shift $\bullet$) and the Track B addition (dispatch
+$\diamondsuit$, Op10/Op12) marked directly on the operations they act on.
+The bracket marks the binding recovery bottleneck: downstream dispatch
+capacity approximately equals demand.}
+\label{fig:topology}
+\end{figure}
+
+\section{Track B: adding the one lever that reaches the bottleneck}
+\label{sec:trackb}
+
+Track B keeps every Track A decision variable and adds exactly the lever
+that Section~\ref{sec:tracka} identifies as missing: transport dispatch
+authority at Op10 and Op12. For this lane we also switched the upstream
+parameterization from buffer \emph{fractions} to per-operation
+\emph{multipliers} on order quantity and reorder point (a richer, six-dimensional
+version of the same upstream family), so that the two new dispatch
+dimensions could be added in the same multiplicative form
+(Table~\ref{tab:action_contract}). The switch in upstream parameterization
+is not what produces the result below --- Section~\ref{sec:tracka} already
+showed that no parameterization of the upstream family alone wins --- it
+is a modeling convenience for attaching the dispatch dimensions
+consistently.
+
+\begin{table}[htbp]
+\centering
+\caption{\texttt{track\_b\_v1} action contract (8 dimensions). Raw policy
+outputs $x_i \in [-1,1]$ are decoded per dimension; multipliers scale the
+thesis base parameters.}
+\label{tab:action_contract}
+\small
+\begin{tabular}{c p{0.32\linewidth} c c}
+\toprule
+Dim & Decision variable & Decode & Effective range \\
+\midrule
+1 & Op3 order quantity mult. & $1.25+0.75x$ & $[0.5,2.0]\times 15{,}500$ units \\
+2 & Op9 order quantity mult. & $1.25+0.75x$ & $[0.5,2.0]\times U(2{,}400,2{,}600)$ \\
+3 & Op3 reorder point mult. & $1.25+0.75x$ & $[0.5,2.0]\times 168$ h \\
+4 & Op9 reorder point mult. & $1.25+0.75x$ & $[0.5,2.0]\times 24$ h \\
+5 & Op5 pre-assembly qty mult. & $1.0+0.5x$ & $[0.5,1.5]$ \\
+6 & assembly shifts $s_t$ & thresholds at $\pm\tfrac13$ & $\{1,2,3\}$ \\
+\textbf{7} & \textbf{Op10 dispatch mult.} & $1.25+0.75x$ & $[0.5,2.0]\times U(2{,}400,2{,}600)$ \\
+\textbf{8} & \textbf{Op12 dispatch mult.} & $1.25+0.75x$ & $[0.5,2.0]\times U(2{,}400,2{,}600)$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Result}
+
+Under the canonical confirmatory protocol (10 training seeds, 60{,}000
+timesteps each, 12 CRN evaluation episodes per seed, paired against the
+best of 147 dense static dispatch configurations), PPO improves Excel ReT
+by
+\[
++0.000438\ \text{(Excel ReT }0.005898\text{ vs.\ }0.005460\text{)},
+\qquad \text{95\% CI } [+0.000409, +0.000468],
+\]
+with all ten per-seed mean deltas individually positive. The same policy
+also produces much larger-magnitude gains in flow fill (0.961 vs.\ 0.669),
+the recovery-tail cycle time $CT_j$ p99 (1{,}207\,h vs.\ 8{,}113\,h), and
+service-loss AUC (an order-of-magnitude reduction). Figure~\ref{fig:pareto}
+shows the policy relative to the entire static dispatch family: it is not
+a strict cost win, but it dominates every one of the 147 static
+configurations on the joint resilience/recovery-tail frontier.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\linewidth]{fig4_pareto_ret_tail_ctj}
+\caption{Track B ReT--tail trade-off, canonical CRN protocol. PPO (star)
+dominates the entire 147-policy static dispatch family on Excel ReT and
+the $CT_j$ p99 recovery tail simultaneously.}
+\label{fig:pareto}
+\end{figure}
+
+\section{Why we believe this result}
+
+The Track B win is not accepted on the strength of the headline number
+alone. Four separate adversarial checks were run specifically to rule out
+the most common alternative explanations for an RL win in a simulated
+environment, and all four are consistent with the win being genuine and
+attributable to the added dispatch authority specifically:
+
+\begin{itemize}
+\item \textbf{More actuators, not more authority?} An action-space
+ablation (5 seeds, matched scale) compares the full 8D contract against
+downstream-dispatch-only (shift frozen) and shift-only (dispatch frozen)
+variants. The downstream-only arm captures the \emph{largest} advantage
+over its own best comparator ($+0.000429$), exceeding the full joint
+contract ($+0.000367$); shift-only captures a comparable gain to joint
+($+0.000377$). The gain does not scale with the number of controllable
+dimensions --- it concentrates in access to the dispatch lever
+specifically.
+\item \textbf{Privileged simulator information?} We retrained PPO with the
+seven observation fields that reveal the true disruption regime and its
+forecast masked to zero; the masked policy retains approximately 95\% of
+the canonical advantage ($+0.000403$/$+0.000395$ across two independent
+compute environments, vs.\ $+0.000415$ unmasked). Separately, a
+non-learning lookup table given \emph{direct} access to the true regime
+(which no static comparator has) improves on the best constant policy by
+only $+0.0000277$ --- a fraction of PPO's advantage over the same
+comparator. The result does not depend on oracle information, in either
+direction.
+\item \textbf{Cost realism.} Because dispatch is the added lever, we
+compute a dispatch-inclusive cost sensitivity
+$C(\lambda_d) = C_{\mathrm{shift}} + \lambda_d[(m_{10}-1)_+ + (m_{12}-1)_+]$.
+PPO uses lower average dispatch multipliers ($\approx$1.30/1.27) than the
+best static comparator's constant 2.00/1.50, so once dispatch expediting
+carries even a modest positive charge ($\lambda_d \geq 0.025$), PPO becomes
+significantly cheaper in total, not just more resilient.
+\item \textbf{Generalization.} The frozen canonical policy transfers with
+fully positive, seed-clustered confidence intervals to current- and
+increased-risk regimes at both evaluated horizons, re-validated against
+fully re-optimized per-cell dense static frontiers (not just the training
+regime); severe-risk, service-floor regimes are the disclosed boundary
+case where the policy does not transfer.
+\end{itemize}
+
+\section{Conclusion: what we now believe, and why}
+
+The evidence supports a single, structural explanation that is consistent
+across every parameterization of the upstream decision family we tried ---
+Garrido's own discrete design, our shared-fraction continuous relaxation,
+and our richer per-operation continuous relaxation: \textbf{a learned
+policy cannot convert measurable oracle headroom into a real win as long
+as its action space is confined to decisions upstream of the operational
+bottleneck.} The bottleneck in this MFSC is downstream transport dispatch
+at Op10/Op12, whose capacity is calibrated in the thesis itself to sit
+approximately at demand. Track A's negative result is therefore not an
+artifact of discretization, of action-space dimensionality, or of any
+single learner's tuning --- it survives across three genuinely different
+parameterizations of the same decision family. Track B's positive result
+is not an artifact of adding more actuators, of privileged observation, of
+an unpriced free lever, or of overfitting to one stress regime --- it
+survives four independent, purpose-built adversarial tests. Taken
+together, we believe the central, defensible claim of this benchmark is:
+reinforcement learning improves supply-chain resilience in this model when,
+and only when, the controllable action surface reaches the constraint that
+actually governs recovery.
+
+\end{document}
