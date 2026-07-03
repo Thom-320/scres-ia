@@ -79,8 +79,8 @@ order-level ReT):
 | h52 | current | -- | -- | +0.0003594 |
 | h52 | increased | -- | -- | +0.0005375 |
 | h52 | severe | -- | -- | -0.0000604 |
-| h104 | current | -- | -- | +0.0002089 |
-| h104 | increased | -- | -- | +0.0005516 |
+| h104 | current | 0.005648 | 0.005405 | +0.0002436 |
+| h104 | increased | 0.003660 | 0.003037 | +0.0006234 |
 | h104 | severe | -- | -- | -0.0000747 |
 
 Allowed claim: the result generalizes beyond the designed
@@ -90,6 +90,24 @@ as negative at both tested horizons under the primary-metric comparator
 convention. Do not cite the older h104/severe marginal-positive value or
 the older majority-win count; those came from selecting the per-cell
 comparator by a secondary criterion and are superseded.
+
+Dense-frontier follow-up (2026-07-02/03): both canonical-horizon
+current/increased transfer cells have now been re-run against the full
+147-cell shift x Op10 x Op12 static dispatch frontier at the same CRN plan.
+Artifact:
+`outputs/experiments/track_b_e3_h104_per_cell_dense_frontier_2026-07-02/`.
+For `current/h104`, the best dense static is
+`S3_op10_2.00_op12_1.50` with order-level ReT `0.005405`; frozen PPO remains
+higher at `0.005648` (`Delta=+0.000244`, seed-clustered CI95
+`[+0.000209,+0.000278]`, 5/5 seeds positive), also improving flow fill
+`0.984` vs `0.840` and shift-utilization cost `0.638` vs `1.000`.
+For `increased/h104`, the best dense static is
+`S2_op10_2.00_op12_1.25` with order-level ReT `0.003037`; frozen PPO remains
+higher at `0.003660` (`Delta=+0.000623`, seed-clustered CI95
+`[+0.000584,+0.000663]`, 5/5 seeds positive), with flow fill `0.941` vs
+`0.613`. The dense follow-up strengthens, rather than weakens, the
+current/increased h104 transfer claims; the fixed-comparator caveat now
+applies only to h52 cells and the severe boundary cells.
 
 ### E4 - Action-Space Ablation
 

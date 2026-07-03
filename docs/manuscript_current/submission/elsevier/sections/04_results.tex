@@ -432,8 +432,8 @@ Horizon & Risk level & PPO ReT & Best static & $\Delta$ [CI95] & Seeds $+$ \\
 h52 & current & 0.005316 & 0.004956 & +0.000359 [+0.000313, +0.000406] & 5/5 \\
 h52 & increased & 0.003259 & 0.002721 & +0.000537 [+0.000504, +0.000571] & 5/5 \\
 h52 & severe & 0.000119 & 0.000180 & $-0.000060$ [$-0.000100$, $-0.000021$] & 0/5 \\
-h104 & current & 0.005648 & 0.005439 & +0.000209 [+0.000171, +0.000247] & 5/5 \\
-h104 & increased & 0.003660 & 0.003109 & +0.000552 [+0.000523, +0.000581] & 5/5 \\
+h104 & current & 0.005648 & 0.005405 & +0.000244 [+0.000209, +0.000278] & 5/5 \\
+h104 & increased & 0.003660 & 0.003037 & +0.000623 [+0.000584, +0.000663] & 5/5 \\
 h104 & severe & 0.000128 & 0.000203 & $-0.000075$ [$-0.000145$, $-0.000005$] & 0/5 \\
 \bottomrule
 \end{tabular}
@@ -451,7 +451,7 @@ selected by the primary metric itself --- the Track B advantage is
 positive in four of the six evaluated cells: both current-risk cells and
 both increased-risk cells, in every case with a fully positive
 seed-clustered CI95 and all five per-seed deltas positive. Deltas in the
-increased-risk cells (up to $+0.000552$ at the canonical horizon) exceed
+increased-risk cells (up to $+0.000623$ at the canonical horizon) exceed
 the canonical \texttt{adaptive\_benchmark\_v2} result reported in
 Table~\ref{tab:track_b_main}. The severe-risk regime is the boundary: PPO
 loses narrowly at both horizons ($-0.000060$ at $h{=}52$, $-0.000075$ at
@@ -465,34 +465,33 @@ increased Garrido-native risk at both horizons and does not transfer to
 the severe service-floor regime. For the two canonical-horizon transfer
 cells we additionally re-optimized the \emph{full} 147-cell dense
 dispatch frontier within each cell: PPO remains positive against the
-per-cell dense best static in both (current/h104: $+0.000209$, CI95
-$[+0.000171, +0.000247]$; increased/h104: $+0.000542$, CI95
-$[+0.000500, +0.000584]$; all five seeds positive in each; the wins
-replicate in an independently launched duplicate run with a different
-evaluation plan). The deltas are essentially unchanged from the
-nine-cell screen, indicating the lighter comparator was not inflating
-the transfer claims; the fixed-comparator caveat now applies only to
-the $h{=}52$ cells and the severe service-floor cells. Per-regime
-dense-frontier validation of those remaining cells and severe-regime
-specialization remain future
+per-cell dense best static in both (current/h104: $+0.000244$, CI95
+$[+0.000209, +0.000278]$; increased/h104: $+0.000623$, CI95
+$[+0.000584, +0.000663]$; all five seeds positive in each). The dense
+frontier strengthens, rather than weakens, the two canonical-horizon
+current/increased transfer claims; the fixed-comparator caveat now
+applies only to the $h{=}52$ cells and the severe service-floor cells.
+Per-regime dense-frontier validation of those remaining cells and
+severe-regime specialization remain future
 work.\footnote{An earlier version of this matrix selected the per-cell
 comparator by a secondary criterion, which flipped the $h{=}104$/severe
 cell marginally positive and inflated two other deltas. The
 numbers reported here use the conservative convention (best in-cell
 static by the primary metric) throughout.}
 
-The first full per-cell dense-frontier follow-up confirms the
-\texttt{current}, $h{=}104$ stress-screen result. Re-evaluating all 147
+The per-cell dense-frontier follow-up confirms both canonical-horizon
+current/increased stress-screen results. Re-evaluating all 147
 shift$\times$Op10$\times$Op12 static dispatch policies on the same CRN
-plan selects \texttt{S3}, Op10$\times$2.00, Op12$\times$1.50 as the
-strongest current/h104 static comparator. The frozen PPO policy remains
-higher on order-level ReT (0.005648 vs.\ 0.005405; $\Delta=+0.000244$,
-seed-clustered CI95 $[+0.000219,+0.000268]$, 5/5 seeds positive) while
-also improving flow fill (0.984 vs.\ 0.840) and using less
-shift-utilization cost (0.638 vs.\ 1.000). The corresponding
-\texttt{increased}, $h{=}104$ per-cell dense frontier was still running
-at manuscript build time, so the table above remains the conservative
-six-cell stress matrix until that final cell lands.
+plans selects \texttt{S3}, Op10$\times$2.00, Op12$\times$1.50 as the
+strongest current/h104 static comparator, and \texttt{S2},
+Op10$\times$2.00, Op12$\times$1.25 as the strongest increased/h104
+static comparator. The frozen PPO policy remains higher on order-level
+ReT in both cells (current/h104: 0.005648 vs.\ 0.005405; increased/h104:
+0.003660 vs.\ 0.003037), with fully positive seed-clustered confidence
+intervals and 5/5 positive seed deltas in each. The same comparison also
+preserves the service interpretation: flow fill is higher for PPO in
+both dense-frontier cells (0.984 vs.\ 0.840 for current/h104; 0.941
+vs.\ 0.613 for increased/h104).
 
 As a further check on whether the disruption regime alone, independent of
 the action space, explains the Track B result, we retrain the original

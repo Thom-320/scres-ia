@@ -8,6 +8,9 @@ Configurations:
   joint           — full 8D action space (baseline, unchanged)
   shift_only      — dims 6-7 (op10/op12) frozen at neutral (signal=0 → mult=1.25)
   downstream_only — dim 5 (shift) frozen at S2 (signal=0)
+  post_cdc_only   — dims 0/2 (op3_q, op3_rop) frozen at Garrido baseline (1.0x);
+                    the agent has no authority over the CDC (Op3) itself, only
+                    over Op5/Op9/Op10/Op12 and the shift level
 """
 from __future__ import annotations
 
@@ -62,10 +65,33 @@ class DownstreamOnlyWrapper(gym.ActionWrapper):
         return modified
 
 
+class PostCdcOnlyWrapper(gym.ActionWrapper):
+    """Freeze Op3 (the CDC itself) to its Garrido baseline (1.0x q/ROP).
+
+    The agent keeps authority over Op5/Op9/Op10/Op12 and the shift level, but
+    cannot alter quantity or reorder-point policy at the distribution centre.
+    Dims 0/2 use multiplier = 1.25 + 0.75*x, so x = -1/3 yields exactly 1.0x.
+    """
+
+    _NEUTRAL_SIGNAL = -1.0 / 3.0
+
+    def action(self, action: np.ndarray) -> np.ndarray:
+        if isinstance(action, dict):
+            modified = dict(action)
+            modified["op3_q"] = float(OPERATIONS[3]["q"])
+            modified["op3_rop"] = float(OPERATIONS[3]["rop"])
+            return modified
+        modified = np.array(action, dtype=np.float32)
+        modified[0] = self._NEUTRAL_SIGNAL
+        modified[2] = self._NEUTRAL_SIGNAL
+        return modified
+
+
 ABLATION_CONFIGS = {
     "joint": None,  # No wrapper needed
     "shift_only": ShiftOnlyWrapper,
     "downstream_only": DownstreamOnlyWrapper,
+    "post_cdc_only": PostCdcOnlyWrapper,
 }
 
 

@@ -392,8 +392,8 @@ def fig5_generalization_heatmap() -> None:
     # (docs/track_b_q1_stats_2026-07-02_final/e3_per_cell_seed_ci.csv).
     deltas = np.array(
         [
-            [0.359, 0.209],
-            [0.537, 0.552],
+            [0.359, 0.244],
+            [0.537, 0.623],
             [-0.060, -0.075],
         ]
     )  # order-level ReT delta x 10^-3
@@ -401,7 +401,7 @@ def fig5_generalization_heatmap() -> None:
     cols = ["h52", "h104"]
 
     fig, ax = plt.subplots(figsize=(4.4, 3.2))
-    norm = TwoSlopeNorm(vmin=-0.62, vcenter=0.0, vmax=0.62)
+    norm = TwoSlopeNorm(vmin=-0.66, vcenter=0.0, vmax=0.66)
     # Diverging ramp anchored on the manuscript palette: boundary vermilion
     # for losses, recovery green for gains (replaces off-palette PiYG).
     cmap = LinearSegmentedColormap.from_list("ret_div", [VERMIL, "#ffffff", GREEN])
