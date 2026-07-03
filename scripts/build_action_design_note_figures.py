@@ -69,33 +69,33 @@ def fig_reduction_chain() -> None:
     xs = [0.15 + i * (w + gap) for i in range(4)]
 
     stage(xs[0], w, "Garrido-Rios (2017)",
-          "3 locations $\\times$ 5 discrete\nreplenishment levels\n"
-          "($I_{168}\\ldots I_{1344}$, hours)\n$+$ 3 discrete shifts\n"
-          "one-factor-at-a-time",
+          "3 ubicaciones $\\times$ 5 niveles\ndiscretos de reposición\n"
+          "($I_{168}\\ldots I_{1344}$, horas)\n$+$ 3 turnos discretos\n"
+          "un factor a la vez",
           "#f6f8fa", "0.35")
     stage(xs[1], w, "continuous\\_its (2D)",
-          "one common continuous\nbuffer fraction across\n"
-          "Op3/Op5/Op9\n$+$ 1 continuous shift signal\n"
-          "(early exploratory lane)",
+          "una fracción continua\ncomún de buffer en\n"
+          "Op3/Op5/Op9\n$+$ 1 señal continua de turno\n"
+          "(lane exploratorio inicial)",
           "#eaf1fb", BLUE)
     stage(xs[2], w, "per\\_op\\_buffer (4D)",
-          "3 independent continuous\nbuffer fractions\n"
-          "(Op3, Op5, Op9)\n$+$ 1 continuous shift signal\n"
-          "(Track A headline contract)",
+          "3 fracciones continuas\nindependientes de buffer\n"
+          "(Op3, Op5, Op9)\n$+$ 1 señal continua de turno\n"
+          "(contrato real de Track A)",
           "#eaf5ea", GREEN)
     stage(xs[3], w, "Track B (8D)",
-          "same upstream family\n(multiplier form)\n"
-          "$+$ Op10 dispatch\n$+$ Op12 dispatch\n"
-          "(the winning extension)",
+          "misma familia upstream\n(forma multiplicativa)\n"
+          "$+$ despacho Op10\n$+$ despacho Op12\n"
+          "(la extensión ganadora)",
           "#fdf1df", VERMIL)
 
-    arrow(xs[0] + w + 0.08, xs[1] - 0.08, "de-discretize")
-    arrow(xs[1] + w + 0.08, xs[2] - 0.08, "remove shared-\nfraction limit")
-    arrow(xs[2] + w + 0.08, xs[3] - 0.08, "add dispatch\nauthority")
+    arrow(xs[0] + w + 0.08, xs[1] - 0.08, "de-discretizar")
+    arrow(xs[1] + w + 0.08, xs[2] - 0.08, "quitar restricción\nde fracción común")
+    arrow(xs[2] + w + 0.08, xs[3] - 0.08, "añadir autoridad\nde despacho")
 
     ax.text(8.3, 0.35,
-            "Every stage keeps Garrido's own decision points (buffer levels, shift); "
-            "only Track B adds a genuinely new lever (dispatch).",
+            "Cada etapa conserva los propios puntos de decisión de Garrido (niveles de buffer, turno); "
+            "solo Track B añade una palanca genuinamente nueva (despacho).",
             fontsize=8.2, color="0.3", ha="center", va="bottom")
 
     save(fig, "fig_reduction_chain")
@@ -108,12 +108,12 @@ def fig_dof_comparison() -> None:
     ax.set_ylim(0, 3)
 
     rows = [
-        ("Garrido-Rios (thesis)", "15 discrete buffer configs (3 loc $\\times$ 5 levels) "
-         "+ 3 discrete shifts;\nvaried one-factor-at-a-time (never jointly)", GREY),
-        ("continuous\\_its", "1 continuous buffer fraction (shared) + 1 continuous shift signal;\n"
-         "de-discretized, but forces all 3 locations to move together", BLUE),
-        ("per\\_op\\_buffer (Track A)", "3 independent continuous buffer fractions + 1 continuous "
-         "shift signal;\nGarrido's granularity preserved, DOE grid removed", GREEN),
+        ("Garrido-Rios (tesis)", "15 configuraciones discretas de buffer (3 ubic. $\\times$ 5 niveles) "
+         "+ 3 turnos discretos;\nvariados un factor a la vez (nunca conjuntamente)", GREY),
+        ("continuous\\_its", "1 fracción continua de buffer (compartida) + 1 señal continua de turno;\n"
+         "de-discretizado, pero obliga a las 3 ubicaciones a moverse juntas", BLUE),
+        ("per\\_op\\_buffer (Track A)", "3 fracciones continuas independientes de buffer + 1 señal "
+         "continua de turno;\ngranularidad de Garrido preservada, grilla DOE eliminada", GREEN),
     ]
     y = 2.55
     for label, desc, col in rows:

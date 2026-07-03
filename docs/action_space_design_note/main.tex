@@ -1,6 +1,7 @@
 \documentclass[11pt]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
 \usepackage{lmodern}
 \usepackage[margin=1in]{geometry}
 \usepackage{hyperref}
@@ -16,8 +17,12 @@
 \definecolor{recgreen}{HTML}{009E73}
 \definecolor{stdblue}{HTML}{0072B2}
 
-\title{Action-Space Design in the Garrido-Grounded DES/RL Benchmark:\\
-What We Changed, Why, and What It Produced}
+% Keep decimal points (not Spanish decimal commas) so every number here
+% matches the English manuscript and code artifacts exactly.
+\decimalpoint
+
+\title{Diseño del Espacio de Acciones en el Benchmark DES/RL Fundamentado en Garrido:\\
+Qué Cambiamos, Por Qué, y Qué Produjo}
 \author{}
 \date{}
 
@@ -25,366 +30,400 @@ What We Changed, Why, and What It Produced}
 \maketitle
 
 \begin{abstract}
-\noindent This note documents, precisely and with full traceability to code
-and data, the action-space decisions behind the two experimental lanes of
-our reinforcement-learning benchmark on Garrido-Rios' (2017) military food
-supply chain (MFSC) model. It answers three questions directly: (1) what
-action contract did we actually use, and how does it relate to Garrido's
-original discrete buffer/shift design; (2) why did the resulting learned
-policies fail to beat the best static policy under the original decision
-scope (Track A); and (3) what extension made a learned policy win, and why
-do we believe that result. Every number cited here traces to a dated
-artifact in the project repository; none are illustrative.
+\noindent Esta nota documenta, con precisión y con trazabilidad completa
+al código y a los datos, las decisiones de diseño del espacio de acciones
+detrás de los dos carriles experimentales de nuestro benchmark de
+aprendizaje por refuerzo sobre el modelo de cadena de suministro de
+alimentos militar (MFSC) de Garrido-Rios (2017). Responde tres preguntas
+directamente: (1) qué contrato de acciones usamos realmente, y cómo se
+relaciona con el diseño discreto original de Garrido de buffer/turno; (2)
+por qué las políticas aprendidas resultantes no lograron superar a la
+mejor política estática bajo el alcance de decisión original (Track A); y
+(3) qué extensión logró que una política aprendida ganara, y por qué
+creemos ese resultado. Cada número citado aquí traza a un artefacto
+fechado en el repositorio del proyecto; ninguno es ilustrativo.
 \end{abstract}
 
-\section{Purpose}
+\section{Propósito}
 
-Garrido-Rios' thesis studies two decision families for the MFSC: strategic
-inventory buffers at three points in the chain (Op3, Op5, Op9) and
-short-term manufacturing capacity via assembly shifts. Both were varied
-\emph{discretely} and \emph{one factor at a time} in the original design of
-experiments (DOE). Our starting proposal --- communicated directly to
-Garrido --- was that this design-of-experiments grid could be replaced by a
-much smaller, continuous parameterization: one continuous buffer variable
-and one (effectively discrete, three-level) shift variable, instead of the
-original 15 buffer configurations and 3 shift levels examined separately.
-This note explains exactly what we built from that idea, what happened
-when we trained a learned policy on it, why it did not win, and what we
-changed afterward to obtain a genuine, robustly-tested win.
+La tesis de Garrido-Rios estudia dos familias de decisión para el MFSC:
+buffers de inventario estratégicos en tres puntos de la cadena (Op3, Op5,
+Op9) y capacidad de manufactura de corto plazo mediante turnos de
+ensamble. Ambas se variaron de forma \emph{discreta} y \emph{un factor a
+la vez} en el diseño de experimentos (DOE) original. Nuestra propuesta
+inicial --- comunicada directamente a Garrido --- fue que esta grilla de
+diseño de experimentos podía reemplazarse por una parametrización
+continua mucho más pequeña: una variable continua de buffer y una
+variable de turno (efectivamente discreta, de tres niveles), en lugar de
+las 15 configuraciones de buffer y 3 niveles de turno originales
+examinados por separado. Esta nota explica exactamente qué construimos a
+partir de esa idea, qué ocurrió al entrenar una política aprendida sobre
+ella, por qué no ganó, y qué cambiamos después para obtener una victoria
+genuina y robustamente probada.
 
-\section{Garrido-Rios' original decision variables}
+\section{Las variables de decisión originales de Garrido-Rios}
 \label{sec:garrido}
 
-Table~\ref{tab:garrido_design} summarizes the thesis' design (Chapter 6,
-Scenarios II--III). Three locations (Op3: raw-material warehouse, Op5:
-pre-assembly buffer, Op9: ration supply battalion) can each hold a
-strategic inventory buffer, replenished at one of five fixed intervals.
-Separately, the assembly line can run at one of three shift levels. The
-two families were never varied jointly: Scenario II fixes $S=1$ and varies
-buffer levels (configurations Cf31--Cf60); Scenario III fixes buffer at
-zero and varies shift level (Cf61--Cf90). This is a valid, efficient
-one-factor-at-a-time DOE for a discrete-event simulation study, but it
-means the thesis never directly observed what happens when buffer and
-shift are adjusted together, and it never expressed either variable on a
-continuous scale.
+La Tabla~\ref{tab:garrido_design} resume el diseño de la tesis (Capítulo
+6, Escenarios II--III). Tres ubicaciones (Op3: almacén de materia prima,
+Op5: buffer de pre-ensamble, Op9: batallón de suministro de raciones)
+pueden cada una mantener un buffer de inventario estratégico, reabastecido
+en uno de cinco intervalos fijos. Por separado, la línea de ensamble puede
+operar en uno de tres niveles de turno. Las dos familias nunca se variaron
+conjuntamente: el Escenario II fija $S=1$ y varía los niveles de buffer
+(configuraciones Cf31--Cf60); el Escenario III fija el buffer en cero y
+varía el nivel de turno (Cf61--Cf90). Este es un DOE válido y eficiente,
+un factor a la vez, para un estudio de simulación de eventos discretos,
+pero significa que la tesis nunca observó directamente qué ocurre cuando
+buffer y turno se ajustan juntos, y nunca expresó ninguna de las dos
+variables en una escala continua.
 
 \begin{table}[htbp]
 \centering
-\caption{Garrido-Rios (2017) buffer/shift design (Tables 6.16, 6.20--6.23).
-Buffer quantities in rations/raw-material units; interval in hours.}
+\caption{Diseño de buffer/turno de Garrido-Rios (2017) (Tablas 6.16,
+6.20--6.23). Cantidades de buffer en unidades de raciones/materia prima;
+intervalo en horas.}
 \label{tab:garrido_design}
 \small
 \begin{tabular}{lccccc}
 \toprule
-Interval (h) & 168 & 336 & 504 & 672 & 1{,}344 \\
+Intervalo (h) & 168 & 336 & 504 & 672 & 1{,}344 \\
 \midrule
-Op3 (raw material) & 15{,}360 & 30{,}720 & 46{,}080 & 61{,}440 & 122{,}880 \\
-Op5 (pre-assembly) & 15{,}360 & 30{,}720 & 46{,}080 & 61{,}440 & 122{,}880 \\
-Op9 (rations) & 15{,}750 & 31{,}500 & 47{,}250 & 63{,}000 & 126{,}000 \\
+Op3 (materia prima) & 15{,}360 & 30{,}720 & 46{,}080 & 61{,}440 & 122{,}880 \\
+Op5 (pre-ensamble) & 15{,}360 & 30{,}720 & 46{,}080 & 61{,}440 & 122{,}880 \\
+Op9 (raciones) & 15{,}750 & 31{,}500 & 47{,}250 & 63{,}000 & 126{,}000 \\
 \bottomrule
 \end{tabular}
 
 \vspace{0.4em}
 \begin{tabular}{lccc}
 \toprule
-Shift level $S$ & 1 & 2 & 3 \\
+Nivel de turno $S$ & 1 & 2 & 3 \\
 \midrule
-Annual capacity (rations) & 738{,}432 & 1{,}476{,}864 & 2{,}215{,}296 \\
+Capacidad anual (raciones) & 738{,}432 & 1{,}476{,}864 & 2{,}215{,}296 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-This gives $3 \times 5 = 15$ discrete buffer configurations and 3 discrete
-shift levels --- the ``15 buffers and 3 shifts'' referred to in our
-discussion with Garrido --- examined one factor at a time (30 buffer
-configurations across the two replicate/risk blocks plus 30 shift
-configurations, Cf31--Cf90 in the thesis' numbering).
+Esto da $3 \times 5 = 15$ configuraciones discretas de buffer y 3 niveles
+discretos de turno --- los ``15 buffers y 3 turnos'' a los que nos
+referimos en nuestra conversación con Garrido --- examinados un factor a
+la vez (30 configuraciones de buffer a través de los dos bloques de
+réplica/riesgo, más 30 configuraciones de turno, Cf31--Cf90 en la
+numeración de la tesis).
 
-\section{From Garrido's grid to a trainable action space}
+\section{De la grilla de Garrido a un espacio de acciones entrenable}
 \label{sec:reduction}
 
-A reinforcement-learning agent needs a differentiable, low-cardinality
-action interface; training directly on Garrido's 15-cell buffer grid (or
-worse, the full $15 \times 3 = 45$-cell joint grid he never populated)
-would starve a policy-gradient method of usable signal between grid
-points. The reduction we proposed to Garrido, and the further refinement
-we made after testing it, proceeded in three steps (Figure~\ref{fig:chain}).
+Un agente de aprendizaje por refuerzo necesita una interfaz de acciones
+diferenciable y de baja cardinalidad; entrenar directamente sobre la
+grilla de 15 celdas de buffer de Garrido (o peor, la grilla conjunta
+completa de $15 \times 3 = 45$ celdas que él nunca pobló) dejaría a un
+método de gradiente de política sin señal útil entre puntos de la grilla.
+La reducción que propusimos a Garrido, y el refinamiento posterior que
+hicimos tras probarla, procedió en tres pasos (Figura~\ref{fig:chain}).
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\linewidth]{fig_reduction_chain}
-\caption{The action-space reduction chain actually implemented, from
-Garrido's discrete design of experiments to the two experimental lanes of
-the paper. Every stage keeps Garrido's own decision points; only the final
-stage (Track B) adds a genuinely new lever.}
+\caption{La cadena de reducción del espacio de acciones realmente
+implementada, desde el diseño de experimentos discreto de Garrido hasta
+los dos carriles experimentales del paper. Cada etapa conserva los propios
+puntos de decisión de Garrido; solo la etapa final (Track B) añade una
+palanca genuinamente nueva.}
 \label{fig:chain}
 \end{figure}
 
-\subsection{Step 1: \texttt{continuous\_its} --- the idea we proposed}
+\subsection{Paso 1: \texttt{continuous\_its} --- la idea que propusimos}
 
-Our first implementation (\texttt{continuous\_its\_env.py},
-contract \texttt{track\_a\_continuous\_its\_v1}) is exactly the
-simplification described to Garrido: a single continuous scalar
-$f \in [0,1]$, representing the fraction of the largest buffer level
-($I_{1{,}344}$) applied \emph{commonly} to Op3, Op5, and Op9 simultaneously,
-plus a single continuous shift signal mapped through fixed thresholds to
-$S \in \{1,2,3\}$. This is a genuine two-dimensional action space: one
-buffer dial, one shift dial. An early, small-scale screen (2 training
-seeds) showed a promising adaptive signal on Excel ReT and CVaR, but a
-3-seed confirmatory rerun and a subsequent dense common-random-number
-(CRN) evaluation against a matching static frontier both failed to
-reproduce it: the apparent win did not survive denser, fairer
-static comparison. We record this honestly as an unconfirmed, superseded
-exploratory lane, not as evidence for or against the central claim.
+Nuestra primera implementación (\texttt{continuous\_its\_env.py},
+contrato \texttt{track\_a\_continuous\_its\_v1}) es exactamente la simplificación
+descrita a Garrido: un único escalar continuo $f \in [0,1]$, que
+representa la fracción del nivel de buffer más grande ($I_{1{,}344}$)
+aplicada \emph{en común} a Op3, Op5 y Op9 simultáneamente, más una única
+señal continua de turno mapeada mediante umbrales fijos a
+$S \in \{1,2,3\}$. Este es un espacio de acciones genuinamente
+bidimensional: un dial de buffer, un dial de turno. Un tamizaje temprano a
+pequeña escala (2 semillas de entrenamiento) mostró una señal adaptativa
+prometedora en Excel ReT y CVaR, pero una repetición confirmatoria de 3
+semillas y una evaluación posterior de números aleatorios comunes (CRN)
+densa contra una frontera estática equivalente fallaron en reproducirla:
+la aparente victoria no sobrevivió una comparación estática más densa y
+justa. Registramos esto honestamente como un carril exploratorio no
+confirmado y superado, no como evidencia a favor ni en contra de la
+afirmación central.
 
-\subsection{Step 2: \texttt{per\_op\_buffer} --- the actual Track A
-contract}
+\subsection{Paso 2: \texttt{per\_op\_buffer} --- el contrato real de Track A}
 
-The single shared buffer fraction in Step 1 has a real limitation: it
-forces the policy to raise or lower inventory at Op3, Op5, and Op9
-together, even though Garrido's own design treats them as three
-independent decision points. We removed this constraint
-(\texttt{supply\_chain/continuous\_its\_env.py}, class
-\texttt{PerOpBufferTrackAEnv}, contract
-\texttt{track\_a\_per\_op\_buffer\_v1}): the action space becomes
+La fracción única y compartida de buffer del Paso 1 tiene una limitación
+real: obliga a la política a subir o bajar el inventario en Op3, Op5 y Op9
+en conjunto, aun cuando el propio diseño de Garrido trata estos puntos
+como tres decisiones independientes. Eliminamos esta restricción
+(\texttt{supply\_chain/continuous\_its\_env.py}, clase
+\texttt{PerOpBufferTrackAEnv}, contrato
+\texttt{track\_a\_per\_op\_buffer\_v1}): el espacio de acciones se
+convierte en
 \begin{equation}
 a = (f_{\mathrm{Op3}},\, f_{\mathrm{Op5}},\, f_{\mathrm{Op9}},\, s) \in [0,1]^3 \times [-1,1],
 \end{equation}
-three independent continuous buffer-target fractions (each still expressed
-relative to Garrido's own $I_{1{,}344}$ scale from Table~\ref{tab:garrido_design})
-plus one continuous shift signal --- four dimensions in total. This is the
-contract actually used for the paper's Track A headline result
-(Section~\ref{sec:tracka}): it is strictly richer than the shared-fraction
-version, and it preserves every one of Garrido's own decision points while
-removing both his discretization into five fixed levels \emph{and} the
-one-factor-at-a-time restriction (buffer and shift are now free to move
-together). Table~\ref{tab:dof} compares the three designs directly.
+tres fracciones continuas independientes de buffer objetivo (cada una
+expresada aún en relación con la propia escala $I_{1{,}344}$ de Garrido de
+la Tabla~\ref{tab:garrido_design}) más una señal continua de turno ---
+cuatro dimensiones en total. Este es el contrato realmente usado para el
+resultado principal de Track A en el paper (Sección~\ref{sec:tracka}): es
+estrictamente más rico que la versión de fracción compartida, y preserva
+cada uno de los puntos de decisión propios de Garrido mientras elimina
+tanto su discretización en cinco niveles fijos \emph{como} la restricción
+de un factor a la vez (buffer y turno ahora pueden moverse juntos
+libremente). La Tabla~\ref{tab:dof} compara los tres diseños directamente.
 
 \begin{table}[htbp]
 \centering
-\caption{Degrees of freedom, Garrido's design vs.\ our two continuous
-reductions.}
+\caption{Grados de libertad: el diseño de Garrido frente a nuestras dos
+reducciones continuas.}
 \label{tab:dof}
 \small
 \begin{tabular}{p{0.22\linewidth}p{0.72\linewidth}}
 \toprule
-Design & Decision variables \\
+Diseño & Variables de decisión \\
 \midrule
-Garrido-Rios (thesis) & 15 discrete buffer configurations (3 locations
-$\times$ 5 levels) + 3 discrete shift levels; varied one factor at a time \\
-\texttt{continuous\_its} & 1 continuous buffer fraction (shared across all
-three locations) + 1 continuous shift signal; de-discretized, but the
-three locations cannot be set independently \\
-\texttt{per\_op\_buffer} (Track A) & 3 independent continuous buffer
-fractions (Op3, Op5, Op9) + 1 continuous shift signal; Garrido's full
-granularity preserved, discretization removed \\
+Garrido-Rios (tesis) & 15 configuraciones discretas de buffer (3
+ubicaciones $\times$ 5 niveles) + 3 niveles discretos de turno; variados
+un factor a la vez \\
+\texttt{continuous\_its} & 1 fracción continua de buffer (compartida entre
+las tres ubicaciones) + 1 señal continua de turno; de-discretizado, pero
+las tres ubicaciones no pueden fijarse de forma independiente \\
+\texttt{per\_op\_buffer} (Track A) & 3 fracciones continuas independientes
+de buffer (Op3, Op5, Op9) + 1 señal continua de turno; granularidad
+completa de Garrido preservada, discretización eliminada \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\section{Track A: why the continuous relaxation still does not win}
+\section{Track A: por qué la relajación continua tampoco gana}
 \label{sec:tracka}
 
-Before training any learner, we first asked whether the \emph{static}
-decision space itself contains exploitable structure: a regime-conditioned
-oracle (the best buffer/shift combination \emph{per disruption regime}) is
-compared against the single best regime-agnostic constant policy over a
-dense grid (five risk families $\times$ five frequency multipliers
-$\times$ three impact multipliers). The oracle beats the best constant
-policy by \textbf{+0.000176 to +0.000296 Excel ReT} (95\% CI lower bound
-positive) --- a small but genuine, non-zero headroom. The question that
-matters is whether a learned policy can capture it.
+Antes de entrenar cualquier agente, primero preguntamos si el propio
+espacio de decisión \emph{estático} contiene estructura explotable: se
+compara un oráculo condicionado al régimen (la mejor combinación de
+buffer/turno \emph{por régimen de disrupción}) contra la única mejor
+política constante independiente del régimen sobre una grilla densa (cinco
+familias de riesgo $\times$ cinco multiplicadores de frecuencia $\times$
+tres multiplicadores de impacto). El oráculo supera a la mejor política
+constante por \textbf{+0.000176 a +0.000296 Excel ReT} (límite inferior
+del IC del 95\% positivo) --- un margen pequeño pero genuino y distinto de
+cero. La pregunta relevante es si una política aprendida puede capturarlo.
 
-None of the tested learners do. We tried continuous PPO directly on the
-\texttt{per\_op\_buffer} contract, PPO warm-started via behavior cloning on
-the oracle's own action table, and PPO trained under a
-family-conflict variant of the same contract with a
-\texttt{ReT\_excel\_plus\_cvar} reward (5 seeds). The closest approach ---
-behavior-cloning-warm-started PPO --- misses the best static comparator by
+Ninguno de los agentes probados lo logra. Probamos PPO continuo
+directamente sobre el contrato \texttt{per\_op\_buffer}, PPO
+pre-entrenado mediante clonación de comportamiento sobre la propia tabla
+de acciones del oráculo, y PPO entrenado bajo una variante de
+conflicto-de-familia del mismo contrato con recompensa
+\texttt{ReT\_excel\_plus\_cvar} (5 semillas). El enfoque más cercano ---
+PPO pre-entrenado por clonación de comportamiento --- falla en igualar al
+mejor comparador estático por
 \[
 -6.99\times10^{-6}\ \text{Excel ReT} \quad (0.155247\ \text{vs.}\ 0.155254),
 \]
-a gap two orders of magnitude smaller than the measured oracle headroom,
-and is Pareto-dominated by ten static configurations on the joint
-Excel-ReT/resource frontier (Table~\ref{tab:tracka}).
+una brecha dos órdenes de magnitud menor que el margen de oráculo medido,
+y está Pareto-dominado por diez configuraciones estáticas en la frontera
+conjunta de Excel ReT/recurso (Tabla~\ref{tab:tracka}).
 
 \begin{table}[htbp]
 \centering
-\caption{Track A boundary summary. Values are Excel ReT under the Track A
-evaluation family; oracle headroom uses the same metric.}
+\caption{Resumen de frontera de Track A. Los valores son Excel ReT bajo la
+familia de evaluación de Track A; el margen del oráculo usa la misma
+métrica.}
 \label{tab:tracka}
 \small
 \begin{tabular}{p{0.28\linewidth}p{0.14\linewidth}p{0.16\linewidth}p{0.28\linewidth}}
 \toprule
-Policy family & Best learned & Best static & Outcome \\
+Familia de política & Mejor aprendida & Mejor estática & Resultado \\
 \midrule
-PPO (continuous, repaired) & 0.155247 & 0.155254 & loses ($-7.0\times10^{-6}$) \\
-BC-warm-started PPO & 0.155247 & 0.155254 & loses; Pareto-dominated \\
-Regime-conditioned oracle & --- & $+0.000176$ to $+0.000296$ & headroom exists, unconverted \\
+PPO (continuo, reparado) & 0.155247 & 0.155254 & pierde ($-7.0\times10^{-6}$) \\
+PPO pre-entrenado por BC & 0.155247 & 0.155254 & pierde; Pareto-dominado \\
+Oráculo condicionado al régimen & --- & $+0.000176$ a $+0.000296$ &
+margen existe, no convertido \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\subsection{The structural reason}
+\subsection{La razón estructural}
 
-The reason is not that the buffer/shift decision space is poorly
-parameterized. It is that the decision the agent controls is not the
-constraint that governs recovery. Figure~\ref{fig:topology} marks the
-binding bottleneck directly on the MFSC topology: downstream transport
-throughput at Op10 and Op12 (line-of-communication dispatch to the combat
-service support units and onward to theatre) runs at approximately 2,400--2,600
-rations/day --- essentially equal to demand. Once a modest buffer is in
-place, additional upstream inventory or additional assembly-line capacity
-from a higher shift level cannot increase what actually reaches the
-theatre, because the downstream pipe is already running near its ceiling.
-Buffer and shift levers, however finely parameterized, sit entirely
-upstream of this constraint. This is a direct instance of the
-Theory-of-Constraints principle that system throughput is governed by its
-binding constraint, not by average-case improvement elsewhere in the
-chain --- and it explains why \emph{every} tested parameterization of the
-buffer/shift family (discrete, shared-fraction continuous, and per-operation
-continuous) converges to the same negative result.
+La razón no es que el espacio de decisión buffer/turno esté mal
+parametrizado. Es que la decisión que controla el agente no es la
+restricción que gobierna la recuperación. La Figura~\ref{fig:topology}
+marca el cuello de botella vinculante directamente sobre la topología del
+MFSC: el rendimiento de transporte aguas abajo en Op10 y Op12 (despacho de
+línea de comunicación hacia las unidades de apoyo de servicio de combate y
+de ahí al teatro) opera en aproximadamente 2{,}400--2{,}600 raciones/día
+--- esencialmente igual a la demanda. Una vez que hay un buffer modesto en
+su lugar, inventario adicional aguas arriba o capacidad adicional de línea
+de ensamble desde un nivel de turno más alto no pueden aumentar lo que
+realmente llega al teatro, porque la tubería aguas abajo ya opera cerca de
+su techo. Las palancas de buffer y turno, sin importar cuán finamente se
+parametricen, se ubican enteramente aguas arriba de esta restricción. Esta
+es una instancia directa del principio de la Teoría de Restricciones: el
+rendimiento del sistema está gobernado por su restricción vinculante, no
+por la mejora del caso promedio en otro punto de la cadena --- y explica
+por qué \emph{toda} parametrización probada de la familia buffer/turno
+(discreta, continua de fracción compartida, y continua por operación)
+converge al mismo resultado negativo.
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\linewidth]{fig2_mfsc_topology}
-\caption{The MFSC topology with the Track A control surface (buffer
-$\bigtriangleup$, shift $\bullet$) and the Track B addition (dispatch
-$\diamondsuit$, Op10/Op12) marked directly on the operations they act on.
-The bracket marks the binding recovery bottleneck: downstream dispatch
-capacity approximately equals demand.}
+\caption{La topología del MFSC con la superficie de control de Track A
+(buffer $\bigtriangleup$, turno $\bullet$) y la adición de Track B
+(despacho $\diamondsuit$, Op10/Op12) marcadas directamente sobre las
+operaciones en las que actúan. El corchete marca el cuello de botella
+vinculante de recuperación: la capacidad de despacho aguas abajo iguala
+aproximadamente a la demanda. (Figura reproducida del manuscrito en
+inglés; las etiquetas se mantienen en el idioma original de envío.)}
 \label{fig:topology}
 \end{figure}
 
-\section{Track B: adding the one lever that reaches the bottleneck}
+\section{Track B: añadiendo la única palanca que alcanza el cuello de botella}
 \label{sec:trackb}
 
-Track B keeps every Track A decision variable and adds exactly the lever
-that Section~\ref{sec:tracka} identifies as missing: transport dispatch
-authority at Op10 and Op12. For this lane we also switched the upstream
-parameterization from buffer \emph{fractions} to per-operation
-\emph{multipliers} on order quantity and reorder point (a richer, six-dimensional
-version of the same upstream family), so that the two new dispatch
-dimensions could be added in the same multiplicative form
-(Table~\ref{tab:action_contract}). The switch in upstream parameterization
-is not what produces the result below --- Section~\ref{sec:tracka} already
-showed that no parameterization of the upstream family alone wins --- it
-is a modeling convenience for attaching the dispatch dimensions
-consistently.
+Track B conserva cada variable de decisión de Track A y añade exactamente
+la palanca que la Sección~\ref{sec:tracka} identifica como faltante:
+autoridad de despacho de transporte en Op10 y Op12. Para este carril
+también cambiamos la parametrización aguas arriba de \emph{fracciones} de
+buffer a \emph{multiplicadores} por operación sobre cantidad de pedido y
+punto de reorden (una versión más rica, de seis dimensiones, de la misma
+familia aguas arriba), de modo que las dos nuevas dimensiones de despacho
+pudieran añadirse en la misma forma multiplicativa
+(Tabla~\ref{tab:action_contract}). El cambio en la parametrización aguas
+arriba no es lo que produce el resultado a continuación --- la
+Sección~\ref{sec:tracka} ya mostró que ninguna parametrización de la
+familia aguas arriba por sí sola gana --- es una conveniencia de modelado
+para adjuntar las dimensiones de despacho de forma consistente.
 
 \begin{table}[htbp]
 \centering
-\caption{\texttt{track\_b\_v1} action contract (8 dimensions). Raw policy
-outputs $x_i \in [-1,1]$ are decoded per dimension; multipliers scale the
-thesis base parameters.}
+\caption{Contrato de acciones \texttt{track\_b\_v1} (8 dimensiones). Las
+salidas crudas de la política $x_i \in [-1,1]$ se decodifican por
+dimensión; los multiplicadores escalan los parámetros base de la tesis.}
 \label{tab:action_contract}
 \small
 \begin{tabular}{c p{0.32\linewidth} c c}
 \toprule
-Dim & Decision variable & Decode & Effective range \\
+Dim & Variable de decisión & Decodificación & Rango efectivo \\
 \midrule
-1 & Op3 order quantity mult. & $1.25+0.75x$ & $[0.5,2.0]\times 15{,}500$ units \\
-2 & Op9 order quantity mult. & $1.25+0.75x$ & $[0.5,2.0]\times U(2{,}400,2{,}600)$ \\
-3 & Op3 reorder point mult. & $1.25+0.75x$ & $[0.5,2.0]\times 168$ h \\
-4 & Op9 reorder point mult. & $1.25+0.75x$ & $[0.5,2.0]\times 24$ h \\
-5 & Op5 pre-assembly qty mult. & $1.0+0.5x$ & $[0.5,1.5]$ \\
-6 & assembly shifts $s_t$ & thresholds at $\pm\tfrac13$ & $\{1,2,3\}$ \\
-\textbf{7} & \textbf{Op10 dispatch mult.} & $1.25+0.75x$ & $[0.5,2.0]\times U(2{,}400,2{,}600)$ \\
-\textbf{8} & \textbf{Op12 dispatch mult.} & $1.25+0.75x$ & $[0.5,2.0]\times U(2{,}400,2{,}600)$ \\
+1 & Mult. cantidad de pedido Op3 & $1.25+0.75x$ & $[0.5,2.0]\times 15{,}500$ unid. \\
+2 & Mult. cantidad de pedido Op9 & $1.25+0.75x$ & $[0.5,2.0]\times U(2{,}400,2{,}600)$ \\
+3 & Mult. punto de reorden Op3 & $1.25+0.75x$ & $[0.5,2.0]\times 168$ h \\
+4 & Mult. punto de reorden Op9 & $1.25+0.75x$ & $[0.5,2.0]\times 24$ h \\
+5 & Mult. cant. pre-ensamble Op5 & $1.0+0.5x$ & $[0.5,1.5]$ \\
+6 & Turnos de ensamble $s_t$ & umbrales en $\pm\tfrac13$ & $\{1,2,3\}$ \\
+\textbf{7} & \textbf{Mult. despacho Op10} & $1.25+0.75x$ & $[0.5,2.0]\times U(2{,}400,2{,}600)$ \\
+\textbf{8} & \textbf{Mult. despacho Op12} & $1.25+0.75x$ & $[0.5,2.0]\times U(2{,}400,2{,}600)$ \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\subsection{Result}
+\subsection{Resultado}
 
-Under the canonical confirmatory protocol (10 training seeds, 60{,}000
-timesteps each, 12 CRN evaluation episodes per seed, paired against the
-best of 147 dense static dispatch configurations), PPO improves Excel ReT
-by
+Bajo el protocolo confirmatorio canónico (10 semillas de entrenamiento,
+60{,}000 pasos de tiempo cada una, 12 episodios de evaluación CRN por
+semilla, comparado contra la mejor de 147 configuraciones estáticas
+densas de despacho), PPO mejora el Excel ReT en
 \[
 +0.000438\ \text{(Excel ReT }0.005898\text{ vs.\ }0.005460\text{)},
-\qquad \text{95\% CI } [+0.000409, +0.000468],
+\qquad \text{IC 95\% } [+0.000409, +0.000468],
 \]
-with all ten per-seed mean deltas individually positive. The same policy
-also produces much larger-magnitude gains in flow fill (0.961 vs.\ 0.669),
-the recovery-tail cycle time $CT_j$ p99 (1{,}207\,h vs.\ 8{,}113\,h), and
-service-loss AUC (an order-of-magnitude reduction). Figure~\ref{fig:pareto}
-shows the policy relative to the entire static dispatch family: it is not
-a strict cost win, but it dominates every one of the 147 static
-configurations on the joint resilience/recovery-tail frontier.
+con las diez medias por semilla individualmente positivas. La misma
+política también produce ganancias de magnitud mucho mayor en tasa de
+llenado de flujo (0.961 vs.\ 0.669), el tiempo de ciclo de la cola de
+recuperación $CT_j$ p99 (1{,}207\,h vs.\ 8{,}113\,h), y el AUC de pérdida
+de servicio (una reducción de un orden de magnitud). La
+Figura~\ref{fig:pareto} muestra la política en relación con toda la
+familia estática de despacho: no es una victoria estricta en costo, pero
+domina cada una de las 147 configuraciones estáticas en la frontera
+conjunta de resiliencia/cola de recuperación.
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.85\linewidth]{fig4_pareto_ret_tail_ctj}
-\caption{Track B ReT--tail trade-off, canonical CRN protocol. PPO (star)
-dominates the entire 147-policy static dispatch family on Excel ReT and
-the $CT_j$ p99 recovery tail simultaneously.}
+\caption{Compensación ReT--cola de Track B, protocolo CRN canónico. PPO
+(estrella) domina a toda la familia de 147 políticas estáticas de
+despacho simultáneamente en Excel ReT y en la cola de recuperación $CT_j$
+p99. (Figura reproducida del manuscrito en inglés.)}
 \label{fig:pareto}
 \end{figure}
 
-\section{Why we believe this result}
+\section{Por qué creemos este resultado}
 
-The Track B win is not accepted on the strength of the headline number
-alone. Four separate adversarial checks were run specifically to rule out
-the most common alternative explanations for an RL win in a simulated
-environment, and all four are consistent with the win being genuine and
-attributable to the added dispatch authority specifically:
+La victoria de Track B no se acepta solo por la fuerza del número
+principal. Se ejecutaron cuatro chequeos adversariales independientes,
+diseñados específicamente para descartar las explicaciones alternativas
+más comunes de una victoria de RL en un entorno simulado, y los cuatro son
+consistentes con que la victoria sea genuina y atribuible específicamente
+a la autoridad de despacho añadida:
 
 \begin{itemize}
-\item \textbf{More actuators, not more authority?} An action-space
-ablation (5 seeds, matched scale) compares the full 8D contract against
-downstream-dispatch-only (shift frozen) and shift-only (dispatch frozen)
-variants. The downstream-only arm captures the \emph{largest} advantage
-over its own best comparator ($+0.000429$), exceeding the full joint
-contract ($+0.000367$); shift-only captures a comparable gain to joint
-($+0.000377$). The gain does not scale with the number of controllable
-dimensions --- it concentrates in access to the dispatch lever
-specifically.
-\item \textbf{Privileged simulator information?} We retrained PPO with the
-seven observation fields that reveal the true disruption regime and its
-forecast masked to zero; the masked policy retains approximately 95\% of
-the canonical advantage ($+0.000403$/$+0.000395$ across two independent
-compute environments, vs.\ $+0.000415$ unmasked). Separately, a
-non-learning lookup table given \emph{direct} access to the true regime
-(which no static comparator has) improves on the best constant policy by
-only $+0.0000277$ --- a fraction of PPO's advantage over the same
-comparator. The result does not depend on oracle information, in either
-direction.
-\item \textbf{Cost realism.} Because dispatch is the added lever, we
-compute a dispatch-inclusive cost sensitivity
-$C(\lambda_d) = C_{\mathrm{shift}} + \lambda_d[(m_{10}-1)_+ + (m_{12}-1)_+]$.
-PPO uses lower average dispatch multipliers ($\approx$1.30/1.27) than the
-best static comparator's constant 2.00/1.50, so once dispatch expediting
-carries even a modest positive charge ($\lambda_d \geq 0.025$), PPO becomes
-significantly cheaper in total, not just more resilient.
-\item \textbf{Generalization.} The frozen canonical policy transfers with
-fully positive, seed-clustered confidence intervals to current- and
-increased-risk regimes at both evaluated horizons, re-validated against
-fully re-optimized per-cell dense static frontiers (not just the training
-regime); severe-risk, service-floor regimes are the disclosed boundary
-case where the policy does not transfer.
+\item \textbf{\textquestiondown Más actuadores, no más autoridad?} Una ablación del espacio
+de acciones (5 semillas, misma escala) compara el contrato completo de 8D
+contra variantes de solo-despacho-aguas-abajo (turno congelado) y
+solo-turno (despacho congelado). El brazo de solo-despacho captura la
+\emph{mayor} ventaja sobre su propio mejor comparador ($+0.000429$),
+superando al contrato conjunto completo ($+0.000367$); solo-turno captura
+una ganancia comparable a la conjunta ($+0.000377$). La ganancia no
+escala con el número de dimensiones controlables --- se concentra en el
+acceso a la palanca de despacho específicamente.
+\item \textbf{\textquestiondown Información privilegiada del simulador?} Reentrenamos PPO
+con los siete campos de observación que revelan el verdadero régimen de
+disrupción y su pronóstico puestos en cero; la política enmascarada
+retiene aproximadamente el 95\% de la ventaja canónica ($+0.000403$/
+$+0.000395$ en dos entornos de cómputo independientes, frente a
+$+0.000415$ sin enmascarar). Por separado, una tabla de consulta sin
+aprendizaje con acceso \emph{directo} al régimen verdadero (que ningún
+comparador estático tiene) mejora a la mejor política constante en solo
+$+0.0000277$ --- una fracción de la ventaja de PPO sobre el mismo
+comparador. El resultado no depende de información de oráculo, en
+ninguna dirección.
+\item \textbf{Realismo de costo.} Dado que el despacho es la palanca
+añadida, calculamos una sensibilidad de costo que incluye el despacho,
+$C(\lambda_d) = C_{\mathrm{turno}} + \lambda_d[(m_{10}-1)_+ + (m_{12}-1)_+]$.
+PPO usa multiplicadores de despacho promedio más bajos ($\approx$1.30/1.27)
+que el comparador estático constante 2.00/1.50 del mejor estático, así que
+en cuanto el despacho acelerado tiene incluso un cargo positivo modesto
+($\lambda_d \geq 0.025$), PPO se vuelve significativamente más barato en
+total, no solo más resiliente.
+\item \textbf{Generalización.} La política congelada canónica transfiere
+con intervalos de confianza agrupados por semilla completamente positivos
+a regímenes de riesgo actual e incrementado en ambos horizontes evaluados,
+revalidados contra fronteras estáticas densas por celda completamente
+re-optimizadas (no solo el régimen de entrenamiento); los regímenes de
+riesgo severo, de piso de servicio, son el caso de frontera revelado donde
+la política no transfiere.
 \end{itemize}
 
-\section{Conclusion: what we now believe, and why}
+\section{Conclusión: qué creemos ahora, y por qué}
 
-The evidence supports a single, structural explanation that is consistent
-across every parameterization of the upstream decision family we tried ---
-Garrido's own discrete design, our shared-fraction continuous relaxation,
-and our richer per-operation continuous relaxation: \textbf{a learned
-policy cannot convert measurable oracle headroom into a real win as long
-as its action space is confined to decisions upstream of the operational
-bottleneck.} The bottleneck in this MFSC is downstream transport dispatch
-at Op10/Op12, whose capacity is calibrated in the thesis itself to sit
-approximately at demand. Track A's negative result is therefore not an
-artifact of discretization, of action-space dimensionality, or of any
-single learner's tuning --- it survives across three genuinely different
-parameterizations of the same decision family. Track B's positive result
-is not an artifact of adding more actuators, of privileged observation, of
-an unpriced free lever, or of overfitting to one stress regime --- it
-survives four independent, purpose-built adversarial tests. Taken
-together, we believe the central, defensible claim of this benchmark is:
-reinforcement learning improves supply-chain resilience in this model when,
-and only when, the controllable action surface reaches the constraint that
-actually governs recovery.
+La evidencia respalda una única explicación estructural que es consistente
+en cada parametrización de la familia de decisión aguas arriba que
+probamos --- el propio diseño discreto de Garrido, nuestra relajación
+continua de fracción compartida, y nuestra relajación continua más rica
+por operación: \textbf{una política aprendida no puede convertir un margen
+de oráculo medible en una victoria real mientras su espacio de acciones
+esté confinado a decisiones aguas arriba del cuello de botella
+operacional.} El cuello de botella en este MFSC es el despacho de
+transporte aguas abajo en Op10/Op12, cuya capacidad está calibrada en la
+propia tesis para situarse aproximadamente en la demanda. El resultado
+negativo de Track A no es, por tanto, un artefacto de la discretización,
+de la dimensionalidad del espacio de acciones, ni del ajuste de un agente
+en particular --- sobrevive a través de tres parametrizaciones
+genuinamente distintas de la misma familia de decisión. El resultado
+positivo de Track B no es un artefacto de añadir más actuadores, de
+observación privilegiada, de una palanca gratuita sin costo, ni de
+sobreajuste a un solo régimen de estrés --- sobrevive a cuatro pruebas
+adversariales independientes, construidas específicamente para
+refutarlo. En conjunto, creemos que la afirmación central y defendible de
+este benchmark es: el aprendizaje por refuerzo mejora la resiliencia de la
+cadena de suministro en este modelo cuando, y solo cuando, la superficie
+de acción controlable alcanza la restricción que realmente gobierna la
+recuperación.
 
 \end{document}
