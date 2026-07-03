@@ -81,6 +81,130 @@ def r2_score(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     return 1.0 - ss_res / ss_tot if ss_tot > 0 else float("nan")
 
 
+def _make_mlp(hidden: tuple[int, ...], seed: int) -> torch.nn.Module:
+    torch.manual_seed(seed)
+    layers: list[torch.nn.Module] = []
+    d_in = 3
+    for h in hidden:
+        layers += [torch.nn.Linear(d_in, h), torch.nn.Tanh()]
+        d_in = h
+    layers += [torch.nn.Linear(d_in, 1)]
+    return torch.nn.Sequential(*layers).float()
+
+
+def _train_with_early_stopping(
+    model: torch.nn.Module,
+    Xtr: torch.Tensor,
+    ytr: torch.Tensor,
+    Xval: torch.Tensor | None,
+    yval: torch.Tensor | None,
+    lr: float,
+    weight_decay: float,
+    max_epochs: int = 3000,
+    patience: int = 250,
+) -> tuple[float, int]:
+    """Returns (best_val_mse, best_epoch). If Xval is None, trains for
+    max_epochs and returns (train_mse_at_end, max_epochs)."""
+    opt = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
+    best_val = float("inf")
+    best_epoch = 0
+    best_state = None
+    bad_epochs = 0
+    for epoch in range(1, max_epochs + 1):
+        model.train()
+        opt.zero_grad()
+        loss = torch.nn.functional.mse_loss(model(Xtr), ytr)
+        loss.backward()
+        opt.step()
+        if Xval is None:
+            continue
+        model.eval()
+        with torch.no_grad():
+            val_mse = torch.nn.functional.mse_loss(model(Xval), yval).item()
+        if val_mse < best_val - 1e-9:
+            best_val = val_mse
+            best_epoch = epoch
+            best_state = {k: v.clone() for k, v in model.state_dict().items()}
+            bad_epochs = 0
+        else:
+            bad_epochs += 1
+            if bad_epochs > patience:
+                break
+    if Xval is None:
+        return loss.item(), max_epochs
+    if best_state is not None:
+        model.load_state_dict(best_state)
+    return best_val, best_epoch
+
+
+def tune_and_fit_mlp(
+    Xn: np.ndarray,
+    y: np.ndarray,
+    train_idx: np.ndarray,
+    test_idx: np.ndarray,
+    y_test_real: np.ndarray,
+    seed: int = 0,
+) -> tuple[float, float, np.ndarray, dict, list[dict]]:
+    # inner train/val split carved out of TRAIN only (test stays untouched)
+    rng = np.random.default_rng(seed + 1)
+    perm = rng.permutation(len(train_idx))
+    n_val = max(1, int(round(0.2 * len(train_idx))))
+    val_pos, inner_pos = perm[:n_val], perm[n_val:]
+    inner_idx = train_idx[inner_pos]
+    val_idx = train_idx[val_pos]
+
+    Xinner = torch.tensor(Xn[inner_idx], dtype=torch.float32)
+    yinner = torch.tensor(y[inner_idx], dtype=torch.float32).unsqueeze(1)
+    Xval = torch.tensor(Xn[val_idx], dtype=torch.float32)
+    yval = torch.tensor(y[val_idx], dtype=torch.float32).unsqueeze(1)
+
+    grid = [
+        {"hidden": h, "lr": lr, "weight_decay": wd}
+        for h in [(16,), (32,), (16, 16), (32, 32), (64, 64), (32, 16)]
+        for lr in [0.003, 0.01, 0.03]
+        for wd in [0.0, 1e-4, 1e-3]
+    ]
+
+    log = []
+    best_cfg, best_val_mse, best_epoch = None, float("inf"), 0
+    for cfg in grid:
+        model = _make_mlp(cfg["hidden"], seed=seed)
+        val_mse, epoch = _train_with_early_stopping(
+            model, Xinner, yinner, Xval, yval,
+            lr=cfg["lr"], weight_decay=cfg["weight_decay"],
+        )
+        log.append({**cfg, "val_mse": val_mse, "best_epoch": epoch})
+        if val_mse < best_val_mse:
+            best_val_mse, best_cfg, best_epoch = val_mse, cfg, epoch
+
+    log.sort(key=lambda r: r["val_mse"])
+    print(f"MLP grid search: {len(grid)} configs; best = {best_cfg}, "
+          f"val_mse={best_val_mse:.3e}, best_epoch={best_epoch}")
+
+    # retrain winning config on the FULL training set (118 pts) for
+    # best_epoch epochs (no further peeking at val or test), then score once
+    # on the held-out test set.
+    final_model = _make_mlp(best_cfg["hidden"], seed=seed)
+    Xtr_full = torch.tensor(Xn[train_idx], dtype=torch.float32)
+    ytr_full = torch.tensor(y[train_idx], dtype=torch.float32).unsqueeze(1)
+    opt = torch.optim.Adam(
+        final_model.parameters(), lr=best_cfg["lr"], weight_decay=best_cfg["weight_decay"]
+    )
+    for _ in range(max(1, best_epoch)):
+        opt.zero_grad()
+        loss = torch.nn.functional.mse_loss(final_model(Xtr_full), ytr_full)
+        loss.backward()
+        opt.step()
+
+    final_model.eval()
+    with torch.no_grad():
+        pred = final_model(torch.tensor(Xn[test_idx], dtype=torch.float32)).squeeze(-1).numpy()
+    r2 = r2_score(y_test_real, pred)
+    mse = float(np.mean((y_test_real - pred) ** 2))
+    cfg_out = {**best_cfg, "best_epoch": best_epoch, "val_mse_during_tuning": best_val_mse}
+    return r2, mse, pred, cfg_out, log[:5]
+
+
 def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     torch.manual_seed(0)
@@ -138,24 +262,15 @@ def main() -> None:
     lin_r2 = r2_score(yte_real, lin_pred)
     lin_mse = float(np.mean((yte_real - lin_pred) ** 2))
 
-    # ---------------------------------------------------------------- small MLP baseline
-    mlp = torch.nn.Sequential(
-        torch.nn.Linear(3, 16), torch.nn.Tanh(),
-        torch.nn.Linear(16, 16), torch.nn.Tanh(),
-        torch.nn.Linear(16, 1),
-    ).float()
-    opt = torch.optim.Adam(mlp.parameters(), lr=0.02)
-    Xtr_t = torch.tensor(Xn[train_idx], dtype=torch.float32)
-    ytr_t = torch.tensor(y[train_idx], dtype=torch.float32).unsqueeze(1)
-    for _ in range(400):
-        opt.zero_grad()
-        loss = torch.nn.functional.mse_loss(mlp(Xtr_t), ytr_t)
-        loss.backward()
-        opt.step()
-    with torch.no_grad():
-        mlp_pred = mlp(torch.tensor(Xn[test_idx], dtype=torch.float32)).squeeze(-1).numpy()
-    mlp_r2 = r2_score(yte_real, mlp_pred)
-    mlp_mse = float(np.mean((yte_real - mlp_pred) ** 2))
+    # ---------------------------------------------------------------- tuned MLP baseline
+    # Honest protocol: carve a validation split out of TRAIN only (never touch
+    # test during tuning), grid-search architecture/lr/weight-decay with
+    # early stopping on validation MSE, then retrain the winning config on
+    # the full training set for the winning epoch count and evaluate once on
+    # the held-out test set.
+    mlp_r2, mlp_mse, mlp_pred, mlp_cfg, mlp_grid_log = tune_and_fit_mlp(
+        Xn, y, train_idx, test_idx, y_test_real=yte_real, seed=0
+    )
 
     # ---------------------------------------------------------------- comparison figure
     fig, ax = plt.subplots(figsize=(4.6, 4.6))
@@ -178,7 +293,15 @@ def main() -> None:
         "n_train": len(train_idx),
         "n_test": len(test_idx),
         "kan": {"width": [3, 4, 1], "grid": 5, "k": 3, "r2_test": kan_r2, "mse_test": kan_mse},
-        "mlp_baseline": {"hidden": [16, 16], "r2_test": mlp_r2, "mse_test": mlp_mse},
+        "mlp_tuned": {
+            "selection": "grid search (18 archs x 3 lr x 3 weight-decay = 54 configs), "
+                         "early-stopped on a val split carved out of TRAIN only; "
+                         "winning config retrained on full train, scored once on test",
+            "winning_config": mlp_cfg,
+            "r2_test": mlp_r2,
+            "mse_test": mlp_mse,
+            "top5_configs_by_val_mse": mlp_grid_log,
+        },
         "linear_baseline": {"r2_test": lin_r2, "mse_test": lin_mse},
     }
     (OUT / "kan_fit_summary.json").write_text(json.dumps(summary, indent=2))

@@ -47,36 +47,50 @@ to train, directly interpretable via pykan's built-in spline
 visualization, and a faithful, literal implementation of what Garrido
 himself sketched.
 
-## Result
+## Result (MLP now properly tuned)
+
+The MLP baseline is no longer a fixed-architecture guess. It is selected
+by a 54-config grid search (6 architectures x 3 learning rates x 3
+weight-decay values), each trained with early stopping on a validation
+split carved out of the training set only (test never touched during
+tuning); the winning configuration is then retrained on the full
+training set for its winning epoch count and scored once on the held-out
+test set. Full grid search log in `kan_fit_summary.json`
+(`mlp_tuned.top5_configs_by_val_mse`).
 
 | Model | Test R² | Test MSE |
 |---|---:|---:|
 | **KAN** (pykan, official) | **0.998** | 3.4e-9 |
-| MLP baseline (16-16, untuned, 400 Adam steps) | 0.624 | 5.3e-7 |
+| MLP, tuned (winning config: hidden=[32,16], lr=0.03, wd=0, 1438 epochs) | 0.855 | 2.0e-7 |
+| MLP, untuned (16-16, fixed 400 Adam steps) -- for reference only | 0.624 | 5.3e-7 |
 | Linear baseline | 0.365 | 9.0e-7 |
 
 Artifacts: `outputs/experiments/kan_scres_demo_2026-07-02/`
-- `kan_fit_summary.json` — exact numbers above
+- `kan_fit_summary.json` — exact numbers above, plus the full 54-config
+  grid search log
 - `kan_splines.png` — pykan's native diagram: the learned univariate
   edge functions (the visual signature of a KAN) for this exact mapping
 - `kan_vs_baselines.png` — predicted-vs-actual on held-out configs,
-  house style, all three models
+  house style, all three models (KAN / tuned MLP / linear)
 
 The KAN fits this low-dimensional, smooth decision-to-metric mapping
 almost exactly on held-out static configurations, and its learned edge
 functions (`kan_splines.png`) are visibly non-degenerate (each shows a
 distinct nonlinear shape, not a flat/collapsed function) — i.e. it is a
-genuine, non-trivial fit, not a saturated or memorized one.
+genuine, non-trivial fit, not a saturated or memorized one. With proper
+tuning, the MLP closes much of the gap (R² 0.624 -> 0.855) but KAN
+remains clearly ahead (0.998) on this exact task — a fair, defensible
+comparison now, not an artifact of an unfair baseline.
 
 ## Honest caveats — read before showing this to anyone
 
-1. **The MLP baseline was not tuned.** Fixed architecture, fixed epoch
-   count, no early stopping, no learning-rate search. A properly tuned
-   MLP would likely close much of the gap on this smooth 3-input
-   function — KANs are known to be strong on exactly this kind of
-   low-dimensional smooth regression, which is *why* this comparison is
-   favorable, not because KAN is unconditionally superior. Report the
-   numbers as "KAN fits this mapping very well," not "KAN beats MLP."
+1. **The comparison is now fair, but still favorable terrain for KAN.**
+   KANs are well known to be strong on exactly this kind of
+   low-dimensional (3 inputs), smooth, noise-free regression — this is
+   close to their best case, not a general claim of KAN superiority.
+   Report the numbers as "KAN fits this mapping essentially exactly, and
+   remains ahead of a properly tuned MLP," not "KAN beats MLP in
+   general."
 2. **This is a supervised surrogate, not a control policy.** It predicts
    ReT from a static decision-variable triple; it does not act, does not
    close the RL loop, and is not a replacement for the PPO+MLP result

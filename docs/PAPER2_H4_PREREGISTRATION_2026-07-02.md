@@ -116,6 +116,29 @@ not path-dependence" — also publishable, pre-committed here.
    (only if E-P2-3 passes), never "organizational learning" without a
    dedicated construct-validity section.
 
+## Amendment 2026-07-02: E-P2-4, DMLPA architecture arm
+
+Added per `docs/ARCHITECTURE_REVIEW_2026-07-02.md`. DMLPA
+(transformer-over-history, `scripts/dmlpa_extractor.py`) has only been
+tried on Track A (screening scale, mixed/degenerate result). It has
+never been run on Track B or combined with the H4 retained-adaptation
+protocol. This amendment adds one arm to E-P2-1 (dose-response): repeat
+the C=8 cell with the DMLPA feature extractor in place of the canonical
+PPO+MLP, same reward/observation/risk contract, same new seed block, same
+claim threshold (seed-clustered CI95 lower bound > 0 under `obs_hidden`).
+
+**Question:** does giving the network explicit attention over the
+online-adaptation history amplify the small H4 retained-vs-reset effect,
+or is that effect architecture-independent (i.e., PPO+MLP already
+captures it and DMLPA adds nothing)?
+
+**Pre-registered outcome interpretation:** if DMLPA's retained-minus-reset
+delta and CI do not exceed PPO+MLP's (from E-P2-1's C=8 cell) by more than
+noise, report "the retained-adaptation effect is architecture-independent
+within the tested designs" — a legitimate, useful null. Do not run
+additional architectures fishing for a larger effect after seeing this
+result; that would reopen the forking-paths problem Paper 1 just closed.
+
 ## Sequencing constraint
 
 Nothing in this document launches until Paper 1 is submitted
