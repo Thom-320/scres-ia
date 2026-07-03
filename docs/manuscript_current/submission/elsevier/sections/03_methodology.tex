@@ -35,7 +35,7 @@ representation of all supply chains.
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\linewidth]{fig2_mfsc_topology}
-\caption{Simplified MFSC topology redrawn from Garrido-Rios' 13-operation military food supply chain. Track B preserves the DES backbone but exposes downstream dispatch controls at Op10 and Op12, the operational recovery valves left fixed in Track A.}
+\caption{Simplified MFSC topology redrawn from Garrido-Rios' 13-operation military food supply chain. Badges mark the controllable interface: buffer (blue triangle) and shift (green dot) are Track A controls; dispatch (vermilion diamond, Op10/Op12) is added in Track B. The bracket marks the binding recovery bottleneck: downstream dispatch capacity approximately equals demand.}
 \label{fig:mfsc_topology}
 \end{figure}
 
@@ -374,7 +374,7 @@ it.
 \toprule
 Lane & Purpose & Claim supported \\
 \midrule
-Track A & Original buffer/shift control against dense static frontiers & Boundary/null: original action surface does not yield a publishable dynamic-control win \\
+Track A & Original buffer/shift control against dense static frontiers & Boundary/null: original action surface yields no statistically and operationally material dynamic-control win \\
 Track B canonical & PPO vs 147 dense static dispatch policies under CRN & Main adaptive-recovery result \\
 E1 & Static, heuristic, and true-regime lookup-table comparators & PPO win is not reproduced by zero-learning privileged regime access \\
 E2 & PPO retrained with privileged regime/forecast fields masked & PPO win does not require oracle observation fields \\

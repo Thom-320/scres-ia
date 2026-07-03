@@ -58,9 +58,9 @@ def save(fig: plt.Figure, stem: str) -> None:
 
 # ---------------------------------------------------------------- fig1
 def fig1_bottleneck_alignment() -> None:
-    fig, ax = plt.subplots(figsize=(7.4, 2.62))
+    fig, ax = plt.subplots(figsize=(7.4, 2.48))
     ax.set_xlim(0, 10)
-    ax.set_ylim(0.35, 4.05)
+    ax.set_ylim(0.35, 3.80)
     ax.axis("off")
 
     def chain(y, title, boxes, accent, arrow_lw):
@@ -94,7 +94,7 @@ def fig1_bottleneck_alignment() -> None:
                         (x + w + 0.04, y + h / 2),
                         (x + w + gap - 0.04, y + h / 2),
                         arrowstyle="-|>",
-                        mutation_scale=11,
+                        mutation_scale=9,
                         color=accent,
                         lw=arrow_lw,
                     )
@@ -103,8 +103,8 @@ def fig1_bottleneck_alignment() -> None:
 
     neutral = ("#f6f8fa", "0.35", 0.9)
     chain(
-        2.72,
-        "Track A --- boundary case",
+        2.47,
+        "Track A \u2014 boundary case",
         [
             ("Buffer + shift\ncontrols only", *neutral),
             ("Upstream /\nassembly authority", *neutral),
@@ -116,7 +116,7 @@ def fig1_bottleneck_alignment() -> None:
     )
     chain(
         0.55,
-        "Track B --- positive case",
+        "Track B \u2014 positive case",
         [
             ("Buffer + shift\n+ dispatch controls", *neutral),
             ("Closed-loop\nfeedback policy", *neutral),
@@ -124,7 +124,7 @@ def fig1_bottleneck_alignment() -> None:
             ("Adaptive recovery:\nReT + tail gains", "#e7f4e9", GREEN, 1.2),
         ],
         "0.30",
-        2.0,
+        1.6,
     )
     save(fig, "fig1_bottleneck_alignment")
 
@@ -155,8 +155,9 @@ def fig2_mfsc_topology() -> None:
         y = ROWY[row]
         ax.add_patch(plt.Rectangle((0.06, y - 0.14), 10.88, H + 0.30,
                                    fc="#f7f9fa", ec="none", zorder=0))
-        ax.text(0.14, y + H + 0.10, label, fontsize=7.8, color="#5a6b76",
-                va="bottom", ha="left", zorder=1)
+        ax.text(0.34, y + H + 0.10, label, fontsize=7.8, color="#5a6b76",
+                va="bottom", ha="left", zorder=3,
+                bbox=dict(boxstyle="square,pad=0.10", fc="#f7f9fa", ec="none"))
 
     # op: (row, col, head, name, risks, controls)  controls: subset of {"buffer","shift","dispatch"}
     ops = {
@@ -201,7 +202,8 @@ def fig2_mfsc_topology() -> None:
         # control badges, top-right corner, stacked horizontally
         for k, c in enumerate(controls):
             g, col_ = BADGE[c]
-            ax.text(x + W - 0.16 - 0.30 * k, y + H - 0.19, g, fontsize=9,
+            fs = {"buffer": 9, "shift": 12, "dispatch": 10.5}[c]
+            ax.text(x + W - 0.16 - 0.30 * k, y + H - 0.19, g, fontsize=fs,
                     color=col_, ha="center", va="center", zorder=4)
 
     def harrow(a, b):
@@ -226,7 +228,14 @@ def fig2_mfsc_topology() -> None:
     varrow(4, 5, "right")
     for a, b in [(5, 6), (6, 7), (7, 8)]:
         harrow(a, b)
-    varrow(8, 9, "right")
+    # Op8 -> Op9: elbow through the left margin (keeps the band-label lane clear)
+    y8m = ROWY[2] + H / 2
+    y9m = ROWY[3] + H / 2
+    ax.plot([XS[0], 0.16, 0.16], [y8m, y8m, y9m], color="0.25", lw=1.2,
+            solid_capstyle="round", zorder=1)
+    ax.add_patch(FancyArrowPatch((0.16, y9m), (XS[0] - 0.02, y9m),
+                 arrowstyle="-|>", mutation_scale=10, color="0.25", lw=1.2,
+                 zorder=1))
     for a, b in [(9, 10), (10, 11), (11, 12)]:
         harrow(a, b)
     varrow(12, 13, "right")
@@ -236,9 +245,10 @@ def fig2_mfsc_topology() -> None:
     by = ROWY[3] - 0.24
     ax.plot([bx0, bx0, bx1, bx1], [by + 0.09, by, by, by + 0.09],
             color=VERMIL, lw=1.3, zorder=3)
-    ax.text((bx0 + bx1) / 2, by - 0.13,
-            "dispatch capacity $\\approx$ demand ($\\approx$2,500 rations/day): the binding recovery bottleneck",
-            fontsize=8.4, color=VERMIL, ha="center", va="top", zorder=3)
+    ax.text(6.0, by - 0.13,
+            "dispatch capacity $\\approx$ demand ($\\approx$2,500 rations/day):\nthe binding recovery bottleneck",
+            fontsize=8.4, color=VERMIL, ha="center", va="top", zorder=3,
+            linespacing=1.25)
 
     # legend line, bottom left
     lx, ly = 0.42, -0.62
@@ -247,8 +257,8 @@ def fig2_mfsc_topology() -> None:
         ("$\\bullet$", GREEN, "shift control (Track A)"),
         ("$\\diamondsuit$", VERMIL, "dispatch control (added in Track B)"),
     ]
-    for glyph, col_, text in items:
-        ax.text(lx, ly, glyph, fontsize=9, color=col_, ha="left", va="center")
+    for (glyph, col_, text), fs in zip(items, (9, 12, 10.5)):
+        ax.text(lx, ly, glyph, fontsize=fs, color=col_, ha="left", va="center")
         ax.text(lx + 0.24, ly, text, fontsize=8.2, color="0.25", ha="left", va="center")
         lx += 0.24 + 0.118 * len(text) + 0.42
 
@@ -358,7 +368,7 @@ def fig4_pareto_ret_tail_ctj() -> None:
                edgecolors="none", zorder=4)
     ax.scatter([ppo[0]], [ppo[1]], marker="*", s=240, c=GREEN,
                edgecolors="0.1", linewidths=0.7, zorder=5)
-    ax.text(ppo[0] * 1.16, ppo[1] + 0.02, "PPO", fontsize=9.5, color=GREEN,
+    ax.text(ppo[0] * 1.16, ppo[1] + 0.13, "PPO", fontsize=9.5, color=GREEN,
             fontweight="bold", va="center")
 
     # the gap annotation
@@ -557,8 +567,8 @@ def fig8_ret_branch_timeline() -> None:
     order(3.3, 0.9, 4.1, (1.6, 3.0),
           "Order A: risk during window, delivered on time ($CT_j = LT_j$)",
           "autonomy branch:\n$\\mathrm{Re}(AP_j)$", BLUE)
-    ax.text(0.9 + 3.2, 3.3 + 0.26, "deadline $OPT_j{+}LT_j$", fontsize=7.2,
-            color="0.45", ha="center", va="bottom")
+    ax.text(0.9 + 3.2, 3.3 - 0.22, "deadline $OPT_j{+}LT_j$", fontsize=7.2,
+            color="0.45", ha="center", va="top")
     order(2.1, 0.9, 6.9, (1.8, 5.3),
           "Order B: risk during window, delivered late ($CT_j > LT_j$)",
           "recovery branch:\n$0.5\\,(1/RP_j)$", GREEN)
