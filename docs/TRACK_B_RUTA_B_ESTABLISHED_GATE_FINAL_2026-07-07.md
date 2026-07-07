@@ -80,6 +80,8 @@ What remains standing about Ruta B (unaffected by this verdict):
 2. Controls + retraction: `TRACK_B_RUTA_B_COUNTERFACTUAL_GATE_AUDIT_2026-07-07.md`
 3. This closure: correct-env run of the trusted gate → null on both policies.
 
-Next (per the post-retraction roadmap): preventive-headroom ceiling tests
-(forced-prep response surface + clairvoyant PPO) decide whether ANY prevention
-work continues in this environment.
+Follow-up completed the same day: preventive-headroom ceiling tests
+(`docs/TRACK_B_PREVENTIVE_HEADROOM_CEILING_VERDICT_2026-07-07.md`) found no
+usable prevention headroom under the current DES/action contract. Prevention is
+closed as a boundary result unless the environment physics are deliberately
+changed in a separately pre-registered extension.
