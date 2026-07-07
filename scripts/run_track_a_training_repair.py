@@ -56,6 +56,7 @@ def build_env(
     cvar_alpha: float,
     action_mode: str,
     frac_grid: list[float],
+    lead_time: float = 0.0,
 ):
     family, phi, psi = parse_regime(regime)
     kwargs: dict[str, Any] = dict(
@@ -72,6 +73,7 @@ def build_env(
         holding_cost=float(holding_cost),
         shift_cost=0.001,
         ret_excel_cvar_alpha=float(cvar_alpha),
+        inventory_replenishment_lead_time=float(lead_time),
     )
     enabled = FAMILY_RISKS.get(family)
     if enabled is not None:
@@ -114,6 +116,7 @@ def eval_policy(regimes: list[str], act_fn, args, seed0: int, *, action_mode: st
             cvar_alpha=args.cvar_alpha,
             action_mode=action_mode,
             frac_grid=args.frac_grid,
+            lead_time=args.lead_time,
         )
         obs, _ = env.reset(seed=seed0 + i)
         done = truncated = False
@@ -242,6 +245,7 @@ def collect_bc(regimes: list[str], teacher_actions: dict[str, list[float]], args
             cvar_alpha=args.cvar_alpha,
             action_mode=args.action_mode,
             frac_grid=args.frac_grid,
+            lead_time=args.lead_time,
         )
         target = encode_action_for_env(env, teacher_actions[regime], args.action_mode)
         obs, _ = env.reset(seed=seed0 + i)
@@ -335,6 +339,7 @@ def main() -> int:
     ap.add_argument("--selection-seed0", type=int, default=8000)
     ap.add_argument("--eval-seed0", type=int, default=9000)
     ap.add_argument("--holding-cost", type=float, default=0.0)
+    ap.add_argument("--lead-time", type=float, default=0.0)
     ap.add_argument("--learning-rate", type=float, default=1e-4)
     ap.add_argument("--ent-coef", type=float, default=0.0)
     ap.add_argument("--clip-range", type=float, default=0.1)
@@ -392,6 +397,7 @@ def main() -> int:
                     cvar_alpha=args.cvar_alpha,
                     action_mode=args.action_mode,
                     frac_grid=args.frac_grid,
+                    lead_time=args.lead_time,
                 )
             )
         venv = VecNormalize(DummyVecEnv(env_fns), norm_obs=True, norm_reward=True, clip_reward=10.0)

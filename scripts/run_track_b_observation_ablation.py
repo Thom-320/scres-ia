@@ -33,13 +33,14 @@ PRIVILEGED_FIELD_NAMES = (*REGIME_FIELD_NAMES, *FORECAST_FIELD_NAMES)
 
 
 class FieldMaskWrapper(gym.ObservationWrapper):
-    """Mask selected v7 observation channels while preserving shape."""
+    """Mask selected observation channels while preserving shape."""
 
     field_names: tuple[str, ...] = ()
+    observation_version: str = "v7"
 
     def __init__(self, env: gym.Env[np.ndarray, np.ndarray]) -> None:
         super().__init__(env)
-        fields = tuple(get_observation_fields("v7"))
+        fields = tuple(get_observation_fields(self.observation_version))
         self._mask_indices = tuple(fields.index(name) for name in self.field_names)
 
     def observation(self, observation: np.ndarray) -> np.ndarray:
@@ -53,6 +54,12 @@ class ForecastMaskWrapper(FieldMaskWrapper):
     """Mask only the explicit risk-forecast channels."""
 
     field_names = FORECAST_FIELD_NAMES
+
+
+class V10ForecastMaskWrapper(ForecastMaskWrapper):
+    """Mask explicit forecast channels on v10 while keeping memory fields."""
+
+    observation_version = "v10"
 
 
 class PrivilegedObservationMaskWrapper(FieldMaskWrapper):
@@ -78,6 +85,11 @@ OBS_ABLATION_CONFIGS: dict[str, ObservationAblationConfig] = {
         label="v7_no_forecast",
         observation_version="v7",
         wrapper=ForecastMaskWrapper,
+    ),
+    "v10_no_forecast": ObservationAblationConfig(
+        label="v10_no_forecast",
+        observation_version="v10",
+        wrapper=V10ForecastMaskWrapper,
     ),
     "v7_no_regime_forecast": ObservationAblationConfig(
         label="v7_no_regime_forecast",

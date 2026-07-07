@@ -174,6 +174,8 @@ class MFSCSimulation:
         backorder_overflow_mode: str = BACKORDER_OVERFLOW_MODE,
         risk_frequency_multiplier: float = 1.0,
         risk_impact_multiplier: float = 1.0,
+        risk_frequency_multipliers_by_id: Optional[dict[str, float]] = None,
+        risk_impact_multipliers_by_id: Optional[dict[str, float]] = None,
         strict_exogenous_crn: bool = False,
         risk_recovery_window_hours: float = 0.0,
         risk_recovery_release_rations: float = 0.0,
@@ -254,14 +256,16 @@ class MFSCSimulation:
         self.seed_stream_mode = seed_stream_mode
         self.strict_exogenous_crn = seed_stream_mode == "split"
         if self.strict_exogenous_crn:
-            general_ss, demand_ss, risk_ss = np.random.SeedSequence(seed).spawn(3)
+            general_ss, demand_ss, risk_ss, regime_ss = np.random.SeedSequence(seed).spawn(4)
             self.rng = np.random.default_rng(general_ss)
             self.demand_rng = np.random.default_rng(demand_ss)
             self.risk_rng = np.random.default_rng(risk_ss)
+            self.regime_rng = np.random.default_rng(regime_ss)
         else:
             self.rng = np.random.default_rng(seed)
             self.demand_rng = self.rng
             self.risk_rng = self.rng
+            self.regime_rng = self.rng
         self.horizon = horizon
         self.risks_enabled = risks_enabled
         self.risk_level = risk_level
@@ -293,6 +297,14 @@ class MFSCSimulation:
         # (longer recovery, bigger demand surge). 1.0 = thesis baseline.
         self.risk_frequency_multiplier = max(1e-6, float(risk_frequency_multiplier))
         self.risk_impact_multiplier = max(1e-6, float(risk_impact_multiplier))
+        self.risk_frequency_multipliers_by_id = {
+            str(risk_id): max(1e-6, float(value))
+            for risk_id, value in (risk_frequency_multipliers_by_id or {}).items()
+        }
+        self.risk_impact_multipliers_by_id = {
+            str(risk_id): max(1e-6, float(value))
+            for risk_id, value in (risk_impact_multipliers_by_id or {}).items()
+        }
         if self.demand_mean_multiplier <= 0.0:
             raise ValueError("demand_mean_multiplier must be > 0.")
         self._raw_units_per_ration = (
@@ -1665,6 +1677,46 @@ class MFSCSimulation:
             dtype=np.float32,
         )
 
+    def get_observation_v10_extra(self) -> np.ndarray:
+        """
+        Return 12 observed risk-memory features for obs v10.
+
+        For R11/R13/R24:
+
+        [0] weeks_since_last_Ri normalized by the episode horizon
+        [1] count_Ri_8w normalized by 8 events
+        [2] count_Ri_26w normalized by 26 events
+        [3] EWMA-like decayed event count with an 8-week time constant
+
+        These are historical features only. They do not inspect future events or
+        the adaptive regime transition matrix.
+        """
+        now_step = float(self.env.now) / float(HOURS_PER_WEEK)
+        features: list[float] = []
+        for risk_id in ("R11", "R13", "R24"):
+            starts = [
+                float(ev.start_time) / float(HOURS_PER_WEEK)
+                for ev in self.risk_events
+                if str(ev.risk_id) == risk_id
+                and float(ev.start_time) < float(self.env.now)
+            ]
+            if starts:
+                weeks_since = max(0.0, now_step - max(starts))
+            else:
+                weeks_since = 104.0
+            count_8w = sum(1 for start in starts if now_step - start <= 8.0)
+            count_26w = sum(1 for start in starts if now_step - start <= 26.0)
+            ewma = sum(float(np.exp(-(now_step - start) / 8.0)) for start in starts)
+            features.extend(
+                [
+                    float(np.clip(weeks_since / 104.0, 0.0, 1.0)),
+                    float(np.clip(count_8w / 8.0, 0.0, 1.0)),
+                    float(np.clip(count_26w / 26.0, 0.0, 1.0)),
+                    float(np.clip(ewma / 8.0, 0.0, 1.0)),
+                ]
+            )
+        return np.asarray(features, dtype=np.float32)
+
     # =====================================================================
     # HELPERS
     # =====================================================================
@@ -1735,12 +1787,12 @@ class MFSCSimulation:
             next_intensity += prob * self._adaptive_expected_intensity(next_regime)
         current_intensity = self._adaptive_expected_intensity(self.adaptive_regime)
         noise_std = float(ADAPTIVE_BENCHMARK_MAINTENANCE["forecast_noise_std"])
-        forecast_48h = next_intensity + float(self.rng.normal(0.0, noise_std))
+        forecast_48h = next_intensity + float(self.regime_rng.normal(0.0, noise_std))
         forecast_168h = (
             0.35 * current_intensity
             + 0.65 * next_intensity
             + 0.15 * float(current_params["forecast_base"])
-            + float(self.rng.normal(0.0, noise_std))
+            + float(self.regime_rng.normal(0.0, noise_std))
         )
         self.adaptive_risk_forecast_48h = float(np.clip(forecast_48h, 0.0, 1.0))
         self.adaptive_risk_forecast_168h = float(np.clip(forecast_168h, 0.0, 1.0))
@@ -1755,7 +1807,7 @@ class MFSCSimulation:
             next_regimes = tuple(transitions.keys())
             probs = np.array(tuple(transitions.values()), dtype=float)
             probs = probs / probs.sum()
-            self.adaptive_regime = str(self.rng.choice(next_regimes, p=probs))
+            self.adaptive_regime = str(self.regime_rng.choice(next_regimes, p=probs))
             self._update_adaptive_forecasts()
 
     def _pending_backorder_age_norm(self) -> float:
@@ -2205,7 +2257,7 @@ class MFSCSimulation:
             return max(float(base_a), round(float(base_b) / max(intensity, 1e-6)))
         if risk_id == "R3":
             return max(float(base_a), float(base_b))
-        return max(float(base_a), float(base_b) / self.risk_frequency_multiplier)
+        return max(float(base_a), float(base_b) / self._risk_frequency_multiplier_for(risk_id))
 
     def _get_risk_p(self, risk_id: str) -> float:
         table = self._risk_table_for(risk_id)
@@ -2216,7 +2268,7 @@ class MFSCSimulation:
         if self.adaptive_benchmark_enabled:
             intensity = self._adaptive_risk_intensity_for(risk_id)
             return min(0.98, float(base_p) * intensity)
-        return min(0.98, float(base_p) * self.risk_frequency_multiplier)
+        return min(0.98, float(base_p) * self._risk_frequency_multiplier_for(risk_id))
 
     def _get_risk_recovery_mean(self, risk_id: str) -> float:
         table = self._risk_table_for(risk_id)
@@ -2229,7 +2281,7 @@ class MFSCSimulation:
         if self.adaptive_benchmark_enabled:
             recovery_scale = self._adaptive_recovery_scale_for(risk_id)
             return float(base_mean) * recovery_scale
-        return float(base_mean) * self.risk_impact_multiplier
+        return float(base_mean) * self._risk_impact_multiplier_for(risk_id)
 
     def _get_risk_surge(self) -> tuple[int, int]:
         table = self._risk_table_for("R24")
@@ -2244,8 +2296,22 @@ class MFSCSimulation:
                 int(round(base_lo * surge_scale)),
                 int(round(base_hi * surge_scale)),
             )
-        psi = self.risk_impact_multiplier
+        psi = self._risk_impact_multiplier_for("R24")
         return int(round(base_lo * psi)), int(round(base_hi * psi))
+
+    def _risk_frequency_multiplier_for(self, risk_id: str) -> float:
+        return float(
+            self.risk_frequency_multipliers_by_id.get(
+                str(risk_id), self.risk_frequency_multiplier
+            )
+        )
+
+    def _risk_impact_multiplier_for(self, risk_id: str) -> float:
+        return float(
+            self.risk_impact_multipliers_by_id.get(
+                str(risk_id), self.risk_impact_multiplier
+            )
+        )
 
     def _sample_uniform_risk_window(self, risk_id: str) -> tuple[float, float]:
         """Sample the event offset for a thesis uniform-occurrence window."""

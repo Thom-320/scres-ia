@@ -64,6 +64,7 @@ def _excel_ret_details(orders: list[Any], *, current_time: float) -> dict[str, A
     cumulative_unattended = 0
     case_counts: Counter[str] = Counter()
     values: list[float] = []
+    cases: list[str] = []
     qty_values: list[tuple[float, float]] = []
     timed_values: list[tuple[float, float]] = []
 
@@ -83,9 +84,27 @@ def _excel_ret_details(orders: list[Any], *, current_time: float) -> dict[str, A
         )
         ret = float(ret)
         values.append(ret)
+        cases.append(str(case))
         case_counts[str(case)] += 1
         qty_values.append((ret, float(getattr(order, "quantity", 0.0) or 0.0)))
         timed_values.append((float(getattr(order, "OPTj", 0.0) or 0.0), ret))
+
+    # Risk-conditional mean: restrict to orders where a risk indicator was
+    # actually active (excel_autotomy/excel_recovery/excel_risk_no_recovery),
+    # excluding the "no risk applicable" excel_fill_rate branch and the
+    # unfulfilled/dropped-order branch. This isolates the SAME formula branch
+    # regardless of how many orders end up risk-touched, so it stays
+    # comparable across risk-roster configurations where that fraction varies
+    # wildly (e.g. all-9-risks vs a rare-risk-only subset) -- the raw mean
+    # does not, since excel_fill_rate values sit near 1.0 and can dominate the
+    # average when most orders are never risk-touched.
+    risk_touched_values = [
+        v
+        for v, c in zip(values, cases)
+        if c in ("excel_autotomy", "excel_recovery", "excel_risk_no_recovery")
+    ]
+    ret_excel_risk_conditional = _mean(risk_touched_values)
+    ret_excel_risk_conditional_n = len(risk_touched_values)
 
     # Rolling 4-week Excel ReT by order placement time, for temporal stability.
     rolling: list[float] = []
@@ -111,6 +130,8 @@ def _excel_ret_details(orders: list[Any], *, current_time: float) -> dict[str, A
     return {
         "values": values,
         "case_counts": case_counts,
+        "ret_excel_risk_conditional": float(ret_excel_risk_conditional),
+        "ret_excel_risk_conditional_n": int(ret_excel_risk_conditional_n),
         "ration_ret_excel": float(ration_ret),
         "rolling_4w_values": rolling,
     }
@@ -197,6 +218,10 @@ def compute_episode_metrics(
         "ret_excel_rolling_4w_mean": _mean(rolling_ret),
         "ret_excel_rolling_4w_min": float(min(rolling_ret)) if rolling_ret else 0.0,
         "ret_excel_rolling_4w_final": rolling_ret[-1] if rolling_ret else 0.0,
+        "ret_excel_risk_conditional": float(
+            excel_details["ret_excel_risk_conditional"]
+        ),
+        "ret_excel_risk_conditional_n": int(excel_details["ret_excel_risk_conditional_n"]),
         "ration_ret_excel": float(excel_details["ration_ret_excel"]),
         "excel_case_pct_fill_rate": 100.0 * excel_cases["excel_fill_rate"] / n,
         "excel_case_pct_autotomy": 100.0 * excel_cases["excel_autotomy"] / n,
@@ -272,6 +297,7 @@ METRIC_KEYS: tuple[str, ...] = (
     "ret_excel_p50", "ret_excel_p75", "ret_excel_p90", "ret_excel_p95",
     "ret_excel_rolling_4w_mean", "ret_excel_rolling_4w_min",
     "ret_excel_rolling_4w_final", "ration_ret_excel",
+    "ret_excel_risk_conditional", "ret_excel_risk_conditional_n",
     "excel_case_pct_fill_rate", "excel_case_pct_autotomy",
     "excel_case_pct_recovery", "excel_case_pct_risk_no_recovery",
     "excel_case_pct_unfulfilled",

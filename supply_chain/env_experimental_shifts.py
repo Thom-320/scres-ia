@@ -91,7 +91,7 @@ from .config import (
 from .supply_chain import MFSCSimulation
 
 NUM_TRACKED_OPS = 13
-OBSERVATION_VERSION_OPTIONS = ("v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9")
+OBSERVATION_VERSION_OPTIONS = ("v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10")
 REWARD_MODE_ALIAS_MAP = {"ReT_corrected_cost": "ReT_corrected"}
 REWARD_MODE_OPTIONS = (
     "ReT_thesis",
@@ -217,6 +217,7 @@ V6_OBSERVATION_DIM = 42  # v5 (30) + 12 adaptive benchmark + production/risk fea
 V7_OBSERVATION_DIM = 52  # v6 (42) + 10 downstream Track B bottleneck + hazard features
 V8_OBSERVATION_DIM = 79  # v7 (52) + 27 realized-risk active/recent/duration features
 V9_OBSERVATION_DIM = 89  # v8 (79) + 10 backorder/trend/throughput features
+V10_OBSERVATION_DIM = 101  # v9 (89) + 12 observed risk-memory features for R11/R13/R24
 PREV_STEP_DEMAND_SCALE = 18_200.0
 PREV_STEP_BACKORDER_SCALE = 18_200.0
 CONTROL_V2_W_FILL = 1.0
@@ -251,6 +252,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
       - v7: v6 + downstream bottleneck state and rolling service features.
       - v8: v7 + realized risk ID observability (active/recent/duration).
       - v9: v8 + backorder health, service trend, and previous-step throughput.
+      - v10: v9 + observed historical memory for frequent risks R11/R13/R24.
     Action:
       - Track A (`track_a_v1`): 5-dimensional [-1, 1]
       - Track B (`track_b_v1`): 8-dimensional [-1, 1]
@@ -397,9 +399,12 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         risk_occurrence_mode: str = "thesis_window",
         risk_frequency_multiplier: float = 1.0,
         risk_impact_multiplier: float = 1.0,
+        risk_frequency_multipliers_by_id: dict[str, float] | None = None,
+        risk_impact_multipliers_by_id: dict[str, float] | None = None,
         initial_buffers: dict[str, float] | None = None,
         initial_shifts: int = 1,
         inventory_replenishment_period: float | None = None,
+        inventory_replenishment_lead_time: float = 0.0,
         enabled_risks: set[str] | tuple[str, ...] | list[str] | None = None,
         risk_overrides: dict[str, str] | None = None,
         priming_enabled: bool = True,
@@ -514,9 +519,20 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self.risk_occurrence_mode = risk_occurrence_mode
         self.risk_frequency_multiplier = max(1e-6, float(risk_frequency_multiplier))
         self.risk_impact_multiplier = max(1e-6, float(risk_impact_multiplier))
+        self.risk_frequency_multipliers_by_id = {
+            str(risk_id): max(1e-6, float(value))
+            for risk_id, value in (risk_frequency_multipliers_by_id or {}).items()
+        }
+        self.risk_impact_multipliers_by_id = {
+            str(risk_id): max(1e-6, float(value))
+            for risk_id, value in (risk_impact_multipliers_by_id or {}).items()
+        }
         self.initial_buffers = dict(initial_buffers or {})
         self.initial_shifts = int(initial_shifts)
         self.initial_inventory_replenishment_period = inventory_replenishment_period
+        self.initial_inventory_replenishment_lead_time = float(
+            inventory_replenishment_lead_time
+        )
         self.enabled_risks = set(enabled_risks) if enabled_risks is not None else None
         self.risk_overrides = dict(risk_overrides or {})
         self.priming_enabled = bool(priming_enabled)
@@ -773,6 +789,8 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             )
 
     def _observation_dim(self) -> int:
+        if self.observation_version == "v10":
+            return V10_OBSERVATION_DIM
         if self.observation_version == "v9":
             return V9_OBSERVATION_DIM
         if self.observation_version == "v8":
@@ -1106,39 +1124,43 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                 ),
             ]
         )
-        if self.observation_version in ("v3", "v4", "v5", "v6", "v7", "v8", "v9"):
+        if self.observation_version in ("v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10"):
             augmented_obs = np.concatenate(
                 [augmented_obs, self._normalized_cumulative_features()]
             )
         if (
-            self.observation_version in ("v4", "v5", "v6", "v7", "v8", "v9")
+            self.observation_version in ("v4", "v5", "v6", "v7", "v8", "v9", "v10")
             and self.sim is not None
         ):
             augmented_obs = np.concatenate(
                 [augmented_obs, self.sim.get_observation_v4_extra()]
             )
         if (
-            self.observation_version in ("v5", "v6", "v7", "v8", "v9")
+            self.observation_version in ("v5", "v6", "v7", "v8", "v9", "v10")
             and self.sim is not None
         ):
             augmented_obs = np.concatenate(
                 [augmented_obs, self.sim.get_observation_v5_extra()]
             )
-        if self.observation_version in ("v6", "v7", "v8", "v9") and self.sim is not None:
+        if self.observation_version in ("v6", "v7", "v8", "v9", "v10") and self.sim is not None:
             augmented_obs = np.concatenate(
                 [augmented_obs, self.sim.get_observation_v6_extra()]
             )
-        if self.observation_version in ("v7", "v8", "v9") and self.sim is not None:
+        if self.observation_version in ("v7", "v8", "v9", "v10") and self.sim is not None:
             augmented_obs = np.concatenate(
                 [augmented_obs, self.sim.get_observation_v7_extra()]
             )
-        if self.observation_version in ("v8", "v9") and self.sim is not None:
+        if self.observation_version in ("v8", "v9", "v10") and self.sim is not None:
             augmented_obs = np.concatenate(
                 [augmented_obs, self.sim.get_observation_v8_extra()]
             )
-        if self.observation_version == "v9" and self.sim is not None:
+        if self.observation_version in ("v9", "v10") and self.sim is not None:
             augmented_obs = np.concatenate(
                 [augmented_obs, self.sim.get_observation_v9_extra()]
+            )
+        if self.observation_version == "v10" and self.sim is not None:
+            augmented_obs = np.concatenate(
+                [augmented_obs, self.sim.get_observation_v10_extra()]
             )
         return augmented_obs
 
@@ -2440,6 +2462,12 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             "inventory_replenishment_period",
             self.initial_inventory_replenishment_period,
         )
+        inventory_replenishment_lead_time = float(
+            reset_options.get(
+                "inventory_replenishment_lead_time",
+                self.initial_inventory_replenishment_lead_time,
+            )
+        )
         super().reset(seed=seed)
         self.current_step = 0
         # Capacity-inertia state (Ed.2): effective shift ramps toward the request.
@@ -2468,6 +2496,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             risks_enabled=True,
             risk_level=self.risk_level,
             seed=seed,
+            strict_exogenous_crn=True,
             horizon=SIMULATION_HORIZON,
             year_basis=self.year_basis,
             stochastic_pt=self.stochastic_pt,
@@ -2483,9 +2512,12 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             risk_occurrence_mode=self.risk_occurrence_mode,
             risk_frequency_multiplier=self.risk_frequency_multiplier,
             risk_impact_multiplier=self.risk_impact_multiplier,
+            risk_frequency_multipliers_by_id=self.risk_frequency_multipliers_by_id,
+            risk_impact_multipliers_by_id=self.risk_impact_multipliers_by_id,
             enabled_risks=self.enabled_risks,
             risk_overrides=self.risk_overrides,
             inventory_replenishment_period=inventory_replenishment_period,
+            inventory_replenishment_lead_time=inventory_replenishment_lead_time,
         )
         self.sim._start_processes()
         self.sim.env.run(until=self.warmup_hours)
@@ -2564,6 +2596,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                 "initial_buffers": initial_buffers,
                 "initial_shifts": initial_shifts,
                 "inventory_replenishment_period": inventory_replenishment_period,
+                "inventory_replenishment_lead_time": inventory_replenishment_lead_time,
             },
         }
         info["state_constraint_context"] = self.get_state_constraint_context()

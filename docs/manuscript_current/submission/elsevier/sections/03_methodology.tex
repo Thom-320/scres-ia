@@ -279,8 +279,10 @@ its window (fill rate).}
 
 The paper-facing comparison prioritizes service and resilience outcomes
 rather than raw reward totals across incompatible reward families. The
-primary metric for the headline claim is \texttt{order\_ret\_excel}
-(Garrido/Excel ReT), with \texttt{order\_level\_ret\_mean},
+primary metric for the headline claim is \texttt{order\_ret\_excel}:
+the Garrido/Excel ReT workbook formula in Eq.~\eqref{eq:ret}. All other
+reported outcomes are secondary diagnostics. These include
+\texttt{order\_level\_ret\_mean},
 \texttt{flow\_fill\_rate}, \texttt{terminal\_rolling\_fill\_rate\_4w},
 recovery-tail metrics (\texttt{order\_ctj\_p99},
 \texttt{order\_rpj\_p99}), service-loss AUC, and a shift-utilization cost
@@ -295,7 +297,7 @@ on raw cumulative reward.
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\linewidth]{fig7_ret_metric_lineage}
-\caption{Garrido/Excel ReT evaluation lineage redrawn from Garrido-Rios' resilience metric structure. The paper reports order-level ReT as the primary outcome, alongside service and recovery-tail metrics, while PPO is trained on a separate operational proxy reward.}
+\caption{Garrido/Excel ReT evaluation lineage redrawn from Garrido-Rios' resilience metric structure. The paper reports the workbook-formula Excel ReT as the primary outcome, alongside native order-level ReT, service, and recovery-tail diagnostics, while PPO is trained on a separate operational proxy reward.}
 \label{fig:ret_metric_lineage}
 \end{figure}
 
@@ -351,15 +353,21 @@ pooled confidence intervals are reported as descriptive only. Primary
 inference treats the \emph{training seed} as the inferential unit:
 per-seed mean paired deltas are computed first, and claims rest on seed
 sign consistency together with seed-clustered bootstrap or $t$-based
-intervals. Where tail risk is reported, we use the lower conditional
-tail of the episode distribution,
+intervals. Where tail resilience is reported for Garrido/Excel ReT, we
+use a single lower-tail convention,
 \begin{equation}
-\mathrm{CVaR}_{0.05}(X) \;=\; \frac{1}{n}\sum_{i=1}^{n} X_{(i)},
+\begin{aligned}
+\mathrm{CVaR}^{\mathrm{ReT}}_{0.05}
+&= \mathbb{E}\!\left[\mathrm{ReT}\mid
+\mathrm{ReT}\le q_{0.05}(\mathrm{ReT})\right] \\
+&\approx \frac{1}{n}\sum_{i=1}^{n} X_{(i)},
 \qquad n = \max\bigl(1, \lceil 0.05\,N \rceil\bigr),
+\end{aligned}
 \label{eq:cvar}
 \end{equation}
-the mean of the $n$ smallest per-episode values $X_{(1)} \le \dots \le
-X_{(N)}$ of the metric. To guard against winner's-curse comparator
+the mean of the $n$ smallest per-episode Excel ReT values
+$X_{(1)} \le \dots \le X_{(N)}$. Higher values are better. To guard
+against winner's-curse comparator
 selection, the headline delta is additionally recomputed against each of
 the twelve strongest static comparators individually; all twelve deltas
 remain positive with confidence intervals excluding zero

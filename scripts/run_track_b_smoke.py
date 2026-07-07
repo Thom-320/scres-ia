@@ -33,7 +33,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from scripts.benchmark_control_reward import build_metric_contract_metadata
 from scripts.track_b_heuristics import HEURISTIC_POLICY_NAMES, make_heuristic_defaults
-from supply_chain.config import OPERATIONS, THESIS_FAITHFUL_PROTOCOL
+from supply_chain.config import (
+    OPERATIONS,
+    THESIS_FAITHFUL_PROTOCOL,
+    TRACK_A_TRAINING_RAW_MATERIAL_FLOW_MODE,
+    TRACK_A_TRAINING_RAW_MATERIAL_ORDER_UP_TO_MULTIPLIER,
+    canonical_raw_material_flow_mode,
+)
 from supply_chain.dkana import DKANAOnlinePolicyAdapter, DKANAPolicy
 from supply_chain.episode_metrics import METRIC_KEYS, compute_episode_metrics
 from supply_chain.env_experimental_shifts import (
@@ -274,6 +280,24 @@ def build_parser() -> argparse.ArgumentParser:
         help="Multiplier for non-adaptive risk impact/duration in controlled Track B screens.",
     )
     parser.add_argument(
+        "--risk-frequency-by-id",
+        default=None,
+        help=(
+            "Optional comma-separated per-risk frequency multipliers, e.g. "
+            "R22=1.0,R23=1.0,R24=2.0. Overrides the global frequency "
+            "multiplier for listed risk IDs."
+        ),
+    )
+    parser.add_argument(
+        "--risk-impact-by-id",
+        default=None,
+        help=(
+            "Optional comma-separated per-risk impact multipliers, e.g. "
+            "R22=1.5,R23=1.5,R24=1.25. Overrides the global impact "
+            "multiplier for listed risk IDs."
+        ),
+    )
+    parser.add_argument(
         "--demand-mean-multiplier",
         type=float,
         default=1.0,
@@ -341,6 +365,50 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--gamma", type=float, default=0.99)
     parser.add_argument("--gae-lambda", type=float, default=0.95)
     parser.add_argument("--clip-range", type=float, default=0.2)
+    parser.add_argument(
+        "--ent-coef",
+        type=float,
+        default=0.0,
+        help="PPO entropy coefficient. Defaults to 0.0 to preserve historical Track B protocol.",
+    )
+    parser.add_argument(
+        "--norm-reward",
+        action="store_true",
+        help=(
+            "Enable VecNormalize reward normalization during training. "
+            "Evaluation metrics are still reported on the original environment scale."
+        ),
+    )
+    parser.add_argument(
+        "--clip-reward",
+        type=float,
+        default=10.0,
+        help="Reward clipping threshold used by VecNormalize when --norm-reward is enabled.",
+    )
+    parser.add_argument(
+        "--surge-inertia",
+        action="store_true",
+        help=(
+            "Enable capacity activation lag in the Track B environment. Requested "
+            "shift increases ramp toward the target instead of applying instantly; "
+            "used only for prevention diagnostics, not the canonical Track B lane."
+        ),
+    )
+    parser.add_argument(
+        "--surge-ramp-per-step",
+        type=int,
+        default=1,
+        help="Maximum upward shift-level increase per decision step when --surge-inertia is enabled.",
+    )
+    parser.add_argument(
+        "--surge-budget-hours",
+        type=float,
+        default=float("inf"),
+        help=(
+            "Episode surge-hour budget when --surge-inertia is enabled. "
+            "S2 costs one step of surge-hours; S3 costs two. Use inf for lag-only."
+        ),
+    )
     return parser
 
 
@@ -384,7 +452,33 @@ def ci95(values: list[float]) -> tuple[float, float]:
     return float(mean - half), float(mean + half)
 
 
+def parse_risk_multiplier_map(raw: str | None) -> dict[str, float]:
+    if not raw:
+        return {}
+    parsed: dict[str, float] = {}
+    for item in str(raw).split(","):
+        token = item.strip()
+        if not token:
+            continue
+        if "=" not in token:
+            raise ValueError(
+                f"Invalid risk multiplier token {token!r}; expected R22=1.5"
+            )
+        risk_id, value = token.split("=", 1)
+        risk_id = risk_id.strip()
+        if not risk_id:
+            raise ValueError(f"Invalid empty risk id in {token!r}")
+        parsed[risk_id] = max(1e-6, float(value))
+    return parsed
+
+
 def build_env_kwargs(args: argparse.Namespace) -> dict[str, Any]:
+    risk_frequency_by_id = parse_risk_multiplier_map(
+        getattr(args, "risk_frequency_by_id", None)
+    )
+    risk_impact_by_id = parse_risk_multiplier_map(
+        getattr(args, "risk_impact_by_id", None)
+    )
     kwargs: dict[str, Any] = {
         "reward_mode": args.reward_mode,
         "ret_seq_kappa": args.ret_seq_kappa,
@@ -397,8 +491,22 @@ def build_env_kwargs(args: argparse.Namespace) -> dict[str, Any]:
         "max_steps": args.max_steps,
         "risk_frequency_multiplier": args.risk_frequency_multiplier,
         "risk_impact_multiplier": args.risk_impact_multiplier,
+        "risk_frequency_multipliers_by_id": risk_frequency_by_id,
+        "risk_impact_multipliers_by_id": risk_impact_by_id,
         "demand_mean_multiplier": args.demand_mean_multiplier,
+        "raw_material_flow_mode": TRACK_A_TRAINING_RAW_MATERIAL_FLOW_MODE,
+        "raw_material_order_up_to_multiplier": (
+            TRACK_A_TRAINING_RAW_MATERIAL_ORDER_UP_TO_MULTIPLIER
+        ),
     }
+    if getattr(args, "surge_inertia", False):
+        kwargs.update(
+            {
+                "surge_inertia": True,
+                "surge_ramp_per_step": int(args.surge_ramp_per_step),
+                "surge_budget_hours": float(args.surge_budget_hours),
+            }
+        )
     if args.enabled_risks:
         kwargs["enabled_risks"] = tuple(
             risk.strip() for risk in str(args.enabled_risks).split(",") if risk.strip()
@@ -587,8 +695,10 @@ def train_ppo(
     vec_norm = VecNormalize(
         vec_env,
         norm_obs=True,
-        norm_reward=False,
+        norm_reward=bool(getattr(args, "norm_reward", False)),
         clip_obs=10.0,
+        clip_reward=float(getattr(args, "clip_reward", 10.0)),
+        gamma=float(args.gamma),
     )
     algo = learned_policy_name(args)
     if algo == "ppo":
@@ -602,6 +712,7 @@ def train_ppo(
             gamma=args.gamma,
             gae_lambda=args.gae_lambda,
             clip_range=args.clip_range,
+            ent_coef=args.ent_coef,
             policy_kwargs={"net_arch": {"pi": [64, 64], "vf": [64, 64]}},
             seed=seed,
             verbose=0,
@@ -618,6 +729,7 @@ def train_ppo(
             gamma=args.gamma,
             gae_lambda=args.gae_lambda,
             clip_range=args.clip_range,
+            ent_coef=args.ent_coef,
             policy_kwargs={
                 "net_arch": {"pi": [64], "vf": [64]},
                 "lstm_hidden_size": 128,
@@ -1513,6 +1625,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
     if order_ledger_rows is not None:
         save_csv(order_ledger_csv, order_ledger_rows)
     reward_contract = build_reward_contract(str(args.reward_mode))
+    env_kwargs_for_summary = build_env_kwargs(args)
 
     summary = {
         "config": {
@@ -1527,12 +1640,38 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
             "ret_excel_cvar_tail_level": float(args.ret_excel_cvar_tail_level),
             "ret_excel_cvar_window": int(args.ret_excel_cvar_window),
             "risk_level": args.risk_level,
+            "risk_frequency_multiplier": float(args.risk_frequency_multiplier),
+            "risk_impact_multiplier": float(args.risk_impact_multiplier),
+            "risk_frequency_by_id": dict(
+                env_kwargs_for_summary.get("risk_frequency_multipliers_by_id", {})
+            ),
+            "risk_impact_by_id": dict(
+                env_kwargs_for_summary.get("risk_impact_multipliers_by_id", {})
+            ),
             "step_size_hours": float(args.step_size_hours),
             "max_steps": int(args.max_steps),
             "observation_version": str(args.observation_version),
             "action_contract": "track_b_v1",
             "year_basis": "thesis",
             "stochastic_pt": True,
+            "raw_material_flow_mode_requested": str(
+                env_kwargs_for_summary.get(
+                    "raw_material_flow_mode", TRACK_A_TRAINING_RAW_MATERIAL_FLOW_MODE
+                )
+            ),
+            "raw_material_flow_mode_canonical": canonical_raw_material_flow_mode(
+                str(
+                    env_kwargs_for_summary.get(
+                        "raw_material_flow_mode", TRACK_A_TRAINING_RAW_MATERIAL_FLOW_MODE
+                    )
+                )
+            ),
+            "raw_material_order_up_to_multiplier": float(
+                env_kwargs_for_summary.get(
+                    "raw_material_order_up_to_multiplier",
+                    TRACK_A_TRAINING_RAW_MATERIAL_ORDER_UP_TO_MULTIPLIER,
+                )
+            ),
             "learning_rate": float(args.learning_rate),
             "n_envs": int(getattr(args, "n_envs", 1)),
             "n_steps": int(args.n_steps),
@@ -1541,6 +1680,14 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
             "gamma": float(args.gamma),
             "gae_lambda": float(args.gae_lambda),
             "clip_range": float(args.clip_range),
+            "ent_coef": float(args.ent_coef),
+            "norm_reward": bool(getattr(args, "norm_reward", False)),
+            "clip_reward": float(getattr(args, "clip_reward", 10.0)),
+            "surge_inertia": bool(getattr(args, "surge_inertia", False)),
+            "surge_ramp_per_step": int(getattr(args, "surge_ramp_per_step", 1)),
+            "surge_budget_hours": float(
+                getattr(args, "surge_budget_hours", float("inf"))
+            ),
             "dkana_checkpoint": (
                 str(args.dkana_checkpoint) if args.dkana_checkpoint else None
             ),
@@ -1555,6 +1702,14 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
             "observation_version": str(args.observation_version),
             "action_contract": "track_b_v1",
             "risk_level": args.risk_level,
+            "risk_frequency_multiplier": float(args.risk_frequency_multiplier),
+            "risk_impact_multiplier": float(args.risk_impact_multiplier),
+            "risk_frequency_by_id": dict(
+                env_kwargs_for_summary.get("risk_frequency_multipliers_by_id", {})
+            ),
+            "risk_impact_by_id": dict(
+                env_kwargs_for_summary.get("risk_impact_multipliers_by_id", {})
+            ),
             "year_basis": "thesis",
             "stochastic_pt": True,
             "step_size_hours": float(args.step_size_hours),

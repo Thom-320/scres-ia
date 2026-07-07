@@ -177,8 +177,15 @@ class ContinuousItsTrackAEnv(gym.Wrapper):
             internal = dict(targets)
         sim.inventory_buffer_targets = dict(internal)
         sim.inventory_replenishment_period = self.replenishment_period
-        for key, target in internal.items():
-            sim._top_up_inventory_buffer(key, float(target))
+        lead = float(getattr(sim, "inventory_replenishment_lead_time", 0.0) or 0.0)
+        if lead > 0.0:
+            # Realistic rebuild: the higher target is not free/instant. The
+            # extra units arrive only after `lead` hours (Ed.2 mechanism),
+            # not synchronously at decision time.
+            sim.env.process(sim._delayed_buffer_top_up(lead))
+        else:
+            for key, target in internal.items():
+                sim._top_up_inventory_buffer(key, float(target))
         return targets
 
     def _action_dict(self, shifts: int) -> dict[str, float | int]:
@@ -345,8 +352,12 @@ class PerOpBufferTrackAEnv(ContinuousItsTrackAEnv):
             internal = dict(targets)
         sim.inventory_buffer_targets = dict(internal)
         sim.inventory_replenishment_period = self.replenishment_period
-        for key, target in internal.items():
-            sim._top_up_inventory_buffer(key, float(target))
+        lead = float(getattr(sim, "inventory_replenishment_lead_time", 0.0) or 0.0)
+        if lead > 0.0:
+            sim.env.process(sim._delayed_buffer_top_up(lead))
+        else:
+            for key, target in internal.items():
+                sim._top_up_inventory_buffer(key, float(target))
         return targets
 
     def _decision_payload_by_fracs(

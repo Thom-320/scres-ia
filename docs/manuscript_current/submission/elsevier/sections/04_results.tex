@@ -127,6 +127,7 @@ common-random-number (CRN) keys for the seed expansion.
 Metric & PPO & Best static & $\Delta$ [CI95] \\
 \midrule
 Excel ReT & 0.005898 & 0.005460 & +0.000438 [0.000409, 0.000468] \\
+Excel ReT CVaR05 & 0.005673 & 0.005098 & +0.000575 [0.000526, 0.000613] \\
 Order-level ReT & 0.005673 & 0.005247 & +0.000426 [0.000398, 0.000455] \\
 Flow fill rate & 0.960 & 0.665 & +0.295 [0.287, 0.303] \\
 Rolling fill (4w) & 0.998 & 0.937 & +0.061 [0.034, 0.095] \\
@@ -267,9 +268,9 @@ The gain does not scale with the number of controllable dimensions: a
 downstream-only policy captures a \emph{larger} advantage over its own best
 evaluated comparator (+0.000429) than the full joint 8-dimensional contract
 (+0.000367), with shift-only capturing a comparable advantage
-(+0.000377) to the joint contract. This rules out the confound that Track
-B wins simply because it gives the learner more actuators. Downstream
-dispatch access is \emph{sufficient} to recover the largest observed
+(+0.000377) to the joint contract. This is inconsistent with the simple
+confound that Track B wins only because it gives the learner more
+actuators. Downstream dispatch access recovers the largest observed
 in-arm advantage and is the strongest single lever in this decomposition;
 shift-only control also captures part of the dynamic-control effect, so
 we do not claim downstream dispatch is the only useful control surface ---
@@ -294,7 +295,7 @@ including heuristics.}
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.78\linewidth]{fig6_action_space_ablation}
-\caption{E4 action-space ablation: the gain concentrates in downstream dispatch access rather than in action-space size. Deltas ($\times 10^{-3}$, order-level ReT) are computed against each arm's own best evaluated comparator, including heuristics; whiskers are 95\% confidence intervals over the five paired training-seed deltas. All three arms are individually positive, and adding shift-mix control on top of dispatch access does not enlarge the advantage.}
+\caption{E4 action-space ablation: the pattern is consistent with downstream dispatch access being the strongest observed lever rather than action-space size alone. Deltas ($\times 10^{-3}$, order-level ReT) are computed against each arm's own best evaluated comparator, including heuristics; whiskers are 95\% confidence intervals over the five paired training-seed deltas. All three arms are individually positive, and adding shift-mix control on top of dispatch access does not enlarge the advantage.}
 \label{fig:ablation}
 \end{figure}
 
@@ -413,14 +414,16 @@ Garrido-native risk levels (\texttt{current}, \texttt{increased},
 \texttt{severe}) and two horizons ($h{=}52$ and $h{=}104$ weeks; 5 seeds
 $\times$ 12 episodes per cell). This is an out-of-cell stress screen, not
 a full per-regime dense-frontier confirmation. In each cell the
-comparator is the strongest static in that cell by the primary metric,
-and inference is seed-clustered (5 per-seed paired deltas, $t$-based
-CI95).
+comparator is the strongest static in that cell under the stress-screen
+native order-level ReT convention, and inference is seed-clustered
+(5 per-seed paired deltas, $t$-based CI95). The headline Track B claim
+remains the Garrido/Excel ReT result in Table~\ref{tab:track_b_main};
+this matrix is a scope and robustness diagnostic.
 
 \begin{table}[htbp]
 \centering
 \caption{Cross-regime stress matrix (frozen PPO vs.\ best in-cell static
-by order-level ReT, CRN-paired; seed-clustered CI95 over five per-seed
+by native order-level ReT, CRN-paired; seed-clustered CI95 over five per-seed
 paired deltas).}
 \label{tab:cross_scenario}
 \footnotesize
@@ -442,12 +445,12 @@ h104 & severe & 0.000128 & 0.000203 & $-0.000075$ [$-0.000145$, $-0.000005$] & 0
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.70\linewidth]{fig5_generalization_heatmap}
-\caption{E3 cross-regime stress matrix (order-level ReT $\Delta$ vs.\ best in-cell static by the primary metric). PPO gains are positive with fully positive seed-clustered CIs for current and increased risk at both horizons; the severe service-floor regime is the disclosed boundary, with narrow losses at both horizons.}
+\caption{E3 cross-regime stress matrix (native order-level ReT $\Delta$ vs.\ best in-cell static under the same stress-screen convention). PPO gains are positive with fully positive seed-clustered CIs for current and increased risk at both horizons; the severe service-floor regime is the disclosed boundary, with narrow losses at both horizons. The primary manuscript metric remains Garrido/Excel ReT.}
 \label{fig:generalization_heatmap}
 \end{figure}
 
-Against a strong comparator convention --- the best in-cell static
-selected by the primary metric itself --- the Track B advantage is
+Against a strong stress-screen comparator convention --- the best in-cell
+static selected by native order-level ReT itself --- the Track B advantage is
 positive in four of the six evaluated cells: both current-risk cells and
 both increased-risk cells, in every case with a fully positive
 seed-clustered CI95 and all five per-seed deltas positive. Deltas in the
@@ -476,8 +479,8 @@ severe-regime specialization remain future
 work.\footnote{An earlier version of this matrix selected the per-cell
 comparator by a secondary criterion, which flipped the $h{=}104$/severe
 cell marginally positive and inflated two other deltas. The
-numbers reported here use the conservative convention (best in-cell
-static by the primary metric) throughout.}
+numbers reported here use the conservative stress-screen convention
+(best in-cell static by native order-level ReT) throughout.}
 
 The per-cell dense-frontier follow-up confirms both canonical-horizon
 current/increased stress-screen results. Re-evaluating all 147
@@ -515,10 +518,10 @@ operational action-space extension overcomes it under paired
 common-random-number evaluation against a 147-cell dense
 downstream-dispatch static grid across 10 training seeds, and remains
 cheaper in total once dispatch expediting is priced at positive charges
-(Section~4.3). A 5-seed action-space decomposition shows downstream
-dispatch access is sufficient to recover the largest in-arm advantage,
-ruling out ``more actuators''
-as the explanation (Section~4.4). Two independent tests --- an
+(Section~4.3). A 5-seed action-space decomposition is consistent with
+downstream dispatch access being the strongest observed lever and argues
+against ``more actuators'' as a sufficient explanation
+(Section~4.4). Two independent tests --- an
 obs-masked retrain and a privileged-access static comparator --- rule out
 that the effect depends on the learned policy exploiting simulator-only
 regime information (Section~4.5). A cross-regime stress evaluation shows
