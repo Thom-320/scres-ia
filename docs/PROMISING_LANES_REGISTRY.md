@@ -744,3 +744,67 @@ Status:
 Mechanism note: Case B/C branch shifts are real. PPO and Real-KAN move more orders into the
 fill-rate branch than the best static baselines, consistent with shorter exposure windows under
 adaptive dispatch. This is reportable as resilience through exposure reduction.
+
+## ⭐16 Ruta B (live auxiliary belief loss) — preventive claim RETRACTED, headroom CLOSED, efficiency claim survives (2026-07-06/07)
+
+**Do not revive the "Ruta B is causally preventive" claim without re-running the full control
+ladder below — it looked real for a full day before the artifact was found.**
+
+Timeline:
+
+1. **Apparent win (2026-07-06):** PPO+MLP with a live auxiliary BCE loss predicting R22/R24 in the
+   next 2 weeks (kept alive through all of PPO training, unlike the earlier pretrained-then-frozen
+   "Ruta A" which failed) passed the `R_full - R_reset(pre-risk)` causal counterfactual at ~74%
+   positive-pair rate, 5/5 seeds individually, confirmatory scale (5x60k). Same ReT as reactive
+   PPO (+10.05% vs static) at ~55% of its resource cost (0.396 vs 0.719).
+2. **Retraction (2026-07-07):** Two adversarial controls killed it — a reactive PPO baseline with
+   *no* auxiliary loss scored 80-90% positive under the same gate code, and a Ruta B variant with
+   a *time-shuffled* (contentless) label scored 67-78%. Both should have been null. Root cause:
+   the gate's "calm action" was the naive full-episode median, which under Case C's R24 frequency
+   (~1 event/1.2 weeks) is contaminated by reactive carryover from *other* nearby events — swapping
+   it into a pre-event window deletes real reactive value, producing a spurious positive delta for
+   any sufficiently reactive policy. Full autopsy:
+   `docs/TRACK_B_RUTA_B_COUNTERFACTUAL_GATE_AUDIT_2026-07-07.md`.
+3. **Established-gate re-verification (2026-07-07):** re-ran the ORIGINAL, trusted
+   `scripts/audit_track_b_risk_event_counterfactual.py` (not a reimplementation) on both reactive
+   and Ruta B checkpoints, extended additively for the `ruta_b` policy type. First attempt
+   silently ran the wrong environment (stale dependency on a remote host — caught via a new
+   `mean_R_full_overall` sanity echo, now permanent in the script's `summary.json`). Corrected
+   re-run: both policies null (R22/R23/R24 positive rates 3-19%, deltas ~1e-4 or smaller) —
+   confirms the retraction with the right numbers.
+   `docs/TRACK_B_RUTA_B_ESTABLISHED_GATE_FINAL_2026-07-07.md`.
+4. **Preventive-headroom ceiling (2026-07-07) — prevention CLOSED for this environment.** Before
+   building yet another gate, tested whether the environment has ANY preventive headroom at all:
+   - Forced-prep response surface (`scripts/audit_prevention_headroom_sweep.py`): branch rollouts
+     forcing calm/medium/max_prep posture in the 4 weeks before isolated R22 anchors, outcome =
+     local Excel ReT on orders actually exposed to the event. Case C tier: flat (DiD +1.8e-5, 1/67
+     real anchors positive). **R22-only clean-physics tier: exact zero** (0/84 real, 0/96 placebo,
+     local ReT bit-identical across all three postures) — verified not a bug (cost_index *does*
+     vary with the forced action). Mechanistic reading: R22's damage (exogenous ~24h recovery,
+     direct operation knockout on `affected_ops=[4,8,10,12]`) has no causal path from the
+     `track_b_v1` action contract's dispatch/shift levers at all.
+   - Clairvoyant PPO (plain PPO seeing the TRUE future R22/R24 label in obs, train+eval, no aux
+     head — genuine upper bound, not reward shaping): ReT 0.485 (no better than reactive's 0.481),
+     cost 0.853 (worst of any variant tested, including reactive's 0.719). Perfect foreknowledge
+     bought nothing and cost more.
+   - **Independently corroborated same day by Codex's separate Gate v2** (event-tape
+     replay/removal design, `scripts/audit_track_b_prevention_gate_v2.py`,
+     `docs/TRACK_B_PREVENTION_GATE_V2_IMPLEMENTATION_2026-07-07.md`): `forced_prep_sweep` and
+     `event_on_off` designs on Case C both return `prevention_headroom_found=false`, deltas ~0.
+   - Verdict: `docs/TRACK_B_PREVENTIVE_HEADROOM_CEILING_VERDICT_2026-07-07.md`. Stop rule
+     triggered — prevention closed as a boundary result ("this DES rewards fast reaction, not
+     preparation," under the current action contract); gate redesign work is not warranted unless
+     the environment itself changes (e.g. a real preparation lead time — not attempted, would need
+     pre-registration as a separate extension).
+5. **Surviving result: Ruta B's efficiency effect, but NOT from the auxiliary loss.** Control
+   ladder (λ=0 head-present, constant-label, permuted-label, true-label — all 3x30k) shows ReT
+   0.481-0.485 and cost 0.396-0.426 across ALL variants, **including λ=0 where the auxiliary loss
+   contributes zero gradient**. Contrast: clairvoyant PPO (extra feature, default extractor, no
+   `RutaBAuxFeaturesExtractor`) shows reactive's high-cost profile (0.853), not the low-cost
+   pattern. **Attribution: `RutaBAuxFeaturesExtractor`'s architecture (not prediction, not
+   auxiliary-loss regularization) induces resource-efficient policies at equivalent ReT.**
+   Publishable as an architecture/efficiency result, explicitly not as anticipation.
+
+Status: **prevention closed** (do not resume without new environment physics); **efficiency-via-
+architecture is the one live thread** if pursued further (needs a direct-resource-penalty PPO
+comparator to check whether a plain reward penalty reproduces it more simply).

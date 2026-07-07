@@ -134,9 +134,13 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--aux-target-risks", nargs="+", default=["R22", "R24"])
     p.add_argument(
         "--aux-label-mode",
-        choices=["true", "permuted"],
+        choices=["true", "permuted", "constant"],
         default="true",
-        help="'permuted' shuffles the true label over time (same base rate) as a negative control.",
+        help=(
+            "'permuted' shuffles the true label over time (same base rate) as a negative "
+            "control; 'constant' replaces every step with the episode base rate (trivial "
+            "gradient) for the efficiency-attribution ladder."
+        ),
     )
     p.add_argument(
         "--obs-config",
@@ -147,6 +151,15 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--features-dim", type=int, default=64)
     p.add_argument("--hidden-width", type=int, default=64)
     p.add_argument("--architecture", choices=["mlp", "real_kan"], default="mlp")
+    p.add_argument(
+        "--clairvoyant",
+        action="store_true",
+        help=(
+            "Preventive-headroom ceiling test: plain PPO (default extractor, no aux head) "
+            "that SEES the true future-risk label in train AND eval. An upper bound on the "
+            "value of anticipatory information under this action contract."
+        ),
+    )
     p.add_argument("--kan-grid", type=int, default=3)
     p.add_argument("--kan-k", type=int, default=3)
     p.add_argument("--kan-head-width", type=int, default=0)
@@ -184,6 +197,17 @@ def make_eval_env(args: argparse.Namespace):
     obs_wrapper = OBS_ABLATION_CONFIGS[str(obs_config)].wrapper
     if obs_wrapper is not None:
         env = obs_wrapper(env)
+    if getattr(args, "_ruta_b_clairvoyant", False):
+        # Clairvoyant ceiling test: the policy consumes the TRUE future-risk
+        # label at eval time too (discovery pass per episode), instead of the
+        # constant pad that is correct only when the label feeds an aux head.
+        return RutaBRiskLabelWrapper(
+            env,
+            target_risks=tuple(getattr(args, "_ruta_b_target_risks", ("R22", "R24"))),
+            lead_weeks=int(getattr(args, "_ruta_b_lead_weeks", 2)),
+            step_size_hours=float(args.step_size_hours),
+            label_mode="true",
+        )
     return ConstantLabelPadWrapper(env)
 
 
@@ -307,6 +331,9 @@ def main() -> None:
             "eval_episodes": cli.eval_episodes,
             "observation_version": obs_config.observation_version,
             "_ruta_b_obs_config": str(cli.obs_config),
+            "_ruta_b_clairvoyant": bool(getattr(cli, "clairvoyant", False)),
+            "_ruta_b_target_risks": tuple(cli.aux_target_risks),
+            "_ruta_b_lead_weeks": int(cli.aux_lead_weeks),
         },
         scenario_overrides=scenario_overrides,
     )
@@ -322,7 +349,14 @@ def main() -> None:
         vec_norm = VecNormalizeKeepLastRaw(
             vec_env, norm_obs=True, norm_reward=False, clip_obs=10.0, clip_reward=10.0, gamma=cli.gamma
         )
-        if cli.architecture == "real_kan":
+        if getattr(cli, "clairvoyant", False):
+            # Ceiling test: default extractor so the policy CONSUMES the label
+            # column (RutaBAuxFeaturesExtractor would strip it off), plain PPO
+            # loss (aux head irrelevant when the label is a visible feature).
+            extractor_class = None
+            extractor_kwargs = None
+            net_arch = {"pi": [64, 64], "vf": [64, 64]}
+        elif cli.architecture == "real_kan":
             extractor_class = RutaBRealKANAuxFeaturesExtractor
             extractor_kwargs = {
                 "features_dim": cli.features_dim,
@@ -351,12 +385,16 @@ def main() -> None:
             gae_lambda=cli.gae_lambda,
             clip_range=cli.clip_range,
             ent_coef=cli.ent_coef,
-            aux_coef=cli.aux_coef,
-            policy_kwargs={
-                "net_arch": net_arch,
-                "features_extractor_class": extractor_class,
-                "features_extractor_kwargs": extractor_kwargs,
-            },
+            aux_coef=0.0 if getattr(cli, "clairvoyant", False) else cli.aux_coef,
+            policy_kwargs=(
+                {"net_arch": net_arch}
+                if extractor_class is None
+                else {
+                    "net_arch": net_arch,
+                    "features_extractor_class": extractor_class,
+                    "features_extractor_kwargs": extractor_kwargs,
+                }
+            ),
             seed=seed,
             verbose=0,
             device="cpu",

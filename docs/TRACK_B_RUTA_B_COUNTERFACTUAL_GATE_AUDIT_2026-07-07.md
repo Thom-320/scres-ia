@@ -132,3 +132,21 @@ event overlap and reactive contamination. Candidate designs:
 
 Until such a gate is built, Track B should be framed as adaptive resilience and
 exposure/cost control, not confirmed anticipatory prevention.
+
+## 2026-07-07 follow-up: Gate v2 implemented
+
+The replacement audit harness is now implemented in
+`scripts/audit_track_b_prevention_gate_v2.py` and documented in
+`docs/TRACK_B_PREVENTION_GATE_V2_IMPLEMENTATION_2026-07-07.md`.
+
+Gate v2 uses full reruns under replayed/edited risk-event tapes rather than
+post-hoc action splicing. It supports:
+
+- `forced_prep_sweep`;
+- `event_on_off`;
+- `oracle_warning`.
+
+Smoke tests passed, but they do not establish preventive headroom. The standing
+claim boundary remains unchanged: no Track B prevention claim unless Gate v2
+finds positive local event-level headroom and the placebo/reactive-null controls
+remain null.

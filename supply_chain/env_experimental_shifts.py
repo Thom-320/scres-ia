@@ -401,6 +401,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         risk_impact_multiplier: float = 1.0,
         risk_frequency_multipliers_by_id: dict[str, float] | None = None,
         risk_impact_multipliers_by_id: dict[str, float] | None = None,
+        risk_event_tape: list[dict[str, Any]] | None = None,
         initial_buffers: dict[str, float] | None = None,
         initial_shifts: int = 1,
         inventory_replenishment_period: float | None = None,
@@ -527,6 +528,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             str(risk_id): max(1e-6, float(value))
             for risk_id, value in (risk_impact_multipliers_by_id or {}).items()
         }
+        self.risk_event_tape = list(risk_event_tape) if risk_event_tape is not None else None
         self.initial_buffers = dict(initial_buffers or {})
         self.initial_shifts = int(initial_shifts)
         self.initial_inventory_replenishment_period = inventory_replenishment_period
@@ -2514,6 +2516,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             risk_impact_multiplier=self.risk_impact_multiplier,
             risk_frequency_multipliers_by_id=self.risk_frequency_multipliers_by_id,
             risk_impact_multipliers_by_id=self.risk_impact_multipliers_by_id,
+            risk_event_tape=self.risk_event_tape,
             enabled_risks=self.enabled_risks,
             risk_overrides=self.risk_overrides,
             inventory_replenishment_period=inventory_replenishment_period,

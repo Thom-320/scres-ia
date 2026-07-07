@@ -176,6 +176,7 @@ class MFSCSimulation:
         risk_impact_multiplier: float = 1.0,
         risk_frequency_multipliers_by_id: Optional[dict[str, float]] = None,
         risk_impact_multipliers_by_id: Optional[dict[str, float]] = None,
+        risk_event_tape: Optional[Iterable[dict[str, Any]]] = None,
         strict_exogenous_crn: bool = False,
         risk_recovery_window_hours: float = 0.0,
         risk_recovery_release_rations: float = 0.0,
@@ -305,6 +306,7 @@ class MFSCSimulation:
             str(risk_id): max(1e-6, float(value))
             for risk_id, value in (risk_impact_multipliers_by_id or {}).items()
         }
+        self.risk_event_tape = self._normalize_risk_event_tape(risk_event_tape)
         if self.demand_mean_multiplier <= 0.0:
             raise ValueError("demand_mean_multiplier must be > 0.")
         self._raw_units_per_ration = (
@@ -843,7 +845,9 @@ class MFSCSimulation:
         ):
             self.env.process(self._inventory_buffer_replenishment())
 
-        if self.risks_enabled:
+        if self.risks_enabled and self.risk_event_tape is not None:
+            self.env.process(self._risk_event_tape_replay())
+        elif self.risks_enabled:
             risk_processes = {
                 "R11": self._risk_R11,
                 "R12": self._risk_R12,
@@ -859,7 +863,7 @@ class MFSCSimulation:
             for risk_id, process_factory in risk_processes.items():
                 if risk_id in enabled:
                     self.env.process(process_factory())
-        if self.adaptive_benchmark_enabled:
+        if self.adaptive_benchmark_enabled and self.risk_event_tape is None:
             self.env.process(self._adaptive_regime_controller())
 
         self._processes_started = True
@@ -869,6 +873,106 @@ class MFSCSimulation:
             and self.risk_recovery_release_rations > 0.0
         ):
             self.env.process(self._r2_recovery_window_controller())
+
+    def _normalize_risk_event_tape(
+        self, risk_event_tape: Optional[Iterable[dict[str, Any]]]
+    ) -> list[RiskEvent] | None:
+        if risk_event_tape is None:
+            return None
+        normalized: list[RiskEvent] = []
+        for row in risk_event_tape:
+            if isinstance(row, RiskEvent):
+                event = row
+            else:
+                affected = row.get("affected_ops", [])
+                event = RiskEvent(
+                    risk_id=str(row["risk_id"]),
+                    start_time=float(row["start_time"]),
+                    end_time=float(row.get("end_time", row["start_time"])),
+                    duration=float(row.get("duration", 0.0)),
+                    affected_ops=[int(op) for op in affected],
+                    description=str(row.get("description", "") or ""),
+                    magnitude=float(row.get("magnitude", 1.0) or 1.0),
+                    unit=str(row.get("unit", "incidents") or "incidents"),
+                )
+            normalized.append(event)
+        return sorted(normalized, key=lambda ev: (float(ev.start_time), str(ev.risk_id)))
+
+    def _risk_event_tape_replay(self):
+        """Replay a pre-serialized risk calendar for counterfactual audits.
+
+        This is intentionally opt-in.  It does not alter the default thesis or
+        Track B risk generators.  The replay covers the physical semantics used
+        by the current prevention-gate work: R22/R23 duration outages and R24
+        point demand surges.  Other event IDs are replayed conservatively as
+        recorded down/up intervals where affected operations are present.
+        """
+        for event in self.risk_event_tape or []:
+            start_time = max(0.0, float(event.start_time))
+            if start_time > self.env.now:
+                yield self.env.timeout(start_time - self.env.now)
+            self.env.process(self._risk_event_tape_event(event))
+
+    def _risk_event_tape_event(self, event: RiskEvent):
+        risk_id = str(event.risk_id)
+        start = float(self.env.now)
+        duration = max(0.0, float(event.duration))
+        affected_ops = [int(op) for op in event.affected_ops]
+
+        if risk_id == "R24":
+            surge = float(event.magnitude)
+            self._contingent_demand_pending += surge
+            self._contingent_demand_pending = min(
+                self._contingent_demand_pending, 5 * 2600
+            )
+            replayed = RiskEvent(
+                risk_id,
+                start,
+                start,
+                0.0,
+                affected_ops or [13],
+                event.description,
+                magnitude=surge,
+                unit=event.unit or "rations",
+            )
+            self.risk_events.append(replayed)
+            self._add_ret_quantity_risk(replayed)
+            return
+
+        if duration > 0.0 and affected_ops:
+            for op_id in affected_ops:
+                self._take_down(op_id)
+            yield self.env.timeout(duration)
+            for op_id in affected_ops:
+                self._bring_up(op_id)
+            end = float(self.env.now)
+            self.risk_events.append(
+                RiskEvent(
+                    risk_id,
+                    start,
+                    end,
+                    end - start,
+                    affected_ops,
+                    event.description,
+                    magnitude=float(event.magnitude),
+                    unit=event.unit,
+                )
+            )
+            return
+
+        replayed = RiskEvent(
+            risk_id,
+            start,
+            start,
+            0.0,
+            affected_ops,
+            event.description,
+            magnitude=float(event.magnitude),
+            unit=event.unit,
+        )
+        self.risk_events.append(replayed)
+        if risk_id in {"R14", "R24"}:
+            self._add_ret_quantity_risk(replayed)
 
     def _r2_recovery_window_controller(self):
         """

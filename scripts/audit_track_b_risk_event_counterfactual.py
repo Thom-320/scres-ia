@@ -842,6 +842,16 @@ def main() -> None:
     save_csv(out / "risk_event_counterfactual_pre.csv", counterfactual_rows)
     save_csv(out / "summary_by_policy_risk.csv", summary_rows)
 
+    # Echo the RESOLVED environment kwargs, not just the raw args: on 2026-07-07
+    # a stale copy of audit_track_b_prevention_mechanism.py on a remote host
+    # parsed --enabled-risks/--faithful but silently ignored them in
+    # env_kwargs(), producing a wrong-environment run that was only caught by
+    # noticing mean_R_full was at the all-risks scale (~0.0056) instead of the
+    # Case C scale (~0.48).
+    resolved_env_kwargs = env_kwargs(args)
+    mean_r_full_overall = (
+        mean([float(r["R_full"]) for r in full_metrics_rows]) if full_metrics_rows else 0.0
+    )
     meta = {
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
         "policies": args.policies,
@@ -852,6 +862,9 @@ def main() -> None:
         "metric": "ret_excel from compute_episode_metrics (Garrido/Excel ReT)",
         "risk_level": args.risk_level,
         "observation_version": args.observation_version,
+        "resolved_env_kwargs": {k: repr(v) for k, v in sorted(resolved_env_kwargs.items())},
+        "obs_config": getattr(args, "obs_config", None),
+        "mean_R_full_overall": mean_r_full_overall,
         "action_contract": "track_b_v1",
         "belief_sidecar": {
             "dataset": str(args.belief_dataset),

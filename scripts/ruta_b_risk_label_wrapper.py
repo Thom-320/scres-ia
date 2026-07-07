@@ -49,7 +49,7 @@ class RutaBRiskLabelWrapper(gym.Wrapper):
         label_mode: str = "true",
     ) -> None:
         super().__init__(env)
-        if label_mode not in ("true", "permuted"):
+        if label_mode not in ("true", "permuted", "constant"):
             raise ValueError(f"Unknown label_mode: {label_mode!r}")
         self._target_risks = set(target_risks)
         self._lead_weeks = int(lead_weeks)
@@ -111,6 +111,15 @@ class RutaBRiskLabelWrapper(gym.Wrapper):
                 values = np.array([self._future_label_by_step[s] for s in steps])
                 rng.shuffle(values)
                 self._future_label_by_step = {s: float(v) for s, v in zip(steps, values)}
+            elif self._label_mode == "constant":
+                # Efficiency-ladder control: every step gets the episode base
+                # rate. The BCE gradient becomes trivial (no per-step signal),
+                # isolating "any aux gradient at all" from temporal content.
+                steps = sorted(self._future_label_by_step)
+                base_rate = (
+                    float(np.mean([self._future_label_by_step[s] for s in steps])) if steps else 0.0
+                )
+                self._future_label_by_step = {s: base_rate for s in steps}
         else:
             self._future_label_by_step = {step: 0.0 for step in range(self._max_steps)}
         obs, info = self.env.reset(seed=seed, options=options)
