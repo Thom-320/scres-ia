@@ -86,6 +86,12 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--max-anchors-per-episode", type=int, default=4)
     p.add_argument("--max-placebos-per-episode", type=int, default=4)
     p.add_argument("--step-size-hours", type=float, default=168.0)
+    # surge-inertia probe: makes shift changes lag + draw on a finite budget,
+    # so pre-positioning capacity BEFORE a shock is rewarded (already wired in
+    # run_track_b_smoke's parser + build_env_kwargs; just passed through here).
+    p.add_argument("--surge-inertia", action="store_true")
+    p.add_argument("--surge-ramp-per-step", type=int, default=1)
+    p.add_argument("--surge-budget-hours", type=float, default=float("inf"))
     return p
 
 
@@ -100,6 +106,10 @@ def build_args(cli: argparse.Namespace) -> argparse.Namespace:
     args.enabled_risks = cli.enabled_risks
     args.risk_frequency_by_id = cli.risk_frequency_by_id or None
     args.risk_impact_by_id = cli.risk_impact_by_id or None
+    if getattr(cli, "surge_inertia", False):
+        args.surge_inertia = True
+        args.surge_ramp_per_step = int(cli.surge_ramp_per_step)
+        args.surge_budget_hours = float(cli.surge_budget_hours)
     return args
 
 

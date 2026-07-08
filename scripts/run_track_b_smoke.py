@@ -311,7 +311,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--algo",
-        choices=["ppo", "recurrent_ppo"],
+        choices=["ppo", "recurrent_ppo", "sac", "td3"],
         default="ppo",
         help="Learned-policy algorithm for the Track B adaptive lane.",
     )
@@ -718,6 +718,25 @@ def train_ppo(
             verbose=0,
             device="cpu",
         )
+    elif algo in ("sac", "td3"):
+        # Off-policy robustness screen (reviewer objection closure): same env,
+        # obs, eval protocol, and net width as the canonical PPO cell; SB3
+        # defaults for the off-policy-specific hyperparameters.
+        from stable_baselines3 import SAC, TD3
+
+        off_policy_cls = SAC if algo == "sac" else TD3
+        off_policy_kwargs: dict[str, Any] = {
+            "policy": "MlpPolicy",
+            "env": vec_norm,
+            "learning_rate": args.learning_rate,
+            "batch_size": args.batch_size,
+            "gamma": args.gamma,
+            "policy_kwargs": {"net_arch": [64, 64]},
+            "seed": seed,
+            "verbose": 0,
+            "device": "cpu",
+        }
+        model = off_policy_cls(**off_policy_kwargs)
     else:
         model = RecurrentPPO(
             "MlpLstmPolicy",

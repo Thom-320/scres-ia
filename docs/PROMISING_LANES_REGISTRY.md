@@ -808,3 +808,33 @@ Timeline:
 Status: **prevention closed** (do not resume without new environment physics); **efficiency-via-
 architecture is the one live thread** if pursued further (needs a direct-resource-penalty PPO
 comparator to check whether a plain reward penalty reproduces it more simply).
+
+**2026-07-08 update — headroom boundary GENERALIZES beyond R22.** Ran the same forced-prep ceiling
+sweep on the never-tested mediable risks (R23-only, R23-in-Case-C, R12-only, R12+R13 background,
+R21-only) plus the `surge_inertia` lever (activation lag + finite budget on shift changes,
+explicitly designed to reward pre-positioning). 4/6 tiers exact zero (bit-identical local ReT
+across forced postures, matching R22's signature); the other 2 (R12-only, R12+R13) show real-anchor
+rates indistinguishable from placebo. One noisy blip (R23-in-Case-C, 2/28) is contradicted by its
+own clean-physics tier and matches the same busy-environment contamination pattern from the
+original gate autopsy — not real signal. `surge_inertia` — the one lever built specifically to
+reward preparation — is ALSO an exact zero. Full writeup:
+`docs/TRACK_B_PREVENTION_HEADROOM_GENERALIZED_VERDICT_2026-07-08.md`. This upgrades the paper claim
+from "R22 has no channel" to "this action contract has no preventive channel for this risk family,
+full stop" — stronger and more defensible.
+
+**Corroborating find while auditing past runs (2026-07-08):** two previously-undigested 2026-07-04
+runs independently support the same null via different methods — `track_b_oracle_resilience_metrics_2026-07-04`
+(fixed-boost oracle, 8-week lead, ReT moves ~0.1-0.3% relative = flat) and, separately, a genuinely
+useful POSITIVE result that is NOT about prevention: `track_b_event_resilience_purchase_vs_*_2026-07-04`
+(`docs/TRACK_B_EVENT_RESILIENCE_PURCHASE_VERDICT_2026-07-04.md`) shows PPO+MLP buys real local
+resilience around actual R22/R24 events vs a cheap heuristic — 74.0%/72.9% positive rate on local
+service continuity, +41-43k backorders avoided, +11-14k backlog-AUC reduced. This is adaptive
+recovery evidence, not prevention, and should be folded into the manuscript's mechanism/operational-
+significance section — it was sitting unused since 2026-07-04.
+
+**2026-07-08 — SAC/TD3 algorithm-scope screen (closes reviewer objection).** 3 seeds × 30k,
+canonical `adaptive_benchmark_v2` v7 h104 protocol, same eval harness as PPO. Both replicate the
+win: **SAC +9.10%** (0.005911 vs best static 0.005418, all 3 seeds positive), **TD3 +8.77%**
+(0.005893 vs same static, all 3 seeds positive) — in the same range as PPO's own screen-scale
+result. The Track B win is not PPO-specific.
+`outputs/experiments/track_b_{sac,td3}_screen_3seed_30k_2026-07-08/`.
