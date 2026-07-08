@@ -297,9 +297,11 @@ def fig3_gap_decomposition() -> None:
         ax.vlines(cap, y[3] - 0.09, y[3] + 0.09, color=GREEN, lw=1.4, zorder=2)
     ax.scatter(vals, y, s=sizes, c=cols, zorder=3, edgecolors="0.2",
                linewidths=0.6)
-    # value labels placed to the RIGHT of each dot (away from y-axis labels)
+    # value labels placed to the RIGHT of each dot (away from y-axis labels);
+    # the PPO label clears the CI whisker cap instead of the dot
     for yi, v in zip(y, vals):
-        ax.text(v + 0.022, yi, f"{v:.3f}", ha="left", va="center",
+        anchor = max(v, ppo_ci[1]) if yi == y[3] else v
+        ax.text(anchor + 0.022, yi, f"{v:.3f}", ha="left", va="center",
                 fontsize=8, color="0.15")
     ax.text(5.470, 3.75, "common-static reference", fontsize=7.6,
             color="0.35", ha="left", va="bottom")
@@ -1299,9 +1301,8 @@ def fig17_control_loop() -> None:
     # r_t: env -> reward (reward flows from env to the reward box)
     arrow((2.6, 2.5), (3.4, 2.0), color="0.4")
     ax.text(2.85, 2.35, "$r_t$", fontsize=8, color="0.4", ha="center", va="center")
-    # policy -> eval (horizontal)
-    arrow((8.6, 2.75), (8.95, 2.75), color=PURPLE, style="-")
-    ax.text(8.78, 2.9, "eval", fontsize=7.0, color=PURPLE, ha="center", va="bottom")
+    # policy -> eval (horizontal; the Eval box title labels the edge itself)
+    arrow((8.6, 2.75), (8.95, 2.75), color=PURPLE)
 
     # bottom footer band: cadence note + Track A/B distinction (no overlap with boxes)
     ax.text(5.0, 0.35, "decision step $t$: every 168 simulated hours (weekly planning cadence)",
