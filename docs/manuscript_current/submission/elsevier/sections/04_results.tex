@@ -28,6 +28,18 @@ rations, fill rate falls to 45.6\%, and total backorders increase to
 3,132. The DES therefore shows a clear transition from a well-calibrated
 nominal system to a fragile network once disruption intensity escalates.
 
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.92\linewidth]{fig12_des_validation}
+\caption{DES validation. (a) Deterministic annual delivery against the
+thesis reference (Garrido-Rios, 2017, Table 6.10), within the accepted
+$\pm 15\%$ threshold. (b) Average annual delivery across the three
+disruption regimes tested (deterministic, current stochastic risk,
+increased risk), showing the fragility transition as disruption
+intensity escalates.}
+\label{fig:des_validation}
+\end{figure}
+
 \hypertarget{42-track-a}{%
 \subsection{Track A: thesis-grounded benchmark (negative
 result)}\label{42-track-a}}
@@ -100,6 +112,30 @@ buffer is in place. Because Track A does not expose downstream dispatch
 control to the agent, the active constraint lies outside the
 controllable interface --- motivating the Track B extension in
 Section~4.3.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.92\linewidth]{fig13_track_a_boundary}
+\caption{Track A boundary. (a) Canonical-grid Excel ReT: best learned PPO
+(5 seeds) against the best constant static, both essentially tied and
+below the regime-conditioned oracle. (b) Oracle-grid evaluation (a
+different, non-comparable numeric scale from panel a): best constant
+static against the regime-conditioned oracle, isolating the
+$+0.000176$ to $+0.000296$ headroom that no tested learner converts;
+PPO's canonical-grid result is noted for reference but is not plotted
+on this axis, since the two panels use different evaluation protocols.}
+\label{fig:track_a_boundary}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.92\linewidth]{fig15_learning_curves}
+\caption{Track A learning curves across five PPO seeds. Every seed
+plateaus near the best-static reference line rather than surpassing it,
+supplementary evidence that additional training does not convert the
+measured oracle headroom under this action contract.}
+\label{fig:learning_curves}
+\end{figure}
 
 \hypertarget{43-track-b}{%
 \subsection{Track B: extended action space (positive
@@ -229,6 +265,18 @@ Charge $\lambda_d$ & PPO total cost & Best static total cost & $\Delta$ [CI95] \
 \includegraphics[width=0.78\linewidth]{fig4_pareto_ret_tail_ctj}
 \caption{Track B ReT--tail trade-off under the canonical CRN protocol. Filled dots are the 147 dense static dispatch policies; open circles mark the static Pareto-nondominated subset on the ReT/cost/tail/flow criteria. PPO (star) is not a strict assembly-cost winner, but it dominates the entire static family on Excel ReT and the $CT_j$ p99 recovery tail simultaneously.}
 \label{fig:pareto_ret_tail}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\linewidth]{fig14_dispatch_cost_sensitivity}
+\caption{Dispatch-inclusive cost sensitivity (Table~\ref{tab:dispatch_cost}
+plotted). PPO's total-cost advantage over the best static comparator
+crosses into statistical significance (CI95 excluding zero) at
+$\lambda_d \approx 0.025$ and grows monotonically as the dispatch-expediting
+charge increases, because PPO expedites selectively while the best
+static comparator holds aggressive multipliers permanently.}
+\label{fig:dispatch_cost_sensitivity}
 \end{figure}
 
 A companion masking experiment addresses whether this advantage could
@@ -434,6 +482,18 @@ all 18 outcomes, including the 6 non-promoted cells, are reported in the
 evidence bundle. The uniform sign across 18 independently-trained
 configurations is evidence against the concern that the canonical result
 depends on a fortuitously tuned reward.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.9\linewidth]{fig16_reward_sensitivity}
+\caption{Reward sensitivity screen. Excel ReT delta over the best dense
+static comparator for all 18 reward/observation cells (4 reward modes
+$\times$ 3 CVaR tail weights where applicable, crossed with observation
+versions v7--v9). Every cell is positive; the canonical
+\texttt{control\_v1}/v7 cell used for the headline result is not the
+largest delta in the screen.}
+\label{fig:reward_sensitivity}
+\end{figure}
 
 \hypertarget{47-cross-scenario}{%
 \subsection{Cross-regime stress evaluation}\label{47-cross-scenario}}

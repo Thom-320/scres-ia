@@ -181,6 +181,18 @@ Dim & Decision variable & Decode & Effective range \\
 \end{tabular}
 \end{table}
 
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.92\linewidth]{fig17_control_loop}
+\caption{The weekly POMDP control loop. The environment emits observation
+$o_t$ and reward $r_t$; the PPO policy returns action $a_t$ under the
+\texttt{track\_b\_v1} 8D contract; the frozen checkpoint is evaluated on
+Garrido/Excel ReT. Track A restricts the agent to dimensions 1--6
+(buffer/shift); Track B adds dimensions 7--8, reaching the downstream
+dispatch bottleneck.}
+\label{fig:control_loop}
+\end{figure}
+
 \begin{table}[htbp]
 \centering
 \caption{Observation classes relevant to the privileged-observation audit.}

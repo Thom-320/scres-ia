@@ -117,11 +117,18 @@ experiment rules out the strongest privileged observation confound but does
 not prove full field deployability of every state variable.
 Fourth, the problem is better described as partially observed control than a
 fully identified MDP: the agent observes a projection of the simulation state,
-not the full internal state. Fifth, the paper uses PPO exclusively (with
+not the full internal state. Fifth, the paper's main results use PPO (with
 RecurrentPPO as a comparator) as a stable continuous-control baseline; we
-claim action-space alignment, not algorithmic superiority, and off-policy
-continuous-control algorithms such as SAC and TD3 are natural robustness
-extensions. Algorithmic choice is not the mechanism tested in this paper,
+claim action-space alignment, not algorithmic superiority. A screening run
+under the identical canonical protocol (control\_v1 reward, observation v7,
+track\_b\_v1 action contract, 3 seeds $\times$ 30{,}000 timesteps) confirms
+the win is not an artifact of on-policy learning: SAC improves order-level
+ReT over the best static/heuristic comparator by $+9.10\%$ and TD3 by
+$+8.77\%$, both with all three seeds individually positive and in the same
+range as PPO's own screen-scale result. We report these as a scope check,
+not a confirmatory-scale claim --- they were not run at the 10-seed budget
+used for the headline number. Algorithmic choice is not the mechanism
+tested in this paper,
 and the reward-insensitivity screen suggests the effect is not tied to
 one training configuration. Sixth, the
 cross-regime/horizon matrix uses a fixed dense-comparable static comparator
@@ -163,7 +170,8 @@ training specialized policies for that regime, rather than relying on the
 policy trained under \texttt{adaptive\_benchmark\_v2}, could establish
 tighter upper bounds on RL effectiveness under catastrophic disruption.
 Cross-campaign organizational learning at longer horizons than the
-8-cycle probe reported above, off-policy algorithm comparisons
-(SAC/TD3), and a full 147-candidate regime-table fit (the current
+8-cycle probe reported above, a confirmatory-scale (10-seed) off-policy
+comparison extending the SAC/TD3 screen reported above, and a full
+147-candidate regime-table fit (the current
 privileged-observation test used a trimmed 75-candidate grid) remain open
 for future work.
