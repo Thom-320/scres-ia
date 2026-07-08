@@ -24,7 +24,7 @@ from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
 
 OUT = Path("docs/manuscript_current/submission/elsevier/figures")
 
-# Okabe-Ito palette
+# Darker variants for small text use (pass 4.5:1 on white)
 BLUE = "#0072B2"
 SKY = "#56B4E9"
 GREEN = "#009E73"
@@ -32,6 +32,9 @@ ORANGE = "#E69F00"
 VERMIL = "#D55E00"
 PURPLE = "#CC79A7"
 GREY = "#7f7f7f"
+# Text-safe darker shades (contrast >= 4.5:1 on white)
+GREEN_TEXT = "#1a7a52"     # 4.55:1 — for small green text
+VERMIL_TEXT = "#a84200"    # 5.73:1 — for small vermilion text
 
 plt.rcParams.update(
     {
@@ -585,6 +588,242 @@ def fig8_ret_branch_timeline() -> None:
     save(fig, "fig8_ret_branch_timeline")
 
 
+# ---------------------------------------------------------------- fig9
+def fig9_prevention_ceiling() -> None:
+    """Prevention boundary, generalized: two independent ceiling tests agree
+    that preventive headroom is ~0 under the track_b_v1 action contract,
+    across every mediable risk family tested.
+
+    Panel (a): forced-prep response surface, all eight tiers. For each tier,
+    the share of isolated real anchors where the max-prep posture beats calm
+    on local Garrido/Excel ReT (filled) vs the same share on matched placebo
+    anchors (open). Every tier sits at 0-7%, far below the 60% promotion bar;
+    six of eight are exact zeros (bit-identical outcomes across postures).
+    Sources:
+      outputs/experiments/track_b_headroom_sweep_{case_c,r22_only}_2026-07-07/
+      outputs/experiments/track_b_headroom_{r23_only,r23_case_c,r12_only,
+        r12_r13bg,r21_only,r23_surge_inertia}_2026-07-08/
+      docs/TRACK_B_PREVENTION_HEADROOM_GENERALIZED_VERDICT_2026-07-08.md
+
+    Panel (b): clairvoyant ceiling. A PPO trained AND evaluated with the TRUE
+    future risk label visible does not improve on the reactive baseline's ReT
+    and is the most resource-expensive variant tested.
+    Source: docs/TRACK_B_PREVENTIVE_HEADROOM_CEILING_VERDICT_2026-07-07.md
+    """
+    fig, (axA, axB) = plt.subplots(
+        1, 2, figsize=(7.4, 3.6), gridspec_kw={"width_ratios": [1.30, 1.0]}
+    )
+
+    # --- panel (a): positive-anchor rate per tier, real vs placebo ----------
+    # (tier label, real %, placebo %, n_real, n_placebo)
+    tiers = [
+        ("R22 · Case C background",   1.5, 4.2, 67, 96),
+        ("R22 · clean physics",       0.0, 0.0, 84, 96),
+        ("R23 · Case C background",   7.1, 4.2, 28, 96),
+        ("R23 · clean physics",       0.0, 0.0, 45, 96),
+        ("R23 · clean + surge lag",   0.0, 0.0, 45, 96),
+        ("R12 · clean physics",       0.0, 0.0, 65, 96),
+        ("R12 · R13 background",      0.0, 2.1, 66, 96),
+        ("R21 · clean physics",       0.0, 0.0, 24, 96),
+    ]
+    y = np.arange(len(tiers))[::-1]
+
+    axA.axvline(60, color=VERMIL, lw=1.0, ls="--", zorder=1)
+    axA.text(61.8, len(tiers) - 0.35, "promotion bar", fontsize=7.6,
+             color=VERMIL_TEXT, ha="left", va="bottom")
+
+    for yi, (label, real, plac, n_r, n_p) in zip(y, tiers):
+        axA.plot([0, max(real, plac)], [yi, yi], color="0.90", lw=1.4, zorder=1)
+        axA.scatter([plac], [yi], s=34, facecolors="white", edgecolors=GREY,
+                    linewidths=1.1, zorder=3)
+        axA.scatter([real], [yi], s=42, c=BLUE, edgecolors="0.2",
+                    linewidths=0.5, zorder=4)
+        axA.text(101, yi, f"{n_r}/{n_p}", fontsize=7.2, color="0.45",
+                 ha="left", va="center")
+
+    axA.text(101, len(tiers) - 0.35, "anchors\n(real/placebo)", fontsize=7.2,
+             color="0.45", ha="left", va="bottom", linespacing=1.15)
+    axA.set_yticks(y)
+    axA.set_yticklabels([t[0] for t in tiers], fontsize=8.2)
+    axA.set_xlim(-3, 100)
+    axA.set_ylim(-0.7, len(tiers) - 0.3 + 0.75)
+    axA.set_xlabel("anchors where max-prep beats calm on local ReT (%)",
+                   fontsize=8.6)
+    axA.set_title("(a) Forced-prep response surface, all tiers",
+                  fontsize=9.4, pad=8)
+    axA.scatter([], [], s=42, c=BLUE, edgecolors="0.2", linewidths=0.5,
+                label="real anchors")
+    axA.scatter([], [], s=34, facecolors="white", edgecolors=GREY,
+                linewidths=1.1, label="placebo anchors")
+    leg = axA.legend(fontsize=7.8, loc="lower right", frameon=True,
+                     borderaxespad=0.4, handletextpad=0.3)
+    leg.get_frame().set_linewidth(0.5)
+    leg.get_frame().set_edgecolor("0.85")
+    leg.get_frame().set_facecolor("white")
+
+    # --- panel (b): clairvoyant ceiling ------------------------------------
+    best_static_ret = 0.441640      # s2_d2.00
+    reactive = (0.481160, 0.719)
+    clairvoy = (0.485035, 0.853)
+
+    axB.axvline(best_static_ret, color=GREY, lw=0.9, ls="--", zorder=1)
+    axB.text(best_static_ret + 0.0012, 0.615, "best static", fontsize=7.8,
+             color="0.35", ha="left", va="bottom", rotation=90)
+
+    axB.scatter(*reactive, s=84, c=BLUE, zorder=4,
+                edgecolors="0.2", linewidths=0.6)
+    axB.text(reactive[0] - 0.0034, reactive[1], "reactive PPO\n+10.65% vs static",
+             fontsize=8, color="0.15", ha="right", va="center",
+             linespacing=1.25)
+    axB.scatter(*clairvoy, s=84, c=VERMIL, zorder=4,
+                edgecolors="0.2", linewidths=0.6)
+    axB.text(clairvoy[0] - 0.0034, clairvoy[1],
+             "clairvoyant PPO\n(true future visible)\n+9.83% vs static",
+             fontsize=8, color="0.15", ha="right", va="center",
+             linespacing=1.25)
+    axB.annotate(
+        "", xy=(clairvoy[0] + 0.0018, clairvoy[1] - 0.006),
+        xytext=(reactive[0] + 0.0018, reactive[1] + 0.006),
+        arrowprops=dict(arrowstyle="->", color="0.55", lw=0.9,
+                        shrinkA=0, shrinkB=0),
+    )
+    axB.text(0.4874, 0.787, "perfect foreknowledge:\nno ReT gain, +19% cost",
+             fontsize=7.8, color="0.35", ha="left", va="center",
+             linespacing=1.25)
+
+    axB.set_xlabel("ReT Excel (Case C scale)", fontsize=9)
+    axB.set_ylabel("resource cost index", fontsize=9)
+    axB.set_xlim(0.437, 0.503)
+    axB.set_ylim(0.60, 0.95)
+    axB.set_xticks([0.44, 0.46, 0.48, 0.50])
+    axB.set_title("(b) Clairvoyant ceiling", fontsize=9.4, pad=8)
+
+    fig.tight_layout(w_pad=2.4)
+    save(fig, "fig9_prevention_ceiling")
+
+
+# ---------------------------------------------------------------- fig10
+def fig10_efficiency_architecture() -> None:
+    """Efficiency is architectural, not predictive: the Ruta B control ladder.
+
+    ReT Excel vs resource cost on the Case C scale. The four
+    RutaBAuxFeaturesExtractor arms (true/permuted/lambda0/constant label)
+    cluster at ~0.40-0.43 cost regardless of whether the auxiliary loss
+    contributes any gradient (lambda=0) or any temporal signal (constant);
+    the two default-extractor arms (reactive, clairvoyant) cluster at
+    ~0.72-0.85 cost regardless of foreknowledge. The cost reduction traces to
+    the extractor trunk, not to prediction.
+    Sources: docs/TRACK_B_PREVENTIVE_HEADROOM_CEILING_VERDICT_2026-07-07.md
+    (control-ladder table); confirm/screen bundles cited therein.
+    """
+    fig, ax = plt.subplots(figsize=(6.4, 4.0))
+
+    # (ReT, cost) -- Case C protocol
+    aux_pts = {
+        "true-label $\\lambda{=}0.25$": (0.481086, 0.396),
+        "$\\lambda{=}0$ (zero gradient)": (0.484962, 0.418),
+        "constant-label": (0.484651, 0.419),
+        "permuted-label": (0.485139, 0.426),
+    }
+    def_pts = {
+        "reactive PPO": (0.481160, 0.719),
+        "clairvoyant PPO": (0.485035, 0.853),
+    }
+
+    # group bands (subtle)
+    ax.axhspan(0.376, 0.446, color=GREEN, alpha=0.055, zorder=0)
+    ax.axhspan(0.699, 0.873, color=VERMIL, alpha=0.055, zorder=0)
+
+    for (x_, y_) in aux_pts.values():
+        ax.scatter(x_, y_, marker="s", s=64, c=GREEN, edgecolors="0.2",
+                   linewidths=0.6, zorder=4)
+    for (x_, y_) in def_pts.values():
+        ax.scatter(x_, y_, marker="o", s=72, c=VERMIL, edgecolors="0.2",
+                   linewidths=0.6, zorder=4)
+
+    # direct labels, collision-free
+    ax.text(0.481086 - 0.0007, 0.396 - 0.017, "true-label\n$\\lambda{=}0.25$",
+            fontsize=8, color="0.15", ha="center", va="top", linespacing=1.2)
+    ax.text(0.485139 + 0.0009, 0.418,
+            "$\\lambda{=}0$ (zero gradient)\nconstant-label\npermuted-label",
+            fontsize=8, color="0.15", ha="left", va="center", linespacing=1.35)
+    ax.text(0.481160 - 0.0009, 0.719, "reactive PPO", fontsize=8,
+            color="0.15", ha="right", va="center")
+    ax.text(0.485035 - 0.0009, 0.853, "clairvoyant PPO\n(true future visible)",
+            fontsize=8, color="0.15", ha="right", va="center", linespacing=1.25)
+
+    # group captions on the bands, right-aligned inside the axes
+    ax.text(0.4773, 0.440, "RutaBAuxFeaturesExtractor trunk",
+            fontsize=8.2, color=GREEN_TEXT, ha="left", va="center",
+            style="italic")
+    ax.text(0.4922, 0.863, "default PPO extractor",
+            fontsize=8.2, color=VERMIL_TEXT, ha="right", va="center",
+            style="italic")
+
+    # the single takeaway, in neutral ink, anchored mid-plot
+    ax.annotate(
+        "", xy=(0.4790, 0.446), xytext=(0.4790, 0.699),
+        arrowprops=dict(arrowstyle="<->", color="0.45", lw=0.9),
+    )
+    ax.text(0.4794, 0.5725, "same ReT,\n$\\sim$45% lower cost",
+            fontsize=8, color="0.30", ha="left", va="center", linespacing=1.3)
+
+    ax.set_xlabel("ReT Excel (Case C scale)", fontsize=9)
+    ax.set_ylabel("resource cost index", fontsize=9)
+    ax.set_xlim(0.4770, 0.4930)
+    ax.set_ylim(0.33, 0.92)
+    ax.set_xticks([0.478, 0.482, 0.486, 0.490])
+    fig.tight_layout()
+    save(fig, "fig10_efficiency_architecture")
+
+
+# ---------------------------------------------------------------- fig11
+def fig11_no_forecast_defense() -> None:
+    """No-forecast defense: 15-seed paired delta (no-forecast - full-v7) on
+    ReT Excel hovers at zero; the headline PPO-vs-static effect is ~200x the
+    y-axis range. Neutral single hue -- the message is "this is noise," so
+    sign is not encoded in color.
+    Source: outputs/experiments/track_b_no_forecast_fixed_rng_final_15seed_2026-07-05/
+    """
+    # per-seed paired deltas, x10^-5 (no-forecast minus full-v7)
+    # exact values from paired_seed_deltas.csv (x10^-5)
+    deltas = [2.02, -0.18, -1.47, 1.43, 0.59, 3.35, -0.06, 4.40,
+              0.01, 2.14, 0.53, -2.10, 1.22, -6.74, -1.93]
+    mean, lo, hi = 0.21, -1.26, 1.68
+
+    fig, ax = plt.subplots(figsize=(6.8, 3.4))
+    x = np.arange(1, 16)
+
+    ax.plot([0.2, 15.9], [0, 0], color="0.35", lw=1.0, zorder=1)
+    ax.vlines(x, 0, deltas, color="0.85", lw=1.4, zorder=2)
+    ax.scatter(x, deltas, s=44, c=BLUE, edgecolors="0.2", linewidths=0.5,
+               zorder=3)
+
+    # pooled mean + CI at the right, in neutral ink
+    xm = 16.6
+    ax.errorbar([xm], [mean], yerr=[[mean - lo], [hi - mean]], fmt="D",
+                ms=7, mfc="white", mec="0.15", ecolor="0.15", elinewidth=1.4,
+                capsize=5, capthick=1.4, zorder=4)
+    ax.text(xm + 0.55, mean, "mean $+0.21$\nCI95 $[-1.26, +1.68]$",
+            fontsize=8, color="0.15", ha="left", va="center", linespacing=1.3)
+
+    # scale reference: text only, no arrow
+    ax.text(0.55, 6.6,
+            "headline PPO $-$ static effect: $+43.8\\times 10^{-5}$ "
+            "($\\sim$200$\\times$ this axis)",
+            fontsize=8, color="0.35", ha="left", va="center")
+
+    ax.set_xticks(list(x) + [xm])
+    ax.set_xticklabels([str(s) for s in x] + ["mean"], fontsize=8)
+    ax.set_xlim(0.2, 20.4)
+    ax.set_ylim(-7.6, 7.4)
+    ax.set_xlabel("training seed", fontsize=9)
+    ax.set_ylabel("paired $\\Delta$ ReT Excel\n(no-forecast $-$ full-v7, "
+                  "$\\times 10^{-5}$)", fontsize=8.8)
+    fig.tight_layout()
+    save(fig, "fig11_no_forecast_defense")
+
+
 if __name__ == "__main__":
     fig1_bottleneck_alignment()
     fig2_mfsc_topology()
@@ -594,4 +833,7 @@ if __name__ == "__main__":
     fig6_action_space_ablation()
     fig7_ret_metric_lineage()
     fig8_ret_branch_timeline()
+    fig9_prevention_ceiling()
+    fig10_efficiency_architecture()
+    fig11_no_forecast_defense()
     print("done")

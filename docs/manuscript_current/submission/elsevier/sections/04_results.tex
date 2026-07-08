@@ -351,10 +351,36 @@ every one of 60 comparisons.
 \label{fig:gap_decomposition}
 \end{figure}
 
+\emph{Is the forecast signal doing any work at all?} A third, sharper
+test drops the two true-transition-matrix forecast fields entirely ---
+training and evaluating with them masked --- and compares against the
+full-v7 policy on the same fifteen training seeds under fixed-RNG paired
+evaluation. The per-seed paired delta (no-forecast minus full-v7) on
+Excel ReT is $+0.21\times 10^{-5}$ on average, with a 95\% confidence
+interval of $[-1.26, +1.68]\times 10^{-5}$ that comfortably includes
+zero and 9 of 15 seeds nominally favoring the \emph{no-forecast} arm
+(Figure~\ref{fig:no_forecast_defense}). For scale, the headline
+PPO-versus-static effect is $+43.8\times 10^{-5}$ --- roughly two
+hundred times the entire range of forecast-removal deltas. Removing the
+privileged forecast produces no measurable change in resilience.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\linewidth]{fig11_no_forecast_defense}
+\caption{No-forecast defense (15 training seeds, fixed-RNG paired
+evaluation). Per-seed paired delta (no-forecast $-$ full-v7) on Excel ReT
+($\times 10^{-5}$), with the pooled mean and 95\% CI at right. The
+deltas straddle zero with no systematic direction; the headline
+PPO-vs-static effect ($+43.8\times 10^{-5}$) is $\sim$200$\times$ this
+axis. Evidence bundle:
+\texttt{track\_b\_no\_forecast\_fixed\_rng\_final\_15seed}.}
+\label{fig:no_forecast_defense}
+\end{figure}
+
 Together these results indicate the Track B advantage is not explained by
-access to privileged simulator state: PPO does not require it to win, and
-a non-learning policy that has it still cannot approach PPO's
-performance.
+access to privileged simulator state: PPO does not require it to win, a
+non-learning policy that has it still cannot approach PPO's performance,
+and deleting the forecast signal outright changes nothing measurable.
 
 \begin{table}[htbp]
 \centering
@@ -517,10 +543,92 @@ therefore not, by itself, sufficient for a learned policy to win; the
 result additionally requires action-space coverage of the downstream
 bottleneck.
 
-\hypertarget{48-summary}{%
-\subsection{Summary}\label{48-summary}}
+\hypertarget{48-prevention-boundary}{%
+\subsection{Prevention boundary: the gain is adaptive recovery, not
+anticipation}\label{48-prevention-boundary}}
 
-The experimental evidence forms a coherent narrative across six result
+The results so far establish \emph{that} downstream dispatch authority
+converts into resilience; this section establishes \emph{when} the policy
+earns it. A natural stronger claim would be anticipation: that the
+learned policy prepares before disruption events rather than reacting to
+them. We tested this claim adversarially and report the boundary
+explicitly.
+
+An initial event-aligned counterfactual --- replacing the policy's
+actions in the four weeks before each disruption event with its own
+``calm'' action and measuring the resilience drop --- appeared to show a
+strong preventive signal (roughly three quarters of pre-event windows
+carrying positive value, stable across seeds). Two negative controls
+falsified the gate itself: a purely reactive baseline with no
+anticipatory machinery of any kind passed it at an even higher rate, and
+so did a variant trained on a temporally shuffled (content-free) risk
+label. The artifact is instructive: under frequent overlapping
+disruptions, the episode-level ``calm action'' statistic is contaminated
+by legitimate reactive responses to \emph{other, nearby} events, so
+substituting it into any pre-event window deletes real reactive value
+and manufactures a positive delta for any sufficiently reactive policy.
+A validated counterfactual with an event-exclusion halo around the calm
+estimate returns both policies to the same null band (3--19\%
+positive-pair rates, mean deltas one to two orders of magnitude smaller).
+
+With the gate question settled, we measured the ceiling directly
+(Figure~\ref{fig:prevention_ceiling}). First, a forced-preparation
+response surface: for isolated real disruption events (and matched
+event-free placebo anchors), we force the entire action vector to a
+fixed posture --- calm, medium, or maximum preparation --- for the four
+weeks before the anchor, then resume the policy, and score only the
+orders causally exposed to that event. Across eight environment tiers
+covering every risk family with a mechanically plausible preparation
+channel (R22/R23 line-of-communication and forward-unit destruction,
+R12/R13 upstream contract and supplier stalls, R21 natural disasters,
+and a surge-inertia variant in which capacity changes take effect with a
+lag --- precisely the physics that should reward preparation), the share
+of real anchors where maximum preparation beats calm is 0--7\%,
+indistinguishable from the placebo rate and far below any promotion
+threshold; six of the eight tiers are \emph{exact} nulls, with
+bit-identical exposed-order outcomes across all three postures while
+resource cost varies. Second, a clairvoyant ceiling: a PPO trained
+\emph{and} evaluated with the true future risk calendar visible in its
+observation gains no resilience over the reactive baseline ($+9.83\%$
+versus $+10.65\%$ over the best static under downstream stress) while
+spending 19\% more resources. If perfect foreknowledge buys nothing, no
+learned predictor can.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{fig9_prevention_ceiling}
+\caption{Prevention ceiling tests. (a) Forced-prep response surface
+across all eight environment tiers: the share of isolated real
+disruption anchors where a forced maximum-preparation posture beats a
+forced calm posture on exposed-order Excel ReT (filled), against the
+same share on matched event-free placebo anchors (open). Every tier
+sits at 0--7\%; six of eight are exact nulls with bit-identical outcomes
+across postures. (b) Clairvoyant ceiling: a PPO trained and evaluated
+with the true future risk calendar visible does not exceed the reactive
+baseline's margin over the best static and is the most
+resource-expensive variant tested. The benchmark rewards fast adaptive
+recovery, not anticipatory preparation, under the studied action
+contract.}
+\label{fig:prevention_ceiling}
+\end{figure}
+
+The mechanistic reading is consistent with the DES physics: the
+disruption processes have exogenous, action-independent recovery
+durations and knock out operations directly, so the dispatch and shift
+levers cannot shorten an outage --- they can only move flow faster while
+capacity exists. The Track B gain is therefore adaptive recovery and
+exposure reduction, not anticipation, and we bound the claim
+accordingly. Beyond the boundary itself, the episode is a methodological
+caution we believe generalizes: event-aligned action-splice
+counterfactuals are structurally fragile under frequent overlapping
+disruptions, and a positive preventive signal from such a gate should
+not be trusted until a reactive-only baseline, a content-free-label
+control, and placebo anchors have all failed to reproduce it.
+
+\hypertarget{49-summary}{%
+\subsection{Summary}\label{49-summary}}
+
+The experimental evidence forms a coherent narrative across seven result
 dimensions. Track A demonstrates a structural limitation under
 dense-frontier evaluation (Section~4.2). Track B demonstrates that an
 operational action-space extension overcomes it under paired
@@ -530,16 +638,23 @@ cheaper in total once dispatch expediting is priced at positive charges
 (Section~4.3). A 5-seed action-space decomposition is consistent with
 downstream dispatch access being the strongest observed lever and argues
 against ``more actuators'' as a sufficient explanation
-(Section~4.4). Two independent tests --- an
-obs-masked retrain and a privileged-access static comparator --- rule out
+(Section~4.4). Three independent tests --- an
+obs-masked retrain, a privileged-access static comparator, and a 15-seed
+paired forecast-removal comparison --- rule out
 that the effect depends on the learned policy exploiting simulator-only
-regime information (Section~4.5). A cross-regime stress evaluation shows
+regime or forecast information (Section~4.5). A cross-regime stress
+evaluation shows
 the frozen policy transfers with fully positive seed-clustered CIs to
 current and increased risk at both horizons, with the severe
 service-floor regime disclosed as the boundary where PPO loses narrowly,
 and a companion experiment
 shows the disruption regime alone is not sufficient for a win without
-downstream-dispatch access (Section~4.7). The central finding is not
+downstream-dispatch access (Section~4.7). Finally, an adversarially
+validated prevention audit bounds the mechanism in time: forced pre-event
+preparation has no causal effect on event-exposed outcomes in any risk
+family, and perfect foreknowledge buys no resilience --- the gain is
+adaptive recovery, not anticipation
+(Section~4.8). The central finding is not
 that RL is universally effective, but that RL value is observed in this
 benchmark when the
 controllable interface reaches the operational bottleneck and the policy

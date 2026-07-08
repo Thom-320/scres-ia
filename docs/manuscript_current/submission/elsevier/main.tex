@@ -122,6 +122,45 @@ Rank & Static policy & Static Excel ReT & $\Delta$ & CI95 \\
 \end{tabular}
 \end{table}
 
+\section{Efficiency-architecture attribution}\label{appendix-efficiency}
+
+The prevention audit (Section~4.8) evaluated, among other candidates, a
+policy trained with a live auxiliary future-risk prediction loss sharing
+the feature trunk with the actor-critic. Its preventive claim did not
+survive the negative controls, but a secondary observation did: under
+the downstream-stress evaluation, that policy matched the reactive
+baseline's resilience ($+10.05\%$ versus $+10.65\%$ over the best
+static) at roughly 55\% of its resource cost (cost index 0.396 versus
+0.719). A control ladder attributes the mechanism
+(Figure~\ref{fig:efficiency_architecture}): replacing the true auxiliary
+label with a temporally permuted label, a constant label, or removing
+the auxiliary gradient entirely ($\lambda{=}0$, head present but inert)
+all reproduce the same low-cost, equal-resilience cluster --- so neither
+the predictive content nor the auxiliary loss is the cause. Conversely,
+both default-extractor policies (the reactive baseline and the
+clairvoyant variant with the true future visible) sit at $1.8$--$2.2\times$
+the cost regardless of foreknowledge. The efficiency effect traces to
+the alternative feature-extractor architecture itself (a narrow shared
+trunk feeding separate actor and critic heads), not to prediction. We
+report this as an incidental architecture observation --- potentially
+useful where resource intensity matters --- and explicitly not as
+evidence of anticipatory learning.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\linewidth]{fig10_efficiency_architecture}
+\caption{Efficiency-architecture attribution (control ladder, Case C
+downstream-stress scale). The four shared-trunk-extractor arms
+(true-label $\lambda{=}0.25$, permuted-label, constant-label, and
+$\lambda{=}0$ with zero auxiliary gradient) cluster at cost
+$\approx$0.40--0.43 with equivalent Excel ReT, regardless of whether
+the auxiliary task carries signal or gradient. The two default-extractor
+arms cluster at cost $\approx$0.72--0.85 regardless of foreknowledge.
+The cost reduction traces to the extractor architecture, not to
+prediction.}
+\label{fig:efficiency_architecture}
+\end{figure}
+
 \bibliographystyle{elsarticle-num}
 \bibliography{references}
 
