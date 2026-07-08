@@ -277,7 +277,11 @@ def fig3_gap_decomposition() -> None:
         "PPO (canonical,\nfrozen checkpoint)",
     ]
     vals = [5.466, 5.494, 5.436, 5.893]  # Excel ReT x 10^-3
-    cols = [GREY, ORANGE, SKY, GREEN]
+    # Comparators in neutral ink; only PPO carries the accent -- the figure's
+    # one message is that the learned policy stands apart from every
+    # non-learning family, privileged or not.
+    cols = ["0.60", "0.60", "0.60", GREEN]
+    sizes = [52, 52, 52, 76]
     # 95% seed-clustered CI of the paired PPO-vs-common-static delta
     # (docs/track_b_q1_stats_2026-07-02_final/seed_level_inference.csv),
     # translated onto the PPO point: delta CI [0.000389, 0.000463].
@@ -285,31 +289,27 @@ def fig3_gap_decomposition() -> None:
 
     fig, ax = plt.subplots(figsize=(6.4, 2.9))
     y = np.arange(len(labels))[::-1]
-    ax.set_ylim(-0.5, 3.9)
-    ax.hlines(y, 5.42, vals, color="0.85", lw=1.4, zorder=1)
-    ax.scatter(vals, y, s=64, c=cols, zorder=3, edgecolors="0.2", linewidths=0.6)
+    ax.set_ylim(-0.5, 3.95)
+    ax.axvline(5.466, color=GREY, lw=0.9, ls="--", zorder=0)
+    ax.hlines(y, 5.42, vals, color="0.88", lw=1.4, zorder=1)
     ax.hlines(y[3], ppo_ci[0], ppo_ci[1], color=GREEN, lw=2.2, zorder=2)
     for cap in ppo_ci:
         ax.vlines(cap, y[3] - 0.09, y[3] + 0.09, color=GREEN, lw=1.4, zorder=2)
+    ax.scatter(vals, y, s=sizes, c=cols, zorder=3, edgecolors="0.2",
+               linewidths=0.6)
+    # value labels above each dot: immune to the reference-line crossing
     for yi, v in zip(y, vals):
-        off = 0.028 if v != vals[3] else 0.048
-        ax.text(v + off, yi, f"{v:.3f}", va="center", fontsize=8)
-    ax.axvline(5.466, color=GREY, lw=0.9, ls="--", zorder=0)
-    ax.text(5.466, 3.62, "common-static reference", fontsize=7.6,
-            color="0.35", ha="center", va="bottom")
+        ax.text(v, yi + 0.24, f"{v:.3f}", ha="center", va="bottom",
+                fontsize=8, color="0.15")
+    ax.text(5.470, 3.60, "common-static reference", fontsize=7.6,
+            color="0.35", ha="left", va="bottom")
+    ax.text(5.60, y[1] - 0.34,
+            "direct true-regime access buys only $+0.028$ over the common static",
+            fontsize=7.6, color="0.35", ha="left", va="center")
     ax.set_yticks(y)
     ax.set_yticklabels(labels, fontsize=8)
     ax.set_xlabel("Excel ReT ($\\times 10^{-3}$; canonical CRN protocol, 5 seeds $\\times$ 12 episodes)")
     ax.set_xlim(5.42, 6.01)
-    ax.annotate(
-        "regime table gains only +0.028\nwith direct true-regime access",
-        xy=(5.503, y[1] - 0.26),
-        xytext=(5.60, y[1] - 0.26),
-        fontsize=7.6,
-        color="0.25",
-        arrowprops=dict(arrowstyle="->", color="0.45", lw=0.9),
-        va="center", ha="left",
-    )
     save(fig, "fig3_gap_decomposition")
 
 
@@ -408,13 +408,15 @@ def fig5_generalization_heatmap() -> None:
     # Diverging ramp anchored on the manuscript palette: boundary vermilion
     # for losses, recovery green for gains (replaces off-palette PiYG).
     cmap = LinearSegmentedColormap.from_list("ret_div", [VERMIL, "#ffffff", GREEN])
-    im = ax.imshow(deltas, cmap=cmap, norm=norm, aspect="auto")
+    im = ax.pcolormesh(deltas, cmap=cmap, norm=norm, edgecolors="white",
+                       linewidth=2.5)
+    ax.invert_yaxis()
     for i in range(3):
         for j in range(2):
             v = deltas[i, j]
             ax.text(
-                j,
-                i,
+                j + 0.5,
+                i + 0.5,
                 f"{v:+.3f}",
                 ha="center",
                 va="center",
@@ -424,20 +426,23 @@ def fig5_generalization_heatmap() -> None:
             )
     # boundary-regime marker: the whole severe row
     ax.add_patch(
-        plt.Rectangle((-0.5 + 0.03, 1.5 + 0.03), 1.94, 0.94, fill=False, ec=VERMIL, lw=1.8, ls=(0, (4, 2)))
+        plt.Rectangle((0.035, 2.035), 1.93, 0.93, fill=False, ec=VERMIL,
+                      lw=1.8, ls=(0, (4, 2)))
     )
-    ax.text(0.5, 2.34, "boundary regime (service floor)", fontsize=7.4, color=VERMIL, ha="center")
-    ax.set_xticks(range(2))
+    ax.text(1.0, 2.82, "boundary regime (service floor)", fontsize=7.4,
+            color=VERMIL_TEXT, ha="center")
+    ax.set_xticks([0.5, 1.5])
     ax.set_xticklabels(cols)
-    ax.set_yticks(range(3))
+    ax.set_yticks([0.5, 1.5, 2.5])
     ax.set_yticklabels(rows)
     ax.set_xlabel("evaluation horizon (weeks)")
     ax.set_ylabel("Garrido-native risk level")
     cb = fig.colorbar(im, ax=ax, shrink=0.85)
     cb.set_label("PPO $-$ best in-cell static, order-level ReT ($\\times 10^{-3}$)", fontsize=8)
+    cb.outline.set_visible(False)
     for spine in ax.spines.values():
-        spine.set_visible(True)
-        spine.set_color("0.4")
+        spine.set_visible(False)
+    ax.tick_params(length=0)
     save(fig, "fig5_generalization_heatmap")
 
 
@@ -453,8 +458,8 @@ def fig6_action_space_ablation() -> None:
     fig, ax = plt.subplots(figsize=(4.9, 3.0))
     x = np.arange(len(arms))
     ax.axhline(0, color="0.25", lw=1.0, zorder=1)
-    ax.text(2.52, 0.012, "best in-arm comparator", fontsize=7.4, color="0.35",
-            ha="right", va="bottom")
+    ax.text(-0.50, 0.012, "0 = best in-arm comparator", fontsize=7.4,
+            color="0.35", ha="left", va="bottom")
     ax.vlines(x, 0, deltas, color="0.85", lw=1.6, zorder=1)
     for xi, lo, hi in zip(x, ci_lo, ci_hi):
         ax.vlines(xi, lo, hi, color=GREEN, lw=2.0, zorder=2)
@@ -824,6 +829,439 @@ def fig11_no_forecast_defense() -> None:
     save(fig, "fig11_no_forecast_defense")
 
 
+# ---------------------------------------------------------------- fig12
+def fig12_des_validation() -> None:
+    """DES validation against Garrido-Rios (2017) Table 6.10.
+
+    Panel (a): per-year delivered rations, thesis reference vs our model,
+    with the +/-15% validation band and the structural-fidelity gap.
+    Panel (b): deterministic-to-stochastic transition: delivered rations,
+    fill rate, and backorders as disruption intensity escalates.
+    Sources: outputs/validation/validation_table_dual_basis.csv (panel a);
+    manuscript Section 4.1 headline numbers (panel b).
+    """
+    import csv
+
+    src = Path("outputs/validation/validation_table_dual_basis.csv")
+    years, thesis, ours = [], [], []
+    with src.open() as fh:
+        for row in csv.DictReader(fh):
+            if row["year_basis"] == "thesis":
+                years.append(int(row["Year"]))
+                thesis.append(float(row["Thesis_ECS"]))
+                ours.append(float(row["Our_Model"]))
+
+    fig, (axA, axB) = plt.subplots(1, 2, figsize=(7.4, 3.1),
+                                   gridspec_kw={"width_ratios": [1.25, 1.0]})
+
+    # --- panel (a): per-year fidelity ---
+    w = 0.36
+    axA.bar(np.array(years) - w / 2, thesis, w, color=GREY, alpha=0.55,
+            edgecolor="0.3", linewidth=0.5, zorder=2, label="Thesis reference")
+    axA.bar(np.array(years) + w / 2, ours, w, color=BLUE, alpha=0.78,
+            edgecolor="0.15", linewidth=0.5, zorder=2, label="Our DES")
+    tmean = np.mean(thesis)
+    axA.axhspan(tmean * 0.85, tmean * 1.15, color=GREEN, alpha=0.06, zorder=0)
+    axA.axhline(tmean, color="0.5", lw=0.7, ls=":", zorder=1)
+    axA.text(8.4, tmean, "thesis mean", fontsize=7.0, color="0.45",
+             ha="right", va="bottom")
+    rmse = np.sqrt(np.mean((np.array(ours) - np.array(thesis)) ** 2))
+    gap = (np.mean(ours) - tmean) / tmean * 100
+    axA.text(0.5, 890000,
+             f"RMSE = {rmse/1000:.0f}k rations/yr\n"
+             f"avg gap = {gap:+.1f}%\n"
+             f"(thesis RMSE baseline: 88k)",
+             fontsize=7.6, color="0.2", va="top",
+             bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="0.6", lw=0.5))
+    axA.set_xlabel("Validation year")
+    axA.set_ylabel("Annual delivered rations")
+    axA.set_xticks(years)
+    axA.set_ylim(0, 1000000)
+    axA.set_title("(a) Year-by-year fidelity (thesis basis)", fontsize=9, pad=5)
+    axA.legend(fontsize=7.4, loc="lower right", frameon=False)
+    axA.grid(True, axis="y", lw=0.3, color="0.92", zorder=0)
+
+    # --- panel (b): risk-regime transition (manuscript Section 4.1) ---
+    regimes = ["deterministic\n(no risk)", "current\nrisk", "increased\nrisk"]
+    delivered = [733621, 677750, 549250]
+    fill = [99.3, 68.3, 45.6]
+    backorders = [41, 1825, 3132]
+
+    x = np.arange(len(regimes))
+    bar_colors = [BLUE, ORANGE, VERMIL]
+    # ink color chosen per bar for >=4.5:1 contrast after alpha-blend over white
+    # white passes on blue (5.19) but fails on orange (1.79) and vermilion (2.63)
+    ink_colors = ["white", "#1F2933", "#1F2933"]
+    axB.bar(x, delivered, 0.55, color=bar_colors,
+            alpha=0.72, edgecolor="0.2", linewidth=0.5, zorder=2)
+    axB.set_ylabel("Annual delivered rations", fontsize=8.6)
+    axB.set_ylim(0, 850000)
+    for xi, d in zip(x, delivered):
+        axB.text(xi, d + 18000, f"{d/1000:.0f}k", ha="center", fontsize=7.6,
+                 fontweight="bold", color="0.15")
+    for xi, f, b, ink in zip(x, fill, backorders, ink_colors):
+        axB.text(xi, 30000, f"fill {f:.1f}%\n{b:,} BO", ha="center",
+                 fontsize=7.2, color=ink, fontweight="bold", va="bottom")
+    axB.set_xticks(x)
+    axB.set_xticklabels(regimes, fontsize=8.0)
+    axB.set_title("(b) Disruption-driven degradation", fontsize=9, pad=5)
+    axB.grid(False)
+
+    fig.tight_layout()
+    save(fig, "fig12_des_validation")
+
+
+# ---------------------------------------------------------------- fig13
+def fig13_track_a_boundary() -> None:
+    """Track A negative result: the dense static frontier absorbs the
+    oracle headroom that no tested learner converts.
+
+    Panel (a): 192 static dispatch policies on the Excel-ReT / resource
+    plane; the best learned PPO (5 seeds) sits below the best static.
+    Panel (b): the 75-regime oracle grid shows measurable but tiny
+    headroom (+0.000176 to +0.000296) that the regime-conditioned oracle
+    captures but no tested learner converts.
+    Sources:
+      outputs/experiments/track_a_repair_continuous_5seed_2026-06-30/
+        static_frontier_heldout.csv, seed_health.csv
+      outputs/experiments/track_a_headroom_search_full3_continuous_2026-06-29/
+        gate_summary.json, best_static_by_regime.csv
+    """
+    import csv
+    import json
+
+    base = Path("outputs/experiments/track_a_repair_continuous_5seed_2026-06-30")
+    fig, (axA, axB) = plt.subplots(1, 2, figsize=(7.4, 3.2),
+                                   gridspec_kw={"width_ratios": [1.0, 1.0]})
+
+    # --- panel (a): static frontier + PPO seeds ---
+    statics = []
+    with (base / "static_frontier_heldout.csv").open() as fh:
+        for row in csv.DictReader(fh):
+            statics.append((float(row["excel"]), float(row["resource"])))
+    sa = np.array(statics)
+    ppo_seeds = []
+    with (base / "seed_health.csv").open() as fh:
+        for row in csv.DictReader(fh):
+            ppo_seeds.append((float(row["excel"]), float(row["resource"]),
+                              int(row["seed"])))
+
+    axA.scatter(sa[:, 1], sa[:, 0], s=14, c=GREY, alpha=0.35,
+                edgecolors="none", zorder=2, label="192 static policies")
+    bi = int(np.argmax(sa[:, 0]))
+    axA.scatter([sa[bi, 1]], [sa[bi, 0]], s=60, facecolors="none",
+                edgecolors=BLUE, linewidths=1.3, zorder=4)
+    axA.annotate("best static\n(0.155254)", xy=(sa[bi, 1], sa[bi, 0]),
+                 xytext=(0.30, 0.1550), fontsize=7.4, color=BLUE,
+                 ha="left", va="center",
+                 arrowprops=dict(arrowstyle="->", color=BLUE, lw=0.8))
+    for exc, res, sd in ppo_seeds:
+        mk = "*" if sd == 5 else "o"
+        sz = 120 if sd == 5 else 40
+        axA.scatter([res], [exc], marker=mk, s=sz, c=VERMIL, zorder=5,
+                    edgecolors="0.2", linewidths=0.5)
+    axA.annotate("best PPO\n(0.155247)", xy=(0.1752, 0.155247),
+                 xytext=(0.42, 0.1545), fontsize=7.4, color=VERMIL,
+                 ha="left", va="center",
+                 arrowprops=dict(arrowstyle="->", color=VERMIL, lw=0.8))
+    axA.set_xlabel("resource index", fontsize=8.6)
+    axA.set_ylabel("Excel ReT", fontsize=8.6)
+    axA.set_title("(a) PPO below the dense static frontier", fontsize=9, pad=5)
+    axA.legend(fontsize=7.2, loc="lower right", frameon=False)
+    axA.grid(True, lw=0.3, color="0.92", zorder=0)
+
+    # --- panel (b): the headroom claim itself, not the regime spread.
+    # The 75 regimes span 0.0004-0.3 (3 orders of magnitude); plotting that
+    # makes the 0.15% oracle-vs-constant gap invisible. Instead, zoom in on
+    # the four learners vs the oracle/constant ceiling, which is the actual
+    # argument: headroom exists, no learner converts it.
+    gs = json.load(open(base.parent / "track_a_headroom_search_full3_continuous_2026-06-29"
+                        / "gate_summary.json"))
+    oracle = gs["oracle_excel"]
+    best_const = gs["best_single_constant"]["excel"]
+    headroom = gs["oracle_minus_best_static"]
+    # learner rows (Excel ReT, on the Track A oracle-grid scale) from seed_health
+    learners = [
+        ("best constant\nstatic", best_const, GREY, "o"),
+        ("regime-conditioned\noracle", oracle, GREEN, "*"),
+        ("best learned\nPPO (5 seeds)", max(r[0] for r in ppo_seeds), VERMIL, "P"),
+    ]
+    # extend axis to show the headroom band clearly
+    lo = best_const - headroom * 1.5
+    hi = oracle + headroom * 1.5
+
+    yvals = [v for _, v, _, _ in learners]
+    ylabs = [n for n, _, _, _ in learners]
+    ypos = np.arange(len(learners))[::-1]
+    axB.barh(ypos, [v - lo for v in yvals], height=0.5, left=lo,
+             color=[c for _, _, c, _ in learners], alpha=0.35, zorder=2)
+    for yp, v, _, mk in zip(ypos, yvals, [None]*3, [m for *_, m in learners]):
+        axB.scatter([v], [yp], marker=mk, s=120 if mk == "*" else 70,
+                    c="0.15", zorder=4, edgecolors="white", linewidths=0.6)
+    # headroom bracket between constant and oracle
+    axB.annotate("", xy=(oracle, 0.62), xytext=(best_const, 0.62),
+                 arrowprops=dict(arrowstyle="<->", color="0.3", lw=1.0))
+    axB.text((oracle + best_const) / 2, 0.30,
+             f"+{headroom*1e6:.0f}$\\times 10^{{-6}}$ headroom\n(oracle $-$ best constant)",
+             fontsize=7.2, color="0.2", ha="center", va="top")
+    axB.text((oracle + best_const) / 2, -0.50,
+             "PPO sits at or below the best constant:\nno tested learner converts the headroom",
+             fontsize=7.2, color=VERMIL, ha="center", va="top",
+             bbox=dict(boxstyle="round,pad=0.25", fc="#fbe9e7", ec=VERMIL, lw=0.6))
+    axB.set_yticks(ypos)
+    axB.set_yticklabels(ylabs, fontsize=7.8)
+    axB.set_xlabel("Excel ReT (Track A oracle-grid scale)", fontsize=8.6)
+    axB.set_xlim(lo, hi)
+    axB.set_ylim(-0.9, 2.6)
+    axB.set_title("(b) Oracle headroom exists but is unconverted", fontsize=9, pad=5)
+    axB.grid(True, axis="x", lw=0.3, color="0.92", zorder=0)
+
+    fig.tight_layout()
+    save(fig, "fig13_track_a_boundary")
+
+
+# ---------------------------------------------------------------- fig14
+def fig14_dispatch_cost_sensitivity() -> None:
+    """Dispatch-inclusive cost sensitivity: pricing downstream transport
+    favors PPO, which expedites selectively, over the best static
+    comparator, which holds aggressive multipliers permanently.
+
+    Crossover at lambda_d approx 0.025; from there up PPO is
+    simultaneously resilience-dominant and cheaper.
+    Source: docs/track_b_q1_stats_2026-07-02_final/dispatch_cost_sensitivity.csv
+    """
+    import csv
+
+    src = Path("docs/track_b_q1_stats_2026-07-02_final/dispatch_cost_sensitivity.csv")
+    lam, ppo_c, stat_c, d_lo, d_hi = [], [], [], [], []
+    with src.open() as fh:
+        for row in csv.DictReader(fh):
+            lam.append(float(row["dispatch_charge_per_multiplier_step"]))
+            ppo_c.append(float(row["ppo_dispatch_inclusive_cost_mean"]))
+            stat_c.append(float(row["static_dispatch_inclusive_cost_mean"]))
+            d_lo.append(float(row["delta_ci95_low"]))
+            d_hi.append(float(row["delta_ci95_high"]))
+
+    fig, ax = plt.subplots(figsize=(5.6, 3.4))
+    ax.plot(lam, stat_c, "-o", color=GREY, lw=1.6, ms=5, zorder=3,
+            label="best static (S2, Op10$\\times$2.0, Op12$\\times$1.5)")
+    ax.plot(lam, ppo_c, "-o", color=GREEN, lw=1.8, ms=5, zorder=4,
+            label="PPO (mean mult $\\approx$1.30/1.27)")
+    # PPO cost uncertainty band derived from the delta CI
+    half = (np.array(d_hi) - np.array(d_lo)) / 2
+    ax.fill_between(lam, np.array(ppo_c) - half, np.array(ppo_c) + half,
+                    color=GREEN, alpha=0.12, zorder=2)
+
+    ax.axvline(0.025, color=VERMIL, lw=0.9, ls=(0, (4, 3)), zorder=1)
+    ax.annotate("crossover\n$\\lambda_d \\approx 0.025$",
+                xy=(0.025, 0.70), xytext=(0.07, 0.58),
+                fontsize=7.8, color=VERMIL, ha="left", va="center",
+                arrowprops=dict(arrowstyle="->", color=VERMIL, lw=0.9))
+    ax.text(0.13, 0.86, "PPO cheaper\n(significant)", fontsize=7.6,
+            color=GREEN, ha="center", va="center",
+            bbox=dict(boxstyle="round,pad=0.2", fc="#e7f4e9", ec=GREEN, lw=0.5))
+    ax.text(0.005, 0.74, "n.s.", fontsize=7.4, color="0.4", ha="center")
+
+    ax.set_xlabel("dispatch charge $\\lambda_d$ (per unit expediting)", fontsize=9)
+    ax.set_ylabel("total cost index\n($C_{\\mathrm{shift}} + \\lambda_d \\cdot$ dispatch)",
+                  fontsize=8.4)
+    ax.set_xlim(-0.005, 0.205)
+    ax.set_ylim(0.55, 1.0)
+    ax.legend(fontsize=7.4, loc="upper left", frameon=False)
+    ax.grid(True, lw=0.3, color="0.92", zorder=0)
+    save(fig, "fig14_dispatch_cost_sensitivity")
+
+
+# ---------------------------------------------------------------- fig15
+def fig15_learning_curves() -> None:
+    """Training dynamics: per-checkpoint Excel ReT for Track A PPO
+    (5 seeds x 8 checkpoints, 5k-40k timesteps).
+
+    The fidelity gate (collapsed=True) marks seeds that violated the
+    DES-fidelity constraint during training; their score is penalized.
+    The frontier never crosses the best-static line, consistent with the
+    Track A boundary result.
+    Source: outputs/experiments/track_a_repair_continuous_5seed_2026-06-30/
+            checkpoint_metrics.csv
+    """
+    import csv
+
+    src = Path("outputs/experiments/track_a_repair_continuous_5seed_2026-06-30/checkpoint_metrics.csv")
+    rows = []
+    with src.open() as fh:
+        for row in csv.DictReader(fh):
+            rows.append((int(row["seed"]), int(row["step"]),
+                         float(row["excel"]), row["collapsed"] == "True"))
+
+    fig, ax = plt.subplots(figsize=(5.8, 3.4))
+    best_static = 0.155254
+    ax.axhline(best_static, color=BLUE, lw=1.2, ls="--", zorder=1)
+    ax.text(40500, best_static, "best static (0.155254)", fontsize=7.4,
+            color=BLUE, va="bottom", ha="right")
+
+    seeds = sorted(set(r[0] for r in rows))
+    for sd in seeds:
+        pts = sorted([(s, e, c) for s2, s, e, c in rows if s2 == sd])
+        steps = [p[0] for p in pts]
+        excels = [p[1] for p in pts]
+        collapsed = [p[2] for p in pts]
+        valid_x, valid_y = [], []
+        for st, ex, cl in zip(steps, excels, collapsed):
+            if cl:
+                if valid_x:
+                    ax.plot(valid_x, valid_y, "-", color=GREY, lw=1.0,
+                            alpha=0.5, zorder=2)
+                    valid_x, valid_y = [], []
+                ax.scatter([st], [ex], s=20, marker="x", c=VERMIL, zorder=4)
+            else:
+                valid_x.append(st)
+                valid_y.append(ex)
+        if valid_x:
+            ax.plot(valid_x, valid_y, "-", lw=1.1, alpha=0.75, zorder=2)
+            ax.scatter(valid_x, valid_y, s=16, zorder=3)
+        ax.text(steps[-1] + 800, excels[-1], f"s{sd}", fontsize=6.8,
+                va="center", ha="left", color="0.3")
+
+    ax.scatter([], [], marker="x", c=VERMIL, s=30, label="fidelity-gate collapse")
+    ax.plot([], [], "-", color=GREY, lw=1.0, label="valid checkpoint")
+    ax.legend(fontsize=7.4, loc="lower left", frameon=False)
+    ax.set_xlabel("training timesteps", fontsize=9)
+    ax.set_ylabel("Excel ReT (Track A scale)", fontsize=9)
+    ax.set_xlim(3000, 43000)
+    ax.set_ylim(0.150, 0.161)
+    ax.grid(True, lw=0.3, color="0.92", zorder=0)
+    save(fig, "fig15_learning_curves")
+
+
+# ---------------------------------------------------------------- fig16
+def fig16_reward_sensitivity() -> None:
+    """Reward-robustness screen: all 18 reward/observation cells show a
+    positive Excel ReT delta (range +0.000195 to +0.000452).
+
+    The sign of the Track B effect is not uniquely tied to one reward
+    specification, CVaR tail weight, or observation version.
+    Source: outputs/experiments/track_b_adaptive_sweep_kaggle_2026-07-01_v6/
+            fetched/track_b_adaptive_sweep/sweep_summary.csv
+    """
+    import csv
+
+    src = Path("outputs/experiments/track_b_adaptive_sweep_kaggle_2026-07-01_v6/"
+               "fetched/track_b_adaptive_sweep/sweep_summary.csv")
+    cells = []
+    with src.open() as fh:
+        for row in csv.DictReader(fh):
+            cells.append((row["reward_mode"], row["observation_version"],
+                          row.get("ret_excel_cvar_alpha", ""),
+                          float(row["excel_ret_delta_vs_best_static"]),
+                          float(row["learned_cost_index"])))
+
+    reward_modes = ["control_v1", "ReT_excel_plus_cvar", "ReT_tail_v2",
+                    "ReT_garrido2024_train"]
+    obs_color = {"v7": BLUE, "v8": SKY, "v9": GREEN}
+    obs_marker = {"v7": "o", "v8": "s", "v9": "D"}
+    x_pos = {rm: i for i, rm in enumerate(reward_modes)}
+
+    fig, ax = plt.subplots(figsize=(6.8, 3.6))
+    for rm, ov, alpha, delta, cost in cells:
+        xp = x_pos[rm]
+        if alpha:
+            a = float(alpha)
+            xp += (a - 0.1) * 1.5
+        ax.scatter(xp, delta * 1e6, s=50, c=obs_color[ov],
+                   marker=obs_marker[ov], zorder=3, edgecolors="0.2",
+                   linewidths=0.5, alpha=0.85)
+
+    ax.axhline(0, color="0.3", lw=1.0, zorder=1)
+    ax.axhline(438, color=GREEN, lw=0.8, ls=(0, (4, 3)), alpha=0.6, zorder=1)
+    ax.text(3.4, 438, "canonical 10-seed\n(+0.000438)", fontsize=7.0,
+            color=GREEN, ha="right", va="bottom")
+
+    ax.set_xticks(range(len(reward_modes)))
+    ax.set_xticklabels([rm.replace("_", "\n") for rm in reward_modes], fontsize=7.8)
+    ax.set_xlim(-0.5, 3.5)
+    ax.set_ylabel("Excel ReT $\\Delta$ ($\\times 10^{-6}$) vs best static", fontsize=8.8)
+    ax.set_xlabel("training reward family", fontsize=9)
+    ax.set_title("18/18 cells positive: effect robust across reward and observation",
+                 fontsize=8.8, pad=6)
+
+    from matplotlib.lines import Line2D
+    handles = [Line2D([0], [0], marker=m, color="none", markerfacecolor=c,
+                      markeredgecolor="0.2", markersize=7, label=ov)
+               for ov, c, m in [("v7", BLUE, "o"), ("v8", SKY, "s"), ("v9", GREEN, "D")]]
+    ax.legend(handles=handles, fontsize=7.6, loc="lower left", frameon=False,
+              title="obs version", title_fontsize=7.4)
+    ax.grid(True, axis="y", lw=0.3, color="0.92", zorder=0)
+    save(fig, "fig16_reward_sensitivity")
+
+
+# ---------------------------------------------------------------- fig17
+def fig17_control_loop() -> None:
+    """POMDP control loop: the weekly decision cycle connecting the DES
+    environment, the observation/action interface, and the PPO policy.
+
+    Rival-parity element (Ding et al. Fig. 4/5/6 show their agent-env
+    interaction). This figure makes the Track A vs Track B action-
+    surface distinction structural rather than verbal.
+    """
+    fig, ax = plt.subplots(figsize=(7.4, 3.0))
+    ax.set_xlim(0, 10)
+    ax.set_ylim(0.2, 3.8)
+    ax.axis("off")
+
+    def box(x, y, w, h, text, fc="white", ec="0.3", lw=0.9, fs=8.2, weight="normal"):
+        ax.add_patch(FancyBboxPatch((x, y), w, h,
+                     boxstyle="round,pad=0.03,rounding_size=0.08",
+                     fc=fc, ec=ec, lw=lw, zorder=2))
+        ax.text(x + w / 2, y + h / 2, text, ha="center", va="center",
+                fontsize=fs, fontweight=weight, linespacing=1.2, zorder=3)
+
+    def arrow(p0, p1, color="0.25", lw=1.3, style="-|>"):
+        ax.add_patch(FancyArrowPatch(p0, p1, arrowstyle=style,
+                     mutation_scale=11, color=color, lw=lw, zorder=1))
+
+    box(0.3, 1.5, 2.3, 1.6,
+        "MFSC DES\n(Python/SimPy)\n\n13 operations\n9 risk processes\nGarrido-grounded",
+        fc="#f6f8fa", ec="0.35", fs=8.0, weight="bold")
+    ax.text(1.45, 3.25, "environment", fontsize=7.6, color="0.4", ha="center")
+
+    box(3.3, 2.4, 2.0, 0.9,
+        "observation $o_t$\nv7: 52 dims\n(backlog, fill, risk pressure)",
+        fc="white", ec=BLUE, lw=1.0, fs=7.6)
+    box(3.3, 0.7, 2.0, 0.9,
+        "action $a_t$\ntrack\\_b\\_v1: 8D\n(buffer, shift, dispatch)",
+        fc="white", ec=VERMIL, lw=1.0, fs=7.6)
+    box(3.3, 1.45, 2.0, 0.55,
+        "reward $r_t$ (control\\_v1)",
+        fc="white", ec="0.4", lw=0.8, fs=7.4)
+
+    box(6.2, 1.5, 2.3, 1.6,
+        "PPO policy\n$\\pi_\\theta(a|o)$\n\nMLP 64$\\times$64\nGAE $\\lambda$=0.95",
+        fc="#e7f4e9", ec=GREEN, lw=1.1, fs=8.0, weight="bold")
+    ax.text(7.35, 3.25, "agent", fontsize=7.6, color="0.4", ha="center")
+
+    box(8.9, 1.5, 1.0, 1.6,
+        "Eval\nGarrido/\nExcel\nReT",
+        fc="#f3edf8", ec=PURPLE, lw=0.9, fs=7.2, weight="bold")
+
+    arrow((2.6, 2.85), (3.3, 2.85), color=BLUE)
+    ax.text(2.95, 3.0, "$o_t$", fontsize=8, color=BLUE, ha="center")
+    arrow((6.2, 1.15), (5.3, 1.15), color=VERMIL)
+    ax.text(5.75, 1.0, "$a_t$", fontsize=8, color=VERMIL, ha="center")
+    arrow((3.3, 1.15), (2.6, 1.7), color=VERMIL)
+    arrow((2.6, 2.3), (3.3, 1.72), color="0.4")
+    ax.text(2.7, 1.95, "$r_t$", fontsize=8, color="0.4")
+    arrow((8.5, 2.3), (8.9, 2.3), color=PURPLE, style="-")
+    ax.text(8.7, 2.45, "eval", fontsize=7.0, color=PURPLE, ha="center")
+
+    ax.text(5.0, 0.35, "decision step $t$: every 168 simulated hours (weekly planning cadence)",
+            fontsize=7.8, color="0.35", ha="center", style="italic")
+    ax.text(0.3, 3.7, "Track A: action dims 1-6 only (buffer/shift)  |  "
+            "Track B: + dims 7-8 (Op10/Op12 dispatch) reach the bottleneck",
+            fontsize=7.4, color=VERMIL, ha="left", va="top")
+
+    save(fig, "fig17_control_loop")
+
+
 if __name__ == "__main__":
     fig1_bottleneck_alignment()
     fig2_mfsc_topology()
@@ -836,4 +1274,10 @@ if __name__ == "__main__":
     fig9_prevention_ceiling()
     fig10_efficiency_architecture()
     fig11_no_forecast_defense()
+    fig12_des_validation()
+    fig13_track_a_boundary()
+    fig14_dispatch_cost_sensitivity()
+    fig15_learning_curves()
+    fig16_reward_sensitivity()
+    fig17_control_loop()
     print("done")
