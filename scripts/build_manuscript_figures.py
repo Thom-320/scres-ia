@@ -106,7 +106,7 @@ def fig1_bottleneck_alignment() -> None:
 
     neutral = ("#f6f8fa", "0.35", 0.9)
     chain(
-        2.47,
+        2.55,
         "Track A \u2014 boundary case",
         [
             ("Buffer + shift\ncontrols only", *neutral),
@@ -118,7 +118,7 @@ def fig1_bottleneck_alignment() -> None:
         1.2,
     )
     chain(
-        0.55,
+        0.95,
         "Track B \u2014 positive case",
         [
             ("Buffer + shift\n+ dispatch controls", *neutral),
@@ -287,9 +287,9 @@ def fig3_gap_decomposition() -> None:
     # translated onto the PPO point: delta CI [0.000389, 0.000463].
     ppo_ci = (5.466 + 0.389, 5.466 + 0.463)
 
-    fig, ax = plt.subplots(figsize=(6.4, 2.9))
+    fig, ax = plt.subplots(figsize=(6.6, 3.1))
     y = np.arange(len(labels))[::-1]
-    ax.set_ylim(-0.5, 3.95)
+    ax.set_ylim(-0.6, 4.1)
     ax.axvline(5.466, color=GREY, lw=0.9, ls="--", zorder=0)
     ax.hlines(y, 5.42, vals, color="0.88", lw=1.4, zorder=1)
     ax.hlines(y[3], ppo_ci[0], ppo_ci[1], color=GREEN, lw=2.2, zorder=2)
@@ -297,19 +297,21 @@ def fig3_gap_decomposition() -> None:
         ax.vlines(cap, y[3] - 0.09, y[3] + 0.09, color=GREEN, lw=1.4, zorder=2)
     ax.scatter(vals, y, s=sizes, c=cols, zorder=3, edgecolors="0.2",
                linewidths=0.6)
-    # value labels above each dot: immune to the reference-line crossing
+    # value labels placed to the RIGHT of each dot (away from y-axis labels)
     for yi, v in zip(y, vals):
-        ax.text(v, yi + 0.24, f"{v:.3f}", ha="center", va="bottom",
+        ax.text(v + 0.022, yi, f"{v:.3f}", ha="left", va="center",
                 fontsize=8, color="0.15")
-    ax.text(5.470, 3.60, "common-static reference", fontsize=7.6,
+    ax.text(5.470, 3.75, "common-static reference", fontsize=7.6,
             color="0.35", ha="left", va="bottom")
-    ax.text(5.60, y[1] - 0.34,
-            "direct true-regime access buys only $+0.028$ over the common static",
-            fontsize=7.6, color="0.35", ha="left", va="center")
+    # annotation arrow now points at the regime-table DOT itself (5.494, y[1])
+    ax.annotate("direct true-regime access buys only $+0.028$\nover the common static",
+                xy=(5.494, y[1]), xytext=(5.62, y[1] - 0.55),
+                fontsize=7.6, color="0.35", ha="left", va="center",
+                arrowprops=dict(arrowstyle="->", color="0.5", lw=0.8))
     ax.set_yticks(y)
     ax.set_yticklabels(labels, fontsize=8)
     ax.set_xlabel("Excel ReT ($\\times 10^{-3}$; canonical CRN protocol, 5 seeds $\\times$ 12 episodes)")
-    ax.set_xlim(5.42, 6.01)
+    ax.set_xlim(5.42, 6.05)
     save(fig, "fig3_gap_decomposition")
 
 
@@ -867,7 +869,7 @@ def fig12_des_validation() -> None:
              ha="right", va="bottom")
     rmse = np.sqrt(np.mean((np.array(ours) - np.array(thesis)) ** 2))
     gap = (np.mean(ours) - tmean) / tmean * 100
-    axA.text(0.5, 890000,
+    axA.text(0.5, 1130000,
              f"RMSE = {rmse/1000:.0f}k rations/yr\n"
              f"avg gap = {gap:+.1f}%\n"
              f"(thesis RMSE baseline: 88k)",
@@ -876,7 +878,8 @@ def fig12_des_validation() -> None:
     axA.set_xlabel("Validation year")
     axA.set_ylabel("Annual delivered rations")
     axA.set_xticks(years)
-    axA.set_ylim(0, 1000000)
+    axA.set_ylim(0, 1150000)
+    axA.yaxis.set_major_formatter(plt.FuncFormatter(lambda v, _: f"{v/1e3:.0f}k"))
     axA.set_title("(a) Year-by-year fidelity (thesis basis)", fontsize=9, pad=5)
     axA.legend(fontsize=7.4, loc="lower right", frameon=False)
     axA.grid(True, axis="y", lw=0.3, color="0.92", zorder=0)
@@ -896,6 +899,7 @@ def fig12_des_validation() -> None:
             alpha=0.72, edgecolor="0.2", linewidth=0.5, zorder=2)
     axB.set_ylabel("Annual delivered rations", fontsize=8.6)
     axB.set_ylim(0, 850000)
+    axB.yaxis.set_major_formatter(plt.FuncFormatter(lambda v, _: f"{v/1e3:.0f}k"))
     for xi, d in zip(x, delivered):
         axB.text(xi, d + 18000, f"{d/1000:.0f}k", ha="center", fontsize=7.6,
                  fontweight="bold", color="0.15")
@@ -980,39 +984,40 @@ def fig13_track_a_boundary() -> None:
     oracle = gs["oracle_excel"]
     best_const = gs["best_single_constant"]["excel"]
     headroom = gs["oracle_minus_best_static"]
-    # learner rows (Excel ReT, on the Track A oracle-grid scale) from seed_health
+    # Two comparable points only: constant vs oracle live on the oracle-grid
+    # evaluation scale. PPO is evaluated on a different grid (panel a's
+    # canonical scale), so it is reported in the note box, never plotted on
+    # this axis. Dots, not bars: a truncated axis makes bar length
+    # meaningless.
     learners = [
         ("best constant\nstatic", best_const, GREY, "o"),
         ("regime-conditioned\noracle", oracle, GREEN, "*"),
-        ("best learned\nPPO (5 seeds)", max(r[0] for r in ppo_seeds), VERMIL, "P"),
     ]
-    # extend axis to show the headroom band clearly
     lo = best_const - headroom * 1.5
     hi = oracle + headroom * 1.5
 
     yvals = [v for _, v, _, _ in learners]
     ylabs = [n for n, _, _, _ in learners]
-    ypos = np.arange(len(learners))[::-1]
-    axB.barh(ypos, [v - lo for v in yvals], height=0.5, left=lo,
-             color=[c for _, _, c, _ in learners], alpha=0.35, zorder=2)
-    for yp, v, _, mk in zip(ypos, yvals, [None]*3, [m for *_, m in learners]):
-        axB.scatter([v], [yp], marker=mk, s=120 if mk == "*" else 70,
-                    c="0.15", zorder=4, edgecolors="white", linewidths=0.6)
+    ypos = np.array([1.8, 1.0])
+    for yp, (_, v, c, mk) in zip(ypos, learners):
+        axB.plot([lo, v], [yp, yp], color="0.90", lw=1.4, zorder=1)
+        axB.scatter([v], [yp], marker=mk, s=150 if mk == "*" else 70,
+                    c=c, zorder=4, edgecolors="0.2", linewidths=0.6)
     # headroom bracket between constant and oracle
-    axB.annotate("", xy=(oracle, 0.62), xytext=(best_const, 0.62),
+    axB.annotate("", xy=(oracle, 0.55), xytext=(best_const, 0.55),
                  arrowprops=dict(arrowstyle="<->", color="0.3", lw=1.0))
-    axB.text((oracle + best_const) / 2, 0.30,
+    axB.text((oracle + best_const) / 2, 0.38,
              f"+{headroom*1e6:.0f}$\\times 10^{{-6}}$ headroom\n(oracle $-$ best constant)",
              fontsize=7.2, color="0.2", ha="center", va="top")
-    axB.text((oracle + best_const) / 2, -0.50,
-             "PPO sits at or below the best constant:\nno tested learner converts the headroom",
-             fontsize=7.2, color=VERMIL, ha="center", va="top",
+    axB.text((oracle + best_const) / 2, -0.42,
+             "no tested learner converts this headroom:\nPPO sits at or below its own best constant\n(panel a; evaluated on the canonical grid)",
+             fontsize=7.2, color=VERMIL_TEXT, ha="center", va="top",
              bbox=dict(boxstyle="round,pad=0.25", fc="#fbe9e7", ec=VERMIL, lw=0.6))
     axB.set_yticks(ypos)
     axB.set_yticklabels(ylabs, fontsize=7.8)
     axB.set_xlabel("Excel ReT (Track A oracle-grid scale)", fontsize=8.6)
     axB.set_xlim(lo, hi)
-    axB.set_ylim(-0.9, 2.6)
+    axB.set_ylim(-1.35, 2.35)
     axB.set_title("(b) Oracle headroom exists but is unconverted", fontsize=9, pad=5)
     axB.grid(True, axis="x", lw=0.3, color="0.92", zorder=0)
 
@@ -1042,25 +1047,42 @@ def fig14_dispatch_cost_sensitivity() -> None:
             d_lo.append(float(row["delta_ci95_low"]))
             d_hi.append(float(row["delta_ci95_high"]))
 
-    fig, ax = plt.subplots(figsize=(5.6, 3.4))
-    ax.plot(lam, stat_c, "-o", color=GREY, lw=1.6, ms=5, zorder=3,
-            label="best static (S2, Op10$\\times$2.0, Op12$\\times$1.5)")
+    fig, ax = plt.subplots(figsize=(5.6, 3.6))
+    # static line drawn ABOVE the band (higher zorder) so it stays visible
+    # where the two lines are close near lambda=0
     ax.plot(lam, ppo_c, "-o", color=GREEN, lw=1.8, ms=5, zorder=4,
             label="PPO (mean mult $\\approx$1.30/1.27)")
-    # PPO cost uncertainty band derived from the delta CI
+    # PPO cost uncertainty band, but only where it does NOT cover the static
+    # line (i.e., for lambda >= 0.025 where PPO is below static). Near lambda=0
+    # the band straddles the static line and would obscure it; clip it out.
     half = (np.array(d_hi) - np.array(d_lo)) / 2
-    ax.fill_between(lam, np.array(ppo_c) - half, np.array(ppo_c) + half,
-                    color=GREEN, alpha=0.12, zorder=2)
+    lam_arr = np.array(lam)
+    ppo_arr = np.array(po_c) if False else np.array(ppo_c)
+    stat_arr = np.array(stat_c)
+    # mask band to the region where PPO upper bound < static (band sits below static)
+    mask = (ppo_arr + half) < stat_arr
+    ax.fill_between(lam_arr, ppo_arr - half, ppo_arr + half,
+                    where=mask, color=GREEN, alpha=0.14, zorder=2,
+                    edgecolor="none")
+    # static line on top so always visible
+    ax.plot(lam, stat_c, "-o", color=GREY, lw=1.6, ms=5, zorder=5,
+            label="best static (S2, Op10$\\times$2.0, Op12$\\times$1.5)")
 
     ax.axvline(0.025, color=VERMIL, lw=0.9, ls=(0, (4, 3)), zorder=1)
+    # crossover annotation placed in the gap between the lines (upper-right)
     ax.annotate("crossover\n$\\lambda_d \\approx 0.025$",
-                xy=(0.025, 0.70), xytext=(0.07, 0.58),
-                fontsize=7.8, color=VERMIL, ha="left", va="center",
+                xy=(0.025, 0.695), xytext=(0.045, 0.625),
+                fontsize=7.6, color=VERMIL, ha="left", va="center",
                 arrowprops=dict(arrowstyle="->", color=VERMIL, lw=0.9))
-    ax.text(0.13, 0.86, "PPO cheaper\n(significant)", fontsize=7.6,
-            color=GREEN, ha="center", va="center",
+    # "PPO cheaper" callout moved to upper-right clear of both lines (lines
+    # trend down-left, top-right is empty)
+    ax.text(0.165, 0.93, "PPO cheaper\n(significant, $\\lambda_d \\geq 0.025$)",
+            fontsize=7.4, color=GREEN, ha="center", va="center",
             bbox=dict(boxstyle="round,pad=0.2", fc="#e7f4e9", ec=GREEN, lw=0.5))
-    ax.text(0.005, 0.74, "n.s.", fontsize=7.4, color="0.4", ha="center")
+    # "n.s." placed at the actual near-crossing point (lambda=0, where CIs cross)
+    ax.annotate("n.s. (CIs cross 0)", xy=(0.0, 0.675), xytext=(0.03, 0.56),
+                fontsize=7.2, color="0.4", ha="left", va="center",
+                arrowprops=dict(arrowstyle="->", color="0.55", lw=0.7))
 
     ax.set_xlabel("dispatch charge $\\lambda_d$ (per unit expediting)", fontsize=9)
     ax.set_ylabel("total cost index\n($C_{\\mathrm{shift}} + \\lambda_d \\cdot$ dispatch)",
@@ -1096,8 +1118,8 @@ def fig15_learning_curves() -> None:
     fig, ax = plt.subplots(figsize=(5.8, 3.4))
     best_static = 0.155254
     ax.axhline(best_static, color=BLUE, lw=1.2, ls="--", zorder=1)
-    ax.text(40500, best_static, "best static (0.155254)", fontsize=7.4,
-            color=BLUE, va="bottom", ha="right")
+    ax.text(4200, best_static, "best static (0.155254)", fontsize=7.4,
+            color=BLUE, va="bottom", ha="left")
 
     seeds = sorted(set(r[0] for r in rows))
     for sd in seeds:
@@ -1108,22 +1130,32 @@ def fig15_learning_curves() -> None:
         valid_x, valid_y = [], []
         for st, ex, cl in zip(steps, excels, collapsed):
             if cl:
+                if len(valid_x) > 1:
+                    ax.plot(valid_x, valid_y, "-", color=BLUE, lw=1.1,
+                            alpha=0.65, zorder=2)
                 if valid_x:
-                    ax.plot(valid_x, valid_y, "-", color=GREY, lw=1.0,
-                            alpha=0.5, zorder=2)
-                    valid_x, valid_y = [], []
-                ax.scatter([st], [ex], s=20, marker="x", c=VERMIL, zorder=4)
+                    ax.scatter(valid_x, valid_y, s=15, c=BLUE, alpha=0.85,
+                               edgecolors="none", zorder=3)
+                valid_x, valid_y = [], []
+                ax.scatter([st], [ex], s=22, marker="x", c=VERMIL, zorder=4)
             else:
                 valid_x.append(st)
                 valid_y.append(ex)
+        if len(valid_x) > 1:
+            ax.plot(valid_x, valid_y, "-", color=BLUE, lw=1.1, alpha=0.65,
+                    zorder=2)
         if valid_x:
-            ax.plot(valid_x, valid_y, "-", lw=1.1, alpha=0.75, zorder=2)
-            ax.scatter(valid_x, valid_y, s=16, zorder=3)
-        ax.text(steps[-1] + 800, excels[-1], f"s{sd}", fontsize=6.8,
-                va="center", ha="left", color="0.3")
+            ax.scatter(valid_x, valid_y, s=15, c=BLUE, alpha=0.85,
+                       edgecolors="none", zorder=3)
+        # vertical offset prevents seed-label collision at the right edge
+        # (final Excel ReT values cluster: 0.1526-0.1552)
+        label_offsets = {1: +0.0011, 2: -0.0004, 3: +0.0006, 4: -0.0010, 5: -0.0014}
+        ax.text(steps[-1] + 800, excels[-1] + label_offsets.get(sd, 0),
+                f"s{sd}", fontsize=6.8, va="center", ha="left", color="0.3")
 
     ax.scatter([], [], marker="x", c=VERMIL, s=30, label="fidelity-gate collapse")
-    ax.plot([], [], "-", color=GREY, lw=1.0, label="valid checkpoint")
+    ax.plot([], [], "-", color=BLUE, lw=1.1, alpha=0.65,
+            marker="o", ms=3.5, label="valid checkpoint")
     ax.legend(fontsize=7.4, loc="lower left", frameon=False)
     ax.set_xlabel("training timesteps", fontsize=9)
     ax.set_ylabel("Excel ReT (Track A scale)", fontsize=9)
@@ -1159,36 +1191,42 @@ def fig16_reward_sensitivity() -> None:
                     "ReT_garrido2024_train"]
     obs_color = {"v7": BLUE, "v8": SKY, "v9": GREEN}
     obs_marker = {"v7": "o", "v8": "s", "v9": "D"}
+    # horizontal jitter by obs version so dots in the same reward family separate
+    obs_jitter = {"v7": -0.16, "v8": 0.0, "v9": 0.16}
     x_pos = {rm: i for i, rm in enumerate(reward_modes)}
 
-    fig, ax = plt.subplots(figsize=(6.8, 3.6))
+    fig, ax = plt.subplots(figsize=(6.8, 3.8))
     for rm, ov, alpha, delta, cost in cells:
-        xp = x_pos[rm]
+        xp = x_pos[rm] + obs_jitter[ov]
         if alpha:
             a = float(alpha)
-            xp += (a - 0.1) * 1.5
-        ax.scatter(xp, delta * 1e6, s=50, c=obs_color[ov],
+            xp += (a - 0.1) * 1.1  # smaller alpha jitter now that obs is offset
+        ax.scatter(xp, delta * 1e6, s=55, c=obs_color[ov],
                    marker=obs_marker[ov], zorder=3, edgecolors="0.2",
-                   linewidths=0.5, alpha=0.85)
+                   linewidths=0.5, alpha=0.9)
 
     ax.axhline(0, color="0.3", lw=1.0, zorder=1)
     ax.axhline(438, color=GREEN, lw=0.8, ls=(0, (4, 3)), alpha=0.6, zorder=1)
-    ax.text(3.4, 438, "canonical 10-seed\n(+0.000438)", fontsize=7.0,
-            color=GREEN, ha="right", va="bottom")
+    # move canonical label to upper-left where there are no dots (control_v1 tops ~406)
+    ax.text(0.0, 462, "canonical 10-seed (+0.000438)", fontsize=7.0,
+            color=GREEN, ha="left", va="bottom")
 
     ax.set_xticks(range(len(reward_modes)))
-    ax.set_xticklabels([rm.replace("_", "\n") for rm in reward_modes], fontsize=7.8)
-    ax.set_xlim(-0.5, 3.5)
+    ax.set_xticklabels([rm.replace("_", "\n") for rm in reward_modes], fontsize=7.6)
+    ax.set_xlim(-0.55, 3.55)
+    ax.set_ylim(-10, 500)
     ax.set_ylabel("Excel ReT $\\Delta$ ($\\times 10^{-6}$) vs best static", fontsize=8.8)
     ax.set_xlabel("training reward family", fontsize=9)
     ax.set_title("18/18 cells positive: effect robust across reward and observation",
-                 fontsize=8.8, pad=6)
+                 fontsize=8.6, pad=8)
 
     from matplotlib.lines import Line2D
     handles = [Line2D([0], [0], marker=m, color="none", markerfacecolor=c,
                       markeredgecolor="0.2", markersize=7, label=ov)
                for ov, c, m in [("v7", BLUE, "o"), ("v8", SKY, "s"), ("v9", GREEN, "D")]]
-    ax.legend(handles=handles, fontsize=7.6, loc="lower left", frameon=False,
+    # legend upper right (away from control_v1 dots at lower-left)
+    ax.legend(handles=handles, fontsize=7.6, loc="upper right", frameon=True,
+              framealpha=0.9, edgecolor="0.8",
               title="obs version", title_fontsize=7.4)
     ax.grid(True, axis="y", lw=0.3, color="0.92", zorder=0)
     save(fig, "fig16_reward_sensitivity")
@@ -1203,9 +1241,9 @@ def fig17_control_loop() -> None:
     interaction). This figure makes the Track A vs Track B action-
     surface distinction structural rather than verbal.
     """
-    fig, ax = plt.subplots(figsize=(7.4, 3.0))
+    fig, ax = plt.subplots(figsize=(7.4, 3.5))
     ax.set_xlim(0, 10)
-    ax.set_ylim(0.2, 3.8)
+    ax.set_ylim(0.0, 4.2)
     ax.axis("off")
 
     def box(x, y, w, h, text, fc="white", ec="0.3", lw=0.9, fs=8.2, weight="normal"):
@@ -1219,45 +1257,62 @@ def fig17_control_loop() -> None:
         ax.add_patch(FancyArrowPatch(p0, p1, arrowstyle=style,
                      mutation_scale=11, color=color, lw=lw, zorder=1))
 
-    box(0.3, 1.5, 2.3, 1.6,
+    # section labels at top (clear of boxes)
+    ax.text(1.45, 3.95, "environment", fontsize=7.6, color="0.4", ha="center")
+    ax.text(7.35, 3.95, "agent", fontsize=7.6, color="0.4", ha="center")
+
+    # environment (left)
+    box(0.3, 1.9, 2.3, 1.7,
         "MFSC DES\n(Python/SimPy)\n\n13 operations\n9 risk processes\nGarrido-grounded",
         fc="#f6f8fa", ec="0.35", fs=8.0, weight="bold")
-    ax.text(1.45, 3.25, "environment", fontsize=7.6, color="0.4", ha="center")
 
-    box(3.3, 2.4, 2.0, 0.9,
+    # three middle boxes (observation top, reward middle, action bottom)
+    box(3.4, 2.7, 2.0, 0.9,
         "observation $o_t$\nv7: 52 dims\n(backlog, fill, risk pressure)",
         fc="white", ec=BLUE, lw=1.0, fs=7.6)
-    box(3.3, 0.7, 2.0, 0.9,
-        "action $a_t$\ntrack\\_b\\_v1: 8D\n(buffer, shift, dispatch)",
-        fc="white", ec=VERMIL, lw=1.0, fs=7.6)
-    box(3.3, 1.45, 2.0, 0.55,
-        "reward $r_t$ (control\\_v1)",
+    box(3.4, 1.75, 2.0, 0.55,
+        "reward $r_t$ (control_v1)",
         fc="white", ec="0.4", lw=0.8, fs=7.4)
+    box(3.4, 0.7, 2.0, 0.9,
+        "action $a_t$\ntrack_b_v1: 8D\n(buffer, shift, dispatch)",
+        fc="white", ec=VERMIL, lw=1.0, fs=7.6)
 
-    box(6.2, 1.5, 2.3, 1.6,
+    # policy (right)
+    box(6.3, 1.9, 2.3, 1.7,
         "PPO policy\n$\\pi_\\theta(a|o)$\n\nMLP 64$\\times$64\nGAE $\\lambda$=0.95",
         fc="#e7f4e9", ec=GREEN, lw=1.1, fs=8.0, weight="bold")
-    ax.text(7.35, 3.25, "agent", fontsize=7.6, color="0.4", ha="center")
 
-    box(8.9, 1.5, 1.0, 1.6,
-        "Eval\nGarrido/\nExcel\nReT",
-        fc="#f3edf8", ec=PURPLE, lw=0.9, fs=7.2, weight="bold")
+    # eval (far right), wider to avoid text overflow
+    box(8.95, 1.9, 0.95, 1.7,
+        "Eval:\nGarrido/\nExcel\nReT",
+        fc="#f3edf8", ec=PURPLE, lw=0.9, fs=7.4, weight="bold")
 
-    arrow((2.6, 2.85), (3.3, 2.85), color=BLUE)
-    ax.text(2.95, 3.0, "$o_t$", fontsize=8, color=BLUE, ha="center")
-    arrow((6.2, 1.15), (5.3, 1.15), color=VERMIL)
-    ax.text(5.75, 1.0, "$a_t$", fontsize=8, color=VERMIL, ha="center")
-    arrow((3.3, 1.15), (2.6, 1.7), color=VERMIL)
-    arrow((2.6, 2.3), (3.3, 1.72), color="0.4")
-    ax.text(2.7, 1.95, "$r_t$", fontsize=8, color="0.4")
-    arrow((8.5, 2.3), (8.9, 2.3), color=PURPLE, style="-")
-    ax.text(8.7, 2.45, "eval", fontsize=7.0, color=PURPLE, ha="center")
+    # arrows with labels placed ON the arrow midpoints
+    # o_t: env-right -> observation-left (horizontal, clean)
+    arrow((2.6, 3.15), (3.4, 3.15), color=BLUE)
+    ax.text(3.0, 3.27, "$o_t$", fontsize=8, color=BLUE, ha="center", va="bottom")
+    # a_t: policy-left -> action-right (horizontal, clean)
+    arrow((6.3, 1.15), (5.4, 1.15), color=VERMIL)
+    ax.text(5.85, 1.27, "$a_t$", fontsize=8, color=VERMIL, ha="center", va="bottom")
+    # action -> env (action feeds back into env)
+    arrow((3.4, 1.0), (2.6, 2.1), color=VERMIL)
+    # r_t: env -> reward (reward flows from env to the reward box)
+    arrow((2.6, 2.5), (3.4, 2.0), color="0.4")
+    ax.text(2.85, 2.35, "$r_t$", fontsize=8, color="0.4", ha="center", va="center")
+    # policy -> eval (horizontal)
+    arrow((8.6, 2.75), (8.95, 2.75), color=PURPLE, style="-")
+    ax.text(8.78, 2.9, "eval", fontsize=7.0, color=PURPLE, ha="center", va="bottom")
 
+    # bottom footer band: cadence note + Track A/B distinction (no overlap with boxes)
     ax.text(5.0, 0.35, "decision step $t$: every 168 simulated hours (weekly planning cadence)",
-            fontsize=7.8, color="0.35", ha="center", style="italic")
-    ax.text(0.3, 3.7, "Track A: action dims 1-6 only (buffer/shift)  |  "
+            fontsize=7.6, color="0.35", ha="center", style="italic")
+    # vermilion Track A/B note moved to a dedicated band below the cadence line
+    ax.add_patch(FancyBboxPatch((0.3, 0.0), 9.6, 0.0, boxstyle="square,pad=0",
+                 fc="none", ec="none"))
+    ax.text(0.3, 0.08,
+            "Track A: action dims 1-6 only (buffer/shift)   |   "
             "Track B: + dims 7-8 (Op10/Op12 dispatch) reach the bottleneck",
-            fontsize=7.4, color=VERMIL, ha="left", va="top")
+            fontsize=7.4, color=VERMIL, ha="left", va="bottom")
 
     save(fig, "fig17_control_loop")
 
