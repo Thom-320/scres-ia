@@ -78,10 +78,23 @@ is a disclosed boundary at both horizons, and two independent tests rule
 out that the effect depends on the learned policy exploiting privileged
 simulator observation fields unavailable to static comparators. The
 paper's central argument is
-therefore structural but conditional: in this benchmark, RL value appears
-when the controllable interface reaches the binding downstream bottleneck
-and the policy can convert the resulting headroom into recovery
-performance.
+therefore structural but conditional, and directly operationalizes
+Theory-of-Constraints reasoning \cite{goldratt1984goal}: system
+performance is governed by its binding constraint, not by average-case
+improvement elsewhere, and so RL value appears in this benchmark when the
+controllable interface reaches the binding downstream bottleneck and the
+policy can convert the resulting headroom into recovery performance,
+regardless of reward design or algorithm choice. A fifth, adversarially
+tested finding sharpens this claim in the temporal dimension: an
+initial-looking causal-prevention signal (pre-event actions causally
+improving disruption outcomes) was traced to a measurement artifact and
+retracted after negative controls, and a subsequent ceiling test---forced
+pre-event postures and a policy with perfect foreknowledge of the future
+risk calendar---finds no preventive headroom across the mediable risk
+roster under the studied action contract. The benchmark therefore
+supports adaptive recovery, not anticipatory prevention, and the paper
+reports the audit that establishes this boundary alongside the positive
+result.
 
 \begin{figure}[htbp]
 \centering
@@ -90,7 +103,7 @@ performance.
 \label{fig:bottleneck_alignment}
 \end{figure}
 
-The paper makes four contributions. First, we contribute a
+The paper makes five contributions. First, we contribute a
 Garrido-grounded DES+RL benchmark that retains thesis-compatible
 resilience metrics and dense static baselines. Second, we report a
 negative benchmark result: under the original buffer/shift action scope,
@@ -101,7 +114,18 @@ Excel ReT, service continuity, backlog, and recovery tails. Fourth, we
 provide a structural diagnosis supported by an action-space ablation,
 a regime-conditioned static table, a masked-observation retrain, and a
 cross-regime/horizon matrix: the gain is not explained by action-space
-size, privileged observation, or the stress regime alone. We do not claim
+size, privileged observation, or the stress regime alone. Fifth, we
+report an adversarially validated causal-prevention audit: an initial
+positive-looking pre-event action-splice signal is diagnosed as a
+measurement artifact of frequent overlapping disruption events, retracted
+using negative controls (a reactive baseline and a content-free label
+both falsely pass the same gate), and superseded by a direct
+preventive-headroom ceiling test---forced pre-event postures and a
+perfect-foreknowledge policy---that finds no anticipatory value across
+the mediable risk roster. We report this boundary explicitly rather than
+omit it, and we document the gate-failure mode itself as a methodological
+caution for causal evaluation of RL policies under frequent, overlapping
+disruption events. We do not claim
 to be the first paper on RL for supply chains, the first DES+RL study, or
 to offer architectural novelty; our contribution is experimental and
 diagnostic. The remainder of the paper is organized as follows: Section
