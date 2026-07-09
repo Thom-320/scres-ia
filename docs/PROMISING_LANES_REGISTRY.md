@@ -930,3 +930,13 @@ Defensible claim today: in an extreme R21 regime with physical buffering headroo
 lead-time-committed inventory targets to the contract yields a confirmed improvement over
 8D adaptive control (+0.0285, seed-clustered CI95 [+0.0158,+0.0412], 5/5 seeds) — temporal-
 commitment control value; ex-ante vs reactive-replenishment attribution pending.
+
+**⭐17 FINAL identified decomposition (2026-07-09, within-checkpoint controls):** clamping the
+11D checkpoint's buffer outputs to its own per-op means loses NOTHING (0.3402→0.3400):
+schedule_value NULL [−0.0009,+0.0012], exante NULL, reactive NULL; replay≡self exactly
+(instrument valid). **The entire +0.0285 increment is learned per-op constant reserve
+LEVELS** (op3 ~0–0.23 — one seed zeroed the dead lever; op5 0.09–0.39; op9 0.13–0.27).
+Graft residual explained: per-op asymmetry + dims-1–8 co-adaptation. Final paper-2 claim:
+RL solves Garrido §8.6.2 (optimal reserve levels, right size right place) inside a joint
+policy — prevention as POSTURE (ex-ante reserves), not as timed behavior; scheduling/
+anticipation affirmatively absent. Run: track_bp_timing_within_2026-07-09.

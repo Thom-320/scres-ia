@@ -222,6 +222,41 @@ for the next hit. Correct paper-2 language: **"state-contingent preventive sched
 not "event anticipation". (Small-n caveat on the lead-lag: 4 episodes, one seed; the
 flatness is uniform across bins. The graft-sweep result is 5-seed × 24-episode scale.)
 
+## Within-checkpoint timing controls — the IDENTIFIED decomposition (final)
+
+Run `track_bp_timing_within_2026-07-09` (`audit_track_bp_timing_within.py`): same 11D
+checkpoints, only the three buffer outputs manipulated, same event tape, seed-clustered
+t-CI over 5 per-seed mean deltas, 24 CRN episodes each:
+
+| Estimand | mean | seed-clustered CI95 | verdict |
+|---|---|---|---|
+| schedule_value (self − clamp_perop) | +0.000153 | [−0.000899, +0.001206] | **NULL** |
+| exante_component (self − block_pre) | +0.000043 | [−0.000085, +0.000170] | **NULL** |
+| reactive_component (self − block_post) | +0.000100 | [−0.000179, +0.000379] | **NULL** |
+| alignment (replay − permuted) | +0.004459 | [−0.000404, +0.009321] | not significant (5/5 nominal; misaligned variance mildly harmful, aligned variance worthless) |
+| open-loop control (replay − self) | exactly 0 in all 5 seeds | — | instrument validated |
+
+Clamping the checkpoint's buffer outputs to its OWN per-op episode means loses nothing
+(0.3402 → 0.3400). **The entire confirmed increment (+0.0285) is a learned per-operation
+constant reserve level effect** — there is no scheduling value, no ex-ante-window
+component, no reactive-window component. Learned levels (mean frac of I_1344, per seed):
+op3 0.00–0.23 (the dead lever; one seed correctly zeroed it), op5 0.09–0.39,
+op9 0.13–0.27 — asymmetric across ops, with within-episode variation that is noise, not
+signal.
+
+This also resolves the graft-audit residual: best common scalar 0.3240 vs per-op clamp
+0.3400 — the +0.016 was per-op asymmetry plus co-adaptation of dims 1–8, exactly the
+confounds the external review named.
+
+**Final claim (paper-2 form):** in an extreme compounding-disruption regime with physical
+buffering headroom, RL on a temporal-commitment contract learns per-operation strategic
+reserve LEVELS (solving Garrido §8.6.2 inside a joint policy: right size, right place —
+including zeroing the dead lever) that beat both no-buffering and blanket buffering,
+while its adaptive dims deliver recovery. Prevention as posture: yes — ex-ante reserves
+held at learned levels, Garrido's proactive strategy optimized. Prevention as timed
+behavior: affirmatively absent — scheduling, anticipation, and even state-contingent
+modulation all test null. The word "anticipation" must not appear in any claim.
+
 ## Guardrails
 
 - Screen scale only (3 seeds × 30k): no confirmatory claims; 5-seed × 60k confirm needed
