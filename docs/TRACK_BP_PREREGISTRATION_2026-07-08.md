@@ -67,7 +67,7 @@ clean-physics tiers as in the closed battery. Tiers (anchor risk × lead time):
 | G0-R21-L2 | R21 (impact×3) | R21 | 336h | harder commitment |
 | G0-R23 | R23 (impact×3) | R23 | 168h | forward-unit destruction; op9/forward stock |
 | G0-R24 | R24 (freq×3) | R24 | 168h | priority demand surge; op9 absorbs |
-| G0-R11 | R11 (impact×8) | R11 | 168h | AL breakdown bridging (exp(2h)→exp(16h) repairs) |
+| G0-R11 | R11 (freq×0.125, impact×8) | R11 | 168h | AL breakdown bridging; frequency reduced 8× so isolated anchors exist (natural R11 fires ~2×/week, which blankets every isolation window) — recorded before launch |
 | G0-R22 | R22 (impact×3) | R22 | 168h | negative control (no buffer channel expected) |
 
 Decision rule (per tier): headroom exists iff DiD(max_prep − calm | real − placebo) > 0
