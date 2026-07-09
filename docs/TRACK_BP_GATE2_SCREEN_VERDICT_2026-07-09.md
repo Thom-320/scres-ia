@@ -82,6 +82,25 @@ Interpretation matrix fixed in advance (before the ablation was read):
 **Outcome: the second branch, decisively** (headline section above): +0.0533 pooled,
 all seeds CI95 > 0, 178% of the static oracle.
 
+## Holding-cost sensitivity (mandatory check — done, favorable)
+
+Adjusted score = episode ReT − λ_h × mean buffer-holding fraction, paired per episode
+across the 72 (seed × eval-seed) pairs, pooled bootstrap CI95:
+
+| λ_h | 11D − 8D adjusted increment | CI95 | 11D − always adjusted |
+|---|---|---|---|
+| 0.00 | +0.0533 | [+0.0432, +0.0637] | +0.089 |
+| 0.05 | +0.0454 | [+0.0352, +0.0561] | +0.131 |
+| 0.10 | +0.0375 | [+0.0275, +0.0483] | +0.173 |
+| 0.20 | +0.0217 | [+0.0113, +0.0328] | +0.258 |
+| 0.34 (crossover) | ≈0 | [−0.0108, +0.0116] | +0.373 |
+| 0.50 | −0.0256 | [−0.0374, −0.0134] | +0.510 |
+
+The preventive increment survives holding charges up to λ_h = 0.2 with CI95 excluding
+zero (crossover λ_h* ≈ 0.34 = 0.0533/0.158 mean holding). Against the blanket posture the
+dominance *grows* with λ_h, since `always_prepared` pays holding 1.0. The selective-timing
+property is therefore not just cosmetic: it is what makes the channel robust to pricing.
+
 ## Guardrails
 
 - Screen scale only (3 seeds × 30k): no confirmatory claims; 5-seed × 60k confirm needed

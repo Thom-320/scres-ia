@@ -79,6 +79,11 @@ def build_parser() -> argparse.ArgumentParser:
                    help="Optional sim-level buffer review cadence in hours (track_bp only).")
     p.add_argument("--initial-buffers", type=str, default=None,
                    help="Optional pre-positioned buffers at reset, e.g. 'op9_rations=15750'.")
+    p.add_argument("--posture-dims", choices=["all", "buffers_only"], default="all",
+                   help="Which action dims the forced posture controls. 'buffers_only' "
+                        "forces only dims 8-10 (buffer fractions, track_bp) and leaves "
+                        "dims 0-7 at the reference policy's action — isolates the buffer "
+                        "channel from dispatch/shift preparation in the causal DiD.")
     p.add_argument("--seeds", nargs="+", type=int, default=[1, 2, 3])
     p.add_argument("--eval-episodes", type=int, default=8)
     p.add_argument("--max-steps", type=int, default=104)
@@ -213,14 +218,24 @@ def run_episode(model, vec_norm, args, cli, eval_seed: int, *,
     step = 0
     shifts: list[int] = []
     action_dim = env.action_space.shape[0]
+    buffers_only = getattr(cli, "posture_dims", "all") == "buffers_only"
+    if buffers_only and action_dim <= 8:
+        raise SystemExit("--posture-dims buffers_only requires the track_bp (11D) contract")
     while not (terminated or truncated):
-        if forced_steps is not None and step in forced_steps:
-            action = np.full(action_dim, float(forced_posture), dtype=np.float32)
-        elif model is None:
+        if model is None:
             # Constant-neutral reference: 'medium' posture on every dim.
             action = np.zeros(action_dim, dtype=np.float32)
         else:
             action = predict_action(model, vec_norm, obs)
+        if forced_steps is not None and step in forced_steps:
+            if buffers_only:
+                # Force only the buffer fractions; dims 0-7 stay at reference.
+                # Map the posture from [-1,1] to the buffer range [0,1] so the
+                # calm/medium/max_prep surface stays 3-point (0 / 0.5 / 1.0).
+                action = np.array(action, dtype=np.float32, copy=True)
+                action[8:] = (float(forced_posture) + 1.0) / 2.0
+            else:
+                action = np.full(action_dim, float(forced_posture), dtype=np.float32)
         # Buffer fraction dims live in [0,1]; the env clips, so forced calm
         # (-1) decodes to zero buffers and max_prep (+1) to full buffers.
         obs, _reward, terminated, truncated, info = env.step(action)
