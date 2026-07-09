@@ -30,6 +30,19 @@ rate is small-magnitude background contamination (R11 still fires ~every 5.6 wee
 freq×0.125), which the DiD design differences out. We read this as a **pass with disclosed
 deviation from the rate bar**, not a clean-bar pass.
 
+**RE-ATTRIBUTION UPDATE (2026-07-09, `track_bp_g0_r11_buffers_only_2026-07-09`): the R11
+signal is RETRACTED as prevention evidence.** Two follow-ups kill it: (1) a buffers-only
+forced posture (dims 8–10 forced to 0/0.5/1.0, dims 0–7 held at the neutral reference in
+every arm) reproduces the tier at exact zero — real 0/62, placebo 0/40, DiD +0.000000
+bit-identical; (2) the original tier's own 3-point response surface shows
+calm 0.479347 < medium 0.482288 ≈ max_prep 0.482202 on real anchors — the entire
+max_prep−calm delta came from the CALM arm hurting (forcing minimum dispatch/shift for
+four weeks before a long breakdown degrades local outcomes), not from preparation helping.
+That is de-preparation harm, not anticipation. The same self-correction discipline that
+retracted the Ruta B splice gate applies here. The R21 results are unaffected: Gate 1
+holds dims 0–7 at medium in ALL arms (no calm confound), and the Gate-2 contract ablation
+compares two trained PPOs.
+
 ## Gate 1 — static clock-policy oracle (CRN-paired, n=24 episodes)
 
 | Cell | always−never (episode ReT) | calendar−never | verdict |

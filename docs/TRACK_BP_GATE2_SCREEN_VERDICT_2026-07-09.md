@@ -101,6 +101,32 @@ zero (crossover λ_h* ≈ 0.34 = 0.0533/0.158 mean holding). Against the blanket
 dominance *grows* with λ_h, since `always_prepared` pays holding 1.0. The selective-timing
 property is therefore not just cosmetic: it is what makes the channel robust to pricing.
 
+## Regime-breadth frontier (R21 freq × impact grid, Gate-1 oracle, n=24 each)
+
+always−never episode ReT (positive count /24; * = bootstrap CI95 excludes zero):
+
+| freq \ impact | ×1 | ×2 | ×3 | ×4 |
+|---|---|---|---|---|
+| ×1 | 0 (0) | 0 (0) | 0 (0) | 0 (0) |
+| ×2 | 0 (0) | 0 (0) | 0 (0) | 0 (0) |
+| ×4 | 0 (0) | 0 (1) | +0.0023 (3) | **+0.0068 (6)*** |
+| ×8 | 0 (0) | +0.0018 (3) | **+0.0174 (8)*** | **+0.0299 (14)*** |
+
+The static preventive channel requires BOTH frequent AND long outages — compounding
+starvation. It is exactly null across the whole natural-to-moderate region (freq ≤2 or
+impact ≤2), turns on at freq×4/impact×4, and grows monotonically. At Garrido-native
+intensity, prevention remains worthless — fully consistent with the paper's boundary and
+with the thesis's own H2 (buffer moderation under increased risk). Runs:
+`track_bp_breadth_r21_f{1,2,4,8}_i{1,2,3,4}_2026-07-09`.
+
+## R11 re-attribution: RETRACTED as prevention evidence
+
+Buffers-only forced posture: exact zero (real 0/62, placebo 0/40, DiD +0.000000). The
+original tier's response surface shows calm < medium ≈ max_prep — the delta was the calm
+arm hurting (de-preparation harm), not preparation helping. Details in the Gates 0/1
+verdict update. Cell B's episode-null is thereby explained; the preventive claim now rests
+solely, and cleanly, on the R21-compounding cell + contract ablation.
+
 ## Guardrails
 
 - Screen scale only (3 seeds × 30k): no confirmatory claims; 5-seed × 60k confirm needed
