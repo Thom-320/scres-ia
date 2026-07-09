@@ -875,13 +875,14 @@ headroom convierte PPO?" + the anticipation check (matching `always` at low hold
 at ~1.0 holding = static buffering learned). Then Real-KAN sidecar, holding-cost sensitivity,
 5-seed confirm. This is paper-2 / extension material — NOT the current manuscript.
 
-**⭐17 update (2026-07-09, Gate 2 + contract ablation): the preventive channel is LEARNABLE and
-the increment is isolated.** Cell A (R21 freq×8 impact×4): PPO on `track_bp_v1` (11D) reaches
-0.332–0.335 episode ReT vs 0.269–0.291 for PPO on plain `track_b_v1` (8D) — pure preventive
+**⭐17 SUPERSEDED early interpretation (2026-07-09, Gate 2 + contract ablation):** Cell A
+(R21 freq×8 impact×4): PPO on `track_bp_v1` (11D) reaches
+0.332–0.335 episode ReT vs 0.269–0.291 for PPO on plain `track_b_v1` (8D) — contract
 increment **+0.0533 pooled** (per seed +0.044/+0.053/+0.063, all bootstrap CI95 > 0, 70/72
 paired episodes positive), = **178% of the static always-prepared oracle** (+0.0299), achieved
-at 10–21% buffer holding (timed/selective, not blanket — anticipation falsifier does not fire).
-Decomposition of the total +0.120 vs neutral: ~55% adaptive channel, ~45% preventive channel.
+at 10–21% mean requested buffer fraction. The contemporaneous timed/selective interpretation
+was later falsified by within-checkpoint and disjoint-calibration controls; retain these
+numbers as historical screen evidence only.
 Cell B (R11): blanket buffers episode-null; Gate-0 local signal needs re-attribution
 (forced posture confound — dispatch/shift prep may carry it). Verdict:
 `docs/TRACK_BP_GATE2_SCREEN_VERDICT_2026-07-09.md`. Next: 5-seed×60k confirm, holding-cost
@@ -893,7 +894,8 @@ PPO_11D−PPO_8D = **+0.0285, seed-clustered CI95 [+0.0158, +0.0412], 5/5 seeds 
 (117/120 episodes), mean holding 0.206 — ≈95% of the full static oracle on top of a stronger
 adaptive baseline. Screen→confirm shrinkage (+0.053→+0.028) disclosed: mature 8D adaptation
 closes part of the gap reactively; unlike C23 the effect survives with every CI95 > 0.
-Holding-cost robust to λ_h=0.2. Breadth frontier: channel null for freq≤2 or impact≤2, on from
+Confirmatory holding-cost significance is clean only near λ_h=0.05 (not 0.2); crossover
+λ_h*=0.138. Breadth frontier: channel null for freq≤2 or impact≤2, on from
 freq×4/impact×4. R11 retracted (calm-arm artifact + buffers-only exact zero). Real-KAN sidecar
 running. docs/TRACK_BP_GATE2_SCREEN_VERDICT_2026-07-09.md.
 
@@ -905,13 +907,15 @@ architecture-robust; the mechanism is the contract physics. Caveat: 8D baseline 
 (KAN_8D not run). This also upgrades the KAN story for Garrido: his literal suggestion
 (pykan) converts his own buffering variable's dynamic headroom at parity with PPO.
 
-**⭐17 timing audit (2026-07-09):** the preventive increment decomposes as optimal static
+**⭐17 SUPERSEDED timing audit v1 (2026-07-09):** the initial analysis decomposed the contract
+increment as optimal static
 level +0.0123 (inverted-U, best constant frac 0.20 — answers Garrido §8.6.2 by learning) +
 **state-contingent scheduling +0.0162 CI95 [+0.0124,+0.0205] (115/120)**. Lead-lag is FLAT
 (no pre-event ramp: 0.213 before vs 0.225 baseline) → NOT hazard-clock anticipation; the
 policy re-arms on operational state. Paper-2 language: "state-contingent preventive
 scheduling", never "event anticipation" — we refuted our own strong version first, again.
-docs/TRACK_BP_GATE2_SCREEN_VERDICT_2026-07-09.md; run track_bp_timing_audit_2026-07-09.
+This interpretation is withdrawn: it compared separately trained policies and pooled episodes.
+See the correction and final cross-fitted decomposition below.
 
 **⭐17 CORRECTIONS after external review (2026-07-09) — three claims walked back:**
 1. "Reacting is too late by construction" was WRONG for the R21 ×8/×4 cell: outages last
@@ -940,3 +944,13 @@ Graft residual explained: per-op asymmetry + dims-1–8 co-adaptation. Final pap
 RL solves Garrido §8.6.2 (optimal reserve levels, right size right place) inside a joint
 policy — prevention as POSTURE (ex-ante reserves), not as timed behavior; scheduling/
 anticipation affirmatively absent. Run: track_bp_timing_within_2026-07-09.
+
+**⭐17 disjoint-calibration confirmation (2026-07-09):** the per-episode clamp's possible
+look-ahead was removed. Postures estimated on 12 separate calibration episodes and frozen
+before the 24 canonical evaluation episodes match/slightly exceed the dynamic checkpoint:
+11D self 0.340164, per-seed frozen 0.340283, global frozen 0.340321; self−global
+`−0.000156`, seed-clustered CI95 `[−0.000746,+0.000433]`. Global posture:
+`Op3=0.1531, Op5=0.2480, Op9=0.2068`. Weekly buffer variation is conclusively unnecessary
+in this protocol. Remaining attribution gate: retrain the 8D adaptive policy under this
+fixed posture; until that lands, phrase the result as joint-policy reserve posture value,
+not proof that dynamic RL is required to select the reserve dimensions.

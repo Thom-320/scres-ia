@@ -1,10 +1,12 @@
 # Track B-P Gate 2 Screen Verdict (2026-07-09)
 
-**Headline: the preventive channel is real, learnable, and large. The contract ablation
-isolates a pure preventive increment of +0.053 episode ReT (PPO_11D − PPO_8D, paired,
-every seed CI95 > 0, 70/72 episodes positive) — 178% of the static blanket-buffer oracle,
-achieved with only 10–21% buffer holding. Learning extracts MORE from Garrido's buffer
-lever than any static posture can, because it times and sizes it.**
+**Current headline after confirmatory and mechanism controls:** access to heterogeneous
+strategic-buffer targets adds confirmed value in the engineered R21 starvation regime:
+PPO-11D minus PPO-8D is +0.0285 at 5 seeds × 60k, seed-clustered CI95
+[+0.0158,+0.0412]. Disjoint-calibration controls show that weekly buffer scheduling adds
+no value; a fixed per-operation posture matches the 11D policy. The surviving result is
+joint-policy reserve-posture value, not anticipation or dynamic prevention. A retrained
+8D-plus-fixed-posture baseline is the remaining attribution gate.**
 
 ## The decomposition (Cell A, R21 compound starvation)
 
@@ -13,7 +15,7 @@ lever than any static posture can, because it times and sizes it.**
 | neutral clock (never_prepared) | 0.2149 | — |
 | + static blanket buffers (always_prepared) | 0.2448 | +0.0299 (preventive, static) |
 | + adaptive learning, 8D `track_b_v1` PPO | 0.2690–0.2914 | +0.0658 over neutral (adaptive) |
-| + preventive lever learned, 11D `track_bp_v1` PPO | 0.3318–0.3354 | **+0.0533 on top of 8D (preventive, dynamic)** |
+| + strategic-buffer contract, 11D `track_bp_v1` PPO | 0.3318–0.3354 | **+0.0533 on top of 8D (screen; attribution pending)** |
 
 Preventive increment per training seed (paired per eval seed, bootstrap CI95):
 seed 1 +0.053124 [+0.035168, +0.073308] (23/24 pos); seed 2 +0.043953
@@ -44,8 +46,9 @@ clock-policy oracle re-run on the identical eval seeds). Numbers recomputed from
 
 - Conversion of the pre-registered oracle (always−never): **3.9–4.0×** across seeds.
 - PPO beats the blanket-buffer posture itself by +0.087 to +0.091 (+36–37% relative)
-  while holding only 10–21% of max buffers — the anticipation-check signature of timed,
-  selective buffering rather than learned static buffering (falsifier #3 does NOT fire).
+  while requesting only 10–21% of max buffer targets. Later within-checkpoint and
+  disjoint-calibration controls show that this is heterogeneous fixed posture plus adaptive
+  co-control, not timed buffering.
 - All three seeds tightly clustered; every CI95 excludes zero by a wide margin.
 
 ## Cell B — R11 rare-long (freq×0.125, impact×8)
@@ -248,21 +251,43 @@ This also resolves the graft-audit residual: best common scalar 0.3240 vs per-op
 0.3400 — the +0.016 was per-op asymmetry plus co-adaptation of dims 1–8, exactly the
 confounds the external review named.
 
-**Final claim (paper-2 form):** in an extreme compounding-disruption regime with physical
-buffering headroom, RL on a temporal-commitment contract learns per-operation strategic
-reserve LEVELS (solving Garrido §8.6.2 inside a joint policy: right size, right place —
-including zeroing the dead lever) that beat both no-buffering and blanket buffering,
-while its adaptive dims deliver recovery. Prevention as posture: yes — ex-ante reserves
-held at learned levels, Garrido's proactive strategy optimized. Prevention as timed
-behavior: affirmatively absent — scheduling, anticipation, and even state-contingent
-modulation all test null. The word "anticipation" must not appear in any claim.
+### Disjoint-calibration confirmation of the fixed-posture result
+
+The per-episode clamp above used the factual episode's own mean action. To remove that
+look-ahead, `audit_track_bp_frozen_posture.py` estimated one per-operation posture per
+checkpoint on 12 disjoint calibration episodes (seed offset 60,000), froze it, and opened
+the canonical 24 evaluation episodes only afterwards. Results:
+
+| Arm | episode ReT |
+|---|---:|
+| 11D checkpoint as-is | 0.340164 |
+| calibration-frozen posture, per seed | 0.340283 |
+| calibration-frozen global posture | **0.340321** |
+
+`self − global frozen = −0.000156`, seed-clustered CI95
+`[−0.000746,+0.000433]`; `self − per-seed frozen = −0.000118`, CI95
+`[−0.000781,+0.000545]`. The global calibration posture is
+`(Op3=0.1531, Op5=0.2480, Op9=0.2068)` of I_1344. Thus the timing null is not an
+artifact of selecting constants on the evaluation episode.
+
+**Final claim at this gate:** in an extreme compounding-disruption regime with physical
+buffering headroom, the 11D joint policy discovers heterogeneous strategic reserve LEVELS
+(right size, right place) while its adaptive dimensions deliver recovery. Prevention as
+timed behavior is affirmatively absent: scheduling, anticipation, and state-contingent
+modulation all test null. Whether RL needs control of the buffer dimensions at all, versus
+an 8D policy trained under this frozen posture, is the next decisive baseline and is not
+yet answered by the within-checkpoint audit.
 
 ## Guardrails
 
-- Screen scale only (3 seeds × 30k): no confirmatory claims; 5-seed × 60k confirm needed
-  before any paper-facing number.
-- Buffer holding is unpriced in reward — a holding-cost sensitivity is mandatory before
-  claiming operational value (PPO's low holding makes this likely favorable, but measure).
-- These cells are engineered stress regimes (freq/impact multipliers), not Garrido-native
-  intensities; frame any claim as regime-conditional.
-- Not part of the current manuscript (paper-2 / extension lane).
+- The 11D−8D contract increment is confirmatory (5 seeds × 60k), but the retrained
+  8D-plus-fixed-posture baseline is still required before attributing that increment to
+  learning the reserve levels rather than to the reserve design itself.
+- Buffer holding is unpriced during training. Confirmatory post-hoc sensitivity is clean
+  only near `lambda_h=0.05`, with crossover at approximately 0.138; actual time-weighted
+  inventory exposure remains to be measured.
+- Replenishment currently tops up containers after a lead regardless of route status.
+  Route-aware arrival is a required physical-robustness sensitivity for Paper 2.
+- These are engineered stress regimes, not Garrido-native intensities. Every claim must
+  remain regime-conditional.
+- This lane remains outside the current Paper 1 manuscript.

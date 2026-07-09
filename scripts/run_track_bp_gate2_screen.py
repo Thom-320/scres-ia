@@ -34,7 +34,11 @@ from scripts.run_track_b_smoke import build_env_kwargs, build_parser as smoke_bu
 from scripts.run_track_b_observation_ablation import OBS_ABLATION_CONFIGS  # noqa: E402
 from scripts.run_track_bp_gate1_oracle import buffer_schedule  # noqa: E402
 from supply_chain.episode_metrics import compute_episode_metrics  # noqa: E402
-from supply_chain.track_bp_env import TRACK_BP_ACTION_DIM, make_track_bp_env  # noqa: E402
+from supply_chain.track_bp_env import (  # noqa: E402
+    TRACK_BP_ACTION_DIM,
+    make_track_b_fixed_buffer_env,
+    make_track_bp_env,
+)
 
 EVAL_EPISODE_SEED_OFFSET = 50_000
 CLOCK_POLICIES = ("never_prepared", "always_prepared", "calendar_prepared")
@@ -58,11 +62,24 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--calendar-cycle-weeks", type=int, default=24)
     p.add_argument("--step-size-hours", type=float, default=168.0)
     p.add_argument("--learning-rate", type=float, default=3e-4)
-    p.add_argument("--contract", choices=["track_bp", "track_b"], default="track_bp",
+    p.add_argument(
+        "--contract",
+        choices=["track_bp", "track_b", "track_b_fixed_buffers"],
+        default="track_bp",
                    help="track_b (8D, no buffer dims) is the contract-ablation arm that "
                         "isolates the preventive increment: PPO_11D - PPO_8D on the same "
                         "cell/seeds. Clock-policy arms are skipped for track_b (buffers "
-                        "do not exist on that contract; reuse the track_bp run's rows).")
+                        "do not exist on that contract; reuse the track_bp run's rows). "
+                        "track_b_fixed_buffers keeps the 8D learner but re-emits a frozen "
+                        "three-buffer posture through the Track B-P lead-time physics.")
+    p.add_argument(
+        "--fixed-buffer-fracs",
+        nargs=3,
+        type=float,
+        metavar=("OP3", "OP5", "OP9"),
+        default=[0.0, 0.0, 0.0],
+        help="Frozen Op3/Op5/Op9 fractions used by track_b_fixed_buffers.",
+    )
     p.add_argument("--features-extractor", choices=["mlp", "real_kan"], default="mlp",
                    help="real_kan plugs the official pykan extractor (Garrido's literal "
                         "KAN suggestion) as the efficiency/interpretability sidecar; "
@@ -89,9 +106,16 @@ def build_args(cli: argparse.Namespace) -> argparse.Namespace:
 def make_env(args: argparse.Namespace, cli: argparse.Namespace):
     kwargs = build_env_kwargs(args)
     lead = kwargs.pop("inventory_replenishment_lead_time", 168.0)
-    if getattr(cli, "contract", "track_bp") == "track_b":
+    contract = getattr(cli, "contract", "track_bp")
+    if contract == "track_b":
         from supply_chain.external_env_interface import make_track_b_env
         env = make_track_b_env(**kwargs)
+    elif contract == "track_b_fixed_buffers":
+        env = make_track_b_fixed_buffer_env(
+            fixed_fracs=tuple(float(x) for x in cli.fixed_buffer_fracs),
+            inventory_replenishment_lead_time=lead,
+            **kwargs,
+        )
     else:
         env = make_track_bp_env(inventory_replenishment_lead_time=lead, **kwargs)
     wrapper = OBS_ABLATION_CONFIGS[str(cli.obs_config)].wrapper
@@ -130,6 +154,8 @@ def run_ppo_episode(model, vec_norm, args, cli, eval_seed: int) -> dict[str, Any
         action = np.asarray(action[0], dtype=np.float32)
         if action.shape[0] > 8:
             fracs.append(float(np.mean(np.clip(action[8:], 0.0, 1.0))))
+        elif cli.contract == "track_b_fixed_buffers":
+            fracs.append(float(np.mean(np.clip(cli.fixed_buffer_fracs, 0.0, 1.0))))
         else:
             fracs.append(0.0)
         obs, _r, terminated, truncated, _i = env.step(action)

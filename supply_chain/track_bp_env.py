@@ -42,6 +42,7 @@ BUFFER_FULL_SCALE: dict[str, float] = {
 
 TRACK_BP_ACTION_CONTRACT = "track_bp_v1"
 TRACK_BP_ACTION_DIM = 11
+TRACK_B_FIXED_BUFFER_ACTION_CONTRACT = "track_b_fixed_buffers_v1"
 
 
 class TrackBPreventiveEnv(gym.Wrapper):
@@ -161,3 +162,53 @@ def make_track_bp_env(
         **overrides,
     )
     return TrackBPreventiveEnv(base)
+
+
+class FixedBufferTrackBEnv(gym.Wrapper):
+    """Expose the canonical 8D contract while holding three buffers fixed.
+
+    This is the strong mechanism baseline for Track B-P: the adaptive policy
+    controls exactly the original eight Track-B dimensions, while the
+    strategic-buffer posture is frozen before training and re-emitted every
+    week through the same lead-time machinery as ``track_bp_v1``.
+    """
+
+    action_contract = TRACK_B_FIXED_BUFFER_ACTION_CONTRACT
+
+    def __init__(self, env: TrackBPreventiveEnv, fixed_fracs: tuple[float, float, float]):
+        super().__init__(env)
+        fracs = np.asarray(fixed_fracs, dtype=np.float32).reshape(-1)
+        if fracs.shape != (3,):
+            raise ValueError(f"fixed_fracs must have shape (3,), got {fracs.shape}")
+        self.fixed_fracs = np.clip(fracs, 0.0, 1.0)
+        self.action_space = gym.spaces.Box(
+            low=np.asarray(env.action_space.low[:8], dtype=np.float32),
+            high=np.asarray(env.action_space.high[:8], dtype=np.float32),
+            dtype=np.float32,
+        )
+
+    def step(self, action: Any):
+        base_action = np.asarray(action, dtype=np.float32).reshape(-1)
+        if base_action.shape != (8,):
+            raise ValueError(f"fixed-buffer Track B action must have shape (8,), got {base_action.shape}")
+        full_action = np.concatenate([base_action, self.fixed_fracs]).astype(np.float32)
+        obs, reward, terminated, truncated, info = self.env.step(full_action)
+        info = dict(info)
+        info["track_bp_fixed_buffer_fracs"] = {
+            key: float(self.fixed_fracs[i]) for i, key in enumerate(BUFFER_KEYS)
+        }
+        return obs, reward, terminated, truncated, info
+
+
+def make_track_b_fixed_buffer_env(
+    *,
+    fixed_fracs: tuple[float, float, float],
+    inventory_replenishment_lead_time: float = 168.0,
+    **overrides: Any,
+) -> FixedBufferTrackBEnv:
+    """Build an 8D Track-B learner with a frozen strategic-buffer posture."""
+    preventive = make_track_bp_env(
+        inventory_replenishment_lead_time=inventory_replenishment_lead_time,
+        **overrides,
+    )
+    return FixedBufferTrackBEnv(preventive, fixed_fracs)
