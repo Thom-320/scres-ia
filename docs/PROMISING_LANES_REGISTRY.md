@@ -904,3 +904,11 @@ fully matches PPO (vs its historical 76–82% on adaptive lanes) — the channel
 architecture-robust; the mechanism is the contract physics. Caveat: 8D baseline is MLP
 (KAN_8D not run). This also upgrades the KAN story for Garrido: his literal suggestion
 (pykan) converts his own buffering variable's dynamic headroom at parity with PPO.
+
+**⭐17 timing audit (2026-07-09):** the preventive increment decomposes as optimal static
+level +0.0123 (inverted-U, best constant frac 0.20 — answers Garrido §8.6.2 by learning) +
+**state-contingent scheduling +0.0162 CI95 [+0.0124,+0.0205] (115/120)**. Lead-lag is FLAT
+(no pre-event ramp: 0.213 before vs 0.225 baseline) → NOT hazard-clock anticipation; the
+policy re-arms on operational state. Paper-2 language: "state-contingent preventive
+scheduling", never "event anticipation" — we refuted our own strong version first, again.
+docs/TRACK_BP_GATE2_SCREEN_VERDICT_2026-07-09.md; run track_bp_timing_audit_2026-07-09.

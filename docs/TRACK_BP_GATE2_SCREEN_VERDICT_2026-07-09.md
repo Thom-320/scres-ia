@@ -177,6 +177,33 @@ make the architecture-matched decomposition fully symmetric (not run — the cro
 architecture tie at 11D with three tightly-clustered seeds already serves the sidecar
 role).
 
+## Timing audit: preventive-static vs anticipatory (2026-07-09)
+
+Run `track_bp_timing_audit_2026-07-09` (`scripts/audit_track_bp_timing.py`). Hybrid
+grafts (trained PPO_8D actions + CONSTANT buffer fraction on dims 9–11, 5 seeds × 24
+episodes each):
+
+| constant frac | 0.10 | 0.15 | **0.20** | 0.30 | 0.50 | 0.75 |
+|---|---|---|---|---|---|---|
+| episode ReT | 0.3229 | 0.3238 | **0.3240** | 0.3239 | 0.3218 | 0.3201 |
+
+PPO_11D = 0.3402. The preventive increment (+0.0285) therefore decomposes:
+- **optimal static level** (best graft − PPO_8D): +0.0123 — an inverted-U in the level
+  (over-buffering at 0.5–0.75 hurts), answering Garrido §8.6.2 (optimal reserve level)
+  by learning;
+- **state-contingent scheduling** (PPO_11D − best graft): **+0.0162, CI95
+  [+0.0124, +0.0205], 115/120 episodes positive** — MOST of the increment is in the
+  schedule, not the level.
+
+**But the scheduling is NOT hazard-clock anticipation.** Behavioral lead-lag (per-step
+buffer fractions vs the R21 event calendar, 4 episodes, seed 1): baseline-far 0.225,
+1–3 wk BEFORE events 0.213, during 0.221, after 0.201 — flat; no pre-event ramp. The
+policy does not predict WHEN events come; it modulates buffer targets on operational
+state (stock/backlog exposure), which in a compounding regime keeps the system re-armed
+for the next hit. Correct paper-2 language: **"state-contingent preventive scheduling"**,
+not "event anticipation". (Small-n caveat on the lead-lag: 4 episodes, one seed; the
+flatness is uniform across bins. The graft-sweep result is 5-seed × 24-episode scale.)
+
 ## Guardrails
 
 - Screen scale only (3 seeds × 30k): no confirmatory claims; 5-seed × 60k confirm needed
