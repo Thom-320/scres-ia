@@ -5,8 +5,15 @@ strategic-buffer target fractions (Op3 raw material, Op5 raw material,
 Op9 rations) drawn from Garrido's I_{t,S} decision family (Table 6.16).
 Raising a target only takes effect `inventory_replenishment_lead_time`
 hours later (`MFSCSimulation._delayed_buffer_top_up`), so — unlike every
-dim of `track_b_v1` — the buffer lever carries temporal commitment:
-reacting after a disruption materialises is too late by construction.
+dim of `track_b_v1` — the buffer lever carries temporal commitment.
+NOTE the commitment is a lag, not a hard ex-ante constraint: in regimes
+whose outages outlast the lead time (e.g. R21 at impact multipliers,
+multi-week recoveries), a post-onset target raise still lands mid-outage
+and `_top_up_inventory_buffer` injects stock regardless of route status.
+Value extracted through this lever therefore mixes ex-ante positioning
+with lagged reaction; separating the two requires the within-checkpoint
+blocking controls (see scripts/audit_track_bp_timing_within.py), not the
+contract alone.
 
 The instant track_b dims are kept intact on purpose: the preventive
 question is whether the lagged lever adds value ON TOP of the best

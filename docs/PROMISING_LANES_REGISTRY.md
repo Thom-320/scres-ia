@@ -912,3 +912,21 @@ level +0.0123 (inverted-U, best constant frac 0.20 — answers Garrido §8.6.2 b
 policy re-arms on operational state. Paper-2 language: "state-contingent preventive
 scheduling", never "event anticipation" — we refuted our own strong version first, again.
 docs/TRACK_BP_GATE2_SCREEN_VERDICT_2026-07-09.md; run track_bp_timing_audit_2026-07-09.
+
+**⭐17 CORRECTIONS after external review (2026-07-09) — three claims walked back:**
+1. "Reacting is too late by construction" was WRONG for the R21 ×8/×4 cell: outages last
+   multiple weeks, a post-onset buffer raise lands mid-outage, and `_top_up_inventory_buffer`
+   injects regardless of route status. The 11D increment mixes ex-ante positioning with
+   LAGGED REACTION. Reframe: temporal-commitment contract value, prevention plausible,
+   ex-ante share unidentified (until the within-checkpoint blocking controls report).
+2. The graft timing audit is confounded (different trained policies; residual ≠ timing) and
+   its CI pooled episodes instead of seed-clustering. Superseded by
+   `audit_track_bp_timing_within.py` (same 11D checkpoint: per-op clamps, permuted replay,
+   pre/post-event blocking, t-CI over 5 per-seed deltas). "State-contingent scheduling
+   +0.0162" is WITHDRAWN pending the within-checkpoint result.
+3. Holding-cost robustness to λ=0.2 came from the screen; at confirmatory scale clean
+   significance reaches only λ≈0.05, crossover λ*=0.138 (verified independently).
+Defensible claim today: in an extreme R21 regime with physical buffering headroom, adding
+lead-time-committed inventory targets to the contract yields a confirmed improvement over
+8D adaptive control (+0.0285, seed-clustered CI95 [+0.0158,+0.0412], 5/5 seeds) — temporal-
+commitment control value; ex-ante vs reactive-replenishment attribution pending.

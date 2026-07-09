@@ -82,24 +82,25 @@ Interpretation matrix fixed in advance (before the ablation was read):
 **Outcome: the second branch, decisively** (headline section above): +0.0533 pooled,
 all seeds CI95 > 0, 178% of the static oracle.
 
-## Holding-cost sensitivity (mandatory check — done, favorable)
+## Holding-cost sensitivity (CORRECTED 2026-07-09: confirmatory scale governs)
 
-Adjusted score = episode ReT − λ_h × mean buffer-holding fraction, paired per episode
-across the 72 (seed × eval-seed) pairs, pooled bootstrap CI95:
+The first version of this section priced the SCREEN-scale increment (+0.0533) and
+claimed robustness to λ_h = 0.2 — that number does not survive the confirmatory scale
+and is retracted (external review caught it; recomputation verified their table exactly).
+At 5-seed × 60k, seed-clustered t-CI over the five per-seed mean adjusted deltas:
 
-| λ_h | 11D − 8D adjusted increment | CI95 | 11D − always adjusted |
-|---|---|---|---|
-| 0.00 | +0.0533 | [+0.0432, +0.0637] | +0.089 |
-| 0.05 | +0.0454 | [+0.0352, +0.0561] | +0.131 |
-| 0.10 | +0.0375 | [+0.0275, +0.0483] | +0.173 |
-| 0.20 | +0.0217 | [+0.0113, +0.0328] | +0.258 |
-| 0.34 (crossover) | ≈0 | [−0.0108, +0.0116] | +0.373 |
-| 0.50 | −0.0256 | [−0.0374, −0.0134] | +0.510 |
+| λ_h | 11D − 8D adjusted increment | seed-clustered CI95 |
+|---|---|---|
+| 0.00 | +0.0285 | [+0.0158, +0.0412] |
+| 0.05 | +0.0182 | [+0.0044, +0.0320] |
+| 0.10 | +0.0079 | [−0.0076, +0.0234] |
+| 0.138 (crossover) | ≈0 | [−0.0170, +0.0171] |
+| 0.20 | −0.0127 | [−0.0326, +0.0071] |
 
-The preventive increment survives holding charges up to λ_h = 0.2 with CI95 excluding
-zero (crossover λ_h* ≈ 0.34 = 0.0533/0.158 mean holding). Against the blanket posture the
-dominance *grows* with λ_h, since `always_prepared` pays holding 1.0. The selective-timing
-property is therefore not just cosmetic: it is what makes the channel robust to pricing.
+**Clean significance only to λ_h ≈ 0.05; crossover at λ_h* = 0.138** (= 0.0285/0.206
+mean holding). Against `always_prepared` the dominance still grows with λ_h (blanket
+pays 1.0). Claim language: the increment survives modest holding charges; it is not
+robust to aggressive ones.
 
 ## Regime-breadth frontier (R21 freq × impact grid, Gate-1 oracle, n=24 each)
 
@@ -177,7 +178,24 @@ make the architecture-matched decomposition fully symmetric (not run — the cro
 architecture tie at 11D with three tightly-clustered seeds already serves the sidecar
 role).
 
-## Timing audit: preventive-static vs anticipatory (2026-07-09)
+## Timing audit v1 — SUPERSEDED (kept for the record; conclusions withdrawn)
+
+External review identified three defects in the section below, all verified: (1) the
+graft test compares two DIFFERENT trained policies, so the residual over the best
+constant graft is confounded by per-op level differences, dispatch-buffer coordination,
+and training-distribution differences — it does NOT identify timing; (2) its CI pooled
+120 episodes instead of clustering by the 5 training seeds; (3) with R21 outages
+lasting multiple weeks at impact ×4, a post-onset buffer raise still lands mid-outage
+(and `_top_up_inventory_buffer` injects regardless of route status), so the 11D
+increment mixes ex-ante positioning with LAGGED REACTION — "too late by construction"
+was wrong for this cell and has been corrected in `track_bp_env.py`. The defensible
+claim from this section is only: *joint-11D value exceeds the best common-scalar graft;
+attribution unidentified.* The identified decomposition comes from the within-checkpoint
+controls (`audit_track_bp_timing_within.py`: per-op clamps, permuted replay,
+pre/post-event blocking on the SAME checkpoint, seed-clustered inference) — results
+recorded in the section that follows it.
+
+## Timing audit v1 (original text): preventive-static vs anticipatory (2026-07-09)
 
 Run `track_bp_timing_audit_2026-07-09` (`scripts/audit_track_bp_timing.py`). Hybrid
 grafts (trained PPO_8D actions + CONSTANT buffer fraction on dims 9–11, 5 seeds × 24

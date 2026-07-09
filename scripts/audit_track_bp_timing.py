@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
-"""Track B-P timing audit: is the learned policy preventive-static or anticipatory?
+"""Track B-P timing audit v1 — SUPERSEDED by audit_track_bp_timing_within.py.
+
+DO NOT cite this audit for timing attribution: it compares two different
+trained policies (11D vs 8D + constant graft), so the residual is confounded
+by per-op level differences, dispatch-buffer coordination, and training
+differences; and its bootstrap pools episodes instead of clustering by
+training seed. Kept only for the graft-sweep level curve (inverted-U over
+constant fractions).
 
 Decisive hybrid test: replay the trained 8D (adaptive-only) PPO checkpoints on
 the 11D track_bp env, grafting a CONSTANT buffer fraction onto dims 8-10. If
