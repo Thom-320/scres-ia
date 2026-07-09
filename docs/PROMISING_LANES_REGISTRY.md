@@ -838,3 +838,39 @@ win: **SAC +9.10%** (0.005911 vs best static 0.005418, all 3 seeds positive), **
 (0.005893 vs same static, all 3 seeds positive) — in the same range as PPO's own screen-scale
 result. The Track B win is not PPO-specific.
 `outputs/experiments/track_b_{sac,td3}_screen_3seed_30k_2026-07-08/`.
+
+---
+
+## ⭐17 Track B-P: dynamic buffering under commitment physics — FIRST POSITIVE PREVENTION GATES (2026-07-09)
+
+**Status: Gates 0/1 PASSED (risk-specific); Gate 2 (PPO conversion screen) running. NEVER LOSE THIS LANE.**
+
+The preventive re-opening the user asked for ("empecemos desde 0: observación + contrato"), grounded
+in the Garrido thesis re-read: §6.5.2 assumes proactive-ONLY buffering; I_{t,S} (Table 6.16) is
+pre-positioned stock at Op3/Op5/Op9 with coupled quantity+cadence. `track_bp_v1` (11D,
+`supply_chain/track_bp_env.py`) = track_b_v1 verbatim + 3 lagged buffer-target fractions under
+`inventory_replenishment_lead_time` — Garrido's lever made dynamic, answering his open §8.6.1 (I×S synergy).
+
+Pre-registration with falsifiers BEFORE results: `docs/TRACK_BP_PREREGISTRATION_2026-07-08.md`.
+Verdict: `docs/TRACK_BP_GATES_0_1_VERDICT_2026-07-09.md`.
+
+Key numbers (recomputed from raw CSVs):
+- Gate 0 R11 rare-long: forced-prep DiD +0.002674, bootstrap CI95 [+0.001061, +0.004622] — first
+  causal prevention positive of the program (prior batteries: 8 tiers, all null/exact-null).
+- Gate 1 R21 compound starvation: always−never +0.0299 episode ReT, CI95 [+0.0142, +0.0478],
+  +13.9% relative, ZERO harm cases (14+/10·/0−).
+- Boundary intact elsewhere: R22/R23/R24/R13 null through both lenses (most exact) — the paper's
+  claim is untouched; this lane shows the boundary is CONTRACT-dependent, which strengthens the
+  action-space-alignment thesis (preventive frontier appears when the action space carries
+  temporal commitment).
+
+Physics found on the way (recorded in pre-reg before results): op3_rm is a dead lever under
+kit_equivalent flow (WDC working stock ~4M ≫ targets); levers live at op5_rm/op9_rations; the
+channel only pays in starvation regimes (current-intensity = bit-identical, same as Garrido H2
+needing increased risk); commitment verified (stock lands exactly `lead` hours after target raise).
+
+Next: Gate 2 conversion (PPO vs never/always/calendar clock oracles, same CRN seeds,
+`scripts/run_track_bp_gate2_screen.py`, cells A=R21-starv B=R11-rare) — answers "¿cuánto del
+headroom convierte PPO?" + the anticipation check (matching `always` at low holding = timing;
+at ~1.0 holding = static buffering learned). Then Real-KAN sidecar, holding-cost sensitivity,
+5-seed confirm. This is paper-2 / extension material — NOT the current manuscript.
