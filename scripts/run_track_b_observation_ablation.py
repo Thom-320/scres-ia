@@ -68,6 +68,16 @@ class PrivilegedObservationMaskWrapper(FieldMaskWrapper):
     field_names = PRIVILEGED_FIELD_NAMES
 
 
+class V10PrivilegedObservationMaskWrapper(PrivilegedObservationMaskWrapper):
+    """Full privileged mask (regime one-hot + forecasts) on the v10 observation.
+
+    Keeps the leak-free event clocks / calendar-phase / windowed-count fields
+    that the Track B-P preventive lane relies on.
+    """
+
+    observation_version = "v10"
+
+
 @dataclass(frozen=True)
 class ObservationAblationConfig:
     label: str
@@ -95,6 +105,11 @@ OBS_ABLATION_CONFIGS: dict[str, ObservationAblationConfig] = {
         label="v7_no_regime_forecast",
         observation_version="v7",
         wrapper=PrivilegedObservationMaskWrapper,
+    ),
+    "v10_no_regime_forecast": ObservationAblationConfig(
+        label="v10_no_regime_forecast",
+        observation_version="v10",
+        wrapper=V10PrivilegedObservationMaskWrapper,
     ),
     "v5_7d": ObservationAblationConfig(
         label="v5_7d",

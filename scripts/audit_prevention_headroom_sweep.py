@@ -54,6 +54,7 @@ from supply_chain.ret_thesis import (  # noqa: E402
     order_counts_as_backorder_for_fill_rate,
 )
 from supply_chain.external_env_interface import make_track_b_env  # noqa: E402
+from supply_chain.track_bp_env import make_track_bp_env  # noqa: E402
 
 EVAL_EPISODE_SEED_OFFSET = 50_000
 POSTURES = {"calm": -1.0, "medium": 0.0, "max_prep": 1.0}
@@ -62,8 +63,22 @@ POSTURES = {"calm": -1.0, "medium": 0.0, "max_prep": 1.0}
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--output-dir", type=Path, required=True)
-    p.add_argument("--checkpoint-root", type=Path, required=True,
-                   help="Reference policy bundle: models/seed{N}/{ppo_model.zip,vec_normalize.pkl}")
+    p.add_argument("--checkpoint-root", type=Path, default=None,
+                   help="Reference policy bundle: models/seed{N}/{ppo_model.zip,vec_normalize.pkl}. "
+                        "Required for --reference-policy checkpoint; ignored for constant.")
+    p.add_argument("--reference-policy", choices=["checkpoint", "constant"], default="checkpoint",
+                   help="Policy that fills non-forced steps. 'constant' uses the neutral "
+                        "medium action (all zeros) — no checkpoint needed, cleanest for a "
+                        "pure-physics ceiling test on a new action contract.")
+    p.add_argument("--env-factory", choices=["track_b", "track_bp"], default="track_b",
+                   help="track_b = canonical 8D contract; track_bp = 11D preventive contract "
+                        "(track_b_v1 + lagged buffer targets at Op3/Op5/Op9).")
+    p.add_argument("--replenishment-lead-time", type=float, default=168.0,
+                   help="Hours between a buffer target raise and stock arrival (track_bp only).")
+    p.add_argument("--replenishment-period", type=float, default=None,
+                   help="Optional sim-level buffer review cadence in hours (track_bp only).")
+    p.add_argument("--initial-buffers", type=str, default=None,
+                   help="Optional pre-positioned buffers at reset, e.g. 'op9_rations=15750'.")
     p.add_argument("--seeds", nargs="+", type=int, default=[1, 2, 3])
     p.add_argument("--eval-episodes", type=int, default=8)
     p.add_argument("--max-steps", type=int, default=104)
@@ -110,11 +125,22 @@ def build_args(cli: argparse.Namespace) -> argparse.Namespace:
         args.surge_inertia = True
         args.surge_ramp_per_step = int(cli.surge_ramp_per_step)
         args.surge_budget_hours = float(cli.surge_budget_hours)
+    if getattr(cli, "env_factory", "track_b") == "track_bp":
+        args.inventory_replenishment_lead_time = float(cli.replenishment_lead_time)
+        if cli.replenishment_period is not None:
+            args.inventory_replenishment_period = float(cli.replenishment_period)
+        if cli.initial_buffers:
+            args.initial_buffers = cli.initial_buffers
     return args
 
 
-def make_env(args: argparse.Namespace, obs_config: str):
-    env = make_track_b_env(**build_env_kwargs(args))
+def make_env(args: argparse.Namespace, obs_config: str, env_factory: str = "track_b"):
+    kwargs = build_env_kwargs(args)
+    if env_factory == "track_bp":
+        lead = kwargs.pop("inventory_replenishment_lead_time", 168.0)
+        env = make_track_bp_env(inventory_replenishment_lead_time=lead, **kwargs)
+    else:
+        env = make_track_b_env(**kwargs)
     wrapper = OBS_ABLATION_CONFIGS[str(obs_config)].wrapper
     if wrapper is not None:
         env = wrapper(env)
@@ -181,7 +207,7 @@ def local_order_outcomes(sim, *, window_start_hours: float, window_end_hours: fl
 def run_episode(model, vec_norm, args, cli, eval_seed: int, *,
                 forced_posture: float | None = None,
                 forced_steps: set[int] | None = None) -> tuple[Any, list[int]]:
-    env = make_env(args, cli.obs_config)
+    env = make_env(args, cli.obs_config, getattr(cli, "env_factory", "track_b"))
     obs, _info = env.reset(seed=eval_seed)
     terminated = truncated = False
     step = 0
@@ -190,8 +216,13 @@ def run_episode(model, vec_norm, args, cli, eval_seed: int, *,
     while not (terminated or truncated):
         if forced_steps is not None and step in forced_steps:
             action = np.full(action_dim, float(forced_posture), dtype=np.float32)
+        elif model is None:
+            # Constant-neutral reference: 'medium' posture on every dim.
+            action = np.zeros(action_dim, dtype=np.float32)
         else:
             action = predict_action(model, vec_norm, obs)
+        # Buffer fraction dims live in [0,1]; the env clips, so forced calm
+        # (-1) decodes to zero buffers and max_prep (+1) to full buffers.
         obs, _reward, terminated, truncated, info = env.step(action)
         shifts.append(int(info.get("shifts_active", 1)))
         step += 1
@@ -252,9 +283,15 @@ def main() -> None:
     rows: list[dict[str, Any]] = []
     anchor_counts = {"real": 0, "placebo": 0}
 
+    if cli.reference_policy == "checkpoint" and cli.checkpoint_root is None:
+        raise SystemExit("--checkpoint-root is required with --reference-policy checkpoint")
+
     for seed in cli.seeds:
-        sample_env = make_env(args, cli.obs_config)
-        model, vec_norm = load_policy(cli.checkpoint_root, seed, sample_env)
+        if cli.reference_policy == "constant":
+            model, vec_norm = None, None
+        else:
+            sample_env = make_env(args, cli.obs_config, getattr(cli, "env_factory", "track_b"))
+            model, vec_norm = load_policy(cli.checkpoint_root, seed, sample_env)
         for episode_idx in range(cli.eval_episodes):
             eval_seed = seed + EVAL_EPISODE_SEED_OFFSET + episode_idx
             # Reference pass: discover calendar (exogenous under strict CRN).

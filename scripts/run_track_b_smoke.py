@@ -409,6 +409,35 @@ def build_parser() -> argparse.ArgumentParser:
             "S2 costs one step of surge-hours; S3 costs two. Use inf for lag-only."
         ),
     )
+    parser.add_argument(
+        "--initial-buffers",
+        type=str,
+        default=None,
+        help=(
+            "Strategic inventory buffers pre-positioned at reset, as "
+            "'op3_rm=15360,op5_rm=15360,op9_rations=15750' (units per Garrido Table 6.16). "
+            "Used by the Track B-P preventive lane; the canonical Track B lane leaves this unset."
+        ),
+    )
+    parser.add_argument(
+        "--inventory-replenishment-period",
+        type=float,
+        default=None,
+        help=(
+            "Review cadence in hours for the strategic-buffer order-up-to loop "
+            "(Garrido I_{t,S} subscript: 168/336/504/672/1344). None disables the loop."
+        ),
+    )
+    parser.add_argument(
+        "--inventory-replenishment-lead-time",
+        type=float,
+        default=0.0,
+        help=(
+            "Hours between a buffer review/target raise and the stock actually arriving. "
+            "The Track B-P commitment lever: >0 makes late reaction unable to mimic "
+            "pre-positioning."
+        ),
+    )
     return parser
 
 
@@ -472,6 +501,30 @@ def parse_risk_multiplier_map(raw: str | None) -> dict[str, float]:
     return parsed
 
 
+def parse_initial_buffers(raw: str | None) -> dict[str, float]:
+    """Parse 'op3_rm=15360,op5_rm=15360,op9_rations=15750' into a buffer dict."""
+    if not raw:
+        return {}
+    allowed = {"op3_rm", "op5_rm", "op9_rations"}
+    parsed: dict[str, float] = {}
+    for token in str(raw).split(","):
+        token = token.strip()
+        if not token:
+            continue
+        if "=" not in token:
+            raise ValueError(
+                f"Invalid --initial-buffers token {token!r}; expected key=units"
+            )
+        key, value = token.split("=", 1)
+        key = key.strip()
+        if key not in allowed:
+            raise ValueError(
+                f"Unknown buffer key {key!r}; allowed: {sorted(allowed)}"
+            )
+        parsed[key] = max(0.0, float(value))
+    return parsed
+
+
 def build_env_kwargs(args: argparse.Namespace) -> dict[str, Any]:
     risk_frequency_by_id = parse_risk_multiplier_map(
         getattr(args, "risk_frequency_by_id", None)
@@ -507,6 +560,17 @@ def build_env_kwargs(args: argparse.Namespace) -> dict[str, Any]:
                 "surge_budget_hours": float(args.surge_budget_hours),
             }
         )
+    initial_buffers = parse_initial_buffers(getattr(args, "initial_buffers", None))
+    if initial_buffers:
+        kwargs["initial_buffers"] = initial_buffers
+    replenishment_period = getattr(args, "inventory_replenishment_period", None)
+    if replenishment_period is not None:
+        kwargs["inventory_replenishment_period"] = float(replenishment_period)
+    replenishment_lead = float(
+        getattr(args, "inventory_replenishment_lead_time", 0.0) or 0.0
+    )
+    if replenishment_lead > 0.0:
+        kwargs["inventory_replenishment_lead_time"] = replenishment_lead
     if args.enabled_risks:
         kwargs["enabled_risks"] = tuple(
             risk.strip() for risk in str(args.enabled_risks).split(",") if risk.strip()
