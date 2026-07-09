@@ -105,6 +105,14 @@ dynamic-minus-frozen `−0.000156`, CI95 `[−0.000746,+0.000433]`.
 - If null, the paper reports a two-stage result: learned reserve design plus adaptive control;
   it does not claim dynamic preventive RL.
 
+Status: **screen complete; dynamic buffer control is unnecessary.** An 8D PPO trained from
+scratch under the globally calibrated frozen posture reaches `0.339790` at 3 seeds x 30k,
+versus `0.333956` for the matched 11D screen. Fixed-minus-11D is `+0.005834`, seed-clustered
+t-CI95 `[+0.001146,+0.010522]`, 3/3 seeds positive. Fixed-minus-no-buffer-8D is `+0.059109`,
+CI95 `[+0.031274,+0.086943]`. The result is therefore a two-stage architecture: learn or
+optimize a heterogeneous reserve posture, freeze it, then run adaptive 8D recovery control.
+A 5-seed x 60k fixed-posture confirmation remains the next scale gate.
+
 ### Gate C: fixed reserve frontier
 
 - Calibration-only search over per-op reserve vectors; evaluation remains held out.
@@ -134,8 +142,9 @@ dynamic-minus-frozen `−0.000156`, CI95 `[−0.000746,+0.000433]`.
 
 1. **Already supported:** contract-regime interaction creates strategic-buffer headroom.
 2. **Already supported:** 11D access improves over separately trained 8D control in R21 x8/x4.
-3. **Pending Gate A/B:** learning selects a superior heterogeneous fixed reserve posture.
-4. **Currently unsupported:** state-contingent preventive scheduling.
+3. **Supported at screen scale:** a calibration-selected heterogeneous fixed reserve posture
+   plus 8D adaptive PPO matches/exceeds the 11D dynamic policy.
+4. **Affirmatively unsupported:** state-contingent preventive scheduling.
 5. **Affirmatively unsupported:** hazard-clock anticipation.
 6. **Never claim without Gate D:** operational deployability of the replenishment mechanism.
 
@@ -145,7 +154,7 @@ dynamic-minus-frozen `−0.000156`, CI95 `[−0.000746,+0.000433]`.
 2. Related work: proactive buffering, inventory-control RL, action-space design, resilience.
 3. DES and contracts: Track B boundary vs Track B-P extension; replenishment semantics.
 4. Pre-registered gates: physical ceiling, regime surface, contract ablation, posture controls.
-5. Results: headroom map; 11D vs 8D; fixed-posture decomposition; cost/physics robustness;
+5. Results: headroom map; 11D vs 8D; dynamic-to-fixed posture distillation; cost/physics robustness;
    architecture sidecar.
 6. Discussion: prevention as reserve posture rather than prediction; managerial reserve sizing;
    limits of engineered stress and direct-replenishment abstraction.

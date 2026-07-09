@@ -278,11 +278,36 @@ modulation all test null. Whether RL needs control of the buffer dimensions at a
 an 8D policy trained under this frozen posture, is the next decisive baseline and is not
 yet answered by the within-checkpoint audit.
 
+## Retrained 8D plus frozen posture — decisive two-stage baseline
+
+Run `track_bp_fixed_posture_8d_3seed_30k_2026-07-09`: canonical 8D PPO trained from
+scratch while the globally calibrated posture `(Op3=0.1531, Op5=0.2480, Op9=0.2068)` is
+re-emitted through the identical 168h lead-time physics. Same R21 x8/x4 cell, seeds 1–3,
+30k training steps, h104, and 24 CRN evaluation episodes as the original Gate-2 screen.
+
+| Arm | seed 1 | seed 2 | seed 3 | mean |
+|---|---:|---:|---:|---:|
+| 8D, no buffers | 0.281616 | 0.291403 | 0.269025 | 0.280681 |
+| 11D, dynamic buffer outputs | 0.334740 | 0.335356 | 0.331773 | 0.333956 |
+| **8D + frozen calibrated posture** | **0.339858** | **0.339765** | **0.339747** | **0.339790** |
+
+- fixed minus 11D: `+0.005834`, seed-clustered t-CI95
+  `[+0.001146,+0.010522]`, 3/3 seeds positive;
+- fixed minus no-buffer 8D: `+0.059109`, CI95
+  `[+0.031274,+0.086943]`, 3/3 seeds positive.
+
+The frozen-posture learner not only matches but exceeds the dynamic 11D screen. Dynamic
+buffer outputs are unnecessary and mildly harmful at this scale. The mechanism is a
+**two-stage design**: use learning/calibration to discover right-size, right-place reserves;
+freeze that strategic posture; let the original 8D policy handle adaptive recovery. This
+does not yet prove RL is the best reserve-level optimizer, because the posture was distilled
+from trained 11D policies. A held-out fixed per-op reserve frontier is the next comparator.
+
 ## Guardrails
 
-- The 11D−8D contract increment is confirmatory (5 seeds × 60k), but the retrained
-  8D-plus-fixed-posture baseline is still required before attributing that increment to
-  learning the reserve levels rather than to the reserve design itself.
+- The 11D−8D contract increment is confirmatory (5 seeds × 60k). The retrained
+  8D-plus-fixed-posture screen shows that dynamic buffer control is not required; its own
+  5-seed confirmation and an independently optimized fixed frontier remain pending.
 - Buffer holding is unpriced during training. Confirmatory post-hoc sensitivity is clean
   only near `lambda_h=0.05`, with crossover at approximately 0.138; actual time-weighted
   inventory exposure remains to be measured.

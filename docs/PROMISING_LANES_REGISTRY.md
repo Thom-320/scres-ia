@@ -954,3 +954,13 @@ before the 24 canonical evaluation episodes match/slightly exceed the dynamic ch
 in this protocol. Remaining attribution gate: retrain the 8D adaptive policy under this
 fixed posture; until that lands, phrase the result as joint-policy reserve posture value,
 not proof that dynamic RL is required to select the reserve dimensions.
+
+**⭐17 decisive retrained baseline (2026-07-09):** 8D PPO trained from scratch under the
+global frozen posture `(0.1531,0.2480,0.2068)` reaches **0.339790** at 3 seeds x 30k,
+versus 11D dynamic **0.333956** on the matched screen: fixed−11D `+0.005834`,
+seed-clustered CI95 `[+0.001146,+0.010522]`, 3/3 seeds. It also beats no-buffer 8D by
+`+0.059109`, CI95 `[+0.031274,+0.086943]`. Dynamic buffer control is unnecessary and
+mildly harmful. Paper-2 mechanism is now two-stage reserve design: discover/optimize a
+heterogeneous fixed posture, then run the simpler adaptive 8D controller. Remaining gates:
+5x60k confirmation, held-out per-op fixed frontier (to test whether RL is needed as the
+posture optimizer), actual-inventory holding costs, and route-aware replenishment sensitivity.
