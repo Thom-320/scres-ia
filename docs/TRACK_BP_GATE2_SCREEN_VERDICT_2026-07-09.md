@@ -1,9 +1,28 @@
 # Track B-P Gate 2 Screen Verdict (2026-07-09)
 
-**Headline: PPO on the preventive contract does not merely convert the static preventive
-oracle — it quadruples it, and it does so with selective (10–20%) buffer holding rather
-than blanket buffering. Attribution between preventive and adaptive channels requires the
-8D-vs-11D contract ablation (launched; pending).**
+**Headline: the preventive channel is real, learnable, and large. The contract ablation
+isolates a pure preventive increment of +0.053 episode ReT (PPO_11D − PPO_8D, paired,
+every seed CI95 > 0, 70/72 episodes positive) — 178% of the static blanket-buffer oracle,
+achieved with only 10–21% buffer holding. Learning extracts MORE from Garrido's buffer
+lever than any static posture can, because it times and sizes it.**
+
+## The decomposition (Cell A, R21 compound starvation)
+
+| Policy stack | episode ReT | increment |
+|---|---|---|
+| neutral clock (never_prepared) | 0.2149 | — |
+| + static blanket buffers (always_prepared) | 0.2448 | +0.0299 (preventive, static) |
+| + adaptive learning, 8D `track_b_v1` PPO | 0.2690–0.2914 | +0.0658 over neutral (adaptive) |
+| + preventive lever learned, 11D `track_bp_v1` PPO | 0.3318–0.3354 | **+0.0533 on top of 8D (preventive, dynamic)** |
+
+Preventive increment per training seed (paired per eval seed, bootstrap CI95):
+seed 1 +0.053124 [+0.035168, +0.073308] (23/24 pos); seed 2 +0.043953
+[+0.031139, +0.057754] (24/24); seed 3 +0.062748 [+0.043017, +0.083653] (23/24).
+Pooled +0.053275. Of the total 11D-vs-neutral gain (+0.120), roughly 55% is the known
+adaptive channel and 45% is the new preventive channel.
+
+Runs: `track_bp_g2_cellA_8d_ablation_2026-07-09` (8D arm) vs
+`track_bp_g2_cellA_r21starv_2026-07-09` (11D arm), identical cell/seeds/eval.
 
 Protocol: Gate 2 of `docs/TRACK_BP_PREREGISTRATION_2026-07-08.md`, unlocked by
 `docs/TRACK_BP_GATES_0_1_VERDICT_2026-07-09.md`. Runs:
@@ -52,14 +71,16 @@ The clock-policy oracle holds dims 1–8 at neutral; PPO optimizes all 11 jointl
 +0.12 therefore bundles the known adaptive channel (dispatch/shift/ROP) with the new
 preventive channel (lagged buffers). The decisive decomposition is the **contract
 ablation**: PPO on plain `track_b_v1` (8D, no buffer dims), same cell, same seeds, same
-eval — the preventive increment is PPO_11D − PPO_8D. Launched as
-`track_bp_g2_cellA_8d_ablation_2026-07-09` (`--contract track_b`).
+eval — the preventive increment is PPO_11D − PPO_8D.
 
-Interpretation matrix fixed in advance:
+Interpretation matrix fixed in advance (before the ablation was read):
 - PPO_11D ≈ PPO_8D → the buffers add nothing on top of adaptation; prevention remains
   practically subsumed even where the static channel exists.
 - PPO_11D − PPO_8D > 0 (CI95 excluding 0) → genuine preventive increment converted by
   learning; size it against the +0.0299 static oracle.
+
+**Outcome: the second branch, decisively** (headline section above): +0.0533 pooled,
+all seeds CI95 > 0, 178% of the static oracle.
 
 ## Guardrails
 

@@ -874,3 +874,16 @@ Next: Gate 2 conversion (PPO vs never/always/calendar clock oracles, same CRN se
 headroom convierte PPO?" + the anticipation check (matching `always` at low holding = timing;
 at ~1.0 holding = static buffering learned). Then Real-KAN sidecar, holding-cost sensitivity,
 5-seed confirm. This is paper-2 / extension material — NOT the current manuscript.
+
+**⭐17 update (2026-07-09, Gate 2 + contract ablation): the preventive channel is LEARNABLE and
+the increment is isolated.** Cell A (R21 freq×8 impact×4): PPO on `track_bp_v1` (11D) reaches
+0.332–0.335 episode ReT vs 0.269–0.291 for PPO on plain `track_b_v1` (8D) — pure preventive
+increment **+0.0533 pooled** (per seed +0.044/+0.053/+0.063, all bootstrap CI95 > 0, 70/72
+paired episodes positive), = **178% of the static always-prepared oracle** (+0.0299), achieved
+at 10–21% buffer holding (timed/selective, not blanket — anticipation falsifier does not fire).
+Decomposition of the total +0.120 vs neutral: ~55% adaptive channel, ~45% preventive channel.
+Cell B (R11): blanket buffers episode-null; Gate-0 local signal needs re-attribution
+(forced posture confound — dispatch/shift prep may carry it). Verdict:
+`docs/TRACK_BP_GATE2_SCREEN_VERDICT_2026-07-09.md`. Next: 5-seed×60k confirm, holding-cost
+sensitivity, Real-KAN sidecar, regime-breadth sweep (how far below freq×8/impact×4 does the
+channel survive?). Screen scale only — no paper claims yet.
