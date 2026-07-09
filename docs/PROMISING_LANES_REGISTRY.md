@@ -896,3 +896,11 @@ closes part of the gap reactively; unlike C23 the effect survives with every CI9
 Holding-cost robust to λ_h=0.2. Breadth frontier: channel null for freq≤2 or impact≤2, on from
 freq×4/impact×4. R11 retracted (calm-arm artifact + buffers-only exact zero). Real-KAN sidecar
 running. docs/TRACK_BP_GATE2_SCREEN_VERDICT_2026-07-09.md.
+
+**⭐17 Real-KAN sidecar (2026-07-09):** pykan extractor on track_bp_v1, 3×60k, Cell A, same CRN
+eval seeds: **KAN 0.3403 ≡ PPO 0.3402 (100.1% capture)** at lower holding (0.171 vs 0.206);
+preventive increment over adaptive-only +0.0286 ≈ PPO's +0.0285. In the preventive domain KAN
+fully matches PPO (vs its historical 76–82% on adaptive lanes) — the channel is
+architecture-robust; the mechanism is the contract physics. Caveat: 8D baseline is MLP
+(KAN_8D not run). This also upgrades the KAN story for Garrido: his literal suggestion
+(pykan) converts his own buffering variable's dynamic headroom at parity with PPO.

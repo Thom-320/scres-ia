@@ -152,6 +152,31 @@ full static blanket oracle** (+0.0299), delivered on top of a stronger adaptive 
 at one-fifth the holding. The 11D total advantage over the neutral clock at confirmatory
 scale is +0.125 (0.340 vs 0.215).
 
+## Real-KAN sidecar (official pykan extractor, 3 seeds × 60k, Cell A)
+
+Run `track_bp_kan_cellA_11d_3seed_60k_2026-07-09` (`--features-extractor real_kan`),
+same eval seeds as the PPO confirm:
+
+| Arm | episode ReT | holding |
+|---|---|---|
+| PPO_11D (MLP, 5 seeds) | 0.3402 | 0.206 |
+| **KAN_11D (pykan, 3 seeds)** | **0.3403** (0.3394/0.3410/0.3406, extremely tight) | **0.171** |
+| PPO_8D (adaptive-only) | 0.3117 | — |
+| always_prepared | 0.2448 | 1.000 |
+| never_prepared | 0.2149 | 0.000 |
+
+KAN captures **100.1% of PPO's gain** over the neutral clock and delivers the same
+preventive increment over the adaptive-only arm (+0.0286 vs PPO's +0.0285) at LOWER
+holding (0.171 vs 0.206). In the preventive domain the Real-KAN is not a partial-capture
+sidecar (its historical 76–82% pattern on the adaptive lanes) — it fully matches PPO.
+Reading: the preventive channel is **architecture-robust**; the mechanism is the
+contract/physics, not the network family — consistent with the program's standing
+architecture finding (clairvoyant/efficiency ladder: architecture shapes cost profiles,
+not access to channels). Minor caveat: the 8D baseline is MLP-PPO; a KAN_8D arm would
+make the architecture-matched decomposition fully symmetric (not run — the cross-
+architecture tie at 11D with three tightly-clustered seeds already serves the sidecar
+role).
+
 ## Guardrails
 
 - Screen scale only (3 seeds × 30k): no confirmatory claims; 5-seed × 60k confirm needed
