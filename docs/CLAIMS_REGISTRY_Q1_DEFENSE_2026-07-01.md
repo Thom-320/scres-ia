@@ -10,8 +10,11 @@ backlog/recovery, and resource are separate evidence columns, not substitutes.
 
 ## Claim Registry
 
+For the Track B-P extension, C29 supersedes the earlier screen-scale status in C28.
+
 | ID | Claim | Status | Current evidence | Before submission |
 |---|---|---|---|---|
+| C29 | In the engineered R21 compounding-starvation regime, a frozen heterogeneous reserve posture plus adaptive 8D PPO reproduces the full 11D buffer-contract gain; weekly dynamic buffer control is unnecessary. | **Supported and confirmed at 5 seeds x 60k** | No-buffer 8D `0.311676`; dynamic 11D `0.340164`; fixed-posture 8D `0.340605`. Fixed-minus-11D `+0.000440`, seed-clustered CI95 `[−0.000799,+0.001680]`, establishing equivalence. Fixed-minus-no-buffer `+0.028928`, CI95 `[+0.016283,+0.041574]`, 5/5 seeds and 117/120 episodes positive. This independently reproduces the 11D-minus-8D contract increment (`+0.028488`). Same-checkpoint and disjoint-calibration controls also find no scheduling value. | Keep outside Paper 1. Paper 2 should frame this as two-stage reserve design plus adaptive recovery, never anticipation or dynamic preventive RL. Because the posture was distilled from 11D, a held-out classical per-op frontier is still needed before claiming RL is the superior posture optimizer. Route-aware replenishment and actual-inventory holding sensitivity remain mandatory. |
 | C1 | Track B improves Garrido/Excel ReT when downstream dispatch is controllable. | **Supported** | 10-seed Track B confirm, dense CRN audit: Excel ReT PPO `0.005898` vs dense static `0.005460`, delta `+0.000438`, seed-clustered CI95 `[+0.000421,+0.000458]`; order-level mean ReT PPO `0.005673` vs static `0.005247`, delta `+0.000426`. See `docs/track_b_q1_stats_2026-07-02_final_10seed/`. | Keep paired dense-CRN table in final workbook; do not cite coarse frontier. |
 | C2 | Track B improves lower-tail resilience / CVaR. | **Supported** | Tail ReT CVaR05 delta about `+0.000506`; recovery tail metrics improve strongly. | Report CVaR05, ReT p05/p10, CTj/RPj/DPj p95/p99 with CI/effect size. |
 | C3 | Track B improves service and recovery, not just mean ReT. | **Supported** | Flow fill, service-loss AUC, backlog, CTj/RPj/DPj tails favor PPO in the rich audit. | Use Garrido-style workbook with PPO, best dense static, top statics, and order ledger. |

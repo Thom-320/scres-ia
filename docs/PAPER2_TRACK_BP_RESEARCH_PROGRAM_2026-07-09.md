@@ -105,13 +105,13 @@ dynamic-minus-frozen `−0.000156`, CI95 `[−0.000746,+0.000433]`.
 - If null, the paper reports a two-stage result: learned reserve design plus adaptive control;
   it does not claim dynamic preventive RL.
 
-Status: **screen complete; dynamic buffer control is unnecessary.** An 8D PPO trained from
-scratch under the globally calibrated frozen posture reaches `0.339790` at 3 seeds x 30k,
-versus `0.333956` for the matched 11D screen. Fixed-minus-11D is `+0.005834`, seed-clustered
-t-CI95 `[+0.001146,+0.010522]`, 3/3 seeds positive. Fixed-minus-no-buffer-8D is `+0.059109`,
-CI95 `[+0.031274,+0.086943]`. The result is therefore a two-stage architecture: learn or
-optimize a heterogeneous reserve posture, freeze it, then run adaptive 8D recovery control.
-A 5-seed x 60k fixed-posture confirmation remains the next scale gate.
+Status: **confirmatory complete; dynamic buffer control is unnecessary.** At 5 seeds x 60k,
+the globally frozen 8D posture reaches `0.340605` versus dynamic 11D `0.340164`:
+fixed-minus-11D `+0.000440`, seed-clustered CI95 `[−0.000799,+0.001680]` (equivalent;
+3/5 seed means positive). Fixed-minus-no-buffer-8D is `+0.028928`, CI95
+`[+0.016283,+0.041574]`, 5/5 seeds and 117/120 episodes positive. The two-stage mechanism
+is confirmed: optimize a heterogeneous reserve posture, freeze it, then run adaptive 8D
+recovery control. Weekly buffer outputs add no measurable value.
 
 ### Gate C: fixed reserve frontier
 

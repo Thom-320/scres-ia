@@ -303,11 +303,28 @@ freeze that strategic posture; let the original 8D policy handle adaptive recove
 does not yet prove RL is the best reserve-level optimizer, because the posture was distilled
 from trained 11D policies. A held-out fixed per-op reserve frontier is the next comparator.
 
+### Confirmatory fixed-posture scale: 5 seeds x 60k
+
+Run `track_bp_fixed_posture_8d_5seed_60k_2026-07-09`, using the same five training
+seeds and 24 CRN evaluation episodes as the confirmatory dynamic-11D and no-buffer-8D
+arms:
+
+| Arm | episode ReT | Fixed-arm contrast | Seed-clustered CI95 |
+|---|---:|---:|---:|
+| 8D, no buffers | 0.311676 | `+0.028928` | `[+0.016283,+0.041574]` |
+| 11D, dynamic buffers | 0.340164 | `+0.000440` | `[−0.000799,+0.001680]` |
+| **8D + frozen posture** | **0.340605** | — | — |
+
+The fixed posture is statistically equivalent to dynamic 11D and reproduces the full
+contract gain over no-buffer 8D (5/5 seeds, 117/120 paired episodes positive). Dynamic
+buffer control is not required. The remaining optimization question is whether a classical
+held-out per-operation reserve search can find the posture without first training 11D.
+
 ## Guardrails
 
-- The 11D−8D contract increment is confirmatory (5 seeds × 60k). The retrained
-  8D-plus-fixed-posture screen shows that dynamic buffer control is not required; its own
-  5-seed confirmation and an independently optimized fixed frontier remain pending.
+- The 11D−8D contract increment and fixed-posture equivalence are both confirmatory
+  (5 seeds × 60k). An independently optimized fixed frontier remains pending before
+  claiming RL is required to discover the reserve posture.
 - Buffer holding is unpriced during training. Confirmatory post-hoc sensitivity is clean
   only near `lambda_h=0.05`, with crossover at approximately 0.138; actual time-weighted
   inventory exposure remains to be measured.

@@ -962,5 +962,14 @@ seed-clustered CI95 `[+0.001146,+0.010522]`, 3/3 seeds. It also beats no-buffer 
 `+0.059109`, CI95 `[+0.031274,+0.086943]`. Dynamic buffer control is unnecessary and
 mildly harmful. Paper-2 mechanism is now two-stage reserve design: discover/optimize a
 heterogeneous fixed posture, then run the simpler adaptive 8D controller. Remaining gates:
-5x60k confirmation, held-out per-op fixed frontier (to test whether RL is needed as the
-posture optimizer), actual-inventory holding costs, and route-aware replenishment sensitivity.
+held-out per-op fixed frontier (to test whether RL is needed as the posture optimizer),
+actual-inventory holding costs, and route-aware replenishment sensitivity.
+
+**⭐17 fixed-posture CONFIRMATORY close-out (2026-07-09):** 5 seeds x 60k, 24 CRN
+episodes: fixed-posture 8D `0.340605`, dynamic 11D `0.340164`, no-buffer 8D `0.311676`.
+Fixed−11D `+0.000440`, seed-clustered CI95 `[−0.000799,+0.001680]` (equivalent; 3/5
+seed means positive). Fixed−no-buffer `+0.028928`, CI95 `[+0.016283,+0.041574]`, 5/5
+seeds and 117/120 episodes positive. The two-stage mechanism is confirmed at full scale:
+the heterogeneous strategic posture carries the full buffer-contract value; weekly dynamic
+buffer actions add nothing measurable. Next gate: classical held-out per-op posture
+optimization, not more dynamic-policy training.
