@@ -58,6 +58,11 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--calendar-cycle-weeks", type=int, default=24)
     p.add_argument("--step-size-hours", type=float, default=168.0)
     p.add_argument("--learning-rate", type=float, default=3e-4)
+    p.add_argument("--contract", choices=["track_bp", "track_b"], default="track_bp",
+                   help="track_b (8D, no buffer dims) is the contract-ablation arm that "
+                        "isolates the preventive increment: PPO_11D - PPO_8D on the same "
+                        "cell/seeds. Clock-policy arms are skipped for track_b (buffers "
+                        "do not exist on that contract; reuse the track_bp run's rows).")
     return p
 
 
@@ -78,7 +83,11 @@ def build_args(cli: argparse.Namespace) -> argparse.Namespace:
 def make_env(args: argparse.Namespace, cli: argparse.Namespace):
     kwargs = build_env_kwargs(args)
     lead = kwargs.pop("inventory_replenishment_lead_time", 168.0)
-    env = make_track_bp_env(inventory_replenishment_lead_time=lead, **kwargs)
+    if getattr(cli, "contract", "track_bp") == "track_b":
+        from supply_chain.external_env_interface import make_track_b_env
+        env = make_track_b_env(**kwargs)
+    else:
+        env = make_track_bp_env(inventory_replenishment_lead_time=lead, **kwargs)
     wrapper = OBS_ABLATION_CONFIGS[str(cli.obs_config)].wrapper
     if wrapper is not None:
         env = wrapper(env)
@@ -113,7 +122,10 @@ def run_ppo_episode(model, vec_norm, args, cli, eval_seed: int) -> dict[str, Any
         obs_n = vec_norm.normalize_obs(np.asarray(obs, dtype=np.float32)[None, :])
         action, _ = model.predict(obs_n, deterministic=True)
         action = np.asarray(action[0], dtype=np.float32)
-        fracs.append(float(np.mean(np.clip(action[8:], 0.0, 1.0))))
+        if action.shape[0] > 8:
+            fracs.append(float(np.mean(np.clip(action[8:], 0.0, 1.0))))
+        else:
+            fracs.append(0.0)
         obs, _r, terminated, truncated, _i = env.step(action)
     m = compute_episode_metrics(env.unwrapped.sim)
     env.close()
@@ -129,11 +141,14 @@ def main() -> None:
     eval_seeds = [1 + EVAL_EPISODE_SEED_OFFSET + i for i in range(cli.eval_episodes)]
 
     # Clock-policy oracle on the exact eval seeds (self-contained comparators).
+    # Skipped for the track_b contract ablation (no buffer dims to schedule);
+    # compare its PPO rows against the track_bp run's clock/PPO rows offline.
     clock: dict[str, list[dict[str, Any]]] = {p: [] for p in CLOCK_POLICIES}
-    for policy in CLOCK_POLICIES:
-        for es in eval_seeds:
-            clock[policy].append(run_clock_episode(policy, args, cli, es))
-    print("clock oracle done", flush=True)
+    if cli.contract == "track_bp":
+        for policy in CLOCK_POLICIES:
+            for es in eval_seeds:
+                clock[policy].append(run_clock_episode(policy, args, cli, es))
+        print("clock oracle done", flush=True)
 
     ppo_rows: dict[int, list[dict[str, Any]]] = {}
     for seed in cli.seeds:
@@ -159,38 +174,44 @@ def main() -> None:
     def mean_ret(rows: list[dict[str, Any]]) -> float:
         return float(np.mean([r["ret_excel"] for r in rows]))
 
-    never = np.array([r["ret_excel"] for r in clock["never_prepared"]])
-    always = np.array([r["ret_excel"] for r in clock["always_prepared"]])
-    oracle = always - never
+    have_clock = bool(clock["never_prepared"])
+    never = np.array([r["ret_excel"] for r in clock["never_prepared"]]) if have_clock else None
+    always = np.array([r["ret_excel"] for r in clock["always_prepared"]]) if have_clock else None
+    oracle = (always - never) if have_clock else None
 
     per_seed: dict[str, Any] = {}
     conversions: list[float] = []
     for seed in cli.seeds:
         ppo = np.array([r["ret_excel"] for r in ppo_rows[seed]])
-        d_never = ppo - never
-        d_always = ppo - always
-        conv = float(np.mean(d_never) / np.mean(oracle)) if np.mean(oracle) > 0 else float("nan")
-        conversions.append(conv)
-        per_seed[str(seed)] = {
+        entry: dict[str, Any] = {
             "ppo_ret_mean": float(np.mean(ppo)),
-            "delta_vs_never_mean": float(np.mean(d_never)),
-            "delta_vs_always_mean": float(np.mean(d_always)),
-            "conversion_of_oracle": conv,
             "mean_buffer_frac": float(np.mean([r["mean_buffer_frac"] for r in ppo_rows[seed]])),
         }
+        if have_clock:
+            d_never = ppo - never
+            d_always = ppo - always
+            conv = float(np.mean(d_never) / np.mean(oracle)) if np.mean(oracle) > 0 else float("nan")
+            conversions.append(conv)
+            entry.update({
+                "delta_vs_never_mean": float(np.mean(d_never)),
+                "delta_vs_always_mean": float(np.mean(d_always)),
+                "conversion_of_oracle": conv,
+            })
+        per_seed[str(seed)] = entry
 
     summary = {
         "config": {k: str(v) for k, v in vars(cli).items()},
         "resolved_env_kwargs": {k: repr(v) for k, v in sorted(build_env_kwargs(args).items())},
-        "clock_policy_means": {
+        "per_seed": per_seed,
+    }
+    if have_clock:
+        summary["clock_policy_means"] = {
             p: {"ret_excel": mean_ret(clock[p]),
                 "mean_buffer_frac": float(np.mean([r["mean_buffer_frac"] for r in clock[p]]))}
             for p in CLOCK_POLICIES
-        },
-        "oracle_always_minus_never_mean": float(np.mean(oracle)),
-        "per_seed": per_seed,
-        "conversion_mean": float(np.mean(conversions)),
-    }
+        }
+        summary["oracle_always_minus_never_mean"] = float(np.mean(oracle))
+        summary["conversion_mean"] = float(np.mean(conversions)) if conversions else None
     (out / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
     rows_flat = []
     for policy in CLOCK_POLICIES:
