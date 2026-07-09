@@ -63,6 +63,12 @@ def build_parser() -> argparse.ArgumentParser:
                         "isolates the preventive increment: PPO_11D - PPO_8D on the same "
                         "cell/seeds. Clock-policy arms are skipped for track_b (buffers "
                         "do not exist on that contract; reuse the track_bp run's rows).")
+    p.add_argument("--features-extractor", choices=["mlp", "real_kan"], default="mlp",
+                   help="real_kan plugs the official pykan extractor (Garrido's literal "
+                        "KAN suggestion) as the efficiency/interpretability sidecar; "
+                        "same protocol otherwise.")
+    p.add_argument("--kan-features-dim", type=int, default=32)
+    p.add_argument("--kan-hidden-width", type=int, default=32)
     return p
 
 
@@ -156,11 +162,23 @@ def main() -> None:
             return make_env(args, cli)
         venv = DummyVecEnv([_make])
         vec_norm = VecNormalize(venv, norm_obs=True, norm_reward=True, clip_obs=10.0)
+        policy_kwargs: dict[str, Any] = {"net_arch": [64, 64]}
+        if cli.features_extractor == "real_kan":
+            from scripts.real_kan_extractor import RealKANFeaturesExtractor
+            policy_kwargs = {
+                "features_extractor_class": RealKANFeaturesExtractor,
+                "features_extractor_kwargs": {
+                    "features_dim": int(cli.kan_features_dim),
+                    "hidden_width": int(cli.kan_hidden_width),
+                    "seed": int(seed),
+                },
+                "net_arch": [64, 64],
+            }
         model = PPO(
             "MlpPolicy", vec_norm,
             learning_rate=cli.learning_rate, n_steps=1024, batch_size=256,
             n_epochs=10, gamma=0.99, gae_lambda=0.95, clip_range=0.2,
-            policy_kwargs={"net_arch": [64, 64]}, seed=seed, verbose=0, device="cpu",
+            policy_kwargs=policy_kwargs, seed=seed, verbose=0, device="cpu",
         )
         model.learn(total_timesteps=cli.train_timesteps, progress_bar=False)
         vec_norm.training = False

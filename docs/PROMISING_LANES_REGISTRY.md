@@ -887,3 +887,12 @@ Cell B (R11): blanket buffers episode-null; Gate-0 local signal needs re-attribu
 `docs/TRACK_BP_GATE2_SCREEN_VERDICT_2026-07-09.md`. Next: 5-seed×60k confirm, holding-cost
 sensitivity, Real-KAN sidecar, regime-breadth sweep (how far below freq×8/impact×4 does the
 channel survive?). Screen scale only — no paper claims yet.
+
+**⭐17 confirmatory close-out (2026-07-09):** 5-seed×60k, both contracts: preventive increment
+PPO_11D−PPO_8D = **+0.0285, seed-clustered CI95 [+0.0158, +0.0412], 5/5 seeds positive**
+(117/120 episodes), mean holding 0.206 — ≈95% of the full static oracle on top of a stronger
+adaptive baseline. Screen→confirm shrinkage (+0.053→+0.028) disclosed: mature 8D adaptation
+closes part of the gap reactively; unlike C23 the effect survives with every CI95 > 0.
+Holding-cost robust to λ_h=0.2. Breadth frontier: channel null for freq≤2 or impact≤2, on from
+freq×4/impact×4. R11 retracted (calm-arm artifact + buffers-only exact zero). Real-KAN sidecar
+running. docs/TRACK_BP_GATE2_SCREEN_VERDICT_2026-07-09.md.

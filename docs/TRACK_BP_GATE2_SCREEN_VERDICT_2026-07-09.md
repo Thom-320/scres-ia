@@ -127,6 +127,31 @@ arm hurting (de-preparation harm), not preparation helping. Details in the Gates
 verdict update. Cell B's episode-null is thereby explained; the preventive claim now rests
 solely, and cleanly, on the R21-compounding cell + contract ablation.
 
+## Confirmatory scale: 5 seeds × 60k (both contracts)
+
+Runs `track_bp_confirm_cellA_{11d,8d}_5seed_60k_2026-07-09`. Preventive increment
+(PPO_11D − PPO_8D, paired per eval episode, same training seed):
+
+| seed | 11D ReT (holding) | 8D ReT | increment | bootstrap CI95 | pos/24 |
+|---|---|---|---|---|---|
+| 1 | 0.3397 (0.191) | 0.3114 | +0.0284 | [+0.0169, +0.0408] | 24/24 |
+| 2 | 0.3393 (0.134) | 0.3106 | +0.0287 | [+0.0162, +0.0423] | 21/24 |
+| 3 | 0.3409 (0.218) | 0.2959 | +0.0450 | [+0.0306, +0.0599] | 24/24 |
+| 4 | 0.3407 (0.270) | 0.3223 | +0.0183 | [+0.0113, +0.0264] | 24/24 |
+| 5 | 0.3402 (0.217) | 0.3182 | +0.0221 | [+0.0142, +0.0307] | 24/24 |
+
+**Pooled +0.028488, seed-clustered t-CI95 [+0.015813, +0.041163], 5/5 seeds positive
+(117/120 episodes), mean holding 0.206.**
+
+Honest scale note (the C23 lesson applied in reverse): the increment shrinks from the
+screen's +0.053 to +0.028 because the 8D adaptive baseline improves more with training
+(0.269–0.291 → 0.296–0.322) than the 11D arm (0.332–0.335 → 0.339–0.341) — mature
+adaptation reactively closes part of the gap. Unlike C23, the effect CONFIRMS rather than
+evaporates: every seed's CI95 excludes zero and the pooled increment equals **95% of the
+full static blanket oracle** (+0.0299), delivered on top of a stronger adaptive baseline
+at one-fifth the holding. The 11D total advantage over the neutral clock at confirmatory
+scale is +0.125 (0.340 vs 0.215).
+
 ## Guardrails
 
 - Screen scale only (3 seeds × 30k): no confirmatory claims; 5-seed × 60k confirm needed
