@@ -138,7 +138,10 @@ def run_episode(
             if detector is not None:
                 in_campaign = detector.update(sim, float(sim.env.now))
             else:
-                in_campaign = sim.campaign_state_at(float(sim.env.now)) == "campaign"
+                # Any non-calm state (pre_campaign ramp included) triggers the
+                # campaign config: the oracle prepares as soon as the world
+                # leaves calm — the earliest a state-conditioned policy can act.
+                in_campaign = sim.campaign_state_at(float(sim.env.now)) != "calm"
         action = camp if in_campaign else calm
         if in_campaign:
             campaign_weeks_detected += 1

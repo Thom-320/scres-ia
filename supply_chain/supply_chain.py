@@ -2489,31 +2489,71 @@ class MFSCSimulation:
 
     # ------------------------------------------------------------ Track C campaign
     def _build_campaign_path(self) -> None:
-        """Sample the episode's calm/campaign schedule (seed-deterministic).
+        """Sample the episode's regime schedule (seed-deterministic).
 
         Dedicated SeedSequence stream: identical seeds give identical campaign
         paths regardless of policy actions or other RNG consumption, and no
         other stream's draw sequence is perturbed.
+
+        Two config formats:
+          legacy 2-state: dwell_calm_weeks_mean / dwell_campaign_weeks_mean +
+            frequency_multipliers / impact_multipliers (campaign-state only);
+          cycle (v2): {"cycle": [{"name", "dwell_mean_weeks",
+            "frequency_multipliers", "impact_multipliers"}, ...]} — states
+            visited in order, looping (e.g. calm -> pre_campaign -> campaign).
         """
         cfg = self.campaign_config or {}
         week = 168.0
-        dwell_means = {
-            "calm": max(week, float(cfg.get("dwell_calm_weeks_mean", 8.0)) * week),
-            "campaign": max(week, float(cfg.get("dwell_campaign_weeks_mean", 5.0)) * week),
-        }
         min_dwell = max(week, float(cfg.get("dwell_min_weeks", 2.0)) * week)
         rng = np.random.default_rng(
             np.random.SeedSequence([int(self.seed or 0), 0xC4A9])
         )
-        state = str(cfg.get("initial_state", "calm"))
+        cycle = cfg.get("cycle")
+        if cycle:
+            states = [
+                (str(s["name"]), max(week, float(s["dwell_mean_weeks"]) * week))
+                for s in cycle
+            ]
+        else:
+            states = [
+                ("calm", max(week, float(cfg.get("dwell_calm_weeks_mean", 8.0)) * week)),
+                ("campaign", max(week, float(cfg.get("dwell_campaign_weeks_mean", 5.0)) * week)),
+            ]
+        start_idx = 0
+        initial = str(cfg.get("initial_state", states[0][0]))
+        for i, (name, _d) in enumerate(states):
+            if name == initial:
+                start_idx = i
+                break
         t = 0.0
+        idx = start_idx
         path: list[tuple[float, str]] = []
         while t < float(self.horizon):
-            path.append((t, state))
-            dwell = max(min_dwell, float(rng.exponential(dwell_means[state])))
+            name, dwell_mean = states[idx]
+            path.append((t, name))
+            dwell = max(min_dwell, float(rng.exponential(dwell_mean)))
             t += dwell
-            state = "campaign" if state == "calm" else "calm"
+            idx = (idx + 1) % len(states)
         self.campaign_path = path
+
+    def _campaign_state_tables(self) -> dict[str, dict[str, dict[str, float]]]:
+        """Per-state {freq, impact} multiplier tables (both config formats)."""
+        cfg = self.campaign_config or {}
+        cycle = cfg.get("cycle")
+        if cycle:
+            return {
+                str(s["name"]): {
+                    "frequency": dict(s.get("frequency_multipliers") or {}),
+                    "impact": dict(s.get("impact_multipliers") or {}),
+                }
+                for s in cycle
+            }
+        return {
+            "campaign": {
+                "frequency": dict(cfg.get("frequency_multipliers") or {}),
+                "impact": dict(cfg.get("impact_multipliers") or {}),
+            }
+        }
 
     def campaign_state_at(self, t: float) -> str:
         if not self.campaign_path:
@@ -2529,27 +2569,29 @@ class MFSCSimulation:
     def _campaign_freq_max(self, risk_id: str) -> float:
         if not self.campaign_config:
             return 1.0
-        table = self.campaign_config.get("frequency_multipliers") or {}
-        return max(1.0, float(table.get(str(risk_id), 1.0)))
+        best = 1.0
+        for tables in self._campaign_state_tables().values():
+            best = max(best, float(tables["frequency"].get(str(risk_id), 1.0)))
+        return best
 
-    def _campaign_impact_now(self, risk_id: str) -> float:
+    def _campaign_multiplier_now(self, risk_id: str, kind: str) -> float:
         if not self.campaign_config:
             return 1.0
-        if self.campaign_state_at(float(self.env.now)) != "campaign":
+        state = self.campaign_state_at(float(self.env.now))
+        tables = self._campaign_state_tables().get(state)
+        if not tables:
             return 1.0
-        table = self.campaign_config.get("impact_multipliers") or {}
-        return float(table.get(str(risk_id), 1.0))
+        return float(tables[kind].get(str(risk_id), 1.0))
+
+    def _campaign_impact_now(self, risk_id: str) -> float:
+        return self._campaign_multiplier_now(risk_id, "impact")
 
     def _campaign_accept_event(self, risk_id: str) -> bool:
         """Thinning acceptance: keep a max-rate candidate event with p=m(state)/m_max."""
         m_max = self._campaign_freq_max(risk_id)
         if m_max <= 1.0:
             return True
-        if self.campaign_state_at(float(self.env.now)) == "campaign":
-            table = (self.campaign_config or {}).get("frequency_multipliers") or {}
-            m_now = float(table.get(str(risk_id), 1.0))
-        else:
-            m_now = 1.0
+        m_now = self._campaign_multiplier_now(risk_id, "frequency")
         return bool(self.risk_rng.random() < (m_now / m_max))
 
     def _sample_uniform_risk_window(self, risk_id: str) -> tuple[float, float]:

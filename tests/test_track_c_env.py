@@ -114,3 +114,28 @@ def test_track_c_env_smoke_and_econ():
     assert 0.0 <= econ["campaign_frac"] <= 1.0
     assert info.get("campaign_state") in ("calm", "campaign")
     assert env.action_space.shape == (11,)
+
+
+def test_campaign_cycle_format_three_states():
+    cfg = {
+        "initial_state": "calm",
+        "dwell_min_weeks": 1.0,
+        "cycle": [
+            {"name": "calm", "dwell_mean_weeks": 6.0},
+            {"name": "pre_campaign", "dwell_mean_weeks": 3.0,
+             "frequency_multipliers": {"R22": 2.0}},
+            {"name": "campaign", "dwell_mean_weeks": 5.0,
+             "frequency_multipliers": {"R22": 6.0},
+             "impact_multipliers": {"R22": 4.0}},
+        ],
+    }
+    sim = _sim(600005, campaign=cfg)
+    states = [s for _, s in sim.campaign_path[:9]]
+    assert states[:3] == ["calm", "pre_campaign", "campaign"]
+    assert states[3:6] == ["calm", "pre_campaign", "campaign"]
+    assert sim._campaign_freq_max("R22") == 6.0
+    # State-dependent multipliers resolve by current time.
+    t_pre = next(t for t, s in sim.campaign_path if s == "pre_campaign")
+    t_camp = next(t for t, s in sim.campaign_path if s == "campaign")
+    assert sim.campaign_state_at(t_pre + 1.0) == "pre_campaign"
+    assert sim.campaign_state_at(t_camp + 1.0) == "campaign"

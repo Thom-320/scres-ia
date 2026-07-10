@@ -70,7 +70,21 @@ STOPS and the null becomes a boundary-extension section of the C&IE paper.
 | Iter | Output dir | Knobs changed | C1 result |
 |---|---|---|---|
 | 1 | outputs/experiments/track_c_gates_iter1_2026-07-10 | none (campaign_v1 as designed) | **FAIL**: switcher−constant −5.9e-6 CI [−1.2e-5, +2.4e-8], 6/24 tapes; threshold 1.96e-4. Diagnosis: phase asymmetry ≈1.2e-5 (swapping calm/campaign roles is inert) — campaign hits do not drain stock (R22 recovery 24h→36h trivial; R21 present in only ~20% of campaigns); pair-candidate set also near-degenerate (similar Sobol leaders). C0 sanity all passed (campaign_frac 0.373; anchors separate: cf0 0.00391 → I1344_S2 0.00469 → heavy 0.00534 ret). Incident note: the runner was edited mid-run (worker tuple mismatch crashed the verdict stage; stages baseline/screen/refine/pairs completed under identical env defaults and were kept; verdict/c2fit/c2verdict rerun cleanly). Script change before iter2 (pre-training, no verdict tapes consulted for design): pair grid now crosses leaders × {leaders, heavy, I1344S2, campaign-boosted(+0.35 buffers, S3, +0.3 dispatch)} and calm-side {leaders, lean, calm-leaned}. |
-| 2 | outputs/experiments/track_c_gates_iter2_2026-07-10 | freq {R21:6,R22:6,R23:4,R24:3}; impact {R21:4,R22:4,R23:2,R24:2}; dwell campaign 6wk (calm 8wk); λ share unchanged 0.15; lead 168h | (pending) |
+| 2 | outputs/experiments/track_c_gates_iter2_2026-07-10 | freq {R21:6,R22:6,R23:4,R24:3}; impact {R21:4,R22:4,R23:2,R24:2}; dwell campaign 6wk (calm 8wk); λ share unchanged 0.15; lead 168h | **FAIL but direction flipped**: switcher−constant +8.8e-6 CI [−8.4e-6, +1.8e-5], **23/24 tapes positive** (real, tiny); threshold 1.52e-4. C2 detector +3.6e-6, 23/24, capture 0.41. Physics diagnosis: with route-aware + 168h lead, buffer raises AT campaign onset arrive mid-outage by construction — the instantaneous-state oracle cannot pre-position; only the instant levers (shift/dispatch) generate switching value, hence tiny gap. Anticipation requires an observable ramp BEFORE the heavy phase. |
+
+**AMENDMENT A1 (2026-07-10, pre-training, before iter3):** the design doc's
+`pre_campaign` ramp state (v2 option) is activated as a structural knob: cycle
+calm → pre_campaign → campaign with per-state multiplier tables (implemented
+as the `cycle` config format; legacy 2-state format unchanged; flags-off
+bitwise identity re-verified). Rationale: measured — in-campaign buffer
+commitment is physically blocked (route-aware + lead), so a detectable low-
+damage precursor phase is the only channel through which ANY non-privileged
+policy could prepare; thesis-plausible (intel/harassment upticks precede
+offensives). The oracle/switcher definition becomes "campaign config when
+state ≠ calm". Verdict tapes were consulted only as the pre-registered
+iteration trigger; no design choice used per-tape verdict data.
+
+| 3 | outputs/experiments/track_c_gates_iter3_2026-07-10 | cycle: calm 8wk (native) → pre_campaign 3wk (freq {R22:2,R23:1.5,R24:1.5}, impact 1.0) → campaign 6wk (freq {R21:6,R22:6,R23:4,R24:3}, impact {R21:4,R22:4,R23:2,R24:2}); λ share 0.15; lead 168h | (pending) |
 
 ## Falsifiers / sanity (Gate C0)
 
