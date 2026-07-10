@@ -1,0 +1,34 @@
+{
+  "contract_id": "garrido_learning_v1",
+  "status": "frozen_decision_surface",
+  "claim_doc": "docs/CLAIM_AND_IDENTIFICATION_2026-07-11.md",
+  "physics": "supply_chain/data/garrido_proxy_v1_freeze_2026-07-10.json",
+  "decision_surface": {
+    "strategic_buffer_levels": {
+      "B0": null,
+      "I168":  {"period_hours": 168.0},
+      "I336":  {"period_hours": 336.0},
+      "I504":  {"period_hours": 504.0},
+      "I672":  {"period_hours": 672.0},
+      "I1344": {"period_hours": 1344.0}
+    },
+    "buffer_note": "Table 6.16: level I_t,S is replenished every t hours (period tied to level). Buffer chosen at campaign start, FIXED for the campaign. One policy per buffer level.",
+    "tactical_action": "Discrete(3) weekly shifts {S1,S2,S3}; effect at k+1; min dwell 1 week; switching logged",
+    "factorial_disclosure": "The 6x3 grid is a factorial EXTENSION built from thesis-native levels; the thesis varied buffers at S=1 and capacity at I=0 (one factor at a time)."
+  },
+  "campaign_families": {
+    "R1":    {"risk_overrides": {"R11": "increased", "R12": "increased", "R13": "increased", "R14": "increased"}},
+    "R2":    {"risk_overrides": {"R21": "increased", "R22": "increased", "R23": "increased", "R24": "increased"}},
+    "mixed": {"risk_overrides": {"R11": "increased", "R12": "increased", "R13": "increased", "R14": "increased", "R21": "increased", "R22": "increased", "R23": "increased", "R24": "increased"}}
+  },
+  "family_note": "All 9 risks enabled; family sets which category runs at thesis Table 6.12 '+' levels; others at current. R3 enabled at current (~absent at campaign scale) and reserved for OOD stress tapes.",
+  "tape_universes": {
+    "calibration": "700001-700060 (20 per family: R1 700001-700020, R2 700021-700040, mixed 700041-700060)",
+    "training": "710001+",
+    "fixed_probes": "715001+",
+    "virgin_confirmatory": "720001+ (LOCKED until pre-registration is frozen)",
+    "exhausted": "200001-600xxx (prior programs; never reuse)"
+  },
+  "campaign_horizon_weeks_provisional": 104,
+  "horizon_note": "Final campaign length (52/104/260) frozen at pilot per the censoring rule (<10% censored recoveries)."
+}
