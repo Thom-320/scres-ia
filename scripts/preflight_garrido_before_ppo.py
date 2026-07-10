@@ -37,6 +37,7 @@ from supply_chain.config import (  # noqa: E402
 
 
 DEFAULT_OUTPUT_DIR = Path("outputs/preflight/garrido_before_ppo")
+REFERENCE_GATE_PATH = Path("outputs/audits/garrido_reference_v2_gate/gate.json")
 REWARD_CANDIDATES = (
     "ReT_garrido2024_raw",
     "ReT_garrido2024",
@@ -181,9 +182,23 @@ def _write_readme(path: Path, payload: dict[str, Any]) -> None:
 
 
 def _freeze_summary(args: argparse.Namespace) -> dict[str, Any]:
+    gate_payload: dict[str, Any] = {}
+    if REFERENCE_GATE_PATH.exists():
+        gate_payload = json.loads(REFERENCE_GATE_PATH.read_text(encoding="utf-8"))
+    promoted = bool(gate_payload.get("promoted_to_garrido_reference_v2", False))
     return {
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
-        "status": "ready_for_pre_ppo_screens",
+        "status": (
+            "ready_for_pre_ppo_screens"
+            if promoted
+            else "blocked_reference_v2_not_promoted"
+        ),
+        "reference_gate": {
+            "path": str(REFERENCE_GATE_PATH),
+            "present": bool(gate_payload),
+            "promoted": promoted,
+            "gates": gate_payload.get("gates", {}),
+        },
         "claim_boundary": {
             "faithful_lane": (
                 "No risk tuning; thesis-window risks, deterministic processing "
@@ -237,6 +252,17 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     root.mkdir(parents=True, exist_ok=True)
 
     freeze = _freeze_summary(args)
+    if (
+        not freeze["reference_gate"]["promoted"]
+        and not bool(args.skip_reward_screen)
+        and not bool(args.allow_unvalidated_reference)
+    ):
+        raise RuntimeError(
+            "PPO preflight blocked: garrido_reference_v2 failed the held-out "
+            f"endogenous gate at {REFERENCE_GATE_PATH}. Use --skip-reward-screen "
+            "for audit-only work. --allow-unvalidated-reference is an explicit "
+            "research override and may not support a thesis-faithful claim."
+        )
     (root / "garrido_des_freeze_summary.json").write_text(
         json.dumps(freeze, indent=2),
         encoding="utf-8",
@@ -395,6 +421,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--reward-train-timesteps", type=int, default=512)
     parser.add_argument("--skip-reward-screen", action="store_true")
     parser.add_argument("--skip-headroom-screen", action="store_true")
+    parser.add_argument("--allow-unvalidated-reference", action="store_true")
     return parser
 
 

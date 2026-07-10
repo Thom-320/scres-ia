@@ -124,6 +124,8 @@ DEMAND_SOURCE_OPTIONS = (
     "excel_order_tape_after_calendar_warmup",
 )
 SEED_STREAM_MODE_OPTIONS = ("single", "split")
+PROCUREMENT_CONTRACT_MODE_OPTIONS = ("legacy_independent", "causal_coupled")
+ORDER_FULFILLMENT_MODE_OPTIONS = ("legacy_theatre_stock", "op9_linked")
 TRACK_A_TRAINING_RISK_OCCURRENCE_MODE = "thesis_window"
 TRACK_A_TRAINING_RAW_MATERIAL_FLOW_MODE = "kit_equivalent_order_up_to"
 TRACK_A_TRAINING_RAW_MATERIAL_ORDER_UP_TO_MULTIPLIER = 2.0

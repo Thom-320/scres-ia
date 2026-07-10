@@ -410,6 +410,9 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         risk_overrides: dict[str, str] | None = None,
         campaign_config: dict[str, Any] | None = None,
         replenishment_route_aware: bool = False,
+        procurement_contract_mode: str = "legacy_independent",
+        order_fulfillment_mode: str = "legacy_theatre_stock",
+        demand_start_after_warmup: bool = False,
         priming_enabled: bool = True,
         # --- Track B: MDP structural fixes ---
         clear_backlog_after_priming: bool = False,  # Fix 3A: clear inherited backlog
@@ -541,6 +544,9 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self.risk_overrides = dict(risk_overrides or {})
         self.campaign_config = dict(campaign_config) if campaign_config else None
         self.replenishment_route_aware = bool(replenishment_route_aware)
+        self.procurement_contract_mode = str(procurement_contract_mode)
+        self.order_fulfillment_mode = str(order_fulfillment_mode)
+        self.demand_start_after_warmup = bool(demand_start_after_warmup)
         self.priming_enabled = bool(priming_enabled)
         self.reward_mode = reward_mode
         self._canonical_reward_mode = canonical_reward_mode
@@ -2527,6 +2533,9 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             inventory_replenishment_lead_time=inventory_replenishment_lead_time,
             campaign_config=self.campaign_config,
             replenishment_route_aware=self.replenishment_route_aware,
+            procurement_contract_mode=self.procurement_contract_mode,
+            order_fulfillment_mode=self.order_fulfillment_mode,
+            demand_start_after_warmup=self.demand_start_after_warmup,
         )
         self.sim._start_processes()
         self.sim.env.run(until=self.warmup_hours)

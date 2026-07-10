@@ -62,6 +62,8 @@ from .config import (
     RISK_ATTRIBUTION_SOURCE_OPTIONS,
     RISK_OCCURRENCE_MODE_OPTIONS,
     SEED_STREAM_MODE_OPTIONS,
+    PROCUREMENT_CONTRACT_MODE_OPTIONS,
+    ORDER_FULFILLMENT_MODE_OPTIONS,
     canonical_raw_material_flow_mode,
     YEAR_BASIS_OPTIONS,
     LEAD_TIME_PROMISE,
@@ -189,6 +191,9 @@ class MFSCSimulation:
         ),
         campaign_config: Optional[dict[str, Any]] = None,
         replenishment_route_aware: bool = False,
+        procurement_contract_mode: str = "legacy_independent",
+        order_fulfillment_mode: str = "legacy_theatre_stock",
+        demand_start_after_warmup: bool = False,
     ) -> None:
         if warmup_trigger not in WARMUP_TRIGGER_OPTIONS:
             valid = ", ".join(WARMUP_TRIGGER_OPTIONS)
@@ -240,6 +245,18 @@ class MFSCSimulation:
                 "Invalid seed_stream_mode="
                 f"{seed_stream_mode!r}. Expected one of: {valid}."
             )
+        if procurement_contract_mode not in PROCUREMENT_CONTRACT_MODE_OPTIONS:
+            valid = ", ".join(PROCUREMENT_CONTRACT_MODE_OPTIONS)
+            raise ValueError(
+                "Invalid procurement_contract_mode="
+                f"{procurement_contract_mode!r}. Expected one of: {valid}."
+            )
+        if order_fulfillment_mode not in ORDER_FULFILLMENT_MODE_OPTIONS:
+            valid = ", ".join(ORDER_FULFILLMENT_MODE_OPTIONS)
+            raise ValueError(
+                "Invalid order_fulfillment_mode="
+                f"{order_fulfillment_mode!r}. Expected one of: {valid}."
+            )
         if ret_recovery_period_mode not in RET_RECOVERY_PERIOD_MODE_OPTIONS:
             valid = ", ".join(RET_RECOVERY_PERIOD_MODE_OPTIONS)
             raise ValueError(
@@ -282,6 +299,9 @@ class MFSCSimulation:
         )
         self.campaign_path: list[tuple[float, str]] = []
         self.replenishment_route_aware = bool(replenishment_route_aware)
+        self.procurement_contract_mode = str(procurement_contract_mode)
+        self.order_fulfillment_mode = str(order_fulfillment_mode)
+        self.demand_start_after_warmup = bool(demand_start_after_warmup)
         self._route_wait_pending: set[str] = set()
         if self.campaign_config:
             self._build_campaign_path()
@@ -414,19 +434,39 @@ class MFSCSimulation:
         self.rations_cssu = simpy.Container(self.env, capacity=INF, init=0)
         self.rations_theatre = simpy.Container(self.env, capacity=INF, init=0)
 
+        # Procurement contract state.  Op1 creates/renews the framework
+        # contract that authorises Op2 supplier deliveries.  The previous
+        # implementation ran Op1 and Op2 as independent clocks, which meant
+        # R12 could change the risk ledger without changing material flow.
+        self.contract_valid_until = 0.0
+        self._contract_renewed_event = self.env.event()
+        self.contract_completion_events: list[tuple[float, float]] = []
+        self.supplier_delivery_events: list[tuple[float, float]] = []
+
         self.inventory_buffer_targets = self._normalize_inventory_buffer_targets(
             initial_buffers or {}
         )
+        self.total_external_raw_material = 0.0
+        self.total_strategic_raw_injected = 0.0
+        self.total_strategic_rations_injected = 0.0
+        self.total_rations_created_from_raw = 0.0
+        self.total_rations_scrapped = 0.0
+        self.total_raw_material_consumed = 0.0
+        self.total_order_fulfilled = 0.0
+        self.total_theatre_inflow = 0.0
         if self.inventory_buffer_targets:
             op3_rm = float(self.inventory_buffer_targets.get("op3_rm", 0))
             op5_rm = float(self.inventory_buffer_targets.get("op5_rm", 0))
             op9_rations = float(self.inventory_buffer_targets.get("op9_rations", 0))
             if op3_rm > 0:
                 self.raw_material_wdc.put(op3_rm)
+                self.total_strategic_raw_injected += op3_rm
             if op5_rm > 0:
                 self.raw_material_al.put(op5_rm)
+                self.total_strategic_raw_injected += op5_rm
             if op9_rations > 0:
                 self.rations_sb.put(op9_rations)
+                self.total_strategic_rations_injected += op9_rations
         # Cache the original Op5 buffer target as a separate attribute (do not pollute
         # inventory_buffer_targets, which other tests compare as a strict dict).
         # See Table 6.16 (Op5,j) — the agent's a5 multiplier scales this baseline.
@@ -478,6 +518,7 @@ class MFSCSimulation:
         self._today_produced = 0
         self._pending_batch = 0
         self._in_transit = 0  # Material between containers (Op8/Op10 transport)
+        self._raw_material_in_transit = 0.0
 
         # =================================================================
         # RISK STATE
@@ -767,6 +808,10 @@ class MFSCSimulation:
             return None
         shortfall = max(0.0, float(target) - float(container.level))
         if shortfall > 0.0:
+            if key in {"op3_rm", "op5_rm"}:
+                self.total_strategic_raw_injected += shortfall
+            elif key == "op9_rations":
+                self.total_strategic_rations_injected += shortfall
             return container.put(shortfall)
         return None
 
@@ -894,9 +939,10 @@ class MFSCSimulation:
         self.env.process(self._op3_wdc_dispatch())
         self.env.process(self._assembly_hourly())  # HOURLY granularity
         self.env.process(self._op8_transport_to_sb())
-        self.env.process(self._op9_sb_dispatch())
-        self.env.process(self._op10_transport_to_cssu())
-        self.env.process(self._op12_transport_to_theatre())
+        if self.order_fulfillment_mode == "legacy_theatre_stock":
+            self.env.process(self._op9_sb_dispatch())
+            self.env.process(self._op10_transport_to_cssu())
+            self.env.process(self._op12_transport_to_theatre())
         self.env.process(self._op13_demand())
         self.env.process(self._daily_tracker())
         if (
@@ -1088,6 +1134,7 @@ class MFSCSimulation:
                     continue
                 self._risk_recovery_seen.add(key)
                 yield self.rations_theatre.put(release_qty)
+                self.total_strategic_rations_injected += release_qty
                 self._risk_recovery_window_until = max(
                     self._risk_recovery_window_until,
                     float(event.end_time) + window_hours,
@@ -1176,6 +1223,8 @@ class MFSCSimulation:
                 {
                     "time": self.env.now,
                     "new_delivered": 0.0,
+                    "new_theatre_inflow": 0.0,
+                    "new_order_fulfilled": 0.0,
                     "new_backorders": 0.0,
                     "new_demanded": 0.0,
                     "new_produced": 0.0,
@@ -1191,11 +1240,13 @@ class MFSCSimulation:
                     "pending_backorder_qty": self.pending_backorder_qty,
                     "pending_backorder_qty_delta": 0.0,
                     "unattended_orders_total": self.total_unattended_orders,
+                    "flow_ledger": self.flow_ledger(),
                 },
             )
 
         prev_backorders = self.total_backorders
         prev_delivered = self.total_delivered
+        prev_order_fulfilled = self.total_order_fulfilled
         prev_demanded = self.total_demanded
         prev_produced = self.total_produced
         prev_backorder_qty = self.cumulative_backorder_qty
@@ -1222,6 +1273,7 @@ class MFSCSimulation:
         # Step deltas
         new_backorders = self.total_backorders - prev_backorders  # order count
         new_delivered = self.total_delivered - prev_delivered  # rations
+        new_order_fulfilled = self.total_order_fulfilled - prev_order_fulfilled
         new_demanded = self.total_demanded - prev_demanded  # rations
         new_produced = self.total_produced - prev_produced  # rations
         new_backorder_qty = (
@@ -1255,6 +1307,8 @@ class MFSCSimulation:
         info = {
             "time": self.env.now,
             "new_delivered": new_delivered,
+            "new_theatre_inflow": new_delivered,
+            "new_order_fulfilled": new_order_fulfilled,
             "new_backorders": new_backorders,  # order count
             "new_demanded": new_demanded,  # rations
             "new_produced": new_produced,  # rations produced at Op5-Op7
@@ -1277,6 +1331,7 @@ class MFSCSimulation:
                 if self.campaign_config
                 else None
             ),
+            "flow_ledger": self.flow_ledger(),
         }
         return obs, reward, done, info
 
@@ -1291,6 +1346,57 @@ class MFSCSimulation:
             "rations_sb_dispatch": float(self.rations_sb_dispatch.level),
             "rations_cssu": float(self.rations_cssu.level),
             "rations_theatre": float(self.rations_theatre.level),
+        }
+
+    def flow_ledger(self) -> dict[str, float]:
+        """Return auditable raw-material and ration conservation residuals.
+
+        Positive residuals mean unaccounted source material; negative values
+        mean the modeled stocks/sinks exceed recorded sources.  The default
+        thesis-strict R14 mode should remain at numerical zero apart from
+        floating-point noise.
+        """
+        raw_sources = (
+            float(self.total_external_raw_material)
+            + float(self.total_strategic_raw_injected)
+        )
+        raw_stock = (
+            float(self.raw_material_wdc.level)
+            + float(self.raw_material_al.level)
+            + float(self._raw_material_in_transit)
+        )
+        raw_sinks = float(self.total_raw_material_consumed) + raw_stock
+
+        ration_sources = (
+            float(self.total_rations_created_from_raw)
+            + float(self.total_strategic_rations_injected)
+        )
+        ration_stock = (
+            float(self.rework_op6.level)
+            + float(self._pending_batch)
+            + float(self.rations_al.level)
+            + float(self.rations_sb.level)
+            + float(self.rations_sb_dispatch.level)
+            + float(self.rations_cssu.level)
+            + float(self.rations_theatre.level)
+            + float(self._in_transit)
+        )
+        ration_sinks = (
+            float(self.total_order_fulfilled)
+            + float(self.total_rations_scrapped)
+            + ration_stock
+        )
+        return {
+            "raw_sources": raw_sources,
+            "raw_consumed": float(self.total_raw_material_consumed),
+            "raw_stock_and_transit": raw_stock,
+            "raw_residual": raw_sources - raw_sinks,
+            "ration_sources": ration_sources,
+            "ration_order_fulfilled": float(self.total_order_fulfilled),
+            "ration_theatre_inflow": float(self.total_theatre_inflow),
+            "ration_scrapped": float(self.total_rations_scrapped),
+            "ration_stock_and_transit": ration_stock,
+            "ration_residual": ration_sources - ration_sinks,
         }
 
     def _backorder_priority_key(
@@ -1415,7 +1521,12 @@ class MFSCSimulation:
         on-time (not backorders).
         """
         yield self.env.timeout(order.LTj)
-        if order.remaining_qty > 0:
+        still_late = (
+            order.OATj is None
+            if self.order_fulfillment_mode == "op9_linked"
+            else order.remaining_qty > 0
+        )
+        if still_late:
             order.backorder = True
             if not order.metrics_excluded:
                 self.total_backorders += 1
@@ -1437,10 +1548,20 @@ class MFSCSimulation:
                 self._finalize_pending_backorder(next_order)
                 self._remove_pending_backorder(next_order)
                 continue
-            if self.rations_theatre.level + 1e-9 < requested_qty:
+            source = (
+                self.rations_sb
+                if self.order_fulfillment_mode == "op9_linked"
+                else self.rations_theatre
+            )
+            if source.level + 1e-9 < requested_qty:
                 break
-            yield self.rations_theatre.get(requested_qty)
-            self._finalize_order_after_fulfillment_delay(next_order)
+            yield source.get(requested_qty)
+            if self.order_fulfillment_mode == "op9_linked":
+                next_order.remaining_qty = 0.0
+                self.env.process(self._deliver_order_from_op9(next_order, requested_qty))
+            else:
+                self.total_order_fulfilled += requested_qty
+                self._finalize_order_after_fulfillment_delay(next_order)
             self._remove_pending_backorder(next_order)
 
     def _backorder_rate(self) -> float:
@@ -2055,20 +2176,54 @@ class MFSCSimulation:
     # =====================================================================
 
     def _op1_contracting(self):
+        """Create and renew the framework contract consumed by Op2.
+
+        The first contract starts at t=0 and completes after Op1 PT=672 h,
+        which is required by the thesis warm-up. Each completion authorises
+        supplier deliveries for the next Op1 ROP window. R12 can therefore
+        delay a renewal and physically block Op2.
+        """
+        if self.procurement_contract_mode == "legacy_independent":
+            while True:
+                yield self.env.timeout(self.params["op1_rop"])
+                while self._is_down(1):
+                    yield self.env.timeout(1)
+                pt_remaining = self._pt("op1_pt")
+                while pt_remaining > 0:
+                    while self._is_down(1):
+                        yield self.env.timeout(1)
+                    yield self.env.timeout(1)
+                    pt_remaining -= 1
+
+        next_cycle_start = 0.0
         while True:
-            yield self.env.timeout(self.params["op1_rop"])
-            while self._is_down(1):
-                yield self.env.timeout(1)
+            if self.env.now < next_cycle_start:
+                yield self.env.timeout(next_cycle_start - self.env.now)
             pt_remaining = self._pt("op1_pt")
             while pt_remaining > 0:
                 while self._is_down(1):
                     yield self.env.timeout(1)
                 yield self.env.timeout(1)
                 pt_remaining -= 1
+            valid_from = float(self.env.now)
+            self.contract_valid_until = max(
+                float(self.contract_valid_until),
+                valid_from + float(self.params["op1_rop"]),
+            )
+            self.contract_completion_events.append(
+                (valid_from, float(self.contract_valid_until))
+            )
+            if not self._contract_renewed_event.triggered:
+                self._contract_renewed_event.succeed(valid_from)
+            self._contract_renewed_event = self.env.event()
+            next_cycle_start += float(self.params["op1_rop"])
 
     def _op2_supplier_delivery(self):
         while True:
             yield self.env.timeout(self.params["op2_rop"])
+            if self.procurement_contract_mode == "causal_coupled":
+                while float(self.env.now) >= float(self.contract_valid_until):
+                    yield self._contract_renewed_event
             while self._is_down(2):
                 yield self.env.timeout(1)
             pt_remaining = self._pt("op2_pt")
@@ -2084,6 +2239,10 @@ class MFSCSimulation:
                 if total_delivery <= 0.0:
                     continue
             yield self.raw_material_wdc.put(total_delivery)
+            self.total_external_raw_material += float(total_delivery)
+            self.supplier_delivery_events.append(
+                (float(self.env.now), float(total_delivery))
+            )
 
     def _op3_wdc_dispatch(self):
         while True:
@@ -2098,11 +2257,13 @@ class MFSCSimulation:
             dispatch = min(total_dispatch, available)
             if dispatch > 0:
                 yield self.raw_material_wdc.get(dispatch)
+                self._raw_material_in_transit += dispatch
                 yield self.env.timeout(self._pt("op3_pt"))
                 # Op4: transport WDC → AL (separate operation per thesis)
                 while self._is_down(4):
                     yield self.env.timeout(1)
                 yield self.env.timeout(self._pt("op4_pt"))
+                self._raw_material_in_transit -= dispatch
                 yield self.raw_material_al.put(dispatch)
 
     # =====================================================================
@@ -2167,6 +2328,8 @@ class MFSCSimulation:
                     yield self.rework_op6.get(rework_qty)
                 if raw_units_qty > 0:
                     yield self.raw_material_al.get(raw_units_qty)
+                    self.total_raw_material_consumed += raw_units_qty
+                    self.total_rations_created_from_raw += raw_produced_qty
                 self._pending_batch += can_produce
                 self._today_produced += can_produce
                 self.total_produced += can_produce
@@ -2199,6 +2362,11 @@ class MFSCSimulation:
             yield self.rations_sb.put(batch_size)
             if self.warmup_trigger == "op9_arrival":
                 self._mark_warmup_complete()
+            if (
+                self.order_fulfillment_mode == "op9_linked"
+                and self.pending_backorders
+            ):
+                yield from self._serve_pending_backorders()
 
     def _op9_sb_dispatch(self):
         """Op9: Supply Battalion — dispatch U(q_min, q_max), async PT=24h."""
@@ -2265,19 +2433,54 @@ class MFSCSimulation:
         yield self.env.timeout(self._pt("op12_pt"))
         self._in_transit -= qty
         yield self.rations_theatre.put(qty)
+        self.total_theatre_inflow += qty
+        # Backward-compatible legacy name. This is theatre inflow, not final
+        # order consumption; use total_order_fulfilled for customer service.
         self.total_delivered += qty
         self.delivery_events.append((self.env.now, qty))
         yield from self._serve_pending_backorders()
+
+    def _deliver_order_from_op9(self, order: OrderRecord, qty: float):
+        """Move a reserved order through the physical Op10/Op12 service path.
+
+        This reference-only mode replaces the calibrated fixed ledger delay.
+        CTj emerges from two 24 h transport stages plus any R22/R23 downtime.
+        """
+        self._in_transit += qty
+        while self._is_down(10):
+            yield self.env.timeout(1)
+        yield self.env.timeout(self._pt("op10_pt"))
+        while self._is_down(11) or self._is_down(12):
+            yield self.env.timeout(1)
+        yield self.env.timeout(self._pt("op12_pt"))
+        self._in_transit -= qty
+        self.total_theatre_inflow += qty
+        self.total_delivered += qty
+        self.total_order_fulfilled += qty
+        self.delivery_events.append((self.env.now, qty))
+        self._finalize_pending_backorder(order)
 
     # =====================================================================
     # DEMAND SINK: Op13
     # =====================================================================
 
     def _place_demand_order(self, order: OrderRecord):
-        available = self.rations_theatre.level
+        source = (
+            self.rations_sb
+            if self.order_fulfillment_mode == "op9_linked"
+            else self.rations_theatre
+        )
+        available = source.level
         if not self.pending_backorders and available >= order.quantity:
-            yield self.rations_theatre.get(order.quantity)
-            self._finalize_order_after_fulfillment_delay(order)
+            yield source.get(order.quantity)
+            if self.order_fulfillment_mode == "op9_linked":
+                order.remaining_qty = 0.0
+                self.env.process(
+                    self._deliver_order_from_op9(order, float(order.quantity))
+                )
+            else:
+                self.total_order_fulfilled += float(order.quantity)
+                self._finalize_order_after_fulfillment_delay(order)
         else:
             # Enqueue for future delivery. Per thesis Sec. 6.8.2,
             # backorder classification deferred until LTj=48h elapses.
@@ -2377,8 +2580,12 @@ class MFSCSimulation:
             yield from self._op13_demand_from_excel_order_tape_after_calendar_warmup()
             return
 
+        if self.demand_start_after_warmup:
+            while not self.warmup_complete and self.env.now < self.horizon:
+                yield self.env.timeout(1.0)
+
         order_num = 0
-        hour_of_week = 0
+        hour_of_week = int(self.env.now) % (7 * HOURS_PER_DAY)
         while True:
             yield self.env.timeout(DEMAND["frequency_hrs"])
             hour_of_week = (hour_of_week + HOURS_PER_DAY) % (7 * HOURS_PER_DAY)
@@ -2741,6 +2948,7 @@ class MFSCSimulation:
                                 f"{defects} defective (returned to raw_material_al)"
                             )
                         else:
+                            self.total_rations_scrapped += float(defects)
                             description = f"{defects} defective (discarded)"
                         event = RiskEvent(
                             "R14",
