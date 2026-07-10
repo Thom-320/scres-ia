@@ -122,6 +122,60 @@ def delayed_quantity_metrics(
     }
 
 
+def match_order_release_counterfactual(
+    factual: MFSCSimulation,
+    no_event: MFSCSimulation,
+    *,
+    event_ref: str,
+    horizon: float,
+    tolerance: float = 1e-8,
+) -> list[dict[str, Any]]:
+    """Match the same demand order across paired runs; keep only earlier opportunities.
+
+    The DES consumes SB inventory FIFO, while its dispatch queue selects the
+    concrete order according to the configured release rule. Matching by ``j``
+    therefore identifies the actual consumer rather than assigning a temporal
+    exposure window to neighboring orders.
+    """
+    factual_by_j = {int(order.j): order for order in factual.orders}
+    no_event_by_j = {int(order.j): order for order in no_event.orders}
+    rows: list[dict[str, Any]] = []
+    for j in sorted(set(factual_by_j) & set(no_event_by_j)):
+        factual_order = factual_by_j[j]
+        no_event_order = no_event_by_j[j]
+        factual_release = factual_order.op9_release_time
+        no_event_release = no_event_order.op9_release_time
+        if no_event_release is None:
+            continue
+        no_event_time = float(no_event_release)
+        if factual_release is None:
+            delay = max(0.0, float(horizon) - no_event_time)
+            if delay <= tolerance:
+                continue
+            status = "censored_not_released_factual"
+            factual_time: float | None = None
+        else:
+            factual_time = float(factual_release)
+            delay = factual_time - no_event_time
+            if delay <= tolerance:
+                continue
+            status = "released_later_factual"
+        quantity = float(no_event_order.quantity)
+        rows.append(
+            {
+                "event_ref": event_ref,
+                "j": j,
+                "quantity": quantity,
+                "no_event_release_time": no_event_time,
+                "factual_release_time": factual_time,
+                "release_delay_hours": float(delay),
+                "delayed_unit_hours": quantity * float(delay),
+                "status": status,
+            }
+        )
+    return rows
+
+
 def _sim_kwargs(cfi: int, seed: int, horizon: float) -> dict[str, Any]:
     spec = design_spec_for_cfi(cfi)
     return {
@@ -157,7 +211,7 @@ def _sim_kwargs(cfi: int, seed: int, horizon: float) -> dict[str, Any]:
 
 def run_audit(
     *, cfi: int, horizon: float, max_events: int, risk_id: str | None = None
-) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
     target = load_raw_garrido_targets(DEFAULT_RAW_WORKBOOKS)[cfi]
     kwargs = _sim_kwargs(cfi, int(target.seed), horizon)
 
@@ -180,11 +234,28 @@ def run_audit(
 
     factual = MFSCSimulation(**kwargs, risk_event_tape=tape).run()
     rows: list[dict[str, Any]] = []
+    order_rows: list[dict[str, Any]] = []
     for event_index in audited_indices:
         event = tape[event_index]
         no_event_tape = tape[:event_index] + tape[event_index + 1 :]
         no_event = MFSCSimulation(**kwargs, risk_event_tape=no_event_tape).run()
         event_ref = f"{event['risk_id']}@{float(event['start_time']):.9f}"
+        matched_orders = match_order_release_counterfactual(
+            factual,
+            no_event,
+            event_ref=event_ref,
+            horizon=horizon,
+        )
+        for order_row in matched_orders:
+            order_row.update(
+                {
+                    "cfi": cfi,
+                    "event_index": event_index,
+                    "risk_id": event["risk_id"],
+                    "event_start": event["start_time"],
+                }
+            )
+        order_rows.extend(matched_orders)
         for node in NODES:
             metrics = delayed_quantity_metrics(
                 factual.material_availability_events[node],
@@ -204,7 +275,7 @@ def run_audit(
                     **metrics,
                 }
             )
-    return tape, rows
+    return tape, rows, order_rows
 
 
 def main() -> None:
@@ -220,7 +291,7 @@ def main() -> None:
     )
     args = parser.parse_args()
     args.output_dir.mkdir(parents=True, exist_ok=True)
-    tape, rows = run_audit(
+    tape, rows, order_rows = run_audit(
         cfi=args.cf,
         horizon=args.horizon,
         max_events=args.max_events,
@@ -235,6 +306,33 @@ def main() -> None:
         writer = csv.DictWriter(handle, fieldnames=list(rows[0]))
         writer.writeheader()
         writer.writerows(rows)
+    if order_rows:
+        with (args.output_dir / "counterfactual_order_opportunities.csv").open(
+            "w", newline="", encoding="utf-8"
+        ) as handle:
+            writer = csv.DictWriter(handle, fieldnames=list(order_rows[0]))
+            writer.writeheader()
+            writer.writerows(order_rows)
+    event_summaries = []
+    for event_ref in sorted({row["event_ref"] for row in rows}):
+        event_orders = [row for row in order_rows if row["event_ref"] == event_ref]
+        release_node = next(
+            row for row in rows if row["event_ref"] == event_ref and row["node"] == "order_release"
+        )
+        event_summaries.append(
+            {
+                "event_ref": event_ref,
+                "matched_orders": len(event_orders),
+                "matched_order_quantity": float(sum(row["quantity"] for row in event_orders)),
+                "matched_order_unit_hours": float(
+                    sum(row["delayed_unit_hours"] for row in event_orders)
+                ),
+                "max_concurrent_release_quantity_debt": float(
+                    release_node["delayed_quantity_peak"]
+                ),
+                "release_debt_recovered_at": release_node["debt_recovered_at"],
+            }
+        )
     verdict = {
         "estimand": "availability_without_event_minus_availability_with_event",
         "cfi": args.cf,
@@ -242,6 +340,7 @@ def main() -> None:
         "calendar_events": len(tape),
         "events_audited": len({row["event_ref"] for row in rows}),
         "rows": rows,
+        "event_order_summaries": event_summaries,
         "claim_boundary": (
             "Paired in-model counterfactual under a frozen replay calendar; "
             "not evidence of real-world causal effect."

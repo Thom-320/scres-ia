@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import pytest
+from types import SimpleNamespace
 
 from scripts.audit_garrido_event_delayed_quantity import (
     _sim_kwargs,
     delayed_quantity_metrics,
+    match_order_release_counterfactual,
 )
-from supply_chain.supply_chain import MFSCSimulation
+from supply_chain.supply_chain import MFSCSimulation, OrderRecord
 
 
 def test_delayed_quantity_curve_measures_peak_area_and_recovery() -> None:
@@ -64,3 +66,40 @@ def test_leave_one_event_out_detects_r13_supplier_availability_debt() -> None:
 
     assert result["delayed_quantity_peak"] > 0.0
     assert result["delay_onset"] == pytest.approx(696.0)
+
+
+def test_order_matching_uses_same_order_identity_not_neighboring_window() -> None:
+    factual_orders = [
+        OrderRecord(j=1, OPTj=0.0, quantity=10.0, op9_release_time=30.0),
+        OrderRecord(j=2, OPTj=1.0, quantity=20.0, op9_release_time=20.0),
+    ]
+    no_event_orders = [
+        OrderRecord(j=1, OPTj=0.0, quantity=10.0, op9_release_time=10.0),
+        OrderRecord(j=2, OPTj=1.0, quantity=20.0, op9_release_time=20.0),
+    ]
+
+    rows = match_order_release_counterfactual(
+        SimpleNamespace(orders=factual_orders),
+        SimpleNamespace(orders=no_event_orders),
+        event_ref="R13@0",
+        horizon=100.0,
+    )
+
+    assert [row["j"] for row in rows] == [1]
+    assert rows[0]["release_delay_hours"] == pytest.approx(20.0)
+    assert rows[0]["delayed_unit_hours"] == pytest.approx(200.0)
+
+
+def test_order_matching_reports_horizon_censored_release() -> None:
+    factual = OrderRecord(j=7, OPTj=0.0, quantity=5.0)
+    counterfactual = OrderRecord(j=7, OPTj=0.0, quantity=5.0, op9_release_time=40.0)
+
+    rows = match_order_release_counterfactual(
+        SimpleNamespace(orders=[factual]),
+        SimpleNamespace(orders=[counterfactual]),
+        event_ref="R13@0",
+        horizon=100.0,
+    )
+
+    assert rows[0]["status"] == "censored_not_released_factual"
+    assert rows[0]["release_delay_hours"] == pytest.approx(60.0)
