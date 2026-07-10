@@ -108,8 +108,17 @@ class HazardDetector:
         return self.ewma >= self.theta
 
 
-def run_episode(policy: Policy, tape: int) -> dict[str, float]:
-    env = make_track_c_env(max_steps=MAX_STEPS)
+def run_episode(
+    policy: Policy,
+    tape: int,
+    campaign: dict[str, Any] | None = None,
+    lead: float = 168.0,
+) -> dict[str, float]:
+    env = make_track_c_env(
+        max_steps=MAX_STEPS,
+        campaign_config=campaign,
+        inventory_replenishment_lead_time=float(lead),
+    )
     obs, info = env.reset(seed=tape)
     sim = env.unwrapped.sim
     detector = (
@@ -142,11 +151,11 @@ def run_episode(policy: Policy, tape: int) -> dict[str, float]:
     return row
 
 
-def eval_policy(task: tuple[str, Policy, list[int]]) -> list[dict[str, Any]]:
-    stage, policy, tapes = task
+def eval_policy(task: tuple) -> list[dict[str, Any]]:
+    stage, policy, tapes, campaign, lead = task
     rows = []
     for tape in tapes:
-        r = run_episode(policy, tape)
+        r = run_episode(policy, tape, campaign=campaign, lead=lead)
         rows.append({"stage": stage, "policy": policy.name, "eval_seed": tape, **r})
     return rows
 
@@ -181,8 +190,15 @@ def write_rows(path: Path, rows: list[dict[str, Any]]) -> None:
         w.writerows(rows)
 
 
-def run_many(policies: list[Policy], tapes: list[int], stage: str, workers: int):
-    tasks = [(stage, p, tapes) for p in policies]
+def run_many(
+    policies: list[Policy],
+    tapes: list[int],
+    stage: str,
+    workers: int,
+    campaign: dict[str, Any] | None = None,
+    lead: float = 168.0,
+):
+    tasks = [(stage, p, tapes, campaign, lead) for p in policies]
     if workers == 1:
         blocks = [eval_policy(t) for t in tasks]
     else:
@@ -228,9 +244,23 @@ def main() -> None:
     parser.add_argument("--refine-top", type=int, default=6)
     parser.add_argument("--refine-radius", type=float, default=0.15)
     parser.add_argument("--pair-top", type=int, default=6)
+    parser.add_argument(
+        "--campaign-json",
+        default=None,
+        help="JSON dict of campaign_config knobs for calibration iterations "
+        "(default: config.CAMPAIGN_V1_CONFIG). Logged to campaign_config.json.",
+    )
+    parser.add_argument("--lead", type=float, default=168.0)
     args = parser.parse_args()
     out = args.output_dir
     out.mkdir(parents=True, exist_ok=True)
+    campaign = json.loads(args.campaign_json) if args.campaign_json else None
+    lead = float(args.lead)
+    from supply_chain.config import CAMPAIGN_V1_CONFIG as _DEFAULT_CFG
+
+    (out / "campaign_config.json").write_text(
+        json.dumps({"campaign": campaign or _DEFAULT_CFG, "lead": lead}, indent=2)
+    )
     stages = ["baseline", "screen", "refine", "pairs", "verdict", "c2fit", "c2verdict"] if args.stage == "all" else [args.stage]
 
     def load_json(name):
@@ -240,7 +270,7 @@ def main() -> None:
         print(f"=== stage {stage}", flush=True)
         if stage == "baseline":
             policies = [Policy(f"anchor_{n}", tuple(v)) for n, v in ANCHORS.items()]
-            rows = run_many(policies, TAPES["baseline"], stage, args.workers)
+            rows = run_many(policies, TAPES["baseline"], stage, args.workers, campaign=campaign, lead=lead)
             write_rows(out / "baseline_rows.csv", rows)
             base_rows = [r for r in rows if r["policy"] == "anchor_cf0_S1_nostock"]
             ret_base = float(np.mean([r["ret_excel"] for r in base_rows]))
@@ -273,7 +303,7 @@ def main() -> None:
         elif stage == "screen":
             lam = load_json("lambdas.json")
             policies = sobol_policies(args.sobol_n, args.sobol_seed)
-            rows = run_many(policies, TAPES["screen"], stage, args.workers)
+            rows = run_many(policies, TAPES["screen"], stage, args.workers, campaign=campaign, lead=lead)
             for r in rows:
                 r["J"] = j_of(r, lam)
             write_rows(out / "screen_rows.csv", rows)
@@ -294,7 +324,7 @@ def main() -> None:
             leaders = [Policy(l["policy"], tuple(l["calm"])) for l in load_json("screen_leaders.json")]
             policies = refine_policies(leaders, args.refine_radius)
             print(f"refine candidates: {len(policies)}", flush=True)
-            rows = run_many(policies, TAPES["refine"], stage, args.workers)
+            rows = run_many(policies, TAPES["refine"], stage, args.workers, campaign=campaign, lead=lead)
             for r in rows:
                 r["J"] = j_of(r, lam)
             write_rows(out / "refine_rows.csv", rows)
@@ -333,7 +363,7 @@ def main() -> None:
             # The frozen constant itself, as the pair-stage reference:
             policies.append(Policy("constant_ref", calm=tuple(frozen["constant"]["calm"])))
             print(f"pair candidates: {len(policies)}", flush=True)
-            rows = run_many(policies, TAPES["pairs"], stage, args.workers)
+            rows = run_many(policies, TAPES["pairs"], stage, args.workers, campaign=campaign, lead=lead)
             for r in rows:
                 r["J"] = j_of(r, lam)
             write_rows(out / "pairs_rows.csv", rows)
@@ -363,7 +393,7 @@ def main() -> None:
                 Policy("anchor_cf0", calm=tuple(ANCHORS["cf0_S1_nostock"])),
                 Policy("anchor_I1344_S2", calm=tuple(ANCHORS["garrido_I1344_S2"])),
             ]
-            rows = run_many(policies, TAPES["verdict"], stage, args.workers)
+            rows = run_many(policies, TAPES["verdict"], stage, args.workers, campaign=campaign, lead=lead)
             for r in rows:
                 r["J"] = j_of(r, lam)
             write_rows(out / "verdict_rows.csv", rows)
@@ -404,7 +434,7 @@ def main() -> None:
                             detector=(theta, hl),
                         )
                     )
-            rows = run_many(policies, TAPES["pairs"], stage, args.workers)
+            rows = run_many(policies, TAPES["pairs"], stage, args.workers, campaign=campaign, lead=lead)
             for r in rows:
                 r["J"] = j_of(r, lam)
             write_rows(out / "c2fit_rows.csv", rows)
@@ -432,7 +462,7 @@ def main() -> None:
                 campaign=tuple(pair["campaign"]),
                 detector=(det["theta"], det["halflife_weeks"]),
             )
-            rows = run_many([policy], TAPES["verdict"], stage, args.workers)
+            rows = run_many([policy], TAPES["verdict"], stage, args.workers, campaign=campaign, lead=lead)
             for r in rows:
                 r["J"] = j_of(r, lam)
             write_rows(out / "c2verdict_rows.csv", rows)
