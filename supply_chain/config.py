@@ -642,6 +642,30 @@ ADAPTIVE_BENCHMARK_V2_SURGE_SCALE_MULTIPLIER = 1.20
 TRACK_B_ROLLING_WINDOW_HOURS = 4 * HOURS_PER_WEEK
 TRACK_B_QUEUE_PRESSURE_LOOKAHEAD_CYCLES = 4.0
 
+# =============================================================================
+# TRACK C CAMPAIGN REGIME (2026-07-10) — campaign_v1
+# =============================================================================
+# Non-stationary calm/campaign schedule over the intentional-attack family
+# (R22/R23/R24) plus an R21 kicker. Grounding:
+#  - Garrido Ch7 moderation evidence: buffers inhibit R22 (92%) / R23 (67%),
+#    capacity inhibits R24 (67%); the association rules driving ReT Low are
+#    R22+R24, R22+R23, R23+R24 (Tables 7.1-7.9).
+#  - Frequency multipliers sit at the measured headroom-on region of the
+#    R21 breadth grid (channel turns on at freq >=x4 AND impact >=x3).
+#  - Dwell times are WEEKS (>= decision epoch 168h and >= replenishment lead)
+#    so a weekly controller can react within a phase — unlike the
+#    adaptive-benchmark process whose ~4-6 DAY dwells are sub-Nyquist.
+# The schedule is sampled once per episode from the seed (exogenous, CRN-safe);
+# frequency modulation is exact thinning (calm keeps the native rate).
+CAMPAIGN_V1_CONFIG = {
+    "initial_state": "calm",
+    "dwell_calm_weeks_mean": 8.0,
+    "dwell_campaign_weeks_mean": 5.0,
+    "dwell_min_weeks": 2.0,
+    "frequency_multipliers": {"R21": 4.0, "R22": 4.0, "R23": 4.0, "R24": 3.0},
+    "impact_multipliers": {"R21": 3.0, "R22": 1.5, "R23": 1.5, "R24": 1.5},
+}
+
 
 # =============================================================================
 # INVENTORY BUFFER LEVELS — Table 6.16 (Scenario II)

@@ -187,6 +187,8 @@ class MFSCSimulation:
             "R23",
             "R24",
         ),
+        campaign_config: Optional[dict[str, Any]] = None,
+        replenishment_route_aware: bool = False,
     ) -> None:
         if warmup_trigger not in WARMUP_TRIGGER_OPTIONS:
             valid = ", ".join(WARMUP_TRIGGER_OPTIONS)
@@ -268,6 +270,21 @@ class MFSCSimulation:
             self.risk_rng = self.rng
             self.regime_rng = self.rng
         self.horizon = horizon
+        # Track C campaign regime (2026-07-10): an exogenous calm/campaign
+        # schedule sampled ONCE from the seed (dedicated stream) so CRN-paired
+        # policies share identical campaign paths. State-dependent frequency is
+        # realized by exact thinning: risks named in frequency_multipliers are
+        # SAMPLED at their maximum (campaign) rate and each candidate event is
+        # ACCEPTED with probability m(state)/m_max — calm keeps the native rate,
+        # campaign multiplies it. Impact multipliers apply at event-fire time.
+        self.campaign_config: Optional[dict[str, Any]] = (
+            dict(campaign_config) if campaign_config else None
+        )
+        self.campaign_path: list[tuple[float, str]] = []
+        self.replenishment_route_aware = bool(replenishment_route_aware)
+        self._route_wait_pending: set[str] = set()
+        if self.campaign_config:
+            self._build_campaign_path()
         self.risks_enabled = risks_enabled
         self.risk_level = risk_level
         self.year_basis = year_basis
@@ -704,7 +721,42 @@ class MFSCSimulation:
                     normalized[key] *= float(NUM_RAW_MATERIALS)
         return normalized
 
-    def _top_up_inventory_buffer(self, key: str, target: float) -> Any:
+    # Track C route physics: a strategic top-up for a node can only arrive while
+    # the node's site and its inbound line-of-communication are operational.
+    # Op3 (WDC) receives from suppliers at its own site; Op5 (AL) is fed through
+    # LOC Op4; Op9 (SB) is fed through LOC Op8. R21 downs sites 3/5/9 directly;
+    # R22 downs LOCs 4/8.
+    _BUFFER_ROUTE_REQUIREMENTS: dict[str, tuple[int, ...]] = {
+        "op3_rm": (3,),
+        "op5_rm": (4, 5),
+        "op9_rations": (8, 9),
+    }
+
+    def _buffer_route_open(self, key: str) -> bool:
+        if not self.replenishment_route_aware:
+            return True
+        required = self._BUFFER_ROUTE_REQUIREMENTS.get(key, ())
+        return all(self.op_down_count.get(op, 0) == 0 for op in required)
+
+    def _route_aware_top_up_when_open(self, key: str):
+        """Hold a blocked top-up until the route reopens, then deliver.
+
+        Delivers to the LATEST target for `key` (order-up-to at arrival), so
+        stacked requests during a long outage collapse into one delivery.
+        """
+        try:
+            while not self._buffer_route_open(key):
+                if self.env.now >= self.horizon:
+                    return
+                yield self.env.timeout(24.0)
+            target = float(self.inventory_buffer_targets.get(key, 0.0))
+            event = self._deliver_buffer_top_up(key, target)
+            if event is not None:
+                yield event
+        finally:
+            self._route_wait_pending.discard(key)
+
+    def _deliver_buffer_top_up(self, key: str, target: float) -> Any:
         if key == "op3_rm":
             container = self.raw_material_wdc
         elif key == "op5_rm":
@@ -717,6 +769,14 @@ class MFSCSimulation:
         if shortfall > 0.0:
             return container.put(shortfall)
         return None
+
+    def _top_up_inventory_buffer(self, key: str, target: float) -> Any:
+        if self.replenishment_route_aware and not self._buffer_route_open(key):
+            if key not in self._route_wait_pending:
+                self._route_wait_pending.add(key)
+                self.env.process(self._route_aware_top_up_when_open(key))
+            return None
+        return self._deliver_buffer_top_up(key, target)
 
     def _target_for_raw_node(self, key: str, fallback: float) -> float:
         """Return an order-up-to target for raw-material operating stock."""
@@ -1212,6 +1272,11 @@ class MFSCSimulation:
             "pending_backorder_qty_delta": self.pending_backorder_qty
             - prev_pending_backorder_qty,
             "unattended_orders_total": self.total_unattended_orders,
+            "campaign_state": (
+                self.campaign_state_at(float(self.env.now))
+                if self.campaign_config
+                else None
+            ),
         }
         return obs, reward, done, info
 
@@ -2404,18 +2469,88 @@ class MFSCSimulation:
         return int(round(base_lo * psi)), int(round(base_hi * psi))
 
     def _risk_frequency_multiplier_for(self, risk_id: str) -> float:
-        return float(
+        base = float(
             self.risk_frequency_multipliers_by_id.get(
                 str(risk_id), self.risk_frequency_multiplier
             )
         )
+        # Campaign thinning: sample at the MAX (campaign) rate; the
+        # state-dependent acceptance gate in the risk loop restores the
+        # native rate during calm phases (exact thinning).
+        return base * self._campaign_freq_max(risk_id)
 
     def _risk_impact_multiplier_for(self, risk_id: str) -> float:
-        return float(
+        base = float(
             self.risk_impact_multipliers_by_id.get(
                 str(risk_id), self.risk_impact_multiplier
             )
         )
+        return base * self._campaign_impact_now(risk_id)
+
+    # ------------------------------------------------------------ Track C campaign
+    def _build_campaign_path(self) -> None:
+        """Sample the episode's calm/campaign schedule (seed-deterministic).
+
+        Dedicated SeedSequence stream: identical seeds give identical campaign
+        paths regardless of policy actions or other RNG consumption, and no
+        other stream's draw sequence is perturbed.
+        """
+        cfg = self.campaign_config or {}
+        week = 168.0
+        dwell_means = {
+            "calm": max(week, float(cfg.get("dwell_calm_weeks_mean", 8.0)) * week),
+            "campaign": max(week, float(cfg.get("dwell_campaign_weeks_mean", 5.0)) * week),
+        }
+        min_dwell = max(week, float(cfg.get("dwell_min_weeks", 2.0)) * week)
+        rng = np.random.default_rng(
+            np.random.SeedSequence([int(self.seed or 0), 0xC4A9])
+        )
+        state = str(cfg.get("initial_state", "calm"))
+        t = 0.0
+        path: list[tuple[float, str]] = []
+        while t < float(self.horizon):
+            path.append((t, state))
+            dwell = max(min_dwell, float(rng.exponential(dwell_means[state])))
+            t += dwell
+            state = "campaign" if state == "calm" else "calm"
+        self.campaign_path = path
+
+    def campaign_state_at(self, t: float) -> str:
+        if not self.campaign_path:
+            return "calm"
+        state = self.campaign_path[0][1]
+        for start, s in self.campaign_path:
+            if float(t) >= start:
+                state = s
+            else:
+                break
+        return state
+
+    def _campaign_freq_max(self, risk_id: str) -> float:
+        if not self.campaign_config:
+            return 1.0
+        table = self.campaign_config.get("frequency_multipliers") or {}
+        return max(1.0, float(table.get(str(risk_id), 1.0)))
+
+    def _campaign_impact_now(self, risk_id: str) -> float:
+        if not self.campaign_config:
+            return 1.0
+        if self.campaign_state_at(float(self.env.now)) != "campaign":
+            return 1.0
+        table = self.campaign_config.get("impact_multipliers") or {}
+        return float(table.get(str(risk_id), 1.0))
+
+    def _campaign_accept_event(self, risk_id: str) -> bool:
+        """Thinning acceptance: keep a max-rate candidate event with p=m(state)/m_max."""
+        m_max = self._campaign_freq_max(risk_id)
+        if m_max <= 1.0:
+            return True
+        if self.campaign_state_at(float(self.env.now)) == "campaign":
+            table = (self.campaign_config or {}).get("frequency_multipliers") or {}
+            m_now = float(table.get(str(risk_id), 1.0))
+        else:
+            m_now = 1.0
+        return bool(self.risk_rng.random() < (m_now / m_max))
 
     def _sample_uniform_risk_window(self, risk_id: str) -> tuple[float, float]:
         """Sample the event offset for a thesis uniform-occurrence window."""
@@ -2573,6 +2708,16 @@ class MFSCSimulation:
         while True:
             delay, window = self._sample_uniform_risk_window("R21")
             yield self.env.timeout(delay)
+            if not self._campaign_accept_event("R21"):
+                tail = self._tail_after_uniform_occurrence(delay, window)
+                if tail > 0:
+                    yield self.env.timeout(tail)
+                continue
+            if self.campaign_config:
+                # Recovery mean at FIRE time so campaign impact applies;
+                # without campaign_config keep the legacy pre-loop constant
+                # (bitwise identity for all existing lanes).
+                beta = self._get_risk_recovery_mean("R21")
             self.env.process(self._r21_event(affected, beta))
             tail = self._tail_after_uniform_occurrence(delay, window)
             if tail > 0:
@@ -2599,6 +2744,13 @@ class MFSCSimulation:
         while True:
             delay, window = self._sample_uniform_risk_window("R22")
             yield self.env.timeout(delay)
+            if not self._campaign_accept_event("R22"):
+                tail = self._tail_after_uniform_occurrence(delay, window)
+                if tail > 0:
+                    yield self.env.timeout(tail)
+                continue
+            if self.campaign_config:
+                beta = self._get_risk_recovery_mean("R22")
             if self.risk_occurrence_mode == "thesis_window":
                 self.env.process(self._risk_R22_event(beta, loc_ops))
                 yield self.env.timeout(self._tail_after_uniform_occurrence(delay, window))
@@ -2621,6 +2773,13 @@ class MFSCSimulation:
         while True:
             delay, window = self._sample_uniform_risk_window("R23")
             yield self.env.timeout(delay)
+            if not self._campaign_accept_event("R23"):
+                tail = self._tail_after_uniform_occurrence(delay, window)
+                if tail > 0:
+                    yield self.env.timeout(tail)
+                continue
+            if self.campaign_config:
+                beta = self._get_risk_recovery_mean("R23")
             if self.risk_occurrence_mode == "thesis_window":
                 self.env.process(self._risk_R23_event(beta))
                 yield self.env.timeout(self._tail_after_uniform_occurrence(delay, window))
@@ -2641,7 +2800,8 @@ class MFSCSimulation:
         while True:
             delay, window = self._sample_uniform_risk_window("R24")
             yield self.env.timeout(delay)
-            self._apply_risk_R24_event()
+            if self._campaign_accept_event("R24"):
+                self._apply_risk_R24_event()
             tail = self._tail_after_uniform_occurrence(delay, window)
             if tail > 0:
                 yield self.env.timeout(tail)

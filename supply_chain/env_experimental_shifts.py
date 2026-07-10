@@ -408,6 +408,8 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         inventory_replenishment_lead_time: float = 0.0,
         enabled_risks: set[str] | tuple[str, ...] | list[str] | None = None,
         risk_overrides: dict[str, str] | None = None,
+        campaign_config: dict[str, Any] | None = None,
+        replenishment_route_aware: bool = False,
         priming_enabled: bool = True,
         # --- Track B: MDP structural fixes ---
         clear_backlog_after_priming: bool = False,  # Fix 3A: clear inherited backlog
@@ -537,6 +539,8 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         )
         self.enabled_risks = set(enabled_risks) if enabled_risks is not None else None
         self.risk_overrides = dict(risk_overrides or {})
+        self.campaign_config = dict(campaign_config) if campaign_config else None
+        self.replenishment_route_aware = bool(replenishment_route_aware)
         self.priming_enabled = bool(priming_enabled)
         self.reward_mode = reward_mode
         self._canonical_reward_mode = canonical_reward_mode
@@ -2521,6 +2525,8 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             risk_overrides=self.risk_overrides,
             inventory_replenishment_period=inventory_replenishment_period,
             inventory_replenishment_lead_time=inventory_replenishment_lead_time,
+            campaign_config=self.campaign_config,
+            replenishment_route_aware=self.replenishment_route_aware,
         )
         self.sim._start_processes()
         self.sim.env.run(until=self.warmup_hours)
