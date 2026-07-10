@@ -1,5 +1,11 @@
 # Garrido fidelity mechanism sprint verdict (2026-07-10)
 
+> **Supersession note:** this document remains the evidence that exact endogenous
+> distribution reproduction failed. Its RL-blocking policy was superseded by
+> `docs/GARRIDO_OPERATIONAL_REFERENCE_DECISION_2026-07-10.md`, which authorizes a
+> separately named Garrido-informed operational reference without relabeling
+> this gate as passed.
+
 ## Executive verdict
 
 `garrido_reference_v2` is **not promoted**. The corrected workbook-view gate

@@ -1,0 +1,65 @@
+{
+ "contract_id": "garrido_operational_reference_v1",
+ "status": "authorized_for_new_research_training",
+ "new_rl_training_allowed": true,
+ "decision_date": "2026-07-10",
+ "decision_basis": "The original Simulink event-to-order assignment code is unavailable and is not identifiable uniquely from the workbooks. Exact endogenous reproduction is no longer a training gate.",
+ "claim_boundary": {
+  "allowed": "Garrido-informed operational DES with thesis-derived topology, risks, controls, mass conservation, and Excel ReT as the primary evaluation metric.",
+  "prohibited": "Numerical replication of Garrido Cf1-Cf20 distributions or recovery of the original Simulink risk-attribution semantics.",
+  "historical_gate": "outputs/audits/garrido_reference_v2_gate_r3/gate.json",
+  "historical_gate_status": "failed_and_retained_as_boundary_evidence"
+ },
+ "frozen_environment": {
+  "procurement_contract_mode": "causal_coupled",
+  "replenishment_route_aware": true,
+  "raw_material_flow_mode": "bom_total_units_order_up_to",
+  "raw_material_order_up_to_multiplier": 1.0,
+  "order_fulfillment_mode": "op9_linked",
+  "op9_dispatch_policy": "fixed_clock_daily",
+  "downstream_transport_capacity_mode": "parallel",
+  "assembly_flow_mode": "aggregate_line",
+  "periodic_release_mode": "start_to_start",
+  "op2_release_clock_mode": "inherit",
+  "risk_occurrence_mode": "thesis_window",
+  "risk_attribution_source": "des_events",
+  "r24_attribution_window_hours": 168.0,
+  "ret_recovery_period_mode": "elapsed",
+  "demand_start_after_warmup": true,
+  "stochastic_pt": false
+ },
+ "metric_contract": {
+  "primary": "Garrido Excel ReT / mean_ret_excel_formula",
+  "secondary": [
+   "time_to_recovery",
+   "service_loss_auc",
+   "fill_rate",
+   "backorders",
+   "lost_orders",
+   "resource_cost",
+   "CVaR"
+  ],
+  "attribution_note": "The 168 h R24 rule is a frozen operational convention selected for aggregate ReT fidelity; it is not claimed as recovered Simulink source logic."
+ },
+ "mandatory_before_confirmatory_claims": {
+  "retrain_agents": true,
+  "build_new_static_full_contract_frontier": true,
+  "use_common_random_numbers": true,
+  "evaluate_on_virgin_tapes": true,
+  "report_failed_garrido_distribution_gate": true,
+  "keep_legacy_track_b_checkpoints_on_legacy_physics": true
+ },
+ "fidelity_disclosure": {
+  "two_tier_contract": "supply_chain/data/garrido_proxy_v1_freeze_2026-07-10.json",
+  "decision_doc": "docs/GARRIDO_ATTRIBUTION_DECISION_2026-07-10.md",
+  "tier2_measured_validation_gaps": {
+   "ret_mae": 0.0355,
+   "risk_share": 0.0656,
+   "artifact": "outputs/audits/garrido_reference_v2_gate_r3/gate.json"
+  },
+  "language_rules": [
+   "NEVER 'thesis-faithful'/'garrido_reference_v2' for the endogenous env",
+   "attribution-sensitive claims: forensic excel_risk_tape lane or inline proxy disclosure"
+  ]
+ }
+}

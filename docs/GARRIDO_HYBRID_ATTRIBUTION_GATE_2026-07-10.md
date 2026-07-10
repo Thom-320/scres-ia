@@ -1,5 +1,9 @@
 # Hybrid attribution candidate gate (2026-07-10)
 
+> **Subsequent project decision:** the failed hybrid remains boundary evidence,
+> but exact Simulink attribution recovery is no longer an RL training gate. See
+> `docs/GARRIDO_OPERATIONAL_REFERENCE_DECISION_2026-07-10.md`.
+
 ## Executive decision
 
 **Do not promote the proposed window-plus-genealogy hybrid. Do not inspect even
@@ -58,7 +62,8 @@ in Cf1, Cf3, and Cf7. The clock hypothesis does not explain the cross-Cf failure
 1. Do not implement a hybrid ReT attribution rule from the current evidence.
 2. Do not run R12/R21 expansion merely to rescue the failed R13 candidate.
 3. Do not estimate a new R24 window or inspect even Cf cases.
-4. Keep RL blocked by the existing Garrido preflight.
+4. Historical conclusion at the time of this gate: keep RL blocked. This was
+   later superseded by the operational-reference decision cited above.
 5. The next information-bearing step is to recover Garrido's actual Simulink
    event-to-order assignment logic or obtain a domain validation of what each
    risk column records. Without that source semantics, further DES attribution

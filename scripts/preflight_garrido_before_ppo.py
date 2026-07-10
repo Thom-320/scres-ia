@@ -38,6 +38,9 @@ from supply_chain.config import (  # noqa: E402
 
 DEFAULT_OUTPUT_DIR = Path("outputs/preflight/garrido_before_ppo")
 REFERENCE_GATE_PATH = Path("outputs/audits/garrido_reference_v2_gate/gate.json")
+OPERATIONAL_REFERENCE_PATH = Path(
+    "supply_chain/data/garrido_operational_reference_v1_2026-07-10.json"
+)
 REWARD_CANDIDATES = (
     "ReT_garrido2024_raw",
     "ReT_garrido2024",
@@ -186,13 +189,31 @@ def _freeze_summary(args: argparse.Namespace) -> dict[str, Any]:
     if REFERENCE_GATE_PATH.exists():
         gate_payload = json.loads(REFERENCE_GATE_PATH.read_text(encoding="utf-8"))
     promoted = bool(gate_payload.get("promoted_to_garrido_reference_v2", False))
+    operational_payload: dict[str, Any] = {}
+    if OPERATIONAL_REFERENCE_PATH.exists():
+        operational_payload = json.loads(
+            OPERATIONAL_REFERENCE_PATH.read_text(encoding="utf-8")
+        )
+    training_authorized = bool(
+        operational_payload.get("new_rl_training_allowed", False)
+        and operational_payload.get("status")
+        == "authorized_for_new_research_training"
+    )
     return {
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
         "status": (
             "ready_for_pre_ppo_screens"
-            if promoted
-            else "blocked_reference_v2_not_promoted"
+            if training_authorized
+            else "blocked_no_operational_reference"
         ),
+        "training_authorized": training_authorized,
+        "operational_reference": {
+            "path": str(OPERATIONAL_REFERENCE_PATH),
+            "contract_id": operational_payload.get("contract_id"),
+            "status": operational_payload.get("status"),
+            "claim_boundary": operational_payload.get("claim_boundary", {}),
+            "frozen_environment": operational_payload.get("frozen_environment", {}),
+        },
         "reference_gate": {
             "path": str(REFERENCE_GATE_PATH),
             "present": bool(gate_payload),
@@ -201,8 +222,9 @@ def _freeze_summary(args: argparse.Namespace) -> dict[str, Any]:
         },
         "claim_boundary": {
             "faithful_lane": (
-                "No risk tuning; thesis-window risks, deterministic processing "
-                "times, Garrido fulfillment delay, capped backlog ledger."
+                "Garrido-informed operational reference; thesis-derived topology "
+                "and controls with a disclosed ReT attribution convention. Not a "
+                "numerical reproduction of the original Simulink distributions."
             ),
             "headroom_lane": (
                 "Risk/PT extensions are sensitivity/headroom experiments, not "
@@ -253,15 +275,15 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
 
     freeze = _freeze_summary(args)
     if (
-        not freeze["reference_gate"]["promoted"]
+        not freeze["training_authorized"]
         and not bool(args.skip_reward_screen)
         and not bool(args.allow_unvalidated_reference)
     ):
         raise RuntimeError(
-            "PPO preflight blocked: garrido_reference_v2 failed the held-out "
-            f"endogenous gate at {REFERENCE_GATE_PATH}. Use --skip-reward-screen "
-            "for audit-only work. --allow-unvalidated-reference is an explicit "
-            "research override and may not support a thesis-faithful claim."
+            "PPO preflight blocked: no authorized operational reference at "
+            f"{OPERATIONAL_REFERENCE_PATH}. Use --skip-reward-screen for "
+            "audit-only work. --allow-unvalidated-reference remains an explicit "
+            "research override."
         )
     (root / "garrido_des_freeze_summary.json").write_text(
         json.dumps(freeze, indent=2),

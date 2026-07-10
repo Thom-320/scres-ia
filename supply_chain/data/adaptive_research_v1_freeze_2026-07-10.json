@@ -1,9 +1,9 @@
 {
   "contract_id": "adaptive_research_v1",
-  "status": "frozen_extension_training_blocked",
-  "new_rl_training_allowed": false,
+  "status": "authorized_rebuild_required",
+  "new_rl_training_allowed": true,
   "frozen_checkpoint_evaluation_allowed": true,
-  "reason": "Keep the research extension separate while garrido_reference_v2 remains unpromoted.",
+  "reason": "Authorized under garrido_operational_reference_v1; exact Simulink attribution recovery is no longer a training gate.",
   "lineage": {
     "legacy_factory": "supply_chain.external_env_interface.make_track_b_env",
     "legacy_action_contract": "track_b_v1",
@@ -12,11 +12,12 @@
     "legacy_procurement_contract_mode": "legacy_independent",
     "warning": "Existing PPO checkpoints were trained before the causal Op1-Op2 repair and must be evaluated only with legacy_independent physics."
   },
-  "future_rebuild_after_reference_gate": {
+  "required_rebuild_before_confirmatory_training": {
+    "environment_contract": "supply_chain/data/garrido_operational_reference_v1_2026-07-10.json",
     "procurement_contract_mode": "causal_coupled",
     "replenishment_route_aware": true,
-    "material_multiplier": "inherit_promoted_garrido_reference_v2",
-    "fulfillment_mechanism": "inherit_promoted_garrido_reference_v2",
+    "material_multiplier": 1.0,
+    "fulfillment_mechanism": "op9_linked_fixed_clock_daily",
     "requires_retraining": true,
     "requires_new_static_frontier": true
   },
