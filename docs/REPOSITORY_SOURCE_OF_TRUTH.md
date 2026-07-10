@@ -1,133 +1,99 @@
 # Repository Source of Truth
 
-This note freezes the current paper-facing repository story. Treat it as the primary reference for README examples, manuscript edits, benchmark commands, and reviewer-facing explanations unless a later note explicitly supersedes it.
+This note freezes the current paper-facing repository story. Treat it as the
+primary reference for README examples, manuscript edits, benchmark commands,
+and reviewer-facing explanations unless a later note explicitly supersedes it.
 
-## Canonical scientific story
+> **Superseded lane notice (2026-07-10).** Everything below replaces the
+> pre-Track-B version of this document, which described the
+> `shift_control`/`ReT_seq_v1`/`v1` lane as the frozen paper backbone. That
+> lane and its 500k bundles under `outputs/paper_benchmarks/` are HISTORICAL
+> context only. The claim-by-claim authority is
+> `docs/CLAIMS_REGISTRY_Q1_DEFENSE_2026-07-01.md`.
 
-The repository supports three distinct roles that must not be conflated:
+## Canonical scientific story (Paper 1)
 
-- `thesis_1to1`: strict Garrido-Rios reproduction lane, no RL wrapper, no
-  reward shaping, no priming, and no action multipliers.
-- `ReT_seq_v1`: primary training reward for the paper-facing benchmark family.
-- `control_v1` / `control_v1_pbrs`: historical operational comparators retained for legacy comparison.
-- `ReT_thesis` / `ret_thesis_corrected_step`: thesis-aligned resilience metrics for reporting and audit.
-- `rt_v0`: historical baseline retained for methodological comparison.
+The manuscript in `docs/manuscript_current/submission/elsevier/` makes one
+central claim:
 
-The paper contribution is therefore:
+> In a thesis-grounded military food supply-chain DES, a learned policy (PPO)
+> improves Garrido/Excel resilience over dense static frontiers when — and,
+> in the tested contracts, only when — the action contract exposes the
+> downstream dispatch bottleneck (Op10/Op12). The measured gain is adaptive
+> recovery, not anticipatory prevention.
 
-> A rigorous DES+RL benchmark for resilient control in a military food supply chain, with explicit treatment of reward alignment, partial observability, and stress-regime-dependent adaptive gains.
+The repository roles that must not be conflated:
 
-Strict thesis reproduction now lives in `docs/thesis_faithful/CONTRACT.md` and
-is executed through `scripts/run_thesis_faithful.py`. That lane is a validation
-gate for the DES, not a training benchmark.
+- `thesis_faithful` lane (`docs/thesis_faithful/CONTRACT.md`,
+  `scripts/run_thesis_faithful.py`): strict Garrido-Rios reproduction, a
+  validation gate for the DES, not a training benchmark.
+- **Track A** (`track_a_*` contracts): the thesis-grounded buffer/shift
+  decision family. Boundary result: no tested learner converts the measured
+  oracle headroom (claims registry C8).
+- **Track B** (`track_b_v1`, 8D): the canonical positive lane — upstream
+  qty/ROP + Op5 + shift + Op10/Op12 dispatch. Primary result C1/C21.
+- **Track B-P** (`track_bp_v1`, 11D; `supply_chain/track_bp_env.py`): the
+  Paper-2 extension lane (strategic reserve postures under lead-time
+  commitment). Outside Paper 1. See C28/C29.
 
-The paper-serious trainable bridge is `thesis_aligned_training`, built through
-`make_thesis_aligned_training_env()` and checked with
-`scripts/run_thesis_aligned_static_gate.py`. It inherits the thesis validation
-knobs but remains a Gym/RL extension.
+## Frozen benchmark backbone (Track B canonical)
 
-## Frozen benchmark backbone
+- Environment factory: `external_env_interface.make_track_b_env()`
+- Action contract: `track_b_v1` (8D)
+- Training reward: `control_v1`
+- Observation: `v7` (note: 48-dim at the time seeds 1-5 were trained; 52-dim
+  for seeds 6-10 — four tail fields appended between runs; disclosed and
+  handled by exact slicing in held-out evaluation)
+- Risk level: `adaptive_benchmark_v2`; horizon h104 (weekly steps, 168 h)
+- Year basis: `thesis`; stochastic PT: on; learning rate 3e-4; 60k timesteps
+- Primary metric: `ret_excel` (Garrido/Excel ReT). Never `ret_thesis`.
 
-Unless a new benchmark family is intentionally introduced, the current paper backbone is:
+## Primary artifact bundles (current)
 
-- Environment: `shift_control`
-- Training reward: `ReT_seq_v1`
-- Frozen `ret_seq_kappa`: `0.20`
-- Historical comparator: `control_v1`
-- Reporting resilience metric: `ReT_thesis` / `ret_thesis_corrected_step`
-- Step size: `168` hours
-- Year basis: `thesis`
-- Benchmark observation version: `v1`
-- Main scenarios:
-  - `increased + stochastic_pt=True`
-  - `severe + stochastic_pt=True`
-- Official thesis-validation basis: `year_basis="thesis"`
-- Gregorian annualization may still appear in diagnostics, but thesis-facing
-  comparisons should use the thesis basis unless explicitly stated otherwise.
-- Frozen paper-facing weights and resilience settings:
-  - `w_bo = 4.0`
-  - `w_cost = 0.02`
-  - `w_disr = 0.0`
-  - `ret_seq_kappa = 0.20`
-
-Interpretation rule:
-
-- `v1` remains the frozen benchmark contract for comparability with the existing 500k artifact bundles.
-- `v2` is the preferred next-step observation contract for new ablations (`frame_stack`, `RecurrentPPO`, richer temporal context).
-- Cross-mode reward totals remain non-comparable. Use `fill_rate`, `backorder_rate`, and `order_level_ret_mean` for `control_v1` vs `ReT_seq_v1` comparisons.
-
-## Primary artifact bundles
-
-The main auditable benchmark artifacts are:
-
-- `outputs/paper_benchmarks/paper_ret_seq_k020_500k`
-- `outputs/paper_benchmarks/paper_ret_seq_k010_500k`
-- `outputs/paper_benchmarks/paper_control_v1_500k`
-- `outputs/benchmarks/final_ret_seq_v1_500k`
-
-Historical `control_reward_500k_*_stopt` bundles and the old seed-inference note remain useful only as legacy context. They were generated before the March 2026 DES audit/alignment fixes and must not be used as the primary evidence for the current repository state.
-
-Current headline reading:
-
-- The paper-trio comparison currently selects `ReT_seq_v1` with `κ=0.20` as the pragmatic leader against `static_s2` on cross-mode comparable metrics.
-- `paper_control_v1_500k` remains the valid operational comparator for the current repo, but it is not the leading lane.
-- `κ=0.10` remains a conservative ablation, not the repo default.
-- `κ=0.30` is not a candidate default because it trends toward collapse-prone shift behavior.
-- `final_ret_seq_v1_500k` is an auditable post-audit comparator, but it uses `year_basis="gregorian"` and should not be conflated with the thesis-basis paper bundle family.
-- These results remain benchmark evidence, not a claim of universal superiority; use cautious inferential language.
-
-## Public defaults
-
-Public entry points should align with the benchmark story:
-
-- `train_agent.py` default shift-control reward: `ReT_seq_v1`
-- `train_agent.py` default `ret_seq_kappa`: `0.20`
-- `train_agent.py` default observation version: `v1`
-- `external_env_interface.make_shift_control_env()` default reward: `ReT_seq_v1`
-- `external_env_interface.make_shift_control_env()` default observation version: `v1`
-
-## ReT-Seq mapping
-
-The current primary reward contract should be described as a sequential extension of Garrido-Rios (2017) Eq. 5.5:
-
-- `SC_t` maps to `Re(FR_t)` from Eq. 5.4 and captures step-level service continuity.
-- `BC_t` is the sequential recovery proxy tied to the recovery idea in Eq. 5.2 through pending backorders relative to cumulative demand.
-- `AE_t` is the explicit cost-efficiency extension motivated by thesis Section 8.6.2, which calls for an optimum SCRes level that includes cost.
-- Geometric aggregation is intentional because it reduces compensability across service, recovery, and efficiency dimensions.
+- Headline 10-seed paired dense-CRN stats:
+  `docs/track_b_q1_stats_2026-07-02_final_10seed/`
+- **Crossed held-out evaluation (Blocker 1, 2026-07-09):**
+  `outputs/experiments/track_b_crossed_eval_2026-07-09/` — 10 checkpoints x
+  60 fresh tapes (eval seeds 200001+), Excel ReT delta `+0.000486`, two-way
+  CI95 `[+0.000456, +0.000517]`, 10/10 checkpoints and 60/60 tapes positive.
+- Corrected decision-contract factorial (Blocker 2, mechanism gate):
+  `outputs/experiments/track_b_factorial_{joint,upstream_shift,dispatch_only}_2026-07-09/`
+- Frozen checkpoints: see `docs/REPRODUCIBILITY.md`.
+- E3 cross-regime + dense-frontier: `docs/track_b_q1_stats_2026-07-02_final/`
+  and `outputs/experiments/track_b_e3_dense_frontier_2026-07-02/` (use the
+  conservative dense-best values; see C11 provenance note).
 
 ## What is not the main paper lane
 
-The following are valuable but secondary:
+Valuable but secondary or retired:
 
-- `ReT_thesis` as the primary training reward
-- `control_v1` as the primary training reward
-- PBRS as the main claim (phase-2 extension only)
-- DKANA / KAN / GNN as the main contribution
-- `severe_training` as the main reported scenario
+- `shift_control`/`ReT_seq_v1` 500k lane (historical; pre-Track-B)
+- `ReT_thesis` as a training reward or reported metric
+- KAN / DKANA / GNN as a contribution (sidecars only)
+- SAC/TD3 beyond the screen-scale scope check
+- Prevention/anticipation claims (retracted; boundary result only — C25/C26)
+- H4 retained/reset as a central theory (small effect; future work)
+- Track B-P reserve postures (Paper 2, gated; C28/C29)
 
 ## Document hierarchy
 
-Use the following hierarchy when documents disagree:
+When documents disagree:
 
-1. `docs/REPOSITORY_SOURCE_OF_TRUTH.md`
-2. `docs/manuscript_notes/control_reward_500k_source_of_truth.md`
-3. `docs/manuscript_notes/paper_strategy_decision_memo.md`
-4. `docs/manuscript_notes/paper_writeup_backlog.md`
-5. Historical reports and meeting notes
+1. `docs/CLAIMS_REGISTRY_Q1_DEFENSE_2026-07-01.md` (claim-by-claim authority)
+2. This file
+3. `docs/REPRODUCIBILITY.md`
+4. Dated verdict documents (`docs/*_VERDICT_*.md`, autopsies, audits)
+5. Historical reports, manuscript notes, and meeting notes
 
 ## Required language discipline
 
-Preferred phrases:
+Preferred: "thesis-grounded reconstruction with forensic workbook replay and
+throughput checks"; "adaptive recovery"; "decision-contract/action-space
+alignment (pattern evidence pending the corrected factorial)"; "boundary
+result"; "no detected difference at current precision".
 
-- `POMDP-style control`
-- `reporting-only resilience metric`
-- `stress-regime-dependent gains`
-- `competitive under moderate stress`
-- `stronger under severe stress`
-
-Avoid:
-
-- `PPO solves the problem`
-- `statistically significant`
-- `novel architecture contribution`
-- `ReT_thesis is the main training reward`
+Avoid: "validated digital twin"; "empirically validated"; the invented
+"±15% validation threshold"; "prevention"/"anticipation"; "organizational
+learning"/"path dependency"; "worst-case" for p99 statistics; "equivalent"
+for a CI that spans zero; "regardless of algorithm choice"; "full 8D static
+frontier" for the downstream 147-cell enumeration; "first DES–RL for SCRES".

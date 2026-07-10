@@ -1,6 +1,14 @@
 # Reproducibility Guide
 
-This guide defines the shortest path to reproduce the current paper-facing benchmark story.
+This guide defines the shortest path to reproduce the current paper-facing
+benchmark story: the **Track B** decision-contract result. The claim-by-claim
+source of truth is `docs/CLAIMS_REGISTRY_Q1_DEFENSE_2026-07-01.md`; every
+headline number below traces to a dated artifact directory.
+
+> Historical note (2026-07-10): earlier versions of this guide described the
+> pre-Track-B `shift_control`/`ReT_seq_v1` lane as canonical. That lane is
+> retired as primary evidence; its bundles under `outputs/paper_benchmarks/`
+> are preserved for provenance only.
 
 ## Environment
 
@@ -22,8 +30,6 @@ If you only want the tested pinned stack, install `requirements-pinned.txt` dire
 
 ## Quick verification
 
-Run the baseline tests:
-
 ```bash
 pytest tests/
 ruff check .
@@ -37,71 +43,75 @@ python run_static.py --sto-only --year-basis thesis --seed 42
 python validation_report.py --official-basis thesis
 ```
 
-Expected outputs:
+Expected outputs: a validation CSV under `outputs/validation/`, with
+deterministic throughput near the thesis reference (reconstruction gap
+$-4.43\%$ on the thesis basis; the thesis's own historical calibration
+dispersion spans $-21.6\%$ to $+14.1\%$ — there is no formal $\pm 15\%$
+acceptance threshold in the source).
 
-- validation CSV under `outputs/validation/`
-- deterministic throughput near the thesis reference with acceptable error band
+## Canonical training command (Track B, the manuscript spine)
 
-## Canonical training command
-
-The public training default now matches the paper-facing benchmark family:
-
-```bash
-python train_agent.py   --env-variant shift_control   --reward-mode ReT_seq_v1   --ret-seq-kappa 0.20   --observation-version v1   --risk-level increased   --stochastic-pt   --w-bo 4.0 --w-cost 0.02 --w-disr 0.0   --timesteps 500000   --year-basis thesis
-```
-
-This command reproduces the current primary benchmark configuration, but not necessarily the exact archived model weights unless the same seeds and artifact collection pipeline are used.
-
-## Auditable artifact bundles
-
-Reviewer-safe artifact references live under:
-
-- `outputs/paper_benchmarks/paper_ret_seq_k020_500k`
-- `outputs/paper_benchmarks/paper_ret_seq_k010_500k`
-- `outputs/paper_benchmarks/paper_control_v1_500k`
-- `outputs/benchmarks/final_ret_seq_v1_500k`
-
-Use these instead of the historical `*_stopt` bundles.
-
-The old `control_reward_500k_*_stopt` bundles and their seed-inference note predate the March 2026 DES audit/alignment fixes and should not be cited as the primary evidence for the current repository state.
-
-## Full publication benchmark path
-
-To reproduce the multi-phase publication run:
+The manuscript's primary result trains PPO on the `track_b_v1` 8D contract
+under the canonical protocol (`control_v1` reward, observation `v7`,
+`adaptive_benchmark_v2` risk level, h104, thesis year basis, stochastic PT,
+lr 3e-4):
 
 ```bash
-bash scripts/run_publication_experiments.sh --preflight
-bash scripts/run_publication_experiments.sh
+python scripts/run_track_b_smoke.py \
+  --reward-mode control_v1 \
+  --observation-version v7 \
+  --risk-level adaptive_benchmark_v2 \
+  --max-steps 104 \
+  --train-timesteps 60000 \
+  --seeds 1 2 3 4 5 \
+  --eval-episodes 12
 ```
 
-The script covers:
+Seeds 6-10 were trained identically in the seed-expansion run. Frozen
+checkpoints:
 
-1. heuristic tuning
-2. PPO benchmark lane
-3. SAC comparator
-4. PPO + frame stacking
-5. RecurrentPPO
-6. publication summary analysis
+- seeds 1-5: `outputs/experiments/track_b_gain_2026-06-30/top_tier_confirm_v3_output/track_b_top_tier_confirm_5seed_60k_h104/models/`
+- seeds 6-10: `outputs/experiments/track_b_seed_expansion_2026-07-02/track_b_seed_expansion_6_10_claude/models/`
+
+Observation-provenance note: seeds 1-5 were trained on the 48-dim v7 (before
+the four tail fields were appended); seeds 6-10 on the 52-dim v7. Field order
+for dims 0-47 is unchanged; held-out evaluation slices the observation for
+the older checkpoints (`scripts/run_track_b_crossed_eval.py`).
+
+## Canonical evaluation and headline artifacts
+
+- 10-seed paired dense-CRN stats bundle: `docs/track_b_q1_stats_2026-07-02_final_10seed/`
+  (PPO `0.005898` vs static `0.005460` Excel ReT on the original 21-tape plan).
+- **Fully crossed held-out evaluation** (all 10 checkpoints and the
+  prespecified static comparator on 60 fresh tapes, eval seeds
+  200001-200060, dependence-aware two-way inference):
+  `outputs/experiments/track_b_crossed_eval_2026-07-09/` — delta `+0.000486`,
+  two-way CI95 `[+0.000456, +0.000517]`, 10/10 checkpoints and 60/60 tapes
+  positive.
+- Dense 147-cell static frontier evaluation: `scripts/run_track_b_dense_crn_static.py`
+  (see the claims registry entry C1 for the exact command).
+- Corrected decision-contract factorial (mechanism gate):
+  `scripts/run_track_b_contract_factorial.py` → `outputs/experiments/track_b_factorial_*_2026-07-09/`.
 
 ## Statistical unit
 
-Use the seed as the primary unit of inference.
+Primary inference treats the training seed as the unit, with tape dependence
+handled explicitly: the crossed evaluation reports a two-way (checkpoint x
+evaluation tape) cluster bootstrap alongside the per-checkpoint t-interval.
+Report at minimum: mean, CI95 under both schemes, per-seed means, and
+leave-one-out sensitivity over checkpoints and tapes.
 
-Report at minimum:
+## Primary metric
 
-- mean
-- standard deviation
-- CI95
-- paired seed-mean difference against the best static baseline
+`ret_excel` (Garrido/Excel ReT, workbook-faithful; audited row-by-row against
+the original workbooks with zero formula mismatches). Never substitute
+`ret_thesis`. Secondary panel: `ret_excel_cvar05`, fill/flow-fill, backlog,
+service-loss AUC, CTj/RPj/DPj tails, shift-utilization cost index.
 
 ## Scope of automated verification
 
-The repository currently guarantees through tests:
-
-- environment contracts
-- core benchmark script functionality
-- control reward diagnostics
-- export utilities
-- evaluation helpers
-
-It does not guarantee by default that full 500k benchmark runs finish in CI; those are offline experiments.
+Tests guarantee environment contracts, core benchmark script functionality,
+control reward diagnostics, export utilities, evaluation helpers, and a
+manuscript guard (`tests/test_manuscript_retired_claims.py`) that fails if
+retired or unsafe claim language reappears. Full 60k training runs are
+offline experiments and are not executed in CI.

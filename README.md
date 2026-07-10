@@ -101,20 +101,24 @@ Quick smoke run with the paper-facing defaults:
 python train_agent.py --timesteps 20000 --n-envs 1 --seed 42 --year-basis thesis
 ```
 
-Frozen benchmark backbone used by the current manuscript lane:
+Canonical Track B training (the current manuscript spine — PPO on the
+`track_b_v1` 8D contract; artifacts and checkpoints in
+`docs/REPRODUCIBILITY.md`):
 
 ```bash
-python train_agent.py \
-  --timesteps 500000 \
-  --n-envs 4 \
-  --env-variant shift_control \
-  --reward-mode ReT_seq_v1 \
-  --ret-seq-kappa 0.20 \
-  --observation-version v1 \
-  --risk-level increased \
-  --stochastic-pt \
-  --w-bo 4.0 --w-cost 0.02 --w-disr 0.0
+python scripts/run_track_b_smoke.py \
+  --reward-mode control_v1 \
+  --observation-version v7 \
+  --risk-level adaptive_benchmark_v2 \
+  --max-steps 104 \
+  --train-timesteps 60000 \
+  --seeds 1 2 3 4 5 \
+  --eval-episodes 12
 ```
+
+Historical note: the earlier `shift_control`/`ReT_seq_v1` 500k lane
+(`train_agent.py --env-variant shift_control ...`) predates the Track B era
+and is retained for provenance only --- it is NOT the manuscript lane.
 
 Artifacts are saved under `outputs/`: models, normalization statistics,
 training curves, CSV files, and JSON summaries.

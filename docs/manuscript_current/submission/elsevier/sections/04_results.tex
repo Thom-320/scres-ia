@@ -187,11 +187,27 @@ Shift-util.\ cost idx & 0.665 & 0.667 & $-0.002$ [$-0.021$, 0.017] (n.s.) \\
 PPO improves Garrido/Excel ReT by 0.000438 over the best dense
 downstream-dispatch static comparator; the order-level ReT gain is
 0.000426. Because the 120 CRN pairs reuse a finite set of evaluation
-scenarios across seeds, we treat the training seed as the inferential
+scenarios across seeds --- the per-seed evaluation plans overlap, so the
+120 rows contain only 21 unique evaluation tapes --- we treat the training
+seed as the inferential
 unit: all ten per-seed mean deltas are individually positive (range
 $+0.000408$ to $+0.000495$), each seed has 12/12 positive episode pairs,
 and the seed-clustered bootstrap CI for the Excel ReT delta excludes zero.
 \footnote{The 10-seed evidence bundle and seed-expansion verdict document in the project repository (Section~3.4).}
+
+To remove the residual tape-dependence concern entirely, we additionally
+ran a fully crossed held-out evaluation: all ten frozen checkpoints and
+the prespecified static comparator were evaluated on the \emph{same} 60
+fresh evaluation tapes, none of which appears in any training or prior
+evaluation run. On this crossed design the advantage is, if anything,
+slightly larger: Excel ReT $+0.000486$ with a two-way
+(checkpoint~$\times$~tape) cluster-bootstrap CI95 of
+$[+0.000456, +0.000517]$, all ten checkpoint means positive (range
+$+0.000463$ to $+0.000509$), the delta positive on all 60 of 60 tapes,
+and leave-one-out means never below $+0.000479$ when dropping any single
+checkpoint or tape. The tail effect is proportionally larger still
+(Excel ReT CVaR05 $+0.001637$, CI95 $[+0.001530, +0.001743]$). No single
+checkpoint or evaluation scenario drives the result.
 To interpret the magnitude: in this stress regime the recovery branch of
 Eq.~\eqref{eq:ret} is empirically capped at $0.5/72 \approx 0.006944$
 per order (Section~3.3),
