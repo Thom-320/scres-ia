@@ -133,6 +133,8 @@ class OrderRecord:
     # resource queues, and time physically blocked by an affected operation.
     op9_release_time: Optional[float] = None
     causal_wait_hours: dict[str, float] = field(default_factory=dict)
+    causal_block_intervals: list[dict[str, Any]] = field(default_factory=list)
+    causal_r24_event_ids: set[str] = field(default_factory=set)
 
 
 @dataclass
@@ -444,6 +446,9 @@ class MFSCSimulation:
         # Causal-exposure attribution state (lazy; only populated when used).
         self._queue_len_history: list[tuple[float, int]] = []
         self._exposure_end_cache: dict[int, float] = {}
+        self._r24_causal_episodes: dict[str, dict[str, Any]] = {}
+        self._r24_causal_sequence = 0
+        self._upstream_scarcity_debts: list[RiskEvent] = []
         self.ret_recovery_period_mode = ret_recovery_period_mode
         self.backorder_overflow_mode = backorder_overflow_mode
         if self.risk_attribution_source == "excel_risk_tape":
@@ -786,7 +791,10 @@ class MFSCSimulation:
         self._ret_quantity_risk_refs[risk_id] = self._ret_quantity_risk_refs[risk_id][-25:]
 
     def _consume_ret_quantity_risk_for_order(
-        self, order: OrderRecord
+        self,
+        order: OrderRecord,
+        *,
+        risk_ids: tuple[str, ...] = ("R14", "R24"),
     ) -> tuple[float, float | None]:
         """Apply queued quantity-risk attribution to an order.
 
@@ -797,7 +805,7 @@ class MFSCSimulation:
         """
         contribution = 0.0
         earliest: float | None = None
-        for risk_id in ("R14", "R24"):
+        for risk_id in risk_ids:
             available = float(self._ret_quantity_risk_units.get(risk_id, 0.0))
             if available <= 0.0:
                 continue
@@ -1541,6 +1549,129 @@ class MFSCSimulation:
             history[-1] = (now, n)
         else:
             history.append((now, n))
+        # An exposure cached while open must be recomputed after the queue
+        # changes; otherwise its first observed ``env.now`` becomes a false
+        # permanent closing time.
+        self._exposure_end_cache.clear()
+
+    def _record_causal_block(
+        self,
+        order: OrderRecord,
+        *,
+        op_id: int,
+        start_time: float,
+        end_time: float,
+        reason: str,
+        event: RiskEvent | None = None,
+    ) -> None:
+        """Record an order-specific physical blocking interval."""
+        start = float(start_time)
+        end = float(end_time)
+        if end <= start:
+            return
+        block = {
+            "op_id": int(op_id),
+            "start_time": start,
+            "end_time": end,
+            "reason": str(reason),
+        }
+        if event is not None:
+            block.update(
+                {
+                    "risk_id": str(event.risk_id),
+                    "risk_event_start": float(event.start_time),
+                    "risk_event_end": float(event.end_time),
+                    "propagation_source": "upstream_scarcity_debt",
+                }
+            )
+        if order.causal_block_intervals and order.causal_block_intervals[-1] == block:
+            return
+        order.causal_block_intervals.append(block)
+
+    def _record_active_upstream_stockout_causes(
+        self, order: OrderRecord, *, duration: float
+    ) -> None:
+        """Record only operations physically down while the head lacks stock."""
+        start = float(self.env.now)
+        end = start + max(0.0, float(duration))
+        for op_id in range(1, 10):
+            if self._is_down(op_id):
+                self._record_causal_block(
+                    order,
+                    op_id=op_id,
+                    start_time=start,
+                    end_time=end,
+                    reason="risk_induced_stockout",
+                )
+        for event in self._upstream_scarcity_debts:
+            upstream_ops = [
+                int(op_id) for op_id in event.affected_ops if int(op_id) <= 8
+            ]
+            if not upstream_ops:
+                continue
+            self._record_causal_block(
+                order,
+                op_id=upstream_ops[0],
+                start_time=start,
+                end_time=end,
+                reason="risk_induced_stockout",
+                event=event,
+            )
+
+    def _register_upstream_scarcity_debt(self, event: RiskEvent) -> None:
+        if self.risk_attribution_source != "causal_exposure":
+            return
+        if not any(int(op_id) <= 8 for op_id in event.affected_ops):
+            return
+        self._upstream_scarcity_debts.append(event)
+
+    def _match_block_to_events(
+        self, block: dict[str, Any]
+    ) -> list[tuple[RiskEvent, float]]:
+        """Match a physical block only to events affecting that operation."""
+        op_id = int(block["op_id"])
+        block_start = float(block["start_time"])
+        block_end = float(block["end_time"])
+        matches: list[tuple[RiskEvent, float]] = []
+        explicit_risk = block.get("risk_id")
+        explicit_start = block.get("risk_event_start")
+        for event in self.risk_events:
+            if explicit_risk is not None:
+                if str(event.risk_id) != str(explicit_risk) or not math.isclose(
+                    float(event.start_time), float(explicit_start), abs_tol=1e-9
+                ):
+                    continue
+                matches.append((event, block_end - block_start))
+                continue
+            if op_id not in {int(value) for value in event.affected_ops}:
+                continue
+            event_start = float(event.start_time)
+            event_end = max(event_start, float(event.end_time))
+            overlap_start = max(block_start, event_start)
+            overlap_end = min(block_end, event_end)
+            if overlap_end > overlap_start:
+                matches.append((event, overlap_end - overlap_start))
+        return matches
+
+    def _refresh_r24_episode_closure(self) -> None:
+        if self.risk_attribution_source != "causal_exposure":
+            return
+        unresolved = [
+            order
+            for order in self.orders
+            if order.OATj is None and not bool(order.lost)
+        ] + list(self.pending_backorders)
+        for episode_id, episode in self._r24_causal_episodes.items():
+            if episode.get("closed_at") is not None:
+                continue
+            if episode.get("assigned_order_j") is None:
+                continue
+            if any(
+                episode_id in order.causal_r24_event_ids
+                for order in unresolved
+            ):
+                continue
+            episode["closed_at"] = float(self.env.now)
 
     def _queue_len_at(self, t: float) -> int:
         """Backlog length just before time t (0 before the first sample)."""
@@ -1583,11 +1714,14 @@ class MFSCSimulation:
             else:
                 hi = mid
         exposure_end = float(self.env.now)  # still open if never relieved
+        resolved = False
         for i in range(lo, len(history)):
             if history[i][1] <= baseline:
                 exposure_end = max(end, history[i][0])
+                resolved = True
                 break
-        self._exposure_end_cache[key] = exposure_end
+        if resolved:
+            self._exposure_end_cache[key] = exposure_end
         return exposure_end
 
     def _remove_pending_backorder(self, order: OrderRecord) -> None:
@@ -1602,6 +1736,7 @@ class MFSCSimulation:
             self.pending_backorders.remove(order)
         self._refresh_pending_backorder_qty()
         self._record_queue_len()
+        self._refresh_r24_episode_closure()
 
     def _finalize_pending_backorder(self, order: OrderRecord) -> None:
         """Mark a delayed order as fulfilled at the current simulation time."""
@@ -1656,6 +1791,12 @@ class MFSCSimulation:
         """
         self.pending_backorders.append(order)
         self.pending_backorders.sort(key=self._backorder_priority_key)
+        if self.risk_attribution_source == "causal_exposure":
+            prior_episode_ids: set[str] = set()
+            for queued_order in self.pending_backorders:
+                if prior_episode_ids:
+                    queued_order.causal_r24_event_ids.update(prior_episode_ids)
+                prior_episode_ids.update(queued_order.causal_r24_event_ids)
         self._record_queue_len()
         while len(self.pending_backorders) > BACKORDER_QUEUE_CAP:
             if self.backorder_overflow_mode == "oldest":
@@ -1680,6 +1821,7 @@ class MFSCSimulation:
             if not dropped.metrics_excluded:
                 self.total_unattended_orders += 1
         self._refresh_pending_backorder_qty()
+        self._refresh_r24_episode_closure()
 
     def _delayed_backorder_check(self, order: OrderRecord):
         """Wait LTj hours, then classify as backorder if still unfulfilled.
@@ -2636,12 +2778,19 @@ class MFSCSimulation:
         while True:
             batch_size = self.params["batch_size"]
             yield self.rations_al.get(batch_size)
+            departed_at = float(self.env.now)
             self._in_transit += batch_size
             while self._is_down(8):
                 yield self.env.timeout(1)
             yield self.env.timeout(self._pt("op8_pt"))
             self._in_transit -= batch_size
             yield self.rations_sb.put(batch_size)
+            if self.risk_attribution_source == "causal_exposure":
+                self._upstream_scarcity_debts = [
+                    event
+                    for event in self._upstream_scarcity_debts
+                    if float(event.end_time) > departed_at
+                ]
             if self.warmup_trigger == "op9_arrival":
                 self._mark_warmup_complete()
             if (
@@ -2747,7 +2896,9 @@ class MFSCSimulation:
                 first += 24.0
             yield self.env.timeout(first - self.env.now)
             while True:
-                yield from self._dispatch_one_op9_order_if_ready()
+                yield from self._dispatch_one_op9_order_if_ready(
+                    next_check_hours=24.0
+                )
                 yield self.env.timeout(24.0)
 
         # Thesis-grounded alternative: a daily freight *headway*, without an
@@ -2755,20 +2906,34 @@ class MFSCSimulation:
         # soon as stock and Op9 are available; the next release cannot occur
         # for 24 h.  Hourly polling is only a liveness mechanism while blocked.
         while True:
-            dispatched = yield from self._dispatch_one_op9_order_if_ready()
+            dispatched = yield from self._dispatch_one_op9_order_if_ready(
+                next_check_hours=1.0
+            )
             yield self.env.timeout(24.0 if dispatched else 1.0)
 
-    def _dispatch_one_op9_order_if_ready(self):
+    def _dispatch_one_op9_order_if_ready(self, *, next_check_hours: float = 24.0):
         """Release at most the SPT-head order; return whether it departed."""
-        if self._is_down(9) or not self.pending_backorders:
+        if not self.pending_backorders:
             return False
         head = self.pending_backorders[0]
+        if self._is_down(9):
+            self._record_causal_block(
+                head,
+                op_id=9,
+                start_time=float(self.env.now),
+                end_time=float(self.env.now) + float(next_check_hours),
+                reason="operation_down",
+            )
+            return False
         qty = float(head.remaining_qty)
         if qty <= 1e-9:
             self._finalize_pending_backorder(head)
             self._remove_pending_backorder(head)
             return False
         if self.rations_sb.level + 1e-9 < qty:
+            self._record_active_upstream_stockout_causes(
+                head, duration=float(next_check_hours)
+            )
             return False
         yield self.rations_sb.get(qty)
         head.remaining_qty = 0.0
@@ -2800,24 +2965,12 @@ class MFSCSimulation:
                 order.causal_wait_hours["op10_resource_queue"] = max(
                     0.0, float(self.env.now) - queue_start
                 )
-                while self._is_down(10):
-                    yield self.env.timeout(1)
-                    order.causal_wait_hours["op10_down"] = (
-                        order.causal_wait_hours.get("op10_down", 0.0) + 1.0
-                    )
+                yield from self._wait_order_for_operation(order, 10)
                 yield self.env.timeout(self._pt("op10_pt"))
         else:
-            while self._is_down(10):
-                yield self.env.timeout(1)
-                order.causal_wait_hours["op10_down"] = (
-                    order.causal_wait_hours.get("op10_down", 0.0) + 1.0
-                )
+            yield from self._wait_order_for_operation(order, 10)
             yield self.env.timeout(self._pt("op10_pt"))
-        while self._is_down(11):
-            yield self.env.timeout(1)
-            order.causal_wait_hours["op11_down"] = (
-                order.causal_wait_hours.get("op11_down", 0.0) + 1.0
-            )
+        yield from self._wait_order_for_operation(order, 11)
         if self.downstream_transport_capacity_mode == "tandem_capacity_one":
             queue_start = float(self.env.now)
             with self.op12_convoy.request() as req:
@@ -2825,18 +2978,10 @@ class MFSCSimulation:
                 order.causal_wait_hours["op12_resource_queue"] = max(
                     0.0, float(self.env.now) - queue_start
                 )
-                while self._is_down(12):
-                    yield self.env.timeout(1)
-                    order.causal_wait_hours["op12_down"] = (
-                        order.causal_wait_hours.get("op12_down", 0.0) + 1.0
-                    )
+                yield from self._wait_order_for_operation(order, 12)
                 yield self.env.timeout(self._pt("op12_pt"))
         else:
-            while self._is_down(12):
-                yield self.env.timeout(1)
-                order.causal_wait_hours["op12_down"] = (
-                    order.causal_wait_hours.get("op12_down", 0.0) + 1.0
-                )
+            yield from self._wait_order_for_operation(order, 12)
             yield self.env.timeout(self._pt("op12_pt"))
         self._in_transit -= qty
         self.total_theatre_inflow += qty
@@ -2845,11 +2990,34 @@ class MFSCSimulation:
         self.delivery_events.append((self.env.now, qty))
         self._finalize_pending_backorder(order)
 
+    def _wait_order_for_operation(self, order: OrderRecord, op_id: int):
+        """Wait for an operation and retain the exact order-specific block."""
+        start = float(self.env.now)
+        while self._is_down(op_id):
+            yield self.env.timeout(1.0)
+        end = float(self.env.now)
+        if end > start:
+            key = f"op{int(op_id)}_down"
+            order.causal_wait_hours[key] = (
+                order.causal_wait_hours.get(key, 0.0) + end - start
+            )
+            self._record_causal_block(
+                order,
+                op_id=op_id,
+                start_time=start,
+                end_time=end,
+                reason="operation_down",
+            )
+
     # =====================================================================
     # DEMAND SINK: Op13
     # =====================================================================
 
     def _place_demand_order(self, order: OrderRecord):
+        for episode_id in order.causal_r24_event_ids:
+            episode = self._r24_causal_episodes.get(episode_id)
+            if episode is not None and episode.get("assigned_order_j") is None:
+                episode["assigned_order_j"] = int(order.j)
         source = (
             self.rations_sb
             if self.order_fulfillment_mode == "op9_linked"
@@ -2901,7 +3069,7 @@ class MFSCSimulation:
             )
             yield from self._place_demand_order(order)
 
-    def _sample_calendar_demand_quantity(self) -> tuple[float, bool]:
+    def _sample_calendar_demand_quantity(self) -> tuple[float, bool, set[str]]:
         demand_qty = float(
             self.demand_rng.integers(int(DEMAND["a"]), int(DEMAND["b"]) + 1)
         )
@@ -2910,10 +3078,17 @@ class MFSCSimulation:
             demand_scale = float(self._adaptive_regime_params()["demand_scale"])
             demand_qty *= demand_scale
         contingent_qty = float(self._contingent_demand_pending)
+        causal_episode_ids: set[str] = set()
         if contingent_qty > 0:
             demand_qty += contingent_qty
             self._contingent_demand_pending = 0
-        return demand_qty, contingent_qty > 0
+            if self.risk_attribution_source == "causal_exposure":
+                for episode_id, episode in self._r24_causal_episodes.items():
+                    if episode.get("assigned_order_j") is None and float(
+                        episode.get("surge_qty", 0.0)
+                    ) > 0.0:
+                        causal_episode_ids.add(episode_id)
+        return demand_qty, contingent_qty > 0, causal_episode_ids
 
     def _exclude_current_order_ledger_from_metrics(self) -> None:
         for order in self.orders:
@@ -2939,7 +3114,11 @@ class MFSCSimulation:
             if day_of_week >= 6:
                 continue
 
-            demand_qty, is_contingent = self._sample_calendar_demand_quantity()
+            (
+                demand_qty,
+                is_contingent,
+                causal_r24_event_ids,
+            ) = self._sample_calendar_demand_quantity()
             self.total_demanded += demand_qty
             order_num += 1
             order = OrderRecord(
@@ -2948,6 +3127,7 @@ class MFSCSimulation:
                 quantity=demand_qty,
                 remaining_qty=demand_qty,
                 contingent=is_contingent,
+                causal_r24_event_ids=causal_r24_event_ids,
                 metrics_excluded=True,
             )
             yield from self._place_demand_order(order)
@@ -2979,7 +3159,11 @@ class MFSCSimulation:
             if day_of_week >= 6:
                 continue
 
-            demand_qty, is_contingent = self._sample_calendar_demand_quantity()
+            (
+                demand_qty,
+                is_contingent,
+                causal_r24_event_ids,
+            ) = self._sample_calendar_demand_quantity()
 
             self.total_demanded += demand_qty
             order_num += 1
@@ -2989,6 +3173,7 @@ class MFSCSimulation:
                 quantity=demand_qty,
                 remaining_qty=demand_qty,
                 contingent=is_contingent,
+                causal_r24_event_ids=causal_r24_event_ids,
             )
             yield from self._place_demand_order(order)
 
@@ -3241,9 +3426,11 @@ class MFSCSimulation:
         repair = max(1, rng.exponential(beta))
         yield self.env.timeout(repair)
         self._bring_up(target)
-        self.risk_events.append(
-            RiskEvent("R11", start, self.env.now, self.env.now - start, [target])
+        event = RiskEvent(
+            "R11", start, self.env.now, self.env.now - start, [target]
         )
+        self.risk_events.append(event)
+        self._register_upstream_scarcity_debt(event)
 
     def _risk_R12(self):
         n = RISKS_CURRENT["R12"]["occurrence"]["n"]
@@ -3270,17 +3457,17 @@ class MFSCSimulation:
         self._take_down(1)
         yield self.env.timeout(delay)
         self._bring_up(1)
-        self.risk_events.append(
-            RiskEvent(
-                "R12",
-                start,
-                self.env.now,
-                delay,
-                [1],
-                magnitude=float(delayed),
-                unit="delayed_contracts",
-            )
+        event = RiskEvent(
+            "R12",
+            start,
+            self.env.now,
+            delay,
+            [1],
+            magnitude=float(delayed),
+            unit="delayed_contracts",
         )
+        self.risk_events.append(event)
+        self._register_upstream_scarcity_debt(event)
 
     def _risk_R13(self):
         n = RISKS_CURRENT["R13"]["occurrence"]["n"]
@@ -3305,17 +3492,17 @@ class MFSCSimulation:
         self._take_down(2)
         yield self.env.timeout(delay)
         self._bring_up(2)
-        self.risk_events.append(
-            RiskEvent(
-                "R13",
-                start,
-                self.env.now,
-                delay,
-                [2],
-                magnitude=float(delayed),
-                unit="delayed_deliveries",
-            )
+        event = RiskEvent(
+            "R13",
+            start,
+            self.env.now,
+            delay,
+            [2],
+            magnitude=float(delayed),
+            unit="delayed_deliveries",
         )
+        self.risk_events.append(event)
+        self._register_upstream_scarcity_debt(event)
 
     def _risk_R14(self):
         """R14 defective products — Binomial(n, p) per day (Table 6.6b).
@@ -3402,9 +3589,11 @@ class MFSCSimulation:
             self.env.process(self._delayed_bring_up(op_id, rt))
         max_rt = max(recovery_times.values())
         yield self.env.timeout(max_rt)
-        self.risk_events.append(
-            RiskEvent("R21", start, self.env.now, max_rt, list(affected))
+        event = RiskEvent(
+            "R21", start, self.env.now, max_rt, list(affected)
         )
+        self.risk_events.append(event)
+        self._register_upstream_scarcity_debt(event)
 
     def _risk_R22(self):
         beta = self._get_risk_recovery_mean("R22")
@@ -3433,9 +3622,9 @@ class MFSCSimulation:
         recovery = max(1, rng.exponential(beta))
         yield self.env.timeout(recovery)
         self._bring_up(target)
-        self.risk_events.append(
-            RiskEvent("R22", start, self.env.now, recovery, [target])
-        )
+        event = RiskEvent("R22", start, self.env.now, recovery, [target])
+        self.risk_events.append(event)
+        self._register_upstream_scarcity_debt(event)
 
     def _risk_R23(self):
         beta = self._get_risk_recovery_mean("R23")
@@ -3479,6 +3668,7 @@ class MFSCSimulation:
     def _apply_risk_R24_event(self) -> None:
         surge_lo, surge_hi = self._get_risk_surge()
         surge = self._risk_rng_for("R24").integers(surge_lo, surge_hi + 1)
+        pending_before = float(self._contingent_demand_pending)
         self._contingent_demand_pending += surge
         # Cap accumulated contingent demand to prevent unbounded obs[14]
         # spikes when multiple R24 events fire before demand is consumed.
@@ -3487,6 +3677,9 @@ class MFSCSimulation:
         max_contingent = 5 * 2600
         self._contingent_demand_pending = min(
             self._contingent_demand_pending, max_contingent
+        )
+        accepted_surge = max(
+            0.0, float(self._contingent_demand_pending) - pending_before
         )
         # Attribution window: Garrido's per-order R24 column marks every order
         # whose cycle overlaps the surge STRESS PERIOD, not just the instant.
@@ -3510,6 +3703,19 @@ class MFSCSimulation:
         )
         self.risk_events.append(event)
         self._add_ret_quantity_risk(event)
+        if self.risk_attribution_source == "causal_exposure":
+            self._r24_causal_sequence += 1
+            episode_id = f"R24-{self._r24_causal_sequence:06d}"
+            self._r24_causal_episodes[episode_id] = {
+                "episode_id": episode_id,
+                "event": event,
+                "start_time": float(self.env.now),
+                "surge_qty": accepted_surge,
+                "baseline_pending_count": len(self.pending_backorders),
+                "baseline_pending_qty": float(self.pending_backorder_qty),
+                "assigned_order_j": None,
+                "closed_at": None,
+            }
 
     def _risk_R3(self):
         duration = RISKS_CURRENT["R3"]["recovery"]["duration"]
@@ -3701,60 +3907,74 @@ class MFSCSimulation:
             earliest_risk_start = min(earliest_risk_start, float(event.start_time))
 
         causal = self.risk_attribution_source == "causal_exposure"
-        for event in self.risk_events:
-            if float(event.duration) <= 0.0:
-                if causal and str(event.risk_id) == "R24":
-                    # Endogenous surge exposure: from the contingent-demand
-                    # injection until the backlog it displaced is absorbed
-                    # (queue length back at its pre-event level). Replaces the
-                    # fixed 168 h screen window with a mechanism.
-                    exp_start = float(event.start_time)
-                    exp_end = self._exposure_end_for(event)
-                    o_start = max(exp_start, float(order.OPTj))
-                    o_end = min(exp_end, float(order.OATj))
-                    if o_start <= o_end:
-                        mark_event(event, max(1.0, o_end - o_start))
-                    continue
-                if float(order.OPTj) <= float(event.start_time) <= float(order.OATj):
-                    mark_event(event, float(event.magnitude))
-                continue
-
-            raw_start = max(float(event.start_time), float(order.OPTj))
-            raw_end = min(float(event.end_time), float(order.OATj))
-            if raw_start < raw_end:
-                # AP semantics keep the RAW outage overlap (risk-time absorbed).
-                total_disruption_hours += raw_end - raw_start
-            if causal:
-                # Marking uses the endogenous exposure window: the outage's
-                # induced-backlog recovery keeps affecting orders after the
-                # operation itself is back up (CF11: R22 marks 0.291 of orders
-                # vs 0.108 under raw windows, with matching event counts).
-                exp_end_time = self._exposure_end_for(event)
-                overlap_start = max(float(event.start_time), float(order.OPTj))
-                overlap_end = min(exp_end_time, float(order.OATj))
-                if overlap_start < overlap_end:
-                    mark_event(event, overlap_end - overlap_start)
-            elif raw_start < raw_end:
-                mark_event(event, raw_end - raw_start)
-
-        # Include ongoing disruptions at fulfillment time
-        for op_id in range(1, 14):
-            down_since = self._op_down_since.get(op_id)
-            if self.op_down_count[op_id] > 0 and down_since is not None:
-                overlap_start = max(down_since, order.OPTj)
-                overlap_end = order.OATj
-                if overlap_start < overlap_end:
-                    total_disruption_hours += overlap_end - overlap_start
-                    key = f"ongoing_op{op_id}"
-                    order.ret_risk_indicators[key] = (
-                        order.ret_risk_indicators.get(key, 0.0)
-                        + overlap_end
-                        - overlap_start
+        if causal:
+            # A duration event is eligible only when an order-specific physical
+            # block identifies the affected operation and interval.  This is
+            # the key distinction from retrospective event-window overlap.
+            seen_pairs: set[tuple[int, float, float]] = set()
+            for block in order.causal_block_intervals:
+                for event, contribution in self._match_block_to_events(block):
+                    pair = (
+                        id(event),
+                        float(block["start_time"]),
+                        float(block["end_time"]),
                     )
-                    earliest_risk_start = min(earliest_risk_start, down_since)
+                    if pair in seen_pairs:
+                        continue
+                    seen_pairs.add(pair)
+                    total_disruption_hours += float(contribution)
+                    mark_event(event, float(contribution))
+
+            # R24 propagates through explicit queue precedence ids, never a
+            # fixed or global-backlog time window.
+            for episode_id in sorted(order.causal_r24_event_ids):
+                episode = self._r24_causal_episodes.get(episode_id)
+                if not episode:
+                    continue
+                event = episode["event"]
+                contribution = max(
+                    1.0,
+                    min(
+                        float(order.OATj) - max(
+                            float(order.OPTj), float(event.start_time)
+                        ),
+                        float(order.CTj),
+                    ),
+                )
+                total_disruption_hours += contribution
+                mark_event(event, contribution)
+        else:
+            for event in self.risk_events:
+                if float(event.duration) <= 0.0:
+                    if float(order.OPTj) <= float(event.start_time) <= float(order.OATj):
+                        mark_event(event, float(event.magnitude))
+                    continue
+
+                raw_start = max(float(event.start_time), float(order.OPTj))
+                raw_end = min(float(event.end_time), float(order.OATj))
+                if raw_start < raw_end:
+                    overlap = raw_end - raw_start
+                    total_disruption_hours += overlap
+                    mark_event(event, overlap)
+
+            # Legacy ongoing-disruption attribution remains bitwise isolated.
+            for op_id in range(1, 14):
+                down_since = self._op_down_since.get(op_id)
+                if self.op_down_count[op_id] > 0 and down_since is not None:
+                    overlap_start = max(down_since, order.OPTj)
+                    overlap_end = order.OATj
+                    if overlap_start < overlap_end:
+                        total_disruption_hours += overlap_end - overlap_start
+                        key = f"ongoing_op{op_id}"
+                        order.ret_risk_indicators[key] = (
+                            order.ret_risk_indicators.get(key, 0.0)
+                            + overlap_end
+                            - overlap_start
+                        )
+                        earliest_risk_start = min(earliest_risk_start, down_since)
 
         quantity_risk_hours, quantity_risk_start = self._consume_ret_quantity_risk_for_order(
-            order
+            order, risk_ids=(("R14",) if causal else ("R14", "R24"))
         )
         if quantity_risk_hours > 0.0:
             total_disruption_hours += quantity_risk_hours
@@ -3769,7 +3989,11 @@ class MFSCSimulation:
         # If the event happened before OPTj, pure time-overlap attribution misses
         # the order even though Garrido's spreadsheet marks the order-level risk
         # column. Treat the contingent order itself as the R24 impact window.
-        if bool(getattr(order, "contingent", False)) and "R24" not in order.ret_risk_indicators:
+        if (
+            not causal
+            and bool(getattr(order, "contingent", False))
+            and "R24" not in order.ret_risk_indicators
+        ):
             contribution = max(1.0, min(float(order.CTj), float(order.LTj)))
             total_disruption_hours += contribution
             order.ret_risk_indicators["R24"] = contribution

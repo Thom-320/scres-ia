@@ -212,3 +212,36 @@ R12 contracting cycle), no exposure mechanism has the substrate it needs. The
 leaves odd-CF ret_gap 0.054 vs the 0.02 bar. Next sprint = resolve the
 release-clock x initial-R12 interaction on the R1 side, then revisit
 exposure.
+
+## Addendum: order-specific causal ledger (Codex + Fable follow-up)
+
+The first Fable arm above was a global queue-recovery exposure proxy: every
+event remained eligible until total backlog returned to its pre-event level.
+It did not satisfy the event-to-order contract because eligibility still used
+temporal overlap and did not require the order to be blocked at an affected
+operation. Its null result therefore falsifies that proxy, not causal
+attribution in general.
+
+The follow-up implementation adds exact order blocking intervals, operation-
+aware event matching, upstream scarcity debt consumed only by orders actually
+blocked by insufficient Op9 stock, and R24 ids propagated only through actual
+SPT queue precedence. Seven falsification and physical-identity tests pass.
+
+Odd-CF-only artifact:
+`outputs/audits/garrido_causal_attribution_odd_cfs/`.
+
+| Arm | Mean absolute ReT gap | Per-risk share gap | Per-risk RP95 log error | Physical CT delta |
+|---|---:|---:|---:|---:|
+| Raw temporal overlap | 0.06996 | 0.14691 | 1.55136 | 0 |
+| Fixed R24 168 h screen | **0.02584** | **0.12070** | 1.51992 | 0 |
+| Order-causal ledger | 0.10126 | 0.18900 | **0.62866** | 0 |
+
+**Verdict:** the order-causal ledger is scientifically cleaner and sharply
+improves RP-tail validity, but it under-attributes affected orders and fails
+the joint promotion rule. The upstream-debt refinement improved its share gap
+from 0.230 to 0.189 and RP95 error from 0.818 to 0.629, but did not reverse the
+ReT/share verdict. Stop further attribution tuning. Do not run even CFs.
+
+The canonical gate remains on the disclosed 168 h r3 benchmark until a physical
+queue/material-lineage mechanism can outperform it. `causal_exposure` remains
+an opt-in audit lane and is not promoted to `garrido_reference_v2`.

@@ -185,7 +185,15 @@ def _conditional_metrics(orders: list[Any], predicate: Any, prefix: str) -> dict
     }
 
 
-def _run(cfi: int, target: GarridoCFTarget, variant: str, rp_mode: str) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+def _run(
+    cfi: int,
+    target: GarridoCFTarget,
+    variant: str,
+    rp_mode: str,
+    *,
+    attribution_source: str = "des_events",
+    r24_window_hours: float = 0.0,
+) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     (
         dispatch_policy,
         transport_mode,
@@ -204,7 +212,7 @@ def _run(cfi: int, target: GarridoCFTarget, variant: str, rp_mode: str) -> tuple
         enabled_risks=set(spec.enabled_risks),
         risk_overrides=dict(spec.risk_overrides),
         risk_occurrence_mode="thesis_window",
-        risk_attribution_source="des_events",
+        risk_attribution_source=attribution_source,
         seed_stream_mode="split",
         year_basis=THESIS_FAITHFUL_PROTOCOL["year_basis"],
         warmup_trigger=THESIS_FAITHFUL_PROTOCOL["warmup_trigger"],
@@ -221,6 +229,7 @@ def _run(cfi: int, target: GarridoCFTarget, variant: str, rp_mode: str) -> tuple
         risk_rng_mode=risk_rng_mode,
         op9_dispatch_policy=dispatch_policy,
         downstream_transport_capacity_mode=transport_mode,
+        r24_attribution_window_hours=float(r24_window_hours),
         demand_start_after_warmup=True,
         ret_recovery_period_mode=rp_mode,
     ).run()
@@ -259,6 +268,8 @@ def _run(cfi: int, target: GarridoCFTarget, variant: str, rp_mode: str) -> tuple
         "risk_initialization_mode": risk_initialization_mode,
         "risk_rng_mode": risk_rng_mode,
         "rp_mode": rp_mode,
+        "attribution_source": attribution_source,
+        "r24_window_hours": float(r24_window_hours),
         "seed": int(target.seed),
         "excel_placed": int(target.max_j),
         "des_placed": len(placed),
