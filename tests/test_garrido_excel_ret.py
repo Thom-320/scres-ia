@@ -13,6 +13,7 @@ from supply_chain.garrido_replication import (
 )
 from supply_chain.ret_thesis import (
     compute_order_level_ret_excel_formula,
+    compute_order_level_ret_excel_visible_ledger,
     compute_ret_per_order_excel_formula,
 )
 from supply_chain.config import BACKORDER_QUEUE_CAP, GARRIDO_R14_RET_PERIOD_HOURS
@@ -65,6 +66,32 @@ def test_excel_ret_recovery_matches_raw_workbook_branch() -> None:
 
     assert case == "excel_recovery"
     assert value == pytest.approx(0.5 * (1.0 / 90.1992))
+
+
+def test_visible_ledger_uses_sparse_j_and_time_varying_bt_ut() -> None:
+    delivered_late = _order(j=1, OPTj=0.0, OATj=100.0, CTj=100.0)
+    lost = _order(
+        j=2,
+        OPTj=24.0,
+        OATj=None,
+        CTj=None,
+        lost=True,
+        lost_time=90.0,
+    )
+    delivered_at_promise = _order(j=3, OPTj=48.0, OATj=96.0, CTj=48.0)
+
+    result = compute_order_level_ret_excel_visible_ledger(
+        [delivered_late, lost, delivered_at_promise],
+        current_time=120.0,
+    )
+
+    assert result["n_generated_orders"] == 3
+    assert result["n_visible_rows"] == 2
+    assert result["n_omitted_rows"] == 1
+    # At j=3/OAT=96: j=1 is pending beyond LT and j=2 is already unattended.
+    assert result["final_backorders"] == 1
+    assert result["final_unattended"] == 1
+    assert result["mean_ret_excel"] == pytest.approx((0.0 + 1.0 / 3.0) / 2.0)
 
 
 def test_excel_ret_uses_explicit_order_risk_indicators() -> None:

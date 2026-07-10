@@ -101,6 +101,29 @@ class GarridoCFTarget:
         return min((order.optj for order in self.orders), default=float("nan"))
 
     @property
+    def max_j(self) -> int:
+        """Highest order index PLACED in the run (workbook-view key fact).
+
+        The workbook rows contain only ATTENDED orders; the j column keeps the
+        original placement index, so max(j) recovers how many orders the
+        Simulink model actually placed (attended + lost/unattended + pending).
+        Verified on CF1: 4,241 rows, max j = 5,714, final ΣUt = 993, ΣBt = 59 —
+        i.e. Garrido places ~1 order per operating day and EXCLUDES lost and
+        never-delivered orders from the order-level table.
+        """
+        return int(max((order.j for order in self.orders), default=0))
+
+    @property
+    def final_sum_bt(self) -> float:
+        """Workbook backlog-list size on the last visible row."""
+        return float(self.orders[-1].sum_bt) if self.orders else 0.0
+
+    @property
+    def final_sum_ut(self) -> float:
+        """Workbook cumulative unattended count on the last visible row."""
+        return float(self.orders[-1].sum_ut) if self.orders else 0.0
+
+    @property
     def last_oatj(self) -> float:
         return max((order.oatj for order in self.orders), default=float("nan"))
 

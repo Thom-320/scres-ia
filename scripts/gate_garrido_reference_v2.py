@@ -31,7 +31,10 @@ from supply_chain.garrido_replication import (  # noqa: E402
     GarridoCFTarget,
     load_raw_garrido_targets,
 )
-from supply_chain.ret_thesis import order_has_ret_risk_indicator  # noqa: E402
+from supply_chain.ret_thesis import (  # noqa: E402
+    compute_order_level_ret_excel_visible_ledger,
+    order_has_ret_risk_indicator,
+)
 from supply_chain.supply_chain import MFSCSimulation  # noqa: E402
 from supply_chain.thesis_design import design_spec_for_cfi  # noqa: E402
 
@@ -54,6 +57,12 @@ def _target_metrics(target: GarridoCFTarget) -> dict[str, float]:
     orders = list(target.orders)
     risk_active = [order.risk_active for order in orders]
     return {
+        # WORKBOOK VIEW (verified on CF1): rows are ATTENDED orders only; the
+        # j column keeps the placement index, so placed = max_j and the gap
+        # (placed - attended) is lost/unattended + pending + in-flight.
+        "placed_orders": float(target.max_j),
+        "ut_final": float(target.final_sum_ut),
+        "bt_final": float(target.final_sum_bt),
         "n_orders": float(len(orders)),
         "warmup": float(target.warmup_hours),
         "ret_mean": float(target.ret_mean_excel),
@@ -73,14 +82,35 @@ def _target_metrics(target: GarridoCFTarget) -> dict[str, float]:
 def _des_metrics(sim: MFSCSimulation) -> dict[str, float]:
     # Garrido's first visible order is placed at the warm-up boundary.  Exclude
     # the DES priming ledger rather than rewarding a different initialization.
-    orders = [order for order in sim.orders if float(order.OPTj) >= sim.warmup_time]
-    ret = sim.compute_order_level_ret(orders=orders)
+    placed = [order for order in sim.orders if float(order.OPTj) >= sim.warmup_time]
+    # WORKBOOK VIEW: Garrido's order-level table contains only ATTENDED
+    # (delivered) orders — lost/unattended, still-pending, and in-flight
+    # orders are excluded from CT/RP/DP/ReT rows and enter only through the
+    # cumulative ΣBt/ΣUt columns. Compare like with like.
+    orders = [
+        order
+        for order in placed
+        if order.CTj is not None and not getattr(order, "lost", False)
+    ]
+    lost = [order for order in placed if getattr(order, "lost", False)]
+    unresolved = [
+        order
+        for order in placed
+        if order.CTj is None and not getattr(order, "lost", False)
+    ]
+    ret = compute_order_level_ret_excel_visible_ledger(
+        placed,
+        current_time=float(sim.env.now),
+    )
     risk_active = [order_has_ret_risk_indicator(order) for order in orders]
-    completed = [order for order in orders if order.CTj is not None]
+    completed = orders
     return {
+        "placed_orders": float(len(placed)),
+        "ut_final": float(ret["final_unattended"]),
+        "bt_final": float(ret["final_backorders"]),
         "n_orders": float(len(orders)),
         "warmup": float(sim.warmup_time),
-        "ret_mean": float(ret["mean_ret"]),
+        "ret_mean": float(ret["mean_ret_excel"]),
         "risk_active_share": float(np.mean(risk_active)) if orders else 0.0,
         "ct_p50": _quantile((o.CTj for o in completed), 0.50),
         "ct_p95": _quantile((o.CTj for o in completed), 0.95),
@@ -109,6 +139,8 @@ def _ratio_error(actual: float, target: float) -> float:
 def _score(des: dict[str, float], target: dict[str, float]) -> float:
     score = 0.0
     score += _ratio_error(des["n_orders"], target["n_orders"])
+    score += 0.5 * _ratio_error(des["placed_orders"], target["placed_orders"])
+    score += 0.5 * _ratio_error(des["ut_final"], target["ut_final"])
     score += _ratio_error(des["warmup"], target["warmup"])
     score += _ratio_error(max(des["ret_mean"], 1e-9), max(target["ret_mean"], 1e-9))
     score += 2.0 * abs(des["risk_active_share"] - target["risk_active_share"])

@@ -13,6 +13,8 @@ Key changes from v1:
   - get_observation() returns normalized state vector.
 """
 
+import math
+
 import simpy
 import numpy as np
 from dataclasses import dataclass, field
@@ -117,6 +119,7 @@ class OrderRecord:
     remaining_qty: float = 0.0
     contingent: bool = False
     lost: bool = False
+    lost_time: Optional[float] = None
     metrics_excluded: bool = False
     # Thesis ReT sub-indicators (Garrido-Rios 2017, Eq. 5.1-5.5):
     APj: float = 0.0  # Autotomy period (hours): CTj=LTj and risks impact in [OPTj,OATj]
@@ -193,6 +196,7 @@ class MFSCSimulation:
         replenishment_route_aware: bool = False,
         procurement_contract_mode: str = "legacy_independent",
         order_fulfillment_mode: str = "legacy_theatre_stock",
+        op9_freight_offset_hours: float = 6.0,
         demand_start_after_warmup: bool = False,
     ) -> None:
         if warmup_trigger not in WARMUP_TRIGGER_OPTIONS:
@@ -301,6 +305,7 @@ class MFSCSimulation:
         self.replenishment_route_aware = bool(replenishment_route_aware)
         self.procurement_contract_mode = str(procurement_contract_mode)
         self.order_fulfillment_mode = str(order_fulfillment_mode)
+        self.op9_freight_offset_hours = float(op9_freight_offset_hours)
         self.demand_start_after_warmup = bool(demand_start_after_warmup)
         self._route_wait_pending: set[str] = set()
         if self.campaign_config:
@@ -943,6 +948,10 @@ class MFSCSimulation:
             self.env.process(self._op9_sb_dispatch())
             self.env.process(self._op10_transport_to_cssu())
             self.env.process(self._op12_transport_to_theatre())
+        else:
+            # op9_linked: outbound service is rate-limited to ONE order-batch
+            # per day (Fig 6.2 / Table 6.20: Op9 'daily freight rate', ROP=24h).
+            self.env.process(self._op9_daily_freight_dispatch())
         self.env.process(self._op13_demand())
         self.env.process(self._daily_tracker())
         if (
@@ -1501,6 +1510,7 @@ class MFSCSimulation:
             else:
                 dropped = self.pending_backorders.pop()
             dropped.lost = True
+            dropped.lost_time = float(self.env.now)
             # Lost orders were demanded during R14-ubiquitous production, so they
             # carry the R14 risk gate like every Garrido order (AVERAGE(R..)>0).
             # Without it they fall into the no-risk fill-rate branch and score ~1.0,
@@ -1539,7 +1549,13 @@ class MFSCSimulation:
         The queue is blocking: if the highest-priority delayed order cannot be
         fully served from on-hand theatre inventory, lower-priority orders wait
         behind it.
+
+        In op9_linked mode this is a no-op: the ONLY server is the daily
+        freight departure (`_op9_daily_freight_dispatch`), per the Table 6.20
+        'daily freight rate' constraint.
         """
+        if self.order_fulfillment_mode == "op9_linked":
+            return
         while self.pending_backorders:
             next_order = self.pending_backorders[0]
             requested_qty = float(next_order.remaining_qty)
@@ -2440,6 +2456,43 @@ class MFSCSimulation:
         self.delivery_events.append((self.env.now, qty))
         yield from self._serve_pending_backorders()
 
+    def _op9_daily_freight_dispatch(self):
+        """Op9 outbound: at most ONE order-batch per day (op9_linked mode).
+
+        Fig 6.2 / Table 6.20: Op9 ships Q = 2,400-2,600 rations 'at a daily
+        freight rate' (ROP = 24 h). This serving-rate constraint — not an
+        artificial delay — is what produces Garrido's congested standing queue
+        (final ΣBt ≈ 60), strictly positive departure waits (no CTj = 48.0
+        exactly, hence zero on-time orders in the workbooks), the ~2,300 h CT
+        p95 (cap-60 queue drained at one order/day), and bounded attended-order
+        tails (stragglers are evicted as Ut before aging for years).
+
+        Departures happen once per day at `op9_freight_offset_hours` after
+        midnight (orders are placed just after midnight in the thesis tapes;
+        the 12% of attended orders with CTj <= 54 h are the queue-empty days
+        where the same-morning departure adds <= 6 h of wait). A departure is
+        skipped when Op9 is down, the queue is empty, or on-hand SB stock does
+        not cover the SPT-head order.
+        """
+        offset = float(self.op9_freight_offset_hours) % 24.0
+        first = math.floor(self.env.now / 24.0) * 24.0 + offset
+        if first <= self.env.now:
+            first += 24.0
+        yield self.env.timeout(first - self.env.now)
+        while True:
+            if not self._is_down(9) and self.pending_backorders:
+                head = self.pending_backorders[0]
+                qty = float(head.remaining_qty)
+                if qty <= 1e-9:
+                    self._finalize_pending_backorder(head)
+                    self._remove_pending_backorder(head)
+                elif self.rations_sb.level + 1e-9 >= qty:
+                    yield self.rations_sb.get(qty)
+                    head.remaining_qty = 0.0
+                    self.env.process(self._deliver_order_from_op9(head, qty))
+                    self._remove_pending_backorder(head)
+            yield self.env.timeout(24.0)
+
     def _deliver_order_from_op9(self, order: OrderRecord, qty: float):
         """Move a reserved order through the physical Op10/Op12 service path.
 
@@ -2471,21 +2524,22 @@ class MFSCSimulation:
             else self.rations_theatre
         )
         available = source.level
-        if not self.pending_backorders and available >= order.quantity:
+        if (
+            self.order_fulfillment_mode != "op9_linked"
+            and not self.pending_backorders
+            and available >= order.quantity
+        ):
             yield source.get(order.quantity)
-            if self.order_fulfillment_mode == "op9_linked":
-                order.remaining_qty = 0.0
-                self.env.process(
-                    self._deliver_order_from_op9(order, float(order.quantity))
-                )
-            else:
-                self.total_order_fulfilled += float(order.quantity)
-                self._finalize_order_after_fulfillment_delay(order)
+            self.total_order_fulfilled += float(order.quantity)
+            self._finalize_order_after_fulfillment_delay(order)
         else:
             # Enqueue for future delivery. Per thesis Sec. 6.8.2,
             # backorder classification deferred until LTj=48h elapses.
+            # In op9_linked mode EVERY order queues for the daily freight
+            # departure (no instant-service path exists in Fig 6.2).
             self._enqueue_backorder(order)
-            yield from self._serve_pending_backorders()
+            if self.order_fulfillment_mode != "op9_linked":
+                yield from self._serve_pending_backorders()
             # Start 48h timer — only count as backorder if still pending
             self.env.process(self._delayed_backorder_check(order))
             if self.risk_attribution_source == "excel_risk_tape":

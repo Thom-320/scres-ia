@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import Counter
+import math
 from typing import Any, Iterable, Mapping
 
 import numpy as np
@@ -298,4 +299,123 @@ def compute_order_level_ret_excel_formula(
         "n_completed": sum(
             1 for order in order_list if getattr(order, "OATj", None) is not None
         ),
+    }
+
+
+def compute_order_level_ret_excel_visible_ledger(
+    orders: Iterable[Any],
+    *,
+    current_time: float | None = None,
+) -> dict[str, Any]:
+    """Reproduce the workbook's sparse visible-order ledger.
+
+    Garrido's raw sheets preserve the original order index ``j`` but omit many
+    orders that are lost or remain unfulfilled.  Their effects survive through
+    the cumulative ``Bt``/``Ut`` columns.  This aggregator therefore walks the
+    complete DES order history to update those ledgers, while emitting ReT only
+    for completed, non-lost rows—the population actually visible in the raw
+    workbooks.
+    """
+    order_list = sorted(
+        list(orders),
+        key=lambda order: (
+            int(getattr(order, "j", 0) or 0),
+            float(getattr(order, "OPTj", 0.0) or 0.0),
+        ),
+    )
+    visible_values: list[float] = []
+    case_counts: Counter[str] = Counter()
+    last_backorders = 0
+    last_unattended = 0
+
+    ledger_events: list[tuple[float, int, int, int]] = []
+    visible_orders: list[Any] = []
+    for candidate in order_list:
+        lost = bool(getattr(candidate, "lost", False))
+        candidate_oat = getattr(candidate, "OATj", None)
+        lost_time = getattr(candidate, "lost_time", None)
+        if not lost and candidate_oat is not None:
+            visible_orders.append(candidate)
+
+        opt = float(getattr(candidate, "OPTj", 0.0) or 0.0)
+        lt = float(getattr(candidate, "LTj", 0.0) or 0.0)
+        activation = opt + lt
+        end_candidates = [
+            float(value)
+            for value in (candidate_oat, lost_time)
+            if value is not None
+        ]
+        end_time = min(end_candidates) if end_candidates else float("inf")
+        if end_time > activation:
+            ledger_events.append((activation, 1, +1, 0))
+            if math.isfinite(end_time):
+                ledger_events.append((end_time, 0, -1, 0))
+        if lost and lost_time is not None:
+            ledger_events.append((float(lost_time), 0, 0, +1))
+
+    ledger_events.sort()
+    visible_orders.sort(
+        key=lambda order: (
+            float(getattr(order, "OATj", 0.0) or 0.0),
+            int(getattr(order, "j", 0) or 0),
+        )
+    )
+    event_index = 0
+    current_backorders = 0
+    cumulative_unattended = 0
+    ledger_snapshots: dict[int, tuple[int, int]] = {}
+    for idx, order in enumerate(visible_orders, start=1):
+        row_time = float(getattr(order, "OATj", 0.0) or 0.0)
+        while (
+            event_index < len(ledger_events)
+            and ledger_events[event_index][0] <= row_time
+        ):
+            _, _, bt_delta, ut_delta = ledger_events[event_index]
+            current_backorders += bt_delta
+            cumulative_unattended += ut_delta
+            event_index += 1
+        current_backorders = max(
+            0, min(current_backorders, int(BACKORDER_QUEUE_CAP))
+        )
+
+        j_value = int(getattr(order, "j", idx) or idx)
+        ret, case = compute_ret_per_order_excel_formula(
+            order,
+            j=j_value,
+            cumulative_backorders=current_backorders,
+            cumulative_unattended=cumulative_unattended,
+        )
+        visible_values.append(float(ret))
+        case_counts[case] += 1
+        ledger_snapshots[j_value] = (
+            current_backorders,
+            cumulative_unattended,
+        )
+
+    max_j = max(
+        (int(getattr(order, "j", 0) or 0) for order in order_list),
+        default=0,
+    )
+    max_visible_j = max(ledger_snapshots, default=0)
+    if max_visible_j:
+        last_backorders, last_unattended = ledger_snapshots[max_visible_j]
+    return {
+        "mean_ret_excel": (
+            float(np.mean(visible_values)) if visible_values else 1.0
+        ),
+        "case_counts": {
+            "excel_fill_rate": int(case_counts["excel_fill_rate"]),
+            "excel_autotomy": int(case_counts["excel_autotomy"]),
+            "excel_recovery": int(case_counts["excel_recovery"]),
+            "excel_risk_no_recovery": int(
+                case_counts["excel_risk_no_recovery"]
+            ),
+        },
+        "n_generated_orders": len(order_list),
+        "max_order_index": max_j,
+        "n_visible_rows": len(visible_values),
+        "n_omitted_rows": len(order_list) - len(visible_values),
+        "final_backorders": last_backorders,
+        "final_unattended": last_unattended,
+        "ret_values": visible_values,
     }
