@@ -105,6 +105,30 @@ same-contract challenge verdict stands.
 No optimization, model selection, or hyperparameter tuning follows this
 gate on these tapes.
 
+## RESULT (2026-07-10) — FAIL: the gap does not replicate
+
+Verdict artifact: `outputs/experiments/track_b_clean_replication_2026-07-10/`
+(`GAP_DOES_NOT_REPLICATE`; every number recomputed from `replication_rows.csv`).
+
+On the never-inspected battery 500061–500120:
+- joint − full static (Excel ReT): **+0.0000062, two-way CI95
+  [−0.0000066, +0.0000184]** — crosses zero (criterion 1 FAILS);
+  4/5 seeds positive (criterion 2 passes); **47/60 tapes** positive
+  (criterion 3 FAILS, needed ≥50).
+- CVaR05: +0.000058 [−0.000023, +0.000131] — also crosses zero.
+- Means: joint 0.0059009 vs static 0.0058948.
+
+Interpretation: the post-hoc +9.6e-6 on tapes 400001–400060 shrank to
++6.2e-6 with a zero-spanning CI — partly a tape-set artifact. Final state of
+the science: **the internally consistent 5-seed joint PPO is at statistical
+parity with the calibration-only full-contract constant policy** ("no detected
+difference at current precision"), while the canonical mixed bundle is
+slightly below it. The same-contract challenge verdict stands unchanged. The
+script's "PROCEED_PASO_1" string is Codex's plan label, not a pre-registered
+commitment: any reward/metric/env change to seek a win is a NEW research
+question requiring a NEW pre-registration and a same-contract static
+re-optimization under the changed conditions.
+
 ## Provenance note
 
 Tapes 500001–500002 were used for a smoke test of the evaluation harness

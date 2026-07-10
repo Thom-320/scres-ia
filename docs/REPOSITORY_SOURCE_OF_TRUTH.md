@@ -33,6 +33,14 @@ comparisons remain valid only relative to their explicitly restricted static
 families. Do not aggregate them into a claim that PPO improves Track B
 resilience over strong same-contract statics.
 
+Clean-replication closure (2026-07-10, tapes 500061–500120, eval-only,
+pre-registered): the internally consistent 5-seed joint bundle's post-hoc
++9.6e-6 edge does NOT replicate (+0.0000062, two-way CI95
+[−0.0000066, +0.0000184], 47/60 tapes; stop rule FAIL). Correct language for
+the fresh joint vs the full-contract static: "no detected difference at
+current precision" — never "PPO retains a small advantage".
+`docs/TRACK_B_CLEAN_REPLICATION_PROTOCOL_2026-07-10.md` (RESULT section).
+
 The repository roles that must not be conflated:
 
 - `thesis_faithful` lane (`docs/thesis_faithful/CONTRACT.md`,
