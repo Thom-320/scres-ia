@@ -6,6 +6,7 @@ from types import SimpleNamespace
 from scripts.audit_garrido_event_delayed_quantity import (
     _sim_kwargs,
     delayed_quantity_metrics,
+    match_fifo_release_opportunities,
     match_order_release_counterfactual,
 )
 from supply_chain.supply_chain import MFSCSimulation, OrderRecord
@@ -103,3 +104,25 @@ def test_order_matching_reports_horizon_censored_release() -> None:
 
     assert rows[0]["status"] == "censored_not_released_factual"
     assert rows[0]["release_delay_hours"] == pytest.approx(60.0)
+
+
+def test_fifo_matching_allocates_only_incremental_release_debt() -> None:
+    factual_orders = [
+        OrderRecord(j=1, OPTj=0.0, quantity=5.0, op9_release_time=20.0),
+        OrderRecord(j=2, OPTj=1.0, quantity=5.0, op9_release_time=30.0),
+    ]
+    no_event_orders = [
+        OrderRecord(j=1, OPTj=0.0, quantity=5.0, op9_release_time=10.0),
+        OrderRecord(j=2, OPTj=1.0, quantity=5.0, op9_release_time=30.0),
+    ]
+
+    rows = match_fifo_release_opportunities(
+        SimpleNamespace(orders=factual_orders),
+        SimpleNamespace(orders=no_event_orders),
+        event_ref="R13@0",
+    )
+
+    assert len(rows) == 1
+    assert rows[0]["j"] == 1
+    assert rows[0]["direct_fifo_quantity"] == pytest.approx(5.0)
+    assert rows[0]["release_debt_after"] == pytest.approx(5.0)

@@ -176,6 +176,77 @@ def match_order_release_counterfactual(
     return rows
 
 
+def match_fifo_release_opportunities(
+    factual: MFSCSimulation,
+    no_event: MFSCSimulation,
+    *,
+    event_ref: str,
+    tolerance: float = 1e-8,
+) -> list[dict[str, Any]]:
+    """Allocate only positive increments of cumulative release debt to orders.
+
+    Factual releases at a timestamp are credited before counterfactual releases
+    at that same timestamp.  A counterfactual order receives at most the slice
+    by which its release increases ``cum(no_event) - cum(factual)``. Thus queue
+    reshuffling is not mislabeled as additional missing material.
+    """
+    factual_releases = sorted(
+        (
+            float(order.op9_release_time),
+            int(order.j),
+            float(order.quantity),
+        )
+        for order in factual.orders
+        if order.op9_release_time is not None
+    )
+    no_event_releases = sorted(
+        (
+            float(order.op9_release_time),
+            int(order.j),
+            float(order.quantity),
+        )
+        for order in no_event.orders
+        if order.op9_release_time is not None
+    )
+    factual_release_by_j = {j: time for time, j, _ in factual_releases}
+    factual_index = 0
+    factual_cumulative = 0.0
+    no_event_cumulative = 0.0
+    rows: list[dict[str, Any]] = []
+    for release_time, j, quantity in no_event_releases:
+        while (
+            factual_index < len(factual_releases)
+            and factual_releases[factual_index][0] <= release_time + tolerance
+        ):
+            factual_cumulative += factual_releases[factual_index][2]
+            factual_index += 1
+        debt_before = max(0.0, no_event_cumulative - factual_cumulative)
+        no_event_cumulative += quantity
+        debt_after = max(0.0, no_event_cumulative - factual_cumulative)
+        direct_quantity = min(quantity, max(0.0, debt_after - debt_before))
+        if direct_quantity <= tolerance:
+            continue
+        factual_time = factual_release_by_j.get(j)
+        same_order_delay = (
+            max(0.0, factual_time - release_time)
+            if factual_time is not None
+            else None
+        )
+        rows.append(
+            {
+                "event_ref": event_ref,
+                "j": j,
+                "counterfactual_release_time": release_time,
+                "direct_fifo_quantity": float(direct_quantity),
+                "release_debt_before": float(debt_before),
+                "release_debt_after": float(debt_after),
+                "factual_same_order_release_time": factual_time,
+                "same_order_release_delay_hours": same_order_delay,
+            }
+        )
+    return rows
+
+
 def _sim_kwargs(cfi: int, seed: int, horizon: float) -> dict[str, Any]:
     spec = design_spec_for_cfi(cfi)
     return {
@@ -211,7 +282,12 @@ def _sim_kwargs(cfi: int, seed: int, horizon: float) -> dict[str, Any]:
 
 def run_audit(
     *, cfi: int, horizon: float, max_events: int, risk_id: str | None = None
-) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
+) -> tuple[
+    list[dict[str, Any]],
+    list[dict[str, Any]],
+    list[dict[str, Any]],
+    list[dict[str, Any]],
+]:
     target = load_raw_garrido_targets(DEFAULT_RAW_WORKBOOKS)[cfi]
     kwargs = _sim_kwargs(cfi, int(target.seed), horizon)
 
@@ -235,6 +311,7 @@ def run_audit(
     factual = MFSCSimulation(**kwargs, risk_event_tape=tape).run()
     rows: list[dict[str, Any]] = []
     order_rows: list[dict[str, Any]] = []
+    fifo_rows: list[dict[str, Any]] = []
     for event_index in audited_indices:
         event = tape[event_index]
         no_event_tape = tape[:event_index] + tape[event_index + 1 :]
@@ -256,6 +333,19 @@ def run_audit(
                 }
             )
         order_rows.extend(matched_orders)
+        direct_fifo = match_fifo_release_opportunities(
+            factual, no_event, event_ref=event_ref
+        )
+        for fifo_row in direct_fifo:
+            fifo_row.update(
+                {
+                    "cfi": cfi,
+                    "event_index": event_index,
+                    "risk_id": event["risk_id"],
+                    "event_start": event["start_time"],
+                }
+            )
+        fifo_rows.extend(direct_fifo)
         for node in NODES:
             metrics = delayed_quantity_metrics(
                 factual.material_availability_events[node],
@@ -275,7 +365,7 @@ def run_audit(
                     **metrics,
                 }
             )
-    return tape, rows, order_rows
+    return tape, rows, order_rows, fifo_rows
 
 
 def main() -> None:
@@ -291,7 +381,7 @@ def main() -> None:
     )
     args = parser.parse_args()
     args.output_dir.mkdir(parents=True, exist_ok=True)
-    tape, rows, order_rows = run_audit(
+    tape, rows, order_rows, fifo_rows = run_audit(
         cfi=args.cf,
         horizon=args.horizon,
         max_events=args.max_events,
@@ -307,15 +397,23 @@ def main() -> None:
         writer.writeheader()
         writer.writerows(rows)
     if order_rows:
-        with (args.output_dir / "counterfactual_order_opportunities.csv").open(
+        with (args.output_dir / "counterfactual_order_delays.csv").open(
             "w", newline="", encoding="utf-8"
         ) as handle:
             writer = csv.DictWriter(handle, fieldnames=list(order_rows[0]))
             writer.writeheader()
             writer.writerows(order_rows)
+    if fifo_rows:
+        with (args.output_dir / "fifo_release_opportunities.csv").open(
+            "w", newline="", encoding="utf-8"
+        ) as handle:
+            writer = csv.DictWriter(handle, fieldnames=list(fifo_rows[0]))
+            writer.writeheader()
+            writer.writerows(fifo_rows)
     event_summaries = []
     for event_ref in sorted({row["event_ref"] for row in rows}):
         event_orders = [row for row in order_rows if row["event_ref"] == event_ref]
+        event_fifo = [row for row in fifo_rows if row["event_ref"] == event_ref]
         release_node = next(
             row for row in rows if row["event_ref"] == event_ref and row["node"] == "order_release"
         )
@@ -326,6 +424,10 @@ def main() -> None:
                 "matched_order_quantity": float(sum(row["quantity"] for row in event_orders)),
                 "matched_order_unit_hours": float(
                     sum(row["delayed_unit_hours"] for row in event_orders)
+                ),
+                "direct_fifo_opportunities": len(event_fifo),
+                "direct_fifo_quantity": float(
+                    sum(row["direct_fifo_quantity"] for row in event_fifo)
                 ),
                 "max_concurrent_release_quantity_debt": float(
                     release_node["delayed_quantity_peak"]

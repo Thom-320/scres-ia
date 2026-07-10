@@ -66,3 +66,37 @@ causal effect and not proof that Garrido's workbook columns use this semantics.
 
 Primary local artifact:
 `outputs/audits/garrido_event_delayed_quantity_r13/verdict.json`.
+
+## FIFO-to-order continuation
+
+The paired audit now produces two intentionally separate order artifacts:
+
+1. `counterfactual_order_delays.csv` matches the same demand identity `j` and
+   measures how much later that order releases in the factual run. This includes
+   downstream queue propagation.
+2. `fifo_release_opportunities.csv` allocates only positive increments of
+   cumulative release debt to the concrete order released in the no-event run.
+   Factual releases at the same timestamp are credited first. Queue reshuffling
+   that does not increase quantity debt therefore receives no additional slice.
+
+In the Cf1 R13 pilot, R13@840 displaced 158 order identities but generated 127
+direct FIFO release opportunities; R13@1008 displaced 463 identities but only
+21 direct opportunities. The difference is propagated queue impact, not new
+missing material.
+
+The bounded screen was then extended to odd Cf cases only:
+
+| Family | Odd Cf cases | Events audited | Events with release debt | Direct FIFO opportunities | Delayed order identities |
+|---|---|---:|---:|---:|---:|
+| R1 / R13 | 1, 3, 5, 7, 9 | 75 | 7 | 1,324 | 3,192 |
+| R2 duration events | 11, 13, 15, 17, 19 | 40 | 17 | 4,288 | 1,332 |
+
+Gross FIFO opportunity quantity is a throughput measure across time and must not
+be confused with peak concurrent debt. The largest peak release debt in the
+screens was 25,425 rations for R1 and 46,187 for R2; repeated direct opportunities
+can legitimately sum above those peaks as debt clears and reopens.
+
+This continuation closes the mapping step at audit level. It does **not** yet
+justify overwriting workbook risk columns or promoting a new ReT lane. The next
+promotion test must compare the event-FIFO attribution against workbook marks on
+the odd Cf set, using a frozen rule, before any even-Cf evaluation.
