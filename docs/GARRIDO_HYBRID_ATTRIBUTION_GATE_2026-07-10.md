@@ -2,7 +2,7 @@
 
 > **Subsequent project decision:** the failed hybrid remains boundary evidence,
 > but exact Simulink attribution recovery is no longer an RL training gate. See
-> `docs/GARRIDO_OPERATIONAL_REFERENCE_DECISION_2026-07-10.md`.
+> `docs/GARRIDO_ATTRIBUTION_DECISION_2026-07-10.md`.
 
 ## Executive decision
 

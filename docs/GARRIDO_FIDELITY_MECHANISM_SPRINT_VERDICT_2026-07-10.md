@@ -2,7 +2,7 @@
 
 > **Supersession note:** this document remains the evidence that exact endogenous
 > distribution reproduction failed. Its RL-blocking policy was superseded by
-> `docs/GARRIDO_OPERATIONAL_REFERENCE_DECISION_2026-07-10.md`, which authorizes a
+> `docs/GARRIDO_ATTRIBUTION_DECISION_2026-07-10.md`, which authorizes a
 > separately named Garrido-informed operational reference without relabeling
 > this gate as passed.
 

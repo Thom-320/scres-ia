@@ -19,7 +19,7 @@ def test_preflight_freeze_summary_keeps_excel_as_primary_resilience() -> None:
     assert summary["reference_gate"]["promoted"] is False
     assert (
         summary["operational_reference"]["contract_id"]
-        == "garrido_operational_reference_v1"
+        == "garrido_proxy_v1"
     )
 
 

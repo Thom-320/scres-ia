@@ -39,7 +39,7 @@ from supply_chain.config import (  # noqa: E402
 DEFAULT_OUTPUT_DIR = Path("outputs/preflight/garrido_before_ppo")
 REFERENCE_GATE_PATH = Path("outputs/audits/garrido_reference_v2_gate/gate.json")
 OPERATIONAL_REFERENCE_PATH = Path(
-    "supply_chain/data/garrido_operational_reference_v1_2026-07-10.json"
+    "supply_chain/data/garrido_proxy_v1_freeze_2026-07-10.json"
 )
 REWARD_CANDIDATES = (
     "ReT_garrido2024_raw",
@@ -195,9 +195,9 @@ def _freeze_summary(args: argparse.Namespace) -> dict[str, Any]:
             OPERATIONAL_REFERENCE_PATH.read_text(encoding="utf-8")
         )
     training_authorized = bool(
-        operational_payload.get("new_rl_training_allowed", False)
+        operational_payload.get("rl_training_allowed", False)
         and operational_payload.get("status")
-        == "authorized_for_new_research_training"
+        == "frozen_research_environment"
     )
     return {
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
@@ -212,7 +212,7 @@ def _freeze_summary(args: argparse.Namespace) -> dict[str, Any]:
             "contract_id": operational_payload.get("contract_id"),
             "status": operational_payload.get("status"),
             "claim_boundary": operational_payload.get("claim_boundary", {}),
-            "frozen_environment": operational_payload.get("frozen_environment", {}),
+            "frozen_environment": operational_payload.get("sim_kwargs", {}),
         },
         "reference_gate": {
             "path": str(REFERENCE_GATE_PATH),

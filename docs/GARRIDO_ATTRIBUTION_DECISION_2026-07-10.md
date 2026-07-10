@@ -75,4 +75,6 @@ blocker under honest labeling.
 - No more attribution-mechanism fitting against odd CFs (unidentified).
 - Even CFs are exhausted for this question (one r3 measurement stands).
 - No new windows, propagation heuristics, or per-risk special cases.
-- Track C / adaptive lanes keep their own frozen physics (`adaptive_research_v1`).
+- Legacy adaptive checkpoints remain on their original frozen physics. New
+  training must rebuild `adaptive_research_v1` from `garrido_proxy_v1` and
+  construct a new static frontier.
