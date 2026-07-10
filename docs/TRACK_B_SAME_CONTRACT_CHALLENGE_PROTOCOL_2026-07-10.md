@@ -2,6 +2,10 @@
 
 Status: **frozen before inspecting any tape in the ranges below**.
 
+Execution status: **complete; stop rule failed**. See
+`docs/TRACK_B_SAME_CONTRACT_CHALLENGE_VERDICT_2026-07-10.md`. The protocol
+below is preserved unchanged as the ex ante specification.
+
 ## Scientific question
 
 Does the canonical joint PPO retain an out-of-sample Garrido/Excel ReT

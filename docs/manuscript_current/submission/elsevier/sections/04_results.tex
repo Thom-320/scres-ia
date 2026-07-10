@@ -184,8 +184,8 @@ Shift-util.\ cost idx & 0.665 & 0.667 & $-0.002$ [$-0.021$, 0.017] (n.s.) \\
 \end{tabular}
 \end{table}
 
-PPO improves Garrido/Excel ReT by 0.000438 over the best dense
-downstream-dispatch static comparator; the order-level ReT gain is
+Relative to the restricted downstream-dispatch static family, PPO improves
+Garrido/Excel ReT by 0.000438; the order-level ReT gain is
 0.000426. Because the 120 CRN pairs reuse a finite set of evaluation
 scenarios across seeds --- the per-seed evaluation plans overlap, so the
 120 rows contain only 21 unique evaluation tapes --- we treat the training
@@ -227,7 +227,8 @@ nearly sevenfold reduction in
 that tail is operationally material for a forward food-resupply chain,
 where the extreme-delay case is precisely the scenario a sustainment
 planner must provision against.
-The policy is Pareto non-dominated on the ReT--cost--tail--flow frontier:
+Within that restricted comparator family, the policy is Pareto non-dominated
+on the ReT--cost--tail--flow frontier:
 no static policy in the dense dispatch grid jointly matches or exceeds PPO on Excel
 ReT, cost, CTj p99, and flow fill simultaneously. It is \emph{not},
 however, a strict cost win on the shift dimension: the shift-utilization
@@ -236,7 +237,8 @@ difference is not statistically distinguishable from zero (CI95 crosses
 zero). We therefore report the result as non-dominated, not
 shift-cost-dominant.
 
-The local upstream bound does not overturn this result. Holding the best
+The local upstream bound does not overturn this restricted-family result.
+Holding the best
 downstream cell fixed (S2, Op10$\times$2.00, Op12$\times$1.50) and
 varying Op3 and Op9 quantity multipliers over a 3$\times$3 grid, the best
 static bound policy is Op3$\times$1.00, Op9$\times$1.25 with order-level
@@ -410,6 +412,46 @@ frozen shift removes their distinguishing dimension; the heuristic
 comparators in that arm act dynamically and remain genuine baselines,
 which is why the reported deltas use the best \emph{evaluated} comparator
 including heuristics.}
+
+\hypertarget{44b-same-contract-challenge}{%
+\subsection{Same-contract static challenge (terminal gate)}\label{44b-same-contract-challenge}}
+
+The preceding frontiers do not grant constant policies all seven continuous
+Track B controls plus the three-level shift choice. We therefore froze a
+terminal challenge before opening its final tapes. Using only calibration
+tapes 300001--300024, we ran one 128-point Sobol screen plus the prespecified
+old-frontier winner, followed by one local refinement around the eight
+leaders. No additional search was permitted. The selected constant policy
+was then frozen and compared with all ten canonical PPO checkpoints on 60
+untouched tapes (400001--400060).
+
+\begin{table}[htbp]
+\centering
+\caption{Terminal same-contract challenge on 60 untouched tapes. Confidence intervals use a two-way checkpoint/training-seed $\times$ tape bootstrap.}
+\label{tab:same_contract_challenge}
+\small
+\begin{tabular}{@{}p{0.40\linewidth}p{0.31\linewidth}r@{}}
+\toprule
+Contrast (Excel ReT) & Mean $\Delta$ [two-way CI95] & Positive seeds \\
+\midrule
+Canonical PPO $-$ full-contract static & $-.000018$ [$-.000029,-.000008$] & 2/10 \\
+Fresh joint PPO $-$ anchored learned arm & $+.000021$ [$+.000007,+.000035$] & 4/5 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The full-contract constant policy attains Excel ReT 0.005906366 versus
+0.005888317 for canonical PPO. CVaR05 moves in the same direction
+($-0.000101921$, CI95 $[-0.000163278,-0.000042639]$). Thus the earlier large,
+stable PPO gain is attributable to comparator scope: the 147-cell family
+held upstream controls fixed. The learned-policy contrast remains informative
+but secondary: fresh joint PPO exceeds an upstream/shift learner whose
+dispatch is fixed at Op10 $2.0\times$, Op12 $1.5\times$ by a small positive
+increment. This does not establish adaptive superiority because the stronger
+constant full-contract policy already matches or exceeds canonical PPO. Under
+the frozen stop rule, the adaptive-advantage and bottleneck-value claims are
+retired; the supported contribution is benchmark and comparator-contract
+design.
 
 \begin{figure}[htbp]
 \centering

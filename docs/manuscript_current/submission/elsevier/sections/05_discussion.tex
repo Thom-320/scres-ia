@@ -1,6 +1,21 @@
 \hypertarget{5-discussion}{%
 \section{Discussion}\label{5-discussion}}
 
+\hypertarget{50-terminal-interpretation}{%
+\subsection{Terminal interpretation: comparator scope, not adaptive superiority}\label{50-terminal-interpretation}}
+
+The same-contract challenge in Section~\ref{44b-same-contract-challenge}
+governs interpretation of all earlier positive Track B comparisons. The
+147-cell frontier and local 3$\times$3 bound are valid restricted-family
+benchmarks, but they do not span the learner's full decision contract. Once a
+constant policy is calibrated over that full contract, its held-out Excel ReT
+exceeds the ten-checkpoint PPO mean with a two-way confidence interval wholly
+below zero for PPO minus static. We therefore make no claim that PPO is
+adaptively superior in Track B. The scientific result is an audit result:
+apparently robust learning gains can survive seed expansion, crossed tapes,
+operational metrics, and privileged-information controls yet still disappear
+when comparator decision rights are aligned with learner decision rights.
+
 \hypertarget{51-interpreting-track-a}{%
 \subsection{Interpreting the Track A negative result}\label{51-interpreting-track-a}}
 
@@ -27,7 +42,7 @@ Track B changes the controllable interface, not the underlying DES physics.
 By adding Op10 and Op12 dispatch multipliers to the action space, the agent
 gains leverage over the downstream bottleneck that constrains Track A. The
 learned policy achieves higher Excel ReT, service continuity, and
-recovery-tail metrics than the best of a dense downstream-dispatch grid of static comparators,
+recovery-tail metrics than the best of a restricted dense downstream-dispatch grid of static comparators,
 but it is not a strict cost win on the shift dimension alone: its
 shift-utilization cost index is not statistically distinguishable from
 the best comparator selected by ReT at zero dispatch charge. We report
@@ -39,21 +54,21 @@ the best static once dispatch expediting carries a positive charge at the
 tested threshold --- the policy buys recovery with \emph{targeted}, not free,
 transport flexibility.
 
-The identified factorial (Section~4.4) refines this
-interpretation. At matched 5-seed, 60{,}000-timestep scale on fresh
+The identified factorial (Section~4.4) refines this restricted-family
+interpretation, but the terminal same-contract challenge supersedes it as a
+superiority gate. At matched 5-seed, 60{,}000-timestep scale on fresh
 held-out tapes against one common comparator, the full \emph{joint}
 contract gains $+0.000517$ over the prespecified static, the
 \emph{upstream\_shift} arm (no dispatch access) retains $+0.000425$ of
 that gain, and the nested contrast identifies the dispatch-access
 increment at $+0.000092$ (two-way CI95 excluding zero, all seeds
 positive), while \emph{dispatch-only} control does not beat the dense
-frontier that already optimizes exactly that subspace. The mechanism is
-therefore two-part: the dominant share of adaptive value concentrates on
-the levers the static comparator family holds fixed, and extending
-authority to the downstream bottleneck adds a smaller, causally
-identified increment. The learner wins by moving what statics cannot,
-and wins more when it can also reach the bottleneck; the number of
-controllable dimensions per se is not what drives the advantage.
+frontier that already optimizes exactly that subspace. This decomposition
+shows why the original comparison was underpowered: most apparent value lay
+in dimensions that the static family was not allowed to move. The anchored-
+arm rerun retains a small within-learner dispatch increment, but the full-
+contract static reversal prevents interpreting that increment as bottleneck
+value over strong static control.
 
 \hypertarget{53-action-space-alignment}{%
 \subsection{Action-space alignment as a design principle}\label{53-action-space-alignment}}
@@ -65,17 +80,18 @@ throughput; organizational-learning accounts of adaptation and forgetting
 \cite{levitt1988organizational}; RL agent design, which determines what the
 agent can control; and action-space architecture, which determines how
 decisions are represented.
-Our benchmark demonstrates a concrete instance of this connection: when the
+Our benchmark demonstrates a cautionary instance of this connection: when the
 action space does not cover the active constraint (Track A), better
 algorithms and rewards do not convert the measured headroom; when downstream
-dispatch authority is exposed (Track B), a standard PPO+MLP agent can produce
-a decisive advantage in the designed sustained-disruption cell. The reward
+dispatch authority is exposed (Track B), a standard PPO+MLP agent produces a
+decisive advantage only against a comparator family with narrower decision
+rights; the advantage disappears under the same-contract challenge. The reward
 sweep (Section~4.6) reinforces this: all 18 screened reward/observation cells
 show positive Excel ReT deltas, whereas in Track A no reward formulation
-succeeds. This suggests a practical design principle: \emph{before investing
-in architectural novelty or reward engineering, verify that the agent's
-controllable interface reaches the binding operational bottleneck and that
-the resulting headroom is dynamically convertible into recovery performance.}
+succeeds. This suggests a practical design principle: \emph{before attributing
+a gain to learning, grant the non-learning benchmark the same feasible
+decision rights and separate the value of the contract from the value of
+adaptation.}
 
 \hypertarget{54-positioning}{%
 \subsection{Positioning relative to the AI--SCRES literature}\label{54-positioning}}

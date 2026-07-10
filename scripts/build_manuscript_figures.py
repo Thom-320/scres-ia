@@ -119,12 +119,12 @@ def fig1_bottleneck_alignment() -> None:
     )
     chain(
         0.95,
-        "Track B \u2014 positive case",
+        "Track B \u2014 comparator-scope audit",
         [
-            ("Buffer + shift\n+ dispatch controls", *neutral),
-            ("Closed-loop\nfeedback policy", *neutral),
-            ("Op10/Op12 dispatch\ncontrollable", *neutral),
-            ("Adaptive recovery:\nReT + tail gains", "#e7f4e9", GREEN, 1.2),
+            ("PPO controls upstream\n+ shift + dispatch", *neutral),
+            ("Restricted static controls\nshift + dispatch only", *neutral),
+            ("Apparent PPO gain\n+0.000486", "#fff8e1", "#b7791f", 1.2),
+            ("Full-contract static\nreverses the gain", "#fbe9e7", VERMIL, 1.2),
         ],
         "0.30",
         1.6,

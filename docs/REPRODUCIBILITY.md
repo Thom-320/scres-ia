@@ -1,7 +1,7 @@
 # Reproducibility Guide
 
 This guide defines the shortest path to reproduce the current paper-facing
-benchmark story: the **Track B** decision-contract result. The claim-by-claim
+benchmark story: the **Track B** decision-contract audit. The claim-by-claim
 source of truth is `docs/CLAIMS_REGISTRY_Q1_DEFENSE_2026-07-01.md`; every
 headline number below traces to a dated artifact directory.
 
@@ -92,6 +92,12 @@ the older checkpoints (`scripts/run_track_b_crossed_eval.py`).
   (see the claims registry entry C1 for the exact command).
 - Corrected decision-contract factorial (mechanism gate):
   `scripts/run_track_b_contract_factorial.py` → `outputs/experiments/track_b_factorial_*_2026-07-09/`.
+- Decisive same-contract challenge (calibration tapes `300001–300024`, final
+  tapes `400001–400060`):
+  `scripts/launch_track_b_same_contract_challenge_vps.sh` →
+  `outputs/experiments/track_b_same_contract_challenge_2026-07-10/`. The
+  full-contract static exceeds canonical PPO by `0.000018049` Excel ReT
+  (PPO−static CI95 `[−0.000028615,−0.000008087]`); see the dated verdict.
 
 ## Statistical unit
 

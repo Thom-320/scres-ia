@@ -16,24 +16,22 @@ and reviewer-facing explanations unless a later note explicitly supersedes it.
 The manuscript in `docs/manuscript_current/submission/elsevier/` makes one
 central claim:
 
-> In a thesis-grounded military food supply-chain DES, a learned policy (PPO)
-> improves Garrido/Excel resilience over dense static frontiers. The identified
-> factorial (2026-07-10) decomposes the gain: most of it (~82%) comes from
-> closed-loop control of the upstream/shift levers that the static family holds
-> fixed, and adding downstream dispatch authority (Op10/Op12) contributes a
-> further causally identified increment (+0.000092, CI95 > 0, 5/5 seeds);
-> dispatch authority alone does not beat the dense frontier that already
-> optimizes that subspace. The measured gain is adaptive recovery, not
-> anticipatory prevention.
+> In a thesis-grounded military food-supply DES, PPO appears decisively better
+> than a dense static frontier when that frontier varies only shift and
+> downstream dispatch while holding the learner's upstream controls fixed.
+> That advantage does **not** survive a same-contract challenge: a
+> calibration-only constant full-contract policy exceeds the ten-checkpoint
+> PPO mean on 60 untouched tapes (PPO minus static `−0.000018049`, two-way
+> CI95 `[−0.000028615,−0.000008087]`). The paper's contribution is therefore
+> benchmark and comparator-contract design, not demonstrated adaptive
+> superiority. A small within-learner dispatch increment survives, but it does
+> not restore superiority over static control.
 
-Do NOT write "only when the contract exposes dispatch": the factorial's
-upstream_shift arm (track_b_v1 upstream parameterization, no dispatch) beats
-the static comparator by +0.000425 on fresh tapes. The Track A boundary result
-applies to the thesis-grounded buffer/shift contract, not to every no-dispatch
-contract. Open reviewer-critical check (2026-07-10, running): the same-contract
-static challenge (`docs/TRACK_B_SAME_CONTRACT_CHALLENGE_PROTOCOL_2026-07-10.md`)
-— a calibration-only full-contract constant policy and an upstream_shift arm
-anchored at the best fixed dispatch (2.0x/1.5x) on virgin tapes 400001+.
+The decisive artifact is
+`docs/TRACK_B_SAME_CONTRACT_CHALLENGE_VERDICT_2026-07-10.md`. Older positive
+comparisons remain valid only relative to their explicitly restricted static
+families. Do not aggregate them into a claim that PPO improves Track B
+resilience over strong same-contract statics.
 
 The repository roles that must not be conflated:
 
@@ -43,8 +41,9 @@ The repository roles that must not be conflated:
 - **Track A** (`track_a_*` contracts): the thesis-grounded buffer/shift
   decision family. Boundary result: no tested learner converts the measured
   oracle headroom (claims registry C8).
-- **Track B** (`track_b_v1`, 8D): the canonical positive lane — upstream
-  qty/ROP + Op5 + shift + Op10/Op12 dispatch. Primary result C1/C21.
+- **Track B** (`track_b_v1`, 8D): the comparator-sensitivity lane — upstream
+  qty/ROP + Op5 + shift + Op10/Op12 dispatch. It contains the restricted-
+  frontier positive result and the decisive same-contract reversal.
 - **Track B-P** (`track_bp_v1`, 11D; `supply_chain/track_bp_env.py`): the
   Paper-2 extension lane (strategic reserve postures under lead-time
   commitment). Outside Paper 1. See C28/C29.
@@ -71,6 +70,9 @@ The repository roles that must not be conflated:
   CI95 `[+0.000456, +0.000517]`, 10/10 checkpoints and 60/60 tapes positive.
 - Corrected decision-contract factorial (Blocker 2, mechanism gate):
   `outputs/experiments/track_b_factorial_{joint,upstream_shift,dispatch_only}_2026-07-09/`
+- **Same-contract challenge (final gate, failed):**
+  `outputs/experiments/track_b_same_contract_challenge_2026-07-10/` and
+  `docs/TRACK_B_SAME_CONTRACT_CHALLENGE_VERDICT_2026-07-10.md`.
 - Frozen checkpoints: see `docs/REPRODUCIBILITY.md`.
 - E3 cross-regime + dense-frontier: `docs/track_b_q1_stats_2026-07-02_final/`
   and `outputs/experiments/track_b_e3_dense_frontier_2026-07-02/` (use the
@@ -101,9 +103,9 @@ When documents disagree:
 ## Required language discipline
 
 Preferred: "thesis-grounded reconstruction with forensic workbook replay and
-throughput checks"; "adaptive recovery"; "identified decision-contract
-decomposition (~82% upstream/shift closed-loop, +0.000092 identified dispatch
-increment)"; "boundary result"; "no detected difference at current precision".
+throughput checks"; "restricted-frontier gain"; "same-contract static
+challenge"; "comparator-family sensitivity"; "small within-learner dispatch
+increment"; "boundary result"; "no detected difference at current precision".
 
 Avoid: "validated digital twin"; "empirically validated"; the invented
 "±15% validation threshold"; "prevention"/"anticipation"; "organizational
@@ -111,4 +113,6 @@ learning"/"path dependency"; "worst-case" for p99 statistics; "equivalent"
 for a CI that spans zero; "regardless of algorithm choice"; "full 8D static
 frontier" for the downstream 147-cell enumeration; "first DES–RL for SCRES";
 "downstream dispatch access is the strongest (observed) lever" (retired by the
-identified factorial); "only when the contract exposes dispatch".
+identified factorial); "only when the contract exposes dispatch"; "PPO beats
+strong static control"; "adaptive advantage" or "bottleneck value" without an
+explicit restricted-comparator qualifier.

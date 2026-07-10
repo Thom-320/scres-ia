@@ -1,5 +1,13 @@
 # Corrected Decision-Contract Factorial — Verdict (2026-07-10)
 
+> **Superseded as the Paper 1 promotion gate.** The later same-contract
+> challenge (`docs/TRACK_B_SAME_CONTRACT_CHALLENGE_VERDICT_2026-07-10.md`)
+> shows that a calibration-only constant policy spanning the full Track B
+> contract exceeds the canonical ten-checkpoint PPO mean on 60 new tapes.
+> The factorial below remains valid for its stated restricted comparator and
+> nested learned-policy contrasts, but it no longer supports a general PPO
+> advantage or an IJPR-leading bottleneck claim.
+
 **Headline: the pre-registered dispatch-access gate PASSES — adding Op10/Op12 dispatch
 authority to an otherwise identical contract yields an identified positive held-out
 contrast (+0.000092, two-way CI95 [+0.000077, +0.000108], 5/5 seeds). But the identified

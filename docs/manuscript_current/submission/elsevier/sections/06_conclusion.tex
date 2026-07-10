@@ -4,9 +4,9 @@
 This paper presented a reproducible DES+RL benchmark for operational
 resilience control in a military food supply chain, grounded in
 Garrido-Rios' 13-operation simulation model~\cite{garrido2017}. The
-experimental design uses two matched benchmark families to answer a
-structural question: when does reinforcement learning outperform strong
-static baselines in resilience-oriented operational control?
+experimental design ultimately answers a benchmark-design question: does an
+apparent reinforcement-learning advantage survive when the static comparator
+is optimized over the same decision contract?
 
 Under the thesis-grounded Track A contract, where the agent controls
 upstream inventory and assembly shifts, dense common-random-number
@@ -22,7 +22,7 @@ dispatch bottleneck additionally outside its controllable interface.
 Under the DES-preserving Track B operational extension, which adds downstream transport
 dispatch at Op10 and Op12 (an 8-dimensional action contract) while
 preserving the DES backbone, PPO improves Garrido/Excel resilience over
-the best of a dense downstream-dispatch grid of static comparators under paired
+the best of a restricted dense downstream-dispatch grid of static comparators under paired
 common-random-number evaluation (+0.000438 Excel ReT across 10 training
 seeds, 95\% CI entirely positive),
 with matching gains in service continuity and recovery-tail metrics. A
@@ -42,20 +42,17 @@ where the frozen policy loses narrowly; and two
 independent tests --- an observation-masked retrain and a
 privileged-access static comparator --- rule out that the effect depends
 on the learned policy exploiting simulator-only regime information
-unavailable to any static or heuristic baseline.
+unavailable to any static or heuristic baseline. However, these controls do
+not address comparator scope. In the terminal same-contract challenge, a
+calibration-only constant full-contract policy attains Excel ReT 0.005906366
+versus 0.005888317 for canonical PPO; PPO minus static is $-0.000018049$
+with two-way CI95 $[-0.000028615,-0.000008087]$. This reverses the earlier
+headline and retires the adaptive-superiority claim.
 
-The central lesson is conditional rather than universal: in this
-benchmark, adaptive value concentrates on the levers that strong fixed
-policies hold constant, and extending the controllable interface to the
-binding operational constraint adds a further causally identified
-increment that the policy converts into recovery performance. This
-finding survives adversarial checks for the
-two most common alternative explanations --- larger action spaces and
-privileged observation access. It connects bottleneck reasoning from the
-Theory of Constraints with RL action-space design---a connection that, to
-our knowledge, has not been demonstrated empirically in the supply chain
-literature. For practitioners and researchers designing RL-based supply
-chain control systems, the implication is direct: before investing in
-architectural complexity, verify that the agent can act on the
-constraint that actually limits system performance and that this action
-surface exposes a recoverable dynamic frontier.
+The central lesson is methodological: comparator decision rights are part of
+the treatment definition. A large gain can be stable across seeds, tapes,
+tail metrics, and information controls while remaining an artifact of a
+static family that holds learner-controlled dimensions fixed. For researchers
+and practitioners, the implication is direct: optimize a credible same-
+contract non-learning policy before attributing resilience gains to
+adaptation, architecture, or bottleneck access.
