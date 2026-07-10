@@ -127,14 +127,20 @@ non-stationarity + costs, constants suffice" — a strong boundary.
   − λ_s·(S−1)·step` — ONE quantity for training reward, static optimization,
   and evaluation (the alignment principle; ret_excel alone reported alongside).
 
-### 3.2 Decision contract `track_c_v1` (12D = track_bp_v1 + live op5)
+### 3.2 Decision contract `track_c_v1` (11D — CORRECTED at implementation)
 
 Dims 0–7: track_b_v1 (op3_q, op9_q, op3_rop, op9_rop, op5_q, shift, op10_q,
 op12_q). Dims 8–10: buffer-target fractions op3_rm/op5_rm/op9_rations under
-the 168h commitment lag (track_bp machinery). Fix: construct the env WITH
-initial op5_rm buffer so dim 4 is live. The static comparator family gets THE
-SAME 12 dims (Sobol full-contract search) plus Garrido's own clock family
-(I168..I1344 × S1–3, his Scenario II/III grid) as named baselines.
+the 168h commitment lag (track_bp machinery). IMPLEMENTATION CORRECTION
+(2026-07-10, `supply_chain/track_c_env.py` docstring): giving op5_q a live
+initial buffer creates a write conflict with dim 9 (both write the op5_rm
+target, op5_q last) — so the contract stays 11D with dim 4 a DISCLOSED no-op
+and op5 authority flowing through dim 9. Any learner arm should freeze dim 4.
+The static comparator family gets THE SAME 11 dims (Sobol full-contract
+search) plus Garrido's own clock family (I168..I1344 × S1–3, Scenario II/III)
+as named baselines. The C1 promote threshold is the PRE-REGISTRATION's
+scale-aware form (0.05·ReT_base with CI95>0), which supersedes the
+provisional "+0.002" below (frozen before any campaign-world result existed).
 
 ### 3.3 Observation
 
