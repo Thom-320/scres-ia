@@ -102,7 +102,7 @@ the Track C oracle phase ENDS and the null verdict is written (constants are
 structurally near-optimal in this DES class across three mechanism families:
 stationary, interdiction-campaign, and supply/demand-stress campaign).**
 
-| 5 | outputs/experiments/track_c_gates_iter5_2026-07-10 | cycle: calm 10wk (native) → pre_campaign 3wk (freq {R13:2,R24:1.5}) → campaign 8wk (freq {R13:6,R24:4,R22:2,R23:2}, impact {R24:2,R22:2,R23:2}); λ share 0.15; lead 168h | (pending) |
+| 5 | outputs/experiments/track_c_gates_iter5_2026-07-10 | cycle: calm 10wk (native) → pre_campaign 3wk (freq {R13:2,R24:1.5}) → campaign 8wk (freq {R13:6,R24:4,R22:2,R23:2}, impact {R24:2,R22:2,R23:2}); λ share 0.15; lead 168h | **FAIL — TERMINAL**: +2.78e-5 CI [+2.43e-5, +3.14e-5], **24/24 tapes** (cleanest signal of the night) vs threshold 2.09e-4. Detector +6.50e-5 [+6.25e-5, +6.74e-5], capture 2.34 — again beats the true-state oracle, still 3.2× below bar. **Oracle phase CLOSED per the terminal rule. Null verdict: `docs/TRACK_C_ORACLE_PHASE_VERDICT_2026-07-10.md`. No PPO seed was ever trained.** |
 
 ## Falsifiers / sanity (Gate C0)
 
