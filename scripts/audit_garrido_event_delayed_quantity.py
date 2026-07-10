@@ -247,7 +247,13 @@ def match_fifo_release_opportunities(
     return rows
 
 
-def _sim_kwargs(cfi: int, seed: int, horizon: float) -> dict[str, Any]:
+def _sim_kwargs(
+    cfi: int,
+    seed: int,
+    horizon: float,
+    *,
+    op2_release_clock_mode: str = "inherit",
+) -> dict[str, Any]:
     spec = design_spec_for_cfi(cfi)
     return {
         "shifts": spec.shifts,
@@ -271,6 +277,7 @@ def _sim_kwargs(cfi: int, seed: int, horizon: float) -> dict[str, Any]:
         "order_fulfillment_mode": "op9_linked",
         "assembly_flow_mode": "aggregate_line",
         "periodic_release_mode": "start_to_start",
+        "op2_release_clock_mode": op2_release_clock_mode,
         "operational_risk_initialization_mode": "include_initial_cycle",
         "risk_rng_mode": "per_risk",
         "op9_dispatch_policy": "fixed_clock_daily",
@@ -281,7 +288,12 @@ def _sim_kwargs(cfi: int, seed: int, horizon: float) -> dict[str, Any]:
 
 
 def run_audit(
-    *, cfi: int, horizon: float, max_events: int, risk_id: str | None = None
+    *,
+    cfi: int,
+    horizon: float,
+    max_events: int,
+    risk_id: str | None = None,
+    op2_release_clock_mode: str = "inherit",
 ) -> tuple[
     list[dict[str, Any]],
     list[dict[str, Any]],
@@ -289,7 +301,12 @@ def run_audit(
     list[dict[str, Any]],
 ]:
     target = load_raw_garrido_targets(DEFAULT_RAW_WORKBOOKS)[cfi]
-    kwargs = _sim_kwargs(cfi, int(target.seed), horizon)
+    kwargs = _sim_kwargs(
+        cfi,
+        int(target.seed),
+        horizon,
+        op2_release_clock_mode=op2_release_clock_mode,
+    )
 
     generator = MFSCSimulation(**kwargs).run()
     tape = [
@@ -375,6 +392,11 @@ def main() -> None:
     parser.add_argument("--max-events", type=int, default=5)
     parser.add_argument("--risk-id")
     parser.add_argument(
+        "--op2-release-clock-mode",
+        choices=("inherit", "calendar_anchored"),
+        default="inherit",
+    )
+    parser.add_argument(
         "--output-dir",
         type=Path,
         default=Path("outputs/audits/garrido_event_delayed_quantity"),
@@ -386,6 +408,7 @@ def main() -> None:
         horizon=args.horizon,
         max_events=args.max_events,
         risk_id=args.risk_id,
+        op2_release_clock_mode=args.op2_release_clock_mode,
     )
     (args.output_dir / "event_tape.json").write_text(
         json.dumps(tape, indent=2), encoding="utf-8"
@@ -435,14 +458,73 @@ def main() -> None:
                 "release_debt_recovered_at": release_node["debt_recovered_at"],
             }
         )
+    target = load_raw_garrido_targets(DEFAULT_RAW_WORKBOOKS)[args.cf]
+    factual_released = {
+        int(order.j)
+        for order in MFSCSimulation(
+            **_sim_kwargs(
+                args.cf,
+                int(target.seed),
+                args.horizon,
+                op2_release_clock_mode=args.op2_release_clock_mode,
+            ),
+            risk_event_tape=tape,
+        ).run().orders
+        if order.op9_release_time is not None
+    }
+    risk_summaries = []
+    for audited_risk in sorted({row["risk_id"] for row in rows}):
+        calendar_count = sum(event["risk_id"] == audited_risk for event in tape)
+        audited_refs = {
+            row["event_ref"] for row in rows if row["risk_id"] == audited_risk
+        }
+        fifo_orders = {
+            int(row["j"]) for row in fifo_rows if row["risk_id"] == audited_risk
+        }
+        identity_orders = {
+            int(row["j"]) for row in order_rows if row["risk_id"] == audited_risk
+        }
+        excel_orders = [
+            order for order in target.orders if float(order.optj) <= args.horizon
+        ]
+        excel_marked = [
+            order
+            for order in excel_orders
+            if any(
+                str(label).startswith(audited_risk) and float(value) > 0.0
+                for label, value in order.risk_values.items()
+            )
+        ]
+        risk_summaries.append(
+            {
+                "risk_id": audited_risk,
+                "calendar_events": calendar_count,
+                "audited_events": len(audited_refs),
+                "event_coverage": len(audited_refs) / max(calendar_count, 1),
+                "factual_released_orders": len(factual_released),
+                "unique_direct_fifo_orders": len(fifo_orders),
+                "direct_fifo_order_share": len(fifo_orders)
+                / max(len(factual_released), 1),
+                "unique_identity_delayed_orders": len(identity_orders),
+                "identity_delay_order_share": len(identity_orders)
+                / max(len(factual_released), 1),
+                "excel_orders_within_horizon": len(excel_orders),
+                "excel_marked_orders_within_horizon": len(excel_marked),
+                "excel_mark_share_within_horizon": len(excel_marked)
+                / max(len(excel_orders), 1),
+                "promotion_eligible": len(audited_refs) == calendar_count,
+            }
+        )
     verdict = {
         "estimand": "availability_without_event_minus_availability_with_event",
         "cfi": args.cf,
         "horizon": args.horizon,
+        "op2_release_clock_mode": args.op2_release_clock_mode,
         "calendar_events": len(tape),
         "events_audited": len({row["event_ref"] for row in rows}),
         "rows": rows,
         "event_order_summaries": event_summaries,
+        "risk_summaries": risk_summaries,
         "claim_boundary": (
             "Paired in-model counterfactual under a frozen replay calendar; "
             "not evidence of real-world causal effect."

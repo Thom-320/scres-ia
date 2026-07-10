@@ -126,3 +126,22 @@ def test_fifo_matching_allocates_only_incremental_release_debt() -> None:
     assert rows[0]["j"] == 1
     assert rows[0]["direct_fifo_quantity"] == pytest.approx(5.0)
     assert rows[0]["release_debt_after"] == pytest.approx(5.0)
+
+
+def test_calendar_anchored_op2_clock_does_not_shift_all_future_releases() -> None:
+    kwargs = _sim_kwargs(cfi=1, seed=375, horizon=1_600.0)
+    event = {
+        "risk_id": "R13",
+        "start_time": 671.0,
+        "end_time": 815.0,
+        "duration": 144.0,
+        "affected_ops": [2],
+    }
+    shifted = MFSCSimulation(**kwargs, risk_event_tape=[event]).run()
+    anchored_kwargs = dict(kwargs)
+    anchored_kwargs["op2_release_clock_mode"] = "calendar_anchored"
+    anchored = MFSCSimulation(**anchored_kwargs, risk_event_tape=[event]).run()
+
+    assert shifted.supplier_delivery_events[0][0] == pytest.approx(839.0)
+    assert anchored.supplier_delivery_events[0][0] == pytest.approx(839.0)
+    assert anchored.supplier_delivery_events[1][0] < shifted.supplier_delivery_events[1][0]

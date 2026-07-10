@@ -100,3 +100,7 @@ This continuation closes the mapping step at audit level. It does **not** yet
 justify overwriting workbook risk columns or promoting a new ReT lane. The next
 promotion test must compare the event-FIFO attribution against workbook marks on
 the odd Cf set, using a frozen rule, before any even-Cf evaluation.
+
+**Subsequent result:** that odd-Cf R13 comparison has now been completed and
+failed jointly; see `docs/GARRIDO_HYBRID_ATTRIBUTION_GATE_2026-07-10.md`. The
+event-FIFO lane remains diagnostic and no even-Cf evaluation is authorized.

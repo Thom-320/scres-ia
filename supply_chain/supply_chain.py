@@ -231,6 +231,7 @@ class MFSCSimulation:
         r24_attribution_window_hours: float = 0.0,
         demand_start_after_warmup: bool = False,
         material_lineage_mode: str = "off",
+        op2_release_clock_mode: str = "inherit",
     ) -> None:
         if warmup_trigger not in WARMUP_TRIGGER_OPTIONS:
             valid = ", ".join(WARMUP_TRIGGER_OPTIONS)
@@ -321,6 +322,10 @@ class MFSCSimulation:
                 f"{periodic_release_mode!r}. Expected completion_relative or "
                 "start_to_start."
             )
+        if op2_release_clock_mode not in {"inherit", "calendar_anchored"}:
+            raise ValueError(
+                "op2_release_clock_mode must be 'inherit' or 'calendar_anchored'."
+            )
         if operational_risk_initialization_mode not in {
             "deferred_first_cycle",
             "include_initial_cycle",
@@ -383,6 +388,7 @@ class MFSCSimulation:
         self.order_fulfillment_mode = str(order_fulfillment_mode)
         self.assembly_flow_mode = str(assembly_flow_mode)
         self.periodic_release_mode = str(periodic_release_mode)
+        self.op2_release_clock_mode = str(op2_release_clock_mode)
         self.operational_risk_initialization_mode = str(
             operational_risk_initialization_mode
         )
@@ -2723,7 +2729,12 @@ class MFSCSimulation:
     def _op2_supplier_delivery(self):
         next_eligible_start = float(self.params["op2_rop"])
         while True:
-            if self.periodic_release_mode == "start_to_start":
+            clock_mode = (
+                self.periodic_release_mode
+                if self.op2_release_clock_mode == "inherit"
+                else self.op2_release_clock_mode
+            )
+            if clock_mode in {"start_to_start", "calendar_anchored"}:
                 wait = max(0.0, next_eligible_start - float(self.env.now))
                 if wait > 0.0:
                     yield self.env.timeout(wait)
@@ -2735,8 +2746,10 @@ class MFSCSimulation:
             while self._is_down(2):
                 yield self.env.timeout(1)
             actual_start = float(self.env.now)
-            if self.periodic_release_mode == "start_to_start":
+            if clock_mode == "start_to_start":
                 next_eligible_start = actual_start + float(self.params["op2_rop"])
+            elif clock_mode == "calendar_anchored":
+                next_eligible_start += float(self.params["op2_rop"])
             pt_remaining = self._pt("op2_pt")
             while pt_remaining > 0:
                 while self._is_down(2):
