@@ -507,7 +507,7 @@ def main() -> None:
             lo, hi = two_way_bootstrap_1d(delta)
             c1_gap = float(c1["switcher_minus_constant_J"]["mean"])
             capture = float(delta.mean()) / c1_gap if c1_gap > 0 else float("nan")
-            passed = bool(capture >= 0.5 and lo > 0)
+            passed = bool(capture >= 0.5 and lo > 0 and c1.get("passed", False))
             result = {
                 "gate": "C2",
                 "detector_minus_constant_J": {"mean": float(delta.mean()), "ci95": [lo, hi],
