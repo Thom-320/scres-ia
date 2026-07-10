@@ -367,7 +367,34 @@ actuators. Because both restricted arms keep the upstream inventory
 dimensions and each is scored against a different in-arm comparator,
 this decomposition is supportive pattern evidence, not an identified
 causal contrast for downstream dispatch access; the identified test is
-the common-comparator factorial described below. We retain the
+the common-comparator factorial that follows.
+
+\paragraph{Identified factorial.} To identify the causal value of dispatch
+access we ran a corrected factorial with true nested contracts, one common
+comparator, the canonical learning rate ($3\times10^{-4}$), and one common
+held-out tape battery (24 fresh evaluation tapes never used in any training
+or prior evaluation; 5 seeds $\times$ 60{,}000 timesteps per arm):
+\emph{joint} (full 8D); \emph{upstream\_shift} (dispatch dimensions frozen
+at the neutral multiplier --- upstream inventory and shift authority only);
+and \emph{dispatch\_only} (upstream and shift dimensions frozen at neutral/S2
+--- dispatch authority only). The pre-registered primary contrast, the value
+of \emph{adding} Op10/Op12 dispatch authority to an otherwise identical
+contract, is positive and identified: joint $-$ upstream\_shift
+$= +0.000092$ Excel ReT, two-way (seed~$\times$~tape) cluster-bootstrap CI95
+$[+0.000077, +0.000108]$, all five seeds positive. The full decomposition,
+however, re-proportions the mechanism: against the common static comparator,
+upstream\_shift alone gains $+0.000425$ $[+0.000372, +0.000488]$ ---
+roughly four fifths of the joint contract's $+0.000517$
+$[+0.000461, +0.000583]$ --- while dispatch\_only gains nothing
+($-0.000012$ $[-0.000028, +0.000004]$). The latter is a coherence check
+rather than a paradox: the dense 147-cell frontier already optimizes
+exactly the shift$\times$dispatch subspace, so a learner restricted to that
+subspace cannot beat it. The identified reading is therefore twofold:
+adaptive value concentrates in closed-loop control of the levers the static
+family holds fixed, and extending the contract to the downstream dispatch
+bottleneck adds a further, causally identified increment on top. (The joint
+arm, trained fresh for this factorial, independently replicates the
+canonical headline on fresh tapes.) We retain the
 joint 8D contract as the paper's canonical result (Section~4.3, trained at
 full 60k$\times$5-seed scale with matched hyperparameters to Track A) and
 treat the ablation as mechanism evidence rather than causal proof or a
