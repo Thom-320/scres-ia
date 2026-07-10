@@ -179,3 +179,36 @@ collects unrelated later events; `first-R0cr` then becomes arbitrarily early.
 - diagnostic per-order causal wait ledger; it does not enter ReT.
 
 These options are opt-in. Frozen adaptive lanes retain their previous defaults.
+
+## Addendum: causal-exposure attribution arm (Fable, post-sprint)
+
+The mandated causal-exposure candidate was implemented
+(`risk_attribution_source="causal_exposure"`: per-event endogenous exposure
+ending when the order backlog returns to its pre-event level, computed lazily
+from a queue-length history; R24 exposure from the surge until its induced
+backlog is absorbed; AP keeps raw outage overlap) and evaluated against the
+pre-registered rule on the ten odd CFs, three arms:
+
+| Arm (odd-CF means) | R2 ret_gap | R2 risk_gap | R2 RP95 log-err | R1 (all metrics) |
+|---|---:|---:|---:|---|
+| raw overlap | 0.137 | 0.234 | 0.312 | identical across arms |
+| 168 h R24 window | 0.054 | 0.064 | 0.200 | identical |
+| causal exposure | 0.135 | 0.231 | 0.310 | identical |
+
+**Verdict: the causal-exposure arm is FALSIFIED as implemented** — it adds
+almost nothing over raw overlap. Mechanism: our backlog is too SHALLOW most
+of the time (the very CT-body defect this sprint isolated), so the
+queue-relief close rule fires immediately and exposures collapse to the raw
+outage window. The single-CF read (CF11 RP95 ratio 1.16) was not
+representative. Artifact: `outputs/audits/attribution_three_arm_odd_cfs.json`.
+
+**Implication (ordering of repairs):** attribution surgery is DOWNSTREAM of
+queue-depth physics. Until the Op9 stock/release dynamics reproduce Garrido's
+standing mid-band backlog (the start-to-start release-clock candidate is the
+strongest lead: CF11 warm-up 816 vs 823.65 h, visible orders 2,130 vs 2,165,
+CT p50 101 vs 103 h — blocked only by its R1-side interaction with the first
+R12 contracting cycle), no exposure mechanism has the substrate it needs. The
+168 h window remains a disclosed calibration, not a mechanism, and even it
+leaves odd-CF ret_gap 0.054 vs the 0.02 bar. Next sprint = resolve the
+release-clock x initial-R12 interaction on the R1 side, then revisit
+exposure.

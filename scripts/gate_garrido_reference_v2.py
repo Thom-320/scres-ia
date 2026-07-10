@@ -177,7 +177,9 @@ def run_cf(
         enabled_risks=set(spec.enabled_risks),
         risk_overrides=dict(spec.risk_overrides),
         risk_occurrence_mode="thesis_window",
-        risk_attribution_source="des_events",
+        risk_attribution_source=(
+            "causal_exposure" if mechanistic_fulfillment else "des_events"
+        ),
         seed_stream_mode="split",
         year_basis=THESIS_FAITHFUL_PROTOCOL["year_basis"],
         warmup_trigger=THESIS_FAITHFUL_PROTOCOL["warmup_trigger"],
@@ -196,10 +198,9 @@ def run_cf(
         # are separate hypotheses, not interchangeable implementations.
         op9_dispatch_policy="fixed_clock_daily",
         downstream_transport_capacity_mode="parallel",
-        # R24 surge stress window (CF11 evidence: 75% of attended orders carry
-        # R24>0 ≈ 6.8 orders/event ≈ one week of placements). Opt-in here;
-        # default 0.0 keeps legacy point events bitwise for frozen lanes.
-        r24_attribution_window_hours=(168.0 if mechanistic_fulfillment else 0.0),
+        # R24 exposure is ENDOGENOUS under causal_exposure (surge until its
+        # induced backlog resolves) — the fixed 168 h screen window is retired.
+        r24_attribution_window_hours=0.0,
         demand_start_after_warmup=bool(mechanistic_fulfillment),
         ret_recovery_period_mode=(
             "elapsed" if mechanistic_fulfillment else "disruption"

@@ -117,7 +117,7 @@ THESIS_REPLICATION_DOWNSTREAM_Q_SOURCE = "figure_6_2"
 THESIS_ROBUSTNESS_DOWNSTREAM_Q_SOURCE = "table_6_20"
 TRACK_A_TRAINING_DOWNSTREAM_Q_SOURCE = THESIS_REPLICATION_DOWNSTREAM_Q_SOURCE
 RISK_OCCURRENCE_MODE_OPTIONS = ("legacy_renewal", "thesis_window")
-RISK_ATTRIBUTION_SOURCE_OPTIONS = ("des_events", "excel_risk_tape")
+RISK_ATTRIBUTION_SOURCE_OPTIONS = ("des_events", "excel_risk_tape", "causal_exposure")
 DEMAND_SOURCE_OPTIONS = (
     "thesis_calendar",
     "excel_order_tape",

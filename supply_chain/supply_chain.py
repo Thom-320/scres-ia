@@ -441,6 +441,9 @@ class MFSCSimulation:
         self.risk_overrides = dict(risk_overrides or {})
         self.risk_occurrence_mode = risk_occurrence_mode
         self.risk_attribution_source = risk_attribution_source
+        # Causal-exposure attribution state (lazy; only populated when used).
+        self._queue_len_history: list[tuple[float, int]] = []
+        self._exposure_end_cache: dict[int, float] = {}
         self.ret_recovery_period_mode = ret_recovery_period_mode
         self.backorder_overflow_mode = backorder_overflow_mode
         if self.risk_attribution_source == "excel_risk_tape":
@@ -1528,6 +1531,65 @@ class MFSCSimulation:
             )
         )
 
+    # ------------------------------------------------------- causal exposure
+    def _record_queue_len(self) -> None:
+        """Append (time, backlog length) to the queue history (monotone time)."""
+        history = self._queue_len_history
+        now = float(self.env.now)
+        n = len(self.pending_backorders)
+        if history and history[-1][0] == now:
+            history[-1] = (now, n)
+        else:
+            history.append((now, n))
+
+    def _queue_len_at(self, t: float) -> int:
+        """Backlog length just before time t (0 before the first sample)."""
+        history = self._queue_len_history
+        lo, hi = 0, len(history)
+        while lo < hi:
+            mid = (lo + hi) // 2
+            if history[mid][0] < float(t):
+                lo = mid + 1
+            else:
+                hi = mid
+        return history[lo - 1][1] if lo > 0 else 0
+
+    def _exposure_end_for(self, event: RiskEvent) -> float:
+        """Endogenous exposure end: the disruption's effect persists until the
+        order backlog returns to its pre-event level.
+
+        Garrido's per-order risk columns mark ~3x more orders per event than
+        the raw outage duration explains (CF11: R22 share 0.291 vs 0.108 with
+        matching event counts) — his exposure covers the induced-backlog
+        recovery period, not just the outage. The same rule closes an R24
+        surge exposure when the contingent demand and the queue it displaced
+        have been absorbed. Computed lazily from the queue-length history and
+        cached per event id.
+        """
+        key = id(event)
+        cached = self._exposure_end_cache.get(key)
+        if cached is not None:
+            return cached
+        baseline = self._queue_len_at(float(event.start_time))
+        end = float(event.end_time)
+        history = self._queue_len_history
+        # First history point at/after the raw event end with qlen <= baseline.
+        lo, hi = 0, len(history)
+        t0 = end
+        while lo < hi:
+            mid = (lo + hi) // 2
+            if history[mid][0] < t0:
+                lo = mid + 1
+            else:
+                hi = mid
+        exposure_end = float(self.env.now)  # still open if never relieved
+        for i in range(lo, len(history)):
+            if history[i][1] <= baseline:
+                exposure_end = max(end, history[i][0])
+                break
+        self._exposure_end_cache[key] = exposure_end
+        return exposure_end
+
     def _remove_pending_backorder(self, order: OrderRecord) -> None:
         """Remove a queued delayed order if it is still present.
 
@@ -1539,6 +1601,7 @@ class MFSCSimulation:
         if order in self.pending_backorders:
             self.pending_backorders.remove(order)
         self._refresh_pending_backorder_qty()
+        self._record_queue_len()
 
     def _finalize_pending_backorder(self, order: OrderRecord) -> None:
         """Mark a delayed order as fulfilled at the current simulation time."""
@@ -1593,6 +1656,7 @@ class MFSCSimulation:
         """
         self.pending_backorders.append(order)
         self.pending_backorders.sort(key=self._backorder_priority_key)
+        self._record_queue_len()
         while len(self.pending_backorders) > BACKORDER_QUEUE_CAP:
             if self.backorder_overflow_mode == "oldest":
                 # Evict the order that has waited longest (earliest OPTj).
@@ -3636,18 +3700,42 @@ class MFSCSimulation:
             )
             earliest_risk_start = min(earliest_risk_start, float(event.start_time))
 
+        causal = self.risk_attribution_source == "causal_exposure"
         for event in self.risk_events:
             if float(event.duration) <= 0.0:
+                if causal and str(event.risk_id) == "R24":
+                    # Endogenous surge exposure: from the contingent-demand
+                    # injection until the backlog it displaced is absorbed
+                    # (queue length back at its pre-event level). Replaces the
+                    # fixed 168 h screen window with a mechanism.
+                    exp_start = float(event.start_time)
+                    exp_end = self._exposure_end_for(event)
+                    o_start = max(exp_start, float(order.OPTj))
+                    o_end = min(exp_end, float(order.OATj))
+                    if o_start <= o_end:
+                        mark_event(event, max(1.0, o_end - o_start))
+                    continue
                 if float(order.OPTj) <= float(event.start_time) <= float(order.OATj):
                     mark_event(event, float(event.magnitude))
                 continue
 
-            overlap_start = max(float(event.start_time), float(order.OPTj))
-            overlap_end = min(float(event.end_time), float(order.OATj))
-            if overlap_start < overlap_end:
-                overlap = overlap_end - overlap_start
-                total_disruption_hours += overlap
-                mark_event(event, overlap)
+            raw_start = max(float(event.start_time), float(order.OPTj))
+            raw_end = min(float(event.end_time), float(order.OATj))
+            if raw_start < raw_end:
+                # AP semantics keep the RAW outage overlap (risk-time absorbed).
+                total_disruption_hours += raw_end - raw_start
+            if causal:
+                # Marking uses the endogenous exposure window: the outage's
+                # induced-backlog recovery keeps affecting orders after the
+                # operation itself is back up (CF11: R22 marks 0.291 of orders
+                # vs 0.108 under raw windows, with matching event counts).
+                exp_end_time = self._exposure_end_for(event)
+                overlap_start = max(float(event.start_time), float(order.OPTj))
+                overlap_end = min(exp_end_time, float(order.OATj))
+                if overlap_start < overlap_end:
+                    mark_event(event, overlap_end - overlap_start)
+            elif raw_start < raw_end:
+                mark_event(event, raw_end - raw_start)
 
         # Include ongoing disruptions at fulfillment time
         for op_id in range(1, 14):
