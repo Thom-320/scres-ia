@@ -4,17 +4,23 @@
 \hypertarget{41-des-validation}{%
 \subsection{DES validation}\label{41-des-validation}}
 
-The reconstructed DES was first validated against the deterministic
+The reconstructed DES was first checked against the deterministic
 baseline (Cf0, single shift S=1) reported in Garrido-Rios (2017, Table
 6.10)~\cite{garrido2017}. Using the official thesis basis of 8,064 hours per year (48
 operational weeks), the simulation delivers 733,621 rations per year on
-average, compared with the thesis reference of 767,592 rations, yielding
-a relative gap of $-4.43\%$. This is comfortably within the accepted
-$\pm 15\%$ validation threshold and supports the structural fidelity of
-the rebuilt DES. A secondary Gregorian-basis check (8,760 hours per
-year) produces 796,940 rations per year ($+3.82\%$ relative gap),
-confirming that the discrepancy is driven by year-basis conventions
-rather than model error.
+average, compared with the thesis reference of 767,592 rations, a
+relative gap of $-4.43\%$. For context, the thesis's own correlated
+inspection compares eight historical annual delivery totals against
+simulated output, with individual annual gaps ranging from $-21.6\%$ to
+$+14.1\%$ (RMSE $\approx$ 88,000 rations); our reconstruction gap sits
+well inside that historically observed dispersion. We characterize the
+environment as a thesis-grounded reconstruction with forensic workbook
+replay and throughput checks --- software verification, exact
+workbook-formula replay, and historical calibration --- rather than an
+externally validated model of the operating supply chain. A secondary
+Gregorian-basis check (8,760 hours per year) produces 796,940 rations
+per year ($+3.82\%$ relative gap), confirming that the discrepancy is
+driven by year-basis conventions rather than model error.
 
 Under deterministic conditions with risks disabled, the simulation
 produces 734,458 rations per year and delivers 733,621, with a fill rate
@@ -31,9 +37,11 @@ nominal system to a fragile network once disruption intensity escalates.
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.92\linewidth]{fig12_des_validation}
-\caption{DES validation. (a) Deterministic annual delivery against the
-thesis reference (Garrido-Rios, 2017, Table 6.10), within the accepted
-$\pm 15\%$ threshold. (b) Average annual delivery across the three
+\caption{DES reconstruction checks. (a) Year-by-year annual delivery
+against the thesis reference (Garrido-Rios, 2017, Table 6.10); the
+reconstruction gap ($-4.4\%$ on the thesis basis) sits well inside the
+thesis's own historical calibration dispersion (individual annual gaps
+of $-21.6\%$ to $+14.1\%$). (b) Average annual delivery across the three
 disruption regimes tested (deterministic, current stochastic risk,
 increased risk), showing the fragility transition as disruption
 intensity escalates.}
@@ -59,10 +67,12 @@ whether a learned policy can convert it.
 No tested learner does. Continuous PPO, PPO warm-started via behavior
 cloning on the oracle action table, and PPO trained under a family-conflict
 action contract (\texttt{per\_op\_conflict}, reward
-\texttt{ReT\_excel\_plus\_cvar}, 5 seeds) all fail to close the gap under
+\texttt{ReT\_excel\_plus\_cvar}) all fail to close the gap under
 paired common-random-number evaluation against the same dense static
-grid. The closest approach --- behavior-cloning-warm-started PPO under
-the family-conflict contract --- misses the best static comparator by
+grid. The closest approach --- a single behavior-cloning-warm-started PPO
+run under the family-conflict contract (3 training seeds, all three
+converging to the same held-out value) --- misses the best static
+comparator by
 $-6.99\times10^{-6}$ Excel ReT (0.155247 vs.\ 0.155254), a difference two
 orders of magnitude smaller than the measured oracle headroom, and is
 Pareto-dominated by 10 static configurations on the joint Excel
@@ -85,13 +95,12 @@ learner rows show that no tested policy converts it. Values are Excel ReT
 under the Track A evaluation family.}
 \label{tab:track_a_boundary}
 \footnotesize
-\setlength{\tabcolsep}{3.5pt}
+\setlength{\tabcolsep}{2.3pt}
 \begin{tabular}{p{0.28\linewidth} c c p{0.26\linewidth}}
 \toprule
 Policy family & Best learned & Best static & Outcome \\
 \midrule
-PPO (continuous, repaired) & 0.155247 & 0.155254 & loses ($-7.0\times10^{-6}$) \\
-BC-warm-started PPO & 0.155247 & 0.155254 & loses; Pareto-dominated \\
+BC-warm-started PPO (\texttt{per\_op\_conflict}, 3 seeds) & 0.155247 & 0.155254 & loses ($-7.0\times10^{-6}$); Pareto-dominated \\
 Regime-conditioned oracle & --- & \multicolumn{1}{c}{$+$0.000176 to $+$0.000296} & headroom exists, unconverted \\
 \bottomrule
 \end{tabular}
@@ -158,6 +167,7 @@ common-random-number (CRN) keys for the seed expansion.
 \caption{Track B main result: PPO vs.\ best dense downstream-dispatch static comparator (\texttt{S2}, Op10$\times$2.00, Op12$\times$1.50), paired CRN evaluation (10 training seeds $\times$ 12 CRN episodes). Episode-level pooled CI95 in brackets is descriptive; primary inference is seed-clustered (all ten per-seed mean deltas positive; seed-clustered bootstrap CI95 for the Excel ReT delta $[+0.000421, +0.000458]$).}
 \label{tab:track_b_main}
 \footnotesize
+\setlength{\tabcolsep}{3.0pt}
 \begin{tabular}{lccc}
 \toprule
 Metric & PPO & Best static & $\Delta$ [CI95] \\
@@ -168,8 +178,8 @@ Order-level ReT & 0.005673 & 0.005247 & +0.000426 [0.000398, 0.000455] \\
 Flow fill rate & 0.960 & 0.665 & +0.295 [0.287, 0.303] \\
 Rolling fill (4w) & 0.998 & 0.937 & +0.061 [0.034, 0.095] \\
 CTj p99 (hours) & 1{,}202 & 8{,}396 & $-7{,}195$ [$-7{,}462$, $-6{,}931$] \\
-Service-loss AUC/order & 116{,}131 & 1{,}190{,}307 & $-1{,}074{,}176$ [$-1{,}147{,}737$, $-1{,}008{,}612$] \\
-Shift-utilization cost index & 0.665 & 0.667 & $-0.002$ [$-0.021$, 0.017] (n.s.) \\
+Svc-loss AUC/order & 116{,}131 & 1{,}190{,}307 & $-1{,}074{,}176$ [$-1{,}148$k, $-1{,}009$k] \\
+Shift-util.\ cost idx & 0.665 & 0.667 & $-0.002$ [$-0.021$, 0.017] (n.s.) \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -191,15 +201,16 @@ recovery-branch range. Operationally, the same policy produces
 larger-magnitude
 improvements in flow fill rate, rolling fill, and
 recovery-tail cycle time (CTj p99 falls from 8{,}396 to 1{,}202 hours).
-In operational terms, the worst-case 1\% of rations orders under the best
+In operational terms, the slowest 1\% of rations orders under the best
 static comparator take approximately 350 days to complete cycle time
 (8{,}396~h $/$ 24); under PPO the same tail falls to approximately 50
 days (1{,}202~h $/$ 24). This is a p99 tail statistic, not a median
-delivery time, and should be read as a bound on worst-case resupply
-delay rather than typical service --- but a nearly sevenfold reduction in
-that bound is operationally material for a forward food-resupply chain,
-where the p99 case is precisely the scenario a sustainment planner must
-provision against.
+delivery time and not a worst-case guarantee --- it describes the
+99th-percentile resupply delay in the evaluated episodes --- but a
+nearly sevenfold reduction in
+that tail is operationally material for a forward food-resupply chain,
+where the extreme-delay case is precisely the scenario a sustainment
+planner must provision against.
 The policy is Pareto non-dominated on the ReT--cost--tail--flow frontier:
 no static policy in the dense dispatch grid jointly matches or exceeds PPO on Excel
 ReT, cost, CTj p99, and flow fill simultaneously. It is \emph{not},
@@ -244,10 +255,11 @@ resilience-dominant and cheaper in total.
 $\Delta = $ PPO $-$ best static total cost; negative favors PPO. Bracketed
 values are bootstrap CI95.}
 \label{tab:dispatch_cost}
-\small
+\footnotesize
+\setlength{\tabcolsep}{4.0pt}
 \begin{tabular}{cccc}
 \toprule
-Charge $\lambda_d$ & PPO total cost & Best static total cost & $\Delta$ [CI95] \\
+Charge $\lambda_d$ & PPO cost & Static cost & $\Delta$ [CI95] \\
 \midrule
 0 (shift only) & 0.665 & 0.667 & $-0.002$ [$-0.021$, +0.019] \\
 0.01 & 0.670 & 0.682 & $-0.012$ [$-0.032$, +0.009] \\
@@ -295,15 +307,22 @@ privileged observation access.
 \hypertarget{44-causal-ablation}{%
 \subsection{Action-space decomposition (mechanism ablation)}\label{44-causal-ablation}}
 
-To test whether the Track B advantage reflects access to the downstream
+To probe whether the Track B advantage reflects access to the downstream
 bottleneck specifically, or simply a larger action space, we run a
 5-seed $\times$ 60{,}000-timestep ablation over the 8-dimensional
 \texttt{track\_b\_v1} contract, holding reward (\texttt{control\_v1}),
 observation version (v7), and risk level (\texttt{adaptive\_benchmark\_v2})
 fixed. Three configurations are compared: \emph{joint} (the full 8D
-contract), \emph{downstream\_only} (shift frozen at S2, only Op10/Op12
-dispatch controllable), and \emph{shift\_only} (dispatch frozen at neutral,
-only shift controllable).
+contract); \emph{downstream\_only}, in which the shift dimension is frozen
+at S2 while the policy retains the upstream inventory dimensions and
+Op10/Op12 dispatch; and \emph{shift\_only}, in which the two dispatch
+dimensions are frozen at their neutral multiplier while the policy retains
+the upstream inventory dimensions and shift selection. Neither restricted
+arm isolates a single lever --- both keep the upstream inventory
+dimensions controllable --- so this decomposition contrasts
+\emph{dispatch access} against \emph{shift access} on top of a shared
+upstream contract, and cannot by itself attribute the gain causally to
+downstream dispatch.
 
 \begin{table}[htbp]
 \centering
@@ -321,18 +340,18 @@ Shift-only & 0.005607 & 0.005231 & +0.000377 \\
 \end{tabular}
 \end{table}
 
-The gain does not scale with the number of controllable dimensions: a
-downstream-only policy captures a \emph{larger} advantage over its own best
+The gain does not scale with the number of controllable dimensions: the
+arm retaining dispatch (with shift frozen) captures a \emph{larger}
+advantage over its own best
 evaluated comparator (+0.000429) than the full joint 8-dimensional contract
-(+0.000367), with shift-only capturing a comparable advantage
+(+0.000367), with the shift-retaining arm capturing a comparable advantage
 (+0.000377) to the joint contract. This is inconsistent with the simple
 confound that Track B wins only because it gives the learner more
-actuators. Downstream dispatch access recovers the largest observed
-in-arm advantage and is the strongest single lever in this decomposition;
-shift-only control also captures part of the dynamic-control effect, so
-we do not claim downstream dispatch is the only useful control surface ---
-both dimensions provide feedback levers, with downstream access strongest
-in this design. We retain the
+actuators. Because both restricted arms keep the upstream inventory
+dimensions and each is scored against a different in-arm comparator,
+this decomposition is supportive pattern evidence, not an identified
+causal contrast for downstream dispatch access; the identified test is
+the common-comparator factorial described below. We retain the
 joint 8D contract as the paper's canonical result (Section~4.3, trained at
 full 60k$\times$5-seed scale with matched hyperparameters to Track A) and
 treat the ablation as mechanism evidence rather than causal proof or a
@@ -420,8 +439,8 @@ evaluation). Per-seed paired delta (no-forecast $-$ full-v7) on Excel ReT
 ($\times 10^{-5}$), with the pooled mean and 95\% CI at right. The
 deltas straddle zero with no systematic direction; the headline
 PPO-vs-static effect ($+43.8\times 10^{-5}$) is $\sim$200$\times$ this
-axis. Evidence bundle:
-\texttt{track\_b\_no\_forecast\_fixed\_rng\_final\_15seed}.}
+axis. Evidence bundle: \texttt{track\_b\_no\_forecast\_}%
+\texttt{fixed\_rng\_final\_15seed}.}
 \label{fig:no_forecast_defense}
 \end{figure}
 
@@ -440,6 +459,7 @@ and the masked PPO row is from the E2 retrain (OVH replication) with
 regime and forecast fields zeroed.}
 \label{tab:privileged_defense}
 \footnotesize
+\setlength{\tabcolsep}{3.0pt}
 \begin{tabular}{p{0.26\linewidth}cc p{0.34\linewidth}}
 \toprule
 Policy family & Excel ReT & Order-level ReT & Interpretation \\
@@ -522,7 +542,7 @@ by native order-level ReT, CRN-paired; seed-clustered CI95 over five per-seed
 paired deltas).}
 \label{tab:cross_scenario}
 \footnotesize
-\setlength{\tabcolsep}{3.5pt}
+\setlength{\tabcolsep}{2.8pt}
 \begin{tabular}{llrrrc}
 \toprule
 Horizon & Risk level & PPO ReT & Best static & $\Delta$ [CI95] & Seeds $+$ \\
@@ -530,8 +550,8 @@ Horizon & Risk level & PPO ReT & Best static & $\Delta$ [CI95] & Seeds $+$ \\
 h52 & current & 0.005316 & 0.004956 & +0.000359 [+0.000313, +0.000406] & 5/5 \\
 h52 & increased & 0.003259 & 0.002721 & +0.000537 [+0.000504, +0.000571] & 5/5 \\
 h52 & severe & 0.000119 & 0.000180 & $-0.000060$ [$-0.000100$, $-0.000021$] & 0/5 \\
-h104 & current & 0.005648 & 0.005405 & +0.000244 [+0.000209, +0.000278] & 5/5 \\
-h104 & increased & 0.003660 & 0.003037 & +0.000623 [+0.000584, +0.000663] & 5/5 \\
+h104 & current & 0.005648 & 0.005439 & +0.000209 [+0.000171, +0.000247] & 5/5 \\
+h104 & increased & 0.003660 & 0.003108 & +0.000552 [+0.000523, +0.000581] & 5/5 \\
 h104 & severe & 0.000128 & 0.000203 & $-0.000075$ [$-0.000145$, $-0.000005$] & 0/5 \\
 \bottomrule
 \end{tabular}
@@ -549,7 +569,7 @@ static selected by native order-level ReT itself --- the Track B advantage is
 positive in four of the six evaluated cells: both current-risk cells and
 both increased-risk cells, in every case with a fully positive
 seed-clustered CI95 and all five per-seed deltas positive. Deltas in the
-increased-risk cells (up to $+0.000623$ at the canonical horizon) exceed
+increased-risk cells (up to $+0.000552$ at the canonical horizon) exceed
 the canonical \texttt{adaptive\_benchmark\_v2} result reported in
 Table~\ref{tab:track_b_main}. The severe-risk regime is the boundary: PPO
 loses narrowly at both horizons ($-0.000060$ at $h{=}52$, $-0.000075$ at
@@ -563,33 +583,36 @@ increased Garrido-native risk at both horizons and does not transfer to
 the severe service-floor regime. For the two canonical-horizon transfer
 cells we additionally re-optimized the \emph{full} 147-cell dense
 dispatch frontier within each cell: PPO remains positive against the
-per-cell dense best static in both (current/h104: $+0.000244$, CI95
-$[+0.000209, +0.000278]$; increased/h104: $+0.000623$, CI95
-$[+0.000584, +0.000663]$; all five seeds positive in each). The dense
-frontier strengthens, rather than weakens, the two canonical-horizon
+per-cell dense best static in both (current/h104: $+0.000209$, CI95
+$[+0.000171, +0.000247]$; increased/h104: $+0.000542$, CI95
+$[+0.000500, +0.000584]$; all five seeds positive in each). The dense
+frontier confirms, rather than weakens, the two canonical-horizon
 current/increased transfer claims; the fixed-comparator caveat now
 applies only to the $h{=}52$ cells and the severe service-floor cells.
 Per-regime dense-frontier validation of those remaining cells and
 severe-regime specialization remain future
 work.\footnote{An earlier version of this matrix selected the per-cell
 comparator by a secondary criterion, which flipped the $h{=}104$/severe
-cell marginally positive and inflated two other deltas. The
-numbers reported here use the conservative stress-screen convention
-(best in-cell static by native order-level ReT) throughout.}
+cell marginally positive and inflated two other deltas; a duplicate
+dense-frontier run additionally selected a slightly weaker best-static
+identity, inflating the two h104 deltas to $+0.000244$/$+0.000623$. The
+numbers reported here use the conservative convention throughout: the
+best in-cell comparator by the primary metric itself, taking the
+stronger static wherever two runs disagree.}
 
 The per-cell dense-frontier follow-up confirms both canonical-horizon
 current/increased stress-screen results. Re-evaluating all 147
 shift$\times$Op10$\times$Op12 static dispatch policies on the same CRN
-plans selects \texttt{S3}, Op10$\times$2.00, Op12$\times$1.50 as the
-strongest current/h104 static comparator, and \texttt{S2},
-Op10$\times$2.00, Op12$\times$1.25 as the strongest increased/h104
+plans selects \texttt{S3}, Op10$\times$2.00, Op12$\times$2.00 as the
+strongest current/h104 static comparator, and \texttt{S3},
+Op10$\times$1.00, Op12$\times$2.00 as the strongest increased/h104
 static comparator. The frozen PPO policy remains higher on order-level
-ReT in both cells (current/h104: 0.005648 vs.\ 0.005405; increased/h104:
-0.003660 vs.\ 0.003037), with fully positive seed-clustered confidence
+ReT in both cells (current/h104: 0.005648 vs.\ 0.005439; increased/h104:
+0.003660 vs.\ 0.003118), with fully positive seed-clustered confidence
 intervals and 5/5 positive seed deltas in each. The same comparison also
 preserves the service interpretation: flow fill is higher for PPO in
-both dense-frontier cells (0.984 vs.\ 0.840 for current/h104; 0.941
-vs.\ 0.613 for increased/h104).
+both dense-frontier cells (0.984 vs.\ 0.824 for current/h104; 0.941
+vs.\ 0.600 for increased/h104).
 
 As a further check on whether the disruption regime alone, independent of
 the action space, explains the Track B result, we retrain the original

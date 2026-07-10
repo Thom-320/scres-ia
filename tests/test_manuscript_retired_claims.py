@@ -19,6 +19,19 @@ RETIRED_CLAIM_PATTERNS = {
     "Track A preventive/coarse-frontier wins are publishable.": (
         r"track\s*a\s+preventive.{0,40}publishable"
     ),
+    # 2026-07-09 provenance repairs (independent assessment, verified):
+    "Invented +-15% validation threshold.": r"pm\s*15\\?%\s*.{0,30}threshold",
+    "Stale h104 delta from the weaker-comparator duplicate run (table use).": (
+        r"\+0\.000244\s*\[\+0\.000209"
+    ),
+    "Stale h104 increased delta from the duplicate run (table use).": (
+        r"\+0\.000623\s*\[\+0\.000584"
+    ),
+    "p99 described as worst-case.": r"worst-case\s+(1\\?%|resupply|performance|bound)",
+    "E4 arms described as single-lever isolation.": (
+        r"only\s+op10/op12\s+dispatch\s+controllable"
+    ),
+    "Validated digital twin language.": r"validated\s+digital\s+twin",
 }
 
 

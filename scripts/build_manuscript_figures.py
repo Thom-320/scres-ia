@@ -397,10 +397,13 @@ def fig4_pareto_ret_tail_ctj() -> None:
 def fig5_generalization_heatmap() -> None:
     # Order-level ReT delta vs best in-cell static by the primary metric
     # (docs/track_b_q1_stats_2026-07-02_final/e3_per_cell_seed_ci.csv).
+    # 2026-07-09 provenance fix: the h104 column previously used a duplicate
+    # run whose weaker best-static comparator inflated the deltas
+    # (0.244/0.623); these are the conservative same-source values.
     deltas = np.array(
         [
-            [0.359, 0.244],
-            [0.537, 0.623],
+            [0.359, 0.209],
+            [0.537, 0.552],
             [-0.060, -0.075],
         ]
     )  # order-level ReT delta x 10^-3
@@ -835,10 +838,13 @@ def fig11_no_forecast_defense() -> None:
 
 # ---------------------------------------------------------------- fig12
 def fig12_des_validation() -> None:
-    """DES validation against Garrido-Rios (2017) Table 6.10.
+    """DES reconstruction checks against Garrido-Rios (2017) Table 6.10.
 
     Panel (a): per-year delivered rations, thesis reference vs our model,
-    with the +/-15% validation band and the structural-fidelity gap.
+    with the thesis's OWN historical calibration dispersion band (its
+    correlated-inspection gaps span -21.6% to +14.1% of the reference
+    mean; the thesis defines no +/-15% acceptance threshold — provenance
+    fix 2026-07-09) and the structural-fidelity gap.
     Panel (b): deterministic-to-stochastic transition: delivered rations,
     fill rate, and backorders as disruption intensity escalates.
     Sources: outputs/validation/validation_table_dual_basis.csv (panel a);
@@ -865,7 +871,10 @@ def fig12_des_validation() -> None:
     axA.bar(np.array(years) + w / 2, ours, w, color=BLUE, alpha=0.78,
             edgecolor="0.15", linewidth=0.5, zorder=2, label="Our DES")
     tmean = np.mean(thesis)
-    axA.axhspan(tmean * 0.85, tmean * 1.15, color=GREEN, alpha=0.06, zorder=0)
+    # Band = the thesis's own historical calibration dispersion (correlated
+    # inspection, Table 6.10: -21.6%..+14.1%), NOT an acceptance threshold.
+    axA.axhspan(tmean * (1 - 0.216), tmean * (1 + 0.141), color=GREEN,
+                alpha=0.06, zorder=0)
     axA.axhline(tmean, color="0.5", lw=0.7, ls=":", zorder=1)
     axA.text(8.4, tmean, "thesis mean", fontsize=7.0, color="0.45",
              ha="right", va="bottom")
