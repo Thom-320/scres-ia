@@ -152,12 +152,16 @@ ruff check . --fix
 mypy supply_chain/
 ```
 
-## Current Benchmark Defaults
+## Current Benchmark Defaults (Track B canonical)
 
-- Training reward: `ReT_seq_v1`
-- Frozen kappa: `0.20`
-- Historical comparator: `control_v1`
-- Thesis-aligned audit metric: `ret_thesis_corrected`
-- Shift-control environment: enabled by default
-- Observation version: `v1` for the frozen benchmark; `v2` for new ablations
-- Main paper scenarios: `increased + stochastic_pt`, `severe + stochastic_pt`
+- Action contract: `track_b_v1` (8D) via `make_track_b_env`
+- Training reward: `control_v1`
+- Observation version: `v7`
+- Risk level: `adaptive_benchmark_v2`; horizon `h104` (weekly 168 h steps)
+- Year basis: `thesis`; stochastic processing times: on
+- Primary metric: `ret_excel` (Garrido/Excel ReT) --- never `ret_thesis`
+- Authority when documents disagree: `docs/CLAIMS_REGISTRY_Q1_DEFENSE_2026-07-01.md`,
+  then `docs/REPOSITORY_SOURCE_OF_TRUTH.md`
+
+Historical (pre-Track-B, provenance only): the `ReT_seq_v1`/kappa 0.20/`v1`
+shift-control lane and its `increased/severe + stochastic_pt` scenarios.

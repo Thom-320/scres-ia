@@ -17,10 +17,23 @@ The manuscript in `docs/manuscript_current/submission/elsevier/` makes one
 central claim:
 
 > In a thesis-grounded military food supply-chain DES, a learned policy (PPO)
-> improves Garrido/Excel resilience over dense static frontiers when — and,
-> in the tested contracts, only when — the action contract exposes the
-> downstream dispatch bottleneck (Op10/Op12). The measured gain is adaptive
-> recovery, not anticipatory prevention.
+> improves Garrido/Excel resilience over dense static frontiers. The identified
+> factorial (2026-07-10) decomposes the gain: most of it (~82%) comes from
+> closed-loop control of the upstream/shift levers that the static family holds
+> fixed, and adding downstream dispatch authority (Op10/Op12) contributes a
+> further causally identified increment (+0.000092, CI95 > 0, 5/5 seeds);
+> dispatch authority alone does not beat the dense frontier that already
+> optimizes that subspace. The measured gain is adaptive recovery, not
+> anticipatory prevention.
+
+Do NOT write "only when the contract exposes dispatch": the factorial's
+upstream_shift arm (track_b_v1 upstream parameterization, no dispatch) beats
+the static comparator by +0.000425 on fresh tapes. The Track A boundary result
+applies to the thesis-grounded buffer/shift contract, not to every no-dispatch
+contract. Open reviewer-critical check (2026-07-10, running): the same-contract
+static challenge (`docs/TRACK_B_SAME_CONTRACT_CHALLENGE_PROTOCOL_2026-07-10.md`)
+— a calibration-only full-contract constant policy and an upstream_shift arm
+anchored at the best fixed dispatch (2.0x/1.5x) on virgin tapes 400001+.
 
 The repository roles that must not be conflated:
 
@@ -88,12 +101,14 @@ When documents disagree:
 ## Required language discipline
 
 Preferred: "thesis-grounded reconstruction with forensic workbook replay and
-throughput checks"; "adaptive recovery"; "decision-contract/action-space
-alignment (pattern evidence pending the corrected factorial)"; "boundary
-result"; "no detected difference at current precision".
+throughput checks"; "adaptive recovery"; "identified decision-contract
+decomposition (~82% upstream/shift closed-loop, +0.000092 identified dispatch
+increment)"; "boundary result"; "no detected difference at current precision".
 
 Avoid: "validated digital twin"; "empirically validated"; the invented
 "±15% validation threshold"; "prevention"/"anticipation"; "organizational
 learning"/"path dependency"; "worst-case" for p99 statistics; "equivalent"
 for a CI that spans zero; "regardless of algorithm choice"; "full 8D static
-frontier" for the downstream 147-cell enumeration; "first DES–RL for SCRES".
+frontier" for the downstream 147-cell enumeration; "first DES–RL for SCRES";
+"downstream dispatch access is the strongest (observed) lever" (retired by the
+identified factorial); "only when the contract exposes dispatch".

@@ -39,18 +39,21 @@ the best static once dispatch expediting carries a positive charge at the
 tested threshold --- the policy buys recovery with \emph{targeted}, not free,
 transport flexibility.
 
-The action-space decomposition (Section~4.4) strengthens this
-interpretation. At
-matched 5-seed, 60{,}000-timestep scale, the \emph{shift\_only} condition
-achieves a comparable advantage over its own best evaluated comparator
-(+0.000377) to the full \emph{joint} contract (+0.000367), while
-\emph{downstream\_only} exceeds both (+0.000429). This decomposition
-provides mechanism evidence consistent with downstream dispatch access
-being the strongest observed lever and with the number of controllable
-dimensions not being what drives the Track B
-advantage; it does not establish downstream dispatch as the only useful
-control surface, since shift-only control also captures part of the
-dynamic effect.
+The identified factorial (Section~4.4) refines this
+interpretation. At matched 5-seed, 60{,}000-timestep scale on fresh
+held-out tapes against one common comparator, the full \emph{joint}
+contract gains $+0.000517$ over the prespecified static, the
+\emph{upstream\_shift} arm (no dispatch access) retains $+0.000425$ of
+that gain, and the nested contrast identifies the dispatch-access
+increment at $+0.000092$ (two-way CI95 excluding zero, all seeds
+positive), while \emph{dispatch-only} control does not beat the dense
+frontier that already optimizes exactly that subspace. The mechanism is
+therefore two-part: the dominant share of adaptive value concentrates on
+the levers the static comparator family holds fixed, and extending
+authority to the downstream bottleneck adds a smaller, causally
+identified increment. The learner wins by moving what statics cannot,
+and wins more when it can also reach the bottleneck; the number of
+controllable dimensions per se is not what drives the advantage.
 
 \hypertarget{53-action-space-alignment}{%
 \subsection{Action-space alignment as a design principle}\label{53-action-space-alignment}}

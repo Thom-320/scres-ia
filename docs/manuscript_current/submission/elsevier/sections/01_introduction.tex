@@ -70,21 +70,24 @@ contract)---PPO improves Garrido/Excel resilience (ReT) by 0.000438
 across 10 training seeds (95\% CI entirely positive) over the best dense
 downstream-dispatch static comparator under paired common-random-number evaluation, with
 matching gains in service continuity and recovery-tail metrics. A
-5-seed action-space ablation is consistent with downstream dispatch being
-the strongest observed lever rather than the number of controllable
-dimensions; the advantage holds across current and increased
+5-seed identified factorial decomposes the mechanism: most of the gain
+comes from closed-loop control of the upstream and shift levers the
+static family holds fixed, and adding downstream dispatch authority
+contributes a further causally identified increment --- so the advantage
+reflects where adaptive authority is placed, not the number of
+controllable dimensions; the advantage holds across current and increased
 Garrido-native risk levels at both evaluated horizons, while severe risk
 is a disclosed boundary at both horizons, and two independent tests rule
 out that the effect depends on the learned policy exploiting privileged
 simulator observation fields unavailable to static comparators. The
 paper's central argument is
-therefore structural but conditional, and directly operationalizes
-Theory-of-Constraints reasoning \cite{goldratt1984goal}: system
-performance is governed by its binding constraint, not by average-case
-improvement elsewhere, and so RL value appears in this benchmark when the
-controllable interface reaches the binding downstream bottleneck and the
-policy can convert the resulting headroom into recovery performance,
-regardless of reward design or algorithm choice. A fifth, adversarially
+therefore structural but conditional, and operationalizes
+Theory-of-Constraints reasoning \cite{goldratt1984goal} in identified
+form: in this benchmark, adaptive value concentrates on the levers that
+strong fixed policies hold constant, and extending the controllable
+interface to the binding downstream bottleneck adds a further causally
+identified increment --- a placement-of-authority effect that reward
+tuning and additional actuators alone did not reproduce. A fifth, adversarially
 tested finding sharpens this claim in the temporal dimension: an
 initial-looking causal-prevention signal (pre-event actions causally
 improving disruption outcomes) was traced to a measurement artifact and

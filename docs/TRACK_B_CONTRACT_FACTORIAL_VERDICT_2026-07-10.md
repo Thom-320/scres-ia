@@ -59,6 +59,34 @@ crossed evaluation) — a full end-to-end replication of the Track B result.
    multipliers + Op5 + shift), a richer upstream contract than Garrido's buffer-fraction
    family. The Track A boundary result stands for the thesis-grounded contract.
 
+## Addendum 2026-07-10 (verified reviewer critique) — anchor caveat + open challenge
+
+Two comparator caveats were verified against the decoder
+(`env_experimental_shifts.py`: dims 0-3 and 6-7 map `1.25 + 0.75x`; dim 4 maps
+`1.0 + 0.5x`):
+
+1. **The `upstream_shift` arm freezes dispatch at 1.25x/1.25x (signal 0.0), not
+   at the best known fixed dispatch (2.0x/1.5x).** The PRIMARY +0.000092 therefore
+   identifies "adding adaptive dispatch vs a NEUTRAL fixed dispatch", which
+   conflates adaptive-dispatch value with the value of a better fixed dispatch
+   level. Fix arm `upstream_shift_best_dispatch` ({6:1.0, 7:1/3}) added to the
+   script.
+2. **The `dispatch_only` arm freezes upstream qty/ROP at 1.25x (signal 0.0),
+   while the 147 statics use base 1.0x** (op5 at 1.0x matches). Its null vs
+   static is a near-subspace comparison, not an exact same-subspace one.
+
+**Open pre-registered check (running 2026-07-10):** the same-contract static
+challenge (`docs/TRACK_B_SAME_CONTRACT_CHALLENGE_PROTOCOL_2026-07-10.md`):
+(i) calibration-only full-contract constant-policy search (tapes 300001-300024),
+(ii) `upstream_shift_best_dispatch` 5x60k, (iii) held-out verdict on virgin
+tapes 400001-400060 with a frozen stop rule. Until it lands, do not present the
++0.000092 increment as "adaptive dispatch beats the best fixed dispatch" — only
+as "dispatch access over an otherwise identical contract with neutral fixed
+dispatch". Consolidated reproducible contrasts:
+`scripts/aggregate_track_b_factorial.py` →
+`outputs/experiments/track_b_factorial_aggregate_2026-07-09/factorial_aggregate_summary.json`
+(reproduces every number above exactly).
+
 ## Manuscript actions
 - §4.4: report this factorial as the identified decomposition (E4 remains as a
   supplementary pattern screen with its disclosed defects).

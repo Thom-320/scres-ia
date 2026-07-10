@@ -263,14 +263,14 @@ Excel resilience score is
 \begin{cases}
 AP_j/LT_j, & \bar{R}_j>0,\ AP_j>0,\\[2mm]
 0.5\,(1/RP_j), & \bar{R}_j>0,\ AP_j=0,\ RP_j>0,\\[2mm]
-0, & \bar{R}_j>0,\ AP_j{=}RP_j{=}0,\ \text{or undelivered},\\[2mm]
-1-\bigl(\min(B_j,60)+U_j\bigr)/j, & \bar{R}_j=0,
+0, & \bar{R}_j>0,\ AP_j{=}RP_j{=}0,\ \text{or undeliv.},\\[2mm]
+1{-}\tfrac{\min(B_j,60)+U_j}{j}, & \bar{R}_j=0,
 \end{cases}
 \label{eq:ret}
 \end{equation}
 the LaTeX rendering of the workbook formula in the original
 \texttt{Raw\_data+Re} sheets
-(\texttt{IF(AVERAGE(R..)>0, IF(APj>0, APj/LT, 0.5*(1/RPj)), 1-((Bt+Ut)/j)})),
+(\texttt{IF(AVERAGE(R..)>0,} \texttt{IF(APj>0, APj/LT,} \texttt{0.5*(1/RPj)),} \texttt{1-((Bt+Ut)/j)})),
 including the workbook's backorder-count cap of 60 in the fill-rate
 branch. Our implementation of Eq.~\eqref{eq:ret} is audited row-by-row
 against Garrido's original result workbooks (47{,}546 orders, zero
@@ -428,6 +428,6 @@ All DES code, Gymnasium wrappers, training and evaluation scripts, static
 frontier definitions, and the frozen evidence bundles behind every table
 in this paper are available in the project repository
 (\texttt{github.com/Thom-320/scres-ia}, branch
-\texttt{codex/garrido-replication-experiments}); each reported number
+\texttt{codex/garrido-}\\\texttt{replication-experiments}); each reported number
 traces to a dated artifact directory and the training seeds are stated
 explicitly throughout.

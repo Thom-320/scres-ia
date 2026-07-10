@@ -53,34 +53,38 @@ from scripts.run_track_b_crossed_eval import (  # noqa: E402
 )
 from supply_chain.external_env_interface import make_track_b_env  # noqa: E402
 
-ARM_FROZEN_DIMS: dict[str, tuple[int, ...]] = {
-    "joint": (),
-    "upstream_shift": (6, 7),
-    "dispatch_only": (0, 1, 2, 3, 4, 5),
+ARM_FROZEN_VALUES: dict[str, dict[int, float]] = {
+    "joint": {},
+    "upstream_shift": {6: 0.0, 7: 0.0},
+    "dispatch_only": {d: 0.0 for d in range(6)},
+    # Strong fixed-dispatch anchor: Op10=2.0x and Op12=1.5x under the
+    # track_b_v1 decoder (1.25 + 0.75*x).  This is the reviewer-critical
+    # replacement for the neutral 1.25x/1.25x no-dispatch arm.
+    "upstream_shift_best_dispatch": {6: 1.0, 7: 1.0 / 3.0},
 }
 
 
 class FreezeDimsWrapper(gym.ActionWrapper):
-    """Force selected action dims to 0.0 (the neutral decode) every step."""
+    """Force selected action dimensions to specified values every step."""
 
-    def __init__(self, env: gym.Env, frozen_dims: tuple[int, ...]):
+    def __init__(self, env: gym.Env, frozen_values: dict[int, float]):
         super().__init__(env)
-        self.frozen_dims = tuple(int(d) for d in frozen_dims)
+        self.frozen_values = {int(d): float(v) for d, v in frozen_values.items()}
 
     def action(self, action):
-        if not self.frozen_dims:
+        if not self.frozen_values:
             return action
         modified = np.array(action, dtype=np.float32, copy=True)
-        for d in self.frozen_dims:
-            modified[d] = 0.0
+        for d, value in self.frozen_values.items():
+            modified[d] = value
         return modified
 
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--output-dir", type=Path, required=True)
-    p.add_argument("--arms", nargs="+", choices=list(ARM_FROZEN_DIMS.keys()),
-                   default=list(ARM_FROZEN_DIMS.keys()))
+    p.add_argument("--arms", nargs="+", choices=list(ARM_FROZEN_VALUES.keys()),
+                   default=["joint", "upstream_shift", "dispatch_only"])
     p.add_argument("--seeds", nargs="+", type=int, default=[1, 2, 3, 4, 5])
     p.add_argument("--train-timesteps", type=int, default=60_000)
     p.add_argument("--eval-seed-base", type=int, default=200_001)
@@ -96,7 +100,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 def make_arm_env(arm: str):
     env = make_track_b_env(**CANONICAL_ENV_KWARGS)
-    frozen = ARM_FROZEN_DIMS[arm]
+    frozen = ARM_FROZEN_VALUES[arm]
     if frozen:
         env = FreezeDimsWrapper(env, frozen)
     return env
@@ -161,7 +165,10 @@ def main() -> None:
     summary: dict[str, Any] = {
         "config": {k: str(v) for k, v in vars(cli).items()},
         "env_kwargs": CANONICAL_ENV_KWARGS,
-        "arm_frozen_dims": {a: list(ARM_FROZEN_DIMS[a]) for a in cli.arms},
+        "arm_frozen_values": {
+            a: {str(d): v for d, v in ARM_FROZEN_VALUES[a].items()}
+            for a in cli.arms
+        },
     }
 
     def contrast(arm_a: str, arm_b: str, key: str) -> dict[str, Any]:

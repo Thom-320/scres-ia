@@ -414,7 +414,7 @@ including heuristics.}
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.78\linewidth]{fig6_action_space_ablation}
-\caption{E4 action-space ablation: the pattern is consistent with downstream dispatch access being the strongest observed lever rather than action-space size alone. Deltas ($\times 10^{-3}$, order-level ReT) are computed against each arm's own best evaluated comparator, including heuristics; whiskers are 95\% confidence intervals over the five paired training-seed deltas. All three arms are individually positive, and adding shift-mix control on top of dispatch access does not enlarge the advantage.}
+\caption{E4 action-space pattern screen (superseded for mechanism attribution by the identified factorial reported in this section). Deltas ($\times 10^{-3}$, order-level ReT) are computed against each arm's own best evaluated comparator, including heuristics; whiskers are 95\% confidence intervals over the five paired training-seed deltas. Because the arms are not nested contracts and do not share a common comparator, this screen cannot attribute the gain to a single lever; the identified factorial shows the dominant share comes from closed-loop upstream/shift control, with a smaller causally identified dispatch-access increment.}
 \label{fig:ablation}
 \end{figure}
 
@@ -761,9 +761,13 @@ operational action-space extension overcomes it under paired
 common-random-number evaluation against a 147-cell dense
 downstream-dispatch static grid across 10 training seeds, and remains
 cheaper in total once dispatch expediting is priced at positive charges
-(Section~4.3). A 5-seed action-space decomposition is consistent with
-downstream dispatch access being the strongest observed lever and argues
-against ``more actuators'' as a sufficient explanation
+(Section~4.3). A 5-seed identified factorial decomposes the mechanism:
+most of the advantage over the dense static frontier comes from
+closed-loop control of the upstream and shift levers the static family
+holds fixed, adding downstream dispatch authority contributes a further
+causally identified increment, and dispatch-only control does not beat
+the frontier that already optimizes that subspace --- ruling out ``more
+actuators'' as a sufficient explanation
 (Section~4.4). Three independent tests --- an
 obs-masked retrain, a privileged-access static comparator, and a 15-seed
 paired forecast-removal comparison --- rule out
@@ -774,8 +778,9 @@ the frozen policy transfers with fully positive seed-clustered CIs to
 current and increased risk at both horizons, with the severe
 service-floor regime disclosed as the boundary where PPO loses narrowly,
 and a companion experiment
-shows the disruption regime alone is not sufficient for a win without
-downstream-dispatch access (Section~4.7). Finally, an adversarially
+shows the disruption regime alone is not sufficient for a win: the
+thesis-grounded Track A contract retrained on the same regime still loses
+(Section~4.7). Finally, an adversarially
 validated prevention audit bounds the mechanism in time: forced pre-event
 preparation has no causal effect on event-exposed outcomes in any risk
 family, and perfect foreknowledge buys no resilience --- the gain is

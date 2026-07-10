@@ -32,6 +32,16 @@ RETIRED_CLAIM_PATTERNS = {
         r"only\s+op10/op12\s+dispatch\s+controllable"
     ),
     "Validated digital twin language.": r"validated\s+digital\s+twin",
+    # 2026-07-10 identified factorial (Blocker 2) retired the E4 reading:
+    "Downstream dispatch as strongest lever (retired by identified factorial).": (
+        r"strongest\s+(observed\s+)?lever"
+    ),
+    "Only-when-dispatch framing (refuted by the upstream_shift arm).": (
+        r"only\s+when\s+the\s+(action\s+contract|controllable\s+interface)"
+    ),
+    "Regardless-of-algorithm/reward universality language.": (
+        r"regardless\s+of\s+(reward\s+design\s+or\s+)?algorithm"
+    ),
 }
 
 

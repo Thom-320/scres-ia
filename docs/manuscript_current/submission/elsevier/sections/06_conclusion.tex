@@ -3,7 +3,7 @@
 
 This paper presented a reproducible DES+RL benchmark for operational
 resilience control in a military food supply chain, grounded in
-Garrido-Rios' validated 13-operation simulation model~\cite{garrido2017}. The
+Garrido-Rios' 13-operation simulation model~\cite{garrido2017}. The
 experimental design uses two matched benchmark families to answer a
 structural question: when does reinforcement learning outperform strong
 static baselines in resilience-oriented operational control?
@@ -12,10 +12,12 @@ Under the thesis-grounded Track A contract, where the agent controls
 upstream inventory and assembly shifts, dense common-random-number
 static frontiers and multiple RL configurations across reward modes,
 observation versions, and algorithms leave no publishable dynamic-control
-advantage. The root cause is structural: the active downstream
-distribution bottleneck lies outside the agent's controllable interface,
-limiting the marginal value of upstream optimization regardless of
-algorithmic sophistication.
+advantage. This boundary is a property of the thesis-grounded decision
+family, not of upstream control per se: the identified factorial shows
+that a richer upstream/shift parameterization under closed-loop control
+does convert headroom, so what Track A lacked was an action
+parameterization whose adaptive movement matters, with the downstream
+dispatch bottleneck additionally outside its controllable interface.
 
 Under the DES-preserving Track B operational extension, which adds downstream transport
 dispatch at Op10 and Op12 (an 8-dimensional action contract) while
@@ -27,8 +29,12 @@ with matching gains in service continuity and recovery-tail metrics. A
 local 3$\times$3 bound over the nearest upstream static quantity controls
 at the best downstream cell narrows but does not overturn the PPO
 advantage. A
-5-seed action-space ablation is consistent with the gain being tied to
-downstream-dispatch access rather than action-space size alone; the
+5-seed identified factorial decomposes the gain: most of it comes from
+closed-loop control of the upstream and shift levers the static family
+holds fixed, downstream dispatch access adds a causally identified
+increment, and dispatch-only control does not beat the dense frontier
+that already optimizes that subspace --- so action-space size alone does
+not explain the result; the
 advantage holds for current and increased Garrido-native risk levels at
 both evaluated horizons with fully positive seed-clustered confidence
 intervals, while the severe service-floor regime is a disclosed boundary
@@ -38,10 +44,12 @@ privileged-access static comparator --- rule out that the effect depends
 on the learned policy exploiting simulator-only regime information
 unavailable to any static or heuristic baseline.
 
-The central lesson is conditional rather than universal: RL value is
-observed in this benchmark when the controllable interface reaches the binding
-operational constraint and the policy can convert that authority into
-recovery performance. This finding survives adversarial checks for the
+The central lesson is conditional rather than universal: in this
+benchmark, adaptive value concentrates on the levers that strong fixed
+policies hold constant, and extending the controllable interface to the
+binding operational constraint adds a further causally identified
+increment that the policy converts into recovery performance. This
+finding survives adversarial checks for the
 two most common alternative explanations --- larger action spaces and
 privileged observation access. It connects bottleneck reasoning from the
 Theory of Constraints with RL action-space design---a connection that, to
