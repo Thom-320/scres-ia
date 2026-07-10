@@ -2437,7 +2437,11 @@ class MFSCSimulation:
         if self.adaptive_benchmark_enabled:
             intensity = self._adaptive_risk_intensity_for(risk_id)
             return min(0.98, float(base_p) * intensity)
-        return min(0.98, float(base_p) * self._risk_frequency_multiplier_for(risk_id))
+        return min(
+            0.98,
+            float(base_p)
+            * self._risk_frequency_multiplier_for(risk_id, campaign_mode="now"),
+        )
 
     def _get_risk_recovery_mean(self, risk_id: str) -> float:
         table = self._risk_table_for(risk_id)
@@ -2468,13 +2472,19 @@ class MFSCSimulation:
         psi = self._risk_impact_multiplier_for("R24")
         return int(round(base_lo * psi)), int(round(base_hi * psi))
 
-    def _risk_frequency_multiplier_for(self, risk_id: str) -> float:
+    def _risk_frequency_multiplier_for(
+        self, risk_id: str, campaign_mode: str = "max"
+    ) -> float:
         base = float(
             self.risk_frequency_multipliers_by_id.get(
                 str(risk_id), self.risk_frequency_multiplier
             )
         )
-        # Campaign thinning: sample at the MAX (campaign) rate; the
+        if campaign_mode == "now":
+            # Binomial risks (R12/R13) re-evaluate p every cycle, so the
+            # state-CURRENT multiplier is exact — no thinning needed.
+            return base * self._campaign_multiplier_now(risk_id, "frequency")
+        # Uniform-window risks: sample at the MAX (campaign) rate; the
         # state-dependent acceptance gate in the risk loop restores the
         # native rate during calm phases (exact thinning).
         return base * self._campaign_freq_max(risk_id)
@@ -2611,6 +2621,13 @@ class MFSCSimulation:
         while True:
             delay, window = self._sample_uniform_risk_window("R11")
             yield self.env.timeout(delay)
+            if not self._campaign_accept_event("R11"):
+                tail = self._tail_after_uniform_occurrence(delay, window)
+                if tail > 0:
+                    yield self.env.timeout(tail)
+                continue
+            if self.campaign_config:
+                beta = self._get_risk_recovery_mean("R11")
             if self.risk_occurrence_mode == "thesis_window":
                 self.env.process(self._risk_R11_event(beta))
                 yield self.env.timeout(self._tail_after_uniform_occurrence(delay, window))

@@ -139,3 +139,22 @@ def test_campaign_cycle_format_three_states():
     t_camp = next(t for t, s in sim.campaign_path if s == "campaign")
     assert sim.campaign_state_at(t_pre + 1.0) == "pre_campaign"
     assert sim.campaign_state_at(t_camp + 1.0) == "campaign"
+
+
+def test_binomial_risk_p_is_state_dependent_not_max():
+    cfg = {
+        "initial_state": "calm",
+        "dwell_min_weeks": 1.0,
+        "cycle": [
+            {"name": "calm", "dwell_mean_weeks": 10000.0},
+            {"name": "campaign", "dwell_mean_weeks": 10000.0,
+             "frequency_multipliers": {"R13": 6.0}},
+        ],
+    }
+    sim = _sim(600007, campaign=cfg)
+    # In the (permanent) calm state the binomial p must be NATIVE, not x6.
+    assert abs(sim._get_risk_p("R13") - 0.1) < 1e-9
+    cfg2 = dict(cfg)
+    cfg2["initial_state"] = "campaign"
+    sim2 = _sim(600007, campaign=cfg2)
+    assert abs(sim2._get_risk_p("R13") - 0.6) < 1e-9

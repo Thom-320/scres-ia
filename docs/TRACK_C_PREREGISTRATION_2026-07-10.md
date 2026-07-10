@@ -85,7 +85,24 @@ state ≠ calm". Verdict tapes were consulted only as the pre-registered
 iteration trigger; no design choice used per-tape verdict data.
 
 | 3 | outputs/experiments/track_c_gates_iter3_2026-07-10 | cycle: calm 8wk (native) → pre_campaign 3wk (freq {R22:2,R23:1.5,R24:1.5}, impact 1.0) → campaign 6wk (freq {R21:6,R22:6,R23:4,R24:3}, impact {R21:4,R22:4,R23:2,R24:2}); λ share 0.15; lead 168h | **FAIL on magnitude, first clean CI**: switcher−constant +2.26e-5 CI95 [+1.40e-5, +3.27e-5], 23/24 tapes; threshold 1.72e-4. NOTE: the non-privileged detector (+3.72e-5 CI [+1.90e-5, +5.69e-5], capture 1.65) BEATS the true-state oracle — EWMA hysteresis pre-positions through ramps better than instant switching; the anticipation channel works mechanically. Diagnosis: winning pair differs only in soft buffer levels (calm 0.02/0.42/0.16 → camp 0.22/0.47/0.36, both S1); boosted variants lose — campaign buffer VALUE still ≈ its λ cost, so the phase differential is second-order. corr(ΔJ, campaign_frac)≈0. Script fix: c2verdict now requires c1.passed (the iter3 c2_verdict.json 'PROMOTE' string predates this fix and is void — C1 failed). |
-| 4 | outputs/experiments/track_c_gates_iter4_2026-07-10 | freq {R21:8,R22:8,R23:6,R24:4}; impact {R21:4,R22:6,R23:3,R24:2}; pre_campaign 4wk freq {R22:3,R23:2,R24:2}; calm 10wk / campaign 7wk; λ share 0.15; lead 168h. Rationale: push into the measured headroom-on region (R21 f8; R22 6-day outages) to raise the CAMPAIGN value of buffers, which — not cost pressure — binds the differential. **Pre-declared stop rule: if iter4 mean < 1e-4, the trajectory (−6e-6, +9e-6, +23e-6, ...) indicates a mechanism ceiling ≈3% of base — STOP and write the null verdict.** | (pending) |
+| 4 | outputs/experiments/track_c_gates_iter4_2026-07-10 | freq {R21:8,R22:8,R23:6,R24:4}; impact {R21:4,R22:6,R23:3,R24:2}; pre_campaign 4wk freq {R22:3,R23:2,R24:2}; calm 10wk / campaign 7wk; λ share 0.15; lead 168h. Rationale: push into the measured headroom-on region (R21 f8; R22 6-day outages) to raise the CAMPAIGN value of buffers, which — not cost pressure — binds the differential. **Pre-declared stop rule: if iter4 mean < 1e-4, the trajectory (−6e-6, +9e-6, +23e-6, ...) indicates a mechanism ceiling ≈3% of base — STOP and write the null verdict.** | **FAIL — stop rule FIRES for the R22-led family**: mean +6.47e-5 (< 1e-4), CI [+5.4e-6, +1.36e-4], only 12/24 tapes (consistency collapsed vs iter3's 23/24 — max amplitude buys variance, not signal); threshold 1.54e-4. C2 capture 0.48, CI crosses zero. The transport-interdiction (R22-led) campaign family is CLOSED: its measured ceiling is ~2% of base. Root cause (established iter3-4): the route-block paradox — campaign outages block exactly the in-phase buffer commitments that switching would exploit. |
+
+**AMENDMENT A2 (2026-07-10, pre-training; iter5 rationale documented BEFORE
+reading iter4 — see the session record):** one FINAL calibration family is
+declared: the supply/demand-stress campaign (R13 supplier delays + R24
+contingent-demand surges lead; routes remain mostly OPEN so in-phase buffer
+replenishment has authority — this breaks the route-block paradox; R13/R24
+are precisely the risks Garrido's Ch7 finds buffer/capacity-mediated).
+Technical fix included: binomial risks (R12/R13) take the state-CURRENT
+multiplier at their weekly re-sample (exact; thinning only applies to
+uniform-window risks); R11 got the acceptance gate for completeness;
+flags-off bitwise identity re-verified; tests 8/8.
+**TERMINAL RULE: iter5 is the last calibration. If C1 fails at any margin,
+the Track C oracle phase ENDS and the null verdict is written (constants are
+structurally near-optimal in this DES class across three mechanism families:
+stationary, interdiction-campaign, and supply/demand-stress campaign).**
+
+| 5 | outputs/experiments/track_c_gates_iter5_2026-07-10 | cycle: calm 10wk (native) → pre_campaign 3wk (freq {R13:2,R24:1.5}) → campaign 8wk (freq {R13:6,R24:4,R22:2,R23:2}, impact {R24:2,R22:2,R23:2}); λ share 0.15; lead 168h | (pending) |
 
 ## Falsifiers / sanity (Gate C0)
 
