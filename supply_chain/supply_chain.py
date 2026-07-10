@@ -582,6 +582,18 @@ class MFSCSimulation:
         self._contract_renewed_event = self.env.event()
         self.contract_completion_events: list[tuple[float, float]] = []
         self.supplier_delivery_events: list[tuple[float, float]] = []
+        # Cumulative-availability event streams used by paired leave-one-risk-out
+        # audits. They are observational only and never feed a process decision.
+        self.material_availability_events: dict[str, list[tuple[float, float]]] = {
+            node: []
+            for node in (
+                "raw_material_wdc",
+                "raw_material_al",
+                "rations_al",
+                "rations_sb",
+                "order_release",
+            )
+        }
 
         self.inventory_buffer_targets = self._normalize_inventory_buffer_targets(
             initial_buffers or {}
@@ -600,14 +612,17 @@ class MFSCSimulation:
             op9_rations = float(self.inventory_buffer_targets.get("op9_rations", 0))
             if op3_rm > 0:
                 self.raw_material_wdc.put(op3_rm)
+                self._record_material_availability("raw_material_wdc", op3_rm)
                 self._lineage_put("raw_material_wdc", op3_rm, source_stage="strategic")
                 self.total_strategic_raw_injected += op3_rm
             if op5_rm > 0:
                 self.raw_material_al.put(op5_rm)
+                self._record_material_availability("raw_material_al", op5_rm)
                 self._lineage_put("raw_material_al", op5_rm, source_stage="strategic")
                 self.total_strategic_raw_injected += op5_rm
             if op9_rations > 0:
                 self.rations_sb.put(op9_rations)
+                self._record_material_availability("rations_sb", op9_rations)
                 self._lineage_put("rations_sb", op9_rations, source_stage="strategic")
                 self.total_strategic_rations_injected += op9_rations
         # Cache the original Op5 buffer target as a separate attribute (do not pollute
@@ -963,6 +978,7 @@ class MFSCSimulation:
                 "op5_rm": "raw_material_al",
                 "op9_rations": "rations_sb",
             }[key]
+            self._record_material_availability(lineage_node, shortfall)
             self._lineage_put(lineage_node, shortfall, source_stage="strategic_top_up")
             return container.put(shortfall)
         return None
@@ -1589,6 +1605,12 @@ class MFSCSimulation:
         )
 
     # ------------------------------------------------------- causal exposure
+    def _record_material_availability(self, node: str, quantity: float) -> None:
+        """Record when quantity first becomes physically available at a node."""
+        qty = float(quantity)
+        if qty > 1e-9:
+            self.material_availability_events[node].append((float(self.env.now), qty))
+
     def _lineage_event_ref(self, event: RiskEvent) -> str:
         return f"{event.risk_id}@{float(event.start_time):.9f}"
 
@@ -2728,6 +2750,7 @@ class MFSCSimulation:
                 if total_delivery <= 0.0:
                     continue
             yield self.raw_material_wdc.put(total_delivery)
+            self._record_material_availability("raw_material_wdc", total_delivery)
             self._lineage_put(
                 "raw_material_wdc",
                 total_delivery,
@@ -2773,6 +2796,7 @@ class MFSCSimulation:
                 yield self.env.timeout(self._pt("op4_pt"))
                 self._raw_material_in_transit -= dispatch
                 yield self.raw_material_al.put(dispatch)
+                self._record_material_availability("raw_material_al", dispatch)
                 self._lineage_forward(
                     "raw_material_al",
                     lineage,
@@ -2870,6 +2894,7 @@ class MFSCSimulation:
                 while self._pending_batch >= batch_size:
                     self._pending_batch -= batch_size
                     yield self.rations_al.put(batch_size)
+                    self._record_material_availability("rations_al", batch_size)
                     batch_lineage = self._lineage_take("pending_batch", batch_size)
                     self._lineage_forward(
                         "rations_al", batch_lineage, source_stage="op7_output"
@@ -2970,6 +2995,7 @@ class MFSCSimulation:
             while self._pending_batch >= batch_size:
                 self._pending_batch -= batch_size
                 yield self.rations_al.put(batch_size)
+                self._record_material_availability("rations_al", batch_size)
                 batch_lineage = self._lineage_take("pending_batch", batch_size)
                 self._lineage_forward(
                     "rations_al", batch_lineage, source_stage="op7_output"
@@ -2997,6 +3023,7 @@ class MFSCSimulation:
             yield self.env.timeout(self._pt("op8_pt"))
             self._in_transit -= batch_size
             yield self.rations_sb.put(batch_size)
+            self._record_material_availability("rations_sb", batch_size)
             op8_refs = self._consume_pending_stage_refs("op8_output")
             self._lineage_forward(
                 "rations_sb",
@@ -3165,6 +3192,7 @@ class MFSCSimulation:
             )
             return False
         yield self.rations_sb.get(qty)
+        self._record_material_availability("order_release", qty)
         consumed_lineage = self._lineage_take("rations_sb", qty)
         for item in consumed_lineage:
             if not item.risk_event_refs:
