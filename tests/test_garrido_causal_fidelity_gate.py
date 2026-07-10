@@ -150,6 +150,23 @@ def test_op9_linked_orders_get_ct_from_transport_not_fixed_delay() -> None:
     assert sim.flow_ledger()["ration_residual"] == pytest.approx(0.0, abs=1e-6)
 
 
+def test_serial_wip_assembly_preserves_mass_and_exposes_station_buffers() -> None:
+    sim = MFSCSimulation(
+        horizon=2_000.0,
+        risks_enabled=False,
+        assembly_flow_mode="serial_wip",
+        procurement_contract_mode="causal_coupled",
+    ).run()
+
+    ledger = sim.flow_ledger()
+    detail = sim._inventory_detail()
+    assert sim.total_produced > 0.0
+    assert "wip_op5_op6" in detail
+    assert "wip_op6_op7" in detail
+    assert ledger["raw_residual"] == pytest.approx(0.0, abs=1e-6)
+    assert ledger["ration_residual"] == pytest.approx(0.0, abs=1e-6)
+
+
 def test_r22_delays_an_op9_linked_order_beyond_the_48h_promise() -> None:
     event = _event("R22", 1_000.0, 240.0, [10])
     sim = MFSCSimulation(
