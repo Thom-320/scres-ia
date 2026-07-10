@@ -128,6 +128,11 @@ class OrderRecord:
     ret_risk_indicators: dict[str, float] = field(default_factory=dict)
     ret_risk_event_refs: list[dict[str, Any]] = field(default_factory=list)
     ret_attribution_override: Optional[dict[str, Any]] = None
+    # Diagnostic-only causal timing ledger. These fields do not enter ReT.
+    # They let the fidelity audit distinguish release/stock waiting, convoy
+    # resource queues, and time physically blocked by an affected operation.
+    op9_release_time: Optional[float] = None
+    causal_wait_hours: dict[str, float] = field(default_factory=dict)
 
 
 @dataclass
@@ -196,7 +201,11 @@ class MFSCSimulation:
         replenishment_route_aware: bool = False,
         procurement_contract_mode: str = "legacy_independent",
         order_fulfillment_mode: str = "legacy_theatre_stock",
+        assembly_flow_mode: str = "aggregate_line",
+        op9_dispatch_policy: str = "fixed_clock_daily",
+        downstream_transport_capacity_mode: str = "parallel",
         op9_freight_offset_hours: float = 6.0,
+        r24_attribution_window_hours: float = 0.0,
         demand_start_after_warmup: bool = False,
     ) -> None:
         if warmup_trigger not in WARMUP_TRIGGER_OPTIONS:
@@ -267,6 +276,26 @@ class MFSCSimulation:
                 "Invalid ret_recovery_period_mode="
                 f"{ret_recovery_period_mode!r}. Expected one of: {valid}."
             )
+        if op9_dispatch_policy not in {"fixed_clock_daily", "ready_headway"}:
+            raise ValueError(
+                "Invalid op9_dispatch_policy="
+                f"{op9_dispatch_policy!r}. Expected fixed_clock_daily or "
+                "ready_headway."
+            )
+        if assembly_flow_mode not in {"aggregate_line", "serial_wip"}:
+            raise ValueError(
+                "Invalid assembly_flow_mode="
+                f"{assembly_flow_mode!r}. Expected aggregate_line or serial_wip."
+            )
+        if downstream_transport_capacity_mode not in {
+            "parallel",
+            "tandem_capacity_one",
+        }:
+            raise ValueError(
+                "Invalid downstream_transport_capacity_mode="
+                f"{downstream_transport_capacity_mode!r}. Expected parallel "
+                "or tandem_capacity_one."
+            )
         if backorder_overflow_mode not in BACKORDER_OVERFLOW_MODE_OPTIONS:
             valid = ", ".join(BACKORDER_OVERFLOW_MODE_OPTIONS)
             raise ValueError(
@@ -305,7 +334,15 @@ class MFSCSimulation:
         self.replenishment_route_aware = bool(replenishment_route_aware)
         self.procurement_contract_mode = str(procurement_contract_mode)
         self.order_fulfillment_mode = str(order_fulfillment_mode)
+        self.assembly_flow_mode = str(assembly_flow_mode)
+        self.op9_dispatch_policy = str(op9_dispatch_policy)
+        self.downstream_transport_capacity_mode = str(
+            downstream_transport_capacity_mode
+        )
         self.op9_freight_offset_hours = float(op9_freight_offset_hours)
+        self.r24_attribution_window_hours = max(
+            0.0, float(r24_attribution_window_hours)
+        )
         self.demand_start_after_warmup = bool(demand_start_after_warmup)
         self._route_wait_pending: set[str] = set()
         if self.campaign_config:
@@ -433,11 +470,17 @@ class MFSCSimulation:
         self.raw_material_wdc = simpy.Container(self.env, capacity=INF, init=0)
         self.raw_material_al = simpy.Container(self.env, capacity=INF, init=0)
         self.rework_op6 = simpy.Container(self.env, capacity=INF, init=0)
+        self.wip_op5_op6 = simpy.Container(self.env, capacity=INF, init=0)
+        self.wip_op6_op7 = simpy.Container(self.env, capacity=INF, init=0)
         self.rations_al = simpy.Container(self.env, capacity=INF, init=0)
         self.rations_sb = simpy.Container(self.env, capacity=INF, init=0)
         self.rations_sb_dispatch = simpy.Container(self.env, capacity=INF, init=0)
         self.rations_cssu = simpy.Container(self.env, capacity=INF, init=0)
         self.rations_theatre = simpy.Container(self.env, capacity=INF, init=0)
+        # op9_linked mode: LOC convoys (Op10, Op12) are capacity-1 daily-rate
+        # servers (Table 6.20 ROP=24h) — a tandem pipeline, not parallel legs.
+        self.op10_convoy = simpy.Resource(self.env, capacity=1)
+        self.op12_convoy = simpy.Resource(self.env, capacity=1)
 
         # Procurement contract state.  Op1 creates/renews the framework
         # contract that authorises Op2 supplier deliveries.  The previous
@@ -942,7 +985,10 @@ class MFSCSimulation:
         self.env.process(self._op1_contracting())
         self.env.process(self._op2_supplier_delivery())
         self.env.process(self._op3_wdc_dispatch())
-        self.env.process(self._assembly_hourly())  # HOURLY granularity
+        if self.assembly_flow_mode == "serial_wip":
+            self.env.process(self._assembly_serial_wip_hourly())
+        else:
+            self.env.process(self._assembly_hourly())  # HOURLY granularity
         self.env.process(self._op8_transport_to_sb())
         if self.order_fulfillment_mode == "legacy_theatre_stock":
             self.env.process(self._op9_sb_dispatch())
@@ -1350,6 +1396,8 @@ class MFSCSimulation:
             "raw_material_wdc": float(self.raw_material_wdc.level),
             "raw_material_al": float(self.raw_material_al.level),
             "rework_op6": float(self.rework_op6.level),
+            "wip_op5_op6": float(self.wip_op5_op6.level),
+            "wip_op6_op7": float(self.wip_op6_op7.level),
             "rations_al": float(self.rations_al.level),
             "rations_sb": float(self.rations_sb.level),
             "rations_sb_dispatch": float(self.rations_sb_dispatch.level),
@@ -1382,6 +1430,8 @@ class MFSCSimulation:
         )
         ration_stock = (
             float(self.rework_op6.level)
+            + float(self.wip_op5_op6.level)
+            + float(self.wip_op6_op7.level)
             + float(self._pending_batch)
             + float(self.rations_al.level)
             + float(self.rations_sb.level)
@@ -2362,6 +2412,91 @@ class MFSCSimulation:
                 ):
                     self._mark_warmup_complete()
 
+    def _assembly_serial_wip_hourly(self):
+        """Op5 -> Op6 -> Op7 as a balanced line with explicit WIP.
+
+        This is the thesis-faithful *candidate* for testing station-specific
+        outage propagation.  Each station can drain its existing upstream WIP
+        while another station is down.  Transfers use the inventory available
+        at the start of the hourly tick, preventing zero-time passage through
+        all three stations.  The aggregate implementation remains the default
+        until held-out CF validation supports promotion.
+        """
+        week_hours = 7 * HOURS_PER_DAY
+        while True:
+            yield self.env.timeout(1.0)
+            hour_in_week = int(self.env.now) % week_hours
+            day_of_week = hour_in_week // HOURS_PER_DAY
+            hour_of_day = hour_in_week % HOURS_PER_DAY
+            shifts = int(self.params["assembly_shifts"])
+            if day_of_week >= 6 or hour_of_day >= HOURS_PER_SHIFT * shifts:
+                continue
+
+            rate = float(RATIONS_PER_HOUR)
+            if self.adaptive_benchmark_enabled:
+                penalty = float(
+                    ADAPTIVE_BENCHMARK_MAINTENANCE["throughput_penalty_max"]
+                )
+                rate *= max(0.0, 1.0 - penalty * self.maintenance_debt)
+
+            start_wip56 = float(self.wip_op5_op6.level)
+            start_wip67 = float(self.wip_op6_op7.level)
+            start_rework = float(self.rework_op6.level)
+
+            op7_qty = 0.0
+            if not self._is_down(7):
+                op7_qty = min(rate, start_wip67)
+
+            op6_rework = 0.0
+            op6_new = 0.0
+            if not self._is_down(6):
+                op6_rework = min(rate, start_rework)
+                op6_new = min(max(0.0, rate - op6_rework), start_wip56)
+
+            op5_qty = 0.0
+            if not self._is_down(5):
+                raw_ration_capacity = float(self.raw_material_al.level) / max(
+                    self._raw_units_per_ration, 1.0
+                )
+                op5_qty = min(rate, raw_ration_capacity)
+
+            if not any(self._is_down(op_id) for op_id in (5, 6, 7)):
+                self._cumulative_available_assembly_hours += 1.0
+                if self.adaptive_benchmark_enabled:
+                    self._apply_maintenance_debt(shifts)
+
+            if op7_qty > 0.0:
+                yield self.wip_op6_op7.get(op7_qty)
+                self._pending_batch += op7_qty
+                self._today_produced += op7_qty
+                self.total_produced += op7_qty
+
+            if op6_rework > 0.0:
+                yield self.rework_op6.get(op6_rework)
+            if op6_new > 0.0:
+                yield self.wip_op5_op6.get(op6_new)
+            op6_total = op6_rework + op6_new
+            if op6_total > 0.0:
+                yield self.wip_op6_op7.put(op6_total)
+
+            if op5_qty > 0.0:
+                raw_units = op5_qty * self._raw_units_per_ration
+                yield self.raw_material_al.get(raw_units)
+                self.total_raw_material_consumed += raw_units
+                self.total_rations_created_from_raw += op5_qty
+                yield self.wip_op5_op6.put(op5_qty)
+
+            batch_size = float(self.params["batch_size"])
+            while self._pending_batch >= batch_size:
+                self._pending_batch -= batch_size
+                yield self.rations_al.put(batch_size)
+
+            if (
+                self.warmup_trigger == "production"
+                and self.total_produced >= batch_size
+            ):
+                self._mark_warmup_complete()
+
     # =====================================================================
     # DOWNSTREAM: Distribution (Op8-Op12)
     # =====================================================================
@@ -2474,38 +2609,104 @@ class MFSCSimulation:
         skipped when Op9 is down, the queue is empty, or on-hand SB stock does
         not cover the SPT-head order.
         """
-        offset = float(self.op9_freight_offset_hours) % 24.0
-        first = math.floor(self.env.now / 24.0) * 24.0 + offset
-        if first <= self.env.now:
-            first += 24.0
-        yield self.env.timeout(first - self.env.now)
+        if self.op9_dispatch_policy == "fixed_clock_daily":
+            offset = float(self.op9_freight_offset_hours) % 24.0
+            first = math.floor(self.env.now / 24.0) * 24.0 + offset
+            if first <= self.env.now:
+                first += 24.0
+            yield self.env.timeout(first - self.env.now)
+            while True:
+                yield from self._dispatch_one_op9_order_if_ready()
+                yield self.env.timeout(24.0)
+
+        # Thesis-grounded alternative: a daily freight *headway*, without an
+        # estimated absolute clock phase.  The first ready order leaves as
+        # soon as stock and Op9 are available; the next release cannot occur
+        # for 24 h.  Hourly polling is only a liveness mechanism while blocked.
         while True:
-            if not self._is_down(9) and self.pending_backorders:
-                head = self.pending_backorders[0]
-                qty = float(head.remaining_qty)
-                if qty <= 1e-9:
-                    self._finalize_pending_backorder(head)
-                    self._remove_pending_backorder(head)
-                elif self.rations_sb.level + 1e-9 >= qty:
-                    yield self.rations_sb.get(qty)
-                    head.remaining_qty = 0.0
-                    self.env.process(self._deliver_order_from_op9(head, qty))
-                    self._remove_pending_backorder(head)
-            yield self.env.timeout(24.0)
+            dispatched = yield from self._dispatch_one_op9_order_if_ready()
+            yield self.env.timeout(24.0 if dispatched else 1.0)
+
+    def _dispatch_one_op9_order_if_ready(self):
+        """Release at most the SPT-head order; return whether it departed."""
+        if self._is_down(9) or not self.pending_backorders:
+            return False
+        head = self.pending_backorders[0]
+        qty = float(head.remaining_qty)
+        if qty <= 1e-9:
+            self._finalize_pending_backorder(head)
+            self._remove_pending_backorder(head)
+            return False
+        if self.rations_sb.level + 1e-9 < qty:
+            return False
+        yield self.rations_sb.get(qty)
+        head.remaining_qty = 0.0
+        head.op9_release_time = float(self.env.now)
+        head.causal_wait_hours["op9_release"] = max(
+            0.0, float(self.env.now) - float(head.OPTj)
+        )
+        self.env.process(self._deliver_order_from_op9(head, qty))
+        self._remove_pending_backorder(head)
+        return True
 
     def _deliver_order_from_op9(self, order: OrderRecord, qty: float):
         """Move a reserved order through the physical Op10/Op12 service path.
 
-        This reference-only mode replaces the calibrated fixed ledger delay.
-        CTj emerges from two 24 h transport stages plus any R22/R23 downtime.
+        Fig 6.2 / Table 6.20: Op10 and Op12 are LOCs shipping 'at a daily
+        freight rate' (ROP = 24 h) — each stage is a SINGLE convoy doing a
+        24 h leg, i.e. a capacity-1 server with 24 h service, not an
+        unlimited parallel pipeline. This tandem structure is what carries
+        Garrido's standing mid-band congestion (CT p75 ≈ 650 h spread across
+        stage queues) and holds orders 'in flight' beyond the Op9 backlog.
+        Outages (R22 on the LOCs, R23 on Op11) block the convoy IN the slot,
+        so downstream attacks propagate backpressure through the pipeline.
         """
         self._in_transit += qty
-        while self._is_down(10):
+        if self.downstream_transport_capacity_mode == "tandem_capacity_one":
+            queue_start = float(self.env.now)
+            with self.op10_convoy.request() as req:
+                yield req
+                order.causal_wait_hours["op10_resource_queue"] = max(
+                    0.0, float(self.env.now) - queue_start
+                )
+                while self._is_down(10):
+                    yield self.env.timeout(1)
+                    order.causal_wait_hours["op10_down"] = (
+                        order.causal_wait_hours.get("op10_down", 0.0) + 1.0
+                    )
+                yield self.env.timeout(self._pt("op10_pt"))
+        else:
+            while self._is_down(10):
+                yield self.env.timeout(1)
+                order.causal_wait_hours["op10_down"] = (
+                    order.causal_wait_hours.get("op10_down", 0.0) + 1.0
+                )
+            yield self.env.timeout(self._pt("op10_pt"))
+        while self._is_down(11):
             yield self.env.timeout(1)
-        yield self.env.timeout(self._pt("op10_pt"))
-        while self._is_down(11) or self._is_down(12):
-            yield self.env.timeout(1)
-        yield self.env.timeout(self._pt("op12_pt"))
+            order.causal_wait_hours["op11_down"] = (
+                order.causal_wait_hours.get("op11_down", 0.0) + 1.0
+            )
+        if self.downstream_transport_capacity_mode == "tandem_capacity_one":
+            queue_start = float(self.env.now)
+            with self.op12_convoy.request() as req:
+                yield req
+                order.causal_wait_hours["op12_resource_queue"] = max(
+                    0.0, float(self.env.now) - queue_start
+                )
+                while self._is_down(12):
+                    yield self.env.timeout(1)
+                    order.causal_wait_hours["op12_down"] = (
+                        order.causal_wait_hours.get("op12_down", 0.0) + 1.0
+                    )
+                yield self.env.timeout(self._pt("op12_pt"))
+        else:
+            while self._is_down(12):
+                yield self.env.timeout(1)
+                order.causal_wait_hours["op12_down"] = (
+                    order.causal_wait_hours.get("op12_down", 0.0) + 1.0
+                )
+            yield self.env.timeout(self._pt("op12_pt"))
         self._in_transit -= qty
         self.total_theatre_inflow += qty
         self.total_delivered += qty
@@ -3139,11 +3340,21 @@ class MFSCSimulation:
         self._contingent_demand_pending = min(
             self._contingent_demand_pending, max_contingent
         )
+        # Attribution window: Garrido's per-order R24 column marks every order
+        # whose cycle overlaps the surge STRESS PERIOD, not just the instant.
+        # CF11 evidence: 75% of attended orders carry R24>0 at increased
+        # frequency ≈ 6.8 orders marked per event ≈ one week of placements
+        # (168 h, the thesis's weekly cadence). A point event (duration 0)
+        # under-marks by an order of magnitude, pushes orders into the
+        # fill-rate branch, and inflates mean ReT in the R2 configurations.
+        # Default 0.0 preserves the legacy point event bitwise for all frozen
+        # Track A/B lanes; the garrido_reference gate opts in with 168 h.
+        window = self.r24_attribution_window_hours
         event = RiskEvent(
             "R24",
             self.env.now,
-            self.env.now,
-            0,
+            self.env.now + window,
+            window,
             [13],
             f"+{surge}",
             magnitude=float(surge),

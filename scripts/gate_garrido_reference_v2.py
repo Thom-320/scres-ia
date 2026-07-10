@@ -191,6 +191,15 @@ def run_cf(
         order_fulfillment_mode=(
             "op9_linked" if mechanistic_fulfillment else "legacy_theatre_stock"
         ),
+        # Freeze the exact mechanism evaluated by this gate.  Do not inherit
+        # constructor defaults: fixed-clock release and tandem convoy capacity
+        # are separate hypotheses, not interchangeable implementations.
+        op9_dispatch_policy="fixed_clock_daily",
+        downstream_transport_capacity_mode="parallel",
+        # R24 surge stress window (CF11 evidence: 75% of attended orders carry
+        # R24>0 ≈ 6.8 orders/event ≈ one week of placements). Opt-in here;
+        # default 0.0 keeps legacy point events bitwise for frozen lanes.
+        r24_attribution_window_hours=(168.0 if mechanistic_fulfillment else 0.0),
         demand_start_after_warmup=bool(mechanistic_fulfillment),
         ret_recovery_period_mode=(
             "elapsed" if mechanistic_fulfillment else "disruption"
@@ -205,6 +214,12 @@ def run_cf(
         "delay": float(delay),
         "fulfillment_mode": (
             "op9_linked" if mechanistic_fulfillment else "legacy_fixed_delay"
+        ),
+        "op9_dispatch_policy": (
+            "fixed_clock_daily" if mechanistic_fulfillment else "not_applicable"
+        ),
+        "downstream_transport_capacity_mode": (
+            "parallel" if mechanistic_fulfillment else "not_applicable"
         ),
         "ret_recovery_period_mode": (
             "elapsed" if mechanistic_fulfillment else "disruption"
