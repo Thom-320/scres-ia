@@ -351,15 +351,44 @@ def main() -> None:
             lam = load_json("lambdas.json")
             frozen = load_json("frozen_constant.json")
             tops = frozen["top_for_pairs"]
-            policies: list[Policy] = []
-            for i, ci in enumerate(tops):
-                for j, cj in enumerate(tops):
-                    if i == j:
+
+            def boosted(vec: list[float], name: str) -> tuple[str, tuple[float, ...]]:
+                """Campaign-boosted variant: buffers up, S3, dispatch up."""
+                v = list(vec)
+                for d in (8, 9, 10):
+                    v[d] = float(np.clip(v[d] + 0.35, 0.0, 1.0))
+                v[5] = 1.0  # S3
+                for d in (6, 7):
+                    v[d] = float(np.clip(v[d] + 0.3, -1.0, 1.0))
+                return name, tuple(v)
+
+            def leaned(vec: list[float], name: str) -> tuple[str, tuple[float, ...]]:
+                """Calm-lean variant: buffers down, S1."""
+                v = list(vec)
+                for d in (8, 9, 10):
+                    v[d] = float(np.clip(v[d] - 0.20, 0.0, 1.0))
+                v[5] = -1.0  # S1
+                return name, tuple(v)
+
+            calm_opts: list[tuple[str, tuple[float, ...]]] = [
+                (f"L{i}", tuple(c["calm"])) for i, c in enumerate(tops)
+            ] + [("lean", tuple(ANCHORS["lean"]))] + [
+                leaned(tops[i]["calm"], f"L{i}lean") for i in range(min(3, len(tops)))
+            ]
+            camp_opts: list[tuple[str, tuple[float, ...]]] = [
+                (f"L{i}", tuple(c["calm"])) for i, c in enumerate(tops)
+            ] + [
+                ("heavy", tuple(ANCHORS["heavy"])),
+                ("I1344S2", tuple(ANCHORS["garrido_I1344_S2"])),
+            ] + [
+                boosted(tops[i]["calm"], f"L{i}boost") for i in range(min(3, len(tops)))
+            ]
+            policies = []
+            for cn, cv in calm_opts:
+                for kn, kv in camp_opts:
+                    if cn == kn:
                         continue
-                    policies.append(
-                        Policy(f"pair_{i}_{j}", calm=tuple(ci["calm"]), campaign=tuple(cj["calm"]))
-                    )
-            policies.append(Policy("pair_lean_heavy", calm=tuple(ANCHORS["lean"]), campaign=tuple(ANCHORS["heavy"])))
+                    policies.append(Policy(f"pair_{cn}__{kn}", calm=cv, campaign=kv))
             # The frozen constant itself, as the pair-stage reference:
             policies.append(Policy("constant_ref", calm=tuple(frozen["constant"]["calm"])))
             print(f"pair candidates: {len(policies)}", flush=True)

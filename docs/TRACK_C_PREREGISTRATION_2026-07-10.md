@@ -69,7 +69,8 @@ STOPS and the null becomes a boundary-extension section of the C&IE paper.
 
 | Iter | Output dir | Knobs changed | C1 result |
 |---|---|---|---|
-| 1 | outputs/experiments/track_c_gates_iter1_2026-07-10 | none (campaign_v1 as designed) | (pending) |
+| 1 | outputs/experiments/track_c_gates_iter1_2026-07-10 | none (campaign_v1 as designed) | **FAIL**: switcher−constant −5.9e-6 CI [−1.2e-5, +2.4e-8], 6/24 tapes; threshold 1.96e-4. Diagnosis: phase asymmetry ≈1.2e-5 (swapping calm/campaign roles is inert) — campaign hits do not drain stock (R22 recovery 24h→36h trivial; R21 present in only ~20% of campaigns); pair-candidate set also near-degenerate (similar Sobol leaders). C0 sanity all passed (campaign_frac 0.373; anchors separate: cf0 0.00391 → I1344_S2 0.00469 → heavy 0.00534 ret). Incident note: the runner was edited mid-run (worker tuple mismatch crashed the verdict stage; stages baseline/screen/refine/pairs completed under identical env defaults and were kept; verdict/c2fit/c2verdict rerun cleanly). Script change before iter2 (pre-training, no verdict tapes consulted for design): pair grid now crosses leaders × {leaders, heavy, I1344S2, campaign-boosted(+0.35 buffers, S3, +0.3 dispatch)} and calm-side {leaders, lean, calm-leaned}. |
+| 2 | outputs/experiments/track_c_gates_iter2_2026-07-10 | freq {R21:6,R22:6,R23:4,R24:3}; impact {R21:4,R22:4,R23:2,R24:2}; dwell campaign 6wk (calm 8wk); λ share unchanged 0.15; lead 168h | (pending) |
 
 ## Falsifiers / sanity (Gate C0)
 
