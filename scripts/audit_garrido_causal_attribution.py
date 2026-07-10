@@ -21,9 +21,10 @@ from supply_chain.garrido_replication import (  # noqa: E402
 
 
 ARMS = {
-    "raw_overlap": ("des_events", 0.0),
-    "fixed_r24_168h": ("des_events", 168.0),
-    "causal_order_ledger": ("causal_exposure", 0.0),
+    "raw_overlap": ("des_events", 0.0, "off"),
+    "fixed_r24_168h": ("des_events", 168.0, "off"),
+    "causal_order_ledger": ("causal_exposure", 0.0, "off"),
+    "causal_material_lineage": ("causal_exposure", 0.0, "tagged_lots"),
 }
 
 
@@ -37,7 +38,7 @@ def main() -> None:
     targets = load_raw_garrido_targets(DEFAULT_RAW_WORKBOOKS)
     summaries = []
     risk_rows = []
-    for arm, (source, window) in ARMS.items():
+    for arm, (source, window, lineage_mode) in ARMS.items():
         for cfi in CALIBRATION_CFS:
             summary, risks = _run(
                 cfi,
@@ -46,6 +47,7 @@ def main() -> None:
                 "elapsed",
                 attribution_source=source,
                 r24_window_hours=window,
+                material_lineage_mode=lineage_mode,
             )
             summary["arm"] = arm
             for row in risks:
@@ -92,6 +94,12 @@ def main() -> None:
                     )
                 ),
                 "max_physical_ct_delta_vs_raw": 0.0,
+                "orders_consuming_affected_material": int(
+                    sum(row.get("orders_consuming_affected_material", 0) for row in rows)
+                ),
+                "orders_blocked_by_lineage_debt": int(
+                    sum(row.get("orders_blocked_by_lineage_debt", 0) for row in rows)
+                ),
             }
         )
 
@@ -112,7 +120,7 @@ def main() -> None:
                 "split": "odd_cf_calibration_only",
                 "arms": aggregate,
                 "promotion_rule": (
-                    "causal_order_ledger must improve ReT, per-risk share, and "
+                    "causal_material_lineage must improve ReT, per-risk share, and "
                     "per-risk RP95 over both comparators with zero physical delta"
                 ),
             },

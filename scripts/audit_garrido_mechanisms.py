@@ -193,6 +193,7 @@ def _run(
     *,
     attribution_source: str = "des_events",
     r24_window_hours: float = 0.0,
+    material_lineage_mode: str = "off",
 ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     (
         dispatch_policy,
@@ -213,6 +214,7 @@ def _run(
         risk_overrides=dict(spec.risk_overrides),
         risk_occurrence_mode="thesis_window",
         risk_attribution_source=attribution_source,
+        material_lineage_mode=material_lineage_mode,
         seed_stream_mode="split",
         year_basis=THESIS_FAITHFUL_PROTOCOL["year_basis"],
         warmup_trigger=THESIS_FAITHFUL_PROTOCOL["warmup_trigger"],
@@ -270,6 +272,14 @@ def _run(
         "rp_mode": rp_mode,
         "attribution_source": attribution_source,
         "r24_window_hours": float(r24_window_hours),
+        "material_lineage_mode": material_lineage_mode,
+        "orders_consuming_affected_material": sum(
+            bool(order.consumed_material_lineage) for order in visible
+        ),
+        "orders_blocked_by_lineage_debt": sum(
+            bool(order.lineage_shortage_refs) for order in visible
+        ),
+        "lineage_terminal_quantities": sim._lineage_snapshot(),
         "seed": int(target.seed),
         "excel_placed": int(target.max_j),
         "des_placed": len(placed),

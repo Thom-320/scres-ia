@@ -135,6 +135,13 @@ class OrderRecord:
     causal_wait_hours: dict[str, float] = field(default_factory=dict)
     causal_block_intervals: list[dict[str, Any]] = field(default_factory=list)
     causal_r24_event_ids: set[str] = field(default_factory=set)
+    # Opt-in material genealogy. ``consumed_material_lineage`` is descriptive:
+    # it proves which affected lots supplied the order. ``lineage_shortage_refs``
+    # is the stricter candidate: it contains only open upstream debts observed
+    # while this order was physically blocked for stock. A counterfactual
+    # delayed-quantity model is still required before calling it causal.
+    consumed_material_lineage: list[dict[str, Any]] = field(default_factory=list)
+    lineage_shortage_refs: list[dict[str, Any]] = field(default_factory=list)
 
 
 @dataclass
@@ -147,6 +154,17 @@ class RiskEvent:
     description: str = ""
     magnitude: float = 1.0
     unit: str = "incidents"
+
+
+@dataclass
+class MaterialLineageSlice:
+    """FIFO quantity slice carried alongside a physical SimPy container."""
+
+    quantity: float
+    lot_id: str
+    risk_event_refs: tuple[str, ...] = ()
+    source_stage: str = "external"
+    created_at: float = 0.0
 
 
 class MFSCSimulation:
@@ -212,6 +230,7 @@ class MFSCSimulation:
         op9_freight_offset_hours: float = 6.0,
         r24_attribution_window_hours: float = 0.0,
         demand_start_after_warmup: bool = False,
+        material_lineage_mode: str = "off",
     ) -> None:
         if warmup_trigger not in WARMUP_TRIGGER_OPTIONS:
             valid = ", ".join(WARMUP_TRIGGER_OPTIONS)
@@ -245,6 +264,10 @@ class MFSCSimulation:
             raise ValueError(
                 "Invalid risk_attribution_source="
                 f"{risk_attribution_source!r}. Expected one of: {valid}."
+            )
+        if material_lineage_mode not in {"off", "tagged_lots"}:
+            raise ValueError(
+                "material_lineage_mode must be 'off' or 'tagged_lots'."
             )
         if demand_source not in DEMAND_SOURCE_OPTIONS:
             valid = ", ".join(DEMAND_SOURCE_OPTIONS)
@@ -443,12 +466,29 @@ class MFSCSimulation:
         self.risk_overrides = dict(risk_overrides or {})
         self.risk_occurrence_mode = risk_occurrence_mode
         self.risk_attribution_source = risk_attribution_source
+        self.material_lineage_mode = material_lineage_mode
         # Causal-exposure attribution state (lazy; only populated when used).
         self._queue_len_history: list[tuple[float, int]] = []
         self._exposure_end_cache: dict[int, float] = {}
         self._r24_causal_episodes: dict[str, dict[str, Any]] = {}
         self._r24_causal_sequence = 0
         self._upstream_scarcity_debts: list[RiskEvent] = []
+        self._material_lineage_sequence = 0
+        self._material_lineage: dict[str, list[MaterialLineageSlice]] = {
+            node: []
+            for node in (
+                "raw_material_wdc",
+                "raw_material_al",
+                "rework_op6",
+                "pending_batch",
+                "rations_al",
+                "rations_sb",
+            )
+        }
+        self._pending_lineage_events_by_stage: dict[str, list[str]] = {
+            stage: [] for stage in ("op2_output", "op4_output", "op7_output", "op8_output")
+        }
+        self._lineage_event_index: dict[str, RiskEvent] = {}
         self.ret_recovery_period_mode = ret_recovery_period_mode
         self.backorder_overflow_mode = backorder_overflow_mode
         if self.risk_attribution_source == "excel_risk_tape":
@@ -560,12 +600,15 @@ class MFSCSimulation:
             op9_rations = float(self.inventory_buffer_targets.get("op9_rations", 0))
             if op3_rm > 0:
                 self.raw_material_wdc.put(op3_rm)
+                self._lineage_put("raw_material_wdc", op3_rm, source_stage="strategic")
                 self.total_strategic_raw_injected += op3_rm
             if op5_rm > 0:
                 self.raw_material_al.put(op5_rm)
+                self._lineage_put("raw_material_al", op5_rm, source_stage="strategic")
                 self.total_strategic_raw_injected += op5_rm
             if op9_rations > 0:
                 self.rations_sb.put(op9_rations)
+                self._lineage_put("rations_sb", op9_rations, source_stage="strategic")
                 self.total_strategic_rations_injected += op9_rations
         # Cache the original Op5 buffer target as a separate attribute (do not pollute
         # inventory_buffer_targets, which other tests compare as a strict dict).
@@ -915,6 +958,12 @@ class MFSCSimulation:
                 self.total_strategic_raw_injected += shortfall
             elif key == "op9_rations":
                 self.total_strategic_rations_injected += shortfall
+            lineage_node = {
+                "op3_rm": "raw_material_wdc",
+                "op5_rm": "raw_material_al",
+                "op9_rations": "rations_sb",
+            }[key]
+            self._lineage_put(lineage_node, shortfall, source_stage="strategic_top_up")
             return container.put(shortfall)
         return None
 
@@ -1540,6 +1589,95 @@ class MFSCSimulation:
         )
 
     # ------------------------------------------------------- causal exposure
+    def _lineage_event_ref(self, event: RiskEvent) -> str:
+        return f"{event.risk_id}@{float(event.start_time):.9f}"
+
+    def _lineage_put(
+        self,
+        node: str,
+        quantity: float,
+        *,
+        risk_event_refs: Iterable[str] = (),
+        source_stage: str,
+        lot_id: str | None = None,
+    ) -> None:
+        """Mirror a physical put in the opt-in FIFO genealogy ledger."""
+        if self.material_lineage_mode != "tagged_lots" or quantity <= 1e-9:
+            return
+        self._material_lineage_sequence += 1
+        self._material_lineage[node].append(
+            MaterialLineageSlice(
+                quantity=float(quantity),
+                lot_id=lot_id or f"L{self._material_lineage_sequence:09d}",
+                risk_event_refs=tuple(sorted(set(risk_event_refs))),
+                source_stage=str(source_stage),
+                created_at=float(self.env.now),
+            )
+        )
+
+    def _lineage_take(
+        self, node: str, quantity: float, *, output_scale: float = 1.0
+    ) -> list[MaterialLineageSlice]:
+        """FIFO-split lineage exactly as the corresponding container is drawn."""
+        if self.material_lineage_mode != "tagged_lots" or quantity <= 1e-9:
+            return []
+        remaining = float(quantity)
+        consumed: list[MaterialLineageSlice] = []
+        queue = self._material_lineage[node]
+        while remaining > 1e-8 and queue:
+            head = queue[0]
+            used = min(remaining, float(head.quantity))
+            consumed.append(
+                MaterialLineageSlice(
+                    quantity=used * float(output_scale),
+                    lot_id=head.lot_id,
+                    risk_event_refs=head.risk_event_refs,
+                    source_stage=head.source_stage,
+                    created_at=head.created_at,
+                )
+            )
+            head.quantity -= used
+            remaining -= used
+            if head.quantity <= 1e-8:
+                queue.pop(0)
+        if remaining > 1e-6:
+            raise AssertionError(
+                f"Lineage underflow at {node}: missing {remaining} of {quantity}."
+            )
+        return consumed
+
+    def _lineage_forward(
+        self,
+        node: str,
+        slices: Iterable[MaterialLineageSlice],
+        *,
+        source_stage: str,
+        extra_refs: Iterable[str] = (),
+    ) -> None:
+        extras = set(extra_refs)
+        for item in slices:
+            self._lineage_put(
+                node,
+                item.quantity,
+                risk_event_refs=set(item.risk_event_refs) | extras,
+                source_stage=source_stage,
+                lot_id=item.lot_id,
+            )
+
+    def _consume_pending_stage_refs(self, stage: str) -> tuple[str, ...]:
+        if self.material_lineage_mode != "tagged_lots":
+            return ()
+        refs = tuple(self._pending_lineage_events_by_stage[stage])
+        self._pending_lineage_events_by_stage[stage].clear()
+        return refs
+
+    def _lineage_snapshot(self) -> dict[str, float]:
+        """Diagnostic quantity totals for conservation tests and audit artifacts."""
+        return {
+            node: float(sum(item.quantity for item in slices))
+            for node, slices in self._material_lineage.items()
+        }
+
     def _record_queue_len(self) -> None:
         """Append (time, backlog length) to the queue history (monotone time)."""
         history = self._queue_len_history
@@ -1617,6 +1755,16 @@ class MFSCSimulation:
                 reason="risk_induced_stockout",
                 event=event,
             )
+            ref = self._lineage_event_ref(event)
+            if not any(row.get("event_ref") == ref for row in order.lineage_shortage_refs):
+                order.lineage_shortage_refs.append(
+                    {
+                        "event_ref": ref,
+                        "risk_id": event.risk_id,
+                        "observed_at": start,
+                        "blocked_hours": end - start,
+                    }
+                )
 
     def _register_upstream_scarcity_debt(self, event: RiskEvent) -> None:
         if self.risk_attribution_source != "causal_exposure":
@@ -1624,6 +1772,22 @@ class MFSCSimulation:
         if not any(int(op_id) <= 8 for op_id in event.affected_ops):
             return
         self._upstream_scarcity_debts.append(event)
+        if self.material_lineage_mode != "tagged_lots":
+            return
+        ref = self._lineage_event_ref(event)
+        self._lineage_event_index[ref] = event
+        earliest_op = min(int(op_id) for op_id in event.affected_ops)
+        if earliest_op <= 2:
+            stage = "op2_output"
+        elif earliest_op <= 4:
+            stage = "op4_output"
+        elif earliest_op <= 7:
+            stage = "op7_output"
+        else:
+            stage = "op8_output"
+        pending = self._pending_lineage_events_by_stage[stage]
+        if ref not in pending:
+            pending.append(ref)
 
     def _match_block_to_events(
         self, block: dict[str, Any]
@@ -2564,6 +2728,12 @@ class MFSCSimulation:
                 if total_delivery <= 0.0:
                     continue
             yield self.raw_material_wdc.put(total_delivery)
+            self._lineage_put(
+                "raw_material_wdc",
+                total_delivery,
+                risk_event_refs=self._consume_pending_stage_refs("op2_output"),
+                source_stage="op2_output",
+            )
             self.total_external_raw_material += float(total_delivery)
             self.supplier_delivery_events.append(
                 (float(self.env.now), float(total_delivery))
@@ -2594,6 +2764,7 @@ class MFSCSimulation:
             dispatch = min(total_dispatch, available)
             if dispatch > 0:
                 yield self.raw_material_wdc.get(dispatch)
+                lineage = self._lineage_take("raw_material_wdc", dispatch)
                 self._raw_material_in_transit += dispatch
                 yield self.env.timeout(self._pt("op3_pt"))
                 # Op4: transport WDC → AL (separate operation per thesis)
@@ -2602,6 +2773,12 @@ class MFSCSimulation:
                 yield self.env.timeout(self._pt("op4_pt"))
                 self._raw_material_in_transit -= dispatch
                 yield self.raw_material_al.put(dispatch)
+                self._lineage_forward(
+                    "raw_material_al",
+                    lineage,
+                    source_stage="op4_output",
+                    extra_refs=self._consume_pending_stage_refs("op4_output"),
+                )
             if self.periodic_release_mode == "start_to_start":
                 next_eligible_start = actual_start + float(self.params["op3_rop"])
 
@@ -2665,8 +2842,23 @@ class MFSCSimulation:
             if can_produce > 0:
                 if rework_qty > 0:
                     yield self.rework_op6.get(rework_qty)
+                    rework_lineage = self._lineage_take("rework_op6", rework_qty)
+                    self._lineage_forward(
+                        "pending_batch", rework_lineage, source_stage="op6_rework"
+                    )
                 if raw_units_qty > 0:
                     yield self.raw_material_al.get(raw_units_qty)
+                    raw_lineage = self._lineage_take(
+                        "raw_material_al",
+                        raw_units_qty,
+                        output_scale=1.0 / max(self._raw_units_per_ration, 1.0),
+                    )
+                    self._lineage_forward(
+                        "pending_batch",
+                        raw_lineage,
+                        source_stage="op7_work",
+                        extra_refs=self._consume_pending_stage_refs("op7_output"),
+                    )
                     self.total_raw_material_consumed += raw_units_qty
                     self.total_rations_created_from_raw += raw_produced_qty
                 self._pending_batch += can_produce
@@ -2678,6 +2870,10 @@ class MFSCSimulation:
                 while self._pending_batch >= batch_size:
                     self._pending_batch -= batch_size
                     yield self.rations_al.put(batch_size)
+                    batch_lineage = self._lineage_take("pending_batch", batch_size)
+                    self._lineage_forward(
+                        "rations_al", batch_lineage, source_stage="op7_output"
+                    )
 
                 if (
                     self.warmup_trigger == "production"
@@ -2755,6 +2951,17 @@ class MFSCSimulation:
             if op5_qty > 0.0:
                 raw_units = op5_qty * self._raw_units_per_ration
                 yield self.raw_material_al.get(raw_units)
+                raw_lineage = self._lineage_take(
+                    "raw_material_al",
+                    raw_units,
+                    output_scale=1.0 / max(self._raw_units_per_ration, 1.0),
+                )
+                self._lineage_forward(
+                    "pending_batch",
+                    raw_lineage,
+                    source_stage="op5_output",
+                    extra_refs=self._consume_pending_stage_refs("op7_output"),
+                )
                 self.total_raw_material_consumed += raw_units
                 self.total_rations_created_from_raw += op5_qty
                 yield self.wip_op5_op6.put(op5_qty)
@@ -2763,6 +2970,10 @@ class MFSCSimulation:
             while self._pending_batch >= batch_size:
                 self._pending_batch -= batch_size
                 yield self.rations_al.put(batch_size)
+                batch_lineage = self._lineage_take("pending_batch", batch_size)
+                self._lineage_forward(
+                    "rations_al", batch_lineage, source_stage="op7_output"
+                )
 
             if (
                 self.warmup_trigger == "production"
@@ -2778,6 +2989,7 @@ class MFSCSimulation:
         while True:
             batch_size = self.params["batch_size"]
             yield self.rations_al.get(batch_size)
+            lineage = self._lineage_take("rations_al", batch_size)
             departed_at = float(self.env.now)
             self._in_transit += batch_size
             while self._is_down(8):
@@ -2785,12 +2997,29 @@ class MFSCSimulation:
             yield self.env.timeout(self._pt("op8_pt"))
             self._in_transit -= batch_size
             yield self.rations_sb.put(batch_size)
+            op8_refs = self._consume_pending_stage_refs("op8_output")
+            self._lineage_forward(
+                "rations_sb",
+                lineage,
+                source_stage="op8_output",
+                extra_refs=op8_refs,
+            )
             if self.risk_attribution_source == "causal_exposure":
-                self._upstream_scarcity_debts = [
-                    event
-                    for event in self._upstream_scarcity_debts
-                    if float(event.end_time) > departed_at
-                ]
+                if self.material_lineage_mode == "tagged_lots":
+                    arrived_refs = set(op8_refs)
+                    for item in lineage:
+                        arrived_refs.update(item.risk_event_refs)
+                    self._upstream_scarcity_debts = [
+                        event
+                        for event in self._upstream_scarcity_debts
+                        if self._lineage_event_ref(event) not in arrived_refs
+                    ]
+                else:
+                    self._upstream_scarcity_debts = [
+                        event
+                        for event in self._upstream_scarcity_debts
+                        if float(event.end_time) > departed_at
+                    ]
             if self.warmup_trigger == "op9_arrival":
                 self._mark_warmup_complete()
             if (
@@ -2936,6 +3165,18 @@ class MFSCSimulation:
             )
             return False
         yield self.rations_sb.get(qty)
+        consumed_lineage = self._lineage_take("rations_sb", qty)
+        for item in consumed_lineage:
+            if not item.risk_event_refs:
+                continue
+            head.consumed_material_lineage.append(
+                {
+                    "lot_id": item.lot_id,
+                    "quantity": float(item.quantity),
+                    "risk_event_refs": list(item.risk_event_refs),
+                    "source_stage": item.source_stage,
+                }
+            )
         head.remaining_qty = 0.0
         head.op9_release_time = float(self.env.now)
         head.causal_wait_hours["op9_release"] = max(
@@ -3523,14 +3764,21 @@ class MFSCSimulation:
                     if defects > 0:
                         self._pending_batch -= defects
                         self.total_produced -= defects
+                        defect_lineage = self._lineage_take("pending_batch", defects)
                         if self.r14_defect_mode == "thesis_strict_op6":
                             yield self.rework_op6.put(defects)
+                            self._lineage_forward(
+                                "rework_op6", defect_lineage, source_stage="r14_rework"
+                            )
                             description = f"{defects} defective (returned to Op6)"
                         elif self.r14_defect_mode == "reprocess":
                             # Thesis Table 6.6b: defects returned to Op6 for
                             # re-processing. Model by feeding back to raw material
                             # so they re-enter the assembly pipeline later.
                             yield self.raw_material_al.put(defects)
+                            self._lineage_forward(
+                                "raw_material_al", defect_lineage, source_stage="r14_reprocess"
+                            )
                             description = (
                                 f"{defects} defective (returned to raw_material_al)"
                             )
