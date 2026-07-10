@@ -167,6 +167,37 @@ def test_serial_wip_assembly_preserves_mass_and_exposes_station_buffers() -> Non
     assert ledger["ration_residual"] == pytest.approx(0.0, abs=1e-6)
 
 
+def test_per_risk_rng_keeps_other_risk_draws_stable_when_r12_initializes() -> None:
+    common = dict(
+        horizon=5_000.0,
+        seed=375,
+        risks_enabled=True,
+        enabled_risks={"R11", "R12", "R13"},
+        risk_occurrence_mode="thesis_window",
+        seed_stream_mode="split",
+        risk_rng_mode="per_risk",
+        procurement_contract_mode="causal_coupled",
+    )
+    deferred = MFSCSimulation(
+        **common,
+        operational_risk_initialization_mode="deferred_first_cycle",
+    ).run()
+    initial = MFSCSimulation(
+        **common,
+        operational_risk_initialization_mode="include_initial_cycle",
+    ).run()
+
+    def signature(sim: MFSCSimulation, risk_id: str) -> list[tuple[float, float, float]]:
+        return [
+            (float(event.start_time), float(event.duration), float(event.magnitude))
+            for event in sim.risk_events
+            if event.risk_id == risk_id
+        ]
+
+    assert signature(deferred, "R11") == signature(initial, "R11")
+    assert signature(deferred, "R13") == signature(initial, "R13")
+
+
 def test_r22_delays_an_op9_linked_order_beyond_the_48h_promise() -> None:
     event = _event("R22", 1_000.0, 240.0, [10])
     sim = MFSCSimulation(

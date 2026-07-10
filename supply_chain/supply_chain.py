@@ -202,6 +202,9 @@ class MFSCSimulation:
         procurement_contract_mode: str = "legacy_independent",
         order_fulfillment_mode: str = "legacy_theatre_stock",
         assembly_flow_mode: str = "aggregate_line",
+        periodic_release_mode: str = "completion_relative",
+        operational_risk_initialization_mode: str = "deferred_first_cycle",
+        risk_rng_mode: str = "shared",
         op9_dispatch_policy: str = "fixed_clock_daily",
         downstream_transport_capacity_mode: str = "parallel",
         op9_freight_offset_hours: float = 6.0,
@@ -287,6 +290,25 @@ class MFSCSimulation:
                 "Invalid assembly_flow_mode="
                 f"{assembly_flow_mode!r}. Expected aggregate_line or serial_wip."
             )
+        if periodic_release_mode not in {"completion_relative", "start_to_start"}:
+            raise ValueError(
+                "Invalid periodic_release_mode="
+                f"{periodic_release_mode!r}. Expected completion_relative or "
+                "start_to_start."
+            )
+        if operational_risk_initialization_mode not in {
+            "deferred_first_cycle",
+            "include_initial_cycle",
+        }:
+            raise ValueError(
+                "Invalid operational_risk_initialization_mode="
+                f"{operational_risk_initialization_mode!r}. Expected "
+                "deferred_first_cycle or include_initial_cycle."
+            )
+        if risk_rng_mode not in {"shared", "per_risk"}:
+            raise ValueError(
+                f"Invalid risk_rng_mode={risk_rng_mode!r}. Expected shared or per_risk."
+            )
         if downstream_transport_capacity_mode not in {
             "parallel",
             "tandem_capacity_one",
@@ -335,6 +357,28 @@ class MFSCSimulation:
         self.procurement_contract_mode = str(procurement_contract_mode)
         self.order_fulfillment_mode = str(order_fulfillment_mode)
         self.assembly_flow_mode = str(assembly_flow_mode)
+        self.periodic_release_mode = str(periodic_release_mode)
+        self.operational_risk_initialization_mode = str(
+            operational_risk_initialization_mode
+        )
+        self.risk_rng_mode = str(risk_rng_mode)
+        risk_salts = {
+            "R11": 11,
+            "R12": 12,
+            "R13": 13,
+            "R14": 14,
+            "R21": 21,
+            "R22": 22,
+            "R23": 23,
+            "R24": 24,
+            "R3": 30,
+        }
+        self.risk_rng_by_id = {
+            risk_id: np.random.default_rng(
+                np.random.SeedSequence([int(seed or 0), 0xA17D17, salt])
+            )
+            for risk_id, salt in risk_salts.items()
+        }
         self.op9_dispatch_policy = str(op9_dispatch_policy)
         self.downstream_transport_capacity_mode = str(
             downstream_transport_capacity_mode
@@ -2285,13 +2329,22 @@ class MFSCSimulation:
             next_cycle_start += float(self.params["op1_rop"])
 
     def _op2_supplier_delivery(self):
+        next_eligible_start = float(self.params["op2_rop"])
         while True:
-            yield self.env.timeout(self.params["op2_rop"])
+            if self.periodic_release_mode == "start_to_start":
+                wait = max(0.0, next_eligible_start - float(self.env.now))
+                if wait > 0.0:
+                    yield self.env.timeout(wait)
+            else:
+                yield self.env.timeout(self.params["op2_rop"])
             if self.procurement_contract_mode == "causal_coupled":
                 while float(self.env.now) >= float(self.contract_valid_until):
                     yield self._contract_renewed_event
             while self._is_down(2):
                 yield self.env.timeout(1)
+            actual_start = float(self.env.now)
+            if self.periodic_release_mode == "start_to_start":
+                next_eligible_start = actual_start + float(self.params["op2_rop"])
             pt_remaining = self._pt("op2_pt")
             while pt_remaining > 0:
                 while self._is_down(2):
@@ -2311,10 +2364,22 @@ class MFSCSimulation:
             )
 
     def _op3_wdc_dispatch(self):
+        next_eligible_start = 0.0
         while True:
-            yield self.env.timeout(self.params["op3_rop"])
+            if self.periodic_release_mode == "start_to_start":
+                while (
+                    float(self.env.now) < next_eligible_start
+                    or float(self.raw_material_wdc.level) <= 0.0
+                ):
+                    remaining = max(
+                        0.0, next_eligible_start - float(self.env.now)
+                    )
+                    yield self.env.timeout(min(1.0, remaining) if remaining else 1.0)
+            else:
+                yield self.env.timeout(self.params["op3_rop"])
             while self._is_down(3):
                 yield self.env.timeout(1)
+            actual_start = float(self.env.now)
             total_dispatch = self.params["op3_q"] * NUM_RAW_MATERIALS
             available = self.raw_material_wdc.level
             if self.raw_material_flow_mode == "bom_total_units_order_up_to":
@@ -2331,6 +2396,8 @@ class MFSCSimulation:
                 yield self.env.timeout(self._pt("op4_pt"))
                 self._raw_material_in_transit -= dispatch
                 yield self.raw_material_al.put(dispatch)
+            if self.periodic_release_mode == "start_to_start":
+                next_eligible_start = actual_start + float(self.params["op3_rop"])
 
     # =====================================================================
     # ASSEMBLY LINE — HOURLY GRANULARITY (fixes daily-check bias)
@@ -3064,13 +3131,19 @@ class MFSCSimulation:
         if m_max <= 1.0:
             return True
         m_now = self._campaign_multiplier_now(risk_id, "frequency")
-        return bool(self.risk_rng.random() < (m_now / m_max))
+        return bool(self._risk_rng_for(risk_id).random() < (m_now / m_max))
+
+    def _risk_rng_for(self, risk_id: str) -> np.random.Generator:
+        """Return a stable family-specific stream for causal risk ablations."""
+        if self.risk_rng_mode == "per_risk":
+            return self.risk_rng_by_id[str(risk_id)]
+        return self.risk_rng
 
     def _sample_uniform_risk_window(self, risk_id: str) -> tuple[float, float]:
         """Sample the event offset for a thesis uniform-occurrence window."""
         a = int(RISKS_CURRENT[risk_id]["occurrence"]["a"])
         b_val = max(a, int(round(self._get_risk_b(risk_id))))
-        delay = float(self.risk_rng.integers(a, b_val + 1))
+        delay = float(self._risk_rng_for(risk_id).integers(a, b_val + 1))
         return delay, float(b_val)
 
     def _tail_after_uniform_occurrence(self, delay: float, window: float) -> float:
@@ -3097,10 +3170,11 @@ class MFSCSimulation:
                 yield from self._risk_R11_event(beta)
 
     def _risk_R11_event(self, beta: float):
-        target = int(self.risk_rng.choice(RISKS_CURRENT["R11"]["affected_ops"]))
+        rng = self._risk_rng_for("R11")
+        target = int(rng.choice(RISKS_CURRENT["R11"]["affected_ops"]))
         start = self.env.now
         self._take_down(target)
-        repair = max(1, self.risk_rng.exponential(beta))
+        repair = max(1, rng.exponential(beta))
         yield self.env.timeout(repair)
         self._bring_up(target)
         self.risk_events.append(
@@ -3110,9 +3184,16 @@ class MFSCSimulation:
     def _risk_R12(self):
         n = RISKS_CURRENT["R12"]["occurrence"]["n"]
         p = self._get_risk_p("R12")
+        first_cycle = True
         while True:
-            yield self.env.timeout(self.params["op1_rop"])
-            delayed = self.risk_rng.binomial(n, p)
+            if not (
+                first_cycle
+                and self.operational_risk_initialization_mode
+                == "include_initial_cycle"
+            ):
+                yield self.env.timeout(self.params["op1_rop"])
+            first_cycle = False
+            delayed = self._risk_rng_for("R12").binomial(n, p)
             if delayed > 0:
                 delay = delayed * 168
                 if self.risk_occurrence_mode == "thesis_window":
@@ -3147,7 +3228,7 @@ class MFSCSimulation:
         )
         while True:
             yield self.env.timeout(interval)
-            delayed = self.risk_rng.binomial(n, p)
+            delayed = self._risk_rng_for("R13").binomial(n, p)
             if delayed > 0:
                 delay = delayed * 24
                 if self.risk_occurrence_mode == "thesis_window":
@@ -3184,7 +3265,7 @@ class MFSCSimulation:
             produced = self._today_produced
             self._today_produced = 0  # Reset daily counter
             if produced > 0:
-                defects = self.rng.binomial(produced, p)
+                defects = self._risk_rng_for("R14").binomial(produced, p)
                 if defects > 0:
                     # Cap at available pending to maintain mass balance
                     defects = min(defects, int(self._pending_batch))
@@ -3246,12 +3327,13 @@ class MFSCSimulation:
                 yield self.env.timeout(tail)
 
     def _r21_event(self, affected: list[int], beta: float):
+        rng = self._risk_rng_for("R21")
         start = self.env.now
         for op_id in affected:
             self._take_down(op_id)
         recovery_times = {}
         for op_id in affected:
-            rt = max(1, self.risk_rng.exponential(beta))
+            rt = max(1, rng.exponential(beta))
             recovery_times[op_id] = rt
             self.env.process(self._delayed_bring_up(op_id, rt))
         max_rt = max(recovery_times.values())
@@ -3280,10 +3362,11 @@ class MFSCSimulation:
                 yield from self._risk_R22_event(beta, loc_ops)
 
     def _risk_R22_event(self, beta: float, loc_ops: list[int]):
-        target = int(self.risk_rng.choice(loc_ops))
+        rng = self._risk_rng_for("R22")
+        target = int(rng.choice(loc_ops))
         start = self.env.now
         self._take_down(target)
-        recovery = max(1, self.risk_rng.exponential(beta))
+        recovery = max(1, rng.exponential(beta))
         yield self.env.timeout(recovery)
         self._bring_up(target)
         self.risk_events.append(
@@ -3309,9 +3392,10 @@ class MFSCSimulation:
                 yield from self._risk_R23_event(beta)
 
     def _risk_R23_event(self, beta: float):
+        rng = self._risk_rng_for("R23")
         start = self.env.now
         self._take_down(11)
-        recovery = max(1, self.risk_rng.exponential(beta))
+        recovery = max(1, rng.exponential(beta))
         yield self.env.timeout(recovery)
         self._bring_up(11)
         self.risk_events.append(
@@ -3330,7 +3414,7 @@ class MFSCSimulation:
 
     def _apply_risk_R24_event(self) -> None:
         surge_lo, surge_hi = self._get_risk_surge()
-        surge = self.risk_rng.integers(surge_lo, surge_hi + 1)
+        surge = self._risk_rng_for("R24").integers(surge_lo, surge_hi + 1)
         self._contingent_demand_pending += surge
         # Cap accumulated contingent demand to prevent unbounded obs[14]
         # spikes when multiple R24 events fire before demand is consumed.

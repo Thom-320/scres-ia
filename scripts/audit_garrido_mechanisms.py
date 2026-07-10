@@ -45,20 +45,104 @@ from supply_chain.thesis_design import design_spec_for_cfi  # noqa: E402
 CALIBRATION_CFS = (1, 3, 5, 7, 9, 11, 13, 15, 17, 19)
 VALIDATION_CFS = (2, 4, 6, 8, 10, 12, 14, 16, 18, 20)
 VARIANTS = {
-    "clock_parallel": ("fixed_clock_daily", "parallel", "aggregate_line"),
+    "clock_parallel": (
+        "fixed_clock_daily",
+        "parallel",
+        "aggregate_line",
+        "completion_relative",
+        "deferred_first_cycle",
+    ),
     "clock_tandem": (
         "fixed_clock_daily",
         "tandem_capacity_one",
         "aggregate_line",
+        "completion_relative",
+        "deferred_first_cycle",
     ),
-    "headway_parallel": ("ready_headway", "parallel", "aggregate_line"),
+    "headway_parallel": (
+        "ready_headway",
+        "parallel",
+        "aggregate_line",
+        "completion_relative",
+        "deferred_first_cycle",
+    ),
     "headway_tandem": (
         "ready_headway",
         "tandem_capacity_one",
         "aggregate_line",
+        "completion_relative",
+        "deferred_first_cycle",
     ),
-    "clock_parallel_serial": ("fixed_clock_daily", "parallel", "serial_wip"),
-    "headway_parallel_serial": ("ready_headway", "parallel", "serial_wip"),
+    "clock_parallel_serial": (
+        "fixed_clock_daily",
+        "parallel",
+        "serial_wip",
+        "completion_relative",
+        "deferred_first_cycle",
+    ),
+    "headway_parallel_serial": (
+        "ready_headway",
+        "parallel",
+        "serial_wip",
+        "completion_relative",
+        "deferred_first_cycle",
+    ),
+    "clock_parallel_release": (
+        "fixed_clock_daily",
+        "parallel",
+        "aggregate_line",
+        "start_to_start",
+        "deferred_first_cycle",
+    ),
+    "clock_parallel_release_serial": (
+        "fixed_clock_daily",
+        "parallel",
+        "serial_wip",
+        "start_to_start",
+        "deferred_first_cycle",
+    ),
+    "headway_parallel_release": (
+        "ready_headway",
+        "parallel",
+        "aggregate_line",
+        "start_to_start",
+        "deferred_first_cycle",
+    ),
+    "clock_parallel_release_r12_initial": (
+        "fixed_clock_daily",
+        "parallel",
+        "aggregate_line",
+        "start_to_start",
+        "include_initial_cycle",
+    ),
+    "clock_parallel_r12_initial": (
+        "fixed_clock_daily",
+        "parallel",
+        "aggregate_line",
+        "completion_relative",
+        "include_initial_cycle",
+    ),
+    "clock_parallel_independent_rng": (
+        "fixed_clock_daily",
+        "parallel",
+        "aggregate_line",
+        "completion_relative",
+        "deferred_first_cycle",
+    ),
+    "clock_parallel_release_independent_rng": (
+        "fixed_clock_daily",
+        "parallel",
+        "aggregate_line",
+        "start_to_start",
+        "deferred_first_cycle",
+    ),
+    "clock_parallel_release_r12_initial_independent_rng": (
+        "fixed_clock_daily",
+        "parallel",
+        "aggregate_line",
+        "start_to_start",
+        "include_initial_cycle",
+    ),
 }
 
 
@@ -102,7 +186,14 @@ def _conditional_metrics(orders: list[Any], predicate: Any, prefix: str) -> dict
 
 
 def _run(cfi: int, target: GarridoCFTarget, variant: str, rp_mode: str) -> tuple[dict[str, Any], list[dict[str, Any]]]:
-    dispatch_policy, transport_mode, assembly_mode = VARIANTS[variant]
+    (
+        dispatch_policy,
+        transport_mode,
+        assembly_mode,
+        release_mode,
+        risk_initialization_mode,
+    ) = VARIANTS[variant]
+    risk_rng_mode = "per_risk" if variant.endswith("independent_rng") else "shared"
     spec = design_spec_for_cfi(cfi)
     sim = MFSCSimulation(
         shifts=spec.shifts,
@@ -125,6 +216,9 @@ def _run(cfi: int, target: GarridoCFTarget, variant: str, rp_mode: str) -> tuple
         procurement_contract_mode="causal_coupled",
         order_fulfillment_mode="op9_linked",
         assembly_flow_mode=assembly_mode,
+        periodic_release_mode=release_mode,
+        operational_risk_initialization_mode=risk_initialization_mode,
+        risk_rng_mode=risk_rng_mode,
         op9_dispatch_policy=dispatch_policy,
         downstream_transport_capacity_mode=transport_mode,
         demand_start_after_warmup=True,
@@ -161,6 +255,9 @@ def _run(cfi: int, target: GarridoCFTarget, variant: str, rp_mode: str) -> tuple
         "dispatch_policy": dispatch_policy,
         "transport_mode": transport_mode,
         "assembly_mode": assembly_mode,
+        "release_mode": release_mode,
+        "risk_initialization_mode": risk_initialization_mode,
+        "risk_rng_mode": risk_rng_mode,
         "rp_mode": rp_mode,
         "seed": int(target.seed),
         "excel_placed": int(target.max_j),
