@@ -208,6 +208,7 @@ def compute_episode_metrics(
         "ret_thesis": float(thesis["mean_ret"]),
         "ret_continuous": float(cont["mean_ret_continuous"]),
         "ret_excel_cvar05": _tail_mean(ret_values, frac=0.05, lower_tail=True),
+        "ret_excel_cvar10": _tail_mean(ret_values, frac=0.10, lower_tail=True),
         "ret_excel_p05": _pct(ret_values, 0.05),
         "ret_excel_p10": _pct(ret_values, 0.10),
         "ret_excel_p25": _pct(ret_values, 0.25),
@@ -238,7 +239,13 @@ def compute_episode_metrics(
         "backorder_qty_final": float(getattr(sim, "pending_backorder_qty", 0.0) or 0.0),
         "service_loss_auc_ration_hours": float(service_loss_auc),
         "service_loss_auc_per_order": float(service_loss_auc / n),
-        # time-to-recovery (RPj over disrupted orders)
+        # RPj is an order-attribution quantity, not system time-to-recovery.
+        # The retained-learning lane computes system_ttr_* from risk clusters
+        # and weekly service/backlog trajectories in l_program_env.py.
+        "rpj_mean": _mean(rpj),
+        "rpj_p95": _pct(rpj, 0.95),
+        # Backward-compatible aliases for historical Track A/B/C artifacts.
+        # New work must use rpj_* or system_ttr_* and must not call these TTR.
         "ttr_mean": _mean(rpj),
         "ttr_p95": _pct(rpj, 0.95),
         "backlog_age_mean": _mean(backlog_ages),
@@ -293,7 +300,7 @@ def merge_resource_metrics(
 
 METRIC_KEYS: tuple[str, ...] = (
     "ret_excel", "ret_thesis", "ret_continuous",
-    "ret_excel_cvar05", "ret_excel_p05", "ret_excel_p10", "ret_excel_p25",
+    "ret_excel_cvar05", "ret_excel_cvar10", "ret_excel_p05", "ret_excel_p10", "ret_excel_p25",
     "ret_excel_p50", "ret_excel_p75", "ret_excel_p90", "ret_excel_p95",
     "ret_excel_rolling_4w_mean", "ret_excel_rolling_4w_min",
     "ret_excel_rolling_4w_final", "ration_ret_excel",
@@ -303,7 +310,7 @@ METRIC_KEYS: tuple[str, ...] = (
     "excel_case_pct_unfulfilled",
     "fill_rate", "fill_rate_on_time", "lost_orders", "lost_rate",
     "backorder_qty_final", "service_loss_auc_ration_hours", "service_loss_auc_per_order",
-    "ttr_mean", "ttr_p95", "backlog_age_mean", "backlog_age_max",
+    "rpj_mean", "rpj_p95", "ttr_mean", "ttr_p95", "backlog_age_mean", "backlog_age_max",
     "apj_p50", "apj_p90", "apj_p99", "apj_positive_p50", "apj_positive_p90",
     "apj_positive_p99",
     "ctj_p50", "ctj_p90", "ctj_p99", "rpj_p50", "rpj_p90", "rpj_p99", "dpj_p99",

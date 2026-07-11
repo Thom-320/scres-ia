@@ -1215,12 +1215,48 @@ class MFSCSimulation:
             replayed = RiskEvent(
                 risk_id,
                 start,
-                start,
-                0.0,
+                start + duration,
+                duration,
                 affected_ops or [13],
                 event.description,
                 magnitude=surge,
                 unit=event.unit or "rations",
+            )
+            self.risk_events.append(replayed)
+            self._add_ret_quantity_risk(replayed)
+            return
+
+        if risk_id == "R14":
+            # Exogenous CRN replay: apply the recorded defect quantity to the
+            # physical pending batch, not merely to the ReT attribution ledger.
+            # The tape is materialized once from the reference campaign so every
+            # policy faces the same defect count at the same post-warmup time.
+            defects = min(max(0, int(round(float(event.magnitude)))), int(self._pending_batch))
+            if defects > 0:
+                self._pending_batch -= defects
+                self.total_produced -= defects
+                defect_lineage = self._lineage_take("pending_batch", defects)
+                if self.r14_defect_mode == "thesis_strict_op6":
+                    yield self.rework_op6.put(defects)
+                    self._lineage_forward(
+                        "rework_op6", defect_lineage, source_stage="r14_tape_rework"
+                    )
+                elif self.r14_defect_mode == "reprocess":
+                    yield self.raw_material_al.put(defects)
+                    self._lineage_forward(
+                        "raw_material_al", defect_lineage, source_stage="r14_tape_reprocess"
+                    )
+                else:
+                    self.total_rations_scrapped += float(defects)
+            replayed = RiskEvent(
+                risk_id,
+                start,
+                start,
+                0.0,
+                affected_ops or [7],
+                event.description,
+                magnitude=float(defects),
+                unit=event.unit or "defective_products",
             )
             self.risk_events.append(replayed)
             self._add_ret_quantity_risk(replayed)

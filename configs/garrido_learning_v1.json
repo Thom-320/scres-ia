@@ -1,34 +1,87 @@
 {
   "contract_id": "garrido_learning_v1",
-  "status": "frozen_decision_surface",
-  "claim_doc": "docs/CLAIM_AND_IDENTIFICATION_2026-07-11.md",
-  "physics": "supply_chain/data/garrido_proxy_v1_freeze_2026-07-10.json",
-  "decision_surface": {
-    "strategic_buffer_levels": {
-      "B0": null,
-      "I168":  {"period_hours": 168.0},
-      "I336":  {"period_hours": 336.0},
-      "I504":  {"period_hours": 504.0},
-      "I672":  {"period_hours": 672.0},
-      "I1344": {"period_hours": 1344.0}
-    },
-    "buffer_note": "Table 6.16: level I_t,S is replenished every t hours (period tied to level). Buffer chosen at campaign start, FIXED for the campaign. One policy per buffer level.",
-    "tactical_action": "Discrete(3) weekly shifts {S1,S2,S3}; effect at k+1; min dwell 1 week; switching logged",
-    "factorial_disclosure": "The 6x3 grid is a factorial EXTENSION built from thesis-native levels; the thesis varied buffers at S=1 and capacity at I=0 (one factor at a time)."
+  "status": "gate2_terminal_stop_no_powered_ppo",
+  "physical_reference": {
+    "contract_id": "garrido_proxy_v1",
+    "path": "supply_chain/data/garrido_proxy_v1_freeze_2026-07-10.json",
+    "sha256": "3d7aaa14263596cd68dce8a79f1f04bcb8fca9639c10cd9ac8160586fda4ed96",
+    "language": "thesis-grounded reconstruction with audited physical causality and a disclosed attribution proxy"
   },
-  "campaign_families": {
-    "R1":    {"risk_overrides": {"R11": "increased", "R12": "increased", "R13": "increased", "R14": "increased"}},
-    "R2":    {"risk_overrides": {"R21": "increased", "R22": "increased", "R23": "increased", "R24": "increased"}},
-    "mixed": {"risk_overrides": {"R11": "increased", "R12": "increased", "R13": "increased", "R14": "increased", "R21": "increased", "R22": "increased", "R23": "increased", "R24": "increased"}}
+  "decision_contract": {
+    "step_hours": 168,
+    "action_space": "Discrete(3)",
+    "actions": {"0": "S1", "1": "S2", "2": "S3"},
+    "activation_delay_steps": 1,
+    "minimum_effective_duration_steps": 1,
+    "mutable_sim_fields": ["assembly_shifts", "batch_size"],
+    "buffers": [0, 168, 336, 504, 672, 1344],
+    "buffer_changes_within_campaign": false
   },
-  "family_note": "All 9 risks enabled; family sets which category runs at thesis Table 6.12 '+' levels; others at current. R3 enabled at current (~absent at campaign scale) and reserved for OOD stress tapes.",
+  "observation_contract": {
+    "dimension": 24,
+    "normalization": "fixed_calibration_only",
+    "normalization_clip": 10.0,
+    "forbidden": [
+      "risk family label",
+      "latent regime",
+      "true intensity",
+      "forecast",
+      "future event time",
+      "future duration",
+      "retrospective risk memory"
+    ]
+  },
+  "learning_carrier": {
+    "primary": ["actor weights", "critic weights"],
+    "technical_ablation": ["actor weights", "critic weights", "optimizer state"],
+    "excluded": ["normalizer", "inventory", "WIP", "backlog", "RNG state"]
+  },
+  "reward": {
+    "formula": "-(late_backlog_hours_norm + total_backlog_hours_norm + lambda_shift * extra_shift_hours_norm + 0.10 * switches)",
+    "normalization": "Gate-1 calibration p95",
+    "reward_normalization": false,
+    "lambda_shift_pilot_candidates": [0.1, 0.25, 0.5]
+  },
+  "outcomes": {
+    "co_primary": ["ret_excel", "service_loss_auc_ration_hours"],
+    "secondary": [
+      "total_backlog_hours",
+      "fill_rate",
+      "ret_excel_cvar10",
+      "system_ttr_mean",
+      "system_ttr_p95",
+      "rpj_mean",
+      "rpj_p95",
+      "shift_hours",
+      "surge_hours",
+      "switches"
+    ],
+    "forbidden_primary_substitution": "order_level_ret_mean"
+  },
   "tape_universes": {
-    "calibration": "700001-700060 (20 per family: R1 700001-700020, R2 700021-700040, mixed 700041-700060)",
-    "training": "710001+",
-    "fixed_probes": "715001+",
-    "virgin_confirmatory": "720001+ (LOCKED until pre-registration is frozen)",
-    "exhausted": "200001-600xxx (prior programs; never reuse)"
+    "calibration_seed_base": 700000,
+    "training_seed_base": 710000,
+    "fixed_probe_seed_base": 720000,
+    "virgin_seed_base": 730000,
+    "r3_stress_seed_base": 740000,
+    "training_families": ["R1", "R2", "mixed"],
+    "r3_training_allowed": false
   },
-  "campaign_horizon_weeks_provisional": 104,
-  "horizon_note": "Final campaign length (52/104/260) frozen at pilot per the censoring rule (<10% censored recoveries)."
+  "gates": {
+    "branch_service_loss_reduction_min": 0.05,
+    "shift_hours_relative_tolerance": 0.02,
+    "ret_excel_noninferiority_margin": -0.01,
+    "minimum_nonextreme_buffers_passing": 2,
+    "retained_ret_excel_ci95_lower_min": 0.0,
+    "retained_service_loss_reduction_min": 0.05
+  },
+  "nonclaims": [
+    "predictive accuracy",
+    "prevention",
+    "anticipation",
+    "real organizational learning",
+    "architecture superiority",
+    "exact Garrido reproduction",
+    "first DES-RL"
+  ]
 }

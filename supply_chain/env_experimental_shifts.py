@@ -286,7 +286,9 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         max_steps: Optional[int] = None,
         year_basis: str = DEFAULT_YEAR_BASIS,
         risk_level: str = "current",
+        risks_enabled: bool = True,
         stochastic_pt: bool = False,
+        warmup_hours_override: float | None = None,
         reward_mode: str = "ReT_thesis",
         observation_version: str = "v1",
         # --- ReT_thesis parameters ---
@@ -402,6 +404,8 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         risk_frequency_multipliers_by_id: dict[str, float] | None = None,
         risk_impact_multipliers_by_id: dict[str, float] | None = None,
         risk_event_tape: list[dict[str, Any]] | None = None,
+        risk_attribution_source: str = "des_events",
+        ret_recovery_period_mode: str = "disruption",
         initial_buffers: dict[str, float] | None = None,
         initial_shifts: int = 1,
         inventory_replenishment_period: float | None = None,
@@ -412,6 +416,10 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         replenishment_route_aware: bool = False,
         procurement_contract_mode: str = "legacy_independent",
         order_fulfillment_mode: str = "legacy_theatre_stock",
+        op9_dispatch_policy: str = "fixed_clock_daily",
+        downstream_transport_capacity_mode: str = "parallel",
+        op9_freight_offset_hours: float = 6.0,
+        r24_attribution_window_hours: float = 0.0,
         demand_start_after_warmup: bool = False,
         priming_enabled: bool = True,
         # --- Track B: MDP structural fixes ---
@@ -504,6 +512,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self.step_size = float(step_size_hours)
         self.year_basis = year_basis
         self.risk_level = risk_level
+        self.risks_enabled = bool(risks_enabled)
         self.stochastic_pt = stochastic_pt
         self.warmup_trigger = warmup_trigger
         self.downstream_q_source = downstream_q_source
@@ -534,6 +543,8 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             for risk_id, value in (risk_impact_multipliers_by_id or {}).items()
         }
         self.risk_event_tape = list(risk_event_tape) if risk_event_tape is not None else None
+        self.risk_attribution_source = str(risk_attribution_source)
+        self.ret_recovery_period_mode = str(ret_recovery_period_mode)
         self.initial_buffers = dict(initial_buffers or {})
         self.initial_shifts = int(initial_shifts)
         self.initial_inventory_replenishment_period = inventory_replenishment_period
@@ -546,6 +557,14 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self.replenishment_route_aware = bool(replenishment_route_aware)
         self.procurement_contract_mode = str(procurement_contract_mode)
         self.order_fulfillment_mode = str(order_fulfillment_mode)
+        self.op9_dispatch_policy = str(op9_dispatch_policy)
+        self.downstream_transport_capacity_mode = str(
+            downstream_transport_capacity_mode
+        )
+        self.op9_freight_offset_hours = float(op9_freight_offset_hours)
+        self.r24_attribution_window_hours = max(
+            0.0, float(r24_attribution_window_hours)
+        )
         self.demand_start_after_warmup = bool(demand_start_after_warmup)
         self.priming_enabled = bool(priming_enabled)
         self.reward_mode = reward_mode
@@ -721,7 +740,11 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self.cvar_window = int(max(2, cvar_window))
         self._cvar_loss_buffer = collections.deque(maxlen=self.cvar_window)
 
-        self.warmup_hours = float(WARMUP["estimated_deterministic_hrs"])
+        self.warmup_hours = float(
+            WARMUP["estimated_deterministic_hrs"]
+            if warmup_hours_override is None
+            else max(0.0, float(warmup_hours_override))
+        )
         self._post_warmup_start_time = self.warmup_hours
         self.priming_shifts = int(WARMUP.get("priming_shifts", 2))
         self.priming_step_hours = float(WARMUP.get("priming_step_hours", 168.0))
@@ -2505,7 +2528,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self.sim = MFSCSimulation(
             shifts=initial_shifts,
             initial_buffers=initial_buffers,
-            risks_enabled=True,
+            risks_enabled=self.risks_enabled,
             risk_level=self.risk_level,
             seed=seed,
             strict_exogenous_crn=True,
@@ -2527,6 +2550,8 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             risk_frequency_multipliers_by_id=self.risk_frequency_multipliers_by_id,
             risk_impact_multipliers_by_id=self.risk_impact_multipliers_by_id,
             risk_event_tape=self.risk_event_tape,
+            risk_attribution_source=self.risk_attribution_source,
+            ret_recovery_period_mode=self.ret_recovery_period_mode,
             enabled_risks=self.enabled_risks,
             risk_overrides=self.risk_overrides,
             inventory_replenishment_period=inventory_replenishment_period,
@@ -2535,10 +2560,17 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             replenishment_route_aware=self.replenishment_route_aware,
             procurement_contract_mode=self.procurement_contract_mode,
             order_fulfillment_mode=self.order_fulfillment_mode,
+            op9_dispatch_policy=self.op9_dispatch_policy,
+            downstream_transport_capacity_mode=(
+                self.downstream_transport_capacity_mode
+            ),
+            op9_freight_offset_hours=self.op9_freight_offset_hours,
+            r24_attribution_window_hours=self.r24_attribution_window_hours,
             demand_start_after_warmup=self.demand_start_after_warmup,
         )
         self.sim._start_processes()
-        self.sim.env.run(until=self.warmup_hours)
+        if self.warmup_hours > self.sim.env.now:
+            self.sim.env.run(until=self.warmup_hours)
         while not self.sim.warmup_complete and self.sim.env.now < self.sim.horizon:
             self.sim.env.run(until=min(self.sim.env.now + 1.0, self.sim.horizon))
         if self.priming_enabled:
