@@ -113,20 +113,37 @@ win:
 - **Virgin confirmatory**: freeze code/tree/features/analysis/manifest/git-SHA, then
   ONE opening of 40 virgin tapes. Runner aborts if virgin tapes open before freeze.
 
-## 6. Promotion / stop (frozen)
-Promote to sequential control ONLY if ALL: liveness+mass-balance pass; ≥2 allocation
-levels each optimal in ≥15% of branch states, none >85%; oracle 28 d service-loss
-≥5% lower than best constant with CI95 lower >0; ΔReT co-directional CI95 lower ≥0;
-lost-order relative increase CI95 upper ≤2%; tree recovers ≥50% oracle & beats best
-constant CI95>0 on held-out; virgin: ΔReT CI95>0, service-loss ≥3% CI95>0, positive
-in ≥3/4 strata & ≥70% tapes, CVaR10 not worse >2%; **worst-CSSU floor**:
-min(ReT_A, ReT_B) not down >0.01 vs best constant (unless a lower mission priority is
-pre-specified); **and the advantage survives ONLY under true localization, not the
-shuffled placebo** (V_info). Else emit `STOP_NO_OBSERVABLE_SPATIAL_HEADROOM`.
+## 6. Promotion / stop (frozen) — aligned to Garrido's stated criterion
 
-Binding guardrails (any breach ⇒ stop): gain from shedding orders/backlog eviction;
-gain from more total transport; 72 h benefit becoming 28 d damage; benefit requiring
-future information; benefit equal under the shuffled-localization placebo.
+Garrido's acceptance bar (stated 2026-07-11): "beat a static policy in **resilience**
+→ paper." Resilience = `ret_excel_visible` (his metric). We therefore make **ReT the
+PRIMARY promotion gate** and demote service-loss from a ≥5% gate to a
+non-worsening guardrail. The anti-artifact guardrails STAY — because the visible
+ledger makes a fake ReT win trivial (shed hard orders, use clairvoyance, overfit),
+and a fake win dies in peer review even with Garrido's sign-off.
+
+**PRIMARY (all required):**
+1. The **deployable observable tree** (current features only — NOT the clairvoyant
+   oracle) beats the best static constant on `ret_excel_visible` with **paired CI95
+   lower > 0**, out-of-sample on the 40 **virgin** tapes, positive in ≥3/4 strata and
+   ≥70% of tapes.
+2. State-contingency real: ≥2 allocation levels each branch-optimal in ≥15% of states,
+   none >85%; the tree captures ≥50% of the oracle ReT headroom.
+3. The ReT win **survives the `_clipped_0_1` sensitivity** (not driven by >1 outliers).
+
+**Binding guardrails (any breach ⇒ `STOP_NO_OBSERVABLE_SPATIAL_HEADROOM`):**
+- **No shedding**: lost-order relative increase CI95 upper ≤2% (the key visible-ledger
+  artifact — a ReT rise bought with more lost orders is disqualified).
+- **Service must not worsen**: service-loss AUC not materially higher (co-primary,
+  now a floor rather than a ≥5% target).
+- **No clairvoyance**: only the observable-feature policy counts; the oracle is a
+  diagnostic bound.
+- **Information, not just attacks (V_info)**: the advantage must appear under TRUE
+  localization and NOT under the shuffled-localization placebo.
+- **Worst-CSSU floor**: min(ReT_A, ReT_B) not down >0.01 vs best constant (unless a
+  lower mission priority is pre-specified).
+- Mass conservation each branch; no gain from more total transport; no 72 h benefit
+  becoming 28 d damage.
 
 ## 7. Claim ladder (pre-specified)
 | Result | Allowed claim |
