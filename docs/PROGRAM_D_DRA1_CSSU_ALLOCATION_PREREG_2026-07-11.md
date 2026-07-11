@@ -1,11 +1,23 @@
 # Program D — DRA-1: Two-CSSU spatial-allocation discovery gate (PREREGISTRATION, frozen 2026-07-11)
 
+> **2026-07-11 correction (pre-experiment, no DRA-1 run yet):** two amendments after
+> the ReT-metric review — (1) primary endpoint is now `ret_excel_visible_v1`
+> (`docs/RET_EXCEL_VISIBLE_V1_CONTRACT_2026-07-11.md`), NOT the full-ledger
+> `ret_excel`; because the visible ledger omits lost orders (verified: 660 visible vs
+> 875 placed on a probe, mean 0.00645 vs 0.00486), it has a "shed-to-win" incentive,
+> so the **lost-order guardrail is strictly binding for every headline**. (2) The CSSU
+> split is framed honestly as OUR structural extension (see §1), not a demonstrable
+> thesis omission.
+
 Status: **frozen before any DRA-1 code/experiment.** Authorized only after D1
 reached `STOP_NO_STATE_DEPENDENT_RATIONING_HEADROOM` (368f381) — the *temporal*
 zero-sum lever has no deployable dynamic value; DRA-1 tests the *spatial* zero-sum
-lever, the committee's #1 family. Primary metric: Garrido Excel `ret_excel`
-(`mean_ret_excel_formula`), never `ret_thesis`/`order_level_ret_mean`.
-No PPO/KAN/RNN/SAC/TD3/MARL is authorized before the confirmatory gate.
+lever, the committee's #1 family. Primary metric: **`ret_excel_visible_v1`** (Garrido
+workbook-visible ledger; see contract doc), co-primary **`service_loss_auc`**, with
+**lost orders as a binding guardrail** (the visible ledger omits lost orders, so a
+policy must never win by shedding). Mandatory sensitivity: `ret_excel_visible_clipped_0_1`
+(the un-clipped recovery branch can exceed 1). Never `ret_thesis`/`order_level_ret_mean`/
+`Rsult_1` Re column. No PPO/KAN/RNN/SAC/TD3/MARL before the confirmatory gate.
 
 ## 0. Why DRA-1 is different from the five stopped programs
 All prior levers (buffer, shift, dispatch-rate, downstream-reserve, D1 rationing)
@@ -18,10 +30,14 @@ the structural criterion requires. This is the last untested decision-right fami
 below the CDC.
 
 ## 1. Fidelity basis (verified first-hand 2026-07-11)
-- **The thesis depicts TWO CSSUs** at Op11 (Fig 6.2, "Combat Service Support Units
-  (2)"); our reconstruction aggregated them into one container `rations_cssu`.
-  Splitting them is an explicit STRUCTURAL EXTENSION, disclosed, **requiring
-  Garrido face-validation of the split before the virgin confirmatory**.
+- **The two-CSSU split is OUR structural extension, not a demonstrable thesis
+  omission.** The thesis is ambiguous: Fig 6.2 labels Op11 "Combat Service Support
+  Units (2)" and the text mentions combat brigades containing CSSUs, but Fig 6.1 and
+  the modelled operations 10–12 treat them AGGREGATED — which our reconstruction
+  faithfully mirrors with one `rations_cssu` container. Splitting into A/B is a
+  proposed extension to create a spatial allocation decision; it must be presented as
+  such and **requires Garrido face-validation before the virgin confirmatory** — never
+  sold as reproducing an explicit thesis division.
 - **Garrido marks the relevant disruptions per order in his own workbooks**
   (Raw_data2, CF11–CF20): columns `R21_1..R21_5, R22_1..R22_4, R23, R24`. So
   R22 (LOC/arc attacks) and R23 (attacks on forward logistics units = the CSSUs)
