@@ -1,4 +1,9 @@
-# DRA-1-v2 — ReT-primary prospective adjustment
+> **HISTORICAL — superseded by `docs/PROGRAM_D_DRA1_V3_PREREGISTRATION_2026-07-11.md` (consolidated 2026-07-11).** Kept for provenance; do not treat as an active preregistration.
+
+# DRA-1-v2 historical adjustment (SUPERSEDED)
+
+> **HISTORICAL PROVENANCE ONLY.** Consolidated and superseded before physical
+> implementation by `PROGRAM_D_DRA1_V3_PREREGISTRATION_2026-07-11.md`.
 
 Status: **FROZEN BEFORE DRA-1 IMPLEMENTATION OR RESULTS** on 2026-07-11. This
 prospectively supersedes only the endpoint hierarchy and promotion thresholds in

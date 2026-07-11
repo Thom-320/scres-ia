@@ -1,4 +1,9 @@
-# DRA-1 preregistration addendum — metric and fidelity corrections
+> **HISTORICAL — superseded by `docs/PROGRAM_D_DRA1_V3_PREREGISTRATION_2026-07-11.md` (consolidated 2026-07-11).** Kept for provenance; do not treat as an active preregistration.
+
+# DRA-1 historical metric/fidelity addendum (SUPERSEDED)
+
+> **HISTORICAL PROVENANCE ONLY.** Consolidated and superseded before physical
+> implementation by `PROGRAM_D_DRA1_V3_PREREGISTRATION_2026-07-11.md`.
 
 Frozen before DRA-1 implementation or results. This addendum corrects provenance
 without altering the risk/action/gate thresholds in the original preregistration.

@@ -1,0 +1,40 @@
+{
+  "contract_id": "cssu_allocation_v1",
+  "status": "PHYSICAL_FOUNDATION",
+  "topology": {
+    "source": "Op9 Supply Battalion",
+    "destinations": ["CSSU_A", "CSSU_B"],
+    "aggregate_demand_invariant": "demand_A + demand_B equals the original aggregate demand tape",
+    "aggregate_capacity_invariant": "dispatch_A + dispatch_B <= min(Op9 stock, fixed daily downstream capacity)"
+  },
+  "action": {
+    "allocation_a": [0.25, 0.5, 0.75],
+    "service_rule": ["SPT_FULL", "FIFO_PARTIAL", "R24_AGE_PARTIAL"],
+    "epoch_hours": 24,
+    "activation_latency_hours": 0,
+    "minimum_duration_hours": 24,
+    "can_change_total_capacity": false
+  },
+  "destination_assignment": {
+    "method": "sha256 keyed by simulation_seed and order_id",
+    "uses_simulator_rng": false,
+    "expected_base_share": [0.5, 0.5]
+  },
+  "unused_capacity": {
+    "reallocate_to_other_destination": true,
+    "rule": "largest unmet quantity first"
+  },
+  "forbidden": [
+    "dropping or evicting demand",
+    "increasing total downstream capacity through the allocation action",
+    "future risk, repair, or demand information",
+    "instantaneous inventory creation"
+  ],
+  "scientific_state": {
+    "destination_flow_integrated_with_des": true,
+    "allocation_action_integrated_with_des": false,
+    "static_frontier_complete": false,
+    "ppo_authorized": false,
+    "verdict": "PENDING_ALLOCATION_ACTUATOR"
+  }
+}

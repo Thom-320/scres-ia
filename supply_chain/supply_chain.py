@@ -22,6 +22,8 @@ from dataclasses import dataclass, field
 from typing import Any, Iterable, Optional
 from collections import Counter
 
+from .cssu_allocation import stable_cssu_destination
+
 from .config import (
     ADAPTIVE_BENCHMARK_INITIAL_REGIME,
     ADAPTIVE_BENCHMARK_MAINTENANCE,
@@ -120,6 +122,8 @@ class OrderRecord:
     backorder: bool = False
     remaining_qty: float = 0.0
     contingent: bool = False
+    # Opt-in Program D topology. ``None`` preserves the aggregate Garrido lane.
+    cssu_destination: Optional[str] = None
     lost: bool = False
     lost_time: Optional[float] = None
     metrics_excluded: bool = False
@@ -236,6 +240,7 @@ class MFSCSimulation:
         demand_start_after_warmup: bool = False,
         material_lineage_mode: str = "off",
         op2_release_clock_mode: str = "inherit",
+        cssu_topology_mode: str = "aggregate",
     ) -> None:
         if warmup_trigger not in WARMUP_TRIGGER_OPTIONS:
             valid = ", ".join(WARMUP_TRIGGER_OPTIONS)
@@ -352,6 +357,10 @@ class MFSCSimulation:
                 f"{downstream_transport_capacity_mode!r}. Expected parallel "
                 "or tandem_capacity_one."
             )
+        if cssu_topology_mode not in {"aggregate", "split_v1"}:
+            raise ValueError(
+                "cssu_topology_mode must be 'aggregate' or 'split_v1'."
+            )
         if backorder_overflow_mode not in BACKORDER_OVERFLOW_MODE_OPTIONS:
             valid = ", ".join(BACKORDER_OVERFLOW_MODE_OPTIONS)
             raise ValueError(
@@ -396,6 +405,7 @@ class MFSCSimulation:
         self.replenishment_route_aware = bool(replenishment_route_aware)
         self.procurement_contract_mode = str(procurement_contract_mode)
         self.order_fulfillment_mode = str(order_fulfillment_mode)
+        self.cssu_topology_mode = str(cssu_topology_mode)
         self.assembly_flow_mode = str(assembly_flow_mode)
         self.periodic_release_mode = str(periodic_release_mode)
         self.op2_release_clock_mode = str(op2_release_clock_mode)
@@ -589,6 +599,12 @@ class MFSCSimulation:
         self.rations_sb = simpy.Container(self.env, capacity=INF, init=0)
         self.rations_sb_dispatch = simpy.Container(self.env, capacity=INF, init=0)
         self.rations_cssu = simpy.Container(self.env, capacity=INF, init=0)
+        # Program D split ledgers are inert in the default aggregate lane.
+        # They make destination-specific flow observable without changing the
+        # shared physical stock or downstream capacity.
+        self.cssu_in_transit = {"A": 0.0, "B": 0.0}
+        self.cssu_delivered = {"A": 0.0, "B": 0.0}
+        self.cssu_demanded = {"A": 0.0, "B": 0.0}
         self.rations_theatre = simpy.Container(self.env, capacity=INF, init=0)
         # Program-v2 opt-in reserve.  It is deliberately separate from the
         # Garrido theatre stock: in ``op9_linked`` mode normal orders travel
@@ -1737,6 +1753,13 @@ class MFSCSimulation:
         if self.emergency_reserve_enabled:
             detail["emergency_theatre_reserve"] = float(
                 self.emergency_theatre_reserve.level
+            )
+        if self.cssu_topology_mode == "split_v1":
+            detail.update(
+                {
+                    "cssu_A_in_transit": float(self.cssu_in_transit["A"]),
+                    "cssu_B_in_transit": float(self.cssu_in_transit["B"]),
+                }
             )
         return detail
 
@@ -3542,6 +3565,11 @@ class MFSCSimulation:
         so downstream attacks propagate backpressure through the pipeline.
         """
         self._in_transit += qty
+        destination = order.cssu_destination
+        if self.cssu_topology_mode == "split_v1":
+            if destination not in {"A", "B"}:
+                raise AssertionError("split_v1 order lacks a valid CSSU destination")
+            self.cssu_in_transit[destination] += qty
         if self.downstream_transport_capacity_mode == "tandem_capacity_one":
             queue_start = float(self.env.now)
             with self.op10_convoy.request() as req:
@@ -3568,6 +3596,9 @@ class MFSCSimulation:
             yield from self._wait_order_for_operation(order, 12)
             yield self.env.timeout(self._pt("op12_pt"))
         self._in_transit -= qty
+        if self.cssu_topology_mode == "split_v1":
+            self.cssu_in_transit[destination] -= qty
+            self.cssu_delivered[destination] += qty
         self.total_theatre_inflow += qty
         self.total_delivered += qty
         self.total_order_fulfilled += qty
@@ -3598,6 +3629,14 @@ class MFSCSimulation:
     # =====================================================================
 
     def _place_demand_order(self, order: OrderRecord):
+        if self.cssu_topology_mode == "split_v1":
+            if order.cssu_destination is None:
+                order.cssu_destination = stable_cssu_destination(
+                    simulation_seed=int(self.seed or 0), order_id=int(order.j)
+                )
+            if order.cssu_destination not in {"A", "B"}:
+                raise ValueError("split_v1 orders require CSSU destination A or B")
+            self.cssu_demanded[order.cssu_destination] += float(order.quantity)
         for episode_id in order.causal_r24_event_ids:
             episode = self._r24_causal_episodes.get(episode_id)
             if episode is not None and episode.get("assigned_order_j") is None:

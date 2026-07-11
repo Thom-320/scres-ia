@@ -253,11 +253,16 @@ def _run(
     )
     event_counts: dict[str, int] = {}
     event_hours: dict[str, float] = {}
+    event_affected_op_counts: dict[str, dict[str, int]] = {}
     for event in sim.risk_events:
         event_counts[event.risk_id] = event_counts.get(event.risk_id, 0) + 1
         event_hours[event.risk_id] = event_hours.get(event.risk_id, 0.0) + float(
             event.duration
         )
+        by_op = event_affected_op_counts.setdefault(event.risk_id, {})
+        for op_id in event.affected_ops:
+            key = str(int(op_id))
+            by_op[key] = by_op.get(key, 0) + 1
 
     summary: dict[str, Any] = {
         "cfi": cfi,
@@ -350,16 +355,38 @@ def _run(
             (order.causal_wait_hours.get("op10_down", 0.0) for order in visible),
             0.95,
         ),
+        "op10_down_wait_positive_orders": sum(
+            order.causal_wait_hours.get("op10_down", 0.0) > 0.0 for order in visible
+        ),
+        "op10_down_wait_max": max(
+            (order.causal_wait_hours.get("op10_down", 0.0) for order in visible),
+            default=0.0,
+        ),
         "op11_down_wait_p95": _q(
             (order.causal_wait_hours.get("op11_down", 0.0) for order in visible),
             0.95,
+        ),
+        "op11_down_wait_positive_orders": sum(
+            order.causal_wait_hours.get("op11_down", 0.0) > 0.0 for order in visible
+        ),
+        "op11_down_wait_max": max(
+            (order.causal_wait_hours.get("op11_down", 0.0) for order in visible),
+            default=0.0,
         ),
         "op12_down_wait_p95": _q(
             (order.causal_wait_hours.get("op12_down", 0.0) for order in visible),
             0.95,
         ),
+        "op12_down_wait_positive_orders": sum(
+            order.causal_wait_hours.get("op12_down", 0.0) > 0.0 for order in visible
+        ),
+        "op12_down_wait_max": max(
+            (order.causal_wait_hours.get("op12_down", 0.0) for order in visible),
+            default=0.0,
+        ),
         "event_counts": event_counts,
         "event_hours": event_hours,
+        "event_affected_op_counts": event_affected_op_counts,
     }
 
     risk_rows: list[dict[str, Any]] = []
@@ -435,7 +462,7 @@ def main() -> None:
         flat_rows = []
         for row in rows:
             flat = dict(row)
-            for key in ("event_counts", "event_hours"):
+            for key in ("event_counts", "event_hours", "event_affected_op_counts"):
                 if key in flat:
                     flat[key] = json.dumps(flat[key], sort_keys=True)
             flat_rows.append(flat)

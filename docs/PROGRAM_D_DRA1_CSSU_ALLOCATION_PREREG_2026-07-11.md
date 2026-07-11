@@ -1,4 +1,10 @@
-# Program D — DRA-1: Two-CSSU spatial-allocation discovery gate (PREREGISTRATION, frozen 2026-07-11)
+> **HISTORICAL — superseded by `docs/PROGRAM_D_DRA1_V3_PREREGISTRATION_2026-07-11.md` (consolidated 2026-07-11).** Kept for provenance; do not treat as an active preregistration.
+
+# Program D — DRA-1 historical preregistration (SUPERSEDED)
+
+> **HISTORICAL PROVENANCE ONLY.** The authoritative pre-implementation contract
+> is `PROGRAM_D_DRA1_V3_PREREGISTRATION_2026-07-11.md`. Do not use this document
+> to select endpoints, thresholds, data universes or experiment sequencing.
 
 > **2026-07-11 correction (pre-experiment, no DRA-1 run yet):** two amendments after
 > the ReT-metric review — (1) primary endpoint is now `ret_excel_visible_v1`
