@@ -1,0 +1,138 @@
+{
+  "comparator": "spt_flat",
+  "criteria": {
+    "lost_upper_ci_at_most_2pct": true,
+    "ret_codirectional_ci_nonnegative": true,
+    "service_loss_5pct_ci_positive": false,
+    "two_actions_15pct_and_none_85pct": true
+  },
+  "generated_at_utc": "2026-07-11T22:42:29.972665+00:00",
+  "git_sha_input": "70bee843f24d67f1c9fb8b1bef4652529cd4716c",
+  "guardrail_endpoints": [
+    "service_loss_auc",
+    "lost_orders",
+    "mass_conservation",
+    "exogenous_identity"
+  ],
+  "inference_unit": "tape (state effects averaged within tape)",
+  "kind": "program_d_d1_visible_v1_branching",
+  "n_branch_rows": 7200,
+  "n_states": 600,
+  "n_tapes": 60,
+  "optimal_rule_counts": {
+    "age_threshold": 4,
+    "fifo_contingent": 8,
+    "lpt_contingent": 42,
+    "spt_contingent": 450,
+    "spt_flat": 96
+  },
+  "optimal_rule_shares": {
+    "age_threshold": 0.006666666666666667,
+    "fifo_contingent": 0.013333333333333334,
+    "lpt_contingent": 0.07,
+    "spt_contingent": 0.75,
+    "spt_flat": 0.16
+  },
+  "oracle_lost_relative_increase": {
+    "ci95": [
+      0.002627705627705627,
+      0.007433261183261183
+    ],
+    "mean": 0.004822150072150072
+  },
+  "oracle_ret_excel_clipped_delta": {
+    "ci95": [
+      0.00042952641392205907,
+      0.0020108128232730013
+    ],
+    "mean": 0.0010945270970350045
+  },
+  "oracle_ret_excel_delta": {
+    "ci95": [
+      0.0004224531147832617,
+      0.0019773363329492156
+    ],
+    "mean": 0.0010945270970350045
+  },
+  "oracle_service_loss_relative_reduction": {
+    "ci95": [
+      -0.0005288482134432772,
+      0.0005630488701197169
+    ],
+    "mean": 5.510134138262406e-06
+  },
+  "ppo_trained": false,
+  "primary_endpoint": "ret_excel",
+  "promoted_to_observable_tree": false,
+  "proxy_sha256": "3d7aaa14263596cd68dce8a79f1f04bcb8fca9639c10cd9ac8160586fda4ed96",
+  "ret_excel_contract_version": "ret_excel_visible_v1",
+  "runtime": {
+    "numpy": "2.4.6",
+    "python": "3.11.15"
+  },
+  "sensitivity_endpoint": "ret_excel_visible_clipped_0_1",
+  "tape_sha256s": [
+    "059856c738ab5bd31230a0ce4f2623a172216da35316fc1e60aa6b94aaccde4a",
+    "07f3fe8fb186597a79a87accc1958a529b3236c72c8c0a665090cd13edf5db04",
+    "0b4104a8dc25920569bb84cbc37157e0cfa07a05897a6b6aa0f903cae55f2579",
+    "0e21c146d3e52199f7b88c599f3a5b815c8ba15ec3f702e97e39bbee902b33b9",
+    "0ee7333a37e6bd72dc91f6c68ae00ba48e2ddecbebb7acf1b295038334efbc39",
+    "0f3d815be17f62ab26de12c5449dcfd2ec70453af261c39675b5134b8f34d59f",
+    "165c6387bb4fecce8da7fd6686072e206c516570c768af35909c52b397027c09",
+    "231d56375f25e1e72e924e969bb6545b68f92880af66d543b84c7383f95c88b3",
+    "256a01214788b12e8d548a0867e9a21c1f2cb10ac901c0f68362f19674a883ad",
+    "2a14174fa5a8418fc5d698f629e406bddae10b8fb160d58548a09abc31f35329",
+    "2ca19962971a440daf1e66c241e2696a8267e911173507909737c32f3ae7d514",
+    "3015242a28ead3d55b0379258146cb2c03ed4b7d1d415d840a8f86a5c2f25673",
+    "312b49d4c654fcf4a55362be1f696a286ac5233cdc5057f341f6f170c7977fa7",
+    "3208a991dbe8ebb2ed0eacdeeb46e120be18b57ff575798bb513daecb735b057",
+    "4565b277e8a5b86345c25b1d0e5889ef230af54819797df479b94ce6ddd1ed1f",
+    "4b12e29c575b609864cd8e17864a86d80e65f5575cd02a1fafd17a3766a3774f",
+    "4ddf570622483ca1abf819309792fe91b2a30ba034266d1eed7ce265df65dd0c",
+    "4fae759823c5b2211bbee0a919038f20cb919d8b565a8a4db251acc387437e5d",
+    "502901e2cdd52807a52b92b5214aa671f9c8fa3dab565425dc7b35b7241f7fc7",
+    "5d4d4421b1c17a406e39f3bd42d1cd646f6381d8bb62c496c73186c1d272190f",
+    "5d4fd4519602fe4c7dd6349f4370e6c23eccd6620ddc0a81fa531baa027afbc4",
+    "642d60ebde9948e71a4dd300cd57dac7c5f845238842eac219c5952a60b14839",
+    "64cd951ebf894084ad6872098796e04b821374840e13b9fc2ff7c77eab7a7908",
+    "65bedfcd81724e549f34f629d2b06659eccd3b176d223425e29a99841e519c41",
+    "6a858ac711928601173b132b574d5d0b45bb1870fcea4853c69876b96ef435f6",
+    "6b376111f7dfb04c7a707a0c973dd46e92f9600f3cafb61eff6919cfe28f5636",
+    "6d07cc7108a698653ef40c8784ec80d67c2431cf6651876fced51d7a428c844d",
+    "7818173a99b44d7ca0a212e1e0c517778879daf5fbd4842defa3a530a10d6615",
+    "78bbeb40d36b3d7d6f958778bb95502b2f77a328c64815facb202ae8652c4644",
+    "8194eefaaa915bf8049c4289164262ff0579fcd003218080bb6b6277c9cdcbee",
+    "85e3ac0635a550daaa94924197d89d3d306efc3b536ff21c302ee79f1b0fd539",
+    "8caf518898194a041c1963043e4007d351ce72cb34e5b071f769634cae15d53b",
+    "8f313ae4abb5f7698154a8813aa0121c1601c0061aa008cb55e167ff298d0f5b",
+    "9bec3ece9c2004edfc739a7420a49f6da7f81052c823755ab6251cd380a000a3",
+    "a26b54633f6221b025bddd5bf9867d2ba495dfb7c54fa6d00ce95c61e5876b5b",
+    "afb0155c4acd8eaf5e5b9801d6ca58937a0b14789014eca3bfac89cdb3106038",
+    "b516cd010b4e0355602ac754fe145d3a3f31c88a0134cc353b2ed2428a8e9e24",
+    "bed77d81ceac454e49864b8cd332ad109e465b05d4e1f1b14c5a46a90d3882a0",
+    "c21c81c4e4c2ca005e6d591feea44678eadedde870ee43466e284a42e167492d",
+    "c24fde7871df588b740d1d15c112a4f0bf3616cefb5b1175f8ae2eb44d74e617",
+    "c3b524abf2e995362e2ae3fbe25822bca99cd5f7891d6a7f20ed1f73a9dd0690",
+    "c40989dd38dabce09fb447b60711ac582ea444fdea5393a80d161507f7237ba6",
+    "c4d85bc9f600c7629719fc57de6bd8e2b16e21277550f40ccebd545ae5719aca",
+    "c90e21ca02d99a9fe7b2c464f80df610cb8fdc3cf24d1a8585a5fbc5a83d4e3f",
+    "d1986c857c20a54c391a58b9041f4e1ad0af4390a60e899544ea039700899b74",
+    "d3b38eb93dae6e120b29d4b74dcfa1224371e84f7b850e1a9d6b0503ba83d5ad",
+    "d8b64a565500940698492475b4aefc16b5996b3cb46161eb4748f52a17a7dfda",
+    "da18d77400daab265467ab54b8a6cd14d610247e250a9b288f58b25175098a02",
+    "dd25c57ec1c0140221c445e39264d6c7aaacc7529cfe55cbd06fd6164d9459ed",
+    "dd898b2fe25ead80b6a4970c6e0b5556d65ff55884de7b4be67b518d00504353",
+    "dffd58d34d1e5e9d96cf12cf316a7d6383e24097c9c13f4299e007e6de86f9ef",
+    "e814b0659b525e95d87c439ba6b62fa0ee0a75f3e3ee6f29297150bc0bdbafb7",
+    "f0c781d5c3a4fd6f315a7735e64fd16050599a90e8ecc263127f66b6ee838f4d",
+    "f7a512b66552f6cafcd667dc081592b49144b6fa508c1853bba25803a4bfe472",
+    "f8e71083820cdbfc087611632a87f14104ccf7fe43cf26addc5c09281ca629da",
+    "fbc7c230b948f1598818c48e8bd2665be46847f0a218d69bbd2fe35b693a7f4e",
+    "fc6139083a7b4fc17d47a3a6043b61190db2c880007c4a4f69ec2d789ca25822",
+    "fc93a6f2690bbda9ad7f6837780032b99f98128f18d0cc85808ec2bce776a4e8",
+    "fcac52e946c95d4b3a5f1ec84a1e1ba7cebcb144aed47317328ba6ecab5a4c78",
+    "fcbaf675aad12ae1fd1ef767ae798a400f90f064caf3c10a82e9faa35b387c45"
+  ],
+  "verdict": "STOP_NO_STATE_DEPENDENT_RATIONING_HEADROOM",
+  "virgin_tapes_opened": 0
+}

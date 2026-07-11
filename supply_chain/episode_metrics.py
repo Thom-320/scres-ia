@@ -19,6 +19,7 @@ from typing import Any, Iterable
 from .ret_thesis import (
     compute_order_level_ret,
     compute_order_level_ret_excel_formula,
+    compute_order_level_ret_excel_visible_ledger,
     compute_ret_per_order_excel_formula,
     compute_periods_continuous_ret,
     compute_fill_rate_from_orders,
@@ -141,7 +142,7 @@ def compute_episode_metrics(
     sim: Any,
     *,
     treatment_start: float | None = None,
-) -> dict[str, float]:
+) -> dict[str, Any]:
     """Full order-derived metrics panel for a completed simulation.
 
     Orders placed before ``treatment_start`` (default = end of warm-up) are excluded so the
@@ -166,7 +167,13 @@ def compute_episode_metrics(
     late = [o for o in served if o.CTj is not None and float(o.CTj) > float(o.LTj or 0.0)]
 
     fill_rate = compute_fill_rate_from_orders(orders, current_time=horizon)
-    excel = compute_order_level_ret_excel_formula(orders, current_time=horizon)
+    # ret_excel_visible_v1: exact population contract of Garrido's workbooks.
+    # The raw sheets retain original j but emit rows only for completed/non-lost
+    # orders; missing orders survive through the time-varying Bt/Ut ledgers.
+    excel_visible = compute_order_level_ret_excel_visible_ledger(
+        orders, current_time=horizon
+    )
+    excel_full = compute_order_level_ret_excel_formula(orders, current_time=horizon)
     excel_details = _excel_ret_details(orders, current_time=horizon)
     thesis = compute_order_level_ret(orders, fill_rate=fill_rate)
     cont = compute_periods_continuous_ret(orders)
@@ -177,9 +184,11 @@ def compute_episode_metrics(
     ctj = [float(o.CTj) for o in served if o.CTj is not None]
     rpj = [float(o.RPj) for o in orders if float(getattr(o, "RPj", 0.0) or 0.0) > 0.0]
     dpj = [float(o.DPj) for o in orders if float(getattr(o, "DPj", 0.0) or 0.0) > 0.0]
-    ret_values = list(excel_details["values"])
+    ret_values = list(excel_visible["ret_values"])
+    ret_values_clipped = [min(1.0, max(0.0, value)) for value in ret_values]
     rolling_ret = list(excel_details["rolling_4w_values"])
-    excel_cases = excel_details["case_counts"]
+    excel_cases = Counter(row["case"] for row in excel_visible["ret_rows"])
+    visible_n = max(1, int(excel_visible["n_visible_rows"]))
 
     # service-loss area (AUC): qty-weighted late-hours beyond the lead-time promise.
     # An order is "service loss" for max(0, end - (OPTj+LT)) hours, end = OATj or horizon.
@@ -204,7 +213,15 @@ def compute_episode_metrics(
         "n_lost": float(len(lost)),
         "n_late": float(len(late)),
         # resilience (the bars)
-        "ret_excel": float(excel["mean_ret_excel"]),
+        # Canonical headline: exact workbook-visible population, un-clipped.
+        "ret_excel": float(excel_visible["mean_ret_excel"]),
+        "ret_excel_visible": float(excel_visible["mean_ret_excel"]),
+        "ret_excel_visible_clipped_0_1": _mean(ret_values_clipped),
+        # Secondary legacy endpoint: every generated order, with unfulfilled=0.
+        "ret_excel_full_ledger": float(excel_full["mean_ret_excel"]),
+        "ret_excel_contract_version": "ret_excel_visible_v1",
+        "ret_excel_visible_n": float(excel_visible["n_visible_rows"]),
+        "ret_excel_omitted_n": float(excel_visible["n_omitted_rows"]),
         "ret_thesis": float(thesis["mean_ret"]),
         "ret_continuous": float(cont["mean_ret_continuous"]),
         "ret_excel_cvar05": _tail_mean(ret_values, frac=0.05, lower_tail=True),
@@ -224,13 +241,13 @@ def compute_episode_metrics(
         ),
         "ret_excel_risk_conditional_n": int(excel_details["ret_excel_risk_conditional_n"]),
         "ration_ret_excel": float(excel_details["ration_ret_excel"]),
-        "excel_case_pct_fill_rate": 100.0 * excel_cases["excel_fill_rate"] / n,
-        "excel_case_pct_autotomy": 100.0 * excel_cases["excel_autotomy"] / n,
-        "excel_case_pct_recovery": 100.0 * excel_cases["excel_recovery"] / n,
+        "excel_case_pct_fill_rate": 100.0 * excel_cases["excel_fill_rate"] / visible_n,
+        "excel_case_pct_autotomy": 100.0 * excel_cases["excel_autotomy"] / visible_n,
+        "excel_case_pct_recovery": 100.0 * excel_cases["excel_recovery"] / visible_n,
         "excel_case_pct_risk_no_recovery": (
-            100.0 * excel_cases["excel_risk_no_recovery"] / n
+            100.0 * excel_cases["excel_risk_no_recovery"] / visible_n
         ),
-        "excel_case_pct_unfulfilled": 100.0 * excel_cases["excel_unfulfilled"] / n,
+        "excel_case_pct_unfulfilled": 0.0,
         # service
         "fill_rate": float(fill_rate),
         "fill_rate_on_time": float(len(on_time) / n),
@@ -299,7 +316,9 @@ def merge_resource_metrics(
 
 
 METRIC_KEYS: tuple[str, ...] = (
-    "ret_excel", "ret_thesis", "ret_continuous",
+    "ret_excel", "ret_excel_visible", "ret_excel_visible_clipped_0_1",
+    "ret_excel_full_ledger", "ret_excel_visible_n", "ret_excel_omitted_n",
+    "ret_thesis", "ret_continuous",
     "ret_excel_cvar05", "ret_excel_cvar10", "ret_excel_p05", "ret_excel_p10", "ret_excel_p25",
     "ret_excel_p50", "ret_excel_p75", "ret_excel_p90", "ret_excel_p95",
     "ret_excel_rolling_4w_mean", "ret_excel_rolling_4w_min",

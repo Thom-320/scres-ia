@@ -306,6 +306,7 @@ def compute_order_level_ret_excel_visible_ledger(
     orders: Iterable[Any],
     *,
     current_time: float | None = None,
+    emit_order_ids: set[int] | None = None,
 ) -> dict[str, Any]:
     """Reproduce the workbook's sparse visible-order ledger.
 
@@ -324,6 +325,7 @@ def compute_order_level_ret_excel_visible_ledger(
         ),
     )
     visible_values: list[float] = []
+    visible_rows: list[dict[str, Any]] = []
     case_counts: Counter[str] = Counter()
     last_backorders = 0
     last_unattended = 0
@@ -334,7 +336,11 @@ def compute_order_level_ret_excel_visible_ledger(
         lost = bool(getattr(candidate, "lost", False))
         candidate_oat = getattr(candidate, "OATj", None)
         lost_time = getattr(candidate, "lost_time", None)
-        if not lost and candidate_oat is not None:
+        emit_candidate = (
+            emit_order_ids is None
+            or int(getattr(candidate, "j", 0) or 0) in emit_order_ids
+        )
+        if not lost and candidate_oat is not None and emit_candidate:
             visible_orders.append(candidate)
 
         opt = float(getattr(candidate, "OPTj", 0.0) or 0.0)
@@ -386,6 +392,15 @@ def compute_order_level_ret_excel_visible_ledger(
             cumulative_unattended=cumulative_unattended,
         )
         visible_values.append(float(ret))
+        visible_rows.append(
+            {
+                "j": j_value,
+                "opt": float(getattr(order, "OPTj", 0.0) or 0.0),
+                "quantity": float(getattr(order, "quantity", 0.0) or 0.0),
+                "ret": float(ret),
+                "case": str(case),
+            }
+        )
         case_counts[case] += 1
         ledger_snapshots[j_value] = (
             current_backorders,
@@ -418,4 +433,5 @@ def compute_order_level_ret_excel_visible_ledger(
         "final_backorders": last_backorders,
         "final_unattended": last_unattended,
         "ret_values": visible_values,
+        "ret_rows": visible_rows,
     }

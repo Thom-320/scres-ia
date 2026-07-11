@@ -20,20 +20,23 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from supply_chain.config import BACKORDER_QUEUE_CAP, HOURS_PER_DAY  # noqa:E402
 from supply_chain.l_program_env import CampaignTape, GarridoLearningEnv  # noqa:E402
 from supply_chain.program_d import PROXY_PATH, RULES, exogenous_hash, paired_bootstrap  # noqa:E402
-from supply_chain.ret_thesis import compute_order_level_ret_excel_formula  # noqa:E402
+from supply_chain.ret_thesis import (  # noqa:E402
+    compute_order_level_ret_excel_formula,
+    compute_order_level_ret_excel_visible_ledger,
+)
 
 FRONTIER_DIR=Path("results/program_d/d1_v2_frontier")
 DEFAULT_OUTPUT=Path("results/program_d/d1_branching")
 H72=72.0; H28=28.0*HOURS_PER_DAY
 
 
-def load_inputs() -> tuple[str,list[CampaignTape]]:
-    verdict=json.loads((FRONTIER_DIR/"verdict.json").read_text())
+def load_inputs(frontier_dir: Path) -> tuple[str,list[CampaignTape]]:
+    verdict=json.loads((frontier_dir/"verdict.json").read_text())
     if not verdict.get("promoted_to_branching"):
         raise RuntimeError("Frontier did not promote; branching is forbidden.")
     tapes=[]
     for split in ("selection","validation"):
-        tapes += [CampaignTape.from_mapping(x) for x in json.loads((FRONTIER_DIR/f"{split}_tapes.json").read_text())]
+        tapes += [CampaignTape.from_mapping(x) for x in json.loads((frontier_dir/f"{split}_tapes.json").read_text())]
     return str(verdict["best_admissible_constant"]),tapes
 
 
@@ -89,14 +92,20 @@ def choose_two(rows:list[dict], stratum:str, used:set[int])->list[dict]:
 
 def cohort_metrics(sim:Any, cohort_ids:set[int], decision:float, horizon:float)->dict[str,float]:
     orders=[o for o in sim.orders if int(o.j) in cohort_ids and float(o.OPTj)<=horizon]
-    ret=compute_order_level_ret_excel_formula(orders,current_time=horizon)["mean_ret_excel"] if orders else 0.0
+    ledger_orders=[o for o in sim.orders if float(o.OPTj)<=horizon]
+    visible=compute_order_level_ret_excel_visible_ledger(
+        ledger_orders,current_time=horizon,emit_order_ids=cohort_ids
+    )
+    full=compute_order_level_ret_excel_formula(orders,current_time=horizon)
+    ret=float(visible["mean_ret_excel"]) if orders else 0.0
+    clipped=float(np.mean(np.clip(visible["ret_values"],0.0,1.0))) if visible["ret_values"] else 0.0
     sl=0.0
     for o in orders:
         end=min(float(o.OATj),horizon) if o.OATj is not None else horizon
         sl += max(0.0,end-max(decision,float(o.OPTj)+float(o.LTj)))*float(o.quantity)
     served=[o for o in orders if o.OATj is not None and float(o.OATj)<=horizon]
     lost=[o for o in orders if bool(o.lost)]
-    return {"ret_excel":float(ret),"service_loss_auc":float(sl),"lost_orders":float(len(lost)),"served_qty":float(sum(o.quantity for o in served)),"ct_mean":float(np.mean([o.CTj for o in served])) if served else 0.0,"terminal_open_orders":float(sum(o.OATj is None and not o.lost for o in orders)),"cohort_orders":float(len(orders))}
+    return {"ret_excel":ret,"ret_excel_visible_clipped_0_1":clipped,"ret_excel_full_ledger":float(full["mean_ret_excel"]),"ret_excel_visible_n":float(visible["n_visible_rows"]),"service_loss_auc":float(sl),"lost_orders":float(len(lost)),"served_qty":float(sum(o.quantity for o in served)),"ct_mean":float(np.mean([o.CTj for o in served])) if served else 0.0,"terminal_open_orders":float(sum(o.OATj is None and not o.lost for o in orders)),"cohort_orders":float(len(orders))}
 
 
 def run_branch(tape:CampaignTape,comparator:str,state:dict,rule:str)->list[dict]:
@@ -115,8 +124,8 @@ def run_branch(tape:CampaignTape,comparator:str,state:dict,rule:str)->list[dict]
 
 
 def main()->int:
-    ap=argparse.ArgumentParser(); ap.add_argument("--output-dir",type=Path,default=DEFAULT_OUTPUT); ap.add_argument("--max-tapes",type=int,default=60); ap.add_argument("--n-boot",type=int,default=10000); args=ap.parse_args(); args.output_dir.mkdir(parents=True,exist_ok=True)
-    comparator,tapes=load_inputs(); tapes=tapes[:args.max_tapes]; states=[]; branches=[]
+    ap=argparse.ArgumentParser(); ap.add_argument("--output-dir",type=Path,default=DEFAULT_OUTPUT); ap.add_argument("--frontier-dir",type=Path,default=FRONTIER_DIR); ap.add_argument("--max-tapes",type=int,default=60); ap.add_argument("--n-boot",type=int,default=10000); args=ap.parse_args(); args.output_dir.mkdir(parents=True,exist_ok=True)
+    comparator,tapes=load_inputs(args.frontier_dir); tapes=tapes[:args.max_tapes]; states=[]; branches=[]
     states_path=args.output_dir/"states.csv"; branches_path=args.output_dir/"branch_rows.csv"
     if states_path.exists() and branches_path.exists():
         with states_path.open(newline="",encoding="utf-8") as fh: states=list(csv.DictReader(fh))
@@ -147,20 +156,21 @@ def main()->int:
         candidates=[r for r in long if r["state_id"]==state_id]
         best=sorted(candidates,key=lambda r:(-float(r["ret_excel"]),float(r["service_loss_auc"]),float(r["lost_orders"]),RULES.index(r["rule"])))[0]
         base=next(r for r in candidates if r["rule"]==comparator)
-        optimal.append({**best,"base_ret":base["ret_excel"],"base_sl":base["service_loss_auc"],"base_lost":base["lost_orders"]})
+        optimal.append({**best,"base_ret":base["ret_excel"],"base_ret_clipped":base["ret_excel_visible_clipped_0_1"],"base_sl":base["service_loss_auc"],"base_lost":base["lost_orders"]})
     counts=Counter(r["rule"] for r in optimal); n=len(optimal)
     # The experimental unit is the tape, not the sampled state. Average within
     # tape first, then bootstrap the 60 paired tape effects.
     tape_effects=[]
     for tape_id in sorted({r["tape_id"] for r in optimal}):
         rr=[r for r in optimal if r["tape_id"]==tape_id]
-        tape_effects.append({"tape_id":tape_id,"ret":float(np.mean([float(r["ret_excel"])-float(r["base_ret"]) for r in rr])),"sl":float(np.mean([(float(r["base_sl"])-float(r["service_loss_auc"]))/max(abs(float(r["base_sl"])),1.0) for r in rr])),"lost":float(np.mean([(float(r["lost_orders"])-float(r["base_lost"]))/max(abs(float(r["base_lost"])),1.0) for r in rr]))})
+        tape_effects.append({"tape_id":tape_id,"ret":float(np.mean([float(r["ret_excel"])-float(r["base_ret"]) for r in rr])),"ret_clipped":float(np.mean([float(r["ret_excel_visible_clipped_0_1"])-float(r["base_ret_clipped"]) for r in rr])),"sl":float(np.mean([(float(r["base_sl"])-float(r["service_loss_auc"]))/max(abs(float(r["base_sl"])),1.0) for r in rr])),"lost":float(np.mean([(float(r["lost_orders"])-float(r["base_lost"]))/max(abs(float(r["base_lost"])),1.0) for r in rr]))})
     ret=paired_bootstrap([r["ret"] for r in tape_effects],seed=0xD130,n_boot=args.n_boot)
+    ret_clipped=paired_bootstrap([r["ret_clipped"] for r in tape_effects],seed=0xD133,n_boot=args.n_boot)
     sl_rel=paired_bootstrap([r["sl"] for r in tape_effects],seed=0xD131,n_boot=args.n_boot)
     lost_rel=paired_bootstrap([r["lost"] for r in tape_effects],seed=0xD132,n_boot=args.n_boot)
     shares={k:v/n for k,v in counts.items()}; action_pass=sum(v>=.15 for v in shares.values())>=2 and max(shares.values())<=.85
     oracle_pass=action_pass and sl_rel["mean"]>=.05 and sl_rel["ci95"][0]>0 and ret["ci95"][0]>=0 and lost_rel["ci95"][1]<=.02
-    verdict={"kind":"program_d_d1_v2_branching","generated_at_utc":datetime.now(timezone.utc).isoformat(),"git_sha_input":subprocess.run(["git","rev-parse","HEAD"],capture_output=True,text=True).stdout.strip(),"proxy_sha256":sha256(PROXY_PATH.read_bytes()).hexdigest(),"tape_sha256s":sorted({str(r["tape_sha256"]) for r in states}),"comparator":comparator,"inference_unit":"tape (state effects averaged within tape)","n_tapes":len(tapes),"n_states":len(states),"n_branch_rows":len(branches),"primary_endpoint":"ret_excel","guardrail_endpoints":["service_loss_auc","lost_orders","mass_conservation","exogenous_identity"],"optimal_rule_counts":dict(counts),"optimal_rule_shares":shares,"oracle_ret_excel_delta":ret,"oracle_service_loss_relative_reduction":sl_rel,"oracle_lost_relative_increase":lost_rel,"criteria":{"two_actions_15pct_and_none_85pct":action_pass,"service_loss_5pct_ci_positive":sl_rel["mean"]>=.05 and sl_rel["ci95"][0]>0,"ret_codirectional_ci_nonnegative":ret["ci95"][0]>=0,"lost_upper_ci_at_most_2pct":lost_rel["ci95"][1]<=.02},"virgin_tapes_opened":0,"ppo_trained":False,"runtime":{"python":platform.python_version(),"numpy":np.__version__},"promoted_to_observable_tree":bool(oracle_pass),"verdict":"PROMOTE_TO_OBSERVABLE_TREE" if oracle_pass else "STOP_NO_STATE_DEPENDENT_RATIONING_HEADROOM"}
+    verdict={"kind":"program_d_d1_visible_v1_branching","generated_at_utc":datetime.now(timezone.utc).isoformat(),"git_sha_input":subprocess.run(["git","rev-parse","HEAD"],capture_output=True,text=True).stdout.strip(),"proxy_sha256":sha256(PROXY_PATH.read_bytes()).hexdigest(),"tape_sha256s":sorted({str(r["tape_sha256"]) for r in states}),"comparator":comparator,"inference_unit":"tape (state effects averaged within tape)","n_tapes":len(tapes),"n_states":len(states),"n_branch_rows":len(branches),"primary_endpoint":"ret_excel","ret_excel_contract_version":"ret_excel_visible_v1","sensitivity_endpoint":"ret_excel_visible_clipped_0_1","guardrail_endpoints":["service_loss_auc","lost_orders","mass_conservation","exogenous_identity"],"optimal_rule_counts":dict(counts),"optimal_rule_shares":shares,"oracle_ret_excel_delta":ret,"oracle_ret_excel_clipped_delta":ret_clipped,"oracle_service_loss_relative_reduction":sl_rel,"oracle_lost_relative_increase":lost_rel,"criteria":{"two_actions_15pct_and_none_85pct":action_pass,"service_loss_5pct_ci_positive":sl_rel["mean"]>=.05 and sl_rel["ci95"][0]>0,"ret_codirectional_ci_nonnegative":ret["ci95"][0]>=0,"lost_upper_ci_at_most_2pct":lost_rel["ci95"][1]<=.02},"virgin_tapes_opened":0,"ppo_trained":False,"runtime":{"python":platform.python_version(),"numpy":np.__version__},"promoted_to_observable_tree":bool(oracle_pass),"verdict":"PROMOTE_TO_OBSERVABLE_TREE" if oracle_pass else "STOP_NO_STATE_DEPENDENT_RATIONING_HEADROOM"}
     def write(path,rows):
         with path.open("w",newline="",encoding="utf-8") as fh: w=csv.DictWriter(fh,fieldnames=list(rows[0])); w.writeheader(); w.writerows(rows)
     write(args.output_dir/"states.csv",states); write(args.output_dir/"branch_rows.csv",branches); write(args.output_dir/"oracle_rows.csv",optimal); write(args.output_dir/"tape_effects.csv",tape_effects); (args.output_dir/"verdict.json").write_text(json.dumps(verdict,indent=2,sort_keys=True),encoding="utf-8"); print(json.dumps(verdict,indent=2)); return 0 if oracle_pass else 2
