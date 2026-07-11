@@ -1,0 +1,22 @@
+|--- contingent_share <= 0.01
+|   |--- recent_fill <= 1.00
+|   |   |--- queue_qty <= 153631.00
+|   |   |   |--- class: spt_contingent
+|   |   |--- queue_qty >  153631.00
+|   |   |   |--- class: spt_contingent
+|   |--- recent_fill >  1.00
+|   |   |--- operational_day <= 3.50
+|   |   |   |--- class: spt_contingent
+|   |   |--- operational_day >  3.50
+|   |   |   |--- class: spt_flat
+|--- contingent_share >  0.01
+|   |--- in_transit <= 2407.00
+|   |   |--- operational_day <= 5.50
+|   |   |   |--- class: spt_contingent
+|   |   |--- operational_day >  5.50
+|   |   |   |--- class: lpt_contingent
+|   |--- in_transit >  2407.00
+|   |   |--- recent_fill <= 0.83
+|   |   |   |--- class: spt_contingent
+|   |   |--- recent_fill >  0.83
+|   |   |   |--- class: spt_flat

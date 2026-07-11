@@ -1,0 +1,22 @@
+|--- contingent_share <= 0.01
+|   |--- recent_demand <= 14913.50
+|   |   |--- queue_occupancy <= 0.99
+|   |   |   |--- class: spt_contingent
+|   |   |--- queue_occupancy >  0.99
+|   |   |   |--- class: lpt_contingent
+|   |--- recent_demand >  14913.50
+|   |   |--- oldest_age <= 300.00
+|   |   |   |--- class: spt_flat
+|   |   |--- oldest_age >  300.00
+|   |   |   |--- class: spt_contingent
+|--- contingent_share >  0.01
+|   |--- in_transit <= 1204.00
+|   |   |--- age_p50 <= 5022.00
+|   |   |   |--- class: spt_contingent
+|   |   |--- age_p50 >  5022.00
+|   |   |   |--- class: lpt_contingent
+|   |--- in_transit >  1204.00
+|   |   |--- recent_fill <= 0.72
+|   |   |   |--- class: spt_contingent
+|   |   |--- recent_fill >  0.72
+|   |   |   |--- class: spt_flat
