@@ -575,6 +575,28 @@ class MFSCSimulation:
         self.rations_sb_dispatch = simpy.Container(self.env, capacity=INF, init=0)
         self.rations_cssu = simpy.Container(self.env, capacity=INF, init=0)
         self.rations_theatre = simpy.Container(self.env, capacity=INF, init=0)
+        # Program-v2 opt-in reserve.  It is deliberately separate from the
+        # Garrido theatre stock: in ``op9_linked`` mode normal orders travel
+        # through Op10--Op12, whereas this stock is already positioned behind
+        # that corridor.  Defaults are inert so frozen Track A/B/L lanes retain
+        # their exact physical contract.
+        self.emergency_theatre_reserve = simpy.Container(
+            self.env, capacity=INF, init=0
+        )
+        self.emergency_reserve_enabled = False
+        self.emergency_reserve_capacity = 0.0
+        self.emergency_reserve_target = 0.0
+        self.emergency_reserve_replenishment_lead_time = 336.0
+        self.emergency_reserve_transport_mode = "fixed_lead"
+        self.emergency_reserve_issue_delay = 24.0
+        self.emergency_reserve_route_ops: tuple[int, ...] = (10, 11, 12)
+        self.emergency_reserve_in_transit = 0.0
+        self.emergency_reserve_units_issued = 0.0
+        self.emergency_reserve_units_replenished = 0.0
+        self.emergency_reserve_replenishment_requests = 0
+        self.emergency_reserve_target_changes = 0
+        self.emergency_reserve_inventory_time = 0.0
+        self._emergency_reserve_last_accounting_time = 0.0
         # op9_linked mode: LOC convoys (Op10, Op12) are capacity-1 daily-rate
         # servers (Table 6.20 ROP=24h) — a tandem pipeline, not parallel legs.
         self.op10_convoy = simpy.Resource(self.env, capacity=1)
@@ -1383,6 +1405,132 @@ class MFSCSimulation:
                 yield self.env.process(self._serve_pending_backorders())
             yield self.env.timeout(1.0)
 
+    # =====================================================================
+    # PROGRAM V2: CONSERVATIVE DOWNSTREAM EMERGENCY RESERVE (OPT-IN)
+    # =====================================================================
+
+    def _account_emergency_reserve_inventory_time(self) -> None:
+        """Accumulate actual stored unit-hours since the last stock change."""
+        now = float(self.env.now)
+        elapsed = max(0.0, now - self._emergency_reserve_last_accounting_time)
+        self.emergency_reserve_inventory_time += (
+            elapsed * float(self.emergency_theatre_reserve.level)
+        )
+        self._emergency_reserve_last_accounting_time = now
+
+    def configure_emergency_theatre_reserve(
+        self,
+        *,
+        capacity: float,
+        initial_stock: float = 0.0,
+        target: float | None = None,
+        replenishment_lead_time: float = 336.0,
+        issue_delay: float = 24.0,
+        route_ops: tuple[int, ...] = (10, 11, 12),
+        transport_mode: str = "fixed_lead",
+    ) -> None:
+        """Enable a finite reserve positioned behind the downstream corridor.
+
+        Initial stock is an explicitly costed strategic source.  Subsequent
+        replenishment is stock-conserving: units are removed from Op9/SB,
+        travel with a real lead, and cannot arrive while any required route
+        operation is unavailable.
+        """
+        if self.emergency_reserve_enabled:
+            raise RuntimeError("Emergency reserve may be configured only once.")
+        capacity = float(capacity)
+        initial_stock = float(initial_stock)
+        if capacity <= 0.0:
+            raise ValueError("Emergency reserve capacity must be positive.")
+        if not 0.0 <= initial_stock <= capacity:
+            raise ValueError("initial_stock must be within [0, capacity].")
+        route_ops = tuple(int(op) for op in route_ops)
+        if not route_ops or any(op < 1 or op > 13 for op in route_ops):
+            raise ValueError("route_ops must contain valid operation ids.")
+        if transport_mode not in {"fixed_lead", "physical_downstream"}:
+            raise ValueError(
+                "transport_mode must be fixed_lead or physical_downstream."
+            )
+        self.emergency_reserve_enabled = True
+        self.emergency_reserve_capacity = capacity
+        self.emergency_reserve_target = min(
+            capacity, initial_stock if target is None else max(0.0, float(target))
+        )
+        self.emergency_reserve_replenishment_lead_time = max(
+            0.0, float(replenishment_lead_time)
+        )
+        self.emergency_reserve_issue_delay = max(0.0, float(issue_delay))
+        self.emergency_reserve_route_ops = route_ops
+        self.emergency_reserve_transport_mode = str(transport_mode)
+        self._emergency_reserve_last_accounting_time = float(self.env.now)
+        if initial_stock > 0.0:
+            self.emergency_theatre_reserve.put(initial_stock)
+            self.total_strategic_rations_injected += initial_stock
+
+    def _emergency_corridor_down(self) -> bool:
+        return any(self._is_down(op) for op in self.emergency_reserve_route_ops)
+
+    def request_emergency_reserve_target(self, target: float) -> None:
+        """Set an order-up-to target and launch at most the missing transfer."""
+        if not self.emergency_reserve_enabled:
+            raise RuntimeError("Emergency reserve is not enabled.")
+        clipped = min(self.emergency_reserve_capacity, max(0.0, float(target)))
+        if abs(clipped - self.emergency_reserve_target) > 1e-9:
+            self.emergency_reserve_target_changes += 1
+        self.emergency_reserve_target = clipped
+        positioned = (
+            float(self.emergency_theatre_reserve.level)
+            + float(self.emergency_reserve_in_transit)
+        )
+        missing = max(0.0, clipped - positioned)
+        if missing > 1e-9:
+            self.emergency_reserve_in_transit += missing
+            self.emergency_reserve_replenishment_requests += 1
+            self.env.process(self._replenish_emergency_reserve(missing))
+
+    def _replenish_emergency_reserve(self, requested_qty: float):
+        """Move existing SB stock across the threatened corridor conservatively."""
+        qty = float(requested_qty)
+        # Do not dispatch into a closed corridor, and never create source stock.
+        while self._emergency_corridor_down() or self.rations_sb.level + 1e-9 < qty:
+            yield self.env.timeout(1.0)
+        yield self.rations_sb.get(qty)
+        self._in_transit += qty
+        if self.emergency_reserve_transport_mode == "physical_downstream":
+            # Mirror the order path rather than inventing an administrative
+            # lead: Op10 transit (24 h), Op11 availability, then Op12 transit
+            # (24 h).  Any pre-leg outage delays that leg endogenously.
+            while self._is_down(10):
+                yield self.env.timeout(1.0)
+            yield self.env.timeout(self._pt("op10_pt"))
+            while self._is_down(11) or self._is_down(12):
+                yield self.env.timeout(1.0)
+            yield self.env.timeout(self._pt("op12_pt"))
+        else:
+            yield self.env.timeout(self.emergency_reserve_replenishment_lead_time)
+            while self._emergency_corridor_down():
+                yield self.env.timeout(1.0)
+        self._in_transit -= qty
+        self.emergency_reserve_in_transit = max(
+            0.0, self.emergency_reserve_in_transit - qty
+        )
+        # A target may have been lowered during transit.  Excess is retained
+        # physically and remains costed; it is never deleted from the model.
+        self._account_emergency_reserve_inventory_time()
+        yield self.emergency_theatre_reserve.put(qty)
+        self.emergency_reserve_units_replenished += qty
+        self.total_theatre_inflow += qty
+
+    def _fulfill_from_emergency_reserve(self, order: OrderRecord, qty: float):
+        """Issue already-positioned stock to theatre demand after a local delay."""
+        yield self.env.timeout(self.emergency_reserve_issue_delay)
+        self._in_transit -= qty
+        self.total_delivered += qty
+        self.total_order_fulfilled += qty
+        self.emergency_reserve_units_issued += qty
+        self.delivery_events.append((self.env.now, qty))
+        self._finalize_pending_backorder(order)
+
     def run(self) -> "MFSCSimulation":
         """Full run (for validation and batch experiments)."""
         self._start_processes()
@@ -1554,7 +1702,7 @@ class MFSCSimulation:
 
     def _inventory_detail(self) -> dict[str, float]:
         """Return a named snapshot of all tracked material buffers."""
-        return {
+        detail = {
             "raw_material_wdc": float(self.raw_material_wdc.level),
             "raw_material_al": float(self.raw_material_al.level),
             "rework_op6": float(self.rework_op6.level),
@@ -1566,6 +1714,11 @@ class MFSCSimulation:
             "rations_cssu": float(self.rations_cssu.level),
             "rations_theatre": float(self.rations_theatre.level),
         }
+        if self.emergency_reserve_enabled:
+            detail["emergency_theatre_reserve"] = float(
+                self.emergency_theatre_reserve.level
+            )
+        return detail
 
     def flow_ledger(self) -> dict[str, float]:
         """Return auditable raw-material and ration conservation residuals.
@@ -1600,6 +1753,7 @@ class MFSCSimulation:
             + float(self.rations_sb_dispatch.level)
             + float(self.rations_cssu.level)
             + float(self.rations_theatre.level)
+            + float(self.emergency_theatre_reserve.level)
             + float(self._in_transit)
         )
         ration_sinks = (
@@ -1618,6 +1772,36 @@ class MFSCSimulation:
             "ration_scrapped": float(self.total_rations_scrapped),
             "ration_stock_and_transit": ration_stock,
             "ration_residual": ration_sources - ration_sinks,
+        }
+
+    def emergency_reserve_metrics(self) -> dict[str, float]:
+        """Return resource metrics without mutating the physical state."""
+        self._account_emergency_reserve_inventory_time()
+        return {
+            "emergency_reserve_level": float(self.emergency_theatre_reserve.level),
+            "emergency_reserve_target": float(self.emergency_reserve_target),
+            "emergency_reserve_in_transit": float(
+                self.emergency_reserve_in_transit
+            ),
+            "emergency_reserve_capacity": float(self.emergency_reserve_capacity),
+            "emergency_reserve_inventory_time": float(
+                self.emergency_reserve_inventory_time
+            ),
+            "emergency_reserve_units_issued": float(
+                self.emergency_reserve_units_issued
+            ),
+            "emergency_reserve_units_replenished": float(
+                self.emergency_reserve_units_replenished
+            ),
+            "emergency_reserve_replenishment_requests": float(
+                self.emergency_reserve_replenishment_requests
+            ),
+            "emergency_reserve_target_changes": float(
+                self.emergency_reserve_target_changes
+            ),
+            "emergency_reserve_transport_mode_physical": float(
+                self.emergency_reserve_transport_mode == "physical_downstream"
+            ),
         }
 
     def _backorder_priority_key(
@@ -3336,6 +3520,28 @@ class MFSCSimulation:
             episode = self._r24_causal_episodes.get(episode_id)
             if episode is not None and episode.get("assigned_order_j") is None:
                 episode["assigned_order_j"] = int(order.j)
+        emergency_available = (
+            self.emergency_reserve_enabled
+            and self.order_fulfillment_mode == "op9_linked"
+            and self._emergency_corridor_down()
+            and self.emergency_theatre_reserve.level + 1e-9 >= order.quantity
+        )
+        if emergency_available:
+            # The reserve is positioned behind Op10--Op12 and is released only
+            # while that corridor is physically unavailable.  It therefore
+            # cannot improve calm-period service or manufacture a forecasting
+            # advantage in the absence of an actual downstream outage.
+            self._account_emergency_reserve_inventory_time()
+            yield self.emergency_theatre_reserve.get(order.quantity)
+            # Preserve mass conservation during the local issue delay.
+            self._in_transit += float(order.quantity)
+            order.remaining_qty = 0.0
+            self.env.process(
+                self._fulfill_from_emergency_reserve(order, float(order.quantity))
+            )
+            self.orders.append(order)
+            self.daily_demand.append((self.env.now, order.quantity))
+            return
         source = (
             self.rations_sb
             if self.order_fulfillment_mode == "op9_linked"
