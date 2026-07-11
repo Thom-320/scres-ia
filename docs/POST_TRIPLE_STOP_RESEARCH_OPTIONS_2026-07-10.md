@@ -85,3 +85,37 @@ Op12 24 h and used 30 new paired tapes. v3 also stopped:
 Therefore Option B is terminal for this reserve-and-warning class. It
 strengthens Option A: the physical redesign creates reserve value, but not
 sufficient adaptive information value to justify RL.
+
+## Addendum: independent convergence (2026-07-11, PI-requested investigation)
+
+A second, independently-run investigation (same corpus, same verified verdict
+commit `4f1a5af`) converged on this exact ranking before the v2/v3 reserve
+result was known to it, and now stands strengthened by it:
+
+- **Option A remains the primary route.** The three "failures" are one
+  decisive result: *"When not to use RL: preregistered gates for DES–RL
+  resilience studies"*, with a triple-measured answer in a validated military
+  case — one robust static configuration (I336×S2) is structurally sufficient;
+  weekly switching value is exactly zero (100% S1 in branching); engineered
+  non-stationarity with priced costs opens ≤2% headroom; every prior apparent
+  RL win was a comparator artifact. The downstream-reserve result above is a
+  FOURTH independent confirmation, on a fourth decision class.
+- **The real next task is not experimentation, it is editorial fusion.**
+  Three (now effectively four, counting the reserve gates) overlapping
+  manuscript skeletons exist in the repo — the Track B C&IE pivot, the Track C
+  extension, and the Program L boundary (plus this reserve addendum) — and
+  must become ONE paper before anything else is worth doing here.
+- **Bonus already banked:** the 18-policy static panel + cost frontier answers
+  the thesis's own open questions (§8.6.1 inventory-capacity synergy, §8.6.2
+  cost-aware optimum) with classical methods — managerial content IJPR/C&IE
+  want, independent of whether RL ever wins.
+- This is judged a genuinely strong, own-account paper opportunity: the
+  gate-protocol contribution (methodology for deciding *not* to train, saving
+  every PPO seed across four decision classes) is close to unpublished in the
+  DES-RL resilience literature.
+
+No new claim, decision, or experiment is authorized by this addendum — it is
+a confirmation and a prioritization note. See
+`docs/CLAIM_AND_IDENTIFICATION_2026-07-11.md` and
+`docs/L_PROGRAM_GATE2_VERDICT_2026-07-10.md` for the governing frozen
+contracts this addendum must not contradict.

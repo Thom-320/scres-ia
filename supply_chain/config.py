@@ -52,6 +52,21 @@ BACKORDER_QUEUE_CAP = 60  # Max pending delayed orders (thesis Section 6.5.4)
 # for testing age-based eviction.
 BACKORDER_OVERFLOW_MODE = "largest"
 BACKORDER_OVERFLOW_MODE_OPTIONS = ("largest", "oldest")
+# Program D lever D1: the rationing/sequencing rule for the standing backlog.
+# "spt_contingent" is Garrido's thesis rule (default, bitwise-faithful):
+# contingent-first, then shortest-processing-time (smallest remaining qty).
+# The alternatives are pure re-orderings of the same queue used to probe
+# whether the sequencing decision carries state-contingent value; no physics
+# changes. See docs/PROGRAM_D_LEVER_DISCOVERY_PREREG_2026-07-11.md.
+BACKORDER_PRIORITY_RULE = "spt_contingent"
+BACKORDER_PRIORITY_RULE_OPTIONS = (
+    "spt_contingent",
+    "fifo_contingent",
+    "lpt_contingent",
+    "spt_flat",
+    "fifo_flat",
+    "age_threshold",
+)
 RATIONS_PER_SHIFT = int(ASSEMBLY_RATE * HOURS_PER_SHIFT)  # 2,564
 
 # Table 6.1: raw materials required for one "Cold weather combat ration #1".

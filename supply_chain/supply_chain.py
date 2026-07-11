@@ -38,6 +38,7 @@ from .config import (
     BACKORDER_QUEUE_CAP,
     BACKORDER_OVERFLOW_MODE,
     BACKORDER_OVERFLOW_MODE_OPTIONS,
+    BACKORDER_PRIORITY_RULE_OPTIONS,
     CAPACITY_BY_SHIFTS,
     HOURS_PER_SHIFT,
     HOURS_PER_DAY,
@@ -202,6 +203,8 @@ class MFSCSimulation:
         seed_stream_mode: Optional[str] = None,
         ret_recovery_period_mode: str = RET_RECOVERY_PERIOD_MODE,
         backorder_overflow_mode: str = BACKORDER_OVERFLOW_MODE,
+        backorder_priority_rule: str = "spt_contingent",
+        backorder_age_threshold_hours: float = 336.0,
         risk_frequency_multiplier: float = 1.0,
         risk_impact_multiplier: float = 1.0,
         risk_frequency_multipliers_by_id: Optional[dict[str, float]] = None,
@@ -354,6 +357,12 @@ class MFSCSimulation:
                 "Invalid backorder_overflow_mode="
                 f"{backorder_overflow_mode!r}. Expected one of: {valid}."
             )
+        if backorder_priority_rule not in BACKORDER_PRIORITY_RULE_OPTIONS:
+            valid = ", ".join(BACKORDER_PRIORITY_RULE_OPTIONS)
+            raise ValueError(
+                "Invalid backorder_priority_rule="
+                f"{backorder_priority_rule!r}. Expected one of: {valid}."
+            )
         raw_material_flow_mode = canonical_raw_material_flow_mode(raw_material_flow_mode)
         self.env = simpy.Environment()
         self.shifts = shifts
@@ -497,6 +506,8 @@ class MFSCSimulation:
         self._lineage_event_index: dict[str, RiskEvent] = {}
         self.ret_recovery_period_mode = ret_recovery_period_mode
         self.backorder_overflow_mode = backorder_overflow_mode
+        self.backorder_priority_rule = backorder_priority_rule
+        self.backorder_age_threshold_hours = float(backorder_age_threshold_hours)
         if self.risk_attribution_source == "excel_risk_tape":
             if self.demand_source != "excel_order_tape":
                 raise ValueError(
@@ -1808,18 +1819,38 @@ class MFSCSimulation:
         self, order: OrderRecord
     ) -> tuple[int, float, float, int]:
         """
-        Return the Garrido backlog priority key.
+        Return the backlog priority key for the active rationing rule.
 
-        Contingent demand takes precedence over regular demand. Within each
-        priority class, delayed orders are sorted in increasing order of size
-        as a proxy for the SPT scheduling rule described in the thesis.
+        The default rule ``spt_contingent`` reproduces Garrido's thesis rule
+        bitwise: contingent demand takes precedence over regular demand, and
+        within each priority class delayed orders are sorted in increasing
+        order of size (an SPT proxy). ``backorder_priority_rule`` (Program D,
+        lever D1) swaps this key among alternative rationing rules to probe
+        whether the *sequencing* decision — who is served today and who is
+        shed on cap-60 overflow — carries state-contingent value. Every rule
+        is a pure re-ordering of the same standing queue; no physics changes.
         """
-        return (
-            0 if order.contingent else 1,
-            float(order.remaining_qty),
-            float(order.OPTj),
-            int(order.j),
-        )
+        rule = self.backorder_priority_rule
+        contingent_class = 0 if order.contingent else 1
+        qty = float(order.remaining_qty)
+        age_key = float(order.OPTj)  # earlier OPTj == older == served first (FIFO)
+        tiebreak = int(order.j)
+        if rule == "spt_contingent":
+            return (contingent_class, qty, age_key, tiebreak)
+        if rule == "fifo_contingent":
+            return (contingent_class, age_key, qty, tiebreak)
+        if rule == "lpt_contingent":
+            return (contingent_class, -qty, age_key, tiebreak)
+        if rule == "spt_flat":
+            return (0, qty, age_key, tiebreak)
+        if rule == "fifo_flat":
+            return (0, age_key, qty, tiebreak)
+        if rule == "age_threshold":
+            # Orders that have waited past the threshold jump ahead of the SPT
+            # ordering (still contingent-first); an explicit age-priority rule.
+            aged = 0 if (float(self.env.now) - age_key) >= self.backorder_age_threshold_hours else 1
+            return (contingent_class, aged, qty, age_key)
+        raise ValueError(f"Unhandled backorder_priority_rule={rule!r}.")
 
     def _refresh_pending_backorder_qty(self) -> None:
         """Recompute the outstanding delayed-demand quantity."""
