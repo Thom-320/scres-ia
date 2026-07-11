@@ -1,6 +1,7 @@
 # Program L(e-1): claim and identification contract
 
-**Status:** implementation contract; no retained-learning result is claimed.
+**Status:** Gate 2 v3 terminal stop. No retained-learning result is claimed and
+no powered PPO experiment is authorized on this decision surface.
 
 ## Primary claim under test
 

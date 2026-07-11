@@ -4,6 +4,10 @@
 using at most two campaigns and three fixed probes are software tests, not
 scientific evidence.
 
+**Terminal update:** Gate 2 v3 returned
+`STOP_NO_DEPLOYABLE_ADAPTIVE_HEADROOM`. By the sequential rule below, Gates 3-5
+are not authorized for Program L v1.
+
 The governing contract is `configs/garrido_learning_v1.json`; the identification
 rules are in `docs/CLAIM_AND_IDENTIFICATION_2026-07-10.md`.
 
@@ -70,4 +74,3 @@ differences among three orders of the same 24-campaign multiset.
 No KAN, RNN, SAC, TD3, MARL, predictor, buffer switching, prevention,
 anticipation, attribution retuning, dynamic normalization, or post-virgin
 hyperparameter changes belong to v1.
-

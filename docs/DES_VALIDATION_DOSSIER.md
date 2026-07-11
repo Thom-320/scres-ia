@@ -2,8 +2,8 @@
 
 **Contract:** `garrido_learning_v1`  
 **Physical reference:** `garrido_proxy_v1`  
-**Status:** corrected Gate 0 PASS; corrected Gate 1 complete; Gate 2 terminal
-stop. No powered PPO authorization.
+**Status:** Gate 0 v3 PASS; Gate 1 v3 complete; Gate 2 v3 terminal stop. No
+powered PPO authorization.
 
 ## Claim boundary
 
@@ -44,6 +44,8 @@ Program L adds a wrapper and does not redefine Track A/B/C:
 
 - categorical S1/S2/S3 action;
 - one-week symmetric activation delay;
+- common S1 physical warm-up across policies within each strategic buffer;
+- treatment begins at endogenous physical warm-up completion;
 - strategic buffer chosen at reset and invariant during the campaign;
 - no physical state carried across reset;
 - no privileged risk/regime/forecast observation;
@@ -71,7 +73,8 @@ downstream transport mode. Defaults remain backward compatible.
 | Normalizer freeze | immutable stats and field lock | implemented and passing |
 | Campaign hash | serialized tape hash verification | implemented and passing |
 | System TTR | risk clustering, baseline, recovery and censoring | implemented; synthetic test passing |
-| Excel ReT identity | all L runners use `ret_excel` | runner guard required |
+| Excel ReT identity | all L runners use `ret_excel` | test and runner guard PASS |
+| Demand CRN | common S1 start; compare post-warm-up schedules | PASS under S1-vs-S3 policy test |
 | Risk-calendar CRN | materialize after risk-free warm-up, then replay | PASS; 60 unique calibration tape hashes |
 | Prefix replay | bitwise identity before branch | PASS across 600 states / 1,800 branches |
 
@@ -93,7 +96,7 @@ baseline. Open clusters are right-censored.
 
 ## Gate 0 promotion rule
 
-The corrected Gate 0 passed locally. Gate 2 subsequently returned
+Gate 0 v3 passed locally. Gate 2 v3 subsequently returned
 `STOP_NO_DEPLOYABLE_ADAPTIVE_HEADROOM`; therefore Program L remains blocked before
 powered PPO regardless of Gate-0 readiness. See
 `docs/L_PROGRAM_GATE2_VERDICT_2026-07-10.md`.
