@@ -1,5 +1,15 @@
 # Program D — Systematic discovery of the dynamic decision rights that matter (PREREGISTRATION, frozen 2026-07-11)
 
+> **2026-07-11 update / provenance chain:** the D1 execution details are superseded by
+> `docs/PROGRAM_D_D1_V2_PREREGISTRATION_2026-07-11.md` (risks-on correction after the v1 screen
+> was found to run with `risks_enabled=False` — see
+> `docs/PROGRAM_D_D1_V1_AUDIT_2026-07-11.md`). Two external committee verdicts and
+> their reconciliation are archived under `docs/external_assessments/` and integrated
+> there (sharper gate thresholds, binding lost-order/backlog guardrails, family ranking
+> #1 CSSU / #2 rationing=D1 / #3 batch-timing, CRN bitwise-identity requirement,
+> biblio fixes, "Discovering Decision Rights Before RL" C&IE framing). This document
+> stands as the program-level frame; the D1-v2 prereg governs the current experiment.
+
 Status: **frozen before any experiment.** Combines two converging plans:
 (1) the systematic decision-rights sweep across Op3–Op13 (the full legal
 surface, not hand-picked contracts); (2) the structural filter — a lever can

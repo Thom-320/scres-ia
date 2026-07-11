@@ -1,0 +1,1448 @@
+# Dictamen del comité
+
+**Votación: 4 a 0 a favor de detener cualquier nuevo entrenamiento PPO hasta completar un programa formal de descubrimiento de derechos de decisión.**
+
+La conclusión común de las cuatro especialidades es incómoda, pero bastante clara:
+
+> El problema actual no es el algoritmo, la red neuronal, el reward ni la duración del entrenamiento. El problema es que todavía no se ha demostrado que el DES contenga un conjunto de intervenciones dinámicas, físicamente realizables y observables cuya acción óptima cambie materialmente con el estado.
+
+PPO no convierte un botón desconectado en una palanca logística. Solo aprende a pulsarlo con creciente confianza estadística.
+
+Los cuatro resultados nulos que reportas deben convertirse en **restricciones científicas permanentes** del proyecto:
+
+1. Los buffers estratégicos y los turnos no mostraron headroom dinámico desplegable.
+2. Los controles de dispatch aguas abajo perdieron o redujeron sus ventajas al compararse contra políticas estáticas del mismo contrato.
+3. La no estacionariedad artificial y los arms persistent/reset/frozen no crearon más de aproximadamente 2% de headroom.
+4. La reserva de emergencia tuvo valor físico, pero el warning imperfecto no demostró valor informativo frente al placebo shuffled; una reserva estática de 15.000 raciones capturó casi todo el valor eficiente.
+
+Por tanto, **el paper de (L_{t-1}) debe aplazarse**. No abandonarse, sino ponerse en el lugar causal correcto. Primero hay que demostrar:
+
+[
+\text{actuador físico}
+\Rightarrow
+\text{ranking de acciones dependiente del estado}
+\Rightarrow
+\text{política observable}
+\Rightarrow
+\text{valor adaptativo}
+\Rightarrow
+\text{aprendizaje retenido}.
+]
+
+Hasta ahora, la cadena causal se ha intentado empezar por el último eslabón.
+
+Usaré estas etiquetas para mantener la procedencia clara:
+
+* **[Tesis]**: respaldado directamente por Garrido-Ríos (2017).
+* **[Repositorio]**: observado en `Thom-320/scres-ia`.
+* **[Evidencia del proyecto]**: resultados nulos y experimentales proporcionados por ustedes.
+* **[Literatura]**: respaldado por fuentes primarias o revisiones actuales.
+* **[Inferencia del comité]**: propuesta nueva que debe validarse, no un hecho demostrado.
+
+Una corrección bibliográfica menor pero necesaria: el título que aparece en la portada del PDF es *A Mixed-Method Study on the Effectiveness of a Buffering Strategy in the Relationship between Risks and Resilience*, no el título descriptivo abreviado usado en el prompt. Conviene corregirlo ahora, antes de que un revisor lo haga con menos delicadeza. 
+
+---
+
+# 1. Qué dicen realmente los resultados nulos
+
+Los cuatro experimentos fallidos no cuentan cuatro historias independientes. Todos apuntan al mismo diagnóstico estructural.
+
+## 1.1 Separar cuatro fuentes de valor
+
+Propongo abandonar temporalmente la expresión general
+
+[
+R_t=f(S_t,D_t,L_{t-1})
+]
+
+y descomponer el claim en cuatro contrastes identificables.
+
+### Valor físico
+
+[
+V_{\mathrm{phys}}
+=================
+
+\mathbb{E}\left[
+Y(a_{\mathrm{physical}})
+------------------------
+
+Y(a_{\mathrm{none}})
+\right].
+]
+
+Pregunta: ¿tener físicamente una reserva, capacidad o ruta mejora el resultado?
+
+### Valor de información
+
+[
+V_{\mathrm{info}}
+=================
+
+\mathbb{E}\left[
+Y(\pi(Z_{\mathrm{real}}))
+-------------------------
+
+Y(\pi(Z_{\mathrm{shuffled}}))
+\right].
+]
+
+Pregunta: manteniendo la misma intervención física y la misma política, ¿la información real mejora la decisión frente a una señal placebo?
+
+### Valor de control adaptativo
+
+[
+V_{\mathrm{adapt}}
+==================
+
+\mathbb{E}\left[
+Y(\pi(O_t))
+-----------
+
+Y(a^*_{\mathrm{constant}})
+\right].
+]
+
+Pregunta: ¿una regla dependiente de observaciones disponibles supera la mejor acción constante del mismo contrato?
+
+### Valor de aprendizaje retenido
+
+[
+V_{\mathrm{retain}}
+===================
+
+\mathbb{E}\left[
+Y(\pi_{\mathrm{persistent}})
+----------------------------
+
+Y(\pi_{\mathrm{reset}})
+\right].
+]
+
+Pregunta: una vez probado el valor adaptativo, ¿conservar conocimiento entre campañas aporta algo adicional?
+
+## 1.2 Interpretación correcta del experimento de reserva
+
+El resultado de `perfect warning + reserve` frente a `zero reserve`, (+17.86%), **no es una estimación pura del valor de información**, porque cambian simultáneamente la información y la disponibilidad física de reserva.
+
+El contraste informativo limpio es:
+
+[
+\text{warning imperfecto}
+-------------------------
+
+# \text{warning shuffled}
+
+1.18%,
+]
+
+con
+
+[
+CI_{95%}=[-0.09%,2.59%].
+]
+
+Ese intervalo incluye cero. La conclusión correcta es:
+
+* (V_{\mathrm{phys}}>0): la reserva funciona físicamente.
+* (V_{\mathrm{info}}) no está demostrado: el warning imperfecto no mejora de manera concluyente frente al placebo.
+* La política estática de 15.000 raciones captura la mayor parte del valor eficiente.
+* Por ello, (V_{\mathrm{adapt}}) es pequeño o nulo en ese contrato.
+* Sin (V_{\mathrm{adapt}}), no hay base para estudiar (V_{\mathrm{retain}}).
+
+Esto no es una derrota de RL. Es una falsificación útil de la hipótesis de que el timing informativo ofrecía suficiente heterogeneidad decisional.
+
+---
+
+# 2. Lo que la tesis permite afirmar y lo que no
+
+## 2.1 Estructura física respaldada
+
+**[Tesis]** La MFSC combina dos lógicas:
+
+* assembly-to-stock desde Op1 hasta Op9;
+* assembly-to-order desde Op9 hasta Op13.
+
+La tesis representa doce materias primas, tres operaciones separadas en la línea de ensamblaje, cuatro líneas de comunicación y **dos CSSUs en Op11**. Op13 constituye el teatro de operaciones y genera demanda regular y contingente. Figure 6.2, Sections 6.3–6.5 y Annex B muestran cada operación como un bloque con buffer y flowchart propios. 
+
+Eso importa porque la reconstrucción Python actual no preserva toda esa granularidad operacional.
+
+## 2.2 Supuestos originales que eliminaban decisiones
+
+**[Tesis]** El modelo original asumía:
+
+* disponibilidad de vehículos y planificación de rutas garantizadas;
+* capacidad de almacenamiento ilimitada;
+* producto único y homogéneo;
+* ausencia de entregas parciales;
+* pedidos y planes de producción sin modificaciones de último minuto;
+* SPT para pedidos regulares, con prioridad para demanda contingente;
+* cola máxima de 60 órdenes;
+* mantenimiento fijo cada siete días;
+* parámetros estacionarios durante horizontes de hasta veinte años;
+* buffers y capacidad como estrategia proactiva, no como respuesta post hoc.
+
+En otras palabras, Garrido diseñó correctamente un modelo para evaluar **buffering estratégico**, no un simulador de control operacional completo. Exigirle ahora que contenga decisiones de convoyes, asignación espacial, mantenimiento dinámico y fulfilment parcial sin reconstruir esas capas sería pedirle a una calculadora que de pronto desarrolle doctrina militar.
+
+La propia tesis reconoce como limitaciones la estacionariedad de la demanda, la exclusión del coste y la utilización de una sola unidad de análisis. Su agenda futura menciona explícitamente:
+
+* interacción entre inventario y capacidad;
+* posible incorporación del lead time;
+* búsqueda de un nivel óptimo de resiliencia incluyendo costes.
+
+Además, su validación reporta diferencias anuales que alcanzan aproximadamente (-21.58%) en un año y atribuye parte de ellas a decisiones discrecionales de producción y a tendencias o estacionalidad de demanda no representadas. Esto respalda la expresión **“thesis-grounded reconstruction”**, no “exact endogenous reproduction”. 
+
+## 2.3 Una discrepancia de la tesis que debe congelarse
+
+La descripción operacional y Figure 6.2 usan rangos downstream de **2.400–2.600 raciones**, mientras Table 6.20 presenta **2.000–2.500 raciones** para Op9–Op12.
+
+No se debe promediar ni escoger retrospectivamente el rango que produzca resultados más entretenidos. El diseño correcto es:
+
+* una lane primaria congelada, `thesis_replication`;
+* una lane de sensibilidad, `thesis_robustness`;
+* todos los resultados identificados por `downstream_q_source`.
+
+El repositorio ya distingue fuentes downstream, de modo que esa separación debe conservarse en cada manifest y tabla.
+
+---
+
+# 3. Auditoría del DES actual: dónde desaparecieron las decisiones
+
+El repositorio es sustancial y tiene una infraestructura útil, pero la capa decisional sigue heredando agregaciones incompatibles con varias de las intervenciones propuestas.
+
+## 3.1 Op3 y Op4 están fusionadas
+
+**[Repositorio]** El modelo inicia diez procesos centrales, no trece procesos autónomos. Op3 y Op4 forman un solo proceso serial; Op5–Op7 están unificadas; Op11 actúa como gate sobre Op12.
+
+En Op3–Op4, el DES:
+
+1. espera el intervalo semanal;
+2. retira material del WDC;
+3. ejecuta PT de Op3;
+4. espera que Op4 esté disponible;
+5. ejecuta PT de Op4;
+6. deposita todo en AL.
+
+No existen:
+
+* pedidos separados para doce materias primas;
+* kit completeness;
+* cola de inspección;
+* vehículos;
+* carga parcial;
+* selección de ruta;
+* expedición;
+* envíos simultáneos.
+
+Por ello, “reorder por materia prima”, “prioridad de inspección” o “routing Op4” son hoy etiquetas sin actuator físico.
+
+## 3.2 Op5–Op7 son una sola línea perfectamente balanceada
+
+**[Repositorio]** El código ejecuta un único loop horario:
+
+* cualquier caída en Op5, Op6 u Op7 detiene toda la línea;
+* una única tasa produce;
+* no hay buffers intermedios;
+* no hay bloqueo ni starvation;
+* no hay estaciones con capacidad propia;
+* el WIP se acumula en `_pending_batch`;
+* el batch completo se transfiere cuando alcanza el umbral.
+
+Por tanto, no existen todavía:
+
+* overtime específico por estación;
+* preventive maintenance por estación;
+* WIP caps;
+* reasignación de trabajadores;
+* prioridad entre rework y trabajo nuevo;
+* control diferencial de Op5, Op6 y Op7.
+
+Cambiar el número común de turnos no crea esas decisiones.
+
+## 3.3 Los dos CSSUs desaparecieron
+
+**[Repositorio]** La tesis describe dos CSSUs, pero Python tiene un solo contenedor `rations_cssu` y modela Op11 como un gate de Op12.
+
+Esto elimina precisamente las decisiones más prometedoras:
+
+* asignar inventario entre CSSU A y CSSU B;
+* responder a una destrucción localizada R23;
+* redistribuir reservas;
+* hacer lateral transshipment;
+* priorizar zonas de demanda;
+* desviar transporte final;
+* comparar centralización y forward placement.
+
+Mientras exista un único contenedor, no hay desigualdad espacial que administrar.
+
+## 3.4 Op4, Op8, Op10 y Op12 no tienen vehículos ni rutas
+
+**[Repositorio]** Op8 espera un batch completo y lo transporta por una única secuencia. Op10 y Op12 se ejecutan como drenajes periódicos de un contenedor a otro, con un PT y un rango de cantidad. No existen flotas, convoyes, arcos alternativos, modos o disponibilidad de transporte.
+
+Modificar `op10_q_max` o `op12_q_max` es hoy equivalente a modificar una tasa de servicio abstracta. No representa:
+
+* contratar más vehículos;
+* formar un convoy;
+* cambiar de modo terrestre a aéreo;
+* usar una ruta alternativa;
+* pagar una expedición;
+* dividir una carga.
+
+Esto explica por qué una constante alta puede capturar casi todo el valor. Si aumentar (Q) no consume un recurso escaso o un coste operativo explícito, el sistema tiene pocos motivos para reducirlo dinámicamente.
+
+## 3.5 La política de backlog está rígidamente fijada
+
+**[Repositorio]** La cola aplica:
+
+1. prioridad de demanda contingente;
+2. SPT dentro de cada clase;
+3. fulfilment completo del primer pedido;
+4. head-of-line blocking;
+5. eliminación del último pedido si la cola supera 60.
+
+No existen como decisiones:
+
+* earliest due date;
+* oldest first;
+* prioridad por misión;
+* partial fulfillment;
+* rationing;
+* service quotas;
+* assignment por CSSU;
+* preemption.
+
+Sin embargo, esas decisiones pueden alterar el service-loss AUC y la cola sin requerir más inventario total.
+
+## 3.6 El buffer dinámico actual todavía es conceptualmente peligroso
+
+El wrapper thesis-factorized puede cambiar el target y ejecutar `_top_up_inventory_buffer` inmediatamente.
+
+Eso convierte una decisión de **ordenar o reconstruir reserva** en una mutación directa del estado físico. Un nivel estratégico de buffer debe ser:
+
+* diseño estático de campaña, o
+* orden de reposición con origen, lead time, capacidad de ruta y coste.
+
+Nunca debe ser “el agente seleccionó (I_{672}), por tanto aparecieron raciones”. Hasta las raciones militares, por muy patrióticas que sean, respetan conservación de masa.
+
+## 3.7 El estado base también agrega demasiado
+
+El estado original contiene un único `any_loc_down` para Op4, Op8, Op10 y Op12.
+
+Una política no puede decidir racionalmente entre rutas, destinos o prioridades si solo sabe que “alguna LOC” está caída.
+
+## 3.8 Hay drift del contrato en documentación y código
+
+`TRACK_B_MINIMAL_SPEC.md` documenta siete dimensiones, pero el constructor actual declara ocho para Track B. La documentación histórica describe cinco dimensiones para Track A, mientras el código actual declara seis.
+
+Antes de otra simulación debe congelarse:
+
+* lista ordenada de acciones;
+* bounds;
+* mapping físico;
+* latencia;
+* minimum dwell;
+* unidades;
+* coste;
+* hash del contrato.
+
+Los resultados recientes del usuario deben además marcar como **superseded** cualquier registro previo que presente Track B como una validación positiva. No se borra la historia, se etiqueta. Los repositorios científicos también necesitan aprender del pasado, aparentemente.
+
+---
+
+# 4. Taxonomía de decisiones Op3–Op13
+
+## Definiciones
+
+| Categoría                 | Definición operacional                                                                                                                                              |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Parámetro físico          | Propiedad del sistema: PT, capacidad, lead time, tamaño del vehículo, tasa de estación. Solo es controlable si existe un recurso o proceso que permita modificarla. |
+| Variable de estado        | Condición endógena observable: inventario, WIP, backlog, edad, ruta caída, ETA, utilización.                                                                        |
+| Incertidumbre exógena     | Demanda, onset y duración de riesgos, yield aleatorio, tiempo de viaje. No puede ser acción.                                                                        |
+| Diseño estático           | Decisión antes de campaña: flota, capacidad instalada, reserva base, ubicación del stock.                                                                           |
+| Decisión táctica dinámica | Cambio diario o semanal, sujeto a lead time y permanencia: overtime, release quantity, reserve repositioning.                                                       |
+| Decisión operacional      | Acción en un evento: asignar un lote, seleccionar una ruta, priorizar un pedido, realizar fulfilment parcial.                                                       |
+| Acción inválida           | Muta directamente inventario o riesgo, usa información futura, crea recursos gratuitos o elimina demanda para mejorar métricas.                                     |
+
+## Taxonomía operación por operación
+
+| Operación                 | Parámetros, estado e incertidumbre                                                                                                                                                                                                         | Decisiones válidas                                                                                                                                                                                             | Acciones inválidas o físicamente incompletas                                                                                                          |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Op3: WDC**              | **Parámetros:** PT de recepción/inspección, capacidad de inspección, Q y ROP. **Estado:** inventario de cada una de las 12 materias primas, órdenes inbound, cola de inspección, cobertura del kit. **Incertidumbre:** R13 upstream y R21. | **Estático:** safety stock y capacidad de inspección. **Táctico:** cantidad de release por material, revisión, expedite, overtime de recepción. **Operacional:** priorizar la materia prima limitante del kit. | Un único escalar de raw material; top-up instantáneo; cambiar ROP sin modelar orden, proveedor y lead time; liberar un kit que carece de componentes. |
+| **Op4: WDC → AL**         | **Parámetros:** capacidad por vehículo, tiempo de carga, PT por ruta. **Estado:** vehículos disponibles, cargas preparadas, material en tránsito, route status y ETA. **Incertidumbre:** R22 y travel time.                                | **Estático:** tamaño de flota y rutas alternativas. **Táctico:** número de convoyes o modo. **Operacional:** cantidad de envío, dispatch timing, consolidación, reroute y expedite.                            | Cambiar (Q) sin vehículo; transporte durante una ruta caída; teletransportar inventario; “routing” con un único arco.                                 |
+| **Op5: pre-assembly**     | **Parámetros:** tasa de estación, trabajadores, mantenimiento. **Estado:** cola de material, WIP, estación caída, fatiga/deuda de mantenimiento. **Incertidumbre:** R11, R21 y R3.                                                         | **Estático:** capacidad de estación. **Táctico:** overtime específico, mantenimiento preventivo, cross-training, WIP cap. **Operacional:** release de kits a la estación.                                      | Turnos comunes como sustituto de servidores separados; mantenimiento sin coste ni downtime; WIP cap cuando no existe buffer intermedio.               |
+| **Op6: assembly**         | **Parámetros:** tasa manual, trabajadores, capacidad de rework. **Estado:** WIP de Op5, cola de rework, utilización y downtime. **Incertidumbre:** R11, R21 y R3.                                                                          | **Táctico:** overtime y reasignación de personal. **Operacional:** prioridad rework vs trabajo nuevo, preemption, WIP control.                                                                                 | Cambiar directamente el yield o la tasa sin recursos; priorización cuando rework y producción no son entidades separadas.                             |
+| **Op7: QC y packaging**   | **Parámetros:** capacidad de inspección, batch threshold, handling time. **Estado:** cola de QC, unidades aprobadas, rework y batches incompletos. **Incertidumbre:** R14, R21 y R3.                                                       | **Estático:** capacidad QC. **Táctico:** batch size y frecuencia base. **Operacional:** cerrar batch, release timing, mantener, reinspeccionar, rework o scrap.                                                | Modificar la probabilidad R14; liberar producto no inspeccionado; hacer menor el batch sin coste de transporte/handling.                              |
+| **Op8: AL → SB**          | **Parámetros:** capacidad y PT de transporte, tamaño mínimo de carga. **Estado:** batches listos, vehículos, en tránsito y ruta. **Incertidumbre:** R22.                                                                                   | **Táctico:** modo y capacidad contratada. **Operacional:** partial-batch dispatch, hold/depart, consolidación, expedite y reroute.                                                                             | Esperar siempre 5.000 y luego afirmar que se estudió dispatch timing; partial shipment sin coste o vehículo.                                          |
+| **Op9: Supply Battalion** | **Parámetros:** handling capacity, dispatch capacity y reserva. **Estado:** inventario, arrivals, pedidos por CSSU, edad/backlog y coverage. **Incertidumbre:** R21 y R3.                                                                  | **Estático:** reserva base y capacidad. **Táctico:** reserve release/rebuild, dispatch cadence. **Operacional:** asignar cantidades a CSSUs, priorizar destinos, enviar parcialmente.                          | Un único (Q) sin destinatario; inventario creado por acción; aumentar dispatch sin lift capacity.                                                     |
+| **Op10: SB → CSSUs**      | **Parámetros:** flota, rutas, modo, capacidad y PT. **Estado:** convoyes, shipments, status de cada lane y ETA. **Incertidumbre:** R22.                                                                                                    | **Estático:** red y flota. **Táctico:** surge transport capacity. **Operacional:** lane allocation, convoy formation, route/mode choice, reroute y expedite.                                                   | Un multiplicador de throughput sin coste o recurso; usar rutas no modeladas; observar futuros ataques.                                                |
+| **Op11: dos CSSUs**       | **Parámetros:** capacidad local, handling, reserva y capacidad lateral. **Estado:** inventario y backlog por CSSU, lane status, demanda local, outage R23. **Incertidumbre:** destrucción R23 y demanda regional.                          | **Estático:** reserve placement. **Táctico:** repositioning de reserva. **Operacional:** asignación, lateral transshipment, priority, partial fulfilment, rationing y fallback cuando un CSSU cae.             | Un único contenedor; transferencia instantánea; enviar desde CSSU destruido; inventar mission classes sin doctrina.                                   |
+| **Op12: CSSUs → tropas**  | **Parámetros:** capacidad de final mile, PT y modo. **Estado:** pedidos por unidad/zona, vehículos, lane status, ETA. **Incertidumbre:** R22 y condiciones operacionales.                                                                  | **Táctico:** capacidad de final mile. **Operacional:** route/convoy assignment, dispatch timing, partial delivery, priority por misión y expedite.                                                             | Un único sink y una ruta; fulfilment sin destino; entregar mientras el enlace está caído.                                                             |
+| **Op13: teatro**          | **Parámetros:** lead-time prometido y reglas doctrinales. **Estado:** pedidos, ubicación, edad, cantidad, contingencia y mission criticality. **Incertidumbre:** demanda regular y R24.                                                    | **Operacional:** orden de servicio, fulfilment parcial, rationing temporal y allocation por prioridad doctrinal.                                                                                               | Cambiar la demanda; borrar backlog; rechazar pedidos para mejorar fill rate; asignar “importancia militar” retrospectivamente.                        |
+
+## Conclusión de la taxonomía
+
+Las variables con más potencial no son nuevos knobs de inventario. Son decisiones que asignan **recursos escasos entre destinos, pedidos o momentos**:
+
+* allocation;
+* sequencing;
+* partial fulfillment;
+* release timing;
+* route/mode choice;
+* lateral transshipment.
+
+Estas decisiones pueden producir rankings reversos. Por ejemplo:
+
+* con CSSU A caído, asignar 75% a A es absurdo;
+* durante recuperación y backlog alto de A, puede ser óptimo;
+* con demanda equilibrada, 50/50 puede dominar;
+* con un pedido contingente localizado, la prioridad puede invertirse.
+
+Ese tipo de inversión es lo que un controlador dinámico necesita. “Más buffer” frente a “menos buffer” suele ser una comparación monotónica y, por tanto, una política constante suele resolverla.
+
+---
+
+# 5. Condición matemática para que una variable merezca RL
+
+Sea (s) un estado alcanzable, (a) una acción, (\omega) un tape exógeno y (H) un horizonte:
+
+[
+Y_H(s,a,\omega)
+]
+
+es el resultado obtenido al aplicar (a) desde (s), manteniendo fijo el futuro exógeno (\omega).
+
+El bound de información perfecta es:
+
+[
+H_{\mathrm{PI}}
+===============
+
+\mathbb{E}_{s,\omega}
+\left[
+\max_a Y_H(s,a,\omega)
+\right]
+-------
+
+\max_a
+\mathbb{E}_{s,\omega}
+\left[
+Y_H(s,a,\omega)
+\right].
+]
+
+Esto compara:
+
+* la mejor acción retrospectiva en cada estado/tape;
+* la mejor constante global.
+
+Es un bound diagnóstico, no una política desplegable.
+
+El headroom observable es:
+
+[
+H_{\mathrm{obs}}
+================
+
+\mathbb{E}
+\left[
+Y_H(s,\pi(O_s),\omega)
+\right]
+-------
+
+\max_a
+\mathbb{E}
+\left[
+Y_H(s,a,\omega)
+\right],
+]
+
+donde (\pi) solo usa observaciones disponibles en el momento de decisión.
+
+Una variable merece entrar a RL únicamente si:
+
+1. el actuator cambia la física;
+2. (\arg\max_a Y(s,a,\omega)) no es casi siempre la misma acción;
+3. una política basada en (O_s) recupera una fracción material del bound;
+4. la mejora sobre la mejor constante es práctica;
+5. sobrevive en tapes vírgenes;
+6. no compra la mejora con más recursos no contabilizados.
+
+Que una variable tenga un gran efecto promedio no basta. Un interruptor que siempre debe estar encendido tiene gran efecto y cero necesidad de RL.
+
+---
+
+# 6. Programa experimental pre-RL
+
+La literatura de simulation optimization distingue problemas según decisiones discretas o continuas, coste del simulador, múltiples resultados y estructura del ruido. Eso favorece un programa escalonado, no una corrida masiva de PPO. ([arXiv][1])
+
+Morris fue diseñado como plan de muestreo factorial para experimentos computacionales preliminares, no como prueba de control adaptativo.  Los diseños factoriales y fractional factorial son igualmente apropiados para planificar y analizar estudios de simulación, incluidos efectos e interacciones. ([arXiv][2])
+
+## Gate 0: ledger de derechos de decisión
+
+| Elemento             | Diseño                                                                                                                                             |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Pregunta             | ¿La acción corresponde a una decisión que un operador real podría ejercer?                                                                         |
+| Documento            | Para cada acción: propietario, actuator, unidades, bounds, recurso, coste, lead time, minimum dwell, observación requerida, operaciones afectadas. |
+| Objeción del revisor | “Los autores inventaron knobs después de observar resultados”.                                                                                     |
+| Endpoint             | `decision_rights_registry.json` versionado y firmado por Garrido.                                                                                  |
+| Promoción            | Todas las acciones tienen mecanismo físico y trazabilidad.                                                                                         |
+| Stop                 | La acción muta directamente inventario, riesgo, demanda o capacidad sin proceso de implementación.                                                 |
+
+## Gate 1: physical liveness
+
+| Elemento    | Diseño                                                                                                             |
+| ----------- | ------------------------------------------------------------------------------------------------------------------ |
+| Experimento | Desde estados elegibles idénticos, aplicar low/base/high durante un epoch.                                         |
+| Controles   | Mismo snapshot, mismo futuro exógeno y acción neutral.                                                             |
+| Objeción    | “La acción solo cambia una variable registrada, no el sistema”.                                                    |
+| Endpoints   | First-effect time, delta de flujo, delta de inventario, ejecución del actuator, conservación de masa y recursos.   |
+| Promoción   | Acción ejecutada en al menos 95% de estados elegibles, efecto dentro de su latencia y signo físicamente coherente. |
+| Stop        | No produce efecto, lo produce instantáneamente cuando debería tener lead time, o viola invariantes.                |
+
+## Gate 2: low/base/high static frontier
+
+| Elemento    | Diseño                                                                                                        |
+| ----------- | ------------------------------------------------------------------------------------------------------------- |
+| Experimento | Evaluar exhaustivamente todas las políticas constantes low/base/high con CRN.                                 |
+| Objeción    | “La política dinámica solo vence a un baseline débil”.                                                        |
+| Endpoints   | ReT, service-loss AUC, backlog AUC, fill, CT/TTR, inventory-days, overtime, convoy-hours, switching y CVaR10. |
+| Promoción   | Existen trade-offs no dominados y ninguna constante captura casi todo el valor.                               |
+| Stop        | Una constante domina o consigue al menos 85% del oracle headroom con recursos iguales o menores.              |
+
+## Gate 3: screening físico
+
+| Tipo de variable        | Método                                                      |
+| ----------------------- | ----------------------------------------------------------- |
+| Continua u ordinal      | Morris con seis niveles y veinte trayectorias, (N=20(k+1)). |
+| Categórica              | Fractional factorial Resolution IV o diseño D-optimal.      |
+| Interacciones iniciales | Main effects y señales de no linealidad/interacción.        |
+
+**Objeción:** “La selección de variables fue intuitiva o retrospectiva”.
+
+**Promoción:** efecto material sobre ReT y al menos una métrica física, o desviación (\sigma) que sugiera interacción.
+
+**Stop:** (\mu^*) y (\sigma) bajos tanto en ReT como en métricas operacionales.
+
+Un (\mu^*) alto solo demuestra influencia. No demuestra que la acción deba cambiar con el estado.
+
+## Gate 4: exact state branching
+
+1. Recolectar estados alcanzables mediante políticas neutrales, estáticas extremas y heurísticas.
+2. Estratificar por fase operacional.
+3. Reconstruir exactamente cada estado.
+4. Aplicar cada acción durante un epoch.
+5. Usar una continuación común después del epoch.
+6. Evaluar a horizonte corto y largo.
+
+**Horizontes recomendados:**
+
+| Familia  |     Corto |     Largo |
+| -------- | --------: | --------: |
+| Op9–Op13 |  48 horas |   28 días |
+| Op7–Op8  |    7 días | 8 semanas |
+| Op5–Op7  |  1 semana | 8 semanas |
+| Op3–Op4  | 4 semanas |   6 meses |
+
+**Objeción:** “Las diferencias son ruido”.
+
+**Endpoint:** distribución de acciones óptimas, ranking reversals, (H_{\mathrm{PI}}), efectos por fase y heterogeneidad.
+
+**Promoción:**
+
+* al menos dos acciones son óptimas en 15% o más de los estados cada una;
+* mejora oracle sobre mejor constante de al menos 0.02–0.03 en ReT o 5% en service-loss AUC;
+* límite inferior del CI95 pareado por encima de cero;
+* el efecto no desaparece ni se invierte en el horizonte largo.
+
+**Stop:**
+
+* una sola acción es óptima en más de 85% de los estados;
+* headroom menor al umbral práctico;
+* mejora solo en 48 horas y daño acumulado a 28 días;
+* el resultado depende de información futura.
+
+## Gate 5: observable convertibility y value of information
+
+Entrenar un policy tree de profundidad máxima 3 o 4 usando exclusivamente observaciones desplegables. Policy learning y prescriptive trees permiten imponer simplicidad y restricciones de implementación, y proporcionan un benchmark interpretable antes de una red neuronal. ([arXiv][3])
+
+La evaluación debe ser cross-fitted:
+
+* folds agrupados por tape;
+* ningún estado del mismo tape en train y test;
+* comparación con best constant;
+* comparación con full-state oracle;
+* comparación con signal shuffled;
+* comparación con signal delayed/noisy.
+
+El valor esperado de información mide precisamente cuánto puede mejorar una decisión al conocer una variable o señal; por tanto, es el lenguaje correcto para separar reserva física de warning. ([arXiv][4])
+
+**Promoción:**
+
+* tree captura al menos 60% del perfect-information headroom;
+* mejora held-out frente a best constant;
+* límite inferior CI95 por encima de cero;
+* reglas comprensibles y ejecutables.
+
+**Stop:**
+
+* oracle positivo pero tree captura menos de 50%;
+* las variables útiles son latentes o futuras;
+* shuffled signal funciona igual;
+* la mejora desaparece con delay realista.
+
+En ese caso, el problema es de sensing o timing, no de RL.
+
+## Gate 6: pairwise interaction y Pareto
+
+Sobre las cuatro mejores variables:
+
+* ejecutar factoriales completos de dos vías;
+* low/base/high para variables ordinales;
+* calcular interaction contrasts;
+* repetir bajo recursos equivalentes.
+
+**Objeción:** “El screening marginal descartó una combinación valiosa”.
+
+**Promoción:** interacción reproducible, no dominada y gerencialmente interpretable.
+
+**Stop:** suma aditiva de efectos, constante equivalente o ventaja comprada por más recursos.
+
+## Gate 7: confirmatorio virgen
+
+* preregistro cerrado;
+* tapes nunca usados;
+* análisis por tape y no por step;
+* bootstrap agrupado por tape;
+* corrección Holm para endpoints secundarios;
+* política congelada;
+* ninguna selección posterior.
+
+**Promoción final a RL:**
+
+1. ReT mejora con CI95 completamente positivo.
+2. Service-loss AUC mejora en la misma dirección.
+3. Resultado positivo en al menos tres de cuatro familias de disrupción.
+4. Al menos 70% de tapes muestran delta favorable.
+5. CVaR10 no empeora más de 2%.
+6. Política es Pareto no dominada.
+7. No depende de eliminación de pedidos.
+
+**Veredicto binario:**
+
+* `PROCEED_TO_POLICY_OPTIMIZATION`
+* `STOP_NO_OBSERVABLE_DYNAMIC_HEADROOM`
+
+---
+
+# 7. CRN y branching: una advertencia técnica importante
+
+El repositorio ya separa RNG general, demanda y riesgo bajo `strict_exogenous_crn`, lo cual es necesario.
+
+Pero **usar la misma seed no garantiza CRN causalmente válido**. Si una acción altera la secuencia de eventos o el número de llamadas al RNG, la llamada número 500 deja de corresponder al mismo evento físico en las dos ramas.
+
+Un preprint metodológico de 2026 formaliza este problema y propone RNG contrafactual indexado por evento, no por orden de ejecución. ([arXiv][5])
+
+El branching harness debe usar una de estas soluciones:
+
+1. tapes exógenos presampleados por tiempo y tipo de evento;
+2. counter-based RNG con claves como
+   `(tape_id, event_type, entity_id, occurrence_index)`;
+3. event-keyed hashing.
+
+La prueba requerida es:
+
+> mismo snapshot + mismo tape + acciones distintas implica logs exógenos bitwise idénticos.
+
+No basta con “seed=42”. El número 42 ha cargado con suficientes expectativas científicas.
+
+---
+
+# 8. Ranking de familias decisionales
+
+La tabla es una priorización previa, no evidencia experimental. Las escalas van de 1 a 5. En burden, 5 significa carga alta.
+
+|   Rank | Familia                                            | Headroom esperado | Grounding tesis | Realismo | Burden | Confounding | Interpretabilidad | Valor publicación |
+| -----: | -------------------------------------------------- | ----------------: | --------------: | -------: | -----: | ----------: | ----------------: | ----------------: |
+|  **1** | Asignación entre dos CSSUs y lateral transshipment |                 5 |               5 |        5 |      3 |           3 |                 5 |                 5 |
+|  **2** | Priority, partial fulfillment y rationing          |               4.5 |               5 |        5 |    2.5 |         3.5 |                 5 |                 5 |
+|  **3** | Batch release y dispatch timing Op7–Op12           |                 4 |               5 |      4.5 |      3 |           3 |                 5 |               4.5 |
+|  **4** | Convoyes, rutas y modos alternativos               |                 5 |             3.5 |        5 |      5 |           4 |                 5 |                 5 |
+|  **5** | Capacidad, mantenimiento y WIP por estación        |               3.5 |               5 |        5 |    4.5 |           3 |                 5 |                 4 |
+|  **6** | Placement y repositioning de reserva               |               2.5 |               5 |        5 |      3 |           2 |                 5 |                 3 |
+|  **7** | Release/reorder/expediting en Op3–Op4              |               2.5 |             4.5 |        4 |    3.5 |           4 |                 4 |                 3 |
+|  **8** | Batch size aislado                                 |                 2 |               5 |      3.5 |    2.5 |           3 |                 4 |               2.5 |
+|  **9** | Buffer estratégico y turno común semanal           |                 1 |               5 |        2 |      1 |           2 |                 4 |                 1 |
+| **10** | Warning/predictor sin nuevo actuator               |                 1 |             2.5 |        4 |      3 |           5 |                 3 |                 1 |
+
+## Por qué los tres primeros
+
+### 1. Dos CSSUs
+
+La tesis ya contiene dos CSSUs y R23 afecta precisamente ese nivel. No hace falta inventar una red de veinte nodos para crear heterogeneidad espacial. Basta con dejar de comprimir dos unidades en un contenedor.
+
+### 2. Reglas de servicio
+
+La tesis ya reconoce:
+
+* backlog;
+* demanda contingente;
+* SPT;
+* lost orders;
+* lead time.
+
+Por tanto, priority y partial fulfillment son extensiones naturales y auditables. Además, no requieren más inventario total.
+
+### 3. Release y dispatch timing
+
+El batch fijo de 5.000 y la salida diaria pueden crear esperas evitables. Sin embargo, la intervención debe incluir handling y transporte; de lo contrario, “enviar inmediatamente en batches pequeños” dominará por construcción.
+
+## Por qué no empiezo por routing
+
+Routing y modos terrestre, aéreo y marítimo tienen un headroom potencial enorme, pero la tesis asume que la disponibilidad de vehículos y la planificación de rutas están garantizadas. Faltan:
+
+* red geográfica;
+* distancias;
+* capacidades;
+* tamaños de flota;
+* costes;
+* tiempos por modo;
+* restricciones de seguridad.
+
+Implementarlo primero convertiría el paper en un nuevo modelo logístico completo con Garrido como inspiración lejana. Es una segunda fase, no la primera.
+
+---
+
+# 9. El experimento mínimo que debe comprometerse
+
+## DRG-1: Two-CSSU Allocation and Service-Rule Discovery Gate
+
+Este es el experimento que debe quedar preregistrado antes de construir otro entorno RL.
+
+## 9.1 Cambios físicos mínimos
+
+1. Reemplazar `rations_cssu` por:
+
+   * `rations_cssu_A`;
+   * `rations_cssu_B`.
+
+2. Crear:
+
+   * backlog A;
+   * backlog B;
+   * in-transit A;
+   * in-transit B;
+   * lane Op10A/Op10B;
+   * lane Op12A/Op12B.
+
+3. Mantener inicialmente:
+
+   * misma capacidad total diaria downstream;
+   * dos salidas diarias fijas, una por CSSU;
+   * distancias simétricas;
+   * sin lateral transshipment;
+   * sin forecasts.
+
+4. Dividir la demanda agregada:
+
+   * 50/50 en expectativa;
+   * variación estocástica por destino;
+   * suma A+B exactamente igual a la demanda original del tape.
+
+5. R23:
+
+   * afecta A o B;
+   * asignación balanceada entre tapes.
+
+6. R22:
+
+   * afecta una lane específica;
+   * onset y duración conservan la distribución thesis-native.
+
+7. R24:
+
+   * demanda contingente dirigida a A o B;
+   * prioridad contingente se mantiene fija en todas las políticas.
+
+Esto preserva el proceso agregado, pero introduce la heterogeneidad mínima que la tesis ya sugiere.
+
+## 9.2 Variables y niveles
+
+### Factor A: allocation share en Op9
+
+Fracción de la capacidad diaria asignada a CSSU A:
+
+[
+a_{\mathrm{alloc}}\in{0.25,0.50,0.75}.
+]
+
+El resto se asigna a B.
+
+No se cambia la capacidad total; solo la asignación.
+
+### Factor B: regla de prioridad regular
+
+[
+a_{\mathrm{priority}}
+\in
+{\text{SPT},\text{oldest-first}}.
+]
+
+La demanda contingente sigue teniendo prioridad sobre ambas.
+
+### Factor C: modo de fulfilment
+
+[
+a_{\mathrm{fill}}
+\in
+{\text{full-order},\text{partial-fill}}.
+]
+
+Esto produce:
+
+[
+3\times2\times2=12
+]
+
+acciones completas y enumerables.
+
+No se incluye lateral transshipment todavía. Mezclar allocation, partial fill y lateral en el primer gate haría más difícil identificar qué generó la señal, deporte favorito de los modelos demasiado ambiciosos.
+
+## 9.3 Epoch y latencias
+
+* decisión cada 24 horas;
+* acción aplicada en el siguiente dispatch;
+* transporte con PT de 24 horas;
+* permanencia mínima de 24 horas;
+* nada de inventario instantáneo;
+* ninguna acción sobre demanda o riesgos.
+
+## 9.4 Observaciones permitidas
+
+* inventario de SB;
+* inventario A y B;
+* backlog quantity A y B;
+* número de pedidos A y B;
+* edad máxima y media A y B;
+* demanda realizada en 1 y 7 días por CSSU;
+* contingent backlog A y B;
+* in-transit quantity y ETA A y B;
+* status de CSSU A/B;
+* status de lanes A/B;
+* tiempo desde la última entrega;
+* acción anterior.
+
+Prohibido:
+
+* tipo futuro de riesgo;
+* tiempo futuro de onset;
+* duración futura;
+* etiqueta de régimen;
+* oracle demand;
+* variables retrospectivas.
+
+## 9.5 Familias de disrupción
+
+| Familia | Contenido                                                         |
+| ------- | ----------------------------------------------------------------- |
+| F1      | Restricción upstream por R21 o R3 que reduce disponibilidad en SB |
+| F2      | R22 dirigido a una lane downstream                                |
+| F3      | R23 dirigido a uno de los dos CSSUs                               |
+| F4      | R24 localizado; la mitad de los tapes incorpora además R22 o R23  |
+
+## 9.6 Tapes y estados
+
+### Discovery
+
+* 80 tapes;
+* 20 por familia;
+* targets A/B balanceados;
+* estrictamente CRN.
+
+### Confirmatorio
+
+* 40 tapes vírgenes;
+* 10 por familia;
+* ningún uso en selección o normalización.
+
+### Estados para branching
+
+De cada discovery tape se extraen 15 estados:
+
+* 3 nominal/pre-onset;
+* 3 durante onset;
+* 3 durante backlog growth;
+* 3 durante early recovery;
+* 3 con high spatial imbalance.
+
+Total:
+
+[
+80\times15=1,200
+]
+
+estados.
+
+Cada estado se ramifica en 12 acciones y dos horizontes:
+
+[
+1,200\times12\times2
+====================
+
+28,800
+]
+
+counterfactual rollouts.
+
+## 9.7 Dos tipos de rollout
+
+### Pulse rollout
+
+* acción durante un epoch;
+* continuación neutral común;
+* horizontes 48 horas y 28 días.
+
+Sirve para identificar el efecto marginal de la acción.
+
+### Static-policy rollout
+
+* cada una de las 12 acciones se mantiene fija durante todo el tape.
+
+Sirve para construir la frontera de políticas constantes.
+
+## 9.8 Endpoints
+
+### Primario
+
+* Garrido Excel ReT a 28 días.
+
+### Coprimario físico
+
+* service-loss AUC.
+
+### Secundarios
+
+* backlog AUC;
+* peak backlog;
+* fill rate;
+* mean/p95 CT;
+* TTR con regla de censura;
+* unattended orders;
+* spatial service imbalance;
+* inventory-days;
+* quantity dispatched;
+* número de fragments;
+* handling events;
+* CVaR10 de ReT y service loss.
+
+ReT debe ser outcome, no reward de entrenamiento en esta fase.
+
+## 9.9 Análisis
+
+1. Diferencias pareadas por estado/tape.
+2. Bootstrap agrupado por tape.
+3. Distribución de la acción óptima.
+4. Mejor constante seleccionada solo en discovery.
+5. Full-information oracle como bound.
+6. Policy tree depth (\leq4).
+7. Five-fold cross-fitting agrupado por tape.
+8. Evaluación secuencial del tree en tapes completos.
+9. Comparación Pareto.
+10. Holm para endpoints secundarios.
+
+## 9.10 Reglas de promoción
+
+El experimento pasa únicamente si cumple todas:
+
+### Physical liveness
+
+* 100% conservación de masa;
+* al menos 95% de acciones elegibles producen el cambio previsto;
+* latencias correctas.
+
+### Heterogeneidad
+
+* por lo menos dos acciones son óptimas en 15% o más de estados;
+* ninguna acción es óptima en más de 85%.
+
+### Headroom oracle
+
+* (\Delta ReT\geq0.02) frente a best constant;
+* service-loss AUC mejora al menos 5%;
+* límite inferior CI95 positivo.
+
+### Observable policy
+
+* tree captura al menos 60% del oracle headroom;
+* cross-fitted CI95 frente a best constant completamente positivo.
+
+### Confirmatorio
+
+* (\Delta ReT\geq0.015);
+* service-loss AUC mejora al menos 3%;
+* positivo en tres de cuatro familias;
+* favorable en al menos 70% de tapes;
+* CVaR10 no empeora más de 2%;
+* política no dominada.
+
+## 9.11 Reglas de stop
+
+`STOP_NO_OBSERVABLE_DYNAMIC_HEADROOM` si ocurre cualquiera:
+
+* best constant captura 85% o más del oracle;
+* una acción domina casi todos los estados;
+* tree captura menos de 50% del oracle;
+* mejora desaparece en tapes vírgenes;
+* mejora desaparece bajo recursos equivalentes;
+* ganancia proviene de lost orders o backlog eviction;
+* mejora inmediata se convierte en daño a 28 días;
+* señal útil requiere información futura.
+
+## 9.12 Objeciones anticipadas del revisor
+
+### “Los autores inventaron heterogeneidad entre CSSUs”
+
+Respuesta: la tesis ya contiene dos CSSUs. El experimento conserva demanda total, capacidad total y distribuciones agregadas; solo desagrega espacialmente. La interpretación debe declararse como **structural extension**, no reproducción histórica. Garrido debe aprobar la división.
+
+### “Partial fulfillment viola la tesis”
+
+Respuesta: correcto. La tesis lo excluye como supuesto simplificador. Por eso se mantienen:
+
+* thesis-faithful baseline: SPT + full order;
+* intervention lane: partial fulfillment.
+
+La extensión responde precisamente a una limitación explícita.
+
+### “El oracle usa información futura”
+
+Respuesta: sí, por definición. Solo se presenta como upper bound. El deployable comparator es el policy tree con observaciones contemporáneas.
+
+### “La política gana porque usa más transporte”
+
+Respuesta: capacidad total diaria fijada; mismos dos departures; misma cantidad total; resource ledger explícito.
+
+### “Hay pseudo-replicación”
+
+Respuesta: folds, bootstrap e inferencia se hacen por tape, no por los 1.200 estados.
+
+### “La política mejora el fill rate rechazando demanda”
+
+Respuesta: no existe admission/eviction como acción; toda demanda permanece en el denominador y los pedidos perdidos reciben penalización explícita.
+
+---
+
+# 10. Cambios del DES requeridos antes de cada familia
+
+## 10.1 Infraestructura común obligatoria
+
+### Snapshot reconstruible
+
+El snapshot debe contener:
+
+* reloj;
+* inventarios;
+* WIP;
+* batches incompletos;
+* backlogs y edades;
+* shipments y ETA;
+* route/node status;
+* residual times;
+* maintenance state;
+* action anterior;
+* future exogenous tape ID.
+
+No basta con copiar containers. Los procesos y eventos pendientes también forman el estado.
+
+### Tapes exógenos independientes de política
+
+Presamplear:
+
+* demanda;
+* destino;
+* onset;
+* duración;
+* operación afectada;
+* travel noise;
+* yield;
+* R24 quantity.
+
+### Resource ledger
+
+Registrar:
+
+* inventory-time;
+* overtime-hours;
+* vehicle-hours;
+* convoy departures;
+* ton-km o equivalente;
+* expedite events;
+* handling/fragments;
+* switching.
+
+### Contrato inmutable
+
+Cada entorno debe exportar:
+
+* action schema;
+* observation schema;
+* physical mapping;
+* version;
+* hash;
+* commit SHA;
+* parameter source;
+* tape manifest.
+
+## 10.2 Dos CSSUs y allocation
+
+Requiere:
+
+* dos containers;
+* dos colas;
+* dos demandas;
+* cuatro lanes o, como mínimo, dos paths diferenciados;
+* R22 y R23 localizados;
+* in-transit por destino;
+* métrica de imbalance;
+* balance de masa por nodo.
+
+Sin eso, `allocation_share` es solo un número decorativo.
+
+## 10.3 Partial fulfillment y priority
+
+Requiere:
+
+* `remaining_qty` verdaderamente servible en fragmentos;
+* fragment history;
+* completion time final;
+* first-service time;
+* lateness por fragmento;
+* priority key seleccionable;
+* prohibición de eliminar pedidos;
+* handling penalty por fragmentación.
+
+La implementación actual espera a que todo el primer pedido pueda servirse.
+
+## 10.4 Batch release y dispatch timing
+
+Requiere:
+
+* batch entity;
+* readiness time;
+* capacidad y coste de loading;
+* partial batch;
+* vehicle departure event;
+* holding cost/time;
+* minimum fill;
+* release decision;
+* missed-departure penalty.
+
+El actual Op8 simplemente espera un batch completo.
+
+## 10.5 Convoyes, routing y modos
+
+Requiere:
+
+* grafo físico;
+* rutas alternativas;
+* nodos y arcos;
+* fleet resources;
+* capacity por vehículo;
+* mode-specific time/cost/risk;
+* loading/unloading;
+* route availability;
+* security constraints;
+* rerouting durante tránsito.
+
+Hasta disponer de estos datos, no debe aparecer una acción llamada `route_choice`.
+
+## 10.6 Op5–Op7 desagregada
+
+Requiere:
+
+* tres servidores;
+* buffers entre estaciones;
+* blocking/starving;
+* station-specific failure;
+* repair resource;
+* maintenance calendar;
+* worker pools;
+* rework queue;
+* overtime por estación;
+* WIP cap.
+
+Solo entonces preventive maintenance y station-specific overtime serán intervenciones reales.
+
+## 10.7 Reserve placement
+
+Requiere:
+
+* origen de reposición;
+* orden;
+* lead time;
+* route availability;
+* target;
+* expiry/obsolescence si aplica;
+* drawdown rule;
+* rebuild rule;
+* inventory-time cost.
+
+La reserva debe moverse por la red, no materializarse al cambiar un target.
+
+---
+
+# 11. Qué aporta la literatura actual
+
+## 11.1 RL en supply chains ya no constituye novedad por sí mismo
+
+Garrido et al. (2024) formularon de manera exploratoria el problema de la ausencia de aprendizaje acumulativo en DES-SCRES y discutieron backpropagation, KAN y RL como posibles familias. Su contribución fue teórica, no una validación empírica de un agente. 
+
+Ding et al. (2026) ya modelaron reconfiguración de supply chain systems-of-systems como POMDP y aplicaron MAPPO con acciones de filling, repairing y recruiting, equilibrando resiliencia y costes. 
+
+Por tanto, no son defendibles:
+
+* “first RL for SCRES”;
+* “first DES+RL supply chain”;
+* “first neural resilience model”.
+
+El hueco debe ser más preciso.
+
+## 11.2 Los baselines estructurados importan más que la arquitectura
+
+Deep Controlled Learning plantea explícitamente que algoritmos genéricos de DRL no siempre son la mejor herramienta para inventarios y usa approximate policy iteration adaptada al problema, reportando gaps muy pequeños frente a benchmarks. ([arXiv][6])
+
+PARL combina aproximación neuronal de valor con programación matemática para acciones combinatorias y restricciones dependientes del estado, y reporta ventajas sobre RL estándar y heurísticas. ([arXiv][7])
+
+Un estudio reciente en cadenas farmacéuticas encuentra que PPO puede ser útil en escenarios complejos, pero no domina políticas clásicas en todos los experimentos; distintas clases de política resultan apropiadas bajo distintas condiciones. ([arXiv][8])
+
+La implicación para ustedes es simple:
+
+> Antes de preguntar qué arquitectura aprende mejor, hay que preguntar qué clase de política necesita el problema.
+
+## 11.3 La literatura de acción-space resuelve escala, no significado físico
+
+Los trabajos sobre grandes espacios discretos usan embeddings, factorización o búsquedas aproximadas para manejar millones de acciones. ([arXiv][9])
+
+Eso resuelve:
+
+* enumeración;
+* complejidad computacional;
+* generalización entre acciones.
+
+No resuelve:
+
+* si el actuator existe;
+* si la acción tiene coste;
+* si toca el binding constraint;
+* si el ranking cambia por estado;
+* si el operador dispone de la información.
+
+El descubrimiento de derechos de decisión es anterior a la representación del action space.
+
+## 11.4 Policy trees son un benchmark, no un adorno de interpretabilidad
+
+Athey y Wager desarrollan policy learning bajo restricciones de simplicidad y observabilidad; Jo et al. formulan prescriptive trees con restricciones específicas del dominio y evaluación out-of-sample. ([arXiv][3])
+
+En el proyecto, un árbol tiene tres funciones:
+
+1. demostrar observable convertibility;
+2. ofrecer un baseline desplegable;
+3. revelar qué variables realmente gobiernan el ranking.
+
+Si un árbol de profundidad tres captura todo el valor, entrenar PPO para obtener la misma regla con dos capas ocultas y menos explicación sería una forma bastante sofisticada de complicar una tabla.
+
+---
+
+# 12. Reencuadre del paper
+
+## El título actual debe retirarse
+
+**From Simulation to Learning: Advancing SCRES Modeling with Deep Learning Algorithms** promete:
+
+* múltiples algoritmos;
+* deep learning como contribución;
+* aprendizaje demostrado;
+* probablemente predictive accuracy.
+
+Ninguna de esas promesas coincide con la evidencia actual.
+
+## Título recomendado para el primer paper
+
+> **Discovering Decision Rights Before Reinforcement Learning: A Simulation-Based Protocol for State-Contingent Supply Chain Resilience Control**
+
+Alternativa más aplicada:
+
+> **From Physical Levers to Deployable Policies: Pre-RL Action-Space Discovery in a Military Food Supply Chain DES**
+
+## Research question
+
+> **Which physically realizable decisions in a military food supply chain exhibit meaningful, observable, and resource-efficient state-contingent value under recurrent disruptions?**
+
+## Research objective
+
+> **To develop and test a simulation-based decision-rights discovery protocol that screens candidate interventions for physical liveness, state-dependent action ranking, observable policy convertibility, resource-equivalent improvement, and out-of-sample robustness before their inclusion in a reinforcement-learning action space.**
+
+## Claim central permitido
+
+> **The usefulness of reinforcement learning in a supply-chain DES is conditional on first identifying physically live decision rights whose relative value changes across reachable and observable operational states.**
+
+No afirma que RL gane. Afirma que existe una condición previa verificable.
+
+## Contribuciones defendibles
+
+1. Taxonomía operación por operación de parámetros, estados, incertidumbres y decisiones.
+2. Protocolo pre-RL reproducible.
+3. Branching causal con tapes exógenos.
+4. Separación entre valor físico, informativo, adaptativo y retenido.
+5. Evidencia de boundary conditions, incluidos resultados nulos.
+6. Decision aid interpretable si el policy tree pasa.
+7. Recomendaciones sobre qué no debe incluirse en un action space.
+
+## Ruta de journals
+
+### Computers & Industrial Engineering
+
+Es el mejor destino inicial para este nuevo paper, porque su scope admite nuevas metodologías computarizadas para problemas de ingeniería industrial, pero exige que aplicaciones reales demuestren originalidad, generalidad y resultados significativos. ([ScienceDirect][10])
+
+Para C&IE, el protocolo debe presentarse como reutilizable:
+
+* intervention ledger;
+* liveness;
+* state branching;
+* policy tree;
+* resource-equivalent frontier;
+* promotion rules.
+
+### IJPR
+
+Se vuelve el objetivo más fuerte si DRG-1 produce:
+
+* reglas claras de allocation y service;
+* decision aid interpretable;
+* comparación con estado del arte;
+* consecuencias gerenciales;
+* escenarios en los que una política simple basta y escenarios en los que adaptación sí paga.
+
+### SMPT
+
+Es el respaldo natural si el aporte dominante termina siendo:
+
+* desagregación del DES;
+* state cloning;
+* CRN causal;
+* V&V;
+* experimental design;
+* comparación de simuladores/políticas.
+
+---
+
+# 13. Decisión final
+
+## Las tres familias que deben implementarse primero
+
+### 1. Allocation espacial en los dos CSSUs
+
+Incluye:
+
+* split A/B;
+* asignación diaria;
+* R22/R23 localizados;
+* más adelante, lateral transshipment.
+
+### 2. Service discipline
+
+Incluye:
+
+* thesis SPT baseline;
+* oldest-first;
+* partial fulfillment;
+* rationing doctrinal;
+* demanda contingente siempre prioritaria.
+
+### 3. Release y dispatch timing
+
+Incluye:
+
+* batch closure Op7;
+* partial-batch dispatch Op8;
+* daily departure timing Op9–Op12;
+* holding/transport/handling contabilizados.
+
+## Lo que no debe explorarse en el primer estudio
+
+* buffer estratégico como acción semanal;
+* turno común como única decisión;
+* nuevos multiplicadores genéricos de (Q) o ROP;
+* warning o predictor adicional;
+* persistent/reset/frozen;
+* KAN;
+* RNN;
+* transformers;
+* MAPPO;
+* comparación PPO–SAC;
+* curriculum learning;
+* dynamic routing sin flota y rutas explícitas;
+* backlog admission/eviction;
+* acciones sobre Op1 y Op2;
+* nuevos rewards antes de encontrar headroom.
+
+## Experimento exacto que debe congelarse antes de cualquier PPO
+
+> **DRG-1: Two-CSSU Allocation and Service-Rule Discovery Gate**
+>
+> * 12 acciones: allocation (3) × priority (2) × fulfilment (2);
+> * epoch diario;
+> * 80 discovery tapes;
+> * 40 virgin tapes;
+> * 1.200 estados ramificados;
+> * horizontes 48 horas y 28 días;
+> * ReT primario;
+> * service-loss AUC coprimario físico;
+> * policy tree depth (\leq4);
+> * same-contract constants;
+> * Pareto/resource matching;
+> * verdict binario preespecificado.
+
+El orden del programa queda así:
+
+[
+\boxed{
+\text{DES refactor}
+\rightarrow
+\text{DRG-1 liveness}
+\rightarrow
+\text{static frontier}
+\rightarrow
+\text{exact branching}
+\rightarrow
+\text{observable tree}
+\rightarrow
+\text{virgin confirmation}
+}
+]
+
+Solo después:
+
+[
+\boxed{
+\text{PPO}
+\rightarrow
+\text{persistent/reset}
+\rightarrow
+L_{t-1}
+}
+]
+
+El próximo claim no debe ser “la cadena aprende”. Debe ser algo más básico y bastante más difícil de falsificar:
+
+> **Primero demostramos que la cadena simulada posee decisiones reales que vale la pena aprender.**
+
+[1]: https://arxiv.org/abs/1706.08591?utm_source=chatgpt.com "Simulation optimization: A review of algorithms and applications"
+[2]: https://arxiv.org/abs/2111.13737?utm_source=chatgpt.com "Let's practice what we preach: Planning and interpreting simulation studies with design and analysis of experiments"
+[3]: https://arxiv.org/abs/1702.02896?utm_source=chatgpt.com "Policy Learning with Observational Data"
+[4]: https://arxiv.org/abs/1302.6794?utm_source=chatgpt.com "Efficient Estimation of the Value of Information in Monte Carlo Models"
+[5]: https://arxiv.org/abs/2603.11084?utm_source=chatgpt.com "Realizing Common Random Numbers: Event-Keyed Hashing for Causally Valid Stochastic Models"
+[6]: https://arxiv.org/abs/2011.15122?utm_source=chatgpt.com "Deep Controlled Learning for Inventory Control"
+[7]: https://arxiv.org/abs/2112.02215?utm_source=chatgpt.com "Deep Policy Iteration with Integer Programming for Inventory Management"
+[8]: https://arxiv.org/abs/2501.10895?utm_source=chatgpt.com "Classical and Deep Reinforcement Learning Inventory Control Policies for Pharmaceutical Supply Chains with Perishability and Non-Stationarity"
+[9]: https://arxiv.org/abs/1512.07679?utm_source=chatgpt.com "Deep Reinforcement Learning in Large Discrete Action Spaces"
+[10]: https://www.sciencedirect.com/journal/computers-and-industrial-engineering/about/aims-and-scope "Aims and scope - Computers & Industrial Engineering | ScienceDirect.com by Elsevier"
+

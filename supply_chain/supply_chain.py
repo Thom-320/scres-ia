@@ -13,6 +13,7 @@ Key changes from v1:
   - get_observation() returns normalized state vector.
 """
 
+import hashlib
 import math
 
 import simpy
@@ -508,6 +509,9 @@ class MFSCSimulation:
         self.backorder_overflow_mode = backorder_overflow_mode
         self.backorder_priority_rule = backorder_priority_rule
         self.backorder_age_threshold_hours = float(backorder_age_threshold_hours)
+        # Program D audit trail. Construction does not append an event, preserving
+        # the frozen default trajectory bitwise; only explicit dynamic changes do.
+        self.backorder_priority_rule_events: list[dict[str, Any]] = []
         if self.risk_attribution_source == "excel_risk_tape":
             if self.demand_source != "excel_order_tape":
                 raise ValueError(
@@ -1567,7 +1571,12 @@ class MFSCSimulation:
 
         # Apply action (modify mutable params)
         if action:
+            requested_priority_rule = action.get("backorder_priority_rule")
+            if requested_priority_rule is not None:
+                self.set_backorder_priority_rule(str(requested_priority_rule))
             for k, v in action.items():
+                if k == "backorder_priority_rule":
+                    continue
                 if k in self.params:
                     self.params[k] = v
                 # Thesis-aligned Op5 buffer target (Table 6.16 I_{t,S} on Op5,j).
@@ -1851,6 +1860,48 @@ class MFSCSimulation:
             aged = 0 if (float(self.env.now) - age_key) >= self.backorder_age_threshold_hours else 1
             return (contingent_class, aged, qty, age_key)
         raise ValueError(f"Unhandled backorder_priority_rule={rule!r}.")
+
+    def _backorder_queue_hash(self) -> str:
+        """Stable hash of queue identity/order for Program D provenance."""
+        payload = "\n".join(
+            f"{int(order.j)}|{float(order.OPTj):.12g}|"
+            f"{float(order.remaining_qty):.12g}|{int(bool(order.contingent))}|"
+            f"{int(bool(order.lost))}"
+            for order in self.pending_backorders
+        )
+        return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+    def set_backorder_priority_rule(self, rule: str) -> dict[str, Any]:
+        """Atomically change only the Op9 queue sequencing rule.
+
+        The standing queue is re-sorted immediately. No order is created,
+        removed, fulfilled, or marked lost, and no random generator is touched.
+        """
+        if rule not in BACKORDER_PRIORITY_RULE_OPTIONS:
+            valid = ", ".join(BACKORDER_PRIORITY_RULE_OPTIONS)
+            raise ValueError(
+                f"Invalid backorder_priority_rule={rule!r}. Expected: {valid}."
+            )
+        previous = self.backorder_priority_rule
+        before_ids = tuple(int(order.j) for order in self.pending_backorders)
+        before_hash = self._backorder_queue_hash()
+        self.backorder_priority_rule = rule
+        self.pending_backorders.sort(key=self._backorder_priority_key)
+        self._refresh_pending_backorder_qty()
+        after_ids = tuple(int(order.j) for order in self.pending_backorders)
+        event = {
+            "time": float(self.env.now),
+            "previous_rule": previous,
+            "new_rule": rule,
+            "queue_hash_before": before_hash,
+            "queue_hash_after": self._backorder_queue_hash(),
+            "queue_size": len(after_ids),
+            "queue_membership_unchanged": sorted(before_ids) == sorted(after_ids),
+        }
+        if not event["queue_membership_unchanged"]:
+            raise AssertionError("Priority-rule change altered queue membership.")
+        self.backorder_priority_rule_events.append(event)
+        return event
 
     def _refresh_pending_backorder_qty(self) -> None:
         """Recompute the outstanding delayed-demand quantity."""
