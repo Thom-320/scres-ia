@@ -45,6 +45,39 @@ comparator side. This is the single highest-risk item for DRA-1 fidelity.
 `verdict: PENDING_ALLOCATION_ACTUATOR` — the actuator/DES wiring is the next stage;
 V1-A must be addressed there.
 
+## V2 — Allocation actuator + localized risks (commit a6068d5)
+
+**PASS on:** 13/13 physical tests; aggregate-mode default is run-to-run reproducible
+(ret_excel 0.006487, deterministic) and the frozen regression suite passes (identity
+when split off); per-CSSU mass conservation holds over full episodes (raw/ration
+residual 0); the V1-A `jointly_constrained → cssu_allocation_live_epochs` classifier
+is implemented. Split is correctly opt-in (`cssu_topology_mode == "split_v1"`).
+
+**FINDING V2-A (BLOCKER for a meaningful frontier) — the allocation lever is
+100% MOOT under the tested R2r regime.** Independent run, `split_v1`, CF11
+R2r-increased, 52 wk: **`cssu_allocation_live_epochs = 0` of 648 (0.0%).** Every
+epoch is classified `allocation_moot` — i.e. `allocation_a` never changes dispatch.
+This is V1-A realized at integration: with the thesis capacity≈demand balance,
+splitting ~2500/day demand across two CSSUs leaves each node ~1250 < ~2500 capacity,
+so both are always serviceable and the split never binds; R22/R23 that take a node
+DOWN make it moot rather than live. **A static frontier run in this state would show
+all 9 policies producing ~identical ReT → a false `STOP_NO_OBSERVABLE_SPATIAL_HEADROOM`.**
+
+Required before opening discovery tapes: **empirically demonstrate that the frozen
+DRA-1 treatment regime generates a MATERIAL fraction of `allocation_live` epochs**
+(joint scarcity / post-hit recovery / localized-R24 with both paths up). Codex's
+contract states this requirement; V2-A shows it is NOT met by a generic R2r regime,
+so the materialized regime must be checked to satisfy it. Suggested guard: the
+frontier smoke should assert `live_fraction ≥ some preregistered minimum` and abort
+if the regime is allocation-dead.
+
+**FINDING V2-B (secondary, confirm wiring).** Setting
+`sim.cssu_daily_capacity_override` to 2000→600 left `total_unattended_orders`
+unchanged (502↔503) — the override did not bind on the split dispatch path, so
+scarcity could not be induced that way. Either the override targets a different path
+or it is not wired into `_cssu_daily_capacity()`; Codex to confirm. (Not blocking,
+but it is one lever intended to create the scarcity V2-A needs.)
+
 ## Open items to verify as they land
 - [ ] Allocation actuator wired into DES; bitwise identity when split disabled.
 - [ ] Destination-tagged demand conserves the aggregate demand tape exactly.
