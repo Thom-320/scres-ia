@@ -1,0 +1,83 @@
+{
+  "contract_id": "op7_op8_finite_convoy_long_horizon_v1",
+  "study_id": "DRA-2b",
+  "status": "PREREGISTERED_BEFORE_NEW_TAPES",
+  "relationship_to_dra2": {
+    "dra2_terminal_tag": "dra2-stop-2026-07-12",
+    "dra2_verdict_unchanged": "STOP_DRA2_PRE_RL_GATE",
+    "dra2_data_allowed_for_claims": false,
+    "dra2_data_role": "design rationale only",
+    "parent_physics_contract": "op7_op8_finite_convoy_v1",
+    "parent_physics_sha256": "6fac6777b655f90bc2deb871fa5a59e0e8fcab6c74e7a6dba892bdf1f0a195cc"
+  },
+  "physics": {
+    "changes_from_parent": "none",
+    "convoy_count": 1,
+    "convoy_capacity_rations": 5000,
+    "outbound_hours": 24,
+    "return_hours": 24,
+    "decision_epoch_hours": 24,
+    "partial_departure_consumes_full_slot": true,
+    "r22_semantics": "temporary bidirectional route closure; convoy and cargo pause and are preserved"
+  },
+  "long_horizon_oracle": {
+    "primary_days": 14,
+    "sensitivity_days": 10,
+    "evaluation_days": [28, 56],
+    "canonical_sequence_rule": "enumerate every binary HOLD/DISPATCH sequence with no adjacent DISPATCH actions; omitted adjacent-DISPATCH strings are physically equivalent because the second action is masked while the convoy is unavailable",
+    "primary_sequence_upper_bound": 987,
+    "sensitivity_sequence_upper_bound": 144,
+    "primary_states": 120,
+    "primary_states_per_tape": 2,
+    "sensitivity_states": 12,
+    "sensitivity_states_per_family": 3
+  },
+  "horizon_sufficiency": {
+    "first_action_agreement_min": 0.90,
+    "normalized_headroom_relative_change_max": 0.20,
+    "normalized_headroom_absolute_change_max_ret_per_day": 0.0005,
+    "positive_to_negative_sign_reversal_allowed": false,
+    "zero_to_positive_is_sign_reversal": false,
+    "service_direction_must_match_at_28d_and_56d": true
+  },
+  "data_splits": {
+    "calibration": {"n_tapes": 60, "seed_start": 860001, "families": 4},
+    "observable_holdout": {"n_tapes": 40, "seed_start": 870001, "families": 4},
+    "ppo_training": {"seed_start": 880001, "confirmatory": false},
+    "ppo_virgin": {"n_tapes": 60, "seed_start": 890001, "families": 4}
+  },
+  "resource_comparison": {
+    "primary": "resource-dominance-constrained static comparator selected once on calibration and frozen for holdout",
+    "constraints": [
+      "static mean departures <= candidate mean departures",
+      "static mean convoy-unavailable-hours <= candidate mean convoy-unavailable-hours"
+    ],
+    "pareto_role": "secondary only"
+  },
+  "promotion_to_tree": {
+    "strong_live_fraction_min": 0.20,
+    "each_action_supported_fraction_min": 0.15,
+    "ret_improvement_min": 0.01,
+    "ret_ci95_lower_min": 0.0,
+    "service_loss_reduction_min": 0.05,
+    "service_ci95_lower_min": 0.0,
+    "horizon_sufficiency_required": true,
+    "lost_orders_noninferiority_required": true,
+    "resource_envelope_required": true
+  },
+  "promotion_to_ppo": {
+    "tree_max_depth": 3,
+    "tree_oracle_capture_min": 0.50,
+    "tree_must_beat_frozen_static_on_holdout": true,
+    "favorable_holdout_tape_fraction_min": 0.70,
+    "tail_noninferiority_required": true,
+    "ppo_allowed_before_all_gates": false
+  },
+  "scientific_state": {
+    "calibration_opened": false,
+    "holdout_opened": false,
+    "ppo_defined": false,
+    "ppo_trained": false,
+    "virgin_tapes_opened": 0
+  }
+}
