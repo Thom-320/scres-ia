@@ -6,7 +6,7 @@
   "frozen_from_program_g_v1_2": {
     "physics": true, "n_cssus": 2, "convoy_capacity": 5000, "convoy_cycle_hours": 48,
     "episode_weeks": 4, "region": "12 surge-1.50 cells (uniform)", "tempo": "semi-Markov independent A/B",
-    "signal_quality": "balanced-accuracy per cell", "risks": "R22 off in primary",
+    "signal_quality": "balanced-accuracy per cell", "risks": "R22 route-specific weekly probability 0.05 exactly as Program G terminal region",
     "metrics": ["ret_order", "ret_quantity", "worst_cssu_fill", "attended_orders", "unfulfilled_rations"],
     "static_comparator": "ABAB (frozen best periodic calendar)", "action_set": ["A", "B", "HOLD"],
     "practical_importance_thresholds": {"delta_min_ret_order": 0.01, "worst_cssu_fill_margin": 0.02}
@@ -38,7 +38,8 @@
     "perfect-information oracle (diagnostic ceiling only)"
   ],
   "observable_upper_bound": {
-    "primary_method": "QMDP optimistic upper bound on J*_obs",
+    "primary_method": "exact full-tape 81-sequence information-relaxation ceiling (rigorous but loose upper bound)",
+    "qmdp_status": "diagnostic approximation only unless separately verified as a valid bound",
     "optional_secondary_method": "information-relaxation bound only if its algorithm and penalty are frozen in a hashed amendment before 1060001 is opened",
     "property": "J_QMDP >= J*_obs (optimistic) -> if J_QMDP - J_ABAB < delta_min then NO observable policy materially beats ABAB",
     "computed_on": "ret_order at the frozen 4-week horizon, same tapes, CRN",
