@@ -86,7 +86,12 @@ def category(sim: MFSCSimulation, tape: dict[str, Any], relative_time: float) ->
     return "other"
 
 
-def select_state(tape: dict[str, Any], base: tuple[float, str]) -> dict[str, Any]:
+def select_state(
+    tape: dict[str, Any],
+    base: tuple[float, str],
+    *,
+    selection_mode: str = "max_imbalance",
+) -> dict[str, Any]:
     sim, start = make_sim(tape, base)
     latest = start + tape["horizon_weeks"] * HOURS_PER_WEEK - LONG_HOURS
     candidates: list[dict[str, Any]] = []
@@ -106,17 +111,36 @@ def select_state(tape: dict[str, Any], base: tuple[float, str]) -> dict[str, Any
         "r23_localized": ("post_hit_recovery", "joint_scarcity"),
         "r24_mixed": ("localized_r24_both_up", "post_hit_recovery", "joint_scarcity"),
     }[tape["family"]]
+    def choose(rows: list[dict[str, Any]]) -> dict[str, Any]:
+        if selection_mode == "a_stressed":
+            return max(rows, key=lambda row: row["cssu_A_backlog_qty"] - row["cssu_B_backlog_qty"])
+        if selection_mode == "b_stressed":
+            return max(rows, key=lambda row: row["cssu_B_backlog_qty"] - row["cssu_A_backlog_qty"])
+        if selection_mode == "balanced":
+            return min(rows, key=lambda row: row["imbalance"])
+        if selection_mode != "max_imbalance":
+            raise ValueError(f"Unknown selection_mode={selection_mode!r}")
+        return max(rows, key=lambda row: row["imbalance"])
+
     for name in preferred:
         eligible = [row for row in candidates if row["category"] == name]
         if eligible:
-            chosen = max(eligible, key=lambda row: row["imbalance"])
+            chosen = choose(eligible)
             return {"tape_id": tape["tape_id"], "family": tape["family"], **chosen}
-    chosen = max(candidates, key=lambda row: row["imbalance"])
+    chosen = choose(candidates)
     return {"tape_id": tape["tape_id"], "family": tape["family"], **chosen}
 
 
-def branch(tape: dict[str, Any], state: dict[str, Any], base: tuple[float, str], action: tuple[float, str]) -> dict[str, Any]:
-    sim, start = make_sim(tape, base)
+def branch(
+    tape: dict[str, Any],
+    state: dict[str, Any],
+    prefix: tuple[float, str],
+    action: tuple[float, str],
+    *,
+    continuation: tuple[float, str] | None = None,
+) -> dict[str, Any]:
+    continuation = prefix if continuation is None else continuation
+    sim, start = make_sim(tape, prefix)
     state_time = start + float(state["relative_time"])
     sim.env.run(until=state_time)
     replay_hash = state_hash(sim)
@@ -127,7 +151,7 @@ def branch(tape: dict[str, Any], state: dict[str, Any], base: tuple[float, str],
     sim.set_cssu_allocation_action(*action, activation_delay_hours=HOURS_PER_DAY)
     sim.env.run(until=state_time + HOURS_PER_DAY)
     sim._activate_due_cssu_action()
-    sim.set_cssu_allocation_action(*base, activation_delay_hours=HOURS_PER_DAY)
+    sim.set_cssu_allocation_action(*continuation, activation_delay_hours=HOURS_PER_DAY)
     sim.env.run(until=state_time + 2 * HOURS_PER_DAY)
     sim._activate_due_cssu_action()
     pulse_dispatch_a = float(sim.cssu_dispatched["A"] - dispatch_before["A"])
