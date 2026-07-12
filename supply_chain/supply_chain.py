@@ -22,7 +22,12 @@ from dataclasses import dataclass, field
 from typing import Any, Iterable, Optional
 from collections import Counter
 
-from .cssu_allocation import stable_cssu_destination
+from .cssu_allocation import (
+    ALLOCATION_LEVELS,
+    SERVICE_RULES,
+    allocate_shared_capacity,
+    stable_cssu_destination,
+)
 
 from .config import (
     ADAPTIVE_BENCHMARK_INITIAL_REGIME,
@@ -121,6 +126,7 @@ class OrderRecord:
     LTj: float = LEAD_TIME_PROMISE  # 48 hours — thesis-defined fixed lead time
     backorder: bool = False
     remaining_qty: float = 0.0
+    in_flight_qty: float = 0.0
     contingent: bool = False
     # Opt-in Program D topology. ``None`` preserves the aggregate Garrido lane.
     cssu_destination: Optional[str] = None
@@ -160,6 +166,7 @@ class RiskEvent:
     description: str = ""
     magnitude: float = 1.0
     unit: str = "incidents"
+    affected_cssu: Optional[str] = None
 
 
 @dataclass
@@ -241,6 +248,9 @@ class MFSCSimulation:
         material_lineage_mode: str = "off",
         op2_release_clock_mode: str = "inherit",
         cssu_topology_mode: str = "aggregate",
+        cssu_allocation_a: float = 0.50,
+        cssu_service_rule: str = "SPT_FULL",
+        cssu_daily_capacity: Optional[float] = None,
     ) -> None:
         if warmup_trigger not in WARMUP_TRIGGER_OPTIONS:
             valid = ", ".join(WARMUP_TRIGGER_OPTIONS)
@@ -361,6 +371,14 @@ class MFSCSimulation:
             raise ValueError(
                 "cssu_topology_mode must be 'aggregate' or 'split_v1'."
             )
+        if float(cssu_allocation_a) not in ALLOCATION_LEVELS:
+            raise ValueError(
+                f"cssu_allocation_a must be one of {ALLOCATION_LEVELS}."
+            )
+        if cssu_service_rule not in SERVICE_RULES:
+            raise ValueError(f"cssu_service_rule must be one of {SERVICE_RULES}.")
+        if cssu_daily_capacity is not None and float(cssu_daily_capacity) <= 0:
+            raise ValueError("cssu_daily_capacity must be positive when provided.")
         if backorder_overflow_mode not in BACKORDER_OVERFLOW_MODE_OPTIONS:
             valid = ", ".join(BACKORDER_OVERFLOW_MODE_OPTIONS)
             raise ValueError(
@@ -406,6 +424,15 @@ class MFSCSimulation:
         self.procurement_contract_mode = str(procurement_contract_mode)
         self.order_fulfillment_mode = str(order_fulfillment_mode)
         self.cssu_topology_mode = str(cssu_topology_mode)
+        self.cssu_allocation_a = float(cssu_allocation_a)
+        self.cssu_service_rule = str(cssu_service_rule)
+        self.cssu_daily_capacity_override = (
+            None if cssu_daily_capacity is None else float(cssu_daily_capacity)
+        )
+        self._pending_cssu_action: Optional[dict[str, Any]] = None
+        self.cssu_action_events: list[dict[str, Any]] = []
+        self.cssu_demand_events: list[tuple[float, str, float]] = []
+        self.cssu_delivery_events: list[tuple[float, str, float]] = []
         self.assembly_flow_mode = str(assembly_flow_mode)
         self.periodic_release_mode = str(periodic_release_mode)
         self.op2_release_clock_mode = str(op2_release_clock_mode)
@@ -603,8 +630,21 @@ class MFSCSimulation:
         # They make destination-specific flow observable without changing the
         # shared physical stock or downstream capacity.
         self.cssu_in_transit = {"A": 0.0, "B": 0.0}
+        self.cssu_inbound_in_transit = {"A": 0.0, "B": 0.0}
+        self.cssu_inventory = {"A": 0.0, "B": 0.0}
+        self.cssu_outbound_in_transit = {"A": 0.0, "B": 0.0}
         self.cssu_delivered = {"A": 0.0, "B": 0.0}
         self.cssu_demanded = {"A": 0.0, "B": 0.0}
+        self.cssu_dispatched = {"A": 0.0, "B": 0.0}
+        self.cssu_capacity_credit = {"A": 0.0, "B": 0.0}
+        self.cssu_allocation_live_epochs = 0
+        self.cssu_allocation_moot_epochs = 0
+        self.cssu_local_down_count = {
+            (op_id, cssu): 0
+            for op_id in (10, 11, 12)
+            for cssu in ("A", "B")
+        }
+        self.cssu_local_risk_events: list[dict[str, Any]] = []
         self.rations_theatre = simpy.Container(self.env, capacity=INF, init=0)
         # Program-v2 opt-in reserve.  It is deliberately separate from the
         # Garrido theatre stock: in ``op9_linked`` mode normal orders travel
@@ -749,6 +789,7 @@ class MFSCSimulation:
             "R24": [],
         }
         self._contingent_demand_pending = 0
+        self._contingent_cssu_destination_pending: Optional[str] = None
         self._cumulative_down_hours = 0.0  # Accumulated op-hours of disruption
         self.adaptive_benchmark_enabled = self.risk_level in (
             "adaptive_benchmark_v1",
@@ -1759,6 +1800,12 @@ class MFSCSimulation:
                 {
                     "cssu_A_in_transit": float(self.cssu_in_transit["A"]),
                     "cssu_B_in_transit": float(self.cssu_in_transit["B"]),
+                    "cssu_A_inventory": float(self.cssu_inventory["A"]),
+                    "cssu_B_inventory": float(self.cssu_inventory["B"]),
+                    "cssu_A_inbound": float(self.cssu_inbound_in_transit["A"]),
+                    "cssu_B_inbound": float(self.cssu_inbound_in_transit["B"]),
+                    "cssu_A_outbound": float(self.cssu_outbound_in_transit["A"]),
+                    "cssu_B_outbound": float(self.cssu_outbound_in_transit["B"]),
                 }
             )
         return detail
@@ -2413,6 +2460,85 @@ class MFSCSimulation:
         )
         return min(1.0, delayed_orders / len(self.orders))
 
+    def get_cssu_observation(self) -> dict[str, float]:
+        """Return deployable current/past split-state features for DRA-1.
+
+        The mapping intentionally exposes no risk schedule, future repair,
+        latent regime, or future demand field. A later environment wrapper can
+        freeze ordering/normalization without changing this information set.
+        """
+        if self.cssu_topology_mode != "split_v1":
+            raise RuntimeError("CSSU observations require cssu_topology_mode='split_v1'.")
+        now = float(self.env.now)
+        obs: dict[str, float] = {
+            "sb_inventory": float(self.rations_sb.level),
+            "allocation_a": float(self.cssu_allocation_a),
+            "service_rule_spt_full": float(self.cssu_service_rule == "SPT_FULL"),
+            "service_rule_fifo_partial": float(
+                self.cssu_service_rule == "FIFO_PARTIAL"
+            ),
+            "service_rule_r24_age_partial": float(
+                self.cssu_service_rule == "R24_AGE_PARTIAL"
+            ),
+            "day_phase": float((now % HOURS_PER_WEEK) / HOURS_PER_WEEK),
+        }
+        for cssu in ("A", "B"):
+            orders = [
+                order
+                for order in self.pending_backorders
+                if order.cssu_destination == cssu
+            ]
+            backlog = sum(float(order.remaining_qty) for order in orders)
+            ages = [max(0.0, now - float(order.OPTj)) for order in orders]
+            contingent = sum(
+                float(order.remaining_qty) for order in orders if order.contingent
+            )
+            demand_1d = sum(
+                qty
+                for time, destination, qty in self.cssu_demand_events
+                if destination == cssu and time >= now - HOURS_PER_DAY
+            )
+            demand_7d = sum(
+                qty
+                for time, destination, qty in self.cssu_demand_events
+                if destination == cssu and time >= now - HOURS_PER_WEEK
+            )
+            delivered_7d = sum(
+                qty
+                for time, destination, qty in self.cssu_delivery_events
+                if destination == cssu and time >= now - HOURS_PER_WEEK
+            )
+            obs.update(
+                {
+                    f"cssu_{cssu}_inventory": float(self.cssu_inventory[cssu]),
+                    f"cssu_{cssu}_inbound": float(
+                        self.cssu_inbound_in_transit[cssu]
+                    ),
+                    f"cssu_{cssu}_outbound": float(
+                        self.cssu_outbound_in_transit[cssu]
+                    ),
+                    f"cssu_{cssu}_backlog_qty": float(backlog),
+                    f"cssu_{cssu}_backlog_count": float(len(orders)),
+                    f"cssu_{cssu}_max_age": float(max(ages) if ages else 0.0),
+                    f"cssu_{cssu}_r24_share": float(
+                        contingent / backlog if backlog > 0 else 0.0
+                    ),
+                    f"cssu_{cssu}_demand_1d": float(demand_1d),
+                    f"cssu_{cssu}_demand_7d": float(demand_7d),
+                    f"cssu_{cssu}_delivered_7d": float(delivered_7d),
+                    f"cssu_{cssu}_op10_up": float(
+                        not self._is_cssu_path_down(10, cssu)
+                    ),
+                    f"cssu_{cssu}_op11_up": float(
+                        not self._is_cssu_path_down(11, cssu)
+                    ),
+                    f"cssu_{cssu}_op12_up": float(
+                        not self._is_cssu_path_down(12, cssu)
+                    ),
+                }
+            )
+        return obs
+
     def get_observation(self) -> np.ndarray:
         """
         Return normalized state vector for RL agent.
@@ -2846,6 +2972,23 @@ class MFSCSimulation:
 
     def _is_down(self, op_id: int) -> bool:
         return self.op_down_count[op_id] > 0
+
+    def _is_cssu_path_down(self, op_id: int, cssu: Optional[str]) -> bool:
+        if self._is_down(op_id):
+            return True
+        if self.cssu_topology_mode != "split_v1" or cssu not in {"A", "B"}:
+            return False
+        return self.cssu_local_down_count.get((int(op_id), cssu), 0) > 0
+
+    def _take_down_cssu(self, op_id: int, cssu: str) -> None:
+        key = (int(op_id), str(cssu))
+        self.cssu_local_down_count[key] += 1
+
+    def _bring_up_cssu(self, op_id: int, cssu: str) -> None:
+        key = (int(op_id), str(cssu))
+        self.cssu_local_down_count[key] = max(
+            0, self.cssu_local_down_count[key] - 1
+        )
 
     def _take_down(self, op_id: int) -> None:
         if self.op_down_count[op_id] == 0:
@@ -3507,6 +3650,10 @@ class MFSCSimulation:
 
     def _dispatch_one_op9_order_if_ready(self, *, next_check_hours: float = 24.0):
         """Release at most the SPT-head order; return whether it departed."""
+        if self.cssu_topology_mode == "split_v1":
+            return (yield from self._dispatch_split_cssu_day(
+                next_check_hours=next_check_hours
+            ))
         if not self.pending_backorders:
             return False
         head = self.pending_backorders[0]
@@ -3544,6 +3691,7 @@ class MFSCSimulation:
                 }
             )
         head.remaining_qty = 0.0
+        head.in_flight_qty += qty
         head.op9_release_time = float(self.env.now)
         head.causal_wait_hours["op9_release"] = max(
             0.0, float(self.env.now) - float(head.OPTj)
@@ -3551,6 +3699,195 @@ class MFSCSimulation:
         self.env.process(self._deliver_order_from_op9(head, qty))
         self._remove_pending_backorder(head)
         return True
+
+    def set_cssu_allocation_action(
+        self,
+        allocation_a: float,
+        service_rule: str,
+        *,
+        activation_delay_hours: float = 24.0,
+    ) -> dict[str, Any]:
+        """Schedule a split-CSSU action without changing total capacity.
+
+        Dynamic actions take effect after the preregistered one-day latency.
+        Static frontier policies are configured in the constructor and require
+        no runtime mutation.
+        """
+        allocation_a = float(allocation_a)
+        if allocation_a not in ALLOCATION_LEVELS:
+            raise ValueError(f"allocation_a must be one of {ALLOCATION_LEVELS}")
+        if service_rule not in SERVICE_RULES:
+            raise ValueError(f"service_rule must be one of {SERVICE_RULES}")
+        if activation_delay_hours < 0:
+            raise ValueError("activation_delay_hours must be non-negative")
+        event = {
+            "requested_at": float(self.env.now),
+            "effective_at": float(self.env.now) + float(activation_delay_hours),
+            "allocation_a": allocation_a,
+            "service_rule": str(service_rule),
+            "previous_allocation_a": float(self.cssu_allocation_a),
+            "previous_service_rule": str(self.cssu_service_rule),
+        }
+        self._pending_cssu_action = event
+        self.cssu_action_events.append(dict(event, status="scheduled"))
+        return event
+
+    def _activate_due_cssu_action(self) -> None:
+        pending = self._pending_cssu_action
+        if pending is None or float(self.env.now) + 1e-9 < pending["effective_at"]:
+            return
+        self.cssu_allocation_a = float(pending["allocation_a"])
+        self.cssu_service_rule = str(pending["service_rule"])
+        self.cssu_action_events.append(
+            dict(pending, activated_at=float(self.env.now), status="activated")
+        )
+        self._pending_cssu_action = None
+
+    def _cssu_daily_capacity(self) -> float:
+        if self.cssu_daily_capacity_override is not None:
+            return float(self.cssu_daily_capacity_override)
+        # Event-keyed daily quantity tape: reproduces the selected thesis range
+        # without consuming a simulator RNG or drifting when policies induce a
+        # different event-call order.
+        q_min = int(round(float(self.params["op10_q_min"])))
+        q_max = int(round(float(self.params["op10_q_max"])))
+        day = int(float(self.env.now) // HOURS_PER_DAY)
+        digest = hashlib.sha256(
+            f"dra1-capacity-v1:{int(self.seed or 0)}:{day}".encode()
+        ).digest()
+        return float(q_min + int.from_bytes(digest[:8], "big") % (q_max - q_min + 1))
+
+    def _cssu_order_key(self, order: OrderRecord) -> tuple[Any, ...]:
+        if self.cssu_service_rule == "SPT_FULL":
+            return (
+                0 if order.contingent else 1,
+                float(order.remaining_qty),
+                float(order.OPTj),
+                int(order.j),
+            )
+        if self.cssu_service_rule == "FIFO_PARTIAL":
+            return (float(order.OPTj), int(order.j))
+        return (
+            0 if order.contingent else 1,
+            float(order.OPTj),
+            int(order.j),
+        )
+
+    def _dispatch_split_cssu_day(self, *, next_check_hours: float = 24.0):
+        """Dispatch one conserved daily capacity pool across CSSU A/B."""
+        self._activate_due_cssu_action()
+        if not self.pending_backorders:
+            return False
+        if self._is_down(9):
+            for order in self.pending_backorders:
+                self._record_causal_block(
+                    order,
+                    op_id=9,
+                    start_time=float(self.env.now),
+                    end_time=float(self.env.now) + float(next_check_hours),
+                    reason="operation_down",
+                )
+            return False
+
+        queues = {
+            cssu: sorted(
+                [
+                    order
+                    for order in self.pending_backorders
+                    if order.cssu_destination == cssu
+                    and float(order.remaining_qty) > 1e-9
+                ],
+                key=self._cssu_order_key,
+            )
+            for cssu in ("A", "B")
+        }
+        requested = {
+            cssu: sum(float(order.remaining_qty) for order in queues[cssu])
+            for cssu in ("A", "B")
+        }
+        available = min(float(self.rations_sb.level), self._cssu_daily_capacity())
+        if available <= 1e-9:
+            for order in self.pending_backorders:
+                self._record_active_upstream_stockout_causes(
+                    order, duration=float(next_check_hours)
+                )
+            return False
+        if self.cssu_service_rule == "SPT_FULL":
+            # A daily lane can carry roughly one thesis-sized full order.  The
+            # allocation share therefore controls weighted service frequency
+            # across days, not an impossible fractional order. Credits provide
+            # deterministic weighted-fair scheduling while unused opportunity
+            # remains reallocable to the destination that can use it.
+            self.cssu_capacity_credit["A"] += available * self.cssu_allocation_a
+            self.cssu_capacity_credit["B"] += available * (1 - self.cssu_allocation_a)
+            candidates = [
+                cssu
+                for cssu in ("A", "B")
+                if queues[cssu]
+                and float(queues[cssu][0].remaining_qty) <= available + 1e-9
+            ]
+            jointly_constrained = len(candidates) == 2
+            if candidates:
+                selected = max(
+                    candidates,
+                    key=lambda cssu: (self.cssu_capacity_credit[cssu], cssu == "A"),
+                )
+                selected_qty = float(queues[selected][0].remaining_qty)
+                budgets = {"A": 0.0, "B": 0.0}
+                budgets[selected] = selected_qty
+                self.cssu_capacity_credit[selected] -= selected_qty
+            else:
+                budgets = {"A": 0.0, "B": 0.0}
+        else:
+            allocation = allocate_shared_capacity(
+                stock=float(self.rations_sb.level),
+                daily_capacity=self._cssu_daily_capacity(),
+                allocation_a=self.cssu_allocation_a,
+                requested=requested,
+                reallocate_unused=True,
+            )
+            # V1-A audit: the split is live only when both destinations exhaust
+            # their nominal shares. Preserve this diagnostic for state sampling.
+            nominal_a = allocation.available * self.cssu_allocation_a
+            nominal_b = allocation.available - nominal_a
+            jointly_constrained = (
+                requested["A"] > nominal_a + 1e-9
+                and requested["B"] > nominal_b + 1e-9
+            )
+            budgets = {"A": allocation.dispatched_a, "B": allocation.dispatched_b}
+        if jointly_constrained:
+            self.cssu_allocation_live_epochs += 1
+        else:
+            self.cssu_allocation_moot_epochs += 1
+
+        dispatched_any = False
+        for cssu in ("A", "B"):
+            budget = float(budgets[cssu])
+            for order in queues[cssu]:
+                remaining = float(order.remaining_qty)
+                if budget <= 1e-9:
+                    break
+                if self.cssu_service_rule == "SPT_FULL" and remaining > budget + 1e-9:
+                    break
+                qty = min(remaining, budget)
+                yield self.rations_sb.get(qty)
+                self._record_material_availability("order_release", qty)
+                order.remaining_qty -= qty
+                order.in_flight_qty += qty
+                if order.op9_release_time is None:
+                    order.op9_release_time = float(self.env.now)
+                    order.causal_wait_hours["op9_release"] = max(
+                        0.0, float(self.env.now) - float(order.OPTj)
+                    )
+                self.cssu_dispatched[cssu] += qty
+                self.env.process(self._deliver_order_from_op9(order, qty))
+                budget -= qty
+                dispatched_any = True
+                if order.remaining_qty <= 1e-9:
+                    order.remaining_qty = 0.0
+                    self._remove_pending_backorder(order)
+            self._refresh_pending_backorder_qty()
+        return dispatched_any
 
     def _deliver_order_from_op9(self, order: OrderRecord, qty: float):
         """Move a reserved order through the physical Op10/Op12 service path.
@@ -3570,6 +3907,7 @@ class MFSCSimulation:
             if destination not in {"A", "B"}:
                 raise AssertionError("split_v1 order lacks a valid CSSU destination")
             self.cssu_in_transit[destination] += qty
+            self.cssu_inbound_in_transit[destination] += qty
         if self.downstream_transport_capacity_mode == "tandem_capacity_one":
             queue_start = float(self.env.now)
             with self.op10_convoy.request() as req:
@@ -3577,12 +3915,18 @@ class MFSCSimulation:
                 order.causal_wait_hours["op10_resource_queue"] = max(
                     0.0, float(self.env.now) - queue_start
                 )
-                yield from self._wait_order_for_operation(order, 10)
+                yield from self._wait_order_for_cssu_operation(order, 10)
                 yield self.env.timeout(self._pt("op10_pt"))
         else:
-            yield from self._wait_order_for_operation(order, 10)
+            yield from self._wait_order_for_cssu_operation(order, 10)
             yield self.env.timeout(self._pt("op10_pt"))
-        yield from self._wait_order_for_operation(order, 11)
+        if self.cssu_topology_mode == "split_v1":
+            self.cssu_inbound_in_transit[destination] -= qty
+            self.cssu_inventory[destination] += qty
+        yield from self._wait_order_for_cssu_operation(order, 11)
+        if self.cssu_topology_mode == "split_v1":
+            self.cssu_inventory[destination] -= qty
+            self.cssu_outbound_in_transit[destination] += qty
         if self.downstream_transport_capacity_mode == "tandem_capacity_one":
             queue_start = float(self.env.now)
             with self.op12_convoy.request() as req:
@@ -3590,20 +3934,26 @@ class MFSCSimulation:
                 order.causal_wait_hours["op12_resource_queue"] = max(
                     0.0, float(self.env.now) - queue_start
                 )
-                yield from self._wait_order_for_operation(order, 12)
+                yield from self._wait_order_for_cssu_operation(order, 12)
                 yield self.env.timeout(self._pt("op12_pt"))
         else:
-            yield from self._wait_order_for_operation(order, 12)
+            yield from self._wait_order_for_cssu_operation(order, 12)
             yield self.env.timeout(self._pt("op12_pt"))
         self._in_transit -= qty
         if self.cssu_topology_mode == "split_v1":
             self.cssu_in_transit[destination] -= qty
+            self.cssu_outbound_in_transit[destination] -= qty
             self.cssu_delivered[destination] += qty
+            self.cssu_delivery_events.append(
+                (float(self.env.now), destination, float(qty))
+            )
         self.total_theatre_inflow += qty
         self.total_delivered += qty
         self.total_order_fulfilled += qty
         self.delivery_events.append((self.env.now, qty))
-        self._finalize_pending_backorder(order)
+        order.in_flight_qty = max(0.0, float(order.in_flight_qty) - qty)
+        if order.remaining_qty <= 1e-9 and order.in_flight_qty <= 1e-9:
+            self._finalize_pending_backorder(order)
 
     def _wait_order_for_operation(self, order: OrderRecord, op_id: int):
         """Wait for an operation and retain the exact order-specific block."""
@@ -3624,19 +3974,47 @@ class MFSCSimulation:
                 reason="operation_down",
             )
 
+    def _wait_order_for_cssu_operation(self, order: OrderRecord, op_id: int):
+        """Wait on aggregate or destination-local downstream availability."""
+        if self.cssu_topology_mode != "split_v1":
+            yield from self._wait_order_for_operation(order, op_id)
+            return
+        start = float(self.env.now)
+        while self._is_cssu_path_down(op_id, order.cssu_destination):
+            yield self.env.timeout(1.0)
+        end = float(self.env.now)
+        if end > start:
+            key = f"op{int(op_id)}_{order.cssu_destination}_down"
+            order.causal_wait_hours[key] = (
+                order.causal_wait_hours.get(key, 0.0) + end - start
+            )
+            self._record_causal_block(
+                order,
+                op_id=op_id,
+                start_time=start,
+                end_time=end,
+                reason=f"cssu_{order.cssu_destination}_path_down",
+            )
+
     # =====================================================================
     # DEMAND SINK: Op13
     # =====================================================================
 
     def _place_demand_order(self, order: OrderRecord):
         if self.cssu_topology_mode == "split_v1":
-            if order.cssu_destination is None:
+            if order.contingent and self._contingent_cssu_destination_pending:
+                order.cssu_destination = self._contingent_cssu_destination_pending
+                self._contingent_cssu_destination_pending = None
+            elif order.cssu_destination is None:
                 order.cssu_destination = stable_cssu_destination(
                     simulation_seed=int(self.seed or 0), order_id=int(order.j)
                 )
             if order.cssu_destination not in {"A", "B"}:
                 raise ValueError("split_v1 orders require CSSU destination A or B")
             self.cssu_demanded[order.cssu_destination] += float(order.quantity)
+            self.cssu_demand_events.append(
+                (float(self.env.now), order.cssu_destination, float(order.quantity))
+            )
         for episode_id in order.causal_r24_event_ids:
             episode = self._r24_causal_episodes.get(episode_id)
             if episode is not None and episode.get("assigned_order_j") is None:
@@ -4269,13 +4647,37 @@ class MFSCSimulation:
     def _risk_R22_event(self, beta: float, loc_ops: list[int]):
         rng = self._risk_rng_for("R22")
         target = int(rng.choice(loc_ops))
+        target_cssu = (
+            str(rng.choice(("A", "B")))
+            if self.cssu_topology_mode == "split_v1" and target in {10, 12}
+            else None
+        )
         start = self.env.now
-        self._take_down(target)
+        if target_cssu is None:
+            self._take_down(target)
+        else:
+            self._take_down_cssu(target, target_cssu)
         recovery = max(1, rng.exponential(beta))
         yield self.env.timeout(recovery)
-        self._bring_up(target)
-        event = RiskEvent("R22", start, self.env.now, recovery, [target])
+        if target_cssu is None:
+            self._bring_up(target)
+        else:
+            self._bring_up_cssu(target, target_cssu)
+        event = RiskEvent(
+            "R22", start, self.env.now, recovery, [target],
+            affected_cssu=target_cssu,
+        )
         self.risk_events.append(event)
+        if target_cssu is not None:
+            self.cssu_local_risk_events.append(
+                {
+                    "risk_id": "R22",
+                    "op_id": target,
+                    "cssu": target_cssu,
+                    "start_time": float(start),
+                    "end_time": float(self.env.now),
+                }
+            )
         self._register_upstream_scarcity_debt(event)
 
     def _risk_R23(self):
@@ -4299,13 +4701,37 @@ class MFSCSimulation:
     def _risk_R23_event(self, beta: float):
         rng = self._risk_rng_for("R23")
         start = self.env.now
-        self._take_down(11)
+        target_cssu = (
+            str(rng.choice(("A", "B")))
+            if self.cssu_topology_mode == "split_v1"
+            else None
+        )
+        if target_cssu is None:
+            self._take_down(11)
+        else:
+            self._take_down_cssu(11, target_cssu)
         recovery = max(1, rng.exponential(beta))
         yield self.env.timeout(recovery)
-        self._bring_up(11)
+        if target_cssu is None:
+            self._bring_up(11)
+        else:
+            self._bring_up_cssu(11, target_cssu)
         self.risk_events.append(
-            RiskEvent("R23", start, self.env.now, recovery, [11])
+            RiskEvent(
+                "R23", start, self.env.now, recovery, [11],
+                affected_cssu=target_cssu,
+            )
         )
+        if target_cssu is not None:
+            self.cssu_local_risk_events.append(
+                {
+                    "risk_id": "R23",
+                    "op_id": 11,
+                    "cssu": target_cssu,
+                    "start_time": float(start),
+                    "end_time": float(self.env.now),
+                }
+            )
 
     def _risk_R24(self):
         while True:
@@ -4319,7 +4745,15 @@ class MFSCSimulation:
 
     def _apply_risk_R24_event(self) -> None:
         surge_lo, surge_hi = self._get_risk_surge()
-        surge = self._risk_rng_for("R24").integers(surge_lo, surge_hi + 1)
+        r24_rng = self._risk_rng_for("R24")
+        surge = r24_rng.integers(surge_lo, surge_hi + 1)
+        target_cssu = (
+            str(r24_rng.choice(("A", "B")))
+            if self.cssu_topology_mode == "split_v1"
+            else None
+        )
+        if target_cssu is not None:
+            self._contingent_cssu_destination_pending = target_cssu
         pending_before = float(self._contingent_demand_pending)
         self._contingent_demand_pending += surge
         # Cap accumulated contingent demand to prevent unbounded obs[14]
@@ -4352,6 +4786,7 @@ class MFSCSimulation:
             f"+{surge}",
             magnitude=float(surge),
             unit="rations",
+            affected_cssu=target_cssu,
         )
         self.risk_events.append(event)
         self._add_ret_quantity_risk(event)

@@ -24,6 +24,19 @@
     "reallocate_to_other_destination": true,
     "rule": "largest unmet quantity first"
   },
+  "liveness_boundary": {
+    "allocation_is_live_when": [
+      "both destinations compete for the shared capacity pool",
+      "post-disruption backlog is being cleared with both paths available",
+      "localized R24 demand creates imbalance while both paths are available"
+    ],
+    "allocation_is_moot_when": "only one destination can use capacity",
+    "required_sampling_strata": [
+      "joint_scarcity",
+      "post_hit_recovery",
+      "localized_r24_both_paths_up"
+    ]
+  },
   "forbidden": [
     "dropping or evicting demand",
     "increasing total downstream capacity through the allocation action",
@@ -32,9 +45,11 @@
   ],
   "scientific_state": {
     "destination_flow_integrated_with_des": true,
-    "allocation_action_integrated_with_des": false,
+    "allocation_action_integrated_with_des": true,
+    "localized_r22_r23_integrated_with_des": true,
+    "deployable_observation_mapping_integrated": true,
     "static_frontier_complete": false,
     "ppo_authorized": false,
-    "verdict": "PENDING_ALLOCATION_ACTUATOR"
+    "verdict": "PENDING_STATIC_FRONTIER_AND_BRANCHING"
   }
 }
