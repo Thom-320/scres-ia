@@ -1,0 +1,207 @@
+{
+  "calibration_seed_start": 990001,
+  "cell": {
+    "cell_id": "G1-central",
+    "lead_weeks": 1,
+    "persistence": "short",
+    "r22_weekly_prob": 0.05,
+    "signal_q": 0.75,
+    "surge_mult": 1.5
+  },
+  "gate": "PROGRAM_G_G1_LADDER_CALIB_HOLDOUT",
+  "holdout_seed_start": 1000001,
+  "interpretation": "G1_SIGNAL_CONVERTS_SPATIAL_HEADROOM_OOS",
+  "ladder": {
+    "Base": {
+      "H_PI_ci95": [
+        767.43,
+        600.6875,
+        942.3113749999999
+      ],
+      "H_obs_ci95": [
+        78.995,
+        -154.341625,
+        309.84324999999995
+      ],
+      "arm": "Base",
+      "best_fixed_calendar_frozen_on_calib": [
+        "B",
+        "A",
+        "B",
+        "A"
+      ],
+      "convoy_missions_obs_vs_static": [
+        12.0,
+        12.0
+      ],
+      "eta": 0.10293446959331795,
+      "persistent_tempo": false,
+      "service_loss_mean": {
+        "best_observable": 25828.575,
+        "best_static": 25907.57,
+        "oracle": 25140.14,
+        "wrong_cssu_placebo": 27276.665
+      },
+      "signal_beats_wrong_cssu_ci95": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "uses_signal": false
+    },
+    "T": {
+      "H_PI_ci95": [
+        766.45,
+        578.49675,
+        955.6549999999999
+      ],
+      "H_obs_ci95": [
+        522.495,
+        349.670875,
+        706.538875
+      ],
+      "arm": "T",
+      "best_fixed_calendar_frozen_on_calib": [
+        "A",
+        "B",
+        "A",
+        "B"
+      ],
+      "convoy_missions_obs_vs_static": [
+        12.0,
+        12.0
+      ],
+      "eta": 0.6817078739643813,
+      "persistent_tempo": true,
+      "service_loss_mean": {
+        "best_observable": 24838.97,
+        "best_static": 25361.465,
+        "oracle": 24595.015,
+        "wrong_cssu_placebo": 27498.63
+      },
+      "signal_beats_wrong_cssu_ci95": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "uses_signal": false
+    },
+    "TR": {
+      "H_PI_ci95": [
+        766.45,
+        578.49675,
+        955.6549999999999
+      ],
+      "H_obs_ci95": [
+        522.495,
+        349.670875,
+        706.538875
+      ],
+      "arm": "TR",
+      "best_fixed_calendar_frozen_on_calib": [
+        "A",
+        "B",
+        "A",
+        "B"
+      ],
+      "convoy_missions_obs_vs_static": [
+        11.815,
+        11.835
+      ],
+      "eta": 0.6817078739643813,
+      "persistent_tempo": true,
+      "service_loss_mean": {
+        "best_observable": 24838.97,
+        "best_static": 25361.465,
+        "oracle": 24595.015,
+        "wrong_cssu_placebo": 27498.63
+      },
+      "signal_beats_wrong_cssu_ci95": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "uses_signal": false
+    },
+    "TRS": {
+      "H_PI_ci95": [
+        766.45,
+        578.49675,
+        955.6549999999999
+      ],
+      "H_obs_ci95": [
+        531.85,
+        357.265,
+        716.2006249999998
+      ],
+      "arm": "TRS",
+      "best_fixed_calendar_frozen_on_calib": [
+        "A",
+        "B",
+        "A",
+        "B"
+      ],
+      "convoy_missions_obs_vs_static": [
+        11.815,
+        11.835
+      ],
+      "eta": 0.6939134972927131,
+      "persistent_tempo": true,
+      "service_loss_mean": {
+        "best_observable": 24829.615,
+        "best_static": 25361.465,
+        "oracle": 24595.015,
+        "wrong_cssu_placebo": 27498.63
+      },
+      "signal_beats_wrong_cssu_ci95": [
+        2659.66,
+        1973.134,
+        3372.7811249999977
+      ],
+      "uses_signal": true
+    },
+    "TS": {
+      "H_PI_ci95": [
+        766.45,
+        578.49675,
+        955.6549999999999
+      ],
+      "H_obs_ci95": [
+        531.85,
+        357.265,
+        716.2006249999998
+      ],
+      "arm": "TS",
+      "best_fixed_calendar_frozen_on_calib": [
+        "A",
+        "B",
+        "A",
+        "B"
+      ],
+      "convoy_missions_obs_vs_static": [
+        12.0,
+        12.0
+      ],
+      "eta": 0.6939134972927131,
+      "persistent_tempo": true,
+      "service_loss_mean": {
+        "best_observable": 24829.615,
+        "best_static": 25361.465,
+        "oracle": 24595.015,
+        "wrong_cssu_placebo": 27498.63
+      },
+      "signal_beats_wrong_cssu_ci95": [
+        2659.66,
+        1973.134,
+        3372.7811249999977
+      ],
+      "uses_signal": true
+    }
+  },
+  "n_calibration": 200,
+  "n_holdout": 200,
+  "note": "Honest OOS: best static frozen on calibration, all metrics on disjoint holdout. Service-loss (unmet rations) is a disclosed Program-G proxy, not ret_excel. IN-SAMPLE central cell only; the 24-cell screen + >=2 adjacent cells still gate a learner.",
+  "ppo_trained": false,
+  "virgin_tapes_opened": 0,
+  "weeks": 4
+}
