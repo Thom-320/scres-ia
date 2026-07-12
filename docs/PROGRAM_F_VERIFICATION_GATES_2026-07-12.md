@@ -86,6 +86,41 @@ open item; everything else is endorsed.
 - **Prelearner-before-learner + tape discipline.** No learner trained, and no virgin (960001+) tape
   opened, until every §7 promotion gate passes and weights/tree/heuristic/mixture/analysis frozen.
 
+## D. RESOLUTION of §B (PI decision 2026-07-12): phase-diagram screen path
+
+The PI chose **the phase-diagram screen** over Garrido face-validation. This resolves §B by
+option (2): g_r / signal reliability / dwell are no longer a single hand-picked cell but **swept
+axes**, and the confirmatory cell is selected by a frozen learnability criterion. A screen is only
+honest if its selection rule and multiplicity are frozen BEFORE it runs — otherwise "screen N cells,
+keep the one that passes" is exactly the p-hacking Program F exists to avoid. Frozen here:
+
+- **Axes + ranges frozen before the screen (Codex to propose, verifier to freeze):** mitigation
+  efficacy g_r (protection/condition/issue factors), signal correct-class probability, context
+  persistence (dwell), budget tightness (tokens), risk amplitude (within thesis Table 6.12 anchors),
+  switching/commitment cost. Exogenous threat rates/magnitudes stay at the `b1db8d1` thesis anchors.
+- **Design:** Morris or Latin-hypercube / fractional-factorial over the axes; each cell evaluated on
+  a dedicated **SCREEN tape universe, disjoint from calibration/holdout/virgin** (new seed block, NOT
+  940001+/950001+/960001+). The screen NEVER touches virgin.
+- **Selection rule (frozen, NOT max-ΔReT):** the confirmatory cell = **the lowest-amplitude
+  realistic cell that pre-satisfies liveness + action-diversity + oracle-headroom + observable-
+  convertibility** on the screen tapes. Ties → lowest risk amplitude, then lowest efficacy magnitude.
+  Selecting the ΔReT-maximizing cell is a forbidden rescue.
+- **Fresh-tape confirmation:** once selected, the cell's §7 promotion gate is evaluated on the
+  SEPARATE calibration (940001+) and holdout (950001+) tapes — never on the screen tapes that chose
+  it. Virgin (960001+) opens only after promotion passes.
+- **Multiplicity honesty:** report how many cells were screened, the full screen surface (the phase
+  diagram is itself a deliverable), and that selection used the frozen rule. If NO realistic cell
+  pre-satisfies the four conditions, emit `STOP_PROGRAM_F_SCREEN` → 7th boundary result (phase
+  diagram of boundary conditions), no confirmatory run.
+- The service MCID stays 5% unless Garrido fixes another value before the screen (dictamen option).
+
+Verifier will audit: axes/ranges frozen before screen tapes open; screen tapes disjoint from
+calib/holdout/virgin; selection matched the frozen learnability rule (not ΔReT-max); confirmatory
+cell re-evaluated on fresh calib/holdout; multiplicity reported. §C machine checks still apply to
+the built physics.
+
+## E. Standing
+
 Standing: DRA-1, DRA-2, DRA-2b, Program E stay closed. Program F is ADDITIVE — the manuscript can
 already be written on the six boundary results + DRA-2 near-miss + Program E null; Program F is a
 pre-committed stronger-result attempt whose failure mode is an honest phase diagram (a 7th boundary
