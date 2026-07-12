@@ -47,25 +47,68 @@ def advance_including(sim: MFSCSimulation, target: float) -> None:
         sim.env.run(until=target)
 
 
-def _context_schedule(rng: np.random.Generator, first: str, weeks: int) -> list[str]:
+def actions_for_budget(tokens: int) -> tuple[tuple[int, int, int], ...]:
+    return tuple(
+        (m, t, r) for m in range(3) for t in range(3) for r in range(3)
+        if m + t + r == int(tokens)
+    )
+
+
+def default_profile() -> dict[str, Any]:
+    return {
+        "cell_id": "program_f_primary", "efficacy_level": "base",
+        "condition_reduction_per_token": 0.20,
+        "r11_factors": [1.0, 0.75, 0.50],
+        "transport_factors": [1.0, 0.65, 0.40],
+        "reserve_issue": [0.0, 2500.0, 5000.0],
+        "signal_accuracy": 0.75, "dwell_weeks": [4, 8],
+        "budget_tokens": 2,
+        "risk_amplitude": "dominant_increased_background_current",
+        "minimum_commitment_weeks": 1,
+    }
+
+
+def profile_for_cell(cell: dict[str, Any]) -> dict[str, Any]:
+    idx = {"low": 0, "base": 1, "high": 2}[cell["efficacy_level"]]
+    return {
+        "cell_id": cell["cell_id"], "efficacy_level": cell["efficacy_level"],
+        "condition_reduction_per_token": [0.15, 0.20, 0.25][idx],
+        "r11_factors": [[1.0, 0.85, 0.65], [1.0, 0.75, 0.50], [1.0, 0.65, 0.40]][idx],
+        "transport_factors": [[1.0, 0.75, 0.55], [1.0, 0.65, 0.40], [1.0, 0.55, 0.30]][idx],
+        "reserve_issue": [[0.0, 2000.0, 4000.0], [0.0, 2500.0, 5000.0], [0.0, 3000.0, 6000.0]][idx],
+        "signal_accuracy": float(cell["signal_accuracy"]),
+        "dwell_weeks": list(map(int, cell["context_dwell_weeks"])),
+        "budget_tokens": int(cell["budget_tokens"]),
+        "risk_amplitude": str(cell["risk_amplitude"]),
+        "minimum_commitment_weeks": int(cell["minimum_commitment_weeks"]),
+    }
+
+
+def _context_schedule(
+    rng: np.random.Generator, first: str, weeks: int, dwell_weeks: tuple[int, int]
+) -> list[str]:
     result: list[str] = []
     current = first
     while len(result) < weeks:
-        dwell = int(rng.integers(4, 9))
+        dwell = int(rng.integers(int(dwell_weeks[0]), int(dwell_weeks[1]) + 1))
         result.extend([current] * min(dwell, weeks - len(result)))
         current = str(rng.choice([value for value in CONTEXTS if value != current]))
     return result
 
 
-def materialize_tape(seed: int, first_context: str, split: str, weeks: int = 32) -> dict[str, Any]:
+def materialize_tape(
+    seed: int, first_context: str, split: str, weeks: int = 32,
+    profile: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     if first_context not in CONTEXTS:
         raise ValueError(first_context)
+    profile = dict(default_profile() if profile is None else profile)
     rng = np.random.default_rng(np.random.SeedSequence([seed, 0xF20260712]))
-    contexts = _context_schedule(rng, first_context, weeks)
+    contexts = _context_schedule(rng, first_context, weeks, tuple(profile["dwell_weeks"]))
     signals = []
     for week in range(weeks):
         target = contexts[min(week + 1, weeks - 1)]
-        if float(rng.random()) < 0.75:
+        if float(rng.random()) < float(profile["signal_accuracy"]):
             predicted = target
         else:
             predicted = str(rng.choice([value for value in CONTEXTS if value != target]))
@@ -84,7 +127,11 @@ def materialize_tape(seed: int, first_context: str, split: str, weeks: int = 32)
     event_id = 0
     for week, context in enumerate(contexts):
         for risk_id in ("R11", "R22", "R23", "R24"):
-            rate = rates[risk_id][0 if context == dominant[risk_id] else 1]
+            use_dominant = (
+                profile["risk_amplitude"] == "dominant_increased_background_current"
+                and context == dominant[risk_id]
+            )
+            rate = rates[risk_id][0 if use_dominant else 1]
             for _ in range(int(rng.poisson(rate))):
                 event_id += 1
                 onset = week * HOURS_PER_WEEK + float(rng.uniform(1.0, HOURS_PER_WEEK - 1.0))
@@ -113,6 +160,7 @@ def materialize_tape(seed: int, first_context: str, split: str, weeks: int = 32)
         "tape_id": f"program-f-{split}-{first_context}-{seed}", "split": split,
         "seed": int(seed), "weeks": int(weeks), "first_context": first_context,
         "context_schedule": contexts, "signals": signals, "base_events": events,
+        "profile": profile,
     }
     tape["threat_sha256"] = digest({
         "context_schedule": contexts, "signals": signals, "base_events": events,
@@ -135,14 +183,19 @@ class ConstantPortfolio:
 class ProgramFController:
     def __init__(self, sim: MFSCSimulation, tape: dict[str, Any], start: float):
         self.sim, self.tape, self.start = sim, tape, float(start)
-        self.active_action = INITIAL_ACTION
-        self.pending_action = INITIAL_ACTION
+        self.profile = dict(tape.get("profile") or default_profile())
+        budget = int(self.profile["budget_tokens"])
+        initial = {1: (1, 0, 0), 2: INITIAL_ACTION, 3: (1, 1, 1)}[budget]
+        self.active_action = initial
+        self.pending_action = initial
         self.condition = 0.25
         self.current_week = 0
         self.action_events: list[dict[str, Any]] = []
         self.damage_events: list[dict[str, Any]] = []
         self.maintenance_downtime_hours = 0.0
         self.token_hours = {"M": 0.0, "T": 0.0, "R": 0.0}
+        self.last_switch_week = -int(self.profile["minimum_commitment_weeks"])
+        self.rejected_switches = 0
 
     def observation(self) -> dict[str, float]:
         week = min(self.current_week, int(self.tape["weeks"]) - 1)
@@ -170,19 +223,31 @@ class ProgramFController:
 
     def request(self, action: Iterable[int]) -> None:
         value = tuple(int(item) for item in action)
-        if value not in ACTIONS:
+        if value not in actions_for_budget(int(self.profile["budget_tokens"])):
             raise ValueError(f"Invalid Program F allocation: {value}")
+        if (
+            value != self.active_action
+            and self.current_week - self.last_switch_week
+            < int(self.profile["minimum_commitment_weeks"])
+        ):
+            self.rejected_switches += 1
+            return
         self.pending_action = value
 
     def activate_week(self, week: int) -> None:
         self.current_week = int(week)
+        previous = self.active_action
         self.active_action = self.pending_action
-        if sum(self.active_action) != 2:
+        if self.active_action != previous:
+            self.last_switch_week = int(week)
+        if sum(self.active_action) != int(self.profile["budget_tokens"]):
             raise AssertionError("Program F budget invariant violated")
         context = self.tape["context_schedule"][week]
         wear = 0.12 if context == "equipment_pressure" else 0.05
         self.condition = float(np.clip(
-            self.condition + wear - 0.20 * self.active_action[0], 0.0, 1.0
+            self.condition + wear
+            - float(self.profile["condition_reduction_per_token"]) * self.active_action[0],
+            0.0, 1.0
         ))
         maintenance_hours = (0.0, 12.0, 24.0)[self.active_action[0]]
         if maintenance_hours > 0.0:
@@ -215,15 +280,15 @@ class ProgramFController:
         base = float(event["base_duration_hours"])
         realized = base
         if risk_id == "R11":
-            factor = (1.0, 0.75, 0.50)[self.active_action[0]]
+            factor = self.profile["r11_factors"][self.active_action[0]]
             realized = max(1.0, base * (1.0 + self.condition) * factor)
         elif risk_id in {"R22", "R23"}:
-            factor = (1.0, 0.65, 0.40)[self.active_action[1]]
+            factor = self.profile["transport_factors"][self.active_action[1]]
             realized = max(1.0, base * factor)
         start = float(self.sim.env.now)
         if risk_id == "R24":
             surge = float(event["magnitude"])
-            quota = (0.0, 2500.0, 5000.0)[self.active_action[2]]
+            quota = self.profile["reserve_issue"][self.active_action[2]]
             self.sim.set_program_f_r24_issue_quota(min(quota, surge))
             self.sim._contingent_demand_pending = min(
                 self.sim._contingent_demand_pending + surge, 5 * 2600
@@ -289,3 +354,37 @@ def run_policy(tape: dict[str, Any], policy: Callable[[dict[str, float]], Iterab
         "action_events": controller.action_events, "damage_events": controller.damage_events,
     })
     return metrics
+
+
+def branch_from_week(
+    tape: dict[str, Any], *, prefix_action: tuple[int, int, int],
+    state_week: int, branch_action: tuple[int, int, int], horizon_weeks: int,
+) -> dict[str, Any]:
+    """Exact replay branch: common prefix, then hold one allocation for H weeks."""
+    sim, controller, start = make_sim(tape)
+    state_week = int(state_week)
+    for week in range(state_week):
+        controller.activate_week(week)
+        controller.request(prefix_action)
+        advance_including(sim, start + (week + 1) * HOURS_PER_WEEK)
+    controller.activate_week(state_week)
+    observation = controller.observation()
+    treatment_start = float(sim.env.now)
+    for offset in range(int(horizon_weeks)):
+        week = state_week + offset
+        if offset > 0:
+            controller.activate_week(week)
+        controller.request(branch_action)
+        advance_including(sim, treatment_start + (offset + 1) * HOURS_PER_WEEK)
+    metrics = compute_episode_metrics(sim, treatment_start=treatment_start)
+    ledger = sim.flow_ledger()
+    return {
+        "observation": observation,
+        "ret": float(metrics["ret_excel"]),
+        "service": float(metrics["service_loss_auc_ration_hours"]),
+        "lost": float(metrics["n_lost"]),
+        "mass_residual": max(abs(float(ledger["raw_residual"])), abs(float(ledger["ration_residual"]))),
+        "threat_sha256": tape["threat_sha256"],
+        "state_week": state_week, "horizon_weeks": int(horizon_weeks),
+        "prefix_action": list(prefix_action), "branch_action": list(branch_action),
+    }
