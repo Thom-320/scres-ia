@@ -1,0 +1,106 @@
+{
+  "abab": [
+    "A",
+    "B",
+    "A",
+    "B"
+  ],
+  "calibration_seed_start": 1020001,
+  "cd_exponents_frozen_G24": {
+    "a": 0.024,
+    "b": 0.026,
+    "c": 0.04,
+    "d": 0.06,
+    "n": 0.1771
+  },
+  "cover_minus_ABAB_ci95": {
+    "attended": [
+      -3.425,
+      -4.29,
+      -2.6
+    ],
+    "cd_sigmoid": [
+      0.004261628835819852,
+      0.0032762488211434578,
+      0.005327620194558982
+    ],
+    "cd_spatial": [
+      0.04599226746298664,
+      0.03565997164507454,
+      0.05676693405675894
+    ],
+    "ret_excel_full": [
+      -0.03167210151964331,
+      -0.040207670353865806,
+      -0.02366822130349975
+    ],
+    "service_loss_lower_better": [
+      3625.505,
+      2805.57025,
+      4485.138750000001
+    ],
+    "worst_cssu_fill": [
+      -0.173262241113646,
+      -0.2133743825817509,
+      -0.13646179169672787
+    ]
+  },
+  "gate": "PROGRAM_G_METRIC_TRIANGULATION",
+  "interpretation": "METRIC_INDUCED_POLICY_REVERSAL_CONFIRMED",
+  "kind": "exploratory_metric_sensitivity",
+  "means": {
+    "ABAB_static": {
+      "attended": 42.685,
+      "cd_sigmoid": 0.5082414046101887,
+      "cd_spatial": 1.1261633618357763,
+      "ret_excel_full": 0.540683528956105,
+      "service_loss_lower_better": 8535.635,
+      "worst_cssu_fill": 0.8307313319100796
+    },
+    "cover": {
+      "attended": 39.26,
+      "cd_sigmoid": 0.5125030334460086,
+      "cd_spatial": 1.172155629298763,
+      "ret_excel_full": 0.5090114274364618,
+      "service_loss_lower_better": 12161.14,
+      "worst_cssu_fill": 0.6574690907964336
+    },
+    "mpc": {
+      "attended": 40.2,
+      "cd_sigmoid": 0.5107498267621583,
+      "cd_spatial": 1.1562167221105442,
+      "ret_excel_full": 0.5158627192574908,
+      "service_loss_lower_better": 10912.73,
+      "worst_cssu_fill": 0.7048118836213949
+    },
+    "retexcel_tree": {
+      "attended": 41.95,
+      "cd_sigmoid": 0.5117762097314213,
+      "cd_spatial": 1.1260066583746238,
+      "ret_excel_full": 0.5256041987341326,
+      "service_loss_lower_better": 7982.09,
+      "worst_cssu_fill": 0.7820602342500651
+    },
+    "service_tree": {
+      "attended": 39.26,
+      "cd_sigmoid": 0.5125030334460086,
+      "cd_spatial": 1.172155629298763,
+      "ret_excel_full": 0.5090114274364618,
+      "service_loss_lower_better": 12161.14,
+      "worst_cssu_fill": 0.6574690907964336
+    }
+  },
+  "n_calibration": 160,
+  "n_test": 200,
+  "note": "Cobb-Douglas = SECONDARY construct index (repo ReT_garrido2024 exponents); does NOT replace ret_excel or rescue G5. phi(spare capacity)/kappa(cost) held constant in v1.2 (S1 fixed, resources matched) -> index driven by zeta/epsilon/tau. Exploratory, not virgin-confirmatory. Stylized order adapter, not full DES.",
+  "phi_kappa_held_constant_disclosed": true,
+  "test_seed_start": 1030001,
+  "winner_per_metric": {
+    "attended": "ABAB_static",
+    "cd_sigmoid": "cover",
+    "cd_spatial": "cover",
+    "ret_excel_full": "ABAB_static",
+    "service_loss_lower_better": "retexcel_tree",
+    "worst_cssu_fill": "ABAB_static"
+  }
+}

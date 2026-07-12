@@ -1,4 +1,23 @@
-# Program G — ret_excel confirmation REVERSES the G5 win — 2026-07-12
+# Program G — ret_excel reanalysis REVERSES the G5 win — 2026-07-12
+
+> **SCOPE CORRECTION (external review 2026-07-12 — owned).** My original framing overstated four
+> things; the corrected labels:
+> 1. **NOT a full-DES port.** This is *the project's real order-level Excel FORMULA applied to a
+>    disclosed, stylized Program G order adapter* (`simulate_orders`), NOT Program G running inside the
+>    Op1–Op13 DES. Safe wording: "using the project's order-level Excel formula on a disclosed Program G
+>    order adapter, blind alternation outperformed the tested observable spatial policies. This does not
+>    yet constitute a full-DES validation of all ReT disruption/recovery branches."
+> 2. **NOT virgin-confirmatory.** Tapes 1010001+ were already opened by G5 under service-loss, so this is
+>    an **exploratory metric reanalysis (metric-sensitivity)**, not preregistered virgin confirmation.
+> 3. **Full ledger is a guardrailed EXTENSION** — call it `ret_excel_full_ledger_guardrailed` (unfulfilled
+>    scored 0), not "the original ret_excel workbook."
+> 4. **Full ReT risk branches (autotomy/recovery/non-recovery/attribution) NOT exercised** — R22 off →
+>    mostly the no-risk fill-rate branch; orders can be placed and attended in the same timestamp, which
+>    does not reproduce full-DES fulfilment latencies.
+> The quantitative finding (headroom exists, observable conversion fails, ranking is metric-dependent)
+> stands under these corrected labels. See `docs/PROGRAM_G_METRIC_TRIANGULATION_2026-07-12.md` for the
+> honest follow-up (new tapes, one trajectory / many lenses, incl. the repo's Cobb-Douglas index).
+
 
 Status: **Under the project's PRIMARY metric `ret_excel`, the G1–G5 observable adaptive win does NOT
 hold. Program G joins the boundary results: clairvoyant headroom exists, but no observable policy

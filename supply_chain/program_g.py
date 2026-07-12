@@ -308,6 +308,74 @@ def simulate_orders(tape: Tape, actions: Sequence[str], arm: str = "TRS") -> lis
     return orders
 
 
+# Frozen Garrido-2024 Cobb-Douglas exponents (supply_chain/env_experimental_shifts.py)
+G24 = {"a_zeta": 0.0240, "b_epsilon": 0.0260, "c_phi": 0.0400, "d_tau": 0.0600, "n_kappa": 0.1771}
+_ROUTINE_WK = 2600.0 / 2 * DEMAND_DAYS
+
+
+def _sigmoid(z):
+    return 1.0 / (1.0 + np.exp(-z))
+
+
+def metrics_all(tape: Tape, actions: Sequence[str], arm: str = "TRS") -> dict:
+    """One trajectory, many lenses. Runs the daily order adapter once and returns
+    service-loss, ret_excel inputs, and the repo's Cobb-Douglas index (frozen G24
+    exponents) plus a spatial geometric-mean variant. phi (spare capacity) and
+    kappa (cost) are held CONSTANT in v1.2 (S1 fixed, resources matched) -- disclosed;
+    so the index is driven by zeta (inventory), epsilon (backorders), tau (fulfil time)."""
+    from .supply_chain import OrderRecord
+    from .config import LEAD_TIME_PROMISE
+    inv = [0.0, 0.0]; sb = float(SB_INITIAL); queues = [[], []]; orders = []; j = 0
+    inv_time = 0.0; bo_units_time = [0.0, 0.0]; days = 0
+    for w in range(tape.weeks):
+        a = actions[w] if w < len(actions) else "HOLD"
+        pri = 0 if a == "A" else 1 if a == "B" else None
+        daily = [tape.demand[w, 0] / DEMAND_DAYS, tape.demand[w, 1] / DEMAND_DAYS]
+        for dow in range(DEMAND_DAYS):
+            hour = (w * DEMAND_DAYS + dow) * 24.0; sb += S1_DAILY
+            if pri is not None and dow in (1, 3, 5):
+                d = min(CONVOY_LOAD, sb, CSSU_CAP - inv[pri]); inv[pri] += d; sb -= d
+            for i in range(2):
+                j += 1; o = OrderRecord(j=j, OPTj=hour, quantity=daily[i],
+                    LTj=float(LEAD_TIME_PROMISE), remaining_qty=daily[i])
+                queues[i].append(o); orders.append(o)
+            for i in range(2):
+                for o in queues[i]:
+                    if o.remaining_qty <= 1e-9 or inv[i] <= 0:
+                        continue
+                    take = min(inv[i], o.remaining_qty); inv[i] -= take; o.remaining_qty -= take
+                    if o.remaining_qty <= 1e-9 and o.OATj is None:
+                        o.OATj = hour; o.CTj = hour - o.OPTj; o.backorder = bool(o.CTj > o.LTj)
+                bo_units_time[i] += sum(o.remaining_qty for o in queues[i])
+                queues[i] = [o for o in queues[i] if o.remaining_qty > 1e-9]
+            inv_time += inv[0] + inv[1] + sb; days += 1
+    # per-CSSU aggregates
+    attended = [[o for o in orders if o.OATj is not None and (o.j % 2 == (1 - i))] for i in range(2)]
+    ct = [np.mean([o.CTj for o in attended[i]]) if attended[i] else float(LEAD_TIME_PROMISE) for i in range(2)]
+    unmet = [sum(o.remaining_qty for o in orders if o.OATj is None and (o.j % 2 == (1 - i))) for i in range(2)]
+    demand_i = [tape.demand[:, i].sum() for i in range(2)]
+    zeta = inv_time / max(days, 1) / _ROUTINE_WK
+    eps = [bo_units_time[i] / max(days, 1) / _ROUTINE_WK + 1e-3 for i in range(2)]
+    tau = [max(ct[i], 1.0) / float(LEAD_TIME_PROMISE) for i in range(2)]
+    phi, kappa = 1.0, 1.0                                  # held constant (disclosed)
+    # paper-faithful aggregate CD
+    eps_agg = float(np.mean(eps)); tau_agg = float(np.mean(tau))
+    Z = (G24["a_zeta"] * np.log(zeta + 1e-3) - G24["b_epsilon"] * np.log(eps_agg)
+         + G24["c_phi"] * np.log(phi) - G24["d_tau"] * np.log(tau_agg) - G24["n_kappa"] * np.log(kappa))
+    # spatial geometric mean (penalizes abandoning one CSSU)
+    zeta_i = [zeta, zeta]  # inventory pooled at SB; use aggregate for both (disclosed)
+    R_i = [(zeta_i[i] + 1e-3) ** G24["a_zeta"] * eps[i] ** (-G24["b_epsilon"]) * tau[i] ** (-G24["d_tau"]) for i in range(2)]
+    R_spatial = float(np.sqrt(R_i[0] * R_i[1]) * phi ** G24["c_phi"] * kappa ** (-G24["n_kappa"]))
+    return {
+        "service_loss": float(sum(unmet)),
+        "orders": orders,
+        "attended_orders": int(sum(o.OATj is not None for o in orders)),
+        "worst_cssu_fill": float(min(1.0 - unmet[i] / max(demand_i[i], 1.0) for i in range(2))),
+        "cd_raw_Z": float(Z), "cd_sigmoid": float(_sigmoid(Z)), "cd_spatial": R_spatial,
+        "zeta": float(zeta), "epsilon": eps_agg, "tau": tau_agg,
+    }
+
+
 def signal_hysteresis_policy(tape: Tape) -> tuple[str, ...]:
     """Observable: send convoy to the CSSU whose signal fires; tie/none -> lower inventory."""
     acts = []
