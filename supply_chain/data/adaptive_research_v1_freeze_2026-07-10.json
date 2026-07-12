@@ -1,0 +1,25 @@
+{
+  "contract_id": "adaptive_research_v1",
+  "status": "authorized_rebuild_required",
+  "new_rl_training_allowed": true,
+  "frozen_checkpoint_evaluation_allowed": true,
+  "reason": "Authorized under garrido_proxy_v1; exact Simulink attribution recovery is no longer a training gate.",
+  "lineage": {
+    "legacy_factory": "supply_chain.external_env_interface.make_track_b_env",
+    "legacy_action_contract": "track_b_v1",
+    "legacy_observation_version": "v7",
+    "legacy_risk_level": "adaptive_benchmark_v2",
+    "legacy_procurement_contract_mode": "legacy_independent",
+    "warning": "Existing PPO checkpoints were trained before the causal Op1-Op2 repair and must be evaluated only with legacy_independent physics."
+  },
+  "required_rebuild_before_confirmatory_training": {
+    "environment_contract": "supply_chain/data/garrido_proxy_v1_freeze_2026-07-10.json",
+    "procurement_contract_mode": "causal_coupled",
+    "replenishment_route_aware": true,
+    "material_multiplier": 1.0,
+    "fulfillment_mechanism": "op9_linked_fixed_clock_daily",
+    "requires_retraining": true,
+    "requires_new_static_frontier": true
+  },
+  "claim_boundary": "Garrido-informed adaptive benchmark; not a numerical reproduction of Cf1-Cf90."
+}

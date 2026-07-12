@@ -1,0 +1,33 @@
+{
+  "dense_static_frontier_dims": [
+    "assembly_shifts",
+    "op10_multiplier",
+    "op12_multiplier"
+  ],
+  "inventory_constant_bound_status": "completed local 3x3 bound over op3_q and op9_q at canonical best downstream cell",
+  "inventory_constant_bound_artifacts": [
+    "upstream_bound_3x3_policy_summary.csv",
+    "upstream_bound_3x3_seed_metrics.csv",
+    "upstream_bound_3x3_summary.json",
+    "upstream_bound_3x3_verdict.json"
+  ],
+  "inventory_constant_bound_result": {
+    "best_policy": "S2_op3_1.00_op9_1.25_op10_2.00_op12_1.50",
+    "best_static_order_level_ret": 0.005612013140649405,
+    "ppo_order_level_ret": 0.0056660208639699,
+    "ppo_minus_best_bound_delta": 0.00005400772332049466,
+    "seed_paired_ci95": [
+      0.000042440816374996535,
+      0.00006557463026595289
+    ]
+  },
+  "not_varied_in_dense_static_frontier": [
+    "op3_q",
+    "op3_rop",
+    "op9_q_min",
+    "op9_q_max",
+    "op9_rop"
+  ],
+  "paper_safe_wording": "best static over the shift x op10 x op12 family, with a local 3x3 op3/op9 upstream bound that does not overturn the PPO advantage",
+  "unsafe_wording": "best 8D static frontier"
+}

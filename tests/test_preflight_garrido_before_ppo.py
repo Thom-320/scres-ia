@@ -1,0 +1,32 @@
+from __future__ import annotations
+
+from scripts.preflight_garrido_before_ppo import _freeze_summary, build_parser
+
+
+def test_preflight_freeze_summary_keeps_excel_as_primary_resilience() -> None:
+    args = build_parser().parse_args(["--skip-reward-screen", "--skip-headroom-screen"])
+
+    summary = _freeze_summary(args)
+
+    assert summary["primary_resilience_metric"] == "mean_ret_excel_formula"
+    assert "cd_sigmoid_mean" in summary["secondary_resilience_metrics"]
+    assert summary["faithful_protocol"]["stochastic_pt"] is False
+    assert summary["faithful_protocol"]["risk_frequency_multiplier"] == 1.0
+    assert summary["faithful_protocol"]["risk_impact_multiplier"] == 1.0
+    assert summary["gates_to_keep_green"]["forensic_replay_mae_required_max"] == 0.005
+    assert summary["status"] == "ready_for_pre_ppo_screens"
+    assert summary["training_authorized"] is True
+    assert summary["reference_gate"]["promoted"] is False
+    assert (
+        summary["operational_reference"]["contract_id"]
+        == "garrido_proxy_v1"
+    )
+
+
+def test_preflight_authorization_does_not_relabel_failed_distribution_gate() -> None:
+    args = build_parser().parse_args(["--skip-reward-screen", "--skip-headroom-screen"])
+    summary = _freeze_summary(args)
+
+    assert summary["training_authorized"] is True
+    assert summary["reference_gate"]["promoted"] is False
+    assert "not a numerical reproduction" in summary["claim_boundary"]["faithful_lane"].lower()

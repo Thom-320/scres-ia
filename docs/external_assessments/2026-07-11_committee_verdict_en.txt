@@ -1,0 +1,1127 @@
+# Committee verdict
+
+## Blind spot
+
+The project has repeatedly treated the **action vector as the object of design**. It is not. The object of design is the set of **physical decision rights** available to a real operator.
+
+A shipment-quantity multiplier is not a decision right unless the model contains the truck, convoy, dock, route, lead time, loading delay, cost, and competing shipment that make the quantity consequential. A preventive-maintenance switch is not a decision right if the failure process remains independent of maintenance. A routing action is decorative if only one route exists. A 14-dimensional action vector can still control precisely nothing of interest. Neural networks, tragically, do not manufacture causal leverage through enthusiasm.
+
+Your failures are therefore informative:
+
+* The thesis-native buffer and shift contract has physical effects but essentially no state-dependent ranking.
+* The broader downstream contract exposed throughput, but much of its value was available to a constant policy.
+* Persistent/reset/frozen training could not create learning value where adaptive-control value was roughly 2% or less.
+* The reserve-warning study found large **physical reserve value**, but little detectable **imperfect-information value**, and the static 15,000-ration posture captured most of the efficient benefit.
+
+Those are not four failed attempts to make PPO win. They are four pieces of evidence that the present DES contains many **design parameters** and few genuine **state-contingent operational choices**.
+
+## Brutal truth
+
+The (L_{t-1}) paper is currently downstream of an unresolved identification problem.
+
+The causal chain is:
+
+[
+L_{t-1}
+\longrightarrow
+\pi_{L_{t-1}}
+\longrightarrow
+A_t
+\longrightarrow
+X_{t+1}
+\longrightarrow
+R.
+]
+
+Retained learning can matter only if:
+
+1. learned state (L) changes the action;
+2. the action changes the physical trajectory;
+3. different actions rank differently in different observable states;
+4. an implementable policy can exploit that variation;
+5. the gain survives comparison with the best constant under equal resources.
+
+If the physical system is nearly invariant to the available action, or the same action is optimal everywhere, then
+
+[
+\frac{\partial R}{\partial L}
+=============================
+
+\frac{\partial R}{\partial X}
+\frac{\partial X}{\partial A}
+\frac{\partial A}{\partial L}
+\approx 0.
+]
+
+No amount of recurrence, PPO tuning, KAN ornamentation, or engineered persistence rescues that chain.
+
+The repository now contains the same diagnosis in several forms. The corrected thesis-factorized experiments show static buffering is extremely strong, PPO does not beat the best simple static policy on fill or ReT, and the faithful severe-extended probe also loses to the best static grid.   The latest risk-modulation sweep also reports a near-binary response surface with no useful intermediate decision frontier.
+
+## Strategic pivot
+
+Suspend the retained-learning confirmatory study.
+
+The next study should ask:
+
+> **Which physically realizable decision rights from Op3 to Op13 expose observable, resource-feasible, state-contingent resilience headroom beyond the best same-contract constant policy?**
+
+Only after one decision family passes that test should it become an RL action space.
+
+I would call this program:
+
+> **Decision-Rights Discovery for Adaptive Supply Chain Resilience Control**
+
+The first paper can be about the discovery framework and the MFSC case. The (L_{t-1}) paper becomes a second paper, conditional on discovering an adaptive contract worth learning.
+
+---
+
+# 1. Evidence ledger
+
+I use the following labels below:
+
+* **[T] Thesis-supported:** directly grounded in Garrido-Ríos (2017).
+* **[R] Repository evidence:** supported by the reviewed `Thom-320/scres-ia` main branch.
+* **[U] User-supplied evidence:** the four null experimental programs reported in your prompt.
+* **[L] Literature-backed:** supported by current primary or publisher sources.
+* **[I] Committee inference:** a proposed interpretation or design decision, not an established fact.
+
+The thesis model is explicitly a one-product, fixed-((ROP,Q)), 13-operation chain with a balanced Op5-Op7 assembly line, fixed release batches, daily downstream flows, one aggregate order queue, and exogenous risks. Its assumptions take route planning and vehicle availability for granted, assume unlimited warehouse capacity, prohibit partial deliveries, use SPT for regular backorders, prioritize R24 contingent demand, and maintain stationary parameters over simulation horizons up to 20 years. Figure 6.2 lists two CSSUs at Op11, while Annex B depicts one aggregate CSSU flowchart block. Tables 6.16 and 6.20 define strategic buffers and shift-dependent static configurations, not repeated state-feedback decisions. 
+
+The current Python reconstruction is correctly described as thesis-grounded rather than an exact endogenous reproduction because the original Simulink files and traces are unavailable and several thesis descriptions are internally ambiguous. The repository documents those choices and explicitly separates calibrated parameters from thesis values.
+
+One repository hygiene problem should be fixed immediately. `PAPER_FINDINGS_REGISTRY.md` still contains April-era Track B claims that downstream dispatch was necessary and sufficient and produced fill near 1.0, while the later repaired-contract evidence and your same-contract static comparisons materially weaken the old interpretation.  Those older entries need a `SUPERSEDED` or `HISTORICAL_ARTIFACT` header. Otherwise Reviewer #2 will discover that the repository tells two incompatible scientific stories, which is the sort of archaeological expedition reviewers undertake when sufficiently irritated.
+
+---
+
+# 2. What the existing nulls actually establish
+
+| Previous experiment                          | What it establishes                                                                                                                                                                                                                                             | What it does not establish                                                                | Scientific disposition                                                                         |
+| -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Thesis buffers at Op3/5/9 plus weekly shifts | **[U]** Under that contract, positive-buffer branch states overwhelmingly prefer S1. Physical buffer value exists, but dynamic shift ranking does not.                                                                                                          | It does not prove all MFSC decisions lack adaptive value.                                 | Freeze as a negative decision-family result. Do not retrain.                                   |
+| Broader downstream dispatch contract         | **[U]** Increasing downstream throughput can improve performance, but same-contract constants capture much of the gain.                                                                                                                                         | It does not prove dynamic control or learning value.                                      | Reclassify as static capacity/design value unless state-ranking evidence survives.             |
+| Nonstationarity plus persistent/reset/frozen | **[U]** Retention cannot generate material gain when the underlying adaptive headroom is around 2% or less.                                                                                                                                                     | It does not test retained learning in a genuinely decision-rich environment.              | Suspend. Do not increase persistence merely to create a result.                                |
+| Reserve plus 14-day warning                  | **[U]** The reserve is physically live. Perfect warning plus reserve has a large upper-bound value. The imperfect warning adds approximately 1.18% over shuffled placebo with a CI crossing zero. A static 15,000-ration posture captures most efficient value. | The +17.86% contrast does not isolate information value if reserve presence also changes. | Publish as a decomposition of reserve and information value, not as adaptive-control evidence. |
+
+The warning experiment should be written as a factorial decomposition:
+
+[
+V_{\text{reserve}}
+==================
+
+## Y(R=15k,I=\varnothing)
+
+Y(R=0,I=\varnothing),
+]
+
+[
+V_{\text{perfect info}}
+=======================
+
+## Y(R=15k,I=\text{perfect})
+
+Y(R=15k,I=\varnothing),
+]
+
+[
+V_{\text{imperfect info}}
+=========================
+
+## Y(R=15k,I=\text{imperfect})
+
+Y(R=15k,I=\text{shuffled}),
+]
+
+[
+V_{\text{adaptive release}}
+===========================
+
+## Y(\pi_{\text{release}},R=15k)
+
+\max_{r\in\mathcal R_{\text{constant}}}Y(r,R=15k).
+]
+
+Your evidence supports the first term. It gives a useful perfect-information upper bound. It does not currently support the third or fourth terms. That distinction is exactly what value-of-information analysis is meant to preserve: information is valuable only through the better decisions it enables, not because an omniscient benchmark looks impressive. ([arXiv][1])
+
+---
+
+# 3. Operation-by-operation decision taxonomy, Op3-Op13
+
+The table is anchored in Sections 6.3-6.7, Figure 6.2, Tables 6.16 and 6.20, Sections 8.5-8.6, and Annex B. Printed pages 82-88 define the processes; pages 96-98 define the simplifying assumptions; page 106 gives the buffers; page 108 gives shift configurations; pages 169-176 show the Simulink macro-blocks. 
+
+In the second column:
+
+* **P** means physical parameter.
+* **S** means endogenous state.
+* **U** means exogenous uncertainty.
+
+| Operation                                   | P / S / U taxonomy                                                                                                                                                                                                                    | Static design decisions                                                                            | Valid tactical or real-time decisions                                                                                                                                                 | Invalid or nonphysical actions under the current DES                                                                                                                                                                     |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Op3: WDC receipt, verification, storage** | **P:** 24h handling, 12 raw materials, weekly release quantities, storage rules. **S:** inventory by material, complete ration kits, pending inbound shipments, material age. **U:** R21 and inherited supplier delays.               | Storage capacity; strategic buffer level; permanent review frequency; receiving resources.         | Component-aware release quantity; release timing; allocation of scarce components to production kits; temporary expedition only if an upstream order and lead-time process exists.    | Instantaneous inventory injection; changing `Q` or `ROP` without an actual replenishment order, supplier lead time, or handling capacity; collapsing 12 materials into one scalar when component imbalance matters.      |
+| **Op4: WDC to AL LOC**                      | **P:** nominal 24h travel. **S:** vehicles, convoy loads, in-transit materials, route availability. **U:** R22 and travel-time variation. The thesis currently takes vehicle availability and route planning for granted.             | Fleet size; vehicle capacity; route network; available transport modes; permanent convoy doctrine. | Departure timing; shipment consolidation; number of available vehicles assigned; convoy formation; route/mode selection; rerouting; expediting with explicit resource and risk costs. | A shipment-quantity multiplier when vehicles, loading slots, routes, and alternative uses do not exist. This merely changes pipe width.                                                                                  |
+| **Op5: pre-assembly**                       | **P:** 320.5 ration/h nominal rate, 8h shifts, weekly maintenance. **S:** raw-material kits, workstation status, pre-assembly WIP, labor availability, maintenance condition. **U:** R11, R21, R3.                                    | Number of workstations; staffing establishment; buffer capacity; permanent maintenance policy.     | Station-specific overtime; controlled release into Op5; WIP cap; preventive maintenance timing; repair-resource priority.                                                             | Preventive maintenance when R11 remains an exogenous memoryless failure clock independent of maintenance; independent Op5 capacity changes while Op5-Op7 remain one balanced aggregate line.                             |
+| **Op6: final assembly**                     | **P:** same nominal rate as Op5. **S:** upstream WIP, assembly WIP, labor and workstation health. **U:** R11, R21, R3.                                                                                                                | Staffing and workstation count; line balancing.                                                    | Station-specific overtime; labor reassignment between Op5 and Op6; WIP release; maintenance or repair priority.                                                                       | Product or order priority with only one homogeneous product and no distinguishable production lots; capacity labels without blocking, starvation, or shared labor.                                                       |
+| **Op7: QC and packing**                     | **P:** identical nominal processing time; box size 10; 5,000-ration release threshold every 48h; R14 rework. **S:** finished-but-unreleased quantity, QC queue, defect/rework queue, outbound dock availability. **U:** R14, R21, R3. | Packaging capacity; inspection resources; standard batch threshold.                                | Batch-release threshold; maximum waiting time; partial-load release; inspection allocation; rework sequencing; dispatch trigger to Op8.                                               | Directly changing defect probability; “release more” without finished inventory or outbound transport; eliminating inspection delay without resources.                                                                   |
+| **Op8: AL to SB LOC**                       | **P:** 24h transit and fixed batch logic. **S:** outbound loads, vehicle availability, in-transit rations, route status. **U:** R22.                                                                                                  | Fleet, route, mode, dock capacity.                                                                 | Full versus partial load departure; convoy timing; route/mode choice; expediting; load consolidation.                                                                                 | Teleporting a 5,000 or 7,000-ration batch; continuous shipment multipliers without vehicle-hours or loading constraints.                                                                                                 |
+| **Op9: Supply Battalion**                   | **P:** 24h handling; daily downstream release; order queue. **S:** SB inventory, destination-specific backlog, order age, priority class, in-transit stock, downstream capacity. **U:** R21, R3, regular and R24 demand.              | Reserve level; storage capacity; permanent fulfillment doctrine.                                   | Allocate scarce stock among CSSUs or missions; reserve release; order priority; partial fulfillment; rationing; dispatch timing; destination-specific release.                        | Deleting, evicting, or refusing demand to improve ReT; treating the current maximum queue of 60 as a benign capacity rather than explicit lost service; clairvoyant priority based on future disruption outcomes.        |
+| **Op10: SB to CSSUs LOC**                   | **P:** nominal 24h transport and daily total flow. **S:** shared fleet, route-specific loads, vehicles in transit, route state, destination queues. **U:** R22.                                                                       | Fleet size; route network; convoy security doctrine; transport modes.                              | Allocate shared vehicle capacity between CSSUs; convoy timing; route/mode choice; rerouting; expedition; holding a convoy for consolidation.                                          | Independent Op10 quantity scaling without a shared finite fleet or an opportunity cost. The earlier Track B contract added quantity control but not the physical resource that would make it a true allocation decision. |
+| **Op11: two CSSUs in Figure 6.2**           | **P:** two units are shown, but Annex B aggregates them into one CSSU block. **S:** each CSSU’s inventory, backlog, route status, mission mix and local reserve. **U:** unit-specific R23, demand asymmetry, arrival delays.          | Number and placement of CSSUs; initial reserve distribution; storage capacity.                     | SB-to-CSSU allocation; local rationing; order priority; partial fulfillment; lateral transshipment; reserve release; balancing inventory between CSSUs.                               | Modeling allocation or lateral transfer while retaining one aggregate CSSU inventory and one aggregate demand queue.                                                                                                     |
+| **Op12: CSSUs to theatre LOC**              | **P:** nominal 24h last-mile transit. **S:** last-mile vehicles, loads, route/mode state, mission destination, in-transit stock. **U:** R22 and local conditions.                                                                     | Last-mile fleet; route/mode portfolio; forward staging capacity.                                   | Vehicle/convoy assignment; terrestrial, aerial or maritime mode; mission sequencing; rerouting; expedition; partial dispatch.                                                         | Mode selection without different travel times, capacities, risks and resource costs; quantity changes without transport assets.                                                                                          |
+| **Op13: theatre demand**                    | **P:** service doctrine and delivery interface. **S:** outstanding demand by mission, age, class and location. **U:** regular demand and R24 contingent orders.                                                                       | Mission-priority doctrine; minimum service floors; authorized rationing rules.                     | Mission-priority service; age-based escalation; partial fulfillment; ration allocation during scarcity.                                                                               | Treating demand magnitude as controllable; dropping inconvenient orders; allowing an agent to sacrifice one unit without an explicit mission-priority constraint and persistent lost-service accounting.                 |
+
+## Classification of the candidate list
+
+Several candidates change category depending on how they are implemented:
+
+* **Shipment quantity** is a tactical action only when it consumes finite loading or transport capacity. Otherwise it is merely a parameter.
+* **Reorder or release interval** is a tactical action when orders have lead time, inventory position, and pending-order state. Otherwise it is a timer knob.
+* **Number of vehicles or convoys** is a static design decision when chosen for the campaign and a tactical decision when allocating an existing fleet among competing movements.
+* **Routing and modes** are operational decisions only when at least two feasible alternatives have distinct capacity, delay, cost, and disruption exposure.
+* **Preventive maintenance** is invalid until failure hazard depends on condition and maintenance history.
+* **WIP caps** are meaningless until Op5-Op7 have distinct WIP buffers and blocking/starvation.
+* **Priority, partial fulfillment, and rationing** are real decisions, but they require destination- and order-level state.
+* **Reserve placement** is largely strategic; **reserve release** can be dynamic.
+* **Backlog admission or eviction** is a service doctrine, not a resilience improvement. Any evicted order must remain a permanent lost-service outcome.
+
+---
+
+# 4. Where aggregation is currently destroying decision headroom
+
+The Python documentation reports seven aggregate inventory containers and a reduced set of core processes. It combines Op3 and Op4 behavior and models Op5-Op7 as a unified assembly process.   Downstream movement is also largely represented as fixed daily dispatch processes rather than shared resource allocation.
+
+| Aggregation or fixed rule                            | Decision removed                                                                                 | Why it suppresses dynamic headroom                                                                                                   | Required repair                                                                               |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
+| **Balanced Op5-Op7 line with identical rates**       | Station-specific overtime, maintenance, labor reallocation, WIP release, bottleneck migration.   | Increasing all stages together makes capacity a coarse static scalar. No station becomes temporarily binding relative to another.    | Separate station resources, WIP buffers, machine states, labor pools and maintenance effects. |
+| **Op3 and Op4 effectively combined**                 | Release timing versus transport availability, truck loading, consolidation, inbound expedition.  | Material departure and arrival become one aggregate process rather than two decisions separated by a constrained transport resource. | Explicit outbound queue, finite vehicle, load, departure and in-transit state.                |
+| **Two CSSUs collapsed into one Op11 block**          | Allocation, local reserve, lateral transshipment, destination priority and geographic imbalance. | One aggregate inventory has no competing recipients. Allocation cannot exist without rivalry for a shared resource.                  | Split CSSU A/B states while preserving aggregate demand and capacity.                         |
+| **Single-path Op4/8/10/12**                          | Route choice, alternate transport mode, convoy allocation, rerouting.                            | A route action has no counterfactual alternative.                                                                                    | At least two routes or modes with distinct time, capacity, risk and cost.                     |
+| **Vehicle and route availability taken for granted** | Fleet sizing and allocation; convoy timing; load consolidation.                                  | A quantity action has no resource opportunity cost.                                                                                  | Explicit fleet resources, return times, loading capacity and availability.                    |
+| **Fixed SPT at Op9**                                 | FIFO, mission priority, aging, partial service and rationing.                                    | All decisions are preselected by one queue discipline. Full-order service can create head-of-line or size effects.                   | Order objects with destination, class, remaining quantity and age; selectable service rules.  |
+| **Fixed 5,000 release batch at Op7/8**               | Lot sizing, partial departure and waiting-time trade-off.                                        | There is no choice between responsiveness and transport efficiency.                                                                  | Mutable threshold plus maximum wait and finite vehicle capacity.                              |
+| **Fixed daily Op9-Op12 dispatch**                    | Event-triggered dispatch, holding, expedition, synchronization and recovery surges.              | The downstream chain behaves like a deterministic clocked pipe.                                                                      | Dispatch events conditional on stock, backlog, route and resource availability.               |
+| **One homogeneous product**                          | Production priority and substitution.                                                            | There is no product-mix or mission-specific production choice.                                                                       | Do not add products in v1. Use order classes and destinations first.                          |
+| **Unlimited storage**                                | Space allocation and overflow decisions.                                                         | Inventory can accumulate without physical penalty.                                                                                   | Add finite storage only if reliable capacity ranges are available.                            |
+| **Queue cap of 60 with eviction**                    | Honest accumulation of unmet demand.                                                             | A policy can appear resilient by causing old orders to disappear from the active queue.                                              | Preserve evicted demand as lost orders in every service and ReT calculation.                  |
+
+The action interface illustrates the same problem. Track A includes several quantity and ROP multipliers beyond the strict thesis decisions; Track B adds Op10 and Op12 quantity multipliers, while richer observations add regime and forecast signals.  These controls become scientifically interpretable only when the corresponding physical resources, information availability and opportunity costs are present.
+
+---
+
+# 5. The quantity that must be measured before RL
+
+For a candidate decision family (j), define the value of taking action (a) from state (x) over horizon (h) as
+
+[
+V_h(x,a)
+========
+
+\mathbb{E}
+\left[
+U_{t:t+h}
+\mid
+X_t=x,,
+do(A_t=a),,
+\pi^{0}_{t+1:t+h},,
+\omega
+\right],
+]
+
+where:
+
+* (U) is a preregistered outcome with higher values better;
+* (\pi^0) is the same continuation policy after the branched action;
+* (\omega) is the same exogenous demand, risk, repair and processing tape.
+
+The **state-contingent dynamic headroom** is
+
+[
+H_h^{\text{dyn}}
+================
+
+\mathbb{E}*{X}
+\left[
+\max*{a\in\mathcal A} V_h(X,a)
+\right]
+-------
+
+\max_{a\in\mathcal A}
+\mathbb{E}_{X}
+\left[
+V_h(X,a)
+\right].
+]
+
+The first term is a diagnostic state oracle. The second is the best same-contract constant.
+
+This quantity answers the question your previous experiments often did not isolate:
+
+> How much value exists solely because the preferred action changes with state?
+
+Then define implementable, observable headroom:
+
+[
+H_h^{\text{obs}}
+================
+
+## V_h(\widehat{\pi}_{\text{tree}})
+
+V_h(a_{\text{best constant}}),
+]
+
+and the conversion ratio:
+
+[
+\eta_h
+======
+
+\frac{H_h^{\text{obs}}}{H_h^{\text{dyn}}}.
+]
+
+Interpretation:
+
+* (H_h^{\text{dyn}}\approx0): no dynamic action space exists.
+* (H_h^{\text{dyn}}>0) but (H_h^{\text{obs}}\approx0): the opportunity exists but cannot be inferred from deployable observations.
+* Both positive, but resource-unmatched: probably a resource purchase, not adaptive intelligence.
+* Both positive and resource-matched: candidate for sequential control.
+* Only then does persistent learning become a coherent estimand.
+
+---
+
+# 6. Pre-RL decision-rights discovery protocol
+
+Simulation optimization already provides ranking-and-selection, common-random-number, response-surface and metamodeling tools for noisy simulation decisions. DRL should enter after those tools establish a nontrivial sequential problem, not before. ([arXiv][2])
+
+## Stage protocol
+
+| Stage                                    | Experimental method                                                                                                                                                                    | Reviewer objection                                                        | Endpoint                                                                 | Promotion or stop rule                                                                                                                      |
+| ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| **D0. Freeze the ontology**              | Create a decision-right contract for every candidate: owner, epoch, levels, latency, duration, resource consumed, feasible set, observable information, physical transitions and cost. | “This is another arbitrary action label.”                                 | Machine-readable contract plus unit tests.                               | Stop candidate if any action lacks a conserved resource, causal transition or feasible timing rule.                                         |
+| **D1. Physical liveness**                | Deterministic microfixtures and one-factor interventions under no noise.                                                                                                               | “The action has no real causal path.”                                     | Known changes in flow, queue, inventory, timing and resource accounting. | Require exact direction and mass-balance agreement in 100% of fixtures.                                                                     |
+| **D2. Low/base/high static frontier**    | Evaluate low, base and high constant settings with CRN. Plot ReT-service-resource Pareto frontiers.                                                                                    | “A mean effect is being confused with adaptive value.”                    | Physical spread and resource trade-off.                                  | A mean effect alone does not promote. Stop if outcome changes are below practical tolerance or are entirely explained by extra resources.   |
+| **D3. Broad screening**                  | Morris elementary effects for ordered numeric factors; resolution-IV or D-optimal fractional factorial for unordered categorical rules.                                                | “The search is fishing across too many levers.”                           | (\mu^*), (\sigma), main effects and a preregistered shortlist.           | Keep approximately 3-5 families. Morris is screening only; it never establishes dynamic headroom.                                           |
+| **D4. Pairwise interaction screen**      | Test only mechanistically justified pairs using strong-heredity rules.                                                                                                                 | “The useful behavior is an interaction omitted by one-factor screening.”  | Interaction effects and Pareto surfaces.                                 | Promote interactions with a practically meaningful effect and stable direction across tapes.                                                |
+| **D5. Exact state branching**            | Replay to identical state, branch all feasible actions, use identical future exogenous tapes, evaluate short and long horizons.                                                        | “The apparent oracle sees different shocks or different starting states.” | (V_h(x,a)), action-ranking maps and (H_h^{dyn}).                         | Require at least two actions to be optimal in at least 15% of held-out branch states each, and a positive lower CI for (H_h^{dyn}).         |
+| **D6. Observable policy conversion**     | Learn a depth-limited policy tree using only deployable features; five-fold cross-fit grouped by tape.                                                                                 | “The oracle uses future information or overfits branch states.”           | Tree performance on held-out tapes and (\eta_h).                         | Tree must recover at least 50% of the oracle gap and beat the best constant with lower CI (>0).                                             |
+| **D7. Resource-equivalent confirmation** | Compare tree, constants and heuristic at equal vehicle-hours, shift-hours, inventory or Pareto resource level.                                                                         | “The adaptive policy simply spends more.”                                 | Equal-resource ReT and service outcomes; Pareto dominance.               | Promote only if non-dominated or superior at the same resource budget.                                                                      |
+| **D8. Virgin-tape robustness**           | One untouched confirmatory evaluation across disruption families and tail events.                                                                                                      | “The result is a calibration artifact.”                                   | ReT, service loss, backlog, CT/TTR, physical cost and CVaR.              | Require positive direction in at least two-thirds of disruption families, at least 70% of paired tapes, and no material tail deterioration. |
+| **D9. Sequential-control promotion**     | Compare policy tree, rollout policy, ADP baseline and then PPO using the frozen contract.                                                                                              | “PPO is being credited for value already available to simple rules.”      | Same-contract, same-resource, out-of-sample performance.                 | PPO is justified only if the sequential problem remains material after strong non-neural policies.                                          |
+
+Morris screening is useful because (\mu^*) ranks overall influence while (\sigma) flags nonlinear or interaction-heavy factors, but it is not a test of state-dependent action ranking. That distinction matters. Humans have a charming tendency to run sensitivity analysis and announce that a variable “should go into RL,” which is not what sensitivity analysis says. The original Morris and revised elementary-effects methods were designed as inexpensive screening procedures. ([UF ABE][3]) ([ScienceDirect][4])
+
+For mixed candidate sets:
+
+* Use Morris for ordered quantities such as batch threshold, waiting time, fleet capacity and overtime.
+* Use factorial designs for categorical choices such as SPT/FIFO/mission priority, partial fulfillment, route rule and maintenance policy.
+* Use stochastic kriging or another metamodel only after screening, to interpolate static Pareto surfaces. It does not replace state branching.
+
+## Exact branchability requirements
+
+The current `diagnose_headroom_argmax.py` enumerates 18 static policies across regimes. It tests whether the best static policy changes by regime, but it is not exact branching from identical endogenous states.
+
+For defensible branching:
+
+1. **Pre-generate exogenous tapes by calendar time or entity ID.** Demand should be indexed by order ID and date; processing time by job ID; disruptions by route or operation and time; repairs by event ID. Never rely on shared RNG call order, because different actions change the number and order of random draws.
+
+2. **Replay rather than deepcopy live SimPy generators.** Run the same initial condition and action history to time (t), verify a canonical state hash, then rerun once per candidate action using the identical future tape.
+
+3. The state digest must include:
+
+   * all inventories and WIP;
+   * full order queues and remaining quantities;
+   * in-transit loads and arrival times;
+   * vehicle/resource availability;
+   * route and operation state;
+   * maintenance state;
+   * current time;
+   * tape suffix hashes.
+
+4. Assert before every branch:
+
+[
+\operatorname{hash}(X_t^{(a_1)})
+================================
+
+# \cdots
+
+\operatorname{hash}(X_t^{(a_m)}),
+]
+
+and
+
+[
+\operatorname{hash}(\omega_{t:})
+\text{ is identical across actions.}
+]
+
+5. Apply the branched action for one decision interval, then revert to the same continuation rule. This estimates the causal value of the immediate decision. A separate full-policy evaluation tests repeated use.
+
+---
+
+# 7. Explicit common promotion rules
+
+These thresholds are proposed committee thresholds, not values stated by Garrido. Freeze them with Garrido before generating the discovery data.
+
+A decision family enters sequential control only if it passes all six:
+
+### G1. Physical effect
+
+Every action level must alter the intended physical state transition in deterministic fixtures, while preserving mass and resource balance.
+
+### G2. State-dependent action ranking
+
+[
+\operatorname{LCB}_{95}(H_h^{dyn}) > 0
+]
+
+and at least two actions must each be branch-optimal in at least 15% of held-out states.
+
+A variable that changes the mean but always prefers the same level is a static design variable.
+
+### G3. Observable convertibility
+
+A depth-(\le3) tree trained only on observable variables must:
+
+[
+\operatorname{LCB}*{95}
+\left[
+V(\widehat\pi*{\text{tree}})
+----------------------------
+
+V(a_{\text{constant}})
+\right] >0
+]
+
+and recover at least 50% of the oracle gap:
+
+[
+\eta \ge 0.50.
+]
+
+### G4. Practical importance
+
+Require at least one of:
+
+* ReT improvement (\ge 0.02);
+* service-loss AUC reduction (\ge 5%);
+* fill improvement (\ge 2) percentage points;
+
+with ReT and at least one physical service metric moving in the same direction.
+
+Tiny positive CIs do not become managerial contributions through ceremonial use of asterisks.
+
+### G5. Resource acceptability
+
+The dynamic policy must be Pareto non-dominated or retain its improvement at matched:
+
+* total shipment capacity;
+* vehicle-hours;
+* shift-hours;
+* strategic inventory;
+* switching frequency.
+
+For military war-mode analysis, monetary costs may remain secondary, but physical resource use cannot remain invisible.
+
+### G6. Robustness and tail safety
+
+Require:
+
+* positive paired effect on at least 70% of virgin tapes;
+* positive aggregate direction in at least two-thirds of disruption families;
+* no more than 5% degradation in CVaR95 service loss or p95 TTR;
+* no meaningful degradation of the worst-served CSSU or mission class.
+
+## Diagnostic failure interpretations
+
+* **G1 fails:** the action is a label.
+* **G1 passes, G2 fails:** the variable matters, but as a constant design choice.
+* **G2 passes, G3 fails:** there is latent opportunity but inadequate observable information.
+* **G3 passes, G4 fails:** adaptive value is statistically detectable but managerially trivial.
+* **G4 passes, G5 fails:** the policy buys performance with more resources.
+* **G5 passes, G6 fails:** the policy is fragile or sacrifices tail cases.
+* **All pass:** sequential control is justified.
+* **PPO beats the tree only after all pass:** neural control may be justified.
+* **Persistent beats reset afterward:** (L_{t-1}) is finally testable.
+
+---
+
+# 8. Candidate ranking
+
+Scores below are **[I] prior assessments**, not empirical results. Headroom, grounding, realism, interpretability and publication value use 1-5, where 5 is strongest. Build burden and confounding risk use 1-5, where 5 is worst.
+
+|  Rank | Decision family                                                                      |                    Headroom | Thesis grounding | Realism | Build burden | Confound risk | Interpretability | Publication value | Verdict                                                |
+| ----: | ------------------------------------------------------------------------------------ | --------------------------: | ---------------: | ------: | -----------: | ------------: | ---------------: | ----------------: | ------------------------------------------------------ |
+| **1** | Split-CSSU allocation, order priority and partial fulfillment at Op9/11/13           |                           5 |                5 |       5 |            3 |             3 |                5 |                 5 | First discovery family                                 |
+| **2** | Finite shared downstream fleet, convoy dispatch and route/mode allocation at Op10/12 |                           5 |                4 |       5 |            5 |             4 |                5 |                 5 | Second family                                          |
+| **3** | Op7/8 batch threshold, maximum wait and departure timing                             |                           4 |                5 |       5 |            3 |             2 |                5 |                 4 | Third family                                           |
+|     4 | CSSU reserve placement, release and lateral transshipment                            |                           4 |                3 |       5 |            4 |             4 |                5 |                 5 | Add after CSSUs are split                              |
+|     5 | Station-specific overtime, WIP release and preventive maintenance at Op5-7           |                           4 |                4 |       4 |            5 |             4 |                4 |                 4 | Valuable, but major line rebuild                       |
+|     6 | Component-aware Op3 release/reorder control                                          |                           3 |                5 |       4 |            3 |             3 |                4 |                 3 | Secondary                                              |
+|     7 | Expediting and alternate transport modes                                             |                           4 |                3 |       4 |            5 |             5 |                5 |                 4 | Requires defensible mode parameters                    |
+|     8 | Static reserve placement                                                             |                   2 dynamic |                5 |       5 |            2 |             2 |                5 |                 3 | Design frontier, not first RL action                   |
+|     9 | Thesis buffer plus weekly shift selection                                            |                           1 |                5 |       5 |            1 |             1 |                5 |                 1 | Dynamic investigation exhausted                        |
+|    10 | Imperfect warning-controlled reserve release                                         | 1 based on current evidence |                3 |       4 |            3 |             4 |                5 |                 2 | Stop unless a new signal has ex ante VOI justification |
+|    11 | Backlog eviction or demand admission as an optimization action                       |                           0 |                3 |       1 |            2 |             5 |                1 |                 0 | Reject                                                 |
+
+## Why the top-ranked family is not “more downstream quantity”
+
+The top family introduces a **shared scarce capacity and competing recipients**. That is the essential difference.
+
+The old downstream quantity control largely allowed the agent to widen Op10 and Op12 pipes. A constant high setting could capture much of the benefit. Split-CSSU allocation instead asks:
+
+> Given the same total capacity, which destination should receive it now?
+
+That question can genuinely change with inventory imbalance, backlog age, route status and contingent demand. It is therefore much more likely to produce action-ranking reversals.
+
+---
+
+# 9. Smallest first discovery experiment
+
+## Experiment DRA-1: Two-CSSU shared-capacity allocation
+
+This is the smallest scientifically meaningful experiment, not necessarily the smallest code diff. Those are not the same thing, despite software engineering’s repeated attempts to make them so.
+
+### Research question
+
+> Does allocating a fixed daily downstream capacity between two CSSUs using observable inventories, backlogs, mission priority and route state improve out-of-sample ReT and service continuity relative to the best constant allocation and queue discipline?
+
+## Physical contract
+
+Figure 6.2 identifies two CSSUs, but the original and reconstructed models aggregate them. DRA-1 splits Op11 into CSSU-A and CSSU-B without increasing total system resources. 
+
+Use the Figure 6.2/text downstream quantity range, (C_t\in[2400,2600]) rations/day, as the primary source. Table 6.20’s 2,000-2,500 range remains a named sensitivity lane, matching the repository’s existing treatment of that ambiguity.
+
+At each day:
+
+[
+q_{A,t}+q_{B,t}\le
+\min{C_t,\ I_{\mathrm{SB},t}}.
+]
+
+No action may increase total dispatch capacity. It only allocates it.
+
+Aggregate demand remains unchanged. Each order receives a destination tag A or B. The base lane uses symmetric expected shares. R24 creates a temporary asymmetric mission demand at one CSSU. The split is an explicit Garrido-informed extension, not a claimed reproduction.
+
+## Action set
+
+Use two factors:
+
+### Allocation share
+
+[
+\alpha_A \in {0.25,\ 0.50,\ 0.75},
+\qquad
+\alpha_B=1-\alpha_A.
+]
+
+### Fulfillment rule
+
+1. `SPT_FULL`: thesis SPT and all-or-nothing fulfillment.
+2. `FIFO_PARTIAL`: oldest-first, partial fulfillment allowed.
+3. `R24_AGE_PARTIAL`: contingent orders first, then oldest regular order, partial fulfillment allowed.
+
+Total action set:
+
+[
+|\mathcal A|=3\times3=9.
+]
+
+Nine actions are enumerable. There is no reason to introduce PPO to avoid counting to nine.
+
+## Decision epoch
+
+Primary epoch: every 24 hours immediately before Op9 dispatch allocation.
+
+The action remains active for one day. Event-triggered decisions after route restoration belong to a later sensitivity experiment.
+
+## Observable state
+
+Use only variables available to an operator at dispatch time:
+
+* SB available inventory;
+* CSSU-A and CSSU-B inventory;
+* A/B days of cover;
+* A/B backlog quantity;
+* A/B number of pending orders;
+* A/B maximum backlog age;
+* fraction of R24 demand in each queue;
+* A/B in-transit quantity and ETA;
+* current A/B route availability;
+* recent 7-day demand and fill;
+* previous allocation;
+* day within the operational week.
+
+Exclude:
+
+* future disruption events;
+* future repair durations;
+* latent risk regime labels;
+* future demand;
+* perfect warning variables;
+* retrospective labels such as eventual recovery status.
+
+## Disruption families
+
+Use four calibration strata:
+
+1. nominal or routine operational risk;
+2. asymmetric R22 route disruption;
+3. asymmetric R23 CSSU disruption;
+4. asymmetric R24 contingent demand, including a mixed R22/R24 subset.
+
+Do not use R3 in the discovery stage. A system-wide black-swan event is useful as an OOD boundary test, but it can drown the allocation mechanism before the mechanism has been identified.
+
+## Tapes and states
+
+### Calibration
+
+* 60 tapes total;
+* 15 per stratum;
+* 4 branch states per tape;
+* 240 branch states.
+
+States should be stratified by:
+
+* backlog imbalance;
+* days-of-cover imbalance;
+* route availability;
+* SB scarcity;
+* R24 share;
+* early versus recovery phase.
+
+### Branch rollouts
+
+For each state:
+
+* 9 actions;
+* 4 matched future tape suffixes;
+* 72-hour short horizon;
+* 28-day long horizon.
+
+Total:
+
+[
+240 \times 9 \times 4 \times 2
+==============================
+
+17{,}280
+]
+
+counterfactual rollouts.
+
+That is vastly cheaper and more informative than another 500,000-step PPO campaign followed by philosophical discussion about why the policy picked the middle action.
+
+### Virgin confirmation
+
+* 40 untouched tapes;
+* 10 per stratum;
+* no policy selection or threshold adjustment after they are opened.
+
+## Continuation policy during branching
+
+For the one-action branch experiment:
+
+1. take candidate action (a) on day (t);
+2. from day (t+1), revert to the same neutral continuation policy for every branch.
+
+This estimates the marginal causal value of the current action.
+
+Separately, evaluate constant and learned tree policies over complete episodes.
+
+## Comparators
+
+1. Thesis aggregate policy adapted to two CSSUs.
+2. All nine constant policies.
+3. Best constant selected on calibration tapes.
+4. A simple observable heuristic:
+
+[
+\alpha_A=
+\begin{cases}
+0.75,& \text{if cover}_A-\text{cover}_B < -\delta,\
+0.25,& \text{if cover}_A-\text{cover}_B > \delta,\
+0.50,& \text{otherwise}.
+\end{cases}
+]
+
+5. Cross-fitted depth-3 policy tree.
+6. State oracle, reported only as a diagnostic upper bound.
+
+## Outcomes
+
+### Primary
+
+* Garrido Excel/order-level ReT over the evaluation window.
+
+### Required consistency outcome
+
+* service-loss AUC.
+
+### Secondary
+
+* overall fill;
+* CSSU-specific fill;
+* worst-CSSU ReT;
+* backlog AUC;
+* maximum backlog age;
+* lost/unattended orders;
+* CT and TTR;
+* quantity delivered;
+* capacity utilization;
+* allocation switching;
+* CVaR95 service loss.
+
+Because a policy could improve aggregate ReT by starving one CSSU, require a service floor:
+
+[
+\min(ReT_A,ReT_B)
+]
+
+must not decline by more than 0.01 relative to the best constant, unless the affected CSSU has lower exogenous mission priority specified before the simulation.
+
+## Statistical analysis
+
+1. Paired action differences under identical tapes.
+2. Cluster bootstrap by tape, 10,000 resamples.
+3. Report mean, median, CI95 and fraction of positive paired tapes.
+4. Estimate:
+
+[
+Y
+\sim
+A
++
+A\times\text{backlog imbalance}
++
+A\times\text{cover imbalance}
++
+A\times\text{route state}
++
+(1|\text{tape}).
+]
+
+5. Train the policy tree using five folds grouped by tape. No state from one tape may occur in both training and validation folds.
+6. Select the tree on calibration only.
+7. Evaluate once on the 40 virgin tapes.
+
+## DRA-1 promotion rule
+
+Promote the family to sequential control only if all hold:
+
+1. Liveness and mass-balance tests pass.
+2. At least two allocation levels are optimal in at least 15% of held-out branch states each.
+3. (\operatorname{LCB}*{95}(H*{28d}^{dyn})>0).
+4. The depth-3 tree recovers at least 50% of the oracle gap.
+5. Tree minus best constant has:
+
+   * ReT lower CI (>0); and
+   * either ReT gain (\ge0.02) or service-loss AUC reduction (\ge5%).
+6. The gain is positive in at least three of the four strata and 70% of virgin tapes.
+7. Worst-CSSU ReT, CVaR95 and lost orders do not contradict the headline.
+
+### Stop conditions
+
+Stop this family if any one occurs:
+
+* the best constant captures at least 90% of the oracle value;
+* action ranking is effectively constant;
+* the observable tree fails to beat the constant;
+* improvement comes from sacrificing one CSSU;
+* partial fulfillment only changes accounting rather than physical delivery;
+* positive effects disappear under the Table 6.20 downstream-quantity sensitivity.
+
+## Reviewer objections specific to DRA-1
+
+| Objection                                                      | Response built into the experiment                                                                                                             |
+| -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| “The thesis does not provide separate CSSU demand data.”       | Preserve aggregate demand exactly, use symmetric baseline, treat asymmetry as a preregistered extension, and obtain Garrido face validation.   |
+| “The policy merely increases transport.”                       | Total daily capacity is identical for every action. Only its allocation changes.                                                               |
+| “The oracle knows future shocks.”                              | Oracle is diagnostic. The tree uses only current observed variables and is tested on virgin tapes.                                             |
+| “Partial fulfillment changes the original service definition.” | Residual quantity remains an active order. Report original order-level ReT plus quantity-based service and lost-order metrics.                 |
+| “Aggregate improvement may sacrifice one unit.”                | Report worst-CSSU ReT, mission-class service floors and CVaR.                                                                                  |
+| “The result is just a clever heuristic.”                       | That is acceptable. If the tree captures the value, PPO is unnecessary. The paper becomes a better decision aid, not a worse AI advertisement. |
+
+---
+
+# 10. DES changes required before candidates are real interventions
+
+## General decision-right contract
+
+Every action should be represented by a schema like:
+
+```text
+DecisionRight
+    owner
+    controlled_operations
+    decision_epoch
+    action_levels
+    feasible_action_mask
+    activation_latency
+    minimum_duration
+    switching_constraints
+    resource_consumption
+    affected_state_transitions
+    required_observations
+    cost_or_resource_accounting
+    audit_fields
+```
+
+An action without those fields should not enter any Gymnasium space.
+
+## Global infrastructure
+
+### 1. Event-tape separation
+
+Add independent, immutable tapes for:
+
+* demand;
+* risk occurrence;
+* repair duration;
+* processing times;
+* route travel times;
+* contingent-demand assignment.
+
+The tape must be independent of policy-induced RNG call counts.
+
+### 2. Replay branching
+
+Add:
+
+* canonical state serialization;
+* state digest;
+* tape suffix digest;
+* common action-history replay;
+* branch runner;
+* equality assertions.
+
+Suggested module:
+
+```text
+supply_chain/counterfactual_replay.py
+```
+
+### 3. Full order objects
+
+Each order needs:
+
+```text
+order_id
+destination
+priority_class
+original_quantity
+remaining_quantity
+placement_time
+due_time
+last_service_time
+status
+lost_reason
+```
+
+The present SPT queue and hard capacity of 60 should not silently discard scientific evidence about unmet service.
+
+### 4. Resource ledger
+
+Track:
+
+* vehicle-hours;
+* convoy-hours;
+* route/mode usage;
+* shift-hours;
+* overtime;
+* inventory-time;
+* handling operations;
+* switching;
+* lost orders.
+
+### 5. Information ledger
+
+For every observed variable, record:
+
+* when it becomes known;
+* to whom;
+* measurement delay;
+* error model;
+* whether it is current state, forecast or hidden simulation truth.
+
+This prevents another perfect-warning-versus-real-warning ambiguity.
+
+## Candidate-specific changes
+
+| Candidate              | Current representation                           | Required physical implementation                                                                                                        |
+| ---------------------- | ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
+| CSSU allocation        | One aggregate CSSU/inventory/queue               | Two CSSU objects, destination-tagged demand, separate inventory and backlog, fixed shared dispatch capacity, unit-specific disruptions. |
+| Partial fulfillment    | Thesis and current logic largely all-or-nothing  | Residual order quantities; repeated fulfillment; unchanged placement time; explicit completion and loss accounting.                     |
+| Priority/rationing     | Fixed SPT plus R24 priority                      | Selectable queue discipline; mission-class constraints; aging; minimum service floor.                                                   |
+| Lateral transshipment  | No spatially distinct CSSUs                      | Separate locations, route, travel time, vehicle capacity, loading delay and transport cost.                                             |
+| Convoy/fleet control   | Quantity and fixed delay                         | Vehicle resources, capacity, departure, loading, return, availability and shared allocation.                                            |
+| Route/mode choice      | Single LOC                                       | At least two alternatives with distinct time, capacity, disruption exposure and resource cost.                                          |
+| Op7/8 batching         | Fixed 5,000/48h or 7,000/24h                     | Mutable threshold, maximum waiting time, partial loads, finished-goods staging and finite outbound vehicle.                             |
+| Op5-7 overtime         | One balanced line                                | Three resources, WIP buffers, station capacity, shared labor and station-specific downtime.                                             |
+| Preventive maintenance | Fixed weekly maintenance plus exogenous failures | Condition/age state, maintenance action duration, maintenance resource and failure hazard affected by maintenance.                      |
+| Op3 reorder/release    | Aggregate raw-material inventory                 | Twelve component inventories, complete-kit constraints, pending inbound orders, order lead times and receiving capacity.                |
+| Expediting             | No explicit expedited process                    | Alternative lead-time distribution, priority resource consumption and cost/risk penalty.                                                |
+| Backlog admission      | Maximum list length                              | Explicit lost-service state and permanent outcome penalty; never deletion from metrics.                                                 |
+
+---
+
+# 11. What the current literature implies
+
+## DES plus ML is no longer the novelty
+
+A 2024 *Computers & Industrial Engineering* review classified 99 simulation-plus-machine-learning supply-chain papers, covering DES and other simulation methods combined with supervised, unsupervised and reinforcement learning. It specifically identifies a diverse and already active hybrid-modeling field. ([ScienceDirect][5])
+
+Garrido et al. (2024) remain important because they formulate cumulative learning as a missing component in SCRES simulation and propose neural methods as possible carriers. But that article is an exploratory theoretical proposal, not evidence that retained neural state improves future resilience. 
+
+Ding et al. (2026) already use MAPPO for resilience-oriented reconfiguration of a supply-chain system-of-systems with filling, repairing and recruiting actions in a POMDP. Their problem is macro-level network reconfiguration, not the discovery of deployable operational controls inside a thesis-grounded DES. 
+
+Therefore, neither of these is safe:
+
+* “first DES plus RL for SCRES”;
+* “first endogenous learning in supply-chain simulation.”
+
+The defensible novelty is methodological:
+
+> **A causal, pre-RL program for discovering whether candidate DES controls are physically live, state-contingent, observable, resource-equivalent and robust before defining the RL action space.**
+
+I did not find a supply-chain resilience paper whose central empirical contribution combines operation-level decision taxonomy, exact state branching, same-contract constants, observable policy-tree conversion, Pareto resource matching and explicit separation of physical, informational, adaptive and retained-learning value. That is a promising novelty hypothesis, not proof of priority. A reproducible systematic search is still required before writing “first.”
+
+## Strong heuristics are mandatory
+
+The inventory-control literature already shows DRL can match strong heuristics and approximate dynamic programming on difficult inventory problems, but it also emphasizes that structural policy insight and specialized policies remain valuable. ([PubsOnline][6]) The DRL roadmap likewise emphasizes action, state, reward and structural design choices rather than treating architecture choice as the main scientific contribution. ([ScienceDirect][7])
+
+This supports your current direction:
+
+* policy tree before PPO;
+* rollout heuristic before PPO;
+* same-contract constant before PPO;
+* approximate dynamic programming before claiming a neural contribution.
+
+Powell’s unified sequential-decision framework identifies several valid policy classes beyond neural value-function methods, including policy-function approximations and lookahead policies. ([arXiv][8]) If a depth-3 tree or one-step rollout captures nearly all available value, that is not an RL failure. It means the problem has an interpretable solution.
+
+## Current action-space research is adjacent, not sufficient
+
+RL action-representation research generally assumes that the physical actions already exist and tries to represent or scale them more effectively. Chandak et al., for example, learn low-dimensional action representations to generalize across large finite action sets. ([arXiv][9])
+
+Your problem occurs one level earlier:
+
+> Which physical interventions deserve to be actions at all?
+
+That distinction should be explicit in the paper. You are not proposing another action embedding. You are proposing a **decision-right identification layer before MDP construction**.
+
+## Policy trees are the correct pre-neural bridge
+
+Policy-learning research supports constrained, interpretable decision policies such as shallow trees and provides methods for evaluating them out of sample. ([arXiv][10]) Optimal policy trees are specifically designed to map observable heterogeneity into interpretable action assignments. ([arXiv][11])
+
+For IJPR, a final tree such as:
+
+```text
+IF CSSU-A cover < 1 day
+AND route A is open
+AND A backlog age > B backlog age
+THEN allocate 75% to A
+ELSE allocate 50/50
+```
+
+is a decision aid. A PPO checkpoint named `best_model.zip` is not.
+
+## C&IE fit
+
+C&IE explicitly seeks original computerized methodologies for industrial-engineering problems and requires real-life applications to demonstrate originality, generality and significance. ([ScienceDirect][12])
+
+That makes C&IE the best current target if the paper is framed around:
+
+1. the general decision-rights discovery protocol;
+2. an auditable, branchable DES implementation;
+3. static and dynamic headroom measures;
+4. interpretable policy conversion;
+5. the MFSC as the case demonstration.
+
+IJPR becomes realistic if DRA-1 or a later family produces a strong managerial decision rule and resource frontier. SMPT becomes the natural fallback if the strongest contribution is branchability, V&V, CRN design and simulation experimentation rather than the supply-chain decision itself.
+
+---
+
+# 12. Recommended paper architecture
+
+## Proposed title
+
+**Before Reinforcement Learning: Discovering Deployable Decision Rights for Resilience Control in a Military Supply Chain DES**
+
+Alternative:
+
+**From Action Labels to Decision Rights: A Pre-RL Experimental Framework for Supply Chain Resilience Control**
+
+## Research question
+
+> Which physically realizable and observable decision rights expose state-contingent, out-of-sample resilience headroom beyond same-contract static policies in a thesis-grounded military food supply chain DES?
+
+## Contributions
+
+1. **Decision taxonomy:** distinguishes parameters, states, uncertainties, designs, tactical decisions, real-time decisions and invalid controls across Op3-Op13.
+
+2. **Identification framework:** separates physical liveness, static sensitivity, dynamic oracle headroom, observable convertibility, resource equivalence and robustness.
+
+3. **Branchable simulation method:** exact CRN replay from identical endogenous states.
+
+4. **Empirical evidence:** reports both failed decision families and the first promoted or rejected CSSU allocation family.
+
+5. **Managerial output:** interpretable policy tree and Pareto decision frontier, not merely neural returns.
+
+6. **Theoretical implication:** retained learning cannot be identified until a nontrivial adaptive-control channel exists.
+
+## Where (L_{t-1}) belongs
+
+The new paper should end with:
+
+[
+X_{t+1}=F(X_t,A_t,D_t),
+\qquad
+A_t=\pi(O_t;L_{t-1}),
+\qquad
+L_t=U(L_{t-1},\tau_t).
+]
+
+The decision-rights paper establishes that (A_t) has causal, state-dependent value.
+
+Only the subsequent learning paper should test whether retaining (L_{t-1}) improves the policy applied to future shocks.
+
+---
+
+# 13. Decisive recommendation
+
+## Implement these three families first
+
+### 1. Split-CSSU shared-capacity allocation
+
+Implement separate CSSU-A/B inventories, backlogs and mission demand. Test allocation, priority and partial fulfillment under a fixed total daily downstream capacity.
+
+This is first because it creates a genuine opportunity cost without inventing more aggregate throughput.
+
+### 2. Finite downstream transport allocation
+
+Add a shared fleet and then test convoy timing, vehicle allocation, route/mode choice and expediting at Op10/12.
+
+This is second because the thesis grounds the LOCs and transport modes, but not their numerical capacities. It requires more modeling and parameter sensitivity.
+
+### 3. Op7/8 release and batch control
+
+Test batch threshold, maximum wait, partial loads and departure timing with a finite outbound transport resource.
+
+This is third because it is strongly thesis-grounded, managerially interpretable and less confounded than station-level maintenance.
+
+## Do not explore now
+
+Do not spend another experimental cycle on:
+
+* weekly dynamic thesis buffers and shifts;
+* more ROP/Q multipliers without physical orders and finite resources;
+* KAN, RNN, transformers or MARL;
+* stronger nonstationarity designed to enlarge a weak learning effect;
+* another warning feature without a preregistered VOI decomposition;
+* backlog eviction as a resilience action;
+* dynamic maintenance before failure hazard depends on maintenance;
+* route choice before multiple physical routes exist;
+* retained/reset/frozen learning before a tree beats the best constant.
+
+## Exact experiment to commit before any PPO training
+
+The next committed artifacts should be:
+
+```text
+docs/DECISION_RIGHTS_DISCOVERY_PREREG_2026-07-11.md
+contracts/cssu_allocation_v1.json
+supply_chain/counterfactual_replay.py
+scripts/run_cssu_allocation_static_frontier.py
+scripts/run_cssu_allocation_branching.py
+scripts/fit_crossfitted_policy_tree.py
+tests/test_cssu_allocation_liveness.py
+tests/test_counterfactual_replay_identity.py
+tests/test_cssu_mass_balance.py
+tests/test_no_privileged_cssu_observations.py
+```
+
+The preregistration must freeze:
+
+```text
+Action set:
+    allocation ∈ {0.25, 0.50, 0.75}
+    rule ∈ {SPT_FULL, FIFO_PARTIAL, R24_AGE_PARTIAL}
+
+Epoch:
+    24 hours
+
+Calibration:
+    60 tapes
+    240 branch states
+    4 future suffixes
+    72h and 28d horizons
+
+Confirmation:
+    40 virgin tapes
+
+Primary outcome:
+    Excel/order-level ReT
+
+Required consistency:
+    service-loss AUC
+
+Promotion:
+    dynamic oracle gap LCB95 > 0
+    ≥2 actions optimal in ≥15% states
+    tree recovers ≥50% oracle gap
+    tree-vs-constant ReT LCB95 > 0
+    ReT gain ≥0.02 or service-loss reduction ≥5%
+    positive on ≥70% tapes
+    no tail or worst-CSSU contradiction
+```
+
+Commit message:
+
+```bash
+git add docs/DECISION_RIGHTS_DISCOVERY_PREREG_2026-07-11.md \
+        contracts/cssu_allocation_v1.json \
+        supply_chain/counterfactual_replay.py \
+        scripts/run_cssu_allocation_static_frontier.py \
+        scripts/run_cssu_allocation_branching.py \
+        scripts/fit_crossfitted_policy_tree.py \
+        tests/test_cssu_allocation_liveness.py \
+        tests/test_counterfactual_replay_identity.py \
+        tests/test_cssu_mass_balance.py \
+        tests/test_no_privileged_cssu_observations.py
+
+git commit -m "preregister and implement two-CSSU decision-rights discovery before RL"
+```
+
+The discovery runner should produce one final machine-readable verdict:
+
+```json
+{
+  "decision_family": "cssu_allocation_v1",
+  "physical_liveness": true,
+  "state_dependent_ranking": null,
+  "observable_convertibility": null,
+  "practical_headroom": null,
+  "resource_feasible": true,
+  "out_of_sample_robust": null,
+  "verdict": "PENDING"
+}
+```
+
+`train_agent.py` remains outside the protocol until that file says:
+
+```json
+"verdict": "PROMOTE_TO_SEQUENTIAL_CONTROL"
+```
+
+That is the next defensible artifact. Everything else is another AI consultation loop wearing a lab coat.
+
+[1]: https://arxiv.org/abs/1709.02319 "https://arxiv.org/abs/1709.02319"
+[2]: https://arxiv.org/abs/1706.08591 "https://arxiv.org/abs/1706.08591"
+[3]: https://abe.ufl.edu/faculty/jjones/ABE_5646/2010/Morris.1991%20SA%20paper.pdf "https://abe.ufl.edu/faculty/jjones/ABE_5646/2010/Morris.1991%20SA%20paper.pdf"
+[4]: https://www.sciencedirect.com/science/article/pii/S1364815206002805 "https://www.sciencedirect.com/science/article/pii/S1364815206002805"
+[5]: https://www.sciencedirect.com/science/article/pii/S036083522400771X "https://www.sciencedirect.com/science/article/pii/S036083522400771X"
+[6]: https://pubsonline.informs.org/doi/10.1287/msom.2021.1064 "https://pubsonline.informs.org/doi/10.1287/msom.2021.1064"
+[7]: https://www.sciencedirect.com/science/article/pii/S0377221721006111 "https://www.sciencedirect.com/science/article/pii/S0377221721006111"
+[8]: https://arxiv.org/abs/1912.03513 "https://arxiv.org/abs/1912.03513"
+[9]: https://arxiv.org/abs/1902.00183 "https://arxiv.org/abs/1902.00183"
+[10]: https://arxiv.org/abs/1702.02896 "https://arxiv.org/abs/1702.02896"
+[11]: https://arxiv.org/abs/2012.02279 "https://arxiv.org/abs/2012.02279"
+[12]: https://www.sciencedirect.com/journal/computers-and-industrial-engineering/about/aims-and-scope "https://www.sciencedirect.com/journal/computers-and-industrial-engineering/about/aims-and-scope"
+

@@ -1,36 +1,58 @@
 \hypertarget{6-conclusion}{%
-\section{6. Conclusion}\label{6-conclusion}}
+\section{Conclusion}\label{6-conclusion}}
 
 This paper presented a reproducible DES+RL benchmark for operational
 resilience control in a military food supply chain, grounded in
-Garrido-Rios' (2017) validated 13-operation simulation model. The
-experimental design uses two matched benchmark families to answer a
-structural question: when does reinforcement learning outperform strong
-static baselines in resilience-oriented operational control?
+Garrido-Rios' 13-operation simulation model~\cite{garrido2017}. The
+experimental design ultimately answers a benchmark-design question: does an
+apparent reinforcement-learning advantage survive when the static comparator
+is optimized over the same decision contract?
 
-Under the thesis-faithful Track A contract, where the agent controls
-upstream inventory and assembly shifts (5 action dimensions), no RL
-configuration across 14 reward modes, 5 observation versions, and 2
-algorithms outperforms the strongest static baseline. The root cause is
-structural: the active downstream distribution bottleneck lies outside
-the agent's controllable interface, limiting the marginal value of
-upstream optimization regardless of algorithmic sophistication.
+Under the thesis-grounded Track A contract, where the agent controls
+upstream inventory and assembly shifts, dense common-random-number
+static frontiers and multiple RL configurations across reward modes,
+observation versions, and algorithms leave no publishable dynamic-control
+advantage. This boundary is a property of the thesis-grounded decision
+family, not of upstream control per se: the identified factorial shows
+that a richer upstream/shift parameterization under closed-loop control
+does convert headroom, so what Track A lacked was an action
+parameterization whose adaptive movement matters, with the downstream
+dispatch bottleneck additionally outside its controllable interface.
 
-Under the extended Track B contract, which adds downstream transport
-dispatch at Op10 and Op12 (7 action dimensions) while preserving the DES
-backbone, PPO achieves fill rate 1.000, zero backorders, and order-level
-resilience 0.950, decisively exceeding all static baselines. A matched
-5D-versus-7D ablation with identical observations, reward, and risk
-profile indicates that the downstream control dimensions are materially
-responsible for the observed gain.
+Under the DES-preserving Track B operational extension, which adds downstream transport
+dispatch at Op10 and Op12 (an 8-dimensional action contract) while
+preserving the DES backbone, PPO improves Garrido/Excel resilience over
+the best of a restricted dense downstream-dispatch grid of static comparators under paired
+common-random-number evaluation (+0.000438 Excel ReT across 10 training
+seeds, 95\% CI entirely positive),
+with matching gains in service continuity and recovery-tail metrics. A
+local 3$\times$3 bound over the nearest upstream static quantity controls
+at the best downstream cell narrows but does not overturn the PPO
+advantage. A
+5-seed identified factorial decomposes the gain: most of it comes from
+closed-loop control of the upstream and shift levers the static family
+holds fixed, downstream dispatch access adds a causally identified
+increment, and dispatch-only control does not beat the dense frontier
+that already optimizes that subspace --- so action-space size alone does
+not explain the result; the
+advantage holds for current and increased Garrido-native risk levels at
+both evaluated horizons with fully positive seed-clustered confidence
+intervals, while the severe service-floor regime is a disclosed boundary
+where the frozen policy loses narrowly; and two
+independent tests --- an observation-masked retrain and a
+privileged-access static comparator --- rule out that the effect depends
+on the learned policy exploiting simulator-only regime information
+unavailable to any static or heuristic baseline. However, these controls do
+not address comparator scope. In the terminal same-contract challenge, a
+calibration-only constant full-contract policy attains Excel ReT 0.005906366
+versus 0.005888317 for canonical PPO; PPO minus static is $-0.000018049$
+with two-way CI95 $[-0.000028615,-0.000008087]$. This reverses the earlier
+headline and retires the adaptive-superiority claim.
 
-The central lesson is that RL effectiveness in this benchmark depends
-not on algorithmic novelty or reward engineering but on whether the
-controllable interface reaches the binding operational constraint. This
-finding connects bottleneck reasoning from the Theory of Constraints
-with RL action-space design-\/-\/-a connection that, to our knowledge,
-has not been demonstrated empirically in the supply chain literature.
-For practitioners and researchers designing RL-based supply chain
-control systems, the implication is direct: before investing in
-architectural complexity, verify that the agent can act on the
-constraint that actually limits system performance.
+The central lesson is methodological: comparator decision rights are part of
+the treatment definition. A large gain can be stable across seeds, tapes,
+tail metrics, and information controls while remaining an artifact of a
+static family that holds learner-controlled dimensions fixed. For researchers
+and practitioners, the implication is direct: optimize a credible same-
+contract non-learning policy before attributing resilience gains to
+adaptation, architecture, or bottleneck access.

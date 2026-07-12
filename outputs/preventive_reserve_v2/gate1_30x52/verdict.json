@@ -1,0 +1,90 @@
+{
+  "arms": [
+    "static_0",
+    "static_15000",
+    "static_30000",
+    "perfect_warning",
+    "imperfect_warning",
+    "shuffled_placebo"
+  ],
+  "contract_id": "preventive_reserve_v2",
+  "contrasts": {
+    "imperfect_vs_shuffled_relative_service_gain": {
+      "ci95": [
+        -0.05220986550480261,
+        -0.00037541343467285945
+      ],
+      "mean": -0.02267746090662232,
+      "pass": false
+    },
+    "perfect_vs_static_0_relative_service_gain": {
+      "ci95": [
+        0.056194566027125484,
+        0.17420145029548656
+      ],
+      "mean": 0.11361440317487166,
+      "pass": false
+    }
+  },
+  "episode_rows_sha256": "e654422a53f2df6aef9d5831ce8abedc1d0974fca7e8e988d6a7b79c0190fcff",
+  "horizon_weeks": 52,
+  "imperfect_static_dominated": true,
+  "liveness_pass": true,
+  "n_tapes": 30,
+  "pareto_pass": false,
+  "perfect_static_dominated": true,
+  "perfect_within_static15_inventory": false,
+  "preregistered_gate": {
+    "imperfect_must_be_pareto_nondominated_vs_static_frontier": true,
+    "imperfect_vs_placebo_relative_service_gain_min": 0.05,
+    "paired_ci95_lower_must_exceed_zero": true,
+    "perfect_inventory_time_le_static15_plus_2pct": true,
+    "perfect_must_be_pareto_nondominated_vs_static_frontier": true,
+    "perfect_warning_relative_service_gain_vs_static0_min": 0.05,
+    "reserve_liveness_fraction_min": 0.5
+  },
+  "promoted_to_ppo": false,
+  "replenishment_transport_mode": "fixed_lead",
+  "reserve_live_fraction": 0.8333333333333334,
+  "screen_only": false,
+  "seed_start": 772000,
+  "summary": {
+    "imperfect_warning": {
+      "inventory_time": 154597534.13333333,
+      "reserve_issued": 31365.366666666665,
+      "ret_excel": 0.14131316455133755,
+      "service_loss": 44844802.13333333
+    },
+    "perfect_warning": {
+      "inventory_time": 162402377.83333334,
+      "reserve_issued": 31915.166666666668,
+      "ret_excel": 0.14147547267990906,
+      "service_loss": 47270358.233333334
+    },
+    "shuffled_placebo": {
+      "inventory_time": 152523738.36666667,
+      "reserve_issued": 34298.333333333336,
+      "ret_excel": 0.14416624887442855,
+      "service_loss": 44465111.13333333
+    },
+    "static_0": {
+      "inventory_time": 0.0,
+      "reserve_issued": 0.0,
+      "ret_excel": 0.11199333918192307,
+      "service_loss": 53043074.3
+    },
+    "static_15000": {
+      "inventory_time": 116291037.46666667,
+      "reserve_issued": 32341.533333333333,
+      "ret_excel": 0.14285151449024516,
+      "service_loss": 44364199.13333333
+    },
+    "static_30000": {
+      "inventory_time": 241945124.9,
+      "reserve_issued": 44810.96666666667,
+      "ret_excel": 0.15455474084637114,
+      "service_loss": 42818663.766666666
+    }
+  },
+  "verdict": "STOP_NO_PREVENTIVE_HEADROOM"
+}

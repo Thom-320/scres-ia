@@ -1,0 +1,251 @@
+\documentclass[11pt]{article}
+\usepackage[margin=2.4cm]{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage[spanish]{babel}
+\hypersetup{colorlinks=true, linkcolor=blue, urlcolor=blue}
+
+\title{Track B: resiliencia, buffers y arquitecturas\\
+\large Resumen corto y directo para Garrido}
+\author{Equipo SCRES-IA}
+\date{3 de julio de 2026}
+
+\begin{document}
+\maketitle
+
+\section*{De qué se trata}
+
+Este documento responde cuatro cosas que quedaron abiertas en la reunión del 2 de julio: cómo se
+reabastecen los buffers, si usar variables continuas contradice el DES, cuál es exactamente el
+contrato Track B 8D, y qué papel cumple el \emph{forecast}. Para no distraernos, aquí nos
+concentramos casi por completo en resiliencia: usamos la fórmula Excel de Garrido (ReT) como
+métrica principal. Las otras métricas sirven para auditar, pero no son el centro de la conversación.
+
+\section*{Buffers: ¿de dónde sale el inventario?}
+
+Tenías razón en dudar. El mecanismo viejo literalmente creaba inventario de la nada (una función
+interna que añadía unidades directas al contenedor de inventario), sin descontarlo de ningún
+origen ni chequear capacidad. Lo arreglamos: ahora el agente solo mueve los parámetros normales de
+reposición (cantidad de orden y punto de reorden) que el simulador ya usa para producir y
+transportar de verdad --- todo pasa por la cadena real, con capacidad y tiempo de transporte.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\textwidth]{figures/fig3_buffer_mechanism.pdf}
+\caption{Mecanismo viejo (el problema) vs. corregido (conserva el flujo físico real).}
+\end{figure}
+
+\section*{¿Continuo contradice el DES?}
+
+No. El DES describe cómo avanza el reloj de la simulación (por eventos, no por pasos fijos); no
+dice nada sobre si las variables de decisión deben ser discretas. La propia tesis ya usa
+fracciones continuas de buffer, y tú mismo recomendaste continuas sobre discretas en la reunión.
+No hay conflicto.
+
+\section*{Qué decide el agente}
+
+En Track B no dejamos que la red cambie toda la cadena. Le damos pocas palancas, escogidas porque
+están cerca del cuello de botella donde sí puede mejorar la resiliencia. El contrato usado se llama
+\textbf{\texttt{track\_b\_v1}}. Es un contrato de \textbf{ocho decisiones}; por eso hablamos de
+Track B 8D. Esto no debe confundirse con \textbf{v7}, que es la versión de observación, no una
+acción de siete dimensiones.
+
+La acción 8D tiene ocho señales continuas entre $-1$ y $1$:
+
+\begin{itemize}
+  \item \textbf{CDC / Op3}: cantidad de reposición y punto de reorden del centro de distribución.
+        Esto permite mover materia prima hacia la cadena, pero siempre respetando disponibilidad y
+        capacidad. Lo incluimos porque Op3 ya aparece en la tesis como nodo de buffer/inventario;
+        además, cuando decimos ``del CDC hacia abajo'', la lectura natural es incluir el CDC como
+        nodo frontera y excluir sólo Op1/Op2 (contratación/proveedores).
+  \item \textbf{Op9}: cantidad de despacho y punto de reorden hacia el batallón. Es la primera
+        palanca claramente aguas abajo del CDC.
+  \item \textbf{Op5}: señal heredada del contrato de tesis para el flujo hacia ensamblaje. No es la
+        palanca que usamos para defender el resultado principal.
+  \item \textbf{Turnos}: una señal continua que se traduce a 1, 2 o 3 turnos de ensamblaje.
+  \item \textbf{Op10 y Op12}: multiplicadores de despacho aguas abajo. Estas son las palancas más
+        importantes de Track B: regulan cuánto empuja la cadena hacia CSSU y teatro cuando hay
+        presión de servicio.
+\end{itemize}
+
+Por eso, la versión \textbf{8D completo} es válida y alineada con la tesis: incluye variables ya
+familiares (Op3, Op9 y turnos) más la extensión nueva aguas abajo (Op10/Op12). Como Op3 es el CDC,
+la frase ``del CDC hacia abajo'' la estamos interpretando de forma inclusiva: incluye Op3 y excluye
+Op1/Op2. Esa lectura también es consistente con la tesis, porque Op3 ya estaba en el contrato de
+inventario/buffer.
+
+\section*{Qué observa el agente}
+
+La política no ve el futuro ni las órdenes individuales completas. Observa un resumen semanal del
+estado de la simulación. En las corridas principales usamos el contrato \textbf{v7}, con 52 señales
+normalizadas. No hace falta memorizar las 52; se agrupan así:
+
+\begin{itemize}
+  \item \textbf{Inventario disponible}: materia prima en CDC y línea de ensamblaje, raciones en
+        ensamblaje, batallón, CSSU y teatro.
+  \item \textbf{Servicio y backlog}: fill rate, backorder rate, demanda y backorders de la semana
+        anterior, backlog acumulado y edad del backlog.
+  \item \textbf{Estado operativo}: si ensamblaje u operaciones logísticas están caídas, turnos
+        activos, lote pendiente y demanda contingente.
+  \item \textbf{Calendario y régimen}: fase de ciclos de Op1/Op2, día/semana de trabajo, y estado
+        del régimen de riesgo (normal, tensionado, pre-disrupción, disrupción, recuperación).
+  \item \textbf{Forecast y presión de riesgo}: forecast a 48h y 168h, deuda de mantenimiento,
+        probabilidad de defectos R14 y señales recientes de riesgos aguas abajo.
+  \item \textbf{Cuello de botella Track B}: estado de Op10/Op12, presión de cola en esos nodos,
+        fill rate y backlog móviles de 4 semanas.
+\end{itemize}
+
+¿Son demasiadas? Para una persona, sí sería una lista larga; para PPO+MLP o Real-KAN, 52 variables
+es un tamaño moderado. Además, no son variables arbitrarias: cada bloque responde a una pregunta
+operativa concreta: cuánto inventario hay, cómo va el servicio, qué tan congestionada está la cola,
+si hay riesgo activo o cercano, y dónde está la presión aguas abajo. Probamos también versiones con
+historia y memoria; hasta ahora no ganaron a esta observación compacta v7.
+
+\section*{Forecast: qué es y por qué hay que tratarlo con cuidado}
+
+El forecast son dos señales normalizadas que resumen presión de riesgo a \textbf{48 horas} y
+\textbf{168 horas}. En el benchmark adaptativo se actualizan cada 48 horas. Técnicamente no son una
+bola de cristal: salen del régimen de riesgo del simulador, de sus probabilidades de transición, de
+la intensidad esperada de disrupción y de un ruido pequeño. En una interpretación operativa, esto
+puede verse como una alerta temprana: inteligencia logística, mantenimiento, monitoreo de rutas o
+información contextual que anticipa que el sistema entra en una fase más peligrosa.
+
+La ventaja es obvia: si queremos estudiar prevención, el forecast le da al agente una señal para
+prepararse antes del golpe. Pero también es polémico: como nace dentro del simulador, un revisor
+podría decir que es una señal privilegiada. Si el agente gana sólo porque lee un indicador que un
+operador real no tendría, el resultado sería menos defendible. Por eso conviene separarlo en tres
+preguntas:
+
+\begin{itemize}
+  \item \textbf{¿Lo usamos para entrenar?} Sí, en el contrato v7 completo.
+  \item \textbf{¿El modelo depende de él?} Ya hicimos la prueba limpia: reentrenamos Track B sin los
+        dos forecasts explícitos. El resultado prácticamente no cambia en ReT Excel: el PPO+MLP
+        sin forecast queda en 0.005895, frente a aproximadamente 0.005898 del canónico con forecast.
+        Además, sigue ganando con claridad a la mejor estática/heurística comparable.
+  \item \textbf{¿Debemos quitarlo?} Para el resultado principal, sí podemos defender una versión sin
+        forecast. Es más conservadora y evita la crítica de información privilegiada. Para estudiar
+        prevención, en cambio, el forecast sigue siendo útil como sonda: si permite actuar antes del
+        riesgo y eso mejora la ReT, entonces se justifica como herramienta de alerta temprana.
+\end{itemize}
+
+Mi recomendación para discutir con Garrido: \textbf{no vender forecast como prevención demostrada
+todavía}. La buena noticia es que ya no necesitamos forecast para sostener el claim principal:
+Track B aprende igual de forma adaptativa y robusta. Dejemos forecast como herramienta para una
+pregunta más ambiciosa: si el agente puede volverse preventivo.
+
+\section*{Resiliencia: los resultados}
+
+Aquí muestro sólo el contrato \textbf{8D completo}. Quitamos la variante de CDC congelado del
+cuerpo principal porque distrae: era una auditoría útil, pero la propuesta que queremos discutir
+con Garrido es el modelo completo, CDC incluido. Probamos dos arquitecturas: PPO+MLP y Real-KAN,
+la implementación oficial de \texttt{pykan}.
+
+Todas las comparaciones usan los mismos escenarios de riesgo para cada política (misma semilla,
+mismos eventos), así que la diferencia es limpia, no suerte. A eso a veces se le llama CRN
+(\emph{common random numbers}), pero en simple significa: \textbf{todos compiten contra el mismo
+partido}. El comparador es nuestra propia grilla de políticas estáticas constantes (147
+combinaciones de turno y despacho).
+
+La tesis sigue siendo la base: usamos su DES, sus operaciones, sus riesgos y su fórmula Excel de
+resiliencia. Lo que no conviene hacer es decir ``mejoramos X\% contra la resiliencia de la tesis'',
+porque la tesis usa otro régimen experimental. Para mejora, la comparación justa es contra la mejor
+política estática dentro de nuestro mismo experimento.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/fig2_results.pdf}
+\caption{Mejora de resiliencia (ReT Excel) del contrato 8D completo frente a la mejor política
+estática.}
+\end{figure}
+
+\textbf{Las dos arquitecturas ganan en el contrato 8D completo.} Estos porcentajes son
+la mejora contra nuestra propia grilla estática densa, no contra un número absoluto de la tesis.
+Esa es la comparación limpia: mismo régimen, mismos eventos, misma métrica ReT Excel.
+
+\begin{center}
+\begin{tabular}{lcc}
+\toprule
+Alternativa & Superficie de decisión & Mejora vs. mejor estática \\
+\midrule
+PPO+MLP & 8D completo & +8.0\% \\
+Real-KAN & 8D completo & +9.4\% \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\clearpage
+
+\begin{itemize}
+  \item \textbf{Op3/CDC sí puede estar}: es el nodo frontera y ya aparece en la tesis. El contrato
+        ampliado no toca Op1/Op2; empieza en el CDC y baja hacia Batallón, CSSU y Teatro.
+  \item \textbf{Si miramos sólo resiliencia, Real-KAN es el mejor}: gana un poco más que PPO+MLP
+        en el contrato 8D completo. KAN sí funciona; la decisión es si priorizamos máxima
+        resiliencia o una arquitectura más simple.
+\end{itemize}
+
+\section*{PPO+MLP vs.\ Real-KAN: ¿cuál preferimos?}
+
+Nuestra recomendación para el paper sigue siendo \textbf{PPO+MLP} como columna vertebral: gana de
+forma clara, es fácil de defender y no depende de una arquitectura nueva para que el resultado
+exista. Pero si el criterio principal de Garrido es \textbf{resiliencia máxima}, entonces Real-KAN
+merece una oportunidad real: obtiene la ReT Excel más alta, conecta con la novedad
+Kolmogorov-Arnold de su paper de 2024 y tiene una ventaja narrativa fuerte: puede ser más
+interpretable que una MLP común. Podemos presentar ambas rutas sin forzar una falsa pelea:
+PPO+MLP como base robusta, Real-KAN como alternativa más novedosa y con mayor resiliencia.
+
+\section*{¿Y la historia? (memoria, atención)}
+
+Probamos LSTM, MLP con historia apilada, y DMLPA/CAN (atención sobre historia). \textbf{Ninguna
+mostró una ventaja real sobre PPO+MLP simple.} Esto queda como pregunta abierta para David: puede
+que otra forma de codificar la historia sí funcione, pero con lo que probamos esta sesión no
+encontramos señal positiva.
+
+\section*{¿Preventivo o reactivo?}
+
+Esta es tu pregunta más interesante. Ya dejamos implementada una auditoría concreta en el repo.
+La auditoría no reentrena nada: toma PPO+MLP y Real-KAN ya entrenados, repite los mismos
+episodios/semillas, y mide si las acciones aprendidas agregan valor antes o después del evento de
+riesgo.
+
+\begin{itemize}
+  \item Alinear las acciones de la política con el momento exacto en que empieza cada riesgo, y
+        ver si sube turno/despacho \emph{antes} (preventivo) o \emph{después} (reactivo) del
+        evento. Esto produce un estudio visual $t=-4,\ldots,+8$ semanas.
+  \item Repetir el mismo episodio reemplazando las acciones de una ventana por una acción neutral.
+        Si $R_{\mathrm{full}}-R_{\mathrm{reset}}$ es positivo antes del riesgo, hay evidencia de
+        prevención; si es positivo después, hay evidencia de reacción/recuperación.
+  \item Apagar o mezclar la señal de forecast sólo al evaluar (sin reentrenar): si no cambia el
+        desempeño, el modelo no depende causalmente de esa señal para decidir.
+  \item Medir sensibilidad por grupos de variables: forecast, fase del régimen, presión aguas
+        abajo, backlog y servicio. Para Real-KAN, esto puede complementarse con splines de
+        \texttt{pykan}; para CAN/DMLPA, la atención se trata como evidencia auxiliar, no como
+        explicación suficiente.
+\end{itemize}
+
+La primera corrida pareada de 5 semillas ya terminó y muestra señales descriptivas interesantes:
+el valor parece aparecer principalmente después del evento, no antes. Además, al reentrenar sin los
+dos forecasts explícitos, la ReT Excel se mantiene prácticamente igual. \textbf{Pero todavía no lo
+presentaría como una clasificación final.}
+Hicimos un control con tres políticas de referencia (una estática, una diseñada para ser
+preventiva y una diseñada para ser reactiva) y la regla automática todavía no separa bien esos
+casos. Por tanto, hoy el reclamo defendible es más prudente:
+\textbf{hay aprendizaje adaptativo claro, pero la auditoría preventivo/reactivo sigue en
+calibración}.
+
+Esto no es una mala noticia; al contrario, nos dice exactamente qué falta para responderte bien.
+El siguiente paso es ajustar la auditoría para distinguir dos cosas: (i) si la política sube
+turno/despacho antes del riesgo, y (ii) si esa acción preventiva realmente mejora la resiliencia
+ReT. El resultado ideal para Garrido sería una política mixta: preventiva ante riesgos comunes y
+reactiva ante lo inesperado. Si una siguiente ronda con KAN/CAN logra eso, sería un argumento
+fuerte para preferir esa arquitectura.
+
+\section*{Conclusión}
+
+Las dos arquitecturas funcionan y ganan resiliencia real en el contrato 8D completo. PPO+MLP es lo más sólido y eficiente para
+el resultado principal del paper. Real-KAN es la alternativa más atractiva si priorizas
+resiliencia máxima e interpretabilidad. Queda a tu criterio cuál enfatizar. La auditoría de
+prevención queda abierta como la próxima prueba: queremos demostrar no sólo que aprende, sino
+\emph{qué} aprende y si ese aprendizaje es preventivo, reactivo o mixto.
+
+\end{document}

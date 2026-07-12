@@ -118,6 +118,9 @@ def main() -> int:
         a.track = "b"
         a.algo = "ppo"
         a.decision_cadence = "weekly"  # per-step; avoids the int() block wrapper
+        # make_track_b_env builds a v7 observation internally; the parser default
+        # (v5, 30 fields) breaks mask validation for the regime/forecast indices 30-36.
+        a.observation_version = "v7"
         a.reward_mode = cli.reward_mode
         a.max_steps = cli.max_steps
         a.pretrain_timesteps = cli.pretrain_timesteps

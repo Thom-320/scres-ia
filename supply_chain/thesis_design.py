@@ -191,7 +191,10 @@ def family_for(cfi: int) -> ScenarioFamily:
 
 
 def horizon_hours_for_source(source_cfi: int) -> float:
-    years = 20 if 21 <= source_cfi <= 30 else 10
+    # Raw Garrido workbooks show CF1-CF2 reaching the 20-year thesis horizon
+    # (~161,263 h OATj), while CF3-CF20 are 10-year windows. Keep this as an
+    # explicit Excel-grounded exception rather than a broad R1 assumption.
+    years = 20 if source_cfi in (1, 2) or 21 <= source_cfi <= 30 else 10
     return float(years * HOURS_PER_YEAR_THESIS)
 
 

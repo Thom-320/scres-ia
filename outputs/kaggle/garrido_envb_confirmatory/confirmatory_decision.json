@@ -1,0 +1,95 @@
+{
+  "started_at_utc": "2026-06-27T11:56:51.807546+00:00",
+  "finished_at_utc": "2026-06-27T14:10:23.366389+00:00",
+  "profile": {
+    "seeds": "8501,8502,8503,8504,8505,8506,8507,8508,8509,8510",
+    "eval_episodes": "5",
+    "max_steps": "52",
+    "train_timesteps": "65536"
+  },
+  "candidates": [
+    {
+      "label": "envb_aggr_g24_raw_ppo",
+      "reward_mode": "ReT_garrido2024_raw",
+      "algo": "ppo",
+      "phi": "2.0",
+      "psi": "1.5",
+      "extra": {},
+      "claim_path": "Partial Win A: Excel ReT"
+    },
+    {
+      "label": "envb_aggr_g24_raw_recurrent",
+      "reward_mode": "ReT_garrido2024_raw",
+      "algo": "recurrent_ppo",
+      "phi": "2.0",
+      "psi": "1.5",
+      "extra": {},
+      "claim_path": "History ablation for Excel ReT"
+    },
+    {
+      "label": "envb_cons_control_v2_ppo",
+      "reward_mode": "control_v2",
+      "algo": "ppo",
+      "phi": "1.0",
+      "psi": "1.25",
+      "extra": {
+        "--control-v2-w-fill": "1.2",
+        "--control-v2-w-service": "6.0",
+        "--control-v2-w-lost": "4.0",
+        "--control-v2-w-inventory": "0.04",
+        "--control-v2-w-shift": "0.06",
+        "--control-v2-w-switch": "0.01"
+      },
+      "claim_path": "Partial Win B: Pareto/resources"
+    }
+  ],
+  "decision": {
+    "by_label": {
+      "envb_aggr_g24_raw_ppo": {
+        "complete_win": false,
+        "partial_win_a_excel_all_statics": false,
+        "partial_win_b_pareto_vs_frozen_efficient": false,
+        "s3_pareto_win": true,
+        "frozen_efficient_excel_delta_mean": 3.5056763160631427e-06,
+        "frozen_efficient_cd_delta_mean": 0.0017780722256391158,
+        "frozen_efficient_resource_delta_mean": 5854873.92,
+        "min_delta_excel_all_statics": -8.446446669181033e-06
+      },
+      "envb_aggr_g24_raw_recurrent": {
+        "complete_win": false,
+        "partial_win_a_excel_all_statics": false,
+        "partial_win_b_pareto_vs_frozen_efficient": false,
+        "s3_pareto_win": true,
+        "frozen_efficient_excel_delta_mean": -6.893647671681327e-05,
+        "frozen_efficient_cd_delta_mean": 0.0016263283397587491,
+        "frozen_efficient_resource_delta_mean": 3700342.56,
+        "min_delta_excel_all_statics": -8.088859970205748e-05
+      },
+      "envb_cons_control_v2_ppo": {
+        "complete_win": false,
+        "partial_win_a_excel_all_statics": false,
+        "partial_win_b_pareto_vs_frozen_efficient": false,
+        "s3_pareto_win": true,
+        "frozen_efficient_excel_delta_mean": -0.0001712714193837436,
+        "frozen_efficient_cd_delta_mean": -0.0018900804631719903,
+        "frozen_efficient_resource_delta_mean": 752115.72,
+        "min_delta_excel_all_statics": -0.0003305983899627343
+      }
+    },
+    "overall": {
+      "complete_win_labels": [],
+      "partial_win_a_labels": [],
+      "partial_win_b_labels": [],
+      "s3_pareto_labels": [
+        "envb_aggr_g24_raw_ppo",
+        "envb_aggr_g24_raw_recurrent",
+        "envb_cons_control_v2_ppo"
+      ]
+    }
+  },
+  "artifacts": {
+    "confirmatory_summary_csv": "outputs/kaggle/garrido_envb_confirmatory/confirmatory_summary.csv",
+    "confirmatory_all_statics_csv": "outputs/kaggle/garrido_envb_confirmatory/confirmatory_all_statics.csv",
+    "confirmatory_report_md": "outputs/kaggle/garrido_envb_confirmatory/confirmatory_report.md"
+  }
+}

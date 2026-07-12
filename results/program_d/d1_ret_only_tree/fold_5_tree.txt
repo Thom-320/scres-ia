@@ -1,0 +1,19 @@
+|--- contingent_share <= 0.01
+|   |--- recent_demand <= 17848.50
+|   |   |--- sb_inventory <= 25.50
+|   |   |   |--- class: spt_flat
+|   |   |--- sb_inventory >  25.50
+|   |   |   |--- class: spt_contingent
+|   |--- recent_demand >  17848.50
+|   |   |--- class: lpt_contingent
+|--- contingent_share >  0.01
+|   |--- op9_down <= 0.50
+|   |   |--- sb_inventory <= 2550.50
+|   |   |   |--- class: spt_contingent
+|   |   |--- sb_inventory >  2550.50
+|   |   |   |--- class: spt_flat
+|   |--- op9_down >  0.50
+|   |   |--- age_p75 <= 3018.00
+|   |   |   |--- class: spt_contingent
+|   |   |--- age_p75 >  3018.00
+|   |   |   |--- class: spt_contingent

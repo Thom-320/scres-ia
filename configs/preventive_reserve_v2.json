@@ -1,0 +1,42 @@
+{
+  "contract_id": "preventive_reserve_v2",
+  "parent_contract": "garrido_proxy_v1",
+  "step_hours": 24.0,
+  "target_risks": ["R22", "R23"],
+  "target_operations": [10, 11, 12],
+  "reserve": {
+    "location": "theatre_behind_op10_op12_corridor",
+    "capacity_rations": 30000.0,
+    "targets_rations": [0.0, 15000.0, 30000.0],
+    "source": "rations_sb",
+    "replenishment_lead_hours": 336.0,
+    "route_ops": [10, 11, 12],
+    "issue_delay_hours": 24.0,
+    "serve_only_when_corridor_down": true
+  },
+  "warning": {
+    "lead_hours": 336.0,
+    "false_negative_probability": 0.2,
+    "false_positive_opportunity_probability": 0.2,
+    "placebo": "half_horizon_time_shift"
+  },
+  "gate": {
+    "n_tapes": 30,
+    "horizon_weeks": 52,
+    "families": ["R2", "mixed"],
+    "risk_levels": ["current", "increased"],
+    "primary_endpoint": "service_loss_auc_ration_hours",
+    "perfect_relative_gain_vs_static0_min": 0.05,
+    "perfect_inventory_time_le_static15_plus_fraction": 0.02,
+    "perfect_pareto_nondominated": true,
+    "imperfect_vs_placebo_relative_gain_min": 0.05,
+    "paired_ci95_lower_above_zero": true,
+    "reserve_liveness_fraction_min": 0.5,
+    "pareto_dimensions": [
+      "service_loss_auc_ration_hours",
+      "emergency_reserve_inventory_time",
+      "ret_excel"
+    ]
+  },
+  "ppo_authorized_before_gate": false
+}

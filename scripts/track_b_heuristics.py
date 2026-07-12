@@ -1,10 +1,11 @@
-"""Track B heuristic baselines (7D action space).
+"""Track B heuristic baselines (8D action space).
 
-Each heuristic outputs a 7-dim action array in [-1, 1]:
+Each heuristic outputs an 8-dim action array in [-1, 1]:
   [0-3]: inventory multiplier signals (op3_q, op9_q, op3_rop, op9_rop)
-  [4]:   shift selector signal (-1→S1, 0→S2, +1→S3)
-  [5]:   op10 downstream multiplier signal
-  [6]:   op12 downstream multiplier signal
+  [4]:   op5 multiplier signal (neutral 0.0)
+  [5]:   shift selector signal (-1→S1, 0→S2, +1→S3)
+  [6]:   op10 downstream multiplier signal
+  [7]:   op12 downstream multiplier signal
 
 Multiplier mapping: signal ∈ [-1, 1] → multiplier = 1.25 + 0.75 * signal ∈ [0.5, 2.0]
 
@@ -51,7 +52,7 @@ class TrackBHysteresis:
         elif backorder_rate < self.tau_low:
             self._current_shift = 1
         return np.array(
-            [0.0, 0.0, 0.0, 0.0, SHIFT_SIGNAL[self._current_shift], 0.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 0.0, SHIFT_SIGNAL[self._current_shift], 0.0, 0.0],
             dtype=np.float32,
         )
 
@@ -95,7 +96,7 @@ class TrackBDisruptionAware:
             inv_signal = 0.0
             ds_signal = 0.0
         return np.array(
-            [inv_signal, inv_signal, inv_signal, inv_signal,
+            [inv_signal, inv_signal, inv_signal, inv_signal, 0.0,
              shift_signal, ds_signal, ds_signal],
             dtype=np.float32,
         )
@@ -136,7 +137,7 @@ class TrackBTuned:
 
         ds_signal = 0.5 if self._current_shift >= 2 else 0.0
         return np.array(
-            [0.0, 0.0, 0.0, 0.0, SHIFT_SIGNAL[self._current_shift],
+            [0.0, 0.0, 0.0, 0.0, 0.0, SHIFT_SIGNAL[self._current_shift],
              ds_signal, ds_signal],
             dtype=np.float32,
         )
@@ -176,7 +177,7 @@ class TrackBDownstreamReactive:
             op12_signal = self.boost_signal
 
         return np.array(
-            [0.0, 0.0, 0.0, 0.0, -1.0, op10_signal, op12_signal],
+            [0.0, 0.0, 0.0, 0.0, 0.0, -1.0, op10_signal, op12_signal],
             dtype=np.float32,
         )
 
@@ -194,7 +195,61 @@ class TrackBMaxDownstream:
 
     def __call__(self, obs: np.ndarray, info: dict[str, Any]) -> np.ndarray:
         return np.array(
-            [0.0, 0.0, 0.0, 0.0, -1.0, 1.0, 1.0],
+            [0.0, 0.0, 0.0, 0.0, 0.0, -1.0, 1.0, 1.0],
+            dtype=np.float32,
+        )
+
+
+class TrackBForecastThreshold:
+    """Forecast-threshold rule using the simulator-exposed v7 forecast fields."""
+
+    def __init__(
+        self,
+        forecast_high: float = 0.55,
+        forecast_low: float = 0.30,
+        fill_caution: float = 0.92,
+        backorder_caution: float = 0.08,
+    ) -> None:
+        self.forecast_high = forecast_high
+        self.forecast_low = forecast_low
+        self.fill_caution = fill_caution
+        self.backorder_caution = backorder_caution
+
+    def reset(self) -> None:
+        pass
+
+    def __call__(self, obs: np.ndarray, info: dict[str, Any]) -> np.ndarray:
+        frame = _latest_frame(obs)
+        forecast_48h = float(frame[35]) if len(frame) > 35 else 0.0
+        forecast_168h = float(frame[36]) if len(frame) > 36 else 0.0
+        fill_rate = float(frame[6]) if len(frame) > 6 else 1.0
+        backorder_rate = float(frame[7]) if len(frame) > 7 else 0.0
+        pressure = max(forecast_48h, 0.75 * forecast_168h)
+
+        if pressure >= self.forecast_high or fill_rate < self.fill_caution:
+            shift_signal = 1.0
+            downstream_signal = 1.0
+            inventory_signal = 0.5
+        elif pressure >= self.forecast_low or backorder_rate > self.backorder_caution:
+            shift_signal = 0.0
+            downstream_signal = 0.5
+            inventory_signal = 0.0
+        else:
+            shift_signal = -1.0
+            downstream_signal = 0.0
+            inventory_signal = 0.0
+
+        return np.array(
+            [
+                inventory_signal,
+                inventory_signal,
+                inventory_signal,
+                inventory_signal,
+                0.0,
+                shift_signal,
+                downstream_signal,
+                downstream_signal,
+            ],
             dtype=np.float32,
         )
 
@@ -209,6 +264,7 @@ def make_heuristic_defaults() -> dict[str, TrackBHeuristicPolicy]:
         "heur_tuned": TrackBTuned(),
         "heur_downstream_reactive": TrackBDownstreamReactive(),
         "heur_s1_max_downstream": TrackBMaxDownstream(),
+        "heur_forecast_threshold": TrackBForecastThreshold(),
     }
 
 

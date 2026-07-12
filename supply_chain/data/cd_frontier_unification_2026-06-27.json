@@ -1,0 +1,52 @@
+{
+  "created_at": "2026-06-27",
+  "primary_metric": "cd_sigmoid_mean",
+  "decision": {
+    "primary_clean_same_bar": {
+      "phi": 2.0,
+      "psi": 1.0,
+      "stochastic_pt": false,
+      "demand_multiplier": 1.0,
+      "ret_g24_shift_cost": 1.0,
+      "ret_g24_kappa_train_frac": 1.0,
+      "reason": "Robust, regime-dependent, interior Track-A C-D frontier without max-inventory corner.",
+      "top_policy_sequence": [
+        "static_S1_I168",
+        "static_S1_I504",
+        "static_S3_I336"
+      ],
+      "robust_artifact": "outputs/experiments/cd_same_bar_frontier_robust_2026-06-27/phi2_psi1_det/summary.json",
+      "conservative_oracle_gap_artifact": "outputs/experiments/cd_static_frontier_2026-06-27/summary.json"
+    },
+    "exploratory_war_raw_headroom": {
+      "phi": 3.0,
+      "psi": 1.0,
+      "stochastic_pt": true,
+      "demand_multiplier": 1.0,
+      "ret_g24_shift_cost": 1.0,
+      "ret_g24_kappa_train_frac": 1.0,
+      "reason": "Largest robust checked static spread, but not clean for Pareto/resource-efficiency claims because severe uses S3_I1344.",
+      "top_policy_sequence": [
+        "static_S1_I168",
+        "static_S2_I336",
+        "static_S3_I1344"
+      ],
+      "robust_artifact": "outputs/experiments/cd_same_bar_war_robust_2026-06-27/phi3_psi1_spt/summary.json"
+    }
+  },
+  "not_primary": [
+    {
+      "cell": "phi4_psi1.5",
+      "reason": "Single-seed war peak suggested high headroom, but available confirm panels show increased-regime optimum at S3_I1344."
+    },
+    {
+      "cell": "dm1.2_spt",
+      "reason": "Valid alternative under stricter off-saturation gate, but it adds demand and stochastic PT before exhausting simpler risk-only C-D same-bar cell."
+    }
+  ],
+  "claim_boundary": {
+    "primary_lane": "Cobb-Douglas same-bar dynamic-vs-static under a clean war-stress extension.",
+    "exploratory_lane": "Higher-stress military scenario to test maximum headroom.",
+    "excel_ret": "Secondary continuity metric, not the primary same-bar metric in the C-D lane."
+  }
+}

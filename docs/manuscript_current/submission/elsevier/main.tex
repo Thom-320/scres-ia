@@ -11,30 +11,33 @@
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
 \usepackage{hyperref}
+\hypersetup{hidelinks}
 \usepackage{amsmath,amssymb}
 \usepackage{booktabs}
 \usepackage{longtable}
 \usepackage{array}
 \usepackage{graphicx}
+\graphicspath{{figures/}}
+\emergencystretch=3em
 
 \begin{document}
 \ifuseelsevier
 \begin{frontmatter}
-\title{When Does Reinforcement Learning Work for Supply Chain Resilience? Action-Space Alignment in a Military DES Benchmark}
+\title{When Apparent Reinforcement-Learning Gains Depend on the Static Frontier: A Garrido-Grounded Supply-Chain DES Benchmark}
 \begin{abstract}
-Supply chain resilience research increasingly uses reinforcement learning and hybrid simulation workflows, but much of the literature still emphasizes inventory cost optimization, abstract network reconfiguration, or generic benchmark environments rather than operational control on validated, domain-specific models. We present a reproducible discrete-event simulation plus reinforcement learning benchmark for resilience control in a 13-operation military food supply chain rebuilt from Garrido-Rios' (2017) thesis and exposed through a Gymnasium-compatible interface. We first report a negative result: under the thesis-faithful control contract, PPO trained with a Cobb--Douglas resilience reward reaches fill rate 0.788 versus 0.792 for the strongest static baseline, and RecurrentPPO does not recover the gap. We then introduce a minimal action-space extension that adds downstream dispatch control at Op10 and Op12 while keeping the DES backbone intact. Under this extended contract, PPO reaches fill rate 1.000, zero backorders, and order-level resilience 0.950, exceeding the baseline by 3.40 percentage points in fill rate and the best static policy by 1.23 percentage points. A matched 5D-versus-7D ablation with identical observation space, reward family, and risk profile further indicates that the added downstream control dimensions are materially responsible for the gain. The contribution is not architectural novelty but a benchmark-centered diagnosis of when reinforcement learning fails and when it works in supply chain resilience control.
+Simulation--reinforcement-learning studies can report stable gains even when the static comparator controls only a subset of the learner's decision variables. We examine this risk in a Garrido-grounded discrete-event benchmark of a 13-operation military food supply chain using common random numbers and the workbook-faithful Garrido/Excel resilience metric. Against a 147-cell frontier that varies shift and downstream dispatch while fixing upstream controls, ten PPO checkpoints improve Excel ReT by $+0.000486$ on 60 crossed held-out tapes. We then impose a stronger, frozen same-contract challenge. A constant policy is selected by one Sobol screen and one refinement using calibration tapes only, then evaluated on 60 untouched tapes. The result reverses: full-contract static ReT is $0.005906366$ versus $0.005888317$ for PPO; PPO minus static is $-0.000018049$ with two-way checkpoint--tape CI95 $[-0.000028615,-0.000008087]$. A matched learned-policy contrast still finds a small positive increment from dynamic dispatch access ($+0.000021106$, CI95 $[+0.000007015,+0.000034963]$), but this does not establish superiority over static control. Privileged-information and prevention audits further delimit interpretation. The contribution is therefore an auditable demonstration that comparator decision rights must match learner decision rights before resilience gains are attributed to adaptive control.
 \end{abstract}
 \begin{keyword}
-Supply chain resilience \sep reinforcement learning \sep discrete-event simulation \sep military supply chain \sep bottleneck alignment
+Supply chain resilience \sep reinforcement learning \sep discrete-event simulation \sep static benchmark \sep comparator design
 \end{keyword}
 \end{frontmatter}
 \else
-\title{When Does Reinforcement Learning Work for Supply Chain Resilience? Action-Space Alignment in a Military DES Benchmark}
+\title{When Apparent Reinforcement-Learning Gains Depend on the Static Frontier: A Garrido-Grounded Supply-Chain DES Benchmark}
 \author{}
 \date{}
 \maketitle
 \begin{abstract}
-Supply chain resilience research increasingly uses reinforcement learning and hybrid simulation workflows, but much of the literature still emphasizes inventory cost optimization, abstract network reconfiguration, or generic benchmark environments rather than operational control on validated, domain-specific models. We present a reproducible discrete-event simulation plus reinforcement learning benchmark for resilience control in a 13-operation military food supply chain rebuilt from Garrido-Rios' (2017) thesis and exposed through a Gymnasium-compatible interface. We first report a negative result: under the thesis-faithful control contract, PPO trained with a Cobb--Douglas resilience reward reaches fill rate 0.788 versus 0.792 for the strongest static baseline, and RecurrentPPO does not recover the gap. We then introduce a minimal action-space extension that adds downstream dispatch control at Op10 and Op12 while keeping the DES backbone intact. Under this extended contract, PPO reaches fill rate 1.000, zero backorders, and order-level resilience 0.950, exceeding the baseline by 3.40 percentage points in fill rate and the best static policy by 1.23 percentage points. A matched 5D-versus-7D ablation with identical observation space, reward family, and risk profile further indicates that the added downstream control dimensions are materially responsible for the gain. The contribution is not architectural novelty but a benchmark-centered diagnosis of when reinforcement learning fails and when it works in supply chain resilience control.
+Simulation--reinforcement-learning studies can report stable gains even when the static comparator controls only a subset of the learner's decision variables. We examine this risk in a Garrido-grounded discrete-event benchmark of a 13-operation military food supply chain using common random numbers and the workbook-faithful Garrido/Excel resilience metric. Against a 147-cell frontier that varies shift and downstream dispatch while fixing upstream controls, ten PPO checkpoints improve Excel ReT by $+0.000486$ on 60 crossed held-out tapes. We then impose a stronger, frozen same-contract challenge. A constant policy is selected by one Sobol screen and one refinement using calibration tapes only, then evaluated on 60 untouched tapes. The result reverses: full-contract static ReT is $0.005906366$ versus $0.005888317$ for PPO; PPO minus static is $-0.000018049$ with two-way checkpoint--tape CI95 $[-0.000028615,-0.000008087]$. A matched learned-policy contrast still finds a small positive increment from dynamic dispatch access ($+0.000021106$, CI95 $[+0.000007015,+0.000034963]$), but this does not establish superiority over static control. Privileged-information and prevention audits further delimit interpretation. The contribution is therefore an auditable demonstration that comparator decision rights must match learner decision rights before resilience gains are attributed to adaptive control.
 \end{abstract}
 \fi
 
@@ -45,12 +48,120 @@ Supply chain resilience research increasingly uses reinforcement learning and hy
 \input{sections/05_discussion.tex}
 \input{sections/06_conclusion.tex}
 
-\nocite{*}
-\ifuseelsevier
+\section*{CRediT authorship contribution statement}
+[TO COMPLETE before submission: author names and roles, e.g.
+Conceptualization; Methodology; Software; Validation; Formal analysis;
+Writing -- original draft; Writing -- review and editing; Supervision.]
+
+\section*{Declaration of competing interest}
+The authors declare that they have no known competing financial
+interests or personal relationships that could have appeared to
+influence the work reported in this paper.
+
+\section*{Funding}
+[TO COMPLETE: funding statement, or ``This research did not receive any
+specific grant from funding agencies in the public, commercial, or
+not-for-profit sectors.'']
+
+\section*{Data and code availability}
+All simulation code (DES backbone, Gymnasium wrappers, training and
+evaluation scripts), the dense static frontier definitions, the frozen
+evidence bundles behind every table and figure, and the figure-generation
+pipeline are openly available in the project repository
+(\texttt{github.com/Thom-320/scres-ia}, branch
+\texttt{codex/garrido-}\\\texttt{replication-experiments}, commit
+\texttt{10c7de9} as of this draft --- \emph{[TO UPDATE: re-pin to the
+camera-ready commit before final submission]}). The original
+Garrido-Rios workbook artifacts used for the row-level metric audit are
+available from the cited thesis repository (WRAP, University of Warwick)
+and from the corresponding author on reasonable request.
+
+\section*{Acknowledgments}
+[TO COMPLETE: acknowledge A. Garrido for the thesis materials and
+workbook artifacts if appropriate, plus any colleagues/reviewers.]
+
+\appendix
+
+\section{Comparator-selection robustness}\label{appendix-robustness}
+
+Because the headline comparator (the strongest of 147 statics) is
+selected on the same evaluation episodes used to score PPO, comparator
+selection could in principle inflate the reported delta (a
+winner's-curse concern). Table~\ref{tab:top12_robustness} recomputes the
+canonical paired delta against each of the twelve strongest static
+comparators individually. All twelve deltas are positive with confidence
+intervals excluding zero, and the delta \emph{grows} down the ranking ---
+the opposite of the pattern selection bias would produce. Comparator
+selection cannot flip the sign of the result.
+
+\begin{table}[htbp]
+\centering
+\caption{PPO Excel ReT delta against each of the top-12 static dispatch
+comparators (60 CRN pairs each; bootstrap CI95). Every pairwise delta is
+positive with a fully positive interval.}
+\label{tab:top12_robustness}
+\scriptsize
+\setlength{\tabcolsep}{4.0pt}
+\begin{tabular}{clccc}
+\toprule
+Rank & Static policy & Static Excel ReT & $\Delta$ & CI95 \\
+\midrule
+1 & S2\_op10\_2.00\_op12\_1.50 & 0.005466 & +0.000426 & [+0.000388, +0.000463] \\
+2 & S2\_op10\_1.25\_op12\_2.50 & 0.005466 & +0.000427 & [+0.000380, +0.000475] \\
+3 & S3\_op10\_2.50\_op12\_2.50 & 0.005465 & +0.000428 & [+0.000389, +0.000467] \\
+4 & S3\_op10\_1.25\_op12\_2.00 & 0.005450 & +0.000443 & [+0.000396, +0.000494] \\
+5 & S2\_op10\_1.00\_op12\_2.00 & 0.005445 & +0.000447 & [+0.000404, +0.000489] \\
+6 & S3\_op10\_1.25\_op12\_1.50 & 0.005442 & +0.000450 & [+0.000404, +0.000497] \\
+7 & S3\_op10\_2.00\_op12\_2.50 & 0.005442 & +0.000451 & [+0.000411, +0.000491] \\
+8 & S3\_op10\_1.00\_op12\_2.50 & 0.005441 & +0.000452 & [+0.000410, +0.000493] \\
+9 & S2\_op10\_2.50\_op12\_1.25 & 0.005438 & +0.000454 & [+0.000422, +0.000488] \\
+10 & S3\_op10\_2.50\_op12\_2.00 & 0.005438 & +0.000455 & [+0.000424, +0.000487] \\
+11 & S2\_op10\_2.50\_op12\_2.00 & 0.005433 & +0.000460 & [+0.000419, +0.000504] \\
+12 & S2\_op10\_1.50\_op12\_1.50 & 0.005428 & +0.000465 & [+0.000422, +0.000507] \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Efficiency-architecture attribution}\label{appendix-efficiency}
+
+The prevention audit (Section~4.8) evaluated, among other candidates, a
+policy trained with a live auxiliary future-risk prediction loss sharing
+the feature trunk with the actor-critic. Its preventive claim did not
+survive the negative controls, but a secondary observation did: under
+the downstream-stress evaluation, that policy matched the reactive
+baseline's resilience ($+10.05\%$ versus $+10.65\%$ over the best
+static) at roughly 55\% of its resource cost (cost index 0.396 versus
+0.719). A control ladder attributes the mechanism
+(Figure~\ref{fig:efficiency_architecture}): replacing the true auxiliary
+label with a temporally permuted label, a constant label, or removing
+the auxiliary gradient entirely ($\lambda{=}0$, head present but inert)
+all reproduce the same low-cost, equal-resilience cluster --- so neither
+the predictive content nor the auxiliary loss is the cause. Conversely,
+both default-extractor policies (the reactive baseline and the
+clairvoyant variant with the true future visible) sit at $1.8$--$2.2\times$
+the cost regardless of foreknowledge. The efficiency effect traces to
+the alternative feature-extractor architecture itself (a narrow shared
+trunk feeding separate actor and critic heads), not to prediction. We
+report this as an incidental architecture observation --- potentially
+useful where resource intensity matters --- and explicitly not as
+evidence of anticipatory learning.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\linewidth]{fig10_efficiency_architecture}
+\caption{Efficiency-architecture attribution (control ladder, Case C
+downstream-stress scale). The four shared-trunk-extractor arms
+(true-label $\lambda{=}0.25$, permuted-label, constant-label, and
+$\lambda{=}0$ with zero auxiliary gradient) cluster at cost
+$\approx$0.40--0.43 with closely matched Excel ReT, regardless of whether
+the auxiliary task carries signal or gradient. The two default-extractor
+arms cluster at cost $\approx$0.72--0.85 regardless of foreknowledge.
+The cost reduction traces to the extractor architecture, not to
+prediction.}
+\label{fig:efficiency_architecture}
+\end{figure}
+
 \bibliographystyle{elsarticle-num}
-\else
-\bibliographystyle{plain}
-\fi
 \bibliography{references}
 
 \end{document}

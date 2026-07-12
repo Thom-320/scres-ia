@@ -1,0 +1,180 @@
+{
+  "description": "Joint 6x3 Cobb-Douglas screen across regimes (paired CRN).",
+  "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "regimes": [
+    "current",
+    "increased",
+    "severe"
+  ],
+  "max_steps": 104,
+  "step_hours": 168.0,
+  "shift_cost": 0.5,
+  "kappa_frac": 0.2,
+  "metric": "ret_garrido2024_sigmoid_total",
+  "per_regime": {
+    "current": {
+      "argmax_shift": 1,
+      "argmax_inventory": 168,
+      "argmax_score": 74.623,
+      "argmax_is_corner": false,
+      "best_shift_marginal_at_argmax_inv": {
+        "S1": 74.623,
+        "S2": 68.618,
+        "S3": 63.669
+      },
+      "surface": {
+        "I0": {
+          "S1": 68.855,
+          "S2": 63.074,
+          "S3": 60.274
+        },
+        "I168": {
+          "S1": 74.623,
+          "S2": 68.618,
+          "S3": 63.669
+        },
+        "I336": {
+          "S1": 73.697,
+          "S2": 66.255,
+          "S3": 63.434
+        },
+        "I504": {
+          "S1": 73.133,
+          "S2": 66.322,
+          "S3": 65.265
+        },
+        "I672": {
+          "S1": 72.305,
+          "S2": 66.188,
+          "S3": 64.137
+        },
+        "I1344": {
+          "S1": 70.352,
+          "S2": 65.328,
+          "S3": 62.34
+        }
+      }
+    },
+    "increased": {
+      "argmax_shift": 1,
+      "argmax_inventory": 168,
+      "argmax_score": 73.671,
+      "argmax_is_corner": false,
+      "best_shift_marginal_at_argmax_inv": {
+        "S1": 73.671,
+        "S2": 66.582,
+        "S3": 63.11
+      },
+      "surface": {
+        "I0": {
+          "S1": 65.494,
+          "S2": 62.943,
+          "S3": 60.522
+        },
+        "I168": {
+          "S1": 73.671,
+          "S2": 66.582,
+          "S3": 63.11
+        },
+        "I336": {
+          "S1": 72.801,
+          "S2": 65.696,
+          "S3": 62.724
+        },
+        "I504": {
+          "S1": 72.166,
+          "S2": 65.279,
+          "S3": 62.135
+        },
+        "I672": {
+          "S1": 71.268,
+          "S2": 64.658,
+          "S3": 61.889
+        },
+        "I1344": {
+          "S1": 69.527,
+          "S2": 64.284,
+          "S3": 61.141
+        }
+      }
+    },
+    "severe": {
+      "argmax_shift": 2,
+      "argmax_inventory": 168,
+      "argmax_score": 67.664,
+      "argmax_is_corner": false,
+      "best_shift_marginal_at_argmax_inv": {
+        "S1": 65.5,
+        "S2": 67.664,
+        "S3": 65.087
+      },
+      "surface": {
+        "I0": {
+          "S1": 63.887,
+          "S2": 64.115,
+          "S3": 63.458
+        },
+        "I168": {
+          "S1": 65.5,
+          "S2": 67.664,
+          "S3": 65.087
+        },
+        "I336": {
+          "S1": 65.724,
+          "S2": 65.281,
+          "S3": 63.623
+        },
+        "I504": {
+          "S1": 66.142,
+          "S2": 64.814,
+          "S3": 62.897
+        },
+        "I672": {
+          "S1": 66.373,
+          "S2": 64.498,
+          "S3": 62.594
+        },
+        "I1344": {
+          "S1": 65.797,
+          "S2": 63.984,
+          "S3": 61.537
+        }
+      }
+    }
+  },
+  "criterion_1_interior": true,
+  "criterion_2_regime_dependent": true,
+  "criterion_2_robust_flip": true,
+  "shift_optimum_moves_with_regime": true,
+  "regime_argmax": {
+    "current": "S1_I168",
+    "increased": "S1_I168",
+    "severe": "S2_I168"
+  },
+  "flips": {
+    "severe": {
+      "from": "S1_I168",
+      "to": "S2_I168",
+      "shift_changed": true,
+      "paired_ci_vs_base_argmax": {
+        "mean": 2.1643,
+        "lo": 1.4677,
+        "hi": 2.8609,
+        "n": 10,
+        "robust": true
+      }
+    }
+  },
+  "green_light_for_rl": true
+}

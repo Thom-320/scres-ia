@@ -73,6 +73,8 @@ OBSERVATION_FIELDS_V6: tuple[str, ...] = OBSERVATION_FIELDS_V5 + (
     "maintenance_debt_norm",
     "backlog_age_norm",
     "theatre_cover_days_norm",
+    "production_rate_norm",
+    "r14_defect_prob",
 )
 OBSERVATION_FIELDS_V7: tuple[str, ...] = OBSERVATION_FIELDS_V6 + (
     "op10_down",
@@ -81,6 +83,52 @@ OBSERVATION_FIELDS_V7: tuple[str, ...] = OBSERVATION_FIELDS_V6 + (
     "op12_queue_pressure_norm",
     "rolling_fill_rate_4w",
     "rolling_backorder_rate_4w",
+    "weeks_since_last_R22",
+    "weeks_since_last_R23",
+    "weeks_since_last_R24",
+    "ewma_downstream_risk",
+)
+REALIZED_RISK_OBSERVATION_IDS: tuple[str, ...] = (
+    "R11",
+    "R12",
+    "R13",
+    "R14",
+    "R21",
+    "R22",
+    "R23",
+    "R24",
+    "R3",
+)
+OBSERVATION_FIELDS_V8: tuple[str, ...] = OBSERVATION_FIELDS_V7 + tuple(
+    f"active_{risk_id.lower()}" for risk_id in REALIZED_RISK_OBSERVATION_IDS
+) + tuple(
+    f"recent_{risk_id.lower()}" for risk_id in REALIZED_RISK_OBSERVATION_IDS
+) + tuple(
+    f"recent_{risk_id.lower()}_duration_norm"
+    for risk_id in REALIZED_RISK_OBSERVATION_IDS
+)
+OBSERVATION_FIELDS_V9: tuple[str, ...] = OBSERVATION_FIELDS_V8 + (
+    "backorder_queue_count_norm",
+    "unattended_total_norm",
+    "oldest_backorder_age_norm",
+    "ewma_fill_rate",
+    "ewma_backlog_growth",
+    "delta_fill_rate",
+    "delta_backlog_momentum",
+    "prev_step_produced_norm",
+    "prev_step_delivered_norm",
+    "prev_step_available_assembly_hours_norm",
+)
+RISK_MEMORY_OBSERVATION_IDS: tuple[str, ...] = ("R11", "R13", "R24")
+OBSERVATION_FIELDS_V10: tuple[str, ...] = OBSERVATION_FIELDS_V9 + tuple(
+    field
+    for risk_id in RISK_MEMORY_OBSERVATION_IDS
+    for field in (
+        f"mem_weeks_since_last_{risk_id}",
+        f"mem_count_{risk_id}_8w",
+        f"mem_count_{risk_id}_26w",
+        f"mem_ewma_{risk_id}_8w",
+    )
 )
 OBSERVATION_FIELDS: tuple[str, ...] = OBSERVATION_FIELDS_V1
 
@@ -241,6 +289,8 @@ def get_episode_terminal_metrics(env: Any) -> dict[str, float]:
             "fill_rate_state_terminal": float("nan"),
             "backorder_rate_state_terminal": float("nan"),
             "order_level_ret_mean": float("nan"),
+            "order_level_ret_excel_formula_mean": float("nan"),
+            "order_level_ret_text_formula_mean": float("nan"),
         }
 
     order_summary: dict[str, Any] = {}
@@ -265,6 +315,12 @@ def get_episode_terminal_metrics(env: Any) -> dict[str, float]:
         "backorder_rate_state_terminal": backorder_rate_state_terminal,
         "order_level_ret_mean": float(
             order_summary.get("mean_ret", fill_rate_order_level)
+        ),
+        "order_level_ret_excel_formula_mean": float(
+            order_summary.get("mean_ret_excel_formula", fill_rate_order_level)
+        ),
+        "order_level_ret_text_formula_mean": float(
+            order_summary.get("mean_ret_text_formula", fill_rate_order_level)
         ),
     }
 
@@ -301,9 +357,15 @@ def get_observation_fields(observation_version: str = "v1") -> tuple[str, ...]:
         return OBSERVATION_FIELDS_V6
     if observation_version == "v7":
         return OBSERVATION_FIELDS_V7
+    if observation_version == "v8":
+        return OBSERVATION_FIELDS_V8
+    if observation_version == "v9":
+        return OBSERVATION_FIELDS_V9
+    if observation_version == "v10":
+        return OBSERVATION_FIELDS_V10
     raise ValueError(
         f"Invalid observation_version={observation_version!r}. "
-        "Expected 'v1', 'v2', 'v3', 'v4', 'v5', 'v6', or 'v7'."
+        "Expected 'v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7', 'v8', 'v9', or 'v10'."
     )
 
 
@@ -374,7 +436,8 @@ def get_track_b_env_spec(
         notes=(
             "Track B keeps the thesis-faithful DES structure but exposes downstream transport control at Op10 and Op12.",
             "observation_version=v7 extends v6 with downstream disruption state, queue pressure, and rolling 4-week service metrics.",
-            "The seventh action contract uses 7 dimensions: the Track A 5D controls plus Op10 and Op12 dispatch quantity multipliers.",
+            "observation_version=v8 adds realized risk-ID state; v9 adds queue health, service trends, and previous-step throughput; v10 adds observed historical memory for frequent risks R11/R13/R24.",
+            "The track_b_v1 action contract uses 8 dimensions: Track A controls plus Op10 and Op12 dispatch quantity multipliers.",
             "risk_level=adaptive_benchmark_v2 is the intended Track B stress profile with stronger downstream transport and demand pressure.",
             "This contract is research-only and must not replace the frozen Track A paper-facing benchmark.",
         ),
@@ -686,6 +749,9 @@ def make_thesis_aligned_training_env(**overrides: Any) -> MFSCGymEnvShifts:
         "raw_material_order_up_to_multiplier": (
             TRACK_A_TRAINING_RAW_MATERIAL_ORDER_UP_TO_MULTIPLIER
         ),
+        "demand_on_hand_fulfillment_delay": (
+            THESIS_FAITHFUL_PROTOCOL["demand_on_hand_fulfillment_delay"]
+        ),
         "priming_enabled": False,
         "clear_backlog_after_priming": False,
         "w_bo": BENCHMARK_W_BO,
@@ -745,6 +811,32 @@ def make_discrete18_track_a_env(**overrides: Any) -> Any:
     ``make_thesis_factorized_track_a_env``.
     """
     from .thesis_decision_env import make_discrete18_track_a_env as _make_env
+
+    return _make_env(**overrides)
+
+
+def make_continuous_its_track_a_env(**overrides: Any) -> Any:
+    """
+    Build the Track A continuous I_t,S env as ``Box([0,-1], [1,1])``.
+
+    This is the nearest continuous relaxation of Garrido-Rios' two decision
+    variables: a common strategic buffer fraction and S1/S2/S3 capacity signal.
+    It does not expose Track B downstream controls or per-node buffers.
+    """
+    from .continuous_its_env import make_continuous_its_track_a_env as _make_env
+
+    return _make_env(**overrides)
+
+
+def make_per_op_buffer_track_a_env(**overrides: Any) -> Any:
+    """
+    Build the Track A per-operation continuous buffer env as
+    ``Box([op3_frac, op5_frac, op9_frac, shift_signal])``.
+
+    This keeps Garrido-Rios' inventory-buffer and shift decision families, but
+    does not force Op3, Op5 and Op9 to share one common buffer fraction.
+    """
+    from .continuous_its_env import make_per_op_buffer_track_a_env as _make_env
 
     return _make_env(**overrides)
 
@@ -919,6 +1011,12 @@ def run_episodes(
             "ret_garrido2024_sigmoid_total": ret_garrido2024_sigmoid_total,
             "ret_thesis_corrected_total": ret_thesis_corrected_total,
             "order_level_ret_mean": float(terminal_metrics["order_level_ret_mean"]),
+            "order_level_ret_text_formula_mean": float(
+                terminal_metrics["order_level_ret_text_formula_mean"]
+            ),
+            "order_level_ret_excel_formula_mean": float(
+                terminal_metrics["order_level_ret_excel_formula_mean"]
+            ),
             "demanded_total": demanded_total,
             "delivered_total": delivered_total,
             "backorder_qty_total": backorder_qty_total,

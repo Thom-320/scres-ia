@@ -1,0 +1,50 @@
+{
+  "freeze_id": "thesis_faithful_env_v1",
+  "date": "2026-06-26",
+  "status": "frozen",
+  "purpose": "The thesis- and Excel-faithful DES environment used for the 1-to-1 PPO-vs-static comparison (Idea 1). All policies are evaluated in THIS environment under common random numbers. Source of truth: supply_chain.config.THESIS_FAITHFUL_PROTOCOL.",
+  "des_config": {
+    "year_basis": "thesis",
+    "hours_per_year": 8064,
+    "horizon_hours": 161280,
+    "warmup_trigger": "op9_arrival",
+    "downstream_q_source": "figure_6_2",
+    "r14_defect_mode": "thesis_strict_op6",
+    "risk_occurrence_mode": "thesis_window",
+    "raw_material_flow_mode": "kit_equivalent_order_up_to",
+    "raw_material_order_up_to_multiplier": 2.0,
+    "stochastic_pt": false,
+    "risk_frequency_multiplier": 1.0,
+    "risk_impact_multiplier": 1.0,
+    "demand_mean_multiplier": 1.0
+  },
+  "ret_fidelity_fixes": {
+    "demand_on_hand_fulfillment_delay_hours": 54.0,
+    "garrido_r14_ret_period_hours": 72.0,
+    "ret_recovery_period_mode": "disruption",
+    "backorder_overflow_mode": "largest",
+    "backorder_queue_cap": 60,
+    "unfulfilled_orders_score": 0.0,
+    "excel_fill_rate_bt_capped_at_queue_cap": true,
+    "note": "These four fixes brought endogenous R1 ReT from ~0.20 (30x off) to the Garrido scale (0.0044 vs Excel 0.0063)."
+  },
+  "ppo_action_observation": {
+    "action_space": "Discrete(18) = [6 inventory levels x 3 shift levels] (Track A)",
+    "inventory_levels": [0, 168, 336, 504, 672, 1344],
+    "shift_levels": [1, 2, 3],
+    "observation_version": "v4",
+    "decision_cadence": "weekly (168h)"
+  },
+  "verification_2026-06-26": {
+    "r1_des_mean_ret": 0.0044,
+    "r1_excel_mean_ret": 0.0063,
+    "r1_ratio": 0.71,
+    "forensic_lane_mae": 0.0038,
+    "faithful_lane_tests": "49 passed"
+  },
+  "known_limitations": {
+    "r2_cf11_20_endogenous": "Under the R2-only gate (CF11-20, R14 excluded), the endogenous DES does not reproduce Garrido's R2 ReT (under-attribution of R22/R23/R24 event->order). This is a documented limitation. It does NOT affect the training regimes (current/increased/severe) because R14 is ubiquitous there, so ~no no-risk orders exist and the R2 fill-rate branch is empty.",
+    "ctj_rpj_tail": "The endogenous CTj/RPj extreme tail (p99) is ~2x Garrido's; affects tail-risk metrics (CVaR/p95), not the mean ReT.",
+    "excel_ret_quirk": "Raw Excel ReT is low-valued and dominated by the disruption branch; used as an EVALUATION bar, not trained on directly (Reward A)."
+  }
+}

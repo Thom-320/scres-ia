@@ -33,11 +33,22 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from scripts.benchmark_control_reward import build_metric_contract_metadata
 from scripts.track_b_heuristics import HEURISTIC_POLICY_NAMES, make_heuristic_defaults
-from supply_chain.config import OPERATIONS
+from supply_chain.config import (
+    OPERATIONS,
+    THESIS_FAITHFUL_PROTOCOL,
+    TRACK_A_TRAINING_RAW_MATERIAL_FLOW_MODE,
+    TRACK_A_TRAINING_RAW_MATERIAL_ORDER_UP_TO_MULTIPLIER,
+    canonical_raw_material_flow_mode,
+)
 from supply_chain.dkana import DKANAOnlinePolicyAdapter, DKANAPolicy
+from supply_chain.episode_metrics import METRIC_KEYS, compute_episode_metrics
 from supply_chain.env_experimental_shifts import (
     OBSERVATION_VERSION_OPTIONS,
     REWARD_MODE_OPTIONS,
+)
+from supply_chain.ret_thesis import (
+    compute_ret_per_order_excel_formula,
+    order_counts_as_backorder_for_fill_rate,
 )
 from supply_chain.external_env_interface import (
     STATE_CONSTRAINT_FIELDS,
@@ -55,6 +66,7 @@ DEFAULT_MAX_STEPS = 260
 DEFAULT_RET_SEQ_KAPPA = 0.20
 EVAL_EPISODE_SEED_OFFSET = 50_000
 DOWNSTREAM_NEAR_MAX_THRESHOLD = 1.90
+RISK_COLS = ("R11", "R12", "R13", "R14", "R21", "R22", "R23", "R24", "R3")
 
 PRIMARY_METRICS = (
     "reward_total",
@@ -77,6 +89,16 @@ PRIMARY_METRICS = (
     "pct_steps_both_downstream_ge_190",
     "assembly_hours_total",
     "assembly_cost_index",
+    "ret_garrido2024_raw_total",
+    "ret_garrido2024_train_total",
+    "ret_garrido2024_sigmoid_total",
+    "ret_garrido2024_sigmoid_mean",
+    "terminal_zeta_avg",
+    "terminal_epsilon_avg",
+    "terminal_phi_avg",
+    "terminal_tau_avg",
+    "terminal_kappa_dot",
+    *tuple(f"order_{key}" for key in METRIC_KEYS),
 )
 
 HOURS_PER_SHIFT = 8.0
@@ -195,6 +217,14 @@ def build_parser() -> argparse.ArgumentParser:
         help="Evaluation episodes per policy and seed.",
     )
     parser.add_argument(
+        "--export-order-ledger",
+        action="store_true",
+        help=(
+            "Write a Garrido-style per-order ledger CSV for evaluated policies. "
+            "This can be large, so it is opt-in for confirmatory/audit runs."
+        ),
+    )
+    parser.add_argument(
         "--reward-mode",
         default="ReT_seq_v1",
         choices=list(REWARD_MODE_OPTIONS),
@@ -207,9 +237,71 @@ def build_parser() -> argparse.ArgumentParser:
         help="ReT_seq_v1 kappa. Ignored by other reward modes.",
     )
     parser.add_argument(
+        "--ret-excel-cvar-alpha",
+        type=float,
+        default=0.5,
+        help="Penalty weight for ReT_excel_plus_cvar.",
+    )
+    parser.add_argument(
+        "--ret-excel-cvar-tail-level",
+        type=float,
+        default=0.05,
+        help="Tail quantile used by ReT_excel_plus_cvar.",
+    )
+    parser.add_argument(
+        "--ret-excel-cvar-window",
+        type=int,
+        default=50,
+        help="Rolling service-loss window for ReT_excel_plus_cvar.",
+    )
+    parser.add_argument(
         "--risk-level",
         default="adaptive_benchmark_v2",
         help="Track B risk profile.",
+    )
+    parser.add_argument(
+        "--enabled-risks",
+        default=None,
+        help=(
+            "Optional comma-separated risk IDs to enable, e.g. R21,R22,R23,R24. "
+            "Leave unset to use the risk profile default."
+        ),
+    )
+    parser.add_argument(
+        "--risk-frequency-multiplier",
+        type=float,
+        default=1.0,
+        help="Multiplier for non-adaptive risk frequency in controlled Track B screens.",
+    )
+    parser.add_argument(
+        "--risk-impact-multiplier",
+        type=float,
+        default=1.0,
+        help="Multiplier for non-adaptive risk impact/duration in controlled Track B screens.",
+    )
+    parser.add_argument(
+        "--risk-frequency-by-id",
+        default=None,
+        help=(
+            "Optional comma-separated per-risk frequency multipliers, e.g. "
+            "R22=1.0,R23=1.0,R24=2.0. Overrides the global frequency "
+            "multiplier for listed risk IDs."
+        ),
+    )
+    parser.add_argument(
+        "--risk-impact-by-id",
+        default=None,
+        help=(
+            "Optional comma-separated per-risk impact multipliers, e.g. "
+            "R22=1.5,R23=1.5,R24=1.25. Overrides the global impact "
+            "multiplier for listed risk IDs."
+        ),
+    )
+    parser.add_argument(
+        "--demand-mean-multiplier",
+        type=float,
+        default=1.0,
+        help="Multiplier for mean daily demand; useful for downstream headroom screens.",
     )
     parser.add_argument(
         "--observation-version",
@@ -219,7 +311,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--algo",
-        choices=["ppo", "recurrent_ppo"],
+        choices=["ppo", "recurrent_ppo", "sac", "td3"],
         default="ppo",
         help="Learned-policy algorithm for the Track B adaptive lane.",
     )
@@ -255,13 +347,97 @@ def build_parser() -> argparse.ArgumentParser:
             "Track B contract and CI95 aggregation."
         ),
     )
+    parser.add_argument(
+        "--faithful",
+        action="store_true",
+        help=(
+            "Run Track B under the THESIS_FAITHFUL protocol (delay=54, thesis_window, "
+            "figure_6_2, kit_equivalent m2.0, r14_strict, warmup op9_arrival, stochastic_pt off) "
+            "instead of the legacy adaptive_benchmark Track B defaults. Garrido-comparable lane "
+            "(Contract v2)."
+        ),
+    )
     parser.add_argument("--learning-rate", type=float, default=3e-4)
+    parser.add_argument("--n-envs", type=int, default=1)
     parser.add_argument("--n-steps", type=int, default=1024)
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--n-epochs", type=int, default=10)
     parser.add_argument("--gamma", type=float, default=0.99)
     parser.add_argument("--gae-lambda", type=float, default=0.95)
     parser.add_argument("--clip-range", type=float, default=0.2)
+    parser.add_argument(
+        "--ent-coef",
+        type=float,
+        default=0.0,
+        help="PPO entropy coefficient. Defaults to 0.0 to preserve historical Track B protocol.",
+    )
+    parser.add_argument(
+        "--norm-reward",
+        action="store_true",
+        help=(
+            "Enable VecNormalize reward normalization during training. "
+            "Evaluation metrics are still reported on the original environment scale."
+        ),
+    )
+    parser.add_argument(
+        "--clip-reward",
+        type=float,
+        default=10.0,
+        help="Reward clipping threshold used by VecNormalize when --norm-reward is enabled.",
+    )
+    parser.add_argument(
+        "--surge-inertia",
+        action="store_true",
+        help=(
+            "Enable capacity activation lag in the Track B environment. Requested "
+            "shift increases ramp toward the target instead of applying instantly; "
+            "used only for prevention diagnostics, not the canonical Track B lane."
+        ),
+    )
+    parser.add_argument(
+        "--surge-ramp-per-step",
+        type=int,
+        default=1,
+        help="Maximum upward shift-level increase per decision step when --surge-inertia is enabled.",
+    )
+    parser.add_argument(
+        "--surge-budget-hours",
+        type=float,
+        default=float("inf"),
+        help=(
+            "Episode surge-hour budget when --surge-inertia is enabled. "
+            "S2 costs one step of surge-hours; S3 costs two. Use inf for lag-only."
+        ),
+    )
+    parser.add_argument(
+        "--initial-buffers",
+        type=str,
+        default=None,
+        help=(
+            "Strategic inventory buffers pre-positioned at reset, as "
+            "'op3_rm=15360,op5_rm=15360,op9_rations=15750' (units per Garrido Table 6.16). "
+            "Used by the Track B-P preventive lane; the canonical Track B lane leaves this unset."
+        ),
+    )
+    parser.add_argument(
+        "--inventory-replenishment-period",
+        type=float,
+        default=None,
+        help=(
+            "Review cadence in hours for the strategic-buffer order-up-to loop "
+            "(Garrido I_{t,S} subscript: 168/336/504/672/1344). None disables the loop."
+        ),
+    )
+    parser.add_argument(
+        "--inventory-replenishment-lead-time",
+        type=float,
+        default=0.0,
+        help=(
+            "Hours between a buffer review/target raise and the stock actually arriving. "
+            "The Track B-P commitment lever: >0 makes late reaction unable to mimic "
+            "pre-positioning."
+        ),
+    )
     return parser
 
 
@@ -305,15 +481,118 @@ def ci95(values: list[float]) -> tuple[float, float]:
     return float(mean - half), float(mean + half)
 
 
+def parse_risk_multiplier_map(raw: str | None) -> dict[str, float]:
+    if not raw:
+        return {}
+    parsed: dict[str, float] = {}
+    for item in str(raw).split(","):
+        token = item.strip()
+        if not token:
+            continue
+        if "=" not in token:
+            raise ValueError(
+                f"Invalid risk multiplier token {token!r}; expected R22=1.5"
+            )
+        risk_id, value = token.split("=", 1)
+        risk_id = risk_id.strip()
+        if not risk_id:
+            raise ValueError(f"Invalid empty risk id in {token!r}")
+        parsed[risk_id] = max(1e-6, float(value))
+    return parsed
+
+
+def parse_initial_buffers(raw: str | None) -> dict[str, float]:
+    """Parse 'op3_rm=15360,op5_rm=15360,op9_rations=15750' into a buffer dict."""
+    if not raw:
+        return {}
+    allowed = {"op3_rm", "op5_rm", "op9_rations"}
+    parsed: dict[str, float] = {}
+    for token in str(raw).split(","):
+        token = token.strip()
+        if not token:
+            continue
+        if "=" not in token:
+            raise ValueError(
+                f"Invalid --initial-buffers token {token!r}; expected key=units"
+            )
+        key, value = token.split("=", 1)
+        key = key.strip()
+        if key not in allowed:
+            raise ValueError(
+                f"Unknown buffer key {key!r}; allowed: {sorted(allowed)}"
+            )
+        parsed[key] = max(0.0, float(value))
+    return parsed
+
+
 def build_env_kwargs(args: argparse.Namespace) -> dict[str, Any]:
-    return {
+    risk_frequency_by_id = parse_risk_multiplier_map(
+        getattr(args, "risk_frequency_by_id", None)
+    )
+    risk_impact_by_id = parse_risk_multiplier_map(
+        getattr(args, "risk_impact_by_id", None)
+    )
+    kwargs: dict[str, Any] = {
         "reward_mode": args.reward_mode,
         "ret_seq_kappa": args.ret_seq_kappa,
+        "ret_excel_cvar_alpha": args.ret_excel_cvar_alpha,
+        "ret_excel_cvar_tail_level": args.ret_excel_cvar_tail_level,
+        "ret_excel_cvar_window": args.ret_excel_cvar_window,
         "risk_level": args.risk_level,
         "observation_version": args.observation_version,
         "step_size_hours": args.step_size_hours,
         "max_steps": args.max_steps,
+        "risk_frequency_multiplier": args.risk_frequency_multiplier,
+        "risk_impact_multiplier": args.risk_impact_multiplier,
+        "risk_frequency_multipliers_by_id": risk_frequency_by_id,
+        "risk_impact_multipliers_by_id": risk_impact_by_id,
+        "demand_mean_multiplier": args.demand_mean_multiplier,
+        "raw_material_flow_mode": TRACK_A_TRAINING_RAW_MATERIAL_FLOW_MODE,
+        "raw_material_order_up_to_multiplier": (
+            TRACK_A_TRAINING_RAW_MATERIAL_ORDER_UP_TO_MULTIPLIER
+        ),
     }
+    if getattr(args, "surge_inertia", False):
+        kwargs.update(
+            {
+                "surge_inertia": True,
+                "surge_ramp_per_step": int(args.surge_ramp_per_step),
+                "surge_budget_hours": float(args.surge_budget_hours),
+            }
+        )
+    initial_buffers = parse_initial_buffers(getattr(args, "initial_buffers", None))
+    if initial_buffers:
+        kwargs["initial_buffers"] = initial_buffers
+    replenishment_period = getattr(args, "inventory_replenishment_period", None)
+    if replenishment_period is not None:
+        kwargs["inventory_replenishment_period"] = float(replenishment_period)
+    replenishment_lead = float(
+        getattr(args, "inventory_replenishment_lead_time", 0.0) or 0.0
+    )
+    if replenishment_lead > 0.0:
+        kwargs["inventory_replenishment_lead_time"] = replenishment_lead
+    if args.enabled_risks:
+        kwargs["enabled_risks"] = tuple(
+            risk.strip() for risk in str(args.enabled_risks).split(",") if risk.strip()
+        )
+    if getattr(args, "faithful", False):
+        P = THESIS_FAITHFUL_PROTOCOL
+        # Garrido-comparable Track B lane: overlay the faithful protocol on top of the
+        # track_b_v1 downstream-control action space. Mirrors make_thesis_aligned_training_env.
+        kwargs.update(
+            {
+                "year_basis": P["year_basis"],
+                "warmup_trigger": P["warmup_trigger"],
+                "r14_defect_mode": P["r14_defect_mode"],
+                "downstream_q_source": "figure_6_2",
+                "risk_occurrence_mode": "thesis_window",
+                "raw_material_flow_mode": P["raw_material_flow_mode"],
+                "raw_material_order_up_to_multiplier": P["raw_material_order_up_to_multiplier"],
+                "demand_on_hand_fulfillment_delay": P["demand_on_hand_fulfillment_delay"],
+                "stochastic_pt": False,
+            }
+        )
+    return kwargs
 
 
 def build_static_policy_action(policy: StaticPolicySpec) -> dict[str, float | int]:
@@ -334,10 +613,10 @@ def build_static_policy_action(policy: StaticPolicySpec) -> dict[str, float | in
 
 def extract_downstream_multipliers(final_info: dict[str, Any]) -> tuple[float, float]:
     clipped_action = final_info.get("clipped_action")
-    if isinstance(clipped_action, (list, tuple)) and len(clipped_action) >= 7:
+    if isinstance(clipped_action, (list, tuple)) and len(clipped_action) >= 8:
         return (
-            float(1.25 + 0.75 * float(clipped_action[5])),
             float(1.25 + 0.75 * float(clipped_action[6])),
+            float(1.25 + 0.75 * float(clipped_action[7])),
         )
 
     raw_action = final_info.get("raw_action")
@@ -350,6 +629,94 @@ def extract_downstream_multipliers(final_info: dict[str, Any]) -> tuple[float, f
         )
 
     return 1.0, 1.0
+
+
+def init_cd_totals() -> dict[str, float]:
+    return {
+        "ret_garrido2024_raw_total": 0.0,
+        "ret_garrido2024_train_total": 0.0,
+        "ret_garrido2024_sigmoid_total": 0.0,
+    }
+
+
+def update_cd_totals(cd_totals: dict[str, float], info: dict[str, Any]) -> None:
+    cd_totals["ret_garrido2024_raw_total"] += float(
+        info.get("ret_garrido2024_raw_step", 0.0)
+    )
+    cd_totals["ret_garrido2024_train_total"] += float(
+        info.get("ret_garrido2024_train_step", 0.0)
+    )
+    cd_totals["ret_garrido2024_sigmoid_total"] += float(
+        info.get("ret_garrido2024_sigmoid_step", 0.0)
+    )
+
+
+def append_order_ledger_rows(
+    ledger_rows: list[dict[str, Any]] | None,
+    env: Any,
+    *,
+    policy: str,
+    seed: int,
+    episode: int,
+    eval_seed: int,
+) -> None:
+    if ledger_rows is None:
+        return
+    sim = env.unwrapped.sim
+    start = float(getattr(sim, "warmup_time", 0.0) or 0.0)
+    orders = sorted(
+        (
+            o
+            for o in sim.orders
+            if not bool(getattr(o, "metrics_excluded", False))
+            and float(getattr(o, "OPTj", 0.0) or 0.0) >= start
+        ),
+        key=lambda o: (
+            int(getattr(o, "j", 0) or 0),
+            float(getattr(o, "OPTj", 0.0) or 0.0),
+        ),
+    )
+    cum_bt = 0
+    cum_ut = 0
+    horizon = float(sim.env.now)
+    for idx, order in enumerate(orders, start=1):
+        if bool(getattr(order, "lost", False)):
+            cum_ut += 1
+        elif order_counts_as_backorder_for_fill_rate(order, current_time=horizon):
+            cum_bt += 1
+        ret_j, case = compute_ret_per_order_excel_formula(
+            order,
+            j=idx,
+            cumulative_backorders=cum_bt,
+            cumulative_unattended=cum_ut,
+        )
+        opt = getattr(order, "OPTj", None)
+        oat = getattr(order, "OATj", None)
+        row = {
+            "policy": policy,
+            "seed": int(seed),
+            "episode": int(episode),
+            "eval_seed": int(eval_seed),
+            "j": idx,
+            "Q": float(getattr(order, "quantity", getattr(order, "Q", 0.0)) or 0.0),
+            "OPTj": opt,
+            "OATj": oat,
+            "LT": getattr(order, "LTj", None),
+            "CTj": getattr(order, "CTj", None),
+            "APj": getattr(order, "APj", None),
+            "RPj": getattr(order, "RPj", None),
+            "DPj": getattr(order, "DPj", None),
+            "sumBt": cum_bt,
+            "sumUt": cum_ut,
+            "lost": int(bool(getattr(order, "lost", False))),
+            "backorder": int(bool(getattr(order, "backorder", False))),
+            "ReTj": ret_j,
+            "case": case,
+        }
+        risks = dict(getattr(order, "ret_risk_indicators", {}) or {})
+        for risk_col in RISK_COLS:
+            row[risk_col] = float(risks.get(risk_col, 0.0))
+        ledger_rows.append(row)
 
 
 def make_monitored_training_env(
@@ -385,12 +752,17 @@ def train_ppo(
     args: argparse.Namespace, seed: int, run_dir: Path
 ) -> tuple[Any, VecNormalize]:
     ensure_algo_dependencies(args)
-    vec_env = DummyVecEnv([make_monitored_training_env(args, seed)])
+    n_envs = max(1, int(getattr(args, "n_envs", 1)))
+    vec_env = DummyVecEnv(
+        [make_monitored_training_env(args, seed + i) for i in range(n_envs)]
+    )
     vec_norm = VecNormalize(
         vec_env,
         norm_obs=True,
-        norm_reward=False,
+        norm_reward=bool(getattr(args, "norm_reward", False)),
         clip_obs=10.0,
+        clip_reward=float(getattr(args, "clip_reward", 10.0)),
+        gamma=float(args.gamma),
     )
     algo = learned_policy_name(args)
     if algo == "ppo":
@@ -404,11 +776,31 @@ def train_ppo(
             gamma=args.gamma,
             gae_lambda=args.gae_lambda,
             clip_range=args.clip_range,
+            ent_coef=args.ent_coef,
             policy_kwargs={"net_arch": {"pi": [64, 64], "vf": [64, 64]}},
             seed=seed,
             verbose=0,
             device="cpu",
         )
+    elif algo in ("sac", "td3"):
+        # Off-policy robustness screen (reviewer objection closure): same env,
+        # obs, eval protocol, and net width as the canonical PPO cell; SB3
+        # defaults for the off-policy-specific hyperparameters.
+        from stable_baselines3 import SAC, TD3
+
+        off_policy_cls = SAC if algo == "sac" else TD3
+        off_policy_kwargs: dict[str, Any] = {
+            "policy": "MlpPolicy",
+            "env": vec_norm,
+            "learning_rate": args.learning_rate,
+            "batch_size": args.batch_size,
+            "gamma": args.gamma,
+            "policy_kwargs": {"net_arch": [64, 64]},
+            "seed": seed,
+            "verbose": 0,
+            "device": "cpu",
+        }
+        model = off_policy_cls(**off_policy_kwargs)
     else:
         model = RecurrentPPO(
             "MlpLstmPolicy",
@@ -420,6 +812,7 @@ def train_ppo(
             gamma=args.gamma,
             gae_lambda=args.gae_lambda,
             clip_range=args.clip_range,
+            ent_coef=args.ent_coef,
             policy_kwargs={
                 "net_arch": {"pi": [64], "vf": [64]},
                 "lstm_hidden_size": 128,
@@ -452,6 +845,9 @@ def _finalize_episode_row(
     op12_multipliers: list[float],
     track_b_context: dict[str, Any],
     terminal_metrics: dict[str, float],
+    final_info: dict[str, Any] | None = None,
+    cd_totals: dict[str, float] | None = None,
+    full_episode_metrics: dict[str, float] | None = None,
 ) -> dict[str, Any]:
     total_steps = max(1, steps)
     if demanded_total > 0.0:
@@ -462,7 +858,7 @@ def _finalize_episode_row(
         flow_fill_rate = 1.0
     op10_arr = np.asarray(op10_multipliers or [1.0], dtype=np.float64)
     op12_arr = np.asarray(op12_multipliers or [1.0], dtype=np.float64)
-    return {
+    row = {
         "policy": policy,
         "seed": seed,
         "episode": episode,
@@ -502,10 +898,36 @@ def _finalize_episode_row(
         "assembly_cost_index": sum(shift_counts.get(s, 0) * s for s in (1, 2, 3))
         / (3.0 * total_steps),
     }
+    cd_totals = cd_totals or init_cd_totals()
+    final_info = final_info or {}
+    row.update(
+        {
+            "ret_garrido2024_raw_total": float(cd_totals["ret_garrido2024_raw_total"]),
+            "ret_garrido2024_train_total": float(cd_totals["ret_garrido2024_train_total"]),
+            "ret_garrido2024_sigmoid_total": float(
+                cd_totals["ret_garrido2024_sigmoid_total"]
+            ),
+            "ret_garrido2024_sigmoid_mean": float(
+                cd_totals["ret_garrido2024_sigmoid_total"] / total_steps
+            ),
+            "terminal_zeta_avg": float(final_info.get("zeta_avg", 0.0)),
+            "terminal_epsilon_avg": float(final_info.get("epsilon_avg", 0.0)),
+            "terminal_phi_avg": float(final_info.get("phi_avg", 0.0)),
+            "terminal_tau_avg": float(final_info.get("tau_avg", 0.0)),
+            "terminal_kappa_dot": float(final_info.get("kappa_dot", 0.0)),
+        }
+    )
+    for key in METRIC_KEYS:
+        row[f"order_{key}"] = float((full_episode_metrics or {}).get(key, 0.0))
+    return row
 
 
 def evaluate_static_policy(
-    policy: StaticPolicySpec, *, args: argparse.Namespace, seed: int
+    policy: StaticPolicySpec,
+    *,
+    args: argparse.Namespace,
+    seed: int,
+    order_ledger_rows: list[dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     env_kwargs = build_env_kwargs(args)
@@ -525,11 +947,13 @@ def evaluate_static_policy(
         shift_counts = {1: 0, 2: 0, 3: 0}
         op10_multipliers: list[float] = []
         op12_multipliers: list[float] = []
+        cd_totals = init_cd_totals()
         final_info = info
 
         while not (terminated or truncated):
             _, reward, terminated, truncated, final_info = env.step(action_payload)
             reward_total += float(reward)
+            update_cd_totals(cd_totals, final_info)
             demanded_total += float(final_info.get("new_demanded", 0.0))
             backorder_qty_total += float(final_info.get("new_backorder_qty", 0.0))
             shift_counts[int(final_info.get("shifts_active", 1))] += 1
@@ -555,14 +979,30 @@ def evaluate_static_policy(
                     "track_b_context"
                 ],
                 terminal_metrics=get_episode_terminal_metrics(env),
+                final_info=final_info,
+                cd_totals=cd_totals,
+                full_episode_metrics=compute_episode_metrics(env.unwrapped.sim),
             )
+        )
+        append_order_ledger_rows(
+            order_ledger_rows,
+            env,
+            policy=policy.label,
+            seed=seed,
+            episode=episode_idx + 1,
+            eval_seed=eval_seed,
         )
         env.close()
     return rows
 
 
 def evaluate_trained_policy(
-    *, args: argparse.Namespace, seed: int, model: Any, vec_norm: VecNormalize
+    *,
+    args: argparse.Namespace,
+    seed: int,
+    model: Any,
+    vec_norm: VecNormalize,
+    order_ledger_rows: list[dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     env_kwargs = build_env_kwargs(args)
@@ -583,6 +1023,7 @@ def evaluate_trained_policy(
         shift_counts = {1: 0, 2: 0, 3: 0}
         op10_multipliers: list[float] = []
         op12_multipliers: list[float] = []
+        cd_totals = init_cd_totals()
         final_info = info
         lstm_states: Any = None
         episode_start = np.ones((1,), dtype=bool)
@@ -604,6 +1045,7 @@ def evaluate_trained_policy(
                 np.asarray(action[0], dtype=np.float32)
             )
             reward_total += float(reward)
+            update_cd_totals(cd_totals, final_info)
             demanded_total += float(final_info.get("new_demanded", 0.0))
             backorder_qty_total += float(final_info.get("new_backorder_qty", 0.0))
             shift_counts[int(final_info.get("shifts_active", 1))] += 1
@@ -630,7 +1072,18 @@ def evaluate_trained_policy(
                     "track_b_context"
                 ],
                 terminal_metrics=get_episode_terminal_metrics(env),
+                final_info=final_info,
+                cd_totals=cd_totals,
+                full_episode_metrics=compute_episode_metrics(env.unwrapped.sim),
             )
+        )
+        append_order_ledger_rows(
+            order_ledger_rows,
+            env,
+            policy=algo,
+            seed=seed,
+            episode=episode_idx + 1,
+            eval_seed=eval_seed,
         )
         env.close()
     return rows
@@ -642,8 +1095,9 @@ def evaluate_heuristic_policy(
     *,
     args: argparse.Namespace,
     seed: int,
+    order_ledger_rows: list[dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
-    """Evaluate a Track B heuristic that takes (obs, info) → 7D action array."""
+    """Evaluate a Track B heuristic that takes (obs, info) -> 8D action array."""
     rows: list[dict[str, Any]] = []
     env_kwargs = build_env_kwargs(args)
     heuristic.reset()
@@ -661,6 +1115,7 @@ def evaluate_heuristic_policy(
         shift_counts = {1: 0, 2: 0, 3: 0}
         op10_multipliers: list[float] = []
         op12_multipliers: list[float] = []
+        cd_totals = init_cd_totals()
         final_info = info
         heuristic.reset()
 
@@ -670,6 +1125,7 @@ def evaluate_heuristic_policy(
                 np.asarray(action, dtype=np.float32)
             )
             reward_total += float(reward)
+            update_cd_totals(cd_totals, final_info)
             demanded_total += float(final_info.get("new_demanded", 0.0))
             backorder_qty_total += float(final_info.get("new_backorder_qty", 0.0))
             shift_counts[int(final_info.get("shifts_active", 1))] += 1
@@ -695,7 +1151,18 @@ def evaluate_heuristic_policy(
                     "track_b_context"
                 ],
                 terminal_metrics=get_episode_terminal_metrics(env),
+                final_info=final_info,
+                cd_totals=cd_totals,
+                full_episode_metrics=compute_episode_metrics(env.unwrapped.sim),
             )
+        )
+        append_order_ledger_rows(
+            order_ledger_rows,
+            env,
+            policy=label,
+            seed=seed,
+            episode=episode_idx + 1,
+            eval_seed=eval_seed,
         )
         env.close()
     return rows
@@ -741,6 +1208,7 @@ def evaluate_dkana_policy(
     args: argparse.Namespace,
     seed: int,
     label: str = "dkana",
+    order_ledger_rows: list[dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     env_kwargs = build_env_kwargs(args)
@@ -759,6 +1227,7 @@ def evaluate_dkana_policy(
         shift_counts = {1: 0, 2: 0, 3: 0}
         op10_multipliers: list[float] = []
         op12_multipliers: list[float] = []
+        cd_totals = init_cd_totals()
         final_info = info
 
         while not (terminated or truncated):
@@ -768,6 +1237,7 @@ def evaluate_dkana_policy(
             )
             final_info["previous_reward"] = float(reward)
             reward_total += float(reward)
+            update_cd_totals(cd_totals, final_info)
             demanded_total += float(final_info.get("new_demanded", 0.0))
             backorder_qty_total += float(final_info.get("new_backorder_qty", 0.0))
             shift_counts[int(final_info.get("shifts_active", 1))] += 1
@@ -793,7 +1263,18 @@ def evaluate_dkana_policy(
                     "track_b_context"
                 ],
                 terminal_metrics=get_episode_terminal_metrics(env),
+                final_info=final_info,
+                cd_totals=cd_totals,
+                full_episode_metrics=compute_episode_metrics(env.unwrapped.sim),
             )
+        )
+        append_order_ledger_rows(
+            order_ledger_rows,
+            env,
+            policy=label,
+            seed=seed,
+            episode=episode_idx + 1,
+            eval_seed=eval_seed,
         )
         env.close()
     return rows
@@ -875,8 +1356,8 @@ def build_decision_summary(
     best_static = max(
         (by_policy[policy_name] for policy_name in STATIC_POLICY_ORDER),
         key=lambda row: (
-            float(row["fill_rate_mean"]),
             ret_metric(row),
+            float(row["fill_rate_mean"]),
             -float(row["backorder_rate_mean"]),
         ),
     )
@@ -891,19 +1372,20 @@ def build_decision_summary(
         best_static["reward_total_mean"]
     )
     ret_gap_vs_best_static = ret_metric(learned_row) - ret_metric(best_static)
+    raw_ret_win = ret_gap_vs_best_static > 0.0
     decision = {
         "learned_policy": learned_policy,
         "baseline_policy": "s2_d1.00",
         "best_static_policy": str(best_static["policy"]),
+        "primary_metric": "order_level_ret_mean",
         "learned_fill_gap_vs_s2_neutral_pp": fill_gap_vs_baseline_pp,
         "learned_fill_gap_vs_best_static_pp": fill_gap_vs_best_static_pp,
         "learned_reward_gap_vs_best_static": reward_gap_vs_best_static,
         "learned_order_level_ret_gap_vs_best_static": ret_gap_vs_best_static,
+        "learned_raw_ret_win_vs_best_static": raw_ret_win,
         "learned_beats_s2_neutral_by_fill": fill_gap_vs_baseline_pp > 0.0,
         "learned_matches_best_static_by_fill": fill_gap_vs_best_static_pp >= -0.5,
-        "promote_to_long_run": (
-            fill_gap_vs_baseline_pp > 0.0 and fill_gap_vs_best_static_pp >= -1.0
-        ),
+        "promote_to_long_run": raw_ret_win,
     }
     if learned_policy == "ppo":
         decision.update(
@@ -912,6 +1394,7 @@ def build_decision_summary(
                 "ppo_fill_gap_vs_best_static_pp": fill_gap_vs_best_static_pp,
                 "ppo_reward_gap_vs_best_static": reward_gap_vs_best_static,
                 "ppo_order_level_ret_gap_vs_best_static": ret_gap_vs_best_static,
+                "ppo_raw_ret_win_vs_best_static": raw_ret_win,
                 "ppo_beats_s2_neutral_by_fill": fill_gap_vs_baseline_pp > 0.0,
                 "ppo_matches_best_static_by_fill": fill_gap_vs_best_static_pp >= -0.5,
             }
@@ -1103,6 +1586,7 @@ def render_markdown(summary: dict[str, Any]) -> str:
             "## Decision",
             "",
             f"- Learned policy: `{decision['learned_policy']}`",
+            f"- Primary decision metric: `{decision['primary_metric']}`",
             f"- Best static policy: `{decision['best_static_policy']}`",
             (
                 f"- {decision['learned_policy']} fill gap vs `s2_d1.00`: "
@@ -1120,6 +1604,7 @@ def render_markdown(summary: dict[str, Any]) -> str:
                 f"- {decision['learned_policy']} order-level ReT gap vs best static: "
                 f"{float(decision['learned_order_level_ret_gap_vs_best_static']):+.4f}"
             ),
+            f"- Raw ReT win vs best static: `{decision['learned_raw_ret_win_vs_best_static']}`",
             f"- Promote to long run: `{decision['promote_to_long_run']}`",
             "",
         ]
@@ -1134,6 +1619,9 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
     models_dir.mkdir(parents=True, exist_ok=True)
 
     episode_rows: list[dict[str, Any]] = []
+    order_ledger_rows: list[dict[str, Any]] | None = (
+        [] if bool(getattr(args, "export_order_ledger", False)) else None
+    )
     trained_models: list[dict[str, Any]] = []
     learned_policy = learned_policy_name(args)
 
@@ -1158,20 +1646,45 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
 
         for policy in STATIC_POLICY_SPECS:
             episode_rows.extend(
-                evaluate_static_policy(policy, args=args, seed=int(seed))
+                evaluate_static_policy(
+                    policy,
+                    args=args,
+                    seed=int(seed),
+                    order_ledger_rows=order_ledger_rows,
+                )
             )
         for h_label, h_policy in make_heuristic_defaults().items():
-            episode_rows.extend(
-                evaluate_heuristic_policy(h_label, h_policy, args=args, seed=int(seed))
-            )
+            try:
+                episode_rows.extend(
+                    evaluate_heuristic_policy(
+                        h_label,
+                        h_policy,
+                        args=args,
+                        seed=int(seed),
+                        order_ledger_rows=order_ledger_rows,
+                    )
+                )
+            except ValueError as exc:
+                # Legacy heuristic defaults emit a 7-dim action; the track_b_v1 contract is 8-dim.
+                # Heuristics are a secondary baseline — skip rather than abort the PPO-vs-static run.
+                print(f"[warn] skipping heuristic {h_label}: {exc}", flush=True)
         episode_rows.extend(
             evaluate_trained_policy(
-                args=args, seed=int(seed), model=model, vec_norm=vec_norm
+                args=args,
+                seed=int(seed),
+                model=model,
+                vec_norm=vec_norm,
+                order_ledger_rows=order_ledger_rows,
             )
         )
         if dkana_adapter is not None:
             episode_rows.extend(
-                evaluate_dkana_policy(dkana_adapter, args=args, seed=int(seed))
+                evaluate_dkana_policy(
+                    dkana_adapter,
+                    args=args,
+                    seed=int(seed),
+                    order_ledger_rows=order_ledger_rows,
+                )
             )
         vec_norm.close()
 
@@ -1184,6 +1697,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
     seed_csv = output_dir / "seed_metrics.csv"
     policy_csv = output_dir / "policy_summary.csv"
     comparison_csv = output_dir / "comparison_table.csv"
+    order_ledger_csv = output_dir / "order_ledger.csv"
     summary_json = output_dir / "summary.json"
     summary_md = output_dir / "summary.md"
 
@@ -1191,30 +1705,72 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
     save_csv(seed_csv, seed_rows)
     save_csv(policy_csv, policy_rows)
     save_csv(comparison_csv, comparison_rows)
+    if order_ledger_rows is not None:
+        save_csv(order_ledger_csv, order_ledger_rows)
     reward_contract = build_reward_contract(str(args.reward_mode))
+    env_kwargs_for_summary = build_env_kwargs(args)
 
     summary = {
         "config": {
             "seeds": [int(seed) for seed in args.seeds],
             "train_timesteps": int(args.train_timesteps),
             "eval_episodes": int(args.eval_episodes),
+            "export_order_ledger": bool(getattr(args, "export_order_ledger", False)),
             "algo": learned_policy,
             "reward_mode": args.reward_mode,
             "ret_seq_kappa": float(args.ret_seq_kappa),
+            "ret_excel_cvar_alpha": float(args.ret_excel_cvar_alpha),
+            "ret_excel_cvar_tail_level": float(args.ret_excel_cvar_tail_level),
+            "ret_excel_cvar_window": int(args.ret_excel_cvar_window),
             "risk_level": args.risk_level,
+            "risk_frequency_multiplier": float(args.risk_frequency_multiplier),
+            "risk_impact_multiplier": float(args.risk_impact_multiplier),
+            "risk_frequency_by_id": dict(
+                env_kwargs_for_summary.get("risk_frequency_multipliers_by_id", {})
+            ),
+            "risk_impact_by_id": dict(
+                env_kwargs_for_summary.get("risk_impact_multipliers_by_id", {})
+            ),
             "step_size_hours": float(args.step_size_hours),
             "max_steps": int(args.max_steps),
             "observation_version": str(args.observation_version),
             "action_contract": "track_b_v1",
             "year_basis": "thesis",
             "stochastic_pt": True,
+            "raw_material_flow_mode_requested": str(
+                env_kwargs_for_summary.get(
+                    "raw_material_flow_mode", TRACK_A_TRAINING_RAW_MATERIAL_FLOW_MODE
+                )
+            ),
+            "raw_material_flow_mode_canonical": canonical_raw_material_flow_mode(
+                str(
+                    env_kwargs_for_summary.get(
+                        "raw_material_flow_mode", TRACK_A_TRAINING_RAW_MATERIAL_FLOW_MODE
+                    )
+                )
+            ),
+            "raw_material_order_up_to_multiplier": float(
+                env_kwargs_for_summary.get(
+                    "raw_material_order_up_to_multiplier",
+                    TRACK_A_TRAINING_RAW_MATERIAL_ORDER_UP_TO_MULTIPLIER,
+                )
+            ),
             "learning_rate": float(args.learning_rate),
+            "n_envs": int(getattr(args, "n_envs", 1)),
             "n_steps": int(args.n_steps),
             "batch_size": int(args.batch_size),
             "n_epochs": int(args.n_epochs),
             "gamma": float(args.gamma),
             "gae_lambda": float(args.gae_lambda),
             "clip_range": float(args.clip_range),
+            "ent_coef": float(args.ent_coef),
+            "norm_reward": bool(getattr(args, "norm_reward", False)),
+            "clip_reward": float(getattr(args, "clip_reward", 10.0)),
+            "surge_inertia": bool(getattr(args, "surge_inertia", False)),
+            "surge_ramp_per_step": int(getattr(args, "surge_ramp_per_step", 1)),
+            "surge_budget_hours": float(
+                getattr(args, "surge_budget_hours", float("inf"))
+            ),
             "dkana_checkpoint": (
                 str(args.dkana_checkpoint) if args.dkana_checkpoint else None
             ),
@@ -1229,6 +1785,14 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
             "observation_version": str(args.observation_version),
             "action_contract": "track_b_v1",
             "risk_level": args.risk_level,
+            "risk_frequency_multiplier": float(args.risk_frequency_multiplier),
+            "risk_impact_multiplier": float(args.risk_impact_multiplier),
+            "risk_frequency_by_id": dict(
+                env_kwargs_for_summary.get("risk_frequency_multipliers_by_id", {})
+            ),
+            "risk_impact_by_id": dict(
+                env_kwargs_for_summary.get("risk_impact_multipliers_by_id", {})
+            ),
             "year_basis": "thesis",
             "stochastic_pt": True,
             "step_size_hours": float(args.step_size_hours),
@@ -1258,6 +1822,9 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
             "seed_metrics_csv": str(seed_csv.resolve()),
             "policy_summary_csv": str(policy_csv.resolve()),
             "comparison_table_csv": str(comparison_csv.resolve()),
+            "order_ledger_csv": (
+                str(order_ledger_csv.resolve()) if order_ledger_rows is not None else None
+            ),
             "summary_json": str(summary_json.resolve()),
             "summary_md": str(summary_md.resolve()),
         },
@@ -1343,8 +1910,8 @@ def main() -> None:
     print(
         "Decision: "
         f"best_static={summary['decision']['best_static_policy']}, "
-        f"{learned_policy}_vs_s2_fill_pp={float(summary['decision']['learned_fill_gap_vs_s2_neutral_pp']):+.2f}, "
-        f"{learned_policy}_vs_best_fill_pp={float(summary['decision']['learned_fill_gap_vs_best_static_pp']):+.2f}, "
+        f"{learned_policy}_vs_best_ret={float(summary['decision']['learned_order_level_ret_gap_vs_best_static']):+.6f}, "
+        f"raw_ret_win={summary['decision']['learned_raw_ret_win_vs_best_static']}, "
         f"promote={summary['decision']['promote_to_long_run']}"
     )
 

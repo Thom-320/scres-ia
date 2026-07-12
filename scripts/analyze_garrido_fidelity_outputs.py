@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import math
 from collections import defaultdict
 from pathlib import Path
 from typing import Iterable
@@ -26,6 +27,15 @@ H1_PROFILE_ORDER = ("current", "increased", "severe", "severe_extended")
 def mean(values: Iterable[float]) -> float:
     vals = list(values)
     return sum(vals) / len(vals) if vals else float("nan")
+
+
+def binomial_positive_p_value(positive: int, total: int) -> float:
+    """One-sided exact sign-test p-value under p=0.5 for positives >= observed."""
+    if total <= 0:
+        return float("nan")
+    positive = max(0, min(int(positive), int(total)))
+    tail = sum(math.comb(total, k) for k in range(positive, total + 1))
+    return float(tail / (2**total))
 
 
 def read_rows(path: Path) -> list[dict[str, str]]:
@@ -187,6 +197,12 @@ def summarize_contrast(rows: list[dict[str, object]]) -> list[dict[str, object]]
                 "ret_delta_mean": mean(ret),
             }
         )
+        out[-1]["fill_positive_p_binom_one_sided"] = binomial_positive_p_value(
+            int(out[-1]["fill_positive"]), int(out[-1]["scenario_count"])
+        )
+        out[-1]["ret_positive_p_binom_one_sided"] = binomial_positive_p_value(
+            int(out[-1]["ret_positive"]), int(out[-1]["scenario_count"])
+        )
     return out
 
 
@@ -281,8 +297,10 @@ def write_markdown(path: Path, payload: dict[str, object]) -> None:
                 "scenario_count",
                 "fill_positive",
                 "fill_delta_mean",
+                "fill_positive_p_binom_one_sided",
                 "ret_positive",
                 "ret_delta_mean",
+                "ret_positive_p_binom_one_sided",
             ],
         )
     )
@@ -296,8 +314,10 @@ def write_markdown(path: Path, payload: dict[str, object]) -> None:
                 "scenario_count",
                 "fill_positive",
                 "fill_delta_mean",
+                "fill_positive_p_binom_one_sided",
                 "ret_positive",
                 "ret_delta_mean",
+                "ret_positive_p_binom_one_sided",
             ],
         )
     )

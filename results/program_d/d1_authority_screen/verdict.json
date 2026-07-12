@@ -1,0 +1,69 @@
+{
+  "authority_present": true,
+  "best_constant_rule": "age_threshold",
+  "best_minus_thesis_default_ret_excel": {
+    "ci95": [
+      0.03655883210030748,
+      0.04071665886205529
+    ],
+    "mean": 0.038656632451298675
+  },
+  "best_minus_worst_ret_excel": {
+    "ci95": [
+      0.052500641300190345,
+      0.05631365076949008
+    ],
+    "mean": 0.05440704676275136
+  },
+  "best_minus_worst_unattended_reduction": {
+    "ci95": [
+      10.4,
+      10.733333333333333
+    ],
+    "mean": 10.566666666666666
+  },
+  "co_primary": [
+    "unattended_orders"
+  ],
+  "contract_id": "garrido_proxy_v1",
+  "delta_authority_threshold": 0.0010881409352550232,
+  "generated_at_utc": "2026-07-11T18:15:41.493378+00:00",
+  "horizon_weeks": 104,
+  "interpretation": "AUTHORITY_PRESENT: the rationing rule moves ret_excel with CI95>0; proceed to Phase 3 branching to test state-contingent value.",
+  "kind": "program_d_d1_authority_screen",
+  "mean_ret_excel_by_rule": {
+    "age_threshold": 0.5442491473993509,
+    "fifo_contingent": 0.5301038877665922,
+    "fifo_flat": 0.5301038877665922,
+    "lpt_contingent": 0.4898421006365998,
+    "spt_contingent": 0.5055925149480525,
+    "spt_flat": 0.5055925149480525
+  },
+  "mean_unattended_orders_by_rule": {
+    "age_threshold": 109.7,
+    "fifo_contingent": 114.46666666666667,
+    "fifo_flat": 114.46666666666667,
+    "lpt_contingent": 120.26666666666667,
+    "spt_contingent": 109.23333333333333,
+    "spt_flat": 109.23333333333333
+  },
+  "n_tapes": 30,
+  "phase1_liveness_pass": true,
+  "primary_metric": "ret_excel",
+  "proxy_sha256": "3d7aaa14263596cd68dce8a79f1f04bcb8fca9639c10cd9ac8160586fda4ed96",
+  "rules": [
+    "spt_contingent",
+    "fifo_contingent",
+    "lpt_contingent",
+    "spt_flat",
+    "fifo_flat",
+    "age_threshold"
+  ],
+  "runtime": {
+    "numpy": "2.4.6",
+    "python": "3.11.15"
+  },
+  "seed_base": 700000,
+  "static_ret_range": 0.054407046762751154,
+  "worst_constant_rule": "lpt_contingent"
+}

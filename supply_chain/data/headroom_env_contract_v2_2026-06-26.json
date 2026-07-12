@@ -1,0 +1,125 @@
+{
+  "contract_id": "headroom_env_contract_v2",
+  "date": "2026-06-26",
+  "status": "frozen_for_confirmatory_preflight",
+  "claim_boundary": {
+    "faithful_lane": "Thesis/Excel comparable lane. No risk tuning. Used for 1:1 Garrido continuity and baseline sanity.",
+    "headroom_lane": "Pre-frozen extension lane for learning headroom. Risk/PT knobs are justified as stress sensitivity and are not part of the 1:1 Garrido replication claim."
+  },
+  "selection_rule": {
+    "principle": "Static/heuristic frontier first; no retained-reset outcome used to select the environment.",
+    "paper_priority": "Prefer the full-horizon static frontier cell for the DQN memory paper, while retaining separate confirmatory sensitivity profiles for Excel-only and Pareto/resource wins.",
+    "source_artifacts": [
+      "outputs/experiments/env_b_headroom_sweep/headroom.csv",
+      "outputs/experiments/env_b_headroom_sweep_26w_2seed_2026_06_26/headroom.csv",
+      "outputs/preflight/garrido_before_ppo/reward_headroom_5seed_52w_v2_2026_06_26/summary.json",
+      "outputs/kaggle/garrido_envb_confirmatory/confirmatory_summary.csv"
+    ]
+  },
+  "shared_defaults": {
+    "track": "a",
+    "action_space": "Discrete(18): six inventory levels x three shift levels",
+    "observation_version": "v5",
+    "mask_preset": "direct_disruption_blind",
+    "risk_occurrence_mode": "thesis_window",
+    "warmup_trigger": "op9_arrival",
+    "r14_defect_mode": "thesis_strict_op6",
+    "raw_material_flow_mode": "kit_equivalent_order_up_to",
+    "raw_material_order_up_to_multiplier": 2.0,
+    "demand_on_hand_fulfillment_delay": 54.0,
+    "ret_recovery_period_mode": "disruption",
+    "backorder_overflow_mode": "largest",
+    "backorder_queue_cap": 60,
+    "black_swan_R3": "not scaled by risk_frequency_multiplier",
+    "regime": "severe",
+    "max_steps": 52
+  },
+  "profiles": {
+    "envb_frontier_v2": {
+      "purpose": "Primary DQN retained-transfer benchmark: full-horizon static frontier is off-saturation and not the S3/I1344 max-corner.",
+      "risk_frequency_multiplier": 1.0,
+      "risk_impact_multiplier": 1.5,
+      "stochastic_pt": false,
+      "demand_mean_multiplier": 1.0,
+      "primary_training_reward_candidates": [
+        "control_v1",
+        "control_v2",
+        "ReT_garrido2024_raw"
+      ],
+      "primary_eval_metric": "mean_ret_excel_formula",
+      "static_frontier_evidence": {
+        "artifact": "outputs/experiments/headroom_calibration_2026-06-26/summary.json",
+        "ret_spread": 0.00085,
+        "argmax": "S3_I672",
+        "best_flow_fill": 0.6847,
+        "best_lost_rate": 0.3756,
+        "off_saturation": true,
+        "corner_free": true,
+        "n_eligible": 3
+      },
+      "notes": "Chosen after the full-horizon static grid completed. This supersedes the more aggressive phi=2/psi=1.5 cell as the primary DQN frontier benchmark."
+    },
+    "envb_aggr_g24_raw": {
+      "purpose": "Confirmatory sensitivity for Partial Win A: exceed static policies on Garrido Excel ReT under aggressive stress.",
+      "risk_frequency_multiplier": 2.0,
+      "risk_impact_multiplier": 1.5,
+      "stochastic_pt": false,
+      "demand_mean_multiplier": 1.0,
+      "primary_training_reward": "ReT_garrido2024_raw",
+      "primary_eval_metric": "mean_ret_excel_formula",
+      "secondary_eval_metrics": [
+        "cd_sigmoid_mean",
+        "flow_fill_rate",
+        "lost_rate",
+        "service_loss_cvar95",
+        "resource_composite_total"
+      ],
+      "confirmatory_candidate_labels": [
+        "envb_aggr_g24_raw_ppo",
+        "envb_aggr_g24_raw_recurrent"
+      ],
+      "notes": "This aggressive path is already launched in the Kaggle confirmatory kernel. The full-horizon static grid marks it as collapsed/off-saturation=false, so it is no longer the primary DQN frontier profile."
+    },
+    "envb_cons_control_v2": {
+      "purpose": "Most promising route for Partial Win B: Excel non-inferiority plus resource/Pareto efficiency.",
+      "risk_frequency_multiplier": 1.0,
+      "risk_impact_multiplier": 1.25,
+      "stochastic_pt": false,
+      "demand_mean_multiplier": 1.0,
+      "primary_training_reward": "control_v2",
+      "primary_eval_metric": "resource_pareto_dominance_with_excel_noninferiority",
+      "control_v2_weights": {
+        "w_fill": 1.2,
+        "w_service": 6.0,
+        "w_lost": 4.0,
+        "w_inventory": 0.04,
+        "w_shift": 0.06,
+        "w_switch": 0.01
+      },
+      "secondary_eval_metrics": [
+        "mean_ret_excel_formula",
+        "cd_sigmoid_mean",
+        "flow_fill_rate",
+        "lost_rate",
+        "service_loss_cvar95",
+        "resource_composite_total"
+      ],
+      "confirmatory_candidate_labels": [
+        "envb_cons_control_v2_ppo"
+      ],
+      "notes": "This is the conservative Pareto/resource path already launched in the Kaggle confirmatory kernel."
+    }
+  },
+  "preflight_requirements": {
+    "reward_gate": [
+      "control_v1 vs control_v2 on training tapes",
+      "static-surface monotonicity and Spearman alignment with Excel ReT/service/resource metrics"
+    ],
+    "dqn_gate": [
+      "faithful env cold-transfer smoke",
+      "envb_aggr_g24_raw cold-transfer smoke",
+      "envb_cons_control_v2 cold-transfer smoke"
+    ],
+    "kaggle_confirmatory": "thomaschisica/scresia-garrido-envb-confirmatory"
+  }
+}

@@ -1,0 +1,107 @@
+{
+  "best_admissible_constant": "spt_flat",
+  "downstream_q_source": "figure_6_2_text_2400_2600",
+  "generated_at_utc": "2026-07-11T22:36:41.981471+00:00",
+  "git_sha_input": "70bee843f24d67f1c9fb8b1bef4652529cd4716c",
+  "kind": "program_d_d1_v2_frontier",
+  "primary_metric": "ret_excel",
+  "promoted_to_branching": true,
+  "proxy_sha256": "3d7aaa14263596cd68dce8a79f1f04bcb8fca9639c10cd9ac8160586fda4ed96",
+  "ret_excel_contract_version": "ret_excel_visible_v1",
+  "runtime": {
+    "numpy": "2.4.6",
+    "python": "3.11.15"
+  },
+  "selection_frontier": [
+    {
+      "admissible": true,
+      "lost_degradation_vs_spt": 0.0,
+      "lost_orders": 112.86666666666666,
+      "ret_excel": 0.0927406650565025,
+      "rule": "spt_contingent",
+      "service_loss_auc": 3836928935.766667,
+      "service_loss_degradation_vs_spt": 0.0
+    },
+    {
+      "admissible": false,
+      "lost_degradation_vs_spt": 0.04164205552274072,
+      "lost_orders": 117.56666666666666,
+      "ret_excel": 0.010132252518747347,
+      "rule": "fifo_contingent",
+      "service_loss_auc": 3838466835.266667,
+      "service_loss_degradation_vs_spt": 0.0004008152159567449
+    },
+    {
+      "admissible": false,
+      "lost_degradation_vs_spt": 0.08328411104548145,
+      "lost_orders": 122.26666666666667,
+      "ret_excel": 0.08948708057661983,
+      "rule": "lpt_contingent",
+      "service_loss_auc": 3838166665.233333,
+      "service_loss_degradation_vs_spt": 0.0003225833700302577
+    },
+    {
+      "admissible": true,
+      "lost_degradation_vs_spt": -0.2203189604252805,
+      "lost_orders": 88.0,
+      "ret_excel": 0.10255200863023636,
+      "rule": "spt_flat",
+      "service_loss_auc": 3838201488.4,
+      "service_loss_degradation_vs_spt": 0.000331659161437905
+    },
+    {
+      "admissible": true,
+      "lost_degradation_vs_spt": -0.024217365623154047,
+      "lost_orders": 110.13333333333334,
+      "ret_excel": 0.009709178219012066,
+      "rule": "fifo_flat",
+      "service_loss_auc": 3839391202.866667,
+      "service_loss_degradation_vs_spt": 0.0006417286171363277
+    },
+    {
+      "admissible": true,
+      "lost_degradation_vs_spt": 0.005316007088009527,
+      "lost_orders": 113.46666666666667,
+      "ret_excel": 0.02895132293907104,
+      "rule": "age_threshold",
+      "service_loss_auc": 3836816158.6,
+      "service_loss_degradation_vs_spt": -2.9392560705440915e-05
+    }
+  ],
+  "selection_seeds": [
+    810001,
+    810030
+  ],
+  "validation": {
+    "mass_conservation_pass": true,
+    "order_service_changed": true,
+    "ret_excel_delta": {
+      "ci95": [
+        0.005443384625955092,
+        0.015865180029897497
+      ],
+      "mean": 0.010496537587299268
+    },
+    "ret_gate_pass": true,
+    "service_gate_pass": false,
+    "service_loss_absolute_reduction": {
+      "ci95": [
+        -1250322.9875,
+        158253.5458333333
+      ],
+      "mean": -546982.6666666666
+    },
+    "service_loss_relative_reduction": {
+      "ci95": [
+        -0.0003303671937251925,
+        3.687338619352441e-05
+      ],
+      "mean": -0.0001460475179405932
+    }
+  },
+  "validation_seeds": [
+    811001,
+    811030
+  ],
+  "verdict": "PROMOTE_TO_BRANCHING"
+}

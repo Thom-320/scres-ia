@@ -59,6 +59,7 @@ ReT_thesis piecewise approximation (Eq. 5.5, audit-only):
 
 from __future__ import annotations
 
+import collections
 import json
 from typing import Any, Optional
 from pathlib import Path
@@ -68,8 +69,10 @@ import numpy as np
 from gymnasium import spaces
 
 from .config import (
+    BACKORDER_QUEUE_CAP,
     CAPACITY_BY_SHIFTS,
     DEFAULT_YEAR_BASIS,
+    GARRIDO_FULFILLMENT_DELAY_HOURS,
     INVENTORY_BUFFERS,
     OPERATIONS,
     R14_DEFECT_MODE_OPTIONS,
@@ -88,7 +91,7 @@ from .config import (
 from .supply_chain import MFSCSimulation
 
 NUM_TRACKED_OPS = 13
-OBSERVATION_VERSION_OPTIONS = ("v1", "v2", "v3", "v4", "v5", "v6", "v7")
+OBSERVATION_VERSION_OPTIONS = ("v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10")
 REWARD_MODE_ALIAS_MAP = {"ReT_corrected_cost": "ReT_corrected"}
 REWARD_MODE_OPTIONS = (
     "ReT_thesis",
@@ -100,11 +103,17 @@ REWARD_MODE_OPTIONS = (
     "ReT_garrido2024_raw",
     "ReT_garrido2024",
     "ReT_garrido2024_train",
+    "ReT_cd_balanced",
+    "ReT_cvar_cd",
+    "ReT_excel_delta",
+    "ReT_excel_plus_cvar",
     "ReT_ladder_v1",
     "ReT_tail_v2",
+    "ReT_tail_v1",  # alias: same computation, defaults to identity transform
     "rt_v0",
     "control_v1",
     "control_v1_pbrs",
+    "control_v2",
     "ReT_cd_v1",
     "ReT_cd_sigmoid",
 )
@@ -144,6 +153,18 @@ RET_TAIL_TRANSFORM = "identity"
 RET_TAIL_GAMMA = 1.0
 RET_TAIL_BETA = 2.0
 
+# ReT_cd_balanced: same Garrido-2024 variables, intentionally light cost term.
+# Full-cost C-D has repeatedly crowned zero-buffer policies; this candidate is
+# a bounded same-bar C-D reward/eval index that keeps cost present but secondary.
+RET_CD_BALANCED_N_KAPPA = 0.05
+
+# ReT_excel_plus_cvar: direct Excel-ReT incremental signal with a rolling
+# service-loss tail penalty.  The alpha sweep is the user's current fast-tuning
+# knob for Excel+CVaR lanes.
+RET_EXCEL_CVAR_ALPHA = 0.50
+RET_EXCEL_CVAR_TAIL_LEVEL = 0.05
+RET_EXCEL_CVAR_WINDOW = 50
+
 # ReT_unified_v1 defaults (paper-facing service-first resilience)
 RET_UNIFIED_W_FR = 0.60
 RET_UNIFIED_W_RC = 0.25
@@ -175,8 +196,11 @@ G24_COST_PRODUCTION = 1.0
 G24_COST_SPARE_CAPACITY = 1.0
 G24_COST_INVENTORY = 1.0
 G24_COST_BACKORDERS = 1.0
+G24_COST_SHIFT = 1.0
 G24_DEFAULT_CALIBRATION_PATH = (
-    Path(__file__).resolve().parent / "data" / "ret_garrido2024_calibration.json"
+    Path(__file__).resolve().parent
+    / "data"
+    / "ret_garrido2024_calibration_faithful_2026-06-26.json"
 )
 
 # ReT_cd_v1 defaults (Cobb-Douglas continuous bridge for ReT_thesis piecewise)
@@ -189,10 +213,19 @@ V2_OBSERVATION_DIM = 18
 V3_OBSERVATION_DIM = 20
 V4_OBSERVATION_DIM = 24  # v3 (20) + rations_sb_dispatch + shifts + op1_down + op2_down
 V5_OBSERVATION_DIM = 30  # v4 (24) + 6 cycle/calendar precursor features
-V6_OBSERVATION_DIM = 40  # v5 (30) + 10 adaptive benchmark features
-V7_OBSERVATION_DIM = 46  # v6 (40) + 6 downstream Track B bottleneck features
+V6_OBSERVATION_DIM = 42  # v5 (30) + 12 adaptive benchmark + production/risk features
+V7_OBSERVATION_DIM = 52  # v6 (42) + 10 downstream Track B bottleneck + hazard features
+V8_OBSERVATION_DIM = 79  # v7 (52) + 27 realized-risk active/recent/duration features
+V9_OBSERVATION_DIM = 89  # v8 (79) + 10 backorder/trend/throughput features
+V10_OBSERVATION_DIM = 101  # v9 (89) + 12 observed risk-memory features for R11/R13/R24
 PREV_STEP_DEMAND_SCALE = 18_200.0
 PREV_STEP_BACKORDER_SCALE = 18_200.0
+CONTROL_V2_W_FILL = 1.0
+CONTROL_V2_W_SERVICE = 4.0
+CONTROL_V2_W_LOST = 2.0
+CONTROL_V2_W_INVENTORY = 0.05
+CONTROL_V2_W_SHIFT = 0.08
+CONTROL_V2_W_SWITCH = 0.02
 INVENTORY_NODE_FIELDS: tuple[str, ...] = (
     "raw_material_wdc",
     "raw_material_al",
@@ -217,9 +250,12 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
       - v5: v4 + thesis-faithful cycle/calendar precursor features.
       - v6: v5 + Track-B adaptive benchmark regime/forecast/debt features.
       - v7: v6 + downstream bottleneck state and rolling service features.
+      - v8: v7 + realized risk ID observability (active/recent/duration).
+      - v9: v8 + backorder health, service trend, and previous-step throughput.
+      - v10: v9 + observed historical memory for frequent risks R11/R13/R24.
     Action:
       - Track A (`track_a_v1`): 5-dimensional [-1, 1]
-      - Track B (`track_b_v1`): 7-dimensional [-1, 1]
+      - Track B (`track_b_v1`): 8-dimensional [-1, 1]
 
     Parameters
     ----------
@@ -250,7 +286,9 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         max_steps: Optional[int] = None,
         year_basis: str = DEFAULT_YEAR_BASIS,
         risk_level: str = "current",
+        risks_enabled: bool = True,
         stochastic_pt: bool = False,
+        warmup_hours_override: float | None = None,
         reward_mode: str = "ReT_thesis",
         observation_version: str = "v1",
         # --- ReT_thesis parameters ---
@@ -272,6 +310,13 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         w_bo: float = 1.0,
         w_cost: float = 0.06,
         w_disr: float = 0.0,
+        # --- control_v2 weights ---
+        control_v2_w_fill: float = CONTROL_V2_W_FILL,
+        control_v2_w_service: float = CONTROL_V2_W_SERVICE,
+        control_v2_w_lost: float = CONTROL_V2_W_LOST,
+        control_v2_w_inventory: float = CONTROL_V2_W_INVENTORY,
+        control_v2_w_shift: float = CONTROL_V2_W_SHIFT,
+        control_v2_w_switch: float = CONTROL_V2_W_SWITCH,
         # --- PBRS parameters (control_v1_pbrs only) ---
         pbrs_alpha: float = 1.0,
         pbrs_beta: float = 0.5,
@@ -325,27 +370,57 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         ret_g24_d_tau: float = G24_D_TAU,
         ret_g24_n_kappa: float = G24_N_KAPPA,
         ret_g24_kappa_train_frac: float = 0.20,
+        ret_g24_shift_cost: float = G24_COST_SHIFT,
+        # --- ReT_cd_balanced parameters ---
+        ret_cd_balanced_n_kappa: float = RET_CD_BALANCED_N_KAPPA,
+        # --- ReT_excel_plus_cvar parameters ---
+        ret_excel_cvar_alpha: float = RET_EXCEL_CVAR_ALPHA,
+        ret_excel_cvar_tail_level: float = RET_EXCEL_CVAR_TAIL_LEVEL,
+        ret_excel_cvar_window: int = RET_EXCEL_CVAR_WINDOW,
         # --- ReT_cd_v1 / ReT_cd_sigmoid parameters ---
         ret_cd_w_fr: float = RET_CD_W_FR,
         ret_cd_w_at: float = RET_CD_W_AT,
+        # --- ReT_cvar_cd parameters (mean-CVaR over the garrido2024 CD index) ---
+        cvar_alpha: float = 0.05,
+        cvar_lambda: float = 0.0,
+        cvar_power: float = 1.0,
+        cvar_window: int = 50,
         # --- Action space configuration ---
         action_contract: str = "track_a_v1",
         action_mode: str = "full",  # "full" (5D), "shift_only" (1D), "shift_q9" (2D)
-        warmup_trigger: str = "production",
+        warmup_trigger: str = "op9_arrival",
         downstream_q_source: str = THESIS_REPLICATION_DOWNSTREAM_Q_SOURCE,
-        r14_defect_mode: str = "reprocess",
-        raw_material_flow_mode: str = "legacy_validated",
+        r14_defect_mode: str = "thesis_strict_op6",
+        raw_material_flow_mode: str = "kit_equivalent_order_up_to",
         raw_material_order_up_to_multiplier: float = 2.0,
         demand_mean_multiplier: float = 1.0,
+        demand_on_hand_fulfillment_delay: float = GARRIDO_FULFILLMENT_DELAY_HOURS,
         surge_inertia: bool = False,
         surge_ramp_per_step: int = 1,
         surge_budget_hours: float = float("inf"),
-        risk_occurrence_mode: str = "legacy_renewal",
+        risk_occurrence_mode: str = "thesis_window",
+        risk_frequency_multiplier: float = 1.0,
+        risk_impact_multiplier: float = 1.0,
+        risk_frequency_multipliers_by_id: dict[str, float] | None = None,
+        risk_impact_multipliers_by_id: dict[str, float] | None = None,
+        risk_event_tape: list[dict[str, Any]] | None = None,
+        risk_attribution_source: str = "des_events",
+        ret_recovery_period_mode: str = "disruption",
         initial_buffers: dict[str, float] | None = None,
         initial_shifts: int = 1,
         inventory_replenishment_period: float | None = None,
+        inventory_replenishment_lead_time: float = 0.0,
         enabled_risks: set[str] | tuple[str, ...] | list[str] | None = None,
         risk_overrides: dict[str, str] | None = None,
+        campaign_config: dict[str, Any] | None = None,
+        replenishment_route_aware: bool = False,
+        procurement_contract_mode: str = "legacy_independent",
+        order_fulfillment_mode: str = "legacy_theatre_stock",
+        op9_dispatch_policy: str = "fixed_clock_daily",
+        downstream_transport_capacity_mode: str = "parallel",
+        op9_freight_offset_hours: float = 6.0,
+        r24_attribution_window_hours: float = 0.0,
+        demand_start_after_warmup: bool = False,
         priming_enabled: bool = True,
         # --- Track B: MDP structural fixes ---
         clear_backlog_after_priming: bool = False,  # Fix 3A: clear inherited backlog
@@ -426,7 +501,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         if (
             canonical_reward_mode == "control_v1_pbrs"
             and pbrs_variant == "step_level"
-            and observation_version not in ("v2", "v3", "v4", "v5", "v6", "v7")
+            and observation_version not in ("v2", "v3", "v4", "v5", "v6", "v7", "v8")
         ):
             raise ValueError(
                 "PBRS step_level variant requires observation_version='v2' "
@@ -437,6 +512,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self.step_size = float(step_size_hours)
         self.year_basis = year_basis
         self.risk_level = risk_level
+        self.risks_enabled = bool(risks_enabled)
         self.stochastic_pt = stochastic_pt
         self.warmup_trigger = warmup_trigger
         self.downstream_q_source = downstream_q_source
@@ -446,6 +522,9 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             raw_material_order_up_to_multiplier
         )
         self.demand_mean_multiplier = float(demand_mean_multiplier)
+        self.demand_on_hand_fulfillment_delay = max(
+            0.0, float(demand_on_hand_fulfillment_delay)
+        )
         # Capacity inertia (Ed.2): surge ramps up slowly (activation lag), draws on a
         # finite surge-hour budget, and de-mobilises instantly. Makes anticipating the
         # shock (pre-positioning capacity before it hits) valuable -> rewards memory.
@@ -453,11 +532,40 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self.surge_ramp_per_step = int(surge_ramp_per_step)
         self.surge_budget_hours = float(surge_budget_hours)
         self.risk_occurrence_mode = risk_occurrence_mode
+        self.risk_frequency_multiplier = max(1e-6, float(risk_frequency_multiplier))
+        self.risk_impact_multiplier = max(1e-6, float(risk_impact_multiplier))
+        self.risk_frequency_multipliers_by_id = {
+            str(risk_id): max(1e-6, float(value))
+            for risk_id, value in (risk_frequency_multipliers_by_id or {}).items()
+        }
+        self.risk_impact_multipliers_by_id = {
+            str(risk_id): max(1e-6, float(value))
+            for risk_id, value in (risk_impact_multipliers_by_id or {}).items()
+        }
+        self.risk_event_tape = list(risk_event_tape) if risk_event_tape is not None else None
+        self.risk_attribution_source = str(risk_attribution_source)
+        self.ret_recovery_period_mode = str(ret_recovery_period_mode)
         self.initial_buffers = dict(initial_buffers or {})
         self.initial_shifts = int(initial_shifts)
         self.initial_inventory_replenishment_period = inventory_replenishment_period
+        self.initial_inventory_replenishment_lead_time = float(
+            inventory_replenishment_lead_time
+        )
         self.enabled_risks = set(enabled_risks) if enabled_risks is not None else None
         self.risk_overrides = dict(risk_overrides or {})
+        self.campaign_config = dict(campaign_config) if campaign_config else None
+        self.replenishment_route_aware = bool(replenishment_route_aware)
+        self.procurement_contract_mode = str(procurement_contract_mode)
+        self.order_fulfillment_mode = str(order_fulfillment_mode)
+        self.op9_dispatch_policy = str(op9_dispatch_policy)
+        self.downstream_transport_capacity_mode = str(
+            downstream_transport_capacity_mode
+        )
+        self.op9_freight_offset_hours = float(op9_freight_offset_hours)
+        self.r24_attribution_window_hours = max(
+            0.0, float(r24_attribution_window_hours)
+        )
+        self.demand_start_after_warmup = bool(demand_start_after_warmup)
         self.priming_enabled = bool(priming_enabled)
         self.reward_mode = reward_mode
         self._canonical_reward_mode = canonical_reward_mode
@@ -477,6 +585,12 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self.w_bo = float(w_bo)
         self.w_cost = float(w_cost)
         self.w_disr = float(w_disr)
+        self.control_v2_w_fill = float(control_v2_w_fill)
+        self.control_v2_w_service = float(control_v2_w_service)
+        self.control_v2_w_lost = float(control_v2_w_lost)
+        self.control_v2_w_inventory = float(control_v2_w_inventory)
+        self.control_v2_w_shift = float(control_v2_w_shift)
+        self.control_v2_w_switch = float(control_v2_w_switch)
 
         self.pbrs_alpha = float(pbrs_alpha)
         self.pbrs_beta = float(pbrs_beta)
@@ -577,20 +691,60 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             calibration.get("n_kappa", calibration.get("kappa_dot", ret_g24_n_kappa))
         )
         self.ret_g24_kappa_train_frac = float(ret_g24_kappa_train_frac)
+        self.ret_g24_shift_cost = max(0.0, float(ret_g24_shift_cost))
         self.ret_g24_target = float(
             calibration.get("target_contribution", G24_EQUATED_TARGET)
         )
         self.ret_g24_kappa_ref = float(calibration.get("kappa_ref", 1.0))
+        # Balancing method for the five-variable index. Default 'max_offset' is the
+        # paper rule (0.20/ln(max)); 'variance_log' and 'minmax' are scale-robust
+        # alternatives so no single term dominates on this DES. Params loaded from
+        # calibration.
+        self.ret_g24_balance_method = str(
+            calibration.get("balance_method", "max_offset")
+        )
+        self.ret_g24_balance_c = float(calibration.get("balance_c", 0.20))
+        self.ret_g24_log_mean = dict(calibration.get("log_mean", {}))
+        self.ret_g24_log_std = dict(calibration.get("log_std", {}))
+        self.ret_g24_minmax_min = dict(calibration.get("minmax_min", {}))
+        self.ret_g24_minmax_max = dict(calibration.get("minmax_max", {}))
+        self.ret_g24_minmax_utility_gmean = dict(
+            calibration.get("minmax_utility_gmean", {})
+        )
         self.ret_g24_maxima = calibration.get("maxima", {})
         self.ret_g24_calibration_source = str(
             calibration.get("source", "built_in_paper_coefficients")
+        )
+
+        # ReT_cd_balanced params
+        self.ret_cd_balanced_n_kappa = max(0.0, float(ret_cd_balanced_n_kappa))
+
+        # ReT_excel_plus_cvar params
+        self.ret_excel_cvar_alpha = max(0.0, float(ret_excel_cvar_alpha))
+        self.ret_excel_cvar_tail_level = min(
+            1.0, max(1e-6, float(ret_excel_cvar_tail_level))
+        )
+        self.ret_excel_cvar_window = int(max(2, ret_excel_cvar_window))
+        self._ret_excel_cvar_loss_buffer = collections.deque(
+            maxlen=self.ret_excel_cvar_window
         )
 
         # ReT_cd_v1 / ReT_cd_sigmoid params
         self.ret_cd_w_fr = float(ret_cd_w_fr)
         self.ret_cd_w_at = float(ret_cd_w_at)
 
-        self.warmup_hours = float(WARMUP["estimated_deterministic_hrs"])
+        # ReT_cvar_cd params (mean-CVaR over the garrido2024 CD resilience index)
+        self.cvar_alpha = float(cvar_alpha)
+        self.cvar_lambda = float(cvar_lambda)
+        self.cvar_power = float(cvar_power)
+        self.cvar_window = int(max(2, cvar_window))
+        self._cvar_loss_buffer = collections.deque(maxlen=self.cvar_window)
+
+        self.warmup_hours = float(
+            WARMUP["estimated_deterministic_hrs"]
+            if warmup_hours_override is None
+            else max(0.0, float(warmup_hours_override))
+        )
         self._post_warmup_start_time = self.warmup_hours
         self.priming_shifts = int(WARMUP.get("priming_shifts", 2))
         self.priming_step_hours = float(WARMUP.get("priming_step_hours", 168.0))
@@ -624,6 +778,9 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self._prev_step_new_demanded = 0.0
         self._prev_step_new_backorder_qty = 0.0
         self._prev_step_disruption_hours = 0.0
+        self._prev_control_v2_signature: tuple[int, float] | None = None
+        self._ret_excel_prev_total = 0.0
+        self._ret_excel_prev_n_orders = 0
         self._warmup_cumulative_backorder_qty = 0.0
         self._warmup_total_demanded = 0.0
         self._warmup_cumulative_down_hours = 0.0
@@ -667,6 +824,12 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             )
 
     def _observation_dim(self) -> int:
+        if self.observation_version == "v10":
+            return V10_OBSERVATION_DIM
+        if self.observation_version == "v9":
+            return V9_OBSERVATION_DIM
+        if self.observation_version == "v8":
+            return V8_OBSERVATION_DIM
         if self.observation_version == "v7":
             return V7_OBSERVATION_DIM
         if self.observation_version == "v6":
@@ -996,28 +1159,43 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                 ),
             ]
         )
-        if self.observation_version in ("v3", "v4", "v5", "v6", "v7"):
+        if self.observation_version in ("v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10"):
             augmented_obs = np.concatenate(
                 [augmented_obs, self._normalized_cumulative_features()]
             )
         if (
-            self.observation_version in ("v4", "v5", "v6", "v7")
+            self.observation_version in ("v4", "v5", "v6", "v7", "v8", "v9", "v10")
             and self.sim is not None
         ):
             augmented_obs = np.concatenate(
                 [augmented_obs, self.sim.get_observation_v4_extra()]
             )
-        if self.observation_version in ("v5", "v6", "v7") and self.sim is not None:
+        if (
+            self.observation_version in ("v5", "v6", "v7", "v8", "v9", "v10")
+            and self.sim is not None
+        ):
             augmented_obs = np.concatenate(
                 [augmented_obs, self.sim.get_observation_v5_extra()]
             )
-        if self.observation_version in ("v6", "v7") and self.sim is not None:
+        if self.observation_version in ("v6", "v7", "v8", "v9", "v10") and self.sim is not None:
             augmented_obs = np.concatenate(
                 [augmented_obs, self.sim.get_observation_v6_extra()]
             )
-        if self.observation_version == "v7" and self.sim is not None:
+        if self.observation_version in ("v7", "v8", "v9", "v10") and self.sim is not None:
             augmented_obs = np.concatenate(
                 [augmented_obs, self.sim.get_observation_v7_extra()]
+            )
+        if self.observation_version in ("v8", "v9", "v10") and self.sim is not None:
+            augmented_obs = np.concatenate(
+                [augmented_obs, self.sim.get_observation_v8_extra()]
+            )
+        if self.observation_version in ("v9", "v10") and self.sim is not None:
+            augmented_obs = np.concatenate(
+                [augmented_obs, self.sim.get_observation_v9_extra()]
+            )
+        if self.observation_version == "v10" and self.sim is not None:
+            augmented_obs = np.concatenate(
+                [augmented_obs, self.sim.get_observation_v10_extra()]
             )
         return augmented_obs
 
@@ -1160,6 +1338,63 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             "weighted_service_loss": weighted_service_loss,
             "weighted_shift_cost": weighted_shift_cost,
             "weighted_disruption": weighted_disruption,
+            "reward_total": reward_total,
+        }
+
+    def _compute_control_v2_components(
+        self, info: dict[str, Any], shifts: int
+    ) -> dict[str, float]:
+        """Dense service/resource reward for the Garrido Track-A lane.
+
+        ``control_v1`` is intentionally sparse: service loss plus shift cost.
+        ``control_v2`` keeps that operational core but adds the two missing
+        pressures needed for the current paper target: lost-order avoidance and
+        strategic-buffer efficiency.  It is a training reward only; Excel ReT
+        remains the primary evaluation metric.
+        """
+        new_demanded = float(info.get("new_demanded", 0.0))
+        new_delivered = float(info.get("new_delivered", 0.0))
+        new_backorder_qty = float(info.get("new_backorder_qty", 0.0))
+        new_unattended_orders = float(info.get("new_unattended_orders", 0.0))
+        fill_rate_step = min(1.0, max(0.0, new_delivered / max(new_demanded, 1.0)))
+        service_loss_step = max(0.0, new_backorder_qty / max(new_demanded, 1.0))
+        lost_order_pressure = min(
+            1.0, max(0.0, new_unattended_orders / max(1.0, float(BACKORDER_QUEUE_CAP)))
+        )
+        strategic_inventory = self._strategic_inventory_target_total()
+        inventory_scale = max(1.0, RET_LADDER_I1344_TOTAL)
+        inventory_pressure = min(2.0, max(0.0, strategic_inventory / inventory_scale))
+        shift_cost_step = max(0.0, float(shifts) - 1.0) / 2.0
+        signature = (int(shifts), round(float(strategic_inventory), 6))
+        switch_cost_step = (
+            0.0
+            if self._prev_control_v2_signature in (None, signature)
+            else 1.0
+        )
+        self._prev_control_v2_signature = signature
+
+        reward_total = (
+            self.control_v2_w_fill * fill_rate_step
+            - self.control_v2_w_service * service_loss_step
+            - self.control_v2_w_lost * lost_order_pressure
+            - self.control_v2_w_inventory * inventory_pressure
+            - self.control_v2_w_shift * shift_cost_step
+            - self.control_v2_w_switch * switch_cost_step
+        )
+        return {
+            "fill_rate_step": fill_rate_step,
+            "service_loss_step": service_loss_step,
+            "lost_order_pressure": lost_order_pressure,
+            "inventory_pressure": inventory_pressure,
+            "strategic_inventory": strategic_inventory,
+            "shift_cost_step": shift_cost_step,
+            "switch_cost_step": switch_cost_step,
+            "weighted_fill": self.control_v2_w_fill * fill_rate_step,
+            "weighted_service_loss": self.control_v2_w_service * service_loss_step,
+            "weighted_lost": self.control_v2_w_lost * lost_order_pressure,
+            "weighted_inventory": self.control_v2_w_inventory * inventory_pressure,
+            "weighted_shift_cost": self.control_v2_w_shift * shift_cost_step,
+            "weighted_switch_cost": self.control_v2_w_switch * switch_cost_step,
             "reward_total": reward_total,
         }
 
@@ -1703,6 +1938,64 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
     # ReT_garrido2024: paper-faithful 5-variable C-D family
     # -----------------------------------------------------------------
 
+    # Fixed Cobb-Douglas signs (Garrido 2024 Eq. 3/4): inventory and spare
+    # capacity raise R; backorders, time-to-fulfill and cost lower it.
+    _G24_SIGNS = {
+        "zeta": 1.0,
+        "epsilon": -1.0,
+        "phi": 1.0,
+        "tau": -1.0,
+        "kappa_dot": -1.0,
+    }
+
+    def _g24_max_offset_exponent(self, key: str) -> float:
+        """Paper offset exponent (0.20/ln(max)) for the legacy max_offset method."""
+        return {
+            "zeta": self.ret_g24_a_zeta,
+            "epsilon": self.ret_g24_b_epsilon,
+            "phi": self.ret_g24_c_phi,
+            "tau": self.ret_g24_d_tau,
+            "kappa_dot": self.ret_g24_n_kappa,
+        }[key]
+
+    def _g24_log_score(
+        self, variables: dict[str, float], *, kappa_scale: float = 1.0
+    ) -> float:
+        """Build the Garrido-2024 log-score under the active balance_method.
+
+        - max_offset (paper/legacy): term = e_i * ln(x_i), e_i = 0.20/ln(max_i).
+        - variance_log: term = (c / std(ln x_i)) * ln(x_i / geometric_mean_i).
+        - minmax: term = (1/5) * ln(utility_i / geometric_mean_utility_i).
+        kappa_scale (<1 for the training variant) only scales the cost term.
+        """
+        eps = 1e-6
+        method = getattr(self, "ret_g24_balance_method", "max_offset")
+        score = 0.0
+        for key, x in variables.items():
+            sign = self._G24_SIGNS[key]
+            scale = kappa_scale if key == "kappa_dot" else 1.0
+            log_x = float(np.log(max(float(x), eps)))
+            if method == "variance_log":
+                mean = float(self.ret_g24_log_mean.get(key, 0.0))
+                std = max(float(self.ret_g24_log_std.get(key, 1.0)), eps)
+                value = (self.ret_g24_balance_c / std) * (log_x - mean)
+            elif method == "minmax":
+                lo = float(self.ret_g24_minmax_min.get(key, 0.0))
+                hi = float(self.ret_g24_minmax_max.get(key, 1.0))
+                norm = (float(x) - lo) / max(hi - lo, eps)
+                norm = min(max(norm, eps), 1.0)
+                utility = norm if sign > 0.0 else 1.0 - norm
+                utility = min(max(utility, eps), 1.0)
+                gmean = max(
+                    float(self.ret_g24_minmax_utility_gmean.get(key, 1.0)), eps
+                )
+                value = (1.0 / 5.0) * float(np.log(utility / gmean))
+                sign = 1.0
+            else:  # max_offset (paper/legacy) — reproduces prior behavior exactly
+                value = self._g24_max_offset_exponent(key) * log_x
+            score += sign * scale * value
+        return float(score)
+
     def _compute_ret_garrido2024(
         self, info: dict[str, Any], shifts: int
     ) -> dict[str, float | str | dict[str, float] | dict[str, Any]]:
@@ -1768,12 +2061,18 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             1.0,
         )
         tau_step = max(net_requirements / tau_denom, 1.0)
+        shift_cost_step = (
+            self.ret_g24_shift_cost
+            * max(0.0, float(shifts) - 1.0)
+            * max(1.0, float(self.step_size))
+        )
 
         step_cost = (
             G24_COST_PRODUCTION * produced_step
             + G24_COST_SPARE_CAPACITY * spare_capacity_step
             + G24_COST_INVENTORY * finished_inventory
             + G24_COST_BACKORDERS * pending_backorder_qty
+            + shift_cost_step
         )
 
         self._ret_g24_elapsed_steps += 1
@@ -1791,29 +2090,21 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         average_cost = max(eps, self._ret_g24_sum_cost / elapsed_steps)
         kappa_dot = max(eps, average_cost / max(self.ret_g24_kappa_ref, eps))
 
-        log_score = float(
-            self.ret_g24_a_zeta * np.log(zeta_avg)
-            - self.ret_g24_b_epsilon * np.log(epsilon_avg)
-            + self.ret_g24_c_phi * np.log(phi_avg)
-            - self.ret_g24_d_tau * np.log(tau_avg)
-            - self.ret_g24_n_kappa * np.log(kappa_dot)
-        )
-        # Training variant: include κ̇ at a reduced fraction to prevent
+        # The five C-D variables; the log-score is built by the active
+        # balance_method (max_offset = paper offsets; variance_log / minmax =
+        # scale-robust balancing so no single term dominates on this DES).
+        g24_vars = {
+            "zeta": zeta_avg,
+            "epsilon": epsilon_avg,
+            "phi": phi_avg,
+            "tau": tau_avg,
+            "kappa_dot": kappa_dot,
+        }
+        log_score = self._g24_log_score(g24_vars, kappa_scale=1.0)
+        # Training variant: scale the κ̇ (cost) term by kappa_train_frac to prevent
         # both S1 collapse (full κ̇) and S3 collapse (no κ̇).
-        # ret_g24_kappa_train_frac controls how much of n_kappa to use:
-        #   0.0 → no cost signal (S3 collapse)
-        #   0.2 → light cost pressure (target: balanced mix)
-        #   1.0 → full cost signal (S1 collapse)
-        kappa_train_coeff = self.ret_g24_n_kappa * getattr(
-            self, "ret_g24_kappa_train_frac", 0.20
-        )
-        log_score_train = float(
-            self.ret_g24_a_zeta * np.log(zeta_avg)
-            - self.ret_g24_b_epsilon * np.log(epsilon_avg)
-            + self.ret_g24_c_phi * np.log(phi_avg)
-            - self.ret_g24_d_tau * np.log(tau_avg)
-            - kappa_train_coeff * np.log(kappa_dot)
-        )
+        kappa_train_frac = float(getattr(self, "ret_g24_kappa_train_frac", 0.20))
+        log_score_train = self._g24_log_score(g24_vars, kappa_scale=kappa_train_frac)
         raw_product = float(np.exp(log_score))
         raw_product_train = float(np.exp(log_score_train))
         sigmoid_index = float(1.0 / (1.0 + np.exp(-log_score)))
@@ -1842,6 +2133,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             "net_requirements_step": net_requirements,
             "tau_step": tau_step,
             "step_cost": step_cost,
+            "shift_cost_step": shift_cost_step,
             "ret_garrido2024_raw_step": raw_product,
             "ret_garrido2024_train_step": raw_product_train,
             "ret_garrido2024_sigmoid_step": sigmoid_index,
@@ -1855,6 +2147,13 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                 "d_tau": self.ret_g24_d_tau,
                 "n_kappa": self.ret_g24_n_kappa,
             },
+            "balance_method": self.ret_g24_balance_method,
+            "balance_c": self.ret_g24_balance_c,
+            "log_mean": self.ret_g24_log_mean,
+            "log_std": self.ret_g24_log_std,
+            "minmax_min": self.ret_g24_minmax_min,
+            "minmax_max": self.ret_g24_minmax_max,
+            "minmax_utility_gmean": self.ret_g24_minmax_utility_gmean,
             "kappa_ref": self.ret_g24_kappa_ref,
             "target_contribution": self.ret_g24_target,
             "maxima": self.ret_g24_maxima,
@@ -1865,13 +2164,118 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                 "epsilon": "avg pending backorder quantity since warmup",
                 "phi": "avg spare assembly capacity since warmup",
                 "tau": "avg net-requirement coverage time proxy since warmup",
-                "kappa_dot": "avg cost normalized by Monte-Carlo reference cost",
+                "kappa_dot": "avg cost incl. production, spare capacity, inventory, backorders, and shift-hours normalized by Monte-Carlo reference cost",
             },
         }
 
     # -----------------------------------------------------------------
-    # ReT_cd_v1 / ReT_cd_sigmoid: Cobb-Douglas continuous bridge
+    # ReT_cvar_cd: mean-CVaR over the garrido2024 CD resilience index
     # -----------------------------------------------------------------
+
+    def _compute_ret_cvar_cd(
+        self, info: dict[str, Any], shifts: int
+    ) -> dict[str, float | str | dict[str, float] | dict[str, Any]]:
+        """Mean-CVaR Cobb-Douglas resilience reward.
+
+        Resilience index = the bounded Cobb-Douglas sigmoid index from
+        ``_compute_ret_garrido2024`` (Garrido et al. 2024, Eq. 6), denoted CD_t
+        in (0, 1]. The per-step deficit is L_t = 1 - CD_t. The training reward
+        combines the mean objective (maximize CD_t) with a tail-risk penalty
+        aligned to the Conditional Value-at-Risk of the recent deficit stream:
+
+            reward_t = CD_t  -  lambda * ( max(0, L_t - VaR_{1-alpha}) )^p
+                                   / (1 - alpha)
+
+        where VaR_{1-alpha} is the (1-alpha) quantile of L over a rolling
+        window of recent steps. When lambda = 0 the reward reduces to the pure
+        CD index (the mean objective). When lambda > 0, steps whose deficit
+        falls in the worst alpha-tail are penalized super-linearly (p > 1),
+        implementing a within-episode CVaR aversion. This is the tractable
+        train-side proxy for the evaluation objective ``mean-CVaR(CD deficit)``
+        computed across episodes; the two share the same (alpha, lambda) knobs.
+
+        Parameters: ``cvar_alpha`` (tail level, default 0.05), ``cvar_lambda``
+        (risk aversion, default 0.0), ``cvar_power`` (1.0 linear / 2.0 super-
+        linear), ``cvar_window`` (rolling-buffer length, default 50 steps).
+        """
+        eps = 1e-9
+        g24 = self._compute_ret_garrido2024(info, shifts)
+        cd_step = float(g24["ret_garrido2024_sigmoid_step"])
+        loss = 1.0 - cd_step
+
+        self._cvar_loss_buffer.append(loss)
+        window = list(self._cvar_loss_buffer)
+        var_q = max(0.0, 1.0 - self.cvar_alpha)
+        var_threshold = float(np.quantile(window, var_q))
+        tail = [v for v in window if v >= var_threshold - eps]
+        cvar_estimate = float(np.mean(tail)) if tail else loss
+        excess = max(0.0, loss - var_threshold)
+        penalty = float(
+            (excess ** self.cvar_power) / max(1.0 - self.cvar_alpha, eps)
+        )
+        reward = cd_step - self.cvar_lambda * penalty
+
+        return {
+            "reward_mode": "ReT_cvar_cd",
+            "active_reward_mode": self.reward_mode,
+            "training_reward_recommendation": "ReT_cvar_cd",
+            "evaluation_index_recommendation": "ReT_garrido2024",
+            "ret_cvar_cd_step": float(reward),
+            "cd_index_step": cd_step,
+            "cd_loss_step": loss,
+            "cvar_alpha": self.cvar_alpha,
+            "cvar_lambda": self.cvar_lambda,
+            "cvar_power": self.cvar_power,
+            "cvar_window": self.cvar_window,
+            "cvar_var_threshold": var_threshold,
+            "cvar_estimate": cvar_estimate,
+            "cvar_excess": excess,
+            "cvar_penalty": penalty,
+            "g24_components": g24,
+        }
+
+    def _compute_ret_cd_balanced(
+        self, info: dict[str, Any], shifts: int
+    ) -> dict[str, float | str | dict[str, float] | dict[str, Any]]:
+        """Balanced Garrido-2024 C-D reward/eval candidate.
+
+        Uses the same five running variables as ``ReT_garrido2024`` but replaces
+        the calibrated cost exponent with a small explicit value.  This keeps
+        the cost/resource term visible without letting it dominate service and
+        buffer preparation in the continuous Track-A lane.
+        """
+        g24 = self._compute_ret_garrido2024(info, shifts)
+        eps = 1e-6
+        n_kappa = max(0.0, float(self.ret_cd_balanced_n_kappa))
+        log_score = float(
+            self.ret_g24_a_zeta * np.log(max(eps, float(g24["zeta_avg"])))
+            - self.ret_g24_b_epsilon
+            * np.log(max(eps, float(g24["epsilon_avg"])))
+            + self.ret_g24_c_phi * np.log(max(eps, float(g24["phi_avg"])))
+            - self.ret_g24_d_tau * np.log(max(eps, float(g24["tau_avg"])))
+            - n_kappa * np.log(max(eps, float(g24["kappa_dot"])))
+        )
+        raw = float(np.exp(log_score))
+        sigmoid = float(1.0 / (1.0 + np.exp(-log_score)))
+        return {
+            "reward_mode": "ReT_cd_balanced",
+            "active_reward_mode": self.reward_mode,
+            "ret_cd_balanced_raw_step": raw,
+            "ret_cd_balanced_sigmoid_step": sigmoid,
+            "ret_cd_balanced_step": sigmoid,
+            "log_score": log_score,
+            "balanced_n_kappa": n_kappa,
+            "g24_components": g24,
+            "exponents": {
+                "a_zeta": self.ret_g24_a_zeta,
+                "b_epsilon": self.ret_g24_b_epsilon,
+                "c_phi": self.ret_g24_c_phi,
+                "d_tau": self.ret_g24_d_tau,
+                "n_kappa": n_kappa,
+            },
+        }
+
+
 
     def _compute_ret_cd_v1(
         self, info: dict[str, Any], step_hours: float
@@ -1989,6 +2393,70 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             ),
         }
 
+    def _compute_ret_excel_delta(self) -> dict[str, float]:
+        """Incremental reward aligned to the workbook ReT aggregate.
+
+        The evaluation metric is the terminal mean of Garrido's raw Excel
+        formula.  For learning, expose the step contribution as the change in
+        cumulative Excel ReT mass: ``mean_ret_excel * n_orders``.
+        """
+        if self.sim is None:
+            raise RuntimeError("Call reset() before computing ReT_excel_delta.")
+
+        summary = self.sim.compute_order_level_ret()
+        n_orders = int(summary["n_orders"])
+        mean_ret = float(summary["mean_ret_excel_formula"])
+        total_ret = mean_ret * float(n_orders)
+        delta_total = total_ret - float(self._ret_excel_prev_total)
+        delta_orders = n_orders - int(self._ret_excel_prev_n_orders)
+        self._ret_excel_prev_total = total_ret
+        self._ret_excel_prev_n_orders = n_orders
+        return {
+            "ret_excel_delta_step": float(delta_total),
+            "ret_excel_mean": mean_ret,
+            "ret_excel_total": float(total_ret),
+            "ret_excel_n_orders": float(n_orders),
+            "ret_excel_delta_orders": float(delta_orders),
+        }
+
+    def _compute_ret_excel_plus_cvar(
+        self, info: dict[str, Any]
+    ) -> dict[str, float | str]:
+        """Excel-ReT incremental signal with a rolling tail-service penalty.
+
+        This is a train-side objective for the user's primary bar: maximize
+        Excel ReT while discouraging policies that win the mean by leaving a
+        bad tail.  The tail proxy is computed from step service-loss
+        ``new_backorder_qty / new_demanded`` over a rolling window.
+        """
+        excel = self._compute_ret_excel_delta()
+        service_loss = max(
+            0.0,
+            float(info.get("new_backorder_qty", 0.0))
+            / max(float(info.get("new_demanded", 0.0)), 1.0),
+        )
+        service_loss = min(1.0, service_loss)
+        self._ret_excel_cvar_loss_buffer.append(service_loss)
+        window = list(self._ret_excel_cvar_loss_buffer)
+        var_q = max(0.0, 1.0 - self.ret_excel_cvar_tail_level)
+        var_threshold = float(np.quantile(window, var_q))
+        tail = [value for value in window if value >= var_threshold - 1e-9]
+        cvar_estimate = float(np.mean(tail)) if tail else service_loss
+        penalty = self.ret_excel_cvar_alpha * cvar_estimate
+        reward = float(excel["ret_excel_delta_step"]) - penalty
+        return {
+            "reward_mode": "ReT_excel_plus_cvar",
+            "ret_excel_plus_cvar_step": reward,
+            "ret_excel_plus_cvar_alpha": self.ret_excel_cvar_alpha,
+            "ret_excel_plus_cvar_tail_level": self.ret_excel_cvar_tail_level,
+            "ret_excel_plus_cvar_window": float(self.ret_excel_cvar_window),
+            "ret_excel_plus_cvar_service_loss_step": service_loss,
+            "ret_excel_plus_cvar_var_threshold": var_threshold,
+            "ret_excel_plus_cvar_cvar_estimate": cvar_estimate,
+            "ret_excel_plus_cvar_penalty": penalty,
+            "ret_excel_components": excel,
+        }
+
     # -----------------------------------------------------------------
     # PBRS potential function (Ng et al. 1999)
     # -----------------------------------------------------------------
@@ -2029,6 +2497,12 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             "inventory_replenishment_period",
             self.initial_inventory_replenishment_period,
         )
+        inventory_replenishment_lead_time = float(
+            reset_options.get(
+                "inventory_replenishment_lead_time",
+                self.initial_inventory_replenishment_lead_time,
+            )
+        )
         super().reset(seed=seed)
         self.current_step = 0
         # Capacity-inertia state (Ed.2): effective shift ramps toward the request.
@@ -2037,19 +2511,27 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self._prev_step_new_demanded = 0.0
         self._prev_step_new_backorder_qty = 0.0
         self._prev_step_disruption_hours = 0.0
+        self._prev_control_v2_signature = None
+        self._ret_excel_prev_total = 0.0
+        self._ret_excel_prev_n_orders = 0
         self._ret_g24_elapsed_steps = 0
         self._ret_g24_sum_zeta = 0.0
         self._ret_g24_sum_epsilon = 0.0
         self._ret_g24_sum_phi = 0.0
         self._ret_g24_sum_tau = 0.0
         self._ret_g24_sum_cost = 0.0
+        self._cvar_loss_buffer = collections.deque(maxlen=self.cvar_window)
+        self._ret_excel_cvar_loss_buffer = collections.deque(
+            maxlen=self.ret_excel_cvar_window
+        )
         self._post_warmup_start_time = self.warmup_hours
         self.sim = MFSCSimulation(
             shifts=initial_shifts,
             initial_buffers=initial_buffers,
-            risks_enabled=True,
+            risks_enabled=self.risks_enabled,
             risk_level=self.risk_level,
             seed=seed,
+            strict_exogenous_crn=True,
             horizon=SIMULATION_HORIZON,
             year_basis=self.year_basis,
             stochastic_pt=self.stochastic_pt,
@@ -2061,13 +2543,34 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                 self.raw_material_order_up_to_multiplier
             ),
             demand_mean_multiplier=self.demand_mean_multiplier,
+            demand_on_hand_fulfillment_delay=self.demand_on_hand_fulfillment_delay,
             risk_occurrence_mode=self.risk_occurrence_mode,
+            risk_frequency_multiplier=self.risk_frequency_multiplier,
+            risk_impact_multiplier=self.risk_impact_multiplier,
+            risk_frequency_multipliers_by_id=self.risk_frequency_multipliers_by_id,
+            risk_impact_multipliers_by_id=self.risk_impact_multipliers_by_id,
+            risk_event_tape=self.risk_event_tape,
+            risk_attribution_source=self.risk_attribution_source,
+            ret_recovery_period_mode=self.ret_recovery_period_mode,
             enabled_risks=self.enabled_risks,
             risk_overrides=self.risk_overrides,
             inventory_replenishment_period=inventory_replenishment_period,
+            inventory_replenishment_lead_time=inventory_replenishment_lead_time,
+            campaign_config=self.campaign_config,
+            replenishment_route_aware=self.replenishment_route_aware,
+            procurement_contract_mode=self.procurement_contract_mode,
+            order_fulfillment_mode=self.order_fulfillment_mode,
+            op9_dispatch_policy=self.op9_dispatch_policy,
+            downstream_transport_capacity_mode=(
+                self.downstream_transport_capacity_mode
+            ),
+            op9_freight_offset_hours=self.op9_freight_offset_hours,
+            r24_attribution_window_hours=self.r24_attribution_window_hours,
+            demand_start_after_warmup=self.demand_start_after_warmup,
         )
         self.sim._start_processes()
-        self.sim.env.run(until=self.warmup_hours)
+        if self.warmup_hours > self.sim.env.now:
+            self.sim.env.run(until=self.warmup_hours)
         while not self.sim.warmup_complete and self.sim.env.now < self.sim.horizon:
             self.sim.env.run(until=min(self.sim.env.now + 1.0, self.sim.horizon))
         if self.priming_enabled:
@@ -2094,6 +2597,12 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             warmup_inventory_detail
         )
         self._ret_g24_prev_pending_backorder_qty = float(self.sim.pending_backorder_qty)
+        ret_excel = self.sim.compute_order_level_ret()
+        self._ret_excel_prev_n_orders = int(ret_excel["n_orders"])
+        self._ret_excel_prev_total = (
+            float(ret_excel["mean_ret_excel_formula"])
+            * float(self._ret_excel_prev_n_orders)
+        )
         obs = self._compose_observation(
             np.array(self.sim.get_observation(), dtype=np.float32)
         )
@@ -2137,6 +2646,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                 "initial_buffers": initial_buffers,
                 "initial_shifts": initial_shifts,
                 "inventory_replenishment_period": inventory_replenishment_period,
+                "inventory_replenishment_lead_time": inventory_replenishment_lead_time,
             },
         }
         info["state_constraint_context"] = self.get_state_constraint_context()
@@ -2168,6 +2678,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         cycle_extra = self.sim.get_observation_v5_extra()
         adaptive_extra = self.sim.get_observation_v6_extra()
         track_b_extra = self.sim.get_observation_v7_extra()
+        v9_extra = self.sim.get_observation_v9_extra()
 
         return {
             "time": float(self.sim.env.now),
@@ -2226,6 +2737,8 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                 "maintenance_debt_norm": float(adaptive_extra[7]),
                 "backlog_age_norm": float(adaptive_extra[8]),
                 "theatre_cover_days_norm": float(adaptive_extra[9]),
+                "production_rate_norm": float(adaptive_extra[10]),
+                "r14_defect_prob": float(adaptive_extra[11]),
             },
             "track_b_context": {
                 "op10_down": float(track_b_extra[0]),
@@ -2234,6 +2747,22 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                 "op12_queue_pressure_norm": float(track_b_extra[3]),
                 "rolling_fill_rate_4w": float(track_b_extra[4]),
                 "rolling_backorder_rate_4w": float(track_b_extra[5]),
+                "weeks_since_last_R22": float(track_b_extra[6]),
+                "weeks_since_last_R23": float(track_b_extra[7]),
+                "weeks_since_last_R24": float(track_b_extra[8]),
+                "ewma_downstream_risk": float(track_b_extra[9]),
+            },
+            "v9_context": {
+                "backorder_queue_count_norm": float(v9_extra[0]),
+                "unattended_total_norm": float(v9_extra[1]),
+                "oldest_backorder_age_norm": float(v9_extra[2]),
+                "ewma_fill_rate": float(v9_extra[3]),
+                "ewma_backlog_growth": float(v9_extra[4]),
+                "delta_fill_rate": float(v9_extra[5]),
+                "delta_backlog_momentum": float(v9_extra[6]),
+                "prev_step_produced_norm": float(v9_extra[7]),
+                "prev_step_delivered_norm": float(v9_extra[8]),
+                "prev_step_available_assembly_hours_norm": float(v9_extra[9]),
             },
         }
 
@@ -2345,6 +2874,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         ret_components: dict[str, float | str] | None = None
         corrected_ret_components: dict[str, float | str] | None = None
         control_components: dict[str, float] | None = None
+        control_v2_components: dict[str, float] | None = None
         ret_seq_components: dict[str, float] | None = None
         ret_unified_components: dict[str, Any] | None = None
         ret_ladder_components: dict[str, Any] | None = None
@@ -2352,6 +2882,10 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         ret_cd_components: dict[str, float | str] | None = None
         ret_cd_4v_components: dict[str, float] | None = None
         ret_g24_components: dict[str, Any] | None = None
+        ret_cd_balanced_components: dict[str, Any] | None = None
+        ret_cvar_components: dict[str, Any] | None = None
+        ret_excel_components: dict[str, float] | None = None
+        ret_excel_cvar_components: dict[str, Any] | None = None
         pbrs_shaping_bonus: float = 0.0
         pbrs_base_reward: float = 0.0
         pbrs_phi: float = 0.0
@@ -2391,7 +2925,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                 info, self.step_size
             )
             ret_components = self._compute_ret_thesis_components(info, self.step_size)
-        elif self._canonical_reward_mode == "ReT_tail_v2":
+        elif self._canonical_reward_mode in ("ReT_tail_v2", "ReT_tail_v1"):
             ret_tail_components = self._compute_ret_tail_v2(info, shifts)
             reward = float(ret_tail_components["ret_tail_step"])
             corrected_ret_components = self._compute_ret_thesis_corrected_components(
@@ -2420,6 +2954,13 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                 pbrs_shaping_bonus = self.pbrs_gamma * pbrs_phi - self._prev_phi
                 reward = pbrs_base_reward + pbrs_shaping_bonus
                 self._prev_phi = pbrs_phi
+        elif self._canonical_reward_mode == "control_v2":
+            control_v2_components = self._compute_control_v2_components(info, shifts)
+            reward = float(control_v2_components["reward_total"])
+            corrected_ret_components = self._compute_ret_thesis_corrected_components(
+                info, self.step_size
+            )
+            ret_components = self._compute_ret_thesis_components(info, self.step_size)
         elif self._canonical_reward_mode == "ReT_cd":
             ret_cd_4v_components = self._compute_ret_cd(info, shifts)
             reward = float(ret_cd_4v_components["ret_cd_step"])
@@ -2444,6 +2985,37 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         elif self._canonical_reward_mode == "ReT_garrido2024_train":
             ret_g24_components = self._compute_ret_garrido2024(info, shifts)
             reward = float(ret_g24_components["ret_garrido2024_train_step"])
+            corrected_ret_components = self._compute_ret_thesis_corrected_components(
+                info, self.step_size
+            )
+            ret_components = self._compute_ret_thesis_components(info, self.step_size)
+        elif self._canonical_reward_mode == "ReT_cd_balanced":
+            ret_cd_balanced_components = self._compute_ret_cd_balanced(info, shifts)
+            reward = float(ret_cd_balanced_components["ret_cd_balanced_step"])
+            ret_g24_components = ret_cd_balanced_components["g24_components"]
+            corrected_ret_components = self._compute_ret_thesis_corrected_components(
+                info, self.step_size
+            )
+            ret_components = self._compute_ret_thesis_components(info, self.step_size)
+        elif self._canonical_reward_mode == "ReT_cvar_cd":
+            ret_cvar_components = self._compute_ret_cvar_cd(info, shifts)
+            reward = float(ret_cvar_components["ret_cvar_cd_step"])
+            ret_g24_components = ret_cvar_components["g24_components"]
+            corrected_ret_components = self._compute_ret_thesis_corrected_components(
+                info, self.step_size
+            )
+            ret_components = self._compute_ret_thesis_components(info, self.step_size)
+        elif self._canonical_reward_mode == "ReT_excel_delta":
+            ret_excel_components = self._compute_ret_excel_delta()
+            reward = float(ret_excel_components["ret_excel_delta_step"])
+            corrected_ret_components = self._compute_ret_thesis_corrected_components(
+                info, self.step_size
+            )
+            ret_components = self._compute_ret_thesis_components(info, self.step_size)
+        elif self._canonical_reward_mode == "ReT_excel_plus_cvar":
+            ret_excel_cvar_components = self._compute_ret_excel_plus_cvar(info)
+            reward = float(ret_excel_cvar_components["ret_excel_plus_cvar_step"])
+            ret_excel_components = ret_excel_cvar_components["ret_excel_components"]
             corrected_ret_components = self._compute_ret_thesis_corrected_components(
                 info, self.step_size
             )
@@ -2583,6 +3155,60 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         out_info["phi_avg"] = float(ret_g24_components["phi_avg"])
         out_info["tau_avg"] = float(ret_g24_components["tau_avg"])
         out_info["kappa_dot"] = float(ret_g24_components["kappa_dot"])
+        if ret_cd_balanced_components is not None:
+            out_info["ret_cd_balanced_step"] = float(
+                ret_cd_balanced_components["ret_cd_balanced_step"]
+            )
+            out_info["ret_cd_balanced_sigmoid_step"] = float(
+                ret_cd_balanced_components["ret_cd_balanced_sigmoid_step"]
+            )
+            out_info["ret_cd_balanced_raw_step"] = float(
+                ret_cd_balanced_components["ret_cd_balanced_raw_step"]
+            )
+            out_info["ret_cd_balanced_n_kappa"] = float(
+                ret_cd_balanced_components["balanced_n_kappa"]
+            )
+            out_info["ret_cd_balanced_components"] = ret_cd_balanced_components
+        if ret_cvar_components is not None:
+            out_info["ret_cvar_cd_step"] = float(ret_cvar_components["ret_cvar_cd_step"])
+            out_info["cd_index_step"] = float(ret_cvar_components["cd_index_step"])
+            out_info["cd_loss_step"] = float(ret_cvar_components["cd_loss_step"])
+            out_info["cvar_var_threshold"] = float(ret_cvar_components["cvar_var_threshold"])
+            out_info["cvar_estimate"] = float(ret_cvar_components["cvar_estimate"])
+            out_info["cvar_penalty"] = float(ret_cvar_components["cvar_penalty"])
+            out_info["ret_cvar_cd_components"] = ret_cvar_components
+        if ret_excel_components is None:
+            ret_excel_summary = self.sim.compute_order_level_ret()
+            n_orders = int(ret_excel_summary["n_orders"])
+            ret_excel_components = {
+                "ret_excel_delta_step": 0.0,
+                "ret_excel_mean": float(ret_excel_summary["mean_ret_excel_formula"]),
+                "ret_excel_total": (
+                    float(ret_excel_summary["mean_ret_excel_formula"])
+                    * float(n_orders)
+                ),
+                "ret_excel_n_orders": float(n_orders),
+                "ret_excel_delta_orders": 0.0,
+            }
+        out_info["ret_excel_delta_step"] = float(
+            ret_excel_components["ret_excel_delta_step"]
+        )
+        out_info["ret_excel_mean"] = float(ret_excel_components["ret_excel_mean"])
+        out_info["ret_excel_components"] = ret_excel_components
+        if ret_excel_cvar_components is not None:
+            out_info["ret_excel_plus_cvar_step"] = float(
+                ret_excel_cvar_components["ret_excel_plus_cvar_step"]
+            )
+            out_info["ret_excel_plus_cvar_alpha"] = float(
+                ret_excel_cvar_components["ret_excel_plus_cvar_alpha"]
+            )
+            out_info["ret_excel_plus_cvar_cvar_estimate"] = float(
+                ret_excel_cvar_components["ret_excel_plus_cvar_cvar_estimate"]
+            )
+            out_info["ret_excel_plus_cvar_penalty"] = float(
+                ret_excel_cvar_components["ret_excel_plus_cvar_penalty"]
+            )
+            out_info["ret_excel_plus_cvar_components"] = ret_excel_cvar_components
         if self._canonical_reward_mode == "ReT_thesis":
             out_info["ReT_raw"] = ReT
             out_info["ret_components"] = {
@@ -2704,6 +3330,27 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                     "gamma": self.pbrs_gamma,
                     "variant": self.pbrs_variant,
                 }
+        elif self._canonical_reward_mode == "control_v2":
+            out_info["service_loss_step"] = float(
+                control_v2_components["service_loss_step"]
+            )
+            out_info["shift_cost_step"] = float(control_v2_components["shift_cost_step"])
+            out_info["control_v2_components"] = {
+                **control_v2_components,
+                "weights": {
+                    "w_fill": self.control_v2_w_fill,
+                    "w_service": self.control_v2_w_service,
+                    "w_lost": self.control_v2_w_lost,
+                    "w_inventory": self.control_v2_w_inventory,
+                    "w_shift": self.control_v2_w_shift,
+                    "w_switch": self.control_v2_w_switch,
+                },
+            }
+            out_info["ret_thesis_corrected_step"] = float(
+                corrected_ret_components["ret_value"]
+            )
+            out_info["ret_thesis_corrected"] = corrected_ret_components
+            out_info["ret_components"] = ret_components
         elif self._canonical_reward_mode == "ReT_cd":
             out_info["ret_cd_step"] = float(ret_cd_4v_components["ret_cd_step"])
             out_info["ret_cd_components"] = ret_cd_4v_components
