@@ -1,5 +1,5 @@
 from supply_chain.program_f import (
-    OBSERVATION_KEYS, make_sim, materialize_tape,
+    CONTEXTS, OBSERVATION_KEYS, make_sim, materialize_tape,
 )
 
 
@@ -29,3 +29,30 @@ def test_future_event_payload_is_not_exposed_by_observation():
     tape["base_events"][-1]["magnitude"] += 999999
     after = controller.observation()
     assert before == after
+
+
+def test_risk_scores_are_noisy_signal_not_true_latent_context():
+    """The three *_score channels must equal the tape's noisy one-week-lead signal
+    (values on the {0.1, 0.8} grid), never a clean {0,1} one-hot of the true
+    next context."""
+    tape = materialize_tape(939052, "interdiction_campaign", "schema-audit", weeks=4)
+    _, controller, _ = make_sim(tape)
+    obs = controller.observation()
+    week = min(controller.current_week, int(tape["weeks"]) - 1)
+    scores = tape["signals"][week]["scores"]
+    assert obs["equipment_condition_score"] == float(scores["equipment_pressure"])
+    assert obs["route_threat_score"] == float(scores["interdiction_campaign"])
+    assert obs["mission_tempo_score"] == float(scores["mission_surge"])
+    for value in (obs["equipment_condition_score"], obs["route_threat_score"],
+                  obs["mission_tempo_score"]):
+        assert value in (0.1, 0.8), value
+
+
+def test_observation_never_exposes_the_true_context_string():
+    tape = materialize_tape(939053, "equipment_pressure", "schema-audit", weeks=4)
+    _, controller, _ = make_sim(tape)
+    obs = controller.observation()
+    true_context = tape["context_schedule"][controller.current_week]
+    assert true_context in CONTEXTS
+    assert true_context not in obs
+    assert true_context not in set(map(str, obs.values()))
