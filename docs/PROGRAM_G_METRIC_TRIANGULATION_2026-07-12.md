@@ -7,38 +7,49 @@ dictamen (2026-07-12): one trajectory / many lenses, NEW tapes (calibration 1020
 (`ReT_garrido2024` frozen exponents a=.024,b=.026,c=.040,d=.060,n=.1771). **Cobb-Douglas is a
 SECONDARY construct index here — it does NOT replace ret_excel and is NOT used to rescue the G5 win.**
 
-## Result (locked test 1030001+, 200 tapes, one trajectory per policy per tape)
+## Result (CORRECTED — 168h calendar + canonical cumulative ledger; locked test 1030001+, 200 tapes)
 
-| Metric (winner ↓) | ABAB static | cover | mpc | service-tree | retexcel-tree | **winner** |
-|---|---:|---:|---:|---:|---:|---|
-| ret_excel_full_ledger_guardrailed | 0.541 | 0.509 | 0.516 | 0.509 | 0.526 | **ABAB** |
-| attended orders (/48) | 42.7 | 39.3 | 40.2 | 39.3 | 42.0 | **ABAB** |
-| worst-CSSU fill (spatial fairness) | 0.831 | 0.657 | 0.705 | 0.657 | 0.782 | **ABAB** |
-| Cobb-Douglas sigmoid (aggregate) | 0.5082 | 0.5125 | 0.5107 | 0.5125 | 0.5118 | **cover** |
-| Cobb-Douglas spatial (geo-mean) | 1.126 | 1.172 | 1.156 | 1.172 | 1.126 | **cover** |
-| service-loss (daily order adapter) | 8536 | 12161 | 10913 | 12161 | 7982 | retexcel-tree |
+> Two code bugs (found by external review, fixed): (1) the order adapter used 144h "weeks"
+> (`(w·6+dow)·24`) instead of `w·168 + dow·24` — with LTj=48 this mis-classified on-time vs late and
+> inflated the ABAB-vs-cover gap; (2) a hand-rolled ledger incremented Bt/Ut AFTER scoring instead of
+> before. Now ret_order uses the repo's canonical `compute_order_level_ret_excel_formula`, and
+> `ret_quantity` (ration-weighted) is added. G0 tests 10/10.
 
-## Reading (honest, non-compensatory)
-- **Order-level continuity (ret_excel), order completion, and spatial fairness (worst-CSSU fill) all
-  favour blind alternation ABAB.** The concentrating cover policy has the WORST worst-CSSU fill (0.657
-  vs 0.831) — it wins by starving one theatre.
-- **The Cobb-Douglas resilience index — both aggregate and the spatial geometric-mean variant — favours
-  the concentrating cover policy**, exactly as the dictamen predicted: an aggregate multiplicative index
-  of inventory/backlog/time can reward concentrating transport on the starving node while temporarily
-  abandoning the other, and it does NOT contain spatial fairness between CSSUs.
-- Therefore CD "favouring cover" is a **construct-dependent advantage that comes with a documented
-  worst-CSSU-fill penalty**, NOT a universal or SCRES win, and NOT a rescue of G5.
+| Metric | ABAB static | cover | retexcel-tree | mpc | **winner** | cover−ABAB CI95 |
+|---|---:|---:|---:|---:|---|---|
+| ret_order (each order equal — thesis) | 0.500 | 0.480 | 0.485 | 0.482 | **ABAB** | −0.021 [−0.027,−0.015] |
+| ret_quantity (each ration equal — mass) | 0.492 | 0.485 | 0.487 | 0.484 | **ABAB** | −0.007 [−0.009,−0.004] |
+| worst-CSSU fill (spatial fairness) | 0.831 | 0.657 | 0.782 | 0.705 | **ABAB** | −0.173 [−0.213,−0.137] |
+| attended orders (/48) | 42.7 | 39.3 | 42.0 | 40.2 | **ABAB** | — |
+| Cobb-Douglas-inspired sigmoid | 0.5061 | 0.5109 | 0.5097 | 0.5089 | **cover** | +0.005 [+0.004,+0.006] |
+| Cobb-Douglas-inspired spatial (geo-mean) | 1.118 | 1.166 | 1.119 | 1.150 | **cover** | +0.048 |
+
+## Reading (honest, corrected — the reversal is NOT order-vs-mass)
+- **Every thesis-grounded resilience metric favours blind alternation ABAB**: ret_order AND
+  **ret_quantity** (so the earlier "cover optimizes mass, ABAB optimizes order-equity" hypothesis is
+  **REFUTED** — ABAB wins BOTH the order-weighted and ration-weighted ReT), plus attended orders and
+  worst-CSSU fill.
+- **Only the Cobb-Douglas-inspired aggregate index favours the concentrating cover policy** (+0.005),
+  and it does so while cover destroys spatial fairness (worst-CSSU fill −0.173 — cover starves one
+  theatre). The multiplicative aggregate rewards concentration precisely because it contains NO
+  worst-node protection — exactly the dictamen's warning about an aggregate CD.
+- Therefore the CD preference for the adaptive/concentrating policy is a **documented artifact of a
+  non-fairness-preserving aggregate index**, NOT adaptive value, NOT a ret_excel replacement, NOT a
+  rescue of G5.
 
 ## The paper-facing claim (the actual contribution)
 > **Adaptive-control eligibility in a supply-chain simulation is not invariant to the resilience
-> functional.** A ration-mass loss metric, an order-level continuity metric (`ret_excel`), and a
-> multiplicative Cobb-Douglas resilience index induce DIFFERENT policy rankings under identical physical
-> trajectories and resource constraints. Concentration (adaptive) wins under mass/Cobb-Douglas
-> aggregates; alternation (a fixed schedule) wins under order-level continuity and spatial fairness.
+> functional.** Under identical physical trajectories and resource constraints, every thesis-grounded
+> resilience metric — order-weighted ReT, ration-weighted ReT, order completion, and worst-node fill —
+> ranks a fixed alternating schedule above the adaptive concentrating policy. Only a multiplicative
+> Cobb-Douglas aggregate index (which contains no worst-node protection) reverses the ranking, and it
+> does so while the favoured policy sacrifices spatial fairness. Metric choice — not the algorithm —
+> decides whether "adaptive control" appears valuable.
 
-This is a stronger, more honest contribution than "PPO won 560 rations in a proxy": it makes the
-metric-dependence itself the finding, and it warns that a multiplicative aggregate index can flatter a
-policy that sacrifices a node.
+This is stronger and more honest than "PPO won 560 rations in a proxy": the metric-dependence IS the
+finding, and it warns that a multiplicative aggregate index can flatter a policy that starves a node.
+Corrected caveat: the earlier order-vs-mass explanation is refuted — ration-weighted ReT also favours
+alternation; the divergence is continuity/fairness metrics vs a non-fairness-preserving aggregate.
 
 ## Discipline / disclosed limits
 - **Exploratory metric-sensitivity, NOT virgin-confirmatory** (policies were known from G5).

@@ -401,7 +401,7 @@ def metrics_all(tape: Tape, actions: Sequence[str], arm: str = "TRS") -> dict:
     eps = [bo_units_time[i] / max(days, 1) / _ROUTINE_WK + 1e-3 for i in range(2)]
     tau = [max(ct[i], 1.0) / float(LEAD_TIME_PROMISE) for i in range(2)]
     phi, kappa = 1.0, 1.0                                  # held constant (disclosed)
-    # paper-faithful aggregate CD
+    # Cobb-Douglas-INSPIRED aggregate (repo G24 exponents; NOT paper-calibrated for MFSC)
     eps_agg = float(np.mean(eps)); tau_agg = float(np.mean(tau))
     Z = (G24["a_zeta"] * np.log(zeta + 1e-3) - G24["b_epsilon"] * np.log(eps_agg)
          + G24["c_phi"] * np.log(phi) - G24["d_tau"] * np.log(tau_agg) - G24["n_kappa"] * np.log(kappa))

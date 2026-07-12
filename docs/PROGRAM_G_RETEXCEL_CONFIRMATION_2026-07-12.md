@@ -14,9 +14,12 @@
 > 4. **Full ReT risk branches (autotomy/recovery/non-recovery/attribution) NOT exercised** — R22 off →
 >    mostly the no-risk fill-rate branch; orders can be placed and attended in the same timestamp, which
 >    does not reproduce full-DES fulfilment latencies.
-> The quantitative finding (headroom exists, observable conversion fails, ranking is metric-dependent)
-> stands under these corrected labels. See `docs/PROGRAM_G_METRIC_TRIANGULATION_2026-07-12.md` for the
-> honest follow-up (new tapes, one trajectory / many lenses, incl. the repo's Cobb-Douglas index).
+> The quantitative finding (observable conversion fails under ret_excel) stands under corrected labels,
+> BUT the specific magnitudes below were computed with two code bugs later fixed (144h "weeks" instead
+> of 168h; a hand-rolled ledger that incremented Bt/Ut after scoring). The **corrected** cover−ABAB
+> ret_order gap is **−0.021 [−0.027,−0.015]** (was reported −0.036), and ABAB also wins ration-weighted
+> ReT_quantity (−0.007) — so the reversal is NOT order-vs-mass. See the canonical, corrected numbers in
+> `docs/PROGRAM_G_METRIC_TRIANGULATION_2026-07-12.md`; treat the tables below as the pre-fix version.
 
 
 Status: **Under the project's PRIMARY metric `ret_excel`, the G1–G5 observable adaptive win does NOT
