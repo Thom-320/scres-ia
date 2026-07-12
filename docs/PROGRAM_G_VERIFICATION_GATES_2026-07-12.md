@@ -73,6 +73,48 @@ hand-picked cell chosen where the gate passes. Required before screen tapes 9800
 - **Two-tier claim honored.** 30% conversion authorizes a LEARNER only; 50% required for a managerial
   claim; the 5% service MCID and 0.02 ΔReT are not lowered post hoc.
 
+## E. External convergent validation + three applied diagnostics (2026-07-12 dictamen)
+
+A second independent expert dictamen (ChatGPT-Pro, 2026-07-12), reasoning from first principles and
+the repository's own boundary results, re-derived **the same environment as Program G** — down to
+identical specifics: two heterogeneous CSSUs A/B with one finite shared convoy (no auto-reallocation,
+location persists), operational-tempo regimes low/routine/surge with advance operational signals, the
+minimal six-action `(convoy_destination∈{A,B,HOLD}, shift∈{S1,S2})` contract, the Base/T/TR/TS/TRS/
+TRSC factorial, and the same gate numbers (oracle ΔReT ≥ 0.02, tree ≥30% conversion to authorize a
+learner / ≥50% for a managerial claim, ≥2 adjacent plausible cells, signal-vs-placebo). Two
+independent sources converging on the same design **before any PPO** is itself strong anti-p-hacking
+evidence and should be cited in the Program G / Paper-2 methods as convergent design validation.
+
+The dictamen contributes three diagnostics Program G's charter does not yet name. They are frozen
+here as ADDITIONS that make the pre-RL audit STRICTER (never easier), slotted between the oracle
+(pre-RL step 5) and the tree (step 6), reported for every factorial arm and cell:
+
+1. **Observable-information gate `I(O_t; a*) > 0` (pre-tree, the cheap Program-E predictor).** On the
+   exact-CRN branch oracle, for each state record the clairvoyant best action `a*(X)` and the
+   deployable observation `O_t`. Estimate mutual information `I(O; a*)` (e.g. balanced-accuracy of
+   predicting `a*` from `O` above the marginal-class base rate, or empirical MI on discretized `O`),
+   and require it to beat a **shuffled-O placebo** with CI95>0. If `I(O; a*) ≈ 0`, the headroom is
+   not observably convertible BY CONSTRUCTION and the arm/cell STOPs before any tree or learner —
+   this is exactly the failure Program E paid to discover episodically. Report `I(O; a*)` alongside
+   `H_PI` and `H_obs_tree`; a passing tree conversion with near-zero `I(O; a*)` is contradictory and
+   must be investigated, not promoted.
+2. **Equilibrium-policy / action-perturbation test (ref: contextual-bandit equilibrium diagnostic).**
+   Take the best full-contract static; retrospectively flip a small fraction ε∈{5%,10%,15%} of its
+   actions to the clairvoyant-best and measure ΔReT(ε). If flipping ε yields negligible improvement,
+   the static is near-equilibrium and there is little learnable margin regardless of algorithm.
+   Report the ΔReT(ε) curve per arm; a flat curve is a STOP signal that no learner can rescue.
+3. **Designated second family (recorded fallback, NOT opened yet).** If the spatial family STOPs at
+   `STOP_PROGRAM_G_NO_OBSERVABLE_SPATIAL_HEADROOM`, the pre-committed next structure is Op5–Op7
+   DISAGGREGATED with a per-station observable degradation state, state-dependent (condition-based)
+   failure hazard, ONE finite repair/maintenance crew (real opportunity cost: repairing Op5 now
+   forgoes Op6), intermediate WIP with block/starvation, and action = assign crew to {Op5,Op6,Op7,
+   wait}. This requires disaggregating the currently-fused Op5–Op7 and making R11 endogenous to
+   condition; it is a separate charter, not a Program G rescue, and needs its own Garrido domain
+   freeze. Recorded so the fallback is pre-committed, not invented after a null.
+
+These do not change any promotion threshold; they add upstream STOP signals that would have caught
+Program E's null before training. `H_PI ≠ H_obs ≠ H_learnable` — the gate now measures all three.
+
 ## D. Standing
 
 DRA-1, DRA-2, DRA-2b, Program E, Program F stay terminal; no reuse of their tapes/weights/thresholds/
