@@ -186,3 +186,33 @@ tendency could at most motivate a trivial heuristic, not PPO (delta negative, CI
 zero). Legitimate 6th boundary result, CONFIRMED. (Note: the adversarial exchange —
 V3 raise → V4 premature-close → Codex rebuttal → V5 rigorous close — is exactly how the
 verifier/builder split should work.)
+
+## V6 — External review convergence + asymmetry pinned + unpushed-status flag
+
+Two independent committee reviews CONVERGE with V5: DRA-1 STOP is legitimate and
+airtight after the prefix-balanced audit (their oracle ΔReT ≈ 8.79e-05 matches V5's
+-1.6e-05/8.5e-05 magnitude; 11/180 states positive; diversity fails). No PPO warranted.
+Their added root cause deepens V1-A/V2-A: DRA-1 is "redistribution without throughput
+creation" — reallocate_unused makes the action non-committal, sinks are homogeneous,
+SPT_FULL + order-level ReT reward concentration, and there is NO intertemporal
+opportunity cost (allocation does not change tomorrow's feasible resources), so the
+problem collapses to a static optimum.
+
+**Asymmetry pinned (V4/V5 loose end):** `stable_cssu_destination` splits 2975 A / 3025 B
+over 6000 ids (0.8% B-favoring) — the source of the mild "serve-B" global attractor.
+Real but tiny, far below the negligible oracle headroom; it does NOT change the verdict.
+**Claim narrowed:** do NOT assert perfect A/B symmetry; disclose the 0.8% destination
+imbalance. A full A/B label-swap invariance replay (Y_A(s,α)=Y_B(Ms,1−α)) is the clean
+presentation audit and belongs in the build (needs sim-level mirroring); it must not
+reopen the gate.
+
+**Reproducibility flag (verified):** HEAD is 12 commits ahead of origin/codex and 175
+ahead of origin/main — the entire DRA-1 build + V1–V6 verification is UNPUSHED. The
+result is not remotely auditable until pushed (an outward action on the shared branch;
+not the verifier's to perform without authorization).
+
+**DRA-1 verification: CLOSED, verdict CONFIRMED airtight.** Recommended (per both
+reviews + our evidence): push+tag the DRA-1 branch; narrow the symmetry claim;
+CLOSE→PUBLISH the "Before RL: decision-right discovery" paper before any new family;
+DRA-2 (finite-convoy batch release, real intertemporal cost, multi-step branching) only
+after submission and only if continuing.
