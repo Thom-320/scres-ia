@@ -113,6 +113,8 @@ def state_policy(state: dict[str, Any]) -> ConvoyThresholdPolicy:
 def branch_actions(
     tape: dict[str, Any], state: dict[str, Any], policy: ConvoyThresholdPolicy,
     forced_actions: tuple[str, ...],
+    *,
+    continuation_policy: ConvoyThresholdPolicy | None = None,
 ) -> dict[str, Any]:
     sim, start = make_sim(tape)
     advance_prefix_to(sim, start, float(state["relative_time"]), policy)
@@ -121,6 +123,7 @@ def branch_actions(
     state_time = float(sim.env.now)
     resource_before = resource_snapshot(sim)
     action_iter = iter(forced_actions)
+    continuation_policy = continuation_policy or policy
     forced_remaining = True
     short_metrics = None
     t1_signature = None
@@ -131,9 +134,9 @@ def branch_actions(
                 action = next(action_iter)
             except StopIteration:
                 forced_remaining = False
-                action = policy.action(sim.get_op8_convoy_observation())
+                action = continuation_policy.action(sim.get_op8_convoy_observation())
         else:
-            action = policy.action(sim.get_op8_convoy_observation())
+            action = continuation_policy.action(sim.get_op8_convoy_observation())
         sim.apply_op8_convoy_action(action, source="forced_sequence" if forced_remaining else "continuation")
         next_time = min(end, float(sim.env.now) + HOURS_PER_DAY)
         advance_including(sim, next_time)
@@ -220,21 +223,36 @@ def main() -> int:
         if args.sequence_state_limit is not None
         else (60 if frontier["calibration_opened"] else 4)
     )
-    by_family_states: dict[str, list[dict[str, Any]]] = {}
+    by_tape: dict[str, list[dict[str, Any]]] = {}
     for state in states:
-        by_family_states.setdefault(state["family"], []).append(state)
+        by_tape.setdefault(state["tape_id"], []).append(state)
+    selected_by_family: dict[str, list[dict[str, Any]]] = {}
+    for family in sorted({state["family"] for state in states}):
+        family_tapes = sorted(
+            tape_id for tape_id, tape_states in by_tape.items()
+            if tape_states[0]["family"] == family
+        )
+        rows = []
+        for tape_index, tape_id in enumerate(family_tapes):
+            prefix = PREFIX_POLICIES[tape_index % len(PREFIX_POLICIES)].policy_id
+            rows.append(next(
+                state for state in by_tape[tape_id]
+                if state["prefix_policy_id"] == prefix
+            ))
+        selected_by_family[family] = rows
     sequence_states: list[dict[str, Any]] = []
-    while len(sequence_states) < min(sequence_limit, len(states)):
+    while len(sequence_states) < min(sequence_limit, len(by_tape)):
         progressed = False
-        for family in sorted(by_family_states):
-            family_rows = by_family_states[family]
-            if family_rows:
-                sequence_states.append(family_rows.pop(0))
+        for family in sorted(selected_by_family):
+            if selected_by_family[family]:
+                sequence_states.append(selected_by_family[family].pop(0))
                 progressed = True
-                if len(sequence_states) >= min(sequence_limit, len(states)):
+                if len(sequence_states) >= min(sequence_limit, len(by_tape)):
                     break
         if not progressed:
             break
+    if len({row["tape_id"] for row in sequence_states}) != len(sequence_states):
+        raise RuntimeError("FAIL_SEQUENCE_TAPE_BALANCE")
     sequence_rows: list[dict[str, Any]] = []
     for state_index, state in enumerate(sequence_states):
         policy = state_policy(state)
@@ -351,7 +369,11 @@ def main() -> int:
     no_family_sign_flip = not any(row["sign_flip"] for row in sensitivity_pairs)
 
     verdict = {
-        "gate": "DRA2_BRANCHING_IMPLEMENTATION_SMOKE",
+        "gate": (
+            "DRA2_BRANCHING_CALIBRATION"
+            if frontier["calibration_opened"]
+            else "DRA2_BRANCHING_IMPLEMENTATION_SMOKE"
+        ),
         "n_tapes": len(tapes), "n_states": len(states),
         "n_one_action_rollouts": len(one_rows),
         "n_sequence_states": len(sequence_states),
@@ -402,7 +424,11 @@ def main() -> int:
         "authorization_decision": frontier.get("authorization_decision"),
         "calibration_opened": bool(frontier["calibration_opened"]),
         "virgin_tapes_opened": 0, "ppo_trained": False,
-        "interpretation": "IMPLEMENTATION_SMOKE_PASS",
+        "interpretation": (
+            "CALIBRATION_DIAGNOSTIC_COMPLETE"
+            if frontier["calibration_opened"]
+            else "IMPLEMENTATION_SMOKE_PASS"
+        ),
     }
     (args.output_dir / "verdict.json").write_text(
         json.dumps(verdict, indent=2, sort_keys=True), encoding="utf-8"
