@@ -636,7 +636,6 @@ class MFSCSimulation:
         self.cssu_delivered = {"A": 0.0, "B": 0.0}
         self.cssu_demanded = {"A": 0.0, "B": 0.0}
         self.cssu_dispatched = {"A": 0.0, "B": 0.0}
-        self.cssu_capacity_credit = {"A": 0.0, "B": 0.0}
         self.cssu_allocation_live_epochs = 0
         self.cssu_allocation_moot_epochs = 0
         self.cssu_local_down_count = {
@@ -3776,6 +3775,14 @@ class MFSCSimulation:
         ).digest()
         return float(q_min + int.from_bytes(digest[:8], "big") % (q_max - q_min + 1))
 
+    def _cssu_daily_allocation_draw(self) -> float:
+        """Policy-independent daily draw used for indivisible full orders."""
+        day = int(float(self.env.now) // HOURS_PER_DAY)
+        digest = hashlib.sha256(
+            f"dra1-allocation-v1:{int(self.seed or 0)}:{day}".encode()
+        ).digest()
+        return int.from_bytes(digest[:8], "big") / float(2**64)
+
     def _cssu_order_key(self, order: OrderRecord) -> tuple[Any, ...]:
         if self.cssu_service_rule == "SPT_FULL":
             return (
@@ -3790,6 +3797,40 @@ class MFSCSimulation:
             0 if order.contingent else 1,
             float(order.OPTj),
             int(order.j),
+        )
+
+    def cssu_allocation_is_live(self) -> bool:
+        """Whether changing the allocation share can affect this dispatch epoch."""
+        if self.cssu_topology_mode != "split_v1" or self._is_down(9):
+            return False
+        available = min(float(self.rations_sb.level), self._cssu_daily_capacity())
+        if available <= 1e-9:
+            return False
+        queues = {
+            cssu: sorted(
+                [o for o in self.pending_backorders
+                 if o.cssu_destination == cssu and float(o.remaining_qty) > 1e-9],
+                key=self._cssu_order_key,
+            )
+            for cssu in ("A", "B")
+        }
+        if self.cssu_service_rule == "SPT_FULL":
+            both_feasible = all(
+                queues[cssu]
+                and float(queues[cssu][0].remaining_qty) <= available + 1e-9
+                for cssu in ("A", "B")
+            )
+            # The three allowed shares select different destinations only for
+            # draws between the extreme thresholds.
+            draw = self._cssu_daily_allocation_draw()
+            return bool(both_feasible and 0.25 <= draw < 0.75)
+        requested = {
+            cssu: sum(float(order.remaining_qty) for order in queues[cssu])
+            for cssu in ("A", "B")
+        }
+        return (
+            requested["A"] > available * self.cssu_allocation_a + 1e-9
+            and requested["B"] > available * (1 - self.cssu_allocation_a) + 1e-9
         )
 
     def _dispatch_split_cssu_day(self, *, next_check_hours: float = 24.0):
@@ -3832,29 +3873,26 @@ class MFSCSimulation:
                 )
             return False
         if self.cssu_service_rule == "SPT_FULL":
-            # A daily lane can carry roughly one thesis-sized full order.  The
-            # allocation share therefore controls weighted service frequency
-            # across days, not an impossible fractional order. Credits provide
-            # deterministic weighted-fair scheduling while unused opportunity
-            # remains reallocable to the destination that can use it.
-            self.cssu_capacity_credit["A"] += available * self.cssu_allocation_a
-            self.cssu_capacity_credit["B"] += available * (1 - self.cssu_allocation_a)
+            # A daily lane carries roughly one thesis-sized full order. The
+            # share is implemented as a deterministic CRN-safe frequency over
+            # days: A is preferred when the daily draw is below alpha. If that
+            # destination cannot use the convoy, capacity is reallocated.
             candidates = [
                 cssu
                 for cssu in ("A", "B")
                 if queues[cssu]
                 and float(queues[cssu][0].remaining_qty) <= available + 1e-9
             ]
-            jointly_constrained = len(candidates) == 2
+            jointly_constrained = self.cssu_allocation_is_live()
             if candidates:
-                selected = max(
-                    candidates,
-                    key=lambda cssu: (self.cssu_capacity_credit[cssu], cssu == "A"),
+                preferred = (
+                    "A" if self._cssu_daily_allocation_draw() < self.cssu_allocation_a
+                    else "B"
                 )
+                selected = preferred if preferred in candidates else candidates[0]
                 selected_qty = float(queues[selected][0].remaining_qty)
                 budgets = {"A": 0.0, "B": 0.0}
                 budgets[selected] = selected_qty
-                self.cssu_capacity_credit[selected] -= selected_qty
             else:
                 budgets = {"A": 0.0, "B": 0.0}
         else:
@@ -3869,10 +3907,7 @@ class MFSCSimulation:
             # their nominal shares. Preserve this diagnostic for state sampling.
             nominal_a = allocation.available * self.cssu_allocation_a
             nominal_b = allocation.available - nominal_a
-            jointly_constrained = (
-                requested["A"] > nominal_a + 1e-9
-                and requested["B"] > nominal_b + 1e-9
-            )
+            jointly_constrained = self.cssu_allocation_is_live()
             budgets = {"A": allocation.dispatched_a, "B": allocation.dispatched_b}
         if jointly_constrained:
             self.cssu_allocation_live_epochs += 1
