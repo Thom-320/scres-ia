@@ -153,6 +153,41 @@ Corrections folded into the audit (these SUPERSEDE the minimal-envelope readings
   confirms it; each has a falsifier that runs in G0/G1 before any learner. The 3 diagnostics in §E
   (`I(O;a*)`, equilibrium-perturbation, second-family fallback) still apply, per arm/cell.
 
+## G. DOMAIN ENVELOPE V1.2 — supersedes V1.1 after the transport-binding correction (2026-07-12)
+
+External dictamen #3 (`docs/external_assessments/program_g_dictamen_v3_2026-07-12.md`), verified
+first-hand, found a physics flaw in V1.1: convoy 5000/48h = **2500/day** ≈ thesis demand 2400–2600 and
+S1 = 2564/day (`config.py:70`), so transport binds and S2 (5128/day) is a dead dimension; the V1.1
+overlay convoy would be non-binding (~5000/day vs 2500/day demand). Adopted as **V1.2**
+(`contracts/program_g_domain_envelope_v1_2.json`, `docs/PROGRAM_G_CHARTER_V1_2_ADDENDUM_2026-07-12.md`).
+These readings SUPERSEDE §F where they conflict:
+
+- **Action space 3, not 6**: `{A, B, HOLD}` weekly PRIORITY applied to every departure that week; no
+  auto-reorientation; convoy waits if the chosen destination lacks storage/load/open route. Machine-
+  verify weekly priority yields multiple departures and never silently reorients. Exact oracle 3^4=81 /
+  3^8=6561 (enumerable) — verify the branching enumerator matches.
+- **Convoy = aggregate two-day convoy-equivalent = the scarce downstream transport** (not an overlay,
+  not a historical vehicle). The convoy-ontology (transport vs overlay) is the **decisive Garrido
+  question**; build stays blocked until answered.
+- **10k = initial SB finished stock** with genealogy; ordinary production feeds SB; `q = min(5000,
+  I_SB, free_capacity_dest)`; no lateral transshipment / no return / no inventory creation on retarget.
+  Verify mass conservation over the unified inventory (no separate reserve object).
+- **Static bar = 120 periodic calendars (period 1–4)** deduped + convex hull, frozen on calibration.
+  Verify the learner is compared to this, never to only always-A/B/HOLD.
+- **Surge 1.25/1.50** (not 2/3); **primary risks R22-only** (R24-native/R23/R11/R21/R3 OFF); **signal =
+  balanced accuracy sens=spec=q, tempo-content only** (no route_threat_score); placebos = circular
+  block-shuffle + post-onset delayed, on rollout. Verify each in G0.
+- **Tempo semi-Markov independent A/B**, transitions routine→{low .5, surge .5}, co-surge ≈ 6.25%;
+  commonality is a documented sensitivity, not a primary axis. **Grid 24 cells** (persistence × 3
+  signal × lead × surge); primary cell = first in the frozen least-favorable order inside a connected
+  ≥2-cell passing region — verify selection is NOT max-ReT.
+- **TRS is the primary physical arm; TRSC deferred** (no invented holding money; resource/Pareto vector
+  only). **episode_weeks = 52.**
+
+The §E diagnostics (`I(O;a*)`, equilibrium-perturbation, second-family fallback) and the §C machine
+checks (CRN-at-onset, label-swap symmetry, obs whitelist, masking, placebo separation, full-contract
+comparator, rollout-not-accuracy, holdout discipline) all still apply, now over the 3-action contract.
+
 ## D. Standing
 
 DRA-1, DRA-2, DRA-2b, Program E, Program F stay terminal; no reuse of their tapes/weights/thresholds/

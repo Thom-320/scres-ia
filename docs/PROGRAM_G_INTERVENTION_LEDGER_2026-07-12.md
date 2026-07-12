@@ -45,6 +45,20 @@ researcher-imposed extension (needs Garrido face validation) · **[L]** literatu
 confirm it exists operationally, its realistic lead, and its sensitivity/FPR envelope. Until then they
 are [X] and cannot enter the policy observation.
 
+## V1.2 revisions (transport-binding correction — supersede the rows above where they conflict)
+
+| Parameter | Operational interpretation | Range (v1.2) | Source | Falsifier | Sensitivity | Claim limit |
+|---|---|---|---|---|---|---|
+| Convoy = downstream transport | The scarce SB→CSSU lift at thesis scale | 2500/day (5000/48h) | [T] matches thesis 2400–2600/day + `RATIONS_PER_SHIFT` | G0: convoy binds when both CSSU need service | overlay (Option B) = Garrido either/or | not a historical single vehicle |
+| Action space {A,B,HOLD} | Weekly dispatch priority, all departures | 3 actions | [X] + [R] Program L dead-shift evidence | G0: priority yields multiple departures/wk, no auto-reorient | 6-action w/ dynamic shift = forbidden mid-study | dynamic shift is a DEAD dimension (S2 unmovable) |
+| 10k SB stock | Initial finished stock, genealogy-tracked | 10,000 | [X] (thesis Op9 wk = 15,750, [T]) | G0: mass conservation, no inventory creation | 15,750 as single later sensitivity | researcher param, NOT thesis reserve level |
+| Surge multiplier | Sustained regime demand | 1.25 / 1.50 | [X] | dose-response across the 2 levels | 2×/3× only for spike models, not regimes | a 2-month regime ≠ a 1-day R24 spike |
+| Primary risks | Isolate tempo+signal+convoy | R22 on; R24-native/R23/R11/R21/R3 off | [X] identification choice | G0: only R22 fires in primary tapes | all-risk-current after a pass | off-risks NOT claimed absent in reality |
+| Signal = balanced accuracy | sens = spec = q, tempo content only | 0.65/0.75/0.85, lead 1–2wk | [X] | must beat block-shuffle + delayed placebo on rollout | asymmetric sens≠spec tier | route_threat excluded (uninterpretable if mixed) |
+| Periodic static bar | All period-1–4 calendars | 120 | [R] Track B statue-vs-sequence lesson | G0: calendars reproducible under CRN | — | learner must beat THIS, not always-A/B/HOLD |
+| TRSC cost | Holding as inventory-time | resource/Pareto vector | [X]; [T] thesis omits cost coefficients | — | monetized version needs Garrido coefficients | no invented money; TRSC deferred |
+| episode_weeks | Long enough for regimes to matter | 52 | [X] | dwell 4–8wk plays out ~7–13× | — | — |
+
 ## Standing
 
 No parameter tagged [X] may enter a generated tape until Garrido confirms it in the sign-off template.

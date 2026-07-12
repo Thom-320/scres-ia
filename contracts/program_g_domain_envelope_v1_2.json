@@ -1,0 +1,172 @@
+{
+  "contract_id": "program_g_domain_envelope_v1_2",
+  "status": "FROZEN_PENDING_GARRIDO_SIGNOFF_BUILD_NOT_AUTHORIZED",
+  "supersedes": "program_g_domain_envelope_v1_1",
+  "source_review": "docs/external_assessments/program_g_dictamen_v3_2026-07-12.md",
+  "addendum_doc": "docs/PROGRAM_G_CHARTER_V1_2_ADDENDUM_2026-07-12.md",
+  "why_v1_1_was_revised": "Verified first-hand: convoy 5000/48h = 2500 rations/day ~= thesis demand 2400-2600/day and S1 = 2564/day, S2 = 5128/day. Transport is the binding constraint; S2 fills SB with immovable stock without increasing delivery -> dynamic shift control is a dead dimension. The V1.1 'emergency-reserve overlay' (convoy on top of a complete normal flow) would deliver ~5000/day vs 2500/day demand -> convoy rarely binds -> no scarcity -> mechanism dies. The convoy must BE the scarce downstream transport.",
+  "episode_weeks": 52,
+  "primary_action": {
+    "review_hours": 168,
+    "type": "weekly_convoy_priority",
+    "levels": ["A", "B", "HOLD"],
+    "priority_applies_to_all_departure_opportunities_in_week": true,
+    "no_auto_reorientation_to_other_cssu": true,
+    "convoy_waits_if_destination_lacks_storage_load_or_open_route": true,
+    "dynamic_shift_control": false,
+    "assembly_shift_fixed": "S1",
+    "action_count": 3,
+    "exact_oracle_sequences_4wk": 81,
+    "exact_oracle_sequences_8wk": 6561
+  },
+  "convoy": {
+    "interpretation": "aggregate_two_day_convoy_equivalent",
+    "not_a_historical_single_vehicle": true,
+    "count": 1,
+    "capacity_rations": 5000,
+    "throughput_rations_per_day": 2500,
+    "start_location": "SB",
+    "outbound_hours_A": 24, "outbound_hours_B": 24,
+    "return_hours_A": 24, "return_hours_B": 24,
+    "partial_load_allowed": true,
+    "partial_load_consumes_full_cycle": true,
+    "automatic_reallocation": false,
+    "available_only_after_return_to_SB": true,
+    "no_destination_change_mid_trip": true,
+    "no_teleport_across_week_boundary": true,
+    "r22_pauses_outbound_and_return": true,
+    "r22_no_permanent_destruction": true,
+    "ontology_decision_pending_garrido": {
+      "option_A_primary_downstream_transport": "the convoy IS the scarce SB->CSSU transport at thesis scale (physics-favored: 2500/day matches thesis flow)",
+      "option_B_emergency_overlay": "normal flow continues; convoy moves only an extra reserve (dictamen #2 preference; risks non-binding convoy)",
+      "verifier_recommendation": "Option A (transport-binding); the overlay is non-binding by the throughput math",
+      "must_be_confirmed_by_garrido_before_build": true
+    }
+  },
+  "inventory": {
+    "initial_SB_finished_rations": 10000,
+    "ten_k_is_researcher_param_not_thesis_op9_level_15750": true,
+    "initial_A_rations": 0,
+    "initial_B_rations": 0,
+    "storage_capacity_A": 10000,
+    "storage_capacity_B": 10000,
+    "automatic_top_up": false,
+    "replenishment_source": "ordinary_physical_production_only",
+    "dispatch_load_rule": "q = min(5000, I_SB, free_capacity_at_destination)",
+    "lateral_transshipment_A_B": false,
+    "return_of_rations_to_SB": false,
+    "inventory_creation_on_retarget": false,
+    "genealogy_tracked": ["origin", "time", "location", "age"],
+    "no_separate_abstract_reserve": true
+  },
+  "tempo": {
+    "process": "semi_markov_independent_by_cssu",
+    "states": ["low", "routine", "surge"],
+    "initial": "routine",
+    "dwell_short_weeks": [4, 5, 6],
+    "dwell_long_weeks": [6, 7, 8],
+    "transition_low": {"routine": 1.0},
+    "transition_routine": {"low": 0.5, "surge": 0.5},
+    "transition_surge": {"routine": 1.0},
+    "approx_stationary": {"routine": 0.50, "low": 0.25, "surge": 0.25},
+    "approx_simultaneous_surge_prob": 0.0625,
+    "latent_label_observable": false
+  },
+  "demand": {
+    "base_distribution": {"dist": "uniform_integer", "low": 2400, "high": 2600, "days_per_week": 6},
+    "split": "D_A = round(D_base/2 * m(Z_A)); D_B = D_programG - D_A",
+    "multipliers": {"low": 0.75, "routine": 1.00, "surge_levels": [1.25, 1.50]},
+    "surge_2x_3x_rejected": "a sustained 4-8 week 50% regime is already severe; a 1-day R24 spike != a 2-month regime",
+    "conservation_rule": "D_A + D_B identical ACROSS POLICIES on the same tape; NOT forced equal to original thesis demand when regimes are active",
+    "no_rule_forcing_B_down_when_A_up": true
+  },
+  "signal": {
+    "target": "future_local_tempo_surge_at_t_plus_L",
+    "metric": "balanced_accuracy_sens_eq_spec",
+    "balanced_accuracy_levels": [0.65, 0.75, 0.85],
+    "sensitivity_equals_specificity": true,
+    "precision_is_reported_not_input": true,
+    "lead_weeks": [1, 2],
+    "content_tempo_demand_only": ["planned_troop_level", "deployment_calendar_pressure"],
+    "route_threat_score_excluded_from_primary": "mixing demand and R22 into one variable makes accuracy uninterpretable",
+    "identifies_cssu": true,
+    "latent_tempo_visible": false,
+    "asymmetric_sens_spec_tier_as_documented_sensitivity": true
+  },
+  "placebos_required": {
+    "circular_block_shuffled": "per CSSU, within tape, preserves positive rate + approx run lengths",
+    "post_onset_delayed": "same signal delivered L+1 weeks late (after the onset it predicted)",
+    "evaluated_on_rollout_not_accuracy": true
+  },
+  "primary_risks": {
+    "R22": "on_current_route_specific_A_B",
+    "R24_native": false,
+    "R23": false,
+    "R11": false, "R21": false, "R3": false,
+    "rationale": "isolate tempo + signal + shared convoy; reintroduce the rest only AFTER a pass and never to select the primary environment"
+  },
+  "static_comparators": {
+    "periodic_policies_period_1_to_4": 120,
+    "enumeration": "3 + 3^2 + 3^3 + 3^4",
+    "dedup_equivalent_calendars": true,
+    "crn": true,
+    "convex_hull_of_resources": true,
+    "frozen_on_calibration_evaluated_on_holdout": true,
+    "plus_observable_heuristics": ["threshold_backlog", "hysteresis", "depth3_tree", "rollout_mpc", "contextual_bandit", "ppo"],
+    "primary_bar": "best full-contract static = best over the 120 periodic calendars + convex hull, within a matched resource envelope"
+  },
+  "mechanism_ladder": {
+    "name": "nested mechanism ladder (NOT a factorial)",
+    "arms": {
+      "Base": {"tempo": "iid", "convoy_physical_memory": false, "signal": false, "resource_accounting": true},
+      "T": {"tempo": "persistent", "convoy_physical_memory": false, "signal": false, "resource_accounting": true},
+      "TR": {"tempo": "persistent", "convoy_physical_memory": true, "signal": false, "resource_accounting": true},
+      "TS": {"tempo": "persistent", "convoy_physical_memory": false, "signal": true, "resource_accounting": true},
+      "TRS": {"tempo": "persistent", "convoy_physical_memory": true, "signal": true, "resource_accounting": true},
+      "TRSC": {"tempo": "persistent", "convoy_physical_memory": true, "signal": true, "resource_accounting": "holding_inventory_time"}
+    },
+    "convoy_physical_memory_false_means": "resource re-available at each dispatch opportunity, does not carry availability week to week; scarcity NOT removed, no free convoys",
+    "primary_physical_arm": "TRS",
+    "TRSC_deferred": "no defensible holding/expiry coefficients; resource envelope already guards against buying the improvement; report a resource/Pareto vector, not fabricated money"
+  },
+  "grid": {
+    "n_cells": 24,
+    "axes": {"persistence": ["short_4_6", "long_6_8"], "signal_quality": [0.65, 0.75, 0.85], "lead_weeks": [1, 2], "surge_level": [1.25, 1.50]},
+    "adjacency": "two cells adjacent iff they differ by exactly one level on exactly one axis",
+    "valid_region": "connected component of >= 2 cells passing all gates",
+    "selection_by_maximum_outcome": false,
+    "deterministic_selection_order_least_to_most_learning_favorable": ["surge 1.25 before 1.50", "signal 0.65 before 0.75 before 0.85", "lead 1 before 2", "persistence short before long"],
+    "primary_cell": "first in that order inside a valid connected component -- the minimally sufficient condition",
+    "commonality_correlated_surge_is_documented_sensitivity_not_primary_axis": true
+  },
+  "data_universes": {
+    "structural_screen_seed_start": 980001,
+    "fresh_calibration_seed_start": 990001,
+    "observable_holdout_seed_start": 1000001,
+    "virgin_learner_test_seed_start": 1010001,
+    "program_d_e_f_tapes_reused": false
+  },
+  "experimental_sequence": {
+    "G0_physics_no_tapes": ["mass conservation", "A/B exchangeability (label-swap symmetry)", "no auto-reallocation", "partial load consumes full cycle", "R22 pauses both legs", "weekly priority yields multiple departures", "same tape -> same threat/demand", "A+B demand identical across policies", "signals match the confusion matrix", "placebos preserve prevalence", "periodic statics reproducible"],
+    "G1_central_cell_all_arms": ["Base", "T", "TR", "TS", "TRS", "TRSC"],
+    "structural_screen": {"tapes_per_cell": 12, "TRS_over_all_24": true, "TS_over_all_24": true, "Base_T_TR_over_persistence_x_surge_only": true, "TRSC_only_if_cost_validated": true, "all_arms_reported": true},
+    "G3_region_confirmation": {"fresh_tapes": 24, "exact_branching": true, "periodic_statics": true, "tree": true, "hysteresis": true, "placebos": true, "bootstrap_by_tape": true, "train_eval_on_uniform_over_eligible_connected_component": true},
+    "G4_holdout": {"tapes_from_1000001": 40, "policies_frozen": true, "no_tuning": true},
+    "G5_learners_only_if_pass": ["rollout_mpc", "contextual_bandit", "MaskablePPO", "persistent_reset_frozen_only_after_virgin_win"]
+  },
+  "build_gate": {
+    "authorized": false,
+    "blocking_requirements": ["Garrido confirms convoy ontology (Option A vs B) and the convoy-equivalent framing", "Garrido domain sign-off on tempo/signal/costs", "intervention ledger complete"],
+    "reason": "The transport-binding physics changes the mechanism; Garrido must confirm the convoy is the real scarce downstream transport before any tape is generated."
+  },
+  "forbidden_rescues": [
+    "authorize build before Garrido confirms the convoy ontology",
+    "restore dynamic S1/S2 to the primary action space after seeing a signal",
+    "grow the action space from 3 to 6 mid-study",
+    "select the max-ReT cell instead of the minimally-sufficient cell in a connected region",
+    "use surge 2x/3x to manufacture a decisional surface",
+    "reuse Program D/E/F tapes/weights/thresholds/cells",
+    "monetize TRSC with invented holding/expiry coefficients",
+    "train PPO during environment selection"
+  ]
+}

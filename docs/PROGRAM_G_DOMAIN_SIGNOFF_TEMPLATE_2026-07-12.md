@@ -1,5 +1,19 @@
 # Program G — Garrido domain sign-off template (2026-07-12)
 
+> **V1.2 UPDATE (decisive items first).** After verifying that convoy 5000/48h = 2500 rations/day ≈
+> thesis daily demand (2400–2600) and that S2 (5128/day) cannot be moved by a 2500/day convoy, three
+> questions now gate the build ABOVE all others:
+>
+> - **[ ] Convoy ontology (THE decisive question).** Is the shared convoy the *primary scarce
+>   downstream transport* SB→CSSU at thesis scale (**Option A**, physics-favored), or an *extra
+>   emergency asset on top of a complete normal flow* (**Option B**, non-binding by the throughput
+>   math)? **A / B / OTHER:** ____
+> - **[ ] Dead shift dimension.** Do you accept that with transport binding at 2500/day, dynamic S1/S2
+>   control does not change final delivery and is therefore removed from the primary action space
+>   (production fixed at S1)? **CONFIRM / REJECT:** ____
+> - **[ ] Surge magnitude.** Is a *sustained* 4–8 week surge realistically **1.25×–1.50×** routine
+>   demand (v1.2), rather than 2×–3× (which suits a one-day spike, not a two-month regime)? **____**
+
 Status: **UNSIGNED. G0 build stays blocked until this is returned with defensible ranges.**
 Editing authorization is not enough; Program G needs **defensible ranges**, not invented ones. This
 template lists exactly what must be confirmed. Each item: Garrido writes CONFIRMED / ADJUST(→value) /
