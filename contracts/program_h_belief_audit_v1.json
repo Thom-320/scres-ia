@@ -1,0 +1,82 @@
+{
+  "contract_id": "program_h_belief_audit_v1",
+  "status": "PREREGISTERED_BEFORE_ANY_PROGRAM_H_TAPE_OR_LEARNER",
+  "parent_terminal_results_unchanged": ["program-g-closed-2026-07-12 (006b41c)"],
+  "question": "Under the frozen corrected spatial contract, does ANY non-anticipative policy using available operational information materially beat ABAB, or is the clairvoyant value essentially information-limited?",
+  "frozen_from_program_g_v1_2": {
+    "physics": true, "n_cssus": 2, "convoy_capacity": 5000, "convoy_cycle_hours": 48,
+    "episode_weeks": 4, "region": "12 surge-1.50 cells (uniform)", "tempo": "semi-Markov independent A/B",
+    "signal_quality": "balanced-accuracy per cell", "risks": "R22 off in primary",
+    "metrics": ["ret_order", "ret_quantity", "worst_cssu_fill", "attended_orders", "unfulfilled_rations"],
+    "static_comparator": "ABAB (frozen best periodic calendar)", "action_set": ["A", "B", "HOLD"],
+    "practical_importance_thresholds": {"delta_min_ret_order": 0.01, "worst_cssu_fill_margin": 0.02}
+  },
+  "belief_state": {
+    "reported_tempo_marginal": "Z=(Z_A,Z_B), 9 labels in {low,routine,surge}^2",
+    "filter_state": "augmented semi-Markov state (Z_A, dwell_age_A, Z_B, dwell_age_B); age/residual duration is required for a Markov filter",
+    "filter_O0": "Bayes update from frozen augmented semi-Markov transition + current imperfect signal + observable physical trajectory only",
+    "filter_O1": "O0 update plus lagged realized demand and the signed-off operational ledger",
+    "latent_label_never_revealed": true,
+    "filter_validated_before_use": "belief must track latent tempo better than the marginal prior (log-loss) or the study reports the filter is uninformative"
+  },
+  "information_contracts": {
+    "O0_program_g_exact": "only the observations already used in Program G (settles policy-class vs info for the SAME info set)",
+    "O1_minimal_operational_ledger": {
+      "adds": ["prev-week realized demand per CSSU", "backlog qty + max age per CSSU", "recent deliveries", "convoy ETA", "current route state"],
+      "excludes": ["future demand", "true tempo", "next risk", "future closure duration", "oracle labels"],
+      "requires_garrido_signoff_before_any_O1_fit_or_tape": true,
+      "default_status": "BLOCKED_AND_EXCLUDED_UNLESS_SIGNED_OFF",
+      "dropped_if_not_operationally_accessible": true
+    }
+  },
+  "policy_ladder": [
+    "ABAB (frozen)",
+    "cover, MPC (prior references only)",
+    "regret-weighted observable policy (trained on Q(s,a*)-Q(s,a) counterfactuals, NOT action accuracy)",
+    "belief-MPC (Bayes filter + frozen horizon)",
+    "POMCP / point-based (strong non-anticipative policy)",
+    "perfect-information oracle (diagnostic ceiling only)"
+  ],
+  "observable_upper_bound": {
+    "primary_method": "QMDP optimistic upper bound on J*_obs",
+    "optional_secondary_method": "information-relaxation bound only if its algorithm and penalty are frozen in a hashed amendment before 1060001 is opened",
+    "property": "J_QMDP >= J*_obs (optimistic) -> if J_QMDP - J_ABAB < delta_min then NO observable policy materially beats ABAB",
+    "computed_on": "ret_order at the frozen 4-week horizon, same tapes, CRN",
+    "is_the_central_deliverable": true
+  },
+  "estimands": {
+    "H_PI": "J_PI - J_static", "H_belief": "J_belief - J_static",
+    "eta_information": "H_belief / H_PI",
+    "UB_gap": "J_QMDP - J_static"
+  },
+  "data_universes": {
+    "development_calibration": {"seed_start": 1060001, "n": 200},
+    "locked_belief_policy_test": {"seed_start": 1070001, "n": 400},
+    "virgin_rl_test": {"seed_start": 1080001, "n": 400, "opened_only_if_learner_gate_passes": true},
+    "program_d_to_g_tapes_reused": false
+  },
+  "learner_authorization_gate_on_1070001": {
+    "ret_order_delta_min": 0.01, "ret_order_lcb95_gt": 0.0,
+    "ret_quantity_noninferior": true, "attended_orders_noninferior": true,
+    "worst_cssu_fill_margin_max": 0.02, "unfulfilled_rations_noninferior": true,
+    "resources_equal": true, "favorable_tapes_min": 0.70, "perfect_info_conversion_min": 0.30,
+    "must_beat_best_nonneural_belief_policy_too": true
+  },
+  "learner_if_gate_passes": {
+    "primary": "PPO with filtered belief in the observation A_t = pi(X_t, b_t)",
+    "single_ablation": "RecurrentPPO over raw history",
+    "frozen": {"net_arch": [64, 64], "seeds": 10, "reward": "frozen", "comparator": "ABAB + regret-policy + belief-MPC + POMCP", "no_sweep": true},
+    "persistent_reset_frozen_only_after_beating_ABAB_and_best_nonneural_belief_policy": true
+  },
+  "outcomes": {
+    "case_A_information_limited": "UB(J*_obs) - J_ABAB < delta_min -> formal information-insufficiency result; virgin 1080001 stays closed; spatial contract terminal",
+    "case_B_policy_class_limited": "a belief-aware policy beats ABAB on 1070001 -> headroom IS observably convertible; the learner gate opens"
+  },
+  "stop": "Program H is the LAST computational extension on the stylized spatial contract. Full-DES port is a separate paper, not before manuscript submission.",
+  "forbidden_rescues": [
+    "select any parameter using learner performance",
+    "reopen or retune Program G", "reuse Program D-G tapes for selection",
+    "train PPO before the belief-policy gate passes", "fit policies by action accuracy instead of regret",
+    "open 1080001+ before the gate", "start the full-DES port before submitting the manuscript"
+  ]
+}
