@@ -30,6 +30,8 @@ tomorrow's feasible action set?** If not, DRA-2 is DRA-1 in a convoy costume.
   bar). Verifier will independently count `dispatch_live` epochs under the frozen
   treatment regime. If ~0 (as the generic R2r regime gave for DRA-1), the frontier is
   meaningless → FAIL until the regime is fixed.
+- `dispatch_feasible` alone is not the numerator: exact CRN branches must diverge in
+  physical/resource state or in the next feasible action set.
 
 ### G-C. Multi-step branching, not one-step
 - Intertemporal value cannot be measured by a single 1-day pulse (DRA-1's method).
@@ -42,6 +44,9 @@ tomorrow's feasible action set?** If not, DRA-2 is DRA-1 in a convoy costume.
   Pareto-accounted). Verifier will check that any ReT gain is not bought by dispatching
   more convoys. If the winner simply runs more departures, FAIL (resource purchase,
   not intelligence).
+- Frozen primary implementation: compare each dynamic candidate with the best
+  calibration-static policy having no more departures and no more vehicle-hours than
+  the candidate. Pareto reporting is secondary and cannot, by itself, support a win.
 
 ### G-E. Standard integrity (as in DRA-1)
 - Bitwise identity when the convoy extension is disabled (frozen-proxy regression).
@@ -101,3 +106,32 @@ genuinely different (better) test than DRA-1.**
 found (one self-inflicted measurement artifact caught and corrected). Blocked, as it
 should be, on Garrido's face-validation of the returning-convoy extension before the
 scientific run. The promising smoke diversity does NOT authorize any claim yet.
+
+---
+## Gate refinements adopted from Codex's cross-review (2026-07-11) — pre-calibration
+
+Codex's three pendings sharpen the frozen gates; the verifier ADOPTS them before any
+60-tape calibration is authorized:
+
+- **G-B strengthened.** The reported 49.8% smoke fraction is DISPATCH-*feasibility*, not
+  a true live fraction. The scientific G-B now requires, per epoch,
+  `live(s)=1{HOLD and DISPATCH both feasible AND yield physically DIFFERENT trajectories}`
+  — auto-verified to differ in ≥1 of: future convoy availability/ETA, staged inventory,
+  in-transit inventory, next feasible action. The 49.8% must NOT be presented as the G-B
+  result until this stronger definition is measured on the calibration regime.
+- **G-D estimand frozen (no formulation shopping).** The contract currently allows
+  "resource-equivalent OR Pareto"; that lets one retrospectively pick the favorable
+  framing. Before calibration, freeze ONE primary estimand:
+  `ΔReT | equal vehicle-hours/departures budget` (Pareto as a disclosed secondary only).
+- **G-A materialized as a machine preflight.** Turn my code-read + manual probe into an
+  auditable verdict: on eligible fixtures, assert
+  `A(X_{t+1}|DISPATCH) ≠ A(X_{t+1}|HOLD)` and emit pass/fail. "Intertemporal commitment
+  exists" must be evidence, not a reviewer's reading.
+
+**Commit-count correction:** HEAD is 15 commits ahead of origin/codex (not 12) — the
+unpushed pile is growing; push before stacking more.
+
+**DRA-1 claim wording (locked):** "Under the tested contract — daily allocation with
+automatic unused-capacity reallocation — CSSU allocation shows scarce, sporadic,
+operationally negligible dynamic value." Do NOT claim perfect A/B symmetry or that 0.25
+is intrinsically optimal (0.8% SHA asymmetry disclosed; label-swap test retained).
