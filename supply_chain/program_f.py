@@ -24,6 +24,13 @@ EVENT_MODEL_ID = "program_f_event_model_v1"
 CONTEXTS = ("equipment_pressure", "interdiction_campaign", "mission_surge")
 ACTIONS = ((2, 0, 0), (0, 2, 0), (0, 0, 2), (1, 1, 0), (1, 0, 1), (0, 1, 1))
 INITIAL_ACTION = (1, 1, 0)
+OBSERVATION_KEYS = (
+    "equipment_condition_score", "route_threat_score", "mission_tempo_score",
+    "equipment_condition", "recent_r11_count", "recent_transport_attack_count",
+    "recent_r24_count", "recent_damage_hours", "sb_inventory", "reserve_inventory",
+    "backlog_qty", "backlog_count", "active_m", "active_t", "active_r",
+    "pending_m", "pending_t", "pending_r", "week_phase",
+)
 PROXY = Path(__file__).resolve().parent / "data" / "garrido_proxy_v1_freeze_2026-07-10.json"
 
 
@@ -192,6 +199,7 @@ class ProgramFController:
         self.current_week = 0
         self.action_events: list[dict[str, Any]] = []
         self.damage_events: list[dict[str, Any]] = []
+        self.consumed_base_events: list[dict[str, Any]] = []
         self.maintenance_downtime_hours = 0.0
         self.token_hours = {"M": 0.0, "T": 0.0, "R": 0.0}
         self.last_switch_week = -int(self.profile["minimum_commitment_weeks"])
@@ -202,7 +210,7 @@ class ProgramFController:
         scores = self.tape["signals"][week]["scores"]
         now = float(self.sim.env.now)
         recent = [row for row in self.damage_events if row["start_time"] >= now - 4 * HOURS_PER_WEEK]
-        return {
+        observation = {
             "equipment_condition_score": float(scores["equipment_pressure"]),
             "route_threat_score": float(scores["interdiction_campaign"]),
             "mission_tempo_score": float(scores["mission_surge"]),
@@ -220,6 +228,9 @@ class ProgramFController:
             "pending_t": float(self.pending_action[1]), "pending_r": float(self.pending_action[2]),
             "week_phase": float(week / max(int(self.tape["weeks"]) - 1, 1)),
         }
+        if tuple(observation) != OBSERVATION_KEYS:
+            raise AssertionError("Program F observation schema drift")
+        return observation
 
     def request(self, action: Iterable[int]) -> None:
         value = tuple(int(item) for item in action)
@@ -276,8 +287,17 @@ class ProgramFController:
         target = self.start + float(event["onset_hours"])
         if target > self.sim.env.now:
             yield self.sim.env.timeout(target - self.sim.env.now)
+        start = float(self.sim.env.now)
         risk_id = str(event["risk_id"])
         base = float(event["base_duration_hours"])
+        self.consumed_base_events.append({
+            "event_id": str(event["event_id"]), "risk_id": risk_id,
+            "onset_hours": float(start - self.start),
+            "base_duration_hours": base,
+            "affected_ops": list(map(int, event["affected_ops"])),
+            "magnitude": float(event["magnitude"]),
+            "context_at_onset": str(event["context_at_onset"]),
+        })
         realized = base
         if risk_id == "R11":
             factor = self.profile["r11_factors"][self.active_action[0]]
@@ -285,7 +305,6 @@ class ProgramFController:
         elif risk_id in {"R22", "R23"}:
             factor = self.profile["transport_factors"][self.active_action[1]]
             realized = max(1.0, base * factor)
-        start = float(self.sim.env.now)
         if risk_id == "R24":
             surge = float(event["magnitude"])
             quota = self.profile["reserve_issue"][self.active_action[2]]
@@ -334,6 +353,31 @@ def make_sim(tape: dict[str, Any]) -> tuple[MFSCSimulation, ProgramFController, 
     return sim, controller, start
 
 
+def runtime_exogenous_artifacts(
+    sim: MFSCSimulation, controller: ProgramFController, start: float
+) -> dict[str, Any]:
+    demand_rows = [
+        {
+            "j": int(order.j),
+            "time_hours": round(float(order.OPTj) - float(start), 9),
+            "quantity": round(float(order.quantity), 9),
+            "contingent": bool(order.contingent),
+            "destination": order.cssu_destination,
+        }
+        for order in sim.orders if float(order.OPTj) >= float(start) - 1e-9
+    ]
+    threat_rows = sorted(
+        controller.consumed_base_events,
+        key=lambda row: (row["onset_hours"], row["event_id"]),
+    )
+    return {
+        "consumed_base_threat_sha256": digest(threat_rows),
+        "realized_demand_sha256": digest(demand_rows),
+        "consumed_base_threat_rows": threat_rows,
+        "realized_demand_rows": demand_rows,
+    }
+
+
 def run_policy(tape: dict[str, Any], policy: Callable[[dict[str, float]], Iterable[int]]) -> dict[str, Any]:
     sim, controller, start = make_sim(tape)
     end = start + int(tape["weeks"]) * HOURS_PER_WEEK
@@ -353,6 +397,7 @@ def run_policy(tape: dict[str, Any], policy: Callable[[dict[str, float]], Iterab
         "token_hours_r": controller.token_hours["R"], "total_token_hours": sum(controller.token_hours.values()),
         "action_events": controller.action_events, "damage_events": controller.damage_events,
     })
+    metrics.update(runtime_exogenous_artifacts(sim, controller, start))
     return metrics
 
 
@@ -378,6 +423,7 @@ def branch_from_week(
         advance_including(sim, treatment_start + (offset + 1) * HOURS_PER_WEEK)
     metrics = compute_episode_metrics(sim, treatment_start=treatment_start)
     ledger = sim.flow_ledger()
+    exogenous = runtime_exogenous_artifacts(sim, controller, start)
     return {
         "observation": observation,
         "ret": float(metrics["ret_excel"]),
@@ -387,4 +433,5 @@ def branch_from_week(
         "threat_sha256": tape["threat_sha256"],
         "state_week": state_week, "horizon_weeks": int(horizon_weeks),
         "prefix_action": list(prefix_action), "branch_action": list(branch_action),
+        **exogenous,
     }
