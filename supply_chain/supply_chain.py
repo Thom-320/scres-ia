@@ -686,6 +686,12 @@ class MFSCSimulation:
         self.emergency_reserve_target_changes = 0
         self.emergency_reserve_inventory_time = 0.0
         self._emergency_reserve_last_accounting_time = 0.0
+        # Program F is opt-in.  The reserve stock remains the existing physical
+        # container; these fields only authorize a bounded R24 fragment release.
+        self.program_f_reserve_enabled = False
+        self.program_f_r24_issue_remaining = 0.0
+        self.program_f_reserve_fragments_issued = 0.0
+        self.program_f_reserve_issue_events: list[dict[str, float]] = []
         # op9_linked mode: LOC convoys (Op10, Op12) are capacity-1 daily-rate
         # servers (Table 6.20 ROP=24h) — a tandem pipeline, not parallel legs.
         self.op10_convoy = simpy.Resource(self.env, capacity=1)
@@ -1620,6 +1626,31 @@ class MFSCSimulation:
             self.emergency_reserve_in_transit += missing
             self.emergency_reserve_replenishment_requests += 1
             self.env.process(self._replenish_emergency_reserve(missing))
+
+    def enable_program_f_reserve(self) -> None:
+        """Authorize stock-conserving partial response to contingent demand."""
+        if not self.emergency_reserve_enabled:
+            raise RuntimeError("Program F reserve requires configured physical stock.")
+        self.program_f_reserve_enabled = True
+
+    def set_program_f_r24_issue_quota(self, quantity: float) -> None:
+        """Set the maximum reserve fragment available to the next R24 order."""
+        if not self.program_f_reserve_enabled:
+            raise RuntimeError("Program F reserve is not enabled.")
+        self.program_f_r24_issue_remaining = max(0.0, float(quantity))
+
+    def _deliver_program_f_reserve_fragment(self, order: OrderRecord, qty: float):
+        yield self.env.timeout(self.emergency_reserve_issue_delay)
+        self._in_transit -= qty
+        self.total_delivered += qty
+        self.total_order_fulfilled += qty
+        self.emergency_reserve_units_issued += qty
+        self.program_f_reserve_fragments_issued += qty
+        self.delivery_events.append((self.env.now, qty))
+        order.in_flight_qty = max(0.0, float(order.in_flight_qty) - qty)
+        if order.remaining_qty <= 1e-9 and order.in_flight_qty <= 1e-9:
+            self._remove_pending_backorder(order)
+            self._finalize_pending_backorder(order)
 
     def _replenish_emergency_reserve(self, requested_qty: float):
         """Move existing SB stock across the threatened corridor conservatively."""
@@ -4329,6 +4360,38 @@ class MFSCSimulation:
             episode = self._r24_causal_episodes.get(episode_id)
             if episode is not None and episode.get("assigned_order_j") is None:
                 episode["assigned_order_j"] = int(order.j)
+        program_f_qty = 0.0
+        if (
+            self.program_f_reserve_enabled
+            and order.contingent
+            and self.program_f_r24_issue_remaining > 1e-9
+            and self.emergency_theatre_reserve.level > 1e-9
+        ):
+            program_f_qty = min(
+                float(order.remaining_qty),
+                float(self.program_f_r24_issue_remaining),
+                float(self.emergency_theatre_reserve.level),
+            )
+            if program_f_qty > 1e-9:
+                self._account_emergency_reserve_inventory_time()
+                yield self.emergency_theatre_reserve.get(program_f_qty)
+                self._in_transit += program_f_qty
+                order.remaining_qty -= program_f_qty
+                order.in_flight_qty += program_f_qty
+                self.program_f_r24_issue_remaining -= program_f_qty
+                self.program_f_reserve_issue_events.append({
+                    "time": float(self.env.now),
+                    "order_j": float(order.j),
+                    "quantity": float(program_f_qty),
+                })
+                self.env.process(
+                    self._deliver_program_f_reserve_fragment(order, program_f_qty)
+                )
+                if order.remaining_qty <= 1e-9:
+                    order.remaining_qty = 0.0
+                    self.orders.append(order)
+                    self.daily_demand.append((self.env.now, order.quantity))
+                    return
         emergency_available = (
             self.emergency_reserve_enabled
             and self.order_fulfillment_mode == "op9_linked"
