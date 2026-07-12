@@ -115,6 +115,44 @@ here as ADDITIONS that make the pre-RL audit STRICTER (never easier), slotted be
 These do not change any promotion threshold; they add upstream STOP signals that would have caught
 Program E's null before training. `H_PI ≠ H_obs ≠ H_learnable` — the gate now measures all three.
 
+## F. DOMAIN ENVELOPE V1.1 — pre-build amendment adopted (2026-07-12, Codex out; verifier owns)
+
+An external review found a physical contradiction in the minimal envelope (weekly action vs 48h
+convoy cycle → convoy idle 120h/wk, so "persistent convoy location" was false). Verified first-hand
+(120h idle; enumerable oracle 393/1,569; 5,000 = real `RATIONS_PER_BATCH` anchor). Adopted as
+**V1.1** — `contracts/program_g_domain_envelope_v1_1.json`,
+`docs/PROGRAM_G_CHARTER_PREBUILD_AMENDMENT_V1_1.md`,
+`docs/PROGRAM_G_INTERVENTION_LEDGER_2026-07-12.md`,
+`docs/PROGRAM_G_DOMAIN_SIGNOFF_TEMPLATE_2026-07-12.md`. The charter's guardrails are unchanged; only
+the physical/informational ontology is corrected. Build stays UNAUTHORIZED pending Garrido sign-off.
+
+Corrections folded into the audit (these SUPERSEDE the minimal-envelope readings in §A–§C):
+- **Convoy decisions every 48h when available** (not weekly); persistent state = convoy availability +
+  reserve depletion + deployed-ration location + A/B backlog. Machine-verify persistence across epochs.
+- **Emergency-reserve overlay**: normal MFSC flow remains; convoy moves only the 10,000-ration reserve
+  (two 5,000 loads, no in-episode replenishment). Verify normal flow unaffected + A+B demand conserved.
+- **Static frontier is NOT the six constants**: it must include strategic prepositioning postures
+  (10k@SB, 5k+5k, 10k@A, 10k@B) AND exact open-loop schedules (all ≤2-departure sequences over 4/8wk,
+  selected on calibration only). Primary contrast `π_obs − max(posture, open-loop, constant)` within a
+  matched resource envelope. Comparing a learner to "always-A/HOLD" is the forbidden Track B error.
+- **Signal = sensitivity/FPR** (moderate 0.70/0.20, high 0.85/0.10), lead 7/14d, binary weekly per-CSSU
+  — NOT scalar accuracy. **Wrong-CSSU placebo ADDED** to the shuffled+delayed set (isolates value of
+  knowing WHERE). Verify signal beats all three placebos.
+- **S1 fixed in the primary spatial screen**; S2 enters only after a liveness preflight (Program L
+  showed S1/S2/S3 identical for positive buffers). Verify S2 is not occupying the action space unproven.
+- **`Base/T/TR/TS/TRS/TRSC` is a nested mechanism ladder, not a factorial** — report contrasts
+  `T−Base, TR−T, TS−T, TRS−TR, TRS−TS, TRSC−TRS`; do not overclaim orthogonality.
+- **Primary grid = 16 connected-region cells** (2 signal × 2 lead × 2 surge-weight × 2 **commonality**),
+  not 24. Commonality (A/B concurrency) is the decisive omitted axis. Promotion needs a **connected
+  component of ≥2 cells**, trained/evaluated on the uniform distribution over that component — never the
+  max-ReT cell. Persistence 6–8wk is a later sensitivity, not primary selection.
+- **Sequence G0→G5** frozen: G0 physics (no tapes); G1 central cell all arms; G2 TRS/TRSC over 16 cells;
+  G3 promotable connected region + 60 calib tapes + tree/hysteresis + exact open-loop comparator +
+  resource frontier; G4 holdout 1000001+ only after full freeze; G5 rollout/MPC → bandit → MaskablePPO.
+- **Intervention-ledger discipline**: no [X] researcher-imposed parameter enters a tape until Garrido
+  confirms it; each has a falsifier that runs in G0/G1 before any learner. The 3 diagnostics in §E
+  (`I(O;a*)`, equilibrium-perturbation, second-family fallback) still apply, per arm/cell.
+
 ## D. Standing
 
 DRA-1, DRA-2, DRA-2b, Program E, Program F stay terminal; no reuse of their tapes/weights/thresholds/
