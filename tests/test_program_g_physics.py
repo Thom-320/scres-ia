@@ -5,7 +5,7 @@ import numpy as np
 
 from supply_chain.program_g import (
     ACTIONS, CONVOY_LOAD, central_cell, cover_signal_policy, enumerate_oracle,
-    materialize_tape, simulate,
+    materialize_tape, metrics_all, ret_order_metrics, simulate, simulate_orders,
 )
 
 
@@ -70,3 +70,20 @@ def test_iid_vs_persistent_tempo_differ():
     tp = _tape(persistent=True)
     ti = _tape(persistent=False)
     assert not np.array_equal(tp.z, ti.z)
+
+
+def test_order_adapter_uses_168_hour_weeks_and_six_operating_days():
+    orders = simulate_orders(_tape(weeks=2), ("A", "B"))
+    assert [o.OPTj for o in orders if o.j in (13, 14)] == [168.0, 168.0]
+    assert max(o.OPTj for o in orders) == 168.0 + 5 * 24.0
+
+
+def test_pending_orders_are_lost_and_ret_uses_canonical_ledger():
+    tape = _tape()
+    orders = simulate_orders(tape, ("HOLD",) * 4)
+    assert all(o.lost for o in orders if o.OATj is None)
+    r = ret_order_metrics(orders)
+    m = metrics_all(tape, ("HOLD",) * 4)
+    assert r["ret_order"] == m["ret_order"]
+    assert r["ret_quantity"] == m["ret_quantity"]
+    assert m["lost_orders"] == sum(o.OATj is None for o in orders)

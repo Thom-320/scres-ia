@@ -1,0 +1,23 @@
+{
+  "contract_id": "program_g_terminal_metric_audit_v1",
+  "frozen_before_seed_start": 1040001,
+  "scope": "stylized_program_g_order_adapter_not_full_des",
+  "calendar": {"hours_per_week": 168, "demand_days_per_week": 6},
+  "canonical_ret": {"function": "compute_order_level_ret_excel_formula", "j_source": "row_index"},
+  "primary_metrics": [
+    "ret_order",
+    "ret_quantity",
+    "attended_orders",
+    "worst_cssu_fill",
+    "unfulfilled_rations_at_horizon"
+  ],
+  "secondary_metrics": ["cd_sigmoid_inspired", "cd_spatial_inspired"],
+  "calibration": {"seed_start": 1040001, "n_tapes": 200},
+  "locked_terminal_test": {"seed_start": 1050001, "n_tapes": 400},
+  "policies": ["best_periodic_1_to_4", "cover", "mpc", "service_tree_depth3", "ret_tree_depth3"],
+  "ppo_allowed": false,
+  "pass_requires_all_primary_guardrails": true,
+  "stop_verdict": "STOP_PROGRAM_G_NO_ROBUST_ADAPTIVE_VALUE_UNDER_STYLIZED_CONTRACT",
+  "pass_verdict": "PASS_PROGRAM_G_STYLIZED_ROBUST_OBSERVABLE_VALUE",
+  "forbidden_claims": ["full_des_confirmation", "cobb_douglas_rescue", "virgin_mfsc_confirmation"]
+}

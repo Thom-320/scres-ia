@@ -18,6 +18,8 @@ from typing import Any, Callable, Sequence
 
 import numpy as np
 
+from .config import HOURS_PER_WEEK
+
 # --- frozen constants (from config anchors / V1.2 envelope) ---
 S1_DAILY = 2564          # RATIONS_PER_SHIFT (config.py:70)
 DEMAND_DAYS = 6          # thesis demand days/week
@@ -285,7 +287,7 @@ def simulate_orders(tape: Tape, actions: Sequence[str], arm: str = "TRS") -> lis
         pri = 0 if a == "A" else 1 if a == "B" else None
         daily = [tape.demand[w, 0] / DEMAND_DAYS, tape.demand[w, 1] / DEMAND_DAYS]
         for dow in range(DEMAND_DAYS):
-            hour = (w * DEMAND_DAYS + dow) * 24.0
+            hour = w * HOURS_PER_WEEK + dow * 24.0
             sb += S1_DAILY
             if pri is not None and dow in (1, 3, 5):        # 3 convoy cycles/week
                 deliver = min(CONVOY_LOAD, sb, CSSU_CAP - inv[pri])
@@ -305,10 +307,47 @@ def simulate_orders(tape: Tape, actions: Sequence[str], arm: str = "TRS") -> lis
                         o.OATj = hour; o.CTj = hour - o.OPTj
                         o.backorder = bool(o.CTj > o.LTj)
                 queues[i] = [o for o in queues[i] if o.remaining_qty > 1e-9]
+    horizon = tape.weeks * HOURS_PER_WEEK
+    for o in orders:                       # unattended at horizon -> lost (increments Ut)
+        if o.OATj is None:
+            o.lost = True; o.lost_time = float(horizon)
     return orders
 
 
-# Frozen Garrido-2024 Cobb-Douglas exponents (supply_chain/env_experimental_shifts.py)
+def ret_order_metrics(orders) -> dict:
+    """Canonical order-level ret_excel (no-risk fill-rate branch) via the REPO aggregator
+    (correct cumulative Bt/Ut ordering), plus quantity-weighted ReT_quantity — the clean
+    probe of the order-vs-mass reversal. Unattended orders are marked lost -> score 0 -> Ut."""
+    from .ret_thesis import (
+        compute_order_level_ret_excel_formula, compute_ret_per_order_excel_formula,
+        order_counts_as_backorder_for_fill_rate,
+    )
+    canonical = compute_order_level_ret_excel_formula(orders, j_source="row_index")
+    # replicate the canonical loop EXACTLY (increment Bt/Ut BEFORE scoring) to expose per-order
+    order_sorted = sorted(orders, key=lambda o: (int(getattr(o, "j", 0) or 0),
+                                                 float(getattr(o, "OPTj", 0.0) or 0.0)))
+    cb = cu = 0; rv = []; q = []
+    for idx, o in enumerate(order_sorted, start=1):
+        if bool(getattr(o, "lost", False)):
+            cu += 1
+        elif order_counts_as_backorder_for_fill_rate(o, current_time=None):
+            cb += 1
+        ret, _ = compute_ret_per_order_excel_formula(o, j=idx, cumulative_backorders=cb,
+                                                     cumulative_unattended=cu)
+        rv.append(ret); q.append(float(getattr(o, "quantity", 0.0) or 0.0))
+    rv = np.array(rv); q = np.array(q)
+    assert abs(float(rv.mean()) - float(canonical["mean_ret_excel"])) < 1e-9, "canonical mismatch"
+    return {
+        "ret_order": float(canonical["mean_ret_excel"]),         # canonical, each order equal
+        "ret_quantity": float((rv * q).sum() / max(q.sum(), 1e-9)),  # each ration weighted equally
+        "attended": int(sum(getattr(o, "OATj", None) is not None for o in orders)),
+        "lost": int(sum(bool(getattr(o, "lost", False)) for o in orders)),
+    }
+
+
+# Cobb-Douglas-INSPIRED index (repo ReT_garrido2024 exponents; NOT paper-calibrated for MFSC).
+# The published G24 coefficients were fit for FACTORY resilience (APP), not this military SC; used
+# here only as a fixed preference profile for a construct-sensitivity probe, NOT "Garrido 2024 exact".
 G24 = {"a_zeta": 0.0240, "b_epsilon": 0.0260, "c_phi": 0.0400, "d_tau": 0.0600, "n_kappa": 0.1771}
 _ROUTINE_WK = 2600.0 / 2 * DEMAND_DAYS
 
@@ -332,7 +371,7 @@ def metrics_all(tape: Tape, actions: Sequence[str], arm: str = "TRS") -> dict:
         pri = 0 if a == "A" else 1 if a == "B" else None
         daily = [tape.demand[w, 0] / DEMAND_DAYS, tape.demand[w, 1] / DEMAND_DAYS]
         for dow in range(DEMAND_DAYS):
-            hour = (w * DEMAND_DAYS + dow) * 24.0; sb += S1_DAILY
+            hour = w * HOURS_PER_WEEK + dow * 24.0; sb += S1_DAILY
             if pri is not None and dow in (1, 3, 5):
                 d = min(CONVOY_LOAD, sb, CSSU_CAP - inv[pri]); inv[pri] += d; sb -= d
             for i in range(2):
@@ -349,6 +388,10 @@ def metrics_all(tape: Tape, actions: Sequence[str], arm: str = "TRS") -> dict:
                 bo_units_time[i] += sum(o.remaining_qty for o in queues[i])
                 queues[i] = [o for o in queues[i] if o.remaining_qty > 1e-9]
             inv_time += inv[0] + inv[1] + sb; days += 1
+    horizon = tape.weeks * HOURS_PER_WEEK
+    for o in orders:
+        if o.OATj is None:
+            o.lost = True; o.lost_time = float(horizon)
     # per-CSSU aggregates
     attended = [[o for o in orders if o.OATj is not None and (o.j % 2 == (1 - i))] for i in range(2)]
     ct = [np.mean([o.CTj for o in attended[i]]) if attended[i] else float(LEAD_TIME_PROMISE) for i in range(2)]
@@ -366,10 +409,14 @@ def metrics_all(tape: Tape, actions: Sequence[str], arm: str = "TRS") -> dict:
     zeta_i = [zeta, zeta]  # inventory pooled at SB; use aggregate for both (disclosed)
     R_i = [(zeta_i[i] + 1e-3) ** G24["a_zeta"] * eps[i] ** (-G24["b_epsilon"]) * tau[i] ** (-G24["d_tau"]) for i in range(2)]
     R_spatial = float(np.sqrt(R_i[0] * R_i[1]) * phi ** G24["c_phi"] * kappa ** (-G24["n_kappa"]))
+    ret = ret_order_metrics(orders)
     return {
+        "unfulfilled_rations_at_horizon": float(sum(unmet)),
+        # Compatibility alias only; this endpoint is not a time-integrated service-loss AUC.
         "service_loss": float(sum(unmet)),
         "orders": orders,
-        "attended_orders": int(sum(o.OATj is not None for o in orders)),
+        "ret_order": ret["ret_order"], "ret_quantity": ret["ret_quantity"],
+        "attended_orders": ret["attended"], "lost_orders": ret["lost"],
         "worst_cssu_fill": float(min(1.0 - unmet[i] / max(demand_i[i], 1.0) for i in range(2))),
         "cd_raw_Z": float(Z), "cd_sigmoid": float(_sigmoid(Z)), "cd_spatial": R_spatial,
         "zeta": float(zeta), "epsilon": eps_agg, "tau": tau_agg,

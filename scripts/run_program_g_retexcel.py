@@ -20,11 +20,11 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from supply_chain.program_g import (
-    cover_signal_policy, materialize_tape, periodic_calendars, simulate, simulate_orders,
+    cover_signal_policy, materialize_tape, periodic_calendars, ret_order_metrics, simulate,
+    simulate_orders,
 )
 from supply_chain.ret_thesis import (
     compute_order_level_ret_excel_visible_ledger as ret_visible,
-    compute_ret_per_order_excel_formula,
 )
 
 REGION = [{"cell_id": f"P{p}_Q{int(q*100)}_L{l}_S150", "signal_q": q, "lead_weeks": l,
@@ -49,19 +49,9 @@ def score(orders):
     vis = ret_visible(orders)
     n_gen = int(vis["n_generated_orders"])
     vis_mean = float(vis["mean_ret_excel"]) if vis["n_visible_rows"] else 0.0
-    # full ledger: score every generated order (unfulfilled -> 0) with the excel formula
-    vals = []
-    cb = cu = 0
-    for k, o in enumerate(sorted(orders, key=lambda z: (z.OPTj, z.j)), start=1):
-        v, case = compute_ret_per_order_excel_formula(
-            o, j=k, cumulative_backorders=cb, cumulative_unattended=cu, risk_active=False)
-        vals.append(v)
-        if getattr(o, "OATj", None) is None:
-            cu += 1
-        elif getattr(o, "backorder", False):
-            cb += 1
-    full_mean = float(np.mean(vals))
-    n_att = sum(getattr(o, "OATj", None) is not None for o in orders)
+    canonical = ret_order_metrics(orders)
+    full_mean = canonical["ret_order"]
+    n_att = canonical["attended"]
     return vis_mean, full_mean, n_att, n_gen
 
 

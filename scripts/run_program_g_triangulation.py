@@ -21,9 +21,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from supply_chain.program_g import (
     ACTIONS, SB_INITIAL, _week_step, cover_signal_policy, materialize_tape, metrics_all,
-    mpc_policy, observe, oracle_action_dataset, periodic_calendars, simulate, simulate_orders,
+    mpc_policy, observe, oracle_action_dataset, periodic_calendars, ret_order_metrics,
+    simulate, simulate_orders,
 )
-from supply_chain.ret_thesis import compute_ret_per_order_excel_formula
 
 REGION = [{"cell_id": f"P{p}_Q{int(q*100)}_L{l}_S150", "signal_q": q, "lead_weeks": l,
            "surge_mult": 1.50, "persistence": p, "r22_weekly_prob": 0.05}
@@ -35,17 +35,8 @@ def rt(i, base):
     return materialize_tape(base + i, REGION[i % len(REGION)], WEEKS, persistent=True)
 
 
-def full_ret(orders):
-    cb = cu = 0; vals = []
-    for k, o in enumerate(sorted(orders, key=lambda z: (z.OPTj, z.j)), 1):
-        v, _ = compute_ret_per_order_excel_formula(o, j=k, cumulative_backorders=cb,
-                                                   cumulative_unattended=cu, risk_active=False)
-        vals.append(v)
-        if o.OATj is None:
-            cu += 1
-        elif getattr(o, "backorder", False):
-            cb += 1
-    return float(np.mean(vals))
+def ret_order(t, seq):
+    return ret_order_metrics(simulate_orders(t, seq, ARM))["ret_order"]
 
 
 def boot_ci(x, n=2000, seed=7):
@@ -63,7 +54,7 @@ def fit_tree(train, objective):
             xs, ys = oracle_action_dataset(t, ARM); X += xs; y += ys
         else:
             best = max(itertools.product(ACTIONS, repeat=WEEKS),
-                       key=lambda s: full_ret(simulate_orders(t, s, ARM)))
+                       key=lambda s: ret_order(t, s))
             inv = np.zeros(2); sb = float(SB_INITIAL)
             for w in range(WEEKS):
                 X.append(observe(inv, sb, t, w)); y.append(ACTIONS.index(best[w]))
@@ -96,14 +87,16 @@ def main() -> int:
         "service_tree": svc_tree,
         "retexcel_tree": ret_tree,
     }
-    METRICS = ["service_loss_lower_better", "ret_excel_full", "cd_sigmoid", "cd_spatial",
-               "attended", "worst_cssu_fill"]
+    METRICS = ["unfulfilled_rations_at_horizon_lower_better", "ret_order", "ret_quantity", "cd_sigmoid",
+               "cd_spatial", "attended", "worst_cssu_fill"]
     data = {p: {m: [] for m in METRICS} for p in policies}
     for t in test:
         for p, fn in policies.items():
-            seq = fn(t); mm = metrics_all(t, seq, ARM)
-            data[p]["service_loss_lower_better"].append(mm["service_loss"])
-            data[p]["ret_excel_full"].append(full_ret(mm["orders"]))
+            seq = fn(t); mm = metrics_all(t, seq, ARM); rm = ret_order_metrics(mm["orders"])
+            data[p]["unfulfilled_rations_at_horizon_lower_better"].append(
+                mm["unfulfilled_rations_at_horizon"])
+            data[p]["ret_order"].append(rm["ret_order"])          # each order equal (thesis)
+            data[p]["ret_quantity"].append(rm["ret_quantity"])    # each ration equal (mass)
             data[p]["cd_sigmoid"].append(mm["cd_sigmoid"])
             data[p]["cd_spatial"].append(mm["cd_spatial"])
             data[p]["attended"].append(mm["attended_orders"])
@@ -113,7 +106,7 @@ def main() -> int:
     # winner per metric (service_loss lower better; others higher better)
     winners = {}
     for m in METRICS:
-        higher = m != "service_loss_lower_better"
+        higher = m != "unfulfilled_rations_at_horizon_lower_better"
         winners[m] = (max if higher else min)(policies, key=lambda p: means[p][m])
     # cover vs ABAB per metric (the reversal), CI95
     reversal = {}
