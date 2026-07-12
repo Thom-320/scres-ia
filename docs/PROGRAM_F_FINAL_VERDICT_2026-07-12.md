@@ -84,9 +84,9 @@ its maximum oracle ReT would violate the preregistration and is forbidden.
 > Risk-specific mitigation, a binding budget, persistent contexts and noisy
 > lead signals created physical liveness, action-ranking diversity and frequent
 > clairvoyant headroom across a broad preregistered phase diagram. However, no
-> admissible two-token cell converted that headroom into positive out-of-sample
-> rollout value with the observable depth-3 policy tree; Program F therefore
-> stopped before confirmation or reinforcement learning.
+> admissible two-token cell achieved positive cross-fitted observable-policy
+> rollout conversion within the preregistered screen; Program F therefore
+> stopped before independent holdout confirmation or reinforcement learning.
 
 This extends the diagnostic ladder:
 
