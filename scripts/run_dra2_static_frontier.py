@@ -42,6 +42,8 @@ def main() -> int:
     parser.add_argument("--horizon-weeks", type=int, default=16)
     parser.add_argument("--n-boot", type=int, default=1_000)
     parser.add_argument("--authorization-record", type=Path)
+    parser.add_argument("--contract-id", default="op7_op8_finite_convoy_v1")
+    parser.add_argument("--tape-prefix", default="dra2")
     args = parser.parse_args()
     if args.n_tapes % 4:
         raise ValueError("n-tapes must be divisible by four")
@@ -61,6 +63,8 @@ def main() -> int:
             FAMILIES[i // per_family],
             args.horizon_weeks,
             "smoke" if args.n_tapes == 4 else "calibration",
+            contract_id=args.contract_id,
+            tape_prefix=args.tape_prefix,
         )
         for i in range(args.n_tapes)
     ]

@@ -115,6 +115,8 @@ def branch_actions(
     forced_actions: tuple[str, ...],
     *,
     continuation_policy: ConvoyThresholdPolicy | None = None,
+    short_hours: float = SHORT_HOURS,
+    long_hours: float = LONG_HOURS,
 ) -> dict[str, Any]:
     sim, start = make_sim(tape)
     advance_prefix_to(sim, start, float(state["relative_time"]), policy)
@@ -127,7 +129,7 @@ def branch_actions(
     forced_remaining = True
     short_metrics = None
     t1_signature = None
-    end = state_time + LONG_HOURS
+    end = state_time + float(long_hours)
     while sim.env.now < end - 1e-9:
         if forced_remaining:
             try:
@@ -153,7 +155,7 @@ def branch_actions(
                 },
                 sort_keys=True,
             )
-        if short_metrics is None and sim.env.now >= state_time + SHORT_HOURS - 1e-9:
+        if short_metrics is None and sim.env.now >= state_time + float(short_hours) - 1e-9:
             short_metrics = episode_metrics_from(sim, state_time)
     long_metrics = episode_metrics_from(sim, state_time)
     resources = resource_delta(sim, resource_before)

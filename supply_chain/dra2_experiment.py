@@ -64,7 +64,15 @@ def advance_including(sim: MFSCSimulation, target: float) -> None:
         sim.env.run(until=target)
 
 
-def materialize_tape(seed: int, family: str, horizon_weeks: int, split: str) -> dict[str, Any]:
+def materialize_tape(
+    seed: int,
+    family: str,
+    horizon_weeks: int,
+    split: str,
+    *,
+    contract_id: str = CONTRACT_ID,
+    tape_prefix: str = "dra2",
+) -> dict[str, Any]:
     if family not in FAMILIES:
         raise ValueError(family)
     horizon = max(float(SIMULATION_HORIZON), 8_000 + horizon_weeks * HOURS_PER_WEEK)
@@ -110,8 +118,8 @@ def materialize_tape(seed: int, family: str, horizon_weeks: int, split: str) -> 
         )
     events.sort(key=lambda row: (row["start_time"], row["risk_id"]))
     tape = {
-        "contract_id": CONTRACT_ID,
-        "tape_id": f"dra2-{split}-{family}-{seed}",
+        "contract_id": contract_id,
+        "tape_id": f"{tape_prefix}-{split}-{family}-{seed}",
         "split": split,
         "family": family,
         "seed": int(seed),
