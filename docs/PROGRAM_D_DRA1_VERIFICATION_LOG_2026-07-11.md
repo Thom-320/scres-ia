@@ -128,3 +128,33 @@ supports STOP independently).
 - [ ] Branching: bitwise prefix + exogenous identity asserts; cluster by tape.
 - [ ] PPO-vs-best-static contrast per V3 §7 (CI95>0, clipped>0, ≥70% tapes,
       ≥8/10 seeds, lost within limit, capacity conserved, placebo-separated).
+
+## V4 — Neutral-prefix re-test RESOLVES the V3 confound (STOP is airtight)
+
+I ran the V3 recommendation myself: `scripts/verify_dra1_branching_neutral_prefix.py`
+re-samples branch states from a NEUTRAL 0.50 prefix and an opposite 0.75 prefix
+(reusing Codex's `select_state`/`branch`), artifact
+`results/program_d/dra1_branching_neutral_prefix_verify.json`.
+
+| prefix | optimal alloc | diversity | stressed node | mean oracle ΔReT |
+|---|---|---|---|---|
+| 0.25 (Codex) | 0.25×58 | FAIL | A always | +8.5e-05 |
+| 0.50 (neutral) | 0.25×55, 0.5×2, 0.75×3 | FAIL | A:34 / B:26 (balanced) | +1.3e-04 |
+| 0.75 (opposite) | 0.25×58, 0.75×2 | FAIL | B:52 | +2.5e-06 |
+
+**Verdict: V3 confound RESOLVED — the STOP is confound-free.** The neutral prefix DOES
+balance which node is stressed (34/26 vs the 0.25-prefix's A-always), so the prefix
+bias I flagged is real and now removed. Yet the optimal allocation stays a
+STATE-INDEPENDENT constant (0.25) in 55/60, with negligible clairvoyant-oracle headroom
+(1.3e-04), and from the opposite 0.75 prefix the optimum returns to 0.25. Spatial
+allocation has no state-contingent value under any prefix → **DRA-1 STOP is a
+legitimate, airtight 6th boundary result.**
+
+**Minor new finding (does NOT affect the STOP):** 0.25 (serve-B) is a GLOBAL attractor
+even from a 0.75 prefix — there is a mild environmental A/B asymmetry (likely the SHA
+destination split ~1986/2014 or the SPT_FULL tie-break `cssu=="A"`). Codex should note
+this if the write-up claims perfect A/B symmetry; relabel "stressed vs healthy node" or
+symmetrize the tie-break. It changes the presentation, not the verdict.
+
+**DRA-1 verification: COMPLETE.** Frontier PASS legitimate (V2-A addressed); branching
+STOP airtight (V3 raised, V4 resolved). No PPO warranted. Sixth boundary result stands.
