@@ -119,6 +119,33 @@ calib/holdout/virgin; selection matched the frozen learnability rule (not ΔReT-
 cell re-evaluated on fresh calib/holdout; multiplicity reported. §C machine checks still apply to
 the built physics.
 
+## F. VERIFIER AUDIT — screen executed and CLOSED (STOP_PROGRAM_F_SCREEN, a1278de) — LEGITIMATE
+
+Audited stage by stage against §D; numbers verified directly from `results/program_f/screen/
+verdict.json` (not the prose), runner logic read, physics tests re-run. All PASS:
+
+- **Discipline (§D):** design frozen before screen (`2b815d9`, SHA `300a2999…` matches doc);
+  screen seeds 970001–970288 (288 unique) — **zero** overlap with calib/holdout/virgin
+  (940001+/950001+/960001+ all `0` opened); `ppo_trained: False`. Selection key in the runner is
+  the frozen lowest-amplitude lexicographic order `(risk, efficacy, |signal−0.75|, dwell,
+  commitment, cell_id)` — NOT ΔReT; only admissible-AND-passing cells are candidates.
+- **Conversion is rollout, not accuracy:** runner L160 `conversion = tree_delta / oracle_ci[0]`,
+  L180 gate `conversion ≥ 0.50 AND tree_delta > 0`, tape-cross-fit sequential rollout. (Program E's
+  accuracy-vs-value lesson honored.)
+- **Physics sound:** 24/24 actuators live, 24/24 threat-CRN identity, max mass residual `0.0`;
+  `test_program_f_physics.py` 4/4 green.
+- **The STOP is real, not an artifact:** oracle headroom exists (16/24 cells; all **8 admissible
+  two-token cells** have positive clairvoyant ΔReT with CI95 lower > 0 — FSC-24 ΔReT 0.02258
+  CIlo +0.00671, DRA-2b magnitude), yet **observable-tree conversion passes 0/24** and every
+  admissible tree rollout delta is NEGATIVE (−0.012 … −0.029). Best conversion overall (FSC-15
+  0.471) is a 1-token boundary cell AND its oracle ΔReT 0.0079 < 0.01 — cannot pass either way.
+  FSC-24 (max headroom) was correctly NOT promoted (that would be the forbidden ΔReT-max rescue).
+
+Verdict: the chosen-physics objection (§B) is decisively resolved — the null holds across a
+24-cell phase diagram spanning efficacy/signal/dwell/budget/amplitude/commitment, not one guessed
+cell. This is the **7th boundary result**. Diagnostic ladder extended:
+`physical effect → action diversity → clairvoyant headroom ↛ observable rollout value`.
+
 ## E. Standing
 
 Standing: DRA-1, DRA-2, DRA-2b, Program E stay closed. Program F is ADDITIVE — the manuscript can
