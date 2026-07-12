@@ -158,3 +158,31 @@ symmetrize the tie-break. It changes the presentation, not the verdict.
 
 **DRA-1 verification: COMPLETE.** Frontier PASS legitimate (V2-A addressed); branching
 STOP airtight (V3 raised, V4 resolved). No PPO warranted. Sixth boundary result stands.
+
+## V5 — Counterbalanced symmetric-frame test (Codex's rebuttal was RIGHT; STOP now airtight)
+
+Codex correctly rejected V4's "airtight": my neutral-prefix check did not control for
+the mild B-attractor, so it could not separate a state-independent optimum from a
+state-contingent "serve/write-off the stressed node" rule. **V4's conclusion is
+withdrawn.** I ran the rigorous test Codex specified
+(`scripts/verify_dra1_stressed_frame.py`, `results/program_d/dra1_stressed_frame_v5.json`):
+
+- pooled branch states from 0.25/0.50/0.75 prefixes → **counterbalanced 95 A-stressed /
+  85 B-stressed** (both congestion directions present, no prefix bias);
+- relabelled actions symmetrically as `share_to_stressed`;
+- compared the BEST fixed `share_to_stressed` rule (a DYNAMIC allocation_a that flips
+  with which node is stressed — something a constant cannot replicate) against the BEST
+  constant allocation_a, grouped bootstrap by tape.
+
+**Result: `best_share_to_stressed − best_constant = −1.6e-05, CI95 [−8.3e-05, +4.7e-05]`
+— crosses zero, mean negative.** A state-contingent allocation does NOT beat the best
+constant. The optimal `share_to_stressed` is itself ~constant (0.25 = "write off the
+stressed node / concentrate on the recoverable one") in 175/180 states — a coherent but
+NEGLIGIBLE directional pattern that fails to beat the constant.
+
+**Verdict: DRA-1 STOP is now genuinely airtight** via the counterbalanced test — no
+prefix confound, no stressed-frame headroom. The weak "concentrate on the healthy node"
+tendency could at most motivate a trivial heuristic, not PPO (delta negative, CI crosses
+zero). Legitimate 6th boundary result, CONFIRMED. (Note: the adversarial exchange —
+V3 raise → V4 premature-close → Codex rebuttal → V5 rigorous close — is exactly how the
+verifier/builder split should work.)
