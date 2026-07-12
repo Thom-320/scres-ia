@@ -271,6 +271,43 @@ def oracle_action_dataset(tape: Tape, arm: str = "TRS"):
     return X, y
 
 
+def simulate_orders(tape: Tape, actions: Sequence[str], arm: str = "TRS") -> list:
+    """Daily order-level rollout emitting real OrderRecord objects, so the project's
+    ret_excel visible-ledger machinery can score Program G under its PRIMARY metric.
+    R22 is off in the primary screen -> orders carry no ReT risk indicator -> the
+    workbook no-risk fill-rate branch (1 - (Bt+Ut)/j) applies."""
+    from .supply_chain import OrderRecord
+    from .config import LEAD_TIME_PROMISE
+    inv = [0.0, 0.0]; sb = float(SB_INITIAL)
+    queues = [[], []]; orders = []; j = 0
+    for w in range(tape.weeks):
+        a = actions[w] if w < len(actions) else "HOLD"
+        pri = 0 if a == "A" else 1 if a == "B" else None
+        daily = [tape.demand[w, 0] / DEMAND_DAYS, tape.demand[w, 1] / DEMAND_DAYS]
+        for dow in range(DEMAND_DAYS):
+            hour = (w * DEMAND_DAYS + dow) * 24.0
+            sb += S1_DAILY
+            if pri is not None and dow in (1, 3, 5):        # 3 convoy cycles/week
+                deliver = min(CONVOY_LOAD, sb, CSSU_CAP - inv[pri])
+                inv[pri] += deliver; sb -= deliver
+            for i in range(2):
+                j += 1
+                o = OrderRecord(j=j, OPTj=hour, quantity=daily[i],
+                                LTj=float(LEAD_TIME_PROMISE), remaining_qty=daily[i])
+                queues[i].append(o); orders.append(o)
+            for i in range(2):
+                for o in queues[i]:
+                    if o.remaining_qty <= 1e-9 or inv[i] <= 0:
+                        continue
+                    take = min(inv[i], o.remaining_qty)
+                    inv[i] -= take; o.remaining_qty -= take
+                    if o.remaining_qty <= 1e-9 and o.OATj is None:
+                        o.OATj = hour; o.CTj = hour - o.OPTj
+                        o.backorder = bool(o.CTj > o.LTj)
+                queues[i] = [o for o in queues[i] if o.remaining_qty > 1e-9]
+    return orders
+
+
 def signal_hysteresis_policy(tape: Tape) -> tuple[str, ...]:
     """Observable: send convoy to the CSSU whose signal fires; tie/none -> lower inventory."""
     acts = []

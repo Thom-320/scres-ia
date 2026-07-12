@@ -1,0 +1,71 @@
+{
+  "frozen_best_calendar": [
+    "A",
+    "B",
+    "A",
+    "B"
+  ],
+  "gate": "PROGRAM_G_RETEXCEL_CONFIRMATION",
+  "holdout": {
+    "attended_delta_cover_minus_static_ci95": [
+      -2.905,
+      -3.7001250000000003,
+      -2.13
+    ],
+    "cover": {
+      "attended_orders_mean": 40.495,
+      "generated_orders_mean": 48.0,
+      "ret_excel_full_ledger_mean": 0.5315774863124215,
+      "ret_excel_visible_mean": 0.7944695872735454
+    },
+    "cover_minus_static_full_ledger_ci95": [
+      -0.028451440386696402,
+      -0.036687330848458606,
+      -0.020551909726842062
+    ],
+    "cover_minus_static_visible_ci95": [
+      -0.03106746979564211,
+      -0.042858394465457646,
+      -0.019692767878202767
+    ],
+    "static": {
+      "attended_orders_mean": 43.4,
+      "generated_orders_mean": 48.0,
+      "ret_excel_full_ledger_mean": 0.5600289266991179,
+      "ret_excel_visible_mean": 0.8255370570691875
+    }
+  },
+  "interpretation": "G_RETEXCEL_NO_WIN",
+  "metric": "ret_excel_visible_v1 + full-ledger guardrail",
+  "n_per_split": 200,
+  "note": "Real ret_excel machinery on emitted OrderRecords (disclosed daily adapter, no new shared-DES physics). Headline = FULL ledger (unfulfilled=0) + lost-order guardrail (attended not materially fewer), per the DRA-1 shed-to-win lesson.",
+  "virgin": {
+    "attended_delta_cover_minus_static_ci95": [
+      -3.255,
+      -4.075125,
+      -2.489875000000001
+    ],
+    "cover": {
+      "attended_orders_mean": 39.66,
+      "generated_orders_mean": 48.0,
+      "ret_excel_full_ledger_mean": 0.5139559415509516,
+      "ret_excel_visible_mean": 0.7799179229357363
+    },
+    "cover_minus_static_full_ledger_ci95": [
+      -0.033135812748754295,
+      -0.042268955966301834,
+      -0.024690616474684856
+    ],
+    "cover_minus_static_visible_ci95": [
+      -0.034696266912429365,
+      -0.04805725261286047,
+      -0.02276111734756582
+    ],
+    "static": {
+      "attended_orders_mean": 42.915,
+      "generated_orders_mean": 48.0,
+      "ret_excel_full_ledger_mean": 0.5470917542997058,
+      "ret_excel_visible_mean": 0.8146141898481655
+    }
+  }
+}

@@ -1,5 +1,13 @@
 # Program G — G5 final verdict (learner on the frozen region) — 2026-07-12
 
+> **⚠ SUPERSEDED HEADLINE (2026-07-12): the win below is SERVICE-LOSS-PROXY ONLY.** The ret_excel
+> confirmation (`docs/PROGRAM_G_RETEXCEL_CONFIRMATION_2026-07-12.md`) shows that under the project's
+> PRIMARY metric ret_excel, NO observable policy beats blind alternation (cover −0.036, ret_excel-native
+> tree −0.012), even though clairvoyant ret_excel headroom exists (+0.018). Program G is a boundary
+> result under ret_excel; the adaptive win here is an artifact of the ration-mass proxy. Read the two
+> docs together.
+
+
 Status: **`G5_LEARNER_BEATS_STATIC_OOS_NO_NEURAL_INCREMENT` — the project's FIRST virgin-confirmed
 observable adaptive-control win, delivered by an INTERPRETABLE depth-3 rule; PPO matches but does not
 beat it.** Run under PI autonomy (`docs/PROGRAM_G_AUTONOMY_AUTHORIZATION_2026-07-12.json`). Service-loss
