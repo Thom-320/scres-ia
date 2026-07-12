@@ -21,3 +21,13 @@ The paper exists independently of a positive PPO result.
 
 Target: C&IE. SMPT is the methodological backup. IJPR requires an interpretable,
 managerially defensible policy result.
+
+## Program G terminal addendum (2026-07-12)
+
+Program G remains a boundary result. Its earlier service-loss proxy win is not a robust
+adaptive headline: after a preregistered corrective audit on 400 newly locked tapes, the best
+periodic same-contract schedule (`ABAB`) beat cover, MPC, and both depth-3 trees on canonical
+order ReT, quantity-weighted ReT, attended orders, worst-CSSU fill, and terminal unfulfilled
+rations. The only allowed scope is the disclosed stylized spatial order adapter, not the full
+DES. Metric-induced ranking changes, including Cobb-Douglas-inspired scores, are construct
+sensitivity and never a rescue. No Program G PPO or retained-learning claim is authorized.

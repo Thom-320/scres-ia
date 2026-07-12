@@ -124,3 +124,14 @@ frontier" for the downstream 147-cell enumeration; "first DES–RL for SCRES";
 identified factorial); "only when the contract exposes dispatch"; "PPO beats
 strong static control"; "adaptive advantage" or "bottleneck value" without an
 explicit restricted-comparator qualifier.
+
+## Program G terminal status (2026-07-12)
+
+Program G is terminal under its stylized spatial-order contract:
+`STOP_PROGRAM_G_NO_ROBUST_ADAPTIVE_VALUE_UNDER_STYLIZED_CONTRACT`. The authoritative
+artifacts are `docs/PROGRAM_G_TERMINAL_METRIC_AUDIT_VERDICT_2026-07-12.md` and
+`results/program_g/terminal_metric_audit/verdict.json`. The corrective run used a 168-hour
+week, the canonical cumulative ReT ledger, quantity-weighted ReT, 200 new calibration tapes,
+and 400 locked terminal tapes. No observable policy passed the joint guardrails against the
+best periodic static (`ABAB`). Earlier G5 language describing a virgin observable adaptive win
+is historical for its service-loss proxy only and must not be used as the paper headline.
