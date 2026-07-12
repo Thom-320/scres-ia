@@ -1,0 +1,123 @@
+{
+  "best_observable_on_virgin": "cover",
+  "frozen_best_calendar": [
+    "A",
+    "B",
+    "A",
+    "B"
+  ],
+  "gate": "PROGRAM_G_G3_G5_LEARNER",
+  "holdout": {
+    "eta_vs_oracle": {
+      "bandit": 0.6778907242693774,
+      "cover": 0.6778907242693774,
+      "mpc": 0.45313704251463327,
+      "ppo": 0.6840148311704544,
+      "tree": 0.6778907242693774
+    },
+    "label": "holdout",
+    "mean_service_loss": {
+      "bandit": 24929.2875,
+      "best_static": 25471.679166666665,
+      "cover": 24929.2875,
+      "mpc": 25109.116666666665,
+      "oracle": 24671.5625,
+      "ppo": 24924.3875,
+      "tree": 24929.2875
+    },
+    "ppo_minus_cover_ci95": [
+      4.9,
+      -79.2090625,
+      83.05447916666651
+    ],
+    "vs_static_ci95": {
+      "bandit": [
+        542.3916666666667,
+        382.1090625,
+        714.943125
+      ],
+      "cover": [
+        542.3916666666667,
+        382.1090625,
+        714.943125
+      ],
+      "mpc": [
+        362.5625,
+        189.36625,
+        547.1627083333333
+      ],
+      "ppo": [
+        547.2916666666666,
+        365.1226041666667,
+        727.7165624999998
+      ],
+      "tree": [
+        542.3916666666667,
+        382.1090625,
+        714.943125
+      ]
+    }
+  },
+  "interpretation": "G5_LEARNER_BEATS_STATIC_OOS_NO_NEURAL_INCREMENT",
+  "n_per_split": 240,
+  "note": "Region = 12 surge-1.50 cells (uniform). Service-loss proxy, disclosed. Tree/bandit fit on TRAIN clairvoyant actions; static frozen on TRAIN; PPO trained once on TRAIN; ALL evaluated on disjoint holdout + virgin.",
+  "ppo": {
+    "algo": "MaskablePPO",
+    "seed": 9701,
+    "timesteps": 60000
+  },
+  "ppo_beats_cover_incrementally": false,
+  "region_cells": 12,
+  "tree_depth": 3,
+  "virgin": {
+    "eta_vs_oracle": {
+      "bandit": 0.734217654383014,
+      "cover": 0.734217654383014,
+      "mpc": 0.4634712422726578,
+      "ppo": 0.6554042246444877,
+      "tree": 0.734217654383014
+    },
+    "label": "virgin",
+    "mean_service_loss": {
+      "bandit": 25560.408333333333,
+      "best_static": 26120.604166666668,
+      "cover": 25560.408333333333,
+      "mpc": 25766.983333333334,
+      "oracle": 25357.620833333334,
+      "ppo": 25620.541666666668,
+      "tree": 25560.408333333333
+    },
+    "ppo_minus_cover_ci95": [
+      -60.13333333333333,
+      -130.39302083333334,
+      7.742499999999995
+    ],
+    "vs_static_ci95": {
+      "bandit": [
+        560.1958333333333,
+        407.70020833333336,
+        736.8651041666666
+      ],
+      "cover": [
+        560.1958333333333,
+        407.70020833333336,
+        736.8651041666666
+      ],
+      "mpc": [
+        353.62083333333334,
+        190.40802083333332,
+        543.1084374999998
+      ],
+      "ppo": [
+        500.0625,
+        328.1147916666667,
+        697.8568749999998
+      ],
+      "tree": [
+        560.1958333333333,
+        407.70020833333336,
+        736.8651041666666
+      ]
+    }
+  }
+}

@@ -234,6 +234,43 @@ def mpc_policy(tape: Tape, arm: str = "TRS", horizon: int = 2) -> tuple[str, ...
     return tuple(acts)
 
 
+OBS_KEYS = ("signal_A", "signal_B", "inv_A_frac", "inv_B_frac", "cover_A", "cover_B", "week_phase")
+
+
+def observe(inv, sb, tape: Tape, w: int) -> np.ndarray:
+    """Deployable observation at the START of week w (no latent tempo, no future)."""
+    routine_wk = 2600.0 / 2 * DEMAND_DAYS
+    return np.array([
+        float(tape.signal[w, 0]), float(tape.signal[w, 1]),
+        inv[0] / CSSU_CAP, inv[1] / CSSU_CAP,
+        inv[0] / routine_wk, inv[1] / routine_wk,
+        w / max(tape.weeks - 1, 1),
+    ], dtype=np.float32)
+
+
+def rollout_policy(tape: Tape, policy_fn: Callable[[np.ndarray], int], arm: str = "TRS"):
+    """Closed-loop rollout: policy_fn(obs)->action index. Returns (service_loss, obs_rows, acts)."""
+    inv = np.zeros(2); sb = float(SB_INITIAL); persistent = arm in ("TR", "TRS", "TRSC")
+    unmet = 0.0; rows = []; acts = []
+    for w in range(tape.weeks):
+        o = observe(inv, sb, tape, w); rows.append(o)
+        a_idx = int(policy_fn(o)); acts.append(ACTIONS[a_idx])
+        inv, sb, u = _week_step(inv, sb, ACTIONS[a_idx], tape.demand[w], tape.r22[w], persistent)
+        unmet += u
+    return unmet, rows, acts
+
+
+def oracle_action_dataset(tape: Tape, arm: str = "TRS"):
+    """(observable state at week w, clairvoyant open-loop best action) along the oracle path."""
+    _, best_seq = enumerate_oracle(tape, arm=arm)
+    inv = np.zeros(2); sb = float(SB_INITIAL); persistent = arm in ("TR", "TRS", "TRSC")
+    X, y = [], []
+    for w in range(tape.weeks):
+        X.append(observe(inv, sb, tape, w)); y.append(ACTIONS.index(best_seq[w]))
+        inv, sb, _ = _week_step(inv, sb, best_seq[w], tape.demand[w], tape.r22[w], persistent)
+    return X, y
+
+
 def signal_hysteresis_policy(tape: Tape) -> tuple[str, ...]:
     """Observable: send convoy to the CSSU whose signal fires; tie/none -> lower inventory."""
     acts = []
