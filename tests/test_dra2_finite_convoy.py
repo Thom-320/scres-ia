@@ -35,6 +35,49 @@ def test_dispatch_consumes_one_convoy_and_returns_after_48_hours():
     assert sim.op8_convoy_metrics()["op8_convoy_load_factor"] == pytest.approx(0.6)
 
 
+def test_dispatch_and_hold_change_future_feasibility_and_resource_state():
+    """G-A: the action must change tomorrow, not merely today's flow label."""
+    dispatch = make_sim()
+    hold = make_sim()
+    seed_staging(dispatch, 3_000)
+    seed_staging(hold, 3_000)
+
+    dispatch.apply_op8_convoy_action("DISPATCH_NOW")
+    hold.apply_op8_convoy_action("HOLD")
+
+    dispatch.env.run(until=24.001)
+    hold.env.run(until=24.001)
+    assert not dispatch.op8_convoy_dispatch_feasible()
+    assert hold.op8_convoy_dispatch_feasible()
+    assert dispatch.op8_convoy_departures > hold.op8_convoy_departures
+
+    dispatch.env.run(until=48.001)
+    hold.env.run(until=48.001)
+    assert dispatch.op8_convoy_available
+    assert hold.op8_convoy_available
+    # The slot reconverges after its contracted cycle, but the resource and
+    # inventory histories do not: HOLD preserved the staged load.
+    assert dispatch.rations_al.level == pytest.approx(0.0)
+    assert hold.rations_al.level == pytest.approx(3_000.0)
+    assert dispatch.op8_convoy_departures == 1
+    assert hold.op8_convoy_departures == 0
+
+
+def test_nominal_and_actual_return_match_when_route_is_up():
+    """Regression for the reported 54 h artifact: no hidden 6 h delay."""
+    sim = make_sim()
+    seed_staging(sim, 5_000)
+    departed_at = float(sim.env.now)
+    sim.apply_op8_convoy_action("DISPATCH_NOW")
+    nominal = float(sim.op8_convoy_nominal_return_at)
+
+    sim.env.run(until=departed_at + 48.001)
+
+    assert nominal == pytest.approx(departed_at + 48.0)
+    assert sim.op8_convoy_actual_return_at == pytest.approx(nominal)
+    assert sim.op8_convoy_route_wait_hours == pytest.approx(0.0)
+
+
 def test_partial_departure_loses_unused_lift_and_cannot_overlap():
     sim = make_sim()
     seed_staging(sim, 2_500)

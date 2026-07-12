@@ -77,6 +77,8 @@
     "tree_oracle_capture_min": 0.50,
     "favorable_heldout_tape_fraction_min": 0.70,
     "mass_and_convoy_conservation_required": true,
+    "resource_comparison_primary": "For each candidate dynamic policy, select the best calibration-static policy satisfying static departures <= candidate departures AND static vehicle_hours <= candidate vehicle_hours; the dynamic policy must beat that resource-envelope comparator. If no eligible static comparator exists, no superiority claim is allowed.",
+    "resource_comparison_secondary": "Report the joint ReT-service-loss-departures-vehicle-hours-load-factor Pareto frontier; Pareto non-dominance alone does not establish adaptive superiority.",
     "equal_resource_or_pareto_required": true
   },
   "scientific_state": {
@@ -84,6 +86,8 @@
     "static_frontier_runner_complete": true,
     "branching_runner_complete": true,
     "smoke_verified": true,
+    "software_preflight_complete": true,
+    "software_preflight_verdict": "PASS_SOFTWARE_PREFLIGHT_AWAITING_GARRIDO_FACE_VALIDATION",
     "calibration_opened": false,
     "ppo_trained": false,
     "verdict": "IMPLEMENTED_AWAITING_GARRIDO_FACE_VALIDATION"

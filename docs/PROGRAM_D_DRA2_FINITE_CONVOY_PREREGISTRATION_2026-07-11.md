@@ -69,6 +69,31 @@ Required physical consistency: service-loss AUC. Secondary: fill, backlog AUC,
 maximum backlog age, CT/RP, lost orders, tail service loss, departures,
 vehicle-hours, route waiting and load factor.
 
+### Frozen resource-equivalence estimand
+
+The primary adaptive comparison is not an unconstrained comparison with the
+globally best static policy. For each candidate dynamic policy, the comparator
+is the best calibration-selected static policy inside the candidate's resource
+envelope:
+
+```text
+static departures <= candidate departures
+AND static vehicle-hours <= candidate vehicle-hours.
+```
+
+If no static policy satisfies that envelope, no adaptive-superiority claim is
+allowed. The joint outcome-resource Pareto frontier is required as a secondary
+analysis, but Pareto non-dominance by itself is not evidence that adaptation
+created value.
+
+### Strong liveness definition
+
+An epoch is live only when both actions are admissible and produce different
+physical/resource trajectories under exact CRN replay. Dispatch feasibility
+alone is an implementation diagnostic, not the confirmatory G-B numerator.
+The difference must appear in at least one of convoy availability/ETA, staged
+inventory, inventory in transit, departures, or the next feasible action set.
+
 ## Promotion
 
 Promote to observable policy only if all frozen thresholds in
