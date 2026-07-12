@@ -1275,6 +1275,11 @@ class MFSCSimulation:
                     description=str(row.get("description", "") or ""),
                     magnitude=float(row.get("magnitude", 1.0) or 1.0),
                     unit=str(row.get("unit", "incidents") or "incidents"),
+                    affected_cssu=(
+                        str(row["affected_cssu"])
+                        if row.get("affected_cssu") in {"A", "B"}
+                        else None
+                    ),
                 )
             normalized.append(event)
         return sorted(normalized, key=lambda ev: (float(ev.start_time), str(ev.risk_id)))
@@ -1306,6 +1311,8 @@ class MFSCSimulation:
             self._contingent_demand_pending = min(
                 self._contingent_demand_pending, 5 * 2600
             )
+            if self.cssu_topology_mode == "split_v1":
+                self._contingent_cssu_destination_pending = event.affected_cssu
             replayed = RiskEvent(
                 risk_id,
                 start,
@@ -1315,6 +1322,7 @@ class MFSCSimulation:
                 event.description,
                 magnitude=surge,
                 unit=event.unit or "rations",
+                affected_cssu=event.affected_cssu,
             )
             self.risk_events.append(replayed)
             self._add_ret_quantity_risk(replayed)
@@ -1357,11 +1365,21 @@ class MFSCSimulation:
             return
 
         if duration > 0.0 and affected_ops:
+            local = (
+                self.cssu_topology_mode == "split_v1"
+                and event.affected_cssu in {"A", "B"}
+            )
             for op_id in affected_ops:
-                self._take_down(op_id)
+                if local and op_id in {10, 11, 12}:
+                    self._take_down_cssu(op_id, event.affected_cssu)
+                else:
+                    self._take_down(op_id)
             yield self.env.timeout(duration)
             for op_id in affected_ops:
-                self._bring_up(op_id)
+                if local and op_id in {10, 11, 12}:
+                    self._bring_up_cssu(op_id, event.affected_cssu)
+                else:
+                    self._bring_up(op_id)
             end = float(self.env.now)
             self.risk_events.append(
                 RiskEvent(
@@ -1373,6 +1391,7 @@ class MFSCSimulation:
                     event.description,
                     magnitude=float(event.magnitude),
                     unit=event.unit,
+                    affected_cssu=event.affected_cssu,
                 )
             )
             return
