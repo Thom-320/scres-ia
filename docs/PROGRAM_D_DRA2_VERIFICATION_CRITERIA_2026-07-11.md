@@ -136,3 +136,39 @@ unpushed pile is growing; push before stacking more.
 automatic unused-capacity reallocation — CSSU allocation shows scarce, sporadic,
 operationally negligible dynamic value." Do NOT claim perfect A/B symmetry or that 0.25
 is intrinsically optimal (0.8% SHA asymmetry disclosed; label-swap test retained).
+
+---
+## Verification — calibration gate result (commit 6e5d5b9, tag dra2-stop-2026-07-12)
+
+Independent audit of `resource_gate_verdict.json`. **STOP_DRA2_PRE_RL_GATE is legitimate
+and DRA-2 is the FIRST family with material, resource-matched dynamic headroom.**
+
+- All my corrections were applied: strong_liveness_pass, diversity_pass,
+  resource_envelope_pass all True; prefix-balanced states; realized-pattern diversity.
+- **Passes are real:** oracle ReT +0.02662 CI95[+0.0165,+0.0373] (≥0.01); service-loss
+  −5.17% CI95[3.27,7.05] (≥5%); lost-orders Δ=0 (no shedding). This is ~300× the D1/DRA-1
+  headroom (8.5e-05) — genuinely different.
+- **Resource-matching VERIFIED genuine (not a purchase):** the dominance comparator
+  `threshold_5000/wait_72h` uses FEWER resources than the dynamic candidate (departures
+  12.25 ≤ 12.55; unavailable-hours 574 ≤ 592.4) and the dynamic still wins +0.02662.
+  `resource_envelope_pass: True`. The win is not bought with more convoys.
+- **STOP reason is the horizon-sufficiency gate (my Decision 1.5), and it is CORRECT +
+  DISCIPLINED.** 7d/10d first-action agreement 91.67% (direction fairly stable) BUT
+  headroom-magnitude stability FAILED — the clairvoyant optimal *value* is
+  horizon-unstable, so the 7-day labels don't characterize the true value and training a
+  tree/PPO on them would be dishonest. The frozen rule required BOTH; only one held → STOP.
+  Goalpost NOT moved despite the 91.67% temptation. observable_tree_authorized=false,
+  ppo_authorized=false, holdout/virgin/PPO untouched.
+
+**Verifier verdict:** DRA-2 is the first genuine crack toward adaptive value — real
+clairvoyant, diverse, resource-matched headroom — correctly stopped short of PPO because
+the signal is not horizon-converged. The clairvoyant +0.02662 is an H_PI upper bound, NOT
+a deployable result (the observable-tree conversion was never run). 
+
+**On DRA-2b (Codex's external-review question): WARRANTED and disciplined.** The finding
+"material headroom but horizon-unstable" points exactly to a NEW study with a long
+decision horizon FIXED EX ANTE (e.g., match/exceed the backlog-clearing timescale; freeze
+the sequence horizon before any calibration). Conditions: new preregistration, new tapes,
+does NOT alter this STOP, NOT presented as a confirmatory continuation of DRA-2. If DRA-2b
+shows STABLE, resource-matched, observable-convertible headroom → it is the first
+legitimate path to PPO. If not → 7th boundary result. This is the honest door to RL.
