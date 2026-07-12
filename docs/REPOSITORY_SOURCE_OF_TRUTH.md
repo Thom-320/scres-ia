@@ -145,3 +145,13 @@ rollout policy on 400 locked tapes. The best order-ReT delta was +0.00225 with C
 remained material (+0.01641), so formal information insufficiency was not established. Seeds
 1080001+ were not opened and no Program H RL was trained. This is the last computational
 extension of the stylized spatial contract.
+
+## Paper 2 bottleneck-migration screen (2026-07-13)
+
+The first thesis-wide Op3–Op13 response-team contract ended at
+`STOP_NO_ADAPTIVE_BOTTLENECK_VALUE`. A signal-adaptive policy allocated one equal-cost team
+among manufacturing, LOC and mission response, but lost to calibration-frozen constant M on
+120 locked tapes: ReT delta -0.001309, CI95 [-0.006384,+0.003093], 53.3% favorable tapes, and
+service-loss change -3.03% (worse). CRN, mass and equal team-hours passed. PPO was blocked and
+1120001+ stayed unopened. This is a confirmed adaptive-negative result under a declared
+high-authority extension; do not escalate the same efficacy/signal cell after observing it.
