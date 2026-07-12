@@ -1,0 +1,20 @@
+{
+  "contract_id": "paper2_bottleneck_migration_v1",
+  "status": "FROZEN_BEFORE_1100001",
+  "actions": {"M": [1,0,0], "T": [0,1,0], "R": [0,0,1]},
+  "activation_lag_weeks": 1,
+  "resource": "one_response_team_week_equal_by_construction",
+  "efficacy": {"r11_duration_factor_M": 0.20, "r22_r23_duration_factor_T": 0.20,
+               "r24_reserve_issue_R": 5000},
+  "signal_balanced_accuracy": 0.85,
+  "context_dwell_weeks": [4,8],
+  "weeks": 24,
+  "calibration": {"seed_start": 1100001, "n": 60},
+  "locked": {"seed_start": 1110001, "n": 120},
+  "learner_virgin": {"seed_start": 1120001, "opened_only_after_gate": true},
+  "ppo_during_selection": false,
+  "pass": {"ret_delta_min": 0.01, "ret_lcb_gt_zero": true,
+           "service_reduction_min": 0.05, "service_lcb_gt_zero": true,
+           "lost_noninferior": true, "favorable_tapes_min": 0.70,
+           "equal_team_hours": true, "crn_and_mass": true}
+}
