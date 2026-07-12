@@ -24,6 +24,17 @@ DEFAULT_FRONTIER = Path("results/program_d/dra2_static_frontier_smoke")
 DEFAULT_OUTPUT = Path("results/program_d/dra2_exact_branching_smoke")
 SHORT_HOURS = 72.0
 LONG_HOURS = 28.0 * HOURS_PER_DAY
+PREFIX_POLICIES = (
+    ConvoyThresholdPolicy(1_000.0, 24.0),
+    ConvoyThresholdPolicy(2_500.0, 48.0),
+    ConvoyThresholdPolicy(5_000.0, 48.0),
+    ConvoyThresholdPolicy(5_000.0, 72.0),
+)
+PRIMARY_SEQUENCE_DAYS = 7
+SENSITIVITY_SEQUENCE_DAYS = 10
+SENSITIVITY_STATE_LIMIT = 12
+RET_TIE_TOLERANCE = 1e-9
+SERVICE_TIE_TOLERANCE = 1e-9
 
 
 def write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
@@ -47,7 +58,7 @@ def advance_prefix_to(sim, start: float, relative_time: float, policy: ConvoyThr
         advance_including(sim, min(target, float(sim.env.now) + HOURS_PER_DAY))
 
 
-def select_states(tape: dict[str, Any], policy: ConvoyThresholdPolicy, n_states: int = 4) -> list[dict[str, Any]]:
+def select_state(tape: dict[str, Any], policy: ConvoyThresholdPolicy) -> dict[str, Any]:
     sim, start = make_sim(tape)
     end = start + int(tape["horizon_weeks"]) * 7 * HOURS_PER_DAY - LONG_HOURS
     candidates: list[dict[str, Any]] = []
@@ -70,31 +81,33 @@ def select_states(tape: dict[str, Any], policy: ConvoyThresholdPolicy, n_states:
     if not candidates:
         raise RuntimeError(f"No live DRA-2 state in {tape['tape_id']}")
 
-    chosen: list[dict[str, Any]] = []
-    selectors = [
-        lambda rows: min(rows, key=lambda row: row["op7_staged_inventory"]),
-        lambda rows: max(rows, key=lambda row: row["op7_staged_inventory"]),
-        lambda rows: max(rows, key=lambda row: row["downstream_backlog_qty"]),
-        lambda rows: max(
-            [row for row in rows if row["recent_route_recovery"]] or rows,
-            key=lambda row: (row["recent_route_recovery"], row["staging_age"]),
-        ),
-    ]
-    for selector in selectors:
-        remaining = [row for row in candidates if row["relative_time"] not in {x["relative_time"] for x in chosen}]
-        if not remaining:
-            break
-        chosen.append(selector(remaining))
-    while len(chosen) < min(n_states, len(candidates)):
-        remaining = [row for row in candidates if row["relative_time"] not in {x["relative_time"] for x in chosen}]
-        chosen.append(remaining[0])
-    result = []
-    for index, row in enumerate(chosen[:n_states]):
-        result.append(
-            {"state_id": f"{tape['tape_id']}|state={index}",
-             "tape_id": tape["tape_id"], "family": tape["family"], **row}
+    if policy.policy_id == "threshold_1000__wait_24h":
+        row = min(candidates, key=lambda item: item["op7_staged_inventory"])
+    elif policy.policy_id == "threshold_2500__wait_48h":
+        row = max(candidates, key=lambda item: item["downstream_backlog_qty"])
+    elif policy.policy_id == "threshold_5000__wait_48h":
+        row = max(
+            [item for item in candidates if item["recent_route_recovery"]] or candidates,
+            key=lambda item: (item["recent_route_recovery"], item["staging_age"]),
         )
-    return result
+    else:
+        row = max(candidates, key=lambda item: item["op7_staged_inventory"])
+    return {
+        "state_id": f"{tape['tape_id']}|prefix={policy.policy_id}",
+        "tape_id": tape["tape_id"],
+        "family": tape["family"],
+        "prefix_policy_id": policy.policy_id,
+        "prefix_inventory_threshold": policy.inventory_threshold,
+        "prefix_maximum_wait_hours": policy.maximum_wait_hours,
+        **row,
+    }
+
+
+def state_policy(state: dict[str, Any]) -> ConvoyThresholdPolicy:
+    return ConvoyThresholdPolicy(
+        float(state["prefix_inventory_threshold"]),
+        float(state["prefix_maximum_wait_hours"]),
+    )
 
 
 def branch_actions(
@@ -110,6 +123,7 @@ def branch_actions(
     action_iter = iter(forced_actions)
     forced_remaining = True
     short_metrics = None
+    t1_signature = None
     end = state_time + LONG_HOURS
     while sim.env.now < end - 1e-9:
         if forced_remaining:
@@ -123,6 +137,19 @@ def branch_actions(
         sim.apply_op8_convoy_action(action, source="forced_sequence" if forced_remaining else "continuation")
         next_time = min(end, float(sim.env.now) + HOURS_PER_DAY)
         advance_including(sim, next_time)
+        if t1_signature is None:
+            obs = sim.get_op8_convoy_observation()
+            t1_signature = json.dumps(
+                {
+                    "convoy_available": obs["convoy_available"],
+                    "dispatch_feasible": sim.op8_convoy_dispatch_feasible(),
+                    "staged": obs["op7_staged_inventory"],
+                    "in_transit": float(sim._in_transit),
+                    "departures": float(sim.op8_convoy_departures),
+                    "unavailable_hours": float(sim.op8_convoy_vehicle_hours),
+                },
+                sort_keys=True,
+            )
         if short_metrics is None and sim.env.now >= state_time + SHORT_HOURS - 1e-9:
             short_metrics = episode_metrics_from(sim, state_time)
     long_metrics = episode_metrics_from(sim, state_time)
@@ -145,6 +172,7 @@ def branch_actions(
         "risk_sha256": hashes["risk_sha256"],
         "demand_sha256": hashes["demand_sha256"],
         "realized_departure_pattern": json.dumps(realized),
+        "t1_physical_signature": t1_signature,
         **resources,
     }
 
@@ -160,14 +188,20 @@ def main() -> int:
     frontier = json.loads((args.frontier_dir / "verdict.json").read_text())
     if frontier["interpretation"] not in {"IMPLEMENTATION_SMOKE_PASS", "PASS_STATIC_FRONTIER"}:
         raise RuntimeError("DRA-2 static frontier did not pass")
-    policy = policy_from_verdict(frontier)
     tapes = json.loads((args.frontier_dir / "tapes.json").read_text())
-    states = [state for tape in tapes for state in select_states(tape, policy, args.states_per_tape)]
+    if args.states_per_tape != 4:
+        raise RuntimeError("DRA-2 contract requires exactly four balanced prefixes per tape")
+    states = [
+        select_state(tape, policy)
+        for tape in tapes
+        for policy in PREFIX_POLICIES
+    ]
     write_csv(args.output_dir / "states.csv", states)
     tape_map = {tape["tape_id"]: tape for tape in tapes}
 
     one_rows: list[dict[str, Any]] = []
     for state in states:
+        policy = state_policy(state)
         expected = None
         for action in ACTIONS:
             result = branch_actions(tape_map[state["tape_id"]], state, policy, (action,))
@@ -202,16 +236,22 @@ def main() -> int:
         if not progressed:
             break
     sequence_rows: list[dict[str, Any]] = []
-    sequences = tuple(product(ACTIONS, repeat=7))
-    for state in sequence_states:
-        for sequence in sequences:
-            result = branch_actions(tape_map[state["tape_id"]], state, policy, sequence)
-            sequence_rows.append(
-                {"state_id": state["state_id"], "tape_id": state["tape_id"],
-                 "family": state["family"], "sequence": "|".join(sequence),
-                 "first_action": sequence[0], **result}
-            )
-        print(f"[dra2-sequence] {state['state_id']} 128 sequences complete", flush=True)
+    for state_index, state in enumerate(sequence_states):
+        policy = state_policy(state)
+        horizons = [PRIMARY_SEQUENCE_DAYS]
+        if state_index < min(SENSITIVITY_STATE_LIMIT, len(sequence_states)):
+            horizons.append(SENSITIVITY_SEQUENCE_DAYS)
+        for days in horizons:
+            for sequence in product(ACTIONS, repeat=days):
+                result = branch_actions(tape_map[state["tape_id"]], state, policy, sequence)
+                sequence_rows.append(
+                    {"state_id": state["state_id"], "tape_id": state["tape_id"],
+                     "family": state["family"], "sequence_days": days,
+                     "sequence": "|".join(sequence),
+                     "first_action": sequence[0], **result}
+                )
+        print(f"[dra2-sequence] {state['state_id']} 7d primary"
+              f"{' + 10d sensitivity' if len(horizons) > 1 else ''} complete", flush=True)
     write_csv(args.output_dir / "sequence_rows.csv", sequence_rows)
 
     by_state: dict[str, list[dict[str, Any]]] = {}
@@ -220,9 +260,33 @@ def main() -> int:
     one_oracle = []
     for state_id, rows in by_state.items():
         hold = next(row for row in rows if row["action"] == "HOLD")
+        dispatch = next(row for row in rows if row["action"] == "DISPATCH_NOW")
         best = max(rows, key=lambda row: (float(row["long_ret"]), -float(row["long_service"])))
+        ret_gap = float(best["long_ret"]) - float(
+            dispatch["long_ret"] if best["action"] == "HOLD" else hold["long_ret"]
+        )
+        other = dispatch if best["action"] == "HOLD" else hold
+        service_relative = (
+            float(other["long_service"]) - float(best["long_service"])
+        ) / max(abs(float(other["long_service"])), 1.0)
+        supported = (
+            best["action"]
+            if ret_gap > RET_TIE_TOLERANCE
+            or (
+                abs(ret_gap) <= RET_TIE_TOLERANCE
+                and service_relative > SERVICE_TIE_TOLERANCE
+            )
+            else "NONE_TIE_OR_ZERO"
+        )
         one_oracle.append(
             {"state_id": state_id, "optimal_action": best["action"],
+             "diversity_supported_action": supported,
+             "ret_gap_vs_other": ret_gap,
+             "service_improvement_vs_other": service_relative,
+             "strong_live": hold["t1_physical_signature"] != next(
+                 row["t1_physical_signature"] for row in rows
+                 if row["action"] == "DISPATCH_NOW"
+             ),
              "delta_ret_vs_hold": float(best["long_ret"]) - float(hold["long_ret"]),
              "service_improvement_vs_hold": (
                  float(hold["long_service"]) - float(best["long_service"])
@@ -232,17 +296,59 @@ def main() -> int:
 
     seq_by_state: dict[str, list[dict[str, Any]]] = {}
     for row in sequence_rows:
-        seq_by_state.setdefault(row["state_id"], []).append(row)
+        seq_by_state.setdefault(f"{row['state_id']}|days={row['sequence_days']}", []).append(row)
     sequence_oracle = []
-    for state_id, rows in seq_by_state.items():
+    for state_day_id, rows in seq_by_state.items():
+        state_id, days_text = state_day_id.rsplit("|days=", 1)
         best = max(rows, key=lambda row: (float(row["long_ret"]), -float(row["long_service"])))
+        all_hold = next(row for row in rows if set(row["sequence"].split("|")) == {"HOLD"})
         sequence_oracle.append(
-            {"state_id": state_id, "best_sequence": best["sequence"],
+            {"state_id": state_id, "sequence_days": int(days_text),
+             "family": best["family"],
+             "best_sequence": best["sequence"],
              "optimal_first_action": best["first_action"],
              "long_ret": best["long_ret"], "long_service": best["long_service"],
+             "delta_ret_vs_all_hold": float(best["long_ret"]) - float(all_hold["long_ret"]),
              "realized_departure_pattern": best["realized_departure_pattern"]}
         )
     write_csv(args.output_dir / "sequence_oracle.csv", sequence_oracle)
+
+    oracle_by_state_day = {
+        (row["state_id"], int(row["sequence_days"])): row
+        for row in sequence_oracle
+    }
+    sensitivity_pairs = []
+    for state in sequence_states[:min(SENSITIVITY_STATE_LIMIT, len(sequence_states))]:
+        primary = oracle_by_state_day[(state["state_id"], PRIMARY_SEQUENCE_DAYS)]
+        sensitivity = oracle_by_state_day[(state["state_id"], SENSITIVITY_SEQUENCE_DAYS)]
+        h7 = float(primary["delta_ret_vs_all_hold"])
+        h10 = float(sensitivity["delta_ret_vs_all_hold"])
+        sensitivity_pairs.append(
+            {
+                "state_id": state["state_id"],
+                "family": state["family"],
+                "first_action_agrees": (
+                    primary["optimal_first_action"] == sensitivity["optimal_first_action"]
+                ),
+                "headroom_7d": h7,
+                "headroom_10d": h10,
+                "absolute_headroom_change": abs(h10 - h7),
+                "relative_headroom_change": (
+                    abs(h10 - h7) / max(abs(h7), 1e-12)
+                ),
+                "sign_flip": (h7 > 0) != (h10 > 0),
+            }
+        )
+    write_csv(args.output_dir / "sequence_sufficiency.csv", sensitivity_pairs)
+    first_action_agreement = sum(
+        row["first_action_agrees"] for row in sensitivity_pairs
+    ) / max(len(sensitivity_pairs), 1)
+    stable_headroom = all(
+        row["absolute_headroom_change"] <= 0.002
+        and row["relative_headroom_change"] <= 0.20
+        for row in sensitivity_pairs
+    )
+    no_family_sign_flip = not any(row["sign_flip"] for row in sensitivity_pairs)
 
     verdict = {
         "gate": "DRA2_BRANCHING_IMPLEMENTATION_SMOKE",
@@ -250,20 +356,50 @@ def main() -> int:
         "n_one_action_rollouts": len(one_rows),
         "n_sequence_states": len(sequence_states),
         "n_sequence_rollouts": len(sequence_rows),
+        "sequence_days": [PRIMARY_SEQUENCE_DAYS, SENSITIVITY_SEQUENCE_DAYS],
         "unique_realized_sequence_patterns": len({row["realized_departure_pattern"] for row in sequence_rows}),
         "one_action_optimal_counts": {
             action: sum(row["optimal_action"] == action for row in one_oracle)
             for action in ACTIONS
         },
-        "sequence_first_action_counts": {
-            action: sum(row["optimal_first_action"] == action for row in sequence_oracle)
+        "one_action_diversity_supported_counts": {
+            action: sum(row["diversity_supported_action"] == action for row in one_oracle)
+            for action in (*ACTIONS, "NONE_TIE_OR_ZERO")
+        },
+        "tie_tolerances": {
+            "ret": RET_TIE_TOLERANCE,
+            "service_relative": SERVICE_TIE_TOLERANCE,
+        },
+        "sequence_first_action_counts_7d": {
+            action: sum(
+                row["optimal_first_action"] == action
+                and row["sequence_days"] == PRIMARY_SEQUENCE_DAYS
+                for row in sequence_oracle
+            )
             for action in ACTIONS
+        },
+        "strong_live_fraction": sum(row["strong_live"] for row in one_oracle) / max(len(one_oracle), 1),
+        "g_b_strong_liveness_pass": (
+            sum(row["strong_live"] for row in one_oracle) / max(len(one_oracle), 1)
+        ) >= 0.20,
+        "restricted_sequence_oracle": True,
+        "sequence_sufficiency": {
+            "n_states": len(sensitivity_pairs),
+            "first_action_agreement": first_action_agreement,
+            "headroom_stability_pass": stable_headroom,
+            "no_sign_flip_pass": no_family_sign_flip,
+            "pass": (
+                first_action_agreement >= 0.90
+                and stable_headroom
+                and no_family_sign_flip
+            ),
         },
         "prefix_identity_pass": True,
         "crn_pass": True,
         "mass_pass": max(float(row["mass_residual"]) for row in one_rows + sequence_rows) <= 1e-6,
         "convoy_conservation_pass": max(abs(float(row["op8_convoy_resource_residual"])) for row in one_rows + sequence_rows) <= 1e-9,
-        "face_validation_accepted": bool(frontier["face_validation_accepted"]),
+        "authorization_record": frontier.get("authorization_record"),
+        "authorization_decision": frontier.get("authorization_decision"),
         "calibration_opened": bool(frontier["calibration_opened"]),
         "virgin_tapes_opened": 0, "ppo_trained": False,
         "interpretation": "IMPLEMENTATION_SMOKE_PASS",

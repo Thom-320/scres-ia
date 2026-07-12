@@ -1,4 +1,8 @@
-# DRA-2 face-validation request for Garrido
+# DRA-2 face-validation request for Garrido — SUPERSEDED
+
+This request was superseded on 2026-07-12 by the PI-delegated autonomy record
+`PROGRAM_D_DRA2_AUTONOMY_AUTHORIZATION_2026-07-12.json`. It is retained only as
+an audit trail and must not be used to imply direct validation by Garrido.
 
 Status: **BLOCKS CALIBRATION; DOES NOT BLOCK SOFTWARE VERIFICATION**.
 

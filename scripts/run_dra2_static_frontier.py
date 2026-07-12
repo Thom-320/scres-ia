@@ -15,7 +15,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from scripts.run_dra1_static_frontier import boot_ci  # noqa: E402
 from supply_chain.dra2_convoy import ConvoyThresholdPolicy, static_policies  # noqa: E402
-from supply_chain.dra2_experiment import FAMILIES, materialize_tape, run_static_policy  # noqa: E402
+from supply_chain.dra2_experiment import (  # noqa: E402
+    FAMILIES, materialize_tape, run_static_policy, validate_authorization_record,
+)
 
 
 DEFAULT_OUTPUT = Path("results/program_d/dra2_static_frontier_smoke")
@@ -39,14 +41,17 @@ def main() -> int:
     parser.add_argument("--n-tapes", type=int, default=4)
     parser.add_argument("--horizon-weeks", type=int, default=16)
     parser.add_argument("--n-boot", type=int, default=1_000)
-    parser.add_argument("--face-validation-accepted", action="store_true")
+    parser.add_argument("--authorization-record", type=Path)
     args = parser.parse_args()
     if args.n_tapes % 4:
         raise ValueError("n-tapes must be divisible by four")
-    if args.n_tapes > 4 and not args.face_validation_accepted:
+    authorization = None
+    if args.n_tapes > 4 and args.authorization_record is None:
         raise RuntimeError(
-            "Calibration is blocked until Garrido validates the 24h return extension."
+            "Calibration requires a contract-bound DRA-2 authorization record."
         )
+    if args.authorization_record is not None:
+        authorization = validate_authorization_record(args.authorization_record)
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
     per_family = args.n_tapes // 4
@@ -115,7 +120,13 @@ def main() -> int:
              "mean_service_loss": service, "mean_departures": departures,
              "mean_vehicle_hours": vehicle_hours,
              "mean_load_factor": float(np.mean([row["op8_convoy_load_factor"] for row in selected])),
-             "mean_live_fraction": float(np.mean([row["live_fraction"] for row in selected])),
+             "mean_dispatch_feasible_fraction": float(np.mean([
+                 row["dispatch_feasible_fraction"] for row in selected
+             ])),
+             "strong_live_fraction": None,
+             "mean_unavailable_hours": float(np.mean([
+                 row["op8_convoy_unavailable_hours"] for row in selected
+             ])),
              "lost_deg_ci_high": guardrails["lost"][2],
              "service_deg_ci_high": guardrails["service"][2],
              "backlog_deg_ci_high": guardrails["backlog"][2],
@@ -143,7 +154,10 @@ def main() -> int:
         "mass_pass": max(float(row["mass_residual"]) for row in rows) <= 1e-6,
         "convoy_conservation_pass": max(float(row["op8_convoy_resource_residual"]) for row in rows) <= 1e-9,
         "best_admissible": best,
-        "face_validation_accepted": bool(args.face_validation_accepted),
+        "authorization_record": (
+            str(args.authorization_record) if args.authorization_record else None
+        ),
+        "authorization_decision": authorization["decision"] if authorization else None,
         "calibration_opened": args.n_tapes > 4,
         "virgin_tapes_opened": 0, "ppo_trained": False,
         "interpretation": (

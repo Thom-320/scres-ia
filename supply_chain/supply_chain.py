@@ -3713,6 +3713,9 @@ class MFSCSimulation:
             "op8_convoy_capacity_committed": float(self.op8_convoy_capacity_committed),
             "op8_convoy_load_factor": float(self.op8_convoy_dispatched_rations / committed),
             "op8_convoy_vehicle_hours": float(self.op8_convoy_vehicle_hours),
+            # Explicit resource name used by the DRA-2 estimand. This includes
+            # outbound, return, and any R22 route wait while the asset is away.
+            "op8_convoy_unavailable_hours": float(self.op8_convoy_vehicle_hours),
             "op8_convoy_idle_hours": float(self.op8_convoy_idle_hours),
             "op8_convoy_route_wait_hours": float(self.op8_convoy_route_wait_hours),
             "op8_convoy_ration_hours_in_transit": float(self.op8_convoy_ration_hours_in_transit),

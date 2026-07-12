@@ -15,12 +15,36 @@ from .supply_chain import MFSCSimulation
 CONTRACT_ID = "op7_op8_finite_convoy_v1"
 PROXY = Path(__file__).resolve().parent / "data" / "garrido_proxy_v1_freeze_2026-07-10.json"
 FAMILIES = ("routine", "assembly_scarcity", "op8_interruption", "r24_mixed")
+CONTRACT_PATH = Path(__file__).resolve().parent.parent / "contracts" / "op7_op8_finite_convoy_v1.json"
 
 
 def digest(value: Any) -> str:
     return sha256(
         json.dumps(value, sort_keys=True, separators=(",", ":")).encode()
     ).hexdigest()
+
+
+def file_sha256(path: Path) -> str:
+    return sha256(path.read_bytes()).hexdigest()
+
+
+def validate_authorization_record(path: Path) -> dict[str, Any]:
+    """Require a traceable PI-delegated authorization bound to this contract."""
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    required = {
+        "validator_name", "validation_date", "authority_basis",
+        "contract_id", "contract_sha256", "decision", "assumptions",
+    }
+    missing = sorted(required - set(payload))
+    if missing:
+        raise RuntimeError(f"INVALID_DRA2_AUTHORIZATION missing={missing}")
+    if payload["contract_id"] != CONTRACT_ID:
+        raise RuntimeError("INVALID_DRA2_AUTHORIZATION contract_id")
+    if payload["contract_sha256"] != file_sha256(CONTRACT_PATH):
+        raise RuntimeError("INVALID_DRA2_AUTHORIZATION contract_sha256")
+    if payload["decision"] != "AUTHORIZE_RESEARCHER_IMPOSED_DRA2_EXTENSION":
+        raise RuntimeError("INVALID_DRA2_AUTHORIZATION decision")
+    return payload
 
 
 def proxy_kwargs() -> dict[str, Any]:
@@ -176,12 +200,12 @@ def run_static_policy(tape: dict[str, Any], policy: ConvoyThresholdPolicy) -> di
     baseline_resource = resource_snapshot(sim)
     end = start + int(tape["horizon_weeks"]) * HOURS_PER_WEEK
     backlog_auc = 0.0
-    live_epochs = 0
+    dispatch_feasible_epochs = 0
     decision_epochs = 0
     while sim.env.now < end - 1e-9:
         observation = sim.get_op8_convoy_observation()
         if sim.op8_convoy_dispatch_feasible():
-            live_epochs += 1
+            dispatch_feasible_epochs += 1
         action = policy.action(observation)
         sim.apply_op8_convoy_action(action, source=policy.policy_id)
         decision_epochs += 1
@@ -195,9 +219,12 @@ def run_static_policy(tape: dict[str, Any], policy: ConvoyThresholdPolicy) -> di
     metrics.update(
         {
             "backlog_auc": float(backlog_auc),
-            "live_epochs": int(live_epochs),
+            "dispatch_feasible_epochs": int(dispatch_feasible_epochs),
             "decision_epochs": int(decision_epochs),
-            "live_fraction": float(live_epochs / max(decision_epochs, 1)),
+            "dispatch_feasible_fraction": float(
+                dispatch_feasible_epochs / max(decision_epochs, 1)
+            ),
+            "strong_live_fraction": None,
             "mass_residual": max(
                 abs(float(ledger["raw_residual"])),
                 abs(float(ledger["ration_residual"])),
@@ -205,6 +232,22 @@ def run_static_policy(tape: dict[str, Any], policy: ConvoyThresholdPolicy) -> di
         }
     )
     return metrics
+
+
+def resource_dominance_static_comparator(
+    candidate: dict[str, float], static_summaries: list[dict[str, float]]
+) -> dict[str, float]:
+    """Best calibration static inside a candidate's joint resource envelope."""
+    departures = float(candidate["mean_departures"])
+    unavailable = float(candidate["mean_unavailable_hours"])
+    eligible = [
+        row for row in static_summaries
+        if float(row["mean_departures"]) <= departures + 1e-9
+        and float(row["mean_unavailable_hours"]) <= unavailable + 1e-9
+    ]
+    if not eligible:
+        raise RuntimeError("NO_RESOURCE_DOMINANCE_STATIC_COMPARATOR")
+    return max(eligible, key=lambda row: float(row["mean_ret"]))
 
 
 def run_actions_to(

@@ -86,14 +86,15 @@ genuinely different (better) test than DRA-1.**
   dispatching now genuinely removes the convoy from the next cycle. (Note: my first
   coarse probe mis-read the return as 54 h; a 1 h-resolution re-check showed 48 h exact
   — my sampling artifact, corrected before reporting. The V4→V5 lesson, self-applied.)
-- **G-B liveness: PASS at smoke** (49.8% ≥ 20%).
+- **Dispatch feasibility smoke: 49.8%. G-B strong liveness: PENDING.** The smoke
+  percentage is not the scientific G-B numerator.
 - **G-C multi-step oracle: implemented** (exact 2^k sequence search; 512 rollouts /
   4 sequence-states in smoke; full run 2^7).
 - **G-E integrity: PASS** — identity when `op8_dispatch_mode` off (default
   thesis_full_batch runs, ret_excel 0.4829); crn_pass, mass_pass, convoy_conservation_pass,
   prefix_identity_pass all true; observation excludes future info. 73 tests pass.
-- **Garrido gate is REAL** — `run_dra2_static_frontier.py:46` fails closed for
-  n_tapes>4 unless `face_validation_accepted`; calibration_opened=false,
+- **Authorization gate is REAL** — the runner fails closed for n_tapes>4 unless a
+  contract-bound PI-autonomy record validates; calibration_opened=false,
   virgin_tapes_opened=0, ppo_trained=false.
 - **G-F diversity — PROMISING but only smoke.** One-step optima split HOLD 10 /
   DISPATCH 6 (62/38), both materially optimal — UNLIKE DRA-1's 97% single-action

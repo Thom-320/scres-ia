@@ -1,6 +1,6 @@
 # Program D DRA-2 — implementation verdict
 
-Status: **IMPLEMENTED; CALIBRATION BLOCKED PENDING GARRIDO FACE VALIDATION**.
+Status: **IMPLEMENTED; CALIBRATION REQUIRES CONTRACT-BOUND PI AUTHORIZATION**.
 
 The opt-in finite-convoy lane, static frontier runner, exact one-action
 branching and exact seven-day sequence search are implemented. Historical
@@ -8,7 +8,8 @@ transport remains the default.
 
 ## Verified physical behavior
 
-- one convoy, 5,000-ration capacity;
+- one researcher-imposed indivisible convoy slot, with capacity interpreted from
+  the thesis-grounded 5,000-ration release batch;
 - partial loads consume the full convoy opportunity;
 - no overlapping departure while the convoy is away;
 - 24 h outbound plus 24 h return under an open route;
@@ -28,7 +29,8 @@ Static frontier:
 - four disposable tapes, one per family;
 - nine same-contract threshold/wait policies;
 - CRN, mass and convoy conservation: PASS;
-- mean live-epoch fraction: approximately 0.498;
+- mean dispatch-feasible fraction: approximately 0.498;
+- strong-live fraction: not measured in this static smoke;
 - calibration tapes opened: false.
 
 Branching:
@@ -44,9 +46,9 @@ Branching:
 Smoke outcomes are implementation diagnostics only. They do not promote the
 family or estimate scientific headroom.
 
-## Remaining external gate
+## Remaining authorization gate
 
-Before opening the 60 calibration tapes, Garrido must validate or explicitly
-authorize the modeled 24 h convoy return leg. If accepted, the runners expand
-without changing physics or thresholds. If rejected, the contract must be
-re-preregistered before any calibration result is observed.
+Before opening the 60 calibration tapes, the runner requires a structured record
+bound to the exact contract hash. The PI has delegated modeling autonomy; therefore
+the lane is disclosed as a stylized researcher-imposed extension rather than a
+validated operational reconstruction.

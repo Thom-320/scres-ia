@@ -11,13 +11,14 @@ RL training.
 
 - Opt-in mode `op8_dispatch_mode="finite_convoy_v1"`; historical modes remain
   bitwise default.
-- One convoy, capacity 5,000 rations.
+- One researcher-imposed indivisible convoy slot. Its 5,000-ration capacity is an
+  interpretation anchored to the thesis release batch, not a recovered vehicle fact.
 - Op7 finished rations enter an explicit staging stock continuously rather than
   materializing only after a full 5,000-ration release batch.
 - `DISPATCH_NOW` loads `min(staged_inventory, 5000)` and consumes the entire
   convoy opportunity, including on a partial load.
-- Outbound travel is 24 h; return is 24 h. The return leg is a disclosed
-  Garrido-informed extension requiring face validation before confirmatory use.
+- Outbound travel is thesis-supported at 24 h; return is a researcher-imposed 24 h
+  parsimonious extension authorized under PI-delegated modeling autonomy.
 - Op8 outages pause physical outbound and return progress.
 - `HOLD` forfeits today's opportunity but leaves the convoy available at Op7
   for the next 24 h epoch.
@@ -104,7 +105,8 @@ Promote to observable policy only if all frozen thresholds in
 - clustered oracle ReT lower CI above zero and point delta at least 0.01;
 - service-loss AUC reduction at least 5%;
 - mass and convoy conservation;
-- equal-resource or Pareto-valid comparison;
+- resource-dominance-constrained static comparison selected once on calibration;
+- Pareto reporting is secondary and cannot substitute for the primary comparison;
 - no tail or lost-order contradiction.
 
 No threshold or physical parameter may be changed after calibration results to

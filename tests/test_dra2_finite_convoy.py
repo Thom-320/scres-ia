@@ -1,6 +1,11 @@
 import pytest
+from pathlib import Path
 
 from supply_chain.dra2_convoy import ConvoyThresholdPolicy, static_policies
+from supply_chain.dra2_experiment import (
+    resource_dominance_static_comparator,
+    validate_authorization_record,
+)
 from supply_chain.supply_chain import MFSCSimulation
 
 
@@ -163,3 +168,24 @@ def test_explicit_historical_mode_preserves_default_trajectory():
     assert explicit.total_delivered == default.total_delivered
     assert explicit.total_demanded == default.total_demanded
     assert [order.CTj for order in explicit.orders] == [order.CTj for order in default.orders]
+
+
+def test_pi_autonomy_record_is_bound_to_frozen_contract():
+    record = validate_authorization_record(
+        Path("docs/PROGRAM_D_DRA2_AUTONOMY_AUTHORIZATION_2026-07-12.json")
+    )
+    assert record["decision"] == "AUTHORIZE_RESEARCHER_IMPOSED_DRA2_EXTENSION"
+
+
+def test_resource_dominance_comparator_respects_joint_envelope():
+    candidate = {"mean_departures": 10.0, "mean_unavailable_hours": 480.0}
+    static = [
+        {"policy_id": "cheap", "mean_ret": 0.6, "mean_departures": 9.0,
+         "mean_unavailable_hours": 430.0},
+        {"policy_id": "best_eligible", "mean_ret": 0.7, "mean_departures": 10.0,
+         "mean_unavailable_hours": 480.0},
+        {"policy_id": "resource_purchase", "mean_ret": 0.9, "mean_departures": 11.0,
+         "mean_unavailable_hours": 500.0},
+    ]
+    selected = resource_dominance_static_comparator(candidate, static)
+    assert selected["policy_id"] == "best_eligible"
