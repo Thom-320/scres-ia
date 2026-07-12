@@ -27,8 +27,17 @@ from supply_chain.supply_chain import MFSCSimulation
 
 FACTORS = (
     NumericFactor("op3_inventory_target", 0.0, 122_880.0, "inventory"),
+    NumericFactor("op3_order_quantity", 7_750.0, 47_000.0, "replenishment"),
+    NumericFactor("op3_review_period", 84.0, 336.0, "replenishment"),
     NumericFactor("op5_inventory_target", 0.0, 122_880.0, "inventory"),
+    NumericFactor("op5_capacity_posture", 1.0, 3.0, "production"),
+    NumericFactor("op7_release_period", 24.0, 72.0, "batching"),
     NumericFactor("op9_inventory_target", 0.0, 126_000.0, "inventory"),
+    NumericFactor("op9_release_period", 12.0, 48.0, "dispatch"),
+    NumericFactor("op10_dispatch_quantity", 1_200.0, 5_200.0, "transport"),
+    NumericFactor("op10_dispatch_period", 12.0, 48.0, "transport"),
+    NumericFactor("op12_dispatch_quantity", 1_200.0, 5_200.0, "transport"),
+    NumericFactor("op12_dispatch_period", 12.0, 48.0, "transport"),
     NumericFactor("risk_frequency_scale", 0.5, 2.0, "risk", "environment_uncertainty"),
     NumericFactor("risk_impact_scale", 0.5, 2.0, "risk", "environment_uncertainty"),
     NumericFactor("demand_level", 0.75, 1.5, "demand", "environment_uncertainty"),
@@ -56,7 +65,22 @@ def run_des(params: dict[str, float], tape: int, horizon_weeks: int) -> dict[str
         warmup_trigger=P["warmup_trigger"],
         r14_defect_mode=P["r14_defect_mode"],
     )
-    sim.run()
+    sim.step(
+        action={
+            "op3_q": params["op3_order_quantity"],
+            "op3_rop": params["op3_review_period"],
+            "assembly_shifts": int(np.clip(np.rint(params["op5_capacity_posture"]), 1, 3)),
+            "op8_rop": params["op7_release_period"],
+            "op9_rop": params["op9_release_period"],
+            "op10_q_min": params["op10_dispatch_quantity"],
+            "op10_q_max": params["op10_dispatch_quantity"],
+            "op10_rop": params["op10_dispatch_period"],
+            "op12_q_min": params["op12_dispatch_quantity"],
+            "op12_q_max": params["op12_dispatch_quantity"],
+            "op12_rop": params["op12_dispatch_period"],
+        },
+        step_hours=float(horizon_weeks) * HOURS_PER_WEEK,
+    )
     metrics = compute_episode_metrics(sim)
     return {
         "ret_excel": float(metrics["ret_excel"]),

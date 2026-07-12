@@ -40,7 +40,8 @@ reversal, oracle advantage over the best same-contract constant, practical
 service value, resource equivalence, horizon stability, and observable rollout
 conversion. Classification accuracy is never an endpoint.
 
-Seeds 1110001+ and 1120001+ remain locked. The present implementation exposes
-only the subset of catalog factors supported safely by the shared DES. A factor
+Seeds 1110001+ and 1120001+ remain locked. The implementation exposes the
+numeric controls already mutable in the shared DES; categorical doctrines use
+the separate D-optimal design. A factor
 marked `requires_adapter` is excluded until its liveness, mass, CRN, and resource
 ledger tests pass.
