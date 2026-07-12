@@ -1,0 +1,36 @@
+{
+  "contract_id": "program_f_event_model_v1",
+  "status": "FROZEN_BEFORE_SEEDS_940001_PLUS",
+  "parent_contract": "mfsc_risk_mitigation_portfolio_v1",
+  "episode_weeks": 32,
+  "context_generation": {
+    "first_context_balanced_by_tape_family": true,
+    "dwell_weeks": {"dist": "discrete_uniform", "low": 4, "high": 8},
+    "next_context": "uniform among the other two contexts"
+  },
+  "weekly_event_counts": {
+    "method": "Poisson with event-keyed RNG",
+    "rates_from_table_6_12_windows": {
+      "R11": {"dominant": 4.0, "background": 1.0},
+      "R22": {"dominant": 0.125, "background": 0.041666666666666664},
+      "R23": {"dominant": 0.125, "background": 0.020833333333333332},
+      "R24": {"dominant": 0.5, "background": 0.25}
+    }
+  },
+  "base_damage": {
+    "R11": {"duration_dist": "exponential", "mean_hours_equipment_context": 5.0, "mean_hours_other": 2.0, "affected_ops": [5,6]},
+    "R22": {"duration_dist": "exponential", "mean_hours": 24.0, "affected_ops": [4,8,10,12]},
+    "R23": {"duration_dist": "exponential", "mean_hours": 120.0, "affected_ops": [11]},
+    "R24": {"surge_dist": "uniform_integer", "low": 2400, "high": 2600, "affected_ops": [13]}
+  },
+  "signals": {
+    "target": "context active one week after signal",
+    "correct_class_probability": 0.75,
+    "reported_score_selected_class": 0.8,
+    "reported_score_other_classes": 0.1,
+    "policy_independent": true
+  },
+  "initial_active_action_m_t_r": [1,1,0],
+  "threat_hash_fields": ["context_schedule","base_events","signals"],
+  "realized_damage_excluded_from_threat_hash": true
+}
