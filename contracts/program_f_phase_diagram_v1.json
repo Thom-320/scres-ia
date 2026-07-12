@@ -1,0 +1,65 @@
+{
+  "contract_id": "program_f_phase_diagram_v1",
+  "status": "FROZEN_BEFORE_SCREEN_SEEDS_970001_PLUS",
+  "parent_contracts": ["mfsc_risk_mitigation_portfolio_v1", "program_f_event_model_v1"],
+  "purpose": "Map learnability boundary conditions and select the lowest-amplitude Program F v1 cell; never maximize PPO or observed ReT.",
+  "design": {
+    "method": "maximin Latin hypercube with categorical quantization",
+    "design_seed": 2026071206,
+    "n_cells": 24,
+    "screen_tapes_per_cell": 12,
+    "tapes_per_starting_context": 4,
+    "screen_seed_start": 970001,
+    "screen_seed_end": 970288,
+    "states_per_tape": 4,
+    "branch_horizon_weeks": 4,
+    "screen_tapes_reused_for_confirmation": false
+  },
+  "axes": {
+    "efficacy_level": {
+      "levels": ["low", "base", "high"],
+      "manufacturing_condition_reduction_per_token": [0.15,0.20,0.25],
+      "manufacturing_r11_factor_token_1": [0.85,0.75,0.65],
+      "manufacturing_r11_factor_token_2": [0.65,0.50,0.40],
+      "transport_factor_token_1": [0.75,0.65,0.55],
+      "transport_factor_token_2": [0.55,0.40,0.30],
+      "reserve_issue_token_1": [2000,2500,3000],
+      "reserve_issue_token_2": [4000,5000,6000]
+    },
+    "signal_accuracy": [0.60,0.75,0.90],
+    "context_dwell_weeks": [[3,5],[4,8],[6,10]],
+    "budget_tokens": [1,2,3],
+    "risk_amplitude": ["current_all_contexts", "dominant_increased_background_current"],
+    "minimum_commitment_weeks": [1,2]
+  },
+  "confirmatory_v1_admissibility": {
+    "budget_tokens_must_equal": 2,
+    "risk_amplitude_allowed": ["current_all_contexts", "dominant_increased_background_current"],
+    "no_new_parameter_value_after_screen": true
+  },
+  "screen_preselection_gates": {
+    "all_three_levers_live": true,
+    "at_least_two_actions_optimal_fraction_min": 0.15,
+    "single_action_optimal_fraction_max": 0.85,
+    "oracle_ret_delta_min": 0.01,
+    "oracle_ret_ci95_lower_min": 0.0,
+    "observable_tree_conversion_min": 0.50,
+    "observable_tree_delta_positive": true
+  },
+  "selection_order": [
+    "risk_amplitude: current before dominant-increased",
+    "efficacy_level: low before base before high",
+    "signal_accuracy: closest to 0.75",
+    "context_dwell: base 4-8 before 3-5 before 6-10",
+    "minimum_commitment: 1 before 2",
+    "cell_id ascending"
+  ],
+  "forbidden": [
+    "select maximum ReT cell",
+    "select a one-token or three-token cell for v1 confirmation",
+    "change axes after screen output",
+    "open seeds 940001+, 950001+, or 960001+ during screen",
+    "train PPO during screen"
+  ],
+  "terminal_if_none": "STOP_PROGRAM_F_SCREEN"
+}
