@@ -172,3 +172,38 @@ the sequence horizon before any calibration). Conditions: new preregistration, n
 does NOT alter this STOP, NOT presented as a confirmatory continuation of DRA-2. If DRA-2b
 shows STABLE, resource-matched, observable-convertible headroom → it is the first
 legitimate path to PPO. If not → 7th boundary result. This is the honest door to RL.
+
+---
+## Verification — DRA-2b long-horizon FINAL (commit 3bcf6e9, tag dra2b-stop-2026-07-12)
+
+Independent audit of `dra2b_long_horizon_calibration/verdict.json`. **STOP_DRA2B_PRE_TREE_GATE
+is legitimate, doubly-supported, and disciplined. This closes Program D's experiment arc.**
+
+Verified: 60 new tapes (860001+, disjoint from DRA-2), 120 states, 987 exact 14-day
+canonical sequences/state; strong_liveness 100%, diversity PASS (HOLD 65 / DISPATCH 40 /
+tie-or-zero 15), resource_envelope PASS, ret_practical PASS (+0.02212 CI95[0.0173,0.0273]),
+lost_orders PASS (Δ0), first-action agreement 100% (direction stable).
+
+**Two gates fail → STOP (both binding):**
+- `service_practical: false` — service-loss reduction only −3.08% CI95[1.99,4.03], below
+  the frozen 5% practical bar.
+- `horizon_sufficiency: false` — per-decision-day magnitude converges in only 5/12 (rel)
+  and 2/12 (abs) states, despite 100% first-action agreement.
+
+**Resource-matching VERIFIED genuine (again):** comparator threshold_5000/wait_72h uses
+FEWER resources (dep 24.48≤24.92; unavail 1169.5≤1193.2) yet the dynamic wins +0.02212.
+Not a purchase.
+
+**Verifier verdict.** DRA-2/DRA-2b is the ONLY family with material clairvoyant ReT
+headroom and a stable action direction — but the service benefit is not practically
+material and the magnitude is horizon-dependent, so it correctly STOPS short of the
+observable tree and PPO. Extending this family again to force a pass would be goalpost-
+moving; correctly NOT done. **No PPO was trained anywhere in Program D; 0 virgin tapes.**
+
+**Program D conclusion (all verified):** six boundary results (constants optimal) + one
+near-miss (DRA-2/2b: material clairvoyant ReT headroom that fails practical-service and
+horizon-convergence). RL is NOT warranted in this thesis-grounded MFSC reconstruction
+under any tested decision right. This is a stronger, pre-registered result than a forced
+win: a resource-constrained adaptive-headroom criterion + diagnostic hierarchy showing
+WHEN NOT to train an agent, with the boundary made precise by the DRA-2 near-miss.
+The experimental program is complete; the honest next step is the manuscript.
