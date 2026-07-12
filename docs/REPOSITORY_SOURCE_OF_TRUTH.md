@@ -135,3 +135,13 @@ week, the canonical cumulative ReT ledger, quantity-weighted ReT, 200 new calibr
 and 400 locked terminal tapes. No observable policy passed the joint guardrails against the
 best periodic static (`ABAB`). Earlier G5 language describing a virgin observable adaptive win
 is historical for its service-loss proxy only and must not be used as the paper headline.
+
+## Program H terminal status (2026-07-13)
+
+Program H ended at `STOP_PROGRAM_H_NO_BELIEF_POLICY_PASS_INFORMATION_BOUND_REMAINS_LOOSE`.
+The informative O0 filter did not yield a qualifying regret fitted-Q, belief-MPC, or point
+rollout policy on 400 locked tapes. The best order-ReT delta was +0.00225 with CI95
+[-0.00021,+0.00460], 19% favorable tapes, and 13.7% PI conversion. The exact full-tape ceiling
+remained material (+0.01641), so formal information insufficiency was not established. Seeds
+1080001+ were not opened and no Program H RL was trained. This is the last computational
+extension of the stylized spatial contract.

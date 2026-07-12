@@ -31,3 +31,12 @@ order ReT, quantity-weighted ReT, attended orders, worst-CSSU fill, and terminal
 rations. The only allowed scope is the disclosed stylized spatial order adapter, not the full
 DES. Metric-induced ranking changes, including Cobb-Douglas-inspired scores, are construct
 sensitivity and never a rescue. No Program G PPO or retained-learning claim is authorized.
+
+## Program H terminal addendum (2026-07-13)
+
+Program H is the final computational closure of the stylized spatial contract. Its Bayes filter
+was informative, but regret fitted-Q, belief-MPC, and point rollout all failed the locked gate
+against ABAB. The best order-ReT delta was +0.00225 with CI95 crossing zero, 19% favorable
+tapes, and 13.7% conversion. The full-information ceiling remains +0.01641, so the paper must
+say that tested belief-policy classes failed while the formal bound on the optimal observable
+policy remains loose. No learner was authorized and 1080001+ remains unopened.

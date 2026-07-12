@@ -77,8 +77,10 @@ def fit_regret_q_policy(tapes, *, random_state: int = 20260713):
     X, Y = np.asarray(rows), np.asarray(targets)
     models = []
     for a in range(len(ACTIONS)):
+        # Single-process execution avoids macOS joblib workers lingering after the fully
+        # materialized verdict; it does not change the frozen estimator or random state.
         model = ExtraTreesRegressor(n_estimators=300, min_samples_leaf=5,
-                                    random_state=random_state + a, n_jobs=-1)
+                                    random_state=random_state + a, n_jobs=1)
         model.fit(X, Y[:, a]); models.append(model)
     return models
 
