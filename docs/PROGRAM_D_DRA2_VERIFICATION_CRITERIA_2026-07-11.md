@@ -66,3 +66,38 @@ tomorrow's feasible action set?** If not, DRA-2 is DRA-1 in a convoy costume.
 - **DRA-1 verdict stands**: `STOP_NO_DYNAMIC_ORACLE_HEADROOM`, airtight (V5), asymmetry
   0.8% disclosed. DRA-2 does not reopen it.
 - **No PPO / no virgin tapes** until G-A…G-F pass, per the frozen contract.
+
+---
+## Verification result — implementation smoke (commit 9ad0ac7, verifier audit)
+
+Independent audit against the frozen gates. **Implementation smoke PASSES; DRA-2 is a
+genuinely different (better) test than DRA-1.**
+
+- **G-A intertemporal commitment: PASS (independently verified).** From an identical
+  feasible state, `DISPATCH_NOW` sets `op8_convoy_available=False` and the convoy is
+  unavailable for exactly the contracted 48 h (`actual_return_at = 960.0 = t0+48`,
+  route_wait=0); `HOLD` preserves it. R22 physically pauses outbound/return via
+  `_op8_route_progress`. This is the real, persistent opportunity cost DRA-1 lacked —
+  dispatching now genuinely removes the convoy from the next cycle. (Note: my first
+  coarse probe mis-read the return as 54 h; a 1 h-resolution re-check showed 48 h exact
+  — my sampling artifact, corrected before reporting. The V4→V5 lesson, self-applied.)
+- **G-B liveness: PASS at smoke** (49.8% ≥ 20%).
+- **G-C multi-step oracle: implemented** (exact 2^k sequence search; 512 rollouts /
+  4 sequence-states in smoke; full run 2^7).
+- **G-E integrity: PASS** — identity when `op8_dispatch_mode` off (default
+  thesis_full_batch runs, ret_excel 0.4829); crn_pass, mass_pass, convoy_conservation_pass,
+  prefix_identity_pass all true; observation excludes future info. 73 tests pass.
+- **Garrido gate is REAL** — `run_dra2_static_frontier.py:46` fails closed for
+  n_tapes>4 unless `face_validation_accepted`; calibration_opened=false,
+  virgin_tapes_opened=0, ppo_trained=false.
+- **G-F diversity — PROMISING but only smoke.** One-step optima split HOLD 10 /
+  DISPATCH 6 (62/38), both materially optimal — UNLIKE DRA-1's 97% single-action
+  dominance. **This is the first lever to show genuine action diversity at smoke.**
+  HARD CAVEAT: 16 smoke states on 4 disposable tapes is NOT a result; the diversity/
+  headroom verdict requires the gated 60-tape calibration + full sequence oracle, and
+  must clear a PREREGISTERED practical δ (G-E) and equal-vehicle-hours (G-D).
+
+**Verifier status:** DRA-2 implementation is sound and correctly gated. No defects
+found (one self-inflicted measurement artifact caught and corrected). Blocked, as it
+should be, on Garrido's face-validation of the returning-convoy extension before the
+scientific run. The promising smoke diversity does NOT authorize any claim yet.
