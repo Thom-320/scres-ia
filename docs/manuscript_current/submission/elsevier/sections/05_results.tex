@@ -1,0 +1,107 @@
+\section{Results}\label{sec:results}
+
+\subsection{Comparator scope reverses the apparent adaptive headline}
+
+Against a 147-cell frontier that varied shift and downstream dispatch while holding upstream
+controls fixed, ten PPO checkpoints produced a crossed held-out ReT difference of $+0.000486$.
+This comparison was stable but did not grant the static policy the learner's complete action
+contract. The frozen same-contract challenge selected a constant using calibration tapes and
+evaluated it on 60 fresh tapes. Full-contract static ReT was $0.005906366$ versus $0.005888317$
+for PPO; PPO minus static was $-0.000018049$, with two-way CI95
+$[-0.000028615,-0.000008087]$. A small within-learner dispatch increment remained positive,
+but it did not restore superiority over static control. The restricted comparison therefore
+diagnoses comparator-family sensitivity rather than adaptive advantage.
+
+\subsection{Decision families fail at different rungs of the ladder}
+
+The boundary programs reveal distinct failure mechanisms (Table~\ref{tab:eligibility}).
+DRA-1 created physically live allocation states, but balanced-prefix exact branching found
+negligible and sparse dynamic oracle value. DRA-2b was qualitatively different: the restricted
+14-day open-loop oracle beat a budget-feasible static comparator by $0.02212$ ReT, CI95
+$[0.01725,0.02734]$, and both HOLD and DISPATCH were supported in substantial state subsets.
+It nevertheless failed its preregistered service-practicality and horizon-sufficiency gates.
+This was evidence of clairvoyant headroom, not deployable policy value.
+
+Program E directly tested conversion using new data and deployable observations. Ten
+MaskablePPO seeds were trained for 200,000 steps each, alongside an interpretable tree and
+heuristics. Validation conversion efficiency was $-0.00438$ and no PPO seed produced a
+positive effect over the same-contract static bar. The tree attained high first-action
+classification accuracy in development but lost in sequential rollout. Thus a learner was
+trained under a legitimate headroom-motivated contract; its null cannot be attributed to a
+failure to attempt RL.
+
+Program F imposed exactly two readiness tokens across maintenance, transport protection, and
+reserve actions, thereby eliminating resource-purchase explanations by construction. Across
+the preregistered phase diagram, observable-tree rollout conversion passed in $0/24$ cells.
+Several cells displayed oracle signal, but every admissible tree rollout delta was negative.
+The program therefore stopped before learner training.
+
+\begin{table}[htbp]
+\centering
+\caption{Eligibility ladder across the main terminal studies. A dash means the program stopped
+before that rung could support a claim.}
+\label{tab:eligibility}
+\small
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lccccc}
+\toprule
+Study & Physical & Ranking & PI headroom & Observable rollout & Learner win \\
+\midrule
+Track A / Program L & yes & weak/limited & small & no & no \\
+DRA-1 allocation & yes & insufficient & negligible & -- & -- \\
+DRA-2b convoy & yes & yes & $+0.02212$ & not authorized & -- \\
+Program E convoy & yes & yes & material prior & no & no (0/10) \\
+Program F portfolio & yes & mixed & cell-dependent & 0/24 gates & -- \\
+Program G spatial & yes & yes & diagnostic & no & -- \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+\subsection{Program G: corrected terminal spatial audit}
+
+Program G initially appeared promising under a ration-mass proxy, motivating a stricter
+order-ledger audit. Two defects were corrected before the terminal test: the six-day operating
+week had been compressed to 144 hours instead of retaining a 168-hour calendar, and two
+runners scored the current order before updating cumulative backlog and unattended counters.
+The corrective protocol was committed before opening 200 new calibration tapes and 400 locked
+test tapes. It also added quantity-weighted ReT and marked horizon-pending orders lost.
+
+The best periodic same-contract policy selected on calibration was blind alternation, ABAB.
+No observable policy passed any substantive joint gate. Cover minus ABAB yielded order ReT
+$-0.02317$ (CI95 $[-0.02816,-0.01893]$), quantity-weighted ReT $-0.00695$
+(CI95 $[-0.00869,-0.00548]$), $3.51$ fewer attended orders, worst-CSSU fill $-0.1734$,
+and 3,370 additional unfulfilled rations at the horizon. MPC also failed every guardrail; the
+service and ReT depth-3 trees collapsed to the same tested behavior as cover. Equal action
+rights rule out a resource-advantage explanation.
+
+\begin{table}[htbp]
+\centering
+\caption{Program G terminal locked test: observable cover policy minus frozen ABAB
+($n=400$ paired tapes). Positive is desirable except for unfulfilled rations.}
+\label{tab:programg}
+\small
+\begin{tabular}{lrr}
+\toprule
+Endpoint & Mean delta & CI95 \\
+\midrule
+Canonical ReT per order & $-0.02317$ & $[-0.02816,-0.01893]$ \\
+Quantity-weighted ReT & $-0.00695$ & $[-0.00869,-0.00548]$ \\
+Attended orders & $-3.51$ & $[-4.15,-2.95]$ \\
+Worst-CSSU fill & $-0.1734$ & $[-0.2033,-0.1466]$ \\
+Unfulfilled rations & $+3370$ & $[+2831,+3971]$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Resilience functionals induce different rankings}
+
+The corrected triangulation refutes a simple order-versus-mass explanation: both order ReT and
+quantity-weighted ReT favor ABAB, as do attended orders and worst-CSSU fill. A
+Cobb--Douglas-inspired aggregate instead favors cover slightly. Its capacity and cost terms are
+constant in this contract, and its remaining inventory--backlog--time aggregation does not
+preserve spatial fairness. The disagreement therefore documents a normative preference for
+concentration, not hidden operational superiority. We retain the metric reversal as a
+methodological result: adaptive-control eligibility is not invariant to the resilience
+functional, and a multiplicative aggregate can reward a policy that worsens continuity and the
+worst-served node.

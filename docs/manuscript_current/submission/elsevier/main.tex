@@ -23,30 +23,30 @@
 \begin{document}
 \ifuseelsevier
 \begin{frontmatter}
-\title{When Apparent Reinforcement-Learning Gains Depend on the Static Frontier: A Garrido-Grounded Supply-Chain DES Benchmark}
+\title{When Is Reinforcement Learning Warranted in a Supply Chain DES? Decision-Rights Eligibility, Comparator Design, and Oracle-to-Policy Conversion}
 \begin{abstract}
-Simulation--reinforcement-learning studies can report stable gains even when the static comparator controls only a subset of the learner's decision variables. We examine this risk in a Garrido-grounded discrete-event benchmark of a 13-operation military food supply chain using common random numbers and the workbook-faithful Garrido/Excel resilience metric. Against a 147-cell frontier that varies shift and downstream dispatch while fixing upstream controls, ten PPO checkpoints improve Excel ReT by $+0.000486$ on 60 crossed held-out tapes. We then impose a stronger, frozen same-contract challenge. A constant policy is selected by one Sobol screen and one refinement using calibration tapes only, then evaluated on 60 untouched tapes. The result reverses: full-contract static ReT is $0.005906366$ versus $0.005888317$ for PPO; PPO minus static is $-0.000018049$ with two-way checkpoint--tape CI95 $[-0.000028615,-0.000008087]$. A matched learned-policy contrast still finds a small positive increment from dynamic dispatch access ($+0.000021106$, CI95 $[+0.000007015,+0.000034963]$), but this does not establish superiority over static control. Privileged-information and prevention audits further delimit interpretation. The contribution is therefore an auditable demonstration that comparator decision rights must match learner decision rights before resilience gains are attributed to adaptive control.
+Reinforcement learning (RL) is often introduced into a discrete-event simulation once an action can be varied, without first establishing that the action exposes observable and resource-adjusted state-contingent value. We develop a preregistered eligibility framework comprising physical liveness, action-ranking diversity, perfect-information headroom, observable conversion, resource equivalence, and out-of-sample robustness. The framework is evaluated in a thesis-grounded reconstruction of a 13-operation military food supply chain and in disclosed convoy, readiness, and spatial extensions. A PPO advantage of $+0.000486$ against a restricted static frontier reverses against a same-contract constant: PPO minus static ReT is $-0.000018049$, CI95 $[-0.000028615,-0.000008087]$. A finite-convoy oracle later exposes material clairvoyant headroom ($+0.02212$), but ten MaskablePPO seeds convert essentially none of it. In a terminal spatial audit on 400 locked tapes, blind alternation beats cover, MPC, and depth-3 trees on order ReT, quantity-weighted ReT, attended orders, worst-node fill, and unfulfilled rations. Metric triangulation further shows that a Cobb--Douglas-inspired aggregate can reverse policy rankings while worsening spatial continuity. The evidence demonstrates that physical authority and clairvoyant headroom are insufficient to warrant RL; comparator rights, deployable information, resource accounting, and the resilience functional jointly determine whether adaptive-control claims are identified.
 \end{abstract}
 \begin{keyword}
 Supply chain resilience \sep reinforcement learning \sep discrete-event simulation \sep static benchmark \sep comparator design
 \end{keyword}
 \end{frontmatter}
 \else
-\title{When Apparent Reinforcement-Learning Gains Depend on the Static Frontier: A Garrido-Grounded Supply-Chain DES Benchmark}
+\title{When Is Reinforcement Learning Warranted in a Supply Chain DES? Decision-Rights Eligibility, Comparator Design, and Oracle-to-Policy Conversion}
 \author{}
 \date{}
 \maketitle
 \begin{abstract}
-Simulation--reinforcement-learning studies can report stable gains even when the static comparator controls only a subset of the learner's decision variables. We examine this risk in a Garrido-grounded discrete-event benchmark of a 13-operation military food supply chain using common random numbers and the workbook-faithful Garrido/Excel resilience metric. Against a 147-cell frontier that varies shift and downstream dispatch while fixing upstream controls, ten PPO checkpoints improve Excel ReT by $+0.000486$ on 60 crossed held-out tapes. We then impose a stronger, frozen same-contract challenge. A constant policy is selected by one Sobol screen and one refinement using calibration tapes only, then evaluated on 60 untouched tapes. The result reverses: full-contract static ReT is $0.005906366$ versus $0.005888317$ for PPO; PPO minus static is $-0.000018049$ with two-way checkpoint--tape CI95 $[-0.000028615,-0.000008087]$. A matched learned-policy contrast still finds a small positive increment from dynamic dispatch access ($+0.000021106$, CI95 $[+0.000007015,+0.000034963]$), but this does not establish superiority over static control. Privileged-information and prevention audits further delimit interpretation. The contribution is therefore an auditable demonstration that comparator decision rights must match learner decision rights before resilience gains are attributed to adaptive control.
+Reinforcement learning (RL) is often introduced into a discrete-event simulation once an action can be varied, without first establishing that the action exposes observable and resource-adjusted state-contingent value. We develop a preregistered eligibility framework comprising physical liveness, action-ranking diversity, perfect-information headroom, observable conversion, resource equivalence, and out-of-sample robustness. The framework is evaluated in a thesis-grounded reconstruction of a 13-operation military food supply chain and in disclosed convoy, readiness, and spatial extensions. A PPO advantage of $+0.000486$ against a restricted static frontier reverses against a same-contract constant: PPO minus static ReT is $-0.000018049$, CI95 $[-0.000028615,-0.000008087]$. A finite-convoy oracle later exposes material clairvoyant headroom ($+0.02212$), but ten MaskablePPO seeds convert essentially none of it. In a terminal spatial audit on 400 locked tapes, blind alternation beats cover, MPC, and depth-3 trees on order ReT, quantity-weighted ReT, attended orders, worst-node fill, and unfulfilled rations. Metric triangulation further shows that a Cobb--Douglas-inspired aggregate can reverse policy rankings while worsening spatial continuity. The evidence demonstrates that physical authority and clairvoyant headroom are insufficient to warrant RL; comparator rights, deployable information, resource accounting, and the resilience functional jointly determine whether adaptive-control claims are identified.
 \end{abstract}
 \fi
 
 \input{sections/01_introduction.tex}
 \input{sections/02_related_work.tex}
-\input{sections/03_methodology.tex}
-\input{sections/04_results.tex}
-\input{sections/05_discussion.tex}
-\input{sections/06_conclusion.tex}
+\input{sections/03_eligibility_framework.tex}
+\input{sections/04_mfsc_case.tex}
+\input{sections/05_results.tex}
+\input{sections/06_discussion.tex}
 
 \section*{CRediT authorship contribution statement}
 [TO COMPLETE before submission: author names and roles, e.g.
