@@ -54,6 +54,27 @@ scientific claim: the headroom is spatial-commitment observability, and **advanc
 redundant once contemporaneous inventory is observed** — a cleaner, more surprising result than "the
 signal helped."
 
+## G2 — 24-cell screen (added): PROMOTABLE CONNECTED REGION (pre-RL gate PASSES)
+
+`scripts/run_program_g_screen.py`, grid 2 persistence × 3 signal × 2 lead × 2 surge, TRS arm,
+cover-signal observable, best static frozen on calibration, holdout evaluation, adjacency = one level
+on one axis. Result (`results/program_g/g2/verdict.json`): **12/24 cells pass, one connected component
+of 12 → `G2_PROMOTABLE_CONNECTED_REGION`, promotable = True.**
+
+- **The decisive axis is surge magnitude**: all 12 passing cells are surge **1.50** (H_obs_lo ≈ +508,
+  η ≈ 0.76); all 12 failing cells are surge **1.25** (η ≈ 0). At 1.25 the A/B demand differential is
+  too small to make the shared convoy a binding spatial commitment.
+- **Signal quality (0.65/0.75/0.85) and lead (1/2) do NOT discriminate** within surge 1.50 — every
+  combination passes equally, reconfirming G1: the advance signal is nearly redundant; the value is
+  spatial commitment under sustained stress.
+- **Minimally-sufficient cell** (frozen least-favorable order, surge 1.25 fails so 1.50, then signal
+  0.65, lead 1, persistence short) = `Pshort_Q65_L1_S150` — NOT the max-outcome cell.
+
+This is the **FIRST time the project's pre-RL eligibility gate has PASSED**: a promotable connected
+region of ≥2 adjacent cells where an observable, resource-matched, OOS policy converts material
+clairvoyant headroom. RL is now WARRANTED (G5) — though the interpretable cover heuristic already
+converts ~0.68–0.76, so the open question is whether a learner adds incremental value over it.
+
 ## Discipline / limits (for Garrido and Reviewer #2)
 - IN-SAMPLE at ONE central cell (high signal / lead 1 / surge 1.50 / short persistence). The 24-cell
   screen + ≥2 adjacent passing cells still gate any learner. Result is OOS across tapes but not across
