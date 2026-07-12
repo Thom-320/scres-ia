@@ -100,9 +100,12 @@ def main() -> int:
     tape_reports = []
     all_demand_ok = all_threat_ok = realized_varies_ok = True
     for tape in tapes:
-        per_action = {"".join(map(str, a)): run_capture(tape, a) for a in ACTIONS}
+        horizon_h = int(tape["weeks"]) * HOURS_PER_WEEK
+        per_action = {
+            "".join(map(str, a)): run_capture(tape, a, horizon_h) for a in ACTIONS
+        }
         demand_hashes = {r["realized_demand_sha256"] for r in per_action.values()}
-        threat_hashes = {r["base_threat_sha256"] for r in per_action.values()}
+        threat_hashes = {r["interior_threat_sha256"] for r in per_action.values()}
         realized_hashes = {r["realized_duration_sha256"] for r in per_action.values()}
         demand_ok = len(demand_hashes) == 1
         threat_ok = len(threat_hashes) == 1
@@ -114,21 +117,35 @@ def main() -> int:
             "tape_id": tape["tape_id"], "context": tape["first_context"],
             "input_threat_sha256": tape["threat_sha256"],
             "demand_identical_across_actions": demand_ok,
-            "consumed_threat_identical_across_actions": threat_ok,
+            "interior_threat_identical_across_actions": threat_ok,
             "realized_duration_varies_across_actions": realized_varies,
             "unique_demand_hashes": len(demand_hashes),
-            "unique_consumed_threat_hashes": len(threat_hashes),
+            "unique_interior_threat_hashes": len(threat_hashes),
             "unique_realized_duration_hashes": len(realized_hashes),
+            "logged_event_counts_by_action": {
+                k: r["n_events_logged"] for k, r in per_action.items()
+            },
             "per_action": per_action,
         })
     all_pass = all_demand_ok and all_threat_ok and realized_varies_ok
     verdict = {
         "gate": "PROGRAM_F_CRN_CONSUMPTION_AUDIT",
+        "note": (
+            "SUPERSEDED complementary diagnostic. The authoritative CRN audit is "
+            "scripts/audit_program_f_terminal_crn.py, which records every base event "
+            "at ONSET (policy-independent) across all 288 screen tapes + 1152 branch "
+            "checks. This disposable per-context probe instead reads the post-outage "
+            "damage LOG, so it hashes threat over INTERIOR events only (a single "
+            "near-horizon event's LOG row truncates under some actions -- a logging "
+            "artifact, not a CRN leak; see docs/PROGRAM_F_POST_TERMINAL_AUDIT). Demand "
+            "and interior threat are identical across the six actions; realized "
+            "durations vary as a sensitivity control."
+        ),
         "post_terminal": True, "calibration_tapes_opened": 0,
         "holdout_tapes_opened": 0, "virgin_tapes_opened": 0, "ppo_trained": False,
         "n_tapes": len(tapes), "n_actions": len(ACTIONS),
         "demand_identical_all_tapes": all_demand_ok,
-        "consumed_threat_identical_all_tapes": all_threat_ok,
+        "interior_threat_identical_all_tapes": all_threat_ok,
         "realized_duration_varies_all_tapes": realized_varies_ok,
         "all_pass": all_pass,
         "interpretation": (
