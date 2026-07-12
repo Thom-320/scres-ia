@@ -1,0 +1,91 @@
+{
+  "contract_id": "op7_op8_finite_convoy_v1",
+  "status": "IMPLEMENTATION_CONTRACT_FROZEN",
+  "provenance": {
+    "convoy_capacity_rations": "thesis-grounded Op7 batch size",
+    "outbound_hours": "thesis-grounded Op8 processing time",
+    "return_hours": "Garrido-informed extension requiring face validation"
+  },
+  "physics": {
+    "convoy_count": 1,
+    "convoy_capacity_rations": 5000,
+    "outbound_hours": 24,
+    "return_hours": 24,
+    "round_trip_hours": 48,
+    "decision_epoch_hours": 24,
+    "hold_semantics": "forfeit the current daily departure opportunity; convoy remains at Op7",
+    "route_outage_semantics": "outbound and return progress pause while Op8 is down",
+    "partial_departure_consumes_full_slot": true,
+    "unused_lift_is_lost": true,
+    "total_convoy_capacity_action_controllable": false
+  },
+  "actions": ["HOLD", "DISPATCH_NOW"],
+  "dispatch_mask": [
+    "staged inventory is zero",
+    "convoy is away",
+    "Op8 route is down"
+  ],
+  "static_frontier": {
+    "inventory_thresholds": [1000, 2500, 5000],
+    "maximum_wait_hours": [24, 48, 72],
+    "dispatch_rule": "DISPATCH_NOW when threshold is met OR oldest staged inventory reaches maximum wait"
+  },
+  "observations": [
+    "op7 staged inventory",
+    "pending assembly quantity",
+    "SB inventory",
+    "downstream backlog quantity and maximum age",
+    "recent demand production and delivery",
+    "convoy availability and nominal return ETA",
+    "time since departure and staging age",
+    "Op8 route status",
+    "previous release action",
+    "day within week"
+  ],
+  "forbidden_observations": [
+    "future risk",
+    "future repair duration",
+    "future demand",
+    "latent regime",
+    "retrospective outcome"
+  ],
+  "resource_ledger": [
+    "departures",
+    "vehicle hours",
+    "route-wait hours",
+    "idle convoy hours",
+    "load factor",
+    "ration-hours in transit",
+    "masked dispatch attempts"
+  ],
+  "experiment": {
+    "calibration_tapes": 60,
+    "observable_holdout_tapes": 40,
+    "ppo_confirmatory_virgin_tapes": 60,
+    "branch_states": 240,
+    "one_action_horizons_hours": [72, 672],
+    "sequence_days": 7,
+    "sequence_count_upper_bound": 128,
+    "r3_training_allowed": false,
+    "ppo_allowed_before_gates": false
+  },
+  "promotion": {
+    "live_epoch_fraction_min": 0.20,
+    "each_action_optimal_state_fraction_min": 0.15,
+    "oracle_ret_improvement_min": 0.01,
+    "service_loss_auc_improvement_min": 0.05,
+    "tree_oracle_capture_min": 0.50,
+    "favorable_heldout_tape_fraction_min": 0.70,
+    "mass_and_convoy_conservation_required": true,
+    "equal_resource_or_pareto_required": true
+  },
+  "scientific_state": {
+    "physical_implementation_complete": true,
+    "static_frontier_runner_complete": true,
+    "branching_runner_complete": true,
+    "smoke_verified": true,
+    "calibration_opened": false,
+    "ppo_trained": false,
+    "verdict": "IMPLEMENTED_AWAITING_GARRIDO_FACE_VALIDATION"
+  }
+}

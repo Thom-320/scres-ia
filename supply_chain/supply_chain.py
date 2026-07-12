@@ -251,6 +251,10 @@ class MFSCSimulation:
         cssu_allocation_a: float = 0.50,
         cssu_service_rule: str = "SPT_FULL",
         cssu_daily_capacity: Optional[float] = None,
+        op8_dispatch_mode: str = "thesis_full_batch",
+        op8_convoy_capacity: float = 5_000.0,
+        op8_convoy_outbound_hours: float = 24.0,
+        op8_convoy_return_hours: float = 24.0,
     ) -> None:
         if warmup_trigger not in WARMUP_TRIGGER_OPTIONS:
             valid = ", ".join(WARMUP_TRIGGER_OPTIONS)
@@ -379,6 +383,17 @@ class MFSCSimulation:
             raise ValueError(f"cssu_service_rule must be one of {SERVICE_RULES}.")
         if cssu_daily_capacity is not None and float(cssu_daily_capacity) <= 0:
             raise ValueError("cssu_daily_capacity must be positive when provided.")
+        if op8_dispatch_mode not in {"thesis_full_batch", "finite_convoy_v1"}:
+            raise ValueError(
+                "op8_dispatch_mode must be 'thesis_full_batch' or "
+                "'finite_convoy_v1'."
+            )
+        if min(
+            float(op8_convoy_capacity),
+            float(op8_convoy_outbound_hours),
+            float(op8_convoy_return_hours),
+        ) <= 0.0:
+            raise ValueError("Op8 convoy capacity and travel times must be positive.")
         if backorder_overflow_mode not in BACKORDER_OVERFLOW_MODE_OPTIONS:
             valid = ", ".join(BACKORDER_OVERFLOW_MODE_OPTIONS)
             raise ValueError(
@@ -433,6 +448,10 @@ class MFSCSimulation:
         self.cssu_action_events: list[dict[str, Any]] = []
         self.cssu_demand_events: list[tuple[float, str, float]] = []
         self.cssu_delivery_events: list[tuple[float, str, float]] = []
+        self.op8_dispatch_mode = str(op8_dispatch_mode)
+        self.op8_convoy_capacity = float(op8_convoy_capacity)
+        self.op8_convoy_outbound_hours = float(op8_convoy_outbound_hours)
+        self.op8_convoy_return_hours = float(op8_convoy_return_hours)
         self.assembly_flow_mode = str(assembly_flow_mode)
         self.periodic_release_mode = str(periodic_release_mode)
         self.op2_release_clock_mode = str(op2_release_clock_mode)
@@ -671,6 +690,26 @@ class MFSCSimulation:
         # servers (Table 6.20 ROP=24h) — a tandem pipeline, not parallel legs.
         self.op10_convoy = simpy.Resource(self.env, capacity=1)
         self.op12_convoy = simpy.Resource(self.env, capacity=1)
+        # DRA-2 opt-in Op7-Op8 convoy. Historical transport remains untouched
+        # unless ``op8_dispatch_mode='finite_convoy_v1'``.
+        self.op8_convoy_available = True
+        self.op8_convoy_departures = 0
+        self.op8_convoy_dispatched_rations = 0.0
+        self.op8_convoy_capacity_committed = 0.0
+        self.op8_convoy_vehicle_hours = 0.0
+        self.op8_convoy_idle_hours = 0.0
+        self.op8_convoy_route_wait_hours = 0.0
+        self.op8_convoy_ration_hours_in_transit = 0.0
+        self.op8_convoy_masked_dispatch_attempts = 0
+        self.op8_convoy_hold_actions = 0
+        self.op8_convoy_dispatch_actions = 0
+        self.op8_convoy_last_departure_at: Optional[float] = None
+        self.op8_convoy_nominal_return_at: Optional[float] = None
+        self.op8_convoy_actual_return_at: Optional[float] = None
+        self.op8_staging_first_ready_at: Optional[float] = None
+        self.op8_last_action = "HOLD"
+        self.op8_convoy_action_events: list[dict[str, Any]] = []
+        self.op8_convoy_departure_events: list[dict[str, Any]] = []
 
         # Procurement contract state.  Op1 creates/renews the framework
         # contract that authorises Op2 supplier deliveries.  The previous
@@ -1208,7 +1247,11 @@ class MFSCSimulation:
             self.env.process(self._assembly_serial_wip_hourly())
         else:
             self.env.process(self._assembly_hourly())  # HOURLY granularity
-        self.env.process(self._op8_transport_to_sb())
+        if self.op8_dispatch_mode == "finite_convoy_v1":
+            self.env.process(self._op8_finite_convoy_warmup_controller())
+            self.env.process(self._op8_convoy_accounting())
+        else:
+            self.env.process(self._op8_transport_to_sb())
         if self.order_fulfillment_mode == "legacy_theatre_stock":
             self.env.process(self._op9_sb_dispatch())
             self.env.process(self._op10_transport_to_cssu())
@@ -3388,16 +3431,17 @@ class MFSCSimulation:
                 self._today_produced += can_produce
                 self.total_produced += can_produce
 
-                # Ship complete batches (read batch_size live for shift changes)
+                # DRA-2 exposes finished Op7 output continuously in staging;
+                # the convoy action, not production, decides when it leaves.
                 batch_size = self.params["batch_size"]
-                while self._pending_batch >= batch_size:
-                    self._pending_batch -= batch_size
-                    yield self.rations_al.put(batch_size)
-                    self._record_material_availability("rations_al", batch_size)
-                    batch_lineage = self._lineage_take("pending_batch", batch_size)
-                    self._lineage_forward(
-                        "rations_al", batch_lineage, source_stage="op7_output"
-                    )
+                if self.op8_dispatch_mode == "finite_convoy_v1":
+                    self._pending_batch -= can_produce
+                    yield from self._stage_finished_rations(can_produce)
+                else:
+                    # Historical thesis lane: only complete batches leave Op7.
+                    while self._pending_batch >= batch_size:
+                        self._pending_batch -= batch_size
+                        yield from self._stage_finished_rations(batch_size)
 
                 if (
                     self.warmup_trigger == "production"
@@ -3491,14 +3535,13 @@ class MFSCSimulation:
                 yield self.wip_op5_op6.put(op5_qty)
 
             batch_size = float(self.params["batch_size"])
-            while self._pending_batch >= batch_size:
-                self._pending_batch -= batch_size
-                yield self.rations_al.put(batch_size)
-                self._record_material_availability("rations_al", batch_size)
-                batch_lineage = self._lineage_take("pending_batch", batch_size)
-                self._lineage_forward(
-                    "rations_al", batch_lineage, source_stage="op7_output"
-                )
+            if self.op8_dispatch_mode == "finite_convoy_v1" and op7_qty > 0.0:
+                self._pending_batch -= op7_qty
+                yield from self._stage_finished_rations(op7_qty)
+            else:
+                while self._pending_batch >= batch_size:
+                    self._pending_batch -= batch_size
+                    yield from self._stage_finished_rations(batch_size)
 
             if (
                 self.warmup_trigger == "production"
@@ -3509,6 +3552,216 @@ class MFSCSimulation:
     # =====================================================================
     # DOWNSTREAM: Distribution (Op8-Op12)
     # =====================================================================
+
+    def _stage_finished_rations(self, qty: float):
+        """Move completed Op7 rations into the auditable Op8 staging stock."""
+        qty = float(qty)
+        was_empty = float(self.rations_al.level) <= 1e-9
+        yield self.rations_al.put(qty)
+        self._record_material_availability("rations_al", qty)
+        batch_lineage = self._lineage_take("pending_batch", qty)
+        self._lineage_forward(
+            "rations_al", batch_lineage, source_stage="op7_output"
+        )
+        if was_empty and qty > 0.0:
+            self.op8_staging_first_ready_at = float(self.env.now)
+
+    def op8_convoy_dispatch_feasible(self) -> bool:
+        """Whether DISPATCH_NOW can create a physical departure this epoch."""
+        return bool(
+            self.op8_dispatch_mode == "finite_convoy_v1"
+            and self.op8_convoy_available
+            and not self._is_down(8)
+            and float(self.rations_al.level) > 1e-9
+        )
+
+    def apply_op8_convoy_action(
+        self, action: str | int, *, source: str = "policy"
+    ) -> dict[str, Any]:
+        """Apply HOLD or DISPATCH_NOW at the current decision epoch."""
+        if self.op8_dispatch_mode != "finite_convoy_v1":
+            raise RuntimeError("Finite-convoy actions require finite_convoy_v1 mode.")
+        if isinstance(action, (int, np.integer)):
+            action = "HOLD" if int(action) == 0 else "DISPATCH_NOW" if int(action) == 1 else str(action)
+        action = str(action).upper()
+        if action not in {"HOLD", "DISPATCH_NOW"}:
+            raise ValueError("Op8 convoy action must be HOLD or DISPATCH_NOW.")
+        feasible_before = self.op8_convoy_dispatch_feasible()
+        event: dict[str, Any] = {
+            "time": float(self.env.now),
+            "action": action,
+            "source": str(source),
+            "feasible_before": feasible_before,
+            "staged_before": float(self.rations_al.level),
+            "convoy_available_before": bool(self.op8_convoy_available),
+            "route_up_before": not self._is_down(8),
+            "departed": False,
+            "quantity": 0.0,
+            "mask_reason": "",
+        }
+        self.op8_last_action = action
+        if action == "HOLD":
+            self.op8_convoy_hold_actions += 1
+            event["mask_reason"] = "intentional_hold"
+        else:
+            self.op8_convoy_dispatch_actions += 1
+            if not feasible_before:
+                self.op8_convoy_masked_dispatch_attempts += 1
+                if not self.op8_convoy_available:
+                    event["mask_reason"] = "convoy_away"
+                elif self._is_down(8):
+                    event["mask_reason"] = "route_down"
+                else:
+                    event["mask_reason"] = "empty_staging"
+            else:
+                qty = min(float(self.rations_al.level), self.op8_convoy_capacity)
+                self.op8_convoy_available = False
+                self.op8_convoy_last_departure_at = float(self.env.now)
+                self.op8_convoy_nominal_return_at = float(self.env.now) + (
+                    self.op8_convoy_outbound_hours + self.op8_convoy_return_hours
+                )
+                self.op8_convoy_departures += 1
+                self.op8_convoy_dispatched_rations += qty
+                self.op8_convoy_capacity_committed += self.op8_convoy_capacity
+                event.update({"departed": True, "quantity": qty})
+                self.op8_convoy_departure_events.append(dict(event))
+                self.env.process(self._op8_finite_convoy_trip(qty))
+        self.op8_convoy_action_events.append(event)
+        return event
+
+    def _op8_route_progress(self, hours: float, *, ration_qty: float = 0.0):
+        remaining = float(hours)
+        while remaining > 1e-9:
+            yield self.env.timeout(1.0)
+            if self._is_down(8):
+                self.op8_convoy_route_wait_hours += 1.0
+            else:
+                remaining -= 1.0
+            if ration_qty > 0.0:
+                self.op8_convoy_ration_hours_in_transit += float(ration_qty)
+
+    def _op8_finite_convoy_trip(self, qty: float):
+        """Consume one persistent vehicle through outbound and return legs."""
+        yield self.rations_al.get(qty)
+        lineage = self._lineage_take("rations_al", qty)
+        if float(self.rations_al.level) <= 1e-9:
+            self.op8_staging_first_ready_at = None
+        departed_at = float(self.env.now)
+        self._in_transit += qty
+        yield from self._op8_route_progress(
+            self.op8_convoy_outbound_hours, ration_qty=qty
+        )
+        self._in_transit -= qty
+        yield from self._op8_arrive_sb(qty, lineage, departed_at)
+        yield from self._op8_route_progress(self.op8_convoy_return_hours)
+        self.op8_convoy_available = True
+        self.op8_convoy_actual_return_at = float(self.env.now)
+        self.op8_convoy_nominal_return_at = None
+
+    def _op8_convoy_accounting(self):
+        while True:
+            yield self.env.timeout(1.0)
+            if self.op8_convoy_available:
+                self.op8_convoy_idle_hours += 1.0
+            else:
+                self.op8_convoy_vehicle_hours += 1.0
+
+    def _op8_finite_convoy_warmup_controller(self):
+        """Use thesis full-load doctrine only until the common warm-up anchor."""
+        while not self.warmup_complete:
+            if (
+                self.op8_convoy_dispatch_feasible()
+                and float(self.rations_al.level) + 1e-9 >= self.op8_convoy_capacity
+            ):
+                self.apply_op8_convoy_action("DISPATCH_NOW", source="warmup")
+            yield self.env.timeout(1.0)
+
+    def _op8_arrive_sb(
+        self, qty: float, lineage: list[MaterialLineageSlice], departed_at: float
+    ):
+        yield self.rations_sb.put(qty)
+        self._record_material_availability("rations_sb", qty)
+        op8_refs = self._consume_pending_stage_refs("op8_output")
+        self._lineage_forward(
+            "rations_sb", lineage, source_stage="op8_output", extra_refs=op8_refs
+        )
+        if self.risk_attribution_source == "causal_exposure":
+            if self.material_lineage_mode == "tagged_lots":
+                arrived_refs = set(op8_refs)
+                for item in lineage:
+                    arrived_refs.update(item.risk_event_refs)
+                self._upstream_scarcity_debts = [
+                    event for event in self._upstream_scarcity_debts
+                    if self._lineage_event_ref(event) not in arrived_refs
+                ]
+            else:
+                self._upstream_scarcity_debts = [
+                    event for event in self._upstream_scarcity_debts
+                    if float(event.end_time) > departed_at
+                ]
+        if self.warmup_trigger == "op9_arrival":
+            self._mark_warmup_complete()
+        if self.order_fulfillment_mode == "op9_linked" and self.pending_backorders:
+            yield from self._serve_pending_backorders()
+
+    def op8_convoy_metrics(self) -> dict[str, float]:
+        committed = max(float(self.op8_convoy_capacity_committed), 1.0)
+        return {
+            "op8_convoy_available": float(self.op8_convoy_available),
+            "op8_convoy_departures": float(self.op8_convoy_departures),
+            "op8_convoy_dispatched_rations": float(self.op8_convoy_dispatched_rations),
+            "op8_convoy_capacity_committed": float(self.op8_convoy_capacity_committed),
+            "op8_convoy_load_factor": float(self.op8_convoy_dispatched_rations / committed),
+            "op8_convoy_vehicle_hours": float(self.op8_convoy_vehicle_hours),
+            "op8_convoy_idle_hours": float(self.op8_convoy_idle_hours),
+            "op8_convoy_route_wait_hours": float(self.op8_convoy_route_wait_hours),
+            "op8_convoy_ration_hours_in_transit": float(self.op8_convoy_ration_hours_in_transit),
+            "op8_convoy_masked_dispatch_attempts": float(self.op8_convoy_masked_dispatch_attempts),
+            "op8_convoy_resource_residual": float(
+                int(self.op8_convoy_available) + int(not self.op8_convoy_available) - 1
+            ),
+        }
+
+    def get_op8_convoy_observation(self) -> dict[str, float]:
+        if self.op8_dispatch_mode != "finite_convoy_v1":
+            raise RuntimeError("DRA-2 observation requires finite_convoy_v1 mode.")
+        now = float(self.env.now)
+        ages = [
+            max(0.0, now - float(order.OPTj))
+            for order in self.pending_backorders
+        ]
+        recent_start = now - HOURS_PER_WEEK
+        recent_demand = sum(q for t, q in self.daily_demand if t >= recent_start)
+        recent_production = sum(q for t, q in self.daily_production if t >= recent_start)
+        recent_delivery = sum(q for t, q in self.delivery_events if t >= recent_start)
+        staging_age = (
+            max(0.0, now - self.op8_staging_first_ready_at)
+            if self.op8_staging_first_ready_at is not None else 0.0
+        )
+        return {
+            "op7_staged_inventory": float(self.rations_al.level),
+            "pending_assembly_quantity": float(self._pending_batch),
+            "sb_inventory": float(self.rations_sb.level),
+            "downstream_backlog_qty": float(self.pending_backorder_qty),
+            "downstream_backlog_count": float(len(self.pending_backorders)),
+            "oldest_backlog_age": float(max(ages) if ages else 0.0),
+            "recent_7d_demand": float(recent_demand),
+            "recent_7d_production": float(recent_production),
+            "recent_7d_delivery": float(recent_delivery),
+            "convoy_available": float(self.op8_convoy_available),
+            "convoy_return_eta": float(
+                max(0.0, self.op8_convoy_nominal_return_at - now)
+                if self.op8_convoy_nominal_return_at is not None else 0.0
+            ),
+            "time_since_departure": float(
+                max(0.0, now - self.op8_convoy_last_departure_at)
+                if self.op8_convoy_last_departure_at is not None else 0.0
+            ),
+            "staging_age": float(staging_age),
+            "op8_route_up": float(not self._is_down(8)),
+            "previous_action_dispatch": float(self.op8_last_action == "DISPATCH_NOW"),
+            "day_phase": float((now % HOURS_PER_WEEK) / HOURS_PER_WEEK),
+        }
 
     def _op8_transport_to_sb(self):
         while True:
