@@ -132,6 +132,7 @@ def main() -> int:
             service_reduction = (service_base - service_oracle) / max(abs(service_base), 1.0)
             resource_equal = bool(spec["resource_equal_by_construction"]) and all(len({round(row["resource"], 9) for row in selected if row["state_id"] == state}) == 1 for state in values)
             local = adaptive_headroom_verdict(values, tapes, observable_deltas=None, service_reduction=service_reduction, resource_equivalent=resource_equal, thresholds=contract["gates"])
+            local["service_loss_reduction"] = float(service_reduction)
             local["lost_orders_delta_mean"] = float(np.mean(lost_delta))
             local["gates"]["lost_orders_nonincrease"] = local["lost_orders_delta_mean"] <= 0.0
             local["promote_to_rl"] = False
