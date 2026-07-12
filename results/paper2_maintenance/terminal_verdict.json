@@ -1,0 +1,34 @@
+{
+  "contract_id": "paper2_maintenance_control_v1",
+  "date": "2026-07-12",
+  "preflight": "PASS_PAPER2_MAINTENANCE_PREFLIGHT",
+  "central_screen": {
+    "n_tapes": 12,
+    "n_periodic_calendars": 1041,
+    "best_static": "PM6|PM6|PM5|PM6|PM6",
+    "oracle_ret_delta_mean": 0.000046694685154010686,
+    "oracle_ret_delta_ci95": [0.000008832927403408982, 0.00009602391557103222],
+    "oracle_service_loss_reduction_mean": -0.04772808847906842,
+    "horizon_first_action_agreement": 0.5,
+    "action_diversity": true,
+    "observable_conversion": false
+  },
+  "phase_diagram": {
+    "n_cells": 108,
+    "n_tapes_per_cell": 4,
+    "passing_cells": 0,
+    "best_oracle_ret_delta": 0.00013383238214118324,
+    "best_oracle_service_loss_reduction": -0.051642134509218146,
+    "best_observable_ret_delta": -0.000049492059843018934
+  },
+  "paper2_learner_authorized": false,
+  "paper3_authorized": false,
+  "verdict": "STOP_NO_OBSERVABLE_MAINTENANCE_HEADROOM",
+  "claim": "Finite equal-budget maintenance allocation is physically live and action-diverse in the tested full-DES serial-WIP extension, but its oracle value is far below the preregistered practical threshold and no tested observable rule beats the same-contract periodic frontier.",
+  "forbidden_next_actions": [
+    "train PPO on this contract",
+    "open Paper 2 virgin seeds 1230001-1230060",
+    "open Paper 3 seeds 1240001-1241000",
+    "increase wear, efficacy, risk or sensor quality after observing this stop"
+  ]
+}

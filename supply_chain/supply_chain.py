@@ -255,6 +255,7 @@ class MFSCSimulation:
         op8_convoy_capacity: float = 5_000.0,
         op8_convoy_outbound_hours: float = 24.0,
         op8_convoy_return_hours: float = 24.0,
+        serial_wip_capacity_rations: Optional[tuple[float, float]] = None,
     ) -> None:
         if warmup_trigger not in WARMUP_TRIGGER_OPTIONS:
             valid = ", ".join(WARMUP_TRIGGER_OPTIONS)
@@ -339,6 +340,13 @@ class MFSCSimulation:
                 "Invalid assembly_flow_mode="
                 f"{assembly_flow_mode!r}. Expected aggregate_line or serial_wip."
             )
+        if serial_wip_capacity_rations is not None:
+            if len(serial_wip_capacity_rations) != 2 or min(
+                map(float, serial_wip_capacity_rations)
+            ) <= 0.0:
+                raise ValueError(
+                    "serial_wip_capacity_rations must contain two positive capacities."
+                )
         if periodic_release_mode not in {"completion_relative", "start_to_start"}:
             raise ValueError(
                 "Invalid periodic_release_mode="
@@ -453,6 +461,11 @@ class MFSCSimulation:
         self.op8_convoy_outbound_hours = float(op8_convoy_outbound_hours)
         self.op8_convoy_return_hours = float(op8_convoy_return_hours)
         self.assembly_flow_mode = str(assembly_flow_mode)
+        self.serial_wip_capacity_rations = (
+            None
+            if serial_wip_capacity_rations is None
+            else tuple(map(float, serial_wip_capacity_rations))
+        )
         self.periodic_release_mode = str(periodic_release_mode)
         self.op2_release_clock_mode = str(op2_release_clock_mode)
         self.operational_risk_initialization_mode = str(
@@ -639,8 +652,13 @@ class MFSCSimulation:
         self.raw_material_wdc = simpy.Container(self.env, capacity=INF, init=0)
         self.raw_material_al = simpy.Container(self.env, capacity=INF, init=0)
         self.rework_op6 = simpy.Container(self.env, capacity=INF, init=0)
-        self.wip_op5_op6 = simpy.Container(self.env, capacity=INF, init=0)
-        self.wip_op6_op7 = simpy.Container(self.env, capacity=INF, init=0)
+        wip_caps = self.serial_wip_capacity_rations or (INF, INF)
+        self.wip_op5_op6 = simpy.Container(
+            self.env, capacity=float(wip_caps[0]), init=0
+        )
+        self.wip_op6_op7 = simpy.Container(
+            self.env, capacity=float(wip_caps[1]), init=0
+        )
         self.rations_al = simpy.Container(self.env, capacity=INF, init=0)
         self.rations_sb = simpy.Container(self.env, capacity=INF, init=0)
         self.rations_sb_dispatch = simpy.Container(self.env, capacity=INF, init=0)
@@ -3518,15 +3536,25 @@ class MFSCSimulation:
             op6_rework = 0.0
             op6_new = 0.0
             if not self._is_down(6):
-                op6_rework = min(rate, start_rework)
-                op6_new = min(max(0.0, rate - op6_rework), start_wip56)
+                free67 = max(
+                    0.0, float(self.wip_op6_op7.capacity) - start_wip67
+                )
+                op6_rework = min(rate, start_rework, free67)
+                op6_new = min(
+                    max(0.0, rate - op6_rework),
+                    start_wip56,
+                    max(0.0, free67 - op6_rework),
+                )
 
             op5_qty = 0.0
             if not self._is_down(5):
                 raw_ration_capacity = float(self.raw_material_al.level) / max(
                     self._raw_units_per_ration, 1.0
                 )
-                op5_qty = min(rate, raw_ration_capacity)
+                free56 = max(
+                    0.0, float(self.wip_op5_op6.capacity) - start_wip56
+                )
+                op5_qty = min(rate, raw_ration_capacity, free56)
 
             if not any(self._is_down(op_id) for op_id in (5, 6, 7)):
                 self._cumulative_available_assembly_hours += 1.0

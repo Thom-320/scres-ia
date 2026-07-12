@@ -1,0 +1,48 @@
+{
+  "action_support": {
+    "PM5": 0.25,
+    "PM6": 0.4166666666666667,
+    "PM7": 0.3333333333333333
+  },
+  "best_static": "PM7|PM6",
+  "contract_id": "paper2_maintenance_control_v1",
+  "gates": {
+    "action_diversity": true,
+    "equal_scheduled_resources": true,
+    "horizon_stability": false,
+    "observable_conversion": false,
+    "oracle_ret": false,
+    "service_practical": false
+  },
+  "horizon_first_action_agreement": 0.4166666666666667,
+  "n_periodic_calendars": 105,
+  "n_tapes": 12,
+  "observable": {
+    "wip_bottleneck": {
+      "oracle_capture": 0.0,
+      "ret_delta_ci95": [
+        0.0,
+        0.0
+      ],
+      "ret_delta_mean": 0.0,
+      "service_loss_delta_mean": 0.0
+    },
+    "worst_condition": {
+      "oracle_capture": -2.708385312364875,
+      "ret_delta_ci95": [
+        -0.0003482267811590516,
+        -0.0001133744690413846
+      ],
+      "ret_delta_mean": -0.0002248838866914099,
+      "service_loss_delta_mean": 1453130.0
+    }
+  },
+  "oracle_ret_delta_ci95": [
+    4.549133452996389e-05,
+    0.00012538329563463493
+  ],
+  "oracle_ret_delta_mean": 8.303245689035602e-05,
+  "oracle_service_loss_reduction_mean": -0.05284812908197137,
+  "stage": "central_cell_prelearner_screen",
+  "verdict": "STOP_NO_OBSERVABLE_MAINTENANCE_HEADROOM"
+}
