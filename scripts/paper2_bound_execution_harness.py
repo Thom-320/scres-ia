@@ -1131,6 +1131,7 @@ def _validate_prepared_inputs(
     repo_root: Path,
     *,
     allow_unsealed_scientific: bool = False,
+    allow_preflight_platform_environment: bool = False,
 ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
     paths = _manifest_paths(run_dir)
     run_manifest = load_json(paths["run"])
@@ -1145,12 +1146,23 @@ def _validate_prepared_inputs(
         certification_environment,
     )
     live_environment = certification_environment()
-    if expected.get("environment") != live_environment:
-        raise HarnessError("immutable environment identity changed since preparation")
-    if expected.get("environment_sha256") != live_environment.get(
-        "environment_sha256"
-    ):
-        raise HarnessError("environment digest changed since preparation")
+    if allow_preflight_platform_environment:
+        if expected.get("environment_source") == "provided_remote_preflight":
+            validate_scientific_environment_payload(
+                expected.get("environment"),
+                local_reference=live_environment,
+            )
+        elif expected.get("environment") != live_environment:
+            raise HarnessError(
+                "immutable environment identity changed since preparation"
+            )
+    else:
+        if expected.get("environment") != live_environment:
+            raise HarnessError("immutable environment identity changed since preparation")
+        if expected.get("environment_sha256") != live_environment.get(
+            "environment_sha256"
+        ):
+            raise HarnessError("environment digest changed since preparation")
     checks = {
         "contract_sha256": sha256_file(repo_root / expected["contract_relative"]),
         "runner_sha256": sha256_file(repo_root / expected["runner_relative"]),
@@ -1194,7 +1206,9 @@ def _validate_prepared_inputs(
     if mode in FROZEN_EVIDENCE_MODES:
         contract = load_json(repo_root / expected["contract_relative"])
         profile = _frozen_evidence_profile(contract, mode)
-        if run_manifest.get("execution", {}).get("frozen_evidence_profile") != profile:
+        if canonical_json_sha256(
+            run_manifest.get("execution", {}).get("frozen_evidence_profile")
+        ) != canonical_json_sha256(profile):
             raise HarnessError("frozen evidence profile differs from contract")
         expected_seed_rows = _seed_rows(
             profile["seeds"], profile["split"], profile["weeks"]
@@ -1240,6 +1254,7 @@ def seal_run(
         run_dir,
         repo_root,
         allow_unsealed_scientific=True,
+        allow_preflight_platform_environment=True,
     )
     if run_manifest.get("mode") != "scientific":
         raise HarnessError("seal is only valid for a scientific frontier run")
@@ -2102,7 +2117,11 @@ def stage_vps(*, run_dir: Path, host: str, remote_root: str, repo_root: Path = R
     if host != DEFAULT_HOST:
         raise HarnessError(f"host must be the approved SSH alias {DEFAULT_HOST!r}")
     _validate_remote_value(remote_root, "remote root")
-    run_manifest, _, _ = _validate_prepared_inputs(run_dir, repo_root)
+    run_manifest, _, _ = _validate_prepared_inputs(
+        run_dir,
+        repo_root,
+        allow_preflight_platform_environment=True,
+    )
     if not run_manifest["git"]["scientific_source_immutable"]:
         raise HarnessError("VPS staging requires critical inputs tracked and identical to HEAD")
     run_id = run_manifest["run_id"]

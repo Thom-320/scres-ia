@@ -373,6 +373,13 @@ def test_remote_environment_snapshot_allows_only_soabi_difference(
     assert manifest["inputs"]["environment_source"] == (
         "provided_remote_preflight"
     )
+    harness._validate_prepared_inputs(
+        run_dir,
+        ROOT,
+        allow_preflight_platform_environment=True,
+    )
+    with pytest.raises(HarnessError, match="environment identity"):
+        harness._validate_prepared_inputs(run_dir, ROOT)
 
     tampered = dict(remote_environment)
     tampered["packages"] = {**tampered["packages"], "numpy": "0.0"}
