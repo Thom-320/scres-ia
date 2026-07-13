@@ -166,7 +166,7 @@ def test_primary_bound_v2_is_frozen_before_24_week_results_and_fail_closed():
     assert contract["seed_blocks"]["algorithm_development_excluded"] == [1_110_001]
     assert contract["seed_blocks"]["calibration"]["n"] == 60
     assert contract["seed_blocks"]["locked_bound"]["n"] == 119
-    assert contract["acceleration_proof"]["required_key_schema"].endswith("_v2")
+    assert contract["acceleration_proof"]["required_key_schema"].endswith("_v3")
     assert "UCB95 is strictly below 0.01" in contract["decision_rules"]["boundary_close"]
     assert contract["decision_rules"]["learner_authorized"] is False
     assert contract["decision_rules"]["paper3_authorized"] is False

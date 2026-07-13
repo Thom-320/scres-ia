@@ -16,6 +16,7 @@ from scripts.run_paper2_bottleneck_exact_transducer import (
     StateNode,
     Transition,
     Transducer,
+    _digest,
     build_transducer,
     feasible_calendar_count,
     feasible_calendars,
@@ -111,13 +112,87 @@ def _synthetic_transducer(weeks: int, tape_offset: int) -> Transducer:
                 )
         layers.append(next_nodes)
         transitions.append(table)
-    return Transducer(
+    transducer = Transducer(
         weeks=weeks,
         layers=layers,
         transitions=transitions,
         collisions=[],
         prefix_replays=0,
     )
+    transducer.collision_bisimulation = _synthetic_structural_certificate(
+        transducer
+    )
+    return transducer
+
+
+def _synthetic_structural_certificate(transducer: Transducer) -> dict:
+    nodes = []
+    for layer_index in reversed(range(transducer.weeks)):
+        for node in transducer.layers[layer_index]:
+            terminal = layer_index == transducer.weeks - 1
+            actions = [] if terminal else sorted(
+                action
+                for (state_id, action) in transducer.transitions[layer_index]
+                if state_id == node.state_id
+            )
+            edges = [] if terminal else [
+                {
+                    "action": action,
+                    "incremental_label_sha256": "a" * 64,
+                    "child_obligation_id": (
+                        f"node:w{layer_index + 2}:n"
+                        f"{transducer.transitions[layer_index][(node.state_id, action)].next_state_id}"
+                    ),
+                    "child_complete": True,
+                }
+                for action in actions
+            ]
+            nodes.append(
+                {
+                    "obligation_id": f"node:w{layer_index + 1}:n{node.state_id}",
+                    "week": layer_index + 1,
+                    "state_id": node.state_id,
+                    "state_sha256": node.key,
+                    "state_sha512": "b" * 128,
+                    "state_bytes": 1,
+                    "expected_actions": actions,
+                    "edges": edges,
+                    "status": "COMPLETE",
+                }
+            )
+    roots = []
+    body = {
+        "schema_version": "paper2_collision_bisimulation_v2",
+        "key_schema_version": frontier.KEY_SCHEMA_VERSION,
+        "complete_state_serialization": True,
+        "event_payload_serialized": True,
+        "resource_users_serialized": True,
+        "callback_closure_state_serialized": True,
+        "process_target_state_serialized_or_fail_closed": True,
+        "runtime_alias_graph_serialized": True,
+        "collision_payload_checks": 0,
+        "collision_root_count": 0,
+        "transition_congruence_checks": 0,
+        "node_obligation_count": len(nodes),
+        "terminal_node_obligation_count": len(transducer.layers[-1]),
+        "unresolved_node_obligation_count": 0,
+        "unresolved_collision_root_count": 0,
+        "all_actions_covered": True,
+        "backward_induction_complete": True,
+        "node_obligations": nodes,
+        "collision_roots": roots,
+        "mismatch_examples": [],
+        "induction_rule": "synthetic unit-test graph",
+        "passed": True,
+    }
+    body["node_obligation_records_sha256"] = _digest(nodes)
+    body["collision_root_records_sha256"] = _digest(roots)
+    body["transition_record_sha256"] = _digest({
+        "nodes": body["node_obligation_records_sha256"],
+        "roots": body["collision_root_records_sha256"],
+    })
+    body["certificate_sha256"] = _digest(body)
+    return body
 
 
 def _brute_exact(transducers):
@@ -382,10 +457,23 @@ def test_calibration_tie_break_replays_all_primary_ties_and_uses_frozen_order():
 def test_phase_aware_replay_audit_accepts_single_calibration_tie_and_locked_pairs():
     contract = json.loads(PRIMARY_CONTRACT_PATH.read_text())
     calibration = _calibration_tie_rows([5])
+    calibration_expected = {
+        row["seed"]: {
+            "tape_sha256": row["tape_sha256"],
+            "consumed_base_threat_sha256": row["guardrails"][
+                "consumed_base_threat_sha256"
+            ],
+            "realized_demand_sha256": row["guardrails"][
+                "realized_demand_sha256"
+            ],
+        }
+        for row in calibration
+    }
     audit = validate_selected_replay_set(
         calibration,
         phase="calibration",
         aggregate_winner_indices=[5],
+        expected_exogenous_by_seed=calibration_expected,
         contract=contract,
     )
     assert audit["passed"] is True
@@ -396,6 +484,7 @@ def test_phase_aware_replay_audit_accepts_single_calibration_tie_and_locked_pair
         calibration[:-1],
         phase="calibration",
         aggregate_winner_indices=[5],
+        expected_exogenous_by_seed=calibration_expected,
         contract=contract,
     )
     assert missing["passed"] is False
@@ -403,6 +492,7 @@ def test_phase_aware_replay_audit_accepts_single_calibration_tie_and_locked_pair
 
     locked = []
     oracle_by_seed = {}
+    locked_expected = {}
     for expected in _contract_seed_rows(contract, "locked_bound"):
         seed = expected["seed"]
         tape_sha = sha256(f"locked-tape-{seed}".encode()).hexdigest()
@@ -436,10 +526,16 @@ def test_phase_aware_replay_audit_accepts_single_calibration_tie_and_locked_pair
             ]
         )
         oracle_by_seed[seed] = [5]
+        locked_expected[seed] = {
+            "tape_sha256": tape_sha,
+            "consumed_base_threat_sha256": threat_sha,
+            "realized_demand_sha256": demand_sha,
+        }
     locked_audit = validate_selected_replay_set(
         locked,
         phase="locked",
         per_tape_winner_indices=oracle_by_seed,
+        expected_exogenous_by_seed=locked_expected,
         contract=contract,
     )
     assert locked_audit["passed"] is True
@@ -450,9 +546,21 @@ def test_phase_aware_replay_audit_accepts_single_calibration_tie_and_locked_pair
         locked,
         phase="locked",
         per_tape_winner_indices=oracle_by_seed,
+        expected_exogenous_by_seed=locked_expected,
         contract=contract,
     )
     assert tampered["passed"] is False
+
+    wrong_expected = copy.deepcopy(locked_expected)
+    wrong_expected[next(iter(wrong_expected))]["realized_demand_sha256"] = "0" * 64
+    wrong_crn = validate_selected_replay_set(
+        locked,
+        phase="locked",
+        per_tape_winner_indices=oracle_by_seed,
+        expected_exogenous_by_seed=wrong_expected,
+        contract=contract,
+    )
+    assert wrong_crn["passed"] is False
 
 
 def test_contender_overflow_and_missing_certificate_fail_closed():

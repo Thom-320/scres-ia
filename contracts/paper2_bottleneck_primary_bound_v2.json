@@ -69,13 +69,13 @@
     "scientific_interpretation": "All tied calendars remain exact primary maximizers. The frozen guardrail ordering chooses one resource-conservative comparator without looking at locked tapes."
   },
   "acceleration_proof": {
-    "required_key_schema": "paper2_bottleneck_semantic_markov_key_v2",
-    "primary_state_merge_rule": "Prefixes may merge only when a machine-audited semantic key preserves the complete future SimPy event graph, callback ownership, generator continuations, containers and resource queues, RNG states, controller state, unresolved orders, relevant risk events and every transition-relevant simulator attribute.",
+    "required_key_schema": "paper2_bottleneck_semantic_markov_key_v3",
+    "primary_state_merge_rule": "Prefixes may merge only after byte-for-byte equality under semantic Markov key v3, which preserves the complete frozen future SimPy runtime graph including alias classes, event payloads, callback ownership and closure state, generator continuations, containers, resource users and queues, RNG states, controller state, unresolved orders, relevant risk events and every transition-relevant simulator attribute. Every discarded collision prefix must additionally close all admissible successor actions into a terminal-to-root obligation graph with bitwise-equal incremental labels. A one-step comparison alone is not authorization.",
     "output_label_rule": "Completed visible-order ReT rows remain path labels and are never used to merge physical states. Future rows may be appended only after reduced-horizon exhaustive equivalence proves immutability of prior rows and equality with unaccelerated simulation.",
     "reduced_horizon_gate": "Before any 24-week result, the current key schema must reproduce every calendar bitwise at 12 weeks on all five collision-suite tapes and at 16 weeks on the designated hard tape.",
     "numeric_exactness": "Calendar selection must use exact binary64 row sums/counts or a documented rounding enclosure that proves the winner cannot change. Approximate top-k search is forbidden.",
     "unaccelerated_replay": "Replay the calibration winner, every primary tie that can affect selection, and every locked oracle winner with supply_chain.paper2_bottleneck.run_policy. Canonical ReT must match the accelerated score within the preregistered bitwise or certified-rounding rule; compute all guardrails and resource ledgers only from these original-simulator replays.",
-    "failure_rule": "Any unclassified mutable state, unknown callback owner, reduced-horizon mismatch, numeric ambiguity, replay mismatch, CRN mismatch or nonzero approximation gap invalidates the acceleration and leaves the family active_for_bound."
+    "failure_rule": "Any unclassified mutable state, unknown callback owner, incomplete alias graph, byte mismatch, dangling collision obligation, reduced-horizon mismatch, numeric ambiguity, replay mismatch, CRN mismatch or nonzero approximation gap invalidates the acceleration and leaves the family active_for_bound. A cap or timeout may yield only BISIMULATION_CERTIFICATE_INCOMPLETE, never sampled authorization."
   },
   "reduced_horizon_certification": {
     "w12_five_tape": {
@@ -105,7 +105,7 @@
       "output_path": "results/paper2_bottleneck/w24_profile_state_audit.json",
       "runner_mode": "profile_state_audit_only_not_authorization"
     },
-    "provenance_rule": "Each result must use schema v3 or later and pin the producing commit, runner and dependency hashes, scientific environment digest, exact seed/context/split/tape hashes and all-prefix callback audit. The authorization validator must reproduce every tape hash from the committed code."
+    "provenance_rule": "Each new result must use exact-transducer schema v4, authorization schema v4 and W24-audit schema v3 or later; pin the producing commit, runner and dependency hashes, scientific environment digest, exact seed/context/split/tape hashes, all-prefix callback audit, and complete collision-certificate digest. The authorization validator must reproduce every tape hash from committed code. The single W24 profile tape tests the implementation path but never substitutes for a complete per-tape certificate on each of the 60 calibration and 119 locked transducers."
   },
   "decision_rules": {
     "boundary_close": "Close this family only if the paired locked resource-restricted H_PI bootstrap UCB95 is strictly below 0.01. This conclusion uses the exact primary ceiling and does not require a favorable guardrail result.",

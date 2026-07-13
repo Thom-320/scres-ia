@@ -54,6 +54,7 @@ from scripts.run_paper2_bottleneck_exact_transducer import (  # noqa: E402
     feasible_calendars,
     run_prefix,
     runtime_proof_audit,
+    validate_collision_bisimulation_certificate,
     validate_reduced_certification_payload,
 )
 from supply_chain.paper2_bottleneck import (  # noqa: E402
@@ -86,10 +87,10 @@ CHECKPOINT_DEPENDENCY_PATHS = (
     ROOT / "requirements.txt",
     ROOT / "requirements-pinned.txt",
 )
-SCHEMA_VERSION = "paper2_bottleneck_full_frontier_v1"
-MANIFEST_SCHEMA_VERSION = "paper2_bottleneck_full_frontier_manifest_v1"
-AUTHORIZATION_SCHEMA_VERSION = "paper2_bound_execution_authorization_v3"
-W24_AUDIT_SCHEMA_VERSION = "paper2_bottleneck_w24_profile_state_audit_v2"
+SCHEMA_VERSION = "paper2_bottleneck_full_frontier_v2"
+MANIFEST_SCHEMA_VERSION = "paper2_bottleneck_full_frontier_manifest_v2"
+AUTHORIZATION_SCHEMA_VERSION = "paper2_bound_execution_authorization_v4"
+W24_AUDIT_SCHEMA_VERSION = "paper2_bottleneck_w24_profile_state_audit_v3"
 CALENDAR_INDEX_SCHEMA_VERSION = "mtr_no_adjacent_switch_lexicographic_v1"
 NEG_INF = float("-inf")
 POS_INF = float("inf")
@@ -296,6 +297,7 @@ class ScoreTransducer:
     layer_prefix_callback_records_sha256: tuple[str, ...] = ()
     prefixes_with_nonempty_callback_inventory: int = 0
     layer_prefixes_with_nonempty_callback_inventory: tuple[int, ...] = ()
+    collision_bisimulation: dict[str, Any] | None = None
 
     def exact_primary(self, sequence: Sequence[int]) -> Fraction:
         if len(sequence) != self.weeks or int(sequence[0]) != 0:
@@ -377,6 +379,16 @@ def compile_score_transducer(
     seed: int,
     tape_sha256: str,
 ) -> ScoreTransducer:
+    collision_failures = validate_collision_bisimulation_certificate(
+        transducer.collision_bisimulation or {},
+        expected_collision_count=len(transducer.collisions),
+        weeks=transducer.weeks,
+    )
+    if collision_failures:
+        raise ValueError(
+            "cannot compile transducer without complete collision certificate: "
+            + "; ".join(collision_failures)
+        )
     initial_values = transducer.layers[0][0].checkpoint.visible_values
     initial_lower, initial_upper, initial_abs, initial_count, initial_total = (
         _values_label(initial_values)
@@ -476,7 +488,72 @@ def compile_score_transducer(
         layer_prefixes_with_nonempty_callback_inventory=tuple(
             transducer.layer_prefixes_with_nonempty_callback_inventory
         ),
+        collision_bisimulation=dict(transducer.collision_bisimulation or {}),
     )
+
+
+def collision_certificate_coverage(
+    compiled: Sequence[ScoreTransducer],
+) -> dict[str, Any]:
+    """Fail-closed aggregate coverage for every scientific tape transducer."""
+    rows: list[dict[str, Any]] = []
+    identities: set[tuple[int, str]] = set()
+    failures: list[str] = []
+    for index, transducer in enumerate(compiled):
+        certificate = transducer.collision_bisimulation or {}
+        identity = (int(transducer.seed), str(transducer.tape_sha256))
+        if identity in identities:
+            failures.append(f"duplicate certificate identity at index {index}")
+        identities.add(identity)
+        certificate_failures = validate_collision_bisimulation_certificate(
+            certificate,
+            expected_collision_count=transducer.collision_count,
+            weeks=transducer.weeks,
+        )
+        failures.extend(
+            f"index {index}: {failure}" for failure in certificate_failures
+        )
+        rows.append(
+            {
+                "index": index,
+                "seed": transducer.seed,
+                "tape_sha256": transducer.tape_sha256,
+                "collision_count": transducer.collision_count,
+                "collision_root_count": certificate.get("collision_root_count"),
+                "node_obligation_count": certificate.get(
+                    "node_obligation_count"
+                ),
+                "certificate_sha256": certificate.get("certificate_sha256"),
+                "complete": not certificate_failures,
+            }
+        )
+    payload = {
+        "schema_version": "paper2_collision_certificate_coverage_v1",
+        "required_count": len(compiled),
+        "complete_count": sum(row["complete"] is True for row in rows),
+        "unique_identity_count": len(identities),
+        "rows": rows,
+        "rows_sha256": _json_digest(rows),
+        "failures": failures,
+        "passed": (
+            bool(compiled)
+            and len(identities) == len(compiled)
+            and all(row["complete"] is True for row in rows)
+            and not failures
+        ),
+    }
+    payload["coverage_sha256"] = _json_digest(payload)
+    return payload
+
+
+def _collision_certificate_summary(certificate: dict[str, Any]) -> dict[str, Any]:
+    """Small provenance view; complete records remain inside the hashed pickle."""
+    omitted = {"node_obligations", "collision_roots"}
+    return {
+        **{key: value for key, value in certificate.items() if key not in omitted},
+        "records_embedded": False,
+        "records_location": "hashed_score_checkpoint_pickle",
+    }
 
 
 @dataclass(frozen=True)
@@ -490,7 +567,7 @@ class BuildSpec:
 
 def _build_fingerprint(spec: BuildSpec) -> dict[str, Any]:
     return {
-        "schema_version": "paper2_bottleneck_score_checkpoint_v1",
+        "schema_version": "paper2_bottleneck_score_checkpoint_v2",
         "index": spec.index,
         "seed": spec.seed,
         "context": spec.context,
@@ -509,7 +586,7 @@ def _build_fingerprint(spec: BuildSpec) -> dict[str, Any]:
 
 def _compiled_transducer_proof(compiled: ScoreTransducer) -> dict[str, Any]:
     payload = {
-        "schema_version": "paper2_bottleneck_compiled_transducer_proof_v1",
+        "schema_version": "paper2_bottleneck_compiled_transducer_proof_v2",
         "builder": "build_transducer_then_compile_score_transducer",
         "weeks": compiled.weeks,
         "seed": compiled.seed,
@@ -536,6 +613,9 @@ def _compiled_transducer_proof(compiled: ScoreTransducer) -> dict[str, Any]:
         ),
         "layer_prefixes_with_nonempty_callback_inventory": list(
             compiled.layer_prefixes_with_nonempty_callback_inventory
+        ),
+        "collision_bisimulation": _collision_certificate_summary(
+            compiled.collision_bisimulation or {}
         ),
     }
     return {**payload, "proof_sha256": _json_digest(payload)}
@@ -625,6 +705,11 @@ def _load_score_checkpoint(
         or compiled.tape_sha256 != metadata.get("tape_sha256")
         or metadata.get("source_transducer_proof")
         != _compiled_transducer_proof(compiled)
+        or validate_collision_bisimulation_certificate(
+            compiled.collision_bisimulation or {},
+            expected_collision_count=compiled.collision_count,
+            weeks=compiled.weeks,
+        )
     ):
         return None
     return compiled, metadata
@@ -1204,6 +1289,7 @@ def validate_selected_replay_set(
     phase: str | None = None,
     aggregate_winner_indices: Sequence[int] | None = None,
     per_tape_winner_indices: dict[int, Sequence[int]] | None = None,
+    expected_exogenous_by_seed: dict[int, dict[str, str]] | None = None,
     contract: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Require action-invariant exogenous hashes and the complete resource ledger."""
@@ -1238,6 +1324,11 @@ def validate_selected_replay_set(
         failures.append(f"{phase} replay seed coverage mismatch")
     if phase in {"calibration", "locked"} and len(grouped) != len(expected_seeds):
         failures.append(f"{phase} replay tape multiplicity mismatch")
+    if phase in {"calibration", "locked"} and (
+        not isinstance(expected_exogenous_by_seed, dict)
+        or set(expected_exogenous_by_seed) != expected_seeds
+    ):
+        failures.append(f"{phase} independent exogenous-hash coverage mismatch")
     for (seed, tape_sha), group in sorted(grouped.items()):
         threat = {row.get("guardrails", {}).get("consumed_base_threat_sha256") for row in group}
         demand = {row.get("guardrails", {}).get("realized_demand_sha256") for row in group}
@@ -1276,7 +1367,18 @@ def validate_selected_replay_set(
             and _is_sha256(next(iter(threat)))
             and _is_sha256(next(iter(demand)))
         )
-        passed = bool(group) and crn_ok and index_ok
+        expected_exogenous = (
+            (expected_exogenous_by_seed or {}).get(seed, {})
+        )
+        expected_hashes_match = bool(
+            expected_exogenous
+            and next(iter(threat), None)
+            == expected_exogenous.get("consumed_base_threat_sha256")
+            and next(iter(demand), None)
+            == expected_exogenous.get("realized_demand_sha256")
+            and tape_sha == expected_exogenous.get("tape_sha256")
+        ) if phase in {"calibration", "locked"} else True
+        passed = bool(group) and crn_ok and expected_hashes_match and index_ok
         if expected_roles is not None:
             passed = passed and actual_roles == expected_roles
         elif phase is None and len(group) < 2:
@@ -1289,6 +1391,8 @@ def validate_selected_replay_set(
             "replay_count": len(group),
             "consumed_base_threat_sha256": next(iter(threat)) if len(threat) == 1 else None,
             "realized_demand_sha256": next(iter(demand)) if len(demand) == 1 else None,
+            "independent_expected_exogenous": expected_exogenous or None,
+            "expected_hashes_match": expected_hashes_match,
             "passed": passed,
         })
     payload = {
@@ -1371,6 +1475,7 @@ def validate_w24_profile_state_audit_payload(
         "semantic_state_inventory_complete": True,
         "unknown_mutable_state_count": 0,
         "unclassified_callback_owner_count": 0,
+        "collision_bisimulation_passed": True,
         "dependency_sha256": expected_fingerprint["dependency_sha256"],
     }
     for key, value in expected.items():
@@ -1404,6 +1509,7 @@ def validate_w24_profile_state_audit_payload(
     layer_nonempty = source_proof.get(
         "layer_prefixes_with_nonempty_callback_inventory", []
     )
+    collision_bisimulation = audit.get("collision_bisimulation", {})
     if not (
         source_proof.get("builder") == "build_transducer_then_compile_score_transducer"
         and source_proof.get("weeks") == 24
@@ -1428,8 +1534,40 @@ def validate_w24_profile_state_audit_payload(
         and isinstance(layer_callback_digests, list)
         and len(layer_callback_digests) == 24
         and all(_is_sha256(row) for row in layer_callback_digests)
+        and source_proof.get("collision_bisimulation")
+        == _collision_certificate_summary(collision_bisimulation)
     ):
         failures.append("W24 layer-wide callback/evaluation proof failed")
+    if not (
+        collision_bisimulation.get("passed") is True
+        and collision_bisimulation.get("key_schema_version")
+        == KEY_SCHEMA_VERSION
+        and collision_bisimulation.get("complete_state_serialization") is True
+        and collision_bisimulation.get("event_payload_serialized") is True
+        and collision_bisimulation.get("resource_users_serialized") is True
+        and collision_bisimulation.get("callback_closure_state_serialized") is True
+        and collision_bisimulation.get(
+            "process_target_state_serialized_or_fail_closed"
+        ) is True
+        and collision_bisimulation.get("runtime_alias_graph_serialized") is True
+        and collision_bisimulation.get("collision_payload_checks")
+        == summary.get("collision_count")
+        and collision_bisimulation.get("collision_root_count")
+        == summary.get("collision_count")
+        and collision_bisimulation.get("unresolved_node_obligation_count") == 0
+        and collision_bisimulation.get("unresolved_collision_root_count") == 0
+        and collision_bisimulation.get("all_actions_covered") is True
+        and collision_bisimulation.get("backward_induction_complete") is True
+        and not collision_bisimulation.get("mismatch_examples")
+        and _is_sha256(collision_bisimulation.get("transition_record_sha256"))
+    ):
+        failures.append("W24 collision bisimulation is incomplete")
+    for failure in validate_collision_bisimulation_certificate(
+        collision_bisimulation,
+        expected_collision_count=int(summary.get("collision_count", -1)),
+        weeks=24,
+    ):
+        failures.append(f"W24 collision certificate invalid: {failure}")
     if not all(
         _is_sha256(summary.get(key))
         for key in (
@@ -1470,7 +1608,7 @@ def validate_acceleration_authorization(
     for key in (
         "execution_authorized",
         "primary_bound_batch_authorized",
-        "reduced_horizon_key_v2_certified",
+        "reduced_horizon_key_v3_certified",
         "full_horizon_primary_acceleration_authorized",
         "primary_frontier_exactness_required",
         "original_runner_replay_required",
@@ -2191,6 +2329,34 @@ def assemble_w24_profile_state_audit(
         and len(compiled.layer_prefix_callback_records_sha256) == 24
         and all(_is_sha256(row) for row in compiled.layer_prefix_callback_records_sha256)
     )
+    collision_bisimulation = compiled.collision_bisimulation or {}
+    collision_bisimulation_passed = bool(
+        collision_bisimulation.get("passed") is True
+        and collision_bisimulation.get("key_schema_version") == KEY_SCHEMA_VERSION
+        and collision_bisimulation.get("complete_state_serialization") is True
+        and collision_bisimulation.get("event_payload_serialized") is True
+        and collision_bisimulation.get("resource_users_serialized") is True
+        and collision_bisimulation.get("callback_closure_state_serialized") is True
+        and collision_bisimulation.get(
+            "process_target_state_serialized_or_fail_closed"
+        ) is True
+        and collision_bisimulation.get("runtime_alias_graph_serialized") is True
+        and collision_bisimulation.get("collision_payload_checks")
+        == compiled.collision_count
+        and collision_bisimulation.get("collision_root_count")
+        == compiled.collision_count
+        and collision_bisimulation.get("unresolved_node_obligation_count") == 0
+        and collision_bisimulation.get("unresolved_collision_root_count") == 0
+        and collision_bisimulation.get("all_actions_covered") is True
+        and collision_bisimulation.get("backward_induction_complete") is True
+        and not collision_bisimulation.get("mismatch_examples")
+        and _is_sha256(collision_bisimulation.get("transition_record_sha256"))
+        and not validate_collision_bisimulation_certificate(
+            collision_bisimulation,
+            expected_collision_count=compiled.collision_count,
+            weeks=compiled.weeks,
+        )
+    )
     passed = bool(
         compiled.weeks == 24
         and compiled.seed == 1_110_001
@@ -2204,6 +2370,7 @@ def assemble_w24_profile_state_audit(
         and inventory.get("all_frozen_invariants_hold") is True
         and not unknown_mutable
         and unknown_callbacks == 0
+        and collision_bisimulation_passed
     )
     checkpoint_summary = {
         "raw_cache_locator": "separate_execution_artifact_manifest",
@@ -2247,6 +2414,8 @@ def assemble_w24_profile_state_audit(
         "unknown_mutable_state": unknown_mutable,
         "unclassified_callback_owner_count": unknown_callbacks,
         "layer_wide_callback_audit_passed": layer_wide_callbacks,
+        "collision_bisimulation": collision_bisimulation,
+        "collision_bisimulation_passed": collision_bisimulation_passed,
     }
     payload["audit_content_sha256"] = _json_digest(payload)
     return payload
@@ -2422,6 +2591,12 @@ def main() -> int:
         progress_path=progress_path,
         started=started,
     )
+    certificate_coverage = collision_certificate_coverage(compiled)
+    if not certificate_coverage["passed"]:
+        raise RuntimeError(
+            "per-tape collision-certificate coverage failed closed: "
+            + "; ".join(certificate_coverage["failures"])
+        )
     tapes = [
         materialize_tape(
             spec.seed, spec.context, spec.split, weeks=spec.weeks
@@ -2572,6 +2747,25 @@ def main() -> int:
             **_paired_h_pi_inference(paired_rows),
         }
 
+    expected_exogenous_by_seed: dict[int, dict[str, str]] = {}
+    if scientific_run:
+        reference_calendar = (0,) * args.weeks
+        for tape in tapes:
+            reference = run_policy(
+                tape,
+                active_calendar_policy(reference_calendar),
+            )
+            expected_exogenous_by_seed[int(tape["seed"])] = {
+                "tape_sha256": str(tape["threat_sha256"]),
+                "consumed_base_threat_sha256": str(
+                    reference["consumed_base_threat_sha256"]
+                ),
+                "realized_demand_sha256": str(
+                    reference["realized_demand_sha256"]
+                ),
+                "reference_calendar": "M" * args.weeks,
+            }
+
     selected_replay_audit = validate_selected_replay_set(
         replay_rows,
         phase=args.phase if scientific_run else "smoke",
@@ -2588,6 +2782,9 @@ def main() -> int:
             if args.phase == "locked"
             else None
         ),
+        expected_exogenous_by_seed=(
+            expected_exogenous_by_seed if scientific_run else None
+        ),
     )
     replay_ok = selected_replay_audit["passed"] is True
     selection_complete = bool(
@@ -2598,6 +2795,7 @@ def main() -> int:
     )
     phase_complete = bool(
         resolved["exact_maximum_certified"]
+        and certificate_coverage["passed"] is True
         and replay_ok
         and selection_complete
         and (
@@ -2640,6 +2838,7 @@ def main() -> int:
             "checkpoint_dir": str(checkpoint_dir.resolve()),
             "resumable": True,
             "checkpoints": checkpoint_metadata,
+            "collision_certificate_coverage": certificate_coverage,
         },
         "transducers": [
             {
@@ -2648,6 +2847,9 @@ def main() -> int:
                 "state_counts": row.state_counts,
                 "prefix_replays": row.prefix_replays,
                 "collision_count": row.collision_count,
+                "collision_certificate_sha256": (
+                    (row.collision_bisimulation or {}).get("certificate_sha256")
+                ),
                 "score_table_sha256": row.table_sha256,
             }
             for row in compiled
@@ -2778,8 +2980,14 @@ def main() -> int:
                 "data_path": row["data_path"],
                 "data_sha256": row["data_sha256"],
                 "score_table_sha256": row["score_table_sha256"],
+                "collision_certificate_sha256": row[
+                    "source_transducer_proof"
+                ]["collision_bisimulation"]["certificate_sha256"],
             }
             for row in checkpoint_metadata
+        ],
+        "collision_certificate_coverage_sha256": certificate_coverage[
+            "coverage_sha256"
         ],
         "result_path": str(args.output.resolve()),
         "result_sha256": _file_sha256(args.output),

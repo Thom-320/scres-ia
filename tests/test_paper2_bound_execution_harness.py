@@ -1,7 +1,9 @@
 import json
 from pathlib import Path
+import shutil
 import subprocess
 import sys
+from types import SimpleNamespace
 
 import pytest
 
@@ -167,6 +169,88 @@ def test_checksum_tampering_fails_retrieval_verification(tmp_path):
     assert verification["evidence_status"] == "VERIFICATION_FAILED_NOT_EVIDENCE"
 
 
+def test_checksum_manifest_is_anchored_and_covers_status_receipts(tmp_path):
+    run_dir = _prepare(tmp_path)
+    assert execute_run(run_dir=run_dir, repo_root=ROOT, location="local") == 0
+    status = json.loads((run_dir / "status" / "run_status.json").read_text())
+    checksum_path = run_dir / "artifact_checksums.json"
+    checksums = json.loads(checksum_path.read_text())
+    recorded = {row["path"] for row in checksums["records"]}
+    seed_status = next((run_dir / "status" / "seeds").glob("*.json"))
+    execution_receipt = next(
+        (run_dir / "status" / "jobs").glob("*.execution_receipt.json")
+    )
+
+    assert status["checksums_sha256"] == harness.sha256_file(checksum_path)
+    assert "status/run_completion_receipt.json" in recorded
+    assert str(seed_status.relative_to(run_dir)) in recorded
+    assert str(execution_receipt.relative_to(run_dir)) in recorded
+
+    checksums["generated_at_utc"] = "tampered"
+    checksum_path.write_text(json.dumps(checksums))
+    verification = verify_artifacts(run_dir, retrieved=True)
+    assert verification["checks_passed"] is False
+    assert any("run status anchor" in reason for reason in verification["failures"])
+
+
+def test_checksum_manifest_structure_and_confinement_fail_closed(tmp_path):
+    baseline = _prepare(tmp_path)
+    assert execute_run(run_dir=baseline, repo_root=ROOT, location="local") == 0
+
+    cases = {
+        "count": "record_count",
+        "duplicate": "duplicate checksum record path",
+        "traversal": "escapes run directory",
+        "omission": "omits protected status/receipt paths",
+    }
+    for case, expected_failure in cases.items():
+        run_dir = tmp_path / case
+        shutil.copytree(baseline, run_dir)
+        checksum_path = run_dir / "artifact_checksums.json"
+        checksums = json.loads(checksum_path.read_text())
+        if case == "count":
+            checksums["record_count"] += 1
+        elif case == "duplicate":
+            checksums["records"].append(dict(checksums["records"][0]))
+            checksums["record_count"] = len(checksums["records"])
+        elif case == "traversal":
+            checksums["records"][0]["path"] = "../outside.json"
+        else:
+            checksums["records"] = [
+                row
+                for row in checksums["records"]
+                if not row["path"].startswith("status/seeds/")
+            ]
+            checksums["record_count"] = len(checksums["records"])
+        checksum_path.write_text(json.dumps(checksums))
+        status_path = run_dir / "status" / "run_status.json"
+        status = json.loads(status_path.read_text())
+        status["checksums_sha256"] = harness.sha256_file(checksum_path)
+        status_path.write_text(json.dumps(status))
+
+        verification = verify_artifacts(run_dir, retrieved=True)
+        assert verification["checks_passed"] is False
+        assert any(
+            expected_failure in reason for reason in verification["failures"]
+        )
+
+
+def test_seed_status_tampering_is_checksum_protected(tmp_path):
+    run_dir = _prepare(tmp_path)
+    assert execute_run(run_dir=run_dir, repo_root=ROOT, location="local") == 0
+    seed_status = next((run_dir / "status" / "seeds").glob("*.json"))
+    payload = json.loads(seed_status.read_text())
+    payload["state"] = "completed-but-tampered"
+    seed_status.write_text(json.dumps(payload))
+
+    verification = verify_artifacts(run_dir, retrieved=True)
+    assert verification["checks_passed"] is False
+    assert any(
+        f"checksum mismatch {seed_status.relative_to(run_dir)}" in reason
+        for reason in verification["failures"]
+    )
+
+
 def test_dry_run_and_non_scientific_vps_launch_fail_closed(tmp_path):
     run_dir = _prepare(tmp_path, mode="dry-run")
     with pytest.raises(HarnessError, match="dry-run manifest cannot execute"):
@@ -183,6 +267,41 @@ def test_dry_run_and_non_scientific_vps_launch_fail_closed(tmp_path):
         )
 
 
+def test_vps_launcher_groups_only_detached_process(monkeypatch, tmp_path):
+    run_dir = tmp_path / "sealed"
+    (run_dir / "status").mkdir(parents=True)
+    (run_dir / "status" / "remote_stage.json").write_text(
+        json.dumps({"remote_run": "~/paper2-bound-runs/pytest-sealed"})
+    )
+    (run_dir / "run_manifest.json").write_text(
+        json.dumps(
+            {
+                "mode": "reduced_w12",
+                "execution": {"sealed_for_execution": True},
+                "inputs": {"harness_relative": "scripts/paper2_bound_execution_harness.py"},
+            }
+        )
+    )
+    captured = {}
+
+    def fake_run_capture(argv, **_kwargs):
+        captured["argv"] = argv
+        return SimpleNamespace(stdout="12345\n")
+
+    monkeypatch.setattr(harness, "run_capture", fake_run_capture)
+    payload = launch_vps(
+        run_dir=run_dir,
+        host="ovh-agent-lab",
+        remote_python="~/scres-ia/.venv/bin/python",
+    )
+
+    remote_command = captured["argv"][-1]
+    assert "&& { nohup " in remote_command
+    assert "< /dev/null & echo $!; }" in remote_command
+    assert payload["remote_launcher_pid"] == 12345
+    assert (run_dir / "status" / "remote_submission.json").is_file()
+
+
 def test_primary_bound_scope_requires_exact_primary_replay_but_not_full_guardrail():
     manifest = {
         "inputs": {"contract_sha256": "c" * 64, "runner_sha256": "r" * 64},
@@ -190,7 +309,7 @@ def test_primary_bound_scope_requires_exact_primary_replay_but_not_full_guardrai
     }
     payload = {
         "execution_assurance": {
-            "key_schema_version": "paper2_bottleneck_semantic_markov_key_v2",
+            "key_schema_version": "paper2_bottleneck_semantic_markov_key_v3",
             "primary_frontier_exact": True,
             "numeric_approximation_gap": 0,
             "original_runner_replay_passed": True,
@@ -491,7 +610,7 @@ def test_authorization_template_separates_reduced_and_w24_primary_gates():
         seed_manifest_sha256="s" * 64,
         command_manifest_sha256="m" * 64,
     )
-    assert template["reduced_horizon_key_v2_certified"] is False
+    assert template["reduced_horizon_key_v3_certified"] is False
     assert template["full_horizon_primary_acceleration_authorized"] is False
     assert template["w24_profile_state_audit"] == {
         "path": "results/paper2_bottleneck/w24_profile_state_audit.json",
@@ -501,6 +620,30 @@ def test_authorization_template_separates_reduced_and_w24_primary_gates():
 
 
 def test_finalized_native_frontier_result_schema_passes_primary_only_validation():
+    certificate_rows = [
+        {
+            "index": index,
+            "seed": 1_100_001 + index,
+            "tape_sha256": f"{index + 1:064x}"[-64:],
+            "collision_count": 0,
+            "collision_root_count": 0,
+            "node_obligation_count": 1,
+            "certificate_sha256": f"{index + 101:064x}"[-64:],
+            "complete": True,
+        }
+        for index in range(60)
+    ]
+    coverage = {
+        "schema_version": "paper2_collision_certificate_coverage_v1",
+        "required_count": 60,
+        "complete_count": 60,
+        "unique_identity_count": 60,
+        "rows": certificate_rows,
+        "rows_sha256": harness.canonical_json_sha256(certificate_rows),
+        "failures": [],
+        "passed": True,
+    }
+    coverage["coverage_sha256"] = harness.canonical_json_sha256(coverage)
     manifest = {
         "inputs": {
             "contract_sha256": "c" * 64,
@@ -515,7 +658,7 @@ def test_finalized_native_frontier_result_schema_passes_primary_only_validation(
         },
     }
     payload = {
-        "schema_version": "paper2_bottleneck_full_frontier_v1",
+        "schema_version": "paper2_bottleneck_full_frontier_v2",
         "phase": "calibration",
         "weeks": 24,
         "primary_contract_sha256": "c" * 64,
@@ -532,12 +675,17 @@ def test_finalized_native_frontier_result_schema_passes_primary_only_validation(
             "contender_overflow": {"aggregate": False, "per_tape": []},
         },
         "acceleration_authorization": {
-            "key_schema_version": "paper2_bottleneck_semantic_markov_key_v2",
+            "key_schema_version": "paper2_bottleneck_semantic_markov_key_v3",
             "authorized": True,
                 "sha256": "a" * 64,
                 "environment_sha256": "e" * 64,
             },
-            "build": {"checkpoints": [{"environment": {"environment_sha256": "e" * 64}}]},
+            "build": {
+                "checkpoints": [
+                    {"environment": {"environment_sha256": "e" * 64}}
+                ],
+                "collision_certificate_coverage": coverage,
+            },
         "selected_replays": [
             {
                 "guardrails": {
@@ -567,8 +715,9 @@ def test_finalized_native_frontier_result_schema_passes_primary_only_validation(
         "code_sha256": {
             "scripts/run_paper2_bottleneck_full_frontier.py": "r" * 64
         },
-        "key_schema_version": "paper2_bottleneck_semantic_markov_key_v2",
+        "key_schema_version": "paper2_bottleneck_semantic_markov_key_v3",
         "exact_maximum_certified": True,
         "environment_sha256": "e" * 64,
+        "collision_certificate_coverage_sha256": coverage["coverage_sha256"],
     }
     assert _validate_scientific_result(payload, manifest, runner_manifest) == []

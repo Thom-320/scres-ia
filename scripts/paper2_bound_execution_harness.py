@@ -20,7 +20,7 @@ from datetime import datetime, timezone
 import hashlib
 import json
 import os
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import platform
 import re
 import shlex
@@ -51,7 +51,7 @@ FULL_HORIZON_CONTRACT = (
 DEFAULT_HOST = "ovh-agent-lab"
 DEFAULT_REMOTE_ROOT = "~/paper2-bound-runs"
 SCHEMA = "paper2_bound_execution_harness_v1"
-AUTH_SCHEMA = "paper2_bound_execution_authorization_v3"
+AUTH_SCHEMA = "paper2_bound_execution_authorization_v4"
 CONTEXTS = ("equipment_pressure", "interdiction_campaign", "mission_surge")
 RUN_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,95}$")
 SAFE_REMOTE_RE = re.compile(r"^[A-Za-z0-9_./~+-]+$")
@@ -119,6 +119,7 @@ def validate_scientific_environment_payload(
         "python_soabi",
         "packages",
         "requirements_sha256",
+        "simpy_source_sha256",
         "environment_sha256",
     }
     if set(payload) != expected_keys:
@@ -133,6 +134,7 @@ def validate_scientific_environment_payload(
             "python_cache_tag",
             "packages",
             "requirements_sha256",
+            "simpy_source_sha256",
         ):
             if payload[key] != local_reference[key]:
                 raise HarnessError(
@@ -642,7 +644,7 @@ def _validate_authorization(
     required_true = (
         "execution_authorized",
         "primary_bound_batch_authorized",
-        "reduced_horizon_key_v2_certified",
+        "reduced_horizon_key_v3_certified",
         "full_horizon_primary_acceleration_authorized",
         "primary_frontier_exactness_required",
         "original_runner_replay_required",
@@ -657,8 +659,8 @@ def _validate_authorization(
     for key in required_true:
         if authorization.get(key) is not True:
             failures.append(f"{key} is not true")
-    if authorization.get("key_schema_version") != "paper2_bottleneck_semantic_markov_key_v2":
-        failures.append("authorization does not require semantic Markov key v2")
+    if authorization.get("key_schema_version") != "paper2_bottleneck_semantic_markov_key_v3":
+        failures.append("authorization does not require semantic Markov key v3")
     if scope == "full_guardrail_frontier" and authorization.get("full_guardrail_label_certified") is not True:
         failures.append("full_guardrail_frontier requires full_guardrail_label_certified")
     if authorization.get("material_hpi_promotion_authorized") is not False:
@@ -753,8 +755,8 @@ def _authorization_template(
         "authorization_scope": "primary_bound_only",
         "execution_authorized": False,
         "primary_bound_batch_authorized": False,
-        "key_schema_version": "paper2_bottleneck_semantic_markov_key_v2",
-        "reduced_horizon_key_v2_certified": False,
+        "key_schema_version": "paper2_bottleneck_semantic_markov_key_v3",
+        "reduced_horizon_key_v3_certified": False,
         "full_horizon_primary_acceleration_authorized": False,
         "reduced_horizon_certification_artifacts": [
             {
@@ -844,8 +846,8 @@ def prepare_run(
     if mode in EXECUTABLE_EVIDENCE_MODES:
         if contract.get("contract_id") != "paper2_bottleneck_primary_bound_v2":
             raise HarnessError("evidence execution requires paper2_bottleneck_primary_bound_v2")
-        if contract.get("acceleration_proof", {}).get("required_key_schema") != "paper2_bottleneck_semantic_markov_key_v2":
-            raise HarnessError("primary-bound contract does not require semantic Markov key v2")
+        if contract.get("acceleration_proof", {}).get("required_key_schema") != "paper2_bottleneck_semantic_markov_key_v3":
+            raise HarnessError("primary-bound contract does not require semantic Markov key v3")
         if contract.get("decision_rules", {}).get("learner_authorized") is not False:
             raise HarnessError("primary-bound contract must keep learner authorization false")
         if contract_path.resolve() != DEFAULT_CONTRACT.resolve():
@@ -1390,8 +1392,8 @@ def _validate_scientific_result(
     expected = run_manifest["inputs"]
     assurance = payload.get("execution_assurance")
     if isinstance(assurance, dict):
-        if assurance.get("key_schema_version") != "paper2_bottleneck_semantic_markov_key_v2":
-            failures.append("result key schema is not v2")
+        if assurance.get("key_schema_version") != "paper2_bottleneck_semantic_markov_key_v3":
+            failures.append("result key schema is not v3")
         if assurance.get("primary_frontier_exact") is not True:
             failures.append("primary frontier is not declared exact")
         if assurance.get("numeric_approximation_gap") != 0:
@@ -1404,7 +1406,7 @@ def _validate_scientific_result(
             failures.append("result contract hash mismatch")
         if assurance.get("runner_sha256") != expected["runner_sha256"]:
             failures.append("result runner hash mismatch")
-    elif payload.get("schema_version") == "paper2_bottleneck_full_frontier_v1":
+    elif payload.get("schema_version") == "paper2_bottleneck_full_frontier_v2":
         if runner_manifest is None:
             failures.append("native frontier result lacks its runner manifest")
         phase = run_manifest["execution"].get("phase")
@@ -1439,8 +1441,8 @@ def _validate_scientific_result(
         if overflow.get("aggregate") or overflow.get("per_tape"):
             failures.append("calendar frontier contender resolution overflowed")
         authorization = payload.get("acceleration_authorization", {})
-        if authorization.get("key_schema_version") != "paper2_bottleneck_semantic_markov_key_v2":
-            failures.append("frontier acceleration key schema is not v2")
+        if authorization.get("key_schema_version") != "paper2_bottleneck_semantic_markov_key_v3":
+            failures.append("frontier acceleration key schema is not v3")
         if authorization.get("authorized") is not True:
             failures.append("frontier acceleration authorization is not authorized")
         if authorization.get("sha256") != expected.get("authorization_sha256"):
@@ -1456,6 +1458,51 @@ def _validate_scientific_result(
             for row in checkpoints
         ):
             failures.append("frontier checkpoint environment digest mismatch")
+        certificate_coverage = payload.get("build", {}).get(
+            "collision_certificate_coverage", {}
+        )
+        coverage_body = (
+            dict(certificate_coverage)
+            if isinstance(certificate_coverage, dict)
+            else {}
+        )
+        coverage_digest = coverage_body.pop("coverage_sha256", None)
+        coverage_rows = certificate_coverage.get("rows", []) if isinstance(
+            certificate_coverage, dict
+        ) else []
+        expected_certificate_count = 60 if phase == "calibration" else 119
+        certificate_identities = {
+            (row.get("seed"), row.get("tape_sha256"))
+            for row in coverage_rows
+            if isinstance(row, dict)
+        }
+        if not (
+            coverage_digest == canonical_json_sha256(coverage_body)
+            and certificate_coverage.get("schema_version")
+            == "paper2_collision_certificate_coverage_v1"
+            and certificate_coverage.get("passed") is True
+            and certificate_coverage.get("required_count")
+            == expected_certificate_count
+            and certificate_coverage.get("complete_count")
+            == expected_certificate_count
+            and certificate_coverage.get("unique_identity_count")
+            == expected_certificate_count
+            and len(coverage_rows) == expected_certificate_count
+            and len(certificate_identities) == expected_certificate_count
+            and certificate_coverage.get("rows_sha256")
+            == canonical_json_sha256(coverage_rows)
+            and all(
+                row.get("complete") is True
+                and isinstance(row.get("certificate_sha256"), str)
+                and len(row["certificate_sha256"]) == 64
+                for row in coverage_rows
+                if isinstance(row, dict)
+            )
+            and not certificate_coverage.get("failures")
+        ):
+            failures.append(
+                "frontier does not carry complete unique per-tape collision certificates"
+            )
         replays = payload.get("selected_replays", [])
         if not replays:
             failures.append("frontier has no unaccelerated winner replays")
@@ -1502,14 +1549,20 @@ def _validate_scientific_result(
             code_hashes = runner_manifest.get("code_sha256", {})
             if code_hashes.get(expected["runner_relative"]) != expected["runner_sha256"]:
                 failures.append("runner manifest code hash mismatch")
-            if runner_manifest.get("key_schema_version") != "paper2_bottleneck_semantic_markov_key_v2":
-                failures.append("runner manifest key schema is not v2")
+            if runner_manifest.get("key_schema_version") != "paper2_bottleneck_semantic_markov_key_v3":
+                failures.append("runner manifest key schema is not v3")
             if runner_manifest.get("exact_maximum_certified") is not True:
                 failures.append("runner manifest does not certify the exact maximum")
             if runner_manifest.get("environment_sha256") != expected.get(
                 "environment_sha256"
             ):
                 failures.append("runner manifest environment digest mismatch")
+            if runner_manifest.get("collision_certificate_coverage_sha256") != (
+                certificate_coverage.get("coverage_sha256")
+            ):
+                failures.append(
+                    "runner manifest collision-certificate coverage hash mismatch"
+                )
     else:
         failures.append("scientific result lacks a recognized execution assurance")
     scope = run_manifest["execution"].get("authorization_scope")
@@ -1616,6 +1669,27 @@ def _checksum_records(run_dir: Path, relative_paths: Iterable[str]) -> list[dict
             {"path": relative, "sha256": sha256_file(path), "bytes": path.stat().st_size}
         )
     return records
+
+
+def _confined_checksum_path(run_dir: Path, relative: Any) -> tuple[str, Path]:
+    """Resolve one manifest path without permitting aliases or traversal."""
+    if not isinstance(relative, str) or not relative or "\\" in relative:
+        raise HarnessError("checksum record path is not a canonical relative path")
+    pure = PurePosixPath(relative)
+    if pure.is_absolute() or any(part in {"", ".", ".."} for part in pure.parts):
+        raise HarnessError(f"checksum record path escapes run directory: {relative!r}")
+    canonical = pure.as_posix()
+    if canonical != relative:
+        raise HarnessError(f"checksum record path is not canonical: {relative!r}")
+    root = run_dir.resolve()
+    candidate = (root / Path(*pure.parts)).resolve()
+    try:
+        candidate.relative_to(root)
+    except ValueError as exc:
+        raise HarnessError(
+            f"checksum record path escapes run directory: {relative!r}"
+        ) from exc
+    return canonical, candidate
 
 
 def execute_run(*, run_dir: Path, repo_root: Path = ROOT, location: str = "local") -> int:
@@ -1908,6 +1982,44 @@ def execute_run(*, run_dir: Path, repo_root: Path = ROOT, location: str = "local
         stop.set()
         thread.join(timeout=max(1.0, interval * 2))
 
+    completed_all = not failed and live.completed_seed_count == seed_manifest["seed_count"]
+    final_state = "completed" if completed_all else "failed"
+    final_evidence_status = (
+        "COMPLETED_REMOTE_NOT_RETRIEVED_NOT_EVIDENCE"
+        if completed_all and location == "vps"
+        else "COMPLETED_HASHED_AUDIT_PENDING_NOT_EVIDENCE"
+        if completed_all
+        else "FAILED_NOT_EVIDENCE"
+    )
+    completion_receipt_relative = "status/run_completion_receipt.json"
+    atomic_write_json(
+        run_dir / completion_receipt_relative,
+        {
+            "schema_version": SCHEMA,
+            "run_id": run_id,
+            "state": final_state,
+            "location": location,
+            "seed_count": seed_manifest["seed_count"],
+            "completed_seed_count": live.completed_seed_count,
+            "failed_seed_count": live.failed_seed_count,
+            "run_manifest_sha256": sha256_file(paths["run"]),
+            "seed_manifest_sha256": sha256_file(paths["seeds"]),
+            "command_manifest_sha256": sha256_file(paths["commands"]),
+            "immutable_status_snapshot": True,
+            "evidence": False,
+            "evidence_status": final_evidence_status,
+        },
+    )
+    checksum_paths.append(completion_receipt_relative)
+    for status_group in ("seeds", "jobs"):
+        status_dir = run_dir / "status" / status_group
+        if status_dir.is_dir():
+            checksum_paths.extend(
+                str(path.relative_to(run_dir))
+                for path in status_dir.rglob("*.json")
+                if path.is_file()
+            )
+
     records = _checksum_records(run_dir, checksum_paths)
     checksum_manifest = {
         "schema_version": SCHEMA,
@@ -1919,15 +2031,6 @@ def execute_run(*, run_dir: Path, repo_root: Path = ROOT, location: str = "local
         "evidence_status": "HASHED_AUDIT_PENDING_NOT_EVIDENCE",
     }
     atomic_write_json(paths["checksums"], checksum_manifest)
-    completed_all = not failed and live.completed_seed_count == seed_manifest["seed_count"]
-    final_state = "completed" if completed_all else "failed"
-    final_evidence_status = (
-        "COMPLETED_REMOTE_NOT_RETRIEVED_NOT_EVIDENCE"
-        if completed_all and location == "vps"
-        else "COMPLETED_HASHED_AUDIT_PENDING_NOT_EVIDENCE"
-        if completed_all
-        else "FAILED_NOT_EVIDENCE"
-    )
     atomic_write_json(
         paths["status"],
         {
@@ -1950,34 +2053,155 @@ def execute_run(*, run_dir: Path, repo_root: Path = ROOT, location: str = "local
 
 
 def verify_artifacts(run_dir: Path, *, retrieved: bool) -> dict[str, Any]:
-    paths = _manifest_paths(run_dir)
-    run_manifest = load_json(paths["run"])
-    status = load_json(paths["status"])
-    checksums = load_json(paths["checksums"])
-    failures = []
+    _run_relative, run_path = _confined_checksum_path(run_dir, "run_manifest.json")
+    _status_relative, status_path = _confined_checksum_path(
+        run_dir, "status/run_status.json"
+    )
+    _checksums_relative, checksums_path = _confined_checksum_path(
+        run_dir, "artifact_checksums.json"
+    )
+    _seeds_relative, seeds_path = _confined_checksum_path(
+        run_dir, "seed_manifest.json"
+    )
+    _commands_relative, commands_path = _confined_checksum_path(
+        run_dir, "command_manifest.json"
+    )
+    run_manifest = load_json(run_path)
+    status = load_json(status_path)
+    checksums = load_json(checksums_path)
+    failures: list[str] = []
     if status.get("state") != "completed":
         failures.append("run status is not completed")
+    checksum_manifest_sha256 = sha256_file(checksums_path)
+    if status.get("checksums_sha256") != checksum_manifest_sha256:
+        failures.append("checksum manifest hash does not match run status anchor")
+    if checksums.get("schema_version") != SCHEMA:
+        failures.append("checksum manifest schema mismatch")
     if checksums.get("run_id") != run_manifest.get("run_id"):
         failures.append("checksum manifest run id mismatch")
+    records = checksums.get("records")
+    if not isinstance(records, list):
+        failures.append("checksum manifest records are missing or malformed")
+        records = []
+    if (
+        isinstance(checksums.get("record_count"), bool)
+        or not isinstance(checksums.get("record_count"), int)
+        or checksums.get("record_count") != len(records)
+    ):
+        failures.append("checksum manifest record_count mismatch")
+
     checked = []
-    for record in checksums.get("records", []):
-        path = run_dir / record["path"]
+    seen_paths: set[str] = set()
+    for index, record in enumerate(records):
+        if not isinstance(record, dict):
+            failures.append(f"malformed checksum record {index}")
+            continue
+        try:
+            relative, path = _confined_checksum_path(run_dir, record.get("path"))
+        except HarnessError as exc:
+            failures.append(str(exc))
+            continue
+        if relative in seen_paths:
+            failures.append(f"duplicate checksum record path: {relative}")
+            continue
+        seen_paths.add(relative)
+        expected_sha = record.get("sha256")
+        expected_bytes = record.get("bytes")
+        if not isinstance(expected_sha, str) or re.fullmatch(r"[0-9a-f]{64}", expected_sha) is None:
+            failures.append(f"malformed checksum digest {relative}")
+            continue
+        if (
+            isinstance(expected_bytes, bool)
+            or not isinstance(expected_bytes, int)
+            or expected_bytes < 0
+        ):
+            failures.append(f"malformed checksum byte count {relative}")
+            continue
         if not path.is_file():
-            failures.append(f"missing {record['path']}")
+            failures.append(f"missing {relative}")
             continue
         actual = sha256_file(path)
-        ok = actual == record["sha256"] and path.stat().st_size == record["bytes"]
-        checked.append({"path": record["path"], "passed": ok, "actual_sha256": actual})
+        ok = actual == expected_sha and path.stat().st_size == expected_bytes
+        checked.append({"path": relative, "passed": ok, "actual_sha256": actual})
         if not ok:
-            failures.append(f"checksum mismatch {record['path']}")
+            failures.append(f"checksum mismatch {relative}")
+
+    seed_manifest = load_json(seeds_path)
+    command_manifest = load_json(commands_path)
+    required_protected_paths = {
+        "run_manifest.json",
+        "seed_manifest.json",
+        "command_manifest.json",
+        "status/run_completion_receipt.json",
+    }
+    for row in seed_manifest.get("seeds", []):
+        required_protected_paths.add(
+            f"status/seeds/seed_{row['seed']}_{row['context']}.json"
+        )
+    for command in command_manifest.get("commands", []):
+        item_id = command.get("job_id") or command.get("seed_id")
+        if not isinstance(item_id, str) or not item_id:
+            failures.append("command manifest item identity is malformed")
+            continue
+        if command.get("job_id"):
+            required_protected_paths.add(f"status/jobs/{item_id}.json")
+        required_protected_paths.add(
+            f"status/jobs/{item_id}.execution_receipt.json"
+        )
+    missing_protected = sorted(required_protected_paths - seen_paths)
+    if missing_protected:
+        failures.append(
+            "immutable checksum manifest omits protected status/receipt paths: "
+            + ", ".join(missing_protected)
+        )
+
     seed_statuses = sorted((run_dir / "status" / "seeds").glob("*.json"))
-    expected_seed_count = load_json(paths["seeds"])["seed_count"]
+    expected_seed_count = seed_manifest["seed_count"]
     if len(seed_statuses) != expected_seed_count:
         failures.append("per-seed status count mismatch")
     for seed_status_path in seed_statuses:
-        seed_status = load_json(seed_status_path)
+        seed_status_relative = str(seed_status_path.relative_to(run_dir))
+        try:
+            _relative, confined_seed_status = _confined_checksum_path(
+                run_dir, seed_status_relative
+            )
+        except HarnessError as exc:
+            failures.append(str(exc))
+            continue
+        if seed_status_relative not in seen_paths:
+            failures.append(
+                f"per-seed status is not checksum protected: {seed_status_relative}"
+            )
+            continue
+        seed_status = load_json(confined_seed_status)
         if seed_status.get("state") != "completed":
             failures.append(f"seed not completed: {seed_status_path.name}")
+    completion_receipt_relative = "status/run_completion_receipt.json"
+    _relative, completion_receipt_path = _confined_checksum_path(
+        run_dir, completion_receipt_relative
+    )
+    if (
+        completion_receipt_relative in seen_paths
+        and completion_receipt_path.is_file()
+    ):
+        completion_receipt = load_json(completion_receipt_path)
+        receipt_expected = {
+            "schema_version": SCHEMA,
+            "run_id": run_manifest.get("run_id"),
+            "state": "completed",
+            "seed_count": expected_seed_count,
+            "completed_seed_count": expected_seed_count,
+            "failed_seed_count": 0,
+            "run_manifest_sha256": sha256_file(run_path),
+            "seed_manifest_sha256": sha256_file(seeds_path),
+            "command_manifest_sha256": sha256_file(commands_path),
+            "immutable_status_snapshot": True,
+        }
+        for key, value in receipt_expected.items():
+            if completion_receipt.get(key) != value:
+                failures.append(f"run completion receipt mismatch: {key}")
+    else:
+        failures.append("run completion receipt is missing")
     result = {
         "schema_version": SCHEMA,
         "run_id": run_manifest["run_id"],
@@ -2046,6 +2270,12 @@ import platform
 import sys
 import sysconfig
 from importlib import metadata
+from pathlib import Path
+import simpy.core as simpy_core
+import simpy.events as simpy_events
+import simpy.resources.base as simpy_resources_base
+import simpy.resources.container as simpy_resources_container
+import simpy.resources.resource as simpy_resources_resource
 
 packages = {{}}
 for package in {repr(("numpy", "simpy", "gymnasium", "scipy", "pandas"))}:
@@ -2060,6 +2290,16 @@ payload = {{
     "python_soabi": sysconfig.get_config_var("SOABI"),
     "packages": packages,
     "requirements_sha256": {json.dumps(requirements_sha256, sort_keys=True)},
+    "simpy_source_sha256": {{
+        module.__name__: hashlib.sha256(Path(module.__file__).read_bytes()).hexdigest()
+        for module in (
+            simpy_core,
+            simpy_events,
+            simpy_resources_base,
+            simpy_resources_container,
+            simpy_resources_resource,
+        )
+    }},
 }}
 encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
 payload["environment_sha256"] = hashlib.sha256(encoded).hexdigest()
@@ -2213,10 +2453,11 @@ def launch_vps(*, run_dir: Path, host: str, remote_python: str) -> dict[str, Any
     launch_command = (
         f"cd {remote_run_q}/source && "
         f"mkdir -p {remote_run_q}/control/logs && "
-        f"nohup {_remote_shell_path(remote_python)} {shlex.quote(harness_rel)} execute "
+        f"{{ nohup {_remote_shell_path(remote_python)} {shlex.quote(harness_rel)} execute "
         f"--run-dir {remote_run_q}/control --repo-root {remote_run_q}/source "
         f"--location vps > {remote_run_q}/control/logs/launcher.stdout.log "
-        f"2> {remote_run_q}/control/logs/launcher.stderr.log < /dev/null & echo $!"
+        f"2> {remote_run_q}/control/logs/launcher.stderr.log < /dev/null & "
+        f"echo $!; }}"
     )
     result = run_capture(["ssh", "-o", "BatchMode=yes", host, launch_command])
     pid = result.stdout.strip()

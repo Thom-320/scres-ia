@@ -21,7 +21,7 @@ from __future__ import annotations
 import argparse
 import ast
 from dataclasses import asdict, dataclass, fields, is_dataclass
-from hashlib import sha256
+from hashlib import sha256, sha512
 from importlib import metadata as importlib_metadata
 import inspect
 import json
@@ -38,6 +38,12 @@ import textwrap
 from typing import Any, Iterable, Iterator, Sequence
 
 import numpy as np
+import simpy.core as simpy_core
+import simpy.events as simpy_events
+import simpy.resources.base as simpy_resources_base
+import simpy.resources.container as simpy_resources_container
+import simpy.resources.resource as simpy_resources_resource
+from simpy.events import PENDING
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
@@ -59,8 +65,8 @@ from supply_chain.supply_chain import MFSCSimulation  # noqa: E402
 ROOT = Path(__file__).resolve().parent.parent
 CONTRACT_PATH = ROOT / "contracts" / "paper2_bottleneck_full_horizon_bound_v1.json"
 PRIMARY_CONTRACT_PATH = ROOT / "contracts" / "paper2_bottleneck_primary_bound_v2.json"
-KEY_SCHEMA_VERSION = "paper2_bottleneck_semantic_markov_key_v2"
-RESULT_SCHEMA_VERSION = "paper2_bottleneck_exact_transducer_certification_v3"
+KEY_SCHEMA_VERSION = "paper2_bottleneck_semantic_markov_key_v3"
+RESULT_SCHEMA_VERSION = "paper2_bottleneck_exact_transducer_certification_v4"
 CERTIFICATION_DEPENDENCY_PATHS = (
     CONTRACT_PATH,
     PRIMARY_CONTRACT_PATH,
@@ -76,21 +82,91 @@ CERTIFICATION_DEPENDENCY_PATHS = (
     ROOT / "requirements-pinned.txt",
 )
 ENVIRONMENT_PACKAGES = ("numpy", "simpy", "gymnasium", "scipy", "pandas")
+SIMPY_SOURCE_MODULES = (
+    simpy_core,
+    simpy_events,
+    simpy_resources_base,
+    simpy_resources_container,
+    simpy_resources_resource,
+)
+EVENT_FIELD_ALLOWLIST = {
+    "simpy.events.Event": frozenset(
+        {"env", "callbacks", "_ok", "_defused", "_value"}
+    ),
+    "simpy.events.Timeout": frozenset(
+        {"env", "callbacks", "_ok", "_defused", "_value", "_delay"}
+    ),
+    "simpy.resources.container.ContainerGet": frozenset(
+        {
+            "env",
+            "callbacks",
+            "_ok",
+            "_defused",
+            "_value",
+            "resource",
+            "proc",
+            "amount",
+        }
+    ),
+    "simpy.resources.container.ContainerPut": frozenset(
+        {
+            "env",
+            "callbacks",
+            "_ok",
+            "_defused",
+            "_value",
+            "resource",
+            "proc",
+            "amount",
+        }
+    ),
+    "simpy.resources.resource.Request": frozenset(
+        {
+            "env",
+            "callbacks",
+            "_ok",
+            "_defused",
+            "_value",
+            "resource",
+            "proc",
+            "usage_since",
+        }
+    ),
+    "simpy.resources.resource.PriorityRequest": frozenset(
+        {
+            "env",
+            "callbacks",
+            "_ok",
+            "_defused",
+            "_value",
+            "resource",
+            "proc",
+            "usage_since",
+            "priority",
+            "preempt",
+            "time",
+            "key",
+        }
+    ),
+}
+PROCESS_FIELD_ALLOWLIST = frozenset(
+    {"env", "callbacks", "_generator", "_target", "_ok", "_defused", "_value"}
+)
 REDUCED_CERTIFICATION_SUITES = {
     "w12_five_tape": {
         "weeks": 12,
         "tapes": (
-            (1_110_001, "equipment_pressure", "ebefe63a0462900911269f6b4a3dabf6b9c1d2b1b1d7fb042573613ac00166f0"),
-            (1_100_001, "equipment_pressure", "c56c321551f6bc675073fdc0fe4e05765db1e5429dfe6916cf18b2aa4d407029"),
-            (1_100_031, "equipment_pressure", "ef9a30479972a2e727c0d0356b6d1b3b848e0f6ba2f946594d6720d63f989624"),
-            (1_110_061, "equipment_pressure", "b1e9d9082144ab68b8de41c60edb9038a9c0ba22346bcaa348130508a09a4519"),
-            (1_110_120, "mission_surge", "1d9339549f428804b15b6d0f17e9084547643364f830c87d3df1482bb5d05351"),
+            (1_110_001, "equipment_pressure", "ebefe74394a04ee08e122e99452a4b5c1ef23c4515c8666e47f5a737f2c39d2c"),
+            (1_100_001, "equipment_pressure", "c56c36a09a04eb7d677e4c42a56e75570e98564e0ee744a47592901144c1df7f"),
+            (1_100_031, "equipment_pressure", "ef9bdbbcdc0096eee9f1c0ddffcda02a07230ef1253a703469e8c921ae7acea3"),
+            (1_110_061, "equipment_pressure", "b1e8b96c1346263f8e09ae3bfa659765ee60f9ddca96a910b2d0274256a1c31e"),
+            (1_110_120, "mission_surge", "1d9331409bf4fc6f8842029bcb8d57b52de505a75be66d7fe6ee96963af2399f"),
         ),
     },
     "w16_hard_tape": {
         "weeks": 16,
         "tapes": (
-            (1_110_025, "equipment_pressure", "3e3056521130921d5898ca07cc96455d69698f78be91aa9e055440f0bfa2dd62"),
+            (1_110_025, "equipment_pressure", "3e3056f28c8afcea663388652d6aab3a904bfaa1883f8b6349976e6affb8c51d"),
         ),
     },
 }
@@ -259,6 +335,19 @@ OUTPUT_OR_REPLAY_FIELDS = {
     "program_f_reserve_issue_events",
 }
 
+# Key-v3 deliberately serializes every live mutable diagnostic/history field as
+# well as the narrowly transition-facing fields above.  Some are probably
+# output-only under this frozen contract, but omitting them would require a
+# theorem-strength dynamic call-graph exclusion.  Keeping them in the bytes is
+# conservative: it can reduce compression, never create a false merge.
+SIM_STATE_FIELDS = tuple(
+    dict.fromkeys(
+        SIM_STATE_FIELDS
+        + tuple(sorted(INERT_FROZEN_FIELDS))
+        + tuple(sorted(OUTPUT_OR_REPLAY_FIELDS))
+    )
+)
+
 
 def static_sim_attribute_reads() -> set[str]:
     """Conservative class-wide AST inventory of ``self.<attr>`` reads."""
@@ -282,9 +371,11 @@ def audit_frozen_state_inventory(sim: Any) -> dict[str, Any]:
     categories = {
         "markov_key": sorted(live & keyed),
         "immutable_contract": sorted(live & set(IMMUTABLE_CONTRACT_FIELDS)),
-        "inert_frozen_contract": sorted(live & set(INERT_FROZEN_FIELDS)),
+        "inert_frozen_contract": sorted(
+            (live & set(INERT_FROZEN_FIELDS)) - keyed
+        ),
         "output_label_or_unaccelerated_replay": sorted(
-            live & set(OUTPUT_OR_REPLAY_FIELDS)
+            (live & set(OUTPUT_OR_REPLAY_FIELDS)) - keyed
         ),
     }
     classified = set().union(*(set(values) for values in categories.values()))
@@ -374,6 +465,10 @@ def certification_environment() -> dict[str, Any]:
         "requirements_sha256": {
             str(path.relative_to(ROOT)): _file_sha256(path)
             for path in (ROOT / "requirements.txt", ROOT / "requirements-pinned.txt")
+        },
+        "simpy_source_sha256": {
+            module.__name__: _file_sha256(Path(module.__file__).resolve())
+            for module in SIMPY_SOURCE_MODULES
         },
     }
     return {**payload, "environment_sha256": _digest(payload)}
@@ -477,6 +572,7 @@ def validate_reduced_certification_payload(
         ):
             failures.append(f"reduced-horizon enumeration incomplete for tape {index}: {role}")
         audit = tape.get("all_prefix_callback_audit", {})
+        bisimulation = tape.get("collision_bisimulation", {})
         layer_counts = audit.get("layer_semantic_key_evaluations")
         layer_callbacks = audit.get("layer_callback_inventory")
         layer_callback_digests = audit.get("layer_prefix_callback_records_sha256")
@@ -505,6 +601,43 @@ def validate_reduced_certification_payload(
             )
         ):
             failures.append(f"reduced-horizon all-prefix callback audit failed for tape {index}: {role}")
+        if not (
+            bisimulation.get("passed") is True
+            and bisimulation.get("key_schema_version") == KEY_SCHEMA_VERSION
+            and bisimulation.get("complete_state_serialization") is True
+            and bisimulation.get("event_payload_serialized") is True
+            and bisimulation.get("resource_users_serialized") is True
+            and bisimulation.get("callback_closure_state_serialized") is True
+            and bisimulation.get(
+                "process_target_state_serialized_or_fail_closed"
+            ) is True
+            and bisimulation.get("runtime_alias_graph_serialized") is True
+            and bisimulation.get("collision_payload_checks")
+            == tape.get("collision_count")
+            and bisimulation.get("collision_root_count")
+            == tape.get("collision_count")
+            and bisimulation.get("unresolved_node_obligation_count") == 0
+            and bisimulation.get("unresolved_collision_root_count") == 0
+            and bisimulation.get("all_actions_covered") is True
+            and bisimulation.get("backward_induction_complete") is True
+            and not bisimulation.get("mismatch_examples")
+            and re.fullmatch(
+                r"[0-9a-f]{64}",
+                str(bisimulation.get("transition_record_sha256", "")),
+            )
+        ):
+            failures.append(
+                f"reduced-horizon collision bisimulation failed for tape {index}: {role}"
+            )
+        for failure in validate_collision_bisimulation_certificate(
+            bisimulation,
+            expected_collision_count=int(tape.get("collision_count", -1)),
+            weeks=int(suite["weeks"]),
+        ):
+            failures.append(
+                f"reduced-horizon collision certificate invalid for tape {index}: "
+                f"{role}: {failure}"
+            )
     if payload.get("summary", {}).get("all_tapes_primary_bitwise_certified") is not True:
         failures.append(f"reduced-horizon primary certification failed: {role}")
     return failures
@@ -616,6 +749,20 @@ def _generator_stack(generator: Any) -> tuple[Any, ...]:
     return tuple(stack)
 
 
+def _callable_closure_token(callback: Any) -> tuple[Any, ...]:
+    """Serialize state carried by an unbound callback or closure."""
+    closure = getattr(callback, "__closure__", None) or ()
+    defaults = getattr(callback, "__defaults__", None) or ()
+    kwdefaults = getattr(callback, "__kwdefaults__", None) or {}
+    return (
+        getattr(callback, "__module__", type(callback).__module__),
+        getattr(callback, "__qualname__", type(callback).__qualname__),
+        tuple(_semantic(cell.cell_contents) for cell in closure),
+        _semantic(defaults),
+        _semantic(kwdefaults),
+    )
+
+
 def _owner_registry(sim: Any) -> dict[int, str]:
     return {
         id(value): name
@@ -634,7 +781,40 @@ def _event_callbacks(
         process = getattr(callback, "__self__", None)
         generator = getattr(process, "_generator", None)
         if generator is not None:
-            callbacks.append(_generator_stack(generator))
+            actual_fields = set(vars(process))
+            unexpected = sorted(actual_fields - PROCESS_FIELD_ALLOWLIST)
+            if unexpected:
+                raise TypeError(
+                    "unclassified fields on simpy.events.Process: "
+                    f"{unexpected}"
+                )
+            if getattr(process, "_target", None) is not event:
+                raise TypeError(
+                    "reachable Process target is not the Event carrying its resume"
+                )
+            process_callbacks = getattr(process, "callbacks", None) or ()
+            if process_callbacks:
+                raise TypeError(
+                    "nested/awaited Process callbacks require recursive graph "
+                    "serialization and fail closed in key-v3"
+                )
+            callbacks.append(
+                (
+                    "process_resume",
+                    _generator_stack(generator),
+                    "target_is_current_event",
+                    tuple(sorted(actual_fields)),
+                    None
+                    if not hasattr(process, "_ok")
+                    else bool(process._ok),
+                    (
+                        "simpy_pending"
+                        if getattr(process, "_value", PENDING) is PENDING
+                        else _semantic(getattr(process, "_value"))
+                    ),
+                    bool(hasattr(process, "_defused")),
+                )
+            )
             if callback_inventory is not None:
                 callback_inventory.add(
                     (
@@ -648,14 +828,23 @@ def _event_callbacks(
         owner = getattr(callback, "__self__", None)
         if owner is None:
             owner_name = "unbound"
+            closure_token = _callable_closure_token(callback)
         elif id(owner) in owner_registry:
             owner_name = owner_registry[id(owner)]
+            closure_token = ()
         else:
             raise TypeError(
                 "unclassified bound callback owner in Markov key: "
                 f"{type(owner).__module__}.{type(owner).__qualname__}::{qualname}"
             )
-        callbacks.append((qualname, owner_name, type(owner).__qualname__ if owner is not None else "None"))
+        callbacks.append(
+            (
+                qualname,
+                owner_name,
+                type(owner).__qualname__ if owner is not None else "None",
+                closure_token,
+            )
+        )
         if callback_inventory is not None:
             callback_inventory.add(
                 (
@@ -673,16 +862,109 @@ def _queued_event_token(
     owner_registry: dict[int, str],
     callback_inventory: set[tuple[str, str, str]] | None = None,
 ) -> tuple[Any, ...]:
+    event_type = f"{type(event).__module__}.{type(event).__qualname__}"
+    allowed_fields = EVENT_FIELD_ALLOWLIST.get(event_type)
+    if allowed_fields is None:
+        raise TypeError(f"unclassified SimPy event type in Markov key: {event_type}")
+    actual_fields = set(vars(event))
+    unexpected_fields = sorted(actual_fields - allowed_fields)
+    if unexpected_fields:
+        raise TypeError(
+            f"unclassified fields on {event_type}: {unexpected_fields}"
+        )
     amount = getattr(event, "amount", None)
+    event_state = []
+    for name, value in sorted(vars(event).items()):
+        if name in {"env", "callbacks"}:
+            continue
+        if value is PENDING:
+            token = ("simpy_pending",)
+        elif name == "resource":
+            if id(value) not in owner_registry:
+                raise TypeError(
+                    "unclassified SimPy resource in Markov key: "
+                    f"{type(value).__module__}.{type(value).__qualname__}"
+                )
+            token = ("sim_owner", owner_registry[id(value)])
+        elif name == "proc":
+            generator = getattr(value, "_generator", None)
+            if generator is None:
+                raise TypeError("resource user lacks a serializable process generator")
+            actual_fields = set(vars(value))
+            unexpected = sorted(actual_fields - PROCESS_FIELD_ALLOWLIST)
+            if unexpected:
+                raise TypeError(
+                    "unclassified fields on simpy.events.Process: "
+                    f"{unexpected}"
+                )
+            if getattr(value, "_target", None) is not event:
+                raise TypeError("resource user Process target is not its request Event")
+            if getattr(value, "callbacks", None):
+                raise TypeError(
+                    "nested/awaited resource-user Process fails closed in key-v3"
+                )
+            token = (
+                "process",
+                _generator_stack(generator),
+                "target_is_current_event",
+                tuple(sorted(actual_fields)),
+            )
+        else:
+            token = _semantic(value)
+        event_state.append((name, token))
     return (
-        type(event).__qualname__,
+        event_type,
         None if amount is None else _semantic(amount),
         bool(getattr(event, "triggered", False)),
         bool(getattr(event, "processed", False)),
+        (
+            "simpy_pending"
+            if getattr(event, "_value", PENDING) is PENDING
+            else _semantic(getattr(event, "_value"))
+        ),
+        None if not hasattr(event, "_ok") else bool(event._ok),
+        bool(hasattr(event, "_defused")),
+        tuple(event_state),
         _event_callbacks(
             event,
             owner_registry=owner_registry,
             callback_inventory=callback_inventory,
+        ),
+    )
+
+
+def _resource_token(
+    resource: Any,
+    *,
+    owner_registry: dict[int, str],
+    callback_inventory: set[tuple[str, str, str]] | None = None,
+) -> tuple[Any, ...]:
+    return (
+        int(resource.capacity),
+        int(resource.count),
+        tuple(
+            _queued_event_token(
+                event,
+                owner_registry=owner_registry,
+                callback_inventory=callback_inventory,
+            )
+            for event in resource.users
+        ),
+        tuple(
+            _queued_event_token(
+                event,
+                owner_registry=owner_registry,
+                callback_inventory=callback_inventory,
+            )
+            for event in resource.queue
+        ),
+        tuple(
+            _queued_event_token(
+                event,
+                owner_registry=owner_registry,
+                callback_inventory=callback_inventory,
+            )
+            for event in resource.get_queue
         ),
     )
 
@@ -731,8 +1013,7 @@ def _environment_token(
                 _float_token(time),
                 int(priority),
                 rank,
-                type(event).__qualname__,
-                _event_callbacks(
+                _queued_event_token(
                     event,
                     owner_registry=owners,
                     callback_inventory=callback_inventory,
@@ -740,6 +1021,64 @@ def _environment_token(
             )
             for rank, (time, priority, _event_id, event) in enumerate(ordered)
         ),
+    )
+
+
+def _runtime_alias_token(sim: Any) -> tuple[Any, ...]:
+    """Encode identity/alias relations among every reachable frozen runtime root.
+
+    Individual event tokens intentionally contain no Python object addresses.
+    This companion section preserves whether two deterministic root paths refer
+    to the same Event, Process, or Resource object, which can affect future
+    release/callback behavior even when their value fields are identical.
+    """
+    event_paths: dict[int, list[str]] = {}
+    process_paths: dict[int, list[str]] = {}
+    resource_paths: dict[int, list[str]] = {}
+
+    def visit_event(path: str, event: Any) -> None:
+        event_paths.setdefault(id(event), []).append(path)
+        process = getattr(event, "proc", None)
+        if process is not None:
+            process_paths.setdefault(id(process), []).append(f"{path}.proc")
+        resource = getattr(event, "resource", None)
+        if resource is not None:
+            resource_paths.setdefault(id(resource), []).append(f"{path}.resource")
+        for index, callback in enumerate(getattr(event, "callbacks", None) or ()):
+            owner = getattr(callback, "__self__", None)
+            if getattr(owner, "_generator", None) is not None:
+                process_paths.setdefault(id(owner), []).append(
+                    f"{path}.callbacks[{index}].process"
+                )
+
+    ordered = sorted(sim.env._queue, key=lambda row: (row[0], row[1], row[2]))
+    for rank, (_time, _priority, _event_id, event) in enumerate(ordered):
+        visit_event(f"env.queue[{rank}]", event)
+    visit_event("sim._contract_renewed_event", sim._contract_renewed_event)
+    for name in CONTAINER_FIELDS:
+        container = getattr(sim, name)
+        for index, event in enumerate(container.get_queue):
+            visit_event(f"container.{name}.get_queue[{index}]", event)
+        for index, event in enumerate(container.put_queue):
+            visit_event(f"container.{name}.put_queue[{index}]", event)
+    for name, resource in (
+        ("op10_convoy", sim.op10_convoy),
+        ("op12_convoy", sim.op12_convoy),
+    ):
+        resource_paths.setdefault(id(resource), []).append(f"resource.{name}")
+        for queue_name in ("users", "put_queue", "get_queue"):
+            for index, event in enumerate(getattr(resource, queue_name)):
+                visit_event(f"resource.{name}.{queue_name}[{index}]", event)
+
+    def classes(kind: str, mapping: dict[int, list[str]]) -> tuple[Any, ...]:
+        # Object ids only group paths inside this replay; they are never emitted.
+        grouped = [tuple(sorted(paths)) for paths in mapping.values()]
+        return (kind, tuple(sorted(grouped)))
+
+    return (
+        classes("event_alias_classes", event_paths),
+        classes("process_alias_classes", process_paths),
+        classes("resource_alias_classes", resource_paths),
     )
 
 
@@ -774,24 +1113,26 @@ def _relevant_risk_events(sim: Any) -> tuple[Any, ...]:
     )
 
 
-def semantic_markov_key(
+def semantic_markov_payload(
     sim: Any,
     controller: Any,
     *,
     callback_inventory: set[tuple[str, str, str]] | None = None,
-) -> str:
-    """Hash a conservative future-state representation for the frozen lane."""
-    payload = {
+) -> dict[str, Any]:
+    """Return the complete serialized future state for the frozen lane."""
+    owners = _owner_registry(sim)
+    return {
         "schema": KEY_SCHEMA_VERSION,
         "environment": _environment_token(
             sim, callback_inventory=callback_inventory
         ),
+        "runtime_graph_aliases": _runtime_alias_token(sim),
         "containers": tuple(
             (
                 name,
                 _container_token(
                     getattr(sim, name),
-                    owner_registry=_owner_registry(sim),
+                    owner_registry=owners,
                     callback_inventory=callback_inventory,
                 ),
             )
@@ -814,20 +1155,16 @@ def semantic_markov_key(
         ),
         "contract_event": _queued_event_token(
             sim._contract_renewed_event,
-            owner_registry=_owner_registry(sim),
+            owner_registry=owners,
             callback_inventory=callback_inventory,
         ),
         "resources": tuple(
             (
                 name,
-                int(resource.count),
-                tuple(
-                    _queued_event_token(
-                        event,
-                        owner_registry=_owner_registry(sim),
-                        callback_inventory=callback_inventory,
-                    )
-                    for event in resource.queue
+                _resource_token(
+                    resource,
+                    owner_registry=owners,
+                    callback_inventory=callback_inventory,
                 ),
             )
             for name, resource in (
@@ -846,7 +1183,44 @@ def semantic_markov_key(
             "condition": _float_token(controller.condition),
         },
     }
-    return _digest(payload)
+
+
+def semantic_markov_fingerprint(
+    sim: Any,
+    controller: Any,
+    *,
+    callback_inventory: set[tuple[str, str, str]] | None = None,
+) -> tuple[str, str, int, bytes]:
+    payload = semantic_markov_payload(
+        sim,
+        controller,
+        callback_inventory=callback_inventory,
+    )
+    encoded = json.dumps(
+        payload,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode()
+    return (
+        sha256(encoded).hexdigest(),
+        sha512(encoded).hexdigest(),
+        len(encoded),
+        encoded,
+    )
+
+
+def semantic_markov_key(
+    sim: Any,
+    controller: Any,
+    *,
+    callback_inventory: set[tuple[str, str, str]] | None = None,
+) -> str:
+    """Hash the complete v3 future-state serialization."""
+    return semantic_markov_fingerprint(
+        sim,
+        controller,
+        callback_inventory=callback_inventory,
+    )[0]
 
 
 def runtime_proof_audit(tape: dict[str, Any]) -> dict[str, Any]:
@@ -861,6 +1235,17 @@ def runtime_proof_audit(tape: dict[str, Any]) -> dict[str, Any]:
     for name in CONTAINER_FIELDS:
         _container_token(
             getattr(sim, name),
+            owner_registry=owners,
+            callback_inventory=callbacks,
+        )
+    _queued_event_token(
+        sim._contract_renewed_event,
+        owner_registry=owners,
+        callback_inventory=callbacks,
+    )
+    for resource in (sim.op10_convoy, sim.op12_convoy):
+        _resource_token(
+            resource,
             owner_registry=owners,
             callback_inventory=callbacks,
         )
@@ -945,6 +1330,9 @@ def checkpoint(sim: Any, start: float, controller: Any) -> Checkpoint:
 @dataclass(frozen=True)
 class PrefixResult:
     key: str
+    payload_sha512: str
+    payload_bytes: int
+    canonical_state_bytes: bytes
     checkpoint: Checkpoint
     callback_inventory: tuple[tuple[str, str, str], ...]
 
@@ -960,11 +1348,14 @@ def run_prefix(tape: dict[str, Any], sequence: Sequence[int]) -> PrefixResult:
         controller.request(ACTIONS[int(requested)])
         advance_including(sim, start + (week + 1) * 168.0)
     callbacks: set[tuple[str, str, str]] = set()
-    key = semantic_markov_key(
+    key, payload_sha512, payload_bytes, canonical_state_bytes = semantic_markov_fingerprint(
         sim, controller, callback_inventory=callbacks
     )
     return PrefixResult(
         key=key,
+        payload_sha512=payload_sha512,
+        payload_bytes=payload_bytes,
+        canonical_state_bytes=canonical_state_bytes,
         checkpoint=checkpoint(sim, start, controller),
         callback_inventory=tuple(sorted(callbacks)),
     )
@@ -1007,6 +1398,9 @@ class StateNode:
     checkpoint: Checkpoint
     last_action: int
     switched_previous: bool
+    payload_sha512: str = ""
+    payload_bytes: int = 0
+    canonical_state_bytes: bytes = b""
 
 
 @dataclass(frozen=True)
@@ -1031,6 +1425,7 @@ class Transducer:
     layer_prefix_callback_records_sha256: tuple[str, ...] = ()
     prefixes_with_nonempty_callback_inventory: int = 0
     layer_prefixes_with_nonempty_callback_inventory: tuple[int, ...] = ()
+    collision_bisimulation: dict[str, Any] | None = None
 
     def predict_visible_ledger(self, sequence: Sequence[int]) -> tuple[tuple[float, ...], tuple[int, ...]]:
         if len(sequence) != self.weeks or int(sequence[0]) != 0:
@@ -1049,6 +1444,482 @@ class Transducer:
 
 def _feasible_next(last_action: int, switched_previous: bool) -> tuple[int, ...]:
     return (last_action,) if switched_previous else (0, 1, 2)
+
+
+@dataclass(frozen=True)
+class CollisionWitness:
+    representative: tuple[int, ...]
+    alternative: tuple[int, ...]
+    representative_checkpoint: Checkpoint
+    alternative_checkpoint: Checkpoint
+    payload_sha512: str
+    payload_bytes: int
+    representative_state_id: int
+    canonical_bytes_equal_at_merge: bool
+
+
+def _appended_after(
+    earlier: Checkpoint,
+    later: Checkpoint,
+) -> tuple[tuple[float, ...], tuple[int, ...]]:
+    values = earlier.visible_values
+    order_ids = earlier.visible_order_ids
+    if later.visible_values[: len(values)] != values:
+        raise AssertionError("completed visible ReT rows changed after their OAT")
+    if later.visible_order_ids[: len(order_ids)] != order_ids:
+        raise AssertionError("completed visible row order changed after its OAT")
+    return (
+        later.visible_values[len(values):],
+        later.visible_order_ids[len(order_ids):],
+    )
+
+
+def audit_collision_bisimulation(
+    tape: dict[str, Any],
+    witnesses: Sequence[CollisionWitness],
+    *,
+    weeks: int,
+    layers: Sequence[Sequence[StateNode]],
+    transitions: Sequence[dict[tuple[int, int], Transition]],
+) -> dict[str, Any]:
+    """Build a complete backward-inductive bisimulation certificate.
+
+    Every quotient node is an obligation whose outgoing action edges point to
+    already-complete obligations in the next layer.  Every discarded collision
+    prefix is then replayed byte-for-byte and all of its next actions must land
+    on those same child obligations with identical incremental primary labels.
+    This closes delayed divergence through the terminal layer rather than
+    treating a one-step comparison as a proof.
+    """
+    mismatches: list[dict[str, Any]] = []
+    transition_checks = 0
+    payload_checks = 0
+    node_obligations: list[dict[str, Any]] = []
+    node_complete: dict[tuple[int, int], bool] = {}
+
+    if len(layers) != weeks or len(transitions) != max(0, weeks - 1):
+        mismatches.append({"reason": "quotient_graph_horizon_mismatch"})
+
+    # Terminal-to-root worklist.  Because every edge increases the layer by one,
+    # reverse layer order is a complete topological proof, not a sampled walk.
+    for layer_index in reversed(range(len(layers))):
+        for node in layers[layer_index]:
+            obligation_id = f"node:w{layer_index + 1}:n{node.state_id}"
+            expected_actions = (
+                ()
+                if layer_index == weeks - 1
+                else _feasible_next(node.last_action, node.switched_previous)
+            )
+            edges: list[dict[str, Any]] = []
+            complete = True
+            for action in expected_actions:
+                transition = transitions[layer_index].get((node.state_id, action))
+                if transition is None:
+                    complete = False
+                    mismatches.append(
+                        {
+                            "reason": "representative_transition_missing",
+                            "obligation_id": obligation_id,
+                            "action": int(action),
+                        }
+                    )
+                    continue
+                child_key = (layer_index + 1, transition.next_state_id)
+                child_complete = node_complete.get(child_key, False)
+                complete = complete and child_complete
+                edges.append(
+                    {
+                        "action": int(action),
+                        "incremental_label_sha256": _digest(
+                            (
+                                transition.appended_visible_values,
+                                transition.appended_visible_order_ids,
+                            )
+                        ),
+                        "child_obligation_id": (
+                            f"node:w{layer_index + 2}:n{transition.next_state_id}"
+                        ),
+                        "child_complete": child_complete,
+                    }
+                )
+            if layer_index == weeks - 1:
+                complete = True
+            node_complete[(layer_index, node.state_id)] = complete
+            node_obligations.append(
+                {
+                    "obligation_id": obligation_id,
+                    "week": layer_index + 1,
+                    "state_id": node.state_id,
+                    "state_sha256": node.key,
+                    "state_sha512": node.payload_sha512,
+                    "state_bytes": node.payload_bytes,
+                    "expected_actions": [int(action) for action in expected_actions],
+                    "edges": edges,
+                    "status": "COMPLETE" if complete else "INCOMPLETE",
+                }
+            )
+
+    collision_roots: list[dict[str, Any]] = []
+    for collision_id, witness in enumerate(witnesses):
+        payload_checks += 1
+        root_id = f"collision:{collision_id:08d}"
+        if len(witness.representative) != len(witness.alternative):
+            mismatches.append(
+                {"reason": "collision_horizon_mismatch", "root_id": root_id}
+            )
+            continue
+        layer_index = len(witness.representative) - 1
+        rep_last = witness.representative[-1]
+        alt_last = witness.alternative[-1]
+        rep_switched = (
+            len(witness.representative) > 1
+            and rep_last != witness.representative[-2]
+        )
+        alt_switched = (
+            len(witness.alternative) > 1
+            and alt_last != witness.alternative[-2]
+        )
+        if (
+            rep_last != alt_last
+            or rep_switched != alt_switched
+            or not witness.payload_sha512
+            or witness.payload_bytes <= 0
+            or not witness.canonical_bytes_equal_at_merge
+        ):
+            mismatches.append(
+                {"reason": "collision_control_state_mismatch", "root_id": root_id}
+            )
+            continue
+
+        representative_root = run_prefix(tape, witness.representative)
+        alternative_root = run_prefix(tape, witness.alternative)
+        root_bytes_equal = (
+            representative_root.canonical_state_bytes
+            == alternative_root.canonical_state_bytes
+        )
+        root_callbacks_equal = (
+            representative_root.callback_inventory
+            == alternative_root.callback_inventory
+        )
+        if not root_bytes_equal or not root_callbacks_equal:
+            mismatches.append(
+                {
+                    "reason": "collision_root_state_not_byte_equal",
+                    "root_id": root_id,
+                    "representative_sha256": representative_root.key,
+                    "alternative_sha256": alternative_root.key,
+                }
+            )
+
+        expected_actions = (
+            ()
+            if len(witness.representative) >= weeks
+            else _feasible_next(rep_last, rep_switched)
+        )
+        edges: list[dict[str, Any]] = []
+        root_complete = root_bytes_equal and root_callbacks_equal
+        for action in expected_actions:
+            transition_checks += 1
+            left = run_prefix(tape, witness.representative + (action,))
+            right = run_prefix(tape, witness.alternative + (action,))
+            left_label = _appended_after(
+                witness.representative_checkpoint,
+                left.checkpoint,
+            )
+            right_label = _appended_after(
+                witness.alternative_checkpoint,
+                right.checkpoint,
+            )
+            graph_transition = transitions[layer_index].get(
+                (witness.representative_state_id, int(action))
+            )
+            if graph_transition is None:
+                mismatches.append(
+                    {
+                        "reason": "collision_representative_edge_missing",
+                        "root_id": root_id,
+                        "action": int(action),
+                    }
+                )
+                root_complete = False
+                continue
+            target = layers[layer_index + 1][graph_transition.next_state_id]
+            target_replay = (
+                left
+                if target.representative == witness.representative + (action,)
+                else run_prefix(tape, target.representative)
+            )
+            child_obligation_key = (layer_index + 1, target.state_id)
+            child_complete = node_complete.get(child_obligation_key, False)
+            byte_equal = (
+                left.canonical_state_bytes == right.canonical_state_bytes
+                and left.canonical_state_bytes
+                == target_replay.canonical_state_bytes
+                and target_replay.key == target.key
+                and target_replay.payload_sha512 == target.payload_sha512
+                and target_replay.payload_bytes == target.payload_bytes
+            )
+            label_equal = (
+                left_label == right_label
+                and left_label
+                == (
+                    graph_transition.appended_visible_values,
+                    graph_transition.appended_visible_order_ids,
+                )
+            )
+            callbacks_equal = (
+                left.callback_inventory == right.callback_inventory
+            )
+            edge_complete = (
+                byte_equal and label_equal and callbacks_equal and child_complete
+            )
+            root_complete = root_complete and edge_complete
+            row = {
+                "root_id": root_id,
+                "week": len(witness.representative),
+                "action": int(action),
+                "state_bytes_equal": byte_equal,
+                "incremental_labels_bitwise_equal": label_equal,
+                "callback_inventory_equal": callbacks_equal,
+                "child_obligation_id": (
+                    f"node:w{layer_index + 2}:n{target.state_id}"
+                ),
+                "child_obligation_complete": child_complete,
+                "status": "COMPLETE" if edge_complete else "INCOMPLETE",
+            }
+            edges.append(row)
+            if not edge_complete and len(mismatches) < 20:
+                mismatches.append(
+                    {
+                        "reason": "collision_successor_obligation_incomplete",
+                        **row,
+                        "alternative_next_key": right.key,
+                        "representative_next_key": left.key,
+                    }
+                )
+        collision_roots.append(
+            {
+                "collision_id": collision_id,
+                "root_id": root_id,
+                "week": len(witness.representative),
+                "representative_state_id": witness.representative_state_id,
+                "representative": calendar_name(witness.representative),
+                "alternative": calendar_name(witness.alternative),
+                "canonical_bytes_equal": root_bytes_equal,
+                "callback_inventory_equal": root_callbacks_equal,
+                "expected_actions": [int(action) for action in expected_actions],
+                "edges": edges,
+                "status": "COMPLETE" if root_complete else "INCOMPLETE",
+            }
+        )
+
+    all_nodes_complete = (
+        len(node_complete) == sum(len(layer) for layer in layers)
+        and all(node_complete.values())
+    )
+    all_roots_complete = (
+        len(collision_roots) == len(witnesses)
+        and all(root["status"] == "COMPLETE" for root in collision_roots)
+    )
+    passed = (
+        payload_checks == len(witnesses)
+        and all_nodes_complete
+        and all_roots_complete
+        and not mismatches
+    )
+    certificate_body = {
+        "schema_version": "paper2_collision_bisimulation_v2",
+        "key_schema_version": KEY_SCHEMA_VERSION,
+        "complete_state_serialization": True,
+        "event_payload_serialized": True,
+        "resource_users_serialized": True,
+        "callback_closure_state_serialized": True,
+        "process_target_state_serialized_or_fail_closed": True,
+        "runtime_alias_graph_serialized": True,
+        "collision_payload_checks": payload_checks,
+        "collision_root_count": len(collision_roots),
+        "transition_congruence_checks": transition_checks,
+        "node_obligation_count": len(node_obligations),
+        "terminal_node_obligation_count": sum(
+            len(layer) for layer in layers[-1:]
+        ),
+        "unresolved_node_obligation_count": sum(
+            status is not True for status in node_complete.values()
+        ),
+        "unresolved_collision_root_count": sum(
+            root["status"] != "COMPLETE" for root in collision_roots
+        ),
+        "all_actions_covered": all_nodes_complete and all_roots_complete,
+        "backward_induction_complete": all_nodes_complete and all_roots_complete,
+        "node_obligations": node_obligations,
+        "collision_roots": collision_roots,
+        "mismatch_examples": mismatches,
+        "induction_rule": (
+            "Each collision successor is byte-equal to a quotient child whose "
+            "complete action set points only to complete later-layer obligations; "
+            "the terminal layer is the base case."
+        ),
+        "passed": passed,
+    }
+    certificate_body["node_obligation_records_sha256"] = _digest(node_obligations)
+    certificate_body["collision_root_records_sha256"] = _digest(collision_roots)
+    certificate_body["transition_record_sha256"] = _digest(
+        {
+            "nodes": certificate_body["node_obligation_records_sha256"],
+            "roots": certificate_body["collision_root_records_sha256"],
+        }
+    )
+    certificate_body["certificate_sha256"] = _digest(certificate_body)
+    return certificate_body
+
+
+def validate_collision_bisimulation_certificate(
+    certificate: dict[str, Any],
+    *,
+    expected_collision_count: int,
+    weeks: int,
+) -> list[str]:
+    """Re-verify coverage, digests and terminal-to-root obligation closure."""
+    failures: list[str] = []
+    if not isinstance(certificate, dict):
+        return ["collision certificate is not an object"]
+    body = dict(certificate)
+    claimed_digest = body.pop("certificate_sha256", None)
+    if claimed_digest != _digest(body):
+        failures.append("collision certificate digest mismatch")
+    nodes = certificate.get("node_obligations")
+    roots = certificate.get("collision_roots")
+    if not isinstance(nodes, list) or not isinstance(roots, list):
+        return failures + ["collision certificate obligation records missing"]
+    if certificate.get("node_obligation_records_sha256") != _digest(nodes):
+        failures.append("node-obligation record digest mismatch")
+    if certificate.get("collision_root_records_sha256") != _digest(roots):
+        failures.append("collision-root record digest mismatch")
+    node_by_id = {
+        row.get("obligation_id"): row
+        for row in nodes
+        if isinstance(row, dict) and isinstance(row.get("obligation_id"), str)
+    }
+    if len(node_by_id) != len(nodes):
+        failures.append("node-obligation identifiers are missing or duplicated")
+    if len(roots) != expected_collision_count:
+        failures.append("collision-root coverage count mismatch")
+    root_ids = {
+        row.get("root_id")
+        for row in roots
+        if isinstance(row, dict) and isinstance(row.get("root_id"), str)
+    }
+    if len(root_ids) != len(roots):
+        failures.append("collision-root identifiers are missing or duplicated")
+
+    for row in nodes:
+        if not isinstance(row, dict):
+            failures.append("malformed node obligation")
+            continue
+        week = row.get("week")
+        actions = row.get("expected_actions")
+        edges = row.get("edges")
+        edge_actions = (
+            [edge.get("action") for edge in edges if isinstance(edge, dict)]
+            if isinstance(edges, list)
+            else []
+        )
+        if (
+            row.get("status") != "COMPLETE"
+            or not isinstance(week, int)
+            or not isinstance(actions, list)
+            or not isinstance(edges, list)
+            or len(edge_actions) != len(edges)
+            or any(not isinstance(action, int) for action in actions + edge_actions)
+            or sorted(actions) != sorted(edge_actions)
+        ):
+            failures.append(f"incomplete node obligation: {row.get('obligation_id')}")
+            continue
+        if week == weeks and actions:
+            failures.append(f"terminal node has actions: {row.get('obligation_id')}")
+        if week < weeks and not actions:
+            failures.append(f"nonterminal node has no actions: {row.get('obligation_id')}")
+        for edge in edges:
+            child_id = edge.get("child_obligation_id")
+            child = node_by_id.get(child_id)
+            if (
+                edge.get("child_complete") is not True
+                or child is None
+                or child.get("week") != week + 1
+                or child.get("status") != "COMPLETE"
+            ):
+                failures.append(
+                    f"dangling/incomplete child obligation: {row.get('obligation_id')}"
+                )
+
+    for root in roots:
+        if not isinstance(root, dict):
+            failures.append("malformed collision root")
+            continue
+        actions = root.get("expected_actions")
+        edges = root.get("edges")
+        edge_actions = (
+            [edge.get("action") for edge in edges if isinstance(edge, dict)]
+            if isinstance(edges, list)
+            else []
+        )
+        if (
+            root.get("status") != "COMPLETE"
+            or root.get("canonical_bytes_equal") is not True
+            or root.get("callback_inventory_equal") is not True
+            or not isinstance(actions, list)
+            or not isinstance(edges, list)
+            or len(edge_actions) != len(edges)
+            or any(not isinstance(action, int) for action in actions + edge_actions)
+            or sorted(actions) != sorted(edge_actions)
+        ):
+            failures.append(f"incomplete collision root: {root.get('root_id')}")
+            continue
+        for edge in edges:
+            child = node_by_id.get(edge.get("child_obligation_id"))
+            if not (
+                edge.get("status") == "COMPLETE"
+                and edge.get("state_bytes_equal") is True
+                and edge.get("incremental_labels_bitwise_equal") is True
+                and edge.get("callback_inventory_equal") is True
+                and edge.get("child_obligation_complete") is True
+                and child is not None
+                and child.get("status") == "COMPLETE"
+                and child.get("week") == root.get("week") + 1
+            ):
+                failures.append(f"incomplete collision edge: {root.get('root_id')}")
+
+    required_true = (
+        "passed",
+        "complete_state_serialization",
+        "event_payload_serialized",
+        "resource_users_serialized",
+        "callback_closure_state_serialized",
+        "process_target_state_serialized_or_fail_closed",
+        "runtime_alias_graph_serialized",
+        "all_actions_covered",
+        "backward_induction_complete",
+    )
+    if certificate.get("schema_version") != "paper2_collision_bisimulation_v2":
+        failures.append("collision certificate schema mismatch")
+    if certificate.get("key_schema_version") != KEY_SCHEMA_VERSION:
+        failures.append("collision certificate key schema mismatch")
+    for key in required_true:
+        if certificate.get(key) is not True:
+            failures.append(f"collision certificate field is not true: {key}")
+    if certificate.get("collision_payload_checks") != expected_collision_count:
+        failures.append("collision payload-check count mismatch")
+    if certificate.get("collision_root_count") != expected_collision_count:
+        failures.append("collision root-count field mismatch")
+    if certificate.get("node_obligation_count") != len(nodes):
+        failures.append("node obligation-count field mismatch")
+    if certificate.get("unresolved_node_obligation_count") != 0:
+        failures.append("unresolved node obligations remain")
+    if certificate.get("unresolved_collision_root_count") != 0:
+        failures.append("unresolved collision roots remain")
+    if certificate.get("mismatch_examples"):
+        failures.append("collision certificate contains mismatches")
+    return failures
 
 
 def build_transducer(tape: dict[str, Any], weeks: int) -> Transducer:
@@ -1071,6 +1942,9 @@ def build_transducer(tape: dict[str, Any], weeks: int) -> Transducer:
         StateNode(
             state_id=0,
             key=initial_result.key,
+            payload_sha512=initial_result.payload_sha512,
+            payload_bytes=initial_result.payload_bytes,
+            canonical_state_bytes=initial_result.canonical_state_bytes,
             representative=initial_prefix,
             checkpoint=initial_result.checkpoint,
             last_action=0,
@@ -1079,12 +1953,13 @@ def build_transducer(tape: dict[str, Any], weeks: int) -> Transducer:
     ]]
     transitions: list[dict[tuple[int, int], Transition]] = []
     collisions: list[dict[str, Any]] = []
+    collision_witnesses: list[CollisionWitness] = []
     prefix_replays = 1
 
     for _next_week in range(1, weeks):
         previous_layer = layers[-1]
         next_nodes: list[StateNode] = []
-        index: dict[tuple[int, bool, str], int] = {}
+        index: dict[tuple[int, bool, bytes], int] = {}
         layer_transitions: dict[tuple[int, int], Transition] = {}
         current_layer_callbacks: set[tuple[str, str, str]] = set()
         current_layer_evaluations = 0
@@ -1118,7 +1993,11 @@ def build_transducer(tape: dict[str, Any], weeks: int) -> Transducer:
                 appended_values = result.checkpoint.visible_values[len(parent_values):]
                 appended_ids = result.checkpoint.visible_order_ids[len(parent_ids):]
                 switched = int(action) != parent.last_action
-                state_key = (int(action), switched, result.key)
+                state_key = (
+                    int(action),
+                    switched,
+                    result.canonical_state_bytes,
+                )
                 if state_key not in index:
                     state_id = len(next_nodes)
                     index[state_key] = state_id
@@ -1126,6 +2005,9 @@ def build_transducer(tape: dict[str, Any], weeks: int) -> Transducer:
                         StateNode(
                             state_id=state_id,
                             key=result.key,
+                            payload_sha512=result.payload_sha512,
+                            payload_bytes=result.payload_bytes,
+                            canonical_state_bytes=result.canonical_state_bytes,
                             representative=sequence,
                             checkpoint=result.checkpoint,
                             last_action=int(action),
@@ -1135,6 +2017,30 @@ def build_transducer(tape: dict[str, Any], weeks: int) -> Transducer:
                 else:
                     state_id = index[state_key]
                     representative = next_nodes[state_id]
+                    if not (
+                        representative.payload_sha512 == result.payload_sha512
+                        and representative.payload_bytes == result.payload_bytes
+                        and representative.canonical_state_bytes
+                        == result.canonical_state_bytes
+                    ):
+                        raise AssertionError(
+                            "byte-complete state mismatch on proposed collision"
+                        )
+                    collision_witnesses.append(
+                        CollisionWitness(
+                            representative=representative.representative,
+                            alternative=sequence,
+                            representative_checkpoint=representative.checkpoint,
+                            alternative_checkpoint=result.checkpoint,
+                            payload_sha512=result.payload_sha512,
+                            payload_bytes=result.payload_bytes,
+                            representative_state_id=state_id,
+                            canonical_bytes_equal_at_merge=(
+                                representative.canonical_state_bytes
+                                == result.canonical_state_bytes
+                            ),
+                        )
+                    )
                     collisions.append(
                         {
                             "week": len(sequence),
@@ -1157,11 +2063,35 @@ def build_transducer(tape: dict[str, Any], weeks: int) -> Transducer:
 
         layers.append(next_nodes)
         transitions.append(layer_transitions)
+        # Exact byte comparisons for this layer are complete.  Retain hashes and
+        # representative prefixes; collision audit replays target representatives
+        # when needed, avoiding O(nodes * state-bytes) resident memory at W24.
+        for node in previous_layer:
+            node.canonical_state_bytes = b""
         layer_callback_inventory.append(current_layer_callbacks)
         layer_semantic_key_evaluations.append(current_layer_evaluations)
         layer_callback_record_digests.append(current_layer_callback_digest)
         layer_prefixes_with_callbacks.append(current_layer_prefixes_with_callbacks)
 
+    collision_bisimulation = audit_collision_bisimulation(
+        tape,
+        collision_witnesses,
+        weeks=weeks,
+        layers=layers,
+        transitions=transitions,
+    )
+    collision_failures = validate_collision_bisimulation_certificate(
+        collision_bisimulation,
+        expected_collision_count=len(collisions),
+        weeks=weeks,
+    )
+    if collision_failures:
+        raise RuntimeError(
+            "collision bisimulation failed closed: " + "; ".join(collision_failures)
+        )
+    for layer in layers:
+        for node in layer:
+            node.canonical_state_bytes = b""
     return Transducer(
         weeks=weeks,
         layers=layers,
@@ -1182,6 +2112,7 @@ def build_transducer(tape: dict[str, Any], weeks: int) -> Transducer:
         layer_prefixes_with_nonempty_callback_inventory=tuple(
             layer_prefixes_with_callbacks
         ),
+        collision_bisimulation=collision_bisimulation,
     )
 
 
@@ -1296,6 +2227,7 @@ def certify_exhaustive(
         "prefix_replays": transducer.prefix_replays,
         "collision_count": len(transducer.collisions),
         "collision_examples": transducer.collisions[:20],
+        "collision_bisimulation": transducer.collision_bisimulation,
         "all_prefix_callback_audit": {
             "scope": "every semantic-key evaluation used to build every reachable layer",
             "semantic_key_evaluations": transducer.semantic_key_evaluations,
