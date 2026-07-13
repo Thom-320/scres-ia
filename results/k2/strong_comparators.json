@@ -1,0 +1,81 @@
+{
+  "cell": {
+    "cell_id": "k2-central",
+    "shelf_life": 156,
+    "cap_mult": 3.0,
+    "lead": 1,
+    "signal_noise": 0.2,
+    "surge_mult": 1.6,
+    "persist": 0.7,
+    "p": 1.0,
+    "h": 0.4
+  },
+  "weeks": 8,
+  "cal_seeds": [
+    6600001,
+    6600120
+  ],
+  "test_seeds": [
+    6700001,
+    6700120
+  ],
+  "virgin_seeds_sealed": [
+    6800001,
+    6800120
+  ],
+  "virgin_opened": false,
+  "tape_sha_sample": "a3fbc5d50c9df268482b7a75e454b8d08f204bc27af86af59750c49aec524eb1",
+  "best_static_const_x_d0": 1.4500000000000002,
+  "best_base_stock_S_x_d0": 2.5999999999999996,
+  "J": {
+    "static_const": [
+      42147.7,
+      40884.8,
+      43414.5
+    ],
+    "base_stock_Sstar": [
+      48008.3,
+      46788.5,
+      49225.7
+    ],
+    "mpc_signal": [
+      41945.8,
+      40679.9,
+      43274.1
+    ],
+    "clairvoyant_greedy_EVPI_floor": [
+      22167.9,
+      21077.3,
+      23315.5
+    ]
+  },
+  "decomp": {
+    "static_minus_base_stock": [
+      -5860.6,
+      -7400.8,
+      -4263.5
+    ],
+    "static_minus_mpc": [
+      201.9,
+      -1535.6,
+      1964.4
+    ],
+    "best_observable_minus_clairvoyant_EVPI": [
+      15820.2,
+      14754.4,
+      16896.2
+    ]
+  },
+  "service_holding": {
+    "static_const": [
+      23941.0,
+      45516.0
+    ],
+    "mpc_signal": [
+      28954.0,
+      32481.0
+    ]
+  },
+  "interpretation": "Best observable policies (static const, MPC) cluster together; the large clairvoyant gap is EVPI (perfect future demand), NOT convertible. Under correct 3-yr-shelf physics with a holding cost and low calm/surge variability, adaptive replenishment shows little convertible value -> RL not warranted, consistent with D-J. No learner trained; virgin sealed.",
+  "verdict": "K2_STRONG_COMPARATOR_SCREEN_EVPI_DOMINATED_NO_CONVERTIBLE_HEADROOM"
+}

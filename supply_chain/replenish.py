@@ -148,3 +148,61 @@ def best_sS(cal_tapes):
             if m < best[0]:
                 best = (m, float(s), float(S))
     return best[1], best[2]
+
+
+# ---- STRONG comparators: continuous order quantities (removes the coarse-grid artifact) ----
+
+def simulate_cont(tape, order_fn):
+    """Simulate with a CONTINUOUS order policy. order_fn(w, state, tape) -> order in RATION units."""
+    cell = tape.cell; st = new_state(cell); cap = cell["cap_mult"] * D0
+    sl = 0.0; hold = 0.0
+    for w in range(tape.weeks):
+        pos = st.onhand + sum(st.pipeline)
+        q = float(np.clip(order_fn(w, st, tape), 0.0, max(0.0, cap - pos)))
+        onhand = st.onhand + st.pipeline[0]
+        pipe = st.pipeline[1:] + [q]
+        served = min(onhand, tape.demand[w]); onhand -= served
+        sl += tape.demand[w] - served; hold += onhand
+        st = State(onhand=onhand, pipeline=pipe)
+    return RResult(service_loss=float(sl), holding=float(hold),
+                   J=float(cell["p"] * sl + cell["h"] * hold))
+
+
+def base_stock(S_rations):
+    """CONTINUOUS order-up-to-S (base-stock): the provably optimal observable policy structure for
+    single-echelon lost-sales with linear holding/shortage costs. order = S - inventory_position."""
+    def fn(w, st, tape):
+        return S_rations - (st.onhand + sum(st.pipeline))
+    return fn
+
+
+def best_base_stock(cal_tapes, lo=0.3, hi=3.5, step=0.05):
+    """Fine 1-D search for the optimal base-stock level S* (in D0 units) on calibration."""
+    best = (np.inf, None)
+    for S in np.arange(lo, hi + 1e-9, step):
+        m = float(np.mean([simulate_cont(t, base_stock(S * D0)).J for t in cal_tapes]))
+        if m < best[0]:
+            best = (m, float(S))
+    return best[1]
+
+
+def mpc_policy(horizon=2):
+    """Receding-horizon MPC using the observable 1-wk demand signal: order-up-to the signal-implied
+    need over the lead+horizon window (uses the forecast; tests whether the signal adds value)."""
+    def fn(w, st, tape):
+        cell = tape.cell
+        fcast = tape.signal[w]                      # noisy next-week demand
+        need = fcast * (cell["lead"] + 1)           # cover lead + one review period
+        return need - (st.onhand + sum(st.pipeline))
+    return fn
+
+
+def clairvoyant_greedy(tape):
+    """Continuous clairvoyant lower bound (knows future demand): order at w exactly what will be
+    consumed on arrival (week w+lead), so shortage~0 and holding~in-transit only. J is a tight EVPI
+    floor (perfect future knowledge) -- NOT an achievable observable target."""
+    cell = tape.cell; L = cell["lead"]
+    def fn(w, st, tape):
+        tgt = w + L
+        return tape.demand[tgt] if tgt < tape.weeks else 0.0
+    return simulate_cont(tape, fn)
