@@ -2132,8 +2132,12 @@ def stage_vps(*, run_dir: Path, host: str, remote_root: str, repo_root: Path = R
     # HEAD and source drift with Git on the VPS.  A single-commit bundle keeps
     # that verification available without copying local remotes or credentials.
     source_bundle = transport / "source.bundle"
+    # ``git bundle create <path> <raw-oid>`` may resolve to no advertised ref
+    # and Git then refuses an empty bundle.  The validator immediately above
+    # proves clean live HEAD equals the prepared immutable commit, so advertise
+    # HEAD while retaining the recorded OID for the remote detached checkout.
     run_capture(
-        ["git", "bundle", "create", str(source_bundle), run_manifest["git"]["commit"]],
+        ["git", "bundle", "create", str(source_bundle), "HEAD"],
         cwd=repo_root,
     )
     control_tar = transport / "control.tar"
