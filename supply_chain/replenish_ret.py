@@ -124,12 +124,14 @@ def rollout_policy(
         pipeline.append(quantity * D0)
         demand = float(tape.demand[week])
         order = OrderRecord(j=week + 1, OPTj=hour, quantity=demand, remaining_qty=demand, LTj=168.0)
-        pending.append(order); orders.append(order)
+        pending.append(order)
+        orders.append(order)
         pending, inventory = _complete_pending(pending, inventory, hour)
         holding += inventory
     horizon = float(WEEKS * 168)
     for order in pending:
-        order.lost = True; order.lost_time = horizon
+        order.lost = True
+        order.lost_time = horizon
     metrics = ret_order_metrics(orders)
     return RetResult(
         ret_order=float(metrics["ret_order"]), ret_quantity=float(metrics["ret_quantity"]),

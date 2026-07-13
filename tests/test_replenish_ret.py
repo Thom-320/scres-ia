@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import pytest
-
 from supply_chain.replenish import central_cell, materialize_tape
 from supply_chain.replenish_ret import (
     BUDGET_D0, WEEKS, paced_policy, periodic_calendars, rollout_actions,

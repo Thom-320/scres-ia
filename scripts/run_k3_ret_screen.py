@@ -117,8 +117,8 @@ def main() -> None:
         },
         "gates": gates,
         "verdict": "PROMOTE_K3_TO_FRESH_CONFIRMATION" if all(gates.values()) else "STOP_K3_NO_RESOURCE_EQUAL_RET_HEADROOM",
-        "learner_authorized": false,
-        "confirmation_seeds_opened": false,
+        "learner_authorized": False,
+        "confirmation_seeds_opened": False,
     }
     path = Path("results/k3/development_screen.json")
     path.parent.mkdir(parents=True, exist_ok=True)
