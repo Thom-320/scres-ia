@@ -15,6 +15,13 @@ manifest, and command manifest. The frozen modes reject seed, context, split,
 horizon, runner, or output-path overrides that differ from
 `contracts/paper2_bottleneck_primary_bound_v2.json`.
 
+For VPS execution, first run `remote-preflight`. It writes
+`scientific_environment.json`, containing the exact remote Python ABI, package
+versions and tracked-requirement hashes. Supply that file to `prepare` with
+`--scientific-environment-json`; the preparing machine must match every field
+except the platform-specific SOABI, and the executing VPS must reproduce the
+complete digest exactly.
+
 The contractual outputs inside each run directory are:
 
 - `results/paper2_bottleneck/exact_transducer_certification_w12.json`
@@ -30,6 +37,7 @@ Prepare one mode without opening a tape:
   --mode reduced_w12 \
   --run-id paper2-reduced-w12 \
   --run-dir outputs/paper2-reduced-w12 \
+  --scientific-environment-json outputs/paper2-remote-preflight/scientific_environment.json \
   --runner-workers 4
 ```
 

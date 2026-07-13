@@ -25,6 +25,7 @@ from scripts.paper2_bound_execution_harness import (
     launch_vps,
     prepare_run,
     seal_run,
+    validate_scientific_environment_payload,
     verify_artifacts,
 )
 from scripts.run_paper2_bottleneck_exact_transducer import (
@@ -329,6 +330,54 @@ def test_frozen_evidence_prepare_is_sealed_and_tampering_fails_closed(
     (run_dir / "run_manifest.json").write_text(json.dumps(manifest))
     with pytest.raises(HarnessError, match="profile differs from contract"):
         harness._validate_prepared_inputs(run_dir, ROOT)
+
+
+def test_remote_environment_snapshot_allows_only_soabi_difference(
+    tmp_path, monkeypatch
+):
+    monkeypatch.setattr(harness, "git_snapshot", _immutable_git_fixture)
+    from scripts.run_paper2_bottleneck_exact_transducer import (
+        certification_environment,
+    )
+
+    remote_environment = certification_environment()
+    remote_environment["python_soabi"] = "cpython-311-x86_64-linux-gnu"
+    unhashed = {
+        key: value
+        for key, value in remote_environment.items()
+        if key != "environment_sha256"
+    }
+    remote_environment["environment_sha256"] = harness.canonical_json_sha256(
+        unhashed
+    )
+    environment_path = tmp_path / "remote-environment.json"
+    environment_path.write_text(json.dumps(remote_environment))
+    profile = _frozen_evidence_profile(
+        json.loads(DEFAULT_CONTRACT.read_text()), "reduced_w16"
+    )
+    run_dir = tmp_path / "w16-remote"
+    manifest = prepare_run(
+        run_dir=run_dir,
+        run_id="pytest-reduced-w16-remote",
+        mode="reduced_w16",
+        contract_path=DEFAULT_CONTRACT,
+        runner_path=DEFAULT_SMOKE_RUNNER,
+        seeds=profile["seeds"],
+        split=profile["split"],
+        weeks=profile["weeks"],
+        runner_workers=2,
+        heartbeat_interval=1.0,
+        scientific_environment_path=environment_path,
+    )
+    assert manifest["inputs"]["environment"] == remote_environment
+    assert manifest["inputs"]["environment_source"] == (
+        "provided_remote_preflight"
+    )
+
+    tampered = dict(remote_environment)
+    tampered["packages"] = {**tampered["packages"], "numpy": "0.0"}
+    with pytest.raises(HarnessError, match="digest mismatch"):
+        validate_scientific_environment_payload(tampered)
 
 
 def test_frozen_evidence_result_binds_harness_commit_runner_and_both_contracts(

@@ -97,6 +97,50 @@ def canonical_json_sha256(value: Any) -> str:
     return sha256_bytes(payload)
 
 
+def validate_scientific_environment_payload(
+    payload: Any,
+    *,
+    local_reference: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Validate a preflight environment without accepting package drift.
+
+    A VPS may legitimately have a different SOABI from the preparing Mac.  All
+    scientific package versions, Python identity, cache tag and tracked
+    requirements hashes must nevertheless match.  The full supplied payload,
+    including SOABI, is hashed and later reproduced by the executing runner.
+    """
+
+    if not isinstance(payload, dict):
+        raise HarnessError("scientific environment snapshot must be a JSON object")
+    expected_keys = {
+        "python_implementation",
+        "python_version",
+        "python_cache_tag",
+        "python_soabi",
+        "packages",
+        "requirements_sha256",
+        "environment_sha256",
+    }
+    if set(payload) != expected_keys:
+        raise HarnessError("scientific environment snapshot schema mismatch")
+    unhashed = {key: payload[key] for key in expected_keys - {"environment_sha256"}}
+    if payload["environment_sha256"] != canonical_json_sha256(unhashed):
+        raise HarnessError("scientific environment snapshot digest mismatch")
+    if local_reference is not None:
+        for key in (
+            "python_implementation",
+            "python_version",
+            "python_cache_tag",
+            "packages",
+            "requirements_sha256",
+        ):
+            if payload[key] != local_reference[key]:
+                raise HarnessError(
+                    f"scientific execution environment differs from preparation: {key}"
+                )
+    return dict(payload)
+
+
 def atomic_write_json(path: Path, value: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     payload = json.dumps(value, indent=2, sort_keys=True) + "\n"
@@ -775,6 +819,7 @@ def prepare_run(
     calibration_result_path: Path | None = None,
     batch_size: int = 65_536,
     max_contenders: int = 100_000,
+    scientific_environment_path: Path | None = None,
 ) -> dict[str, Any]:
     _validate_run_id(run_id)
     if mode not in {"dry-run", "smoke", "scientific", *FROZEN_EVIDENCE_MODES}:
@@ -918,7 +963,26 @@ def prepare_run(
     from scripts.run_paper2_bottleneck_exact_transducer import (
         certification_environment,
     )
-    scientific_environment = certification_environment()
+    local_scientific_environment = certification_environment()
+    if scientific_environment_path is not None:
+        if mode not in EXECUTABLE_EVIDENCE_MODES:
+            raise HarnessError(
+                "an external scientific environment is only valid for evidence modes"
+            )
+        if not scientific_environment_path.is_file():
+            raise HarnessError("scientific environment snapshot is missing")
+        scientific_environment = validate_scientific_environment_payload(
+            load_json(scientific_environment_path),
+            local_reference=local_scientific_environment,
+        )
+        scientific_environment_source = "provided_remote_preflight"
+        scientific_environment_source_sha256 = sha256_file(
+            scientific_environment_path
+        )
+    else:
+        scientific_environment = local_scientific_environment
+        scientific_environment_source = "preparation_runtime"
+        scientific_environment_source_sha256 = None
     manifest = {
         "schema_version": SCHEMA,
         "run_id": run_id,
@@ -943,6 +1007,8 @@ def prepare_run(
             "machine_snapshot_sha256": sha256_file(paths["machine"]),
             "environment": scientific_environment,
             "environment_sha256": scientific_environment["environment_sha256"],
+            "environment_source": scientific_environment_source,
+            "environment_source_sha256": scientific_environment_source_sha256,
             "dependency_snapshot_redactions": redactions,
             "calibration_result_relative": calibration_result_rel,
             "calibration_result_sha256": (
@@ -1954,6 +2020,60 @@ def remote_preflight(*, output_dir: Path, host: str, remote_python: str) -> dict
     deps, redactions = sanitize_dependency_snapshot(deps_result.stdout)
     deps_path = output_dir / "pip_freeze.txt"
     deps_path.write_text(deps)
+    requirements_sha256 = {
+        str(path.relative_to(ROOT)): sha256_file(path)
+        for path in (ROOT / "requirements.txt", ROOT / "requirements-pinned.txt")
+    }
+    environment_code = f"""
+import hashlib
+import json
+import platform
+import sys
+import sysconfig
+from importlib import metadata
+
+packages = {{}}
+for package in {repr(("numpy", "simpy", "gymnasium", "scipy", "pandas"))}:
+    try:
+        packages[package] = metadata.version(package)
+    except metadata.PackageNotFoundError:
+        packages[package] = "MISSING"
+payload = {{
+    "python_implementation": platform.python_implementation(),
+    "python_version": platform.python_version(),
+    "python_cache_tag": sys.implementation.cache_tag,
+    "python_soabi": sysconfig.get_config_var("SOABI"),
+    "packages": packages,
+    "requirements_sha256": {json.dumps(requirements_sha256, sort_keys=True)},
+}}
+encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
+payload["environment_sha256"] = hashlib.sha256(encoded).hexdigest()
+print(json.dumps(payload, sort_keys=True))
+"""
+    environment_result = run_capture(
+        [
+            "ssh",
+            "-o",
+            "BatchMode=yes",
+            host,
+            f"{_remote_shell_path(remote_python)} -c "
+            f"{shlex.quote(environment_code)}",
+        ]
+    )
+    try:
+        remote_environment = json.loads(environment_result.stdout)
+    except json.JSONDecodeError as exc:
+        raise HarnessError("remote scientific environment was not valid JSON") from exc
+    from scripts.run_paper2_bottleneck_exact_transducer import (
+        certification_environment,
+    )
+
+    remote_environment = validate_scientific_environment_payload(
+        remote_environment,
+        local_reference=certification_environment(),
+    )
+    environment_path = output_dir / "scientific_environment.json"
+    atomic_write_json(environment_path, remote_environment)
     atomic_write_json(output_dir / "machine.json", machine)
     result = {
         "schema_version": SCHEMA,
@@ -1964,6 +2084,12 @@ def remote_preflight(*, output_dir: Path, host: str, remote_python: str) -> dict
         "machine_snapshot_sha256": sha256_file(output_dir / "machine.json"),
         "dependency_snapshot_sha256": sha256_file(deps_path),
         "dependency_snapshot_redactions": redactions,
+        "scientific_environment_sha256": remote_environment[
+            "environment_sha256"
+        ],
+        "scientific_environment_snapshot_sha256": sha256_file(
+            environment_path
+        ),
         "scientific_job_submitted": False,
         "evidence": False,
         "evidence_status": "REMOTE_CAPABILITY_PREFLIGHT_ONLY_NOT_EVIDENCE",
@@ -2166,6 +2292,7 @@ def build_parser() -> argparse.ArgumentParser:
     prepare.add_argument("--max-contenders", type=int, default=100_000)
     prepare.add_argument("--heartbeat-interval-seconds", type=float, default=15.0)
     prepare.add_argument("--authorization-json", type=Path)
+    prepare.add_argument("--scientific-environment-json", type=Path)
 
     seal = sub.add_parser("seal")
     seal.add_argument("--run-dir", type=Path, required=True)
@@ -2253,6 +2380,11 @@ def main() -> int:
                 ),
                 batch_size=args.batch_size,
                 max_contenders=args.max_contenders,
+                scientific_environment_path=(
+                    args.scientific_environment_json.resolve()
+                    if args.scientific_environment_json
+                    else None
+                ),
             )
         elif args.command == "seal":
             result = seal_run(
