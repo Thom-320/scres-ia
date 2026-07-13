@@ -1,0 +1,66 @@
+{
+  "schema_version": "paper2_prelearner_contract_v1",
+  "frozen_date": "2026-07-13",
+  "status": "NO_CURRENT_CANDIDATE_ELIGIBLE",
+  "primary_endpoint": "ret_excel_visible_v1 via compute_episode_metrics",
+  "practical_effect": {
+    "delta_ret_lcb95_minimum": 0.01,
+    "favorable_tapes_minimum": 0.70
+  },
+  "mandatory_gates": [
+    {"id": "causal_liveness", "rule": "Every action dimension changes a conserved physical trajectory and at least one canonical/guardrail endpoint in a preregistered liveness test."},
+    {"id": "action_support", "rule": "At least two actions are uniquely optimal in at least 15% of reachable live states each; no action or fixed sequence is optimal in more than 85%."},
+    {"id": "resource_restricted_hpi", "rule": "Resource-restricted H_PI is computed against the complete same-contract comparator and has LCB95 at least 0.01."},
+    {"id": "observable_conversion", "rule": "A deployable non-anticipative non-neural policy has H_obs LCB95 at least 0.01."},
+    {"id": "resources", "rule": "Candidate use is componentwise non-superior for every named budget; scalar token sums are insufficient when components are not substitutable."},
+    {"id": "lost_orders", "rule": "Lost orders are non-inferior under the frozen margin."},
+    {"id": "quantity_ret", "rule": "Quantity-weighted ReT is non-inferior."},
+    {"id": "worst_node", "rule": "Worst-product, worst-CSSU or worst-node fill is non-inferior."},
+    {"id": "tail_risk", "rule": "CVaR/tail outcomes do not contradict the mean result."},
+    {"id": "adjacent_cells", "rule": "Every gate survives multiple adjacent plausible, independently sourced cells."},
+    {"id": "rollout_value", "rule": "Real rollout value is positive; oracle-action classification accuracy is not sufficient."},
+    {"id": "signal_placebos", "rule": "Real signal beats block-shuffled, post-commitment delayed and wrong-location/product signals with paired CI above zero."},
+    {"id": "observation_whitelist", "rule": "Fail-closed whitelist excludes latent state, future tape events, seed IDs, future lead times, oracle actions and any post-decision information."},
+    {"id": "trajectory_certificate", "rule": "Modal complete sequence, calibration-only calendar and phase-only controls strictly underperform under identical tapes/resources."},
+    {"id": "null_physics", "rule": "Removing the proposed mechanism produces H_obs equivalence within [-0.002,0.002] and action-equivalent hashes where exact equivalence is expected."}
+  ],
+  "comparator_minimum": [
+    "all constants",
+    "all full-horizon open-loop schedules where tractable",
+    "certified optimization bound and approximation gap otherwise",
+    "periodic calendars through the full episode",
+    "threshold and hysteresis rules",
+    "problem-class base-stock or sS policies",
+    "resource-constrained MPC",
+    "exact or approximate DP",
+    "belief policy for partial observation",
+    "interpretable policies proposed during the search",
+    "resource-equal convexified mixtures"
+  ],
+  "verification_tests": [
+    "tests/test_paper2_exhaustive_search_registry.py",
+    "tests/test_paper2_bottleneck.py",
+    "tests/test_replenish_ret.py",
+    "scripts/verify_paper2_exhaustion.py",
+    "scripts/audit_paper2_bottleneck_completeness.py",
+    "contracts/paper2_bottleneck_full_horizon_bound_v1.json"
+  ],
+  "candidate_entry_status": {
+    "multi_ration_product_mix_setup_substitution": "blocked_domain_fact",
+    "regime_lead_time_advance_transport_reservation": "blocked_domain_fact",
+    "censored_demand_active_information_acquisition": "blocked_domain_fact",
+    "lateral_cssu_transshipment": "blocked_domain_fact",
+    "multi_echelon_information_lag_only": "falsified_by_information_inclusion",
+    "queue_admission_priority_with_abandonment": "blocked_domain_fact",
+    "alarm_signal_finite_maintenance": "falsified_current_contract",
+    "finite_storage_space_allocation": "blocked_domain_fact",
+    "inspection_effort_vs_throughput": "blocked_domain_fact",
+    "multimodal_last_mile_mode_choice": "blocked_domain_fact",
+    "alternate_route_recourse_same_destination": "blocked_domain_fact",
+    "integrated_production_maintenance_routing_recovery_resource": "active_for_bound",
+    "mission_loadout_carried_autonomy_allocation": "blocked_domain_fact",
+    "demand_shaping_or_substitution": "blocked_except_as_approved_product_substitution"
+  },
+  "learner_authorized": false,
+  "paper3_authorized": false
+}

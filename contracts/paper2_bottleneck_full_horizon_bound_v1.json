@@ -1,0 +1,83 @@
+{
+  "contract_id": "paper2_bottleneck_full_horizon_bound_v1",
+  "frozen_date": "2026-07-13",
+  "status": "RETROSPECTIVE_BOUND_PROTOCOL_FROZEN_BEFORE_FULL_EXECUTION",
+  "scientific_scope": "Corrective family-bound computation on already-burned tapes. Not a confirmatory Paper 2 result and not domain validation of a real cross-stage team.",
+  "parent_contract": "paper2_bottleneck_migration_v1",
+  "physics": {
+    "implementation": "supply_chain.paper2_bottleneck",
+    "weeks": 24,
+    "actions": ["M", "T", "R"],
+    "initial_active_action": "M",
+    "request_activation_lag_weeks": 1,
+    "minimum_commitment_weeks": 1,
+    "adjacent_week_switches_forbidden": true,
+    "efficacy_and_signal_parameters": "unchanged from paper2_bottleneck_high_authority_v1; no parameter sweep",
+    "researcher_extension_warning": "One fungible plant/LOC/theatre response team is not established by the thesis and still requires Garrido sign-off."
+  },
+  "resource_envelope": {
+    "response_team": "exactly one team-week in every epoch, 4032 team-hours per 24-week episode",
+    "allocation_destinations": "M/T/R hours are mutually exclusive uses of the same team, not separate purchased budgets",
+    "reserve": {
+      "capacity_units": 10000,
+      "initial_stock_units": 10000,
+      "target_units": 10000,
+      "replenishment_lead_hours": 168,
+      "issue_delay_hours": 24,
+      "interpretation": "Reserve issue is endogenous service from fixed available system stock. Automatic reserve replenishment is an internal conserved transfer from the MFSC, not exogenous resource creation.",
+      "mandatory_ledgers": ["reserve_units_issued", "reserve_units_replenished", "reserve_inventory_terminal", "system_ration_mass_residual"]
+    },
+    "matching_rule": "All calendars receive identical initial stock, exogenous production, reserve capacity/target/replenishment physics and team-hours. Any external stock creation, unequal dispatch purchase or mass residual fails the contract."
+  },
+  "metric_and_guardrails": {
+    "primary": "ret_excel_visible_v1 via compute_episode_metrics",
+    "guardrails": ["ration_ret_excel", "quantity_weighted_ret", "service_loss_auc_ration_hours", "n_lost", "lost_orders", "backorder_qty_final", "backlog_age_max", "worst_cssu_service", "ret_excel_cvar05", "ret_excel_cvar10", "mass_residual", "reserve ledgers"],
+    "no_metric_substitution": true
+  },
+  "complete_open_loop_family": {
+    "effective_calendar_count": 11184811,
+    "definition": "Every 24-week requested M/T/R calendar whose active week 0 is M and whose active allocation does not switch in adjacent weeks.",
+    "calibration_frontier": {
+      "seed_start": 1100001,
+      "n_tapes": 60,
+      "use": "enumerate every feasible calendar and select the maximum calibration-mean canonical ReT, with deterministic tie breaks by guardrails then lexicographic calendar"
+    },
+    "locked_bound": {
+      "algorithm_development_seed_excluded": 1110001,
+      "seed_start_inclusive": 1110002,
+      "seed_end_inclusive": 1110120,
+      "n_tapes": 119,
+      "use": "evaluate the calibration-selected complete-frontier calendar and the exact per-tape feasible oracle; compute paired H_PI and guardrail differences"
+    },
+    "selection_bias_direction": "Independent calibration selection can only weaken the comparator relative to the true best expected open-loop schedule; therefore a locked H_PI upper confidence bound below the practical gate remains a conservative family closure."
+  },
+  "exact_acceleration_requirements": {
+    "allowed": ["tape-specific physical-effect quotient", "exact prefix transducer", "full replay", "vectorized table lookup"],
+    "state_merge_rule": "Prefixes may merge only under a proved sufficient Markov key that preserves every future transition, RNG/exogenous continuation, unresolved order, scheduled process, inventory/resource state, and sufficient statistic needed for the final visible-ledger primary and every guardrail.",
+    "proof_obligations": [
+      "Document every key field and every deliberately excluded mutable field.",
+      "Include pending SimPy event/process continuations or prove that deterministic prefix replay plus the key makes them redundant.",
+      "Include canonical visible-ledger history sufficient statistics and every unresolved order state; an inventory-only key is invalid.",
+      "For every merged state in the collision suite, replay every feasible next action and compare the next key and all final endpoints exactly.",
+      "Re-run selected calibration winner and every locked oracle winner through the unaccelerated run_policy implementation.",
+      "Report approximation gap exactly zero; otherwise the result is not a ceiling."
+    ],
+    "development_collision_suite": [1110001, 1100001, 1100031, 1110061, 1110120],
+    "failure_rule": "Any state-key collision with a different next transition, terminal endpoint, order ledger, resource ledger or exogenous hash invalidates the acceleration and leaves the family active_for_bound."
+  },
+  "inference": {
+    "paired_unit": "tape",
+    "bootstrap_resamples": 10000,
+    "bootstrap_seed": 20260713,
+    "practical_gate": 0.01,
+    "boundary_close_rule": "resource-restricted H_PI UCB95 < 0.01, or every oracle improvement violates a mandatory guardrail/resource constraint",
+    "observable_promote_rule": "not evaluated unless H_PI LCB95 >= 0.01 and every pre-learner physical/resource/guardrail gate remains viable",
+    "learner_authorized": false,
+    "paper3_authorized": false
+  },
+  "execution_discipline": {
+    "required": ["immutable commit and contract hashes", "dependency snapshot", "seed manifest", "command manifest", "stdout and stderr logs", "heartbeat", "machine-readable partial progress", "returned-artifact checksums"],
+    "vps_submission_is_evidence": false,
+    "completed_retrieved_hashed_audit_required": true
+  }
+}

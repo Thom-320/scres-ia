@@ -3635,17 +3635,60 @@ class MFSCSimulation:
         )
 
     def apply_op8_convoy_action(
-        self, action: str | int, *, source: str = "policy"
+        self,
+        action: str | int,
+        *,
+        source: str = "policy",
+        route_outbound_hours: float | None = None,
+        route_return_hours: float | None = None,
+        route_exposed_op: int | None = 8,
+        route_id: str | None = None,
+        route_bypasses_op8: bool = False,
     ) -> dict[str, Any]:
-        """Apply HOLD or DISPATCH_NOW at the current decision epoch."""
+        """Apply HOLD or DISPATCH_NOW at the current decision epoch.
+
+        The ``route_*`` overrides (default None/8/False => thesis Op8 leg,
+        flags-off identity) let Program-L route recourse commit a dispatch to a
+        chosen physical route with its own transit and R22 exposure.
+        ``route_bypasses_op8`` models a disclosed alternate route that remains
+        dispatchable while Op8 is R22-down. All order, mass and ReT accounting
+        stays in the canonical DES.
+        """
         if self.op8_dispatch_mode != "finite_convoy_v1":
             raise RuntimeError("Finite-convoy actions require finite_convoy_v1 mode.")
+        for name, value in (
+            ("route_outbound_hours", route_outbound_hours),
+            ("route_return_hours", route_return_hours),
+        ):
+            if value is not None and (
+                not math.isfinite(float(value)) or float(value) < 0.0
+            ):
+                raise ValueError(f"{name} must be finite and non-negative.")
+        if route_exposed_op is not None and (
+            isinstance(route_exposed_op, bool)
+            or not isinstance(route_exposed_op, (int, np.integer))
+            or not 1 <= int(route_exposed_op) <= 13
+        ):
+            raise ValueError("route_exposed_op must be None or an operation in [1, 13].")
         if isinstance(action, (int, np.integer)):
-            action = "HOLD" if int(action) == 0 else "DISPATCH_NOW" if int(action) == 1 else str(action)
+            action = (
+                "HOLD"
+                if int(action) == 0
+                else "DISPATCH_NOW"
+                if int(action) == 1
+                else str(action)
+            )
         action = str(action).upper()
         if action not in {"HOLD", "DISPATCH_NOW"}:
             raise ValueError("Op8 convoy action must be HOLD or DISPATCH_NOW.")
-        feasible_before = self.op8_convoy_dispatch_feasible()
+        if route_bypasses_op8:
+            feasible_before = bool(
+                self.op8_dispatch_mode == "finite_convoy_v1"
+                and self.op8_convoy_available
+                and float(self.rations_al.level) > 1e-9
+            )
+        else:
+            feasible_before = self.op8_convoy_dispatch_feasible()
         event: dict[str, Any] = {
             "time": float(self.env.now),
             "action": action,
@@ -3674,45 +3717,93 @@ class MFSCSimulation:
                     event["mask_reason"] = "empty_staging"
             else:
                 qty = min(float(self.rations_al.level), self.op8_convoy_capacity)
+                ob = (
+                    self.op8_convoy_outbound_hours
+                    if route_outbound_hours is None
+                    else float(route_outbound_hours)
+                )
+                rb = (
+                    self.op8_convoy_return_hours
+                    if route_return_hours is None
+                    else float(route_return_hours)
+                )
                 self.op8_convoy_available = False
                 self.op8_convoy_last_departure_at = float(self.env.now)
-                self.op8_convoy_nominal_return_at = float(self.env.now) + (
-                    self.op8_convoy_outbound_hours + self.op8_convoy_return_hours
-                )
+                self.op8_convoy_nominal_return_at = float(self.env.now) + (ob + rb)
                 self.op8_convoy_departures += 1
                 self.op8_convoy_dispatched_rations += qty
                 self.op8_convoy_capacity_committed += self.op8_convoy_capacity
-                event.update({"departed": True, "quantity": qty})
+                event.update(
+                    {"departed": True, "quantity": qty, "route_id": route_id}
+                )
                 self.op8_convoy_departure_events.append(dict(event))
-                self.env.process(self._op8_finite_convoy_trip(qty))
+                self.env.process(
+                    self._op8_finite_convoy_trip(
+                        qty,
+                        outbound_hours=ob,
+                        return_hours=rb,
+                        exposed_op=route_exposed_op,
+                    )
+                )
         self.op8_convoy_action_events.append(event)
         return event
 
-    def _op8_route_progress(self, hours: float, *, ration_qty: float = 0.0):
+    def _op8_route_progress(
+        self,
+        hours: float,
+        *,
+        ration_qty: float = 0.0,
+        exposed_op: int | None = 8,
+    ):
+        # ``exposed_op`` names the LOC whose R22 outage stalls this leg (default: the
+        # thesis Op8 line). Program-L route recourse passes a per-dispatch route's
+        # exposure; exposed_op=None => committed transit (safe alternate, no
+        # mid-flight stall).
         remaining = float(hours)
         while remaining > 1e-9:
             yield self.env.timeout(1.0)
-            if self._is_down(8):
+            if exposed_op is not None and self._is_down(exposed_op):
                 self.op8_convoy_route_wait_hours += 1.0
             else:
                 remaining -= 1.0
             if ration_qty > 0.0:
                 self.op8_convoy_ration_hours_in_transit += float(ration_qty)
 
-    def _op8_finite_convoy_trip(self, qty: float):
-        """Consume one persistent vehicle through outbound and return legs."""
+    def _op8_finite_convoy_trip(
+        self,
+        qty: float,
+        *,
+        outbound_hours: float | None = None,
+        return_hours: float | None = None,
+        exposed_op: int | None = 8,
+    ):
+        """Consume one persistent vehicle through outbound and return legs.
+
+        ``outbound_hours``/``return_hours``/``exposed_op`` default to the thesis
+        Op8 leg (flags-off identity). Program-L route recourse overrides them per
+        dispatch to model the selected route's transit and R22 exposure. All
+        order, mass and ReT accounting remains in the canonical DES.
+        """
+        ob = (
+            self.op8_convoy_outbound_hours
+            if outbound_hours is None
+            else float(outbound_hours)
+        )
+        rb = (
+            self.op8_convoy_return_hours
+            if return_hours is None
+            else float(return_hours)
+        )
         yield self.rations_al.get(qty)
         lineage = self._lineage_take("rations_al", qty)
         if float(self.rations_al.level) <= 1e-9:
             self.op8_staging_first_ready_at = None
         departed_at = float(self.env.now)
         self._in_transit += qty
-        yield from self._op8_route_progress(
-            self.op8_convoy_outbound_hours, ration_qty=qty
-        )
+        yield from self._op8_route_progress(ob, ration_qty=qty, exposed_op=exposed_op)
         self._in_transit -= qty
         yield from self._op8_arrive_sb(qty, lineage, departed_at)
-        yield from self._op8_route_progress(self.op8_convoy_return_hours)
+        yield from self._op8_route_progress(rb, exposed_op=exposed_op)
         self.op8_convoy_available = True
         self.op8_convoy_actual_return_at = float(self.env.now)
         self.op8_convoy_nominal_return_at = None

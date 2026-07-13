@@ -1,0 +1,20 @@
+# Domain decisions required to reopen Paper 2 mechanisms
+
+These are domain gates, not requests to endorse an adaptive or neural result. A “yes” must be accompanied by operational definitions, units, ranges and source records before a new numerical contract is frozen.
+
+1. **Product mix.** Which of the 21 ration types share Op5–Op7, and what are their product-specific BOMs, rates, batch/changeover/minimum-run rules, mission/climate substitution matrix, demand shares and pre-commitment signals?
+2. **Advance transport reservation.** Do Op10 and Op12 use one finite fleet booked before dispatch? If yes, what are its capacity, vehicle-hours, booking lead, dwell, cancellation/reassignment, route-specific degraded leads and pre-booking signals?
+3. **Censored field demand.** During a CSSU stockout, is complete requested quantity recorded or only issued quantity? Can a resource-limited report arrive before commitment, and what does it reveal, cost and consume?
+4. **Lateral resupply.** May CSSUs resupply one another? Is the lateral lane faster than SB resupply, and what payload, travel/return time, risk and distinct or shared lift apply?
+5. **Information and authority.** Which inventory, backlog, consumption and convoy reports move from each CSSU to SB, with what latency/error; which decisions are central versus local; and which shipments become irrevocable before new reports arrive?
+6. **Mission deadlines.** Do unfilled ration orders become physically useless after a deployment window; are they logged as lost; can logistics reject, defer or reroute them; and what observed deadline classes occur?
+7. **Maintenance signals.** Is a condition signal available before Op5–Op7 failure, and can one finite crew prevent or shorten it? What are signal errors/lead, preventive effect, repair duration and finished-stock cover?
+8. **Finite storage.** What usable capacities exist at WDC, assembly, SB and CSSUs; which space is dedicated or fungible; what happens on overflow; and what lead/resource is required to reconfigure it?
+9. **Inspection authority.** Can Op7 inspection intensity vary? What sampling rate, sensitivity, specificity, inspection/rework time and operational consequence of escaped defects apply?
+10. **Transport modes.** Which land, air or water modes serve Op10/Op12; what payload, fleet count, one-way/turnaround time, eligibility and R22 exposure apply; what is known before dispatch; and does commitment remove the asset from later epochs?
+11. **Alternate-route recourse.** Does the MFSC operator choose among at least two routes from Op8 toward the same downstream demand using one finite shared fleet? If yes, what are each route's payload, outbound/return times, R22 exposure, commitment/reassignment rules, degradation persistence and warning available before dispatch; are 36 h each way, +24 h degraded, persistence 0.85, prevalence 0.25 and signal accuracy 0.85 plausible?
+12. **Cross-stage recovery resource.** Is there one truly fungible resource allocated mutually exclusively among plant repair, LOC/vehicle recovery and theatre response? Where is it based, what skills/travel/activation/dwell apply, how does one unit change recovery time at each target, and is emergency-reserve stock a separately budgeted and replenished resource?
+13. **Approved substitution.** May a requisition be satisfied with another ration type without violating nutrition, climate, mission or contract requirements, and when is that substitution decided and logged?
+14. **Mission loadout and carried autonomy.** Before deployment, may logistics allocate a fixed total ration loadout among mission cohorts using observed mission-duration and resupply plans? What are the pack and mass limits, decision authority, signal timestamps and accuracy, sealed demand-ledger semantics, unused-pack return/transfer rules, cohort identifiers and plausible mission/resupply envelope?
+
+Until these facts are supplied, the associated rows remain `blocked_domain_fact`; absence of a fact is not a machine-audited global impossibility result.

@@ -58,7 +58,8 @@ class BottleneckController(ProgramFController):
 
 def make_sim(tape):
     horizon = max(float(SIMULATION_HORIZON), 8_000 + int(tape["weeks"]) * HOURS_PER_WEEK)
-    kwargs = proxy_kwargs(); kwargs["assembly_flow_mode"] = "serial_wip"
+    kwargs = proxy_kwargs()
+    kwargs["assembly_flow_mode"] = "serial_wip"
     sim = MFSCSimulation(seed=int(tape["seed"]), horizon=horizon, risks_enabled=False,
                          strict_exogenous_crn=True, **kwargs)
     sim._start_processes()
@@ -91,6 +92,15 @@ def run_policy(tape, policy: Callable[[dict[str, float]], Iterable[int]]):
         advance_including(sim, min(end, start + (week + 1) * HOURS_PER_WEEK))
     metrics = compute_episode_metrics(sim, treatment_start=start)
     ledger = sim.flow_ledger()
+    reserve = sim.emergency_reserve_metrics()
+    reserve_initial = 10_000.0
+    reserve_terminal = float(reserve["emergency_reserve_level"])
+    reserve_replenished = float(reserve["emergency_reserve_units_replenished"])
+    reserve_issued = float(reserve["emergency_reserve_units_issued"])
+    reserve_committed_pending = max(
+        0.0,
+        reserve_initial + reserve_replenished - reserve_issued - reserve_terminal,
+    )
     metrics.update({
         "threat_sha256": tape["threat_sha256"],
         "mass_residual": max(abs(float(ledger["raw_residual"])),
@@ -101,7 +111,28 @@ def run_policy(tape, policy: Callable[[dict[str, float]], Iterable[int]]):
         "total_token_hours": sum(controller.token_hours.values()),
         "action_events": controller.action_events,
         "damage_events": controller.damage_events,
-        "reserve_units_issued": float(sim.program_f_reserve_fragments_issued),
+        "reserve_units_issued": reserve_issued,
+        "reserve_units_replenished": reserve_replenished,
+        "reserve_inventory_initial": reserve_initial,
+        "reserve_inventory_terminal": reserve_terminal,
+        "reserve_committed_pending_terminal": reserve_committed_pending,
+        "reserve_in_transit_terminal": float(reserve["emergency_reserve_in_transit"]),
+        "reserve_capacity": float(reserve["emergency_reserve_capacity"]),
+        "reserve_target_terminal": float(reserve["emergency_reserve_target"]),
+        "reserve_replenishment_lead_time": float(
+            sim.emergency_reserve_replenishment_lead_time
+        ),
+        "reserve_issue_delay": float(sim.emergency_reserve_issue_delay),
+        "reserve_replenishment_requests": float(
+            reserve["emergency_reserve_replenishment_requests"]
+        ),
+        "reserve_stock_balance_residual": (
+            reserve_initial
+            + reserve_replenished
+            - reserve_issued
+            - reserve_terminal
+            - reserve_committed_pending
+        ),
     })
     metrics.update(runtime_exogenous_artifacts(sim, controller, start))
     return metrics

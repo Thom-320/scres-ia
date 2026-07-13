@@ -1,0 +1,147 @@
+{
+  "schema_version": "paper2_candidate_intervention_ledger_v1",
+  "frozen_date": "2026-07-13",
+  "purpose": "Separate thesis-native physics from disclosed researcher extensions before any numerical contract is allowed to enter the pre-learner gate.",
+  "interventions": [
+    {
+      "family_id": "multi_ration_product_mix_setup_substitution",
+      "operational_interpretation": "Choose which nonfungible ration type uses the next shared Op5-Op7 batch.",
+      "source_justification": "The thesis names 21 ration types and models one Cold Weather ration, but provides only that product's BOM and no shared-line product-mix rules.",
+      "provenance_class": "researcher_extension_requiring_Garrido_signoff",
+      "units_and_conservation": "integer batches; ration units; ingredient units by BOM; line-hours; setup-hours or lost yield; payload weight and volume; no label may create material or capacity",
+      "plausible_envelope_status": "not parameterizable from current sources",
+      "null_or_falsification_regime": "one homogeneous product, or equal-BOM fully fungible labels with zero setup, gives H_PI=H_obs=0",
+      "claim_limit": "At most product-mix control in a Garrido-approved extension; not a result for the thesis single-product DES."
+    },
+    {
+      "family_id": "regime_lead_time_advance_transport_reservation",
+      "operational_interpretation": "Book future shared lift for Op10 or Op12 before a route-specific degraded period.",
+      "source_justification": "The thesis contains transport stages and risk editing, but assumes vehicle and route availability and does not specify a finite shared booking pool.",
+      "provenance_class": "researcher_extension_requiring_Garrido_signoff",
+      "units_and_conservation": "booked slots; vehicle-hours; payload; departures; cancellations and unused slots; capacity is removed from all competing arcs when committed",
+      "plausible_envelope_status": "booking lead, fleet size, dwell and signal envelope absent",
+      "null_or_falsification_regime": "unlimited 24-hour arcs or no pre-booking authority make the action transition-dead and H_PI=H_obs=0",
+      "claim_limit": "Only advance transport reservation under validated fleet physics, not generic routing superiority."
+    },
+    {
+      "family_id": "censored_demand_active_information_acquisition",
+      "operational_interpretation": "Spend a scarce reporting resource to estimate unmet field demand before a binding replenishment or production decision.",
+      "source_justification": "Lost-sales and censored-demand theory supplies the mechanism, but the current DES records requested orders and contains no report-acquisition action.",
+      "provenance_class": "researcher_extension_requiring_Garrido_signoff",
+      "units_and_conservation": "requested, issued, censored and lost ration units remain separate; reports consume named staff-hours or communication slots; evaluator retains sealed true demand",
+      "plausible_envelope_status": "system-of-record and report process unknown",
+      "null_or_falsification_regime": "if complete requested demand is recorded, active report acquisition has zero information value",
+      "claim_limit": "Only value of a validated field-report process; never value from hiding demand already available to operators."
+    },
+    {
+      "family_id": "lateral_cssu_transshipment",
+      "operational_interpretation": "Move conserved stock between CSSUs after central dispatch commitments reveal a donor-recipient imbalance.",
+      "source_justification": "Multiple CSSUs exist, but the thesis does not document lateral resupply authority, its routes or a distinct vehicle resource.",
+      "provenance_class": "researcher_extension_requiring_Garrido_signoff",
+      "units_and_conservation": "ration units at origin, in transit and destination; trips; payload; vehicle-hours; no unit may exist at two nodes simultaneously",
+      "plausible_envelope_status": "lateral lane and distinct resource not established",
+      "null_or_falsification_regime": "central resupply weakly dominates when lateral travel is no faster, uses the same lift and SB stock is available",
+      "claim_limit": "Only lateral balancing where the real lane and resource distinction are validated."
+    },
+    {
+      "family_id": "multi_echelon_information_lag_only",
+      "operational_interpretation": "Delay reports without adding a new physical commitment right.",
+      "source_justification": "The proposal is a strict information reduction of Program G/H rather than a new physical mechanism.",
+      "provenance_class": "formal_reduction_of_versioned_contract",
+      "units_and_conservation": "unchanged inventory, pipeline, dispatch and capacity ledgers",
+      "plausible_envelope_status": "mathematically defined but cannot create value by information inclusion alone",
+      "null_or_falsification_regime": "O_lag is a subset of O_current with the same actions and transitions",
+      "claim_limit": "No adaptive-headroom claim unless a separately validated irrevocable upstream decision is added."
+    },
+    {
+      "family_id": "queue_admission_priority_with_abandonment",
+      "operational_interpretation": "Admit, defer, reroute or prioritize orders that have observable mission deadlines.",
+      "source_justification": "The thesis permits backlog and priority logic but does not establish physical abandonment, admission authority or deadline classes.",
+      "provenance_class": "researcher_extension_requiring_Garrido_signoff",
+      "units_and_conservation": "orders and ration units; service-hours; every rejection or expiry remains a lost order in the canonical evaluator",
+      "plausible_envelope_status": "deadline and authority facts absent",
+      "null_or_falsification_regime": "without physical expiry and released capacity it reduces to closed D1 priority control or prohibited demand shedding",
+      "claim_limit": "Only deadline-aware admission under a lost-order non-inferiority guardrail."
+    },
+    {
+      "family_id": "alarm_signal_finite_maintenance",
+      "operational_interpretation": "Allocate a finite preventive-maintenance crew to the station whose observed condition indicates impending failure.",
+      "source_justification": "Program J implements this researcher extension against thesis Op5-Op7 maintenance context.",
+      "provenance_class": "versioned_researcher_extension_already_falsified",
+      "units_and_conservation": "crew-hours by station and week; downtime-hours; production units; one crew-hour cannot serve multiple stations",
+      "plausible_envelope_status": "implemented screen; observed restricted-oracle maximum 0.0001338324 ReT",
+      "null_or_falsification_regime": "signal removal or nonbinding crew makes adaptive allocation value zero",
+      "claim_limit": "Current contract is closed below the 0.01 practical gate; severity or signal retuning alone cannot reopen it."
+    },
+    {
+      "family_id": "finite_storage_space_allocation",
+      "operational_interpretation": "Reserve, relocate or reconfigure scarce storage across products or locations before arrivals.",
+      "source_justification": "The thesis explicitly assumes unlimited storage, so finite space is not thesis-native physics.",
+      "provenance_class": "researcher_extension_requiring_Garrido_signoff",
+      "units_and_conservation": "volume-time; inventory volume by location; handling-hours; relocation transport; overflow units remain explicitly located or lost",
+      "plausible_envelope_status": "site capacities and overflow consequences absent",
+      "null_or_falsification_regime": "nonbinding storage capacity gives H_PI=H_obs=0",
+      "claim_limit": "Only storage-allocation value under measured capacity and handling constraints."
+    },
+    {
+      "family_id": "inspection_effort_vs_throughput",
+      "operational_interpretation": "Trade Op7 inspection effort against immediate throughput and later defect/rework consequences.",
+      "source_justification": "Op7 quality control is thesis-native, but controllable intensity, diagnostic accuracy and defect consequences are not specified.",
+      "provenance_class": "researcher_extension_requiring_Garrido_signoff",
+      "units_and_conservation": "inspection-minutes; line-hours; inspected, accepted, rejected and reworked ration units; only qualified output may satisfy orders",
+      "plausible_envelope_status": "action and parameters absent",
+      "null_or_falsification_regime": "fixed inspection or zero consequence for escaped defects makes the action dead",
+      "claim_limit": "Only adaptive quality-control effort with qualified-delivery guardrails."
+    },
+    {
+      "family_id": "multimodal_last_mile_mode_choice",
+      "operational_interpretation": "Choose land, air or water mode and destination before dispatch, tying up a mode-specific asset through turnaround.",
+      "source_justification": "The thesis mentions transport modes and urgency, but models a common 24-hour arc and assumes vehicle availability.",
+      "provenance_class": "researcher_extension_requiring_Garrido_signoff",
+      "units_and_conservation": "mode-specific vehicle or aircraft-hours; payload; trips; turnaround; an asset cannot serve concurrent dispatches",
+      "plausible_envelope_status": "mode capacities, leads, eligibility and risk exposure absent",
+      "null_or_falsification_regime": "collapsing every mode to the same unlimited 24-hour arc gives H_PI=H_obs=0",
+      "claim_limit": "Only mode-selection value under validated fleet, payload, lead and availability facts."
+    },
+    {
+      "family_id": "alternate_route_recourse_same_destination",
+      "operational_interpretation": "Choose between a primary and alternate route for the same shipment before committing one finite vehicle through its return leg.",
+      "source_justification": "The thesis contains Op8 transport and R22 but takes route planning and vehicle availability as given; the alternate route and its warning process are researcher-introduced.",
+      "provenance_class": "researcher_extension_requiring_Garrido_signoff",
+      "units_and_conservation": "ration payload, departures, outbound and return vehicle-hours, route-specific delay and in-transit stock; one vehicle and shipment cannot occupy both routes",
+      "plausible_envelope_status": "implemented as a development scaffold but route, fleet, persistence and signal parameters are not validated; the v1 screen is not a certified PI bound",
+      "null_or_falsification_regime": "the thesis-native one-route kernel, common-mode route effects, identical route physics or post-departure warning gives H_PI=H_obs=0",
+      "claim_limit": "Only alternate-route recourse after Garrido face validation and a complete resource-restricted bound; the present heuristic null neither confirms Paper 2 nor closes the introduced family."
+    },
+    {
+      "family_id": "integrated_production_maintenance_routing_recovery_resource",
+      "operational_interpretation": "Commit one team among plant maintenance, line-of-communication recovery and theatre response.",
+      "source_justification": "The post-K3 bottleneck simulator is a versioned extension; the thesis does not identify one real cross-stage team.",
+      "provenance_class": "versioned_researcher_extension_active_for_bound_and_domain_signoff",
+      "units_and_conservation": "one response-team week per epoch allocated to M, T or R; travel, activation and dwell; reserve ration issue, stock and replenishment remain a separate unresolved ledger",
+      "plausible_envelope_status": "numerically executable, but the real shared-resource identity is unvalidated and the exact frontier/PI ceiling is incomplete",
+      "null_or_falsification_regime": "removing bottleneck coupling yielded exact selected-terminal-metric hashes on three retrospective tapes; a preregistered full-ledger null remains required",
+      "claim_limit": "No Paper 2 or domain claim until the full-horizon comparator, restricted-PI ceiling, reserve-resource semantics and Garrido confirmation of a fungible cross-stage team all pass."
+    },
+    {
+      "family_id": "mission_loadout_carried_autonomy_allocation",
+      "operational_interpretation": "Allocate a fixed carried-ration loadout among mission cohorts before departure, after receiving mission and resupply plans.",
+      "source_justification": "The thesis states that a ration covers 24 hours, weighs at most 1.4 kg, soldiers commonly carry about five, and mission duration/resupply frequency affect the number carried; the executable DES contains no personal-carry state or action.",
+      "provenance_class": "researcher_extension_requiring_Garrido_signoff",
+      "units_and_conservation": "ration packs and kilograms by cohort; packs leave CSSU inventory on issue, satisfy sealed timestamped demand only when consumed, and unused packs must be returned, transferred or explicitly written off",
+      "plausible_envelope_status": "conceptually thesis-anchored but not parameterizable or executable from current sources",
+      "null_or_falsification_regime": "identical mission distributions, fully reliable resupply, nonbinding carry limits or a shuffled/post-departure mission signal gives H_obs=0",
+      "claim_limit": "At most mission-loadout allocation in a Garrido-approved downstream extension; not a result for the current theatre-delivery endpoint."
+    },
+    {
+      "family_id": "demand_shaping_or_substitution",
+      "operational_interpretation": "Satisfy an order with an approved alternative ration without erasing the original demand ledger.",
+      "source_justification": "Twenty-one ration types are named, but no mission/climate substitution matrix or authority is documented.",
+      "provenance_class": "blocked_except_as_Garrido_approved_product_substitution",
+      "units_and_conservation": "original requested units; substituted units by type; nutritional/mission eligibility; unmet originals remain lost or backlogged",
+      "plausible_envelope_status": "substitution matrix and accounting semantics absent",
+      "null_or_falsification_regime": "cancellation or deferral that raises ReT by deleting demand fails the lost-order guardrail",
+      "claim_limit": "No demand-shaping claim; only approved noninferior product substitution may be tested."
+    }
+  ]
+}

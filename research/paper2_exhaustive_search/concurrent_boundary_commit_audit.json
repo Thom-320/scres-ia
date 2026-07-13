@@ -1,0 +1,134 @@
+{
+  "schema_version": "paper2_concurrent_boundary_commit_audit_v1",
+  "generated_date": "2026-07-13",
+  "audited_commit": "a91890bfd3d815fc2bd614076c576487e13e0d06",
+  "audited_claim": "SEARCH_ENVELOPE_BOUNDARY_CERTIFIED",
+  "verdict": "SUPERSEDED_NONTERMINAL_INSUFFICIENT_FOR_RETURN_B",
+  "paper2_confirmed": false,
+  "paper3_authorized": false,
+  "terminal_boundary_certified": false,
+  "governing_current_status": "OPEN_ACTIVE_BOUND_REQUIRED",
+  "machine_conflict": {
+    "concurrent_certificate_path": "results/paper2_search/boundary_certificate.json",
+    "concurrent_certificate_terminal_return": "SEARCH_ENVELOPE_BOUNDARY_CERTIFIED",
+    "concurrent_certificate_reported_active_families": 0,
+    "audited_registry_path": "research/paper2_exhaustive_search/approach_registry.json",
+    "audited_active_family": "integrated_production_maintenance_routing_recovery_resource",
+    "full_horizon_calendar_count": 11184811,
+    "resource_restricted_pi_ceiling_available": false,
+    "atlas_corrective_audit": "results/paper2_search/voi_ceiling_atlas_corrective_audit.json",
+    "atlas_cells_stored_statistic_reproduced": 64,
+    "atlas_cells_unguarded_sparse_visible_metric_H_PI_zero": 64,
+    "atlas_cells_unguarded_sparse_visible_metric_project_H_PI_valid": false,
+    "atlas_positive_cells_reproduced_under_stored_full_order_formula": 2,
+    "atlas_positive_cells_full_order_lost_delta_ci95": [[0.4791666666666667, 0.1875, 0.8333333333333334], [0.16666666666666666, 0.020833333333333332, 0.3541666666666667]],
+    "atlas_positive_cells_lost_guardrail_pass": [false, false]
+  },
+  "failed_terminal_B_requirements": [
+    {
+      "requirement": "quantitative ceiling for every searched mechanism family",
+      "evidence": "The concurrent certificate says only >=3 of 12 families have quantitative bounds, while Return B requires family-by-family quantitative ceilings.",
+      "path": "results/paper2_search/boundary_certificate.json",
+      "json_pointer": "/evidence_budget_discharged/families_with_quantitative_bounds"
+    },
+    {
+      "requirement": "close every active family before a terminal boundary",
+      "evidence": "The integrated M/T/R family has 11,184,811 admissible full-horizon calendars; neither its exact frontier nor a resource-restricted PI upper ceiling has been computed.",
+      "path": "results/paper2_bottleneck/corrective_completeness_audit.json",
+      "json_pointer": "/calendar_frontier"
+    },
+    {
+      "requirement": "canonical full-DES evidence for the claimed searched envelope",
+      "evidence": "The 64-cell atlas declares itself a STYLIZED two-CSSU adapter and not the full Op1-Op13 DES. It cannot certify the untested full-DES M/T/R family or other distinct mechanisms.",
+      "path": "results/paper2_search/voi_ceiling_atlas.json",
+      "json_pointer": "/contract"
+    },
+    {
+      "requirement": "H_obs is the maximum over admissible observable policies, not one tested policy",
+      "evidence": "headroom_at evaluates one belief/nowcast cover rule. Its H_obs field is a tested-policy delta and therefore a lower bound on maximized H_obs, not an upper ceiling capable of closing the family.",
+      "path": "supply_chain/headroom_sensitivity.py",
+      "code_scope": "_belief_policy and headroom_at"
+    },
+    {
+      "requirement": "canonical ret_excel_visible_v1 aggregation",
+      "evidence": "The atlas adapter scores compute_order_level_ret_excel_formula over all generated orders with a row-index denominator. Corrective replay reproduces both reported positive cells exactly, but both increase lost orders with CI95 entirely above zero. Raw visible-ledger optimization chooses HOLD^4 because an empty visible population scores 1.0; that 64/64 zero is a shed-to-win degeneracy and explicitly is not a project H_PI ceiling.",
+      "path": "supply_chain/program_g.py",
+      "code_scope": "ret_order_metrics",
+      "corrective_artifact": "results/paper2_search/voi_ceiling_atlas_corrective_audit.json"
+    },
+    {
+      "requirement": "screened factors must causally enter the scored rollout",
+      "evidence": "r22_prob is declared and sampled, but simulate_orders never consumes tape.r22. Corrective paired replay at probabilities 0 and 0.30 changes R22 arrays while producing maximum fixed-sequence score difference exactly zero across 48 tapes x 81 sequences under both formula variants. The belief policy can still change sequences through its shadow _week_step, so this does not prove the whole tested-policy statistic invariant.",
+      "path": "supply_chain/program_g.py",
+      "code_scope": "simulate_orders",
+      "corrective_artifact": "results/paper2_search/voi_ceiling_atlas_corrective_audit.json#/r22_inertness"
+    },
+    {
+      "requirement": "uncertainty, resources, guardrails and null-cell evidence for any headroom screen",
+      "evidence": "The atlas stores point estimates of H_PI, H_obs and eta but no confidence intervals, per-cell resource ledger, lost-order result, worst-CSSU result, tail-risk result or explicit null-physics cell.",
+      "path": "results/paper2_search/voi_ceiling_atlas.json",
+      "json_pointer": "/cells"
+    },
+    {
+      "requirement": "strongest full-contract comparator",
+      "evidence": "The atlas names a periodic calendar and a belief/nowcast policy, but does not provide a certified all-open-loop bound or approximation gap for each cell and does not audit the complete comparator family required by the task.",
+      "path": "results/paper2_search/voi_ceiling_atlas.json",
+      "json_pointer": "/estimator"
+    },
+    {
+      "requirement": "reproducible immutable execution evidence",
+      "evidence": "The atlas provides no exact command manifest, dependency snapshot, per-tape seed manifest, contract/code hash, stdout/stderr log or checksum-indexed partial results. Referenced figure and regression-test files are absent from the audited commit.",
+      "path": "docs/PAPER2_PAPER3_BOUNDARY_CERTIFICATE_AND_STRATEGY_2026-07-13.md",
+      "referenced_missing_paths": [
+        "results/paper2_search/voi_ceiling_atlas_figure.py",
+        "tests/test_voi_ceiling_atlas.py"
+      ]
+    },
+    {
+      "requirement": "burn every opened tape block",
+      "evidence": "The atlas says it opened seed block 7,200,001+, but the concurrent seed-burn ledger does not record that block. The same ledger also labels already opened K3 6,800,001 and 6,900,001 blocks as known virgin.",
+      "path": "results/paper2_search/seed_burn_ledger.json",
+      "opened_block_source": "results/paper2_search/voi_ceiling_atlas.json#/design"
+    },
+    {
+      "requirement": "same-contract headroom decomposition",
+      "evidence": "The concurrent synthesis combines a restricted 10/14-day DRA2 oracle gap with Program E observable-policy results from a different restricted contract/resource setup. Those values cannot form a same-contract H_PI-to-H_obs conversion estimate.",
+      "path": "results/paper2_search/failure_taxonomy.json",
+      "code_scope": "DRA2 and Program E rows"
+    },
+    {
+      "requirement": "auditable multi-agent evidence trail",
+      "evidence": "The claim of 49 agents and 2.9M tokens has no committed task registry, raw reports, hashes or executable synthesis checks. It is provenance metadata, not machine evidence.",
+      "path": "results/paper2_search/boundary_certificate.json",
+      "json_pointer": "/candidate_screen_result/method"
+    },
+    {
+      "requirement": "no theorem-strength invariant without a proved scope",
+      "evidence": "Claims such as global maximal-readiness optimality, periodic-calendar sufficiency and restoration-order invariance are stated as envelope-closing invariants without machine proofs covering every allowed action, topology and canonical-ledger consequence.",
+      "path": "results/paper2_search/boundary_certificate.json",
+      "json_pointer": "/generative_invariants_that_close_the_envelope"
+    },
+    {
+      "requirement": "Paper 3 retained learning remains prohibited until a learned Paper 2 win",
+      "evidence": "The concurrent strategy recommends a different constructive-inverse study as Paper 3. That may be future publication strategy, but it is not the retained-learning estimand authorized by this task and cannot satisfy the requested Paper 3 return condition.",
+      "path": "results/paper2_search/boundary_certificate.json",
+      "json_pointer": "/recommended_portfolio/paper3_primary_conditional"
+    },
+    {
+      "requirement": "current provenance",
+      "evidence": "The certificate says the K3 correction still needs to be pushed, but the audited commit itself was pushed and contains ef6b53b7 as an ancestor; its required provenance action is now stale.",
+      "path": "results/paper2_search/boundary_certificate.json",
+      "json_pointer": "/required_next_provenance_action"
+    }
+  ],
+  "allowed_scientific_use": [
+    "The concurrent candidate registry is exploratory theory-screen input.",
+    "The stylized atlas is an exploratory tested-policy screen only; it is not canonical visible-ledger H_obs and requires metric, factor-liveness, execution, comparator and guardrail repair before boundary use.",
+    "The commit does not authorize virgin confirmation, learner training, Paper 2 success or Paper 3 retained learning."
+  ],
+  "exact_evidence_needed_to_reverse_this_audit": [
+    "Compute or rigorously upper-bound the integrated M/T/R resource-restricted full-horizon PI frontier under frozen reserve semantics.",
+    "Provide a quantitative ceiling, with declared scope and proof or reproducible computation, for every family included in Return B.",
+    "Repair tape-burn, comparator, resource, guardrail and execution manifests for every numerical artifact used by the terminal claim."
+  ]
+}

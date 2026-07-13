@@ -1,0 +1,53 @@
+{
+  "schema_version": "paper2_seed_burn_ledger_correction_v1",
+  "generated_date": "2026-07-13",
+  "policy": "Any tape observed by a human, agent or development script is permanently ineligible for virgin confirmation. Ambiguous concurrent ranges are conservatively reserved.",
+  "blocks": [
+    {
+      "label": "k3_confirmation",
+      "range": "6800001+",
+      "status": "burned",
+      "reason": "K3 development and correction"
+    },
+    {
+      "label": "k3_learner_test",
+      "range": "6900001+",
+      "status": "burned",
+      "reason": "K3 learner evaluation"
+    },
+    {
+      "label": "bottleneck_calibration",
+      "range": "1100001-1100060",
+      "status": "burned",
+      "reason": "M/T/R policy selection and corrective audits"
+    },
+    {
+      "label": "bottleneck_locked",
+      "range": "1110001-1110120",
+      "status": "burned",
+      "reason": "M/T/R locked evaluation and corrective audits"
+    },
+    {
+      "label": "bottleneck_learner_reserved",
+      "range": "1120001+",
+      "status": "unopened_reserved",
+      "reason": "Learner block remains prohibited while the pre-learner gate is closed"
+    },
+    {
+      "label": "concurrent_stylized_voi_atlas",
+      "range": "7200001-7299999",
+      "status": "burned_conservative_reservation",
+      "reason": "Corrective replay reconstructs seed_start=7200001+1000*cell_index with 48 tapes for each of 64 cells and reproduces all stored values. Because the commit supplies no runner or manifest, the wider 7.2M block remains excluded fail-closed."
+    }
+  ],
+  "concurrent_ledger_defect": {
+    "path": "results/paper2_search/seed_burn_ledger.json",
+    "omitted_opened_range": "7200001+",
+    "source": "results/paper2_search/voi_ceiling_atlas.json#/design",
+    "reconstructed_pattern": "cell_index 0..63 uses 7200001+1000*cell_index through +47; validated by exact reproduction of all 64 stored H_PI/H_obs values",
+    "corrective_evidence": "results/paper2_search/voi_ceiling_atlas_corrective_audit.json",
+    "resolution": "the conservative 7200001-7299999 reservation in this correction governs"
+  },
+  "paper2_confirmatory_virgin_block": null,
+  "virgin_allocation_status": "not_allocated_no_candidate_passed_prelearner_gate"
+}

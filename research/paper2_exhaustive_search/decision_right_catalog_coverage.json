@@ -1,0 +1,419 @@
+{
+  "all_decision_rights_covered_once": true,
+  "catalog": "contracts/decision_right_catalog_v1.json",
+  "catalog_contract_id": "decision_right_catalog_v1",
+  "decision_right_count": 32,
+  "exact_current_kernel_zero_count": 13,
+  "exact_current_kernel_zero_factor_ids": [
+    "op4_dispatch_quantity",
+    "op4_dispatch_period",
+    "op4_transport_capacity",
+    "op5_maintenance_effort",
+    "op5_wip_limit",
+    "op6_inspection_effort",
+    "op6_rework_rule",
+    "op6_wip_limit",
+    "op7_release_period",
+    "op7_quality_release_rule",
+    "op10_route_priority",
+    "op11_allocation_rule",
+    "op12_routing_rule"
+  ],
+  "generated_date": "2026-07-13",
+  "interpretation": "A zero applies only to the current transition kernel. It does not close a Garrido-approved researcher extension that adds a live action, conserved resource and operational parameters.",
+  "new_executable_source_native_candidate_count": 0,
+  "paper2_confirmed": false,
+  "paper3_authorized": false,
+  "rows": [
+    {
+      "catalog_status": "implemented",
+      "current_kernel_h_obs_ceiling": null,
+      "current_kernel_h_pi_ceiling": null,
+      "disposition": "closed_reduction",
+      "evidence": [
+        "outputs/experiments/track_a_v2_conservation_ppo_5seed_40k_2026-07-03/summary.json"
+      ],
+      "factor_id": "op3_inventory_target",
+      "family_route": "A/D/K2/K3 inventory and replenishment",
+      "operation": 3
+    },
+    {
+      "catalog_status": "implemented",
+      "current_kernel_h_obs_ceiling": null,
+      "current_kernel_h_pi_ceiling": null,
+      "disposition": "closed_reduction",
+      "evidence": [
+        "results/k2/strong_comparators.json",
+        "results/k3/open_loop_confound_audit.json"
+      ],
+      "factor_id": "op3_order_quantity",
+      "family_route": "D/K2/K3 replenishment",
+      "operation": 3
+    },
+    {
+      "catalog_status": "implemented",
+      "current_kernel_h_obs_ceiling": null,
+      "current_kernel_h_pi_ceiling": null,
+      "disposition": "closed_reduction",
+      "evidence": [
+        "results/k2/strong_comparators.json",
+        "results/k3/open_loop_confound_audit.json"
+      ],
+      "factor_id": "op3_review_period",
+      "family_route": "D/K2/K3 replenishment",
+      "operation": 3
+    },
+    {
+      "catalog_status": "requires_adapter",
+      "current_kernel_h_obs_ceiling": 0.0,
+      "current_kernel_h_pi_ceiling": 0.0,
+      "disposition": "action_absent_requires_adapter",
+      "evidence": [
+        "contracts/decision_right_catalog_v1.json"
+      ],
+      "factor_id": "op4_dispatch_quantity",
+      "family_route": "DRA2 finite transport",
+      "operation": 4
+    },
+    {
+      "catalog_status": "requires_adapter",
+      "current_kernel_h_obs_ceiling": 0.0,
+      "current_kernel_h_pi_ceiling": 0.0,
+      "disposition": "action_absent_requires_adapter",
+      "evidence": [
+        "contracts/decision_right_catalog_v1.json"
+      ],
+      "factor_id": "op4_dispatch_period",
+      "family_route": "DRA2 finite transport",
+      "operation": 4
+    },
+    {
+      "catalog_status": "requires_adapter",
+      "current_kernel_h_obs_ceiling": 0.0,
+      "current_kernel_h_pi_ceiling": 0.0,
+      "disposition": "action_absent_requires_adapter",
+      "evidence": [
+        "contracts/decision_right_catalog_v1.json"
+      ],
+      "factor_id": "op4_transport_capacity",
+      "family_route": "DRA2/reservation transport",
+      "operation": 4
+    },
+    {
+      "catalog_status": "implemented",
+      "current_kernel_h_obs_ceiling": null,
+      "current_kernel_h_pi_ceiling": null,
+      "disposition": "closed_reduction",
+      "evidence": [
+        "outputs/experiments/track_a_v2_conservation_ppo_5seed_40k_2026-07-03/summary.json"
+      ],
+      "factor_id": "op5_inventory_target",
+      "family_route": "A/D buffer control",
+      "operation": 5
+    },
+    {
+      "catalog_status": "implemented",
+      "current_kernel_h_obs_ceiling": null,
+      "current_kernel_h_pi_ceiling": null,
+      "disposition": "closed_reduction_resource_frontier",
+      "evidence": [
+        "outputs/experiments/track_b_same_contract_challenge_2026-07-10/summary.json"
+      ],
+      "factor_id": "op5_capacity_posture",
+      "family_route": "A/B/C capacity posture",
+      "operation": 5
+    },
+    {
+      "catalog_status": "requires_adapter",
+      "current_kernel_h_obs_ceiling": 0.0,
+      "current_kernel_h_pi_ceiling": 0.0,
+      "disposition": "action_absent_requires_adapter",
+      "evidence": [
+        "contracts/decision_right_catalog_v1.json"
+      ],
+      "factor_id": "op5_maintenance_effort",
+      "family_route": "Program J maintenance",
+      "operation": 5
+    },
+    {
+      "catalog_status": "requires_adapter",
+      "current_kernel_h_obs_ceiling": 0.0,
+      "current_kernel_h_pi_ceiling": 0.0,
+      "disposition": "action_absent_requires_adapter",
+      "evidence": [
+        "contracts/decision_right_catalog_v1.json"
+      ],
+      "factor_id": "op5_wip_limit",
+      "family_route": "buffer/WIP allocation",
+      "operation": 5
+    },
+    {
+      "catalog_status": "implemented_shared_shift",
+      "current_kernel_h_obs_ceiling": null,
+      "current_kernel_h_pi_ceiling": null,
+      "disposition": "closed_reduction_resource_frontier",
+      "evidence": [
+        "outputs/experiments/track_b_same_contract_challenge_2026-07-10/summary.json"
+      ],
+      "factor_id": "op6_capacity_posture",
+      "family_route": "A/B/C shared shifts",
+      "operation": 6
+    },
+    {
+      "catalog_status": "requires_adapter",
+      "current_kernel_h_obs_ceiling": 0.0,
+      "current_kernel_h_pi_ceiling": 0.0,
+      "disposition": "action_absent_requires_adapter",
+      "evidence": [
+        "contracts/decision_right_catalog_v1.json"
+      ],
+      "factor_id": "op6_inspection_effort",
+      "family_route": "inspection effort versus throughput",
+      "operation": 6
+    },
+    {
+      "catalog_status": "implemented",
+      "current_kernel_h_obs_ceiling": 0.0,
+      "current_kernel_h_pi_ceiling": 0.0,
+      "disposition": "fidelity_configuration_not_adaptive_action",
+      "evidence": [
+        "supply_chain/supply_chain.py"
+      ],
+      "factor_id": "op6_rework_rule",
+      "family_route": "R14 thesis-strict rework",
+      "operation": 6
+    },
+    {
+      "catalog_status": "requires_adapter",
+      "current_kernel_h_obs_ceiling": 0.0,
+      "current_kernel_h_pi_ceiling": 0.0,
+      "disposition": "action_absent_requires_adapter",
+      "evidence": [
+        "contracts/decision_right_catalog_v1.json"
+      ],
+      "factor_id": "op6_wip_limit",
+      "family_route": "buffer/WIP allocation",
+      "operation": 6
+    },
+    {
+      "catalog_status": "implemented",
+      "current_kernel_h_obs_ceiling": null,
+      "current_kernel_h_pi_ceiling": null,
+      "disposition": "closed_reduction_resource_frontier",
+      "evidence": [
+        "supply_chain/supply_chain.py",
+        "results/program_d/dra2_preflight/verdict.json"
+      ],
+      "factor_id": "op7_batch_quantity",
+      "family_route": "A batching/DRA2 finite convoy",
+      "operation": 7
+    },
+    {
+      "catalog_status": "implemented",
+      "current_kernel_h_obs_ceiling": 0.0,
+      "current_kernel_h_pi_ceiling": 0.0,
+      "disposition": "transition_dead_configuration_field",
+      "evidence": [
+        "supply_chain/config.py",
+        "supply_chain/supply_chain.py"
+      ],
+      "factor_id": "op7_release_period",
+      "family_route": "Op7 release timing",
+      "operation": 7
+    },
+    {
+      "catalog_status": "requires_adapter",
+      "current_kernel_h_obs_ceiling": 0.0,
+      "current_kernel_h_pi_ceiling": 0.0,
+      "disposition": "action_absent_requires_adapter",
+      "evidence": [
+        "contracts/decision_right_catalog_v1.json"
+      ],
+      "factor_id": "op7_quality_release_rule",
+      "family_route": "quality priority/product mix",
+      "operation": 7
+    },
+    {
+      "catalog_status": "implemented",
+      "current_kernel_h_obs_ceiling": null,
+      "current_kernel_h_pi_ceiling": null,
+      "disposition": "closed_reduction",
+      "evidence": [
+        "results/program_d/dra2_preflight/verdict.json"
+      ],
+      "factor_id": "op8_dispatch_threshold",
+      "family_route": "DRA2/2b finite convoy",
+      "operation": 8
+    },
+    {
+      "catalog_status": "implemented",
+      "current_kernel_h_obs_ceiling": null,
+      "current_kernel_h_pi_ceiling": null,
+      "disposition": "closed_reduction",
+      "evidence": [
+        "results/program_d/dra2_preflight/verdict.json"
+      ],
+      "factor_id": "op8_max_wait",
+      "family_route": "DRA2/2b finite convoy",
+      "operation": 8
+    },
+    {
+      "catalog_status": "implemented",
+      "current_kernel_h_obs_ceiling": null,
+      "current_kernel_h_pi_ceiling": null,
+      "disposition": "closed_reduction_resource_frontier",
+      "evidence": [
+        "results/program_d/dra2_preflight/verdict.json"
+      ],
+      "factor_id": "op8_convoy_capacity",
+      "family_route": "DRA2/2b finite convoy",
+      "operation": 8
+    },
+    {
+      "catalog_status": "implemented",
+      "current_kernel_h_obs_ceiling": null,
+      "current_kernel_h_pi_ceiling": null,
+      "disposition": "closed_reduction",
+      "evidence": [
+        "results/program_i/branching/verdict.json"
+      ],
+      "factor_id": "op9_inventory_target",
+      "family_route": "A/D buffer control",
+      "operation": 9
+    },
+    {
+      "catalog_status": "implemented",
+      "current_kernel_h_obs_ceiling": null,
+      "current_kernel_h_pi_ceiling": null,
+      "disposition": "closed_reduction_resource_frontier",
+      "evidence": [
+        "results/program_i/branching/verdict.json"
+      ],
+      "factor_id": "op9_release_period",
+      "family_route": "Program I dispatch cadence",
+      "operation": 9
+    },
+    {
+      "catalog_status": "implemented",
+      "current_kernel_h_obs_ceiling": null,
+      "current_kernel_h_pi_ceiling": null,
+      "disposition": "closed_reduction",
+      "evidence": [
+        "results/program_d/d1_v3_visible_branching/verdict.json"
+      ],
+      "factor_id": "op9_queue_rule",
+      "family_route": "D1 priority control",
+      "operation": 9
+    },
+    {
+      "catalog_status": "implemented",
+      "current_kernel_h_obs_ceiling": null,
+      "current_kernel_h_pi_ceiling": null,
+      "disposition": "closed_reduction_resource_frontier",
+      "evidence": [
+        "results/program_i/branching/verdict.json"
+      ],
+      "factor_id": "op10_dispatch_quantity",
+      "family_route": "B/DRA2/G transport",
+      "operation": 10
+    },
+    {
+      "catalog_status": "implemented",
+      "current_kernel_h_obs_ceiling": null,
+      "current_kernel_h_pi_ceiling": null,
+      "disposition": "closed_reduction_resource_frontier",
+      "evidence": [
+        "results/program_i/branching/verdict.json"
+      ],
+      "factor_id": "op10_dispatch_period",
+      "family_route": "B/DRA2/G transport",
+      "operation": 10
+    },
+    {
+      "catalog_status": "requires_adapter",
+      "current_kernel_h_obs_ceiling": 0.0,
+      "current_kernel_h_pi_ceiling": 0.0,
+      "disposition": "action_absent_requires_adapter",
+      "evidence": [
+        "contracts/decision_right_catalog_v1.json"
+      ],
+      "factor_id": "op10_route_priority",
+      "family_route": "DRA1/G/H spatial routing",
+      "operation": 10
+    },
+    {
+      "catalog_status": "requires_adapter",
+      "current_kernel_h_obs_ceiling": 0.0,
+      "current_kernel_h_pi_ceiling": 0.0,
+      "disposition": "action_absent_requires_adapter",
+      "evidence": [
+        "contracts/decision_right_catalog_v1.json"
+      ],
+      "factor_id": "op11_allocation_rule",
+      "family_route": "DRA1/G/H CSSU allocation",
+      "operation": 11
+    },
+    {
+      "catalog_status": "implemented_extension",
+      "current_kernel_h_obs_ceiling": null,
+      "current_kernel_h_pi_ceiling": null,
+      "disposition": "researcher_extension_reduction",
+      "evidence": [
+        "contracts/decision_right_catalog_v1.json",
+        "results/program_f/screen/verdict.json"
+      ],
+      "factor_id": "op11_forward_reserve",
+      "family_route": "F/G mitigation and spatial reserve",
+      "operation": 11
+    },
+    {
+      "catalog_status": "implemented",
+      "current_kernel_h_obs_ceiling": null,
+      "current_kernel_h_pi_ceiling": null,
+      "disposition": "closed_reduction_resource_frontier",
+      "evidence": [
+        "results/program_i/branching/verdict.json"
+      ],
+      "factor_id": "op12_dispatch_quantity",
+      "family_route": "B/DRA2/G transport",
+      "operation": 12
+    },
+    {
+      "catalog_status": "implemented",
+      "current_kernel_h_obs_ceiling": null,
+      "current_kernel_h_pi_ceiling": null,
+      "disposition": "closed_reduction_resource_frontier",
+      "evidence": [
+        "results/program_i/branching/verdict.json"
+      ],
+      "factor_id": "op12_dispatch_period",
+      "family_route": "B/DRA2/G transport",
+      "operation": 12
+    },
+    {
+      "catalog_status": "requires_adapter",
+      "current_kernel_h_obs_ceiling": 0.0,
+      "current_kernel_h_pi_ceiling": 0.0,
+      "disposition": "action_absent_requires_adapter",
+      "evidence": [
+        "contracts/decision_right_catalog_v1.json"
+      ],
+      "factor_id": "op12_routing_rule",
+      "family_route": "DRA1/G/H spatial routing",
+      "operation": 12
+    },
+    {
+      "catalog_status": "implemented",
+      "current_kernel_h_obs_ceiling": null,
+      "current_kernel_h_pi_ceiling": null,
+      "disposition": "closed_reduction",
+      "evidence": [
+        "results/program_d/d1_v3_visible_branching/verdict.json"
+      ],
+      "factor_id": "op13_rationing_rule",
+      "family_route": "D1 priority control",
+      "operation": 13
+    }
+  ],
+  "schema_version": "paper2_decision_right_catalog_coverage_v1"
+}

@@ -1,0 +1,137 @@
+{
+  "contract_id": "paper2_bottleneck_primary_bound_v2",
+  "frozen_date": "2026-07-13",
+  "status": "RETROSPECTIVE_PRIMARY_BOUND_PROTOCOL_FROZEN_BEFORE_ANY_24_WEEK_RESULT",
+  "parent_contract": "paper2_bottleneck_full_horizon_bound_v1",
+  "scientific_scope": "Exact resource-restricted primary-metric bound on already-burned tapes for the integrated M/T/R family. This is neither a confirmatory Paper 2 result nor domain validation of a fungible cross-stage response team.",
+  "reason_for_version": "Version 1 required every non-additive guardrail to be reconstructible under state merging. Version 2 separates an exact primary frontier from unaccelerated replay of selected schedules. A primary H_PI UCB95 below 0.01 closes the family without relying on a guardrail approximation; a material H_PI does not promote the family until a complete guardrail-constrained audit is added.",
+  "physics": {
+    "implementation": "supply_chain.paper2_bottleneck",
+    "weeks": 24,
+    "actions": ["M", "T", "R"],
+    "initial_active_action": "M",
+    "request_activation_lag_weeks": 1,
+    "adjacent_week_switches_forbidden": true,
+    "effective_calendar_count": 11184811,
+    "profile": "paper2_bottleneck_high_authority_v1 unchanged",
+    "researcher_extension_warning": "The thesis does not establish one fungible response team shared across plant recovery, transport protection and theatre reserve. Garrido sign-off remains mandatory for any positive claim."
+  },
+  "metric": {
+    "primary": "ret_excel_visible_v1 via compute_episode_metrics",
+    "practical_gate": 0.01,
+    "lost_order_guardrail": "No increase",
+    "worst_node_guardrail": "No material deterioration",
+    "other_mandatory_guardrails": [
+      "quantity-weighted ReT",
+      "service-loss AUC",
+      "attended and lost orders",
+      "remaining backlog and maximum age",
+      "tail ReT",
+      "mass conservation",
+      "reserve issue, replenishment and terminal-stock ledgers"
+    ],
+    "no_metric_substitution": true
+  },
+  "resource_envelope": {
+    "response_team": "Exactly one mutually exclusive M/T/R team-week in every epoch and 4032 total team-hours per episode.",
+    "reserve": "Identical 10000-unit initial stock, capacity, target, lead time and stock-conserving replenishment physics for every calendar.",
+    "failure_rule": "Any external stock creation, unequal total team-hours, unequal initial stock, superior dispatch resource or mass residual invalidates the run."
+  },
+  "seed_blocks": {
+    "algorithm_development_excluded": [1110001],
+    "calibration": {"start": 1100001, "end": 1100060, "n": 60, "status": "burned"},
+    "locked_bound": {"start": 1110002, "end": 1110120, "n": 119, "status": "burned"},
+    "new_virgin_tapes_opened": false
+  },
+  "complete_frontier": {
+    "calibration": "Evaluate every one of the 11184811 feasible calendars on every calibration tape and select the maximum mean canonical ReT. Use deterministic guardrail then lexicographic tie-breaking after unaccelerated replay of all primary ties.",
+    "locked": "On each locked tape, find the exact maximum canonical ReT over every feasible calendar. Evaluate the frozen calibration winner on the same tape under CRN.",
+    "h_pi": "Per-tape exact feasible oracle ReT minus frozen calibration-winner ReT.",
+    "selection_bias_direction": "Selecting the comparator only on independent calibration can weaken it relative to the unknown best expected open-loop schedule. Therefore a locked H_PI UCB95 below 0.01 is conservative for family closure."
+  },
+  "calibration_tie_break": {
+    "scope": "Applied only among calendars with exactly equal maximum aggregate canonical ReT on the 60 calibration tapes.",
+    "required_replay": "Replay every exact primary tie on all calibration tapes with the original simulator before selection.",
+    "aggregate_rule": "Use the arithmetic mean across the frozen 60 calibration tapes for each numeric guardrail.",
+    "lexicographic_priorities": [
+      {"field": "lost_orders", "direction": "minimize"},
+      {"field": "n_lost", "direction": "minimize"},
+      {"field": "ration_ret_excel", "direction": "maximize"},
+      {"field": "ret_excel_cvar05", "direction": "maximize"},
+      {"field": "ret_excel_cvar10", "direction": "maximize"},
+      {"field": "service_loss_auc_ration_hours", "direction": "minimize"},
+      {"field": "backorder_qty_final", "direction": "minimize"},
+      {"field": "backlog_age_max", "direction": "minimize"},
+      {"field": "reserve_units_issued", "direction": "minimize"},
+      {"field": "calendar_index", "direction": "minimize"}
+    ],
+    "missing_or_nonfinite_rule": "Fail closed; never skip an unavailable guardrail or alter this ordering after calibration.",
+    "scientific_interpretation": "All tied calendars remain exact primary maximizers. The frozen guardrail ordering chooses one resource-conservative comparator without looking at locked tapes."
+  },
+  "acceleration_proof": {
+    "required_key_schema": "paper2_bottleneck_semantic_markov_key_v2",
+    "primary_state_merge_rule": "Prefixes may merge only when a machine-audited semantic key preserves the complete future SimPy event graph, callback ownership, generator continuations, containers and resource queues, RNG states, controller state, unresolved orders, relevant risk events and every transition-relevant simulator attribute.",
+    "output_label_rule": "Completed visible-order ReT rows remain path labels and are never used to merge physical states. Future rows may be appended only after reduced-horizon exhaustive equivalence proves immutability of prior rows and equality with unaccelerated simulation.",
+    "reduced_horizon_gate": "Before any 24-week result, the current key schema must reproduce every calendar bitwise at 12 weeks on all five collision-suite tapes and at 16 weeks on the designated hard tape.",
+    "numeric_exactness": "Calendar selection must use exact binary64 row sums/counts or a documented rounding enclosure that proves the winner cannot change. Approximate top-k search is forbidden.",
+    "unaccelerated_replay": "Replay the calibration winner, every primary tie that can affect selection, and every locked oracle winner with supply_chain.paper2_bottleneck.run_policy. Canonical ReT must match the accelerated score within the preregistered bitwise or certified-rounding rule; compute all guardrails and resource ledgers only from these original-simulator replays.",
+    "failure_rule": "Any unclassified mutable state, unknown callback owner, reduced-horizon mismatch, numeric ambiguity, replay mismatch, CRN mismatch or nonzero approximation gap invalidates the acceleration and leaves the family active_for_bound."
+  },
+  "reduced_horizon_certification": {
+    "w12_five_tape": {
+      "weeks": 12,
+      "split": "transducer_collision_suite_burned",
+      "output_path": "results/paper2_bottleneck/exact_transducer_certification_w12.json",
+      "seed_context": [
+        [1110001, "equipment_pressure"],
+        [1100001, "equipment_pressure"],
+        [1100031, "equipment_pressure"],
+        [1110061, "equipment_pressure"],
+        [1110120, "mission_surge"]
+      ],
+      "calendar_count_per_tape": 2731
+    },
+    "w16_hard_tape": {
+      "weeks": 16,
+      "split": "transducer_hard_state_burned",
+      "output_path": "results/paper2_bottleneck/exact_transducer_certification_w16_hard.json",
+      "seed_context": [[1110025, "equipment_pressure"]],
+      "calendar_count_per_tape": 43691
+    },
+    "w24_profile_state_audit": {
+      "weeks": 24,
+      "split": "w24_profile_state_audit_burned",
+      "seed_context": [[1110001, "equipment_pressure"]],
+      "output_path": "results/paper2_bottleneck/w24_profile_state_audit.json",
+      "runner_mode": "profile_state_audit_only_not_authorization"
+    },
+    "provenance_rule": "Each result must use schema v3 or later and pin the producing commit, runner and dependency hashes, scientific environment digest, exact seed/context/split/tape hashes and all-prefix callback audit. The authorization validator must reproduce every tape hash from the committed code."
+  },
+  "decision_rules": {
+    "boundary_close": "Close this family only if the paired locked resource-restricted H_PI bootstrap UCB95 is strictly below 0.01. This conclusion uses the exact primary ceiling and does not require a favorable guardrail result.",
+    "material_headroom": "If H_PI LCB95 is at least 0.01, report diagnostic physical headroom only. Do not train or claim observable value until every mandatory guardrail, liveness, signal-placebo and comparator gate is separately passed.",
+    "ambiguous_headroom": "If the interval straddles 0.01, the family remains active and the result is not a boundary certificate.",
+    "guardrail_failure": "A selected oracle that violates lost-order, worst-node, resource or tail guardrails cannot support Paper 2; if H_PI is material, a complete guardrail-constrained frontier is required before closure or promotion.",
+    "learner_authorized": false,
+    "paper3_authorized": false
+  },
+  "inference": {
+    "paired_unit": "tape",
+    "bootstrap_resamples": 10000,
+    "bootstrap_seed": 20260713,
+    "confidence_level": 0.95
+  },
+  "execution_discipline": {
+    "required": [
+      "immutable git, contract and script hashes",
+      "environment and dependency snapshot",
+      "seed and command manifests",
+      "stdout and stderr logs",
+      "heartbeat",
+      "machine-readable partial progress",
+      "checksums on retrieved artifacts"
+    ],
+    "submitted_job_is_evidence": false,
+    "completed_retrieved_hashed_audit_required": true
+  }
+}

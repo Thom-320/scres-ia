@@ -1,0 +1,168 @@
+{
+  "schema_version": "paper2_source_extraction_index_v2",
+  "generated_date": "2026-07-13",
+  "method": "pdftotext -layout for PDFs; python-docx extraction plus LibreOffice/PDF rendering for DOCX visual QA; key thesis and factory-resilience pages rendered with Poppler and visually inspected; workbook formula lineage imported from the frozen 2026-06-25 audit, independently rerun on 2026-07-13, and current workbook identities verified by SHA-256",
+  "sources": [
+    {
+      "id": "garrido_thesis_2017",
+      "source_path": "/Users/thom/Library/CloudStorage/GoogleDrive-chisicathomas@gmail.com/My Drive/Archive/Misc_Unsorted/Unsorted/WRAP_Theses_Garrido_Rios_2017.pdf",
+      "source_sha256": "de9192d233b0c728ece6156b754fc64543146868121358b8a95c73b3edaa55cf",
+      "pages": 187,
+      "extracted_text_sha256": "5c6101b90a67eae12b52859ac48592ec8c4f2efbdd937f1a7854ce540a75d05c",
+      "extracted_lines": 7869,
+      "extracted_words": 65856,
+      "authority": "primary MFSC physical and ReT source",
+      "chapter_map": [
+        {"chapter": "1", "title": "Introduction", "printed_pages": [16, 20], "extracted_scope": "problem, objectives, scope, contributions and thesis structure", "claim_boundary": "research setting only; no sequential adaptive contract"},
+        {"chapter": "2", "title": "Systematic Literature Review", "printed_pages": [22, 38], "extracted_scope": "SCRES measurement approaches, review protocol, gaps and method classification through 2017", "claim_boundary": "historical thesis context, not the current Paper 2 literature review"},
+        {"chapter": "3", "title": "Hypotheses Development and Conceptual Framework", "printed_pages": [40, 49], "extracted_scope": "fixed-scenario risk-frequency, inventory-buffer and short-term-capacity hypotheses", "claim_boundary": "configuration moderation, not adaptive-over-open-loop value"},
+        {"chapter": "4", "title": "Research Methods", "printed_pages": [51, 58], "extracted_scope": "simulation, questionnaire/case-study component and non-parametric analysis", "claim_boundary": "method for the original study; new extensions require fresh verification and validation"},
+        {"chapter": "5", "title": "Operationalization of Resilience in Military Supply Chains", "printed_pages": [60, 77], "extracted_scope": "military-SC semantics; AP/RP/DP algorithms; Equations 5.1-5.5 and accumulated fill-rate branch", "claim_boundary": "conceptual thesis ReT authority; raw-workbook formula and visible-row population are reconciled separately"},
+        {"chapter": "6", "title": "Simulation Model Output Data and Questionnaire", "printed_pages": [79, 120], "extracted_scope": "Op1-Op13, capacities, demand, risks, assumptions, verification/validation, 90 configurations, run length, warm-up, output matrix and questionnaire", "claim_boundary": "primary MFSC-physics authority subject to disclosed simplifications"},
+        {"chapter": "7", "title": "Discussion of Results", "printed_pages": [123, 139], "extracted_scope": "risk-frequency effects and moderation by inventory buffers or shifts", "claim_boundary": "fixed-configuration thesis results, not feedback or learned-policy evidence"},
+        {"chapter": "8", "title": "Conclusions and Future Research", "printed_pages": [141, 149], "extracted_scope": "findings, limitations, practical implications, stationarity, costs, lead time and future questions", "claim_boundary": "questions and limitations do not supply new-mechanism parameter values"},
+        {"chapter": "annexes", "title": "Annexes A-E", "printed_pages": [167, 186], "extracted_scope": "text-mining algorithm, Simulink code, questionnaire, ReT categorization and association-rule algorithms", "claim_boundary": "provenance and implementation evidence, not proof of Python/Simulink distributional identity"}
+      ],
+      "search_index": [
+        {"topic": "21 ration types and single-product reduction", "sections": ["6.3.1", "6.5.3"], "printed_pages": [82, 97], "finding": "Real MFSC assembles 21 types; the DES uses Cold Weather #1 as a homogeneous simplification."},
+        {"topic": "Cold Weather #1 BOM", "section": "6.3.1", "printed_pages": [82, 83], "finding": "Twelve raw-material components are specified for the one modeled product."},
+        {"topic": "line capacity", "section": "6.3.2", "printed_pages": [83, 84], "finding": "Assembly rate 320.5 rations/hour; one-shift effective weekly hours/capacity and S1-S3 alternatives are reported."},
+        {"topic": "Op1-Op13 physical semantics", "section": "6.3.3", "printed_pages": [84, 87], "finding": "Processing, batch and transport cadences for the complete network; Op1 PT is 672 h, Op3 releases 15,500 units of each raw material weekly, and the downstream promised order lead time is 48 h after warm-up."},
+        {"topic": "risk distributions", "section": "6.4", "printed_pages": [89, 96], "finding": "R11-R14, R21-R24 and R3 event assumptions and affected operations."},
+        {"topic": "order-level ReT equations and conditional aggregation", "section": "5.6.2-5.6.3", "printed_pages": [72, 76], "finding": "Equations 5.1-5.5 define the AP, RP, DP-minus-RP and accumulated fill-rate cases. The repository separately reconstructs the raw-workbook conditional formula and visible-row population contract."},
+        {"topic": "dual production and inventory policy", "section": "6.3.3", "printed_page": 84, "finding": "The chain is assemble-to-stock through Op9 and assemble-to-order from Op9 to Op13, with (ROP,Q) logic."},
+        {"topic": "lead time, warm-up and horizon", "sections": ["6.8.1", "6.8.2"], "printed_pages": [110, 111], "finding": "Promised downstream lead time is 48 h after the first 5,000-ration Op9 arrival; deterministic warm-up is 838.8 h; principal runs extend to 20 years or 161,280 h."},
+        {"topic": "experimental design and common seeds", "sections": ["6.7", "6.9.1"], "printed_pages": [102, 114], "finding": "Ninety fixed configurations cover risk frequency, inventory buffers and short-term capacity; matched configuration families reuse seeds for comparison."},
+        {"topic": "verification, validation and questionnaire", "sections": ["6.6", "6.10"], "printed_pages": [98, 120], "finding": "Original Simulink verification/validation and the case-study questionnaire support the thesis model only; they do not validate later researcher extensions."},
+        {"topic": "fixed-configuration results", "section": "7", "printed_pages": [123, 139], "finding": "The thesis analyzes risk effects and moderation by inventory buffers and shifts across fixed configurations, not sequential feedback policies."},
+        {"topic": "backlog priority and loss", "section": "6.5.4", "printed_page": 97, "finding": "Late orders backorder; cap 60; SPT and contingent priority; overflow is lost."},
+        {"topic": "transport and storage assumptions", "section": "6.5.5", "printed_page": 97, "finding": "Vehicle availability and route planning are taken for granted; storage is unlimited."},
+        {"topic": "setup and maintenance assumptions", "section": "6.5.7", "printed_pages": [97, 98], "finding": "Setup omitted because one item is modeled; maintenance fixed at 24 hours every seven days."},
+        {"topic": "stationarity", "sections": ["6.5.8", "8.5.1"], "printed_pages": [98, 146, 147], "finding": "Steady parameters/demand are a major limitation."},
+        {"topic": "forecast and dynamic buffering", "section": "8.4", "printed_page": 146, "finding": "Long-term demand changes should be incorporated quickly through advance cross-functional forecasting."},
+        {"topic": "lead time future work", "section": "8.6.1", "printed_page": 148, "finding": "Lead time is named as a future research dimension."},
+        {"topic": "transport modes", "sections": ["5.2", "6.2"], "printed_pages": [60, 61, 80], "finding": "Land/sea/water/air and urgency/equipment-based mode choice are mentioned without numerical mode physics."},
+        {"topic": "three-year ration life", "keywords": ["non-perishable", "three years", "27 C"], "finding": "The modeled combat ration is non-perishable at the scale relevant to the thesis; a two-week shelf life is incompatible."}
+      ]
+    },
+    {
+      "id": "garrido2024_scres_ai",
+      "source_path": "/Users/thom/Library/CloudStorage/GoogleDrive-chisicathomas@gmail.com/My Drive/Supernote/Document/20_RESEARCH/PhD-Papers/garrido2024 scres+AI.pdf",
+      "source_sha256": "3e3bc8f82e20b891ee163fb8a035dd37be4312fa11f58dde77452dc1bb903ae6",
+      "pages": 15,
+      "extracted_text_sha256": "aff609d37255cb129fceb0226cffc09c7400fd3e7ff5b4c335294c7baed96d51",
+      "extracted_lines": 591,
+      "extracted_words": 5783,
+      "authority": "conceptual learning motivation, not an empirical adaptive-policy result",
+      "search_index": [
+        {"topic": "scope", "sections": ["1", "5"], "finding": "Explicitly preliminary, theoretical and exploratory."},
+        {"topic": "DES construction", "section": "3", "finding": "Twelve-step archetype covers material/information flows, risk identification, assumptions, verification, validation, experimental design, warm-up/run length and metric construction."},
+        {"topic": "open-loop limitation", "section": "3", "finding": "Repeated conventional DES runs do not themselves retain experience; the paper calls this an Alzheimer effect and frames the model as open loop."},
+        {"topic": "learning integration", "section": "4.2", "finding": "Proposes inserting a neural/learning mechanism between decision inputs and SCRES outcomes across iterations."},
+        {"topic": "SCRES drivers and neuron analogy", "section": "4.2", "finding": "Uses AP, RP, DP and fill rate as example drivers, combined through weights and an activation function; other drivers are explicitly possible."},
+        {"topic": "learning-centered SCRES definition", "section": "4.2", "finding": "Proposes progressive adaptive capacity derived from continuous learning from past experiences; this is conceptual, not empirically tested."},
+        {"topic": "algorithm families", "sections": ["4.2", "5"], "finding": "Names backpropagation, Kolmogorov-Arnold networks and reinforcement-learning/simulation optimization as possibilities, without a validated action/observation contract or comparative result."}
+      ]
+    },
+    {
+      "id": "garrido2024_factory_resilience_cobb_douglas",
+      "source_path": "/Users/thom/Downloads/garrido et al 2024 factory resilience.pdf",
+      "source_sha256": "1260863dc295232faf24b820e1f67d53f25f81ffa2d221f7ef02a02310519c43",
+      "pages": 20,
+      "extracted_lines": 1138,
+      "extracted_words": 13395,
+      "authority": "primary source for the published factory-level Cobb-Douglas APP construct, not for the thesis order-level MFSC endpoint",
+      "search_index": [
+        {"topic": "scope", "finding": "Hypothetical make-to-stock factory, 36-week aggregate-production-planning horizon, with demand variability as the sole source of uncertainty."},
+        {"topic": "decision set", "finding": "Compares seven fixed pure APP substrategies: three zero-inventory/chase, two constant-workforce and two hybrid rules."},
+        {"topic": "index variables", "finding": "Factory resilience combines average inventory, backorders, spare capacity, net-requirement fulfillment time and normalized total cost."},
+        {"topic": "published Equation 5", "finding": "Log score is 0.024 ln(zeta) - 0.026 ln(epsilon) + 0.04 ln(phi) - 0.06 ln(tau) - 0.1771 ln(kappa_dot); Equation 6 applies a sigmoid."},
+        {"topic": "calibration", "finding": "Coefficients equate each term to 0.2 at its maximum observed after 10,000 factory simulations; they are calibration-specific rather than universal MFSC weights."},
+        {"topic": "result", "finding": "Fixed match-chase S12 dominates the other pure APP substrategies, a dominant-constant warning rather than evidence of adaptive state feedback."},
+        {"topic": "claim boundary", "finding": "The paper validates neither MFSC component mappings nor sequential adaptive, learned or retained-learning value."}
+      ]
+    },
+    {
+      "id": "v0_pdf_draft",
+      "source_path": "/Users/thom/Downloads/v.0_neuralNet-scres.pdf",
+      "source_sha256": "521b12770e94f3e70c4c88ce1e38613f4e0aad3e1dab114632c9c89dbfad182d",
+      "pages": 21,
+      "extracted_text_sha256": "b18929d0b17e11be0391ab169fe86158023c807ab88b9b424082a308e4d6dd08",
+      "extracted_lines": 708,
+      "extracted_words": 5163,
+      "authority": "incomplete working manuscript only",
+      "search_index": [
+        {"topic": "draft state", "finding": "Placeholder abstract/results/figures and drafting comments remain."},
+        {"topic": "proposed DES/Gym scope", "finding": "Describes a SimPy/Gymnasium reconstruction of the 13-operation DES with hourly internal dynamics and 168 h decision cadence."},
+        {"topic": "proposed observation contract", "finding": "States a 15-dimensional baseline observation; this prose is a draft and is not a no-privileged-information audit."},
+        {"topic": "proposed action contract", "finding": "States a five-dimensional Track A action over Op3/Op9 dispatch/reorder quantities and shifts, plus later downstream-dispatch extensions."},
+        {"topic": "proposed reward", "finding": "Uses SC^0.60 * BC^0.25 * AE^0.15 as a sequential Cobb-Douglas-style training reward; it is not canonical ret_excel_visible_v1."},
+        {"topic": "proposed learner families", "finding": "Contains PPO/RecurrentPPO, HSN and DKANA/KAN prose with unresolved citations and incomplete architecture text."},
+        {"topic": "draft numeric claims", "finding": "Includes validation and results prose whose provenance must be reconciled with repository outputs before use."},
+        {"topic": "claim routing", "finding": "Any positive prose is superseded by live verdict JSON and corrective audits."}
+      ]
+    },
+    {
+      "id": "v0_docx_draft",
+      "source_path": "/Users/thom/Downloads/v.0_neuralNet-scres.docx",
+      "source_sha256": "b111070a05c8f4d1afa058454138bed9b4b74900ab87eaaf6eb5186b6e8293f2",
+      "rendered_pages": 21,
+      "extracted_text_sha256": "6f80e1ca529d82f767b221005c16f624dcaae5bff61b41601b322db4b9e07c1a",
+      "extracted_lines": 834,
+      "extracted_words": 4658,
+      "visual_qa": "sampled pages 1, 5, 9, 12 and 21; layout contains blank/sparse pages, placeholders and embedded working material",
+      "authority": "editable incomplete working manuscript only"
+    },
+    {
+      "id": "garrido_raw_data1_ret_workbook",
+      "source_path": "/Users/thom/Downloads/Raw_data1+Re.xlsx",
+      "source_sha256": "30b88c9b9fe68ef527dbfcc70d8e653ea7bd152ab891b3fc0ecf53cb6f043486",
+      "authority": "primary raw operational-ReT workbook for CF1-CF10",
+      "scope": "CF1-CF10; risk columns R11_1, R11_2, R12, R13, R14; ReT column U",
+      "audit_evidence": [
+        "docs/audits/garrido_excel_des_2026-06-25/README.md",
+        "outputs/audits/garrido_replication_2026-06-25/replication_audit.json"
+      ],
+      "claim_boundary": "formula and workbook-visible rows are authoritative; workbook replay does not validate endogenous Python risk generation"
+    },
+    {
+      "id": "garrido_raw_data2_ret_workbook",
+      "source_path": "/Users/thom/Downloads/Raw_data2+Re.xlsx",
+      "source_sha256": "4bd462771fefff16fc5666a851256b3780198d474832dec1423c0b6f94be86b0",
+      "authority": "primary raw operational-ReT workbook for CF11-CF20",
+      "scope": "CF11-CF20; risk columns R21_1-R21_5, R22_1-R22_4, R23, R24; ReT column AA",
+      "audit_evidence": [
+        "docs/audits/garrido_excel_des_2026-06-25/README.md",
+        "outputs/audits/garrido_replication_2026-06-25/replication_audit.json"
+      ],
+      "claim_boundary": "formula and workbook-visible rows are authoritative; workbook replay does not validate endogenous Python risk generation"
+    },
+    {
+      "id": "garrido_rsult1_workbook",
+      "source_path": "/Users/thom/Downloads/Rsult_1.xlsx",
+      "source_sha256": "1901f683f6014cf75237c17233b8eba04f541b956f2d19dcecf2edc00e83b00a",
+      "authority": "secondary transformed/discretized ReT analysis",
+      "scope": "Cf1-Cf12 plus APj, RPj, DPj and Re aggregate sheets",
+      "audit_evidence": "docs/audits/garrido_excel_des_2026-06-25/README.md",
+      "claim_boundary": "not a direct consolidation of Raw_data1+Re.xlsx and Raw_data2+Re.xlsx and not the primary 20-CF target"
+    }
+  ],
+  "workbook_formula_audit": {
+    "audit_doc": "docs/audits/garrido_excel_des_2026-06-25/README.md",
+    "machine_result": "outputs/audits/garrido_replication_2026-06-25/replication_audit.json",
+    "formula": "IF(AVERAGE(risk_cols)>0, IF(APj>0, APj/LT, 0.5*(1/RPj)), 1-((sumBt+sumUt)/j))",
+    "raw_cf_sheets": 20,
+    "audited_rows": 47546,
+    "total_mismatches": 0,
+    "max_abs_diff": 0.0,
+    "forensic_best_config": {
+      "demand_source": "excel_order_tape",
+      "risk_attribution_source": "excel_risk_tape",
+      "risk_occurrence_mode": "thesis_window",
+      "seed_stream_mode": "split",
+      "mean_abs_ret_gap": 0.0037525450819093386
+    },
+    "claim_boundary": "establishes formula fidelity, sparse visible-row population lineage and forensic numerical replication; does not establish endogenous DES trajectory or distributional equivalence"
+  },
+  "copyright_note": "The committed artifact is an index and paraphrased extraction note; full source text remains in temporary local extraction files and is not redistributed."
+}
