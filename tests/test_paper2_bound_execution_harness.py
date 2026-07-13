@@ -1,5 +1,7 @@
 import json
 from pathlib import Path
+import subprocess
+import sys
 
 import pytest
 
@@ -31,6 +33,43 @@ from scripts.run_paper2_bottleneck_exact_transducer import (
 
 
 ROOT = Path(__file__).resolve().parent.parent
+
+
+def test_direct_cli_prepare_resolves_repository_namespace(tmp_path):
+    run_dir = tmp_path / "direct-cli"
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(ROOT / "scripts" / "paper2_bound_execution_harness.py"),
+            "prepare",
+            "--mode",
+            "smoke",
+            "--run-id",
+            "pytest-direct-cli",
+            "--run-dir",
+            str(run_dir),
+            "--runner",
+            str(DEFAULT_SMOKE_RUNNER),
+            "--seed",
+            "1110001:equipment_pressure",
+            "--split",
+            "harness_pytest_burned",
+            "--weeks",
+            "4",
+            "--runner-workers",
+            "1",
+        ],
+        cwd=tmp_path,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    manifest = json.loads((run_dir / "run_manifest.json").read_text())
+    assert manifest["mode"] == "smoke"
+    assert manifest["inputs"]["runner_relative"].endswith(
+        "run_paper2_bottleneck_exact_transducer.py"
+    )
 
 
 def _prepare(tmp_path: Path, *, mode: str = "smoke") -> Path:

@@ -35,6 +35,12 @@ from typing import Any, Iterable, Sequence
 
 
 ROOT = Path(__file__).resolve().parent.parent
+# Direct ``python scripts/...`` execution otherwise exposes only ``scripts/``
+# on sys.path, while the harness imports sibling modules through the repository
+# namespace.  Pin the tracked repository root explicitly for local and VPS CLI
+# entrypoints; module imports used by tests already have the same path.
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 HARNESS_PATH = Path(__file__).resolve()
 DEFAULT_CONTRACT = ROOT / "contracts" / "paper2_bottleneck_primary_bound_v2.json"
 DEFAULT_RUNNER = ROOT / "scripts" / "run_paper2_bottleneck_full_frontier.py"
