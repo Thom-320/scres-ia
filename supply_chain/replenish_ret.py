@@ -52,7 +52,19 @@ def _complete_pending(pending: list[OrderRecord], inventory: float, hour: float)
     return [order for order in pending if order.remaining_qty > 1e-9], inventory
 
 
-def rollout_actions(tape: RTape, actions: Sequence[float]) -> RetResult:
+def _budget_feasible_quantity(
+    requested: float, spent: float, week: int, *, exact_budget: bool
+) -> float:
+    remaining = max(0.0, BUDGET_D0 - spent)
+    weeks_after = WEEKS - week - 1
+    minimum_now = max(0.0, remaining - WEEKLY_CAP_D0 * weeks_after) if exact_budget else 0.0
+    quantity = min(WEEKLY_CAP_D0, max(minimum_now, float(requested)), remaining)
+    return round(quantity / 0.25) * 0.25
+
+
+def rollout_actions(
+    tape: RTape, actions: Sequence[float], *, exact_budget: bool = False
+) -> RetResult:
     inventory = D0
     pipeline = [0.0] * LEAD_WEEKS
     pending: list[OrderRecord] = []
@@ -64,8 +76,9 @@ def rollout_actions(tape: RTape, actions: Sequence[float]) -> RetResult:
         hour = float(week * 168)
         inventory += pipeline.pop(0)
         requested = float(actions[week])
-        quantity = min(WEEKLY_CAP_D0, max(0.0, requested), BUDGET_D0 - spent)
-        quantity = round(quantity / 0.25) * 0.25
+        quantity = _budget_feasible_quantity(
+            requested, spent, week, exact_budget=exact_budget
+        )
         spent += quantity
         used.append(quantity)
         pipeline.append(quantity * D0)
@@ -96,6 +109,8 @@ def rollout_actions(tape: RTape, actions: Sequence[float]) -> RetResult:
 def rollout_policy(
     tape: RTape,
     policy: Callable[[dict[str, float]], float],
+    *,
+    exact_budget: bool = False,
 ) -> RetResult:
     inventory = D0
     pipeline = [0.0] * LEAD_WEEKS
@@ -117,8 +132,9 @@ def rollout_policy(
             "forecast_D0": float(tape.signal[week] / D0),
         }
         requested = float(policy(obs))
-        quantity = min(WEEKLY_CAP_D0, max(0.0, requested), BUDGET_D0 - spent)
-        quantity = round(quantity / 0.25) * 0.25
+        quantity = _budget_feasible_quantity(
+            requested, spent, week, exact_budget=exact_budget
+        )
         spent += quantity
         actions.append(quantity)
         pipeline.append(quantity * D0)
@@ -141,7 +157,7 @@ def rollout_policy(
     )
 
 
-def paced_policy(alpha: float, beta: float):
+def paced_policy(alpha: float, beta: float, gamma: float = 0.0):
     """Budget pace plus forecast and inventory feedback; no latent state."""
     def policy(obs: dict[str, float]) -> float:
         pace = obs["remaining_budget_D0"] / obs["weeks_remaining"]
@@ -149,6 +165,7 @@ def paced_policy(alpha: float, beta: float):
             pace
             + float(alpha) * (obs["forecast_D0"] - 1.0)
             + float(beta) * (1.0 - obs["on_hand_D0"])
+            + float(gamma) * obs["backlog_D0"]
         )
     return policy
 

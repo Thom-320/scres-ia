@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from supply_chain.replenish import central_cell, materialize_tape
 from supply_chain.replenish_ret import (
     BUDGET_D0, WEEKS, paced_policy, periodic_calendars, rollout_actions,
@@ -12,6 +14,16 @@ def test_every_rollout_respects_equal_budget_and_weekly_cap() -> None:
     result = rollout_actions(tape, (1.5,) * WEEKS)
     assert result.ordered_D0 <= BUDGET_D0
     assert max(result.actions) <= 1.5
+
+
+def test_exact_budget_mode_commits_identical_total_resource() -> None:
+    tape = materialize_tape(6700004, central_cell(), WEEKS)
+    low = rollout_actions(tape, (0.0,) * WEEKS, exact_budget=True)
+    adaptive = rollout_policy(
+        tape, paced_policy(1.0, 0.5, 1.0), exact_budget=True
+    )
+    assert low.ordered_D0 == pytest.approx(BUDGET_D0)
+    assert adaptive.ordered_D0 == pytest.approx(BUDGET_D0)
 
 
 def test_policy_uses_only_observation_and_emits_canonical_ret() -> None:
