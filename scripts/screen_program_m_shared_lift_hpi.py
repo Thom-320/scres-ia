@@ -22,12 +22,15 @@ import json
 import math
 import os
 from pathlib import Path
+import sys
 import tempfile
 from typing import Any, Callable, Iterable, Mapping, Sequence
 
 import numpy as np
 
 ROOT = Path(__file__).resolve().parent.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from supply_chain.config import HOURS_PER_WEEK, SIMULATION_HORIZON  # noqa: E402
 from supply_chain.episode_metrics import compute_episode_metrics  # noqa: E402

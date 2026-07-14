@@ -2,6 +2,10 @@ from __future__ import annotations
 
 from dataclasses import asdict
 import json
+import os
+from pathlib import Path
+import subprocess
+import sys
 
 import pytest
 
@@ -20,6 +24,22 @@ from scripts.screen_program_m_shared_lift_hpi import (
 
 
 SYNTHETIC_SEEDS = (91, 92)
+ROOT = Path(__file__).resolve().parent.parent
+
+
+def test_producer_cli_imports_repo_without_pythonpath() -> None:
+    environment = dict(os.environ)
+    environment.pop("PYTHONPATH", None)
+    completed = subprocess.run(
+        [sys.executable, str(ROOT / "scripts/screen_program_m_shared_lift_hpi.py"), "--help"],
+        cwd=ROOT,
+        env=environment,
+        check=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    assert completed.returncode == 0, completed.stderr
 
 
 def _fake_shard(cell: Cell, seed: int, *, preferred: int) -> dict:
