@@ -26,7 +26,7 @@ audited artifacts may change a family state.
 ## 2. Exact local and remote refs at refresh
 
 ```text
-local codex/paper2-maintenance-headroom  9114da740cecae51d361e73026ab04ac85aa5c44
+local codex/paper2-maintenance-headroom  2490248f9f0accfcb99d1dbb1405c15fecd43de9
 origin/codex/paper2-maintenance-headroom a91890bfd3d815fc2bd614076c576487e13e0d06
 origin/main                              c6e6d08bfc99db7d842c30edb88e5586227b7729
 origin/program-g/structured-spatial-headroom
@@ -34,8 +34,8 @@ origin/program-g/structured-spatial-headroom
 GitHub draft PR #2 head                   3bcf6e96f3dd0c3282d6b051da0a47fa87684b3d
 ```
 
-At this refresh the current local branch was 18 commits ahead and zero behind
-its origin branch, and 267 commits ahead and zero behind `origin/main`.
+At this refresh the current local branch was 19 commits ahead and zero behind
+its origin branch, and 268 commits ahead and zero behind `origin/main`.
 There were 7 local branches, 10 remote-tracking refs and 27 local/remote tags.
 
 The decisive correction to the earlier provenance note is:
@@ -51,7 +51,7 @@ The decisive correction to the earlier provenance note is:
   `codex/garrido-replication-experiments`; its description/head therefore does
   not contain the K3/M/T/R corrective chain and must not be used as current
   scientific status.
-- The 18 commits after `a91890bf` through `9114da7` were local-only at refresh.
+- The 19 commits after `a91890bf` through `2490248f` were local-only at refresh.
   They include the invalidation of `179f7c2`, the complete watched/deep-replayed
   `<=3` shell, the frozen `<=4` preflight/producer custody chain and the local
   replay-readiness freeze. Publication would not turn an incomplete shell into
@@ -63,7 +63,7 @@ The decisive correction to the earlier provenance note is:
 |---|---|---|
 | `origin/main` | `c6e6d08b` | Repository base; far behind the research branch |
 | `origin/codex/paper2-maintenance-headroom` | `a91890bf` | Contains K3 retraction and the now-retracted concurrent boundary commit |
-| local `codex/paper2-maintenance-headroom` | `9114da7` at refresh | 18 commits ahead; `<=4` producer active, result absent, no H_PI/H_obs claim |
+| local `codex/paper2-maintenance-headroom` | `2490248f` at refresh | 19 commits ahead; `<=4` producer active, result absent, no H_PI/H_obs claim |
 | `origin/codex/garrido-replication-experiments` / PR #2 | `3bcf6e96` | Draft historical Excel/Cobb-Douglas lane, not current Paper 2 truth |
 | `origin/program-g/structured-spatial-headroom` | `9b758d45` | Program-I remote endpoint |
 | `program-k3-retraction-2026-07-13` | present remotely | Immutable K3 corrective tag |
