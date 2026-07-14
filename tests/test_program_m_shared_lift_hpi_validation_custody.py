@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
+import subprocess
+import sys
 
 import pytest
 
@@ -14,6 +17,28 @@ from scripts.launch_program_m_shared_lift_hpi_validation import (
     validation_seed_manifest,
     write_prestart_manifests,
 )
+
+
+ROOT = Path(__file__).resolve().parent.parent
+
+
+def test_validation_launcher_cli_imports_repo_without_pythonpath() -> None:
+    environment = dict(os.environ)
+    environment.pop("PYTHONPATH", None)
+    completed = subprocess.run(
+        [
+            sys.executable,
+            str(ROOT / "scripts/launch_program_m_shared_lift_hpi_validation.py"),
+            "--help",
+        ],
+        cwd=ROOT,
+        env=environment,
+        check=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    assert completed.returncode == 0, completed.stderr
 
 
 def test_validation_command_has_no_seed_override_and_caps_workers(tmp_path: Path) -> None:

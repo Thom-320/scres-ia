@@ -13,6 +13,10 @@ import sys
 import time
 from typing import Any, Sequence
 
+ROOT = Path(__file__).resolve().parent.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 from scripts.launch_program_m_shared_lift_hpi import (
     checked_output,
     exclusive_json,
@@ -22,7 +26,6 @@ from scripts.launch_program_m_shared_lift_hpi import (
 )
 
 
-ROOT = Path(__file__).resolve().parent.parent
 RUN_ROOT = ROOT / "outputs/program_m_shared_lift_hpi_validation_vps_runs"
 PRODUCER = ROOT / "scripts/validate_program_m_shared_lift_hpi.py"
 WATCHER = ROOT / "scripts/watch_program_m_shared_lift_hpi.py"
