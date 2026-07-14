@@ -2,7 +2,7 @@
   "schema_version": "paper2_approach_registry_v2",
   "generated_date": "2026-07-13",
   "repository_head": "9e97b8f7a580a5d08550ace0bb86e2d792eab15c",
-  "current_scientific_status": "OPEN_ACTIVE_BOUND_REQUIRED__MTR_SWITCH4_VPS_PREFLIGHT_PENDING",
+  "current_scientific_status": "OPEN_ACTIVE_BOUND_REQUIRED__MTR_SWITCH4_PRODUCER_RUNNING_NOT_EVIDENCE",
   "terminal_boundary_certified": false,
   "decision_standard": {
     "primary_metric": "ret_excel_visible_v1",
@@ -291,10 +291,10 @@
       },
       "h_obs_estimate": {"tested_signal_vs_best_constant_mean": -0.0013093716179235963, "ci95": [-0.006384019811757724, 0.003092795281669821]},
       "comparator_family": ["all full-horizon team-allocation schedules", "constant doctrines", "max-pressure/index rules", "resource-constrained MPC", "DP/ADP", "convex mixtures"],
-      "main_threat_to_validity": "Separate resources factorize into closed families; a generic token pool reduces to Program F. The frozen contract matches one team-week, with M/T/R as allocation destinations, but the real cross-stage team identity is unvalidated and reserve issue/replenishment semantics are unresolved. The signal-policy null also faces 11,184,811 effective calendars and lacks a resource-restricted PI ceiling.",
+      "main_threat_to_validity": "Separate resources factorize into closed families; a generic token pool reduces to Program F. The frozen v1 contract matches one 4032-hour team-week and identical reserve access, while treating reserve issue/replenishment/request counts as conserved endogenous outcomes. The real cross-stage team identity and any separately finite reserve transport/handling resource remain unvalidated by Garrido. The signal-policy null also faces 11,184,811 effective calendars and lacks a resource-restricted PI ceiling.",
       "state": "active_for_bound",
       "adversarial_hold": {
-        "status": "SWITCH4_CONTRACT_FROZEN__VPS_PREFLIGHT_PENDING",
+        "status": "SWITCH4_PRODUCER_RUNNING_NOT_EVIDENCE",
         "required_semantic_markov_key": "paper2_bottleneck_semantic_markov_key_v4",
         "governing_contract": "contracts/paper2_bottleneck_primary_bound_v2.json",
         "available_certifications": [
@@ -307,7 +307,7 @@
         "h_pi_computed": false,
         "paper2_learner_authorized": false,
         "paper3_authorized": false,
-        "release_rule": "The 507-calendar single-excursion screen rejected its selected calendar only as a resource-relaxed W24 reference; it did not compute H_PI. The complete calibration-only <=3-switch sieve then selected a unique calendar using all three permitted switches and passed full deep replay, so that comparator family is boundary-active rather than sufficient. The complete <=4-switch v2 contract is now frozen. Run its same-host six-worker six-tape concurrent RSS preflight on the VPS; launch the producer only if every preflight custody and memory gate passes. Do not authorize W24, an observable-policy claim or a learner until a stronger open-loop frontier and resource-restricted H_PI verdict exist."
+        "release_rule": "The 507-calendar single-excursion screen rejected its selected calendar only as a resource-relaxed W24 reference; it did not compute H_PI. The complete calibration-only <=3-switch sieve then selected a unique calendar using all three permitted switches and passed full deep replay, so that comparator family is boundary-active rather than sufficient. The complete <=4-switch v2 preflight passed every same-host custody and memory gate and the 60-tape producer is running on the immutable VPS checkout. A submitted/running job is not evidence: retrieve and hash the completed producer, pass independent deep replay, and reconcile whether the selected calendar still hits the four-switch boundary. Do not authorize W24, an observable-policy claim or a learner until a stronger open-loop frontier and resource-restricted H_PI verdict exist."
       },
       "current_physics_ceiling": {
         "available": false,
@@ -344,11 +344,42 @@
           "contract_id": "paper2_bottleneck_switch_complexity_screen_v2",
           "candidate_count": 89131,
           "calibration_rollouts": 5347860,
-          "state": "frozen_awaiting_same_host_vps_preflight",
+          "state": "producer_running_not_evidence",
           "preflight_candidate_tapes": 6,
           "preflight_rollouts": 534786,
           "preflight_workers": 6,
           "preflight_peak_rss_limit_bytes": 6442450944,
+          "preflight_evidence": {
+            "run_id": "mtr-switch4-preflight-8f31f410-20260714T053810Z",
+            "git_head": "8f31f4104c14ebd6bcf559fb5bba1040f1a3fcc3",
+            "hostname": "vps-f733423b",
+            "scores_evaluated": 534786,
+            "elapsed_seconds": 7564.493107976974,
+            "peak_scientific_process_tree_rss_bytes": 754049024,
+            "minimum_memory_available_bytes": 10378723328,
+            "stderr_bytes": 0,
+            "result_sha256": "f284c172a213fe16e72e43f1d0da8ed953d759b4f96de9ea2ab92822221ab798",
+            "watcher_sha256": "3e85edeaa7c9657c97b4382759b38aca156701ed61a67002fde722c0aaad0f02",
+            "launch_receipt_sha256": "64f035e6bfef8040576e3f84d289673cb2ac33459c3a8202395540c7ed7a5082",
+            "pid_sha256": "4005883c2404c49d55813c814cc4c4902603e56f320fb6e2c7420f66d8952345",
+            "watcher_log_sha256": "35fcd52ce5e0a49538df09814973fe6627711bffeaf98fc4ee940cc1cc939886",
+            "strict_validator_passed": true,
+            "remote_local_file_hashes_match": true,
+            "local_custody": "outputs/vps_switch4_custody/mtr-switch4-preflight-8f31f410-20260714T053810Z/retrieved"
+          },
+          "producer_execution": {
+            "run_id": "mtr-switch4-producer-8f31f410-20260714T074723Z",
+            "launched_at_utc": "2026-07-14T07:47:45.089593+00:00",
+            "git_head": "8f31f4104c14ebd6bcf559fb5bba1040f1a3fcc3",
+            "hostname": "vps-f733423b",
+            "workers": 6,
+            "watcher_started_before_scientific_process": true,
+            "scientific_pid": 820778,
+            "watcher_pid": 820777,
+            "last_verified_state": "running_alive_awaiting_first_progress",
+            "result_evidence": null,
+            "submission_is_evidence": false
+          },
           "locked_tapes_authorized": false,
           "virgin_tapes_authorized": false,
           "h_pi_computed": false,
@@ -368,7 +399,7 @@
       },
       "null_regime": "Separate nontransferable resources or no target-dependent causal effect.",
       "evidence_required_to_change_state": ["complete <=4-switch calibration comparator gate", "complete open-loop frontier or certified approximation bound", "resource-restricted PI ceiling", "Garrido validation of reserve transport and handling semantics", "real fungible shared-resource identity and operational constraints"],
-      "exact_garrido_question": "Is there one truly fungible resource allocated mutually exclusively among plant repair, LOC/vehicle recovery and theatre response; where is it based, what skills/travel/activation/dwell apply, how does one unit causally change recovery time at each target, and is emergency-reserve stock a separately budgeted and replenished resource?"
+      "exact_garrido_question": "Is there one truly fungible resource allocated mutually exclusively among plant repair, LOC/vehicle recovery and theatre response; where is it based, what skills/travel/activation/dwell apply, and how does one unit causally change recovery time at each target? For each R24 reserve issue and Op9 order-up-to replenishment, is transport/handling/order processing non-scarce or does it consume a separately finite departure, vehicle-hour, crew-hour, fuel/budget or slot shared with Op10/Op12 or M/T/R; is 5000 units a per-event, per-week or per-episode limit; and how is the prepositioned 10000-unit stock costed?"
     },
     {
       "family_id": "mission_loadout_carried_autonomy_allocation",
@@ -448,12 +479,12 @@
     }
   ],
   "registry_summary": {
-    "governing_status": "OPEN_ACTIVE_BOUND_REQUIRED__MTR_SWITCH4_VPS_PREFLIGHT_PENDING",
+    "governing_status": "OPEN_ACTIVE_BOUND_REQUIRED__MTR_SWITCH4_PRODUCER_RUNNING_NOT_EVIDENCE",
     "terminal_boundary_certified": false,
     "promotable": 0,
     "active_for_bound": ["integrated_production_maintenance_routing_recovery_resource"],
     "active_family_state": {"integrated_production_maintenance_routing_recovery_resource": "active_for_bound"},
-    "mtr_adversarial_hold": "Historical W12/W16 key-v2 results and all prior remote W24 attempts remain rejected. The complete calibration-only <=3-switch family passed watched production and 696,660-rollout deep replay, but its unique winner used all three permitted switches. The complete <=4-switch v2 contract is frozen; only its same-host six-worker six-tape concurrent RSS preflight is currently pending. Production requires a passing preflight and watcher-before-science custody. W24, H_PI, an observable-policy claim and all learner work remain unauthorized.",
+    "mtr_adversarial_hold": "Historical W12/W16 key-v2 results and all prior remote W24 attempts remain rejected. The complete calibration-only <=3-switch family passed watched production and 696660-rollout deep replay, but its unique winner used all three permitted switches. The <=4-switch same-host six-worker preflight passed strict custody and memory validation, was retrieved, and matched remote hashes. Its 60-tape producer is running under watcher-before-science custody on immutable commit 8f31f410; a running job is not evidence. W24, H_PI, an observable-policy claim and all learner work remain unauthorized until completed producer retrieval, checksum verification, deep replay and the subsequent bound decision all pass.",
     "falsified_or_formally_dominated": ["multi_echelon_information_lag_only", "alarm_signal_finite_maintenance"],
     "formally_dominated_historical_contracts": ["K3_budgeted_replenishment under frozen ret_excel_full_ledger_order; exact H_PI=H_obs=0 over all 6,371 exact-budget trajectories and all 5,758,374 non-superior-budget grid calendars, with under-spending pairs not mislabeled equal-resource; visible-v1 not unconditionally certified"],
     "blocked_domain_fact": ["multi_ration_product_mix_setup_substitution", "regime_lead_time_advance_transport_reservation", "censored_demand_active_information_acquisition", "lateral_cssu_transshipment", "queue_admission_priority_with_abandonment", "r21_r3_shared_mab_restoration_sequencing", "finite_storage_space_allocation", "inspection_effort_vs_throughput", "multimodal_last_mile_mode_choice", "alternate_route_recourse_same_destination", "mission_loadout_carried_autonomy_allocation", "component_specific_r13_kit_balancing_op4_expedite", "r14_detected_lot_disposition"],

@@ -155,7 +155,11 @@ Linked family:
 - Verbatim response: `[EMPTY]`
 - Named resource and mutual-exclusion semantics: `[EMPTY]`
 - Base, skills, travel, activation, dwell and causal effects: `[EMPTY]`
-- Reserve issue/replenishment ledger: `[EMPTY]`
+- Reserve request/transfer resource and whether it is separately finite: `[EMPTY]`
+- Sharing with Op10/Op12 or the M/T/R response team: `[EMPTY]`
+- R issue limit period and any issue/handling time: `[EMPTY]`
+- Initial 10,000-unit prepositioning and cost treatment: `[EMPTY]`
+- Capacity, units, turnaround, concurrency and reassignment for every finite resource: `[EMPTY]`
 - Source evidence or signed expert-judgment reference: `[EMPTY]`
 - Responder sign-off: `[EMPTY]`
 - Adjudicator and date: `[EMPTY]`

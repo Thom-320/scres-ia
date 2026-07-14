@@ -333,11 +333,13 @@
         "One named real resource is fungible and mutually exclusively allocated among plant, LOC/vehicle and theatre response.",
         "Its base, skills, travel, activation and dwell are defined.",
         "One resource unit has a defined causal effect on recovery at every target.",
-        "Emergency reserve stock is separately budgeted and its issue/replenishment semantics are defined."
+        "Every separately finite reserve issue/replenishment, transport, handling, fuel, budget or order-processing resource is named, quantified and componentwise budgeted.",
+        "The 5000-unit issue limit is defined per event, week or episode, and the initial 10000-unit prepositioning and cost treatment are defined."
       ],
       "positive_transition": "ACTIVE_BOUND_DOMAIN_SUPPORTED_BOUND_STILL_REQUIRED",
       "negative_conditions": [
-        "The response functions use separate non-transferable resources or no one resource can causally serve all targets."
+        "The response functions use separate non-transferable resources or no one resource can causally serve all targets.",
+        "Reserve issue or replenishment consumes a finite resource that cannot be represented and matched under a frozen same-contract envelope."
       ],
       "negative_transition": "BLOCKED_INVALID_PHYSICAL_INTERPRETATION",
       "claim_invariant": "A positive answer cannot replace the unresolved exact full-horizon frontier or restricted-PI ceiling."

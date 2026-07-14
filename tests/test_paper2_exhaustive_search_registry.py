@@ -1,3 +1,4 @@
+import hashlib
 import json
 from pathlib import Path
 
@@ -8,6 +9,14 @@ SEARCH = ROOT / "research" / "paper2_exhaustive_search"
 
 def load(name: str):
     return json.loads((SEARCH / name).read_text())
+
+
+def sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def test_failure_taxonomy_is_unique_and_keeps_corrective_k3_truth():
@@ -40,6 +49,23 @@ def test_no_candidate_is_promotable_and_paper3_is_closed():
     assert registry["registry_summary"]["paper2_confirmed"] is False
     assert registry["registry_summary"]["paper3_authorized"] is False
     assert not any(row["state"] == "promotable" for row in registry["approaches"])
+
+
+def test_reproducibility_manifest_hashes_every_listed_artifact_and_source():
+    manifest = load("reproducibility_manifest.json")
+    assert manifest["paper2_confirmed"] is False
+    assert manifest["paper3_authorized"] is False
+    assert manifest["scientific_status"].startswith("OPEN_ACTIVE_BOUND_REQUIRED")
+    for relative, expected in manifest["artifact_hashes"].items():
+        path = Path(relative)
+        if not path.is_absolute():
+            path = ROOT / path
+        assert path.is_file(), relative
+        assert sha256(path) == expected, relative
+    for source, expected in manifest["source_hashes"].items():
+        path = Path(source)
+        assert path.is_file(), source
+        assert sha256(path) == expected, source
 
 
 def test_domain_blocked_families_have_questions_and_state_change_evidence():
@@ -136,6 +162,42 @@ def test_constants_only_statistic_does_not_close_bottleneck_family():
     assert row["current_physics_ceiling"]["available"] is False
     assert "lower bound" in rejection
     assert "LCB" in rejection
+
+
+def test_mtr_resource_semantics_separate_budget_from_endogenous_flows():
+    verdict = load("mtr_resource_semantics_verdict_20260714.json")
+    registry = load("approach_registry.json")
+    transition = load("garrido_family_question_state_transitions.json")
+    response_ledger = (
+        ROOT / "docs" / "GARRIDO_FACE_VALIDATION_RESPONSES_2026-07-13.md"
+    ).read_text()
+    question_text = (SEARCH / "garrido_face_validation_questions.md").read_text()
+
+    assert verdict["named_budget"]["total_episode_hours"] == 4032
+    assert {row["field"] for row in verdict["endogenous_outcome_flows_not_named_budgets_in_v1"]} == {
+        "reserve_units_issued",
+        "reserve_units_replenished",
+        "reserve_replenishment_requests",
+    }
+    assert verdict["domain_validity"]["status"] == "UNANSWERED_GARRIDO_FACT"
+    assert verdict["claim_boundary"]["h_pi_computed"] is False
+    assert verdict["claim_boundary"]["h_obs_computed"] is False
+    assert verdict["claim_boundary"]["learner_authorized"] is False
+    assert verdict["claim_boundary"]["paper3_authorized"] is False
+
+    integrated = next(
+        row for row in registry["approaches"]
+        if row["family_id"] == "integrated_production_maintenance_routing_recovery_resource"
+    )
+    assert integrated["state"] == "active_for_bound"
+    assert "endogenous outcomes" in integrated["main_threat_to_validity"]
+    q6 = next(
+        row for row in transition["family_mappings"]
+        if row["family_id"] == "integrated_production_maintenance_routing_recovery_resource"
+    )
+    assert any("componentwise budgeted" in item for item in q6["positive_conditions"])
+    assert "vehicle-hour" in question_text
+    assert "Initial 10,000-unit prepositioning" in response_ledger
 
 
 def test_effect_quotient_is_not_promoted_as_a_completed_ceiling():
