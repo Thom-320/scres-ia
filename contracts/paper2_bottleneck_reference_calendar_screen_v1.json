@@ -1,0 +1,69 @@
+{
+  "contract_id": "paper2_bottleneck_reference_calendar_screen_v1",
+  "frozen_date": "2026-07-13",
+  "status": "DEVELOPMENT_COMPARATOR_SCREEN_FROZEN_BEFORE_EXECUTION",
+  "parent_contract": "paper2_bottleneck_primary_bound_v2",
+  "purpose": "Find a stronger tape-independent reference calendar cheaply and determine, before any W24 transducer batch, whether it could possibly yield an oracle-minus-reference UCB95 below 0.01.",
+  "scientific_scope": "Comparator development on burned calibration tapes followed by one diagnostic evaluation on burned locked tapes. This screen cannot estimate the full oracle, H_PI or H_obs and cannot authorize a positive claim.",
+  "physics": {
+    "implementation": "supply_chain.paper2_bottleneck.run_policy",
+    "weeks": 24,
+    "actions": ["M", "T", "R"],
+    "initial_active_action": "M",
+    "request_activation_lag_weeks": 1,
+    "adjacent_week_switches_forbidden": true,
+    "profile": "paper2_bottleneck_high_authority_v1 unchanged"
+  },
+  "candidate_family": {
+    "constant_m": "MMMMMMMMMMMMMMMMMMMMMMMM",
+    "single_excursion": "For action T and action R, replace one contiguous all-M interval whose start is in weeks 1..22 and whose inclusive end is at least start+1 and at most 23.",
+    "candidate_count": 507,
+    "why_feasible": "Every excursion has length at least two, so neither the switch away from M nor the switch back to M occurs in adjacent active weeks.",
+    "enumeration_order": "constant M first, then action T followed by R, then increasing start, then increasing inclusive end",
+    "no_locked_selection": true
+  },
+  "calibration": {
+    "seed_start": 1100001,
+    "seed_end": 1100060,
+    "n": 60,
+    "split": "calibration",
+    "context_rule": "CONTEXTS[(seed-1100001) mod 3]",
+    "primary_selection": "maximum arithmetic mean ret_excel_visible_v1",
+    "tie_break": "minimum calendar index",
+    "all_candidates_reported": true
+  },
+  "locked_diagnostic": {
+    "seed_start": 1110002,
+    "seed_end": 1110120,
+    "n": 119,
+    "split": "locked",
+    "context_rule": "CONTEXTS[(seed-1110001) mod 3], preserving the original 120-tape rotation after excluding development seed 1110001",
+    "evaluated_policies": [
+      "the single calibration-selected reference calendar",
+      "constant M",
+      "constant T",
+      "constant R"
+    ],
+    "lower_random_variable": "L_tape = max(0, max(Y_M,Y_T,Y_R) - Y_selected_reference)",
+    "logic": "The full feasible oracle contains the selected reference and every constant, so oracle-reference is pointwise at least L_tape. If the common-resample UCB95 of L_tape is already at or above 0.01, this reference cannot support a below-gate oracle ceiling and no W24 computation should be launched for it.",
+    "bootstrap_resamples": 10000,
+    "bootstrap_seed": 20260713,
+    "confidence_level": 0.95,
+    "practical_gate": 0.01
+  },
+  "resource_diagnostic": {
+    "total_team_hours": 4032,
+    "initial_reserve": 10000,
+    "mass_residual": 0,
+    "crn_hashes_equal_within_tape": true,
+    "classification": "RESOURCE_RELAXED_DIAGNOSTIC",
+    "warning": "Reserve issue, replenishment, requests and terminal stock are policy-dependent outcomes and are retained per policy. Constants are not declared componentwise resource-matched; including them only creates a lower envelope for precluding one selected reference and cannot support a positive comparison."
+  },
+  "decision_rules": {
+    "reference_precluded": "If locked lower-bound UCB95 is at least 0.01, reject only this selected reference as mathematically incapable of closing M/T/R.",
+    "reference_candidate_only": "If locked lower-bound UCB95 is below 0.01, the reference remains eligible for a later exact oracle-minus-reference calculation; it does not itself close anything.",
+    "learner_authorized": false,
+    "paper2_authorized": false,
+    "paper3_authorized": false
+  }
+}

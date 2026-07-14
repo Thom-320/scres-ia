@@ -1,0 +1,374 @@
+{
+  "schema_version": "mtr_w12_keyv4_attempt_invalidation_v1",
+  "created_at_utc": "2026-07-14T02:05:54Z",
+  "scope": {
+    "source_commit": "b9916ed5db082d8e408d5f13dec77ea2ce350173",
+    "profile": "w12_five_tape",
+    "weeks": 12,
+    "seed_count": 5,
+    "split": "transducer_collision_suite_burned",
+    "custody_root_glob": "results/paper2_bound_harness/w12_keyv4_b9916ed_*",
+    "attempt_pairs": 6,
+    "custody_roots": 12,
+    "execution_host": "local_mac",
+    "vps_used": false,
+    "detached_watcher_used": false
+  },
+  "seed_status": {
+    "seeds": [
+      {"seed": 1110001, "context": "equipment_pressure"},
+      {"seed": 1100001, "context": "equipment_pressure"},
+      {"seed": 1100031, "context": "equipment_pressure"},
+      {"seed": 1110061, "context": "equipment_pressure"},
+      {"seed": 1110120, "context": "mission_surge"}
+    ],
+    "classification": "BURNED_DEVELOPMENT_OR_CORRECTIVE",
+    "virgin_eligible": false,
+    "binding_rule": "These seeds and every artifact produced from them are development/corrective material only and must never be described as virgin or confirmatory evidence."
+  },
+  "evidence_basis": {
+    "filesystem_audit": "All twelve custody roots, reserved outputs, authorizations, runtime attestations, receipts, stdout/stderr logs, run status and heartbeats were inspected in place after the attempts ended.",
+    "operator_tool_transcript": "Failure chronology and PIDs are retained from the root launch-tool transcript. Where no durable PID record exists, the value is null rather than reconstructed.",
+    "volatile_prelaunch_logs": [
+      "/private/tmp/scres_w12_b9916ed_producer5_prelaunch.log",
+      "/private/tmp/scres_w12_b9916ed_replay5_prelaunch.log",
+      "/private/tmp/scres_w12_b9916ed_producer6_prelaunch.log",
+      "/private/tmp/scres_w12_b9916ed_replay6_prelaunch.log"
+    ],
+    "limitation": "The /private/tmp logs are volatile and are not themselves a durable custody archive; their current content hashes are recorded below."
+  },
+  "attempts": [
+    {
+      "attempt": 1,
+      "pair_id": "152123e218933fed80b871820147d136b53f70aaddab6a989dd09a78a762e186",
+      "chronology": "The initial signed launch was rejected before prelaunch because the run roots were mode 0755. After correction to 0700, both parents emitted prelaunch records, but the caller parser rejected CRLF-delimited transport. No ACK was sent and no child launched. Both blocked parents were killed.",
+      "prelaunch_emitted": true,
+      "prelaunch_durably_retained": false,
+      "ack_sent": false,
+      "child_launched": false,
+      "invalid_reason": "PRELAUNCH_TRANSPORT_PARSE_FAILURE_NO_ACK_NO_CHILD",
+      "pids": {
+        "producer_parent": 8772,
+        "replay_parent": 8773,
+        "producer_child": null,
+        "replay_child": null
+      },
+      "producer": {
+        "custody_root": "results/paper2_bound_harness/w12_keyv4_b9916ed_producer",
+        "authorization_sha256": "5da3d641e536c173b104219acd7f6f2e3046f5f17ca2e710b8da3772a243f8dc",
+        "authorization_id": "07823a01694dfd3b00880e006e052328d2fe3a5e0f670be73451b0875f84b58f",
+        "public_key_fingerprint": "6d6c35d4f3fb68b9ddc6cf5ac073e118f4790229e1753f9c3ff979c4c8d42ff4",
+        "internal_run_id": "a98445d1971ee790845438c6dbf54f0e12259b8bf6ba0ef2b304229a593cd56f",
+        "reserved_output_inode": 87526477,
+        "reserved_output_bytes": 0,
+        "receipt_exists": false,
+        "runtime_attestation_exists": false,
+        "stdout_log_exists": false,
+        "stderr_log_exists": false
+      },
+      "replay": {
+        "custody_root": "results/paper2_bound_harness/w12_keyv4_b9916ed_replay",
+        "authorization_sha256": "b3c6766e91a16702bfa63b354fdf6c5189aa16de8feca1eba345c12d6c7acde0",
+        "authorization_id": "c584bd4172185a61e79a6380c839e087b51d1f07c5ab41a58056ecaf5a50c407",
+        "public_key_fingerprint": "e2ff5f6ed4e8ff394c896695b376172e63551ee76f1fdd579df4bf4278783516",
+        "internal_run_id": "1d79ead5c8264df43c5edc8007738c68acc9e211b87cb1aaae68d57adf3abefd",
+        "reserved_output_inode": 87526479,
+        "reserved_output_bytes": 0,
+        "receipt_exists": false,
+        "runtime_attestation_exists": false,
+        "stdout_log_exists": false,
+        "stderr_log_exists": false
+      },
+      "evidence": false
+    },
+    {
+      "attempt": 2,
+      "pair_id": "fd631ba38dcaab2a115d5c1f9f1aa8f42d936a1dd18aca4da9e4526aed8723d5",
+      "chronology": "The PTY hard-wrapped each prelaunch JSON record. Parsing failed, no ACK was sent, no child launched, and both blocked parents were killed.",
+      "prelaunch_emitted": true,
+      "prelaunch_durably_retained": false,
+      "ack_sent": false,
+      "child_launched": false,
+      "invalid_reason": "PTY_HARD_WRAP_PARSE_FAILURE_NO_ACK_NO_CHILD",
+      "pids": {
+        "producer_parent": 10077,
+        "replay_parent": 10078,
+        "producer_child": null,
+        "replay_child": null
+      },
+      "producer": {
+        "custody_root": "results/paper2_bound_harness/w12_keyv4_b9916ed_producer2",
+        "authorization_sha256": "277311f37dd5b18dde697a0021ca39bf37c3ea760630e1b2f6822017285acb68",
+        "authorization_id": "22e93d70cef5aa4fb020897d196e1358bcb77ea85984bd96b41c97dc261ab2ce",
+        "public_key_fingerprint": "a111da25eb516c26e1d3646d4e68a288b317c71eed91c7223cff67d8e6c4ccd1",
+        "internal_run_id": "212b7eb5267818d3909d59f999006e6c004725dde6ce48044a80b9d70b89a39e",
+        "reserved_output_inode": 87529778,
+        "reserved_output_bytes": 0,
+        "receipt_exists": false,
+        "runtime_attestation_exists": false,
+        "stdout_log_exists": false,
+        "stderr_log_exists": false
+      },
+      "replay": {
+        "custody_root": "results/paper2_bound_harness/w12_keyv4_b9916ed_replay2",
+        "authorization_sha256": "fe7d1e407b141812c0c349e76bbed12188aca7402226ce45b786b68ea3a36ec6",
+        "authorization_id": "17549181c1ce4f43a7b33904071ea827f2cc3048f5eed067fd5775047c7e4240",
+        "public_key_fingerprint": "4c696eba29bbf7b4020e06ca57ebb7c3ba430b7b7b2e2d0f35978b88940f5da3",
+        "internal_run_id": "7465b9db841cfc2f7fbec092d84d88c8afa5a0c70cc743d9897209d473285d9a",
+        "reserved_output_inode": 87529776,
+        "reserved_output_bytes": 0,
+        "receipt_exists": false,
+        "runtime_attestation_exists": false,
+        "stdout_log_exists": false,
+        "stderr_log_exists": false
+      },
+      "evidence": false
+    },
+    {
+      "attempt": 3,
+      "pair_id": "bbdb51a975a013b592c0b71f7b3abd8def13baa790f7920c563d530812b02a2b",
+      "chronology": "The non-TTY display split or truncated the prelaunch transport, parsing failed, and session stdin closed. No ACK was sent and no child launched.",
+      "prelaunch_emitted": true,
+      "prelaunch_durably_retained": false,
+      "ack_sent": false,
+      "child_launched": false,
+      "invalid_reason": "NON_TTY_TRANSPORT_SPLIT_NO_ACK_NO_CHILD",
+      "pids": {
+        "producer_parent": null,
+        "replay_parent": null,
+        "producer_child": null,
+        "replay_child": null
+      },
+      "producer": {
+        "custody_root": "results/paper2_bound_harness/w12_keyv4_b9916ed_producer3",
+        "authorization_sha256": "fdbfc0a63a9626d3ddda1c4901ecfaf3a9b067620c16ac0209cc3dc113d5f6c2",
+        "authorization_id": "9f6f4523b65ddcaca59e29d354de469ed6c26a928561aec17174eb65bd237e68",
+        "public_key_fingerprint": "0c8155a9dafecdaa3663fccfa156ff3147ef1fb5a30adf414734b33f018b9c91",
+        "internal_run_id": "19c846b1371c84d1dee3e8cf6a12d191d83cbbe30e7eeefba4e01be154f87b5e",
+        "reserved_output_inode": 87532559,
+        "reserved_output_bytes": 0,
+        "receipt_exists": false,
+        "runtime_attestation_exists": false,
+        "stdout_log_exists": false,
+        "stderr_log_exists": false
+      },
+      "replay": {
+        "custody_root": "results/paper2_bound_harness/w12_keyv4_b9916ed_replay3",
+        "authorization_sha256": "2bee9c9ee599a9eafb3ba9fe8e6d758b0b8fc9ac6fc4f7565a79d8afc4a13adf",
+        "authorization_id": "9dfcecabe68a22de873d5de16bf473061727e38a34c682bfc97b844f17dba315",
+        "public_key_fingerprint": "fbdc2bab73a4193951e6a2fd7595e13854dd7f50b68362143230719b206ce493",
+        "internal_run_id": "b37a1cd06268879f44cca09091893adb5ea9b9f0e19d979f06451bc65413cb42",
+        "reserved_output_inode": 87532557,
+        "reserved_output_bytes": 0,
+        "receipt_exists": false,
+        "runtime_attestation_exists": false,
+        "stdout_log_exists": false,
+        "stderr_log_exists": false
+      },
+      "evidence": false
+    },
+    {
+      "attempt": 4,
+      "pair_id": "27ca3e37b18476c14095a6d8d50484e402f47bf03d441f2725bc74700c18aa25",
+      "chronology": "CR/LF stripping did not make the live transport reliable: the displayed JSON was corrupted (including true becoming tue). Parsing failed and the sessions closed. No ACK was sent and no child launched.",
+      "prelaunch_emitted": true,
+      "prelaunch_durably_retained": false,
+      "ack_sent": false,
+      "child_launched": false,
+      "invalid_reason": "LIVE_TRANSPORT_CONTENT_CORRUPTION_NO_ACK_NO_CHILD",
+      "pids": {
+        "producer_parent": null,
+        "replay_parent": null,
+        "producer_child": null,
+        "replay_child": null
+      },
+      "producer": {
+        "custody_root": "results/paper2_bound_harness/w12_keyv4_b9916ed_producer4",
+        "authorization_sha256": "b1843baa7398c75a14708cfa903cd520392a47a019150cbba6c49c71d86b33b3",
+        "authorization_id": "c6b99335b299c45b0a6a6607bddac18fdf0a0650385ad481f716026b8a1e9414",
+        "public_key_fingerprint": "48860e6de77cc9b76d524a1629469f1616bbbf47277625630212a09899a0094c",
+        "internal_run_id": "1e0f77773cceca34c0839ad64623a1c005b3781d1b223213e67e30e45bb757ba",
+        "reserved_output_inode": 87535018,
+        "reserved_output_bytes": 0,
+        "receipt_exists": false,
+        "runtime_attestation_exists": false,
+        "stdout_log_exists": false,
+        "stderr_log_exists": false
+      },
+      "replay": {
+        "custody_root": "results/paper2_bound_harness/w12_keyv4_b9916ed_replay4",
+        "authorization_sha256": "3199661b0e2995c9d24d4aa2a3d66167456816986c737936c72734b3c86c0246",
+        "authorization_id": "8b71a6db944b8261c6f9d22b54b009beb33b0fae1601eaec793abf7d3fdcefde",
+        "public_key_fingerprint": "f2be080545e18e3e7eaf9fa9f43836c7ea2d39cd02d8fcde2739d6d581245f10",
+        "internal_run_id": "715184dab326a62637f60a20fa7e54d013531db868b603b4c2bc339270e1661c",
+        "reserved_output_inode": 87535016,
+        "reserved_output_bytes": 0,
+        "receipt_exists": false,
+        "runtime_attestation_exists": false,
+        "stdout_log_exists": false,
+        "stderr_log_exists": false
+      },
+      "evidence": false
+    },
+    {
+      "attempt": 5,
+      "pair_id": "792816a23ec6d05fdb7a26564639b7a57dc431b3121c393e5e17b471c249adf6",
+      "chronology": "A first wrapper invocation failed before the harness because a literal \\n was passed. The pristine roots were then reused with non-TTY tee. Both exact prelaunch records were retained, but stdin was closed; each harness failed closed before ACK and no child launched.",
+      "prelaunch_emitted": true,
+      "prelaunch_durably_retained": true,
+      "ack_sent": false,
+      "child_launched": false,
+      "invalid_reason": "STDIN_CLOSED_FAIL_CLOSED_NO_ACK_NO_CHILD",
+      "pids": {
+        "producer_parent": null,
+        "replay_parent": null,
+        "producer_child": null,
+        "replay_child": null
+      },
+      "producer": {
+        "custody_root": "results/paper2_bound_harness/w12_keyv4_b9916ed_producer5",
+        "authorization_sha256": "62dc7e50ba6617ec794718774ca14e7d733706fdc51f88d0a848d33342cba59e",
+        "authorization_id": "5df1ee6c73552bda4d8242ba47daac2db994bf513025a12cb9d033dd087a2688",
+        "public_key_fingerprint": "5e7062e93991036dcf7f1a13703fcf112c66316f1b9d58de946e38b8d6d59465",
+        "internal_run_id": "485773aeb6766dcc12bf68094f0d5f9741f9172e2d2bf7a359a4ebf89ab1682a",
+        "prelaunch_log": "/private/tmp/scres_w12_b9916ed_producer5_prelaunch.log",
+        "prelaunch_log_bytes": 1215,
+        "prelaunch_log_sha256": "832dc2f900661b5524bf87c6fddbc12bcd5d64a3be56b5d9b1db9220f5aa3eae",
+        "reserved_output_inode": 87538305,
+        "reserved_output_bytes": 0,
+        "receipt_exists": false,
+        "runtime_attestation_exists": false,
+        "stdout_log_exists": false,
+        "stderr_log_exists": false
+      },
+      "replay": {
+        "custody_root": "results/paper2_bound_harness/w12_keyv4_b9916ed_replay5",
+        "authorization_sha256": "cba837d3ed6eb5d79875625ec03c0024f42008e8c80c4c131ed909189b24bd1c",
+        "authorization_id": "55cfeb18098472c5b9d42363ba44915fe4b7269ccb4b0adfc913761f9cea9573",
+        "public_key_fingerprint": "ec45e155de53f29ee28928ba9d29edfaa71bef3a5f4b62a15b315e14018900d8",
+        "internal_run_id": "4fc323dc95f3ea9175893ac035fca93ed128d0f63675ec21a3f67958a0243899",
+        "prelaunch_log": "/private/tmp/scres_w12_b9916ed_replay5_prelaunch.log",
+        "prelaunch_log_bytes": 1233,
+        "prelaunch_log_sha256": "d696ccd1582136f370fe8e6c89e0ff516191543477a7c4a693717c6f7d467470",
+        "reserved_output_inode": 87538307,
+        "reserved_output_bytes": 0,
+        "receipt_exists": false,
+        "runtime_attestation_exists": false,
+        "stdout_log_exists": false,
+        "stderr_log_exists": false
+      },
+      "evidence": false
+    },
+    {
+      "attempt": 6,
+      "pair_id": "e0e220774b3c14a5755a20add356ff583bc76c599ab9703d105ea6b78213f220",
+      "chronology": "TTY plus tee retained both exact prelaunch records. Required fields and hashes were checked, exact ACKs were sent, and both scientific children launched. They ran for about 22 minutes at about 99 percent CPU. Because the run remained attached to a live local execution session and had no detached watcher, automatic task continuation aborted that session and terminated both children before either output or receipt was finalized.",
+      "prelaunch_emitted": true,
+      "prelaunch_durably_retained": true,
+      "ack_sent": true,
+      "child_launched": true,
+      "child_completed": false,
+      "invalid_reason": "ATTACHED_LOCAL_SESSION_TERMINATION_NO_RESULT_NO_RECEIPT",
+      "pids": {
+        "producer_shell": 15284,
+        "replay_shell": 15285,
+        "producer_signer_parent": 15316,
+        "replay_signer_parent": 15335,
+        "producer_child": 16590,
+        "replay_child": 16672
+      },
+      "producer": {
+        "custody_root": "results/paper2_bound_harness/w12_keyv4_b9916ed_producer6",
+        "authorization_sha256": "e44ce71d6726968fbadadfa7a06c284fa12fe4e1b6c31e9ecaa534300aad6cfc",
+        "authorization_id": "d5816f2487bc99a66e71bdb5694c9fe2680013fad87b9c3144f2d8fce89be91f",
+        "public_key_fingerprint": "2ea6edb1de536a4c26cdcd7ad7c089a007e132fc76ed6c47135569fbeb229171",
+        "internal_run_id": "b9bff9a5f872767aadd774ec0530a362ba9aaa8eb5cec16f3f46d8c138d4638e",
+        "prelaunch_log": "/private/tmp/scres_w12_b9916ed_producer6_prelaunch.log",
+        "prelaunch_log_bytes": 1215,
+        "prelaunch_log_sha256": "88b48bf2659ddb6a8017cf94ab6dbd8dc2819b64d095f2ffb8f3acf8afe24b67",
+        "reserved_output_inode": 87540360,
+        "reserved_output_bytes": 0,
+        "reserved_output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "runtime_attestation_exists": true,
+        "runtime_attestation_bytes": 1711114,
+        "runtime_attestation_sha256": "74e4a0891f814327f83f12e6ee104bb30a73c03b16e1612a90ae0829ffc72b97",
+        "stdout_log_exists": true,
+        "stdout_log_bytes": 0,
+        "stderr_log_exists": true,
+        "stderr_log_bytes": 0,
+        "receipt_exists": false
+      },
+      "replay": {
+        "custody_root": "results/paper2_bound_harness/w12_keyv4_b9916ed_replay6",
+        "authorization_sha256": "586f9bb415f64ff393b17f6f1fdac7eaf3e3cd7d210aa5f0274984c7da9aa5ba",
+        "authorization_id": "fcdc48b2b0b296605efb2dc19044da0b6803bb58d7e2b6f28572f07b4418c200",
+        "public_key_fingerprint": "bb4f74d60994018c85b172eef14b038591a2229c40fb31453430087b139d02a7",
+        "internal_run_id": "428b514e0a7a5acb043a81102fe5f34830e676b7654da04d54a8b9621a60a3af",
+        "prelaunch_log": "/private/tmp/scres_w12_b9916ed_replay6_prelaunch.log",
+        "prelaunch_log_bytes": 1233,
+        "prelaunch_log_sha256": "62ff41c511e90d0919f3a49da597fada5d152c6c5d466510b5c963a577d1a5cd",
+        "reserved_output_inode": 87540359,
+        "reserved_output_bytes": 0,
+        "reserved_output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "runtime_attestation_exists": true,
+        "runtime_attestation_bytes": 1711114,
+        "runtime_attestation_sha256": "74e4a0891f814327f83f12e6ee104bb30a73c03b16e1612a90ae0829ffc72b97",
+        "stdout_log_exists": true,
+        "stdout_log_bytes": 0,
+        "stderr_log_exists": true,
+        "stderr_log_bytes": 0,
+        "receipt_exists": false
+      },
+      "evidence": false
+    }
+  ],
+  "aggregate_verdict": {
+    "attempt_pairs_valid": 0,
+    "attempt_pairs_invalid": 6,
+    "scientific_results_completed": 0,
+    "signed_exact_receipts_completed": 0,
+    "paired_portable_archives_completed": 0,
+    "w12_certified": false,
+    "h_pi_computed": false,
+    "paper2_evidence": false,
+    "verdict": "INVALIDATED_NO_EVIDENCE",
+    "reason": "None of the six attempt pairs produced a non-empty exact result plus a signed receipt for both producer and independent replay. Attempts 1-5 never launched children; attempt 6 was terminated before completion. Authorization, reserved empty outputs and partial runtime files are not scientific results."
+  },
+  "execution_discipline_correction": {
+    "binding": true,
+    "reduced_gate_host_policy": "W12 and W16 may run on the local Mac or the verified ovh-agent-lab VPS, provided the selected host uses detached controllers and an independent detached watcher.",
+    "next_w12_host": "local_mac_or_verified_ovh-agent-lab_vps",
+    "w16_host": "local_mac_or_verified_ovh-agent-lab_vps",
+    "w24_and_full_frontier_host": "verified_ovh-agent-lab_vps_required",
+    "next_launch_mode": "detached_supervisor",
+    "required_watcher": true,
+    "required_before_ack": [
+      "immutable committed source and verified checkout on the selected execution host",
+      "selected-host environment preflight and dependency attestation",
+      "two independently keyed parent launchers",
+      "caller-retained exact prelaunch records and hashes outside each custody root",
+      "detached supervisor session identifiers",
+      "watcher process identifier and durable watcher log",
+      "machine-readable heartbeat path and stale-heartbeat rule",
+      "explicit producer/replay PID manifest"
+    ],
+    "required_during_run": [
+      "watcher polls process liveness, heartbeat age, output growth and free disk",
+      "watcher persists UTC observations independently of the interactive Codex session",
+      "watcher never promotes partial output to evidence"
+    ],
+    "required_after_run": [
+      "both exact results and both signed receipts completed",
+      "launch-host verification completed before relocation",
+      "two transfer manifests completed and independently retrieved",
+      "checksums and relocated-pair verification completed locally",
+      "only then may W12 be described as evidence"
+    ],
+    "prohibitions": [
+      "No W12 or W16 scientific child may remain lifecycle-bound to an interactive exec session.",
+      "No W24 or full-frontier execution may run locally; it requires the verified ovh-agent-lab VPS, detached supervision and an independent watcher.",
+      "A submitted, running, interrupted or partially materialized job is not evidence.",
+      "No seed in transducer_collision_suite_burned may be relabeled virgin."
+    ]
+  }
+}
