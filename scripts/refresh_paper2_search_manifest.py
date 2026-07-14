@@ -39,6 +39,7 @@ REQUIRED_ARTIFACT_PATHS = {
     "results/program_o/exact_transducer_validation_v1/ret_matrices.npz",
     "contracts/program_m_shared_lift_reservation_v1.json",
     "docs/external_assessments/EXTERNAL_CHATGPT_PRO_PROGRAM_M_AUDIT_PROMPT_2026-07-14.md",
+    "docs/external_assessments/EXTERNAL_CHATGPT_PRO_PROGRAM_O_FULL_DES_AUDIT_PROMPT_2026-07-14.md",
     "research/paper2_exhaustive_search/PROGRAM_M_SHARED_LIFT_PREREGISTRATION_2026-07-14.md",
     "research/paper2_exhaustive_search/program_m_hpi_screen_custody_20260714.json",
     "research/paper2_exhaustive_search/program_m_hpi_screen_selection_20260714.json",
