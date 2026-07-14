@@ -1,0 +1,102 @@
+{
+  "artifact_hashes": {
+    "outputs/experiments/track_b_same_contract_challenge_2026-07-10/summary.json": "d0d88c378856418c3b390ea1af4251f3e6ce52853d3c898f3fa6a6e9539dfc98",
+    "research/paper2_exhaustive_search/action_trajectory_audit.md": "19ecef5bb0ff3b85d102efe0340125234d0375502e25266ab8b7063cf55e1bdb",
+    "research/paper2_exhaustive_search/approach_registry.json": "e1fb15f53441b4382c901424d2d52aad31fdfc1c6a6f997a3289e60d1002f80c",
+    "research/paper2_exhaustive_search/boundary_scope_proof.md": "dc171d61a8178ecd6ac7186be072837c7f20eab2e9888c1144083efd00c0d5ab",
+    "research/paper2_exhaustive_search/boundary_verification.json": "986aaf46c33bca604b30be86731ea239884029362240f99c7927faf6440af65b",
+    "research/paper2_exhaustive_search/comparator_completeness_audit.md": "e5c602a880aea52224202cc744accd2c28f6f96a4aa5973705a2f9bc768f70bd",
+    "research/paper2_exhaustive_search/global_headroom_sensitivity_design_and_results.md": "ffb39f6fb072a5d10d2005cb86e55ad998ff4f8770c56c8c6e4a65a749c28d75",
+    "research/paper2_exhaustive_search/paper2_paper3_status.md": "08fd239d1e6151b1a2a889f1329fd4a4ae3f97d376d6642f2c21c67777a7a00c",
+    "research/paper2_exhaustive_search/mtr_switch_complexity_screen_verdict_20260713.json": "afd23d1c120e7f2bc25c19d78e92120c19bf4dc3e31b083ed8216d3fae19fbaa",
+    "research/paper2_exhaustive_search/paper_facing_claims_table.json": "dc7ab6d613b568fcf9372d3f4483bfa0ef31533ecf571841fecde579cd4762e5",
+    "research/paper2_exhaustive_search/paper_facing_claims_table.md": "1a3b4f0f37705a90eb8131406ed5e21850d0baba8619db20970993dfd36bec01",
+    "research/paper2_exhaustive_search/phase0_failure_taxonomy.json": "23723acd44856a151a4e3e8e53d9fc111b1f8840dd9bdb96279c5133e4d653f2",
+    "research/paper2_exhaustive_search/primary_source_literature_review.md": "3fdf00610a3d57842e48e7c3a4f13a7cca6d948b6a61cdf4c8be0466ca9968d3",
+    "research/paper2_exhaustive_search/source_reconstruction.md": "8b43a8a36903511f62d705477cefa658cb2b7408ce9fee1d4cf9e2f28e218110",
+    "results/k3/open_loop_confound_audit.json": "6d509cddb0885dc7c58a3bbc36d82caf93aa1b5b04e19b7786be1afa16e82e84",
+    "results/paper2_bottleneck/corrective_completeness_audit.json": "8131d169f1844a1fb96a40394d01d0a092fef51ec2ccd5e77674fc3c5e751b46",
+    "results/paper2_maintenance/terminal_verdict.json": "0a9fe2f59bd06ad2d8c262117dea109473ced904809b969efafeb7e6dbb9fe44",
+    "results/program_h/bound/verdict.json": "0f2ad526082bd970993dbbc6eaf549273699e14a1fbc0271fba6f722ff2b57f8",
+    "results/paper2_bound_harness/switch_complexity_screen/9672e21_local_20260713_sieve1/result.json": "6cc461c9ab5612ecf9df0a3c9769a200d0a58207e514e56f57e8e793ce9e0d27",
+    "results/paper2_bound_harness/switch_complexity_screen/9e97b8f_local_20260713_sieve1_deepverify/verification.json": "734769b2ae31cbec06e2947916cc2b5c85ab1900247ec165b3291b2cb1253a21",
+    "results/program_i/branching/verdict.json": "3ef9512fa7b394b927b91888429cbeeed9126bedb0adeecff4fb493c30ad8936"
+  },
+  "commands": [
+    "git fetch --all --tags --prune",
+    "gh pr view 2 --json number,state,isDraft,headRefName,headRefOid,baseRefName,mergeStateStatus,updatedAt,url",
+    "PYTHONPATH=. .venv/bin/python scripts/audit_k3_open_loop_confound.py",
+    "PYTHONPATH=. .venv/bin/python -m pytest -q tests/test_replenish_ret.py",
+    "PYTHONPATH=. .venv/bin/python scripts/audit_paper2_bottleneck_completeness.py",
+    "PYTHONPATH=. .venv/bin/python scripts/verify_paper2_exhaustion.py",
+    "PYTHONPATH=. .venv/bin/python -m pytest -q tests/test_paper2_exhaustive_search_registry.py tests/test_paper2_bottleneck.py tests/test_replenish_ret.py",
+    ".venv/bin/python -m pytest -q tests/test_garrido_excel_ret.py tests/test_ret_excel_visible_contract.py tests/test_garrido_audit_workbook_packaging.py",
+    ".venv/bin/python -m pytest -q tests/test_factory_resilience.py",
+    ".venv/bin/python scripts/launch_paper2_switch_complexity.py --run-dir results/paper2_bound_harness/switch_complexity_screen/9672e21_local_20260713_sieve1 --workers 6 --watch-interval-seconds 10",
+    ".venv/bin/python scripts/launch_paper2_switch_complexity.py --run-dir results/paper2_bound_harness/switch_complexity_screen/9e97b8f_local_20260713_sieve1_deepverify --workers 6 --watch-interval-seconds 10 --verify-result results/paper2_bound_harness/switch_complexity_screen/9672e21_local_20260713_sieve1/result.json --deep",
+    "Remote immutable W12/W16/W24 executions from 179f7c2 and 0a1e3be were intentionally terminated after adversarial invalidation; no grouped result was retrieved or promoted."
+  ],
+  "environment": {
+    "packages": {
+      "SALib": "1.5.2",
+      "gymnasium": "1.3.0",
+      "numpy": "2.4.6",
+      "pandas": "3.0.3",
+      "sb3-contrib": "2.9.0",
+      "scikit-learn": "1.9.0",
+      "scipy": "1.17.1",
+      "simpy": "4.1.2",
+      "stable-baselines3": "2.9.0",
+      "torch": "2.12.1"
+    },
+    "platform": "macOS-27.0-arm64-arm-64bit",
+    "python": "3.11.15"
+  },
+  "execution_scope": {
+    "local": "The frozen 11,611-calendar <=3-switch calibration screen completed at commit 9672e21 under a detached prestart watcher. Full deep replay completed at 9e97b8f: 696,660 candidate rollouts plus 60 selected ledgers, passed with no failures or stderr. The unique winner uses all three permitted switches, so the comparator boundary remains active.",
+    "new_confirmatory_tapes_opened": false,
+    "new_learner_training": "prohibited",
+    "vps": "ovh-agent-lab was re-audited reachable and idle with 6 vCPU and about 10 GiB available RAM. Its old 0a1e3be checkouts and W12/W16/W24 directories are not reusable evidence. The complete <=4-switch calibration gate is the next authorized VPS workload after a one-tape RSS preflight and watcher-before-science custody; the current exact W24 builder is not memory-safe for this host."
+  },
+  "generated_date": "2026-07-13",
+  "known_reproducibility_defects": [
+    "scripts/audit_k3_open_loop_confound.py fails without PYTHONPATH=. because it cannot import supply_chain",
+    "the first semantic quotient producer 179f7c2 self-attested Markov-state completeness rather than machine-certifying it",
+    "the 179f7c2 harness did not reconcile exact ordered tape/certificate identities or semantically reconcile execution receipts",
+    "the original bottleneck verdict stores only scalar total team-hours and omits component M/T/R and reserve ledgers",
+    "the standalone APP/CD v1 gate failed source-fidelity, privileged-observation, resource and comparator audit; a later-discovered unauthorized 400-tape output is quarantined and its seeds are burned",
+    "the <=3-switch deep replay reuses the producer's evaluation functions; it certifies deterministic full replay and artifact integrity, not an independent reimplementation of the DES",
+    "the current exact W24 transducer retains full canonical state bytes and is estimated above 33 GiB before Python overhead, so it is not memory-safe on the 10-GiB VPS"
+  ],
+  "paper2_confirmed": false,
+  "paper3_authorized": false,
+  "repository": {
+    "branch": "codex/paper2-maintenance-headroom",
+    "head_input": "9e97b8f7a580a5d08550ace0bb86e2d792eab15c",
+    "k3_corrective_ancestor": "ef6b53b7cac9c1cbdcdc4347a31c8300d1941fc0",
+    "local_head_published": false,
+    "origin_current_branch_at_refresh": "a91890bfd3d815fc2bd614076c576487e13e0d06",
+    "origin_main": "c6e6d08bfc99db7d842c30edb88e5586227b7729",
+    "origin_pr2_branch": "3bcf6e96f3dd0c3282d6b051da0a47fa87684b3d",
+    "origin_program_i": "9b758d45659e7279c55a295f674cf16068e22934"
+  },
+  "schema_version": "paper2_search_reproducibility_manifest_v2_nonterminal",
+  "scientific_status": "OPEN_ACTIVE_BOUND_REQUIRED__MTR_SWITCH4_VPS_GATE_AUTHORIZED",
+  "seed_and_tape_status": {
+    "bottleneck_calibration_1100001_1100060": "burned",
+    "bottleneck_learner_1120001_plus": "unopened",
+    "bottleneck_locked_1110001_1110120": "burned",
+    "k3_confirmation_6800001_plus": "burned",
+    "k3_learner_test_6900001_plus": "burned",
+    "factory_app_cd_9600001_9600400": "burned_quarantined; unauthorized execution preceded the written rejection and was discovered by the later audit; no valid custody chain or scientific result; paper reproduction flag hard-coded",
+    "factory_app_cd_9600401_plus": "old open-ended declaration withdrawn; future valid protocol must allocate a new disjoint block",
+    "new_paper2_virgin_universe": "not allocated because no candidate passed the pre-learner gate"
+  },
+  "source_hashes": {
+    "/Users/thom/Downloads/v.0_neuralNet-scres.docx": "b111070a05c8f4d1afa058454138bed9b4b74900ab87eaaf6eb5186b6e8293f2",
+    "/Users/thom/Downloads/v.0_neuralNet-scres.pdf": "521b12770e94f3e70c4c88ce1e38613f4e0aad3e1dab114632c9c89dbfad182d",
+    "/Users/thom/Downloads/garrido et al 2024 factory resilience.pdf": "1260863dc295232faf24b820e1f67d53f25f81ffa2d221f7ef02a02310519c43",
+    "/Users/thom/Library/CloudStorage/GoogleDrive-chisicathomas@gmail.com/My Drive/Archive/Misc_Unsorted/Unsorted/WRAP_Theses_Garrido_Rios_2017.pdf": "de9192d233b0c728ece6156b754fc64543146868121358b8a95c73b3edaa55cf",
+    "/Users/thom/Library/CloudStorage/GoogleDrive-chisicathomas@gmail.com/My Drive/Supernote/Document/20_RESEARCH/PhD-Papers/garrido2024 scres+AI.pdf": "3e3bc8f82e20b891ee163fb8a035dd37be4312fa11f58dde77452dc1bb903ae6"
+  }
+}

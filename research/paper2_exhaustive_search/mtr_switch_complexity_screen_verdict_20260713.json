@@ -1,0 +1,104 @@
+{
+  "schema_version": "mtr_switch_complexity_screen_verdict_v1",
+  "generated_date": "2026-07-13",
+  "family_id": "integrated_production_maintenance_routing_recovery_resource",
+  "contract_id": "paper2_bottleneck_switch_complexity_screen_v1",
+  "contract_sha256": "a8ff0b9c4ef6e45544349cd951ef3d22441f984111ad6b447822d5c861613d56",
+  "effective_verdict": "CALIBRATION_SWITCH_COMPLEXITY_BOUNDARY_ACTIVE_DEEP_REPLAY_PASS",
+  "scientific_scope": "comparator development on burned calibration tapes only",
+  "producer": {
+    "git_head": "9672e2146a6f02efac47ce7a58234fe78a92bbe2",
+    "run_dir": "results/paper2_bound_harness/switch_complexity_screen/9672e21_local_20260713_sieve1",
+    "result_sha256": "6cc461c9ab5612ecf9df0a3c9769a200d0a58207e514e56f57e8e793ce9e0d27",
+    "content_sha256": "86648ce1c4314ab558ce3f2efc7b90e447c27a33360e1491d0cc7256b8f26402",
+    "elapsed_seconds": 3431.4350064159953,
+    "watcher_terminal_state": "completed_unverified",
+    "stderr_bytes": 0
+  },
+  "deep_replay": {
+    "git_head": "9e97b8f7a580a5d08550ace0bb86e2d792eab15c",
+    "run_dir": "results/paper2_bound_harness/switch_complexity_screen/9e97b8f_local_20260713_sieve1_deepverify",
+    "verification_sha256": "734769b2ae31cbec06e2947916cc2b5c85ab1900247ec165b3291b2cb1253a21",
+    "content_sha256": "89787d5fcb4bbb602354fda6a31012b3744768bd650b5c640b048fe38404e1a6",
+    "passed": true,
+    "failures": [],
+    "calibration_tapes_replayed": 60,
+    "candidate_rollouts_replayed": 696660,
+    "selected_ledger_rollouts_replayed": 60,
+    "elapsed_seconds": 3196.511619417026,
+    "watcher_terminal_state": "completed_unverified",
+    "stderr_bytes": 0
+  },
+  "candidate_family": {
+    "horizon_weeks": 24,
+    "actions": ["M", "T", "R"],
+    "week_zero_fixed_action": "M",
+    "maximum_switches": 3,
+    "adjacent_switches_allowed": false,
+    "complete_family_count": 11611,
+    "counts_by_switches": {
+      "0": 1,
+      "1": 46,
+      "2": 924,
+      "3": 10640
+    }
+  },
+  "calibration": {
+    "split": "burned_calibration_only",
+    "seed_start": 1100001,
+    "seed_end": 1100060,
+    "n_tapes": 60,
+    "selected_candidate_index": 3735,
+    "selected_full_frontier_calendar_index": 125611,
+    "selected_calendar": "MMMMMMMTTRRRMMMMMMMMMMMM",
+    "selected_switch_count": 3,
+    "selected_mean_ret_excel": 0.2724722526949322,
+    "primary_tie_count": 1,
+    "boundary_hit": true
+  },
+  "resource_interpretation": {
+    "frozen_model_rule": "Every policy receives exactly one mutually exclusive M/T/R team-week per epoch and identical initial reserve stock, capacity, target, lead, production and access to Op9 inventory.",
+    "endogenous_ledgers": [
+      "reserve_units_issued",
+      "reserve_units_replenished",
+      "reserve_replenishment_requests"
+    ],
+    "domain_hold": "Whether reserve replenishment consumes a separate finite transport, handling, fuel, order-processing or shared M/T/R resource remains a Garrido face-validation question."
+  },
+  "data_access": {
+    "locked_tapes_accessed": false,
+    "virgin_tapes_accessed": false,
+    "new_learner_tapes_accessed": false
+  },
+  "claim_flags": {
+    "h_pi_computed": false,
+    "h_obs_computed": false,
+    "full_open_loop_frontier_complete": false,
+    "w24_authorized": false,
+    "learner_authorized": false,
+    "paper2_authorized": false,
+    "paper3_authorized": false,
+    "mtr_family_null": false,
+    "mtr_family_positive": false
+  },
+  "interpretation": "The unique best calendar uses all three permitted switches, so the frozen family is boundary-active. This does not establish adaptive value and does not establish a family null. It requires a separately frozen richer comparator gate before any observable-policy or learner claim.",
+  "next_gate": {
+    "family": "complete calendars with at most four switches under the same calibration-only semantics",
+    "candidate_count": 89131,
+    "calibration_rollouts": 5347860,
+    "execution_target": "ovh-agent-lab VPS after one-tape maximum-RSS preflight",
+    "watcher_requirement": "independent detached watcher must attest prestart before scientific PID",
+    "estimated_producer_hours_on_six_vcpu": 7.7,
+    "estimated_deep_replay_hours_on_six_vcpu": 7.7,
+    "stop_rule": "If the unique selected calendar is interior, do not infer global optimality; if it again uses the maximum switch count, do not claim H_obs and reconsider the next certified comparator step before further expansion."
+  },
+  "vps_audit": {
+    "host": "ovh-agent-lab",
+    "reachable": true,
+    "vcpus": 6,
+    "available_memory_gib_approx": 10,
+    "old_remote_runs_reusable": false,
+    "exact_w24_current_builder_memory_safe": false,
+    "warning": "The current exact W24 transducer is estimated to require more than 33 GiB before Python overhead and must not be launched on the 10-GiB VPS without disk-backed state storage or a measured sub-6-GiB one-tape profile."
+  }
+}
