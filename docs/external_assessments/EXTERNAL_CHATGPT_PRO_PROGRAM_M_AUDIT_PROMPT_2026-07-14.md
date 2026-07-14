@@ -4,11 +4,13 @@ Repository: `Thom-320/scres-ia`
 
 Branch: `codex/paper2-maintenance-headroom`
 
-Scientific snapshot to audit: `ff5e4a8055b2805441894ae0af8de5eb354963fd`
+Scientific snapshot to audit: `d2adb8a2bfecd76ba2f40f988bce1184f144cce0`
 
 Audit that exact commit. It contains the metric correction, Program M contract,
 full-DES implementation, complete-calendar producer, tests and VPS custody
-tools, but no Program M scientific result and no opened Program M seed block.
+tools, plus the fail-closed correction making the producer importable from a
+clean remote clone without `PYTHONPATH`. It contains no Program M scientific
+result and no opened Program M seed block.
 
 ## Role
 
