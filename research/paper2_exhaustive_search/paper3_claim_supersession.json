@@ -1,0 +1,81 @@
+{
+  "schema_version": "paper3_claim_supersession_v1",
+  "generated_date": "2026-07-14",
+  "scope": "Current SCRES-IA Papers 2 and 3 exhaustive-search task only",
+  "status": "PAPER3_NOT_AUTHORIZED__DEPENDENCY_PAPER2_LEARNED_VALUE_UNMET",
+  "precedence_rule": "For current-task Paper-3 authorization, this artifact and its content-addressed current-task inputs supersede any historical claim-registry label. The bounded historical measurement remains historical evidence but is not an authorization token.",
+  "historical_claim": {
+    "claim_id": "C12",
+    "source": {
+      "path": "docs/CLAIMS_REGISTRY_Q1_DEFENSE_2026-07-01.md",
+      "sha256": "bbbc05dbb4bb1e9243341831ab3d1ebbe919dfabd8af7cef8c3c75c80da965f7"
+    },
+    "historical_status": "Supported at small effect size, both observation arms",
+    "evidence": {
+      "path": "docs/H4_RETAINED_VS_RESET_VERDICT_2026-07-02.md",
+      "sha256": "f034f2a43411e04d284dfcafa1a4bfdf4a1fc9f693865a5d620538ae3cae387f"
+    },
+    "bounded_interpretation_retained": true,
+    "bounded_interpretation": "An earlier Track-B probe reported a small retained-minus-reset effect over eight within-checkpoint online-adaptation cycles. The measurement is not retracted by this artifact.",
+    "authorization_transferable_to_current_paper3": false
+  },
+  "later_same_contract_correction": {
+    "path": "docs/TRACK_B_SAME_CONTRACT_CHALLENGE_VERDICT_2026-07-10.md",
+    "sha256": "85347feb755609fd4400f990b4986c74fa9ac4678af5d212bd74c28bc32a4651",
+    "finding": "The Track-B learned policy underlying the historical probe lost to the calibration-only optimized full-contract constant policy on the untouched same-contract test: PPO-minus-static was -0.000018049 with CI95 [-0.000028615,-0.000008087].",
+    "consequence": "The historical C12 result cannot establish current-task H_learned because its prerequisite learned adaptive advantage does not survive the strongest same-contract comparator."
+  },
+  "current_task_inputs": [
+    {
+      "path": "research/paper2_exhaustive_search/prelearner_contract.json",
+      "sha256": "2e327cf0583f930bf8f3fe0f6629be63d5665ddf9de53665793934b6a348dd52",
+      "required_values": {
+        "status": "NO_CURRENT_CANDIDATE_ELIGIBLE",
+        "learner_authorized": false,
+        "paper3_authorized": false
+      }
+    },
+    {
+      "path": "research/paper2_exhaustive_search/paper2_paper3_status.md",
+      "sha256": "527478fb18191e82e8b0298414f7ae27a5db498dc1080954184b21e803d00da7",
+      "required_text": "PAPER3_NOT_AUTHORIZED__DEPENDENCY_PAPER2_LEARNED_VALUE_UNMET"
+    },
+    {
+      "path": "research/paper2_exhaustive_search/paper_facing_claims_table.json",
+      "sha256": "c33e5862beb938baee6d16daacd222a47954e1a4b5f512684b1d537283e07661",
+      "required_values": {
+        "current_verdict.paper2_adaptive_confirmed": false,
+        "current_verdict.paper2_neural_incremental_confirmed": false,
+        "current_verdict.paper3_retained_learning_authorized": false
+      }
+    }
+  ],
+  "current_task_authorization_gate": {
+    "canonical_endpoint": "ret_excel_request_snapshot_v2",
+    "canonical_endpoint_status": "SOURCE_ALIGNED_IMPLEMENTED__PROVISIONAL_PENDING_SAME_TIME_GARRIDO_CONFIRMATION_AND_V2_RESCORE",
+    "paper2_observable_adaptive_value_confirmed": false,
+    "paper2_learned_adaptive_value_confirmed": false,
+    "h_learned_positive_against_strongest_same_contract_comparator": false,
+    "virgin_paper2_confirmation_passed": false,
+    "required_before_paper3": [
+      "Paper 2 establishes H_obs above the frozen practical gate under equal resources and all guardrails",
+      "a learned policy establishes H_learned above the strongest full-contract open-loop and classical comparator",
+      "the Paper-2 learned advantage survives virgin tapes and the state-feedback trajectory certificate",
+      "a Paper-3 campaign protocol is then frozen before any Paper-3 development or virgin campaign sequence is opened"
+    ],
+    "unmet_requirements": [
+      "No current candidate has passed the v2 pre-learner gate; all visible-v1 results are metric-development only",
+      "No current Paper-2 learned adaptive advantage exists",
+      "No current Paper-2 virgin confirmation exists",
+      "No current Paper-3 campaign preregistration or authorized virgin block exists"
+    ]
+  },
+  "effective_current_disposition": {
+    "historical_c12_result_retracted": false,
+    "historical_c12_may_be_promoted_as_current_paper3_result": false,
+    "paper3_authorized": false,
+    "new_retained_learning_execution_authorized": false,
+    "paper3_claim_allowed": "Only PAPER3_NOT_AUTHORIZED__DEPENDENCY_PAPER2_LEARNED_VALUE_UNMET",
+    "reopening_rule": "Recompute authorization prospectively only after a content-addressed current-task Paper-2 verdict confirms H_learned against the strongest same-contract comparator on virgin tapes. Historical C12 alone can never reopen the gate."
+  }
+}

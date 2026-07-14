@@ -30,11 +30,32 @@ These questions should be sent to Garrido as a batch BEFORE any further computat
   facts. It is not a global impossibility proof over unasked physics.
 - Linked families bundled under one question are adjudicated independently.
   A positive answer for one linked family does not reopen the others.
-- The canonical endpoint remains `ret_excel_visible_v1` through the repository
-  aggregator. Cobb–Douglas remains secondary construct sensitivity unless Q12
+- The canonical development endpoint is `ret_excel_request_snapshot_v2`,
+  provisional pending Metric Clarification M1 below. Cobb–Douglas remains
+  secondary construct sensitivity unless Q12
   supplies both the APP ledger and Garrido's explicit MFSC-domain endorsement;
   even then, a new frozen contract and recalibration are required before it can
   become a co-primary construct.
+
+---
+
+## Metric Clarification M1 — request-ledger timing (mandatory before virgin confirmation)
+
+**Context:** The raw workbooks attach `sumBt`, `sumUt`, order number and `OPTj`
+to each visible request row. Thesis Annex B describes the same barrier matrix as
+associated with each request generated. The earlier Python contract instead
+reconstructed `Bt/Ut` at `OATj`; that implementation is now quarantined.
+
+**Question:** “In the original Simulink request barrier, were accumulated
+backorders `sumBt` and unattended/lost orders `sumUt` frozen when order `j` was
+generated at `OPTj`? If another completion, queue removal or loss occurred at
+the identical simulation timestamp, did that event update `sumBt/sumUt` before
+or after the snapshot attached to request `j`?”
+
+**Effect of answer:** This does not create adaptive headroom. It validates or
+corrects only the deterministic event-order convention of
+`ret_excel_request_snapshot_v2`. Ambiguity keeps virgin confirmation blocked;
+all development tapes and comparators must be rescored after any correction.
 
 ---
 

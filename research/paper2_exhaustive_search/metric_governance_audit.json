@@ -1,112 +1,141 @@
 {
-  "schema_version": "paper2_metric_governance_audit_v1",
-  "generated_date": "2026-07-13",
-  "status": "CANONICAL_RET_LOCKED_CD_SECONDARY_ONLY_FOR_CURRENT_PAPER2",
+  "schema_version": "paper2_metric_governance_audit_v2",
+  "generated_date": "2026-07-14",
+  "status": "CANONICAL_RET_EXCEL_REQUEST_SNAPSHOT_V2__PROVISIONAL__RESCORE_REQUIRED",
   "canonical_endpoint": {
-    "contract_id": "ret_excel_visible_v1",
+    "contract_id": "ret_excel_request_snapshot_v2",
     "implementation": "supply_chain.episode_metrics.compute_episode_metrics",
-    "per_order_formula": "IF(risk_active, IF(APj > 0, APj / LTj, 0.5 * (1 / RPj)), 1 - ((Bt + Ut) / j))",
-    "aggregation": "Unclipped mean over completed non-lost workbook-visible rows; lost and horizon-unresolved orders remain in the cumulative Bt/Ut ledger and lost orders are a simultaneous non-inferiority guardrail.",
-    "source_files": {
-      "ret_thesis_py_sha256": "b7cade35a666eaf306df531625b0887f26910d101b4d56ca32ba08c72cd08c45",
-      "episode_metrics_py_sha256": "3a0ba206ee57904c971f3701dbf21ca676a2e9f5fc7f5029550e04325d5c262f",
-      "workbook_auditor_sha256": "7dc90464b80d9bd5b303ee7ad8a7a2a2b1b58f48d0f9eed7884f2419875224b4"
+    "implementation_status": "SOURCE_ALIGNED_IMPLEMENTED__PROVISIONAL_PENDING_SAME_TIME_GARRIDO_CONFIRMATION",
+    "per_order_formula": "IF(risk_active, IF(APj > 0, APj / LTj, 0.5 * (1 / RPj)), 1 - ((Bt_at_request + Ut_at_request) / j))",
+    "aggregation": "Unclipped mean over completed non-lost workbook-visible rows emitted in original j/OPTj order; original j is preserved and lost or horizon-unresolved orders emit no primary row.",
+    "request_snapshot_semantics": {
+      "capture_time": "At OPTj, before inserting request j into the Op9 queue.",
+      "fields": [
+        "ret_bt_at_request",
+        "ret_ut_at_request",
+        "ret_ledger_snapshot_time",
+        "ret_ledger_event_sequence"
+      ],
+      "immutability": "Bt/Ut are frozen on the order record at request generation and are never reconstructed from OATj or rewritten by later release, completion or loss events.",
+      "same_timestamp_convention": "Events already scheduled before the request-generation callback run first; then Bt/Ut are snapshotted; then request j is enqueued. The event sequence is recorded.",
+      "same_timestamp_authority": "PROVISIONAL_PENDING_GARRIDO_SIMULINK_CONFIRMATION"
     },
-    "fresh_reaudit": {
-      "timestamp_utc": "2026-07-13T19:12:25.624150+00:00",
+    "mandatory_guardrails": [
+      "quantity-weighted ReT",
+      "service-loss AUC",
+      "attended and lost orders",
+      "remaining backlog and maximum backlog age",
+      "worst-product/worst-CSSU/worst-node service",
+      "tail risk",
+      "componentwise resource and conservation ledgers"
+    ],
+    "decision": "This is the source-aligned canonical development and future-confirmation contract. Its implementation does not restore any prior result. No Paper-2 null, positive, H_PI, H_obs or ceiling may be asserted until the same tapes and complete same-contract comparator are rescored under v2 and all guardrails are rebuilt."
+  },
+  "source_evidence": {
+    "excel_formula_reaudit": {
+      "path": "research/paper2_exhaustive_search/excel_metric_reaudit_20260713.json",
+      "sha256": "b9341ef1d52a9b1cebafd892ea7e3e175868d5a986954022086f2461832472f1",
       "raw_cf_sheets": 20,
       "formula_rows": 47546,
       "mismatches": 0,
       "max_abs_diff": 0.0,
-      "artifact_path": "research/paper2_exhaustive_search/excel_metric_reaudit_20260713.json",
-      "artifact_sha256": "b9341ef1d52a9b1cebafd892ea7e3e175868d5a986954022086f2461832472f1",
-      "test_result": "17 passed",
-      "test_files": [
-        "tests/test_garrido_excel_ret.py",
-        "tests/test_ret_excel_visible_contract.py",
-        "tests/test_garrido_audit_workbook_packaging.py"
-      ]
+      "scope": "Exact formula replay given workbook Bt/Ut inputs only."
     },
-    "known_construct_nonmonotonicity": {
-      "status": "MACHINE_VERIFIED_LIVE_AGGREGATOR_COUNTEREXAMPLE",
-      "artifact": "research/paper2_exhaustive_search/k3_frontloading_dominance_certificate.json",
-      "contract_scope": "Frozen K3 exact-budget FIFO kernel, zero risk indicators, identical total order resource and identical lost order 8.",
-      "front_loaded_schedule": "(1.5,1.5,1.5,1.5,1.5,1.5,1.0,0.0)*D0; weakly earlier completion for every order; visible-v1=6/7.",
-      "later_batched_schedule": "(1.0,1.0,1.5,1.5,1.5,1.5,1.5,0.5)*D0; prefix-dominated by the front-loaded schedule; visible-v1=1.0.",
-      "mechanism": "The sparse ledger applies all completion-removal events at a timestamp before emitting any row at that timestamp, so later batched completions can see a smaller Bt than an earlier individual completion.",
-      "interpretation": "This does not change which metric is canonical and does not establish adaptive value. It proves that physical service/completion dominance is insufficient to certify a visible-v1 upper bound; the primary metric must always be recomputed directly and interpreted with service, loss, quantity, tail and fairness guardrails."
+    "source_semantics_audit": {
+      "path": "research/paper2_exhaustive_search/ret_excel_visible_v1_source_semantics_audit_20260714.json",
+      "sha256": "17a8c700188a53676e4936373ec6384e1243c9745985048f1bc9192845411ab6",
+      "content_sha256": "612518b86eb20cddacc7e9206c28ce040d3f268f55a4ecc6a2380c2736e252f0",
+      "status": "FORMULA_EXACT__VISIBLE_ROWS_OBSERVED__OAT_BT_UT_RECONSTRUCTION_NOT_SOURCE_VALIDATED",
+      "oat_adjacent_inversions_in_j_order": 16391,
+      "sum_ut_decreases_in_j_order": 0,
+      "sum_ut_decreases_in_oat_order": 8340,
+      "visible_only_oat_bt_matches": 590,
+      "visible_rows": 47546
     },
-    "decision": "Binding primary endpoint for the current Paper 2 success definition; service loss, quantity ReT, lost orders, worst-node service, tail risk and resource ledgers remain mandatory guardrails."
+    "v2_implementation_audit": {
+      "path": "research/paper2_exhaustive_search/ret_excel_request_snapshot_v2_implementation_audit_20260714.json",
+      "sha256": "61a67f24cb3bf31b9cf5fd9333436bd2a37da61e6bedb838e572612a8b1e2137",
+      "content_sha256": "0c0166d21d75bfdceb3f49e8da3db484070435349d2e5ff481da295ed847b1f3",
+      "status": "SOURCE_ALIGNED_IMPLEMENTED__PROVISIONAL_PENDING_SAME_TIME_GARRIDO_CONFIRMATION",
+      "canonical_aggregator_formula_rows": 47546,
+      "canonical_aggregator_mismatches": 0,
+      "canonical_aggregator_max_abs_diff": 0.0,
+      "native_des_snapshot_integration_test": "tests/test_ret_excel_request_snapshot_contract.py::test_native_des_captures_request_snapshots_before_queue_entry",
+      "native_des_snapshot_test_sha256": "c09258c68207ab8d76bd860e4de5fb29a3ec0fa354a12a6d0225b2726644b31e",
+      "claim_limit": "Workbook replay with injected source Bt/Ut snapshots does not prove endogenous DES ledger fidelity, adaptive headroom or a Paper-2 result."
+    }
+  },
+  "superseded_contracts": {
+    "ret_excel_visible_v1": {
+      "status": "QUARANTINED_METRIC_DEVELOPMENT_ONLY",
+      "implementation_defect": "The OAT-derived Bt/Ut reconstruction is not source-validated. The workbook rows are ordered by j/OPTj and carry request-time ledger evidence; treating Bt/Ut as OAT-time cumulative observations changes the estimand.",
+      "allowed_claim": "Only the narrow historical statement that the unchanged cell formula exactly reproduces cached workbook cells when workbook Bt/Ut are supplied as inputs.",
+      "prohibited_claims": [
+        "Paper-2 positive result",
+        "Paper-2 null result",
+        "H_PI",
+        "H_obs",
+        "learned value",
+        "family or comparator ceiling",
+        "terminal Return A or Return B evidence"
+      ],
+      "restoration_rule": "No old scalar can be relabelled. Re-run or rescore the identical eligible tapes under v2, rebuild every same-contract comparator and guardrail, then issue a new versioned verdict."
+    }
+  },
+  "quarantine_registry": [
+    {
+      "scope_id": "all_ret_excel_visible_v1_oat_ledger_outputs",
+      "scope": "Every result whose scored primary ledger was ret_excel_visible_v1 or an equivalent OAT-derived Bt/Ut implementation, including historical D-K3 screens where applicable.",
+      "disposition": "METRIC_DEVELOPMENT_ONLY",
+      "paper2_authority": false
+    },
+    {
+      "scope_id": "program_h_visible_v1",
+      "scope": "Program H visible-v1 repairs, observable screens, bounds and comparator replays.",
+      "disposition": "QUARANTINED_PENDING_V2_RESCORE",
+      "paper2_authority": false
+    },
+    {
+      "scope_id": "program_j_visible_v1",
+      "scope": "Program J visible-v1 complete-frontier and observable-policy repairs.",
+      "disposition": "QUARANTINED_PENDING_V2_RESCORE",
+      "paper2_authority": false
+    },
+    {
+      "scope_id": "mtr_visible_v1_switch_frontiers",
+      "scope": "All M/T/R <=3, <=4, W12/W16/W24 local or VPS outputs scored with visible-v1, including watched or deep-replayed outputs.",
+      "disposition": "QUARANTINED_METRIC_DEVELOPMENT_ONLY_EVEN_IF_CUSTODY_PASSES",
+      "paper2_authority": false
+    }
+  ],
+  "v2_release_gates": {
+    "implementation_and_formula_replay": "PASS_PROVISIONAL",
+    "same_timestamp_garrido_confirmation": "PENDING",
+    "endogenous_snapshot_conservation_and_queue_cap_tests": "REQUIRED",
+    "identical_tape_rescore_h_j_mtr": "REQUIRED",
+    "complete_same_contract_comparators_rebuilt": "REQUIRED",
+    "all_guardrails_rebuilt": "REQUIRED",
+    "virgin_confirmation": "PROHIBITED_UNTIL_ALL_PRIOR_GATES_PASS"
+  },
+  "legacy_nonmonotonicity_reclassification": {
+    "artifact": "research/paper2_exhaustive_search/k3_frontloading_dominance_certificate.json",
+    "old_observation": "The OAT-derived sparse visible-v1 ledger can rank a later-batched trajectory above an earlier-completing trajectory.",
+    "current_interpretation": "This is evidence against the superseded OAT-ledger implementation, not an intrinsic property of ret_excel_request_snapshot_v2 and not a canonical K3 ceiling."
   },
   "garrido_factory_cobb_douglas_2024": {
     "source_path": "/Users/thom/Downloads/garrido et al 2024 factory resilience.pdf",
     "source_sha256": "1260863dc295232faf24b820e1f67d53f25f81ffa2d221f7ef02a02310519c43",
     "doi": "10.1080/00207543.2024.2425771",
     "scope": "Factory-level aggregate production planning in an MTS facility over 36 weeks; demand variability is the sole uncertainty; seven fixed pure APP substrategies are compared.",
-    "variables": {
-      "zeta": "average accumulated inventory",
-      "epsilon": "average backorders",
-      "phi": "average spare production capacity",
-      "tau": "average time/effort to meet net requirements",
-      "kappa_dot": "strategy cost normalized across the seven strategies"
-    },
     "published_log_score": "0.024 ln(zeta) - 0.026 ln(epsilon) + 0.040 ln(phi) - 0.060 ln(tau) - 0.1771 ln(kappa_dot)",
     "published_index": "sigmoid(published_log_score)",
-    "calibration": "Each term was set to contribute 0.2 at its maximum observed across 10,000 simulations; the coefficients are calibrated to the paper's hypothetical factory and strategy ensemble, not to the MFSC distribution system.",
-    "dominant_static_warning": "The paper reports S12 (match-chase with spare capacity) as the dominant fixed substrategy, median index 0.55784. It does not establish sequential state feedback or learning value."
-  },
-  "repository_cd_implementations": [
-    {
-      "id": "program_g_cd_inspired",
-      "implementation": "supply_chain.program_g.metrics_all",
-      "classification": "CONSTRUCT_SENSITIVITY_ONLY",
-      "reason": "Uses published exponents but maps them to a stylized two-CSSU distribution adapter, fixes phi and kappa at 1, and is explicitly not paper-calibrated for MFSC.",
-      "current_evidence": "Program G confirms a metric-induced policy-ranking reversal: the CD winner loses canonical order ReT, attended orders and worst-CSSU service."
-    },
-    {
-      "id": "track_a_g24_default",
-      "implementation": "supply_chain.env_experimental_shifts.MFSCGymEnvShifts._compute_ret_garrido2024",
-      "classification": "MFSC_ADAPTATION_NOT_PUBLISHED_INDEX_EXACT",
-      "reason": "The default calibration file stores DES-rebalanced exponents but activates variance_log balancing, under which the score uses standardized log variables rather than the published coefficients; it also uses a post-hoc de-saturation constant. Its APP cost mapping omits hiring, firing and overtime terms absent from the DES.",
-      "default_calibration_sha256": "49069b2e4ce92fc47d6143b5df5480dabf23e30c305cf1e94e07a9453a548494"
-    },
-    {
-      "id": "published_formula_as_pure_construct",
-      "implementation": "supply_chain.factory_resilience",
-      "classification": "FORMULA_EXACT_ONLY_IF_GIVEN_VALID_POSITIVE_FACTORY_COMPONENTS",
-      "reason": "The published coefficients and sigmoid are exact as a mathematical transformation; applying them to MFSC variables still requires an independently validated variable ledger and the paper's seven-strategy cost normalization or an explicitly new calibration."
-    }
-  ],
-  "existing_headroom_evidence": {
-    "clean_phi2_psi1_static_screen": {
-      "metric": "adapted CD sigmoid",
-      "reported_oracle_minus_robust_fixed": 0.00816,
-      "classification": "EXPLORATORY_NOT_CERTIFIED_H_PI",
-      "limitations": [
-        "not canonical ReT",
-        "not a complete full-horizon open-loop frontier",
-        "not virgin-confirmatory",
-        "current PPO did not beat the best static policy"
-      ]
-    },
-    "clean_lane_ppo": {
-      "deltas_vs_best_static_by_regime": {
-        "current": -0.083453,
-        "increased": -0.012111,
-        "severe": -0.015638
-      },
-      "verdict": "NO_LEARNED_CD_ADVANTAGE"
-    },
-    "war_phi4_psi1_5": {
-      "reported_corrective_delta_vs_best_static": -0.0418,
-      "service_direction": "PPO worse: flow fill 0.4283 vs 0.8090; lost rate 0.5288 vs 0.0593; Excel ReT 0.0007 vs 0.0024.",
-      "verdict": "APPARENT_WIN_INVALIDATED"
-    }
+    "calibration": "Coefficients are calibrated to the paper's hypothetical factory and seven-strategy ensemble, not to the MFSC distribution system.",
+    "dominant_static_warning": "The paper reports S12 as the dominant fixed substrategy; it does not establish sequential state feedback or learning value."
   },
   "metric_decision": {
-    "current_paper2": "Cobb-Douglas may be reported as a frozen secondary construct-sensitivity outcome. It cannot rescue a null or loss on ret_excel_visible_v1 and cannot satisfy the current Paper 2 success definition by itself.",
-    "separate_factory_resilience_lane": "Scientifically possible only as a separately preregistered factory/APP study with validated APP ledgers, published or independently justified calibration, complete full-horizon APP comparators, and canonical ReT/lost-order/worst-node/resource non-inferiority retained as cross-construct guardrails when embedded in MFSC.",
-    "other_metrics": "No alternative metric may be selected after observing policy rankings. Any new primary construct requires domain authority, a frozen estimand and calibration, and a separate claim; it cannot be called thesis ReT."
+    "current_paper2": "Cobb-Douglas may be reported only as a frozen secondary construct-sensitivity outcome. It cannot rescue any visible-v1 output or substitute for a future v2 result.",
+    "separate_factory_resilience_lane": "Possible only as a separately preregistered factory/APP study with validated APP ledgers, justified calibration and complete same-contract comparators.",
+    "other_metrics": "No endpoint may be selected after observing policy rankings. A new primary construct requires domain authority, a frozen estimand and a separate claim."
   },
   "risk_governance": {
     "governing_artifact": "research/paper2_exhaustive_search/risk_intervention_governance.json",
@@ -120,17 +149,16 @@
       "observation timing and no-leakage contract",
       "claim limit"
     ],
-    "forbidden": "Increasing frequency or impact until a learner or preferred metric wins, or reusing the prior phi4/psi1.5 war cell as thesis-faithful evidence."
+    "forbidden": "Increasing frequency or impact until a learner or preferred metric wins, or selecting a metric because it creates headroom."
   },
   "paper2_authorization": {
+    "paper2_positive_confirmed": false,
+    "paper2_null_confirmed": false,
+    "paper2_ceiling_confirmed": false,
+    "learner_authorized": false,
     "learner_authorized_by_cd": false,
     "paper3_authorized": false,
-    "standalone_factory_app_v1": {
-      "status": "QUARANTINED_UNAUTHORIZED_PRE_REJECTION_EXECUTION_DISCOVERED_POST_AUDIT",
-      "declared_seed_block_opened": true,
-      "audit": "research/paper2_exhaustive_search/factory_app_cd_gate_v1_rejection.json",
-      "replacement_protocol": "research/paper2_exhaustive_search/FACTORY_APP_CD_PROTOCOL_V2_BLOCKED_2026-07-13.md",
-      "reason": "The runner was not a faithful APP reconstruction, used a privileged latent variability parameter, omitted equal-resource/full-horizon comparators and did not implement the mandatory null, trajectory or chain-of-custody gates. Its unauthorized execution preceded the written rejection; a later provenance audit discovered the JSON. Seeds 9600001-9600400 are burned, the claimed paper-reproduction flag was hard-coded, and every number is quarantined non-evidence."
-    }
+    "prior_h_j_mtr_results_restored": false,
+    "current_scientific_state": "HOLD_CANONICAL_V2_RESCORE_AND_DOMAIN_CONFIRMATION_REQUIRED"
   }
 }

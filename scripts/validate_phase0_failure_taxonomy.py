@@ -54,8 +54,8 @@ def validate(taxonomy: dict[str, Any]) -> dict[str, Any]:
         missing = sorted(REQUIRED_FIELDS - set(row))
         if missing:
             failures.append(f"{family_id}: missing fields {missing}")
-        if not str(row.get("primary_metric", "")).startswith("ret_excel_visible_v1"):
-            failures.append(f"{family_id}: governing primary metric is not visible-v1")
+        if not str(row.get("primary_metric", "")):
+            failures.append(f"{family_id}: primary/evidence metric is empty")
         if not row.get("exact_failure"):
             failures.append(f"{family_id}: exact failure is empty")
         artifacts = []
@@ -71,6 +71,17 @@ def validate(taxonomy: dict[str, Any]) -> dict[str, Any]:
         if not artifacts:
             failures.append(f"{family_id}: no evidence artifacts")
         evidence_rows.append({"family_id": family_id, "artifacts": artifacts})
+    if taxonomy.get("canonical_metric") != "ret_excel_request_snapshot_v2":
+        failures.append("canonical metric is not request-snapshot v2")
+    if taxonomy.get("canonical_metric_status") != (
+        "PROVISIONAL_PENDING_GARRIDO_SAME_TIME_CONFIRMATION_AND_COMPLETE_V2_RESCORE"
+    ):
+        failures.append("canonical v2 metric is not fail-closed provisional")
+    quarantine_rule = str(taxonomy.get("metric_quarantine_rule", ""))
+    if "ret_excel_visible_v1" not in quarantine_rule or (
+        "cannot establish" not in quarantine_rule
+    ):
+        failures.append("visible-v1 historical evidence is not globally quarantined")
     return {
         "passed": not failures,
         "failures": failures,

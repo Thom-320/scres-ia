@@ -1,0 +1,99 @@
+{
+  "schema_version": "paper2_global_sensitivity_portfolio_inventory_v1",
+  "generated_date": "2026-07-14",
+  "governing_metric": "ret_excel_request_snapshot_v2",
+  "metric_scope_rule": "Every executed study predating the 2026-07-14 request-snapshot correction is historical/non-governing unless explicitly rescored under v2.",
+  "scientific_status": "COMPLETE_INVENTORY_OF_EXECUTED_SCREENS__NO_PORTFOLIO_WIDE_HOBS_CEILING",
+  "selection_rule": "Executed historical designs are reported in full, including null cells. Domain-blocked mechanisms are not assigned invented parameter ranges. No cell may be promoted from this retrospective inventory.",
+  "executed_studies": [
+    {
+      "study": "Program I full-DES Morris",
+      "purpose": "physical outcome sensitivity, not adaptive-value sensitivity",
+      "metric_scope": "includes ret_excel outputs but does not compute H_PI or H_obs",
+      "design_rows": 320,
+      "rows_complete": true,
+      "artifacts": [
+        {"path": "results/program_i/morris/design.csv", "sha256": "2e5db29cd863666c9643643e26a7a65181775db42683d90c15f7b18c7005380d"},
+        {"path": "results/program_i/morris/partial_rows.jsonl", "sha256": "f58d5484a00c98b55d010a826add6b1541680f2ffc2cbd904534c4b0bbf21a89"},
+        {"path": "results/program_i/morris/verdict.json", "sha256": "2dbc098afa2cca032e4e2c482d75d489f26ae2efe76c4d4b1a4e32e1ce10b0a3"}
+      ],
+      "claim_limit": "Cannot rank adaptive headroom or close any policy family."
+    },
+    {
+      "study": "Program I six-factor pilot Morris",
+      "purpose": "pilot physical outcome sensitivity",
+      "metric_scope": "full-DES outcome sensitivity, not H_PI/H_obs",
+      "design_rows": 140,
+      "rows_complete": true,
+      "artifacts": [
+        {"path": "results/program_i/pilot_six_factor/morris/design.csv", "sha256": "ad8f78795bb5a596c2a851451d7597ae16fb5052c20685d14019ec09e32ba372"},
+        {"path": "results/program_i/pilot_six_factor/morris/partial_rows.jsonl", "sha256": "aa13497ca421209946c9ae6e04f4194eba13e2ecdcb6e9fe9849e69680d39987"},
+        {"path": "results/program_i/pilot_six_factor/morris/verdict.json", "sha256": "665f8641b503fde1151ea74829c378f6c070762824f1838299bb4f24fa8599be"}
+      ],
+      "claim_limit": "Pilot only; cannot rank adaptive headroom or close any policy family."
+    },
+    {
+      "study": "Program I full-DES local branching",
+      "purpose": "restricted local action-branch sensitivity",
+      "metric_scope": "ret_excel_visible_v1 within three restricted local action families",
+      "design_rows": 4320,
+      "n_tapes": 60,
+      "rows_complete": true,
+      "artifacts": [
+        {"path": "results/program_i/branching/branch_rows.csv", "sha256": "e8d4e2f65dc4adb6a48e0bd48c19b29121bf62a4d678baffca9b2e1919f49186"},
+        {"path": "results/program_i/branching/verdict.json", "sha256": "3ef9512fa7b394b927b91888429cbeeed9126bedb0adeecff4fb493c30ad8936"}
+      ],
+      "claim_limit": "Complete only for the versioned local branch portfolio; not a full-horizon family ceiling."
+    },
+    {
+      "study": "Historical Program-I adaptive-headroom Morris and GP reconstruction",
+      "purpose": "adaptive-value sensitivity in the historical stylized spatial adapter",
+      "metric_scope": "ret_order/full-ledger order adapter, not full-DES ret_excel_visible_v1",
+      "morris_cells": 56,
+      "gp_search_cells": 40,
+      "located_confirmation_cells": 1,
+      "total_reported_evaluations": 97,
+      "rows_complete": true,
+      "artifact": {"path": "results/headroom_gsa/all_cells_reconstruction.json", "sha256": "407dcaf5a8c3ace5815511dba36c2b9320a2f69ceff88a64fa7c8d0c294bbb3a"},
+      "result": "Aggregate verdicts reproduce exactly. The located positive region is out-of-sample stable on its adapter but fails worst-CSSU fill by about 0.13.",
+      "claim_limit": "Retrospective burned-tape construct sensitivity only; not governing H_PI/H_obs."
+    },
+    {
+      "study": "Concurrent 64-cell VOI atlas and corrective audit",
+      "purpose": "exploratory scarcity/commonality/signal atlas",
+      "metric_scope": "source atlas uses wrong full-order formula; direct visible optimization degenerates to HOLD^4 shed-to-win",
+      "cells": 64,
+      "rows_complete": true,
+      "artifacts": [
+        {"path": "results/paper2_search/voi_ceiling_atlas.json", "sha256": "7cce1d4e8e07d21d0c803efdfe5ebc50293582533b0f427a82dc4a97c7cbc145"},
+        {"path": "results/paper2_search/voi_ceiling_atlas_corrective_audit.json", "sha256": "f06fede396dc1be5db5c5b3e1cc90813e54db7c7725161b68cbeaf7ea2a6586c"}
+      ],
+      "result": "Both apparent positive cells fail lost-order noninferiority; no governing H_obs or ceiling.",
+      "claim_limit": "Exploratory corrective evidence only."
+    }
+  ],
+  "active_unscreened_or_incomplete": [
+    {
+      "family": "Program M finite shared-lift advance reservation",
+      "reason": "A frozen full-DES synthetic extension now supplies a conserved pre-booked slot, 24-hour information lead, localized disruption, complete 256-calendar frontier and four sealed development roles. No Program M tape has been opened.",
+      "next": "Audit the exact producer and whole-session watcher, then open only 7300001-7300024 for the preregistered H_PI screen. Stop before H_obs if the frozen PI gate fails."
+    },
+    {
+      "family": "Program H spatial/belief contract",
+      "reason": "The current adapter is action-dead and its historical full-ledger and visible-v1 scores are non-governing.",
+      "next": "Do not replay the dead adapter; require a materially new route/lag mechanism with endpoint liveness before any v2 screen."
+    },
+    {
+      "family": "Program J maintenance",
+      "reason": "A central v2 cell has a complete 6,561-schedule frontier and a tiny resource-restricted PI delta, but the 108-cell grid is not yet screened.",
+      "next": "Retain as a secondary ceiling map. Do not displace Program M: the central v2 delta is 54.7 times below the practical gate and the wider screen is expected to refine a null rather than locate the strongest prior headroom clue."
+    },
+    {
+      "family": "Integrated M/T/R",
+      "reason": "All historical switch frontiers used the quarantined visible-v1 metric; the stopped VPS run produced no result.",
+      "next": "Restart from the first burned calibration tape only after the v2 contract is immutable; retain the W24/global-bound requirement and whole-session watcher."
+    }
+  ],
+  "domain_blocked_design_rule": "No numerical cell is created for an extension until its action, observations, resource ledger, plausible envelope, null regime and later face-validation question are frozen. A disclosed synthetic development extension may be screened before expert response only with a conditional claim limit; it cannot be presented as thesis-native or domain-validated. Absence of invented cells is deliberate fail-closed governance, not evidence of a null.",
+  "portfolio_conclusion": "All executed sensitivity rows are now discoverable and content-addressed. The portfolio still lacks governing-metric family-wide H_PI/H_obs ceilings and therefore supports neither Return A nor Return B."
+}

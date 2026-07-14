@@ -1,0 +1,162 @@
+{
+  "canonical_aggregator_workbook_replay": {
+    "formula_rows": 47546,
+    "max_abs_diff": 0.0,
+    "mismatches": 0,
+    "passes": true,
+    "sheets": {
+      "CF1": {
+        "max_abs_diff": 0.0,
+        "mismatches": 0,
+        "rows": 4241
+      },
+      "CF10": {
+        "max_abs_diff": 0.0,
+        "mismatches": 0,
+        "rows": 2061
+      },
+      "CF11": {
+        "max_abs_diff": 0.0,
+        "mismatches": 0,
+        "rows": 2165
+      },
+      "CF12": {
+        "max_abs_diff": 0.0,
+        "mismatches": 0,
+        "rows": 2186
+      },
+      "CF13": {
+        "max_abs_diff": 0.0,
+        "mismatches": 0,
+        "rows": 1956
+      },
+      "CF14": {
+        "max_abs_diff": 0.0,
+        "mismatches": 0,
+        "rows": 2173
+      },
+      "CF15": {
+        "max_abs_diff": 0.0,
+        "mismatches": 0,
+        "rows": 2203
+      },
+      "CF16": {
+        "max_abs_diff": 0.0,
+        "mismatches": 0,
+        "rows": 2218
+      },
+      "CF17": {
+        "max_abs_diff": 0.0,
+        "mismatches": 0,
+        "rows": 2227
+      },
+      "CF18": {
+        "max_abs_diff": 0.0,
+        "mismatches": 0,
+        "rows": 2277
+      },
+      "CF19": {
+        "max_abs_diff": 0.0,
+        "mismatches": 0,
+        "rows": 2120
+      },
+      "CF2": {
+        "max_abs_diff": 0.0,
+        "mismatches": 0,
+        "rows": 4420
+      },
+      "CF20": {
+        "max_abs_diff": 0.0,
+        "mismatches": 0,
+        "rows": 2168
+      },
+      "CF3": {
+        "max_abs_diff": 0.0,
+        "mismatches": 0,
+        "rows": 2151
+      },
+      "CF4": {
+        "max_abs_diff": 0.0,
+        "mismatches": 0,
+        "rows": 2186
+      },
+      "CF5": {
+        "max_abs_diff": 0.0,
+        "mismatches": 0,
+        "rows": 2279
+      },
+      "CF6": {
+        "max_abs_diff": 0.0,
+        "mismatches": 0,
+        "rows": 2061
+      },
+      "CF7": {
+        "max_abs_diff": 0.0,
+        "mismatches": 0,
+        "rows": 2115
+      },
+      "CF8": {
+        "max_abs_diff": 0.0,
+        "mismatches": 0,
+        "rows": 2278
+      },
+      "CF9": {
+        "max_abs_diff": 0.0,
+        "mismatches": 0,
+        "rows": 2061
+      }
+    },
+    "tolerance": 1e-12
+  },
+  "canonical_development_contract": "ret_excel_request_snapshot_v2",
+  "claim_limit": "The v2 implementation is source-aligned and exactly reproduces workbook cells when source Bt/Ut snapshots are injected. It does not prove endogenous DES ledger fidelity, adaptive headroom, or a Paper-2 result.",
+  "content_sha256": "0c0166d21d75bfdceb3f49e8da3db484070435349d2e5ff481da295ed847b1f3",
+  "generated_at_utc": "2026-07-14T10:10:21.676923+00:00",
+  "implementation_sources": {
+    "supply_chain/episode_metrics.py": "0eae8b9a9ab5c6289ff94a318c6ab27c031ed184d0e0f00d761e8785373cab9b",
+    "supply_chain/garrido_replication.py": "1435b8f52437cb71408019138779a337b17092d1b06318a704d2b200e390fa96",
+    "supply_chain/ret_thesis.py": "0c589df3a47c6257305964a1714befbf6df8d2c76c0eedec41b4a4b00f48cf73",
+    "supply_chain/supply_chain.py": "1372e10375e7d86ecea315d27a97d09c3b957e667d2381880f958bd28bedd772",
+    "tests/test_ret_excel_request_snapshot_contract.py": "c09258c68207ab8d76bd860e4de5fb29a3ec0fa354a12a6d0225b2726644b31e"
+  },
+  "repository_head_before_uncommitted_implementation": "a6b1efa6bc0ef468d5d27ee876e931ea02832b47",
+  "request_snapshot_contract": {
+    "capture_time": "OPTj before inserting request j into the Op9 queue",
+    "fallback": "half-open [OPTj+LTj, min(OATj,lost_time)) reconstruction for adapters without captured snapshots; diagnostic unless the complete event history is present",
+    "fields": [
+      "ret_bt_at_request",
+      "ret_ut_at_request",
+      "ret_ledger_snapshot_time",
+      "ret_ledger_event_sequence"
+    ],
+    "row_population": "completed non-lost rows only, emitted in original j/OPTj order, original j preserved, no clipping",
+    "same_timestamp_convention": "events already scheduled before request generation run first; snapshot; then enqueue request j; record event sequence"
+  },
+  "schema_version": "ret_excel_request_snapshot_v2_implementation_audit_v1",
+  "scientific_authorization": {
+    "paper2_confirmed": false,
+    "paper3_authorized": false,
+    "prior_h_j_mtr_results_restored": false,
+    "required_next": "rescore identical burned/calibration tapes and rebuild every comparator under v2; obtain Garrido confirmation of same-timestamp event order before virgin confirmation"
+  },
+  "source_semantics_audit": {
+    "content_sha256": "612518b86eb20cddacc7e9206c28ce040d3f268f55a4ecc6a2380c2736e252f0",
+    "path": "research/paper2_exhaustive_search/ret_excel_visible_v1_source_semantics_audit_20260714.json",
+    "sha256": "17a8c700188a53676e4936373ec6384e1243c9745985048f1bc9192845411ab6"
+  },
+  "status": "SOURCE_ALIGNED_IMPLEMENTED__PROVISIONAL_PENDING_SAME_TIME_GARRIDO_CONFIRMATION",
+  "superseded_contract": {
+    "disposition": "QUARANTINED_OAT_LEDGER_NOT_SOURCE_VALIDATED",
+    "id": "ret_excel_visible_v1"
+  },
+  "workbooks": [
+    {
+      "path": "/Users/thom/Downloads/Raw_data1+Re.xlsx",
+      "sha256": "30b88c9b9fe68ef527dbfcc70d8e653ea7bd152ab891b3fc0ecf53cb6f043486"
+    },
+    {
+      "path": "/Users/thom/Downloads/Raw_data2+Re.xlsx",
+      "sha256": "4bd462771fefff16fc5666a851256b3780198d474832dec1423c0b6f94be86b0"
+    }
+  ]
+}

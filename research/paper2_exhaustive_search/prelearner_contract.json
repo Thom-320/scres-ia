@@ -2,7 +2,13 @@
   "schema_version": "paper2_prelearner_contract_v1",
   "frozen_date": "2026-07-13",
   "status": "NO_CURRENT_CANDIDATE_ELIGIBLE",
-  "primary_endpoint": "ret_excel_visible_v1 via compute_episode_metrics",
+  "primary_endpoint": "ret_excel_request_snapshot_v2 via compute_episode_metrics",
+  "metric_readiness": {
+    "status": "HOLD_CANONICAL_V2_RESCORE_AND_DOMAIN_CONFIRMATION_REQUIRED",
+    "same_timestamp_garrido_confirmation": false,
+    "prior_visible_v1_results_restored": false,
+    "paper2_null_positive_or_ceiling_authorized": false
+  },
   "practical_effect": {
     "delta_ret_lcb95_minimum": 0.01,
     "favorable_tapes_minimum": 0.70
@@ -50,9 +56,9 @@
     "regime_lead_time_advance_transport_reservation": "blocked_domain_fact",
     "censored_demand_active_information_acquisition": "blocked_domain_fact",
     "lateral_cssu_transshipment": "blocked_domain_fact",
-    "multi_echelon_information_lag_only": "falsified_by_information_inclusion",
+    "multi_echelon_information_lag_only": "active_for_bound",
     "queue_admission_priority_with_abandonment": "blocked_domain_fact",
-    "alarm_signal_finite_maintenance": "falsified_current_contract",
+    "alarm_signal_finite_maintenance": "active_for_bound",
     "r21_r3_shared_mab_restoration_sequencing": "blocked_domain_fact",
     "finite_storage_space_allocation": "blocked_domain_fact",
     "inspection_effort_vs_throughput": "blocked_domain_fact",

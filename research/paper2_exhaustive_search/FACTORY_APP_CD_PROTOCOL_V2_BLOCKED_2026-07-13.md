@@ -16,7 +16,8 @@ a new disjoint seed block.
 `supply_chain.factory_resilience` may compute the published Garrido et al. 2024
 factory-APP transformation from valid positive components. It does not validate
 an MFSC mapping, an APP simulator, an adaptive policy or a Paper 2 endpoint.
-For the current Paper 2 contract, `ret_excel_visible_v1` remains primary and
+For the current Paper 2 contract, `ret_excel_request_snapshot_v2` is the
+provisional primary endpoint and
 Cobb-Douglas remains secondary construct sensitivity. A CD ranking cannot
 promote a canonical-ReT null or a service/fairness failure.
 

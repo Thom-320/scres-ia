@@ -3,7 +3,11 @@ import json
 from copy import deepcopy
 from pathlib import Path
 
-from scripts.verify_paper2_exhaustion import validate_boundary_family_proof_ledger
+from scripts.verify_paper2_exhaustion import (
+    validate_boundary_family_proof_ledger,
+    validate_metric_governance,
+    validate_paper3_claim_supersession,
+)
 from scripts.validate_phase0_failure_taxonomy import validate as validate_phase0_taxonomy
 
 
@@ -42,9 +46,10 @@ def test_phase0_taxonomy_has_canonical_metric_exact_failure_and_hashed_evidence(
     assert validation["failures"] == []
     assert validation["family_count"] == 17
     assert validation["evidence_hashes_checked"] >= 34
+    assert taxonomy["canonical_metric"] == "ret_excel_request_snapshot_v2"
+    assert "cannot establish" in taxonomy["metric_quarantine_rule"]
     assert all(
-        row["primary_metric"].startswith("ret_excel_visible_v1")
-        and row["exact_failure"]
+        row["primary_metric"] and row["exact_failure"]
         for row in taxonomy["decision_families"]
     )
 
@@ -85,6 +90,176 @@ def test_boundary_family_proof_ledger_is_complete_but_explicitly_nonterminal():
         row["family_id"] for row in registry["approaches"]
     }
     assert ledger["terminal_b_supported"] is False
+
+
+def test_canonical_v2_metric_governance_quarantines_every_visible_v1_claim():
+    governance = load("metric_governance_audit.json")
+    source_semantics = load(
+        "ret_excel_visible_v1_source_semantics_audit_20260714.json"
+    )
+    implementation = load(
+        "ret_excel_request_snapshot_v2_implementation_audit_20260714.json"
+    )
+    excel_reaudit = load("excel_metric_reaudit_20260713.json")
+
+    validation = validate_metric_governance(
+        governance,
+        source_semantics,
+        implementation,
+        excel_reaudit,
+        root=ROOT,
+    )
+
+    assert validation["passed"] is True
+    assert validation["failures"] == []
+    assert validation["hashes_checked"] == 3
+    assert validation["implementation_source_hashes_checked"] == 5
+    assert validation["canonical_contract"] == "ret_excel_request_snapshot_v2"
+    assert validation["visible_v1_disposition"] == (
+        "QUARANTINED_METRIC_DEVELOPMENT_ONLY"
+    )
+    assert validation["quarantined_scopes"] == [
+        "all_ret_excel_visible_v1_oat_ledger_outputs",
+        "mtr_visible_v1_switch_frontiers",
+        "program_h_visible_v1",
+        "program_j_visible_v1",
+    ]
+    assert validation["paper2_positive_confirmed"] is False
+    assert validation["paper2_null_confirmed"] is False
+    assert validation["paper2_ceiling_confirmed"] is False
+    assert validation["prior_h_j_mtr_results_restored"] is False
+
+
+def test_metric_governance_fails_if_visible_v1_or_same_time_is_promoted():
+    governance = deepcopy(load("metric_governance_audit.json"))
+    source_semantics = load(
+        "ret_excel_visible_v1_source_semantics_audit_20260714.json"
+    )
+    implementation = load(
+        "ret_excel_request_snapshot_v2_implementation_audit_20260714.json"
+    )
+    excel_reaudit = load("excel_metric_reaudit_20260713.json")
+
+    governance["canonical_endpoint"]["request_snapshot_semantics"][
+        "same_timestamp_authority"
+    ] = "CONFIRMED_WITHOUT_DOMAIN_RESPONSE"
+    governance["superseded_contracts"]["ret_excel_visible_v1"][
+        "status"
+    ] = "CANONICAL"
+    governance["paper2_authorization"]["paper2_null_confirmed"] = True
+    governance["quarantine_registry"] = [
+        row
+        for row in governance["quarantine_registry"]
+        if row["scope_id"] != "mtr_visible_v1_switch_frontiers"
+    ]
+
+    validation = validate_metric_governance(
+        governance,
+        source_semantics,
+        implementation,
+        excel_reaudit,
+        root=ROOT,
+    )
+
+    assert validation["passed"] is False
+    assert "same-time convention was promoted without Garrido authority" in validation[
+        "failures"
+    ]
+    assert "visible-v1 is not quarantined" in validation["failures"]
+    assert "H/J/MTR or global visible-v1 quarantine is missing" in validation[
+        "failures"
+    ]
+    assert "scientific authorization must remain false: paper2_null_confirmed" in (
+        validation["failures"]
+    )
+
+
+def test_historical_noncanonical_bounds_cannot_masquerade_as_visible_v1_ceilings():
+    registry = load("approach_registry.json")
+    ledger = load("boundary_family_proof_ledger.json")
+    rows = {row["family_id"]: row for row in ledger["families"]}
+
+    program_h = rows["multi_echelon_information_lag_only"]
+    program_j = rows["alarm_signal_finite_maintenance"]
+    assert program_h["governing_metric"] == "ret_excel_request_snapshot_v2"
+    assert program_h["evidence_metric"] == "ret_excel_full_ledger_order_adapter"
+    assert program_j["governing_metric"] == "ret_excel_request_snapshot_v2"
+    assert program_j["evidence_metric"].startswith("ret_excel_request_snapshot_v2")
+    assert program_h["terminal_b_eligible"] is False
+    assert program_j["terminal_b_eligible"] is False
+
+    forged = deepcopy(ledger)
+    forged_h = next(
+        row
+        for row in forged["families"]
+        if row["family_id"] == "multi_echelon_information_lag_only"
+    )
+    forged_h["terminal_b_eligible"] = True
+    forged_h["closure_kind"] = "certified_quantitative_global_upper_bound"
+    forged_h["quantitative_ceiling"]["ucb95"] = 0.009
+    forged_h["scope_closes_registered_family"] = True
+    forged["summary"]["terminal_b_eligible_families"] = 1
+    forged["summary"]["nonterminal_families"] = 16
+
+    validation = validate_boundary_family_proof_ledger(registry, forged, root=ROOT)
+    family_failure = next(
+        failure
+        for failure in validation["failures"]
+        if failure.get("family_id") == forged_h["family_id"]
+    )
+    assert "evidence_metric_does_not_match_governing_metric" in family_failure[
+        "reasons"
+    ]
+
+
+def test_historical_visible_v1_ceiling_audit_is_content_addressed_and_nonterminal():
+    audit = load("historical_visible_v1_ceiling_audit_20260714.json")
+
+    assert audit["governing_metric"] == "ret_excel_visible_v1"
+    assert audit["summary"]["lanes_audited"] == len(audit["lanes"]) == 10
+    assert audit["summary"][
+        "existing_family_wide_visible_v1_matched_resource_ceilings"
+    ] == 0
+    assert audit["summary"]["paper2_confirmed"] is False
+    assert audit["summary"]["terminal_boundary_supported"] is False
+    for row in audit["lanes"]:
+        artifacts = row.get("artifacts", [row.get("artifact")])
+        for artifact in artifacts:
+            assert artifact is not None
+            path = ROOT / artifact["path"]
+            assert path.is_file(), artifact["path"]
+            assert sha256(path) == artifact["sha256"]
+
+    by_lane = {row["lane"]: row for row in audit["lanes"]}
+    assert by_lane["Program H"]["evidence_metric"] == (
+        "ret_excel_full_ledger_order_adapter"
+    )
+    assert by_lane["Program J"]["evidence_metric"] == "ret_excel_full_ledger"
+
+
+def test_global_sensitivity_inventory_reports_every_executed_design_and_scope():
+    inventory = load("global_sensitivity_portfolio_inventory.json")
+
+    assert inventory["governing_metric"] == "ret_excel_request_snapshot_v2"
+    assert len(inventory["executed_studies"]) == 5
+    assert len(inventory["active_unscreened_or_incomplete"]) == 4
+    assert "neither Return A nor Return B" in inventory["portfolio_conclusion"]
+    for study in inventory["executed_studies"]:
+        assert study["rows_complete"] is True
+        artifacts = study.get("artifacts", [study.get("artifact")])
+        for artifact in artifacts:
+            assert artifact is not None
+            path = ROOT / artifact["path"]
+            assert path.is_file(), artifact["path"]
+            assert sha256(path) == artifact["sha256"]
+
+    reconstructed = next(
+        row
+        for row in inventory["executed_studies"]
+        if row["study"].startswith("Historical Program-I")
+    )
+    assert reconstructed["total_reported_evaluations"] == 97
+    assert "not full-DES ret_excel_visible_v1" in reconstructed["metric_scope"]
 
 
 def test_registry_relabeling_cannot_manufacture_a_terminal_boundary():
@@ -130,7 +305,9 @@ def test_reproducibility_manifest_hashes_every_listed_artifact_and_source():
     manifest = load("reproducibility_manifest.json")
     assert manifest["paper2_confirmed"] is False
     assert manifest["paper3_authorized"] is False
-    assert manifest["scientific_status"].startswith("OPEN_ACTIVE_BOUND_REQUIRED")
+    assert manifest["scientific_status"] == (
+        "HOLD_CANONICAL_V2_RESCORE_AND_DOMAIN_CONFIRMATION_REQUIRED"
+    )
     for relative, expected in manifest["artifact_hashes"].items():
         path = Path(relative)
         if not path.is_absolute():
@@ -170,8 +347,10 @@ def test_current_action_absence_is_not_mislabeled_as_global_impossibility():
     product_mix = rows["multi_ration_product_mix_setup_substitution"]
     reservation = rows["regime_lead_time_advance_transport_reservation"]
     assert product_mix["state"] == "blocked_domain_fact"
-    assert reservation["state"] == "blocked_domain_fact"
+    assert reservation["state"] == "active_researcher_extension_pre_tape"
     assert reservation["current_physics_ceiling"]["h_pi"] == 0.0
+    assert reservation["program_m_extension"]["h_pi"] is None
+    assert reservation["program_m_extension"]["h_obs"] is None
 
 
 def test_mission_loadout_is_new_but_current_kernel_null():
@@ -195,11 +374,62 @@ def test_prelearner_contract_keeps_learning_closed_until_every_gate_passes():
     registry = load("approach_registry.json")
     statuses = contract["candidate_entry_status"]
     assert contract["status"] == "NO_CURRENT_CANDIDATE_ELIGIBLE"
+    assert contract["primary_endpoint"].startswith("ret_excel_request_snapshot_v2")
+    assert contract["metric_readiness"] == {
+        "status": "HOLD_CANONICAL_V2_RESCORE_AND_DOMAIN_CONFIRMATION_REQUIRED",
+        "same_timestamp_garrido_confirmation": False,
+        "prior_visible_v1_results_restored": False,
+        "paper2_null_positive_or_ceiling_authorized": False,
+    }
     assert contract["learner_authorized"] is False
     assert contract["paper3_authorized"] is False
     assert len(contract["mandatory_gates"]) == 15
     assert set(statuses) == {row["family_id"] for row in registry["approaches"]}
     assert statuses["integrated_production_maintenance_routing_recovery_resource"] == "active_for_bound"
+
+
+def test_historical_c12_is_bounded_evidence_not_current_paper3_authorization():
+    supersession = load("paper3_claim_supersession.json")
+    validation = validate_paper3_claim_supersession(supersession, root=ROOT)
+
+    assert validation["passed"] is True
+    assert validation["failures"] == []
+    assert validation["hashes_checked"] == 6
+    assert validation["historical_claim_preserved"] is True
+    assert validation["paper3_authorized"] is False
+    assert supersession["historical_claim"]["authorization_transferable_to_current_paper3"] is False
+    assert supersession["current_task_authorization_gate"]["canonical_endpoint"] == (
+        "ret_excel_request_snapshot_v2"
+    )
+    assert supersession["current_task_authorization_gate"][
+        "paper2_learned_adaptive_value_confirmed"
+    ] is False
+
+
+def test_historical_supported_label_cannot_be_flipped_into_paper3_authority():
+    supersession = deepcopy(load("paper3_claim_supersession.json"))
+    supersession["historical_claim"][
+        "authorization_transferable_to_current_paper3"
+    ] = True
+    supersession["effective_current_disposition"]["paper3_authorized"] = True
+    supersession["effective_current_disposition"][
+        "new_retained_learning_execution_authorized"
+    ] = True
+
+    validation = validate_paper3_claim_supersession(supersession, root=ROOT)
+
+    assert validation["passed"] is False
+    assert validation["paper3_authorized"] is True
+    assert "historical C12 was made transferable to current Paper 3" in validation[
+        "failures"
+    ]
+    assert "invalid effective disposition: paper3_authorized" in validation[
+        "failures"
+    ]
+    assert (
+        "invalid effective disposition: new_retained_learning_execution_authorized"
+        in validation["failures"]
+    )
 
 
 def test_intervention_ledger_is_complete_and_claim_limited():

@@ -19,6 +19,7 @@ from typing import Any, Iterable
 from .ret_thesis import (
     compute_order_level_ret,
     compute_order_level_ret_excel_formula,
+    compute_order_level_ret_excel_request_snapshot_ledger,
     compute_order_level_ret_excel_visible_ledger,
     compute_ret_per_order_excel_formula,
     compute_periods_continuous_ret,
@@ -142,6 +143,7 @@ def compute_episode_metrics(
     sim: Any,
     *,
     treatment_start: float | None = None,
+    ret_excel_contract_version: str = "ret_excel_request_snapshot_v2",
 ) -> dict[str, Any]:
     """Full order-derived metrics panel for a completed simulation.
 
@@ -167,12 +169,21 @@ def compute_episode_metrics(
     late = [o for o in served if o.CTj is not None and float(o.CTj) > float(o.LTj or 0.0)]
 
     fill_rate = compute_fill_rate_from_orders(orders, current_time=horizon)
-    # ret_excel_visible_v1: exact population contract of Garrido's workbooks.
-    # The raw sheets retain original j but emit rows only for completed/non-lost
-    # orders; missing orders survive through the time-varying Bt/Ut ledgers.
-    excel_visible = compute_order_level_ret_excel_visible_ledger(
-        orders, current_time=horizon
-    )
+    # v2 is the provisional source-aligned request snapshot. The superseded
+    # visible-v1 branch remains callable only so quarantined runs can be
+    # reproduced without silently relabeling their metric.
+    if ret_excel_contract_version == "ret_excel_request_snapshot_v2":
+        excel_visible = compute_order_level_ret_excel_request_snapshot_ledger(
+            orders, current_time=horizon
+        )
+    elif ret_excel_contract_version == "ret_excel_visible_v1":
+        excel_visible = compute_order_level_ret_excel_visible_ledger(
+            orders, current_time=horizon
+        )
+    else:
+        raise ValueError(
+            f"unknown ReT Excel contract version: {ret_excel_contract_version}"
+        )
     excel_full = compute_order_level_ret_excel_formula(orders, current_time=horizon)
     excel_details = _excel_ret_details(orders, current_time=horizon)
     thesis = compute_order_level_ret(orders, fill_rate=fill_rate)
@@ -219,7 +230,7 @@ def compute_episode_metrics(
         "ret_excel_visible_clipped_0_1": _mean(ret_values_clipped),
         # Secondary legacy endpoint: every generated order, with unfulfilled=0.
         "ret_excel_full_ledger": float(excel_full["mean_ret_excel"]),
-        "ret_excel_contract_version": "ret_excel_visible_v1",
+        "ret_excel_contract_version": ret_excel_contract_version,
         "ret_excel_visible_n": float(excel_visible["n_visible_rows"]),
         "ret_excel_omitted_n": float(excel_visible["n_omitted_rows"]),
         "ret_thesis": float(thesis["mean_ret"]),

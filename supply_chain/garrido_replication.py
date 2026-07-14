@@ -63,6 +63,10 @@ class GarridoOrderTarget:
             "OPTj": float(self.optj),
             "Q": float(self.q),
             "contingent": bool(self.q > 2600.0 or self.risk_values.get("R24", 0.0) > 0.0),
+            "ret_bt_at_request": int(self.sum_bt),
+            "ret_ut_at_request": int(self.sum_ut),
+            "ret_ledger_snapshot_time": float(self.optj),
+            "ret_ledger_event_sequence": int(self.j),
             "ret_attribution": {
                 "APj": float(self.apj),
                 "RPj": float(self.rpj),

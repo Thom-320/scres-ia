@@ -181,16 +181,21 @@ IF(risk_active,
 ```
 
 The workbook branch does not clip its result, and its visible sheets omit many
-lost or horizon-unresolved rows while retaining their cumulative `Bt`/`Ut`
-effects. Consequently, the binding repository implementation is
-`ret_excel_visible_v1`, evaluated through the canonical episode aggregator:
+lost or horizon-unresolved rows. The 2026-07-14 source-semantics audit corrected
+the ledger timing: `Bt`/`Ut` are snapshots carried with each request at `OPTj`,
+not values reconstructed at `OATj`. Consequently, the binding development
+implementation is `ret_excel_request_snapshot_v2`:
 
 - completed, non-lost order rows are visible in the mean;
 - lost and unresolved orders are not assigned a favorable synthetic ReT value;
-- their demand/backlog effects remain in the cumulative ledger;
+- their effects enter later request-time snapshots and the lost-order ledger;
 - lost orders are therefore a simultaneous non-inferiority guardrail, not an optional reporting field.
 
-`program_g.ret_order_metrics` uses a different full-ledger implementation and must not be substituted for `ret_excel_visible_v1`. Service loss, quantity-weighted ReT, worst-CSSU fill, backlog, and tail outcomes remain simultaneous diagnostics; none may replace the primary endpoint after policy results are observed.
+`program_g.ret_order_metrics` uses a different full-ledger implementation and
+must not be substituted for request-snapshot-v2. The superseded visible-v1
+OAT-ledger implementation is metric-development only. Service loss,
+quantity-weighted ReT, worst-CSSU fill, backlog and tail outcomes remain
+simultaneous diagnostics.
 
 ### Workbook traceability and fidelity boundary
 
@@ -210,20 +215,23 @@ The frozen [workbook audit](../../docs/audits/garrido_excel_des_2026-06-25/READM
 These facts establish four distinct levels that must not be collapsed:
 
 1. **Formula fidelity:** the conditional Excel formula is transcribed exactly.
-2. **Row-population fidelity:** `ret_excel_visible_v1` reconstructs the sparse visible-order population and cumulative `Bt`/`Ut` ledger.
+2. **Row-population and ledger-input fidelity:** request-snapshot-v2 emits the sparse visible population and exactly replays formula cells when workbook `Bt`/`Ut` snapshots are injected.
 3. **Forensic numerical replication:** replaying workbook `Q/OPTj` and visible risk/AP/RP/DP tapes reproduces the workbook closely.
 4. **Endogenous DES fidelity:** the repository's own demand/risk generators do **not** thereby inherit the workbook trajectories or distributional validity.
 
-Only levels 1-3 are established by this workbook audit. This section makes no claim that endogenous Python risk dynamics exactly reproduce the thesis Simulink model.
+Only levels 1-3 are established by this workbook audit. Native DES snapshot
+capture is implemented and tested, but same-timestamp ordering remains pending
+Garrido confirmation; this section makes no claim that endogenous Python risk
+dynamics exactly reproduce the thesis Simulink model.
 
-### Fresh 2026-07-13 metric lock
+### 2026-07-14 metric correction
 
-The workbook audit was rerun read-only against the three current local files.
-It again covered 20 raw `CF` sheets and 47,546 formula-bearing rows, with zero
-mismatches and maximum absolute difference `0.0`. Seventeen focused formula,
-visible-population and packaging tests passed. The result locks
-`ret_excel_visible_v1` as the current Paper 2 primary endpoint; it does not
-authorize a metric switch. The machine-readable reconciliation is
+The formula audit covers 20 raw `CF` sheets and 47,546 formula-bearing rows with
+zero mismatches. A separate timing audit found 16,391 adjacent `OATj`
+inversions in request order and proved that the earlier audit had supplied
+workbook `Bt/Ut` rather than validating OAT reconstruction. The source-aligned
+v2 aggregator again reproduces all 47,546 cells exactly with request snapshots.
+The machine-readable reconciliation is
 [`metric_governance_audit.json`](metric_governance_audit.json).
 
 ## Garrido 2024 factory-resilience Cobb-Douglas boundary

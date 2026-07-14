@@ -1,0 +1,272 @@
+{
+  "schema_version": "program_j_request_snapshot_v2_frontier_structure_audit_v1",
+  "generated_date": "2026-07-14",
+  "status": "COMPLETED_DEVELOPMENT_RESOURCE_RESTRICTED_PI_VS_COMPLETE_OPEN_LOOP_DELTA_0_000182735_BELOW_GATE__NOT_STRONGEST_COMPARATOR_H_PI_H_OBS_OR_FAMILY_CEILING",
+  "subject": {
+    "runner": "scripts/recompute_program_j_visible_v1_frontier.py",
+    "result_path": "results/paper2_maintenance/request_snapshot_v2_full_frontier/verdict.json",
+    "raw_result_path": "results/paper2_maintenance/request_snapshot_v2_full_frontier/raw_matrices.npz",
+    "result_values_required_for_this_audit": true,
+    "repository_head_recorded_by_runner": "a6b1efa6bc0ef468d5d27ee876e931ea02832b47",
+    "repository_head_contains_runner": false,
+    "working_tree_execution_status": "RUNNER_UNTRACKED_AND_REQUEST_SNAPSHOT_CORE_FILES_MODIFIED_AT_AUDIT_TIME"
+  },
+  "source_bindings": {
+    "scripts/recompute_program_j_visible_v1_frontier.py": "481fefd63274152c95c5797dc9f901a95cc56fd364cd6f2e4e44f313b58460c6",
+    "contracts/paper2_maintenance_control_v1.json": "26e524662d60620ddd93de943f34e2ea5daa5e3709f771e5daa60af0a9b86f1b",
+    "supply_chain/maintenance_control.py": "eb0636ffc594944720b7d3a886768cfedf0d9683f8a229e573ded19f576a200c",
+    "supply_chain/episode_metrics.py": "0eae8b9a9ab5c6289ff94a318c6ab27c031ed184d0e0f00d761e8785373cab9b",
+    "supply_chain/ret_thesis.py": "0c589df3a47c6257305964a1714befbf6df8d2c76c0eedec41b4a4b00f48cf73",
+    "supply_chain/supply_chain.py": "1372e10375e7d86ecea315d27a97d09c3b957e667d2381880f958bd28bedd772",
+    "research/paper2_exhaustive_search/ret_excel_request_snapshot_v2_implementation_audit_20260714.json": "61a67f24cb3bf31b9cf5fd9333436bd2a37da61e6bedb838e572612a8b1e2137",
+    "research/paper2_exhaustive_search/seed_burn_ledger.json": "76280eaf9b67b75883d66482d26bb058639b79bb93f010780a223cdda905716a",
+    "tests/test_program_j_visible_v1_frontier.py": "d3fd79c42e2f5b714cb700de348c7c992c15cff4924a8cdbfbd5429f5c3e24a3"
+  },
+  "execution_time_source_exceptions": {
+    "supply_chain/episode_metrics.py": {
+      "execution_sha256": "b8aac46414b014d3dbdab6a636a6c2df9e36ccd95b9013189f600e1dfa085cb7",
+      "current_sha256": "0eae8b9a9ab5c6289ff94a318c6ab27c031ed184d0e0f00d761e8785373cab9b",
+      "semantic_change": "The later source added an explicit quarantined visible-v1 replay branch. The default request-snapshot-v2 path used by Program J is unchanged. The result remains bound to the execution hash and is not silently relabeled as a current-code execution."
+    }
+  },
+  "result_bindings": {
+    "results/paper2_maintenance/request_snapshot_v2_full_frontier/verdict.json": "fff5ec80a6396dd11f035638643002ec8a592d74675bbeb386f278a15ff50c35",
+    "results/paper2_maintenance/request_snapshot_v2_full_frontier/raw_matrices.npz": "ea54ea49a524d992e2c7b4087ab59f94f4170024730e1dd6f33c96d42b8cc0f0",
+    "verdict_content_sha256": "b6eef653a64f32c2e1649b1b268e770fa86f0f0423c8d1280a1906f9150370ca"
+  },
+  "metric_contract": {
+    "id": "ret_excel_request_snapshot_v2",
+    "runner_binding": "extract reads run_policy outcome ret_excel_visible; compute_episode_metrics binds that field to the request-snapshot-v2 aggregator",
+    "workbook_replay": {
+      "formula_rows": 47546,
+      "mismatches": 0,
+      "max_abs_diff": 0.0,
+      "implementation_audit_content_sha256": "0c0166d21d75bfdceb3f49e8da3db484070435349d2e5ff481da295ed847b1f3"
+    },
+    "development_status": "SOURCE_ALIGNED_IMPLEMENTED__PROVISIONAL_PENDING_SAME_TIME_GARRIDO_CONFIRMATION",
+    "post_run_compatibility_note": "episode_metrics later gained an explicit legacy visible-v1 replay branch. The default and Program-J extraction remain request-snapshot-v2. source_bindings addresses the current audited tree, while execution_time_source_exceptions preserves the exact execution hash.",
+    "endogenous_snapshot_limit": "Exact workbook replay uses injected source Bt/Ut. Native DES request snapshots are implemented but the same-timestamp event order remains pending Garrido confirmation.",
+    "quantity_guardrail_scope": "ration_ret_excel remains the full generated-order quantity-weighted formula, while ret_excel_cvar05 is computed from request-snapshot-v2 visible rows; this cross-population guardrail is allowed only if disclosed and frozen."
+  },
+  "evaluated_contract": {
+    "contract_id": "paper2_maintenance_control_v1",
+    "scope": "single central cell of the disclosed full-DES serial-WIP Op5-Op7 maintenance extension",
+    "weeks": 8,
+    "actions": [
+      "PM5",
+      "PM6",
+      "PM7"
+    ],
+    "complete_open_loop_schedule_count": 6561,
+    "complete_open_loop_schedule_formula": "3^8",
+    "historical_reference": "PM6|PM6|PM5|PM6|PM6 tiled to eight weeks",
+    "tapes": {
+      "seed_start": 1200001,
+      "n": 12,
+      "burn_status": "BURNED_PROGRAM_J_SCREEN",
+      "virgin": false,
+      "same_materialized_tape_reused_across_all_schedules": true,
+      "per_tape_base_exogenous_hash_persisted_by_runner": false
+    },
+    "cell": {
+      "sensor_balanced_accuracy": 0.75,
+      "pm_restore_fraction": 0.5,
+      "wip_capacity_days": 2,
+      "wear_heterogeneity": "high",
+      "repair_profile": "current"
+    }
+  },
+  "open_loop_and_pi_audit": {
+    "full_horizon_open_loop_enumeration_complete": true,
+    "static_comparator": "development-block convex mixture over all 6,561 full-horizon schedules, optimized for mean request-snapshot ReT subject to aggregate guardrails relative to the historical reference",
+    "pi_relaxation": "one tape-contingent convex distribution over all 6,561 schedules per tape, optimized under the same aggregate guardrail directions",
+    "valid_if_all_result_conditions_pass": "A retrospective, central-cell, finite-sample PI-versus-complete-open-loop point diagnostic under the named aggregate resource and outcome constraints.",
+    "not_established": [
+      "population H_PI confidence interval",
+      "strongest-admissible-comparator H_PI under the current task definition",
+      "H_obs",
+      "learned value",
+      "family-wide ceiling across 108 cells",
+      "Paper 2 confirmation"
+    ],
+    "convexification_limit": "A fractional PI solution is a randomized full-information relaxation. Store the weights and report a deterministic or integer-feasible counterpart before interpreting action-ranking diversity or a deployable oracle schedule."
+  },
+  "completed_result_independent_recalculation": {
+    "raw_matrix_shape": [
+      12,
+      6561,
+      9
+    ],
+    "raw_matrix_all_finite": true,
+    "seed_sequence_exact": [
+      1200001,
+      1200002,
+      1200003,
+      1200004,
+      1200005,
+      1200006,
+      1200007,
+      1200008,
+      1200009,
+      1200010,
+      1200011,
+      1200012
+    ],
+    "runner_reported_guardrail_relative_to_historical_reference": {
+      "reference_ret_visible": 0.007409759989259415,
+      "static_ret_visible": 0.007409759989259415,
+      "pi_ret_visible": 0.007451133365357915,
+      "pi_delta_ret_visible": 0.000041373376098500364,
+      "practical_gate": 0.01,
+      "gate_divided_by_delta": 241.70132928461848,
+      "interpretation": "This is the runner's stricter outcome-guardrailed relaxation. It is not the resource-only H_PI estimand because service, quantity and tail outcomes are used as admissibility constraints."
+    },
+    "resource_only_envelope": {
+      "definition": "Every schedule has 192 executed preventive hours and zero mass residual; corrective crew-hours are capped at the historical reference mean B=5.2351916879496345.",
+      "B_corrective_hours": 5.2351916879496345,
+      "B_preregistration_status": "HISTORICAL_REFERENCE_DERIVED_NOT_FROZEN_AS_A_NUMERIC_RESOURCE_CAP_IN_THE_ORIGINAL_CONTRACT",
+      "B_sensitivity": "The cap does not change the best deterministic static or deterministic tape-wise PI value in this matrix; both also win when only the equal 192-hour scheduled/executed PM right is imposed. B must nevertheless be frozen before a new evaluation.",
+      "feasible_deterministic_schedule_count": 1804,
+      "best_static_first_tie_index": 132,
+      "best_static_tie_count_at_1e_15": 28,
+      "best_static_sequence": "PM5|PM5|PM5|PM6|PM6|PM7|PM7|PM5",
+      "best_static_ret_visible": 0.0074429967578929735,
+      "best_static_corrective_hours": 5.146236441649424,
+      "deterministic_tape_contingent_pi_ret_visible": 0.0076257314038405445,
+      "deterministic_tape_contingent_pi_corrective_hours": 4.6803591609900765,
+      "resource_only_pi_lp_ret_visible": 0.0076257314038405445,
+      "resource_only_pi_delta_ret_visible": 0.00018273464594757097,
+      "practical_gate": 0.01,
+      "gate_divided_by_delta": 54.72415998698536,
+      "lp_fractional_tape_count": 1,
+      "deterministic_pi_with_same_objective_exists": true,
+      "interpretation": "This is a valid central-block development PI-versus-complete-open-loop point diagnostic under the provisional resource slice. It is more than fifty-four-fold below the 0.01 practical gate, but twelve central-cell tapes cannot certify a population or family-wide ceiling."
+    },
+    "deterministic_resource_only_pi_minus_best_static_guardrails": {
+      "ret_quantity": 0.0001531443243092262,
+      "ret_cvar05": -0.0000036906522254162404,
+      "lost_orders": 0.0,
+      "service_loss_auc_ration_hours": -680578.3333333321,
+      "flow_fill_rate": 0.0016534808994738137,
+      "executed_pm_hours": 0.0,
+      "corrective_hours": -0.4658772806593474,
+      "mass_residual": 0.0,
+      "tail_noninferiority_point_pass": false,
+      "interpretation": "Service loss, quantity ReT and flow fill improve, but CVaR05 worsens. Therefore even the resource-only PI diagnostic does not satisfy the simultaneous guardrail gate."
+    }
+  },
+  "resource_acceptance": {
+    "scheduled_preventive_rights": "Exactly one 24-hour PM request per week for every sequence, hence 192 scheduled hours over eight weeks by construction.",
+    "corrective_crew_hours": "Endogenous but budgeted; both static and PI LPs constrain their mean to be non-superior to the comparator.",
+    "executed_preventive_hours": "Not constrained inside either LP. The runner only reports a post-optimization allclose check against 192 hours.",
+    "mass_conservation": "Not constrained or fail-closed. The runner only reports the maximum residual after optimization.",
+    "required_result_conditions": {
+      "resource_audit.executed_pm_hours_equal": true,
+      "resource_audit.corrective_hours_constrained_non_superior": true,
+      "resource_audit.maximum_mass_residual_lte": 1e-05,
+      "static_and_pi_lost_orders_non_superior": true,
+      "static_and_pi_service_loss_auc_non_superior": true,
+      "static_and_pi_quantity_ret_noninferior": true,
+      "static_and_pi_ret_cvar05_noninferior": true
+    },
+    "fail_closed_rule": "If any required result condition fails or is missing, no development H_PI diagnostic is admissible even if delta_ret_visible is positive.",
+    "remaining_resource_evidence_gap": "The output omits per-tape tape hashes, demand/sensor/R14 consumed-ledger hashes, complete maintenance action-event trajectories and a total in-horizon crew-hours ledger."
+  },
+  "guardrail_completeness": {
+    "stored_and_constrained": [
+      "lost_orders",
+      "service_loss_auc_ration_hours",
+      "corrective_hours",
+      "ration_ret_excel",
+      "ret_excel_cvar05"
+    ],
+    "stored_but_not_constrained": [
+      "flow_fill_rate",
+      "executed_pm_hours",
+      "mass_residual"
+    ],
+    "not_stored_in_frontier": [
+      "attended_orders",
+      "remaining_backlog quantity",
+      "maximum backlog age",
+      "worst-node or worst-CSSU service",
+      "CVaR10 and additional tail diagnostics",
+      "blocked and starved hours",
+      "total crew-hours and queue delay",
+      "complete resource and conservation ledgers"
+    ],
+    "aggregate_constraint_limit": "Mean aggregate constraints may compensate harms across tapes. They do not establish paired confidence-bound noninferiority for a frozen policy.",
+    "paper2_gate_complete": false
+  },
+  "strongest_comparator_and_observability": {
+    "observable_policies_in_runner": [
+      "worst_condition",
+      "wip_bottleneck"
+    ],
+    "mandatory_missing_comparators": [
+      "round-robin calendar as an explicit named baseline",
+      "condition thresholds with hysteresis",
+      "failure-risk or hazard-index rule",
+      "properly tuned condition-based maintenance index or Whittle-style comparator",
+      "resource-constrained MPC",
+      "exact or approximate DP/belief policy on a validated state abstraction"
+    ],
+    "observable_policy_inference_missing": [
+      "fresh holdout evaluation after calibration-only tuning",
+      "paired confidence intervals and practical effect threshold",
+      "action-sequence uniqueness and observable-state dependence",
+      "modal fixed full-horizon sequence replacement",
+      "phase-of-episode calendar replacement",
+      "sensor shuffle, delay and wrong-station placebos"
+    ],
+    "h_obs_established": false,
+    "learner_authorized": false
+  },
+  "statistical_scope": {
+    "n_tapes": 12,
+    "selection_and_evaluation_same_block": true,
+    "confidence_interval_implemented": false,
+    "cell_coverage": "1 of 108 frozen cells",
+    "interpretation": "development sample-average optimization only; no population lower or upper confidence bound and no connected-region stability"
+  },
+  "provenance_audit": {
+    "raw_matrix_design": "NPZ preserves seeds, all sequences, field names and the complete numeric matrix and is content-hashed by the verdict.",
+    "strengths": [
+      "deterministic seed order after parallel evaluation",
+      "complete raw numeric frontier retained",
+      "result refuses to overwrite existing verdict and raw matrix",
+      "progress file is updated atomically"
+    ],
+    "defects": [
+      "the repository_head recorded by the runner does not contain the untracked runner or the modified request-snapshot implementation",
+      "no runner, contract or core-source hashes are embedded in the verdict",
+      "no environment or dependency snapshot",
+      "no immutable command manifest",
+      "no per-tape base_exogenous_sha256 manifest",
+      "no independent replay or solver-weight artifact"
+    ],
+    "promotion_rule": "Commit and hash runner plus metric implementation before any new calibration or confirmatory run. Treat this local execution as retrospective development evidence only."
+  },
+  "claim_boundary": {
+    "conditionally_valid": "RETROSPECTIVE_CENTRAL_CELL_REQUEST_SNAPSHOT_V2_RESOURCE_RESTRICTED_COMPLETE_OPEN_LOOP_AND_DETERMINISTIC_FULL_INFORMATION_POINT_DIAGNOSTIC_DELTA_0_000182735",
+    "invalid": [
+      "strongest-comparator H_PI",
+      "H_obs",
+      "state-feedback certificate",
+      "Program-J family null or ceiling",
+      "Paper 2 result",
+      "Paper 3 authorization"
+    ],
+    "positive_result_rule": "The resource-only point delta is positive but 54.724 times below the practical gate and has a CVaR05 contradiction. It does not reopen a learner.",
+    "small_or_null_result_rule": "The central development point is a strong local null diagnostic, not a confidence-bounded or family-wide ceiling. It cannot close Program J across the other 107 frozen cells without a complete cell-wise ceiling or a justified global bound."
+  },
+  "required_next": [
+    "Fail closed on executed preventive hours and mass residual before solving or reporting the frontier.",
+    "Persist per-tape exogenous hashes, PI weights or deterministic selections, action trajectories and full resource/guardrail ledgers.",
+    "Report paired guardrail deltas and uncertainty; do not infer noninferiority from LP mean constraints.",
+    "If development PI remains material, freeze and evaluate the complete classical/observable comparator set on a disjoint burned holdout before any learner.",
+    "Resolve the request-snapshot same-time convention with Garrido before virgin confirmation.",
+    "Use the frozen 108-cell design or a preregistered connected subset before any family-level statement."
+  ],
+  "content_sha256": "7d32203c52567539a352d3455ba50b62a7ccf4a7983836c4803c490ded161873"
+}

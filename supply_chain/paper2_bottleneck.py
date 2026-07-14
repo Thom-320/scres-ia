@@ -83,14 +83,23 @@ def signal_policy(observation: dict[str, float]):
     return ACTIONS[max(range(3), key=lambda i: (scores[i], -i))]
 
 
-def run_policy(tape, policy: Callable[[dict[str, float]], Iterable[int]]):
+def run_policy(
+    tape,
+    policy: Callable[[dict[str, float]], Iterable[int]],
+    *,
+    ret_excel_contract_version: str = "ret_excel_request_snapshot_v2",
+):
     sim, controller, start = make_sim(tape)
     end = start + int(tape["weeks"]) * HOURS_PER_WEEK
     for week in range(int(tape["weeks"])):
         controller.activate_week(week)
         controller.request(policy(controller.observation()))
         advance_including(sim, min(end, start + (week + 1) * HOURS_PER_WEEK))
-    metrics = compute_episode_metrics(sim, treatment_start=start)
+    metrics = compute_episode_metrics(
+        sim,
+        treatment_start=start,
+        ret_excel_contract_version=ret_excel_contract_version,
+    )
     ledger = sim.flow_ledger()
     reserve = sim.emergency_reserve_metrics()
     reserve_initial = 10_000.0

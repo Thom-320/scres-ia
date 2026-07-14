@@ -18,16 +18,16 @@ def test_current_terminal_readiness_is_valid_and_explicitly_incomplete():
 
     assert validation["passed"] is True
     assert validation["all_outputs_terminal_ready"] is False
-    assert validation["terminal_ready_ids"] == [1, 2, 3, 4, 5]
-    assert validation["nonterminal_ids"] == [6, 7, 8, 9, 10, 11, 12, 13]
+    assert validation["terminal_ready_ids"] == [1, 2, 3, 4, 5, 6, 11]
+    assert validation["nonterminal_ids"] == [7, 8, 9, 10, 12, 13]
 
 
 def test_unhashed_artifact_cannot_be_promoted_by_flipping_terminal_ready():
     readiness = deepcopy(_readiness())
-    row = readiness["required_outputs"][5]
+    row = readiness["required_outputs"][6]
     row["terminal_ready"] = True
     readiness["summary"]["terminal_ready_count"] += 1
-    readiness["summary"]["nonterminal_output_ids"].remove(6)
+    readiness["summary"]["nonterminal_output_ids"].remove(7)
 
     validation = validate_readiness(readiness)
 

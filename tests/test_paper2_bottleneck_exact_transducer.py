@@ -1039,12 +1039,13 @@ def test_rehashed_request_lag_tamper_is_rejected():
 
 
 def test_key_schema_names_required_future_state_families():
-    assert KEY_SCHEMA_VERSION.endswith("_v4")
+    assert KEY_SCHEMA_VERSION.endswith("_v5")
     assert {"rations_sb", "emergency_theatre_reserve"}.issubset(CONTAINER_FIELDS)
     assert set(RNG_FIELDS) == {"rng", "demand_rng", "risk_rng", "regime_rng"}
     assert {
         "pending_backorder_qty",
         "total_unattended_orders",
+        "_ret_ledger_snapshot_sequence",
         "op_down_count",
         "_ret_quantity_risk_units",
         "emergency_reserve_in_transit",

@@ -1,0 +1,114 @@
+{
+  "adapter_liveness_audit": {
+    "arm_T": {
+      "attended_orders": 47.0,
+      "lost_orders": 1.0,
+      "ret_quantity": 0.5488148249333286,
+      "ret_visible": 0.8540925434613251,
+      "unfulfilled_rations": 178.99999999999864,
+      "worst_cssu_fill": 0.9940687232844031
+    },
+    "arm_TRS": {
+      "attended_orders": 47.0,
+      "lost_orders": 1.0,
+      "ret_quantity": 0.5488148249333286,
+      "ret_visible": 0.8540925434613251,
+      "unfulfilled_rations": 178.99999999999864,
+      "worst_cssu_fill": 0.9940687232844031
+    },
+    "arm_bit_identical": true,
+    "probe_actions": [
+      "A",
+      "B",
+      "A",
+      "B"
+    ],
+    "probe_seed": 1060001,
+    "r22_all_one": {
+      "attended_orders": 47.0,
+      "lost_orders": 1.0,
+      "ret_quantity": 0.5488148249333286,
+      "ret_visible": 0.8540925434613251,
+      "unfulfilled_rations": 178.99999999999864,
+      "worst_cssu_fill": 0.9940687232844031
+    },
+    "r22_all_zero": {
+      "attended_orders": 47.0,
+      "lost_orders": 1.0,
+      "ret_quantity": 0.5488148249333286,
+      "ret_visible": 0.8540925434613251,
+      "unfulfilled_rations": 178.99999999999864,
+      "worst_cssu_fill": 0.9940687232844031
+    },
+    "r22_bit_identical": true,
+    "source_mechanism_check": {
+      "evidence": "supply_chain/program_g.py metrics_all accepts arm but never references it and its daily delivery loop never references tape.r22.",
+      "metrics_all_reads_arm": false,
+      "metrics_all_reads_tape_r22": false
+    },
+    "weekly_reference_physics": {
+      "mission_ledger_changes": true,
+      "r22_one_convoy_missions": 8,
+      "r22_one_service_loss": 15224.0,
+      "r22_zero_convoy_missions": 12,
+      "r22_zero_service_loss": 15224.0,
+      "service_loss_bit_identical": true,
+      "structural_delivery_ceiling": {
+        "closed_cycles_times_load": 10000,
+        "cssu_capacity": 10000,
+        "normal_cycles_times_load": 15000,
+        "proof": "A route closure reduces three cycles to two, but two 5,000-ration loads already equal the 10,000-ration CSSU capacity. Since free capacity is at most 10,000, the closure cannot reduce weekly delivered quantity in the frozen weekly kernel; it changes only the mission ledger."
+      }
+    }
+  },
+  "claim_limit": "The quarantined visible-v1 metric cannot support any Program-H H_PI, H_obs, ceiling, null, or positive. Demand-only outputs from the dead-route adapter are independently invalid. The previously generated full screen was deleted and replaced by this fail-closed invalidation artifact.",
+  "content_sha256": "0e7516780c1b5fc05d2dd4be21855928ed941c9ad3dca0104a163a68b1909e31",
+  "diagnostic_metric": "ret_excel_visible_v1",
+  "frontier_source": {
+    "path": "/Users/thom/Projects/research/scres-ia/results/program_h/visible_v1_repair/verdict.json",
+    "sha256": "d52251822fc2f05e75c810ba7fc08eb3a788217376a15163f685599aa5824d57"
+  },
+  "generated_at_utc": "2026-07-14T10:03:21.554752+00:00",
+  "governing_metric": null,
+  "metric_governance": {
+    "can_support_h_result": false,
+    "diagnostic_metric": "ret_excel_visible_v1",
+    "diagnostic_metric_disposition": "QUARANTINED_OAT_LEDGER_NOT_SOURCE_VALIDATED",
+    "diagnostic_metric_status": "HOLD_FOR_LEDGER_SEMANTICS_REPAIR",
+    "prior_h_results_restored": false,
+    "program_h_disposition": "QUARANTINE_IF_SCORED_BY_THE_CURRENT_OAT_LEDGER; rescore only after the request-snapshot contract and implementation pass",
+    "replacement_development_contract": "ret_excel_request_snapshot_v2",
+    "replacement_status": "SOURCE_ALIGNED_IMPLEMENTED__PROVISIONAL_PENDING_SAME_TIME_GARRIDO_CONFIRMATION",
+    "request_snapshot_v2_audit": {
+      "content_sha256": "72c5267b98373546d727dc6df26a69d4e31511a58322d54bee3ef0e776c28ea1",
+      "path": "/Users/thom/Projects/research/scres-ia/research/paper2_exhaustive_search/ret_excel_request_snapshot_v2_implementation_audit_20260714.json",
+      "sha256": "35ec4cb5d5ad6ab83c9e38f4e7d1b13b7f10d150dbb7441221657380c3dc2744"
+    },
+    "required_rescore": "rescore identical burned/calibration tapes and rebuild every comparator under v2; obtain Garrido confirmation of same-timestamp event order before virgin confirmation",
+    "visible_v1_semantics_audit": {
+      "content_sha256": "612518b86eb20cddacc7e9206c28ce040d3f268f55a4ecc6a2380c2736e252f0",
+      "path": "/Users/thom/Projects/research/scres-ia/research/paper2_exhaustive_search/ret_excel_visible_v1_source_semantics_audit_20260714.json",
+      "sha256": "17a8c700188a53676e4936373ec6384e1243c9745985048f1bc9192845411ab6"
+    }
+  },
+  "policies_evaluated": false,
+  "reopening_requirements": [
+    "Obtain domain authorization for materially new R22 physics; the frozen weekly kernel makes a one-cycle closure service-inert when two remaining 5,000-ration cycles already fill 10,000-ration CSSU capacity.",
+    "Implement and independently validate the authorized R22 mechanism in the Program-G/H daily governing adapter, including causal arm and route-closure endpoint-liveness tests.",
+    "Rescore the identical burned/calibration tapes with ret_excel_request_snapshot_v2 and rebuild every fixed and observable comparator under that contract.",
+    "Retain the request-snapshot-v2 provisional boundary, including Garrido confirmation of same-timestamp request-ledger event order, before any virgin confirmation."
+  ],
+  "repository_head": "a6b1efa6bc0ef468d5d27ee876e931ea02832b47",
+  "required_resolution": "Program H can reopen only after both an authorized, causally live R22 adapter and a complete request-snapshot-v2 rescore on identical burned/calibration tapes. Fixing only physics or only the metric is insufficient.",
+  "retrospective_screen_pass": false,
+  "schema_version": "program_h_visible_v1_observable_policy_screen_invalid_v1",
+  "scientific_status": "INVALID_PROGRAM_H_DEAD_ROUTE_AND_QUARANTINED_VISIBLE_V1",
+  "tapes": {
+    "probe_seed": 1060001,
+    "probe_status": "historical burned",
+    "virgin_opened": false
+  },
+  "valid_for_H_PI": false,
+  "valid_for_H_obs": false,
+  "valid_for_paper2": false
+}

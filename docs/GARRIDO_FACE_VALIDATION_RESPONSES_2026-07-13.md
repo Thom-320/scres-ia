@@ -1,4 +1,4 @@
-# Garrido face-validation response ledger — Q1–Q12
+# Garrido face-validation response ledger — Metric M1 + Q1–Q12
 
 Created: 2026-07-13
 Status: **EMPTY TEMPLATE — NO GARRIDO ANSWERS RECORDED**
@@ -26,7 +26,9 @@ not fill numerical gaps, and do not treat silence as a negative answer.
    not authorize training.
 5. A domain-negative answer blocks only the mapped mechanism. It is not a global
    impossibility result.
-6. The primary endpoint remains `ret_excel_visible_v1`. Cobb–Douglas remains
+6. The provisional primary endpoint is `ret_excel_request_snapshot_v2`; Metric
+   Clarification M1 must confirm or correct same-timestamp ledger ordering
+   before virgin confirmation. Cobb–Douglas remains
    secondary unless all Q12 positive conditions are evidenced and Garrido
    explicitly endorses the MFSC Op5–Op7 mapping; even then, it becomes only
    `CO_PRIMARY_ELIGIBLE_PENDING_CONTRACT`.
@@ -43,6 +45,20 @@ not fill numerical gaps, and do not treat silence as a negative answer.
 | Source-record SHA-256 | `[EMPTY]` |
 | First adjudicator | `[EMPTY]` |
 | Independent checker | `[EMPTY]` |
+
+---
+
+## Metric Clarification M1 — request-ledger timing
+
+- Verbatim response: `[EMPTY]`
+- Did `sumBt/sumUt` freeze at request generation `OPTj`? `[EMPTY]`
+- At identical timestamps, which event updated the ledger first? `[EMPTY]`
+- Simulink block/event-order evidence: `[EMPTY]`
+- Responder sign-off: `[EMPTY]`
+- Adjudicator and date: `[EMPTY]`
+- Independent checker and date: `[EMPTY]`
+- Criterion result: `UNANSWERED_VIRGIN_CONFIRMATION_BLOCKED`
+- Required implementation/rescore action: `[EMPTY]`
 
 ---
 

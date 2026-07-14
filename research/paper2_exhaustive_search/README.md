@@ -2,30 +2,41 @@
 
 ## Current scientific status
 
-`OPEN_ACTIVE_BOUND_REQUIRED__MTR_SWITCH4_PRODUCER_RUNNING_NOT_EVIDENCE` — Paper 2 is not confirmed and Paper 3 is not authorized.
+`HOLD_CANONICAL_V2_RESCORE_AND_DOMAIN_CONFIRMATION_REQUIRED` — Paper 2 is neither confirmed nor falsified, and Paper 3 is not authorized.
 
-The only numerically active family is the integrated M/T/R bottleneck contract. Its complete calibration-only `<=3`-switch family contains 11,611 calendars and 696,660 tape-calendar rollouts. Watched production and a separate full deep replay agree exactly, but the unique winner `MMMMMMMTTRRRMMMMMMMMMMMM` uses all three permitted switches. The restricted frontier is therefore boundary-active rather than sufficient.
+The source audit found that `ret_excel_visible_v1` reconstructed `Bt/Ut` at order completion even though the workbooks and thesis Annex B carry the accumulated ledger with each request at `OPTj`. Every visible-v1 result is therefore quarantined as metric-development only. The replacement `ret_excel_request_snapshot_v2` reproduces all 47,546 workbook formula cells exactly when source snapshots are injected and captures the same fields natively in the DES. It remains provisional pending Garrido confirmation of same-timestamp event order and complete v2 rescoring.
 
-The richer complete `<=4`-switch family contains 89,131 calendars and 5,347,860 tape-calendar rollouts. Its six-tape/six-worker VPS preflight passed strict custody, environment, memory and hash validation. The 60-tape producer is currently running from immutable commit `8f31f410` under a detached watcher. A running job is not evidence. A tracked pre-completion anchor binds the host boot, process start identities, immutable launch files, exact preflight files and the watcher-log prefix before either result or progress existed. After terminal retrieval, every remote hash and custody gate must pass, followed by a separately watched 5,347,920-rollout local deep replay.
+Program H is blocked independently because the governing adapter ignores both the route arm and R22; no H policy or ceiling is live. Program J has been rescored in one central cell under v2: all `3^8=6,561` schedules on 12 burned tapes give a resource-restricted PI point delta `0.000182735`, 54.7 times below the `0.01` gate, while tail non-inferiority fails. That is a strong local null diagnostic, not a 108-cell or confidence-bounded family ceiling.
 
-Even a valid `<=4` result is not the full 11,184,811-calendar open-loop frontier and does not compute resource-restricted `H_PI` or `H_obs`. The frozen named resource is one mutually exclusive 4,032-hour team budget with identical reserve access; issue and replenishment are conserved endogenous outcome flows in v1, while the real-world transport/handling and cross-target team fungibility remain explicit Garrido domain questions.
+M/T/R's earlier `<=3` frontier and `<=4` VPS execution used visible-v1 and have no current scientific authority. The VPS watcher did start before science, but its terminal check covered only the parent PID: six reparented multiprocessing workers continued after the parent stopped. They were identified through their cwd and run-log descriptors and terminated with `SIGTERM`; no ghost process remains. A v2 restart must begin from the first calibration tape under a new immutable commit and a watcher covering the complete POSIX scientific session.
 
 The older physical-effect quotient estimate remains diagnostic only. Commit
 `179f7c2` and its W12/W16/W24 jobs were invalidated before result because
 Markov sufficiency and the scientific identity/receipt chain were not yet
 machine-certified. Later key-v4 proof work and short-horizon fixtures do not
-create a W24 frontier or an `H_PI` result. The current `<=4` screen is a
+create a W24 frontier or an `H_PI` result. The superseded `<=4` screen was a
 brute-force comparator-development gate rather than that exact proof. The M/T/R
 row therefore remains `active_for_bound`, not falsified, promotable or terminal.
 
 The machine-readable family proof ledger now makes the claim boundary stricter:
 none of the 17 registered mechanism families is currently eligible for terminal
-Return B. Program J has a below-gate restricted screen only for its frozen
-contract; Program H's certified bound remains above `0.01`; eleven apparent
-zeros are current-kernel action-absence/null-regime facts rather than ceilings
-on their proposed extensions; and M/T/R is active without a global bound.
+Return B. Program J has only a below-gate central-cell v2 point diagnostic;
+Program H's governing route adapter is dead and has no v2 ceiling; eleven
+apparent zeros are current-kernel action-absence/null-regime facts rather than
+ceilings on their proposed extensions; and M/T/R is active without a v2 global bound.
 Because disclosed researcher extensions are open-ended, this package does not
 claim a universal boundary over every imaginable future extension.
+
+Program M is the active headroom search rather than a Garrido-dependent repair
+of those nulls. It is a disclosed synthetic full-DES extension: one conserved
+protected-lift slot is reserved weekly for CSSU A or B, 24 hours before a
+localized access-risk window. Its adversarially corrected contract freezes 19
+cells, all 256 eight-week calendars, equal charged slots/payload/vehicle-hours,
+four disjoint sealed development roles, null physics and signal placebos. The
+implementation and exact H_PI producer pass synthetic tests; no Program M
+scientific tape has been opened. A positive development result would remain
+conditional on this extension, with later expert review needed only before an
+MFSC fleet claim—not to find or select the headroom.
 
 ## Artifact index
 
@@ -33,9 +44,10 @@ claim a universal boundary over every imaginable future extension.
 - `source_reconstruction.md`, `source_extraction_index.json` and `scripts/verify_source_extractions.py`: thesis, Garrido paper and v0 extraction provenance, pinned deterministic reconstruction, and explicit resolution of the legacy root `thesis.txt` versus canonical `-layout` extract hashes.
 - `primary_source_literature_review.md`: mechanism-oriented primary-source review.
 - `metric_governance_audit.json` and `docs/COBB_DOUGLAS_FACTORY_METRIC_AUDIT_2026-07-13.md`: fresh Excel/ReT reconciliation and the exact boundary for Garrido's factory-APP Cobb-Douglas construct.
-- `excel_metric_reaudit_20260713.json`: preserved 20-sheet/47,546-row Excel formula audit with zero mismatches; this is the machine evidence behind the current `ret_excel_visible_v1` lock.
+- `ret_excel_visible_v1_source_semantics_audit_20260714.json` and `ret_excel_request_snapshot_v2_implementation_audit_20260714.json`: exact 47,546-row formula replay, proof that OAT-ledger reconstruction was not source-validated, and the provisional source-aligned v2 replacement.
 - `factory_app_cd_gate_v1_rejection.json`, `factory_app_cd_v1_forensic_record.json`, quarantined bytecode/raw Stage-A JSON, and `FACTORY_APP_CD_PROTOCOL_V2_BLOCKED_2026-07-13.md`: a flawed APP/CD runner executed 400 tapes before its written rejection; the later audit discovered it, burned `9,600,001–9,600,400`, and found its paper-reproduction flag was hard-coded. The raw numbers are not evidence.
 - `approach_registry.json`: live family states, ceilings and state-change evidence.
+- `contracts/program_m_shared_lift_reservation_v1.json`, `PROGRAM_M_SHARED_LIFT_PREREGISTRATION_2026-07-14.md`, `supply_chain/program_m_shared_lift.py` and `scripts/screen_program_m_shared_lift_hpi.py`: frozen active synthetic headroom contract, full-DES actuator and complete 256-calendar pre-learner screen; no scientific tape opened.
 - `candidate_intervention_ledger.json`: operational meaning, provenance, conservation, null regime and claim limits.
 - `risk_intervention_governance.json`: explicit permission and fail-closed requirements for thesis-risk edits or a realistic new risk; forbids tuning severity/frequency until a policy wins.
 - `r21_r3_restoration_registry_correction.json`: corrects an unsupported historical `FALSIFIED` label; thesis-default parallel recovery is exact-null, while a scarce MaB restoration-team extension is `blocked_domain_fact` pending Q7.

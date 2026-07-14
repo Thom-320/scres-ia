@@ -45,6 +45,9 @@ TERMINAL_B_PROOF_CLASSES = {
     "formal_global_dominance",
 }
 
+CANONICAL_METRIC_CONTRACT = "ret_excel_request_snapshot_v2"
+LEGACY_VISIBLE_METRIC_CONTRACT = "ret_excel_visible_v1"
+
 
 def load(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text())
@@ -66,6 +69,382 @@ def git(*args: str) -> str:
     return subprocess.check_output(["git", *args], cwd=ROOT, text=True).strip()
 
 
+def validate_metric_governance(
+    governance: dict[str, Any],
+    source_semantics: dict[str, Any],
+    implementation_audit: dict[str, Any],
+    excel_reaudit: dict[str, Any],
+    *,
+    root: Path = ROOT,
+) -> dict[str, Any]:
+    """Validate the v2 lock and fail closed on every visible-v1 result.
+
+    Exact workbook formula replay is necessary but does not authorize a result.
+    The current release gate also requires source-aligned request snapshots,
+    explicit quarantine of the OAT-derived v1 ledger, and false Paper-2/Paper-3
+    authorization until same-time semantics and v2 rescoring are complete.
+    """
+    failures: list[str] = []
+    hashes_checked = 0
+    implementation_source_hashes_checked = 0
+
+    if governance.get("schema_version") != "paper2_metric_governance_audit_v2":
+        failures.append("invalid metric-governance schema")
+    if governance.get("status") != (
+        "CANONICAL_RET_EXCEL_REQUEST_SNAPSHOT_V2__PROVISIONAL__RESCORE_REQUIRED"
+    ):
+        failures.append("metric governance does not retain the provisional v2 hold")
+
+    canonical = governance.get("canonical_endpoint", {})
+    if canonical.get("contract_id") != CANONICAL_METRIC_CONTRACT:
+        failures.append("canonical endpoint is not request-snapshot v2")
+    if canonical.get("implementation_status") != (
+        "SOURCE_ALIGNED_IMPLEMENTED__PROVISIONAL_PENDING_SAME_TIME_GARRIDO_CONFIRMATION"
+    ):
+        failures.append("v2 implementation status is not fail-closed provisional")
+    request = canonical.get("request_snapshot_semantics", {})
+    required_fields = {
+        "ret_bt_at_request",
+        "ret_ut_at_request",
+        "ret_ledger_snapshot_time",
+        "ret_ledger_event_sequence",
+    }
+    if set(request.get("fields", [])) != required_fields:
+        failures.append("request-snapshot field set is incomplete")
+    if request.get("same_timestamp_authority") != (
+        "PROVISIONAL_PENDING_GARRIDO_SIMULINK_CONFIRMATION"
+    ):
+        failures.append("same-time convention was promoted without Garrido authority")
+
+    evidence = governance.get("source_evidence", {})
+    evidence_rows = {
+        "excel_formula_reaudit": excel_reaudit,
+        "source_semantics_audit": source_semantics,
+        "v2_implementation_audit": implementation_audit,
+    }
+    for label, payload in evidence_rows.items():
+        row = evidence.get(label, {})
+        relative = row.get("path")
+        expected = row.get("sha256")
+        path = root / relative if isinstance(relative, str) else None
+        if path is None or not path.is_file():
+            failures.append(f"missing metric evidence: {label}")
+            continue
+        hashes_checked += 1
+        if not isinstance(expected, str) or sha256(path) != expected:
+            failures.append(f"metric evidence hash mismatch: {label}")
+        try:
+            if load(path) != payload:
+                failures.append(f"metric evidence payload mismatch: {label}")
+        except (json.JSONDecodeError, OSError):
+            failures.append(f"invalid metric evidence JSON: {label}")
+
+    raw_formula = excel_reaudit.get("raw_formula_audit", {})
+    if (
+        raw_formula.get("total_rows") != 47_546
+        or raw_formula.get("total_mismatches") != 0
+        or raw_formula.get("max_abs_diff") != 0.0
+        or len(raw_formula.get("sheets", {})) != 20
+    ):
+        failures.append("Excel formula reaudit is not exact on 47,546 rows")
+
+    source_formula = source_semantics.get("workbook_formula_replay", {})
+    source_totals = source_semantics.get("timing_and_population_evidence", {}).get(
+        "totals", {}
+    )
+    if source_semantics.get("status") != (
+        "FORMULA_EXACT__VISIBLE_ROWS_OBSERVED__OAT_BT_UT_RECONSTRUCTION_NOT_SOURCE_VALIDATED"
+    ):
+        failures.append("source audit no longer rejects OAT-derived Bt/Ut")
+    if evidence.get("source_semantics_audit", {}).get("content_sha256") != (
+        source_semantics.get("content_sha256")
+    ):
+        failures.append("source-semantics content hash mismatch")
+    if (
+        source_formula.get("formula_rows") != 47_546
+        or source_formula.get("mismatches") != 0
+        or source_formula.get("max_abs_diff") != 0.0
+        or source_totals.get("OATj_adjacent_inversions_in_j_order") != 16_391
+        or source_totals.get("sumUt_adjacent_decreases_in_j_order") != 0
+        or source_totals.get("sumUt_adjacent_decreases_in_OATj_order") != 8_340
+        or source_totals.get("visible_rows_only_OAT_Bt_matches") != 590
+        or source_totals.get("visible_rows_only_OAT_Bt_total") != 47_546
+    ):
+        failures.append("source-semantics audit counters mismatch")
+
+    replay = implementation_audit.get("canonical_aggregator_workbook_replay", {})
+    if implementation_audit.get("canonical_development_contract") != (
+        CANONICAL_METRIC_CONTRACT
+    ):
+        failures.append("implementation audit contract mismatch")
+    if evidence.get("v2_implementation_audit", {}).get("content_sha256") != (
+        implementation_audit.get("content_sha256")
+    ):
+        failures.append("v2 implementation content hash mismatch")
+    if implementation_audit.get("status") != (
+        "SOURCE_ALIGNED_IMPLEMENTED__PROVISIONAL_PENDING_SAME_TIME_GARRIDO_CONFIRMATION"
+    ):
+        failures.append("implementation audit lost its provisional hold")
+    if (
+        replay.get("passes") is not True
+        or replay.get("formula_rows") != 47_546
+        or replay.get("mismatches") != 0
+        or replay.get("max_abs_diff") != 0.0
+        or len(replay.get("sheets", {})) != 20
+    ):
+        failures.append("canonical v2 aggregator does not exactly replay the workbook")
+
+    implementation_sources = implementation_audit.get("implementation_sources", {})
+    required_implementation_sources = {
+        "supply_chain/episode_metrics.py",
+        "supply_chain/garrido_replication.py",
+        "supply_chain/ret_thesis.py",
+        "supply_chain/supply_chain.py",
+        "tests/test_ret_excel_request_snapshot_contract.py",
+    }
+    if set(implementation_sources) != required_implementation_sources:
+        failures.append("v2 implementation source manifest is incomplete")
+    for relative in sorted(required_implementation_sources & set(implementation_sources)):
+        path = root / relative
+        implementation_source_hashes_checked += 1
+        if not path.is_file() or sha256(path) != implementation_sources[relative]:
+            failures.append(f"v2 implementation source hash mismatch: {relative}")
+    native_test = evidence.get("v2_implementation_audit", {})
+    if native_test.get("native_des_snapshot_integration_test") != (
+        "tests/test_ret_excel_request_snapshot_contract.py::"
+        "test_native_des_captures_request_snapshots_before_queue_entry"
+    ):
+        failures.append("native DES snapshot integration test is not pinned")
+    if native_test.get("native_des_snapshot_test_sha256") != implementation_sources.get(
+        "tests/test_ret_excel_request_snapshot_contract.py"
+    ):
+        failures.append("native DES snapshot integration test hash mismatch")
+
+    legacy = governance.get("superseded_contracts", {}).get(
+        LEGACY_VISIBLE_METRIC_CONTRACT, {}
+    )
+    required_prohibitions = {
+        "Paper-2 positive result",
+        "Paper-2 null result",
+        "H_PI",
+        "H_obs",
+        "family or comparator ceiling",
+        "terminal Return A or Return B evidence",
+    }
+    if legacy.get("status") != "QUARANTINED_METRIC_DEVELOPMENT_ONLY":
+        failures.append("visible-v1 is not quarantined")
+    if not required_prohibitions.issubset(set(legacy.get("prohibited_claims", []))):
+        failures.append("visible-v1 prohibited-claim set is incomplete")
+
+    quarantines = {
+        row.get("scope_id"): row
+        for row in governance.get("quarantine_registry", [])
+    }
+    required_quarantines = {
+        "all_ret_excel_visible_v1_oat_ledger_outputs",
+        "program_h_visible_v1",
+        "program_j_visible_v1",
+        "mtr_visible_v1_switch_frontiers",
+    }
+    if not required_quarantines.issubset(quarantines):
+        failures.append("H/J/MTR or global visible-v1 quarantine is missing")
+    for scope_id in required_quarantines & set(quarantines):
+        if quarantines[scope_id].get("paper2_authority") is not False:
+            failures.append(f"quarantined scope retains Paper-2 authority: {scope_id}")
+
+    release = governance.get("v2_release_gates", {})
+    if (
+        release.get("same_timestamp_garrido_confirmation") != "PENDING"
+        or release.get("identical_tape_rescore_h_j_mtr") != "REQUIRED"
+        or release.get("complete_same_contract_comparators_rebuilt") != "REQUIRED"
+        or release.get("all_guardrails_rebuilt") != "REQUIRED"
+        or release.get("virgin_confirmation")
+        != "PROHIBITED_UNTIL_ALL_PRIOR_GATES_PASS"
+    ):
+        failures.append("v2 release gates do not fail closed")
+
+    authorization = governance.get("paper2_authorization", {})
+    for field in (
+        "paper2_positive_confirmed",
+        "paper2_null_confirmed",
+        "paper2_ceiling_confirmed",
+        "learner_authorized",
+        "paper3_authorized",
+        "prior_h_j_mtr_results_restored",
+    ):
+        if authorization.get(field) is not False:
+            failures.append(f"scientific authorization must remain false: {field}")
+
+    return {
+        "passed": not failures,
+        "failures": failures,
+        "hashes_checked": hashes_checked,
+        "implementation_source_hashes_checked": implementation_source_hashes_checked,
+        "canonical_contract": canonical.get("contract_id"),
+        "canonical_status": canonical.get("implementation_status"),
+        "visible_v1_disposition": legacy.get("status"),
+        "quarantined_scopes": sorted(required_quarantines & set(quarantines)),
+        "paper2_positive_confirmed": authorization.get("paper2_positive_confirmed"),
+        "paper2_null_confirmed": authorization.get("paper2_null_confirmed"),
+        "paper2_ceiling_confirmed": authorization.get("paper2_ceiling_confirmed"),
+        "prior_h_j_mtr_results_restored": authorization.get(
+            "prior_h_j_mtr_results_restored"
+        ),
+    }
+
+
+def validate_paper3_claim_supersession(
+    supersession: dict[str, Any],
+    *,
+    root: Path = ROOT,
+) -> dict[str, Any]:
+    """Validate the fail-closed precedence rule for historical retained claims.
+
+    C12 is preserved as bounded historical evidence.  It may not be interpreted
+    as current Paper-3 authorization unless the current task independently
+    establishes the Paper-2 learned-value prerequisite.  The current artifact
+    intentionally records that this prerequisite is unmet.
+    """
+    failures: list[str] = []
+    hashes_checked = 0
+
+    if supersession.get("schema_version") != "paper3_claim_supersession_v1":
+        failures.append("invalid schema")
+    if supersession.get("status") != (
+        "PAPER3_NOT_AUTHORIZED__DEPENDENCY_PAPER2_LEARNED_VALUE_UNMET"
+    ):
+        failures.append("invalid current Paper-3 status")
+
+    historical = supersession.get("historical_claim", {})
+    if historical.get("claim_id") != "C12":
+        failures.append("historical claim must be C12")
+    if historical.get("historical_status") != (
+        "Supported at small effect size, both observation arms"
+    ):
+        failures.append("historical C12 status mismatch")
+    if historical.get("bounded_interpretation_retained") is not True:
+        failures.append("bounded historical interpretation was not retained")
+    if historical.get("authorization_transferable_to_current_paper3") is not False:
+        failures.append("historical C12 was made transferable to current Paper 3")
+
+    def validate_hashed_file(row: dict[str, Any], label: str) -> Path | None:
+        nonlocal hashes_checked
+        relative = row.get("path")
+        expected = row.get("sha256")
+        path = root / relative if isinstance(relative, str) else None
+        if path is None or not path.is_file():
+            failures.append(f"missing {label} artifact")
+            return None
+        if not isinstance(expected, str) or sha256(path) != expected:
+            failures.append(f"{label} artifact hash mismatch")
+            return None
+        hashes_checked += 1
+        return path
+
+    c12_source = validate_hashed_file(historical.get("source", {}), "C12 source")
+    if c12_source is not None:
+        source_text = c12_source.read_text()
+        if "| C12 | Retained learning" not in source_text or (
+            "Supported at small effect size, both observation arms" not in source_text
+        ):
+            failures.append("hashed C12 source does not contain the historical claim")
+    h4_source = validate_hashed_file(historical.get("evidence", {}), "C12 evidence")
+    if h4_source is not None:
+        h4_text = h4_source.read_text()
+        if "8 online-adaptation cycles" not in h4_text or (
+            "not a claim of" not in h4_text
+            or "cross-campaign organizational learning" not in h4_text
+        ):
+            failures.append("hashed C12 evidence lacks its own scope limitation")
+
+    correction = supersession.get("later_same_contract_correction", {})
+    correction_path = validate_hashed_file(correction, "same-contract correction")
+    if correction_path is not None:
+        correction_text = correction_path.read_text()
+        if "PPO minus static is `−0.000018049`" not in correction_text or (
+            "Retire the claim that PPO has a Track B adaptive" not in correction_text
+        ):
+            failures.append("same-contract correction does not retire learned advantage")
+
+    def dotted_value(payload: dict[str, Any], dotted: str) -> Any:
+        value: Any = payload
+        for key in dotted.split("."):
+            if not isinstance(value, dict) or key not in value:
+                return object()
+            value = value[key]
+        return value
+
+    current_inputs = supersession.get("current_task_inputs", [])
+    if len(current_inputs) != 3:
+        failures.append("current-task input set must contain exactly three artifacts")
+    for index, row in enumerate(current_inputs):
+        path = validate_hashed_file(row, f"current-task input {index}")
+        if path is None:
+            continue
+        if "required_values" in row:
+            try:
+                payload = load(path)
+            except (json.JSONDecodeError, OSError):
+                failures.append(f"current-task input {index} is not valid JSON")
+                continue
+            for dotted, expected in row["required_values"].items():
+                if dotted_value(payload, dotted) != expected:
+                    failures.append(
+                        f"current-task input {index} required value mismatch: {dotted}"
+                    )
+        required_text = row.get("required_text")
+        if required_text is not None and required_text not in path.read_text():
+            failures.append(f"current-task input {index} required text missing")
+
+    gate = supersession.get("current_task_authorization_gate", {})
+    if gate.get("canonical_endpoint") != CANONICAL_METRIC_CONTRACT:
+        failures.append("current task canonical endpoint mismatch")
+    if gate.get("canonical_endpoint_status") != (
+        "SOURCE_ALIGNED_IMPLEMENTED__PROVISIONAL_PENDING_SAME_TIME_GARRIDO_CONFIRMATION_AND_V2_RESCORE"
+    ):
+        failures.append("current task metric gate is not provisional and fail closed")
+    for field in (
+        "paper2_observable_adaptive_value_confirmed",
+        "paper2_learned_adaptive_value_confirmed",
+        "h_learned_positive_against_strongest_same_contract_comparator",
+        "virgin_paper2_confirmation_passed",
+    ):
+        if gate.get(field) is not False:
+            failures.append(f"current prerequisite must remain false: {field}")
+    if len(gate.get("required_before_paper3", [])) != 4:
+        failures.append("Paper-3 prerequisite set is incomplete")
+    if len(gate.get("unmet_requirements", [])) != 4:
+        failures.append("current unmet-requirement set is incomplete")
+
+    disposition = supersession.get("effective_current_disposition", {})
+    required_disposition = {
+        "historical_c12_result_retracted": False,
+        "historical_c12_may_be_promoted_as_current_paper3_result": False,
+        "paper3_authorized": False,
+        "new_retained_learning_execution_authorized": False,
+        "paper3_claim_allowed": (
+            "Only PAPER3_NOT_AUTHORIZED__DEPENDENCY_PAPER2_LEARNED_VALUE_UNMET"
+        ),
+    }
+    for field, expected in required_disposition.items():
+        if disposition.get(field) != expected:
+            failures.append(f"invalid effective disposition: {field}")
+    if "Historical C12 alone can never reopen the gate" not in disposition.get(
+        "reopening_rule", ""
+    ):
+        failures.append("reopening rule does not fail closed on historical C12")
+
+    return {
+        "passed": not failures,
+        "failures": failures,
+        "hashes_checked": hashes_checked,
+        "historical_claim_preserved": (
+            historical.get("bounded_interpretation_retained") is True
+        ),
+        "paper3_authorized": disposition.get("paper3_authorized"),
+    }
+
+
 def validate_boundary_family_proof_ledger(
     registry: dict[str, Any],
     ledger: dict[str, Any],
@@ -83,7 +462,7 @@ def validate_boundary_family_proof_ledger(
     registry_rows = {row["family_id"]: row for row in registry["approaches"]}
     ledger_rows = {row["family_id"]: row for row in ledger.get("families", [])}
 
-    schema_ok = ledger.get("schema_version") == "paper2_boundary_family_proof_ledger_v1"
+    schema_ok = ledger.get("schema_version") == "paper2_boundary_family_proof_ledger_v2"
     if not schema_ok:
         failures.append({"scope": "ledger", "reason": "invalid_schema"})
 
@@ -109,8 +488,14 @@ def validate_boundary_family_proof_ledger(
         row_failures: list[str] = []
         if row.get("registry_state") != registry_row.get("state"):
             row_failures.append("registry_state_mismatch")
-        if row.get("metric") != "ret_excel_visible_v1":
-            row_failures.append("noncanonical_or_missing_metric")
+        governing_metric = row.get("governing_metric")
+        if governing_metric not in {
+            LEGACY_VISIBLE_METRIC_CONTRACT,
+            CANONICAL_METRIC_CONTRACT,
+        }:
+            row_failures.append("unknown_or_missing_governing_metric")
+        if not row.get("evidence_metric"):
+            row_failures.append("missing_evidence_metric")
         if not row.get("named_resource_vector"):
             row_failures.append("missing_named_resource_vector")
 
@@ -135,6 +520,12 @@ def validate_boundary_family_proof_ledger(
 
         claimed_terminal = row.get("terminal_b_eligible") is True
         if claimed_terminal:
+            if governing_metric == LEGACY_VISIBLE_METRIC_CONTRACT:
+                row_failures.append("legacy_visible_v1_cannot_support_terminal_claim")
+            if governing_metric != CANONICAL_METRIC_CONTRACT:
+                row_failures.append("terminal_claim_not_scored_under_canonical_v2")
+            if row.get("evidence_metric") != row.get("governing_metric"):
+                row_failures.append("evidence_metric_does_not_match_governing_metric")
             if row.get("closure_kind") not in TERMINAL_B_PROOF_CLASSES:
                 row_failures.append("ineligible_closure_kind")
             if row.get("comparator_complete") is not True:
@@ -197,6 +588,66 @@ def validate_boundary_family_proof_ledger(
     }
 
 
+def validate_historical_visible_v1_ceiling_audit(
+    audit: dict[str, Any],
+    *,
+    root: Path = ROOT,
+) -> dict[str, Any]:
+    failures: list[str] = []
+    rows = audit.get("lanes", [])
+    hashes_checked = 0
+    if audit.get("schema_version") != "paper2_historical_visible_v1_ceiling_audit_v1":
+        failures.append("invalid schema")
+    if audit.get("governing_metric") != "ret_excel_visible_v1":
+        failures.append("invalid governing metric")
+    summary = audit.get("summary", {})
+    if summary.get("lanes_audited") != len(rows) or len(rows) != 10:
+        failures.append("lane count mismatch")
+    if summary.get("existing_family_wide_visible_v1_matched_resource_ceilings") != 0:
+        failures.append("unsupported existing visible-v1 ceiling count")
+    if summary.get("paper2_confirmed") is not False:
+        failures.append("audit cannot confirm Paper 2")
+    if summary.get("terminal_boundary_supported") is not False:
+        failures.append("audit cannot support terminal boundary")
+
+    by_lane = {row.get("lane"): row for row in rows}
+    if len(by_lane) != len(rows):
+        failures.append("duplicate lane")
+    if by_lane.get("Program H", {}).get("evidence_metric") != (
+        "ret_excel_full_ledger_order_adapter"
+    ):
+        failures.append("Program H evidence metric mismatch")
+    if by_lane.get("Program J", {}).get("evidence_metric") != "ret_excel_full_ledger":
+        failures.append("Program J evidence metric mismatch")
+
+    for row in rows:
+        artifacts = row.get("artifacts")
+        if artifacts is None:
+            artifacts = [row.get("artifact")]
+        for artifact in artifacts:
+            if not isinstance(artifact, dict):
+                failures.append(f"missing artifact for {row.get('lane')}")
+                continue
+            relative = artifact.get("path")
+            expected = artifact.get("sha256")
+            path = root / relative if isinstance(relative, str) else None
+            if path is None or not path.is_file():
+                failures.append(f"missing artifact: {relative}")
+                continue
+            hashes_checked += 1
+            if not isinstance(expected, str) or sha256(path) != expected:
+                failures.append(f"artifact hash mismatch: {relative}")
+    return {
+        "passed": not failures,
+        "failures": failures,
+        "lane_count": len(rows),
+        "hashes_checked": hashes_checked,
+        "existing_visible_v1_ceilings": summary.get(
+            "existing_family_wide_visible_v1_matched_resource_ceilings"
+        ),
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -218,6 +669,18 @@ def main() -> int:
     interventions = load(SEARCH / "candidate_intervention_ledger.json")
     decision_coverage = load(SEARCH / "decision_right_catalog_coverage.json")
     decision_catalog = load(ROOT / "contracts" / "decision_right_catalog_v1.json")
+    paper3_supersession = load(SEARCH / "paper3_claim_supersession.json")
+    historical_ceiling_audit = load(
+        SEARCH / "historical_visible_v1_ceiling_audit_20260714.json"
+    )
+    metric_audit = load(SEARCH / "metric_governance_audit.json")
+    metric_source_semantics = load(
+        SEARCH / "ret_excel_visible_v1_source_semantics_audit_20260714.json"
+    )
+    metric_v2_implementation = load(
+        SEARCH / "ret_excel_request_snapshot_v2_implementation_audit_20260714.json"
+    )
+    excel_metric_reaudit = load(SEARCH / "excel_metric_reaudit_20260713.json")
 
     record("taxonomy_schema", taxonomy.get("schema_version") == "paper2_failure_taxonomy_v1",
            taxonomy.get("schema_version"))
@@ -236,6 +699,13 @@ def main() -> int:
     record(
         "prelearner_gate_is_fail_closed",
         prelearner["status"] == "NO_CURRENT_CANDIDATE_ELIGIBLE"
+        and prelearner["primary_endpoint"].startswith(CANONICAL_METRIC_CONTRACT)
+        and prelearner["metric_readiness"]["status"]
+        == "HOLD_CANONICAL_V2_RESCORE_AND_DOMAIN_CONFIRMATION_REQUIRED"
+        and prelearner["metric_readiness"][
+            "paper2_null_positive_or_ceiling_authorized"
+        ]
+        is False
         and prelearner["learner_authorized"] is False
         and prelearner["paper3_authorized"] is False
         and set(prelearner["candidate_entry_status"]) == approach_ids,
@@ -244,6 +714,24 @@ def main() -> int:
             "mandatory_gates": len(prelearner["mandatory_gates"]),
             "learner_authorized": prelearner["learner_authorized"],
         },
+    )
+    paper3_supersession_validation = validate_paper3_claim_supersession(
+        paper3_supersession
+    )
+    record(
+        "historical_c12_is_superseded_for_current_paper3_authorization",
+        paper3_supersession_validation["passed"]
+        and paper3_supersession_validation["paper3_authorized"] is False,
+        paper3_supersession_validation,
+    )
+    historical_ceiling_validation = validate_historical_visible_v1_ceiling_audit(
+        historical_ceiling_audit
+    )
+    record(
+        "historical_visible_v1_ceiling_audit_is_fail_closed",
+        historical_ceiling_validation["passed"]
+        and historical_ceiling_validation["existing_visible_v1_ceilings"] == 0,
+        historical_ceiling_validation,
     )
     boundary_proof_validation = validate_boundary_family_proof_ledger(
         registry,
@@ -320,39 +808,20 @@ def main() -> int:
         source_ok &= actual == expected
     record("source_hashes", source_ok, source_details)
 
-    metric_audit = load(SEARCH / "metric_governance_audit.json")
-    metric_lock = metric_audit["canonical_endpoint"]["fresh_reaudit"]
-    metric_nonmonotonicity = metric_audit["canonical_endpoint"][
-        "known_construct_nonmonotonicity"
-    ]
+    metric_validation = validate_metric_governance(
+        metric_audit,
+        metric_source_semantics,
+        metric_v2_implementation,
+        excel_metric_reaudit,
+    )
     record(
-        "canonical_metric_and_cd_claim_boundary_locked",
-        metric_audit["status"]
-        == "CANONICAL_RET_LOCKED_CD_SECONDARY_ONLY_FOR_CURRENT_PAPER2"
-        and metric_audit["canonical_endpoint"]["contract_id"]
-        == "ret_excel_visible_v1"
-        and metric_lock["raw_cf_sheets"] == 20
-        and metric_lock["formula_rows"] == 47_546
-        and metric_lock["mismatches"] == 0
-        and metric_lock["max_abs_diff"] == 0.0
-        and metric_audit["paper2_authorization"]["learner_authorized_by_cd"]
-        is False
-        and metric_audit["paper2_authorization"]["paper3_authorized"] is False
-        and metric_nonmonotonicity["status"]
-        == "MACHINE_VERIFIED_LIVE_AGGREGATOR_COUNTEREXAMPLE"
-        and "visible-v1=6/7" in metric_nonmonotonicity["front_loaded_schedule"]
-        and "visible-v1=1.0" in metric_nonmonotonicity[
-            "later_batched_schedule"
-        ],
-        {
-            "status": metric_audit["status"],
-            "canonical_contract": metric_audit["canonical_endpoint"][
-                "contract_id"
-            ],
-            "fresh_reaudit": metric_lock,
-            "known_nonmonotonicity": metric_nonmonotonicity,
-            "cd_current_paper2": metric_audit["metric_decision"]["current_paper2"],
-        },
+        "canonical_v2_metric_is_provisional_and_visible_v1_is_quarantined",
+        metric_validation["passed"]
+        and metric_validation["paper2_positive_confirmed"] is False
+        and metric_validation["paper2_null_confirmed"] is False
+        and metric_validation["paper2_ceiling_confirmed"] is False
+        and metric_validation["prior_h_j_mtr_results_restored"] is False,
+        metric_validation,
     )
 
     ancestor = "ef6b53b7cac9c1cbdcdc4347a31c8300d1941fc0"
@@ -760,14 +1229,23 @@ def main() -> int:
            {"active_for_bound": active, "blocked": blocked})
 
     failed = [check for check in checks if not check["passed"]]
+    metric_rescore_hold = (
+        metric_audit["paper2_authorization"]["current_scientific_state"]
+        == "HOLD_CANONICAL_V2_RESCORE_AND_DOMAIN_CONFIRMATION_REQUIRED"
+        and metric_audit["v2_release_gates"]["identical_tape_rescore_h_j_mtr"]
+        == "REQUIRED"
+    )
     terminal_boundary = (
         not failed
+        and not metric_rescore_hold
         and not active
         and not blocked
         and boundary_proof_validation["all_families_terminal_b_eligible"]
     )
     if failed:
         status = "FAIL_EVIDENCE_INCONSISTENT"
+    elif metric_rescore_hold:
+        status = "HOLD_CANONICAL_V2_RESCORE_AND_DOMAIN_CONFIRMATION_REQUIRED"
     elif active:
         status = "OPEN_ACTIVE_BOUND_REQUIRED"
     elif blocked:
@@ -783,7 +1261,11 @@ def main() -> int:
         "status": status,
         "terminal_boundary": terminal_boundary,
         "paper2_confirmed": False,
+        "paper2_null_confirmed": False,
+        "paper2_ceiling_confirmed": False,
         "paper3_authorized": False,
+        "canonical_metric_contract": CANONICAL_METRIC_CONTRACT,
+        "metric_rescore_hold": metric_rescore_hold,
         "checks_passed": len(checks) - len(failed),
         "checks_total": len(checks),
         "active_for_bound": active,

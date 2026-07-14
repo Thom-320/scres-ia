@@ -133,6 +133,13 @@ class OrderRecord:
     lost: bool = False
     lost_time: Optional[float] = None
     metrics_excluded: bool = False
+    # Garrido Annex-B barrier-matrix snapshot carried with each request to Op9.
+    # These are captured at OPTj, before the new request enters the queue.  They
+    # are the Bt/Ut inputs later used by the workbook's no-risk ReT branch.
+    ret_bt_at_request: Optional[int] = None
+    ret_ut_at_request: Optional[int] = None
+    ret_ledger_snapshot_time: Optional[float] = None
+    ret_ledger_event_sequence: Optional[int] = None
     # Thesis ReT sub-indicators (Garrido-Rios 2017, Eq. 5.1-5.5):
     APj: float = 0.0  # Autotomy period (hours): CTj=LTj and risks impact in [OPTj,OATj]
     RPj: float = 0.0  # Recovery period (hours): OATj - first R0cr detection
@@ -811,6 +818,7 @@ class MFSCSimulation:
         self.pending_backorders: list[OrderRecord] = []
         self.pending_backorder_qty = 0.0
         self.total_unattended_orders = 0
+        self._ret_ledger_snapshot_sequence = 0
         self.warmup_complete = False
         self.warmup_time = 0.0
         self._cumulative_available_assembly_hours = 0.0
@@ -4461,6 +4469,24 @@ class MFSCSimulation:
     # =====================================================================
 
     def _place_demand_order(self, order: OrderRecord):
+        if order.ret_bt_at_request is None:
+            order.ret_bt_at_request = min(
+                int(BACKORDER_QUEUE_CAP),
+                sum(
+                    1
+                    for pending in self.pending_backorders
+                    if bool(getattr(pending, "backorder", False))
+                    and not bool(getattr(pending, "lost", False))
+                    and not bool(getattr(pending, "metrics_excluded", False))
+                ),
+            )
+        if order.ret_ut_at_request is None:
+            order.ret_ut_at_request = int(self.total_unattended_orders)
+        if order.ret_ledger_snapshot_time is None:
+            order.ret_ledger_snapshot_time = float(self.env.now)
+        if order.ret_ledger_event_sequence is None:
+            self._ret_ledger_snapshot_sequence += 1
+            order.ret_ledger_event_sequence = self._ret_ledger_snapshot_sequence
         if self.cssu_topology_mode == "split_v1":
             if order.contingent and self._contingent_cssu_destination_pending:
                 order.cssu_destination = self._contingent_cssu_destination_pending
@@ -4580,6 +4606,26 @@ class MFSCSimulation:
                 quantity=demand_qty,
                 remaining_qty=demand_qty,
                 contingent=bool(row.get("contingent", False)),
+                ret_bt_at_request=(
+                    int(row["ret_bt_at_request"])
+                    if row.get("ret_bt_at_request") is not None
+                    else None
+                ),
+                ret_ut_at_request=(
+                    int(row["ret_ut_at_request"])
+                    if row.get("ret_ut_at_request") is not None
+                    else None
+                ),
+                ret_ledger_snapshot_time=(
+                    float(row["ret_ledger_snapshot_time"])
+                    if row.get("ret_ledger_snapshot_time") is not None
+                    else None
+                ),
+                ret_ledger_event_sequence=(
+                    int(row["ret_ledger_event_sequence"])
+                    if row.get("ret_ledger_event_sequence") is not None
+                    else None
+                ),
                 ret_attribution_override=row.get("ret_attribution"),
             )
             yield from self._place_demand_order(order)
@@ -4615,6 +4661,7 @@ class MFSCSimulation:
         self.total_demanded = 0
         self.total_backorders = 0
         self.total_unattended_orders = 0
+        self._ret_ledger_snapshot_sequence = 0
         self.cumulative_backorder_qty = 0.0
 
     def _op13_demand_from_excel_order_tape_after_calendar_warmup(self):

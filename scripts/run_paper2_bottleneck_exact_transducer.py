@@ -3,9 +3,9 @@
 
 This script is deliberately *not* a full-horizon H_PI computation.  It tests
 whether prefixes of the frozen ``paper2_bottleneck_migration_v1`` simulator may
-share future transitions under a conservative semantic Markov key.  The first
-certification target is the canonical sparse visible-order ReT ledger on short,
-already-burned development tapes.
+share future transitions under a conservative semantic Markov key.  The current
+target is the request-snapshot-v2 order-level ReT ledger on short, already-burned
+development tapes. Historical key-v4/visible-v1 certificates remain quarantined.
 
 Scientific limits
 -----------------
@@ -70,6 +70,7 @@ from supply_chain.paper2_bottleneck import (  # noqa: E402
 )
 from supply_chain.program_f import ProgramFController, advance_including  # noqa: E402
 from supply_chain.ret_thesis import (  # noqa: E402
+    compute_order_level_ret_excel_request_snapshot_ledger,
     compute_order_level_ret_excel_visible_ledger,
 )
 from supply_chain.supply_chain import MFSCSimulation  # noqa: E402
@@ -77,8 +78,8 @@ from supply_chain.supply_chain import MFSCSimulation  # noqa: E402
 ROOT = Path(__file__).resolve().parent.parent
 CONTRACT_PATH = ROOT / "contracts" / "paper2_bottleneck_full_horizon_bound_v1.json"
 PRIMARY_CONTRACT_PATH = ROOT / "contracts" / "paper2_bottleneck_primary_bound_v2.json"
-KEY_SCHEMA_VERSION = "paper2_bottleneck_semantic_markov_key_v4"
-RESULT_SCHEMA_VERSION = "paper2_bottleneck_exact_transducer_certification_v5"
+KEY_SCHEMA_VERSION = "paper2_bottleneck_semantic_markov_key_v5"
+RESULT_SCHEMA_VERSION = "paper2_bottleneck_exact_transducer_certification_v6"
 MARKOV_COMPLETENESS_SCHEMA_VERSION = "paper2_markov_completeness_v1"
 PROOF_CALLABLE_BINDING_SCHEMA_VERSION = "paper2_loaded_callable_binding_v1"
 REDUCED_EXECUTION_VERIFICATION_SCHEMA_VERSION = (
@@ -271,6 +272,7 @@ SIM_STATE_FIELDS = (
     "_in_transit",
     "pending_backorder_qty",
     "total_unattended_orders",
+    "_ret_ledger_snapshot_sequence",
     "op_down_count",
     "_op_down_since",
     "_contingent_demand_pending",
@@ -654,6 +656,7 @@ _EXTERNAL_PROOF_CALLABLE_ROOTS = frozenset(
     {
         "advance_including",
         "compute_episode_metrics",
+        "compute_order_level_ret_excel_request_snapshot_ledger",
         "compute_order_level_ret_excel_visible_ledger",
         "make_sim",
         "materialize_tape",
@@ -6169,11 +6172,24 @@ def _endpoint_panel(sim: Any, start: float, controller: Any) -> dict[str, Any]:
 
 
 def checkpoint(sim: Any, start: float, controller: Any) -> Checkpoint:
-    visible = compute_order_level_ret_excel_visible_ledger(
-        _treatment_orders(sim, start), current_time=sim.env.now
+    treatment_orders = _treatment_orders(sim, start)
+    visible = compute_order_level_ret_excel_request_snapshot_ledger(
+        treatment_orders, current_time=sim.env.now
     )
-    values = tuple(float(value) for value in visible["ret_values"])
-    ids = tuple(int(row["j"]) for row in visible["ret_rows"])
+    ret_by_j = {int(row["j"]): float(row["ret"]) for row in visible["ret_rows"]}
+    completed = sorted(
+        (
+            order
+            for order in treatment_orders
+            if getattr(order, "OATj", None) is not None
+            and int(order.j) in ret_by_j
+        ),
+        key=lambda order: (float(order.OATj), int(order.j)),
+    )
+    ids = tuple(int(order.j) for order in completed)
+    values = tuple(ret_by_j[order_id] for order_id in ids)
+    if set(ids) != set(ret_by_j):
+        raise RuntimeError("request-snapshot visible population/order mapping drifted")
     primary = float(np.mean(values)) if values else 1.0
     panel = _endpoint_panel(sim, start, controller)
     selected = {key: panel.get(key) for key in ENDPOINT_KEYS}

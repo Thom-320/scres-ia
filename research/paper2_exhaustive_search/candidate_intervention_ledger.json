@@ -16,12 +16,12 @@
     {
       "family_id": "regime_lead_time_advance_transport_reservation",
       "operational_interpretation": "Book future shared lift for Op10 or Op12 before a route-specific degraded period.",
-      "source_justification": "The thesis contains transport stages and risk editing, but assumes vehicle and route availability and does not specify a finite shared booking pool.",
-      "provenance_class": "researcher_extension_requiring_Garrido_signoff",
-      "units_and_conservation": "booked slots; vehicle-hours; payload; departures; cancellations and unused slots; capacity is removed from all competing arcs when committed",
-      "plausible_envelope_status": "booking lead, fleet size, dwell and signal envelope absent",
-      "null_or_falsification_regime": "unlimited 24-hour arcs or no pre-booking authority make the action transition-dead and H_PI=H_obs=0",
-      "claim_limit": "Only advance transport reservation under validated fleet physics, not generic routing superiority."
+      "source_justification": "The thesis anchors two CSSUs, Op10/Op12 24-hour downstream legs, daily 2400-2600 ration orders and use of land/water/air modes by urgency and equipment. Ozer and Wei (2004), Boada-Collado et al. (2022), Bertsimas and van Ryzin (1991/1993) and GAO-21-125 support the advance-information/shared-capacity mechanism class, not Program M's numerical parameters.",
+      "provenance_class": "disclosed_synthetic_researcher_extension_with_later_face_validation",
+      "units_and_conservation": "one charged slot per week; eight departures; 2600-ration charged capacity per slot; 48 vehicle-hours per slot; 20,800 total capacity; 384 total vehicle-hours; loaded and empty movements are charged identically; inventory is removed once from Op9 and delivered once",
+      "plausible_envelope_status": "Program M freezes 24-hour activation, 144-hour window, one-order payload, hazards 0.25/0.50/0.75, durations 24/72/120 hours and two signal qualities before results. Duration endpoints are thesis-risk anchors; hazard, signal, protected-mode and slot values remain disclosed synthetic scenario assumptions.",
+      "null_or_falsification_regime": "zero hazard, mode-equivalence, shuffled warning, one-week delay and wrong-location warning must collapse H_obs; native thesis physics still has exact zero reservation-action liveness",
+      "claim_limit": "At most conditional adaptive value in the frozen Program M multimodal contested-access extension. No numerical thesis-fleet, learned-policy or Paper-2 claim follows without all frozen gates and later independent face validation."
     },
     {
       "family_id": "censored_demand_active_information_acquisition",
@@ -67,11 +67,11 @@
       "family_id": "alarm_signal_finite_maintenance",
       "operational_interpretation": "Allocate a finite preventive-maintenance crew to the station whose observed condition indicates impending failure.",
       "source_justification": "Program J implements this researcher extension against thesis Op5-Op7 maintenance context.",
-      "provenance_class": "versioned_researcher_extension_already_falsified",
+      "provenance_class": "versioned_researcher_extension_pending_governing_metric_repair",
       "units_and_conservation": "crew-hours by station and week; downtime-hours; production units; one crew-hour cannot serve multiple stations",
-      "plausible_envelope_status": "implemented screen; observed restricted-oracle maximum 0.0001338324 ReT",
+      "plausible_envelope_status": "implemented historical screen; observed restricted-oracle maximum 0.0001338324 under ret_excel_full_ledger, with no complete visible-v1 3^8 frontier",
       "null_or_falsification_regime": "signal removal or nonbinding crew makes adaptive allocation value zero",
-      "claim_limit": "Current contract is closed below the 0.01 practical gate; severity or signal retuning alone cannot reopen it."
+      "claim_limit": "Historical full-ledger tested-policy null only. Complete visible-v1 3^8 frontier is required before closing the current contract; severity or signal retuning alone cannot rescue it."
     },
     {
       "family_id": "r21_r3_shared_mab_restoration_sequencing",

@@ -50,7 +50,7 @@
       "code_scope": "_belief_policy and headroom_at"
     },
     {
-      "requirement": "canonical ret_excel_visible_v1 aggregation",
+      "requirement": "historical visible-v1 aggregation claim, now additionally quarantined by the request-snapshot-v2 source audit",
       "evidence": "The atlas adapter scores compute_order_level_ret_excel_formula over all generated orders with a row-index denominator. Corrective replay reproduces both reported positive cells exactly, but both increase lost orders with CI95 entirely above zero. Raw visible-ledger optimization chooses HOLD^4 because an empty visible population scores 1.0; that 64/64 zero is a shed-to-win degeneracy and explicitly is not a project H_PI ceiling.",
       "path": "supply_chain/program_g.py",
       "code_scope": "ret_order_metrics",

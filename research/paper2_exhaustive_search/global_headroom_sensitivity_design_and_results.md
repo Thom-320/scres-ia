@@ -4,7 +4,7 @@ Date: 2026-07-13
 
 ## Existing global result
 
-Program I is the repository's completed sensitivity analysis of adaptive value rather than raw outcome. Its most important result is interaction-specific:
+Program I is the repository's completed historical sensitivity analysis of adaptive value rather than raw outcome. It uses the stylized `ret_order`/full-ledger order adapter, not the governing full-DES `ret_excel_request_snapshot_v2`, so it is construct-sensitivity evidence rather than a current-task H_PI/H_obs screen. Its most important within-contract result is interaction-specific:
 
 - scarcity and concurrent spatial demand move `H_obs`;
 - information quality, signal lead/persistence and risk magnitude are inert in that frozen contract;
@@ -13,6 +13,16 @@ Program I is the repository's completed sensitivity analysis of adaptive value r
 - worst-CSSU fill deteriorates about `0.126-0.128`, so the region fails the simultaneous fairness guardrail.
 
 This is a boundary result, not a candidate cell. Increasing risk magnitude or signal quality inside the same spatial contract is a blocked reparameterization.
+
+The complete historical design is now reconstructed in
+`results/headroom_gsa/all_cells_reconstruction.json`: 56 Morris cells, 40 GP
+search cells and one located-region confirmation, using the original burned
+`3,000,001+` tapes. It reproduces every stored aggregate verdict exactly and
+retains every null cell. `global_sensitivity_portfolio_inventory.json`
+content-addresses this reconstruction together with the 320-row full-DES
+Morris design, 140-row pilot, 4,320-row local-branch table and 64-cell
+corrective atlas. This makes the executed portfolio complete as reporting; it
+does not turn noncanonical or restricted screens into governing ceilings.
 
 The concurrently committed 64-cell atlas is not additional canonical evidence.
 Corrective replay reconstructs the omitted `1000*cell_index` seed convention

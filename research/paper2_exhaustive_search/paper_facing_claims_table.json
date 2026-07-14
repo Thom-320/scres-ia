@@ -2,6 +2,7 @@
   "schema_version": "paper_facing_claims_table_v1",
   "generated_date": "2026-07-14",
   "purpose": "Charter section 19 item 13: classify every paper-facing claim. Machine-evidenced; each row cites the binding artifact.",
+  "metric_governance": "ret_excel_request_snapshot_v2 is the provisional canonical development endpoint. Every ret_excel_visible_v1 OAT-ledger result is metric-development only and cannot establish a current H_PI, H_obs, null, positive or ceiling.",
   "classifications": {
     "CONFIRMED": {
       "definition": "Survives every comparator, resource, metric, observability, action-trajectory, and confirmatory gate on virgin tapes.",
@@ -19,9 +20,9 @@
         {"claim": "Observable conversion of DRA-2b headroom fails (Program E); 0/10 PPO seeds beat static", "family": "E_convoy_observable_learning", "artifact": "results/program_e/validation/verdict.json (PPO delta CI [-3.2e-4,+2.0e-4], 0/10)", "failure_arrow": "learned value (failed: learner collapses to best static)"},
         {"claim": "Mitigation portfolio (Program F) has oracle headroom but 0/24 cells convert observably", "family": "F_mitigation_portfolio", "artifact": "results/program_f/screen/verdict.json (STOP_PROGRAM_F_SCREEN)", "failure_arrow": "observable conversion (failed: insufficient predictive information)"},
         {"claim": "Spatial commitment (Program G) has no robust adaptive value under the stylized contract; service-loss proxy win reverses under canonical ret_excel", "family": "G_spatial_commitment", "artifact": "results/program_g/terminal_metric_audit/verdict.json (STOP_PROGRAM_G...)", "failure_arrow": "observable headroom (failed: metric reversal + fairness concentration + ABAB dominates)"},
-        {"claim": "Belief-state rescue of G (Program H) has a material PI ceiling but no belief policy converts it; bound not tight enough for formal impossibility", "family": "H_belief_state_spatial_rescue", "artifact": "results/program_h/locked_belief_policy_gate/verdict.json + bound/verdict.json (ceiling +0.0164, best policy +0.0023 CI crosses 0)", "failure_arrow": "observable headroom (failed: information-limited, bound gap)"},
+        {"claim": "Program H has no governing PI or observable result; historical metrics are non-governing/quarantined and the current adapter ignores R22 and route arm", "family": "H_belief_state_spatial_rescue", "artifact": "results/program_h/visible_v1_repair/observable_policy_screen.json", "failure_arrow": "physical liveness and governing-metric PI ceiling unresolved"},
         {"claim": "Thesis-control branching (Program I) has no resource-adjusted local headroom; only scarcity x concurrency moves H_obs and it fails the fairness guardrail", "family": "I_thesis_control_branching + I_global_scarcity_concurrency_region", "artifact": "results/program_i/branching/verdict.json + results/headroom_gsa/oos_guardrail_check.json (worst_cssu_fill -0.13 << -0.02)", "failure_arrow": "observable headroom (failed: all oracle deltas ~1e-5; the one positive region starves a CSSU)"},
-        {"claim": "Serial-line maintenance allocation (Program J) has negligible canonical ReT ceiling (~1e-4); PPO beats static in 0/6 seeds", "family": "J_finite_maintenance", "artifact": "results/paper2_maintenance/terminal_verdict.json + results/paper2/rl_convertibility.json (PPO 0/6)", "failure_arrow": "learned value (failed: physical magnitude too small + dominant calendar)"},
+        {"claim": "Serial-line maintenance has a strong central-cell v2 null signal but no family ceiling", "family": "J_finite_maintenance", "artifact": "results/paper2_maintenance/request_snapshot_v2_full_frontier/verdict.json + program_j_request_snapshot_v2_frontier_structure_audit_20260714.json", "failure_arrow": "complete 3^8 central PI delta 0.000182735, but 107 cells, CI, worst-node and tail guardrail remain"},
         {"claim": "Lateral transshipment is dominated by central resupply under current physics (no thesis-native lateral lane)", "family": "F3_lateral_transshipment", "artifact": "candidate_family_ledger.json F3 (BLOCKED by domination)", "failure_arrow": "n/a (dominated, not tested)"},
         {"claim": "Multi-echelon information lag alone cannot create value (information monotonicity)", "family": "F6_multi_echelon_information_lag", "artifact": "candidate_family_ledger.json F6 (BLOCKED by mathematical impossibility)", "failure_arrow": "n/a (mathematical: O_lag subset O_current)"},
         {"claim": "Admission/abandonment reduces to D1 (backorder priority) under current physics (no operational abandonment)", "family": "F2_admission_abandonment", "artifact": "candidate_family_ledger.json F2 (BLOCKED, reduces to D1)", "failure_arrow": "n/a (reduces to closed)"}
@@ -30,7 +31,7 @@
     "UNRESOLVED_BOUND": {
       "definition": "A tested policy-level result exists, but the strongest same-contract frontier or a valid resource-restricted ceiling is not yet certified. No family-level null, positive result, or terminal boundary claim is allowed.",
       "claims": [
-        {"claim": "Integrated M/T/R signal control is a policy null, while the full equal-resource 11,184,811-calendar frontier remains unresolved", "family": "post_K3_bottleneck_migration / integrated_production_maintenance_routing_recovery_resource", "artifact": "contracts/paper2_bottleneck_primary_bound_v2.json + research/paper2_exhaustive_search/mtr_switch_complexity_screen_verdict_20260713.json + research/paper2_exhaustive_search/mtr_resource_semantics_verdict_20260714.json + research/paper2_exhaustive_search/vps_switch4_producer_precompletion_anchor_20260714.json + research/paper2_exhaustive_search/mtr_switch4_deep_replay_readiness_20260714.json", "failure_arrow": "unresolved exact full-horizon resource-restricted H_PI", "note": "The earlier componentwise-unequal comparison and best-of-constants LCB are not an H_PI ceiling. The complete 11,611-calendar <=3-switch calibration screen passed 696,660-rollout deep replay, but its unique winner uses all three allowed switches. The complete 89,131-calendar <=4 producer is running after a passed preflight; a running job is not evidence and must pass terminal custody plus separate 5,347,920-rollout deep replay. Neither shell is H_PI, H_obs, a family null or a positive result."}
+        {"claim": "Integrated M/T/R has no request-snapshot-v2 comparator frontier or PI bound", "family": "post_K3_bottleneck_migration / integrated_production_maintenance_routing_recovery_resource", "artifact": "research/paper2_exhaustive_search/mtr_switch4_vps_metric_quarantine_20260714.json", "failure_arrow": "all completed/partial comparator scores used quarantined visible-v1", "note": "The watched <=4 producer was deliberately terminated after 5/60 tapes. A v2 continuation must restart calibration from tape one under an immutable commit and prestart watcher."}
       ]
     },
     "EXPLORATORY": {
@@ -63,7 +64,10 @@
     "QUARANTINED_BLOCKED": {
       "definition": "A proposed contract or runner failed source, observability, comparator or governance audit. Any execution discovered outside authorization and custody is quarantined, burns its tapes, and supplies no scientific result.",
       "claims": [
-        {"claim": "The rejected standalone factory-APP Cobb-Douglas v1 runner is not a faithful or deployable headroom test", "family": "factory_app_cd_resilience", "artifact": "research/paper2_exhaustive_search/factory_app_cd_gate_v1_rejection.json", "effective_verdict": "QUARANTINED_UNAUTHORIZED_PRE_REJECTION_EXECUTION_DISCOVERED_POST_AUDIT; 9600001-9600400 burned; paper_reproduces_dominant_pure was hard-coded; exact mathematical transform survives, numerical runner and raw output do not"}
+        {"claim": "The rejected standalone factory-APP Cobb-Douglas v1 runner is not a faithful or deployable headroom test", "family": "factory_app_cd_resilience", "artifact": "research/paper2_exhaustive_search/factory_app_cd_gate_v1_rejection.json", "effective_verdict": "QUARANTINED_UNAUTHORIZED_PRE_REJECTION_EXECUTION_DISCOVERED_POST_AUDIT; 9600001-9600400 burned; paper_reproduces_dominant_pure was hard-coded; exact mathematical transform survives, numerical runner and raw output do not"},
+        {"claim": "Every ret_excel_visible_v1 OAT-ledger result is metric-development only", "family": "global_metric_governance", "artifact": "metric_governance_audit.json", "effective_verdict": "QUARANTINED_OAT_LEDGER_NOT_SOURCE_VALIDATED"},
+        {"claim": "Program H visible-v1 results cannot support H_PI, H_obs or closure", "family": "H_belief_state_spatial_rescue", "artifact": "results/program_h/visible_v1_repair/observable_policy_screen.json", "effective_verdict": "INVALID_PROGRAM_H_GOVERNING_ADAPTER_R22_AND_ARM_DEAD_PLUS_METRIC_QUARANTINE"},
+        {"claim": "M/T/R <=3/<=4/W12/W16/W24 visible-v1 outputs cannot support a current null or ceiling", "family": "integrated_production_maintenance_routing_recovery_resource", "artifact": "mtr_switch4_vps_metric_quarantine_20260714.json", "effective_verdict": "CONTROLLED_TERMINATION_AFTER_5_OF_60__CUSTODY_ONLY"}
       ]
     },
     "FUTURE_WORK": {
@@ -71,7 +75,7 @@
       "claims": [
         {"claim": "A methodological Paper 2 on state-action-metric alignment / decision-right eligibility / why adaptive value requires simultaneous alignment (publishable regardless of any positive adaptive result)", "evidence": "The entire D->K3 arc IS this result; see docs/PAPER_CLAIM_FREEZE_2026-07-12.md ('Paper exists independently of a positive PPO result')"},
         {"claim": "A simulation-optimization decision-right discovery paper (the G0-G9 methodology itself, validated by the nulls it correctly produced)", "evidence": "The pre-learner gate chain correctly stopped 9 lanes before expensive learner training"},
-        {"claim": "A value-of-information / information-sufficiency paper (Program H's certified-bound methodology, even though the bound was not tight enough for impossibility)", "evidence": "results/program_h/bound/verdict.json (certified J_PI ceiling +0.0164)"},
+        {"claim": "A value-of-information / information-sufficiency methods paper using Program H's certified-bound machinery, explicitly scoped to its full-ledger adapter until visible-v1 replay is complete", "evidence": "results/program_h/bound/verdict.json (non-governing full-ledger J_PI ceiling +0.0164)"},
         {"claim": "A construct-validity / metric-induced-ranking-reversal paper (Program G's ret_excel vs service-loss vs Cobb-Douglas triangulation)", "evidence": "results/program_g/triangulation/verdict.json (METRIC_INDUCED_POLICY_REVERSAL_CONFIRMED)"},
         {"claim": "R21/R3 scarce Maintenance Battalion restoration sequencing is a domain-blocked question, not a falsified family", "evidence": "risk_intervention_governance.json + approach_registry.json; current parallel-recovery action is exact-null and the historical order-invariance claim lacks a machine proof"},
         {"claim": "Op7 inspection requires variable effort technology, a persistent signaled quality regime, sampled-unit conservation and qualified-output guardrails before any screen", "evidence": "inspection_quality_and_decision_gap_correction.json + Garrido Q8"},
@@ -88,14 +92,14 @@
     "EXPLORATORY": 8,
     "SUPERSEDED": 3,
     "RETRACTED": 1,
-    "QUARANTINED_BLOCKED": 1,
+    "QUARANTINED_BLOCKED": 4,
     "FUTURE_WORK": 9
   },
   "current_verdict": {
     "paper2_adaptive_confirmed": false,
     "paper2_neural_incremental_confirmed": false,
     "paper3_retained_learning_authorized": false,
-    "terminal_outcome_pending": "Awaiting a stronger M/T/R open-loop frontier or valid resource-restricted ceiling. The <=3-switch comparator gate is deep-replay verified but boundary-active, so the next authorized step is the separately frozen complete <=4-switch calibration gate on the VPS. F8/F10 and other researcher extensions remain domain-blocked pending Garrido facts; no terminal outcome B is currently valid.",
+    "terminal_outcome_pending": "HOLD_CANONICAL_V2_RESCORE_AND_DOMAIN_CONFIRMATION_REQUIRED. Program J has only a central-cell v2 point diagnostic; Program H lacks live route physics; M/T/R has no v2 comparator or PI bound; researcher extensions remain domain-blocked. No terminal A or B is valid.",
     "honest_strongest_paper2_today": "Methodological / boundary result (state-action-metric alignment or decision-right discovery), NOT a positive adaptive-control paper. Consistent with docs/PAPER_CLAIM_FREEZE_2026-07-12.md."
   }
 }

@@ -1,17 +1,17 @@
 # Boundary of what can and cannot be certified
 
 Date: 2026-07-14
-Current machine status: `OPEN_ACTIVE_BOUND_REQUIRED__MTR_SWITCH4_PRODUCER_RUNNING_NOT_EVIDENCE`.
+Current machine status: `HOLD_CANONICAL_V2_RESCORE_AND_DOMAIN_CONFIRMATION_REQUIRED`.
 
 ## Result
 
 The current repository does not contain a valid Paper 2 environment. It also does not yet support terminal outcome B over the complete user-permitted extension class.
 
-This is not because a positive result is assumed to exist. It is because the extension class is open-ended and one implemented family still lacks a quantitative ceiling:
+This is not because a positive result is assumed to exist. It is because the extension class is open-ended and multiple implemented families still lack a governing-metric quantitative ceiling:
 
 1. The finite, versioned Track A-C and Program D-K3 contracts are null, retracted, guardrail-failing, physically invalid, or comparator-incomplete as recorded in `phase0_failure_taxonomy.json`.
 2. The new product, transport, information, storage, inspection, transshipment, queue, component-kit, detected-lot-disposition, R21/R3 scarce-restoration and mission-loadout families require operational facts absent from the thesis. They are `blocked_domain_fact`, not falsified. Current inspection, component-kit and disposition actions are absent, so their incremental current-kernel `H_PI=H_obs=0`; this does not close a signed-off extension. Current R21/R3 recovery is parallel and has exact zero sequencing-action liveness; the hypothetical scarce Maintenance Battalion extension lacks team/work/travel/observation facts, and its historical restoration-order-invariance closure has no machine proof. Mission loadout is thesis-motivated (one pack covers 24 hours, up to 1.4 kg, typically about five packs depending on mission/resupply) but absent from the executable theatre-delivery state.
-3. The integrated M/T/R response-team contract has a policy-level null but not a family ceiling. It has 11,184,811 effective full-horizon calendars. After the original three-constant comparison, a complete watched and independently deep-replayed `<=3`-switch screen evaluated all 11,611 calendars and selected a unique winner that used all three allowed switches. The next complete 89,131-calendar `<=4`-switch producer is currently running after a passed six-tape VPS preflight; it is not evidence until terminal retrieval, custody validation and separate deep replay pass. Even a valid `<=4` result is not the full W24 frontier or a resource-restricted PI ceiling. The first semantic-state quotient attempt (`179f7c2`) was stopped before result after an adversarial HOLD: its finite quotient induction was not accepted because Markov-state completeness was self-attested and its scientific identity/receipt chain was incomplete. The invalidated key-v3 development profile suggested roughly 3-8 CPU-hours per W24 tape and approximately 4.5-15 days for the 179-tape build on the six-CPU VPS before calendar screening. Those figures are historical planning estimates, not current evidence or a scientific result.
+3. The source audit invalidated the OAT-time ledger semantics of `ret_excel_visible_v1`; all H/J/MTR results scored with it are metric-development only. Program H is also structurally dead because its governing adapter ignores R22 and route arm. Program J now has a central-cell v2 point diagnostic: complete `3^8` open-loop enumeration on 12 burned tapes gives resource-restricted PI delta `0.000182735`, but this is neither confidence-bounded nor family-wide and fails the tail guardrail. The visible-v1 M/T/R `<=4` VPS producer was deliberately terminated after 5/60 tapes under its valid prestart watcher. No v2 M/T/R comparator or PI bound exists. The first semantic-state quotient attempt (`179f7c2`) was already stopped after an adversarial HOLD because Markov-state completeness and scientific identity were not certified. Every M/T/R continuation must restart from the first calibration tape under v2.
 
 Accordingly, the exact scientific state is:
 
@@ -72,31 +72,35 @@ A failed heuristic, learner, or signal policy is not a family ceiling.
 | D1 priority | Restricted oracle `+0.0010945`, CI95 `[+0.0004225,+0.0019773]`; observable tree is negative and loses orders. |
 | DRA-1 allocation | Restricted oracle `+0.0000879`, UCB95 `0.0001659`. |
 | Program I resource-equal transport branching | Oracle `+0.00001045`, UCB95 `0.00001420` for the versioned branch portfolio; not a global reservation ceiling. |
-| Program J alarm/maintenance | Maximum screened restricted oracle `0.0001338324`; observable rules negative. The 0.01 gate is at least `74.72x` that best observed effect. This closes alarm scaling within J, not every domain-valid maintenance extension. |
+| Program J alarm/maintenance | Central-cell request-snapshot-v2 resource-restricted PI point delta `0.000182735` versus the complete `3^8` frontier; 54.7 times below gate, but only 12 burned tapes/1 of 108 cells, no CI/worst-node endpoint, and CVaR05 worsens. |
 | R21/R3 shared MaB restoration sequencing | Exact current-kernel `H_PI=H_obs=0` because recovery clocks are independent/parallel and no shared-team dispatch action exists. A scarce-team extension is blocked pending team count/skills, work/travel/preemption and damage-assessment facts; it is not machine-falsified. |
 | K3 budgeted replenishment | Learned policy exactly equals one fixed period-8 schedule; adaptive and neural claims retracted. |
-| Multi-echelon lag alone | Formal information inclusion: `O_lag` is a subset of `O_current`, so lag cannot improve the frozen G/H optimum. |
+| Multi-echelon lag alone | Formal information inclusion gives `J_star(O_lag) <= J_star(O_current)`, but the current-information optimum has no v2 numeric ceiling; Program H first requires a causally live R22/route adapter. |
 | Native reservation, storage, inspection, lateral and multimodal actions | Exact zero action liveness because those actions are not in the thesis transition kernel. Their introduced versions remain domain-blocked. |
 | Component-specific R13 / Op4 kit balancing | Exact current-kernel `H_PI=H_obs=0`: the DES aggregates `rm1...rm12`, R13 is a common Op2 delay and no finite component-load Op4 action exists. The frozen catalog's earlier DRA2 route was a category error because DRA2 controls finished rations at Op7-Op8. |
 | Alternate-route recourse | Exact thesis-native `H_PI=H_obs=0` because there is no alternate-route action. The Program-L development heuristic reaches at most mean `+0.004017` with LCB95 below zero and extra departures; this is not a ceiling for the unvalidated extension. |
 | Mission-loadout carried autonomy | Exact current-kernel `H_PI=H_obs=0`: the DES has no cohort carried-inventory state, loadout action, sealed carried-consumption ledger or return rule. A Garrido-approved downstream extension remains domain-blocked. |
 | Native R14 inspection and detected-lot disposition | The thesis already has fixed Op7 inspection, 3%/8% Binomial defects and Op6 rework. No variable inspection or sequential disposition action exists, hence incremental current-kernel `H_PI=H_obs=0`. With equal-rate unit-yield rework, rework saves raw material and weakly dominates discard. Any extension needs measured inspection technology or distinct rework/replacement physics and must preserve latent-defect conservation and R14 attribution. |
-| Integrated M/T/R team | Signal policy `-0.001309`, CI95 `[-0.006384,+0.003093]`; feasible clairvoyant lower bound `+0.002336`, CI95 `[-0.000993,+0.005841]`; no ceiling. |
+| Integrated M/T/R team | All reported signal/comparator deltas used quarantined visible-v1. No v2 comparator frontier, PI point or ceiling exists. |
 
-Comparator-development evidence adds that the complete `<=3`-switch
-calibration frontier has mean best open-loop ReT `0.2724722527` and a unique
-three-switch-boundary winner. It does not change the `no ceiling` entry. The
-`<=4` producer has no result yet.
+Historical visible-v1 comparator-development found a boundary-active `<=3`
+winner, but that score is now quarantined and does not determine the v2
+comparator. The `<=4` producer was terminated after 5/60 tapes when the metric
+defect was confirmed; it has no result.
 
-A deterministic per-tape canonical upper bound was also computed on the 120 burned locked tapes. Because `ret_excel_visible_v1` has an un-clipped `0.5/RP` recovery branch and the action-sensitive causal cone begins before almost every order, its mean upper gap versus constant M is `138.185` (bootstrap interval `[87.003,200.842]`); zero tapes have a bound at or below `0.01`. This is rigorous but vacuous. It proves that an affected-order/unit-score shortcut cannot close M/T/R, not that the family has large headroom.
+A deterministic per-tape upper bound was computed under visible-v1, but it is
+now metric-development only. It cannot bound request-snapshot-v2 M/T/R.
 
 ## Smallest next closure step
 
-The only current numerical `active_for_bound` family is the integrated M/T/R team. It can change state only after:
+The current numerical `active_for_bound` families are Program H physics/metric
+repair, Program J family-wide v2 screening, and the integrated M/T/R team. H
+requires a live authorized route adapter before any replay. J requires the
+complete 108-cell v2 screen and confidence-bound follow-up. M/T/R can change
+state only after:
 
-- the running `<=4` shell completes, is retrieved with matching remote hashes,
-  passes the tracked custody anchor and producer validator, and is reproduced
-  by the isolated full deep replay;
+- a new immutable v2 run restarts from the first calibration tape with a
+  prestart watcher and source-bound custody;
 - the full 11,184,811-calendar frontier is certified or replaced by a valid upper-bound method;
 - a resource-restricted PI ceiling is computed through the canonical aggregator;
 - the one-team-week resource is confirmed to be truly fungible across M/T/R, while reserve issue/replenishment is frozen as an outcome or separately matched resource;

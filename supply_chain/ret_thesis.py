@@ -435,3 +435,155 @@ def compute_order_level_ret_excel_visible_ledger(
         "ret_values": visible_values,
         "ret_rows": visible_rows,
     }
+
+
+def compute_order_level_ret_excel_request_snapshot_ledger(
+    orders: Iterable[Any],
+    *,
+    current_time: float | None = None,
+    emit_order_ids: set[int] | None = None,
+) -> dict[str, Any]:
+    """Reconstruct the workbook-visible ledger at request generation.
+
+    Garrido-Rios (2017), Annex B, printed page 169, describes a barrier matrix
+    associated with each *request generated*.  The matrix carries the order
+    number, generation time, and accumulated backorder/lost-order counts to
+    Op9.  The raw workbooks likewise keep rows in increasing ``j``/``OPTj``
+    order even though ``OATj`` repeatedly reverses.  Consequently Bt/Ut are
+    request-time snapshots, not completion-time reconstructions.
+
+    Native DES orders should carry ``ret_bt_at_request`` and
+    ``ret_ut_at_request`` captured at ``OPTj``.  For stylized adapters that
+    lack those fields, this function reconstructs the same snapshot from the
+    complete order history using half-open backorder intervals
+    ``[OPTj + LTj, min(OATj, lost_time))`` and lost events observed by ``OPTj``.
+    The fallback is deterministic but must not be described as workbook-
+    validated when the adapter omits orders or event times.
+    """
+    del current_time  # the request snapshot is historical, not horizon-relative
+    order_list = sorted(
+        list(orders),
+        key=lambda order: (
+            int(getattr(order, "j", 0) or 0),
+            float(getattr(order, "OPTj", 0.0) or 0.0),
+        ),
+    )
+    visible_orders = [
+        order
+        for order in order_list
+        if not bool(getattr(order, "lost", False))
+        and getattr(order, "OATj", None) is not None
+        and (
+            emit_order_ids is None
+            or int(getattr(order, "j", 0) or 0) in emit_order_ids
+        )
+    ]
+    visible_values: list[float] = []
+    visible_rows: list[dict[str, Any]] = []
+    case_counts: Counter[str] = Counter()
+    last_backorders = 0
+    last_unattended = 0
+
+    for idx, order in enumerate(visible_orders, start=1):
+        row_time = float(getattr(order, "OPTj", 0.0) or 0.0)
+        row_key = (
+            int(getattr(order, "j", idx) or idx),
+            row_time,
+        )
+        explicit_bt = getattr(order, "ret_bt_at_request", None)
+        explicit_ut = getattr(order, "ret_ut_at_request", None)
+        if explicit_bt is not None and explicit_ut is not None:
+            current_backorders = int(explicit_bt)
+            cumulative_unattended = int(explicit_ut)
+            snapshot_source = "captured_at_request"
+        else:
+            current_backorders = 0
+            cumulative_unattended = 0
+            for candidate in order_list:
+                candidate_key = (
+                    int(getattr(candidate, "j", 0) or 0),
+                    float(getattr(candidate, "OPTj", 0.0) or 0.0),
+                )
+                if candidate_key >= row_key:
+                    break
+                opt = float(getattr(candidate, "OPTj", 0.0) or 0.0)
+                lt = float(getattr(candidate, "LTj", 0.0) or 0.0)
+                activation = opt + lt
+                candidate_oat = getattr(candidate, "OATj", None)
+                lost_time = getattr(candidate, "lost_time", None)
+                end_candidates = [
+                    float(value)
+                    for value in (candidate_oat, lost_time)
+                    if value is not None
+                ]
+                end_time = min(end_candidates) if end_candidates else float("inf")
+                if activation <= row_time < end_time:
+                    current_backorders += 1
+                if (
+                    bool(getattr(candidate, "lost", False))
+                    and lost_time is not None
+                    and float(lost_time) <= row_time
+                ):
+                    cumulative_unattended += 1
+            snapshot_source = "reconstructed_from_complete_history"
+
+        current_backorders = max(
+            0, min(current_backorders, int(BACKORDER_QUEUE_CAP))
+        )
+        cumulative_unattended = max(0, cumulative_unattended)
+        j_value = int(getattr(order, "j", idx) or idx)
+        ret, case = compute_ret_per_order_excel_formula(
+            order,
+            j=j_value,
+            cumulative_backorders=current_backorders,
+            cumulative_unattended=cumulative_unattended,
+        )
+        visible_values.append(float(ret))
+        visible_rows.append(
+            {
+                "j": j_value,
+                "opt": row_time,
+                "quantity": float(getattr(order, "quantity", 0.0) or 0.0),
+                "sum_bt": current_backorders,
+                "sum_ut": cumulative_unattended,
+                "snapshot_source": snapshot_source,
+                "snapshot_time": getattr(
+                    order, "ret_ledger_snapshot_time", None
+                ),
+                "snapshot_event_sequence": getattr(
+                    order, "ret_ledger_event_sequence", None
+                ),
+                "ret": float(ret),
+                "case": str(case),
+            }
+        )
+        case_counts[case] += 1
+        last_backorders = current_backorders
+        last_unattended = cumulative_unattended
+
+    max_j = max(
+        (int(getattr(order, "j", 0) or 0) for order in order_list),
+        default=0,
+    )
+    return {
+        "contract_version": "ret_excel_request_snapshot_v2",
+        "mean_ret_excel": (
+            float(np.mean(visible_values)) if visible_values else 1.0
+        ),
+        "case_counts": {
+            "excel_fill_rate": int(case_counts["excel_fill_rate"]),
+            "excel_autotomy": int(case_counts["excel_autotomy"]),
+            "excel_recovery": int(case_counts["excel_recovery"]),
+            "excel_risk_no_recovery": int(
+                case_counts["excel_risk_no_recovery"]
+            ),
+        },
+        "n_generated_orders": len(order_list),
+        "max_order_index": max_j,
+        "n_visible_rows": len(visible_values),
+        "n_omitted_rows": len(order_list) - len(visible_values),
+        "final_backorders": last_backorders,
+        "final_unattended": last_unattended,
+        "ret_values": visible_values,
+        "ret_rows": visible_rows,
+    }

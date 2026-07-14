@@ -2,11 +2,32 @@
 
 Date: 2026-07-14
 
+Current governing status: `HOLD_CANONICAL_V2_RESCORE_AND_DOMAIN_CONFIRMATION_REQUIRED`.
+
+`ret_excel_visible_v1` is quarantined because its OAT-time `Bt/Ut`
+reconstruction is not source-validated. Every H/J/MTR scalar below that was
+produced with visible-v1 is historical metric-development evidence only; it
+cannot establish a null, positive, `H_PI`, `H_obs` or ceiling. The canonical
+development endpoint is now `ret_excel_request_snapshot_v2`, provisional
+pending Garrido confirmation of same-timestamp request-ledger ordering and
+complete v2 rescore.
+
 ## Paper 2
 
 No new candidate from this exhaustive-search round is eligible for a Paper 2 confirmatory preregistration.
 
-The last implemented candidate is the integrated M/T/R bottleneck-migration contract. Its preregistered observable gate stopped on already-opened locked tapes:
+Program M is now frozen for a **development pre-learner H_PI screen**, not for
+Paper 2 confirmation. It tests advance reservation of one equal-charged
+protected-lift slot between CSSU A/B under a localized access signal. The
+contract is a disclosed synthetic extension, not a thesis-fleet estimate, and
+does not depend on Garrido to search or select headroom. All 256 full-horizon
+calendars, resource ledgers, null physics, placebos and four disjoint seed roles
+were fixed before any Program M scientific tape was opened. `H_PI`, `H_obs` and
+learned value are all still uncomputed; learner and virgin tapes remain blocked.
+
+The last implemented candidate before the metric correction was the integrated
+M/T/R bottleneck-migration contract. Its now-quarantined observable gate
+stopped on already-opened locked tapes:
 
 - canonical ReT delta: `-0.001309`, CI95 `[-0.006384,+0.003093]`;
 - service-loss reduction: `-0.03035`, CI95 `[-0.03877,-0.02246]`;
@@ -27,11 +48,16 @@ The corrective comparator/resource audit now shows that the original gate was no
 - there is no resource-restricted PI ceiling;
 - the null cell is implementable but was not frozen prospectively.
 
-Therefore the effective status is:
+That historical analysis cannot determine the current v2 sign. The effective status is:
 
-`NO_PAPER2_RESULT__ACTIVE_BOUND_AND_DOMAIN_FACTS_REQUIRED`.
+`HOLD_CANONICAL_V2_RESCORE_AND_DOMAIN_CONFIRMATION_REQUIRED`.
 
-Program L does not change this status. Its full-DES development screen used the canonical aggregator, but its purported `H_PI` was a myopic true-state rule, its comparator frontier was incomplete, and its two positive-mean cells used more departures with LCB95 below zero. The tested heuristic contract is a no-go; thesis-native alternate-route value is exactly zero because the action is absent; the introduced route family remains blocked on Garrido facts and a certified bound.
+Program L does not change this status. Its full-DES development screen used the
+now-quarantined visible-v1 aggregator; independently, its purported `H_PI` was
+a myopic true-state rule, its comparator frontier was incomplete, and its two
+positive-mean cells used more departures with LCB95 below zero. The introduced
+route family remains blocked on Garrido facts, live physics and a certified v2
+bound.
 
 No seed block may be renamed virgin. In particular, `6800001+`, `6900001+`,
 `1100001–1100060`, `1110001–1110120`, and the unauthorized APP/CD range
@@ -64,22 +90,26 @@ scores plus 60 selected-calendar ledgers. Its unique winner
 `MMMMMMMTTRRRMMMMMMMMMMMM` uses all three permitted switches, so that family is
 boundary-active and cannot be treated as the strongest open-loop comparator.
 
-The separately frozen `<=4`-switch family contains 89,131 calendars. Its
-six-tape/six-worker VPS preflight completed, passed relocated custody and
-environment validation, and was retrieved with matching hashes. The 60-tape
-producer is now running from immutable commit `8f31f410` under a watcher that
-attested prestart before the scientific PID. A tracked pre-completion anchor was
-captured while result and progress were still zero bytes. No producer result
-exists yet; a submitted or running job is not evidence. Terminal evidence must
-pass remote-file checksum retrieval, the fail-closed producer-custody validator
-from commit `d89d911`, and an independent local deep replay of 5,347,860
-candidate scores plus 60 selected ledgers.
+The separately frozen visible-v1 `<=4` family contains 89,131 calendars. Its
+six-tape VPS preflight passed custody, but the 60-tape producer was deliberately
+terminated after 5/60 tapes when the metric defect was confirmed. The watcher
+attested before the scientific PID, recorded the terminal state, and the
+artifacts were retrieved and hashed. There is no scientific result and no live
+VPS process. Any M/T/R continuation must restart calibration from tape one on
+an immutable v2 commit with a prestart watcher.
 
 Accordingly the governing status is
-`OPEN_ACTIVE_BOUND_REQUIRED__MTR_SWITCH4_PRODUCER_RUNNING_NOT_EVIDENCE`.
-The `<=4` gate is still not the complete 11,184,811-calendar W24 frontier and
-does not compute resource-restricted `H_PI` or `H_obs`. W24, Paper 2 learning
-and Paper 3 remain unauthorized.
+`HOLD_CANONICAL_V2_RESCORE_AND_DOMAIN_CONFIRMATION_REQUIRED`.
+No v2 M/T/R frontier, resource-restricted `H_PI` or `H_obs` exists. W24, Paper
+2 learning and Paper 3 remain unauthorized.
+
+Program J has one completed v2 development diagnostic. On 12 burned central-
+cell tapes, the complete `3^8=6,561` open-loop frontier and a resource-only
+tape-contingent PI relaxation give delta `0.000182735`, 54.7 times below the
+`0.01` practical gate. CVaR05 worsens. Because the resource slice was derived
+historically, only one of 108 cells was evaluated, no confidence ceiling or
+worst-node endpoint exists, and the run came from a dirty development tree,
+this is a strong local null signal rather than `H_PI`, `H_obs` or family closure.
 
 Risk editing does not currently authorize a numeric rescue. The thesis-supported
 current-to-increased R11–R24/R3 cells change occurrence only and add no
@@ -116,11 +146,21 @@ Before any result, freeze in one versioned contract:
 - fixed-sequence and phase replacements;
 - a single learner architecture/budget/seeds and stop rule.
 
-No current family clears this entry gate.
+No current family clears the learner-entry gate. Program M clears only the
+pre-result infrastructure gate needed to run its H_PI development screen.
 
 ## Paper 3
 
 Paper 3 is prohibited. `H_learned > 0` has not been established under the current strongest comparator definition.
+
+Historical claim C12 in `docs/CLAIMS_REGISTRY_Q1_DEFENSE_2026-07-01.md`
+records a small retained-minus-reset effect from an earlier Track-B probe. That
+bounded historical result is not retracted, but it cannot authorize Paper 3 in
+this task: the underlying Track-B learned policy subsequently lost to the
+full-contract constant comparator, and the probe was not the required
+virgin-campaign, matched-compute retained-learning comparison conditional on a
+confirmed Paper-2 learned win. The machine-readable precedence and
+non-transferability rule is frozen in `paper3_claim_supersession.json`.
 
 The transient K3 Paper-3 authorization is superseded by the corrective period-8 audit. No retained-learning result, campaign preregistration, or new retention run may be promoted while Paper 2 is false.
 

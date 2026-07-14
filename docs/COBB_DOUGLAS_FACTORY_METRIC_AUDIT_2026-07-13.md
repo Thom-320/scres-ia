@@ -5,21 +5,26 @@ Machine record: [`metric_governance_audit.json`](../research/paper2_exhaustive_s
 
 ## Verdict
 
-The current Paper 2 endpoint remains `ret_excel_visible_v1`. A fresh read-only
-recalculation of the three Garrido workbooks audited all 20 raw `CF` sheets and
-47,546 formula-bearing rows with zero mismatches and maximum absolute error
-`0.0`; the 17 workbook/metric contract tests pass. The binding implementation
-is `supply_chain.episode_metrics.compute_episode_metrics`, which calls the
-workbook-visible ledger aggregator. It emits completed, non-lost rows without
-clipping and retains lost or unresolved orders through the cumulative backlog
-and unattended-order ledger. Lost orders therefore remain a simultaneous
-guardrail.
+**2026-07-14 supersession:** the source-aligned canonical development endpoint
+is now `ret_excel_request_snapshot_v2`. The earlier
+`ret_excel_visible_v1` OAT-derived `Bt/Ut` ledger is quarantined as
+metric-development only and cannot establish a Paper-2 null, positive or
+ceiling. The fresh workbook audit still establishes its narrow result: all 20
+raw `CF` sheets and 47,546 formula-bearing rows replay with zero mismatches and
+maximum absolute error `0.0` when workbook `Bt/Ut` are supplied. It did not
+validate reconstruction of those ledgers from `OATj`.
+
+The v2 aggregator now accepts request-time `Bt/Ut` snapshots and reproduces the
+same 47,546 cells exactly. This is provisional pending confirmation of
+same-timestamp Simulink ordering and re-score of all eligible tapes and
+comparators. Lost orders and the other physical/resource outcomes remain
+simultaneous guardrails.
 
 Garrido, Pongutá and García-Reyes (2024) supplies a legitimate second
 construct, but it is a **factory-level aggregate-production-planning index**,
 not the thesis order-level MFSC ReT. In the current Paper 2 contract it may be a
-frozen secondary construct-sensitivity measure; it cannot turn a canonical-ReT
-null into a Paper 2 positive.
+frozen secondary construct-sensitivity measure; it cannot rescue a quarantined
+v1 result or substitute for a future v2 Paper-2 result.
 
 ## What the 2024 index measures
 

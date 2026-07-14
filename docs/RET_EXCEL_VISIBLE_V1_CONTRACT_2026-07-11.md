@@ -1,8 +1,17 @@
 # `ret_excel_visible_v1` — frozen metric contract (2026-07-11)
 
-Status: **canonical for new confirmatory work**. Historical artifacts are not
-rewritten; their `ret_excel` is relabelled conceptually as full-ledger unless
-their runner explicitly used the visible-ledger function.
+> **Superseded 2026-07-14.** This historical contract is quarantined as
+> metric-development only because its OAT-derived `Bt/Ut` reconstruction is not
+> source-validated. It cannot support a Paper-2 null, positive, `H_PI`, `H_obs`,
+> comparator ceiling or terminal boundary. The canonical source-aligned
+> development contract is
+> [`ret_excel_request_snapshot_v2`](RET_EXCEL_REQUEST_SNAPSHOT_V2_CONTRACT_2026-07-14.md).
+> The historical text below is retained unchanged for provenance.
+
+Historical status at freeze: **then treated as canonical for new confirmatory
+work**. Historical artifacts are not rewritten; their `ret_excel` is relabelled
+conceptually as full-ledger unless their runner explicitly used the
+visible-ledger function.
 
 ## Primary endpoint
 

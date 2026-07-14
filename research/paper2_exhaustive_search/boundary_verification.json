@@ -1,10 +1,11 @@
 {
   "active_for_bound": [
+    "multi_echelon_information_lag_only",
+    "alarm_signal_finite_maintenance",
     "integrated_production_maintenance_routing_recovery_resource"
   ],
   "blocked_domain_or_claim_families": [
     "multi_ration_product_mix_setup_substitution",
-    "regime_lead_time_advance_transport_reservation",
     "censored_demand_active_information_acquisition",
     "lateral_cssu_transshipment",
     "queue_admission_priority_with_abandonment",
@@ -18,6 +19,7 @@
     "r14_detected_lot_disposition",
     "demand_shaping_or_substitution"
   ],
+  "canonical_metric_contract": "ret_excel_request_snapshot_v2",
   "checks": [
     {
       "check": "taxonomy_schema",
@@ -64,6 +66,28 @@
       "passed": true
     },
     {
+      "check": "historical_c12_is_superseded_for_current_paper3_authorization",
+      "detail": {
+        "failures": [],
+        "hashes_checked": 6,
+        "historical_claim_preserved": true,
+        "paper3_authorized": false,
+        "passed": true
+      },
+      "passed": true
+    },
+    {
+      "check": "historical_visible_v1_ceiling_audit_is_fail_closed",
+      "detail": {
+        "existing_visible_v1_ceilings": 0,
+        "failures": [],
+        "hashes_checked": 11,
+        "lane_count": 10,
+        "passed": true
+      },
+      "passed": true
+    },
+    {
       "check": "boundary_proof_ledger_schema_and_family_coverage",
       "detail": {
         "coverage_ok": true,
@@ -75,7 +99,7 @@
       "check": "boundary_proof_artifact_hashes_and_summary_are_consistent",
       "detail": {
         "all_families_terminal_b_eligible": false,
-        "artifact_hashes_checked": 5,
+        "artifact_hashes_checked": 7,
         "coverage_ok": true,
         "failures": [],
         "nonterminal_family_ids": [
@@ -180,35 +204,25 @@
       "passed": true
     },
     {
-      "check": "canonical_metric_and_cd_claim_boundary_locked",
+      "check": "canonical_v2_metric_is_provisional_and_visible_v1_is_quarantined",
       "detail": {
-        "canonical_contract": "ret_excel_visible_v1",
-        "cd_current_paper2": "Cobb-Douglas may be reported as a frozen secondary construct-sensitivity outcome. It cannot rescue a null or loss on ret_excel_visible_v1 and cannot satisfy the current Paper 2 success definition by itself.",
-        "fresh_reaudit": {
-          "artifact_path": "research/paper2_exhaustive_search/excel_metric_reaudit_20260713.json",
-          "artifact_sha256": "b9341ef1d52a9b1cebafd892ea7e3e175868d5a986954022086f2461832472f1",
-          "formula_rows": 47546,
-          "max_abs_diff": 0.0,
-          "mismatches": 0,
-          "raw_cf_sheets": 20,
-          "test_files": [
-            "tests/test_garrido_excel_ret.py",
-            "tests/test_ret_excel_visible_contract.py",
-            "tests/test_garrido_audit_workbook_packaging.py"
-          ],
-          "test_result": "17 passed",
-          "timestamp_utc": "2026-07-13T19:12:25.624150+00:00"
-        },
-        "known_nonmonotonicity": {
-          "artifact": "research/paper2_exhaustive_search/k3_frontloading_dominance_certificate.json",
-          "contract_scope": "Frozen K3 exact-budget FIFO kernel, zero risk indicators, identical total order resource and identical lost order 8.",
-          "front_loaded_schedule": "(1.5,1.5,1.5,1.5,1.5,1.5,1.0,0.0)*D0; weakly earlier completion for every order; visible-v1=6/7.",
-          "interpretation": "This does not change which metric is canonical and does not establish adaptive value. It proves that physical service/completion dominance is insufficient to certify a visible-v1 upper bound; the primary metric must always be recomputed directly and interpreted with service, loss, quantity, tail and fairness guardrails.",
-          "later_batched_schedule": "(1.0,1.0,1.5,1.5,1.5,1.5,1.5,0.5)*D0; prefix-dominated by the front-loaded schedule; visible-v1=1.0.",
-          "mechanism": "The sparse ledger applies all completion-removal events at a timestamp before emitting any row at that timestamp, so later batched completions can see a smaller Bt than an earlier individual completion.",
-          "status": "MACHINE_VERIFIED_LIVE_AGGREGATOR_COUNTEREXAMPLE"
-        },
-        "status": "CANONICAL_RET_LOCKED_CD_SECONDARY_ONLY_FOR_CURRENT_PAPER2"
+        "canonical_contract": "ret_excel_request_snapshot_v2",
+        "canonical_status": "SOURCE_ALIGNED_IMPLEMENTED__PROVISIONAL_PENDING_SAME_TIME_GARRIDO_CONFIRMATION",
+        "failures": [],
+        "hashes_checked": 3,
+        "implementation_source_hashes_checked": 5,
+        "paper2_ceiling_confirmed": false,
+        "paper2_null_confirmed": false,
+        "paper2_positive_confirmed": false,
+        "passed": true,
+        "prior_h_j_mtr_results_restored": false,
+        "quarantined_scopes": [
+          "all_ret_excel_visible_v1_oat_ledger_outputs",
+          "mtr_visible_v1_switch_frontiers",
+          "program_h_visible_v1",
+          "program_j_visible_v1"
+        ],
+        "visible_v1_disposition": "QUARANTINED_METRIC_DEVELOPMENT_ONLY"
       },
       "passed": true
     },
@@ -216,7 +230,7 @@
       "check": "k3_corrective_commit_is_ancestor",
       "detail": {
         "corrective_commit": "ef6b53b7cac9c1cbdcdc4347a31c8300d1941fc0",
-        "head": "2490248f9f0accfcb99d1dbb1405c15fecd43de9"
+        "head": "a6b1efa6bc0ef468d5d27ee876e931ea02832b47"
       },
       "passed": true
     },
@@ -234,7 +248,7 @@
         "full_ledger_h_pi": 0.0,
         "prefix_violations": 0,
         "schedules": 6371,
-        "sha256": "e400efb4d987ff5b976370d9315fc76939cc0b27d9bb7cd05afe4f640c292fcf",
+        "sha256": "4f39e1ace48346c556f641375c4a9c9b66eebdcf335624d54ac21b0b161e4ac1",
         "states": 61,
         "visible_v1_scope": "NOT_UNCONDITIONALLY_CERTIFIED_BY_THIS_THEOREM"
       },
@@ -677,10 +691,9 @@
       "detail": {
         "states": [
           "active_for_bound",
+          "active_researcher_extension_pre_tape",
           "blocked_domain_fact",
-          "blocked_except_as_product_substitution",
-          "falsified_by_information_inclusion",
-          "falsified_current_contract"
+          "blocked_except_as_product_substitution"
         ]
       },
       "passed": true
@@ -689,14 +702,21 @@
       "check": "paper3_not_authorized",
       "detail": {
         "active_family_state": {
-          "integrated_production_maintenance_routing_recovery_resource": "active_for_bound"
+          "alarm_signal_finite_maintenance": "active_for_bound",
+          "integrated_production_maintenance_routing_recovery_resource": "active_for_bound",
+          "multi_echelon_information_lag_only": "active_for_bound",
+          "regime_lead_time_advance_transport_reservation": "active_researcher_extension_pre_tape"
         },
         "active_for_bound": [
+          "multi_echelon_information_lag_only",
+          "alarm_signal_finite_maintenance",
           "integrated_production_maintenance_routing_recovery_resource"
+        ],
+        "active_researcher_extension_pre_tape": [
+          "regime_lead_time_advance_transport_reservation"
         ],
         "blocked_domain_fact": [
           "multi_ration_product_mix_setup_substitution",
-          "regime_lead_time_advance_transport_reservation",
           "censored_demand_active_information_acquisition",
           "lateral_cssu_transshipment",
           "queue_admission_priority_with_abandonment",
@@ -709,15 +729,12 @@
           "component_specific_r13_kit_balancing_op4_expedite",
           "r14_detected_lot_disposition"
         ],
-        "falsified_or_formally_dominated": [
-          "multi_echelon_information_lag_only",
-          "alarm_signal_finite_maintenance"
-        ],
+        "falsified_or_formally_dominated": [],
         "formally_dominated_historical_contracts": [
           "K3_budgeted_replenishment under frozen ret_excel_full_ledger_order; exact H_PI=H_obs=0 over all 6,371 exact-budget trajectories and all 5,758,374 non-superior-budget grid calendars, with under-spending pairs not mislabeled equal-resource; visible-v1 not unconditionally certified"
         ],
-        "governing_status": "OPEN_ACTIVE_BOUND_REQUIRED__MTR_SWITCH4_PRODUCER_RUNNING_NOT_EVIDENCE",
-        "mtr_adversarial_hold": "Historical W12/W16 key-v2 results and all prior remote W24 attempts remain rejected. The complete calibration-only <=3-switch family passed watched production and 696660-rollout deep replay, but its unique winner used all three permitted switches. The <=4-switch same-host six-worker preflight passed strict custody and memory validation, was retrieved, and matched remote hashes. Its 60-tape producer is running under watcher-before-science custody on immutable commit 8f31f410; a running job is not evidence. W24, H_PI, an observable-policy claim and all learner work remain unauthorized until completed producer retrieval, checksum verification, deep replay and the subsequent bound decision all pass.",
+        "governing_status": "HOLD_CANONICAL_V2_RESCORE_AND_DOMAIN_CONFIRMATION_REQUIRED",
+        "mtr_adversarial_hold": "Every completed M/T/R switch frontier used the quarantined visible-v1 metric. The 60-tape VPS producer was stopped after 5/60 and yielded no result; six orphan workers exposed a parent-PID-only watcher defect and were terminated. A v2 restart requires a new immutable commit and whole-session watcher. W24, H_PI, an observable-policy claim and all learner work remain unauthorized.",
         "paper2_confirmed": false,
         "paper3_authorized": false,
         "paper3_status": "PAPER3_NOT_AUTHORIZED__DEPENDENCY_PAPER2_LEARNED_VALUE_UNMET",
@@ -730,11 +747,12 @@
       "check": "unresolved_families_are_explicit",
       "detail": {
         "active_for_bound": [
+          "multi_echelon_information_lag_only",
+          "alarm_signal_finite_maintenance",
           "integrated_production_maintenance_routing_recovery_resource"
         ],
         "blocked": [
           "multi_ration_product_mix_setup_substitution",
-          "regime_lead_time_advance_transport_reservation",
           "censored_demand_active_information_acquisition",
           "lateral_cssu_transshipment",
           "queue_admission_priority_with_abandonment",
@@ -752,11 +770,11 @@
       "passed": true
     }
   ],
-  "checks_passed": 30,
-  "checks_total": 30,
+  "checks_passed": 32,
+  "checks_total": 32,
   "family_proof_validation": {
     "all_families_terminal_b_eligible": false,
-    "artifact_hashes_checked": 5,
+    "artifact_hashes_checked": 7,
     "coverage_ok": true,
     "failures": [],
     "nonterminal_family_ids": [
@@ -782,10 +800,13 @@
     "summary_consistent": true,
     "terminal_family_ids": []
   },
+  "metric_rescore_hold": true,
+  "paper2_ceiling_confirmed": false,
   "paper2_confirmed": false,
+  "paper2_null_confirmed": false,
   "paper3_authorized": false,
-  "repository_head": "2490248f9f0accfcb99d1dbb1405c15fecd43de9",
+  "repository_head": "a6b1efa6bc0ef468d5d27ee876e931ea02832b47",
   "schema_version": "paper2_boundary_verification_v1",
-  "status": "OPEN_ACTIVE_BOUND_REQUIRED",
+  "status": "HOLD_CANONICAL_V2_RESCORE_AND_DOMAIN_CONFIRMATION_REQUIRED",
   "terminal_boundary": false
 }

@@ -151,7 +151,11 @@ def _evaluate_calibration_tape(
     scores: list[float] = []
     reference_hashes: tuple[str, str] | None = None
     for sequence in candidates:
-        row = run_policy(tape, active_calendar_policy(sequence))
+        row = run_policy(
+            tape,
+            active_calendar_policy(sequence),
+            ret_excel_contract_version="ret_excel_visible_v1",
+        )
         hashes = _validate_rollout(
             row,
             tape_sha256=tape["threat_sha256"],
@@ -188,7 +192,11 @@ def _evaluate_locked_tape(
     rows: dict[str, dict[str, Any]] = {}
     reference_hashes: tuple[str, str] | None = None
     for name, sequence in policies.items():
-        row = run_policy(tape, active_calendar_policy(sequence))
+        row = run_policy(
+            tape,
+            active_calendar_policy(sequence),
+            ret_excel_contract_version="ret_excel_visible_v1",
+        )
         hashes = _validate_rollout(
             row,
             tape_sha256=tape["threat_sha256"],
