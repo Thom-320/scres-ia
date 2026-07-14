@@ -2,9 +2,13 @@
 
 Repository: `Thom-320/scres-ia`
 
-Branch and commit: **fill only after the metric correction and Program M
-implementation are committed and pushed. Do not audit an uncommitted working
-tree.**
+Branch: `codex/paper2-maintenance-headroom`
+
+Scientific snapshot to audit: `ff5e4a8055b2805441894ae0af8de5eb354963fd`
+
+Audit that exact commit. It contains the metric correction, Program M contract,
+full-DES implementation, complete-calendar producer, tests and VPS custody
+tools, but no Program M scientific result and no opened Program M seed block.
 
 ## Role
 
