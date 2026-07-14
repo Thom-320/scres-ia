@@ -2,8 +2,9 @@
   "all_decision_rights_covered_once": true,
   "catalog": "contracts/decision_right_catalog_v1.json",
   "catalog_contract_id": "decision_right_catalog_v1",
+  "coverage_limitation": "The one-to-one audit covers every decision right declared in the frozen v1 catalog; it is not evidence that the catalog exhausts thesis-grounded state distinctions. Independent Op3-Op13 census found at least two action-absent, domain-blocked families; this is a correction, not a proof that no further gaps exist.",
   "decision_right_count": 32,
-  "exact_current_kernel_zero_count": 13,
+  "exact_current_kernel_zero_count": 12,
   "exact_current_kernel_zero_factor_ids": [
     "op4_dispatch_quantity",
     "op4_dispatch_period",
@@ -11,7 +12,6 @@
     "op5_maintenance_effort",
     "op5_wip_limit",
     "op6_inspection_effort",
-    "op6_rework_rule",
     "op6_wip_limit",
     "op7_release_period",
     "op7_quality_release_rule",
@@ -20,8 +20,14 @@
     "op12_routing_rule"
   ],
   "generated_date": "2026-07-13",
-  "interpretation": "A zero applies only to the current transition kernel. It does not close a Garrido-approved researcher extension that adds a live action, conserved resource and operational parameters.",
+  "interpretation": "A zero applies only to the current transition kernel. It does not close a Garrido-approved researcher extension that adds a live action, conserved resource and operational parameters. Cobb-Douglas cannot make a transition-dead action live.",
+  "mechanism_family_complete": false,
   "new_executable_source_native_candidate_count": 0,
+  "newly_identified_gap_count": 2,
+  "newly_identified_gaps": [
+    "component_specific_r13_kit_balancing_op4_expedite",
+    "r14_detected_lot_disposition"
+  ],
   "paper2_confirmed": false,
   "paper3_authorized": false,
   "rows": [
@@ -69,10 +75,11 @@
       "current_kernel_h_pi_ceiling": 0.0,
       "disposition": "action_absent_requires_adapter",
       "evidence": [
-        "contracts/decision_right_catalog_v1.json"
+        "contracts/decision_right_catalog_v1.json",
+        "thesis.txt"
       ],
       "factor_id": "op4_dispatch_quantity",
-      "family_route": "DRA2 finite transport",
+      "family_route": "Op4 raw-material transport; not DRA2 finished-ration Op8 transport",
       "operation": 4
     },
     {
@@ -81,10 +88,11 @@
       "current_kernel_h_pi_ceiling": 0.0,
       "disposition": "action_absent_requires_adapter",
       "evidence": [
-        "contracts/decision_right_catalog_v1.json"
+        "contracts/decision_right_catalog_v1.json",
+        "thesis.txt"
       ],
       "factor_id": "op4_dispatch_period",
-      "family_route": "DRA2 finite transport",
+      "family_route": "Op4 raw-material transport; not DRA2 finished-ration Op8 transport",
       "operation": 4
     },
     {
@@ -93,10 +101,11 @@
       "current_kernel_h_pi_ceiling": 0.0,
       "disposition": "action_absent_requires_adapter",
       "evidence": [
-        "contracts/decision_right_catalog_v1.json"
+        "contracts/decision_right_catalog_v1.json",
+        "thesis.txt"
       ],
       "factor_id": "op4_transport_capacity",
-      "family_route": "DRA2/reservation transport",
+      "family_route": "Op4 raw-material kit balancing/expedite; finite lift absent",
       "operation": 4
     },
     {
@@ -165,22 +174,26 @@
       "current_kernel_h_pi_ceiling": 0.0,
       "disposition": "action_absent_requires_adapter",
       "evidence": [
-        "contracts/decision_right_catalog_v1.json"
+        "contracts/decision_right_catalog_v1.json",
+        "thesis.txt"
       ],
       "factor_id": "op6_inspection_effort",
-      "family_route": "inspection effort versus throughput",
-      "operation": 6
+      "family_route": "Op7 inspection effort versus throughput; frozen catalog labels the wrong operation",
+      "operation": 6,
+      "semantic_correction": "Inspection is thesis Op7; Op6 is the rework destination. The frozen v1 catalog is preserved for provenance.",
+      "semantic_operation": 7
     },
     {
       "catalog_status": "implemented",
-      "current_kernel_h_obs_ceiling": 0.0,
-      "current_kernel_h_pi_ceiling": 0.0,
-      "disposition": "fidelity_configuration_not_adaptive_action",
+      "current_kernel_h_obs_ceiling": null,
+      "current_kernel_h_pi_ceiling": null,
+      "disposition": "transition_live_fidelity_configuration_not_adaptive_action",
       "evidence": [
-        "supply_chain/supply_chain.py"
+        "supply_chain/supply_chain.py",
+        "thesis.txt"
       ],
       "factor_id": "op6_rework_rule",
-      "family_route": "R14 thesis-strict rework",
+      "family_route": "R14 thesis-strict Op6 rework; constructor alternatives change physics, while detected-lot disposition action is absent",
       "operation": 6
     },
     {

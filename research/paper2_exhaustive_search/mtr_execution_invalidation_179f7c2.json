@@ -1,0 +1,49 @@
+{
+  "schema_version": "paper2_mtr_execution_invalidation_v1",
+  "recorded_at_utc": "2026-07-13T20:46:32Z",
+  "source_git_commit": "179f7c2db224ab7cab557d86ede10c86d629311f",
+  "scientific_status": "INVALIDATED_BEFORE_RESULT_NOT_EVIDENCE",
+  "reason": "Independent adversarial review placed the producing commit on HOLD before any result was retrieved or promoted.",
+  "invalidated_runs": [
+    {
+      "run_id": "paper2-mtr-w12-179f7c2",
+      "mode": "reduced_w12",
+      "state_when_stopped": "running",
+      "completed_grouped_result": false
+    },
+    {
+      "run_id": "paper2-mtr-w16-179f7c2",
+      "mode": "reduced_w16",
+      "state_when_stopped": "running",
+      "completed_grouped_result": false
+    },
+    {
+      "run_id": "paper2-mtr-w24-audit-0a1e3be",
+      "mode": "w24_audit",
+      "source_git_commit": "0a1e3be6",
+      "state_when_stopped": "running",
+      "completed_grouped_result": false
+    }
+  ],
+  "hold_findings": [
+    "The finite quotient induction was only conditionally sound: the producer self-attested, rather than machine-certified, that its canonical bytes were Markov-sufficient for the exact loaded deterministic kernel.",
+    "The scientific-result validator did not reconcile the exact ordered tape and certificate identities across prepared seeds, checkpoints, result transducers, coverage rows and the runner manifest.",
+    "Retrieval verification checksum-protected execution receipts but did not semantically reconcile their commit, command, output and environment claims."
+  ],
+  "termination": {
+    "remote_processes_intentionally_stopped": true,
+    "why": "Conserve VPS compute after proof invalidation.",
+    "stale_remote_status_files_are_evidence": false,
+    "live_process_check_utc": "2026-07-13T21:24:46Z",
+    "live_mtr_processes_after_stop": 0
+  },
+  "promotion_prohibited": {
+    "w12_authorization": true,
+    "w16_authorization": true,
+    "w24_authorization": true,
+    "h_pi": true,
+    "paper2": true,
+    "paper3": true
+  },
+  "next_gate": "Repair all HOLD findings, freeze a new immutable commit, repeat reduced-horizon and W24 certification, retrieve and independently audit the new artifacts."
+}

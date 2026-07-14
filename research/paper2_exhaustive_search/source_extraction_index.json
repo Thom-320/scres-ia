@@ -1,7 +1,21 @@
 {
-  "schema_version": "paper2_source_extraction_index_v2",
+  "schema_version": "paper2_source_extraction_index_v3",
   "generated_date": "2026-07-13",
-  "method": "pdftotext -layout for PDFs; python-docx extraction plus LibreOffice/PDF rendering for DOCX visual QA; key thesis and factory-resilience pages rendered with Poppler and visually inspected; workbook formula lineage imported from the frozen 2026-06-25 audit, independently rerun on 2026-07-13, and current workbook identities verified by SHA-256",
+  "method": "pdftotext -layout for canonical PDF text; pandoc -t plain for DOCX text; LibreOffice/PDF rendering for DOCX visual QA; key thesis and factory-resilience pages rendered with Poppler and visually inspected; workbook formula lineage imported from the frozen 2026-06-25 audit, independently rerun on 2026-07-13, and current workbook identities verified by SHA-256",
+  "extraction_reproducibility": {
+    "verifier": "scripts/verify_source_extractions.py",
+    "canonical_command": "python scripts/verify_source_extractions.py --output-dir tmp/paper2_source_extracts --report tmp/paper2_source_extraction_verification.json",
+    "toolchain": {
+      "pdftotext": "26.06.0",
+      "pdfinfo": "26.06.0",
+      "pandoc": "3.10"
+    },
+    "word_count_command": "LC_ALL=C.UTF-8 wc -l -w -c",
+    "word_count_locale": "C.UTF-8",
+    "canonical_outputs_committed": false,
+    "reason_outputs_not_committed": "Full copyrighted source text is reconstructed locally from hash-verified source files and is not redistributed.",
+    "clean_clone_condition": "A clean clone plus source files matching the recorded SHA-256 identities and the pinned extractor versions deterministically reproduces every canonical output; --source ID=/path may relocate a source without relaxing its hash check."
+  },
   "sources": [
     {
       "id": "garrido_thesis_2017",
@@ -11,6 +25,12 @@
       "extracted_text_sha256": "5c6101b90a67eae12b52859ac48592ec8c4f2efbdd937f1a7854ce540a75d05c",
       "extracted_lines": 7869,
       "extracted_words": 65856,
+      "extraction": {
+        "tool": "pdftotext",
+        "arguments": ["-layout"],
+        "output_filename": "garrido_thesis_2017.layout.txt",
+        "output_bytes": 533903
+      },
       "authority": "primary MFSC physical and ReT source",
       "chapter_map": [
         {"chapter": "1", "title": "Introduction", "printed_pages": [16, 20], "extracted_scope": "problem, objectives, scope, contributions and thesis structure", "claim_boundary": "research setting only; no sequential adaptive contract"},
@@ -53,6 +73,12 @@
       "extracted_text_sha256": "aff609d37255cb129fceb0226cffc09c7400fd3e7ff5b4c335294c7baed96d51",
       "extracted_lines": 591,
       "extracted_words": 5783,
+      "extraction": {
+        "tool": "pdftotext",
+        "arguments": ["-layout"],
+        "output_filename": "garrido2024_scres_ai.layout.txt",
+        "output_bytes": 42367
+      },
       "authority": "conceptual learning motivation, not an empirical adaptive-policy result",
       "search_index": [
         {"topic": "scope", "sections": ["1", "5"], "finding": "Explicitly preliminary, theoretical and exploratory."},
@@ -69,8 +95,15 @@
       "source_path": "/Users/thom/Downloads/garrido et al 2024 factory resilience.pdf",
       "source_sha256": "1260863dc295232faf24b820e1f67d53f25f81ffa2d221f7ef02a02310519c43",
       "pages": 20,
+      "extracted_text_sha256": "6260c59fb9b4803c5432995e5fa5212670b2b4c6aadb2bfd11df65c1aa6c1fbf",
       "extracted_lines": 1138,
       "extracted_words": 13395,
+      "extraction": {
+        "tool": "pdftotext",
+        "arguments": ["-layout"],
+        "output_filename": "garrido2024_factory_resilience.layout.txt",
+        "output_bytes": 116117
+      },
       "authority": "primary source for the published factory-level Cobb-Douglas APP construct, not for the thesis order-level MFSC endpoint",
       "search_index": [
         {"topic": "scope", "finding": "Hypothetical make-to-stock factory, 36-week aggregate-production-planning horizon, with demand variability as the sole source of uncertainty."},
@@ -90,6 +123,12 @@
       "extracted_text_sha256": "b18929d0b17e11be0391ab169fe86158023c807ab88b9b424082a308e4d6dd08",
       "extracted_lines": 708,
       "extracted_words": 5163,
+      "extraction": {
+        "tool": "pdftotext",
+        "arguments": ["-layout"],
+        "output_filename": "v0_neuralNet_scres.layout.txt",
+        "output_bytes": 45225
+      },
       "authority": "incomplete working manuscript only",
       "search_index": [
         {"topic": "draft state", "finding": "Placeholder abstract/results/figures and drafting comments remain."},
@@ -110,6 +149,12 @@
       "extracted_text_sha256": "6f80e1ca529d82f767b221005c16f624dcaae5bff61b41601b322db4b9e07c1a",
       "extracted_lines": 834,
       "extracted_words": 4658,
+      "extraction": {
+        "tool": "pandoc",
+        "arguments": ["-t", "plain"],
+        "output_filename": "v0_neuralNet_scres.docx.txt",
+        "output_bytes": 38944
+      },
       "visual_qa": "sampled pages 1, 5, 9, 12 and 21; layout contains blank/sparse pages, placeholders and embedded working material",
       "authority": "editable incomplete working manuscript only"
     },
@@ -145,6 +190,21 @@
       "scope": "Cf1-Cf12 plus APj, RPj, DPj and Re aggregate sheets",
       "audit_evidence": "docs/audits/garrido_excel_des_2026-06-25/README.md",
       "claim_boundary": "not a direct consolidation of Raw_data1+Re.xlsx and Raw_data2+Re.xlsx and not the primary 20-CF target"
+    }
+  ],
+  "tracked_legacy_extracts": [
+    {
+      "path": "thesis.txt",
+      "source_id": "garrido_thesis_2017",
+      "tool": "pdftotext",
+      "arguments": [],
+      "regenerated_output_filename": "garrido_thesis_2017.default_flow.legacy.txt",
+      "sha256": "c0b1671cc8548a19e9b19a53c49c02c7bf6c80912b7af0ebb9a42051c72da1c7",
+      "lines": 10008,
+      "words": 65778,
+      "bytes": 443582,
+      "canonical_for_paper2_search": false,
+      "discrepancy_resolution": "This tracked file is the default-flow pdftotext rendering of the same hash-verified thesis PDF. The canonical searchable research extraction uses -layout and therefore has SHA-256 5c6101b90a67eae12b52859ac48592ec8c4f2efbdd937f1a7854ce540a75d05c. Both modes reproduce byte-for-byte; the different hashes do not indicate different source documents."
     }
   ],
   "workbook_formula_audit": {

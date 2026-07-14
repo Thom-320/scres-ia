@@ -2,7 +2,7 @@
   "schema_version": "paper2_approach_registry_v2",
   "generated_date": "2026-07-13",
   "repository_head": "0a1e3be66390ff2b3f6e3c576bbc6604c06f36d3",
-  "current_scientific_status": "OPEN_ACTIVE_BOUND_REQUIRED__MTR_KEY_V3_ADVERSARIAL_HOLD",
+  "current_scientific_status": "OPEN_ACTIVE_BOUND_REQUIRED__MTR_KEY_V4_SIGNED_REDUCED_GATE_PENDING",
   "terminal_boundary_certified": false,
   "decision_standard": {
     "primary_metric": "ret_excel_visible_v1",
@@ -16,11 +16,11 @@
   },
   "searched_envelope": {
     "id": "mfsc_validated_and_versioned_extensions_2026-07-13_v1",
-    "included": [
+      "included": [
       "thesis-native single-product Op3-Op13 physics",
       "versioned Track A-C and Program D-K3 researcher extensions already implemented in the repository",
       "post-K3 equal-team bottleneck migration screen",
-      "theory-first embeddability tests for product mix, censored demand, admission, lateral transshipment, capacity reservation, multi-echelon information lag, finite storage, inspection, integrated recovery and alarm maintenance"
+      "theory-first embeddability tests for product mix, censored demand, admission, lateral transshipment, capacity reservation, multi-echelon information lag, finite storage, inspection, component-kit balancing, defect disposition, integrated recovery and alarm maintenance"
     ],
     "not_claimed": "A universal boundary over arbitrary future researcher extensions is impossible because unconstrained extensions can embed a headroom-bearing POMDP.",
     "state_rule": "Only versioned numerical contracts may be falsified. A mechanism that needs absent operational facts is blocked_domain_fact, not empirically falsified.",
@@ -167,6 +167,25 @@
       "exact_garrido_question": "Is a condition signal available before an actual Op5-Op7 breakdown and can a finite shared crew prevent/shorten it; what are signal errors/lead, preventive efficacy/duration, repair duration and finished-stock cover?"
     },
     {
+      "family_id": "r21_r3_shared_mab_restoration_sequencing",
+      "hypothesis": "When one R21/R3 event disables several operations concurrently, fewer cross-trained Maintenance Battalion teams than disabled sites force serial recovery and observable damage estimates reverse the best next repair.",
+      "physical_mechanism": "A finite mobile restoration-team pool with travel, activation, nonzero repair work and mutually exclusive assignment across concurrently disabled operations.",
+      "decision_rights": "Dispatch or reassign a restoration team to one disabled operation; optionally preempt only if the real rule permits it.",
+      "observations": "Timestamped damage assessment, operation state, backlog/WIP and team location available before dispatch; no future repair duration or risk tape.",
+      "information_lead": "damage assessment must arrive before an irrevocable travel/repair commitment",
+      "resource_constraint": "team-hours, travel-hours, activation, skills and simultaneous-use exclusion; one team cannot repair two sites concurrently",
+      "expected_ranking_reversal": "the operation with greatest marginal canonical ReT recovery changes with damage duration, WIP/backlog, downstream cover and team location.",
+      "h_pi_estimate": {"thesis_default_parallel_recovery_action_absent": 0.0, "scarce_team_extension": null},
+      "h_obs_estimate": {"thesis_default_parallel_recovery_action_absent": 0.0, "scarce_team_extension": null},
+      "comparator_family": ["all fixed restoration permutations", "upstream-first", "downstream-first", "critical-path", "WSPT", "exact finite-state DP", "resource-constrained MPC"],
+      "main_threat_to_validity": "The thesis supplies simultaneous outage/recovery distributions and names MaB but does not supply team count, serialized work, travel, preemption or pre-dispatch damage information. A historical FALSIFIED label relied on an unproved restoration-order-invariance assertion and is not a machine ceiling.",
+      "state": "blocked_domain_fact",
+      "current_physics_ceiling": {"kind": "action_absent_exact_null", "condition": "independent parallel recovery clocks and no shared-team dispatch action", "h_pi": 0.0, "h_obs": 0.0},
+      "null_regime": "Thesis-default independent parallel recovery with no scarce shared team.",
+      "evidence_required_to_change_state": ["Maintenance Battalion team count and skill compatibility", "base/travel and activation times", "operation-specific repair work distributions", "meaning of 120/672-hour recovery values", "preemption rule", "damage-assessment timing and error", "Garrido authorization"],
+      "exact_garrido_question": "After an R21 or R3 event, does the Maintenance Battalion have fewer cross-trained recovery teams than disabled sites, forcing repairs to serialize; if yes, what are team count, bases/travel/activation, operation-specific repair distributions, preemption, damage-assessment lead/error, and whether 120/672 hours is work content or autonomous downtime?"
+    },
+    {
       "family_id": "finite_storage_space_allocation",
       "hypothesis": "Nonfungible finite space with slow relocation forces state-dependent allocation among products or locations.",
       "physical_mechanism": "Finite location/product-specific storage, overflow consequence and relocation/reconfiguration lead.",
@@ -187,22 +206,22 @@
     },
     {
       "family_id": "inspection_effort_vs_throughput",
-      "hypothesis": "A scarce Op7 inspection effort trades current throughput for reduced defective escape/rework, with ranking reversal under changing quality risk and backlog.",
-      "physical_mechanism": "Variable sampling/inspection time, imperfect sensitivity/specificity, defect escape and rework consequence.",
+      "hypothesis": "A scarce Op7 inspection effort trades current throughput for qualified output under a persistent, signaled lot-quality regime.",
+      "physical_mechanism": "Variable sampling/inspection time, imperfect sensitivity/specificity, CRN-coupled exogenous per-unit/lot defect draws, escaped-defect consequences and Op6 rework.",
       "decision_rights": "Choose inspection intensity or allocate inspectors.",
       "observations": "Quality signal, backlog, inventory and process state.",
       "information_lead": "quality indicators available before batch release",
       "resource_constraint": "inspection labor/minutes, line hours, rework and qualified output",
-      "expected_ranking_reversal": "high inspection under credible defect risk versus throughput under backlog pressure.",
-      "h_pi_estimate": null,
-      "h_obs_estimate": null,
-      "comparator_family": ["all inspection calendars", "fixed sampling plans", "Bayesian quality thresholds", "DP/MPC", "robust policy"],
-      "main_threat_to_validity": "R14 gives a fixed 3% defect and rework rule but no controllable effort or undetected-defect endpoint; without a qualified-delivery guardrail minimum inspection weakly dominates.",
+      "expected_ranking_reversal": "Simplified screen only: with normalized throughput, no false positives, immediate unit-yield recovery and qualified output (1-delta)(1-p+p*s), throughput penalty delta must satisfy T(.03)<=delta<T(.08), T(p)=p(s_H-s_L)/(1-p+p*s_H); with extreme sensitivities 0 and 1 this is 0.03<=delta<0.08. This is not a general inspection theorem, and a persistent pre-action quality state is still absent.",
+      "h_pi_estimate": {"current_kernel_action_absent": 0.0},
+      "h_obs_estimate": {"current_kernel_action_absent": 0.0},
+      "comparator_family": ["all full-horizon inspection calendars", "fixed AQL/sampling plans", "Shewhart/EWMA/CUSUM/SPRT", "Bayesian belief thresholds", "backlog/cover thresholds", "DP/POMDP/MPC", "equal-inspector-hour convex mixtures"],
+      "main_threat_to_validity": "R14 supplies fixed 3%/8% Binomial defects and says a detected item returns to Op6; it does not establish 100% detection. The current DES treats every generated defect as detected. Neither source supplies variable inspection, a persistent quality regime, a leading signal or field-escape endpoint. If detection controls the R14 metric gate, inspect-less can manufacture ReT by concealing risk.",
       "state": "blocked_domain_fact",
-      "current_physics_ceiling": {"kind": "action_absent"},
-      "null_regime": "Inspection has no effect on escape/rework or qualified service.",
-      "evidence_required_to_change_state": ["controllable inspection intensity", "sensitivity/specificity", "inspection and rework time", "undetected-defect operational consequence", "qualified-delivery guardrail"],
-      "exact_garrido_question": "Can Op7 inspection intensity vary; what sampling rate, sensitivity, specificity, inspection/rework time and operational consequence of an escaped defective ration apply?"
+      "current_physics_ceiling": {"kind": "action_absent_exact_null", "h_pi": 0.0, "h_obs": 0.0},
+      "null_regime": "The current kernel has no inspection action and therefore exact zero incremental headroom. An introduced action is exactly transition-dead only when detection, qualification, rework/escape and throughput responses are all effort-invariant. Constant-p/no-quality-signal blocks the proposed signal-responsive mechanism but does not rule out backlog/cover feedback; zero escape consequence may make intensive inspection dominated without making the action transition-dead.",
+      "evidence_required_to_change_state": ["controllable Op7 inspection intensity", "effort-to-sensitivity/specificity curve", "persistent lot-quality state and pre-action signal", "inspection and rework time", "undetected-defect operational consequence", "AQL/qualified-delivery guardrail", "CRN-coupled exogenous unit/lot draws", "latent defective = inspected TP + inspected FN + uninspected defective", "latent conforming = inspected TN + inspected FP + uninspected conforming", "escaped defective = inspected FN + uninspected defective", "inspected TP + inspected FP = reworked + scrapped + held/queued", "Garrido authorization"],
+      "exact_garrido_question": "Is Op7 100% inspection or sampling; may intensity vary; what inspector minutes, sensitivity/specificity/false rejects, lot persistence and pre-action signals, escaped-defect consequence, rework yield/time and AQL apply?"
     },
     {
       "family_id": "multimodal_last_mile_mode_choice",
@@ -275,8 +294,8 @@
       "main_threat_to_validity": "Separate resources factorize into closed families; a generic token pool reduces to Program F. The frozen contract matches one team-week, with M/T/R as allocation destinations, but the real cross-stage team identity is unvalidated and reserve issue/replenishment semantics are unresolved. The signal-policy null also faces 11,184,811 effective calendars and lacks a resource-restricted PI ceiling.",
       "state": "active_for_bound",
       "adversarial_hold": {
-        "status": "MTR_KEY_V3_ADVERSARIAL_HOLD",
-        "required_semantic_markov_key": "paper2_bottleneck_semantic_markov_key_v3",
+        "status": "MTR_KEY_V4_SIGNED_REDUCED_GATE_PENDING",
+        "required_semantic_markov_key": "paper2_bottleneck_semantic_markov_key_v4",
         "governing_contract": "contracts/paper2_bottleneck_primary_bound_v2.json",
         "available_certifications": [
           "results/paper2_bottleneck/exact_transducer_certification_w12.json",
@@ -288,7 +307,7 @@
         "h_pi_computed": false,
         "paper2_learner_authorized": false,
         "paper3_authorized": false,
-        "release_rule": "Release only through a key-v3 fail-closed certification with exact replay and gap checks, complete primary and guardrail labels, locked physical-resource equality, and a full 24-week resource-restricted H_PI verdict under the v2 boundary rules."
+        "release_rule": "The key-v4 proof and signed-parent/relocation plumbing passed independent dirty-byte audit, but no key-v4 scientific result exists yet. Release only after an immutable schema-bumped commit passes the complete suites, two separately keyed signed W12 and W16 pairs pass archived retrieval verification, and the full 24-week resource-restricted H_PI verdict satisfies the v2 boundary rules with exact replay, zero gap and locked physical-resource equality."
       },
       "current_physics_ceiling": {
         "available": false,
@@ -327,6 +346,44 @@
       "exact_garrido_question": "Before deployment, may logistics allocate a fixed total ration loadout among mission cohorts using observed mission-duration and resupply plans; what are the pack/mass limits, decision authority, signal timestamps and accuracy, demand-ledger semantics, and return/transfer rules?"
     },
     {
+      "family_id": "component_specific_r13_kit_balancing_op4_expedite",
+      "hypothesis": "With one frozen finished-ration type and no output-product choice/substitution, named complementary-input R13 delays change the kit-limiting component and an observed component pipeline can reverse which equal-payload Op4 load or expedition should be committed.",
+      "physical_mechanism": "Component-specific rm1...rm12 inventory and pipeline, BOM consumption, finite mixed-load Op4 lift and optional conserved expedition resource.",
+      "decision_rights": "Choose component composition/priority of the next capacity-limited Op4 shipment or expend a matched expedition token.",
+      "observations": "Component on-hand and pipeline by identity plus nonprivileged supplier-delay status available before load commitment.",
+      "information_lead": "must precede Op4 dispatch by its loading and 24-hour transit lead",
+      "resource_constraint": "component units, payload weight/volume, departures, vehicle-hours, minimum lots and expedition tokens",
+      "expected_ranking_reversal": "For K(x,p)=min_i floor((x_i+p_i)/b_i), equal-resource loads a,b are live only if K(x,p+y_a) differs from K(x,p+y_b); the limiting component must change over material observable states.",
+      "h_pi_estimate": {"current_aggregate_kernel": 0.0},
+      "h_obs_estimate": {"current_aggregate_kernel": 0.0},
+      "comparator_family": ["all full-horizon component-load schedules or certified MILP bound", "proportional-kit doctrine", "component base-stock/order-up-to", "serve-current-kit-bottleneck", "robust component mix", "DP/MPC", "equal-resource convex mixtures"],
+      "main_threat_to_validity": "The thesis names 12 raw materials but the DES aggregates them, R13 is a common Op2 delay, and Op4 has neither component-load authority nor finite lift. If delays are common, kits fixed-proportion, lift nonbinding or identities unobserved, one doctrine dominates.",
+      "state": "blocked_domain_fact",
+      "current_physics_ceiling": {"kind": "action_and_state_absent_exact_null", "h_pi": 0.0, "h_obs": 0.0},
+      "null_regime": "Scalar common delay, proportional component inventories, fixed kit loads or nonbinding lift gives H_PI=H_obs=0. If component identity exists but is unavailable before dispatch, H_obs=0 while H_PI may remain positive and must not be called zero.",
+      "evidence_required_to_change_state": ["named R13 component/supplier events", "component inventory/pipeline observability", "per-ration BOM", "finite mixed-load Op4 authority and return cycle", "payload/minimum-lot rules", "substitution/expedition resource", "Garrido authorization"],
+      "exact_garrido_question": "In R13, do delayed deliveries identify named rm1...rm12 components, and may WDC choose the component composition or priority of a capacity-limited Op4 shipment; what BOM, inventory/pipeline visibility, payload, return, minimum-lot, expedition and substitution rules apply?"
+    },
+    {
+      "family_id": "r14_detected_lot_disposition",
+      "hypothesis": "After an observed R14 detection, state-dependent line and raw-material shadow values can reverse whether a held lot should be reworked or scrapped and replaced.",
+      "physical_mechanism": "A discretionary, quality-constrained lot disposition with distinct rework duration/yield/capacity and replacement material/lead.",
+      "decision_rights": "Choose hold/rework versus scrap-and-replace after defect quantity is known; shipping known nonconforming output is prohibited.",
+      "observations": "Defect quantity, rework queue, raw-material cover, backlog and line availability known before disposition.",
+      "information_lead": "after Op7 detection but before Op6 rework or replacement commitment",
+      "resource_constraint": "line-hours, rework capacity, replacement raw materials, qualified output, disposal and persistent R14 attribution",
+      "expected_ranking_reversal": "Reduced shadow-cost screen only: D_reduced(s)=lambda_C(s)(h_r/y_r-h_n)-lambda_R(s)b, with lambda_C in canonical-value/line-hour, lambda_R in canonical-value/material-unit, h_r rework hours, y_r rework yield, h_n replacement-production hours and b replacement material units. A sign change is necessary only inside that reduced model, which omits lead, hold, disposal, repeat-defect and deadline effects; a licensed contract needs D_total(s). Under current same-rate unit-yield physics, rework weakly dominates discard on qualified service/material use.",
+      "h_pi_estimate": {"current_fixed_rework_kernel": 0.0},
+      "h_obs_estimate": {"current_fixed_rework_kernel": 0.0},
+      "comparator_family": ["always rework", "always scrap-and-replace", "fixed disposition fractions", "all batch/lot calendars", "raw-cover/backlog/rework-queue thresholds", "DP/MILP/MPC", "perfect-information ceiling"],
+      "main_threat_to_validity": "Return to Op6 is thesis-mandated and constructor mode is not an adaptive right. Discard can also launder the R14 Excel risk label unless attribution follows replacement.",
+      "state": "blocked_domain_fact",
+      "current_physics_ceiling": {"kind": "action_absent_and_rework_dominates", "h_pi": 0.0, "h_obs": 0.0},
+      "null_regime": "Mandatory unit-yield rework at the same effective line rate with no extra consequence.",
+      "evidence_required_to_change_state": ["discretionary disposition authority", "defect-known timing", "rework duration/capacity/yield", "replacement lead/material", "partial-batch release and disposal cost", "quality acceptance constraint", "R14 attribution persistence", "Garrido authorization"],
+      "exact_garrido_question": "When Op7 detects R14 nonconforming rations, is return to Op6 mandatory or may the operator choose hold/rework versus scrap-and-replace; what timing, duration, capacity, yield, material, lead, release, disposal, quality and R14-attribution rules apply?"
+    },
+    {
       "family_id": "demand_shaping_or_substitution",
       "hypothesis": "Changing requested demand creates adaptive value.",
       "physical_mechanism": "Deferral/cancellation or approved product substitution.",
@@ -347,14 +404,15 @@
     }
   ],
   "registry_summary": {
-    "governing_status": "OPEN_ACTIVE_BOUND_REQUIRED__MTR_KEY_V3_ADVERSARIAL_HOLD",
+    "governing_status": "OPEN_ACTIVE_BOUND_REQUIRED__MTR_KEY_V4_SIGNED_REDUCED_GATE_PENDING",
     "terminal_boundary_certified": false,
     "promotable": 0,
     "active_for_bound": ["integrated_production_maintenance_routing_recovery_resource"],
     "active_family_state": {"integrated_production_maintenance_routing_recovery_resource": "active_for_bound"},
-    "mtr_adversarial_hold": "paper2_bottleneck_semantic_markov_key_v3 required; available W12/W16 v2 reduced-horizon certifications do not authorize full 24-week H_PI or Paper 2 learning",
+    "mtr_adversarial_hold": "paper2_bottleneck_semantic_markov_key_v4 is the only active schema; historical W12/W16 key-v2 results remain rejected. Independent proof/custody audit passed only on dirty development bytes, so an immutable commit and new separately keyed signed W12/W16 archive pairs are required before W24, H_PI or Paper 2 learning.",
     "falsified_or_formally_dominated": ["multi_echelon_information_lag_only", "alarm_signal_finite_maintenance"],
-    "blocked_domain_fact": ["multi_ration_product_mix_setup_substitution", "regime_lead_time_advance_transport_reservation", "censored_demand_active_information_acquisition", "lateral_cssu_transshipment", "queue_admission_priority_with_abandonment", "finite_storage_space_allocation", "inspection_effort_vs_throughput", "multimodal_last_mile_mode_choice", "alternate_route_recourse_same_destination", "mission_loadout_carried_autonomy_allocation"],
+    "formally_dominated_historical_contracts": ["K3_budgeted_replenishment under frozen ret_excel_full_ledger_order; exact H_PI=H_obs=0 over all 6,371 exact-budget trajectories and all 5,758,374 non-superior-budget grid calendars, with under-spending pairs not mislabeled equal-resource; visible-v1 not unconditionally certified"],
+    "blocked_domain_fact": ["multi_ration_product_mix_setup_substitution", "regime_lead_time_advance_transport_reservation", "censored_demand_active_information_acquisition", "lateral_cssu_transshipment", "queue_admission_priority_with_abandonment", "r21_r3_shared_mab_restoration_sequencing", "finite_storage_space_allocation", "inspection_effort_vs_throughput", "multimodal_last_mile_mode_choice", "alternate_route_recourse_same_destination", "mission_loadout_carried_autonomy_allocation", "component_specific_r13_kit_balancing_op4_expedite", "r14_detected_lot_disposition"],
     "paper2_confirmed": false,
     "paper3_authorized": false,
     "paper3_status": "PAPER3_NOT_AUTHORIZED__DEPENDENCY_PAPER2_LEARNED_VALUE_UNMET"

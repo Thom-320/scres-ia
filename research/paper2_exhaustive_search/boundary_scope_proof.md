@@ -10,8 +10,8 @@ The current repository does not contain a valid Paper 2 environment. It also doe
 This is not because a positive result is assumed to exist. It is because the extension class is open-ended and one implemented family still lacks a quantitative ceiling:
 
 1. The finite, versioned Track A-C and Program D-K3 contracts are null, retracted, guardrail-failing, physically invalid, or comparator-incomplete as recorded in `phase0_failure_taxonomy.json`.
-2. The new product, transport, information, storage, inspection, transshipment, queue and mission-loadout families require operational facts absent from the thesis. They are `blocked_domain_fact`, not falsified. Mission loadout is thesis-motivated (one pack covers 24 hours, up to 1.4 kg, typically about five packs depending on mission/resupply) but absent from the executable theatre-delivery state.
-3. The integrated M/T/R response-team contract has a policy-level null but not a family ceiling. It has 11,184,811 effective full-horizon calendars; the experiment tested three constants. Direct enumeration is about 741.79 serial CPU-days at the latest timing. An exact event-effect quotient reduces the required DES runs 22.70× to about 32.68 serial CPU-days, but those executions have not been completed and the simulator still has no branchable weekly state or additive canonical objective.
+2. The new product, transport, information, storage, inspection, transshipment, queue, component-kit, detected-lot-disposition, R21/R3 scarce-restoration and mission-loadout families require operational facts absent from the thesis. They are `blocked_domain_fact`, not falsified. Current inspection, component-kit and disposition actions are absent, so their incremental current-kernel `H_PI=H_obs=0`; this does not close a signed-off extension. Current R21/R3 recovery is parallel and has exact zero sequencing-action liveness; the hypothetical scarce Maintenance Battalion extension lacks team/work/travel/observation facts, and its historical restoration-order-invariance closure has no machine proof. Mission loadout is thesis-motivated (one pack covers 24 hours, up to 1.4 kg, typically about five packs depending on mission/resupply) but absent from the executable theatre-delivery state.
+3. The integrated M/T/R response-team contract has a policy-level null but not a family ceiling. It has 11,184,811 effective full-horizon calendars; the experiment tested three constants. The first semantic-state quotient attempt (`179f7c2`) was stopped before result after an adversarial HOLD: its finite quotient induction was not accepted because Markov-state completeness was self-attested and its scientific identity/receipt chain was incomplete. The invalidated key-v3 development profile suggested roughly 3-8 CPU-hours per W24 tape and approximately 4.5-15 days for the 179-tape build on the six-CPU VPS before calendar screening. Those figures are historical planning estimates, not current key-v4 evidence or a scientific result.
 
 Accordingly, the exact scientific state is:
 
@@ -64,13 +64,15 @@ A failed heuristic, learner, or signal policy is not a family ceiling.
 | D1 priority | Restricted oracle `+0.0010945`, CI95 `[+0.0004225,+0.0019773]`; observable tree is negative and loses orders. |
 | DRA-1 allocation | Restricted oracle `+0.0000879`, UCB95 `0.0001659`. |
 | Program I resource-equal transport branching | Oracle `+0.00001045`, UCB95 `0.00001420` for the versioned branch portfolio; not a global reservation ceiling. |
-| Program J alarm/maintenance | Maximum screened restricted oracle `0.0001338`; observable rules negative. This closes alarm scaling within J, not every domain-valid maintenance extension. |
+| Program J alarm/maintenance | Maximum screened restricted oracle `0.0001338324`; observable rules negative. The 0.01 gate is at least `74.72x` that best observed effect. This closes alarm scaling within J, not every domain-valid maintenance extension. |
+| R21/R3 shared MaB restoration sequencing | Exact current-kernel `H_PI=H_obs=0` because recovery clocks are independent/parallel and no shared-team dispatch action exists. A scarce-team extension is blocked pending team count/skills, work/travel/preemption and damage-assessment facts; it is not machine-falsified. |
 | K3 budgeted replenishment | Learned policy exactly equals one fixed period-8 schedule; adaptive and neural claims retracted. |
 | Multi-echelon lag alone | Formal information inclusion: `O_lag` is a subset of `O_current`, so lag cannot improve the frozen G/H optimum. |
 | Native reservation, storage, inspection, lateral and multimodal actions | Exact zero action liveness because those actions are not in the thesis transition kernel. Their introduced versions remain domain-blocked. |
+| Component-specific R13 / Op4 kit balancing | Exact current-kernel `H_PI=H_obs=0`: the DES aggregates `rm1...rm12`, R13 is a common Op2 delay and no finite component-load Op4 action exists. The frozen catalog's earlier DRA2 route was a category error because DRA2 controls finished rations at Op7-Op8. |
 | Alternate-route recourse | Exact thesis-native `H_PI=H_obs=0` because there is no alternate-route action. The Program-L development heuristic reaches at most mean `+0.004017` with LCB95 below zero and extra departures; this is not a ceiling for the unvalidated extension. |
 | Mission-loadout carried autonomy | Exact current-kernel `H_PI=H_obs=0`: the DES has no cohort carried-inventory state, loadout action, sealed carried-consumption ledger or return rule. A Garrido-approved downstream extension remains domain-blocked. |
-| Native R14 rework sequencing | Rework consumes the same Op5-Op7 hourly capacity before new raw material in the one-product simulator. Discard violates the thesis/conservation guardrails; a new sequencing benefit would require product-specific consequence or deadline physics absent from the kernel. |
+| Native R14 inspection and detected-lot disposition | The thesis already has fixed Op7 inspection, 3%/8% Binomial defects and Op6 rework. No variable inspection or sequential disposition action exists, hence incremental current-kernel `H_PI=H_obs=0`. With equal-rate unit-yield rework, rework saves raw material and weakly dominates discard. Any extension needs measured inspection technology or distinct rework/replacement physics and must preserve latent-defect conservation and R14 attribution. |
 | Integrated M/T/R team | Signal policy `-0.001309`, CI95 `[-0.006384,+0.003093]`; feasible clairvoyant lower bound `+0.002336`, CI95 `[-0.000993,+0.005841]`; no ceiling. |
 
 A deterministic per-tape canonical upper bound was also computed on the 120 burned locked tapes. Because `ret_excel_visible_v1` has an un-clipped `0.5/RP` recovery branch and the action-sensitive causal cone begins before almost every order, its mean upper gap versus constant M is `138.185` (bootstrap interval `[87.003,200.842]`); zero tapes have a bound at or below `0.01`. This is rigorous but vacuous. It proves that an affected-order/unit-score shortcut cannot close M/T/R, not that the family has large headroom.
@@ -87,4 +89,12 @@ The only current numerical `active_for_bound` family is the integrated M/T/R tea
 
 Until then, reporting a terminal exhaustion certificate would overstate the evidence.
 
-The implemented quotient is a valid route to the first two requirements, not their completion. For each tape and week it records only whether the active action mitigates an R11, R22/R23 or R24 event. Calendars with the same effect word are outcome-equivalent in the frozen code, so one DES run per effect word suffices; the final calendar optimization must still scan all calendars by table lookup under the frozen reserve rule.
+The quotient architecture remains only a candidate route to the first two
+requirements. Finite backward induction is sufficient only after a separate,
+machine-verifiable certificate establishes that its canonical bytes are a
+Markov-sufficient state for the exact loaded kernel. That certificate must
+bind live code identity, the full transition-relevant simulator/controller/
+SimPy graph, immutable tape/profile/global inputs, all RNGs, request-lag timing,
+path-output exclusions and per-prefix schema closure. Until that premise and
+the execution chain pass adversarial re-audit, no quotient result may be called
+exact evidence.

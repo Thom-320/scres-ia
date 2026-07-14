@@ -113,10 +113,14 @@ def test_all_catalogued_decision_rights_are_routed_once():
     assert len(rows) == 32
     assert set(rows) == catalog_ids
     assert coverage["new_executable_source_native_candidate_count"] == 0
-    assert coverage["exact_current_kernel_zero_count"] == 13
+    assert coverage["exact_current_kernel_zero_count"] == 12
     assert rows["op7_release_period"]["catalog_status"] == "implemented"
     assert rows["op7_release_period"]["disposition"] == "transition_dead_configuration_field"
     assert rows["op7_release_period"]["current_kernel_h_pi_ceiling"] == 0.0
+    assert rows["op6_rework_rule"]["disposition"] == (
+        "transition_live_fidelity_configuration_not_adaptive_action"
+    )
+    assert rows["op6_rework_rule"]["current_kernel_h_pi_ceiling"] is None
     assert "op7_rop" in (ROOT / "supply_chain" / "config.py").read_text()
     assert "op7_rop" not in (ROOT / "supply_chain" / "supply_chain.py").read_text()
 
@@ -166,7 +170,7 @@ def test_primary_bound_v2_is_frozen_before_24_week_results_and_fail_closed():
     assert contract["seed_blocks"]["algorithm_development_excluded"] == [1_110_001]
     assert contract["seed_blocks"]["calibration"]["n"] == 60
     assert contract["seed_blocks"]["locked_bound"]["n"] == 119
-    assert contract["acceleration_proof"]["required_key_schema"].endswith("_v3")
+    assert contract["acceleration_proof"]["required_key_schema"].endswith("_v4")
     assert "UCB95 is strictly below 0.01" in contract["decision_rules"]["boundary_close"]
     assert contract["decision_rules"]["learner_authorized"] is False
     assert contract["decision_rules"]["paper3_authorized"] is False

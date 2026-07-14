@@ -1,0 +1,104 @@
+{
+  "schema_version": "paper2_risk_intervention_governance_v1",
+  "frozen_date": "2026-07-13",
+  "status": "GOVERNANCE_GATE_ACTIVE_NO_NEW_RISK_NUMERICALLY_AUTHORIZED",
+  "purpose": "Permit realistic risk editing without tuning disruption magnitude or the metric until a preferred policy wins.",
+  "binding_endpoint": "ret_excel_visible_v1 through supply_chain.episode_metrics.compute_episode_metrics",
+  "mandatory_guardrails": [
+    "quantity_weighted_ret",
+    "service_loss_auc",
+    "lost_orders",
+    "remaining_backlog_and_max_age",
+    "worst_node_or_worst_cssu_service",
+    "tail_risk",
+    "all_action_and_physical_resource_ledgers"
+  ],
+  "authorized_classes": [
+    {
+      "class": "thesis_risk_parameter_edit",
+      "status": "ALLOWED_ONLY_WITH_AUTHOR_SUPPORTED_RANGE_FROZEN_BEFORE_POLICY_RESULTS",
+      "requirements": [
+        "risk id and affected operations",
+        "frequency, duration and impact units",
+        "source or recorded Garrido authorization for the range",
+        "separate exogenous occurrence tape from endogenous action consequences",
+        "mechanism-removal null cell",
+        "same parameter cells for every policy and comparator"
+      ]
+    },
+    {
+      "class": "new_realistic_risk",
+      "status": "RESEARCHER_EXTENSION_BLOCKED_PENDING_DOMAIN_FACT",
+      "requirements": [
+        "named operational event and causal transition path",
+        "affected Op3-Op13 nodes and conservation consequences",
+        "empirical, literature or Garrido-supported frequency, duration, correlation and localization envelope",
+        "pre-action observation channel with timestamp, lead, false-positive and false-negative behavior",
+        "action authority, activation delay, minimum dwell and mutually exclusive resource",
+        "null cell that removes only the proposed mechanism",
+        "explicit claim limit and exact falsifiable Garrido sign-off question"
+      ]
+    }
+  ],
+  "thesis_authorized_parameter_cells": {
+    "claim_limit": "These current-to-increased occurrence edits are source-supported sensitivity cells only. They add no observation, scarce action or ranking reversal and therefore do not by themselves authorize an adaptive contract.",
+    "R11_interarrival_hours": "Uniform(1,168) to Uniform(1,42)",
+    "R12_probability": "1/11 to 4/11",
+    "R13_probability": "1/10 to 4/10",
+    "R14_probability": "0.03 to 0.08",
+    "R21_interarrival_hours": "Uniform(1,16128) to Uniform(1,4032)",
+    "R22_interarrival_hours": "Uniform(1,4032) to Uniform(1,1344)",
+    "R23_interarrival_hours": "Uniform(1,8064) to Uniform(1,1344)",
+    "R24_interarrival_hours": "Uniform(1,672) to Uniform(1,336)",
+    "R3_interarrival_hours": "Uniform(1,161280) to Uniform(1,80640)"
+  },
+  "necessary_headroom_structure": {
+    "binding_shared_resource": true,
+    "incompatible_actions": true,
+    "persistent_consequences": true,
+    "pre_action_informative_but_imperfect_observation": true,
+    "material_state_dependent_action_ranking_reversal": true,
+    "warning": "Increasing risk frequency or impact without creating this structure reparameterizes the closed Program-I result; signal quality and magnitude were inert while scarcity x concurrency was the only live axis."
+  },
+  "currently_identified_domain_blocked_risk_mechanisms": [
+    {
+      "id": "r21_r3_shared_mab_restoration_sequencing",
+      "operations": "R21: Op3/Op5/Op6/Op7/Op9; R3: Op5/Op6/Op7/Op9",
+      "current_state": "BLOCKED_DOMAIN_FACT_NOT_FALSIFIED",
+      "quantitative_screen": "Under thesis-default independent parallel recovery there is no sequencing action, so current-physics H_PI=H_obs=0. The historical restoration-order-invariance label lacks a machine proof and cannot close a hypothetical scarce-team extension.",
+      "why_high_priority": "R21/R3 supply simultaneous disabled sites and the thesis names the Maintenance Battalion, making this the closest source anchor to the only Program-I live mechanism: scarcity x concurrency.",
+      "null_cell": "Thesis-default independent parallel recovery clocks with no shared team or serialization.",
+      "mandatory_comparators_if_licensed": [
+        "all fixed restoration permutations",
+        "upstream-first and downstream-first",
+        "critical-path and WSPT rules",
+        "exact finite-state DP",
+        "resource-constrained MPC"
+      ],
+      "exact_question": "After one R21 or R3 event, does the Maintenance Battalion have fewer cross-trained recovery teams than disabled sites so repairs serialize; if yes, what are team count, bases and travel, activation delay, operation-specific repair-time distributions, preemption rules, damage-assessment lead/errors, and do the thesis 120/672-hour values represent repair work or autonomous downtime?"
+    },
+    {
+      "id": "precursor_predictable_high_consequence_failure",
+      "operations": "candidate Op3/Op5/Op6/Op7/Op9 failure family",
+      "current_state": "BLOCKED_DOMAIN_FACT",
+      "quantitative_screen": "Program J best screened restricted-oracle effect was 0.00013383238214118324 ReT; the 0.01 gate requires at least 74.72 times that observed effect before observable-conversion and guardrail losses.",
+      "exact_question": "Is there a real failure mode with a timestamped observable precursor early enough to act, a downtime/recovery envelope whose downstream inventory cannot absorb it, and a named finite crew or capacity action that changes its consequence?"
+    },
+    {
+      "id": "persistent_localized_route_degradation_with_leading_warning",
+      "operations": "candidate Op8/Op10/Op12 route family",
+      "current_state": "BLOCKED_DOMAIN_FACT",
+      "quantitative_screen": "Current thesis-native alternate-route action is absent, so current-kernel H_PI=H_obs=0; DRA-2b's large perfect-information gap was not observably converted.",
+      "exact_question": "Is R22 route-specific and persistent, is an alternate route and finite vehicle commitment real, and what timestamped warning is available before dispatch rather than after the route decision?"
+    }
+  ],
+  "forbidden": [
+    "increase disruption magnitude or frequency until PPO or a preferred policy wins",
+    "select risk cells after observing policy rankings",
+    "give the adaptive policy future event labels, latent regimes or unavailable route state",
+    "change the primary metric to Cobb-Douglas, service loss or reward because canonical ReT is null",
+    "allow risk-induced demand shedding, mass creation, superior resources or worst-node starvation",
+    "call a large EVPI or true-state heuristic a deployable adaptive result"
+  ],
+  "promotion_rule": "A risk-modified contract remains exploratory until a strong non-neural non-anticipative policy clears the full pre-learner gate on fresh tapes against the complete same-contract open-loop and classical frontier."
+}

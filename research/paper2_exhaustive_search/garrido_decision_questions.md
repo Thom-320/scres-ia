@@ -1,5 +1,9 @@
 # Domain decisions required to reopen Paper 2 mechanisms
 
+Status: **SOURCE INVENTORY, NOT THE SENDABLE FACE-VALIDATION BATCH.** The sole
+canonical Q1–Q12 document is `garrido_face_validation_questions.md`; deterministic
+family transitions are in `garrido_family_question_state_transitions.json`.
+
 These are domain gates, not requests to endorse an adaptive or neural result. A “yes” must be accompanied by operational definitions, units, ranges and source records before a new numerical contract is frozen.
 
 1. **Product mix.** Which of the 21 ration types share Op5–Op7, and what are their product-specific BOMs, rates, batch/changeover/minimum-run rules, mission/climate substitution matrix, demand shares and pre-commitment signals?
@@ -16,5 +20,7 @@ These are domain gates, not requests to endorse an adaptive or neural result. A 
 12. **Cross-stage recovery resource.** Is there one truly fungible resource allocated mutually exclusively among plant repair, LOC/vehicle recovery and theatre response? Where is it based, what skills/travel/activation/dwell apply, how does one unit change recovery time at each target, and is emergency-reserve stock a separately budgeted and replenished resource?
 13. **Approved substitution.** May a requisition be satisfied with another ration type without violating nutrition, climate, mission or contract requirements, and when is that substitution decided and logged?
 14. **Mission loadout and carried autonomy.** Before deployment, may logistics allocate a fixed total ration loadout among mission cohorts using observed mission-duration and resupply plans? What are the pack and mass limits, decision authority, signal timestamps and accuracy, sealed demand-ledger semantics, unused-pack return/transfer rules, cohort identifiers and plausible mission/resupply envelope?
+15. **Component-specific R13 and Op4 kit balancing.** Do R13 delays identify named `rm1...rm12` components/suppliers, and may WDC prioritize the component composition of a finite mixed-load Op4 dispatch? What BOM, inventory/pipeline visibility, payload, return, minimum-lot, expedition and substitution rules apply?
+16. **Detected-lot disposition.** After Op7 detects R14 nonconformance, is return to Op6 mandatory or may the operator choose hold/rework versus scrap-and-replace? What are the decision timing, rework duration/capacity/yield, replacement material/lead, partial-lot release, disposal, quality and persistent R14-attribution rules?
 
 Until these facts are supplied, the associated rows remain `blocked_domain_fact`; absence of a fact is not a machine-audited global impossibility result.

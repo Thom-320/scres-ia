@@ -121,17 +121,26 @@ def main() -> int:
         row for row in decision_coverage["rows"]
         if row["factor_id"] == "op7_release_period"
     )
+    op6_rework = next(
+        row for row in decision_coverage["rows"]
+        if row["factor_id"] == "op6_rework_rule"
+    )
     record(
-        "decision_right_catalog_is_exhaustively_routed",
+        "declared_decision_right_catalog_is_routed_with_known_gaps",
         decision_coverage["decision_right_count"] == 32
         and decision_coverage["all_decision_rights_covered_once"] is True
+        and decision_coverage["mechanism_family_complete"] is False
+        and decision_coverage["newly_identified_gap_count"] == 2
         and decision_coverage["new_executable_source_native_candidate_count"] == 0
-        and decision_coverage["exact_current_kernel_zero_count"] == 13
+        and decision_coverage["exact_current_kernel_zero_count"] == 12
         and coverage_ids == catalog_decision_ids
         and all((ROOT / path).exists() for path in coverage_evidence_paths)
         and op7_release["catalog_status"] == "implemented"
         and op7_release["disposition"] == "transition_dead_configuration_field"
         and op7_release["current_kernel_h_pi_ceiling"] == 0.0
+        and op6_rework["disposition"]
+        == "transition_live_fidelity_configuration_not_adaptive_action"
+        and op6_rework["current_kernel_h_pi_ceiling"] is None
         and "op7_rop" in (ROOT / "supply_chain" / "config.py").read_text()
         and "op7_rop" not in (ROOT / "supply_chain" / "supply_chain.py").read_text(),
         {
@@ -139,7 +148,10 @@ def main() -> int:
             "coverage_count": len(coverage_ids),
             "exact_current_kernel_zero_count": decision_coverage["exact_current_kernel_zero_count"],
             "new_executable_source_native_candidate_count": decision_coverage["new_executable_source_native_candidate_count"],
+            "mechanism_family_complete": decision_coverage["mechanism_family_complete"],
+            "newly_identified_gap_count": decision_coverage["newly_identified_gap_count"],
             "op7_release_period": op7_release,
+            "op6_rework_rule": op6_rework,
         },
     )
 
@@ -153,6 +165,9 @@ def main() -> int:
 
     metric_audit = load(SEARCH / "metric_governance_audit.json")
     metric_lock = metric_audit["canonical_endpoint"]["fresh_reaudit"]
+    metric_nonmonotonicity = metric_audit["canonical_endpoint"][
+        "known_construct_nonmonotonicity"
+    ]
     record(
         "canonical_metric_and_cd_claim_boundary_locked",
         metric_audit["status"]
@@ -165,13 +180,20 @@ def main() -> int:
         and metric_lock["max_abs_diff"] == 0.0
         and metric_audit["paper2_authorization"]["learner_authorized_by_cd"]
         is False
-        and metric_audit["paper2_authorization"]["paper3_authorized"] is False,
+        and metric_audit["paper2_authorization"]["paper3_authorized"] is False
+        and metric_nonmonotonicity["status"]
+        == "MACHINE_VERIFIED_LIVE_AGGREGATOR_COUNTEREXAMPLE"
+        and "visible-v1=6/7" in metric_nonmonotonicity["front_loaded_schedule"]
+        and "visible-v1=1.0" in metric_nonmonotonicity[
+            "later_batched_schedule"
+        ],
         {
             "status": metric_audit["status"],
             "canonical_contract": metric_audit["canonical_endpoint"][
                 "contract_id"
             ],
             "fresh_reaudit": metric_lock,
+            "known_nonmonotonicity": metric_nonmonotonicity,
             "cd_current_paper2": metric_audit["metric_decision"]["current_paper2"],
         },
     )
@@ -198,6 +220,67 @@ def main() -> int:
     )
     record("k3_static_period8_confound", k3_ok,
            {"sha256": sha256(k3_path), "verdict": k3["verdict"]})
+
+    k3_dominance_path = SEARCH / "k3_frontloading_dominance_certificate.json"
+    k3_dominance = load(k3_dominance_path)
+    k3_graph = k3_dominance["resource_graph"]
+    k3_prefix = k3_dominance["exhaustive_prefix_certificate"]
+    k3_envelope = k3_dominance["non_superior_resource_envelope_certificate"]
+    k3_metric = k3_dominance["full_ledger_metric_monotonicity"]
+    k3_full = k3_dominance["metric_conclusions"]["frozen_k3_full_ledger"]
+    k3_visible = k3_dominance["metric_conclusions"]["ret_excel_visible_v1"]
+    k3_visible_counterexample = k3_dominance[
+        "visible_ledger_nonmonotonicity_counterexample"
+    ]
+    k3_dominance_ok = (
+        k3_dominance["status"]
+        == "PASS_EXACT_PATHWISE_FRONTLOADING_DOMINANCE__FROZEN_K3_FULL_LEDGER_H_PI_ZERO"
+        and k3_dominance["generated_without_stochastic_tapes"] is True
+        and k3_graph["reachable_state_count"] == 61
+        and k3_graph["reachable_edge_count"] == 260
+        and k3_graph["effective_exact_budget_schedule_count"] == 6_371
+        and k3_graph["all_terminal_spends_equal_budget"] is True
+        and k3_prefix["schedules_checked"] == 6_371
+        and k3_prefix["prefix_comparisons_checked"] == 50_968
+        and k3_prefix["violation_count"] == 0
+        and k3_envelope["schedule_count_total_spend_le_budget"] == 5_758_374
+        and k3_envelope["exact_budget_schedule_count"] == 6_371
+        and k3_envelope["strictly_under_budget_schedule_count"] == 5_752_003
+        and k3_envelope["prefix_dominance_violation_count"] == 0
+        and k3_prefix["unique_nondominated_schedule_count"] == 1
+        and k3_metric["status_vectors_checked_against_live_aggregator"] == 6_561
+        and k3_metric["coordinatewise_status_pairs_checked"] == 1_679_616
+        and k3_metric["abstraction_mismatch_count"] == 0
+        and k3_metric["metric_dominance_violation_count"] == 0
+        and all(k3_dominance["source_semantics"]["checks"].values())
+        and k3_full["metric"] == "ret_excel_full_ledger_order"
+        and k3_full["h_pi"] == 0.0
+        and k3_full["h_obs"] == 0.0
+        and k3_visible["result"]
+        == "NOT_UNCONDITIONALLY_CERTIFIED_BY_THIS_THEOREM"
+        and k3_visible_counterexample["status"]
+        == "PASS_LIVE_AGGREGATOR_COUNTEREXAMPLE"
+        and k3_visible_counterexample["front_loaded_path"][
+            "mean_ret_excel"
+        ]
+        == 6 / 7
+        and k3_visible_counterexample["later_batched_path"][
+            "mean_ret_excel"
+        ]
+        == 1.0
+    )
+    record(
+        "k3_exact_frontloading_full_ledger_hpi_zero",
+        k3_dominance_ok,
+        {
+            "sha256": sha256(k3_dominance_path),
+            "states": k3_graph["reachable_state_count"],
+            "schedules": k3_graph["effective_exact_budget_schedule_count"],
+            "prefix_violations": k3_prefix["violation_count"],
+            "full_ledger_h_pi": k3_full["h_pi"],
+            "visible_v1_scope": k3_visible["result"],
+        },
+    )
 
     track_b = load(ROOT / "outputs" / "experiments" /
                    "track_b_same_contract_challenge_2026-07-10" / "summary.json")

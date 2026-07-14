@@ -1,0 +1,294 @@
+{
+  "contract_id": "program_k3_ret_budgeted_replenishment_v1",
+  "exhaustive_prefix_certificate": {
+    "algebraic_identity": "sum_{t<k} q_t <= min(1.5*k,10.0) = sum_{t<k} F_t for every k=1,...,8",
+    "prefix_comparisons_checked": 50968,
+    "schedules_checked": 6371,
+    "strictly_prefix_dominated_schedule_count": 6370,
+    "unique_nondominated_schedule_count": 1,
+    "violation_count": 0
+  },
+  "front_loaded_schedule": {
+    "actions_D0": [
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.0,
+      0.0
+    ],
+    "actions_quarter_units": [
+      6,
+      6,
+      6,
+      6,
+      6,
+      6,
+      4,
+      0
+    ],
+    "identity": "F=(1.5,1.5,1.5,1.5,1.5,1.5,1.0,0.0)*D0",
+    "is_reachable": true,
+    "prefix_spend_D0": [
+      1.5,
+      3.0,
+      4.5,
+      6.0,
+      7.5,
+      9.0,
+      10.0,
+      10.0
+    ],
+    "total_D0": 10.0
+  },
+  "full_ledger_metric_monotonicity": {
+    "abstraction_mismatch_count": 0,
+    "coordinatewise_status_pairs_checked": 1679616,
+    "maximum_abs_difference": 1.1102230246251565e-16,
+    "metric_dominance_violation_count": 0,
+    "status_order": [
+      "on_time",
+      "late",
+      "lost"
+    ],
+    "status_vectors_checked_against_live_aggregator": 6561,
+    "strict_metric_improvement_pair_count": 1655559
+  },
+  "generated_without_stochastic_tapes": true,
+  "metric_conclusions": {
+    "frozen_k3_full_ledger": {
+      "h_obs": 0.0,
+      "h_pi": 0.0,
+      "learned_incremental_value_upper_bound": 0.0,
+      "metric": "ret_excel_full_ledger_order",
+      "reason": "Earlier completion can only turn a full-ledger row from lost/late to late/on-time. F weakly dominates every exact-budget perfect-information or non-anticipative trajectory pathwise and every grid calendar using non-superior total resources. Because F itself is admissible open loop inside B, oracle minus strongest open loop is exactly zero.",
+      "result": "H_PI=0 exactly"
+    },
+    "ret_excel_visible_v1": {
+      "mandatory_guardrail": "Any candidate compared with F must have lost_candidate<=lost_F. The coupling already gives lost_F<=lost_candidate, so eligibility requires exact equality of lost counts.",
+      "paper2_rule": "No visible-v1 advantage may reopen K3 unless lost counts are equal, the visible-ledger aggregator is recomputed on the same path, and the ranking survives a separate metric-specific proof/audit. This certificate burns no tapes and supplies no such rescue.",
+      "reason_for_scope_limit": "The sparse visible ledger omits unfulfilled rows and scores rows at their completion times. A policy that completes fewer or later rows can change the scored population or ledger snapshot; OAT dominance alone is not asserted here to imply mean visible-ReT dominance.",
+      "result": "NOT_UNCONDITIONALLY_CERTIFIED_BY_THIS_THEOREM"
+    }
+  },
+  "non_superior_resource_envelope_certificate": {
+    "exact_budget_schedule_count": 6371,
+    "maximum_spend_quarter_units_by_layer": {
+      "0": 0,
+      "1": 6,
+      "2": 12,
+      "3": 18,
+      "4": 24,
+      "5": 30,
+      "6": 36,
+      "7": 40,
+      "8": 40
+    },
+    "method": "exact finite-state dynamic-programming enumeration",
+    "prefix_dominance_violation_count": 0,
+    "reachable_edge_count": 1194,
+    "reachable_state_count": 215,
+    "resource_scope": "Calendars may use less than 10*D0; they are within the same upper-bound resource envelope but are not described as pairwise equal-resource to F.",
+    "schedule_count_total_spend_le_budget": 5758374,
+    "strictly_under_budget_schedule_count": 5752003
+  },
+  "pathwise_coupling_theorem": {
+    "backlog_implication": "B_F(w)=max(0,cumulative demand through w-S_F(w)) <= B_q(w) at every review epoch.",
+    "completion_implication": "Order j is generated at zero-based epoch j-1. For any w>=j-1, OAT_q(j)<=w implies cumulative demand through j <= S_q(w) <= S_F(w), hence OAT_F(j)<=w. Therefore OAT_F(j)<=OAT_q(j), with infinity for horizon-unfulfilled orders.",
+    "loss_implication": "Every order attended by q by the horizon is attended by F; lost_F<=lost_q and attended_F>=attended_q pathwise.",
+    "premises": [
+      "Demand D_j is the same nonnegative exogenous tape under every policy.",
+      "A week-t order is received in full at the start of week t+1.",
+      "Initial inventory is identical and service is work-conserving FIFO.",
+      "There is no spoilage, receipt/storage capacity clipping, or action-dependent service penalty."
+    ],
+    "resource_implication": "Every effective exact-budget K3 policy trajectory and F spend exactly 10*D0. Separately, all 5,758,374 grid calendars spending <=10*D0 obey the same weekly cap and are prefix-dominated by F; those under-spending comparisons are within the resource envelope, not pairwise equal-resource.",
+    "supply_order": "With zero-based review epoch w in {0,...,7}, S_F(w)=D0*(1+sum_{t<w}F_t) >= D0*(1+sum_{t<w}q_t)=S_q(w)."
+  },
+  "resource_graph": {
+    "action_quarter_units": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "all_terminal_spends_equal_budget": true,
+    "budget_quarter_units": 40,
+    "effective_exact_budget_schedule_count": 6371,
+    "enumeration_sha256": "0362b015feaa3e240e94b5053955ac973875976160ef99e0d9c5e8c297606982",
+    "quarter_D0_scale": 0.25,
+    "reachable_edge_count": 260,
+    "reachable_state_count": 61,
+    "reachable_state_counts_by_layer": {
+      "0": 1,
+      "1": 7,
+      "2": 9,
+      "3": 9,
+      "4": 9,
+      "5": 9,
+      "6": 9,
+      "7": 7,
+      "8": 1
+    },
+    "terminal_states": [
+      [
+        8,
+        40
+      ]
+    ],
+    "weekly_cap_quarter_units": 6,
+    "weeks": 8
+  },
+  "schema_version": "k3_frontloading_dominance_certificate_v1",
+  "scientific_verdict": {
+    "k3_full_ledger_family_state": "FORMALLY_DOMINATED_BY_FULL_HORIZON_OPEN_LOOP_F",
+    "no_new_tapes_consumed": true,
+    "paper2_adaptive_value": false,
+    "paper3_authorized": false
+  },
+  "scope": {
+    "excluded": [
+      "ret_excel_visible_v1 as an unconditional monotone objective",
+      "any replenishment contract with spoilage, storage clipping, receipt clipping, action-dependent holding cost, endogenous demand, non-FIFO allocation, or a different lead/horizon",
+      "all new or unburned tapes"
+    ],
+    "included": "Frozen eight-week K3 exact-budget replenishment kernel and ret_excel_full_ledger_order metric."
+  },
+  "source_semantics": {
+    "checks": {
+      "completion_time_is_current_review_hour": true,
+      "contract_and_kernel_horizon_eight_weeks": true,
+      "contract_one_week_lead": true,
+      "demand_loaded_from_frozen_tape": true,
+      "fifo_filter_preserves_survivor_order": true,
+      "fifo_iterates_pending_in_original_order": true,
+      "fifo_work_conserving_take": true,
+      "frozen_contract_names_full_ledger_metric": true,
+      "full_ledger_increments_lost_and_late_before_score": true,
+      "holding_excluded_from_metric_call": true,
+      "holding_not_in_primary_contract": true,
+      "identical_initial_inventory_one_D0": true,
+      "k3_adapter_calls_full_ledger_aggregator": true,
+      "k3_orders_do_not_inject_risk_fields": true,
+      "kernel_one_week_lead_constant": true,
+      "new_order_enters_tail_unclipped": true,
+      "no_spoilage_or_inventory_capacity_branch": true,
+      "only_declared_action_caps_in_projector": true,
+      "order_record_risk_indicators_default_empty": true,
+      "order_record_risk_periods_default_zero": true,
+      "pending_orders_lost_only_at_horizon": true,
+      "pipeline_receives_head_exactly": true,
+      "receive_before_order_append": true,
+      "rollout_does_not_mutate_tape": true,
+      "rtape_generator_demand_is_nonnegative": true
+    },
+    "loaded_function_source_sha256": {
+      "_complete_pending": "447392479fbe61acf43fd08f8b830a57dbe4ef65e6871aa427a4bb556b1e1c6a",
+      "rollout_actions": "9b66440e7aeb441ed11b59d5c9d20d5904d999fa2e103d5771a36dfe17b1d72c"
+    },
+    "source_sha256": {
+      "contracts/program_k3_ret_budgeted_replenishment_v1.json": "357ca661faaa177860a6de511a70e480e9494e8aad6d872f5cfc7f9b14e1508b",
+      "supply_chain/program_g.py": "0d172fffb53a0edc9069de86b33d292439db86792313eb2f36a7d1423e7ce51e",
+      "supply_chain/replenish.py": "6e85def81777629b670f353cdf058807c165766959f8c30247e5eb4b685a2043",
+      "supply_chain/replenish_ret.py": "3fcd81861c9303013ca9b3cc366ea029dbc06e9d66ef0fbe1e853e52a3fd642e",
+      "supply_chain/ret_thesis.py": "b7cade35a666eaf306df531625b0887f26910d101b4d56ca32ba08c72cd08c45",
+      "supply_chain/supply_chain.py": "74e79d230e565e4d77c7812550948fb46cd9c8ef8595d298372ffa4d3f692741"
+    },
+    "status": "PASS"
+  },
+  "status": "PASS_EXACT_PATHWISE_FRONTLOADING_DOMINANCE__FROZEN_K3_FULL_LEDGER_H_PI_ZERO",
+  "visible_ledger_nonmonotonicity_counterexample": {
+    "claim_limit": "The feasible open-loop example disproves H_PI=0 when F is assumed to be a universal visible-v1 upper comparator. It does not estimate K3 H_PI, establish H_obs>0, or reopen the blocked K3 lane without a new mechanism.",
+    "demand_D0": [
+      3.2,
+      1.0,
+      0.3,
+      1.1,
+      0.3,
+      1.0,
+      1.0,
+      3.2
+    ],
+    "demand_support_scope": "Every demand value is in the lower-clipped Gaussian generator's mathematical support, but the extreme 3.2*D0 draws are rare; this is a universal-theorem counterexample, not a practical-frequency estimate.",
+    "front_loaded_path": {
+      "actions_D0": [
+        1.5,
+        1.5,
+        1.5,
+        1.5,
+        1.5,
+        1.5,
+        1.0,
+        0.0
+      ],
+      "completion_weeks": [
+        2.0,
+        3.0,
+        3.0,
+        4.0,
+        4.0,
+        5.0,
+        6.0,
+        null
+      ],
+      "lost_order_ids": [
+        8
+      ],
+      "mean_ret_excel": 0.8571428571428571,
+      "ordered_D0": 10.0,
+      "ret_values": [
+        0.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "later_batched_path": {
+      "actions_D0": [
+        1.0,
+        1.0,
+        1.5,
+        1.5,
+        1.5,
+        1.5,
+        1.5,
+        0.5
+      ],
+      "completion_weeks": [
+        3.0,
+        3.0,
+        3.0,
+        4.0,
+        4.0,
+        5.0,
+        6.0,
+        null
+      ],
+      "lost_order_ids": [
+        8
+      ],
+      "mean_ret_excel": 1.0,
+      "ordered_D0": 10.0,
+      "ret_values": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "mechanism": "F completes order 1 at week 2 when order 2 has activated but is still open, so its j=1 row sees Bt=1 and scores zero. q completes orders 1-3 together at week 3; completion-removal events are applied before all same-time rows, so its j=1 row sees Bt=0.",
+    "purpose": "Proves inside the frozen K3 action/resource kernel that pathwise earlier completion and equal lost counts do not order ret_excel_visible_v1.",
+    "status": "PASS_LIVE_AGGREGATOR_COUNTEREXAMPLE"
+  }
+}

@@ -1,9 +1,9 @@
 # Estado correctivo de búsqueda y estrategia condicional para los Artículos 2 y 3 — SCRES-IA MFSC DES
 
-**Fecha:** 2026-07-13 · **Base de corrección de procedencia:** `0a1e3be66390ff2b3f6e3c576bbc6604c06f36d3`; el commit key-v3 posterior gobierna por su hash de Git y manifiestos de ejecución.
-**Estado científico gobernante:** `OPEN_ACTIVE_BOUND_REQUIRED__MTR_KEY_V3_ADVERSARIAL_HOLD`
+**Fecha:** 2026-07-13 · **Base de corrección de procedencia:** `0a1e3be66390ff2b3f6e3c576bbc6604c06f36d3`; el commit inmutable key-v4/result-v5/auth-v9 gobierna por su hash de Git y manifiestos de ejecución.
+**Estado científico gobernante:** `OPEN_ACTIVE_BOUND_REQUIRED__MTR_KEY_V4_SIGNED_REDUCED_GATE_PENDING`
 **Retorno terminal:** ninguno. `SEARCH_ENVELOPE_BOUNDARY_CERTIFIED` queda retractado.
-**Artefactos-máquina que gobiernan sobre este texto:** `research/paper2_exhaustive_search/concurrent_boundary_commit_audit.json`, `research/paper2_exhaustive_search/boundary_verification.json`, `research/paper2_exhaustive_search/approach_registry.json`, `contracts/paper2_bottleneck_primary_bound_v2.json`, `results/paper2_bottleneck/exact_transducer_certification_w12.json`, `results/paper2_bottleneck/exact_transducer_certification_w16_hard.json`, `research/paper2_exhaustive_search/metric_governance_audit.json` y `research/paper2_exhaustive_search/seed_burn_ledger_correction.json`.
+**Artefactos-máquina que gobiernan sobre este texto:** `research/paper2_exhaustive_search/concurrent_boundary_commit_audit.json`, `research/paper2_exhaustive_search/approach_registry.json`, `contracts/paper2_bottleneck_primary_bound_v2.json`, `research/paper2_exhaustive_search/mtr_execution_invalidation_179f7c2.json`, `research/paper2_exhaustive_search/metric_governance_audit.json` y `research/paper2_exhaustive_search/seed_burn_ledger_correction.json`. Los resultados W12/W16 guardados son schema key-v2 histórico y no gobiernan autorización.
 
 > Nota de método: el texto principal va en español; los títulos, preguntas de investigación, hipótesis, contribuciones y pasajes listos-para-manuscrito van en inglés académico, según el encargo. Se etiqueta cada afirmación como `THESIS-SUPPORTED`, `REPOSITORY-EVIDENCED`, `LITERATURE-BACKED`, `PI-VALIDATED`, `COMMITTEE-INFERENCE` o `SPECULATION`.
 
@@ -11,12 +11,13 @@
 
 ## 1. Veredicto ejecutivo
 
-**No hay un contrato Paper 2 positivo confirmado, pero tampoco hay un certificado terminal B.** La familia integrada M/T/R conserva un nulo de política observable frente a la constante M, no una cota familiar: quedan 11.184.811 calendarios admisibles y no se ha computado el `H_PI` restringido por recursos sobre 24 semanas. El hold adversarial key-v3 es vinculante: cualquier resultado con key/schema anterior, horizonte reducido, guardrails no certificados, replay incompleto o gap no nulo deja la familia `active_for_bound`.
+**No hay un contrato Paper 2 positivo confirmado, pero tampoco hay un certificado terminal B.** La familia integrada M/T/R conserva un nulo de política observable frente a la constante M, no una cota familiar: quedan 11.184.811 calendarios admisibles y no se ha computado el `H_PI` restringido por recursos sobre 24 semanas. El gate firmado key-v4 es vinculante: cualquier resultado con key/schema anterior, horizonte reducido, custodia portable no reverificada, guardrails no certificados, replay incompleto o gap no nulo deja la familia `active_for_bound`.
 
 - **Artículo 2 positivo:** no confirmado; ningún learner está autorizado. DRA-2b, E y los demás programas conservan sus STOP/retracciones contractuales, sin convertirse en una imposibilidad global.
 - **M/T/R:** `OPEN_ACTIVE_BOUND_REQUIRED`. Los certificados W12/W16 verifican sólo equivalencia primaria a horizonte reducido; declaran `full_24_week_transducer_authorized=false`, `h_pi_computed=false` y no reclaman boundary certificate.
 - **Artículo 3 de aprendizaje retenido:** `PAPER3_NOT_AUTHORIZED__DEPENDENCY_PAPER2_LEARNED_VALUE_UNMET`. K3 permanece retractado por el confound período-8; ningún manuscrito alternativo cambia esa dependencia científica.
 - **Métrica:** `ret_excel_visible_v1` vía `compute_episode_metrics` permanece como endpoint primario vinculante. Cobb–Douglas 2024 es un índice APP de fábrica y sólo sensibilidad secundaria; `program_g.metrics_all` es CD-inspired, no una calibración MFSC de la fórmula publicada. Ningún ranking CD puede rescatar un nulo canónico.
+- **Gate APP/CD independiente:** la transformación publicada exacta queda disponible en `supply_chain.factory_resilience`, pero el primer runner Stage-A inventaba la demanda, alteraba Algoritmos 1/2, entregaba un `cv` latente privilegiado al selector y omitía la frontera/resource matching. La auditoría posterior halló que, antes de escribirse ese rechazo, había consumido `9.600.001–9.600.400` sin autorización ni cadena de custodia y había fijado en código, no calculado, el supuesto indicador de reproducción del paper. Esos tapes están quemados y el resultado queda en cuarentena: no prueba `H_PI`, `H_obs`, ranking, reproducción ni nulo. Gobiernan `factory_app_cd_gate_v1_rejection.json` v2, el registro forense y el protocolo v2 bloqueado.
 
 **Portafolio provisional:** continuar el bound exacto M/T/R y conservar R03/R09 y las demás extensiones como preguntas de dominio. Un paper metodológico o de constructo puede evaluarse después, pero hoy no debe titularse ni venderse como certificado de frontera. No entrenar ninguna red hasta que una política no neuronal pase los gates completos; no ejecutar retención hasta que exista `H_learned > 0` confirmado.
 
@@ -29,13 +30,13 @@
 | Eje | Estado verificado |
 |---|---|
 | Capacidad | FS local ✅, git ✅, VPS `ovh-agent-lab` 135.148.42.12 (6 vCPU/11 GB, ocioso) ✅, Python 3.11.15 + gymnasium 1.3.0 + sb3 2.9.0 + **sb3_contrib (MaskablePPO)** + simpy 4.1.2 + torch 2.12.1 + SALib ✅. **No** hay bloqueo por *tooling*. |
-| Base auditada | `codex/paper2-maintenance-headroom @ 0a1e3be`; el commit key-v3 posterior debe citarse por el hash materializado en Git/manifiestos. |
+| Base auditada | `codex/paper2-maintenance-headroom @ 0a1e3be`; el commit key-v4/result-v5/auth-v9 posterior debe citarse por el hash materializado en Git/manifiestos. |
 | K3 remoto según refs locales | `origin/codex/paper2-maintenance-headroom` contiene `ef6b53b7`; por tanto la afirmación histórica “K3 sólo vive en disco local” ya no gobierna. |
-| Divergencia pendiente | Los cinco commits correctivos posteriores a `a91890bf` todavía no están contenidos en ese ref remoto local. La verificación del servidor debe refrescarse antes de cualquier publicación. |
-| Gate vigente | `OPEN_ACTIVE_BOUND_REQUIRED`; la procedencia mejoró, pero la evidencia científica sigue bajo hold adversarial key-v3. |
+| Divergencia pendiente | El `fetch` del 2026-07-13 confirma seis commits locales posteriores a `a91890bf` (hasta `179f7c2`) que no están en `origin/codex/paper2-maintenance-headroom`; el último está además invalidado como productor de evidencia. El draft PR #2 sigue en `3bcf6e96`. |
+| Gate vigente | `OPEN_ACTIVE_BOUND_REQUIRED`; la prueba/custodia key-v4 fue aceptada en bytes de desarrollo, pero W12/W16 científicos firmados siguen pendientes. |
 | K3 | Retracción reproducida bit-a-bit (`fixed_minus_mpc_ordered_D0=[0,0,0]`; fijo período-8 supera al MPC por ReT≈0.0177). |
 
-**Acción de procedencia pendiente:** publicar y verificar de forma inmutable los cinco commits correctivos posteriores a `a91890bf`, con hashes de contrato/harness/entorno y artefactos recuperados. Un job enviado o un bundle staged no es evidencia científica.
+**Acción de procedencia pendiente:** primero reparar y reauditar el HOLD; después publicar o archivar inmutablemente sólo la cadena válida. Los seis commits locales posteriores a `a91890bf` no están aún en origin, y publicar `179f7c2` no curaría su invalidación. Un job enviado o un bundle staged no es evidencia científica.
 
 ---
 
@@ -75,7 +76,7 @@
 | K — perecibilidad | EXPLORATORIO inválido | — | — | **física incompatible con la tesis** (3 años no-perecedero) |
 | K2 — reabastecimiento con costo | EVPI-dominado | 15820 (costo J) | −202 | solo-info-perfecta + comparador clásico fuerte |
 | **K3 — reabastecimiento presupuestado** | **RETRACTED** | — | 0.0 vs fijo | **confusión de cronograma abierto período-8 + frontera estática incompleta** |
-| post-K3 — migración de cuello de botella M/T/R | `OPEN_ACTIVE_BOUND_REQUIRED` | no computado | política signal −0.0013 vs constante M | nulo de política; frontera de 11.184.811 calendarios y H_PI de 24 semanas pendientes; hold key-v3 |
+| post-K3 — migración de cuello de botella M/T/R | `OPEN_ACTIVE_BOUND_REQUIRED` | no computado | política signal −0.0013 vs constante M | nulo de política; frontera de 11.184.811 calendarios y H_PI de 24 semanas pendientes; gate firmado key-v4 |
 
 **Mecanismos recurrentes observados en contratos cerrados:** (i) *constante/calendario robusto dominante* (D1, DRA1, G, J, K3); (ii) *información perfecta sin conversión observable* (DRA2b, E, F, H, K2); (iii) *reversión de métrica o guardarraíl* (D1, G, región-I); (iv) *compra de recursos/comparador* (DRA2b, I, K3); (v) *liveness de endpoint sub-umbral* (D1, DRA1, I, J); (vi) *colapso del aprendiz a calendario abierto* (E, J, K3); (vii) *física fuera del producto de la tesis* (K). M/T/R no entra todavía en una clase de cierre familiar.
 
@@ -122,7 +123,7 @@
 | R11 | anticipación de régimen | 0/3/0 | calendario dominante | Storage ilimitado + ReT ciego-a-holding ⇒ "máxima prontitud" constante; reabre Track C. |
 | R12 | secuenciación de recuperación | 0/3/0 | calendario dominante | Un servidor no-preemptivo ⇒ tiempo total = suma (invariante-al-orden); permutación reverso-topológica fija clairvoyant-óptima. |
 
-**Estado gobernante:** M/T/R es la única familia `ACTIVE_BOUND_REQUIRED` bajo HOLD adversarial key-v3. R03 y R09 se preservan como preguntas de dominio bloqueadas, no como las únicas extensiones lógicamente posibles. Ninguna familia es promotable y ningún aprendiz está autorizado.
+**Estado gobernante:** M/T/R es la única familia `ACTIVE_BOUND_REQUIRED` bajo el gate científico firmado key-v4. R03 y R09 se preservan como preguntas de dominio bloqueadas, no como las únicas extensiones lógicamente posibles. Ninguna familia es promotable y ningún aprendiz está autorizado.
 
 ---
 
@@ -146,7 +147,7 @@
 
 ## 8. Estado decisivo pendiente para el Artículo 2
 
-No existe todavía ni un ambiente positivo confirmado ni un certificado terminal de frontera. El objeto decisivo inmediato es la cota M/T/R de 24 semanas bajo `paper2_bottleneck_semantic_markov_key_v3`, con `ret_excel_visible_v1` como endpoint primario, recursos físicos pareados y todos los guardarraíles. `REPOSITORY-EVIDENCED`.
+No existe todavía ni un ambiente positivo confirmado ni un certificado terminal de frontera. El objeto decisivo inmediato es la cota M/T/R de 24 semanas bajo `paper2_bottleneck_semantic_markov_key_v4`, con `ret_excel_visible_v1` como endpoint primario, recursos físicos pareados y todos los guardarraíles. `REPOSITORY-EVIDENCED`.
 
 **Qué sí sostiene el corpus:** el patrón de nulos locales y el confound K3 justifican un gate de elegibilidad y una taxonomía de riesgos. No justifican convertir el atlas concurrente en una teoría global ni afirmar que toda la física admisible está dominada por calendarios. Las cifras del atlas quedan excluidas de inferencia sobre `H_PI`, `H_obs` y `η` hasta una recomputación canónica válida.
 
@@ -156,7 +157,7 @@ No existe todavía ni un ambiente positivo confirmado ni un certificado terminal
 
 ## 9. Diseño experimental del Artículo 2
 
-`CORRECTIVE-STATUS`. Este diseño no puede presentarse como terminal con los datos actuales: requiere completar o cerrar válidamente la cota M/T/R key-v3. El atlas concurrente se conserva como artefacto histórico exploratorio, no como evidencia primaria.
+`CORRECTIVE-STATUS`. Este diseño no puede presentarse como terminal con los datos actuales: requiere completar o cerrar válidamente la cota M/T/R key-v4. El atlas concurrente se conserva como artefacto histórico exploratorio, no como evidencia primaria.
 
 - **Unidad de análisis:** familia-de-decisión × celda-de-parámetro. Estimando: `H_PI`, `H_obs`, `η`, guardarraíles (worst-CSSU, pérdidas, ReT cantidad, cola).
 - **Ancla full-DES:** DRA2b (H_PI=0.0221), E (0/10), F (0/24), G (ABAB domina), H (belief no-pass), J (0/6), K2 (EVPI-dominado), K3 (confusión período-8).
@@ -289,7 +290,7 @@ Preguntas secundarias de face-validation (para el atlas, no para reabrir): exist
 ## 17. Roadmap correctivo
 
 `COMMITTEE-INFERENCE`.
-- **Ahora:** preservar la corrección de procedencia, mantener `OPEN_ACTIVE_BOUND_REQUIRED__MTR_KEY_V3_ADVERSARIAL_HOLD` y auditar el certificado key-v3 contra el contrato v2.
+- **Ahora:** preservar la corrección de procedencia, mantener `OPEN_ACTIVE_BOUND_REQUIRED__MTR_KEY_V4_SIGNED_REDUCED_GATE_PENDING` y ejecutar los pares científicos W12/W16 firmados contra el contrato v2 inmutable.
 - **Siguiente gate:** producir una cota M/T/R 24-week resource-restricted con `ret_excel_visible_v1`, recursos físicos pareados, guardarraíles completos, CRN/replay/gap checks y verdict JSON versionado; si no se puede, documentar exactamente el blocker sin llamar a eso frontera.
 - **Después del gate:** actualizar el registro de claims y sólo entonces decidir entre positivo Paper 2, cierre familiar M/T/R o continuación de búsqueda.
 - **Paper 3:** no ejecutar retención hasta confirmar primero `H_learned > 0` de Paper 2.
@@ -321,7 +322,7 @@ Preguntas secundarias de face-validation (para el atlas, no para reabrir): exist
 
 `CORRECTIVE-STATUS`.
 - **Terminal B / frontera del sobre:** **NO CERTIFICADA**.
-- **M/T/R:** `OPEN_ACTIVE_BOUND_REQUIRED__MTR_KEY_V3_ADVERSARIAL_HOLD`; los certificados W12/W16 de schema v2 no autorizan el transductor full-24-week, no certifican guardarraíles completos y no calculan `H_PI`.
+- **M/T/R:** `OPEN_ACTIVE_BOUND_REQUIRED__MTR_KEY_V4_SIGNED_REDUCED_GATE_PENDING`; los certificados históricos W12/W16 key-v2 no autorizan el transductor full-24-week, no certifican guardarraíles completos y no calculan `H_PI`; deben reemplazarse por pares key-v4/result-v5 firmados y reverificados.
 - **Paper 2 positivo:** no confirmado; ningún learner está autorizado mientras el pre-gate siga incompleto.
 - **Paper 3 retenido:** **no autorizado** hasta que Paper 2 confirme `H_learned > 0`.
 - **Métrica:** `ret_excel_visible_v1` es la primaria; Cobb–Douglas queda exclusivamente como sensibilidad secundaria.
@@ -332,7 +333,7 @@ Preguntas secundarias de face-validation (para el atlas, no para reabrir): exist
 
 ## 21. Próximos artefactos, condicionados al HOLD
 
-1. Resolver y verificar el certificado semántico key-v3 contra `contracts/paper2_bottleneck_primary_bound_v2.json` sin rebajar requisitos.
+1. Ejecutar y verificar los pares científicos W12/W16 key-v4 contra `contracts/paper2_bottleneck_primary_bound_v2.json` sin rebajar requisitos.
 2. Emitir un verdict M/T/R que distinga explícitamente cierre, headroom diagnóstico, intervalo inconcluso o HOLD por fallo técnico/semántico.
 3. `docs/GARRIDO_ELICITATION_R03_R09_2026-07.md` — instrumento con las 2 preguntas falsables + criterios de conversión/cierre.
 4. Excluir el atlas concurrente de figuras inferenciales; si se preserva, rotularlo como histórico invalidado.
@@ -347,4 +348,4 @@ Preguntas secundarias de face-validation (para el atlas, no para reabrir): exist
 
 ### Apéndice — estado de suficiencia de evidencia
 
-La reconciliación de procedencia, la taxonomía y el confound K3 se preservan como evidencia histórica útil. El atlas concurrente no cuenta como cota canónica; la frontera M/T/R full-horizon y `H_PI` 24-week siguen pendientes; los guardarraíles full-contract no están certificados. **Retorno vigente: `OPEN_ACTIVE_BOUND_REQUIRED__MTR_KEY_V3_ADVERSARIAL_HOLD`; no hay resultado terminal A ni B.**
+La reconciliación de procedencia, la taxonomía y el confound K3 se preservan como evidencia histórica útil. El atlas concurrente no cuenta como cota canónica; la frontera M/T/R full-horizon y `H_PI` 24-week siguen pendientes; los guardarraíles full-contract no están certificados. **Retorno vigente: `OPEN_ACTIVE_BOUND_REQUIRED__MTR_KEY_V4_SIGNED_REDUCED_GATE_PENDING`; no hay resultado terminal A ni B.**

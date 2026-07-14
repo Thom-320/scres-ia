@@ -311,17 +311,17 @@
       "decision_rights": "weekly order multipliers under exact total and weekly caps",
       "physical_liveness": "live",
       "action_ranking_diversity": false,
-      "h_pi": null,
-      "h_obs": {"estimate_kind": "tested_policy_delta_vs_fixed_replacement", "policy": "PPO seed 0", "mean": 0.0, "ci95": [0.0, 0.0], "relative_to_fixed_replacement": true},
+      "h_pi": {"estimate_kind": "exact_pathwise_full_horizon_open_loop_dominance", "metric": "ret_excel_full_ledger_order", "value": 0.0, "reachable_states": 61, "effective_exact_budget_schedules": 6371, "all_non_superior_budget_grid_schedules": 5758374, "visible_v1_scope": "not certified and F is not a universal upper comparator: a feasible exact-budget q with q prefix-dominated by F, identical lost order 8 and weakly later completions scores visible-v1 1.0 versus F 6/7 because the sparse ledger rewards same-time batching; this is an open-loop metric counterexample, not H_PI or H_obs"},
+      "h_obs": {"estimate_kind": "exact_pathwise_full_horizon_open_loop_dominance", "metric": "ret_excel_full_ledger_order", "value": 0.0},
       "learned_value": {"unique_test_sequences": 1, "modal_sequence": [1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.0, 0.0]},
       "retained_value": null,
-      "strongest_comparator": "corrective full-horizon fixed period-8 schedule",
-      "resource_matching": "exact; fixed-versus-MPC ordered-D0 delta 0",
-      "guardrail_result": "fixed schedule reproduces PPO exactly and beats MPC by ReT 0.01771 on learner-test tapes",
+      "strongest_comparator": "unique prefix-nondominated full-horizon F=(1.5,1.5,1.5,1.5,1.5,1.5,1.0,0.0)*D0; exact graph covers all 6,371 forced-exact-budget schedules and the separate budget-envelope DP covers all 5,758,374 schedules spending at most B",
+      "resource_matching": "exact for the frozen policy graph and fixed-versus-MPC ordered-D0 delta 0; under-spending calendars are non-superior-resource alternatives, not called pairwise equal-resource",
+      "guardrail_result": "F uses exactly 10*D0, pathwise weakly improves completion/backlog/loss over every equal-budget trajectory, reproduces PPO, and beats the tested MPC. Full-ledger dominance is exact. Canonical sparse visible-v1 is nonmonotone even with identical losses: a feasible later-batching open loop scores 1.0 versus F 6/7, so no canonical H_PI/H_obs conclusion is inferred from the theorem or counterexample.",
       "final_verdict": "RETRACT_K3_ADAPTIVE_AND_NEURAL_CLAIMS_STATIC_PERIOD8_CONFOUND",
-      "failure_class": ["open_loop_schedule_confound", "incomplete_static_frontier", "learner_collapse"],
-      "exact_failure": "The learner rediscovers a tape-independent period-8 calendar omitted from the original period-1-to-4 frontier.",
-      "evidence": ["results/k3/open_loop_confound_audit.json", "docs/PROGRAM_K3_FINAL_CORRECTIVE_VERDICT_2026-07-12.md"]
+      "failure_class": ["open_loop_schedule_confound", "formally_dominated_full_horizon_resource_graph", "learner_collapse"],
+      "exact_failure": "The learner rediscovers F, the unique prefix-nondominated schedule. Source-bound enumeration proves F dominates all 6,371 exact-budget trajectories; an additional exact DP covers all 5,758,374 grid calendars spending at most B with zero prefix violations. Therefore H_PI=Hobs=0 only for the frozen full-ledger metric. The feasible batching counterexample prevents promotion of this theorem to ret_excel_visible_v1 and independently shows why metric ranking is not physical service ranking.",
+      "evidence": ["research/paper2_exhaustive_search/k3_frontloading_dominance_certificate.json", "scripts/certify_k3_frontloading_dominance.py", "results/k3/open_loop_confound_audit.json", "docs/PROGRAM_K3_FINAL_CORRECTIVE_VERDICT_2026-07-12.md"]
     },
     {
       "family_id": "post_K3_bottleneck_migration",
@@ -333,13 +333,13 @@
       "h_obs": {"estimate_kind": "tested_policy_delta_not_H_obs_optimum", "policy": "signal_adaptive", "mean": -0.0013093716179235963, "ci95": [-0.006384019811757724, 0.003092795281669821]},
       "learned_value": null,
       "retained_value": null,
-      "strongest_comparator": "calibration-frozen constant M",
+      "strongest_comparator": "UNRESOLVED: exact maximum over all 11,184,811 admissible 24-week open-loop calendars is required; constant M is only the strongest comparator tested so far",
       "resource_matching": "the frozen contract matches one response-team week by construction; M/T/R are allocation destinations, not separate purchased resources. Reserve ration issue/replenishment differs and its resource accounting remains unresolved.",
       "guardrail_result": "service loss worsens 3.03%; favorable tapes 53.3%; 120/120 signal trajectories are unique but calibration-derived calendar and phase replacements also fail",
-      "final_verdict": "STOP_NO_ADAPTIVE_BOTTLENECK_VALUE",
+      "final_verdict": "ACTIVE_EXACT_EQUAL_RESOURCE_HPI_BOUND_NOT_YET_CERTIFIED",
       "failure_class": ["dominant_robust_action", "observable_conversion", "service_guardrail", "incomplete_open_loop_frontier", "reserve_resource_accounting_unresolved", "domain_resource_identity_unvalidated"],
-      "exact_failure": "The signal policy does not outperform the manufacturing doctrine and worsens service loss. A corrective audit found 11,184,811 effective full-horizon calendars, no certified PI ceiling, equal frozen team-week totals, but unequal reserve issue with unresolved reserve-resource accounting. The tested policy is null but the integrated-resource family is not quantitatively exhausted.",
-      "evidence": ["results/paper2_bottleneck/locked_confirmation/verdict.json", "results/paper2_bottleneck/corrective_completeness_audit.json", "docs/PAPER2_BOTTLENECK_MIGRATION_FINAL_VERDICT_2026-07-13.md"]
+      "exact_failure": "The tested signal policy does not outperform the manufacturing doctrine and worsens service loss, but that is not H_obs and does not close the family. A corrective audit found 11,184,811 effective full-horizon calendars and no certified PI ceiling. Commit 179f7c2 attempted the exact bound but was placed on adversarial HOLD before result; the family remains active until the proof and chain of custody pass or an exact ceiling is obtained.",
+      "evidence": ["results/paper2_bottleneck/locked_confirmation/verdict.json", "results/paper2_bottleneck/corrective_completeness_audit.json", "contracts/paper2_bottleneck_primary_bound_v2.json", "research/paper2_exhaustive_search/mtr_execution_invalidation_179f7c2.json"]
     }
   ],
   "recurring_mechanisms": [

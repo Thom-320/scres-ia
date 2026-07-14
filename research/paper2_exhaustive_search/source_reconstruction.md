@@ -16,7 +16,49 @@ Status: Phase 0 source-of-truth extraction; this document does not authorize new
 | `Raw_data2+Re.xlsx` | `4bd462771fefff16fc5666a851256b3780198d474832dec1423c0b6f94be86b0` | Primary raw workbook for `CF11`-`CF20`; operational ReT formula in column `AA`. |
 | `Rsult_1.xlsx` | `1901f683f6014cf75237c17233b8eba04f541b956f2d19dcecf2edc00e83b00a` | Secondary transformed/discretized workbook; not a consolidation of all 20 raw `CF` sheets. |
 
-The PDFs were extracted with `pdftotext -layout`. The DOCX was rendered to 21 page images and visually sampled. The draft contains placeholder abstract/results text, internal drafting comments, a proposed Cobb-Douglas training reward, and incomplete claims. It is not an audited result. Workbook identities and hashes above refer to the local files audited by [`docs/audits/garrido_excel_des_2026-06-25/README.md`](../../docs/audits/garrido_excel_des_2026-06-25/README.md); the raw books are source evidence, while the README and its JSON output are audit evidence.
+The canonical PDF texts were extracted with Poppler 26.06.0
+`pdftotext -layout`; the DOCX text was extracted with Pandoc 3.10
+`-t plain`. The DOCX was separately rendered to 21 page images and visually
+sampled. The draft contains placeholder abstract/results text, internal
+drafting comments, a proposed Cobb-Douglas training reward, and incomplete
+claims. It is not an audited result. Workbook identities and hashes above refer
+to the local files audited by
+[`docs/audits/garrido_excel_des_2026-06-25/README.md`](../../docs/audits/garrido_excel_des_2026-06-25/README.md);
+the raw books are source evidence, while the README and its JSON output are
+audit evidence.
+
+### Deterministic searchable-text reconstruction
+
+Full copyrighted source text is not committed. A clean clone can reconstruct
+and verify every canonical text when supplied the source files whose hashes are
+listed above:
+
+```bash
+python scripts/verify_source_extractions.py \
+  --output-dir tmp/paper2_source_extracts \
+  --report tmp/paper2_source_extraction_verification.json
+```
+
+The verifier is fail-closed on source SHA-256, extractor version, PDF page
+count, output SHA-256, bytes, lines and words. `--source ID=/path` permits a
+source to live at another path without relaxing its identity check. Exact
+commands, output names and counts are machine-readable in
+[`source_extraction_index.json`](source_extraction_index.json).
+
+The five historical full-text files under ignored `tmp/` paths were audited
+before removing them from the evidence dependency: their hashes equal the five
+canonical output hashes in the v3 index. They are disposable local caches, not
+required inputs. The tracked verifier plus the hash-identified original sources
+are the reconstruction authority.
+
+The tracked root [`thesis.txt`](../../thesis.txt) is not the canonical indexed
+extract. It is a legacy extraction of the same thesis PDF made with default
+flow (`pdftotext` without `-layout`): 443,582 bytes, 10,008 lines, 65,778 words,
+SHA-256 `c0b1671c...72da1c7`. The canonical layout-preserving extract is 533,903
+bytes, 7,869 lines, 65,856 words, SHA-256 `5c6101b9...a75d05c`. The verifier
+regenerates both byte-for-byte and proves that this hash difference is an
+extractor-mode difference, not a second or changed thesis source. Search notes
+and indexed page references use the layout-preserving form.
 
 ## Thesis chapter-by-chapter reading map
 
@@ -220,6 +262,18 @@ it as primary only with a validated APP variable/cost ledger and complete
 same-contract comparator frontier; that would be a distinct claim and would
 not retroactively rescue a null on canonical ReT.
 
+A proposed standalone Stage-A runner was independently audited and rejected. A
+later provenance correction found an untracked JSON showing that the rejected
+runner nevertheless consumed seeds `9,600,001–9,600,400` without authorization,
+an immutable commit receipt, a tape manifest or per-tape ledgers. It used a
+non-source demand generator, materially changed Algorithms 1/2, exposed a
+latent full-path variability parameter to the policy, and omitted the complete
+resource-matched frontier. The machine record is
+[`factory_app_cd_gate_v1_rejection.json`](factory_app_cd_gate_v1_rejection.json);
+the raw JSON is quarantined, all 400 seeds are burned, and the replacement
+protocol remains blocked before preregistration. Its reported numbers are not a
+scientific result or a valid null.
+
 ## Garrido 2024 claim boundary
 
 **Source claims.** The 2024 paper is explicitly a preliminary, theoretical, exploratory analysis. It:
@@ -272,5 +326,8 @@ It also states that a hypothetical supply chain may be used when real informatio
 | Admission/abandonment | Current orders backorder rather than physically expire; blocked absent mission deadlines and explicit rejection authority. |
 | Reporting lag alone | A strict information subset of Program G/H and cannot create value without a new irreversible multi-stage authority. |
 | Mission loadout/carried autonomy | Pack duration, mass and typical personal carry are thesis facts, but cohort allocation, signal timing, demand accounting and return/transfer physics are absent; current-kernel action liveness and headroom are exactly zero. |
+| Op7 inspection effort | The thesis already specifies fixed quality control, R14 `p=.03/.08` defects and Op6 rework. Variable inspection effort, effort-to-sensitivity/specificity, a persistent lot state, leading signal and escaped-defect consequence are absent; current-kernel incremental headroom is exactly zero. |
+| Component-specific R13 / Op4 kit balancing | Twelve raw materials and 12 R13 deliveries are thesis facts, but the executable model aggregates them and provides neither component pipelines nor a finite mixed-load Op4 action. Current-kernel headroom is exactly zero; implementation is blocked on BOM/load/expedition facts. |
+| R14 detected-lot disposition | Return to Op6 is thesis-native and fixed. Rework-versus-replacement authority, time/yield/material differences and persistent risk attribution are absent; current-kernel headroom is exactly zero and current rework weakly dominates discard. |
 
 No row in this table authorizes PPO. A candidate first needs a preregistered, resource-restricted clairvoyant ceiling, observable classical conversion, null cell, guardrails, and a complete action-trajectory/static-frontier audit.

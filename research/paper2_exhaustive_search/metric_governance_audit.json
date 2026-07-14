@@ -18,13 +18,23 @@
       "formula_rows": 47546,
       "mismatches": 0,
       "max_abs_diff": 0.0,
-      "temporary_result_sha256": "b9341ef1d52a9b1cebafd892ea7e3e175868d5a986954022086f2461832472f1",
+      "artifact_path": "research/paper2_exhaustive_search/excel_metric_reaudit_20260713.json",
+      "artifact_sha256": "b9341ef1d52a9b1cebafd892ea7e3e175868d5a986954022086f2461832472f1",
       "test_result": "17 passed",
       "test_files": [
         "tests/test_garrido_excel_ret.py",
         "tests/test_ret_excel_visible_contract.py",
         "tests/test_garrido_audit_workbook_packaging.py"
       ]
+    },
+    "known_construct_nonmonotonicity": {
+      "status": "MACHINE_VERIFIED_LIVE_AGGREGATOR_COUNTEREXAMPLE",
+      "artifact": "research/paper2_exhaustive_search/k3_frontloading_dominance_certificate.json",
+      "contract_scope": "Frozen K3 exact-budget FIFO kernel, zero risk indicators, identical total order resource and identical lost order 8.",
+      "front_loaded_schedule": "(1.5,1.5,1.5,1.5,1.5,1.5,1.0,0.0)*D0; weakly earlier completion for every order; visible-v1=6/7.",
+      "later_batched_schedule": "(1.0,1.0,1.5,1.5,1.5,1.5,1.5,0.5)*D0; prefix-dominated by the front-loaded schedule; visible-v1=1.0.",
+      "mechanism": "The sparse ledger applies all completion-removal events at a timestamp before emitting any row at that timestamp, so later batched completions can see a smaller Bt than an earlier individual completion.",
+      "interpretation": "This does not change which metric is canonical and does not establish adaptive value. It proves that physical service/completion dominance is insufficient to certify a visible-v1 upper bound; the primary metric must always be recomputed directly and interpreted with service, loss, quantity, tail and fairness guardrails."
     },
     "decision": "Binding primary endpoint for the current Paper 2 success definition; service loss, quantity ReT, lost orders, worst-node service, tail risk and resource ledgers remain mandatory guardrails."
   },
@@ -99,6 +109,7 @@
     "other_metrics": "No alternative metric may be selected after observing policy rankings. Any new primary construct requires domain authority, a frozen estimand and calibration, and a separate claim; it cannot be called thesis ReT."
   },
   "risk_governance": {
+    "governing_artifact": "research/paper2_exhaustive_search/risk_intervention_governance.json",
     "allowed": "Thesis risks may be edited within author-supported ranges, and a realistic new risk may be introduced as a disclosed researcher extension.",
     "required_before_screen": [
       "operational interpretation and affected operations",
@@ -113,6 +124,13 @@
   },
   "paper2_authorization": {
     "learner_authorized_by_cd": false,
-    "paper3_authorized": false
+    "paper3_authorized": false,
+    "standalone_factory_app_v1": {
+      "status": "QUARANTINED_UNAUTHORIZED_PRE_REJECTION_EXECUTION_DISCOVERED_POST_AUDIT",
+      "declared_seed_block_opened": true,
+      "audit": "research/paper2_exhaustive_search/factory_app_cd_gate_v1_rejection.json",
+      "replacement_protocol": "research/paper2_exhaustive_search/FACTORY_APP_CD_PROTOCOL_V2_BLOCKED_2026-07-13.md",
+      "reason": "The runner was not a faithful APP reconstruction, used a privileged latent variability parameter, omitted equal-resource/full-horizon comparators and did not implement the mandatory null, trajectory or chain-of-custody gates. Its unauthorized execution preceded the written rejection; a later provenance audit discovered the JSON. Seeds 9600001-9600400 are burned, the claimed paper-reproduction flag was hard-coded, and every number is quarantined non-evidence."
+    }
   }
 }

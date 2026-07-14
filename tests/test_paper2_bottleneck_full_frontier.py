@@ -20,6 +20,7 @@ from scripts.run_paper2_bottleneck_exact_transducer import (
     build_transducer,
     feasible_calendar_count,
     feasible_calendars,
+    markov_completeness_certificate,
     run_prefix,
 )
 from scripts.run_paper2_bottleneck_full_frontier import (
@@ -72,9 +73,11 @@ def _synthetic_transducer(weeks: int, tape_offset: int) -> Transducer:
             checkpoint=_checkpoint((Fraction(8 + tape_offset, 32),)),
             last_action=0,
             switched_previous=False,
+            represented_prefix_count=1,
         )
     ]]
     transitions = []
+    collisions = []
     for week in range(1, weeks):
         prior = layers[-1]
         next_nodes = []
@@ -100,8 +103,24 @@ def _synthetic_transducer(weeks: int, tape_offset: int) -> Transducer:
                             checkpoint=_checkpoint(),
                             last_action=action,
                             switched_previous=switched,
+                            represented_prefix_count=0,
                         )
                     )
+                else:
+                    collisions.append(
+                        {
+                            "week": week + 1,
+                            "parent_state_id": parent.state_id,
+                            "action": action,
+                            "target_state_id": next_index[key],
+                            "represented_prefix_count": (
+                                parent.represented_prefix_count
+                            ),
+                        }
+                    )
+                next_nodes[next_index[key]].represented_prefix_count += (
+                    parent.represented_prefix_count
+                )
                 # Some edges append no visible row, so policy denominators vary.
                 code = (week * 11 + parent.last_action * 5 + action * 7 + tape_offset) % 29
                 values = () if code % 7 == 0 else (Fraction(code + 1, 64),)
@@ -116,7 +135,7 @@ def _synthetic_transducer(weeks: int, tape_offset: int) -> Transducer:
         weeks=weeks,
         layers=layers,
         transitions=transitions,
-        collisions=[],
+        collisions=collisions,
         prefix_replays=0,
     )
     transducer.collision_bisimulation = _synthetic_structural_certificate(
@@ -127,6 +146,7 @@ def _synthetic_transducer(weeks: int, tape_offset: int) -> Transducer:
 
 def _synthetic_structural_certificate(transducer: Transducer) -> dict:
     nodes = []
+    lag_records = []
     for layer_index in reversed(range(transducer.weeks)):
         for node in transducer.layers[layer_index]:
             terminal = layer_index == transducer.weeks - 1
@@ -138,6 +158,7 @@ def _synthetic_structural_certificate(transducer: Transducer) -> dict:
             edges = [] if terminal else [
                 {
                     "action": action,
+                    "represented_prefix_count": node.represented_prefix_count,
                     "incremental_label_sha256": "a" * 64,
                     "child_obligation_id": (
                         f"node:w{layer_index + 2}:n"
@@ -147,6 +168,23 @@ def _synthetic_structural_certificate(transducer: Transducer) -> dict:
                 }
                 for action in actions
             ]
+            for action in actions:
+                lag_records.append(
+                    {
+                        "obligation_id": (
+                            f"request-lag:w{layer_index + 2}:p"
+                            f"{node.state_id}:a{action}"
+                        ),
+                        "parent_week": layer_index + 1,
+                        "parent_state_id": node.state_id,
+                        "action": action,
+                        "state_bytes_equal": True,
+                        "checkpoint_equal": True,
+                        "callback_inventory_equal": True,
+                        "markov_binding_equal": True,
+                        "status": "COMPLETE",
+                    }
+                )
             nodes.append(
                 {
                     "obligation_id": f"node:w{layer_index + 1}:n{node.state_id}",
@@ -155,12 +193,106 @@ def _synthetic_structural_certificate(transducer: Transducer) -> dict:
                     "state_sha256": node.key,
                     "state_sha512": "b" * 128,
                     "state_bytes": 1,
+                    "last_action": node.last_action,
+                    "switched_previous": node.switched_previous,
+                    "represented_prefix_count": node.represented_prefix_count,
                     "expected_actions": actions,
                     "edges": edges,
                     "status": "COMPLETE",
                 }
             )
+    node_map = {
+        (row["week"], row["state_id"]): row for row in nodes
+    }
     roots = []
+    for collision_id, collision in enumerate(transducer.collisions):
+        week = collision["week"]
+        child = node_map[(week, collision["target_state_id"])]
+        actions = child["expected_actions"]
+        edges = []
+        for action in actions:
+            target = transducer.transitions[week - 1][
+                (child["state_id"], action)
+            ].next_state_id
+            edges.append(
+                {
+                    "action": action,
+                    "state_bytes_equal": True,
+                    "incremental_labels_bitwise_equal": True,
+                    "callback_inventory_equal": True,
+                    "markov_binding_equal": True,
+                    "child_obligation_id": f"node:w{week + 1}:n{target}",
+                    "child_obligation_complete": True,
+                    "status": "COMPLETE",
+                }
+            )
+        roots.append(
+            {
+                "collision_id": collision_id,
+                "root_id": f"collision:{collision_id:08d}",
+                "discarded_transition_id": (
+                    f"discarded:w{week}:p{collision['parent_state_id']}"
+                    f":a{collision['action']}"
+                ),
+                "discarded_parent_state_id": collision["parent_state_id"],
+                "discarded_action": collision["action"],
+                "represented_prefix_count": collision[
+                    "represented_prefix_count"
+                ],
+                "week": week,
+                "representative_state_id": child["state_id"],
+                "last_action": child["last_action"],
+                "switched_previous": child["switched_previous"],
+                "canonical_bytes_equal": True,
+                "callback_inventory_equal": True,
+                "markov_binding_equal": True,
+                "expected_actions": actions,
+                "edges": edges,
+                "status": "COMPLETE",
+            }
+        )
+    multiplicity_records = []
+    for layer_index, layer in enumerate(transducer.layers):
+        terminal = layer_index == transducer.weeks - 1
+        outgoing = (
+            0
+            if terminal
+            else sum(
+                len((node.last_action,) if node.switched_previous else (0, 1, 2))
+                for node in layer
+            )
+        )
+        kept = 0 if terminal else len(transducer.layers[layer_index + 1])
+        represented_successors = (
+            0
+            if terminal
+            else sum(
+                node.represented_prefix_count
+                * len(
+                    (node.last_action,)
+                    if node.switched_previous
+                    else (0, 1, 2)
+                )
+                for node in layer
+            )
+        )
+        multiplicity_records.append(
+            {
+                "week": layer_index + 1,
+                "node_count": len(layer),
+                "represented_prefix_count": sum(
+                    node.represented_prefix_count for node in layer
+                ),
+                "closed_form_prefix_count": feasible_calendar_count(layer_index + 1),
+                "outgoing_quotient_transition_count": outgoing,
+                "represented_successor_count": represented_successors,
+                "kept_successor_state_count": kept,
+                "discarded_transition_count": 0 if terminal else outgoing - kept,
+                "status": "COMPLETE",
+            }
+        )
+    markov_completeness = markov_completeness_certificate()
+    discarded_ids = [row["discarded_transition_id"] for row in roots]
     body = {
         "schema_version": "paper2_collision_bisimulation_v2",
         "key_schema_version": frontier.KEY_SCHEMA_VERSION,
@@ -170,8 +302,37 @@ def _synthetic_structural_certificate(transducer: Transducer) -> dict:
         "callback_closure_state_serialized": True,
         "process_target_state_serialized_or_fail_closed": True,
         "runtime_alias_graph_serialized": True,
-        "collision_payload_checks": 0,
-        "collision_root_count": 0,
+        "markov_completeness_certificate": markov_completeness,
+        "markov_completeness_certificate_sha256": markov_completeness[
+            "certificate_sha256"
+        ],
+        "markov_completeness_validated": True,
+        "per_key_runtime_schema_enforced": True,
+        "runtime_schema_sha256": "c" * 64,
+        "tape_binding_sha256": "d" * 64,
+        "deterministic_transition_semantics_bound": True,
+        "control_state_bound_into_obligations": True,
+        "exact_feasible_action_sets_validated": True,
+        "quotient_multiplicity_validated": True,
+        "request_lag_equivalence_validated": True,
+        "request_lag_equivalence_check_count": len(lag_records),
+        "request_lag_equivalence_records": lag_records,
+        "request_lag_equivalence_records_sha256": _digest(lag_records),
+        "layer_multiplicity_records": multiplicity_records,
+        "layer_multiplicity_records_sha256": _digest(multiplicity_records),
+        "terminal_represented_prefix_count": feasible_calendar_count(
+            transducer.weeks
+        ),
+        "terminal_closed_form_prefix_count": feasible_calendar_count(
+            transducer.weeks
+        ),
+        "w24_terminal_prefix_target": 11_184_811,
+        "discarded_transition_count": len(roots),
+        "discarded_transition_witness_count": len(roots),
+        "discarded_transition_witness_bijection": True,
+        "discarded_transition_ids_sha256": _digest(discarded_ids),
+        "collision_payload_checks": len(roots),
+        "collision_root_count": len(roots),
         "transition_congruence_checks": 0,
         "node_obligation_count": len(nodes),
         "terminal_node_obligation_count": len(transducer.layers[-1]),

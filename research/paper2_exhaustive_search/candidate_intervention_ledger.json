@@ -74,6 +74,16 @@
       "claim_limit": "Current contract is closed below the 0.01 practical gate; severity or signal retuning alone cannot reopen it."
     },
     {
+      "family_id": "r21_r3_shared_mab_restoration_sequencing",
+      "operational_interpretation": "Dispatch a finite Maintenance Battalion team among operations disabled concurrently by one R21 or R3 event.",
+      "source_justification": "The thesis names MaB and simultaneous R21/R3 operation outages, but its executable recovery clocks are independent and no scarce team pool, travel, repair-work or damage-assessment decision is specified.",
+      "provenance_class": "thesis_anchored_researcher_extension_blocked_pending_Garrido_facts",
+      "units_and_conservation": "team-hours and travel-hours; disabled-operation repair work in hours; one team cannot occupy two repairs; outage/recovery events remain on the exogenous tape and policy choices change consequences only",
+      "plausible_envelope_status": "current parallel-recovery action is exact-null; scarce-team parameter envelope unavailable",
+      "null_or_falsification_regime": "thesis-default independent parallel recovery clocks, or teams at least equal disabled sites, makes the proposed sequencing action nonbinding",
+      "claim_limit": "Do not call the family falsified or executable until team scarcity, repair-work meaning, travel, preemption and damage-observation timing are supplied; then begin with exact DP/permutation comparators before any learner."
+    },
+    {
       "family_id": "finite_storage_space_allocation",
       "operational_interpretation": "Reserve, relocate or reconfigure scarce storage across products or locations before arrivals.",
       "source_justification": "The thesis explicitly assumes unlimited storage, so finite space is not thesis-native physics.",
@@ -86,11 +96,11 @@
     {
       "family_id": "inspection_effort_vs_throughput",
       "operational_interpretation": "Trade Op7 inspection effort against immediate throughput and later defect/rework consequences.",
-      "source_justification": "Op7 quality control is thesis-native, but controllable intensity, diagnostic accuracy and defect consequences are not specified.",
+      "source_justification": "Op7 quality control and R14 Binomial defects with Op6 rework are thesis-native. Controllable inspection intensity, diagnostic accuracy, lot persistence/signals and escaped-defect consequences are not specified.",
       "provenance_class": "researcher_extension_requiring_Garrido_signoff",
-      "units_and_conservation": "inspection-minutes; line-hours; inspected, accepted, rejected and reworked ration units; only qualified output may satisfy orders",
-      "plausible_envelope_status": "action and parameters absent",
-      "null_or_falsification_regime": "fixed inspection or zero consequence for escaped defects makes the action dead",
+      "units_and_conservation": "inspection-minutes; line-hours; CRN-coupled exogenous per-unit/lot latent draws; latent defective = inspected TP + inspected FN + uninspected defective; latent conforming = inspected TN + inspected FP + uninspected conforming; escaped defective = inspected FN + uninspected defective; inspected TP + inspected FP = reworked + scrapped + held/queued; only qualified/reworked output may satisfy orders; R14 attribution cannot depend on detection action",
+      "plausible_envelope_status": "action, effort-response curve, persistent quality regime, leading signal and escape endpoint absent; current-kernel H_PI=H_obs=0",
+      "null_or_falsification_regime": "current no-inspection-action kernel gives exact H_PI=H_obs=0. For an introduced action, effort-invariant detection, qualification, rework/escape and throughput responses make it transition-dead. Constant-p/no-quality-signal blocks the proposed signal-responsive mechanism but does not exclude backlog/cover feedback; zero escape consequence can make intensive inspection dominated without making it transition-dead",
       "claim_limit": "Only adaptive quality-control effort with qualified-delivery guardrails."
     },
     {
@@ -132,6 +142,26 @@
       "plausible_envelope_status": "conceptually thesis-anchored but not parameterizable or executable from current sources",
       "null_or_falsification_regime": "identical mission distributions, fully reliable resupply, nonbinding carry limits or a shuffled/post-departure mission signal gives H_obs=0",
       "claim_limit": "At most mission-loadout allocation in a Garrido-approved downstream extension; not a result for the current theatre-delivery endpoint."
+    },
+    {
+      "family_id": "component_specific_r13_kit_balancing_op4_expedite",
+      "operational_interpretation": "For one frozen finished-ration type with no output-product choice/substitution, prioritize named complementary raw-material components in a capacity-limited Op4 load or use a matched expedition resource before Op5 kit commitment.",
+      "source_justification": "The thesis names 12 raw materials and models R13 over 12 deliveries, but the DES aggregates them and supplies no component-specific load authority or finite Op4 lift.",
+      "provenance_class": "researcher_extension_requiring_Garrido_signoff",
+      "units_and_conservation": "rm1...rm12 units; per-ration BOM; payload weight/volume; minimum lots; departures; vehicle-hours; expedition tokens; every component remains on-hand, in-transit, consumed or explicitly lost",
+      "plausible_envelope_status": "component identities, BOM, pipeline visibility, finite mixed-load lift and expedition authority absent; current-kernel H_PI=H_obs=0",
+      "null_or_falsification_regime": "common scalar R13 delay, proportional kits, nonbinding lift or fixed loads gives H_PI=H_obs=0. If named component identity exists but is unobserved before dispatch, only H_obs=0 follows; H_PI may remain positive.",
+      "claim_limit": "Only component-kit balancing or expedition value under Garrido-validated component and Op4 physics."
+    },
+    {
+      "family_id": "r14_detected_lot_disposition",
+      "operational_interpretation": "After Op7 detects nonconforming output, choose hold/rework versus scrap-and-replace without ever shipping a known defect.",
+      "source_justification": "The thesis requires return to Op6; the executable r14_defect_mode is a fidelity configuration, not a sequential decision. Discretionary disposition and its costs are absent.",
+      "provenance_class": "researcher_extension_requiring_Garrido_signoff",
+      "units_and_conservation": "defective ration units; rework line-hours and yield; replacement raw-material units and lead; qualified output; disposal; the original R14 event remains attributed through replacement",
+      "plausible_envelope_status": "disposition authority and distinct rework/replacement parameters absent; current-kernel H_PI=H_obs=0 and rework weakly dominates discard",
+      "null_or_falsification_regime": "mandatory unit-yield rework at the same effective line rate and no additional consequence gives a single dominant action",
+      "claim_limit": "Only post-detection lot disposition under validated quality, capacity, material and attribution rules."
     },
     {
       "family_id": "demand_shaping_or_substitution",

@@ -35,6 +35,7 @@ import os
 from pathlib import Path
 import pickle
 import platform
+import re
 import subprocess
 import sys
 import time
@@ -55,7 +56,13 @@ from scripts.run_paper2_bottleneck_exact_transducer import (  # noqa: E402
     run_prefix,
     runtime_proof_audit,
     validate_collision_bisimulation_certificate,
-    validate_reduced_certification_payload,
+    validate_reduced_certification_structure,
+)
+from scripts.paper2_bound_execution_harness import (  # noqa: E402
+    ISOLATED_BOOTSTRAP,
+    HarnessError,
+    _confined_checksum_path,
+    reverify_authorized_reduced_pair_archive,
 )
 from supply_chain.paper2_bottleneck import (  # noqa: E402
     ACTIONS,
@@ -89,7 +96,7 @@ CHECKPOINT_DEPENDENCY_PATHS = (
 )
 SCHEMA_VERSION = "paper2_bottleneck_full_frontier_v2"
 MANIFEST_SCHEMA_VERSION = "paper2_bottleneck_full_frontier_manifest_v2"
-AUTHORIZATION_SCHEMA_VERSION = "paper2_bound_execution_authorization_v4"
+AUTHORIZATION_SCHEMA_VERSION = "paper2_bound_execution_authorization_v9"
 W24_AUDIT_SCHEMA_VERSION = "paper2_bottleneck_w24_profile_state_audit_v3"
 CALENDAR_INDEX_SCHEMA_VERSION = "mtr_no_adjacent_switch_lexicographic_v1"
 NEG_INF = float("-inf")
@@ -1425,14 +1432,12 @@ def _scientific_source_drift() -> str:
 
 
 def _repo_artifact(relative: Any) -> Path:
-    candidate = (ROOT / str(relative)).resolve()
     try:
-        candidate.relative_to(ROOT.resolve())
-    except ValueError as exc:
+        rel, candidate = _confined_checksum_path(ROOT, relative)
+    except HarnessError as exc:
         raise ValueError("authorization artifact escapes the repository") from exc
     if not candidate.is_file():
         raise ValueError(f"authorization artifact is missing: {relative}")
-    rel = str(candidate.relative_to(ROOT.resolve()))
     if not _git_value("ls-files", "--error-unmatch", "--", rel):
         raise ValueError(f"authorization artifact is not tracked: {relative}")
     shown = subprocess.run(
@@ -1608,7 +1613,7 @@ def validate_acceleration_authorization(
     for key in (
         "execution_authorized",
         "primary_bound_batch_authorized",
-        "reduced_horizon_key_v3_certified",
+        "reduced_horizon_key_v4_certified",
         "full_horizon_primary_acceleration_authorized",
         "primary_frontier_exactness_required",
         "original_runner_replay_required",
@@ -1632,6 +1637,18 @@ def validate_acceleration_authorization(
         failures.append("authorization primary-bound contract hash mismatch")
     if payload.get("runner_sha256") != _file_sha256(Path(__file__)):
         failures.append("authorization frontier-runner hash mismatch")
+    if payload.get("isolated_bootstrap_sha256") != _file_sha256(
+        ISOLATED_BOOTSTRAP
+    ):
+        failures.append("authorization isolated-bootstrap hash mismatch")
+    for key in (
+        "host_runtime_sha256",
+        "portable_runtime_sha256",
+        "scientific_child_environment_sha256",
+        "execution_nonce",
+    ):
+        if not re.fullmatch(r"[0-9a-f]{64}", str(payload.get(key, ""))):
+            failures.append(f"authorization runtime identity is malformed: {key}")
     if payload.get("environment_sha256") != certification_environment().get(
         "environment_sha256"
     ):
@@ -1664,7 +1681,84 @@ def validate_acceleration_authorization(
         )
         if digest != row.get("sha256"):
             failures.append(f"reduced-horizon hash mismatch: {role}")
-        failures.extend(validate_reduced_certification_payload(reduced, str(role)))
+        failures.extend(
+            validate_reduced_certification_structure(
+                reduced,
+                str(role),
+                expected_environment_sha256=payload.get("environment_sha256"),
+            )
+        )
+        pair_row = row.get("independent_execution_verification")
+        if not isinstance(pair_row, dict):
+            failures.append(
+                f"independent execution verification is missing: {role}"
+            )
+        else:
+            try:
+                pair_artifact = _repo_artifact(pair_row.get("path"))
+                pair_digest = _file_sha256(pair_artifact)
+                json.loads(pair_artifact.read_text())
+            except (OSError, ValueError, json.JSONDecodeError) as exc:
+                failures.append(
+                    f"cannot validate independent execution verification {role}: {exc}"
+                )
+            else:
+                dependencies.append(
+                    {
+                        "role": f"{role}_independent_execution_verification",
+                        "path": str(pair_artifact),
+                        "sha256": pair_digest,
+                    }
+                )
+                if pair_digest != pair_row.get("sha256"):
+                    failures.append(
+                        f"independent execution verification hash mismatch: {role}"
+                    )
+                producer_fingerprint = pair_row.get(
+                    "producer_public_key_fingerprint"
+                )
+                independent_fingerprint = pair_row.get(
+                    "independent_public_key_fingerprint"
+                )
+                if not re.fullmatch(r"[0-9a-f]{64}", str(producer_fingerprint)) or not re.fullmatch(
+                    r"[0-9a-f]{64}", str(independent_fingerprint)
+                ):
+                    failures.append(
+                        f"caller-retained pair fingerprints are missing: {role}"
+                    )
+                else:
+                    archive_reverification = reverify_authorized_reduced_pair_archive(
+                        archive_root=ROOT,
+                        pair_verification_path=pair_artifact,
+                        expected_pair_verification_sha256=str(
+                            pair_row.get("sha256")
+                        ),
+                        verification_mode=str(
+                            pair_row.get("verification_mode", "")
+                        ),
+                        role=str(role),
+                        certified_artifact_sha256=str(row.get("sha256")),
+                        expected_producer_public_key_fingerprint=str(
+                            producer_fingerprint
+                        ),
+                        expected_independent_public_key_fingerprint=str(
+                            independent_fingerprint
+                        ),
+                        expected_producer_manifest_sha256=pair_row.get(
+                            "producer_manifest_sha256"
+                        ),
+                        expected_independent_manifest_sha256=pair_row.get(
+                            "independent_manifest_sha256"
+                        ),
+                    )
+                    failures.extend(
+                        f"archived pair reverification: {failure}"
+                        for failure in archive_reverification.get("failures", [])
+                    )
+                    if archive_reverification.get("passed") is not True:
+                        failures.append(
+                            f"archived pair reverification failed: {role}"
+                        )
         if row.get("source_git_commit") != reduced.get("provenance", {}).get(
             "git_commit"
         ):

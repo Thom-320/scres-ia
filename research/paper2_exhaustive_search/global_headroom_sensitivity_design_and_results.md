@@ -83,10 +83,19 @@ The selection rule is the least-favorable plausible connected region satisfying 
 - Alternate-route recourse: the existing v1 grid is retrospective development evidence only. Do not rescreen until the route/fleet/signal facts are signed off; then freeze a true resource-restricted full-horizon oracle, full calendar/classical frontier, componentwise vehicle ledger and route-removal null before opening any result.
 - Censored demand: no grid until system-of-record censoring and active-report resource are confirmed.
 - Storage: no grid until actual capacity/overflow/relocation data are confirmed.
-- Inspection: no grid until effort, sensitivity/specificity and qualified-output consequences are confirmed.
+- Inspection: no grid until Op7 authority, effort-to-sensitivity/specificity, persistent lot state/leading signal, qualified-output consequences and AQL are confirmed. Native no-action inspection has exact incremental `H_PI=H_obs=0`; exogenous per-unit/lot latent draws must be CRN-coupled and R14 metric attribution must be independent of the inspection action.
+- Component-specific R13/Op4 kit balancing: no grid until named component delays, BOM, component inventory/pipeline observability, finite mixed-load lift and expedition/substitution rules are confirmed. The current aggregate kernel has exact `H_PI=H_obs=0` for this absent action.
+- R14 detected-lot disposition: no grid until discretion, rework time/capacity/yield, replacement material/lead, partial-release/quality rules and persistent risk attribution are confirmed. Current fixed unit-yield same-rate rework weakly dominates discard.
+- R21/R3 restoration sequencing: no grid until Garrido supplies Maintenance Battalion team count/skills, base/travel/activation, operation-specific repair work, preemption, damage-assessment lead/error, and whether 120/672 hours is team work or autonomous downtime. Under the current independent parallel-recovery physics the action is absent, so `H_PI=H_obs=0`; the historical restoration-order-invariance claim is not a machine-certified ceiling on a scarce-team extension.
 - Mission loadout: no grid until authority, pack/mass limits, pre-departure mission/resupply signals, sealed consumption-order semantics and unused-pack return rules are confirmed. In the current DES the action is absent, so `H_PI=H_obs=0` exactly for this family.
 - Integrated M/T/R: do not sweep the already chosen 80% efficacy or 0.85 signal. First certify the existing full-horizon frontier/PI ceiling, validate that one real team is fungible across targets, and settle reserve issue/replenishment semantics.
 
 The implemented effect quotient is the frozen execution route for that existing cell: 30,765,821 calibration and 57,918,762 locked effect executions. It changes compute cost only; it does not alter the preregistered cell or authorize a parameter search.
 
 This routing prevents selecting physical parameters from learner performance.
+
+The thesis-supported current-to-increased occurrence cells for R11–R24/R3 may
+be used only after a decision contract is independently licensed. They change
+occurrence frequency, not observation or action authority. Program I already
+shows that magnitude/frequency changes alone do not create the required
+scarcity-by-concurrency feedback mechanism in its frozen contract.

@@ -38,6 +38,18 @@
       "range": "7200001-7299999",
       "status": "burned_conservative_reservation",
       "reason": "Corrective replay reconstructs seed_start=7200001+1000*cell_index with 48 tapes for each of 64 cells and reproduces all stored values. Because the commit supplies no runner or manifest, the wider 7.2M block remains excluded fail-closed."
+    },
+    {
+      "label": "factory_app_cd_v1_unauthorized_execution",
+      "range": "9600001-9600400",
+      "status": "burned_quarantined",
+      "reason": "An untracked Stage-A JSON discovered at 2026-07-13T21:27:28Z reports 400 tapes from seed 9600001. The execution preceded the written audit that rejected its source, observability, comparator and resource contract. The output has no valid custody chain and supplies no scientific result, but every consumed seed is permanently burned. See factory_app_cd_gate_v1_rejection.json v2 and the forensic record."
+    },
+    {
+      "label": "factory_app_cd_v1_declared_remainder",
+      "range": "9600401+",
+      "status": "withdrawn_not_reserved",
+      "reason": "The rejected runner's open-ended declaration is withdrawn. A future valid APP/CD protocol must allocate a new disjoint seed block; it may not infer virgin status from this old declaration."
     }
   ],
   "concurrent_ledger_defect": {

@@ -1,0 +1,183 @@
+{
+  "schema_version": "mtr_proof_and_custody_adversarial_log_v1",
+  "recorded_date": "2026-07-13",
+  "current_status": "READY_FOR_IMMUTABLE_KEY_V4_FREEZE__NO_SCIENTIFIC_EXECUTION",
+  "scientific_effect": {
+    "w12_authorized": false,
+    "w16_authorized": false,
+    "w24_authorized": false,
+    "h_pi_computed": false,
+    "paper2_learner_authorized": false,
+    "paper3_authorized": false
+  },
+  "proof_rounds": [
+    {
+      "round": 1,
+      "subject": "commit 179f7c2 key-v3 proof and execution",
+      "verdict": "REJECTED_INVALIDATED_BEFORE_RESULT",
+      "fatal_findings": [
+        "semantic key omitted transition-relevant runtime state and its sufficiency was self-attested",
+        "transducer and brute replay shared rebindable scientific helpers",
+        "collision validator did not independently recompute feasible actions",
+        "path multiplicity, discarded-witness identity and request-lag equivalence were not certified",
+        "completed/lost orders and older risks lacked serialization or a sufficient-statistic proof"
+      ],
+      "governing_artifact": "research/paper2_exhaustive_search/mtr_execution_invalidation_179f7c2.json"
+    },
+    {
+      "round": 2,
+      "subject": "dirty-worktree full-history/inductive remediation",
+      "verdict": "REJECTED_NEW_BINDING_COUNTEREXAMPLES",
+      "counterexamples": [
+        "post-freeze MFSCSimulation.__init__.__defaults__ shifts 1 to 3 changed canonical primary while certificate and W4 exhaustive still passed",
+        "post-freeze np.mean replacement changed canonical primary while certificate and W4 exhaustive still passed",
+        "custom SourceLoader compiled a condition-deleting semantic payload while disk source and inspect.getsource remained original; import freeze self-blessed it"
+      ],
+      "positive_checks_only": [
+        "post-import run_prefix and semantic-payload rebinding rejected",
+        "projected action_events method read rejected",
+        "impossible action sets, multiplicity, request-lag and witness tampering rejected",
+        "completed/lost-order and old-risk mutations changed the key",
+        "W6 represented all 43 calendars with 10 witnesses and 77 lag checks",
+        "implementation W8 represented all 171 calendars with 45 witnesses and 274 lag checks"
+      ],
+      "release_blocker": "Bind method defaults/closures, statically used module attributes and independently compiled source-to-loaded code before a fresh audit."
+    },
+    {
+      "round": 3,
+      "subject": "complete semantic-state and loaded-runtime remediation after round 2",
+      "verdict": "PROVISIONALLY_ACCEPTED_FOR_PROOF_LOGIC__EXECUTION_CHAIN_STILL_HOLD",
+      "closed_counterexamples": [
+        "builtins getattr and zip replacement",
+        "staticmethod descriptor and inherited SimPy method mutation",
+        "class base/MRO mutation",
+        "custom source-loader disk-versus-loaded-code substitution",
+        "callable defaults, closures and statically reachable module-attribute mutation",
+        "request lag, multiplicity and collision-root omission",
+        "alias, callback, scheduled-process, resource, inventory, order and complete terminal-state omission",
+        "runtime widening of the complete-witness exclusion schema"
+      ],
+      "positive_checks_only": [
+        "two fresh W2 processes produced the same complete scientific witness after the strengthened state proof",
+        "all-calendar output count/digest, terminal count, collision examples, endpoint replay and proof audit were added to the execution witness",
+        "recursively reachable helper source/code identities were exposed separately after a test caught an inventory omission"
+      ],
+      "claim_limit": "These are proof-logic tests on dirty development bytes. They do not authorize a reduced scientific run until the launch, isolation, receipt and archival chain passes independently."
+    }
+  ],
+  "custody_rounds": [
+    {
+      "round": 1,
+      "verdict": "REJECTED",
+      "counterexample": "A coherent returned-bundle replacement could replace commands or all 60 seed/tape/certificate identities and every internal checksum because the returned tree authenticated itself."
+    },
+    {
+      "round": 2,
+      "verdict": "REJECTED",
+      "counterexample": "An external base anchor still allowed unchanged-input all-60 result substitution, runtime-context substitution, post-hoc anchor minting and omission of staged archive hashes."
+    },
+    {
+      "round": 3,
+      "verdict": "REJECTED_TEMPORAL_CUSTODY",
+      "counterexample": "A completed bundle could be rewound and a new self-consistent base/stage/launch chain minted; retrieve derived the expected digest from mutable local state."
+    },
+    {
+      "round": 4,
+      "verdict": "ACCEPT_FOR_STAGED_EXECUTION_ONLY",
+      "controls": [
+        "caller-retained out-of-band launch receipt path and SHA-256 are mandatory",
+        "retrieval never derives the expected launch digest from mutable sidecars",
+        "deterministic tape hashes, source/control archives, remote path/runtime and exact argv are externally bound",
+        "post-hoc/rewrite attacks fail against the originally retained digest",
+        "stage and launch receipt v2 require 256-bit nonces"
+      ],
+      "claim_limit": "Trusted-local custody model only; no proof against a malicious local actor controlling the custody store without signing/TSA. Retrieved artifacts remain evidence=false/AUDIT_PENDING until independent proof and replay."
+    },
+    {
+      "round": 5,
+      "verdict": "REJECTED_SCOPE_BINDING",
+      "counterexample": "The reduced-suite authorization omitted the frozen split, the threat-tape digest did not distinguish split, and an arbitrary split could pass a self-consistent reduced certificate.",
+      "remediation": "W12 and W16 suites now bind their exact burned split in authorization creation, canonical argv reconstruction, payload validation, tape identity and receipt checks."
+    },
+    {
+      "round": 6,
+      "verdict": "REJECTED_NONCOMPOSABLE_ISOLATION_AND_EXACT_RECEIPTS",
+      "counterexample": "The exact two-process path launched a direct inherited-environment child with -I -B, while the hardened harness launched -I -B -S through a sanitized bootstrap and emitted a different receipt schema. No execution could satisfy both chains end to end.",
+      "remediation_required": "One canonical isolated-bootstrap argv and one authorization/receipt chain must bind the bootstrap, runtime attestation, sanitized child environment and exact scientific output."
+    },
+    {
+      "round": 7,
+      "verdict": "REJECTED_NO_CHILD_SELF_AUTHORED_RECEIPT_FORGERY",
+      "counterexample": "An independent auditor created two legitimate prelaunch authorizations, copied one structurally valid W2 payload while changing only execution identity, fabricated distinct PIDs/return codes and post-run receipts, retained every resulting SHA-256, and obtained passed=true without launching either child.",
+      "scientific_meaning": "Authorization/output/receipt hashes provide self-consistency and tamper evidence; they do not prove process spawn, exit or independent recomputation.",
+      "remediation_required": "Distinct sanitized parent launchers must hold distinct ephemeral Ed25519 private keys outside child files/environment/descriptors, expose caller-retained public-key fingerprints before launch, open fresh custody paths fail-closed, spawn fixed canonical children, wait for exit, hash runtime/output/log bytes and sign post-exit receipts. Later authorization must reopen every archived artifact and rerun signature plus scientific verification rather than trust a stored passed flag.",
+      "residual_claim_limit": "Even signed launch/exit attestation is not a TEE or generic proof of computation. The accepted threat model must state that pinned runner/launcher bytes execute honestly and that hostile root or same-UID memory inspection/cross-tree copying is outside scope unless separately sandboxed."
+    },
+    {
+      "round": 8,
+      "verdict": "ACCEPT_CUSTODY_AND_RELOCATION_PLUMBING_FOR_IMMUTABLE_FREEZE",
+      "audited_dirty_byte_hashes": {
+        "exact_runner_sha256": "b98a05391a157b286d22042544e690698ea2ed020812ba6aa3c25e68803e09ed",
+        "execution_harness_sha256": "38d25c72bc447e2f00c3ba9aba2babf34fec4c822a20b3f2be40415ea6b8f2b5",
+        "harness_tests_sha256": "ed04a3ffd6348131454c5477d2bc643bdd619f5857a4c6833765b9462c49bfca",
+        "isolated_bootstrap_sha256": "bd213f24f88b6e303398bec158f0eeee8c5250c8e6efc40a5a00e4a7332a70f9",
+        "frontier_runner_sha256": "06dbefd219eb12baea737ecd4d954b90f6d5ad24624ec588ac7203e41df36d57",
+        "primary_contract_sha256": "b1e1605c33a50a588690dfd60e700ecaaa12ba0a45ce28599ac41ea463f509a9"
+      },
+      "complete_suite_results": [
+        "signed execution/relocation harness: 72 passed in 184.90 seconds",
+        "exact proof runner: 49 passed, 1 skipped",
+        "full-frontier runner: 15 passed"
+      ],
+      "independent_attack_results": [
+        "two independently signed and acknowledged W2 children were actually launched",
+        "each copied archive passed single-run retrieval verification",
+        "the relocated pair required distinct keys, manifests, authorizations, receipts and outputs with matching portable scope and exact witness",
+        "the pair rejected both W2 probes solely because they were deliberately non-scientific smoke executions",
+        "no-ACK, key substitution, signed-field mutation, receipt swap, log/output/runtime tamper, symlink, traversal, manifest substitution, same-root reuse and wrong-role attacks failed closed"
+      ],
+      "schema_freeze_rule": "The audited dirty-byte implementation must be mechanically renamed to semantic key v4 and exact result v5, then carry a separately versioned bound authorization after portable archive review, rerun in full, and be committed immutably before any scientific reduced-horizon launch. Historical key-v2/key-v3 results remain invalid.",
+      "threat_model": "Honest pinned parent launcher, exact runner and control plane. Hostile trusted root/caller, same-UID memory inspection, malicious pinned-runner cross-tree copying, TEE attestation and generic proof-of-computation are outside scope and must not be claimed."
+    },
+    {
+      "round": 9,
+      "verdict": "REJECTED_PORTABLE_PATH_SYMLINK_ALIAS",
+      "counterexample": "A copied signed W2 archive remained accepted when either its canonical result path or signed transfer-manifest path was replaced by an in-root symlink to byte-identical content. The confinement helper resolved paths before callers inspected is_symlink, erasing the lexical alias.",
+      "scientific_effect": "Portable W24 authorization remained blocked even though the initial portable-pair unit suite passed.",
+      "remediation_required": "Before resolution, lstat every existing descendant component below the explicit trusted archive root; route checksum creation, transfer-manifest creation, single-transfer and pair verification, tracked authorization artifacts, classic pair reverification and frontier repository artifacts through that one checker. Add byte-identical result-leaf, manifest-leaf and intermediate-directory symlink regressions."
+    },
+    {
+      "round": 10,
+      "verdict": "ACCEPT_FINAL_KEY_V4_PORTABLE_CUSTODY_FOR_IMMUTABLE_FREEZE",
+      "final_dirty_byte_hashes": {
+        "exact_runner_sha256": "206abda1e65c48c0d7cfd595e2096d968d942000b783f595e765e6ac85253027",
+        "execution_harness_sha256": "00f8ba21673df91d700e560526f86dd8de90a912e8d8db85c67693617659b173",
+        "frontier_runner_sha256": "88cf7740928ac65c80b1829a9b109e04a8ff3c4ec4911caa555b9ae12094a425",
+        "primary_contract_sha256": "8b62f8f0e096792bd65bbab9f733b94589b042d3a6566c01e307e4c6d74fda97",
+        "harness_tests_sha256": "527c069717df7f5aefeeeb5751bd1586bf5a5c7832eb7579ccd96535dd12606f",
+        "isolated_bootstrap_sha256": "bd213f24f88b6e303398bec158f0eeee8c5250c8e6efc40a5a00e4a7332a70f9"
+      },
+      "active_schemas": {
+        "semantic_key": "paper2_bottleneck_semantic_markov_key_v4",
+        "exact_result": "paper2_bottleneck_exact_transducer_certification_v5",
+        "bound_authorization": "paper2_bound_execution_authorization_v9",
+        "signed_transfer_manifest": "paper2_reduced_signed_transfer_manifest_v2",
+        "portable_retrieved_pair": "paper2_reduced_retrieved_pair_verification_v3"
+      },
+      "complete_suite_results": [
+        "exact proof runner: 49 passed, 1 skipped in 213.63 seconds",
+        "signed harness plus full-frontier: 92 passed in 308.67 seconds",
+        "focused lexical attack suite: 9 passed in 23.98 seconds"
+      ],
+      "independent_attack_results": [
+        "11 focused signed-transfer, portable-pair, legacy, tamper, reuse and witness/scope tests passed in 20.80 seconds",
+        "byte-identical result leaf symlink rejected",
+        "byte-identical transfer-manifest leaf symlink rejected",
+        "byte-identical intermediate payload-directory symlink rejected",
+        "clean copied transfer, portable pair fresh reverification, cached-PASS rejection and both transfer-chain dispatch passed"
+      ],
+      "residual_claim_limit": "Lexical lstat/check/read is not atomic against a hostile concurrent filesystem writer. Acceptance assumes the pinned parent/control plane and archive filesystem are honest during verification. This is not TEE attestation or generic proof of computation; hostile root, trusted-caller compromise and same-UID memory attacks remain outside scope."
+    }
+  ],
+  "next_release_rule": "Commit the accepted key-v4/result-v5/authorization-v9/portable-pair-v3 bytes immutably. Then run and archive two separately keyed/parented W12 and W16 burned-tape pairs with caller-retained prelaunch fingerprints, transfer-manifest digests and fresh portable archive reverification. No W24 work is authorized before those gates and no signed receipt may be described as TEE-backed proof of computation."
+}

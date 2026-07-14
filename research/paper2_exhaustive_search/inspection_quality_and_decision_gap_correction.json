@@ -1,0 +1,113 @@
+{
+  "schema_version": "paper2_inspection_quality_and_decision_gap_correction_v1",
+  "generated_date": "2026-07-13",
+  "status": "CURRENT_KERNEL_EXACT_NULLS__AT_LEAST_TWO_NEWLY_IDENTIFIED_GAPS_BLOCKED_ON_DOMAIN_FACTS",
+  "canonical_metric": "ret_excel_visible_v1 via compute_episode_metrics",
+  "metric_rule": "Cobb-Douglas is secondary construct sensitivity and cannot make a transition-dead action live.",
+  "catalog_scope_correction": {
+    "declared_decision_rights_routed_once": 32,
+    "declared_current_kernel_exact_zero_count": 12,
+    "mechanism_family_complete": false,
+    "newly_identified_gap_count": 2,
+    "gap_count_is_lower_bound": true,
+    "reason": "Routing every row in the frozen decision_right_catalog_v1 proves coverage of that declaration, not exhaustion of thesis-grounded state distinctions. This correction identifies two gaps but does not prove that no further gap exists.",
+    "semantic_errors": [
+      {
+        "factor_id": "op6_inspection_effort",
+        "frozen_catalog_operation": 6,
+        "correct_operational_location": 7,
+        "reason": "Thesis Op7 performs quality control; Op6 is the rework destination. The frozen v1 catalog is preserved rather than silently rewritten."
+      },
+      {
+        "factor_ids": [
+          "op4_dispatch_quantity",
+          "op4_dispatch_period",
+          "op4_transport_capacity"
+        ],
+        "old_route": "DRA2 finished-ration transport",
+        "correct_route": "Op4 raw-material transport",
+        "reason": "DRA2 controls the Op7-Op8 finished-ration convoy and does not audit component-specific raw-material load composition."
+      }
+    ]
+  },
+  "inspection_effort": {
+    "thesis_native_facts": {
+      "operation": 7,
+      "processing_hours_per_ration": 0.003125,
+      "r14_current_probability": 0.03,
+      "r14_increased_probability": 0.08,
+      "units_per_shift": 2564,
+      "detected_defect_destination": "Op6 rework",
+      "detection_coverage": "not specified by thesis; the current DES treats every generated R14 defect as detected"
+    },
+    "expected_defects_per_shift": {
+      "current": 76.92,
+      "increased": 205.12
+    },
+    "probability_zero_defects_per_shift": {
+      "current": 1.21e-34,
+      "increased": 1.42e-93
+    },
+    "current_kernel_h_pi": 0.0,
+    "current_kernel_h_obs": 0.0,
+    "exact_zero_reason": "No sequential inspection action or effort-response curve enters the transition kernel.",
+    "optimistic_two_level_reversal_condition": "Simplified screen only: assume normalized base throughput, no false positives, immediate unit-yield recovery and qualified output (1-delta)*(1-p+p*s). Then delta must satisfy T(.03) <= delta < T(.08), where T(p)=p*(s_H-s_L)/(1-p+p*s_H). At s_L=0 and s_H=1 this is 0.03 <= delta < 0.08. This is not a general inspection theorem.",
+    "required_conservation": [
+      "exogenous per-unit or per-lot latent-quality draws are coupled under CRN; realized counts may vary only through a declared production-exposure coupling when policies produce different quantities",
+      "latent defective units = inspected true-positive units + inspected false-negative units + uninspected defective units",
+      "latent conforming units = inspected true-negative units + inspected false-positive units + uninspected conforming units",
+      "escaped defective units = inspected false-negative units + uninspected defective units",
+      "classified-nonconforming units = inspected true-positive units + inspected false-positive units = reworked units + scrapped units + held/queued units",
+      "only qualified or successfully reworked units satisfy demand",
+      "R14 metric activation is independent of the inspection action"
+    ],
+    "state": "blocked_domain_fact"
+  },
+  "existing_r14_configuration_boundary": {
+    "factor_id": "op6_rework_rule",
+    "configuration_name": "r14_defect_mode",
+    "transition_live": true,
+    "sequential_adaptive_action": false,
+    "exact_zero_ceiling_applicable": false,
+    "reason": "The constructor alternatives thesis_strict_op6, reprocess and discard change queues, raw-material return and scrap. They are alternative episode physics, not within-episode lot-disposition rights."
+  },
+  "omitted_families": [
+    {
+      "family_id": "component_specific_r13_kit_balancing_op4_expedite",
+      "separation_from_product_mix": "Freeze one finished-ration type and remove output-product choice/substitution; the only action allocates complementary inputs or expedition lift.",
+      "current_kernel_h_pi": 0.0,
+      "current_kernel_h_obs": 0.0,
+      "exact_zero_reason": "The DES aggregates rm1...rm12, applies R13 as a common Op2 delay and has no finite component-load Op4 action.",
+      "necessary_liveness": "For K(x,p)=min_i floor((x_i+p_i)/b_i), two equal-resource loads a,b must produce K(x,p+y_a) != K(x,p+y_b), and the limiting component must change across material observable states.",
+      "h_pi_and_h_obs_zero_regimes": [
+        "R13 is a common scalar delay",
+        "shipments must be proportional kits",
+        "component inventories stay proportional",
+        "Op4 lift is nonbinding"
+      ],
+      "observable_only_null": "If component identity exists but is not known before dispatch, H_obs=0 while H_PI may remain positive.",
+      "state": "blocked_domain_fact"
+    },
+    {
+      "family_id": "r14_detected_lot_disposition",
+      "separation_from_inspection": "Freeze the inspection/detection rule and reveal defect quantity before action; disposition cannot change sampling, sensitivity or specificity.",
+      "current_kernel_h_pi": 0.0,
+      "current_kernel_h_obs": 0.0,
+      "exact_zero_reason": "The thesis fixes return to Op6 and r14_defect_mode is an episode configuration, not a sequential action.",
+      "necessary_reversal": "Reduced shadow-cost screen only: D_reduced(s)=lambda_C(s)*(h_r/y_r-h_n)-lambda_R(s)*b, where lambda_C is canonical marginal value per line-hour, lambda_R is canonical marginal value per replacement-material unit, h_r is rework line-hours, y_r is rework yield, h_n is replacement-production hours and b is replacement material units. A sign change is necessary only within this reduced model. It omits lead, hold, disposal, repeat-defect and deadline effects; a licensed contract needs D_total(s). Under current same-rate unit-yield physics, rework weakly dominates discard on qualified service/material use.",
+      "metric_guard": "The original R14 event must remain attributed through replacement so disposition cannot launder the Excel risk indicator.",
+      "state": "blocked_domain_fact"
+    }
+  ],
+  "evidence": [
+    "thesis.txt",
+    "supply_chain/supply_chain.py",
+    "supply_chain/external_env_interface.py",
+    "supply_chain/ret_thesis.py",
+    "research/paper2_exhaustive_search/excel_metric_reaudit_20260713.json",
+    "contracts/decision_right_catalog_v1.json",
+    "research/paper2_exhaustive_search/decision_right_catalog_coverage.json"
+  ],
+  "paper2_confirmed": false,
+  "paper3_authorized": false
+}
