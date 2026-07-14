@@ -7,6 +7,7 @@ from scripts.validate_paper2_switch4_producer_custody import (
     EXPECTED_PYTHON,
     PREFLIGHT_FILES,
     SCRIPT_BLOBS,
+    _environment_is_frozen,
     validate_producer_custody,
 )
 
@@ -194,10 +195,14 @@ def _custody_fixture(tmp_path: Path, *, workers: int = 6):
         ],
     }
     final_progress = {
+        "schema_version": "paper2_bottleneck_switch4_progress_v1",
         "stage": "complete",
         "completed": 120,
         "total": 120,
+        "output": str(remote / "result.json"),
         "output_sha256": result_sha,
+        "elapsed_seconds": 10.0,
+        "updated_at_utc": "2026-07-14T00:00:03.900000+00:00",
     }
     _write(run / "progress.json", final_progress)
     terminal = {
@@ -317,6 +322,10 @@ def _patch_science_and_blobs(monkeypatch, *, valid_preflight: bool = True):
         lambda expected_head: {"passed": True, "expected_head": expected_head},
     )
     monkeypatch.setattr(
+        "scripts.validate_paper2_switch4_producer_custody._environment_is_frozen",
+        lambda environment: True,
+    )
+    monkeypatch.setattr(
         "scripts.validate_paper2_switch4_producer_custody._tracked_file_provenance",
         lambda path: {"passed": True, "path": str(path)},
     )
@@ -326,12 +335,27 @@ def _patch_science_and_blobs(monkeypatch, *, valid_preflight: bool = True):
             lambda preflight_dir, expected_head: {
                 "passed": True,
                 "checks": {"synthetic": True},
+                "environment": json.loads(
+                    (preflight_dir.parent / "mtr-switch4-producer-test" / "result.json").read_text()
+                )["environment"],
                 **{
                     key: file_sha256(preflight_dir / filename)
                     for key, filename in PREFLIGHT_FILES.items()
                 },
             },
         )
+
+
+def test_environment_validator_rejects_minimal_vps_identity():
+    assert (
+        _environment_is_frozen(
+            {
+                "hostname": "vps-f733423b",
+                "python_executable": EXPECTED_PYTHON,
+            }
+        )
+        is False
+    )
 
 
 def test_completed_producer_custody_binds_science_watcher_and_preflight(

@@ -29,6 +29,9 @@ EXPECTED_HOSTNAME = "vps-f733423b"
 EXPECTED_OPERATION = "calibration_switch4_screen"
 EXPECTED_RESULT_SCHEMA = "paper2_bottleneck_switch4_screen_v1"
 EXPECTED_PYTHON = "/home/ubuntu/scres-ia/.venv/bin/python"
+EXPECTED_VPS_ENVIRONMENT_SHA256 = (
+    "1aa1b181f05bb0e0c2ce3e02a7287e8166d8c94e8b3eaa42f02f37fda6a66aab"
+)
 VALIDATOR_RELATIVE_PATH = "scripts/validate_paper2_switch4_producer_custody.py"
 EXPECTED_RUN_FILES = {
     "result": "result.json",
@@ -79,6 +82,7 @@ PREFLIGHT_DEPENDENCY_BLOBS = {
 }
 VALIDATION_RUNTIME_PATHS = {
     "scripts/launch_paper2_switch4.py",
+    "scripts/run_paper2_bottleneck_exact_transducer.py",
     "scripts/verify_paper2_bottleneck_switch4.py",
 }
 DYNAMIC_RECEIPT_FIELDS = {
@@ -134,6 +138,101 @@ def _parse_utc(value: Any) -> datetime | None:
     except (TypeError, ValueError):
         return None
     return parsed if parsed.tzinfo is not None else None
+
+
+def _environment_is_frozen(environment: Any) -> bool:
+    if not isinstance(environment, dict):
+        return False
+    certification = environment.get("certification_environment")
+    if not isinstance(certification, dict):
+        return False
+    certification_body = dict(certification)
+    recorded_digest = certification_body.pop("environment_sha256", None)
+    return (
+        set(environment)
+        == {
+            "python",
+            "python_executable",
+            "platform",
+            "hostname",
+            "numpy",
+            "certification_environment",
+        }
+        and environment.get("hostname") == EXPECTED_HOSTNAME
+        and environment.get("python_executable") == EXPECTED_PYTHON
+        and isinstance(environment.get("python"), str)
+        and bool(environment["python"])
+        and isinstance(environment.get("platform"), str)
+        and bool(environment["platform"])
+        and set(certification)
+        == {
+            "python_implementation",
+            "python_version",
+            "python_cache_tag",
+            "python_soabi",
+            "packages",
+            "requirements_sha256",
+            "simpy_source_sha256",
+            "environment_sha256",
+        }
+        and set(certification.get("packages", {}))
+        == {"numpy", "simpy", "gymnasium", "scipy", "pandas"}
+        and environment.get("numpy") == certification["packages"].get("numpy")
+        and set(certification.get("requirements_sha256", {}))
+        == {"requirements.txt", "requirements-pinned.txt"}
+        and set(certification.get("simpy_source_sha256", {}))
+        == {
+            "simpy.core",
+            "simpy.events",
+            "simpy.resources.base",
+            "simpy.resources.container",
+            "simpy.resources.resource",
+        }
+        and all(
+            isinstance(value, str) and len(value) == 64
+            for value in certification["requirements_sha256"].values()
+        )
+        and all(
+            isinstance(value, str) and len(value) == 64
+            for value in certification["simpy_source_sha256"].values()
+        )
+        and recorded_digest == json_sha256(certification_body)
+        and json_sha256(environment) == EXPECTED_VPS_ENVIRONMENT_SHA256
+    )
+
+
+def _progress_is_complete(
+    progress: Any,
+    *,
+    completed: int,
+    total: int,
+    output: str,
+    output_sha256: str,
+) -> bool:
+    return (
+        isinstance(progress, dict)
+        and set(progress)
+        == {
+            "schema_version",
+            "stage",
+            "completed",
+            "total",
+            "output",
+            "output_sha256",
+            "elapsed_seconds",
+            "updated_at_utc",
+        }
+        and progress.get("schema_version")
+        == "paper2_bottleneck_switch4_progress_v1"
+        and progress.get("stage") == "complete"
+        and progress.get("completed") == completed
+        and progress.get("total") == total
+        and progress.get("output") == output
+        and progress.get("output_sha256") == output_sha256
+        and isinstance(progress.get("elapsed_seconds"), (int, float))
+        and progress["elapsed_seconds"] >= 0
+        and _parse_utc(progress.get("updated_at_utc")) is not None
+    )
 
 
 def _watcher_log_is_bound(
@@ -609,8 +708,7 @@ def _validate_relocated_preflight(
         == watcher.get("hostname")
         == receipt.get("hostname")
         == EXPECTED_HOSTNAME,
-        "runtime": command_shape
-        and result.get("environment", {}).get("python_executable") == EXPECTED_PYTHON,
+        "runtime": command_shape and _environment_is_frozen(result.get("environment")),
         "dependency_blobs": dependency_blobs,
         "preflight_scope": result.get("preflight_only") is True
         and result.get("candidate_count") == 89_131
@@ -650,13 +748,15 @@ def _validate_relocated_preflight(
         and watcher.get("scientific_pid_alive") is False,
         "result_hash": watcher.get("result_exists") is True
         and watcher.get("result_sha256") == result_sha,
-        "progress": isinstance(progress, dict)
-        and progress_artifact == progress
+        "progress": progress_artifact == progress
         and watcher.get("progress_sha256") == file_sha256(progress_path)
-        and progress.get("stage") == "complete"
-        and progress.get("completed") == 6
-        and progress.get("total") == 6
-        and progress.get("output_sha256") == result_sha,
+        and _progress_is_complete(
+            progress,
+            completed=6,
+            total=6,
+            output=str(receipt.get("output")),
+            output_sha256=result_sha,
+        ),
         "stderr": watcher.get("stderr_bytes") == 0
         and stderr_path.is_file()
         and stderr_path.stat().st_size == 0,
@@ -670,6 +770,7 @@ def _validate_relocated_preflight(
     return {
         "passed": all(checks.values()),
         "checks": checks,
+        "environment": result.get("environment"),
         "result_sha256": result_sha,
         "watcher_sha256": file_sha256(watcher_path),
         "progress_sha256": file_sha256(progress_path),
@@ -792,8 +893,9 @@ def validate_producer_custody(
         == watcher.get("hostname")
         == receipt.get("hostname")
         == EXPECTED_HOSTNAME,
-        "runtime_bound": result.get("environment", {}).get("python_executable")
-        == EXPECTED_PYTHON,
+        "runtime_bound": _environment_is_frozen(result.get("environment"))
+        and result.get("environment")
+        == preflight_validation.get("environment"),
         "receipt_schema": receipt.get("schema_version")
         == "paper2_switch4_detached_launch_v1",
         "receipt_operation": receipt.get("operation") == EXPECTED_OPERATION,
@@ -847,13 +949,15 @@ def validate_producer_custody(
         "scientific_process_closed": watcher.get("scientific_pid_alive") is False,
         "result_exists": watcher.get("result_exists") is True,
         "result_hash_bound": watcher.get("result_sha256") == result_sha,
-        "progress_complete": isinstance(progress, dict)
-        and progress_artifact == progress
+        "progress_complete": progress_artifact == progress
         and watcher.get("progress_sha256") == file_sha256(paths["progress"])
-        and progress.get("stage") == "complete"
-        and progress.get("completed") == 120
-        and progress.get("total") == 120
-        and progress.get("output_sha256") == result_sha,
+        and _progress_is_complete(
+            progress,
+            completed=120,
+            total=120,
+            output=str(receipt.get("output")),
+            output_sha256=result_sha,
+        ),
         "stderr_zero": watcher.get("stderr_bytes") == 0
         and paths["stderr"].is_file()
         and paths["stderr"].stat().st_size == 0,
