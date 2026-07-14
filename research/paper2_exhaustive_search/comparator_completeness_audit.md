@@ -25,15 +25,25 @@ The comparator is the maximum over full-horizon same-contract open-loop schedule
 | K2 | Constant, optimized base-stock and signal MPC | No certified full-horizon schedule bound | Large gap is EVPI/cost-objective evidence, not `H_obs`. |
 | K3 | Exact reachable resource graph: 61 states, 260 edges and all 6,371 effective exact-budget eight-week schedules; a separate DP enumeration covers all 5,758,374 action-grid calendars with total spend at most 10 D0 | Complete for the frozen no-spoilage, one-week-lead, FIFO `ret_excel_full_ledger_order` contract: source-bound pathwise proof makes F=(1.5x6,1,0) the unique prefix-nondominated schedule and gives H_PI=H_obs=0. Exact-budget pairs use equal resources; 5,752,003 under-spending calendars are within the non-superior resource envelope but are not mislabeled pairwise equal-resource. This does **not** order sparse `ret_excel_visible_v1`: a feasible exact-budget K3 counterexample has F weakly complete every order earlier with the same lost order 8, yet F scores 6/7 and a later-batching open loop scores 1.0 because same-time backlog removals precede row emission. That counterexample invalidates F as a universal visible-v1 upper comparator; it does not establish H_PI or observable headroom. Any primary-metric reopening still needs the full feasible frontier and guardrails. | Frozen full-ledger K3 is formally dominated by a full-horizon open loop inside B; adaptive/neural claims remain retracted, while no new canonical K3 claim is made. |
 | Program L route recourse | `const_R1`, `const_R2`, alternating route and one signal heuristic, all sharing a state-responsive dispatch trigger | **Incomplete:** no full-horizon HOLD/R1/R2 frontier, DP/belief/MPC, true PI oracle, resource match or fixed-calendar replacement | The implemented heuristic/cells are a development no-go. The introduced route family is not closed and remains Garrido-pending. |
-| Integrated M/T/R team | Three constants plus all 27 memoryless signal-label mappings; calibration winner is constant M | **Incomplete:** 11,184,811 calendars; exact effect quotient identifies 88,684,583 required tape-level DES executions, not yet run | Memoryless observable mapping is closed; family remains `active_for_bound`. |
+| Integrated M/T/R team | Three constants; all 27 memoryless signal mappings; complete watched and deep-replayed 11,611-calendar `<=3`-switch family; complete 89,131-calendar `<=4`-switch producer currently running after a passed six-tape VPS preflight | **Incomplete:** the `<=3` winner uniquely uses all three permitted switches. The running `<=4` job is not evidence, and even a completed `<=4` screen is not the full 11,184,811-calendar W24 frontier or a resource-restricted PI oracle. | Memoryless observable mapping is closed. M/T/R remains `active_for_bound`; retrieve, custody-validate and independently deep-replay `<=4`, then apply the frozen post-result bound decision. No learner is authorized. |
 
-The M/T/R complete-frontier computation is now frozen prospectively relative
-to its full execution in
-`contracts/paper2_bottleneck_full_horizon_bound_v1.json`. It uses all
-11,184,811 calibration calendars, excludes algorithm-development tape
-`1110001` from locked inference, and accepts an accelerated result only after
-zero-gap state-key certification plus unaccelerated replays of every selected
-winner.
+The exact M/T/R W24 computation remains frozen prospectively in
+`contracts/paper2_bottleneck_full_horizon_bound_v1.json`. It would use all
+11,184,811 calibration calendars, exclude algorithm-development tape `1110001`
+from locked inference, and accept an accelerated result only after zero-gap
+state-key certification plus unaccelerated replays of every selected winner.
+No such W24 result currently exists. The `<=3` and `<=4` calendar screens are
+explicit comparator-complexity shells and must not be relabeled as the complete
+frontier.
+
+This is not the only Return-B blocker. Track A/B, D1, DRA2/E, F, the optimal
+observable Program-H policy bound, longer-horizon Program J calendars, K2, K3
+under canonical visible-v1, and Program L also lack a family-wide
+comparator-complete quantitative ceiling. The contract-local results remain
+valid at their stated scope, but a completed M/T/R shell cannot silently close
+these other gaps. `boundary_family_proof_ledger.json` is the governing
+machine-readable separation between a contract-local null and a terminal
+family ceiling.
 
 ## Candidate-family comparator obligations
 

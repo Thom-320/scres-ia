@@ -1,7 +1,7 @@
 # Boundary of what can and cannot be certified
 
-Date: 2026-07-13
-Current machine status: `OPEN_ACTIVE_BOUND_REQUIRED`.
+Date: 2026-07-14
+Current machine status: `OPEN_ACTIVE_BOUND_REQUIRED__MTR_SWITCH4_PRODUCER_RUNNING_NOT_EVIDENCE`.
 
 ## Result
 
@@ -11,7 +11,7 @@ This is not because a positive result is assumed to exist. It is because the ext
 
 1. The finite, versioned Track A-C and Program D-K3 contracts are null, retracted, guardrail-failing, physically invalid, or comparator-incomplete as recorded in `phase0_failure_taxonomy.json`.
 2. The new product, transport, information, storage, inspection, transshipment, queue, component-kit, detected-lot-disposition, R21/R3 scarce-restoration and mission-loadout families require operational facts absent from the thesis. They are `blocked_domain_fact`, not falsified. Current inspection, component-kit and disposition actions are absent, so their incremental current-kernel `H_PI=H_obs=0`; this does not close a signed-off extension. Current R21/R3 recovery is parallel and has exact zero sequencing-action liveness; the hypothetical scarce Maintenance Battalion extension lacks team/work/travel/observation facts, and its historical restoration-order-invariance closure has no machine proof. Mission loadout is thesis-motivated (one pack covers 24 hours, up to 1.4 kg, typically about five packs depending on mission/resupply) but absent from the executable theatre-delivery state.
-3. The integrated M/T/R response-team contract has a policy-level null but not a family ceiling. It has 11,184,811 effective full-horizon calendars; the experiment tested three constants. The first semantic-state quotient attempt (`179f7c2`) was stopped before result after an adversarial HOLD: its finite quotient induction was not accepted because Markov-state completeness was self-attested and its scientific identity/receipt chain was incomplete. The invalidated key-v3 development profile suggested roughly 3-8 CPU-hours per W24 tape and approximately 4.5-15 days for the 179-tape build on the six-CPU VPS before calendar screening. Those figures are historical planning estimates, not current key-v4 evidence or a scientific result.
+3. The integrated M/T/R response-team contract has a policy-level null but not a family ceiling. It has 11,184,811 effective full-horizon calendars. After the original three-constant comparison, a complete watched and independently deep-replayed `<=3`-switch screen evaluated all 11,611 calendars and selected a unique winner that used all three allowed switches. The next complete 89,131-calendar `<=4`-switch producer is currently running after a passed six-tape VPS preflight; it is not evidence until terminal retrieval, custody validation and separate deep replay pass. Even a valid `<=4` result is not the full W24 frontier or a resource-restricted PI ceiling. The first semantic-state quotient attempt (`179f7c2`) was stopped before result after an adversarial HOLD: its finite quotient induction was not accepted because Markov-state completeness was self-attested and its scientific identity/receipt chain was incomplete. The invalidated key-v3 development profile suggested roughly 3-8 CPU-hours per W24 tape and approximately 4.5-15 days for the 179-tape build on the six-CPU VPS before calendar screening. Those figures are historical planning estimates, not current evidence or a scientific result.
 
 Accordingly, the exact scientific state is:
 
@@ -19,6 +19,14 @@ Accordingly, the exact scientific state is:
 - Paper 3 authorized: **false**.
 - Finite-envelope boundary terminal: **false**.
 - Further PPO/retention training authorized: **false**.
+
+`boundary_family_proof_ledger.json` now represents this distinction explicitly
+for every registered family. A row can count toward terminal Return B only with
+the canonical metric, a named and componentwise-matched resource vector, a
+complete same-contract comparator, a family-wide exact/formal/global upper
+proof and content-addressed evidence. The current count is `0/17`. Merely
+changing `state` labels cannot change that count; the verifier rejects registry
+and proof-ledger divergence.
 
 ## Why a universal boundary over arbitrary extensions is impossible
 
@@ -75,12 +83,20 @@ A failed heuristic, learner, or signal policy is not a family ceiling.
 | Native R14 inspection and detected-lot disposition | The thesis already has fixed Op7 inspection, 3%/8% Binomial defects and Op6 rework. No variable inspection or sequential disposition action exists, hence incremental current-kernel `H_PI=H_obs=0`. With equal-rate unit-yield rework, rework saves raw material and weakly dominates discard. Any extension needs measured inspection technology or distinct rework/replacement physics and must preserve latent-defect conservation and R14 attribution. |
 | Integrated M/T/R team | Signal policy `-0.001309`, CI95 `[-0.006384,+0.003093]`; feasible clairvoyant lower bound `+0.002336`, CI95 `[-0.000993,+0.005841]`; no ceiling. |
 
+Comparator-development evidence adds that the complete `<=3`-switch
+calibration frontier has mean best open-loop ReT `0.2724722527` and a unique
+three-switch-boundary winner. It does not change the `no ceiling` entry. The
+`<=4` producer has no result yet.
+
 A deterministic per-tape canonical upper bound was also computed on the 120 burned locked tapes. Because `ret_excel_visible_v1` has an un-clipped `0.5/RP` recovery branch and the action-sensitive causal cone begins before almost every order, its mean upper gap versus constant M is `138.185` (bootstrap interval `[87.003,200.842]`); zero tapes have a bound at or below `0.01`. This is rigorous but vacuous. It proves that an affected-order/unit-score shortcut cannot close M/T/R, not that the family has large headroom.
 
 ## Smallest next closure step
 
 The only current numerical `active_for_bound` family is the integrated M/T/R team. It can change state only after:
 
+- the running `<=4` shell completes, is retrieved with matching remote hashes,
+  passes the tracked custody anchor and producer validator, and is reproduced
+  by the isolated full deep replay;
 - the full 11,184,811-calendar frontier is certified or replaced by a valid upper-bound method;
 - a resource-restricted PI ceiling is computed through the canonical aggregator;
 - the one-team-week resource is confirmed to be truly fungible across M/T/R, while reserve issue/replenishment is frozen as an outcome or separately matched resource;

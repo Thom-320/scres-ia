@@ -1,6 +1,6 @@
 {
   "schema_version": "paper2_failure_taxonomy_v1",
-  "generated_date": "2026-07-13",
+  "generated_date": "2026-07-14",
   "estimand_note": "Objects stored under h_obs that name a tested policy are policy deltas, not proofs of the maximized H_obs estimand. H_PI values are restricted to the stated action/comparator portfolio unless explicitly certified otherwise.",
   "scope": "Audited Track A through K3 arc plus the subsequent equal-team bottleneck-migration screen",
   "canonical_metric": "ret_excel_visible_v1",
@@ -9,7 +9,7 @@
     "local_branch": "codex/paper2-maintenance-headroom",
     "starting_k3_corrective_head": "ef6b53b7cac9c1cbdcdc4347a31c8300d1941fc0",
     "concurrent_boundary_commit": "a91890bfd3d815fc2bd614076c576487e13e0d06",
-    "head_at_provenance_refresh": "a91890bfd3d815fc2bd614076c576487e13e0d06",
+    "head_at_provenance_refresh": "9114da740cecae51d361e73026ab04ac85aa5c44",
     "remote_program_i_head": "9b758d45659e7279c55a295f674cf16068e22934",
     "remote_pr2_head": "3bcf6e96f3dd0c3282d6b051da0a47fa87684b3d",
     "remote_state_verified_after_fetch": true,
@@ -37,6 +37,7 @@
   "decision_families": [
     {
       "family_id": "A_thesis_grounded_buffer_shift_control",
+      "primary_metric": "ret_excel_visible_v1 (current governing metric; legacy Track-A ret_excel compatibility is not assumed)",
       "physical_mechanism": "Thesis-grounded inventory/buffer and shift controls across upstream MFSC operations",
       "decision_rights": "Five effective quantity/ROP/shift dimensions; the disclosed Op5 quantity dimension is inert in the tested initialization",
       "physical_liveness": "regime-dependent but not learner-convertible",
@@ -55,6 +56,7 @@
     },
     {
       "family_id": "B_extended_downstream_control",
+      "primary_metric": "ret_excel_visible_v1",
       "physical_mechanism": "Extended upstream quantity/ROP/shift plus direct Op10/Op12 dispatch control",
       "decision_rights": "Eight-dimensional Track B contract",
       "physical_liveness": "live",
@@ -73,6 +75,7 @@
     },
     {
       "family_id": "C_campaign_nonstationarity_with_priced_commitment",
+      "primary_metric": "ret_excel_visible_v1 (current governing metric; historical J_v3 evidence is secondary only)",
       "physical_mechanism": "Campaign regimes, route-aware replenishment, priced holding/dispatch/shift resources, and buffer/shift/dispatch commitment",
       "decision_rights": "Full Track-C contract tested first with exact/optimized constants and privileged or detector-triggered switchers",
       "physical_liveness": "live but endpoint-weak",
@@ -91,6 +94,7 @@
     },
     {
       "family_id": "D1_backorder_priority",
+      "primary_metric": "ret_excel_visible_v1",
       "physical_mechanism": "Backorder sequencing under the existing cap-60 pending-order list",
       "decision_rights": "SPT, contingent-priority, FIFO/LPT and age-threshold service rules",
       "physical_liveness": "live but endpoint-weak",
@@ -109,6 +113,7 @@
     },
     {
       "family_id": "DRA1_cssu_allocation",
+      "primary_metric": "ret_excel_visible_v1",
       "physical_mechanism": "Reallocatable downstream CSSU capacity plus order-priority doctrine",
       "decision_rights": "CSSU A share and FIFO/SPT/R24-age service rule",
       "physical_liveness": "live in 11 of 180 informative states",
@@ -127,6 +132,7 @@
     },
     {
       "family_id": "DRA2_DRA2b_finite_convoy",
+      "primary_metric": "ret_excel_visible_v1",
       "physical_mechanism": "Finite convoy dispatch with hold/dispatch commitment",
       "decision_rights": "Dispatch now or hold across exact finite-horizon sequences",
       "physical_liveness": "strong; live fraction 1.0",
@@ -145,6 +151,7 @@
     },
     {
       "family_id": "E_convoy_observable_learning",
+      "primary_metric": "ret_excel_visible_v1",
       "physical_mechanism": "Observable conversion of the DRA2b convoy contract",
       "decision_rights": "MaskablePPO/tree/heuristic dispatch under the same convoy envelope",
       "physical_liveness": "inherited from DRA2b",
@@ -163,6 +170,7 @@
     },
     {
       "family_id": "F_mitigation_portfolio",
+      "primary_metric": "ret_excel_visible_v1",
       "physical_mechanism": "Finite budget tokens split among manufacturing, reserve and transport mitigation",
       "decision_rights": "All same-budget integer portfolios with commitment dwell",
       "physical_liveness": "all three levers live in all screened cells",
@@ -181,6 +189,7 @@
     },
     {
       "family_id": "G_spatial_commitment",
+      "primary_metric": "ret_excel_visible_v1",
       "physical_mechanism": "Two-CSSU scarce shared convoy with spatial commitments",
       "decision_rights": "A/B/HOLD sequences and observable cover/tree/MPC policies",
       "physical_liveness": "live",
@@ -199,6 +208,7 @@
     },
     {
       "family_id": "H_belief_state_spatial_rescue",
+      "primary_metric": "ret_excel_visible_v1",
       "physical_mechanism": "Belief filtering and lookahead on the frozen Program G spatial contract",
       "decision_rights": "regret fitted-Q, belief MPC and point rollout",
       "physical_liveness": "inherited from Program G",
@@ -217,6 +227,7 @@
     },
     {
       "family_id": "I_thesis_control_branching",
+      "primary_metric": "ret_excel_visible_v1",
       "physical_mechanism": "Production posture, Op9 dispatch cadence and Op10/12 transport cadence",
       "decision_rights": "three actions per family at 4- and 8-week branches",
       "physical_liveness": "live",
@@ -235,6 +246,7 @@
     },
     {
       "family_id": "I_global_scarcity_concurrency_region",
+      "primary_metric": "ret_excel_visible_v1",
       "physical_mechanism": "Scarcity by concurrent two-CSSU demand regimes",
       "decision_rights": "observable spatial policy over the Program G action set",
       "physical_liveness": "live only on scarcity by concurrency interaction",
@@ -253,6 +265,7 @@
     },
     {
       "family_id": "J_finite_maintenance",
+      "primary_metric": "ret_excel_visible_v1",
       "physical_mechanism": "Equal-budget maintenance allocation across serial Op5-Op7 WIP stations",
       "decision_rights": "weekly maintenance target calendars, observable heuristics and PPO",
       "physical_liveness": "live and action-diverse",
@@ -271,6 +284,7 @@
     },
     {
       "family_id": "K_perishability",
+      "primary_metric": "ret_excel_visible_v1 (current governing metric; short-shelf-life evidence is physically excluded)",
       "physical_mechanism": "Age-sensitive inventory with a two-week shelf life",
       "decision_rights": "adaptive replenishment",
       "physical_liveness": "live in counterfactual product",
@@ -289,6 +303,7 @@
     },
     {
       "family_id": "K2_holding_cost_replenishment",
+      "primary_metric": "ret_excel_visible_v1 (current governing metric; historical cost-J evidence cannot promote)",
       "physical_mechanism": "Three-year nonperishable replenishment with holding penalty and demand signal",
       "decision_rights": "constant order, optimized base stock and signal MPC",
       "physical_liveness": "live",
@@ -307,6 +322,7 @@
     },
     {
       "family_id": "K3_budgeted_replenishment",
+      "primary_metric": "ret_excel_visible_v1 (the exact full-ledger dominance proof is not assumed to transfer)",
       "physical_mechanism": "Exactly budgeted eight-week replenishment timing",
       "decision_rights": "weekly order multipliers under exact total and weekly caps",
       "physical_liveness": "live",
@@ -325,6 +341,7 @@
     },
     {
       "family_id": "post_K3_bottleneck_migration",
+      "primary_metric": "ret_excel_visible_v1",
       "physical_mechanism": "One equal-cost response team allocated among manufacturing, LOC and mission response",
       "decision_rights": "M/R/T constants and signal-adaptive allocation",
       "physical_liveness": "live",
@@ -333,13 +350,13 @@
       "h_obs": {"estimate_kind": "tested_policy_delta_not_H_obs_optimum", "policy": "signal_adaptive", "mean": -0.0013093716179235963, "ci95": [-0.006384019811757724, 0.003092795281669821]},
       "learned_value": null,
       "retained_value": null,
-      "strongest_comparator": "UNRESOLVED: exact maximum over all 11,184,811 admissible 24-week open-loop calendars is required; constant M is only the strongest comparator tested so far",
-      "resource_matching": "the frozen contract matches one response-team week by construction; M/T/R are allocation destinations, not separate purchased resources. Reserve ration issue/replenishment differs and its resource accounting remains unresolved.",
+      "strongest_comparator": "UNRESOLVED: exact maximum over all 11,184,811 admissible 24-week open-loop calendars is required. The complete 11,611-calendar <=3-switch calibration frontier passed watched production and full deep replay, but its unique winner uses all three switches. The complete 89,131-calendar <=4-switch producer is running after a passed VPS preflight and is not evidence until terminal custody validation and independent deep replay pass.",
+      "resource_matching": "the frozen contract matches one 4032-hour response-team budget and identical reserve access by construction; M/T/R are mutually exclusive allocation destinations, not separate purchased resources. Reserve issue/replenishment/request counts are conserved endogenous outcome flows in v1. Real transport/handling scarcity and cross-target team fungibility remain unresolved Garrido domain facts.",
       "guardrail_result": "service loss worsens 3.03%; favorable tapes 53.3%; 120/120 signal trajectories are unique but calibration-derived calendar and phase replacements also fail",
-      "final_verdict": "ACTIVE_EXACT_EQUAL_RESOURCE_HPI_BOUND_NOT_YET_CERTIFIED",
+      "final_verdict": "ACTIVE_SWITCH4_COMPARATOR_PRODUCER_RUNNING_NOT_EVIDENCE__EXACT_EQUAL_RESOURCE_HPI_BOUND_NOT_CERTIFIED",
       "failure_class": ["dominant_robust_action", "observable_conversion", "service_guardrail", "incomplete_open_loop_frontier", "reserve_resource_accounting_unresolved", "domain_resource_identity_unvalidated"],
-      "exact_failure": "The tested signal policy does not outperform the manufacturing doctrine and worsens service loss, but that is not H_obs and does not close the family. A corrective audit found 11,184,811 effective full-horizon calendars and no certified PI ceiling. Commit 179f7c2 attempted the exact bound but was placed on adversarial HOLD before result; the family remains active until the proof and chain of custody pass or an exact ceiling is obtained.",
-      "evidence": ["results/paper2_bottleneck/locked_confirmation/verdict.json", "results/paper2_bottleneck/corrective_completeness_audit.json", "contracts/paper2_bottleneck_primary_bound_v2.json", "research/paper2_exhaustive_search/mtr_execution_invalidation_179f7c2.json"]
+      "exact_failure": "The tested signal policy does not outperform the manufacturing doctrine and worsens service loss, but that is not H_obs and does not close the family. The complete <=3-switch comparator is boundary-active. The running <=4 shell has no result and cannot be treated as evidence; even a valid replayed result is not the full frontier or PI ceiling. The family remains active until a valid upper ceiling/full bound and the domain resource facts are resolved.",
+      "evidence": ["results/paper2_bottleneck/locked_confirmation/verdict.json", "results/paper2_bottleneck/corrective_completeness_audit.json", "contracts/paper2_bottleneck_primary_bound_v2.json", "research/paper2_exhaustive_search/mtr_switch_complexity_screen_verdict_20260713.json", "research/paper2_exhaustive_search/mtr_resource_semantics_verdict_20260714.json", "research/paper2_exhaustive_search/vps_switch4_producer_precompletion_anchor_20260714.json", "research/paper2_exhaustive_search/mtr_switch4_deep_replay_readiness_20260714.json"]
     }
   ],
   "recurring_mechanisms": [

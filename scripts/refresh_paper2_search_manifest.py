@@ -26,6 +26,50 @@ PACKAGES = (
     "torch",
 )
 
+REQUIRED_ARTIFACT_PATHS = {
+    "research/paper2_exhaustive_search/README.md",
+    "research/paper2_exhaustive_search/phase0_failure_taxonomy.json",
+    "research/paper2_exhaustive_search/phase0_failure_taxonomy_validation.json",
+    "research/paper2_exhaustive_search/provenance_reconciliation.md",
+    "research/paper2_exhaustive_search/artifact_index.json",
+    "research/paper2_exhaustive_search/source_reconstruction.md",
+    "research/paper2_exhaustive_search/source_extraction_index.json",
+    "research/paper2_exhaustive_search/excel_metric_reaudit_20260713.json",
+    "research/paper2_exhaustive_search/primary_source_literature_review.md",
+    "research/paper2_exhaustive_search/literature_discovery_inclusion_inventory_20260713.json",
+    "research/paper2_exhaustive_search/approach_registry.json",
+    "research/paper2_exhaustive_search/candidate_intervention_ledger.json",
+    "research/paper2_exhaustive_search/boundary_family_proof_ledger.json",
+    "research/paper2_exhaustive_search/boundary_verification.json",
+    "research/paper2_exhaustive_search/terminal_return_readiness.json",
+    "research/paper2_exhaustive_search/terminal_return_verification.json",
+    "research/paper2_exhaustive_search/comparator_completeness_audit.md",
+    "research/paper2_exhaustive_search/action_trajectory_audit.md",
+    "research/paper2_exhaustive_search/paper2_paper3_status.md",
+    "research/paper2_exhaustive_search/paper_facing_claims_table.json",
+    "research/paper2_exhaustive_search/paper_facing_claims_table.md",
+    "research/paper2_exhaustive_search/vps_switch4_producer_precompletion_anchor_20260714.json",
+    "research/paper2_exhaustive_search/mtr_switch4_deep_replay_readiness_20260714.json",
+    "scripts/audit_paper2_switch4_exact_ties.py",
+    "scripts/validate_phase0_failure_taxonomy.py",
+    "scripts/validate_paper2_switch4_producer_custody.py",
+    "scripts/verify_paper2_exhaustion.py",
+    "scripts/verify_paper2_terminal_return.py",
+    "tests/test_paper2_exhaustive_search_registry.py",
+    "tests/test_paper2_switch4_exact_ties.py",
+    "tests/test_paper2_terminal_return.py",
+}
+REQUIRED_SOURCE_PATHS = {
+    "/Users/thom/Downloads/Raw_data1+Re.xlsx",
+    "/Users/thom/Downloads/Raw_data2+Re.xlsx",
+    "/Users/thom/Downloads/Rsult_1.xlsx",
+    "/Users/thom/Downloads/garrido et al 2024 factory resilience.pdf",
+    "/Users/thom/Downloads/v.0_neuralNet-scres.docx",
+    "/Users/thom/Downloads/v.0_neuralNet-scres.pdf",
+    "/Users/thom/Library/CloudStorage/GoogleDrive-chisicathomas@gmail.com/My Drive/Supernote/Document/20_RESEARCH/PhD-Papers/garrido2024 scres+AI.pdf",
+    "/Users/thom/Library/CloudStorage/GoogleDrive-chisicathomas@gmail.com/My Drive/Archive/Misc_Unsorted/Unsorted/WRAP_Theses_Garrido_Rios_2017.pdf",
+}
+
 
 def sha256(path: Path) -> str:
     digest = hashlib.sha256()
@@ -82,6 +126,15 @@ def main() -> int:
     manifest["generated_date"] = date.today().isoformat()
     manifest["repository"]["branch"] = git("branch", "--show-current")
     manifest["repository"]["head_input"] = git("rev-parse", "HEAD")
+    branch = manifest["repository"]["branch"]
+    remote_branch = f"origin/{branch}"
+    manifest["repository"]["origin_current_branch_at_refresh"] = git(
+        "rev-parse", remote_branch
+    )
+    manifest["repository"]["origin_main"] = git("rev-parse", "origin/main")
+    manifest["repository"]["local_head_published"] = bool(
+        git("branch", "-r", "--contains", manifest["repository"]["head_input"])
+    )
     manifest["environment"] = {
         "python": platform.python_version(),
         "platform": platform.platform(),
@@ -91,6 +144,24 @@ def main() -> int:
     }
     manifest["artifact_hashes"] = refresh_hashes(manifest["artifact_hashes"])
     manifest["source_hashes"] = refresh_hashes(manifest["source_hashes"])
+    missing_required_artifacts = sorted(
+        REQUIRED_ARTIFACT_PATHS - set(manifest["artifact_hashes"])
+    )
+    missing_required_sources = sorted(
+        REQUIRED_SOURCE_PATHS - set(manifest["source_hashes"])
+    )
+    if missing_required_artifacts or missing_required_sources:
+        raise ValueError(
+            "Curated manifest required-set coverage failed: "
+            f"artifacts={missing_required_artifacts}, sources={missing_required_sources}"
+        )
+    manifest["required_set_coverage"] = {
+        "required_artifact_count": len(REQUIRED_ARTIFACT_PATHS),
+        "required_source_count": len(REQUIRED_SOURCE_PATHS),
+        "missing_required_artifacts": [],
+        "missing_required_sources": [],
+        "passed": True,
+    }
     MANIFEST.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
     print(MANIFEST)
     return 0

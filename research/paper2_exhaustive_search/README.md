@@ -2,19 +2,30 @@
 
 ## Current scientific status
 
-`OPEN_ACTIVE_BOUND_REQUIRED__MTR_PROOF_AND_EVIDENCE_CHAIN_HOLD` — Paper 2 is not confirmed and Paper 3 is not authorized.
+`OPEN_ACTIVE_BOUND_REQUIRED__MTR_SWITCH4_PRODUCER_RUNNING_NOT_EVIDENCE` — Paper 2 is not confirmed and Paper 3 is not authorized.
 
-The only numerically active family is the integrated M/T/R bottleneck contract. Three retrospective null tapes have exact equality only for selected terminal metrics and exogenous hashes; this is not an action/full-state policy-equivalence proof. Its current evidence is insufficient: the full-horizon open-loop frontier contains 11,184,811 feasible calendars, the resource-restricted PI ceiling is not computed, and reserve ration issue/replenishment semantics are unresolved. The frozen one-team-week budget itself is equal; M/T/R are allocation destinations.
+The only numerically active family is the integrated M/T/R bottleneck contract. Its complete calibration-only `<=3`-switch family contains 11,611 calendars and 696,660 tape-calendar rollouts. Watched production and a separate full deep replay agree exactly, but the unique winner `MMMMMMMTTRRRMMMMMMMMMMMM` uses all three permitted switches. The restricted frontier is therefore boundary-active rather than sufficient.
 
-The older physical-effect quotient estimate is diagnostic only. A semantic
-Markov quotient is under proof hardening, but commit `179f7c2` and its W12/W16/
-W24 jobs were invalidated before result because Markov sufficiency and the
-scientific identity/receipt chain were not yet machine-certified. The current
-dirty-worktree remediation passes local tests but remains under independent
-adversarial re-audit. No W24 frontier or H_PI result exists. The row therefore
-remains `active_for_bound`, not falsified, promotable or terminal.
+The richer complete `<=4`-switch family contains 89,131 calendars and 5,347,860 tape-calendar rollouts. Its six-tape/six-worker VPS preflight passed strict custody, environment, memory and hash validation. The 60-tape producer is currently running from immutable commit `8f31f410` under a detached watcher. A running job is not evidence. A tracked pre-completion anchor binds the host boot, process start identities, immutable launch files, exact preflight files and the watcher-log prefix before either result or progress existed. After terminal retrieval, every remote hash and custody gate must pass, followed by a separately watched 5,347,920-rollout local deep replay.
 
-All other new mechanism families are either formally reduced, quantitatively below the practical gate on a versioned contract, or blocked on explicit domain facts. Because disclosed researcher extensions are open-ended, this package does not claim a universal boundary over every imaginable future extension.
+Even a valid `<=4` result is not the full 11,184,811-calendar open-loop frontier and does not compute resource-restricted `H_PI` or `H_obs`. The frozen named resource is one mutually exclusive 4,032-hour team budget with identical reserve access; issue and replenishment are conserved endogenous outcome flows in v1, while the real-world transport/handling and cross-target team fungibility remain explicit Garrido domain questions.
+
+The older physical-effect quotient estimate remains diagnostic only. Commit
+`179f7c2` and its W12/W16/W24 jobs were invalidated before result because
+Markov sufficiency and the scientific identity/receipt chain were not yet
+machine-certified. Later key-v4 proof work and short-horizon fixtures do not
+create a W24 frontier or an `H_PI` result. The current `<=4` screen is a
+brute-force comparator-development gate rather than that exact proof. The M/T/R
+row therefore remains `active_for_bound`, not falsified, promotable or terminal.
+
+The machine-readable family proof ledger now makes the claim boundary stricter:
+none of the 17 registered mechanism families is currently eligible for terminal
+Return B. Program J has a below-gate restricted screen only for its frozen
+contract; Program H's certified bound remains above `0.01`; eleven apparent
+zeros are current-kernel action-absence/null-regime facts rather than ceilings
+on their proposed extensions; and M/T/R is active without a global bound.
+Because disclosed researcher extensions are open-ended, this package does not
+claim a universal boundary over every imaginable future extension.
 
 ## Artifact index
 
@@ -39,9 +50,16 @@ All other new mechanism families are either formally reduced, quantitatively bel
 - `contracts/paper2_bottleneck_full_horizon_bound_v1.json`: frozen retrospective protocol for the exact 11,184,811-calendar M/T/R frontier; seed 1110001 is excluded from final inference because it was used to develop the acceleration.
 - `mtr_execution_invalidation_179f7c2.json`: binding invalidation of the first key-v3 W12/W16/W24 execution attempt before any result.
 - `mtr_proof_and_custody_adversarial_log.json`: cumulative executable counterexamples and release gates for the exact quotient and VPS custody chain; current proof remains on HOLD.
+- `mtr_switch_complexity_screen_verdict_20260713.json`: complete watched and deep-replayed `<=3`-switch calibration frontier; its unique winner hits the three-switch boundary.
+- `mtr_resource_semantics_verdict_20260714.json`: frozen one-team budget, conserved reserve-flow interpretation and exact unresolved Garrido resource question.
+- `vps_switch4_producer_precompletion_anchor_20260714.json` and `scripts/validate_paper2_switch4_producer_custody.py`: pre-result process/log/hash anchor and fail-closed terminal producer-custody audit.
+- `mtr_switch4_deep_replay_readiness_20260714.json`: isolated exact-source local replay checkout, runtime, command and input-gate freeze; readiness only, not a replay result.
 - `results/paper2_bottleneck/loose_canonical_upper_bound.json`: rigorous locked-tape bound showing why the un-clipped sparse ReT ledger defeats a cheap affected-order ceiling.
 - `results/paper2_bottleneck/signal_mapping_audit.json`: exact 27-policy memoryless signal screen; calibration selects constant M.
 - `boundary_scope_proof.md` and `boundary_verification.json`: machine-checked scope and nonterminal verdict.
+- `boundary_family_proof_ledger.json`: all 17 current families with canonical metric, named resource vector, closure class, quantitative ceiling scope, hashed proof artifacts where they exist and the exact missing evidence; zero are terminal-B eligible.
+- `terminal_return_readiness.json`, `terminal_return_verification.json` and `scripts/verify_paper2_terminal_return.py`: separate 1-13 deliverable gate; currently neither Return A nor Return B is verified.
+- `scripts/audit_paper2_switch4_exact_ties.py`: post-result fail-closed audit of every exact maximizer, so a boundary-spanning tie cannot be hidden by the producer's minimum-index tie break.
 - `garrido_decision_questions.md`: minimal falsifiable domain questions that could reopen blocked mechanisms.
 - `paper2_paper3_status.md` and `paper_facing_claims_table.md`: paper-facing claim boundaries.
 - `reproducibility_manifest.json`: inputs, hashes, environment, commands and tape status.

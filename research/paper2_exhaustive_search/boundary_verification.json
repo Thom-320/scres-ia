@@ -64,6 +64,46 @@
       "passed": true
     },
     {
+      "check": "boundary_proof_ledger_schema_and_family_coverage",
+      "detail": {
+        "coverage_ok": true,
+        "schema_ok": true
+      },
+      "passed": true
+    },
+    {
+      "check": "boundary_proof_artifact_hashes_and_summary_are_consistent",
+      "detail": {
+        "all_families_terminal_b_eligible": false,
+        "artifact_hashes_checked": 5,
+        "coverage_ok": true,
+        "failures": [],
+        "nonterminal_family_ids": [
+          "alarm_signal_finite_maintenance",
+          "alternate_route_recourse_same_destination",
+          "censored_demand_active_information_acquisition",
+          "component_specific_r13_kit_balancing_op4_expedite",
+          "demand_shaping_or_substitution",
+          "finite_storage_space_allocation",
+          "inspection_effort_vs_throughput",
+          "integrated_production_maintenance_routing_recovery_resource",
+          "lateral_cssu_transshipment",
+          "mission_loadout_carried_autonomy_allocation",
+          "multi_echelon_information_lag_only",
+          "multi_ration_product_mix_setup_substitution",
+          "multimodal_last_mile_mode_choice",
+          "queue_admission_priority_with_abandonment",
+          "r14_detected_lot_disposition",
+          "r21_r3_shared_mab_restoration_sequencing",
+          "regime_lead_time_advance_transport_reservation"
+        ],
+        "schema_ok": true,
+        "summary_consistent": true,
+        "terminal_family_ids": []
+      },
+      "passed": true
+    },
+    {
       "check": "declared_decision_right_catalog_is_routed_with_known_gaps",
       "detail": {
         "catalog_count": 32,
@@ -176,7 +216,7 @@
       "check": "k3_corrective_commit_is_ancestor",
       "detail": {
         "corrective_commit": "ef6b53b7cac9c1cbdcdc4347a31c8300d1941fc0",
-        "head": "6aca3e589a6cc50998396a459f3112bd5575d423"
+        "head": "9114da740cecae51d361e73026ab04ac85aa5c44"
       },
       "passed": true
     },
@@ -712,11 +752,39 @@
       "passed": true
     }
   ],
-  "checks_passed": 28,
-  "checks_total": 28,
+  "checks_passed": 30,
+  "checks_total": 30,
+  "family_proof_validation": {
+    "all_families_terminal_b_eligible": false,
+    "artifact_hashes_checked": 5,
+    "coverage_ok": true,
+    "failures": [],
+    "nonterminal_family_ids": [
+      "alarm_signal_finite_maintenance",
+      "alternate_route_recourse_same_destination",
+      "censored_demand_active_information_acquisition",
+      "component_specific_r13_kit_balancing_op4_expedite",
+      "demand_shaping_or_substitution",
+      "finite_storage_space_allocation",
+      "inspection_effort_vs_throughput",
+      "integrated_production_maintenance_routing_recovery_resource",
+      "lateral_cssu_transshipment",
+      "mission_loadout_carried_autonomy_allocation",
+      "multi_echelon_information_lag_only",
+      "multi_ration_product_mix_setup_substitution",
+      "multimodal_last_mile_mode_choice",
+      "queue_admission_priority_with_abandonment",
+      "r14_detected_lot_disposition",
+      "r21_r3_shared_mab_restoration_sequencing",
+      "regime_lead_time_advance_transport_reservation"
+    ],
+    "schema_ok": true,
+    "summary_consistent": true,
+    "terminal_family_ids": []
+  },
   "paper2_confirmed": false,
   "paper3_authorized": false,
-  "repository_head": "6aca3e589a6cc50998396a459f3112bd5575d423",
+  "repository_head": "9114da740cecae51d361e73026ab04ac85aa5c44",
   "schema_version": "paper2_boundary_verification_v1",
   "status": "OPEN_ACTIVE_BOUND_REQUIRED",
   "terminal_boundary": false

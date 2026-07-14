@@ -1,6 +1,6 @@
 # Paper 2 preregistration / verdict and Paper 3 authorization status
 
-Date: 2026-07-13
+Date: 2026-07-14
 
 ## Paper 2
 
@@ -19,7 +19,10 @@ The last implemented candidate is the integrated M/T/R bottleneck-migration cont
 The corrective comparator/resource audit now shows that the original gate was not a family exhaustion:
 
 - 11,184,811 effective full-horizon calendars exist;
-- only three constants were compared;
+- the original observable gate compared only three constants; later comparator
+  development completed and deep-replayed all 11,611 `<=3`-switch calendars,
+  but its unique winner hit that family boundary, and the richer `<=4` producer
+  remains in progress rather than evidence;
 - total one-team hours are equal by construction; M/T/R hours are allocation destinations, while reserve issue/replenishment semantics still require a frozen ledger interpretation;
 - there is no resource-restricted PI ceiling;
 - the null cell is implementable but was not frozen prospectively.
@@ -54,15 +57,29 @@ without semantic reconciliation. W12, W16 and W24 processes were intentionally
 stopped before result. They are diagnostics only and authorize nothing; see
 `mtr_execution_invalidation_179f7c2.json`.
 
-The successor proof is identified separately as semantic key v4, exact-result
-schema v5 and bound-authorization schema v9. Its complete proof, frontier and
-signed-custody test suites pass on development bytes, including independent
-attacks on real W2 child launches and portable two-transfer-chain archive
-reverification. Those W2 probes were deliberately non-scientific and correctly
-rejected as evidence. Until the schema-bumped bytes are committed immutably and
-new separately keyed W12 and W16 scientific pairs pass, the governing status is
-`OPEN_ACTIVE_BOUND_REQUIRED__MTR_KEY_V4_SIGNED_REDUCED_GATE_PENDING`; W24,
-`H_PI`, Paper 2 learning and Paper 3 remain unauthorized.
+Subsequent comparator development no longer relies on the invalid W12/W16
+outputs. The complete calibration-only `<=3`-switch family evaluated all 11,611
+calendars on 60 tapes, and an independent full replay reproduced all 696,660
+scores plus 60 selected-calendar ledgers. Its unique winner
+`MMMMMMMTTRRRMMMMMMMMMMMM` uses all three permitted switches, so that family is
+boundary-active and cannot be treated as the strongest open-loop comparator.
+
+The separately frozen `<=4`-switch family contains 89,131 calendars. Its
+six-tape/six-worker VPS preflight completed, passed relocated custody and
+environment validation, and was retrieved with matching hashes. The 60-tape
+producer is now running from immutable commit `8f31f410` under a watcher that
+attested prestart before the scientific PID. A tracked pre-completion anchor was
+captured while result and progress were still zero bytes. No producer result
+exists yet; a submitted or running job is not evidence. Terminal evidence must
+pass remote-file checksum retrieval, the fail-closed producer-custody validator
+from commit `d89d911`, and an independent local deep replay of 5,347,860
+candidate scores plus 60 selected ledgers.
+
+Accordingly the governing status is
+`OPEN_ACTIVE_BOUND_REQUIRED__MTR_SWITCH4_PRODUCER_RUNNING_NOT_EVIDENCE`.
+The `<=4` gate is still not the complete 11,184,811-calendar W24 frontier and
+does not compute resource-restricted `H_PI` or `H_obs`. W24, Paper 2 learning
+and Paper 3 remain unauthorized.
 
 Risk editing does not currently authorize a numeric rescue. The thesis-supported
 current-to-increased R11–R24/R3 cells change occurrence only and add no

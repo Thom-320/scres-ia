@@ -1,6 +1,6 @@
 # Paper-facing claims table
 
-Date: 2026-07-13
+Date: 2026-07-14
 
 | Status | Claim | Evidence boundary |
 |---|---|---|
@@ -17,6 +17,7 @@ Date: 2026-07-13
 | boundary/null | Integrated M/T/R signal control is a policy null, not a family ceiling. | Signal delta negative; 11,184,811 calendars and no PI upper bound. |
 | boundary/null | The calibration-selected five-week T excursion is too weak to serve as a resource-relaxed W24 reference. | On 119 burned locked tapes, the constants-envelope lower gap is `0.014898`, CI95 `[0.011281, 0.019349]`; deep replay passes. Reserve issue/replenishment differs, so this neither computes resource-matched H_PI/H_obs nor closes M/T/R. |
 | unresolved bound | The complete calibration-only family of 11,611 M/T/R calendars with at most three switches is comparator-boundary active. | Unique winner `MMMMMMMTTRRRMMMMMMMMMMMM` uses all three switches; all 696,660 candidate rollouts and 60 selected ledgers pass deep replay. This neither computes H_PI/H_obs nor establishes a family null or positive result. |
+| unresolved bound | The richer complete 89,131-calendar M/T/R `<=4`-switch gate is executing but has no result. | Six-tape VPS preflight and custody passed; the 60-tape producer is watched from immutable commit `8f31f410`. Running is not evidence; terminal retrieval, custody validation and separate 5,347,920-rollout deep replay are mandatory. |
 | boundary/null | Every right declared in the frozen Op3--Op13 v1 catalog is routed; 12 are exact current-kernel action-zero/equivalent. | `decision_right_catalog_coverage.json` covers 32/32 declared entries. This is not mechanism completeness: at least two domain-blocked, action-absent families were newly identified; transition-live `r14_defect_mode` is configuration, not an exact-zero adaptive right. |
 | boundary/null | The concurrent 64-cell atlas does not provide canonical positive evidence. | All 64 stored statistics reproduce; the two positives fail lost-order non-inferiority, while raw visible-ledger `HOLD^4` is an invalid shed-to-win degeneracy. |
 | boundary/null | Program L's tested route heuristic is a development no-go, not a family ceiling. | Maximum positive mean `+0.004017`, LCB95 below zero, extra departures; purported `H_PI` can be negative and is not an oracle. |
@@ -31,7 +32,7 @@ Date: 2026-07-13
 | retracted for thesis product | Two-week perishability supports the ration claim. | Ration is non-perishable for approximately three years under stated storage. |
 | quarantined/blocked | The rejected Stage-A Cobb-Douglas runner is a faithful APP reconstruction or deployable headroom test. | An unauthorized JSON consumed `9,600,001–9,600,400`, but invented demand, altered APP algorithms, privileged latent `cv`, unequal resources, incomplete frontier and missing custody make every reported number non-evidence. The seeds are burned; only the pure published transformation survives. |
 | future work | Product-mix embeddability gate after Garrido supplies product-level facts. | Exact two/three-product DP before any learner. |
-| future work | Integrated M/T/R certified frontier/PI bound. | First run the separately frozen complete <=4-switch calibration gate on the VPS with watcher-before-science custody; any further exact bound needs memory-safe branchable state or a valid information-relaxation/optimization bound plus Garrido-validated reserve semantics. |
+| future work | Integrated M/T/R certified frontier/PI bound. | Finish, retrieve, validate and deep-replay the running complete `<=4` shell; any further exact bound needs memory-safe branchable state or a valid information-relaxation/optimization bound plus Garrido-validated reserve semantics. |
 | future work | R21/R3 scarce Maintenance Battalion restoration sequencing after Garrido supplies team/work/observation facts. | Current parallel recovery gives exact zero action liveness; the historical restoration-order-invariance closure lacks a machine proof, so the extension is blocked rather than falsified. |
 | future work | Mission-loadout embeddability after Garrido supplies authority, carry, signal, sealed-demand and return rules. | Exact two-cohort finite-state DP before any learner. |
 | future work | Domain questions for storage, inspection, censoring, transshipment and mission expiry. | Each remains `blocked_domain_fact`; none is a numerical result. |

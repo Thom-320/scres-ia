@@ -39,6 +39,12 @@ SOURCE_HASHES = {
         "de9192d233b0c728ece6156b754fc64543146868121358b8a95c73b3edaa55cf",
 }
 
+TERMINAL_B_PROOF_CLASSES = {
+    "certified_quantitative_global_upper_bound",
+    "exact_global_zero",
+    "formal_global_dominance",
+}
+
 
 def load(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text())
@@ -60,6 +66,137 @@ def git(*args: str) -> str:
     return subprocess.check_output(["git", *args], cwd=ROOT, text=True).strip()
 
 
+def validate_boundary_family_proof_ledger(
+    registry: dict[str, Any],
+    ledger: dict[str, Any],
+    *,
+    root: Path = ROOT,
+) -> dict[str, Any]:
+    """Validate family-wide Return-B proof objects independently of state labels.
+
+    A registry label is routing metadata, not a scientific ceiling.  This check
+    therefore requires a complete proof object, canonical metric, named and
+    matched resources, a complete comparator, and content-addressed evidence
+    before any family can count toward a terminal boundary.
+    """
+    failures: list[dict[str, Any]] = []
+    registry_rows = {row["family_id"]: row for row in registry["approaches"]}
+    ledger_rows = {row["family_id"]: row for row in ledger.get("families", [])}
+
+    schema_ok = ledger.get("schema_version") == "paper2_boundary_family_proof_ledger_v1"
+    if not schema_ok:
+        failures.append({"scope": "ledger", "reason": "invalid_schema"})
+
+    coverage_ok = set(registry_rows) == set(ledger_rows) and len(ledger_rows) == len(
+        ledger.get("families", [])
+    )
+    if not coverage_ok:
+        failures.append(
+            {
+                "scope": "ledger",
+                "reason": "family_coverage_mismatch_or_duplicate",
+                "registry_only": sorted(set(registry_rows) - set(ledger_rows)),
+                "ledger_only": sorted(set(ledger_rows) - set(registry_rows)),
+            }
+        )
+
+    terminal_ids: list[str] = []
+    nonterminal_ids: list[str] = []
+    artifact_hashes_checked = 0
+    for family_id in sorted(set(registry_rows) & set(ledger_rows)):
+        registry_row = registry_rows[family_id]
+        row = ledger_rows[family_id]
+        row_failures: list[str] = []
+        if row.get("registry_state") != registry_row.get("state"):
+            row_failures.append("registry_state_mismatch")
+        if row.get("metric") != "ret_excel_visible_v1":
+            row_failures.append("noncanonical_or_missing_metric")
+        if not row.get("named_resource_vector"):
+            row_failures.append("missing_named_resource_vector")
+
+        artifact_failures: list[str] = []
+        for artifact in row.get("proof_artifacts", []):
+            relative = artifact.get("path")
+            expected = artifact.get("sha256")
+            if not relative or not expected:
+                artifact_failures.append("missing_path_or_sha256")
+                continue
+            path = Path(relative)
+            if not path.is_absolute():
+                path = root / path
+            if not path.is_file():
+                artifact_failures.append(f"missing:{relative}")
+                continue
+            artifact_hashes_checked += 1
+            if sha256(path) != expected:
+                artifact_failures.append(f"hash_mismatch:{relative}")
+        if artifact_failures:
+            row_failures.extend(artifact_failures)
+
+        claimed_terminal = row.get("terminal_b_eligible") is True
+        if claimed_terminal:
+            if row.get("closure_kind") not in TERMINAL_B_PROOF_CLASSES:
+                row_failures.append("ineligible_closure_kind")
+            if row.get("comparator_complete") is not True:
+                row_failures.append("comparator_incomplete")
+            if row.get("resource_matching_certified") is not True:
+                row_failures.append("resources_not_certified_matched")
+            if row.get("scope_closes_registered_family") is not True:
+                row_failures.append("proof_scope_not_family_wide")
+            if row.get("unresolved_extension_or_domain_fact") is not False:
+                row_failures.append("unresolved_extension_or_domain_fact")
+            if not row.get("proof_artifacts"):
+                row_failures.append("missing_content_addressed_proof")
+            if row.get("closure_kind") == "certified_quantitative_global_upper_bound":
+                ceiling = row.get("quantitative_ceiling") or {}
+                ucb95 = ceiling.get("ucb95")
+                if ucb95 is None or float(ucb95) >= 0.01:
+                    row_failures.append("quantitative_ucb95_not_below_gate")
+            elif row.get("closure_kind") in {"exact_global_zero", "formal_global_dominance"}:
+                ceiling = row.get("quantitative_ceiling") or {}
+                value = ceiling.get("value")
+                if value is None or float(value) > 0.0:
+                    row_failures.append("exact_or_dominance_ceiling_not_nonpositive")
+
+        if row_failures:
+            failures.append(
+                {"scope": "family", "family_id": family_id, "reasons": row_failures}
+            )
+        if claimed_terminal and not row_failures:
+            terminal_ids.append(family_id)
+        else:
+            nonterminal_ids.append(family_id)
+
+    all_families_terminal = (
+        schema_ok
+        and coverage_ok
+        and not failures
+        and bool(ledger_rows)
+        and len(terminal_ids) == len(registry_rows)
+    )
+    summary = ledger.get("summary", {})
+    summary_consistent = (
+        summary.get("registered_families") == len(ledger_rows)
+        and summary.get("terminal_b_eligible_families") == len(terminal_ids)
+        and summary.get("nonterminal_families") == len(nonterminal_ids)
+        and ledger.get("terminal_b_supported") is all_families_terminal
+    )
+    if not summary_consistent:
+        failures.append({"scope": "ledger", "reason": "summary_or_terminal_flag_mismatch"})
+        all_families_terminal = False
+
+    return {
+        "schema_ok": schema_ok,
+        "coverage_ok": coverage_ok,
+        "summary_consistent": summary_consistent,
+        "artifact_hashes_checked": artifact_hashes_checked,
+        "terminal_family_ids": terminal_ids,
+        "nonterminal_family_ids": nonterminal_ids,
+        "all_families_terminal_b_eligible": all_families_terminal,
+        "failures": failures,
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -76,6 +213,7 @@ def main() -> int:
 
     taxonomy = load(SEARCH / "phase0_failure_taxonomy.json")
     registry = load(SEARCH / "approach_registry.json")
+    boundary_proofs = load(SEARCH / "boundary_family_proof_ledger.json")
     prelearner = load(SEARCH / "prelearner_contract.json")
     interventions = load(SEARCH / "candidate_intervention_ledger.json")
     decision_coverage = load(SEARCH / "decision_right_catalog_coverage.json")
@@ -106,6 +244,25 @@ def main() -> int:
             "mandatory_gates": len(prelearner["mandatory_gates"]),
             "learner_authorized": prelearner["learner_authorized"],
         },
+    )
+    boundary_proof_validation = validate_boundary_family_proof_ledger(
+        registry,
+        boundary_proofs,
+    )
+    record(
+        "boundary_proof_ledger_schema_and_family_coverage",
+        boundary_proof_validation["schema_ok"]
+        and boundary_proof_validation["coverage_ok"],
+        {
+            "schema_ok": boundary_proof_validation["schema_ok"],
+            "coverage_ok": boundary_proof_validation["coverage_ok"],
+        },
+    )
+    record(
+        "boundary_proof_artifact_hashes_and_summary_are_consistent",
+        not boundary_proof_validation["failures"]
+        and boundary_proof_validation["summary_consistent"],
+        boundary_proof_validation,
     )
     catalog_decision_ids = {
         row["id"] for row in decision_catalog["factors"]
@@ -603,13 +760,20 @@ def main() -> int:
            {"active_for_bound": active, "blocked": blocked})
 
     failed = [check for check in checks if not check["passed"]]
-    terminal_boundary = not failed and not active and not blocked
+    terminal_boundary = (
+        not failed
+        and not active
+        and not blocked
+        and boundary_proof_validation["all_families_terminal_b_eligible"]
+    )
     if failed:
         status = "FAIL_EVIDENCE_INCONSISTENT"
     elif active:
         status = "OPEN_ACTIVE_BOUND_REQUIRED"
     elif blocked:
         status = "BOUNDARY_CONDITIONAL_ON_DOMAIN_FACTS"
+    elif not boundary_proof_validation["all_families_terminal_b_eligible"]:
+        status = "NONTERMINAL_FAMILY_CEILINGS_INCOMPLETE"
     else:
         status = "TERMINAL_FINITE_ENVELOPE_BOUNDARY"
 
@@ -624,6 +788,7 @@ def main() -> int:
         "checks_total": len(checks),
         "active_for_bound": active,
         "blocked_domain_or_claim_families": blocked,
+        "family_proof_validation": boundary_proof_validation,
         "checks": checks,
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)

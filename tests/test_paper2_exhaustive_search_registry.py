@@ -1,6 +1,10 @@
 import hashlib
 import json
+from copy import deepcopy
 from pathlib import Path
+
+from scripts.verify_paper2_exhaustion import validate_boundary_family_proof_ledger
+from scripts.validate_phase0_failure_taxonomy import validate as validate_phase0_taxonomy
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -30,6 +34,21 @@ def test_failure_taxonomy_is_unique_and_keeps_corrective_k3_truth():
     assert rows["K3_budgeted_replenishment"]["retained_value"] is None
 
 
+def test_phase0_taxonomy_has_canonical_metric_exact_failure_and_hashed_evidence():
+    taxonomy = load("phase0_failure_taxonomy.json")
+    validation = validate_phase0_taxonomy(taxonomy)
+
+    assert validation["passed"] is True
+    assert validation["failures"] == []
+    assert validation["family_count"] == 17
+    assert validation["evidence_hashes_checked"] >= 34
+    assert all(
+        row["primary_metric"].startswith("ret_excel_visible_v1")
+        and row["exact_failure"]
+        for row in taxonomy["decision_families"]
+    )
+
+
 def test_taxonomy_does_not_mislabel_tested_policies_as_optimized_hobs():
     taxonomy = load("phase0_failure_taxonomy.json")
     for row in taxonomy["decision_families"]:
@@ -51,6 +70,62 @@ def test_no_candidate_is_promotable_and_paper3_is_closed():
     assert not any(row["state"] == "promotable" for row in registry["approaches"])
 
 
+def test_boundary_family_proof_ledger_is_complete_but_explicitly_nonterminal():
+    registry = load("approach_registry.json")
+    ledger = load("boundary_family_proof_ledger.json")
+    validation = validate_boundary_family_proof_ledger(registry, ledger, root=ROOT)
+
+    assert validation["schema_ok"] is True
+    assert validation["coverage_ok"] is True
+    assert validation["summary_consistent"] is True
+    assert validation["failures"] == []
+    assert validation["all_families_terminal_b_eligible"] is False
+    assert validation["terminal_family_ids"] == []
+    assert set(validation["nonterminal_family_ids"]) == {
+        row["family_id"] for row in registry["approaches"]
+    }
+    assert ledger["terminal_b_supported"] is False
+
+
+def test_registry_relabeling_cannot_manufacture_a_terminal_boundary():
+    registry = deepcopy(load("approach_registry.json"))
+    ledger = load("boundary_family_proof_ledger.json")
+    for row in registry["approaches"]:
+        row["state"] = "falsified_current_contract"
+
+    validation = validate_boundary_family_proof_ledger(registry, ledger, root=ROOT)
+
+    assert validation["all_families_terminal_b_eligible"] is False
+    assert any(
+        "registry_state_mismatch" in failure.get("reasons", [])
+        for failure in validation["failures"]
+    )
+
+
+def test_terminal_label_without_complete_hashed_proof_is_rejected():
+    registry = load("approach_registry.json")
+    ledger = deepcopy(load("boundary_family_proof_ledger.json"))
+    row = ledger["families"][0]
+    row["terminal_b_eligible"] = True
+    row["closure_kind"] = "exact_global_zero"
+    row["comparator_complete"] = True
+    row["resource_matching_certified"] = True
+    row["scope_closes_registered_family"] = True
+    row["unresolved_extension_or_domain_fact"] = False
+    row["proof_artifacts"] = []
+    ledger["summary"]["terminal_b_eligible_families"] = 1
+    ledger["summary"]["nonterminal_families"] = 16
+
+    validation = validate_boundary_family_proof_ledger(registry, ledger, root=ROOT)
+
+    assert validation["all_families_terminal_b_eligible"] is False
+    family_failure = next(
+        failure for failure in validation["failures"]
+        if failure.get("family_id") == row["family_id"]
+    )
+    assert "missing_content_addressed_proof" in family_failure["reasons"]
+
+
 def test_reproducibility_manifest_hashes_every_listed_artifact_and_source():
     manifest = load("reproducibility_manifest.json")
     assert manifest["paper2_confirmed"] is False
@@ -66,6 +141,17 @@ def test_reproducibility_manifest_hashes_every_listed_artifact_and_source():
         path = Path(source)
         assert path.is_file(), source
         assert sha256(path) == expected, source
+    coverage = manifest["required_set_coverage"]
+    assert coverage["passed"] is True
+    assert coverage["missing_required_artifacts"] == []
+    assert coverage["missing_required_sources"] == []
+    assert coverage["required_artifact_count"] >= 27
+    assert coverage["required_source_count"] == 8
+    assert {
+        "/Users/thom/Downloads/Raw_data1+Re.xlsx",
+        "/Users/thom/Downloads/Raw_data2+Re.xlsx",
+        "/Users/thom/Downloads/Rsult_1.xlsx",
+    }.issubset(manifest["source_hashes"])
 
 
 def test_domain_blocked_families_have_questions_and_state_change_evidence():
