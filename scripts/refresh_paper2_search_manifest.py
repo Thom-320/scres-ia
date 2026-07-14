@@ -28,6 +28,8 @@ PACKAGES = (
 
 REQUIRED_ARTIFACT_PATHS = {
     "research/paper2_exhaustive_search/README.md",
+    "contracts/program_o_multi_ration_product_mix_v1.json",
+    "research/paper2_exhaustive_search/PROGRAM_O_MULTI_RATION_PREREGISTRATION_2026-07-14.md",
     "contracts/program_m_shared_lift_reservation_v1.json",
     "docs/external_assessments/EXTERNAL_CHATGPT_PRO_PROGRAM_M_AUDIT_PROMPT_2026-07-14.md",
     "research/paper2_exhaustive_search/PROGRAM_M_SHARED_LIFT_PREREGISTRATION_2026-07-14.md",
@@ -80,6 +82,7 @@ REQUIRED_ARTIFACT_PATHS = {
     "scripts/screen_program_m_shared_lift_hpi.py",
     "scripts/launch_program_m_shared_lift_hpi.py",
     "scripts/watch_program_m_shared_lift_hpi.py",
+    "scripts/bound_program_o_affected_orders.py",
     "scripts/validate_program_m_shared_lift_hpi.py",
     "scripts/launch_program_m_shared_lift_hpi_validation.py",
     "scripts/record_mtr_switch4_metric_quarantine.py",
@@ -101,6 +104,7 @@ REQUIRED_ARTIFACT_PATHS = {
     "tests/test_program_m_shared_lift_hpi_custody.py",
     "tests/test_program_m_shared_lift_hpi_validation.py",
     "tests/test_program_m_shared_lift_hpi_validation_custody.py",
+    "tests/test_program_o_affected_order_bound.py",
     "tests/test_mtr_switch4_vps_metric_quarantine.py",
     "results/headroom_gsa/all_cells_reconstruction.json",
     "results/paper2_maintenance/request_snapshot_v2_full_frontier/verdict.json",
