@@ -38,10 +38,13 @@ selection screen then completed all 116,736 DES evaluations: maximum H_PI mean
 was 0.0362453, six cells formed one connected screen region, the zero-hazard
 null was exactly zero, and no selected oracle increased lost orders or worsened
 worst-CSSU fill in mean. These are selection-only means, not confidence-bounded
-H_PI. The six-cell validation and simultaneous inference are frozen while seeds
-7300025-7300048 remain sealed. A positive development result would remain
-conditional on this extension, with later expert review needed only before an
-MFSC fleet claim—not to find or select the headroom.
+H_PI. The subsequent frozen validation completed 36,864 additional rollouts.
+Only the duplicated high-hazard/120-hour physical setting passed the
+simultaneous gate (`H_PI=0.0411478`, LCB95 `0.0227791`); adjacent h50/120 had
+LCB95 `0.0090063` and h75/72 had negative bounds. No component spanned the
+required hazard and duration levels, so Program M stops before H_obs. This
+closes the frozen contract, not all possible advance-reservation mechanisms,
+and it may not be rescued by adding cells after validation.
 
 ## Artifact index
 

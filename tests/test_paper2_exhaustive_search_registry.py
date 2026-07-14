@@ -347,7 +347,7 @@ def test_current_action_absence_is_not_mislabeled_as_global_impossibility():
     product_mix = rows["multi_ration_product_mix_setup_substitution"]
     reservation = rows["regime_lead_time_advance_transport_reservation"]
     assert product_mix["state"] == "blocked_domain_fact"
-    assert reservation["state"] == "active_researcher_extension_hpi_validation_sealed"
+    assert reservation["state"] == "blocked_frozen_contract_hpi_region_fail"
     assert reservation["current_physics_ceiling"]["h_pi"] == 0.0
     assert reservation["program_m_extension"]["h_pi"] is None
     assert reservation["program_m_extension"]["h_obs"] is None

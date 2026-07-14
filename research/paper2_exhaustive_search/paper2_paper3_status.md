@@ -26,9 +26,13 @@ were fixed before any Program M scientific tape was opened. The first screen
 block is now burned: all 116,736 evaluations completed, six cells formed one
 connected selection region, maximum mean oracle-minus-static was 0.0362453 and
 the null was exactly zero. Because the screen has no confidence bound, `H_PI`
-is not yet validated; seeds 7300025-7300048 remain sealed for the frozen
-simultaneous six-cell validation. `H_obs` and learned value remain uncomputed;
-learner and virgin tapes remain blocked.
+was not yet validated at that stage. The fresh six-cell validation is now
+complete. Two signal-duplicate h75/120 cells passed individually with
+simultaneous LCB95 `0.022779`, but h50/120 missed the gate at `0.009006` and
+h75/72 failed. Therefore no connected component spans two hazard and two
+duration levels. The frozen stop rule applies: **no H_obs fitting** and no new
+Program M cells. `7300025-7300048` is burned; `7300049+` remains sealed and
+unauthorized. Learned value, learner and virgin tapes remain blocked.
 
 The last implemented candidate before the metric correction was the integrated
 M/T/R bottleneck-migration contract. Its now-quarantined observable gate
