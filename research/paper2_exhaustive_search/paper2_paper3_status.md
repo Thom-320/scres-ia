@@ -140,6 +140,17 @@ results; see `inspection_quality_and_decision_gap_correction.json` and Garrido
 Q8-Q10. Cobb-Douglas cannot make an absent transition live and remains a
 secondary construct-sensitivity metric.
 
+Program O now supplies the first validated headroom-bearing **reduced
+mechanism** after the K3 correction. The thesis documents 21 real ration types
+but the DES models one; a disclosed two-product exact transducer restored
+nonfungible product commitments without changing total demand or capacity.
+All four fresh validation cells passed the simultaneous H_PI gate (LCB95
+`0.0781–0.1141`), the fully fungible null was exact, and backlog,
+worst-product fill and full-order ReT moved in the same direction. This is not
+full-DES evidence. The next authorized step is only a separately frozen
+product-tagged full-DES H_PI screen with the complete `4^8` open-loop frontier.
+H_obs, learners and Paper 3 remain unauthorized.
+
 ## Pre-learner freeze if a domain-blocked family reopens
 
 Before any result, freeze in one versioned contract:
@@ -155,8 +166,10 @@ Before any result, freeze in one versioned contract:
 - fixed-sequence and phase replacements;
 - a single learner architecture/budget/seeds and stop rule.
 
-No current family clears the learner-entry gate. Program M clears only the
-pre-result infrastructure gate needed to run its H_PI development screen.
+No current family clears the learner-entry gate. Program M is stopped because
+its fresh validation produced no passing connected H_PI region. Program O
+clears only the reduced-transducer gate needed to freeze a full-DES H_PI
+development contract.
 
 ## Paper 3
 

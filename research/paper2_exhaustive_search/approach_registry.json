@@ -41,12 +41,12 @@
       "h_obs_estimate": null,
       "comparator_family": ["all 3^T or 4^T full-horizon schedules", "product base-stock/order-up-to", "network-flow allocation", "deterministic and stochastic MILP/MPC", "exact finite-horizon belief DP", "robust mix", "convex mixtures"],
       "main_threat_to_validity": "The thesis documents 21 products but specifies only one product's BOM and no product demand, substitution, setup or signal data; an exact small-state DP also blocks a neural-increment claim by policy-class containment.",
-      "state": "active_researcher_extension_exact_transducer_validation_frozen",
+      "state": "active_researcher_extension_full_des_freeze_required",
       "current_physics_ceiling": {"kind": "exact_null", "condition": "single homogeneous thesis product or fully fungible equal-BOM zero-setup labels", "h_pi": 0.0, "h_obs": 0.0},
       "program_o_extension": {
         "contract": "contracts/program_o_multi_ration_product_mix_v1.json",
         "preregistration": "research/paper2_exhaustive_search/PROGRAM_O_MULTI_RATION_PREREGISTRATION_2026-07-14.md",
-        "stage": "EXACT_TRANSDUCER_SCREEN_PASSED__VALIDATION_FROZEN",
+        "stage": "EXACT_TRANSDUCER_REGION_VALIDATED__FULL_DES_NOT_YET_FROZEN",
         "affected_order_bound": {
           "result": "results/program_o/affected_order_bound_v1/result.json",
           "status": "PASS_METRIC_LIVENESS_ONLY__TRANSDUCER_FREEZE_ALLOWED",
@@ -64,6 +64,14 @@
           "h_pi_validated": false
         },
         "validation_freeze": "research/paper2_exhaustive_search/program_o_exact_transducer_validation_freeze_20260714.json",
+        "exact_transducer_validation": {
+          "result": "results/program_o/exact_transducer_validation_v1/result.json",
+          "status": "PASS_VALIDATED_TRANSDUCER_REGION__FULL_DES_FREEZE_ALLOWED",
+          "simultaneous_lcb95_range": [0.07811484252349112, 0.11414561377620609],
+          "eligible_connected_components": 1,
+          "selected_full_des_development_cell": "rho75_share90",
+          "full_des_h_pi_established": false
+        },
         "numerical_physics_status": "DISCLOSED_RESEARCHER_INTRODUCED_NOT_MFSC_ESTIMATES",
         "learner_authorized": false
       },
@@ -538,7 +546,7 @@
     "mtr_adversarial_hold": "Every completed M/T/R switch frontier used the quarantined visible-v1 metric. The 60-tape VPS producer was stopped after 5/60 and yielded no result; six orphan workers exposed a parent-PID-only watcher defect and were terminated. A v2 restart requires a new immutable commit and whole-session watcher. W24, H_PI, an observable-policy claim and all learner work remain unauthorized.",
     "falsified_or_formally_dominated": [],
     "formally_dominated_historical_contracts": ["K3_budgeted_replenishment under frozen ret_excel_full_ledger_order; exact H_PI=H_obs=0 over all 6,371 exact-budget trajectories and all 5,758,374 non-superior-budget grid calendars, with under-spending pairs not mislabeled equal-resource; visible-v1 not unconditionally certified"],
-    "active_researcher_extension_exact_transducer_validation_frozen": ["multi_ration_product_mix_setup_substitution"],
+    "active_researcher_extension_full_des_freeze_required": ["multi_ration_product_mix_setup_substitution"],
     "blocked_domain_fact": ["censored_demand_active_information_acquisition", "lateral_cssu_transshipment", "queue_admission_priority_with_abandonment", "r21_r3_shared_mab_restoration_sequencing", "finite_storage_space_allocation", "inspection_effort_vs_throughput", "multimodal_last_mile_mode_choice", "alternate_route_recourse_same_destination", "mission_loadout_carried_autonomy_allocation", "component_specific_r13_kit_balancing_op4_expedite", "r14_detected_lot_disposition"],
     "paper2_confirmed": false,
     "paper3_authorized": false,

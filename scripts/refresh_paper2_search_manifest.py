@@ -35,6 +35,8 @@ REQUIRED_ARTIFACT_PATHS = {
     "results/program_o/affected_order_bound_v1/result.json",
     "results/program_o/exact_transducer_screen_v1/result.json",
     "research/paper2_exhaustive_search/program_o_exact_transducer_validation_freeze_20260714.json",
+    "results/program_o/exact_transducer_validation_v1/result.json",
+    "results/program_o/exact_transducer_validation_v1/ret_matrices.npz",
     "contracts/program_m_shared_lift_reservation_v1.json",
     "docs/external_assessments/EXTERNAL_CHATGPT_PRO_PROGRAM_M_AUDIT_PROMPT_2026-07-14.md",
     "research/paper2_exhaustive_search/PROGRAM_M_SHARED_LIFT_PREREGISTRATION_2026-07-14.md",
