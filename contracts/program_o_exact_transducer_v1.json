@@ -1,0 +1,44 @@
+{
+  "schema_version": "program_o_exact_transducer_v1",
+  "status": "FROZEN_PRE_SCREEN_NO_SEEDS_OPENED",
+  "parent_contract": "contracts/program_o_multi_ration_product_mix_v1.json",
+  "purpose": "Cheap corrected exact-transducer falsification before any full-DES product implementation.",
+  "claim_limit": "A positive result authorizes only a separately frozen full-DES H_PI screen. It is not full-DES evidence, H_obs, learned value or an MFSC numerical claim.",
+  "metric": "ret_excel_request_snapshot_v2",
+  "weeks": 8,
+  "workdays_per_week": 6,
+  "daily_order_quantity": 2500,
+  "weekly_production_batches": 3,
+  "batch_quantity": 5000,
+  "actions": {
+    "C_MAJOR": ["P_C", "P_H", "P_C"],
+    "H_MAJOR": ["P_H", "P_C", "P_H"]
+  },
+  "action_count": 2,
+  "complete_open_loop_calendars": 256,
+  "commitment": "All three product targets for a week are frozen at the weekly action. Batch completions occur at hours 24, 72 and 120; demand occurs at hours 30, 54, 78, 102, 126 and 150, avoiding same-time ambiguity.",
+  "initial_inventory": {"P_C": 5000, "P_H": 5000},
+  "delivery_lead_hours_after_allocation": 48,
+  "backlog_rule": "Product FIFO; later matching production serves backlog before inventory accumulation. Pending targets cannot be redirected.",
+  "resource_rule": "Every calendar commits exactly 24 batches, 120000 ration units and the same gross line and transport capacity. Product labels do not change gross resources.",
+  "positive_cells": [
+    {"cell_id": "rho75_share75", "regime_persistence": 0.75, "dominant_share": 0.75},
+    {"cell_id": "rho75_share90", "regime_persistence": 0.75, "dominant_share": 0.9},
+    {"cell_id": "rho90_share75", "regime_persistence": 0.9, "dominant_share": 0.75},
+    {"cell_id": "rho90_share90", "regime_persistence": 0.9, "dominant_share": 0.9}
+  ],
+  "null_cell": {"cell_id": "null_fungible", "regime_persistence": 0.9, "dominant_share": 0.9, "complete_substitution": true},
+  "screen": {
+    "seeds": [7400001, 7400024],
+    "n_tapes": 24,
+    "pass_rule": "At least two adjacent positive cells have mean exact oracle-minus-best-static H_PI >= 0.015; null calendar scores and ledgers are bit-identical; oracle has non-superior mean unfulfilled quantity and no worse worst-product fill.",
+    "stop_rule": "Otherwise stop before validation or full DES."
+  },
+  "validation": {
+    "seeds": [7400025, 7400048],
+    "status": "SEALED_NOT_AUTHORIZED_UNTIL_SCREEN_SELECTION_FREEZE",
+    "required_future_rule": "Simultaneous one-sided 95% LCB >=0.01 over a connected region, with static calendar reselected in every bootstrap resample."
+  },
+  "learner_authorized": false,
+  "paper3_authorized": false
+}
