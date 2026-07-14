@@ -1,5 +1,6 @@
 import json
 from hashlib import sha256
+import os
 
 import numpy as np
 
@@ -75,6 +76,14 @@ def test_watcher_distinguishes_prestart_complete_and_failure(tmp_path):
     assert snapshot(
         tmp_path, watcher_started="2026-07-13T00:00:00+00:00"
     )["state"] == "watching_prestart"
+    (tmp_path / "pid.json").write_text(json.dumps({
+        "scientific_pid": os.getpid(), "output": str(tmp_path / "result.json"),
+    }))
+    awaiting = snapshot(
+        tmp_path, watcher_started="2026-07-13T00:00:00+00:00"
+    )
+    assert awaiting["state"] == "running_alive_awaiting_first_progress"
+    assert any(row["pid"] == os.getpid() for row in awaiting["scientific_process_tree"])
     result = tmp_path / "result.json"
     result.write_text('{"ok":true}\n')
     result_sha = sha256(result.read_bytes()).hexdigest()

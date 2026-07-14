@@ -69,6 +69,43 @@ def process_command(pid: int) -> str | None:
     return result.stdout.strip() or None
 
 
+def process_tree(root_pid: int) -> list[dict[str, Any]]:
+    if root_pid <= 0:
+        return []
+    result = subprocess.run(
+        ["ps", "-axo", "pid=,ppid=,%cpu=,rss=,command="],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+        check=False,
+    )
+    rows: list[dict[str, Any]] = []
+    for line in result.stdout.splitlines():
+        fields = line.strip().split(None, 4)
+        if len(fields) < 5:
+            continue
+        try:
+            rows.append({
+                "pid": int(fields[0]),
+                "ppid": int(fields[1]),
+                "cpu_percent": float(fields[2]),
+                "rss_bytes": int(fields[3]) * 1024,
+                "command": fields[4],
+            })
+        except ValueError:
+            continue
+    selected = {root_pid}
+    while True:
+        descendants = {
+            int(row["pid"]) for row in rows if int(row["ppid"]) in selected
+        }
+        updated = selected | descendants
+        if updated == selected:
+            break
+        selected = updated
+    return [row for row in rows if int(row["pid"]) in selected]
+
+
 def append_jsonl(path: Path, payload: dict[str, Any]) -> None:
     with path.open("a") as handle:
         handle.write(json.dumps(payload, sort_keys=True) + "\n")
@@ -85,6 +122,7 @@ def snapshot(run_dir: Path, *, watcher_started: str) -> dict[str, Any]:
     ) if pid_payload else run_dir / "result.json"
     pid = int(pid_payload.get("scientific_pid", -1)) if pid_payload else -1
     alive = pid_alive(pid)
+    tree = process_tree(pid) if alive else []
     progress_age = (
         max(0.0, time.time() - progress_path.stat().st_mtime)
         if progress_path.exists()
@@ -99,6 +137,13 @@ def snapshot(run_dir: Path, *, watcher_started: str) -> dict[str, Any]:
         "scientific_pid": pid if pid > 0 else None,
         "scientific_pid_alive": alive,
         "scientific_command": process_command(pid) if alive else None,
+        "scientific_process_tree": tree,
+        "scientific_process_tree_cpu_percent": sum(
+            float(row["cpu_percent"]) for row in tree
+        ),
+        "scientific_process_tree_rss_bytes": sum(
+            int(row["rss_bytes"]) for row in tree
+        ),
         "progress": progress,
         "progress_sha256": file_sha256(progress_path),
         "progress_age_seconds": progress_age,
@@ -114,11 +159,13 @@ def snapshot(run_dir: Path, *, watcher_started: str) -> dict[str, Any]:
     }
     if pid_payload is None:
         payload["state"] = "watching_prestart"
+    elif alive and progress is None:
+        payload["state"] = "running_alive_awaiting_first_progress"
     elif alive:
         payload["state"] = (
             "running_fresh"
             if progress_age is not None and progress_age <= 600.0
-            else "running_progress_stale_or_not_started"
+            else "running_progress_stale"
         )
     else:
         complete = bool(
