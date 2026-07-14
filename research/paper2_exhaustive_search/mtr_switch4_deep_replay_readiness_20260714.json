@@ -1,0 +1,93 @@
+{
+  "claim_limit": "Execution-readiness evidence only. The producer has not completed, no deep replay has run, no H_PI or H_obs has been computed, and no learner, Paper 2, or Paper 3 claim is authorized.",
+  "deep_replay": {
+    "candidate_rollouts": 5347860,
+    "execution_diversity": "VPS Linux producer followed by isolated local macOS replay",
+    "expected_terminal_progress": {
+      "completed": 120,
+      "stage": "complete",
+      "total": 120
+    },
+    "selected_ledger_rollouts": 60,
+    "workers": 6
+  },
+  "input_gate": {
+    "producer_custody_validator_commit": "d89d911",
+    "requirements": [
+      "remote watcher terminal state is completed_unverified",
+      "scientific producer and six-worker process tree are absent",
+      "remote terminal file manifest is captured before retrieval",
+      "retrieved files match every remote SHA-256",
+      "tracked precompletion anchor prefix and immutable artifacts validate",
+      "producer custody validation passes every check",
+      "producer result remains calibration-only with locked and virgin tapes closed"
+    ],
+    "status": "PENDING_COMPLETED_VALIDATED_PRODUCER_RESULT"
+  },
+  "local_environment": {
+    "certification_environment_sha256": "5977eb596051f0f63ffee0fc645c80587602c378bf0ffb9f3b5b8560fc3c7538",
+    "packages": {
+      "gymnasium": "1.3.0",
+      "numpy": "2.4.6",
+      "pandas": "3.0.3",
+      "scipy": "1.17.1",
+      "simpy": "4.1.2"
+    },
+    "platform": "macOS-27.0-arm64-arm-64bit",
+    "python_executable": "/Users/thom/Projects/research/scres-ia/.venv/bin/python",
+    "python_soabi": "cpython-311-darwin",
+    "python_version": "3.11.15",
+    "requirements_sha256": {
+      "requirements-pinned.txt": "bbed08653b2e0a5de856aa47387e6e40aad73945524493452322fa86874d6dcf",
+      "requirements.txt": "09eb18567b7e6e87ae10f16c6e74f8fab1b7c97e84f83943e8320116c21b9303"
+    },
+    "simpy_source_sha256": {
+      "simpy.core": "05abddf46dca568598006fd42727f9b4913b47a8afb59359f999878a28fbf437",
+      "simpy.events": "b58a8ee5df683cfd0cfc0afa0a5e3e78db16cad0ca01694b693cc6914002b570",
+      "simpy.resources.base": "915e6b66e26e573fdd7740a876eeae224284e09ad43d5bece67eec78092c22b0",
+      "simpy.resources.container": "989417edbd3abd102f3d9946fb5b544cb8dc5d8120df6968f1b42245961c6876",
+      "simpy.resources.resource": "780bcd474925ac74ea3e01c680a05f21c7232c43b9a973e1c6550e5d20d41a4f"
+    }
+  },
+  "planned_argv_template": [
+    "/Users/thom/Projects/research/scres-ia/.venv/bin/python",
+    "/Users/thom/Projects/research/scres-ia/outputs/vps_switch4_custody/mtr-switch4-deepverify-8f31f410/source/scripts/launch_paper2_switch4.py",
+    "--run-dir",
+    "/Users/thom/Projects/research/scres-ia/outputs/vps_switch4_custody/mtr-switch4-deepverify-8f31f410/source/results/paper2_bound_harness/switch_complexity_screen_v2/<new-deepverify-run-id>",
+    "--workers",
+    "6",
+    "--watch-interval-seconds",
+    "5",
+    "--deep-verify-result",
+    "/Users/thom/Projects/research/scres-ia/outputs/vps_switch4_custody/<producer-run-id>/retrieved/result.json"
+  ],
+  "schema_version": "paper2_switch4_deep_replay_readiness_v1",
+  "source_checkout": {
+    "bundle_sha256": "b6210838fdfbbfa941c00f5dd7162b386ddd034c06cd1bd5036b2d5000fc0360",
+    "git_head": "8f31f4104c14ebd6bcf559fb5bba1040f1a3fcc3",
+    "git_status_porcelain": [],
+    "path": "/Users/thom/Projects/research/scres-ia/outputs/vps_switch4_custody/mtr-switch4-deepverify-8f31f410/source",
+    "sha256": {
+      "contracts/paper2_bottleneck_switch_complexity_screen_v2.json": "04aee40ef30c1ee8e9d9984325501738c5636ffc75c5b4149e620a2c593b1f81",
+      "scripts/launch_paper2_switch4.py": "19b1fc8bf23a922db6622f188a061e37929771f35186c7a0d7b4fa95cf6c2f79",
+      "scripts/search_paper2_bottleneck_switch4.py": "4bbd7348b7cfcdcfb9bbef9b19ab54e154bb00bfc083bcbefa20d35cf4c04a56",
+      "scripts/verify_paper2_bottleneck_switch4.py": "6008cff57b13e1c1cf9085c30b8e9057ef10e3885d8281f6db2fe4211b0045a4",
+      "scripts/watch_paper2_switch4.py": "d8b3d179bb1cbdadeac5029e2d4c90348124e8953249455e29289037f84ae9d3"
+    }
+  },
+  "status": "READY_PENDING_TRUSTED_INPUT",
+  "tape_scope": {
+    "calibration_seed_end": 1100060,
+    "calibration_seed_start": 1100001,
+    "locked_tapes_accessed": false,
+    "n_tapes": 60,
+    "virgin_tapes_accessed": false
+  },
+  "watcher": {
+    "detached": true,
+    "launcher": "scripts/launch_paper2_switch4.py",
+    "non_overwriting_run_directory": true,
+    "prestart_attestation_required": true,
+    "watcher": "scripts/watch_paper2_switch4.py"
+  }
+}
