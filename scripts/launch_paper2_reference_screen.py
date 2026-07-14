@@ -16,6 +16,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
 SCREEN = ROOT / "scripts" / "search_paper2_bottleneck_reference_calendar.py"
+VERIFIER = ROOT / "scripts" / "verify_paper2_bottleneck_reference_calendar.py"
 WATCHER = ROOT / "scripts" / "watch_paper2_reference_screen.py"
 
 
@@ -49,6 +50,11 @@ def main() -> int:
     parser.add_argument("--run-dir", type=Path, required=True)
     parser.add_argument("--workers", type=int, default=6)
     parser.add_argument("--watch-interval-seconds", type=float, default=10.0)
+    parser.add_argument(
+        "--deep-verify-result",
+        type=Path,
+        help="launch the independent deep verifier instead of the screen",
+    )
     args = parser.parse_args()
     if args.workers < 1 or args.watch_interval_seconds <= 0:
         parser.error("workers and watcher interval must be positive")
@@ -76,16 +82,35 @@ def main() -> int:
     os.chmod(run_dir, 0o700)
     output = run_dir / "result.json"
     progress = run_dir / "progress.json"
-    command = [
-        sys.executable,
-        str(SCREEN),
-        "--output",
-        str(output),
-        "--progress",
-        str(progress),
-        "--workers",
-        str(args.workers),
-    ]
+    if args.deep_verify_result is None:
+        operation = "screen"
+        command = [
+            sys.executable,
+            str(SCREEN),
+            "--output",
+            str(output),
+            "--progress",
+            str(progress),
+            "--workers",
+            str(args.workers),
+        ]
+        verified_result = None
+    else:
+        operation = "deep_verification"
+        verified_result = args.deep_verify_result.resolve(strict=True)
+        command = [
+            sys.executable,
+            str(VERIFIER),
+            "--result",
+            str(verified_result),
+            "--output",
+            str(output),
+            "--progress",
+            str(progress),
+            "--workers",
+            str(args.workers),
+            "--deep",
+        ]
     manifest = {
         "schema_version": "paper2_reference_screen_detached_launch_v1",
         "created_at_utc": utc_now(),
@@ -96,6 +121,12 @@ def main() -> int:
         "launcher_sha256": file_sha256(Path(__file__).resolve()),
         "watcher_sha256": file_sha256(WATCHER),
         "screen_sha256": file_sha256(SCREEN),
+        "verifier_sha256": file_sha256(VERIFIER),
+        "operation": operation,
+        "verified_result": str(verified_result) if verified_result else None,
+        "verified_result_sha256": (
+            file_sha256(verified_result) if verified_result else None
+        ),
         "workers": args.workers,
         "watch_interval_seconds": args.watch_interval_seconds,
     }

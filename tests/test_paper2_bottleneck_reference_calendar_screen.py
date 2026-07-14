@@ -11,6 +11,9 @@ from scripts.search_paper2_bottleneck_reference_calendar import (
     candidate_calendars,
 )
 from scripts.watch_paper2_reference_screen import snapshot
+from scripts.verify_paper2_bottleneck_reference_calendar import (
+    VERIFICATION_SCHEMA,
+)
 from scripts.run_paper2_bottleneck_full_frontier import (
     PRIMARY_CONTRACT_PATH,
     _contract_seed_rows,
@@ -114,3 +117,7 @@ def test_independent_watcher_distinguishes_prestart_complete_and_failure(tmp_pat
     }))
     failed = snapshot(tmp_path, watcher_started="2026-07-13T00:00:00+00:00")
     assert failed["state"] == "failed_or_incomplete"
+
+
+def test_verification_schema_is_distinct_from_scientific_result():
+    assert VERIFICATION_SCHEMA == "paper2_bottleneck_reference_calendar_verification_v1"

@@ -11,6 +11,7 @@ import subprocess
 import sys
 import time
 from typing import Any
+from datetime import datetime, timezone
 
 import numpy as np
 
@@ -262,6 +263,7 @@ def main() -> int:
     payload = json.loads(result_path.read_text())
     failures = validate_payload(payload)
     deep_summary: dict[str, Any] = {"performed": False}
+    progress: Path | None = None
     started = time.perf_counter()
     if args.deep and not failures:
         if args.progress is None:
@@ -339,6 +341,8 @@ def main() -> int:
     verification = {
         "schema_version": VERIFICATION_SCHEMA,
         "verifier_sha256": _file_sha256(Path(__file__).resolve()),
+        "verification_git_head": verification_git_head,
+        "verification_launch_git_status_porcelain": verification_launch_status,
         "result_path": str(result_path),
         "result_sha256": _file_sha256(result_path),
         "result_content_sha256": payload.get("content_sha256"),
@@ -349,6 +353,18 @@ def main() -> int:
     }
     verification["verification_content_sha256"] = _json_sha256(verification)
     _atomic_json(verification_path, verification)
+    if progress is not None:
+        _atomic_json(progress, {
+            "schema_version": "paper2_reference_screen_progress_v1",
+            "stage": "complete",
+            "completed": deep_summary.get("calibration_tapes_replayed", 0)
+            + deep_summary.get("locked_tapes_replayed", 0),
+            "total": 179,
+            "output": str(verification_path),
+            "output_sha256": _file_sha256(verification_path),
+            "elapsed_seconds": time.perf_counter() - started,
+            "updated_at_utc": datetime.now(timezone.utc).isoformat(),
+        })
     print(json.dumps(verification, indent=2, sort_keys=True))
     return 0 if not failures else 1
 
