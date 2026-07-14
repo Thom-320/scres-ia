@@ -33,8 +33,13 @@ protected-lift slot is reserved weekly for CSSU A or B, 24 hours before a
 localized access-risk window. Its adversarially corrected contract freezes 19
 cells, all 256 eight-week calendars, equal charged slots/payload/vehicle-hours,
 four disjoint sealed development roles, null physics and signal placebos. The
-implementation and exact H_PI producer pass synthetic tests; no Program M
-scientific tape has been opened. A positive development result would remain
+implementation and exact H_PI producer passed synthetic tests. The watched
+selection screen then completed all 116,736 DES evaluations: maximum H_PI mean
+was 0.0362453, six cells formed one connected screen region, the zero-hazard
+null was exactly zero, and no selected oracle increased lost orders or worsened
+worst-CSSU fill in mean. These are selection-only means, not confidence-bounded
+H_PI. The six-cell validation and simultaneous inference are frozen while seeds
+7300025-7300048 remain sealed. A positive development result would remain
 conditional on this extension, with later expert review needed only before an
 MFSC fleet claim—not to find or select the headroom.
 

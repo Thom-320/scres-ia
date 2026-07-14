@@ -22,8 +22,13 @@ protected-lift slot between CSSU A/B under a localized access signal. The
 contract is a disclosed synthetic extension, not a thesis-fleet estimate, and
 does not depend on Garrido to search or select headroom. All 256 full-horizon
 calendars, resource ledgers, null physics, placebos and four disjoint seed roles
-were fixed before any Program M scientific tape was opened. `H_PI`, `H_obs` and
-learned value are all still uncomputed; learner and virgin tapes remain blocked.
+were fixed before any Program M scientific tape was opened. The first screen
+block is now burned: all 116,736 evaluations completed, six cells formed one
+connected selection region, maximum mean oracle-minus-static was 0.0362453 and
+the null was exactly zero. Because the screen has no confidence bound, `H_PI`
+is not yet validated; seeds 7300025-7300048 remain sealed for the frozen
+simultaneous six-cell validation. `H_obs` and learned value remain uncomputed;
+learner and virgin tapes remain blocked.
 
 The last implemented candidate before the metric correction was the integrated
 M/T/R bottleneck-migration contract. Its now-quarantined observable gate

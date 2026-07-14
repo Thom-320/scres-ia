@@ -1,0 +1,48 @@
+{
+  "schema_version": "program_m_hpi_screen_selection_v1",
+  "selection_id": "program_m_hpi_screen_selection_20260714",
+  "frozen_on": "2026-07-14",
+  "status": "FROZEN_SCREEN_SELECTION__HPI_VALIDATION_SEEDS_REMAIN_SEALED",
+  "scientific_commit": "d2adb8a2bfecd76ba2f40f988bce1184f144cce0",
+  "screen_result": {
+    "sha256": "54d26a8c2e8651159d33694ad56c311f7cef8e6483d9caeb1a449a14b14e8101",
+    "completed_shards": 456,
+    "expected_shards": 456,
+    "custody_state": "completed_and_retrieved; this selection binds the result digest, not an untracked path"
+  },
+  "selected_cell_ids": [
+    "h50_d120_s70",
+    "h50_d120_s85",
+    "h75_d120_s70",
+    "h75_d120_s85",
+    "h75_d72_s70",
+    "h75_d72_s85"
+  ],
+  "selection_rule_applied": "The completed selection-only screen nominated the exact six-cell connected region above. Validation must evaluate all six cells; none may be removed or added after seeing validation results.",
+  "h_pi_validation": {
+    "seed_start": 7300025,
+    "seed_end": 7300048,
+    "n": 24,
+    "state": "SEALED_NOT_OPENED",
+    "calendars_per_cell_tape": 256,
+    "expected_shards": 144,
+    "expected_des_evaluations": 36864
+  },
+  "inference": {
+    "estimand": "Within each cell, mean rowwise maximum canonical ReT over all 256 calendars minus canonical ReT of the best tape-independent calendar selected on the same validation tapes.",
+    "bootstrap_resamples": 10000,
+    "bootstrap_rng_seed": 2026071401,
+    "static_reselection": "For every paired tape bootstrap resample and every cell, reselect the calendar with the greatest resampled mean; break an exact tie by smallest calendar index.",
+    "simultaneous_lcb": "Basic max-error one-sided familywise 95% bound across the six frozen cells: for resample b and cell c compute e_bc=theta_hat_c-theta_star_bc; q95 is the empirical 0.95 quantile of max_c(e_bc) using NumPy method=higher; LCB_c=theta_hat_c-q95.",
+    "practical_gate": 0.01,
+    "connected_region_rule": "Filter cells with simultaneous LCB >= 0.01. On the original frozen adjacency graph, retain connected components with at least three cells spanning at least two hazard levels and at least two duration levels.",
+    "cell_selection_rule": "Among cells in passing connected components, select the smallest observed H_PI; break an exact tie by cell_id."
+  },
+  "authorization": {
+    "h_obs": false,
+    "learner": false,
+    "paper2": false,
+    "paper3": false,
+    "virgin_tapes": false
+  }
+}
