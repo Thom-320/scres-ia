@@ -89,27 +89,30 @@ def test_first_passing_regime_selection_is_frozen(tmp_path) -> None:
     path = tmp_path / "rows.csv"
     fields = [
         "profile", "candidate", "candidate_resource_nominal", "ret_excel",
+        "seed",
         "ration_ret_excel", "ret_excel_cvar10", "lost_orders", "backorder_qty_final",
         "backlog_age_max", "service_loss_auc_ration_hours", "resource",
     ]
     rows = []
     for profile in ("R2_current", "R2_OAT_R24_increased", "R2_OAT_R22_increased", "Cf19"):
-        for candidate, ret in (("f0_S1", 0.50), ("f0.5_S1", 0.50)):
-            if profile == "R2_OAT_R24_increased" and candidate == "f0.5_S1":
-                ret = 0.53
-            rows.append({
-                "profile": profile,
-                "candidate": candidate,
-                "candidate_resource_nominal": 0.0 if candidate == "f0_S1" else 0.25,
-                "ret_excel": ret,
-                "ration_ret_excel": 0.5,
-                "ret_excel_cvar10": 0.5,
-                "lost_orders": 0,
-                "backorder_qty_final": 0,
-                "backlog_age_max": 0,
-                "service_loss_auc_ration_hours": 0,
-                "resource": 0,
-            })
+        for seed in range(6):
+            for candidate, ret in (("f0_S1", 0.50), ("f0.5_S1", 0.50)):
+                if profile == "R2_OAT_R24_increased" and candidate == "f0.5_S1":
+                    ret = 0.53
+                rows.append({
+                    "profile": profile,
+                    "candidate": candidate,
+                    "candidate_resource_nominal": 0.0 if candidate == "f0_S1" else 0.25,
+                    "seed": seed,
+                    "ret_excel": ret,
+                    "ration_ret_excel": 0.5,
+                    "ret_excel_cvar10": 0.5,
+                    "lost_orders": 0,
+                    "backorder_qty_final": 0,
+                    "backlog_age_max": 0,
+                    "service_loss_auc_ration_hours": 0,
+                    "resource": 0,
+                })
     with path.open("w", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fields)
         writer.writeheader()

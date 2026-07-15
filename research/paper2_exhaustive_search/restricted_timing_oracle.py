@@ -225,6 +225,9 @@ def select_frozen_postures(
     raw_rows_path: Path,
     *,
     budget_cap: float = 0.5,
+    robust_label: str | None = None,
+    bootstrap_seed: int = 7460999,
+    n_bootstrap: int = 10_000,
     regime_order: Sequence[str] = (
         "R2_current",
         "R2_OAT_R24_increased",
@@ -248,7 +251,11 @@ def select_frozen_postures(
         return float(np.mean([float(row[metric]) for row in by[(profile, label)]]))
 
     current = regime_order[0]
-    low_label = max(eligible, key=lambda label: (metric_mean(current, label, "ret_excel"), label))
+    low_label = robust_label or max(
+        eligible, key=lambda label: (metric_mean(current, label, "ret_excel"), label)
+    )
+    if low_label not in eligible:
+        return None
     low = posture_from_label(low_label, resources[low_label])
     for profile in regime_order[1:]:
         if not all((profile, label) in by for label in eligible):
@@ -276,9 +283,32 @@ def select_frozen_postures(
         high_label = max(
             admissible, key=lambda label: (metric_mean(profile, label, "ret_excel"), label)
         )
-        if metric_mean(profile, high_label, "ret_excel") - metric_mean(
-            profile, low_label, "ret_excel"
-        ) >= 0.01:
+        high_by_seed = {
+            int(row["seed"]): float(row["ret_excel"])
+            for row in by[(profile, high_label)]
+        }
+        low_by_seed = {
+            int(row["seed"]): float(row["ret_excel"])
+            for row in by[(profile, low_label)]
+        }
+        common_seeds = sorted(set(high_by_seed) & set(low_by_seed))
+        if not common_seeds:
+            continue
+        deltas = np.asarray(
+            [high_by_seed[seed] - low_by_seed[seed] for seed in common_seeds],
+            dtype=float,
+        )
+        rng = np.random.default_rng(int(bootstrap_seed))
+        boot = np.asarray([
+            float(np.mean(deltas[rng.integers(0, len(deltas), len(deltas))]))
+            for _ in range(int(n_bootstrap))
+        ])
+        lcb95 = float(np.quantile(boot, 0.05))
+        if (
+            float(np.mean(deltas)) >= 0.01
+            and lcb95 > 0.0
+            and int(np.sum(deltas > 0.0)) >= 4
+        ):
             return low, posture_from_label(high_label, resources[high_label]), profile
     return None
 

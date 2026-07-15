@@ -166,9 +166,30 @@ def main() -> int:
         })
         return 0
 
+    r2_summaries = risk_result.get("group_budget_summaries", {}).get(
+        "R2_frequency", []
+    )
+    frozen_cap = float(contract["posture_frontier"]["resource_budget_cap"])
+    r2_summary = next(
+        (
+            row for row in r2_summaries
+            if abs(float(row.get("budget_cap", -1.0)) - frozen_cap) <= 1e-12
+            and bool(row.get("door_pass", False))
+        ),
+        None,
+    )
+    if r2_summary is None:
+        write_json_atomic(output / "result.json", {
+            "status": "STOP_BEFORE_TIMING_NO_R2_DOOR_AT_FROZEN_CAP",
+            "frozen_resource_cap": frozen_cap,
+            "source_risk_result_sha256": sha256(risk_result_path),
+            "timing_seeds_opened": False,
+        })
+        return 0
     selection = select_frozen_postures(
         risk_raw_path,
-        budget_cap=float(contract["posture_frontier"]["resource_budget_cap"]),
+        budget_cap=frozen_cap,
+        robust_label=str(r2_summary["best_robust_constant"]),
     )
     if selection is None:
         write_json_atomic(output / "result.json", {
