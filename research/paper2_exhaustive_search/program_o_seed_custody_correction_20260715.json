@@ -1,0 +1,15 @@
+{
+  "schema_version": "program_o_seed_custody_correction_v1",
+  "status": "AUTHORITATIVE_ADDITIVE_CORRECTION",
+  "reason": "The parent Program O contract reserved 7400097-7400144 for H_obs before the full-DES H_PI validation retry consumed 7400097-7400120. This correction prevents accidental reuse and does not rewrite historical artifacts.",
+  "ranges": [
+    {"range": [7400049, 7400072], "role": "full-DES H_PI development", "state": "BURNED_COMPLETED", "evidence": "results/program_o/full_des_hpi_translation_v1/development_custody_verdict_v1.json"},
+    {"range": [7400073, 7400096], "role": "full-DES H_PI validation attempt 1", "state": "BURNED_CLAIMED_TAPES_NOT_OPENED", "evidence": "results/program_o/full_des_hpi_translation_v1/validation_attempt1_preseed_failure_v1.json"},
+    {"range": [7400097, 7400120], "role": "full-DES H_PI validation attempt 2", "state": "BURNED_COMPLETED", "evidence": "results/program_o/full_des_hpi_translation_v1/validation_custody_verdict_v1.json"},
+    {"range": [7400121, 7400144], "role": "superseded H_obs fit remainder", "state": "RETIRED_UNOPENED"},
+    {"range": [7400145, 7400192], "role": "superseded H_obs validation", "state": "RETIRED_UNOPENED"},
+    {"range": [7420001, 7420048], "role": "H_obs fit v2", "state": "SEALED_NOT_OPENED"},
+    {"range": [7420049, 7420096], "role": "H_obs validation v2", "state": "SEALED_NOT_OPENED"}
+  ],
+  "reuse_rule": "No retired or burned Program O identity may be reused. Opening either 742-series block requires the additive H_obs contract and a tracked immutable execution freeze."
+}
