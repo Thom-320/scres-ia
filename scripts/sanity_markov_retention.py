@@ -129,7 +129,8 @@ def main() -> int:
         r = res[rho]
         print(f"  rho={rho}: Delta_late={r['delta_late_mean']:+.3f} +/-{r['delta_late_sem']:.3f}  "
               f"curve {r['curve_first5']} -> {r['curve_last5']}")
-    d9 = res["0.9"]["delta_late_mean"]; d5 = res["0.5"]["delta_late_mean"]
+    d9 = res["0.9"]["delta_late_mean"]
+    d5 = res["0.5"]["delta_late_mean"]
     ok = d9 > 0.10 and d9 > d5 + 0.08
     print(f"\n  GATE {'PASS' if ok else 'FAIL'}: Delta(0.9)={d9:+.3f} should be >>{0.10} and >> Delta(0.5)={d5:+.3f}")
     print("  If FAIL, the transfer harness cannot detect retention where it provably exists.")

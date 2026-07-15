@@ -124,12 +124,17 @@ def main() -> int:
 
     def base_args():
         a = ev.build_parser().parse_args([])
-        a.track = "a"; a.algo = "dqn"; a.decision_cadence = "weekly"
-        a.reward_mode = cli.reward_mode; a.max_steps = cli.max_steps
+        a.track = "a"
+        a.algo = "dqn"
+        a.decision_cadence = "weekly"
+        a.reward_mode = cli.reward_mode
+        a.max_steps = cli.max_steps
         a.mask_preset = cli.mask_preset
         a.pretrain_timesteps = cli.pretrain_timesteps
-        a.learning_starts = cli.learning_starts; a.buffer_size = cli.buffer_size
-        a.rho_disruption = cli.rho_disruption; a.rho_demand = None
+        a.learning_starts = cli.learning_starts
+        a.buffer_size = cli.buffer_size
+        a.rho_disruption = cli.rho_disruption
+        a.rho_demand = None
         a.regime_seed = cli.regime_seed
         a.surge_inertia = cli.surge_inertia
         a.surge_budget_hours = cli.surge_budget_hours
@@ -174,7 +179,8 @@ def main() -> int:
     }
     (run_dir / "transfer.json").write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
-    m = mem["overall"]; t = total["overall"]
+    m = mem["overall"]
+    t = total["overall"]
     print("\nCORRECTED TRANSFER PROTOCOL (clean ReT, cold eval, seed-clustered)")
     print(f"  MEMORY (retained - reset) ΔR = {m['mean']:+.4f} +/-{m['sem']:.4f} "
           f"ci95=[{m['ci95_lo']:+.4f},{m['ci95_hi']:+.4f}] (n={m['n']})")

@@ -44,7 +44,8 @@ def test_finite_surge_budget_caps_to_s1_when_exhausted():
 def test_demobilises_instantly():
     env = _env(surge_inertia=True, surge_ramp_per_step=1, surge_budget_hours=1e9)
     env.reset(seed=1)
-    env.step([1.0]); env.step([1.0])      # ramp up to S3
+    env.step([1.0])
+    env.step([1.0])      # ramp up to S3
     assert env._effective_shift == 3
     env.step([-1.0])                       # request S1 -> instant drop
     assert env._effective_shift == 1

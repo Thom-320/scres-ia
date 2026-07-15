@@ -14,12 +14,23 @@ from scripts.retention_transfer import run_seed
 
 def _args(train_per_block: int):
     a = ev.build_parser().parse_args([])
-    a.track = "a"; a.algo = "dqn"; a.decision_cadence = "weekly"
-    a.reward_mode = "control_v1"; a.max_steps = 3; a.mask_preset = "none"
-    a.pretrain_timesteps = 0; a.learning_starts = 10; a.buffer_size = 500
-    a.rho_disruption = 0.85; a.rho_demand = None; a.regime_seed = 909
-    a.surge_inertia = False; a.surge_budget_hours = float("inf"); a.surge_ramp_per_step = 1
-    a.online_timesteps_per_cycle = train_per_block; a.retain_buffer = False
+    a.track = "a"
+    a.algo = "dqn"
+    a.decision_cadence = "weekly"
+    a.reward_mode = "control_v1"
+    a.max_steps = 3
+    a.mask_preset = "none"
+    a.pretrain_timesteps = 0
+    a.learning_starts = 10
+    a.buffer_size = 500
+    a.rho_disruption = 0.85
+    a.rho_demand = None
+    a.regime_seed = 909
+    a.surge_inertia = False
+    a.surge_budget_hours = float("inf")
+    a.surge_ramp_per_step = 1
+    a.online_timesteps_per_cycle = train_per_block
+    a.retain_buffer = False
     return a
 
 

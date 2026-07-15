@@ -70,7 +70,8 @@ def main() -> int:
                     sim = faithful_sim(S, period, seed, risk)
                     sim.run()
                     r = sim.compute_order_level_ret()
-                    rets.append(r["mean_ret"]); fills.append(r["fill_rate_order_level"])
+                    rets.append(r["mean_ret"])
+                    fills.append(r["fill_rate_order_level"])
                     for k in CASES:
                         cc[k] += r["case_counts"][k]
                 n = len(seeds)
