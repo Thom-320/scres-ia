@@ -1,0 +1,67 @@
+{
+  "contract_id": "garrido_risk_headroom_sensitivity_v1",
+  "status": "FROZEN_BEFORE_DEVELOPMENT_SEEDS_7450001_7450006",
+  "scientific_question": "Which thesis-authorized recurrent-risk frequency and impact changes alter canonical ReT, reverse the ranking of thesis-native buffer/shift policies, or create regime-tailoring headroom worth a new pre-learner contract?",
+  "thesis_anchor": {
+    "source": "Garrido-Rios 2017 thesis, Section 6.7.2, Tables 6.11-6.15",
+    "frequency_levels": "Use RISKS_CURRENT and RISKS_INCREASED exactly; do not approximate the thesis plus level with a global multiplier.",
+    "factorial_profiles": "Reproduce Cf1-Cf10 for R1 and Cf11-Cf20 for R2.",
+    "black_swan_R3": "FROZEN_NOT_EDITED_AND_EXCLUDED_FROM_THE_CATEGORY_SENSITIVITY_SCREEN"
+  },
+  "metric": {
+    "primary": "ret_excel_request_snapshot_v2",
+    "implementation": "supply_chain.episode_metrics.compute_episode_metrics",
+    "secondary_guardrails": [
+      "ration_ret_excel",
+      "ret_excel_cvar10",
+      "lost_orders",
+      "backorder_qty_final",
+      "backlog_age_max",
+      "service_loss_auc_ration_hours"
+    ],
+    "forbidden": ["metric substitution", "Cobb-Douglas promotion", "hand-rolled ReT"]
+  },
+  "risk_design": {
+    "frequency": {
+      "exact_thesis_profiles": ["R1_current", "R2_current", "Cf1-Cf20"],
+      "one_at_a_time": ["R11", "R12", "R13", "R14", "R21", "R22", "R23", "R24"]
+    },
+    "impact": {
+      "multipliers": [1.0, 1.5, 2.0],
+      "eligible_risks": ["R11", "R21", "R22", "R23", "R24"],
+      "interpretation": "Recovery-duration scaling for R11/R21/R22/R23 and surge-size scaling for R24; researcher stress sensitivity, not an exact Table 6.12 frequency level."
+    },
+    "forbidden": ["scale R3", "select a new amplitude after outcomes", "increase risk until a policy wins"]
+  },
+  "policy_frontier": {
+    "family": "constant thesis Track-A common buffer plus assembly shifts",
+    "buffer_fractions_of_I1344": [0.0, 0.125, 0.25, 0.375, 0.5, 1.0],
+    "shift_levels": [1, 2, 3],
+    "candidate_count": 18,
+    "resource_budget_caps": [0.0, 0.0625, 0.125, 0.1875, 0.25, 0.5, 0.75, 1.0],
+    "claim_limit": "The profile oracle is a regime-tailoring diagnostic over constants, not H_PI and not H_obs."
+  },
+  "development": {
+    "seeds": [7450001, 7450002, 7450003, 7450004, 7450005, 7450006],
+    "max_steps": 520,
+    "step_hours": 168,
+    "stochastic_processing_times": false,
+    "use": "development sensitivity only; never virgin or confirmatory; 520 weeks matches the thesis R1/R2 design horizon of 10 years"
+  },
+  "door_rule": {
+    "candidate_if": [
+      "profile tailoring delta mean >= 0.01",
+      "paired bootstrap LCB95 > 0",
+      "at least two policies are profile-optimal",
+      "average selected resource is non-superior to the robust comparator",
+      "ration ReT and CVaR10 are non-inferior",
+      "lost orders, backlog, backlog age and service-loss AUC are non-superior"
+    ],
+    "meaning": "A passing budget/profile set licenses a new same-physics pre-learner decision contract. It does not authorize a learner or Paper 2 language.",
+    "null_meaning": "Risk stress changes system performance but not adaptive headroom under this action family."
+  },
+  "selection_rule": "Report every profile and budget. If multiple doors pass, select the lowest-amplitude thesis-frequency profile set and then the smallest resource cap; never select maximum headroom.",
+  "learner_authorized": false,
+  "paper2_confirmed": false,
+  "paper3_authorized": false
+}

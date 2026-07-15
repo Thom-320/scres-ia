@@ -403,6 +403,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         risk_impact_multiplier: float = 1.0,
         risk_frequency_multipliers_by_id: dict[str, float] | None = None,
         risk_impact_multipliers_by_id: dict[str, float] | None = None,
+        risk_rng_mode: str = "shared",
         risk_event_tape: list[dict[str, Any]] | None = None,
         risk_attribution_source: str = "des_events",
         ret_recovery_period_mode: str = "disruption",
@@ -542,6 +543,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             str(risk_id): max(1e-6, float(value))
             for risk_id, value in (risk_impact_multipliers_by_id or {}).items()
         }
+        self.risk_rng_mode = str(risk_rng_mode)
         self.risk_event_tape = list(risk_event_tape) if risk_event_tape is not None else None
         self.risk_attribution_source = str(risk_attribution_source)
         self.ret_recovery_period_mode = str(ret_recovery_period_mode)
@@ -2549,6 +2551,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             risk_impact_multiplier=self.risk_impact_multiplier,
             risk_frequency_multipliers_by_id=self.risk_frequency_multipliers_by_id,
             risk_impact_multipliers_by_id=self.risk_impact_multipliers_by_id,
+            risk_rng_mode=self.risk_rng_mode,
             risk_event_tape=self.risk_event_tape,
             risk_attribution_source=self.risk_attribution_source,
             ret_recovery_period_mode=self.ret_recovery_period_mode,
