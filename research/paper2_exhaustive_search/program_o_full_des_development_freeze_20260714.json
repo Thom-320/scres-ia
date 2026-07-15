@@ -2,7 +2,7 @@
   "schema_version": "program_o_full_des_development_freeze_v1",
   "status": "AUTHORIZED_PROGRAM_O_FULL_DES_HPI_DEVELOPMENT_ONLY",
   "frozen_at_utc": "2026-07-15T01:14:59Z",
-  "implementation_source_commit": "46e805634bbd27868c053fe91d7bffc6733c21d0",
+  "implementation_source_commit": "551ffab2479ed6d5e2ab86b857aece76b8b20a9c",
   "execution_rule": "Run only from the clean immutable commit that contains this additive freeze and whose source hashes match this document.",
   "parent_gate_o0": {
     "screen_result": "results/program_o/gate_o0_full_action_transducer_v1/screen/result.json",
@@ -14,27 +14,30 @@
   },
   "contract": {
     "path": "contracts/program_o_full_des_hpi_translation_v1.json",
-    "sha256": "b721e687f35ac5e0f8a7fd315e7e041dabe8542895a2f09b14753bb86bcc7538",
+    "sha256": "b7fea9a3acbc016fa95c27db1f814bef23c885373b6377cb1d0d2d3fdb643fbd",
     "selected_cell": "rho75_share90",
     "primary_metric": "ret_excel_request_snapshot_v2",
     "cobb_douglas": "outside_contract"
   },
   "source_hashes": {
-    "supply_chain/program_o_full_des.py": "07e77e1efde94cd19e2fcba2ddb2bcc305b59dac1029ccfad33bd1974e5ea5cf",
-    "supply_chain/program_o_full_des_transducer.py": "1d1ee5c67aa24a19b217a2b5388f34bcb42b68a87cb657e193bb5ad3acbe65a3",
-    "scripts/screen_program_o_full_des_hpi.py": "01af93dce8e674102e5b83ea8878d6433b897a96f7d8a53829b7fda01efe98d8",
-    "scripts/launch_program_o_full_des_hpi.py": "12c62735c3e0a4539db54dcb369be4095f20f9698a729e50e16343902414d98f",
-    "scripts/run_program_o_full_des_hpi_custodied.py": "4cc58c39d58230464b44ebbd38d253b2c9f3a144c9d90d97e509f2b9d960ca13",
+    "supply_chain/program_o_full_des.py": "8e3b87fe3ad195c0b1e860a86d4c1098ecc7942499b0d8b8acff021c2fec7376",
+    "supply_chain/program_o_full_des_transducer.py": "4c268777032fd24a9d948b1d168cc4aa493ab647ff98ca75628b956ad9775779",
+    "scripts/screen_program_o_full_des_hpi.py": "7fe243371a75dc45f821b01b94726f8e8ba7a1b5c21095174af44838a8be5d8f",
+    "scripts/launch_program_o_full_des_hpi.py": "fab6fb470277d2e65454b6926417d34cd07827862f572c24e16bc8b5434ff27e",
+    "scripts/run_program_o_full_des_hpi_custodied.py": "1f48f7fc9aaef4f7d9503f66916c59ef7427ff56002554d0dc824ddf25fd53f8",
     "scripts/watch_program_o_full_des_hpi.py": "0d44bf3c69a277604f0288cd6d347463804142a5a6edf9722a42e001f27be8af",
+    "scripts/program_o_full_des_guard.py": "77d56ee9b5d75ae1f9adb13547182e08bf152bc473bb633bb6bab22739461b81",
+    "scripts/validate_program_o_full_des_hpi_custody.py": "ced30315a67afc380c64b3bef0b4ba0026aaab1c804e016ae3066df151565c33",
     "supply_chain/supply_chain.py": "c720e2ce198b9330d81a9f29efc7456300f63b2dd9022489f584fba6fea585ea",
     "supply_chain/ret_thesis.py": "a516cae034b8d428e584998e2baab73d752543e6199936b6e6eb0729c09cc805",
-    "tests/test_program_o_full_des.py": "de3949af4c2da2efd737d8c75edc4f4619d9542edad62c56d7278befc8678de5",
-    "tests/test_program_o_full_des_custody.py": "c2b39ebef60403d64f11f09e04f56485d8f5438fcf5d0a7db0c2ed15d51bc71b"
+    "supply_chain/episode_metrics.py": "0eae8b9a9ab5c6289ff94a318c6ab27c031ed184d0e0f00d761e8785373cab9b",
+    "tests/test_program_o_full_des.py": "8f0960bc8826399d2c339940b7c905c2ce4966182fa69cfdd4511e80526fefc7",
+    "tests/test_program_o_full_des_custody.py": "d66ee9bcb22388eceb37a1ba5b083f0b5d35aa87e9c6a8aa9086bef5d0a6f810"
   },
   "preexecution_verification": {
     "program_o_and_custody_tests": {
       "command": ".venv/bin/python -m pytest -q tests/test_program_o_full_des.py tests/test_program_o_full_des_custody.py",
-      "result": "35 passed"
+      "result": "39 passed"
     },
     "metric_and_physics_tests": {
       "command": ".venv/bin/python -m pytest -q tests/test_program_o_full_des.py tests/test_ret_excel_request_snapshot_contract.py tests/test_ret_excel_request_snapshot_v2_audit.py tests/test_downstream_dispatch_conservation.py tests/test_material_lineage.py",
@@ -43,8 +46,9 @@
     "direct_transducer_parity": {
       "burned_seed": 7400048,
       "profiles": 4,
-      "direct_replay_calendars": 1045,
-      "maximum_absolute_error": 4.440892098500626e-16,
+      "direct_replay_calendars": 336,
+      "coverage": "all 4^H calendars for H=1,2,3 with exact physical/order trace comparison",
+      "rows_sha256": "40d31498a892737ed1f14d80db8be77c93362c539f3d864061886db417ee8e07",
       "status": "development_diagnostic_not_scientific_evidence"
     },
     "repository_suite": {
@@ -74,6 +78,14 @@
       "range": [7400073, 7400096],
       "status": "SEALED_NOT_AUTHORIZED_UNTIL_DEVELOPMENT_PASS_IS_RETRIEVED_HASHED_AUDITED_AND_AN_ADDITIVE_VALIDATION_FREEZE_IS_COMMITTED"
     }
+  },
+  "execution_authorization": {
+    "stage": "development",
+    "run_id": "program-o-full-des-dev-v1-20260715",
+    "run_dir": "/home/ubuntu/program_o_runs/program-o-full-des-dev-v1-20260715",
+    "seed_range": [7400049, 7400072],
+    "seed_claim_root": "/home/ubuntu/program_o_seed_claims",
+    "single_use_rule": "An O_EXCL host-level claim for this exact stage and seed range must be created after watcher readiness and before the producer. Any prior claim blocks relaunch."
   },
   "custody_requirements": {
     "watcher_before_producer": true,
