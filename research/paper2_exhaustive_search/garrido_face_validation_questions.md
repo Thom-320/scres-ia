@@ -1,4 +1,4 @@
-# Garrido face-validation questions — canonical Q1–Q13 batch
+# Garrido face-validation questions — canonical Q1–Q14 batch
 
 Date: 2026-07-13
 Status: **CANONICAL HUMAN-FACING BATCH**
@@ -373,9 +373,47 @@ learner or a metric change — the full pre-learner gate chain still applies.
 
 ---
 
+## Q14 — Downstream fleet contracting model (resolves the Program O H_obs resource estimand)
+
+**Context:** Program O's dual-resource diagnostic (result `e48606e7`) showed that under a
+**fixed-clock reserved-fleet** cost model a state-dependent observable controller (belief-MPC)
+captures material adaptive value — incremental operational-state value LCB95 **+0.025 to +0.073**
+over a connected 3-cell component, beating every information placebo — but under a **pay-per-use**
+transport model it does not. The controllers use ~**2,280 of 5,376** charged downstream vehicle-hours
+(**42 % utilization**) and deliver otherwise-stranded rations by filling idle capacity. Whether that
+idle-capacity use is **free** (fixed-clock) or a **purchased resource** (pay-per-use) is the single
+fact that decides whether Program O has real observable headroom or a transport-utilization artifact.
+This is the critical-path question; all internal experiments are exhausted.
+
+**Question:** "For the downstream transport legs Op10 (Supply Battalion → CSSU) and Op12
+(CSSU → Theatre):
+(a) Is freight capacity **reserved and paid on a fixed schedule** (vehicles/hours contracted and
+charged whether loaded or empty), or is cost **incurred per trip / per unit hauled** (pay-per-use)?
+(b) If fixed-schedule: is there routinely **idle reserved capacity** (unused vehicle-hours inside the
+contracted envelope) that additional deliveries could fill at no incremental transport cost?
+(c) If pay-per-use: what is the marginal cost structure (per trip, per vehicle-hour, per ration-km)?
+(d) Are the 112 daily dispatch slots and 5,376 downstream vehicle-hours a hard reserved entitlement, a
+soft target, or a metered resource?"
+
+**Resolves Program O to the POSITIVE branch if:** the fleet is fixed-clock reserved with routinely idle
+capacity (a + b) → filling idle reserved capacity is free → the diagnostic's fixed-clock signal is real
+→ execute a preregistered out-of-sample validation of the frozen belief-MPC controller on the sealed
+tapes `7420049–7420096`. A clean OOS pass establishes classical H_obs > 0 (then the neural-learner gate).
+
+**Resolves Program O to the BOUNDARY branch if:** transport is pay-per-use, or the reserved envelope is
+tight with no idle capacity (a / c / d) → the observable ReT gain is a purchased-transport effect → the
+perfect-information ceiling (H_PI 0.152) does not convert to resource-honest observable value; Program O
+terminates as a boundary instance.
+
+**Does not, by itself, authorize** opening the sealed tapes or a learner — it selects which of the two
+preregistered branches executes. Until answered, the sealed tapes stay closed (opening them under the
+fixed-clock contract first would be post-hoc selection of the convention that passes).
+
+---
+
 ## How to use these questions
 
-1. Send all thirteen sections as one batch. Linked families within one section are
+1. Send all fourteen sections as one batch. Linked families within one section are
    adjudicated independently.
 2. Record each answer verbatim in
    `docs/GARRIDO_FACE_VALIDATION_RESPONSES_2026-07-13.md`, including source
