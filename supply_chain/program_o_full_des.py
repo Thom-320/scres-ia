@@ -27,6 +27,9 @@ from supply_chain.supply_chain import (
 
 PRODUCTS = ("P_C", "P_H")
 PRODUCT_SET = frozenset(PRODUCTS)
+DOWNSTREAM_FREIGHT_PHYSICS_MODES = frozenset(
+    {"loaded_only", "fixed_clock_physical_v1"}
+)
 
 
 def _json_digest(value: Any) -> str:
@@ -244,6 +247,7 @@ class ProgramOFullDESSimulation(MFSCSimulation):
         activation_delay_hours: float = 24.0,
         demand_offsets_hours: Sequence[float] = (30, 54, 78, 102, 126, 150),
         clearance_hours: float = 1344.0,
+        downstream_freight_physics_mode: str = "loaded_only",
     ) -> None:
         if not 1 <= len(calendar) <= 8 or any(
             int(value) not in range(4) for value in calendar
@@ -260,6 +264,11 @@ class ProgramOFullDESSimulation(MFSCSimulation):
             raise ValueError("scheduler must map every action to three products")
         if len(demand_offsets_hours) != 6:
             raise ValueError("six weekly demand offsets are required")
+        if downstream_freight_physics_mode not in DOWNSTREAM_FREIGHT_PHYSICS_MODES:
+            raise ValueError(
+                "downstream_freight_physics_mode must be loaded_only or "
+                "fixed_clock_physical_v1"
+            )
 
         super().__init__(
             shifts=1,
@@ -287,6 +296,9 @@ class ProgramOFullDESSimulation(MFSCSimulation):
         self.program_o_activation_delay_hours = float(activation_delay_hours)
         self.program_o_demand_offsets_hours = tuple(map(float, demand_offsets_hours))
         self.program_o_clearance_hours = float(clearance_hours)
+        self.program_o_downstream_freight_physics_mode = str(
+            downstream_freight_physics_mode
+        )
         self.program_o_tape = product_demand_tape(
             int(seed),
             regime_persistence=float(regime_persistence),
@@ -307,6 +319,12 @@ class ProgramOFullDESSimulation(MFSCSimulation):
         self.program_o_actual_loaded_departures = 0
         self.program_o_actual_payload = 0.0
         self.program_o_actual_downstream_vehicle_hours = 0.0
+        self.program_o_scheduled_downstream_missions = 0
+        self.program_o_empty_downstream_missions = 0
+        self.program_o_scheduled_downstream_vehicle_hours = 0.0
+        self.program_o_scheduled_downstream_crew_hours = 0.0
+        self.program_o_scheduled_payload_capacity = 0.0
+        self.program_o_downstream_mission_events: list[dict[str, Any]] = []
         self.program_o_warmup_event = self.env.event()
         self._program_o_processes_started = False
         self._queue_targets(
@@ -568,6 +586,72 @@ class ProgramOFullDESSimulation(MFSCSimulation):
             }
         )
 
+    def _program_o_fixed_clock_window_is_open(self) -> bool:
+        if self.program_o_decision_start is None:
+            return False
+        start = float(self.program_o_decision_start)
+        stop = (
+            start
+            + float(self.program_o_decision_weeks) * float(HOURS_PER_WEEK)
+            + float(self.program_o_clearance_hours)
+        )
+        return start <= float(self.env.now) < stop
+
+    def _program_o_empty_downstream_mission(self, mission_id: int):
+        """Occupy the real Op10/Op12 convoy servers for an empty daily mission."""
+        started_at = float(self.env.now)
+        event = {
+            "mission_id": int(mission_id),
+            "kind": "empty",
+            "scheduled_at": started_at,
+            "op10_started_at": None,
+            "op10_completed_at": None,
+            "op12_started_at": None,
+            "op12_completed_at": None,
+        }
+        self.program_o_downstream_mission_events.append(event)
+        with self.op10_convoy.request() as request:
+            yield request
+            event["op10_started_at"] = float(self.env.now)
+            yield self.env.timeout(float(self.params["op10_pt"]))
+            event["op10_completed_at"] = float(self.env.now)
+        with self.op12_convoy.request() as request:
+            yield request
+            event["op12_started_at"] = float(self.env.now)
+            yield self.env.timeout(float(self.params["op12_pt"]))
+            event["op12_completed_at"] = float(self.env.now)
+
+    def _dispatch_one_op9_order_if_ready(self, *, next_check_hours: float = 24.0):
+        """Execute one scheduled downstream mission, loaded or empty, when enabled."""
+        dispatched = yield from super()._dispatch_one_op9_order_if_ready(
+            next_check_hours=next_check_hours
+        )
+        if (
+            self.program_o_downstream_freight_physics_mode
+            != "fixed_clock_physical_v1"
+            or not self._program_o_fixed_clock_window_is_open()
+        ):
+            return dispatched
+
+        self.program_o_scheduled_downstream_missions += 1
+        mission_id = self.program_o_scheduled_downstream_missions
+        route_hours = float(self.params["op10_pt"]) + float(self.params["op12_pt"])
+        self.program_o_scheduled_downstream_vehicle_hours += route_hours
+        self.program_o_scheduled_downstream_crew_hours += route_hours
+        self.program_o_scheduled_payload_capacity += float(DEMAND["b"])
+        if dispatched:
+            self.program_o_downstream_mission_events.append(
+                {
+                    "mission_id": int(mission_id),
+                    "kind": "loaded",
+                    "scheduled_at": float(self.env.now),
+                }
+            )
+        else:
+            self.program_o_empty_downstream_missions += 1
+            self.env.process(self._program_o_empty_downstream_mission(mission_id))
+        return dispatched
+
     def _on_order_physical_delivery(self, order: OrderRecord, quantity: float) -> None:
         tokens = list(getattr(order, "_program_o_supply_tokens", []))
         if abs(sum(item.quantity for item in tokens) - float(quantity)) > 1e-8:
@@ -680,7 +764,7 @@ class ProgramOFullDESSimulation(MFSCSimulation):
             "aggregate_flow_ledger": self.flow_ledger(),
         }
 
-    def program_o_resource_ledger(self) -> dict[str, float]:
+    def program_o_resource_ledger(self) -> dict[str, Any]:
         treatment_days = (
             float(self.program_o_decision_weeks) * float(HOURS_PER_WEEK)
             + self.program_o_clearance_hours
@@ -703,6 +787,22 @@ class ProgramOFullDESSimulation(MFSCSimulation):
             ),
             "charged_daily_dispatch_slots": float(charged_slots),
             "charged_downstream_vehicle_hours": float(charged_slots * 48.0),
+            "downstream_freight_physics_mode": self.program_o_downstream_freight_physics_mode,
+            "scheduled_downstream_missions": float(
+                self.program_o_scheduled_downstream_missions
+            ),
+            "empty_downstream_missions": float(
+                self.program_o_empty_downstream_missions
+            ),
+            "scheduled_downstream_vehicle_hours": float(
+                self.program_o_scheduled_downstream_vehicle_hours
+            ),
+            "scheduled_downstream_crew_hours": float(
+                self.program_o_scheduled_downstream_crew_hours
+            ),
+            "scheduled_payload_capacity": float(
+                self.program_o_scheduled_payload_capacity
+            ),
             "setup_hours": 0.0,
         }
 
@@ -769,6 +869,7 @@ def run_program_o_full_des_episode(
     regime_persistence: float,
     dominant_share: float,
     complete_substitution: bool = False,
+    downstream_freight_physics_mode: str = "loaded_only",
 ) -> tuple[ProgramOFullDESSimulation, dict[str, Any]]:
     sim = ProgramOFullDESSimulation(
         seed=int(seed),
@@ -777,5 +878,6 @@ def run_program_o_full_des_episode(
         regime_persistence=float(regime_persistence),
         dominant_share=float(dominant_share),
         complete_substitution=bool(complete_substitution),
+        downstream_freight_physics_mode=str(downstream_freight_physics_mode),
     ).run_contract()
     return sim, sim.product_outcome_panel()

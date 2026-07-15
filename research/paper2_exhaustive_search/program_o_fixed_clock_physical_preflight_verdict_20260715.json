@@ -1,0 +1,47 @@
+{
+  "schema_version": "program_o_fixed_clock_physical_preflight_verdict_v1",
+  "status": "PASS_PROGRAM_O_FIXED_CLOCK_PHYSICAL_PREFLIGHT",
+  "contract_sha256": "d13508f6694a96dd219cf411a6cc14f1ef4031540805df34b55941289f14d9cc",
+  "implementation_sha256": "005a139f8e558a2de46178d5c37245f0a66e126fe45c467d0c5e7bfecdc66d7e",
+  "audit_script_sha256": "492919171e64988b335ebb7bbd73246fabea2d60bd5ec0d72d8c2dd5a32df4b0",
+  "result_sha256": "4b5bce2af1b85d837343c1f63c59a0672772312b756b211a12001e0de7deb509",
+  "result_path": "results/program_o/fixed_clock_physical_preflight_v1/result.json",
+  "tape_governance": {
+    "burned_development_range": [7420001, 7420048],
+    "sealed_validation_range": [7420049, 7420096],
+    "sealed_validation_accessed": false
+  },
+  "audit": {
+    "primary_policy": "belief_mpc__3",
+    "connected_cells": [
+      "rho75_share90",
+      "rho90_share75",
+      "rho90_share90"
+    ],
+    "episodes_per_mode": 144,
+    "total_direct_episodes": 288,
+    "parity_failures": 0,
+    "physical_failures": 0,
+    "unique_scheduled_resource_vectors": 1,
+    "scheduled_missions_per_episode": 112,
+    "scheduled_vehicle_hours_per_episode": 5376,
+    "scheduled_crew_hours_per_episode": 5376,
+    "scheduled_payload_capacity_per_episode": 291200,
+    "max_product_or_partition_residual": 1e-8,
+    "flags_off_identity_preserved": true,
+    "empty_missions_occupy_op10_and_op12": true,
+    "canonical_metrics_and_physical_outcomes_identical_to_parent": true
+  },
+  "authorization": {
+    "prepare_immutable_validation_freeze": true,
+    "open_sealed_validation_now": false,
+    "reason": "The implementation commit, source hash manifest, command manifest, watcher-ready gate, and exclusive seed claim must be frozen before the single allowed opening."
+  },
+  "claim_boundary": {
+    "fixed_clock_physical_preflight_passed": true,
+    "h_obs_confirmed": false,
+    "learner_authorized": false,
+    "paper2_confirmed": false,
+    "paper3_authorized": false
+  }
+}
