@@ -1,0 +1,235 @@
+{
+  "schema_version": "program_o_state_rich_hobs_prelearner_v1",
+  "status": "DESIGN_PREREGISTRATION__AWAITS_IMPLEMENTATION_AND_TRACKED_EXECUTION_FREEZE",
+  "supersedes_for_h_obs": "contracts/program_o_hobs_prelearner_v1.json",
+  "supersession_reason": "The label-only HMM family (program_o_hobs_prelearner_v1) produced clean primary-cell development headroom but (a) failed cross-cell robustness and (b) obtained part of its visible-ReT gain by increasing actual transported payload, not by allocation at matched throughput. A direct oracle-parameter recomputation (belief_extreme with TRUE rho/share per cell) changed 0/192 trajectories, proving the failure is decisional-structure, not parametric; auto-calibration cannot repair it. The correct H_obs comparator is a finite, pre-registered state-rich classical controller family, measured against a throughput-matched frontier so it targets the same construct the perfect-information ceiling was certified under.",
+  "scientific_scope": "Observable adaptive value of a finite, pre-registered, non-anticipative state-rich CLASSICAL controller family in the disclosed two-product Program O researcher extension. A PASS establishes H_obs>0 via classical control only. It does NOT authorize a learner, does NOT confirm neural Paper 2, does NOT estimate the real MFSC product mix, and does NOT authorize Paper 3.",
+  "parent_hpi_contract": "contracts/program_o_full_des_hpi_translation_v1.json",
+  "parent_hpi_evidence": {
+    "path": "results/program_o/full_des_hpi_translation_v1/validation_custody_verdict_v1.json",
+    "sha256": "9dc23deda5684a30ff03bc91d04aa4de08c911bb5541d75456b703778d1a4219",
+    "status": "PASS_PROGRAM_O_FULL_DES_HPI_TRANSLATION_CUSTODY_VERIFIED",
+    "safe_h_pi": 0.15151378920653932,
+    "simultaneous_safe_lcb95": 0.1156159088651399,
+    "throughput_control_note": "The certified H_PI held gross_production_quantity delta = 0 and all charged/reserved resources equal. The clairvoyant value came from reallocating the C/H split at fixed throughput, NOT from moving more freight. H_obs MUST be measured under the same matched-throughput condition."
+  },
+  "label_only_development_evidence_preserved": {
+    "run": "program-o-hobs-fit-v1-20260715",
+    "selected_config": {"policy_id": "belief_extreme_v1", "initial_action": 2},
+    "primary_cell_mean_delta_vs_full_frontier": 0.0625,
+    "primary_cell_diagnostic_lcb95_reselected_frontier": 0.0407,
+    "status": "STRONG_DEVELOPMENT_SIGNAL_ONE_CELL__NOT_H_OBS",
+    "disposition": "Retained and reported as the motivating signal for this gate: a minimal observable policy shows development headroom in the primary regime but fails cross-cell robustness and matched-throughput resource fairness. Not discarded, not promotable.",
+    "refutation_of_autocalibration": "belief_extreme decides only by sign(belief_c-0.5); predicted_share_c-0.5 = (2*share-1)*(belief_c-0.5), so the action is invariant to the dominant_share magnitude, and symmetric transitions preserve sign. Oracle-true (rho,share) per cell changed 0/192 trajectories. A noisier online estimator can only match or worsen. Parametric self-calibration is therefore excluded."
+  },
+  "physics": {
+    "products": ["P_C", "P_H"],
+    "nonfungible": true,
+    "common_bom": true,
+    "equal_mass_and_processing_time": true,
+    "setup_hours": 0,
+    "substitution": 0,
+    "risks_enabled": false,
+    "weekly_actions": [0, 1, 2, 3],
+    "decision_weeks": 8,
+    "activation_delay_hours": 24,
+    "within_week_scheduler": "centered_minority_v1",
+    "op9_queue": "work_conserving_product_feasible_SPT",
+    "delivery_requires_op10_and_op12": true,
+    "post_fit_physics_changes_forbidden": true,
+    "inherit_from": "contracts/program_o_hobs_prelearner_v1.json physics block; identical physics, no change permitted"
+  },
+  "primary_cell": {"regime_persistence": 0.75, "dominant_product_share": 0.90},
+  "stability_cells": [
+    {"id": "rho75_share75", "regime_persistence": 0.75, "dominant_product_share": 0.75},
+    {"id": "rho75_share90", "regime_persistence": 0.75, "dominant_product_share": 0.90},
+    {"id": "rho90_share75", "regime_persistence": 0.90, "dominant_product_share": 0.75},
+    {"id": "rho90_share90", "regime_persistence": 0.90, "dominant_product_share": 0.90}
+  ],
+  "policy_model_parameters": {
+    "rule": "Every controller configuration is FROZEN on the primary-cell fit selection and applied UNCHANGED in all sensitivity cells. No controller is given the true sensitivity-cell (rho, share). Controllers may consume the label-history regime belief as a sufficient statistic (non-anticipative), but not the latent regime."
+  },
+  "observation_contract": {
+    "decision_barrier": "At week t, every consumed event and every operational-state read must reflect only physical facts with timestamp strictly less than decision_start+168*t. The current decision's own effect is excluded.",
+    "state_snapshot_rule": "Operational state is snapshotted from the certified full-DES state at the half-open barrier. Tagged WIP is counted exactly once (a committed lot is pipeline WIP, not also finished inventory). No current-week or future request quantity, no future skeleton arrival, no seed, no oracle, no score-time metric may enter the state vector.",
+    "allowed_state_vector": [
+      "regime_belief_c (from the label-history HMM filter, non-anticipative, primary-cell parameters)",
+      "inventory_position_P_C", "inventory_position_P_H",
+      "backlog_quantity_P_C", "backlog_quantity_P_H",
+      "backlog_max_age_P_C", "backlog_max_age_P_H",
+      "committed_pipeline_lots_P_C", "committed_pipeline_lots_P_H",
+      "blocked_production_slots",
+      "public_week_index",
+      "remaining_capacity_rights",
+      "prior_policy_actions"
+    ],
+    "explicitly_not_used": [
+      "latent regime", "current or future request product/quantity", "tape seed or hash",
+      "future skeleton arrivals", "oracle or best-calendar fields", "score-time metrics",
+      "true sensitivity-cell rho or share"
+    ],
+    "row_hash_required": true,
+    "no_double_counting_required": true,
+    "same_time_rule": "The whitelist is strictly half-open at decision_start+168*t; physical events or state transitions timestamped exactly at the barrier are not observations for the week-t action."
+  },
+  "finite_controller_family": {
+    "principle": "Small, strong, FINITE, fully enumerated. Each controller exposes at most two discrete hyperparameters on an enumerated grid. Internal solvers (min-cost flow, integer MPC, bounded DP) are exact/deterministic given the enumerated meta-parameters. No continuous parameter search of any kind; no post-fit retuning.",
+    "controllers": [
+      {
+        "id": "base_stock_per_product_v1",
+        "description": "Target inventory-position cover per product; allocate the 3 batch rights to raise the product furthest below its target, favoring the minority product to protect worst-product fill.",
+        "enumerated_grid": {"minority_cover_weeks": [0.5, 1.0, 1.5]},
+        "configurations": 3
+      },
+      {
+        "id": "max_pressure_hysteresis_v1",
+        "description": "Allocate batches to the product with highest pressure = backlog + pressure_weight_ratio*max_backlog_age, with a hysteresis band to avoid chattering across weeks.",
+        "enumerated_grid": {"pressure_weight_ratio": [0.0, 1.0, 4.0], "hysteresis_band": [0, 1]},
+        "configurations": 6
+      },
+      {
+        "id": "min_cost_flow_v1",
+        "description": "Exact minimum-cost allocation of the 3 slots minimizing weighted (holding_ratio*inventory_position + backlog) subject to feasibility; deterministic exact solve per week.",
+        "enumerated_grid": {"holding_ratio": [0.1, 0.5, 1.0]},
+        "configurations": 3
+      },
+      {
+        "id": "integer_mpc_v1",
+        "description": "Rolling integer program over a fixed horizon using belief-predicted request shares; maximize a predicted visible-ReT proxy subject to capacity and the same weekly action rights. Exact solve; only horizon and service weight enumerated.",
+        "enumerated_grid": {"horizon_weeks": [3, 4], "service_weight": ["low", "high"]},
+        "configurations": 4
+      },
+      {
+        "id": "belief_dp_bounded_v1",
+        "description": "Bounded backward dynamic program on (discretized regime belief, discretized inventory position) with coarse or fine discretization; exact given the grid.",
+        "enumerated_grid": {"discretization": ["coarse", "fine"]},
+        "configurations": 2
+      }
+    ],
+    "total_configurations": 18,
+    "source": "TO BE IMPLEMENTED by the concurrent process at supply_chain/program_o_state_rich_hobs.py; hashes bound by the execution freeze, not this design freeze.",
+    "selection": "Choose ONE configuration on the fit tapes by maximum mean canonical ReT among configurations that simultaneously (a) pass ALL mean guardrails including matched-throughput resource fairness, (b) beat every state placebo in mean, (c) pass the state-dependence certificate, and (d) yield a clean connected component of >=3 of 4 cells ON FIT. Deterministic tie-break: higher quantity-visible ReT, higher worst-product fill, fewer unresolved units, lower matched-throughput transport, controller order as listed, then lower hyperparameter index. If NO configuration satisfies (a)-(d) on fit, return STOP_NO_OBSERVABLE_HEADROOM and DO NOT open validation.",
+    "continuous_threshold_search": false,
+    "post_fit_retuning": false
+  },
+  "open_loop_denominator": {
+    "calendars": 65536,
+    "definition": "All base-4 length-eight calendars under the same weekly action rights and centered-minority scheduler.",
+    "unconstrained_frontier_contrast_reported": "Policy mean minus the maximum mean of all 65,536 calendars, reselected inside every paired bootstrap resample. Reported as a diagnostic upper bound on observed advantage.",
+    "binding_matched_throughput_frontier": "The BINDING H_obs contrast is policy mean minus the maximum mean over the THROUGHPUT-ADMISSIBLE static subset: calendars whose per-tape actual (loaded_departures, payload, downstream_vehicle_hours) are EACH >= the policy's corresponding per-tape actuals. This subset is recomputed and its max reselected inside every paired bootstrap resample. Rationale: the certified H_PI held gross production and all resources equal, so a legitimate observable conversion must beat a static that moves at least as much freight; beating only lower-throughput calendars is a throughput effect, not allocation intelligence.",
+    "empty_admissible_set_rule": "If for any tape no static calendar is throughput-admissible (policy out-transports the entire frontier on that tape), that tape is flagged and the gate returns STOP_RESOURCE_FRONTIER_CONFOUND.",
+    "randomized_mixture_note": "A tape-independent convex mixture cannot exceed its best pure member in expected ReT."
+  },
+  "primary_metric": {
+    "id": "ret_excel_request_snapshot_v2",
+    "implementation": "canonical compute_episode_metrics/request-snapshot aggregator only; hand-rolled ReT forbidden",
+    "workbook_formula_replay": "47,546 cached cells reproduced exactly when workbook Bt/Ut snapshots are injected",
+    "same_time_convention": "repository-defined half-open request snapshot with zero-time completion/loss barrier",
+    "claim_limit": "The formula and visible-row population are workbook-aligned. The endogenous same-time convention is a frozen researcher reconstruction, so any positive remains conditional on that explicit convention."
+  },
+  "mandatory_metrics": {
+    "higher_or_equal": ["ration_ret_visible", "ret_full", "quantity_ret_full", "ret_visible_cvar10", "worst_product_fill"],
+    "lower_or_equal": ["omitted_rows", "omitted_quantity", "lost_orders", "lost_quantity", "unresolved_orders", "unresolved_quantity", "max_backlog_age", "service_loss_auc"],
+    "additional_sensitivities": ["common-visible-row ReT", "union-of-generated-orders ReT with omitted rows scored zero", "fill_P_C", "fill_P_H", "ending inventory by product"]
+  },
+  "resource_contract": {
+    "reserved_envelope_equality_given": {
+      "gross_policy_batch_slots": 24,
+      "gross_production_quantity": 120000,
+      "charged_daily_dispatch_slots": 112,
+      "charged_downstream_vehicle_hours": 5376,
+      "rule": "All configurations reserve and are charged the same fixed-clock entitlement; equal by construction. This is the base resource match, not the binding fairness test."
+    },
+    "binding_fairness_test": "Matched-throughput frontier (see open_loop_denominator.binding_matched_throughput_frontier). The policy must beat a static that transports at least as much. This closes the actual-utilization confound WITHOUT forbidding the legitimate mechanism (improving fill necessarily raises payload); it forbids only winning by out-transporting the comparator.",
+    "actual_utilization_reported": ["actual_loaded_departures", "actual_payload", "actual_downstream_vehicle_hours"],
+    "throughput_decomposition_reported": "Report H_obs against (i) unconstrained frontier and (ii) matched-throughput frontier. The gap (i)-(ii) quantifies how much of the raw advantage is throughput rather than allocation.",
+    "stop_rule": "If the matched-throughput H_obs is not positive where the unconstrained one is, or the admissible set is empty on any tape, return STOP_RESOURCE_FRONTIER_CONFOUND. Utilization quantities may not be relabeled after results."
+  },
+  "state_placebos": {
+    "stale_state": "At week t use operational state as of week t-2 (delayed two weeks); do not update between.",
+    "cross_tape_state": "Feed the operational-state stream from the tape 17 positions later in ascending seed order, with wraparound; the same fixed shift-17 mapping is reused unchanged on validation.",
+    "swapped_state": "Swap the P_C and P_H state channels (inventory, backlog, age, committed lots) without changing the physical tape.",
+    "no_state": "Ignore all operational state; act on the regime belief alone under a fixed rule (the information-null policy).",
+    "promotion_rule": "The real-state controller must beat EVERY placebo with a simultaneous paired one-sided LCB95 greater than zero."
+  },
+  "nulls": {
+    "full_fungibility": "With fully fungible products every controller must be transition- and metric-identical to the static frontier; H_obs=0 exactly.",
+    "fixed_common_product_season": "The complete open-loop frontier must match the controller up to numerical tolerance.",
+    "rho50_or_share50": "Diagnostic information-null sensitivity; not a replacement primary cell."
+  },
+  "state_dependence_certificate": {
+    "record_all_observation_hashes_and_actions": true,
+    "minimum_unique_realized_calendars": 8,
+    "maximum_modal_sequence_fraction": 0.50,
+    "minimum_action_levels_with_ten_percent_support": 2,
+    "minimum_common_week_indices_with_cross_tape_variation": 2,
+    "not_reducible_to_any_single_calendar_required": true,
+    "state_perturbation_counterfactuals": [
+      "Swap the two products' (inventory, backlog, age) channels at an audited non-tie state: the action must map a -> 3-a (complementary allocation).",
+      "Increase the minority product's backlog by one batch-equivalent at an audited non-tie state: the batches allocated to the majority product must not increase."
+    ],
+    "tie_states_reported_separately": true,
+    "fixed_replacements": ["modal complete sequence", "fit phase-only per-week modal calendar", "fit-frozen best open-loop calendar", "validation-reselected matched-throughput frontier"],
+    "required": "The controller must beat modal and phase-only replacements with paired LCB95>0, satisfy every perturbation counterfactual at non-tie states, and beat the matched-throughput frontier at the practical gate. A controller that fails any perturbation direction returns STOP_STATE_INDEPENDENT_POLICY."
+  },
+  "tape_blocks": {
+    "fit": {"range": [7420001, 7420048], "status": "REUSE_BURNED_DEVELOPMENT_TAPES", "note": "Already opened by the label-only fit. Reused for development selection of this family; scientific integrity rests entirely on the sealed validation block opened once."},
+    "validation": {"range": [7420049, 7420096], "status": "SEALED_NOT_OPENED", "note": "Reserved for H_obs validation, never opened by the label-only gate. Opened once, only if the fit selection satisfies all fit-pass conditions including >=3 clean connected cells."},
+    "bootstrap_rng_seed": 7421999,
+    "future_learner_seeds_note": "The 742-series is NOT learner-virgin. A confirmatory neural Paper 2 comparison requires a fresh, previously unopened seed block allocated by a new custody correction."
+  },
+  "execution_sequence": [
+    "Concurrent process implements supply_chain/program_o_state_rich_hobs.py and scripts/screen_program_o_state_rich_hobs_fit.py, plus tests; commits with this contract, seed custody, watcher, and a fit-only execution freeze binding source hashes.",
+    "Open fit block 7420001-7420048 once under whole-session VPS custody; select one configuration by the frozen rule; retrieve and hash all artifacts.",
+    "Proceed to validation ONLY if the fit selection satisfies every fit_pass_rule condition, including the >=3 clean connected-cell requirement. Otherwise emit STOP and stop.",
+    "Commit the selected configuration and a separate validation execution freeze.",
+    "Open validation block 7420049-7420096 once under whole-session VPS custody; run 10,000 paired bootstrap with the matched-throughput frontier reselected each resample.",
+    "Run independent checksum/custody verification and direct full-DES replay of the selected controller's realized calendars."
+  ],
+  "fit_pass_rule": {
+    "primary_matched_throughput_mean_delta_minimum": 0.015,
+    "minimum_favorable_tapes": 34,
+    "all_mean_guardrails_pass_including_matched_throughput": true,
+    "real_state_mean_beats_each_placebo": true,
+    "state_dependence_certificate_pass": true,
+    "clean_connected_component_of_at_least_three_cells_on_fit_required": true,
+    "note": "The >=3 clean connected-cell precondition ON FIT is the decisive addition versus the label-only gate: it prevents opening the sealed validation tapes with a policy already known to fail cross-cell guardrail cleanliness."
+  },
+  "validation_pass_rule": {
+    "bootstrap_resamples": 10000,
+    "matched_throughput_frontier_reselected_each_resample": true,
+    "primary_and_connected_component_rule": "Primary rho75_share90 and a connected component of at least three of four cells spanning both rho and share levels must have simultaneous one-sided LCB95(H_obs over the matched-throughput frontier) >= 0.01.",
+    "primary_minimum_favorable_tapes": 34,
+    "ration_ret_visible_lcb95_minimum": 0.0,
+    "ret_full_lcb95_minimum": 0.0,
+    "quantity_ret_full_lcb95_minimum": 0.0,
+    "worst_product_fill_and_cvar_lcb95_minimum": 0.0,
+    "lost_orders_and_quantity_ucb95_maximum": 0.0,
+    "backlog_age_service_loss_ucb95_maximum": 0.0,
+    "matched_throughput_admissible_on_every_scored_tape": true,
+    "all_conservation_parity_null_placebo_and_state_dependence_gates_pass": true
+  },
+  "terminal_labels": {
+    "pass": "PASS_PROGRAM_O_STATE_RICH_OBSERVABLE_HEADROOM_PRELEARNER_GATE",
+    "no_headroom": "STOP_NO_OBSERVABLE_HEADROOM",
+    "information_placebo": "STOP_INFORMATION_PLACEBO",
+    "resource_frontier": "STOP_RESOURCE_FRONTIER_CONFOUND",
+    "state_independent": "STOP_STATE_INDEPENDENT_POLICY",
+    "invalid": "INVALID_OBSERVATION_OR_CUSTODY"
+  },
+  "downstream_ladder_documented_not_authorized": {
+    "on_pass": "H_obs>0 established via CLASSICAL observable control at matched throughput. This is NOT neural Paper 2. The passing controller becomes a mandatory comparator.",
+    "neural_paper2_gate": "Freeze a learner; comparator = elementwise maximum over {open-loop matched-throughput frontier, base_stock, max_pressure, min_cost_flow, integer_mpc, belief_dp, label-only interpretable}. The learner must win on a FRESH virgin confirmatory seed block (not 742-series) and pass the state-dependence and trajectory audits. Only then is neural Paper 2 confirmed.",
+    "paper3_gate": "Begins only after neural Paper 2: retained/persistent value vs reset/scratch/frozen, fresh campaigns, matched compute."
+  },
+  "source_hashes_at_contract_freeze": {},
+  "implementation_status": "DESIGN_PREREGISTRATION. Source files do not yet exist; their hashes are bound by the fit-only execution freeze the implementing process commits, not by this design freeze.",
+  "claim_boundary": {
+    "full_des_h_pi_established": true,
+    "state_rich_h_obs_established": false,
+    "even_on_pass_neural_paper2_not_confirmed": true,
+    "learner_authorized": false,
+    "paper2_confirmed": false,
+    "paper3_authorized": false
+  }
+}
