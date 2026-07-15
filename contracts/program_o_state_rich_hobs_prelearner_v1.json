@@ -1,6 +1,17 @@
 {
   "schema_version": "program_o_state_rich_hobs_prelearner_v1",
-  "status": "DESIGN_PREREGISTRATION__AWAITS_IMPLEMENTATION_AND_TRACKED_EXECUTION_FREEZE",
+  "status": "INDEPENDENT_CONVERGENT_DESIGN_REVIEW__NON_OPERATIONAL",
+  "reconciliation": {
+    "operational_gate": "contracts/program_o_state_rich_comparator_fit_v1.json",
+    "operational_implementation": "supply_chain/program_o_state_rich.py",
+    "relationship": "This file and the operational gate were authored independently and in parallel (convergent design). They agree on: the label-only refutation (0/192, structural not parametric), tape governance (development 7420001-48, sealed validation 7420049-96, no new random tapes), a finite non-anticipative state-rich classical family (base-stock, max-pressure/hysteresis, min-cost-flow, integer/belief MPC, bounded belief-DP), state placebos, a >=3 clean connected-cell stability requirement demonstrated ON FIT before opening validation, and resource fairness as a hard gate (reserved-envelope equality + actual-use non-superiority), not framing. The convergence is a positive validity signal.",
+    "this_file_is": "A non-operational independent design review. DO NOT execute from it. The operational gate above is canonical.",
+    "refinements_recommended_for_operational_gate": [
+      "State-dependence certificate: in addition to product-channel swap placebos, apply explicit STATE-perturbation counterfactuals to the WINNING policy at audited non-tie states (swap inventory/backlog/age channels -> complementary action a->3-a; increase minority backlog by a batch-equivalent -> majority allocation must not increase). Proves state-driven action, not a disguised calendar.",
+      "Resource rationale: tie the actual-use gate explicitly to the certified H_PI condition (gross_production_quantity delta = 0, all resources equal). H_obs must be measured under the same matched-throughput condition or it is not the same construct and eta = H_obs/H_PI is meaningless.",
+      "Resource strictness (governance choice): the operational gate requires policy mean actual use <= the best-ReT static's actual use. This review proposes the stricter matched-throughput frontier (H_obs contrast against the max over statics whose per-tape actual use >= the policy's, reselected each bootstrap). The stricter form more tightly isolates allocation intelligence from throughput; it can only reduce false positives. Governance should pick one before validation opens."
+    ]
+  },
   "supersedes_for_h_obs": "contracts/program_o_hobs_prelearner_v1.json",
   "supersession_reason": "The label-only HMM family (program_o_hobs_prelearner_v1) produced clean primary-cell development headroom but (a) failed cross-cell robustness and (b) obtained part of its visible-ReT gain by increasing actual transported payload, not by allocation at matched throughput. A direct oracle-parameter recomputation (belief_extreme with TRUE rho/share per cell) changed 0/192 trajectories, proving the failure is decisional-structure, not parametric; auto-calibration cannot repair it. The correct H_obs comparator is a finite, pre-registered state-rich classical controller family, measured against a throughput-matched frontier so it targets the same construct the perfect-information ceiling was certified under.",
   "scientific_scope": "Observable adaptive value of a finite, pre-registered, non-anticipative state-rich CLASSICAL controller family in the disclosed two-product Program O researcher extension. A PASS establishes H_obs>0 via classical control only. It does NOT authorize a learner, does NOT confirm neural Paper 2, does NOT estimate the real MFSC product mix, and does NOT authorize Paper 3.",

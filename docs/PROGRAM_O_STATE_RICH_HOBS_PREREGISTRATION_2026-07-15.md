@@ -7,6 +7,22 @@
 
 Titles / abstract / hypotheses in English per the reporting convention; rationale below.
 
+> **Reconciliation (2026-07-15).** The concurrent process authored an operational
+> state-rich gate — `contracts/program_o_state_rich_comparator_fit_v1.json` with
+> implementation `supply_chain/program_o_state_rich.py` — independently and in
+> parallel with this document. **The two designs converged**: same refutation,
+> same tape governance, same finite classical family (base-stock, max-pressure,
+> min-cost-flow, belief-MPC H3/4, belief-DP), same state placebos, same ≥3 clean
+> connected-cell fit stability, and the same principle that resource fairness is a
+> hard gate (reserved equality + actual-use non-superiority), not framing. That
+> convergence is a positive validity signal. **The operational gate is canonical;
+> this document is a non-operational independent design review** that additionally
+> recommends: (i) explicit STATE-perturbation counterfactuals on the winning policy
+> (not only label/channel swaps), (ii) tying the resource gate to the certified
+> H_PI Δgross_production=0 condition so η=H_obs/H_PI is a like-for-like ratio, and
+> (iii) a governance choice between the operational "≤ best-ReT static actual use"
+> and the stricter "matched-throughput frontier" contrast before validation opens.
+
 ---
 
 ## 1. Why this gate exists (the refutation that motivated it)
