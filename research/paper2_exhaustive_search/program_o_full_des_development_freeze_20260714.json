@@ -1,0 +1,109 @@
+{
+  "schema_version": "program_o_full_des_development_freeze_v1",
+  "status": "AUTHORIZED_PROGRAM_O_FULL_DES_HPI_DEVELOPMENT_ONLY",
+  "frozen_at_utc": "2026-07-15T01:14:59Z",
+  "implementation_source_commit": "46e805634bbd27868c053fe91d7bffc6733c21d0",
+  "execution_rule": "Run only from the clean immutable commit that contains this additive freeze and whose source hashes match this document.",
+  "parent_gate_o0": {
+    "screen_result": "results/program_o/gate_o0_full_action_transducer_v1/screen/result.json",
+    "screen_result_sha256": "0a9a83b4fea1395c2d982e0a14ae2d0bbd893c452f923b91d732df923c5c873b",
+    "validation_result": "results/program_o/gate_o0_full_action_transducer_v1/validation/result.json",
+    "validation_result_sha256": "665c26253a52fdb8362acacf27175ffac32b8ec9e6898d0e2b752c91dd3c6238",
+    "validation_status": "PASS_PROGRAM_O_GATE_O0_FULL_ACTION_TRANSDUCER",
+    "claim_boundary": "O-0 establishes full-action reduced-transducer H_PI only; it is not full-DES evidence."
+  },
+  "contract": {
+    "path": "contracts/program_o_full_des_hpi_translation_v1.json",
+    "sha256": "b721e687f35ac5e0f8a7fd315e7e041dabe8542895a2f09b14753bb86bcc7538",
+    "selected_cell": "rho75_share90",
+    "primary_metric": "ret_excel_request_snapshot_v2",
+    "cobb_douglas": "outside_contract"
+  },
+  "source_hashes": {
+    "supply_chain/program_o_full_des.py": "07e77e1efde94cd19e2fcba2ddb2bcc305b59dac1029ccfad33bd1974e5ea5cf",
+    "supply_chain/program_o_full_des_transducer.py": "1d1ee5c67aa24a19b217a2b5388f34bcb42b68a87cb657e193bb5ad3acbe65a3",
+    "scripts/screen_program_o_full_des_hpi.py": "01af93dce8e674102e5b83ea8878d6433b897a96f7d8a53829b7fda01efe98d8",
+    "scripts/launch_program_o_full_des_hpi.py": "12c62735c3e0a4539db54dcb369be4095f20f9698a729e50e16343902414d98f",
+    "scripts/run_program_o_full_des_hpi_custodied.py": "4cc58c39d58230464b44ebbd38d253b2c9f3a144c9d90d97e509f2b9d960ca13",
+    "scripts/watch_program_o_full_des_hpi.py": "0d44bf3c69a277604f0288cd6d347463804142a5a6edf9722a42e001f27be8af",
+    "supply_chain/supply_chain.py": "c720e2ce198b9330d81a9f29efc7456300f63b2dd9022489f584fba6fea585ea",
+    "supply_chain/ret_thesis.py": "a516cae034b8d428e584998e2baab73d752543e6199936b6e6eb0729c09cc805",
+    "tests/test_program_o_full_des.py": "de3949af4c2da2efd737d8c75edc4f4619d9542edad62c56d7278befc8678de5",
+    "tests/test_program_o_full_des_custody.py": "c2b39ebef60403d64f11f09e04f56485d8f5438fcf5d0a7db0c2ed15d51bc71b"
+  },
+  "preexecution_verification": {
+    "program_o_and_custody_tests": {
+      "command": ".venv/bin/python -m pytest -q tests/test_program_o_full_des.py tests/test_program_o_full_des_custody.py",
+      "result": "35 passed"
+    },
+    "metric_and_physics_tests": {
+      "command": ".venv/bin/python -m pytest -q tests/test_program_o_full_des.py tests/test_ret_excel_request_snapshot_contract.py tests/test_ret_excel_request_snapshot_v2_audit.py tests/test_downstream_dispatch_conservation.py tests/test_material_lineage.py",
+      "result": "53 passed before custody tests; 56 passed after custody integration"
+    },
+    "direct_transducer_parity": {
+      "burned_seed": 7400048,
+      "profiles": 4,
+      "direct_replay_calendars": 1045,
+      "maximum_absolute_error": 4.440892098500626e-16,
+      "status": "development_diagnostic_not_scientific_evidence"
+    },
+    "repository_suite": {
+      "command": ".venv/bin/python -m pytest -q tests",
+      "result": "961 passed, 2 skipped, 9 failed",
+      "program_o_or_snapshot_fixture_failures": 0,
+      "known_failures": [
+        "historical Track-B observation-width expectation",
+        "K3 certificate source binding stale after canonical metric/core edits",
+        "retired manuscript phrase outside Program O",
+        "metric-governance audit source hashes stale after canonical snapshot fix",
+        "Paper-2 reproducibility manifest source hash stale",
+        "terminal-readiness hashes stale after concurrent registry edits",
+        "Program-J retrospective audit source binding stale after canonical metric edits",
+        "historical absolute paths in tracked research documents",
+        "historical Track-B heuristic-count expectation"
+      ],
+      "governance": "Do not silently rebind historical scientific results to current source code. These failures remain disclosed and cannot promote Program O."
+    }
+  },
+  "seed_custody": {
+    "development": {
+      "range": [7400049, 7400072],
+      "status": "SEALED_UNTIL_THIS_FREEZE_IS_COMMITTED_AND_VPS_PREFLIGHT_PASSES"
+    },
+    "validation": {
+      "range": [7400073, 7400096],
+      "status": "SEALED_NOT_AUTHORIZED_UNTIL_DEVELOPMENT_PASS_IS_RETRIEVED_HASHED_AUDITED_AND_AN_ADDITIVE_VALIDATION_FREEZE_IS_COMMITTED"
+    }
+  },
+  "custody_requirements": {
+    "watcher_before_producer": true,
+    "prestart_heartbeat_required": true,
+    "whole_sid_and_pgid_monitored": true,
+    "reparented_children_monitored": true,
+    "running_job_is_evidence": false,
+    "terminal_group_must_be_empty": true,
+    "remote_per_file_checksums_required": true,
+    "retrieved_per_file_checksum_replay_required": true,
+    "immutable_commit_and_contract_hashes_required": true
+  },
+  "development_terminal_rule": {
+    "pass": "Exactly the development_pass_rule in the frozen contract, including safe H_PI, all guardrails, conservation, direct parity, ordering sensitivities, and exact fungible aggregate null.",
+    "fail": "STOP_PROGRAM_O_FULL_DES_TRANSLATION",
+    "forbidden_rescues": [
+      "setup loss",
+      "unequal BOM",
+      "partial substitution",
+      "risk addition or escalation",
+      "extra initial inventory",
+      "metric replacement",
+      "post-result product-mix cells"
+    ]
+  },
+  "claim_boundary": {
+    "full_des_h_pi_established": false,
+    "h_obs_authorized": false,
+    "learner_authorized": false,
+    "paper2_confirmed": false,
+    "paper3_authorized": false
+  }
+}
