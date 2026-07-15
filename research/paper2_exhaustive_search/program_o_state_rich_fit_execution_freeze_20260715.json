@@ -1,0 +1,46 @@
+{
+  "schema_version": "program_o_state_rich_fit_execution_freeze_v1",
+  "status": "FROZEN_BEFORE_STATE_RICH_FIT_EVALUATION",
+  "run_id": "program-o-state-rich-fit-v1-20260715",
+  "scientific_commit": "5663c53ca5cb0064835666983e5c77d99b00bddc",
+  "contract": "contracts/program_o_state_rich_comparator_fit_v1.json",
+  "contract_sha256": "97885cf771656cf1829899af9e9dcdd09dc93c2c9aa4e9f683555a3d43c8680d",
+  "source_sha256": {
+    "supply_chain/program_o_state_rich.py": "08641bf1d2e26a660bdf23588019b42dff7ba4f6e812003c95c63133dffc695a",
+    "scripts/screen_program_o_state_rich_fit.py": "7dfb769d9d15c1d1586390e2f9d6b95881537d49539b57dc6735574b32f6777e",
+    "tests/test_program_o_state_rich.py": "2210283e89444c8ff6b29ac4306ad5b993d83ab35d734690058dfb5ee557454d"
+  },
+  "preflight": {
+    "focused_tests": "66 passed, 1 workbook-reader warning",
+    "direct_operational_state_parity_fixture": 7400048,
+    "lint": "PASS",
+    "json_validation": "PASS"
+  },
+  "parent_run": {
+    "run_id": "program-o-hobs-fit-v1-20260715",
+    "result": "outputs/program_o_runs/program-o-hobs-fit-v1-20260715/artifacts/fit/result.json",
+    "result_sha256": "2de51be686539ccc801566a2886d7b0ec27ff1e30a8694eb5a0a2f15fc7a9cd0",
+    "raw_matrix_shards": 192,
+    "matrix_hash_rule": "Every shard must match the hash recorded in the parent result before evaluation."
+  },
+  "tape_custody": {
+    "burned_fit_only": [7420001, 7420048],
+    "sealed_validation": [7420049, 7420096],
+    "validation_access_authorized": false,
+    "new_tape_generation_authorized": false
+  },
+  "execution": {
+    "entrypoint": "scripts/screen_program_o_state_rich_fit.py",
+    "output": "outputs/program_o_runs/program-o-state-rich-fit-v1-20260715/artifacts/fit",
+    "overwrite_forbidden": true,
+    "complete_result_required": true,
+    "running_job_is_evidence": false
+  },
+  "claim_boundary": {
+    "full_des_h_pi_established": true,
+    "h_obs_established": false,
+    "learner_authorized": false,
+    "paper2_confirmed": false,
+    "paper3_authorized": false
+  }
+}
