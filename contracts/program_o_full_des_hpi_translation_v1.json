@@ -1,0 +1,225 @@
+{
+  "schema_version": "program_o_full_des_hpi_translation_v1",
+  "status": "FROZEN_IMPLEMENTATION_PRE_SEED_7400049",
+  "parent_contract": "contracts/program_o_full_action_transducer_v1.json",
+  "gate_o0_validation": "results/program_o/gate_o0_full_action_transducer_v1/validation/result.json",
+  "scientific_scope": "Two synthetic nonfungible mission-suitability product classes carried through the full Op1-Op13 DES. The only thesis anchor is the documented collapse of 21 real ration types into one homogeneous simulated ration.",
+  "claim_limit": "A pass establishes only resource-restricted perfect-information headroom in a disclosed two-product researcher extension. It is not an MFSC product-mix estimate, H_obs, learned value, Paper 2 confirmation, or Paper 3 authorization.",
+  "selected_cell": {
+    "cell_id": "rho75_share90",
+    "regime_persistence": 0.75,
+    "dominant_product_share": 0.90,
+    "selection_rule": "Frozen before full-DES execution as the least-favorable validated O-0 cell among the four primary cells by original validation H_PI."
+  },
+  "base_des": {
+    "shifts": 1,
+    "risks_enabled": false,
+    "stochastic_processing_times": false,
+    "year_basis": "thesis",
+    "raw_material_flow_mode": "kit_equivalent_order_up_to",
+    "procurement_contract_mode": "causal_coupled",
+    "replenishment_route_aware": true,
+    "assembly_flow_mode": "aggregate_line",
+    "op8_dispatch_mode": "thesis_full_batch",
+    "order_fulfillment_mode": "op9_linked",
+    "op9_dispatch_policy": "fixed_clock_daily",
+    "downstream_transport_capacity_mode": "tandem_capacity_one",
+    "cssu_topology_mode": "aggregate",
+    "strict_exogenous_crn": true
+  },
+  "product_physics": {
+    "products": ["P_C", "P_H"],
+    "gross_mass_per_ration": "equal",
+    "production_rate": "equal",
+    "common_BOM": "identical",
+    "product_specific_components": "none",
+    "setup_hours": 0,
+    "substitution_fraction": 0,
+    "expiry": "disabled",
+    "product_commitment_point": "start of the first physical production hour assigned to each 5000-ration target",
+    "relabel_after_commitment": "forbidden"
+  },
+  "action": {
+    "cadence_hours": 168,
+    "activation_delay_hours": 24,
+    "levels": [0, 1, 2, 3],
+    "meaning": "number of each week's next three gross batch targets assigned to P_C",
+    "primary_scheduler": "centered_minority_v1",
+    "within_week_schedulers": {
+      "centered_minority_v1": {
+        "0": ["P_H", "P_H", "P_H"],
+        "1": ["P_H", "P_C", "P_H"],
+        "2": ["P_C", "P_H", "P_C"],
+        "3": ["P_C", "P_C", "P_C"]
+      },
+      "blocked_right_v1": {
+        "0": ["P_H", "P_H", "P_H"],
+        "1": ["P_H", "P_H", "P_C"],
+        "2": ["P_C", "P_C", "P_H"],
+        "3": ["P_C", "P_C", "P_C"]
+      },
+      "blocked_left_v1": {
+        "0": ["P_H", "P_H", "P_H"],
+        "1": ["P_C", "P_H", "P_H"],
+        "2": ["P_H", "P_C", "P_C"],
+        "3": ["P_C", "P_C", "P_C"]
+      }
+    },
+    "horizon_weeks": 8,
+    "complete_open_loop_frontier": 65536,
+    "gross_policy_batch_slots": 24,
+    "target_overwrite": "forbidden"
+  },
+  "initialization": {
+    "neutral_prefix_targets": ["P_C", "P_H"],
+    "treatment_anchor": "one actual 5000-ration P_C lot and one actual 5000-ration P_H lot have traversed Op1-Op9 and are simultaneously present at Op9",
+    "injected_finished_inventory": 0,
+    "production_without_committed_target": "blocked",
+    "prefix_state_hash_identical_across_calendars": true
+  },
+  "demand": {
+    "orders": 48,
+    "weekly_request_offsets_hours": [30, 54, 78, 102, 126, 150],
+    "quantity_distribution": "native thesis U_integer[2400,2600] on the dedicated demand RNG stream",
+    "product_labels": "event-keyed frozen Program O tape; no policy RNG calls",
+    "new_demand_after_week_8": false
+  },
+  "queue": {
+    "primary": "work-conserving product-feasible spt_contingent",
+    "rule": "Among the existing policy-independent priority ordering, release the first full order whose requested product is physically available. An incompatible product head cannot block a feasible order of the other product.",
+    "cross_product_substitution": false,
+    "cap_orders": 60
+  },
+  "same_time_event_convention": {
+    "op9_daily_release_before_op8_arrival": true,
+    "interpretation": "A product lot reaching Op9 exactly at a daily release timestamp is not eligible for that release and becomes eligible at the next daily slot.",
+    "request_snapshot_interval": "A prior order contributes to Bt on [OPTj+LTj, min(OATj,lost_time)); the current request is excluded from its own snapshot.",
+    "completion_or_loss_at_request_timestamp": "A completion or loss at the exact request timestamp is applied before the new request snapshot through the zero-time request barrier.",
+    "scheduler_invariance_required": true
+  },
+  "horizon": {
+    "request_window_hours": 1344,
+    "clearance_tail_hours": 1344,
+    "score_time_hours_after_treatment": 2688
+  },
+  "metric": {
+    "primary": "ret_excel_request_snapshot_v2",
+    "implementation": "supply_chain.episode_metrics.compute_episode_metrics",
+    "hand_rolled_ret_forbidden": true,
+    "cobb_douglas": "outside contract"
+  },
+  "resource_envelope": {
+    "gross_production_batch_slots": 24,
+    "gross_production_quantity": 120000,
+    "reserved_op9_daily_slots_over_request_and_clearance_window": 112,
+    "reserved_op10_vehicle_days": 112,
+    "reserved_op12_vehicle_days": 112,
+    "charged_downstream_vehicle_hours": 5376,
+    "interpretation": "The fixed daily freight entitlement is reserved whether loaded or empty. Loaded departures and payload are reported as utilization/outcomes, not extra purchased capacity.",
+    "report_actual_utilization": true
+  },
+  "safe_oracle_constraints_per_tape": {
+    "higher_or_equal": [
+      "visible_rows",
+      "ret_full",
+      "quantity_ret_full",
+      "ret_visible_cvar10",
+      "fill_P_C",
+      "fill_P_H",
+      "worst_product_fill"
+    ],
+    "lower_or_equal": [
+      "omitted_rows",
+      "omitted_quantity",
+      "lost_orders",
+      "lost_quantity",
+      "unresolved_orders",
+      "unresolved_quantity",
+      "remaining_quantity_P_C",
+      "remaining_quantity_P_H",
+      "max_backlog_age",
+      "service_loss_auc"
+    ],
+    "equal": [
+      "generated_orders",
+      "gross_policy_batch_slots",
+      "gross_production_quantity",
+      "charged_daily_dispatch_slots",
+      "charged_downstream_vehicle_hours"
+    ],
+    "conservation_absolute_tolerance": 1e-8
+  },
+  "parity_gate": {
+    "direct_all_calendars_horizons_weeks": [1, 2],
+    "direct_boundary_calendars_horizon_3": "all constants, all single-switch extremes, calibration static, and every transducer oracle tie",
+    "direct_horizon_8": "selected static, every per-tape oracle/tie, all constants/extremes, and 256 deterministic sampled calendars per tape",
+    "required_fields": [
+      "batch arrival events",
+      "OPTj",
+      "OATj",
+      "CTj",
+      "request Bt/Ut snapshots",
+      "product inventory",
+      "visible ReT",
+      "full ReT",
+      "lost and unresolved orders",
+      "worst-product fill",
+      "resource ledger",
+      "product and aggregate conservation"
+    ],
+    "tolerance": 1e-10
+  },
+  "nulls_and_sensitivities": {
+    "full_fungibility": "All calendars must have bit-identical aggregate physical outcomes, order ledgers, metrics, and charged resources; H_PI=0 exactly.",
+    "single_product": "Action labels cannot change any transition.",
+    "fixed_deterministic_product_season": "The complete open-loop frontier must match the oracle.",
+    "within_week_ordering": ["centered_minority_v1", "blocked_right_v1", "blocked_left_v1"],
+    "zero_initial_finished_stock": "directional sensitivity, not primary"
+  },
+  "tape_blocks": {
+    "development": {
+      "range": [7400049, 7400072],
+      "status": "SEALED_NOT_OPENED_PENDING_IMPLEMENTATION_TESTS_AND_COMMIT"
+    },
+    "validation": {
+      "range": [7400073, 7400096],
+      "status": "SEALED_NOT_AUTHORIZED_PENDING_DEVELOPMENT_PASS_AND_ADDITIVE_FREEZE"
+    }
+  },
+  "development_pass_rule": {
+    "mean_safe_h_pi_minimum": 0.015,
+    "minimum_favorable_tapes": 17,
+    "minimum_unique_safe_oracle_calendars": 4,
+    "maximum_modal_safe_oracle_fraction": 0.85,
+    "minimum_material_action_levels": 2,
+    "all_guardrails_pass": true,
+    "all_conservation_and_parity_tests_pass": true,
+    "full_fungibility_null_exact": true,
+    "within_week_ordering_direction_stable": true
+  },
+  "validation_pass_rule": {
+    "simultaneous_one_sided_lcb95_safe_h_pi_minimum": 0.01,
+    "bootstrap_resamples": 10000,
+    "bootstrap_rng_seed": 7400999,
+    "static_reselected_over_all_65536_each_resample": true,
+    "safe_oracle_recomputed_each_resample": true
+  },
+  "terminal_labels": {
+    "development_pass": "PASS_PROGRAM_O_FULL_DES_HPI_DEVELOPMENT",
+    "validation_pass": "PASS_PROGRAM_O_FULL_DES_HPI_TRANSLATION",
+    "stop": "STOP_PROGRAM_O_FULL_DES_TRANSLATION",
+    "invalid": "INVALID_PROGRAM_O_FULL_DES_NO_EVIDENCE"
+  },
+  "forbidden_rescues": [
+    "setup loss",
+    "unequal BOM",
+    "partial substitution",
+    "risk addition or escalation",
+    "extra initial inventory",
+    "metric replacement",
+    "post-result product-mix cells"
+  ],
+  "h_obs_authorized": false,
+  "learner_authorized": false,
+  "paper3_authorized": false
+}

@@ -3409,6 +3409,34 @@ class MFSCSimulation:
     # ASSEMBLY LINE — HOURLY GRANULARITY (fixes daily-check bias)
     # =====================================================================
 
+    def _assembly_output_capacity(self, nominal_capacity: float) -> float:
+        """Return the ration output capacity available to the active contract.
+
+        The base DES has no product-target commitment and therefore returns the
+        nominal capacity unchanged.  Researcher extensions may reduce this
+        value only through a disclosed, resource-accounted commitment gate.
+        Keeping the hook synchronous and identity-valued by default makes the
+        flags-off trajectory exactly the historical implementation.
+        """
+        return float(nominal_capacity)
+
+    def _record_assembly_product_output(self, quantity: float) -> None:
+        """Optional metadata hook after physical ration production."""
+
+    def _stage_product_metadata(self, quantity: float) -> None:
+        """Optional metadata hook before a finished batch enters Op8 stock."""
+
+    def _take_op8_product_metadata(self, quantity: float) -> Any:
+        """Optional metadata hook after the physical Op8 batch withdrawal."""
+        return None
+
+    def _arrive_op8_product_metadata(self, token: Any, quantity: float) -> None:
+        """Optional metadata hook before the physical Op9 inventory put."""
+
+    def _op8_warmup_ready(self) -> bool:
+        """Whether an Op8 arrival satisfies the active warm-up contract."""
+        return True
+
     def _assembly_hourly(self):
         """
         Op5-7: Assembly line at HOURLY resolution.
@@ -3455,6 +3483,9 @@ class MFSCSimulation:
                     ADAPTIVE_BENCHMARK_MAINTENANCE["throughput_penalty_max"]
                 )
                 effective_rate *= max(0.0, 1.0 - penalty * self.maintenance_debt)
+            effective_rate = max(
+                0.0, float(self._assembly_output_capacity(effective_rate))
+            )
             rework_qty = min(effective_rate, rework_available)
             raw_capacity = max(0.0, effective_rate - rework_qty)
             raw_ration_capacity = rm_available / max(self._raw_units_per_ration, 1.0)
@@ -3485,6 +3516,7 @@ class MFSCSimulation:
                     self.total_raw_material_consumed += raw_units_qty
                     self.total_rations_created_from_raw += raw_produced_qty
                 self._pending_batch += can_produce
+                self._record_assembly_product_output(can_produce)
                 self._today_produced += can_produce
                 self.total_produced += can_produce
 
@@ -3624,6 +3656,7 @@ class MFSCSimulation:
         """Move completed Op7 rations into the auditable Op8 staging stock."""
         qty = float(qty)
         was_empty = float(self.rations_al.level) <= 1e-9
+        self._stage_product_metadata(qty)
         yield self.rations_al.put(qty)
         self._record_material_availability("rations_al", qty)
         batch_lineage = self._lineage_take("pending_batch", qty)
@@ -3928,6 +3961,7 @@ class MFSCSimulation:
         while True:
             batch_size = self.params["batch_size"]
             yield self.rations_al.get(batch_size)
+            product_token = self._take_op8_product_metadata(batch_size)
             lineage = self._lineage_take("rations_al", batch_size)
             departed_at = float(self.env.now)
             self._in_transit += batch_size
@@ -3935,6 +3969,7 @@ class MFSCSimulation:
                 yield self.env.timeout(1)
             yield self.env.timeout(self._pt("op8_pt"))
             self._in_transit -= batch_size
+            self._arrive_op8_product_metadata(product_token, batch_size)
             yield self.rations_sb.put(batch_size)
             self._record_material_availability("rations_sb", batch_size)
             op8_refs = self._consume_pending_stage_refs("op8_output")
@@ -3960,7 +3995,7 @@ class MFSCSimulation:
                         for event in self._upstream_scarcity_debts
                         if float(event.end_time) > departed_at
                     ]
-            if self.warmup_trigger == "op9_arrival":
+            if self.warmup_trigger == "op9_arrival" and self._op8_warmup_ready():
                 self._mark_warmup_complete()
             if (
                 self.order_fulfillment_mode == "op9_linked"
@@ -4088,7 +4123,13 @@ class MFSCSimulation:
             ))
         if not self.pending_backorders:
             return False
-        head = self.pending_backorders[0]
+        head = self._select_op9_dispatch_order()
+        if head is None:
+            for pending in self.pending_backorders:
+                self._record_active_upstream_stockout_causes(
+                    pending, duration=float(next_check_hours)
+                )
+            return False
         if self._is_down(9):
             self._record_causal_block(
                 head,
@@ -4108,20 +4149,7 @@ class MFSCSimulation:
                 head, duration=float(next_check_hours)
             )
             return False
-        yield self.rations_sb.get(qty)
-        self._record_material_availability("order_release", qty)
-        consumed_lineage = self._lineage_take("rations_sb", qty)
-        for item in consumed_lineage:
-            if not item.risk_event_refs:
-                continue
-            head.consumed_material_lineage.append(
-                {
-                    "lot_id": item.lot_id,
-                    "quantity": float(item.quantity),
-                    "risk_event_refs": list(item.risk_event_refs),
-                    "source_stage": item.source_stage,
-                }
-            )
+        yield from self._reserve_op9_order_stock(head, qty)
         head.remaining_qty = 0.0
         head.in_flight_qty += qty
         head.op9_release_time = float(self.env.now)
@@ -4131,6 +4159,34 @@ class MFSCSimulation:
         self.env.process(self._deliver_order_from_op9(head, qty))
         self._remove_pending_backorder(head)
         return True
+
+    def _select_op9_dispatch_order(self) -> OrderRecord | None:
+        """Return the next physically eligible order under the active contract.
+
+        The base contract preserves strict SPT-head service.  A product-aware
+        extension may skip an incompatible product head only to implement a
+        frozen work-conserving, product-feasible queue; it may not use future
+        demand or change the priority key among feasible orders.
+        """
+        return self.pending_backorders[0] if self.pending_backorders else None
+
+    def _reserve_op9_order_stock(self, order: OrderRecord, quantity: float):
+        """Atomically reserve aggregate Op9 stock and its optional metadata."""
+        qty = float(quantity)
+        yield self.rations_sb.get(qty)
+        self._record_material_availability("order_release", qty)
+        consumed_lineage = self._lineage_take("rations_sb", qty)
+        for item in consumed_lineage:
+            if not item.risk_event_refs:
+                continue
+            order.consumed_material_lineage.append(
+                {
+                    "lot_id": item.lot_id,
+                    "quantity": float(item.quantity),
+                    "risk_event_refs": list(item.risk_event_refs),
+                    "source_stage": item.source_stage,
+                }
+            )
 
     def set_cssu_allocation_action(
         self,
@@ -4419,9 +4475,15 @@ class MFSCSimulation:
         self.total_delivered += qty
         self.total_order_fulfilled += qty
         self.delivery_events.append((self.env.now, qty))
+        self._on_order_physical_delivery(order, qty)
         order.in_flight_qty = max(0.0, float(order.in_flight_qty) - qty)
         if order.remaining_qty <= 1e-9 and order.in_flight_qty <= 1e-9:
             self._finalize_pending_backorder(order)
+
+    def _on_order_physical_delivery(
+        self, order: OrderRecord, quantity: float
+    ) -> None:
+        """Optional metadata hook after both downstream physical legs."""
 
     def _wait_order_for_operation(self, order: OrderRecord, op_id: int):
         """Wait for an operation and retain the exact order-specific block."""

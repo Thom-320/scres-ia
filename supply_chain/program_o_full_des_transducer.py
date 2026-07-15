@@ -1,0 +1,511 @@
+"""Certified event transducer for Program O's risk-off full-DES contract.
+
+One direct SimPy run extracts the action-independent Op1--Op13 physical
+skeleton: treatment anchor, batch-arrival times, native demand quantities and
+times, and fixed daily Op9 slots.  This module replays only the product-feasible
+state transition over the complete open-loop frontier.  Promotion requires
+direct-SimPy parity; the transducer alone is never full-DES evidence.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+import hashlib
+from itertools import product
+import json
+import math
+import re
+from typing import Any, Mapping, Sequence
+
+import numpy as np
+
+from supply_chain.program_o_full_des import (
+    PRODUCTS,
+    ProgramOFullDESSimulation,
+)
+from supply_chain.ret_thesis import (
+    compute_order_level_ret_excel_request_snapshot_ledger,
+)
+
+POLICY_SLOT_PATTERN = re.compile(r"^policy:w(?P<week>\d+):s(?P<position>\d+)$")
+
+MATRIX_KEYS = (
+    "ret_visible",
+    "ret_full",
+    "quantity_ret_full",
+    "ration_ret_visible",
+    "ret_visible_cvar10",
+    "visible_rows",
+    "omitted_rows",
+    "omitted_quantity",
+    "generated_orders",
+    "lost_orders",
+    "lost_quantity",
+    "unresolved_orders",
+    "unresolved_quantity",
+    "remaining_quantity_P_C",
+    "remaining_quantity_P_H",
+    "max_backlog_age",
+    "service_loss_auc",
+    "fill_P_C",
+    "fill_P_H",
+    "worst_product_fill",
+    "ending_inventory_P_C",
+    "ending_inventory_P_H",
+    "ending_inventory_total",
+    "gross_policy_batch_slots",
+    "gross_production_quantity",
+    "charged_daily_dispatch_slots",
+    "charged_downstream_vehicle_hours",
+    "actual_loaded_departures",
+    "actual_payload",
+    "actual_downstream_vehicle_hours",
+    "mass_residual",
+)
+
+
+def _digest(value: Any) -> str:
+    return hashlib.sha256(
+        json.dumps(value, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
+
+
+@dataclass(frozen=True)
+class FullDESSkeleton:
+    seed: int
+    decision_start: float
+    score_time: float
+    batch_arrivals: tuple[tuple[float, int, int], ...]
+    order_times: tuple[float, ...]
+    order_quantities: tuple[float, ...]
+    order_products: tuple[str, ...]
+    release_slots: tuple[float, ...]
+    opening_inventory: tuple[float, float]
+    tape_sha256: str
+    prefix_state_hash: str
+    skeleton_sha256: str
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "seed": self.seed,
+            "decision_start": self.decision_start,
+            "score_time": self.score_time,
+            "batch_arrivals": [list(row) for row in self.batch_arrivals],
+            "order_times": list(self.order_times),
+            "order_quantities": list(self.order_quantities),
+            "order_products": list(self.order_products),
+            "release_slots": list(self.release_slots),
+            "opening_inventory": list(self.opening_inventory),
+            "tape_sha256": self.tape_sha256,
+            "prefix_state_hash": self.prefix_state_hash,
+            "skeleton_sha256": self.skeleton_sha256,
+        }
+
+
+def full_action_calendars() -> np.ndarray:
+    return np.asarray(tuple(product(range(4), repeat=8)), dtype=np.uint8)
+
+
+def direct_full_des_vector(
+    sim: ProgramOFullDESSimulation, panel: Mapping[str, Any]
+) -> dict[str, float]:
+    """Project one direct SimPy episode onto the transducer matrix schema."""
+    metrics = panel["metrics"]
+    products = panel["products"]
+    resources = panel["resources"]
+    conservation = panel["conservation"]
+    visible = compute_order_level_ret_excel_request_snapshot_ledger(sim.orders)
+    visible_quantity = sum(float(row["quantity"]) for row in visible["ret_rows"])
+    ration_ret_visible = (
+        sum(float(row["ret"]) * float(row["quantity"]) for row in visible["ret_rows"])
+        / visible_quantity
+        if visible_quantity > 0.0
+        else 0.0
+    )
+    orders = [
+        order
+        for order in sim.orders
+        if not order.metrics_excluded
+        and float(order.OPTj) >= float(sim.program_o_decision_start or 0.0)
+    ]
+    omitted_quantity = sum(
+        float(order.remaining_qty) + float(order.in_flight_qty)
+        for order in orders
+        if order.OATj is None
+    )
+    lost_quantity = sum(float(order.quantity) for order in orders if order.lost)
+    output = {
+        "ret_visible": float(metrics["ret_excel"]),
+        "ret_full": float(metrics["ret_excel_full_ledger"]),
+        "quantity_ret_full": float(metrics["ration_ret_excel"]),
+        "ration_ret_visible": float(ration_ret_visible),
+        "ret_visible_cvar10": float(metrics["ret_excel_cvar10"]),
+        "visible_rows": float(metrics["ret_excel_visible_n"]),
+        "omitted_rows": float(metrics["ret_excel_omitted_n"]),
+        "omitted_quantity": float(omitted_quantity),
+        "generated_orders": float(metrics["n_orders"]),
+        "lost_orders": float(metrics["n_lost"]),
+        "lost_quantity": float(lost_quantity),
+        "unresolved_orders": float(metrics["n_orders"] - metrics["n_served"]),
+        "unresolved_quantity": float(omitted_quantity),
+        "remaining_quantity_P_C": float(products["P_C"]["unresolved_quantity"]),
+        "remaining_quantity_P_H": float(products["P_H"]["unresolved_quantity"]),
+        "max_backlog_age": float(metrics["backlog_age_max"]),
+        "service_loss_auc": float(metrics["service_loss_auc_ration_hours"]),
+        "fill_P_C": float(products["P_C"]["fill"]),
+        "fill_P_H": float(products["P_H"]["fill"]),
+        "worst_product_fill": float(panel["worst_product_fill"]),
+        "ending_inventory_P_C": float(
+            conservation["per_product"]["P_C"]["nodes"]["rations_sb"]
+        ),
+        "ending_inventory_P_H": float(
+            conservation["per_product"]["P_H"]["nodes"]["rations_sb"]
+        ),
+        "ending_inventory_total": float(
+            conservation["per_product"]["P_C"]["nodes"]["rations_sb"]
+            + conservation["per_product"]["P_H"]["nodes"]["rations_sb"]
+        ),
+        "gross_policy_batch_slots": float(resources["committed_action_batch_slots"]),
+        "gross_production_quantity": float(
+            resources["gross_action_production_quantity"]
+        ),
+        "charged_daily_dispatch_slots": float(
+            resources["charged_daily_dispatch_slots"]
+        ),
+        "charged_downstream_vehicle_hours": float(
+            resources["charged_downstream_vehicle_hours"]
+        ),
+        "actual_loaded_departures": float(resources["actual_loaded_departures"]),
+        "actual_payload": float(resources["actual_payload"]),
+        "actual_downstream_vehicle_hours": float(
+            resources["actual_downstream_vehicle_hours"]
+        ),
+        "mass_residual": float(conservation["max_abs_product_residual"]),
+    }
+    if tuple(output) != MATRIX_KEYS:
+        raise AssertionError("direct full-DES vector schema drift")
+    return output
+
+
+def normalize_scheduler(scheduler: Mapping[str, Sequence[str]]) -> np.ndarray:
+    index = {product_id: idx for idx, product_id in enumerate(PRODUCTS)}
+    return np.asarray(
+        [
+            [index[product_id] for product_id in scheduler[str(action)]]
+            for action in range(4)
+        ],
+        dtype=np.uint8,
+    )
+
+
+def extract_full_des_skeleton(
+    *,
+    seed: int,
+    scheduler: Mapping[str, Sequence[str]],
+    regime_persistence: float,
+    dominant_share: float,
+) -> tuple[FullDESSkeleton, ProgramOFullDESSimulation]:
+    """Run one direct calendar and extract only action-independent events."""
+    sim = ProgramOFullDESSimulation(
+        seed=int(seed),
+        calendar=(2,) * 8,
+        scheduler=scheduler,
+        regime_persistence=float(regime_persistence),
+        dominant_share=float(dominant_share),
+        complete_substitution=False,
+    ).run_contract()
+    arrivals: dict[tuple[int, int], float] = {}
+    for event in sim.program_o_product_events:
+        if event["event"] != "op8_arrived_sb":
+            continue
+        tokens = event["tokens"]
+        if len(tokens) != 1:
+            raise AssertionError("full-DES policy batch arrival is not one product lot")
+        match = POLICY_SLOT_PATTERN.match(str(tokens[0]["lot_id"]))
+        if match is None:
+            continue
+        key = (int(match.group("week")), int(match.group("position")))
+        if key in arrivals:
+            raise AssertionError(f"duplicate policy slot arrival: {key}")
+        arrivals[key] = float(event["time"])
+    expected = {(week, position) for week in range(8) for position in range(3)}
+    if set(arrivals) != expected:
+        raise AssertionError(
+            f"missing policy batch arrivals: {sorted(expected-set(arrivals))}"
+        )
+
+    orders = sorted(sim.orders, key=lambda order: int(order.j))
+    if len(orders) != 48:
+        raise AssertionError(f"expected 48 orders, observed {len(orders)}")
+    start = float(sim.program_o_decision_start or 0.0)
+    score = float(sim.env.now)
+    first_release = math.floor(start / 24.0) * 24.0 + float(
+        sim.op9_freight_offset_hours
+    )
+    if first_release <= start + 1e-12:
+        first_release += 24.0
+    release_slots: list[float] = []
+    value = first_release
+    while value <= score + 1e-12:
+        release_slots.append(float(value))
+        value += 24.0
+    raw = {
+        "seed": int(seed),
+        "decision_start": start,
+        "score_time": score,
+        "batch_arrivals": [
+            [arrivals[(week, position)], week, position]
+            for week in range(8)
+            for position in range(3)
+        ],
+        "order_times": [float(order.OPTj) for order in orders],
+        "order_quantities": [float(order.quantity) for order in orders],
+        "order_products": [str(order.requested_product_id) for order in orders],
+        "release_slots": release_slots,
+        "opening_inventory": [5000.0, 5000.0],
+        "tape_sha256": sim.program_o_tape["sha256"],
+        "prefix_state_hash": str(sim.program_o_prefix_state_hash),
+    }
+    skeleton = FullDESSkeleton(
+        seed=int(seed),
+        decision_start=start,
+        score_time=score,
+        batch_arrivals=tuple(
+            (float(time), int(week), int(position))
+            for time, week, position in raw["batch_arrivals"]
+        ),
+        order_times=tuple(raw["order_times"]),
+        order_quantities=tuple(raw["order_quantities"]),
+        order_products=tuple(raw["order_products"]),
+        release_slots=tuple(release_slots),
+        opening_inventory=(5000.0, 5000.0),
+        tape_sha256=str(raw["tape_sha256"]),
+        prefix_state_hash=str(raw["prefix_state_hash"]),
+        skeleton_sha256=_digest(raw),
+    )
+    return skeleton, sim
+
+
+def _tail_mean(values: np.ndarray, valid: np.ndarray, fraction: float) -> np.ndarray:
+    """Row-wise lower-tail mean over valid order cells."""
+    count = valid.sum(axis=1)
+    output = np.ones(valid.shape[0], dtype=np.float64)
+    for n_visible in np.unique(count):
+        mask = count == n_visible
+        if not np.any(mask):
+            continue
+        if int(n_visible) == 0:
+            output[mask] = 0.0
+            continue
+        k = max(1, int(math.ceil(float(n_visible) * float(fraction))))
+        panel = np.where(valid[mask], values[mask], np.inf)
+        output[mask] = np.partition(panel, k - 1, axis=1)[:, :k].mean(axis=1)
+    return output
+
+
+def simulate_full_des_frontier(
+    *,
+    skeleton: FullDESSkeleton,
+    scheduler: Mapping[str, Sequence[str]],
+    calendars: np.ndarray | None = None,
+    complete_substitution: bool = False,
+) -> dict[str, np.ndarray]:
+    """Vectorized replay of every calendar over one direct-DES skeleton."""
+    calendars = full_action_calendars() if calendars is None else np.asarray(calendars)
+    if calendars.ndim != 2 or calendars.shape[1] != 8:
+        raise ValueError("calendars must have shape (n, 8)")
+    n_calendar = int(calendars.shape[0])
+    n_order = len(skeleton.order_times)
+    scheduler_array = normalize_scheduler(scheduler)
+    product_index = {product_id: idx for idx, product_id in enumerate(PRODUCTS)}
+    requested_product = np.asarray(
+        [product_index[product_id] for product_id in skeleton.order_products],
+        dtype=np.uint8,
+    )
+    opt = np.asarray(skeleton.order_times, dtype=np.float64)
+    quantities = np.asarray(skeleton.order_quantities, dtype=np.float64)
+    rows = np.arange(n_calendar)
+
+    inventory = np.repeat(
+        np.asarray(skeleton.opening_inventory, dtype=np.float64)[None, :],
+        n_calendar,
+        axis=0,
+    )
+    pending = np.zeros((n_calendar, n_order), dtype=bool)
+    oat = np.full((n_calendar, n_order), np.inf, dtype=np.float64)
+    released = np.zeros((n_calendar, n_order), dtype=bool)
+    bt = np.zeros((n_calendar, n_order), dtype=np.uint8)
+    created = np.zeros(n_order, dtype=bool)
+
+    events: list[tuple[float, int, str, tuple[int, int] | int | None]] = []
+    # Match the frozen SimPy registration semantics exactly.  The daily Op9
+    # release wakes before an Op8 batch arrival at the same timestamp, so stock
+    # arriving at that instant is first eligible at the next daily release.
+    # This ordering is physical contract state, not an implementation detail:
+    # reversing it changes OATj and request-time backlog snapshots.
+    for time in skeleton.release_slots:
+        events.append((float(time), 0, "release", None))
+    for time, week, position in skeleton.batch_arrivals:
+        events.append((float(time), 1, "batch", (int(week), int(position))))
+    for order_index, time in enumerate(skeleton.order_times):
+        events.append((float(time), 2, "demand", int(order_index)))
+
+    priority_order = np.lexsort(
+        (
+            np.arange(n_order, dtype=np.int64),
+            opt,
+            quantities,
+        )
+    )
+    for now, _priority, kind, payload in sorted(events):
+        if kind == "batch":
+            week, position = payload  # type: ignore[misc]
+            labels = scheduler_array[calendars[:, week], position]
+            inventory[rows, labels] += 5000.0
+            continue
+        if kind == "demand":
+            order_index = int(payload)  # type: ignore[arg-type]
+            prior = np.arange(order_index)
+            if len(prior):
+                late = (opt[prior] + 48.0 <= float(now) + 1e-12)[None, :] & (
+                    oat[:, prior] > float(now) + 1e-12
+                )
+                bt[:, order_index] = np.minimum(60, late.sum(axis=1)).astype(np.uint8)
+            pending[:, order_index] = True
+            created[order_index] = True
+            continue
+
+        chosen = np.full(n_calendar, -1, dtype=np.int16)
+        for order_index in priority_order:
+            if not created[order_index]:
+                continue
+            if complete_substitution:
+                enough = inventory.sum(axis=1) + 1e-9 >= quantities[order_index]
+            else:
+                enough = (
+                    inventory[:, requested_product[order_index]] + 1e-9
+                    >= quantities[order_index]
+                )
+            mask = (chosen < 0) & pending[:, order_index] & enough
+            chosen[mask] = int(order_index)
+        for order_index in priority_order:
+            mask = chosen == int(order_index)
+            if not np.any(mask):
+                continue
+            qty = float(quantities[order_index])
+            if complete_substitution:
+                take_c = np.minimum(inventory[mask, 0], qty)
+                inventory[mask, 0] -= take_c
+                inventory[mask, 1] -= qty - take_c
+            else:
+                inventory[mask, requested_product[order_index]] -= qty
+            pending[mask, order_index] = False
+            released[mask, order_index] = True
+            oat[mask, order_index] = float(now) + 48.0
+
+    completed = oat <= float(skeleton.score_time) + 1e-12
+    visible_values = 1.0 - bt.astype(np.float64) / np.arange(1, n_order + 1)[None, :]
+    visible_count = completed.sum(axis=1)
+    visible_sum = np.where(completed, visible_values, 0.0).sum(axis=1)
+    ret_visible = np.divide(
+        visible_sum,
+        visible_count,
+        out=np.ones(n_calendar, dtype=np.float64),
+        where=visible_count > 0,
+    )
+    completed_quantity = np.where(completed, quantities[None, :], 0.0)
+    visible_quantity_total = completed_quantity.sum(axis=1)
+    ration_ret_visible = np.divide(
+        (completed_quantity * visible_values).sum(axis=1),
+        visible_quantity_total,
+        out=np.zeros(n_calendar, dtype=np.float64),
+        where=visible_quantity_total > 0.0,
+    )
+
+    ct = oat - opt[None, :]
+    unresolved = ~completed
+    unresolved_quantity = np.where(unresolved, quantities[None, :], 0.0)
+    unresolved_count = unresolved.sum(axis=1)
+    final_fill_rate = 1.0 - unresolved_count / float(n_order)
+    full_order_values = np.where(
+        completed & (ct <= 48.0 + 1e-12),
+        final_fill_rate[:, None],
+        0.0,
+    )
+    ret_full = full_order_values.mean(axis=1)
+    quantity_ret_full = (full_order_values * quantities[None, :]).sum(
+        axis=1
+    ) / quantities.sum()
+    end = np.minimum(oat, float(skeleton.score_time))
+    lateness = np.maximum(0.0, end - (opt[None, :] + 48.0))
+    service_loss_auc = (lateness * quantities[None, :]).sum(axis=1)
+    ages = np.where(
+        unresolved,
+        float(skeleton.score_time) - opt[None, :],
+        0.0,
+    )
+    max_backlog_age = ages.max(axis=1)
+
+    demand_by_product = np.asarray(
+        [quantities[requested_product == idx].sum() for idx in range(2)],
+        dtype=np.float64,
+    )
+    completed_by_product = np.stack(
+        [
+            np.where(
+                completed[:, requested_product == idx],
+                quantities[requested_product == idx][None, :],
+                0.0,
+            ).sum(axis=1)
+            for idx in range(2)
+        ],
+        axis=1,
+    )
+    fill = completed_by_product / demand_by_product[None, :]
+    remaining_by_product = demand_by_product[None, :] - completed_by_product
+    loaded = released.sum(axis=1).astype(np.float64)
+    payload = (released * quantities[None, :]).sum(axis=1)
+    production = np.full(n_calendar, 120000.0)
+    opening = float(sum(skeleton.opening_inventory))
+    mass_residual = opening + production - inventory.sum(axis=1) - payload
+
+    output: dict[str, np.ndarray] = {
+        "ret_visible": ret_visible,
+        "ret_full": ret_full,
+        "quantity_ret_full": quantity_ret_full,
+        "ration_ret_visible": ration_ret_visible,
+        "ret_visible_cvar10": _tail_mean(visible_values, completed, 0.10),
+        "visible_rows": visible_count.astype(np.float64),
+        "omitted_rows": (n_order - visible_count).astype(np.float64),
+        "omitted_quantity": unresolved_quantity.sum(axis=1),
+        "generated_orders": np.full(n_calendar, float(n_order)),
+        "lost_orders": np.zeros(n_calendar),
+        "lost_quantity": np.zeros(n_calendar),
+        "unresolved_orders": unresolved_count.astype(np.float64),
+        "unresolved_quantity": unresolved_quantity.sum(axis=1),
+        "remaining_quantity_P_C": remaining_by_product[:, 0],
+        "remaining_quantity_P_H": remaining_by_product[:, 1],
+        "max_backlog_age": max_backlog_age,
+        "service_loss_auc": service_loss_auc,
+        "fill_P_C": fill[:, 0],
+        "fill_P_H": fill[:, 1],
+        "worst_product_fill": fill.min(axis=1),
+        "ending_inventory_P_C": inventory[:, 0],
+        "ending_inventory_P_H": inventory[:, 1],
+        "ending_inventory_total": inventory.sum(axis=1),
+        "gross_policy_batch_slots": np.full(n_calendar, 24.0),
+        "gross_production_quantity": production,
+        "charged_daily_dispatch_slots": np.full(
+            n_calendar, float(len(skeleton.release_slots))
+        ),
+        "charged_downstream_vehicle_hours": np.full(
+            n_calendar, float(len(skeleton.release_slots) * 48.0)
+        ),
+        "actual_loaded_departures": loaded,
+        "actual_payload": payload,
+        "actual_downstream_vehicle_hours": loaded * 48.0,
+        "mass_residual": mass_residual,
+    }
+    if tuple(output) != MATRIX_KEYS:
+        raise AssertionError("full-DES transducer matrix schema drift")
+    return output
