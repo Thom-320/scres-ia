@@ -39,9 +39,10 @@ def test_full_des_contract_is_hpi_only_and_seed_blocks_are_fail_closed():
         "status": "SEALED_NOT_OPENED_PENDING_IMPLEMENTATION_TESTS_AND_COMMIT",
     }
     assert CONTRACT["tape_blocks"]["validation"] == {
-        "range": [7400073, 7400096],
-        "status": "SEALED_NOT_AUTHORIZED_PENDING_DEVELOPMENT_PASS_AND_ADDITIVE_FREEZE",
+        "range": [7400097, 7400120],
+        "status": "SEALED_VALIDATION_RETRY_AFTER_PRESEED_MANIFEST_FAILURE",
     }
+    assert CONTRACT["burned_execution_identities"][0]["tapes_opened"] is False
     assert CONTRACT["h_obs_authorized"] is False
     assert CONTRACT["learner_authorized"] is False
     assert CONTRACT["paper3_authorized"] is False
