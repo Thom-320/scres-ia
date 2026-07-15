@@ -1,6 +1,12 @@
 # Program O fixed-clock H_obs validation verdict
 
-## Verdict
+## Corrective status
+
+**RETRACTED AS A TERMINAL ADJUDICATION.** The causal audit found that the executor selected the point comparator on the sealed validation tapes even though the contract froze the development-selected comparator. It also found an invalid unstandardized simultaneous critical value. See `PROGRAM_O_RHO90_SHARE90_CAUSAL_DIAGNOSTIC_2026-07-15.md`.
+
+The raw trajectories, matrices, ledgers, actions, and custody remain valid burned evidence. The automatic PASS/STOP adjudication does not. H_obs remains unconfirmed pending one corrective validation; no learner is authorized.
+
+## Original verdict (retracted)
 
 `STOP_PROGRAM_O_CLASSICAL_HOBS_VALIDATION`
 
