@@ -61,6 +61,9 @@ MATRIX_KEYS = (
     "actual_payload",
     "actual_downstream_vehicle_hours",
     "mass_residual",
+    "partition_residual",
+    "aggregate_ration_residual",
+    "raw_material_residual",
 )
 
 
@@ -73,6 +76,7 @@ def _digest(value: Any) -> str:
 @dataclass(frozen=True)
 class FullDESSkeleton:
     seed: int
+    decision_weeks: int
     decision_start: float
     score_time: float
     batch_arrivals: tuple[tuple[float, int, int], ...]
@@ -88,6 +92,7 @@ class FullDESSkeleton:
     def as_dict(self) -> dict[str, Any]:
         return {
             "seed": self.seed,
+            "decision_weeks": self.decision_weeks,
             "decision_start": self.decision_start,
             "score_time": self.score_time,
             "batch_arrivals": [list(row) for row in self.batch_arrivals],
@@ -102,8 +107,10 @@ class FullDESSkeleton:
         }
 
 
-def full_action_calendars() -> np.ndarray:
-    return np.asarray(tuple(product(range(4), repeat=8)), dtype=np.uint8)
+def full_action_calendars(weeks: int = 8) -> np.ndarray:
+    if int(weeks) <= 0 or int(weeks) > 8:
+        raise ValueError("weeks must be in 1..8")
+    return np.asarray(tuple(product(range(4), repeat=int(weeks))), dtype=np.uint8)
 
 
 def direct_full_des_vector(
@@ -181,10 +188,89 @@ def direct_full_des_vector(
             resources["actual_downstream_vehicle_hours"]
         ),
         "mass_residual": float(conservation["max_abs_product_residual"]),
+        "partition_residual": float(conservation["max_abs_partition_residual"]),
+        "aggregate_ration_residual": abs(
+            float(conservation["aggregate_flow_ledger"]["ration_residual"])
+        ),
+        "raw_material_residual": abs(
+            float(conservation["aggregate_flow_ledger"]["raw_residual"])
+        ),
     }
     if tuple(output) != MATRIX_KEYS:
         raise AssertionError("direct full-DES vector schema drift")
     return output
+
+
+def direct_full_des_trace(sim: ProgramOFullDESSimulation) -> dict[str, Any]:
+    """Return the promotion-relevant physical/order trace from direct SimPy."""
+    start = float(sim.program_o_decision_start or 0.0)
+    state_events: list[dict[str, Any]] = []
+    for event in sim.program_o_product_events:
+        if event.get("event") != "op8_arrived_sb":
+            continue
+        tokens = event.get("tokens", [])
+        if len(tokens) != 1 or not POLICY_SLOT_PATTERN.match(
+            str(tokens[0].get("lot_id", ""))
+        ):
+            continue
+        state_events.append(
+            {
+                "time": float(event["time"]),
+                "event": "batch",
+                "product_id": str(tokens[0]["product_id"]),
+                "quantity": float(event["quantity"]),
+                "product_inventory_after": {
+                    key: float(value)
+                    for key, value in event["product_inventory_after"].items()
+                },
+            }
+        )
+    for event in sim.program_o_order_route_events:
+        if event.get("event") != "op9_reserved":
+            continue
+        state_events.append(
+            {
+                "time": float(event["time"]),
+                "event": "release",
+                "order_j": int(event["order_j"]),
+                "quantity": float(event["quantity"]),
+                "product_inventory_after": {
+                    key: float(value)
+                    for key, value in event["product_inventory_after"].items()
+                },
+            }
+        )
+    state_events.sort(
+        key=lambda row: (
+            float(row["time"]),
+            0 if row["event"] == "release" else 1,
+            int(row.get("order_j", 0)),
+        )
+    )
+    orders = []
+    for order in sorted(
+        (
+            row
+            for row in sim.orders
+            if not row.metrics_excluded and float(row.OPTj) >= start
+        ),
+        key=lambda row: int(row.j),
+    ):
+        orders.append(
+            {
+                "j": int(order.j),
+                "OPTj": float(order.OPTj),
+                "OATj": None if order.OATj is None else float(order.OATj),
+                "CTj": None if order.CTj is None else float(order.CTj),
+                "ret_bt_at_request": int(getattr(order, "ret_bt_at_request", 0) or 0),
+                "ret_ut_at_request": int(getattr(order, "ret_ut_at_request", 0) or 0),
+                "requested_product_id": str(order.requested_product_id),
+                "quantity": float(order.quantity),
+                "lost": bool(order.lost),
+            }
+        )
+    trace = {"state_events": state_events, "orders": orders}
+    return {**trace, "sha256": _digest(trace)}
 
 
 def normalize_scheduler(scheduler: Mapping[str, Sequence[str]]) -> np.ndarray:
@@ -204,11 +290,12 @@ def extract_full_des_skeleton(
     scheduler: Mapping[str, Sequence[str]],
     regime_persistence: float,
     dominant_share: float,
+    decision_weeks: int = 8,
 ) -> tuple[FullDESSkeleton, ProgramOFullDESSimulation]:
     """Run one direct calendar and extract only action-independent events."""
     sim = ProgramOFullDESSimulation(
         seed=int(seed),
-        calendar=(2,) * 8,
+        calendar=(2,) * int(decision_weeks),
         scheduler=scheduler,
         regime_persistence=float(regime_persistence),
         dominant_share=float(dominant_share),
@@ -228,15 +315,20 @@ def extract_full_des_skeleton(
         if key in arrivals:
             raise AssertionError(f"duplicate policy slot arrival: {key}")
         arrivals[key] = float(event["time"])
-    expected = {(week, position) for week in range(8) for position in range(3)}
+    expected = {
+        (week, position) for week in range(int(decision_weeks)) for position in range(3)
+    }
     if set(arrivals) != expected:
         raise AssertionError(
             f"missing policy batch arrivals: {sorted(expected-set(arrivals))}"
         )
 
     orders = sorted(sim.orders, key=lambda order: int(order.j))
-    if len(orders) != 48:
-        raise AssertionError(f"expected 48 orders, observed {len(orders)}")
+    expected_orders = int(decision_weeks) * 6
+    if len(orders) != expected_orders:
+        raise AssertionError(
+            f"expected {expected_orders} orders, observed {len(orders)}"
+        )
     start = float(sim.program_o_decision_start or 0.0)
     score = float(sim.env.now)
     first_release = math.floor(start / 24.0) * 24.0 + float(
@@ -251,11 +343,12 @@ def extract_full_des_skeleton(
         value += 24.0
     raw = {
         "seed": int(seed),
+        "decision_weeks": int(decision_weeks),
         "decision_start": start,
         "score_time": score,
         "batch_arrivals": [
             [arrivals[(week, position)], week, position]
-            for week in range(8)
+            for week in range(int(decision_weeks))
             for position in range(3)
         ],
         "order_times": [float(order.OPTj) for order in orders],
@@ -268,6 +361,7 @@ def extract_full_des_skeleton(
     }
     skeleton = FullDESSkeleton(
         seed=int(seed),
+        decision_weeks=int(decision_weeks),
         decision_start=start,
         score_time=score,
         batch_arrivals=tuple(
@@ -309,12 +403,19 @@ def simulate_full_des_frontier(
     scheduler: Mapping[str, Sequence[str]],
     calendars: np.ndarray | None = None,
     complete_substitution: bool = False,
+    trace_out: dict[str, Any] | None = None,
 ) -> dict[str, np.ndarray]:
     """Vectorized replay of every calendar over one direct-DES skeleton."""
-    calendars = full_action_calendars() if calendars is None else np.asarray(calendars)
-    if calendars.ndim != 2 or calendars.shape[1] != 8:
-        raise ValueError("calendars must have shape (n, 8)")
+    calendars = (
+        full_action_calendars(skeleton.decision_weeks)
+        if calendars is None
+        else np.asarray(calendars)
+    )
+    if calendars.ndim != 2 or calendars.shape[1] != skeleton.decision_weeks:
+        raise ValueError(f"calendars must have shape (n, {skeleton.decision_weeks})")
     n_calendar = int(calendars.shape[0])
+    if trace_out is not None and n_calendar != 1:
+        raise ValueError("trace_out is available only for one calendar")
     n_order = len(skeleton.order_times)
     scheduler_array = normalize_scheduler(scheduler)
     product_index = {product_id: idx for idx, product_id in enumerate(PRODUCTS)}
@@ -336,6 +437,7 @@ def simulate_full_des_frontier(
     released = np.zeros((n_calendar, n_order), dtype=bool)
     bt = np.zeros((n_calendar, n_order), dtype=np.uint8)
     created = np.zeros(n_order, dtype=bool)
+    trace_events: list[dict[str, Any]] = []
 
     events: list[tuple[float, int, str, tuple[int, int] | int | None]] = []
     # Match the frozen SimPy registration semantics exactly.  The daily Op9
@@ -362,6 +464,18 @@ def simulate_full_des_frontier(
             week, position = payload  # type: ignore[misc]
             labels = scheduler_array[calendars[:, week], position]
             inventory[rows, labels] += 5000.0
+            if trace_out is not None:
+                trace_events.append(
+                    {
+                        "time": float(now),
+                        "event": "batch",
+                        "product_id": PRODUCTS[int(labels[0])],
+                        "quantity": 5000.0,
+                        "product_inventory_after": {
+                            PRODUCTS[idx]: float(inventory[0, idx]) for idx in range(2)
+                        },
+                    }
+                )
             continue
         if kind == "demand":
             order_index = int(payload)  # type: ignore[arg-type]
@@ -402,6 +516,18 @@ def simulate_full_des_frontier(
             pending[mask, order_index] = False
             released[mask, order_index] = True
             oat[mask, order_index] = float(now) + 48.0
+            if trace_out is not None and bool(mask[0]):
+                trace_events.append(
+                    {
+                        "time": float(now),
+                        "event": "release",
+                        "order_j": int(order_index + 1),
+                        "quantity": qty,
+                        "product_inventory_after": {
+                            PRODUCTS[idx]: float(inventory[0, idx]) for idx in range(2)
+                        },
+                    }
+                )
 
     completed = oat <= float(skeleton.score_time) + 1e-12
     visible_values = 1.0 - bt.astype(np.float64) / np.arange(1, n_order + 1)[None, :]
@@ -426,10 +552,22 @@ def simulate_full_des_frontier(
     unresolved = ~completed
     unresolved_quantity = np.where(unresolved, quantities[None, :], 0.0)
     unresolved_count = unresolved.sum(axis=1)
-    final_fill_rate = 1.0 - unresolved_count / float(n_order)
+    # Exact no-risk branch of compute_order_level_ret_excel_formula.  A late
+    # completed order increments the accumulated Bt before its own row.  A
+    # pending overdue order does likewise; an in-flight order with no remaining
+    # queue quantity does not.  Unfulfilled rows themselves score zero.
+    order_backorder = (completed & (ct > 48.0 + 1e-12)) | (
+        unresolved
+        & pending
+        & (float(skeleton.score_time) - opt[None, :] > 48.0 + 1e-12)
+    )
+    cumulative_backorders = np.minimum(
+        60, np.cumsum(order_backorder.astype(np.int16), axis=1)
+    )
     full_order_values = np.where(
-        completed & (ct <= 48.0 + 1e-12),
-        final_fill_rate[:, None],
+        completed,
+        1.0
+        - cumulative_backorders / np.arange(1, n_order + 1, dtype=np.float64)[None, :],
         0.0,
     )
     ret_full = full_order_values.mean(axis=1)
@@ -461,11 +599,17 @@ def simulate_full_des_frontier(
         ],
         axis=1,
     )
-    fill = completed_by_product / demand_by_product[None, :]
+    fill = np.divide(
+        completed_by_product,
+        demand_by_product[None, :],
+        out=np.ones_like(completed_by_product),
+        where=demand_by_product[None, :] > 0.0,
+    )
     remaining_by_product = demand_by_product[None, :] - completed_by_product
     loaded = released.sum(axis=1).astype(np.float64)
     payload = (released * quantities[None, :]).sum(axis=1)
-    production = np.full(n_calendar, 120000.0)
+    gross_slots = float(skeleton.decision_weeks * 3)
+    production = np.full(n_calendar, gross_slots * 5000.0)
     opening = float(sum(skeleton.opening_inventory))
     mass_residual = opening + production - inventory.sum(axis=1) - payload
 
@@ -493,7 +637,7 @@ def simulate_full_des_frontier(
         "ending_inventory_P_C": inventory[:, 0],
         "ending_inventory_P_H": inventory[:, 1],
         "ending_inventory_total": inventory.sum(axis=1),
-        "gross_policy_batch_slots": np.full(n_calendar, 24.0),
+        "gross_policy_batch_slots": np.full(n_calendar, gross_slots),
         "gross_production_quantity": production,
         "charged_daily_dispatch_slots": np.full(
             n_calendar, float(len(skeleton.release_slots))
@@ -505,7 +649,33 @@ def simulate_full_des_frontier(
         "actual_payload": payload,
         "actual_downstream_vehicle_hours": loaded * 48.0,
         "mass_residual": mass_residual,
+        "partition_residual": np.zeros(n_calendar),
+        "aggregate_ration_residual": np.zeros(n_calendar),
+        "raw_material_residual": np.zeros(n_calendar),
     }
     if tuple(output) != MATRIX_KEYS:
         raise AssertionError("full-DES transducer matrix schema drift")
+    if trace_out is not None:
+        orders = []
+        for order_index in range(n_order):
+            oat_value = float(oat[0, order_index])
+            orders.append(
+                {
+                    "j": int(order_index + 1),
+                    "OPTj": float(opt[order_index]),
+                    "OATj": None if not math.isfinite(oat_value) else oat_value,
+                    "CTj": (
+                        None
+                        if not math.isfinite(oat_value)
+                        else float(oat_value - opt[order_index])
+                    ),
+                    "ret_bt_at_request": int(bt[0, order_index]),
+                    "ret_ut_at_request": 0,
+                    "requested_product_id": str(skeleton.order_products[order_index]),
+                    "quantity": float(quantities[order_index]),
+                    "lost": False,
+                }
+            )
+        trace = {"state_events": trace_events, "orders": orders}
+        trace_out.update({**trace, "sha256": _digest(trace)})
     return output

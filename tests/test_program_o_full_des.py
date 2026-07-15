@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 
 from scripts.screen_program_o_exact_transducer import make_tape
+from scripts.screen_program_o_full_des_hpi import preseed_parity_gate
 from supply_chain.program_o_full_des import (
     ProductTagLedger,
     product_demand_tape,
@@ -52,6 +53,14 @@ def test_full_des_frontier_is_complete_and_unique():
     assert len({tuple(row) for row in calendars.tolist()}) == 65536
     assert calendars[0].tolist() == [0] * 8
     assert calendars[-1].tolist() == [3] * 8
+
+
+def test_preseed_parity_exhausts_all_short_horizon_calendars_and_traces():
+    verdict = preseed_parity_gate(CONTRACT)
+
+    assert verdict["passed"] is True
+    assert verdict["burned_seed"] == 7400048
+    assert verdict["episode_count"] == 4 * (4 + 16 + 64)
 
 
 def run(calendar, *, fungible=False, seed=7400000):

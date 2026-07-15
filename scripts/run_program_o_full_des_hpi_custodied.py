@@ -30,10 +30,13 @@ def write_json_atomic(path: Path, value: Any) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--run-dir", type=Path, required=True)
+    parser.add_argument("--run-id", required=True)
     parser.add_argument("--stage", choices=("development", "validation"), required=True)
     parser.add_argument("--workers", type=int, required=True)
     parser.add_argument("--contract", type=Path, required=True)
-    parser.add_argument("--validation-freeze", type=Path, required=True)
+    parser.add_argument("--execution-freeze", type=Path, required=True)
+    parser.add_argument("--seed-claim", type=Path, required=True)
+    parser.add_argument("--development-result", type=Path)
     args = parser.parse_args()
     run_dir = args.run_dir.resolve()
     command = [
@@ -47,9 +50,17 @@ def main() -> int:
         str(args.contract.resolve()),
         "--output-root",
         str(run_dir / "artifacts"),
-        "--validation-freeze",
-        str(args.validation_freeze.resolve()),
+        "--run-dir",
+        str(run_dir),
+        "--run-id",
+        str(args.run_id),
+        "--execution-freeze",
+        str(args.execution_freeze.resolve()),
+        "--seed-claim",
+        str(args.seed_claim.resolve()),
     ]
+    if args.development_result is not None:
+        command.extend(["--development-result", str(args.development_result.resolve())])
     started = now_utc()
     returncode = 1
     error = None

@@ -13,8 +13,15 @@ import subprocess
 import sys
 import time
 from typing import Any
+import shutil
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
+
+from scripts.program_o_full_des_guard import (  # noqa: E402
+    create_seed_claim,
+    verify_tracked_freeze,
+)
 
 
 def now_utc() -> str:
@@ -41,10 +48,13 @@ def git_commit() -> str:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--run-dir", type=Path, required=True)
+    parser.add_argument("--run-id", required=True)
     parser.add_argument("--stage", choices=("development", "validation"), required=True)
     parser.add_argument("--workers", type=int, required=True)
     parser.add_argument("--contract", type=Path, required=True)
-    parser.add_argument("--validation-freeze", type=Path, required=True)
+    parser.add_argument("--execution-freeze", type=Path, required=True)
+    parser.add_argument("--development-result", type=Path)
+    parser.add_argument("--seed-claim-root", type=Path, required=True)
     parser.add_argument("--expected-commit", required=True)
     parser.add_argument("--watch-interval-seconds", type=float, default=10.0)
     parser.add_argument("--preflight-only", action="store_true")
@@ -52,7 +62,9 @@ def main() -> int:
 
     run_dir = args.run_dir.resolve()
     contract = args.contract.resolve()
-    validation_freeze = args.validation_freeze.resolve()
+    execution_freeze = args.execution_freeze.resolve()
+    seed_block = json.loads(contract.read_text())["tape_blocks"][args.stage]
+    seed_range = list(map(int, seed_block["range"]))
     failures = []
     current_commit = git_commit()
     dirty = subprocess.check_output(
@@ -64,22 +76,49 @@ def main() -> int:
         failures.append("worktree is dirty")
     if not contract.is_file():
         failures.append("contract is absent")
-    if args.stage == "validation" and not validation_freeze.is_file():
-        failures.append("validation freeze is absent")
+    if not execution_freeze.is_file():
+        failures.append("execution freeze is absent")
+    if args.stage == "validation" and (
+        args.development_result is None
+        or not args.development_result.resolve().is_file()
+    ):
+        failures.append("immutable development result is absent")
     if run_dir.exists():
         failures.append("run identity already exists")
+    authorization = None
+    if not failures:
+        try:
+            authorization = verify_tracked_freeze(
+                freeze_path=execution_freeze,
+                contract_path=contract,
+                stage=str(args.stage),
+                run_id=str(args.run_id),
+                run_dir=run_dir,
+                seed_range=seed_range,
+                expected_commit=str(args.expected_commit),
+            )
+        except RuntimeError as exc:
+            failures.append(str(exc))
     preflight = {
         "checked_at_utc": now_utc(),
         "passed": not failures,
         "failures": failures,
         "run_dir": str(run_dir),
+        "run_id": str(args.run_id),
         "stage": str(args.stage),
         "workers": int(args.workers),
         "expected_commit": str(args.expected_commit),
         "current_commit": current_commit,
         "contract": str(contract),
         "contract_sha256": sha256(contract) if contract.is_file() else None,
-        "validation_freeze": str(validation_freeze),
+        "execution_freeze": str(execution_freeze),
+        "development_result": (
+            str(args.development_result.resolve())
+            if args.development_result is not None
+            else None
+        ),
+        "seed_range": seed_range,
+        "authorization": authorization,
     }
     if args.preflight_only:
         print(json.dumps(preflight, indent=2, sort_keys=True))
@@ -129,20 +168,46 @@ def main() -> int:
         watcher.terminate()
         raise TimeoutError("watcher did not record fail-closed prestart custody")
 
+    if authorization is None:
+        raise AssertionError("authorization disappeared after preflight")
+    try:
+        seed_claim = create_seed_claim(
+            claim_root=args.seed_claim_root.resolve(),
+            authorization=authorization,
+            contract_sha256=sha256(contract),
+        )
+    except BaseException:
+        watcher.terminate()
+        watcher.wait(timeout=10)
+        raise
+    write_json_atomic(
+        custody / "seed_claim_reference.json",
+        {"path": str(seed_claim), "sha256": sha256(seed_claim)},
+    )
+    shutil.copyfile(seed_claim, custody / "seed_claim.json")
+
     runner_command = [
         sys.executable,
         str(ROOT / "scripts/run_program_o_full_des_hpi_custodied.py"),
         "--run-dir",
         str(run_dir),
+        "--run-id",
+        str(args.run_id),
         "--stage",
         str(args.stage),
         "--workers",
         str(args.workers),
         "--contract",
         str(contract),
-        "--validation-freeze",
-        str(validation_freeze),
+        "--execution-freeze",
+        str(execution_freeze),
+        "--seed-claim",
+        str(seed_claim),
     ]
+    if args.development_result is not None:
+        runner_command.extend(
+            ["--development-result", str(args.development_result.resolve())]
+        )
     producer_stdout = (custody / "producer.stdout.log").open("ab")
     producer_stderr = (custody / "producer.stderr.log").open("ab")
     producer = subprocess.Popen(
@@ -158,6 +223,7 @@ def main() -> int:
         "schema_version": "program_o_full_des_producer_control_v1",
         "launched_at_utc": now_utc(),
         "stage": str(args.stage),
+        "run_id": str(args.run_id),
         "producer_pid": producer.pid,
         "producer_pgid": os.getpgid(producer.pid),
         "producer_sid": os.getsid(producer.pid),
@@ -167,6 +233,9 @@ def main() -> int:
         "watcher_command": watcher_command,
         "scientific_commit": current_commit,
         "contract_sha256": sha256(contract),
+        "execution_freeze_sha256": sha256(execution_freeze),
+        "seed_claim": str(seed_claim),
+        "seed_claim_sha256": sha256(seed_claim),
     }
     write_json_atomic(custody / "producer_control.json", control)
     print(json.dumps(control, indent=2, sort_keys=True))

@@ -36,7 +36,7 @@
     "setup_hours": 0,
     "substitution_fraction": 0,
     "expiry": "disabled",
-    "product_commitment_point": "start of the first physical production hour assigned to each 5000-ration target",
+    "product_commitment_point": "target activation exactly 24 hours after the weekly decision; each activated target is irrevocable even if its first physical production hour occurs later",
     "relabel_after_commitment": "forbidden"
   },
   "action": {
@@ -150,8 +150,8 @@
     "conservation_absolute_tolerance": 1e-8
   },
   "parity_gate": {
-    "direct_all_calendars_horizons_weeks": [1, 2],
-    "direct_boundary_calendars_horizon_3": "all constants, all single-switch extremes, calibration static, and every transducer oracle tie",
+    "burned_seed": 7400048,
+    "direct_all_calendars_horizons_weeks": [1, 2, 3],
     "direct_horizon_8": "selected static, every per-tape oracle/tie, all constants/extremes, and 256 deterministic sampled calendars per tape",
     "required_fields": [
       "batch arrival events",
@@ -205,8 +205,10 @@
     "safe_oracle_recomputed_each_resample": true
   },
   "terminal_labels": {
-    "development_pass": "PASS_PROGRAM_O_FULL_DES_HPI_DEVELOPMENT",
-    "validation_pass": "PASS_PROGRAM_O_FULL_DES_HPI_TRANSLATION",
+    "development_pass_pending_custody": "PASS_PROGRAM_O_FULL_DES_HPI_DEVELOPMENT_PENDING_INDEPENDENT_CUSTODY",
+    "validation_pass_pending_custody": "PASS_PROGRAM_O_FULL_DES_HPI_TRANSLATION_PENDING_INDEPENDENT_CUSTODY",
+    "development_pass_after_custody": "PASS_PROGRAM_O_FULL_DES_HPI_DEVELOPMENT_CUSTODY_VERIFIED",
+    "validation_pass_after_custody": "PASS_PROGRAM_O_FULL_DES_HPI_TRANSLATION_CUSTODY_VERIFIED",
     "stop": "STOP_PROGRAM_O_FULL_DES_TRANSLATION",
     "invalid": "INVALID_PROGRAM_O_FULL_DES_NO_EVIDENCE"
   },

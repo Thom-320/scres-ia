@@ -33,17 +33,22 @@ from supply_chain.program_o_full_des import (  # noqa: E402
 )
 from supply_chain.program_o_full_des_transducer import (  # noqa: E402
     MATRIX_KEYS,
+    direct_full_des_trace,
     direct_full_des_vector,
     extract_full_des_skeleton,
     full_action_calendars,
     simulate_full_des_frontier,
 )
+from scripts.program_o_full_des_guard import (  # noqa: E402
+    verify_seed_claim,
+    verify_tracked_freeze,
+)
 
 DEFAULT_CONTRACT = ROOT / "contracts/program_o_full_des_hpi_translation_v1.json"
 DEFAULT_OUTPUT_ROOT = ROOT / "results/program_o/full_des_hpi_translation_v1"
-DEFAULT_VALIDATION_FREEZE = (
+DEFAULT_DEVELOPMENT_FREEZE = (
     ROOT / "research/paper2_exhaustive_search/"
-    "program_o_full_des_validation_freeze_20260714.json"
+    "program_o_full_des_development_freeze_20260714.json"
 )
 
 
@@ -360,6 +365,13 @@ def replay_profile_seed(
         ]
     mismatches: list[dict[str, Any]] = []
     max_abs_error = 0.0
+    trace_mismatches: list[dict[str, Any]] = []
+    skeleton, _ = extract_full_des_skeleton(
+        seed=int(seed),
+        scheduler=scheduler,
+        regime_persistence=float(profile["regime_persistence"]),
+        dominant_share=float(profile["dominant_share"]),
+    )
     for index in indices:
         calendar = calendars[int(index)].astype(int).tolist()
         sim, panel = run_program_o_full_des_episode(
@@ -371,6 +383,29 @@ def replay_profile_seed(
             complete_substitution=bool(profile["complete_substitution"]),
         )
         observed = direct_full_des_vector(sim, panel)
+        direct_trace = direct_full_des_trace(sim)
+        transducer_trace: dict[str, Any] = {}
+        simulate_full_des_frontier(
+            skeleton=skeleton,
+            scheduler=scheduler,
+            calendars=[calendar],
+            complete_substitution=bool(profile["complete_substitution"]),
+            trace_out=transducer_trace,
+        )
+        if comparable_trace(
+            direct_trace,
+            complete_substitution=bool(profile["complete_substitution"]),
+        ) != comparable_trace(
+            transducer_trace,
+            complete_substitution=bool(profile["complete_substitution"]),
+        ):
+            trace_mismatches.append(
+                {
+                    "calendar_index": int(index),
+                    "direct_trace_sha256": direct_trace["sha256"],
+                    "transducer_trace_sha256": transducer_trace.get("sha256"),
+                }
+            )
         for key in compared_keys:
             error = abs(float(observed[key]) - float(expected[key][int(index)]))
             max_abs_error = max(max_abs_error, error)
@@ -387,7 +422,7 @@ def replay_profile_seed(
                 )
                 if len(mismatches) >= 20:
                     break
-        if len(mismatches) >= 20:
+        if len(mismatches) >= 20 or len(trace_mismatches) >= 20:
             break
     return {
         "profile_id": str(profile["profile_id"]),
@@ -395,9 +430,10 @@ def replay_profile_seed(
         "calendar_count": len(indices),
         "calendar_indices_sha256": digest_json(list(map(int, indices))),
         "compared_fields": compared_keys,
-        "passed": not mismatches,
+        "passed": not mismatches and not trace_mismatches,
         "max_abs_error": float(max_abs_error),
         "mismatches": mismatches,
+        "trace_mismatches": trace_mismatches,
     }
 
 
@@ -457,21 +493,118 @@ def checksum_tree(stage_root: Path) -> Path:
     return destination
 
 
+def comparable_trace(
+    trace: Mapping[str, Any], *, complete_substitution: bool
+) -> dict[str, Any]:
+    payload = {
+        "state_events": [dict(row) for row in trace["state_events"]],
+        "orders": [dict(row) for row in trace["orders"]],
+    }
+    if complete_substitution:
+        # Product partitions are inert FIFO metadata in the exact fungible null.
+        for row in payload["state_events"]:
+            row.pop("product_inventory_after", None)
+    return payload
+
+
+def preseed_parity_gate(contract: Mapping[str, Any]) -> dict[str, Any]:
+    """Exhaust direct/transducer parity for H=1,2,3 on a burned tape."""
+    burned_seed = int(contract["parity_gate"]["burned_seed"])
+    tolerance = float(contract["parity_gate"]["tolerance"])
+    profiles = frozen_profiles(contract)
+    scheduler_map = contract["action"]["within_week_schedulers"]
+    rows: list[dict[str, Any]] = []
+    for profile in profiles:
+        scheduler = scheduler_map[str(profile["scheduler_id"])]
+        for weeks in (1, 2, 3):
+            skeleton, _ = extract_full_des_skeleton(
+                seed=burned_seed,
+                scheduler=scheduler,
+                regime_persistence=float(profile["regime_persistence"]),
+                dominant_share=float(profile["dominant_share"]),
+                decision_weeks=weeks,
+            )
+            for calendar_array in full_action_calendars(weeks):
+                calendar = calendar_array.astype(int).tolist()
+                direct_sim, direct_panel = run_program_o_full_des_episode(
+                    seed=burned_seed,
+                    calendar=calendar,
+                    scheduler=scheduler,
+                    regime_persistence=float(profile["regime_persistence"]),
+                    dominant_share=float(profile["dominant_share"]),
+                    complete_substitution=bool(profile["complete_substitution"]),
+                )
+                expected = direct_full_des_vector(direct_sim, direct_panel)
+                transducer_trace: dict[str, Any] = {}
+                observed = simulate_full_des_frontier(
+                    skeleton=skeleton,
+                    scheduler=scheduler,
+                    calendars=[calendar],
+                    complete_substitution=bool(profile["complete_substitution"]),
+                    trace_out=transducer_trace,
+                )
+                excluded = (
+                    {"ending_inventory_P_C", "ending_inventory_P_H"}
+                    if bool(profile["complete_substitution"])
+                    else set()
+                )
+                mismatches = {
+                    key: abs(float(observed[key][0]) - float(expected[key]))
+                    for key in MATRIX_KEYS
+                    if key not in excluded
+                    if abs(float(observed[key][0]) - float(expected[key])) > tolerance
+                }
+                direct_trace = direct_full_des_trace(direct_sim)
+                trace_equal = comparable_trace(
+                    direct_trace,
+                    complete_substitution=bool(profile["complete_substitution"]),
+                ) == comparable_trace(
+                    transducer_trace,
+                    complete_substitution=bool(profile["complete_substitution"]),
+                )
+                rows.append(
+                    {
+                        "profile_id": str(profile["profile_id"]),
+                        "weeks": weeks,
+                        "calendar": calendar,
+                        "matrix_pass": not mismatches,
+                        "matrix_mismatches": mismatches,
+                        "trace_pass": trace_equal,
+                        "direct_trace_sha256": direct_trace["sha256"],
+                        "transducer_trace_sha256": transducer_trace.get("sha256"),
+                    }
+                )
+                if mismatches or not trace_equal:
+                    return {
+                        "passed": False,
+                        "burned_seed": burned_seed,
+                        "episode_count": len(rows),
+                        "rows_sha256": digest_json(rows),
+                        "first_failure": rows[-1],
+                    }
+    return {
+        "passed": True,
+        "burned_seed": burned_seed,
+        "episode_count": len(rows),
+        "rows_sha256": digest_json(rows),
+        "coverage": "all 4^H calendars for H=1,2,3 across every frozen profile",
+    }
+
+
 def verify_validation_freeze(
     freeze_path: Path,
     contract_path: Path,
-    output_root: Path,
+    development_result: Path,
     expected_range: Sequence[int],
 ) -> None:
     if not freeze_path.is_file():
         raise RuntimeError("validation remains sealed: additive freeze is absent")
     freeze = json.loads(freeze_path.read_text())
-    development_result = output_root / "development" / "result.json"
+    if not development_result.is_file():
+        raise RuntimeError("validation remains sealed: development result is absent")
     failures = []
     if freeze.get("status") != "AUTHORIZED_PROGRAM_O_FULL_DES_VALIDATION":
         failures.append("freeze status")
-    if freeze.get("scientific_commit") != git_commit():
-        failures.append("scientific commit")
     if freeze.get("contract_sha256") != sha256(contract_path):
         failures.append("contract hash")
     if freeze.get("development_result_sha256") != sha256(development_result):
@@ -488,7 +621,11 @@ def execute(
     output_root: Path,
     stage: str,
     workers: int,
-    validation_freeze: Path,
+    run_dir: Path,
+    run_id: str,
+    execution_freeze: Path,
+    seed_claim: Path,
+    development_result: Path | None,
 ) -> Path:
     if not git_is_clean():
         raise RuntimeError("refusing scientific execution from a dirty worktree")
@@ -496,6 +633,21 @@ def execute(
     seed_block = contract["tape_blocks"][stage]
     start, end = map(int, seed_block["range"])
     seeds = tuple(range(start, end + 1))
+    authorization = verify_tracked_freeze(
+        freeze_path=execution_freeze,
+        contract_path=contract_path,
+        stage=stage,
+        run_id=run_id,
+        run_dir=run_dir,
+        seed_range=[start, end],
+    )
+    verify_seed_claim(
+        claim_path=seed_claim,
+        authorization=authorization,
+        contract_sha256=sha256(contract_path),
+    )
+    if output_root.resolve() != (run_dir.resolve() / "artifacts"):
+        raise RuntimeError("output root is not bound to the authorized run directory")
     if stage == "development":
         if (
             seed_block["status"]
@@ -503,8 +655,19 @@ def execute(
         ):
             raise RuntimeError("development seed block status is not sealed")
     else:
+        if development_result is None:
+            raise RuntimeError("validation requires an explicit development result")
         verify_validation_freeze(
-            validation_freeze, contract_path, output_root, [start, end]
+            execution_freeze,
+            contract_path,
+            development_result.resolve(),
+            [start, end],
+        )
+    preseed_parity = preseed_parity_gate(contract)
+    if not preseed_parity["passed"]:
+        raise RuntimeError(
+            "preseed direct/transducer parity failed before any sealed tape opened: "
+            + json.dumps(preseed_parity["first_failure"], sort_keys=True)
         )
     stage_root = output_root / stage
     if stage_root.exists():
@@ -521,6 +684,8 @@ def execute(
         ROOT / "supply_chain/supply_chain.py",
         ROOT / "supply_chain/ret_thesis.py",
         ROOT / "supply_chain/episode_metrics.py",
+        ROOT / "scripts/program_o_full_des_guard.py",
+        ROOT / "scripts/validate_program_o_full_des_hpi_custody.py",
     )
     manifests = {
         "commit_manifest.json": {
@@ -540,11 +705,17 @@ def execute(
             "seed_range": [start, end],
             "seeds": list(seeds),
             "status_at_open": str(seed_block["status"]),
+            "seed_claim": str(seed_claim),
+            "seed_claim_sha256": sha256(seed_claim),
+            "run_id": run_id,
         },
         "command_manifest.json": {
             "argv": sys.argv,
             "cwd": str(ROOT),
             "workers": int(workers),
+            "run_dir": str(run_dir),
+            "run_id": run_id,
+            "execution_freeze": str(execution_freeze),
         },
         "environment_manifest.json": {
             "python": sys.version,
@@ -555,6 +726,7 @@ def execute(
     }
     for name, payload in manifests.items():
         write_json_atomic(stage_root / name, payload)
+    write_json_atomic(stage_root / "preseed_parity.json", preseed_parity)
     update_progress(
         progress_path,
         status="RUNNING",
@@ -649,27 +821,10 @@ def execute(
         row for row in summaries.values() if row["role"] == "exact_null"
     )
     null_panel = panels[str(null_summary["profile_id"])]
-    null_identity_keys = (
-        "ret_visible",
-        "ret_full",
-        "quantity_ret_full",
-        "ration_ret_visible",
-        "ret_visible_cvar10",
-        "visible_rows",
-        "omitted_rows",
-        "omitted_quantity",
-        "generated_orders",
-        "lost_orders",
-        "lost_quantity",
-        "unresolved_orders",
-        "unresolved_quantity",
-        "max_backlog_age",
-        "service_loss_auc",
-        "actual_loaded_departures",
-        "actual_payload",
-        "actual_downstream_vehicle_hours",
-        "charged_daily_dispatch_slots",
-        "charged_downstream_vehicle_hours",
+    null_identity_keys = tuple(
+        key
+        for key in MATRIX_KEYS
+        if key not in {"ending_inventory_P_C", "ending_inventory_P_H"}
     )
     null_identity = {
         key: bool(np.all(null_panel[key] == null_panel[key][:, :1]))
@@ -746,8 +901,14 @@ def execute(
         float(row["safe_h_pi"]) >= float(dev_rule["mean_safe_h_pi_minimum"])
         for row in ordering
     )
+    conservation_keys = (
+        "mass_residual",
+        "partition_residual",
+        "aggregate_ration_residual",
+        "raw_material_residual",
+    )
     conservation_pass = all(
-        bool(np.all(np.abs(panel["mass_residual"]) <= 1e-8))
+        bool(all(np.all(np.abs(panel[key]) <= 1e-8) for key in conservation_keys))
         for panel in panels.values()
     )
     if stage == "development":
@@ -759,7 +920,7 @@ def execute(
             and null_pass
         )
         status = (
-            contract["terminal_labels"]["development_pass"]
+            contract["terminal_labels"]["development_pass_pending_custody"]
             if passed
             else contract["terminal_labels"]["stop"]
         )
@@ -782,7 +943,7 @@ def execute(
             and null_pass
         )
         status = (
-            contract["terminal_labels"]["validation_pass"]
+            contract["terminal_labels"]["validation_pass_pending_custody"]
             if passed
             else contract["terminal_labels"]["stop"]
         )
@@ -792,6 +953,7 @@ def execute(
         "status": status,
         "passed": passed,
         "stage": stage,
+        "run_id": run_id,
         "scientific_commit": commit,
         "contract": str(contract_path.relative_to(ROOT)),
         "contract_sha256": sha256(contract_path),
@@ -811,7 +973,8 @@ def execute(
         "ordering_sensitivity_pass": ordering_pass,
         "simultaneous_inference": inference,
         "claim_boundary": {
-            "full_des_h_pi_established": bool(stage == "validation" and passed),
+            "full_des_h_pi_established": False,
+            "pending_independent_custody_validation": bool(passed),
             "h_obs_authorized": False,
             "learner_authorized": False,
             "paper2_confirmed": False,
@@ -819,6 +982,9 @@ def execute(
         },
         "shard_manifest_sha256": digest_json(shard_manifest),
         "direct_parity_sha256": digest_json(parity_rows),
+        "preseed_parity": preseed_parity,
+        "execution_authorization": authorization,
+        "seed_claim_sha256": sha256(seed_claim),
     }
     result["content_sha256"] = digest_json(result)
     result_path = stage_root / "result.json"
@@ -842,9 +1008,13 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--contract", type=Path, default=DEFAULT_CONTRACT)
     parser.add_argument("--output-root", type=Path, default=DEFAULT_OUTPUT_ROOT)
+    parser.add_argument("--run-dir", type=Path, required=True)
+    parser.add_argument("--run-id", required=True)
     parser.add_argument(
-        "--validation-freeze", type=Path, default=DEFAULT_VALIDATION_FREEZE
+        "--execution-freeze", type=Path, default=DEFAULT_DEVELOPMENT_FREEZE
     )
+    parser.add_argument("--seed-claim", type=Path, required=True)
+    parser.add_argument("--development-result", type=Path)
     return parser.parse_args()
 
 
@@ -855,7 +1025,15 @@ def main() -> int:
         output_root=args.output_root.resolve(),
         stage=str(args.stage),
         workers=int(args.workers),
-        validation_freeze=args.validation_freeze.resolve(),
+        run_dir=args.run_dir.resolve(),
+        run_id=str(args.run_id),
+        execution_freeze=args.execution_freeze.resolve(),
+        seed_claim=args.seed_claim.resolve(),
+        development_result=(
+            args.development_result.resolve()
+            if args.development_result is not None
+            else None
+        ),
     )
     print(result)
     return 0

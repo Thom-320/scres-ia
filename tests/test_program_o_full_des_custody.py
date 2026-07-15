@@ -5,6 +5,9 @@ import subprocess
 import sys
 import time
 
+import pytest
+
+from scripts.program_o_full_des_guard import create_seed_claim, verify_seed_claim
 from scripts.watch_program_o_full_des_hpi import monitor, snapshot
 
 
@@ -91,3 +94,60 @@ def test_watcher_preserves_custody_after_parent_exits_with_live_child(
     assert state["status"] == "RUNNING"
     assert state["custody_scope_alive"] is True
     assert any(row["pid"] != parent.pid for row in state["session_members"])
+
+
+def test_seed_claim_is_exclusive_and_bound_to_authorization(tmp_path: Path):
+    authorization = {
+        "scientific_commit": "a" * 40,
+        "freeze_sha256": "b" * 64,
+        "freeze_path": "/repo/freeze.json",
+        "run_id": "program-o-test",
+        "run_dir": "/remote/program-o-test",
+        "stage": "development",
+        "seed_range": [7400049, 7400072],
+    }
+    claim = create_seed_claim(
+        claim_root=tmp_path,
+        authorization=authorization,
+        contract_sha256="c" * 64,
+    )
+
+    verified = verify_seed_claim(
+        claim_path=claim,
+        authorization=authorization,
+        contract_sha256="c" * 64,
+    )
+    assert verified["run_id"] == "program-o-test"
+    with pytest.raises(FileExistsError):
+        create_seed_claim(
+            claim_root=tmp_path,
+            authorization=authorization,
+            contract_sha256="c" * 64,
+        )
+
+
+def test_seed_claim_tampering_fails_closed(tmp_path: Path):
+    authorization = {
+        "scientific_commit": "a" * 40,
+        "freeze_sha256": "b" * 64,
+        "freeze_path": "/repo/freeze.json",
+        "run_id": "program-o-test",
+        "run_dir": "/remote/program-o-test",
+        "stage": "development",
+        "seed_range": [7400049, 7400072],
+    }
+    claim = create_seed_claim(
+        claim_root=tmp_path,
+        authorization=authorization,
+        contract_sha256="c" * 64,
+    )
+    payload = json.loads(claim.read_text())
+    payload["run_id"] = "tampered"
+    claim.write_text(json.dumps(payload))
+
+    with pytest.raises(RuntimeError, match="run_id"):
+        verify_seed_claim(
+            claim_path=claim,
+            authorization=authorization,
+            contract_sha256="c" * 64,
+        )

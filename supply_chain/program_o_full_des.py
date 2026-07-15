@@ -195,14 +195,20 @@ class ProductTagLedger:
 
 
 def product_demand_tape(
-    seed: int, *, regime_persistence: float, dominant_share: float
+    seed: int,
+    *,
+    regime_persistence: float,
+    dominant_share: float,
+    weeks: int = 8,
 ) -> dict[str, Any]:
     """Reproduce the frozen Program O event-keyed two-product tape."""
     rng = np.random.default_rng(int(seed))
     regime = "P_C" if int(rng.integers(0, 2)) == 0 else "P_H"
     regimes: list[str] = []
     labels: list[str] = []
-    for _week in range(8):
+    if int(weeks) <= 0 or int(weeks) > 8:
+        raise ValueError("weeks must be in 1..8")
+    for _week in range(int(weeks)):
         regimes.append(regime)
         for _day in range(6):
             dominant = bool(rng.random() < float(dominant_share))
@@ -239,8 +245,10 @@ class ProgramOFullDESSimulation(MFSCSimulation):
         demand_offsets_hours: Sequence[float] = (30, 54, 78, 102, 126, 150),
         clearance_hours: float = 1344.0,
     ) -> None:
-        if len(calendar) != 8 or any(int(value) not in range(4) for value in calendar):
-            raise ValueError("calendar must contain eight actions in {0,1,2,3}")
+        if not 1 <= len(calendar) <= 8 or any(
+            int(value) not in range(4) for value in calendar
+        ):
+            raise ValueError("calendar must contain one to eight actions in {0,1,2,3}")
         normalized_scheduler = {
             int(action): tuple(str(product_id) for product_id in labels)
             for action, labels in scheduler.items()
@@ -273,6 +281,7 @@ class ProgramOFullDESSimulation(MFSCSimulation):
             demand_start_after_warmup=True,
         )
         self.program_o_calendar = tuple(int(value) for value in calendar)
+        self.program_o_decision_weeks = len(self.program_o_calendar)
         self.program_o_scheduler = normalized_scheduler
         self.program_o_complete_substitution = bool(complete_substitution)
         self.program_o_activation_delay_hours = float(activation_delay_hours)
@@ -282,6 +291,7 @@ class ProgramOFullDESSimulation(MFSCSimulation):
             int(seed),
             regime_persistence=float(regime_persistence),
             dominant_share=float(dominant_share),
+            weeks=self.program_o_decision_weeks,
         )
         self.program_o_ledger = ProductTagLedger()
         self.program_o_target_queue: deque[ProductTarget] = deque()
@@ -410,6 +420,10 @@ class ProgramOFullDESSimulation(MFSCSimulation):
                 "event": "op8_arrived_sb",
                 "quantity": float(quantity),
                 "tokens": [asdict(item) for item in token],
+                "product_inventory_after": {
+                    product_id: self.program_o_ledger.quantity("rations_sb", product_id)
+                    for product_id in PRODUCTS
+                },
             }
         )
 
@@ -474,7 +488,7 @@ class ProgramOFullDESSimulation(MFSCSimulation):
         start = float(self.program_o_decision_start or self.env.now)
         labels = tuple(self.program_o_tape["order_products"])
         order_num = 0
-        for week in range(8):
+        for week in range(self.program_o_decision_weeks):
             for day, offset in enumerate(self.program_o_demand_offsets_hours):
                 target_time = start + week * float(HOURS_PER_WEEK) + float(offset)
                 if target_time > self.env.now:
@@ -516,14 +530,22 @@ class ProgramOFullDESSimulation(MFSCSimulation):
         return None
 
     def _reserve_op9_order_stock(self, order: OrderRecord, quantity: float):
-        yield from super()._reserve_op9_order_stock(order, quantity)
         qty = float(quantity)
+        # Reserve the product partition before yielding the immediately
+        # satisfiable aggregate Container.get event.  Otherwise another
+        # same-time Op8 callback can mutate the metadata partition between the
+        # physical and product reservations, defeating the frozen atomic move.
         if self.program_o_complete_substitution:
             slices = self.program_o_ledger.take_fifo("rations_sb", qty)
         else:
             slices = self.program_o_ledger.take_product(
                 "rations_sb", str(getattr(order, "requested_product_id")), qty
             )
+        inventory_after_reservation = {
+            product_id: self.program_o_ledger.quantity("rations_sb", product_id)
+            for product_id in PRODUCTS
+        }
+        yield from super()._reserve_op9_order_stock(order, quantity)
         self.program_o_ledger.put_slices("order_transit", slices, now=self.env.now)
         setattr(order, "_program_o_supply_tokens", slices)
         supplied: dict[str, float] = {}
@@ -542,6 +564,7 @@ class ProgramOFullDESSimulation(MFSCSimulation):
                 "event": "op9_reserved",
                 "quantity": qty,
                 "oat_is_none": order.OATj is None,
+                "product_inventory_after": inventory_after_reservation,
             }
         )
 
@@ -576,7 +599,7 @@ class ProgramOFullDESSimulation(MFSCSimulation):
             raise RuntimeError("Program O warm-up did not establish both product lots")
         score_time = (
             float(self.program_o_decision_start)
-            + 8.0 * float(HOURS_PER_WEEK)
+            + float(self.program_o_decision_weeks) * float(HOURS_PER_WEEK)
             + float(self.program_o_clearance_hours)
         )
         self.horizon = score_time
@@ -659,7 +682,8 @@ class ProgramOFullDESSimulation(MFSCSimulation):
 
     def program_o_resource_ledger(self) -> dict[str, float]:
         treatment_days = (
-            8.0 * float(HOURS_PER_WEEK) + self.program_o_clearance_hours
+            float(self.program_o_decision_weeks) * float(HOURS_PER_WEEK)
+            + self.program_o_clearance_hours
         ) / 24.0
         charged_slots = treatment_days
         return {
