@@ -66,7 +66,9 @@ def verify_tracked_freeze(
         failures.append("authorized stage")
     if execution.get("run_id") != str(run_id):
         failures.append("authorized run id")
-    if Path(str(execution.get("run_dir", ""))) != run_dir.resolve():
+    authorized_run_dir = Path(os.path.abspath(str(execution.get("run_dir", ""))))
+    requested_run_dir = Path(os.path.abspath(str(run_dir)))
+    if authorized_run_dir != requested_run_dir:
         failures.append("authorized run dir")
     if execution.get("seed_range") != list(map(int, seed_range)):
         failures.append("authorized seed range")
@@ -83,7 +85,7 @@ def verify_tracked_freeze(
         "freeze_sha256": sha256(freeze_path),
         "freeze_path": str(freeze_path),
         "run_id": str(run_id),
-        "run_dir": str(run_dir.resolve()),
+        "run_dir": str(requested_run_dir),
         "stage": str(stage),
         "seed_range": list(map(int, seed_range)),
     }

@@ -60,7 +60,7 @@ def main() -> int:
     parser.add_argument("--preflight-only", action="store_true")
     args = parser.parse_args()
 
-    run_dir = args.run_dir.resolve()
+    run_dir = Path(os.path.abspath(str(args.run_dir)))
     contract = args.contract.resolve()
     execution_freeze = args.execution_freeze.resolve()
     seed_block = json.loads(contract.read_text())["tape_blocks"][args.stage]
