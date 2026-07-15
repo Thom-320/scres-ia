@@ -1,0 +1,70 @@
+{
+  "schema_version": "program_o_fixed_clock_hobs_corrective_execution_freeze_v1",
+  "status": "FROZEN_BEFORE_SINGLE_CORRECTIVE_OPEN",
+  "scientific_commit": "7399c9e6caca6fd835d2dbbfcb5831bd90cfbb7b",
+  "contract_sha256": "8cb665df8fad6bdfe9172d6c224c4b50da4ff14e77f4fbe3c04ff58616b4e278",
+  "preflight_verdict": {
+    "path": "research/paper2_exhaustive_search/program_o_fixed_clock_physical_preflight_verdict_20260715.json",
+    "sha256": "b450d87bbc6cfb2beabcc562f5baeb584f0b9a076ccddc26302c954ba6a3eacd",
+    "status": "PASS_PROGRAM_O_FIXED_CLOCK_PHYSICAL_PREFLIGHT"
+  },
+  "technical_invalidation": {
+    "path": "results/program_o/fixed_clock_hobs_validation_v1/causal_diagnostic_v1/result.json",
+    "sha256": "05b13ea294dc0d1a0d8c040d2b269a20b18ae85bad80744a46bced1b092006df",
+    "status": "TECHNICAL_INVALIDATION_REQUIRES_CORRECTIVE_REPEAT"
+  },
+  "authorization": {
+    "scientific_commit": "7399c9e6caca6fd835d2dbbfcb5831bd90cfbb7b",
+    "run_id": "program-o-fixed-clock-hobs-corrective-v1-20260715",
+    "run_dir": "/home/ubuntu/program_o_runs/program-o-fixed-clock-hobs-corrective-v1-20260715",
+    "stage": "corrective_validation",
+    "seed_range": [7430001, 7430048]
+  },
+  "source_sha256": {
+    "contracts/program_o_fixed_clock_hobs_corrective_validation_v1.json": "8cb665df8fad6bdfe9172d6c224c4b50da4ff14e77f4fbe3c04ff58616b4e278",
+    "scripts/screen_program_o_fixed_clock_hobs_validation.py": "d20a8a3690a1eee15291586daacd692969cc753dec1f44c02d4e9d331f4c7b1f",
+    "scripts/run_program_o_fixed_clock_hobs_validation_custodied.py": "b69817d3ee7ccefe6231677ce490b4248356d24f2c9821cfc34e6876b3e892b9",
+    "scripts/launch_program_o_fixed_clock_hobs_validation.py": "18f09857c5f9e2acf6da0cbb864ee41befc9137ea93e0d3bb79814343ede5d06",
+    "scripts/watch_program_o_full_des_hpi.py": "0d44bf3c69a277604f0288cd6d347463804142a5a6edf9722a42e001f27be8af",
+    "scripts/program_o_full_des_guard.py": "df25f5f0239a402d44bb1126bc9b7b9707df16886866b3b79853228d21f017a5",
+    "scripts/screen_program_o_hobs_fit.py": "a4ab1915acc872d860581f525ff9c866581c623a8b63e6d6fb67a88355e8c7f7",
+    "scripts/screen_program_o_state_rich_fit.py": "7dfb769d9d15c1d1586390e2f9d6b95881537d49539b57dc6735574b32f6777e",
+    "scripts/diagnose_program_o_state_rich_dual_resource.py": "75e4eb59be1e620a5d1466ead0d1f0316f38db0deb21599f4474a141f81eacf2",
+    "supply_chain/program_o_full_des.py": "005a139f8e558a2de46178d5c37245f0a66e126fe45c467d0c5e7bfecdc66d7e",
+    "supply_chain/program_o_full_des_transducer.py": "4c268777032fd24a9d948b1d168cc4aa493ab647ff98ca75628b956ad9775779",
+    "supply_chain/program_o_state_rich.py": "5a8df96c2e3f28eea0e3ff01722e082f93772dcf78084255df25f0de11234d32",
+    "supply_chain/program_o_hobs.py": "e8052e551dd74d07f45e86e07008dc1cdd517b01f09aa858264a63e05b334109",
+    "supply_chain/supply_chain.py": "c720e2ce198b9330d81a9f29efc7456300f63b2dd9022489f584fba6fea585ea",
+    "supply_chain/episode_metrics.py": "0eae8b9a9ab5c6289ff94a318c6ab27c031ed184d0e0f00d761e8785373cab9b",
+    "supply_chain/ret_thesis.py": "a516cae034b8d428e584998e2baab73d752543e6199936b6e6eb0729c09cc805",
+    "results/program_o/state_rich_comparator_fit_v1/result.json": "d67ac97a359a307ca632b6a13493e3ff5940a97e9440a6bc4b7d77c08a147875",
+    "results/program_o/fixed_clock_hobs_validation_v1/causal_diagnostic_v1/result.json": "05b13ea294dc0d1a0d8c040d2b269a20b18ae85bad80744a46bced1b092006df"
+  },
+  "execution": {
+    "workers": 8,
+    "watcher_first": true,
+    "pid_equals_pgid_equals_sid": true,
+    "cgroup_record_required": true,
+    "exclusive_host_seed_claim": true,
+    "raw_matrices_retained": true,
+    "remote_checksums_required": true,
+    "relaunch_forbidden": true
+  },
+  "adjudication": {
+    "point_comparator": "development-selected static indices 39599,39599,31743",
+    "bootstrap_comparator": "same frozen static in every resample",
+    "simultaneous_method": "studentized one-sided max-t across all 69 estimands",
+    "minimum_lcb": 0.01,
+    "minimum_favorable_tapes": 34,
+    "all_placebos_positive": true,
+    "all_guardrails_noninferior": true,
+    "no_second_rescue": true
+  },
+  "claim_boundary": {
+    "validation_authorized_once": true,
+    "h_obs_confirmed": false,
+    "learner_authorized": false,
+    "paper2_confirmed": false,
+    "paper3_authorized": false
+  }
+}
