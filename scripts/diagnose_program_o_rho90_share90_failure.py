@@ -92,14 +92,17 @@ def corrected_max_t(
     panels: Mapping[str, Mapping[str, np.ndarray]],
     result: Mapping[str, Any],
     resamples: int,
+    fixed_comparator_indices: Mapping[str, int] | None = None,
 ) -> dict[str, Any]:
     """Studentized max-t audit; descriptive only and never used for promotion."""
     cells = list(result["cells"])
     n_tapes = 48
-    seed = int.from_bytes(
-        hashlib.sha256(b"program-o-rho90-share90-causal-diagnostic-v1").digest()[:8],
-        "big",
+    bootstrap_identity = (
+        b"program-o-rho90-share90-causal-diagnostic-v1-fixed-comparator"
+        if fixed_comparator_indices is not None
+        else b"program-o-rho90-share90-causal-diagnostic-v1-reselected-comparator"
     )
+    seed = int.from_bytes(hashlib.sha256(bootstrap_identity).digest()[:8], "big")
     rng = np.random.default_rng(seed)
     samples = rng.integers(0, n_tapes, size=(resamples, n_tapes))
     counts = np.zeros((resamples, n_tapes), dtype=float)
@@ -117,10 +120,14 @@ def corrected_max_t(
         tape_rows = np.arange(n_tapes, dtype=np.int64)
         policy = {key: panel[key][tape_rows, policy_indices] for key in MATRIX_KEYS}
         selected = np.empty(resamples, dtype=np.int64)
-        for start in range(0, resamples, 25):
-            stop = min(resamples, start + 25)
-            selected[start:stop] = np.argmax(counts[start:stop] @ panel["ret_visible"], axis=1)
-        static_point = int(np.argmax(panel["ret_visible"].mean(axis=0)))
+        if fixed_comparator_indices is None:
+            for start in range(0, resamples, 25):
+                stop = min(resamples, start + 25)
+                selected[start:stop] = np.argmax(counts[start:stop] @ panel["ret_visible"], axis=1)
+            static_point = int(np.argmax(panel["ret_visible"].mean(axis=0)))
+        else:
+            static_point = int(fixed_comparator_indices[cell_id])
+            selected.fill(static_point)
         signed = [("ret_visible", 1.0, "primary")]
         signed.extend((key, 1.0, "guardrail") for key in HIGHER_KEYS)
         signed.extend((key, -1.0, "guardrail") for key in LOWER_KEYS)
@@ -167,6 +174,11 @@ def corrected_max_t(
     }
     return {
         "method": "studentized_one_sided_max_t",
+        "comparator_mode": (
+            "frozen_development_static"
+            if fixed_comparator_indices is not None
+            else "validation_reselected_static"
+        ),
         "descriptive_only": True,
         "resamples": int(resamples),
         "estimand_count": len(names),
@@ -434,6 +446,18 @@ def run(contract_path: Path, validation_dir: Path, output: Path) -> dict[str, An
         result=result,
         resamples=int(contract["corrective_inference"]["bootstrap_resamples"]),
     )
+    frozen_indices = {
+        audit_cell_id: int(
+            fit_result["configurations"][config.config_id][audit_cell_id]["static_index"]
+        )
+        for audit_cell_id in all_panels
+    }
+    corrected_frozen = corrected_max_t(
+        panels=all_panels,
+        result=result,
+        resamples=int(contract["corrective_inference"]["bootstrap_resamples"]),
+        fixed_comparator_indices=frozen_indices,
+    )
 
     metric_sign_reversals = {
         "quantity_ret": int(
@@ -520,6 +544,7 @@ def run(contract_path: Path, validation_dir: Path, output: Path) -> dict[str, An
         "group_comparison": group_comparison,
         "correlations_with_ret_delta": correlations,
         "corrected_inference_descriptive_only": corrected,
+        "corrected_frozen_comparator_inference_descriptive_only": corrected_frozen,
         "decision_rule": {
             "technical_invalidation": technical_invalidation,
             "corrective_repeat_licensed": technical_invalidation,
