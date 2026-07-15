@@ -1,4 +1,4 @@
-# Garrido face-validation questions — canonical Q1–Q12 batch
+# Garrido face-validation questions — canonical Q1–Q13 batch
 
 Date: 2026-07-13
 Status: **CANONICAL HUMAN-FACING BATCH**
@@ -306,9 +306,76 @@ This answer cannot alter the canonical ReT endpoint or rescue a canonical null.
 
 ---
 
+## Q13 — Non-fungible ration classes sharing Op5–Op7 (validates or collapses the Program O construct)
+
+**Context:** Program O is a disclosed two-class researcher extension motivated
+directly by the Ch 8 limitation named in Q1 — the thesis compresses 21 real
+ration types into one homogeneous product. Program O restores the suppressed
+feature by modelling **two non-substitutable classes (P_C, P_H)** that share the
+single capacity-constrained Op5–Op7 assembly line and must be given a weekly
+production split. Under this construct the full-DES perfect-information gap is
+**custody-verified and material** (safe H_PI 0.152, simultaneous LCB95 0.116) and
+is **exactly zero when the two classes are made fungible** (the causal null). The
+entire value therefore rests on genuine non-fungibility at a shared bottleneck.
+This question asks Garrido to (i) confirm the construct is domain-defensible and
+(ii) supply the real calibration values so the result can be re-expressed for the
+true MFSC rather than the researcher stand-in. Unlike Q1–Q12 this is not a
+"would this reopen a family" query — the gap already exists and is audited.
+
+**Question:** "Among the 21 real ration types produced by the MFSC:
+(a) Do **two or more classes exist such that a theatre requisition for one
+CANNOT be filled by another** (e.g., religious/halal/kosher, medical/therapeutic,
+or climate-specific rations) — genuine non-substitutability, not merely
+different SKUs?
+(b) Do those classes **share the same capacity-constrained Op5–Op7 assembly
+resource**, so producing one consumes capacity the other needs in the same
+period — or does each class have dedicated, non-contending capacity?
+(c) Is the **demand mix between classes uncertain and time-varying with
+persistence** (one class dominant for a stretch, then shifting)? If so, what are
+realistic values for the dominant-class share and the persistence of the dominant
+regime? (Program O currently screens dominant-share ∈ {0.75, 0.90} and regime
+persistence ∈ {0.75, 0.90}.)
+(d) Is the class mix **partially observable in advance** of the weekly production
+commitment through requisition or forecast signals — with what lead and error —
+or is it known exactly, or not at all?
+(e) Does **switching assembly between classes incur a setup/changeover** time or
+cost? (Program O currently assumes zero setup and identical BOM, mass and rate.)
+(f) Is a **weekly allocation of a small number of production batches** (Program O
+uses three batches over an eight-week horizon) a realistic decision cadence and
+granularity, or is the real decision continuous, daily, or annual?
+(g) Is a **two-class reduction a defensible abstraction**, or is the real
+structure many small classes (which changes the allocation combinatorics)?"
+
+**Validates the Program O construct — and licenses an MFSC-representativeness
+claim — if:** at least two classes are mutually non-substitutable (a), share a
+capacity-constrained bottleneck (b), and the mix is uncertain, persistent (c) and
+imperfectly observable before commitment (d). The certified H_PI and any
+observable-headroom result may then be re-calibrated to the real (share,
+persistence, setup, cadence) and reported as representative of the MFSC. Non-zero
+setup (e) does not collapse the construct; it must be added to the physics and
+re-run.
+
+**Collapses the Program O construct to the exact fungible null (H_PI = 0; no
+Program O paper) if:** all 21 types are mutually substitutable at fulfilment
+(a false), OR each class has dedicated non-contending assembly capacity (b false),
+OR the class mix is deterministic or known exactly in advance (c/d false). Under
+any of these the two-class distinction carries no information value and Program O
+reduces to the aggregate single-product problem already modelled.
+
+**Non-blocking note.** This question refines *external calibration and the
+MFSC-representativeness claim*; it is **not** a gate on the internal research. The
+two-class extension is disclosed and self-motivated by the thesis's own 21→1
+compression, so the state-rich observable-headroom gate proceeds on the researcher
+extension regardless of Garrido's timing. A "collapses" answer retires Program O
+as a real-MFSC claim (converting it to a boundary/abstraction result); a
+"validates" answer upgrades it to a calibrated MFSC claim. It does not authorize a
+learner or a metric change — the full pre-learner gate chain still applies.
+
+---
+
 ## How to use these questions
 
-1. Send all twelve sections as one batch. Linked families within one section are
+1. Send all thirteen sections as one batch. Linked families within one section are
    adjudicated independently.
 2. Record each answer verbatim in
    `docs/GARRIDO_FACE_VALIDATION_RESPONSES_2026-07-13.md`, including source
