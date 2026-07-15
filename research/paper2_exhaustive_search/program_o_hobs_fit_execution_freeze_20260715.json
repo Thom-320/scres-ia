@@ -1,0 +1,67 @@
+{
+  "schema_version": "program_o_hobs_fit_execution_freeze_v1",
+  "status": "AUTHORIZED_PROGRAM_O_HOBS_FIT_ONLY",
+  "frozen_at_utc": "2026-07-15T03:30:00Z",
+  "implementation_source_commit": "f052686084d8fcea94892808c23e5cff7bf247f7",
+  "scope": "Open the 48-tape H_obs fit block once. Select and custody one deterministic observable policy configuration. Validation, learner training, Paper 2 confirmation, and Paper 3 remain prohibited.",
+  "contract": "contracts/program_o_hobs_prelearner_v1.json",
+  "contract_sha256": "c496782c46f587d23916ad72dc047e9e4a2aa6b4bb9ea1f860e6f304dc06a263",
+  "parent_hpi_evidence": {
+    "path": "results/program_o/full_des_hpi_translation_v1/validation_custody_verdict_v1.json",
+    "sha256": "9dc23deda5684a30ff03bc91d04aa4de08c911bb5541d75456b703778d1a4219",
+    "status": "PASS_PROGRAM_O_FULL_DES_HPI_TRANSLATION_CUSTODY_VERIFIED"
+  },
+  "execution_authorization": {
+    "stage": "fit",
+    "run_id": "program-o-hobs-fit-v1-20260715",
+    "run_dir": "/home/ubuntu/program_o_runs/program-o-hobs-fit-v1-20260715",
+    "seed_range": [7420001, 7420048],
+    "seed_claim_root": "/home/ubuntu/program_o_seed_claims",
+    "workers": 6,
+    "single_use_rule": "The watcher must be ready before an O_EXCL host claim is created. Any prior run directory or claim blocks launch."
+  },
+  "source_hashes": {
+    "contracts/program_o_hobs_prelearner_v1.json": "c496782c46f587d23916ad72dc047e9e4a2aa6b4bb9ea1f860e6f304dc06a263",
+    "supply_chain/program_o_hobs.py": "e8052e551dd74d07f45e86e07008dc1cdd517b01f09aa858264a63e05b334109",
+    "scripts/screen_program_o_hobs_fit.py": "a4ab1915acc872d860581f525ff9c866581c623a8b63e6d6fb67a88355e8c7f7",
+    "scripts/program_o_hobs_guard.py": "6b5d291474445d4c208574a15f397012dbe544006a20cdac06190eae4fc9be9b",
+    "scripts/run_program_o_hobs_fit_custodied.py": "78a525073a10ff6491a5dd9f01bee3710cd4e40f74d9ab5c6f510520003c4318",
+    "scripts/launch_program_o_hobs_fit.py": "42a1fb0fdb86cd60c8740261b0cbb43e9f3c5cd242ca09367eebd81d027f4003",
+    "scripts/watch_program_o_full_des_hpi.py": "0d44bf3c69a277604f0288cd6d347463804142a5a6edf9722a42e001f27be8af",
+    "supply_chain/program_o_full_des.py": "8e3b87fe3ad195c0b1e860a86d4c1098ecc7942499b0d8b8acff021c2fec7376",
+    "supply_chain/program_o_full_des_transducer.py": "4c268777032fd24a9d948b1d168cc4aa493ab647ff98ca75628b956ad9775779",
+    "supply_chain/ret_thesis.py": "a516cae034b8d428e584998e2baab73d752543e6199936b6e6eb0729c09cc805",
+    "supply_chain/episode_metrics.py": "0eae8b9a9ab5c6289ff94a318c6ab27c031ed184d0e0f00d761e8785373cab9b",
+    "tests/test_program_o_hobs.py": "8b355e9b1ed0bf2e971a431f431187f09ff1bc4ff258a0207d368b7d2fb4ffca"
+  },
+  "custody_requirements": {
+    "watcher_first": true,
+    "producer_pid_equals_pgid_equals_sid": true,
+    "monitor_entire_posix_session": true,
+    "atomic_heartbeat": true,
+    "resume_cursor": "progress completed/total plus per-cell/per-seed raw shards",
+    "remote_per_file_checksums": true,
+    "retrieval_and_independent_revalidation_required": true,
+    "cgroup_claim": "not made; repository custody monitors full POSIX SID and PGID"
+  },
+  "prelaunch_tests": {
+    "command": ".venv/bin/python -m pytest -q tests/test_program_o_hobs.py tests/test_program_o_full_des.py tests/test_program_o_full_des_custody.py tests/test_ret_excel_request_snapshot_contract.py tests/test_ret_excel_request_snapshot_v2_audit.py",
+    "result": "60 passed",
+    "local_smoke": "Two already-burned tapes, one cell, direct replay maximum absolute error 0.0; no scientific evidence."
+  },
+  "fail_closed": [
+    "No source or contract hash mismatch.",
+    "No dirty worktree or moving branch checkout.",
+    "No reuse of a run identity or seed claim.",
+    "No validation seed opening.",
+    "No learner launch regardless of fit result.",
+    "A running or partially retrieved job is not evidence."
+  ],
+  "claim_boundary": {
+    "full_des_h_pi_established": true,
+    "h_obs_established": false,
+    "learner_authorized": false,
+    "paper2_confirmed": false,
+    "paper3_authorized": false
+  }
+}
