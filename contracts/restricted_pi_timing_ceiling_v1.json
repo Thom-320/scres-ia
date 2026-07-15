@@ -1,0 +1,136 @@
+{
+  "contract_id": "restricted_pi_timing_ceiling_v1",
+  "status": "FROZEN_BEFORE_TIMING_DEVELOPMENT_SEEDS_7460001_7460048",
+  "scientific_question": "Does physically constrained daily intervention timing add canonical ReT beyond constants, weekly open-loop timing, and weekly clairvoyant timing under thesis-authorized recurrent-risk regimes?",
+  "claim_name": "restricted_PI_timing_ceiling",
+  "claim_limits": {
+    "not_total_H_PI": true,
+    "not_H_obs": true,
+    "learner_authorized": false,
+    "paper2_confirmed": false,
+    "paper3_authorized": false
+  },
+  "metrics": {
+    "primary": "ret_excel_request_snapshot_v2",
+    "mandatory": [
+      "ret_excel_full_ledger",
+      "ration_ret_excel",
+      "ret_excel_cvar10",
+      "lost_orders",
+      "ret_excel_omitted_n",
+      "backorder_qty_final",
+      "backlog_age_max",
+      "worst_node_or_product_fill",
+      "realized_resources"
+    ],
+    "secondary_temporal_panel": {
+      "implementation": "supply_chain.resilience_temporal.compute_temporal_resilience_panel",
+      "sample_hours": 24,
+      "risk_cluster_gap_hours": 168,
+      "cluster_window_hours": 1344,
+      "baseline_hours": 336,
+      "recovery_definition": "service >= 95 percent of the pre-event median and overdue backlog <= 105 percent of its pre-event median for seven consecutive daily observations",
+      "selection_use": "report_only_never_select_or_rescue"
+    },
+    "forbidden": [
+      "replace canonical ReT",
+      "promote resilience_triangle_v1",
+      "select a policy on a temporal secondary",
+      "Cobb-Douglas"
+    ]
+  },
+  "risk_regimes": {
+    "enabled": ["R21", "R22", "R23", "R24"],
+    "primary_frequency_profiles": {
+      "current": {"R21": "current", "R22": "current", "R23": "current", "R24": "current"},
+      "R24_increased": {"R21": "current", "R22": "current", "R23": "current", "R24": "increased"},
+      "R22_increased": {"R21": "current", "R22": "increased", "R23": "current", "R24": "current"},
+      "R22_R24_increased": {"R21": "current", "R22": "increased", "R23": "current", "R24": "increased"}
+    },
+    "impact_sensitivities": [1.5, 2.0],
+    "impact_sensitivity_rule": "predeclared report-only sensitivities; they cannot rescue a failed primary frequency regime",
+    "R3": "thesis_current_unscaled_and_excluded_from_isolation_screen",
+    "profile_selection_rule": "select the first passing regime in order current, R24_increased, R22_increased, R22_R24_increased; if none pass, stop before timing execution"
+  },
+  "posture_frontier": {
+    "family": "Track-A common I1344 buffer fraction plus S1/S2/S3",
+    "constants": 18,
+    "buffer_fractions": [0.0, 0.125, 0.25, 0.375, 0.5, 1.0],
+    "shift_levels": [1, 2, 3],
+    "resource_budget_cap": 0.5,
+    "low_posture": "best safe constant in current regime at frozen cap",
+    "high_posture": "best safe constant in selected increased regime at frozen cap",
+    "no_posture_search_after_timing_results": true
+  },
+  "physical_intervention": {
+    "implementation": "supply_chain.event_triggered_env.EventTriggeredTrackAEnv",
+    "review_hours": 24,
+    "hold": "preserve requested posture and create no buffer top-up or exogenous RNG call",
+    "dispatch": "daily immediate only when the selected Track-A posture changes a dispatch field; otherwise thesis baseline",
+    "shifts": "one-level-per-day upward ramp with the existing surge-hour budget; HOLD preserves the request while physical ramping may continue",
+    "buffers": "168-hour immutable commitment; no cancellation or overwrite; at most one new commitment per 168 hours",
+    "churn_cost": "none; report intervention count and change magnitude instead"
+  },
+  "restricted_privileged_oracle": {
+    "future_information": "realized R22 and R24 event onset/end times only",
+    "postures": ["low_posture", "high_posture"],
+    "entry_offsets_hours": [-168, -72, -24, 0, 24, 72],
+    "exit_offset_hours_after_event_end": 72,
+    "conflict_rule": "overlapping high-posture windows are unioned; same-time events are applied before the daily observation and decision",
+    "action_between_boundaries": "HOLD"
+  },
+  "comparators": {
+    "constants": "all 18 Track-A constants",
+    "open_loop": "all 256 eight-week binary low/high calendars repeated periodically",
+    "weekly_clairvoyant": "same restricted event windows rounded down to the preceding 168-hour decision boundary",
+    "observable": "EWMA plus hysteresis trigger using realized past risk, backlog age and inventory shortfall only",
+    "placebos": [
+      "signal_shuffled_within_tape",
+      "signal_stale_168h",
+      "signal_cross_tape_shift17"
+    ]
+  },
+  "safe_oracle": {
+    "selection_level": "per tape",
+    "exclude_if_worse": [
+      "lost orders",
+      "omitted orders",
+      "full-order ReT",
+      "quantity-weighted ReT",
+      "remaining backlog",
+      "backlog age",
+      "worst node or product fill",
+      "realized shift, surge, transport, or buffer resources"
+    ],
+    "shed_to_win_fixture_must_be_rejected": true
+  },
+  "development": {
+    "seeds": [7460001, 7460048],
+    "n_tapes": 48,
+    "burned_only": true,
+    "bootstrap_rng_seed": 7460999,
+    "sealed_or_virgin_tapes_opened": false
+  },
+  "promotion_gate": {
+    "increment_over_best_comparator": 0.01,
+    "paired_LCB95_strictly_positive": true,
+    "minimum_favorable_tapes": 34,
+    "minimum_distinct_intervention_times": 2,
+    "all_guardrails_noninferior": true,
+    "resources_non_superior": true,
+    "next_if_pass": "freeze one observable classical controller and a new OOS validation contract",
+    "next_if_fail": "close this timing family without changing metrics, offsets, impacts, postures, or cadence"
+  },
+  "custody": {
+    "required": [
+      "immutable commit and contract hashes",
+      "exclusive seed claim",
+      "PGID and SID watcher",
+      "atomic heartbeat",
+      "resume cursor",
+      "raw matrices",
+      "action trajectories",
+      "checksums"
+    ]
+  }
+}
