@@ -625,6 +625,33 @@ def state_rich_calendar(
                     **stale_payload,
                     observation_sha256=_digest(stale_payload),
                 )
+            elif observation_mode == "stale_operational_current_belief":
+                donor = real_observation_history[max(0, week - 2)]
+                stale_payload = _observation_payload(observation)
+                for key in (
+                    "on_hand",
+                    "locked_pipeline",
+                    "backlog_quantity",
+                    "backlog_orders",
+                    "max_backlog_age",
+                    "in_flight_quantity",
+                ):
+                    stale_payload[key] = getattr(donor, key)
+                observation = replace(
+                    observation,
+                    **stale_payload,
+                    observation_sha256=_digest(stale_payload),
+                )
+            elif observation_mode == "current_operational_stale_belief":
+                donor = real_observation_history[max(0, week - 2)]
+                stale_payload = _observation_payload(observation)
+                stale_payload["belief_c"] = donor.belief_c
+                stale_payload["predicted_share_c"] = donor.predicted_share_c
+                observation = replace(
+                    observation,
+                    **stale_payload,
+                    observation_sha256=_digest(stale_payload),
+                )
             elif observation_mode == "no_state":
                 no_state_payload = _observation_payload(observation)
                 for key in (
@@ -643,10 +670,50 @@ def state_rich_calendar(
                     **no_state_payload,
                     observation_sha256=_digest(no_state_payload),
                 )
+            elif observation_mode == "belief_only":
+                belief_only_payload = _observation_payload(observation)
+                for key in (
+                    "on_hand",
+                    "locked_pipeline",
+                    "backlog_quantity",
+                    "max_backlog_age",
+                    "in_flight_quantity",
+                ):
+                    belief_only_payload[key] = (0.0, 0.0)
+                belief_only_payload["backlog_orders"] = (0, 0)
+                observation = replace(
+                    observation,
+                    **belief_only_payload,
+                    observation_sha256=_digest(belief_only_payload),
+                )
+            elif observation_mode == "operational_only":
+                operational_only_payload = _observation_payload(observation)
+                operational_only_payload["belief_c"] = 0.5
+                operational_only_payload["predicted_share_c"] = 0.5
+                observation = replace(
+                    observation,
+                    **operational_only_payload,
+                    observation_sha256=_digest(operational_only_payload),
+                )
             elif observation_mode == "swapped_state":
                 previous_action = observation.previous_action
                 observation = replace(
                     swap_product_channels(observation),
+                    previous_action=previous_action,
+                )
+                swapped_payload = _observation_payload(observation)
+                observation = replace(
+                    observation,
+                    observation_sha256=_digest(swapped_payload),
+                )
+            elif observation_mode == "swapped_operational_current_belief":
+                belief_c = observation.belief_c
+                predicted_share_c = observation.predicted_share_c
+                previous_action = observation.previous_action
+                observation = replace(
+                    swap_product_channels(observation),
+                    belief_c=belief_c,
+                    predicted_share_c=predicted_share_c,
                     previous_action=previous_action,
                 )
                 swapped_payload = _observation_payload(observation)

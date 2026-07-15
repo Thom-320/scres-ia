@@ -1,0 +1,105 @@
+{
+  "schema_version": "program_o_state_rich_dual_resource_diagnostic_v1",
+  "status": "FROZEN_POST_HOC_DIAGNOSTIC_BEFORE_EXECUTION",
+  "scientific_scope": "A new post-hoc diagnostic on burned fit tapes. It executes information placebos that the stopped state-rich fit did not run and reports two resource estimands without changing the stopped run's verdict.",
+  "source_result": {
+    "run_id": "program-o-state-rich-fit-v1-20260715",
+    "sha256": "d67ac97a359a307ca632b6a13493e3ff5940a97e9440a6bc4b7d77c08a147875",
+    "status": "STOP_RESOURCE_OR_GUARDRAIL_CONFOUND"
+  },
+  "tape_governance": {
+    "burned_fit_min": 7420001,
+    "burned_fit_max": 7420048,
+    "sealed_validation_min": 7420049,
+    "sealed_validation_max": 7420096,
+    "validation_access_forbidden": true,
+    "new_tape_generation_forbidden": true
+  },
+  "controller_family": {
+    "config_ids": [
+      "base_stock__1",
+      "base_stock__2",
+      "max_pressure__0",
+      "max_pressure__5000",
+      "min_cost_flow__1",
+      "min_cost_flow__2",
+      "belief_mpc__3",
+      "belief_mpc__4",
+      "belief_dp__3",
+      "belief_dp__4"
+    ],
+    "no_retuning": true,
+    "no_new_controller": true
+  },
+  "cells": [
+    "rho75_share75",
+    "rho75_share90",
+    "rho90_share75",
+    "rho90_share90"
+  ],
+  "primary_cell": "rho75_share90",
+  "placebo_families": {
+    "total_information": [
+      "stale_t2",
+      "no_state",
+      "swapped_state",
+      "cross_tape_shift17"
+    ],
+    "operational_state_given_current_belief": [
+      "belief_only",
+      "stale_operational_current_belief",
+      "swapped_operational_current_belief"
+    ],
+    "belief_given_current_operational_state": [
+      "operational_only",
+      "current_operational_stale_belief"
+    ]
+  },
+  "placebo_inference": {
+    "contrast": "real-observation ReT minus placebo-observation ReT on paired burned tapes",
+    "bootstrap_resamples": 10000,
+    "pass_rule": "Every placebo in a family must have one-sided paired LCB95 strictly greater than zero.",
+    "all_controller_cell_rows_executed": true
+  },
+  "common_nonresource_gates": {
+    "mean_ret_delta_minimum": 0.015,
+    "favorable_tapes_minimum": 34,
+    "metric_guardrails_pass": true,
+    "reserved_capacity_equal": true,
+    "action_trajectory_pass": true,
+    "state_counterfactual_pass": true
+  },
+  "resource_estimands": {
+    "fixed_clock_reserved": {
+      "definition": "Gross production slots, production quantity, charged dispatch slots, and charged downstream vehicle-hours are equal. Additional realized payload, departures, or vehicle-hours inside the fixed reserved envelope are utilization, not resource purchase.",
+      "binding_gate": "reserved_capacity_equal"
+    },
+    "pay_per_use": {
+      "definition": "Realized loaded departures, payload, and downstream vehicle-hours are resources. The policy must be non-superior to the best open-loop comparator and pass the globally matched actual-use frontier.",
+      "binding_gates": [
+        "strict_actual_use_pass",
+        "resource_frontier_pass"
+      ]
+    }
+  },
+  "stability": {
+    "required_connected_cells": 3,
+    "must_span_both_rho_levels": true,
+    "must_span_both_share_levels": true,
+    "configuration_fixed_across_cells": true
+  },
+  "diagnostic_questions": {
+    "total_observable_value": "Does any frozen controller show stable value over open-loop when its complete real observation beats all total-information placebos?",
+    "incremental_operational_state_value": "Conditional on the current regime belief, does real operational state beat belief-only, stale-operational, and swapped-operational controls?",
+    "incremental_belief_value": "Conditional on current operational state, does the current belief beat neutral and stale-belief controls?"
+  },
+  "claim_boundary": {
+    "post_hoc_development_diagnostic_only": true,
+    "cannot_relabel_source_stop": true,
+    "h_obs_confirmed": false,
+    "validation_authorized": false,
+    "learner_authorized": false,
+    "paper2_confirmed": false,
+    "paper3_authorized": false
+  }
+}
