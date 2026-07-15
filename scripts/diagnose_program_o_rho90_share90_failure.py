@@ -29,6 +29,7 @@ from supply_chain.program_o_state_rich import (  # noqa: E402
 DEFAULT_CONTRACT = ROOT / "contracts/program_o_rho90_share90_causal_diagnostic_v1.json"
 PARENT_FULL = ROOT / "contracts/program_o_full_des_hpi_translation_v1.json"
 PARENT_STATE = ROOT / "contracts/program_o_state_rich_comparator_fit_v1.json"
+FIT_RESULT = ROOT / "results/program_o/state_rich_comparator_fit_v1/result.json"
 
 
 def sha256(path: Path) -> str:
@@ -205,6 +206,10 @@ def run(contract_path: Path, validation_dir: Path, output: Path) -> dict[str, An
     seeds = list(range(7420049, 7420097))
     if result["seeds"] != seeds:
         raise RuntimeError("burned seed block mismatch")
+    fit_source = contract["frozen_development_comparator_source"]
+    if sha256(FIT_RESULT) != fit_source["sha256"]:
+        raise RuntimeError("frozen development comparator source mismatch")
+    fit_result = json.loads(FIT_RESULT.read_text())
 
     all_panels = {cell: load_panel(validation_dir, cell, seeds) for cell in result["cells"]}
     cell_id = contract["scope"]["cell"]
@@ -354,6 +359,34 @@ def run(contract_path: Path, validation_dir: Path, output: Path) -> dict[str, An
         exact_mismatches.append(
             {"kind": "static_index", "expected": static_index, "actual": stored_static}
         )
+    frozen_comparator_rescore = {}
+    comparator_contract_drift = []
+    for audit_cell_id, audit_panel in all_panels.items():
+        validation_row = result["cells"][audit_cell_id]
+        frozen_row = fit_result["configurations"][config.config_id][audit_cell_id]
+        frozen_index = int(frozen_row["static_index"])
+        validation_index = int(validation_row["static_index"])
+        audit_policy_indices = np.asarray(validation_row["calendar_indices"], dtype=np.int64)
+        audit_tape_rows = np.arange(len(seeds), dtype=np.int64)
+        frozen_deltas = (
+            audit_panel["ret_visible"][audit_tape_rows, audit_policy_indices]
+            - audit_panel["ret_visible"][:, frozen_index]
+        )
+        frozen_comparator_rescore[audit_cell_id] = {
+            "frozen_development_static_index": frozen_index,
+            "validation_reselected_static_index": validation_index,
+            "indices_equal": frozen_index == validation_index,
+            "mean_delta_vs_frozen_development_static": float(np.mean(frozen_deltas)),
+            "favorable_tapes_vs_frozen_development_static": int(np.sum(frozen_deltas > 0)),
+        }
+        if frozen_index != validation_index:
+            comparator_contract_drift.append(
+                {
+                    "cell_id": audit_cell_id,
+                    "frozen_development_static_index": frozen_index,
+                    "validation_reselected_static_index": validation_index,
+                }
+            )
     favorable = [row for row in tape_rows if row["group"] == "favorable"]
     non_favorable = [row for row in tape_rows if row["group"] == "non_favorable"]
     feature_keys = [
@@ -422,7 +455,7 @@ def run(contract_path: Path, validation_dir: Path, output: Path) -> dict[str, An
             )
         ),
     }
-    technical_invalidation = bool(exact_mismatches)
+    technical_invalidation = bool(exact_mismatches or comparator_contract_drift)
     status = (
         "TECHNICAL_INVALIDATION_REQUIRES_CORRECTIVE_REPEAT"
         if technical_invalidation
@@ -461,6 +494,13 @@ def run(contract_path: Path, validation_dir: Path, output: Path) -> dict[str, An
             "unique_scheduled_resource_vectors": result["physical_replay"][
                 "unique_scheduled_resource_vectors"
             ],
+            "comparator_contract_drift": comparator_contract_drift,
+            "frozen_development_comparator_rescore": frozen_comparator_rescore,
+            "contract_internal_ambiguity": {
+                "frozen_point_comparator_clause": "selected on the existing burned development block only; frozen before validation",
+                "bootstrap_clause": "reselect the strongest open-loop calendar inside every paired bootstrap resample",
+                "interpretation": "The clauses define different point-comparator estimands and must be reconciled before corrective validation. The executed code used validation-selected point comparators.",
+            },
             "metric_sign_reversals": metric_sign_reversals,
             "original_unstandardized_critical": result["inference"]["simultaneous_critical"],
         },
