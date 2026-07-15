@@ -144,6 +144,7 @@ def compute_episode_metrics(
     *,
     treatment_start: float | None = None,
     ret_excel_contract_version: str = "ret_excel_request_snapshot_v2",
+    include_temporal_panel: bool = False,
 ) -> dict[str, Any]:
     """Full order-derived metrics panel for a completed simulation.
 
@@ -217,7 +218,7 @@ def compute_episode_metrics(
     delivered = sum(float(o.quantity or 0.0) for o in served)
     demanded = sum(float(o.quantity or 0.0) for o in orders)
 
-    return {
+    panel = {
         # counts
         "n_orders": float(len(orders)),
         "n_served": float(len(served)),
@@ -297,6 +298,13 @@ def compute_episode_metrics(
         "demanded_rations": float(demanded),
         "flow_fill_rate": float(delivered / demanded) if demanded > 0 else 1.0,
     }
+    if include_temporal_panel:
+        from .resilience_temporal import compute_temporal_resilience_panel
+
+        panel.update(
+            compute_temporal_resilience_panel(sim, treatment_start=treatment_start)
+        )
+    return panel
 
 
 def merge_resource_metrics(
