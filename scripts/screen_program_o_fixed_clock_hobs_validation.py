@@ -53,12 +53,11 @@ PARENT_FULL_DES_CONTRACT = ROOT / "contracts/program_o_full_des_hpi_translation_
 PARENT_STATE_CONTRACT = ROOT / "contracts/program_o_state_rich_comparator_fit_v1.json"
 PARENT_HOBS_CONTRACT = ROOT / "contracts/program_o_hobs_prelearner_v1.json"
 DEFAULT_CONTRACT = ROOT / "contracts/program_o_fixed_clock_physical_hobs_validation_v1.json"
+FIT_RESULT = ROOT / "results/program_o/state_rich_comparator_fit_v1/result.json"
 
 
 def git_commit() -> str:
-    return subprocess.check_output(
-        ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True
-    ).strip()
+    return subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
 
 
 def decode_calendar(index: int, *, weeks: int = 8) -> tuple[int, ...]:
@@ -103,9 +102,7 @@ def physical_replay_task(task: Mapping[str, Any]) -> dict[str, Any]:
         "loaded_departures": resources["actual_loaded_departures"],
         "empty_missions": resources["empty_downstream_missions"],
         "max_product_residual": panel["conservation"]["max_abs_product_residual"],
-        "max_partition_residual": panel["conservation"][
-            "max_abs_partition_residual"
-        ],
+        "max_partition_residual": panel["conservation"]["max_abs_partition_residual"],
     }
 
 
@@ -116,8 +113,9 @@ def joint_bootstrap(
     placebo_rows: Mapping[str, Mapping[str, Any]],
     cells: Sequence[str],
     resamples: int,
+    static_indices: Mapping[str, int],
 ) -> dict[str, Any]:
-    """Simultaneous one-sided LCBs with open-loop reselected each resample."""
+    """Studentized simultaneous LCBs against development-frozen statics."""
     n_tapes = 48
     seed = int.from_bytes(
         hashlib.sha256(b"program-o-fixed-clock-hobs-validation-v1").digest()[:8],
@@ -140,13 +138,7 @@ def joint_bootstrap(
         tape_rows = np.arange(n_tapes, dtype=np.int64)
         policy = {key: panel[key][tape_rows, policy_indices] for key in MATRIX_KEYS}
 
-        # Exact full-frontier reselection in each resample, processed in chunks.
-        selected = np.empty(resamples, dtype=np.int64)
-        for start in range(0, resamples, 25):
-            stop = min(resamples, start + 25)
-            weighted = counts[start:stop] @ panel["ret_visible"]
-            selected[start:stop] = np.argmax(weighted, axis=1)
-        static_point = int(np.argmax(panel["ret_visible"].mean(axis=0)))
+        static_point = int(static_indices[cell_id])
 
         signed_metrics = [("ret_visible", 1.0, "primary")]
         signed_metrics.extend((key, 1.0, "guardrail") for key in HIGHER_KEYS)
@@ -156,13 +148,7 @@ def joint_bootstrap(
             comparator_point = panel[key][:, static_point]
             point = float(sign * (policy[key] - comparator_point).mean())
             policy_boot = counts @ policy[key]
-            static_boot = np.asarray(
-                [
-                    np.dot(counts[b], panel[key][:, selected[b]])
-                    for b in range(resamples)
-                ],
-                dtype=float,
-            )
+            static_boot = counts @ panel[key][:, static_point]
             definitions.append((name, kind, key))
             points[name] = point
             boot_columns.append(sign * (policy_boot - static_boot))
@@ -179,24 +165,72 @@ def joint_bootstrap(
 
     boot = np.column_stack(boot_columns)
     point_vector = np.asarray([points[name] for name, _kind, _key in definitions])
-    simultaneous_critical = float(
-        np.quantile(np.max(point_vector[None, :] - boot, axis=1), 0.95)
-    )
+    standard_error = boot.std(axis=0, ddof=1)
+    active = standard_error > 1e-15
+    max_t = np.zeros(resamples, dtype=float)
+    if np.any(active):
+        standardized = (point_vector[None, active] - boot[:, active]) / standard_error[active]
+        max_t = np.max(standardized, axis=1)
+    simultaneous_critical = float(np.quantile(max_t, 0.95))
+    lower_bounds = point_vector.copy()
+    lower_bounds[active] = point_vector[active] - simultaneous_critical * standard_error[active]
     estimates = {}
     for index, (name, kind, key) in enumerate(definitions):
         estimates[name] = {
             "kind": kind,
             "metric_or_mode": key,
             "estimate": float(point_vector[index]),
-            "simultaneous_lcb95": float(point_vector[index] - simultaneous_critical),
+            "bootstrap_se": float(standard_error[index]),
+            "simultaneous_lcb95": float(lower_bounds[index]),
         }
     return {
         "resamples": int(resamples),
-        "static_reselected_each_resample": True,
+        "comparator_mode": "development_selected_full_frontier_frozen_before_validation",
+        "static_reselected_each_resample": False,
         "estimand_count": len(definitions),
         "simultaneous_critical": simultaneous_critical,
         "estimates": estimates,
     }
+
+
+def apply_frozen_static_comparator(
+    *,
+    row: Mapping[str, Any],
+    panel: Mapping[str, np.ndarray],
+    static_index: int,
+) -> dict[str, Any]:
+    """Re-score an already emitted policy against its development-frozen static."""
+    updated = dict(row)
+    policy_indices = np.asarray(row["calendar_indices"], dtype=np.int64)
+    tape_rows = np.arange(len(policy_indices), dtype=np.int64)
+    deltas = {
+        key: panel[key][tape_rows, policy_indices] - panel[key][:, int(static_index)]
+        for key in MATRIX_KEYS
+    }
+    means = {key: float(values.mean()) for key, values in deltas.items()}
+    tolerance = 1e-12
+    updated.update(
+        {
+            "static_index": int(static_index),
+            "static_mean_ret_visible": float(panel["ret_visible"][:, int(static_index)].mean()),
+            "mean_delta_vs_full_frontier": means["ret_visible"],
+            "favorable_tapes": int(np.sum(deltas["ret_visible"] > 0.0)),
+            "mean_deltas": means,
+            "metric_guardrails_pass": bool(
+                all(means[key] >= -tolerance for key in HIGHER_KEYS)
+                and all(means[key] <= tolerance for key in LOWER_KEYS)
+            ),
+            "reserved_capacity_equal": bool(
+                means["gross_policy_batch_slots"] == 0.0
+                and means["gross_production_quantity"] == 0.0
+                and means["charged_daily_dispatch_slots"] == 0.0
+                and means["charged_downstream_vehicle_hours"] == 0.0
+            ),
+            "per_tape_ret_delta": deltas["ret_visible"].astype(float).tolist(),
+            "comparator_selection": "burned_development_full_frontier_frozen_before_validation",
+        }
+    )
+    return updated
 
 
 def run(*, contract_path: Path, output: Path, workers: int) -> dict[str, Any]:
@@ -206,9 +240,9 @@ def run(*, contract_path: Path, output: Path, workers: int) -> dict[str, Any]:
     if contract["validation_tapes"]["status"] != "SEALED_NOT_ACCESSED":
         raise RuntimeError("validation tape contract is not sealed")
     seed_min, seed_max = contract["validation_tapes"]["range"]
-    if [seed_min, seed_max] != [7420049, 7420096]:
-        raise RuntimeError("validation seed range drift")
     seeds = list(range(int(seed_min), int(seed_max) + 1))
+    if len(seeds) != 48 or int(seed_min) < 7430001:
+        raise RuntimeError("corrective validation requires a fresh 48-tape block")
     parent_full = json.loads(PARENT_FULL_DES_CONTRACT.read_text())
     parent_hobs = json.loads(PARENT_HOBS_CONTRACT.read_text())
     parent_state = json.loads(PARENT_STATE_CONTRACT.read_text())
@@ -220,6 +254,15 @@ def run(*, contract_path: Path, output: Path, workers: int) -> dict[str, Any]:
     config = StateRichConfiguration("belief_mpc", 3)
     if config.config_id != contract["primary_policy"]["config_id"]:
         raise RuntimeError("primary controller drift")
+    frozen_source = contract["open_loop_comparator"]["frozen_source"]
+    if sha256(FIT_RESULT) != frozen_source["sha256"]:
+        raise RuntimeError("frozen comparator source identity mismatch")
+    frozen_indices = {
+        str(cell_id): int(index)
+        for cell_id, index in contract["open_loop_comparator"]["frozen_static_indices"].items()
+    }
+    if set(frozen_indices) != set(cell_ids):
+        raise RuntimeError("frozen comparator cell set drift")
 
     output.mkdir(parents=True)
     write_json_atomic(
@@ -261,8 +304,7 @@ def run(*, contract_path: Path, output: Path, workers: int) -> dict[str, Any]:
         cell_id = str(cell["id"])
         panels[cell_id] = load_cell_panel(output, cell_id, seeds)
         skeletons[cell_id] = [
-            json.loads(skeleton_path(output, cell_id, seed).read_text())
-            for seed in seeds
+            json.loads(skeleton_path(output, cell_id, seed).read_text()) for seed in seeds
         ]
         row, decision_audits = evaluate_configuration(
             config=config,
@@ -273,13 +315,17 @@ def run(*, contract_path: Path, output: Path, workers: int) -> dict[str, Any]:
             scheduler=scheduler,
             model=model,
         )
-        rows[cell_id] = row
+        rows[cell_id] = apply_frozen_static_comparator(
+            row=row,
+            panel=panels[cell_id],
+            static_index=frozen_indices[cell_id],
+        )
         audits[cell_id] = decision_audits
         placebos[cell_id] = evaluate_placebos(
             contract=placebo_contract,
             config=config,
             cell_id=cell_id,
-            real_indices=row["calendar_indices"],
+            real_indices=rows[cell_id]["calendar_indices"],
             skeletons=skeletons[cell_id],
             panel=panels[cell_id],
             scheduler=scheduler,
@@ -292,6 +338,7 @@ def run(*, contract_path: Path, output: Path, workers: int) -> dict[str, Any]:
         placebo_rows=placebos,
         cells=cell_ids,
         resamples=int(contract["primary_gate"]["paired_bootstrap_resamples"]),
+        static_indices=frozen_indices,
     )
 
     replay_tasks = {}
@@ -322,23 +369,18 @@ def run(*, contract_path: Path, output: Path, workers: int) -> dict[str, Any]:
     resource_vectors = set()
     with ProcessPoolExecutor(max_workers=int(workers)) as pool:
         futures = {
-            pool.submit(physical_replay_task, task): key
-            for key, task in replay_tasks.items()
+            pool.submit(physical_replay_task, task): key for key, task in replay_tasks.items()
         }
         for completed, future in enumerate(as_completed(futures), start=1):
             row = future.result()
             cell_id = row["cell_id"]
             seed_position = int(row["seed"]) - int(seed_min)
             with np.load(
-                output
-                / "raw_calendar_matrix"
-                / cell_id
-                / f"tape_{row['seed']}.npz"
+                output / "raw_calendar_matrix" / cell_id / f"tape_{row['seed']}.npz"
             ) as shard:
                 for key in MATRIX_KEYS:
                     error = abs(
-                        float(row["vector"][key])
-                        - float(shard[key][int(row["calendar_index"])])
+                        float(row["vector"][key]) - float(shard[key][int(row["calendar_index"])])
                     )
                     if error > 1e-10:
                         replay_failures.append(
@@ -372,8 +414,7 @@ def run(*, contract_path: Path, output: Path, workers: int) -> dict[str, Any]:
 
     estimates = inference["estimates"]
     primary_pass = all(
-        estimates[f"{cell_id}::primary::ret_visible"]["simultaneous_lcb95"]
-        >= 0.01
+        estimates[f"{cell_id}::primary::ret_visible"]["simultaneous_lcb95"] >= 0.01
         and int(rows[cell_id]["favorable_tapes"]) >= 34
         for cell_id in cell_ids
     )
@@ -394,11 +435,7 @@ def run(*, contract_path: Path, output: Path, workers: int) -> dict[str, Any]:
     )
     physical_pass = not replay_failures and len(resource_vectors) == 1
     passed = primary_pass and placebo_pass and guardrail_pass and action_pass and physical_pass
-    status = (
-        contract["terminal_rules"]["pass"]
-        if passed
-        else contract["terminal_rules"]["fail"]
-    )
+    status = contract["terminal_rules"]["pass"] if passed else contract["terminal_rules"]["fail"]
     result = {
         "schema_version": "program_o_fixed_clock_physical_hobs_validation_result_v1",
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),

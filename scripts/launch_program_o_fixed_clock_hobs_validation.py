@@ -37,9 +37,7 @@ def write_json_atomic(path: Path, value: Any) -> None:
 
 
 def git_commit() -> str:
-    return subprocess.check_output(
-        ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True
-    ).strip()
+    return subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
 
 
 def cgroup_for_pid(pid: int) -> list[str]:
@@ -69,17 +67,16 @@ def main() -> int:
     failures = []
     if current_commit != str(args.expected_commit):
         failures.append("HEAD does not equal expected immutable commit")
-    if subprocess.check_output(
-        ["git", "status", "--porcelain"], cwd=ROOT, text=True
-    ).strip():
+    if subprocess.check_output(["git", "status", "--porcelain"], cwd=ROOT, text=True).strip():
         failures.append("worktree is dirty")
     if run_dir.exists():
         failures.append("run identity already exists")
     if sha256(contract_path) != str(freeze["contract_sha256"]):
         failures.append("contract hash mismatch")
-    if contract["validation_tapes"]["range"] != [7420049, 7420096]:
-        failures.append("validation seed range drift")
-    if freeze["authorization"]["seed_range"] != [7420049, 7420096]:
+    seed_range = list(contract["validation_tapes"]["range"])
+    if len(seed_range) != 2 or seed_range[1] - seed_range[0] != 47:
+        failures.append("validation seed range is not one 48-tape block")
+    if freeze["authorization"]["seed_range"] != seed_range:
         failures.append("freeze seed range drift")
     for relative, expected in freeze["source_sha256"].items():
         path = ROOT / relative
@@ -111,7 +108,7 @@ def main() -> int:
         "contract_sha256": sha256(contract_path),
         "execution_freeze": str(freeze_path),
         "execution_freeze_sha256": sha256(freeze_path),
-        "seed_range": [7420049, 7420096],
+        "seed_range": seed_range,
     }
     if args.preflight_only:
         print(json.dumps(manifest, indent=2, sort_keys=True))
@@ -130,9 +127,10 @@ def main() -> int:
         "--interval-seconds",
         str(args.watch_interval_seconds),
     ]
-    with (custody / "watcher.stdout.log").open("ab") as stdout, (
-        custody / "watcher.stderr.log"
-    ).open("ab") as stderr:
+    with (
+        (custody / "watcher.stdout.log").open("ab") as stdout,
+        (custody / "watcher.stderr.log").open("ab") as stderr,
+    ):
         watcher = subprocess.Popen(
             watcher_command,
             cwd=ROOT,
@@ -192,9 +190,10 @@ def main() -> int:
         "--seed-claim",
         str(seed_claim),
     ]
-    with (custody / "producer.stdout.log").open("ab") as stdout, (
-        custody / "producer.stderr.log"
-    ).open("ab") as stderr:
+    with (
+        (custody / "producer.stdout.log").open("ab") as stdout,
+        (custody / "producer.stderr.log").open("ab") as stderr,
+    ):
         producer = subprocess.Popen(
             runner_command,
             cwd=ROOT,
