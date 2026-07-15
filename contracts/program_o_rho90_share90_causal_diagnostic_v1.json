@@ -1,0 +1,51 @@
+{
+  "schema_version": "program_o_rho90_share90_causal_diagnostic_v1",
+  "status": "FROZEN_POST_STOP_BEFORE_DIAGNOSTIC",
+  "source_result": {
+    "path": "results/program_o/fixed_clock_hobs_validation_v1/remote_run/artifacts/validation/result.json",
+    "sha256": "09ec3f1691d6e5da090d7afb62523124321de666d4441ea2f92f619cb8326362",
+    "terminal_status": "STOP_PROGRAM_O_CLASSICAL_HOBS_VALIDATION"
+  },
+  "scope": {
+    "cell": "rho90_share90",
+    "seeds": [7420049, 7420096],
+    "burned_tapes_only": true,
+    "policy": "belief_mpc__3",
+    "no_policy_search": true,
+    "no_promotion": true,
+    "stop_cannot_be_relabelled": true
+  },
+  "questions": [
+    "implementation_or_metric_error",
+    "regime_phase_change",
+    "commitment_delay",
+    "wrong_product_inventory_accumulation",
+    "open_loop_calendar_local_advantage",
+    "genuine_bimodality_or_sign_instability"
+  ],
+  "groups": {
+    "favorable": "policy ReT minus frozen full-frontier comparator ReT > 0",
+    "non_favorable": "policy ReT minus frozen full-frontier comparator ReT <= 0"
+  },
+  "corrective_inference": {
+    "purpose": "descriptive audit only",
+    "method": "studentized one-sided max-t across the same 69 estimands",
+    "bootstrap_resamples": 10000,
+    "open_loop_reselected_each_resample": true,
+    "zero_variance_estimands": "exact point bound",
+    "cannot_change_terminal_verdict": true
+  },
+  "decision_rule": {
+    "technical_invalidation": "Only an exact calendar, metric, CRN, mass, physical-replay, or source-identity mismatch can invalidate the execution and license a corrective repetition on new tapes.",
+    "physical_or_decisional_failure": "If identities and parity pass but the failure tracks regime, commitment, inventory, or frontier interaction, Program O remains closed.",
+    "post_hoc_policy_opportunity": "If another action rule appears preferable, record it as future mechanism evidence only; do not reopen Program O."
+  },
+  "forbidden": [
+    "opening any new tape",
+    "changing belief_mpc__3",
+    "dropping rho90_share90",
+    "changing the 34-of-48 threshold",
+    "training a learner",
+    "reversing the Program O STOP"
+  ]
+}
