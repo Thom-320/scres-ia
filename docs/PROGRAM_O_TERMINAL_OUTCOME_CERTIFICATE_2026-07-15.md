@@ -1,78 +1,76 @@
-# Program O — H_obs state-rich fit: claim-boundary record (CORRECTED)
+# Program O — H_obs claim-boundary record (state-rich fit + dual-resource diagnostic)
 
 **Date:** 2026-07-15
-**Status:** `H_OBS_NOT_ESTABLISHED — NOT A TERMINAL BOUNDARY.` The state-rich fit stopped on
-the frozen actual-use resource gate; the information placebos **were never executed**. No
-positive and no "state-has-no-value" boundary can be claimed from this run.
+**Status:** `OBSERVABLE STATE VALUE MEASURED (development) — H_obs NOT YET CONFIRMED.` The frozen
+state-rich fit stopped on the actual-use resource gate; a preregistered dual-resource diagnostic
+then executed the placebos that the fit had gated out. Under the **fixed-clock reserved-capacity**
+resource convention there is a **stable, state-dependent observable signal**; under **pay-per-use**
+there is not. Everything now hinges on one freight-economics fact. Sealed validation `7420049–7420096`
+remains unopened.
 
-> **Correction notice.** The prior version of this file (commit d29c29b) claimed a terminal
-> `BOUNDARY_CERTIFICATE` on the grounds that "every controller fails the information placebos →
-> rich state adds nothing → value saturates at the belief → state-rich increment ≈ 0
-> (overdetermined)." **That conclusion was an error and is fully retracted.** `information_placebos`
-> is `null` in 40/40 result rows and `pre_placebo_rule_pass` is `False` in 40/40; the screener
-> (`scripts/screen_program_o_state_rich_fit.py:589`) computes placebos **only** for configurations
-> that first clear every non-placebo primary gate, and 0/40 did. `information_placebos_pass: False`
-> is the uninitialized default, not an experimental result. The placebos never ran, so there is
-> **no evidence** about whether rich operational state adds value over the regime belief. Reading a
-> default flag as a result was the mistake. Credit to the concurrent audit for catching it.
+> **History.** Commit d29c29b claimed a terminal boundary ("state adds nothing"); that was an error —
+> the fit's `information_placebos` were `null` (never ran, gated behind the resource gate). Retracted
+> in 022abd0. The dual-resource diagnostic (below) has now **actually run the placebos** and shows the
+> opposite: the rich operational state **does** add material value over the belief under fixed-clock.
 
 ---
 
 ## 1. Established quantitative ceiling (H_PI) — custody-verified (unchanged)
 
 safe H_PI **0.15151**, simultaneous safe LCB95 **0.11562**, exact fungible-null **0.0**,
-25,177-episode parity, conserved throughput. Commit `6ad6f10`, verdict `98ce2ce`,
-`result_sha256 f5f2da8d…`. This remains solid and is not affected by the error below.
+25,177-episode parity, conserved throughput. Commit `6ad6f10`, verdict `98ce2ce`, `result f5f2da8d…`.
 
-## 2. What the state-rich fit actually shows
+## 2. State-rich fit (source run) — STOP on the actual-use gate
 
-Run `program-o-state-rich-fit-v1-20260715`, commit `041dcef`, result `d67ac97a` (transfer-verified),
-producer exit 0, burned fit tapes `7420001–48` only, **sealed validation `7420049–96` never opened**
-(`validation_seed_accessed: False`). Terminal label `STOP_RESOURCE_OR_GUARDRAIL_CONFOUND`,
-`stability.passing_cells: []`.
+Run `program-o-state-rich-fit-v1-20260715` (commit `041dcef`, result `d67ac97a`, sealed tapes never
+opened) → `STOP_RESOURCE_OR_GUARDRAIL_CONFOUND`. All 10 controllers reach material ReT (0.038–0.102)
+with metric guardrails clean and reserved capacity equal, but out-transport the full frontier
+(`strict_actual_use_pass: False`). The `STOP` is **correct as scored** under the frozen contract
+(actual-use binding); it may not be retroactively relabeled. The information placebos never ran.
 
-**Verified facts (retained):**
-- All 10 controllers capture material ReT vs the full open-loop frontier (belief-DP per cell:
-  0.038 / 0.068 / 0.074 / 0.102), with `metric_guardrails_pass: True` and `reserved_capacity_equal: True`.
-- All fail the **actual-use resource gate**: `strict_actual_use_pass: False` and the matched-resource
-  frontier is empty (`eligible_calendar_count: 0`) — every controller out-transports the entire
-  65,536-calendar frontier. Mechanism (belief-DP, ρ75s90): at equal production (Δ=0) and equal
-  **reserved** fleet (5,376 charged-hours, only ~2,280 used → **42 % utilization**), the belief policy
-  delivers +~22,000 otherwise-stranded rations (worst-product-fill +0.26) by filling idle, already-charged
-  freight.
-- Only belief-MPC reached the state-perturbation certificate (passes 8/40 rows → its actions are
-  functionally state-dependent) — but this measures dependence, **not incremental value**.
-- The **information placebos never ran** (gated behind the resource gate) → the state-value question
-  is **unmeasured**.
+## 3. Dual-resource diagnostic — the placebos executed
 
-## 3. Two open scientific issues — both genuine, neither resolved
+Run `program-o-dual-resource-diagnostic-v1-20260715`, commit `a9733d0`, result `e48606e7`
+(transfer-verified), producer exit 0, burned fit tapes `7420001–48` only, `validation_seed_accessed: False`.
+Status `DIAGNOSTIC_STABLE_SIGNAL_FIXED_CLOCK_ONLY`. Post-hoc development diagnostic; does **not** confirm
+H_obs or relabel the source STOP.
 
-1. **Resource estimand (contested, but the frozen STOP is correct as scored).** It is scientifically
-   reasonable to ask whether "actual transport use" is the right resource under a fixed-clock fleet
-   charged whether loaded or empty (2,280 / 5,376 used). But the frozen contract
-   (`contracts/program_o_state_rich_comparator_fit_v1.json`) made **actual use binding and stated that
-   reserved-capacity equality could not override it**. Under that frozen contract the `STOP` is correct
-   and may **not** be retroactively relabeled a false-negative. Switching to reserved-capacity fairness
-   now would be a **new prospective estimand**, not a re-scoring of this run.
-2. **State value (unmeasured).** Because the placebos never executed, we do **not** know whether the
-   observable ReT signal requires the rich operational state or reduces to the belief. This is the
-   experiment that was gated out.
+**belief-MPC (configs 3 and 4)** pass the fixed-clock state-rich increment on a connected component of
+three cells — **rho75_share90, rho90_share75, rho90_share90** (spans both ρ and share levels) — beating
+**every** information placebo with paired one-sided LCB95 > 0:
 
-## 4. Disposition
+| Estimand (real observation minus placebo, LCB95) | rho75s90 | rho90s75 | rho90s90 |
+|---|---|---|---|
+| **Total observable** (vs no-state / stale-t2 / swapped / cross-tape) | +0.058…+0.145 | +0.050…+0.174 | +0.085…+0.186 |
+| **Incremental operational state, given belief** (vs belief-only / stale-op / swapped-op) | **+0.037** | **+0.025** | **+0.073** |
+| Incremental belief, given state (vs stale-belief / operational-only) | +0.008…+0.010 | +0.008…+0.011 | +0.016…+0.017 |
 
-- H_obs **NOT established**. Do **not** open sealed validation, authorize a learner, claim Paper 2, or
-  begin Paper 3.
-- Do **not** claim a terminal "state-has-no-value" boundary — that was the retracted error.
-- Program O retains a custody-verified full-DES H_PI and a development-stage observable signal that is
-  **potentially compatible with reserved resources but unconfirmed**.
+`diagnostic_gates`: `incremental_operational_state_pass: True`, `incremental_belief_pass: True`,
+`fixed_clock_total_observable_pass: True`, `state_counterfactual_pass: True` — but
+`pay_per_use_state_rich_increment_pass: False`, `pay_per_use_total_observable_pass: False`. No controller
+passes under pay-per-use.
 
-## 5. Legitimate continuation (a new run, not a rescue of this one)
+**Finding:** at equal production and equal **reserved** fleet, the rich operational state provides
+**material, state-dependent observable value over the regime belief** (development stage). This directly
+overturns the retracted "state adds nothing." The value is real only if idle reserved-fleet utilization
+is free — i.e. only under fixed-clock.
 
-A **new preregistered diagnostic on burned tapes `7420001–48` only** that (a) actually **executes the
-information placebos** and state certificate for the candidate controllers, and (b) reports H_obs under
-**both** resource estimands separately — fixed-clock reserved-capacity vs pay-per-use transport — so the
-two are never conflated. That can determine whether observable value exists under the fixed-clock
-interpretation. It cannot retroactively rescue this run. The construct question (Garrido Q13) remains
-open and non-blocking.
+## 4. The single decisive open fact
 
-Custody: fit result `d67ac97a` transfer-verified; H_PI verdict `f5f2da8d`; sealed tapes intact.
+**Is the downstream fleet fixed-clock reserved (charged whether loaded or empty — under which the signal
+is real) or pay-per-use (under which it is a resource confound)?** This is a Garrido/thesis freight-model
+question and is now the critical path. Program O has no other blocking uncertainty.
+
+## 5. Disposition and the legitimate route to a terminal outcome
+
+- Do **not** open sealed validation yet; do **not** authorize a learner; H_obs **not confirmed**;
+  no Paper 2 / Paper 3 claim. This is a development signal on burned tapes.
+- **Do not open the sealed tapes under the fixed-clock contract until the fleet convention is
+  independently justified** — otherwise it is post-hoc selection of the convention that passes.
+- **If the freight model is fixed-clock reserved:** freeze belief-MPC (selected on burned tapes),
+  preregister a fixed-clock H_obs **validation** contract, open sealed `7420049–96` once. A clean OOS
+  pass → H_obs established → classical-observable Paper 2 candidate → then the neural-learner gate.
+- **If pay-per-use:** the boundary stands (perfect-information ceiling real; observable conversion is a
+  transport-utilization effect).
+
+Custody: diagnostic `e48606e7`, fit `d67ac97a`, H_PI verdict `f5f2da8d`; sealed tapes intact.
