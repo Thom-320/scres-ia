@@ -379,6 +379,7 @@ def evaluate_schedule(
         panel.update(
             {
                 "worst_node_or_product_fill": _aggregate_worst_fill(panel),
+                "treatment_start": treatment_start,
                 "shift_hours": shift_hours,
                 "surge_hours": surge_hours,
                 "buffer_target_unit_hours": buffer_target_unit_hours,

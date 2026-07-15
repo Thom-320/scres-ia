@@ -42,9 +42,19 @@ The privileged schedule uses entry offsets `{-168,-72,-24,0,+24,+72}` hours arou
 R22/R24 onsets and returns to the low posture 72 hours after event end. Overlapping high
 windows are unioned. Between schedule boundaries the action is `HOLD`.
 
-Promotion requires an increment of at least 0.01 over the strongest comparator, paired
+Promotion requires an increment of at least 0.01 **on canonical
+`ret_excel_request_snapshot_v2`** over the strongest comparator, paired
 LCB95 above zero, at least 34/48 favorable tapes, multiple intervention times, no resource
 increase, and every service/fairness guardrail noninferior. A failure closes this timing
 family without changing cadence, offsets, postures, impacts, or metrics.
+
+A difference confined to the temporal secondary panel can support only a recovery-rapidity
+analysis. It cannot open observable validation, a learner, or Paper 2. The first augmented
+regime is selected before timing results in the fixed order R24-increased, R22-increased,
+then R22+R24-increased; current is the comparator rather than a selectable stress rescue.
+
+The development result also reports `eta_timing`: the EWMA/hysteresis increment divided by
+the restricted privileged increment against the same strongest nonobservable comparator.
+This ratio diagnoses convertibility on burned tapes; it is not confirmed `H_obs`.
 
 No learner, Paper 2 positive claim, or Paper 3 work is authorized by this freeze.
