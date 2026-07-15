@@ -403,15 +403,23 @@ def run(contract_path: Path, validation_dir: Path, output: Path) -> dict[str, An
     )
 
     metric_sign_reversals = {
-        "quantity_ret": sum(
-            np.sign(row["ret_delta"]) != np.sign(row["quantity_ret_delta"])
-            and abs(row["quantity_ret_delta"]) > 1e-12
-            for row in tape_rows
+        "quantity_ret": int(
+            sum(
+                bool(
+                    np.sign(row["ret_delta"]) != np.sign(row["quantity_ret_delta"])
+                    and abs(row["quantity_ret_delta"]) > 1e-12
+                )
+                for row in tape_rows
+            )
         ),
-        "worst_product_fill": sum(
-            np.sign(row["ret_delta"]) != np.sign(row["worst_product_fill_delta"])
-            and abs(row["worst_product_fill_delta"]) > 1e-12
-            for row in tape_rows
+        "worst_product_fill": int(
+            sum(
+                bool(
+                    np.sign(row["ret_delta"]) != np.sign(row["worst_product_fill_delta"])
+                    and abs(row["worst_product_fill_delta"]) > 1e-12
+                )
+                for row in tape_rows
+            )
         ),
     }
     technical_invalidation = bool(exact_mismatches)
