@@ -84,6 +84,14 @@
     "open_loop": "all 256 eight-week binary low/high calendars repeated periodically",
     "weekly_clairvoyant": "same restricted event windows rounded down to the preceding 168-hour decision boundary",
     "observable": "EWMA plus hysteresis trigger using realized past risk, backlog age and inventory shortfall only",
+    "observable_trigger_parameters": {
+      "ewma_decay": 0.85,
+      "enter_threshold": 0.15,
+      "exit_threshold": 0.05,
+      "minimum_high_dwell_hours": 72,
+      "backlog_age_scale_hours": 672,
+      "inventory_shortfall_weight": 0.25
+    },
     "placebos": [
       "signal_shuffled_within_tape",
       "signal_stale_168h",
@@ -107,6 +115,8 @@
   "development": {
     "seeds": [7460001, 7460048],
     "n_tapes": 48,
+    "horizon_weeks": 104,
+    "max_daily_steps": 728,
     "burned_only": true,
     "bootstrap_rng_seed": 7460999,
     "sealed_or_virgin_tapes_opened": false

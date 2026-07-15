@@ -298,6 +298,10 @@ def make_event_triggered_track_a_env(**overrides: Any) -> EventTriggeredTrackAEn
     overrides.setdefault("surge_inertia", True)
     overrides.setdefault("surge_ramp_per_step", 1)
     overrides.setdefault("initial_shifts", init_shifts)
+    if "initial_buffers" not in overrides and init_frac > 1e-9:
+        overrides["initial_buffers"] = {
+            key: init_frac * float(_I1344[key]) for key in _BUFFER_KEYS
+        }
     # Buffer timing is owned by this wrapper; disabling the simulator's generic
     # delayed top-up prevents duplicate commitments.
     overrides["inventory_replenishment_lead_time"] = 0.0
