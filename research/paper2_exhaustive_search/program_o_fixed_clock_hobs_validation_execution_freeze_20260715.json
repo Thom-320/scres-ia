@@ -1,0 +1,62 @@
+{
+  "schema_version": "program_o_fixed_clock_hobs_validation_execution_freeze_v1",
+  "status": "FROZEN_BEFORE_SINGLE_VALIDATION_OPEN",
+  "scientific_commit": "48062f8a52dda8417812cac828978906704a58fa",
+  "contract_sha256": "d13508f6694a96dd219cf411a6cc14f1ef4031540805df34b55941289f14d9cc",
+  "preflight_verdict": {
+    "path": "research/paper2_exhaustive_search/program_o_fixed_clock_physical_preflight_verdict_20260715.json",
+    "sha256": "b450d87bbc6cfb2beabcc562f5baeb584f0b9a076ccddc26302c954ba6a3eacd",
+    "status": "PASS_PROGRAM_O_FIXED_CLOCK_PHYSICAL_PREFLIGHT"
+  },
+  "authorization": {
+    "scientific_commit": "48062f8a52dda8417812cac828978906704a58fa",
+    "run_id": "program-o-fixed-clock-hobs-validation-v1-20260715",
+    "run_dir": "/home/ubuntu/program_o_runs/program-o-fixed-clock-hobs-validation-v1-20260715",
+    "stage": "validation",
+    "seed_range": [7420049, 7420096]
+  },
+  "source_sha256": {
+    "contracts/program_o_fixed_clock_physical_hobs_validation_v1.json": "d13508f6694a96dd219cf411a6cc14f1ef4031540805df34b55941289f14d9cc",
+    "scripts/screen_program_o_fixed_clock_hobs_validation.py": "7c691a385b3d94d8a841e8cee65e85a6c17338b4d70a8aae29b5a13be36d5a04",
+    "scripts/run_program_o_fixed_clock_hobs_validation_custodied.py": "3e9efa6b06b8b737d55e4562883163766e812db5c1835c791851e16be442e327",
+    "scripts/launch_program_o_fixed_clock_hobs_validation.py": "3ffe3c25842dc54e64feceeece4985169736a1d4c38ed57267bc58ddb87c5be9",
+    "scripts/watch_program_o_full_des_hpi.py": "0d44bf3c69a277604f0288cd6d347463804142a5a6edf9722a42e001f27be8af",
+    "scripts/program_o_full_des_guard.py": "df25f5f0239a402d44bb1126bc9b7b9707df16886866b3b79853228d21f017a5",
+    "scripts/screen_program_o_hobs_fit.py": "a4ab1915acc872d860581f525ff9c866581c623a8b63e6d6fb67a88355e8c7f7",
+    "scripts/screen_program_o_state_rich_fit.py": "7dfb769d9d15c1d1586390e2f9d6b95881537d49539b57dc6735574b32f6777e",
+    "scripts/diagnose_program_o_state_rich_dual_resource.py": "75e4eb59be1e620a5d1466ead0d1f0316f38db0deb21599f4474a141f81eacf2",
+    "supply_chain/program_o_full_des.py": "005a139f8e558a2de46178d5c37245f0a66e126fe45c467d0c5e7bfecdc66d7e",
+    "supply_chain/program_o_full_des_transducer.py": "4c268777032fd24a9d948b1d168cc4aa493ab647ff98ca75628b956ad9775779",
+    "supply_chain/program_o_state_rich.py": "5a8df96c2e3f28eea0e3ff01722e082f93772dcf78084255df25f0de11234d32",
+    "supply_chain/program_o_hobs.py": "e8052e551dd74d07f45e86e07008dc1cdd517b01f09aa858264a63e05b334109",
+    "supply_chain/supply_chain.py": "c720e2ce198b9330d81a9f29efc7456300f63b2dd9022489f584fba6fea585ea",
+    "supply_chain/episode_metrics.py": "0eae8b9a9ab5c6289ff94a318c6ab27c031ed184d0e0f00d761e8785373cab9b",
+    "supply_chain/ret_thesis.py": "a516cae034b8d428e584998e2baab73d752543e6199936b6e6eb0729c09cc805"
+  },
+  "execution": {
+    "workers": 8,
+    "watcher_first": true,
+    "pid_equals_pgid_equals_sid": true,
+    "cgroup_record_required": true,
+    "exclusive_host_seed_claim": true,
+    "raw_matrices_retained": true,
+    "remote_checksums_required": true,
+    "relaunch_forbidden": true
+  },
+  "inference": {
+    "bootstrap_resamples": 10000,
+    "open_loop_reselected_each_resample": true,
+    "simultaneous_familywise_lcb": true,
+    "primary_lcb_minimum": 0.01,
+    "minimum_favorable_tapes": 34,
+    "all_nine_placebos_lcb_positive": true,
+    "all_guardrails_simultaneously_noninferior": true
+  },
+  "claim_boundary": {
+    "validation_authorized_once": true,
+    "h_obs_confirmed": false,
+    "learner_authorized": false,
+    "paper2_confirmed": false,
+    "paper3_authorized": false
+  }
+}
