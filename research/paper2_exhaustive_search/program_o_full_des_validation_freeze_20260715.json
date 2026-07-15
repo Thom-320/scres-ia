@@ -1,0 +1,58 @@
+{
+  "schema_version": "program_o_full_des_validation_freeze_v1",
+  "status": "AUTHORIZED_PROGRAM_O_FULL_DES_VALIDATION",
+  "frozen_at_utc": "2026-07-15T02:00:00Z",
+  "implementation_source_commit": "55c430952407be994f49cdd6e95b8213a28cd692",
+  "execution_rule": "Run once from the clean immutable commit containing this tracked freeze; every bound source hash and the retrieved development result hash must match before validation seeds open.",
+  "contract": {
+    "path": "contracts/program_o_full_des_hpi_translation_v1.json",
+    "sha256": "b7fea9a3acbc016fa95c27db1f814bef23c885373b6377cb1d0d2d3fdb643fbd"
+  },
+  "development_evidence": {
+    "result_path_remote": "/home/ubuntu/program_o_runs/program-o-full-des-dev-v1-20260715/artifacts/development/result.json",
+    "development_result_sha256": "833ab41d53274f1885220f6ecec05452849dcfa185c23abfe12bbe982bf0b8a4",
+    "independent_custody_verdict_sha256": "8517d68e2b9c30e000b7855f0dfa879e7e5d449f79e44c15660506abb2903b3d",
+    "remote_files_manifest_sha256": "035bb5c6f06f7c7f2e735b15872b75a34d34f506b673dfea2a89c618c818c0a3",
+    "status": "PASS_PROGRAM_O_FULL_DES_HPI_DEVELOPMENT_CUSTODY_VERIFIED"
+  },
+  "development_result_sha256": "833ab41d53274f1885220f6ecec05452849dcfa185c23abfe12bbe982bf0b8a4",
+  "validation_seed_range": [7400073, 7400096],
+  "execution_authorization": {
+    "stage": "validation",
+    "run_id": "program-o-full-des-validation-v1-20260715",
+    "run_dir": "/home/ubuntu/program_o_runs/program-o-full-des-validation-v1-20260715",
+    "seed_range": [7400073, 7400096],
+    "seed_claim_root": "/home/ubuntu/program_o_seed_claims",
+    "single_use_rule": "An O_EXCL host-level claim for this exact stage and seed range must be created after watcher readiness and before the producer. Any prior claim blocks relaunch."
+  },
+  "source_hashes": {
+    "supply_chain/program_o_full_des.py": "8e3b87fe3ad195c0b1e860a86d4c1098ecc7942499b0d8b8acff021c2fec7376",
+    "supply_chain/program_o_full_des_transducer.py": "4c268777032fd24a9d948b1d168cc4aa493ab647ff98ca75628b956ad9775779",
+    "scripts/screen_program_o_full_des_hpi.py": "7fe243371a75dc45f821b01b94726f8e8ba7a1b5c21095174af44838a8be5d8f",
+    "scripts/launch_program_o_full_des_hpi.py": "9f0d2d87a714a1164745865ce122d2878a564d84dd4c9b9df6ea964a24eb36c9",
+    "scripts/run_program_o_full_des_hpi_custodied.py": "1f48f7fc9aaef4f7d9503f66916c59ef7427ff56002554d0dc824ddf25fd53f8",
+    "scripts/watch_program_o_full_des_hpi.py": "0d44bf3c69a277604f0288cd6d347463804142a5a6edf9722a42e001f27be8af",
+    "scripts/program_o_full_des_guard.py": "df25f5f0239a402d44bb1126bc9b7b9707df16886866b3b79853228d21f017a5",
+    "scripts/validate_program_o_full_des_hpi_custody.py": "ced30315a67afc380c64b3bef0b4ba0026aaab1c804e016ae3066df151565c33",
+    "supply_chain/supply_chain.py": "c720e2ce198b9330d81a9f29efc7456300f63b2dd9022489f584fba6fea585ea",
+    "supply_chain/ret_thesis.py": "a516cae034b8d428e584998e2baab73d752543e6199936b6e6eb0729c09cc805",
+    "supply_chain/episode_metrics.py": "0eae8b9a9ab5c6289ff94a318c6ab27c031ed184d0e0f00d761e8785373cab9b",
+    "tests/test_program_o_full_des.py": "8f0960bc8826399d2c339940b7c905c2ce4966182fa69cfdd4511e80526fefc7",
+    "tests/test_program_o_full_des_custody.py": "d66ee9bcb22388eceb37a1ba5b083f0b5d35aa87e9c6a8aa9086bef5d0a6f810"
+  },
+  "validation_rule": {
+    "source": "contracts/program_o_full_des_hpi_translation_v1.json",
+    "simultaneous_one_sided_lcb95_safe_h_pi_minimum": 0.01,
+    "bootstrap_resamples": 10000,
+    "static_reselected_over_all_65536_each_resample": true,
+    "safe_oracle_recomputed_each_resample": true,
+    "all_parity_conservation_null_and_ordering_gates_required": true
+  },
+  "claim_boundary": {
+    "full_des_h_pi_established": false,
+    "h_obs_authorized": false,
+    "learner_authorized": false,
+    "paper2_confirmed": false,
+    "paper3_authorized": false
+  }
+}
