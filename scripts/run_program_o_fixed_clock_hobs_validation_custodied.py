@@ -9,6 +9,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import platform
 import subprocess
 import sys
 import traceback
@@ -52,6 +53,23 @@ def main() -> int:
         claim_path=args.seed_claim.resolve(),
         authorization=authorization,
         contract_sha256=str(freeze["contract_sha256"]),
+    )
+    packages = subprocess.check_output(
+        [sys.executable, "-m", "pip", "freeze"], text=True
+    ).splitlines()
+    write_json_atomic(
+        run_dir / "custody" / "environment_manifest.json",
+        {
+            "schema_version": "program_o_fixed_clock_hobs_environment_v1",
+            "captured_at_utc": now_utc(),
+            "run_id": str(args.run_id),
+            "scientific_commit": str(freeze["scientific_commit"]),
+            "executable": sys.executable,
+            "python": sys.version,
+            "platform": platform.platform(),
+            "machine": platform.machine(),
+            "packages": packages,
+        },
     )
     command = [
         sys.executable,

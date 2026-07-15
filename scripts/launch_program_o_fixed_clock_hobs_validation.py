@@ -104,6 +104,7 @@ def main() -> int:
         "run_id": str(args.run_id),
         "run_dir": str(run_dir),
         "workers": int(args.workers),
+        "python_executable": sys.executable,
         "expected_commit": str(args.expected_commit),
         "current_commit": current_commit,
         "contract": str(contract_path),
