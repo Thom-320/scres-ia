@@ -4468,20 +4468,64 @@ class MFSCSimulation:
     # DEMAND SINK: Op13
     # =====================================================================
 
+    def _ret_request_snapshot_counts_at(self, snapshot_time: float) -> tuple[int, int]:
+        """Return the source-aligned ``(Bt, Ut)`` state at a request time.
+
+        ``backorder`` and membership in ``pending_backorders`` are mutable live
+        queue state.  Neither is an authoritative request-ledger clock: the
+        delayed-backorder callback can run before or after a request generated
+        at exactly ``OPTj + LTj``, and an order dispatched from Op9 is removed
+        from that queue before its physical ``OATj``.  Annex-B/v2 semantics are
+        instead the half-open interval
+
+        ``[OPTj + LTj, min(OATj, lost_time))``.
+
+        The current order is not yet present in ``self.orders`` when this
+        method is called.  Warm-up/excluded orders cannot enter the treatment
+        ledger.  Bt is capped at the thesis queue capacity; Ut is cumulative.
+        """
+        now = float(snapshot_time)
+        active_backorders = 0
+        unattended = 0
+        for prior in self.orders:
+            if bool(getattr(prior, "metrics_excluded", False)):
+                continue
+            opt = float(getattr(prior, "OPTj", 0.0) or 0.0)
+            # Same-time new requests cannot already be late or lost and are
+            # not causally prior to the snapshot being captured.
+            if opt >= now:
+                continue
+            lt = float(getattr(prior, "LTj", 0.0) or 0.0)
+            oat = getattr(prior, "OATj", None)
+            lost_time = getattr(prior, "lost_time", None)
+            terminal_times = [
+                float(value)
+                for value in (oat, lost_time)
+                if value is not None
+            ]
+            end_time = min(terminal_times) if terminal_times else float("inf")
+            if opt + lt <= now < end_time:
+                active_backorders += 1
+            if lost_time is not None and float(lost_time) <= now:
+                unattended += 1
+        return min(int(BACKORDER_QUEUE_CAP), active_backorders), unattended
+
     def _place_demand_order(self, order: OrderRecord):
+        # Freeze completion/loss-before-request precedence at equal physical
+        # timestamps.  A zero-time phase barrier lets every event already
+        # scheduled for ``env.now`` materialize its OATj/lost_time before the
+        # request snapshot, independent of process-registration order.  Excel
+        # tape rows carrying explicit source snapshots bypass this native-DES
+        # convention and remain bit-for-bit unchanged.
+        if order.ret_bt_at_request is None or order.ret_ut_at_request is None:
+            yield self.env.timeout(0)
+        snapshot_bt, snapshot_ut = self._ret_request_snapshot_counts_at(
+            float(self.env.now)
+        )
         if order.ret_bt_at_request is None:
-            order.ret_bt_at_request = min(
-                int(BACKORDER_QUEUE_CAP),
-                sum(
-                    1
-                    for pending in self.pending_backorders
-                    if bool(getattr(pending, "backorder", False))
-                    and not bool(getattr(pending, "lost", False))
-                    and not bool(getattr(pending, "metrics_excluded", False))
-                ),
-            )
+            order.ret_bt_at_request = snapshot_bt
         if order.ret_ut_at_request is None:
-            order.ret_ut_at_request = int(self.total_unattended_orders)
+            order.ret_ut_at_request = snapshot_ut
         if order.ret_ledger_snapshot_time is None:
             order.ret_ledger_snapshot_time = float(self.env.now)
         if order.ret_ledger_event_sequence is None:

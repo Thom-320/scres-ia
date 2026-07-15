@@ -486,10 +486,6 @@ def compute_order_level_ret_excel_request_snapshot_ledger(
 
     for idx, order in enumerate(visible_orders, start=1):
         row_time = float(getattr(order, "OPTj", 0.0) or 0.0)
-        row_key = (
-            int(getattr(order, "j", idx) or idx),
-            row_time,
-        )
         explicit_bt = getattr(order, "ret_bt_at_request", None)
         explicit_ut = getattr(order, "ret_ut_at_request", None)
         if explicit_bt is not None and explicit_ut is not None:
@@ -500,13 +496,14 @@ def compute_order_level_ret_excel_request_snapshot_ledger(
             current_backorders = 0
             cumulative_unattended = 0
             for candidate in order_list:
-                candidate_key = (
-                    int(getattr(candidate, "j", 0) or 0),
-                    float(getattr(candidate, "OPTj", 0.0) or 0.0),
-                )
-                if candidate_key >= row_key:
-                    break
+                if candidate is order:
+                    continue
                 opt = float(getattr(candidate, "OPTj", 0.0) or 0.0)
+                # Request time, not order id, is the causal boundary.  This
+                # also excludes every same-time new request from the current
+                # row without assuming that ``j`` is chronological.
+                if opt >= row_time:
+                    continue
                 lt = float(getattr(candidate, "LTj", 0.0) or 0.0)
                 activation = opt + lt
                 candidate_oat = getattr(candidate, "OATj", None)

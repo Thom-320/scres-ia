@@ -1,6 +1,7 @@
 from types import SimpleNamespace
 
 import pytest
+import simpy
 
 from supply_chain.garrido_replication import (
     DEFAULT_RAW_WORKBOOKS,
@@ -10,7 +11,7 @@ from supply_chain.ret_thesis import (
     compute_order_level_ret_excel_request_snapshot_ledger,
     compute_order_level_ret_excel_visible_ledger,
 )
-from supply_chain.supply_chain import MFSCSimulation
+from supply_chain.supply_chain import BACKORDER_QUEUE_CAP, MFSCSimulation, OrderRecord
 
 
 def order(**kwargs):
@@ -198,3 +199,141 @@ def test_native_des_captures_request_snapshots_before_queue_entry():
         row["snapshot_source"] == "captured_at_request"
         for row in ledger["ret_rows"]
     )
+
+
+def _native_snapshot_sim(prior_orders):
+    simulation = MFSCSimulation(
+        seed=17,
+        horizon=1,
+        risks_enabled=False,
+        warmup_trigger="production",
+        order_fulfillment_mode="op9_linked",
+    )
+    simulation.orders = list(prior_orders)
+    simulation.pending_backorders = []
+    return simulation
+
+
+def test_native_request_snapshot_uses_half_open_time_interval_not_queue_flag():
+    prior = OrderRecord(
+        j=99,
+        OPTj=0.0,
+        LTj=48.0,
+        quantity=2500.0,
+        remaining_qty=2500.0,
+        backorder=False,
+    )
+    simulation = _native_snapshot_sim([prior])
+
+    assert simulation._ret_request_snapshot_counts_at(47.999) == (0, 0)
+    assert simulation._ret_request_snapshot_counts_at(48.0) == (1, 0)
+    prior.backorder = True
+    assert simulation._ret_request_snapshot_counts_at(49.0) == (1, 0)
+    # Dispatch may remove an order from the live queue while it is in flight;
+    # OATj, not queue membership, closes the request-ledger interval.
+    assert prior not in simulation.pending_backorders
+    prior.OATj = 60.0
+    assert simulation._ret_request_snapshot_counts_at(59.999) == (1, 0)
+    assert simulation._ret_request_snapshot_counts_at(60.0) == (0, 0)
+
+
+def test_native_request_snapshot_loss_boundary_cap_and_exclusions():
+    lost = OrderRecord(
+        j=1,
+        OPTj=0.0,
+        LTj=48.0,
+        quantity=2500.0,
+        remaining_qty=2500.0,
+        lost=True,
+        lost_time=60.0,
+    )
+    excluded = OrderRecord(
+        j=2,
+        OPTj=0.0,
+        LTj=48.0,
+        quantity=2500.0,
+        remaining_qty=2500.0,
+        metrics_excluded=True,
+    )
+    active = [
+        OrderRecord(
+            j=10 + idx,
+            OPTj=0.0,
+            LTj=48.0,
+            quantity=2500.0,
+            remaining_qty=2500.0,
+        )
+        for idx in range(BACKORDER_QUEUE_CAP + 5)
+    ]
+    simulation = _native_snapshot_sim([lost, excluded, *active])
+
+    assert simulation._ret_request_snapshot_counts_at(59.0) == (
+        BACKORDER_QUEUE_CAP,
+        0,
+    )
+    assert simulation._ret_request_snapshot_counts_at(60.0) == (
+        BACKORDER_QUEUE_CAP,
+        1,
+    )
+
+
+@pytest.mark.parametrize("completion_registered_first", [False, True])
+def test_native_request_snapshot_is_scheduler_invariant_at_deadline(
+    completion_registered_first,
+):
+    prior = OrderRecord(
+        j=1,
+        OPTj=0.0,
+        LTj=48.0,
+        quantity=2500.0,
+        remaining_qty=2500.0,
+    )
+    simulation = _native_snapshot_sim([prior])
+    simulation.env = simpy.Environment()
+    observed = []
+
+    def completion():
+        yield simulation.env.timeout(48.0)
+        prior.OATj = 48.0
+        prior.CTj = 48.0
+        prior.remaining_qty = 0.0
+
+    def snapshot():
+        yield simulation.env.timeout(48.0)
+        # Mirrors the zero-time phase barrier at the start of
+        # _place_demand_order without entering the physical order path.
+        yield simulation.env.timeout(0)
+        observed.append(
+            simulation._ret_request_snapshot_counts_at(simulation.env.now)
+        )
+
+    processes = (completion, snapshot) if completion_registered_first else (snapshot, completion)
+    for process in processes:
+        simulation.env.process(process())
+    simulation.env.run(until=48.0001)
+
+    assert observed == [(0, 0)]
+
+
+def test_fallback_snapshot_uses_request_time_not_nonmonotone_order_id():
+    prior = order(
+        j=99,
+        OPTj=0.0,
+        OATj=100.0,
+        CTj=100.0,
+        ret_bt_at_request=None,
+        ret_ut_at_request=None,
+    )
+    row = order(
+        j=1,
+        OPTj=60.0,
+        OATj=108.0,
+        CTj=48.0,
+        ret_bt_at_request=None,
+        ret_ut_at_request=None,
+    )
+
+    result = compute_order_level_ret_excel_request_snapshot_ledger([row, prior])
+
+    row_result = next(item for item in result["ret_rows"] if item["j"] == 1)
+    assert row_result["sum_bt"] == 1
