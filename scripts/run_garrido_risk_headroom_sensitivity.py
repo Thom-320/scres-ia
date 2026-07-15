@@ -9,10 +9,12 @@ perfect-information headroom nor observable-policy headroom.
 from __future__ import annotations
 
 import argparse
+from concurrent.futures import ProcessPoolExecutor, as_completed
 import csv
 import hashlib
 import itertools
 import json
+import os
 import sys
 from dataclasses import asdict
 from pathlib import Path
@@ -147,6 +149,24 @@ def evaluate(profile: dict[str, Any], candidate: Candidate, *, seed: int, max_st
         }
     finally:
         env.close()
+
+
+def evaluate_task(
+    profile: dict[str, Any], candidate: Candidate, seed: int, max_steps: int
+) -> dict[str, Any]:
+    metrics = evaluate(profile, candidate, seed=seed, max_steps=max_steps)
+    return {
+        "profile": profile["id"],
+        "group": profile["group"],
+        "enabled_risks": ",".join(profile["enabled"]),
+        "risk_overrides": json.dumps(profile["overrides"], sort_keys=True),
+        "impact_multipliers": json.dumps(profile["impact"], sort_keys=True),
+        "candidate": candidate.label,
+        "candidate_resource_nominal": candidate.resource,
+        "action": json.dumps(candidate.action),
+        "seed": int(seed),
+        **metrics,
+    }
 
 
 def mean(rows: list[dict[str, Any]], field: str) -> float:
@@ -301,12 +321,19 @@ def write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
         writer.writerows(rows)
 
 
+def write_json_atomic(path: Path, value: Any) -> None:
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    temporary.write_text(json.dumps(value, indent=2, sort_keys=True) + "\n")
+    temporary.replace(path)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--contract", default="contracts/garrido_risk_headroom_sensitivity_v1.json")
     parser.add_argument("--output", default="results/garrido_risk_headroom_sensitivity_v1/development")
     parser.add_argument("--seeds", default="")
     parser.add_argument("--max-steps", type=int, default=0)
+    parser.add_argument("--workers", type=int, default=1)
     parser.add_argument("--profile-prefix", default="", help="optional smoke filter")
     args = parser.parse_args()
 
@@ -324,26 +351,51 @@ def main() -> int:
     output = Path(args.output)
     output.mkdir(parents=True, exist_ok=True)
 
+    partial_path = output / "raw_rows.partial.jsonl"
     rows: list[dict[str, Any]] = []
+    if partial_path.is_file():
+        rows = [json.loads(line) for line in partial_path.read_text().splitlines() if line.strip()]
+    completed_keys = {
+        (row["profile"], row["candidate"], int(row["seed"])) for row in rows
+    }
     total = len(profiles) * len(candidates) * len(seeds)
-    completed = 0
-    for profile, candidate, seed in itertools.product(profiles, candidates, seeds):
-        metrics = evaluate(profile, candidate, seed=seed, max_steps=max_steps)
-        rows.append({
-            "profile": profile["id"],
-            "group": profile["group"],
-            "enabled_risks": ",".join(profile["enabled"]),
-            "risk_overrides": json.dumps(profile["overrides"], sort_keys=True),
-            "impact_multipliers": json.dumps(profile["impact"], sort_keys=True),
-            "candidate": candidate.label,
-            "candidate_resource_nominal": candidate.resource,
-            "action": json.dumps(candidate.action),
-            "seed": seed,
-            **metrics,
-        })
+    tasks = [
+        (profile, candidate, seed, max_steps)
+        for profile, candidate, seed in itertools.product(profiles, candidates, seeds)
+        if (profile["id"], candidate.label, int(seed)) not in completed_keys
+    ]
+    completed = len(rows)
+
+    def retain(row: dict[str, Any]) -> None:
+        nonlocal completed
+        rows.append(row)
+        with partial_path.open("a") as handle:
+            handle.write(json.dumps(row, sort_keys=True) + "\n")
+            handle.flush()
+            os.fsync(handle.fileno())
         completed += 1
+        write_json_atomic(
+            output / "progress.json",
+            {"completed": completed, "total": total, "fraction": completed / max(1, total)},
+        )
         if completed % max(1, total // 100) == 0 or completed == total:
             print(f"PROGRESS {completed}/{total} ({100.0 * completed / total:.1f}%)", flush=True)
+
+    workers = max(1, int(args.workers))
+    if workers == 1:
+        for task in tasks:
+            retain(evaluate_task(*task))
+    else:
+        with ProcessPoolExecutor(max_workers=workers) as executor:
+            futures = [executor.submit(evaluate_task, *task) for task in tasks]
+            for future in as_completed(futures):
+                retain(future.result())
+
+    profile_order = {profile["id"]: index for index, profile in enumerate(profiles)}
+    candidate_order = {candidate.label: index for index, candidate in enumerate(candidates)}
+    rows.sort(key=lambda row: (
+        profile_order[row["profile"]], candidate_order[row["candidate"]], int(row["seed"])
+    ))
 
     write_csv(output / "raw_rows.csv", rows)
     profile_ids = [profile["id"] for profile in profiles]
@@ -391,6 +443,7 @@ def main() -> int:
         "black_swan_R3_scaled": False,
         "seeds": seeds,
         "max_steps": max_steps,
+        "workers": workers,
         "n_profiles": len(profiles),
         "n_candidates": len(candidates),
         "n_evaluations": len(rows),

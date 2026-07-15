@@ -30,6 +30,7 @@ def main() -> int:
     parser.add_argument("--run-dir", type=Path, required=True)
     parser.add_argument("--source-commit", required=True)
     parser.add_argument("--python", default=sys.executable)
+    parser.add_argument("--workers", type=int, default=5)
     args = parser.parse_args()
 
     run_dir = args.run_dir.resolve()
@@ -44,6 +45,8 @@ def main() -> int:
         "scripts/run_garrido_risk_headroom_sensitivity.py",
         "--output",
         str(artifacts),
+        "--workers",
+        str(max(1, int(args.workers))),
     ]
     control = {
         "schema_version": "garrido_risk_headroom_producer_control_v1",
