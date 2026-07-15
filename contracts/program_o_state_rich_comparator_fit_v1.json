@@ -1,0 +1,192 @@
+{
+  "schema_version": "program_o_state_rich_comparator_fit_v1",
+  "status": "FROZEN_SOURCE_PENDING_EXECUTION_COMMIT",
+  "scientific_scope": "Post-fit development gate for finite state-rich classical observable controllers in the disclosed two-product Program O full-DES extension. Uses burned fit tapes only. Does not establish H_obs, authorize a learner, confirm Paper 2, or authorize Paper 3.",
+  "parent_evidence": {
+    "full_des_h_pi": {
+      "path": "results/program_o/full_des_hpi_translation_v1/validation_custody_verdict_v1.json",
+      "status": "PASS_PROGRAM_O_FULL_DES_HPI_TRANSLATION_CUSTODY_VERIFIED",
+      "safe_h_pi": 0.15151378920653932,
+      "simultaneous_safe_lcb95": 0.1156159088651399
+    },
+    "label_only_fit": {
+      "run_id": "program-o-hobs-fit-v1-20260715",
+      "status": "PASS_PROGRAM_O_HOBS_FIT__FREEZE_SELECTION_BEFORE_VALIDATION",
+      "claim": "development signal only; selected belief_extreme_v1/init2 is not H_obs evidence"
+    }
+  },
+  "post_fit_disclosure": {
+    "reason_for_new_gate": "The label-only selected policy improved the primary cell but failed cross-cell worst-product/backlog guardrails and used more loaded transport. This state-rich family is therefore post-fit development and receives no confirmatory status from the burned fit block.",
+    "auto_calibration_rejected": "Supplying belief_extreme_v1 with each cell's true rho/share changed 0 of 192 calendars. The failure is structural extreme allocation, not parameter misspecification.",
+    "no_additional_policy_after_result": true
+  },
+  "tape_governance": {
+    "development_only": [7420001, 7420048],
+    "source": "retrieved custody-verified artifacts from program-o-hobs-fit-v1-20260715",
+    "validation_sealed": [7420049, 7420096],
+    "validation_may_not_be_read_or_opened": true,
+    "new_random_tapes_forbidden": true
+  },
+  "observation_contract": {
+    "decision_cadence_hours": 168,
+    "half_open_barrier": "Only physical and request events with timestamp strictly less than the weekly decision timestamp are observable.",
+    "allowed": [
+      "product-specific on-hand Op9 inventory",
+      "product-specific committed production targets not yet at Op9",
+      "product-specific pending backlog quantity, order count, and maximum age",
+      "product-specific in-flight quantity already released from Op9",
+      "strictly prior request labels and timestamps through the frozen HMM belief",
+      "prior actions, public week index, and remaining decision count"
+    ],
+    "forbidden": [
+      "latent regime",
+      "current or future request labels or quantities",
+      "future demand skeleton",
+      "tape seed, hash, or identity",
+      "oracle calendar or score-time metrics",
+      "true sensitivity-cell rho/share",
+      "future policy-independent RNG realizations"
+    ],
+    "model_parameters": {
+      "regime_persistence": 0.75,
+      "dominant_product_share": 0.90,
+      "rule": "Fixed across all cells; no auto-calibration or cell-label access."
+    }
+  },
+  "finite_controller_family": {
+    "source": "supply_chain/program_o_state_rich.py",
+    "configurations": [
+      {"config_id": "base_stock__1", "family": "balanced product base-stock", "cover_weeks": 1},
+      {"config_id": "base_stock__2", "family": "balanced product base-stock", "cover_weeks": 2},
+      {"config_id": "max_pressure__0", "family": "belief-and-inventory max pressure", "hysteresis_rations": 0},
+      {"config_id": "max_pressure__5000", "family": "belief-and-inventory max pressure", "hysteresis_rations": 5000},
+      {"config_id": "min_cost_flow__1", "family": "exact three-slot deficit allocation", "forecast_weeks": 1},
+      {"config_id": "min_cost_flow__2", "family": "exact three-slot deficit allocation", "forecast_weeks": 2},
+      {"config_id": "belief_mpc__3", "family": "deterministic expected-demand integer MPC", "horizon_weeks": 3},
+      {"config_id": "belief_mpc__4", "family": "deterministic expected-demand integer MPC", "horizon_weeks": 4},
+      {"config_id": "belief_dp__3", "family": "seven-branch weekly-count approximate belief DP", "horizon_weeks": 3},
+      {"config_id": "belief_dp__4", "family": "seven-branch weekly-count approximate belief DP", "horizon_weeks": 4}
+    ],
+    "continuous_search": false,
+    "fit_retuning": false,
+    "tie_break": "Lexicographic operational objective, then lowest action id. Product-label swap is required away from exact ties.",
+    "planning_quantity": "Six weekly orders at the thesis mean 2500 rations; no realized future quantity is consumed.",
+    "claim_limit": "belief_dp is an approximate finite planning comparator, not a certified global POMDP bound. A bound or approximation gap remains mandatory before any learned-value claim."
+  },
+  "open_loop_denominator": {
+    "calendars": 65536,
+    "definition": "All base-4 length-eight calendars under centered_minority_v1.",
+    "best_static": "Maximum mean ret_excel_request_snapshot_v2 on the burned fit block, recomputed from all raw matrices.",
+    "constants_and_phase_calendars_contained": true
+  },
+  "metrics": {
+    "primary": "ret_excel_request_snapshot_v2 via the existing certified raw matrices",
+    "higher_or_equal": [
+      "ration_ret_visible",
+      "ret_full",
+      "quantity_ret_full",
+      "ret_visible_cvar10",
+      "worst_product_fill"
+    ],
+    "lower_or_equal": [
+      "omitted_rows",
+      "omitted_quantity",
+      "lost_orders",
+      "lost_quantity",
+      "unresolved_orders",
+      "unresolved_quantity",
+      "max_backlog_age",
+      "service_loss_auc"
+    ]
+  },
+  "resource_adjudication": {
+    "reserved_capacity": {
+      "gross_policy_batch_slots": 24,
+      "gross_production_quantity": 120000,
+      "charged_daily_dispatch_slots": 112,
+      "charged_downstream_vehicle_hours": 5376,
+      "equality_required": true
+    },
+    "strict_actual_use_gate": {
+      "reference": "the same cell's maximum-mean 65,536-calendar open-loop comparator",
+      "mean_policy_minus_reference_must_be_nonpositive": [
+        "actual_loaded_departures",
+        "actual_payload",
+        "actual_downstream_vehicle_hours"
+      ],
+      "tolerance": 1e-12,
+      "status_if_failed": "STOP_RESOURCE_OR_GUARDRAIL_CONFOUND"
+    },
+    "binding_matched_throughput_frontier": {
+      "definition": "A single tape-independent calendar is admissible only if, on every one of the 48 paired tapes, its loaded departures, payload, and realized vehicle-hours are each greater than or equal to the policy's corresponding use. Select maximum mean ReT over that globally admissible subset.",
+      "policy_delta_minimum": 0.015,
+      "empty_subset_status": "STOP_RESOURCE_FRONTIER_CONFOUND",
+      "reason": "This preserves a deployable open-loop comparator while preventing the controller from winning against a lazier-transport calendar. It is stricter than mean-use matching and does not permit a different static calendar to be selected for each tape."
+    },
+    "resource_frontier_report": "Report unconstrained and globally matched-throughput contrasts. Neither reserved-envelope equality nor a weaker mean-use comparison can override failure of the binding frontier."
+  },
+  "selection": {
+    "primary_cell": "rho75_share90",
+    "rule": "Among the ten configurations passing every primary-cell metric guardrail, reserved-capacity equality, strict actual-use gate, binding matched-throughput delta>=0.015, unconstrained delta>=0.015, at least 34/48 favorable tapes, action/state-support gates, and all four paired information-placebo LCB gates, select maximum mean primary ReT; break ties by worst-product fill, CVaR, lower max-age, then config order.",
+    "configuration_is_then_fixed_across_all_cells": true
+  },
+  "stability_gate": {
+    "cells": ["rho75_share75", "rho75_share90", "rho90_share75", "rho90_share90"],
+    "required_component": "A connected component of at least three cells spanning both rho and share levels.",
+    "fit_requirements_per_cell": {
+      "mean_delta_minimum": 0.015,
+      "favorable_tapes_minimum": 34,
+      "all_metric_guardrails": true,
+      "reserved_capacity_equal": true,
+      "strict_actual_use_nonpositive": true,
+      "binding_matched_throughput_delta_minimum": 0.015,
+      "all_information_placebo_lcb95_strictly_positive": true
+    }
+  },
+  "action_trajectory_gate": {
+    "minimum_unique_sequences": 8,
+    "maximum_modal_fraction": 0.50,
+    "minimum_varying_week_indices": 2,
+    "minimum_actions_with_ten_percent_support": 2,
+    "record_complete_observations_and_actions": true,
+    "fixed_modal_and_phase_replacements_required_before_validation": true
+  },
+  "state_dependence_counterfactuals": {
+    "product_channel_swap": "At every audited non-tie state, swap C/H inventory, backlog, age, pipeline and in-flight channels; map belief to 1-belief, predicted share to 1-share, and previous action to 3-action. The new action must equal 3-original_action.",
+    "minority_backlog_monotonicity": "At every audited non-tie state, add one 5,000-ration batch to the product receiving fewer slots. The slots allocated to the previously majority product must not increase.",
+    "required_for_primary_selection": true,
+    "failure_status": "STOP_STATE_INDEPENDENT_POLICY"
+  },
+  "placebos_if_candidate_survives": {
+    "stale_operational_state_t_minus_2": true,
+    "inventory_and_backlog_masked": true,
+    "product_channels_swapped": true,
+    "cross_tape_shift17_observation_donor": true,
+    "paired_bootstrap_resamples": 10000,
+    "pass_rule": "For every promoted cell, the one-sided paired bootstrap LCB95 of real-state ReT minus each placebo ReT must be strictly positive.",
+    "selection_rule": "Evaluate every finite configuration clearing the non-placebo primary gates; a failed first-ranked controller cannot hide a lower-ranked configuration that passes the frozen placebo gates."
+  },
+  "operational_state_parity": {
+    "requirement": "Before any fit matrix is evaluated, calendars emitted from compact operational replay must be rerun in direct SimPy and the pre-decision on-hand, locked pipeline, backlog quantity/count/age, and in-flight fields must agree at every weekly decision.",
+    "fixture_seed": 7400048,
+    "fixture_status": "BURNED_PRESEED_ONLY",
+    "same_time_rule": "Strictly half-open: an event at the decision timestamp is not yet observable.",
+    "failure_status": "INVALID_STATE_RICH_OBSERVATION_OR_MATRIX"
+  },
+  "terminal_labels": {
+    "candidate": "PASS_STATE_RICH_FIT_CANDIDATE_PENDING_PLACEBOS_AND_FREEZE",
+    "no_policy": "STOP_NO_STATE_RICH_OBSERVABLE_HEADROOM",
+    "resource_or_guardrail": "STOP_RESOURCE_OR_GUARDRAIL_CONFOUND",
+    "resource_frontier": "STOP_RESOURCE_FRONTIER_CONFOUND",
+    "state_independent": "STOP_STATE_INDEPENDENT_POLICY",
+    "no_stability": "STOP_NO_STABLE_STATE_RICH_HEADROOM",
+    "invalid": "INVALID_STATE_RICH_OBSERVATION_OR_MATRIX"
+  },
+  "claim_boundary": {
+    "full_des_h_pi_established": true,
+    "h_obs_established": false,
+    "learner_authorized": false,
+    "paper2_confirmed": false,
+    "paper3_authorized": false
+  }
+}
