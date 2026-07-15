@@ -39,6 +39,14 @@ def test_privileged_windows_ignore_r3_and_union_overlaps() -> None:
     assert windows == [(128.0, 322.0)]
 
 
+def test_no_risk_and_irrelevant_risk_have_zero_restricted_timing_action() -> None:
+    spec = ScheduleSpec("restricted_privileged", "offset", -168.0)
+    for events in ([], [_event("R3", 100, 800)], [_event("R21", 100, 200)]):
+        assert not schedule_is_high(
+            spec, now=168.0, treatment_start=0.0, risk_events=events
+        )
+
+
 def test_daily_and_weekly_privileged_schedules_are_distinct() -> None:
     events = [_event("R22", 250, 274)]
     daily = ScheduleSpec("restricted_privileged", "d", -24.0)

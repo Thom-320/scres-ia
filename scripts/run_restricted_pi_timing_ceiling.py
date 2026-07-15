@@ -404,6 +404,23 @@ def main() -> int:
             [placebo[seed] for seed in seeds],
         )
 
+    observable_hashes = sorted({
+        real[seed]["action_trajectory_sha256"] for seed in seeds
+    })
+    periodic_hashes = sorted({
+        row["metrics"]["action_trajectory_sha256"]
+        for row in all_rows if row["family"] == "open_loop_8week_periodic"
+    })
+    feedback_trajectory_audit = {
+        "observable_unique_action_trajectory_hashes": len(observable_hashes),
+        "observable_hashes": observable_hashes,
+        "matches_any_open_loop_hash": any(
+            value in set(periodic_hashes) for value in observable_hashes
+        ),
+        "state_dependent_development_signal": len(observable_hashes) >= 2,
+        "claim_limit": "burned-tape diagnostic only; OOS feedback certification remains required"
+    }
+
     result = {
         "schema_version": "restricted_pi_timing_ceiling_result_v1",
         "status": (
@@ -421,6 +438,7 @@ def main() -> int:
         "promotion": promotion,
         "observable_conversion": observable_conversion,
         "placebo_results": placebo_results,
+        "feedback_trajectory_audit": feedback_trajectory_audit,
         "selected_privileged_schedule_by_seed": selected_offsets,
         "risk_tape_hashes": tape_hashes,
         "timing_seeds_opened": True,
