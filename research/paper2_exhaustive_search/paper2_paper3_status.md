@@ -1,5 +1,31 @@
 # Paper 2 preregistration / verdict and Paper 3 authorization status
 
+## New wartime-stress route — 2026-07-16
+
+Current governing status:
+`WAR_STRESS_TIMING_ATLAS_FROZEN_IMPLEMENTATION_PENDING`.
+
+The boundary certificate below remains the terminal account of the portfolio
+executed through Program O and the exact Cf/Track-A risk sensitivity. It is not
+a global impossibility theorem. A genuinely new contract now freezes a
+conditional wartime stress family and a different estimand: within each fixed
+stress cell, restricted event-timed control versus the strongest same-cell
+comparator. Cross-regime constant reversal is explicitly not required.
+
+The atlas contains all 144 preregistered cells: three operational risk masks,
+four frequency levels, three impact levels and four coupling modes. Selection
+requires a simultaneous-inference connected region and chooses the least severe
+passing component, never the maximum-headroom cell. R3 and a persistent campaign
+fixture are separate report-only boundaries.
+
+Only implementation and non-scientific preflight are authorized. Development
+seeds `7470001–7470012`, validation seeds `7470101–7470148` and observable seeds
+`7470201–7470248` remain unopened. Learner, Paper 2 and Paper 3 remain
+unauthorized. Governing authorization:
+`war_stress_timing_reopening_authorization_20260716.json`.
+
+---
+
 ## Superseding status — 2026-07-16
 
 Current governing status:
