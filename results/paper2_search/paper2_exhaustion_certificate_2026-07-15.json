@@ -1,37 +1,47 @@
 {
   "schema_version": "paper2_exhaustion_certificate_v1",
   "generated_at_utc": "2026-07-15T18:00:00Z",
-  "status": "PAPER2_SEARCH_BOUNDARY_CERTIFIED__NO_POSITIVE_INSTANCE__EXACT_REOPENERS_NAMED",
+  "status": "PAPER2_SEARCH_BOUNDARY_CERTIFIED__NO_POSITIVE_INSTANCE__EXACT_REOPENERS_NAMED__OAT_SCOPE_DISCLOSED",
   "scientific_commit": "adbfb8f",
   "summary": "Exhaustive search for a Garrido-defensible decision contract exposing material, observable, resource-adjusted adaptive headroom (H_obs) under canonical order-level ReT. Outcome: NO positive instance. A material perfect-information ceiling exists in exactly one disclosed researcher extension (Program O, H_PI 0.152) but does NOT convert out-of-sample. The thesis-native envelope is negative across 4 decision surfaces, 3 independent programs, 2 physics generations, and now Garrido's own risk-escalation table. Every remaining reopener is an exact, falsifiable domain question listed below.",
-
   "primary_endpoint": {
     "metric": "ret_excel_request_snapshot_v2",
     "implementation": "supply_chain.episode_metrics.compute_episode_metrics",
-    "forbidden": ["metric substitution", "Cobb-Douglas promotion", "hand-rolled ReT", "temporal-index promotion"],
+    "forbidden": [
+      "metric substitution",
+      "Cobb-Douglas promotion",
+      "hand-rolled ReT",
+      "temporal-index promotion"
+    ],
     "note": "Time-resolved/temporal resilience indices are secondary sensitivities only; a temporal-only gain authorizes neither learner nor Paper 2."
   },
-
   "quantitative_ceilings": {
     "thesis_native_envelope": {
-      "verdict": "NEGATIVE — no deployable adaptive headroom",
+      "verdict": "NEGATIVE \u2014 no deployable adaptive headroom",
       "full_des_max_H_PI": {
         "value": 0.0221,
         "family": "DRA2b_finite_convoy",
         "H_obs": "~0 (Program E: 0/10 PPO seeds, tree, heuristic, convex mixture all fail)"
       },
       "stylized_voi_atlas_64_cells": {
-        "H_PI_mean": 0.0135, "H_PI_max": 0.024595, "frac_H_PI_ge_0.01": 0.6875,
-        "H_obs_mean": -0.007896, "H_obs_max": 0.016283, "frac_H_obs_le_0": 0.796875, "frac_H_obs_ge_0.01": 0.03125,
+        "H_PI_mean": 0.0135,
+        "H_PI_max": 0.024595,
+        "frac_H_PI_ge_0.01": 0.6875,
+        "H_obs_mean": -0.007896,
+        "H_obs_max": 0.016283,
+        "frac_H_obs_le_0": 0.796875,
+        "frac_H_obs_ge_0.01": 0.03125,
         "eta_mean": -0.7895,
-        "STATUS": "RETRACTED_BY_CORRECTIVE_AUDIT — the 2 positive-H_obs cells were shed-to-win (theatre starvation, fails worst-CSSU fairness). EXCLUDED FROM INFERENCE.",
+        "STATUS": "RETRACTED_BY_CORRECTIVE_AUDIT \u2014 the 2 positive-H_obs cells were shed-to-win (theatre starvation, fails worst-CSSU fairness). EXCLUDED FROM INFERENCE.",
         "interpretation": "Directional only: observable policy destroys value despite clairvoyant headroom."
       },
       "track_c_campaign_oracle": {
         "regime": "campaign_v1 non-stationary over R22/R23/R24(+R21), Garrido Ch7-motivated",
         "best_switching_headroom_vs_same_contract_constant": 6.5e-05,
-        "oracle": 2.8e-05, "tapes": "24/24", "bar": "5% of base",
-        "verdict": "NULL — constants structurally near-optimal even under engineered non-stationarity with priced costs",
+        "oracle": 2.8e-05,
+        "tapes": "24/24",
+        "bar": "5% of base",
+        "verdict": "NULL \u2014 constants structurally near-optimal even under engineered non-stationarity with priced costs",
         "key_finding": "HYSTERESIS BEATS CLAIRVOYANCE: non-privileged EWMA detector outperforms the true-state instant switcher x2.3 under commitment lags",
         "ppo_seeds_trained": 0
       },
@@ -42,7 +52,7 @@
       },
       "route_recourse_program_L_R03": {
         "full_des_H_PI": "<=0.005 at every R22 regime swept (thesis-native 24h -> 720h extreme)",
-        "verdict": "STOP — buffer-intercept: downstream SB/CSSU buffers absorb Op8 outages",
+        "verdict": "STOP \u2014 buffer-intercept: downstream SB/CSSU buffers absorb Op8 outages",
         "note": "Stylized screen showed 0.15; full-DES collapsed ~30x. Stylized screens over-state headroom."
       },
       "garrido_risk_escalation_screen": {
@@ -59,20 +69,30 @@
         "black_swan_R3_scaled": false,
         "verdict": "DEVELOPMENT_NO_DOOR_UNDER_TESTED_FRONTIER",
         "decisive_finding": "The optimal constant posture is INVARIANT across all 45 risk profiles at every budget cap. Escalating the thesis's own recurrent risks does not change what you should do. Risks reduce physical resilience (ReT 0.53 -> 0.20 under escalation) but create ZERO regime-tailoring headroom.",
-        "custody": {"result_sha256": "e4a3d4a0", "execution_commit": "01c1d9d", "frozen_contract_commit": "6794fe6", "contract_identical": true},
-        "scope": "development (6 seeds) — a cheap door that did not open; requires no confirmation to stay closed (burden was to demonstrate headroom; absent by 2 orders of magnitude)"
+        "custody": {
+          "result_sha256": "e4a3d4a0",
+          "execution_commit": "01c1d9d",
+          "frozen_contract_commit": "6794fe6",
+          "contract_identical": true
+        },
+        "scope": "development (6 seeds) \u2014 a cheap door that did not open; requires no confirmation to stay closed (burden was to demonstrate headroom; absent by 2 orders of magnitude)",
+        "SCOPE_LIMITATION_OAT": "This screen is a ONE-FACTOR-AT-A-TIME design (Garrido Cf1-Cf20 + one-at-a-time R11-R24). Per Saltelli et al., OAT cannot account for interactions (multiple factors are never varied concomitantly) and explores only a 'hypercross' with negligible coverage of the parameter volume. THEREFORE the finding 'optimal posture is invariant across 45 profiles' is valid ONLY ALONG THE AXES from the baseline; the simultaneous multi-risk INTERIOR of the risk space is UNEXPLORED by this design. A posture reversal requiring e.g. R22 AND R24 elevated concomitantly could not have been detected.",
+        "interaction_interior_status": "UNEXPLORED \u2014 addressed by WAR_SCENARIO_INTERACTION_SENSITIVITY_PREREGISTRATION_2026-07-15.md"
       }
     },
-
     "extended_envelope_program_O_two_nonfungible_products": {
-      "verdict": "CLOSED — material H_PI established, but H_obs NOT confirmed out-of-sample",
+      "verdict": "CLOSED \u2014 material H_PI established, but H_obs NOT confirmed out-of-sample",
       "full_des_H_PI": {
         "safe_h_pi": 0.15151378920653932,
         "simultaneous_safe_lcb95": 0.1156159088651399,
         "exact_fungible_null": 0.0,
         "direct_parity_episodes": 25177,
         "throughput": "conserved (delta gross_production = 0; all charged/reserved resources equal)",
-        "custody": {"verdict_commit": "98ce2ce", "result_sha256": "f5f2da8d", "science_commit": "6ad6f10"},
+        "custody": {
+          "verdict_commit": "98ce2ce",
+          "result_sha256": "f5f2da8d",
+          "science_commit": "6ad6f10"
+        },
         "significance": "THE ONLY material perfect-information ceiling found in the entire search; survives real Op9-Op12 buffering (the test that collapsed route recourse to <=0.005); causally attributable to non-fungibility (fungible null = 0 exactly)"
       },
       "h_obs_attempts": {
@@ -86,7 +106,8 @@
           "note": "all 10 controllers out-transported the full 65,536-calendar frontier; information placebos never executed (gated behind the resource gate)"
         },
         "dual_resource_diagnostic": {
-          "result_sha256": "e48606e7", "execution_commit": "a9733d0",
+          "result_sha256": "e48606e7",
+          "execution_commit": "a9733d0",
           "verdict": "DIAGNOSTIC_STABLE_SIGNAL_FIXED_CLOCK_ONLY",
           "finding": "under fixed-clock reserved capacity, belief-MPC beats ALL information placebos over 3 connected cells; incremental operational-state value POSITIVE and material (LCB95 +0.025..+0.073). Under pay-per-use: fails.",
           "h_obs_confirmed": false,
@@ -94,7 +115,8 @@
         },
         "fixed_clock_physical_oos_validation": {
           "verdict": "STOP_PROGRAM_O_CLASSICAL_HOBS_VALIDATION",
-          "result_sha256": "09ec3f16", "execution_commit": "897ebab",
+          "result_sha256": "09ec3f16",
+          "execution_commit": "897ebab",
           "sealed_tapes": "7420049-7420096 opened exactly once",
           "decisive_failure": "rho90_share90 favorable on 26/48 tapes vs preregistered minimum 34 (mean +0.083 but BIMODAL/unstable); other cells 45/48 and 44/48",
           "bug_disclosure": "a real executor defect mixed 69 incompatible-scale estimands into a single simultaneous critical (23.65M), voiding the LCB/placebo/guardrail flags. The verdict is INDEPENDENT of the bug: the 26/48 favorable-tape count is a raw per-tape count computed pre-bootstrap.",
@@ -102,14 +124,12 @@
         }
       }
     },
-
     "conversion_ratio_eta": {
       "thesis_native_stylized": -0.79,
       "program_O": "H_PI 0.152 material; H_obs not confirmed OOS => eta not established",
       "interpretation": "Across the entire search, no decision contract converts perfect-information headroom into deployable, resource-honest, out-of-sample-stable observable value."
     }
   },
-
   "exact_garrido_questions": {
     "canonical_batch": "research/paper2_exhaustive_search/garrido_face_validation_questions.md (Q1-Q13)",
     "reopeners": [
@@ -118,7 +138,7 @@
         "question": "Does an unfilled ration requirement have a HARD deadline after which it is PERMANENTLY abandoned (not backordered), with a deadline distribution TIGHTER than the 24-120h R21/R23/R22 recovery timescales, AND does the logistics agency hold doctrinal triage/admission authority?",
         "reopens_if": "hard deadlines tighter than recovery times AND triage authority both exist",
         "closes_if": "orders always backorder, or deadlines looser than recovery, or no triage authority (collapses to D1)",
-        "status": "OPEN — the strongest thesis-native reopener"
+        "status": "OPEN \u2014 the strongest thesis-native reopener"
       },
       {
         "id": "Q6_Q7_integrated_shared_resource",
@@ -132,32 +152,38 @@
         "question": "Do >=2 mutually NON-SUBSTITUTABLE ration classes exist among the 21 real types (religious/medical/climate) that SHARE the capacity-constrained Op5-Op7 assembly, with an uncertain, persistent, partially-advance-observable demand mix? Real (share, persistence, setup, cadence)?",
         "validates_if": "non-substitutable classes share the bottleneck with uncertain persistent advance-observable mix => the certified H_PI 0.152 becomes MFSC-representative",
         "collapses_if": "all types mutually substitutable, or dedicated non-contending capacity, or deterministic mix => exact fungible null (H_PI = 0)",
-        "status": "OPEN — but note Program O's H_obs already failed OOS, so a 'validates' answer restores representativeness of the CEILING only, not a positive"
+        "status": "OPEN \u2014 but note Program O's H_obs already failed OOS, so a 'validates' answer restores representativeness of the CEILING only, not a positive"
       },
       {
         "id": "Q14_freight_economics",
         "question": "Is the downstream Op10/Op12 fleet FIXED-CLOCK RESERVED (scheduled convoys depart and consume vehicle/crew-hours whether loaded or empty, so filling idle capacity is free) or PAY-PER-USE (each loaded trip consumes marginal resource)?",
         "scopes": "Program O's fixed-clock branch: under fixed-clock the dual-resource diagnostic's development signal is resource-honest; under pay-per-use it is a resource confound.",
-        "status": "OPEN — but NOT decisive: the fixed-clock OOS validation already FAILED on prospective consistency (26/48), so Q14 cannot rescue Program O; it only scopes the retired development finding."
+        "status": "OPEN \u2014 but NOT decisive: the fixed-clock OOS validation already FAILED on prospective consistency (26/48), so Q14 cannot rescue Program O; it only scopes the retired development finding."
       },
       {
         "id": "Q2_R03_route_recourse",
         "question": "Does the operator choose among >=2 routes toward the same downstream demand with one finite shared fleet, with degradation persistence and pre-dispatch warning?",
-        "status": "BAR RAISED — route recourse already has a full-DES negative (H_PI <= 0.005, buffer-intercept). A reopener would additionally require finite downstream storage."
+        "status": "BAR RAISED \u2014 route recourse already has a full-DES negative (H_PI <= 0.005, buffer-intercept). A reopener would additionally require finite downstream storage."
       }
     ]
   },
-
   "residual_untested_threads": [
     {
       "id": "within_event_intervention_timing",
       "description": "Endogenous/impulse control of WHEN to intervene (sub-weekly), attacking Track C's fixed-168h-cadence + commitment-lag root cause.",
-      "status": "UN-LICENSED — the frozen rule gated it behind the risk-sensitivity door, which did not open (R2_frequency @ cap 0.5 gave 5.0e-05 vs 0.01).",
+      "status": "UN-LICENSED \u2014 the frozen rule gated it behind the risk-sensitivity door, which did not open (R2_frequency @ cap 0.5 gave 5.0e-05 vs 0.01).",
       "assessment": "Motivation substantially undercut: the risk screen shows the optimal constant posture is INVARIANT across all 45 risk profiles, so better-timed switching between postures has nothing to exploit at the regime level. NOT strictly refuted for within-event response timing. Would require a new preregistration with independent motivation.",
-      "prior_evidence_against": "Track C: hysteresis beats clairvoyance x2.3 under commitment lags — even perfect information cannot be converted at the weekly epoch."
+      "prior_evidence_against": "Track C: hysteresis beats clairvoyance x2.3 under commitment lags \u2014 even perfect information cannot be converted at the weekly epoch."
+    },
+    {
+      "id": "wartime_multirisk_interaction_region",
+      "description": "Simultaneous multi-risk (wartime) elevation of the recurrent risks \u2014 the INTERACTION interior that the OAT screen is structurally blind to. R3 stays frozen.",
+      "status": "OPEN and PRE-REGISTERED \u2014 research/paper2_exhaustive_search/WAR_SCENARIO_INTERACTION_SENSITIVITY_PREREGISTRATION_2026-07-15.md",
+      "method": "Morris screening + Sobol total-effect (S_Ti - S_i = interaction mass) + PRIM scenario discovery on DEVELOPMENT tapes (hypothesis-generating only), then a frozen one-shot confirmation on a VIRGIN 746-series block. NOT a grid search.",
+      "prior": "Evidence against is substantial: Track C already tested a combined campaign regime (R22/R23/R24+R21) -> 6.5e-05 vs 5% bar; extreme intensity enters binary collapse; posture ordering changes with BUDGET, never with regime. A null is expected and pre-committed.",
+      "if_additive": "If S_Ti ~= S_i for all factors, the OAT null GENERALISES to the interior and this certificate upgrades from 'negative along the axes' to 'negative including interactions'."
     }
   ],
-
   "claim_boundary": {
     "full_des_H_PI_established": true,
     "H_PI_established_where": "Program O only (0.15151, LCB95 0.11562, disclosed two-non-fungible-product researcher extension)",
@@ -167,6 +193,5 @@
     "paper3_authorized": false,
     "positive_instance_found": false
   },
-
-  "terminal_finding": "Across the thesis-native envelope (4 decision surfaces, 3 independent programs, 2 physics generations, Garrido's own Cf1-Cf20 risk-escalation table) and one engineered extension with ~7x more clairvoyant headroom, NO decision contract converts perfect-information headroom into deployable, resource-honest, out-of-sample-stable observable value. The mechanism is consistent and mechanistically identified: the thesis DES is structurally over-buffered (constants are near-optimal; the optimal posture is invariant to risk regime), commitment lags defeat clairvoyance (hysteresis > true-state switching), and where clairvoyant headroom exists it does not survive observability, resource-honesty, or out-of-sample prospective consistency. Adaptive/learned control is NOT warranted in this system under the stated gates. Zero PPO seeds were wasted: every gate killed its candidate before training."
+  "terminal_finding": "Across the thesis-native envelope (4 decision surfaces, 3 independent programs, 2 physics generations, Garrido's own Cf1-Cf20 risk-escalation table) and one engineered extension with ~7x more clairvoyant headroom, NO decision contract converts perfect-information headroom into deployable, resource-honest, out-of-sample-stable observable value. The mechanism is consistent and mechanistically identified: the thesis DES is structurally over-buffered (constants are near-optimal; the optimal posture is invariant to risk regime), commitment lags defeat clairvoyance (hysteresis > true-state switching), and where clairvoyant headroom exists it does not survive observability, resource-honesty, or out-of-sample prospective consistency. Adaptive/learned control is NOT warranted in this system under the stated gates. Zero PPO seeds were wasted: every gate killed its candidate before training. SCOPE NOTE: the thesis-native risk evidence is one-factor-at-a-time and therefore interaction-blind by design; the negative is established ALONG THE AXES. The simultaneous multi-risk (wartime) interior is pre-registered for discovery + frozen virgin confirmation and is the single remaining structured probe. This certificate is provisional on that probe's outcome."
 }
