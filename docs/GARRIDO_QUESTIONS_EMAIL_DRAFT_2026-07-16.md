@@ -25,8 +25,12 @@ agradeceríamos respuestas aunque sean cualitativas:
    la lista saturada cerca de 60 en todas las configuraciones con riesgo). Nuestra pregunta es sobre
    la realidad detrás de esa simplificación: ¿existe además una caducidad TEMPORAL dura — plazos de
    misión tras los cuales el requerimiento se abandona — más corta que los tiempos de recuperación
-   típicos (24–120 h)? ¿Y quién posee la autoridad real de decidir QUÉ pedido se admite o se
-   descarta cuando no alcanza para todos (en el modelo se descarta "el último de la lista")?
+   típicos (24–120 h)? Su tesis menciona un "order cancellation time" (p. 75): ¿es un plazo físico
+   real — y de cuánto — o una descripción conceptual del límite de 60? ¿El tope de 60 backorders
+   refleja capacidad operacional real o fue una conveniencia de modelado en Simulink? ¿Eliminar el
+   último pedido de la lista es una regla doctrinal intencional? ¿Y la autoridad real permite solo
+   priorizar pedidos contingentes (R24), o también admitir/rechazar/abandonar pedidos — con clases
+   de criticidad dentro de los contingentes?
 
 2. **Recurso de restauración compartido.** Su Figura 6.1 muestra UN solo Maintenance Battalion
    para todo el sistema, pero el modelo asume tiempos de recuperación INDEPENDIENTES por operación
@@ -47,6 +51,12 @@ agradeceríamos respuestas aunque sean cualitativas:
    cargados o vacíos) o bajo pago-por-uso (cada viaje cargado consume recurso marginal)? En su
    experiencia, ¿qué utilización típica tiene esa flota?
 
+5. **Competencia y reparto entre CSSUs (Op11).** Su topología incluye dos CSSUs, pero el modelo
+   no describe ninguna regla de reparto entre ellas y los registros agregan los pedidos sin
+   destino. En la realidad: ¿varias CSSUs compiten simultáneamente por una misma entrega escasa?
+   ¿Quién decide el reparto y con qué regla (¿equidad entre teatros, prioridad de misión?)? ¿El
+   decisor observa demanda/backlog/nivel de servicio POR CSSU al momento de repartir?
+
 Además, una aclaración métrica breve (M1 del documento adjunto): en su cálculo de ReT en Excel,
 ¿el estado de cada pedido se evalúa en el instante de la solicitud? Queremos confirmar que nuestra
 réplica formal coincide con su intención.
@@ -59,8 +69,12 @@ Thomas Chisica
 
 ---
 
-**Nota interna (no enviar):** mapeo a los reopeners del certificado — (1)=Q11/R09 *strongest*;
-(2)=Q6/Q7; (3)=Q13 (solo restaura representatividad del techo H_PI 0.152, no un positivo);
-(4)=Q14 (solo delimita el hallazgo retirado de desarrollo; NO decisivo tras el STOP OOS 26/48).
+**Nota interna (no enviar):** mapeo a los reopeners del certificado — (1)=Q11/R09 *strongest*
+(refinada 2026-07-16: la variante cap-60 ya fue agotada por D1; solo el deadline temporal real +
+autoridad de admisión/evicción reabren); (2)=Q6/Q7; (3)=Q13 (solo restaura representatividad del
+techo H_PI 0.152, no un positivo); (4)=Q14 (solo delimita el hallazgo retirado de desarrollo; NO
+decisivo tras el STOP OOS 26/48); (5)=hecho de dominio que decide el estatus del probe op11
+(HOLD_PENDING_DOMAIN_FACT — sin confirmación de competencia multi-CSSU con autoridad de reparto
+observable, op11/max_min_fill es una extensión sintética, no una puerta tesis-nativa).
 Reglas de uso: una respuesta "reopens" NO autoriza entrenamiento — autoriza preregistrar el
 contrato correspondiente con oracle-first. Ver sección "What these questions do NOT authorize".

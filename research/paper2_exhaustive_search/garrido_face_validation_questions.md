@@ -235,8 +235,19 @@ overflow, and what resource/lead is required to relocate or reconfigure stock?"
 
 ## Q11 — Mission-expiry / admission triage (reopens R09)
 
-**Context:** The thesis assumes late orders become backorders (never abandoned).
-R09 requires hard deadlines + permanent abandonment + triage authority — a
+**Context (CORRECTED 2026-07-16; the previous sentence "the thesis assumes late
+orders become backorders (never abandoned)" was FALSE):** the thesis names an
+"order cancellation time" after which backorders are re-categorised as lost/
+unattended Ut "without disappearing from the calculation of resilience" (p. 75),
+and implements it as a hard **cap-60 backorder list with overflow eviction** —
+a new backorder beyond 60 removes the last order in the list as Ut (p. 97,
+§6.5.4) — plus SPT sequencing with R24-contingent priority. Empirically (raw
+Excel ledgers) the list saturates near 60 in every risky Cf and 12–31% of all
+orders end as Ut. That capacity-triggered variant was already tested: Program
+D1 found large CONSTANT rationing-rule authority but
+`STOP_NO_STATE_DEPENDENT_RATIONING_HEADROOM`. R09 therefore hinges on what the
+model does NOT contain — a real TIME-based deadline tighter than recoveries and
+admission/eviction authority richer than "drop the last of the list" — a
 non-work-conserving admission problem, materially distinct from D1 (closed).
 
 **Question:** "For theatre requirements — especially R24 contingent-demand
@@ -249,7 +260,13 @@ than backordered indefinitely?
 (c) Does the logistics agency hold doctrinal authority to triage/decline which
 orders enter the fulfillment pipeline (admission control)?
 (d) Do R24 orders carry mission-criticality CLASSES beyond the single
-contingent-priority flag?"
+contingent-priority flag?
+(e) Is the 'order cancellation time' (p. 75) a real physical deadline — and how
+long — or a conceptual account of the cap-60 list implementation (p. 97)?
+(f) Does the 60-slot backorder list reflect real operational capacity, or a
+Simulink modelling convenience? Is evicting the LAST order of the SPT-sorted
+list an intentional doctrinal rule, and does real authority extend to
+admitting/rejecting/abandoning orders beyond prioritising R24?"
 
 **Linked operational field — mission loadout and carried autonomy:** "Before
 deployment, may logistics allocate a fixed total ration loadout among mission

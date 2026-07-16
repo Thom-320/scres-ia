@@ -31,7 +31,14 @@ target was IJPR (Taylor & Francis, different template). Decide before heavy form
 3. **The MFSC case and the eligibility framework.** Saved sections 03/04 (thesis-faithful DES,
    canonical `ret_excel_request_snapshot_v2` endpoint, decision-right catalog Op3–Op13 =
    `contracts/decision_right_catalog_v1.json`).
-4. **The ladder in action — negative results with teeth.** One subsection per closed family, each
+4. **The ladder in action — negative results with teeth.** Include the D1 STATIC finding as the
+   canonical example of "constant authority without adaptive value": the thesis's own cap-60
+   overflow-triage mechanism (§6.5.4; conceptual "order cancellation time", thesis p. 75) is the
+   dominant failure mode in Garrido's raw data (Ut 12–31%, list saturated), and a better CONSTANT
+   rationing rule beats the thesis default with CI95>0 (`results/program_d/d1_*`) — yet
+   `STOP_NO_STATE_DEPENDENT_RATIONING_HEADROOM`. Framing anchor for the whole paper: thesis
+   §6.5.2 explicitly ASSUMES no post-hoc reaction (pure buffering); our certified negatives are
+   the quantitative validation of that assumption inside its envelope. One subsection per closed family, each
    with its ceiling from `results/paper2_search/paper2_exhaustion_certificate_2026-07-15.json`
    (`quantitative_ceilings`): thesis-native envelope (DRA2b H_PI 0.0221 with H_obs≈0; Track C
    6.5e-05; route recourse ≤0.005), risk-magnitude invariance (screen e4a3d4a0: optimal posture

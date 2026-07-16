@@ -1,5 +1,19 @@
 # Preregistration — op11 fair-allocation conversion probe (v1)
 
+> **ADDENDUM 2026-07-16 (post G0–G4, auditor domain review): status →
+> `HOLD_PENDING_DOMAIN_FACT` + development negative.** Two independent findings:
+> (1) *Domain:* the thesis describes NO allocation rule between its two CSSUs (Op11 is PT=0
+> receipt; §6.5.5 takes vehicles for granted) and the raw Excel ledgers aggregate orders without
+> destination — so this probe is a stylized multi-CSSU EXTENSION, not thesis-native. It cannot be
+> promoted (or sold as a thesis door) unless Garrido confirms multi-CSSU competition with
+> allocation authority and per-CSSU observability (email question 5).
+> (2) *Result (reduced model, burned blocks only, commit 39517a2):* G0 PASS (exact reproduction of
+> the fairness-violating anchor); ALL state-contingent fair candidates NEGATIVE; the best eligible
+> candidate is sequence-identical to the static comparator (H ≡ 0.0 on 600 tapes) → G5 cannot
+> pass → **the virgin block 4800001–4800200 was never opened and stays closed.** Within the frozen
+> family, fairness absorbs 100% of the +0.013 headroom. G1's anchor tolerance was mis-frozen
+> (disclosed); G2/G3 passed vacuously. No certificate entry claims a thesis-native closure.
+
 **Date frozen:** 2026-07-16 · **Status:** FROZEN BEFORE IMPLEMENTATION AND ANY EXECUTION
 **Contract:** `contracts/op11_fair_allocation_conversion_probe_v1.json`
 **Contract SHA-256:** `c6863e7c5e7d29d8f1a9bd8cc7c50620e7e2b1e192eed25e0b3516360bb2316e`
