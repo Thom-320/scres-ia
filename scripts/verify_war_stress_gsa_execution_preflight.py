@@ -15,6 +15,9 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from scripts.build_war_stress_policy_manifest import build_manifest  # noqa: E402
+from scripts.build_war_stress_exact_reduction_certificate import (  # noqa: E402
+    build_certificate as build_reduction_certificate,
+)
 
 
 def _sha256(path: Path) -> str:
@@ -56,6 +59,31 @@ def verify(repo_root: Path) -> dict[str, Any]:
         require(path.is_file(), f"missing executor artifact {path}")
         if path.is_file():
             require(_sha256(path) == section["sha256"], f"hash mismatch for {path}")
+    reduction = contract["exact_reduction"]
+    reduction_path = repo_root / reduction["certificate_path"]
+    require(
+        _sha256(reduction_path) == reduction["certificate_sha256"],
+        "exact reduction certificate hash mismatch",
+    )
+    builder_path = repo_root / reduction["builder_path"]
+    require(
+        _sha256(builder_path) == reduction["builder_sha256"],
+        "exact reduction builder hash mismatch",
+    )
+    committed_reduction = json.loads(reduction_path.read_text())
+    require(
+        build_reduction_certificate() == committed_reduction,
+        "exact reduction certificate is not reproducible",
+    )
+    require(
+        committed_reduction["reduced_policy_count"] == 50_049,
+        "unexpected reduced policy count",
+    )
+    require(
+        committed_reduction["vector_dominance_used"] is False
+        and committed_reduction["branch_and_bound_used"] is False,
+        "uncertified pruning entered exact reduction",
+    )
     benchmark = contract["benchmark"]
     benchmark_path = repo_root / benchmark["receipt_path"]
     require(
@@ -65,7 +93,8 @@ def verify(repo_root: Path) -> dict[str, Any]:
     receipt = json.loads(benchmark_path.read_text())
     require(receipt["scientific_seeds_opened"] is False, "benchmark opened scientific seeds")
     require(receipt["risk_tape"]["r3_event_count"] == 0, "R3 entered primary benchmark")
-    require(receipt["runtime"]["compute_gate_pass"] is False, "compute STOP disappeared")
+    compute = receipt.get("compute", receipt.get("runtime", {}))
+    require(compute.get("compute_gate_pass") is False, "compute STOP disappeared")
     authorization = contract["authorization"]
     require(authorization["open_7470001_through_7470012"] is False, "seeds authorized")
     require(authorization["run_Morris"] is False, "Morris authorized")
@@ -80,7 +109,10 @@ def verify(repo_root: Path) -> dict[str, Any]:
         "failures": failures,
         "contract_sha256": _sha256(contract_path),
         "policy_templates": committed["total_policy_templates"],
-        "projected_scientific_episodes": benchmark["projected_scientific_episodes"],
+        "reduced_policy_templates": committed_reduction["reduced_policy_count"],
+        "projected_scientific_episodes": benchmark[
+            "parent_atlas_projected_episodes_after_exact_reduction"
+        ],
         "scientific_seeds_opened": False,
         "scientific_execution_authorized": False,
     }

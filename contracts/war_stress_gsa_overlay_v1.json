@@ -6,7 +6,11 @@
     "path": "contracts/war_stress_timing_atlas_v1.json",
     "sha256": "a876a939e662fdd5379e6ba763ac77c469c1bc89086941b84627ba5caaf8b50b"
   },
-  "purpose": "Diagnose continuous within-mask risk interactions and discover stable development hypotheses for the safe within-cell timing ceiling; never replace the parent 144-cell gate or promote a result alone.",
+  "purpose": "Screen continuous within-mask factor involvement and nonlinear structure and discover stable development hypotheses for the safe within-cell timing ceiling; no interaction claim is authorized, and the overlay never replaces the parent 144-cell gate or promotes a result alone.",
+  "canonical_audit_standard": {
+    "path": "research/paper2_exhaustive_search/GSA_PROTOTYPE_RETRACTION_AND_AUDIT_STANDARD_2026-07-16.md",
+    "sha256": "98881327dff48f84dd45d7d9257284dbd03d9b2f5800b4b5e599160a42b9c9ef"
+  },
   "superseded_prototype": {
     "commit": "7d5e34425922f0bd817180e4e24fe277b6bb274d",
     "disposition": "retained on war-risk-interaction as a didactic prototype; not merged",
@@ -60,7 +64,8 @@
   "stochastic_protocol": {
     "common_random_numbers": "identical ordered tape IDs and exogenous base-stream hashes across configurations; within each fixed configuration, every policy must also reproduce the exact realized risk-event tape hash",
     "morris_tapes": [7470001, 7470002, 7470003],
-    "qmc_surrogate_prim_tapes": [7470004, 7470005, 7470006, 7470007, 7470008, 7470009, 7470010, 7470011, 7470012],
+    "qmc_surrogate_tapes": [7470004, 7470005, 7470006, 7470007, 7470008],
+    "prim_independent_tapes": [7470009, 7470010, 7470011, 7470012],
     "response_records": [
       "per-tape safe timing delta",
       "mean and standard error",
@@ -69,7 +74,14 @@
       "exogenous base-stream hashes",
       "every primary, guardrail, resource and saturation ledger"
     ],
-    "noise_audit": "estimate Monte-Carlo variance of each configuration mean and separate it from observed between-configuration variance; report the Monte-Carlo fraction",
+    "noise_audit": "balanced two-way CRN decomposition into configuration signal, shared tape main effect, and configuration-by-tape residual; the residual divided by tape count is the Monte-Carlo variance relevant to paired configuration means",
+    "non_scientific_DES_calibration": {
+      "path": "research/paper2_exhaustive_search/war_stress_crn_noise_calibration_20260716.json",
+      "sha256": "781f747013782042950d4b289fcbe026f0199945b711d9334018926d8eb6b341",
+      "runner_path": "scripts/run_war_stress_crn_noise_calibration.py",
+      "runner_sha256": "111bed9cc06146900e8ce760268479ecc3ce042f3e50473baed552bd52ef5f70",
+      "scope": "short fixed-policy DES fixture; populates CRN variance components but cannot calibrate H_timing_safe interaction/additivity thresholds"
+    },
     "noise_gate": "a stratum with Monte-Carlo fraction >0.50 cannot be selected for QMC/Sobol from three-tape Morris evidence"
   },
   "phase_G1_morris": {
@@ -85,7 +97,7 @@
   },
   "phase_G2_surrogate": {
     "design": "128-point scrambled Sobol space-filling pool per frozen stratum, generated independently of Saltelli cross-sampling",
-    "implementation": "cross-fitted ExtraTrees mean emulator plus residual-variance emulator",
+    "implementation": "cross-fitted ExtraTrees mean emulator plus a separate internal-variance emulator trained on configuration-by-tape residual variance after removing shared tape effects",
     "minimum_configurations": "max(40, 10*k)",
     "configuration_level_cross_validation": true,
     "sample_weight": "inverse estimated variance of the configuration mean, normalized and clipped to [0.1,10]",
@@ -94,6 +106,9 @@
       "cv_NRMSE_max": 0.15,
       "cv_Spearman_min": 0.90
     },
+    "required_error_report": ["mean CV R2", "mean CV NRMSE", "mean CV Spearman", "internal-variance log-RMSE", "internal-variance Spearman"],
+    "DES_noise_calibration_status": "NOT_RUN_SCIENTIFIC_SEEDS_CLOSED",
+    "additivity_or_interaction_threshold_authorized": false,
     "failure": "no Sobol indices and no PRIM box may be reported for that stratum"
   },
   "phase_G3_sobol": {
@@ -103,10 +118,11 @@
     "second_order": false,
     "report": ["raw S1", "S1 confidence", "raw ST", "ST confidence", "raw ST-S1 gap"],
     "no_clipping": true,
-    "claim_limit": "ST-S1 is the overlapping sum of higher-order terms involving a factor, not a unique global interaction mass and not proof that an OAT null generalizes"
+    "interaction_claim_authorized": false,
+    "claim_limit": "ST-S1 is the overlapping sum of higher-order terms involving a factor, not a unique global interaction mass and not proof that an OAT null generalizes; no Sij or Shapley contract exists"
   },
   "phase_G4_scenario_discovery": {
-    "implementation": "EMA Workbench 2.5.3 PRIM with peeling and pasting, wrapped in repeated configuration-level stratified holdouts",
+    "implementation": "EMA Workbench 2.5.3 PRIM with peeling and pasting, wrapped in repeated configuration-level stratified holdouts on the independent PRIM tape block and a label-permutation false-box null",
     "binary_case": "H_timing_safe >=0.01 and every parent safe/resource/action/saturation gate passes",
     "repeats": 20,
     "test_fraction": 0.30,
@@ -117,10 +133,14 @@
     "holdout_coverage_min": 0.40,
     "holdout_pass_fraction_min": 0.70,
     "stable_factor_frequency_min": 0.70,
+    "permutation_repeats": 99,
+    "maximum_permutation_pvalue": 0.05,
+    "uncertainty_report": "split-distribution 95% intervals for holdout density, coverage and support",
     "output": "development hypothesis only"
   },
   "relationship_to_parent_promotion": {
     "parent_144_cell_gate_remains_binding": true,
+    "parent_atlas_must_execute_first": true,
     "GSA_cannot_promote_alone": true,
     "allowed_use": [
       "rank risk-factor influence",

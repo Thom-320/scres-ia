@@ -4,7 +4,7 @@
   "implementation_parent_commit": "67471f7",
   "gsa_overlay": {
     "path": "contracts/war_stress_gsa_overlay_v1.json",
-    "sha256": "85e5c6fce3e9f3e90c4ed7e5b6962c17fac437b4cc355103e4e432361320b22a",
+    "sha256": "db033c786edc8867cc4b2aea9b2b916a8ffcadac5aaf416bb938ad51bf34e499",
     "configuration_manifest_path": "research/paper2_exhaustive_search/war_stress_gsa_overlay_manifest_20260716.json",
     "configuration_manifest_sha256": "c0195412354034001c35852880ff915b2d23c0d669c55f13130ae2a63a59333b"
   },
@@ -21,6 +21,14 @@
     }
   },
   "executor": {
+    "gsa_analysis_module": {
+      "path": "research/paper2_exhaustive_search/war_risk_gsa_v2.py",
+      "sha256": "b4c0979f3259987a829f99b9cacc295eeaaa376e74c0832262680ad9cf3486b1"
+    },
+    "scenario_discovery_module": {
+      "path": "research/paper2_exhaustive_search/war_risk_scenario_discovery.py",
+      "sha256": "0207b249818a87e4ab082a1e9e3303f4ea7aec1a20334af94c41d5703136b01b"
+    },
     "risk_tape_module": {
       "path": "research/paper2_exhaustive_search/war_stress_risk_tapes.py",
       "sha256": "b28179ff39cfcfaa455a10112f16bd51c2c80e7ae0d4e9e486856206fb72ef0e"
@@ -42,6 +50,20 @@
       "sha256": "65b88a3503667a9ac7511623ca3068806fa478b8e1a615469937eed4d0b700dc"
     }
   },
+  "exact_reduction": {
+    "certificate_path": "research/paper2_exhaustive_search/war_stress_exact_policy_reduction_20260716.json",
+    "certificate_sha256": "10906d28a8419519f36f9c264ccf18bc8db29d28beed3bd1a7d5e7b198188200",
+    "builder_path": "scripts/build_war_stress_exact_reduction_certificate.py",
+    "builder_sha256": "11e725169a7cc8b8ca492925d24af337a0ef7c1ddb3bd8c2b6e925e341637ccc",
+    "method": "remove only all-zero periodic calendars proven trajectory-identical to the retained constant-low posture",
+    "full_policy_templates": 50202,
+    "reduced_policy_templates": 50049,
+    "removed_exact_duplicates": 153,
+    "reduction_fraction": 0.0030476873431337396,
+    "vector_dominance_used": false,
+    "branch_and_bound_used": false,
+    "compute_gate_pass_after_reduction": false
+  },
   "risk_tape_semantics": {
     "base_streams": "fixed per tape and risk; identical hash across GSA configurations",
     "configuration_transform": "frequency and impact multipliers transform common base uniforms into a materialized event tape",
@@ -51,16 +73,21 @@
     "R24_saturation_ledgers_required": true
   },
   "benchmark": {
-    "receipt_path": "research/paper2_exhaustive_search/war_stress_gsa_executor_benchmark_20260716.json",
-    "receipt_sha256": "accd53d381450d18133ce25a619f71b2f23f20de0f498335ed34ecbd61abdd51",
+    "receipt_path": "research/paper2_exhaustive_search/war_stress_gsa_h104_benchmark_20260716.json",
+    "receipt_sha256": "0dd44798590b0b7af180501e2ed029e56e35ca4d0b74e3e0cbd160daf7f7028f",
     "seed": 94700001,
     "scientific": false,
     "pipeline_pass": true,
     "watcher_pass": true,
-    "event_count": 4,
+    "horizon_weeks": 104,
+    "event_count": 70,
     "R3_event_count": 0,
-    "projected_scientific_episodes": 85845420,
-    "projected_wall_days_at_32_workers": 15.136034347151336,
+    "parent_atlas_projected_episodes_after_exact_reduction": 86484672,
+    "GSA_morris_projected_episodes_after_exact_reduction": 85583790,
+    "measured_seconds_per_episode": 1.2606108539998786,
+    "projected_wall_days_at_32_workers": 39.141228377523966,
+    "parent_atlas_projected_wall_days_after_exact_reduction": 39.43269539489995,
+    "GSA_morris_projected_wall_days_after_exact_reduction": 39.02193815120308,
     "maximum_authorizable_episodes": 2000000,
     "maximum_authorizable_projected_wall_days": 7.0,
     "compute_gate_pass": false
@@ -74,6 +101,6 @@
     "run_PRIM": false,
     "train_learner": false
   },
-  "unlock_rule": "commit an exact reduction or optimization certificate that preserves the complete comparator and safe-oracle estimand, rerun watcher-first non-scientific benchmarks, and pass both <=2,000,000 projected episodes and <=7 projected wall-days before issuing a new content-addressed seed authorization",
+  "unlock_rule": "the certified duplicate-only reduction is insufficient; any further reduction requires a new admissible exact algorithm or vector-dominance theorem with bit-identical argmax and H_timing_safe against full enumeration on tractable DES subinstances, followed by a measured H104 benchmark passing both <=2,000,000 projected episodes and <=7 projected wall-days",
   "claim_boundary": "the DES wiring and custody pipeline are implemented and tested; no scientific risk-sensitivity evidence was produced"
 }

@@ -330,13 +330,24 @@ class NoiseAudit:
     configuration_count: int
     tapes_per_configuration: int
     observed_variance_of_means: float
-    monte_carlo_variance_of_means: float
-    estimated_signal_variance: float
+    configuration_signal_variance: float
+    tape_main_effect_variance: float
+    configuration_by_tape_variance: float
+    monte_carlo_variance_of_paired_configuration_means: float
     monte_carlo_fraction: float
+    residuals: np.ndarray
 
 
 def audit_crn_noise(responses: Sequence[StochasticTimingResponse]) -> NoiseAudit:
-    """Separate estimated-mean Monte-Carlo noise from between-config signal."""
+    """Two-way CRN decomposition of configuration, tape, and residual variation.
+
+    With common random numbers, configuration-mean errors are correlated through
+    the shared tape main effect.  Treating each configuration's within-tape
+    variance as independent therefore misstates the noise in comparisons across
+    configurations.  This balanced two-way decomposition removes the shared tape
+    effect and treats the configuration-by-tape residual as the Monte-Carlo
+    uncertainty relevant to paired configuration contrasts.
+    """
     if len(responses) < 2:
         raise ValueError("at least two configurations are required")
     reference = responses[0].tape_ids
@@ -351,22 +362,42 @@ def audit_crn_noise(responses: Sequence[StochasticTimingResponse]) -> NoiseAudit
     n_tapes = len(reference)
     if n_tapes < 2:
         raise ValueError("at least two tapes per configuration are required")
-    means = np.asarray([response.mean for response in responses], dtype=float)
-    observed = float(np.var(means, ddof=1))
-    mc = float(
-        np.mean(
-            [np.var(response.deltas, ddof=1) / n_tapes for response in responses]
-        )
+    matrix = np.asarray([response.deltas for response in responses], dtype=float)
+    if matrix.shape != (len(responses), n_tapes):
+        raise ValueError("response vectors do not form a balanced configuration-by-tape panel")
+    n_configurations = matrix.shape[0]
+    grand = float(np.mean(matrix))
+    configuration_means = np.mean(matrix, axis=1)
+    tape_means = np.mean(matrix, axis=0)
+    residuals = (
+        matrix
+        - configuration_means[:, None]
+        - tape_means[None, :]
+        + grand
     )
-    signal = max(0.0, observed - mc)
-    denominator = signal + mc
+    ss_configuration = n_tapes * float(np.sum((configuration_means - grand) ** 2))
+    ss_tape = n_configurations * float(np.sum((tape_means - grand) ** 2))
+    ss_residual = float(np.sum(residuals**2))
+    ms_configuration = ss_configuration / (n_configurations - 1)
+    ms_tape = ss_tape / (n_tapes - 1)
+    ms_residual = ss_residual / ((n_configurations - 1) * (n_tapes - 1))
+    signal = max(0.0, (ms_configuration - ms_residual) / n_tapes)
+    tape_variance = max(0.0, (ms_tape - ms_residual) / n_configurations)
+    interaction_variance = max(0.0, ms_residual)
+    mc_for_paired_means = interaction_variance / n_tapes
+    denominator = signal + mc_for_paired_means
     return NoiseAudit(
-        configuration_count=len(responses),
+        configuration_count=n_configurations,
         tapes_per_configuration=n_tapes,
-        observed_variance_of_means=observed,
-        monte_carlo_variance_of_means=mc,
-        estimated_signal_variance=signal,
-        monte_carlo_fraction=(mc / denominator if denominator > 0.0 else 0.0),
+        observed_variance_of_means=float(np.var(configuration_means, ddof=1)),
+        configuration_signal_variance=signal,
+        tape_main_effect_variance=tape_variance,
+        configuration_by_tape_variance=interaction_variance,
+        monte_carlo_variance_of_paired_configuration_means=mc_for_paired_means,
+        monte_carlo_fraction=(
+            mc_for_paired_means / denominator if denominator > 0.0 else 0.0
+        ),
+        residuals=residuals,
     )
 
 
@@ -378,6 +409,8 @@ class SurrogateFit:
     cv_r2: float
     cv_nrmse: float
     cv_spearman: float
+    variance_cv_log_rmse: float
+    variance_cv_spearman: float
     gate_pass: bool
     minimum_training_points: int
 
@@ -409,13 +442,14 @@ def fit_cross_validated_surrogate(
     minimum_points = max(40, 10 * len(factor_space.names))
     if X.shape[0] < minimum_points:
         raise ValueError(f"surrogate requires at least {minimum_points} configurations")
-    audit_crn_noise(responses)
+    noise_audit = audit_crn_noise(responses)
     y = np.asarray([response.mean for response in responses], dtype=float)
-    variance_y = np.asarray(
-        [max(response.standard_error**2, 1e-12) for response in responses],
-        dtype=float,
+    internal_variance = np.maximum(
+        np.sum(noise_audit.residuals**2, axis=1) / max(1, noise_audit.tapes_per_configuration - 1),
+        1e-12,
     )
-    weights = 1.0 / variance_y
+    mean_sampling_variance = internal_variance / noise_audit.tapes_per_configuration
+    weights = 1.0 / mean_sampling_variance
     weights = np.clip(weights / np.median(weights), 0.1, 10.0)
     model = ExtraTreesRegressor(
         n_estimators=500,
@@ -433,7 +467,6 @@ def fit_cross_validated_surrogate(
     cv_spearman = float(correlation) if np.isfinite(correlation) else 0.0
     model.fit(X, y, sample_weight=weights)
 
-    residual_sq = np.maximum((y - predictions) ** 2, 1e-12)
     variance_model = ExtraTreesRegressor(
         n_estimators=300,
         min_samples_leaf=3,
@@ -441,7 +474,27 @@ def fit_cross_validated_surrogate(
         random_state=int(seed) + 1,
         n_jobs=1,
     )
-    variance_model.fit(X, np.log(residual_sq), sample_weight=weights)
+    log_internal_variance = np.log(internal_variance)
+    variance_predictions = cross_val_predict(
+        variance_model,
+        X,
+        log_internal_variance,
+        cv=splitter,
+        params={"sample_weight": weights},
+    )
+    variance_cv_log_rmse = float(
+        math.sqrt(mean_squared_error(log_internal_variance, variance_predictions))
+    )
+    if float(np.ptp(log_internal_variance)) <= 1e-12:
+        variance_cv_spearman = 1.0
+    else:
+        variance_correlation = spearmanr(
+            log_internal_variance, variance_predictions
+        ).statistic
+        variance_cv_spearman = (
+            float(variance_correlation) if np.isfinite(variance_correlation) else 0.0
+        )
+    variance_model.fit(X, log_internal_variance, sample_weight=weights)
     passed = bool(
         cv_r2 >= minimum_r2
         and cv_nrmse <= maximum_nrmse
@@ -454,6 +507,8 @@ def fit_cross_validated_surrogate(
         cv_r2=cv_r2,
         cv_nrmse=cv_nrmse,
         cv_spearman=cv_spearman,
+        variance_cv_log_rmse=variance_cv_log_rmse,
+        variance_cv_spearman=variance_cv_spearman,
         gate_pass=passed,
         minimum_training_points=minimum_points,
     )
@@ -503,6 +558,8 @@ def surrogate_sobol_indices(
             "r2": fit.cv_r2,
             "nrmse": fit.cv_nrmse,
             "spearman": fit.cv_spearman,
+            "internal_variance_log_rmse": fit.variance_cv_log_rmse,
+            "internal_variance_spearman": fit.variance_cv_spearman,
         },
         "claim_limit": "ST-S1 overlaps across factors and is not a unique global interaction mass",
     }

@@ -6,6 +6,14 @@ import subprocess
 import sys
 
 from research.paper2_exhaustive_search.war_stress_risk_tapes import build_risk_tape
+from research.paper2_exhaustive_search.restricted_timing_oracle import (
+    ScheduleSpec,
+    evaluate_schedule,
+    posture_from_label,
+)
+from scripts.build_war_stress_exact_reduction_certificate import (
+    build_certificate as build_reduction_certificate,
+)
 from scripts.build_war_stress_policy_manifest import build_manifest
 from supply_chain.event_triggered_env import make_event_triggered_track_a_env
 
@@ -34,6 +42,44 @@ def test_policy_manifest_exact_counts_and_hash_are_reproducible() -> None:
         "weekly_privileged": 5_508,
     }
     assert left["total_policy_templates"] == 50_202
+
+
+def test_exact_reduction_removes_only_all_low_calendar_duplicates() -> None:
+    certificate = build_reduction_certificate()
+    assert certificate["full_policy_count"] == 50_202
+    assert certificate["reduced_policy_count"] == 50_049
+    assert certificate["removed_duplicate_count"] == 153
+    assert certificate["vector_dominance_used"] is False
+    assert certificate["branch_and_bound_used"] is False
+    assert all(
+        row["removed_policy_id"].endswith("::000")
+        and row["retained_policy_id"].startswith("constant::")
+        for row in certificate["duplicate_mappings"]
+    )
+
+
+def test_all_low_calendar_is_bit_identical_to_constant_low_in_des() -> None:
+    low = posture_from_label("f0_S1")
+    high = posture_from_label("f0.125_S2")
+    common = {
+        "seed": 94_700_002,
+        "risk_overrides": {},
+        "max_daily_steps": 14,
+        "enabled_risks": (),
+    }
+    constant = evaluate_schedule(
+        **common,
+        low=low,
+        high=low,
+        spec=ScheduleSpec("constant", "constant-low", False),
+    )
+    calendar = evaluate_schedule(
+        **common,
+        low=low,
+        high=high,
+        spec=ScheduleSpec("open_loop_8week_periodic", "all-low", (0,) * 8),
+    )
+    assert constant == calendar
 
 
 def test_policy_independent_tapes_share_base_stream_but_change_with_configuration() -> None:

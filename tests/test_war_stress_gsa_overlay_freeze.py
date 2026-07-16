@@ -15,6 +15,9 @@ def test_overlay_freeze_is_complete_and_unopened() -> None:
     assert verdict["morris_configurations"] == 570
     assert verdict["qmc_pool_configurations"] == 1536
     assert verdict["scientific_seeds_opened"] is False
+    assert verdict["interaction_claim_authorized"] is False
+    assert verdict["prim_tape_block_independent"] is True
+    assert verdict["DES_noise_calibration_fixture_populated"] is True
     assert verdict["failures"] == []
 
 

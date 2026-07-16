@@ -13,8 +13,9 @@ prototype in four load-bearing ways:
 1. Morris sampling and analysis use SALib 1.5.2; no hand-built clipping.
 2. The response is `H_timing_safe` within the same risk cell, not tailoring
    among constants or a posture-reversal indicator.
-3. Every response is a vector over paired CRN tapes. Monte-Carlo uncertainty in
-   the estimated mean is measured separately from between-configuration signal.
+3. Every response is a vector over paired CRN tapes. A balanced two-way
+   decomposition separates configuration signal, shared tape effects and
+   configuration-by-tape residual noise.
 4. Sobol is computed only on a cross-fitted OOS-approved mean surrogate inside
    a fixed independent-factor stratum. PRIM uses EMA Workbench peeling/pasting
    plus repeated configuration-level holdouts.
@@ -54,8 +55,10 @@ Sobol from requiring millions of ten-year DES episodes.
 
 ## Stochastic surrogate gate
 
-The mean emulator is cross-fitted by configuration, never by tape. The variance
-emulator models squared OOS residuals. Sobol and PRIM remain blocked unless:
+The mean emulator is cross-fitted by configuration, never by tape. The internal
+variance emulator models configuration-by-tape residual variance after removing
+the common tape effect; it does not relabel metamodel residuals as DES noise.
+Sobol and PRIM remain blocked unless:
 
 - OOS R² ≥ 0.80;
 - normalized RMSE ≤ 0.15;
@@ -64,16 +67,20 @@ emulator models squared OOS residuals. Sobol and PRIM remain blocked unless:
 Classical Sobol is restricted to independently sampled factors within one fixed
 mask/coupling stratum. Raw negative or >1 Monte-Carlo estimates are retained;
 they are not clipped. `ST−S1` is reported only as an overlapping higher-order
-gap, never as a unique interaction mass.
+gap, never as a unique interaction mass. No interaction/additivity claim is
+authorized because this contract computes neither `S_ij` nor Shapley and no DES
+noise-floor calibration has run.
 
 ## Scenario discovery
 
-EMA Workbench PRIM supplies peeling and pasting. Twenty stratified
-configuration-level splits test each discovered box. A stable development box
-requires the frozen train and holdout density, coverage, support and factor
-frequency gates. It remains a hypothesis.
+EMA Workbench PRIM supplies peeling and pasting. It uses the independent
+`7470009–7470012` tape block, not the surrogate tapes `7470004–7470008`.
+Twenty stratified configuration-level splits test each discovered box, and 99
+label permutations calibrate the false-box rate. A stable development box
+requires the frozen train/holdout gates, factor stability, permutation p≤0.05
+and reported split-distribution intervals. It remains a hypothesis.
 
-The parent atlas is binding: neither Sobol nor PRIM can open validation, replace
+The parent atlas must run first and remains binding: neither Sobol nor PRIM can open validation, replace
 the connected-region gate, authorize a learner or alter the risk envelope. A
 continuous box outside a parent passing component requires a new contract and
 new seeds.

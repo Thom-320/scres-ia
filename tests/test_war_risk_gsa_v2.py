@@ -127,6 +127,7 @@ def test_crn_noise_audit_requires_same_tapes_and_reports_noise() -> None:
     assert audit.configuration_count == 3
     assert audit.tapes_per_configuration == 4
     assert 0.0 <= audit.monte_carlo_fraction <= 1.0
+    assert audit.residuals.shape == (3, 4)
 
     bad = _response("bad", 0.02, tape_ids=(1, 2, 3, 5))
     with pytest.raises(ValueError, match="same ordered CRN"):
@@ -192,12 +193,14 @@ def test_validated_prim_recovers_interaction_box_on_holdouts() -> None:
         names=("r22", "r24", "irrelevant"),
         repeats=8,
         seed=32,
+        permutation_repeats=19,
     )
     assert result.status == "VALIDATED_DEVELOPMENT_BOX_HYPOTHESIS"
     assert result.holdout_pass_fraction >= 0.70
     assert "r22" in result.stable_factors
     assert "r24" in result.stable_factors
     assert "irrelevant" not in result.stable_factors
+    assert result.permutation_pvalue <= 0.05
 
 
 def test_validated_prim_does_not_promote_sparse_or_noise_targets() -> None:
@@ -205,7 +208,9 @@ def test_validated_prim_does_not_promote_sparse_or_noise_targets() -> None:
     X = rng.random((1_000, 3))
     sparse = np.zeros(1_000, dtype=bool)
     sparse[:5] = True
-    sparse_result = validated_prim_discovery(X, sparse, names=("a", "b", "c"))
+    sparse_result = validated_prim_discovery(
+        X, sparse, names=("a", "b", "c"), permutation_repeats=9
+    )
     assert sparse_result.status == "INSUFFICIENT_POSITIVE_OR_NEGATIVE_CONFIGURATIONS"
 
     noise = rng.random(1_000) < 0.10
@@ -215,5 +220,32 @@ def test_validated_prim_does_not_promote_sparse_or_noise_targets() -> None:
         names=("a", "b", "c"),
         repeats=8,
         seed=42,
+        permutation_repeats=9,
     )
     assert noise_result.status == "NO_STABLE_PRIM_BOX"
+
+
+def test_crn_two_way_decomposition_removes_shared_tape_effect() -> None:
+    tape_effect = np.asarray([-0.04, 0.03, 0.01, 0.00])
+    configuration_effect = np.asarray([0.00, 0.02, 0.04, 0.06])
+    responses = []
+    for index, effect in enumerate(configuration_effect):
+        deltas = effect + tape_effect
+        responses.append(
+            StochasticTimingResponse(
+                config_id=f"c{index}",
+                tape_ids=(1, 2, 3, 4),
+                event_tape_sha256s=tuple(f"event-{index}-{tape}" for tape in range(4)),
+                exogenous_base_stream_sha256s=("b1", "b2", "b3", "b4"),
+                deltas=deltas,
+                selected_policy_ids=("p",) * 4,
+                mean=float(np.mean(deltas)),
+                standard_error=float(np.std(deltas, ddof=1) / 2.0),
+                favorable_tapes=int(np.sum(deltas > 0)),
+            )
+        )
+    audit = audit_crn_noise(responses)
+    assert audit.tape_main_effect_variance > 0.0
+    assert audit.configuration_signal_variance > 0.0
+    assert audit.configuration_by_tape_variance == pytest.approx(0.0, abs=1e-15)
+    assert audit.monte_carlo_fraction == pytest.approx(0.0, abs=1e-15)

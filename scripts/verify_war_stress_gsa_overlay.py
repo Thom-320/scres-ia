@@ -78,6 +78,44 @@ def verify(repo_root: Path) -> dict[str, Any]:
 
     target = contract["target"]
     require(target.get("id") == "H_timing_safe", "wrong GSA target")
+    audit = contract.get("canonical_audit_standard", {})
+    audit_path = repo_root / str(audit.get("path", ""))
+    require(audit_path.is_file(), "canonical A1-A11 audit standard missing")
+    if audit_path.is_file():
+        require(_sha256(audit_path) == audit.get("sha256"), "audit standard hash mismatch")
+    stochastic = contract.get("stochastic_protocol", {})
+    calibration = stochastic.get("non_scientific_DES_calibration", {})
+    for path_key, hash_key in (("path", "sha256"), ("runner_path", "runner_sha256")):
+        path = repo_root / str(calibration.get(path_key, ""))
+        require(path.is_file(), f"missing DES noise calibration artifact {path_key}")
+        if path.is_file():
+            require(
+                _sha256(path) == calibration.get(hash_key),
+                f"DES noise calibration hash mismatch for {path_key}",
+            )
+    surrogate_tapes = set(stochastic.get("qmc_surrogate_tapes", []))
+    prim_tapes = set(stochastic.get("prim_independent_tapes", []))
+    require(not surrogate_tapes & prim_tapes, "surrogate and PRIM tape blocks overlap")
+    require(
+        surrogate_tapes | prim_tapes == set(range(7470004, 7470013)),
+        "surrogate/PRIM tape partition mismatch",
+    )
+    require(
+        contract.get("phase_G3_sobol", {}).get("interaction_claim_authorized") is False,
+        "interaction claims are not fail-closed",
+    )
+    require(
+        int(contract.get("phase_G4_scenario_discovery", {}).get("permutation_repeats", 0))
+        == 99,
+        "PRIM permutation null is not frozen",
+    )
+    require(
+        contract.get("relationship_to_parent_promotion", {}).get(
+            "parent_atlas_must_execute_first"
+        )
+        is True,
+        "GSA can run before the parent atlas",
+    )
     require(
         any("regime-tailoring" in item for item in target.get("not_allowed", [])),
         "constant-tailoring target not forbidden",
@@ -121,6 +159,9 @@ def verify(repo_root: Path) -> dict[str, Any]:
         "salib_version": salib_version,
         "ema_workbench_version": ema_version,
         "scientific_seeds_opened": bool(custody.get("opened")),
+        "interaction_claim_authorized": False,
+        "prim_tape_block_independent": not bool(surrogate_tapes & prim_tapes),
+        "DES_noise_calibration_fixture_populated": bool(calibration),
         "failures": failures,
     }
 

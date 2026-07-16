@@ -28,9 +28,22 @@ gate or open validation by itself.
 The DES executor, policy-independent coupled tapes, exact 50,202-template
 policy certificate, resume cursor and watcher-first PGID/SID custody are now
 implemented. A non-scientific benchmark passed the physical/custody pipeline
-but projected 85,845,420 two-year episodes (15.1 wall-days at 32 workers), so
-scientific seeds remain closed under `STOP_COMPUTE_INFEASIBLE`. The next gate is
-an exact comparator/oracle reduction certificate, not a larger VPS launch.
+and a measured 104-week episode took 1.2606 seconds. Because the parent atlas
+must run first, its governing projection after exact reduction is 86,484,672
+episodes and 39.43 wall-days at 32 workers (the later GSA Morris overlay would
+be 85,583,790 episodes and 39.02 days). The only certified exact reduction
+removes 153 trajectory-identical all-low calendars (0.30%), leaving 50,049
+policies. Scientific seeds therefore remain
+closed under `STOP_COMPUTE_INFEASIBLE`; an unproved dominance or B&B shortcut is
+not authorized.
+
+The canonical A1–A11 audit standard is integrated. Noise decomposition is now
+CRN-aware, the internal-variance emulator is separate from mean-model residual
+error, no interaction/additivity claim is authorized without a future Sij or
+Shapley contract and DES calibration, and PRIM uses an independent tape block
+plus a label-permutation false-box control. A 16-row non-scientific DES fixture
+populates the CRN components (Monte-Carlo fraction 0.1451), but its fixed-policy
+short horizon cannot calibrate an `H_timing_safe` interaction threshold.
 
 Only implementation and non-scientific preflight are authorized. Development
 seeds `7470001–7470012`, validation seeds `7470101–7470148` and observable seeds
