@@ -1,5 +1,36 @@
 # Paper 2 preregistration / verdict and Paper 3 authorization status
 
+## Superseding status — 2026-07-16
+
+Current governing status:
+`CURRENT_IMPLEMENTED_PORTFOLIO_EXHAUSTED_NO_LEARNER_AUTHORIZED`.
+
+Two newer audited results supersede the Program O and risk-editing descriptions
+later in this historical ledger:
+
+1. Program O completed its corrective classical-control validation. Mean
+   canonical ReT, all information placebos, equal scheduled resources,
+   trajectories, and state counterfactuals passed, but simultaneous CVaR10
+   non-inferiority failed in two of three frozen cells. The terminal verdict is
+   `STOP_PROGRAM_O_AFTER_CORRECTIVE_VALIDATION`; a second rescue is forbidden.
+2. The Garrido current/increased risk sensitivity completed 4,860 evaluations
+   with R3 unscaled. Independent recomputation found zero passing doors. Maximum
+   `H_profile_raw` was 0.00024068 and maximum safe headroom was 0.00006931,
+   versus the 0.01 material gate. The restricted timing seeds
+   `7460001–7460048` therefore remain unopened and that experiment is closed
+   without execution.
+
+This is a boundary certificate for the currently implemented portfolio, not a
+global impossibility theorem. Exact unanswered domain questions RT1–RT5 may
+motivate a genuinely new preregistered mechanism, but cannot retrospectively
+rescue either completed gate. Governing machine record:
+`paper2_current_boundary_certificate_20260716.json`.
+
+`learner_authorized: false` · `paper2_confirmed: false` ·
+`paper3_authorized: false`.
+
+---
+
 Date: 2026-07-14
 
 Current governing status: `HOLD_CANONICAL_V2_RESCORE_AND_DOMAIN_CONFIRMATION_REQUIRED`.

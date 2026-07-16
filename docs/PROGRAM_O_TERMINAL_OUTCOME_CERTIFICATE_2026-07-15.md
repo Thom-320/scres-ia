@@ -1,77 +1,70 @@
-# Program O — corrected conditional development certificate
+# Program O — terminal corrective outcome certificate
 
-**Date:** 2026-07-15
-**Status:** `ACTIVE_FIXED_CLOCK_PHYSICAL_PREFLIGHT — NOT TERMINAL`
+**Original date:** 2026-07-15
 
-The former statement that the internal search was exhausted and that Garrido Q14 was the only
-remaining move is retracted. The dual-resource diagnostic identifies a real development signal under
-fixed-clock accounting, but the parent DES charges empty capacity without physically executing empty
-missions. A new internal falsification is therefore both possible and required: implement the
-dedicated schedule physically and test parity before prospective validation.
+**Corrected through:** 2026-07-16
+**Status:** `STOP_PROGRAM_O_AFTER_CORRECTIVE_VALIDATION`
 
-## Verified evidence
+This certificate supersedes the earlier `ACTIVE_FIXED_CLOCK_PHYSICAL_PREFLIGHT`
+version. Program O completed its prospective corrective classical-control
+validation and is closed. The result establishes a reproducible mean canonical
+ReT advantage for the frozen belief-MPC, but it does not establish the project's
+joint safe classical-H_obs contract because simultaneous CVaR10 non-inferiority
+failed in two of the three frozen cells.
 
-| Quantity | Verified value | Claim boundary |
+## Evidence chain
+
+| Stage | Result | Claim boundary |
 |---|---:|---|
-| Safe full-DES H_PI | 0.15151; simultaneous LCB95 0.11562 | perfect-information ceiling only |
+| Full-DES safe perfect-information ceiling | 0.15151; simultaneous LCB95 0.11562 | H_PI only |
 | Fully fungible null | exactly 0 | causal mechanism control |
-| Primary belief-MPC ΔReT on burned tapes | 0.0648–0.1013 across the passing component | development only |
-| Operational state given current belief, LCB95 | **0.0182–0.1446** across passing belief-MPC contrasts | development only |
-| Corresponding contrast means | **0.0244–0.1659** | development only |
-| Total-information placebo LCB95 | 0.0490–0.1862 | development only |
-| Belief given current state LCB95 | 0.00535–0.01709 | development only |
-| Pay-per-use resource gate | fails | no pay-per-use positive claim |
+| Corrective rho75/share90 ΔReT | 0.09852; simultaneous LCB95 0.06595 | mean classical advantage |
+| Corrective rho90/share75 ΔReT | 0.07347; simultaneous LCB95 0.04303 | mean classical advantage |
+| Corrective rho90/share90 ΔReT | 0.09974; simultaneous LCB95 0.05860 | mean classical advantage |
+| Information placebos | all 27 pass; minimum simultaneous LCB95 0.00716 | observable/state-dependent signal |
+| Physical replay | 1,451 episodes; zero failures; one resource vector | equal scheduled resources |
+| rho75/share90 ΔCVaR10 | 0.03502; simultaneous LCB95 **-0.00858** | fails joint safety |
+| rho90/share75 ΔCVaR10 | 0.01954; simultaneous LCB95 **-0.01551** | fails joint safety |
 
-Custody identities: diagnostic result
-`e48606e79c4fcbcc7a1f2955476057d2cd9432b95a0bac7337f38f5b44cba535`, source fit
-`d67ac97a359a307ca632b6a13493e3ff5940a97e9440a6bc4b7d77c08a147875`, scientific
-commit `a9733d033b0ac0969ab9ccc994219bda2b66215e`. All 360 placebo contrasts and all
-resource, guardrail, trajectory, and counterfactual records were independently recomputed. Validation
-seeds `7420049–7420096` remain unopened.
+The point estimates favor the MPC, but the preregistered gate required every
+simultaneous guardrail lower bound to be non-negative. The two negative CVaR10
+bounds therefore determine the verdict.
 
-## What the diagnostic changes
+## Scientific interpretation
 
-The earlier statement that operational state added no value was false and remains retracted. With
-placebos actually executed, `belief_mpc__3` and `belief_mpc__4` show a connected three-cell component
-(`rho75_share90`, `rho90_share75`, `rho90_share90`) in which current operational state adds material
-value beyond belief alone. The fourth cell (`rho75_share75`) is not eligible because CVaR10 worsens by
-about 0.0061.
+Program O supports the bounded statement that operational state feedback can
+improve mean canonical ReT over a development-frozen full-horizon open-loop
+comparator under the two-product researcher extension. The advantage survived
+information placebos, resource matching, action-trajectory checks, state
+counterfactuals, and physical replay.
 
-This is not confirmed H_obs: the controllers and resource interpretation were diagnosed on burned
-development tapes. It is nevertheless sufficient to justify one prospective route if the fixed-clock
-resource envelope is made physically real.
+It does **not** support any of the following:
 
-## Load-bearing physical issue
+- joint safe classical H_obs under the frozen contract;
+- a learner-entry decision;
+- Paper 2 learned value;
+- Paper 3 retained learning.
 
-The thesis specifies daily downstream freight and 24 h legs and takes vehicle availability for
-granted. It does not specify empty running or a flat freight contract. In the current code, empty daily
-slots are charged in the ledger but not simulated. Thus the favorable fixed-clock result cannot yet be
-described as literal physical resource equality.
+The corrective contract forbids another controller, cell deletion, metric,
+physics, comparator, threshold, or guardrail change. A new learned policy cannot
+be introduced as a rescue of this result.
 
-Program O now proceeds as a disclosed researcher extension:
+## Custody
 
-- one daily downstream mission executes loaded or empty;
-- every mission occupies Op10 and Op12 for 24 h each;
-- every policy receives exactly the same missions, vehicle-hours, crew-hours, and payload capacity;
-- the production action changes only the nonfungible C/H mix;
-- pay-per-use remains a reported boundary interpretation.
+- executed commit: `7a05d448f4d788a19385a0c65c842b8663ed8391`;
+- scientific source commit: `14b559cc0c88b8c186673077403d7c4253337cae`;
+- result SHA-256: `3d3ff5b37510a993582cfc82b5414868da5cec2f99eda5da1df58013af389877`;
+- retrieved manifest SHA-256: `635f855228af404165484f8ca1732cd13114a01c16e8ce5e996efdebbe8b938e`;
+- seed block: `7430001–7430048`, opened once and burned;
+- independent audit:
+  `results/program_o/fixed_clock_hobs_corrective_validation_v1/independent_audit_v1.json`.
 
-The frozen contract is `contracts/program_o_fixed_clock_physical_hobs_validation_v1.json`; the
-preflight is `research/paper2_exhaustive_search/PROGRAM_O_FIXED_CLOCK_PHYSICAL_PREFLIGHT_FREEZE_2026-07-15.md`.
+## Final claim boundary
 
-## Prospective route
-
-1. Pass physical identity, convoy-occupancy, conservation, resource-equality, null, and parity tests
-   using only burned fixtures.
-2. Commit an immutable execution freeze and custody manifests.
-3. Open `7420049–7420096` once for the frozen `belief_mpc__3` controller, three connected cells, nine
-   placebos, complete 65,536-calendar denominator, guardrails, and action audit.
-4. A fail closes Program O without policy, cell, physics, or metric rescue.
-5. A pass establishes classical H_obs under the dedicated-shuttle extension. Only then may one learner
-   be frozen and tested against the maximum of the open-loop and classical comparator set on new tapes.
-
-## Current claim boundary
-
-`full_des_h_pi_established: True` · `h_obs_confirmed: False` ·
-`fixed_clock_physical_preflight: ACTIVE` · `learner_authorized: False` ·
-`paper2_confirmed: False` · `paper3_authorized: False`.
+`classical_primary_ret_advantage_confirmed: true` ·
+`safe_joint_h_obs_contract_confirmed: false` ·
+`program_o_closed: true` ·
+`second_rescue_forbidden: true` ·
+`learner_authorized: false` ·
+`paper2_confirmed: false` ·
+`paper3_authorized: false`.
