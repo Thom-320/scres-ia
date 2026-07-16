@@ -21,7 +21,7 @@ from supply_chain.headroom_sensitivity import (
 )
 from supply_chain.program_g import (
     ACTIONS, CONVOY_LOAD, CSSU_CAP, CYCLES_PER_WEEK, DEMAND_DAYS, MULT, S1_DAILY, SB_INITIAL,
-    _week_step, ret_order_metrics, simulate, simulate_orders,
+    metrics_all,
 )
 from supply_chain.program_h_belief import CSSUFilter
 
@@ -149,12 +149,14 @@ class SeqEval:
 
 
 def eval_seq(t, seq) -> SeqEval:
-    orders = simulate_orders(t, seq, ARM)
-    m = ret_order_metrics(orders)
-    r = simulate(t, seq, arm=ARM)
+    # single daily-order-adapter rollout; worst_cssu_fill is the CONTRACT-frozen lens
+    # (program_g.py:420 in metrics_all), NOT simulate()'s weekly-fill lens. The first G0 run
+    # used the weekly lens and failed the -0.10 check at -0.096 while reproducing H/CI/rq of
+    # the custodied OOS artifact exactly -- a lens mismatch in this module, corrected here.
+    m = metrics_all(t, seq, ARM)
     return SeqEval(ret_order=m["ret_order"], ret_quantity=m["ret_quantity"],
-                   attended_frac=m["attended"] / max(len(orders), 1),
-                   worst_cssu_fill=r.worst_cssu_fill)
+                   attended_frac=m["attended_orders"] / max(len(m["orders"]), 1),
+                   worst_cssu_fill=m["worst_cssu_fill"])
 
 
 ALL_SEQS = list(itertools.product(ACTIONS, repeat=WEEKS))  # 81; superset of periodic_calendars(4)
@@ -220,7 +222,7 @@ def main() -> int:
            "virgin_block_opened": False,
            "delta_definitions": {
                "H": "policy.ret_order - static.ret_order (per tape, paired)",
-               "worst_cssu_fill_delta": "raw difference of program_g simulate().worst_cssu_fill",
+               "worst_cssu_fill_delta": "raw difference of program_g metrics_all() worst_cssu_fill (daily order adapter, program_g.py:420 -- the contract-frozen lens)",
                "attended_delta": "difference of attended-order FRACTION (attended/total orders)",
                "ret_quantity_delta": "raw difference of quantity-weighted ret",
                "static": "argmax-mean open-loop sequence over all 81, in-sample per block (superset of periodic_calendars(4))"}}
