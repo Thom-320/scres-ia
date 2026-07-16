@@ -1,32 +1,19 @@
-"""Global sensitivity analysis core for the wartime multi-risk INTERACTION probe.
+"""PROTOTYPE — NOT INTEGRABLE. DO NOT USE FOR SCIENCE.
 
-Why this exists
----------------
-The completed Garrido risk screen is a ONE-FACTOR-AT-A-TIME (OAT) design (Cf1-Cf20 +
-one-at-a-time R11-R24).  Per Saltelli et al., OAT **cannot detect interactions** -- factors are
-never varied concomitantly -- and explores only a "hypercross" of negligible volume.  Its null
-("optimal posture invariant across 45 profiles") is therefore valid ONLY ALONG THE AXES.
+Superseded by the SALib-based GSA layer. Audited defects (measured, see
+GSA_LAYER_SPEC_AND_AUDIT_STANDARD_2026-07-15.md):
+  * morris_screening: hand-rolled trajectories use clipping -> 208/800 steps NULL (26.0%) and
+    186/800 off-delta (23.2%) = 49.2% invalid, silently skipped. USE SALib.
+  * sobol_indices: assumes a DETERMINISTIC f. On a stochastic DES, internal noise deflates S1 and
+    inflates ST -> MANUFACTURES FALSE INTERACTION (measured: ST[x3] 0.235 -> 0.546 at noise sd=3),
+    biased toward the very hypothesis under test.
+  * "interaction = ST - S1" is FALSE: it double-counts (measured 1.87x on Ishigami). Use S_ij/Shapley.
+  * additive(): callable below the calibrated N; floor is ~0.038 at N=1024 and LARGER on a stochastic DES.
+  * prim_box: greedy peel only; on pure noise it names irrelevant factors as restricting and
+    min_support is inert. Needs pasting/CV/bagging/false-box control.
 
-This module supplies the methods that see what OAT cannot:
-
-* ``morris_screening``   -- elementary effects.  ``mu_star`` ranks influence; ``sigma`` high
-  means the factor acts non-linearly OR **through interactions**.  Cheap: r*(k+1) evaluations.
-* ``sobol_indices``      -- variance-based.  Returns first-order ``S_i`` and total-effect
-  ``S_Ti``.  **``S_Ti - S_i`` is exactly the interaction mass an OAT design is blind to.**
-  If ``S_Ti ~= S_i`` for every factor the response is additive and the OAT null GENERALISES.
-  Cost: N*(k+2) evaluations.
-* ``prim_box``           -- Patient Rule Induction Method (scenario discovery, as used in RAND's
-  Robust Decision Making).  Finds the *box* in factor space where a target is high (e.g. where a
-  posture reversal occurs), reporting coverage/density.
-
-Discipline: everything here is HYPOTHESIS-GENERATING and runs on development tapes only.  A box
-found by PRIM is a hypothesis, never a result; it must be frozen and confirmed once on virgin
-tapes.  See WAR_SCENARIO_INTERACTION_SENSITIVITY_PREREGISTRATION_2026-07-15.md.
-
-All estimators are validated against analytic ground truth (Ishigami) in
-``test_war_risk_gsa.py`` -- notably Ishigami's x3, whose main effect is exactly 0 but whose total
-effect is 0.244: a factor that matters ONLY through interaction, i.e. precisely the case an OAT
-screen reports as "irrelevant".
+Retained ONLY as (a) the Ishigami validation bench in test_war_risk_gsa.py and (b) the provenance of
+the measured constraints. Importing this for analysis is a governance violation.
 """
 
 from __future__ import annotations
