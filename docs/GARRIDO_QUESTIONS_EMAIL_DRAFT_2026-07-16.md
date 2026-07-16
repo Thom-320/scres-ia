@@ -19,21 +19,28 @@ políticas adaptativas es nulo o no convertible. Antes de publicar, necesitamos 
 cuatro supuestos operacionales que son exactamente los que podrían revertir esa conclusión. Le
 agradeceríamos respuestas aunque sean cualitativas:
 
-1. **Caducidad de misión y triage (la más importante).** Cuando un requerimiento de raciones no
-   puede atenderse a tiempo, ¿existe un plazo duro tras el cual se abandona definitivamente (no se
-   acumula como backorder)? ¿Ese plazo es más corto que los tiempos típicos de recuperación de las
-   disrupciones recurrentes (días)? ¿Y la agencia logística tiene autoridad doctrinal para hacer
-   triage/admisión de pedidos?
+1. **Caducidad de misión y triage (la más importante).** Su modelo abandona pedidos por desborde
+   de la lista de 60 backorders (§6.5.4: el último de la lista se etiqueta *lost/unattended*), y en
+   sus datos ese mecanismo es el modo de falla dominante (12–31% de los pedidos terminan en Ut, con
+   la lista saturada cerca de 60 en todas las configuraciones con riesgo). Nuestra pregunta es sobre
+   la realidad detrás de esa simplificación: ¿existe además una caducidad TEMPORAL dura — plazos de
+   misión tras los cuales el requerimiento se abandona — más corta que los tiempos de recuperación
+   típicos (24–120 h)? ¿Y quién posee la autoridad real de decidir QUÉ pedido se admite o se
+   descarta cuando no alcanza para todos (en el modelo se descarta "el último de la lista")?
 
-2. **Recurso de restauración compartido.** Tras disrupciones simultáneas (planta, línea de
-   comunicación, teatro), ¿existe UN recurso real —equipo, cuadrilla, vehículo especializado— que
-   se asigna de forma mutuamente excluyente entre esos frentes, con menos equipos que sitios
-   afectados (obligando a secuenciar)? ¿O los presupuestos de recuperación son separados y paralelos?
+2. **Recurso de restauración compartido.** Su Figura 6.1 muestra UN solo Maintenance Battalion
+   para todo el sistema, pero el modelo asume tiempos de recuperación INDEPENDIENTES por operación
+   (Tablas 6.6b/6.7b). En la realidad, tras disrupciones simultáneas (planta + LOC + unidad de
+   avanzada), ¿ese batallón (u otro recurso único: cuadrilla, equipo especializado) debe
+   SECUENCIAR las recuperaciones — menos equipos que sitios afectados — o son efectivamente
+   paralelas e independientes como asume el modelo?
 
-3. **Clases de ración no sustituibles.** De los 21 tipos reales de ración, ¿hay al menos dos clases
-   mutuamente NO sustituibles (religiosa/médica/climática) que compartan la misma capacidad de
-   ensamblaje restringida, con una mezcla de demanda incierta, persistente y parcialmente
-   anticipable? ¿Podría darnos magnitudes aproximadas (participación, persistencia)?
+3. **Clases de ración no sustituibles.** Su tesis documenta que el MFSC real ensambla 21 tipos de
+   ración según requisitos nutricionales Y condiciones climáticas (§6.3.1), simplificados a uno
+   solo en el modelo (§6.5.3). ¿Hay al menos dos clases mutuamente NO sustituibles (p. ej.
+   clima frío vs. selva, o religiosa/médica) que compartan la misma línea de ensamblaje, con mezcla
+   de demanda incierta, persistente y parcialmente anticipable? ¿Magnitudes aproximadas
+   (participación de cada clase, persistencia)?
 
 4. **Modelo económico de la flota descendente.** Los convoyes de distribución (Op10/Op12),
    ¿operan con programación fija reservada (salen según calendario y consumen horas-vehículo vayan
