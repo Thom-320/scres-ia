@@ -1,0 +1,140 @@
+{
+  "contract_id": "war_stress_gsa_overlay_v1",
+  "status": "FROZEN_BEFORE_SCIENTIFIC_SEED_ACCESS",
+  "implementation_base_commit": "93e3bb9823816ed577acfc7a7820e0193c4bd464",
+  "parent_contract": {
+    "path": "contracts/war_stress_timing_atlas_v1.json",
+    "sha256": "a876a939e662fdd5379e6ba763ac77c469c1bc89086941b84627ba5caaf8b50b"
+  },
+  "purpose": "Diagnose continuous within-mask risk interactions and discover stable development hypotheses for the safe within-cell timing ceiling; never replace the parent 144-cell gate or promote a result alone.",
+  "superseded_prototype": {
+    "commit": "7d5e34425922f0bd817180e4e24fe277b6bb274d",
+    "disposition": "retained on war-risk-interaction as a didactic prototype; not merged",
+    "reasons": [
+      "custom Morris trajectories used clipping and produced null/nonstandard steps",
+      "target was regime-tailoring among constants rather than H_timing_safe",
+      "direct Sobol ignored stochastic simulator noise and input-dependence gates",
+      "ST-S1 was over-described as unique interaction mass",
+      "custom PRIM lacked EMA peeling/pasting and configuration-level holdout validation"
+    ]
+  },
+  "target": {
+    "id": "H_timing_safe",
+    "definition": "per configuration, mean over paired CRN tapes of the best safe restricted event-timed candidate minus the strongest frozen same-cell comparator; if no candidate is safe on a tape, delta is zero",
+    "implementation": "research.paper2_exhaustive_search.war_risk_gsa_v2.compute_h_timing_safe",
+    "not_allowed": [
+      "regime-tailoring max constant minus robust constant",
+      "posture reversal as the target",
+      "temporal secondary metric as target",
+      "unconstrained oracle before safe selection"
+    ]
+  },
+  "strata": {
+    "definition": "one fixed parent mask and one fixed coupling mode",
+    "count": 12,
+    "factor_sampling": "independent uniform in log2 multiplier space inside each stratum",
+    "spaces": {
+      "LOC_SURGE": ["phi_R22", "phi_R24", "psi_R22", "psi_R24"],
+      "THEATER_CAPACITY_SURGE": ["phi_R21", "phi_R23", "phi_R24", "psi_R21", "psi_R23", "psi_R24"],
+      "PRODUCTION_QUALITY_SURGE": ["phi_R11", "phi_R14", "phi_R24", "psi_R11", "psi_R24"]
+    },
+    "bounds": {
+      "phi_log2": [0.0, 3.0],
+      "psi_log2": [0.0, 2.0]
+    },
+    "classical_sobol_rule": "allowed only within a fixed stratum with independently sampled factors; any future domain constraint or dependent factor sampling requires a new Shapley/dependent-input contract"
+  },
+  "sampling_manifest": {
+    "path": "research/paper2_exhaustive_search/war_stress_gsa_overlay_manifest_20260716.json",
+    "sha256": "d33e23e576e6aafa3b18bc347a879b3f1621c6ed24747b9e5b3cdeb8364a6bc9",
+    "configuration_payload_sha256": "684b8387047c7e4589d953da0068374922cbfe4011e4aa4fb479de479ebf0e45",
+    "morris_configurations": 720,
+    "qmc_pool_configurations": 1536,
+    "all_points_frozen_before_tapes": true
+  },
+  "stochastic_protocol": {
+    "common_random_numbers": "identical ordered tape IDs and exogenous base-stream hashes across configurations; within each fixed configuration, every policy must also reproduce the exact realized risk-event tape hash",
+    "morris_tapes": [7470001, 7470002, 7470003],
+    "qmc_surrogate_prim_tapes": [7470004, 7470005, 7470006, 7470007, 7470008, 7470009, 7470010, 7470011, 7470012],
+    "response_records": [
+      "per-tape safe timing delta",
+      "mean and standard error",
+      "selected policy IDs",
+      "event-tape hashes",
+      "exogenous base-stream hashes",
+      "every primary, guardrail, resource and saturation ledger"
+    ],
+    "noise_audit": "estimate Monte-Carlo variance of each configuration mean and separate it from observed between-configuration variance; report the Monte-Carlo fraction",
+    "noise_gate": "a stratum with Monte-Carlo fraction >0.50 cannot be selected for QMC/Sobol from three-tape Morris evidence"
+  },
+  "phase_G1_morris": {
+    "implementation": "SALib 1.5.2 standard optimized Morris design and analyzer",
+    "candidate_trajectories": 20,
+    "selected_trajectories": 10,
+    "levels": 8,
+    "bootstrap_resamples": 1000,
+    "interpretation": "mu_star ranks influence; sigma indicates nonlinearity or interaction and cannot distinguish them",
+    "qmc_eligibility": "max over factors of (mu_star - mu_star_conf95) >=0.001 on H_timing_safe, Monte-Carlo fraction <=0.50, zero risk clipping/saturation, and all safe-oracle invariants pass",
+    "selection": "execute QMC pools for at most three eligible strata, ordered by largest lower influence proxy, then parent mask order and coupling order",
+    "no_eligible_stratum": "stop the overlay; do not add trajectories or lower the threshold"
+  },
+  "phase_G2_surrogate": {
+    "design": "128-point scrambled Sobol space-filling pool per frozen stratum, generated independently of Saltelli cross-sampling",
+    "implementation": "cross-fitted ExtraTrees mean emulator plus residual-variance emulator",
+    "minimum_configurations": "max(40, 10*k)",
+    "configuration_level_cross_validation": true,
+    "sample_weight": "inverse estimated variance of the configuration mean, normalized and clipped to [0.1,10]",
+    "gates": {
+      "cv_R2_min": 0.80,
+      "cv_NRMSE_max": 0.15,
+      "cv_Spearman_min": 0.90
+    },
+    "failure": "no Sobol indices and no PRIM box may be reported for that stratum"
+  },
+  "phase_G3_sobol": {
+    "surface": "passed deterministic mean surrogate only",
+    "base_N": 4096,
+    "bootstrap_resamples": 1000,
+    "second_order": false,
+    "report": ["raw S1", "S1 confidence", "raw ST", "ST confidence", "raw ST-S1 gap"],
+    "no_clipping": true,
+    "claim_limit": "ST-S1 is the overlapping sum of higher-order terms involving a factor, not a unique global interaction mass and not proof that an OAT null generalizes"
+  },
+  "phase_G4_scenario_discovery": {
+    "implementation": "EMA Workbench 2.5.3 PRIM with peeling and pasting, wrapped in repeated configuration-level stratified holdouts",
+    "binary_case": "H_timing_safe >=0.01 and every parent safe/resource/action/saturation gate passes",
+    "repeats": 20,
+    "test_fraction": 0.30,
+    "train_density_min": 0.80,
+    "train_coverage_min": 0.50,
+    "support_min": 0.05,
+    "holdout_density_min": 0.70,
+    "holdout_coverage_min": 0.40,
+    "holdout_pass_fraction_min": 0.70,
+    "stable_factor_frequency_min": 0.70,
+    "output": "development hypothesis only"
+  },
+  "relationship_to_parent_promotion": {
+    "parent_144_cell_gate_remains_binding": true,
+    "GSA_cannot_promote_alone": true,
+    "allowed_use": [
+      "rank risk-factor influence",
+      "diagnose nonlinear or interaction structure",
+      "explain a parent connected component",
+      "propose a continuous hypothesis box for a future separately frozen contract"
+    ],
+    "forbidden_use": [
+      "replace the parent connected-region rule",
+      "open parent validation because PRIM finds a box",
+      "claim additivity or global exhaustion from point estimates",
+      "run a learner"
+    ]
+  },
+  "authorization": {
+    "implementation_and_fixture_tests": true,
+    "scientific_seed_access": false,
+    "learner_authorized": false,
+    "paper2_confirmed": false,
+    "paper3_authorized": false
+  }
+}

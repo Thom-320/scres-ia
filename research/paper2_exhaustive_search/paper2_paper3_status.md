@@ -18,6 +18,13 @@ requires a simultaneous-inference connected region and chooses the least severe
 passing component, never the maximum-headroom cell. R3 and a persistent campaign
 fixture are separate report-only boundaries.
 
+A preregistered GSA overlay now adds SALib Morris screening, a paired-CRN
+`H_timing_safe` target, a cross-fitted stochastic surrogate, stratified Sobol
+only after an OOS gate, and EMA Workbench PRIM with repeated configuration-level
+holdouts. Its 720 Morris points and 1,536-point QMC pool were frozen before seed
+access. The overlay is diagnostic: it cannot replace the parent connected-region
+gate or open validation by itself.
+
 Only implementation and non-scientific preflight are authorized. Development
 seeds `7470001–7470012`, validation seeds `7470101–7470148` and observable seeds
 `7470201–7470248` remain unopened. Learner, Paper 2 and Paper 3 remain

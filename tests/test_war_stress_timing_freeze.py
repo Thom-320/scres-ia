@@ -62,5 +62,14 @@ def test_reopening_authorization_is_content_addressed_and_preflight_only() -> No
         path = ROOT / new[path_key]
         assert path.is_file()
         assert _sha256(path) == new[hash_key]
+    overlay = payload["gsa_overlay"]
+    for path_key, hash_key in (
+        ("contract_path", "contract_sha256"),
+        ("preregistration_path", "preregistration_sha256"),
+        ("verification_path", "verification_sha256"),
+    ):
+        path = ROOT / overlay[path_key]
+        assert path.is_file()
+        assert _sha256(path) == overlay[hash_key]
     assert any("open seed 7470001" in item for item in payload["not_authorized_now"])
     assert any("train a learner" in item for item in payload["not_authorized_now"])
