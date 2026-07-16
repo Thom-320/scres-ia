@@ -1,0 +1,79 @@
+{
+  "contract_id": "war_stress_gsa_execution_preflight_v1",
+  "status": "STOP_BEFORE_SCIENTIFIC_EXECUTION_COMPUTE_INFEASIBLE",
+  "implementation_parent_commit": "67471f7",
+  "gsa_overlay": {
+    "path": "contracts/war_stress_gsa_overlay_v1.json",
+    "sha256": "85e5c6fce3e9f3e90c4ed7e5b6962c17fac437b4cc355103e4e432361320b22a",
+    "configuration_manifest_path": "research/paper2_exhaustive_search/war_stress_gsa_overlay_manifest_20260716.json",
+    "configuration_manifest_sha256": "c0195412354034001c35852880ff915b2d23c0d669c55f13130ae2a63a59333b"
+  },
+  "policy_family": {
+    "manifest_path": "research/paper2_exhaustive_search/war_stress_policy_manifest_20260716.json",
+    "manifest_sha256": "04b9059f539241f66620ab5af29985a73752afaf52f2e5d1c70ea981ab049466",
+    "ordered_template_rows_sha256": "cd47a94d3e89ac535606884193ffb83a941ed8997f95e26f51e92f0b4657a65d",
+    "total_policy_templates": 50202,
+    "counts": {
+      "constant": 18,
+      "open_loop_8week_periodic": 39168,
+      "restricted_privileged": 5508,
+      "weekly_privileged": 5508
+    }
+  },
+  "executor": {
+    "risk_tape_module": {
+      "path": "research/paper2_exhaustive_search/war_stress_risk_tapes.py",
+      "sha256": "b28179ff39cfcfaa455a10112f16bd51c2c80e7ae0d4e9e486856206fb72ef0e"
+    },
+    "producer": {
+      "path": "scripts/run_war_stress_gsa_executor.py",
+      "sha256": "4dc2014be94ec5426107a250ccd0d58fc2102ca05a8efbfca8e047b95ccefe9b"
+    },
+    "watcher": {
+      "path": "scripts/watch_war_stress_gsa_session.py",
+      "sha256": "1d32b3cf7eb0b116debfe92d536dbc910237627b074ffa8f9d361d6340fee63c"
+    },
+    "launcher": {
+      "path": "scripts/launch_war_stress_gsa_benchmark.py",
+      "sha256": "ac472e0e7e4fe412c88a860546d45e198a33a6a6f73b9c19fe88b3cb1613e47e"
+    },
+    "policy_manifest_builder": {
+      "path": "scripts/build_war_stress_policy_manifest.py",
+      "sha256": "65b88a3503667a9ac7511623ca3068806fa478b8e1a615469937eed4d0b700dc"
+    }
+  },
+  "risk_tape_semantics": {
+    "base_streams": "fixed per tape and risk; identical hash across GSA configurations",
+    "configuration_transform": "frequency and impact multipliers transform common base uniforms into a materialized event tape",
+    "policy_replay": "every policy in a fixed configuration replays the exact same event tape hash",
+    "coupled_frequency_rule": "only phi_R24 exists in coupled strata; non-R24 native occurrence streams are replaced",
+    "R3_primary_event_count": 0,
+    "R24_saturation_ledgers_required": true
+  },
+  "benchmark": {
+    "receipt_path": "research/paper2_exhaustive_search/war_stress_gsa_executor_benchmark_20260716.json",
+    "receipt_sha256": "accd53d381450d18133ce25a619f71b2f23f20de0f498335ed34ecbd61abdd51",
+    "seed": 94700001,
+    "scientific": false,
+    "pipeline_pass": true,
+    "watcher_pass": true,
+    "event_count": 4,
+    "R3_event_count": 0,
+    "projected_scientific_episodes": 85845420,
+    "projected_wall_days_at_32_workers": 15.136034347151336,
+    "maximum_authorizable_episodes": 2000000,
+    "maximum_authorizable_projected_wall_days": 7.0,
+    "compute_gate_pass": false
+  },
+  "authorization": {
+    "non_scientific_fixture_benchmarks": true,
+    "open_7470001_through_7470012": false,
+    "run_Morris": false,
+    "fit_surrogate": false,
+    "run_Sobol": false,
+    "run_PRIM": false,
+    "train_learner": false
+  },
+  "unlock_rule": "commit an exact reduction or optimization certificate that preserves the complete comparator and safe-oracle estimand, rerun watcher-first non-scientific benchmarks, and pass both <=2,000,000 projected episodes and <=7 projected wall-days before issuing a new content-addressed seed authorization",
+  "claim_boundary": "the DES wiring and custody pipeline are implemented and tested; no scientific risk-sensitivity evidence was produced"
+}

@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 def test_overlay_freeze_is_complete_and_unopened() -> None:
     verdict = verify(ROOT)
     assert verdict["status"] == "PASS_WAR_STRESS_GSA_OVERLAY_FREEZE"
-    assert verdict["morris_configurations"] == 720
+    assert verdict["morris_configurations"] == 570
     assert verdict["qmc_pool_configurations"] == 1536
     assert verdict["scientific_seeds_opened"] is False
     assert verdict["failures"] == []
@@ -32,14 +32,27 @@ def test_overlay_manifest_contains_every_stratum_once_per_design_point() -> None
         assert len(counts) == 12
         assert set(counts.values()) == {expected_per_stratum}
 
-    morris_expected = {
+    independent_expected = {
         "LOC_SURGE": 50,
         "THEATER_CAPACITY_SURGE": 70,
         "PRODUCTION_QUALITY_SURGE": 60,
+    }
+    coupled_expected = {
+        "LOC_SURGE": 40,
+        "THEATER_CAPACITY_SURGE": 50,
+        "PRODUCTION_QUALITY_SURGE": 40,
     }
     counts = {}
     for row in manifest["morris"]["rows"]:
         key = (row["mask"], row["coupling"])
         counts[key] = counts.get(key, 0) + 1
     assert len(counts) == 12
-    assert all(count == morris_expected[mask] for (mask, _), count in counts.items())
+    assert all(
+        count
+        == (
+            independent_expected[mask]
+            if coupling == "independent"
+            else coupled_expected[mask]
+        )
+        for (mask, coupling), count in counts.items()
+    )

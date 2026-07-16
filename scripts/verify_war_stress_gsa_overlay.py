@@ -60,7 +60,7 @@ def verify(repo_root: Path) -> dict[str, Any]:
     require(_sha256(parent_path) == contract["parent_contract"]["sha256"], "parent contract hash mismatch")
     require(_sha256(manifest_path) == contract["sampling_manifest"]["sha256"], "sampling manifest hash mismatch")
     require(manifest.get("status") == "FROZEN_BEFORE_SCIENTIFIC_SEED_ACCESS", "manifest status mismatch")
-    require(int(manifest["morris"]["configuration_count"]) == 720, "Morris count mismatch")
+    require(int(manifest["morris"]["configuration_count"]) == 570, "Morris count mismatch")
     require(int(manifest["qmc_pool"]["configuration_count"]) == 1536, "QMC count mismatch")
     ids = [row["config_id"] for family in ("morris", "qmc_pool") for row in manifest[family]["rows"]]
     require(len(ids) == len(set(ids)), "duplicate GSA configuration IDs")

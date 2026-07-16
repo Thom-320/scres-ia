@@ -53,7 +53,8 @@ def verify(contract_path: Path, custody_path: Path, repo_root: Path) -> dict[str
         "contract is not frozen before implementation and seeds",
     )
     require(
-        custody.get("status") == "RESERVED_BEFORE_IMPLEMENTATION_AND_FIRST_ACCESS",
+        custody.get("status")
+        == "RESERVED_UNOPENED__EXECUTOR_PREFLIGHT_COMPLETE__COMPUTE_BLOCKED",
         "custody status mismatch",
     )
     require(not bool(custody.get("opened")), "scientific seeds already opened")

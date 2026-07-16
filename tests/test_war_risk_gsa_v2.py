@@ -74,6 +74,15 @@ def test_salib_morris_has_standard_nonzero_steps_and_detects_effect() -> None:
     assert result["mu_star"][1] > result["mu_star"][0] > 0.0
 
 
+def test_coupled_space_drops_inert_non_driver_frequency_factors() -> None:
+    independent = FactorSpace.for_mask("THEATER_CAPACITY_SURGE", "independent")
+    coupled = FactorSpace.for_mask("THEATER_CAPACITY_SURGE", "coincident")
+    assert independent.names == (
+        "phi_R21", "phi_R23", "phi_R24", "psi_R21", "psi_R23", "psi_R24"
+    )
+    assert coupled.names == ("phi_R24", "psi_R21", "psi_R23", "psi_R24")
+
+
 def test_h_timing_target_rejects_shed_to_win_and_preserves_crn() -> None:
     comparator = PolicyMetrics("static", _metrics(0.50), "event-hash", "base-hash")
     good = PolicyMetrics("timing-good", _metrics(0.60), "event-hash", "base-hash")

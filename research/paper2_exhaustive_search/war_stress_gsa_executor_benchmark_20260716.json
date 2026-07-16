@@ -1,0 +1,55 @@
+{
+  "schema_version": "war_stress_gsa_executor_benchmark_receipt_v1",
+  "status": "PASS_NONSCIENTIFIC_PIPELINE_BUT_STOP_COMPUTE_INFEASIBLE",
+  "benchmark_seed": 94700001,
+  "scientific_seeds_opened": false,
+  "configuration_id": "morris::LOC_SURGE::coincident::00::00",
+  "horizon_days": 28,
+  "treatment_start_hour": 943.8,
+  "risk_tape": {
+    "event_count": 4,
+    "r3_event_count": 0,
+    "base_stream_sha256": "4da6324e7a0595c19014a5ef00b2605b01d3a2e139e06f248c9616b792062c96",
+    "event_tape_sha256": "f52805da5d3f963c91f9ff0abe32970dbafb2dd556d1ca8ffda8e95e123fb07e"
+  },
+  "physical_fixture": {
+    "policy_count": 2,
+    "intervention_counts": [0, 3],
+    "generated_surge_quantities": [20037.0, 20037.0],
+    "clipped_surge_quantities": [0.0, 0.0],
+    "h_timing_safe_fixture": 0.0
+  },
+  "runtime": {
+    "seconds_per_short_episode": 0.018749312499949156,
+    "linear_horizon_scale": 26.0,
+    "projected_workers": 32,
+    "projected_scientific_episodes": 85845420,
+    "projected_wall_days": 15.136034347151336,
+    "maximum_authorizable_episodes": 2000000,
+    "maximum_authorizable_projected_wall_days": 7.0,
+    "compute_gate_pass": false,
+    "projection_is_diagnostic_only": true
+  },
+  "watcher": {
+    "ready_before_producer": true,
+    "producer_returncode": 0,
+    "watcher_returncode": 0,
+    "terminal_status": "TERMINAL_SESSION_EMPTY_WITH_EXIT_RECEIPT"
+  },
+  "source_receipts": {
+    "result_sha256": "bfb73c2fa8e21e3464f6e2e70fcddd18f44cf65d066f0b9ea9a0aa5fb8450510",
+    "producer_control_sha256": "0bf37d2497413ac392b4c892fae83647ef64f7a64c851c73d51bfe71faa54019",
+    "environment_manifest_sha256": "e35f46720504c3d463228b4a3deb23e18802aa5811c31bc3bb214f3e822402ba",
+    "watcher_ready_sha256": "6972d1dc570a76c438c2dc7a0eaece4c0bf69cdf4a649dde913025f78a981788",
+    "watcher_terminal_sha256": "948c189e826a361ad1a266ed5b772936e1fb60fc56d840e95ec27d4e62926903",
+    "producer_exit_sha256": "2e8d30d41d7c6d3cba48ee8a171c02947b003b0936085c3b9813af01d3ed4425"
+  },
+  "claim_boundary": {
+    "non_scientific_fixture_only": true,
+    "morris_authorized": false,
+    "sobol_authorized": false,
+    "prim_authorized": false,
+    "learner_authorized": false,
+    "reason_scientific_execution_blocked": "the literal frozen policy family implies 85,845,420 two-year DES episodes before QMC; a new exact reduction or optimization certificate is required"
+  }
+}

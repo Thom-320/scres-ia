@@ -35,6 +35,7 @@ MASK_SEEDS = {
     "THEATER_CAPACITY_SURGE": 7471002,
     "PRODUCTION_QUALITY_SURGE": 7471003,
 }
+COUPLING_SEED_OFFSETS = {name: index * 10_000 for index, name in enumerate(COUPLINGS)}
 
 
 def _sha256_bytes(payload: bytes) -> str:
@@ -49,30 +50,31 @@ def build_manifest() -> dict[str, Any]:
     morris_rows: list[dict[str, Any]] = []
     qmc_rows: list[dict[str, Any]] = []
     for mask in MASK_FACTORS:
-        shared_space = FactorSpace.for_mask(mask, COUPLINGS[0])
-        design = salib_morris_design(
-            shared_space,
-            candidate_trajectories=20,
-            selected_trajectories=10,
-            levels=8,
-            seed=MASK_SEEDS[mask],
-        )
-        qmc_sampler = qmc.Sobol(
-            d=len(shared_space.names),
-            scramble=True,
-            seed=MASK_SEEDS[mask] + 100,
-        )
-        qmc_unit = qmc_sampler.random_base2(m=7)
-        lo = np.asarray([bounds[0] for bounds in shared_space.log2_bounds], dtype=float)
-        hi = np.asarray([bounds[1] for bounds in shared_space.log2_bounds], dtype=float)
-        qmc_log2 = qmc.scale(qmc_unit, lo, hi)
-        qmc_physical = shared_space.physical(qmc_log2)
         for coupling in COUPLINGS:
+            space = FactorSpace.for_mask(mask, coupling)
+            stratum_seed = MASK_SEEDS[mask] + COUPLING_SEED_OFFSETS[coupling]
+            design = salib_morris_design(
+                space,
+                candidate_trajectories=20,
+                selected_trajectories=10,
+                levels=8,
+                seed=stratum_seed,
+            )
+            qmc_sampler = qmc.Sobol(
+                d=len(space.names),
+                scramble=True,
+                seed=stratum_seed + 100,
+            )
+            qmc_unit = qmc_sampler.random_base2(m=7)
+            lo = np.asarray([bounds[0] for bounds in space.log2_bounds], dtype=float)
+            hi = np.asarray([bounds[1] for bounds in space.log2_bounds], dtype=float)
+            qmc_log2 = qmc.scale(qmc_unit, lo, hi)
+            qmc_physical = space.physical(qmc_log2)
             for index, (log2_point, physical_point) in enumerate(
                 zip(design.log2_points, design.physical_points, strict=True)
             ):
-                trajectory = index // (len(shared_space.names) + 1)
-                step = index % (len(shared_space.names) + 1)
+                trajectory = index // (len(space.names) + 1)
+                step = index % (len(space.names) + 1)
                 morris_rows.append(
                     {
                         "config_id": f"morris::{mask}::{coupling}::{trajectory:02d}::{step:02d}",
@@ -80,8 +82,8 @@ def build_manifest() -> dict[str, Any]:
                         "coupling": coupling,
                         "trajectory": trajectory,
                         "step": step,
-                        "log2_factors": _point_payload(shared_space, log2_point),
-                        "physical_multipliers": _point_payload(shared_space, physical_point),
+                        "log2_factors": _point_payload(space, log2_point),
+                        "physical_multipliers": _point_payload(space, physical_point),
                     }
                 )
             for index, (log2_point, physical_point) in enumerate(
@@ -93,8 +95,8 @@ def build_manifest() -> dict[str, Any]:
                         "mask": mask,
                         "coupling": coupling,
                         "index": index,
-                        "log2_factors": _point_payload(shared_space, log2_point),
-                        "physical_multipliers": _point_payload(shared_space, physical_point),
+                        "log2_factors": _point_payload(space, log2_point),
+                        "physical_multipliers": _point_payload(space, physical_point),
                     }
                 )
     cell_payload = json.dumps(

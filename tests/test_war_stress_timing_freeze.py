@@ -51,7 +51,10 @@ def test_freeze_rejects_r3_in_primary_grid(tmp_path: Path) -> None:
 
 def test_reopening_authorization_is_content_addressed_and_preflight_only() -> None:
     payload = json.loads(AUTHORIZATION.read_text(encoding="utf-8"))
-    assert payload["status"] == "AUTHORIZE_IMPLEMENTATION_AND_PREFLIGHT_ONLY"
+    assert (
+        payload["status"]
+        == "IMPLEMENTATION_PREFLIGHT_COMPLETE__STOP_COMPUTE_INFEASIBLE"
+    )
     new = payload["new_contract"]
     for path_key, hash_key in (
         ("path", "sha256"),
@@ -71,5 +74,14 @@ def test_reopening_authorization_is_content_addressed_and_preflight_only() -> No
         path = ROOT / overlay[path_key]
         assert path.is_file()
         assert _sha256(path) == overlay[hash_key]
+    execution = payload["execution_preflight"]
+    for path_key, hash_key in (
+        ("contract_path", "contract_sha256"),
+        ("command_manifest_path", "command_manifest_sha256"),
+        ("verification_path", "verification_sha256"),
+    ):
+        path = ROOT / execution[path_key]
+        assert path.is_file()
+        assert _sha256(path) == execution[hash_key]
     assert any("open seed 7470001" in item for item in payload["not_authorized_now"])
     assert any("train a learner" in item for item in payload["not_authorized_now"])

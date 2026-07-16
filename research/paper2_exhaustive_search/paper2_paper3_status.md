@@ -21,9 +21,16 @@ fixture are separate report-only boundaries.
 A preregistered GSA overlay now adds SALib Morris screening, a paired-CRN
 `H_timing_safe` target, a cross-fitted stochastic surrogate, stratified Sobol
 only after an OOS gate, and EMA Workbench PRIM with repeated configuration-level
-holdouts. Its 720 Morris points and 1,536-point QMC pool were frozen before seed
+holdouts. Its 570 Morris points and 1,536-point QMC pool were frozen before seed
 access. The overlay is diagnostic: it cannot replace the parent connected-region
 gate or open validation by itself.
+
+The DES executor, policy-independent coupled tapes, exact 50,202-template
+policy certificate, resume cursor and watcher-first PGID/SID custody are now
+implemented. A non-scientific benchmark passed the physical/custody pipeline
+but projected 85,845,420 two-year episodes (15.1 wall-days at 32 workers), so
+scientific seeds remain closed under `STOP_COMPUTE_INFEASIBLE`. The next gate is
+an exact comparator/oracle reduction certificate, not a larger VPS launch.
 
 Only implementation and non-scientific preflight are authorized. Development
 seeds `7470001–7470012`, validation seeds `7470101–7470148` and observable seeds

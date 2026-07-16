@@ -124,9 +124,17 @@ def schedule_is_high(
         week = max(0, int((now - treatment_start) // WEEK))
         return bool(spec.payload[week % 8])
     if spec.family in {"restricted_privileged", "weekly_privileged"}:
+        payload = spec.payload
+        if isinstance(payload, Mapping):
+            entry_offset = float(payload["entry_offset_hours"])
+            exit_offset = float(payload["exit_offset_hours"])
+        else:
+            entry_offset = float(payload)
+            exit_offset = 72.0
         windows = privileged_windows(
             risk_events,
-            entry_offset_hours=float(spec.payload),
+            entry_offset_hours=entry_offset,
+            exit_offset_hours=exit_offset,
         )
         if spec.family == "weekly_privileged":
             windows = [
@@ -330,13 +338,16 @@ def evaluate_schedule(
     max_daily_steps: int,
     known_risk_events: Sequence[Any] = (),
     observed_signal_series: Sequence[float] | None = None,
+    risk_event_tape: Sequence[Mapping[str, Any]] | None = None,
+    enabled_risks: Sequence[str] | None = None,
 ) -> dict[str, Any]:
     env = make_event_triggered_track_a_env(
         init_frac=low.buffer_fraction,
         init_shifts=low.shifts,
         max_steps=int(max_daily_steps),
-        enabled_risks=("R21", "R22", "R23", "R24"),
+        enabled_risks=tuple(enabled_risks or ("R21", "R22", "R23", "R24")),
         risk_overrides=dict(risk_overrides),
+        risk_event_tape=(list(risk_event_tape) if risk_event_tape is not None else None),
         risk_rng_mode="per_risk",
         stochastic_pt=False,
         priming_enabled=False,
@@ -415,6 +426,18 @@ def evaluate_schedule(
                 "buffer_target_unit_hours": buffer_target_unit_hours,
                 "op8_convoy_vehicle_hours": float(
                     getattr(env.unwrapped.sim, "op8_convoy_vehicle_hours", 0.0)
+                ),
+                "generated_surge_quantity": float(
+                    getattr(env.unwrapped.sim, "r24_generated_surge_quantity", 0.0)
+                ),
+                "admitted_surge_quantity": float(
+                    getattr(env.unwrapped.sim, "r24_admitted_surge_quantity", 0.0)
+                ),
+                "clipped_surge_quantity": float(
+                    getattr(env.unwrapped.sim, "r24_clipped_surge_quantity", 0.0)
+                ),
+                "risk_cap_hits": float(
+                    getattr(env.unwrapped.sim, "r24_cap_hit_count", 0)
                 ),
                 "intervention_count": int(env.intervention_count),
                 "distinct_intervention_times": len(

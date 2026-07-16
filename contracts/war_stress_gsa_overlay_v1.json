@@ -32,11 +32,16 @@
   "strata": {
     "definition": "one fixed parent mask and one fixed coupling mode",
     "count": 12,
-    "factor_sampling": "independent uniform in log2 multiplier space inside each stratum",
-    "spaces": {
+    "factor_sampling": "independent uniform in log2 multiplier space inside each stratum; coupled strata omit non-R24 frequency factors because the parent replaces their native occurrence streams with the R24-driven schedule",
+    "independent_spaces": {
       "LOC_SURGE": ["phi_R22", "phi_R24", "psi_R22", "psi_R24"],
       "THEATER_CAPACITY_SURGE": ["phi_R21", "phi_R23", "phi_R24", "psi_R21", "psi_R23", "psi_R24"],
       "PRODUCTION_QUALITY_SURGE": ["phi_R11", "phi_R14", "phi_R24", "psi_R11", "psi_R24"]
+    },
+    "coupled_spaces": {
+      "LOC_SURGE": ["phi_R24", "psi_R22", "psi_R24"],
+      "THEATER_CAPACITY_SURGE": ["phi_R24", "psi_R21", "psi_R23", "psi_R24"],
+      "PRODUCTION_QUALITY_SURGE": ["phi_R24", "psi_R11", "psi_R24"]
     },
     "bounds": {
       "phi_log2": [0.0, 3.0],
@@ -46,9 +51,9 @@
   },
   "sampling_manifest": {
     "path": "research/paper2_exhaustive_search/war_stress_gsa_overlay_manifest_20260716.json",
-    "sha256": "d33e23e576e6aafa3b18bc347a879b3f1621c6ed24747b9e5b3cdeb8364a6bc9",
-    "configuration_payload_sha256": "684b8387047c7e4589d953da0068374922cbfe4011e4aa4fb479de479ebf0e45",
-    "morris_configurations": 720,
+    "sha256": "c0195412354034001c35852880ff915b2d23c0d669c55f13130ae2a63a59333b",
+    "configuration_payload_sha256": "e7f0a3e406502c0925a410f54ac5f70f331383e32f0f541967bfe80a9a207fb0",
+    "morris_configurations": 570,
     "qmc_pool_configurations": 1536,
     "all_points_frozen_before_tapes": true
   },

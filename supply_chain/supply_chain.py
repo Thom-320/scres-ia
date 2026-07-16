@@ -860,6 +860,12 @@ class MFSCSimulation:
         }
         self._contingent_demand_pending = 0
         self._contingent_cssu_destination_pending: Optional[str] = None
+        # Auditable R24 saturation ledger.  These counters are observational:
+        # they do not alter the existing 13,000-ration pending-demand cap.
+        self.r24_generated_surge_quantity = 0.0
+        self.r24_admitted_surge_quantity = 0.0
+        self.r24_clipped_surge_quantity = 0.0
+        self.r24_cap_hit_count = 0
         self._cumulative_down_hours = 0.0  # Accumulated op-hours of disruption
         self.adaptive_benchmark_enabled = self.risk_level in (
             "adaptive_benchmark_v1",
@@ -1381,10 +1387,20 @@ class MFSCSimulation:
 
         if risk_id == "R24":
             surge = float(event.magnitude)
+            pending_before = float(self._contingent_demand_pending)
+            self.r24_generated_surge_quantity += surge
             self._contingent_demand_pending += surge
             self._contingent_demand_pending = min(
                 self._contingent_demand_pending, 5 * 2600
             )
+            admitted = max(
+                0.0, float(self._contingent_demand_pending) - pending_before
+            )
+            clipped = max(0.0, surge - admitted)
+            self.r24_admitted_surge_quantity += admitted
+            self.r24_clipped_surge_quantity += clipped
+            if clipped > 1e-9:
+                self.r24_cap_hit_count += 1
             if self.cssu_topology_mode == "split_v1":
                 self._contingent_cssu_destination_pending = event.affected_cssu
             replayed = RiskEvent(
@@ -5412,6 +5428,12 @@ class MFSCSimulation:
         accepted_surge = max(
             0.0, float(self._contingent_demand_pending) - pending_before
         )
+        clipped_surge = max(0.0, float(surge) - accepted_surge)
+        self.r24_generated_surge_quantity += float(surge)
+        self.r24_admitted_surge_quantity += accepted_surge
+        self.r24_clipped_surge_quantity += clipped_surge
+        if clipped_surge > 1e-9:
+            self.r24_cap_hit_count += 1
         # Attribution window: Garrido's per-order R24 column marks every order
         # whose cycle overlaps the surge STRESS PERIOD, not just the instant.
         # CF11 evidence: 75% of attended orders carry R24>0 at increased

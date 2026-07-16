@@ -23,11 +23,14 @@ prototype in four load-bearing ways:
 
 There are 12 strata: three parent risk masks by four coupling modes. Factors are
 risk-specific frequency and impact multipliers sampled independently and
-uniformly in log2 space inside each stratum.
+uniformly in log2 space inside each stratum. In coupled strata, only `phi_R24`
+is a frequency factor: the parent contract replaces every other native
+occurrence process with the R24-driven cluster schedule. Keeping the replaced
+frequency factors would create inert dimensions by construction.
 
 The exact committed manifest contains:
 
-- 720 Morris configurations: 20 candidate trajectories, 10 optimized retained
+- 570 Morris configurations: 20 candidate trajectories, 10 optimized retained
   trajectories, eight levels;
 - a 1,536-point QMC pool: 128 scrambled Sobol space-filling points per stratum;
 - exact IDs, log2 values, physical multipliers and content hash for every point.

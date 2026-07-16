@@ -51,6 +51,14 @@ MASK_FACTORS: dict[str, tuple[str, ...]] = {
     ),
 }
 
+COUPLED_MODES = frozenset(
+    {
+        "disruption_leads_surge_72h",
+        "coincident",
+        "surge_leads_disruption_72h",
+    }
+)
+
 DEFAULT_HIGHER_GUARDRAILS = (
     "ret_excel_full_ledger",
     "ration_ret_excel",
@@ -85,6 +93,16 @@ class FactorSpace:
         if mask not in MASK_FACTORS:
             raise ValueError(f"unknown war-risk mask {mask!r}")
         names = MASK_FACTORS[mask]
+        if coupling in COUPLED_MODES:
+            # The parent contract replaces every native non-R24 occurrence
+            # process with the R24-driven cluster schedule in coupled modes.
+            # Consequently only phi_R24 controls cluster frequency; retaining
+            # any other phi would create an inert GSA dimension by definition.
+            names = tuple(
+                name
+                for name in names
+                if not name.startswith("phi_") or name == "phi_R24"
+            )
         bounds = tuple((0.0, 3.0) if name.startswith("phi_") else (0.0, 2.0) for name in names)
         return cls(mask=mask, coupling=coupling, names=names, log2_bounds=bounds)
 
