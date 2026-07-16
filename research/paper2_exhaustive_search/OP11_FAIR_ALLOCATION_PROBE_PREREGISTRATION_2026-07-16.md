@@ -7,12 +7,16 @@
 > destination — so this probe is a stylized multi-CSSU EXTENSION, not thesis-native. It cannot be
 > promoted (or sold as a thesis door) unless Garrido confirms multi-CSSU competition with
 > allocation authority and per-CSSU observability (email question 5).
-> (2) *Result (reduced model, burned blocks only, commit 39517a2):* G0 PASS (exact reproduction of
-> the fairness-violating anchor); ALL state-contingent fair candidates NEGATIVE; the best eligible
-> candidate is sequence-identical to the static comparator (H ≡ 0.0 on 600 tapes) → G5 cannot
-> pass → **the virgin block 4800001–4800200 was never opened and stays closed.** Within the frozen
-> family, fairness absorbs 100% of the +0.013 headroom. G1's anchor tolerance was mis-frozen
-> (disclosed); G2/G3 passed vacuously. No certificate entry claims a thesis-native closure.
+> (2) *Result (reduced model, burned blocks only, commit 39517a2):* status
+> **`OP11_FAIR_CONVERSION_DEVELOPMENT_NO_GO` / `G1_FAILED` / `G5_NOT_OPENED`.** G0 PASS (exact
+> reproduction of the fairness-violating anchor, H ≈ 0.01307); ALL state-contingent fair
+> candidates NEGATIVE (≈ −0.0053..−0.0057); the best eligible candidate equals the static
+> comparator on all 600 burned development tapes (H = 0.0) — strong diagnostic evidence, NOT a
+> universal identity, so no "mathematically cannot pass" claim is made. G1 failed (anchor
+> tolerance mis-frozen, disclosed); G2/G3 passed trivially because the selected policy is
+> equivalent to the static on that set. The development no-go suffices to keep G5 closed —
+> **virgin block 4800001–4800200 preserved, never opened.** This is a development no-go, not a
+> refutation; no certificate entry claims a thesis-native closure.
 
 **Date frozen:** 2026-07-16 · **Status:** FROZEN BEFORE IMPLEMENTATION AND ANY EXECUTION
 **Contract:** `contracts/op11_fair_allocation_conversion_probe_v1.json`

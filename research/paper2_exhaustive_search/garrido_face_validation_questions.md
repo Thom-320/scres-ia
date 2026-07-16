@@ -242,10 +242,17 @@ unattended Ut "without disappearing from the calculation of resilience" (p. 75),
 and implements it as a hard **cap-60 backorder list with overflow eviction** —
 a new backorder beyond 60 removes the last order in the list as Ut (p. 97,
 §6.5.4) — plus SPT sequencing with R24-contingent priority. Empirically (raw
-Excel ledgers) the list saturates near 60 in every risky Cf and 12–31% of all
-orders end as Ut. That capacity-triggered variant was already tested: Program
-D1 found large CONSTANT rationing-rule authority but
-`STOP_NO_STATE_DEPENDENT_RATIONING_HEADROOM`. R09 therefore hinges on what the
+Excel ledgers) the queue reaches its cap-60 at some point in all 20 Cf and the
+books report 148–993 Ut orders per configuration, with cycle times vastly above
+the 48h promise (the visible ledger does not pin the total-order denominator,
+so no abandonment PERCENTAGE is claimed). That capacity-triggered variant was
+already tested: Program D1 found real CONSTANT rationing authority (best
+admissible constant `spt_flat` ≈ +0.0105 over the thesis default, though not
+clearing the full service gate), and the state-preferred rule DOES vary
+(≈75/16/7% shares across states) — but that state dependence adds only
+≈ +0.0011 ReT and is not observably convertible
+(`STOP_NO_STATE_DEPENDENT_RATIONING_HEADROOM` = no MATERIAL adaptive headroom,
+not rule invariance). R09 therefore hinges on what the
 model does NOT contain — a real TIME-based deadline tighter than recoveries and
 admission/eviction authority richer than "drop the last of the list" — a
 non-work-conserving admission problem, materially distinct from D1 (closed).

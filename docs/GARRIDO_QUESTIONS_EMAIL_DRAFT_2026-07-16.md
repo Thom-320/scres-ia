@@ -20,10 +20,10 @@ cuatro supuestos operacionales que son exactamente los que podrían revertir esa
 agradeceríamos respuestas aunque sean cualitativas:
 
 1. **Caducidad de misión y triage (la más importante).** Su modelo abandona pedidos por desborde
-   de la lista de 60 backorders (§6.5.4: el último de la lista se etiqueta *lost/unattended*), y en
-   sus datos ese mecanismo es el modo de falla dominante (12–31% de los pedidos terminan en Ut, con
-   la lista saturada cerca de 60 en todas las configuraciones con riesgo). Nuestra pregunta es sobre
-   la realidad detrás de esa simplificación: ¿existe además una caducidad TEMPORAL dura — plazos de
+   de la lista de 60 backorders (§6.5.4: el último de la lista se etiqueta *lost/unattended*). En
+   sus 20 configuraciones la cola alcanza en algún momento su capacidad de 60, los libros reportan
+   entre 148 y 993 pedidos Ut por configuración, y los tiempos de ciclo superan enormemente la
+   promesa de 48 horas. Nuestra pregunta es sobre la realidad detrás de esa simplificación: ¿existe además una caducidad TEMPORAL dura — plazos de
    misión tras los cuales el requerimiento se abandona — más corta que los tiempos de recuperación
    típicos (24–120 h)? Su tesis menciona un "order cancellation time" (p. 75): ¿es un plazo físico
    real — y de cuánto — o una descripción conceptual del límite de 60? ¿El tope de 60 backorders
@@ -32,19 +32,21 @@ agradeceríamos respuestas aunque sean cualitativas:
    priorizar pedidos contingentes (R24), o también admitir/rechazar/abandonar pedidos — con clases
    de criticidad dentro de los contingentes?
 
-2. **Recurso de restauración compartido.** Su Figura 6.1 muestra UN solo Maintenance Battalion
-   para todo el sistema, pero el modelo asume tiempos de recuperación INDEPENDIENTES por operación
-   (Tablas 6.6b/6.7b). En la realidad, tras disrupciones simultáneas (planta + LOC + unidad de
-   avanzada), ¿ese batallón (u otro recurso único: cuadrilla, equipo especializado) debe
-   SECUENCIAR las recuperaciones — menos equipos que sitios afectados — o son efectivamente
+2. **Recurso de restauración compartido.** Su Figura 6.1 incluye un Maintenance Battalion dentro
+   de la estructura conceptual de la Logistics Brigade, mientras que el modelo representa las
+   recuperaciones con relojes INDEPENDIENTES por operación (Tablas 6.6b/6.7b). En la operación
+   real, tras disrupciones simultáneas (planta + LOC + unidad de avanzada): ¿existe capacidad de
+   mantenimiento/restauración COMPARTIDA entre incidentes? ¿Cuántos equipos hay disponibles frente
+   a sitios afectados, y cómo se priorizan solicitudes concurrentes — o son efectivamente
    paralelas e independientes como asume el modelo?
 
-3. **Clases de ración no sustituibles.** Su tesis documenta que el MFSC real ensambla 21 tipos de
-   ración según requisitos nutricionales Y condiciones climáticas (§6.3.1), simplificados a uno
-   solo en el modelo (§6.5.3). ¿Hay al menos dos clases mutuamente NO sustituibles (p. ej.
-   clima frío vs. selva, o religiosa/médica) que compartan la misma línea de ensamblaje, con mezcla
-   de demanda incierta, persistente y parcialmente anticipable? ¿Magnitudes aproximadas
-   (participación de cada clase, persistencia)?
+3. **Clases de ración no sustituibles.** Su tesis documenta diversidad real de productos — 21
+   tipos según requisitos nutricionales Y condiciones climáticas (§6.3.1) — simplificados a uno
+   solo en el modelo (§6.5.3), lo que justifica estudiar una extensión multiproducto. Para
+   calibrarla necesitamos su confirmación de: ¿qué grado de sustitución hay entre clases (p. ej.
+   clima frío vs. selva, o religiosa/médica)? ¿Comparten efectivamente la misma línea de
+   ensamblaje (Op5–Op7), con lista de materiales y tiempos comparables? ¿Magnitudes representativas
+   (participación de cada clase, persistencia de la mezcla de demanda, anticipabilidad)?
 
 4. **Modelo económico de la flota descendente.** Los convoyes de distribución (Op10/Op12),
    ¿operan con programación fija reservada (salen según calendario y consumen horas-vehículo vayan
