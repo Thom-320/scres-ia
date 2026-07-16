@@ -1,0 +1,79 @@
+{
+  "contract_id": "op11_fair_allocation_conversion_probe_v1",
+  "schema_version": "op11_fair_allocation_conversion_probe_v1",
+  "date_frozen": "2026-07-16",
+  "status": "FROZEN_DESIGN_BEFORE_IMPLEMENTATION_AND_ANY_EXECUTION",
+  "scientific_question": "The single OOS-stable observable-headroom region in the whole program (Program I GP-located region) buys its win by starving one CSSU (worst_cssu_fill_delta ~ -0.13 vs the -0.02 guardrail). Does giving the controller an explicitly fairness-aware allocation rule -- the reduced-model analogue of decision right op11_allocation_rule / max_min_fill -- convert any of that headroom into FAIR observable value, under a hard fairness non-inferiority guardrail?",
+  "relationship_to_prior_work": {
+    "program_i_gsa_result": "docs/PROGRAM_I_HEADROOM_GSA_RESULT_2026-07-12.md",
+    "located_region_source": "results/headroom_gsa/oos_guardrail_check.json (qualifies_new_lane=false, reason: worst_cssu_fill_delta -0.13 << -0.02)",
+    "decision_right_catalog": "contracts/decision_right_catalog_v1.json -- op11_allocation_rule, levels [fifo, mission_priority, max_min_fill], status requires_adapter; catalog invariant: requires_adapter factors cannot enter a scientific screen until liveness and ledger tests pass",
+    "not_a_rescue": "No closed lane is reopened. The Program I region was refused as a lane BECAUSE of the fairness guardrail; this probe tests a NEW decision right aimed at exactly that failure, on the same custodied region.",
+    "war_stress_atlas": "fully independent; seed series 747 is never touched by this probe"
+  },
+  "model_scope": {
+    "environment": "supply_chain/headroom_sensitivity.py -- reduced two-CSSU shared-convoy model (exact Program G physics via program_g.materialize_tape + frozen commonality coupling). The environment code is NOT modified by this probe; only new policy functions are added.",
+    "metric": "ret_order and guardrail fields as computed by supply_chain/program_g.py metrics (worst_cssu_fill at program_g.py:420 vintage of the freeze commit). This is the reduced-model metric, NOT the canonical DES endpoint.",
+    "claim_boundary": "DEVELOPMENT ONLY. No Paper 2 claim, no managerial claim, no learner, no canonical-metric claim. A PASS authorizes exactly one action: preregistering a full-DES op11 adapter contract (liveness + ledger tests per the catalog invariant, canonical ret_excel_request_snapshot_v2 endpoint). A FAIL closes the fair-conversion door and is recorded in the boundary certificate as a disclosed negative."
+  },
+  "frozen_theta_star": {
+    "signal_q": 0.532,
+    "lead": 2,
+    "surge_mult": 1.946,
+    "persistence": "short",
+    "commonality": 0.887,
+    "r22_prob": 0.107,
+    "source": "results/headroom_gsa/oos_guardrail_check.json field located_theta, copied verbatim"
+  },
+  "robustness_thetas_report_only": [
+    {"perturb": "surge_mult", "value": 1.751},
+    {"perturb": "surge_mult", "value": 2.141},
+    {"perturb": "commonality", "value": 0.798}
+  ],
+  "policy_families": {
+    "anchor_ratio_belief": "the EXACT Program I belief policy (headroom_sensitivity._belief_policy) -- the known fairness-violating anchor; reproduction control only, never a candidate",
+    "fair_candidates_frozen": [
+      {"id": "maxmin_realized_fill", "rule": "each week serve the CSSU with the LOWER realized cumulative fill rate to date; tie -> lower belief expected cover; HOLD is never selected"},
+      {"id": "fair_gate_ratio_delta", "rule": "ratio belief rule, overridden to serve the other CSSU whenever its realized cumulative fill trails the served CSSU's by more than delta", "delta_grid": [0.02, 0.05, 0.10]},
+      {"id": "min_service_alternation", "rule": "ratio belief rule constrained so no CSSU goes unserved for 2 consecutive weeks"}
+    ],
+    "information_set": "identical to the Program I belief policy: CSSUFilter posteriors updated with realized demand + advance signal, plus realized own-trajectory fill history. Non-anticipative; no tape-future access.",
+    "resources": "identical action set program_g.ACTIONS = (A, B, HOLD), identical single convoy, identical inventories. Allocation redistributes; it creates nothing.",
+    "no_posthoc_extension": "no candidate, parameter value, or theta may be added after this freeze"
+  },
+  "comparator": "strongest full-contract periodic calendar selected in-sample on the eval tapes -- byte-identical to headroom_at's static baseline. The comparator is never weakened.",
+  "estimand": {
+    "H_obs_fair": "mean ret_order of the selected fair-family policy minus the best static comparator, per block",
+    "guardrail_eligibility": "a candidate is eligible on a block iff, vs the SAME comparator on the SAME tapes: worst_cssu_fill_delta >= -0.02 AND attended_delta >= -0.02 AND ret_quantity_delta >= -0.02",
+    "selection_rule": "argmax mean H_obs_fair among ELIGIBLE candidates on DEVELOPMENT blocks only; frozen in an execution-freeze artifact (candidate id + parameters + sha256) before confirmation",
+    "eta_fair_report_only": "H_obs_fair / H_PI at theta_star, diagnostic never a gate"
+  },
+  "gates_in_order": [
+    {"id": "G0_reproduction", "spec": "burned block 3000001-3000200 at theta_star: anchor_ratio_belief must reproduce H_obs > 0 with CI95 > 0 AND worst_cssu_fill_delta <= -0.10 (the known violation). FAIL -> STOP_ENV_MISMATCH; nothing further runs."},
+    {"id": "G1_anchor_null", "spec": "commonality=0: reproduce the Program G anchor (H_PI ~ +0.015, H_obs ~ -0.02) within +/-0.01."},
+    {"id": "G2_information_null", "spec": "signal_q=0.5 (uninformative): the selected fair candidate's H_obs_fair CI95 must NOT be entirely above 0. This placebo MUST execute and populate a field; a defaulted or missing field voids every downstream verdict (A11 / commit 022abd0 lesson)."},
+    {"id": "G3_signal_placebo", "spec": "selected candidate re-evaluated with advance signals permuted across tapes (mismatched-tape placebo): H_obs_fair CI95 must NOT be entirely above 0."},
+    {"id": "G4_development_selection", "spec": "burned blocks 3000001-3000200, 4200001-4200200, 4500001-4500200 at theta_star: run all frozen candidates, apply guardrail eligibility, select argmax, commit execution-freeze artifact."},
+    {"id": "G5_confirmation_one_shot", "spec": "VIRGIN block 4800001-4800200 (200 tapes), opened ONCE, only after G0-G4 committed and independently verified: PASS iff one-sided LCB95(H_obs_fair) > 0 AND point estimate >= 0.01 AND all three guardrail deltas >= -0.02 AND >= 120/200 tapes favorable (robust-count guard against bimodality, the Program O OOS lesson). No rescues, no re-selection, no second opening."}
+  ],
+  "if_pass": "authorizes ONLY the preregistration of an op11 full-DES adapter contract (liveness + ledger + anti-shed fixtures, canonical metric endpoint). Learner and Paper 2/3 remain blocked behind that separate contract's own gates.",
+  "if_fail": "the fair-conversion door CLOSES: recorded in the boundary certificate as FAIR_CONVERSION_REFUTED_IN_REDUCED_MODEL (with the numbers), and the full-DES op11 adapter is NOT built.",
+  "seeds": {
+    "development_burned": ["3000001-3000200", "4200001-4200200", "4500001-4500200"],
+    "confirmation_virgin": "4800001-4800200",
+    "virginity_evidence": "at the freeze commit, a repository grep for '4800001' returns no seed usage in any code, contract, or result artifact",
+    "series_747": "untouched; reserved for war_stress_timing_atlas_v1"
+  },
+  "anti_p_hacking": [
+    "all candidates, the delta grid, theta_star, thresholds and the favorable-count rule are frozen in this contract before any execution",
+    "the confirmation block opens once; every result (pass or fail, all gates, all robustness thetas) is reported",
+    "every verdict field must be populated by an executed computation; no field may be read from a default",
+    "the comparator family is never reduced or weakened"
+  ],
+  "implementation_split": {
+    "implementer": "PI agent (policy functions + runner + fixture tests; environment untouched)",
+    "independent_verifier": "concurrent auditor process",
+    "verifier_gate": "the auditor verifies G0-G4 outputs, the execution-freeze artifact, and this contract's sha BEFORE the virgin block is opened"
+  },
+  "compute_envelope": "WEEKS=4, |ACTIONS|=3 (81 oracle sequences/tape); full probe well under 1e5 policy-tape evaluations, minutes on one local core. No cluster, no authorization-cap interaction."
+}
