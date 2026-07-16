@@ -1,7 +1,7 @@
 {
   "schema_version": "paper2_exhaustion_certificate_v1",
   "generated_at_utc": "2026-07-15T18:00:00Z",
-  "status": "PAPER2_SEARCH_BOUNDARY_CERTIFIED__NO_POSITIVE_INSTANCE__EXACT_REOPENERS_NAMED__OAT_SCOPE_DISCLOSED",
+  "status": "PAPER2_SEARCH_BOUNDARY_CERTIFIED__NO_POSITIVE_INSTANCE__EXACT_REOPENERS_NAMED__DISCRETE_DESIGN_SCOPE",
   "scientific_commit": "adbfb8f",
   "summary": "Exhaustive search for a Garrido-defensible decision contract exposing material, observable, resource-adjusted adaptive headroom (H_obs) under canonical order-level ReT. Outcome: NO positive instance. A material perfect-information ceiling exists in exactly one disclosed researcher extension (Program O, H_PI 0.152) but does NOT convert out-of-sample. The thesis-native envelope is negative across 4 decision surfaces, 3 independent programs, 2 physics generations, and now Garrido's own risk-escalation table. Every remaining reopener is an exact, falsifiable domain question listed below.",
   "primary_endpoint": {
@@ -76,8 +76,9 @@
           "contract_identical": true
         },
         "scope": "development (6 seeds) \u2014 a cheap door that did not open; requires no confirmation to stay closed (burden was to demonstrate headroom; absent by 2 orders of magnitude)",
-        "SCOPE_LIMITATION_OAT": "This screen is a ONE-FACTOR-AT-A-TIME design (Garrido Cf1-Cf20 + one-at-a-time R11-R24). Per Saltelli et al., OAT cannot account for interactions (multiple factors are never varied concomitantly) and explores only a 'hypercross' with negligible coverage of the parameter volume. THEREFORE the finding 'optimal posture is invariant across 45 profiles' is valid ONLY ALONG THE AXES from the baseline; the simultaneous multi-risk INTERIOR of the risk space is UNEXPLORED by this design. A posture reversal requiring e.g. R22 AND R24 elevated concomitantly could not have been detected.",
-        "interaction_interior_status": "UNEXPLORED \u2014 addressed by WAR_SCENARIO_INTERACTION_SENSITIVITY_PREREGISTRATION_2026-07-15.md"
+        "RETRACTION_2026-07-15": "A prior revision of this certificate asserted the screen was a pure one-factor-at-a-time (OAT) 'hypercross' and that the negative held ONLY ALONG THE AXES. THAT ASSERTION IS FALSE AND IS RETRACTED. Verified against supply_chain/thesis_design.py RISK_PATTERNS: the Cf profiles are boolean tuples over (R11,R12,R13,R14)/(R21,R22,R23,R24) and DO vary factors concomitantly -- e.g. Cf1=(F,F,T,T) raises R13+R14 together; Cf6=(T,T,F,T) raises R11+R12+R14 together; Cf20=(T,T,T,T) raises ALL FOUR R2 risks simultaneously. Cf20 is itself a combined wartime-like regime and it produced no door. The error was inferred from the contract label 'one_at_a_time' without reading thesis_design.py.",
+        "scope_ACCURATE": "The screen covered a DISCRETE subset of intra-R1 and intra-R2 concomitant combinations (the Cf1-Cf20 boolean patterns, including the all-four-R2 cell Cf20), PLUS one-at-a-time sensitivities and 1x/1.5x/2x impacts. It did NOT cover: the continuous risk space, inter-family (R1 x R2) interactions, phi x psi coupling, or temporal/coupling structure. The negative is established over that discrete design, not merely 'along the axes'.",
+        "unexplored_regions": "continuous space; inter-family R1xR2 interactions; phi x psi coupling; temporal coupling structures"
       }
     },
     "extended_envelope_program_O_two_nonfungible_products": {
@@ -177,11 +178,10 @@
     },
     {
       "id": "wartime_multirisk_interaction_region",
-      "description": "Simultaneous multi-risk (wartime) elevation of the recurrent risks \u2014 the INTERACTION interior that the OAT screen is structurally blind to. R3 stays frozen.",
-      "status": "OPEN and PRE-REGISTERED \u2014 research/paper2_exhaustive_search/WAR_SCENARIO_INTERACTION_SENSITIVITY_PREREGISTRATION_2026-07-15.md",
+      "description": "Continuous / inter-family (R1xR2) / phi-psi-coupled / temporally-coupled risk structure -- the regions the DISCRETE Cf design did not cover. NOT 'the interaction interior' at large: intra-family concomitant combinations WERE covered (incl. Cf20 = all four R2 risks).",
+      "status": "OPEN but DOWNGRADED. Superseded in governance by the frozen war_stress_timing_atlas_v1 (144 concomitant cells, connected-region rule, seeds 747xxxx). Any GSA layer must sit ON TOP of that atlas, target H_timing_safe (not constant-posture tailoring), and handle DES stochasticity.",
       "method": "Morris screening + Sobol total-effect (S_Ti - S_i = interaction mass) + PRIM scenario discovery on DEVELOPMENT tapes (hypothesis-generating only), then a frozen one-shot confirmation on a VIRGIN 746-series block. NOT a grid search.",
-      "prior": "Evidence against is substantial: Track C already tested a combined campaign regime (R22/R23/R24+R21) -> 6.5e-05 vs 5% bar; extreme intensity enters binary collapse; posture ordering changes with BUDGET, never with regime. A null is expected and pre-committed.",
-      "if_additive": "If S_Ti ~= S_i for all factors, the OAT null GENERALISES to the interior and this certificate upgrades from 'negative along the axes' to 'negative including interactions'."
+      "prior": "Evidence against is now stronger than previously stated: Cf20 already elevates all four R2 risks concomitantly and produced no door; Track C tested a combined campaign regime -> 6.5e-05 vs a 5% bar; extremes enter binary collapse; posture reorders with BUDGET, never with regime."
     }
   ],
   "claim_boundary": {
@@ -193,5 +193,5 @@
     "paper3_authorized": false,
     "positive_instance_found": false
   },
-  "terminal_finding": "Across the thesis-native envelope (4 decision surfaces, 3 independent programs, 2 physics generations, Garrido's own Cf1-Cf20 risk-escalation table) and one engineered extension with ~7x more clairvoyant headroom, NO decision contract converts perfect-information headroom into deployable, resource-honest, out-of-sample-stable observable value. The mechanism is consistent and mechanistically identified: the thesis DES is structurally over-buffered (constants are near-optimal; the optimal posture is invariant to risk regime), commitment lags defeat clairvoyance (hysteresis > true-state switching), and where clairvoyant headroom exists it does not survive observability, resource-honesty, or out-of-sample prospective consistency. Adaptive/learned control is NOT warranted in this system under the stated gates. Zero PPO seeds were wasted: every gate killed its candidate before training. SCOPE NOTE: the thesis-native risk evidence is one-factor-at-a-time and therefore interaction-blind by design; the negative is established ALONG THE AXES. The simultaneous multi-risk (wartime) interior is pre-registered for discovery + frozen virgin confirmation and is the single remaining structured probe. This certificate is provisional on that probe's outcome."
+  "terminal_finding": "Across the thesis-native envelope (4 decision surfaces, 3 independent programs, 2 physics generations, Garrido's own Cf1-Cf20 risk-escalation table) and one engineered extension with ~7x more clairvoyant headroom, NO decision contract converts perfect-information headroom into deployable, resource-honest, out-of-sample-stable observable value. The mechanism is consistent and mechanistically identified: the thesis DES is structurally over-buffered (constants are near-optimal; the optimal posture is invariant to risk regime), commitment lags defeat clairvoyance (hysteresis > true-state switching), and where clairvoyant headroom exists it does not survive observability, resource-honesty, or out-of-sample prospective consistency. Adaptive/learned control is NOT warranted in this system under the stated gates. Zero PPO seeds were wasted: every gate killed its candidate before training. SCOPE NOTE (corrected): the thesis-native risk evidence spans a DISCRETE design -- Cf1-Cf20 boolean patterns (including Cf20, which elevates all four R2 risks concomitantly) plus one-at-a-time sensitivities and 1x/1.5x/2x impacts. It does NOT span the continuous space, inter-family R1xR2 interactions, phi-psi coupling, or temporal coupling. An earlier revision wrongly characterised this as pure OAT; that claim is retracted."
 }

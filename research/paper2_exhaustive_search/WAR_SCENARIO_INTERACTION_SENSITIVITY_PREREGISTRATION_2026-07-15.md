@@ -1,6 +1,23 @@
+# ⚠️ SUPERSEDED — DO NOT EXECUTE
+
+**Retracted 2026-07-15.** This pre-registration justified itself on the claim that the completed risk screen was
+**one-factor-at-a-time and therefore interaction-blind**. **That premise is FALSE:** `thesis_design.py`
+`RISK_PATTERNS` shows Cf1–Cf20 vary risks **concomitantly** (Cf20 elevates **all four R2 risks at once** and
+produced **no door**). The intra-family concomitant region was therefore already covered.
+
+It is further superseded in **governance** by the frozen `war_stress_timing_atlas_v1` (144 concomitant cells,
+connected-region rule, seed series **747**, not the 746 proposed here), and its **estimand is wrong**: it targets
+constant-posture *tailoring* rather than **`H_timing_safe`** — timing value can exist even when the optimal
+constant never changes across regimes.
+
+Retained only as an audit trail of the reasoning error. Any GSA layer must sit **on top of** the atlas, target
+`H_timing_safe`, use SALib's validated Morris, and explicitly handle DES stochasticity + input dependence.
+
+---
+
 # Pre-registration — Wartime multi-risk INTERACTION sensitivity (discovery → frozen virgin confirmation)
 
-**Date:** 2026-07-15 · **Science base:** `adbfb8f` · **Status:** PRE-REGISTRATION (no tape opened)
+**Date:** 2026-07-15 · **Science base:** `adbfb8f` · **Status:** **SUPERSEDED / NOT FOR EXECUTION** — its §1b rationale rested on a false premise (see banner).
 **Primary endpoint:** `ret_excel_request_snapshot_v2` via `supply_chain.episode_metrics.compute_episode_metrics`
 **R3 (black swan): FROZEN — never activated, never scaled, excluded from every phase.**
 

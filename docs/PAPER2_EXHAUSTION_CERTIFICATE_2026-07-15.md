@@ -2,15 +2,20 @@
 
 **Date:** 2026-07-15 · **Science commit:** `adbfb8f`
 **Machine-readable:** `results/paper2_search/paper2_exhaustion_certificate_2026-07-15.json`
-**Status:** `PAPER2_SEARCH_BOUNDARY_CERTIFIED__NO_POSITIVE_INSTANCE__EXACT_REOPENERS_NAMED__OAT_SCOPE_DISCLOSED`
+**Status:** `PAPER2_SEARCH_BOUNDARY_CERTIFIED__NO_POSITIVE_INSTANCE__EXACT_REOPENERS_NAMED__DISCRETE_DESIGN_SCOPE`
 
-> ⚠️ **SCOPE (added on methodological review).** The thesis-native risk evidence is **one-factor-at-a-time**
-> (Garrido Cf1–Cf20 + one-at-a-time R11–R24). Per Saltelli et al., **OAT cannot detect interactions** (factors are
-> never varied concomitantly) and covers only a **'hypercross'** of negligible volume. **The negative is therefore
-> established ALONG THE AXES; the simultaneous multi-risk (wartime) INTERIOR is unexplored by that design.** It is
-> pre-registered for discovery + frozen virgin confirmation in
-> `research/paper2_exhaustive_search/WAR_SCENARIO_INTERACTION_SENSITIVITY_PREREGISTRATION_2026-07-15.md`.
-> **This certificate is provisional on that probe.**
+> ⚠️ **RETRACTION (2026-07-15).** A prior revision of this file claimed the risk screen was a pure
+> **one-factor-at-a-time 'hypercross'** and that the negative held **only along the axes**. **That claim is
+> FALSE and is retracted.** Verified against `supply_chain/thesis_design.py` `RISK_PATTERNS`: the Cf profiles
+> are boolean tuples that **do vary factors concomitantly** — `Cf1=(F,F,T,T)` raises **R13+R14** together,
+> `Cf6=(T,T,F,T)` raises **R11+R12+R14**, and **`Cf20=(T,T,T,T)` raises ALL FOUR R2 risks simultaneously**.
+> **Cf20 is itself a combined wartime-like regime, and it produced no door.**
+>
+> **Accurate scope:** the screen covered a **discrete subset of intra-R1 and intra-R2 concomitant
+> combinations** (Cf1–Cf20, incl. the all-four-R2 cell) **plus** one-at-a-time sensitivities and 1×/1.5×/2×
+> impacts. It did **not** cover the **continuous** space, **inter-family (R1×R2)** interactions, **φ×ψ**
+> coupling, or **temporal coupling**. The error came from inferring OAT from the contract label
+> `one_at_a_time` without reading `thesis_design.py`.
 
 **Primary endpoint throughout:** `ret_excel_request_snapshot_v2` via `supply_chain.episode_metrics.compute_episode_metrics`.
 Metric substitution, Cobb–Douglas promotion, hand-rolled ReT, and temporal-index promotion are forbidden;
@@ -58,11 +63,12 @@ Using **Garrido's own escalation methodology** (exact **Cf1–Cf20** + one-at-a-
 > **The optimal constant posture is INVARIANT across all 45 risk profiles, at every budget cap.**
 > Escalating the thesis's own recurrent risks **does not change what you should do**.
 
-⚠️ **Valid along the OAT axes only** — a reversal requiring e.g. R22 **and** R24 elevated *concomitantly* could
-not have been detected by this design (see scope note above).
+⚠️ **Scope:** valid over the **discrete Cf design** — which *does* include concomitant intra-family cells
+(**Cf20 elevates all four R2 risks together and still produced no door**). Not covered: continuous space,
+inter-family R1×R2 interactions, φ×ψ coupling, temporal coupling.
 
 Risks genuinely degrade physical resilience (ReT 0.53 → 0.20 under escalation) but create **zero
-regime-tailoring headroom** (along the tested axes) — and this is **not** a guardrail/shed rejection: all guardrails are clean;
+regime-tailoring headroom** (over the tested discrete design) — and this is **not** a guardrail/shed rejection: all guardrails are clean;
 the tailoring simply has no value. Custody: result `e4a3d4a0`, execution `01c1d9d` (child of frozen
 `6794fe6`, contract byte-identical), independently recomputed. Scope: development (6 seeds) — a cheap door
 that did not open; it requires no confirmation to stay closed, since the burden was to *demonstrate*
