@@ -500,9 +500,18 @@ def state_rich_calendar(
     regime_persistence: float,
     dominant_share: float,
     observation_mode: str = "real",
+    action_overrides: Sequence[int] | None = None,
 ) -> tuple[tuple[int, ...], tuple[StateRichDecision, ...]]:
-    """Replay pre-decision physical state and produce one adaptive calendar."""
+    """Replay state and produce a policy or execution-supplied calendar."""
     weeks = int(skeleton["decision_weeks"])
+    if action_overrides is not None:
+        action_overrides = tuple(int(value) for value in action_overrides)
+        if len(action_overrides) != weeks or any(
+            value not in range(4) for value in action_overrides
+        ):
+            raise ValueError(
+                f"action_overrides must contain {weeks} actions in {{0,1,2,3}}"
+            )
     start = float(skeleton["decision_start"])
     score_time = float(skeleton["score_time"])
     order_times = np.asarray(skeleton["order_times"], dtype=float)
@@ -723,13 +732,18 @@ def state_rich_calendar(
                 )
             elif observation_mode != "real":
                 raise ValueError(f"unknown observation mode: {observation_mode}")
-            action, objective, tied = choose_state_rich_action(
-                observation,
-                config,
-                scheduler=scheduler,
-                regime_persistence=float(regime_persistence),
-                dominant_share=float(dominant_share),
-            )
+            if action_overrides is None:
+                action, objective, tied = choose_state_rich_action(
+                    observation,
+                    config,
+                    scheduler=scheduler,
+                    regime_persistence=float(regime_persistence),
+                    dominant_share=float(dominant_share),
+                )
+            else:
+                action = int(action_overrides[week])
+                objective = ()
+                tied = (action,)
             actions.append(int(action))
             decisions.append(
                 StateRichDecision(

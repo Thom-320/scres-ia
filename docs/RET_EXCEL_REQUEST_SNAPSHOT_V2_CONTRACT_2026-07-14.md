@@ -1,8 +1,8 @@
 # `ret_excel_request_snapshot_v2` — canonical source-aligned contract
 
 Date: 2026-07-14  
-Status: **implemented provisionally; same-time Garrido confirmation and v2
-re-score required before any Paper-2 claim**.
+Status: **implemented as the frozen researcher-defined primary; Garrido confirmation controls
+source-faithfulness language, and a dual same-time sensitivity is mandatory before Program Q**.
 
 The primary per-order formula is unchanged from the Garrido workbooks. The
 contract change is the provenance and timing of `Bt` and `Ut`: they are frozen
@@ -25,8 +25,10 @@ guardrails.
 
 The provisional deterministic same-time convention is: execute events already
 scheduled before the request callback, snapshot `Bt/Ut`, enqueue request `j`,
-and record the event sequence. Garrido/Simulink confirmation of that convention
-is required before virgin confirmation.
+and record the event sequence. The alternative `snapshot_before_events` convention is available
+only for explicit sensitivity rescoring with `force_reconstruct=True`; it cannot silently replace
+captured native fields. Garrido/Simulink confirmation determines whether the primary may be
+described as original-model semantics rather than a disclosed researcher convention.
 
 ## Evidence and claim boundary
 
