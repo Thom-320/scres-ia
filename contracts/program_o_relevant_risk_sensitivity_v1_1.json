@@ -1,0 +1,55 @@
+{
+  "contract_id": "program_o_relevant_risk_sensitivity_v1_1",
+  "schema_version": "program_o_relevant_risk_sensitivity_v1_1",
+  "date_frozen": "2026-07-17",
+  "status": "FROZEN_BEFORE_V1_1_G0_G1_EXECUTION",
+  "lineage": {
+    "supersedes_execution_only": "program_o_relevant_risk_sensitivity_v1",
+    "v1_stop": "STOP_V1_AFTER_G0_IMPLEMENTATION_PREREGISTRATION_MISMATCH",
+    "closed_program_o_verdict_unchanged": "STOP_PROGRAM_O_AFTER_CORRECTIVE_VALIDATION",
+    "program_o_r_unchanged": true
+  },
+  "purpose": "Secondary robustness analysis of the already frozen Program O mechanism under Garrido-style relevant risks. It cannot select cells, tune, promote, reopen Program O, or modify Program O-R.",
+  "primary_cell": {
+    "id": "rho90_share90",
+    "environment_parameters": {"regime_persistence": 0.90, "dominant_share": 0.90},
+    "controller_model_parameters": {"regime_persistence": 0.75, "dominant_share": 0.90},
+    "note": "The controller model remains fixed at .75/.90 in every environment. True cell rho/share are never exposed to the controller."
+  },
+  "burned_preflight_tapes": [7430001, 7430002, 7430003, 7430004, 7430005, 7430006, 7430007, 7430008, 7430009, 7430010, 7430011, 7430012],
+  "risks": {
+    "activation": "after the common neutral Program O warm-up event; risks cannot alter or prevent construction of the shared initial state",
+    "included": ["R11", "R14", "R21", "R22", "R24"],
+    "affected_ops": {
+      "R11": [5, 6],
+      "R14": [7],
+      "R21": [3, 5, 6, 7, 9],
+      "R22": [4, 8, 10, 12],
+      "R24": [13]
+    },
+    "R22_claim_boundary": "product-blind downstream robustness control; not a direct product-mix risk",
+    "R24_assignment_rule": "contingent surge is consumed by the next scheduled demand order and inherits that order's already-frozen product label; report product counts and treat this as a conditional model assumption",
+    "R3": "disabled and event count must be zero"
+  },
+  "gates": {
+    "G0": "On all 12 burned tapes, reconstruct belief_mpc__3 with fixed .75/.90 model parameters; calendar indices must equal the historical corrective-validation indices. Direct full-DES replays of the reconstructed policy and frozen static comparator must match the custodied matrices bit-exactly.",
+    "G1": "At thesis frequency phi=1, each risk alone must fire across the 12-tape block; every populated affected_ops entry must be a nonempty subset of its frozen operation map, no foreign risk may fire, and R3 count must be zero.",
+    "G1_liveness_fixture": "A separate implementation-only high-frequency fixture may demonstrate process liveness but can never rescue a failed thesis-rate G1.",
+    "G2": "Blocked until G0/G1 outputs receive an independent signed verification. The map remains secondary robustness only."
+  },
+  "future_grid_if_authorized": {
+    "baseline": "risks off",
+    "thesis_current": "all included at phi=psi=1",
+    "one_at_a_time_phi": [1, 2, 4],
+    "combined_relevant_phi": 2,
+    "impact_multiplier": 1,
+    "selection_for_program_o_r": false
+  },
+  "endpoints": {
+    "primary_report": "ret_excel_request_snapshot_v2 robustness delta",
+    "secondary": ["CVaR10", "service loss", "backlog age", "lost and unresolved", "worst-product service", "resources"],
+    "promotion_authority": false
+  },
+  "D1_under_risk": "hypothesis only; not authorized by this contract",
+  "program_p": "not authorized; requires external domain facts on deadlines, criticality, shared line, and advance signal"
+}

@@ -1,0 +1,27 @@
+{
+  "schema_version": "program_o_relevant_risk_sensitivity_v1_stop_v1",
+  "date": "2026-07-17",
+  "status": "STOP_V1_AFTER_G0_IMPLEMENTATION_PREREGISTRATION_MISMATCH",
+  "historical_g0_retained": {
+    "scope": "one static calendar, one cell rho90_share90, one burned tape 7430001",
+    "result": "bit-exact for the three checked fields",
+    "not_established": [
+      "frozen belief_mpc__3 controller identity",
+      "12-tape environment identity",
+      "restricted-comparator identity",
+      "risk fixture validity"
+    ]
+  },
+  "defects_found_before_g1": [
+    "contract froze G1 at phi=1 but implementation used phi=4",
+    "implementation ignored the populated RiskEvent.affected_ops field and therefore emitted an empty operation map",
+    "G1 did not enforce the preregistered exact affected-operation map",
+    "G0 used one seed and a static calendar rather than the frozen controller and comparator family"
+  ],
+  "g1_executed": false,
+  "g2_executed": false,
+  "scientific_map_read": false,
+  "claim": "none",
+  "successor": "program_o_relevant_risk_sensitivity_v1_1"
+}
+

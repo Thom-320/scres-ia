@@ -1,0 +1,26 @@
+{
+  "schema_version": "program_o_relevant_risk_sensitivity_v1_1_discarded_attempts",
+  "date": "2026-07-17",
+  "scientific_result_emitted": false,
+  "attempts": [
+    {
+      "execution": "local sequential",
+      "outcome": "interrupted before artifact after excessive wall time",
+      "scientific_output_read": false
+    },
+    {
+      "execution": "local 10-worker multiprocessing",
+      "outcome": "interrupted before artifact after memory oversubscription",
+      "measurement": "approximately 3.3 GiB peak footprint for a sampled R14 worker",
+      "scientific_output_read": false
+    },
+    {
+      "execution": "local two-worker retry before warm-up correction",
+      "outcome": "interrupted before artifact after diagnosing that risks were active during neutral-prefix construction",
+      "defect": "R14/R21 could delay or prevent the common two-product warm-up, so the fixture was not evaluating a common treatment initial state",
+      "scientific_output_read": false
+    }
+  ],
+  "corrective_execution_setting": "maximum two workers and risk activation immediately after the common neutral warm-up; seeds, treatment physics, risks, phi and gates unchanged",
+  "claim": "none"
+}
