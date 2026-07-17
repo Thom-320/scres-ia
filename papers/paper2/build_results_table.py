@@ -38,19 +38,6 @@ def need(d: dict, *keys):
     return cur
 
 
-def deep_find(d, want):
-    """Find a scalar by key-substring match anywhere (used only for L1 whose schema is verbose)."""
-    hits = {}
-    def walk(o, p=""):
-        if isinstance(o, dict):
-            for k, v in o.items():
-                walk(v, f"{p}/{k}")
-        elif isinstance(o, (int, float)) and any(w in p.lower() for w in want):
-            hits[p] = o
-    walk(d)
-    return hits
-
-
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--learner-result", type=Path, default=DEFAULT_LEARNER)
@@ -63,11 +50,11 @@ def main() -> int:
     # ---- Level 1: physical opportunity -------------------------------------------------------
     hpi = json.loads(HPI.read_text())
     sources["L1"] = f"{HPI.relative_to(ROOT)}@{sha(HPI)}"
-    l1 = deep_find(hpi, ("safe_h_pi", "lcb"))
-    h_pi = next((v for p, v in l1.items() if "safe_h_pi" in p.lower() and "lcb" not in p.lower()), None)
-    h_pi_lcb = next((v for p, v in l1.items() if "lcb" in p.lower()), None)
-    if h_pi is None or h_pi_lcb is None:
-        raise SystemExit(f"L1 fields not found; candidates: {l1}")
+    # EXACT fields only. A fuzzy 'first lcb match' previously grabbed simultaneous_RAW_lcb95
+    # (0.11652) instead of the safe companion (0.11562) -- fuzzy key matching IS inferring
+    # from labels, the exact failure class A11 forbids.
+    h_pi = need(hpi, "primary", "safe_h_pi")
+    h_pi_lcb = need(hpi, "primary", "simultaneous_safe_lcb95")
     rows.append(("L1 physical opportunity", "all (safe oracle)",
                  f"H_PI = {h_pi:.5f}", f"LCB95 = {h_pi_lcb:.5f}",
                  "fungible null = 0 (exact)", sources["L1"]))

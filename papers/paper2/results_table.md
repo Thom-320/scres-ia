@@ -2,7 +2,7 @@
 
 | Level | Cell | Point | Bound | Integrity / notes | Source |
 |---|---|---|---|---|---|
-| L1 physical opportunity | all (safe oracle) | H_PI = 0.15151 | LCB95 = 0.11652 | fungible null = 0 (exact) | `results/program_o/full_des_hpi_translation_v1/validation_custody_verdict_v1.json@9dc23deda568` |
+| L1 physical opportunity | all (safe oracle) | H_PI = 0.15151 | LCB95 = 0.11562 | fungible null = 0 (exact) | `results/program_o/full_des_hpi_translation_v1/validation_custody_verdict_v1.json@9dc23deda568` |
 | L2 classical H_obs | rho75_share90 | LCB95 = +0.06595 | 44/48 favorable | placebos 27/27=True; CVaR10 LCB -0.0086 (pt +0.0350) | `results/program_o/fixed_clock_hobs_corrective_validation_v1/independent_audit_v1.json@7fffbc30aef4` |
 | L2 classical H_obs | rho90_share75 | LCB95 = +0.04303 | 42/48 favorable | placebos 27/27=True; CVaR10 LCB -0.0155 (pt +0.0195) | `results/program_o/fixed_clock_hobs_corrective_validation_v1/independent_audit_v1.json@7fffbc30aef4` |
 | L2 classical H_obs | rho90_share90 | LCB95 = +0.05860 | 46/48 favorable | placebos 27/27=True; CVaR10 gate met | `results/program_o/fixed_clock_hobs_corrective_validation_v1/independent_audit_v1.json@7fffbc30aef4` |
