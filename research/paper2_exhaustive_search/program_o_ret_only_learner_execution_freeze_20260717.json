@@ -1,0 +1,60 @@
+{
+  "schema_version": "program_o_ret_only_learner_execution_freeze_v1",
+  "status": "FROZEN_BEFORE_748_SCIENTIFIC_SEEDS",
+  "run_id": "program-o-ret-only-learner-v1-20260717",
+  "scientific_source_commit": "e84ddf7e42241051c6741d9851bb142bc2a2b05b",
+  "contract": "contracts/program_o_ret_only_learner_v1.json",
+  "contract_sha256": "4d36157f84cc15d30be53a82514b2a5a2b20561b8425a50f8c2862436175b7b2",
+  "source_hashes": {
+    "supply_chain/program_o_ret_env.py": "863a7f67320450377010362a8a6d5ff40064814e212a4636459dd22b7c8846ea",
+    "supply_chain/program_o_ret_freeze.py": "6f3cebde7d21e77127d58142bde889209e1544cd4354cdbfff9c7ad2038fd599",
+    "supply_chain/program_o_state_rich.py": "f81fcbb2f615b869d7774cb11adb819d64f5a23c02257bbb328190fc1d1e11a6",
+    "supply_chain/program_o_full_des_transducer.py": "934a8782cbdc8740541916955d90ac230ac1aa416b24090fc22de82da740818b",
+    "scripts/train_program_o_ret_learner.py": "6ade20740eef4b4e02f10ae221fe33ad0a6e1a1e8f326ca105f28799d252bf24",
+    "scripts/evaluate_program_o_ret_learner.py": "78f0472d67065b81a58fa67d5ccdd35df566a68476d4c0809275779a0f9e8b7e",
+    "scripts/audit_program_o_ret_learner_full_des.py": "efce0603f73fb2993b945171d63799dda672eacdbbdafe43864b1e1b5f912a1d",
+    "scripts/launch_program_o_ret_learner.sh": "bf9792c3a5d69156b2c719d545c43a2b33cfebb8e72b0a893378bd9198d38022",
+    "tests/test_program_o_ret_env.py": "3795732cc8901b850800900513cb97244d1b16a7b5223332dcbcb2c628b8d611"
+  },
+  "preflight": {
+    "focused_tests": "59 passed",
+    "lint": "PASS",
+    "compile": "PASS",
+    "nonscientific_smoke_seed": 94800001,
+    "nonscientific_smoke_requested_steps": 16,
+    "nonscientific_smoke_executed_steps": 512,
+    "nonscientific_smoke_result": "PASS",
+    "scientific_seed_opened": false
+  },
+  "tape_custody": {
+    "training": [748100001, 748350250],
+    "comparator_calibration": [7480001, 7480048],
+    "virgin_confirmation": [7480101, 7480148],
+    "all_status": "RESERVED_UNOPENED"
+  },
+  "execution": {
+    "required_worktree_branch": "codex/program-o-ret-only-learner",
+    "training_entrypoint": "scripts/launch_program_o_ret_learner.sh",
+    "training_command": "setsid bash scripts/launch_program_o_ret_learner.sh RUN_ROOT",
+    "calibration_command": ".venv/bin/python scripts/evaluate_program_o_ret_learner.py --models RUN_ROOT/models --output RUN_ROOT/calibration --phase calibration",
+    "direct_audit_command": ".venv/bin/python scripts/audit_program_o_ret_learner_full_des.py --evaluation RUN_ROOT/calibration --output RUN_ROOT/calibration_direct_audit",
+    "confirmation_requires_calibration_pass_and_independent_authorization": true,
+    "confirmation_command": ".venv/bin/python scripts/evaluate_program_o_ret_learner.py --models RUN_ROOT/models --output RUN_ROOT/confirmation --phase confirmation",
+    "overwrite_forbidden": true,
+    "running_job_is_evidence": false
+  },
+  "session_custody": {
+    "launcher_records": ["commit", "launcher_pid", "sid", "pgid", "producer_pids", "started_utc", "finished_utc"],
+    "required_status_sequence": ["RUNNING", "COMPLETE_PENDING_EVALUATION"],
+    "watcher_requirement": "A separate persistent watcher must record the run root, launcher SID/PGID, resume cursor, status transitions, terminal producer exits, and checksum completion.",
+    "complete_model_hash_manifest_required": true,
+    "raw_matrix_hash_manifest_required_after_evaluation": true
+  },
+  "claim_boundary": {
+    "historical_program_o_status_unchanged": "STOP_PROGRAM_O_AFTER_CORRECTIVE_VALIDATION",
+    "learner_result_exists": false,
+    "paper2_learned_confirmed": false,
+    "paper3_authorized": false,
+    "relevant_risk_sensitivity_is_secondary_and_not_authorized_by_this_freeze": true
+  }
+}
