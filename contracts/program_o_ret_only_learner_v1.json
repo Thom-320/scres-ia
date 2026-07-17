@@ -1,0 +1,112 @@
+{
+  "schema_version": "program_o_ret_only_learner_v1",
+  "status": "DRAFT_PENDING_SOURCE_HASH_AND_EXECUTION_FREEZE",
+  "scientific_scope": "Prospective learned-control study in the disclosed two-product Program O researcher extension. The historical STOP_PROGRAM_O_AFTER_CORRECTIVE_VALIDATION remains unchanged.",
+  "genealogy": {
+    "historical_joint_contract_status": "STOP_PROGRAM_O_AFTER_CORRECTIVE_VALIDATION",
+    "confirmed_result": "Classical observable feedback has a positive canonical-ReT advantage in three connected cells with 27/27 information placebos, equal scheduled resources and direct state dependence.",
+    "unconfirmed_result": "Simultaneous CVaR10 non-inferiority was not established in two cells.",
+    "new_endpoint_decision": "Canonical ReT is the sole promotion endpoint for Program O-R. CVaR10 is secondary and cannot promote or block.",
+    "not_a_rescue": true
+  },
+  "physics": {
+    "parent": "contracts/program_o_fixed_clock_hobs_corrective_validation_v1.json",
+    "metric": "ret_excel_request_snapshot_v2",
+    "downstream_freight_physics_mode": "fixed_clock_physical_v1",
+    "decision_weeks": 8,
+    "actions": [0, 1, 2, 3],
+    "batch_slots_per_week": 3,
+    "products": ["P_C", "P_H"],
+    "risks_enabled_primary": false,
+    "no_physics_change": true
+  },
+  "cells": [
+    {"id": "rho75_share90", "regime_persistence": 0.75, "dominant_share": 0.90},
+    {"id": "rho90_share75", "regime_persistence": 0.90, "dominant_share": 0.75},
+    {"id": "rho90_share90", "regime_persistence": 0.90, "dominant_share": 0.90}
+  ],
+  "observation": {
+    "implementation": "supply_chain/program_o_ret_env.py",
+    "dimension": 21,
+    "fixed_belief_model_parameters": {"regime_persistence": 0.75, "dominant_product_share": 0.90},
+    "fixed_model_rule": "The belief model is fixed across all cells; true sensitivity-cell rho/share is forbidden.",
+    "allowed": ["product on-hand", "locked pipeline", "backlog quantity/count/age", "in-flight quantity", "frozen HMM belief/predicted share", "previous action", "public phase"],
+    "forbidden": ["latent regime", "future demand", "tape seed/hash", "true cell parameters", "oracle calendar", "score-time metrics"],
+    "same_time_rule": "strictly half-open"
+  },
+  "learner": {
+    "algorithm": "sb3_contrib.RecurrentPPO",
+    "policy": "MlpLstmPolicy",
+    "learner_seeds": [8101, 8102, 8103, 8104, 8105, 8106, 8107, 8108, 8109, 8110],
+    "requested_timesteps_per_seed": 200000,
+    "executed_timesteps_per_seed": 200192,
+    "rollout_rounding_disclosure": "RecurrentPPO completes 391 rollouts of n_steps=512; changing n_steps after this smoke is forbidden.",
+    "checkpoint_rule": "final checkpoint only",
+    "policy_kwargs": {"lstm_hidden_size": 64, "net_arch": [64, 64]},
+    "hyperparameters": {"learning_rate": 0.0003, "n_steps": 512, "batch_size": 64, "gamma": 0.99, "gae_lambda": 0.95, "clip_range": 0.2, "ent_coef": 0.01},
+    "reward": "zero for decisions 1-7; terminal ret_excel_request_snapshot_v2 only",
+    "architecture_or_checkpoint_search": false
+  },
+  "tape_custody": {
+    "nonscientific_smoke": 94800001,
+    "training": [748100001, 748350250],
+    "training_partition": "25,024 stepped training tapes plus one reset-only sentinel per learner seed; 250,250 opened skeletons total",
+    "comparator_calibration": [7480001, 7480048],
+    "virgin_confirmation": [7480101, 7480148],
+    "open_before_execution_freeze": false
+  },
+  "comparators": {
+    "open_loop": "complete 65,536-calendar frontier; maximum mean, never per-tape post-hoc maximum",
+    "classical": "maximum mean over all ten frozen state-rich configurations",
+    "named": ["belief_mpc__3", "belief_mpc__4", "modal", "phase_only", "frequency_matched"],
+    "bootstrap_reselection": "reselect family maximum mean inside each bootstrap resample"
+  },
+  "primary_gates": {
+    "estimands": ["H_learned = learner - max(open_loop)", "H_neural = learner - max(classical)"],
+    "simultaneous_lcb95_minimum_each_cell": 0.01,
+    "favorable_tapes_minimum_each_cell": 34,
+    "positive_learner_seeds_minimum": 8,
+    "trajectory_feedback_required": true,
+    "fixed_calendar_collapse_forbidden": true
+  },
+  "integrity_gates": {
+    "scheduled_resource_equality_exact": true,
+    "mass_and_partition_conservation_exact": true,
+    "all_generated_demand_remains_in_ledger": true,
+    "noninferiority_margin": -0.02,
+    "noninferiority_metrics": ["ret_full", "quantity_ret_full", "worst_product_fill"]
+  },
+  "secondary_only": ["ret_visible_cvar10", "service_loss_auc", "backlog age", "lost/unresolved", "actual transport utilization"],
+  "risk_sensitivity": {
+    "status": "DESIGN_ONLY_DOES_NOT_BLOCK_PRIMARY_AND_CANNOT_RESCUE_IT",
+    "principle": "Garrido-style mechanism masks: activate only risks touching the product-mix line or the demand it serves.",
+    "directly_relevant_risks": {
+      "R11": "Op5/Op6 workstation breakdowns",
+      "R14": "Op7 quality defects",
+      "R21": "Op5/Op6/Op7 and Op9 simultaneous capacity loss",
+      "R24": "Op13 contingent demand surge"
+    },
+    "negative_control": {"R22": "product-blind downstream LOC disruption"},
+    "excluded": ["R12", "R13", "R23", "R3"],
+    "frozen_executable_masks": [
+      ["R11", "R14"],
+      ["R21"],
+      ["R11", "R14", "R21"],
+      ["R22"]
+    ],
+    "deferred_masks": {
+      "masks": [["R24"], ["R11", "R14", "R24"], ["R11", "R14", "R21", "R24"]],
+      "status": "BLOCKED_UNTIL_PRODUCT_LABEL_AND_LEDGER_RULE_FOR_CONTINGENT_DEMAND_IS_FROZEN"
+    },
+    "levels": ["thesis_current", "thesis_severe"],
+    "sequence": "Evaluate the frozen risk-off learner first. Run frozen-policy OOD sensitivity second. Fine-tuning requires a later preregistration and cannot alter the primary verdict."
+  },
+  "terminal_rules": {
+    "pass": "PASS_PROGRAM_O_R_RET_ONLY_LEARNED_AND_NEURAL_VALUE",
+    "fail": "STOP_PROGRAM_O_R_NO_LEARNED_VALUE_OVER_CLASSICAL_FRONTIER",
+    "no_post_result_changes": true,
+    "paper3_authorized_only_on_pass": true
+  },
+  "domain_boundary": "Internal result is a disclosed researcher extension until Garrido confirms nonfungible ration classes sharing Op5-Op7 capacity and the ReT timestamp semantics.",
+  "source_hashes": {}
+}

@@ -291,6 +291,7 @@ def extract_full_des_skeleton(
     regime_persistence: float,
     dominant_share: float,
     decision_weeks: int = 8,
+    downstream_freight_physics_mode: str = "loaded_only",
 ) -> tuple[FullDESSkeleton, ProgramOFullDESSimulation]:
     """Run one direct calendar and extract only action-independent events."""
     sim = ProgramOFullDESSimulation(
@@ -300,6 +301,7 @@ def extract_full_des_skeleton(
         regime_persistence=float(regime_persistence),
         dominant_share=float(dominant_share),
         complete_substitution=False,
+        downstream_freight_physics_mode=str(downstream_freight_physics_mode),
     ).run_contract()
     arrivals: dict[tuple[int, int], float] = {}
     for event in sim.program_o_product_events:
