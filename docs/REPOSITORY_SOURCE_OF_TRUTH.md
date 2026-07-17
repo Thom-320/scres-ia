@@ -109,6 +109,26 @@ It is not accurate to claim:
 The portfolio-level machine-readable boundary is
 `research/paper2_exhaustive_search/paper2_current_boundary_certificate_20260716.json`.
 
+## Guardrail taxonomy and the conditional ReT-centred route (2026-07-17)
+
+`docs/GUARDRAIL_TAXONOMY_AUDIT_2026-07-17.md` classifies every terminal closure: Class A
+(canonical-construct failure), Class B (identification guards — resources, placebos, anti-shed —
+non-negotiable under any construct reading), Class C (deployability preferences beyond the source
+construct, e.g. tail/CVaR non-inferiority). **CVaR appears as a closure reason only in the
+Program O corrective validation — exactly one candidate reopening.** The route to a learner is
+strictly sequential and prospectively gated:
+
+1. Garrido's written, dated answer to **M2** (operational acceptance criterion: mean canonical
+   ReT vs binding worst-theatre/worst-campaign requirements; two-sided wording, frozen
+   interpretation rule);
+2. the frozen **`contracts/cvar_gate_instrument_audit_v1.json`** (power / oracle control /
+   trivial-equivalence control of the zero-margin gate; burned tapes only; report-only margins);
+3. adjudication by the **independent auditor** — never by the implementing side;
+4. only then a new frozen learner contract (`program_o_ret_learner_v1`) on fresh sealed tapes,
+   with Class-B guards intact and CVaR as secondary reporting.
+
+`STOP_PROGRAM_O_AFTER_CORRECTIVE_VALIDATION` remains immutable under every branch of this route.
+
 ## Metric and domain status
 
 Program O used `ret_excel_request_snapshot_v2` as its frozen canonical primary
