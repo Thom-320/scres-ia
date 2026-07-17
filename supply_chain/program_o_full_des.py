@@ -276,11 +276,18 @@ class ProgramOFullDESSimulation(MFSCSimulation):
                 "fixed_clock_physical_v1"
             )
 
+        # Relevant-risk sensitivity starts from the same neutral Program O
+        # prefix as the historical risks-off contract.  Starting R14/R21
+        # during prefix construction can prevent the two-product warm-up from
+        # completing and makes the initial state policy/risk dependent.
+        # Therefore the parent starts with risks disabled; the requested risk
+        # generators are launched exactly when program_o_warmup_event fires.
+        self._program_o_requested_risks_enabled = bool(risks_enabled)
         super().__init__(
             shifts=1,
             seed=int(seed),
             horizon=20_000.0,
-            risks_enabled=bool(risks_enabled),
+            risks_enabled=False,
             enabled_risks=enabled_risks,
             risk_frequency_multipliers_by_id=risk_frequency_multipliers_by_id,
             stochastic_pt=False,
@@ -682,7 +689,29 @@ class ProgramOFullDESSimulation(MFSCSimulation):
             return
         super()._start_processes()
         self.env.process(self._program_o_action_controller())
+        if self._program_o_requested_risks_enabled:
+            self.env.process(self._program_o_post_warmup_risk_controller())
         self._program_o_processes_started = True
+
+    def _program_o_post_warmup_risk_controller(self):
+        """Launch the frozen relevant-risk generators after neutral warm-up."""
+        yield self.program_o_warmup_event
+        self.risks_enabled = True
+        risk_processes = {
+            "R11": self._risk_R11,
+            "R12": self._risk_R12,
+            "R13": self._risk_R13,
+            "R14": self._risk_R14,
+            "R21": self._risk_R21,
+            "R22": self._risk_R22,
+            "R23": self._risk_R23,
+            "R24": self._risk_R24,
+            "R3": self._risk_R3,
+        }
+        enabled = self.enabled_risks or set(risk_processes)
+        for risk_id, process_factory in risk_processes.items():
+            if risk_id in enabled:
+                self.env.process(process_factory())
 
     def run_contract(self) -> "ProgramOFullDESSimulation":
         self._start_processes()

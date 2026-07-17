@@ -27,6 +27,7 @@ def test_v11_contract_freezes_phi_one_and_fixed_controller_model():
         "dominant_share": 0.90,
     }
     assert contract["future_grid_if_authorized"]["selection_for_program_o_r"] is False
+    assert "after the common neutral" in contract["risks"]["activation"]
 
 
 def test_v11_has_no_g2_execution_surface():
