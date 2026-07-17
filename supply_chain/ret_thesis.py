@@ -442,6 +442,8 @@ def compute_order_level_ret_excel_request_snapshot_ledger(
     *,
     current_time: float | None = None,
     emit_order_ids: set[int] | None = None,
+    same_time_precedence: str = "events_before_snapshot",
+    force_reconstruct: bool = False,
 ) -> dict[str, Any]:
     """Reconstruct the workbook-visible ledger at request generation.
 
@@ -461,6 +463,10 @@ def compute_order_level_ret_excel_request_snapshot_ledger(
     validated when the adapter omits orders or event times.
     """
     del current_time  # the request snapshot is historical, not horizon-relative
+    if same_time_precedence not in {
+        "events_before_snapshot", "snapshot_before_events"
+    }:
+        raise ValueError("unknown same_time_precedence")
     order_list = sorted(
         list(orders),
         key=lambda order: (
@@ -488,7 +494,7 @@ def compute_order_level_ret_excel_request_snapshot_ledger(
         row_time = float(getattr(order, "OPTj", 0.0) or 0.0)
         explicit_bt = getattr(order, "ret_bt_at_request", None)
         explicit_ut = getattr(order, "ret_ut_at_request", None)
-        if explicit_bt is not None and explicit_ut is not None:
+        if explicit_bt is not None and explicit_ut is not None and not force_reconstruct:
             current_backorders = int(explicit_bt)
             cumulative_unattended = int(explicit_ut)
             snapshot_source = "captured_at_request"
@@ -514,12 +520,21 @@ def compute_order_level_ret_excel_request_snapshot_ledger(
                     if value is not None
                 ]
                 end_time = min(end_candidates) if end_candidates else float("inf")
-                if activation <= row_time < end_time:
+                if same_time_precedence == "events_before_snapshot":
+                    active_at_snapshot = activation <= row_time < end_time
+                    lost_before_snapshot = (
+                        lost_time is not None and float(lost_time) <= row_time
+                    )
+                else:
+                    active_at_snapshot = activation < row_time <= end_time
+                    lost_before_snapshot = (
+                        lost_time is not None and float(lost_time) < row_time
+                    )
+                if active_at_snapshot:
                     current_backorders += 1
                 if (
                     bool(getattr(candidate, "lost", False))
-                    and lost_time is not None
-                    and float(lost_time) <= row_time
+                    and lost_before_snapshot
                 ):
                     cumulative_unattended += 1
             snapshot_source = "reconstructed_from_complete_history"
@@ -563,6 +578,8 @@ def compute_order_level_ret_excel_request_snapshot_ledger(
         default=0,
     )
     return {
+        "same_time_precedence": same_time_precedence,
+        "force_reconstruct": bool(force_reconstruct),
         "contract_version": "ret_excel_request_snapshot_v2",
         "mean_ret_excel": (
             float(np.mean(visible_values)) if visible_values else 1.0

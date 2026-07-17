@@ -33,7 +33,7 @@ def code(text: str) -> dict:
 cells = [
     markdown(
         r"""
-        # Laboratorio Program O-R de David — PPO+DMLPA, DMLPA posicional y RecurrentPPO
+        # Laboratorio Program O-R de David — bakeoff completo de arquitecturas
 
         Este notebook permite **ver, editar y auditar** la arquitectura de David usando el entorno
         incremental real de Program O-R. Todo lo ejecutado aquí es desarrollo: usa exclusivamente
@@ -45,24 +45,25 @@ cells = [
         - `FriendDMLPAPositional`: la misma arquitectura con PE sinusoidal y `LayerNorm`.
         - Historia apilada configurable. Con el default, cuatro estados de 21 variables forman
           cuatro tokens temporales; David puede cambiar la longitud o el agrupamiento.
-        - `RecurrentPPO` como baseline de memoria.
-        - Hook explícito para `SAC-Discrete + DMLPA`. **SB3 SAC no sirve aquí** porque la acción
-          `k∈{0,1,2,3}` es discreta; David puede conectar su implementación sin cambiar el evaluador.
+        - PPO+MLP, PPO+historia y `RecurrentPPO` como controles.
+        - PPO+DMLPA fiel y posicional.
+        - SAC-Discrete+DMLPA fiel y posicional. **SB3 SAC no sirve aquí** porque la acción
+          `k∈{0,1,2,3}` es discreta; este notebook incluye SAC categórico funcional.
 
         ## Preset por defecto
 
-        `preliminary`: 3 seeds del optimizador × 50,000 pasos, 12 tapes por cada una de las tres
-        celdas. Es suficientemente serio para descartar arquitecturas malas, pero sigue siendo mucho
-        menor que el contrato científico (10 seeds × 200,000 pasos y 48 tapes selladas por celda).
+        `screen`: siete modelos × 3 seeds del optimizador × 50,000 pasos, 12 tapes por cada una de
+        las tres celdas. Es un filtro serio pero sigue siendo desarrollo no promocionable.
 
-        El resultado principal del notebook es `H_learned` contra los 65,536 calendarios open-loop y
-        `H_neural` contra la mejor configuración clásica elegida **por media del panel**, nunca por tape.
+        El resultado principal del notebook es `H_OL` contra los 65,536 calendarios open-loop y
+        `Delta_N` contra la mejor configuración clásica elegida **por media del panel**, nunca por
+        tape. Los nombres históricos `H_learned`/`H_neural` aparecen solo como aliases de lectura.
         """
     ),
     code(
         r"""
         # Celda 1 — configuración editable + guardia de seeds
-        import json, math, sys, time
+        import ast, hashlib, importlib.metadata, inspect, json, math, os, platform, shutil, sys, time
         from collections import deque
         from pathlib import Path
         from typing import Any
@@ -77,12 +78,15 @@ cells = [
         sys.path.insert(0, str(ROOT))
 
         # ── EDITA ESTO ────────────────────────────────────────────────────────────────
-        PRESET = "preliminary"  # "quick" | "preliminary" | "extended"
-        MODEL_KINDS_TO_RUN = ["ppo_dmlpa_positional"]
-        # Para comparar las tres familias:
-        # MODEL_KINDS_TO_RUN = ["ppo_dmlpa_faithful", "ppo_dmlpa_positional", "recurrent_ppo"]
-        # SAC de David, después de implementar build_sac_discrete_dmlpa():
-        # MODEL_KINDS_TO_RUN = ["sac_discrete_dmlpa"]
+        PRESET = os.environ.get("DAVID_PRESET", "screen")
+        DEFAULT_MODEL_KINDS = [
+            "ppo_mlp", "ppo_mlp_history", "recurrent_ppo",
+            "ppo_dmlpa_faithful", "ppo_dmlpa_positional",
+            "sac_discrete_dmlpa_faithful", "sac_discrete_dmlpa_positional",
+        ]
+        MODEL_KINDS_TO_RUN = json.loads(
+            os.environ.get("DAVID_MODEL_KINDS", json.dumps(DEFAULT_MODEL_KINDS))
+        )
 
         HISTORY_LENGTH = 4
         DMLPA_FEATURES_DIM = 120
@@ -90,11 +94,13 @@ cells = [
         DMLPA_NHEAD = 12
         DMLPA_NUM_LAYERS = 4
         SAVE_DEV_ARTIFACTS = True
+        FROZEN_CANDIDATE_MANIFEST = None  # obligatorio para full_training
 
         PRESETS = {
             "quick": dict(total_timesteps=10_000, optimizer_seeds=[9201], eval_tapes_per_cell=4),
-            "preliminary": dict(total_timesteps=50_000, optimizer_seeds=[9201, 9202, 9203], eval_tapes_per_cell=12),
-            "extended": dict(total_timesteps=100_000, optimizer_seeds=[9201, 9202, 9203, 9204, 9205], eval_tapes_per_cell=24),
+            "screen": dict(total_timesteps=50_000, optimizer_seeds=[9201, 9202, 9203], eval_tapes_per_cell=12),
+            "finalist": dict(total_timesteps=100_000, optimizer_seeds=[9201, 9202, 9203, 9204, 9205], eval_tapes_per_cell=24),
+            "full_training": dict(total_timesteps=200_192, optimizer_seeds=list(range(9301, 9311)), eval_tapes_per_cell=0),
         }
         CFG = PRESETS[PRESET]
         TOTAL_TIMESTEPS = CFG["total_timesteps"]
@@ -103,23 +109,30 @@ cells = [
 
         DEV_TRAIN_SEEDS = (949100001, 949199999)
         DEV_EVAL_SEEDS = list(range(949200001, 949200001 + EVAL_TAPES_PER_CELL))
-        FORBIDDEN = [(7420001, 7430999), (747000000, 748999999), (7480001, 7480999)]
 
         def assert_dev_seed(seed: int) -> None:
-            for lo, hi in FORBIDDEN:
-                if lo <= int(seed) <= hi:
-                    raise RuntimeError(f"SEED PROHIBIDA {seed}: rango científico [{lo}, {hi}]")
+            value = int(seed)
+            in_train = DEV_TRAIN_SEEDS[0] <= value <= DEV_TRAIN_SEEDS[1]
+            in_visible_eval = 949200001 <= value <= 949299999
+            if not (in_train or in_visible_eval):
+                raise RuntimeError(f"SEED PROHIBIDA {value}: el sandbox solo admite namespaces 9491*/9492*")
 
         for seed in [DEV_TRAIN_SEEDS[0], DEV_TRAIN_SEEDS[1], *DEV_EVAL_SEEDS]:
             assert_dev_seed(seed)
 
         allowed = {
             "ppo_dmlpa_faithful", "ppo_dmlpa_positional", "recurrent_ppo",
-            "sac_discrete_dmlpa", "ppo_mlp",
+            "sac_discrete_dmlpa_faithful", "sac_discrete_dmlpa_positional",
+            "ppo_mlp", "ppo_mlp_history",
         }
         unknown = set(MODEL_KINDS_TO_RUN) - allowed
         if unknown:
             raise ValueError(f"MODEL_KINDS desconocidos: {sorted(unknown)}")
+        if PRESET == "finalist" and len(MODEL_KINDS_TO_RUN) > 2:
+            raise RuntimeError("finalist admite máximo dos modelos")
+        if PRESET == "full_training":
+            if len(MODEL_KINDS_TO_RUN) != 1 or not FROZEN_CANDIDATE_MANIFEST:
+                raise RuntimeError("full_training exige un único candidato y manifiesto congelado")
 
         print("Guardia OK: solo seeds de desarrollo.")
         print({"preset": PRESET, "models": MODEL_KINDS_TO_RUN, "timesteps_per_seed": TOTAL_TIMESTEPS,
@@ -200,7 +213,7 @@ cells = [
             def __init__(self, observation_space, factor: int = 1, features_dim: int = 120,
                          hidden_dim: int = 100, nhead: int = 12, num_layers: int = 4):
                 super().__init__(observation_space, features_dim)
-                flat_dim = int(np.prod(observation_space.shape))
+                flat_dim = int(observation_space.shape[0])
                 if flat_dim % factor != 0:
                     raise ValueError(f"Observation dimension {flat_dim} no es divisible por factor={factor}")
                 if features_dim % nhead != 0:
@@ -230,7 +243,7 @@ cells = [
             def __init__(self, observation_space, factor: int = 1, features_dim: int = 120,
                          hidden_dim: int = 100, nhead: int = 12, num_layers: int = 4):
                 super().__init__(observation_space, features_dim)
-                flat_dim = int(np.prod(observation_space.shape))
+                flat_dim = int(observation_space.shape[0])
                 if flat_dim % factor != 0:
                     raise ValueError(f"Observation dimension {flat_dim} no es divisible por factor={factor}")
                 if features_dim % nhead != 0:
@@ -274,11 +287,11 @@ cells = [
         DMLPA = FriendDMLPAPositional
 
         def build_policy_kwargs(model_kind: str) -> dict[str, Any] | None:
-            if model_kind in {"ppo_mlp", "recurrent_ppo"}:
+            if model_kind in {"ppo_mlp", "ppo_mlp_history", "recurrent_ppo"}:
                 return None
-            if model_kind in {"ppo_dmlpa_faithful", "sac_discrete_dmlpa"}:
+            if model_kind in {"ppo_dmlpa_faithful", "sac_discrete_dmlpa_faithful"}:
                 extractor = FriendDMLPAFaithful
-            elif model_kind == "ppo_dmlpa_positional":
+            elif model_kind in {"ppo_dmlpa_positional", "sac_discrete_dmlpa_positional"}:
                 extractor = FriendDMLPAPositional
             else:
                 raise ValueError(f"MODEL_KIND desconocido: {model_kind}")
@@ -304,18 +317,51 @@ cells = [
         # Celda 4 — constructores de agentes + AUDIT de la red antes de entrenar
         from stable_baselines3 import PPO
         from sb3_contrib import RecurrentPPO
+        from scripts.discrete_sac_dmlpa import DiscreteSACAgent, DiscreteSACConfig
 
-        def build_sac_discrete_dmlpa(env, seed: int):
-            '''HOOK DE DAVID: conectar aquí SAC-Discrete. SB3.SAC NO admite Discrete(4).'''
-            raise NotImplementedError(
-                "Pega aquí tu SAC-Discrete y conserva la interfaz learn(total_timesteps=...) "
-                "+ predict(obs, deterministic=True). No uses stable_baselines3.SAC vanilla."
+        def architecture_source_for_audit(target) -> tuple[str, str]:
+            '''Return actual executable source; never hash a class repr as if it were code.'''
+            try:
+                return inspect.getsource(target), "inspect.getsource"
+            except (OSError, TypeError):
+                notebook_path = ROOT / "notebooks" / "david_sandbox_program_o_ret.ipynb"
+                payload = json.loads(notebook_path.read_text())
+                for cell in payload["cells"]:
+                    cell_source = "".join(cell.get("source", []))
+                    if "class FriendDMLPAFaithful" in cell_source and "class FriendDMLPAPositional" in cell_source:
+                        target_name = getattr(target, "__name__", "")
+                        tree = ast.parse(cell_source)
+                        for node in tree.body:
+                            if isinstance(node, ast.ClassDef) and node.name == target_name:
+                                lines = cell_source.splitlines(keepends=True)
+                                class_source = "".join(lines[node.lineno - 1:node.end_lineno])
+                                return class_source, "notebook_class_ast"
+                        return cell_source, "notebook_architecture_cell"
+                raise RuntimeError("No se pudo recuperar el código ejecutable DMLPA para auditarlo")
+
+        def build_sac_discrete_dmlpa(env, seed: int, positional: bool):
+            '''SAC categórico exacto; David puede editar esta fábrica sin tocar el evaluador.'''
+            extractor_class = FriendDMLPAPositional if positional else FriendDMLPAFaithful
+            extractor_kwargs = {
+                "factor": HISTORY_LENGTH, "features_dim": DMLPA_FEATURES_DIM,
+                "hidden_dim": DMLPA_HIDDEN, "nhead": DMLPA_NHEAD,
+                "num_layers": DMLPA_NUM_LAYERS,
+            }
+            return DiscreteSACAgent(
+                env=env, seed=seed, features_dim=DMLPA_FEATURES_DIM,
+                extractor_factory=lambda: extractor_class(env.observation_space, **extractor_kwargs),
+                config=DiscreteSACConfig(
+                    learning_rate=3e-4, gamma=0.99, tau=0.005,
+                    buffer_size=100_000, batch_size=256, learning_starts=2_000,
+                ),
             )
 
         def build_agent(model_kind: str, seed: int):
             env = make_env(model_kind)
             common = dict(env=env, verbose=0, seed=int(seed), learning_rate=3e-4, gamma=0.99)
-            if model_kind in {"ppo_dmlpa_faithful", "ppo_dmlpa_positional", "ppo_mlp"}:
+            if model_kind in {
+                "ppo_dmlpa_faithful", "ppo_dmlpa_positional", "ppo_mlp", "ppo_mlp_history"
+            }:
                 kwargs = build_policy_kwargs(model_kind)
                 return PPO(
                     "MlpPolicy", n_steps=512, batch_size=64, gae_lambda=0.95,
@@ -328,8 +374,10 @@ cells = [
                     policy_kwargs=dict(lstm_hidden_size=64, net_arch=dict(pi=[64, 64], vf=[64, 64])),
                     **common,
                 )
-            if model_kind == "sac_discrete_dmlpa":
-                return build_sac_discrete_dmlpa(env, seed)
+            if model_kind == "sac_discrete_dmlpa_faithful":
+                return build_sac_discrete_dmlpa(env, seed, positional=False)
+            if model_kind == "sac_discrete_dmlpa_positional":
+                return build_sac_discrete_dmlpa(env, seed, positional=True)
             raise ValueError(model_kind)
 
         def architecture_audit(agent, model_kind: str) -> dict[str, Any]:
@@ -337,14 +385,26 @@ cells = [
             total = sum(p.numel() for p in policy.parameters())
             trainable = sum(p.numel() for p in policy.parameters() if p.requires_grad)
             extractor = getattr(policy, "features_extractor", None)
+            source, source_origin = architecture_source_for_audit(
+                type(extractor) if extractor is not None else type(policy)
+            )
             report = {
                 "model_kind": model_kind,
                 "policy_class": type(policy).__name__,
+                "source_sha256": hashlib.sha256(source.encode()).hexdigest(),
+                "source_origin": source_origin,
                 "total_parameters": int(total),
                 "trainable_parameters": int(trainable),
                 "history_length": history_for(model_kind),
+                "temporal_tokens": history_for(model_kind),
                 "observation_shape": tuple(agent.get_env().observation_space.shape)
                     if hasattr(agent, "get_env") else None,
+                "device": str(agent.device),
+                "packages": {
+                    name: importlib.metadata.version(name)
+                    for name in ("torch", "gymnasium", "stable-baselines3", "sb3-contrib")
+                },
+                "python": platform.python_version(),
             }
             print("\n" + "═" * 78)
             print(json.dumps(report, indent=2))
@@ -354,15 +414,24 @@ cells = [
                 with torch.no_grad():
                     output = extractor(dummy)
                 print("entrada dummy:", tuple(dummy.shape), "→ salida extractor:", tuple(output.shape))
+                report["dummy_input_shape"] = tuple(dummy.shape)
+                report["extractor_output_shape"] = tuple(output.shape)
+                report["has_layer_norm"] = any(isinstance(m, torch.nn.LayerNorm) for m in extractor.modules())
                 if hasattr(extractor, "pos_encoding"):
                     print("positional encoding:", tuple(extractor.pos_encoding.shape))
+                    report["positional_encoding_shape"] = tuple(extractor.pos_encoding.shape)
+                else:
+                    report["positional_encoding_shape"] = None
+                print("\nCÓDIGO/CLASE AUDITADA:\n", source)
             print("═" * 78)
             return report
 
-        # Construye un ejemplar antes de gastar compute: David ve exactamente qué se entrenará.
-        AUDIT_AGENT = build_agent(MODEL_KINDS_TO_RUN[0], OPTIMIZER_SEEDS[0])
-        ARCHITECTURE_REPORT = architecture_audit(AUDIT_AGENT, MODEL_KINDS_TO_RUN[0])
-        del AUDIT_AGENT
+        # Construye un ejemplar de cada modelo antes de gastar compute.
+        ARCHITECTURE_REPORTS = {}
+        for _model_kind in MODEL_KINDS_TO_RUN:
+            _audit_agent = build_agent(_model_kind, OPTIMIZER_SEEDS[0])
+            ARCHITECTURE_REPORTS[_model_kind] = architecture_audit(_audit_agent, _model_kind)
+            del _audit_agent
         """
     ),
     code(
@@ -374,6 +443,7 @@ cells = [
 
         agents: dict[tuple[str, int], Any] = {}
         training_rows = []
+        model_files = []
         for model_kind in MODEL_KINDS_TO_RUN:
             for seed in OPTIMIZER_SEEDS:
                 print(f"\nEntrenando {model_kind} seed={seed} pasos={TOTAL_TIMESTEPS:,}")
@@ -385,7 +455,10 @@ cells = [
                 training_rows.append({"model": model_kind, "seed": seed, "timesteps": TOTAL_TIMESTEPS,
                                       "elapsed_seconds": elapsed})
                 if SAVE_DEV_ARTIFACTS and hasattr(agent, "save"):
-                    agent.save(RUN_ROOT / f"{model_kind}_seed{seed}.zip")
+                    suffix = ".pt" if model_kind.startswith("sac_discrete") else ".zip"
+                    model_path = RUN_ROOT / f"{model_kind}_seed{seed}{suffix}"
+                    agent.save(model_path)
+                    model_files.append(model_path)
                 print(f"listo en {elapsed/60:.1f} min")
 
         display(pd.DataFrame(training_rows))
@@ -557,6 +630,11 @@ cells = [
                 row_summary = {
                     "model": model_kind,
                     "cell": cell.cell_id,
+                    "H_OL": float(d_open.mean()),
+                    "H_OL_LCB05_dev": two_way_lcb95(d_open),
+                    "Delta_N": float(d_classical.mean()),
+                    "Delta_N_LCB05_dev": two_way_lcb95(d_classical, rng_seed=920101),
+                    # Legacy aliases retained so older David notebooks remain readable.
                     "H_learned": float(d_open.mean()),
                     "H_learned_LCB05_dev": two_way_lcb95(d_open),
                     "H_neural": float(d_classical.mean()),
@@ -578,7 +656,7 @@ cells = [
 
         summary_df = pd.DataFrame(summaries)
         display(summary_df)
-        print("\nLectura rápida: H_learned>0 = aprende frente a horarios fijos; H_neural>=0 = iguala/supera clásico.")
+        print("\nLectura rápida: H_OL>0 = aprende frente a horarios fijos; Delta_N>=0 = iguala/supera clásico.")
         print("Los LCB son exploratorios y NO simultáneos. resource_spread debe ser exactamente 0.")
         for key, value in detailed.items():
             print("\n", key)
@@ -597,7 +675,7 @@ cells = [
             "optimizer_seeds": OPTIMIZER_SEEDS,
             "history_length": HISTORY_LENGTH,
             "eval_tapes": DEV_EVAL_SEEDS,
-            "architecture": ARCHITECTURE_REPORT,
+            "architecture": ARCHITECTURE_REPORTS,
             "training": training_rows,
             "summary": summaries,
             "details": detailed,
@@ -609,7 +687,14 @@ cells = [
         if SAVE_DEV_ARTIFACTS:
             path = RUN_ROOT / "development_report.json"
             path.write_text(json.dumps(report, indent=2, default=str) + "\n")
+            checksums = []
+            for artifact in [*model_files, path]:
+                digest = hashlib.sha256(artifact.read_bytes()).hexdigest()
+                checksums.append(f"{digest}  {artifact.name}")
+            (RUN_ROOT / "files.sha256").write_text("\n".join(checksums) + "\n")
+            bundle = shutil.make_archive(str(RUN_ROOT), "zip", root_dir=RUN_ROOT)
             print("Reporte guardado en:", path)
+            print("Bundle descargable:", bundle)
         else:
             print(json.dumps(report["summary"], indent=2))
         """
@@ -620,11 +705,12 @@ cells = [
 
         1. Ejecutar primero `quick` para verificar que su código corre.
         2. Dejar visible el audit de arquitectura: extractor completo, parámetros, entrada y salida.
-        3. Usar `preliminary` sin cambiar tapes ni métricas para comparar propuestas.
-        4. No seleccionar un modelo porque ganó una sola seed o una sola celda.
-        5. Un candidato merece preregistro nuevo únicamente si muestra, de forma estable:
-           - `H_learned > 0`;
-           - `H_neural >= 0`;
+        3. Usar `screen` sin cambiar tapes ni métricas para comparar propuestas.
+        4. Usar `finalist` con máximo dos modelos; `full_training` requiere manifiesto congelado.
+        5. No seleccionar un modelo porque ganó una sola seed o una sola celda.
+        6. Un candidato merece preregistro nuevo únicamente si muestra, de forma estable:
+           - `H_OL > 0`;
+           - `Delta_N >= 0`;
            - feedback real y derrota de placebos;
            - recursos exactamente iguales;
            - guardrails sin deterioro material.

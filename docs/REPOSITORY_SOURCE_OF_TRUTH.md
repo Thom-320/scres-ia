@@ -155,3 +155,31 @@ among manufacturing, LOC and mission response, but lost to calibration-frozen co
 service-loss change -3.03% (worse). CRN, mass and equal team-hours passed. PPO was blocked and
 1120001+ stayed unopened. This is a confirmed adaptive-negative result under a declared
 high-authority extension; do not escalate the same efficacy/signal cell after observing it.
+
+## Program O and O-R terminal status (2026-07-17)
+
+This section supersedes any earlier sentence implying that no learner has shown state-dependent
+value relative to open-loop scheduling.
+
+- Program O remains `STOP_PROGRAM_O_AFTER_CORRECTIVE_VALIDATION`. Its mean canonical-ReT
+  conversion passed; its frozen joint CVaR10 tail gate did not. The numerical audit shows that
+  roughly +0.079 true tail improvement was needed for 80% joint power at 48 tapes. The later
+  interpretation correction explicitly retracts the label "instrument defect": the gate was
+  stringent and underpowered for small effects, not technically invalid.
+- Program O-R remains `STOP_CALIBRATION_NOT_ELIGIBLE` at scientific commit `821c8d8`. On held-out
+  calibration, RecurrentPPO beat the complete 65,536-calendar open-loop frontier in all three cells
+  with simultaneous lower bounds +0.0366 to +0.0663, genuine feedback and exact resource/demand
+  checks. It did not beat the best classical state-rich controller and its virgin block was not
+  opened.
+- Correct claim boundary: positive calibration evidence of learned adaptation over open-loop;
+  neural premium, independent replication, tail-safe deployment and retained-learning value are
+  not established.
+- Program Q is a separate prospective frozen-policy replication. CVaR10 is secondary there, while
+  resource equality, demand preservation, anti-shed/product floors, feedback and information
+  placebos remain fail-closed identification gates.
+
+Authoritative artifacts are `docs/PROGRAM_O_R_TERMINAL_VERDICT_2026-07-17.md`,
+`research/paper2_exhaustive_search/program_o_ret_calibration_v12_terminal_audit_20260717.json`, and
+`contracts/program_q_frozen_policy_replication_v1.json`. Paper 3 remains unauthorized until Program
+Q returns either `PASS_Q_NEURAL_PREMIUM` or
+`PASS_Q_LEARNED_ADAPTATION_CLASSICALLY_EQUIVALENT`.

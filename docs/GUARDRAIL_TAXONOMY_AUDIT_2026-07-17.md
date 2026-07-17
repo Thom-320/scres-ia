@@ -15,14 +15,14 @@ and which fail on the construct itself or on causal-identification guards?
   **Non-negotiable under any construct reading.**
 - **Class C — deployability preferences.** Standards beyond the source construct (tail-risk /
   CVaR non-inferiority). Legitimate to include, but their membership in the ACCEPTANCE rule is a
-  domain-owner decision → negotiable only with a written, dated Garrido sign-off (question M2),
-  and only prospectively (new contract), never retroactively.
+  prospectively declared research-contract decision. Garrido's written M2 answer controls external
+  and deployment interpretation, not internal authorization of a disclosed researcher extension.
 
 ## Audit table (every row traceable to a populated verdict artifact)
 
 | Programa | Razón terminal (artefacto) | Clase | ¿Reabre bajo ReT-only? |
 |---|---|---|---|
-| **Program O — corrective validation** | Mean canonical ReT **PASS** all 3 cells (LCB95 +0.043/+0.059/+0.066; 42/44/46 de 48; 27/27 placebos; 1,451 replays 0 fallos) — falla SOLO `ret_visible_cvar10` joint LCB95 −0.0086/−0.0155 con puntos +0.035/+0.020 (`results/program_o/fixed_clock_hobs_corrective_validation_v1/independent_audit_v1.json`) | **C** | **SÍ — la única reapertura.** Vía: M2 sign-off → adjudicación del auditor → contrato learner nuevo. El STOP del contrato congelado NO se reescribe. |
+| **Program O — corrective validation** | Mean canonical ReT **PASS** all 3 cells (LCB95 +0.043/+0.059/+0.066; 42/44/46 de 48; 27/27 placebos; 1,451 replays 0 fallos) — falla SOLO `ret_visible_cvar10` joint LCB95 −0.0086/−0.0155 con puntos +0.035/+0.020 (`results/program_o/fixed_clock_hobs_corrective_validation_v1/independent_audit_v1.json`) | **C** | Única familia que justificó un sucesor ReT-primary prospectivo: Program O-R. El STOP histórico no se reabre ni reescribe. |
 | Program O — label-only controller | Ventaja coincidente con +388 vehicle-hours / ~20k raciones extra (recursos no conservados) | B | No — confound causal, no preferencia |
 | Program I GP region (≡ ancla op11) | `qualifies_new_lane:false` por worst-CSSU fill −0.13 vs −0.02 y attended −0.09..−0.28 (`results/headroom_gsa/oos_guardrail_check.json`) | B | No — reabrirlo legitima shed-to-win (el "win" agregado mata de hambre un teatro). Solo un M2 que NIEGUE pisos de servicio por teatro lo movería a clase C — improbable y no recomendado |
 | D1 rationing (§6.5.4 cap-60) | Valor estado-dependiente ≈ +0.0011 EN ReT canónico (`results/program_d/d1_branching/verdict.json`: `STOP_NO_STATE_DEPENDENT_RATIONING_HEADROOM`; frontier `d1_v3_visible_frontier`) | A | No. Nota de paper: el hallazgo ESTÁTICO `spt_flat` (+0.0105) falló además `service_loss_5pct_ci_positive` — criterio clase-C menor; citable como limitación, no reabre nada adaptativo |
@@ -46,12 +46,11 @@ exactamente una reapertura candidata — Program O.**
 
 Retrospective CVaR panels are computable on burned tapes (Program O cells, Program G, D1) as a
 SECONDARY cross-program tail-risk section. If informative, good addition; if not, nothing is lost
-— the acceptance rule under the source construct is canonical ReT (pending M2).
+— the new research acceptance rule uses canonical ReT; M2 remains an external-validity question.
 
 ## What this audit does NOT do
 
-It does not reweaken any Class-B guard, does not alter `STOP_PROGRAM_O_AFTER_CORRECTIVE_VALIDATION`
-(whose `no_post_failure_changes` covers thresholds and guardrails), and does not authorize any
-learner. The gate to a learner runs: M2 written sign-off → CVaR instrument audit
-(`cvar_gate_instrument_audit_v1`) → independent-auditor adjudication → new frozen contract on
-fresh sealed tapes.
+It does not reweaken any Class-B guard or alter `STOP_PROGRAM_O_AFTER_CORRECTIVE_VALIDATION`.
+The historical CVaR audit's numerical power curve is retained, but its `instrument defect` label
+is retracted by `CVAR_GATE_INSTRUMENT_AUDIT_INTERPRETATION_CORRECTION_2026-07-17.md`. Program O-R
+was authorized only by its independent prospective contract and has its own terminal verdict.

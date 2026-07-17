@@ -28,26 +28,37 @@ def test_david_architectures_and_audit_are_visible() -> None:
         "FEATURE EXTRACTOR COMPLETO",
         "total_parameters",
         "build_sac_discrete_dmlpa",
+        "DiscreteSACAgent",
         "RecurrentPPO",
         "HistoryStackWrapper",
+        "source_sha256",
+        "source_origin",
+        "notebook_class_ast",
+        "never hash a class repr as if it were code",
     )
     for token in required:
         assert token in source
 
 
-def test_default_is_bounded_multiseed_preliminary_run() -> None:
+def test_default_is_bounded_multiseed_screen() -> None:
     source = "\n".join("".join(cell["source"]) for cell in _notebook()["cells"])
-    assert 'PRESET = "preliminary"' in source
-    assert '"preliminary": dict(total_timesteps=50_000' in source
+    assert 'os.environ.get("DAVID_PRESET", "screen")' in source
+    assert '"screen": dict(total_timesteps=50_000' in source
     assert "optimizer_seeds=[9201, 9202, 9203]" in source
     assert "eval_tapes_per_cell=12" in source
-    assert 'MODEL_KINDS_TO_RUN = ["ppo_dmlpa_positional"]' in source
+    for model in (
+        "ppo_mlp", "ppo_mlp_history", "recurrent_ppo",
+        "ppo_dmlpa_faithful", "ppo_dmlpa_positional",
+        "sac_discrete_dmlpa_faithful", "sac_discrete_dmlpa_positional",
+    ):
+        assert f'"{model}"' in source
 
 
 def test_scientific_seed_ranges_are_rejected() -> None:
     source = "\n".join("".join(cell["source"]) for cell in _notebook()["cells"])
-    assert "(747000000, 748999999)" in source
-    assert "(7480001, 7480999)" in source
+    assert "949100001" in source
+    assert "949299999" in source
+    assert "el sandbox solo admite namespaces 9491*/9492*" in source
     assert "assert_dev_seed" in source
 
 

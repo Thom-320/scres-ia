@@ -337,3 +337,45 @@ def test_fallback_snapshot_uses_request_time_not_nonmonotone_order_id():
 
     row_result = next(item for item in result["ret_rows"] if item["j"] == 1)
     assert row_result["sum_bt"] == 1
+
+
+def test_same_time_semantic_sensitivity_is_explicit_and_default_is_unchanged():
+    prior = order(
+        j=1,
+        OPTj=0.0,
+        LTj=48.0,
+        OATj=60.0,
+        CTj=60.0,
+        ret_bt_at_request=None,
+        ret_ut_at_request=None,
+    )
+    visible = order(
+        j=2,
+        OPTj=60.0,
+        LTj=48.0,
+        OATj=108.0,
+        CTj=48.0,
+        ret_bt_at_request=None,
+        ret_ut_at_request=None,
+    )
+    default = compute_order_level_ret_excel_request_snapshot_ledger([prior, visible])
+    events_first = compute_order_level_ret_excel_request_snapshot_ledger(
+        [prior, visible], same_time_precedence="events_before_snapshot", force_reconstruct=True
+    )
+    snapshot_first = compute_order_level_ret_excel_request_snapshot_ledger(
+        [prior, visible], same_time_precedence="snapshot_before_events", force_reconstruct=True
+    )
+    default_row = next(row for row in default["ret_rows"] if row["j"] == 2)
+    events_row = next(row for row in events_first["ret_rows"] if row["j"] == 2)
+    snapshot_row = next(row for row in snapshot_first["ret_rows"] if row["j"] == 2)
+    assert default_row["sum_bt"] == events_row["sum_bt"] == 0
+    assert snapshot_row["sum_bt"] == 1
+    assert events_first["same_time_precedence"] == "events_before_snapshot"
+    assert snapshot_first["same_time_precedence"] == "snapshot_before_events"
+
+
+def test_unknown_same_time_precedence_fails_closed():
+    with pytest.raises(ValueError, match="same_time_precedence"):
+        compute_order_level_ret_excel_request_snapshot_ledger(
+            [], same_time_precedence="scheduler_luck"
+        )
