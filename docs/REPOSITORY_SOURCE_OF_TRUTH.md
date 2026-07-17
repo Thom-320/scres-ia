@@ -152,3 +152,15 @@ When documents disagree, use:
 3. the Program O corrective independent audit and verdict;
 4. the full-DES HPI custody verdict;
 5. dated historical verdicts and older claim registries.
+
+## Program O-R learner stage (2026-07-17/18 addendum)
+
+Terminal: `STOP_CALIBRATION_NOT_ELIGIBLE` (compound gate; commit `821c8d8`). Separated
+preregistered estimands: **H_OL (learner vs complete 65,536 open-loop frontier) POSITIVE in all
+3 cells** (LCB95 +0.037..+0.066, 41-44/48 favorable, feedback/placebos/resources/replay clean);
+**Δ_N (learner vs best classical belief controller) ≈ 0** (LCB95 −0.008..−0.014). Reading:
+*learned adaptation real; no neural premium over structured decision theory.* Virgin 7480101-48
+sealed forever. Prospective replication frozen as
+`contracts/program_q_frozen_policy_replication_v1.json` (N=128/cell by frozen power rule, block
+7490001+, four terminal outcomes, David-challenger clause). See
+`docs/PAPER2_CLAIM_LADDER_2026-07-18.md`.

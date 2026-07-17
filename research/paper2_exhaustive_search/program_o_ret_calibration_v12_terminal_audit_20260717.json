@@ -1,0 +1,95 @@
+{
+  "schema_version": "program_o_ret_calibration_v12_terminal_audit_v1",
+  "created_at": "2026-07-17T22:12:08Z",
+  "program": "program_o_ret_only_learner_v1",
+  "historical_program_o_verdict_unchanged": "STOP_PROGRAM_O_AFTER_CORRECTIVE_VALIDATION",
+  "prospective_program_or_calibration_verdict": "STOP_CALIBRATION_NOT_ELIGIBLE",
+  "claim_boundary": "The calibration is scientifically complete and failed its frozen promotion gates. The confirmation block remains sealed. The FAILED_INFRASTRUCTURE label is a launcher-control-flow defect and does not invalidate or promote the scientific result.",
+  "execution": {
+    "git_commit": "f2167ee945129d7e2da02699918e91a9e83f726f",
+    "contract_sha256": "5442e8a9e4de33a7e02e443cabc163a5acd396424b6614ab03ea4fe10c78c752",
+    "calibration_seed_range": [7480001, 7480048],
+    "confirmation_seed_range": [7480101, 7480148],
+    "watcher_ready_at_utc": "2026-07-17T21:15:06.010512+00:00",
+    "producer_started_at_utc": "2026-07-17T21:15:07Z",
+    "scientific_artifacts_finished_at_utc": "2026-07-17T22:07:57Z",
+    "producer_pid": 1474034,
+    "producer_pgid": 1474034,
+    "producer_sid": 1474034
+  },
+  "retrieval_and_integrity": {
+    "retrieved_path": "/private/tmp/program-o-ret-calibration-v12-20260717-retrieved",
+    "retrieved_size": "153M",
+    "remote_manifest_entries_verified": 165,
+    "raw_matrix_entries_verified": 144,
+    "evaluation_manifest_entries_verified": 146,
+    "direct_audit_manifest_entries_verified": 1,
+    "all_sha256_manifests_passed_locally": true,
+    "remote_files_manifest_sha256": "95426835b12f198508b14dcc45710f2481e8453c934df8abfc8a6d3e92a55604",
+    "evaluation_result_sha256": "dc55880f0dca92e3c51c0690203736835ef75b8247dc1716e2cc6f9b5f0a54fd",
+    "direct_audit_sha256": "790550848f06565901fa95c4b28a9448715f7169b6610023aea0451aa762366c",
+    "adjudication_sha256": "290132773d46db814ade0d821ed29867a32f84daf6172ce9713be6b69097a666"
+  },
+  "scientific_result": {
+    "direct_full_des_audit_passed": true,
+    "direct_unique_replays": 990,
+    "direct_audit_failure_count": 0,
+    "maximum_direct_replay_error": 5.551115123125783e-16,
+    "passed_gates": {
+      "demand_preservation": true,
+      "information_placebos_executed_and_beaten": true,
+      "scheduled_resource_equality_exact": true,
+      "trajectory_feedback": true
+    },
+    "failed_gates": {
+      "base_lcb": false,
+      "base_cells": false
+    },
+    "cells": {
+      "rho75_share90": {
+        "H_learned_estimate": 0.07575755307277598,
+        "H_learned_lcb95": 0.04322581779229105,
+        "H_neural_estimate": -0.001645866256585582,
+        "H_neural_lcb95": -0.00878915373785542,
+        "favorable_tapes_vs_open_loop": 41,
+        "favorable_tapes_vs_classical": 21,
+        "positive_learner_seeds_vs_both": 1
+      },
+      "rho90_share75": {
+        "H_learned_estimate": 0.06261198671266455,
+        "H_learned_lcb95": 0.03659344336503134,
+        "H_neural_estimate": -0.0027324544170865828,
+        "H_neural_lcb95": -0.013997239559772895,
+        "favorable_tapes_vs_open_loop": 42,
+        "favorable_tapes_vs_classical": 22,
+        "positive_learner_seeds_vs_both": 0
+      },
+      "rho90_share90": {
+        "H_learned_estimate": 0.1045500387434144,
+        "H_learned_lcb95": 0.06629718714588984,
+        "H_neural_estimate": -0.001496518554404025,
+        "H_neural_lcb95": -0.008283032412981978,
+        "favorable_tapes_vs_open_loop": 44,
+        "favorable_tapes_vs_classical": 24,
+        "positive_learner_seeds_vs_both": 2
+      }
+    },
+    "interpretation": "The recurrent learner robustly beats the full open-loop frontier in all three cells, but does not beat the best classical state-rich controller. Therefore it fails the frozen H_neural, favorable-tape-versus-classical, and positive-seed-versus-both requirements."
+  },
+  "confirmation_custody": {
+    "independent_authorization_created": false,
+    "local_artifact_filename_hits_for_confirmation_seeds": 0,
+    "remote_artifact_filename_hits_for_confirmation_seeds": 0,
+    "remote_non_source_content_hits_for_confirmation_seeds": 0,
+    "live_confirmation_process_hits": 0,
+    "status": "VERIFIED_SEALED_AFTER_CALIBRATION_STOP"
+  },
+  "launcher_defect": {
+    "observed_wrapper_status": "FAILED_INFRASTRUCTURE",
+    "actual_adjudication_status": "STOP_CALIBRATION_NOT_ELIGIBLE",
+    "cause": "The launcher installs an ERR trap whose handler exits. The adjudicator intentionally returns 1 for a scientific STOP; although invoked after set +e, the ERR trap still runs and exits before adjudication_rc is captured and terminal custody is written.",
+    "impact": "Custody terminal labels and progress remained stale, but all scientific artifacts and their manifests were already written, retrieved, and verified. No tape rerun is authorized.",
+    "prospective_fix": "Future launchers must capture the adjudicator return code in an if/else construct that does not trigger ERR, and must label scientific STOP as completed adjudication. The frozen launcher and this result are not rewritten post hoc."
+  },
+  "next_action": "Do not execute confirmation. Preserve this STOP and use the completed calibration only as evidence that learned feedback exceeded open-loop schedules but provided no incremental value over the classical frontier."
+}
