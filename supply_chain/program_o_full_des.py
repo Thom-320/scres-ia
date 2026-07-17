@@ -248,7 +248,13 @@ class ProgramOFullDESSimulation(MFSCSimulation):
         demand_offsets_hours: Sequence[float] = (30, 54, 78, 102, 126, 150),
         clearance_hours: float = 1344.0,
         downstream_freight_physics_mode: str = "loaded_only",
+        risks_enabled: bool = False,
+        enabled_risks: set[str] | None = None,
+        risk_frequency_multipliers_by_id: dict[str, float] | None = None,
     ) -> None:
+        # Relevant-risk pass-through (contract program_o_relevant_risk_sensitivity_v1):
+        # defaults reproduce the historical risks-off physics BIT-EXACTLY; when enabled, the
+        # parent's fidelity-verified risk machinery (exact thinning per risk id) drives events.
         if not 1 <= len(calendar) <= 8 or any(
             int(value) not in range(4) for value in calendar
         ):
@@ -274,7 +280,9 @@ class ProgramOFullDESSimulation(MFSCSimulation):
             shifts=1,
             seed=int(seed),
             horizon=20_000.0,
-            risks_enabled=False,
+            risks_enabled=bool(risks_enabled),
+            enabled_risks=enabled_risks,
+            risk_frequency_multipliers_by_id=risk_frequency_multipliers_by_id,
             stochastic_pt=False,
             deterministic_baseline=False,
             warmup_trigger="op9_arrival",
@@ -870,6 +878,9 @@ def run_program_o_full_des_episode(
     dominant_share: float,
     complete_substitution: bool = False,
     downstream_freight_physics_mode: str = "loaded_only",
+    risks_enabled: bool = False,
+    enabled_risks: set[str] | None = None,
+    risk_frequency_multipliers_by_id: dict[str, float] | None = None,
 ) -> tuple[ProgramOFullDESSimulation, dict[str, Any]]:
     sim = ProgramOFullDESSimulation(
         seed=int(seed),
@@ -879,5 +890,8 @@ def run_program_o_full_des_episode(
         dominant_share=float(dominant_share),
         complete_substitution=bool(complete_substitution),
         downstream_freight_physics_mode=str(downstream_freight_physics_mode),
+        risks_enabled=bool(risks_enabled),
+        enabled_risks=enabled_risks,
+        risk_frequency_multipliers_by_id=risk_frequency_multipliers_by_id,
     ).run_contract()
     return sim, sim.product_outcome_panel()
