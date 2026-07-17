@@ -8,8 +8,11 @@ fi
 
 run_root=$1
 if [[ -e "$run_root" ]]; then
-  echo "refusing to overwrite existing run root: $run_root" >&2
-  exit 2
+  unexpected=$(find "$run_root" -mindepth 1 -maxdepth 1 ! -name custody -print -quit)
+  if [[ -n "$unexpected" ]]; then
+    echo "refusing to overwrite initialized run root: $run_root" >&2
+    exit 2
+  fi
 fi
 mkdir -p "$run_root/models" "$run_root/logs" "$run_root/custody" "$run_root/artifacts/training"
 
