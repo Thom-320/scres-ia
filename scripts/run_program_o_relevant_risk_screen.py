@@ -36,7 +36,7 @@ def frozen_scheduler():
 OUT_DIR = ROOT / "results/program_o/relevant_risk_sensitivity_v1"
 CELL = "rho90_share90"                      # frozen primary cell (contract)
 CELL_PARAMS = {"regime_persistence": 0.90, "dominant_share": 0.90}
-INCLUDED = ["R11", "R14", "R21", "R22", "R24"]
+INCLUDED = ["R11", "R14", "R21", "R22"]   # R24 excluded pre-execution (amendment 2026-07-17): no P_C/P_H label
 G1_PHI = 4.0
 G0_TOL = 1e-9
 

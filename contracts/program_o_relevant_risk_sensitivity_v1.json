@@ -3,6 +3,8 @@
   "schema_version": "program_o_relevant_risk_sensitivity_v1",
   "date_frozen": "2026-07-17",
   "status": "FROZEN_DESIGN_BEFORE_IMPLEMENTATION_AND_ANY_EXECUTION",
+  "amendment_2026_07_17_pre_execution": "R24 moved from included to excluded pending domain fact P1: contingent demand at Op13 carries NO product label (P_C/P_H/mix), so in the two-product world its effect on the MIX decision is scientifically undefined. Caught at the risk-fixture stage (G1) before any G2 map was read; concurred with independently by the auditor. This is a validity REDUCTION (a risk removed for ill-definition), not a post-hoc extension to find a win, and no G2 result had been produced. Included set is now the four product-well-defined risks; grid recomputed to 15 configs.",
+
   "scientific_question": "Program O's product-mix mechanism -- the only decision variable with confirmed observable adaptive value on canonical ReT -- was established with risks_enabled=False (demand-regime uncertainty only). Does that adaptive value survive, grow, or die when the thesis's OWN operational risks relevant to the mechanism's operations are activated and escalated, Garrido-style (only relevant risks on)?",
   "method_lineage": "Garrido thesis section 6.4/6.7: activate only the risks relevant to the operations under study, one-factor-at-a-time frequency escalation. This contract applies his own method to the one mechanism his construct rewards.",
   "not_a_rescue": {
@@ -15,10 +17,10 @@
       "R11": "workstation breakdowns -- hits Op5/Op6 (thesis Table 6.6b: U(1,168) occurrence, exp(beta=2h) repair)",
       "R14": "quality problems -- hits Op7 (Binomial n=2564 p=3/100, reprocess)",
       "R21": "natural disasters -- hits Op3,Op5,Op6,Op7,Op9 simultaneously (U(1,16128), exp(beta=120h))",
-      "R22": "LOC attacks -- hits Op4,Op8,Op10,Op12 (U(1,4032), exp(beta=24h))",
-      "R24": "contingent demand -- hits Op13 (U(1,672), 2400-2600 rations/672h, priority over regular)"
+      "R22": "LOC attacks -- hits Op4,Op8,Op10,Op12 (U(1,4032), exp(beta=24h))"
     },
     "excluded_with_reason": {
+      "R24": "contingent demand at Op13 -- BLOCKED pending domain fact P1 (amendment 2026-07-17): the injected demand has no P_C/P_H/mix label, so its effect on the mix decision is undefined in the two-product world. Reopens only if Garrido specifies the contingent-demand product attribution.",
       "R12_R13": "contracting/supplier risks hit Op1/Op2, upstream of and symmetric to the mix decision",
       "R23": "forward-unit destruction hits Op11 downstream of the mix, symmetric across products (PT=0 pass-through); effect on the MIX decision expected nil -- excluded, disclosed",
       "R3": "black swan FROZEN per standing program rule; untouched"
@@ -26,11 +28,11 @@
   },
   "configuration_grid_frozen": {
     "baseline": "risks_enabled=False (identity anchor: must reproduce the corrective-validation development numbers bit-consistently)",
-    "thesis_current": "all five included risks ON at thesis-current frequency/impact (phi=psi=1)",
-    "one_at_a_time_phi": "each included risk alone at phi in {1, 2, 4}, psi=1, others OFF (Garrido one-factor design) -> 15 configs",
-    "combined_relevant": "all five ON at phi=2, psi=1 (the concomitant profile, Cf-style)",
-    "total_configs": 18,
-    "no_posthoc_extension": "no config, level, or risk may be added after this freeze"
+    "thesis_current": "all four included risks ON at thesis-current frequency/impact (phi=psi=1)",
+    "one_at_a_time_phi": "each included risk (R11,R14,R21,R22) alone at phi in {1, 2, 4}, psi=1, others OFF (Garrido one-factor design) -> 12 configs",
+    "combined_relevant": "all four ON at phi=2, psi=1 (the concomitant profile, Cf-style)",
+    "total_configs": 15,
+    "no_posthoc_extension": "no config, level, or risk may be added after this freeze (R24 removal is a pre-execution validity reduction, documented above, not an extension)"
   },
   "evaluation": {
     "environment": "full DES Program O physics (fixed_clock_physical), risks per config; NO transducer (its parity certificate covers risks-off physics only)",
