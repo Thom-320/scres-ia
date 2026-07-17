@@ -15,6 +15,20 @@ ROOT = Path(__file__).resolve().parents[1]
 CONTRACT = json.loads(
     (ROOT / "contracts/program_q_frozen_policy_replication_v1.json").read_text()
 )
+FALLBACK = (
+    ROOT
+    / "research/paper2_exhaustive_search/program_q_historical_recurrentppo_fallback_freeze_20260717.json"
+)
+
+
+def test_historical_fallback_is_hash_frozen_without_retraining() -> None:
+    payload = json.loads(FALLBACK.read_text())
+    assert payload["status"] == "FROZEN_FALLBACK_PENDING_DAVID_950_OR_DEFAULT_SELECTION"
+    assert payload["training"]["retraining_for_program_q"] is False
+    assert payload["training"]["checkpoint_selection"] == "final only"
+    assert len(payload["checkpoints_sha256"]) == 10
+    assert all(len(value) == 64 for value in payload["checkpoints_sha256"].values())
+    assert payload["scientific_seed_state"]["7490001_7490256"] == "UNOPENED"
 
 
 def result_fixture(*, h_lcb=0.02, delta_lcb=-0.005, delta_ucb=0.005):
