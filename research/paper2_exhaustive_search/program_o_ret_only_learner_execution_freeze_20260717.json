@@ -4,30 +4,34 @@
   "run_id": "program-o-ret-only-learner-v1-20260717",
   "scientific_source_commit": "b4d3cc16788320a9794d08a0da5ce44d7ce5c318",
   "contract": "contracts/program_o_ret_only_learner_v1.json",
-  "contract_sha256": "4a42cb8b75c22091d940a8b89786d0c3dc20de548c61ccb04b92fef538935c90",
+  "contract_sha256": "5442e8a9e4de33a7e02e443cabc163a5acd396424b6614ab03ea4fe10c78c752",
   "source_hashes": {
     "supply_chain/program_o_ret_env.py": "863a7f67320450377010362a8a6d5ff40064814e212a4636459dd22b7c8846ea",
     "supply_chain/program_o_ret_freeze.py": "6f3cebde7d21e77127d58142bde889209e1544cd4354cdbfff9c7ad2038fd599",
+    "supply_chain/program_o_eval_custody.py": "88cd11f069bb3461473498a20ea67e871ab9c3fa98fb60b1accb4e55e0f16209",
     "supply_chain/program_o_state_rich.py": "f81fcbb2f615b869d7774cb11adb819d64f5a23c02257bbb328190fc1d1e11a6",
     "supply_chain/program_o_full_des_transducer.py": "934a8782cbdc8740541916955d90ac230ac1aa416b24090fc22de82da740818b",
     "scripts/train_program_o_ret_learner.py": "6ade20740eef4b4e02f10ae221fe33ad0a6e1a1e8f326ca105f28799d252bf24",
-    "scripts/evaluate_program_o_ret_learner.py": "34be289864af8de24d3622f803042e321136cc676d61894208a48c6a37251992",
-    "scripts/audit_program_o_ret_learner_full_des.py": "73a16304feade73af4399eba784caef384ec14036560f8bfd3fb2a3cfb057b04",
+    "scripts/evaluate_program_o_ret_learner.py": "9ae23b2c0e0c757e55a1294d60a6c031f063e06064a90aec741e10baac6a90c8",
+    "scripts/audit_program_o_ret_learner_full_des.py": "440c3981853e7c4b22b0a2783d81d869b0b2eea5fab624771ba83a3c189a7dc4",
+    "scripts/adjudicate_program_o_ret_calibration.py": "70e303d481e0f1ca9bd834e53cd9eb28f32ea6c107e4b36dc50bb9ff967260b8",
+    "scripts/launch_program_o_ret_calibration_v12.sh": "a6a133949f157c541575b918f7092e39bc8f2a9c8510927d0836d8706e66042a",
     "scripts/launch_program_o_ret_learner.sh": "cf5fb7208c301d69babfc8ba739307793fd5b2bdd87949930af5b39c19c8cb15",
     "scripts/watch_program_o_full_des_hpi.py": "0d44bf3c69a277604f0288cd6d347463804142a5a6edf9722a42e001f27be8af",
     "tests/test_program_o_ret_env.py": "3795732cc8901b850800900513cb97244d1b16a7b5223332dcbcb2c628b8d611",
-    "tests/test_program_o_ret_learner_evaluator_amendment.py": "3a74321b845c976fa62dc2e423c27f0036ac419db3ce93ddfa4dfaab1a960597",
-    "supply_chain/program_o_eval_custody.py": "88cd11f069bb3461473498a20ea67e871ab9c3fa98fb60b1accb4e55e0f16209"
+    "tests/test_program_o_ret_learner_evaluator_amendment.py": "b404ef6cd08241b1831f707b70222e721a9f56f0843907bce92fed51f87e5763",
+    "tests/test_program_o_ret_learner_evaluator_v12.py": "3ed7d13a633b65c8f6e3781a16f3f538c35e4f80fd1da97e53d645a388714a48"
   },
   "preflight": {
-    "focused_tests": "59 passed",
+    "focused_tests": "117 passed (111 Program O regressions + 6 watcher custody tests)",
     "lint": "PASS",
     "compile": "PASS",
     "nonscientific_smoke_seed": 94800001,
     "nonscientific_smoke_requested_steps": 16,
     "nonscientific_smoke_executed_steps": 512,
     "nonscientific_smoke_result": "PASS",
-    "scientific_seed_opened": false
+    "scientific_seed_opened": false,
+    "optional_test_disclosure": "test_program_o_affected_order_bound was not collected locally because openpyxl is absent from this venv; unchanged code path, not part of v1.2 evaluator sources"
   },
   "tape_custody": {
     "training": [
@@ -49,10 +53,11 @@
     "training_entrypoint": "scripts/launch_program_o_ret_learner.sh",
     "training_command": "setsid bash scripts/launch_program_o_ret_learner.sh RUN_ROOT",
     "watcher_command": ".venv/bin/python scripts/watch_program_o_full_des_hpi.py --run-dir RUN_ROOT --interval-seconds 10 --stale-seconds 900",
-    "calibration_command": ".venv/bin/python scripts/evaluate_program_o_ret_learner.py --models RUN_ROOT/models --output RUN_ROOT/calibration --phase calibration",
-    "direct_audit_command": ".venv/bin/python scripts/audit_program_o_ret_learner_full_des.py --evaluation RUN_ROOT/calibration --output RUN_ROOT/calibration_direct_audit",
+    "calibration_command": "setsid bash scripts/launch_program_o_ret_calibration_v12.sh TRAINING_ROOT CALIBRATION_RUN_ROOT",
+    "direct_audit_command": ".venv/bin/python scripts/audit_program_o_ret_learner_full_des.py --evaluation CALIBRATION_RUN_ROOT/artifacts/calibration/evaluation --output CALIBRATION_RUN_ROOT/artifacts/calibration/direct_audit",
+    "adjudication_command": ".venv/bin/python scripts/adjudicate_program_o_ret_calibration.py --calibration-result CALIBRATION_RUN_ROOT/artifacts/calibration/evaluation/result.json --direct-audit CALIBRATION_RUN_ROOT/artifacts/calibration/direct_audit/independent_full_des_audit.json --output CALIBRATION_RUN_ROOT/artifacts/calibration/result.json",
     "confirmation_requires_calibration_pass_and_independent_authorization": true,
-    "confirmation_command": ".venv/bin/python scripts/evaluate_program_o_ret_learner.py --models RUN_ROOT/models --output RUN_ROOT/confirmation --phase confirmation",
+    "confirmation_command": ".venv/bin/python scripts/evaluate_program_o_ret_learner.py --models TRAINING_ROOT/models --output CONFIRMATION_ROOT/evaluation --phase confirmation --calibration-result CALIBRATION_RUN_ROOT/artifacts/calibration/evaluation/result.json --full-des-audit CALIBRATION_RUN_ROOT/artifacts/calibration/direct_audit/independent_full_des_audit.json --adjudication CALIBRATION_RUN_ROOT/artifacts/calibration/result.json --authorization INDEPENDENT_AUTHORIZATION.json",
     "overwrite_forbidden": true,
     "running_job_is_evidence": false
   },

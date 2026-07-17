@@ -275,6 +275,8 @@ def verify_confirmation_preconditions(
     if "result.json" not in evaluation_manifest:
         raise SystemExit("confirmation blocked: result.json absent from evaluation manifest")
     calibration = json.loads(calibration_result_path.read_text())
+    if calibration.get("schema_version") != "program_o_ret_only_learner_evaluation_v1_2":
+        raise SystemExit("confirmation blocked: calibration evaluator schema is not v1.2")
     if calibration.get("phase") != "calibration":
         raise SystemExit("confirmation blocked: supplied result is not a calibration result")
     if calibration.get("provisional_primary_pass") is not True:
@@ -634,6 +636,11 @@ def main() -> int:
         "max_abs_residual": float(max(demand_identity_max.values())),
     }
     raw_paths = sorted((args.output / "raw_calendar_matrix").rglob("*.npz"))
+    expected_raw_count = len(CONFIRMED_RET_CELLS) * len(seeds)
+    if len(raw_paths) != expected_raw_count:
+        raise RuntimeError(
+            f"raw matrix custody incomplete: expected {expected_raw_count}, got {len(raw_paths)}"
+        )
     raw_manifest_path = args.output / "raw_files.sha256"
     raw_manifest = write_sha256_manifest(args.output, raw_paths, raw_manifest_path)
     passed, amendment_gates = compute_provisional_primary_pass(
@@ -659,6 +666,7 @@ def main() -> int:
         "raw_matrix_manifest": raw_manifest_path.name,
         "raw_matrix_manifest_sha256": sha256(raw_manifest_path),
         "raw_matrix_count": len(raw_manifest),
+        "raw_matrix_expected_count": expected_raw_count,
         "amendment_gates": amendment_gates,
         "direct_full_des_replay_required_before_terminal_verdict": True,
         "provisional_primary_pass": passed,

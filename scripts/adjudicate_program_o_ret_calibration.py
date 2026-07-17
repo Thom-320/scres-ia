@@ -41,6 +41,10 @@ def adjudicate(calibration_path: Path, direct_audit_path: Path) -> dict[str, obj
     calibration_sha = sha256(calibration_path)
     direct_audit_sha = sha256(direct_audit_path)
     checks = {
+        "evaluator_schema_v1_2": (
+            calibration.get("schema_version")
+            == "program_o_ret_only_learner_evaluation_v1_2"
+        ),
         "calibration_phase": calibration.get("phase") == "calibration",
         "provisional_primary_pass": calibration.get("provisional_primary_pass") is True,
         "all_amendment_gates": bool(calibration.get("amendment_gates"))

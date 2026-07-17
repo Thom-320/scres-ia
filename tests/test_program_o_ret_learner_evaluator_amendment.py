@@ -125,7 +125,8 @@ def test_confirmation_refusal_ladder(tmp_path):
         contract = base / "contract.json"; contract.write_text("{}")
         cal_dir = base / "calibration"; cal_dir.mkdir()
         cal = cal_dir / "result.json"
-        cal.write_text(json.dumps({"phase": "calibration", "provisional_primary_pass": True,
+        cal.write_text(json.dumps({"schema_version": "program_o_ret_only_learner_evaluation_v1_2",
+                                   "phase": "calibration", "provisional_primary_pass": True,
                                    "amendment_gates": {"base_lcb": True}}))
         raw = cal_dir / "raw_calendar_matrix" / "c1" / "tape.npz"
         raw.parent.mkdir(parents=True)

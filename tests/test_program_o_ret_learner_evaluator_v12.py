@@ -70,6 +70,7 @@ def test_adjudication_fails_when_direct_audit_does_not_bind_result(tmp_path: Pat
     write_sha256_manifest(calibration, [raw], raw_manifest)
     result = calibration / "result.json"
     result.write_text(json.dumps({
+        "schema_version": "program_o_ret_only_learner_evaluation_v1_2",
         "phase": "calibration",
         "provisional_primary_pass": True,
         "amendment_gates": {"all": True},

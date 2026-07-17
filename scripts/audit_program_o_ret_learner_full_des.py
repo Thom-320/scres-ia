@@ -73,6 +73,10 @@ def main() -> int:
     if expected_raw != set(raw_files):
         raise SystemExit("audit blocked: raw and evaluation manifests disagree")
     evaluation = json.loads(result_path.read_text())
+    if evaluation.get("schema_version") != "program_o_ret_only_learner_evaluation_v1_2":
+        raise SystemExit("audit blocked: evaluator schema is not frozen v1.2")
+    if evaluation.get("raw_matrix_count") != evaluation.get("raw_matrix_expected_count"):
+        raise SystemExit("audit blocked: incomplete raw matrix count")
     seeds = list(range(int(evaluation["seed_range"][0]), int(evaluation["seed_range"][1]) + 1))
     learner_seeds = list(map(int, contract["learner"]["learner_seeds"]))
     cell_lookup = {cell.cell_id: cell for cell in CONFIRMED_RET_CELLS}
