@@ -1,0 +1,62 @@
+{
+  "contract_id": "program_o_relevant_risk_sensitivity_v1",
+  "schema_version": "program_o_relevant_risk_sensitivity_v1",
+  "date_frozen": "2026-07-17",
+  "status": "FROZEN_DESIGN_BEFORE_IMPLEMENTATION_AND_ANY_EXECUTION",
+  "scientific_question": "Program O's product-mix mechanism -- the only decision variable with confirmed observable adaptive value on canonical ReT -- was established with risks_enabled=False (demand-regime uncertainty only). Does that adaptive value survive, grow, or die when the thesis's OWN operational risks relevant to the mechanism's operations are activated and escalated, Garrido-style (only relevant risks on)?",
+  "method_lineage": "Garrido thesis section 6.4/6.7: activate only the risks relevant to the operations under study, one-factor-at-a-time frequency escalation. This contract applies his own method to the one mechanism his construct rewards.",
+  "not_a_rescue": {
+    "closed_records_untouched": ["STOP_PROGRAM_O_AFTER_CORRECTIVE_VALIDATION (risks-off validation; its no_post_failure_rescue list, which includes risk addition, applies to THAT contract's claim)", "paper2 exhaustion certificate", "garrido risk screen (constant-posture tailoring null -- different estimand: posture invariance, not mix-mechanism robustness)"],
+    "claim_here": "DEVELOPMENT robustness/generalization map only. No promotion, no learner, no sealed tapes, no Paper 2 claim. Outputs feed (a) the manuscript's robustness section and (b) cell selection for any future adjudicated learner contract."
+  },
+  "relevant_risk_map": {
+    "mechanism_operations": "mix decision executes on the shared Op5-Op7 assembly line; product flows Op8-Op12; demand at Op13",
+    "included": {
+      "R11": "workstation breakdowns -- hits Op5/Op6 (thesis Table 6.6b: U(1,168) occurrence, exp(beta=2h) repair)",
+      "R14": "quality problems -- hits Op7 (Binomial n=2564 p=3/100, reprocess)",
+      "R21": "natural disasters -- hits Op3,Op5,Op6,Op7,Op9 simultaneously (U(1,16128), exp(beta=120h))",
+      "R22": "LOC attacks -- hits Op4,Op8,Op10,Op12 (U(1,4032), exp(beta=24h))",
+      "R24": "contingent demand -- hits Op13 (U(1,672), 2400-2600 rations/672h, priority over regular)"
+    },
+    "excluded_with_reason": {
+      "R12_R13": "contracting/supplier risks hit Op1/Op2, upstream of and symmetric to the mix decision",
+      "R23": "forward-unit destruction hits Op11 downstream of the mix, symmetric across products (PT=0 pass-through); effect on the MIX decision expected nil -- excluded, disclosed",
+      "R3": "black swan FROZEN per standing program rule; untouched"
+    }
+  },
+  "configuration_grid_frozen": {
+    "baseline": "risks_enabled=False (identity anchor: must reproduce the corrective-validation development numbers bit-consistently)",
+    "thesis_current": "all five included risks ON at thesis-current frequency/impact (phi=psi=1)",
+    "one_at_a_time_phi": "each included risk alone at phi in {1, 2, 4}, psi=1, others OFF (Garrido one-factor design) -> 15 configs",
+    "combined_relevant": "all five ON at phi=2, psi=1 (the concomitant profile, Cf-style)",
+    "total_configs": 18,
+    "no_posthoc_extension": "no config, level, or risk may be added after this freeze"
+  },
+  "evaluation": {
+    "environment": "full DES Program O physics (fixed_clock_physical), risks per config; NO transducer (its parity certificate covers risks-off physics only)",
+    "tapes": "12 BURNED development tapes per config (7420001-7420012 series, already opened in the fit stage); CRN: identical demand-mix and risk event tapes across policies within a config",
+    "policies_per_config": ["frozen belief-MPC (rho90_share90 configuration, byte-identical to the corrective validation's controller, NO retuning)", "constant k in {0,1,2,3}", "restricted periodic calendar family (period 1-4 over k, deduped, ~40 sequences)"],
+    "primary_estimand": "H_dev(config) = mean ret_excel_request_snapshot_v2 of frozen belief-MPC minus best-in-config restricted comparator, paired per tape",
+    "comparator_bias_disclosure": "the comparator is RESTRICTED (not the 65,536 frontier) -> H_dev is biased UPWARD. Screening asymmetry frozen: a config where H_dev <= 0 is dead A FORTIORI (the full frontier is stronger); a config where H_dev > 0 is a HYPOTHESIS only and can never be promoted from this screen. Any future confirmation pays the full frontier on fresh sealed tapes under its own contract.",
+    "secondary_panels": ["H_PI_dev (per-tape clairvoyant best over the restricted family, report-only)", "physical ReT level per config (does escalation hurt resilience as in the thesis H1 direction?)", "ret_visible_cvar10 REPORTED (never a gate -- PI directive: if informative, good addition; if not, nothing lost)", "anti-shed guardrails (worst-product fill, lost orders, attended) reported", "risk-event fixture: per-config event counts per operation MUST be populated and match the relevant-risk map (a risk that never fires or fires on unmapped ops voids the config)"]
+  },
+  "compute_envelope": "18 configs x 12 tapes x ~45 policy-sequences ~= 9,720 full-DES episodes; at 1-5 s/episode ~= 3-14 h on the local 10-core pool. No caps touched, no cluster, no 747/748 seeds, no sealed tapes.",
+  "gates_in_order": [
+    {"G0_identity": "baseline config reproduces the risks-off development H of the frozen controller within CI (environment identity; fail -> STOP_ENV_MISMATCH, nothing else runs)"},
+    {"G1_risk_fixture": "every included risk fires on exactly its mapped operations with plausible thesis-rate counts at phi=1; R3 event count = 0 everywhere"},
+    {"G2_map": "produce the full 18-config map with every cell reported (no silent drops)"}
+  ],
+  "outcomes_precommitted": {
+    "value_survives_or_grows": "robustness section for the manuscript + candidate risk cells for the future adjudicated learner contract (cell selection rule: least-severe surviving cells first, never max-H)",
+    "value_dies_under_risk": "honest scope boundary for the paper: the confirmed conversion is a calm-environment result; recorded in the certificate as a disclosed limitation",
+    "either_way": "no rescue, no promotion, no learner authorization from this screen"
+  },
+  "implementation_split": {
+    "implementer": "PI agent",
+    "independent_verifier": "concurrent auditor process (verifies G0 identity + risk fixture BEFORE the map is read; verifies frozen-controller byte-identity)"
+  },
+  "outputs": [
+    "results/program_o/relevant_risk_sensitivity_v1/result.json",
+    "docs/PROGRAM_O_RELEVANT_RISK_SENSITIVITY_VERDICT_2026-07-17.md"
+  ]
+}
