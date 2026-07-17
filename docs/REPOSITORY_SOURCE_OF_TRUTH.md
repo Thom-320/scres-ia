@@ -1,133 +1,154 @@
-# Repository Source of Truth
+# Repository source of truth
 
-This note freezes the current paper-facing repository story. Treat it as the primary reference for README examples, manuscript edits, benchmark commands, and reviewer-facing explanations unless a later note explicitly supersedes it.
+**Effective date:** 2026-07-17
+**Scientific status:** `CURRENT_IMPLEMENTED_PORTFOLIO_EXHAUSTED_NO_LEARNER_AUTHORIZED`
 
-## Canonical scientific story
+This document is the repository-level claim boundary. It supersedes the former
+Track-A/Track-B narrative that presented `ReT_seq_v1` and stress-regime gains as
+the current paper contribution.
 
-The repository supports three distinct roles that must not be conflated:
+## Binding headline
 
-- `thesis_1to1`: strict Garrido-Rios reproduction lane, no RL wrapper, no
-  reward shaping, no priming, and no action multipliers.
-- `ReT_seq_v1`: primary training reward for the paper-facing benchmark family.
-- `control_v1` / `control_v1_pbrs`: historical operational comparators retained for legacy comparison.
-- `ReT_thesis` / `ret_thesis_corrected_step`: thesis-aligned resilience metrics for reporting and audit.
-- `rt_v0`: historical baseline retained for methodological comparison.
+No tested learner has established deployable adaptive value under the current
+contracts. No learner is authorized. Paper 2 is not confirmed, and Paper 3
+remains blocked.
 
-The paper contribution is therefore:
+The strongest implemented mechanism is Program O, a nonfungible product-mix
+extension of the full DES. It established a large, custody-verified
+full-information ceiling, and its corrective observable validation established
+a reproducible mean canonical-ReT advantage with genuine state-dependent
+actions. It did **not** satisfy the frozen joint tail-safety contract.
 
-> A rigorous DES+RL benchmark for resilient control in a military food supply chain, with explicit treatment of reward alignment, partial observability, and stress-regime-dependent adaptive gains.
+The terminal label is:
 
-Strict thesis reproduction now lives in `docs/thesis_faithful/CONTRACT.md` and
-is executed through `scripts/run_thesis_faithful.py`. That lane is a validation
-gate for the DES, not a training benchmark.
+`STOP_PROGRAM_O_AFTER_CORRECTIVE_VALIDATION`
 
-The paper-serious trainable bridge is `thesis_aligned_training`, built through
-`make_thesis_aligned_training_env()` and checked with
-`scripts/run_thesis_aligned_static_gate.py`. It inherits the thesis validation
-knobs but remains a Gym/RL extension.
+## Program O evidence
 
-## Frozen benchmark backbone
+### Full-information ceiling
 
-Unless a new benchmark family is intentionally introduced, the current paper backbone is:
+The full-DES translation established:
 
-- Environment: `shift_control`
-- Training reward: `ReT_seq_v1`
-- Frozen `ret_seq_kappa`: `0.20`
-- Historical comparator: `control_v1`
-- Reporting resilience metric: `ReT_thesis` / `ret_thesis_corrected_step`
-- Step size: `168` hours
-- Year basis: `thesis`
-- Benchmark observation version: `v1`
-- Main scenarios:
-  - `increased + stochastic_pt=True`
-  - `severe + stochastic_pt=True`
-- Official thesis-validation basis: `year_basis="thesis"`
-- Gregorian annualization may still appear in diagnostics, but thesis-facing
-  comparisons should use the thesis basis unless explicitly stated otherwise.
-- Frozen paper-facing weights and resilience settings:
-  - `w_bo = 4.0`
-  - `w_cost = 0.02`
-  - `w_disr = 0.0`
-  - `ret_seq_kappa = 0.20`
+- safe `H_PI = 0.1515137892`;
+- simultaneous safe LCB95 `= 0.1156159089`;
+- exact fungible-null `H_PI = 0`;
+- 25,177 direct horizon-8 parity episodes;
+- equal production and reserved downstream resources.
 
-Interpretation rule:
+This is a physical opportunity ceiling, not observable adaptation and not a
+learner result. The authoritative compact record is
+`results/program_o/full_des_hpi_translation_v1/validation_custody_verdict_v1.json`.
 
-- `v1` remains the frozen benchmark contract for comparability with the existing 500k artifact bundles.
-- `v2` is the preferred next-step observation contract for new ablations (`frame_stack`, `RecurrentPPO`, richer temporal context).
-- Cross-mode reward totals remain non-comparable. Use `fill_rate`, `backorder_rate`, and `order_level_ret_mean` for `control_v1` vs `ReT_seq_v1` comparisons.
+### Observable corrective validation
 
-## Primary artifact bundles
+The corrective validation used fresh seeds `7430001-7430048`, frozen
+development-selected full-frontier comparators, and studentized one-sided
+max-t inference. Mean canonical-ReT passed in all connected cells:
 
-The main auditable benchmark artifacts are:
+| Cell | Mean delta ReT | Simultaneous LCB95 | Favorable tapes |
+|---|---:|---:|---:|
+| rho75/share90 | 0.09852 | 0.06595 | 44/48 |
+| rho90/share75 | 0.07347 | 0.04303 | 42/48 |
+| rho90/share90 | 0.09974 | 0.05860 | 46/48 |
 
-- `outputs/paper_benchmarks/paper_ret_seq_k020_500k`
-- `outputs/paper_benchmarks/paper_ret_seq_k010_500k`
-- `outputs/paper_benchmarks/paper_control_v1_500k`
-- `outputs/benchmarks/final_ret_seq_v1_500k`
+All 27 information-placebo contrasts passed. Physical equality passed across
+1,451 replays with zero failures. Action trajectories and state
+counterfactuals passed in every cell.
 
-Historical `control_reward_500k_*_stopt` bundles and the old seed-inference note remain useful only as legacy context. They were generated before the March 2026 DES audit/alignment fixes and must not be used as the primary evidence for the current repository state.
+The frozen joint contract nevertheless failed because simultaneous CVaR10
+non-inferiority did not clear zero in two cells:
 
-Current headline reading:
+- rho75/share90: LCB95 `-0.0085776`;
+- rho90/share75: LCB95 `-0.0155069`.
 
-- The paper-trio comparison currently selects `ReT_seq_v1` with `κ=0.20` as the pragmatic leader against `static_s2` on cross-mode comparable metrics.
-- `paper_control_v1_500k` remains the valid operational comparator for the current repo, but it is not the leading lane.
-- `κ=0.10` remains a conservative ablation, not the repo default.
-- `κ=0.30` is not a candidate default because it trends toward collapse-prone shift behavior.
-- `final_ret_seq_v1_500k` is an auditable post-audit comparator, but it uses `year_basis="gregorian"` and should not be conflated with the thesis-basis paper bundle family.
-- These results remain benchmark evidence, not a claim of universal superiority; use cautious inferential language.
+All other guardrails passed. The point estimates favored the controller, but
+the preregistration required every guardrail LCB to be non-negative. The
+contract forbids a second rescue, cell deletion, threshold relaxation,
+controller change, or metric change.
 
-## Public defaults
+The authoritative records are:
 
-Public entry points should align with the benchmark story:
+- `docs/PROGRAM_O_CORRECTIVE_HOBS_VALIDATION_VERDICT_2026-07-15.md`;
+- `results/program_o/fixed_clock_hobs_corrective_validation_v1/independent_audit_v1.json`.
 
-- `train_agent.py` default shift-control reward: `ReT_seq_v1`
-- `train_agent.py` default `ret_seq_kappa`: `0.20`
-- `train_agent.py` default observation version: `v1`
-- `external_env_interface.make_shift_control_env()` default reward: `ReT_seq_v1`
-- `external_env_interface.make_shift_control_env()` default observation version: `v1`
+### Why a corrective run existed
 
-## ReT-Seq mapping
+The first prospective block, seeds `7420049-7420096`, was opened exactly once.
+Its automatic adjudication was retracted because the executor reselected the
+comparator on validation tapes and used an invalid unstandardized simultaneous
+critical value across heterogeneous estimands. The burned trajectories and
+custody remained valid. A single corrective validation was authorized to test
+the same scientific contract with those adjudication defects repaired.
 
-The current primary reward contract should be described as a sequential extension of Garrido-Rios (2017) Eq. 5.5:
+The first-run records are retained as historical evidence, not as the current
+terminal verdict:
 
-- `SC_t` maps to `Re(FR_t)` from Eq. 5.4 and captures step-level service continuity.
-- `BC_t` is the sequential recovery proxy tied to the recovery idea in Eq. 5.2 through pending backorders relative to cumulative demand.
-- `AE_t` is the explicit cost-efficiency extension motivated by thesis Section 8.6.2, which calls for an optimum SCRes level that includes cost.
-- Geometric aggregation is intentional because it reduces compensability across service, recovery, and efficiency dimensions.
+- `docs/PROGRAM_O_FIXED_CLOCK_HOBS_VALIDATION_VERDICT_2026-07-15.md`;
+- `results/program_o/fixed_clock_hobs_validation_v1/independent_audit_v1.json`.
 
-## What is not the main paper lane
+## Current claim boundary
 
-The following are valuable but secondary:
+It is accurate to claim:
 
-- `ReT_thesis` as the primary training reward
-- `control_v1` as the primary training reward
-- PBRS as the main claim (phase-2 extension only)
-- DKANA / KAN / GNN as the main contribution
-- `severe_training` as the main reported scenario
+- material full-information product-mix headroom in the full DES;
+- exact collapse of that headroom under the fungible null;
+- observable, state-dependent mean canonical-ReT improvement over the frozen
+  full open-loop comparator;
+- failure to establish joint tail-safe classical `H_obs` under the frozen
+  familywise contract.
+
+It is not accurate to claim:
+
+- safe joint `H_obs > 0` under the project contract;
+- learned adaptive superiority;
+- Paper 2 confirmation;
+- Paper 3 authorization;
+- a global impossibility theorem outside the implemented and preregistered
+  portfolio.
+
+The portfolio-level machine-readable boundary is
+`research/paper2_exhaustive_search/paper2_current_boundary_certificate_20260716.json`.
+
+## Metric and domain status
+
+Program O used `ret_excel_request_snapshot_v2` as its frozen canonical primary
+endpoint. Garrido face validation remains necessary to identify the intended
+same-timestamp ordering of `sumBt`/`sumUt` and to establish how representative
+the nonfungible product classes are of the MFSC. Those answers may refine
+construct validity or justify a genuinely new preregistered contract. They do
+not retrospectively reopen Program O.
+
+## Historical lanes
+
+Track A, Track B, Track B-P, Track C, Programs D through N, and older
+`ReT_seq_v1` benchmark bundles remain useful provenance and bounded evidence.
+They are not the current positive paper claim. Earlier gains must retain their
+original comparator and contract qualifiers.
+
+## Publication and execution authorization
+
+- Current defensible paper route: a boundary paper separating physical
+  headroom, observable mean conversion, and joint tail-safe deployability.
+- New simulation: only after a genuinely new mechanism is justified and
+  preregistered with new physics, observations, comparators, and seeds.
+- Learner: not authorized under current contracts.
+- Paper 3: blocked until a future contract establishes learned adaptive value.
+
+## Provenance scope of this reconciliation
+
+This small reconciliation changes the remote claim state and publishes compact
+audited summaries with immutable hashes. It intentionally does not add the raw
+calendar matrices or large custody bundles to Git history. Those remain
+external custody artifacts identified by SHA-256 in the included audit files.
+Accordingly, this PR makes the terminal claim boundary reviewable from GitHub;
+it is not by itself a complete raw-data replication package.
 
 ## Document hierarchy
 
-Use the following hierarchy when documents disagree:
+When documents disagree, use:
 
-1. `docs/REPOSITORY_SOURCE_OF_TRUTH.md`
-2. `docs/manuscript_notes/control_reward_500k_source_of_truth.md`
-3. `docs/manuscript_notes/paper_strategy_decision_memo.md`
-4. `docs/manuscript_notes/paper_writeup_backlog.md`
-5. Historical reports and meeting notes
-
-## Required language discipline
-
-Preferred phrases:
-
-- `POMDP-style control`
-- `reporting-only resilience metric`
-- `stress-regime-dependent gains`
-- `competitive under moderate stress`
-- `stronger under severe stress`
-
-Avoid:
-
-- `PPO solves the problem`
-- `statistically significant`
-- `novel architecture contribution`
-- `ReT_thesis is the main training reward`
+1. this file;
+2. `paper2_current_boundary_certificate_20260716.json`;
+3. the Program O corrective independent audit and verdict;
+4. the full-DES HPI custody verdict;
+5. dated historical verdicts and older claim registries.
