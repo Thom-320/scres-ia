@@ -83,6 +83,139 @@ def trajectory_audit(calendars: list[tuple[int, ...]]) -> dict[str, object]:
 
 GUARDRAIL_KEYS = ("ret_full", "quantity_ret_full", "worst_product_fill")
 
+# ---- evaluator amendment v1_1 (2026-07-17, frozen BEFORE calibration seed 7480001) -----------
+# Closes four audited defects: trajectory audit not gated; modal/phase_only/frequency_matched
+# comparators (contract comparators/named) not executed; scheduled_resource_equality_exact not
+# verified; confirmation openable without calibration PASS + independent authorization.
+
+RESOURCE_EQUALITY_KEYS = (
+    "gross_policy_batch_slots", "gross_production_quantity",
+    "charged_daily_dispatch_slots", "charged_downstream_vehicle_hours",
+)
+PLACEBO_FAMILIES = ("modal", "phase_only", "frequency_matched")
+PLACEBO_SEEDS_MINIMUM = 8   # mirrors primary_gates/positive_learner_seeds_minimum
+
+
+def encode_calendar(calendar: tuple[int, ...]) -> int:
+    index = 0
+    for action in calendar:
+        index = index * 4 + int(action)
+    return index
+
+
+def derive_placebo_calendars(
+    calendars: list[tuple[int, ...]], *, rng_seed: int
+) -> dict[str, tuple[int, ...]]:
+    """Contract comparators modal / phase_only / frequency_matched from realized calendars."""
+    counts = Counter(calendars)
+    top = max(counts.values())
+    modal = min(cal for cal, n in counts.items() if n == top)
+    weeks = len(calendars[0])
+    phase_only = []
+    for week in range(weeks):
+        week_counts = Counter(row[week] for row in calendars)
+        week_top = max(week_counts.values())
+        phase_only.append(min(a for a, n in week_counts.items() if n == week_top))
+    pooled = Counter(a for row in calendars for a in row)
+    actions = sorted(pooled)
+    probs = np.asarray([pooled[a] for a in actions], dtype=float)
+    probs /= probs.sum()
+    rng = np.random.default_rng(rng_seed)
+    frequency_matched = tuple(
+        int(actions[i]) for i in rng.choice(len(actions), size=weeks, p=probs)
+    )
+    return {
+        "modal": tuple(modal),
+        "phase_only": tuple(phase_only),
+        "frequency_matched": frequency_matched,
+    }
+
+
+def compute_provisional_primary_pass(
+    *,
+    inference: dict,
+    summary_rows: dict,
+    audit_rows: dict,
+    placebo_rows: dict,
+    resource_equality: dict,
+) -> tuple[bool, dict]:
+    """FAIL-CLOSED amendment gate: every component must be populated AND passing.
+
+    Anti-022abd0 property: an absent, empty, or unexecuted component is a FAIL, never a
+    default pass. Pinned by tests/test_program_o_ret_learner_evaluator_amendment.py.
+    """
+    gates: dict[str, bool] = {}
+    gates["base_lcb"] = bool(inference.get("estimates")) and all(
+        row["lcb95"] >= (0.01 if name.endswith(("H_learned", "H_neural")) else -0.02)
+        for name, row in inference["estimates"].items()
+    )
+    gates["base_cells"] = bool(summary_rows) and all(
+        row["favorable_tapes_vs_open_loop"] >= 34
+        and row["favorable_tapes_vs_classical"] >= 34
+        and row["positive_learner_seeds_vs_both"] >= 8
+        and row["max_abs_mass_residual"] <= 1e-6
+        and row["max_abs_partition_residual"] <= 1e-6
+        and all(
+            value >= -0.02
+            for metric in row["point_guardrails"].values()
+            for value in metric.values()
+        )
+        for row in summary_rows.values()
+    )
+    gates["trajectory_feedback"] = bool(audit_rows) and all(
+        bool(seed_row.get("passed"))
+        for cell in audit_rows.values()
+        for seed_row in cell.values()
+    )
+    gates["information_placebos_executed_and_beaten"] = bool(placebo_rows) and all(
+        set(cell) == set(PLACEBO_FAMILIES)
+        and all(
+            family_row.get("executed") is True
+            and int(family_row.get("learner_seeds_beating", -1)) >= PLACEBO_SEEDS_MINIMUM
+            for family_row in cell.values()
+        )
+        for cell in placebo_rows.values()
+    )
+    gates["scheduled_resource_equality_exact"] = (
+        resource_equality.get("populated") is True
+        and float(resource_equality.get("max_abs_diff", float("inf"))) == 0.0
+    )
+    return all(gates.values()), gates
+
+
+def verify_confirmation_preconditions(
+    *,
+    calibration_result_path: Path | None,
+    authorization_path: Path | None,
+    contract_path: Path,
+) -> None:
+    """Virgin confirmation opens ONLY on calibration PASS + independent authorization."""
+    if calibration_result_path is None or authorization_path is None:
+        raise SystemExit(
+            "confirmation blocked: --calibration-result and --authorization are mandatory"
+        )
+    calibration = json.loads(Path(calibration_result_path).read_text())
+    if calibration.get("phase") != "calibration":
+        raise SystemExit("confirmation blocked: supplied result is not a calibration result")
+    if calibration.get("provisional_primary_pass") is not True:
+        raise SystemExit("confirmation blocked: calibration provisional_primary_pass is not True")
+    gate_map = calibration.get("amendment_gates") or {}
+    if not gate_map or not all(gate_map.values()):
+        raise SystemExit(
+            f"confirmation blocked: calibration amendment gates not all True: {gate_map}"
+        )
+    authorization = json.loads(Path(authorization_path).read_text())
+    contract_sha = hashlib.sha256(Path(contract_path).read_bytes()).hexdigest()
+    calibration_sha = hashlib.sha256(Path(calibration_result_path).read_bytes()).hexdigest()
+    if authorization.get("authorized_by") != "independent_auditor":
+        raise SystemExit(
+            "confirmation blocked: authorization must come from the independent auditor"
+        )
+    if authorization.get("contract_sha256") != contract_sha:
+        raise SystemExit("confirmation blocked: authorization contract_sha256 mismatch")
+    if authorization.get("calibration_result_sha256") != calibration_sha:
+        raise SystemExit("confirmation blocked: authorization calibration_result_sha256 mismatch")
+
 
 def simultaneous_bootstrap(rows: dict[str, dict[str, np.ndarray]], resamples: int) -> dict:
     rng = np.random.default_rng(
@@ -167,6 +300,8 @@ def main() -> int:
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--phase", choices=("calibration", "confirmation"), required=True)
     parser.add_argument("--bootstrap", type=int, default=10_000)
+    parser.add_argument("--calibration-result", type=Path, default=None)
+    parser.add_argument("--authorization", type=Path, default=None)
     args = parser.parse_args()
     if args.output.exists():
         raise FileExistsError(f"refusing to overwrite {args.output}")
@@ -183,10 +318,19 @@ def main() -> int:
         RecurrentPPO.load(args.models / f"recurrent_ppo_seed_{seed}.zip", device="cpu")
         for seed in learner_seeds
     ]
+    if args.phase == "confirmation":
+        verify_confirmation_preconditions(
+            calibration_result_path=args.calibration_result,
+            authorization_path=args.authorization,
+            contract_path=CONTRACT,
+        )
     args.output.mkdir(parents=True)
     result_rows: dict[str, dict[str, np.ndarray]] = {}
     audit_rows: dict[str, object] = {}
     summary_rows: dict[str, object] = {}
+    placebo_rows: dict[str, object] = {}
+    resource_max_abs_diff = 0.0
+    resource_equality_populated = False
     all_calendars = full_action_calendars()
     configs = finite_state_rich_configurations()
     for cell_index, cell in enumerate(CONFIRMED_RET_CELLS):
@@ -251,6 +395,45 @@ def main() -> int:
             }
             for index, seed in enumerate(learner_seeds)
         }
+        # ---- amendment v1_1: execute the three contract placebo comparators per learner seed
+        open_ret_full = result_rows[cell.cell_id]["open_loop"]["ret_visible"]  # (tapes, 65536)
+        cell_placebos: dict[str, dict[str, object]] = {}
+        for family in PLACEBO_FAMILIES:
+            beating = 0
+            per_seed = {}
+            for model_index, learner_seed in enumerate(learner_seeds):
+                placebos = derive_placebo_calendars(
+                    learner_calendars[model_index],
+                    rng_seed=int(learner_seed) * 1_000 + cell_index,
+                )
+                placebo_calendar = placebos[family]
+                placebo_mean = float(
+                    open_ret_full[:, encode_calendar(placebo_calendar)].mean()
+                )
+                learner_mean = float(learner_metrics["ret_visible"][model_index].mean())
+                beats = bool(learner_mean > placebo_mean)
+                beating += int(beats)
+                per_seed[str(learner_seed)] = {
+                    "calendar": list(placebo_calendar),
+                    "placebo_mean_ret_visible": placebo_mean,
+                    "learner_mean_ret_visible": learner_mean,
+                    "beats": beats,
+                }
+            cell_placebos[family] = {
+                "executed": True,
+                "learner_seeds_beating": beating,
+                "per_seed": per_seed,
+            }
+        placebo_rows[cell.cell_id] = cell_placebos
+        # ---- amendment v1_1: exact scheduled-resource equality across learner AND classical
+        for key in RESOURCE_EQUALITY_KEYS:
+            pooled = np.concatenate(
+                [learner_metrics[key], classical_metrics[key]], axis=0
+            )  # (models+configs, tapes)
+            spread = float(np.max(pooled.max(axis=0) - pooled.min(axis=0)))
+            resource_max_abs_diff = max(resource_max_abs_diff, spread)
+        resource_equality_populated = True
+
         open_ret = result_rows[cell.cell_id]["open_loop"]["ret_visible"]
         classical_ret = classical_metrics["ret_visible"]
         learner_ret = learner_metrics["ret_visible"]
@@ -299,31 +482,30 @@ def main() -> int:
             },
         }
     inference = simultaneous_bootstrap(result_rows, args.bootstrap)
-    passed = all(
-        row["lcb95"] >= (0.01 if name.endswith(("H_learned", "H_neural")) else -0.02)
-        for name, row in inference["estimates"].items()
-    )
-    passed = passed and all(
-        row["favorable_tapes_vs_open_loop"] >= 34
-        and row["favorable_tapes_vs_classical"] >= 34
-        and row["positive_learner_seeds_vs_both"] >= 8
-        and row["max_abs_mass_residual"] <= 1e-6
-        and row["max_abs_partition_residual"] <= 1e-6
-        and all(
-            value >= -0.02
-            for metric in row["point_guardrails"].values()
-            for value in metric.values()
-        )
-        for row in summary_rows.values()
+    resource_equality = {
+        "populated": bool(resource_equality_populated),
+        "max_abs_diff": float(resource_max_abs_diff),
+        "keys": list(RESOURCE_EQUALITY_KEYS),
+    }
+    passed, amendment_gates = compute_provisional_primary_pass(
+        inference=inference,
+        summary_rows=summary_rows,
+        audit_rows=audit_rows,
+        placebo_rows=placebo_rows,
+        resource_equality=resource_equality,
     )
     result = {
-        "schema_version": "program_o_ret_only_learner_evaluation_v1",
+        "schema_version": "program_o_ret_only_learner_evaluation_v1_1",
+        "amendment": "evaluator_amendment_v1_1_2026-07-17 (trajectory gate; placebo comparators executed+gated; exact resource equality; confirmation preconditions)",
         "created_at": datetime.now(timezone.utc).isoformat(),
         "phase": args.phase,
         "seed_range": seed_range,
         "inference": inference,
         "cell_summaries": summary_rows,
         "trajectory_audits": audit_rows,
+        "information_placebos": placebo_rows,
+        "scheduled_resource_equality": resource_equality,
+        "amendment_gates": amendment_gates,
         "direct_full_des_replay_required_before_terminal_verdict": True,
         "provisional_primary_pass": passed,
         "terminal_verdict": "PENDING_DIRECT_FULL_DES_REPLAY_AND_INTEGRITY_AUDIT",

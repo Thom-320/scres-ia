@@ -14,55 +14,136 @@
     "metric": "ret_excel_request_snapshot_v2",
     "downstream_freight_physics_mode": "fixed_clock_physical_v1",
     "decision_weeks": 8,
-    "actions": [0, 1, 2, 3],
+    "actions": [
+      0,
+      1,
+      2,
+      3
+    ],
     "batch_slots_per_week": 3,
-    "products": ["P_C", "P_H"],
+    "products": [
+      "P_C",
+      "P_H"
+    ],
     "risks_enabled_primary": false,
     "no_physics_change": true
   },
   "cells": [
-    {"id": "rho75_share90", "regime_persistence": 0.75, "dominant_share": 0.90},
-    {"id": "rho90_share75", "regime_persistence": 0.90, "dominant_share": 0.75},
-    {"id": "rho90_share90", "regime_persistence": 0.90, "dominant_share": 0.90}
+    {
+      "id": "rho75_share90",
+      "regime_persistence": 0.75,
+      "dominant_share": 0.9
+    },
+    {
+      "id": "rho90_share75",
+      "regime_persistence": 0.9,
+      "dominant_share": 0.75
+    },
+    {
+      "id": "rho90_share90",
+      "regime_persistence": 0.9,
+      "dominant_share": 0.9
+    }
   ],
   "observation": {
     "implementation": "supply_chain/program_o_ret_env.py",
     "dimension": 21,
-    "fixed_belief_model_parameters": {"regime_persistence": 0.75, "dominant_product_share": 0.90},
+    "fixed_belief_model_parameters": {
+      "regime_persistence": 0.75,
+      "dominant_product_share": 0.9
+    },
     "fixed_model_rule": "The belief model is fixed across all cells; true sensitivity-cell rho/share is forbidden.",
-    "allowed": ["product on-hand", "locked pipeline", "backlog quantity/count/age", "in-flight quantity", "frozen HMM belief/predicted share", "previous action", "public phase"],
-    "forbidden": ["latent regime", "future demand", "tape seed/hash", "true cell parameters", "oracle calendar", "score-time metrics"],
+    "allowed": [
+      "product on-hand",
+      "locked pipeline",
+      "backlog quantity/count/age",
+      "in-flight quantity",
+      "frozen HMM belief/predicted share",
+      "previous action",
+      "public phase"
+    ],
+    "forbidden": [
+      "latent regime",
+      "future demand",
+      "tape seed/hash",
+      "true cell parameters",
+      "oracle calendar",
+      "score-time metrics"
+    ],
     "same_time_rule": "strictly half-open"
   },
   "learner": {
     "algorithm": "sb3_contrib.RecurrentPPO",
     "policy": "MlpLstmPolicy",
-    "learner_seeds": [8101, 8102, 8103, 8104, 8105, 8106, 8107, 8108, 8109, 8110],
+    "learner_seeds": [
+      8101,
+      8102,
+      8103,
+      8104,
+      8105,
+      8106,
+      8107,
+      8108,
+      8109,
+      8110
+    ],
     "requested_timesteps_per_seed": 200000,
     "executed_timesteps_per_seed": 200192,
     "rollout_rounding_disclosure": "RecurrentPPO completes 391 rollouts of n_steps=512; changing n_steps after this smoke is forbidden.",
     "checkpoint_rule": "final checkpoint only",
-    "policy_kwargs": {"lstm_hidden_size": 64, "net_arch": [64, 64]},
-    "hyperparameters": {"learning_rate": 0.0003, "n_steps": 512, "batch_size": 64, "gamma": 0.99, "gae_lambda": 0.95, "clip_range": 0.2, "ent_coef": 0.01},
+    "policy_kwargs": {
+      "lstm_hidden_size": 64,
+      "net_arch": [
+        64,
+        64
+      ]
+    },
+    "hyperparameters": {
+      "learning_rate": 0.0003,
+      "n_steps": 512,
+      "batch_size": 64,
+      "gamma": 0.99,
+      "gae_lambda": 0.95,
+      "clip_range": 0.2,
+      "ent_coef": 0.01
+    },
     "reward": "zero for decisions 1-7; terminal ret_excel_request_snapshot_v2 only",
     "architecture_or_checkpoint_search": false
   },
   "tape_custody": {
     "nonscientific_smoke": 94800001,
-    "training": [748100001, 748350250],
+    "training": [
+      748100001,
+      748350250
+    ],
     "training_partition": "25,024 stepped training tapes plus one reset-only sentinel per learner seed; 250,250 opened skeletons total",
-    "comparator_calibration": [7480001, 7480048],
-    "virgin_confirmation": [7480101, 7480148],
+    "comparator_calibration": [
+      7480001,
+      7480048
+    ],
+    "virgin_confirmation": [
+      7480101,
+      7480148
+    ],
     "open_before_execution_freeze": false
   },
   "comparators": {
     "open_loop": "complete 65,536-calendar frontier; maximum mean, never per-tape post-hoc maximum",
     "classical": "maximum mean over all ten frozen state-rich configurations",
-    "named": ["belief_mpc__3", "belief_mpc__4", "modal", "phase_only", "frequency_matched"],
+    "named": [
+      "belief_mpc__3",
+      "belief_mpc__4",
+      "modal",
+      "phase_only",
+      "frequency_matched"
+    ],
     "bootstrap_reselection": "reselect family maximum mean inside each bootstrap resample"
   },
   "primary_gates": {
-    "estimands": ["H_learned = learner - max(open_loop)", "H_neural = learner - max(classical)"],
+    "estimands": [
+      "H_learned = learner - max(open_loop)",
+      "H_neural = learner - max(classical)"
+    ],
     "simultaneous_lcb95_minimum_each_cell": 0.01,
     "favorable_tapes_minimum_each_cell": 34,
     "positive_learner_seeds_minimum": 8,
@@ -74,9 +155,19 @@
     "mass_and_partition_conservation_exact": true,
     "all_generated_demand_remains_in_ledger": true,
     "noninferiority_margin": -0.02,
-    "noninferiority_metrics": ["ret_full", "quantity_ret_full", "worst_product_fill"]
+    "noninferiority_metrics": [
+      "ret_full",
+      "quantity_ret_full",
+      "worst_product_fill"
+    ]
   },
-  "secondary_only": ["ret_visible_cvar10", "service_loss_auc", "backlog age", "lost/unresolved", "actual transport utilization"],
+  "secondary_only": [
+    "ret_visible_cvar10",
+    "service_loss_auc",
+    "backlog age",
+    "lost/unresolved",
+    "actual transport utilization"
+  ],
   "risk_sensitivity": {
     "status": "DESIGN_ONLY_DOES_NOT_BLOCK_PRIMARY_AND_CANNOT_RESCUE_IT",
     "principle": "Garrido-style mechanism masks: activate only risks touching the product-mix line or the demand it serves.",
@@ -86,19 +177,55 @@
       "R21": "Op5/Op6/Op7 and Op9 simultaneous capacity loss",
       "R24": "Op13 contingent demand surge"
     },
-    "negative_control": {"R22": "product-blind downstream LOC disruption"},
-    "excluded": ["R12", "R13", "R23", "R3"],
+    "negative_control": {
+      "R22": "product-blind downstream LOC disruption"
+    },
+    "excluded": [
+      "R12",
+      "R13",
+      "R23",
+      "R3"
+    ],
     "frozen_executable_masks": [
-      ["R11", "R14"],
-      ["R21"],
-      ["R11", "R14", "R21"],
-      ["R22"]
+      [
+        "R11",
+        "R14"
+      ],
+      [
+        "R21"
+      ],
+      [
+        "R11",
+        "R14",
+        "R21"
+      ],
+      [
+        "R22"
+      ]
     ],
     "deferred_masks": {
-      "masks": [["R24"], ["R11", "R14", "R24"], ["R11", "R14", "R21", "R24"]],
+      "masks": [
+        [
+          "R24"
+        ],
+        [
+          "R11",
+          "R14",
+          "R24"
+        ],
+        [
+          "R11",
+          "R14",
+          "R21",
+          "R24"
+        ]
+      ],
       "status": "BLOCKED_UNTIL_PRODUCT_LABEL_AND_LEDGER_RULE_FOR_CONTINGENT_DEMAND_IS_FROZEN"
     },
-    "levels": ["thesis_current", "thesis_severe"],
+    "levels": [
+      "thesis_current",
+      "thesis_severe"
+    ],
     "sequence": "Evaluate the frozen risk-off learner first. Run frozen-policy OOD sensitivity second. Fine-tuning requires a later preregistration and cannot alter the primary verdict."
   },
   "terminal_rules": {
@@ -114,10 +241,22 @@
     "supply_chain/program_o_state_rich.py": "f81fcbb2f615b869d7774cb11adb819d64f5a23c02257bbb328190fc1d1e11a6",
     "supply_chain/program_o_full_des_transducer.py": "934a8782cbdc8740541916955d90ac230ac1aa416b24090fc22de82da740818b",
     "scripts/train_program_o_ret_learner.py": "6ade20740eef4b4e02f10ae221fe33ad0a6e1a1e8f326ca105f28799d252bf24",
-    "scripts/evaluate_program_o_ret_learner.py": "78f0472d67065b81a58fa67d5ccdd35df566a68476d4c0809275779a0f9e8b7e",
+    "scripts/evaluate_program_o_ret_learner.py": "6d2bb884c2cc0c6d9997d587fb7f7adb2bb660f7a29f90d55422780710cf52d0",
     "scripts/audit_program_o_ret_learner_full_des.py": "efce0603f73fb2993b945171d63799dda672eacdbbdafe43864b1e1b5f912a1d",
     "scripts/launch_program_o_ret_learner.sh": "cf5fb7208c301d69babfc8ba739307793fd5b2bdd87949930af5b39c19c8cb15",
     "scripts/watch_program_o_full_des_hpi.py": "0d44bf3c69a277604f0288cd6d347463804142a5a6edf9722a42e001f27be8af",
-    "tests/test_program_o_ret_env.py": "3795732cc8901b850800900513cb97244d1b16a7b5223332dcbcb2c628b8d611"
+    "tests/test_program_o_ret_env.py": "3795732cc8901b850800900513cb97244d1b16a7b5223332dcbcb2c628b8d611",
+    "tests/test_program_o_ret_learner_evaluator_amendment.py": "b69c50faa6c1e99e062b91d67aece01fe2cb63944348c38f3c9ec9d9987c2812"
+  },
+  "evaluator_amendment_v1_1_2026_07_17": {
+    "frozen_before": "calibration seed 7480001 (no 7480xxx seed opened at amendment time)",
+    "closes_audited_defects": [
+      "trajectory_audit().passed now GATES provisional_primary_pass (primary_gates/trajectory_feedback_required)",
+      "modal/phase_only/frequency_matched comparators (comparators/named) are EXECUTED per learner seed per cell via the saved 65,536-calendar panel and GATED at >=8/10 seeds beating each family",
+      "scheduled_resource_equality_exact verified: max spread across learner+classical policies per tape over gross_policy_batch_slots/gross_production_quantity/charged_daily_dispatch_slots/charged_downstream_vehicle_hours must be exactly 0.0",
+      "phase=confirmation REFUSES to run without --calibration-result (provisional_primary_pass=True AND all amendment_gates True) plus --authorization signed by the independent auditor with matching contract and calibration-result SHA-256"
+    ],
+    "fail_closed": "absent, empty, or unexecuted components FAIL the gate (anti-022abd0); pinned by tests/test_program_o_ret_learner_evaluator_amendment.py (13 tests)",
+    "previous_evaluator_sha256": "78f0472d67065b81a58fa67d5ccdd35df566a68476d4c0809275779a0f9e8b7e"
   }
 }
