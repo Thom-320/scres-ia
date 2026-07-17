@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import argparse
 from datetime import datetime, timezone
-import hashlib
 import json
 from pathlib import Path
 import sys
@@ -22,6 +21,11 @@ from supply_chain.program_o_full_des_transducer import (  # noqa: E402
 )
 from supply_chain.program_o_ret_env import CONFIRMED_RET_CELLS  # noqa: E402
 from supply_chain.program_o_ret_freeze import verify_execution_freeze  # noqa: E402
+from supply_chain.program_o_eval_custody import (  # noqa: E402
+    sha256,
+    verify_sha256_manifest,
+    write_sha256_manifest,
+)
 
 
 CONTRACT = ROOT / "contracts/program_o_ret_only_learner_v1.json"
@@ -42,10 +46,6 @@ def calendar_index(calendar: tuple[int, ...]) -> int:
     return value
 
 
-def digest(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
-
-
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--evaluation", type=Path, required=True)
@@ -59,6 +59,19 @@ def main() -> int:
         raise SystemExit("audit blocked until source/execution freeze")
     verify_execution_freeze(ROOT, CONTRACT)
     result_path = args.evaluation / "result.json"
+    evaluation_files = verify_sha256_manifest(
+        args.evaluation, args.evaluation / "evaluation_files.sha256"
+    )
+    raw_files = verify_sha256_manifest(
+        args.evaluation, args.evaluation / "raw_files.sha256"
+    )
+    if "result.json" not in evaluation_files:
+        raise SystemExit("audit blocked: result.json absent from evaluation manifest")
+    expected_raw = {
+        relative for relative in evaluation_files if relative.startswith("raw_calendar_matrix/")
+    }
+    if expected_raw != set(raw_files):
+        raise SystemExit("audit blocked: raw and evaluation manifests disagree")
     evaluation = json.loads(result_path.read_text())
     seeds = list(range(int(evaluation["seed_range"][0]), int(evaluation["seed_range"][1]) + 1))
     learner_seeds = list(map(int, contract["learner"]["learner_seeds"]))
@@ -119,7 +132,11 @@ def main() -> int:
         "schema_version": "program_o_ret_only_learner_direct_full_des_audit_v1",
         "created_at": datetime.now(timezone.utc).isoformat(),
         "evaluation_result": str(result_path),
-        "evaluation_result_sha256": digest(result_path),
+        "evaluation_result_sha256": sha256(result_path),
+        "evaluation_files_manifest_sha256": sha256(
+            args.evaluation / "evaluation_files.sha256"
+        ),
+        "raw_files_manifest_sha256": sha256(args.evaluation / "raw_files.sha256"),
         "phase": evaluation["phase"],
         "seed_range": evaluation["seed_range"],
         "direct_unique_replays": unique_replays,
@@ -135,8 +152,12 @@ def main() -> int:
         ),
         "claim_boundary": "This audit establishes replay parity only; it cannot promote a failed statistical gate.",
     }
-    (args.output / "independent_full_des_audit.json").write_text(
+    audit_path = args.output / "independent_full_des_audit.json"
+    audit_path.write_text(
         json.dumps(audit, indent=2, sort_keys=True) + "\n"
+    )
+    write_sha256_manifest(
+        args.output, [audit_path], args.output / "audit_files.sha256"
     )
     return 0 if passed else 1
 

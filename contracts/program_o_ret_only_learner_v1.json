@@ -241,12 +241,13 @@
     "supply_chain/program_o_state_rich.py": "f81fcbb2f615b869d7774cb11adb819d64f5a23c02257bbb328190fc1d1e11a6",
     "supply_chain/program_o_full_des_transducer.py": "934a8782cbdc8740541916955d90ac230ac1aa416b24090fc22de82da740818b",
     "scripts/train_program_o_ret_learner.py": "6ade20740eef4b4e02f10ae221fe33ad0a6e1a1e8f326ca105f28799d252bf24",
-    "scripts/evaluate_program_o_ret_learner.py": "6d2bb884c2cc0c6d9997d587fb7f7adb2bb660f7a29f90d55422780710cf52d0",
-    "scripts/audit_program_o_ret_learner_full_des.py": "efce0603f73fb2993b945171d63799dda672eacdbbdafe43864b1e1b5f912a1d",
+    "scripts/evaluate_program_o_ret_learner.py": "34be289864af8de24d3622f803042e321136cc676d61894208a48c6a37251992",
+    "scripts/audit_program_o_ret_learner_full_des.py": "73a16304feade73af4399eba784caef384ec14036560f8bfd3fb2a3cfb057b04",
     "scripts/launch_program_o_ret_learner.sh": "cf5fb7208c301d69babfc8ba739307793fd5b2bdd87949930af5b39c19c8cb15",
     "scripts/watch_program_o_full_des_hpi.py": "0d44bf3c69a277604f0288cd6d347463804142a5a6edf9722a42e001f27be8af",
     "tests/test_program_o_ret_env.py": "3795732cc8901b850800900513cb97244d1b16a7b5223332dcbcb2c628b8d611",
-    "tests/test_program_o_ret_learner_evaluator_amendment.py": "b69c50faa6c1e99e062b91d67aece01fe2cb63944348c38f3c9ec9d9987c2812"
+    "tests/test_program_o_ret_learner_evaluator_amendment.py": "3a74321b845c976fa62dc2e423c27f0036ac419db3ce93ddfa4dfaab1a960597",
+    "supply_chain/program_o_eval_custody.py": "88cd11f069bb3461473498a20ea67e871ab9c3fa98fb60b1accb4e55e0f16209"
   },
   "evaluator_amendment_v1_1_2026_07_17": {
     "frozen_before": "calibration seed 7480001 (no 7480xxx seed opened at amendment time)",
@@ -258,5 +259,15 @@
     ],
     "fail_closed": "absent, empty, or unexecuted components FAIL the gate (anti-022abd0); pinned by tests/test_program_o_ret_learner_evaluator_amendment.py (13 tests)",
     "previous_evaluator_sha256": "78f0472d67065b81a58fa67d5ccdd35df566a68476d4c0809275779a0f9e8b7e"
+  },
+  "evaluator_amendment_v1_2_2026_07_17": {
+    "frozen_before": "calibration seed 7480001 (verified unopened at freeze time)",
+    "closes_independent_audit_partial_fail": [
+      "F5: phase=confirmation additionally REQUIRES --full-des-audit artifact with passed=True covering the calibration run",
+      "demand preservation GATED: visible_rows+omitted_rows==generated_orders exact (frontier+learners+classical) and aggregate_ration/raw_material residuals <= 1e-6",
+      "resource equality scope extended to the FULL 65,536-calendar frontier (per-tape frontier spread AND learner/classical cross-diff vs frontier anchor must be exactly 0.0)",
+      "evaluation custody: SHA-256 manifest over every written raw matrix (raw_matrix_manifest.sha256.json) with its digest embedded in result.json"
+    ],
+    "previous_evaluator_sha256": "6d2bb884c2cc0c6d9997d587fb7f7adb2bb660f7a29f90d55422780710cf52d0"
   }
 }

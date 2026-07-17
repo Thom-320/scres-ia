@@ -29,6 +29,11 @@ from supply_chain.program_o_ret_env import (  # noqa: E402
     ProgramORetOnlyEnv,
 )
 from supply_chain.program_o_ret_freeze import verify_execution_freeze  # noqa: E402
+from supply_chain.program_o_eval_custody import (  # noqa: E402
+    sha256,
+    verify_sha256_manifest,
+    write_sha256_manifest,
+)
 from supply_chain.program_o_state_rich import (  # noqa: E402
     finite_state_rich_configurations,
     state_rich_calendar,
@@ -94,6 +99,54 @@ RESOURCE_EQUALITY_KEYS = (
 )
 PLACEBO_FAMILIES = ("modal", "phase_only", "frequency_matched")
 PLACEBO_SEEDS_MINIMUM = 8   # mirrors primary_gates/positive_learner_seeds_minimum
+LEDGER_TOLERANCE = 1e-8
+DEMAND_LEDGER_IDENTITIES = (
+    "generated_orders_policy_invariant",
+    "generated_equals_visible_plus_omitted",
+    "omitted_rows_equal_unresolved_orders",
+    "omitted_quantity_equal_unresolved_quantity",
+    "product_remaining_equals_unresolved_quantity",
+    "lost_orders_zero_risk_off",
+    "lost_quantity_zero_risk_off",
+)
+
+
+def demand_ledger_residuals(metrics: dict[str, np.ndarray]) -> dict[str, np.ndarray]:
+    """Return the explicit risk-off Program O demand-ledger identities."""
+    return {
+        "generated_orders_policy_invariant": (
+            np.asarray(metrics["generated_orders"])
+            - np.asarray(metrics["generated_orders"]).reshape(-1)[0]
+        ),
+        "generated_equals_visible_plus_omitted": (
+            np.asarray(metrics["generated_orders"])
+            - np.asarray(metrics["visible_rows"])
+            - np.asarray(metrics["omitted_rows"])
+        ),
+        "omitted_rows_equal_unresolved_orders": (
+            np.asarray(metrics["omitted_rows"])
+            - np.asarray(metrics["unresolved_orders"])
+        ),
+        "omitted_quantity_equal_unresolved_quantity": (
+            np.asarray(metrics["omitted_quantity"])
+            - np.asarray(metrics["unresolved_quantity"])
+        ),
+        "product_remaining_equals_unresolved_quantity": (
+            np.asarray(metrics["remaining_quantity_P_C"])
+            + np.asarray(metrics["remaining_quantity_P_H"])
+            - np.asarray(metrics["unresolved_quantity"])
+        ),
+        "lost_orders_zero_risk_off": np.asarray(metrics["lost_orders"]),
+        "lost_quantity_zero_risk_off": np.asarray(metrics["lost_quantity"]),
+    }
+
+
+def maximum_ledger_residual(metrics: dict[str, np.ndarray]) -> tuple[float, dict[str, float]]:
+    rows = {
+        name: float(np.max(np.abs(values)))
+        for name, values in demand_ledger_residuals(metrics).items()
+    }
+    return max(rows.values()), rows
 
 
 def encode_calendar(calendar: tuple[int, ...]) -> int:
@@ -138,6 +191,7 @@ def compute_provisional_primary_pass(
     audit_rows: dict,
     placebo_rows: dict,
     resource_equality: dict,
+    demand_preservation: dict,
 ) -> tuple[bool, dict]:
     """FAIL-CLOSED amendment gate: every component must be populated AND passing.
 
@@ -178,7 +232,15 @@ def compute_provisional_primary_pass(
     )
     gates["scheduled_resource_equality_exact"] = (
         resource_equality.get("populated") is True
+        and resource_equality.get("full_open_loop_frontier_included") is True
         and float(resource_equality.get("max_abs_diff", float("inf"))) == 0.0
+    )
+    gates["demand_preservation"] = (
+        demand_preservation.get("populated") is True
+        and set(demand_preservation.get("identities", {}))
+        == set(DEMAND_LEDGER_IDENTITIES)
+        and float(demand_preservation.get("max_abs_residual", float("inf")))
+        <= LEDGER_TOLERANCE
     )
     return all(gates.values()), gates
 
@@ -188,13 +250,31 @@ def verify_confirmation_preconditions(
     calibration_result_path: Path | None,
     authorization_path: Path | None,
     contract_path: Path,
+    full_des_audit_path: Path | None = None,
+    adjudication_path: Path | None = None,
 ) -> None:
-    """Virgin confirmation opens ONLY on calibration PASS + independent authorization."""
-    if calibration_result_path is None or authorization_path is None:
-        raise SystemExit(
-            "confirmation blocked: --calibration-result and --authorization are mandatory"
+    """Virgin confirmation opens only on a complete, hashed authorization chain."""
+    if any(
+        path is None
+        for path in (
+            calibration_result_path,
+            full_des_audit_path,
+            adjudication_path,
+            authorization_path,
         )
-    calibration = json.loads(Path(calibration_result_path).read_text())
+    ):
+        raise SystemExit(
+            "confirmation blocked: --calibration-result, --full-des-audit, "
+            "--adjudication and --authorization are all mandatory"
+        )
+    calibration_result_path = Path(calibration_result_path)
+    calibration_root = calibration_result_path.parent
+    evaluation_manifest = verify_sha256_manifest(
+        calibration_root, calibration_root / "evaluation_files.sha256"
+    )
+    if "result.json" not in evaluation_manifest:
+        raise SystemExit("confirmation blocked: result.json absent from evaluation manifest")
+    calibration = json.loads(calibration_result_path.read_text())
     if calibration.get("phase") != "calibration":
         raise SystemExit("confirmation blocked: supplied result is not a calibration result")
     if calibration.get("provisional_primary_pass") is not True:
@@ -204,9 +284,34 @@ def verify_confirmation_preconditions(
         raise SystemExit(
             f"confirmation blocked: calibration amendment gates not all True: {gate_map}"
         )
+
+    full_des_audit_path = Path(full_des_audit_path)
+    audit_manifest = verify_sha256_manifest(
+        full_des_audit_path.parent, full_des_audit_path.parent / "audit_files.sha256"
+    )
+    if full_des_audit_path.name not in audit_manifest:
+        raise SystemExit("confirmation blocked: full-DES audit absent from audit manifest")
+    full_des_audit = json.loads(full_des_audit_path.read_text())
+    calibration_sha = sha256(calibration_result_path)
+    if full_des_audit.get("passed") is not True:
+        raise SystemExit("confirmation blocked: direct full-DES audit did not pass")
+    if full_des_audit.get("phase") != "calibration":
+        raise SystemExit("confirmation blocked: full-DES audit must cover calibration")
+    if full_des_audit.get("evaluation_result_sha256") != calibration_sha:
+        raise SystemExit("confirmation blocked: full-DES audit does not bind calibration")
+
+    adjudication_path = Path(adjudication_path)
+    adjudication = json.loads(adjudication_path.read_text())
+    direct_audit_sha = sha256(full_des_audit_path)
+    if adjudication.get("status") != "ELIGIBLE_FOR_INDEPENDENT_AUTHORIZATION":
+        raise SystemExit("confirmation blocked: calibration adjudication is not eligible")
+    if adjudication.get("calibration_result_sha256") != calibration_sha:
+        raise SystemExit("confirmation blocked: adjudication calibration hash mismatch")
+    if adjudication.get("direct_audit_sha256") != direct_audit_sha:
+        raise SystemExit("confirmation blocked: adjudication direct-audit hash mismatch")
+
     authorization = json.loads(Path(authorization_path).read_text())
     contract_sha = hashlib.sha256(Path(contract_path).read_bytes()).hexdigest()
-    calibration_sha = hashlib.sha256(Path(calibration_result_path).read_bytes()).hexdigest()
     if authorization.get("authorized_by") != "independent_auditor":
         raise SystemExit(
             "confirmation blocked: authorization must come from the independent auditor"
@@ -215,6 +320,10 @@ def verify_confirmation_preconditions(
         raise SystemExit("confirmation blocked: authorization contract_sha256 mismatch")
     if authorization.get("calibration_result_sha256") != calibration_sha:
         raise SystemExit("confirmation blocked: authorization calibration_result_sha256 mismatch")
+    if authorization.get("direct_audit_sha256") != direct_audit_sha:
+        raise SystemExit("confirmation blocked: authorization direct_audit_sha256 mismatch")
+    if authorization.get("adjudication_sha256") != sha256(adjudication_path):
+        raise SystemExit("confirmation blocked: authorization adjudication_sha256 mismatch")
 
 
 def simultaneous_bootstrap(rows: dict[str, dict[str, np.ndarray]], resamples: int) -> dict:
@@ -302,6 +411,8 @@ def main() -> int:
     parser.add_argument("--bootstrap", type=int, default=10_000)
     parser.add_argument("--calibration-result", type=Path, default=None)
     parser.add_argument("--authorization", type=Path, default=None)
+    parser.add_argument("--full-des-audit", type=Path, default=None)
+    parser.add_argument("--adjudication", type=Path, default=None)
     args = parser.parse_args()
     if args.output.exists():
         raise FileExistsError(f"refusing to overwrite {args.output}")
@@ -323,6 +434,8 @@ def main() -> int:
             calibration_result_path=args.calibration_result,
             authorization_path=args.authorization,
             contract_path=CONTRACT,
+            full_des_audit_path=args.full_des_audit,
+            adjudication_path=args.adjudication,
         )
     args.output.mkdir(parents=True)
     result_rows: dict[str, dict[str, np.ndarray]] = {}
@@ -331,6 +444,8 @@ def main() -> int:
     placebo_rows: dict[str, object] = {}
     resource_max_abs_diff = 0.0
     resource_equality_populated = False
+    demand_identity_max = {name: 0.0 for name in DEMAND_LEDGER_IDENTITIES}
+    demand_preservation_populated = False
     all_calendars = full_action_calendars()
     configs = finite_state_rich_configurations()
     for cell_index, cell in enumerate(CONFIRMED_RET_CELLS):
@@ -381,6 +496,28 @@ def main() -> int:
                 )
                 for key in MATRIX_KEYS:
                     learner_metrics[key][model_index, tape_index] = metrics[key][0]
+            # ---- amendment v1_2: resource invariance must include the FULL 65,536 frontier,
+            # and demand preservation is gated explicitly (rows identity + quantity residuals)
+            for key in RESOURCE_EQUALITY_KEYS:
+                frontier_column = panel[key]
+                anchor = float(frontier_column[0])
+                resource_max_abs_diff = max(
+                    resource_max_abs_diff,
+                    float(frontier_column.max() - frontier_column.min()),
+                    float(np.max(np.abs(learner_metrics[key][:, tape_index] - anchor))),
+                    float(np.max(np.abs(classical_metrics[key][:, tape_index] - anchor))),
+                )
+            for family_metrics in (
+                panel,
+                {key: learner_metrics[key][:, tape_index] for key in MATRIX_KEYS},
+                {key: classical_metrics[key][:, tape_index] for key in MATRIX_KEYS},
+            ):
+                _maximum, identity_rows = maximum_ledger_residual(family_metrics)
+                for identity, value in identity_rows.items():
+                    demand_identity_max[identity] = max(
+                        demand_identity_max[identity], value
+                    )
+            demand_preservation_populated = True
         result_rows[cell.cell_id] = {
             "learner": {key: learner_metrics[key] for key in ("ret_visible", *GUARDRAIL_KEYS)},
             "open_loop": {key: np.stack(values) for key, values in open_rows.items()},
@@ -484,19 +621,32 @@ def main() -> int:
     inference = simultaneous_bootstrap(result_rows, args.bootstrap)
     resource_equality = {
         "populated": bool(resource_equality_populated),
+        "full_open_loop_frontier_included": True,
         "max_abs_diff": float(resource_max_abs_diff),
         "keys": list(RESOURCE_EQUALITY_KEYS),
+        "scope": "learners + classical + FULL 65,536-calendar frontier (amendment v1_2)",
     }
+    demand_preservation = {
+        "populated": bool(demand_preservation_populated),
+        "contract_scope": "risk_off_program_o",
+        "tolerance": LEDGER_TOLERANCE,
+        "identities": demand_identity_max,
+        "max_abs_residual": float(max(demand_identity_max.values())),
+    }
+    raw_paths = sorted((args.output / "raw_calendar_matrix").rglob("*.npz"))
+    raw_manifest_path = args.output / "raw_files.sha256"
+    raw_manifest = write_sha256_manifest(args.output, raw_paths, raw_manifest_path)
     passed, amendment_gates = compute_provisional_primary_pass(
         inference=inference,
         summary_rows=summary_rows,
         audit_rows=audit_rows,
         placebo_rows=placebo_rows,
         resource_equality=resource_equality,
+        demand_preservation=demand_preservation,
     )
     result = {
-        "schema_version": "program_o_ret_only_learner_evaluation_v1_1",
-        "amendment": "evaluator_amendment_v1_1_2026-07-17 (trajectory gate; placebo comparators executed+gated; exact resource equality; confirmation preconditions)",
+        "schema_version": "program_o_ret_only_learner_evaluation_v1_2",
+        "amendment": "evaluator_amendment_v1_2_2026-07-17 (v1_1: trajectory gate, placebo comparators, resource equality, confirmation preconditions; v1_2: full-DES-audit precondition F5, demand-preservation gate, frontier-wide resource invariance, raw-matrix SHA-256 custody manifest)",
         "created_at": datetime.now(timezone.utc).isoformat(),
         "phase": args.phase,
         "seed_range": seed_range,
@@ -505,12 +655,22 @@ def main() -> int:
         "trajectory_audits": audit_rows,
         "information_placebos": placebo_rows,
         "scheduled_resource_equality": resource_equality,
+        "demand_preservation": demand_preservation,
+        "raw_matrix_manifest": raw_manifest_path.name,
+        "raw_matrix_manifest_sha256": sha256(raw_manifest_path),
+        "raw_matrix_count": len(raw_manifest),
         "amendment_gates": amendment_gates,
         "direct_full_des_replay_required_before_terminal_verdict": True,
         "provisional_primary_pass": passed,
         "terminal_verdict": "PENDING_DIRECT_FULL_DES_REPLAY_AND_INTEGRITY_AUDIT",
     }
-    (args.output / "result.json").write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
+    result_path = args.output / "result.json"
+    result_path.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
+    write_sha256_manifest(
+        args.output,
+        [result_path, raw_manifest_path, *raw_paths],
+        args.output / "evaluation_files.sha256",
+    )
     return 0
 
 
