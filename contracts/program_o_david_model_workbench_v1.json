@@ -1,0 +1,52 @@
+{
+  "schema_version": "program_o_david_model_workbench_v1",
+  "status": "DEVELOPMENT_ONLY_NO_SCIENTIFIC_PROMOTION",
+  "parent_contract": "contracts/program_o_ret_only_learner_v1.json",
+  "purpose": "Portable Colab/Kaggle/local workbench for David to edit DMPLA/DMLPA architectures and compare discrete-action learners under the exact Program O-R physics.",
+  "physics": {
+    "environment": "supply_chain.program_o_ret_env.ProgramORetOnlyEnv",
+    "action_space": "Discrete(4): allocate 0,1,2,3 of the next three batch rights to P_C",
+    "decision_horizon": 8,
+    "reward": "zero on decisions 1-7; terminal ret_excel_request_snapshot_v2",
+    "cells": ["rho75_share90", "rho90_share75", "rho90_share90"],
+    "risks_enabled": false,
+    "true_cell_parameters_forbidden_from_observation": true
+  },
+  "seed_custody": {
+    "allowed_development_namespace": [949100001, 949999999],
+    "default_training": [949100001, 949119999],
+    "default_evaluation": [949200001, 949200048],
+    "reserved_scientific_748_namespace_forbidden": true,
+    "claim": "All 949-series outputs are exploratory and burned on creation."
+  },
+  "model_surface": {
+    "supported_examples": [
+      "RECURRENT_PPO_REFERENCE",
+      "PPO_DMPLA",
+      "DISCRETE_SAC_DMPLA",
+      "CUSTOM"
+    ],
+    "scientific_reference": "RecurrentPPO MlpLstmPolicy with the frozen Program O-R architecture and hyperparameters; notebook runs remain exploratory 949-series experiments.",
+    "editable_encoder_cell": true,
+    "editable_history_and_position_encoding": true,
+    "custom_mode": "David may replace the neural architecture and training loop while retaining the locked environment, information boundary, seed namespace, and common evaluator.",
+    "standard_sb3_sac_forbidden_reason": "Stable-Baselines3 SAC requires a continuous Box action space; Program O-R is Discrete(4).",
+    "continuous_action_quantization": "EXPLORATORY_ONLY_AND_DISABLED_BY_DEFAULT"
+  },
+  "important_metrics": {
+    "primary": ["ret_visible"],
+    "guardrails": ["ret_full", "quantity_ret_full", "worst_product_fill"],
+    "integrity": ["gross_production_quantity", "charged_downstream_vehicle_hours", "generated_orders", "lost_orders", "unresolved_orders", "mass_residual", "partition_residual"],
+    "secondary_optional": ["ret_visible_cvar10"]
+  },
+  "mandatory_development_checks": [
+    "seed namespace guard",
+    "environment and observation shape smoke",
+    "same-tape comparison",
+    "calendar diversity and modal fraction",
+    "C/H swap action sensitivity",
+    "mass and partition residuals",
+    "artifact hashes"
+  ],
+  "claim_boundary": "A workbench win selects at most one candidate architecture for a later preregistered experiment. It cannot reinterpret Program O, O-R, or authorize Paper 2/Paper 3."
+}
