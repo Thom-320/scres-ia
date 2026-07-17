@@ -37,7 +37,17 @@ The notebook includes four runnable paths:
 3. Edit only the marked architecture cell until the desired model builds and trains.
 4. Switch to `development` and compare several optimizer seeds on the same evaluation tapes.
 5. Judge models by canonical ReT and the guardrail table, not by training reward.
-6. Reject a candidate that collapses to one fixed calendar or violates conservation/resources.
+6. Reject a candidate that collapses to one fixed calendar, loses to modal/phase/frequency-matched placebos, or violates conservation/resources.
 7. If one architecture survives, freeze it in a new preregistration before using any new holdout namespace.
+
+The mini-evaluator enumerates all 65,536 open-loop calendars and all ten frozen
+state-rich classical configurations in each of the three cells. It selects the
+best member of each comparator family by its mean across the common tapes. It
+never constructs an unrealistically clairvoyant comparator by selecting a
+different classical rule after seeing each tape.
+
+RecurrentPPO evaluation carries the LSTM state and `episode_start` flag through
+all eight decisions. Resetting the recurrent state at every decision would turn
+RecurrentPPO into a different, memoryless controller and is explicitly avoided.
 
 The notebook cannot promote Paper 2, reopen Program O, or use the reserved `748...` scientific tapes.
