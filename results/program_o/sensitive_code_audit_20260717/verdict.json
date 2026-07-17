@@ -1,0 +1,33 @@
+{
+  "schema_version": "program_o_sensitive_code_audit_20260717",
+  "audited_training_commit": "02aad62ff5997458ca427729134291f77abc5bca",
+  "audited_risk_commit": "0d30b2323d03454083c03e07162fa3de17c6e0b6",
+  "claude_commits": [
+    "2f3d0148cbb81150a7b591035afb9ff414560af8",
+    "e5813264c1de87ac6aacd5fdc7cbadd972e08f52"
+  ],
+  "historical_program_o_status": "STOP_PROGRAM_O_AFTER_CORRECTIVE_VALIDATION",
+  "or_training_status": "CONTINUE_TRAINING_ONLY",
+  "or_evaluation_status": "HOLD_BEFORE_CALIBRATION_EVALUATOR_GATES_INCOMPLETE",
+  "risk_v1_1_status": "STOP_V1_1_BEFORE_G2_RARE_RISK_FIXTURE_NOT_POPULATED",
+  "g2_authorized": false,
+  "calibration_opened": false,
+  "confirmation_opened": false,
+  "findings": {
+    "training_seed_partition": "PASS",
+    "training_source_freeze": "PASS",
+    "vps_training_custody": "PASS_LIVE_NOT_TERMINAL_EVIDENCE",
+    "trajectory_feedback_gate": "FAIL_NOT_WIRED_TO_PROMOTION",
+    "modal_phase_frequency_controls": "FAIL_NOT_IMPLEMENTED",
+    "confirmation_predecessor_gate": "FAIL_PROSE_ONLY",
+    "resource_and_demand_integrity": "FAIL_INCOMPLETE",
+    "evaluation_hash_adjudication": "FAIL_INCOMPLETE",
+    "post_warmup_risk_activation": "PASS_WITH_TEST_COVERAGE_GAP",
+    "r24_product_label_claim": "CLAUDE_COMMIT_FACTUALLY_INCORRECT"
+  },
+  "focused_tests": {
+    "command": "pytest -q tests/test_program_o_ret_env.py tests/test_program_o_full_des.py tests/test_program_o_state_rich.py tests/test_program_o_exact_transducer.py tests/test_program_o_fixed_clock_physical.py tests/test_program_o_fixed_clock_hobs_validation.py",
+    "result": "65 passed"
+  },
+  "next_action": "freeze prospective evaluation-only amendment before tape 7480001; preserve trained checkpoints and all historical STOP labels"
+}
