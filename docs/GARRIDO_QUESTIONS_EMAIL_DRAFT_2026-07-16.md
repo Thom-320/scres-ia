@@ -59,9 +59,17 @@ agradeceríamos respuestas aunque sean cualitativas:
    ¿Quién decide el reparto y con qué regla (¿equidad entre teatros, prioridad de misión?)? ¿El
    decisor observa demanda/backlog/nivel de servicio POR CSSU al momento de repartir?
 
-Además, una aclaración métrica breve (M1 del documento adjunto): en su cálculo de ReT en Excel,
-¿el estado de cada pedido se evalúa en el instante de la solicitud? Queremos confirmar que nuestra
-réplica formal coincide con su intención.
+Además, dos aclaraciones sobre el constructo (M1 y M2 del documento adjunto):
+
+- **M1 (métrica):** en su cálculo de ReT en Excel, ¿el estado acumulado (backorders y pedidos
+  perdidos) de cada pedido se congela en el instante de la solicitud (OPTj)? Y si una entrega, una
+  expulsión de la lista de backorders y una solicitud nueva coinciden en el mismo instante de
+  simulación, ¿en qué orden se ejecutan?
+- **M2 (criterio de aceptación):** ¿el criterio operacional de aceptación que usted concebía era
+  el ReT canónico medio, o su definición de resiliencia incluía también un requisito sobre los
+  peores desenlaces? Y por separado: en la doctrina real, ¿existen requisitos vinculantes sobre el
+  servicio del peor teatro o de la peor campaña (pisos de servicio, riesgo de cola), o la medida
+  operativa de aceptación es la resiliencia promedio?
 
 Con gusto le compartimos el borrador del artículo; su tesis es la base empírica y nos importa que
 el modelo quede fielmente representado.

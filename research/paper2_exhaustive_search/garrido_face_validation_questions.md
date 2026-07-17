@@ -435,6 +435,31 @@ may change claim scope, never the already frozen physics or acceptance rule.
 
 ---
 
+## M2 — Operational acceptance criterion of the resilience construct (BLOCKING, added 2026-07-17)
+
+**Context:** the Program O corrective validation passed its canonical mean-ReT gate in all three
+cells but failed a joint tail non-inferiority guardrail (`ret_visible_cvar10`, zero margin) that
+was OUR added deployability standard, not part of the thesis construct. Whether that standard
+belongs in the ACCEPTANCE rule is a domain-owner question, and it must be answered prospectively
+and in writing — never inferred from which answer is convenient.
+
+**Question (deliberately two-sided):** "For your thesis construct and for real doctrine,
+answered separately:
+(a) Was the intended operational acceptance criterion the canonical mean ReT alone, or did the
+intended definition of resilience/acceptance also include a requirement on worst outcomes?
+(b) In real military logistics doctrine, are there BINDING requirements on worst-theatre service
+or worst-campaign outcomes (service floors, tail risk), or is average resilience the operative
+measure for acceptance decisions?"
+
+**Interpretation rule (frozen now):** a written, dated answer that the acceptance criterion is
+mean canonical ReT (a) AND that doctrine imposes no binding tail/floor requirement (b) authorizes
+— after the `cvar_gate_instrument_audit_v1` report and independent-auditor adjudication — a NEW
+learner contract with CVaR as secondary reporting, never a gate. Any other answer keeps tail
+non-inferiority in the acceptance rule (with a properly calibrated margin and power). Neither
+answer rewrites `STOP_PROGRAM_O_AFTER_CORRECTIVE_VALIDATION`.
+
+---
+
 ## How to use these questions
 
 1. Send all fourteen sections as one batch. Linked families within one section are
