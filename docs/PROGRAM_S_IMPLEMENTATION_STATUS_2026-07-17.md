@@ -50,4 +50,10 @@ The post-Q numeric-range auditor excludes burned 749 from virginity claims and
 audits only the still-reserved S namespaces. The fresh S1 preopening audit binds
 the terminal Q adjudication and authorizes S1 without changing any S gate.
 
+The post-Q execution harness enumerates exactly 5,760 unique
+`group × trajectory × point × product-cell × tape` shards, fixes two recycled
+workers, starts an independent watcher before the producer, records PID/PGID,
+RAM, stderr and atomic progress, refuses overwrite, and permits only an explicit
+fail-closed resume over missing identities.
+
 Paper 3 remains sealed until a risk-aware S4 PASS, and its formerly open-ended namespace is bounded to `7530001–7539999`.
