@@ -8,7 +8,12 @@ import numpy as np
 from scripts.adjudicate_program_q import CELL_IDS, adjudicate
 from scripts.audit_program_q_seed_custody import scan
 from scripts.benchmark_program_q_latency import benchmark_callable
-from scripts.power_program_q_replication import bootstrap_effects, point_effects
+from scripts.power_program_q_replication import (
+    _load_classical_shard,
+    _write_classical_shard,
+    bootstrap_effects,
+    point_effects,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -93,6 +98,23 @@ def test_power_bootstrap_reselects_comparator_families() -> None:
     )
     assert draws.shape == (12, 6)
     assert np.isfinite(draws).all()
+
+
+def test_classical_cache_shards_are_atomic_resumable_and_identity_checked(
+    tmp_path: Path,
+) -> None:
+    indices = list(range(10))
+    _write_classical_shard(tmp_path, 0, 7480001, indices)
+    shard = tmp_path / f"{CELL_IDS[0]}__tape_7480001.npz"
+    assert shard.is_file()
+    assert not list(tmp_path.glob("*.tmp"))
+    assert _load_classical_shard(
+        shard, expected_cell_index=0, expected_tape_seed=7480001
+    ) == indices
+    with np.testing.assert_raises_regex(RuntimeError, "identity mismatch"):
+        _load_classical_shard(
+            shard, expected_cell_index=0, expected_tape_seed=7480002
+        )
 
 
 def test_seed_custody_scan_allows_contract_declaration_only(tmp_path: Path) -> None:

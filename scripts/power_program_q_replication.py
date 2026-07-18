@@ -8,7 +8,7 @@ every bootstrap replicate.  No 749 or 950 tape is generated or opened here.
 from __future__ import annotations
 
 import argparse
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, as_completed
 import json
 from pathlib import Path
 import sys
@@ -153,7 +153,44 @@ def _classical_indices_for_tape(task: tuple[int, int]) -> tuple[int, int, list[i
     return cell_index, tape_seed, indices
 
 
-def build_classical_cache(run: Path, output: Path, workers: int) -> None:
+def _write_classical_shard(
+    shards_dir: Path, cell_index: int, tape_seed: int, indices: list[int]
+) -> None:
+    destination = shards_dir / f"{CELL_IDS[cell_index]}__tape_{tape_seed}.npz"
+    temporary = destination.with_suffix(".npz.tmp")
+    with temporary.open("wb") as stream:
+        np.savez_compressed(
+            stream,
+            cell_index=np.asarray(cell_index, dtype=np.int64),
+            tape_seed=np.asarray(tape_seed, dtype=np.int64),
+            calendar_indices=np.asarray(indices, dtype=np.int64),
+        )
+    temporary.replace(destination)
+
+
+def _load_classical_shard(
+    path: Path, *, expected_cell_index: int, expected_tape_seed: int
+) -> list[int]:
+    with np.load(path, allow_pickle=False) as payload:
+        cell_index = int(payload["cell_index"])
+        tape_seed = int(payload["tape_seed"])
+        indices = payload["calendar_indices"].astype(np.int64)
+    expected_configs = len(finite_state_rich_configurations())
+    if cell_index != expected_cell_index or tape_seed != expected_tape_seed:
+        raise RuntimeError(f"classical shard identity mismatch: {path}")
+    if indices.shape != (expected_configs,):
+        raise RuntimeError(f"classical shard is incomplete: {path}")
+    return indices.tolist()
+
+
+def build_classical_cache(
+    run: Path,
+    output: Path,
+    workers: int,
+    *,
+    shards_dir: Path,
+    max_tasks_per_child: int,
+) -> None:
     if output.exists():
         raise FileExistsError(f"refusing to overwrite {output}")
     tasks = []
@@ -166,11 +203,28 @@ def build_classical_cache(run: Path, output: Path, workers: int) -> None:
         seeds = [int(path.stem.split("_")[-1]) for path in paths]
         tape_seeds_by_cell[cell.cell_id] = seeds
         tasks.extend((cell_index, seed) for seed in seeds)
+    shards_dir.mkdir(parents=True, exist_ok=True)
     rows: dict[str, dict[int, list[int]]] = {cell: {} for cell in CELL_IDS}
-    with ProcessPoolExecutor(max_workers=workers) as executor:
-        for cell_index, tape_seed, indices in executor.map(
-            _classical_indices_for_tape, tasks
-        ):
+    pending = []
+    for cell_index, tape_seed in tasks:
+        shard = shards_dir / f"{CELL_IDS[cell_index]}__tape_{tape_seed}.npz"
+        if shard.exists():
+            rows[CELL_IDS[cell_index]][tape_seed] = _load_classical_shard(
+                shard,
+                expected_cell_index=cell_index,
+                expected_tape_seed=tape_seed,
+            )
+        else:
+            pending.append((cell_index, tape_seed))
+    with ProcessPoolExecutor(
+        max_workers=workers, max_tasks_per_child=max_tasks_per_child
+    ) as executor:
+        futures = {
+            executor.submit(_classical_indices_for_tape, task): task for task in pending
+        }
+        for future in as_completed(futures):
+            cell_index, tape_seed, indices = future.result()
+            _write_classical_shard(shards_dir, cell_index, tape_seed, indices)
             rows[CELL_IDS[cell_index]][tape_seed] = indices
     arrays = {}
     for cell_id in CELL_IDS:
@@ -246,13 +300,33 @@ def main() -> None:
     )
     parser.add_argument("--build-classical-cache", action="store_true")
     parser.add_argument("--workers", type=int, default=8)
+    parser.add_argument(
+        "--classical-cache-shards-dir",
+        type=Path,
+        help="resumable per-tape cache shards (defaults beside the final cache)",
+    )
+    parser.add_argument(
+        "--max-tasks-per-child",
+        type=int,
+        default=1,
+        help="recycle cache workers to bound full-DES skeleton memory",
+    )
     parser.add_argument("--critical-resamples", type=int, default=5_000)
     parser.add_argument("--power-resamples", type=int, default=2_000)
     args = parser.parse_args()
     if args.output.exists():
         raise FileExistsError(f"refusing to overwrite {args.output}")
     if args.build_classical_cache:
-        build_classical_cache(args.run, args.classical_cache, args.workers)
+        shards_dir = args.classical_cache_shards_dir or args.classical_cache.with_name(
+            f"{args.classical_cache.stem}_shards"
+        )
+        build_classical_cache(
+            args.run,
+            args.classical_cache,
+            args.workers,
+            shards_dir=shards_dir,
+            max_tasks_per_child=args.max_tasks_per_child,
+        )
     panels = load_panels(args.run, args.classical_cache)
     rng = np.random.default_rng(20260717)
     critical, base_se = simultaneous_critical(
