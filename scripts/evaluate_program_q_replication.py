@@ -64,6 +64,11 @@ SMOKE_SCRIPT = ROOT / "scripts/smoke_program_q_confirmation.py"
 SMOKE_ROOT = ROOT / "results/program_q/confirmation_development_smoke_v2"
 SMOKE_REPORT = SMOKE_ROOT / "report.json"
 SMOKE_MANIFEST = SMOKE_ROOT / "smoke_files.sha256"
+REDUCTION_AMENDMENT = (
+    ROOT
+    / "research/paper2_exhaustive_search/"
+    "program_q_deterministic_guardrail_reduction_amendment_v1.json"
+)
 PRIMARY_KEYS = ("ret_visible",)
 GUARDRAIL_KEYS = ("ret_full", "quantity_ret_full", "worst_product_fill")
 RESOURCE_KEYS = (
@@ -135,6 +140,7 @@ def verify_authorization(path: Path) -> dict[str, Any]:
         "smoke_script_sha256": sha256(SMOKE_SCRIPT),
         "smoke_report_sha256": sha256(SMOKE_REPORT),
         "smoke_manifest_sha256": sha256(SMOKE_MANIFEST),
+        "reduction_amendment_sha256": sha256(REDUCTION_AMENDMENT),
     }
     if payload.get("status") != "AUTHORIZED_PROGRAM_Q_CONFIRMATION":
         raise RuntimeError("Program Q confirmation is not independently authorized")
@@ -391,23 +397,46 @@ def simultaneous_guardrail_inference(
                     learner_mean - classical_means[np.arange(width), classical_indices]
                 )
     se = boot.std(axis=0, ddof=1)
-    if not np.all(np.isfinite(se)) or np.any(se <= 0.0):
+    if not np.all(np.isfinite(se)) or np.any(se < 0.0):
         raise RuntimeError("Program Q guardrail bootstrap produced invalid standard errors")
-    active = se > 1e-15
+    deterministic = se <= 1e-15
+    if np.any(deterministic):
+        deterministic_error = np.max(
+            np.abs(boot[:, deterministic] - point[deterministic][None, :])
+        )
+        if not np.isfinite(deterministic_error) or deterministic_error > 1e-12:
+            raise RuntimeError(
+                "Program Q zero-SE guardrail is not an exact deterministic contrast"
+            )
+    active = ~deterministic
+    if not np.any(active):
+        raise RuntimeError("Program Q guardrail family has no stochastic endpoint")
     studentized = np.zeros_like(boot)
     studentized[:, active] = (point[active] - boot[:, active]) / se[active]
-    critical = float(np.quantile(np.max(studentized, axis=1), 0.95))
+    critical = float(np.quantile(np.max(studentized[:, active], axis=1), 0.95))
     if not np.isfinite(critical) or critical <= 0.0:
         raise RuntimeError("Program Q guardrail bootstrap produced an invalid critical value")
     return {
         "method": "separate two-way one-sided studentized max-t guardrail family",
         "resamples": resamples,
         "simultaneous_critical": critical,
+        "deterministic_zero_se_endpoints": [
+            name for index, name in enumerate(names) if deterministic[index]
+        ],
         "estimates": {
             name: {
                 "point": float(point[index]),
                 "se": float(se[index]),
-                "lcb95": float(point[index] - critical * se[index]),
+                "lcb95": float(
+                    point[index]
+                    if deterministic[index]
+                    else point[index] - critical * se[index]
+                ),
+                "inference_kind": (
+                    "exact_deterministic_contrast"
+                    if deterministic[index]
+                    else "studentized_max_t"
+                ),
             }
             for index, name in enumerate(names)
         },

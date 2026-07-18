@@ -1,0 +1,30 @@
+{
+  "schema_version": "program_q_deterministic_guardrail_reduction_amendment_v1",
+  "status": "FROZEN_AFTER_FAIL_CLOSED_BEFORE_ANY_RESULT_WAS_EMITTED",
+  "parent_scientific_commit": "de12fea0d9665493c798a6f4327b9aa976307762",
+  "run_id": "program-q-confirmation-v1-20260718",
+  "observed_failure": "RuntimeError: Program Q guardrail bootstrap produced invalid standard errors",
+  "failure_stage": "reduction_before_result_direct_replay_or_adjudication",
+  "completed_shards_preserved": 768,
+  "new_seed_execution_forbidden": true,
+  "diagnosis": {
+    "ret_full": "exactly zero for learner, complete open-loop frontier and classical family on every seed and cell",
+    "quantity_ret_full": "exactly zero for learner, complete open-loop frontier and classical family on every seed and cell",
+    "worst_product_fill": "nondegenerate and remains in the studentized max-t family",
+    "cause": "the evaluator already defined active endpoints as SE > 1e-15 but rejected all SE <= 0 before applying that branch"
+  },
+  "authorized_reduction_change_only": {
+    "deterministic_rule": "A zero-SE endpoint is accepted only when every bootstrap draw equals its full-sample point within 1e-12; its exact lower bound equals the point.",
+    "stochastic_rule": "All nondegenerate guardrails retain the frozen two-way one-sided studentized max-t inference.",
+    "fail_closed_rule": "Reject a zero-SE endpoint if any bootstrap draw differs from its point, if values are nonfinite, or if the family contains no stochastic endpoint."
+  },
+  "forbidden_changes": [
+    "shard regeneration",
+    "seed reopening",
+    "primary estimand or threshold change",
+    "comparator change",
+    "margin change",
+    "replacement or feedback gate change"
+  ],
+  "claim_boundary": "Exact zero contrasts establish only finite-design noninferiority at the frozen -0.02 margin. They do not establish informative variation or tail safety for ret_full or quantity_ret_full."
+}

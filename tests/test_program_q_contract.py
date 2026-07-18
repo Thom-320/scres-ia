@@ -11,6 +11,7 @@ from scripts.audit_program_q_power_preopen import expected_selected_N
 from scripts.audit_program_q_seed_custody import scan
 from scripts.benchmark_program_q_latency import benchmark_callable
 from scripts.evaluate_program_q_replication import (
+    simultaneous_guardrail_inference,
     simultaneous_primary_inference,
     validate_shard,
     verify_authorization,
@@ -274,6 +275,47 @@ def test_program_q_bootstrap_one_is_rejected_fail_closed() -> None:
     }
     with np.testing.assert_raises_regex(ValueError, "at least two"):
         simultaneous_primary_inference(panels, resamples=1)
+
+
+def test_program_q_guardrail_inference_accepts_only_exact_zero_se_contrasts() -> None:
+    panels = {}
+    for cell_index, cell in enumerate(CELL_IDS):
+        learner_ret = np.asarray([[0.8, 0.9, 0.85], [0.81, 0.89, 0.86]])
+        open_ret = np.asarray([[0.7, 0.72], [0.74, 0.71], [0.73, 0.75]])
+        classical_ret = np.asarray([[0.79, 0.88, 0.84], [0.78, 0.87, 0.83]])
+        exact_learner = np.zeros_like(learner_ret)
+        exact_open = np.zeros_like(open_ret)
+        exact_classical = np.zeros_like(classical_ret)
+        varying_learner = learner_ret - 0.1 + cell_index * 0.001
+        varying_open = open_ret - 0.1
+        varying_classical = classical_ret - 0.1
+        panels[cell] = {
+            "learner_ret": learner_ret,
+            "open_ret": open_ret,
+            "classical_ret": classical_ret,
+            "learner__ret_full": exact_learner,
+            "open__ret_full": exact_open,
+            "classical__ret_full": exact_classical,
+            "learner__quantity_ret_full": exact_learner,
+            "open__quantity_ret_full": exact_open,
+            "classical__quantity_ret_full": exact_classical,
+            "learner__worst_product_fill": varying_learner,
+            "open__worst_product_fill": varying_open,
+            "classical__worst_product_fill": varying_classical,
+        }
+    result = simultaneous_guardrail_inference(panels, resamples=100, rng_seed=123)
+    assert len(result["deterministic_zero_se_endpoints"]) == 12
+    for name in result["deterministic_zero_se_endpoints"]:
+        estimate = result["estimates"][name]
+        assert estimate["point"] == estimate["lcb95"] == 0.0
+        assert estimate["inference_kind"] == "exact_deterministic_contrast"
+    stochastic = [
+        row
+        for name, row in result["estimates"].items()
+        if "worst_product_fill" in name
+    ]
+    assert stochastic
+    assert all(row["inference_kind"] == "studentized_max_t" for row in stochastic)
 
 
 def test_program_q_plan_does_not_open_scientific_seeds(tmp_path: Path) -> None:
