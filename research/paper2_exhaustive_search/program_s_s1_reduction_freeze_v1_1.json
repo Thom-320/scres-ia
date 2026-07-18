@@ -1,0 +1,31 @@
+{
+  "schema_version": "program_s_s1_reduction_freeze_v1_1",
+  "frozen_at_utc": "2026-07-18T16:50:00Z",
+  "timing_disclosure": "Frozen after the 751 block was opened but before run completion, retrieval, any point summary, or any S1 outcome reduction. The method is inherited unchanged from the audited Program O full-DES H_PI validation.",
+  "run_source_commit": "adc00561ae8d6a439e4b55cab434b356f8f8ea38",
+  "expected_shards": 5760,
+  "expected_points": 480,
+  "tapes_per_point": 12,
+  "inference": {
+    "method": "paired tape bootstrap with the best of all 65536 open-loop calendars reselected and the guardrail-safe oracle recomputed in every resample",
+    "bootstrap_resamples": 10000,
+    "bootstrap_rng_seed": 7510999,
+    "simultaneous_family": "all 480 S-NATIVE Morris point x product-cell safe H_PI estimands",
+    "critical_value": "95th percentile using method=higher of the maximum point-estimate-minus-bootstrap-estimate error",
+    "one_sided_lcb": true
+  },
+  "early_exit": {
+    "threshold": 0.01,
+    "rule": "STOP iff the maximum simultaneous LCB95(H_PI_safe) across all 480 points is strictly below 0.01",
+    "stop_label": "STOP_S1_NO_CONNECTED_PHYSICAL_HEADROOM",
+    "continue_label": "PASS_S1_NATIVE_HEADROOM_CONTINUE_TO_CONNECTED_REGION_AUDIT",
+    "selection_performed": false
+  },
+  "fail_closed_requirements": [
+    "producer_exit status COMPLETE with 5760 shards",
+    "exact manifest identity and SHA-256 verification",
+    "exact shard schema, dimensions, finite matrices, cell identity, calendar identity, and hashes",
+    "direct replay maximum absolute error at most 1e-10",
+    "atomic append-only reduction output"
+  ]
+}

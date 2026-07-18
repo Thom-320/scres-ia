@@ -6,6 +6,11 @@ import numpy as np
 import pytest
 
 from scripts.launch_program_s_s1_native import next_resume_custody
+from scripts.adjudicate_program_s_s1_native_early_exit import (
+    expected_relative_paths,
+    point_identities,
+    verify_run_custody,
+)
 from scripts.run_program_s_s1_native import EXPECTED_SHARDS, pending_tasks, shard_path, tasks
 from supply_chain.program_o_full_des_transducer import MATRIX_KEYS
 
@@ -55,3 +60,19 @@ def test_resume_custody_namespace_is_append_only(tmp_path: Path) -> None:
     first.mkdir(parents=True)
     second = next_resume_custody(tmp_path)
     assert second.name == "attempt-002"
+
+
+def test_s1_reduction_freeze_covers_the_complete_family() -> None:
+    assert len(expected_relative_paths()) == EXPECTED_SHARDS == 5_760
+    identities = point_identities()
+    assert len(identities) == len(set(identities)) == 480
+    assert {row[3] for row in identities} == {
+        "rho75_share90",
+        "rho90_share75",
+        "rho90_share90",
+    }
+
+
+def test_s1_reducer_refuses_partial_run_before_reading_outcomes(tmp_path: Path) -> None:
+    with pytest.raises(FileNotFoundError, match="incomplete S1 custody"):
+        verify_run_custody(tmp_path)
