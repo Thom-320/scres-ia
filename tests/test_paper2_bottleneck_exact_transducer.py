@@ -561,6 +561,22 @@ def test_immutable_sim_contract_state_is_bound_into_every_key():
     assert before_fingerprint[3] != after_fingerprint[3]
 
 
+def test_program_s_r24_ledgers_are_output_only_exactly_classified():
+    sim, _controller = _post_week_state()
+    inventory = exact_module.audit_frozen_state_inventory(sim)
+    expected = {
+        "r24_generated_surge_quantity",
+        "r24_admitted_surge_quantity",
+        "r24_clipped_surge_quantity",
+        "r24_cap_hit_count",
+    }
+    # Key-v3 deliberately binds output/replay fields into the conservative
+    # Markov bytes; they therefore appear in the effective markov_key category.
+    assert expected <= set(inventory["categories"]["markov_key"])
+    assert expected.isdisjoint(inventory["static_live_reads_unclassified"])
+    assert inventory["classification_complete"] is True
+
+
 def test_every_key_fails_closed_on_runtime_global_rebinding(monkeypatch):
     markov_completeness_certificate()
     sim, controller = _post_week_state()

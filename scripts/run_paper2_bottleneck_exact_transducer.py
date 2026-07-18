@@ -494,6 +494,16 @@ OUTPUT_OR_REPLAY_FIELDS = {
     "daily_inventory_theatre",
     "emergency_reserve_target_changes",
     "program_f_reserve_issue_events",
+    # Program S R24 incidence ledgers. These counters are written by the shared
+    # simulator hot path and read only by Program S reporting/audit code. They
+    # do not affect a transition, action, event time, or canonical ReT outcome
+    # in the frozen bottleneck contract, so their scientific role is
+    # output/replay. Key-v3 still serializes every such field conservatively;
+    # the classification prevents an unreviewed field from entering silently.
+    "r24_generated_surge_quantity",
+    "r24_admitted_surge_quantity",
+    "r24_clipped_surge_quantity",
+    "r24_cap_hit_count",
 }
 
 # The quotient theorem is deliberately scoped to the primary visible-order ReT
