@@ -18,6 +18,7 @@ from scripts.evaluate_program_q_replication import (
     write_plan,
 )
 from scripts.launch_program_q_confirmation import archive_previous_attempt
+from scripts.run_program_q_confirmation import verify_pre_reduction_shard_manifest
 from scripts.power_program_q_replication import (
     _load_classical_shard,
     _write_classical_shard,
@@ -342,6 +343,33 @@ def test_program_q_resume_rejects_incomplete_existing_shard(tmp_path: Path) -> N
     np.savez_compressed(shard, cell_index=0, tape_seed=7490001)
     with np.testing.assert_raises_regex(RuntimeError, "schema mismatch"):
         validate_shard(shard, cell_index=0, tape_seed=7490001)
+
+
+def test_program_q_resume_binds_exact_pre_reduction_shard_manifest(
+    tmp_path: Path,
+) -> None:
+    from supply_chain.program_o_eval_custody import sha256, write_sha256_manifest
+
+    shards = tmp_path / "shards"
+    custody = tmp_path / "custody"
+    paths = []
+    for index in range(2):
+        path = shards / f"cell/tape_{index}.npz"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(f"shard-{index}".encode())
+        paths.append(path)
+    manifest = custody / "pre_reduction_shards.sha256"
+    write_sha256_manifest(shards, paths, manifest)
+    authorization = {"pre_reduction_shard_manifest_sha256": sha256(manifest)}
+    rows = verify_pre_reduction_shard_manifest(
+        shards=shards, custody=custody, authorization=authorization, expected=2
+    )
+    assert len(rows) == 2
+    paths[0].write_bytes(b"tampered")
+    with np.testing.assert_raises_regex(ValueError, "SHA-256 mismatch"):
+        verify_pre_reduction_shard_manifest(
+            shards=shards, custody=custody, authorization=authorization, expected=2
+        )
 
 
 def test_direct_replay_detects_corrupt_promoted_learner_matrix() -> None:

@@ -154,6 +154,11 @@ def verify_authorization(path: Path) -> dict[str, Any]:
     for key, expected in required.items():
         if payload.get(key) != expected:
             raise RuntimeError(f"Program Q authorization {key} mismatch")
+    manifest_hash = payload.get("pre_reduction_shard_manifest_sha256")
+    if not isinstance(manifest_hash, str) or len(manifest_hash) != 64:
+        raise RuntimeError(
+            "Program Q authorization lacks pre-reduction shard manifest binding"
+        )
     return payload
 
 

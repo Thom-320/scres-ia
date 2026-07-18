@@ -58,6 +58,23 @@ def _task(arguments: tuple[int, int, str, str]) -> str:
     )
 
 
+def verify_pre_reduction_shard_manifest(
+    *, shards: Path, custody: Path, authorization: dict[str, Any], expected: int
+) -> dict[str, str]:
+    manifest = custody / "pre_reduction_shards.sha256"
+    if authorization.get("pre_reduction_shard_manifest_sha256") != sha256(manifest):
+        raise RuntimeError("Program Q pre-reduction shard manifest hash mismatch")
+    rows = verify_sha256_manifest(shards, manifest)
+    observed = {
+        path.relative_to(shards).as_posix() for path in shards.rglob("*.npz")
+    }
+    if len(rows) != expected or set(rows) != observed:
+        raise RuntimeError(
+            "Program Q pre-reduction shard manifest is not the exact frozen shard set"
+        )
+    return rows
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--run-dir", type=Path, required=True)
@@ -81,7 +98,7 @@ def main() -> int:
             raise RuntimeError("Program Q producer refuses to start before watcher readiness")
         if sha256(custody / "watcher_ready.json") != args.watcher_ready_sha256:
             raise RuntimeError("Program Q watcher readiness hash mismatch")
-        verify_authorization(args.authorization)
+        authorization = verify_authorization(args.authorization)
         verify_model_hashes(args.models)
         contract = _contract()
         seeds = _frozen_seeds(contract)
@@ -100,23 +117,31 @@ def main() -> int:
                 "expected": len(tasks),
             },
         )
-        with ProcessPoolExecutor(
-            max_workers=int(args.workers), max_tasks_per_child=1
-        ) as executor:
-            futures = [executor.submit(_task, task) for task in tasks]
-            completed = 0
-            for future in as_completed(futures):
-                future.result()
-                completed += 1
-                write_json_atomic(
-                    artifacts / "progress.json",
-                    {
-                        "updated_at": now_utc(),
-                        "stage": "shards",
-                        "completed": completed,
-                        "expected": len(tasks),
-                    },
-                )
+        if args.attempt_id > 0 and completed == len(tasks):
+            verify_pre_reduction_shard_manifest(
+                shards=shards,
+                custody=custody,
+                authorization=authorization,
+                expected=len(tasks),
+            )
+        else:
+            with ProcessPoolExecutor(
+                max_workers=int(args.workers), max_tasks_per_child=1
+            ) as executor:
+                futures = [executor.submit(_task, task) for task in tasks]
+                completed = 0
+                for future in as_completed(futures):
+                    future.result()
+                    completed += 1
+                    write_json_atomic(
+                        artifacts / "progress.json",
+                        {
+                            "updated_at": now_utc(),
+                            "stage": "shards",
+                            "completed": completed,
+                            "expected": len(tasks),
+                        },
+                    )
         direct_path = audit_dir / "independent_full_des_audit.json"
         result_path = evaluation / "result.json"
         if not result_path.is_file():

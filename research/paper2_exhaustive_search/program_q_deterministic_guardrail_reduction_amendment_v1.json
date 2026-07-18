@@ -18,6 +18,11 @@
     "stochastic_rule": "All nondegenerate guardrails retain the frozen two-way one-sided studentized max-t inference.",
     "fail_closed_rule": "Reject a zero-SE endpoint if any bootstrap draw differs from its point, if values are nonfinite, or if the family contains no stochastic endpoint."
   },
+  "pre_reduction_custody": {
+    "require_exact_768_shard_manifest": true,
+    "bind_manifest_sha256_in_fresh_authorization": true,
+    "resume_must_not_regenerate_existing_shards": true
+  },
   "forbidden_changes": [
     "shard regeneration",
     "seed reopening",
