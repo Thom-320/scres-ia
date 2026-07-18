@@ -1,0 +1,23 @@
+All inspections complete: the diff, both frozen documents, the adjudicator, the replay audit, and the test suite (22 passed in the project venv). Report follows.
+
+VERDICT: AUTHORIZE_REDUCTION_RESUME
+
+FINDINGS:
+
+1. **Mathematically sound exclusion (no defect).** `scripts/evaluate_program_q_replication.py:402-416` — a zero-SE endpoint has no defined studentized statistic; the pre-fix code (`se <= 0.0` reject at old line 394) made the frozen method undefined for this data, so this is the minimal coherent completion, not a method change. Excluding degenerate columns from `np.max(studentized[:, active], axis=1)` removes only an artificial zero-floor on the max; the remaining `worst_product_fill` family (2 comparators × 3 cells) retains exact frozen two-way one-sided max-t simultaneous coverage. LCB = point for an endpoint whose every bootstrap draw equals its point is exact conditional on the observed design.
+
+2. **Fail-closed structure verified.** `scripts/evaluate_program_q_replication.py:403-413` — non-exact zero-SE endpoints raise (draw deviation > 1e-12), nonfinite raises, and an all-deterministic family raises. The margin gate at `:833-840` still compares deterministic LCBs against −0.02, so a deterministically *bad* constant contrast would still fail. Test `test_program_q_guardrail_inference_accepts_only_exact_zero_se_contrasts` (`tests/test_program_q_contract.py:280-319`) exercises the mixed family; 22/22 tests pass.
+
+3. **Minor code/text mismatch (non-blocking).** The amendment's claim boundary speaks of "exact zero contrasts," but the code accepts any deterministic constant point. Given the diagnosis (all values exactly 0.0), no practical divergence; if a nonzero deterministic contrast ever appeared, the margin gate still binds. Also `np.any(se < 0.0)` is vacuous (std ≥ 0); harmless.
+
+4. **Determinism certificate is stochastic, not exhaustive (non-blocking).** The exactness check runs over the 10,000 realized reweighted draws with comparator reselection, not a direct panel identity scan. Any per-tape/per-seed deviation entering the frozen estimand would break SE ≤ 1e-15 with probability approximately 1 at 10,000 draws, and unselected frontier entries lie outside the frozen estimand, so this is adequate.
+
+5. **Governance chain correct.** `verify_authorization` now binds `reduction_amendment_sha256`, the new `evaluator_sha256`, and `source_commit`; any pre-amendment authorization fails closed automatically. The amendment's `parent_scientific_commit` matches de12fea. Its forbidden-changes list excludes every estimand, threshold, comparator and margin change. No result, output directory, or manifest was emitted before the failure, so no partial result exists to retract.
+
+6. **Custody gap predating this commit (non-blocking, recommend closing before resume).** `shard_files.sha256` was first written at reduction time; no production-time cryptographic manifest bound the 768 shards. Recommendation: hash the 768 shards now and bind that manifest into the fresh authorization payload — zero data cost, closes the window.
+
+7. **Adjudicator does not surface vacuity (claim-boundary, non-blocking).** The adjudicator consumes `ret_full_noninferior` and `quantity_ret_full_noninferior` as booleans and its terminal JSON does not echo `deterministic_zero_se_endpoints`. Any drafted claim must be written from the full bundle, not the adjudication JSON alone.
+
+CLAIM_BOUNDARY: Because `ret_full` and `quantity_ret_full` are exactly 0.0 across the complete 65,536-calendar open-loop frontier, all classical configurations, and all learner seeds on every tape and cell, these two guardrails are policy-invariant identities in this fixed-clock physical model. Their noninferior gates pass vacuously and certify only finite-design equality at the frozen −0.02 margin on the 256 frozen tapes. They provide zero evidence of informative variation, invisible-demand protection, or tail safety, and no population-level noninferiority claim may be attached to them. The only stochastic distributional guardrail remaining is `worst_product_fill`, which is nondegenerate in every cell and retains full frozen simultaneous inference. Any terminal PASS_Q verdict must state that two of three integrity guardrails were deterministic identities and that guardrail-based safety evidence rests on `worst_product_fill` plus the nonblocking secondaries alone; the primary H_OL and Delta_N claims on `ret_visible` are unaffected.
+
+FINAL_ACTION: Issue a fresh independent authorization binding the reduction amendment and a pre-reduction hash manifest of the 768 shards, then resume reduction on the existing 768 shards with no seed regeneration.
