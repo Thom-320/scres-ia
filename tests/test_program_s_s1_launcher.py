@@ -5,7 +5,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from scripts.launch_program_s_s1_native import next_resume_custody
+from scripts.launch_program_s_s1_native import SCIENTIFIC_PATHS, next_resume_custody
 from scripts.adjudicate_program_s_s1_native_early_exit import (
     expected_relative_paths,
     point_identities,
@@ -76,3 +76,9 @@ def test_s1_reduction_freeze_covers_the_complete_family() -> None:
 def test_s1_reducer_refuses_partial_run_before_reading_outcomes(tmp_path: Path) -> None:
     with pytest.raises(FileNotFoundError, match="incomplete S1 custody"):
         verify_run_custody(tmp_path)
+
+
+def test_postrun_reducer_is_not_misclassified_as_trajectory_physics() -> None:
+    assert "scripts/run_program_s_s1_shard.py" in SCIENTIFIC_PATHS
+    assert "scripts/summarize_program_s_s1_point.py" not in SCIENTIFIC_PATHS
+    assert "scripts/adjudicate_program_s_s1_native_early_exit.py" not in SCIENTIFIC_PATHS

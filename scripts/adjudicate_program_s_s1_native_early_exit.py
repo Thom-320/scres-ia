@@ -24,11 +24,13 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from scripts.run_program_s_s1_native import EXPECTED_SHARDS, shard_path, tasks  # noqa: E402
+from scripts.run_program_s_s1_shard import make_cell, resolve_point  # noqa: E402
 from scripts.screen_program_o_full_des_hpi import (  # noqa: E402
     bootstrap_counts,
     bootstrap_profile,
+    profile_summary,
 )
-from scripts.summarize_program_s_s1_point import summarize_point  # noqa: E402
+from supply_chain.program_o_full_des_transducer import MATRIX_KEYS  # noqa: E402
 
 
 FREEZE_PATH = (
@@ -40,6 +42,18 @@ DESIGN_PATH = (
     / "research/paper2_exhaustive_search/program_s_native_morris_design_v1_1.json"
 )
 CONTRACT_PATH = ROOT / "contracts/program_s_product_mix_risk_interaction_gsa_v1.json"
+SEEDS = tuple(range(7_510_001, 7_510_013))
+EXTRA_KEYS = (
+    "classical_calendar_index",
+    "classical_calendar",
+    "oracle_calendar_index",
+    "risk_event_tape_sha256",
+    "base_stream_sha256",
+    "skeleton_sha256",
+    "cell_id",
+    "observation_sha256",
+    "direct_replay_max_abs_error",
+)
 
 
 def sha256(path: Path) -> str:
@@ -56,6 +70,126 @@ def atomic_json(path: Path, payload: dict[str, Any]) -> None:
     os.replace(temporary, path)
 
 
+def _scalar_text(value: np.ndarray) -> str:
+    array = np.asarray(value)
+    if array.shape != ():
+        raise AssertionError("expected scalar string metadata")
+    return str(array.item())
+
+
+def summarize_point(
+    *,
+    group: int,
+    trajectory: int,
+    point: int,
+    product_cell: str,
+    output_root: Path,
+) -> tuple[dict[str, Any], dict[str, np.ndarray]]:
+    """Load, validate, and summarize one frozen 12-tape S1 point."""
+    group_row, point_row = resolve_point(group, trajectory, point)
+    expected_cell = make_cell(group_row, point_row, product_cell)
+    prefix = (
+        f"g{group:02d}__t{trajectory:02d}__p{point:02d}"
+        f"__{product_cell}__seed"
+    )
+    paths = [output_root / "matrices" / f"{prefix}{seed}.npz" for seed in SEEDS]
+    missing = [str(path) for path in paths if not path.is_file()]
+    if missing:
+        raise FileNotFoundError(f"missing {len(missing)} S1 shards")
+
+    panel = {key: [] for key in MATRIX_KEYS}
+    classical_indices: list[int] = []
+    shard_rows: list[dict[str, Any]] = []
+    expected_files = set(MATRIX_KEYS) | set(EXTRA_KEYS)
+    for seed, path in zip(SEEDS, paths, strict=True):
+        with np.load(path, allow_pickle=False) as shard:
+            if set(shard.files) != expected_files:
+                raise AssertionError(f"S1 shard schema drift: {path}")
+            for key in MATRIX_KEYS:
+                values = np.asarray(shard[key])
+                if values.shape != (65_536,) or not np.all(np.isfinite(values)):
+                    raise AssertionError(f"invalid {key} matrix in {path}")
+                panel[key].append(values)
+            cell_id = _scalar_text(shard["cell_id"])
+            if cell_id != expected_cell.cell_id:
+                raise AssertionError(f"cell identity mismatch in {path}")
+            classical_index = int(np.asarray(shard["classical_calendar_index"]).item())
+            oracle_index = int(np.asarray(shard["oracle_calendar_index"]).item())
+            if not 0 <= classical_index < 65_536 or not 0 <= oracle_index < 65_536:
+                raise AssertionError(f"calendar index out of range in {path}")
+            calendar = np.asarray(shard["classical_calendar"])
+            if calendar.shape != (8,) or np.any((calendar < 0) | (calendar > 3)):
+                raise AssertionError(f"invalid classical calendar in {path}")
+            reconstructed = 0
+            for action in calendar:
+                reconstructed = reconstructed * 4 + int(action)
+            if reconstructed != classical_index:
+                raise AssertionError(f"classical calendar/index mismatch in {path}")
+            if oracle_index != int(np.argmax(np.asarray(shard["ret_visible"]))):
+                raise AssertionError(f"oracle index mismatch in {path}")
+            observations = np.asarray(shard["observation_sha256"])
+            if observations.shape != (8,) or any(len(str(value)) != 64 for value in observations):
+                raise AssertionError(f"invalid observation hashes in {path}")
+            hashes = {
+                key: _scalar_text(shard[key])
+                for key in (
+                    "risk_event_tape_sha256",
+                    "base_stream_sha256",
+                    "skeleton_sha256",
+                )
+            }
+            if any(len(value) != 64 for value in hashes.values()):
+                raise AssertionError(f"invalid scientific hash in {path}")
+            replay_error = float(np.asarray(shard["direct_replay_max_abs_error"]).item())
+            if not np.isfinite(replay_error) or replay_error > 1e-10:
+                raise AssertionError(f"direct replay failed in {path}: {replay_error}")
+            classical_indices.append(classical_index)
+            shard_rows.append(
+                {
+                    "seed": seed,
+                    "sha256": sha256(path),
+                    "risk_event_tape_sha256": hashes["risk_event_tape_sha256"],
+                    "base_stream_sha256": hashes["base_stream_sha256"],
+                    "skeleton_sha256": hashes["skeleton_sha256"],
+                    "direct_replay_max_abs_error": replay_error,
+                }
+            )
+
+    stacked = {key: np.stack(values) for key, values in panel.items()}
+    summary = profile_summary(stacked, json.loads(CONTRACT_PATH.read_text()))
+    tapes = np.arange(len(paths))
+    classical_values = stacked["ret_visible"][tapes, np.asarray(classical_indices)]
+    static_values = stacked["ret_visible"][:, summary["best_static_calendar_index"]]
+    deltas = classical_values - static_values
+    summary.update(
+        stratum=str(group_row["stratum"]),
+        mask=str(group_row["mask"]),
+        group=int(group),
+        trajectory=int(trajectory),
+        point=int(point),
+        product_cell=str(product_cell),
+        cell_id=expected_cell.cell_id,
+        physical=point_row["physical"],
+        classical_policy="belief_mpc_h4_no_alarm",
+        classical_calendar_indices=classical_indices,
+        classical_h_obs=float(deltas.mean()),
+        classical_h_obs_per_tape=deltas.tolist(),
+        classical_favorable_tapes=int(np.sum(deltas > 1e-15)),
+        eta=(
+            float(deltas.mean()) / float(summary["safe_h_pi"])
+            if float(summary["safe_h_pi"]) > 0.0
+            else 0.0
+        ),
+        shard_identity_sha256=hashlib.sha256(
+            json.dumps(shard_rows, sort_keys=True, separators=(",", ":")).encode()
+        ).hexdigest(),
+        maximum_direct_replay_abs_error=max(
+            row["direct_replay_max_abs_error"] for row in shard_rows
+        ),
+    )
+    return summary, stacked
+
+
 def expected_relative_paths() -> set[str]:
     return {
         str(shard_path(Path("."), task)).removeprefix("./")
@@ -66,16 +200,29 @@ def expected_relative_paths() -> set[str]:
 def verify_run_custody(output_root: Path) -> dict[str, Any]:
     if not output_root.is_dir():
         raise FileNotFoundError(output_root)
-    exit_path = output_root / "producer_exit.json"
-    manifest_path = output_root / "shard_files.sha256"
     launch_path = output_root / "launch_manifest.json"
-    for required in (exit_path, manifest_path, launch_path):
-        if not required.is_file():
-            raise FileNotFoundError(f"incomplete S1 custody: {required}")
-    exit_receipt = json.loads(exit_path.read_text())
+    if not launch_path.is_file():
+        raise FileNotFoundError(f"incomplete S1 custody: {launch_path}")
+    custody_dirs = [output_root] + sorted(
+        (output_root / "resume_attempts").glob("attempt-*")
+    )
+    complete_receipts: list[tuple[Path, Path, dict[str, Any]]] = []
+    for custody_dir in custody_dirs:
+        candidate = custody_dir / "producer_exit.json"
+        if candidate.is_file():
+            receipt = json.loads(candidate.read_text())
+            if receipt.get("status") == "COMPLETE":
+                complete_receipts.append((custody_dir, candidate, receipt))
+    if len(complete_receipts) != 1:
+        raise FileNotFoundError(
+            "incomplete/ambiguous S1 custody: expected exactly one COMPLETE receipt"
+        )
+    custody_dir, exit_path, exit_receipt = complete_receipts[0]
+    manifest_path = custody_dir / "shard_files.sha256"
+    if not manifest_path.is_file():
+        raise FileNotFoundError(f"incomplete S1 custody: {manifest_path}")
     if (
-        exit_receipt.get("status") != "COMPLETE"
-        or int(exit_receipt.get("expected_shards", -1)) != EXPECTED_SHARDS
+        int(exit_receipt.get("expected_shards", -1)) != EXPECTED_SHARDS
         or int(exit_receipt.get("completed_shards", -1)) != EXPECTED_SHARDS
         or exit_receipt.get("failure") is not None
     ):
@@ -130,6 +277,7 @@ def verify_run_custody(output_root: Path) -> dict[str, Any]:
         "shard_manifest_sha256": manifest_sha,
         "verified_shards": EXPECTED_SHARDS,
         "source_commit": launch["source_commit"],
+        "terminal_custody_dir": str(custody_dir.relative_to(output_root) or "."),
     }
 
 

@@ -21,7 +21,9 @@ SCIENTIFIC_PATHS = (
     "research/paper2_exhaustive_search/program_s_native_morris_design_v1_1.json",
     "research/paper2_exhaustive_search/program_s_s1_preopen_audit_v1_2.json",
     "scripts/run_program_s_s1_shard.py",
-    "scripts/summarize_program_s_s1_point.py",
+    # Reducers/summarizers run only after all shards exist and may be repaired
+    # without changing any generated scientific trajectory.  Binding them here
+    # would make a post-run audit fix incorrectly disable fail-closed resume.
     "supply_chain/program_s_risk_interaction.py",
     "supply_chain/program_o_full_des.py",
     "supply_chain/program_o_full_des_transducer.py",
