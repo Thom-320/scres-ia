@@ -24,6 +24,9 @@ FALLBACK = (
     ROOT
     / "research/paper2_exhaustive_search/program_q_historical_recurrentppo_fallback_freeze_20260717.json"
 )
+APPROXIMATE_POWER = (
+    ROOT / "research/paper2_exhaustive_search/program_q_power_20260718.json"
+)
 
 
 def test_historical_fallback_is_hash_frozen_without_retraining() -> None:
@@ -140,6 +143,15 @@ def test_live_program_q_seed_custody_declarations_do_not_fake_a_collision() -> N
     assert payload["pass"]
     assert payload["status"] == "PROGRAM_Q_SEEDS_VIRGIN"
     assert not payload["suspicious"]
+
+
+def test_early_power_approximation_cannot_select_program_q_N() -> None:
+    payload = json.loads(APPROXIMATE_POWER.read_text())
+    assert payload["status"] == "NONAUTHORITATIVE_APPROXIMATION"
+    assert payload["program_q_N_authority"] is False
+    assert payload["selected_N"] is None
+    assert payload["verdict"] == "NO_CONTRACTUAL_VERDICT"
+    assert CONTRACT["power"]["script"] == "scripts/power_program_q_replication.py"
 
 
 def test_latency_benchmark_reports_batch_one_and_failures() -> None:
