@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from pathlib import Path
 
@@ -11,7 +12,9 @@ from pathlib import Path
 CELL_IDS = ("rho75_share90", "rho90_share75", "rho90_share90")
 
 
-def adjudicate(result: dict, contract: dict) -> dict:
+def adjudicate(
+    result: dict, contract: dict, direct_audit: dict | None = None
+) -> dict:
     estimates = result.get("inference", {}).get("estimates", {})
     summaries = result.get("cell_summaries", {})
     integrity = result.get("integrity_gates", {})
@@ -25,6 +28,31 @@ def adjudicate(result: dict, contract: dict) -> dict:
         "worst_product_fill_noninferior",
     )
     integrity_pass = all(integrity.get(name) is True for name in required_integrity)
+    direct_audit_pass = bool(direct_audit and direct_audit.get("passed") is True)
+    confirmation = contract.get("confirmation", {})
+    start, end = map(int, confirmation.get("reserved_block", [0, -1]))
+    expected_n = int(confirmation.get("N") or 0)
+    expected_range = [start, start + expected_n - 1]
+    inference = result.get("inference", {})
+    design_gates = {
+        "schema": result.get("schema_version")
+        == "program_q_frozen_policy_replication_evaluation_v1",
+        "N": result.get("N") == expected_n and expected_range[1] <= end,
+        "seed_range": result.get("seed_range") == expected_range,
+        "cells": set(summaries) == set(CELL_IDS),
+        "inference_method": inference.get("method")
+        == "two-way learner-seed/tape studentized max-t",
+        "comparator_reselection": inference.get(
+            "comparator_reselection_inside_every_resample"
+        )
+        is True,
+        "bilateral_equivalence": inference.get("H_OL_one_sided_and_Delta_N_two_sided")
+        is True,
+        "shards": result.get("shard_count") == expected_n * len(CELL_IDS),
+        "bootstrap_resamples": result.get("bootstrap_resamples")
+        == confirmation.get("bootstrap_resamples"),
+    }
+    design_pass = all(design_gates.values())
     adaptation = True
     premium = True
     equivalent = True
@@ -51,7 +79,7 @@ def adjudicate(result: dict, contract: dict) -> dict:
             "favorable_tapes": favorable_pass,
             "learner_seeds": seed_pass,
         }
-    if not integrity_pass or not adaptation:
+    if not design_pass or not integrity_pass or not direct_audit_pass or not adaptation:
         verdict = "STOP_Q_NO_REPLICATED_LEARNED_ADAPTATION"
     elif premium:
         verdict = "PASS_Q_NEURAL_PREMIUM"
@@ -64,6 +92,8 @@ def adjudicate(result: dict, contract: dict) -> dict:
         "historical_verdicts_unchanged": contract["historical_verdicts_immutable"],
         "cell_gates": cell_gates,
         "integrity_gates": {name: integrity.get(name) for name in required_integrity},
+        "direct_full_des_replay": direct_audit_pass,
+        "design_gates": design_gates,
         "verdict": verdict,
         "paper3_authorized": verdict in {
             "PASS_Q_NEURAL_PREMIUM",
@@ -81,12 +111,21 @@ def main() -> None:
         default=Path("contracts/program_q_frozen_policy_replication_v1.json"),
     )
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--direct-audit", type=Path, required=True)
     args = parser.parse_args()
     if args.output.exists():
         raise FileExistsError(f"refusing to overwrite {args.output}")
-    payload = adjudicate(
-        json.loads(args.result.read_text()), json.loads(args.contract.read_text())
-    )
+    result = json.loads(args.result.read_text())
+    contract = json.loads(args.contract.read_text())
+    direct_audit = json.loads(args.direct_audit.read_text())
+    contract_sha = hashlib.sha256(args.contract.read_bytes()).hexdigest()
+    result_sha = hashlib.sha256(args.result.read_bytes()).hexdigest()
+    if (
+        direct_audit.get("contract_sha256") != contract_sha
+        or direct_audit.get("evaluation_result_sha256") != result_sha
+    ):
+        direct_audit["passed"] = False
+    payload = adjudicate(result, contract, direct_audit)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(payload, indent=2) + "\n")
     print(json.dumps(payload, indent=2))

@@ -147,7 +147,11 @@ def snapshot(run_dir: Path, *, stale_seconds: float) -> dict[str, Any]:
         status = "COMPLETE_PENDING_RETRIEVAL"
     else:
         status = "FAILED_PRODUCER_EXIT"
-    result_path = run_dir / "artifacts" / str(stage) / "result.json" if stage else None
+    result_path = (
+        run_dir / str(control["result_relative_path"])
+        if control and control.get("result_relative_path")
+        else run_dir / "artifacts" / str(stage) / "result.json" if stage else None
+    )
     state = {
         "observed_at_utc": now_utc(),
         "status": status,

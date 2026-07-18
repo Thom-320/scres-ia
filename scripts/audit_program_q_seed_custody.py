@@ -17,6 +17,7 @@ DECLARATION_ALLOWLIST = {
     "research/paper2_exhaustive_search/program_q_power_preopen_attempts_20260717.json",
     "research/paper2_exhaustive_search/program_q_power_preopen_v5_verdict_20260718.json",
     "research/paper2_exhaustive_search/program_q_primary_candidate_independence_v1.json",
+    "research/paper2_exhaustive_search/program_q_confirmation_execution_plan_v1.json",
     "research/paper2_exhaustive_search/program_q_seed_custody_preopen_20260717.json",
     "scripts/audit_program_q_seed_custody.py",
 }
@@ -31,24 +32,26 @@ def scan(root: Path) -> dict:
         if not directory.exists():
             continue
         for path in directory.rglob("*"):
-            if not path.is_file() or path.suffix not in {".json", ".md", ".py", ".txt", ".log"}:
+            if not path.is_file():
                 continue
             relative = path.relative_to(root).as_posix()
-            try:
-                text = path.read_text(errors="ignore")
-            except OSError:
-                continue
-            hits = sorted(
-                {
-                    int(value)
-                    for value in NUMBER.findall(text)
-                    if RESERVED_LOW <= int(value) <= RESERVED_HIGH
-                }
-            )
             name_hit = any(
                 RESERVED_LOW <= int(value) <= RESERVED_HIGH
                 for value in re.findall(r"\d+", path.name)
             )
+            hits = []
+            if path.suffix in {".json", ".md", ".py", ".txt", ".log"}:
+                try:
+                    text = path.read_text(errors="ignore")
+                except OSError:
+                    text = ""
+                hits = sorted(
+                    {
+                        int(value)
+                        for value in NUMBER.findall(text)
+                        if RESERVED_LOW <= int(value) <= RESERVED_HIGH
+                    }
+                )
             if hits or name_hit:
                 row = {"path": relative, "seeds": hits, "seed_in_filename": name_hit}
                 if relative in DECLARATION_ALLOWLIST:
