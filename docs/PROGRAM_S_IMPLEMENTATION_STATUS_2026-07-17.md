@@ -2,7 +2,7 @@
 
 ## Current verdict
 
-`HOLD_S1_TECHNICALLY_READY_PROGRAM_Q_HAS_VPS_PRIORITY`
+`PASS_S1_PREOPEN_AUTHORIZED_POST_Q_TERMINAL`
 
 S0 remains frozen under the parent v1 contract:
 
@@ -10,7 +10,8 @@ S0 remains frozen under the parent v1 contract:
 - `PASS_S0_HOT_PATH_RISKOFF_PARITY_V1_1` on 18 burned episodes;
 - `PASS_S1_TRANSDUCER_PREFLIGHT_ALL_MASKS_ELIGIBLE`.
 
-No Program Q/S reserved seed in intervals 749, 751, 752, or 753 has been opened.
+Program Q opened and terminally adjudicated `7490001–7490256`. Program S intervals
+751, 752 and 753 remain unopened.
 
 ## Binding v1.1 changes before S1
 
@@ -20,7 +21,7 @@ No Program Q/S reserved seed in intervals 749, 751, 752, or 753 has been opened.
 - Program S-P is a separate, unseeded annex with a risk-family-specific, binned and noisy alarm generator.
 - R23 retains deterministic physical liveness but is fixed at multiplier 1.0 as a negative control and cannot select a cell.
 - Native S1 stops before S2 when `max LCB95(H_PI_safe) < 0.01`.
-- Program Q is the current primary Paper 2 instrument. S cannot open scientific seeds while Q keeps VPS priority.
+- Program Q is terminal. Its VPS precedence is discharged; Program S may proceed only under the fresh post-Q audit.
 - S terminal labels describe risk-aware adaptation rather than claiming Paper 2 by label alone.
 
 ## Compute and design
@@ -43,8 +44,10 @@ The first hot-path audit used the rounded literal `2.22e-16`, slightly below exa
 
 The first compute preflight exposed that capacity had accidentally been generated as a continuous Morris coordinate despite the discrete contract. No timing episode or scientific seed ran. The design was corrected prospectively before 751: capacity is now fixed at 1.0 inside Morris.
 
-## Remaining hold
+## Post-Q authorization
 
-The unified Q/S numeric-range seed auditor passes. The amended S1 preopening audit still withholds authorization solely while Program Q remains `FROZEN_POWER_PASS_N_256_PENDING_SEED_AUTHORIZATION` and retains VPS priority.
+The post-Q numeric-range auditor excludes burned 749 from virginity claims and
+audits only the still-reserved S namespaces. The fresh S1 preopening audit binds
+the terminal Q adjudication and authorizes S1 without changing any S gate.
 
 Paper 3 remains sealed until a risk-aware S4 PASS, and its formerly open-ended namespace is bounded to `7530001–7539999`.

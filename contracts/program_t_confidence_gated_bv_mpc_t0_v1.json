@@ -1,0 +1,77 @@
+{
+  "contract_id": "program_t_confidence_gated_bv_mpc_t0_v1",
+  "status": "FROZEN_DEVELOPMENT_ONLY_NO_NEW_SCIENTIFIC_SEEDS",
+  "date_frozen": "2026-07-18",
+  "ancestry": {
+    "program_q_terminal_commit": "f2dfe356c179bd16f4b89b26e8ed3b19d69f5a71",
+    "program_s_implementation_commit": "1f1b2b65818e4f595731cbc444db1bf3467a332a",
+    "program_q_verdict_preserved": "STOP_Q_NO_REPLICATED_LEARNED_ADAPTATION"
+  },
+  "purpose": "Determine whether a ReT-aligned, deployable MPC leaves residual observable headroom that a learned belief and terminal value could convert. T0 cannot establish Paper 2.",
+  "data_custody": {
+    "allowed": "burned 748 and 749 development/evaluation artifacts only",
+    "forbidden": ["751", "752", "753", "754", "755", "756"],
+    "new_scientific_seeds_authorized": false
+  },
+  "historical_claims": {
+    "must_not_reinterpret": ["Program O", "Program O-R", "Program Q"],
+    "program_q_floor": "A frozen RecurrentPPO replicated superiority over the complete open-loop frontier but failed the worst-product compound gate and did not show a neural premium."
+  },
+  "t0_questions": [
+    "Does a ReT-aligned MPC with horizons 1, 3, 4, 6 and 8 absorb the apparent residual headroom?",
+    "Does history contain deployable information beyond the nominal analytic belief?",
+    "Can a learned continuation value improve quality or latency without worsening worst-product service?",
+    "Can a confidence gate fall back reliably outside calibration support or under solver failure?"
+  ],
+  "nested_arms": {
+    "M0": "strong ReT-aligned nominal/particle/scenario MPC with explicit service constraints",
+    "M1": "M0 plus learned terminal value",
+    "M2": "M0 plus recurrent belief correction",
+    "M3": "M0 plus recurrent belief correction and learned terminal value",
+    "M4": "M3 behind a calibrated confidence-and-support gate"
+  },
+  "architecture_freeze": {
+    "gru_units": null,
+    "quantile_count": null,
+    "loss_weights": null,
+    "reason": "Architecture is selected only after residual headroom and calibration feasibility are demonstrated on burned data."
+  },
+  "compute_fairness": {
+    "online_budget_ms": null,
+    "rule": "Report a preregistered quality-time-safety frontier first. Freeze an operational online SLA prospectively; do not derive it by rounding a favorable observed runtime.",
+    "same_hardware_and_model_call_accounting_required": true
+  },
+  "exact_benchmark": {
+    "implementation": "supply_chain.program_t_exact_pomdp.ExactProductMixPOMDP",
+    "requirements": [
+      "exact belief-DP dominates or ties every tested policy",
+      "full-horizon MPC equals exact belief-DP",
+      "complete open-loop frontier is enumerated",
+      "label-swap symmetry and conservation pass"
+    ]
+  },
+  "go_to_training_gate": {
+    "required": [
+      "LCB95 residual value versus strongest deployable MPC at least 0.015",
+      "LCB95 value versus complete open-loop frontier at least 0.015",
+      "worst-product-fill LCB at least -0.02",
+      "real history beats shuffled and delayed history",
+      "resources, demand and mass are exact",
+      "at least two actions are materially optimal",
+      "the result is stable over a connected plausible region"
+    ]
+  },
+  "stop_rules": [
+    "full-horizon or strengthened deployable MPC absorbs the residual gap",
+    "history does not beat its placebos",
+    "the confidence gate is miscalibrated or selectively abstains on hard cases",
+    "worst-product service or lost demand fails",
+    "the apparent gain uses extra physical resources or privileged information"
+  ],
+  "publication_routes": {
+    "primary": "quality superiority if prospectively confirmed",
+    "secondary": "quality-time-safety frontier if equivalence and a material operational advantage are prospectively confirmed",
+    "base": "Program Q boundary result; no Program T promotion"
+  },
+  "paper3_dependency": "No Paper 3 scientific seed may open until a prospectively frozen Paper 2 contract passes. T0 may only define component-level retained/reset tests."
+}

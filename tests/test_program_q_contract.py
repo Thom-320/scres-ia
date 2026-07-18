@@ -180,11 +180,11 @@ def test_seed_custody_scan_detects_reserved_seed_in_binary_artifact_filename(
     assert payload["suspicious"][0]["seed_in_filename"] is True
 
 
-def test_live_program_q_seed_custody_declarations_do_not_fake_a_collision() -> None:
+def test_historical_program_q_preopen_scanner_detects_terminal_opening() -> None:
     payload = scan(ROOT)
-    assert payload["pass"]
-    assert payload["status"] == "PROGRAM_Q_SEEDS_VIRGIN"
-    assert not payload["suspicious"]
+    assert payload["pass"] is False
+    assert payload["status"] == "STOP_PROGRAM_Q_SEED_COLLISION"
+    assert any("confirmation_v1_20260718" in row["path"] for row in payload["suspicious"])
 
 
 def test_early_power_approximation_cannot_select_program_q_N() -> None:

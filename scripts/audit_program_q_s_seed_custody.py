@@ -10,7 +10,7 @@ import re
 
 
 ROOT = Path(__file__).resolve().parents[1]
-REGISTRY_PATH = ROOT / "research/paper2_exhaustive_search/program_q_s_seed_registry_v1.json"
+REGISTRY_PATH = ROOT / "research/paper2_exhaustive_search/program_q_s_seed_registry_v1_1.json"
 NUMBER = re.compile(r"(?<!\d)(\d{7,9})(?!\d)")
 TEXT_SUFFIXES = {".json", ".md", ".py", ".txt", ".log", ".yaml", ".yml", ".sh"}
 
@@ -38,7 +38,10 @@ def _range_hits(text: str, ranges: list[dict], *, require_context: bool) -> dict
 
 def scan(root: Path = ROOT) -> dict:
     registry = json.loads(REGISTRY_PATH.read_text())
-    ranges = registry["ranges"]
+    ranges = [
+        row for row in registry["ranges"]
+        if row["status"] in {"RESERVED_UNOPENED", "SEALED_UNAUTHORIZED"}
+    ]
     allowlist = set(registry["declaration_allowlist"])
     declarations: list[dict] = []
     suspicious: list[dict] = []
@@ -65,13 +68,16 @@ def scan(root: Path = ROOT) -> dict:
             row = {"path": relative, "range_hits": hits}
             (declarations if relative in allowlist else suspicious).append(row)
     return {
-        "schema_version": "program_q_s_seed_custody_audit_v1_1",
+        "schema_version": "program_q_s_seed_custody_audit_v1_2",
         "registry": str(REGISTRY_PATH.relative_to(root)),
         "numeric_interval_semantics": True,
         "declarations": declarations,
         "suspicious": suspicious,
         "pass": not suspicious,
-        "verdict": "PASS_PROGRAM_Q_AND_S_UNIFIED_SEED_CUSTODY" if not suspicious else "STOP_PROGRAM_Q_S_SEED_COLLISION"
+        "opened_ranges_excluded_from_virginity_scan": [
+            row["id"] for row in registry["ranges"] if row["status"].startswith("BURNED_")
+        ],
+        "verdict": "PASS_PROGRAM_S_RESERVED_SEED_CUSTODY_POST_Q" if not suspicious else "STOP_PROGRAM_S_SEED_COLLISION"
     }
 
 

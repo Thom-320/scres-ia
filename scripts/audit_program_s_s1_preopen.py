@@ -21,10 +21,10 @@ FILES = {
     "hot_path": ROOT / "results/program_s/s0_hot_path_riskoff_parity_v1_1/corrective_result_v2.json",
     "transducer": ROOT / "results/program_s/s1_transducer_preflight_v1/result.json",
     "compute": ROOT / "results/program_s/s1_compute_benchmark_v1_1/result.json",
-    "unified_seeds": ROOT / "research/paper2_exhaustive_search/program_q_s_seed_custody_preopen_v1_1.json",
-    "program_q": ROOT / "contracts/program_q_frozen_policy_replication_v1.json",
+    "unified_seeds": ROOT / "research/paper2_exhaustive_search/program_q_s_seed_custody_post_q_v1_2.json",
+    "program_q_terminal": ROOT / "results/program_q/confirmation_v1_20260718/artifacts/confirmation/adjudication.json",
 }
-OUT = ROOT / "research/paper2_exhaustive_search/program_s_s1_preopen_audit_v1_1.json"
+OUT = ROOT / "research/paper2_exhaustive_search/program_s_s1_preopen_audit_v1_2.json"
 
 
 def digest(value) -> str:
@@ -67,20 +67,22 @@ def audit() -> dict:
         "seed_block_declarations_match": freeze["native"]["seed_block"] == [7510001, 7510012]
         and payloads["seed_manifest"]["S_NATIVE"]["S1"] == [7510001, 7510012],
         "no_reserved_seed_collision": not suspicious_751,
-        "program_q_still_pending_preopen": payloads["program_q"]["status"]
-        == "FROZEN_POWER_PASS_N_256_PENDING_SEED_AUTHORIZATION",
+        "program_q_terminal_adjudicated": payloads["program_q_terminal"]["verdict"]
+        == "STOP_Q_NO_REPLICATED_LEARNED_ADAPTATION",
     }
     technically_ready = all(
-        value for key, value in checks.items() if key != "program_q_still_pending_preopen"
+        value for key, value in checks.items() if key != "program_q_terminal_adjudicated"
     )
-    q_has_priority = checks["program_q_still_pending_preopen"]
+    q_terminal = checks["program_q_terminal_adjudicated"]
+    q_has_priority = not q_terminal
     return {
-        "schema_version": "program_s_s1_preopen_audit_v1_1",
+        "schema_version": "program_s_s1_preopen_audit_v1_2",
         "checks": checks,
         "suspicious_751_result_files": suspicious_751,
         "technically_ready": technically_ready,
         "program_q_vps_priority_active": q_has_priority,
-        "scientific_seed_authorization": bool(technically_ready and not q_has_priority),
+        "program_q_terminal": q_terminal,
+        "scientific_seed_authorization": bool(technically_ready and q_terminal),
         "verdict": (
             "HOLD_S1_TECHNICALLY_READY_PROGRAM_Q_HAS_VPS_PRIORITY"
             if technically_ready and q_has_priority

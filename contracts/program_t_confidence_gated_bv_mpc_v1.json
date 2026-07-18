@@ -1,0 +1,47 @@
+{
+  "contract_id": "program_t_confidence_gated_bv_mpc_v1",
+  "status": "DRAFT_INTERFACE_ONLY_SUPERSEDED_BY_T0_NO_SCIENTIFIC_SEEDS_AUTHORIZED",
+  "date": "2026-07-18",
+  "parents": {
+    "program_q_terminal_commit": "f2dfe356c179bd16f4b89b26e8ed3b19d69f5a71",
+    "program_s_preintegration_commit": "1f1b2b65818e4f595731cbc444db1bf3467a332a"
+  },
+  "historical_verdicts_unchanged": {
+    "program_o": "STOP_PROGRAM_O_AFTER_CORRECTIVE_VALIDATION",
+    "program_o_r": "STOP_CALIBRATION_NOT_ELIGIBLE",
+    "program_q": "STOP_Q_NO_REPLICATED_LEARNED_ADAPTATION"
+  },
+  "method": {
+    "name": "confidence_gated_belief_value_mpc",
+    "actions": [0, 1, 2, 3],
+    "history_encoder": {"type": "causal_recurrent_candidate", "hidden_units": null},
+    "terminal_return_quantiles": null,
+    "confidence_calibration": "candidate_split_conformal_subject_to_T0_coverage_gate",
+    "worst_product_margin": null,
+    "fallback": "nominal_feasible_mpc"
+  },
+  "training_loss": {
+    "formula": "decision_regret + lambda_b*belief_nll + lambda_v*quantile_loss",
+    "lambda_grid": null,
+    "selection_data": "training_only"
+  },
+  "seed_namespaces": "UNALLOCATED_UNTIL_T0_GO_AND_GLOBAL_COLLISION_AUDIT",
+  "authorization_chain": [
+    "Program S S1/S2 connected-region gate",
+    "residual observable headroom LCB95 >= 0.015",
+    "exact benchmark and fail-closed tests",
+    "online-compute benchmark",
+    "training/calibration freeze",
+    "power >= 0.80 before confirmation"
+  ],
+  "current_authorization": {
+    "exact_benchmark": true,
+    "burned_748_749_diagnostics": true,
+    "program_s_s1": "controlled by its independent post-Q authorization",
+    "program_t_training": false,
+    "program_t_confirmation": false,
+    "paper3": false
+  },
+  "binding_contract": "contracts/program_t_confidence_gated_bv_mpc_t0_v1.json",
+  "claim_limit": "The confidence gate is a calibrated local abstention rule, not an episode-level service guarantee. All joint safety claims require end-to-end confirmation."
+}

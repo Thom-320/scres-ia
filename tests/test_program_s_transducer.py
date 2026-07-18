@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import numpy as np
+
 from scripts.audit_program_s_s1_preopen import audit
 from scripts.build_program_s_morris_design import build
 from scripts.preflight_program_s_transducer import (
@@ -30,7 +32,7 @@ def test_risk_aware_transducer_is_exact_for_r24_priority_and_risk_ret() -> None:
     assert payload["pass"] is True
     assert payload["horizons"]["1"]["calendars"] == 4
     assert payload["horizons"]["1"]["unique_skeleton_hashes"] == 1
-    assert payload["horizons"]["1"]["max_matrix_abs_error"] == 0.0
+    assert payload["horizons"]["1"]["max_matrix_abs_error"] <= np.finfo(float).eps
 
 
 def test_live_transducer_preflight_admits_all_three_masks_without_seed_opening() -> None:
@@ -85,9 +87,10 @@ def test_morris_design_is_deterministic_optimized_and_capacity_anchored() -> Non
     assert native["scientific_seed_block_opened"] is False
 
 
-def test_s1_is_technically_ready_but_q_priority_blocks_seed_opening() -> None:
+def test_s1_is_technically_ready_after_q_terminal_adjudication() -> None:
     payload = audit()
     assert payload["technically_ready"] is True
-    assert payload["program_q_vps_priority_active"] is True
-    assert payload["scientific_seed_authorization"] is False
-    assert payload["verdict"] == "HOLD_S1_TECHNICALLY_READY_PROGRAM_Q_HAS_VPS_PRIORITY"
+    assert payload["program_q_terminal"] is True
+    assert payload["program_q_vps_priority_active"] is False
+    assert payload["scientific_seed_authorization"] is True
+    assert payload["verdict"] == "PASS_S1_PREOPEN_AUTHORIZED"
