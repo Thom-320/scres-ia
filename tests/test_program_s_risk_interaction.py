@@ -86,14 +86,10 @@ def test_policy_independent_risk_tape_is_reproducible_and_has_no_r3() -> None:
 
 def test_alarm_channel_is_reproducible_and_never_contains_risk_id() -> None:
     tape = build_program_s_risk_tape(cell(), tape_id=7510000, horizon_hours=8 * 168)
-    alarms = build_operational_alarms(
-        cell(), tape_id=7510000, events=tape["events"], horizon_hours=8 * 168
-    )
-    assert alarms == build_operational_alarms(
-        cell(), tape_id=7510000, events=tape["events"], horizon_hours=8 * 168
-    )
-    assert all("risk" not in key for alarm in alarms for key in alarm.__dict__)
-    assert all(alarm.issued_at <= alarm.effective_window[0] for alarm in alarms)
+    with pytest.raises(RuntimeError, match="forbidden in amended Program S-NATIVE"):
+        build_operational_alarms(
+            cell(), tape_id=7510000, events=tape["events"], horizon_hours=8 * 168
+        )
 
 
 def test_program_o_new_risk_arguments_preserve_riskoff_defaults() -> None:
@@ -130,9 +126,6 @@ def test_program_s_replays_risk_after_neutral_prefix_and_hides_generators() -> N
         scheduler=SCHEDULER,
         cell=cell(),
         risk_event_tape=[event],
-        operational_alarms=[
-            OperationalAlarm(0, (24, 26), "production", "low", 0.5, 0.7)
-        ],
     ).run_contract()
     observed = [row for row in sim.risk_events if row.risk_id == "R11"]
     assert len(observed) == 1
@@ -140,7 +133,21 @@ def test_program_s_replays_risk_after_neutral_prefix_and_hides_generators() -> N
     observation = sim.program_s_observation()
     forbidden = {"seed", "tape", "phi", "psi", "rho", "share", "risk_id", "regime"}
     assert forbidden.isdisjoint(observation)
-    assert observation["alarm"] is not None
+    assert observation["alarm"] is None
+
+
+def test_native_simulation_rejects_legacy_anticipatory_alarm() -> None:
+    with pytest.raises(ValueError, match="S-NATIVE forbids"):
+        ProgramSRiskAwareSimulation(
+            seed=7510000,
+            calendar=[2],
+            scheduler=SCHEDULER,
+            cell=cell(),
+            risk_event_tape=[],
+            operational_alarms=[
+                OperationalAlarm(0, (24, 26), "production", "low", 0.5, 0.7)
+            ],
+        )
 
 
 def test_r14_rework_preserves_product_mass_and_returns_from_op6() -> None:
@@ -175,4 +182,3 @@ def test_r14_rework_preserves_product_mass_and_returns_from_op6() -> None:
     )
     assert panel["conservation"]["max_abs_product_residual"] <= 1e-8
     assert panel["conservation"]["max_abs_partition_residual"] <= 1e-8
-

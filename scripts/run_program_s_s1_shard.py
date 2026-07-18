@@ -43,7 +43,7 @@ PARENT = json.loads(
     (ROOT / "contracts/program_o_full_des_hpi_translation_v1.json").read_text()
 )
 DESIGN = json.loads(
-    (ROOT / "research/paper2_exhaustive_search/program_s_morris_design_v1.json").read_text()
+    (ROOT / "research/paper2_exhaustive_search/program_s_native_morris_design_v1_1.json").read_text()
 )
 SCHEDULER = PARENT["action"]["within_week_schedulers"][
     PARENT["action"]["primary_scheduler"]
@@ -109,6 +109,8 @@ def main() -> int:
     if not 7510001 <= args.seed <= 7510012:
         raise ValueError("S1 seed must be in the frozen 7510001-7510012 block")
     group, point = resolve_point(args.group, args.trajectory, args.point)
+    if group["stratum"] != "THESIS_NATIVE_INDEPENDENT":
+        raise RuntimeError("the S1 scientific runner accepts S-NATIVE only")
     current_cell = make_cell(group, point, args.product_cell)
     built = build_program_s_risk_tape(
         current_cell, tape_id=args.seed, horizon_hours=8 * 168
@@ -188,4 +190,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

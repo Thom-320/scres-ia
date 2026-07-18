@@ -105,12 +105,17 @@ def build_operational_alarms(
     horizon_hours: float,
     contingent_product_share_by_week: Sequence[float] | None = None,
 ) -> tuple[OperationalAlarm, ...]:
-    """Create a reproducible lossy alarm channel with explicit false positives.
+    """Legacy v1 alarm generator, prohibited for amended Program S-NATIVE.
 
-    Balanced accuracy is a generator target over repeated tapes, not a claim
-    that one short tape will contain exactly the target fraction.  Calibration
-    is therefore tested over a fixed tape ensemble before S2 can open.
+    The v1.1 amendment separates anticipatory information into Program S-P.
+    This function is retained only so the frozen S0 implementation remains
+    importable; calling it for a thesis-native cell now fails closed.
     """
+    if cell.stratum == "THESIS_NATIVE_INDEPENDENT":
+        raise RuntimeError(
+            "anticipatory alarms are forbidden in amended Program S-NATIVE; "
+            "use the separately frozen Program S-P generator"
+        )
     accuracy = float(cell.alarm_balanced_accuracy)
     lead = float(cell.alarm_lead_hours)
     rng = np.random.default_rng(_alarm_seed(int(tape_id), cell.cell_id))

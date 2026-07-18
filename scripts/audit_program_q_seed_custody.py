@@ -18,6 +18,8 @@ DECLARATION_ALLOWLIST = {
     "research/paper2_exhaustive_search/program_q_power_preopen_v5_verdict_20260718.json",
     "research/paper2_exhaustive_search/program_q_primary_candidate_independence_v1.json",
     "research/paper2_exhaustive_search/program_q_seed_custody_preopen_20260717.json",
+    "research/paper2_exhaustive_search/program_q_s_seed_registry_v1.json",
+    "research/paper2_exhaustive_search/program_q_s_seed_custody_preopen_v1_1.json",
     "scripts/audit_program_q_seed_custody.py",
 }
 NUMBER = re.compile(r"(?<!\d)(\d{7,9})(?!\d)")

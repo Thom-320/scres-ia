@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the frozen optimized Morris trajectories for Program S S1."""
+"""Build separated native and wartime Morris designs for Program S v1.1."""
 
 from __future__ import annotations
 
@@ -16,13 +16,14 @@ ROOT = Path(__file__).resolve().parents[1]
 FREEZE = json.loads(
     (
         ROOT
-        / "research/paper2_exhaustive_search/program_s_morris_design_freeze_v1.json"
+        / "research/paper2_exhaustive_search/program_s_morris_design_freeze_v1_1.json"
     ).read_text()
 )
 CONTRACT = json.loads(
     (ROOT / "contracts/program_s_product_mix_risk_interaction_gsa_v1.json").read_text()
 )
-OUT = ROOT / "research/paper2_exhaustive_search/program_s_morris_design_v1.json"
+OUT_NATIVE = ROOT / "research/paper2_exhaustive_search/program_s_native_morris_design_v1_1.json"
+OUT_WARTIME = ROOT / "research/paper2_exhaustive_search/program_s_wartime_morris_design_v1_1.json"
 
 
 RANGES = {
@@ -31,7 +32,6 @@ RANGES = {
     "r14_defect_probability": (1.0, 2.0),
     "r24_frequency": (1.0, 4.0),
     "r24_quantity": (1.0, 2.0),
-    "baseline_capacity": (0.9, 1.1),
 }
 COUPLINGS = (
     "disruption_leads_r24_72h",
@@ -52,7 +52,6 @@ def factors(mask: str) -> tuple[str, ...]:
         "duration_impact",
         "r24_frequency",
         "r24_quantity",
-        "baseline_capacity",
     ]
     if mask == "PRODUCTION_QUALITY_SURGE":
         values.insert(2, "r14_defect_probability")
@@ -107,6 +106,7 @@ def physical_value(name: str, normalized: float) -> float:
 
 def physical_point(mask: str, names: tuple[str, ...], point: np.ndarray) -> dict[str, Any]:
     values = {name: physical_value(name, point[index]) for index, name in enumerate(names)}
+    values["baseline_capacity"] = 1.0
     risks = CONTRACT["physical_masks"][mask]
     phi = {
         risk: (
@@ -128,27 +128,32 @@ def physical_point(mask: str, names: tuple[str, ...], point: np.ndarray) -> dict
         )
         for risk in risks
     }
+    # R23 remains physically live but is frozen as a non-selectable negative
+    # control for the mix-only action under amendment v1.1.
+    if "R23" in phi:
+        phi["R23"] = 1.0
+        psi["R23"] = 1.0
     return {
         "normalized": {name: float(point[index]) for index, name in enumerate(names)},
         "physical": values,
         "phi_by_risk": phi,
         "psi_by_risk": psi,
         "r14_probability_multiplier": values.get("r14_defect_probability", 1.0),
-        "baseline_capacity_multiplier": values["baseline_capacity"],
+        "baseline_capacity_multiplier": 1.0,
     }
 
 
-def build() -> dict[str, Any]:
+def build(stratum: str) -> dict[str, Any]:
     rng = np.random.default_rng(int(FREEZE["design_rng_seed"]))
     groups: list[dict[str, Any]] = []
     candidate_count = int(FREEZE["candidate_trajectories_per_mask_stratum"])
     selected_count = int(FREEZE["selected_optimized_trajectories_per_mask_stratum"])
     for mask in CONTRACT["physical_masks"]:
         names = factors(mask)
-        for stratum in ("THESIS_NATIVE_INDEPENDENT", "RESEARCHER_WARTIME_COUPLED"):
+        for current_stratum in (stratum,):
             candidates = [candidate_trajectory(rng, names) for _ in range(candidate_count)]
             trajectories: list[dict[str, Any]] = []
-            if stratum == "THESIS_NATIVE_INDEPENDENT":
+            if current_stratum == "THESIS_NATIVE_INDEPENDENT":
                 selected = optimize(candidates, selected_count)
                 coupling_by_index = {index: "independent" for index in selected}
             else:
@@ -168,7 +173,7 @@ def build() -> dict[str, Any]:
                 ]
                 trajectories.append(
                     {
-                        "trajectory_id": f"{mask}__{stratum}__{sequence:02d}",
+                        "trajectory_id": f"{mask}__{current_stratum}__{sequence:02d}",
                         "candidate_index": int(candidate_index),
                         "coupling": coupling_by_index[candidate_index],
                         "factor_order_inferred_from_steps": True,
@@ -178,7 +183,7 @@ def build() -> dict[str, Any]:
             groups.append(
                 {
                     "mask": mask,
-                    "stratum": stratum,
+                    "stratum": current_stratum,
                     "factor_names": list(names),
                     "candidate_count": candidate_count,
                     "selected_count": len(trajectories),
@@ -205,19 +210,21 @@ def build() -> dict[str, Any]:
                         }
                         for coupling in (
                             ("independent",)
-                            if stratum == "THESIS_NATIVE_INDEPENDENT"
+                            if current_stratum == "THESIS_NATIVE_INDEPENDENT"
                             else COUPLINGS
                         )
                     ],
                 }
             )
     payload = {
-        "schema_version": "program_s_morris_design_v1",
+        "schema_version": "program_s_morris_design_v1_1",
+        "execution_family": "S_NATIVE" if stratum == "THESIS_NATIVE_INDEPENDENT" else "S_WARTIME",
+        "promotion_authorized": stratum == "THESIS_NATIVE_INDEPENDENT",
         "freeze_sha256": digest(FREEZE),
         "design_rng_seed": FREEZE["design_rng_seed"],
         "groups": groups,
         "product_cells": FREEZE["product_cells"],
-        "scientific_seed_block": FREEZE["seed_block"],
+        "scientific_seed_block": FREEZE["native"]["seed_block"] if stratum == "THESIS_NATIVE_INDEPENDENT" else None,
         "scientific_seed_block_opened": False,
     }
     payload["design_sha256"] = digest(payload)
@@ -225,14 +232,21 @@ def build() -> dict[str, Any]:
 
 
 def main() -> int:
-    payload = build()
-    OUT.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+    native = build("THESIS_NATIVE_INDEPENDENT")
+    wartime = build("RESEARCHER_WARTIME_COUPLED")
+    OUT_NATIVE.write_text(json.dumps(native, indent=2, sort_keys=True) + "\n")
+    OUT_WARTIME.write_text(json.dumps(wartime, indent=2, sort_keys=True) + "\n")
     print(json.dumps({
-        "output": str(OUT),
-        "design_sha256": payload["design_sha256"],
-        "groups": len(payload["groups"]),
-        "trajectories": sum(len(group["trajectories"]) for group in payload["groups"]),
-        "points": sum(len(row["points"]) for group in payload["groups"] for row in group["trajectories"]),
+        "native_output": str(OUT_NATIVE),
+        "wartime_output": str(OUT_WARTIME),
+        "native_design_sha256": native["design_sha256"],
+        "wartime_design_sha256": wartime["design_sha256"],
+        "native_groups": len(native["groups"]),
+        "native_trajectories": sum(len(group["trajectories"]) for group in native["groups"]),
+        "native_points": sum(len(row["points"]) for group in native["groups"] for row in group["trajectories"]),
+        "wartime_groups": len(wartime["groups"]),
+        "wartime_trajectories": sum(len(group["trajectories"]) for group in wartime["groups"]),
+        "wartime_points": sum(len(row["points"]) for group in wartime["groups"] for row in group["trajectories"]),
         "scientific_seed_block_opened": False,
     }, indent=2))
     return 0

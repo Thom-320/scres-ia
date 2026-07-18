@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import hashlib
 import json
 from pathlib import Path
 
@@ -52,20 +51,38 @@ def test_live_transducer_preflight_admits_all_three_masks_without_seed_opening()
 
 
 def test_morris_design_is_deterministic_optimized_and_capacity_anchored() -> None:
-    live = json.loads(
+    native = json.loads(
         (
             ROOT
-            / "research/paper2_exhaustive_search/program_s_morris_design_v1.json"
+            / "research/paper2_exhaustive_search/program_s_native_morris_design_v1_1.json"
         ).read_text()
     )
-    assert build() == live
-    assert len(live["groups"]) == 6
-    assert sum(len(group["trajectories"]) for group in live["groups"]) == 60
+    wartime = json.loads(
+        (
+            ROOT
+            / "research/paper2_exhaustive_search/program_s_wartime_morris_design_v1_1.json"
+        ).read_text()
+    )
+    assert build("THESIS_NATIVE_INDEPENDENT") == native
+    assert build("RESEARCHER_WARTIME_COUPLED") == wartime
+    assert len(native["groups"]) == 3
+    assert sum(len(group["trajectories"]) for group in native["groups"]) == 30
+    assert native["promotion_authorized"] is True
+    assert wartime["promotion_authorized"] is False
+    assert wartime["scientific_seed_block"] is None
     assert all(
         all(anchor["baseline_capacity_multiplier"] == 1.0 for anchor in group["mandatory_capacity_1_anchors"])
-        for group in live["groups"]
+        for group in native["groups"]
     )
-    assert live["scientific_seed_block_opened"] is False
+    assert all(
+        point["phi_by_risk"].get("R23", 1.0) == 1.0
+        and point["psi_by_risk"].get("R23", 1.0) == 1.0
+        for design in (native, wartime)
+        for group in design["groups"]
+        for trajectory in group["trajectories"]
+        for point in trajectory["points"]
+    )
+    assert native["scientific_seed_block_opened"] is False
 
 
 def test_s1_is_technically_ready_but_q_priority_blocks_seed_opening() -> None:
@@ -74,4 +91,3 @@ def test_s1_is_technically_ready_but_q_priority_blocks_seed_opening() -> None:
     assert payload["program_q_vps_priority_active"] is True
     assert payload["scientific_seed_authorization"] is False
     assert payload["verdict"] == "HOLD_S1_TECHNICALLY_READY_PROGRAM_Q_HAS_VPS_PRIORITY"
-

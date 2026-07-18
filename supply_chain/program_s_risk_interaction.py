@@ -196,6 +196,10 @@ class ProgramSRiskAwareSimulation(ProgramOFullDESSimulation):
             **program_o_kwargs,
         )
         self.program_s_cell = cell
+        if cell.stratum == "THESIS_NATIVE_INDEPENDENT" and operational_alarms:
+            raise ValueError(
+                "Program S-NATIVE forbids anticipatory alarms under amendment v1.1"
+            )
         self.program_s_relative_risk_tape = validate_program_s_risk_tape(
             risk_event_tape, mask=cell.mask
         )
@@ -229,6 +233,8 @@ class ProgramSRiskAwareSimulation(ProgramOFullDESSimulation):
         self.env.process(self._program_s_risk_replay())
 
     def current_operational_alarm(self) -> OperationalAlarm | None:
+        if self.program_s_cell.stratum == "THESIS_NATIVE_INDEPENDENT":
+            return None
         if self.program_o_decision_start is None:
             return None
         relative_now = float(self.env.now) - float(self.program_o_decision_start)

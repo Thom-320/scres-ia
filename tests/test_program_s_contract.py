@@ -23,6 +23,15 @@ LEDGER = json.loads(
 PAPER3 = json.loads(
     (ROOT / "contracts/program_s_paper3_retained_knowledge_v1.json").read_text()
 )
+AMENDMENT = json.loads(
+    (ROOT / "contracts/program_s_product_mix_risk_interaction_gsa_v1_1_amendment.json").read_text()
+)
+ALARM_ANNEX = json.loads(
+    (ROOT / "contracts/program_s_p_risk_specific_alarm_annex_v1.json").read_text()
+)
+DOMAIN_FACT = json.loads(
+    (ROOT / "research/paper2_exhaustive_search/program_s_domain_fact_adjudication_v1.json").read_text()
+)
 
 
 def test_program_s_is_prospective_and_cannot_rewrite_closed_programs() -> None:
@@ -85,3 +94,22 @@ def test_paper3_is_frozen_but_sealed_until_program_s_paper2_pass() -> None:
     assert PAPER3["seed_block_opened"] is False
     assert PAPER3["reset_boundary"]["knowledge_only_may_persist"] is True
     assert "retained_empirical_bayes_belief_mpc" in PAPER3["arms"]
+
+
+def test_v1_1_separates_native_wartime_and_alarm_annex() -> None:
+    assert AMENDMENT["execution_families"]["S_NATIVE"]["anticipatory_alarm"] == "FORBIDDEN"
+    assert AMENDMENT["execution_families"]["S_WARTIME"]["promotion_to_s3"] is False
+    assert AMENDMENT["risk_selection"]["R23"]["may_rank_or_select_a_cell"] is False
+    assert AMENDMENT["program_q_precedence"]["program_s_scientific_seeds_forbidden_while_q_pending"] is True
+    assert ALARM_ANNEX["promotion_authorized"] is False
+    assert ALARM_ANNEX["scientific_seed_block"] is None
+    assert DOMAIN_FACT["garrido_response_required"] is False
+    assert DOMAIN_FACT["AF_1_advance_signal"]["program_s_effect"].startswith(
+        "Authorizes only the separate S-P annex"
+    )
+
+
+def test_v1_1_uses_risk_aware_terminal_labels() -> None:
+    labels = AMENDMENT["s4_terminal_labels"]
+    assert labels["neural_premium"] == "PASS_S_RISK_AWARE_ADAPTATION_PREMIUM"
+    assert labels["classically_equivalent"] == "PASS_S_RISK_AWARE_ADAPTATION_CLASSICALLY_EQUIVALENT"

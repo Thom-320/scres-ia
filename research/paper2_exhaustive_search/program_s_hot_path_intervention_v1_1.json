@@ -1,0 +1,18 @@
+{
+  "schema_version": "program_s_hot_path_intervention_v1_1",
+  "date_frozen": "2026-07-17",
+  "reason": "R14 physical mass returned to Op6 but Program O product tags previously did not follow the rework movement.",
+  "shared_hot_path_files": [
+    "supply_chain/supply_chain.py",
+    "supply_chain/program_o_full_des.py"
+  ],
+  "new_hooks": [
+    "_record_product_rework_started",
+    "_record_rework_product_output"
+  ],
+  "riskoff_invariant": "No R14 defect source exists when risks are disabled; rework_op6 and its product ledger remain exactly zero.",
+  "required_audit": "PASS_S0_HOT_PATH_RISKOFF_PARITY_V1_1",
+  "custody_tolerance": 2.220446049250313e-16,
+  "attempt1_status": "STOP_NUMERIC_LITERAL_ROUNDED_BELOW_MACHINE_EPSILON",
+  "scientific_seed_blocks_opened": []
+}

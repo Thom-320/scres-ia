@@ -1,64 +1,50 @@
-# Program S implementation status — 2026-07-17
+# Program S implementation status — amended v1.1 — 2026-07-17
 
 ## Current verdict
 
 `HOLD_S1_TECHNICALLY_READY_PROGRAM_Q_HAS_VPS_PRIORITY`
 
-Program S is a prospective contract. It does not alter:
+S0 remains frozen under the parent v1 contract:
 
-- `STOP_PROGRAM_O_AFTER_CORRECTIVE_VALIDATION`;
-- `STOP_CALIBRATION_NOT_ELIGIBLE` for O-R;
-- `PASS_POWER_SELECT_N_256` for Program Q.
+- `PASS_S0_RISK_ADAPTER_LIVE_AND_RISKOFF_IDENTICAL`;
+- `PASS_S0_HOT_PATH_RISKOFF_PARITY_V1_1` on 18 burned episodes;
+- `PASS_S1_TRANSDUCER_PREFLIGHT_ALL_MASKS_ELIGIBLE`.
 
-No Program S seed in blocks 751, 752, or 753 has been opened.
+No Program Q/S reserved seed in intervals 749, 751, 752, or 753 has been opened.
 
-## Implemented
+## Binding v1.1 changes before S1
 
-- Isolated branch/worktree from scientific parent `c2fa5cb3`.
-- Frozen Program S contract, intervention ledger, seed manifest, raw-matrix schema, Morris design, claim table, and sealed Paper 3 contract.
-- Backward-compatible Program O risk interfaces for per-risk impact, exact risk tapes, and risk RNG mode.
-- `ProgramSRiskAwareSimulation` with decision-relative tapes and a fail-closed observation whitelist.
-- Separate thesis-native independent and researcher-introduced wartime-coupled strata.
-- Deterministic S0 fixtures for R11, R14, R21, R22, R23, and R24.
-- Product-preserving R14 rework through Op6; no mass or tag duplication.
-- Policy-independent alarms with lead, accuracy, false positives, and no future risk ID/seed/parameters.
-- Risk-aware transducer extensions for contingent-priority queues, mission completion clocks, risk AP/RP ReT, and realized risk events.
-- Atomic/resumable S1 shard producer and point summarizer.
+- S-NATIVE is the only primary/promotable physical screen.
+- S-WARTIME is separated and hypothesis-generating; it has no seed block and cannot be an automatic fallback.
+- Anticipatory alarms are forbidden in S-NATIVE.
+- Program S-P is a separate, unseeded annex with a risk-family-specific, binned and noisy alarm generator.
+- R23 retains deterministic physical liveness but is fixed at multiplier 1.0 as a negative control and cannot select a cell.
+- Native S1 stops before S2 when `max LCB95(H_PI_safe) < 0.01`.
+- Program Q is the current primary Paper 2 instrument. S cannot open scientific seeds while Q keeps VPS priority.
+- S terminal labels describe risk-aware adaptation rather than claiming Paper 2 by label alone.
 
-## Executed instrument evidence
+## Compute and design
 
-S0 returned:
+The amended Morris design contains:
 
-`PASS_S0_RISK_ADAPTER_LIVE_AND_RISKOFF_IDENTICAL`
+- 3 native groups, 30 trajectories, 160 points;
+- capacity fixed at 1.0 inside Morris;
+- 0.9/1.1 reserved as discrete post-selection stability anchors;
+- 3 product-regime cells and 12 tapes;
+- 5,760 projected native shards.
 
-- All ten deterministic risk-operation fixtures passed.
-- R14 moved and returned exactly 30 tagged rations; conservation residuals were zero.
-- R21 simultaneously affected Op3/5/6/7/9 in its fixture.
-- R24 created one contingent order and retained the frozen product label.
-- Native R21 incidence was 0/12 burned tapes; this is reported as rarity, not misclassified as physical non-liveness.
-- Program S explicit risk-off defaults are bitwise identical to the parent adapter. The parent commit itself differs from the older custodied `ret_visible` scalar by one IEEE-754 ULP (`1.11e-16`), disclosed rather than hidden.
+The burned-tape benchmark measured 1.91–3.22 seconds per complete 65,536-calendar shard. With a frozen 1.25 safety multiplier and two workers, projected wall time is approximately 11,582 seconds (3.22 hours), below the seven-day cap:
 
-The transducer preflight passed all three masks:
+`PASS_S1_COMPUTE_BENCHMARK_FEASIBLE`
 
-- all calendars at horizons 1, 2, and 3;
-- H=8 static/oracle/extreme replays;
-- maximum absolute matrix error `5.55e-17`;
-- one physical skeleton per mask/horizon across actions.
+## Instrument corrections retained
 
-## Frozen S1 design
+The first hot-path audit used the rounded literal `2.22e-16`, slightly below exact binary64 epsilon. It stopped technically. The identical burned inputs were repeated with `numpy.finfo(float).eps`; max difference was exactly one epsilon and risk-off rework remained zero in 18/18 episodes. Both artifacts are retained.
 
-- 3 masks × 2 strata = 6 design groups.
-- 10 optimized Morris trajectories per group.
-- 8-level log2 coordinates.
-- 380 trajectory points plus mandatory capacity-1.0 anchors.
-- Three connected Program O product-regime cells.
-- Exact 65,536-calendar frontier and closed-loop belief-MPC per tape.
-- Every shard performs direct static/oracle/extreme replays before atomic publication.
+The first compute preflight exposed that capacity had accidentally been generated as a continuous Morris coordinate despite the discrete contract. No timing episode or scientific seed ran. The design was corrected prospectively before 751: capacity is now fixed at 1.0 inside Morris.
 
-## Why S1 has not started
+## Remaining hold
 
-Program Q remains `FROZEN_POWER_PASS_N_256_PENDING_SEED_AUTHORIZATION` and has frozen VPS priority. The Program S preopening audit is technically clean, but its seed authorization remains false until Q releases that priority or reaches a terminal result.
+The unified Q/S numeric-range seed auditor passes. The amended S1 preopening audit still withholds authorization solely while Program Q remains `FROZEN_POWER_PASS_N_256_PENDING_SEED_AUTHORIZATION` and retains VPS priority.
 
-This HOLD is infrastructure governance, not a scientific null. The next action after Q releases the VPS is to rerun `scripts/audit_program_s_s1_preopen.py`; only `PASS_S1_PREOPEN_AUTHORIZED` may open `7510001`.
-
-Paper 3 remains sealed until a confirmatory S4 Paper 2 PASS.
+Paper 3 remains sealed until a risk-aware S4 PASS, and its formerly open-ended namespace is bounded to `7530001–7539999`.
