@@ -135,6 +135,13 @@ def test_seed_custody_scan_allows_contract_declaration_only(tmp_path: Path) -> N
     assert payload["status"] == "STOP_PROGRAM_Q_SEED_COLLISION"
 
 
+def test_live_program_q_seed_custody_declarations_do_not_fake_a_collision() -> None:
+    payload = scan(ROOT)
+    assert payload["pass"]
+    assert payload["status"] == "PROGRAM_Q_SEEDS_VIRGIN"
+    assert not payload["suspicious"]
+
+
 def test_latency_benchmark_reports_batch_one_and_failures() -> None:
     payload = benchmark_callable(
         lambda observation: int(np.argmax(observation)),

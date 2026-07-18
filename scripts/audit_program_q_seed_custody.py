@@ -13,6 +13,9 @@ RESERVED_LOW = 7_490_001
 RESERVED_HIGH = 7_490_256
 DECLARATION_ALLOWLIST = {
     "contracts/program_q_frozen_policy_replication_v1.json",
+    "research/paper2_exhaustive_search/program_q_historical_recurrentppo_fallback_freeze_20260717.json",
+    "research/paper2_exhaustive_search/program_q_power_preopen_attempts_20260717.json",
+    "research/paper2_exhaustive_search/program_q_primary_candidate_independence_v1.json",
     "research/paper2_exhaustive_search/program_q_seed_custody_preopen_20260717.json",
     "scripts/audit_program_q_seed_custody.py",
 }
