@@ -1,0 +1,67 @@
+{
+  "contract_id": "program_s_paper3_retained_knowledge_v1",
+  "schema_version": "program_s_paper3_contract_v1",
+  "date_frozen": "2026-07-17",
+  "status": "SEALED_UNAUTHORIZED_UNTIL_PROGRAM_S_S4_PAPER2_PASS",
+  "opening_authority": [
+    "PASS_S_PAPER2_NEURAL_PREMIUM",
+    "PASS_S_PAPER2_LEARNED_ADAPTATION_CLASSICALLY_EQUIVALENT"
+  ],
+  "campaign_cell_selection": {
+    "primary": "the least-severe confirmed Program S component cell selected prospectively by S2-S4",
+    "adjacent": "the two graph-adjacent confirmed component cells with smallest physical distance",
+    "posthoc_replacement_forbidden": true
+  },
+  "campaign_transition": {
+    "persistent_diagonal": 0.8,
+    "persistent_off_diagonal": "0.2 distributed uniformly over the other two cells",
+    "null": "iid draws from the same stationary three-cell marginal",
+    "multiple_orderings": true,
+    "same_campaign_multiset_across_arms": true
+  },
+  "reset_boundary": {
+    "physical_inventory": true,
+    "wip": true,
+    "backlog": true,
+    "orders_in_transit": true,
+    "risk_and_demand_rng": true,
+    "knowledge_only_may_persist": true
+  },
+  "arms": [
+    "retained_posterior_context",
+    "reset_posterior_context",
+    "retained_weights_reset_optimizer",
+    "retained_weights_and_optimizer",
+    "reset_weights_matched_compute",
+    "frozen_program_s_policy",
+    "scratch_matched_compute",
+    "retained_empirical_bayes_belief_mpc",
+    "zero_update_control"
+  ],
+  "primary_estimand": "cold-start canonical ReT retained minus reset before any update in the new campaign",
+  "secondary_estimands": [
+    "AUC over first four episodes",
+    "episodes to reach belief-MPC",
+    "negative-transfer frequency and magnitude",
+    "CVaR10",
+    "worst-product fill",
+    "campaign-order interaction"
+  ],
+  "matched_compute": {
+    "environment_interactions": "exact",
+    "gradient_updates": "exact",
+    "wall_clock": "reported but not a substitute for update matching",
+    "replay_buffer_cross_campaign": "forbidden unless declared as a separate retained-memory arm"
+  },
+  "pass": {
+    "lcb95_H_ret_cold_min": 0.01,
+    "favorable_transition_fraction_min": 0.70,
+    "multiple_campaign_orderings_required": true,
+    "iid_null_equivalence_interval": [-0.01, 0.01],
+    "retained_learner_vs_retained_empirical_bayes": "superior or equivalent within +/-0.01",
+    "physical_state_leakage": 0
+  },
+  "seed_block": "7530001+",
+  "seed_block_opened": false,
+  "no_training_or_scientific_evaluation_before_authorization": true
+}

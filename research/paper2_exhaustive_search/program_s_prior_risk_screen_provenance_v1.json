@@ -1,0 +1,21 @@
+{
+  "schema_version": "program_s_prior_risk_screen_provenance_v1",
+  "recorded_on": "2026-07-17",
+  "purpose": "Port the terminal meaning of Program O relevant-risk v1.1 without changing its STOP or treating its incomplete screen as Program S evidence.",
+  "source_branch": "codex/program-o-risk-sensitivity-v1-1",
+  "source_commit": "0d30b23",
+  "source_contract": "contracts/program_o_relevant_risk_sensitivity_v1_1.json",
+  "terminal_verdict": "STOP_V1_1_BEFORE_G2_RARE_RISK_FIXTURE_NOT_POPULATED",
+  "verified_stage_results": {
+    "G0_riskoff_identity": "PASS",
+    "G1_deterministic_liveness": "NOT_IMPLEMENTED_AS_SEPARATE_FIXTURE",
+    "G1_stochastic_incidence": "R21 zero events; R22 only partial operation coverage",
+    "G2_frequency_impact_map": "NOT_EXECUTED"
+  },
+  "scientific_boundary": [
+    "The stop does not establish risk invariance of Program O.",
+    "It does not estimate frequency sensitivity, impact sensitivity, risk x product interactions, or timing interactions.",
+    "Program S repairs the instrument prospectively by separating deterministic liveness from stochastic incidence."
+  ],
+  "immutable_historical_record": true
+}

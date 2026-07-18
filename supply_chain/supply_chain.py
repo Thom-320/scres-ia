@@ -1427,6 +1427,7 @@ class MFSCSimulation:
             if defects > 0:
                 self._pending_batch -= defects
                 self.total_produced -= defects
+                self._record_product_rework_started(defects)
                 defect_lineage = self._lineage_take("pending_batch", defects)
                 if self.r14_defect_mode == "thesis_strict_op6":
                     yield self.rework_op6.put(defects)
@@ -3439,6 +3440,12 @@ class MFSCSimulation:
     def _record_assembly_product_output(self, quantity: float) -> None:
         """Optional metadata hook after physical ration production."""
 
+    def _record_rework_product_output(self, quantity: float) -> None:
+        """Optional metadata hook after Op6 rework returns to finished WIP."""
+
+    def _record_product_rework_started(self, quantity: float) -> None:
+        """Optional metadata hook when R14 removes finished WIP for rework."""
+
     def _stage_product_metadata(self, quantity: float) -> None:
         """Optional metadata hook before a finished batch enters Op8 stock."""
 
@@ -3532,7 +3539,10 @@ class MFSCSimulation:
                     self.total_raw_material_consumed += raw_units_qty
                     self.total_rations_created_from_raw += raw_produced_qty
                 self._pending_batch += can_produce
-                self._record_assembly_product_output(can_produce)
+                if rework_qty > 0.0:
+                    self._record_rework_product_output(rework_qty)
+                if raw_produced_qty > 0.0:
+                    self._record_assembly_product_output(raw_produced_qty)
                 self._today_produced += can_produce
                 self.total_produced += can_produce
 
@@ -5207,6 +5217,7 @@ class MFSCSimulation:
                     if defects > 0:
                         self._pending_batch -= defects
                         self.total_produced -= defects
+                        self._record_product_rework_started(defects)
                         defect_lineage = self._lineage_take("pending_batch", defects)
                         if self.r14_defect_mode == "thesis_strict_op6":
                             yield self.rework_op6.put(defects)

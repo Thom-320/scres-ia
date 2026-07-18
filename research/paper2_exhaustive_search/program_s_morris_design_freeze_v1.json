@@ -1,0 +1,30 @@
+{
+  "schema_version": "program_s_morris_design_freeze_v1",
+  "date_frozen": "2026-07-17",
+  "status": "DESIGN_FROZEN_BEFORE_7510001",
+  "coordinate_scale": "log2 for positive physical multipliers; categorical product cell analyzed as a block",
+  "levels": 8,
+  "candidate_trajectories_per_mask_stratum": 200,
+  "selected_optimized_trajectories_per_mask_stratum": 10,
+  "design_rng_seed": 20260717,
+  "optimization": "greedy maximin trajectory distance with deterministic tie-breaking",
+  "factors": {
+    "uniform_frequency": [1.0, 2.0, 4.0],
+    "duration_impact": [1.0, 1.5, 2.0],
+    "r14_defect_probability": [1.0, 1.5, 2.0],
+    "r24_frequency": [1.0, 2.0, 4.0],
+    "r24_quantity": [1.0, 1.5, 2.0],
+    "baseline_capacity": [0.9, 1.0, 1.1]
+  },
+  "product_cells": {
+    "rho75_share90": {"rho": 0.75, "share": 0.90},
+    "rho90_share75": {"rho": 0.90, "share": 0.75},
+    "rho90_share90": {"rho": 0.90, "share": 0.90}
+  },
+  "primary_outputs": ["H_PI_safe", "classical_H_obs"],
+  "ranking": "mu-star on H_PI_safe; report mu and sigma; top three factors only define the prospectively frozen S2 local grid",
+  "no_isolated_point_promotion": true,
+  "capacity_rule": "0.9 and 1.1 are stability checks and cannot rescue failure at 1.0",
+  "seed_block": [7510001, 7510012],
+  "seed_block_opened": false
+}

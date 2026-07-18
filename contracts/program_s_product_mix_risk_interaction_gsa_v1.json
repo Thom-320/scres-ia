@@ -1,0 +1,217 @@
+{
+  "contract_id": "program_s_product_mix_risk_interaction_gsa_v1",
+  "schema_version": "program_s_contract_v1",
+  "date_frozen": "2026-07-17",
+  "status": "FROZEN_S0_IMPLEMENTATION_NO_SCIENTIFIC_SEEDS_OPENED",
+  "parent_commit": "c2fa5cb3",
+  "scientific_scope": "Prospective risk x nonfungible-product x timing sensitivity; independent of all closed Program O/O-R contracts and parallel to Program Q.",
+  "historical_verdicts_immutable": {
+    "program_o": "STOP_PROGRAM_O_AFTER_CORRECTIVE_VALIDATION",
+    "program_o_r": "STOP_CALIBRATION_NOT_ELIGIBLE",
+    "program_q": "PASS_POWER_SELECT_N_256"
+  },
+  "prohibitions": [
+    "No Program S result changes or reinterprets an O, O-R, or Q verdict.",
+    "No post-result addition of risks, actions, resources, observations, metrics, cells, or thresholds.",
+    "No risk identifier, seed, tape identifier, phi, psi, rho, dominant share, latent regime, realized future demand, or oracle calendar in policy observations.",
+    "No shifts, reserves, convoy purchases, or other purchasable resources in Program S v1.",
+    "R3 is deterministic diagnostic-only and cannot select a cell.",
+    "R14 uses defect probability, preserves return to Op6, and has no invented repair duration.",
+    "Capacity 0.9/1.1 is stability-only; the selected component must pass at 1.0."
+  ],
+  "strata": {
+    "THESIS_NATIVE_INDEPENDENT": {
+      "interpretation": "Garrido-native independent occurrences and recovery semantics",
+      "allowed_couplings": ["independent"]
+    },
+    "RESEARCHER_WARTIME_COUPLED": {
+      "interpretation": "Disclosed synthetic temporal coupling with R24; no MFSC prevalence claim",
+      "allowed_couplings": [
+        "disruption_leads_r24_72h",
+        "coincident",
+        "r24_leads_disruption_72h"
+      ],
+      "replacement_rule": "The coupled cluster replaces rather than duplicates its native event."
+    }
+  },
+  "physical_masks": {
+    "PRODUCTION_QUALITY_SURGE": ["R11", "R14", "R24"],
+    "LOC_SURGE": ["R22", "R24"],
+    "CROSS_ECHELON_SURGE": ["R21", "R23", "R24"]
+  },
+  "r3_diagnostic": {
+    "included_in_screen": false,
+    "frequency_or_impact_scaling_forbidden": true
+  },
+  "decision_contract": {
+    "action_space": "Discrete(4)",
+    "action_meaning": "number of the next three production lots assigned to P_C",
+    "cadence_hours": 168,
+    "activation_delay_hours": 24,
+    "episode_decisions": 8,
+    "open_loop_frontier_size": 65536,
+    "resource_envelope": "Program O fixed-clock physical resource vector"
+  },
+  "observation_whitelist": [
+    "inventory_by_product",
+    "wip_by_product",
+    "locked_pipeline_by_product",
+    "backlog_quantity_and_age_by_product",
+    "recent_realized_demand_and_product_mix_belief",
+    "currently_available_capacity_by_echelon",
+    "realized_downtime_by_echelon",
+    "aggregated_operational_alarm_family_severity_window_product_share_confidence",
+    "alarm_lead"
+  ],
+  "risk_interfaces": {
+    "risk_impact_multipliers_by_id": "dict[str,float] | None",
+    "risk_event_tape": "policy-independent iterable of RiskEvent",
+    "risk_rng_mode": ["shared", "per_risk"],
+    "time_origin": "Program O decision start after the neutral risk-free prefix"
+  },
+  "safe_oracle_constraints_per_tape": {
+    "higher_or_equal": [
+      "visible_rows",
+      "ret_full",
+      "quantity_ret_full",
+      "ret_visible_cvar10",
+      "fill_P_C",
+      "fill_P_H",
+      "worst_product_fill"
+    ],
+    "lower_or_equal": [
+      "omitted_rows",
+      "omitted_quantity",
+      "lost_orders",
+      "lost_quantity",
+      "unresolved_orders",
+      "unresolved_quantity",
+      "remaining_quantity_P_C",
+      "remaining_quantity_P_H",
+      "max_backlog_age",
+      "service_loss_auc"
+    ],
+    "equal": [
+      "generated_orders",
+      "gross_policy_batch_slots",
+      "gross_production_quantity",
+      "charged_daily_dispatch_slots",
+      "charged_downstream_vehicle_hours"
+    ],
+    "conservation_absolute_tolerance": 1e-8
+  },
+  "s0": {
+    "question": "Are the risk adapter and product ledgers causally live while risk-off remains identical?",
+    "deterministic_fixtures": ["R11", "R14", "R21", "R22", "R23", "R24"],
+    "required_checks": [
+      "R11 exact Op5/Op6 target fixture",
+      "R14 exact defect quantity returns to Op6 without mass creation",
+      "R21 simultaneous Op3/5/6/7/9",
+      "R22 separate Op4/8/10/12 fixtures",
+      "R23 Op11",
+      "R24 preserves the already frozen ambient product label",
+      "thesis incidence reported separately from deterministic liveness",
+      "risk-off Program O parity"
+    ],
+    "pass": "PASS_S0_RISK_ADAPTER_LIVE_AND_RISKOFF_IDENTICAL",
+    "stop": "STOP_S0_RISK_ADAPTER_OR_PARITY_FAILURE"
+  },
+  "s1_morris": {
+    "method": "elementary effects on log2 coordinates; 10 optimized trajectories and 8 levels per mask/stratum",
+    "development_tapes": {"start": 7510001, "end": 7510012, "opened": false},
+    "factors": {
+      "uniform_frequency": [1.0, 2.0, 4.0],
+      "duration_impact_R11_R21_R22_R23": [1.0, 1.5, 2.0],
+      "r14_defect_probability_multiplier": [1.0, 1.5, 2.0],
+      "r24_frequency": [1.0, 2.0, 4.0],
+      "r24_quantity": [1.0, 1.5, 2.0],
+      "baseline_capacity": [0.9, 1.0, 1.1],
+      "product_regime_cells": ["rho75_share90", "rho90_share75", "rho90_share90"]
+    },
+    "primary_sensitivity_outputs": ["H_PI_safe", "classical_H_obs"],
+    "transducer_gate": {
+      "exact_all_calendars_horizons": [1, 2, 3],
+      "h8_direct_replays": ["static", "oracle", "extreme_all_C", "extreme_all_H"],
+      "action_dependent_skeleton_action": "STOP_MASK_BEFORE_INEXACT_SCREEN"
+    },
+    "selection_rule": "No isolated Morris point can be promoted. Select the top three factors by mu-star on H_PI_safe, then freeze S2 grid."
+  },
+  "s2": {
+    "fresh_tapes": {"start": 7510101, "end": 7510148, "opened": false},
+    "alarm_grid": {"lead_hours": [0, 24, 72], "balanced_accuracy": [0.5, 0.7, 0.85]},
+    "placebos": ["block_shuffle", "delayed_beyond_commitment", "wrong_echelon", "wrong_product", "confidence_permutation", "always_on"],
+    "comparators": ["65536_open_loop_calendars", "constants_and_cycles", "product_base_stock", "hysteresis_max_pressure", "min_cost_flow", "rolling_deterministic_MILP", "belief_MPC", "belief_DP", "convex_mixtures"],
+    "connected_component_gate": {
+      "minimum_cells": 3,
+      "must_span_both_rho_levels_and_both_share_levels": true,
+      "lcb95_H_PI_safe_min": 0.02,
+      "lcb95_classical_H_obs_min": 0.015,
+      "eta_min": 0.25,
+      "favorable_tapes_min_fraction": 0.70,
+      "minimum_material_actions": 2,
+      "minimum_reachable_state_fraction_per_action": 0.20,
+      "modal_calendar_max_fraction": 0.50,
+      "lost_orders_noninferior": true,
+      "worst_product_fill_lcb_min": -0.02,
+      "quantity_and_full_ledger_ret_lcb_min": -0.02,
+      "cvar10_lcb_min": -0.02,
+      "real_alarm_beats_all_placebos": true
+    },
+    "selection_order": ["thesis_native_first", "wartime_only_if_native_fails", "least_severe_connected_component"],
+    "extreme_only_rule": "A component existing only at frequency 4 and impact 2 is exploratory and non-promotable.",
+    "go": "GO_S3_FULL_DES_HPI_HOBS",
+    "stop_s1": "STOP_S1_NO_CONNECTED_PHYSICAL_HEADROOM",
+    "stop_s2": "STOP_S2_NO_SAFE_OBSERVABLE_CONVERSION"
+  },
+  "s3": {
+    "fresh_tapes": {"start": 7510201, "end": 7510248, "opened": false},
+    "cells_min": 6,
+    "cells_max": 12,
+    "full_frontier_recomputed_per_cell": true,
+    "closed_loop_classical_policies": true,
+    "parity": {"complete_horizons": [1, 2, 3], "h8_replays": ["static", "oracle", "policy", "modal", "extremes"], "ret_tolerance": 1e-12, "conservation_tolerance": 1e-8},
+    "go": "GO_S4_RISK_AWARE_LEARNER",
+    "stop": "STOP_S3_TRANSLATION_FAILED"
+  },
+  "s4": {
+    "learner": "RecurrentPPO",
+    "optimizer_seeds": 10,
+    "reward": "zero intermediate plus terminal ret_excel_request_snapshot_v2",
+    "reward_shaping_forbidden": true,
+    "privileged_critic_forbidden": true,
+    "training_tapes": {"start": 751100001, "end": 751350000, "opened": false},
+    "calibration_tapes": {"start": 7510301, "end": 7510348, "opened": false},
+    "confirmation_tapes": {"start": 7520001, "end": 7520256, "opened": false},
+    "confirmation_n_candidates": [128, 192, 256],
+    "minimum_joint_power": 0.80,
+    "estimands": {"H_OL": "learner minus complete open-loop frontier", "Delta_N": "learner minus best classical controller"},
+    "pass_neural_premium": {"label": "PASS_S_PAPER2_NEURAL_PREMIUM", "lcb95_H_OL_min": 0.01, "lcb95_Delta_N_min": 0.01},
+    "pass_equivalence": {"label": "PASS_S_PAPER2_LEARNED_ADAPTATION_CLASSICALLY_EQUIVALENT", "lcb95_H_OL_min": 0.01, "Delta_N_equivalence_interval": [-0.01, 0.01]},
+    "joint_gates": [">=70% favorable tapes", ">=8/10 learner seeds with H_OL > 0", "exact resources", "S2 guardrails", "modal phase-only and frequency-matched replacements underperform", "state/alarm perturbation response", "real alarm beats placebos"],
+    "classical_only": "BOUND_S_CLASSICAL_ADAPTATION_ONLY",
+    "stop": "STOP_S_NO_REPLICATED_LEARNED_ADAPTATION"
+  },
+  "paper3": {
+    "authorized_before_s4_pass": false,
+    "seed_block": "7530001+",
+    "seed_block_opened": false,
+    "persistent_transition_diagonal": 0.8,
+    "iid_null_required": true,
+    "physical_state_resets_between_campaigns": true,
+    "arms": ["retained_context", "reset_context", "retained_weights_reset_optimizer", "retained_weights_and_optimizer", "reset_weights_matched_compute", "frozen_S_policy", "scratch", "retained_empirical_bayes_belief_MPC", "zero_update"],
+    "primary": "cold-start retained minus reset ReT before within-campaign update",
+    "pass_gates": ["LCB95 >= 0.01", ">=70% favorable transitions", "matched interactions and compute", "multiple campaign orderings", "iid null equivalent to zero", "retained learner superior or equivalent to retained Empirical-Bayes", "no physical state leakage"]
+  },
+  "infrastructure": {
+    "program_q_vps_priority": true,
+    "program_s_before_q_completion": ["contracts", "fixtures", "transducer", "tests"],
+    "vps": ["frontiers", "comparators", "bootstrap", "S2", "S3", "confirmation"],
+    "kaggle": ["S4 training", "Paper 3 training"],
+    "depends_on_david": false,
+    "max_full_des_workers": 2,
+    "max_tasks_per_child": 1,
+    "watcher_before_producer": true,
+    "atomic_shard_key": "cell x tape",
+    "partial_or_uncustodied_run_is_evidence": false
+  }
+}
