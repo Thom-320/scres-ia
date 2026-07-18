@@ -155,6 +155,17 @@ def test_authoritative_power_selects_the_minimum_jointly_powered_N() -> None:
     assert expected_selected_N(rows, [128, 160, 192, 256], 0.8) == 160
 
 
+def test_program_q_contract_freezes_authoritative_N_256() -> None:
+    power = CONTRACT["power"]["authoritative_result"]
+    assert CONTRACT["status"] == "FROZEN_POWER_PASS_N_256_PENDING_SEED_AUTHORIZATION"
+    assert CONTRACT["confirmation"]["N"] == 256
+    assert power["selected_N"] == 256
+    assert power["joint_power"] >= CONTRACT["power"]["minimum_joint_power"]
+    assert len(power["result_sha256"]) == 64
+    assert len(power["cache_sha256"]) == 64
+    assert CONTRACT["confirmation"]["opened"] is False
+
+
 def test_latency_benchmark_reports_batch_one_and_failures() -> None:
     payload = benchmark_callable(
         lambda observation: int(np.argmax(observation)),

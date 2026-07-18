@@ -2,7 +2,7 @@
   "contract_id": "program_q_frozen_policy_replication_v1",
   "schema_version": "program_q_frozen_policy_replication_v1",
   "date_created": "2026-07-17",
-  "status": "FROZEN_DESIGN_PENDING_POWER_AND_SEED_AUTHORIZATION",
+  "status": "FROZEN_POWER_PASS_N_256_PENDING_SEED_AUTHORIZATION",
   "historical_verdicts_immutable": {
     "program_o": "STOP_PROGRAM_O_AFTER_CORRECTIVE_VALIDATION",
     "program_o_r": "STOP_CALIBRATION_NOT_ELIGIBLE",
@@ -42,14 +42,32 @@
     "minimum_joint_power": 0.8,
     "reselect_open_loop_65536_inside_every_resample": true,
     "reselect_classical_10_inside_every_resample": true,
-    "failure": "STOP_PROGRAM_Q_UNDERPOWERED_WITHIN_CAP"
+    "failure": "STOP_PROGRAM_Q_UNDERPOWERED_WITHIN_CAP",
+    "authoritative_result": {
+      "run_id": "program-q-power-preopen-v5-20260718",
+      "source_commit": "0cdf753",
+      "selected_N": 256,
+      "joint_power": 0.8755,
+      "result": "results/program_q/power_preopen_v5_20260718/artifacts/program_q_power_v1.json",
+      "result_sha256": "d50bd939e59d4ac3a8e4edf527e6ba9ecd5540ebd06c0c68e721a8eedb542683",
+      "cache_sha256": "a7ef66075dc287fd9d78ddf2abccbbd0a1f3d5e469add2da2c8c679081423405",
+      "independent_audit": "results/program_q/power_preopen_v5_20260718/independent_audit_v1.json",
+      "independent_audit_sha256": "b26385e966477cb2e354cd9e2bee9a2a8e1f055cd0f4705ce4778d0cdce30f80"
+    }
   },
   "confirmation": {
     "reserved_block": [7490001, 7490256],
     "opened": false,
-    "N": null,
+    "N": 256,
     "same_tapes_all_cells_crn": true,
-    "opening_requires": ["repository-wide collision scan", "power PASS", "historical candidate hash verification", "independent authorization"]
+    "opening_requires": ["repository-wide collision scan", "historical candidate hash verification", "confirmatory launcher audit", "independent authorization"],
+    "preopening_gate_state": {
+      "power": "PASS_SELECT_N_256",
+      "seed_collision_scan": "PASS_PROGRAM_Q_SEEDS_VIRGIN",
+      "historical_candidate_hashes": "PASS_10_OF_10",
+      "confirmatory_launcher_audit": "PENDING",
+      "independent_authorization": "PENDING"
+    }
   },
   "comparators": {
     "open_loop": "all 65536 calendars; family maximum mean; never per-tape maximum",
