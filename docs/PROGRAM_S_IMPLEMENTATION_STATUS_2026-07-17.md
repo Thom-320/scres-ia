@@ -56,4 +56,12 @@ workers, starts an independent watcher before the producer, records PID/PGID,
 RAM, stderr and atomic progress, refuses overwrite, and permits only an explicit
 fail-closed resume over missing identities.
 
+## Live execution update — 2026-07-18
+
+S1 opened `7510001–7510012` once at `2026-07-18T15:34:38Z` on
+`ovh-agent-lab`, source commit `adc0056`, after the post-Q authorization. The
+watcher is active, the run is partial, and no scientific verdict exists. The
+authoritative live seed registry is now v1.2; the v1.1 preopening registry and
+audit remain immutable historical evidence.
+
 Paper 3 remains sealed until a risk-aware S4 PASS, and its formerly open-ended namespace is bounded to `7530001–7539999`.
