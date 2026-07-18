@@ -88,6 +88,10 @@ class FullDESSkeleton:
     tape_sha256: str
     prefix_state_hash: str
     skeleton_sha256: str
+    release_completion_slots: tuple[float, ...] | None = None
+    release_available: tuple[bool, ...] | None = None
+    risk_events: tuple[dict[str, Any], ...] = ()
+    order_contingent: tuple[bool, ...] | None = None
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -104,6 +108,18 @@ class FullDESSkeleton:
             "tape_sha256": self.tape_sha256,
             "prefix_state_hash": self.prefix_state_hash,
             "skeleton_sha256": self.skeleton_sha256,
+            "release_completion_slots": (
+                None
+                if self.release_completion_slots is None
+                else list(self.release_completion_slots)
+            ),
+            "release_available": (
+                None if self.release_available is None else list(self.release_available)
+            ),
+            "risk_events": list(self.risk_events),
+            "order_contingent": (
+                None if self.order_contingent is None else list(self.order_contingent)
+            ),
         }
 
 
@@ -399,6 +415,109 @@ def _tail_mean(values: np.ndarray, valid: np.ndarray, fraction: float) -> np.nda
     return output
 
 
+def _risk_adjusted_order_values(
+    *,
+    skeleton: FullDESSkeleton,
+    oat: np.ndarray,
+    opt: np.ndarray,
+    bt: np.ndarray,
+    completed: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Reproduce DES AP/RP risk branches for a policy-independent event tape."""
+    n_calendar, n_order = oat.shape
+    request_values = 1.0 - bt.astype(np.float64) / np.arange(
+        1, n_order + 1
+    )[None, :]
+    active = np.zeros((n_calendar, n_order), dtype=bool)
+    r24_indicator = np.zeros((n_calendar, n_order), dtype=bool)
+    disruption_hours = np.zeros((n_calendar, n_order), dtype=np.float64)
+    point_events: list[tuple[float, str, float]] = []
+    origin = float(skeleton.decision_start)
+    for event in skeleton.risk_events:
+        risk_id = str(event["risk_id"])
+        start = origin + float(event["start_time"])
+        duration = max(0.0, float(event.get("duration", 0.0)))
+        end = origin + float(event.get("end_time", event["start_time"] + duration))
+        if duration <= 0.0:
+            magnitude = max(0.0, float(event.get("magnitude", 0.0)))
+            inside = completed & (opt[None, :] <= start + 1e-12) & (
+                start <= oat + 1e-12
+            )
+            active |= inside
+            if risk_id == "R24":
+                r24_indicator |= inside
+            if risk_id in {"R14", "R24"} and magnitude > 0.0:
+                units = 1.0 if risk_id == "R14" else max(1.0, magnitude / 2600.0)
+                point_events.append((start, risk_id, units))
+            continue
+        # A duration event enters sim.risk_events only when it ends.  An order
+        # finalized before that callback cannot yet carry its indicator.
+        overlap = np.maximum(
+            0.0,
+            np.minimum(oat, end) - np.maximum(opt[None, :], start),
+        )
+        eligible = completed & (end <= oat + 1e-12) & (overlap > 0.0)
+        active |= eligible
+        disruption_hours += np.where(eligible, overlap, 0.0)
+
+    contingent = (
+        np.zeros(n_order, dtype=bool)
+        if skeleton.order_contingent is None
+        else np.asarray(skeleton.order_contingent, dtype=bool)
+    )
+    point_events.sort(key=lambda row: (row[0], row[1]))
+    # Quantity-risk ledgers are consumed in physical order-completion order.
+    # A scalar loop over 48 orders is cheap; all other state remains vectorized.
+    for calendar_index in range(n_calendar):
+        completed_indices = np.flatnonzero(completed[calendar_index])
+        completion_order = sorted(
+            completed_indices.tolist(),
+            key=lambda order_index: (
+                float(oat[calendar_index, order_index]),
+                int(order_index),
+            ),
+        )
+        event_index = 0
+        r14_available = 0.0
+        r24_available = 0.0
+        for order_index in completion_order:
+            completion_time = float(oat[calendar_index, order_index])
+            while (
+                event_index < len(point_events)
+                and point_events[event_index][0] <= completion_time + 1e-12
+            ):
+                _time, risk_id, units = point_events[event_index]
+                if risk_id == "R14":
+                    r14_available += units
+                else:
+                    r24_available += units
+                event_index += 1
+            if r14_available > 0.0:
+                active[calendar_index, order_index] = True
+                disruption_hours[calendar_index, order_index] += 72.0
+            if r24_available > 0.0:
+                active[calendar_index, order_index] = True
+                r24_indicator[calendar_index, order_index] = True
+                disruption_hours[calendar_index, order_index] += 1.0
+                r24_available = max(0.0, r24_available - min(1.0, r24_available))
+            if contingent[order_index] and not r24_indicator[calendar_index, order_index]:
+                active[calendar_index, order_index] = True
+                r24_indicator[calendar_index, order_index] = True
+                disruption_hours[calendar_index, order_index] += min(
+                    max(0.0, completion_time - float(opt[order_index])), 48.0
+                )
+
+    ct = oat - opt[None, :]
+    risk_values = np.zeros((n_calendar, n_order), dtype=np.float64)
+    on_time = active & completed & (ct <= 48.0 + 1e-12)
+    late = active & completed & ~on_time
+    risk_values[on_time] = np.minimum(disruption_hours[on_time], 48.0) / 48.0
+    positive_recovery = late & (disruption_hours > 0.0)
+    risk_values[positive_recovery] = 0.5 / disruption_hours[positive_recovery]
+    request_values = np.where(active, risk_values, request_values)
+    return request_values, active
+
+
 def simulate_full_des_frontier(
     *,
     skeleton: FullDESSkeleton,
@@ -447,18 +566,42 @@ def simulate_full_des_frontier(
     # arriving at that instant is first eligible at the next daily release.
     # This ordering is physical contract state, not an implementation detail:
     # reversing it changes OATj and request-time backlog snapshots.
-    for time in skeleton.release_slots:
-        events.append((float(time), 0, "release", None))
+    release_completion_slots = (
+        tuple(float(time) + 48.0 for time in skeleton.release_slots)
+        if skeleton.release_completion_slots is None
+        else tuple(map(float, skeleton.release_completion_slots))
+    )
+    release_available = (
+        tuple(True for _ in skeleton.release_slots)
+        if skeleton.release_available is None
+        else tuple(map(bool, skeleton.release_available))
+    )
+    if not (
+        len(release_completion_slots)
+        == len(release_available)
+        == len(skeleton.release_slots)
+    ):
+        raise ValueError("release completion/availability vectors must match release_slots")
+    for release_index, time in enumerate(skeleton.release_slots):
+        events.append((float(time), 0, "release", int(release_index)))
     for time, week, position in skeleton.batch_arrivals:
         events.append((float(time), 1, "batch", (int(week), int(position))))
     for order_index, time in enumerate(skeleton.order_times):
         events.append((float(time), 2, "demand", int(order_index)))
 
+    contingent_class = (
+        np.ones(n_order, dtype=np.uint8)
+        if skeleton.order_contingent is None
+        else 1 - np.asarray(skeleton.order_contingent, dtype=np.uint8)
+    )
+    if contingent_class.shape != (n_order,):
+        raise ValueError("order_contingent must match order count")
     priority_order = np.lexsort(
         (
             np.arange(n_order, dtype=np.int64),
             opt,
             quantities,
+            contingent_class,
         )
     )
     for now, _priority, kind, payload in sorted(events):
@@ -491,6 +634,9 @@ def simulate_full_des_frontier(
             created[order_index] = True
             continue
 
+        release_index = int(payload)  # type: ignore[arg-type]
+        if not release_available[release_index]:
+            continue
         chosen = np.full(n_calendar, -1, dtype=np.int16)
         for order_index in priority_order:
             if not created[order_index]:
@@ -517,7 +663,7 @@ def simulate_full_des_frontier(
                 inventory[mask, requested_product[order_index]] -= qty
             pending[mask, order_index] = False
             released[mask, order_index] = True
-            oat[mask, order_index] = float(now) + 48.0
+            oat[mask, order_index] = float(release_completion_slots[release_index])
             if trace_out is not None and bool(mask[0]):
                 trace_events.append(
                     {
@@ -532,7 +678,14 @@ def simulate_full_des_frontier(
                 )
 
     completed = oat <= float(skeleton.score_time) + 1e-12
-    visible_values = 1.0 - bt.astype(np.float64) / np.arange(1, n_order + 1)[None, :]
+    ct = oat - opt[None, :]
+    visible_values, risk_active = _risk_adjusted_order_values(
+        skeleton=skeleton,
+        oat=oat,
+        opt=opt,
+        bt=bt,
+        completed=completed,
+    )
     visible_count = completed.sum(axis=1)
     visible_sum = np.where(completed, visible_values, 0.0).sum(axis=1)
     ret_visible = np.divide(
@@ -550,7 +703,6 @@ def simulate_full_des_frontier(
         where=visible_quantity_total > 0.0,
     )
 
-    ct = oat - opt[None, :]
     unresolved = ~completed
     unresolved_quantity = np.where(unresolved, quantities[None, :], 0.0)
     unresolved_count = unresolved.sum(axis=1)
@@ -571,6 +723,11 @@ def simulate_full_des_frontier(
         1.0
         - cumulative_backorders / np.arange(1, n_order + 1, dtype=np.float64)[None, :],
         0.0,
+    )
+    full_order_values = np.where(
+        completed & risk_active,
+        visible_values,
+        full_order_values,
     )
     ret_full = full_order_values.mean(axis=1)
     quantity_ret_full = (full_order_values * quantities[None, :]).sum(

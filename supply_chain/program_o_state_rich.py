@@ -547,8 +547,23 @@ def state_rich_calendar(
     for week in range(weeks):
         # Strict half-open observation: same-time physical events are not seen.
         events.append((start + 168.0 * week, -1, "decision", week))
-    for time in skeleton["release_slots"]:
-        events.append((float(time), 0, "release", None))
+    release_slots = tuple(map(float, skeleton["release_slots"]))
+    release_completion_slots = tuple(
+        map(
+            float,
+            skeleton.get("release_completion_slots")
+            or [time + 48.0 for time in release_slots],
+        )
+    )
+    release_available = tuple(
+        map(bool, skeleton.get("release_available") or [True] * len(release_slots))
+    )
+    if not (
+        len(release_slots) == len(release_completion_slots) == len(release_available)
+    ):
+        raise ValueError("release vectors must have equal length")
+    for release_index, time in enumerate(release_slots):
+        events.append((float(time), 0, "release", int(release_index)))
     batch_arrivals = [
         (float(time), int(week), int(position))
         for time, week, position in skeleton["batch_arrivals"]
@@ -558,8 +573,16 @@ def state_rich_calendar(
     for order_index, time in enumerate(order_times):
         events.append((float(time), 2, "demand", int(order_index)))
 
+    contingent = np.asarray(
+        skeleton.get("order_contingent") or [False] * len(order_times), dtype=bool
+    )
     priority_order = np.lexsort(
-        (np.arange(len(order_times), dtype=np.int64), order_times, quantities)
+        (
+            np.arange(len(order_times), dtype=np.int64),
+            order_times,
+            quantities,
+            1 - contingent.astype(np.uint8),
+        )
     )
     for now, _priority, kind, payload in sorted(events):
         if kind == "decision":
@@ -764,6 +787,9 @@ def state_rich_calendar(
             pending[order_index] = True
             created[order_index] = True
             continue
+        release_index = int(payload)
+        if not release_available[release_index]:
+            continue
         chosen = None
         for order_index in priority_order:
             if not created[order_index] or not pending[order_index]:
@@ -777,7 +803,7 @@ def state_rich_calendar(
             inventory[product_id] -= quantities[chosen]
             pending[chosen] = False
             released[chosen] = True
-            oat[chosen] = float(now) + 48.0
+            oat[chosen] = float(release_completion_slots[release_index])
 
     if len(actions) != weeks or any(action not in range(4) for action in actions):
         raise AssertionError("state-rich controller did not emit a full calendar")

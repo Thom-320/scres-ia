@@ -69,6 +69,7 @@ class ProductTagLedger:
 
     NODE_NAMES = (
         "pending_batch",
+        "rework_op6",
         "rations_al",
         "op8_transit",
         "rations_sb",
@@ -251,6 +252,9 @@ class ProgramOFullDESSimulation(MFSCSimulation):
         risks_enabled: bool = False,
         enabled_risks: set[str] | None = None,
         risk_frequency_multipliers_by_id: dict[str, float] | None = None,
+        risk_impact_multipliers_by_id: dict[str, float] | None = None,
+        risk_event_tape: Iterable[dict[str, Any]] | None = None,
+        risk_rng_mode: str = "shared",
     ) -> None:
         # Relevant-risk pass-through (contract program_o_relevant_risk_sensitivity_v1):
         # defaults reproduce the historical risks-off physics BIT-EXACTLY; when enabled, the
@@ -283,6 +287,9 @@ class ProgramOFullDESSimulation(MFSCSimulation):
             risks_enabled=bool(risks_enabled),
             enabled_risks=enabled_risks,
             risk_frequency_multipliers_by_id=risk_frequency_multipliers_by_id,
+            risk_impact_multipliers_by_id=risk_impact_multipliers_by_id,
+            risk_event_tape=risk_event_tape,
+            risk_rng_mode=str(risk_rng_mode),
             stochastic_pt=False,
             deterministic_baseline=False,
             warmup_trigger="op9_arrival",
@@ -412,6 +419,40 @@ class ProgramOFullDESSimulation(MFSCSimulation):
                 if target.source == "policy":
                     self.program_o_completed_action_slots += 1
                 self.program_o_active_target = None
+
+    def _record_rework_product_output(self, quantity: float) -> None:
+        slices = self.program_o_ledger.take_fifo("rework_op6", float(quantity))
+        self.program_o_ledger.put_slices("pending_batch", slices, now=self.env.now)
+        self.program_o_product_events.append(
+            {
+                "time": float(self.env.now),
+                "event": "r14_rework_returned_to_pending_batch",
+                "quantity": float(quantity),
+                "tokens": [asdict(item) for item in slices],
+            }
+        )
+
+    def _record_product_rework_started(self, quantity: float) -> None:
+        slices = self.program_o_ledger.take_fifo("pending_batch", float(quantity))
+        if self.r14_defect_mode == "thesis_strict_op6":
+            target_node = "rework_op6"
+        elif self.r14_defect_mode == "discard":
+            target_node = "scrap"
+        else:
+            raise ValueError(
+                "Program O product tagging supports R14 thesis_strict_op6 or discard; "
+                "generic raw-material reprocess would erase committed product identity"
+            )
+        self.program_o_ledger.put_slices(target_node, slices, now=self.env.now)
+        self.program_o_product_events.append(
+            {
+                "time": float(self.env.now),
+                "event": "r14_product_rework_started",
+                "quantity": float(quantity),
+                "target_node": target_node,
+                "tokens": [asdict(item) for item in slices],
+            }
+        )
 
     def _stage_product_metadata(self, quantity: float) -> None:
         slices = self.program_o_ledger.take_fifo("pending_batch", quantity)
@@ -721,7 +762,7 @@ class ProgramOFullDESSimulation(MFSCSimulation):
         return _json_digest(payload)
 
     def product_conservation_ledger(self) -> dict[str, Any]:
-        stock_nodes = (
+        stock_nodes = [
             "pending_batch",
             "rations_al",
             "op8_transit",
@@ -729,7 +770,16 @@ class ProgramOFullDESSimulation(MFSCSimulation):
             "order_transit",
             "delivered",
             "scrap",
-        )
+        ]
+        if (
+            self.program_o_ledger.quantity("rework_op6") > 1e-12
+            or float(self.rework_op6.level) > 1e-12
+            or any(
+                event.get("event") == "r14_product_rework_started"
+                for event in self.program_o_product_events
+            )
+        ):
+            stock_nodes.insert(1, "rework_op6")
         per_product: dict[str, Any] = {}
         for product_id in PRODUCTS:
             nodes = {
@@ -760,6 +810,10 @@ class ProgramOFullDESSimulation(MFSCSimulation):
             "order_transit": self.program_o_ledger.quantity("order_transit")
             - sum(float(order.in_flight_qty) for order in self.orders),
         }
+        if "rework_op6" in stock_nodes:
+            partitions["rework_op6"] = self.program_o_ledger.quantity(
+                "rework_op6"
+            ) - float(self.rework_op6.level)
         return {
             "per_product": per_product,
             "partition_residuals": partitions,
@@ -881,6 +935,9 @@ def run_program_o_full_des_episode(
     risks_enabled: bool = False,
     enabled_risks: set[str] | None = None,
     risk_frequency_multipliers_by_id: dict[str, float] | None = None,
+    risk_impact_multipliers_by_id: dict[str, float] | None = None,
+    risk_event_tape: Iterable[dict[str, Any]] | None = None,
+    risk_rng_mode: str = "shared",
 ) -> tuple[ProgramOFullDESSimulation, dict[str, Any]]:
     sim = ProgramOFullDESSimulation(
         seed=int(seed),
@@ -893,5 +950,8 @@ def run_program_o_full_des_episode(
         risks_enabled=bool(risks_enabled),
         enabled_risks=enabled_risks,
         risk_frequency_multipliers_by_id=risk_frequency_multipliers_by_id,
+        risk_impact_multipliers_by_id=risk_impact_multipliers_by_id,
+        risk_event_tape=risk_event_tape,
+        risk_rng_mode=str(risk_rng_mode),
     ).run_contract()
     return sim, sim.product_outcome_panel()

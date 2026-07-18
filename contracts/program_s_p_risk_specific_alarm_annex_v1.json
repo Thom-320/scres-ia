@@ -1,0 +1,37 @@
+{
+  "contract_id": "program_s_p_risk_specific_alarm_annex_v1",
+  "date_frozen": "2026-07-17",
+  "status": "FROZEN_GENERATOR_SPEC_NO_SCIENTIFIC_SEEDS_ASSIGNED",
+  "parent": "program_s_product_mix_risk_interaction_gsa_v1_1_amendment",
+  "scientific_role": "Separate researcher-introduced information experiment; never an in-contract rescue of S-NATIVE or S-WARTIME.",
+  "domain_gate": "GATE_DOMAIN_FACTS_ADJUDICATED_AF_1",
+  "domain_gate_artifact": "research/paper2_exhaustive_search/program_s_domain_fact_adjudication_v1.json",
+  "disclosure": "Signal properties are researcher-adjudicated from thesis forecasting language and public doctrine, not MFSC estimates.",
+  "forbidden": [
+    "exact future event start or end",
+    "realized duration",
+    "risk identifier",
+    "tape or seed",
+    "generator multipliers",
+    "future demand realization",
+    "uniform high-accuracy signal across risk families"
+  ],
+  "risk_family_models": {
+    "R24": {"family": "planned_contingent_demand", "lead_bins_hours": [72, 168], "detection_probability": [0.70, 0.85], "specificity": [0.70, 0.85], "onset_bin_hours": 24},
+    "R21": {"family": "weather_natural_disaster", "lead_bins_hours": [24, 72], "detection_probability": [0.60, 0.80], "specificity": [0.70, 0.90], "onset_bin_hours": 24},
+    "R22": {"family": "loc_threat", "lead_bins_hours": [0, 24], "detection_probability": [0.50, 0.65], "specificity": [0.60, 0.80], "onset_bin_hours": 24},
+    "R11_R14": {"family": "condition_monitoring", "lead_bins_hours": [0, 24], "detection_probability": [0.55, 0.75], "specificity": [0.70, 0.90], "onset_bin_hours": 12}
+  },
+  "generator": {
+    "predicted_window_is_binned_and_jittered": true,
+    "issuance_time_is_jittered_and_does_not_equal_true_onset_minus_nominal_lead": true,
+    "severity_uses_confusion_matrix": true,
+    "duration_is_never_emitted": true,
+    "false_positives_generated_from_no-event_opportunities": true,
+    "policy_independent_rng": true,
+    "calibration_required_on_burned_tapes": true
+  },
+  "placebos": ["block_shuffle", "late_beyond_commitment", "wrong_family", "wrong_product", "confidence_permutation", "always_on"],
+  "scientific_seed_block": null,
+  "promotion_authorized": false
+}
