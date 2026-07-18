@@ -28,12 +28,15 @@ FALLBACK = (
 
 def test_historical_fallback_is_hash_frozen_without_retraining() -> None:
     payload = json.loads(FALLBACK.read_text())
-    assert payload["status"] == "FROZEN_FALLBACK_PENDING_DAVID_950_OR_DEFAULT_SELECTION"
+    assert payload["status"] == "FROZEN_PRIMARY_CANDIDATE_NO_EXTERNAL_DEPENDENCY"
     assert payload["training"]["retraining_for_program_q"] is False
     assert payload["training"]["checkpoint_selection"] == "final only"
     assert len(payload["checkpoints_sha256"]) == 10
     assert all(len(value) == 64 for value in payload["checkpoints_sha256"].values())
     assert payload["scientific_seed_state"]["7490001_7490256"] == "UNOPENED"
+    assert payload["selection_rule"]["external_challenger_can_replace_primary"] is False
+    assert CONTRACT["primary_candidate"]["replacement_by_external_challenger"] == "forbidden"
+    assert CONTRACT["architecture_sidecar_firewall"]["may_delay_or_replace_program_q"] is False
 
 
 def result_fixture(*, h_lcb=0.02, delta_lcb=-0.005, delta_ucb=0.005):

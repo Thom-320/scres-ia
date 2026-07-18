@@ -1,7 +1,7 @@
 {
   "schema_version": "program_q_historical_recurrentppo_fallback_freeze_v1",
   "date_frozen": "2026-07-17",
-  "status": "FROZEN_FALLBACK_PENDING_DAVID_950_OR_DEFAULT_SELECTION",
+  "status": "FROZEN_PRIMARY_CANDIDATE_NO_EXTERNAL_DEPENDENCY",
   "program_q_contract": "contracts/program_q_frozen_policy_replication_v1.json",
   "historical_scientific_commit": "821c8d8cd68a904f2d7fdfb790ddb7272eff3a78",
   "training_source_commit": "02aad62ff5997458ca427729134291f77abc5bca",
@@ -32,13 +32,14 @@
     "8110": "a1a34809aac90f737a4b78803f68978dbdec5560e8c4353d44dd90f76cb1cc5a"
   },
   "selection_rule": {
-    "if_one_david_challenger_passes_950": "use the newly retrained and frozen challenger",
-    "otherwise": "use these ten historical checkpoints",
+    "program_q_primary": "these ten historical checkpoints",
+    "external_challenger_can_replace_primary": false,
+    "external_collaborator_dependency": false,
     "post_freeze_checkpoint_or_architecture_changes": "forbidden"
   },
   "scientific_seed_state": {
     "7480101_7480148": "SEALED_FOREVER",
     "7490001_7490256": "UNOPENED",
-    "950100001_950100096": "UNOPENED"
+    "950100001_950100096": "SEALED_NOT_PART_OF_PROGRAM_Q"
   }
 }
