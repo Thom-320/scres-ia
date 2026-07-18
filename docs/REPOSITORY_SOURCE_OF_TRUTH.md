@@ -176,7 +176,9 @@ value relative to open-loop scheduling.
   not established.
 - Program Q is a separate prospective frozen-policy replication. CVaR10 is secondary there, while
   resource equality, demand preservation, anti-shed/product floors, feedback and information
-  placebos remain fail-closed identification gates.
+  placebos remain fail-closed identification gates. Its primary learner is now unconditionally the
+  ten-checkpoint historical RecurrentPPO population frozen by SHA-256; collaborator architecture
+  sandboxes are non-promotable sidecars and cannot delay or replace Program Q.
 
 Authoritative artifacts are `docs/PROGRAM_O_R_TERMINAL_VERDICT_2026-07-17.md`,
 `research/paper2_exhaustive_search/program_o_ret_calibration_v12_terminal_audit_20260717.json`, and

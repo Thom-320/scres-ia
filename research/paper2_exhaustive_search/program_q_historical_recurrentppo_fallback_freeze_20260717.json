@@ -1,0 +1,45 @@
+{
+  "schema_version": "program_q_historical_recurrentppo_fallback_freeze_v1",
+  "date_frozen": "2026-07-17",
+  "status": "FROZEN_PRIMARY_CANDIDATE_NO_EXTERNAL_DEPENDENCY",
+  "program_q_contract": "contracts/program_q_frozen_policy_replication_v1.json",
+  "historical_scientific_commit": "821c8d8cd68a904f2d7fdfb790ddb7272eff3a78",
+  "training_source_commit": "02aad62ff5997458ca427729134291f77abc5bca",
+  "source_hashes": {
+    "program_o_ret_only_learner_v1_contract": "5442e8a9e4de33a7e02e443cabc163a5acd396424b6614ab03ea4fe10c78c752",
+    "train_program_o_ret_learner_py": "6ade20740eef4b4e02f10ae221fe33ad0a6e1a1e8f326ca105f28799d252bf24",
+    "program_o_ret_env_py": "863a7f67320450377010362a8a6d5ff40064814e212a4636459dd22b7c8846ea",
+    "model_files_manifest": "6dc84d6eda7fe4f2b3fa9b1f9515b133e1dcdeb18d6ab896d4eff3a80a931276",
+    "remote_files_manifest": "427778eaa547ecd13fec337333d80f8a461b6e9ff518ae96adbab4e6d5ab74f8"
+  },
+  "architecture": "RecurrentPPO MlpLstmPolicy; LSTM 64; policy/value MLP [64,64]",
+  "training": {
+    "optimizer_seeds": [8101, 8102, 8103, 8104, 8105, 8106, 8107, 8108, 8109, 8110],
+    "executed_timesteps_each": 200192,
+    "checkpoint_selection": "final only",
+    "retraining_for_program_q": false
+  },
+  "checkpoints_sha256": {
+    "8101": "f27b31ce5a4e827ebc4d08132b6ba159f76c149852edd1f385753ea5209b4e3e",
+    "8102": "9b84c156765029301d2c1fa8db4af7a7ea0bbba72731586011f25b0357a8e231",
+    "8103": "7ae2005d4632ffb11aeba80cd7793ed688f7b3aa9ab25a4034b5f91cd472fddb",
+    "8104": "f409a142c0c4c681334f92046380730b08eb993efbc1df178194eb1f4fa78fab",
+    "8105": "b8282be926d4ac4dd348c65659f20f9477234b61af93376e093e283a499ef8da",
+    "8106": "0d7584ddbd288147a59965b5ed0dd07d39d1d121c821a821cc671fc7d2e4d2bf",
+    "8107": "9f4c5117d7d10715ed8d4134de8122667f4fb40344f26f1e7d7429de4551efe1",
+    "8108": "36e4cea08fa079601ee97636b689abb7adbad153d28090f6500b2310d582ec1f",
+    "8109": "4f6a2832bd7526ec5a71b55b9891408da812cd1d84d9729b184977485d016701",
+    "8110": "a1a34809aac90f737a4b78803f68978dbdec5560e8c4353d44dd90f76cb1cc5a"
+  },
+  "selection_rule": {
+    "program_q_primary": "these ten historical checkpoints",
+    "external_challenger_can_replace_primary": false,
+    "external_collaborator_dependency": false,
+    "post_freeze_checkpoint_or_architecture_changes": "forbidden"
+  },
+  "scientific_seed_state": {
+    "7480101_7480148": "SEALED_FOREVER",
+    "7490001_7490256": "UNOPENED",
+    "950100001_950100096": "SEALED_NOT_PART_OF_PROGRAM_Q"
+  }
+}

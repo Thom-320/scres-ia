@@ -1,0 +1,71 @@
+{
+  "schema_version": "program_q_power_preopen_attempts_v1",
+  "scope": "burned O-R calibration data only; no 749 or 950 seed opened",
+  "authoritative_result": null,
+  "attempts": [
+    {
+      "run_id": "program-q-power-preopen-v1-20260717",
+      "terminal_status": "FAILED_INFRASTRUCTURE_MISSING_DEPENDENCY",
+      "status_recorded_at_utc": "2026-07-17T23:38:06Z",
+      "cause": "flat deployment omitted scripts.evaluate_program_o_ret_learner",
+      "scientific_result": false
+    },
+    {
+      "run_id": "program-q-power-preopen-v2-20260717",
+      "terminal_status": "STOPPED_RESOURCE_PREFLIGHT_5_WORKERS",
+      "status_recorded_at_utc": "2026-07-17T23:44:32Z",
+      "cause": "five persistent full-DES workers approached the VPS memory envelope; stopped before an authoritative cache or power result",
+      "scientific_result": false
+    },
+    {
+      "run_id": "program-q-power-preopen-v3-20260717",
+      "terminal_status": "STOPPED_RESOURCE_PREFLIGHT_3_WORKERS",
+      "status_recorded_at_utc": "2026-07-17T23:52:52Z",
+      "cause": "one persistent worker terminated abruptly and raised BrokenProcessPool, consistent with the observed memory pressure",
+      "scientific_result": false
+    },
+    {
+      "run_id": "program-q-power-preopen-v4-20260717",
+      "terminal_status": "STOPPED_RESOURCE_PREFLIGHT_MEMORY_GROWTH",
+      "status_recorded_at_utc": "2026-07-18T00:01:12Z",
+      "cause": "with two persistent workers, RSS continued growing beyond 3.2 GiB per worker before the first cache was written; stopped preventively before OOM",
+      "watcher": {
+        "attached_after_producer_start": true,
+        "scope_limitation": "BURNED_DATA_PREFLIGHT_ONLY_NOT_SCIENTIFIC_CUSTODY"
+      },
+      "scientific_result": false
+    },
+    {
+      "run_id": "program-q-power-preopen-v5-20260718",
+      "terminal_status": "COMPLETE_PENDING_RETRIEVAL",
+      "status_recorded_at_utc": "2026-07-18T00:27:56Z",
+      "source_commit": "0cdf753",
+      "execution": "two workers recycled after every tape; 144 atomic identity-checked shards",
+      "watcher_started_before_producer": true,
+      "result_sha256": "d50bd939e59d4ac3a8e4edf527e6ba9ecd5540ebd06c0c68e721a8eedb542683",
+      "cache_sha256": "a7ef66075dc287fd9d78ddf2abccbbd0a1f3d5e469add2da2c8c679081423405",
+      "independent_audit_pass": true,
+      "selected_N": 256,
+      "scientific_result": false,
+      "scope": "burned-data power analysis only"
+    }
+  ],
+  "corrective_design_for_next_attempt": {
+    "worker_recycling": "max_tasks_per_child=1",
+    "resumability": "one atomic identity-checked shard per cell and tape",
+    "final_cache_rule": "written only after all 144 shards validate",
+    "watcher_rule": "watcher-first for the next preflight and mandatory watcher-first for any future scientific seed run",
+    "unchanged": [
+      "burned input matrices",
+      "ten classical configurations",
+      "open-loop and classical-family reselection",
+      "critical and power resampling counts",
+      "Program Q endpoints and thresholds"
+    ]
+  },
+  "reserved_seed_state": {
+    "7480101_7480148": "SEALED_FOREVER",
+    "7490001_7490256": "UNOPENED",
+    "950100001_950100096": "UNOPENED"
+  }
+}

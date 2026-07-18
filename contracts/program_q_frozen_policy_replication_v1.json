@@ -2,7 +2,7 @@
   "contract_id": "program_q_frozen_policy_replication_v1",
   "schema_version": "program_q_frozen_policy_replication_v1",
   "date_created": "2026-07-17",
-  "status": "FROZEN_DESIGN_PENDING_CANDIDATE_POWER_AND_SEED_AUTHORIZATION",
+  "status": "FROZEN_POWER_PASS_N_256_PENDING_SEED_AUTHORIZATION",
   "historical_verdicts_immutable": {
     "program_o": "STOP_PROGRAM_O_AFTER_CORRECTIVE_VALIDATION",
     "program_o_r": "STOP_CALIBRATION_NOT_ELIGIBLE",
@@ -18,26 +18,21 @@
     "reward": "zero intermediate, ret_excel_request_snapshot_v2 terminal",
     "forbidden_information": ["tape_id", "seed", "latent_regime", "true_rho", "true_share", "future_demand", "oracle_calendar"]
   },
-  "architecture_firewall": {
+  "primary_candidate": {
+    "policy": "historical Program O-R RecurrentPPO population",
+    "learner_seeds": [8101, 8102, 8103, 8104, 8105, 8106, 8107, 8108, 8109, 8110],
+    "checkpoints": "frozen by SHA-256 in research/paper2_exhaustive_search/program_q_historical_recurrentppo_fallback_freeze_20260717.json",
+    "retraining": "forbidden",
+    "checkpoint_selection": "final checkpoints only",
+    "replacement_by_external_challenger": "forbidden"
+  },
+  "architecture_sidecar_firewall": {
     "sandbox_train": [949100001, 949199999],
     "sandbox_visible_eval": [949200001, 949299999],
     "status": "SANDBOX_DEVELOPMENT_ONLY_NOT_PROMOTABLE",
-    "blind_qualification": [950100001, 950100096],
-    "blind_qualification_opened": false,
-    "challenger_rule": {
-      "all_three_cells_H_OL_positive": true,
-      "feedback_placebos_resources_demand": "all pass",
-      "minimum_mean_gain_over_matched_recurrent_ppo_each_cell": 0.005,
-      "simultaneous_lcb95_challenger_minus_recurrent_ppo": 0.0
-    },
-    "fallback": "historical frozen RecurrentPPO checkpoints"
-  },
-  "final_training_if_challenger_qualifies": {
-    "optimizer_seeds": [9301, 9302, 9303, 9304, 9305, 9306, 9307, 9308, 9309, 9310],
-    "timesteps_each": 200192,
-    "training_tapes_total": 250240,
-    "checkpoint_selection": "final only",
-    "required_before_training": ["architecture source sha256", "hyperparameter manifest sha256", "training tape claim", "watcher metadata"]
+    "former_blind_qualification_block_950100001_950100096": "SEALED_NOT_PART_OF_PROGRAM_Q",
+    "may_delay_or_replace_program_q": false,
+    "future_use": "a separately named prospective architecture study only"
   },
   "power": {
     "script": "scripts/power_program_q_replication.py",
@@ -47,14 +42,32 @@
     "minimum_joint_power": 0.8,
     "reselect_open_loop_65536_inside_every_resample": true,
     "reselect_classical_10_inside_every_resample": true,
-    "failure": "STOP_PROGRAM_Q_UNDERPOWERED_WITHIN_CAP"
+    "failure": "STOP_PROGRAM_Q_UNDERPOWERED_WITHIN_CAP",
+    "authoritative_result": {
+      "run_id": "program-q-power-preopen-v5-20260718",
+      "source_commit": "0cdf753",
+      "selected_N": 256,
+      "joint_power": 0.8755,
+      "result": "results/program_q/power_preopen_v5_20260718/artifacts/program_q_power_v1.json",
+      "result_sha256": "d50bd939e59d4ac3a8e4edf527e6ba9ecd5540ebd06c0c68e721a8eedb542683",
+      "cache_sha256": "a7ef66075dc287fd9d78ddf2abccbbd0a1f3d5e469add2da2c8c679081423405",
+      "independent_audit": "results/program_q/power_preopen_v5_20260718/independent_audit_v1.json",
+      "independent_audit_sha256": "b26385e966477cb2e354cd9e2bee9a2a8e1f055cd0f4705ce4778d0cdce30f80"
+    }
   },
   "confirmation": {
     "reserved_block": [7490001, 7490256],
     "opened": false,
-    "N": null,
+    "N": 256,
     "same_tapes_all_cells_crn": true,
-    "opening_requires": ["repository-wide collision scan", "power PASS", "candidate frozen", "checkpoint hashes", "independent authorization"]
+    "opening_requires": ["repository-wide collision scan", "historical candidate hash verification", "confirmatory launcher audit", "independent authorization"],
+    "preopening_gate_state": {
+      "power": "PASS_SELECT_N_256",
+      "seed_collision_scan": "PASS_PROGRAM_Q_SEEDS_VIRGIN",
+      "historical_candidate_hashes": "PASS_10_OF_10",
+      "confirmatory_launcher_audit": "PENDING",
+      "independent_authorization": "PENDING"
+    }
   },
   "comparators": {
     "open_loop": "all 65536 calendars; family maximum mean; never per-tape maximum",
@@ -90,5 +103,8 @@
     "STOP_Q_NO_REPLICATED_LEARNED_ADAPTATION",
     "STOP_PROGRAM_Q_UNDERPOWERED_WITHIN_CAP"
   ],
-  "paper3_authorized": false
+  "paper3_authorized": false,
+  "prospective_amendments_before_scientific_seed_opening": [
+    "program_q_primary_candidate_independence_v1"
+  ]
 }

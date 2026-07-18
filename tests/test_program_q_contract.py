@@ -6,15 +6,37 @@ from pathlib import Path
 import numpy as np
 
 from scripts.adjudicate_program_q import CELL_IDS, adjudicate
+from scripts.audit_program_q_power_preopen import expected_selected_N
 from scripts.audit_program_q_seed_custody import scan
 from scripts.benchmark_program_q_latency import benchmark_callable
-from scripts.power_program_q_replication import bootstrap_effects, point_effects
+from scripts.power_program_q_replication import (
+    _load_classical_shard,
+    _write_classical_shard,
+    bootstrap_effects,
+    point_effects,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
-CONTRACT = json.loads(
-    (ROOT / "contracts/program_q_frozen_policy_replication_v1.json").read_text()
+CONTRACT = json.loads((ROOT / "contracts/program_q_frozen_policy_replication_v1.json").read_text())
+FALLBACK = (
+    ROOT
+    / "research/paper2_exhaustive_search/program_q_historical_recurrentppo_fallback_freeze_20260717.json"
 )
+APPROXIMATE_POWER = ROOT / "research/paper2_exhaustive_search/program_q_power_20260718.json"
+
+
+def test_historical_fallback_is_hash_frozen_without_retraining() -> None:
+    payload = json.loads(FALLBACK.read_text())
+    assert payload["status"] == "FROZEN_PRIMARY_CANDIDATE_NO_EXTERNAL_DEPENDENCY"
+    assert payload["training"]["retraining_for_program_q"] is False
+    assert payload["training"]["checkpoint_selection"] == "final only"
+    assert len(payload["checkpoints_sha256"]) == 10
+    assert all(len(value) == 64 for value in payload["checkpoints_sha256"].values())
+    assert payload["scientific_seed_state"]["7490001_7490256"] == "UNOPENED"
+    assert payload["selection_rule"]["external_challenger_can_replace_primary"] is False
+    assert CONTRACT["primary_candidate"]["replacement_by_external_challenger"] == "forbidden"
+    assert CONTRACT["architecture_sidecar_firewall"]["may_delay_or_replace_program_q"] is False
 
 
 def result_fixture(*, h_lcb=0.02, delta_lcb=-0.005, delta_ucb=0.005):
@@ -49,9 +71,7 @@ def result_fixture(*, h_lcb=0.02, delta_lcb=-0.005, delta_ucb=0.005):
 def test_program_q_equivalence_and_premium_are_distinct() -> None:
     equivalent = adjudicate(result_fixture(), CONTRACT)
     assert equivalent["verdict"] == "PASS_Q_LEARNED_ADAPTATION_CLASSICALLY_EQUIVALENT"
-    premium = adjudicate(
-        result_fixture(delta_lcb=0.011, delta_ucb=0.03), CONTRACT
-    )
+    premium = adjudicate(result_fixture(delta_lcb=0.011, delta_ucb=0.03), CONTRACT)
     assert premium["verdict"] == "PASS_Q_NEURAL_PREMIUM"
 
 
@@ -67,9 +87,7 @@ def test_power_bootstrap_reselects_comparator_families() -> None:
     panels = {}
     for cell in CELL_IDS:
         learner = np.full((3, 4), 0.75)
-        open_loop = np.asarray(
-            [[0.70, 0.72], [0.76, 0.69], [0.70, 0.72], [0.76, 0.69]]
-        )
+        open_loop = np.asarray([[0.70, 0.72], [0.76, 0.69], [0.70, 0.72], [0.76, 0.69]])
         classical = np.asarray([[0.73, 0.73, 0.73, 0.73], [0.74, 0.70, 0.74, 0.70]])
         panels[cell] = {"learner": learner, "open_loop": open_loop, "classical": classical}
     points = point_effects(panels)
@@ -79,6 +97,21 @@ def test_power_bootstrap_reselects_comparator_families() -> None:
     )
     assert draws.shape == (12, 6)
     assert np.isfinite(draws).all()
+
+
+def test_classical_cache_shards_are_atomic_resumable_and_identity_checked(
+    tmp_path: Path,
+) -> None:
+    indices = list(range(10))
+    _write_classical_shard(tmp_path, 0, 7480001, indices)
+    shard = tmp_path / f"{CELL_IDS[0]}__tape_7480001.npz"
+    assert shard.is_file()
+    assert not list(tmp_path.glob("*.tmp"))
+    assert (
+        _load_classical_shard(shard, expected_cell_index=0, expected_tape_seed=7480001) == indices
+    )
+    with np.testing.assert_raises_regex(RuntimeError, "identity mismatch"):
+        _load_classical_shard(shard, expected_cell_index=0, expected_tape_seed=7480002)
 
 
 def test_seed_custody_scan_allows_contract_declaration_only(tmp_path: Path) -> None:
@@ -94,6 +127,43 @@ def test_seed_custody_scan_allows_contract_declaration_only(tmp_path: Path) -> N
     payload = scan(tmp_path)
     assert not payload["pass"]
     assert payload["status"] == "STOP_PROGRAM_Q_SEED_COLLISION"
+
+
+def test_live_program_q_seed_custody_declarations_do_not_fake_a_collision() -> None:
+    payload = scan(ROOT)
+    assert payload["pass"]
+    assert payload["status"] == "PROGRAM_Q_SEEDS_VIRGIN"
+    assert not payload["suspicious"]
+
+
+def test_early_power_approximation_cannot_select_program_q_N() -> None:
+    payload = json.loads(APPROXIMATE_POWER.read_text())
+    assert payload["status"] == "NONAUTHORITATIVE_APPROXIMATION"
+    assert payload["program_q_N_authority"] is False
+    assert payload["selected_N"] is None
+    assert payload["verdict"] == "NO_CONTRACTUAL_VERDICT"
+    assert CONTRACT["power"]["script"] == "scripts/power_program_q_replication.py"
+
+
+def test_authoritative_power_selects_the_minimum_jointly_powered_N() -> None:
+    rows = {
+        "128": {"H_OL": 1.0, "Delta_N_equivalence": 0.81, "joint": 0.79},
+        "160": {"H_OL": 1.0, "Delta_N_equivalence": 0.88, "joint": 0.82},
+        "192": {"H_OL": 1.0, "Delta_N_equivalence": 0.91, "joint": 0.90},
+        "256": {"H_OL": 1.0, "Delta_N_equivalence": 0.97, "joint": 0.96},
+    }
+    assert expected_selected_N(rows, [128, 160, 192, 256], 0.8) == 160
+
+
+def test_program_q_contract_freezes_authoritative_N_256() -> None:
+    power = CONTRACT["power"]["authoritative_result"]
+    assert CONTRACT["status"] == "FROZEN_POWER_PASS_N_256_PENDING_SEED_AUTHORIZATION"
+    assert CONTRACT["confirmation"]["N"] == 256
+    assert power["selected_N"] == 256
+    assert power["joint_power"] >= CONTRACT["power"]["minimum_joint_power"]
+    assert len(power["result_sha256"]) == 64
+    assert len(power["cache_sha256"]) == 64
+    assert CONTRACT["confirmation"]["opened"] is False
 
 
 def test_latency_benchmark_reports_batch_one_and_failures() -> None:
