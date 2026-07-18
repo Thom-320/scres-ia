@@ -56,6 +56,24 @@ workers, starts an independent watcher before the producer, records PID/PGID,
 RAM, stderr and atomic progress, refuses overwrite, and permits only an explicit
 fail-closed resume over missing identities.
 
+## Post-opening audits
+
+The integrated exact-transducer suite initially failed closed because four new
+R24 incidence counters in the shared simulator hot path were not assigned a
+scientific state role. They are output/accounting ledgers, are never read by the
+frozen bottleneck transition, and key-v3 conservatively serializes them anyway.
+They were explicitly classified and reaudited without changing the running S1
+source or any historical result: the exact-transducer/full-frontier suite passes
+`65 passed, 1 skipped`.
+
+The original `--resume` implementation detected missing shards but could not
+resume after a normal failure receipt, because the immutable
+`producer_exit.json` blocked re-entry. A prospective recovery-only harness now
+uses append-only `resume_attempts/attempt-NNN` custody directories, validates
+every preserved NPZ before reuse, refuses completed runs, and verifies that all
+scientific files are byte-identical to the original source commit. This does not
+modify or restart the healthy attempt already running from `adc0056`.
+
 ## Live execution update — 2026-07-18
 
 S1 opened `7510001–7510012` once at `2026-07-18T15:34:38Z` on

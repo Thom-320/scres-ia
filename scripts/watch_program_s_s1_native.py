@@ -44,23 +44,26 @@ def available_memory_kib() -> int | None:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output-root", type=Path, required=True)
+    parser.add_argument("--custody-dir", type=Path)
     parser.add_argument("--interval", type=float, default=15.0)
     args = parser.parse_args()
     args.output_root.mkdir(parents=True, exist_ok=True)
-    ready = args.output_root / "watcher_ready.json"
-    state = args.output_root / "watcher_state.json"
-    log = args.output_root / "watcher_state.jsonl"
+    custody_dir = args.custody_dir or args.output_root
+    custody_dir.mkdir(parents=True, exist_ok=True)
+    ready = custody_dir / "watcher_ready.json"
+    state = custody_dir / "watcher_state.json"
+    log = custody_dir / "watcher_state.jsonl"
     if ready.exists() or state.exists() or log.exists():
         raise FileExistsError("refusing to overwrite Program S watcher identity")
     atomic_json(ready, {"status": "READY", "watcher_pid": os.getpid(), "time": utc_now()})
     while True:
-        control_path = args.output_root / "producer_control.json"
+        control_path = custody_dir / "producer_control.json"
         control = json.loads(control_path.read_text()) if control_path.exists() else {}
         pid = control.get("producer_pid")
         alive = process_alive(pid)
         shards = len(list((args.output_root / "matrices").glob("*.npz")))
-        stderr = args.output_root / "producer.stderr.log"
-        exit_path = args.output_root / "producer_exit.json"
+        stderr = custody_dir / "producer.stderr.log"
+        exit_path = custody_dir / "producer_exit.json"
         payload = {
             "time": utc_now(),
             "watcher_pid": os.getpid(),
