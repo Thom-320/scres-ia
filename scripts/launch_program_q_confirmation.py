@@ -57,6 +57,15 @@ def main() -> int:
         failures.append("run identity already exists")
     if current_commit != args.expected_commit:
         failures.append("HEAD does not equal expected immutable commit")
+    tracked_dirty = (
+        subprocess.run(["git", "diff", "--quiet"], cwd=ROOT, check=False).returncode != 0
+        or subprocess.run(
+            ["git", "diff", "--cached", "--quiet"], cwd=ROOT, check=False
+        ).returncode
+        != 0
+    )
+    if tracked_dirty:
+        failures.append("tracked worktree differs from immutable commit")
     try:
         authorization = verify_authorization(args.authorization)
         if authorization.get("preopen_audit_sha256") != sha256(PREOPEN_AUDIT):

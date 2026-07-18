@@ -14,6 +14,7 @@ from datetime import datetime, timezone
 import hashlib
 import json
 from pathlib import Path
+import subprocess
 import sys
 from typing import Any, Mapping
 
@@ -130,6 +131,11 @@ def verify_authorization(path: Path) -> dict[str, Any]:
         raise RuntimeError("Program Q confirmation is not independently authorized")
     if payload.get("authorized_by") != "independent_auditor":
         raise RuntimeError("Program Q authorization must be independent")
+    current_commit = subprocess.check_output(
+        ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True
+    ).strip()
+    if payload.get("source_commit") != current_commit:
+        raise RuntimeError("Program Q authorization source commit mismatch")
     for key, expected in required.items():
         if payload.get(key) != expected:
             raise RuntimeError(f"Program Q authorization {key} mismatch")
@@ -549,6 +555,14 @@ def reduce_shards(*, shards: Path, output: Path, resamples: int) -> dict[str, An
             key: np.empty((len(learner_seeds), len(seeds)), dtype=float)
             for key in ("ret_visible", *GUARDRAIL_KEYS)
         }
+        secondary_classical = {
+            key: np.empty((len(configs), len(seeds)), dtype=float)
+            for key in SECONDARY_KEYS
+        }
+        secondary_learner = {
+            key: np.empty((len(learner_seeds), len(seeds)), dtype=float)
+            for key in SECONDARY_KEYS
+        }
         learner_calendars = np.empty(
             (len(learner_seeds), len(seeds), 8), dtype=np.uint8
         )
@@ -566,6 +580,9 @@ def reduce_shards(*, shards: Path, output: Path, resamples: int) -> dict[str, An
                     learner_values[key][:, tape_index] = payload[f"learner__{key}"]
                 learner_calendars[:, tape_index] = payload["learner_calendars"]
                 classical_calendars[:, tape_index] = payload["classical_calendars"]
+                for key in SECONDARY_KEYS:
+                    secondary_classical[key][:, tape_index] = payload[f"classical__{key}"]
+                    secondary_learner[key][:, tape_index] = payload[f"learner__{key}"]
                 for key in RESOURCE_KEYS:
                     open_resource = np.asarray(payload[f"open_loop__{key}"], dtype=float)
                     anchor = float(open_resource[0])
@@ -619,6 +636,28 @@ def reduce_shards(*, shards: Path, output: Path, resamples: int) -> dict[str, An
                 )
             ),
         }
+        secondary_panel: dict[str, Any] = {}
+        for key in SECONDARY_KEYS:
+            open_selected = np.empty(len(seeds), dtype=float)
+            for tape_index, seed in enumerate(seeds):
+                with np.load(
+                    shards / cell.cell_id / f"tape_{seed}.npz", allow_pickle=False
+                ) as payload:
+                    open_selected[tape_index] = payload[f"open_loop__{key}"][open_index]
+            learner_by_tape_secondary = secondary_learner[key].mean(axis=0)
+            classical_selected = secondary_classical[key][classical_index]
+            secondary_panel[key] = {
+                "learner_mean": float(learner_by_tape_secondary.mean()),
+                "best_open_loop_mean": float(open_selected.mean()),
+                "best_classical_mean": float(classical_selected.mean()),
+                "delta_vs_open_loop": float(
+                    (learner_by_tape_secondary - open_selected).mean()
+                ),
+                "delta_vs_classical": float(
+                    (learner_by_tape_secondary - classical_selected).mean()
+                ),
+            }
+        summaries[cell.cell_id]["secondary_nonblocking"] = secondary_panel
         cell_audits: dict[str, Any] = {}
         cell_replacements: dict[str, Any] = {
             family: {"executed": True, "learner_seeds_beating": 0, "per_seed": {}}
