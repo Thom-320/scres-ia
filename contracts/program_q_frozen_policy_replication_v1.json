@@ -59,6 +59,7 @@
     "reserved_block": [7490001, 7490256],
     "opened": false,
     "N": 256,
+    "bootstrap_resamples": 10000,
     "same_tapes_all_cells_crn": true,
     "opening_requires": ["repository-wide collision scan", "historical candidate hash verification", "confirmatory launcher audit", "independent authorization"],
     "preopening_gate_state": {
@@ -71,12 +72,18 @@
     "confirmatory_execution_plan": "research/paper2_exhaustive_search/program_q_confirmation_execution_plan_v1.json",
     "confirmatory_preopen_audit": "research/paper2_exhaustive_search/program_q_confirmation_preopen_audit_v1.json",
     "development_smoke": {
-      "seed": 949200001,
+      "seeds": [949200003, 949200004],
       "scientific_status": "SANDBOX_DEVELOPMENT_ONLY_NOT_PROMOTABLE",
+      "status": "PASS_NONPROMOTABLE_END_TO_END_SMOKE",
       "full_frontier_shape": 65536,
       "classical_family_shape": 10,
       "learner_population_shape": 10,
-      "direct_full_des_max_error": 0.0
+      "shard_count": 6,
+      "inference_resamples": 200,
+      "direct_full_des_max_error": 3.3306690738754696e-16,
+      "reduced_design_adjudication": "STOP_Q_NO_REPLICATED_LEARNED_ADAPTATION",
+      "report": "results/program_q/confirmation_development_smoke_v2/report.json",
+      "manifest": "results/program_q/confirmation_development_smoke_v2/smoke_files.sha256"
     }
   },
   "comparators": {

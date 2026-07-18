@@ -6,20 +6,24 @@ from pathlib import Path
 import numpy as np
 
 from scripts.adjudicate_program_q import CELL_IDS, adjudicate
+from scripts.audit_program_q_full_des import compare_promoted_sources
 from scripts.audit_program_q_power_preopen import expected_selected_N
 from scripts.audit_program_q_seed_custody import scan
 from scripts.benchmark_program_q_latency import benchmark_callable
 from scripts.evaluate_program_q_replication import (
     simultaneous_primary_inference,
+    validate_shard,
     verify_authorization,
     write_plan,
 )
+from scripts.launch_program_q_confirmation import archive_previous_attempt
 from scripts.power_program_q_replication import (
     _load_classical_shard,
     _write_classical_shard,
     bootstrap_effects,
     point_effects,
 )
+from supply_chain.program_o_full_des_transducer import MATRIX_KEYS
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -59,7 +63,17 @@ def result_fixture(*, h_lcb=0.02, delta_lcb=-0.005, delta_ucb=0.005):
             "positive_learner_seeds_H_OL": 9,
         }
     return {
-        "inference": {"estimates": estimates},
+        "schema_version": "program_q_frozen_policy_replication_evaluation_v1",
+        "N": 256,
+        "seed_range": [7490001, 7490256],
+        "shard_count": 768,
+        "bootstrap_resamples": 10000,
+        "inference": {
+            "method": "two-way learner-seed/tape studentized max-t",
+            "comparator_reselection_inside_every_resample": True,
+            "H_OL_one_sided_and_Delta_N_two_sided": True,
+            "estimates": estimates,
+        },
         "cell_summaries": summaries,
         "integrity_gates": {
             "feedback": True,
@@ -95,6 +109,16 @@ def test_program_q_adjudication_requires_direct_full_des_replay() -> None:
     payload = adjudicate(result_fixture(), CONTRACT)
     assert payload["verdict"] == "STOP_Q_NO_REPLICATED_LEARNED_ADAPTATION"
     assert payload["direct_full_des_replay"] is False
+
+
+def test_program_q_adjudication_rejects_truncated_seed_design() -> None:
+    result = result_fixture()
+    result["N"] = 128
+    result["seed_range"] = [7490001, 7490128]
+    result["shard_count"] = 384
+    payload = adjudicate(result, CONTRACT, {"passed": True})
+    assert payload["verdict"] == "STOP_Q_NO_REPLICATED_LEARNED_ADAPTATION"
+    assert payload["design_gates"]["N"] is False
 
 
 def test_power_bootstrap_reselects_comparator_families() -> None:
@@ -141,6 +165,17 @@ def test_seed_custody_scan_allows_contract_declaration_only(tmp_path: Path) -> N
     payload = scan(tmp_path)
     assert not payload["pass"]
     assert payload["status"] == "STOP_PROGRAM_Q_SEED_COLLISION"
+
+
+def test_seed_custody_scan_detects_reserved_seed_in_binary_artifact_filename(
+    tmp_path: Path,
+) -> None:
+    (tmp_path / "results/run").mkdir(parents=True)
+    artifact = tmp_path / "results/run/tape_7490001.npz"
+    artifact.write_bytes(b"binary")
+    payload = scan(tmp_path)
+    assert payload["pass"] is False
+    assert payload["suspicious"][0]["seed_in_filename"] is True
 
 
 def test_live_program_q_seed_custody_declarations_do_not_fake_a_collision() -> None:
@@ -228,6 +263,19 @@ def test_program_q_primary_inference_reselects_and_builds_bilateral_equivalence(
         assert delta["lcb95"] <= delta["point"] <= delta["ucb95"]
 
 
+def test_program_q_bootstrap_one_is_rejected_fail_closed() -> None:
+    panels = {
+        cell: {
+            "learner": np.asarray([[0.8, 0.9], [0.81, 0.91]]),
+            "open_loop": np.asarray([[0.7, 0.75], [0.71, 0.74]]),
+            "classical": np.asarray([[0.79, 0.89], [0.78, 0.88]]),
+        }
+        for cell in CELL_IDS
+    }
+    with np.testing.assert_raises_regex(ValueError, "at least two"):
+        simultaneous_primary_inference(panels, resamples=1)
+
+
 def test_program_q_plan_does_not_open_scientific_seeds(tmp_path: Path) -> None:
     path = tmp_path / "plan.json"
     write_plan(path)
@@ -245,3 +293,44 @@ def test_program_q_producer_fails_closed_without_independent_authorization(
     authorization.write_text('{"status": "NOT_AUTHORIZED"}')
     with np.testing.assert_raises_regex(RuntimeError, "not independently authorized"):
         verify_authorization(authorization)
+
+
+def test_program_q_resume_rejects_incomplete_existing_shard(tmp_path: Path) -> None:
+    shard = tmp_path / "tape_7490001.npz"
+    np.savez_compressed(shard, cell_index=0, tape_seed=7490001)
+    with np.testing.assert_raises_regex(RuntimeError, "schema mismatch"):
+        validate_shard(shard, cell_index=0, tape_seed=7490001)
+
+
+def test_direct_replay_detects_corrupt_promoted_learner_matrix() -> None:
+    payload = {}
+    direct = {}
+    for key in MATRIX_KEYS:
+        direct[key] = 1.0
+        payload[f"open_loop__{key}"] = np.asarray([1.0])
+        payload[f"learner__{key}"] = np.asarray([1.0])
+    payload["learner__ret_visible"][0] = 9.0
+    _, failures = compare_promoted_sources(
+        payload,
+        direct,
+        calendar=(0, 0, 0, 0, 0, 0, 0, 0),
+        sources=[("open_loop", 0, "open"), ("learner", 0, "learner")],
+        atol=1e-8,
+    )
+    assert len(failures) == 1
+    assert failures[0]["source"] == "learner"
+
+
+def test_program_q_resume_archives_prior_live_custody(tmp_path: Path) -> None:
+    custody = tmp_path / "custody"
+    custody.mkdir()
+    for name in ("producer_control.json", "producer_exit.json", "watcher_ready.json"):
+        (custody / name).write_text("{}")
+    attempt = archive_previous_attempt(custody)
+    assert attempt == 1
+    assert not (custody / "producer_control.json").exists()
+    assert (custody / "attempts/attempt_1/producer_exit.json").is_file()
+    (custody / "producer_exit.json").write_text("{}")
+    attempt = archive_previous_attempt(custody)
+    assert attempt == 2
+    assert (custody / "attempts/attempt_2/producer_exit.json").is_file()

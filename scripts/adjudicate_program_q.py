@@ -29,6 +29,30 @@ def adjudicate(
     )
     integrity_pass = all(integrity.get(name) is True for name in required_integrity)
     direct_audit_pass = bool(direct_audit and direct_audit.get("passed") is True)
+    confirmation = contract.get("confirmation", {})
+    start, end = map(int, confirmation.get("reserved_block", [0, -1]))
+    expected_n = int(confirmation.get("N") or 0)
+    expected_range = [start, start + expected_n - 1]
+    inference = result.get("inference", {})
+    design_gates = {
+        "schema": result.get("schema_version")
+        == "program_q_frozen_policy_replication_evaluation_v1",
+        "N": result.get("N") == expected_n and expected_range[1] <= end,
+        "seed_range": result.get("seed_range") == expected_range,
+        "cells": set(summaries) == set(CELL_IDS),
+        "inference_method": inference.get("method")
+        == "two-way learner-seed/tape studentized max-t",
+        "comparator_reselection": inference.get(
+            "comparator_reselection_inside_every_resample"
+        )
+        is True,
+        "bilateral_equivalence": inference.get("H_OL_one_sided_and_Delta_N_two_sided")
+        is True,
+        "shards": result.get("shard_count") == expected_n * len(CELL_IDS),
+        "bootstrap_resamples": result.get("bootstrap_resamples")
+        == confirmation.get("bootstrap_resamples"),
+    }
+    design_pass = all(design_gates.values())
     adaptation = True
     premium = True
     equivalent = True
@@ -55,7 +79,7 @@ def adjudicate(
             "favorable_tapes": favorable_pass,
             "learner_seeds": seed_pass,
         }
-    if not integrity_pass or not direct_audit_pass or not adaptation:
+    if not design_pass or not integrity_pass or not direct_audit_pass or not adaptation:
         verdict = "STOP_Q_NO_REPLICATED_LEARNED_ADAPTATION"
     elif premium:
         verdict = "PASS_Q_NEURAL_PREMIUM"
@@ -69,6 +93,7 @@ def adjudicate(
         "cell_gates": cell_gates,
         "integrity_gates": {name: integrity.get(name) for name in required_integrity},
         "direct_full_des_replay": direct_audit_pass,
+        "design_gates": design_gates,
         "verdict": verdict,
         "paper3_authorized": verdict in {
             "PASS_Q_NEURAL_PREMIUM",

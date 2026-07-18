@@ -27,7 +27,11 @@ from scripts.evaluate_program_q_replication import (  # noqa: E402
     verify_authorization,
     verify_model_hashes,
 )
-from supply_chain.program_o_eval_custody import sha256, write_sha256_manifest  # noqa: E402
+from supply_chain.program_o_eval_custody import (  # noqa: E402
+    sha256,
+    verify_sha256_manifest,
+    write_sha256_manifest,
+)
 from supply_chain.program_o_ret_env import CONFIRMED_RET_CELLS  # noqa: E402
 
 
@@ -60,7 +64,8 @@ def main() -> int:
     parser.add_argument("--models", type=Path, required=True)
     parser.add_argument("--authorization", type=Path, required=True)
     parser.add_argument("--workers", type=int, default=2)
-    parser.add_argument("--bootstrap", type=int, default=10_000)
+    parser.add_argument("--watcher-ready-sha256", required=True)
+    parser.add_argument("--attempt-id", type=int, required=True)
     args = parser.parse_args()
     run_dir = args.run_dir.resolve()
     custody = run_dir / "custody"
@@ -74,6 +79,8 @@ def main() -> int:
     try:
         if not (custody / "watcher_ready.json").is_file():
             raise RuntimeError("Program Q producer refuses to start before watcher readiness")
+        if sha256(custody / "watcher_ready.json") != args.watcher_ready_sha256:
+            raise RuntimeError("Program Q watcher readiness hash mismatch")
         verify_authorization(args.authorization)
         verify_model_hashes(args.models)
         contract = _contract()
@@ -110,21 +117,39 @@ def main() -> int:
                         "expected": len(tasks),
                     },
                 )
-        write_json_atomic(
-            artifacts / "progress.json",
-            {"updated_at": now_utc(), "stage": "reduction", "completed": 0, "expected": 1},
-        )
-        reduce_shards(shards=shards, output=evaluation, resamples=int(args.bootstrap))
-        write_json_atomic(
-            artifacts / "progress.json",
-            {"updated_at": now_utc(), "stage": "direct_replay", "completed": 0, "expected": 1},
-        )
-        direct = direct_audit(evaluation=evaluation, shards=shards, atol=1e-8)
-        audit_dir.mkdir(parents=True)
         direct_path = audit_dir / "independent_full_des_audit.json"
-        direct_path.write_text(json.dumps(direct, indent=2, sort_keys=True) + "\n")
-        write_sha256_manifest(audit_dir, [direct_path], audit_dir / "audit_files.sha256")
         result_path = evaluation / "result.json"
+        if not result_path.is_file():
+            write_json_atomic(
+                artifacts / "progress.json",
+                {"updated_at": now_utc(), "stage": "reduction", "completed": 0, "expected": 1},
+            )
+            reduce_shards(
+                shards=shards,
+                output=evaluation,
+                resamples=int(contract["confirmation"]["bootstrap_resamples"]),
+            )
+        else:
+            verify_sha256_manifest(evaluation, evaluation / "evaluation_files.sha256")
+            verify_sha256_manifest(shards, evaluation / "shard_files.sha256")
+        if not direct_path.is_file():
+            write_json_atomic(
+                artifacts / "progress.json",
+                {"updated_at": now_utc(), "stage": "direct_replay", "completed": 0, "expected": 1},
+            )
+            direct = direct_audit(evaluation=evaluation, shards=shards, atol=1e-8)
+            audit_dir.mkdir(parents=True, exist_ok=True)
+            direct_path.write_text(json.dumps(direct, indent=2, sort_keys=True) + "\n")
+            write_sha256_manifest(audit_dir, [direct_path], audit_dir / "audit_files.sha256")
+        else:
+            verify_sha256_manifest(audit_dir, audit_dir / "audit_files.sha256")
+            direct = json.loads(direct_path.read_text())
+            if (
+                direct.get("passed") is not True
+                or direct.get("contract_sha256") != sha256(CONTRACT)
+                or direct.get("evaluation_result_sha256") != sha256(result_path)
+            ):
+                raise RuntimeError("existing Program Q direct audit failed custody binding")
         result = json.loads(result_path.read_text())
         terminal = adjudicate(result, contract, direct)
         terminal.update(
@@ -153,6 +178,7 @@ def main() -> int:
                 "git_commit": subprocess.check_output(
                     ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True
                 ).strip(),
+                "attempt_id": int(args.attempt_id),
             },
         )
     return returncode

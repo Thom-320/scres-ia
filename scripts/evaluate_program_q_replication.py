@@ -59,6 +59,11 @@ DIRECT_AUDIT = ROOT / "scripts/audit_program_q_full_des.py"
 ADJUDICATOR = ROOT / "scripts/adjudicate_program_q.py"
 RUNNER = ROOT / "scripts/run_program_q_confirmation.py"
 LAUNCHER = ROOT / "scripts/launch_program_q_confirmation.py"
+WATCHER = ROOT / "scripts/watch_program_o_full_des_hpi.py"
+SMOKE_SCRIPT = ROOT / "scripts/smoke_program_q_confirmation.py"
+SMOKE_ROOT = ROOT / "results/program_q/confirmation_development_smoke_v2"
+SMOKE_REPORT = SMOKE_ROOT / "report.json"
+SMOKE_MANIFEST = SMOKE_ROOT / "smoke_files.sha256"
 PRIMARY_KEYS = ("ret_visible",)
 GUARDRAIL_KEYS = ("ret_full", "quantity_ret_full", "worst_product_fill")
 RESOURCE_KEYS = (
@@ -126,6 +131,10 @@ def verify_authorization(path: Path) -> dict[str, Any]:
         "adjudicator_sha256": sha256(ADJUDICATOR),
         "runner_sha256": sha256(RUNNER),
         "launcher_sha256": sha256(LAUNCHER),
+        "watcher_sha256": sha256(WATCHER),
+        "smoke_script_sha256": sha256(SMOKE_SCRIPT),
+        "smoke_report_sha256": sha256(SMOKE_REPORT),
+        "smoke_manifest_sha256": sha256(SMOKE_MANIFEST),
     }
     if payload.get("status") != "AUTHORIZED_PROGRAM_Q_CONFIRMATION":
         raise RuntimeError("Program Q confirmation is not independently authorized")
@@ -218,6 +227,8 @@ def simultaneous_primary_inference(
     H_OL uses a simultaneous lower bound. Delta_N uses simultaneous two-sided
     bounds, so equivalence can never be inferred from a non-significant test.
     """
+    if resamples < 2:
+        raise ValueError("Program Q bootstrap requires at least two resamples")
     cells = tuple(panels)
     points: list[float] = []
     names: list[str] = []
@@ -274,6 +285,8 @@ def simultaneous_primary_inference(
             boot[start:stop, offset] = learner_mean - open_mean.max(axis=1)
             boot[start:stop, offset + 1] = learner_mean - classical_mean.max(axis=1)
     se = boot.std(axis=0, ddof=1)
+    if not np.all(np.isfinite(se)) or np.any(se <= 0.0):
+        raise RuntimeError("Program Q primary bootstrap produced invalid standard errors")
     active = se > 1e-15
     statistics = np.zeros((resamples, len(point)), dtype=float)
     statistics[:, active] = (boot[:, active] - point[active]) / se[active]
@@ -285,6 +298,8 @@ def simultaneous_primary_inference(
         ]
     )
     critical = float(np.quantile(np.max(family, axis=1), 0.95))
+    if not np.isfinite(critical) or critical <= 0.0:
+        raise RuntimeError("Program Q primary bootstrap produced an invalid critical value")
     estimates: dict[str, dict[str, float]] = {}
     for index, name in enumerate(names):
         estimates[name] = {
@@ -310,6 +325,8 @@ def simultaneous_guardrail_inference(
     rng_seed: int = 7490258,
 ) -> dict[str, Any]:
     """Separate one-sided max-t family for the three preregistered guardrails."""
+    if resamples < 2:
+        raise ValueError("Program Q guardrail bootstrap requires at least two resamples")
     cells = tuple(panels)
     names: list[str] = []
     points: list[float] = []
@@ -374,10 +391,14 @@ def simultaneous_guardrail_inference(
                     learner_mean - classical_means[np.arange(width), classical_indices]
                 )
     se = boot.std(axis=0, ddof=1)
+    if not np.all(np.isfinite(se)) or np.any(se <= 0.0):
+        raise RuntimeError("Program Q guardrail bootstrap produced invalid standard errors")
     active = se > 1e-15
     studentized = np.zeros_like(boot)
     studentized[:, active] = (point[active] - boot[:, active]) / se[active]
     critical = float(np.quantile(np.max(studentized, axis=1), 0.95))
+    if not np.isfinite(critical) or critical <= 0.0:
+        raise RuntimeError("Program Q guardrail bootstrap produced an invalid critical value")
     return {
         "method": "separate two-way one-sided studentized max-t guardrail family",
         "resamples": resamples,
@@ -402,6 +423,66 @@ def _atomic_savez(path: Path, **arrays: Any) -> None:
     temporary.replace(path)
 
 
+def validate_shard(path: Path, *, cell_index: int, tape_seed: int) -> None:
+    configs = finite_state_rich_configurations()
+    freeze = json.loads(FREEZE.read_text())
+    expected_config_ids = [config.config_id for config in configs]
+    expected_learner_seeds = list(map(int, freeze["training"]["optimizer_seeds"]))
+    cell = CONFIRMED_RET_CELLS[cell_index]
+    with np.load(path, allow_pickle=False) as payload:
+        required = {
+            "cell_index",
+            "cell_id",
+            "tape_seed",
+            "skeleton_sha256",
+            "learner_seeds",
+            "classical_config_ids",
+            "learner_calendars",
+            "classical_calendars",
+            *(f"open_loop__{key}" for key in MATRIX_KEYS),
+            *(f"classical__{key}" for key in MATRIX_KEYS),
+            *(f"learner__{key}" for key in MATRIX_KEYS),
+        }
+        if set(payload.files) != required:
+            raise RuntimeError(f"Program Q shard schema mismatch: {path}")
+        if (
+            int(payload["cell_index"]) != cell_index
+            or str(payload["cell_id"]) != cell.cell_id
+            or int(payload["tape_seed"]) != tape_seed
+        ):
+            raise RuntimeError(f"Program Q shard identity mismatch: {path}")
+        if list(map(int, payload["learner_seeds"])) != expected_learner_seeds:
+            raise RuntimeError(f"Program Q learner seed identity mismatch: {path}")
+        if list(map(str, payload["classical_config_ids"])) != expected_config_ids:
+            raise RuntimeError(f"Program Q classical config identity mismatch: {path}")
+        if payload["learner_calendars"].shape != (len(expected_learner_seeds), 8):
+            raise RuntimeError(f"Program Q learner shard shape mismatch: {path}")
+        if payload["classical_calendars"].shape != (len(configs), 8):
+            raise RuntimeError(f"Program Q classical shard shape mismatch: {path}")
+        for calendars in (payload["learner_calendars"], payload["classical_calendars"]):
+            if np.any(calendars < 0) or np.any(calendars > 3):
+                raise RuntimeError(f"Program Q shard contains an invalid action: {path}")
+        for key in MATRIX_KEYS:
+            if payload[f"open_loop__{key}"].shape != (65_536,):
+                raise RuntimeError(f"Program Q open-loop shard shape mismatch: {path}")
+            if payload[f"classical__{key}"].shape != (len(configs),):
+                raise RuntimeError(f"Program Q classical metric shape mismatch: {path}")
+            if payload[f"learner__{key}"].shape != (len(expected_learner_seeds),):
+                raise RuntimeError(f"Program Q learner metric shape mismatch: {path}")
+            for prefix in ("open_loop", "classical", "learner"):
+                if not np.all(np.isfinite(payload[f"{prefix}__{key}"])):
+                    raise RuntimeError(f"Program Q shard contains non-finite metrics: {path}")
+        skeleton, _ = extract_full_des_skeleton(
+            seed=tape_seed,
+            scheduler=scheduler(),
+            regime_persistence=cell.regime_persistence,
+            dominant_share=cell.dominant_share,
+            downstream_freight_physics_mode="fixed_clock_physical_v1",
+        )
+        if str(payload["skeleton_sha256"]) != skeleton.skeleton_sha256:
+            raise RuntimeError(f"Program Q shard skeleton hash mismatch: {path}")
+
+
 def produce_shard(
     *,
     cell_index: int,
@@ -421,6 +502,7 @@ def produce_shard(
     cell = CONFIRMED_RET_CELLS[cell_index]
     path = output / cell.cell_id / f"tape_{tape_seed}.npz"
     if path.exists():
+        validate_shard(path, cell_index=cell_index, tape_seed=tape_seed)
         return path
     skeleton, _ = extract_full_des_skeleton(
         seed=tape_seed,
@@ -525,6 +607,11 @@ def reduce_shards(*, shards: Path, output: Path, resamples: int) -> dict[str, An
     if output.exists():
         raise FileExistsError(f"refusing to overwrite {output}")
     contract = _contract()
+    frozen_resamples = int(contract["confirmation"]["bootstrap_resamples"])
+    if int(resamples) != frozen_resamples:
+        raise RuntimeError(
+            f"Program Q bootstrap must equal frozen value {frozen_resamples}"
+        )
     seeds = _frozen_seeds(contract)
     paths = _expected_shards(shards, seeds)
     learner_seeds = list(
@@ -538,6 +625,8 @@ def reduce_shards(*, shards: Path, output: Path, resamples: int) -> dict[str, An
     demand_max_abs_residual = 0.0
     mass_max_abs_residual = 0.0
     partition_max_abs_residual = 0.0
+    aggregate_ration_max_abs_residual = 0.0
+    raw_material_max_abs_residual = 0.0
     summaries: dict[str, Any] = {}
     trajectory_audits: dict[str, Any] = {}
     replacements: dict[str, Any] = {}
@@ -604,6 +693,14 @@ def reduce_shards(*, shards: Path, output: Path, resamples: int) -> dict[str, An
                 partition_max_abs_residual = max(
                     partition_max_abs_residual,
                     *(float(np.max(np.abs(payload[f"{prefix}__partition_residual"]))) for prefix in ("open_loop", "classical", "learner")),
+                )
+                aggregate_ration_max_abs_residual = max(
+                    aggregate_ration_max_abs_residual,
+                    *(float(np.max(np.abs(payload[f"{prefix}__aggregate_ration_residual"]))) for prefix in ("open_loop", "classical", "learner")),
+                )
+                raw_material_max_abs_residual = max(
+                    raw_material_max_abs_residual,
+                    *(float(np.max(np.abs(payload[f"{prefix}__raw_material_residual"]))) for prefix in ("open_loop", "classical", "learner")),
                 )
         primary_panels[cell.cell_id] = {
             "learner": learner_values["ret_visible"],
@@ -719,6 +816,8 @@ def reduce_shards(*, shards: Path, output: Path, resamples: int) -> dict[str, An
         "mass_partition_demand": (
             mass_max_abs_residual <= 1e-6
             and partition_max_abs_residual <= 1e-6
+            and aggregate_ration_max_abs_residual <= 1e-6
+            and raw_material_max_abs_residual <= 1e-6
             and demand_max_abs_residual <= 1e-8
         ),
         "ret_full_noninferior": guardrail_pass["ret_full"],
@@ -731,6 +830,7 @@ def reduce_shards(*, shards: Path, output: Path, resamples: int) -> dict[str, An
         "contract_sha256": sha256(CONTRACT),
         "seed_range": [seeds[0], seeds[-1]],
         "N": len(seeds),
+        "bootstrap_resamples": frozen_resamples,
         "inference": primary_inference,
         "guardrail_inference": guardrail_inference,
         "cell_summaries": summaries,
@@ -741,6 +841,8 @@ def reduce_shards(*, shards: Path, output: Path, resamples: int) -> dict[str, An
             "demand_max_abs_residual": demand_max_abs_residual,
             "mass_max_abs_residual": mass_max_abs_residual,
             "partition_max_abs_residual": partition_max_abs_residual,
+            "aggregate_ration_max_abs_residual": aggregate_ration_max_abs_residual,
+            "raw_material_max_abs_residual": raw_material_max_abs_residual,
         },
         "integrity_gates": integrity,
         "direct_full_des_replay_required": True,
@@ -779,7 +881,12 @@ def write_plan(output: Path) -> None:
         "adjudicator_sha256": sha256(ADJUDICATOR),
         "runner_sha256": sha256(RUNNER),
         "launcher_sha256": sha256(LAUNCHER),
+        "watcher_sha256": sha256(WATCHER),
+        "smoke_script_sha256": sha256(SMOKE_SCRIPT),
+        "smoke_report_sha256": sha256(SMOKE_REPORT),
+        "smoke_manifest_sha256": sha256(SMOKE_MANIFEST),
         "N": len(seeds),
+        "bootstrap_resamples": int(contract["confirmation"]["bootstrap_resamples"]),
         "seed_range": [seeds[0], seeds[-1]],
         "cells": [cell.cell_id for cell in CONFIRMED_RET_CELLS],
         "expected_shards": len(seeds) * len(CONFIRMED_RET_CELLS),
@@ -813,7 +920,6 @@ def main() -> int:
     reduce_parser = subparsers.add_parser("reduce")
     reduce_parser.add_argument("--shards", type=Path, required=True)
     reduce_parser.add_argument("--output", type=Path, required=True)
-    reduce_parser.add_argument("--bootstrap", type=int, default=10_000)
     reduce_parser.add_argument("--authorization", type=Path, required=True)
     args = parser.parse_args()
     if args.command == "plan":
@@ -832,7 +938,9 @@ def main() -> int:
     verify_authorization(args.authorization)
     if args.command == "reduce":
         reduce_shards(
-            shards=args.shards, output=args.output, resamples=args.bootstrap
+            shards=args.shards,
+            output=args.output,
+            resamples=int(_contract()["confirmation"]["bootstrap_resamples"]),
         )
         return 0
     path = produce_shard(
