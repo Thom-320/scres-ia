@@ -9,6 +9,11 @@ from scripts.adjudicate_program_q import CELL_IDS, adjudicate
 from scripts.audit_program_q_power_preopen import expected_selected_N
 from scripts.audit_program_q_seed_custody import scan
 from scripts.benchmark_program_q_latency import benchmark_callable
+from scripts.evaluate_program_q_replication import (
+    simultaneous_primary_inference,
+    verify_authorization,
+    write_plan,
+)
 from scripts.power_program_q_replication import (
     _load_classical_shard,
     _write_classical_shard,
@@ -69,18 +74,27 @@ def result_fixture(*, h_lcb=0.02, delta_lcb=-0.005, delta_ucb=0.005):
 
 
 def test_program_q_equivalence_and_premium_are_distinct() -> None:
-    equivalent = adjudicate(result_fixture(), CONTRACT)
+    direct_audit = {"passed": True}
+    equivalent = adjudicate(result_fixture(), CONTRACT, direct_audit)
     assert equivalent["verdict"] == "PASS_Q_LEARNED_ADAPTATION_CLASSICALLY_EQUIVALENT"
-    premium = adjudicate(result_fixture(delta_lcb=0.011, delta_ucb=0.03), CONTRACT)
+    premium = adjudicate(
+        result_fixture(delta_lcb=0.011, delta_ucb=0.03), CONTRACT, direct_audit
+    )
     assert premium["verdict"] == "PASS_Q_NEURAL_PREMIUM"
 
 
 def test_program_q_adjudication_fails_closed_on_missing_integrity() -> None:
     result = result_fixture()
     del result["integrity_gates"]["feedback"]
-    payload = adjudicate(result, CONTRACT)
+    payload = adjudicate(result, CONTRACT, {"passed": True})
     assert payload["verdict"] == "STOP_Q_NO_REPLICATED_LEARNED_ADAPTATION"
     assert not payload["paper3_authorized"]
+
+
+def test_program_q_adjudication_requires_direct_full_des_replay() -> None:
+    payload = adjudicate(result_fixture(), CONTRACT)
+    assert payload["verdict"] == "STOP_Q_NO_REPLICATED_LEARNED_ADAPTATION"
+    assert payload["direct_full_des_replay"] is False
 
 
 def test_power_bootstrap_reselects_comparator_families() -> None:
@@ -157,13 +171,24 @@ def test_authoritative_power_selects_the_minimum_jointly_powered_N() -> None:
 
 def test_program_q_contract_freezes_authoritative_N_256() -> None:
     power = CONTRACT["power"]["authoritative_result"]
-    assert CONTRACT["status"] == "FROZEN_POWER_PASS_N_256_PENDING_SEED_AUTHORIZATION"
+    assert (
+        CONTRACT["status"]
+        == "FROZEN_N_256_CONFIRMATION_IMPLEMENTATION_AUDITED_PENDING_AUTHORIZATION"
+    )
     assert CONTRACT["confirmation"]["N"] == 256
     assert power["selected_N"] == 256
     assert power["joint_power"] >= CONTRACT["power"]["minimum_joint_power"]
     assert len(power["result_sha256"]) == 64
     assert len(power["cache_sha256"]) == 64
     assert CONTRACT["confirmation"]["opened"] is False
+    assert (
+        CONTRACT["confirmation"]["preopening_gate_state"]["confirmatory_launcher_audit"]
+        == "PASS_CONFIRMATION_IMPLEMENTATION_PREOPEN_AUDIT"
+    )
+    assert (
+        CONTRACT["confirmation"]["preopening_gate_state"]["independent_authorization"]
+        == "PENDING"
+    )
 
 
 def test_latency_benchmark_reports_batch_one_and_failures() -> None:
@@ -176,3 +201,47 @@ def test_latency_benchmark_reports_batch_one_and_failures() -> None:
     assert payload["batch_size"] == 1
     assert payload["failures"] == 0
     assert payload["p95_ms"] >= 0.0
+
+
+def test_program_q_primary_inference_reselects_and_builds_bilateral_equivalence() -> None:
+    panels = {}
+    for cell in CELL_IDS:
+        panels[cell] = {
+            "learner": np.asarray(
+                [[0.80, 0.78, 0.81, 0.79], [0.79, 0.80, 0.80, 0.79]], dtype=float
+            ),
+            "open_loop": np.asarray(
+                [[0.70, 0.75], [0.72, 0.74], [0.71, 0.73], [0.70, 0.76]],
+                dtype=float,
+            ),
+            "classical": np.asarray(
+                [[0.79, 0.80, 0.80, 0.79], [0.78, 0.79, 0.79, 0.78]], dtype=float
+            ),
+        }
+    result = simultaneous_primary_inference(panels, resamples=100, rng_seed=123)
+    assert result["comparator_reselection_inside_every_resample"] is True
+    assert result["H_OL_one_sided_and_Delta_N_two_sided"] is True
+    for cell in CELL_IDS:
+        h = result["estimates"][f"{cell}::H_OL"]
+        delta = result["estimates"][f"{cell}::Delta_N"]
+        assert h["point"] > 0.0
+        assert delta["lcb95"] <= delta["point"] <= delta["ucb95"]
+
+
+def test_program_q_plan_does_not_open_scientific_seeds(tmp_path: Path) -> None:
+    path = tmp_path / "plan.json"
+    write_plan(path)
+    payload = json.loads(path.read_text())
+    assert payload["N"] == 256
+    assert payload["expected_shards"] == 768
+    assert payload["scientific_seeds_opened_by_plan"] == 0
+    assert payload["external_collaborator_dependency"] is False
+
+
+def test_program_q_producer_fails_closed_without_independent_authorization(
+    tmp_path: Path,
+) -> None:
+    authorization = tmp_path / "authorization.json"
+    authorization.write_text('{"status": "NOT_AUTHORIZED"}')
+    with np.testing.assert_raises_regex(RuntimeError, "not independently authorized"):
+        verify_authorization(authorization)
