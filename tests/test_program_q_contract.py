@@ -6,6 +6,7 @@ from pathlib import Path
 import numpy as np
 
 from scripts.adjudicate_program_q import CELL_IDS, adjudicate
+from scripts.audit_program_q_power_preopen import expected_selected_N
 from scripts.audit_program_q_seed_custody import scan
 from scripts.benchmark_program_q_latency import benchmark_callable
 from scripts.power_program_q_replication import (
@@ -17,16 +18,12 @@ from scripts.power_program_q_replication import (
 
 
 ROOT = Path(__file__).resolve().parents[1]
-CONTRACT = json.loads(
-    (ROOT / "contracts/program_q_frozen_policy_replication_v1.json").read_text()
-)
+CONTRACT = json.loads((ROOT / "contracts/program_q_frozen_policy_replication_v1.json").read_text())
 FALLBACK = (
     ROOT
     / "research/paper2_exhaustive_search/program_q_historical_recurrentppo_fallback_freeze_20260717.json"
 )
-APPROXIMATE_POWER = (
-    ROOT / "research/paper2_exhaustive_search/program_q_power_20260718.json"
-)
+APPROXIMATE_POWER = ROOT / "research/paper2_exhaustive_search/program_q_power_20260718.json"
 
 
 def test_historical_fallback_is_hash_frozen_without_retraining() -> None:
@@ -74,9 +71,7 @@ def result_fixture(*, h_lcb=0.02, delta_lcb=-0.005, delta_ucb=0.005):
 def test_program_q_equivalence_and_premium_are_distinct() -> None:
     equivalent = adjudicate(result_fixture(), CONTRACT)
     assert equivalent["verdict"] == "PASS_Q_LEARNED_ADAPTATION_CLASSICALLY_EQUIVALENT"
-    premium = adjudicate(
-        result_fixture(delta_lcb=0.011, delta_ucb=0.03), CONTRACT
-    )
+    premium = adjudicate(result_fixture(delta_lcb=0.011, delta_ucb=0.03), CONTRACT)
     assert premium["verdict"] == "PASS_Q_NEURAL_PREMIUM"
 
 
@@ -92,9 +87,7 @@ def test_power_bootstrap_reselects_comparator_families() -> None:
     panels = {}
     for cell in CELL_IDS:
         learner = np.full((3, 4), 0.75)
-        open_loop = np.asarray(
-            [[0.70, 0.72], [0.76, 0.69], [0.70, 0.72], [0.76, 0.69]]
-        )
+        open_loop = np.asarray([[0.70, 0.72], [0.76, 0.69], [0.70, 0.72], [0.76, 0.69]])
         classical = np.asarray([[0.73, 0.73, 0.73, 0.73], [0.74, 0.70, 0.74, 0.70]])
         panels[cell] = {"learner": learner, "open_loop": open_loop, "classical": classical}
     points = point_effects(panels)
@@ -114,13 +107,11 @@ def test_classical_cache_shards_are_atomic_resumable_and_identity_checked(
     shard = tmp_path / f"{CELL_IDS[0]}__tape_7480001.npz"
     assert shard.is_file()
     assert not list(tmp_path.glob("*.tmp"))
-    assert _load_classical_shard(
-        shard, expected_cell_index=0, expected_tape_seed=7480001
-    ) == indices
+    assert (
+        _load_classical_shard(shard, expected_cell_index=0, expected_tape_seed=7480001) == indices
+    )
     with np.testing.assert_raises_regex(RuntimeError, "identity mismatch"):
-        _load_classical_shard(
-            shard, expected_cell_index=0, expected_tape_seed=7480002
-        )
+        _load_classical_shard(shard, expected_cell_index=0, expected_tape_seed=7480002)
 
 
 def test_seed_custody_scan_allows_contract_declaration_only(tmp_path: Path) -> None:
@@ -152,6 +143,16 @@ def test_early_power_approximation_cannot_select_program_q_N() -> None:
     assert payload["selected_N"] is None
     assert payload["verdict"] == "NO_CONTRACTUAL_VERDICT"
     assert CONTRACT["power"]["script"] == "scripts/power_program_q_replication.py"
+
+
+def test_authoritative_power_selects_the_minimum_jointly_powered_N() -> None:
+    rows = {
+        "128": {"H_OL": 1.0, "Delta_N_equivalence": 0.81, "joint": 0.79},
+        "160": {"H_OL": 1.0, "Delta_N_equivalence": 0.88, "joint": 0.82},
+        "192": {"H_OL": 1.0, "Delta_N_equivalence": 0.91, "joint": 0.90},
+        "256": {"H_OL": 1.0, "Delta_N_equivalence": 0.97, "joint": 0.96},
+    }
+    assert expected_selected_N(rows, [128, 160, 192, 256], 0.8) == 160
 
 
 def test_latency_benchmark_reports_batch_one_and_failures() -> None:
