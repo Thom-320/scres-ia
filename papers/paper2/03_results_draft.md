@@ -44,7 +44,8 @@ identity, or true cell parameters, and rewarded only by terminal canonical ReT �
 
 This is, to our knowledge, the first learned policy in this validated military DES family to show
 material out-of-sample adaptive value under a complete open-loop comparator frontier and an
-adversarial feedback certification.
+adversarial feedback certification. The finding was subsequently replicated prospectively on
+256 fresh tapes per cell with the policies frozen by hash (§3.5).
 
 ## 3.4 No neural premium over structured belief control (Level 4)
 
@@ -58,16 +59,35 @@ belief-MPC are an order of magnitude smaller than the learned advantage over ope
 scheduling: the network arrives at the structured controller's frontier — a single forward pass
 where the MPC runs an online planning enumeration — and stops there.
 
-## 3.5 Prospective replication (Program Q) — [SLOT]
+## 3.5 Prospective replication (Program Q)
 
-A frozen-policy replication contract (`program_q_frozen_policy_replication_v1`) tests, on
-entirely new tapes with the ten policies frozen by hash: (E1) replicated superiority over the
-complete open-loop frontier, and (E2) the neural relation graded as premium, TOST equivalence
-within ±0.01, or a non-inferiority floor. *(Outcome — PASS_PREMIUM / PASS_EQUIVALENT / BOUND /
-STOP — and its table row are inserted here by the build script when the terminal artifact
-exists; the framing of §3.1–3.4 does not depend on which outcome obtains.)* A mandatory
-computational benchmark (per-decision latency, memory, planner cost at equal hardware)
-accompanies the replication to quantify amortization value separately from outcome value.
+The frozen-policy replication contract (`program_q_frozen_policy_replication_v1`) was executed
+on 256 entirely new tapes per cell (block 7490001–7490256, opened once) with the ten policies
+frozen by SHA-256, complete comparator reselection inside every bootstrap resample, and an
+independent full-DES audit of every realized calendar (21,696 unique replays, zero failures,
+maximum ReT replay error 7.8 × 10⁻¹⁶). Both scientific endpoints replicated:
+
+- **E1 — learned adaptation replicated.** H_OL point estimates **+0.080 / +0.073 / +0.117**
+  with simultaneous LCB95 **+0.066 / +0.062 / +0.106**; 84.8% / 89.8% / 95.7% of tapes
+  favorable against the best of 65,536 calendars; **10/10 optimizer seeds positive in every
+  cell**. The calibration-generated hypothesis survived contact with five times as many fresh
+  tapes, with tighter bounds than calibration itself produced.
+- **E2 — classical equivalence demonstrated.** Δ_N simultaneous CI95s of
+  [−0.0063, +0.0031], [−0.0055, +0.0041], and [−0.0027, +0.0019] lie wholly inside the frozen
+  ±0.01 equivalence region in all three cells: the no-neural-premium finding is now a
+  TOST-certified equivalence, not a failure to reject.
+
+The compound contract verdict is nevertheless **STOP_Q_NO_REPLICATED_LEARNED_ADAPTATION**,
+because one frozen Class-B guardrail failed: worst-product fill against the best classical
+controller crossed the −0.02 non-inferiority margin in all three cells (simultaneous LCB95
+−0.0227 / −0.0257 / −0.0263; point estimates −0.010 / −0.016 / −0.005). Against the open-loop
+frontier the same guardrail is strongly positive (LCB95 +0.093 to +0.348). The learned policies
+therefore match belief-MPC's ReT while conceding a small amount of worst-product balance —
+below the margin's resolution in point estimate, but not provably within it. Consistent with
+the preregistration, we report the endpoint components separately and make no compound
+deployment claim; scheduled-resource equality, demand-ledger identities, feedback and
+replacement-control gates, and the full-ledger and quantity-weighted ReT guardrails (both exact
+deterministic zero contrasts under this evaluator) all passed.
 
 ## 3.6 Where the ladder localizes the value
 

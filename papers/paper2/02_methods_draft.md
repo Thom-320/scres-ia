@@ -104,12 +104,18 @@ calibration on entirely new tapes with the ten policies frozen by SHA: E1 replic
 (LCB95(Δ_N) ≥ +0.01), TOST equivalence (CI95(Δ_N) ⊂ [−0.01, +0.01]; equivalence is demonstrated
 by two one-sided bounds, never inferred from non-significance), or a non-inferiority floor
 (LCB95 ≥ −0.01 with ≥8/10 seeds above −0.01). The ±0.01 margin is the program's pre-existing
-practical-effect threshold, frozen before the replication tapes exist. Sample size (128 tapes
-per cell, CRN across cells) was selected by a frozen smallest-N rule from a resampling power
-analysis of the calibration matrices (power 1.000 for E1, 0.806 for E2 at N=128), committed
-before any replication seed. A mandatory computational benchmark (per-decision latency median
-and p95, memory, parameters, planner cost, equal hardware) quantifies amortization value
-separately from outcome value.
+practical-effect threshold, frozen before the replication tapes exist. Sample size (256 tapes
+per cell, CRN across cells; block 7490001–7490256) was selected by a frozen smallest-N rule
+from a resampling power analysis of the calibration matrices that reproduced the full inference
+pipeline — including comparator reselection inside every bootstrap resample, which raises the
+simultaneous critical value to 3.20 (joint power 1.000 for E1, 0.876 for E2-equivalence at
+N=256); an earlier approximation omitting reselection noise selected N=128 and is retained in
+the record as a quarantined non-authoritative attempt. Replication integrity adds three frozen
+Class-B non-inferiority guardrails against both comparator families at margin −0.02:
+full-ledger ReT, quantity-weighted ReT, and worst-product fill; any guardrail failure forces
+the compound STOP verdict regardless of endpoint outcomes. A mandatory computational benchmark
+(per-decision latency median and p95, memory, parameters, planner cost, equal hardware)
+quantifies amortization value separately from outcome value.
 
 ## 2.7 Governance and reproducibility
 

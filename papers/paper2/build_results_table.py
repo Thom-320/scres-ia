@@ -22,6 +22,7 @@ CELLS = ["rho75_share90", "rho90_share75", "rho90_share90"]
 HPI = ROOT / "results/program_o/full_des_hpi_translation_v1/validation_custody_verdict_v1.json"
 CORRECTIVE = ROOT / "results/program_o/fixed_clock_hobs_corrective_validation_v1/independent_audit_v1.json"
 DEFAULT_LEARNER = ROOT / "results/program_o/ret_only_learner_v1/calibration_run/result.json"
+DEFAULT_Q_DIR = ROOT / "results/program_q/confirmation_v1_20260718/artifacts/confirmation"
 
 
 def sha(path: Path) -> str:
@@ -92,14 +93,46 @@ def main() -> int:
                      sources["L3L4"]))
 
     # ---- Program Q ---------------------------------------------------------------------------
-    if a.program_q and Path(a.program_q).exists():
-        q = json.loads(Path(a.program_q).read_text())
-        rows.append(("Q prospective replication", "all",
-                     str(q.get("terminal_outcome") or q.get("status")), "", "",
-                     f"{Path(a.program_q).name}@{sha(Path(a.program_q))}"))
+    qdir = Path(a.program_q) if a.program_q else DEFAULT_Q_DIR
+    if qdir.exists():
+        q_res_p = qdir / "evaluation/result.json"
+        q_adj_p = qdir / "adjudication.json"
+        q_res = json.loads(q_res_p.read_text())
+        q_adj = json.loads(q_adj_p.read_text())
+        src_res = f"{q_res_p.relative_to(ROOT)}@{sha(q_res_p)}"
+        src_adj = f"{q_adj_p.relative_to(ROOT)}@{sha(q_adj_p)}"
+        sources["Q"] = src_res
+        q_est = need(q_res, "inference", "estimates")
+        q_guard = need(q_res, "guardrail_inference", "estimates")
+        q_n = need(q_res, "N")
+        for cell in CELLS:
+            e = need(q_est, f"{cell}::H_OL")
+            s_ = need(q_res, "cell_summaries", cell)
+            fav = need(s_, "favorable_tapes_fraction_vs_open_loop")
+            seeds = need(s_, "positive_learner_seeds_H_OL")
+            rows.append(("Q replicated H_OL", cell,
+                         f"est {e['point']:+.5f}", f"LCB95 = {e['lcb95']:+.5f}",
+                         f"{fav:.1%} of {q_n} tapes favorable; {seeds}/10 seeds positive",
+                         src_res))
+        for cell in CELLS:
+            e = need(q_est, f"{cell}::Delta_N")
+            rows.append(("Q neural relation Δ_N", cell,
+                         f"est {e['point']:+.5f}",
+                         f"CI95 [{e['lcb95']:+.5f}, {e['ucb95']:+.5f}]",
+                         "TOST equivalence bar: CI ⊂ [−0.01, +0.01]", src_res))
+        for cell in CELLS:
+            g = need(q_guard, f"{cell}::worst_product_fill::vs_classical")
+            rows.append(("Q guardrail worst-product fill (vs classical)", cell,
+                         f"est {g['point']:+.5f}", f"LCB95 = {g['lcb95']:+.5f}",
+                         "frozen Class-B margin −0.02 (binding)", src_res))
+        rows.append(("Q terminal adjudication", "all",
+                     str(need(q_adj, "verdict")),
+                     f"N={q_n}/cell, seeds {need(q_res, 'seed_range')[0]}–{need(q_res, 'seed_range')[1]}",
+                     "compound label; components above reported separately as preregistered",
+                     src_adj))
     else:
         rows.append(("Q prospective replication", "all", "PENDING",
-                     "contract frozen: N=128/cell, block 7490001+",
+                     "contract frozen: N=256/cell, block 7490001–7490256",
                      "outcomes: PASS_PREMIUM / PASS_EQUIVALENT / BOUND / STOP", "contract@frozen"))
 
     # ---- emit --------------------------------------------------------------------------------
