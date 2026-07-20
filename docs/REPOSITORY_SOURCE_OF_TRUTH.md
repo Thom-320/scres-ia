@@ -4,6 +4,19 @@ This note freezes the current paper-facing repository story. Treat it as the
 primary reference for README examples, manuscript edits, benchmark commands,
 and reviewer-facing explanations unless a later note explicitly supersedes it.
 
+> **Paper 2 superseding addendum (2026-07-20).** Program Q is no longer
+> prospective. It is terminal at `STOP_Q_NO_REPLICATED_LEARNED_ADAPTATION`:
+> learned ReT superiority over the complete 65,536-calendar open-loop frontier
+> replicated in all three cells, and practical equivalence to the strongest
+> tested structured controller was demonstrated. The compound STOP is due to
+> failure of the frozen worst-product-fill non-inferiority guardrail. The next
+> Paper 2 attempt is prospectively governed by
+> `contracts/paper2_learning_augmented_event_triggered_mpc_v1.json`: strengthen
+> ReT-aligned MPC first, require residual and endogenous-timing headroom before
+> training, then test a confidence-gated learning-augmented event-triggered MPC.
+> No new result from that hybrid exists yet. If any essential gate fails, the
+> executed Program Q decomposition manuscript is the publication route.
+
 > **Superseded lane notice (2026-07-10).** Everything below replaces the
 > pre-Track-B version of this document, which described the
 > `shift_control`/`ReT_seq_v1`/`v1` lane as the frozen paper backbone. That
@@ -174,14 +187,15 @@ value relative to open-loop scheduling.
 - Correct claim boundary: positive calibration evidence of learned adaptation over open-loop;
   neural premium, independent replication, tail-safe deployment and retained-learning value are
   not established.
-- Program Q is a separate prospective frozen-policy replication. CVaR10 is secondary there, while
-  resource equality, demand preservation, anti-shed/product floors, feedback and information
-  placebos remain fail-closed identification gates. Its primary learner is now unconditionally the
-  ten-checkpoint historical RecurrentPPO population frozen by SHA-256; collaborator architecture
-  sandboxes are non-promotable sidecars and cannot delay or replace Program Q.
+- Program Q is terminal and independently replicated the ReT and equivalence endpoints. Its
+  compound label remains `STOP_Q_NO_REPLICATED_LEARNED_ADAPTATION` because the frozen
+  worst-product-fill non-inferiority guardrail failed in all three cells. Do not paraphrase the
+  compound STOP as absence of learned adaptation, and do not paraphrase endpoint replication as a
+  deployment-safety or neural-premium result.
 
 Authoritative artifacts are `docs/PROGRAM_O_R_TERMINAL_VERDICT_2026-07-17.md`,
 `research/paper2_exhaustive_search/program_o_ret_calibration_v12_terminal_audit_20260717.json`, and
-`contracts/program_q_frozen_policy_replication_v1.json`. Paper 3 remains unauthorized until Program
-Q returns either `PASS_Q_NEURAL_PREMIUM` or
-`PASS_Q_LEARNED_ADAPTATION_CLASSICALLY_EQUIVALENT`.
+`contracts/program_q_frozen_policy_replication_v1.json` and
+`docs/PROGRAM_Q_TERMINAL_VERDICT_2026-07-18.md`. Paper 3 remains unauthorized under the new
+master contract until the prospective Paper 2 hybrid establishes learned adaptive value; no
+historical verdict is reopened.

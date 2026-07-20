@@ -23,6 +23,13 @@
     "Can a learned continuation value improve quality or latency without worsening worst-product service?",
     "Can a confidence gate fall back reliably outside calibration support or under solver failure?"
   ],
+  "executable_surfaces_2026_07_20": {
+    "common_controller_interface": "supply_chain.paper2_controller",
+    "ret_aligned_scenario_mpc": "supply_chain.program_t_scenario_mpc",
+    "quality_time_and_residual_gate": "supply_chain.program_t_t0_gate",
+    "adjudicator": "scripts/adjudicate_program_t_t0_residual.py",
+    "status": "IMPLEMENTED_INTERFACE_AND_FAIL_CLOSED_GATE; full-DES scenario providers and burned comparator matrices remain required before adjudication"
+  },
   "nested_arms": {
     "M0": "strong ReT-aligned nominal/particle/scenario MPC with explicit service constraints",
     "M1": "M0 plus learned terminal value",

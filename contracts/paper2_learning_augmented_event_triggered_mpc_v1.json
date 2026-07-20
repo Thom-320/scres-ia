@@ -1,0 +1,125 @@
+{
+  "contract_id": "paper2_learning_augmented_event_triggered_mpc_v1",
+  "status": "FROZEN_INTEGRATION_CHARTER_GATES_ONLY_NO_LEARNER_OR_CONFIRMATION_SEEDS_AUTHORIZED",
+  "date": "2026-07-20",
+  "primary_journal": "Computers & Industrial Engineering",
+  "working_title": "Learning-Augmented Event-Triggered MPC for Supply-Chain Resilience under Nonstationary Disruptions: Exact Static Benchmarks and Full-DES Validation",
+  "historical_verdicts_unchanged": {
+    "program_o": "STOP_PROGRAM_O_AFTER_CORRECTIVE_VALIDATION",
+    "program_o_r": "STOP_CALIBRATION_NOT_ELIGIBLE",
+    "program_q": "STOP_Q_NO_REPLICATED_LEARNED_ADAPTATION",
+    "program_s_s1": "STOP_S1_TRANSDUCER_EXACTNESS_FAILURE"
+  },
+  "evidence_boundary": {
+    "confirmed": [
+      "Program Q RecurrentPPO beats the complete 65536-calendar open-loop frontier in all three cells",
+      "Program Q RecurrentPPO is practically equivalent in canonical ReT to the strongest tested structured controller",
+      "Program Q worst-product-fill non-inferiority versus the structured controller is not established",
+      "the reduced exact benchmark is solved and horizon-3 MPC reaches its exact optimum"
+    ],
+    "prospective": [
+      "simulator-budgeted static search qualification",
+      "residual full-DES headroom beyond strengthened ReT-aligned MPC",
+      "nonstationary risk-envelope promotion",
+      "endogenous-review value",
+      "learning-augmented hybrid value",
+      "virgin confirmation"
+    ]
+  },
+  "physical_contract": {
+    "products": 2,
+    "nonfungible_primary_cell": true,
+    "mix_actions": [0, 1, 2, 3],
+    "review_dwell_weeks": [1, 2, 4],
+    "review_budget": 4,
+    "production_slots": 24,
+    "transport_resources": "identical across policies",
+    "primary_endpoint": "ret_excel_request_snapshot_v2",
+    "event_tie_robustness": "both plausible simultaneous-event orderings, frozen before confirmation"
+  },
+  "information_contract": {
+    "allowed": [
+      "observable product inventory, WIP, pipeline and backlog",
+      "order ages and recent realized demand",
+      "realized outages and recoveries",
+      "previous actions and review-right balance",
+      "causal history available at the decision time"
+    ],
+    "forbidden": [
+      "true latent regime",
+      "true transition matrix",
+      "future demand or disruption",
+      "future event identity",
+      "tape or seed identity",
+      "oracle action or score"
+    ]
+  },
+  "execution_order": [
+    "U0_STATIC_DISCOVERY_NONBLOCKING",
+    "T0_STRENGTHENED_FULL_DES_MPC",
+    "U1_S1B_RISK_CASCADE_IF_T0_ABSORBS_HEADROOM",
+    "U2_ENDOGENOUS_TIMING_ORACLE",
+    "U3_U4_HYBRID_ABLATIONS",
+    "U5_VIRGIN_CONFIRMATION"
+  ],
+  "promotion_gates": {
+    "T0_residual_headroom": {
+      "estimand": "V(best observable) - V(strengthened ReT-aligned MPC)",
+      "lcb95_minimum": 0.015,
+      "requires": ["resource equality", "lost-orders noninferiority", "worst-product-fill noninferiority"]
+    },
+    "U1_connected_region": {
+      "minimum_cells": 3,
+      "minimum_material_actions": 2,
+      "H_PI_safe_lcb95_minimum": 0.02,
+      "classical_H_obs_lcb95_minimum": 0.015,
+      "matched_stationary_risk_mass": true
+    },
+    "U2_timing": {
+      "estimand": "V(best variable-review adaptive controller with four review rights) - V(best fixed-cadence adaptive controller with the same four review rights)",
+      "lcb95_minimum": 0.015,
+      "unconstrained_weekly_oracle_role": "upper ceiling only; report V(variable-review oracle) - V(unconstrained weekly oracle) as non-positive regret, never as a superiority estimand",
+      "stop_label": "STOP_NO_ENDOGENOUS_REVIEW_VALUE"
+    },
+    "U5_confirmation": {
+      "hybrid_minus_best_static_lcb95_minimum": 0.01,
+      "hybrid_minus_best_classical_lcb95_minimum": 0.01,
+      "hybrid_minus_pure_rl_lcb95_minimum": 0.0,
+      "minimum_favorable_tape_fraction": 0.70,
+      "minimum_positive_optimizer_seeds": "8/10",
+      "worst_product_fill_margin": -0.02,
+      "lost_demand_may_increase": false,
+      "exact_resource_equality": true,
+      "equal_review_rights": true
+    }
+  },
+  "method_candidate": {
+    "components": [
+      "causal recurrent belief encoder",
+      "distributional terminal ReT value",
+      "constrained scenario MPC over product mix and review time",
+      "calibrated confidence gate with robust feasible MPC fallback"
+    ],
+    "attribution_arms": [
+      "strengthened MPC",
+      "learned belief plus MPC",
+      "learned terminal value plus MPC",
+      "learned timing plus MPC",
+      "learned belief plus terminal value",
+      "complete hybrid",
+      "pure recurrent RL"
+    ],
+    "architecture_parameters": "UNFROZEN_UNTIL_T0_AND_U2_PROMOTE"
+  },
+  "claim_limit": "If confirmed, claim best performance among the complete open-loop frontier and all preregistered tested adaptive families under matched information, resources, review rights and online computation. Never claim superiority over every mathematically possible dynamic policy or deployment safety.",
+  "failure_route": "Preserve the failed gate and route the executed Program Q decomposition manuscript to submission without another rescue environment.",
+  "current_authorization": {
+    "burned_development_diagnostics": true,
+    "U0_burned_development": true,
+    "T0_burned_development": true,
+    "new_scientific_seed_reservation": false,
+    "hybrid_training": false,
+    "virgin_confirmation": false,
+    "paper3": false
+  }
+}
