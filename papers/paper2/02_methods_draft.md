@@ -68,10 +68,13 @@ Ten RecurrentPPO policies (independent optimizer seeds 8101–8110) were trained
 training tapes (block 748100001–748350250, one fresh stochastic realization per episode, plus one
 reset sentinel per seed), with the three cells alternating round-robin
 (`contracts/program_o_ret_only_learner_v1.json`). The observation (21 features) contains only
-non-privileged operational state — per-product inventory, pipeline, backlog and ages, recent
-demand, committed batches, an HMM belief summary, previous action, and temporal phase; the tape
-seed/hash, true cell parameters, latent regime, and any future information are contractually
-forbidden and tested. Reward is the terminal canonical ReT only (no shaping). Training artifacts
+non-privileged operational state — per-product on-hand inventory, locked (committed) pipeline,
+backlog quantity, order count and maximum age, in-flight quantity, a frozen HMM belief summary
+whose parameters are fixed across all cells (the true cell parameters are forbidden, so the
+belief model is deliberately misspecified in two of the three cells), the previous action, and
+temporal phase. Realized demand enters only through its operational traces (inventory draws and
+backlog), never as an explicit demand window; the tape seed/hash, true cell parameters, latent
+regime, and any future information are contractually forbidden and tested. Reward is the terminal canonical ReT only (no shaping). Training artifacts
 (model SHA-256s, contract hash, git commit) are custody-manifested.
 
 ## 2.5 Evaluation protocol and integrity gates
