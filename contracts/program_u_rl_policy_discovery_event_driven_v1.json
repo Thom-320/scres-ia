@@ -1,0 +1,136 @@
+{
+  "contract_id": "program_u_rl_policy_discovery_event_driven_v1",
+  "status": "FROZEN_THEORY_AND_SOFTWARE_GATE_NO_NEW_SEEDS_AUTHORIZED",
+  "date": "2026-07-20",
+  "historical_verdicts_unchanged": {
+    "program_o": "STOP_PROGRAM_O_AFTER_CORRECTIVE_VALIDATION",
+    "program_o_r": "STOP_CALIBRATION_NOT_ELIGIBLE",
+    "program_q": "STOP_Q_NO_REPLICATED_LEARNED_ADAPTATION",
+    "program_s_s1": "STOP_S1_TRANSDUCER_EXACTNESS_FAILURE"
+  },
+  "scientific_questions": {
+    "u0_static_discovery": "Can a simulator-budgeted learner discover the globally best or near-best open-loop calendar without reading the exhaustive score matrix?",
+    "u1_endogenous_review": "Does allocating a finite number of review rights using observable state improve canonical ReT over the best discovered static calendar and fixed-cadence feedback?",
+    "u2_risk_cascade": "Which thesis-native risk interactions create connected safe adaptive headroom after exactness is established before screening?"
+  },
+  "u0_static_discovery": {
+    "physical_policy": "one tape-independent base-4 length-eight calendar",
+    "search_mdp": "eight construction steps with terminal canonical ReT only",
+    "observation_whitelist": ["construction phase", "calendar prefix"],
+    "observation_blacklist": ["tape", "seed", "demand", "risk", "inventory", "regime", "oracle score"],
+    "training_may_read_exhaustive_frontier": false,
+    "physical_des_evaluations_per_episode": 1,
+    "comparison": ["random search", "cross-entropy method", "autoregressive policy gradient", "CMA-ES over a parameterized doctrine", "Bayesian optimization over interpretable rules"],
+    "small_case_answer_key": "all 65536 calendars, held out from every search algorithm",
+    "large_case_certificate": "branch-and-bound, dynamic programming, MILP gap, or best-known bound; exhaustive enumeration is not required",
+    "report": ["simple regret", "best-so-far AUC", "DES calls to 1 percent gap", "optimizer-seed variability", "wall time"]
+  },
+  "u1_endogenous_review": {
+    "decision_model": "semi-Markov weekly commitment with endogenous next-review interval",
+    "action": "product mix k in {0,1,2,3} plus dwell in {1,2,4} weeks",
+    "review_budget": 4,
+    "reason_for_budget": "without scarce managerial attention the shortest dwell weakly dominates",
+    "physical_resources": "identical Program O batch, transport and demand resources",
+    "comparators": ["best static calendar", "best fixed review cadence", "threshold and hysteresis", "event-triggered MPC", "Program Q RecurrentPPO"],
+    "mandatory_audits": ["modal calendar", "phase-only", "frequency-matched", "review-time placebo", "equal review budget"]
+  },
+  "u2_risk_cascade": {
+    "replaces_failed_program_s_s1": true,
+    "adversarial_exactness_first": true,
+    "first_tape_per_point_before_expansion": true,
+    "per_mask_fail_closed_early_exit": true,
+    "multiple_points_per_worker": true,
+    "cache_common_tapes_and_prefixes": true,
+    "approximate_search_for_localization": true,
+    "exact_frontier_only_for_finalists": true,
+    "maximum_exact_finalists": 12,
+    "primary_stratum": "THESIS_NATIVE_INDEPENDENT",
+    "wartime_stratum": "EXPLORATORY_NONPROMOTABLE",
+    "r23": "NEGATIVE_CONTROL_NOT_SELECTABLE_IN_MIX_ONLY_V1"
+  },
+  "environment_design_governance": {
+    "principle": "The environment may be optimized for decision relevance and adaptive headroom, but never against learner outcomes.",
+    "designer_objectives": ["H_PI_safe", "classical H_obs", "action-ranking reversals", "guardrail feasibility"],
+    "forbidden_designer_objectives": ["PPO return", "hybrid-minus-MPC", "which architecture wins"],
+    "freeze_order": ["physics envelope", "environment screen", "least-severe connected region", "observations and actions", "classical comparators", "learner"],
+    "selection_rule": "Select the least-severe connected region meeting frozen pre-learner headroom gates; never the cell where a learner looks best.",
+    "separate_seed_universes": true,
+    "researcher_extension_label_required": true
+  },
+  "risk_strata": {
+    "GARRIDO_NATIVE_VALIDATION": {
+      "purpose": "source-anchored reference and construct validation",
+      "parameters": "Tables 6.11-6.12 current/increased levels",
+      "promotable": true
+    },
+    "RESEARCHER_DECISION_RELEVANT_STRESS": {
+      "purpose": "plausible adverse stress testing targeted to the frozen decision rights",
+      "parameters": ["risk-specific frequency", "risk-specific recovery/impact", "concurrency", "timing relative to demand and commitment"],
+      "requirement": "units, operational interpretation, plausible bound, conservation, null and claim limit for every factor",
+      "promotable": true,
+      "claim_limit": "methodological full-DES stress experiment, not an empirical estimate of MFSC risk"
+    },
+    "DYNAMIC_REGIME_STRESS": {
+      "purpose": "test feedback under changing recurrent risk conditions",
+      "regimes": ["normal", "surge", "recovery"],
+      "latent": true,
+      "transition_cadence_hours": 168,
+      "observations": ["realized outages", "realized recovery", "recent demand", "inventory/WIP/backlog", "nonprivileged operational signals"],
+      "forbidden_observations": ["regime id", "transition matrix", "future event identity", "future demand", "seed/tape"],
+      "promotable": true
+    }
+  },
+  "decision_relevance_masks": {
+    "product_mix_primary": ["R11", "R14", "R24"],
+    "conditional_timing_interactions": ["R22"],
+    "negative_controls": ["R23"],
+    "rule": "A risk is selectable only after a forced fixture proves that it changes the ranking of at least two admissible actions, not merely absolute ReT."
+  },
+  "stochastic_processing_time": {
+    "allowed": true,
+    "primary_candidate": "mean_preserving_lognormal_potential_service_tape_v1",
+    "common_random_numbers": true,
+    "policy_independent_potential_times": true,
+    "spread_axis": [0.0, 0.15, 0.30, 0.50],
+    "existing_repo_triangular_mode": "diagnostic_only because Tri(0.75,1.0,1.5) has mean 1.0833 and changes mean capacity as well as variability",
+    "null": "spread=0 reproduces deterministic processing bitwise",
+    "gate": "stochastic PT must create action-ranking reversals and observable conversion; lower ReT alone is insufficient"
+  },
+  "prelearner_region_gate": {
+    "minimum_connected_cells": 3,
+    "H_PI_safe_LCB95": 0.02,
+    "classical_H_obs_LCB95": 0.015,
+    "eta_minimum": 0.25,
+    "minimum_material_actions": 2,
+    "real_history_beats_shuffled_and_delayed": true,
+    "lost_orders_noninferior": true,
+    "worst_product_fill_margin": -0.02,
+    "CVaR10_margin": -0.02
+  },
+  "garrido_native_levels": {
+    "R11_interarrival_hours": {"current": 168, "increased": 42},
+    "R12_delay_probability": {"current": 0.0909090909, "increased": 0.3636363636},
+    "R13_delay_probability": {"current": 0.1, "increased": 0.4},
+    "R14_defect_probability": {"current": 0.03, "increased": 0.08},
+    "R21_interarrival_hours": {"current": 16128, "increased": 4032},
+    "R22_interarrival_hours": {"current": 4032, "increased": 1344},
+    "R23_interarrival_hours": {"current": 8064, "increased": 1344},
+    "R24_interarrival_hours": {"current": 672, "increased": 336},
+    "R3_interarrival_hours": {"current": 161280, "increased": 80640},
+    "inventory_hours": [0, 168, 336, 504, 672, 1344],
+    "assembly_shifts": [1, 2, 3]
+  },
+  "endpoint": "ret_excel_request_snapshot_v2",
+  "guardrails": ["ret_full", "quantity_ret_full", "lost orders", "unresolved quantity", "worst-product fill", "CVaR10", "mass and resource ledgers"],
+  "seed_policy": {
+    "new_scientific_seeds_reserved": false,
+    "burned_748_749_751_allowed_for_diagnostics_only": true,
+    "global_collision_audit_required_before_reservation": true
+  },
+  "stop_rules": {
+    "inexact_mask": "STOP_U2_MASK_TRANSDUCER_INEXACT",
+    "no_static_discovery": "BOUND_U0_SEARCH_DID_NOT_RECOVER_NEAR_OPTIMUM",
+    "no_event_value": "STOP_U1_NO_ENDOGENOUS_REVIEW_VALUE",
+    "no_risk_headroom": "STOP_U2_NO_CONNECTED_RISK_HEADROOM"
+  }
+}
