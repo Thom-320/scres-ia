@@ -1,0 +1,38 @@
+{
+  "schema_version": "program_u1_native_risk_stage_a_adjudication_v1",
+  "status": "STOP_U1_ALL_RISK_MASKS_FAIL_EXACTNESS",
+  "scientific_result_available": false,
+  "seed_block": [7540001, 7540003],
+  "seed_status": "BURNED_STOP_INSTRUMENT_EXACTNESS",
+  "completed_valid_shards_before_stop": 492,
+  "expected_shards": 900,
+  "historical_program_s_production_mask": {
+    "mask": "PRODUCTION_QUALITY_SURGE",
+    "status": "STOP_MASK_BEFORE_INEXACT_SCREEN",
+    "maximum_replay_error": 0.000013558433253764782,
+    "reason": "R14 and production-risk timing make the reference skeleton action-dependent"
+  },
+  "prospective_u1_masks": {
+    "LOC_SURGE": {
+      "status": "STOP_MASK_BEFORE_INEXACT_SCREEN",
+      "maximum_replay_error": 0.08571428571428573,
+      "ret_visible_error": 0.018583042973286945
+    },
+    "CROSS_ECHELON_SURGE": {
+      "status": "STOP_MASK_BEFORE_INEXACT_SCREEN",
+      "maximum_replay_error": 0.026651848286211866,
+      "ret_visible_error": 0.026651848286211866
+    }
+  },
+  "gate_consequences": {
+    "risk_optimization_result": "NO_APPLICABLE_RESULT",
+    "environment_parameter_search_authorized": false,
+    "u2_timing_authorized": false,
+    "ppo_or_architecture_search_authorized": false,
+    "learned_history_encoder_authorized": false,
+    "hybrid_training_authorized": false,
+    "u5_confirmation_authorized": false,
+    "paper2_route": "PROGRAM_Q_FALLBACK"
+  },
+  "claim_limit": "The stop is an instrument-exactness result, not evidence that nonstationary risks lack adaptive headroom. A future direct-SimPy risk study requires a new contract and cannot rescue T0 or this U1 run."
+}
