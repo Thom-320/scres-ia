@@ -8,7 +8,7 @@ the selected calendar is always evaluated by the certified full-DES transducer.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from functools import lru_cache
 import hashlib
 from itertools import product
@@ -17,6 +17,10 @@ from typing import Mapping, Sequence
 
 import numpy as np
 
+from supply_chain.program_o_full_des_transducer import (
+    FullDESSkeleton,
+    simulate_full_des_frontier,
+)
 from supply_chain.program_o_state_rich import (
     StateRichConfiguration,
     StateRichObservation,
@@ -196,3 +200,161 @@ def t0_grid(*, particles: int = 32) -> tuple[FullDEST0Config, ...]:
         for h in (1, 3, 4, 6, 8)
         for mode in ("nominal", "scenario", "robust", "constraint_aware")
     )
+
+
+def _synthetic_skeletons(
+    base: FullDESSkeleton,
+    observation: StateRichObservation,
+    config: FullDEST0Config,
+) -> tuple[FullDESSkeleton, ...]:
+    """Replace every unobserved demand row with a belief-generated row."""
+    count = 1 if config.mode == "nominal" else config.particles
+    seed = int.from_bytes(
+        hashlib.sha256((observation.observation_sha256 + "::T0_RET_SCENARIOS_V1").encode()).digest()[:8],
+        "big",
+    )
+    rng = np.random.default_rng(seed)
+    past = [i for i, t in enumerate(base.order_times) if t < observation.decision_time - 1e-12]
+    future_weeks = range(observation.week, base.decision_weeks)
+    out = []
+    for scenario_index in range(count):
+        times = [base.order_times[i] for i in past]
+        quantities = [base.order_quantities[i] for i in past]
+        products = [base.order_products[i] for i in past]
+        contingent = [False for _ in past]
+        regime_c = (
+            observation.belief_c >= 0.5
+            if config.mode == "nominal"
+            else bool(rng.random() < observation.belief_c)
+        )
+        for week in future_weeks:
+            if config.mode == "nominal":
+                share_c = (
+                    config.dominant_share if regime_c else 1.0 - config.dominant_share
+                )
+                count_c = int(round(6 * share_c))
+                labels = ["P_C"] * count_c + ["P_H"] * (6 - count_c)
+                quantities_week = [2500.0] * 6
+            else:
+                probability_c = config.dominant_share if regime_c else 1.0 - config.dominant_share
+                labels = ["P_C" if rng.random() < probability_c else "P_H" for _ in range(6)]
+                quantities_week = list(map(float, rng.integers(2400, 2601, size=6)))
+            for offset, product_id, quantity in zip((30, 54, 78, 102, 126, 150), labels, quantities_week):
+                times.append(base.decision_start + 168.0 * week + float(offset))
+                quantities.append(quantity)
+                products.append(product_id)
+                contingent.append(False)
+            if config.mode == "nominal":
+                belief_next = config.regime_persistence * float(regime_c) + (1.0 - config.regime_persistence) * float(not regime_c)
+                regime_c = belief_next >= 0.5
+            elif rng.random() > config.regime_persistence:
+                regime_c = not regime_c
+        order = np.argsort(np.asarray(times), kind="stable")
+        out.append(
+            replace(
+                base,
+                seed=-(scenario_index + 1),
+                order_times=tuple(float(times[i]) for i in order),
+                order_quantities=tuple(float(quantities[i]) for i in order),
+                order_products=tuple(str(products[i]) for i in order),
+                order_contingent=tuple(bool(contingent[i]) for i in order),
+                tape_sha256="belief_generated_no_realized_future",
+                skeleton_sha256=hashlib.sha256(
+                    f"{observation.observation_sha256}:{scenario_index}".encode()
+                ).hexdigest(),
+            )
+        )
+    return tuple(out)
+
+
+def choose_ret_transducer_action(
+    observation: StateRichObservation,
+    *,
+    base_skeleton: FullDESSkeleton,
+    prefix: Sequence[int],
+    scheduler: Mapping[str, Sequence[str]],
+    config: FullDEST0Config,
+) -> tuple[int, dict[str, float]]:
+    """Score candidate action sequences with canonical ReT transducer rollouts."""
+    horizon = min(config.horizon, observation.remaining_decisions)
+    sequences = _sequences(horizon)
+    tail = base_skeleton.decision_weeks - len(prefix) - horizon
+    calendars = np.empty((len(sequences), base_skeleton.decision_weeks), dtype=np.uint8)
+    if prefix:
+        calendars[:, : len(prefix)] = np.asarray(prefix, dtype=np.uint8)
+    calendars[:, len(prefix) : len(prefix) + horizon] = sequences
+    if tail:
+        calendars[:, len(prefix) + horizon :] = sequences[:, -1, None]
+    scenarios = _synthetic_skeletons(base_skeleton, observation, config)
+    ret = np.empty((len(sequences), len(scenarios)), dtype=float)
+    worst = np.empty_like(ret)
+    lost = np.empty_like(ret)
+    for index, scenario in enumerate(scenarios):
+        panel = simulate_full_des_frontier(
+            skeleton=scenario, scheduler=scheduler, calendars=calendars
+        )
+        ret[:, index] = panel["ret_visible"]
+        worst[:, index] = panel["worst_product_fill"]
+        lost[:, index] = panel["lost_orders"]
+    mean_ret = ret.mean(axis=1)
+    tail_count = max(1, int(np.ceil(0.10 * len(scenarios))))
+    tail_ret = np.partition(ret, tail_count - 1, axis=1)[:, :tail_count].mean(axis=1)
+    min_fill = worst.min(axis=1)
+    feasible = (min_fill >= config.worst_product_floor) & (lost.max(axis=1) <= 1e-12)
+    primary = tail_ret if config.mode == "robust" else mean_ret
+    if config.mode != "constraint_aware":
+        feasible[:] = True
+    best = max(
+        range(len(sequences)),
+        key=lambda i: (
+            int(feasible[i]),
+            float(primary[i]),
+            float(tail_ret[i]),
+            float(min_fill[i]),
+            *tuple(-int(x) for x in sequences[i]),
+        ),
+    )
+    return int(sequences[best, 0]), {
+        "candidate_sequences": float(len(sequences)),
+        "scenario_count": float(len(scenarios)),
+        "planning_ret": float(mean_ret[best]),
+        "planning_tail": float(tail_ret[best]),
+        "planning_worst_fill": float(min_fill[best]),
+        "planning_feasible": float(feasible[best]),
+    }
+
+
+def ret_transducer_t0_calendar(
+    *,
+    skeleton: FullDESSkeleton,
+    scheduler: Mapping[str, Sequence[str]],
+    config: FullDEST0Config,
+) -> tuple[tuple[int, ...], dict[str, object]]:
+    prefix: list[int] = []
+    decisions = []
+    started = time.perf_counter()
+    for week in range(skeleton.decision_weeks):
+        probe = tuple(prefix + [0] * (skeleton.decision_weeks - len(prefix)))
+        _calendar, rows = state_rich_calendar(
+            skeleton=skeleton.as_dict(),
+            scheduler=scheduler,
+            config=StateRichConfiguration("belief_mpc", 1),
+            regime_persistence=config.regime_persistence,
+            dominant_share=config.dominant_share,
+            action_overrides=probe,
+        )
+        observation = rows[week].observation
+        action, diagnostics = choose_ret_transducer_action(
+            observation,
+            base_skeleton=skeleton,
+            prefix=prefix,
+            scheduler=scheduler,
+            config=config,
+        )
+        prefix.append(action)
+        decisions.append({"week": week, "action": action, **diagnostics})
+    return tuple(prefix), {
+        "config_id": "ret_transducer_" + config.config_id,
+        "online_ms": (time.perf_counter() - started) * 1000.0,
+        "decisions": decisions,
+    }

@@ -19,7 +19,11 @@ from supply_chain.program_o_full_des_transducer import (  # noqa: E402
     MATRIX_KEYS, extract_full_des_skeleton, simulate_full_des_frontier,
 )
 from supply_chain.program_o_ret_env import CONFIRMED_RET_CELLS  # noqa: E402
-from supply_chain.program_t_full_des_mpc import t0_calendar, t0_grid  # noqa: E402
+from supply_chain.program_t_full_des_mpc import (  # noqa: E402
+    ret_transducer_t0_calendar,
+    t0_calendar,
+    t0_grid,
+)
 from supply_chain.program_t_t0_gate import adjudicate_t0_residual  # noqa: E402
 
 Q_RESULT = ROOT / "results/program_q/confirmation_v1_20260718/artifacts/confirmation/evaluation/result.json"
@@ -32,6 +36,7 @@ def main() -> int:
     parser.add_argument("--horizons", default="1,3,4,6,8")
     parser.add_argument("--modes", default="nominal,scenario,robust,constraint_aware")
     parser.add_argument("--cells", default="rho75_share90,rho90_share75,rho90_share90")
+    parser.add_argument("--provider", choices=("compact", "ret_transducer"), default="compact")
     parser.add_argument("--output", type=Path, default=ROOT / "results/program_t/t0_full_des_matrix_v1/result.json")
     args = parser.parse_args()
     if not 1 <= args.n_tapes <= 256:
@@ -42,7 +47,7 @@ def main() -> int:
     configs = [c for c in t0_grid(particles=args.particles) if c.horizon in wanted_h and c.mode in wanted_m]
     q = json.loads(Q_RESULT.read_text())
     sched = scheduler()
-    output = {"schema_version": "program_t_t0_full_des_matrix_v1", "created_at": datetime.now(timezone.utc).isoformat(), "claim_status": "BURNED_T0_ROUTING_EVIDENCE", "seed_range": [7490001, 7490256], "n_tapes": args.n_tapes, "cells": {}}
+    output = {"schema_version": "program_t_t0_full_des_matrix_v1", "created_at": datetime.now(timezone.utc).isoformat(), "claim_status": "BURNED_T0_ROUTING_EVIDENCE", "planning_provider": args.provider, "seed_range": [7490001, 7490256], "n_tapes": args.n_tapes, "cells": {}}
     for cell_index, cell in enumerate(CONFIRMED_RET_CELLS):
         if cell.cell_id not in wanted_c:
             continue
@@ -58,7 +63,10 @@ def main() -> int:
             for key in learner:
                 learner[key].append(float(np.mean(q_metrics[key])))
             for config in configs:
-                calendar, diagnostics = t0_calendar(skeleton=skeleton.as_dict(), scheduler=sched, config=config)
+                if args.provider == "ret_transducer":
+                    calendar, diagnostics = ret_transducer_t0_calendar(skeleton=skeleton, scheduler=sched, config=config)
+                else:
+                    calendar, diagnostics = t0_calendar(skeleton=skeleton.as_dict(), scheduler=sched, config=config)
                 metrics = simulate_full_des_frontier(skeleton=skeleton, scheduler=sched, calendars=np.asarray([calendar], dtype=np.uint8))
                 target = rows[config.config_id]
                 target["calendar"].append(list(calendar)); target["online_ms"].append(float(diagnostics["online_ms"]))
