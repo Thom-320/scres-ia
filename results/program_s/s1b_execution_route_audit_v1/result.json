@@ -1,0 +1,25 @@
+{
+  "routes": [
+    {
+      "engine": "direct_simpy",
+      "mask": "PRODUCTION_QUALITY_SURGE",
+      "reason": "R14 action-dependent production/quality timing lacks an independent extreme-calendar certificate",
+      "transducer_certificate_required": true
+    },
+    {
+      "engine": "certified_transducer",
+      "mask": "LOC_SURGE",
+      "reason": "current mask certificate passes and no uncertified action-dependent R14 modification is active",
+      "transducer_certificate_required": false
+    },
+    {
+      "engine": "certified_transducer",
+      "mask": "CROSS_ECHELON_SURGE",
+      "reason": "current mask certificate passes and no uncertified action-dependent R14 modification is active",
+      "transducer_certificate_required": false
+    }
+  ],
+  "schema_version": "program_s_s1b_execution_routes_v1",
+  "scientific_seeds_opened": [],
+  "status": "ROUTES_FROZEN_NO_SCIENTIFIC_SEEDS_AUTHORIZED"
+}
