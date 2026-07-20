@@ -1,0 +1,56 @@
+{
+  "schema_version": "program_s_s1b_cascade_screen_draft_v0",
+  "status": "DRAFT_NOT_FROZEN",
+  "authority": "PI analysis 2026-07-20 (docs/PI_ANALYSIS_RL_LADDER_AND_RISK_HEADROOM_2026-07-20.md); input to the auditor's freeze process. Opens NO seeds.",
+  "supersedes_instrument_of": "program_s_product_mix_risk_interaction_gsa_v1 (S1 instrument invalidated 2026-07-18: transducer skeleton not action-independent under PRODUCTION_QUALITY_SURGE, replay error 1.3558e-05 vs frozen 1e-10; STOP_MASK_BEFORE_INEXACT_SCREEN)",
+  "scientific_question_unchanged": "Does any researcher-defined, mechanism-relevant risk envelope create clairvoyant product-mix headroom (H_PI_safe) that the risk-free Program O environment lacks?",
+  "seed_policy": {
+    "burned_751x_block": "PERMANENTLY EXCLUDED (7510001-7510012 opened by the failed S1 run; no selective reuse, no mask exclusion on those tapes)",
+    "fresh_screen_block": "TBD_BY_AUDITOR",
+    "confirmation_block": "TBD_BY_AUDITOR, opens only on screen promotion + independent authorization"
+  },
+  "cascade": {
+    "g0_adversarial_exactness_first": {
+      "when": "BEFORE any matrix generation",
+      "coverage": "every mask x {all-C, all-H, static, oracle, modal} calendars x all 12 dev tapes x extreme Morris points",
+      "gate": "transducer vs direct SimPy, ret tolerance 1e-10, fail-closed per mask",
+      "purpose": "catches action-dependent skeletons (e.g. R14 defect/rework) on day zero"
+    },
+    "per_mask_instrument_routing": {
+      "action_independent_masks": "transducer (speed path), G0-certified",
+      "action_dependent_masks": "direct SimPy, or a corrected transducer admitting action-dependent skeletons only after its own parity re-certification",
+      "early_exit_rule": "a mask failing G0 stops THAT mask only; LOC/CROSS masks proceed; rule is prospective in this contract, not retrofitted"
+    },
+    "incremental_screen": {
+      "stage_a": "1 tape per Morris point",
+      "stage_b": "remaining 11 tapes only for points that are exact AND show preliminary oracle headroom",
+      "preliminary_headroom_bar": "TBD_BY_AUDITOR (suggest H_PI_safe_1tape > 0)"
+    },
+    "worker_efficiency": {
+      "batching": "persistent worker processes, many points per worker, no per-shard interpreter launch",
+      "caching": "risk tapes, demand streams, and common episode prefixes cached across points"
+    },
+    "pruning": "where SimPy-direct is required, certified bounds/B&B or cheap surrogate to LOCATE candidate regions; exact values only where needed",
+    "search_vs_confirmation": {
+      "screen_output": "nominate <= 6-12 (mask, phi, cell) cells",
+      "confirmation_only": "full 65,536-calendar enumeration + all Class-B guardrails run only in promoted cells on fresh sealed seeds"
+    }
+  },
+  "risk_envelope_design": {
+    "base": "Garrido Table 6.12 two-level (-/+) coding per risk; our levels may differ and are disclosed as a researcher-defined stress envelope",
+    "relevance_mapping_frozen": "R11/R14 -> Op5-7, R21/R22 -> LOCs, R24 -> demand; R12/R13/R23 excluded with recorded reasons; R3 frozen (per program_o_relevant_risk_sensitivity_v1)",
+    "nonstationary_axis": {
+      "allowed": "regime-switching risk intensity as an envelope axis (thesis §8.5.1 stationarity limitation is the license)",
+      "control": "matched stationary envelope delivering the same total risk mass; estimand is the DIFFERENCE in adaptive headroom"
+    },
+    "selection_asymmetry": "envelopes with oracle H<=0 die a fortiori; H>0 promotes a hypothesis only; conversion tested on fresh seeds under the confirmation phase"
+  },
+  "guardrails_unchanged": "Class A/B gates of the S1 contract carry over verbatim at freeze time (resources, placebos, anti-shed incl. worst-product fill, demand ledger, custody)",
+  "freeze_checklist_for_auditor": [
+    "assign fresh seed blocks",
+    "fix preliminary headroom bar and promotion count",
+    "port Class A/B gate text verbatim from program_s_product_mix_risk_interaction_gsa_v1",
+    "G0 script + tests (including an R14-class action-dependence regression test)",
+    "hash this contract and the design doc into the launch manifest"
+  ]
+}
