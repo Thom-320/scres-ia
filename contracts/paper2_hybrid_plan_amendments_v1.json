@@ -1,0 +1,79 @@
+{
+  "schema_version": "paper2_hybrid_plan_amendments_v1",
+  "status": "BINDING_PROSPECTIVE",
+  "created_at": "2026-07-20",
+  "adopted_by": "PI (user) — 'Me encantan las enmiendas. ejecutalas y guardalas.'",
+  "scope": {
+    "applies_to": [
+      "program_u_rl_policy_discovery_event_driven_v1 and successors",
+      "U1/S1b risk-envelope screen contract (not yet frozen)",
+      "U2 endogenous-timing oracle contract (not yet frozen)",
+      "U3/U4 hybrid training contracts (not yet frozen)",
+      "U5 virgin confirmation contract (not yet frozen)"
+    ],
+    "prospective_only": true,
+    "modifies_no_terminal_verdict": true,
+    "terminal_verdicts_untouched": {
+      "program_o": "STOP_PROGRAM_O_AFTER_CORRECTIVE_VALIDATION",
+      "program_o_r": "STOP_CALIBRATION_NOT_ELIGIBLE",
+      "program_q": "STOP_Q_NO_REPLICATED_LEARNED_ADAPTATION",
+      "program_s_s1": "STOP_MASK_BEFORE_INEXACT_SCREEN (instrument invalidated)",
+      "program_t_t0": "STOP_T0_NO_SAFE_RESIDUAL_HEADROOM (burned routing evidence, 2026-07-20)"
+    }
+  },
+  "amendment_1_graded_u5_outcome": {
+    "problem": "U5 primary gates are superiority-only (LCB95[V(Hybrid)-V(BestClassical)] >= 0.01). The historically most probable good outcome — hybrid TOST-equivalent to best classical in ReT WITH worst-product-fill safety restored (exactly what Program Q's pure learner failed) — would map to STOP and burn the campaign. This reconstructs the compound-gate failure mode the paper itself documents twice as a paid-for lesson.",
+    "rule": "U5 MUST adjudicate to one of a graded outcome set that includes, in addition to the superiority PASS, the following second positive terminal:",
+    "new_terminal_outcome": {
+      "label": "PASS_HYBRID_SAFE_EQUIVALENT",
+      "gates_all_required": {
+        "equivalence_vs_best_classical": "simultaneous CI95[V(Hybrid)-V(BestClassical)] wholly inside [-0.01, +0.01] in every promoted cell (TOST; two one-sided bounds, never inferred from non-significance)",
+        "worst_product_fill_recovered": "simultaneous LCB95[worst_product_fill(Hybrid) - worst_product_fill(BestClassical)] >= -0.02 in every promoted cell (the exact guardrail Program Q failed)",
+        "not_worse_than_pure_rl": "simultaneous LCB95[V(Hybrid)-V(PureRL)] >= 0",
+        "class_b_integrity": "all Class-B gates unchanged from the plan: exact resources, review-rights equality, lost-demand non-increase, feedback/replacement placebos, direct-DES replay audit"
+      },
+      "claim_licensed": "The hybrid recovers deployable worst-product safety at classical-equivalent canonical resilience and amortized online cost — 'recovering what Q lost' — publishable as a primary result.",
+      "claim_forbidden": "Any superiority claim over the best classical controller under this outcome."
+    },
+    "outcome_set_u5": [
+      "PASS_HYBRID_SUPERIOR",
+      "PASS_HYBRID_SAFE_EQUIVALENT",
+      "BOUND_HYBRID_ADAPTATION_ONLY",
+      "STOP_HYBRID_NO_VALUE"
+    ],
+    "freeze_requirement": "This outcome set must be in the U5 contract BEFORE any U5 seed is opened; adding it after seeing U5 data is prohibited."
+  },
+  "amendment_2_compute_preflight_and_tripwire": {
+    "problem": "T0->U1->U2 has unbounded-duration risk (S1 died at 48% after 3 days; war-stress atlas died STOP_COMPUTE_INFEASIBLE at 86.5M episodes). A fallback that exists but never fires is the most expensive way to lose a finished asset (the executed Program Q manuscript).",
+    "compute_preflight_gate": {
+      "binding": "REQUIRED before freezing EVERY upcoming contract (U1/S1b, U2, U3/U4, U5).",
+      "required_fields": [
+        "measured_seconds_per_episode on the actual target hardware (measured, not estimated)",
+        "total_episode_count implied by the frozen design (worst case, no early-exit credit)",
+        "projected_wall_clock and projected_peak_memory",
+        "hardware_capacity_cap (VPS ovh-agent-lab / Kaggle / local M1) and margin"
+      ],
+      "pass_rule": "projected_wall_clock <= 0.5 * time_to_tripwire AND projected_peak_memory within capacity. FAIL -> redesign before freeze; a contract frozen without a passing preflight artifact is invalid.",
+      "artifact": "compute_preflight.json committed next to the contract, hash-referenced by it."
+    },
+    "tripwire": {
+      "date": "2026-08-03",
+      "condition": "U2 endogenous-timing oracle has no PASS (LCB95(H_timing) >= 0.015) by this date",
+      "action": [
+        "The executed Program Q manuscript (branch paper2-program-q-integration) is submitted as Paper 2 with its truthful claim (learned adaptation replicated over the complete open-loop frontier; TOST equivalence to belief-MPC; no neural premium; worst-product safety not certified).",
+        "The hybrid campaign continues uninterrupted as the NEXT paper; nothing is cancelled, only the publication routing changes."
+      ],
+      "adjustment_rule": "Date adjustable by the PI in writing BEFORE the U1 freeze; absent written adjustment it is binding. Set as ~2x the historical program cadence (days-scale runs) with margin."
+    }
+  },
+  "amendment_3_garrido_source_attribution": {
+    "problem": "The plan cites 'Garrido' for three distinct sources; conflating them is the kind of imprecision a reviewer who knows the author detects immediately — and Garrido may be a reviewer.",
+    "rule": "The manuscript's Garrido-alignment matrix MUST attribute every inherited element to exactly one of:",
+    "sources": {
+      "garrido_rios_2017_thesis": "Physics and fidelity base: Op1-Op13, risk taxonomy R11-R24/R3, cap-60 backorder list, warm-up semantics, Annex B request-snapshot support, Table 6.12, the 0/47,546 formula-cell verification against the original workbooks.",
+      "garrido_et_al_2024": "Closed-loop motivation (turning open-loop DES output into updated decisions) and the Cobb-Douglas index ReT_garrido2024 — which under this plan is a SECONDARY outcome bar only, never a training reward.",
+      "garrido_proposal_draft": "What the v0 manuscript promised and this plan replaces (Deep Learning Algorithms framing, predictive-accuracy claim, Track-A action contract, DKA/KAN material). Cited only as superseded scope, never as delivered results."
+    },
+    "manuscript_rule": "Every claim of continuity with 'Garrido' in the paper must name the specific source; the alignment matrix is a required supplement artifact."
+  }
+}
