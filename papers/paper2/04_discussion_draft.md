@@ -10,7 +10,11 @@ premium over the structured controller. Each level is falsifiable separately, an
 the levels disagree in exactly the way that compound success criteria hide: Level 3 is a clear
 positive while Level 4 is a clear null. A single PASS/STOP boolean over their conjunction would
 have reported — and briefly did report — "failure" for a system that had just produced the
-program's first genuine learned adaptation.
+program's first genuine learned adaptation. The prospective replication repeated the pattern a
+second time: both scientific endpoints replicated cleanly, yet the contract's compound verdict
+is STOP because a single distributional guardrail (worst-product fill versus the classical
+controller) crossed its frozen margin. Component-wise reporting is what makes both compound
+verdicts interpretable rather than misleading.
 
 ## 4.2 Why "no neural premium" is the informative outcome
 
@@ -65,8 +69,12 @@ three-cell demand family, so out-of-distribution robustness (including the thesi
 operational risks, which were disabled throughout Program O) remains a preregistered but
 unexecuted extension. Joint tail safety was not established and is not claimed. The event-tie
 semantics of the source metric awaits domain confirmation; our dual-semantics sensitivity bounds
-the exposure. Learned-adaptation results are calibration evidence until the frozen-policy
-replication completes, and external validity claims await the source author's answers.
+the exposure. The learned-adaptation and equivalence findings are replication-grade (frozen
+policies, fresh sealed tapes, N=256 per cell), but the replication's compound verdict is a
+guardrail STOP: worst-product fill against the classical controller could not be certified
+non-inferior at the frozen −0.02 margin in any cell, so the learned policies are equivalent in
+ReT while conceding a small, not-provably-bounded amount of worst-product balance. No compound
+deployment claim is made, and external validity claims await the source author's answers.
 
 ## 4.6 Implications and next questions
 

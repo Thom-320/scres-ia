@@ -2,8 +2,10 @@
 
 **Working title:** Learning Adaptive Control Without a Neural Premium: Exhaustive Open-Loop,
 Belief-MPC, and Recurrent-RL Comparisons in a Full-DES Military Supply Chain
-**Status:** calibration-evidence framing (Program Q replication pending). Every number below
-traces to a custodied artifact; the claim ladder is frozen in `docs/PAPER2_CLAIM_LADDER_2026-07-18.md`.
+**Status:** replication-grade — Program Q executed 2026-07-18 (N=256/cell; E1 replicated, E2
+TOST-equivalent, compound verdict STOP on the worst-product-fill guardrail; see §3.5). Every
+number below traces to a custodied artifact; the claim ladder is frozen in
+`docs/PAPER2_CLAIM_LADDER_2026-07-18.md`.
 
 ---
 
@@ -61,5 +63,6 @@ open-loop plus TOST equivalence to belief-MPC); and (iv) a computational-amortiz
 where the learned policy matches MPC at a fraction of the per-decision cost, its value is
 operational, not architectural.
 
-*(Methods, results and replication sections follow the frozen contracts; Program Q outcome slots
-into §Results as PASS_PREMIUM / PASS_EQUIVALENT / BOUND / STOP without changing this framing.)*
+*(Methods, results and replication sections follow the frozen contracts; the executed Program Q
+outcome — endpoints replicated, compound guardrail STOP — is reported component-wise in §3.5
+and does not change this framing.)*
