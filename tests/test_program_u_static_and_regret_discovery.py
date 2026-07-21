@@ -8,6 +8,8 @@ from scripts.run_program_u_static_discovery_benchmark import (
     diagonal_es_search,
     random_search,
 )
+from scripts.run_program_q2_static_ppo_tuning import sobol_configurations
+from scripts.run_program_q2_recurrent_tuning import configurations as recurrent_configurations
 
 
 class QuadraticOracle:
@@ -39,3 +41,24 @@ def test_history_vector_right_aligns_and_zero_pads() -> None:
     np.testing.assert_array_equal(result[:-2], 0.0)
     np.testing.assert_array_equal(result[-2], first)
     np.testing.assert_array_equal(result[-1], second)
+
+
+def test_static_ppo_sobol_panel_has_sixteen_unique_frozen_configs() -> None:
+    configurations = sobol_configurations()
+    assert len(configurations) == 16
+    assert len({row["config_id"] for row in configurations}) == 16
+    assert all(row["gamma"] == 1.0 for row in configurations)
+
+
+def test_recurrent_panel_is_minimal_and_balances_three_reward_contracts() -> None:
+    configurations = recurrent_configurations()
+    assert len(configurations) == 12
+    assert {row["reward_mode"] for row in configurations} == {
+        "raw_terminal",
+        "standardized_terminal",
+        "pbrs_terminal",
+    }
+    assert all(
+        sum(row["reward_mode"] == reward for row in configurations) == 4
+        for reward in {row["reward_mode"] for row in configurations}
+    )

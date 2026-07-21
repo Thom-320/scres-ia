@@ -50,6 +50,8 @@ class SearchResult:
     trace: list[float]
     proposed: int
     elapsed_seconds: float = 0.0
+    frozen_calendar: tuple[int, ...] | None = None
+    frozen_mean_entropy: float | None = None
 
 
 class CalendarOracle:
@@ -178,7 +180,19 @@ def rf_ucb_search(oracle: CalendarOracle, *, budget: int, seed: int) -> SearchRe
     return SearchResult("rf_ucb", seed, budget, best, best_score, trace, budget)
 
 
-def ppo_search(oracle: CalendarOracle, *, budget: int, seed: int) -> SearchResult:
+def ppo_search(
+    oracle: CalendarOracle,
+    *,
+    budget: int,
+    seed: int,
+    learning_rate: float = 1e-3,
+    n_steps: int | None = None,
+    n_epochs: int = 10,
+    clip_range: float = 0.2,
+    ent_coef: float = 0.0,
+    gae_lambda: float = 1.0,
+    net_arch: tuple[int, ...] = (64, 64),
+) -> SearchResult:
     # One terminal episode proposes one calendar and therefore consumes one
     # candidate budget. The tape id is deliberately a dummy and absent from obs.
     trace: list[float] = []; best = None; best_score = -np.inf
@@ -188,20 +202,61 @@ def ppo_search(oracle: CalendarOracle, *, budget: int, seed: int) -> SearchResul
         best, best_score = _update(best, best_score, trace, calendar, score)
         return {"ret_visible": score}
     env = StaticCalendarDiscoveryEnv(evaluator=evaluator, tape_ids=(0,), horizon=HORIZON, action_count=ACTIONS)
-    rollout = min(256, max(32, budget * HORIZON))
-    model = PPO("MlpPolicy", env, seed=seed, learning_rate=1e-3, n_steps=rollout,
-                batch_size=min(64, rollout), gamma=1.0, gae_lambda=1.0,
-                ent_coef=0.0, verbose=0, device="cpu")
+    rollout = int(n_steps or min(256, max(32, budget * HORIZON)))
+    rollout = min(rollout, budget * HORIZON)
+    batch_size = min(64, rollout)
+    while rollout % batch_size != 0 and batch_size > 1:
+        batch_size -= 1
+    model = PPO("MlpPolicy", env, seed=seed, learning_rate=learning_rate, n_steps=rollout,
+                batch_size=batch_size, gamma=1.0, gae_lambda=gae_lambda,
+                n_epochs=n_epochs, clip_range=clip_range, ent_coef=ent_coef,
+                policy_kwargs={"net_arch": list(net_arch)}, verbose=0, device="cpu")
     model.learn(total_timesteps=budget * HORIZON, progress_bar=False)
     # SB3 rounds to complete rollouts. Truncate for equal-budget reporting.
     trace = trace[:budget]
     if not trace:
         raise AssertionError("PPO proposed no calendars")
-    # Reconstruct the best among the budgeted proposals by keeping it online.
-    # `best` can include rounded surplus proposals, so obtain a deterministic
-    # candidate and compare it only if budget was not exceeded.
     assert best is not None
-    return SearchResult("ppo_autoregressive", seed, budget, best, float(max(trace)), trace, len(trace))
+
+    # Freeze what the trained deterministic policy actually emits.  Do not
+    # evaluate its terminal step here: the exact score matrix remains
+    # inaccessible until every optimizer has frozen its candidate.
+    def forbidden_evaluator(_calendar: tuple[int, ...], _tape_id: int):
+        raise AssertionError("frozen-policy extraction must not query the answer key")
+
+    freeze_env = StaticCalendarDiscoveryEnv(
+        evaluator=forbidden_evaluator,
+        tape_ids=(0,),
+        horizon=HORIZON,
+        action_count=ACTIONS,
+    )
+    obs, _ = freeze_env.reset()
+    frozen: list[int] = []
+    entropies: list[float] = []
+    for period in range(HORIZON):
+        obs_tensor, _ = model.policy.obs_to_tensor(obs)
+        distribution = model.policy.get_distribution(obs_tensor)
+        entropy = distribution.entropy()
+        entropies.append(float(entropy.detach().cpu().numpy().reshape(-1)[0]))
+        action, _ = model.predict(obs, deterministic=True)
+        value = int(np.asarray(action).reshape(-1)[0])
+        frozen.append(value)
+        if period < HORIZON - 1:
+            obs, _, terminated, truncated, _ = freeze_env.step(value)
+            if terminated or truncated:
+                raise AssertionError("freeze environment terminated before the calendar was complete")
+
+    return SearchResult(
+        "ppo_autoregressive",
+        seed,
+        budget,
+        best,
+        float(max(trace)),
+        trace,
+        len(trace),
+        frozen_calendar=tuple(frozen),
+        frozen_mean_entropy=float(np.mean(entropies)),
+    )
 
 
 SEARCHERS = {
@@ -246,17 +301,38 @@ def main() -> int:
     mean_scores = score_matrix.mean(axis=1); optimum_index = int(np.argmax(mean_scores)); optimum = float(mean_scores[optimum_index])
     rows = []
     for result in frozen:
-        rank = int(1 + np.sum(mean_scores > result.score + 1e-15))
-        regret = float(optimum - result.score)
+        best_seen_index = int(sum(action * (ACTIONS ** (HORIZON - 1 - period)) for period, action in enumerate(result.calendar)))
+        best_seen_score = float(mean_scores[best_seen_index])
+        rank = int(1 + np.sum(mean_scores > best_seen_score + 1e-15))
+        regret = float(optimum - best_seen_score)
+        frozen_calendar = result.frozen_calendar or result.calendar
+        frozen_index = int(sum(action * (ACTIONS ** (HORIZON - 1 - period)) for period, action in enumerate(frozen_calendar)))
+        frozen_score = float(mean_scores[frozen_index])
+        frozen_rank = int(1 + np.sum(mean_scores > frozen_score + 1e-15))
+        frozen_regret = float(optimum - frozen_score)
         rows.append({
             "algorithm": result.algorithm, "optimizer_seed": result.seed, "candidate_budget": result.budget,
-            "calendar": list(result.calendar), "mean_ret": result.score, "exact_rank": rank,
+            # Legacy aliases retain compatibility with the first exploratory
+            # result while the explicit fields prevent best-seen/final-policy
+            # conflation.
+            "calendar": list(result.calendar), "mean_ret": best_seen_score, "exact_rank": rank,
             "simple_regret": regret, "exact_optimum_recovered": rank == 1,
+            "best_seen_calendar": list(result.calendar),
+            "best_seen_mean_ret": best_seen_score,
+            "best_seen_exact_rank": rank,
+            "best_seen_simple_regret": regret,
+            "best_seen_optimum_recovered": rank == 1,
+            "frozen_policy_calendar": list(frozen_calendar),
+            "frozen_policy_mean_ret": frozen_score,
+            "frozen_policy_exact_rank": frozen_rank,
+            "frozen_policy_simple_regret": frozen_regret,
+            "frozen_policy_optimum_recovered": frozen_rank == 1,
+            "frozen_policy_mean_entropy": result.frozen_mean_entropy,
             "best_so_far_auc": float(np.mean(result.trace)), "proposals": result.proposed,
             "elapsed_seconds": result.elapsed_seconds,
         })
     payload = {
-        "schema_version": "program_u_static_discovery_benchmark_v1",
+        "schema_version": "program_u_static_discovery_benchmark_v1_1",
         "created_at": datetime.now(timezone.utc).isoformat(), "claim_status": "BURNED_DEVELOPMENT_NO_CLAIM",
         "tapes": list(TAPES), "answer_key_read_during_search": False,
         "search_space_size": int(len(calendars)), "optimal_calendar": list(map(int, calendars[optimum_index])),
