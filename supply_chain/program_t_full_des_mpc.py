@@ -26,6 +26,7 @@ from supply_chain.program_o_state_rich import (
     StateRichObservation,
     state_rich_calendar,
 )
+from supply_chain.program_t_joint_belief import ExactJointBelief, weekly_product_counts
 
 
 @dataclass(frozen=True)
@@ -267,6 +268,59 @@ def _synthetic_skeletons(
     return tuple(out)
 
 
+def _joint_belief_skeletons(
+    base: FullDESSkeleton,
+    observation: StateRichObservation,
+    config: FullDEST0Config,
+    belief: ExactJointBelief,
+) -> tuple[FullDESSkeleton, ...]:
+    """Generate deployable scenarios from the complete theta/regime mixture."""
+    seed = int.from_bytes(
+        hashlib.sha256((observation.observation_sha256 + "::T0_JOINT_BELIEF_V1").encode()).digest()[:8],
+        "big",
+    )
+    count = 1 if config.mode == "nominal" else config.particles
+    sampled = belief.sample_states(count=count, seed=seed)
+    past = [i for i, t in enumerate(base.order_times) if t < observation.decision_time - 1e-12]
+    future_weeks = range(observation.week, base.decision_weeks)
+    out = []
+    for scenario_index, (rho, share, initial_regime_c) in enumerate(sampled):
+        scenario_seed = seed ^ ((scenario_index + 1) * 0x9E3779B97F4A7C15)
+        rng = np.random.default_rng(scenario_seed & ((1 << 64) - 1))
+        times = [base.order_times[i] for i in past]
+        quantities = [base.order_quantities[i] for i in past]
+        products = [base.order_products[i] for i in past]
+        contingent = [False for _ in past]
+        regime_c = bool(initial_regime_c)
+        for week in future_weeks:
+            probability_c = share if regime_c else 1.0 - share
+            labels = ["P_C" if rng.random() < probability_c else "P_H" for _ in range(6)]
+            quantities_week = list(map(float, rng.integers(2400, 2601, size=6)))
+            for offset, product_id, quantity in zip((30, 54, 78, 102, 126, 150), labels, quantities_week):
+                times.append(base.decision_start + 168.0 * week + float(offset))
+                quantities.append(quantity)
+                products.append(product_id)
+                contingent.append(False)
+            if rng.random() > rho:
+                regime_c = not regime_c
+        order = np.argsort(np.asarray(times), kind="stable")
+        out.append(
+            replace(
+                base,
+                seed=-(scenario_index + 1),
+                order_times=tuple(float(times[i]) for i in order),
+                order_quantities=tuple(float(quantities[i]) for i in order),
+                order_products=tuple(str(products[i]) for i in order),
+                order_contingent=tuple(bool(contingent[i]) for i in order),
+                tape_sha256="joint_belief_generated_no_realized_future",
+                skeleton_sha256=hashlib.sha256(
+                    f"{observation.observation_sha256}:joint:{scenario_index}".encode()
+                ).hexdigest(),
+            )
+        )
+    return tuple(out)
+
+
 def choose_ret_transducer_action(
     observation: StateRichObservation,
     *,
@@ -274,6 +328,7 @@ def choose_ret_transducer_action(
     prefix: Sequence[int],
     scheduler: Mapping[str, Sequence[str]],
     config: FullDEST0Config,
+    joint_belief: ExactJointBelief | None = None,
 ) -> tuple[int, dict[str, float]]:
     """Score candidate action sequences with canonical ReT transducer rollouts."""
     horizon = min(config.horizon, observation.remaining_decisions)
@@ -285,7 +340,11 @@ def choose_ret_transducer_action(
     calendars[:, len(prefix) : len(prefix) + horizon] = sequences
     if tail:
         calendars[:, len(prefix) + horizon :] = sequences[:, -1, None]
-    scenarios = _synthetic_skeletons(base_skeleton, observation, config)
+    scenarios = (
+        _synthetic_skeletons(base_skeleton, observation, config)
+        if joint_belief is None
+        else _joint_belief_skeletons(base_skeleton, observation, config, joint_belief)
+    )
     ret = np.empty((len(sequences), len(scenarios)), dtype=float)
     worst = np.empty_like(ret)
     lost = np.empty_like(ret)
@@ -355,6 +414,71 @@ def ret_transducer_t0_calendar(
         decisions.append({"week": week, "action": action, **diagnostics})
     return tuple(prefix), {
         "config_id": "ret_transducer_" + config.config_id,
+        "online_ms": (time.perf_counter() - started) * 1000.0,
+        "decisions": decisions,
+    }
+
+
+def joint_belief_ret_transducer_calendar(
+    *,
+    skeleton: FullDESSkeleton,
+    scheduler: Mapping[str, Sequence[str]],
+    config: FullDEST0Config,
+    belief: ExactJointBelief,
+    history_transform: str = "real",
+) -> tuple[tuple[int, ...], dict[str, object]]:
+    """Plan with a causal joint posterior; no true current regime is consumed."""
+    if history_transform not in {"real", "wrong_product", "shuffled"}:
+        raise ValueError("unknown history transform")
+    counts = list(
+        weekly_product_counts(
+            order_times=skeleton.order_times,
+            order_products=skeleton.order_products,
+            decision_start=skeleton.decision_start,
+            weeks=skeleton.decision_weeks,
+        )
+    )
+    if history_transform == "wrong_product":
+        counts = [6 - count for count in counts]
+    elif history_transform == "shuffled":
+        counts = list(reversed(counts))
+    posterior = belief.copy()
+    prefix: list[int] = []
+    decisions = []
+    started = time.perf_counter()
+    for week in range(skeleton.decision_weeks):
+        if week:
+            posterior.observe_previous_week(counts[week - 1])
+        probe = tuple(prefix + [0] * (skeleton.decision_weeks - len(prefix)))
+        _calendar, rows = state_rich_calendar(
+            skeleton=skeleton.as_dict(),
+            scheduler=scheduler,
+            config=StateRichConfiguration("belief_mpc", 1),
+            regime_persistence=config.regime_persistence,
+            dominant_share=config.dominant_share,
+            action_overrides=probe,
+        )
+        observation = rows[week].observation
+        action, diagnostics = choose_ret_transducer_action(
+            observation,
+            base_skeleton=skeleton,
+            prefix=prefix,
+            scheduler=scheduler,
+            config=config,
+            joint_belief=posterior,
+        )
+        prefix.append(action)
+        decisions.append(
+            {
+                "week": week,
+                "action": action,
+                "posterior": posterior.as_dict(),
+                **diagnostics,
+            }
+        )
+    return tuple(prefix), {
+        "config_id": "ret_transducer_joint_" + config.config_id,
+        "history_transform": history_transform,
         "online_ms": (time.perf_counter() - started) * 1000.0,
         "decisions": decisions,
     }

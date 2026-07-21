@@ -47,7 +47,7 @@ class ScenarioMPCConfig:
     horizon: int
     mode: Mode
     scenario_limit: int = 64
-    worst_product_floor: float = 0.0
+    worst_product_floor: float = 0.70
     lost_demand_ceiling: float = 0.0
     cvar_alpha: float = 0.10
 
@@ -65,9 +65,16 @@ class ReTAlignedScenarioMPC:
     sees a true regime, tape id, future realized event, or answer matrix.
     """
 
-    def __init__(self, *, rollout_model: ScenarioRolloutModel, config: ScenarioMPCConfig):
+    def __init__(
+        self,
+        *,
+        rollout_model: ScenarioRolloutModel,
+        config: ScenarioMPCConfig,
+        fallback_planner: Any | None = None,
+    ):
         self.rollout_model = rollout_model
         self.config = config
+        self.fallback_planner = fallback_planner
         self.controller_id = f"ret_mpc_{config.mode}_h{config.horizon}"
         self._history: list[tuple[float, ...]] = []
 
@@ -110,7 +117,6 @@ class ReTAlignedScenarioMPC:
         review_rights_remaining: int,
         online_budget_ms: float,
     ) -> ControllerDecision:
-        del review_rights_remaining
         start = time.perf_counter()
         scenarios = tuple(
             self.rollout_model.scenarios(
@@ -133,13 +139,25 @@ class ReTAlignedScenarioMPC:
             )
             rows.append((self._objective(outcomes), tuple(actions)))
             if (time.perf_counter() - start) * 1000.0 > online_budget_ms:
+                if self.fallback_planner is None:
+                    raise TimeoutError(
+                        "online budget exceeded without a verified feasible fallback"
+                    )
+                fallback = self.fallback_planner.select_action(
+                    observable_state=observable_state,
+                    review_rights_remaining=review_rights_remaining,
+                    online_budget_ms=max(0.0, online_budget_ms - (time.perf_counter() - start) * 1000.0),
+                )
+                if not fallback.feasible:
+                    raise RuntimeError("fallback planner returned an infeasible action")
                 return ControllerDecision(
-                    action=ControllerAction(0, 1),
+                    action=fallback.action,
                     controller_id=self.controller_id,
                     mode="fallback",
-                    online_ms=(time.perf_counter() - start) * 1000.0,
-                    feasible=False,
+                    online_ms=(time.perf_counter() - start) * 1000.0 + fallback.online_ms,
+                    feasible=True,
                     fallback_reason="online_budget_exceeded",
+                    diagnostics={"fallback_controller_id": fallback.controller_id},
                 )
         objective, actions = max(rows, key=lambda row: (row[0], tuple(-x for x in row[1])))
         return ControllerDecision(
@@ -158,4 +176,3 @@ def t0_comparator_grid() -> tuple[ScenarioMPCConfig, ...]:
         for horizon in (1, 3, 4, 6, 8)
         for mode in ("nominal", "scenario", "robust", "constraint_aware")
     )
-

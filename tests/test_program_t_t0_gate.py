@@ -6,6 +6,7 @@ from supply_chain.program_t_scenario_mpc import (
     ScenarioMPCConfig,
     t0_comparator_grid,
 )
+from supply_chain.paper2_controller import ControllerAction, ControllerDecision
 from supply_chain.program_t_t0_gate import (
     ComparatorPoint,
     adjudicate_t0_residual,
@@ -48,6 +49,49 @@ def test_ret_aligned_mpc_uses_deployable_interface() -> None:
     assert decision.action.mix in (0, 1, 2, 3)
 
 
+class VerifiedFallback:
+    controller_id = "verified_fallback"
+
+    def select_action(self, **kwargs):
+        del kwargs
+        return ControllerDecision(
+            action=ControllerAction(2, 1),
+            controller_id=self.controller_id,
+            mode="robust",
+            online_ms=0.0,
+            feasible=True,
+        )
+
+
+def test_timeout_uses_verified_feasible_fallback() -> None:
+    controller = ReTAlignedScenarioMPC(
+        rollout_model=ToyRollout(),
+        config=ScenarioMPCConfig(horizon=3, mode="scenario"),
+        fallback_planner=VerifiedFallback(),
+    )
+    decision = controller.select_action(
+        observable_state={}, review_rights_remaining=4, online_budget_ms=0.0
+    )
+    assert decision.feasible
+    assert decision.mode == "fallback"
+    assert decision.action.mix == 2
+
+
+def test_timeout_without_verified_fallback_fails_closed() -> None:
+    controller = ReTAlignedScenarioMPC(
+        rollout_model=ToyRollout(),
+        config=ScenarioMPCConfig(horizon=3, mode="scenario"),
+    )
+    try:
+        controller.select_action(
+            observable_state={}, review_rights_remaining=4, online_budget_ms=0.0
+        )
+    except TimeoutError:
+        pass
+    else:
+        raise AssertionError("controller must not fabricate an infeasible action")
+
+
 def test_frontier_removes_dominated_points() -> None:
     points = (
         ComparatorPoint("a", 0.8, 2.0, True),
@@ -67,4 +111,3 @@ def test_t0_gate_passes_only_jointly() -> None:
     )
     assert str(result["status"]).startswith("PASS_T0")
     assert result["hybrid_confirmation_authorized"] is False
-

@@ -1,0 +1,56 @@
+{
+  "schema_version": "program_t_causal_residual_campaign_v1",
+  "claim_status": "EXPLORATORY_NO_CLAIM",
+  "source_commit": "9d0946f92cf69753686f6e2bb48dd3e88d53a1ea",
+  "burned_seed_range": [7490001, 7490256],
+  "new_scientific_seeds_opened": [],
+  "mechanisms": {
+    "belief_parameter_misspecification": {
+      "status": "CRACK_INCONCLUSIVE",
+      "pooled_mean": 0.0062151963053931536,
+      "pooled_lcb95": 0.0027293808557362145,
+      "largest_cell_mean": 0.01427623678282673,
+      "adaptive_mpc_not_run_reason": "pooled oracle crack below 0.01"
+    },
+    "q_mpc_complementarity": {
+      "oracle_ceiling_mean": 0.022256594702943076,
+      "oracle_ceiling_lcb95": 0.018099955743517304,
+      "observable_one_step_mean": 0.0023443405391502504,
+      "observable_one_step_lcb95": 0.0012526912231512386,
+      "status": "STOP_Q_MPC_SELECTOR_NOT_OBSERVABLY_CONVERTIBLE"
+    },
+    "history_predictability": {
+      "best_log_score_increment": 0.12901033194245806,
+      "best_action_change_fraction": 0.046875,
+      "status": "STOP_NO_HISTORY_PREDICTIVE_INCREMENT"
+    },
+    "terminal_continuation": {
+      "perfect_information_upper_bound_mean_9_tapes": 0.06751929085933567,
+      "cross_fitted_mean": 0.00947856707288651,
+      "cross_fitted_lcb95": 0.0052589489464193616,
+      "rho75_share90_lcb95": -0.0009444713782084218,
+      "status": "STOP_TERMINAL_CONTINUATION_NOT_CONVERTIBLE"
+    }
+  },
+  "hybrid_training_authorized": false,
+  "r1_retention_authorized": false,
+  "u1_direct_preflight": {
+    "status": "PASS_U1_DIRECT_PREFLIGHT_READY_FOR_BOUNDED_DISCOVERY",
+    "engine": "direct_simpy_only",
+    "mean_direct_seconds": 0.013721073110355066,
+    "resources_exact": true,
+    "new_scientific_seeds_opened": []
+  },
+  "u1_direct_discovery": {
+    "bounded_candidate_count": 17,
+    "classical_conversion_candidate_count_3_tapes": 1,
+    "connected_region_promoted_point_count_12_tapes": 1,
+    "best_isolated_classical_h_obs_mean": 0.11851288253816857,
+    "best_isolated_classical_h_obs_lcb95": 0.027286041002375087,
+    "status": "STOP_U1_NO_CONNECTED_CLASSICAL_CONVERSION_REGION",
+    "new_scientific_seeds_opened": []
+  },
+  "next_route": "PROGRAM_Q_PUBLICATION_FALLBACK",
+  "program_q_fallback_preserved": true,
+  "interpretation": "Each stop is mechanism-specific. Stationary Q mechanisms did not clear their prospective gates. Direct-SimPy Garrido-native discovery found one strong isolated cell but not the required connected region, so no hybrid training is authorized under this campaign."
+}
