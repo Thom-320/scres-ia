@@ -229,6 +229,16 @@ def _run(payload: tuple[str, int, int, int, tuple[int, ...], Path, int, tuple[in
     return {"arm": arm, "optimizer_seed": optimizer_seed, "training_seed_range": [train_low, train_high], "bc_history": bc_history, "checkpoints": checkpoint_rows}
 
 
+def training_episodes_required(checkpoints: tuple[int, ...], n_steps: int = 512, episode_steps: int = 8) -> int:
+    """Upper-bound environment resets after SB3 rounds every learn() call to a rollout."""
+    rounded_steps = sum(
+        int(np.ceil((current - previous) / n_steps)) * n_steps
+        for previous, current in zip(checkpoints, checkpoints[1:])
+    )
+    # DummyVecEnv resets once before training and immediately after terminal steps.
+    return int(np.ceil(rounded_steps / episode_steps)) + 1
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--calibration", type=Path, default=CALIBRATION)
@@ -246,7 +256,7 @@ def main() -> int:
     checkpoints = tuple(map(int, args.checkpoints.split(",")))
     if not checkpoints or checkpoints[0] != 0 or tuple(sorted(set(checkpoints))) != checkpoints:
         raise ValueError("checkpoints must be sorted, unique, and start at zero")
-    episodes_per_seed = int(np.ceil(max(checkpoints) / 8)) + 100
+    episodes_per_seed = training_episodes_required(checkpoints) + 99
     tasks = []
     for seed_index, optimizer_seed in enumerate(optimizer_seeds):
         low = args.training_seed_base + seed_index * 10_000

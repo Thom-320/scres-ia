@@ -10,6 +10,7 @@ from scripts.run_program_q2_warmstart_probe import (
     _model,
     _teacher_episodes,
     behavior_clone,
+    training_episodes_required,
 )
 from supply_chain.program_o_ret_env import ProgramORetOnlyEnv
 
@@ -30,3 +31,7 @@ def test_recurrent_behavior_clone_improves_teacher_accuracy() -> None:
     history = behavior_clone(model, episode, epochs=2, seed=7)
     assert len(history) == 2
     assert history[-1]["mean_nll"] <= history[0]["mean_nll"]
+
+
+def test_training_namespace_accounts_for_rollout_rounding_at_each_checkpoint() -> None:
+    assert training_episodes_required((0, 10_000, 30_000, 60_000)) == 7_617
