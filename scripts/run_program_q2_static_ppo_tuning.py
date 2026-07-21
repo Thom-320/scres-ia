@@ -8,6 +8,7 @@ has frozen its deterministic policy.  Runs are burned development diagnostics.
 from __future__ import annotations
 
 import argparse
+from concurrent.futures import ProcessPoolExecutor
 from datetime import datetime, timezone
 import json
 from pathlib import Path
@@ -100,11 +101,44 @@ def _rank(rows: list[dict]) -> list[dict]:
     )
 
 
+def _run_single(payload: tuple[dict, dict, int]) -> tuple[dict, object]:
+    """Run one config/seed in an isolated CPU process."""
+    config, stage, seed = payload
+    import torch
+
+    torch.set_num_threads(1)
+    sched = scheduler()
+    skeletons = {
+        tape: extract_full_des_skeleton(
+            seed=tape,
+            scheduler=sched,
+            regime_persistence=0.75,
+            dominant_share=0.90,
+            downstream_freight_physics_mode="fixed_clock_physical_v1",
+        )[0]
+        for tape in TAPES
+    }
+    result = ppo_search(
+        CalendarOracle(skeletons, sched),
+        budget=stage["budget"],
+        seed=seed,
+        learning_rate=config["learning_rate"],
+        n_steps=config["n_steps"],
+        n_epochs=config["n_epochs"],
+        clip_range=config["clip_range"],
+        ent_coef=config["ent_coef"],
+        gae_lambda=config["gae_lambda"],
+        net_arch=tuple(config["net_arch"]),
+    )
+    return config, result
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--stage", type=int, choices=STAGES, required=True)
     parser.add_argument("--previous", type=Path)
     parser.add_argument("--max-configs", type=int)
+    parser.add_argument("--jobs", type=int, default=1)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     stage = STAGES[args.stage]
@@ -132,22 +166,16 @@ def main() -> int:
     }
     frozen = []
     started = time.perf_counter()
-    for config in configs:
-        for seed in stage["seeds"]:
-            oracle = CalendarOracle(skeletons, sched)
-            result = ppo_search(
-                oracle,
-                budget=stage["budget"],
-                seed=seed,
-                learning_rate=config["learning_rate"],
-                n_steps=config["n_steps"],
-                n_epochs=config["n_epochs"],
-                clip_range=config["clip_range"],
-                ent_coef=config["ent_coef"],
-                gae_lambda=config["gae_lambda"],
-                net_arch=tuple(config["net_arch"]),
-            )
-            frozen.append((config, result))
+    if args.jobs <= 0:
+        raise ValueError("jobs must be positive")
+    if args.jobs == 1:
+        for config in configs:
+            for seed in stage["seeds"]:
+                frozen.append(_run_single((config, stage, seed)))
+    else:
+        tasks = [(config, stage, seed) for config in configs for seed in stage["seeds"]]
+        with ProcessPoolExecutor(max_workers=min(args.jobs, len(tasks))) as executor:
+            frozen.extend(executor.map(_run_single, tasks))
 
     # Answer-key access starts here, after all requested policies are frozen.
     calendars = full_action_calendars()
