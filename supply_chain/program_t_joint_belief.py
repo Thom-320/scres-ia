@@ -44,6 +44,32 @@ class ExactJointBelief:
         probability[THETA_GRID.index(theta), :] = 0.5
         return cls(probability)
 
+    @classmethod
+    def from_theta_marginal(
+        cls,
+        marginal: Iterable[float],
+        *,
+        probability_regime_c: float = 0.5,
+    ) -> "ExactJointBelief":
+        """Build a campaign-start belief without leaking the new regime.
+
+        Q-R1 retains only knowledge about the campaign parameter at the first
+        gate.  The physical reset gives the new latent regime its public prior.
+        """
+        theta = np.asarray(tuple(marginal), dtype=float)
+        if theta.shape != (len(THETA_GRID),):
+            raise ValueError("theta marginal must have length three")
+        if np.any(theta < 0.0) or not np.isfinite(theta).all() or theta.sum() <= 0.0:
+            raise ValueError("invalid theta marginal")
+        probability_c = float(probability_regime_c)
+        if not 0.0 <= probability_c <= 1.0:
+            raise ValueError("regime probability must be in [0, 1]")
+        theta /= theta.sum()
+        probability = np.column_stack(
+            (theta * (1.0 - probability_c), theta * probability_c)
+        )
+        return cls(probability)
+
     def __post_init__(self) -> None:
         self.probability = np.asarray(self.probability, dtype=float).copy()
         if self.probability.shape != (len(THETA_GRID), 2):
@@ -77,6 +103,28 @@ class ExactJointBelief:
             current[theta_index, 0] = rho * posterior_previous[theta_index, 0] + (1.0 - rho) * posterior_previous[theta_index, 1]
             current[theta_index, 1] = (1.0 - rho) * posterior_previous[theta_index, 0] + rho * posterior_previous[theta_index, 1]
         self.probability = current / current.sum()
+
+    def observe_campaign(self, counts_c: Iterable[int]) -> None:
+        """Consume every causal weekly count before exporting knowledge."""
+        for count_c in counts_c:
+            self.observe_previous_week(int(count_c))
+
+    def between_campaign_transition(self, persistence: float) -> "ExactJointBelief":
+        """Propagate theta knowledge and reset the new physical regime to 0.5.
+
+        With three theta states, the non-stay mass is distributed uniformly
+        over the other two states.  ``persistence=1/3`` is therefore the iid
+        uniform transition, not 0.5.
+        """
+        kappa = float(persistence)
+        if not 0.0 <= kappa <= 1.0:
+            raise ValueError("persistence must be in [0, 1]")
+        old = np.asarray(self.theta_marginal, dtype=float)
+        count = len(old)
+        if count < 2:
+            raise RuntimeError("theta grid must contain at least two states")
+        new = kappa * old + ((1.0 - kappa) / (count - 1)) * (1.0 - old)
+        return ExactJointBelief.from_theta_marginal(new, probability_regime_c=0.5)
 
     @property
     def probability_regime_c(self) -> float:

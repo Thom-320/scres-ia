@@ -1,0 +1,69 @@
+{
+  "schema_version": "q_r1_retained_learning_discovery_v1",
+  "status": "FROZEN_BURNED_DISCOVERY_NO_LEARNER_AUTHORIZED",
+  "claim_status": "EXPLORATORY_NO_CLAIM",
+  "parent_commit": "946864eafa708b81bd3c94efafd1c547552201de",
+  "historical_boundaries": {
+    "program_o_q_r0_h4_q2_immutable": true,
+    "r0_verdict": "STOP_NO_RETAINED_CONTEXT_HEADROOM",
+    "r0_not_reinterpreted": true
+  },
+  "north_star": "Causally test whether retained decision knowledge improves cold-start canonical ReT after a complete physical reset.",
+  "primary_metric": {
+    "id": "early_ret_2w",
+    "definition": "ret_excel_request_snapshot_v2 on orders originated in the first 336 decision hours, scored through the common campaign cutoff",
+    "treatment_window_decisions": 2,
+    "common_continuation_from_decision": 3
+  },
+  "secondary_metrics": [
+    "ret_visible",
+    "ret_full",
+    "ret_visible_cvar10",
+    "early_service_loss_to_score",
+    "worst_product_fill",
+    "lost_orders",
+    "unresolved_orders"
+  ],
+  "d1_demand": {
+    "history_roots": [7570201, 7570224],
+    "campaigns_per_history": 12,
+    "theta_grid": [[0.75, 0.90], [0.90, 0.75], [0.90, 0.90]],
+    "persistence_modes": ["iid", "persistent_0p75", "persistent_0p90"],
+    "iid_stay_probability": 0.3333333333333333,
+    "arms": [
+      "reset_exact_bayes_mpc",
+      "retained_exact_bayes_mpc",
+      "oracle_parameters_mpc",
+      "shuffled_posterior_mpc",
+      "wrong_posterior_mpc"
+    ],
+    "primary_planner": "ret_proxy_scenario_h3_p4",
+    "oracle_parameters_boundary": "theta-known information arm under the same MPC; never observes Z_t or future demand and is not a full value upper bound",
+    "oracle_headroom_gate": 0.02,
+    "retained_information_gate": 0.01,
+    "action_divergence_gate": 0.10
+  },
+  "d2_risk": {
+    "history_roots": [7570601, 7570624],
+    "engine": "direct_simpy_only",
+    "primary_carrier": "R24 current/increased",
+    "negative_control": "R22 product-blind",
+    "cannot_rescue_d1": true
+  },
+  "guardrails": {
+    "physical_reset_bitwise": true,
+    "same_exogenous_history_across_arms": true,
+    "resource_equality_exact": true,
+    "ledger_complete": true,
+    "lost_orders_ceiling": 0.0,
+    "worst_product_margin_for_safe_label": -0.02,
+    "cvar10_secondary_only": true,
+    "no_future_latent_tape_or_seed": true
+  },
+  "learner_authorization": {
+    "authorized": false,
+    "requires_d1_or_d2_pass": true,
+    "requires_d3_residual_at_least": 0.02
+  },
+  "terminal_scope": "Every STOP closes only its tested carrier or mechanism."
+}

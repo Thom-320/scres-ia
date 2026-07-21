@@ -1,0 +1,37 @@
+{
+  "schema_version": "q_r1_cold_start_replication_v1",
+  "status": "FROZEN_PROSPECTIVE_BEFORE_75708_ROOTS",
+  "claim_status": "BURNED_REPLICATION_NO_CONFIRMATORY_CLAIM",
+  "source_pilot": "results/q_r1/discovery_terminal_summary_v1.json",
+  "history_roots": [7570801, 7570824],
+  "campaigns_per_history": 12,
+  "primary_metric": "early_ret_2w canonical request-snapshot ReT",
+  "rationale": {
+    "old_headroom_0p02": "retired for this replication because it was a heuristic 2x multiplier, not a power-derived scientific threshold",
+    "scientific_sesoi": 0.01,
+    "pilot_cluster_sd": 0.01269854041116846,
+    "approx_n_for_90pct_power_two_sided_at_0p01": 17,
+    "chosen_history_roots": 24
+  },
+  "hierarchical_estimands": [
+    {
+      "id": "retained_binary_context_cold_start",
+      "comparison": "retained posterior minus reset posterior",
+      "primary_population": "persistent_0p90",
+      "pass": "point >= 0.01 and history-clustered LCB95 > 0",
+      "mechanism": "persistent_0p90 >= persistent_0p75 > iid, iid abs <= 0.005, shuffled <= 0.005, wrong <= 0",
+      "guardrails": "resources exact, no lost/unresolved increase, worst-product delta >= -0.02"
+    },
+    {
+      "id": "tested_persistent_residual",
+      "comparison": "privileged selector over frozen candidate calendars minus best retained structured H3 MPC",
+      "primary_population": "persistent_0p75 and persistent_0p90; iid is reported only as null",
+      "pass": "history-clustered LCB95 >= 0.01 and action divergence >= 0.10",
+      "boundary": "a pass authorizes D4 observable conversion only; it never authorizes or proves a learner premium"
+    }
+  ],
+  "favorable_fraction": "reported as heterogeneity; the 70% gate is reserved for final hybrid confirmation, not causal mean accumulated-learning value",
+  "learner_training_authorized": false,
+  "next_if_pass": "D4_OBSERVABLE_CONVERSION_WITH_DELAYED_AND_SHUFFLED_PLACEBOS",
+  "historical_verdicts_reopened": []
+}

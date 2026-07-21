@@ -3,6 +3,7 @@ from __future__ import annotations
 import math
 
 import numpy as np
+import pytest
 
 from supply_chain.program_t_joint_belief import ExactJointBelief, THETA_GRID, weekly_product_counts
 
@@ -48,3 +49,13 @@ def test_weekly_counts_use_only_completed_week_rows() -> None:
         weeks=3,
     )
     assert counts == (1, 1, 1)
+
+
+def test_between_campaign_transition_has_correct_iid_null() -> None:
+    belief = ExactJointBelief.from_theta_marginal((1.0, 0.0, 0.0))
+    iid = belief.between_campaign_transition(1.0 / 3.0)
+    np.testing.assert_allclose(iid.theta_marginal, (1 / 3, 1 / 3, 1 / 3))
+    assert iid.probability_regime_c == pytest.approx(0.5)
+    persistent = belief.between_campaign_transition(0.9)
+    assert persistent.theta_marginal[0] == 0.9
+    assert persistent.probability_regime_c == pytest.approx(0.5)
