@@ -1,104 +1,64 @@
-# Probe spec — CROSS_ECHELON_SURGE densification (EXPLORATORY_NO_CLAIM)
+# Probe spec — nonstationary observable-conversion densification (EXPLORATORY_NO_CLAIM)
 
-**One-page discovery spec, not a frozen contract. Burned tapes only, direct-SimPy only, no
-training.** This is the **go/no-go gate** for the "beat the MPC under nonstationarity" campaign —
-the only place in the whole search with large measured headroom. Every stationary mechanism is
-dead (belief crack 0.006, belief-insensitive decisions <5% action change, David's transformer
-ties + fails worst-product, terminal value fails, action-regret dies on holdout). The one live
-lead is nonstationary.
+**CORRECTED 2026-07-21 (v2).** The original v1 of this spec anchored on a MISREAD: it claimed
+CROSS_ECHELON_SURGE had observable classical conversion H_obs ≈ +0.119. **That is wrong.** The
++0.119 was CROSS_ECHELON's clairvoyant `h_pi_sampled_mean` (actually 0.091) conflated with the
+verdict-summary `best_isolated_classical_h_obs_mean`; the auditor caught it and the artifact
+confirms it. Corrected facts below. Same error class as the raw/safe-LCB fuzzy-match — recorded,
+not hidden.
 
-## The lead (verified, causal-residual U1 direct discovery, `results/program_u1/direct_bounded_discovery_v1/result.json`)
+## Verified reality (results/program_u1/direct_classical_conversion_v1/result.json)
 
-Under mask **`CROSS_ECHELON_SURGE` = risks (R21, R23, R24)** — cross-echelon line-of-communication
-disruption + demand surge — the direct-SimPy discovery found a strong isolated point:
+The `classical_h_obs_loo_mean` (leave-one-tape-out observable conversion vs best static) per
+candidate:
 
-- `h_pi_sampled_mean` **0.091** (rho90_share90), 0.077 (rho90_share75); best isolated classical
-  **H_obs +0.1185, LCB95 +0.0273** — ~10× the stationary headroom, in **both** the clairvoyant
-  (H_PI) and the observable-classical (H_obs) sense;
-- **`ranking_reversal: true`** and `oracle_calendar_indices [0,31,0]` — the optimal calendar
-  **switches mid-episode**: adaptation is decision-relevant here, unlike the stationary env
-  (<5% action change);
-- static policy sacrifices worst-product (`worst_product_fill_mean_at_static` 0.426) → both a ReT
-  headroom AND a worst-product-recovery opportunity;
-- `resource_range 0.0`, `lost_orders_max 0.0`, `selection_uses_learner_returns: False` (selection
-  was on H_PI/H_obs, per the frozen rule).
+| Mask | Cell | H_PI (clairvoyant) | **H_obs (observable classical)** |
+|---|---|---:|---:|
+| CROSS_ECHELON_SURGE | rho90_share90 | 0.091 | **−0.043** |
+| CROSS_ECHELON_SURGE | rho90_share75 | 0.077 | **−0.048** |
+| LOC_SURGE | rho75_share90 | 0.039 | **+0.018 (only promoted point)** |
 
-**It STOPPED only on an underpowered connectivity check** — 36-point sparse Morris grid, 3 burned
-tapes (7430001–3), 12-tape expansion, 1/5 connected → `STOP_U1_NO_CONNECTED_CLASSICAL_CONVERSION_REGION`.
-That is not "no region"; it is "the sparse grid found the peak but never sampled its neighborhood
-densely enough to prove a region." This probe decides: **real connected region, or isolated
-artifact?**
+So CROSS_ECHELON is a Program-O-shaped dead end: large clairvoyant H_PI, but observable control
+**cannot convert it** (negative H_obs). The ONLY observably-convertible point is **LOC_SURGE /
+rho75_share90 / H_obs +0.018** — and `direct_connected_region_v1` already
+`STOP_U1_NO_CONNECTED_CLASSICAL_CONVERSION_REGION` (1 promoted point, no connected region, and
+its static worst-product fill is very low ≈ 0.084 → a worst-product problem, not just headroom).
 
-## Design
+## Honest status of the nonstationary lead
 
-- **Physics:** Program O extension, `CROSS_ECHELON_SURGE` (R21/R23/R24) enabled, **direct-SimPy
-  MANDATORY** — this mask is action-dependent and FAILS transducer exactness (0.027 > 1e-10); no
-  transducer anywhere in this probe. Cells `rho90_share90` (primary, strongest) and
-  `rho90_share75`.
-- **Anchor + dense local grid.** Reconstruct the factor vector at the recorded strong candidate
-  (Morris group 2 / trajectory 3 / points 1–2) — the multipliers on R21/R23/R24 (frequency φ,
-  impact ψ), the coupling/concurrency (independent / coincident / lead–lag 72 h), and the timing
-  relative to demand and to the irreversible batch commitment. Then a **dense grid** (fine full
-  factorial or ±2 steps per axis at ≥5 levels) over a local neighborhood of that vector, so
-  adjacency in factor space is testable.
-- **Tapes:** BURNED exploratory, **24 tapes/point** (expand promoted neighborhoods to 48), CRN —
-  the SAME tapes drive every grid point and every arm. Candidate block **7570401–7570448** (48
-  seeds), `PENDING_COLLISION_SCAN` by the registry owner; above the retained-plan reservation
-  (≤7570124) and below the war-stress span (≥7580020).
-- **Matched stationary control (equal risk mass).** Every point carries a stationary comparator
-  with the SAME total R21/R23/R24 mass but no within-episode regime structure, so a pass measures
-  *nonstationary structure creating headroom*, not merely "risks lower ReT."
-- **Selection axis, frozen:** H_PI^safe, H_obs^classical, ranking reversals, guardrails —
-  **NEVER learner return** (`selection_uses_learner_returns` must stay False; the discipline line
-  that keeps a future win real).
+Much weaker than v1 implied. There is **one isolated point of +0.018 observable conversion**
+(LOC_SURGE), not a +0.119 region. This is not a strong lead; it may well be an isolated
+artifact. Densification is still the correct *test* — but its prior is now "probably
+ISOLATED_ARTIFACT," and it must not be oversold.
 
-## Estimands (per grid point; point + coarse bootstrap CIs — exploratory)
+## Design (if pursued — a small parallel probe, not the main compute)
 
-- `H_PI_safe` — clairvoyant safe-oracle vs best static calendar (full 65,536, mean-selected).
-- `H_obs_classical` — best frozen non-privileged classical controller vs best static.
-- `ranking_reversal_fraction` — share of tapes where the mean-optimal calendar switches within
-  the episode (the decision-relevance signal).
-- `worst_product_fill` vs classical and vs static (recovery opportunity).
-- `resource_range` (must be 0.0) and matched-stationary-control delta.
+- **Anchor: LOC_SURGE, rho75_share90**, group 1 / trajectory 8 / point 1 (the promoted row).
+  Reconstruct its factor vector (φ/ψ on the LOC risks, concurrency, onset/recovery timing) and a
+  dense local grid around it.
+- Direct-SimPy only; 24→48 burned tapes, CRN; matched stationary control (equal risk mass).
+- Selection axis, frozen: `H_PI_safe`, observable `H_obs_classical`, ranking reversals,
+  worst-product, resources, connectivity — **NEVER learner return**.
 
-## Connectivity gate (the crux — what the sparse grid could not test)
+## Connectivity gate + verdicts
 
-A **connected region** requires a contiguous set of **≥3 adjacent grid points** (neighbors in
-factor space) that ALL satisfy, simultaneously:
+Region = ≥3 adjacent points all with `LCB95(H_obs_classical) ≥ 0.015` AND ranking reversals AND
+worst-product/resource guardrails AND headroom over the matched stationary control.
+- `REGION_CONFIRMED` → a nonstationary envelope exists → authorizes the dynamic hybrid there.
+- `ISOLATED_ARTIFACT` (the likely outcome) → no promotable nonstationary env in this DES family;
+  the isolated point is an exploratory boundary. Then the learner story is stationary-only.
 
-- `LCB95(H_PI_safe) ≥ 0.02` AND `LCB95(H_obs_classical) ≥ 0.015`;
-- `ranking_reversal_fraction ≥ 0.5` (≥2 materially-distinct optimal actions across the region);
-- worst-product and resource guardrails pass;
-- headroom exceeds the matched stationary control (nonstationarity, not risk mass alone).
+## Compute + invariants
 
-## Verdicts (routing, not claims)
+Direct-SimPy (the risk masks fail transducer exactness); exact resources; burned tapes, no
+sealed seeds; EXPLORATORY_NO_CLAIM; compute preflight (the discovery ran in ~48 s, so a dense
+LOC_SURGE grid is minutes). This is a SMALL parallel probe; the main compute goes to the
+dynamic residual-warm-start ablation.
 
-- **`REGION_CONFIRMED`** — a connected region exists → authorizes designing the nonstationary
-  hybrid campaign in this envelope (Max-Obs RL vs reinforced belief-MPC, both same info; graded
-  U5 outcomes incl. `PASS_HYBRID_SAFE_EQUIVALENT`; and R1 retention becomes meaningful because
-  now experience has value to accumulate). This is the environment where beating the MPC is
-  physically possible AND where the north star (accumulated experience) lives.
-- **`ISOLATED_ARTIFACT`** — the peak does not extend to any connected region → this mechanism
-  closes honestly; the beat-the-MPC route in this DES family is exhausted and Program Q (with its
-  mechanistic "why") is the paper. Not empty-handed.
-- **`INCONCLUSIVE_NEEDS_WIDER`** — signal at the grid boundary → one wider grid, then decide.
+## Relationship to the corrected picture
 
-## Invariants (non-negotiable, even in exploration)
-
-Direct-SimPy only; exact resource equality (0.0) across all arms and the matched control; no
-privileged info in deployable arms; CRN; burned tapes only, no sealed seed opened;
-`EXPLORATORY_NO_CLAIM`; selection never on learner return; minimal result JSON.
-
-## Compute preflight (amendment 2)
-
-The 36-point sparse discovery ran in 48 s at 0.0137 s/episode. A dense grid of ~200 points × 24
-tapes × (H_PI enumeration + classical + matched control) is minutes-to-~1 h. Run a 1-point ×
-all-arms smoke, project from measured time, **hard cap 60 min, stop if the projection exceeds
-it.** No contract freezes without a passing `compute_preflight.json`.
-
-## Relationship to the live plans
-
-Does not touch anything frozen (Q/O/O-R/T0/U1-stationary/sealed S); does not collide with
-Codex's Q2-A/B/C stationary bakeoff (that hardens Q's null for defensibility; this hunts the
-nonstationary win) or the retained-learning lane. `REGION_CONFIRMED` is the precondition that
-makes the nonstationary hybrid, the U5 graded outcomes, and R1 retention all executable.
+The auditor's deeper correction stands: the flat STATIC top does NOT explain the MPC tie — Q
+already beats best static by H_OL ≈ 0.06–0.10, so **feedback value exists in the stationary
+env**; what is missing is an observable residual belief-MPC does not capture. The primary
+win-hunt is therefore the **dynamic residual warm-start** (does starting from a strong policy
+let a learner acquire a state-dependent residual over belief-MPC?), not this nonstationary probe.
