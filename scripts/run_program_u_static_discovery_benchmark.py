@@ -192,15 +192,24 @@ def ppo_search(
     ent_coef: float = 0.0,
     gae_lambda: float = 1.0,
     net_arch: tuple[int, ...] = (64, 64),
+    reward_center: float = 0.0,
+    reward_scale: float = 1.0,
+    normalize_advantage: bool = True,
 ) -> SearchResult:
     # One terminal episode proposes one calendar and therefore consumes one
     # candidate budget. The tape id is deliberately a dummy and absent from obs.
+    if not np.isfinite(reward_center):
+        raise ValueError("reward_center must be finite")
+    if not np.isfinite(reward_scale) or reward_scale <= 0.0:
+        raise ValueError("reward_scale must be finite and positive")
     trace: list[float] = []; best = None; best_score = -np.inf
     def evaluator(calendar: tuple[int, ...], _tape_id: int):
         nonlocal best, best_score
         score = oracle.score(calendar)
         best, best_score = _update(best, best_score, trace, calendar, score)
-        return {"ret_visible": score}
+        # Search custody and best-seen reporting always use canonical ReT. The
+        # affine transform changes only PPO's learning signal.
+        return {"ret_visible": (score - reward_center) / reward_scale}
     env = StaticCalendarDiscoveryEnv(evaluator=evaluator, tape_ids=(0,), horizon=HORIZON, action_count=ACTIONS)
     rollout = int(n_steps or min(256, max(32, budget * HORIZON)))
     rollout = min(rollout, budget * HORIZON)
@@ -210,6 +219,7 @@ def ppo_search(
     model = PPO("MlpPolicy", env, seed=seed, learning_rate=learning_rate, n_steps=rollout,
                 batch_size=batch_size, gamma=1.0, gae_lambda=gae_lambda,
                 n_epochs=n_epochs, clip_range=clip_range, ent_coef=ent_coef,
+                normalize_advantage=normalize_advantage,
                 policy_kwargs={"net_arch": list(net_arch)}, verbose=0, device="cpu")
     model.learn(total_timesteps=budget * HORIZON, progress_bar=False)
     # SB3 rounds to complete rollouts. Truncate for equal-budget reporting.

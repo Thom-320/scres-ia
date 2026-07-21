@@ -10,6 +10,7 @@ from scripts.run_program_u_static_discovery_benchmark import (
 )
 from scripts.run_program_q2_static_ppo_tuning import sobol_configurations
 from scripts.run_program_q2_recurrent_tuning import configurations as recurrent_configurations
+from scripts.run_program_q2_static_reward_geometry import arms as reward_geometry_arms
 
 
 class QuadraticOracle:
@@ -62,3 +63,15 @@ def test_recurrent_panel_is_minimal_and_balances_three_reward_contracts() -> Non
         sum(row["reward_mode"] == reward for row in configurations) == 4
         for reward in {row["reward_mode"] for row in configurations}
     )
+
+
+def test_static_reward_geometry_is_a_two_by_two_factorial() -> None:
+    rows = reward_geometry_arms(0.73, 0.09)
+    assert {row["arm"] for row in rows} == {
+        "raw_advnorm",
+        "standardized_advnorm",
+        "raw_no_advnorm",
+        "standardized_no_advnorm",
+    }
+    assert {row["normalize_advantage"] for row in rows} == {True, False}
+    assert all(row["reward_scale"] > 0.0 for row in rows)
