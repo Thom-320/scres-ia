@@ -204,10 +204,17 @@ def product_demand_tape(
     regime_persistence: float,
     dominant_share: float,
     weeks: int = 8,
+    initial_regime: str | None = None,
 ) -> dict[str, Any]:
     """Reproduce the frozen Program O event-keyed two-product tape."""
     rng = np.random.default_rng(int(seed))
-    regime = "P_C" if int(rng.integers(0, 2)) == 0 else "P_H"
+    if initial_regime is not None and str(initial_regime) not in PRODUCTS:
+        raise ValueError("initial_regime must be P_C, P_H, or None")
+    regime = (
+        str(initial_regime)
+        if initial_regime is not None
+        else ("P_C" if int(rng.integers(0, 2)) == 0 else "P_H")
+    )
     regimes: list[str] = []
     labels: list[str] = []
     if int(weeks) <= 0 or int(weeks) > 8:
@@ -224,6 +231,10 @@ def product_demand_tape(
         "regimes": regimes,
         "order_products": labels,
     }
+    # Preserve Program Q's historical tape payload and digest byte-for-byte
+    # when no researcher extension is requested.
+    if initial_regime is not None:
+        raw["initial_regime"] = str(initial_regime)
     payload = {
         **raw,
         "regime_persistence": float(regime_persistence),
@@ -255,23 +266,28 @@ class ProgramOFullDESSimulation(MFSCSimulation):
         risk_impact_multipliers_by_id: dict[str, float] | None = None,
         risk_event_tape: Iterable[dict[str, Any]] | None = None,
         risk_rng_mode: str = "shared",
+        initial_regime: str | None = None,
     ) -> None:
         # Relevant-risk pass-through (contract program_o_relevant_risk_sensitivity_v1):
         # defaults reproduce the historical risks-off physics BIT-EXACTLY; when enabled, the
         # parent's fidelity-verified risk machinery (exact thinning per risk id) drives events.
-        if not 1 <= len(calendar) <= 8 or any(
-            int(value) not in range(4) for value in calendar
-        ):
-            raise ValueError("calendar must contain one to eight actions in {0,1,2,3}")
         normalized_scheduler = {
             int(action): tuple(str(product_id) for product_id in labels)
             for action, labels in scheduler.items()
         }
-        if set(normalized_scheduler) != set(range(4)) or any(
+        if not normalized_scheduler or set(normalized_scheduler) != set(
+            range(len(normalized_scheduler))
+        ) or any(
             len(labels) != 3 or not set(labels).issubset(PRODUCT_SET)
             for labels in normalized_scheduler.values()
         ):
-            raise ValueError("scheduler must map every action to three products")
+            raise ValueError(
+                "scheduler must map consecutive actions from zero to three products"
+            )
+        if not 1 <= len(calendar) <= 8 or any(
+            int(value) not in normalized_scheduler for value in calendar
+        ):
+            raise ValueError("calendar contains an action absent from scheduler")
         if len(demand_offsets_hours) != 6:
             raise ValueError("six weekly demand offsets are required")
         if downstream_freight_physics_mode not in DOWNSTREAM_FREIGHT_PHYSICS_MODES:
@@ -319,6 +335,7 @@ class ProgramOFullDESSimulation(MFSCSimulation):
             regime_persistence=float(regime_persistence),
             dominant_share=float(dominant_share),
             weeks=self.program_o_decision_weeks,
+            initial_regime=initial_regime,
         )
         self.program_o_ledger = ProductTagLedger()
         self.program_o_target_queue: deque[ProductTarget] = deque()
@@ -938,6 +955,7 @@ def run_program_o_full_des_episode(
     risk_impact_multipliers_by_id: dict[str, float] | None = None,
     risk_event_tape: Iterable[dict[str, Any]] | None = None,
     risk_rng_mode: str = "shared",
+    initial_regime: str | None = None,
 ) -> tuple[ProgramOFullDESSimulation, dict[str, Any]]:
     sim = ProgramOFullDESSimulation(
         seed=int(seed),
@@ -953,5 +971,6 @@ def run_program_o_full_des_episode(
         risk_impact_multipliers_by_id=risk_impact_multipliers_by_id,
         risk_event_tape=risk_event_tape,
         risk_rng_mode=str(risk_rng_mode),
+        initial_regime=initial_regime,
     ).run_contract()
     return sim, sim.product_outcome_panel()

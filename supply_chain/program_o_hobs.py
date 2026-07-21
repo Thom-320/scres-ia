@@ -140,6 +140,7 @@ def observable_calendar(
     history_delay_weeks: int = 0,
     swap_observed_labels: bool = False,
     ignore_history: bool = False,
+    initial_belief_c: float = 0.5,
 ) -> tuple[tuple[int, ...], tuple[ObservableDecision, ...]]:
     """Build an action calendar from events strictly before each decision.
 
@@ -153,6 +154,8 @@ def observable_calendar(
         raise ValueError("request time/product vectors must have equal length")
     if int(history_delay_weeks) < 0:
         raise ValueError("history_delay_weeks must be non-negative")
+    if not 0.0 < float(initial_belief_c) < 1.0:
+        raise ValueError("initial_belief_c must be strictly between zero and one")
     events = sorted(
         (float(time), str(product))
         for time, product in zip(request_times, request_products, strict=True)
@@ -177,7 +180,7 @@ def observable_calendar(
         if ignore_history:
             labels = []
 
-        belief = 0.5
+        belief = float(initial_belief_c)
         previous_labels: tuple[str, ...] = ()
         for prior_week in range(week):
             week_start = float(decision_start) + 168.0 * prior_week

@@ -1,0 +1,33 @@
+{
+  "schema_version": "retained_learning_discovery_terminal_summary_v1",
+  "status": "EXPLORATORY_NO_CLAIM",
+  "north_star": "Causally identify whether retained decision knowledge improves cold-start resilience after complete physical reset.",
+  "R0": {
+    "verdict": "STOP_NO_RETAINED_CONTEXT_HEADROOM",
+    "oracle_headroom_kappa_0p9": 0.02571274883980916,
+    "retained_delta_kappa_0p5": 0.0,
+    "retained_delta_kappa_0p75": 0.007483641848664463,
+    "retained_delta_kappa_0p9": 0.009252245080424444,
+    "direct_replay_episodes": 108,
+    "direct_replay_max_abs_error": 5.551115123125783e-16,
+    "interpretation": "The causal pattern was directionally correct but the oracle itself did not reach the frozen 0.03 practical threshold."
+  },
+  "Q2_action": {
+    "verdict": "STOP_NO_SEQUENCE8_ACTION_HEADROOM",
+    "omitted_action_optimal_fraction": 0.171875,
+    "mean_pulse_ret_gain": 0.0004668789439056705,
+    "mean_greedy_full_rollout_ret_gain": 0.0059067679178301065
+  },
+  "Q2_timing": {
+    "verdict": "STOP_PI_TIMING_NOT_IDENTIFIABLE_WITH_EQUIVALENT_FEASIBLE_SETS",
+    "reason": "Eight weekly 3-bit sequence actions and 24 clairvoyant binary batch decisions span the same 16777216 calendars; timing value requires intermediate observable information."
+  },
+  "Q2_observation": {
+    "verdict": "STOP_OBSERVATION_ALIASING_BELOW_THRESHOLD",
+    "q21_cross_tape_regret": 0.016585403578656243,
+    "rich_cross_tape_regret": 0.01652375614177902,
+    "regret_attributable_to_compression": 0.00006164743687722338,
+    "full_state_probe_authorized": false
+  },
+  "terminal_route": "PROGRAM_Q_FALLBACK; no full-state training, Q2 learner, retained Paper 3, or new risk environment authorized."
+}

@@ -501,6 +501,7 @@ def state_rich_calendar(
     dominant_share: float,
     observation_mode: str = "real",
     action_overrides: Sequence[int] | None = None,
+    initial_belief_c: float = 0.5,
 ) -> tuple[tuple[int, ...], tuple[StateRichDecision, ...]]:
     """Replay state and produce a policy or execution-supplied calendar."""
     weeks = int(skeleton["decision_weeks"])
@@ -541,6 +542,7 @@ def state_rich_calendar(
         initial_action=1,
         regime_persistence=float(regime_persistence),
         dominant_share=float(dominant_share),
+        initial_belief_c=float(initial_belief_c),
     )
 
     events: list[tuple[float, int, str, Any]] = []

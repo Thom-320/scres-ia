@@ -291,10 +291,13 @@ def direct_full_des_trace(sim: ProgramOFullDESSimulation) -> dict[str, Any]:
 
 def normalize_scheduler(scheduler: Mapping[str, Sequence[str]]) -> np.ndarray:
     index = {product_id: idx for idx, product_id in enumerate(PRODUCTS)}
+    keys = sorted(int(key) for key in scheduler)
+    if keys != list(range(len(keys))):
+        raise ValueError("scheduler actions must be consecutive from zero")
     return np.asarray(
         [
             [index[product_id] for product_id in scheduler[str(action)]]
-            for action in range(4)
+            for action in keys
         ],
         dtype=np.uint8,
     )
@@ -308,6 +311,7 @@ def extract_full_des_skeleton(
     dominant_share: float,
     decision_weeks: int = 8,
     downstream_freight_physics_mode: str = "loaded_only",
+    initial_regime: str | None = None,
 ) -> tuple[FullDESSkeleton, ProgramOFullDESSimulation]:
     """Run one direct calendar and extract only action-independent events."""
     sim = ProgramOFullDESSimulation(
@@ -318,6 +322,7 @@ def extract_full_des_skeleton(
         dominant_share=float(dominant_share),
         complete_substitution=False,
         downstream_freight_physics_mode=str(downstream_freight_physics_mode),
+        initial_regime=initial_regime,
     ).run_contract()
     arrivals: dict[tuple[int, int], float] = {}
     for event in sim.program_o_product_events:
@@ -539,6 +544,10 @@ def simulate_full_des_frontier(
         raise ValueError("trace_out is available only for one calendar")
     n_order = len(skeleton.order_times)
     scheduler_array = normalize_scheduler(scheduler)
+    if calendars.size and (
+        int(calendars.min()) < 0 or int(calendars.max()) >= len(scheduler_array)
+    ):
+        raise ValueError("calendar contains an action absent from scheduler")
     product_index = {product_id: idx for idx, product_id in enumerate(PRODUCTS)}
     requested_product = np.asarray(
         [product_index[product_id] for product_id in skeleton.order_products],
