@@ -1,0 +1,515 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{textcomp}
+\usepackage[spanish,es-noquoting]{babel}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{geometry}
+\geometry{margin=2.4cm}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,linkcolor=blue!55!black,urlcolor=blue!55!black,citecolor=blue!55!black}
+\usepackage{fancyhdr}
+\pagestyle{fancy}\fancyhf{}\rhead{SCRES-IA — la carrera completa}\lhead{\thepage}\cfoot{}
+\setlength{\headheight}{14pt}
+\newcommand{\ret}{\text{ReT}}
+\newcommand{\code}[1]{\texttt{#1}}
+
+\title{\textbf{SCRES-IA: la carrera completa}\\[4pt]
+\large Resiliencia, aprendizaje por refuerzo y control estructurado\\
+en una cadena de suministro militar de alimentos\\[8pt]
+\normalsize Documento acompañante de \emph{Submission A} (Program Q) y del Paper 2}
+\author{Programa de investigación SCRES-IA}
+\date{22 de julio de 2026}
+
+\begin{document}
+\maketitle
+\thispagestyle{fancy}
+
+\begin{abstract}
+\noindent Este documento explica, de principio a fin y sin dar nada por supuesto, qué es el programa
+SCRES-IA, qué hemos logrado, qué significa cada término técnico que usamos y en qué punto exacto de la
+carrera estamos. Está pensado como \emph{compañero pedagógico} de dos entregables: (i) \emph{Submission
+A} / Paper 2, el manuscrito sobre \emph{Program Q} que ya tenemos; y (ii) el frente activo de
+aprendizaje acumulado entre campañas (\emph{Q-R1}). No sustituye a los manuscritos: los explica. El
+lector no necesita saber de antemano qué es un ``lazo abierto'' ni un ``MPC''; todo se define aquí. La
+tesis central, ya sostenida por evidencia sellada, es doble y honesta: \textbf{el aprendizaje por
+refuerzo adquiere control adaptativo real —le gana a las 65\,536 políticas fijas posibles— pero no
+supera al control estructurado clásico}; y \textbf{la retención de conocimiento entre campañas mejora
+causalmente la resiliencia inicial}, aunque todavía no de forma conjuntamente segura.
+\end{abstract}
+
+\tableofcontents
+\bigskip
+\hrule
+\bigskip
+
+%==============================================================
+\section{Para qué sirve este documento}
+El programa SCRES-IA (\emph{Supply-Chain RESilience with Inteligencia Artificial}) ha producido muchos
+experimentos, veredictos y correcciones. Este texto los ordena en una sola narrativa. Responde tres
+preguntas que se hicieron explícitamente:
+\begin{enumerate}[nosep]
+  \item \textbf{¿Qué logramos?} (Secciones \ref{sec:logros} y \ref{sec:qr1}.)
+  \item \textbf{¿Qué significa cada término?} (Sección \ref{sec:glosario}, un glosario exhaustivo:
+        lazo abierto/cerrado, MPC, RL, PPO, ReT, \emph{belief}, \emph{cold-start}, placebos,
+        \emph{guardrails}, etc.)
+  \item \textbf{¿Cómo fue la carrera y dónde estamos?} (Secciones \ref{sec:metodo}, \ref{sec:carrera}
+        y \ref{sec:estado}.)
+\end{enumerate}
+
+%==============================================================
+\section{El problema y el mundo simulado}\label{sec:mundo}
+
+\subsection{La tesis de Garrido-Ríos (2017)}
+El punto de partida es una tesis doctoral que modela una \textbf{cadena de suministro militar de
+alimentos}: el flujo de raciones desde su producción hasta las tropas desplegadas, a través de
+\textbf{13 operaciones} encadenadas (producción, procesamiento, almacenamiento, transporte por
+distintos escalones, etc.). El interés no es el costo ni la ganancia, sino la \textbf{resiliencia}: la
+capacidad de la cadena de seguir sirviendo pedidos a tiempo cuando ocurren disrupciones (averías,
+retrasos de proveedores, picos de demanda, pérdidas de capacidad). La tesis define una métrica formal
+de resiliencia, \textbf{ReT}, y la calcula en hojas de cálculo Excel a partir de datos de la operación.
+
+\subsection{La petición de Garrido et al.\ (2024)}
+Años después, un artículo de seguimiento plantea una agenda: los modelos de simulación tradicionales
+\emph{no aprenden de la experiencia}. Cada corrida empieza de cero; el sistema no acumula sabiduría de
+una campaña a la siguiente. Los autores lo llaman, medio en broma, el ``efecto Alzheimer'' de la
+simulación, y proponen usar \textbf{inteligencia artificial} para dos cosas:
+\begin{enumerate}[nosep]
+  \item \textbf{Convertir la simulación de lazo abierto en lazo cerrado} (definidos abajo): que un
+        controlador \emph{reaccione} al estado del sistema en vez de seguir un plan fijo.
+  \item \textbf{Acumular aprendizaje entre iteraciones}: que la experiencia pasada mejore las
+        decisiones futuras. Esta es la ``estrella polar'' del programa.
+\end{enumerate}
+
+\subsection{Nuestra reconstrucción y su fidelidad}
+Reconstruimos la cadena de 13 operaciones como una \textbf{simulación de eventos discretos} (DES; ver
+glosario) en Python/SimPy, y reprodujimos la métrica ReT de la tesis \textbf{exactamente}: sobre
+$47\,546$ celdas de fórmula de los libros Excel reales, \textbf{0 discrepancias}. Esta fidelidad
+numérica es el cimiento: cualquier cosa que midamos después descansa sobre un modelo verificado contra
+la fuente.
+
+\subsection{La extensión de dos productos: el problema de decisión}\label{sec:extension}
+Sobre esa base construimos una \textbf{extensión de investigación}: dos productos no fungibles
+(llamémoslos $P_C$ y $P_H$) que comparten la misma línea de procesamiento (operaciones Op5--Op7). Cada
+semana, durante 8 semanas, hay que decidir \textbf{cómo repartir la producción entre los dos
+productos}. Cada decisión semanal elige uno de 4 niveles de mezcla; con 8 decisiones, el espacio
+completo de \emph{planes fijos} tiene
+\[
+4^{8} = 65\,536 \text{ calendarios posibles.}
+\]
+Este número es importante: es pequeño lo suficiente para \textbf{enumerarlo entero}. Podemos calcular
+el ReT de \emph{cada uno} de los 65\,536 planes fijos y así conocer, exactamente, cuál es el mejor plan
+que no reacciona al estado. Eso nos da una \emph{clave de respuestas} (``answer key'') contra la cual
+medir si reaccionar al estado aporta algo.
+
+%==============================================================
+\section{Glosario exhaustivo}\label{sec:glosario}
+Aquí se define cada término. Los nombres técnicos suelen quedarse en inglés (así aparecen en la
+literatura y en el código); se explica su significado.
+
+\begin{description}[style=unboxed,leftmargin=0pt]
+\item[Simulación de eventos discretos (DES, \emph{Discrete-Event Simulation}).]
+Un modelo de computadora donde el tiempo avanza ``saltando'' de un evento al siguiente (llega un
+pedido, termina un lote, sale un camión), en vez de continuamente. Es la forma estándar de simular
+cadenas de suministro. La nuestra usa la librería SimPy.
+
+\item[Lazo abierto (\emph{open loop}).]
+Un plan de acciones fijado \emph{de antemano} que se ejecuta pase lo que pase, sin mirar cómo va el
+sistema. Analogía: un temporizador de riego que abre el agua a las 6\,a.m.\ todos los días, llueva o
+truene. En nuestro problema, un ``calendario'' de 8 decisiones semanales fijadas antes de empezar es
+una política de lazo abierto. Hay $65\,536$ de ellas.
+
+\item[Lazo cerrado (\emph{closed loop}).]
+Un controlador que \emph{observa el estado} del sistema y \emph{reacciona}: ajusta la próxima decisión
+según lo que está pasando (inventario, pedidos atrasados, demanda observada). Analogía: un termostato
+que mide la temperatura y enciende o apaga la calefacción. Convertir el DES de lazo abierto en lazo
+cerrado es la primera petición de Garrido 2024.
+
+\item[Resiliencia ReT (\emph{Resilience over Time}).]
+La métrica central, tomada de la tesis. Mide, pedido por pedido, qué tan bien la cadena entrega a
+tiempo. Sin disrupción activa, para el pedido $j$:
+\[
+\ret_j = 1 - \frac{B_{t}+U_{t}}{j},
+\]
+donde $B_t$ son pedidos en \emph{backorder} (atrasados pero aún en cola) y $U_t$ pedidos no atendidos.
+Con disrupción activa hay ramas adicionales (autotomía, recuperación). Un ReT de 1 es servicio
+perfecto; valores menores indican degradación. \textbf{Nunca modificamos esta fórmula}: es fiel a la
+tesis (0/47\,546).
+
+\item[MPC (\emph{Model Predictive Control}, control predictivo por modelo).]
+Un controlador \emph{estructurado clásico} (no una red neuronal). En cada decisión: (1) usa un modelo
+del sistema para simular hacia adelante un \emph{horizonte} de varias semanas; (2) evalúa muchas
+secuencias de acciones candidatas; (3) elige la primera acción de la mejor secuencia; (4) avanza una
+semana y repite. Es ``receding-horizon'' (horizonte deslizante). Es fuerte, interpretable y respeta
+restricciones de seguridad. En este trabajo, el rival a vencer.
+
+\item[\emph{belief} / filtro bayesiano.]
+La ``creencia'' del controlador sobre variables ocultas del mundo (por ejemplo, cuál producto va a
+dominar la demanda). Un \emph{filtro bayesiano} actualiza esa creencia de forma óptima a medida que
+llegan observaciones. Un \textbf{belief-MPC} es un MPC que planifica sobre esa creencia. Punto técnico
+clave: para un régimen de dos estados con dinámica conocida, la creencia bayesiana es un
+\emph{estadístico suficiente} —contiene toda la información útil de la historia—, así que \emph{ninguna
+red puede formar una mejor creencia} a partir de los mismos datos.
+
+\item[Aprendizaje por refuerzo (RL, \emph{Reinforcement Learning}).]
+Una familia de métodos donde un agente \emph{aprende} una política (qué hacer en cada estado)
+maximizando una recompensa, por ensayo y error sobre muchos episodios simulados. A diferencia del MPC,
+no planifica en línea: aprende una política y luego la ejecuta con un solo ``forward pass''.
+
+\item[PPO / RecurrentPPO.]
+\emph{Proximal Policy Optimization}: el algoritmo de RL que usamos. \emph{RecurrentPPO} le añade
+memoria (una red LSTM) para que la política pueda recordar lo observado dentro de un episodio. Es
+nuestro aprendiz principal.
+
+\item[\emph{cold-start} (arranque en frío).]
+Las primeras decisiones de una campaña, \emph{antes} de haber observado casi nada de esa campaña. Es
+donde el conocimiento retenido de campañas anteriores debería ayudar más: uno decide mejor al inicio
+si recuerda cómo fueron las campañas pasadas.
+
+\item[\emph{retained} vs \emph{reset} (retenido vs reiniciado).]
+El tratamiento central de Q-R1. Tras terminar una campaña se hace un \textbf{reset físico completo}
+(inventario, colas, pedidos en tránsito, todo a cero). La única diferencia entre brazos es si el
+\emph{conocimiento} (la creencia/posterior) se \textbf{retiene} de la campaña anterior o se
+\textbf{reinicia}. Si el brazo retenido decide mejor en frío que el reiniciado, ese es el valor causal
+del conocimiento acumulado.
+
+\item[Cohorte temprana y \emph{full-cohort} vs \emph{visible}.]
+Medimos la ReT sobre la \emph{cohorte} de pedidos generados en las 2 primeras semanas. El endpoint
+\textbf{visible} promedia solo los pedidos completados (el defecto que las auditorías señalaron: puede
+``ganar'' dejando pedidos difíciles sin resolver). El endpoint \textbf{full-cohort} mantiene los 12
+pedidos de la cohorte en el denominador, puntuando 0 a los no resueltos o perdidos. Usamos el
+full-cohort como endpoint honesto.
+
+\item[\emph{worst-product fill} (peor producto).]
+El nivel de servicio del \emph{producto peor atendido}. Es un \emph{guardrail} de equidad: impide
+subir el ReT medio favoreciendo a un producto y matando de hambre al otro.
+
+\item[\emph{unresolved} / \emph{lost} / \emph{backorder}.]
+Pedidos \emph{no resueltos} (aún sin atender al corte), \emph{perdidos} (expulsados de la cola) y
+\emph{atrasados} (en cola). Guardrails de servicio: una mejora de ReT no cuenta si aumenta estos.
+
+\item[Dosis-respuesta (\emph{dose-response}).]
+Prueba de mecanismo. Variamos la \emph{persistencia} $\kappa$ entre campañas (qué tanto se parece una
+campaña a la anterior). Si el efecto retenido es real, debe \emph{crecer con la persistencia}:
+$\kappa{=}0.90 > \kappa{=}0.75 > \text{iid}$ (iid $=$ campañas independientes $=$ nada que recordar).
+
+\item[Placebos (\emph{placebo controls}).]
+Brazos de control negativo que \emph{no deberían} producir mejora si el mecanismo es genuino:
+\emph{shuffled} (historia barajada), \emph{wrong} (historia deliberadamente equivocada, un
+``anti-oráculo''), \emph{delayed} (historia retrasada una campaña). Si un placebo mejora, hay una fuga
+en el mecanismo.
+
+\item[\emph{guardrail}.]
+Una barrera de validez que se debe pasar aparte de la magnitud del efecto: recursos exactamente
+iguales, sin aumento de perdidos/no-resueltos, equidad de producto, misma información para ambos
+brazos, reset físico idéntico. Sin ellas, ``más ReT'' se puede comprar haciendo trampa.
+
+\item[SESOI y LCB (\emph{Smallest Effect Size Of Interest}; \emph{Lower Confidence Bound}).]
+SESOI es el tamaño de efecto mínimo que nos importa científicamente ($+0.01$ de ReT). LCB es el
+extremo inferior de un intervalo de confianza al 95\%: exigimos LCB${}>0$ (o ${}\ge$ SESOI) para que el
+efecto no sea ruido. Los intervalos son \emph{clustered bootstrap} por historia (respetan que los
+pedidos de una misma historia están correlacionados).
+
+\item[CRN (\emph{Common Random Numbers}).]
+Técnica para comparar dos políticas de forma justa: se les aplica \emph{exactamente el mismo azar}
+(los mismos shocks de demanda), de modo que las diferencias se deban a la política, no a la suerte.
+
+\item[TOST / equivalencia.]
+\emph{Two One-Sided Tests}: prueba estadística para afirmar que dos cosas son \emph{prácticamente
+iguales} (no solo que ``no encontramos diferencia''). Así probamos rigurosamente RL${\approx}$MPC.
+
+\item[Las cuatro cantidades de la escalera: $H_{PI}$, $H_{obs}$, $H_{OL}$, $\Delta_N$.]
+El corazón metodológico (Sección \ref{sec:metodo}):
+\begin{itemize}[nosep]
+  \item $H_{PI}$ — \emph{oportunidad física} clarividente: cuánto ReT ganaría un oráculo que conoce el
+        futuro. Es el techo.
+  \item $H_{obs}$ — \emph{conversión observable}: cuánto de esa oportunidad convierte un controlador
+        \emph{clásico} desplegable (sin ver el futuro).
+  \item $H_{OL}$ — \emph{adaptación aprendida}: cuánto le gana el RL a la \emph{mejor política fija}
+        (las 65\,536). Mide si reaccionar al estado sirve.
+  \item $\Delta_N$ — \emph{prima neural}: cuánto le gana el RL al \emph{mejor MPC estructurado}. Es la
+        pregunta ``¿vale la pena la red?''.
+\end{itemize}
+
+\item[Seeds selladas vs quemadas (\emph{sealed} vs \emph{burned}).]
+Una \emph{seed} fija el azar de una corrida. Las \emph{quemadas} son de desarrollo (se pueden mirar
+muchas veces). Las \emph{selladas} se abren \emph{una sola vez} para la confirmación prospectiva: se
+congela el contrato y los criterios \emph{antes} de abrirlas, para que nadie ``pinte la diana después
+del disparo''. Disciplina anti-autoengaño.
+
+\item[Custodia y A11.]
+Cada resultado guarda hashes SHA-256, commit, entorno y filas crudas. ``A11'' es nuestra regla:
+\emph{verificar cada afirmación contra el artefacto real} antes de creerla —incluso las de nuestro
+propio agente colaborador.
+\end{description}
+
+%==============================================================
+\section{El método: la escalera de falsación de 4 niveles}\label{sec:metodo}
+La contribución metodológica de \emph{Submission A} no es un algoritmo de RL nuevo, sino una
+\textbf{forma de decidir, con rigor, cuándo un controlador aprendido aporta valor sobre el control
+estructurado}. Se organiza como una escalera que \emph{localiza dónde vive (o muere) el valor}:
+\[
+\underbrace{H_{PI}}_{\text{¿hay oportunidad física?}}
+\;\to\;
+\underbrace{H_{obs}}_{\text{¿la convierte el control clásico?}}
+\;\to\;
+\underbrace{H_{OL}}_{\text{¿el RL aprende a adaptarse?}}
+\;\to\;
+\underbrace{\Delta_N}_{\text{¿la red supera a la estructura?}}
+\]
+Cada peldaño es \emph{falsable por separado}. La clave es la \textbf{clave de respuestas exacta}: como
+enumeramos las 65\,536 políticas fijas, sabemos exactamente cuál es la mejor política que no reacciona.
+Así, cuando el RL le gana a \emph{todas}, es adaptación genuina y no ``redescubrir un buen plan fijo''
+—una distinción que los trabajos de RL-en-DES con baselines débiles no pueden hacer.
+
+%==============================================================
+\section{Lo que logramos: Submission A / Paper 2 (Program Q)}\label{sec:logros}
+
+\subsection{El entorno y el diseño}
+Demanda con cambio de régimen (dos productos), 8 decisiones semanales, 4 acciones por decisión,
+$65\,536$ calendarios de lazo abierto enumerados, \textbf{sin riesgos activos} (entorno estacionario),
+métrica ReT canónica. Confirmación con $256$ ``tapes'' (realizaciones de azar) por celda,
+$21\,696$ replays directos del DES completo, \textbf{0 fallos de auditoría}, 3 celdas de régimen.
+
+\subsection{Resultado 1 — el RL adquiere adaptación real}
+Una política recurrente (RecurrentPPO), entrenada desde cero, \textbf{le gana a las 65\,536 políticas
+fijas} en las tres celdas, con márgenes grandes de ReT canónica ($H_{OL}$):
+\begin{center}
+\begin{tabular}{lccc}
+\toprule
+Celda de régimen & $H_{OL}$ (RL $-$ mejor fija) & Semillas positivas \\
+\midrule
+rho75\_share90 & $+0.0795$ & 10/10 \\
+rho90\_share75 & $+0.0726$ & 10/10 \\
+rho90\_share90 & $+0.1172$ & 10/10 \\
+\bottomrule
+\end{tabular}
+\end{center}
+Esto \textbf{entrega la primera petición de Garrido 2024}: el DES de lazo abierto convertido en lazo
+cerrado por una IA que \emph{aprende a reaccionar}, medido con rigor. La curva de aprendizaje sube
+monótonamente y converge \emph{desde abajo} al nivel del control estructurado, sin deriva.
+
+\subsection{Resultado 2 — pero no hay prima neural: RL${\approx}$MPC}
+Cuando comparamos el RL con el \emph{mejor control estructurado} (belief-MPC), la diferencia
+$\Delta_N$ es \textbf{estadísticamente equivalente a cero} (TOST) en las tres celdas:
+\begin{center}
+\begin{tabular}{lcc}
+\toprule
+Celda & $\Delta_N$ (RL $-$ MPC) & IC 95\% \\
+\midrule
+rho75\_share90 & $-0.0016$ & $[-0.0063,\,+0.0031]$ \\
+rho90\_share75 & $-0.0007$ & $[-0.0055,\,+0.0041]$ \\
+rho90\_share90 & $-0.0004$ & $[-0.0027,\,+0.0019]$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+Los intervalos \emph{cruzan y encierran} el cero: no es ``no encontramos diferencia'', es
+\emph{equivalencia demostrada}. La igualdad sobrevivió a \textbf{cinco pruebas adversariales
+independientes} (replicación prospectiva, una arquitectura distinta tipo transformer, arranque
+tibio desde tres inicializaciones, un factorial de geometría de recompensa, y un aprendiz off-policy
+QR-DQN). Ningún ``defecto arreglable'' del RL explica el empate.
+
+\subsection{Resultado 3 — el mecanismo: la decisión es \emph{belief-insensitive}}
+¿Por qué empatan? Porque en este entorno estacionario \textbf{la decisión óptima casi no depende de la
+creencia}: una mejor inferencia cambia la acción óptima en ${<}5\%$ de los estados, y la cima del
+paisaje de políticas fijas es \emph{plana} (las 38 mejores dentro de $0.0025$). El control
+estructurado ya se sienta en la frontera observable; no queda residual que una red pueda capturar.
+
+\subsection{Resultado 4 — la amortización tampoco favorece a la red}
+Se creía que aunque empataran en calidad, el RL podría ganar en \emph{costo}: un ``forward pass'' en
+vez de planificar en línea. El benchmark de latencia (hardware-específico, 5\,000 repeticiones) lo
+\textbf{refuta}:
+\begin{center}
+\begin{tabular}{lcc}
+\toprule
+Controlador & Mediana (ms) & p95 (ms) \\
+\midrule
+RecurrentPPO & $0.573$ & $0.702$ \\
+Familia estructurada & $0.082$ & $0.088$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+El control estructurado es \textbf{${\sim}7\times$ más rápido}. Así que la familia estructurada iguala
+al RL en resiliencia (equivalencia práctica) \emph{y} lo supera en cómputo. Honestamente, entonces,
+Submission A \textbf{no reclama ninguna ventaja de amortización neural}.
+
+\subsection{El reencuadre: un marco de decisión, no un ``RL ganó''}
+El veredicto congelado de Program Q es \code{STOP\_Q\_NO\_REPLICATED\_LEARNED\_ADAPTATION}: el RL
+aprende la adaptación, pero \emph{no} hay prima sobre la estructura. Esto se presenta no como una
+decepción sino como el \textbf{poder discriminante del marco}: la escalera separa ``hubo aprendizaje''
+(Nivel 3, $+0.07$ a $+0.12$ sobre toda la frontera) de ``el aprendizaje le ganó a la estructura''
+(Nivel 4, ${\approx}0$) —una distinción que los papers de baseline débil no pueden trazar. El título de
+trabajo lo captura:
+\begin{quote}
+\emph{``When Feedback Beats an Exhaustive Static Frontier but Not Structured Control: Exact Benchmarking
+of Recurrent RL in a Supply-Chain DES.''}
+\end{quote}
+Es un resultado más honesto y, paradójicamente, más fuerte: un \textbf{protocolo para decidir cuándo un
+controlador aprendido merece desplegarse}, aplicado a un DES industrial validado. Destino: \emph{Computers
+\& Industrial Engineering} (Q1).
+
+%==============================================================
+\section{El frente activo: Q-R1, el aprendizaje acumulado entre campañas}\label{sec:qr1}
+
+\subsection{La estrella polar de Garrido}
+La \emph{segunda} petición de Garrido 2024 —la que de verdad importa— es el \textbf{aprendizaje
+acumulado}: que la experiencia de campañas pasadas mejore las decisiones de campañas futuras, después
+de un reset físico completo. Ese es el ``efecto Alzheimer'' curado. Q-R1 es nuestro ataque a esta
+pregunta.
+
+\subsection{El diseño}
+Se generan \emph{historias} de campañas correlacionadas (persistencia $\kappa$). Entre campañas, reset
+físico total; solo el \emph{conocimiento} (posterior bayesiano) se retiene o se reinicia. Se mide la
+ReT \emph{full-cohort} de la cohorte de arranque en frío. Brazos: retenido, reiniciado, y placebos
+(shuffled, wrong, delayed). Comparador: la familia MPC estructurada más fuerte que congelamos y
+verificamos (H4, integración estratificada, con \emph{gate} de convergencia p16/p64).
+
+\subsection{El veredicto verificado (confirmación prospectiva, seeds selladas)}
+La confirmación corrió ${\sim}9.3$\,h en el VPS sobre seeds selladas frescas (roots
+$7\,572\,001$--$7\,572\,032$, commit congelado, integridad verificada A11). Verdicto:
+\code{STOP\_REPAIRED\_Q\_R1\_NO\_RETAINED\_INFORMATION\_PASS}. Pero \textbf{la estructura del STOP es la
+noticia}:
+\begin{center}
+\begin{tabular}{lc}
+\toprule
+Cantidad (κ$=0.90$, full-cohort) & Valor \\
+\midrule
+ReT retenido $-$ reiniciado & $\mathbf{+0.0656}$ (LCB95 $+0.0524$) \\
+Dosis-respuesta & $+0.0656\;(\kappa.90) > +0.0341\;(\kappa.75) > 0\;(\text{iid})$ \\
+Anti-oráculo (\emph{wrong}) & $-0.1016$ \\
+\midrule
+\emph{Falla} — placebo \emph{delayed} & $+0.0059\;(>0)$ \\
+\emph{Falla} — worst-product (LCB) & $-0.0365\;(<-0.02)$; no-resueltos $+0.094$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\paragraph{Lectura honesta.} El efecto retenido es \textbf{real, grande y con dosis-respuesta
+perfecta}, y el anti-oráculo daña fuertemente —exactamente la firma de un mecanismo causal genuino.
+\textbf{El aprendizaje acumulado de Garrido queda confirmado prospectivamente} en seeds selladas, y
+contra el comparador estructurado \emph{más fuerte} (el efecto es aún mayor que el $+0.0226$ de los
+diagnósticos de desarrollo). \emph{Pero} no pasa dos barreras: (i) el placebo \emph{delayed} es
+levemente positivo —una fuga menor de temporización—; y, sobre todo, (ii) el brazo retenido sube el
+ReT medio \emph{en parte favoreciendo al producto mayoritario}, degradando el servicio del minoritario
+por debajo del margen de equidad. Es la \textbf{misma forma que hallamos en Program O}: la conversión
+\emph{media} es real; la conversión \emph{conjuntamente segura} no está establecida.
+
+\subsection{Qué abre esto}
+El STOP es correcto y \textbf{no autoriza entrenar ninguna red}. Pero define con precisión la próxima
+pregunta: el ``residual convertible'' aquí \emph{no es de magnitud} (la magnitud sobra: $+0.066$), sino
+de \textbf{seguridad conjunta}. La pregunta defendible es: \emph{¿puede un controlador retenido
+consciente de restricciones —o un híbrido learning-augmented MPC— mantener la ganancia media de
+$+0.066$ SIN el costo de peor-producto/no-resueltos?} Si un híbrido con \emph{gate} de confianza captura
+esa ganancia respetando la equidad, ahí está el paper fuerte.
+
+%==============================================================
+\section{La carrera honesta: el ``cuándo NO entrenar''}\label{sec:carrera}
+Una parte esencial del programa es lo que \emph{no} funcionó, documentado con la misma disciplina que
+lo que sí. A lo largo de la carrera abrimos y cerramos muchos frentes (variantes de riesgo, prevención,
+reordenamiento, perecederos, timing endógeno, atlas de estrés de guerra), y casi todos terminaron en
+\textbf{STOP} bien fundamentados: había ``oportunidad clarividente'' ($H_{PI}>0$) pero \emph{no} se
+convertía en ventaja observable, o el controlador estructurado ya capturaba todo el valor. El patrón
+recurrente:
+\begin{quote}
+\emph{El aprendizaje por refuerzo no está justificado cuando el control estructurado ya se sienta en la
+frontera observable. Saber cuándo NO entrenar es, en sí mismo, un resultado.}
+\end{quote}
+Esta honestidad tiene tres pilares metodológicos, todos vinculantes:
+\begin{enumerate}[nosep]
+  \item \textbf{Seeds selladas de un solo tiro} con contrato y criterios congelados \emph{antes} de
+        abrirlas (no se puede pescar el resultado favorable).
+  \item \textbf{Verificación adversarial (A11)}: cada afirmación se comprueba contra el artefacto
+        real. Dos agentes se auditan mutuamente; varias sobre-afirmaciones (mías y del colaborador)
+        fueron atrapadas y corregidas —incluida esta misma semana.
+  \item \textbf{Métrica intacta}: la ReT canónica nunca se cambia (0/47\,546); las mejoras deben
+        pasar guardrails de recursos, servicio y equidad, no comprarse con trampa.
+\end{enumerate}
+
+%==============================================================
+\section{Estado actual y ruta}\label{sec:estado}
+Trabajamos en dos carriles paralelos.
+
+\paragraph{Carril A — publicar Submission A / Paper 2 (Program Q).} Listo en lo esencial: el marco de 4
+niveles, la frontera exacta, la equivalencia RL${\approx}$MPC robusta a 5 pruebas, el mecanismo
+belief-insensitive y el benchmark de latencia (que retira honestamente el argumento de amortización).
+Destino \emph{Computers \& Industrial Engineering}. Es la publicación asegurada antes de la graduación.
+
+\paragraph{Carril B — Q-R1 y el intento de ganarle limpio al MPC.} La secuencia disciplinada,
+acordada tras varias rondas de auto-crítica adversarial, es:
+\begin{enumerate}[nosep]
+  \item Adjudicar la confirmación canónica de Q-R1 (\textbf{hecho}: STOP con efecto real pero no
+        conjuntamente seguro).
+  \item Congelar el mejor comparador estructurado \emph{probado} (nunca llamarlo ``MPC óptimo'').
+  \item Medir el residual con full-cohort, CRN independiente de la política, restricciones completas y
+        auditoría de potencia con SESOI $+0.01$ —\emph{sin umbrales arbitrarios}.
+  \item Solo si queda residual: probar un \emph{learning-augmented MPC} (valor terminal aprendido y/o
+        corrección de creencia), con RecurrentPPO puro como \emph{ablación}, no como candidato.
+  \item Si no hay residual estacionario: sensibilidad \emph{learner-blind} de los riesgos existentes;
+        y solo si son inertes, una extensión de riesgo acoplado a producto \textbf{validada
+        físicamente por Garrido}, con física y grilla congeladas antes de cualquier RL.
+\end{enumerate}
+La apuesta más prometedora \emph{no} es más ajuste de PPO estacionario, sino \textbf{un encoder de
+contexto causal retenido $+$ un MPC factible, bajo riesgos persistentes específicos por producto
+físicamente validados} —donde una red puede aprender una representación más rica que el filtro discreto
+actual, siempre que el MPC reciba exactamente la misma historia.
+
+\paragraph{Qué significa ``ganarle al MPC'', con honestidad.} No existe un teorema de imposibilidad ni
+un MPC óptimo certificado. ``Ganarle'' significa ganarle a \emph{la familia MPC retenida más fuerte que
+hayamos congelado y probado} bajo el mismo contrato de información, servicio y recursos —y el candidato
+final sería, él mismo, un \emph{learning-augmented MPC}. Sabemos que existe una \emph{incertidumbre
+física históricamente aprendible} (el efecto retenido de $+0.066$); no sabemos aún si un controlador
+justo deja un residual convertible \emph{y seguro}. Esa medición, no más PPO, es el próximo paso.
+
+%==============================================================
+\section{Limitaciones honestas}\label{sec:limitaciones}
+\begin{itemize}[nosep]
+  \item \textbf{Entorno estacionario y extensión de investigación.} La equivalencia RL${\approx}$MPC se
+        demostró sin riesgos activos y con una extensión de dos productos \emph{definida por nosotros},
+        no estimada de la cadena militar real. Bajo riesgos físicamente relevantes la respuesta podría
+        cambiar.
+  \item \textbf{El efecto retenido no es conjuntamente seguro.} $+0.066$ de ReT medio, pero con costo
+        de peor-producto y no-resueltos; no es desplegable tal cual.
+  \item \textbf{No hay óptimo de control certificado.} El MPC es un controlador aproximado de horizonte
+        deslizante; que su creencia sea óptima para \emph{inferencia} no prueba que sea óptimo para
+        \emph{control}.
+  \item \textbf{Validación física pendiente.} Cualquier extensión de riesgo acoplado a producto
+        requiere validación escrita de Garrido antes de ejecutarse.
+\end{itemize}
+
+%==============================================================
+\section{Resumen ejecutivo en una página}
+\begin{itemize}[nosep]
+  \item Reconstruimos, con fidelidad exacta (0/47\,546), una cadena de suministro militar de 13
+        operaciones y su métrica de resiliencia ReT.
+  \item Construimos un marco de falsación de 4 niveles con una \textbf{frontera de lazo abierto exacta
+        de 65\,536 planes} como clave de respuestas.
+  \item \textbf{Logro 1 (Submission A):} el RL aprende control de lazo cerrado real —le gana a las
+        65\,536 políticas fijas ($+0.07$ a $+0.12$)— pero \textbf{empata al MPC} ($\Delta_N{\approx}0$,
+        equivalencia TOST, robusta a 5 pruebas); y el MPC es además ${\sim}7\times$ más rápido. Entrega
+        el puente lazo-abierto$\to$lazo-cerrado de Garrido y aporta un protocolo de decisión ``cuándo
+        entrenar''.
+  \item \textbf{Logro 2 (Q-R1):} la retención de conocimiento entre campañas \textbf{mejora causalmente
+        la resiliencia de arranque en frío} ($+0.066$, LCB $+0.052$, dosis-respuesta perfecta,
+        anti-oráculo correcto), confirmada prospectivamente en seeds selladas —el aprendizaje acumulado
+        de Garrido. \emph{Pero} aún no es conjuntamente segura (costo de equidad de producto).
+  \item \textbf{Estrella polar restante:} un híbrido learning-augmented MPC que capture esa ganancia
+        \emph{sin} el costo de servicio, o bien un certificado honesto de frontera. La disciplina —seeds
+        selladas, verificación adversarial, métrica intacta— es lo que hace creíbles tanto los ``sí''
+        como los ``no''.
+\end{itemize}
+
+\vfill
+\noindent\rule{\linewidth}{0.4pt}\\
+{\footnotesize Documento acompañante generado el 22 de julio de 2026. Los números provienen de
+artefactos con custodia SHA-256: la tabla de Submission A (\code{source\_of\_truth.json}, veredicto
+\code{STOP\_Q\_NO\_REPLICATED\_LEARNED\_ADAPTATION}), el benchmark de latencia
+(\code{latency\_benchmark\_v1}) y la adjudicación verificada del confirmatorio Q-R1
+(\code{STOP\_REPAIRED\_Q\_R1\_NO\_RETAINED\_INFORMATION\_PASS}, verificación A11 independiente sobre los
+outputs crudos del VPS). La métrica ReT es fiel a la tesis Garrido-Ríos 2017.}
+
+\end{document}
