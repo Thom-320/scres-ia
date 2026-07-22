@@ -1,9 +1,24 @@
-"""MPC* — the strengthened structured belief-MPC comparator for Q-R1 Gate 1.
+"""MPC* — exact-state-integration belief-MPC PROTOTYPE for Q-R1 Gate 1.
 
-This is the "MPC challenge" comparator the two-track plan freezes BEFORE any
-learner is trained.  It fixes the four weaknesses the external audits isolated
-in ``program_t_full_des_mpc.py`` (which is left byte-identical so prior frozen
-artifacts still reproduce):
+STATUS (reclassified 2026-07-21, Codex reconciliation): EXPLORATORY_COMPARATOR_PROTOTYPE, NOT the
+frozen strongest comparator.  It is a real improvement over the noise-dominated legacy MC-MPC (the
+p16-vs-p64 0/12 vs 12/12 first-action stability certificate stands), but it has four known
+limitations and does not close the deployable residual:
+  - the 6 latent states are integrated exactly, but future demand is only MC-approximated
+    (``realizations_per_state`` tapes/state); "exact-stratified" overstates the demand side;
+  - ``_realization_seed`` keys the CRN on ``observation_sha256``, which is policy-dependent, so
+    common shocks are NOT guaranteed across arms that reached divergent states (a proper comparator
+    keys the scenario bank on history_root/campaign/week/scenario_id only);
+  - the fail-closed fallback maximizes weighted worst-fill and flags ``fallback_used`` /
+    ``planning_feasible=0``, but the returned action may still be infeasible — it is NOT a
+    guaranteed-safe policy;
+  - the objective is ``ret_visible``, not the full-cohort endpoint that motivated the repair.
+The defensible universal comparator is Codex's calibrated ``ret_proxy_scenario_h4_p16_stratified``
+(deeper H4, full-cohort primary) frozen in ``contracts/q_r1_successor_replication_v1.json``.  This
+module is kept as an exact-state-integration cross-check tool only.
+
+It addresses the four weaknesses the external audits isolated in ``program_t_full_des_mpc.py``
+(which is left byte-identical so prior frozen artifacts still reproduce):
 
 1. Exact / stratified 6-state integration.  The mixture over (theta, regime) is
    enumerated with exact posterior weights (``ExactJointBelief.enumerate_states``)

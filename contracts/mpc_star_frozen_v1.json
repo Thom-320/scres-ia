@@ -2,8 +2,9 @@
   "contract_id": "mpc_star_frozen_v1",
   "schema_version": "mpc_star_freeze_v1",
   "date_frozen": "2026-07-21",
-  "status": "FROZEN_STRONGEST_STRUCTURED_COMPARATOR",
-  "purpose": "The strengthened structured belief-MPC (MPC*) frozen at Q-R1 Gate 1 as the strongest-structured comparator every learner must beat before any neural-premium claim. Reconciles the retained_empirical_bayes_belief_mpc arm of program_s_paper3_retained_knowledge_v1.",
+  "status": "EXPLORATORY_COMPARATOR_PROTOTYPE",
+  "reclassified_2026_07_21": "Downgraded from FROZEN_STRONGEST_STRUCTURED_COMPARATOR after the Codex reconciliation review. This is a real improvement over the noise-dominated legacy MC-MPC (the p16-vs-p64 0/12 vs 12/12 stability certificate stands), but it is NOT the strongest structured comparator and does NOT close the deployable residual. Four known limitations (Codex, verified): (1) integrates the 6 latent states exactly but only Monte-Carlo-approximates future demand with 8 realizations/state; (2) CRN keyed by observation_sha256 is policy-dependent, so it does NOT guarantee common shocks across divergent arms; (3) the fail-closed fallback maximizes worst-fill but can still return an infeasible action -- it flags fallback_used/planning_feasible=0 but is not a guaranteed-safe policy; (4) optimizes ret_visible, not the full-cohort endpoint that motivated the repair. The defensible universal comparator is Codex's calibrated ret_proxy_scenario_h4_p16_stratified (deeper H4, full-cohort primary) frozen in q_r1_successor_replication_v1; this prototype is retained only as an exact-state-integration cross-check tool.",
+  "purpose": "Exploratory exact-state-integration belief-MPC prototype (Q-R1 Gate 1). Demonstrated that the legacy MC-MPC comparator was noise-dominated; NOT authoritative as the strongest comparator.",
   "module": "supply_chain/program_t_mpc_star.py",
   "frozen_config": {
     "mode": "constraint_aware",

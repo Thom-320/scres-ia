@@ -2,6 +2,18 @@
 
 **EXPLORATORY_NO_CLAIM. Burned roots only. Canonical ReT unchanged.**
 
+> **RECLASSIFIED 2026-07-21 (Codex reconciliation review).** The verdict below was originally
+> written as `STOP_NO_DEPLOYABLE_NEURAL_PREMIUM_STATIONARY_ENV`. It is **DOWNGRADED to an
+> unadjudicated hypothesis** `HYPOTHESIS_NO_DEPLOYABLE_PREMIUM_PENDING_COMPARATOR_V2`. Reason
+> (correct, accepted): the sufficient-statistic argument shows the retained Bayesian belief is
+> optimal for **inference** of the regime, but that does **not** prove an approximate H3 MPC is the
+> optimal **control** policy for the full-DES POMDP. A stronger CONTROLLER (deeper horizon, better
+> planning) consuming the SAME retained belief could beat the retained H3 MPC — that is deployable
+> control headroom a learner could capture, and this gate did not measure it. The parametric-carrier
+> NULL below stands (it is a direct measurement); the regime-carrier conclusion is a hypothesis
+> pending the calibrated comparator v2 (Codex's `ret_proxy_scenario_h4_p16_stratified`) and the
+> frozen prospective successor confirmatory. Do not cite a stationary-env STOP as demonstrated.
+
 Gate 2 asks whether any deployable headroom survives beyond the strongest structured controller
 (MPC*, frozen at Gate 1) — the precondition for authorizing a learner. The answer, on both memory
 carriers, is **no deployable premium in the stationary environment**. The route defined by the plan
@@ -54,11 +66,14 @@ over the retained controller is ≤ 0.
 | Joint-carrier D3 clean deployable bound (prior) | +0.0094, LCB +0.0057 (< the 0.015 gate) |
 | Regime oracle headroom | +0.0316 — but **clairvoyant**, not deployable |
 
-**Gate 2 outcome: `STOP_NO_DEPLOYABLE_NEURAL_PREMIUM_STATIONARY_ENV`.** The structured Bayesian
-controller sits at the deployable frontier on both carriers; the large regime oracle headroom is
-clairvoyant. No learner is authorized in this environment — training one would spend PPO to
-approximate (at best equal) an already-optimal Bayesian controller, the predicted null of Program Q's
-5-way RL≈MPC and the belief-insensitivity mechanism.
+**Gate 2 outcome (RECLASSIFIED): `HYPOTHESIS_NO_DEPLOYABLE_PREMIUM_PENDING_COMPARATOR_V2`.** The
+parametric carrier is a measured NULL. The regime-carrier conclusion is a hypothesis, not a
+demonstrated STOP: the sufficient-statistic argument closes the "better estimator" door but NOT the
+"better controller" door — a deeper-horizon controller with the same retained belief may beat the H3
+retained MPC, and that control headroom (deployable, learner-capturable) was not measured here.
+Resolving it requires the calibrated comparator v2 (deeper horizons, full-cohort objective,
+convergence-gated) and the frozen prospective successor. Until then, no stationary-env STOP is
+claimed and no learner is authorized OR excluded.
 
 ## What IS established (Paper 3 spine, structured form)
 Retained structured (Bayesian) decision knowledge improves cold-start canonical ReT by **+0.0226
