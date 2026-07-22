@@ -35,14 +35,27 @@ it. Test: the horizon-convergence probe (H3/H4/H6, burned roots, stratified plan
   the H4 MPC by cheap deep lookahead. (Lower probability given the n=1 tie.)
 - **H6 ≈ H4** → stationary env control-saturated → Door 1 CLOSED → go to Door 2/3.
 
-### Door 2 — Model intractability under complex risk (THE defensible winning door).
+### Door 2 — Model intractability under complex risk (candidate door; REFINED per Codex 2026-07-22).
 Make the environment's true dynamics **richer than any tractable structured planner can integrate**,
 and decision-relevant. The MPC must then APPROXIMATE (truncated horizon, particle belief, no exact
-risk-state DP) — not because we designed a bad model, but because **exact planning is intractable**.
-A learner trained on the true environment amortizes the intractable lookahead and beats the
-approximation. This is the Bertsekas ADP value proposition and it is **defensible against Reviewer
-#2**: the claim is "when risk dynamics exceed tractable structured planning, a learned controller
-beats the best tractable MPC," NOT "we handicapped the MPC."
+risk-state DP) — not by design, but because **exact planning is intractable**.
+
+**CRITICAL REFINEMENT (accepted from Codex): intractability alone is NOT a neural win.** Under
+intractability the fair comparator is NOT the exact MPC — it is the **best CLASSICAL structured
+approximation under the same compute budget** (rollout / approximate DP / a hand-designed or
+classical structured terminal value). A learned (neural) value function must beat THAT, not just the
+exact MPC. So the win hierarchy has two distinct levels:
+- **Level 1 (amortization, EXPECTED):** learning-augmented MPC beats the tractable exact-ish MPC.
+  This is not a neural premium — any amortization of intractable lookahead achieves it.
+- **Level 2 (the REAL Δ_N):** the neural value/belief beats the **best classical structured ADP**
+  under the same budget. Only this is a defensible neural premium. My earlier win condition
+  (`learner − MPC*`) tested Level 1; the real bar is `neural − best_classical_structured_ADP`.
+
+**Gating (binding, per Codex):** Door 2 is defensible ONLY if, FIRST, the EXISTING Garrido risks
+R11/R14/R21/R22/R24 are shown **decision-inert** (a learner-blind screen: the optimal mix action does
+not vary with them — the prior product-BLIND screen found invariant posture, but product-coupling is
+untested), AND Garrido provides **written physical validation** of any product-coupled risk (amplitudes,
+frequencies, timing, persistence). Complexity added without those two is not defensible.
 
 Concrete mechanism: a **product-specific risk with a large/continuous, slowly-recovering state** —
 e.g. a capacity loss on one product's Op5–Op7 share with stochastic multi-week recovery, or
@@ -64,7 +77,14 @@ otherwise it reads as designed-to-fail. Lower priority than Door 2.
 
 ## Winning plan (gates, criteria, execution)
 
-**G-H (tonight, running): horizon door.** Horizon-convergence probe. Routes Door 1 open/closed.
+**G-H (tonight): horizon door.** Horizon-convergence probe (burned, `/tmp/qr1_horizon`). **Honest
+scope (per Codex): this is a burned diagnostic, NOT a saturation certificate** — it uses p16 only
+(not p16/p64/p256 convergence; p16 is not ground truth), a single θ=(0.90,0.90), and the binary
+regime carrier. It INDICATES horizon effect at those settings, it does not certify control-optimality.
+Result so far: the **paired `retained_H4 − retained_H3` contrast is exactly 0.000000 across all 176
+campaigns** (identical retained decisions at H3 and H4) — a strong saturation signal at p16/this-cell;
+H6−H4 pending. A full certificate would add p64/p256 convergence and multiple cells. Routes Door 1
+open/closed as a diagnostic prior, not a proof.
 
 **G-R (next): ranking-reversal + intractability screen (learner-blind).** Build a minimal
 product-specific complex-recovery risk in direct-SimPy. Measure, WITHOUT any learner:
@@ -81,10 +101,14 @@ exhaustion certificate for this mechanism.
 and computational contract" (per Codex): stratified/exact integration, H1–H6 (+H8 only after
 DP/caching preflight), convergence-gated against a high-precision reference (p16/p64/p256 sensitivity;
 p64 is NOT ground truth), fail-closed-or-abstain. Ladder M0→M4 + PPO ablation, each with independent
-holdout, ranking-change + placebo + ledger/service gates. **WIN condition:**
-`LCB95[RetainedLearningAugmentedMPC − BestTractableRetainedMPC*] ≥ 0.01`, no adverse cell, exact
-resources, no lost-demand increase, worst-product within margin, multi-seed stable, same online
-compute budget. Fresh sealed seeds; confirmation one-shot.
+holdout, ranking-change + placebo + ledger/service gates. **WIN condition (two levels, per Codex):**
+must include a **classical structured ADP** baseline (non-neural learned/rollout terminal value) in
+the comparator suite. Level 1 `LCB95[learning-augmented MPC − best tractable MPC*] ≥ 0.01` shows
+amortization (necessary, not sufficient). **The publishable neural premium is Level 2:**
+`LCB95[neural-value learner − best classical structured ADP] ≥ 0.01` under the SAME compute budget.
+Both with no adverse cell, exact resources, no lost-demand increase, worst-product within margin,
+multi-seed stable. Fresh sealed seeds; confirmation one-shot. If Level 1 holds but Level 2 fails →
+"amortization helps, neural value does not" (still a result, not a neural premium).
 
 **Automatic pre-learner STOP (binding):** if G-R shows no deployable residual over the best tractable
 MPC*, NO learner is trained — that is the exhaustion certificate (quantitative ceilings: oracle
