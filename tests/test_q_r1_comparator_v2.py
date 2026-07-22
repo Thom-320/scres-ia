@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 
 from scripts.evaluate_program_q_replication import scheduler
+from scripts.audit_q_r1_comparator_power import audit, required_histories
 from scripts.merge_q_r1_comparator_v2_shards import (
     merge_convergence,
     merge_pareto,
@@ -252,3 +253,35 @@ def test_merge_recomputes_pareto_from_raw_rows() -> None:
     assert row["retained_minus_reset_early_ret_complete_cohort"] == pytest.approx(0.15)
     assert row["retained_minus_reset_worst_product_fill"] == pytest.approx(-0.02)
     assert row["retained_minus_reset_unresolved_orders"] == pytest.approx(0.5)
+
+
+def test_power_audit_clusters_by_history_root() -> None:
+    def metrics(ret: float):
+        return {"early_ret_complete_cohort": ret}
+
+    payload = {
+        "pareto_pairs": [
+            {
+                "config_id": "h4_c64",
+                "history_root": root,
+                "persistence_mode": "binary_0.9",
+                "retained": metrics(0.7 + delta),
+                "reset": metrics(0.7),
+            }
+            for root, delta in ((1, 0.01), (2, 0.02), (3, 0.03))
+        ]
+    }
+    result = audit(
+        payload,
+        config_id="h4_c64",
+        persistence_mode="binary_0.9",
+        sesoi=0.01,
+        alpha=0.05,
+        bootstrap_draws=100,
+        bootstrap_seed=7,
+    )
+    assert result["n_history_roots"] == 3
+    assert result["burned_mean_delta"] == pytest.approx(0.02)
+    assert result["burned_sd_delta"] == pytest.approx(0.01)
+    assert int(result["required_histories"]["0.9"]) >= 1
+    assert required_histories(sd=0.0, sesoi=0.01, alpha=0.05, power=0.9) == 1
