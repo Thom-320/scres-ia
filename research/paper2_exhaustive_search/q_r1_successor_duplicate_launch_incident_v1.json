@@ -1,0 +1,35 @@
+{
+  "schema_version": "q_r1_successor_duplicate_launch_incident_v1",
+  "recorded_utc": "2026-07-22T03:40:53Z",
+  "contract_changed": false,
+  "canonical_execution": {
+    "host": "ovh-agent-lab",
+    "base_path": "/home/ubuntu/q_r1_runs/983c197",
+    "commit": "983c1971c1aeb87613838954e4a6035d79f53234",
+    "bundle_sha256": "4764b65d576c7a3444e1c9d31712f9ee5fc399a291c7b593ba2f611a741d125a",
+    "launched_utc": "2026-07-22T02:37:54Z",
+    "shards": ["s01", "s02", "s03", "s04"],
+    "preserved": true
+  },
+  "duplicate_execution": {
+    "host": "local_mac",
+    "worktree": "/private/tmp/claude-501/-Users-thom-Projects-research-scres-ia/79a20ac6-ef07-49db-ab45-48bab5e28d63/scratchpad/successor-wt",
+    "commit": "983c1971c1aeb87613838954e4a6035d79f53234",
+    "approximately_launched_utc": "2026-07-22T03:36:00Z",
+    "pids": [62791, 62793, 62795, 62796],
+    "roots": [[7572001, 7572008], [7572009, 7572016], [7572017, 7572024], [7572025, 7572032]],
+    "stopped_utc": "2026-07-22T03:39:00Z",
+    "result_json_files_observed": 0,
+    "partial_output_files_observed": 0,
+    "reason": "A second agent checked only local processes, did not check the already-running VPS execution, and incorrectly inferred that the frozen roots had not been opened."
+  },
+  "custody_adjudication": {
+    "status": "DISCLOSE_DUPLICATE_LAUNCH_CANONICAL_FIRST_RUN_CONTINUES",
+    "same_frozen_contract_and_commit": true,
+    "outcome_was_observed_before_duplicate_stop": false,
+    "adaptive_selection_or_contract_change": false,
+    "investigator_assessment": "The duplicate launch is an operational custody deviation that must be disclosed. It did not produce an observed result or enable adaptive selection; the earlier VPS execution remains the sole canonical evidence source.",
+    "independent_auditor_review_required": true,
+    "historical_verdicts_reopened": []
+  }
+}
