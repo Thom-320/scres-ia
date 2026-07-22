@@ -1,0 +1,30 @@
+{
+  "schema_version": "q_r1_h8_instrument_preflight_adjudication_v1",
+  "claim_status": "BURNED_INSTRUMENT_PREFLIGHT_NO_COMPARATOR_SELECTION",
+  "execution_commit": "983c1971c1aeb87613838954e4a6035d79f53234",
+  "source_result_sha256": "5b6b98693b8f5a2095e050d468a8515c06c2f46c33cbe42b4227cba7d6b25079",
+  "exit_status": 0,
+  "history_root": 7570801,
+  "states": 1,
+  "horizon": 8,
+  "mode": "scenario",
+  "convergence": {
+    "p16_p64_first_action_agreement": 1.0,
+    "first_action_agreement_gate": 0.95,
+    "first_action_agreement_pass": true,
+    "p16_p64_mean_abs_planning_value_error": 0.005063398530379404,
+    "mean_abs_planning_value_error_gate": 0.005,
+    "mean_abs_planning_value_error_pass": false,
+    "p16_p64_q95_abs_planning_value_error": 0.005063398530379404,
+    "q95_abs_planning_value_error_gate": 0.01,
+    "q95_abs_planning_value_error_pass": true,
+    "overall_pass": false
+  },
+  "latency_ms_first_action": {
+    "p16": 88203.81359010935,
+    "p64": 345399.6914830059
+  },
+  "adjudication": "H8 is not converged under the frozen mean-value-error gate in this one-state burned instrument preflight. It cannot select or reject a comparator, authorize learner training, alter the canonical Q-R1 confirmation, or support an outcome claim.",
+  "learner_training_authorized": false,
+  "comparator_selection_authorized": false
+}
