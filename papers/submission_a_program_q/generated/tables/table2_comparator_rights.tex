@@ -1,0 +1,16 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Information and decision rights of the principal comparators.}
+\label{tab:comparators}
+\begin{tabular}{p{0.18\linewidth}p{0.23\linewidth}p{0.19\linewidth}p{0.28\linewidth}}
+\toprule
+Comparator & Information & Decision rights & Resource and selection rule \\
+\midrule
+Open-loop frontier & No episode feedback & Eight weekly mix actions fixed ex ante & All 65,536 calendars; common tapes and scheduled resources \\
+Belief-based control & Same deployable operational history; fixed HMM model & Replans weekly over the same four actions & Best frozen structured controller reselected inside bootstrap \\
+RecurrentPPO & Same 21-field causal observation; recurrent state & Chooses one of four mix actions weekly & Ten frozen checkpoints; identical physical resources \\
+Oracle & Privileged future information & Diagnostic only & Never a deployable comparator or a learned claim \\
+\bottomrule
+\end{tabular}
+\end{table}

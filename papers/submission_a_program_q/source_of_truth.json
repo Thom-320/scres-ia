@@ -1,0 +1,113 @@
+{
+  "binding_verdict": "STOP_Q_NO_REPLICATED_LEARNED_ADAPTATION",
+  "confirmation_rows": [
+    [
+      "rho75_share90",
+      "+0.07952",
+      "+0.06608",
+      "-0.00159",
+      "[-0.00627, +0.00310]",
+      "84.8%",
+      "10/10"
+    ],
+    [
+      "rho90_share75",
+      "+0.07255",
+      "+0.06233",
+      "-0.00072",
+      "[-0.00552, +0.00408]",
+      "89.8%",
+      "10/10"
+    ],
+    [
+      "rho90_share90",
+      "+0.11724",
+      "+0.10614",
+      "-0.00041",
+      "[-0.00268, +0.00186]",
+      "95.7%",
+      "10/10"
+    ]
+  ],
+  "design": {
+    "actions_per_decision": 4,
+    "cells": [
+      "rho75_share90",
+      "rho90_share75",
+      "rho90_share90"
+    ],
+    "confirmation_tapes_per_cell": 256,
+    "direct_audit_failures": 0,
+    "direct_full_des_replays": 21696,
+    "learner_checkpoints": 10,
+    "open_loop_calendars": 65536,
+    "researcher_defined_extension": true,
+    "risks_enabled": false,
+    "weekly_decisions": 8
+  },
+  "evidence_sha256": {
+    "adjudication": "e13e17f001a1d24f86f00257e145c26f9c09def68ef7b2ee2f90fcb23148b0e9",
+    "calibration": "dc55880f0dca92e3c51c0690203736835ef75b8247dc1716e2cc6f9b5f0a54fd",
+    "confirmation": "62f6fd390471624f7c301b8baa96d31871db99e22dd5a22d6bb8cf7bba8088b2",
+    "confirmation_contract": "b0bd21c7eec5f0aa6acc4e6866e32c3804aa2fa7f8afecc040bc7fd129980874",
+    "direct_audit": "3da52ca129707e883be0179f82be8058d29ddf454c27a4f578918c26c7ec82eb",
+    "learner_contract": "5442e8a9e4de33a7e02e443cabc163a5acd396424b6614ab03ea4fe10c78c752",
+    "metric_audit": "61a67f24cb3bf31b9cf5fd9333436bd2a37da61e6bedb838e572612a8b1e2137"
+  },
+  "guardrail_rows": [
+    [
+      "rho75_share90",
+      "-0.01036",
+      "-0.02266",
+      "+0.000",
+      "+0.204",
+      "+908251",
+      "0.0"
+    ],
+    [
+      "rho90_share75",
+      "-0.01573",
+      "-0.02566",
+      "+0.000",
+      "+0.280",
+      "+1164457",
+      "0.0"
+    ],
+    [
+      "rho90_share90",
+      "-0.00451",
+      "-0.02632",
+      "+0.000",
+      "+0.119",
+      "+476550",
+      "0.0"
+    ]
+  ],
+  "metric": {
+    "contract": "ret_excel_request_snapshot_v2",
+    "formula_rows": 47546,
+    "max_abs_diff": 0.0,
+    "mismatches": 0,
+    "visible_population_caveat": "Primary workbook-visible rows are completed non-lost orders; ledger and service endpoints are mandatory companion outcomes."
+  },
+  "primary_interpretation": "Feedback value replicated; no neural premium; worst-product safety not established.",
+  "prohibited_claims": [
+    "Neural premium over structured control.",
+    "Deployment or worst-product safety.",
+    "Accumulated learning, transfer, or path dependency across campaigns.",
+    "Improvement under Garrido-native active risks.",
+    "Superiority over every mathematically possible dynamic policy."
+  ],
+  "schema_version": "submission_a_program_q_source_of_truth_v1",
+  "scientific_base_commit": "f2dfe356c179bd16f4b89b26e8ed3b19d69f5a71",
+  "static_frontier_summary_sha256": "b4d21cc8eae385acff76c1c9f975cdae554b300610233586eadec6f1ebd194a0",
+  "submission_name": "Submission A -- Program Q",
+  "supported_claims": [
+    "Exact reproduction of the workbook ReT formula given source snapshots.",
+    "RecurrentPPO outperforms every calendar in the complete 65,536-policy open-loop frontier in all three cells.",
+    "RecurrentPPO is practically equivalent, not superior, to the selected structured controller under the frozen +/-0.01 margin.",
+    "The action trajectory and replacement controls identify genuine within-episode feedback rather than a fixed schedule."
+  ],
+  "target_journal": "Computers & Industrial Engineering",
+  "title": "When Feedback Beats Every Static Policy but Not Structured Control: Exact Benchmarking of Recurrent RL in a Supply-Chain DES"
+}
