@@ -1,0 +1,106 @@
+{
+  "claim_status": "BURNED_DEVELOPMENT_NO_CLAIM",
+  "confirmation_authorized": true,
+  "convergence": [
+    {
+      "convergence_pass": false,
+      "horizon": 1,
+      "mode": "scenario",
+      "p16_mean_online_ms_first_action": 314.93690615316154,
+      "p16_p64_first_action_agreement": 1.0,
+      "p16_p64_max_planning_value_error": 0.010345610297169516,
+      "p16_p64_mean_abs_planning_value_error": 0.003956029946089757,
+      "p16_p64_q95_abs_planning_value_error": 0.010316494290317396,
+      "p64_mean_online_ms_first_action": 1237.3284583489294,
+      "states": 20
+    },
+    {
+      "convergence_pass": false,
+      "horizon": 3,
+      "mode": "scenario",
+      "p16_mean_online_ms_first_action": 355.24465214984957,
+      "p16_p64_first_action_agreement": 1.0,
+      "p16_p64_max_planning_value_error": 0.016253870168352225,
+      "p16_p64_mean_abs_planning_value_error": 0.003865506651839484,
+      "p16_p64_q95_abs_planning_value_error": 0.016224373691101763,
+      "p64_mean_online_ms_first_action": 1438.059083497501,
+      "states": 20
+    },
+    {
+      "convergence_pass": true,
+      "horizon": 4,
+      "mode": "scenario",
+      "p16_mean_online_ms_first_action": 450.0818457978312,
+      "p16_p64_first_action_agreement": 1.0,
+      "p16_p64_max_planning_value_error": 0.008355370620187985,
+      "p16_p64_mean_abs_planning_value_error": 0.004892124499535822,
+      "p16_p64_q95_abs_planning_value_error": 0.008341463636560914,
+      "p64_mean_online_ms_first_action": 1780.3587351969327,
+      "states": 20
+    },
+    {
+      "convergence_pass": true,
+      "horizon": 6,
+      "mode": "scenario",
+      "p16_mean_online_ms_first_action": 2266.7927685994073,
+      "p16_p64_first_action_agreement": 1.0,
+      "p16_p64_max_planning_value_error": 0.00726283960416807,
+      "p16_p64_mean_abs_planning_value_error": 0.0049666385120762605,
+      "p16_p64_q95_abs_planning_value_error": 0.007241714816012257,
+      "p64_mean_online_ms_first_action": 8889.390845898015,
+      "states": 20
+    }
+  ],
+  "convergence_gate": {
+    "first_action_agreement_min": 0.95,
+    "max_abs_planning_value_error": "reported diagnostic, not a gate",
+    "mean_abs_planning_value_error_max": 0.005,
+    "q95_abs_planning_value_error_max": 0.01
+  },
+  "created_at": "2026-07-22T02:17:53.576084+00:00",
+  "elapsed_seconds": 808.121932457987,
+  "h8_boundary": "not run; requires cached/DP preflight and explicit CLI opt-in",
+  "history_roots": [
+    7570801,
+    7570804
+  ],
+  "learner_training_authorized": false,
+  "performance": [
+    {
+      "config_id": "ret_proxy_scenario_h4_p16_stratified",
+      "horizon": 4,
+      "max_lost_orders": 0.0,
+      "mean_early_ret_complete_cohort": 0.7582190957190957,
+      "mean_early_ret_visible": 0.7594521377191832,
+      "mean_online_ms_campaign": 3119.9242511262128,
+      "mean_ret_full": 0.0,
+      "mean_worst_product_fill": 0.9271429159651643,
+      "mode": "scenario"
+    },
+    {
+      "config_id": "ret_proxy_scenario_h6_p16_stratified",
+      "horizon": 6,
+      "max_lost_orders": 0.0,
+      "mean_early_ret_complete_cohort": 0.7582190957190957,
+      "mean_early_ret_visible": 0.7594521377191832,
+      "mean_online_ms_campaign": 8677.767572950688,
+      "mean_ret_full": 0.0,
+      "mean_worst_product_fill": 0.9271429159651643,
+      "mode": "scenario"
+    }
+  ],
+  "schema_version": "q_r1_retained_mpc_calibration_v1",
+  "selected_universal_config": {
+    "config_id": "ret_proxy_scenario_h4_p16_stratified",
+    "horizon": 4,
+    "max_lost_orders": 0.0,
+    "mean_early_ret_complete_cohort": 0.7582190957190957,
+    "mean_early_ret_visible": 0.7594521377191832,
+    "mean_online_ms_campaign": 3119.9242511262128,
+    "mean_ret_full": 0.0,
+    "mean_worst_product_fill": 0.9271429159651643,
+    "mode": "scenario"
+  },
+  "selection_objective": "absolute pooled early complete-cohort ReT, then ret_full and worst fill; never retained-minus-reset or learner return",
+  "state_selection": "deterministic linspace over roots/campaigns; no outcome used"
+}

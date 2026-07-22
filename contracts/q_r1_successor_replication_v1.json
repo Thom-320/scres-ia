@@ -1,0 +1,53 @@
+{
+  "schema_version": "q_r1_successor_replication_v1",
+  "status": "FROZEN_PROSPECTIVE_UNOPENED",
+  "claim_status": "PROSPECTIVE_CONFIRMATION_NOT_YET_RUN",
+  "historical_verdicts_reopened": [],
+  "history_roots": [7572001, 7572032],
+  "histories": 32,
+  "campaigns_per_history": 12,
+  "shards": [
+    {"id": "s01", "history_roots": [7572001, 7572008]},
+    {"id": "s02", "history_roots": [7572009, 7572016]},
+    {"id": "s03", "history_roots": [7572017, 7572024]},
+    {"id": "s04", "history_roots": [7572025, 7572032]}
+  ],
+  "selected_universal_planner": {
+    "config_id": "ret_proxy_scenario_h4_p16_stratified",
+    "horizon": 4,
+    "mode": "scenario",
+    "particles": 16,
+    "belief_integration": "stratified",
+    "selection_source": "results/q_r1/retained_mpc_calibration_v3/result.json",
+    "selection_never_used_retained_minus_reset_or_learner_return": true
+  },
+  "estimands": {
+    "A": "prefix_natural_replanning",
+    "B": "sustained_control",
+    "C": "historical_splice_diagnostic_only"
+  },
+  "primary_population": "persistence_0p90",
+  "dose_population": "persistence_0p75",
+  "null_population": "iid_0p50_binary_context",
+  "primary_metrics": ["early_ret_visible", "early_ret_complete_cohort"],
+  "pass": {
+    "each_primary_point_min": 0.01,
+    "each_primary_history_clustered_lcb95_min_exclusive": 0.0,
+    "dose_order": "0.90 > 0.75 > iid",
+    "iid_abs_max": 0.005,
+    "shuffled_delayed_max": 0.0,
+    "lost_demand_increase_max": 0.0,
+    "worst_product_lcb95_min": -0.02,
+    "scheduled_resource_error_max": 0.0
+  },
+  "adjudication": {
+    "A_and_B_separate": true,
+    "C_can_rescue": false,
+    "oracle_is_upper_bound_only": true,
+    "placebos_action_eligible": false,
+    "post_outcome_episode_selection": false,
+    "learner_training_authorized_by_this_contract": false
+  },
+  "collision_audit": "research/paper2_exhaustive_search/q_r1_successor_replication_seed_collision_audit_v1.json",
+  "contract_identity_sha256": "ac9ddd46d0e25b54ee149ee0602cc90b4057ce787797d13e4e0ee56d8ca45068"
+}

@@ -3,6 +3,7 @@ from __future__ import annotations
 import pytest
 
 from scripts.adjudicate_q_r1_successor import adjudicate
+from scripts.merge_q_r1_successor_shards import merge_payloads
 from scripts.run_q_r1_successor_abc import fixed_theta_belief, summarize
 from supply_chain.q_r1_retained_learning import ESTIMANDS
 
@@ -109,3 +110,26 @@ def test_adjudicator_never_selects_oracle_or_placebos() -> None:
         "reset_posterior_0p5",
     ]
     assert result["learner_training_authorized"] is False
+
+
+def test_merge_rejects_incomplete_frozen_shards() -> None:
+    contract = {
+        "shards": [
+            {"history_roots": [1, 1]},
+            {"history_roots": [2, 2]},
+        ],
+        "contract_identity_sha256": "abc",
+        "selected_universal_planner": {"config_id": "planner"},
+        "history_roots": [1, 2],
+        "campaigns_per_history": 12,
+    }
+    payload = {
+        "history_roots": [1, 1],
+        "contract_sha256": "abc",
+        "planner": "planner",
+        "runtime": {"commit": "same"},
+        "rows": [],
+        "elapsed_seconds": 1.0,
+    }
+    with pytest.raises(ValueError, match="exactly cover"):
+        merge_payloads(contract, [payload])

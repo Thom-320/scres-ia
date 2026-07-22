@@ -49,6 +49,44 @@ ARMS = HISTORICAL_ARMS + ("delayed_posterior",)
 DEPLOYABLE_ARMS = ("retained_posterior", "reset_posterior_0p5")
 
 
+def contract_identity(contract: dict[str, object]) -> str:
+    payload = dict(contract)
+    payload["contract_identity_sha256"] = None
+    canonical = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
+    return hashlib.sha256(canonical).hexdigest()
+
+
+def load_and_validate_contract(args: argparse.Namespace) -> tuple[dict[str, object] | None, str | None]:
+    """Bind a prospective shard to the frozen successor contract."""
+    if args.contract is None:
+        if args.burned or args.allow_dirty_smoke:
+            return None, None
+        raise RuntimeError("prospective Q-R1 runs require --contract")
+    contract_path = args.contract.resolve()
+    contract = json.loads(contract_path.read_text())
+    if contract.get("status") != "FROZEN_PROSPECTIVE_UNOPENED":
+        raise RuntimeError("Q-R1 contract is not frozen and unopened")
+    planner = contract["selected_universal_planner"]
+    expected = {
+        "horizon": args.horizon,
+        "mode": args.mode,
+        "particles": args.particles,
+        "belief_integration": args.belief_integration,
+    }
+    if any(planner.get(key) != value for key, value in expected.items()):
+        raise RuntimeError("runner planner does not match the frozen contract")
+    if args.campaigns != contract.get("campaigns_per_history"):
+        raise RuntimeError("campaign count does not match the frozen contract")
+    shard = [args.seed_start, args.seed_start + args.histories - 1]
+    allowed = [row["history_roots"] for row in contract.get("shards", [])]
+    if shard not in allowed:
+        raise RuntimeError("requested shard is not an exact frozen shard")
+    identity = contract_identity(contract)
+    if contract.get("contract_identity_sha256") != identity:
+        raise RuntimeError("Q-R1 contract identity digest mismatch")
+    return contract, identity
+
+
 def sha256(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as handle:
@@ -213,6 +251,7 @@ def run(args: argparse.Namespace, output_dir: Path) -> dict[str, object]:
     runtime = runtime_receipt()
     if runtime["git_status_porcelain"] and not args.allow_dirty_smoke:
         raise RuntimeError("scientific Q-R1 runs require a clean worktree")
+    contract, contract_sha256 = load_and_validate_contract(args)
     sched = scheduler()
     config = FullDEST0Config(
         horizon=args.horizon,
@@ -321,6 +360,8 @@ def run(args: argparse.Namespace, output_dir: Path) -> dict[str, object]:
         "histories": args.histories,
         "campaigns_per_history": args.campaigns,
         "planner": config.config_id,
+        "contract_sha256": contract_sha256,
+        "contract_schema": None if contract is None else contract.get("schema_version"),
         "estimand_boundaries": {
             "prefix_natural_replanning": "two treatment actions, then reset-belief policy replans on each reached state",
             "sustained_control": "arm controller acts for all eight decisions",
@@ -354,6 +395,7 @@ def run(args: argparse.Namespace, output_dir: Path) -> dict[str, object]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument("--contract", type=Path)
     parser.add_argument("--seed-start", type=int, required=True)
     parser.add_argument("--histories", type=int, default=32)
     parser.add_argument("--campaigns", type=int, default=12)
