@@ -55,12 +55,17 @@ from supply_chain.retained_context_discovery import (  # noqa: E402
 CELL = ("rho90_share90", 0.90, 0.90)
 ESTIMANDS = ("A_natural_replan", "B_retained_full", "C_frozen_splice")
 DELTA_KEYS = (
-    "early_ret_2w",
+    "early_ret_2w",  # VISIBLE cohort mean (completed-only) — the burn's endpoint
+    "early_ret_full_2w",  # FULL 12-order cohort (unresolved/lost score 0) — the honest endpoint
     "worst_product_fill",
     "unresolved_orders",
     "lost_orders",
     "early_unresolved_orders",
     "early_worst_product_fill",
+    "early_service_loss_to_score",
+    "actual_loaded_departures",
+    "actual_payload",
+    "actual_downstream_vehicle_hours",
 )
 RESOURCE_KEYS = (
     "gross_policy_batch_slots",
@@ -178,6 +183,16 @@ def run(args: argparse.Namespace) -> dict:
                     "B_retained_full": evaluate_calendar(campaign=physical, calendar=cal_ret_nat, scheduler=sched),
                     "C_frozen_splice": evaluate_calendar(campaign=physical, calendar=cal_ret_c, scheduler=sched),
                 }
+                # Full-cohort endpoint: the 12-order early cohort with unresolved/lost
+                # scored 0 (closes the completed-only selection hole in early_ret_2w).
+                # Derived from existing fields; canonical ReT is left untouched.
+                for label in metrics:
+                    generated = metrics[label]["early_generated_orders"]
+                    metrics[label]["early_ret_full_2w"] = (
+                        metrics[label]["early_ret_2w"] * metrics[label]["early_visible_rows"] / generated
+                        if generated > 0.0
+                        else 0.0
+                    )
                 burn_ret = committed_rows.get(
                     (kappa, campaign.history_root, campaign_index, "retained_posterior")
                 )
@@ -190,10 +205,18 @@ def run(args: argparse.Namespace) -> dict:
                         abs(metrics["C_frozen_splice"]["early_ret_2w"] - burn_ret["early_ret_2w"]),
                         abs(metrics["reset"]["early_ret_2w"] - burn_reset["early_ret_2w"]),
                     )
+                # Action-equivalence is NOT belief-equivalence: the retained and reset
+                # priors differ by construction; record that difference alongside
+                # whether it actually changed the first two actions (the treatment).
+                belief_abs_diff = abs(float(prior_ret) - float(prior_reset))
+                first2_action_changed = tuple(cal_ret_nat[:2]) != tuple(cal_reset_nat[:2])
                 row = {
                     "kappa": kappa,
                     "history_root": campaign.history_root,
                     "campaign_index": campaign_index,
+                    "initial_belief_abs_diff": belief_abs_diff,
+                    "first2_action_changed": bool(first2_action_changed),
+                    "a_equals_b_calendar": bool(tuple(cal_ret_a) == tuple(cal_ret_nat)),
                     "calendars": {
                         "reset": list(map(int, cal_reset_nat)),
                         "A_natural_replan": list(map(int, cal_ret_a)),
@@ -223,9 +246,21 @@ def run(args: argparse.Namespace) -> dict:
     summaries: dict[str, dict] = {}
     for kappa in args.kappas:
         subset = [row for row in pairs_out if row["kappa"] == kappa]
+        n_belief_diff = sum(1 for row in subset if row["initial_belief_abs_diff"] > 1e-9)
+        n_action_changed = sum(1 for row in subset if row["first2_action_changed"])
         summaries[str(kappa)] = {
             "n_pairs": len(subset),
             "a_equals_b_calendars": a_equals_b[kappa],
+            "action_vs_belief": {
+                "n_initial_belief_differs": n_belief_diff,
+                "max_initial_belief_abs_diff": max(
+                    (row["initial_belief_abs_diff"] for row in subset), default=0.0
+                ),
+                "n_first2_action_changed": n_action_changed,
+                "note": "A==B calendars is ACTION-equivalence, not belief-equivalence: "
+                "priors differ in n_initial_belief_differs pairs but only change the "
+                "first two actions in n_first2_action_changed of them.",
+            },
             "estimands": {
                 estimand: {
                     key: delta_stats(
@@ -248,7 +283,7 @@ def run(args: argparse.Namespace) -> dict:
             ),
         }
     payload = {
-        "schema_version": "q_r1_c1_natural_continuation_diagnostic_v1",
+        "schema_version": "q_r1_c1_natural_continuation_diagnostic_v2",
         "claim_status": "EXPLORATORY_NO_CLAIM",
         "seed_policy": "BURNED_ROOTS_ONLY_7570801_7570824",
         "created_at": datetime.now(timezone.utc).isoformat(),
@@ -294,13 +329,17 @@ def main() -> int:
         kappa: {
             "a_equals_b": summary["a_equals_b_calendars"],
             "n_pairs": summary["n_pairs"],
+            "action_vs_belief": summary["action_vs_belief"],
             **{
                 estimand: {
-                    "d_early_ret_mean": summary["estimands"][estimand]["early_ret_2w"]["mean"],
-                    "d_early_ret_ci95": summary["estimands"][estimand]["early_ret_2w"]["clustered_ci95"],
+                    "d_early_ret_visible_mean": summary["estimands"][estimand]["early_ret_2w"]["mean"],
+                    "d_early_ret_visible_ci95": summary["estimands"][estimand]["early_ret_2w"]["clustered_ci95"],
+                    "d_early_ret_FULL_mean": summary["estimands"][estimand]["early_ret_full_2w"]["mean"],
+                    "d_early_ret_FULL_ci95": summary["estimands"][estimand]["early_ret_full_2w"]["clustered_ci95"],
                     "d_worst_fill_mean": summary["estimands"][estimand]["worst_product_fill"]["mean"],
                     "d_unresolved_mean": summary["estimands"][estimand]["unresolved_orders"]["mean"],
                     "d_unresolved_max": summary["estimands"][estimand]["unresolved_orders"]["max"],
+                    "d_actual_payload_mean": summary["estimands"][estimand]["actual_payload"]["mean"],
                 }
                 for estimand in ESTIMANDS
             },

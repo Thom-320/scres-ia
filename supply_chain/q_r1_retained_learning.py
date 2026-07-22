@@ -290,6 +290,18 @@ def evaluate_calendar(
         "mass_residual": row["mass_residual"],
         "partition_residual": row["partition_residual"],
         **{key: row[key] for key in RESOURCE_KEYS},
+        # Actual downstream utilization (as opposed to the "charged" scheduled
+        # entitlement above): lets a matched-resources audit distinguish "better
+        # decision" from "used more of the already-reserved fleet".
+        **{
+            key: row[key]
+            for key in (
+                "actual_loaded_departures",
+                "actual_payload",
+                "actual_downstream_vehicle_hours",
+            )
+            if key in row
+        },
     }
 
 
