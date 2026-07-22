@@ -36,7 +36,9 @@ unresolved demand, and ledger completeness remain mandatory disclosures.
 Whether worst-product is a gate for the domain claim or only for a `safe`
 deployment label requires written, neutral validation from Garrido.
 
-Until that response exists, future adjudication must report two verdicts:
+The PI reports that Garrido's criterion is canonical mean ReT.  Pending a
+written record from Garrido, successor adjudication therefore reports two
+verdicts without making the second a prerequisite for the first:
 
 1. `RETAINED_RET_EFFECT`: canonical mean ReT effect with causal controls.
 2. `RETAINED_SAFE_EFFECT`: the ReT effect plus the frozen service constraints.
@@ -54,6 +56,12 @@ The written question to Garrido must remain neutral:
 
 No candidate numerical margin is included in the question.  A domain answer
 may govern a new contract, but cannot change the frozen adjudication.
+
+For the successor draft, worst-product and unresolved demand are mandatory
+secondary disclosures and define a deployment-sensitivity frontier.  They do
+not gate `RETAINED_RET_EFFECT` or a ReT-only hybrid premium.  Resources, full
+ledger accounting, causal information rights, and lost-demand disclosure
+remain identification requirements rather than optional preferences.
 
 ## Immediate successor route
 

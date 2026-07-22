@@ -150,6 +150,7 @@ def run(args: argparse.Namespace) -> dict[str, object]:
         for config in family(args, args.high_paths)
     }
     convergence: list[dict[str, object]] = []
+    convergence_pairs: list[dict[str, object]] = []
     converged_signatures: list[tuple[int, str, float, str]] = []
     if args.convergence_receipt is not None:
         receipt = json.loads(args.convergence_receipt.read_text())
@@ -168,6 +169,7 @@ def run(args: argparse.Namespace) -> dict[str, object]:
         ]:
             raise ValueError("convergence receipt path budgets do not match")
         convergence = list(receipt["convergence"])
+        convergence_pairs = list(receipt.get("convergence_pairs", []))
         converged_signatures = [
             _signature_tuple(row)
             for row in convergence
@@ -189,7 +191,10 @@ def run(args: argparse.Namespace) -> dict[str, object]:
             high_abstentions = 0
             for campaign, retained_prior in states:
                 observation = first_observation(campaign)
-                for prior in (retained_prior, 0.5):
+                for prior_label, prior in (
+                    ("retained", retained_prior),
+                    ("reset", 0.5),
+                ):
                     outputs = []
                     for config in (low, high):
                         if time.perf_counter() - started > args.hard_cap_seconds:
@@ -218,11 +223,23 @@ def run(args: argparse.Namespace) -> dict[str, object]:
                     if outputs[0] is not None and outputs[1] is not None:
                         low_actions.append(int(outputs[0][0]))
                         high_actions.append(int(outputs[1][0]))
-                        errors.append(
-                            abs(
-                                float(outputs[0][1]["planning_early_ret_complete_cohort"])
-                                - float(outputs[1][1]["planning_early_ret_complete_cohort"])
-                            )
+                        error = abs(
+                            float(outputs[0][1]["planning_early_ret_complete_cohort"])
+                            - float(outputs[1][1]["planning_early_ret_complete_cohort"])
+                        )
+                        errors.append(error)
+                        convergence_pairs.append(
+                            {
+                                "signature": list(signature),
+                                "history_root": campaign.history_root,
+                                "campaign_index": campaign.campaign_index,
+                                "persistence_mode": campaign.persistence_mode,
+                                "prior_arm": prior_label,
+                                "retained_prior": retained_prior,
+                                "low_action": int(outputs[0][0]),
+                                "high_action": int(outputs[1][0]),
+                                "absolute_planning_value_error": error,
+                            }
                         )
             comparable = len(errors)
             agreement = (
@@ -269,6 +286,7 @@ def run(args: argparse.Namespace) -> dict[str, object]:
             "retained_minus_reset_used_for_selection": False,
             "phase": "convergence_only",
             "convergence": convergence,
+            "convergence_pairs": convergence_pairs,
             "pareto": [],
             "pareto_pairs": [],
             "elapsed_seconds": time.perf_counter() - started,
@@ -385,6 +403,7 @@ def run(args: argparse.Namespace) -> dict[str, object]:
         "retained_minus_reset_used_for_selection": False,
         "phase": "pareto_from_receipt" if args.convergence_receipt else "all",
         "convergence": convergence,
+        "convergence_pairs": convergence_pairs,
         "pareto": pareto,
         "pareto_pairs": pareto_pairs,
         "elapsed_seconds": time.perf_counter() - started,

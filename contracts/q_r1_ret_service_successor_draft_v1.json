@@ -18,13 +18,16 @@
     },
     "retained_safe_effect": {
       "inherits_retained_ret_effect": true,
+      "role": "SECONDARY_DEPLOYMENT_SENSITIVITY_NOT_RET_GATE",
       "lost_demand_increase_max": 0.0,
-      "worst_product_margin": "PENDING_NEUTRAL_GARRIDO_VALIDATION",
-      "unresolved_margin": "PENDING_NEUTRAL_GARRIDO_VALIDATION",
+      "worst_product_margin": "REPORT_FRONTIER_NO_PRIMARY_GATE",
+      "unresolved_margin": "REPORT_FRONTIER_NO_PRIMARY_GATE",
       "resources_exact": true
     },
     "hybrid_premium": {
-      "requires_retained_safe_effect": true,
+      "requires_retained_ret_effect": true,
+      "requires_retained_safe_effect": false,
+      "safety_disclosure_still_required": true,
       "comparator": "PENDING_COMPARATOR_CHALLENGE_V2",
       "sesoi": 0.01,
       "requires_positive_clustered_lcb95": true
@@ -39,6 +42,11 @@
   },
   "roots": null,
   "power_audit": null,
-  "garrido_signoff": null,
+  "domain_priority": {
+    "criterion": "canonical_mean_ret",
+    "source": "USER_REPORTED_GARRIDO_POSITION_2026_07_22",
+    "written_garrido_confirmation": null,
+    "effect_on_contract": "service metrics remain mandatory disclosures but do not gate the ReT or hybrid-premium claim"
+  },
   "execution_authorized": false
 }

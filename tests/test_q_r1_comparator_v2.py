@@ -6,6 +6,10 @@ import numpy as np
 import pytest
 
 from scripts.evaluate_program_q_replication import scheduler
+from scripts.merge_q_r1_comparator_v2_shards import (
+    merge_convergence,
+    merge_pareto,
+)
 from supply_chain.program_o_full_des_transducer import simulate_full_des_frontier
 from supply_chain.program_o_state_rich import (
     StateRichConfiguration,
@@ -176,3 +180,75 @@ def test_no_feasible_sequence_abstains_instead_of_false_safe(monkeypatch) -> Non
             ),
         )
 
+
+def test_merge_recomputes_convergence_from_raw_rows() -> None:
+    signature = [4, "scenario", 0.0, "expected"]
+    shards = []
+    for root, actions, errors in (
+        (7_570_801, ((0, 0), (1, 1)), (0.001, 0.002)),
+        (7_570_807, ((2, 2), (3, 3)), (0.003, 0.004)),
+    ):
+        shards.append(
+            {
+                "convergence": [
+                    {
+                        "signature": signature,
+                        "low_config": "low",
+                        "high_config": "high",
+                        "low_abstentions": 0,
+                        "high_abstentions": 0,
+                    }
+                ],
+                "convergence_pairs": [
+                    {
+                        "signature": signature,
+                        "history_root": root,
+                        "campaign_index": index + 1,
+                        "persistence_mode": "binary_0.9",
+                        "prior_arm": "retained",
+                        "low_action": action[0],
+                        "high_action": action[1],
+                        "absolute_planning_value_error": error,
+                    }
+                    for index, (action, error) in enumerate(zip(actions, errors))
+                ],
+            }
+        )
+    merged = merge_convergence(shards)
+    row = merged["convergence"][0]
+    assert row["first_action_agreement"] == 1.0
+    assert row["mean_abs_planning_value_error"] == pytest.approx(0.0025)
+    assert row["convergence_pass"] is True
+
+
+def test_merge_recomputes_pareto_from_raw_rows() -> None:
+    def metrics(ret: float, fill: float, unresolved: float):
+        return {
+            "early_ret_complete_cohort": ret,
+            "worst_product_fill": fill,
+            "unresolved_orders": unresolved,
+            "lost_orders": 0.0,
+            "mass_residual": 0.0,
+        }
+
+    shards = [
+        {
+            "pareto_pairs": [
+                {
+                    "config_id": "h4_c64",
+                    "history_root": 7_570_801 + index,
+                    "campaign_index": 1,
+                    "persistence_mode": "binary_0.9",
+                    "retained": metrics(0.8 + 0.1 * index, 0.7, 1.0),
+                    "reset": metrics(0.7, 0.72, 0.5),
+                }
+            ]
+        }
+        for index in range(2)
+    ]
+    merged = merge_pareto(shards)
+    row = merged["pareto"][0]
+    assert row["pairs"] == 2
+    assert row["retained_minus_reset_early_ret_complete_cohort"] == pytest.approx(0.15)
+    assert row["retained_minus_reset_worst_product_fill"] == pytest.approx(-0.02)
+    assert row["retained_minus_reset_unresolved_orders"] == pytest.approx(0.5)
