@@ -10,6 +10,7 @@ from scripts.audit_q_r1_comparator_power import audit, required_histories
 from scripts.merge_q_r1_comparator_v2_shards import (
     merge_convergence,
     merge_pareto,
+    merge_targeted,
 )
 from supply_chain.program_o_full_des_transducer import simulate_full_des_frontier
 from supply_chain.program_o_state_rich import (
@@ -285,3 +286,26 @@ def test_power_audit_clusters_by_history_root() -> None:
     assert result["burned_sd_delta"] == pytest.approx(0.01)
     assert int(result["required_histories"]["0.9"]) >= 1
     assert required_histories(sd=0.0, sesoi=0.01, alpha=0.05, power=0.9) == 1
+
+
+def test_merge_targeted_recomputes_high_budget_agreement() -> None:
+    shards = [
+        {
+            "rows": [
+                {
+                    "history_root": 7_570_801 + index,
+                    "campaign_index": 1,
+                    "persistence_mode": "binary_0.9",
+                    "prior_arm": "reset",
+                    "c256_action": index,
+                    "c1024_action": index,
+                    "absolute_planning_value_error": 0.0001 * (index + 1),
+                }
+            ]
+        }
+        for index in range(2)
+    ]
+    merged = merge_targeted(shards)
+    assert merged["target_count"] == 2
+    assert merged["agreement"] == 1.0
+    assert merged["mean_abs_planning_value_error"] == pytest.approx(0.00015)

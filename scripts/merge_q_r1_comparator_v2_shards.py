@@ -151,21 +151,75 @@ def merge_pareto(shards: list[dict[str, object]]) -> dict[str, object]:
     return {"pareto": merged, "pareto_pairs": raw}
 
 
+def merge_targeted(shards: list[dict[str, object]]) -> dict[str, object]:
+    raw = [row for shard in shards for row in shard.get("rows", [])]
+    identities = [
+        (
+            int(row["history_root"]),
+            int(row["campaign_index"]),
+            str(row["persistence_mode"]),
+            str(row["prior_arm"]),
+        )
+        for row in raw
+    ]
+    if len(identities) != len(set(identities)):
+        raise ValueError("duplicate targeted-convergence identity")
+    errors = np.asarray(
+        [float(row["absolute_planning_value_error"]) for row in raw], dtype=float
+    )
+    agreement = np.asarray(
+        [int(row["c256_action"]) == int(row["c1024_action"]) for row in raw],
+        dtype=bool,
+    )
+    return {
+        "target_rule": "scenario c64 action differs from c256 action",
+        "target_count": len(raw),
+        "agreement": float(agreement.mean()) if len(raw) else 1.0,
+        "mean_abs_planning_value_error": float(errors.mean()) if len(raw) else 0.0,
+        "q95_abs_planning_value_error": (
+            float(np.quantile(errors, 0.95)) if len(raw) else 0.0
+        ),
+        "rows": raw,
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--phase", choices=("convergence", "pareto"), required=True)
+    parser.add_argument(
+        "--phase", choices=("convergence", "pareto", "targeted"), required=True
+    )
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("inputs", nargs="+", type=Path)
     args = parser.parse_args()
     if args.output.exists():
         raise SystemExit(f"refusing to overwrite {args.output}")
     shards = [json.loads(path.read_text()) for path in args.inputs]
-    _validate_common(shards)
-    root_blocks = [list(shard["history_roots"]) for shard in shards]
-    flattened = [root for block in root_blocks for root in range(int(block[0]), int(block[1]) + 1)]
-    if len(flattened) != len(set(flattened)):
-        raise ValueError("root blocks overlap")
-    payload = merge_convergence(shards) if args.phase == "convergence" else merge_pareto(shards)
+    if args.phase != "targeted":
+        _validate_common(shards)
+    if args.phase == "targeted":
+        flattened = sorted(
+            {
+                int(row["history_root"])
+                for shard in shards
+                for row in shard.get("rows", [])
+            }
+        )
+        root_blocks = [[root, root] for root in flattened]
+    else:
+        root_blocks = [list(shard["history_roots"]) for shard in shards]
+        flattened = [
+            root
+            for block in root_blocks
+            for root in range(int(block[0]), int(block[1]) + 1)
+        ]
+        if len(flattened) != len(set(flattened)):
+            raise ValueError("root blocks overlap")
+    if args.phase == "convergence":
+        payload = merge_convergence(shards)
+    elif args.phase == "pareto":
+        payload = merge_pareto(shards)
+    else:
+        payload = merge_targeted(shards)
     result = {
         "schema_version": "q_r1_comparator_v2_merged_v1",
         "claim_status": "BURNED_DEVELOPMENT_NO_CLAIM",
@@ -173,8 +227,16 @@ def main() -> int:
         "phase": args.phase,
         "root_blocks": root_blocks,
         "history_roots": [min(flattened), max(flattened)],
-        "states": sum(int(shard["states"]) for shard in shards),
-        "conditional_path_budgets": shards[0]["conditional_path_budgets"],
+        "states": (
+            sum(int(shard["states"]) for shard in shards)
+            if args.phase != "targeted"
+            else sum(len(shard.get("rows", [])) for shard in shards)
+        ),
+        "conditional_path_budgets": (
+            shards[0]["conditional_path_budgets"]
+            if args.phase != "targeted"
+            else shards[0]["path_budgets"]
+        ),
         "selection_performed": False,
         "learner_return_used": False,
         "retained_minus_reset_used_for_selection": False,
@@ -189,4 +251,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
