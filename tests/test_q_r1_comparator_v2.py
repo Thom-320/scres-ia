@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 
 from scripts.evaluate_program_q_replication import scheduler
+from scripts.freeze_q_r1_comparator_v2 import freeze
 from scripts.audit_q_r1_comparator_power import audit, required_histories
 from scripts.merge_q_r1_comparator_v2_shards import (
     merge_convergence,
@@ -459,3 +460,31 @@ def test_frozen_pareto_requires_hashed_passing_convergence(tmp_path, monkeypatch
     receipt.write_text("{}")
     with pytest.raises(ValueError, match="hash mismatch"):
         load_freeze(freeze)
+
+
+def test_freeze_rejects_failed_predetermined_comparator() -> None:
+    payload = {
+        "claim_status": "BURNED_DEVELOPMENT_NO_CLAIM",
+        "phase": "convergence",
+        "history_roots": [7_570_801, 7_570_824],
+        "value_indifference_tolerance": 0.002,
+        "tie_breaker": "service",
+        "selection_performed": False,
+        "learner_return_used": False,
+        "retained_minus_reset_used_for_selection": False,
+        "convergence": [
+            {
+                "signature": [4, "scenario", 0.0, "expected"],
+                "low_config": (
+                    "qr1_v2_scenario_h4_c64_wf0.00_unone_expected_tol0.0020_service"
+                ),
+                "convergence_pass": False,
+            }
+        ],
+    }
+    with pytest.raises(ValueError, match="failed convergence"):
+        freeze(payload, receipt_path="receipt.json", receipt_sha256="abc")
+    payload["convergence"][0]["convergence_pass"] = True
+    result = freeze(payload, receipt_path="receipt.json", receipt_sha256="abc")
+    assert result["status"] == "FROZEN_BURNED_CALIBRATION_NO_FRESH_SEEDS"
+    assert result["execution_authority"] == "BURNED_PARETO_AND_POWER_AUDIT_ONLY"
