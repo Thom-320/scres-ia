@@ -1,14 +1,24 @@
 """Q-R1 burned discovery primitives for causal cross-campaign retention.
 
 Physical campaign state is immutable and shared across arms.  Knowledge state
-is the only treatment.  The cold-start estimand changes the first two weekly
-actions and then applies one common reset-MPC continuation.
+is the only treatment.  Three estimands are kept separate:
+
+``prefix_natural_replanning``
+    The retained/reset treatment chooses two actions, after which the same
+    reset-belief MPC policy replans on the physical state actually reached by
+    each prefix.
+``sustained_control``
+    Each retained/reset controller acts for the full campaign.
+``historical_splice``
+    The frozen legacy construction concatenates an arm prefix with a reset
+    calendar planned on another trajectory.  It is diagnostic only.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from types import SimpleNamespace
+import time
 from typing import Any, Mapping, Protocol, Sequence
 
 import numpy as np
@@ -52,6 +62,16 @@ RESOURCE_KEYS = (
     "gross_production_quantity",
     "charged_daily_dispatch_slots",
     "charged_downstream_vehicle_hours",
+)
+ACTUAL_RESOURCE_KEYS = (
+    "actual_loaded_departures",
+    "actual_payload",
+    "actual_downstream_vehicle_hours",
+)
+ESTIMANDS = (
+    "prefix_natural_replanning",
+    "sustained_control",
+    "historical_splice",
 )
 
 
@@ -197,6 +217,94 @@ def common_continuation_calendar(
     )
 
 
+def controller_calendar_from_prefix(
+    *,
+    campaign: PhysicalCampaignState,
+    treatment_prefix: Sequence[int],
+    continuation_belief: ExactJointBelief,
+    scheduler: Mapping[str, Sequence[str]],
+    config: FullDEST0Config,
+    history_transform: str = "real",
+) -> tuple[tuple[int, ...], dict[str, object]]:
+    """Apply one controller policy after a fixed prefix on the reached state.
+
+    This is a policy continuation, not a calendar splice.  At every week the
+    state-rich observation is recomputed from ``prefix`` and therefore reflects
+    the inventory, backlog, and pipeline produced by the arm's actual prior
+    actions.  The continuation belief is updated only with causal demand
+    observations, which are common across paired arms.
+    """
+    decisions = tuple(map(int, treatment_prefix))
+    if not 0 < len(decisions) < campaign.skeleton.decision_weeks:
+        raise ValueError("treatment prefix must be shorter than the campaign")
+    if any(action not in range(4) for action in decisions):
+        raise ValueError("prefix contains an unavailable action")
+    if history_transform not in {"real", "wrong_product", "shuffled"}:
+        raise ValueError("unknown history transform")
+    counts = list(
+        weekly_product_counts(
+            order_times=campaign.skeleton.order_times,
+            order_products=campaign.skeleton.order_products,
+            decision_start=campaign.skeleton.decision_start,
+            weeks=campaign.skeleton.decision_weeks,
+        )
+    )
+    if history_transform == "wrong_product":
+        counts = [6 - count for count in counts]
+    elif history_transform == "shuffled":
+        counts = list(reversed(counts))
+
+    posterior = continuation_belief.copy()
+    prefix: list[int] = []
+    diagnostics: list[dict[str, object]] = []
+    started = time.perf_counter()
+    for week in range(campaign.skeleton.decision_weeks):
+        if week:
+            posterior.observe_previous_week(counts[week - 1])
+        if week < len(decisions):
+            action = decisions[week]
+            detail: dict[str, object] = {"treatment_action": True}
+        else:
+            probe = tuple(
+                prefix
+                + [0] * (campaign.skeleton.decision_weeks - len(prefix))
+            )
+            _calendar, rows = state_rich_calendar(
+                skeleton=campaign.skeleton.as_dict(),
+                scheduler=scheduler,
+                config=StateRichConfiguration("belief_mpc", 1),
+                regime_persistence=config.regime_persistence,
+                dominant_share=config.dominant_share,
+                action_overrides=probe,
+            )
+            observation = rows[week].observation
+            action, action_detail = choose_ret_transducer_action(
+                observation,
+                base_skeleton=campaign.skeleton,
+                prefix=prefix,
+                scheduler=scheduler,
+                config=config,
+                joint_belief=posterior,
+            )
+            detail = {"treatment_action": False, **action_detail}
+        prefix.append(int(action))
+        diagnostics.append(
+            {
+                "week": week,
+                "action": int(action),
+                "posterior": posterior.as_dict(),
+                **detail,
+            }
+        )
+    return tuple(prefix), {
+        "config_id": "natural_replanning_" + config.config_id,
+        "treatment_decisions": len(decisions),
+        "history_transform": history_transform,
+        "online_ms": (time.perf_counter() - started) * 1000.0,
+        "decisions": diagnostics,
+    }
+
+
 def _order_namespaces(trace: Mapping[str, Any]) -> list[SimpleNamespace]:
     rows = []
     for raw in trace["orders"]:
@@ -221,10 +329,12 @@ def early_cohort_metrics(
 def early_cohort_metrics_from_orders(
     *, orders: Sequence[Any], decision_start: float, score_time: float
 ) -> dict[str, float]:
-    """Score the canonical two-week request cohort from a full ledger.
+    """Score visible and non-censorable versions of the two-week cohort.
 
-    Completion is observed through a common end-of-campaign cutoff; unresolved
-    requests remain in the denominator/ledger and are never silently dropped.
+    ``early_ret_visible`` is the unmodified workbook-visible ReT and therefore
+    excludes lost or unresolved rows. ``early_ret_complete_cohort`` keeps the
+    same generated cohort in the denominator and assigns zero to every omitted
+    row.  Both are reported; neither is silently substituted for the other.
     """
     cutoff = float(decision_start) + 2.0 * 168.0
     cohort = [order for order in orders if float(order.OPTj) < cutoff - 1e-12]
@@ -244,20 +354,56 @@ def early_cohort_metrics_from_orders(
         )
         for order in cohort
     )
-    fill = {}
+    fill: dict[str, float] = {}
     for product_id in PRODUCTS:
         demanded = sum(float(order.quantity) for order in cohort if order.requested_product_id == product_id)
         delivered = sum(float(order.quantity) for order in completed if order.requested_product_id == product_id)
         fill[product_id] = 1.0 if demanded <= 0.0 else delivered / demanded
+    visible_values = np.asarray(ledger["ret_values"], dtype=float)
+    complete_values = np.concatenate(
+        (
+            visible_values,
+            np.zeros(len(cohort) - len(visible_values), dtype=float),
+        )
+    )
+    visible_q10 = (
+        float(np.quantile(visible_values, 0.10)) if len(visible_values) else 1.0
+    )
+    complete_q10 = (
+        float(np.quantile(complete_values, 0.10)) if len(complete_values) else 1.0
+    )
+    tail_count = max(1, int(np.ceil(0.10 * len(complete_values)))) if len(complete_values) else 1
+    complete_cvar10 = (
+        float(np.sort(complete_values)[:tail_count].mean())
+        if len(complete_values)
+        else 1.0
+    )
+    visible_ret = float(ledger["mean_ret_excel"])
+    complete_ret = (
+        float(visible_values.sum() / len(cohort)) if cohort else 1.0
+    )
+    unresolved_quantity = sum(float(order.quantity) for order in unresolved)
+    lost_quantity = sum(float(order.quantity) for order in lost)
+    visible_quantity = sum(float(order.quantity) for order in completed)
     return {
-        "early_ret_2w": float(ledger["mean_ret_excel"]),
+        "early_ret_2w": visible_ret,
+        "early_ret_visible": visible_ret,
+        "early_ret_complete_cohort": complete_ret,
+        "early_ret_visible_q10": visible_q10,
+        "early_ret_complete_cohort_q10": complete_q10,
+        "early_ret_complete_cohort_cvar10": complete_cvar10,
         "early_visible_rows": float(ledger["n_visible_rows"]),
-        "early_omitted_rows": float(ledger["n_omitted_rows"]),
+        "early_omitted_rows": float(len(cohort) - ledger["n_visible_rows"]),
         "early_generated_orders": float(len(cohort)),
         "early_unresolved_orders": float(len(unresolved)),
+        "early_unresolved_quantity": float(unresolved_quantity),
         "early_lost_orders": float(len(lost)),
+        "early_lost_quantity": float(lost_quantity),
+        "early_visible_quantity": float(visible_quantity),
         "early_service_loss_to_score": float(service_loss),
         "early_worst_product_fill": float(min(fill.values())),
+        "early_fill_P_C": float(fill["P_C"]),
+        "early_fill_P_H": float(fill["P_H"]),
     }
 
 
@@ -287,9 +433,15 @@ def evaluate_calendar(
         "worst_product_fill": row["worst_product_fill"],
         "lost_orders": row["lost_orders"],
         "unresolved_orders": row["unresolved_orders"],
+        "unresolved_quantity": row["unresolved_quantity"],
+        "lost_quantity": row["lost_quantity"],
+        "service_loss_auc": row["service_loss_auc"],
+        "fill_P_C": row["fill_P_C"],
+        "fill_P_H": row["fill_P_H"],
         "mass_residual": row["mass_residual"],
         "partition_residual": row["partition_residual"],
         **{key: row[key] for key in RESOURCE_KEYS},
+        **{key: row[key] for key in ACTUAL_RESOURCE_KEYS},
     }
 
 

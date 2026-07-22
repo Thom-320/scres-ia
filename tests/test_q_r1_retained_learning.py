@@ -9,6 +9,7 @@ from supply_chain.q_r1_retained_learning import (
     PERSISTENCE_MODES,
     build_parameter_history,
     common_continuation_calendar,
+    controller_calendar_from_prefix,
     controller_prefix,
     retained_belief_path,
     transition_theta,
@@ -38,6 +39,11 @@ def test_early_metric_accepts_direct_order_objects():
     assert scored["early_generated_orders"] == 2.0
     assert scored["early_unresolved_orders"] == 1.0
     assert scored["early_omitted_rows"] == 1.0
+    assert scored["early_ret_visible"] == 1.0
+    assert scored["early_ret_complete_cohort"] == 0.5
+    assert scored["early_omitted_rows"] == (
+        scored["early_generated_orders"] - scored["early_visible_rows"]
+    )
 
 
 def test_risk_level_history_is_reproducible_and_binary():
@@ -119,3 +125,25 @@ def test_controller_prefix_returns_only_requested_decisions() -> None:
     )
     assert len(prefix) == 2
     assert len(detail["decisions"]) == 2
+
+
+def test_natural_replanning_uses_prefix_then_replans() -> None:
+    history = build_parameter_history(
+        history_root=7_570_201,
+        campaigns=2,
+        persistence_mode="iid",
+        scheduler=scheduler(),
+    )
+    from supply_chain.program_t_full_des_mpc import FullDEST0Config
+
+    calendar, detail = controller_calendar_from_prefix(
+        campaign=history[0],
+        treatment_prefix=(3, 3),
+        continuation_belief=ExactJointBelief.uniform(),
+        scheduler=scheduler(),
+        config=FullDEST0Config(1, "scenario", particles=2),
+    )
+    assert calendar[:2] == (3, 3)
+    assert len(calendar) == history[0].skeleton.decision_weeks
+    assert all(row["treatment_action"] for row in detail["decisions"][:2])
+    assert not any(row["treatment_action"] for row in detail["decisions"][2:])

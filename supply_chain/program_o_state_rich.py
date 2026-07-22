@@ -501,6 +501,7 @@ def state_rich_calendar(
     dominant_share: float,
     observation_mode: str = "real",
     action_overrides: Sequence[int] | None = None,
+    action_prefix: Sequence[int] | None = None,
     initial_belief_c: float = 0.5,
 ) -> tuple[tuple[int, ...], tuple[StateRichDecision, ...]]:
     """Replay state and produce a policy or execution-supplied calendar."""
@@ -513,6 +514,16 @@ def state_rich_calendar(
             raise ValueError(
                 f"action_overrides must contain {weeks} actions in {{0,1,2,3}}"
             )
+    if action_prefix is not None:
+        action_prefix = tuple(int(value) for value in action_prefix)
+        if not 0 < len(action_prefix) < weeks or any(
+            value not in range(4) for value in action_prefix
+        ):
+            raise ValueError(
+                f"action_prefix must contain 1..{weeks - 1} actions in {{0,1,2,3}}"
+            )
+    if action_overrides is not None and action_prefix is not None:
+        raise ValueError("action_overrides and action_prefix are mutually exclusive")
     start = float(skeleton["decision_start"])
     score_time = float(skeleton["score_time"])
     order_times = np.asarray(skeleton["order_times"], dtype=float)
@@ -757,7 +768,11 @@ def state_rich_calendar(
                 )
             elif observation_mode != "real":
                 raise ValueError(f"unknown observation mode: {observation_mode}")
-            if action_overrides is None:
+            if action_prefix is not None and week < len(action_prefix):
+                action = int(action_prefix[week])
+                objective = ()
+                tied = (action,)
+            elif action_overrides is None:
                 action, objective, tied = choose_state_rich_action(
                     observation,
                     config,
