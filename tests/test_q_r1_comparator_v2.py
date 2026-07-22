@@ -12,6 +12,7 @@ from scripts.merge_q_r1_comparator_v2_shards import (
     merge_pareto,
     merge_targeted,
 )
+from scripts.run_q_r1_comparator_v2_frozen_pareto import load_freeze
 from supply_chain.program_o_full_des_transducer import simulate_full_des_frontier
 from supply_chain.program_o_state_rich import (
     StateRichConfiguration,
@@ -401,3 +402,60 @@ def test_merge_targeted_recomputes_high_budget_agreement() -> None:
     assert merged["target_count"] == 2
     assert merged["agreement"] == 1.0
     assert merged["mean_abs_planning_value_error"] == pytest.approx(0.00015)
+
+
+def test_frozen_pareto_requires_hashed_passing_convergence(tmp_path, monkeypatch) -> None:
+    import hashlib
+    import json
+
+    import scripts.run_q_r1_comparator_v2_frozen_pareto as frozen_runner
+
+    config = ComparatorV2Config(
+        horizon=4,
+        conditional_paths=64,
+        mode="scenario",
+        worst_product_floor=0.0,
+        value_indifference_tolerance=0.002,
+        tie_breaker="service",
+    )
+    receipt = tmp_path / "convergence.json"
+    receipt.write_text(
+        json.dumps(
+            {
+                "convergence": [
+                    {
+                        "low_config": config.config_id,
+                        "convergence_pass": True,
+                    }
+                ]
+            }
+        )
+    )
+    freeze = tmp_path / "freeze.json"
+    freeze.write_text(
+        json.dumps(
+            {
+                "status": "FROZEN_BURNED_CALIBRATION_NO_FRESH_SEEDS",
+                "selection_used_learner_return": False,
+                "selection_used_retained_minus_reset": False,
+                "config": {
+                    "horizon": 4,
+                    "conditional_paths": 64,
+                    "mode": "scenario",
+                    "worst_product_floor": 0.0,
+                    "value_indifference_tolerance": 0.002,
+                    "tie_breaker": "service",
+                },
+                "config_id": config.config_id,
+                "convergence_receipt": receipt.name,
+                "convergence_sha256": hashlib.sha256(receipt.read_bytes()).hexdigest(),
+            }
+        )
+    )
+    monkeypatch.setattr(frozen_runner, "ROOT", tmp_path)
+    payload, loaded = load_freeze(freeze)
+    assert payload["config_id"] == config.config_id
+    assert loaded == config
+    receipt.write_text("{}")
+    with pytest.raises(ValueError, match="hash mismatch"):
+        load_freeze(freeze)
