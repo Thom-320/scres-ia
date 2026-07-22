@@ -1,0 +1,15 @@
+{
+  "schema_version": "q_r1_comparator_v2_timeout_receipt_v1",
+  "claim_status": "BURNED_INSTRUMENT_PREFLIGHT_NO_CLAIM",
+  "history_roots": [7570801, 7570804],
+  "states": 8,
+  "horizon": 4,
+  "service_floor": 0.70,
+  "conditional_path_budgets": [64, 256],
+  "hard_cap_seconds": 3600,
+  "result_json_written": false,
+  "failure": "TimeoutError: comparator v2 preflight hard cap exceeded",
+  "failure_location": "Pareto evaluation after convergence loop",
+  "interpretation": "The monolithic runner reached Pareto evaluation but did not preserve its convergence rows before the hard cap. No comparator selection or scientific claim is licensed by this failed invocation.",
+  "corrective_action": "Split convergence and Pareto phases with a validated convergence receipt; rerun only on burned development histories without changing family, thresholds, or path budgets."
+}

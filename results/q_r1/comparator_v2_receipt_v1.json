@@ -1,0 +1,31 @@
+{
+  "schema_version": "q_r1_comparator_v2_receipt_v1",
+  "claim_status": "BURNED_DEVELOPMENT_NO_CLAIM",
+  "base_commit": "7bccf86",
+  "branch": "codex/q-r1-comparator-reconciliation",
+  "history_namespace": [7570801, 7570824],
+  "fresh_roots_opened": false,
+  "canonical_ret_changed": false,
+  "historical_artifacts_changed": false,
+  "learner_return_used": false,
+  "retained_minus_reset_used_for_selection": false,
+  "tests": {
+    "focused": "58 passed",
+    "command_scope": "Q-R1, retained context, joint belief, full-DES MPC, and state-rich tests"
+  },
+  "artifact_sha256": {
+    "comparator_v2_preflight_v1": "414e689cbb1735e1604ab092058b27ea95f0b79552fb08943e76e5c0c69a9d50",
+    "comparator_v2_preflight_p16_p64_v1": "4299bfdff80c44f162d5e9793bc65fdfb82f4adeef7678575f57e5d8c841d1f6",
+    "comparator_v2_preflight_p64_p256_convergence_v1": "0449c26b9af33c99eb245c129951608c4bd59a1ce7a58ee9eb3970c7ace43185",
+    "comparator_v2_pareto_h4_c64_v1": "df3462573f6f9b3f6d680ea8b3140fb0df38c527db14f4ba975fae382b2b9e5a",
+    "monolithic_timeout_receipt": "21197239b4ed71f15955bb7538b12939e6ac3bb6b52c8b967da3e4b99ed04bb9"
+  },
+  "final_code_sha256": {
+    "scripts/run_q_r1_comparator_v2_preflight.py": "416ca1cf16643883d38653321e20916437908572c78ecc63cbde5910e3fda8b1",
+    "supply_chain/q_r1_comparator_v2.py": "85aeeaee00e914d42f2a501f5675005847c322826a47fecd2fce157c2393de16",
+    "supply_chain/program_o_full_des_transducer.py": "5aceb59d37eb14f105566aa7d0a73a31a47e1ab8fb8cedceccbf4d1285684f21",
+    "supply_chain/program_t_joint_belief.py": "97e53d2bc708ea07442e0af6bfa2477449545467e7478f2c6cc87a643884b685",
+    "tests/test_q_r1_comparator_v2.py": "0503912cf31fc998e04d86395892e8381d1650198ec492a409e7f99794bd8f52"
+  },
+  "post_run_runner_change": "After the burned Pareto completed, the runner was extended to persist raw paired rows in future invocations. This serialization-only addition did not alter the completed actions or aggregates; the completed preflight remains non-claim evidence and contains aggregates only."
+}

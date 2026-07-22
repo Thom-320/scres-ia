@@ -530,6 +530,7 @@ def simulate_full_des_frontier(
     calendars: np.ndarray | None = None,
     complete_substitution: bool = False,
     trace_out: dict[str, Any] | None = None,
+    include_q_r1_metrics: bool = False,
 ) -> dict[str, np.ndarray]:
     """Vectorized replay of every calendar over one direct-DES skeleton."""
     calendars = (
@@ -823,6 +824,64 @@ def simulate_full_des_frontier(
     }
     if tuple(output) != MATRIX_KEYS:
         raise AssertionError("full-DES transducer matrix schema drift")
+    if include_q_r1_metrics:
+        early_mask = opt < float(skeleton.decision_start) + 2.0 * 168.0 - 1e-12
+        early_generated = int(early_mask.sum())
+        early_completed = completed[:, early_mask]
+        early_values = visible_values[:, early_mask]
+        early_visible_count = early_completed.sum(axis=1)
+        early_visible_sum = np.where(early_completed, early_values, 0.0).sum(axis=1)
+        early_visible = np.divide(
+            early_visible_sum,
+            early_visible_count,
+            out=np.ones(n_calendar, dtype=np.float64),
+            where=early_visible_count > 0,
+        )
+        early_complete = (
+            early_visible_sum / float(early_generated)
+            if early_generated
+            else np.ones(n_calendar, dtype=np.float64)
+        )
+        early_demand_by_product = np.asarray(
+            [
+                quantities[early_mask & (requested_product == idx)].sum()
+                for idx in range(2)
+            ],
+            dtype=np.float64,
+        )
+        early_completed_by_product = np.stack(
+            [
+                np.where(
+                    completed[:, early_mask & (requested_product == idx)],
+                    quantities[early_mask & (requested_product == idx)][None, :],
+                    0.0,
+                ).sum(axis=1)
+                for idx in range(2)
+            ],
+            axis=1,
+        )
+        early_fill = np.divide(
+            early_completed_by_product,
+            early_demand_by_product[None, :],
+            out=np.ones_like(early_completed_by_product),
+            where=early_demand_by_product[None, :] > 0.0,
+        )
+        output.update(
+            {
+                "early_ret_visible": early_visible,
+                "early_ret_complete_cohort": early_complete,
+                "early_generated_orders": np.full(
+                    n_calendar, float(early_generated)
+                ),
+                "early_visible_rows": early_visible_count.astype(np.float64),
+                "early_unresolved_orders": (
+                    early_generated - early_visible_count
+                ).astype(np.float64),
+                "early_fill_P_C": early_fill[:, 0],
+                "early_fill_P_H": early_fill[:, 1],
+                "early_worst_product_fill": early_fill.min(axis=1),
+            }
+        )
     if trace_out is not None:
         orders = []
         for order_index in range(n_order):

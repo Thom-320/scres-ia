@@ -1,0 +1,44 @@
+{
+  "schema_version": "q_r1_ret_service_successor_draft_v1",
+  "status": "DRAFT_NO_SEEDS_NO_EXECUTION_AUTHORITY",
+  "historical_verdicts_reopened": [],
+  "canonical_ret_metric_changed": false,
+  "claim_ladder": {
+    "retained_ret_effect": {
+      "primary": "early_ret_complete_cohort",
+      "secondary": "early_ret_visible",
+      "sesoi": 0.01,
+      "requires_positive_clustered_lcb95": true,
+      "dose_order": "persistence_0p90 > persistence_0p75 > iid",
+      "valid_nulls": [
+        "iid",
+        "cross_root_block_shuffle",
+        "wrong_history"
+      ]
+    },
+    "retained_safe_effect": {
+      "inherits_retained_ret_effect": true,
+      "lost_demand_increase_max": 0.0,
+      "worst_product_margin": "PENDING_NEUTRAL_GARRIDO_VALIDATION",
+      "unresolved_margin": "PENDING_NEUTRAL_GARRIDO_VALIDATION",
+      "resources_exact": true
+    },
+    "hybrid_premium": {
+      "requires_retained_safe_effect": true,
+      "comparator": "PENDING_COMPARATOR_CHALLENGE_V2",
+      "sesoi": 0.01,
+      "requires_positive_clustered_lcb95": true
+    }
+  },
+  "ablations_not_null_placebos": {
+    "delayed_posterior": {
+      "role": "age_of_memory_ablation",
+      "expected_estimand": "monotone decay with lag under persistent campaigns",
+      "required_zero_effect": false
+    }
+  },
+  "roots": null,
+  "power_audit": null,
+  "garrido_signoff": null,
+  "execution_authorized": false
+}

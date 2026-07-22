@@ -145,6 +145,19 @@ class ExactJointBelief:
             for index in indices
         )
 
+    def enumerate_states(self) -> tuple[tuple[float, float, bool, float], ...]:
+        """Return all six latent states with their exact posterior weights."""
+        return tuple(
+            (
+                float(rho),
+                float(share),
+                bool(regime_index),
+                float(self.probability[theta_index, regime_index]),
+            )
+            for theta_index, (rho, share) in enumerate(THETA_GRID)
+            for regime_index in (0, 1)
+        )
+
     def as_dict(self) -> Mapping[str, object]:
         return {
             "theta_grid": [list(theta) for theta in THETA_GRID],
