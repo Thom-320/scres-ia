@@ -54,6 +54,8 @@ class ComparatorV2Config:
     max_unresolved_orders: float | None = None
     tail_alpha: float = 0.10
     service_statistic: str = "expected"
+    value_indifference_tolerance: float = 0.0
+    tie_breaker: str = "legacy"
 
     def __post_init__(self) -> None:
         if self.horizon not in (1, 3, 4, 6, 8):
@@ -70,6 +72,10 @@ class ComparatorV2Config:
             raise ValueError("tail_alpha must be in (0,1]")
         if self.service_statistic not in {"expected", "worst_case"}:
             raise ValueError("service_statistic must be expected or worst_case")
+        if self.value_indifference_tolerance < 0.0:
+            raise ValueError("value_indifference_tolerance must be non-negative")
+        if self.tie_breaker not in {"legacy", "service"}:
+            raise ValueError("tie_breaker must be legacy or service")
 
     @property
     def config_id(self) -> str:
@@ -81,7 +87,8 @@ class ComparatorV2Config:
         return (
             f"qr1_v2_{self.mode}_h{self.horizon}_c{self.conditional_paths}"
             f"_wf{self.worst_product_floor:.2f}_u{unresolved}"
-            f"_{self.service_statistic}"
+            f"_{self.service_statistic}_tol{self.value_indifference_tolerance:.4f}"
+            f"_{self.tie_breaker}"
         )
 
 
@@ -300,17 +307,34 @@ def choose_comparator_v2_action(
         )
     primary = tail_early if config.mode == "robust" else mean_early
     eligible = np.flatnonzero(feasible)
-    best = max(
-        map(int, eligible),
-        key=lambda index: (
-            float(primary[index]),
-            float(mean_early[index]),
-            float(tail_early[index]),
-            float(service_fill[index]),
-            float(mean_full[index]),
-            *tuple(-int(value) for value in sequences[index]),
-        ),
-    )
+    if config.tie_breaker == "service":
+        best_primary = float(primary[eligible].max())
+        eligible = eligible[
+            primary[eligible]
+            >= best_primary - float(config.value_indifference_tolerance) - 1e-15
+        ]
+        best = max(
+            map(int, eligible),
+            key=lambda index: (
+                float(service_fill[index]),
+                -float(service_unresolved[index]),
+                float(mean_full[index]),
+                float(mean_visible[index]),
+                *tuple(-int(value) for value in sequences[index]),
+            ),
+        )
+    else:
+        best = max(
+            map(int, eligible),
+            key=lambda index: (
+                float(primary[index]),
+                float(mean_early[index]),
+                float(tail_early[index]),
+                float(service_fill[index]),
+                float(mean_full[index]),
+                *tuple(-int(value) for value in sequences[index]),
+            ),
+        )
     return int(sequences[best, 0]), {
         "config_id": config.config_id,
         "planning_key": planning_key.token(),
@@ -329,6 +353,9 @@ def choose_comparator_v2_action(
         "planning_expected_unresolved_orders": float(expected_unresolved[best]),
         "planning_max_lost_orders": float(maximum_lost[best]),
         "planning_feasible": True,
+        "value_indifference_tolerance": config.value_indifference_tolerance,
+        "tie_breaker": config.tie_breaker,
+        "near_optimal_sequence_count": int(len(eligible)),
         "fallback_used": False,
     }
 

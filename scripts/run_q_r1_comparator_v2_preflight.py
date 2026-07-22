@@ -92,9 +92,11 @@ def family(args: argparse.Namespace, conditional_paths: int) -> list[ComparatorV
                 conditional_paths=conditional_paths,
                 mode="scenario",
                 worst_product_floor=0.0,
+                value_indifference_tolerance=args.value_indifference_tolerance,
+                tie_breaker=args.tie_breaker,
             )
         )
-        for floor in args.service_floors:
+        for floor in (() if args.scenario_only else args.service_floors):
             configs.append(
                 ComparatorV2Config(
                     horizon=horizon,
@@ -102,6 +104,8 @@ def family(args: argparse.Namespace, conditional_paths: int) -> list[ComparatorV
                     mode="constraint_aware",
                     worst_product_floor=floor,
                     service_statistic="expected",
+                    value_indifference_tolerance=args.value_indifference_tolerance,
+                    tie_breaker=args.tie_breaker,
                 )
             )
     return configs
@@ -168,6 +172,12 @@ def run(args: argparse.Namespace) -> dict[str, object]:
             args.high_paths,
         ]:
             raise ValueError("convergence receipt path budgets do not match")
+        if float(receipt.get("value_indifference_tolerance", 0.0)) != float(
+            args.value_indifference_tolerance
+        ):
+            raise ValueError("convergence receipt indifference tolerance does not match")
+        if str(receipt.get("tie_breaker", "legacy")) != args.tie_breaker:
+            raise ValueError("convergence receipt tie breaker does not match")
         convergence = list(receipt["convergence"])
         convergence_pairs = list(receipt.get("convergence_pairs", []))
         converged_signatures = [
@@ -281,6 +291,8 @@ def run(args: argparse.Namespace) -> dict[str, object]:
             "history_roots": [args.seed_start, args.seed_start + args.histories - 1],
             "states": len(states),
             "conditional_path_budgets": [args.low_paths, args.high_paths],
+            "value_indifference_tolerance": args.value_indifference_tolerance,
+            "tie_breaker": args.tie_breaker,
             "selection_performed": False,
             "learner_return_used": False,
             "retained_minus_reset_used_for_selection": False,
@@ -398,6 +410,8 @@ def run(args: argparse.Namespace) -> dict[str, object]:
         "history_roots": [args.seed_start, args.seed_start + args.histories - 1],
         "states": len(states),
         "conditional_path_budgets": [args.low_paths, args.high_paths],
+        "value_indifference_tolerance": args.value_indifference_tolerance,
+        "tie_breaker": args.tie_breaker,
         "selection_performed": False,
         "learner_return_used": False,
         "retained_minus_reset_used_for_selection": False,
@@ -424,6 +438,13 @@ def main() -> int:
     parser.add_argument("--low-paths", type=int, default=4)
     parser.add_argument("--high-paths", type=int, default=16)
     parser.add_argument("--hard-cap-seconds", type=float, default=7200.0)
+    parser.add_argument("--value-indifference-tolerance", type=float, default=0.0)
+    parser.add_argument("--tie-breaker", choices=("legacy", "service"), default="legacy")
+    parser.add_argument(
+        "--scenario-only",
+        action="store_true",
+        help="Evaluate only the ReT-primary scenario controller.",
+    )
     parser.add_argument("--convergence-only", action="store_true")
     parser.add_argument("--convergence-receipt", type=Path)
     args = parser.parse_args()

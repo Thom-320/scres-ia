@@ -23,11 +23,17 @@ def _validate_common(shards: list[dict[str, object]]) -> None:
     if not shards:
         raise ValueError("at least one shard is required")
     expected = shards[0]["conditional_path_budgets"]
+    expected_tolerance = float(shards[0].get("value_indifference_tolerance", 0.0))
+    expected_tie_breaker = str(shards[0].get("tie_breaker", "legacy"))
     for shard in shards:
         if shard.get("claim_status") != "BURNED_DEVELOPMENT_NO_CLAIM":
             raise ValueError("only burned development shards may be merged")
         if shard.get("conditional_path_budgets") != expected:
             raise ValueError("conditional path budgets differ across shards")
+        if float(shard.get("value_indifference_tolerance", 0.0)) != expected_tolerance:
+            raise ValueError("indifference tolerance differs across shards")
+        if str(shard.get("tie_breaker", "legacy")) != expected_tie_breaker:
+            raise ValueError("tie breaker differs across shards")
         if shard.get("selection_performed") is not False:
             raise ValueError("a shard performed selection")
         if shard.get("learner_return_used") is not False:
@@ -236,6 +242,16 @@ def main() -> int:
             shards[0]["conditional_path_budgets"]
             if args.phase != "targeted"
             else shards[0]["path_budgets"]
+        ),
+        "value_indifference_tolerance": (
+            float(shards[0].get("value_indifference_tolerance", 0.0))
+            if args.phase != "targeted"
+            else None
+        ),
+        "tie_breaker": (
+            str(shards[0].get("tie_breaker", "legacy"))
+            if args.phase != "targeted"
+            else None
         ),
         "selection_performed": False,
         "learner_return_used": False,

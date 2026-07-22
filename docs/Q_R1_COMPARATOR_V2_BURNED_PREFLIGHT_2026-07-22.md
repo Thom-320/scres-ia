@@ -70,11 +70,23 @@ scenario mode.  The positive unresolved delta also remains unresolved.
 ## Routing
 
 1. Do not authorize a learner from this preflight.
-2. Obtain Garrido's neutral definition of any service floor or unresolved-
-   demand requirement.
-3. Expand the burned frontier with raw paired rows and an actually active,
-   domain-grounded constraint; select a universal structured controller only
-   by convergence, feasibility, and calibration performance.
-4. Run a prospective power audit with SESOI +0.01 before assigning fresh roots.
-5. Only a safe residual against that frozen controller may authorize M1/M2/M4.
-
+2. The PI reports that Garrido's acceptance criterion is canonical mean ReT.
+   Therefore no unrequested service floor will be invented as a successor
+   claim gate.  Worst-product, unresolved, lost and resource use remain
+   mandatory secondary disclosures.
+3. The 24-root c64/c256 expansion failed the frozen action-agreement gate:
+   87/96 arm-states agreed (90.625%), despite mean and q95 planning-value
+   errors of 0.000340 and 0.000892.  A targeted c256/c1024 audit of the nine
+   disagreements agreed in 8/9 states, with mean error 0.000095.  This is
+   evidence of numerically near-indifferent actions, not permission to round
+   the 95% gate down.
+4. Run one burned, ReT-first tie-aware convergence audit.  The primary remains
+   `early_ret_complete_cohort`; among sequences within 0.002 planned ReT of
+   the maximum, prefer higher worst-product fill and then fewer unresolved
+   orders.  The 0.002 band is fixed before this audit and is one fifth of the
+   final +0.01 SESOI.  It is a numerical indifference rule, not a safety claim.
+5. If and only if the original convergence thresholds pass, freeze that
+   universal comparator, expand its raw retained/reset rows, and run the
+   clustered prospective power audit with SESOI +0.01.
+6. M1/M2/M4 require a deployable residual against that frozen comparator;
+   oracle knowledge remains a clairvoyant upper bound, never learned value.

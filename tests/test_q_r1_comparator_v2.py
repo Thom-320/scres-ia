@@ -183,6 +183,98 @@ def test_no_feasible_sequence_abstains_instead_of_false_safe(monkeypatch) -> Non
         )
 
 
+def test_service_tie_breaker_only_acts_inside_ret_indifference_band(monkeypatch) -> None:
+    campaign, observation = _campaign_and_observation()
+
+    def panel(*, calendars, **_kwargs):
+        first = np.asarray(calendars)[:, 0]
+        # Action 0 is the unique ReT maximizer. Action 1 is 0.001 lower but has
+        # better service. Actions 2-3 remain outside the useful set.
+        early = np.choose(first, (0.800, 0.799, 0.700, 0.600)).astype(float)
+        fill = np.choose(first, (0.70, 0.90, 0.80, 0.75)).astype(float)
+        unresolved = np.choose(first, (2.0, 0.0, 1.0, 1.0)).astype(float)
+        size = len(calendars)
+        return {
+            "early_ret_complete_cohort": early,
+            "ret_visible": early,
+            "ret_full": early,
+            "worst_product_fill": fill,
+            "unresolved_orders": unresolved,
+            "lost_orders": np.zeros(size),
+        }
+
+    monkeypatch.setattr(
+        "supply_chain.q_r1_comparator_v2.simulate_full_des_frontier",
+        panel,
+    )
+    common = dict(
+        observation=observation,
+        base_skeleton=campaign.skeleton,
+        prefix=(),
+        scheduler=scheduler(),
+        belief=ExactJointBelief.uniform(),
+        planning_key=PlanningKey(campaign.history_root, campaign.campaign_index, 0),
+    )
+    legacy, _legacy_detail = choose_comparator_v2_action(
+        **common,
+        config=ComparatorV2Config(
+            horizon=1,
+            conditional_paths=1,
+            mode="scenario",
+        ),
+    )
+    tied, tied_detail = choose_comparator_v2_action(
+        **common,
+        config=ComparatorV2Config(
+            horizon=1,
+            conditional_paths=1,
+            mode="scenario",
+            value_indifference_tolerance=0.002,
+            tie_breaker="service",
+        ),
+    )
+    strict, strict_detail = choose_comparator_v2_action(
+        **common,
+        config=ComparatorV2Config(
+            horizon=1,
+            conditional_paths=1,
+            mode="scenario",
+            value_indifference_tolerance=0.0005,
+            tie_breaker="service",
+        ),
+    )
+    assert legacy == 0
+    assert tied == 1
+    assert tied_detail["near_optimal_sequence_count"] == 2
+    assert strict == 0
+    assert strict_detail["near_optimal_sequence_count"] == 1
+
+
+def test_merge_rejects_mixed_tie_breaker_contracts() -> None:
+    base = {
+        "claim_status": "BURNED_DEVELOPMENT_NO_CLAIM",
+        "conditional_path_budgets": [64, 256],
+        "value_indifference_tolerance": 0.002,
+        "selection_performed": False,
+        "learner_return_used": False,
+        "retained_minus_reset_used_for_selection": False,
+        "convergence": [],
+        "convergence_pairs": [],
+        "history_roots": [7_570_801, 7_570_801],
+        "states": 1,
+    }
+    legacy = {**base, "tie_breaker": "legacy"}
+    service = {
+        **base,
+        "tie_breaker": "service",
+        "history_roots": [7_570_802, 7_570_802],
+    }
+    from scripts.merge_q_r1_comparator_v2_shards import _validate_common
+
+    with pytest.raises(ValueError, match="tie breaker"):
+        _validate_common([legacy, service])
+
+
 def test_merge_recomputes_convergence_from_raw_rows() -> None:
     signature = [4, "scenario", 0.0, "expected"]
     shards = []
