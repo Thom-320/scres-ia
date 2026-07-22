@@ -144,6 +144,9 @@ def main() -> int:
     parser.add_argument("--states", type=int, default=12)
     parser.add_argument("--hard-cap-seconds", type=float, default=14_400.0)
     args = parser.parse_args()
+    # Resolve before use: a relative --freeze made the run crash on its final
+    # metadata line, after the full evaluation had already been paid for.
+    args.freeze = args.freeze.resolve()
     if args.output.exists():
         raise SystemExit(f"refusing to overwrite {args.output}")
     result = run(args)
