@@ -30,9 +30,16 @@ Generate the source of truth, six tables, and four figures:
 python scripts/build_submission_a_program_q.py
 ```
 
-Compile `main.tex` with the repository's LaTeX build workflow. The generator
-verifies the frozen evidence hashes before producing outputs; it does not rerun
-the simulator or change a scientific verdict.
+Build the same evidence package and a byte-deterministic review PDF:
+
+```bash
+python scripts/build_submission_a_pdf.py
+```
+
+The PDF wrapper fixes `SOURCE_DATE_EPOCH`, and the figure generator removes
+volatile PDF metadata. The evidence manifest excludes itself. The generator
+verifies the frozen evidence hashes; it does not rerun the simulator or change
+a scientific verdict.
 
 ## Submission blockers, not scientific blockers
 

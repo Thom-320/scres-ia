@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import subprocess
+import sys
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -33,3 +35,29 @@ def test_generated_package_contains_all_planned_tables_and_figures() -> None:
     figures = sorted((PAPER / "generated" / "figures").glob("figure*.pdf"))
     assert len(tables) == 6
     assert len(figures) == 4
+
+
+def test_generator_is_byte_deterministic() -> None:
+    tracked = sorted((PAPER / "generated").rglob("*")) + [PAPER / "source_of_truth.json"]
+    before = {
+        path.relative_to(PAPER): path.read_bytes()
+        for path in tracked
+        if path.is_file()
+    }
+    subprocess.run(
+        [sys.executable, str(ROOT / "scripts" / "build_submission_a_program_q.py")],
+        cwd=ROOT,
+        check=True,
+    )
+    after = {
+        path.relative_to(PAPER): path.read_bytes()
+        for path in tracked
+        if path.is_file()
+    }
+    assert after == before
+
+
+def test_deterministic_pdf_wrapper_is_tracked() -> None:
+    wrapper = ROOT / "scripts" / "build_submission_a_pdf.py"
+    assert wrapper.is_file()
+    assert "SOURCE_DATE_EPOCH" in wrapper.read_text()

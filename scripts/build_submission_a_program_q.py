@@ -103,7 +103,7 @@ def verify_evidence() -> dict[str, dict]:
 
 def write_csv(path: Path, header: list[str], rows: list[list[object]]) -> None:
     with path.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.writer(handle)
+        writer = csv.writer(handle, lineterminator="\n")
         writer.writerow(header)
         writer.writerows(rows)
 
@@ -306,7 +306,10 @@ def style() -> None:
 
 
 def save_figure(fig: plt.Figure, stem: str) -> None:
-    fig.savefig(FIGURES / f"{stem}.pdf")
+    fig.savefig(
+        FIGURES / f"{stem}.pdf",
+        metadata={"CreationDate": None, "ModDate": None},
+    )
     fig.savefig(FIGURES / f"{stem}.png", dpi=220)
     plt.close(fig)
 
@@ -477,7 +480,7 @@ def main() -> None:
     )
     hashes = []
     for path in sorted(GENERATED.rglob("*")):
-        if path.is_file():
+        if path.is_file() and path != GENERATED / "generated_files.sha256":
             hashes.append(f"{sha256(path)}  {path.relative_to(PAPER).as_posix()}")
     (GENERATED / "generated_files.sha256").write_text("\n".join(hashes) + "\n", encoding="utf-8")
 
