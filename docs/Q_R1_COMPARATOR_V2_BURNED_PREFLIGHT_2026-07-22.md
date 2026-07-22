@@ -91,9 +91,22 @@ scenario mode.  The positive unresolved delta also remains unresolved.
    is not eligible for freeze.
 5. Return to the pure-ReT selector and run the already specified global
    c256/c1024 convergence check.  This is a budget escalation, not a changed
-   outcome gate.  If it fails, comparator convergence remains unresolved.
+   outcome gate.  It passed: 93/96 first actions agreed (96.875%), mean value
+   error was 0.000110, q95 error was 0.000247, and neither budget abstained.
+   The c256 pure-ReT comparator is therefore the convergence-qualified
+   candidate.
 6. If and only if the original convergence thresholds pass, freeze that
    universal comparator, expand its raw retained/reset rows, and run the
    clustered prospective power audit with SESOI +0.01.
 7. M1/M2/M4 require a deployable residual against that frozen comparator;
    oracle knowledge remains a clairvoyant upper bound, never learned value.
+
+## Freeze custody discrepancy
+
+The automatic freeze utility written before the c256/c1024 run was mistakenly
+hard-coded to the earlier c64/service-tie candidate, which had already failed.
+Changing that utility after observing the c256/c1024 PASS would create an
+avoidable post-outcome ambiguity.  Therefore this run is recorded as
+`PASS_COMPARATOR_CONVERGENCE_PENDING_INDEPENDENT_FREEZE_AUDIT`: no freeze,
+Pareto expansion, power audit, or learner is executed until the mismatch is
+resolved prospectively and independently.
