@@ -9,6 +9,7 @@ claim, enter this manuscript, or delay the submission ceiling.
 |---|---|---|---|---|
 | 2026-07-22 | Frozen scientific package, manuscript, six tables, four figures and review PDF | Thom | DONE | `source_of_truth.json`; `generated/generated_files.sha256`; `output/pdf/submission_a_program_q_draft.pdf` |
 | 2026-07-22 | Hardware-specific action-latency benchmark and removal of unmeasured amortization claim | Thom | DONE | `results/program_q/latency_benchmark_v1/result.json`; commit `a543f65` |
+| 2026-07-22 | Two frozen confirmatory falsification probes: action-trajectory feedback and modal/phase-only/frequency-matched replacements | Thom | DONE | `results/program_q/confirmation_v1_20260718/artifacts/confirmation/evaluation/result.json`: `trajectory_audits`, `replacement_controls`, and both corresponding integrity gates |
 | 2026-07-29 | Author order, affiliations, corresponding author and CRediT approved | Thom + all authors | BLOCKED_HUMAN | Signed/dated update to `AUTHORSHIP_AND_PORTFOLIO.md` |
 | 2026-07-29 | Garrido face validation: ReT, researcher extension, worst-product/unresolved and closed-loop wording | Garrido | BLOCKED_HUMAN | Written response to `GARRIDO_FACE_VALIDATION_REQUEST.md` |
 | 2026-08-05 | Security and public-release review of military-model wording and assets | Thom + designated reviewer | TODO | Signed checklist entry plus any redaction commit |
@@ -29,6 +30,9 @@ claim, enter this manuscript, or delay the submission ceiling.
   policies.
 - Latency is secondary and hardware-specific. The measured structured family
   was faster; no neural compute advantage is claimed.
+- The two probes above are checks inside the single sealed Program Q
+  confirmation. They are not two additional experiments or independent
+  replications, and no exploratory probe is promoted retrospectively.
 
 ## Escalation rule
 
