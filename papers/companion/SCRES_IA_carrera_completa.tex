@@ -16,6 +16,17 @@
 \usepackage{fancyhdr}
 \pagestyle{fancy}\fancyhf{}\rhead{SCRES-IA — la carrera completa}\lhead{\thepage}\cfoot{}
 \setlength{\headheight}{14pt}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.17}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit,backgrounds}
+\usepackage{float}
+% paleta
+\definecolor{cAzul}{HTML}{2C5F8A}
+\definecolor{cVerde}{HTML}{3E8E5A}
+\definecolor{cRojo}{HTML}{B23A48}
+\definecolor{cGris}{HTML}{6B7280}
+\definecolor{cAmbar}{HTML}{C08A1E}
 \newcommand{\ret}{\text{ReT}}
 \newcommand{\code}[1]{\texttt{#1}}
 
@@ -54,13 +65,69 @@ El programa SCRES-IA (\emph{Supply-Chain RESilience with Inteligencia Artificial
 experimentos, veredictos y correcciones. Este texto los ordena en una sola narrativa. Responde tres
 preguntas que se hicieron explícitamente:
 \begin{enumerate}[nosep]
-  \item \textbf{¿Qué logramos?} (Secciones \ref{sec:logros} y \ref{sec:qr1}.)
-  \item \textbf{¿Qué significa cada término?} (Sección \ref{sec:glosario}, un glosario exhaustivo:
+  \item \textbf{\textquestiondown{}Qué logramos?} (Secciones \ref{sec:logros} y \ref{sec:qr1}.)
+  \item \textbf{\textquestiondown{}Qué significa cada término?} (Sección \ref{sec:glosario}, un glosario exhaustivo:
         lazo abierto/cerrado, MPC, RL, PPO, ReT, \emph{belief}, \emph{cold-start}, placebos,
         \emph{guardrails}, etc.)
-  \item \textbf{¿Cómo fue la carrera y dónde estamos?} (Secciones \ref{sec:metodo}, \ref{sec:carrera}
+  \item \textbf{\textquestiondown{}Cómo fue la carrera y dónde estamos?} (Secciones \ref{sec:metodo}, \ref{sec:carrera}
         y \ref{sec:estado}.)
 \end{enumerate}
+
+%==============================================================
+\section{La historia en palabras simples: \textquestiondown{}qué está pasando?}\label{sec:historia}
+Antes de los detalles, la película completa, con analogías.
+
+\paragraph{El mundo.} Imagine una cadena que lleva comida a soldados desplegados. Cada semana hay que
+decidir cuánto producir de dos tipos de ración que comparten la misma máquina. Si uno decide mal, hay
+pedidos que llegan tarde o no llegan: la \emph{resiliencia} cae. Medimos esa resiliencia con un número
+llamado ReT (1 $=$ perfecto). Todo esto vive en un simulador que reproduce \emph{exactamente} (celda por
+celda) las cuentas de la tesis original.
+
+\paragraph{La pregunta de fondo.} Hay dos formas de decidir. Una es \textbf{seguir un plan fijo}
+escrito de antemano (``lazo abierto''), como un temporizador de riego. La otra es \textbf{reaccionar al
+estado} (``lazo cerrado''), como un termostato que mide y ajusta. La comunidad de investigación cree
+que la inteligencia artificial (aprendizaje por refuerzo, ``RL'') puede aprender a reaccionar mejor que
+cualquier plan fijo. Nosotros quisimos probarlo \emph{con rigor absoluto}.
+
+\paragraph{El truco que nos da rigor.} Nuestro problema es pequeño a propósito: solo hay
+$4^8 = 65\,536$ planes fijos posibles. Eso significa que podemos \textbf{probarlos todos} y saber, con
+certeza, cuál es el mejor plan fijo. Es como tener la ``clave de respuestas'' de un examen. Así, si el
+RL le gana a \emph{todos}, no hay duda: aprendió algo que ningún plan fijo tiene. No está haciendo
+trampa ni ``redescubriendo'' un buen plan.
+
+\paragraph{Lo que encontramos (Logro 1).} El RL, efectivamente, \textbf{le gana a los 65\,536 planes
+fijos} (Figura \ref{fig:curva}): aprende a reaccionar, y eso vale mucho ($+0.07$ a $+0.12$ de ReT). Eso
+\emph{por sí solo} ya cumple la primera petición de Garrido: convertir el simulador de ``plan fijo'' en
+``reacción inteligente''. \emph{Pero} pusimos un rival más duro: el \textbf{MPC}, un controlador clásico
+(no una red neuronal) que planifica hacia adelante con un modelo. Y ahí, sorpresa honesta: el RL
+\textbf{empata} al MPC (Figura \ref{fig:forest}). No lo supera ni un poquito; son prácticamente
+idénticos. Encima, el MPC es \textbf{7 veces más rápido}. Es decir: la red aprende algo real, pero ese
+``algo'' ya lo tenía el control clásico, y más barato.
+
+\paragraph{Por qué empatan (la explicación profunda).} Porque en este mundo \emph{la mejor decisión
+casi no cambia por más que uno sepa}. La cima del paisaje de decisiones es \emph{plana}: muchas
+políticas distintas dan casi el mismo ReT. Cuando eso pasa, no hay nada que una red pueda ``exprimir''
+que el control estructurado no exprima ya. Es un resultado importante: \textbf{a veces entrenar una red
+no está justificado}, y saber \emph{cuándo no} entrenar es, en sí, ciencia útil.
+
+\paragraph{La segunda pregunta: memoria entre campañas (Logro 2).} La petición \emph{más} interesante de
+Garrido es que el sistema \textbf{aprenda de la experiencia}: que recordar campañas pasadas mejore las
+decisiones de las nuevas, incluso después de reiniciar todo lo físico. Lo probamos (``Q-R1''): dos
+brazos idénticos salvo que uno \emph{recuerda} el conocimiento de campañas anteriores y el otro lo
+\emph{olvida}. Resultado (Figura \ref{fig:qr1}): \textbf{recordar ayuda, y bastante} ($+0.066$ de ReT al
+arranque), con la firma inequívoca de un efecto causal real (crece con cuánto se parecen las campañas;
+una historia falsa \emph{daña}). \textbf{Ese es el aprendizaje acumulado de Garrido, confirmado} en una
+prueba prospectiva sellada. Pero hay un ``pero'' honesto: el brazo que recuerda sube el promedio
+\emph{en parte descuidando al producto minoritario} —mejora la media a costa de la equidad—. Así que el
+efecto es \emph{real} pero todavía \emph{no es seguro} para desplegar tal cual.
+
+\paragraph{Dónde estamos, en una frase.} Probamos, con la disciplina más estricta posible (respuestas
+selladas, métrica intacta, verificación adversarial), que \textbf{la IA aprende control real pero no le
+gana al control clásico en este entorno tranquilo}, y que \textbf{la memoria entre campañas sí mejora
+causalmente la resiliencia inicial, aunque aún con un costo de servicio}. La pregunta abierta —la
+apuesta— es si un \emph{híbrido} (red $+$ MPC) puede quedarse con la ganancia de $+0.066$ \emph{sin} el
+costo, probablemente bajo riesgos físicos reales que Garrido valide. No forzamos un ``la IA ganó''; lo
+medimos honestamente, y por eso vale.
 
 %==============================================================
 \section{El problema y el mundo simulado}\label{sec:mundo}
@@ -233,7 +300,7 @@ El corazón metodológico (Sección \ref{sec:metodo}):
   \item $H_{OL}$ — \emph{adaptación aprendida}: cuánto le gana el RL a la \emph{mejor política fija}
         (las 65\,536). Mide si reaccionar al estado sirve.
   \item $\Delta_N$ — \emph{prima neural}: cuánto le gana el RL al \emph{mejor MPC estructurado}. Es la
-        pregunta ``¿vale la pena la red?''.
+        pregunta ``\textquestiondown{}vale la pena la red?''.
 \end{itemize}
 
 \item[Seeds selladas vs quemadas (\emph{sealed} vs \emph{burned}).]
@@ -254,18 +321,51 @@ La contribución metodológica de \emph{Submission A} no es un algoritmo de RL n
 \textbf{forma de decidir, con rigor, cuándo un controlador aprendido aporta valor sobre el control
 estructurado}. Se organiza como una escalera que \emph{localiza dónde vive (o muere) el valor}:
 \[
-\underbrace{H_{PI}}_{\text{¿hay oportunidad física?}}
+\underbrace{H_{PI}}_{\text{\textquestiondown{}hay oportunidad física?}}
 \;\to\;
-\underbrace{H_{obs}}_{\text{¿la convierte el control clásico?}}
+\underbrace{H_{obs}}_{\text{\textquestiondown{}la convierte el control clásico?}}
 \;\to\;
-\underbrace{H_{OL}}_{\text{¿el RL aprende a adaptarse?}}
+\underbrace{H_{OL}}_{\text{\textquestiondown{}el RL aprende a adaptarse?}}
 \;\to\;
-\underbrace{\Delta_N}_{\text{¿la red supera a la estructura?}}
+\underbrace{\Delta_N}_{\text{\textquestiondown{}la red supera a la estructura?}}
 \]
 Cada peldaño es \emph{falsable por separado}. La clave es la \textbf{clave de respuestas exacta}: como
 enumeramos las 65\,536 políticas fijas, sabemos exactamente cuál es la mejor política que no reacciona.
 Así, cuando el RL le gana a \emph{todas}, es adaptación genuina y no ``redescubrir un buen plan fijo''
 —una distinción que los trabajos de RL-en-DES con baselines débiles no pueden hacer.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  font=\footnotesize,
+  box/.style={rectangle,rounded corners=3pt,draw=#1,very thick,fill=#1!8,
+    text width=2.55cm,minimum height=1.35cm,align=center,inner sep=3pt},
+  lab/.style={text width=2.7cm,align=center,text=cGris,font=\scriptsize},
+  ar/.style={-{Stealth[length=3mm]},very thick,cGris}
+]
+\node[box=cAzul]  (pi)  {\textbf{$H_{PI}$}\\[2pt]Oportunidad física (oráculo)};
+\node[box=cVerde,right=1.15cm of pi]  (obs) {\textbf{$H_{obs}$}\\[2pt]Conversión clásica observable};
+\node[box=cAmbar,right=1.15cm of obs] (ol)  {\textbf{$H_{OL}$}\\[2pt]Adaptación aprendida (RL vs fija)};
+\node[box=cRojo,right=1.15cm of ol]   (dn)  {\textbf{$\Delta_N$}\\[2pt]Prima neural (RL vs MPC)};
+\draw[ar] (pi)--(obs); \draw[ar] (obs)--(ol); \draw[ar] (ol)--(dn);
+\node[lab,below=3pt of pi]  {\textquestiondown{}hay techo?};
+\node[lab,below=3pt of obs] {\textquestiondown{}lo captura la estructura?};
+\node[lab,below=3pt of ol]  {\textquestiondown{}reaccionar sirve?};
+\node[lab,below=3pt of dn]  {\textquestiondown{}la red supera a la estructura?};
+% resultados de Program Q anotados
+\node[lab,above=2pt of pi,text=cAzul]  {$0.15$};
+\node[lab,above=2pt of obs,text=cVerde]{$+0.04..{+}0.07$};
+\node[lab,above=2pt of ol,text=cAmbar] {$+0.07..{+}0.12$ \checkmark};
+\node[lab,above=2pt of dn,text=cRojo]  {$\approx 0$ (empate)};
+\end{tikzpicture}
+\caption{\textbf{La escalera de falsación de 4 niveles.} Cada nivel localiza si el valor
+adaptativo existe o muere. Los números en azul/verde/ámbar/rojo son los resultados de Program Q: hay
+oportunidad física ($H_{PI}$), el control clásico convierte parte ($H_{obs}$), el RL aprende adaptación
+real y le gana a las 65\,536 políticas fijas ($H_{OL}$), pero \emph{no} supera al MPC ($\Delta_N\approx
+0$). El poder del marco es distinguir ``hubo aprendizaje'' (nivel 3) de ``el aprendizaje ganó'' (nivel
+4).}
+\label{fig:escalera}
+\end{figure}
 
 %==============================================================
 \section{Lo que logramos: Submission A / Paper 2 (Program Q)}\label{sec:logros}
@@ -294,6 +394,38 @@ Esto \textbf{entrega la primera petición de Garrido 2024}: el DES de lazo abier
 cerrado por una IA que \emph{aprende a reaccionar}, medido con rigor. La curva de aprendizaje sube
 monótonamente y converge \emph{desde abajo} al nivel del control estructurado, sin deriva.
 
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=12cm,height=6.2cm,font=\footnotesize,
+  xlabel={Pasos de entrenamiento (miles)},ylabel={$\Delta$ ReT},
+  xmin=0,xmax=60,ymin=-0.11,ymax=0.13,
+  axis lines=left,grid=major,grid style={gray!18},
+  legend style={at={(0.985,0.28)},anchor=east,draw=gray!40,font=\scriptsize},
+  ytick={-0.10,-0.05,0,0.05,0.10},
+  clip=false
+]
+% RL - mejor politica fija: sube 0 -> +0.10
+\addplot[cAmbar,very thick,samples=80,domain=0:60]{0.105*(1-exp(-x/13))};
+\addlegendentry{RL $-$ mejor fija ($H_{OL}$)}
+% RL - MPC: sube de -0.10 -> ~0
+\addplot[cRojo,very thick,dashed,samples=80,domain=0:60]{-0.105*exp(-x/11)};
+\addlegendentry{RL $-$ MPC ($\Delta_N$)}
+\addplot[gray,dotted,thick,samples=2,domain=0:60]{0};
+\node[cAmbar,anchor=east,font=\scriptsize] at (axis cs:59,0.108){\textbf{$\to +0.10$ (gana a las 65\,536)}};
+\node[cRojo,anchor=south east,font=\scriptsize]  at (axis cs:59,0.006){\textbf{$\to 0$ (empata al MPC)}};
+\end{axis}
+\end{tikzpicture}
+\caption{\textbf{Curva de aprendizaje (forma esquemática; extremos verificados).} RecurrentPPO
+entrenado desde cero. La línea ámbar ($H_{OL}$) sube monótonamente hasta ${+}0.10$: el RL aprende a
+adaptarse y supera a la mejor de las 65\,536 políticas fijas. La línea roja ($\Delta_N$) sube
+\emph{desde abajo} y converge exactamente a $0$: el RL alcanza al MPC pero no lo supera. Los valores
+finales están verificados (Tablas de Program Q); la trayectoria intermedia es ilustrativa de la forma
+monótona sin deriva observada.}
+\label{fig:curva}
+\end{figure}
+
 \subsection{Resultado 2 — pero no hay prima neural: RL${\approx}$MPC}
 Cuando comparamos el RL con el \emph{mejor control estructurado} (belief-MPC), la diferencia
 $\Delta_N$ es \textbf{estadísticamente equivalente a cero} (TOST) en las tres celdas:
@@ -314,8 +446,50 @@ independientes} (replicación prospectiva, una arquitectura distinta tipo transf
 tibio desde tres inicializaciones, un factorial de geometría de recompensa, y un aprendiz off-policy
 QR-DQN). Ningún ``defecto arreglable'' del RL explica el empate.
 
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=12cm,height=4.6cm,font=\footnotesize,
+  xlabel={$\Delta_N$ = RL $-$ MPC (ReT canónica)},
+  xmin=-0.014,xmax=0.014,ymin=0.4,ymax=3.6,
+  ytick={1,2,3},yticklabels={rho90\_share90,rho90\_share75,rho75\_share90},
+  axis lines=left,grid=major,grid style={gray!14},
+  xtick={-0.01,-0.005,0,0.005,0.01},
+  scaled x ticks=false,
+  x tick label style={/pgf/number format/fixed,/pgf/number format/precision=3}
+]
+\addplot[draw=none,forget plot] coordinates {(-0.013,0.5)(0.013,3.5)};
+% banda de equivalencia [-0.01,+0.01]
+\fill[cVerde!12] (axis cs:-0.01,0.4) rectangle (axis cs:0.01,3.6);
+\draw[gray,dashed,thick] (axis cs:0,0.4)--(axis cs:0,3.6);
+% celda 1 (y=1): rho90_share90
+\draw[cRojo,very thick] (axis cs:-0.0027,1)--(axis cs:0.0019,1);
+\draw[cRojo,very thick] (axis cs:-0.0027,0.88)--(axis cs:-0.0027,1.12);
+\draw[cRojo,very thick] (axis cs:0.0019,0.88)--(axis cs:0.0019,1.12);
+\node[cRojo,circle,fill,inner sep=1.7pt] at (axis cs:-0.0004,1){};
+% celda 2 (y=2): rho90_share75
+\draw[cRojo,very thick] (axis cs:-0.0055,2)--(axis cs:0.0041,2);
+\draw[cRojo,very thick] (axis cs:-0.0055,1.88)--(axis cs:-0.0055,2.12);
+\draw[cRojo,very thick] (axis cs:0.0041,1.88)--(axis cs:0.0041,2.12);
+\node[cRojo,circle,fill,inner sep=1.7pt] at (axis cs:-0.0007,2){};
+% celda 3 (y=3): rho75_share90
+\draw[cRojo,very thick] (axis cs:-0.0063,3)--(axis cs:0.0031,3);
+\draw[cRojo,very thick] (axis cs:-0.0063,2.88)--(axis cs:-0.0063,3.12);
+\draw[cRojo,very thick] (axis cs:0.0031,2.88)--(axis cs:0.0031,3.12);
+\node[cRojo,circle,fill,inner sep=1.7pt] at (axis cs:-0.0016,3){};
+\node[anchor=south,font=\scriptsize,cVerde!60!black] at (axis cs:0,3.12){banda de equivalencia $\pm0.01$};
+\end{axis}
+\end{tikzpicture}
+\caption{\textbf{Forest plot de equivalencia ($\Delta_N$).} Cada punto es la diferencia RL$-$MPC en una
+celda de régimen, con su intervalo de confianza clustered al 95\%. Los tres intervalos \emph{encierran
+el 0} y caen dentro de la banda de equivalencia $\pm0.01$ (el SESOI). Esta es la prueba visual de que
+la red \emph{no} supera al control estructurado: $\Delta_N\approx 0$, equivalencia TOST.}
+\label{fig:forest}
+\end{figure}
+
 \subsection{Resultado 3 — el mecanismo: la decisión es \emph{belief-insensitive}}
-¿Por qué empatan? Porque en este entorno estacionario \textbf{la decisión óptima casi no depende de la
+\textquestiondown{}Por qué empatan? Porque en este entorno estacionario \textbf{la decisión óptima casi no depende de la
 creencia}: una mejor inferencia cambia la acción óptima en ${<}5\%$ de los estados, y la cima del
 paisaje de políticas fijas es \emph{plana} (las 38 mejores dentro de $0.0025$). El control
 estructurado ya se sienta en la frontera observable; no queda residual que una red pueda capturar.
@@ -389,6 +563,41 @@ Anti-oráculo (\emph{wrong}) & $-0.1016$ \\
 \end{tabular}
 \end{center}
 
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=12.5cm,height=5.6cm,font=\footnotesize,
+  ybar,bar width=15pt,
+  ylabel={$\Delta$ ReT full-cohort (retenido $-$ reiniciado)},
+  symbolic x coords={iid,{$\kappa$=0.75},{$\kappa$=0.90},shuffled,delayed,wrong},
+  xtick=data,x tick label style={font=\scriptsize},
+  ymin=-0.115,ymax=0.085,
+  axis lines=left,grid=major,grid style={gray!16},
+  ytick={-0.10,-0.05,0,0.05},
+  nodes near coords,every node near coord/.append style={font=\tiny,/pgf/number format/fixed,/pgf/number format/precision=3},
+  clip=false
+]
+% dosis-respuesta (verde) + placebos (gris/rojo)
+\addplot[draw=cVerde,fill=cVerde!30] coordinates {(iid,0.0)({$\kappa$=0.75},0.0341)({$\kappa$=0.90},0.0656)};
+\addplot[draw=cGris,fill=cGris!25]   coordinates {(shuffled,-0.0043)(delayed,0.0059)(wrong,-0.1016)};
+\draw[gray,dotted] (axis cs:iid,0)--(axis cs:wrong,0);
+\node[cVerde!55!black,font=\scriptsize,anchor=west,align=left] at (axis cs:iid,0.048)
+  {\textbf{efecto retenido}\\(crece con $\kappa$)};
+\node[cRojo,font=\scriptsize,anchor=west] at (axis cs:shuffled,-0.075){anti-oráculo (historia falsa)};
+\node[cAmbar,font=\scriptsize,anchor=south] at (axis cs:delayed,0.014){placebo $>0$};
+\end{axis}
+\end{tikzpicture}
+\caption{\textbf{Q-R1: dosis-respuesta y placebos (κ$=0.90$, full-cohort, seeds selladas).} En verde,
+el efecto retenido crece con la persistencia: iid$=0 < \kappa0.75=+0.034 < \kappa0.90=+0.066$
+—dosis-respuesta perfecta, la firma de causalidad. En gris/rojo, los placebos: \emph{shuffled} y
+\emph{wrong} (anti-oráculo, $-0.10$) dañan como deben; pero \emph{delayed} es levemente positivo
+($+0.006$), una fuga menor de temporización que hace fallar el gate de mecanismo. Aparte, el brazo
+retenido degrada el peor-producto (no mostrado), fallando el gate de equidad. Veredicto: efecto real
+pero \emph{no conjuntamente seguro}.}
+\label{fig:qr1}
+\end{figure}
+
 \paragraph{Lectura honesta.} El efecto retenido es \textbf{real, grande y con dosis-respuesta
 perfecta}, y el anti-oráculo daña fuertemente —exactamente la firma de un mecanismo causal genuino.
 \textbf{El aprendizaje acumulado de Garrido queda confirmado prospectivamente} en seeds selladas, y
@@ -402,7 +611,7 @@ por debajo del margen de equidad. Es la \textbf{misma forma que hallamos en Prog
 \subsection{Qué abre esto}
 El STOP es correcto y \textbf{no autoriza entrenar ninguna red}. Pero define con precisión la próxima
 pregunta: el ``residual convertible'' aquí \emph{no es de magnitud} (la magnitud sobra: $+0.066$), sino
-de \textbf{seguridad conjunta}. La pregunta defendible es: \emph{¿puede un controlador retenido
+de \textbf{seguridad conjunta}. La pregunta defendible es: \emph{\textquestiondown{}puede un controlador retenido
 consciente de restricciones —o un híbrido learning-augmented MPC— mantener la ganancia media de
 $+0.066$ SIN el costo de peor-producto/no-resueltos?} Si un híbrido con \emph{gate} de confianza captura
 esa ganancia respetando la equidad, ahí está el paper fuerte.
