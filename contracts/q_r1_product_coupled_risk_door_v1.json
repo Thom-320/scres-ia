@@ -1,0 +1,50 @@
+{
+  "contract_id": "q_r1_product_coupled_risk_door_v1",
+  "schema_version": "q_r1_risk_door_prereg_v1",
+  "date_frozen": "2026-07-21",
+  "status": "PREREGISTERED_LEARNER_BLIND_BEFORE_ANY_SEED",
+  "motivation": "Gate 2 closed the neural premium in the STATIONARY env on both carriers (STOP_NO_DEPLOYABLE_NEURAL_PREMIUM_STATIONARY_ENV): the product-mix decision is belief-insensitive, so retained knowledge cannot convert to a decision change. This is the ONLY authorized new mechanism: a product-COUPLED risk that breaks that symmetry, making the optimal mix depend on which product will be hit/surge, so retained cross-campaign risk-type knowledge can convert. Prior product-BLIND risk escalation already closed (max H_profile_safe 6.9e-05, optimal posture invariant across 45 profiles); this is the untested product-COUPLED variant.",
+  "mechanism_candidates_researcher_defined": {
+    "R24_product_composition": "the Garrido demand-surge risk with a PERSISTENT per-campaign product composition (surge favors P_C or P_H), observable only through history",
+    "R14_product_specific_yield": "the Garrido rework/non-conforming risk applied asymmetrically to one product's Op7 yield",
+    "note": "Garrido-native risk families (R24, R14); the product-coupling is the researcher-defined extension, disclosed as a doctrine-grounded assumption, NOT attributed to Garrido's exact levels"
+  },
+  "selection_axis_learner_blind": [
+    "H_PI clairvoyant headroom (oracle-of-risk vs best static)",
+    "ranking reversals (does the argmax action CHANGE with the risk state? the belief-sensitivity the stationary env lacked)",
+    "observable classical conversion H_obs (retained-Bayesian-on-risk-type MPC captures H_PI)",
+    "connected region (>=3 graph-adjacent risk cells all passing)"
+  ],
+  "selection_forbidden": "risk frequency/impact/coupling/timing may NEVER be chosen by learner return; only by the learner-blind axis above",
+  "screen_gates": {
+    "H_PI_safe_LCB95_min": 0.02,
+    "H_obs_structured_LCB95_min": 0.015,
+    "ranking_reversal_required": true,
+    "materially_optimal_actions_min": 2,
+    "connected_cells_min": 3,
+    "worst_product_fill_noninferiority": -0.02,
+    "lost_demand_increase": "forbidden",
+    "unresolved_margin": "domain-justified, frozen before seeds (NOT the accidental <=0-per-pair rule)"
+  },
+  "comparator": "the frozen MPC* (contracts/mpc_star_frozen_v1.json), extended to consume the retained risk-type posterior; a learner is authorized ONLY if a deployable candidate leaves LCB95(residual over retained MPC*) >= 0.015 with ranking reversals and safety",
+  "execution": {
+    "direct_simpy": "required (risk masks break transducer exactness)",
+    "seeds": "fresh collision-scanned block, frozen before opening; burned 7570801-24 NEVER reused for a confirmatory claim",
+    "screen_roots_per_cell": 24,
+    "holdout_roots_per_cell": 48,
+    "campaigns_per_history": 12,
+    "no_learner_training_before_screen_pass": true
+  },
+  "stop_verdicts": {
+    "STOP_R24_PRODUCT_CARRIER_NO_CONVERTIBLE_HEADROOM": "R24 product composition does not create belief-sensitive convertible headroom",
+    "STOP_R14_YIELD_CARRIER_NO_CONVERTIBLE_HEADROOM": "R14 product-specific yield does not",
+    "GO_LEARNER_ON_<cell>": "a connected region passes all screen gates learner-blind; a single hybrid confidence-gated learner (M3/M4, the existing ~70%-built ConfidenceGatedBeliefValueMPC) is then authorized on fresh seeds vs MPC*"
+  },
+  "invariants": {
+    "canonical_ReT_unchanged": true,
+    "win_must_beat_retained_MPC_star_same_information": true,
+    "no_true_regime_tape_seed_or_future_in_actor": true,
+    "AF_1_anticipation_bounds_apply_if_alarms_used": true
+  },
+  "honest_prior": "Given the stationary-env closure and the extensive prior product-blind risk null, the prior on a convertible product-coupled door is modest; the screen is designed to close it cheaply (learner-blind, no PPO) OR open exactly one learner attempt. Either outcome is a terminal result."
+}
