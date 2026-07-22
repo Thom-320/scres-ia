@@ -145,6 +145,30 @@ class ExactJointBelief:
             for index in indices
         )
 
+    def enumerate_states(
+        self, *, weight_floor: float = 1e-12
+    ) -> tuple[tuple[float, float, bool, float], ...]:
+        """Exact support enumeration: every (rho, share, regime_c, weight).
+
+        Unlike ``sample_states`` (Monte-Carlo, with replacement), this returns
+        each of the (up to) six latent states with its exact posterior weight,
+        so a planner can integrate the theta/regime mixture with zero sampling
+        noise.  States below ``weight_floor`` are dropped and the survivors are
+        renormalized to sum to one.
+        """
+        states: list[tuple[float, float, bool, float]] = []
+        for theta_index, (rho, share) in enumerate(THETA_GRID):
+            for regime_index in (0, 1):
+                weight = float(self.probability[theta_index, regime_index])
+                if weight > float(weight_floor):
+                    states.append((float(rho), float(share), bool(regime_index), weight))
+        total = sum(state[3] for state in states)
+        if total <= 0.0:
+            raise RuntimeError("joint belief has no support above weight_floor")
+        return tuple(
+            (rho, share, regime_c, weight / total) for rho, share, regime_c, weight in states
+        )
+
     def as_dict(self) -> Mapping[str, object]:
         return {
             "theta_grid": [list(theta) for theta in THETA_GRID],

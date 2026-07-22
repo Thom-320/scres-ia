@@ -1,0 +1,44 @@
+{
+  "contract_id": "mpc_star_frozen_v1",
+  "schema_version": "mpc_star_freeze_v1",
+  "date_frozen": "2026-07-21",
+  "status": "FROZEN_STRONGEST_STRUCTURED_COMPARATOR",
+  "purpose": "The strengthened structured belief-MPC (MPC*) frozen at Q-R1 Gate 1 as the strongest-structured comparator every learner must beat before any neural-premium claim. Reconciles the retained_empirical_bayes_belief_mpc arm of program_s_paper3_retained_knowledge_v1.",
+  "module": "supply_chain/program_t_mpc_star.py",
+  "frozen_config": {
+    "mode": "constraint_aware",
+    "integration": "exact_stratified_6_state",
+    "horizon": 3,
+    "realizations_per_state": 8,
+    "worst_product_floor": 0.70,
+    "fail_closed": true,
+    "crn": "keyed by (observation_sha256, state_index, realization) only; particle/arm/config independent"
+  },
+  "four_fixes_vs_legacy": {
+    "exact_integration": "ExactJointBelief.enumerate_states replaces sample_states (MC with replacement); the 6-state (theta,regime) mixture is integrated with exact posterior weights",
+    "fail_closed": "worst-product floor + no-lost always enforced; empty feasible set returns the max-weighted-worst-fill safe default, never the best infeasible ReT",
+    "objective_alignment": "primary objective is the same ret_visible rollout the gate scores (ret_full is degenerate in the fast-path transducer), with worst-product enforced as a hard constraint",
+    "frozen_crn": "byte-identical demand realizations across MPC* and every learner arm"
+  },
+  "calibration_evidence": "results/q_r1/gate1_mpc_star_calibration_v1/result.json",
+  "action_stability_certificate": {
+    "n_campaigns": 12,
+    "belief": "uniform_reset_campaign_start",
+    "legacy_p16_vs_p64_first_action_agree": "0/12",
+    "mpc_star_self_agree_across_r_and_horizon_first_action": "12/12",
+    "mpc_star_self_agree_first_two_actions": "12/12",
+    "legacy_p64_vs_mpc_star_first_action_agree": "12/12",
+    "interpretation": "the legacy Monte-Carlo MPC is noise-dominated (p16 disagrees with p64 in all 12 campaigns); exact integration is the stable target p64 was approximating; r16 and h4 do not change the action, so h3/r8 is the converged, efficient freeze",
+    "fallbacks_on_real_campaigns": 0,
+    "median_online_ms_h3_r8": 7800
+  },
+  "reconciliation": {
+    "supersedes_comparator": "the legacy scenario_h3_p4 / p32 belief-MPC used in the Q-R1 D3 residual, which the audit and this calibration show is noise-dominated",
+    "downstream_use": "Gate 2 recomputes the clean deployable residual against THIS frozen MPC*; a learner is authorized only if LCB95(residual over MPC*) >= 0.015"
+  },
+  "invariants": {
+    "planner_sees_only_state_rich_observation": true,
+    "no_true_regime_tape_seed_or_future_demand": true,
+    "canonical_ReT_unchanged": true
+  }
+}
