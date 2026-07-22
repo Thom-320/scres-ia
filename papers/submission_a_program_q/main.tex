@@ -29,7 +29,7 @@
 
 \ifelsevierclass
 \begin{frontmatter}
-\title{When Feedback Beats Every Static Policy but Not Structured Control: Exact Benchmarking of Recurrent RL in a Supply-Chain DES}
+\title{When Feedback Beats an Exhaustive Static Frontier but Not Structured Control: Exact Benchmarking of Recurrent RL in a Supply-Chain DES}
 \author{Anonymous for review}
 \begin{abstract}
 Reinforcement learning (RL) can outperform a short list of fixed supply-chain policies without demonstrating that a neural controller is necessary. We separate the value of feedback from a specifically neural premium in a thesis-grounded, researcher-defined multiproduct extension of a discrete-event military food-supply-chain model. The weekly decision allocates three production batches between two non-fungible products over eight weeks, yielding an exactly enumerable frontier of $4^8=65{,}536$ open-loop calendars. The primary resilience functional reproduces 47,546 cells of the source Excel workbooks with zero discrepancy when supplied the source ledger snapshots. Ten frozen RecurrentPPO policies were prospectively evaluated on 256 new common-random-number tapes in each of three demand-regime cells. RecurrentPPO exceeded the best calendar in the complete static frontier by 0.07255--0.11724 in mean Excel ReT; simultaneous lower confidence bounds were 0.06233--0.10614, and all ten optimizer seeds were positive in every cell. Against the best reselected structured controller, however, the differences were -0.00159 to -0.00041 and all simultaneous intervals lay within the prespecified $\pm0.01$ equivalence region. The frozen worst-product-fill non-inferiority condition was not established. Thus feedback has robust value in this contract, but neural superiority and deployment safety do not. The study contributes an exact static benchmark, a comparator-rights protocol, and a reproducible claim ladder for deciding when learned control is warranted in industrial simulation.
@@ -39,7 +39,7 @@ supply chain resilience \sep reinforcement learning \sep discrete-event simulati
 \end{keyword}
 \end{frontmatter}
 \else
-\title{When Feedback Beats Every Static Policy but Not Structured Control: Exact Benchmarking of Recurrent RL in a Supply-Chain DES}
+\title{When Feedback Beats an Exhaustive Static Frontier but Not Structured Control: Exact Benchmarking of Recurrent RL in a Supply-Chain DES}
 \author{Anonymous for review}
 \date{}
 \maketitle
@@ -72,7 +72,7 @@ The contributions are sixfold. First, we reproduce the source resilience formula
 
 Supply-chain resilience concerns the capacity to absorb, respond to, and recover from disruption while maintaining required functions \cite{ponomarov2009understanding,hosseini2019review}. Quantitative research increasingly combines simulation with machine learning, but the evidentiary role of the learner varies: prediction can inform a fixed policy, RL can choose sequential actions, and simulation optimization can search an open-loop design \cite{badakhshan2024,yan2022,rolf2023}. These are not interchangeable forms of adaptation.
 
-Deep RL has produced important results in lost-sales, dual-sourcing, and multi-echelon inventory problems \cite{gijsbrechts2022}. At the same time, the inventory-control literature emphasizes the importance of structured baselines, reward design, and state sufficiency \cite{boute2022}. Our study focuses on an identification problem left implicit by performance-only comparisons: if a neural policy beats every static design but not a structured feedback family with the same deployable information, the evidence supports feedback value without supporting neural necessity.
+Deep RL has produced important results in lost-sales, dual-sourcing, and multi-echelon inventory problems \cite{gijsbrechts2022}. At the same time, the inventory-control literature emphasizes the importance of structured baselines, reward design, and state sufficiency \cite{boute2022}. Our study focuses on an identification problem left implicit by performance-only comparisons: if a neural policy beats the complete, contract-defined static-calendar frontier but not a structured feedback family with the same deployable information, the evidence supports feedback value without supporting neural necessity.
 
 The distinction also connects to simulation optimization. Selecting the maximum observed response from a large design set can create winner's-curse bias unless the selection and evaluation protocol are separated \cite{boesel2003}. We avoid this in two ways. The static frontier is exhaustive, and its best calendar is selected by mean performance rather than per-tape future knowledge. In inference, the best open-loop and structured comparators are reselected inside every bootstrap resample. The final estimates use new confirmation tapes opened once.
 

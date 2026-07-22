@@ -208,7 +208,7 @@ def write_tables(data: dict[str, dict], source: dict) -> None:
         rows=[
             ["Metric", "Excel ReT reproduced?", "Supported", "47,546 workbook rows; zero mismatches"],
             ["Static", "Best open-loop frontier known?", "Supported", "All $4^8=65,536$ calendars evaluated"],
-            ["Learned", "Feedback beats every static?", "Supported", "H_OL LCB95 $>0$ in all three cells; 10/10 seeds positive"],
+            ["Learned", "Feedback beats the exhaustive 65,536-calendar frontier?", "Supported", "H_OL LCB95 $>0$ in all three cells; 10/10 seeds positive"],
             ["Neural", "RL beats structured control?", "Not supported", r"Delta_N practically equivalent to zero within $\pm0.01$"],
             ["Safe", "Worst product non-inferior?", "Not established", "Simultaneous lower bounds cross the frozen $-0.02$ margin"],
         ],
@@ -424,7 +424,7 @@ def build_source_of_truth(data: dict[str, dict]) -> dict:
     latency = data["latency"]
     return {
         "schema_version": "submission_a_program_q_source_of_truth_v1",
-        "title": "When Feedback Beats Every Static Policy but Not Structured Control: Exact Benchmarking of Recurrent RL in a Supply-Chain DES",
+        "title": "When Feedback Beats an Exhaustive Static Frontier but Not Structured Control: Exact Benchmarking of Recurrent RL in a Supply-Chain DES",
         "submission_name": "Submission A -- Program Q",
         "target_journal": "Computers & Industrial Engineering",
         "scientific_base_commit": "f2dfe356c179bd16f4b89b26e8ed3b19d69f5a71",
