@@ -85,8 +85,15 @@ scenario mode.  The positive unresolved delta also remains unresolved.
    the maximum, prefer higher worst-product fill and then fewer unresolved
    orders.  The 0.002 band is fixed before this audit and is one fifth of the
    final +0.01 SESOI.  It is a numerical indifference rule, not a safety claim.
-5. If and only if the original convergence thresholds pass, freeze that
+   This audit failed: c64/c256 agreed on 80/96 first actions (83.33%), while
+   mean and q95 value errors remained only 0.000383 and 0.001014.  The
+   service tie-breaker therefore increases numerical ranking instability and
+   is not eligible for freeze.
+5. Return to the pure-ReT selector and run the already specified global
+   c256/c1024 convergence check.  This is a budget escalation, not a changed
+   outcome gate.  If it fails, comparator convergence remains unresolved.
+6. If and only if the original convergence thresholds pass, freeze that
    universal comparator, expand its raw retained/reset rows, and run the
    clustered prospective power audit with SESOI +0.01.
-6. M1/M2/M4 require a deployable residual against that frozen comparator;
+7. M1/M2/M4 require a deployable residual against that frozen comparator;
    oracle knowledge remains a clairvoyant upper bound, never learned value.
