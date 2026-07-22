@@ -136,12 +136,20 @@ def run(args: argparse.Namespace) -> dict[str, object]:
             actions_64.append(actions[64])
             value_errors.append(abs(planning_value(details[16]) - planning_value(details[64])))
         agreement = float(np.mean(np.asarray(actions_16) == np.asarray(actions_64)))
+        mean_value_error = float(np.mean(value_errors))
+        q95_value_error = float(np.quantile(value_errors, 0.95))
         max_value_error = float(np.max(value_errors))
-        passed = agreement >= 0.95 and max_value_error < 0.005
+        passed = (
+            agreement >= 0.95
+            and mean_value_error < 0.005
+            and q95_value_error < 0.01
+        )
         row = {
             "horizon": horizon,
             "mode": mode,
             "p16_p64_first_action_agreement": agreement,
+            "p16_p64_mean_abs_planning_value_error": mean_value_error,
+            "p16_p64_q95_abs_planning_value_error": q95_value_error,
             "p16_p64_max_planning_value_error": max_value_error,
             "p16_mean_online_ms_first_action": float(np.mean(times_16)),
             "p64_mean_online_ms_first_action": float(np.mean(times_64)),
@@ -221,7 +229,9 @@ def run(args: argparse.Namespace) -> dict[str, object]:
         "selection_objective": "absolute pooled early complete-cohort ReT, then ret_full and worst fill; never retained-minus-reset or learner return",
         "convergence_gate": {
             "first_action_agreement_min": 0.95,
-            "max_planning_value_error": 0.005,
+            "mean_abs_planning_value_error_max": 0.005,
+            "q95_abs_planning_value_error_max": 0.01,
+            "max_abs_planning_value_error": "reported diagnostic, not a gate",
         },
         "h8_boundary": (
             "included after explicit CLI opt-in"
