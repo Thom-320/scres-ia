@@ -1,5 +1,51 @@
 # How to beat the MPC — the honest analysis and the winning plan (2026-07-22)
 
+> **SUPERSEDED IN PART — CORRECTED ROUTE BINDING (2026-07-22, Codex review accepted).**
+> A second Codex review found real overstatements in the strategy below. All accepted:
+> 1. **"MPC model==truth + tractable planning==optimal" is FALSE.** The full-DES MPC is a
+>    receding-horizon, ret_proxy-based, demand-approximate, scenario-family-restricted controller,
+>    NOT a certified full-DES POMDP optimum. Belief sufficiency for inference ≠ control optimality.
+> 2. **The horizon sweep does not certify exhaustion** (p16 only, single θ, binary carrier, burned,
+>    no p64/p256; partially redundant with the existing calibration_v3). EXPLORATORY_NO_CLAIM;
+>    authorizes nothing. (My H3=H4=H6 paired result stands only as a descriptive prior.)
+> 3. **Door 2 was framed backwards.** "Make the env intractable so the learner wins" is attackable
+>    environment-engineering. The defensible question is: *do physically-plausible Garrido-recognized
+>    risks create persistent, product-specific, decision-relevant uncertainty that tractable
+>    structured controllers do not fully convert?* Physics first → headroom → learner. Never design
+>    complexity to induce a neural win.
+> 4. **The thresholds H_PI≥0.02 and residual≥0.015 are arbitrary** (same class as the retired 0.02).
+>    Replace with the scientific SESOI +0.01 + a prospective power audit (uncertainty + experiment
+>    cost → derived diagnostic gate), never a heuristic multiplier.
+> 5. **"M4 ~70% built" is overstated.** `program_t_confidence_gated_mpc.py` is an interface + tested
+>    gate; `program_t_learning_components.py` is a GRU + a loss. Still MISSING: causal dataset,
+>    targets, trainer, split/calibration, real MPC adapters, terminal-value integration,
+>    belief-correction integration, checkpointing, end-to-end eval, compute matching. It is a useful
+>    scaffold, not a 70%-complete system.
+>
+> **Corrected north star (binding):** demonstrate that retained decision knowledge *causally* improves
+> cold-start resilience after a full physical reset; and, AS A STRETCH, that a learning-augmented MPC
+> converts a residual the best retained *tractable* controller does not capture. NOT merely "beat the
+> MPC."
+>
+> **Binding sequence (Codex's corrected route; supersedes the door ordering below):**
+> 1. Finish + adjudicate the canonical Q-R1 (VPS `ovh-agent-lab`, commit 983c197) — SOLE Q-R1 source.
+> 2. Build comparator challenge v2 AFTER adjudication, without mixing branches.
+> 3. Freeze the best *tested deployable* comparator — never call it "optimal MPC".
+> 4. Measure the residual with full-cohort ReT, policy-independent CRN, full constraints, power audit
+>    at SESOI +0.01.
+> 5. Residual is horizon-type → test M1 (terminal value). 6. Residual is inference-type → test M2
+>    (belief correction). 7. No stationary residual → learner-blind sensitivity of R11/R14/R21/R22/R24.
+> 8. Only if those risks are decision-inert → product-coupled extension **validated by Garrido**,
+>    physics + grid frozen BEFORE any RL. 9. M3/M4 only if M1/M2 change rankings and pass
+>    holdout/placebos. 10. Final confirmation vs the best retained structured controller, same rights.
+>
+> Nothing past step 1 executes until the canonical Q-R1 is adjudicated. The sections below are the
+> earlier (partly-flawed) analysis, kept for transparency; where they conflict with this block, THIS
+> block wins.
+
+---
+
+
 North star: a learner (learning-augmented MPC, not pure PPO) that beats the strongest structured
 retained MPC on canonical ReT, with the SAME information, safety, and compute budget. This document
 maps every path, the decision criteria, and the one path that is both winnable and defensible.
