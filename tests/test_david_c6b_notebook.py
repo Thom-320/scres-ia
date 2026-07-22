@@ -66,3 +66,26 @@ def test_claim_and_custody_guards_are_visible() -> None:
     assert "assert_dev_tape" in source
     assert "No cambies" in source
     assert "PUEDES EDITAR AQUÍ" in source
+
+
+def test_notebook_is_verbose_and_explains_progress_to_operator() -> None:
+    source = _all_source()
+    assert "NOTEBOOK 6 · PLAN DE EJECUCIÓN" in source
+    assert "TRABAJO {job_number}/{total_jobs}" in source
+    assert "SIGUE CORRIENDO" in source
+    assert "ETA aproximado restante" in source
+    assert "RESULTADOS MEDIOS POR MODELO Y CELDA" in source
+    assert 'verbose=1' in source
+
+
+def test_notebook_interprets_learning_and_builds_sendable_audit_zip() -> None:
+    source = _all_source()
+    assert "random_binary" in source
+    assert "learned_signal_vs_random_all_cells" in source
+    assert "RESUMEN_PARA_THOMAS.txt" in source
+    assert "REPORTE_VISUAL_PARA_PANTALLAZO.html" in source
+    assert "C6B_AUDITORIA_PARA_ENVIAR" in source
+    assert "files.sha256" in source
+    assert "AUTO_DOWNLOAD_AUDIT" in source
+    assert "google.colab import files" in source
+    assert "c6b-download" in source

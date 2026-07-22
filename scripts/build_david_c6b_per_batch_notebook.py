@@ -34,7 +34,7 @@ def code(text: str) -> dict:
 cells = [
     markdown(
         r"""
-        # C6-B de David — 24 decisiones físicas reales por lote
+        # Notebook 6 · C6-B de David — 24 decisiones físicas reales por lote
 
         Este notebook prueba una pregunta nueva y prospectiva: **¿la memoria de DMLPA aporta valor
         cuando el controlador observa y actúa en 24 epochs físicos reales?**
@@ -46,7 +46,12 @@ cells = [
 
         ## Default `SERIOUS`
 
-        Selecciona **Run all**. Sin editar nada ejecuta cinco brazos, tres seeds y el mismo presupuesto
+        Este notebook está preparado para que **10bits solamente seleccione `Run all`**. Durante la
+        corrida muestra qué modelo está entrenando, la seed, tiempo transcurrido y un heartbeat cada
+        60 segundos. Al terminar entrega una interpretación en español, una tarjeta para pantallazo y
+        un ZIP pequeño listo para enviar a Thomas.
+
+        Sin editar nada ejecuta cinco brazos, tres seeds y el mismo presupuesto
         de 200,192 pasos por seed:
 
         - RecurrentPPO con la arquitectura histórica MLP-LSTM: baseline en este mismo C6-B.
@@ -72,7 +77,7 @@ cells = [
     code(
         r"""
         # 1 — CONFIGURACIÓN. El default ya está listo para Run all.
-        import ast, hashlib, importlib.metadata, inspect, json, math, os, platform, shutil, subprocess, sys, time
+        import ast, hashlib, html, importlib.metadata, inspect, json, math, os, platform, shutil, subprocess, sys, threading, time
         from collections import deque
         from pathlib import Path
         from typing import Any
@@ -90,6 +95,16 @@ cells = [
         DMLPA_HIDDEN = 100
         DMLPA_HEADS = 12
         DMLPA_LAYERS = 4
+        AUTO_DOWNLOAD_AUDIT = True  # intenta descargar el ZIP pequeño al finalizar
+        HEARTBEAT_SECONDS = 60       # muestra que la corrida sigue viva
+
+        MODEL_LABELS = {
+            "recurrent_ppo_mlp": "Baseline RecurrentPPO (MLP-LSTM)",
+            "ppo_dmlpa_stack24": "PPO + DMLPA con memoria física stack 24",
+            "ppo_dmlpa_stack1": "PPO + DMLPA sin memoria (stack 1)",
+            "recurrent_ppo_dmlpa_stack24": "RecurrentPPO + DMLPA stack 24",
+            "sac_discrete_dmlpa_stack24": "SAC categórico discreto + DMLPA stack 24",
+        }
 
         PROFILES = {
             "debug": dict(timesteps=768, optimizer_seeds=[9201], selection_tapes=2, eval_tapes=2),
@@ -113,9 +128,16 @@ cells = [
 
         for tape in (TRAIN_TAPE_START, TRAIN_TAPE_END, *SELECTION_SEEDS, *EVAL_SEEDS):
             assert_dev_tape(tape)
-        print({"profile": RUN_PROFILE, "models": MODEL_KINDS, "timesteps_per_seed": TOTAL_TIMESTEPS,
-               "optimizer_seeds": OPTIMIZER_SEEDS, "selection_tapes_per_cell": SELECTION_TAPES_PER_CELL,
-               "eval_tapes_per_cell": EVAL_TAPES_PER_CELL, "frame_stack": FRAME_STACK})
+        total_jobs = len(MODEL_KINDS) * len(OPTIMIZER_SEEDS)
+        print("=" * 76)
+        print("NOTEBOOK 6 · PLAN DE EJECUCIÓN")
+        print("Perfil:", RUN_PROFILE, "| trabajos de entrenamiento:", total_jobs)
+        print("Pasos por modelo/seed:", f"{TOTAL_TIMESTEPS:,}", "| frame stack:", FRAME_STACK)
+        print("Seeds de optimización:", OPTIMIZER_SEEDS)
+        for number, kind in enumerate(MODEL_KINDS, 1):
+            print(f"  {number}. {MODEL_LABELS[kind]} [{kind}]")
+        print("Al finalizar se mostrará el veredicto y se generará un ZIP de auditoría.")
+        print("=" * 76)
         """
     ),
     code(
@@ -309,7 +331,7 @@ cells = [
 
         def build_agent(model_kind, optimizer_seed):
             env = make_env(model_kind)
-            common = dict(env=env, seed=int(optimizer_seed), verbose=0, learning_rate=3e-4, gamma=0.99)
+            common = dict(env=env, seed=int(optimizer_seed), verbose=1, learning_rate=3e-4, gamma=0.99)
             if model_kind in {"ppo_dmlpa_stack24", "ppo_dmlpa_stack1"}:
                 return PPO("MlpPolicy", n_steps=768, batch_size=96, gae_lambda=0.95,
                            ent_coef=0.01, policy_kwargs=dmlpa_policy_kwargs(model_kind), **common)
@@ -340,33 +362,68 @@ cells = [
             agent = build_agent(kind, OPTIMIZER_SEEDS[0])
             policy = getattr(agent, "policy", agent)
             architecture_reports[kind] = {
+                "modelo_legible": MODEL_LABELS[kind],
                 "policy": type(policy).__name__,
                 "history": history_for(kind),
                 "parameters": int(sum(p.numel() for p in policy.parameters())),
                 "action_space": str(agent.get_env().action_space),
             }
-        display(pd.DataFrame(architecture_reports).T)
+        architecture_df = pd.DataFrame(architecture_reports).T
+        print("\nMODELOS QUE SE VAN A CORRER")
+        display(architecture_df)
+        print(architecture_df.to_string())
         """
     ),
     code(
         r"""
-        # 7 — Entrenamiento multiseed
+        # 7 — Entrenamiento multiseed con progreso y tiempo visible
         RUN_ROOT = REPO / "outputs" / "david_c6b" / f"{RUN_PROFILE}_{int(time.time())}"
         RUN_ROOT.mkdir(parents=True, exist_ok=True)
+        RUN_STARTED = time.time()
+
+        class TrainingHeartbeat:
+            def __init__(self, label, every_seconds=HEARTBEAT_SECONDS):
+                self.label = label; self.every_seconds = every_seconds
+                self.stop_event = threading.Event(); self.started = None; self.thread = None
+            def __enter__(self):
+                self.started = time.time()
+                def beat():
+                    while not self.stop_event.wait(self.every_seconds):
+                        elapsed = time.time() - self.started
+                        total = time.time() - RUN_STARTED
+                        print(f"  ⏱ SIGUE CORRIENDO · {self.label} · modelo {elapsed/60:.1f} min · total {total/60:.1f} min", flush=True)
+                self.thread = threading.Thread(target=beat, daemon=True); self.thread.start()
+                return self
+            def __exit__(self, exc_type, exc, tb):
+                self.stop_event.set(); self.thread.join(timeout=2)
+
         agents = {}; training_rows = []
+        total_jobs = len(MODEL_KINDS) * len(OPTIMIZER_SEEDS); job_number = 0
         for kind in MODEL_KINDS:
             for optimizer_seed in OPTIMIZER_SEEDS:
-                print(f"\nEntrenando {kind} seed={optimizer_seed} pasos={TOTAL_TIMESTEPS:,}")
+                job_number += 1
+                label = MODEL_LABELS[kind]
+                print("\n" + "=" * 76)
+                print(f"TRABAJO {job_number}/{total_jobs}: {label}")
+                print(f"ID={kind} | seed={optimizer_seed} | pasos={TOTAL_TIMESTEPS:,} | historia={history_for(kind)}")
+                print("Estado: ENTRENANDO", flush=True)
                 started = time.time(); agent = build_agent(kind, optimizer_seed)
-                agent.learn(total_timesteps=TOTAL_TIMESTEPS, progress_bar=False)
+                with TrainingHeartbeat(f"{kind} seed={optimizer_seed}"):
+                    agent.learn(total_timesteps=TOTAL_TIMESTEPS, progress_bar=False)
                 elapsed = time.time() - started
                 agents[(kind, optimizer_seed)] = agent
-                training_rows.append({"model": kind, "seed": optimizer_seed,
-                                      "timesteps": TOTAL_TIMESTEPS, "elapsed_seconds": elapsed})
+                training_rows.append({"model": kind, "model_label": label, "seed": optimizer_seed,
+                                      "timesteps": TOTAL_TIMESTEPS, "history": history_for(kind),
+                                      "elapsed_seconds": elapsed, "steps_per_second": TOTAL_TIMESTEPS / elapsed})
                 suffix = ".pt" if kind.startswith("sac_discrete") else ".zip"
                 agent.save(RUN_ROOT / f"{kind}_seed{optimizer_seed}{suffix}")
-                print(f"listo: {elapsed/60:.1f} min")
-        display(pd.DataFrame(training_rows))
+                completed_average = (time.time() - RUN_STARTED) / job_number
+                remaining_minutes = completed_average * (total_jobs - job_number) / 60.0
+                print(f"Estado: TERMINADO · {elapsed/60:.2f} min · {TOTAL_TIMESTEPS/elapsed:.1f} pasos/s")
+                print(f"Progreso global: {job_number}/{total_jobs} · ETA aproximado restante: {remaining_minutes:.1f} min")
+        training_df = pd.DataFrame(training_rows)
+        print("\nENTRENAMIENTO COMPLETO · tiempo total:", f"{(time.time()-RUN_STARTED)/60:.2f} min")
+        display(training_df)
         """
     ),
     code(
@@ -419,12 +476,22 @@ cells = [
                 episode_start[:] = done
             return info["metrics"]
 
-        evaluation_rows = []
+        def rollout_random_binary(skeleton, cell_index, tape_seed, policy_seed):
+            env = ProgramOPerBatchEnv(scheduler=SCHED, tape_seed_start=tape_seed, tape_seed_end=tape_seed)
+            env.reset(options={"skeleton": skeleton, "tape_seed": tape_seed, "cell_index": cell_index})
+            rng = np.random.default_rng(int(policy_seed) + 31 * int(tape_seed)); done = False
+            while not done:
+                _, _, done, _, info = env.step(int(rng.integers(0, 2)))
+            return info["metrics"]
+
+        evaluation_rows = []; evaluation_started = time.time(); evaluation_tape_number = 0
+        total_evaluation_tapes = len(CONFIRMED_RET_CELLS) * len(EVAL_SEEDS)
         RESOURCE_KEYS = ("gross_policy_batch_slots", "gross_production_quantity",
                          "charged_daily_dispatch_slots", "charged_downstream_vehicle_hours")
         for cell_index, cell in enumerate(CONFIRMED_RET_CELLS):
             for tape_seed in EVAL_SEEDS:
-                print("evaluando", cell.cell_id, tape_seed)
+                evaluation_tape_number += 1
+                print(f"EVALUACIÓN {evaluation_tape_number}/{total_evaluation_tapes}: {cell.cell_id} tape={tape_seed}")
                 skeleton, _ = extract_full_des_skeleton(
                     seed=tape_seed, scheduler=SCHED,
                     regime_persistence=cell.regime_persistence, dominant_share=cell.dominant_share,
@@ -442,8 +509,21 @@ cells = [
                         for key in RESOURCE_KEYS:
                             row[f"resource_delta::{key}"] = metrics[key] - structured[key]
                         evaluation_rows.append(row)
+                for optimizer_seed in OPTIMIZER_SEEDS:
+                    metrics = rollout_random_binary(skeleton, cell_index, tape_seed, optimizer_seed)
+                    row = {"model": "random_binary", "optimizer_seed": optimizer_seed,
+                           "cell": cell.cell_id, "tape_seed": tape_seed,
+                           "ret_visible": metrics["ret_visible"],
+                           "delta_structured": metrics["ret_visible"] - structured["ret_visible"],
+                           "worst_delta_structured": metrics["worst_product_fill"] - structured["worst_product_fill"]}
+                    for key in RESOURCE_KEYS:
+                        row[f"resource_delta::{key}"] = metrics[key] - structured[key]
+                    evaluation_rows.append(row)
         evaluation_df = pd.DataFrame(evaluation_rows)
-        display(evaluation_df.head())
+        print("Evaluación terminada en", f"{(time.time()-evaluation_started)/60:.2f} min")
+        result_summary = evaluation_df.groupby(["model", "cell"]).ret_visible.agg(["mean", "std", "count"])
+        print("\nRESULTADOS MEDIOS POR MODELO Y CELDA")
+        display(result_summary)
         """
     ),
     code(
@@ -469,7 +549,9 @@ cells = [
             for cell in [c.cell_id for c in CONFIRMED_RET_CELLS]:
                 candidate_ret = matrix(kind, cell, "ret_visible")
                 recurrent_ret = matrix("recurrent_ppo_mlp", cell, "ret_visible")
+                random_ret = matrix("random_binary", cell, "ret_visible")
                 delta_rppo = candidate_ret - recurrent_ret
+                delta_random = candidate_ret - random_ret
                 delta_structured = matrix(kind, cell, "delta_structured")
                 worst = matrix(kind, cell, "worst_delta_structured")
                 resource_cols = [c for c in evaluation_df.columns if c.startswith("resource_delta::")]
@@ -481,6 +563,8 @@ cells = [
                 row = {"model": kind, "cell": cell,
                        "delta_vs_RecurrentPPO": float(delta_rppo.mean()),
                        "delta_vs_RecurrentPPO_LCB05": two_way_lcb(delta_rppo),
+                       "delta_vs_random": float(delta_random.mean()),
+                       "delta_vs_random_LCB05": two_way_lcb(delta_random, 20260726),
                        "delta_vs_structured": float(delta_structured.mean()),
                        "delta_vs_structured_LCB05": two_way_lcb(delta_structured, 20260723),
                        "worst_product_delta_LCB05": two_way_lcb(worst, 20260724),
@@ -499,6 +583,7 @@ cells = [
             rows = verdict_df[verdict_df.model == kind]
             final_verdict[kind] = {
                 "beat_recurrent_ppo_all_cells": bool((rows.delta_vs_RecurrentPPO_LCB05 > 0).all()),
+                "learned_signal_vs_random_all_cells": bool((rows.delta_vs_random_LCB05 > 0).all()),
                 "beat_structured_plus_0p01_all_cells": bool((rows.delta_vs_structured_LCB05 >= 0.01).all()),
                 "strong_goal_all_cells": bool(rows.strong_cell_pass.all()),
             }
@@ -535,7 +620,83 @@ cells = [
     ),
     code(
         r"""
-        # 11 — Guardar bundle auditable
+        # 11 — Interpretación directa + archivo pequeño para enviar y auditar
+        from IPython.display import FileLink, HTML, Javascript, display
+        from urllib.parse import quote
+
+        trained_means = (evaluation_df[evaluation_df.model != "random_binary"]
+                         .groupby("model").ret_visible.mean().sort_values(ascending=False))
+        best_observed_value = float(trained_means.iloc[0])
+        best_observed_models = [
+            str(kind) for kind, value in trained_means.items()
+            if np.isclose(float(value), best_observed_value, atol=1e-12, rtol=0.0)
+        ]
+        best_observed_label = "EMPATE: " + " | ".join(MODEL_LABELS.get(kind, kind) for kind in best_observed_models)
+        if len(best_observed_models) == 1:
+            best_observed_label = MODEL_LABELS.get(best_observed_models[0], best_observed_models[0])
+        total_training_minutes = sum(row["elapsed_seconds"] for row in training_rows) / 60.0
+        operator_rows = []
+        for kind in candidates:
+            flags = final_verdict[kind]
+            operator_rows.append({
+                "modelo": MODEL_LABELS[kind],
+                "señal_aprendizaje_vs_azar": "SÍ" if flags["learned_signal_vs_random_all_cells"] else "NO",
+                "ganó_a_RecurrentPPO": "SÍ" if flags["beat_recurrent_ppo_all_cells"] else "NO",
+                "ganó_al_estructurado": "SÍ" if flags["beat_structured_plus_0p01_all_cells"] else "NO",
+                "objetivo_fuerte_completo": "SÍ" if flags["strong_goal_all_cells"] else "NO",
+            })
+        operator_df = pd.DataFrame(operator_rows)
+
+        interpretation_lines = [
+            "NOTEBOOK 6 · RESUMEN PARA THOMAS",
+            "=" * 72,
+            f"Resultado global: {RUN_OUTCOME}",
+            f"Perfil ejecutado: {RUN_PROFILE}",
+            f"Modelos entrenados: {len(MODEL_KINDS)} tipos x {len(OPTIMIZER_SEEDS)} seeds = {len(training_rows)} trabajos",
+            f"Pasos por trabajo: {TOTAL_TIMESTEPS:,}",
+            f"Tiempo total de entrenamiento: {total_training_minutes:.2f} minutos",
+            f"Mejor media observada: {best_observed_label}",
+            f"Controlador estructurado seleccionado: {BEST_STRUCTURED_ID}",
+            "",
+            "LECTURA AUTOMÁTICA POR CANDIDATO",
+        ]
+        for kind in candidates:
+            flags = final_verdict[kind]
+            interpretation_lines.extend([
+                f"- {MODEL_LABELS[kind]}",
+                f"    Señal frente a política aleatoria: {'SÍ' if flags['learned_signal_vs_random_all_cells'] else 'NO'}",
+                f"    Superó RecurrentPPO en todas las celdas: {'SÍ' if flags['beat_recurrent_ppo_all_cells'] else 'NO'}",
+                f"    Superó estructurado +0.01 en todas: {'SÍ' if flags['beat_structured_plus_0p01_all_cells'] else 'NO'}",
+                f"    Cumplió objetivo fuerte completo: {'SÍ' if flags['strong_goal_all_cells'] else 'NO'}",
+            ])
+        interpretation_lines.extend([
+            "",
+            "MEMORIA DMLPA",
+            "- Stack 24 superó stack 1 en todas las celdas: " +
+            ("SÍ" if final_verdict["DMLPA_MEMORY"]["helped_all_cells"] else "NO"),
+            "",
+            "INTERPRETACIÓN",
+        ])
+        if RUN_PROFILE != "serious":
+            interpretation_lines.append(
+                "Esta fue una corrida de prueba. Verifica que el código funciona, pero NO permite concluir que aprendió o ganó científicamente."
+            )
+        elif RUN_OUTCOME == "C6B_DEVELOPMENT_PASS_TO_PREREGISTRATION":
+            interpretation_lines.append(
+                "PASS de desarrollo: existe evidencia para preregistrar una confirmación. Aún requiere validación física de Garrido."
+            )
+        else:
+            interpretation_lines.append(
+                "NO-GO bajo el sobre probado: ningún candidato satisfizo simultáneamente todas las reglas congeladas."
+            )
+        interpretation_lines.extend([
+            "",
+            "LÍMITE DEL CLAIM",
+            "C6-B usa autoridad física nueva por lote. Incluso un PASS no autoriza publicación ni despliegue sin Garrido y preregistro.",
+        ])
+        EXECUTIVE_TEXT = "\n".join(interpretation_lines) + "\n"
+        print("\n" + EXECUTIVE_TEXT)
+
         report = {"status": "C6B_DEVELOPMENT_ONLY_NOT_PROMOTABLE", "profile": RUN_PROFILE,
                   "models": MODEL_KINDS, "timesteps_per_seed": TOTAL_TIMESTEPS,
                   "optimizer_seeds": OPTIMIZER_SEEDS, "frame_stack": FRAME_STACK,
@@ -543,26 +704,102 @@ cells = [
                   "training": training_rows, "verdict": verdict_rows,
                   "memory_ablation": memory_rows, "final_verdict": final_verdict,
                   "run_outcome": RUN_OUTCOME,
+                  "best_observed_models": best_observed_models,
+                  "best_observed_ret": best_observed_value,
+                  "total_training_minutes": total_training_minutes,
                   "claim_boundary": "New per-batch authority; requires Garrido face validation and a fresh preregistered run."}
-        evaluation_df.to_csv(RUN_ROOT / "evaluation_rows.csv", index=False)
-        (RUN_ROOT / "development_report.json").write_text(json.dumps(report, indent=2, default=str) + "\n")
-        artifacts = sorted(path for path in RUN_ROOT.iterdir() if path.is_file())
+        AUDIT_DIR = RUN_ROOT / "AUDITORIA_PARA_ENVIAR"
+        AUDIT_DIR.mkdir(parents=True, exist_ok=True)
+        (AUDIT_DIR / "RESUMEN_PARA_THOMAS.txt").write_text(EXECUTIVE_TEXT)
+        (AUDIT_DIR / "development_report.json").write_text(json.dumps(report, indent=2, default=str) + "\n")
+        architecture_df.to_csv(AUDIT_DIR / "modelos_y_arquitecturas.csv")
+        training_df.to_csv(AUDIT_DIR / "tiempos_de_entrenamiento.csv", index=False)
+        selection_df.to_csv(AUDIT_DIR / "seleccion_controlador_estructurado.csv", index=False)
+        evaluation_df.to_csv(AUDIT_DIR / "resultados_fila_a_fila.csv", index=False)
+        verdict_df.to_csv(AUDIT_DIR / "veredicto_por_modelo_y_celda.csv", index=False)
+        operator_df.to_csv(AUDIT_DIR / "interpretacion_directa_por_modelo.csv", index=False)
+        memory_df.to_csv(AUDIT_DIR / "ablacion_memoria_stack24_vs_stack1.csv", index=False)
+        source_notebook = REPO / "notebooks" / "scresia_david_C6B_physical_perbatch_FINAL.ipynb"
+        if source_notebook.exists():
+            shutil.copy2(source_notebook, AUDIT_DIR / source_notebook.name)
+
+        environment = {
+            "python": sys.version, "platform": platform.platform(),
+            "core_commit": CORE_COMMIT,
+            "public_notebook": "https://github.com/Thom-320/scres-ia/blob/qr1-c1-natural-continuation/notebooks/scresia_david_C6B_physical_perbatch_FINAL.ipynb",
+            "torch": torch.__version__, "cuda_available": torch.cuda.is_available(),
+            "cuda_device": torch.cuda.get_device_name(0) if torch.cuda.is_available() else None,
+            "numpy": np.__version__, "pandas": pd.__version__,
+            "stable_baselines3": importlib.metadata.version("stable-baselines3"),
+            "sb3_contrib": importlib.metadata.version("sb3-contrib"),
+        }
+        (AUDIT_DIR / "entorno_de_ejecucion.json").write_text(json.dumps(environment, indent=2) + "\n")
+
+        outcome_color = "#166534" if "PASS" in RUN_OUTCOME else "#991b1b" if "NO_GO" in RUN_OUTCOME else "#92400e"
+        screenshot_html = (
+            '<div style="font-family:Arial,sans-serif;border:3px solid #111827;border-radius:16px;padding:22px;max-width:1050px;background:#fff">'
+            '<h1 style="margin:0 0 8px">Notebook 6 · Resultado C6-B</h1>'
+            f'<div style="font-size:22px;font-weight:700;color:white;background:{outcome_color};padding:12px;border-radius:8px">{html.escape(RUN_OUTCOME)}</div>'
+            f'<p><b>Perfil:</b> {html.escape(RUN_PROFILE)} · <b>Trabajos:</b> {len(training_rows)} · <b>Tiempo de entrenamiento:</b> {total_training_minutes:.2f} min</p>'
+            f'<p><b>Mejor media observada:</b> {html.escape(best_observed_label)}</p>'
+            '<h2>¿Quién aprendió y quién ganó?</h2>' + operator_df.to_html(index=False) +
+            '<h2>¿Sirvió la memoria?</h2>' + memory_df.to_html(index=False, float_format=lambda x: f"{x:.4f}") +
+            '<p style="font-weight:700">Un smoke no permite conclusión científica. Un PASS serious solo autoriza preregistrar y requiere validación Garrido.</p></div>'
+        )
+        (AUDIT_DIR / "REPORTE_VISUAL_PARA_PANTALLAZO.html").write_text(
+            "<!doctype html><meta charset='utf-8'><title>Resultado C6-B</title>" + screenshot_html
+        )
+        display(HTML(screenshot_html))
+
+        artifacts = sorted(path for path in AUDIT_DIR.iterdir() if path.is_file())
         checksums = [f"{hashlib.sha256(path.read_bytes()).hexdigest()}  {path.name}" for path in artifacts]
-        (RUN_ROOT / "files.sha256").write_text("\n".join(checksums) + "\n")
-        bundle = shutil.make_archive(str(RUN_ROOT), "zip", root_dir=RUN_ROOT)
-        print("reporte:", RUN_ROOT / "development_report.json")
-        print("bundle:", bundle)
+        (AUDIT_DIR / "files.sha256").write_text("\n".join(checksums) + "\n")
+        AUDIT_ZIP = Path(shutil.make_archive(str(RUN_ROOT / "C6B_AUDITORIA_PARA_ENVIAR"), "zip", root_dir=AUDIT_DIR))
+
+        try:
+            relative_zip = AUDIT_ZIP.relative_to(Path.cwd())
+        except ValueError:
+            relative_zip = AUDIT_ZIP
+        download_href = "/files/" + quote(str(relative_zip))
+        display(HTML(
+            f'<div style="padding:18px;background:#e0f2fe;border:2px solid #0284c7;border-radius:12px;font-size:18px">'
+            f'<b>ARCHIVO LISTO PARA ENVIAR</b><br><a id="c6b-download" href="{download_href}" download>'
+            f'DESCARGAR {html.escape(AUDIT_ZIP.name)}</a><br><small>{html.escape(str(AUDIT_ZIP))}</small></div>'
+        ))
+        print("ARCHIVO FINAL PARA ENVIAR:", AUDIT_ZIP)
+        print("SHA256:", hashlib.sha256(AUDIT_ZIP.read_bytes()).hexdigest())
+
+        if AUTO_DOWNLOAD_AUDIT and IN_COLAB:
+            from google.colab import files
+            files.download(str(AUDIT_ZIP))
+        elif AUTO_DOWNLOAD_AUDIT and IN_KAGGLE:
+            display(Javascript("setTimeout(function(){document.getElementById('c6b-download').click();}, 1500);"))
+            print("Kaggle: se intentó la descarga automática. Si el navegador la bloquea, usa el botón azul de arriba.")
+        else:
+            print("VPS/local: descarga el ZIP desde la ruta mostrada arriba.")
         """
     ),
     markdown(
         r"""
-        ## Instrucciones finales para David
+        ## Instrucciones finales para 10bits / David
+
+        1. Activa GPU e Internet en Kaggle o Colab.
+        2. Selecciona **Run all** y no cierres la sesión.
+        3. Si aparece `SIGUE CORRIENDO`, el proceso está vivo: no lo reinicies.
+        4. Al terminar, toma un pantallazo de la tarjeta **Notebook 6 · Resultado C6-B**.
+        5. Envía el archivo `C6B_AUDITORIA_PARA_ENVIAR.zip` a Thomas. Contiene resumen legible,
+           tablas completas, tiempos, versiones, checksums y el notebook fuente; no contiene los
+           pesos grandes de los modelos.
+        6. Si Kaggle bloquea la descarga automática, pulsa el botón azul final. El ZIP también queda
+           guardado en `/kaggle/working/scresia_c6b/outputs/david_c6b/...` y aparecerá en Output tras
+           guardar una versión.
 
         ### ✅ PUEDES CAMBIAR
 
         - La clase `DavidDMLPAPositional`.
         - `FEATURES_DIM`, hidden size, heads y capas, conservando dimensiones compatibles.
         - `MODEL_KINDS` para depuración y `RUN_PROFILE="debug"` para un smoke.
+        - `AUTO_DOWNLOAD_AUDIT=False` si el navegador no permite descargas automáticas.
         - Después del smoke, vuelve a `serious` y usa **Run all**.
 
         ### ⛔ NO CAMBIES
