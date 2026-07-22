@@ -64,6 +64,10 @@ EVIDENCE = {
         ROOT / "contracts/program_q_frozen_policy_replication_v1.json",
         "b0bd21c7eec5f0aa6acc4e6866e32c3804aa2fa7f8afecc040bc7fd129980874",
     ),
+    "latency": (
+        ROOT / "results/program_q/latency_benchmark_v1/result.json",
+        "29091179bdbad740cba776aa49a71043cd79fbff400528b1f48e6856afbd3192",
+    ),
 }
 
 CELLS = ("rho75_share90", "rho90_share75", "rho90_share90")
@@ -417,6 +421,7 @@ def build_source_of_truth(data: dict[str, dict]) -> dict:
     primary, guardrails = evidence_rows(data)
     metric = data["metric_audit"]["canonical_aggregator_workbook_replay"]
     direct = data["direct_audit"]
+    latency = data["latency"]
     return {
         "schema_version": "submission_a_program_q_source_of_truth_v1",
         "title": "When Feedback Beats Every Static Policy but Not Structured Control: Exact Benchmarking of Recurrent RL in a Supply-Chain DES",
@@ -446,6 +451,14 @@ def build_source_of_truth(data: dict[str, dict]) -> dict:
         },
         "confirmation_rows": primary,
         "guardrail_rows": guardrails,
+        "hardware_specific_latency": {
+            "claim_status": latency["claim_status"],
+            "platform": latency["platform"],
+            "observation_count": latency["observation_panel"]["count"],
+            "recurrent_ppo_median_ms": latency["controllers"]["recurrent_ppo"]["median_ms"],
+            "reselected_structured_median_ms": latency["controllers"]["reselected_structured_family"]["median_ms"],
+            "interpretation": "The structured family was faster on the measured hardware; no computational advantage is claimed for RecurrentPPO.",
+        },
         "supported_claims": [
             "Exact reproduction of the workbook ReT formula given source snapshots.",
             "RecurrentPPO outperforms every calendar in the complete 65,536-policy open-loop frontier in all three cells.",

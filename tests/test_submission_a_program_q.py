@@ -18,6 +18,10 @@ def test_source_of_truth_preserves_program_q_boundary() -> None:
     assert source["design"]["open_loop_calendars"] == 65_536
     assert source["design"]["risks_enabled"] is False
     assert source["design"]["direct_full_des_replays"] == 21_696
+    latency = source["hardware_specific_latency"]
+    assert latency["claim_status"] == "DESCRIPTIVE_HARDWARE_SPECIFIC_NO_OUTCOME_CLAIM"
+    assert latency["observation_count"] == 24
+    assert latency["reselected_structured_median_ms"] < latency["recurrent_ppo_median_ms"]
     assert any("Neural premium" in claim for claim in source["prohibited_claims"])
     assert any("Accumulated learning" in claim for claim in source["prohibited_claims"])
 
