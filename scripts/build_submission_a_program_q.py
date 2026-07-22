@@ -217,7 +217,7 @@ def write_tables(data: dict[str, dict], source: dict) -> None:
         header=["Comparator", "Information", "Decision rights", "Resource and selection rule"],
         rows=[
             ["Open-loop frontier", "No episode feedback", "Eight weekly mix actions fixed ex ante", "All 65,536 calendars; common tapes and scheduled resources"],
-            ["Belief-based control", "Same deployable operational history; fixed HMM model", "Replans weekly over the same four actions", "Best frozen structured controller reselected inside bootstrap"],
+            ["Structured feedback family", "Same deployable operational history; fixed HMM summary available", "Replans weekly over the same four actions", "Best frozen family member reselected inside bootstrap"],
             ["RecurrentPPO", "Same 21-field causal observation; recurrent state", "Chooses one of four mix actions weekly", "Ten frozen checkpoints; identical physical resources"],
             ["Oracle", "Privileged future information", "Diagnostic only", "Never a deployable comparator or a learned claim"],
         ],
