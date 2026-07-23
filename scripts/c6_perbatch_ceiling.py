@@ -13,15 +13,30 @@ and spawn (macOS). Nothing here trains a learner; it is a gate.
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 import numpy as np
 
 from supply_chain.program_o_full_des_transducer import simulate_full_des_frontier
 from supply_chain.retained_context_discovery import build_campaign_history
 
-try:  # tolerate both `scripts.` package import and a flat sys.path (Kaggle clone)
-    from scripts.evaluate_program_q_replication import scheduler as _count_scheduler
-except Exception:  # pragma: no cover
-    from evaluate_program_q_replication import scheduler as _count_scheduler
+_ROOT = Path(__file__).resolve().parents[1]
+
+
+def _count_scheduler() -> dict:
+    """The frozen weekly-count scheduler, read from the same contract as
+    scripts/evaluate_program_q_replication.py::scheduler.
+
+    Re-read here instead of imported from that module because it drags in
+    sb3_contrib -> torch at module import time, which is absent on lean cloud
+    runtimes (Kaggle) and irrelevant to this gate.
+    """
+    parent = json.loads(
+        (_ROOT / "contracts/program_o_full_des_hpi_translation_v1.json").read_text()
+    )
+    key = parent["action"]["primary_scheduler"]
+    return parent["action"]["within_week_schedulers"][key]
 
 
 OBJECTIVE = "early_ret_complete_cohort"
