@@ -56,6 +56,12 @@ class ComparatorV2Config:
     service_statistic: str = "expected"
     value_indifference_tolerance: float = 0.0
     tie_breaker: str = "legacy"
+    # Service-aware screen fields (contracts/q_r1_service_aware_retained_screen_v1.json).
+    # Defaults reproduce the frozen behavior exactly; config_id is unchanged at defaults.
+    fill_tail_alpha: float | None = None  # V1: feasibility floor on lower-tail worst fill
+    belief_floor_slope: float = 0.0       # V2: floor += slope*max(0, regime confidence-0.5)
+    penalty_lambda: float = 0.0           # V3: primary -= lambda*max(0, pfloor - tail fill)
+    penalty_floor: float = 0.0
 
     def __post_init__(self) -> None:
         if self.horizon not in (1, 3, 4, 6, 8):
@@ -76,6 +82,14 @@ class ComparatorV2Config:
             raise ValueError("value_indifference_tolerance must be non-negative")
         if self.tie_breaker not in {"legacy", "service"}:
             raise ValueError("tie_breaker must be legacy or service")
+        if self.fill_tail_alpha is not None and not 0.0 < self.fill_tail_alpha <= 1.0:
+            raise ValueError("fill_tail_alpha must be in (0,1]")
+        if self.belief_floor_slope < 0.0:
+            raise ValueError("belief_floor_slope must be non-negative")
+        if self.penalty_lambda < 0.0:
+            raise ValueError("penalty_lambda must be non-negative")
+        if not 0.0 <= self.penalty_floor <= 1.0:
+            raise ValueError("penalty_floor must be in [0,1]")
 
     @property
     def config_id(self) -> str:
@@ -84,12 +98,21 @@ class ComparatorV2Config:
             if self.max_unresolved_orders is None
             else str(int(self.max_unresolved_orders))
         )
-        return (
+        base = (
             f"qr1_v2_{self.mode}_h{self.horizon}_c{self.conditional_paths}"
             f"_wf{self.worst_product_floor:.2f}_u{unresolved}"
             f"_{self.service_statistic}_tol{self.value_indifference_tolerance:.4f}"
             f"_{self.tie_breaker}"
         )
+        # Non-default service-aware fields extend the id; at defaults the frozen
+        # id is reproduced byte-identically.
+        if self.fill_tail_alpha is not None:
+            base += f"_fta{self.fill_tail_alpha:.2f}"
+        if self.belief_floor_slope > 0.0:
+            base += f"_bfs{self.belief_floor_slope:.2f}"
+        if self.penalty_lambda > 0.0:
+            base += f"_pl{self.penalty_lambda:.2f}@{self.penalty_floor:.2f}"
+        return base
 
 
 class NoFeasibleStructuredAction(RuntimeError):
@@ -291,21 +314,66 @@ def choose_comparator_v2_action(
         if config.service_statistic == "expected"
         else minimum_fill
     )
+    # V1 (service-aware screen): feasibility floor evaluated on the posterior lower-tail
+    # of worst_product_fill across scenarios — the adverse-regime scenarios the expected
+    # statistic averages away. Default None keeps frozen behavior.
+    if config.fill_tail_alpha is not None:
+        service_fill = _weighted_lower_tail_mean(
+            worst_fill, weights, config.fill_tail_alpha
+        )
     service_unresolved = (
         expected_unresolved
         if config.service_statistic == "expected"
         else maximum_unresolved
     )
-    feasible = (service_fill >= config.worst_product_floor) & (maximum_lost <= 1e-12)
+    # V2: the floor tightens with posterior regime confidence (the confident-and-wrong
+    # failure mode). Default slope 0.0 keeps the frozen scalar floor.
+    effective_floor = config.worst_product_floor
+    fallback_used = False
+    if config.belief_floor_slope > 0.0:
+        regime_c_probability = sum(
+            float(weight)
+            for (_rho, _share, regime_c, weight) in belief.enumerate_states()
+            if bool(regime_c)
+        )
+        confidence = max(regime_c_probability, 1.0 - regime_c_probability)
+        effective_floor = min(
+            1.0,
+            config.worst_product_floor
+            + config.belief_floor_slope * max(0.0, confidence - 0.5),
+        )
+    feasible = (service_fill >= effective_floor) & (maximum_lost <= 1e-12)
     if config.max_unresolved_orders is not None:
         feasible &= service_unresolved <= config.max_unresolved_orders + 1e-12
     if config.mode in {"scenario", "robust"}:
         feasible[:] = maximum_lost <= 1e-12
     if not np.any(feasible):
-        raise NoFeasibleStructuredAction(
-            f"no sequence satisfies {config.config_id} at {planning_key.token()}"
-        )
+        if config.fill_tail_alpha is not None or config.belief_floor_slope > 0.0:
+            # Fail-closed fallback for the screen variants: when no sequence clears the
+            # (tail/belief-scaled) floor, take the safest lost-clean action by service
+            # fill instead of aborting the campaign; flagged in diagnostics.
+            lost_clean = maximum_lost <= 1e-12
+            if not np.any(lost_clean):
+                raise NoFeasibleStructuredAction(
+                    f"no lost-clean sequence at {planning_key.token()}"
+                )
+            fallback_used = True
+            feasible = lost_clean & (service_fill >= service_fill[lost_clean].max() - 1e-12)
+        else:
+            raise NoFeasibleStructuredAction(
+                f"no sequence satisfies {config.config_id} at {planning_key.token()}"
+            )
     primary = tail_early if config.mode == "robust" else mean_early
+    # V3: soft service penalty on the primary objective. Default lambda 0.0 is frozen.
+    if config.penalty_lambda > 0.0:
+        penalty_tail = _weighted_lower_tail_mean(
+            worst_fill,
+            weights,
+            config.fill_tail_alpha if config.fill_tail_alpha is not None else config.tail_alpha,
+        )
+        primary = primary - config.penalty_lambda * np.maximum(
+            0.0, config.penalty_floor - penalty_tail
+        )
     eligible = np.flatnonzero(feasible)
     if config.tie_breaker == "service":
         best_primary = float(primary[eligible].max())
@@ -356,7 +424,7 @@ def choose_comparator_v2_action(
         "value_indifference_tolerance": config.value_indifference_tolerance,
         "tie_breaker": config.tie_breaker,
         "near_optimal_sequence_count": int(len(eligible)),
-        "fallback_used": False,
+        "fallback_used": bool(fallback_used),
     }
 
 
