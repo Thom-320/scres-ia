@@ -1,0 +1,45 @@
+{
+  "amendment_id": "q_r1_product_coupled_execution_amendment_v1",
+  "parent_contract": "contracts/q_r1_product_coupled_risk_door_v1.json",
+  "date_frozen": "2026-07-23",
+  "status": "FROZEN_BEFORE_ANY_SEED",
+  "authority": "PI full-autonomy grant (amendment df6fcf1f); all parameters below are RESEARCHER-DEFINED, doctrine-grounded, and never attributed to Garrido; risk family is Garrido-native R24 (contingent demand surge, thesis Table 6.7)",
+  "mechanism_frozen": {
+    "carrier": "R24_product_composition ONLY (R14 yield deferred until this carrier is adjudicated, per the parent contract's sequencing)",
+    "latent_state": "sigma in {C_favored, H_favored}: a per-history composition state, persistent across campaigns with kappa_r; when an R24 surge fires, its quantity is assigned to the favored product with probability s_r (else the other product); observable ONLY through realized demand history",
+    "r24_frequency": "increased (uniform(1,336) h, the thesis's own increased level) so surges occur within 8-week campaigns",
+    "r24_surge_quantity": "thesis surge_lo/hi (2400, 2600) unscaled"
+  },
+  "cells_frozen": {
+    "grid": "kappa_r in {0.75, 0.90} x s_r in {0.70, 0.85, 1.00} = 6 cells",
+    "adjacency": "2x3 lattice edges (kappa axis and s_r axis neighbors)",
+    "connected_cells_min": 3,
+    "control": "s_r = 0.50 cell run at kappa_r 0.90 as instrument control (composition uninformative -> no reversal expected; a reversal there is an artifact flag)"
+  },
+  "arms_learner_blind": {
+    "constants": "4 constant weekly-count postures (Discrete(4) held all campaign)",
+    "oracle": "sigma-conditional posture (knows true sigma) -> H_PI",
+    "observable": "posterior-sigma posture: Beta-Bernoulli posterior on sigma from past campaigns' realized surge product assignments -> H_obs",
+    "selection_forbidden": "no learner return anywhere; M4 hybrid trains ONLY on GO"
+  },
+  "gates": "as preregistered in the parent: H_PI_safe LCB95 >= 0.02, ranking reversal with >= 2 materially optimal actions (tol 0.005), H_obs LCB95 >= 0.015, connected >= 3 cells, worst_product_fill >= -0.02, lost increase forbidden, unresolved margin mean <= +2/campaign and max <= 12 (thesis SS6.5.4 Ut 12-31% anchor)",
+  "seeds": {
+    "screen_roots": [7590001, 7590024],
+    "holdout_reserved_untouched": [7590101, 7590148],
+    "calibration_probes": [7590901, 7590920],
+    "campaigns_per_history": 12,
+    "collision_scan": "759xxxx verified free across main repo + both worktrees (2026-07-22 scan; 758 burned by legacy artifacts)"
+  },
+  "execution": {
+    "direct_simpy": "required; risk masks break transducer exactness; evaluation is direct ProgramOFullDESSimulation with risks_enabled",
+    "self_checks_required": [
+      "risk-off + coupling-off reproduces the stationary baseline for the same seed (regression guard)",
+      "surge product assignment matches sigma at rate s_r empirically (calibration probes)",
+      "CRN: risk/surge timeline identical across arms for same (cell, root)",
+      "determinism: same arm twice -> identical metrics",
+      "control cell shows no material reversal"
+    ],
+    "hosts": "VPS free cores + local leftovers; hard cap per shard, abort-not-continue"
+  },
+  "verdicts": "STOP_R24_PRODUCT_CARRIER_NO_CONVERTIBLE_HEADROOM or GO_LEARNER_ON_<cells>, exactly as the parent contract defines"
+}
