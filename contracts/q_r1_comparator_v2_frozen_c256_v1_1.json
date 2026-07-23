@@ -1,0 +1,85 @@
+{
+  "amendment": "docs/Q_R1_COMPARATOR_V2_FREEZE_AMENDMENT_V1_2026-07-22.md",
+  "authority_commit": "51957969",
+  "config": {
+    "conditional_paths": 256,
+    "horizon": 4,
+    "max_unresolved_orders": null,
+    "mode": "scenario",
+    "service_statistic": "expected",
+    "tail_alpha": 0.1,
+    "tie_breaker": "legacy",
+    "value_indifference_tolerance": 0.0,
+    "worst_product_floor": 0.0
+  },
+  "config_id": "qr1_v2_scenario_h4_c256_wf0.00_unone_expected_tol0.0000_legacy",
+  "constraint_aware_family_frozen": false,
+  "constraint_aware_family_status": "NO_CONVERGENT_BUDGET_TESTED_C256_ESCALATION_NOT_RUN",
+  "convergence_gate": {
+    "abstentions_max": 0,
+    "first_action_agreement_min": 0.95,
+    "mean_value_error_max": 0.005,
+    "q95_value_error_max": 0.01
+  },
+  "convergence_gate_recomputed": {
+    "abstentions": true,
+    "first_action_agreement": true,
+    "mean_value_error": true,
+    "q95_value_error": true
+  },
+  "convergence_receipt": "results/q_r1/comparator_v2_c256_c1024_v1/convergence_merged/result.json",
+  "convergence_sha256": "15d8d00b9fd4b9647724657ba5ff08207eac4a9f822b49bed80ebb916b7b9941",
+  "correction_note": "config, config_id, convergence receipt, gate and execution authority are byte-identical to the superseded freeze; only the secondary-disclosure schema changed. The burned Pareto in results/q_r1/comparator_v2_frozen_pareto_c256_v1 was evaluated against the superseded file and its recorded hash remains valid.",
+  "correction_scope": "SCHEMA_ONLY_SECONDARY_DISCLOSURE_NAMES",
+  "created_at": "2026-07-23T01:20:54.636191+00:00",
+  "degenerate_disclosures": {
+    "lost_orders": "hardcoded np.zeros in the fast-path transducer (program_o_full_des_transducer.py:795). Structurally incapable of showing a loss on this path; never as a live guardrail.",
+    "ret_full": "identically 0.0 on this evaluation path: full_order_values is gated on `completed` at score_time (program_o_full_des_transducer.py:731-742), which is empty for the early cohort. Report only with this caveat; never as a live guardrail."
+  },
+  "execution_authority": "BURNED_PARETO_AND_POWER_AUDIT_ONLY",
+  "fresh_roots_assigned": null,
+  "learner_authorized": false,
+  "observed_convergence": {
+    "comparable_arm_states": 96,
+    "convergence_pass": true,
+    "first_action_agreement": 0.96875,
+    "high_abstentions": 0,
+    "high_config": "qr1_v2_scenario_h4_c1024_wf0.00_unone_expected_tol0.0000_legacy",
+    "low_abstentions": 0,
+    "low_config": "qr1_v2_scenario_h4_c256_wf0.00_unone_expected_tol0.0000_legacy",
+    "mean_abs_planning_value_error": 0.00010953411184428986,
+    "q95_abs_planning_value_error": 0.00024666925036373466,
+    "signature": [
+      4,
+      "scenario",
+      0.0,
+      "expected"
+    ]
+  },
+  "primary_objective": "early_ret_complete_cohort",
+  "schema_version": "q_r1_comparator_v2_freeze_v1_1",
+  "scientific_role": "strongest_tested_universal_structured_comparator_not_optimality_claim",
+  "secondary_disclosures": [
+    "early_ret_visible",
+    "ret_visible",
+    "worst_product_fill",
+    "unresolved_orders",
+    "resources"
+  ],
+  "selection_used_learner_return": false,
+  "selection_used_retained_minus_reset": false,
+  "smallest_tested_convergent_budget": true,
+  "status": "FROZEN_BURNED_CALIBRATION_NO_FRESH_SEEDS",
+  "superseded_by_coverage_expansion": {
+    "agreement_at_96_states": 0.90625,
+    "config_id": "qr1_v2_scenario_h4_c64_wf0.00_unone_expected",
+    "failed_at_states": 96,
+    "passed_at_states": 16
+  },
+  "supersedes": "contracts/q_r1_comparator_v2_frozen_c256_v1.json",
+  "supersedes_instrument": "scripts/freeze_q_r1_comparator_v2.py",
+  "supersedes_sha256": "a0833360198a16b3ffe60d36fd8a0d0fe0e64bee841fd6ac3e727a2c4d06a651",
+  "untested_budgets_between_failed_and_frozen": [
+    128
+  ]
+}

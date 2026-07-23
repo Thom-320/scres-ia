@@ -36,6 +36,29 @@ EXPECTED_SIGNATURE = [4, "scenario", 0.0, "expected"]
 EXPECTED_TOLERANCE = 0.0
 EXPECTED_TIE_BREAKER = "legacy"
 
+# The superseded utility listed `ret_total`, which `evaluate_calendar` never emits, and
+# listed `ret_full` / `lost_orders` as live guardrails although both are structurally
+# degenerate on this evaluation path.  See
+# scripts/correct_q_r1_comparator_v2_disclosures.py for the full derivation.
+SECONDARY_DISCLOSURES = [
+    "early_ret_visible",
+    "ret_visible",
+    "worst_product_fill",
+    "unresolved_orders",
+    "resources",
+]
+
+DEGENERATE_DISCLOSURES = {
+    "ret_full": (
+        "identically 0.0 on this evaluation path (program_o_full_des_transducer.py:731-742); "
+        "never a live guardrail"
+    ),
+    "lost_orders": (
+        "hardcoded np.zeros in the fast-path transducer "
+        "(program_o_full_des_transducer.py:795); never a live guardrail"
+    ),
+}
+
 # Unchanged from the original gate -- this amendment relaxes nothing.
 GATE = {
     "first_action_agreement_min": 0.95,
@@ -137,14 +160,8 @@ def freeze(payload: dict[str, object], *, receipt_path: str, receipt_sha256: str
         "supersedes_instrument": "scripts/freeze_q_r1_comparator_v2.py",
         "scientific_role": "strongest_tested_universal_structured_comparator_not_optimality_claim",
         "primary_objective": "early_ret_complete_cohort",
-        "secondary_disclosures": [
-            "early_ret_visible",
-            "ret_total",
-            "worst_product_fill",
-            "unresolved_orders",
-            "lost_orders",
-            "resources",
-        ],
+        "secondary_disclosures": list(SECONDARY_DISCLOSURES),
+        "degenerate_disclosures": dict(DEGENERATE_DISCLOSURES),
         "config_id": str(selected["low_config"]),
         "config": config,
         "convergence_receipt": receipt_path,

@@ -1,11 +1,14 @@
-# Q-R1 comparator v2 — corrective freeze amendment v1 (independent audit)
+# Q-R1 comparator v2 — corrective freeze amendment v1 (separate internal adversarial audit)
 
 **Date:** 2026-07-22
 **Branch:** `codex/q-r1-comparator-reconciliation`
 **Parent tip audited:** `41977bfa` ("Adjudicate high-budget comparator convergence")
-**Auditor:** root/PI agent, independent of the comparator's construction and of the
-convergence executions. The auditor wrote none of `program_t_*`, none of the
-comparator v2 scripts, and none of the convergence receipts.
+**Auditor:** root/PI agent. **This is a separate internal adversarial audit, not an
+independent one.** The auditor did not write `program_t_*`, the comparator v2 scripts, or
+the convergence receipts, and adversarially re-derived them — but it operates inside the
+same project and the same automation as the executor. In the manuscript this must be
+described as a separate internal adversarial audit; reserve "independent" for a genuinely
+external person or team.
 **Claim status:** `BURNED_DEVELOPMENT_NO_CLAIM`. Nothing here is a result.
 
 ---
@@ -226,9 +229,30 @@ receipt rather than asserted:
 | q95 abs planning value error | ≤ 0.01 | **0.00024667** | ✅ |
 | abstentions (low / high) | 0 | **0 / 0** | ✅ |
 
-Secondary disclosures travel with every downstream table and are never dropped:
-`early_ret_visible`, `ret_total`, `worst_product_fill`, `unresolved_orders`,
-`lost_orders`, `resources`.
+**Secondary disclosures — corrected in v1_1.** The v1 list was inherited verbatim from the
+superseded utility and carried two defects:
+
+- `ret_total` **does not exist**. `evaluate_calendar` emits `ret_full`; the only `ret_total`
+  in the tree is an unrelated accumulator in `scripts/benchmark_ret_ablation_static.py`. A
+  disclosure named after a nonexistent key is silently dropped by any table builder.
+- Renaming alone would have been worse than the bug. On this evaluation path **both**
+  `ret_full` and `lost_orders` are structurally degenerate: `full_order_values` is gated on
+  `completed` at score_time (`program_o_full_des_transducer.py:731-742`), which is empty for
+  the early cohort, so `ret_full ≡ 0.0`; and `lost_orders` is hardcoded `np.zeros`
+  (`program_o_full_des_transducer.py:795`). Measured on the calibration probe: `ret_full`
+  0.0 and `lost_orders` 0.0 in **4/4** arm evaluations while `ret_visible` varied normally.
+  Listing either as a live guardrail puts a dead column in every downstream table — the same
+  class of defect the five external audits flagged.
+
+Corrected list (`contracts/q_r1_comparator_v2_frozen_c256_v1_1.json`):
+`early_ret_visible`, `ret_visible`, `worst_product_fill`, `unresolved_orders`, `resources`,
+with `ret_full` and `lost_orders` moved to a `degenerate_disclosures` block that states why
+each is dead. **The correction is schema-only and versioned**: `config`, `config_id`, the
+convergence receipt and hash, the gate, and the execution authority are byte-identical, and
+**v1 itself was not mutated** because the burned Pareto was evaluated against it and records
+its hash. Consequence to expect: v1 is byte-regenerable only from the freeze instrument as
+of `712a3724`; the current instrument regenerates the corrected list. That divergence is the
+fix, not a defect.
 
 ---
 
@@ -271,9 +295,53 @@ receipts degraded one field at a time:
 | T6b | synthetic: agreement degraded to 0.90625 | refuses — *failed convergence gate: ['first_action_agreement']* |
 | T6c | synthetic: `selection_performed = true` | refuses — *invalid selection provenance* |
 
-T6b matters specifically: the instrument recomputes the gate from the four raw numbers and
-does not trust the receipt's `convergence_pass` boolean, so a receipt whose boolean and
-whose numbers disagree is rejected rather than frozen.
+T6b matters specifically: the instrument does not trust the receipt's `convergence_pass`
+boolean, so a receipt whose boolean and whose summary numbers disagree is rejected rather
+than frozen.
+
+**T1–T6 are now permanent**: `tests/test_q_r1_comparator_v2_freeze.py`, 16 tests, all
+passing. Documented-but-unversioned checks protect nothing; T5 in particular pins the
+mislabelling hazard so it cannot silently reappear.
+
+---
+
+## 5c. Gate re-derived from the raw rows (closes a real gap in §5b)
+
+§5b's wording was too strong. The freeze instrument applies the thresholds to the
+receipt's **summary** fields and refuses to trust its `convergence_pass` boolean — but it
+does **not** rebuild those summaries from the underlying rows. A receipt whose summaries
+were internally correct while its raw rows disagreed with them would have passed. That
+gap is real and is now closed by a separate fail-closed instrument,
+`scripts/audit_q_r1_comparator_v2_freeze.py`, which must run before any downstream
+evaluation.
+
+It re-derives everything from the **96 raw `convergence_pairs` rows**, using the exact
+conventions of `merge_q_r1_comparator_v2_shards.py::merge_convergence` (agreement =
+`mean(low_action == high_action)`; `np.quantile(errors, 0.95)`; strict `<` on both error
+bounds), and additionally validates coverage.
+
+**Result — `results/q_r1/comparator_v2_c256_c1024_v1/freeze_audit_recomputed.json`:**
+
+| quantity | re-derived from 96 rows | receipt summary | \|Δ\| |
+|---|---|---|---|
+| first-action agreement | 0.96875 (93/96, **3** disagreements) | 0.96875 | **0.0** |
+| mean abs planning value error | 0.00010953411184428986 | same | **0.0** |
+| q95 abs planning value error | 0.00024666925036373466 | same | **0.0** |
+
+Coverage checks all pass: 96 unique row identities; exactly 96 rows; a single signature;
+the four exact root blocks `[801-806][807-812][813-818][819-824]`; exact root coverage
+(24 roots, none missing, none extra); both prior arms present; `conditional_path_budgets
+== [256, 1024]`; `states == 48`; `comparable_arm_states == 96`; all three
+selection-provenance flags `false`; `claim_status` burned.
+
+**Verdict: `FREEZE_ENTITLED_RECOMPUTED_FROM_RAW_ROWS`, 21/21 checks.** The re-derivation
+reproduces the summaries **bit-for-bit** (Δ exactly 0.0, not merely within tolerance), so
+the freeze was entitled to happen and the burned Pareto evaluated against it is not
+affected.
+
+One boundary convention was aligned in passing: the merger uses strict `<` on the mean and
+q95 bounds while the freeze instrument used `<=`. No observed value is anywhere near those
+bounds, so nothing changes numerically; the audit uses the merger's convention.
 
 ---
 
@@ -284,7 +352,10 @@ full convergence ladder including the superseded c64 pass; the gate arithmetic; 
 receipt hash; the provenance flags; and the two failure modes of the old instrument.
 
 The auditor did **not** re-derive the planner's value estimates, re-run any convergence
-shard, or verify that the exact 6-state enumeration is itself correct. Those rest on the
+shard, or verify that the exact 6-state enumeration is itself correct. §5c re-derives the
+convergence *statistics* from the recorded per-row actions and value errors; it does not
+recompute those per-row quantities from the planner, so it certifies the receipt's
+internal consistency, not the planner's correctness. Those rest on the
 comparator v2 construction and its earlier verification, not on this document. First-action
 agreement of 0.96875 against c1024 is evidence of **numerical stability at the chosen
 budget**, not evidence of planner optimality — the "strongest tested" wording in §4 is
