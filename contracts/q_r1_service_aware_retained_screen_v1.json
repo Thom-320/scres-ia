@@ -1,0 +1,36 @@
+{
+  "contract_id": "q_r1_service_aware_retained_screen_v1",
+  "schema_version": "q_r1_service_screen_prereg_v1",
+  "date_frozen": "2026-07-23",
+  "status": "FROZEN_BEFORE_EXECUTION_BURNED_ROOTS_ONLY",
+  "claim_status": "BURNED_DEVELOPMENT_NO_CLAIM",
+  "goal": "keep the confirmed retained mean ReT gain inside the worst-product safety bar (the H3 frontier): the sealed confirmatory stopped at worst_product LCB95 -0.0365; the burned kappa-0.75 stratum breaches at -0.054",
+  "root_cause_being_fixed": "conditional_scenario_bank fabricates near-balanced P_C/P_H future demand (q_r1_comparator_v2.py:187-197), ignoring dominant_share=0.90, so predicted worst_product_fill never dips below the floor even when realized fill collapses; scenario/robust modes additionally overwrite feasibility to lost-only (:302-303). Breach anatomy: 14/24 kappa-0.75 retained arms breach, 10/14 in the product the prior FAVORED, early cohort never breaches (damage is late-campaign).",
+  "variant_grid_fixed": {
+    "V0_regime_consistent_bank": "scenario demand split drawn consistent with each scenario's latent regime (dominant_share), so the planner foresees minority-product scarcity; new config flag bank_mode='regime_consistent' (default 'legacy' = frozen behavior)",
+    "V1_tail_feasibility": "feasibility floor applied to _weighted_lower_tail_mean(worst_fill, weights, alpha) in constraint_aware mode; alpha in {0.10, 0.25}, floor in {0.70, 0.80}",
+    "V2_belief_conditional_floor": "floor = base + slope*max(0, posterior_confidence - 0.5); (base, slope) in {(0.70, 0.4), (0.70, 0.6)}; targets the confident-and-wrong failure mode",
+    "V3_penalty_composite": "primary = mean_early - lambda*max(0, floor - tail_worst_fill); lambda in {0.5, 1.0, 2.0}, floor 0.80, alpha 0.10",
+    "V4_not_rerun": "lexicographic service tie-break already rejected for ranking instability (0.8333 agreement); not re-run",
+    "combinations_allowed": "V0 alone; V0+V1 crossed; V2 and V3 each with and without V0 -- total <= 18 candidate configs, enumerated in the runner, no additions after first execution"
+  },
+  "evaluation": {
+    "roots": "burned 7570801-7570824 only; the SAME 48 paired campaigns as the frozen Pareto; CRN-paired against the UNTOUCHED frozen c256 retained and reset arms (pareto_merged rows reused as the comparator side; new arms replayed on identical skeletons)",
+    "budget": "c256 conditional paths, identical to the frozen comparator; 690 s/pair measured -> shard local+VPS",
+    "objective": "early_ret_complete_cohort; full disclosure ledger as in clustered_inference.json"
+  },
+  "gates_frozen": {
+    "mean_retention": "variant retained - frozen reset mean >= +0.05 at kappa 0.90 (clustered)",
+    "safety": "worst_product_fill clustered LCB95 >= -0.02 in BOTH strata",
+    "unresolved_margin": "mean increase <= +2.0 orders/campaign and max <= 12, anchored to thesis SS6.5.4 Ut 12-31% (researcher-set within thesis-observed range, disclosed)",
+    "convergence": "any passing variant must pass its own c256 vs c1024 convergence check (agreement >= 0.95, mean < 0.005, q95 < 0.01, abstentions 0) before being named a candidate",
+    "selection": "gates only; never realized-outcome maximization; grid fixed above"
+  },
+  "on_pass": "fresh sealed block + power-audited N -> the Paper 2/3 positive completing H1-H4 (H3 volatility/tail)",
+  "on_fail": "STOP_SERVICE_AWARE_NO_SAFE_CONVERSION: the mean gain is not safely convertible by planner-side mechanisms; the honest boundary stands",
+  "invariants": [
+    "frozen c256 contract, receipt, and Pareto artifacts byte-untouched; new config fields default to frozen behavior",
+    "tests/test_q_r1_comparator_v2.py and tests/test_q_r1_comparator_v2_freeze.py stay green",
+    "canonical ReT unchanged; no learner anywhere in this screen"
+  ]
+}
