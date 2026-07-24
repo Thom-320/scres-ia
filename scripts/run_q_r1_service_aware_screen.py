@@ -89,10 +89,31 @@ def main() -> int:
     sched = scheduler()
     started = time.perf_counter()
     rows: list[dict] = []
+    checkpoint = args.output.with_suffix(".partial.jsonl")
+    done_keys: set[tuple] = set()
+    if checkpoint.exists():
+        for line in checkpoint.read_text().splitlines():
+            if not line.strip():
+                continue
+            row = json.loads(line)
+            rows.append(row)
+            done_keys.add((row["config_id"], row["history_root"], row["campaign_index"]))
+        print(f"resumed {len(rows)} rows from {checkpoint}", flush=True)
+    checkpoint.parent.mkdir(parents=True, exist_ok=True)
+    truncated = False
     for config in chosen:
+        if truncated:
+            break
         for campaign, retained_prior in states:
+            key = (config.config_id, int(campaign.history_root), int(campaign.campaign_index))
+            if key in done_keys:
+                continue
             if time.perf_counter() - started > args.hard_cap_seconds:
-                raise TimeoutError("service-aware screen shard hard cap exceeded")
+                # abort-not-continue lost ~45/48 paid arms per VPS shard on
+                # 2026-07-23; the cap now truncates and KEEPS completed work
+                truncated = True
+                print("HARD CAP: truncating shard, partial rows preserved", flush=True)
+                break
             calendar, detail = comparator_v2_calendar(
                 campaign=campaign,
                 belief=fixed_theta_belief(retained_prior),
@@ -100,7 +121,7 @@ def main() -> int:
                 config=config,
             )
             metrics = evaluate_calendar(campaign=campaign, calendar=calendar, scheduler=sched)
-            rows.append({
+            row = {
                 "config_id": config.config_id,
                 "history_root": int(campaign.history_root),
                 "campaign_index": int(campaign.campaign_index),
@@ -112,7 +133,10 @@ def main() -> int:
                     1 for step in detail.get("diagnostics", [])
                     if step.get("fallback_used")
                 ),
-            })
+            }
+            rows.append(row)
+            with checkpoint.open("a") as fh:
+                fh.write(json.dumps(row, sort_keys=True) + "\n")
             print(f"  {config.config_id[-28:]} root {campaign.history_root} "
                   f"c{campaign.campaign_index} ({time.perf_counter()-started:.0f}s)",
                   flush=True)
@@ -127,10 +151,11 @@ def main() -> int:
         "configs": [c.config_id for c in chosen],
         "rows": rows,
         "elapsed_seconds": time.perf_counter() - started,
+        "truncated_by_hard_cap": truncated,
         "selection_performed": False,
         "learner_return_used": False,
     }, indent=1, sort_keys=True) + "\n")
-    print(f"rows={len(rows)} -> {args.output}")
+    print(f"rows={len(rows)} truncated={truncated} -> {args.output}")
     return 0
 
 
