@@ -109,7 +109,8 @@ def main() -> int:
             key = (config.config_id, int(campaign.history_root), int(campaign.campaign_index))
             if key in done_keys:
                 continue
-            if time.perf_counter() - started > args.hard_cap_seconds:
+            if (args.hard_cap_seconds is not None
+                    and time.perf_counter() - started > args.hard_cap_seconds):
                 # abort-not-continue lost ~45/48 paid arms per VPS shard on
                 # 2026-07-23; the cap now truncates and KEEPS completed work
                 truncated = True
