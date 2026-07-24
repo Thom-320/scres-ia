@@ -74,7 +74,8 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--config-indices", nargs="+", type=int, required=True)
-    parser.add_argument("--hard-cap-seconds", type=float, default=43_200.0)
+    # no default cap: the 12h default silently truncated three paid VPS shards
+    parser.add_argument("--hard-cap-seconds", type=float, default=None)
     parser.add_argument("--max-states", type=int, default=None,
                         help="smoke only: truncate the state list")
     args = parser.parse_args()
