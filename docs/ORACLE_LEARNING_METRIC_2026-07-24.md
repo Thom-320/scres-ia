@@ -100,14 +100,42 @@ The learner is rewarded on `early_ret_complete_cohort`, the same scalar the ceil
 arms are graded on. The frozen environment rewards `ret_visible`, so the objective is recomputed
 by a thin wrapper rather than by editing the frozen environment.
 
-Two architectures are run at 5 seeds each: PPO with an MLP policy, and RecurrentPPO with an
-LSTM policy (the incumbent in the three-model comparison).
+Two architectures were run at 5 seeds each, 48,000 timesteps (6,000 episodes), 17 evaluation
+checkpoints per seed: PPO with an MLP policy, and RecurrentPPO with an LSTM policy (the
+incumbent in the three-model comparison).
 
-**Disclosure that must travel with the curve:** these runs use library-default hyperparameters
-at a small budget (48,000 timesteps). The curve is a demonstration that the *metric* works and a
-measurement of *these* runs — it is **not** a tuned architecture comparison, and no ranking of
-MLP versus LSTM should be read off it. A tuned comparison, and David's KAN arm, are separate
-work.
+### Result: learning is visible, and it does not reach the static bar
+
+| checkpoint | PPO+MLP capture (mean of 5) | RecurrentPPO capture (mean of 5) |
+|---|---|---|
+| 0 (untrained) | −1.298 | −1.959 |
+| 6,000 | −0.987 | −2.881 |
+| 15,000 | **−0.466** (best) | −2.280 |
+| 30,000 | −0.872 | −2.337 |
+| 48,000 | −0.630 | −1.190 |
+| seeds above the static bar at the end | **0 / 5** | **0 / 5** |
+
+Two things are simultaneously true, and both belong in the paper:
+
+1. **The learners do learn.** PPO+MLP improves from −1.30 to −0.47 within 15,000 timesteps, and
+   the number of *distinct* calendars it produces across the 48 campaigns rises from 8 to about
+   17–21 — it is conditioning its allocation on the observed state, not settling on a constant.
+   RecurrentPPO improves too, later and less (−1.96 → −1.19). The metric registers learning
+   cleanly, which is exactly what it was built to do.
+2. **Neither crosses the bar.** At Garrido's criterion — beat the best static policy — learning
+   is **not confirmed** for either learner at this budget: 0 of 10 seeds ends above zero, while
+   the structured retained belief-MPC sits at **+0.743**. PPO+MLP also plateaus by ~15,000
+   timesteps and then oscillates without further progress, and one RecurrentPPO seed stays
+   collapsed on a constant allocation for the whole run (capture −3.65).
+
+**What this does and does not license.** It licenses: "on this decision problem, at this budget,
+the trained policies improve steadily but remain below a hard static bar that a structured
+belief controller clears by a wide margin". It does **not** license any ranking of MLP versus
+LSTM (library-default hyperparameters, no tuning, small budget), nor a general claim that RL
+cannot succeed here. The general claim is already established far more strongly and
+architecture-independently by the exact ceiling analysis: the C6 gate enumerated the finer
+8⁸ = 16,777,216 per-batch action space and found no stratum where the ceiling itself clears the
+gate over the frozen controller, which bounds *every* policy, trained or not.
 
 ## 5. Why this metric is worth the paper's space
 
