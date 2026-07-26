@@ -1,0 +1,223 @@
+{
+  "schema_version": "q_r1_matched_retention_curve_v2",
+  "status": "FROZEN_PROSPECTIVE_UNOPENED",
+  "claim_status": "NO_CLAIM_UNTIL_CONFIRMATION",
+  "design_parent_commit": "74612123a02742ec451fc360f4b33365bd2ab9c3",
+  "north_star": "Causally test whether a recurrent learner carrying only deployable decision history across complete physical resets improves cold-start canonical ReT relative to the same frozen model with recurrent state reset at every campaign boundary.",
+  "paper_boundary": {
+    "submission_a_program_q_unchanged": true,
+    "submission_b_q_r1_only": true,
+    "oracle_figure_not_authorized_for_submission_a": true,
+    "program_q_historical_results_reopened": []
+  },
+  "estimands": {
+    "primary_learned_retention": "mean early_ret_complete_cohort(recurrent_ppo_retained_state - same_weights_recurrent_ppo_reset_state) over campaigns 1..11",
+    "trained_progress": "trained recurrent policy minus its untrained initialization under each memory treatment",
+    "neural_premium": "retained recurrent policy minus frozen retained structured MPC with the same causal history",
+    "oracle_capture_secondary": "pooled capture against a calibration-frozen static calendar and exact post-hoc 4^8 ceiling on predeclared probe campaigns"
+  },
+  "physical_contract": {
+    "campaigns_per_metaepisode": 12,
+    "decisions_per_campaign": 8,
+    "decisions_per_metaepisode": 96,
+    "physical_reset_between_campaigns": "complete immutable FullDESSkeleton replacement",
+    "physical_state_never_retained": [
+      "inventory",
+      "work_in_process",
+      "backlog",
+      "pipeline",
+      "transport_state",
+      "clock"
+    ],
+    "knowledge_treatment": "recurrent hidden state retained or zeroed at the explicit causal campaign-boundary marker",
+    "episode_start_retained": "true only at the beginning of the complete 12-campaign history",
+    "episode_start_reset": "true at every physical campaign boundary",
+    "weights_update_during_evaluation": false
+  },
+  "information_rights": {
+    "learner_inputs": "21-dimensional deployable state-rich observation plus one physical-boundary marker",
+    "same_raw_causal_history_available_to_learner_and_mpc": true,
+    "forbidden": [
+      "true regime",
+      "retained Bayesian prior as a privileged learner feature",
+      "history root",
+      "tape seed",
+      "future demand",
+      "future shocks",
+      "clairvoyant ceiling"
+    ],
+    "retained_mpc": "may compute its posterior from the same past observations using the frozen exact Bayesian model",
+    "oracle": "post-hoc grading ceiling only; never action-eligible"
+  },
+  "data_splits": {
+    "training_history_roots": [7660001, 7660040],
+    "checkpoint_selection_history_roots": [7660101, 7660116],
+    "reserved_confirmation_history_roots": [7660201, 7660264],
+    "confirmation_rule": "power audit selects the smallest prefix of the reserved block before any confirmation root is opened",
+    "persistence_modes": {
+      "iid": 0.5,
+      "persistent_0p75": 0.75,
+      "persistent_0p90": 0.9
+    },
+    "primary_mode": "persistent_0p90",
+    "dose_mode": "persistent_0p75",
+    "null_mode": "iid",
+    "optimizer_seeds": [7661001, 7661002, 7661003, 7661004, 7661005],
+    "split_overlap_allowed": false
+  },
+  "static_and_oracle_protocol": {
+    "static_calendar_selected_only_on_checkpoint_selection_split": true,
+    "static_calendar_frozen_before_confirmation": true,
+    "exact_frontiers_new_for_confirmation": true,
+    "exact_frontier_probe_campaign_indices": [5, 11],
+    "best_checkpoint_selected_on_confirmation": false,
+    "confirmation_evaluated_once_after_weights_freeze": true
+  },
+  "arms": [
+    {
+      "id": "best_static_frozen",
+      "role": "Garrido static bar"
+    },
+    {
+      "id": "retained_structured_mpc",
+      "role": "strongest tested retained structured comparator"
+    },
+    {
+      "id": "reset_structured_mpc",
+      "role": "structured feedback without cross-campaign memory"
+    },
+    {
+      "id": "recurrent_ppo_retained_state",
+      "role": "primary learned cumulative treatment"
+    },
+    {
+      "id": "recurrent_ppo_reset_state_same_weights",
+      "role": "primary matched reset ablation"
+    },
+    {
+      "id": "ppo_mlp_within_campaign",
+      "role": "feed-forward within-campaign ablation; not eligible for cumulative-learning claim"
+    },
+    {
+      "id": "kan_ppo_within_campaign",
+      "role": "David candidate; blocked until environment, observation, reward, action, seed, parameter-count, and compute parity receipts exist"
+    },
+    {
+      "id": "clairvoyant_ceiling",
+      "role": "post-hoc upper bound only; never deployable or action-eligible"
+    }
+  ],
+  "training": {
+    "algorithm": "sb3_contrib.RecurrentPPO",
+    "policy": "MlpLstmPolicy",
+    "reward": "raw early_ret_complete_cohort at the end of every physical campaign",
+    "normalize_advantage": true,
+    "rollout_steps": 480,
+    "batch_size": 96,
+    "learning_rate_candidates": [0.0001, 0.0003],
+    "hidden_size_candidates": [64, 128],
+    "gamma_candidates": [0.99, 1.0],
+    "gae_lambda_candidates": [0.95, 1.0],
+    "entropy_candidates": [0.0, 0.005],
+    "candidate_design": "eight precomputed Sobol configurations times three development seeds; top two advance to all five optimizer seeds",
+    "screen_configurations": [
+      {"id": "s01", "hidden_size": 64, "learning_rate": 0.0001, "gamma": 0.99, "gae_lambda": 0.95, "entropy": 0.0},
+      {"id": "s02", "hidden_size": 128, "learning_rate": 0.0003, "gamma": 1.0, "gae_lambda": 1.0, "entropy": 0.005},
+      {"id": "s03", "hidden_size": 64, "learning_rate": 0.0003, "gamma": 1.0, "gae_lambda": 0.95, "entropy": 0.005},
+      {"id": "s04", "hidden_size": 128, "learning_rate": 0.0001, "gamma": 0.99, "gae_lambda": 1.0, "entropy": 0.0},
+      {"id": "s05", "hidden_size": 64, "learning_rate": 0.0001, "gamma": 1.0, "gae_lambda": 1.0, "entropy": 0.005},
+      {"id": "s06", "hidden_size": 128, "learning_rate": 0.0003, "gamma": 0.99, "gae_lambda": 0.95, "entropy": 0.0},
+      {"id": "s07", "hidden_size": 64, "learning_rate": 0.0003, "gamma": 0.99, "gae_lambda": 1.0, "entropy": 0.005},
+      {"id": "s08", "hidden_size": 128, "learning_rate": 0.0001, "gamma": 1.0, "gae_lambda": 0.95, "entropy": 0.0}
+    ],
+    "screen_timesteps_per_seed": 96000,
+    "full_timesteps_per_seed": 240000,
+    "checkpoint_interval_timesteps": 24000,
+    "selection_metrics": [
+      "retained-minus-reset early_ret_complete_cohort on checkpoint-selection roots",
+      "trained-minus-untrained progress",
+      "stability across optimizer seeds",
+      "iid null",
+      "worst-product disclosure"
+    ],
+    "selection_must_not_use": [
+      "confirmation roots",
+      "clairvoyant future during action selection",
+      "KAN return before parity acceptance"
+    ],
+    "pbrs": false,
+    "rudder": false,
+    "online_updates_during_evaluation": false
+  },
+  "gates": {
+    "instrument_preflight": [
+      "bitwise physical skeleton equality across retained/reset evaluation arms",
+      "96 decisions and 12 campaign rewards per metaepisode",
+      "retained state crosses exactly 11 physical boundaries",
+      "reset state crosses zero physical boundaries",
+      "same frozen weights and deterministic actions conditional on recurrent state",
+      "no forbidden observation fields"
+    ],
+    "development_go": {
+      "primary_point_estimate_at_least": 0.01,
+      "descriptive_lcb95_positive": true,
+      "optimizer_seeds_positive_minimum": "4/5",
+      "iid_absolute_effect_at_most": 0.005,
+      "persistent_0p90_greater_than_persistent_0p75_greater_than_iid": true,
+      "trained_progress_positive": true
+    },
+    "power_audit": {
+      "sesoi": 0.01,
+      "power": 0.9,
+      "alpha_one_sided": 0.05,
+      "clustering": "history_root and optimizer_seed",
+      "maximum_confirmation_roots": 64
+    },
+    "confirmatory_retained_learning": {
+      "point_estimate_at_least": 0.01,
+      "lcb95_positive": true,
+      "iid_absolute_effect_at_most": 0.005,
+      "dose_response": true,
+      "weights_frozen": true
+    },
+    "confirmatory_neural_premium": {
+      "lcb95_at_least": 0.01,
+      "no_persistence_cell_adverse": true,
+      "same_information_rights": true,
+      "same_online_compute_class": true
+    }
+  },
+  "secondary_disclosures_not_garrido_ret_gate": [
+    "worst_product_fill",
+    "unresolved_orders",
+    "lost_orders",
+    "service_loss",
+    "ret_visible",
+    "whole_campaign ReT",
+    "CVaR10",
+    "actual resource use",
+    "policy latency",
+    "offline training cost"
+  ],
+  "kan_boundary": {
+    "authorized_now": false,
+    "required_receipts": [
+      "same environment commit",
+      "same observations and action encoding",
+      "same reward",
+      "same training and evaluation roots",
+      "same number of optimizer seeds",
+      "matched environment timesteps",
+      "effective parameter count",
+      "checkpoint hashes"
+    ]
+  },
+  "terminal_scope": {
+    "failed_development_gate": "STOP_MATCHED_RECURRENT_RETENTION_NO_DEVELOPMENT_VALUE",
+    "failed_confirmation": "STOP_MATCHED_RECURRENT_RETENTION_NO_CONFIRMATORY_VALUE",
+    "structured_pass_only": "PASS_STRUCTURED_ACCUMULATED_LEARNING",
+    "learned_retention_pass": "PASS_LEARNED_ACCUMULATED_VALUE",
+    "neural_premium_pass": "PASS_HYBRID_STRUCTURED_PREMIUM",
+    "no_stop_reopens_program_q_or_historical_q_r1": true
+  }
+}
