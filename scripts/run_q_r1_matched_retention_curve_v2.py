@@ -242,38 +242,65 @@ def main() -> int:
         policy_kwargs=policy_kwargs,
         verbose=0,
     )
-    started = time.perf_counter()
-    model.learn(total_timesteps=timesteps, progress_bar=False)
-    training_seconds = time.perf_counter() - started
-
     evaluation_roots = (
         [7_570_801]
         if args.mode == "smoke"
         else _root_range(contract, "selection")
     )
     rows: list[dict[str, Any]] = []
-    for kappa in kappa_values:
-        rows.extend(
-            evaluate_same_weights(
+    args.output_dir.mkdir(parents=True)
+    checkpoint_interval = (
+        timesteps
+        if args.mode == "smoke"
+        else int(contract["training"]["checkpoint_interval_timesteps"])
+    )
+    checkpoint_steps = [0]
+    checkpoint_steps.extend(range(checkpoint_interval, timesteps + 1, checkpoint_interval))
+    if checkpoint_steps[-1] != timesteps:
+        checkpoint_steps.append(timesteps)
+
+    started = time.perf_counter()
+    checkpoint_receipts: list[dict[str, Any]] = []
+    completed_steps = 0
+    for target_steps in checkpoint_steps:
+        if target_steps > completed_steps:
+            model.learn(
+                total_timesteps=target_steps - completed_steps,
+                reset_num_timesteps=False,
+                progress_bar=False,
+            )
+            completed_steps = target_steps
+        checkpoint = args.output_dir / f"model_t{target_steps:06d}"
+        model.save(checkpoint)
+        checkpoint_path = checkpoint.with_suffix(".zip")
+        checkpoint_receipts.append(
+            {
+                "timesteps": target_steps,
+                "checkpoint": checkpoint_path.name,
+                "sha256": _sha256(checkpoint_path),
+            }
+        )
+        for kappa in kappa_values:
+            point_rows = evaluate_same_weights(
                 model,
                 roots=evaluation_roots,
                 kappa=kappa,
                 reset_at_boundaries=False,
             )
-        )
-        rows.extend(
-            evaluate_same_weights(
-                model,
-                roots=evaluation_roots,
-                kappa=kappa,
-                reset_at_boundaries=True,
+            point_rows.extend(
+                evaluate_same_weights(
+                    model,
+                    roots=evaluation_roots,
+                    kappa=kappa,
+                    reset_at_boundaries=True,
+                )
             )
-        )
+            for row in point_rows:
+                row["timesteps"] = target_steps
+                row["trained"] = bool(target_steps)
+            rows.extend(point_rows)
+    training_seconds = time.perf_counter() - started
 
-    args.output_dir.mkdir(parents=True)
-    checkpoint = args.output_dir / "model"
-    model.save(checkpoint)
-    checkpoint_path = checkpoint.with_suffix(".zip")
     (args.output_dir / "rows.json").write_text(
         json.dumps(rows, indent=1, sort_keys=True) + "\n"
     )
@@ -292,7 +319,7 @@ def main() -> int:
         "evaluation_roots": evaluation_roots,
         "kappa_values": kappa_values,
         "training_seconds": training_seconds,
-        "checkpoint_sha256": _sha256(checkpoint_path),
+        "checkpoints": checkpoint_receipts,
         "row_count": len(rows),
         "same_checkpoint_both_memory_arms": True,
         "confirmation_roots_opened": False,
