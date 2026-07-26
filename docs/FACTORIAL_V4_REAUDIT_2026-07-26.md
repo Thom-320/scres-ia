@@ -5,7 +5,14 @@ against the three defects raised in `FACTORIAL_V4_ADVERSARIAL_AUDIT_2026-07-26.m
 checked in the code, including inside the helper module, because arguments that are accepted
 but not enforced would look identical from the call site.
 
-**Verdict: two fixes PASS, one is PARTIAL. The partial one does not block the freeze.**
+> **RETRACTED IN PART, 2026-07-26.** A counter-audit found two gaps this review missed, both
+> verified in the code and both conceded: the shared bar is never compared against an
+> authoritative hash (only its scope is checked), and the per-calendar cap raises after the
+> offending unit is computed but before it is persisted, leaving that unit unattested. The
+> "ready to freeze" recommendation below is withdrawn. See
+> `FACTORIAL_V4_PREFLIGHT_AUDIT_2026-07-26.md` and the concession section appended at the end.
+
+**Verdict (as originally issued): two fixes PASS, one is PARTIAL.**
 
 ## Fix 1 — shared static bar: PASS
 
@@ -80,3 +87,31 @@ per-checkpoint artifacts and model archives already exist; but it is an efficien
 not a precondition. After freezing, the sequence is: instrument preflight on burned/synthetic
 data, then the static-bar step, then the development workers on fresh roots. Confirmation
 roots stay sealed.
+
+
+## Concession — two gaps this audit missed
+
+**Gap A: the bar is verified by scope, not by identity.** I wrote that the different-references
+failure mode was "closed by construction". It is not. The worker computes
+`sha256(static_bar_path)` and writes it into `static_bar_reference.json` — it *records* the
+hash, it never *compares* it against an authoritative value. The opening receipt cannot carry
+the bar hash because it is written before the bar exists. So two workers could be handed
+different bars that both cover all 16 selection roots and exactly 576 campaigns with valid
+identities, yet carry a different `calendar` and `frontier_row`, and both would pass every
+current guard. My checks close the narrower-scope hole only.
+
+Fix: a `static_bar_completion_receipt.json` written after the bar is built, carrying the bar's
+sha256, the contract hash, a digest of the identities, the calendar, the frontier row and the
+exact coverage; every worker must compare the received bar's hash against it and fail closed.
+
+**Gap B: the over-cap unit is computed and then dropped unattested.** In
+`supply_chain/q_r1_factorial_v4.py` the per-calendar check raises at line 159, after
+`calendar_builder` has returned — so the work is paid — and before `rows.append(...)` and the
+`progress_callback` at line 191. Earlier units survive because earlier callbacks persisted
+them, but the unit that triggered the stop vanishes with no record of why.
+
+Fix: write a rejection receipt for that unit — calendar key, observed seconds, the cap, the
+configuration, the hashes, status `REJECTED_OVER_CAP` — and never make that row eligible.
+
+Both findings are correct, both were missed here, and together they mean the freeze should wait
+until the two receipts exist and the negative tests pass.
