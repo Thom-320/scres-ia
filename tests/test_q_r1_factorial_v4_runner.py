@@ -85,12 +85,14 @@ def _static_bar_chain(tmp_path: Path) -> tuple[Path, Path, Path, list[int]]:
     return bar_path, completion_path, opening_path, roots
 
 
-def test_draft_authorizes_only_burned_instrument_preflight() -> None:
-    contract, receipt = load_authority("instrument-preflight")
+def test_freeze_receipt_closes_preflight_and_authorizes_development_loader() -> None:
+    with pytest.raises(RuntimeError, match="closed after the contract freeze"):
+        load_authority("instrument-preflight")
+    contract, receipt = load_authority("development-worker")
     assert contract["status"] == "DRAFT_PROSPECTIVE_UNOPENED_NOT_AUTHORITY"
-    assert receipt is None
-    with pytest.raises(RuntimeError, match="forbidden until the contract is frozen"):
-        load_authority("development-worker")
+    assert receipt is not None
+    assert receipt["status"] == "FROZEN_PROSPECTIVE_UNOPENED"
+    assert receipt["fresh_development_roots_opened"] is False
 
 
 def test_neural_arm_emits_complete_campaign_rows_with_one_checkpoint_hash() -> None:
