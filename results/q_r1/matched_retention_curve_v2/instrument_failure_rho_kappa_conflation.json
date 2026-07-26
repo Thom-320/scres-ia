@@ -1,0 +1,87 @@
+{
+  "schema_version": "q_r1_matched_retention_curve_v2_instrument_failure_v1",
+  "status": "STOP_INSTRUMENT_INVALID_RHO_KAPPA_CONFLATION",
+  "claim_status": "BURNED_INSTRUMENT_FAILURE_NO_CLAIM",
+  "detected_at_local": "2026-07-26T14:37:00-05:00",
+  "stopped_at_local": "2026-07-26T14:49:00-05:00",
+  "defect": {
+    "observed_within_campaign_regime_persistence_rho": 0.75,
+    "required_within_campaign_regime_persistence_rho": 0.9,
+    "cross_campaign_kappa_cells": [
+      0.5,
+      0.75,
+      0.9
+    ],
+    "cause": "The runner used the cross-campaign kappa value 0.75 as the within-campaign regime persistence rho.",
+    "physical_consequence": "The generated campaigns were different physical objects from the rho=0.90 exact-frontier and frozen-comparator campaigns.",
+    "contract_consequence": "The v2 freeze is incomplete because the contract omitted rho even though rho changes campaign identity. Correcting only the runner after development roots were opened does not preserve prospective authority."
+  },
+  "identity_check": {
+    "history_root": 7570801,
+    "campaign_index": 6,
+    "rho_0p90_skeleton_sha256_prefix": "1ab4ec34",
+    "rho_0p75_skeleton_sha256_prefix": "35e0d189",
+    "pre_correction_rows_match": "rho_0p75",
+    "maximum_exact_lookup_disagreement_reported": 0.667
+  },
+  "custody": {
+    "contract_sha256": "532de7a774f5846ec53e273f2e0f25edd785bf2140b17fdb9316572d08d38d80",
+    "frozen_contract_commit": "ed78c6c127ae9df89cde9cd106568b90beec1182",
+    "development_opening_parent_commit": "1a5354c80e8a1fa2bfcdee36a4a9d481b6980429",
+    "invalid_runner_parent_commit": "4a00c2a4",
+    "post_opening_correction_commit": "c40977e71f194991b71758f506d0908ef352dcbc",
+    "training_history_roots_burned": [
+      7660001,
+      7660040
+    ],
+    "checkpoint_selection_history_roots_burned": [
+      7660101,
+      7660116
+    ],
+    "optimizer_seeds_burned": [
+      7661001,
+      7661002,
+      7661003
+    ],
+    "reserved_confirmation_history_roots_opened": false,
+    "reserved_confirmation_history_roots": [
+      7660201,
+      7660264
+    ]
+  },
+  "executions": [
+    {
+      "label": "rho_0p75_original_screen",
+      "started_at_local": "2026-07-26T14:26:58-05:00",
+      "terminated": true,
+      "completed_scientific_results": 0,
+      "configs_started": 8,
+      "optimizer_seed": 7661001,
+      "maximum_checkpoint_timesteps_observed": 48000,
+      "partial_artifact_path": "/private/tmp/q_r1_matched_retention_curve_v2_screen",
+      "scientific_use": "forbidden"
+    },
+    {
+      "label": "rho_0p90_post_opening_relaunch",
+      "started_at_local": "2026-07-26T14:40:00-05:00",
+      "terminated": true,
+      "completed_scientific_results": 0,
+      "workers_started": 8,
+      "partial_artifact_path": "/private/tmp/q_r1_matched_retention_curve_v2_instrument_failure_20260726/rho090_relaunch_screen",
+      "scientific_use": "forbidden because the executable changed after the v2 development opening"
+    }
+  ],
+  "preservation": {
+    "invalid_rho_0p75_smoke_restored": "results/q_r1/matched_retention_curve_v2/smoke",
+    "corrected_rho_0p90_smoke_custody": "/private/tmp/q_r1_matched_retention_curve_v2_instrument_failure_20260726/smoke_rho090",
+    "invalid_smoke_must_not_be_deleted": true,
+    "partial_checkpoints_must_not_be_selected_or_aggregated": true
+  },
+  "required_successor": {
+    "new_contract_required": true,
+    "rho_must_be_explicitly_frozen": 0.9,
+    "new_development_and_selection_roots_required": true,
+    "confirmation_roots_must_remain_sealed_until_a_new_power_audit": true,
+    "v2_contract_may_not_be_reopened_or_reinterpreted": true
+  }
+}
