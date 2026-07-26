@@ -1,0 +1,49 @@
+{
+ "contract_id": "oracle_retained_learning_curve_v2",
+ "schema_version": "oracle_curve_prereg_v1",
+ "date_frozen": "2026-07-26",
+ "status": "FROZEN_BEFORE_EXECUTION",
+ "claim_status": "DEVELOPMENT_UNTIL_A_SEALED_BLOCK_IS_OPENED",
+ "supersedes": "the 2026-07-24 pilot in results/oracle_capture_v1/learning_curve_*.json",
+ "why": "The pilot compared a learner that cannot carry knowledge across campaigns against a model-predictive controller that is explicitly initialized with a carried posterior (fixed_theta_belief(retained_prior)), while the rollout additionally reset the recurrent state at every campaign boundary (episode_start=True). Any head-to-head reading of that pilot conflates architecture with information rights. This contract fixes the design before any further training so the comparison answers the intended question.",
+ "question": "Given the SAME causal history and the SAME retention rights as the retained belief-MPC, can a neural controller match or exceed it on the oracle capture metric?",
+ "design": {
+  "meta_episode": "12 consecutive campaigns per history, the same structure the retained MPC is evaluated on",
+  "physical_reset": "physical state is reset between campaigns; only knowledge crosses the boundary",
+  "retention_rights": "the retained learner arm carries its recurrent state across campaign boundaries within a history (episode_start=True only at the start of the whole history); the reset arm receives an identical model and identical compute but its state is reset at every campaign boundary",
+  "belief_parity": "any carried belief summary supplied to the MPC must be supplied to the learner in the same observation slots, or the learner must be explicitly classified as a within-campaign comparator",
+  "memoryless_architectures": "PPO-MLP and KAN-PPO cannot retain history by construction; they either receive the same causal context summary or are reported as within-campaign comparators, never as failed retained arms",
+  "identical_history": "learner and MPC are evaluated on the identical causal history, CRN-paired",
+  "weights_frozen_at_evaluation": true,
+  "splits": "train, checkpoint-selection and test are disjoint; the best static bar is selected on calibration and frozen before the test block is touched",
+  "frontiers": "fresh exact 4^8 frontiers are enumerated for the confirmatory block; no frontier is reused from the burned set"
+ },
+ "arms": [
+  {"arm": "best_static_frozen", "role": "Garrido's bar; selected on calibration, frozen before test"},
+  {"arm": "mpc_reset", "role": "value of feedback without memory"},
+  {"arm": "mpc_retained", "role": "value of structured accumulated knowledge"},
+  {"arm": "recurrent_ppo_reset", "role": "neural learning without retention"},
+  {"arm": "recurrent_ppo_retained", "role": "the treatment: neural accumulation with matched rights"},
+  {"arm": "ppo_mlp", "role": "feed-forward ablation, within-campaign comparator"},
+  {"arm": "kan_ppo", "role": "David's candidate; admitted only with verified environment and rights parity"},
+  {"arm": "oracle", "role": "post-hoc exact ceiling; a grading device, never a deployable comparator"}
+ ],
+ "reporting_rules": {
+  "three_numbers": "every capture figure is reported as pooled over all campaigns, conditional on campaigns with headroom, and the penalty incurred on zero-headroom campaigns; the pooled figure is never reported alone",
+  "no_architecture_ranking_without_tuning": "MLP vs LSTM vs KAN may not be ranked unless each has received a documented, comparable tuning budget",
+  "learning_claim": "a learner is credited with learning only against a paired comparison with its own initialization AND a fresh holdout, never from a mean curve alone",
+  "ceiling_scope": "ceiling-based bounds are always stated with their three qualifiers: that action space, those campaigns, that decision threshold"
+ },
+ "gates": {
+  "parity": "the parity self-check must pass before any result is read: retained and reset arms must differ ONLY in the retention flag, verified by an identical-configuration assertion",
+  "match_mpc": "recurrent_ppo_retained - mpc_retained clustered LCB95 >= -0.02 to claim parity with the structured controller",
+  "beat_mpc": "recurrent_ppo_retained - mpc_retained clustered LCB95 > 0 to claim a learner premium",
+  "sanity": "recurrent_ppo_retained - recurrent_ppo_reset > 0 is required before any retention claim is made"
+ },
+ "sequencing": "no further training on the superseded pilot design; the parity self-check runs first, then the development block, and only a passing development result may open a sealed confirmatory block",
+ "invariants": [
+  "the frozen c256 comparator, its receipt and its Pareto artifacts stay byte-untouched",
+  "the oracle grading module and its self-checks are unchanged",
+  "no sealed seed is opened by this contract"
+ ]
+}

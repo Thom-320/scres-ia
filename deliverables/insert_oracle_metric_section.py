@@ -36,6 +36,12 @@ def cap(name):
     return p["pooled_ratio"], p["lcb95"]
 
 
+def decomp(name):
+    """(pooled, conditional-on-headroom, penalty charged on zero-headroom campaigns)."""
+    p = POL[name]["best_static_open_loop"]["pooled"]
+    return p["pooled_ratio"], p["conditional_ratio"], p["numerator_zero_headroom"]
+
+
 def absolute(name):
     return POL[name]["absolute"]
 
@@ -169,6 +175,13 @@ for s in (
     "The headline figure is the pooled ratio, the sum of realized gains divided by the sum of "
     "available gains, because it retains campaigns in which the reference is already optimal "
     "and the per-campaign ratio is undefined.",
+    "Those campaigns are not neutral in the pooled ratio: they add nothing to the denominator "
+    "but still add the realized difference to the numerator, which is negative whenever a "
+    "controller fails to reproduce an already-optimal static calendar.",
+    "The pooled ratio therefore charges a controller for regressions on campaigns that offered "
+    "nothing to gain, which is deliberate, and for that reason three quantities are reported "
+    "together: the pooled ratio over all campaigns, the ratio conditional on campaigns that "
+    "had headroom, and the penalty incurred on the campaigns that had none.",
 ): sent(s)
 
 head("3.4.3 The reference policies", italic=True)
@@ -195,39 +208,52 @@ for s in (
 
 r_cap, r_lcb = cap("frozen_c256_mpc_retained")
 z_cap, z_lcb = cap("frozen_c256_mpc_reset")
+_, rr_cond, rr_pen = decomp("frozen_c256_mpc_retained")
+_, rz_cond, rz_pen = decomp("frozen_c256_mpc_reset")
 c1_cap, _ = cap("constant_action_1")
 table([
-    ["Controller", "Mean ReT", "Capture (LCB95)", "Exact optima"],
-    ["Clairvoyant ceiling (exact)", f"{CEIL:.4f}", "1.000", "48 / 48"],
+    ["Controller", "Mean ReT", "Pooled capture (LCB95)", "Capture where headroom exists",
+     "Exact optima"],
+    ["Clairvoyant ceiling (exact)", f"{CEIL:.4f}", "1.000", "1.000", "48 / 48"],
     ["Retained belief-MPC", f"{absolute('frozen_c256_mpc_retained')['mean_label']:.4f}",
-     f"{r_cap:+.3f} ({r_lcb:+.3f})",
+     f"{r_cap:+.3f} ({r_lcb:+.3f})", f"{rr_cond:+.3f}",
      f"{absolute('frozen_c256_mpc_retained')['exact_optimum_hits']} / 48"],
     [f"Service-aware variants ({len(SA)})",
      f"{min(sa_labels):.4f} - {max(sa_labels):.4f}",
-     f"{min(sa_caps):+.3f} to {max(sa_caps):+.3f}",
+     f"{min(sa_caps):+.3f} to {max(sa_caps):+.3f}", "+0.764 to +0.799",
      f"{min(sa_hits)} - {max(sa_hits)} / 48"],
-    ["Best static calendar", f"{STATIC:.4f}", "0.000", "27 / 48"],
+    ["Best static calendar", f"{STATIC:.4f}", "0.000", "0.000", "27 / 48"],
     ["Belief-reset MPC", f"{absolute('frozen_c256_mpc_reset')['mean_label']:.4f}",
-     f"{z_cap:+.3f} ({z_lcb:+.3f})", "0 / 48"],
+     f"{z_cap:+.3f} ({z_lcb:+.3f})", f"{rz_cond:+.3f}", "0 / 48"],
     ["Constant allocation", f"{absolute('constant_action_1')['mean_label']:.4f}",
-     f"{c1_cap:+.3f}", "0 / 48"],
-], widths=[2.5, 1.0, 1.6, 1.1])
+     f"{c1_cap:+.3f}", f"{POL['constant_action_1']['best_static_open_loop']['pooled']['conditional_ratio']:+.3f}",
+     "0 / 48"],
+], widths=[1.9, 0.85, 1.45, 1.35, 0.85])
 cap_p = before()
 cap_p.alignment = 1
-cap_p.add_run("Table 4. Fraction of the exact clairvoyant headroom captured by each controller "
-              "on the 48 evaluated campaigns. Capture is measured against the best static "
-              "open-loop calendar.").italic = True
+cap_p.add_run("Table 4. Fraction of the exact clairvoyant headroom captured by each controller, "
+              "measured against the best static open-loop calendar. The pooled column covers all "
+              "48 campaigns and charges regressions on the 27 campaigns where the static "
+              "calendar was already optimal; the following column is restricted to the 21 "
+              "campaigns that offered headroom.").italic = True
 
 for s in (
-    f"The retained belief-MPC captures {r_cap * 100:.0f}% of the clairvoyant headroom with a "
-    f"lower bound of {r_lcb:+.3f}, and it selects the exactly optimal calendar in "
-    f"{absolute('frozen_c256_mpc_retained')['exact_optimum_hits']} of 48 campaigns.",
+    f"The retained belief-MPC captures {r_cap * 100:.0f}% of the clairvoyant headroom in the "
+    f"pooled sense with a lower bound of {r_lcb:+.3f}, and it selects the exactly optimal "
+    f"calendar in {absolute('frozen_c256_mpc_retained')['exact_optimum_hits']} of 48 campaigns.",
     "The comparison with the belief-reset controller isolates the mechanism: the two share the "
     "same forecasting machinery, the same horizon and the same action contract, and differ only "
     "in whether knowledge is carried across successive campaigns.",
-    f"Without that retention the controller captures nothing in the pooled sense ({z_cap:+.3f}) "
-    "and never once reaches the exact optimum, so the gain is attributable to accumulated "
-    "knowledge rather than to reactivity.",
+    f"The decomposition is more informative than the pooled figure alone: on the campaigns that "
+    f"actually offered headroom the reset controller still captures {rz_cond * 100:.0f}%, so "
+    f"feedback without retention is far from worthless, but it is charged {rz_pen:.2f} on the "
+    f"campaigns where the static calendar was already optimal, against {rr_pen:.2f} for the "
+    f"retained controller.",
+    f"Retention therefore contributes in two distinct ways: it raises capture where headroom "
+    f"exists, from {rz_cond:.3f} to {rr_cond:.3f}, and it sharply reduces damage where no "
+    f"headroom exists.",
+    "The second effect is the larger of the two, which is a result about knowing when not to "
+    "act rather than about acting better.",
     "This is a direct operationalization of the path-dependency hypothesis stated in Section 3.1, "
     "measured against an exact ceiling instead of against a chosen competitor.",
     "A third observation constrains how far any controller could go: in 27 of the 48 campaigns "
@@ -263,7 +289,9 @@ if curves:
     figure(FIG, "Figure M5. (a) Distance to the exact clairvoyant ceiling for every evaluated "
                 "controller. (b) Capture ratio against training experience for two learner "
                 "architectures, five seeds each, with the best static policy at zero and the "
-                "clairvoyant ceiling at one.")
+                "clairvoyant ceiling at one. Panel (b) is a pilot: the learners hold no "
+                "cross-campaign retention rights, so the model-predictive reference lines are "
+                "shown for scale and not as a matched comparison.")
     for s in (
         f"Both architectures learn in the sense the metric was designed to detect: the "
         f"feed-forward learner improves from {mlp['start']:.2f} to {mlp['best']:.2f} within "
@@ -273,19 +301,26 @@ if curves:
         f"The recurrent learner improves later and less, from {rec['start']:.2f} to "
         f"{rec['end']:.2f} at {rec['timesteps']:,} timesteps.",
         f"Neither architecture reaches the static reference: {mlp['above_bar'] + rec['above_bar']} "
-        f"of {mlp['n'] + rec['n']} seeds finish above zero, while the structured retained "
-        f"controller sits at {r_cap:+.3f}.",
-        "Under the criterion adopted here, that a model is credited with learning only when it "
-        "exceeds the best static policy, learning is confirmed for the structured controller and "
-        "is not confirmed for either neural learner at this training budget.",
-        "Two limitations are stated explicitly so the comparison is not over-read.",
-        "The learners use library-default hyperparameters at a deliberately modest budget, so the "
-        "curves measure these particular runs and do not constitute a tuned ranking of "
-        "feed-forward against recurrent architectures.",
-        "The general statement that no policy in this action space can substantially exceed the "
-        "structured controller does not rest on these runs at all, but on the exhaustive "
-        "enumeration of the finer per-batch action space reported in Section 4, which bounds "
-        "every policy whether trained or not.",
+        f"of {mlp['n'] + rec['n']} seeds finish above zero.",
+        "Three limitations are stated explicitly, because the comparison is easy to over-read.",
+        "First, and most important, the neural pilot and the model-predictive controllers do not "
+        "hold the same information rights.",
+        "The retained controller is initialized in each campaign with the posterior carried over "
+        "from the preceding campaigns of its history, whereas the learner receives no carried "
+        "prior and its recurrent state is reset at every campaign boundary, so the learner is "
+        "structurally incapable of the cross-campaign accumulation that produces the retained "
+        "controller's advantage.",
+        "The pilot therefore answers whether a learner improves against its own initialization "
+        "within campaigns, and it does not yet answer whether a learner granted the same memory "
+        "could match or exceed the retained controller; that comparison requires a matched-rights "
+        "design and is reported separately.",
+        "Second, the learners use library-default hyperparameters at a deliberately modest "
+        "budget, so the curves measure these particular runs and do not constitute a tuned "
+        "ranking of feed-forward against recurrent architectures.",
+        "Third, the exhaustive enumeration of the finer per-batch action space reported in "
+        "Section 4 bounds every policy on the evaluated campaigns within that action space and "
+        "at the preregistered decision threshold, which is a statement about this decision "
+        "problem rather than about learning methods in general.",
     ): sent(s)
 else:
     sent("The learning-curve panel is generated by the same instrument and is reported in "

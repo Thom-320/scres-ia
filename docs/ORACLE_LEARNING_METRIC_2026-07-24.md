@@ -1,4 +1,11 @@
-# The oracle learning metric (requested by Garrido, meeting 2026-07-22)
+# Clairvoyant-headroom diagnostic and training-progress pilot
+*(the explicit learning measure requested by Garrido, meeting 2026-07-22)*
+
+> **Corrected 2026-07-26 after an adversarial internal review.** Three defects were confirmed and
+> fixed: a transcribed mean (0.7994 -> 0.7990), a wrong description of the pooled ratio that had
+> produced a materially wrong claim about the belief-reset arm, and an undisclosed
+> information-rights asymmetry between the neural pilot and the model-predictive arms. The
+> corrections are recorded in section 6.
 
 **What Garrido asked for.** An explicit learning metric, measured over time: run the episodes,
 compute the clairvoyant maximum resilience for each *already-run* episode (valid post-hoc only,
@@ -58,10 +65,10 @@ Ceiling mean **0.8203** (range 0.7487–0.8768) over the 48 campaigns. Best stat
 | controller | mean ReT | pooled capture vs static (LCB95) | per-campaign η (n=21) | exact optima |
 |---|---|---|---|---|
 | Clairvoyant ceiling | 0.8203 | 1.0000 | 1.0000 | 48/48 |
-| **Retained belief-MPC** | **0.7994** | **+0.743 (+0.554)** | +0.789 | **42/48** |
+| **Retained belief-MPC** | **0.7990** | **+0.743 (+0.554)** | +0.789 | **42/48** |
 | Service-aware variants (9) | 0.796–0.799 | +0.692 … +0.726 | +0.764 … +0.789 | 39–41/48 |
 | Best static calendar | 0.7376 | 0.000 | 0.000 | 27/48 |
-| Belief-reset MPC | 0.7293 | −0.100 (−0.617) | +0.326 | 0/48 |
+| Belief-reset MPC | 0.7293 | −0.099 (−0.617) | +0.326 | 0/48 |
 | Constant 1:2 | 0.6582 | −0.957 | −0.679 | 0/48 |
 | Constant 2:1 | 0.6076 | −1.565 | −0.594 | 0/48 |
 
@@ -71,11 +78,14 @@ Four findings worth reporting to Garrido:
    LCB95 +0.554, and hits the *exact* optimum in 42 of 48 campaigns. On his criterion, this
    controller demonstrably learns: it beats the best static policy with the lower bound well
    clear of zero.
-2. **Feedback alone is not enough.** The belief-reset MPC — same machinery, same forecast
-   horizon, but no knowledge carried between campaigns — captures **nothing** in the pooled
-   sense (−0.100) and never once reaches the exact optimum. What buys the gain is *retained*
-   knowledge, not reactivity. This isolates the mechanism far more sharply than a mean-difference
-   test can.
+2. **Retention's contribution is mostly about restraint, not about acting better.** The
+   belief-reset MPC — same machinery, same horizon, no knowledge carried between campaigns —
+   scores −0.099 pooled, but that single number is misleading and the decomposition matters:
+   on the 21 campaigns that actually offered headroom it still captures **+0.546**, while on the
+   27 campaigns where the static calendar was already optimal it is charged **−2.562** for
+   breaking them. The retained arm captures more where headroom exists (+0.799) and, far more
+   decisively, does much less damage where none exists (−0.221). Retention buys knowing *when
+   not to act*.
 3. **In 27 of 48 campaigns a single static calendar is already exactly optimal.** There is
    literally nothing to learn in more than half the population. This is not a defect of the
    controllers; it is a property of the decision problem, and it is the quantitative core of the
@@ -135,7 +145,10 @@ LSTM (library-default hyperparameters, no tuning, small budget), nor a general c
 cannot succeed here. The general claim is already established far more strongly and
 architecture-independently by the exact ceiling analysis: the C6 gate enumerated the finer
 8⁸ = 16,777,216 per-batch action space and found no stratum where the ceiling itself clears the
-gate over the frozen controller, which bounds *every* policy, trained or not.
+gate over the frozen controller. That bounds every policy **within that action space, on those
+48 burned campaigns, at the preregistered decision threshold** — it is a statement about this
+decision problem, not about learning methods in general, and it must not be quoted as "RL cannot
+work".
 
 ## 5. Why this metric is worth the paper's space
 
@@ -150,3 +163,36 @@ a number instead of a shrug.
 It also gives Garrido what he pressed for in a form that survives review: learning is confirmed
 by a lower confidence bound above a hard static bar, measured over training time, on episodes
 whose optimum is known exactly.
+
+## 6. Corrections applied 2026-07-26 (adversarial internal review)
+
+**C1 — transcribed mean.** The retained arm's mean ReT is 0.799035, which rounds to 0.7990; the
+table had 0.7994. The DOCX was unaffected because it reads the JSON directly. Fixed.
+
+**C2 — the pooled ratio was described wrongly, and the description hid a real result.** The
+documentation claimed a zero-headroom campaign "contributes 0 to both sums, so neither helps nor
+hurts". False: it adds 0 to the denominator but still adds (V − B) to the numerator, which is
+negative whenever a controller breaks an already-optimal static calendar. The calculation is
+kept — charging regressions is deliberate — but it is now described correctly and reported as
+three numbers (pooled over 48, conditional on the 21 with headroom, penalty on the 27 without).
+This overturned the earlier claim that feedback without retention "captures nothing": it
+captures +0.546 where there is headroom, and its negative pooled figure is almost entirely the
+−2.562 penalty for damaging campaigns that needed no action.
+
+**C3 — unequal information rights in the pilot.** The retained MPC is initialized with
+`fixed_theta_belief(retained_prior)`, a posterior carried across campaigns. The learner's
+environment has no mechanism to accept a carried prior, and the rollout passes
+`episode_start=True` at every campaign boundary, which resets the recurrent state. The learner
+was therefore structurally incapable of the accumulation that produces the retained arm's
+advantage, and the head-to-head reading conflated architecture with information rights. The
+pilot is now labelled as such in the document, in the DOCX and on the figure panel, and the
+matched-rights design is preregistered in
+`contracts/oracle_retained_learning_curve_v2.json` before any further training.
+
+**C4 — scope of the ceiling claim.** "Bounds every policy, trained or not" is now stated with its
+three qualifiers: that action space, those campaigns, that threshold.
+
+**Not changed:** the ceiling is exact, the lookup grading is exact, the retained arm's 42/48
+exact optima stand, and the tie-plateau finding stands. What changed is what may be *concluded*
+from the pilot, and one substantive claim about the reset arm that was wrong in the reader's
+favour and is now corrected against us.

@@ -103,8 +103,9 @@ axb.axhline(0.0, color=GREEN, lw=1.0, ls=(0, (4, 2)), zorder=2)
 axb.axhline(mpc, color=ORANGE, lw=1.2, zorder=2)
 axb.text(0.985, 1.0, "clairvoyant ceiling", transform=axb.get_yaxis_transform(),
          ha="right", va="bottom", fontsize=6.2, color=GREEN)
-axb.text(0.985, mpc, "retained belief-MPC (+0.74)", transform=axb.get_yaxis_transform(),
-         ha="right", va="bottom", fontsize=6.2, color=ORANGE)
+axb.text(0.985, mpc, "retained belief-MPC (+0.74, retains across campaigns)",
+         transform=axb.get_yaxis_transform(), ha="right", va="bottom", fontsize=6.0,
+         color=ORANGE)
 axb.text(0.985, 0.0, "best static policy", transform=axb.get_yaxis_transform(),
          ha="right", va="bottom", fontsize=6.2, color=GREEN)
 lo = min(-1.6, min(mat.min() for mat in [np.array([[p["pooled_ratio"] for p in c["points"]]
@@ -113,8 +114,8 @@ lo = min(-1.6, min(mat.min() for mat in [np.array([[p["pooled_ratio"] for p in c
 axb.set_ylim(lo - 0.18, 1.15)
 axb.set_xlabel("Training experience (environment timesteps)", fontsize=7.2, color=INK)
 axb.set_ylabel("Fraction of clairvoyant headroom captured", fontsize=7.2, color=INK)
-axb.set_title("(b) Learning curve on the oracle metric", fontsize=7.8, weight="bold",
-              color=INK, loc="left", pad=5)
+axb.set_title("(b) Training progress (pilot: no cross-campaign retention rights)",
+              fontsize=7.4, weight="bold", color=INK, loc="left", pad=5)
 axb.grid(True, color=GRID, lw=0.4, zorder=0)
 axb.set_axisbelow(True)
 for side in ("top", "right"):

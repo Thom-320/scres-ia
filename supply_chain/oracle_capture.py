@@ -151,9 +151,17 @@ def pooled_capture(campaigns: list[Campaign], calendars: dict[tuple, list[int]],
     """Portfolio capture: sum(V - B) / sum(C - B) over ALL campaigns.
 
     The per-campaign ratio is undefined where the bar already sits at the ceiling (in this
-    burned set the best static calendar is exactly optimal in 27 of 48 campaigns, so those
-    are dropped from the per-campaign mean). This pooled form keeps every campaign: a
-    zero-headroom campaign contributes 0 to both sums and so neither helps nor hurts.
+    burned set the best static calendar is exactly optimal in 27 of 48 campaigns), so those
+    campaigns are dropped from the per-campaign mean.
+
+    They are NOT neutral in the pooled form. A zero-headroom campaign adds 0 to the
+    denominator but still adds (V - B) to the numerator, which is negative whenever the
+    policy fails to reproduce the already-optimal static calendar. The pooled ratio therefore
+    charges regressions on campaigns that offered nothing to gain. That is a defensible
+    design -- a controller that breaks what was already optimal should pay for it -- but it
+    must be reported as such, so this function also returns the decomposition:
+    `numerator_zero_headroom` is exactly that penalty, and `conditional_ratio` is the pooled
+    ratio computed only over campaigns that had headroom.
     """
     rows = []
     for c in campaigns:
@@ -173,13 +181,18 @@ def pooled_capture(campaigns: list[Campaign], calendars: dict[tuple, list[int]],
         return num / den if den > 1e-12 else float("nan")
 
     boot = np.array([ratio(rng.choice(roots, len(roots), True)) for _ in range(BOOT_DRAWS)])
-    zero_headroom = sum(1 for _, _, d in rows if d <= 1e-12)
+    zero_rows = [(n, d) for _, n, d in rows if d <= 1e-12]
+    head_rows = [(n, d) for _, n, d in rows if d > 1e-12]
+    head_den = sum(d for _, d in head_rows)
     return {
         "pooled_ratio": ratio(roots),
         "lcb95": float(np.nanquantile(boot, 0.05)),
         "ucb95": float(np.nanquantile(boot, 0.95)),
         "n_campaigns": len(rows),
-        "n_zero_headroom_campaigns": zero_headroom,
+        "n_zero_headroom_campaigns": len(zero_rows),
+        "numerator_zero_headroom": sum(n for n, _ in zero_rows),
+        "conditional_ratio": (sum(n for n, _ in head_rows) / head_den
+                              if head_den > 1e-12 else float("nan")),
     }
 
 
