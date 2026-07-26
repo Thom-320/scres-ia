@@ -8,6 +8,7 @@ from scripts.run_q_r1_matched_retention_factorial_v4 import (
     estimands,
     evaluate_neural_arm,
     load_authority,
+    static_rows,
 )
 
 
@@ -77,3 +78,11 @@ def test_estimands_include_the_neural_premium_from_common_rows() -> None:
     assert result["raw_recurrent_memory_value"]["mean"] == pytest.approx(0.02)
     assert result["structured_retained_value"]["mean"] == pytest.approx(0.05)
     assert result["neural_premium"]["mean"] == pytest.approx(0.02)
+
+
+def test_static_rows_emit_the_same_mandatory_service_aliases() -> None:
+    histories = build_histories([7_570_801], (0.90,))
+    rows = static_rows(histories, calendar=[0] * 8)
+    assert len(rows) == 12
+    assert all(row["service_loss"] == row["service_loss_auc"] for row in rows)
+    assert all(row["whole_campaign_ret"] == row["ret_visible"] for row in rows)

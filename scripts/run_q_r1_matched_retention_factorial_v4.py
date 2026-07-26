@@ -329,6 +329,8 @@ def static_rows(
                 calendar=calendar,
                 scheduler=sched,
             )
+            metrics["service_loss"] = metrics["service_loss_auc"]
+            metrics["whole_campaign_ret"] = metrics["ret_visible"]
             rows.append(
                 {
                     "history_root": campaign.history_root,
