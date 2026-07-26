@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -12,6 +13,7 @@ from supply_chain.q_r1_metaepisode_env import (
 
 ROOT = Path(__file__).resolve().parents[1]
 CONTRACT = ROOT / "contracts/q_r1_matched_retention_curve_v2.json"
+RECEIPT = ROOT / "contracts/q_r1_matched_retention_curve_v2_freeze_receipt.json"
 COLLISION = (
     ROOT
     / "research/paper2_exhaustive_search"
@@ -64,3 +66,12 @@ def test_collision_audit_keeps_reserved_roots_unopened() -> None:
     assert audit["collision_clean"] is True
     assert audit["roots_opened"] is False
     assert audit["confirmation_roots_opened"] is False
+
+
+def test_freeze_receipt_matches_contract_bytes() -> None:
+    receipt = json.loads(RECEIPT.read_text())
+    digest = hashlib.sha256(CONTRACT.read_bytes()).hexdigest()
+    assert receipt["status"] == "FROZEN_PROSPECTIVE_UNOPENED"
+    assert receipt["contract_sha256"] == digest
+    assert receipt["frozen_before_training_roots_opened"] is True
+    assert receipt["training_roots_opened"] is False
