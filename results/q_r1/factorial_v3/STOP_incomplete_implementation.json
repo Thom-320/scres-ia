@@ -1,0 +1,54 @@
+{
+ "claim_status": "NO_RESULT_NOTHING_TO_INTERPRET",
+ "custody_conservative_burn": {
+  "checkpoint_selection_history_roots": [
+   7662101,
+   7662116
+  ],
+  "confirmation_opened": false,
+  "optimizer_seeds": [
+   7663001,
+   7663002,
+   7663003,
+   7663004,
+   7663005
+  ],
+  "reserved_confirmation_history_roots": [
+   7662201,
+   7662264
+  ],
+  "training_history_roots": [
+   7662001,
+   7662040
+  ]
+ },
+ "results_produced": "none. Only a 960-timestep, one-root smoke exists; it must not be interpreted. No seed produced result.json.",
+ "root_cause_on_my_side": "I adapted my v2 runner to four arms and launched it, instead of implementing the frozen contract. Speed of execution was traded against fidelity to the design, and the design is the point.",
+ "schema": "q_r1_factorial_v3_stop_incomplete_implementation_v1",
+ "status": "STOP_RUNNER_DID_NOT_IMPLEMENT_THE_FROZEN_CONTRACT",
+ "stopped_at_utc": "2026-07-26T20:27:22.646792+00:00",
+ "successor_requirements_before_any_freeze": [
+  "three kappa cells including the iid null at 0.50",
+  "the retained structured controller as an arm, so the neural premium is computable",
+  "the service ledger reported as mandatory secondary disclosures",
+  "real checkpoint selection on the selection split only",
+  "total timesteps, PPO hyperparameters, checkpoint cadence and bar-root count frozen IN the contract, not chosen at the command line",
+  "the static bar computed once over the whole selection split and written before grading",
+  "a development-opening receipt written when the roots are opened",
+  "fresh roots and fresh optimizer seeds",
+  "an execution environment that can attest its commit and a clean worktree"
+ ],
+ "verification": "every finding above was checked against the runner and the contract in this lineage, not accepted on assertion",
+ "verified_findings": {
+  "1_bar_roots": "contract declares 16 selection roots (7662101-7662116); the run used --bar-roots 4 and the smoke used 1",
+  "2_runtime_not_frozen": "the contract fixes neither total timesteps, nor PPO hyperparameters, nor checkpoint cadence, nor the number of roots used for the bar (verified: no 'timesteps' or 'learning_rate' key in training_protocol)",
+  "3_sharding_after_freeze": "--seed-indices was added, rsynced and launched before the commit documenting it",
+  "4_vps_not_attestable": "the VPS working copy has no .git, so no execution commit or clean worktree can be attested",
+  "5_kappa_null_missing": "runner KAPPAS = (0.75, 0.90); the contract declares three cells including iid_null 0.50, so the iid null and the full dose response were not evaluable",
+  "6_no_retained_mpc": "zero references to the structured comparator; the neural premium, which is the north star of the design, was not computable",
+  "7_no_checkpoint_selection": "one final model is trained and selection_mean_ret computed afterwards; no selection among checkpoints occurs",
+  "8_no_service_ledger": "zero references to worst_product_fill, unresolved_orders or lost_orders; the mandatory secondary disclosures were absent",
+  "9_no_opening_receipt": "no development-opening receipt was written and the freeze receipt still asserts training_roots_opened=false while they were opened"
+ },
+ "who_stopped_it": "the Codex lineage stopped the VPS processes, which also explains the SIGTERM I was diagnosing as a system watchdog. Given the findings, that was correct enforcement, not interference."
+}
