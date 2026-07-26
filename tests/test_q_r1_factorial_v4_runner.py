@@ -71,6 +71,7 @@ def _static_bar_chain(tmp_path: Path) -> tuple[Path, Path, Path, list[int]]:
             "schema_version": (
                 "q_r1_factorial_v4_static_bar_completion_receipt"
             ),
+            "mode": "static-bar",
             "contract_sha256": contract_sha,
             "opening_receipt_sha256": sha256(opening_path),
             "static_bar_sha256": sha256(bar_path),

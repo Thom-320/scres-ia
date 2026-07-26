@@ -93,12 +93,13 @@ def validate_shared_static_bar(
     expected_contract_sha256: str,
     expected_roots: list[int],
     expected_campaigns: int,
+    expected_opening_mode: str = "static-bar",
 ) -> dict[str, Any]:
     """Load the one authoritative static bar and verify its custody chain."""
     opening = json.loads(opening_receipt_path.read_text())
     completion = json.loads(completion_receipt_path.read_text())
     static_bar = json.loads(static_bar_path.read_text())
-    if opening.get("mode") != "static-bar":
+    if opening.get("mode") != expected_opening_mode:
         raise RuntimeError("development opening receipt has the wrong mode")
     if opening.get("contract_sha256") != expected_contract_sha256:
         raise RuntimeError("development opening receipt contract mismatch")
@@ -106,6 +107,8 @@ def validate_shared_static_bar(
         "q_r1_factorial_v4_static_bar_completion_receipt"
     ):
         raise RuntimeError("static bar completion receipt schema mismatch")
+    if completion.get("mode") != expected_opening_mode:
+        raise RuntimeError("static bar completion receipt mode mismatch")
     if completion.get("contract_sha256") != expected_contract_sha256:
         raise RuntimeError("static bar completion receipt contract mismatch")
     if completion.get("opening_receipt_sha256") != sha256(opening_receipt_path):
@@ -778,6 +781,17 @@ def main() -> int:
         write_json(
             args.output_dir / "static_bar_completion_receipt.json",
             completion_receipt,
+        )
+        validate_shared_static_bar(
+            static_bar_path=static_bar_path,
+            completion_receipt_path=(
+                args.output_dir / "static_bar_completion_receipt.json"
+            ),
+            opening_receipt_path=opening_path,
+            expected_contract_sha256=sha256(CONTRACT_PATH),
+            expected_roots=completion_receipt["selection_roots"],
+            expected_campaigns=int(static_bar["selection_campaigns"]),
+            expected_opening_mode=args.mode,
         )
     else:
         assert args.static_bar_path is not None
