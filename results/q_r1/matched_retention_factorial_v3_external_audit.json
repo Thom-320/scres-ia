@@ -1,0 +1,62 @@
+{
+  "schema_version": "q_r1_matched_retention_factorial_v3_external_audit_v1",
+  "status": "STOP_INSTRUMENT_CONTRACT_IMPLEMENTATION_MISMATCH",
+  "claim_status": "BURNED_INSTRUMENT_PREFLIGHT_NO_CLAIM",
+  "audited_branch": "codex/q-r1-comparator-reconciliation",
+  "frozen_contract_commit": "f5a8e1fa5def497f5375b7a43797258819fcf07d",
+  "execution_driver_commit": "688a53d03e0f48bfae8c500717d2b817bc39d250",
+  "contract_sha256": "7baea13353fc5d1a5038aae41c99c97bd6959342a78843d5aa43f4092b0310e9",
+  "vps_source_directory": "/home/ubuntu/scres-qr1-constraint-aware",
+  "vps_source_has_git_metadata": false,
+  "full_workers_started_at_utc": "2026-07-26T20:10:17Z",
+  "workers_terminated": true,
+  "full_result_files_created": 0,
+  "passed_preflights": {
+    "rho_identity": true,
+    "exact_lookup_value_agreement_abs_delta": 0.0,
+    "declared_factor_levels_present": true,
+    "contract_hash_matches_receipt": true
+  },
+  "blocking_discrepancies": [
+    "contract selection split is 16 roots but full runtime used --bar-roots 4",
+    "smoke static bar used one selection root",
+    "training budget and RecurrentPPO hyperparameters are not frozen by the contract",
+    "seed sharding code was committed after workers launched",
+    "runner omits kappa=0.50 and cannot adjudicate iid or full dose response",
+    "runner does not evaluate retained structured MPC and cannot compute neural premium",
+    "runner does not implement checkpoint selection",
+    "runner omits mandatory service disclosures",
+    "no development-opening receipt or immutable execution commit exists"
+  ],
+  "burned_development": {
+    "training_history_roots": [
+      7662001,
+      7662040
+    ],
+    "checkpoint_selection_history_roots": [
+      7662101,
+      7662116
+    ],
+    "optimizer_seeds": [
+      7663001,
+      7663005
+    ]
+  },
+  "confirmation": {
+    "history_roots": [
+      7662201,
+      7662264
+    ],
+    "opened": false
+  },
+  "remote_artifacts_preserved": [
+    "results/q_r1/factorial_v3/vps_smoke/static_bar.json",
+    "results/q_r1/factorial_v3/vps_smoke/result.json",
+    "results/q_r1/factorial_v3/logs/seed_idx0.log",
+    "results/q_r1/factorial_v3/logs/seed_idx1.log",
+    "results/q_r1/factorial_v3/logs/seed_idx2.log",
+    "results/q_r1/factorial_v3/logs/seed_idx3.log",
+    "results/q_r1/factorial_v3/logs/seed_idx4.log"
+  ],
+  "required_next_state": "new fully implemented and frozen successor with fresh development roots; confirmation remains sealed"
+}
