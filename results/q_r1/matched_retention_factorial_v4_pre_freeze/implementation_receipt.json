@@ -1,0 +1,79 @@
+{
+  "schema_version": "q_r1_matched_retention_factorial_v4_pre_freeze_implementation_v1",
+  "status": "IMPLEMENTATION_READY_FOR_EXTERNAL_PASS_PRE_FREEZE",
+  "scientific_claim_status": "NO_CLAIM",
+  "contract_status": "DRAFT_PROSPECTIVE_UNOPENED_NOT_AUTHORITY",
+  "freeze_executed": false,
+  "fresh_development_roots_opened": false,
+  "confirmation_roots_opened": false,
+  "implementation": {
+    "commit": "1d7a306ddcd77ed3ce37ee90a0647b06a29b18c3",
+    "branch": "codex/q-r1-oracle-v2",
+    "contract_sha256": "bb92a2cbfcd3691a77f7f9ab8a269d7ffab65823d37b41f70d0b13795d92e764",
+    "static_bar_completion_receipt_required": true,
+    "worker_static_bar_hash_match_required": true,
+    "over_cap_unit_receipt_required": true,
+    "over_cap_unit_action_eligible": false,
+    "resume_supported": false,
+    "failed_attempt_recovery_policy_frozen_in_draft": true
+  },
+  "optimizer_seed_custody": {
+    "instrument_preflight_seed": 7672001,
+    "instrument_preflight_seed_status": "BURNED_INSTRUMENT_ONLY_NOT_DEVELOPMENT_ELIGIBLE",
+    "fresh_development_optimizer_seeds": [
+      7672101,
+      7672102,
+      7672103,
+      7672104,
+      7672105
+    ],
+    "fresh_development_optimizer_seeds_opened": false
+  },
+  "negative_tests": {
+    "altered_static_bar_rejected": true,
+    "valid_bar_with_wrong_completion_receipt_rejected": true,
+    "two_workers_cannot_accept_different_static_bar_hashes": true,
+    "individual_over_cap_receipt_preserves_prior_rows": true,
+    "existing_output_directory_rejected": true,
+    "focal_test_result": "50 passed",
+    "lint_result": "ruff clean"
+  },
+  "burned_preflight": {
+    "claim_status": "BURNED_INSTRUMENT_PREFLIGHT_NO_CLAIM",
+    "output_directory": "/private/tmp/q_r1_factorial_v4_preflight_custody_v2_final_20260726",
+    "execution_commit": "1d7a306ddcd77ed3ce37ee90a0647b06a29b18c3",
+    "worktree_clean_at_opening": true,
+    "elapsed_seconds": 300.9920166669981,
+    "same_checkpoint_hash_all_neural_arms": true,
+    "missing_service_rows": 0,
+    "structured_comparator_rows": 6,
+    "structured_cache_entries": 1,
+    "structured_cache_reuse": 5,
+    "structured_elapsed_seconds": 289.0205536249996,
+    "confirmation_roots_opened": false
+  },
+  "artifact_sha256": {
+    "result.json": "59cbe38b4b7557d6c8a5d63e248076ffdd11da8c1ca0ac0950712a3a4fa8a63f",
+    "rows.json": "239b5591c3031cd7c133014058b5751473845797035422ca78a9f2bab9964693",
+    "instrument_preflight_receipt.json": "ad5e2182f60bf479698b237b6fc5f2a2e4cc5a0a77f64d4831d67c87927a74e3",
+    "static_bar.json": "6e8975dda8e8f0fb63fc6f4a89d3c93eaadc3799aa8f4bb175d9558eb6e31e76",
+    "static_bar_completion_receipt.json": "b5b7c3d1db2244358b9787376bf4d547693421097242a7de24601aecf5f436a3",
+    "checkpoint_progress.json": "6d5c3647105078698daa67c6a222e73d01d2eb2aaafd2e2d6c8957286bbcac85",
+    "checkpoint_rows.json": "9ac2fd002be18167551279096153bae8114d58d2a893fdc7dc321deabded6b6b",
+    "structured_progress.json": "f699691f9697810685931c749f98a3faa92aa62b2cef265739b5eb23803a938d",
+    "structured_rows.json": "ada298b7ebe68be29e21506f08089a27d6af3a95a72769de65ff1a34f7f919f2"
+  },
+  "next_gate": {
+    "required_status": "PASS_PRE_FREEZE",
+    "issuer": "independent_external_reviewer",
+    "scope": [
+      "static-bar completion receipt binding",
+      "over-cap rejection receipt",
+      "five negative tests",
+      "preflight-seed separation",
+      "failed-worker recovery policy"
+    ],
+    "on_pass": "Mechanically freeze the reviewed contract bytes and emit a separate immutable freeze receipt.",
+    "on_fail": "Keep the contract in DRAFT and do not open fresh roots."
+  }
+}
