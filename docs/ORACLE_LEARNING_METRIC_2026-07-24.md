@@ -192,6 +192,29 @@ matched-rights design is preregistered in
 **C4 — scope of the ceiling claim.** "Bounds every policy, trained or not" is now stated with its
 three qualifiers: that action space, those campaigns, that threshold.
 
+**C5 — the static bar had been selected in-sample, and that was the deepest defect.** The bar
+was the calendar maximizing the mean exact label across the very 48 campaigns it was then used
+to grade. Selecting it honestly, on a disjoint calibration block of 96 campaigns
+(`scripts/freeze_static_bar_out_of_sample.py`, artifact
+`results/oracle_capture_v1/static_bar_out_of_sample.json`), changes the calendar
+([0,0,3,3,3,3,3,3] -> [2,3,3,1,0,0,0,0]), lowers the bar from 0.7376 to 0.6894, and moves every
+headline number:
+
+| | in-sample bar (withdrawn) | deployable bar (primary) |
+|---|---|---|
+| campaigns with zero headroom | 27 / 48 | **0 / 48** |
+| retained belief-MPC capture | +0.743 (LCB +0.554) | **+0.838 (LCB +0.707)** |
+| belief-reset MPC capture | -0.099 | **+0.305 (LCB +0.209)** |
+
+Two claims I had emphasized do not survive. "In 27 of 48 campaigns a static calendar is already
+exactly optimal, so there is nothing to learn in half the population" was an artefact of
+hindsight: under an honest bar the count is zero. And the corrected-but-still-wrong C2 reading
+("feedback without retention captures nothing, and its value is restraint") is superseded: with a
+deployable bar reactivity alone captures a solid +0.305, and retention multiplies it by about 2.7
+to +0.838. The in-sample calendar is retained only as an adversarial hindsight reference, where it
+captures +0.368 -- less than the retained controller, which is itself a useful result: no fixed
+plan reproduces state-dependent control even when chosen with full knowledge of the campaigns.
+
 **Not changed:** the ceiling is exact, the lookup grading is exact, the retained arm's 42/48
 exact optima stand, and the tie-plateau finding stands. What changed is what may be *concluded*
 from the pilot, and one substantive claim about the reset arm that was wrong in the reader's

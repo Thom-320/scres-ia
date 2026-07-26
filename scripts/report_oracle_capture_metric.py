@@ -53,9 +53,19 @@ def main() -> int:
     static_calendar = index_to_calendar(static_row)
     constants = constant_action_indices()
 
+    # PRIMARY bar: chosen on a disjoint calibration block, i.e. what a planner could
+    # actually have fixed in advance. The in-sample bar below is kept only as an
+    # adversarial hindsight reference -- selecting it on the graded campaigns inflates it
+    # (0.7376 vs 0.6894) and manufactures 27 "already optimal" campaigns that do not
+    # survive honest selection.
+    oos = json.loads((OUT / "static_bar_out_of_sample.json").read_text())
+    oos_row = int(oos["frontier_row"])
     bars = {
+        "deployable_static_out_of_sample": {c.key: float(c.labels[oos_row])
+                                            for c in campaigns},
         "uninformed_expectation": {c.key: float(c.labels.mean()) for c in campaigns},
-        "best_static_open_loop": {c.key: float(c.labels[static_row]) for c in campaigns},
+        "hindsight_static_in_sample": {c.key: float(c.labels[static_row])
+                                       for c in campaigns},
     }
     for action, row in constants.items():
         bars[f"constant_action_{action}"] = {c.key: float(c.labels[row]) for c in campaigns}
@@ -66,7 +76,9 @@ def main() -> int:
         c.key: index_to_calendar(c.frozen_indices["reset"]) for c in campaigns}
     policies["frozen_c256_mpc_retained"] = {
         c.key: index_to_calendar(c.frozen_indices["retained"]) for c in campaigns}
-    policies["best_static_open_loop"] = {c.key: static_calendar for c in campaigns}
+    policies["deployable_static_out_of_sample"] = {
+        c.key: index_to_calendar(oos_row) for c in campaigns}
+    policies["hindsight_static_in_sample"] = {c.key: static_calendar for c in campaigns}
     for action, row in constants.items():
         policies[f"constant_action_{action}"] = {
             c.key: index_to_calendar(row) for c in campaigns}
@@ -137,7 +149,16 @@ def main() -> int:
             "ceiling_max": float(ceilings.max()),
         },
         "bars": {
-            "best_static_open_loop": {
+            "deployable_static_out_of_sample": {
+                "calendar": oos["calendar"], "frontier_row": oos_row,
+                "mean_label": float(np.mean([bars["deployable_static_out_of_sample"][c.key]
+                                             for c in campaigns])),
+                "selected_on": oos["calibration_block"],
+                "definition": "PRIMARY bar: the best fixed calendar selectable WITHOUT "
+                              "seeing the evaluation campaigns; zero-headroom campaigns "
+                              "under it: see n_zero_headroom_campaigns",
+            },
+            "hindsight_static_in_sample": {
                 "calendar": static_calendar, "frontier_row": static_row,
                 "mean_label": static_mean,
                 "definition": "single calendar maximizing the mean exact label across the "
@@ -157,13 +178,13 @@ def main() -> int:
     print(f"oracle ceiling mean {ceilings.mean():.4f} "
           f"[{ceilings.min():.4f}, {ceilings.max():.4f}] over {len(campaigns)} campaigns")
     print(f"best static open-loop calendar {static_calendar} mean {static_mean:.4f}\n")
-    print(f"{'policy':38} {'pooled vs static':>18} {'per-campaign':>16} "
+    print(f"{'policy':38} {'pooled vs deployable':>21} {'conditional':>12} "
           f"{'opt':>4} {'ties':>5}")
     for name, entry in sorted(report.items(), key=lambda kv:
-                              -kv[1]["best_static_open_loop"]["pooled"]["pooled_ratio"]):
-        s = entry["best_static_open_loop"]
+                              -kv[1]["deployable_static_out_of_sample"]["pooled"]["pooled_ratio"]):
+        s = entry["deployable_static_out_of_sample"]
         print(f"{name[:38]:38} {s['pooled']['pooled_ratio']:+.4f}/{s['pooled']['lcb95']:+.4f} "
-              f"{s['per_campaign']['mean']:+.4f} (n{s['per_campaign']['n_campaigns']:>2}) "
+              f"{s['pooled']['conditional_ratio']:+.4f} "
               f"{entry['absolute']['exact_optimum_hits']:>4} "
               f"{entry['vs_retained_arm']['of_which_exact_value_ties']:>5}")
     return 0
