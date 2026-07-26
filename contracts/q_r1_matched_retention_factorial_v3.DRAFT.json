@@ -1,0 +1,142 @@
+{
+  "schema_version": "q_r1_matched_retention_factorial_v3",
+  "status": "DRAFT_PROSPECTIVE_UNOPENED_NOT_AUTHORITY",
+  "supersedes": "q_r1_matched_retention_curve_v2",
+  "reason_for_successor": "The v2 physical contract omitted within-campaign rho and development opened under rho=0.75 instead of the canonical rho=0.90.",
+  "north_star": "Estimate a deployable neural premium over the strongest tested retained structured controller without conflating explicit retained context, recurrent hidden-state retention, physics, or information rights.",
+  "physical_contract": {
+    "within_campaign_regime_persistence_rho": 0.9,
+    "cross_campaign_knowledge_persistence_kappa_cells": {
+      "iid_null": 0.5,
+      "dose": 0.75,
+      "primary": 0.9
+    },
+    "dominant_product_share": 0.9,
+    "campaigns_per_metaepisode": 12,
+    "decisions_per_campaign": 8,
+    "physical_reset_between_campaigns": "complete immutable FullDESSkeleton replacement",
+    "objective": "early_ret_complete_cohort",
+    "ret_excel_formula_changed": false
+  },
+  "causal_information": {
+    "retained_prior_path_definition": "computed only from realized ordered-product identities in preceding campaigns, rho=0.90, dominant share=0.90, and the frozen kappa cell",
+    "retained_prior_path_policy_independent": true,
+    "forbidden": [
+      "true latent regime",
+      "history root as a feature",
+      "tape seed as a feature",
+      "future demand",
+      "future shocks",
+      "clairvoyant ceiling during action selection"
+    ],
+    "learner_and_mpc_receive_the_same_explicit_prior_when_the_prior_factor_is_retained": true,
+    "same_raw_causal_history": true
+  },
+  "evaluation_factorial_same_frozen_checkpoint": [
+    {
+      "id": "P0_H0",
+      "explicit_prior": 0.5,
+      "hidden_state_at_campaign_boundary": "reset",
+      "interpretation": "neural reset reference"
+    },
+    {
+      "id": "P1_H0",
+      "explicit_prior": "policy-independent retained_prior_path",
+      "hidden_state_at_campaign_boundary": "reset",
+      "interpretation": "structured retained-context value available to the same neural checkpoint"
+    },
+    {
+      "id": "P0_H1",
+      "explicit_prior": 0.5,
+      "hidden_state_at_campaign_boundary": "retained",
+      "interpretation": "raw recurrent-memory value without the explicit Bayesian summary"
+    },
+    {
+      "id": "P1_H1",
+      "explicit_prior": "policy-independent retained_prior_path",
+      "hidden_state_at_campaign_boundary": "retained",
+      "interpretation": "canonical retained neural arm with matched structured-context rights"
+    }
+  ],
+  "estimands": {
+    "explicit_context_value": "P1_H0 - P0_H0",
+    "recurrent_residual_given_context": "P1_H1 - P1_H0",
+    "raw_recurrent_memory_value": "P0_H1 - P0_H0",
+    "interaction": "(P1_H1 - P1_H0) - (P0_H1 - P0_H0)",
+    "total_retained_neural_treatment": "P1_H1 - P0_H0",
+    "neural_premium": "P1_H1 - strongest_tested_retained_structured_controller_with_same_prior_and_history"
+  },
+  "training_protocol": {
+    "canonical_training_arm": "P1_H1",
+    "same_checkpoint_used_for_all_four_factorial_evaluations": true,
+    "weights_frozen_during_evaluation": true,
+    "checkpoint_selection_uses_only_selection_split": true,
+    "confirmation_evaluated_once": true,
+    "separate_weights_retained_vs_reset_training": "allowed only as a secondary learnability experiment and never substituted for the same-checkpoint factorial"
+  },
+  "comparators": [
+    "calibration-selected static calendar frozen before test",
+    "reset structured controller",
+    "retained structured controller with the same retained prior",
+    "same-checkpoint four-arm neural factorial",
+    "post-hoc exact clairvoyant ceiling for grading only"
+  ],
+  "data_splits": {
+    "training_history_roots": [
+      7662001,
+      7662040
+    ],
+    "checkpoint_selection_history_roots": [
+      7662101,
+      7662116
+    ],
+    "reserved_confirmation_history_roots": [
+      7662201,
+      7662264
+    ],
+    "optimizer_seeds": [
+      7663001,
+      7663002,
+      7663003,
+      7663004,
+      7663005
+    ],
+    "opened": false
+  },
+  "static_and_oracle_protocol": {
+    "static_calendar_selected_out_of_sample": true,
+    "selection_split": "checkpoint_selection_history_roots",
+    "static_calendar_frozen_before_confirmation": true,
+    "fresh_exact_frontiers_for_confirmation": true,
+    "hindsight_static_reported_only_as_adversarial_secondary": true,
+    "oracle_action_eligible": false
+  },
+  "gates": {
+    "instrument": [
+      "rho is exactly 0.90 in contract, runtime receipt, skeleton metadata and exact-frontier metadata",
+      "kappa is logged separately and never aliases rho",
+      "retained prior is identical for learner and retained MPC",
+      "factorial arms share weights, skeletons, raw history, actions, compute and evaluation order",
+      "only the declared prior and hidden-state factors differ",
+      "confirmation roots remain sealed until a prospective power audit with SESOI 0.01"
+    ],
+    "retained_learning": {
+      "sesoi": 0.01,
+      "lcb95_positive": true,
+      "iid_absolute_effect_at_most": 0.005,
+      "dose_response": true
+    },
+    "neural_premium": {
+      "lcb95_at_least": 0.01,
+      "same_information_rights": true,
+      "same_physics": true,
+      "service_reported_as_mandatory_secondary_not_garrido_gate": true
+    }
+  },
+  "boundaries": {
+    "kan_authorized": false,
+    "submission_a_modified": false,
+    "no_new_roots_may_open_until_status_is_frozen_and_a_freeze_receipt_exists": true,
+    "no_claim_from_v2_or_from_the_alternate_separate_weights_development_curve": true
+  }
+}

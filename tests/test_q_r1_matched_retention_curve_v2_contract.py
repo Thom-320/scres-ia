@@ -19,6 +19,14 @@ COLLISION = (
     / "research/paper2_exhaustive_search"
     / "q_r1_matched_retention_curve_v2_seed_collision_audit.json"
 )
+INCIDENT = (
+    ROOT
+    / "results/q_r1/matched_retention_curve_v2"
+    / "instrument_failure_rho_kappa_conflation.json"
+)
+SUCCESSOR_DRAFT = (
+    ROOT / "contracts/q_r1_matched_retention_factorial_v3.DRAFT.json"
+)
 
 
 def _range(bounds: list[int]) -> set[int]:
@@ -75,3 +83,35 @@ def test_freeze_receipt_matches_contract_bytes() -> None:
     assert receipt["contract_sha256"] == digest
     assert receipt["frozen_before_training_roots_opened"] is True
     assert receipt["training_roots_opened"] is False
+
+
+def test_v2_is_superseded_by_instrument_failure() -> None:
+    incident = json.loads(INCIDENT.read_text())
+    assert incident["status"] == "STOP_INSTRUMENT_INVALID_RHO_KAPPA_CONFLATION"
+    assert incident["claim_status"] == "BURNED_INSTRUMENT_FAILURE_NO_CLAIM"
+    assert (
+        incident["defect"]["observed_within_campaign_regime_persistence_rho"]
+        == 0.75
+    )
+    assert (
+        incident["defect"]["required_within_campaign_regime_persistence_rho"]
+        == 0.90
+    )
+    assert incident["custody"]["reserved_confirmation_history_roots_opened"] is False
+    assert incident["required_successor"]["new_contract_required"] is True
+
+
+def test_v3_draft_separates_rho_kappa_and_retention_factors() -> None:
+    successor = json.loads(SUCCESSOR_DRAFT.read_text())
+    assert successor["status"] == "DRAFT_PROSPECTIVE_UNOPENED_NOT_AUTHORITY"
+    physical = successor["physical_contract"]
+    assert physical["within_campaign_regime_persistence_rho"] == 0.90
+    assert physical["cross_campaign_knowledge_persistence_kappa_cells"] == {
+        "iid_null": 0.5,
+        "dose": 0.75,
+        "primary": 0.9,
+    }
+    arms = {arm["id"] for arm in successor["evaluation_factorial_same_frozen_checkpoint"]}
+    assert arms == {"P0_H0", "P1_H0", "P0_H1", "P1_H1"}
+    assert successor["data_splits"]["opened"] is False
+    assert successor["boundaries"]["kan_authorized"] is False
