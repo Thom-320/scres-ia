@@ -1,9 +1,14 @@
-"""Oracle capture metric: what fraction of the clairvoyant ceiling a policy captures.
+"""Clairvoyant-headroom diagnostic: what fraction of an exact ceiling a policy captures.
 
-Requested by Garrido (meeting 2026-07-22) as the explicit learning metric. For every
-already-run campaign the exact clairvoyant maximum is known by exhaustive enumeration of
-all 4^8 = 65,536 weekly-allocation calendars, so any policy is graded by table lookup —
-no re-simulation, no estimation error in the ceiling.
+Requested by Garrido (meeting 2026-07-22) as an explicit way to measure progress over
+training.  The instrument has two deliberately separate uses:
+
+1. controller headroom accounting, including structured controllers that are not trained;
+2. training-progress curves for learned policies.
+
+For every already-run campaign the exact clairvoyant maximum is known by exhaustive
+enumeration of all 4^8 = 65,536 weekly-allocation calendars, so a realized calendar is
+graded by table lookup with no re-simulation and no numerical error in the ceiling.
 
 Definition. For campaign i with exact label array L_i over the 65,536 calendars:
 
@@ -16,8 +21,9 @@ eta = 1 means the policy matched a decision-maker who knew the whole future; eta
 it did no better than the static bar; eta < 0 means it did worse. Campaign-level ratios are
 aggregated clustered on history_root (the resampling unit), with a one-sided LCB95.
 
-Learning is CONFIRMED, per Garrido's criterion, only when the capture ratio against the
-strongest static bar is positive with its lower confidence bound above zero.
+Beating the static bar demonstrates state-dependent decision value.  It is not, by itself,
+evidence that a controller was trained or that it retained knowledge between campaigns.
+Those claims require the corresponding treatment and matched information rights.
 
 The ceiling is a valid upper bound for ANY policy in this action space, including a policy
 with privileged information, which is what makes it a fair grading device rather than a
@@ -152,8 +158,10 @@ def pooled_capture(campaigns: list[Campaign], calendars: dict[tuple, list[int]],
 
     The per-campaign ratio is undefined where the bar already sits at the ceiling (in this
     burned set the best static calendar is exactly optimal in 27 of 48 campaigns, so those
-    are dropped from the per-campaign mean). This pooled form keeps every campaign: a
-    zero-headroom campaign contributes 0 to both sums and so neither helps nor hurts.
+    are dropped from the per-campaign mean). This pooled form keeps every campaign. A
+    zero-headroom campaign contributes zero to the denominator, but contributes V-B to the
+    numerator. It therefore neither helps nor hurts only when the evaluated policy also
+    matches the ceiling; otherwise it correctly penalizes a regression below the static bar.
     """
     rows = []
     for c in campaigns:
@@ -173,13 +181,17 @@ def pooled_capture(campaigns: list[Campaign], calendars: dict[tuple, list[int]],
         return num / den if den > 1e-12 else float("nan")
 
     boot = np.array([ratio(rng.choice(roots, len(roots), True)) for _ in range(BOOT_DRAWS)])
-    zero_headroom = sum(1 for _, _, d in rows if d <= 1e-12)
+    zero_headroom_rows = [(n, d) for _, n, d in rows if d <= 1e-12]
     return {
         "pooled_ratio": ratio(roots),
         "lcb95": float(np.nanquantile(boot, 0.05)),
         "ucb95": float(np.nanquantile(boot, 0.95)),
         "n_campaigns": len(rows),
-        "n_zero_headroom_campaigns": zero_headroom,
+        "n_zero_headroom_campaigns": len(zero_headroom_rows),
+        "zero_headroom_numerator": float(sum(n for n, _ in zero_headroom_rows)),
+        "n_zero_headroom_regressions": int(
+            sum(1 for n, _ in zero_headroom_rows if n < -1e-12)
+        ),
     }
 
 

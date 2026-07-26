@@ -1,0 +1,48 @@
+{
+  "schema": "oracle_capture_interpretation_correction_v1",
+  "created_date": "2026-07-26",
+  "status": "CORRECTIVE_INTERPRETATION_NO_NEW_OUTCOME_CLAIM",
+  "display_name": "clairvoyant_headroom_and_training_progress_diagnostic",
+  "historical_learning_curve_sha256": {
+    "ppo_mlp": "e2d5c4c579185e1e7deafc37cb4f173e14758262e1cda38d4ee4263e0660d2c1",
+    "recurrent_ppo": "b7c5ef5fc79b85da77ab32e5434419d8b9737c01d833d20455ba434f469abbef"
+  },
+  "corrections": [
+    {
+      "id": "C1",
+      "before": "oracle learning metric",
+      "after": "clairvoyant-headroom and training-progress diagnostic",
+      "reason": "Structured controller headroom and trained learning are distinct estimands."
+    },
+    {
+      "id": "C2",
+      "before": "retained MPC mean ReT 0.7994",
+      "after": "retained MPC mean ReT 0.7990",
+      "exact_value": 0.7990351180455347
+    },
+    {
+      "id": "C3",
+      "before": "zero-headroom campaigns contribute zero to both pooled sums",
+      "after": "they contribute zero to the denominator and V-B to the numerator",
+      "reason": "A policy regression below an already-optimal static bar is intentionally penalized."
+    },
+    {
+      "id": "C4",
+      "before": "neural curves can be compared directly with retained MPC",
+      "after": "pilot has unmatched retention rights",
+      "facts": {
+        "retained_mpc_receives_cross_campaign_prior": true,
+        "neural_initial_belief_c": 0.5,
+        "recurrent_hidden_state_crosses_campaign_boundaries": false
+      }
+    },
+    {
+      "id": "C5",
+      "before": "C6 establishes a general architecture-independent impossibility",
+      "after": "C6 bounds only the tested action space and burned strata under its stated threshold",
+      "reason": "C6 is BURNED_DEVELOPMENT_NO_CLAIM and is not a global RL impossibility theorem."
+    }
+  ],
+  "historical_results_reopened": [],
+  "new_training_authorized": false
+}

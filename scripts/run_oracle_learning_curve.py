@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Stage 2 of the oracle metric: the learning curve Garrido asked for.
+"""Stage 2 pilot: training progress on the clairvoyant-headroom diagnostic.
 
 Trains a learner on campaigns built from a FRESH root block (7650001+) and, at fixed
 training-time checkpoints, rolls the deterministic policy out on the 48 burned campaigns
@@ -192,12 +192,21 @@ def main() -> int:
 
     payload = {
         "schema": "oracle_learning_curve_v1",
+        "display_name": "training_progress_pilot_unmatched_retention_rights",
         "claim_status": "BURNED_DEVELOPMENT_NO_CLAIM_METHODOLOGICAL",
         "created_at": datetime.now(timezone.utc).isoformat(),
         "architecture": args.arch,
         "objective": OBJECTIVE,
         "metric": "pooled capture = sum(V - best_static) / sum(ceiling - best_static) "
                   "over the 48 burned campaigns; ceiling exact by 4^8 enumeration",
+        "interpretation_boundary": {
+            "purpose": "instrument and training-progress pilot only",
+            "retention_rights_matched_to_retained_mpc": False,
+            "learner_initial_belief_c": 0.5,
+            "recurrent_state_crosses_campaign_boundaries": False,
+            "architecture_ranking_authorized": False,
+            "confirmatory_learning_claim_authorized": False,
+        },
         "training": {
             "root_block": [TRAIN_ROOT_START, TRAIN_ROOT_END],
             "n_training_campaigns": len(specs),

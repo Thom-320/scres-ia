@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Stage 1 of the oracle metric: grade every controller we already have calendars for.
+"""Stage 1 of the clairvoyant-headroom diagnostic.
 
 Everything here is an exact table lookup into the 48 enumerated 4^8 frontiers, so the
 ceiling carries no estimation error and no policy is re-simulated. Burned development
@@ -46,7 +46,6 @@ def index_to_calendar(index: int) -> list[int]:
 def main() -> int:
     campaigns = load_campaigns(FRONTIERS)
     by_key: dict[tuple, Campaign] = {c.key: c for c in campaigns}
-    rng = np.random.default_rng(BOOT_SEED)
 
     # ---- bars ---------------------------------------------------------------
     static_row, static_mean = best_static_calendar(campaigns)
@@ -122,11 +121,19 @@ def main() -> int:
 
     out = {
         "schema": "oracle_capture_metric_v1",
+        "display_name": "clairvoyant_headroom_diagnostic",
         "claim_status": "BURNED_DEVELOPMENT_NO_CLAIM_METHODOLOGICAL",
         "created_at": datetime.now(timezone.utc).isoformat(),
         "requested_by": "Garrido, meeting 2026-07-22: explicit learning metric = % of the "
                         "post-hoc clairvoyant maximum captured; learning confirmed only if "
                         "it beats the best static policy",
+        "interpretation_boundary": {
+            "structured_controller": "capture above the static bar establishes state-dependent "
+                                     "decision value, not trained learning",
+            "trained_policy": "training progress requires a trained-vs-untrained contrast",
+            "retained_learning": "retention requires matched retained/reset information rights "
+                                 "across physical campaign resets",
+        },
         "objective": "early_ret_complete_cohort",
         "oracle": {
             "method": "exhaustive enumeration of all 4^8 = 65,536 weekly calendars per "

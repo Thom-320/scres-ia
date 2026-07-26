@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Figure M5 — the oracle learning metric (Garrido's explicit learning measure).
+"""Figure M5 — clairvoyant headroom and an unmatched-rights training pilot.
 
 Panel (a): where each controller sits between the best static policy and the exact
 clairvoyant ceiling, on the same 48 already-run campaigns.
-Panel (b): capture ratio against training time — the learning curve, with the static bar
-at 0 and the clairvoyant ceiling at 1.
+Panel (b): capture ratio against training time for a methodological pilot whose neural
+arms do not have the cross-campaign retained prior available to the retained MPC.
 
 Style and palette inherited from build_figures.py (dataviz six-checks validated):
 blue = learned, orange = structured feedback, green = static/frontier, ink/muted text.
@@ -18,7 +18,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 OUT = Path(__file__).resolve().parent
-RES = Path("/private/tmp/scres-q-r1-retained-belief-discovery-v2/results/oracle_capture_v1")
+ROOT = Path(__file__).resolve().parents[2]
+RES = ROOT / "results/oracle_capture_v1"
 INK, MUTED, BORDER = "#1A1A1A", "#5A6570", "#31415a"
 SURF, GRID = "#FFFFFF", "#DCE3EA"
 BLUE, ORANGE, GREEN, PURPLE = "#2B6CB0", "#D9642A", "#2F9E77", "#9C5BB8"
@@ -113,7 +114,8 @@ lo = min(-1.6, min(mat.min() for mat in [np.array([[p["pooled_ratio"] for p in c
 axb.set_ylim(lo - 0.18, 1.15)
 axb.set_xlabel("Training experience (environment timesteps)", fontsize=7.2, color=INK)
 axb.set_ylabel("Fraction of clairvoyant headroom captured", fontsize=7.2, color=INK)
-axb.set_title("(b) Learning curve on the oracle metric", fontsize=7.8, weight="bold",
+axb.set_title("(b) Training-progress pilot (unmatched retention rights)",
+              fontsize=7.8, weight="bold",
               color=INK, loc="left", pad=5)
 axb.grid(True, color=GRID, lw=0.4, zorder=0)
 axb.set_axisbelow(True)

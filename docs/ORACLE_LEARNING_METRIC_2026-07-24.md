@@ -1,4 +1,4 @@
-# The oracle learning metric (requested by Garrido, meeting 2026-07-22)
+# Clairvoyant-headroom and training-progress diagnostic
 
 **What Garrido asked for.** An explicit learning metric, measured over time: run the episodes,
 compute the clairvoyant maximum resilience for each *already-run* episode (valid post-hoc only,
@@ -8,6 +8,12 @@ captures. Learning is confirmed only if the model beats the best static policy.
 **Status.** Implemented and computed. `BURNED_DEVELOPMENT_NO_CLAIM_METHODOLOGICAL` — the metric
 is an instrument, evaluated on the burned development campaigns (roots 7570801–24); it opens no
 sealed block and asserts no new confirmatory claim.
+
+**Correction dated 2026-07-26.** The diagnostic separates two questions that the original title
+collapsed: structured controller headroom and progress caused by training. The neural panel is
+a pilot with unmatched retention rights: the retained MPC receives a cross-campaign prior,
+whereas both neural policies start each campaign at belief 0.5 and the recurrent hidden state is
+reset. It therefore cannot rank neural learning against retained structured knowledge.
 
 - Metric module: `supply_chain/oracle_capture.py`
 - Stage 1 (all existing controllers): `scripts/report_oracle_capture_metric.py`
@@ -36,7 +42,9 @@ Two aggregations are reported, because they answer different questions:
 - **per-campaign η**, clustered on `history_root` with one-sided LCB95. Undefined where the bar
   already sits at the ceiling, so it is conditional on the campaigns that have headroom.
 - **pooled capture** `Σ(V_i − B_i) / Σ(C_i − B_i)` over **all** 48 campaigns. A zero-headroom
-  campaign contributes 0 to both sums, so nothing is discarded. This is the headline number.
+  campaign contributes zero to the denominator but still contributes `V_i − B_i` to the
+  numerator. It is neutral only when the evaluated policy also matches the ceiling; otherwise
+  it correctly penalizes a regression below the static bar.
 
 ## 2. The bars
 
@@ -58,7 +66,7 @@ Ceiling mean **0.8203** (range 0.7487–0.8768) over the 48 campaigns. Best stat
 | controller | mean ReT | pooled capture vs static (LCB95) | per-campaign η (n=21) | exact optima |
 |---|---|---|---|---|
 | Clairvoyant ceiling | 0.8203 | 1.0000 | 1.0000 | 48/48 |
-| **Retained belief-MPC** | **0.7994** | **+0.743 (+0.554)** | +0.789 | **42/48** |
+| **Retained belief-MPC** | **0.7990** | **+0.743 (+0.554)** | +0.789 | **42/48** |
 | Service-aware variants (9) | 0.796–0.799 | +0.692 … +0.726 | +0.764 … +0.789 | 39–41/48 |
 | Best static calendar | 0.7376 | 0.000 | 0.000 | 27/48 |
 | Belief-reset MPC | 0.7293 | −0.100 (−0.617) | +0.326 | 0/48 |
@@ -68,9 +76,10 @@ Ceiling mean **0.8203** (range 0.7487–0.8768) over the 48 campaigns. Best stat
 Four findings worth reporting to Garrido:
 
 1. **The retained belief-MPC captures 74% of the clairvoyant headroom** over a hard static bar,
-   LCB95 +0.554, and hits the *exact* optimum in 42 of 48 campaigns. On his criterion, this
-   controller demonstrably learns: it beats the best static policy with the lower bound well
-   clear of zero.
+   LCB95 +0.554, and hits the *exact* optimum in 42 of 48 campaigns. This establishes
+   state-dependent decision value on burned development campaigns. Because the controller is
+   Bayesian and not trained by gradient updates, the diagnostic does not by itself establish
+   trained neural learning.
 2. **Feedback alone is not enough.** The belief-reset MPC — same machinery, same forecast
    horizon, but no knowledge carried between campaigns — captures **nothing** in the pooled
    sense (−0.100) and never once reaches the exact optimum. What buys the gain is *retained*
@@ -104,7 +113,7 @@ Two architectures were run at 5 seeds each, 48,000 timesteps (6,000 episodes), 1
 checkpoints per seed: PPO with an MLP policy, and RecurrentPPO with an LSTM policy (the
 incumbent in the three-model comparison).
 
-### Result: learning is visible, and it does not reach the static bar
+### Result: the pilot shows training progress without crossing the static bar
 
 | checkpoint | PPO+MLP capture (mean of 5) | RecurrentPPO capture (mean of 5) |
 |---|---|---|
@@ -115,13 +124,15 @@ incumbent in the three-model comparison).
 | 48,000 | −0.630 | −1.190 |
 | seeds above the static bar at the end | **0 / 5** | **0 / 5** |
 
-Two things are simultaneously true, and both belong in the paper:
+Two things are simultaneously visible in this methodological pilot:
 
-1. **The learners do learn.** PPO+MLP improves from −1.30 to −0.47 within 15,000 timesteps, and
+1. **Training changes performance in the expected direction on average.** PPO+MLP improves from
+   −1.30 to −0.47 within 15,000 timesteps, and
    the number of *distinct* calendars it produces across the 48 campaigns rises from 8 to about
    17–21 — it is conditioning its allocation on the observed state, not settling on a constant.
-   RecurrentPPO improves too, later and less (−1.96 → −1.19). The metric registers learning
-   cleanly, which is exactly what it was built to do.
+   RecurrentPPO improves later and less (−1.96 → −1.19). This is descriptive evidence that the
+   instrument registers training progress; a confirmatory learning claim requires a fresh
+   holdout and paired trained-versus-untrained inference.
 2. **Neither crosses the bar.** At Garrido's criterion — beat the best static policy — learning
    is **not confirmed** for either learner at this budget: 0 of 10 seeds ends above zero, while
    the structured retained belief-MPC sits at **+0.743**. PPO+MLP also plateaus by ~15,000
@@ -131,11 +142,10 @@ Two things are simultaneously true, and both belong in the paper:
 **What this does and does not license.** It licenses: "on this decision problem, at this budget,
 the trained policies improve steadily but remain below a hard static bar that a structured
 belief controller clears by a wide margin". It does **not** license any ranking of MLP versus
-LSTM (library-default hyperparameters, no tuning, small budget), nor a general claim that RL
-cannot succeed here. The general claim is already established far more strongly and
-architecture-independently by the exact ceiling analysis: the C6 gate enumerated the finer
-8⁸ = 16,777,216 per-batch action space and found no stratum where the ceiling itself clears the
-gate over the frozen controller, which bounds *every* policy, trained or not.
+LSTM (library-default hyperparameters, no tuning, small budget), a comparison with the retained
+MPC under equal information, nor a general claim that RL cannot succeed here. The C6 analysis
+is itself `BURNED_DEVELOPMENT_NO_CLAIM`; it bounds only the tested per-batch action space and
+burned strata under its stated threshold. It is not a global impossibility result.
 
 ## 5. Why this metric is worth the paper's space
 
@@ -147,6 +157,8 @@ statement, and it makes a null result *informative*: when the ceiling itself sit
 bar, the correct engineering conclusion is not to train a network, and the metric says so with
 a number instead of a shrug.
 
-It also gives Garrido what he pressed for in a form that survives review: learning is confirmed
-by a lower confidence bound above a hard static bar, measured over training time, on episodes
-whose optimum is known exactly.
+It also gives Garrido the requested measurement framework in a form that can survive review:
+progress is measured against a hard static bar and an exact post-hoc ceiling. A future
+confirmatory curve must give the learner and retained MPC the same causal history, retain the
+recurrent state only in the retained arm, freeze checkpoint selection before fresh evaluation,
+and keep the weights fixed during that evaluation.
