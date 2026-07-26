@@ -41,7 +41,14 @@ CONTRACT_PATH = ROOT / "contracts/q_r1_matched_retention_curve_v2.json"
 RECEIPT_PATH = (
     ROOT / "contracts/q_r1_matched_retention_curve_v2_freeze_receipt.json"
 )
-REGIME_PERSISTENCE = 0.75
+# CORRECTED 2026-07-26: was 0.75, which is a value of KAPPA (cross-campaign knowledge
+# persistence, strata 0.75/0.90), not of RHO (within-campaign regime persistence). Every
+# enumerated frontier, the frozen Pareto and the C6 gate use rho = 0.90, so the previous
+# value built campaigns that were different physical objects and could not be graded against
+# the exact ceilings: rebuilding history 7570801 campaign 6 gives skeleton 1ab4ec34... at
+# rho=0.90 and 35e0d189... at rho=0.75, and the pre-correction rows carry 35e0d189...
+# The frozen contract never declares rho, so its bytes and freeze receipt remain valid.
+REGIME_PERSISTENCE = 0.90
 DOMINANT_SHARE = 0.90
 
 
