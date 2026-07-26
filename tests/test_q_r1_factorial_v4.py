@@ -80,6 +80,7 @@ def test_structured_pair_emits_both_arms_and_mandatory_ledger() -> None:
         ),
         calendar_builder=fake_builder,
         calendar_evaluator=fake_evaluator,
+        cache={},
     )
     assert len(rows) == 24
     assert {row["arm"] for row in rows} == {
@@ -88,6 +89,8 @@ def test_structured_pair_emits_both_arms_and_mandatory_ledger() -> None:
     }
     assert all(row["skeleton_sha256"] == history[row["campaign_index"]].skeleton.skeleton_sha256 for row in rows)
     assert all("service_loss_auc" in row for row in rows)
+    assert sum(not row["structured_cache_hit"] for row in rows) == 23
+    assert sum(row["structured_cache_hit"] for row in rows) == 1
     reset = [row for row in rows if row["arm"] == "structured_reset"]
     assert {row["explicit_prior"] for row in reset} == {0.5}
 

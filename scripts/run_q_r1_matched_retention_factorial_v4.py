@@ -374,6 +374,7 @@ def evaluate_structured(
         tuple[str, str, str],
         tuple[tuple[int, ...], dict[str, object], dict[str, Any]],
     ] = {}
+    budget = contract["structured_comparators"]["compute_budget"]
     started = time.perf_counter()
     rows = structured_pair_rows(
         histories=selected,
@@ -381,9 +382,11 @@ def evaluate_structured(
         scheduler=scheduler(),
         config=config,
         cache=cache,
+        per_calendar_hard_cap_seconds=float(
+            budget["per_calendar_hard_cap_seconds"]
+        ),
     )
     elapsed = time.perf_counter() - started
-    budget = contract["structured_comparators"]["compute_budget"]
     if elapsed > float(budget["development_sequential_hard_cap_seconds"]):
         raise PredeclaredComputeBudgetExceeded(
             "STOP_COMPUTE_BUDGET_PREDECLARED"
@@ -662,7 +665,7 @@ def main() -> int:
         if row["arm"] == "structured_retained"
     }
 
-    def selection_key(step: int) -> tuple[float, float, float, int]:
+    def selection_key(step: int) -> tuple[float, float, float, float, int]:
         rows = checkpoint_rows[step]
         retained = [row for row in rows if row["arm"] == "P1_H1"]
         primary = float(np.mean([row[PRIMARY] for row in retained]))
@@ -684,14 +687,22 @@ def main() -> int:
             in structured_mean
         ]
         premium = float(np.mean(premium_values)) if premium_values else float("-inf")
-        total = estimands(rows)["total_retained_neural_treatment"]["mean"]
-        return primary, premium, float(total), -step
+        point_estimands = estimands(rows)
+        total = float(point_estimands["total_retained_neural_treatment"]["mean"])
+        iid_rows = [row for row in rows if float(row["kappa"]) == 0.5]
+        iid_effect = estimands(iid_rows)["total_retained_neural_treatment"]["mean"]
+        return primary, premium, total, -abs(float(iid_effect)), -step
 
     selected_step = max(checkpoints, key=selection_key)
     selected_checkpoint = next(
         row for row in checkpoint_receipts if row["timesteps"] == selected_step
     )
     selected_rows = checkpoint_rows[selected_step] + structured + bar_rows
+    all_checkpoint_rows = [
+        row
+        for step in checkpoints
+        for row in checkpoint_rows[step]
+    ]
     result = {
         "schema_version": "q_r1_matched_retention_factorial_v4_run",
         "created_at": datetime.now(timezone.utc).isoformat(),
@@ -711,6 +722,9 @@ def main() -> int:
         },
         "checkpoints": checkpoint_receipts,
         "selected_checkpoint": selected_checkpoint,
+        "checkpoint_selection_scores": {
+            str(step): list(map(float, selection_key(step))) for step in checkpoints
+        },
         "selection_rule": contract["training_protocol"]["checkpoint_selection"],
         "structured_comparator": structured_receipt,
         "estimands": estimands(selected_rows),
@@ -737,7 +751,11 @@ def main() -> int:
         "confirmation_roots_opened": False,
         "elapsed_seconds": time.perf_counter() - started,
     }
+    write_json(args.output_dir / "checkpoint_rows.json", all_checkpoint_rows)
     write_json(args.output_dir / "rows.json", selected_rows)
+    result["checkpoint_rows_sha256"] = sha256(
+        args.output_dir / "checkpoint_rows.json"
+    )
     write_json(args.output_dir / "result.json", result)
     print(json.dumps(result, indent=2, sort_keys=True))
     return 0

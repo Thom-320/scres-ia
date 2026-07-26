@@ -8,6 +8,7 @@ write a freeze/opening receipt.
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
+import time
 from typing import Any
 
 from scripts.run_q_r1_successor_abc import fixed_theta_belief
@@ -88,7 +89,12 @@ def structured_pair_rows(
         comparator_v2_calendar
     ),
     calendar_evaluator: Callable[..., dict[str, Any]] = evaluate_calendar,
-    cache: dict[tuple[str, str, str], tuple[tuple[int, ...], dict[str, object], dict[str, Any]]] | None = None,
+    cache: dict[
+        tuple[str, str, str],
+        tuple[tuple[int, ...], dict[str, object], dict[str, Any]],
+    ]
+    | None = None,
+    per_calendar_hard_cap_seconds: float | None = None,
 ) -> list[dict[str, Any]]:
     """Evaluate retained/reset structured arms on matched physical histories."""
     if len(histories) != len(prior_paths):
@@ -110,6 +116,7 @@ def structured_pair_rows(
                 )
                 cached = None if cache is None else cache.get(key)
                 if cached is None:
+                    started = time.perf_counter()
                     belief: ExactJointBelief = fixed_theta_belief(prior)
                     calendar, diagnostics = calendar_builder(
                         campaign=structured_campaign,
@@ -122,10 +129,19 @@ def structured_pair_rows(
                         calendar=calendar,
                         scheduler=scheduler,
                     )
+                    planning_elapsed = time.perf_counter() - started
+                    if (
+                        per_calendar_hard_cap_seconds is not None
+                        and planning_elapsed > float(per_calendar_hard_cap_seconds)
+                    ):
+                        raise RuntimeError("STOP_COMPUTE_BUDGET_PREDECLARED")
                     if cache is not None:
                         cache[key] = (calendar, diagnostics, metrics)
+                    cache_hit = False
                 else:
                     calendar, diagnostics, metrics = cached
+                    planning_elapsed = 0.0
+                    cache_hit = True
                 missing = (
                     set(REQUIRED_PRIMARY_FIELDS)
                     | set(REQUIRED_SERVICE_FIELDS)
@@ -146,6 +162,8 @@ def structured_pair_rows(
                         "prefix_state_hash": campaign.skeleton.prefix_state_hash,
                         "comparator_config_id": config.config_id,
                         "comparator_diagnostics": diagnostics,
+                        "structured_compute_seconds": planning_elapsed,
+                        "structured_cache_hit": cache_hit,
                         **metrics,
                     }
                 )
