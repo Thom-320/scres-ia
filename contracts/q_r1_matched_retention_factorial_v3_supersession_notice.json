@@ -1,0 +1,53 @@
+{
+ "contract": {
+  "contract_itself_unchanged": true,
+  "path": "contracts/q_r1_matched_retention_factorial_v3.json",
+  "sha256": "7baea13353fc5d1a5038aae41c99c97bd6959342a78843d5aa43f4092b0310e9"
+ },
+ "recorded_at_utc": "2026-07-26T20:39:24.374685+00:00",
+ "schema_version": "q_r1_matched_retention_factorial_v3_supersession_notice_v1",
+ "status": "SUPERSEDED_ROOTS_OPENED_UNDER_AN_INCOMPLETE_IMPLEMENTATION",
+ "stop_notice": "results/q_r1/factorial_v3/STOP_incomplete_implementation.json",
+ "successor_rules": [
+  "fresh roots and fresh optimizer seeds; none of the burned blocks are reused",
+  "contract, runner, tests and an opening receipt must agree clause by clause before development opens",
+  "the runner must be able to compute the learner-retained minus MPC-retained premium from the first execution"
+ ],
+ "superseded_receipt": {
+  "asserted_at_utc": "2026-07-26T19:50:47.599846+00:00",
+  "asserted_status": "FROZEN_PROSPECTIVE_UNOPENED",
+  "byte_identical_to_original": true,
+  "path": "contracts/q_r1_matched_retention_factorial_v3_freeze_receipt.json",
+  "restored_from_commit": "f5a8e1fa",
+  "sha256": "453655617ad5f3bde2f5189ccc2037a9887cd052ae4399f2e180963b76c56a6d"
+ },
+ "what_actually_happened": {
+  "confirmation_roots_opened": false,
+  "defective_instrument": "scripts/run_q_r1_factorial_v3.py as of commit 688a53d0: omitted the iid null cell kappa=0.50, had no retained-MPC arm so the neural premium was incomputable, performed no checkpoint selection, reported no service ledger, and used 4 of the 16 declared selection roots for the static bar",
+  "opened_at_utc_approximate": "2026-07-26T20:05Z, when the five VPS processes began",
+  "opened_without_a_development_opening_receipt": true,
+  "reserved_confirmation_history_roots": [
+   7662201,
+   7662264
+  ],
+  "results_produced": "none; only a 960-timestep one-root smoke, not interpretable",
+  "roots_opened": {
+   "checkpoint_selection_history_roots": [
+    7662101,
+    7662116
+   ],
+   "optimizer_seeds": [
+    7663001,
+    7663002,
+    7663003,
+    7663004,
+    7663005
+   ],
+   "training_history_roots": [
+    7662001,
+    7662040
+   ]
+  }
+ },
+ "why_this_file_exists": "The freeze receipt is a historical record of what was asserted BEFORE any data was opened. It must stay byte-identical forever. Commit 8577c420 wrongly edited it in place to say the roots were open; that edit is reverted and the state change is recorded here instead. Rewriting a prospective record to match later events destroys the only thing that made it evidence."
+}
