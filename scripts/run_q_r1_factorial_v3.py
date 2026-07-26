@@ -165,6 +165,8 @@ def rollout(model, env: MetaCampaignEnv, spec: HistorySpec) -> list[dict]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--seeds", type=int, default=5)
+    parser.add_argument("--seed-indices", nargs="+", type=int, default=None,
+                        help="run only these positions of the contract's optimizer_seeds")
     parser.add_argument("--total-timesteps", type=int, default=96_000)
     parser.add_argument("--bar-roots", type=int, default=8,
                         help="selection-split roots enumerated for the static bar")
@@ -179,7 +181,9 @@ def main() -> int:
     splits = contract["data_splits"]
     train_lo, train_hi = splits["training_history_roots"]
     sel_lo, sel_hi = splits["checkpoint_selection_history_roots"]
-    seeds = list(splits["optimizer_seeds"])[: args.seeds]
+    declared = list(splits["optimizer_seeds"])
+    seeds = ([declared[i] for i in args.seed_indices] if args.seed_indices
+             else declared[: args.seeds])
     train_specs = [HistorySpec(r, k, CAMPAIGNS)
                    for r in range(train_lo, train_hi + 1) for k in KAPPAS]
     sel_specs = [HistorySpec(r, k, CAMPAIGNS)
