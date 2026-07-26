@@ -9,8 +9,8 @@ The factorial design is scientifically useful.
 The VPS execution launched on 2026-07-26 is not an admissible execution of the
 frozen contract.
 
-The five full workers and a later diagnostic worker were terminated before a
-full result was produced.
+The five full workers and two later diagnostic workers (`diag1`, `diag2`) were
+terminated before a full result was produced.
 
 No confirmation root was opened.
 
