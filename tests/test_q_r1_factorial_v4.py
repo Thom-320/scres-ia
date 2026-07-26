@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import time
+
 import numpy as np
 
 from scripts.evaluate_program_q_replication import scheduler
@@ -163,3 +165,50 @@ def test_structured_progress_is_persistable_after_each_completed_row() -> None:
     assert len(rows) == 24
     assert snapshots[0] == (1, 1)
     assert snapshots[-1] == (24, 23)
+
+
+def test_over_cap_unit_is_rejected_with_receipt_after_prior_rows_persist() -> None:
+    history = _history()
+    builder_calls = 0
+    progress_snapshots: list[tuple[int, int]] = []
+    rejections: list[tuple[dict[str, object], int, int]] = []
+
+    def builder(**_kwargs):
+        nonlocal builder_calls
+        builder_calls += 1
+        if builder_calls == 2:
+            time.sleep(0.02)
+        return (0,) * 8, {"builder_call": builder_calls}
+
+    with np.testing.assert_raises_regex(
+        RuntimeError, "STOP_COMPUTE_BUDGET_PREDECLARED"
+    ):
+        structured_pair_rows(
+            histories=[history],
+            prior_paths=matched_prior_paths([history]),
+            scheduler=scheduler(),
+            config=ComparatorV2Config(horizon=1, conditional_paths=1),
+            calendar_builder=builder,
+            calendar_evaluator=lambda **_kwargs: _metrics(),
+            cache={},
+            per_calendar_hard_cap_seconds=0.005,
+            aggregate_hard_cap_seconds=1.0,
+            progress_callback=lambda completed, cache: progress_snapshots.append(
+                (len(completed), len(cache))
+            ),
+            rejection_callback=lambda receipt, completed, cache: rejections.append(
+                (receipt, len(completed), len(cache))
+            ),
+        )
+
+    assert progress_snapshots[-1] == (2, 1)
+    assert len(rejections) == 1
+    receipt, rows_before_rejection, cache_before_rejection = rejections[0]
+    assert receipt["status"] == "REJECTED_OVER_CAP"
+    assert receipt["action_eligible"] is False
+    assert receipt["observed_seconds"] > receipt["per_calendar_hard_cap_seconds"]
+    assert len(receipt["calendar_sha256"]) == 64
+    assert len(receipt["diagnostics_sha256"]) == 64
+    assert len(receipt["metrics_sha256"]) == 64
+    assert rows_before_rejection == 2
+    assert cache_before_rejection == 1

@@ -36,6 +36,7 @@ def test_v4_splits_and_optimizer_seeds_are_fresh_and_disjoint() -> None:
     selection = _range(splits["checkpoint_selection_history_roots"])
     confirmation = _range(splits["reserved_confirmation_history_roots"])
     optimizer = set(map(int, splits["optimizer_seeds"]))
+    instrument_seed = int(splits["instrument_preflight_optimizer_seed"])
     assert len(training) == 40
     assert len(selection) == 16
     assert len(confirmation) == 64
@@ -43,6 +44,10 @@ def test_v4_splits_and_optimizer_seeds_are_fresh_and_disjoint() -> None:
     assert training.isdisjoint(selection | confirmation | optimizer)
     assert selection.isdisjoint(confirmation | optimizer)
     assert confirmation.isdisjoint(optimizer)
+    assert instrument_seed not in optimizer
+    assert splits["instrument_preflight_seed_status"] == (
+        "BURNED_INSTRUMENT_ONLY_NOT_DEVELOPMENT_ELIGIBLE"
+    )
 
     collision = json.loads(COLLISION.read_text())
     assert collision["collision_clean"] is True
@@ -112,6 +117,12 @@ def test_v4_contains_all_kappa_cells_and_secondary_service_ledger() -> None:
     assert contract["static_bar_protocol"][
         "development_workers_may_not_recompute_the_bar"
     ]
+    assert contract["static_bar_protocol"][
+        "authoritative_completion_receipt_required"
+    ]
+    assert contract["static_bar_protocol"][
+        "workers_must_match_static_bar_sha256_to_completion_receipt"
+    ]
 
 
 def test_v4_requires_separate_immutable_freeze_and_opening_receipts() -> None:
@@ -123,3 +134,10 @@ def test_v4_requires_separate_immutable_freeze_and_opening_receipts() -> None:
     assert custody["execution_requires_clean_worktree"] is True
     assert custody["checkpoint_rows_persisted_before_next_checkpoint"] is True
     assert custody["structured_rows_and_cache_persisted_after_each_campaign"] is True
+    assert custody["over_cap_unit_receipt_required_before_raise"] is True
+    assert custody["over_cap_unit_action_eligible"] is False
+    recovery = custody["failed_worker_recovery"]
+    assert recovery["resume_supported"] is False
+    assert recovery["new_output_directory_required"] is True
+    assert recovery["failed_attempt_directory_may_not_be_deleted_or_reused"] is True
+    assert recovery["only_one_complete_attempt_per_worker_may_be_action_eligible"] is True

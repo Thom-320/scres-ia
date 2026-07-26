@@ -145,12 +145,14 @@
       7670264
     ],
     "optimizer_seeds": [
-      7672001,
-      7672002,
-      7672003,
-      7672004,
-      7672005
+      7672101,
+      7672102,
+      7672103,
+      7672104,
+      7672105
     ],
+    "instrument_preflight_optimizer_seed": 7672001,
+    "instrument_preflight_seed_status": "BURNED_INSTRUMENT_ONLY_NOT_DEVELOPMENT_ELIGIBLE",
     "opened": false,
     "collision_audit": "research/paper2_exhaustive_search/q_r1_matched_retention_factorial_v4_seed_collision_audit.DRAFT.json"
   },
@@ -226,16 +228,16 @@
       }
     ],
     "development_screen_optimizer_seeds": [
-      7672001,
-      7672002,
-      7672003
+      7672101,
+      7672102,
+      7672103
     ],
     "full_optimizer_seeds": [
-      7672001,
-      7672002,
-      7672003,
-      7672004,
-      7672005
+      7672101,
+      7672102,
+      7672103,
+      7672104,
+      7672105
     ],
     "screen_timesteps_per_seed": 96000,
     "full_timesteps_per_seed": 240000,
@@ -266,7 +268,7 @@
       "oracle_return_used": false
     },
     "configuration_selection": {
-      "screen_requires": "all eight configurations times optimizer seeds 7672001-7672003",
+      "screen_requires": "all eight configurations times optimizer seeds 7672101-7672103",
       "screen_advances": 2,
       "full_requires": "the two screen winners times all five optimizer seeds",
       "ranking": [
@@ -289,6 +291,9 @@
     "written_before_any_learner_or_mpc_grading": true,
     "shared_immutable_artifact_across_optimizer_seeds": true,
     "development_workers_must_read_and_hash_the_precomputed_artifact": true,
+    "authoritative_completion_receipt_required": true,
+    "workers_must_match_static_bar_sha256_to_completion_receipt": true,
+    "completion_receipt_must_bind_opening_receipt_contract_identities_calendar_and_frontier_row": true,
     "development_workers_may_not_recompute_the_bar": true,
     "selected_without_confirmation": true
   },
@@ -368,6 +373,16 @@
     "checkpoint_rows_persisted_before_next_checkpoint": true,
     "structured_rows_and_cache_persisted_after_each_campaign": true,
     "aggregate_compute_budget_checked_before_starting_each_uncached_calendar": true,
+    "over_cap_unit_receipt_required_before_raise": true,
+    "over_cap_unit_action_eligible": false,
+    "failed_worker_recovery": {
+      "resume_supported": false,
+      "new_output_directory_required": true,
+      "same_commit_contract_config_and_optimizer_seed_required": true,
+      "failed_attempt_directory_must_be_preserved": true,
+      "failed_attempt_directory_may_not_be_deleted_or_reused": true,
+      "only_one_complete_attempt_per_worker_may_be_action_eligible": true
+    },
     "fresh_roots_may_open_only_after_external_pre_freeze_pass": true
   },
   "boundaries": {

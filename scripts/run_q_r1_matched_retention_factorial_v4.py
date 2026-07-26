@@ -78,6 +78,63 @@ def sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def json_sha256(value: Any) -> str:
+    payload = json.dumps(
+        value, sort_keys=True, separators=(",", ":"), default=str
+    ).encode()
+    return hashlib.sha256(payload).hexdigest()
+
+
+def validate_shared_static_bar(
+    *,
+    static_bar_path: Path,
+    completion_receipt_path: Path,
+    opening_receipt_path: Path,
+    expected_contract_sha256: str,
+    expected_roots: list[int],
+    expected_campaigns: int,
+) -> dict[str, Any]:
+    """Load the one authoritative static bar and verify its custody chain."""
+    opening = json.loads(opening_receipt_path.read_text())
+    completion = json.loads(completion_receipt_path.read_text())
+    static_bar = json.loads(static_bar_path.read_text())
+    if opening.get("mode") != "static-bar":
+        raise RuntimeError("development opening receipt has the wrong mode")
+    if opening.get("contract_sha256") != expected_contract_sha256:
+        raise RuntimeError("development opening receipt contract mismatch")
+    if completion.get("schema_version") != (
+        "q_r1_factorial_v4_static_bar_completion_receipt"
+    ):
+        raise RuntimeError("static bar completion receipt schema mismatch")
+    if completion.get("contract_sha256") != expected_contract_sha256:
+        raise RuntimeError("static bar completion receipt contract mismatch")
+    if completion.get("opening_receipt_sha256") != sha256(opening_receipt_path):
+        raise RuntimeError("static bar completion receipt opening hash mismatch")
+    actual_bar_sha = sha256(static_bar_path)
+    if completion.get("static_bar_sha256") != actual_bar_sha:
+        raise RuntimeError("static bar artifact hash mismatch")
+    if completion.get("identities_sha256") != json_sha256(
+        static_bar.get("identities")
+    ):
+        raise RuntimeError("static bar identity digest mismatch")
+    static_roots = sorted(
+        {int(row["history_root"]) for row in static_bar.get("identities", [])}
+    )
+    if static_roots != list(map(int, expected_roots)):
+        raise RuntimeError("static bar does not cover all selection roots")
+    if static_bar.get("selection_campaigns") != int(expected_campaigns):
+        raise RuntimeError("static bar selection campaign count mismatch")
+    if completion.get("selection_roots") != static_roots:
+        raise RuntimeError("static bar completion root coverage mismatch")
+    if completion.get("selection_campaigns") != int(expected_campaigns):
+        raise RuntimeError("static bar completion campaign count mismatch")
+    if completion.get("calendar") != static_bar.get("calendar"):
+        raise RuntimeError("static bar completion calendar mismatch")
+    if completion.get("frontier_row") != static_bar.get("frontier_row"):
+        raise RuntimeError("static bar completion frontier-row mismatch")
+    return static_bar
+
+
 def git(*args: str) -> str:
     return subprocess.check_output(
         ["git", *args], cwd=ROOT, text=True, stderr=subprocess.DEVNULL
@@ -411,6 +468,29 @@ def evaluate_structured(
             },
         )
 
+    def persist_rejection(
+        rejection: dict[str, Any],
+        completed_rows: list[dict[str, Any]],
+        completed_cache: dict[
+            tuple[str, str, str],
+            tuple[tuple[int, ...], dict[str, object], dict[str, Any]],
+        ],
+    ) -> None:
+        persist_progress(completed_rows, completed_cache)
+        receipt = {
+            **rejection,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "contract_sha256": sha256(CONTRACT_PATH),
+            "comparator_freeze_sha256": sha256(COMPARATOR_FREEZE_PATH),
+            "rows_persisted_before_rejection": len(completed_rows),
+            "cache_entries_persisted_before_rejection": len(completed_cache),
+            "confirmation_roots_opened": False,
+        }
+        write_json(
+            progress_dir / "structured_rejected_over_cap.json",
+            receipt,
+        )
+
     started = time.perf_counter()
     rows = structured_pair_rows(
         histories=selected,
@@ -425,6 +505,7 @@ def evaluate_structured(
             budget["development_sequential_hard_cap_seconds"]
         ),
         progress_callback=persist_progress,
+        rejection_callback=persist_rejection,
     )
     elapsed = time.perf_counter() - started
     if elapsed > float(budget["development_sequential_hard_cap_seconds"]):
@@ -522,6 +603,7 @@ def main() -> int:
     parser.add_argument("--config-id", default="s01")
     parser.add_argument("--optimizer-seed", type=int, default=7_672_001)
     parser.add_argument("--static-bar-path", type=Path)
+    parser.add_argument("--static-bar-completion-receipt", type=Path)
     parser.add_argument("--development-opening-receipt", type=Path)
     parser.add_argument("--output-dir", type=Path, required=True)
     args = parser.parse_args()
@@ -542,6 +624,13 @@ def main() -> int:
     cfg = configs[args.config_id]
 
     if args.mode == "instrument-preflight":
+        expected_preflight_seed = int(
+            contract["data_splits"]["instrument_preflight_optimizer_seed"]
+        )
+        if args.optimizer_seed != expected_preflight_seed:
+            raise ValueError(
+                "instrument preflight seed differs from the contracted burned seed"
+            )
         scope = contract["structured_comparators"]["evaluation_scope"][
             "instrument_preflight"
         ]
@@ -573,7 +662,6 @@ def main() -> int:
             if args.optimizer_seed not in allowed:
                 raise ValueError("optimizer seed is outside the frozen contract")
 
-    shared_opening: dict[str, Any] | None = None
     shared_static_bar: dict[str, Any] | None = None
     if args.mode == "development-worker":
         if (
@@ -583,16 +671,30 @@ def main() -> int:
             raise RuntimeError(
                 "development worker requires the static-bar opening receipt"
             )
-        shared_opening = json.loads(args.development_opening_receipt.read_text())
-        if shared_opening.get("mode") != "static-bar":
-            raise RuntimeError("development opening receipt has the wrong mode")
-        if shared_opening.get("contract_sha256") != sha256(CONTRACT_PATH):
-            raise RuntimeError("development opening receipt contract mismatch")
         if args.static_bar_path is None or not args.static_bar_path.is_file():
             raise RuntimeError(
                 "development worker requires the shared static-bar artifact"
             )
-        shared_static_bar = json.loads(args.static_bar_path.read_text())
+        if (
+            args.static_bar_completion_receipt is None
+            or not args.static_bar_completion_receipt.is_file()
+        ):
+            raise RuntimeError(
+                "development worker requires the static-bar completion receipt"
+            )
+        expected_roots = integer_range(
+            contract["data_splits"]["checkpoint_selection_history_roots"]
+        )
+        shared_static_bar = validate_shared_static_bar(
+            static_bar_path=args.static_bar_path,
+            completion_receipt_path=args.static_bar_completion_receipt,
+            opening_receipt_path=args.development_opening_receipt,
+            expected_contract_sha256=sha256(CONTRACT_PATH),
+            expected_roots=expected_roots,
+            expected_campaigns=len(expected_roots)
+            * CAMPAIGNS_PER_METAEPISODE
+            * len(KAPPAS),
+        )
 
     args.output_dir.mkdir(parents=True)
     opening_receipt = {
@@ -623,6 +725,12 @@ def main() -> int:
                 "opening_receipt_sha256": sha256(
                     args.development_opening_receipt
                 ),
+                "static_bar_completion_receipt": str(
+                    args.static_bar_completion_receipt
+                ),
+                "static_bar_completion_receipt_sha256": sha256(
+                    args.static_bar_completion_receipt
+                ),
                 "contract_sha256": sha256(CONTRACT_PATH),
             },
         )
@@ -643,25 +751,46 @@ def main() -> int:
             campaign_indices=static_campaigns,
         )
         write_json(args.output_dir / "static_bar.json", static_bar)
+        static_bar_path = args.output_dir / "static_bar.json"
+        opening_path = args.output_dir / opening_name
+        completion_receipt = {
+            "schema_version": (
+                "q_r1_factorial_v4_static_bar_completion_receipt"
+            ),
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "mode": args.mode,
+            "claim_status": claim_status,
+            "contract_sha256": sha256(CONTRACT_PATH),
+            "opening_receipt_sha256": sha256(opening_path),
+            "static_bar_sha256": sha256(static_bar_path),
+            "identities_sha256": json_sha256(static_bar["identities"]),
+            "selection_roots": sorted(
+                {
+                    int(row["history_root"])
+                    for row in static_bar["identities"]
+                }
+            ),
+            "selection_campaigns": int(static_bar["selection_campaigns"]),
+            "calendar": static_bar["calendar"],
+            "frontier_row": int(static_bar["frontier_row"]),
+            "immutable": True,
+        }
+        write_json(
+            args.output_dir / "static_bar_completion_receipt.json",
+            completion_receipt,
+        )
     else:
         assert args.static_bar_path is not None
         assert shared_static_bar is not None
         static_bar = shared_static_bar
-        expected_roots = contract["data_splits"][
-            "checkpoint_selection_history_roots"
-        ]
-        static_roots = sorted(
-            {int(row["history_root"]) for row in static_bar["identities"]}
-        )
-        if static_roots != integer_range(expected_roots):
-            raise RuntimeError("static bar does not cover all selection roots")
-        if static_bar.get("selection_campaigns") != 16 * 12 * 3:
-            raise RuntimeError("static bar selection campaign count mismatch")
         write_json(
             args.output_dir / "static_bar_reference.json",
             {
                 "path": str(args.static_bar_path),
                 "sha256": sha256(args.static_bar_path),
+                "completion_receipt_sha256": sha256(
+                    args.static_bar_completion_receipt
+                ),
                 "calendar": static_bar["calendar"],
                 "frontier_row": static_bar["frontier_row"],
             },
@@ -673,6 +802,9 @@ def main() -> int:
             "claim_status": "DEVELOPMENT_OPENING_NO_LEARNER_RESULT",
             "contract_sha256": sha256(CONTRACT_PATH),
             "static_bar_sha256": sha256(args.output_dir / "static_bar.json"),
+            "static_bar_completion_receipt_sha256": sha256(
+                args.output_dir / "static_bar_completion_receipt.json"
+            ),
             "training_roots_opened": training_roots,
             "selection_roots_opened": evaluation_roots,
             "confirmation_roots_opened": False,

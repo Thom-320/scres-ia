@@ -8,6 +8,8 @@ write a freeze/opening receipt.
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
+import hashlib
+import json
 import time
 from typing import Any
 
@@ -107,6 +109,18 @@ def structured_pair_rows(
         None,
     ]
     | None = None,
+    rejection_callback: Callable[
+        [
+            dict[str, Any],
+            list[dict[str, Any]],
+            dict[
+                tuple[str, str, str],
+                tuple[tuple[int, ...], dict[str, object], dict[str, Any]],
+            ],
+        ],
+        None,
+    ]
+    | None = None,
 ) -> list[dict[str, Any]]:
     """Evaluate retained/reset structured arms on matched physical histories."""
     if len(histories) != len(prior_paths):
@@ -156,6 +170,53 @@ def structured_pair_rows(
                         per_calendar_hard_cap_seconds is not None
                         and planning_elapsed > float(per_calendar_hard_cap_seconds)
                     ):
+                        if rejection_callback is not None:
+                            def canonical(value: Any) -> bytes:
+                                return json.dumps(
+                                    value,
+                                    sort_keys=True,
+                                    separators=(",", ":"),
+                                    default=str,
+                                ).encode()
+
+                            rejection_callback(
+                                {
+                                    "schema_version": (
+                                        "q_r1_factorial_v4_structured_over_cap_v1"
+                                    ),
+                                    "status": "REJECTED_OVER_CAP",
+                                    "history_root": int(campaign.history_root),
+                                    "campaign_index": int(campaign.campaign_index),
+                                    "kappa": float(campaign.kappa),
+                                    "arm": arm,
+                                    "explicit_prior": float(prior),
+                                    "skeleton_sha256": (
+                                        campaign.skeleton.skeleton_sha256
+                                    ),
+                                    "comparator_config_id": config.config_id,
+                                    "cache_key": list(key),
+                                    "observed_seconds": float(planning_elapsed),
+                                    "per_calendar_hard_cap_seconds": float(
+                                        per_calendar_hard_cap_seconds
+                                    ),
+                                    "cumulative_compute_seconds": float(
+                                        cumulative_compute_seconds
+                                    ),
+                                    "calendar": list(map(int, calendar)),
+                                    "calendar_sha256": hashlib.sha256(
+                                        canonical(list(map(int, calendar)))
+                                    ).hexdigest(),
+                                    "diagnostics_sha256": hashlib.sha256(
+                                        canonical(diagnostics)
+                                    ).hexdigest(),
+                                    "metrics_sha256": hashlib.sha256(
+                                        canonical(metrics)
+                                    ).hexdigest(),
+                                    "action_eligible": False,
+                                },
+                                rows,
+                                {} if cache is None else cache,
+                            )
                         raise RuntimeError("STOP_COMPUTE_BUDGET_PREDECLARED")
                     if cache is not None:
                         cache[key] = (calendar, diagnostics, metrics)
