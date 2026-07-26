@@ -265,6 +265,21 @@
       "confirmation_return_used": false,
       "oracle_return_used": false
     },
+    "configuration_selection": {
+      "screen_requires": "all eight configurations times optimizer seeds 7672001-7672003",
+      "screen_advances": 2,
+      "full_requires": "the two screen winners times all five optimizer seeds",
+      "ranking": [
+        "larger across-seed mean selected-checkpoint P1_H1 early_ret_complete_cohort",
+        "larger across-seed mean neural premium",
+        "larger across-seed mean total retained neural treatment",
+        "smaller across-seed mean absolute iid effect",
+        "lexicographically smaller config id"
+      ],
+      "confirmation_return_used": false,
+      "oracle_return_used": false,
+      "selection_artifact_required_before_power_audit": true
+    },
     "same_frozen_checkpoint_for_four_factorial_arms": true,
     "weights_frozen_during_evaluation": true,
     "online_updates_during_evaluation": false

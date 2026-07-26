@@ -64,6 +64,10 @@ def test_v4_freezes_runtime_and_real_checkpoint_selection() -> None:
     assert selection["split"] == "checkpoint_selection_history_roots"
     assert selection["confirmation_return_used"] is False
     assert selection["oracle_return_used"] is False
+    configuration = training["configuration_selection"]
+    assert configuration["screen_advances"] == 2
+    assert configuration["confirmation_return_used"] is False
+    assert configuration["oracle_return_used"] is False
 
 
 def test_v4_can_compute_north_star_and_all_factorial_estimands() -> None:
