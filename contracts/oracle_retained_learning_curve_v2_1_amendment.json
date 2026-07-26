@@ -1,0 +1,34 @@
+{
+ "contract_id": "oracle_retained_learning_curve_v2_1_amendment",
+ "amends": "contracts/oracle_retained_learning_curve_v2.json",
+ "schema_version": "oracle_curve_prereg_amendment_v1",
+ "date_frozen": "2026-07-26",
+ "status": "FROZEN_AMENDMENT_CAMPAIGN_IDENTITY_DECLARED",
+ "claim_status": "DEVELOPMENT_NO_CLAIM",
+ "why": "The parallel Codex lineage suffered a rho/kappa conflation (its runner used the cross-campaign kappa value 0.75 as the within-campaign regime persistence rho, which is 0.90 everywhere in this programme), and its own instrument-failure record made the deeper governance point: a v2 freeze that omits rho is incomplete, because rho changes CAMPAIGN IDENTITY. This contract had the same omission. Its runner carries the correct rho = 0.90, verified by skeleton identity against the enumerated frontiers, so no campaign in this lineage is misconstructed and no result is invalidated. The omission is nevertheless closed here, because a parameter that determines which physical campaign is evaluated must be contracted, not merely coded.",
+ "campaign_identity_parameters_now_declared": {
+  "within_campaign_regime_persistence_rho": 0.90,
+  "dominant_share": 0.90,
+  "campaigns_per_history": 12,
+  "decisions_per_campaign": 8,
+  "downstream_freight_physics_mode": "fixed_clock_physical_v1",
+  "cross_campaign_knowledge_persistence_kappa_cells": [0.75, 0.90],
+  "note": "kappa is NOT rho. kappa governs whether the latent regime carries from one campaign to the next; rho governs regime persistence between demand events INSIDE a campaign. Every enumerated 4^8 frontier, the frozen c256 Pareto and the C6 per-batch gate use rho = 0.90 with kappa as the stratum label."
+ },
+ "identity_verification_required_before_any_result_is_read": {
+  "rule": "for at least one campaign shared with the enumerated frontier set, the rebuilt skeleton_sha256 must equal the value produced at rho = 0.90, and the objective of an identical calendar must agree with the exact frontier lookup to 1e-9",
+  "reference": "history 7570801 campaign 6 hashes to 1ab4ec34... at rho = 0.90 and 35e0d189... at rho = 0.75",
+  "instrument": "scripts/crosscheck_codex_matched_retention.py performs exactly this check and blocks the verdict when it fails"
+ },
+ "unchanged_by_this_amendment": [
+  "every arm, gate and reporting rule of the parent contract",
+  "the parity self-check requirement",
+  "the out-of-sample static bar artifact and the three-number reporting rule",
+  "the sequencing: no sealed confirmatory block may be opened on a development result"
+ ],
+ "lineage_status": {
+  "this_lineage": "instrument construction VERIFIED correct at rho = 0.90; the development run in flight on training roots 7680001-7680016 and calibration roots 7690001-7690004 stands",
+  "codex_lineage": "STOP_INSTRUMENT_INVALID_RHO_KAPPA_CONFLATION per its own record; its training roots 7660001-7660040, selection roots 7660101-7660116 and optimizer seeds 7661001-7661003 are BURNED, and its reserved confirmation block 7660201-7660264 remains unopened",
+  "correcting_the_runner_after_opening_is_insufficient": "the PI attempted exactly that (commit c40977e7) and relaunched the screen on the burned roots; that does not restore prospective authority, and the Codex lineage was right to stop it. A successor needs a NEW contract declaring rho, with FRESH roots and FRESH optimizer seeds."
+ }
+}
