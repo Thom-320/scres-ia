@@ -1,0 +1,68 @@
+{
+  "schema_version": "q_r1_matched_retention_factorial_v4_preflight_custody_v1",
+  "claim_status": "BURNED_INSTRUMENT_PREFLIGHT_NO_CLAIM",
+  "scientific_interpretation_forbidden": true,
+  "execution": {
+    "commit": "a71363570f3510e7cf452f2a905d1cad31803a98",
+    "worktree_clean_at_opening": true,
+    "mode": "instrument-preflight",
+    "config_id": "s01",
+    "optimizer_seed": 7672001,
+    "elapsed_seconds": 322.60888237499967,
+    "external_output_directory": "/private/tmp/q_r1_factorial_v4_preflight_final_20260726"
+  },
+  "contract": {
+    "path": "contracts/q_r1_matched_retention_factorial_v4.DRAFT.json",
+    "sha256": "591eed179f8c21dd1cbab0edbe3ef601c18648002c2f426fe036e96f2f2b9086",
+    "status": "DRAFT_PROSPECTIVE_UNOPENED_NOT_AUTHORITY",
+    "fresh_development_roots_opened": false,
+    "confirmation_roots_opened": false
+  },
+  "operational_fixes_verified": {
+    "shared_static_bar_supported_for_development": true,
+    "development_workers_forbid_static_bar_recomputation": true,
+    "aggregate_budget_checked_before_next_uncached_calendar": true,
+    "per_calendar_hard_cap_seconds": 600,
+    "checkpoint_rows_persisted_before_next_checkpoint": true,
+    "structured_rows_and_cache_persisted_incrementally": true
+  },
+  "instrument_checks": {
+    "same_checkpoint_hash_all_neural_arms": true,
+    "missing_service_rows": 0,
+    "selected_checkpoint_timesteps": 0,
+    "checkpoint_selection_note": "The two tiny burned preflight checkpoints tied exactly; this is not scientific evidence.",
+    "arm_counts": {
+      "P0_H0": 36,
+      "P1_H0": 36,
+      "P0_H1": 36,
+      "P1_H1": 36,
+      "best_static_frozen": 36,
+      "structured_reset": 3,
+      "structured_retained": 3
+    },
+    "structured_comparator": {
+      "config_id": "qr1_v2_scenario_h4_c256_wf0.00_unone_expected_tol0.0000_legacy",
+      "rows": 6,
+      "cache_entries": 1,
+      "cache_reuse": 5,
+      "elapsed_seconds": 307.679791999999,
+      "max_unique_calculation_seconds": 307.669,
+      "hard_cap_seconds": 600
+    }
+  },
+  "artifact_sha256": {
+    "result.json": "6fc8b550100e834c2af6da3cffd873e943744cae6a9ae8440ed870d52541b215",
+    "rows.json": "50a704ef7d706064c8cf44c7208c33137e90c66f6498435c9cf5b5606d882424",
+    "instrument_preflight_receipt.json": "25dd7072ffcc7f829a217168a2fbbb15b31277b1153d1588d338b32b2c5927c2",
+    "static_bar.json": "6e8975dda8e8f0fb63fc6f4a89d3c93eaadc3799aa8f4bb175d9558eb6e31e76",
+    "checkpoint_progress.json": "e5e1e515df0c12a19691037cbf2e65c70c5e01c0ec07b9a90fa9c2e210abc8e5",
+    "checkpoint_rows.json": "c1ab3686be47ade6e6910419573ad451e189e8e11bd8a296e36b6887e33971bf",
+    "checkpoint_rows_t000000.json": "ace1c83e3310cebc8c57cc0fbc1b5771a9c9895121ddd34cf8eee2e36053b627",
+    "checkpoint_rows_t000480.json": "d8aa1d90c67de37c478d4b1c55dd840c7502b985bd6621d82befc9b2b64c9be1",
+    "structured_progress.json": "c0e792659c0f48e65ba46afb168b0976dbdd7b02e982cb52b143be2abca48ead",
+    "structured_rows.json": "28fce5a2474486a1e8f8dead4a74e0005d8ca6febc804bc9e415b649fae99cd3",
+    "structured_rows.partial.json": "bb198f83a4457d6970e255d3a1105751b639c38fc53ae40d901cf4e1373504c0",
+    "structured_cache.partial.json": "41ef47f72859e3ba517e032695394f655347aff0d465ddcc080c04c6d342b97f"
+  },
+  "next_authorized_step": "Independent re-audit of the three operational fixes. Do not freeze the contract or open fresh roots before PASS."
+}
