@@ -1,0 +1,308 @@
+{
+  "schema_version": "q_r1_matched_retention_factorial_v4",
+  "status": "DRAFT_PROSPECTIVE_UNOPENED_NOT_AUTHORITY",
+  "claim_status": "NO_CLAIM",
+  "supersedes": "q_r1_matched_retention_factorial_v3",
+  "predecessor_status": "STOP_RUNNER_DID_NOT_IMPLEMENT_THE_FROZEN_CONTRACT",
+  "north_star": "Estimate retained neural premium over the strongest tested retained structured controller with matched causal history and explicit prior rights.",
+  "physical_contract": {
+    "within_campaign_regime_persistence_rho": 0.9,
+    "cross_campaign_knowledge_persistence_kappa_cells": {
+      "iid_null": 0.5,
+      "dose": 0.75,
+      "primary": 0.9
+    },
+    "dominant_product_share": 0.9,
+    "campaigns_per_metaepisode": 12,
+    "decisions_per_campaign": 8,
+    "physical_reset_between_campaigns": "complete immutable FullDESSkeleton replacement",
+    "downstream_freight_physics_mode": "fixed_clock_physical_v1",
+    "objective": "early_ret_complete_cohort",
+    "ret_excel_formula_changed": false
+  },
+  "information_rights": {
+    "retained_prior_path": "computed only from realized ordered-product identities in preceding campaigns",
+    "retained_prior_policy_independent": true,
+    "learner_and_retained_mpc_receive_identical_prior_path": true,
+    "raw_causal_history_matched": true,
+    "learner_observation": "21 deployable state-rich fields plus boundary marker plus explicit prior feature",
+    "forbidden": [
+      "true latent regime",
+      "history root as feature",
+      "tape seed as feature",
+      "future demand",
+      "future shocks",
+      "clairvoyant ceiling during action selection"
+    ]
+  },
+  "factorial_arms_same_checkpoint": [
+    {
+      "id": "P0_H0",
+      "explicit_prior": 0.5,
+      "recurrent_state_between_campaigns": "reset"
+    },
+    {
+      "id": "P1_H0",
+      "explicit_prior": "retained_prior_path",
+      "recurrent_state_between_campaigns": "reset"
+    },
+    {
+      "id": "P0_H1",
+      "explicit_prior": 0.5,
+      "recurrent_state_between_campaigns": "retained"
+    },
+    {
+      "id": "P1_H1",
+      "explicit_prior": "retained_prior_path",
+      "recurrent_state_between_campaigns": "retained"
+    }
+  ],
+  "structured_comparators": {
+    "reset": {
+      "id": "structured_reset",
+      "comparator_contract": "contracts/q_r1_comparator_v2_frozen_c256_v1.json",
+      "explicit_prior": 0.5
+    },
+    "retained": {
+      "id": "structured_retained",
+      "comparator_contract": "contracts/q_r1_comparator_v2_frozen_c256_v1.json",
+      "explicit_prior": "retained_prior_path"
+    },
+    "scientific_role": "strongest tested structured comparator; no optimality claim",
+    "same_histories_and_skeletons_as_learner": true
+  },
+  "estimands": {
+    "explicit_context_value": "P1_H0 - P0_H0",
+    "recurrent_residual_given_context": "P1_H1 - P1_H0",
+    "raw_recurrent_memory_value": "P0_H1 - P0_H0",
+    "interaction": "(P1_H1 - P1_H0) - (P0_H1 - P0_H0)",
+    "total_retained_neural_treatment": "P1_H1 - P0_H0",
+    "structured_retained_value": "structured_retained - structured_reset",
+    "neural_premium": "P1_H1 - structured_retained"
+  },
+  "data_splits": {
+    "training_history_roots": [
+      7670001,
+      7670040
+    ],
+    "checkpoint_selection_history_roots": [
+      7670101,
+      7670116
+    ],
+    "reserved_confirmation_history_roots": [
+      7670201,
+      7670264
+    ],
+    "optimizer_seeds": [
+      7672001,
+      7672002,
+      7672003,
+      7672004,
+      7672005
+    ],
+    "opened": false,
+    "collision_audit": "research/paper2_exhaustive_search/q_r1_matched_retention_factorial_v4_seed_collision_audit.DRAFT.json"
+  },
+  "training_protocol": {
+    "algorithm": "sb3_contrib.RecurrentPPO",
+    "policy": "MlpLstmPolicy",
+    "canonical_training_arm": "P1_H1",
+    "reward": "raw early_ret_complete_cohort at each campaign completion",
+    "screen_configurations": [
+      {
+        "id": "s01",
+        "hidden_size": 64,
+        "learning_rate": 0.0001,
+        "gamma": 0.99,
+        "gae_lambda": 0.95,
+        "entropy": 0.0
+      },
+      {
+        "id": "s02",
+        "hidden_size": 128,
+        "learning_rate": 0.0003,
+        "gamma": 1.0,
+        "gae_lambda": 1.0,
+        "entropy": 0.005
+      },
+      {
+        "id": "s03",
+        "hidden_size": 64,
+        "learning_rate": 0.0003,
+        "gamma": 1.0,
+        "gae_lambda": 0.95,
+        "entropy": 0.005
+      },
+      {
+        "id": "s04",
+        "hidden_size": 128,
+        "learning_rate": 0.0001,
+        "gamma": 0.99,
+        "gae_lambda": 1.0,
+        "entropy": 0.0
+      },
+      {
+        "id": "s05",
+        "hidden_size": 64,
+        "learning_rate": 0.0001,
+        "gamma": 1.0,
+        "gae_lambda": 1.0,
+        "entropy": 0.005
+      },
+      {
+        "id": "s06",
+        "hidden_size": 128,
+        "learning_rate": 0.0003,
+        "gamma": 0.99,
+        "gae_lambda": 0.95,
+        "entropy": 0.0
+      },
+      {
+        "id": "s07",
+        "hidden_size": 64,
+        "learning_rate": 0.0003,
+        "gamma": 0.99,
+        "gae_lambda": 1.0,
+        "entropy": 0.005
+      },
+      {
+        "id": "s08",
+        "hidden_size": 128,
+        "learning_rate": 0.0001,
+        "gamma": 1.0,
+        "gae_lambda": 0.95,
+        "entropy": 0.0
+      }
+    ],
+    "development_screen_optimizer_seeds": [
+      7672001,
+      7672002,
+      7672003
+    ],
+    "full_optimizer_seeds": [
+      7672001,
+      7672002,
+      7672003,
+      7672004,
+      7672005
+    ],
+    "screen_timesteps_per_seed": 96000,
+    "full_timesteps_per_seed": 240000,
+    "checkpoint_interval_timesteps": 24000,
+    "rollout_steps": 480,
+    "batch_size": 96,
+    "normalize_advantage": true,
+    "policy_net_arch": [
+      64,
+      64
+    ],
+    "value_net_arch": [
+      64,
+      64
+    ],
+    "checkpoint_selection": {
+      "split": "checkpoint_selection_history_roots",
+      "eligible_checkpoints": "all declared checkpoint intervals including initialization",
+      "primary": "maximum mean P1_H1 early_ret_complete_cohort",
+      "tie_breakers": [
+        "larger neural premium over structured_retained",
+        "larger P1_H1 minus P0_H0",
+        "smaller absolute iid effect",
+        "earlier checkpoint",
+        "lexicographically smaller config id"
+      ],
+      "confirmation_return_used": false,
+      "oracle_return_used": false
+    },
+    "same_frozen_checkpoint_for_four_factorial_arms": true,
+    "weights_frozen_during_evaluation": true,
+    "online_updates_during_evaluation": false
+  },
+  "static_bar_protocol": {
+    "computed_once_over_all_16_selection_roots": true,
+    "written_before_any_learner_or_mpc_grading": true,
+    "shared_immutable_artifact_across_optimizer_seeds": true,
+    "selected_without_confirmation": true
+  },
+  "mandatory_outputs": {
+    "primary": [
+      "early_ret_complete_cohort",
+      "early_ret_visible",
+      "whole_campaign_ret"
+    ],
+    "service_secondary": [
+      "worst_product_fill",
+      "unresolved_orders",
+      "unresolved_quantity",
+      "lost_orders",
+      "lost_quantity",
+      "service_loss"
+    ],
+    "resources": [
+      "gross_policy_batch_slots",
+      "gross_production_quantity",
+      "charged_daily_dispatch_slots",
+      "charged_downstream_vehicle_hours"
+    ],
+    "custody": [
+      "raw history-by-campaign rows",
+      "contract hash",
+      "execution commit",
+      "worktree clean flag",
+      "Python and dependency versions",
+      "checkpoint hashes",
+      "runtime",
+      "skeleton and prefix-state hashes"
+    ]
+  },
+  "gates": {
+    "instrument_preflight": [
+      "rho equals 0.90 in contract runtime and skeleton metadata",
+      "kappa is logged independently in all three cells",
+      "factorial arms differ only by declared prior and recurrent-state factors",
+      "learner and retained MPC receive identical prior path",
+      "all seven action-eligible arms emit complete rows",
+      "oracle and placebos are never action eligible",
+      "static bar uses all 16 selection roots",
+      "confirmation remains sealed"
+    ],
+    "development_retention": {
+      "sesoi": 0.01,
+      "point_estimate_at_least": 0.01,
+      "descriptive_lcb95_positive": true,
+      "optimizer_seeds_positive_minimum": "4/5",
+      "iid_absolute_effect_at_most": 0.005,
+      "dose_response": "kappa_0.90 > kappa_0.75 > kappa_0.50"
+    },
+    "development_neural_premium": {
+      "sesoi": 0.01,
+      "lcb95_at_least": 0.01,
+      "no_persistence_cell_adverse": true,
+      "same_information_rights": true
+    },
+    "power_audit": {
+      "sesoi": 0.01,
+      "power": 0.9,
+      "alpha_one_sided": 0.05,
+      "clustering": [
+        "history_root",
+        "optimizer_seed"
+      ],
+      "maximum_confirmation_roots": 64
+    }
+  },
+  "execution_custody": {
+    "development_opening_receipt_required": true,
+    "freeze_receipt_separate_and_immutable": true,
+    "execution_requires_git_metadata": true,
+    "execution_requires_clean_worktree": true,
+    "output_directory_must_not_exist": true,
+    "fresh_roots_may_open_only_after_external_pre_freeze_pass": true
+  },
+  "boundaries": {
+    "kan_authorized": false,
+    "submission_a_modified": false,
+    "no_new_roots_may_open_while_status_is_draft": true,
+    "no_claim_from_predecessor_smokes_or_partial_logs": true
+  }
+}

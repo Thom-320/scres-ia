@@ -8,9 +8,13 @@ from supply_chain.q_r1_metaepisode_env import (
     DECISIONS_PER_CAMPAIGN,
     DECISIONS_PER_METAEPISODE,
     META_OBSERVATION_DIM,
+    FACTORIAL_OBSERVATION_DIM,
     QRetainedMetaEpisodeEnv,
 )
-from supply_chain.retained_context_discovery import build_campaign_history
+from supply_chain.retained_context_discovery import (
+    build_campaign_history,
+    retained_prior_path,
+)
 
 
 def _history(root: int = 7_570_801):
@@ -92,3 +96,48 @@ def test_meta_observation_exposes_no_privileged_scalar() -> None:
     observation, _ = env.reset(options={"history_index": 0})
     assert np.all((0.0 <= observation) & (observation <= 1.0))
     assert observation.shape[0] == META_OBSERVATION_DIM
+
+
+def test_factorial_observation_exposes_only_the_supplied_prior() -> None:
+    history = _history()
+    path = retained_prior_path(
+        history,
+        regime_persistence=0.90,
+        dominant_share=0.90,
+    )
+    env = QRetainedMetaEpisodeEnv(
+        histories=[history],
+        scheduler=scheduler(),
+        prior_paths=[path],
+        expose_prior_feature=True,
+    )
+    observation, info = env.reset(options={"history_index": 0})
+    assert observation.shape == (FACTORIAL_OBSERVATION_DIM,)
+    assert observation[-2] == 1.0
+    assert observation[-1] == path[0]
+    assert info["explicit_prior"] == path[0]
+
+    for _ in range(DECISIONS_PER_CAMPAIGN):
+        observation, _reward, _terminated, _truncated, info = env.step(0)
+    assert info["campaign_boundary"] is True
+    assert info["explicit_prior"] == path[0]
+    assert observation[-2] == 1.0
+    assert observation[-1] == path[1]
+
+
+def test_factorial_prior_paths_fail_closed_on_shape_or_range() -> None:
+    history = _history()
+    with np.testing.assert_raises_regex(ValueError, "campaign history"):
+        QRetainedMetaEpisodeEnv(
+            histories=[history],
+            scheduler=scheduler(),
+            prior_paths=[[0.5]],
+            expose_prior_feature=True,
+        )
+    with np.testing.assert_raises_regex(ValueError, r"in \[0, 1\]"):
+        QRetainedMetaEpisodeEnv(
+            histories=[history],
+            scheduler=scheduler(),
+            prior_paths=[[1.1] * CAMPAIGNS_PER_METAEPISODE],
+            expose_prior_feature=True,
+        )

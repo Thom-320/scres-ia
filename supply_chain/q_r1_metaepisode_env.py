@@ -38,6 +38,7 @@ CAMPAIGNS_PER_METAEPISODE = 12
 DECISIONS_PER_CAMPAIGN = 8
 DECISIONS_PER_METAEPISODE = CAMPAIGNS_PER_METAEPISODE * DECISIONS_PER_CAMPAIGN
 META_OBSERVATION_DIM = OBSERVATION_DIM + 1
+FACTORIAL_OBSERVATION_DIM = OBSERVATION_DIM + 2
 OBJECTIVE = "early_ret_complete_cohort"
 _REPLAY_CONFIG = StateRichConfiguration("belief_mpc", 3)
 
@@ -55,6 +56,8 @@ class QRetainedMetaEpisodeEnv(gym.Env[np.ndarray, int]):
         regime_persistence: float = 0.90,
         dominant_share: float = 0.90,
         sampling_seed: int = 0,
+        prior_paths: Sequence[Sequence[float]] | None = None,
+        expose_prior_feature: bool = False,
     ) -> None:
         super().__init__()
         self.histories = tuple(tuple(history) for history in histories)
@@ -75,15 +78,37 @@ class QRetainedMetaEpisodeEnv(gym.Env[np.ndarray, int]):
         self.scheduler = {str(key): tuple(value) for key, value in scheduler.items()}
         self.regime_persistence = float(regime_persistence)
         self.dominant_share = float(dominant_share)
+        self.expose_prior_feature = bool(expose_prior_feature)
+        if prior_paths is None:
+            self.prior_paths = tuple(
+                tuple(0.5 for _ in history) for history in self.histories
+            )
+        else:
+            self.prior_paths = tuple(
+                tuple(float(value) for value in path) for path in prior_paths
+            )
+            if len(self.prior_paths) != len(self.histories):
+                raise ValueError("prior_paths must match the number of histories")
+            for history, path in zip(self.histories, self.prior_paths, strict=True):
+                if len(path) != len(history):
+                    raise ValueError("each prior path must match its campaign history")
+                if any(not 0.0 <= value <= 1.0 for value in path):
+                    raise ValueError("every explicit prior must be in [0, 1]")
         self._rng = np.random.default_rng(int(sampling_seed))
         self.action_space = spaces.Discrete(4)
+        observation_dim = (
+            FACTORIAL_OBSERVATION_DIM
+            if self.expose_prior_feature
+            else META_OBSERVATION_DIM
+        )
         self.observation_space = spaces.Box(
             low=0.0,
             high=1.0,
-            shape=(META_OBSERVATION_DIM,),
+            shape=(observation_dim,),
             dtype=np.float32,
         )
         self._history: tuple[CampaignSpec, ...] | None = None
+        self._history_index: int | None = None
         self._campaign_position = 0
         self._actions: list[int] = []
         self._campaign_rows: list[dict[str, Any]] = []
@@ -93,6 +118,12 @@ class QRetainedMetaEpisodeEnv(gym.Env[np.ndarray, int]):
         if self._history is None:
             raise RuntimeError("reset() must be called before accessing the campaign")
         return self._history[self._campaign_position]
+
+    @property
+    def current_prior(self) -> float:
+        if self._history_index is None:
+            raise RuntimeError("reset() must be called before accessing the prior")
+        return float(self.prior_paths[self._history_index][self._campaign_position])
 
     def _observation(self, *, boundary: bool) -> np.ndarray:
         campaign = self.current_campaign
@@ -111,9 +142,12 @@ class QRetainedMetaEpisodeEnv(gym.Env[np.ndarray, int]):
         if decision_index >= len(decisions):
             raise RuntimeError("no observation exists after a terminal campaign action")
         base = normalized_state_rich_observation(decisions[decision_index].observation)
-        return np.concatenate(
-            [base, np.asarray([float(boundary)], dtype=np.float32)]
-        ).astype(np.float32, copy=False)
+        suffix = [float(boundary)]
+        if self.expose_prior_feature:
+            suffix.append(self.current_prior)
+        return np.concatenate([base, np.asarray(suffix, dtype=np.float32)]).astype(
+            np.float32, copy=False
+        )
 
     def reset(
         self,
@@ -129,6 +163,7 @@ class QRetainedMetaEpisodeEnv(gym.Env[np.ndarray, int]):
             history_index = int(self._rng.integers(len(self.histories)))
         if history_index not in range(len(self.histories)):
             raise ValueError("history_index is outside the supplied history set")
+        self._history_index = history_index
         self._history = self.histories[history_index]
         self._campaign_position = 0
         self._actions = []
@@ -137,6 +172,7 @@ class QRetainedMetaEpisodeEnv(gym.Env[np.ndarray, int]):
             "campaign_boundary": True,
             "campaign_position": 0,
             "physical_reset": True,
+            "explicit_prior": self.current_prior,
         }
 
     def step(
@@ -171,8 +207,10 @@ class QRetainedMetaEpisodeEnv(gym.Env[np.ndarray, int]):
             "worst_product_fill": metrics["worst_product_fill"],
             "unresolved_orders": metrics["unresolved_orders"],
             "lost_orders": metrics["lost_orders"],
+            "service_loss": metrics["service_loss_auc"],
             "skeleton_sha256": campaign.skeleton.skeleton_sha256,
             "prefix_state_hash": campaign.skeleton.prefix_state_hash,
+            "explicit_prior": self.current_prior,
         }
         self._campaign_rows.append(row)
         reward = float(metrics[OBJECTIVE])
@@ -187,7 +225,7 @@ class QRetainedMetaEpisodeEnv(gym.Env[np.ndarray, int]):
                 "campaign_rows": tuple(self._campaign_rows),
             }
             return (
-                np.zeros(META_OBSERVATION_DIM, dtype=np.float32),
+                np.zeros(self.observation_space.shape, dtype=np.float32),
                 reward,
                 True,
                 False,
