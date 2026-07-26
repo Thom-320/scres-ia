@@ -75,6 +75,16 @@ def test_v4_can_compute_north_star_and_all_factorial_estimands() -> None:
     assert comparators["retained"]["explicit_prior"] == "retained_prior_path"
     assert comparators["reset"]["explicit_prior"] == 0.5
     assert comparators["same_histories_and_skeletons_as_learner"] is True
+    scope = comparators["evaluation_scope"]
+    assert scope["development_checkpoint_selection"]["history_roots"] == [
+        7_670_101,
+        7_670_116,
+    ]
+    assert scope["development_checkpoint_selection"]["campaign_indices"] == [0, 1]
+    budget = comparators["compute_budget"]
+    assert budget["per_calendar_hard_cap_seconds"] == 600
+    assert budget["on_budget_exceeded"] == "STOP_COMPUTE_BUDGET_PREDECLARED"
+    assert budget["post_open_scope_reduction_forbidden"] is True
     assert FACTORIAL_OBSERVATION_DIM == 23
 
 

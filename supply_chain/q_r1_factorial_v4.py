@@ -88,6 +88,7 @@ def structured_pair_rows(
         comparator_v2_calendar
     ),
     calendar_evaluator: Callable[..., dict[str, Any]] = evaluate_calendar,
+    cache: dict[tuple[str, str, str], tuple[tuple[int, ...], dict[str, object], dict[str, Any]]] | None = None,
 ) -> list[dict[str, Any]]:
     """Evaluate retained/reset structured arms on matched physical histories."""
     if len(histories) != len(prior_paths):
@@ -102,18 +103,29 @@ def structured_pair_rows(
                 ("structured_reset", 0.5),
                 ("structured_retained", float(retained_prior)),
             ):
-                belief: ExactJointBelief = fixed_theta_belief(prior)
-                calendar, diagnostics = calendar_builder(
-                    campaign=structured_campaign,
-                    belief=belief,
-                    scheduler=scheduler,
-                    config=config,
+                key = (
+                    campaign.skeleton.skeleton_sha256,
+                    float(prior).hex(),
+                    config.config_id,
                 )
-                metrics = calendar_evaluator(
-                    campaign=structured_campaign,
-                    calendar=calendar,
-                    scheduler=scheduler,
-                )
+                cached = None if cache is None else cache.get(key)
+                if cached is None:
+                    belief: ExactJointBelief = fixed_theta_belief(prior)
+                    calendar, diagnostics = calendar_builder(
+                        campaign=structured_campaign,
+                        belief=belief,
+                        scheduler=scheduler,
+                        config=config,
+                    )
+                    metrics = calendar_evaluator(
+                        campaign=structured_campaign,
+                        calendar=calendar,
+                        scheduler=scheduler,
+                    )
+                    if cache is not None:
+                        cache[key] = (calendar, diagnostics, metrics)
+                else:
+                    calendar, diagnostics, metrics = cached
                 missing = (
                     set(REQUIRED_PRIMARY_FIELDS)
                     | set(REQUIRED_SERVICE_FIELDS)

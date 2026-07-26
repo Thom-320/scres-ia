@@ -69,7 +69,56 @@
       "explicit_prior": "retained_prior_path"
     },
     "scientific_role": "strongest tested structured comparator; no optimality claim",
-    "same_histories_and_skeletons_as_learner": true
+    "same_histories_and_skeletons_as_learner": true,
+    "evaluation_scope": {
+      "instrument_preflight": {
+        "history_roots": [
+          7570801,
+          7570801
+        ],
+        "campaign_indices": [
+          0
+        ],
+        "kappa_cells": [
+          0.5,
+          0.75,
+          0.9
+        ],
+        "claim_status": "BURNED_INSTRUMENT_PREFLIGHT_NO_CLAIM"
+      },
+      "development_checkpoint_selection": {
+        "history_roots": [
+          7670101,
+          7670116
+        ],
+        "campaign_indices": [
+          0,
+          1
+        ],
+        "kappa_cells": [
+          0.5,
+          0.75,
+          0.9
+        ],
+        "paired_structured_calendar_evaluations_before_cache": 192
+      },
+      "confirmation": "smallest root prefix selected by the prospective clustered power audit; all 12 campaigns per selected root",
+      "scope_may_not_change_after_development_opening": true
+    },
+    "compute_budget": {
+      "measured_conservative_seconds_per_structured_calendar": 300,
+      "per_calendar_hard_cap_seconds": 600,
+      "development_sequential_hard_cap_seconds": 115200,
+      "parallelism_may_reduce_wall_time_but_not_change_scope": true,
+      "cache_key": [
+        "skeleton_sha256",
+        "explicit_prior_hex",
+        "comparator_config_sha256"
+      ],
+      "cache_reuse_across_kappa_allowed_only_for_identical_cache_key": true,
+      "on_budget_exceeded": "STOP_COMPUTE_BUDGET_PREDECLARED",
+      "post_open_scope_reduction_forbidden": true
+    }
   },
   "estimands": {
     "explicit_context_value": "P1_H0 - P0_H0",
