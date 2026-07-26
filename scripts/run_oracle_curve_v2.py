@@ -30,7 +30,7 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from scripts.c6_perbatch_ceiling import OBJECTIVE, SCHED_PATTERN  # noqa: E402
+from scripts.c6_perbatch_ceiling import OBJECTIVE  # noqa: E402
 from scripts.evaluate_program_q_replication import scheduler  # noqa: E402
 from supply_chain.oracle_capture import (  # noqa: E402
     BOOT_SEED, calendar_index, load_campaigns, pooled_capture,
@@ -50,9 +50,16 @@ KAPPAS = (0.75, 0.90)
 CAMPAIGNS = 12
 
 
+# The 4-action COUNT scheduler, which is what the env, the enumerated 4^8 frontiers and the
+# frozen comparator all use. c6_perbatch_ceiling.SCHED_PATTERN is the 8-action PER-BATCH
+# mapping of the C6 gate; using it here silently reinterpreted action 1 as [P_C,P_H,P_H]
+# instead of [P_H,P_C,P_H], so the reward was computed on different physics than the grading.
+COUNT_SCHEDULER = scheduler()
+
+
 def objective_of(skeleton, calendar) -> float:
     metrics = simulate_full_des_frontier(
-        skeleton=skeleton, scheduler=SCHED_PATTERN,
+        skeleton=skeleton, scheduler=COUNT_SCHEDULER,
         calendars=np.asarray([calendar], dtype=np.uint8), include_q_r1_metrics=True)
     return float(np.asarray(metrics[OBJECTIVE])[0])
 
@@ -130,7 +137,7 @@ def main() -> int:
         campaigns, _ = calib_env._load(spec)
         for campaign in campaigns:
             metrics = simulate_full_des_frontier(
-                skeleton=campaign.skeleton, scheduler=SCHED_PATTERN,
+                skeleton=campaign.skeleton, scheduler=COUNT_SCHEDULER,
                 calendars=all_calendars, include_q_r1_metrics=True)
             calib_labels.append(np.asarray(metrics[OBJECTIVE], dtype=float))
     calib_stack = np.vstack(calib_labels)

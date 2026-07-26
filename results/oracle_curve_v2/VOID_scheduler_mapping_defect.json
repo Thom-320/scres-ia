@@ -1,0 +1,19 @@
+{
+ "artifacts_voided": [
+  "results/oracle_curve_v2/curve_v2_retained.log",
+  "results/oracle_curve_v2/curve_v2_reset.log",
+  "any curve_v2_*.json produced by that run"
+ ],
+ "claim_status": "VOID_NO_CLAIM",
+ "defect": {
+  "consequence": "action 1 was interpreted as [P_C,P_H,P_H] instead of [P_H,P_C,P_H], so the REWARD the learner optimized and the calibration statistic used for checkpoint selection were computed on different physics than the grading. The graded capture numbers were internally consistent with the frontiers, but the policy was trained and selected against a mis-specified objective.",
+  "fix": "objective_fn now uses the count scheduler; the gate passes with abs delta 0.0",
+  "found_by": "the rho-identity gate of the factorial v3 runner, which compares a simulated objective against the exact frontier lookup of the same calendar: it failed at 0.3830 vs 0.4850 and blocked the run before any value was reported",
+  "what": "the runner's objective_fn evaluated calendars with c6_perbatch_ceiling.SCHED_PATTERN, the 8-action PER-BATCH mapping of the C6 gate, while the environment, the enumerated 4^8 frontiers and the frozen comparator all use the 4-action COUNT mapping"
+ },
+ "schema": "oracle_curve_v2_void_notice_v1",
+ "status": "VOID_INSTRUMENT_DEFECT_WRONG_ACTION_MAPPING",
+ "supersedes_characterization": "an external review described this run as valid-but-confounded exploratory evidence of the total retention treatment. That was generous: the run is not merely confounded, it is void, because its training signal was the wrong objective.",
+ "transient_note": "the +0.0208 capture observed at one checkpoint is NOT evidence of anything: it came from this defective run, it was repeatedly observed on a burned test set, it was never selected, and it collapsed at the next checkpoint.",
+ "voided_at_utc": "2026-07-26T19:58:11.928323+00:00"
+}
