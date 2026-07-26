@@ -15,7 +15,7 @@ import numpy as np
 
 
 ROOT = Path(__file__).resolve().parents[1]
-CONTRACT_PATH = ROOT / "contracts/q_r1_matched_retention_factorial_v4.DRAFT.json"
+CONTRACT_PATH = ROOT / "contracts/q_r1_matched_retention_factorial_v4.json"
 
 
 def sha256(path: Path) -> str:

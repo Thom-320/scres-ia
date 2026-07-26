@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -7,7 +8,10 @@ from supply_chain.q_r1_metaepisode_env import FACTORIAL_OBSERVATION_DIM
 
 
 ROOT = Path(__file__).resolve().parents[1]
-CONTRACT = ROOT / "contracts/q_r1_matched_retention_factorial_v4.DRAFT.json"
+CONTRACT = ROOT / "contracts/q_r1_matched_retention_factorial_v4.json"
+RECEIPT = (
+    ROOT / "contracts/q_r1_matched_retention_factorial_v4_freeze_receipt.json"
+)
 COLLISION = (
     ROOT
     / "research/paper2_exhaustive_search"
@@ -19,14 +23,18 @@ def _range(bounds: list[int]) -> set[int]:
     return set(range(int(bounds[0]), int(bounds[1]) + 1))
 
 
-def test_v4_is_draft_and_cannot_open_roots() -> None:
+def test_v4_reviewed_bytes_are_frozen_by_a_separate_receipt() -> None:
     contract = json.loads(CONTRACT.read_text())
     assert contract["status"] == "DRAFT_PROSPECTIVE_UNOPENED_NOT_AUTHORITY"
     assert contract["data_splits"]["opened"] is False
-    assert contract["execution_custody"][
-        "fresh_roots_may_open_only_after_external_pre_freeze_pass"
-    ]
-    assert contract["boundaries"]["no_new_roots_may_open_while_status_is_draft"]
+    receipt = json.loads(RECEIPT.read_text())
+    assert receipt["status"] == "FROZEN_PROSPECTIVE_UNOPENED"
+    assert receipt["contract_sha256"] == hashlib.sha256(
+        CONTRACT.read_bytes()
+    ).hexdigest()
+    assert receipt["reviewed_contract_internal_status"] == contract["status"]
+    assert receipt["fresh_development_roots_opened"] is False
+    assert receipt["confirmation_roots_opened"] is False
 
 
 def test_v4_splits_and_optimizer_seeds_are_fresh_and_disjoint() -> None:

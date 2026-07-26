@@ -52,7 +52,7 @@ from supply_chain.retained_context_discovery import (  # noqa: E402
 )
 
 
-CONTRACT_PATH = ROOT / "contracts/q_r1_matched_retention_factorial_v4.DRAFT.json"
+CONTRACT_PATH = ROOT / "contracts/q_r1_matched_retention_factorial_v4.json"
 FREEZE_RECEIPT_PATH = (
     ROOT / "contracts/q_r1_matched_retention_factorial_v4_freeze_receipt.json"
 )
@@ -164,13 +164,17 @@ def runtime_receipt() -> dict[str, Any]:
 def load_authority(mode: str) -> tuple[dict[str, Any], dict[str, Any] | None]:
     contract = json.loads(CONTRACT_PATH.read_text())
     if mode == "instrument-preflight":
+        if FREEZE_RECEIPT_PATH.exists():
+            raise RuntimeError(
+                "instrument preflight is closed after the contract freeze"
+            )
         if contract["status"] != "DRAFT_PROSPECTIVE_UNOPENED_NOT_AUTHORITY":
             raise RuntimeError("instrument preflight expects the reviewed draft")
         if contract["data_splits"]["opened"]:
             raise RuntimeError("draft unexpectedly marks development roots open")
         return contract, None
-    if contract["status"] != "FROZEN_PROSPECTIVE_UNOPENED":
-        raise RuntimeError("development is forbidden until the contract is frozen")
+    if contract["status"] != "DRAFT_PROSPECTIVE_UNOPENED_NOT_AUTHORITY":
+        raise RuntimeError("frozen contract content marker is unexpected")
     if not FREEZE_RECEIPT_PATH.exists():
         raise RuntimeError("development requires a separate freeze receipt")
     receipt = json.loads(FREEZE_RECEIPT_PATH.read_text())
@@ -178,6 +182,12 @@ def load_authority(mode: str) -> tuple[dict[str, Any], dict[str, Any] | None]:
         raise RuntimeError("contract bytes do not match the freeze receipt")
     if receipt.get("status") != "FROZEN_PROSPECTIVE_UNOPENED":
         raise RuntimeError("freeze receipt does not authorize development")
+    if receipt.get("reviewed_contract_internal_status") != contract["status"]:
+        raise RuntimeError("freeze receipt content-status marker mismatch")
+    if receipt.get("fresh_development_roots_opened") is not False:
+        raise RuntimeError("freeze receipt does not attest closed development roots")
+    if receipt.get("confirmation_roots_opened") is not False:
+        raise RuntimeError("freeze receipt does not attest closed confirmation roots")
     return contract, receipt
 
 
