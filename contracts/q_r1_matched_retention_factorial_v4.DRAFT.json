@@ -84,7 +84,9 @@
           0.75,
           0.9
         ],
-        "claim_status": "BURNED_INSTRUMENT_PREFLIGHT_NO_CLAIM"
+        "claim_status": "BURNED_INSTRUMENT_PREFLIGHT_NO_CLAIM",
+        "training_and_evaluation_roots_are_identical": true,
+        "held_out_interpretation_forbidden": true
       },
       "development_checkpoint_selection": {
         "history_roots": [
@@ -271,6 +273,8 @@
     "computed_once_over_all_16_selection_roots": true,
     "written_before_any_learner_or_mpc_grading": true,
     "shared_immutable_artifact_across_optimizer_seeds": true,
+    "development_workers_must_read_and_hash_the_precomputed_artifact": true,
+    "development_workers_may_not_recompute_the_bar": true,
     "selected_without_confirmation": true
   },
   "mandatory_outputs": {
@@ -346,6 +350,9 @@
     "execution_requires_git_metadata": true,
     "execution_requires_clean_worktree": true,
     "output_directory_must_not_exist": true,
+    "checkpoint_rows_persisted_before_next_checkpoint": true,
+    "structured_rows_and_cache_persisted_after_each_campaign": true,
+    "aggregate_compute_budget_checked_before_starting_each_uncached_calendar": true,
     "fresh_roots_may_open_only_after_external_pre_freeze_pass": true
   },
   "boundaries": {

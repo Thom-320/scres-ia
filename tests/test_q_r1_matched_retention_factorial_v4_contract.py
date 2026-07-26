@@ -105,6 +105,9 @@ def test_v4_contains_all_kappa_cells_and_secondary_service_ledger() -> None:
     assert contract["static_bar_protocol"][
         "computed_once_over_all_16_selection_roots"
     ]
+    assert contract["static_bar_protocol"][
+        "development_workers_may_not_recompute_the_bar"
+    ]
 
 
 def test_v4_requires_separate_immutable_freeze_and_opening_receipts() -> None:
@@ -114,3 +117,5 @@ def test_v4_requires_separate_immutable_freeze_and_opening_receipts() -> None:
     assert custody["freeze_receipt_separate_and_immutable"] is True
     assert custody["execution_requires_git_metadata"] is True
     assert custody["execution_requires_clean_worktree"] is True
+    assert custody["checkpoint_rows_persisted_before_next_checkpoint"] is True
+    assert custody["structured_rows_and_cache_persisted_after_each_campaign"] is True

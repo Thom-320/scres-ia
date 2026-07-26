@@ -116,3 +116,50 @@ def test_structured_pair_fails_closed_when_service_is_missing() -> None:
             calendar_builder=fake_builder,
             calendar_evaluator=fake_evaluator,
         )
+
+
+def test_structured_budget_stops_before_starting_unaffordable_work() -> None:
+    history = _history()
+    calls = 0
+
+    def should_not_run(**_kwargs):
+        nonlocal calls
+        calls += 1
+        return (0,) * 8, {}
+
+    with np.testing.assert_raises_regex(
+        RuntimeError, "STOP_COMPUTE_BUDGET_PREDECLARED"
+    ):
+        structured_pair_rows(
+            histories=[history],
+            prior_paths=matched_prior_paths([history]),
+            scheduler=scheduler(),
+            config=ComparatorV2Config(horizon=1, conditional_paths=1),
+            calendar_builder=should_not_run,
+            calendar_evaluator=lambda **_kwargs: _metrics(),
+            cache={},
+            per_calendar_hard_cap_seconds=2.0,
+            aggregate_hard_cap_seconds=1.0,
+        )
+    assert calls == 0
+
+
+def test_structured_progress_is_persistable_after_each_completed_row() -> None:
+    history = _history()
+    snapshots: list[tuple[int, int]] = []
+
+    rows = structured_pair_rows(
+        histories=[history],
+        prior_paths=matched_prior_paths([history]),
+        scheduler=scheduler(),
+        config=ComparatorV2Config(horizon=1, conditional_paths=1),
+        calendar_builder=lambda **_kwargs: ((0,) * 8, {}),
+        calendar_evaluator=lambda **_kwargs: _metrics(),
+        cache={},
+        progress_callback=lambda completed, cache: snapshots.append(
+            (len(completed), len(cache))
+        ),
+    )
+    assert len(rows) == 24
+    assert snapshots[0] == (1, 1)
+    assert snapshots[-1] == (24, 23)

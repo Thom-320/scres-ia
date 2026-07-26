@@ -351,6 +351,7 @@ def evaluate_structured(
     *,
     campaign_indices: set[int],
     contract: dict[str, Any],
+    progress_dir: Path,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     _freeze, config = load_freeze(COMPARATOR_FREEZE_PATH)
     selected = filter_histories(
@@ -377,6 +378,39 @@ def evaluate_structured(
         tuple[tuple[int, ...], dict[str, object], dict[str, Any]],
     ] = {}
     budget = contract["structured_comparators"]["compute_budget"]
+
+    def persist_progress(
+        completed_rows: list[dict[str, Any]],
+        completed_cache: dict[
+            tuple[str, str, str],
+            tuple[tuple[int, ...], dict[str, object], dict[str, Any]],
+        ],
+    ) -> None:
+        partial_rows = progress_dir / "structured_rows.partial.json"
+        write_json(partial_rows, completed_rows)
+        cache_payload = [
+            {
+                "key": list(key),
+                "calendar": list(value[0]),
+                "diagnostics": value[1],
+                "metrics": value[2],
+            }
+            for key, value in sorted(completed_cache.items())
+        ]
+        partial_cache = progress_dir / "structured_cache.partial.json"
+        write_json(partial_cache, cache_payload)
+        write_json(
+            progress_dir / "structured_progress.json",
+            {
+                "complete": False,
+                "rows_persisted": len(completed_rows),
+                "cache_entries_persisted": len(completed_cache),
+                "rows_sha256": sha256(partial_rows),
+                "cache_sha256": sha256(partial_cache),
+                "confirmation_roots_opened": False,
+            },
+        )
+
     started = time.perf_counter()
     rows = structured_pair_rows(
         histories=selected,
@@ -387,6 +421,10 @@ def evaluate_structured(
         per_calendar_hard_cap_seconds=float(
             budget["per_calendar_hard_cap_seconds"]
         ),
+        aggregate_hard_cap_seconds=float(
+            budget["development_sequential_hard_cap_seconds"]
+        ),
+        progress_callback=persist_progress,
     )
     elapsed = time.perf_counter() - started
     if elapsed > float(budget["development_sequential_hard_cap_seconds"]):
@@ -478,11 +516,13 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--mode",
-        choices=("instrument-preflight", "development-worker"),
+        choices=("instrument-preflight", "static-bar", "development-worker"),
         required=True,
     )
     parser.add_argument("--config-id", default="s01")
     parser.add_argument("--optimizer-seed", type=int, default=7_672_001)
+    parser.add_argument("--static-bar-path", type=Path)
+    parser.add_argument("--development-opening-receipt", type=Path)
     parser.add_argument("--output-dir", type=Path, required=True)
     args = parser.parse_args()
     if args.output_dir.exists():
@@ -528,9 +568,31 @@ def main() -> int:
         claim_status = "DEVELOPMENT_NO_CONFIRMATORY_CLAIM"
         opening_name = "development_opening_receipt.json"
         static_campaigns = None
-        allowed = set(map(int, contract["data_splits"]["optimizer_seeds"]))
-        if args.optimizer_seed not in allowed:
-            raise ValueError("optimizer seed is outside the frozen contract")
+        if args.mode == "development-worker":
+            allowed = set(map(int, contract["data_splits"]["optimizer_seeds"]))
+            if args.optimizer_seed not in allowed:
+                raise ValueError("optimizer seed is outside the frozen contract")
+
+    shared_opening: dict[str, Any] | None = None
+    shared_static_bar: dict[str, Any] | None = None
+    if args.mode == "development-worker":
+        if (
+            args.development_opening_receipt is None
+            or not args.development_opening_receipt.is_file()
+        ):
+            raise RuntimeError(
+                "development worker requires the static-bar opening receipt"
+            )
+        shared_opening = json.loads(args.development_opening_receipt.read_text())
+        if shared_opening.get("mode") != "static-bar":
+            raise RuntimeError("development opening receipt has the wrong mode")
+        if shared_opening.get("contract_sha256") != sha256(CONTRACT_PATH):
+            raise RuntimeError("development opening receipt contract mismatch")
+        if args.static_bar_path is None or not args.static_bar_path.is_file():
+            raise RuntimeError(
+                "development worker requires the shared static-bar artifact"
+            )
+        shared_static_bar = json.loads(args.static_bar_path.read_text())
 
     args.output_dir.mkdir(parents=True)
     opening_receipt = {
@@ -550,19 +612,76 @@ def main() -> int:
         "runtime": runtime,
         "confirmation_roots_opened": False,
     }
-    write_json(args.output_dir / opening_name, opening_receipt)
+    if args.mode in {"instrument-preflight", "static-bar"}:
+        write_json(args.output_dir / opening_name, opening_receipt)
+    else:
+        assert args.development_opening_receipt is not None
+        write_json(
+            args.output_dir / "worker_opening_reference.json",
+            {
+                "opening_receipt": str(args.development_opening_receipt),
+                "opening_receipt_sha256": sha256(
+                    args.development_opening_receipt
+                ),
+                "contract_sha256": sha256(CONTRACT_PATH),
+            },
+        )
 
-    training_histories = build_histories(training_roots, kappas)
+    training_histories = (
+        ()
+        if args.mode == "static-bar"
+        else build_histories(training_roots, kappas)
+    )
     evaluation_histories = (
         training_histories
-        if evaluation_roots == training_roots
+        if training_histories and evaluation_roots == training_roots
         else build_histories(evaluation_roots, kappas)
     )
-    static_bar = build_static_bar(
-        evaluation_histories,
-        campaign_indices=static_campaigns,
-    )
-    write_json(args.output_dir / "static_bar.json", static_bar)
+    if args.mode in {"instrument-preflight", "static-bar"}:
+        static_bar = build_static_bar(
+            evaluation_histories,
+            campaign_indices=static_campaigns,
+        )
+        write_json(args.output_dir / "static_bar.json", static_bar)
+    else:
+        assert args.static_bar_path is not None
+        assert shared_static_bar is not None
+        static_bar = shared_static_bar
+        expected_roots = contract["data_splits"][
+            "checkpoint_selection_history_roots"
+        ]
+        static_roots = sorted(
+            {int(row["history_root"]) for row in static_bar["identities"]}
+        )
+        if static_roots != integer_range(expected_roots):
+            raise RuntimeError("static bar does not cover all selection roots")
+        if static_bar.get("selection_campaigns") != 16 * 12 * 3:
+            raise RuntimeError("static bar selection campaign count mismatch")
+        write_json(
+            args.output_dir / "static_bar_reference.json",
+            {
+                "path": str(args.static_bar_path),
+                "sha256": sha256(args.static_bar_path),
+                "calendar": static_bar["calendar"],
+                "frontier_row": static_bar["frontier_row"],
+            },
+        )
+
+    if args.mode == "static-bar":
+        result = {
+            "schema_version": "q_r1_factorial_v4_static_bar_run",
+            "claim_status": "DEVELOPMENT_OPENING_NO_LEARNER_RESULT",
+            "contract_sha256": sha256(CONTRACT_PATH),
+            "static_bar_sha256": sha256(args.output_dir / "static_bar.json"),
+            "training_roots_opened": training_roots,
+            "selection_roots_opened": evaluation_roots,
+            "confirmation_roots_opened": False,
+            "learner_evaluated": False,
+            "structured_comparator_evaluated": False,
+        }
+        write_json(args.output_dir / "result.json", result)
+        print(json.dumps(result, indent=2, sort_keys=True))
+        return 0
 
     from sb3_contrib import RecurrentPPO  # noqa: PLC0415
 
@@ -629,13 +748,31 @@ def main() -> int:
             row["config_id"] = args.config_id
             row["optimizer_seed"] = args.optimizer_seed
         checkpoint_rows[step] = rows
+        checkpoint_rows_path = (
+            args.output_dir / f"checkpoint_rows_t{step:06d}.json"
+        )
+        write_json(checkpoint_rows_path, rows)
         checkpoint_receipts.append(
             {
                 "timesteps": step,
                 "path": archive.name,
                 "sha256": checkpoint_sha,
+                "rows_path": checkpoint_rows_path.name,
+                "rows_sha256": sha256(checkpoint_rows_path),
                 "factorial_arms": [row[0] for row in FACTORIAL_ARMS],
             }
+        )
+        write_json(
+            args.output_dir / "checkpoint_progress.json",
+            {
+                "schema_version": "q_r1_factorial_v4_checkpoint_progress",
+                "completed_timesteps": [
+                    row["timesteps"] for row in checkpoint_receipts
+                ],
+                "checkpoint_receipts": checkpoint_receipts,
+                "structured_evaluation_started": False,
+                "confirmation_roots_opened": False,
+            },
         )
 
     scope = contract["structured_comparators"]["evaluation_scope"][
@@ -651,6 +788,16 @@ def main() -> int:
         structured_histories,
         campaign_indices=set(map(int, scope["campaign_indices"])),
         contract=contract,
+        progress_dir=args.output_dir,
+    )
+    write_json(args.output_dir / "structured_rows.json", structured)
+    write_json(
+        args.output_dir / "structured_progress.json",
+        {
+            **structured_receipt,
+            "complete": True,
+            "rows_sha256": sha256(args.output_dir / "structured_rows.json"),
+        },
     )
     bar_rows = static_rows(
         evaluation_histories,
@@ -702,8 +849,10 @@ def main() -> int:
     selected_rows = checkpoint_rows[selected_step] + structured + bar_rows
     all_checkpoint_rows = [
         row
-        for step in checkpoints
-        for row in checkpoint_rows[step]
+        for receipt in checkpoint_receipts
+        for row in json.loads(
+            (args.output_dir / str(receipt["rows_path"])).read_text()
+        )
     ]
     result = {
         "schema_version": "q_r1_matched_retention_factorial_v4_run",

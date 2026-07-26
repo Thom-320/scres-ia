@@ -95,11 +95,24 @@ def structured_pair_rows(
     ]
     | None = None,
     per_calendar_hard_cap_seconds: float | None = None,
+    aggregate_hard_cap_seconds: float | None = None,
+    progress_callback: Callable[
+        [
+            list[dict[str, Any]],
+            dict[
+                tuple[str, str, str],
+                tuple[tuple[int, ...], dict[str, object], dict[str, Any]],
+            ],
+        ],
+        None,
+    ]
+    | None = None,
 ) -> list[dict[str, Any]]:
     """Evaluate retained/reset structured arms on matched physical histories."""
     if len(histories) != len(prior_paths):
         raise ValueError("histories and prior_paths must have equal length")
     rows: list[dict[str, Any]] = []
+    cumulative_compute_seconds = 0.0
     for history, priors in zip(histories, prior_paths, strict=True):
         if len(history) != len(priors):
             raise ValueError("each prior path must match its history")
@@ -116,6 +129,14 @@ def structured_pair_rows(
                 )
                 cached = None if cache is None else cache.get(key)
                 if cached is None:
+                    if (
+                        aggregate_hard_cap_seconds is not None
+                        and per_calendar_hard_cap_seconds is not None
+                        and cumulative_compute_seconds
+                        + float(per_calendar_hard_cap_seconds)
+                        > float(aggregate_hard_cap_seconds)
+                    ):
+                        raise RuntimeError("STOP_COMPUTE_BUDGET_PREDECLARED")
                     started = time.perf_counter()
                     belief: ExactJointBelief = fixed_theta_belief(prior)
                     calendar, diagnostics = calendar_builder(
@@ -130,6 +151,7 @@ def structured_pair_rows(
                         scheduler=scheduler,
                     )
                     planning_elapsed = time.perf_counter() - started
+                    cumulative_compute_seconds += planning_elapsed
                     if (
                         per_calendar_hard_cap_seconds is not None
                         and planning_elapsed > float(per_calendar_hard_cap_seconds)
@@ -167,4 +189,6 @@ def structured_pair_rows(
                         **metrics,
                     }
                 )
+                if progress_callback is not None:
+                    progress_callback(rows, {} if cache is None else cache)
     return rows
