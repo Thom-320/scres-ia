@@ -1,0 +1,90 @@
+{
+  "schema_version": "q_r1_matched_retention_factorial_v4_instrument_stop_v1",
+  "status": "STOP_INSTRUMENT_PACKAGING_STATIC_BAR_PATH",
+  "recorded_at_utc": "2026-07-27T11:53:51Z",
+  "execution_commit": "66f43cb6e6d9028f8bb58b849461cdc941c423c0",
+  "contract_sha256": "bb92a2cbfcd3691a77f7f9ab8a269d7ffab65823d37b41f70d0b13795d92e764",
+  "static_bar_sha256": "3de72f0197f1771bc894e44ee987600e49bf319250933a81b25157eb0b434f94",
+  "failure": {
+    "type": "deterministic_final_packaging_path_error",
+    "exception": "FileNotFoundError",
+    "attempted_path_pattern": "<worker_output_dir>/static_bar.json",
+    "actual_authoritative_input": "the externally supplied --static-bar-path",
+    "scientific_estimands_changed": false
+  },
+  "local_wave1_attempts": {
+    "count": 8,
+    "configs_and_seeds": {
+      "s01": [
+        7672101,
+        7672102,
+        7672103
+      ],
+      "s02": [
+        7672101,
+        7672102,
+        7672103
+      ],
+      "s03": [
+        7672101,
+        7672102
+      ]
+    },
+    "training_timesteps_completed_per_attempt": 96000,
+    "checkpoint_timesteps": [
+      0,
+      24000,
+      48000,
+      72000,
+      96000
+    ],
+    "structured_rows_preserved_per_attempt": 192,
+    "result_json_emitted": false,
+    "action_eligible": false
+  },
+  "vps_attempts": {
+    "original_attempts": {
+      "count": 4,
+      "status": "FAILED_VPS_REBOOT_PRESERVED_NOT_ELIGIBLE",
+      "reboot_at_utc": "2026-07-27T00:22:30Z"
+    },
+    "retry1_attempts": {
+      "count": 4,
+      "configs_and_seeds": {
+        "s03": [
+          7672103
+        ],
+        "s04": [
+          7672101,
+          7672102,
+          7672103
+        ]
+      },
+      "stopped_by_user_authorization": true,
+      "stopped_at_utc": "2026-07-27T11:53:51Z",
+      "completed_timesteps": [
+        0
+      ],
+      "result_json_emitted": false,
+      "action_eligible": false,
+      "remote_directories_preserved": true,
+      "local_custody_directory": "/private/tmp/q_r1_factorial_v4_retry1_stopped_20260727T1153Z",
+      "local_custody_manifest_sha256": "8974d977b8c97cd59093b2d661649df4deb3b85e2ecdd29804d76b9795dfe1ad"
+    }
+  },
+  "confirmation_roots": {
+    "range": [
+      7670201,
+      7670264
+    ],
+    "opened": false
+  },
+  "governance": {
+    "wave2_launched": false,
+    "aggregation_performed": false,
+    "configuration_selected": false,
+    "learner_claim_authorized": false,
+    "all_v4_attempts_action_eligible": false,
+    "required_next_step": "versioned corrective instrument and a new audited execution authority"
+  }
+}
