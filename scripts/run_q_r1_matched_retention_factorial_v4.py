@@ -78,6 +78,19 @@ def sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def authoritative_static_bar_sha256(
+    *,
+    mode: str,
+    output_dir: Path,
+    static_bar_path: Path | None,
+) -> str:
+    """Hash the static bar that is authoritative for the active mode."""
+    path = output_dir / "static_bar.json" if mode == "static-bar" else static_bar_path
+    if path is None or not path.is_file():
+        raise RuntimeError("authoritative static bar is missing")
+    return sha256(path)
+
+
 def json_sha256(value: Any) -> str:
     payload = json.dumps(
         value, sort_keys=True, separators=(",", ":"), default=str
@@ -825,7 +838,11 @@ def main() -> int:
             "schema_version": "q_r1_factorial_v4_static_bar_run",
             "claim_status": "DEVELOPMENT_OPENING_NO_LEARNER_RESULT",
             "contract_sha256": sha256(CONTRACT_PATH),
-            "static_bar_sha256": sha256(args.output_dir / "static_bar.json"),
+            "static_bar_sha256": authoritative_static_bar_sha256(
+                mode=args.mode,
+                output_dir=args.output_dir,
+                static_bar_path=args.static_bar_path,
+            ),
             "static_bar_completion_receipt_sha256": sha256(
                 args.output_dir / "static_bar_completion_receipt.json"
             ),
@@ -1025,7 +1042,11 @@ def main() -> int:
         "static_bar": {
             "calendar": static_bar["calendar"],
             "frontier_row": static_bar["frontier_row"],
-            "sha256": sha256(args.output_dir / "static_bar.json"),
+            "sha256": authoritative_static_bar_sha256(
+                mode=args.mode,
+                output_dir=args.output_dir,
+                static_bar_path=args.static_bar_path,
+            ),
         },
         "checkpoints": checkpoint_receipts,
         "selected_checkpoint": selected_checkpoint,

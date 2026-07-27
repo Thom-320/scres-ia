@@ -1,0 +1,63 @@
+{
+  "schema_version": "q_r1_matched_retention_factorial_v4_1_corrective_salvage",
+  "status": "DRAFT_CORRECTIVE_SALVAGE_UNOPENED_NOT_AUTHORITY",
+  "claim_status": "NO_CLAIM",
+  "base_contract": "contracts/q_r1_matched_retention_factorial_v4.json",
+  "base_contract_sha256": "bb92a2cbfcd3691a77f7f9ab8a269d7ffab65823d37b41f70d0b13795d92e764",
+  "instrument_stop": "STOP_INSTRUMENT_PACKAGING_STATIC_BAR_PATH",
+  "scope": "Correct final packaging only; scientific design, ReT, histories, roots, seeds, arms, comparator, thresholds, checkpoint rule, selection rule, and configuration ranking remain byte-for-byte governed by factorial v4.",
+  "allowed_runner_change": {
+    "defect": "development-worker final packaging hashed output_dir/static_bar.json although the authoritative shared static bar is supplied by --static-bar",
+    "correction": "development workers hash the validated --static-bar artifact; static-bar mode continues to hash output_dir/static_bar.json"
+  },
+  "salvage_source_workers": [
+    {"config_id": "s01", "optimizer_seed": 7672101},
+    {"config_id": "s01", "optimizer_seed": 7672102},
+    {"config_id": "s01", "optimizer_seed": 7672103},
+    {"config_id": "s02", "optimizer_seed": 7672101},
+    {"config_id": "s02", "optimizer_seed": 7672102},
+    {"config_id": "s02", "optimizer_seed": 7672103},
+    {"config_id": "s03", "optimizer_seed": 7672101},
+    {"config_id": "s03", "optimizer_seed": 7672102}
+  ],
+  "salvage_rules": {
+    "source_attempts_read_only": true,
+    "source_attempts_must_match_frozen_inventory_hashes": true,
+    "all_checkpoint_archives_and_rows_must_match_receipts": true,
+    "all_declared_checkpoints_required": true,
+    "exact_factorial_root_kappa_campaign_and_arm_coverage_required": true,
+    "complete_service_ledger_required": true,
+    "structured_rows_and_progress_hash_required": true,
+    "same_checkpoint_hash_across_four_neural_arms_required": true,
+    "selection_and_estimands_recomputed_mechanically_under_base_contract": true,
+    "new_output_directory_required": true,
+    "source_directory_may_not_be_modified_reused_or_deleted": true,
+    "confirmation_roots_may_not_open": true
+  },
+  "missing_worker_matrix": [
+    {"config_id": "s03", "optimizer_seed": 7672103},
+    {"config_id": "s04", "optimizer_seed": 7672101},
+    {"config_id": "s04", "optimizer_seed": 7672102},
+    {"config_id": "s04", "optimizer_seed": 7672103},
+    {"config_id": "s05", "optimizer_seed": 7672101},
+    {"config_id": "s05", "optimizer_seed": 7672102},
+    {"config_id": "s05", "optimizer_seed": 7672103},
+    {"config_id": "s06", "optimizer_seed": 7672101},
+    {"config_id": "s06", "optimizer_seed": 7672102},
+    {"config_id": "s06", "optimizer_seed": 7672103},
+    {"config_id": "s07", "optimizer_seed": 7672101},
+    {"config_id": "s07", "optimizer_seed": 7672102},
+    {"config_id": "s07", "optimizer_seed": 7672103},
+    {"config_id": "s08", "optimizer_seed": 7672101},
+    {"config_id": "s08", "optimizer_seed": 7672102},
+    {"config_id": "s08", "optimizer_seed": 7672103}
+  ],
+  "execution": {
+    "new_output_directory_per_attempt": true,
+    "vps_concurrency_cap": 2,
+    "failed_attempts_preserved": true,
+    "duplicate_action_eligible_results_forbidden": true,
+    "confirmation_roots_opened": false
+  },
+  "freeze_precondition": "Freeze receipt must bind this amendment, the base contract, source inventory, stop receipt, corrective implementation commit, and attest that returns and selection scores were not inspected before freeze."
+}

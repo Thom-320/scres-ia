@@ -9,6 +9,7 @@ import numpy as np
 import pytest
 
 from scripts.run_q_r1_matched_retention_factorial_v4 import (
+    authoritative_static_bar_sha256,
     build_histories,
     estimands,
     evaluate_neural_arm,
@@ -18,6 +19,9 @@ from scripts.run_q_r1_matched_retention_factorial_v4 import (
     sha256,
     static_rows,
     validate_shared_static_bar,
+)
+from scripts.salvage_q_r1_matched_retention_factorial_v4 import (
+    _verify_source_hashes,
 )
 
 
@@ -250,3 +254,48 @@ def test_runner_rejects_an_existing_output_directory(
     )
     with pytest.raises(SystemExit, match="refusing to overwrite"):
         main()
+
+
+def test_worker_hashes_the_shared_authoritative_static_bar(tmp_path: Path) -> None:
+    output = tmp_path / "worker"
+    output.mkdir()
+    shared = tmp_path / "static_bar.json"
+    shared.write_text("{}\n")
+    assert authoritative_static_bar_sha256(
+        mode="development-worker",
+        output_dir=output,
+        static_bar_path=shared,
+    ) == sha256(shared)
+
+
+def test_static_bar_mode_hashes_its_own_output(tmp_path: Path) -> None:
+    output = tmp_path / "bar"
+    output.mkdir()
+    local = output / "static_bar.json"
+    local.write_text('{"calendar":[0]}\n')
+    divergent = tmp_path / "other.json"
+    divergent.write_text('{"calendar":[3]}\n')
+    assert authoritative_static_bar_sha256(
+        mode="static-bar",
+        output_dir=output,
+        static_bar_path=divergent,
+    ) == sha256(local)
+
+
+def test_salvage_source_hash_validation_is_fail_closed(tmp_path: Path) -> None:
+    source = tmp_path / "s01_1"
+    source.mkdir()
+    tracked = source / "checkpoint_progress.json"
+    tracked.write_text("{}\n")
+    manifest = {
+        "files": [
+            {
+                "name": tracked.name,
+                "sha256": sha256(tracked),
+            }
+        ]
+    }
+    _verify_source_hashes(source, manifest)
+    tracked.write_text('{"altered":true}\n')
+    with pytest.raises(RuntimeError, match="source hash mismatch"):
+        _verify_source_hashes(source, manifest)
