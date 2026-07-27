@@ -87,12 +87,22 @@ congelados (barra estática, contratos, campañas).
 """)
 
 code(r"""
-# --- Celda 1: setup -------------------------------------------------------------------
+# --- Celda 1: setup y detección de plataforma ------------------------------------------
 import os, subprocess, sys, importlib
 
 REPO_URL    = "https://github.com/Thom-320/scres-ia.git"
 REPO_BRANCH = "codex/q-r1-comparator-reconciliation"   # rama con el entorno más reciente
-REPO_DIR    = "/content/scres-ia" if os.path.isdir("/content") else "./scres-ia"
+
+# ¿Dónde estamos corriendo? Cambia dónde se clona y dónde queda el archivo de resultados.
+if "google.colab" in sys.modules or os.path.isdir("/content"):
+    PLATFORM, WORKDIR = "colab", "/content"
+elif os.path.isdir("/kaggle/working"):
+    PLATFORM, WORKDIR = "kaggle", "/kaggle/working"
+else:
+    PLATFORM, WORKDIR = "local", os.getcwd()
+REPO_DIR = os.path.join(WORKDIR, "scres-ia")
+
+print(f"[plataforma] {PLATFORM.upper()}  |  carpeta de trabajo: {WORKDIR}")
 
 def sh(cmd):
     print("$", cmd)
@@ -218,6 +228,32 @@ if DMLPA_FEATURES_DIM % DMLPA_NHEAD:
     raise ValueError(f"DMLPA_FEATURES_DIM ({DMLPA_FEATURES_DIM}) debe ser divisible por "
                      f"DMLPA_NHEAD ({DMLPA_NHEAD})")
 print("[ok] configuración válida")
+
+# --- Resumen en español de lo que vas a correr, para que no haya sorpresas -------------
+_ARCH_ES = {
+    "dmlpa_positional": "DMLPA completa (transformer + posición sinusoidal + LayerNorm)",
+    "dmlpa_faithful":   "DMLPA original (transformer, sin posición explícita)",
+    "mlp":              "MLP simple (control)",
+    "lstm":             "RecurrentPPO (memoria recurrente)",
+}
+_MODO_ES = {
+    "smoke":  "prueba de humo: solo verifica que todo corra. NO mires los números.",
+    "signal": "prueba de señal: sirve para decidir si vale la pena el run largo.",
+    "final":  "run definitivo: varias semillas, resultado reportable.",
+}
+print()
+print("=" * 78)
+print("  ESTO ES LO QUE VAS A CORRER")
+print("=" * 78)
+print(f"  Modo          : {PRESET} — {_MODO_ES[PRESET]}")
+print(f"  Arquitectura  : {_ARCH_ES[ARCHITECTURE]}")
+print(f"  Algoritmo     : {ALGORITHM.upper()}")
+print(f"  Frame stack   : {FRAME_STACK} frames = {FRAME_STACK/8:.0f} campañas de historia")
+print(f"                  (tu transformer verá una secuencia de {FRAME_STACK} tokens)")
+print(f"  Entrenamiento : {CFG['timesteps']:,} timesteps x {len(CFG['seeds'])} semilla(s)")
+print(f"  Evaluación    : {CFG['eval_roots']} historias x 12 campañas x 2 kappas")
+print(f"  Se compara con: la mejor política estática y el MPC, sobre TUS mismas campañas")
+print("=" * 78)
 """)
 
 # ---------------------------------------------------------------- 3. entorno
@@ -505,58 +541,98 @@ Esta es la celda que responde tus tres preguntas. Léela y decide con ella.
 """)
 
 code(r"""
-# --- Celda 7: veredicto ---------------------------------------------------------------
+# --- Celda 7: VEREDICTO ---------------------------------------------------------------
 best = max(runs, key=lambda r: r["mean_ret"])
 mean_all = float(np.mean([r["mean_ret"] for r in runs]))
 vs_static_best, vs_static_mean = best["mean_ret"] - STATIC_MEAN, mean_all - STATIC_MEAN
 vs_mpc = best["mean_ret"] - MPC_MEAN
-pct_of_mpc = (vs_static_best / FROZEN["mpc_advantage_over_static"] * 100
-              if FROZEN["mpc_advantage_over_static"] else float("nan"))
+mpc_adv = FROZEN["mpc_advantage_over_static"]
+pct_of_mpc = vs_static_best / mpc_adv * 100 if mpc_adv else float("nan")
 seeds_above = sum(1 for r in runs if r["mean_ret"] > STATIC_MEAN)
 collapsed = sum(1 for r in runs if r["distinct_calendars"] <= 1)
 
+# ---- CHECKLIST: cada criterio con PASA / FALTA y qué hacer si falta -------------------
+criterios = []
+
+def criterio(nombre, ok, detalle, si_falta):
+    criterios.append(dict(nombre=nombre, ok=bool(ok), detalle=detalle, si_falta=si_falta))
+
+criterio("El run terminó y es interpretable",
+         PRESET != "smoke",
+         f"modo = {PRESET}",
+         "corre PRESET='signal' (los números de 'smoke' no significan nada)")
+criterio("Sin colapso a acción constante",
+         collapsed == 0,
+         f"{len(runs) - collapsed}/{len(runs)} semillas exploran varias acciones",
+         "sube ENT_COEF a 0.03-0.05 y baja LEARNING_RATE a 1e-4")
+criterio("Suficientes semillas para distinguir señal de suerte",
+         len(runs) >= 2 or PRESET == "smoke",
+         f"{len(runs)} semilla(s)",
+         "usa PRESET='signal' (2 semillas) o 'final' (5 semillas)")
+criterio("LE GANA A LA ESTÁTICA (el criterio de Garrido)",
+         vs_static_best > 0,
+         f"mejor semilla {vs_static_best:+.4f} sobre la barra",
+         "sube FRAME_STACK a 24 o 32: más historia entre campañas")
+criterio("Le gana a la estática de forma ESTABLE",
+         seeds_above == len(runs) and len(runs) >= 2,
+         f"{seeds_above}/{len(runs)} semillas por encima",
+         "si solo unas semillas ganan, es inestable: más semillas y más timesteps")
+criterio("LE GANA AL MPC (el objetivo final)",
+         vs_mpc > 0,
+         f"{vs_mpc:+.4f} respecto al MPC",
+         f"te falta cerrar {abs(vs_mpc):.4f} de ReT")
+
+pasan = sum(1 for c in criterios if c["ok"])
+
 print("=" * 78)
-print(f"  {arch_name}   |   frame stack = {FRAME_STACK}   |   preset = {PRESET}")
+print(f"  VEREDICTO — {arch_name}")
+print(f"  frame stack = {FRAME_STACK} ({FRAME_STACK/8:.0f} campañas) | modo = {PRESET} "
+      f"| semillas = {len(runs)}")
 print("=" * 78)
-print(f"  Barra estática ............ {STATIC_MEAN:.4f}")
-print(f"  MPC (rival) ............... {MPC_MEAN:.4f}")
-print(f"  Tu política (mejor semilla) {best['mean_ret']:.4f}")
-print(f"  Tu política (media)  ...... {mean_all:.4f}")
+print(f"  Barra estática (hay que superarla) ... {STATIC_MEAN:.4f}")
+print(f"  MPC (el rival real) ................. {MPC_MEAN:.4f}")
+print(f"  TU POLÍTICA (mejor semilla) ......... {best['mean_ret']:.4f}")
+print(f"  TU POLÍTICA (media de semillas) ..... {mean_all:.4f}")
+print("-" * 78)
+print(f"  CHECKLIST — cumples {pasan} de {len(criterios)} criterios")
+print("-" * 78)
+for c in criterios:
+    marca = "[ PASA  ]" if c["ok"] else "[ FALTA ]"
+    print(f"  {marca} {c['nombre']}")
+    print(f"            {c['detalle']}")
+    if not c["ok"]:
+        print(f"            -> qué hacer: {c['si_falta']}")
 print("-" * 78)
 
+# ---- En español simple ---------------------------------------------------------------
+print("  EN PALABRAS SENCILLAS:")
 if PRESET == "smoke":
-    print("  MODO SMOKE: el notebook corre. NO interpretes estos números.")
-elif vs_static_best <= 0:
-    print(f"  1) ¿Le ganaste a la estática?  NO  ({vs_static_best:+.4f})")
-    print(f"     {seeds_above} de {len(runs)} semillas la superan.")
-    print("     -> Todavía no hay aprendizaje demostrado bajo el criterio de Garrido.")
-elif seeds_above < len(runs):
-    print(f"  1) ¿Le ganaste a la estática?  PARCIAL  ({vs_static_best:+.4f} la mejor)")
-    print(f"     Solo {seeds_above} de {len(runs)} semillas. Inestable: corre más semillas.")
+    print("    El notebook funciona de principio a fin. Estos números NO significan nada")
+    print("    todavía porque el entrenamiento fue mínimo. Ahora corre PRESET='signal'.")
+elif vs_mpc > 0:
+    print("    LE GANASTE AL MPC. Es el resultado que llevamos meses buscando.")
+    print("    Manda el JSON de la Celda 8 de inmediato para verificarlo.")
+elif vs_static_best > 0 and seeds_above == len(runs):
+    print(f"    Le ganaste a la política estática de forma consistente ({seeds_above}/"
+          f"{len(runs)} semillas).")
+    print(f"    Es el primer aprendiz que lo logra. Te falta cerrar {abs(vs_mpc):.4f}")
+    print(f"    para alcanzar al MPC: vas por el {max(pct_of_mpc, 0):.0f}% de su ventaja.")
+elif vs_static_best > 0:
+    print(f"    Le ganaste a la estática solo con {seeds_above} de {len(runs)} semillas.")
+    print("    Es prometedor pero inestable: todavía no cuenta como aprendizaje demostrado.")
 else:
-    print(f"  1) ¿Le ganaste a la estática?  SÍ  ({vs_static_best:+.4f}, {seeds_above}/"
-          f"{len(runs)} semillas)")
-    print("     -> Es el primer aprendiz que lo logra. Avísanos.")
-
-print(f"  2) ¿Qué tan cerca del MPC?     {vs_mpc:+.4f}  "
-      f"({max(pct_of_mpc, 0):.0f}% de su ventaja)")
-if vs_mpc > 0:
-    print("     -> LE GANASTE AL MPC. Este es el resultado que buscamos hace meses.")
-
-print(f"  3) ¿El run es válido?")
-problems = []
-if collapsed:
-    problems.append(f"{collapsed}/{len(runs)} semillas colapsaron a acción constante "
-                    f"(sube ENT_COEF)")
-if len(runs) < 2 and PRESET != "smoke":
-    problems.append("una sola semilla: no se puede distinguir señal de suerte")
-if best["n_campaigns"] != N_EVAL:
-    problems.append(f"campañas evaluadas {best['n_campaigns']} != esperadas {N_EVAL}")
-for p in problems:
-    print(f"     [!] {p}")
-if not problems:
-    print("     [ok] sin problemas detectados")
+    falta_barra = abs(vs_static_best)
+    print(f"    Todavía NO le ganas a la política estática: te faltan {falta_barra:.4f} de ReT.")
+    print(f"    Y para alcanzar al MPC te faltan {abs(vs_mpc):.4f} en total.")
+    print("    Traducción: una regla fija sencilla sigue siendo mejor que tu red.")
+    if collapsed:
+        print("    La causa más probable: la red colapsó a repetir siempre la misma acción.")
+    else:
+        print("    La red sí varía sus decisiones, así que el problema no es exploración:")
+        print("    prueba FRAME_STACK más grande (24 o 32) para darle más historia.")
 print("=" * 78)
+
+problems = [c["nombre"] for c in criterios if not c["ok"]]
 """)
 
 # ---------------------------------------------------------------- 8. export
@@ -601,22 +677,40 @@ payload = {
         "vs_mpc_best": vs_mpc, "percent_of_mpc_advantage": pct_of_mpc,
         "seeds_above_static": seeds_above, "seeds_total": len(runs),
         "collapsed_seeds": collapsed, "problems": problems,
+        "criterios_cumplidos": pasan, "criterios_totales": len(criterios),
+        "checklist": criterios,
     },
     "environment": {"python": platform.python_version(), "torch": torch.__version__,
-                    "gpu": torch.cuda.is_available()},
+                    "gpu": torch.cuda.is_available(), "plataforma": PLATFORM},
 }
 
 name = (f"scresia_david_{ARCHITECTURE}_fs{FRAME_STACK}_{PRESET}_"
         f"{datetime.datetime.now().strftime('%Y%m%d_%H%M')}.json")
-with open(name, "w") as fh:
-    json.dump(payload, fh, indent=1, sort_keys=True)
-print(f"[ok] resultados escritos en {name}")
 
-try:
-    from google.colab import files
-    files.download(name)
-except Exception:
-    print("(si no estás en Colab, descarga el archivo desde el panel de archivos)")
+# El archivo se guarda donde la plataforma lo deja visible/descargable.
+dest_dir = "/kaggle/working" if PLATFORM == "kaggle" else os.getcwd()
+path = os.path.join(dest_dir, name)
+with open(path, "w") as fh:
+    json.dump(payload, fh, indent=1, sort_keys=True)
+print(f"[ok] resultados escritos en: {path}")
+print(f"[ok] criterios cumplidos: {pasan}/{len(criterios)}")
+
+if PLATFORM == "colab":
+    try:
+        from google.colab import files
+        files.download(path)
+        print("[ok] descarga iniciada en tu navegador")
+    except Exception as exc:
+        print(f"(la descarga automática falló: {exc})")
+        print(f"    Descárgalo a mano: panel izquierdo -> Archivos -> {name}")
+elif PLATFORM == "kaggle":
+    print("    En Kaggle el archivo queda en /kaggle/working: aparece en la pestaña")
+    print(f"    'Output' del notebook al terminar. Descarga {name} desde ahí.")
+else:
+    print(f"    Estás en local: el archivo está en {path}")
+
+print()
+print("*** MANDA ESE ARCHIVO. Con él verificamos tu run sin preguntarte nada. ***")
 """)
 
 md(r"""
