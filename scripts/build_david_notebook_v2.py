@@ -72,6 +72,39 @@ lugar donde hay señal.
 
 Tu arquitectura DMLPA encaja naturalmente: el transformer atiende sobre los `FRAME_STACK`
 frames apilados, así que un stack más grande le da más contexto histórico que resumir.
+
+---
+
+## Qué YA probamos (para que no gastes tiempo repitiéndolo)
+
+| Ya probado | Resultado |
+|---|---|
+| PPO + MLP, sin memoria entre campañas | por debajo de la estática |
+| RecurrentPPO (LSTM), sin memoria entre campañas | por debajo, y colapsa a acción constante |
+| Espacio de acción más fino (8⁸ = 16.7 M calendarios por campaña) | **cerrado**: el techo exacto de ese espacio no supera al MPC |
+| Dar al aprendiz el prior bayesiano explícito | aporta **+0.002** — casi nada |
+| Memoria recurrente entre campañas | aporta **+0.019** — es ahí donde está el valor |
+
+**La lectura:** el valor no está en el prior explícito ni en un espacio de acción más rico.
+Está en **la memoria entre campañas**. Por eso este entorno la maximiza, y por eso tu
+propuesta de subir el frame stack ataca justo la palanca correcta.
+
+## Qué NO está probado todavía (tu oportunidad)
+
+- Frame stack grande **cruzando campañas** con atención (tu DMLPA). Nunca se ha corrido.
+- Horizonte de 4 campañas, que es donde κ=0.90 todavía conserva ~51% de la señal.
+- Positional encoding sobre esa secuencia larga.
+
+## Sobre la barra estática: la conocemos **exactamente**
+
+No es una estimación. Como una campaña son 8 decisiones con 4 acciones, el espacio completo
+de políticas de una campaña son 4⁸ = 65.536 calendarios, y los **enumeramos todos**. Sabemos
+con certeza cuál es el mejor calendario fijo y cuánto vale. Eso hace que la comparación sea
+dura pero justa: no hay suerte de muestreo en la barra.
+
+Por la misma razón conocemos el **techo clarividente exacto** — lo mejor que cualquier
+política podría haber hecho conociendo el futuro. Nadie puede superarlo, así que si te
+acercas a él, es real.
 """)
 
 # ---------------------------------------------------------------- 1. setup
@@ -139,9 +172,14 @@ tus resultados dejan de ser comparables con los nuestros y con los de Garrido.
 
 | `PRESET` | Para qué sirve | Cuánto tarda (GPU) |
 |---|---|---|
-| `"smoke"` | ¿El notebook corre sin errores? No mires los números. | ~3 min |
-| `"signal"` | ¿Hay señal? ¿Vale la pena el run largo? | ~30-45 min |
-| `"final"`  | Resultado definitivo, varias semillas, reportable. | ~4-6 h |
+| `"smoke"` | ¿El notebook corre sin errores? No mires los números. | ~1-3 min |
+| `"signal"` | ¿Hay señal? ¿Vale la pena el run largo? | ~25-40 min |
+| `"final"`  | Resultado definitivo, 5 semillas, reportable. | ~3-6 h |
+
+Los tiempos salen de una medición real, no de una estimación: el simulador cuesta **7.9 ms
+por decisión**, así que 60.000 timesteps son ~8 min de simulación pura y 240.000 son ~32 min.
+El resto es la red. En GPU el `final` está cerca de 3 h; en CPU puede irse a 8 h. El notebook
+te imprime el tiempo real de cada semilla mientras corre.
 
 **Recomendación:** corre `smoke` una vez, luego `signal`. Solo si `signal` muestra que te
 acercas a la estática, corre `final`.
@@ -163,17 +201,34 @@ PRESET = "smoke"          # "smoke" | "signal" | "final"
 ARCHITECTURE = "dmlpa_positional"
 
 # ---- FRAME STACK (tu propuesta) ------------------------------------------------------
-# Cuántas observaciones pasadas ve la política en cada decisión.
-# El transformer de DMLPA atiende sobre estos frames: más stack = más contexto histórico.
+# Cuántas observaciones pasadas ve la política en cada decisión. Una campaña son 8
+# decisiones, así que el stack se lee mejor en CAMPAÑAS de historia:
 #
-#   8  = una campaña completa (8 decisiones)
-#   16 = dos campañas  <- recomendado para empezar; cruza el límite de campaña
-#   24 = tres campañas
-#   32 = cuatro campañas (más lento, más memoria)
+#     frames   campañas de historia
+#        8            1  (solo la campaña actual: no cruza el límite, poco útil)
+#       16            2
+#       24            3
+#       32            4   <-- DEFAULT
+#       40            5
 #
-# IMPORTANTE: el valor DEBE dividir exactamente la observación apilada, y el notebook lo
-# verifica por ti. Cruzar el límite de campaña es donde creemos que está la señal.
-FRAME_STACK = 16
+# ¿POR QUÉ 32 Y NO MÁS? Hay una respuesta exacta, no es gusto. Entre campañas la creencia
+# se transforma como  b' = κ·b + (1-κ)(1-b),  o sea la parte informativa se multiplica por
+# (2κ-1) en CADA campaña. Lo que queda de señal según qué tan atrás mires:
+#
+#     campañas atrás:     0      1      2      3      4      5
+#     κ = 0.75:        1.000  0.500  0.250  0.125  0.062  0.031
+#     κ = 0.90:        1.000  0.800  0.640  0.512  0.410  0.328
+#
+# Con κ=0.75 a las 3 campañas atrás ya casi no queda nada (0.125). Con κ=0.90 —que es la
+# celda principal del contrato— a las 3 campañas atrás todavía queda 51%. Por eso 32 frames
+# (4 campañas: la actual + 3 de historia) cubre el horizonte donde de verdad hay información,
+# y más allá el aporte decae geométricamente mientras el costo de atención crece como N².
+#
+# SOBRE TU PROPUESTA DE 30: 32 la domina. Es prácticamente el mismo costo, pero son campañas
+# COMPLETAS (múltiplo de 8) en vez de 3 campañas + 6 decisiones sueltas, así que el modelo
+# ve unidades enteras y el resultado es interpretable. Si quieres probar 40, hazlo: es la
+# comparación que nos dice si el horizonte largo aporta o solo agrega ruido.
+FRAME_STACK = 32
 
 # ---- ALGORITMO -----------------------------------------------------------------------
 # "ppo"  : recomendado. Funciona con las 4 arquitecturas.
@@ -519,6 +574,21 @@ def evaluate(model, roots, frame_stack):
                 calendars.append(tuple(info["calendar"]))
     return float(np.mean(values)), len(values), len(set(calendars))
 
+# --- Aviso de cuánto va a tardar, medido, para que sepas si te da tiempo ---------------
+_SIM_MS = 7.9                      # ms por decisión, medido en el simulador
+_sim_min = CFG["timesteps"] * _SIM_MS / 1000 / 60
+_factor = 1.6 if torch.cuda.is_available() else 3.5   # red + PPO sobre la simulación
+_est_seed = _sim_min * _factor
+print("=" * 78)
+print(f"  TIEMPO ESTIMADO ({'GPU' if torch.cuda.is_available() else 'CPU'})")
+print(f"  ~{_est_seed:.0f} min por semilla x {len(CFG['seeds'])} semilla(s) "
+      f"= ~{_est_seed*len(CFG['seeds'])/60:.1f} h en total")
+print(f"  (simulación pura: {_sim_min:.0f} min; el resto es la red)")
+if not torch.cuda.is_available():
+    print("  [!] Estás en CPU. Con DMLPA (2.2M parámetros) conviene GPU:")
+    print("      en Colab: Entorno de ejecución -> Cambiar tipo -> GPU")
+print("=" * 78)
+
 runs = []
 for seed in CFG["seeds"]:
     t0 = time.perf_counter()
@@ -572,7 +642,9 @@ criterio("Suficientes semillas para distinguir señal de suerte",
 criterio("LE GANA A LA ESTÁTICA (el criterio de Garrido)",
          vs_static_best > 0,
          f"mejor semilla {vs_static_best:+.4f} sobre la barra",
-         "sube FRAME_STACK a 24 o 32: más historia entre campañas")
+         ("sube FRAME_STACK a 32 (4 campañas de historia)" if FRAME_STACK < 32 else
+          "prueba FRAME_STACK=40, o más timesteps: con 32 ya cubres el horizonte "
+          "donde κ=0.90 conserva señal"))
 criterio("Le gana a la estática de forma ESTABLE",
          seeds_above == len(runs) and len(runs) >= 2,
          f"{seeds_above}/{len(runs)} semillas por encima",
