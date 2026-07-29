@@ -1,0 +1,49 @@
+{
+  "schema_version": "program_i_op7_release_period_instrument_notice_v1",
+  "created_on": "2026-07-28",
+  "status": "INVALIDATED_BY_INERT_ACTION_MAPPING",
+  "scope": {
+    "program": "Program I",
+    "factor_id": "op7_release_period",
+    "affected_evidence": "Morris sensitivity estimate only"
+  },
+  "defect": {
+    "runner": "scripts/run_program_i_sensitivity.py",
+    "factor_mapping": {
+      "source_factor": "op7_release_period",
+      "action_key": "op8_rop"
+    },
+    "action_key_present_in_mutable_params": false,
+    "historical_unknown_key_behavior": "silently_ignored"
+  },
+  "invalidated_values": {
+    "mu": 0.0,
+    "mu_star": 0.0,
+    "sigma": 0.0,
+    "sign_stability": 1.0
+  },
+  "interpretation": {
+    "allowed": "The Program I Morris estimate for op7_release_period is invalid because the action mapping was inert.",
+    "forbidden": [
+      "Op7 release timing is physically null based on the Morris estimate.",
+      "Op7 release timing is now known to be live.",
+      "Program I as a whole is reopened."
+    ]
+  },
+  "catalog_custody": {
+    "current_disposition": "transition_dead_configuration_field",
+    "current_disposition_source": "static code trace",
+    "disposition_changed_by_this_notice": false,
+    "required_before_change": [
+      "explicit actuator semantics",
+      "native cadence",
+      "fail-closed action routing",
+      "liveness test"
+    ]
+  },
+  "rerun": {
+    "authorized": false,
+    "earliest_phase": "after Submission A submission receipt",
+    "scope_if_authorized": "focal development-tape rerun only"
+  }
+}
