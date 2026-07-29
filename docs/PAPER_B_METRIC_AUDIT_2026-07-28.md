@@ -50,6 +50,19 @@ Source hashes are frozen in
 The out-of-range values are real, but the proposed causal interpretation in
 the prior review was too strong.
 
+Their mechanism is visible in the same rows. The autotomy branch implements
+`Re(APj) = APj/LT`; the repeated workbook values satisfy:
+
+```text
+48.00744 / 48 = 1.000155
+48.00120 / 48 = 1.000025
+```
+
+Thus the excess comes from a continuous event time slightly beyond the nominal
+48-hour lead time. The prospective contract must decide whether to bound
+`APj` by `LT` or clip final `ReT`. Neither choice licenses deletion of the
+order.
+
 For `Cf1`:
 
 | treatment | mean |

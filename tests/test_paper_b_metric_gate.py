@@ -32,6 +32,8 @@ def test_metric_gate_rejects_false_pass_with_unresolved_decisions() -> None:
 
 
 def test_range_clipping_is_not_observation_deletion() -> None:
+    assert 48.00744 / 48.0 == pytest.approx(1.000155)
+    assert 48.00120 / 48.0 == pytest.approx(1.000025)
     summary = summarize([0.25, 1.000155])
     assert summary["mean_clipped_0_1"] == pytest.approx(0.625)
     assert summary["mean_excluding_above_1_diagnostic_only"] == pytest.approx(0.25)
