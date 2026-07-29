@@ -148,12 +148,20 @@ Partial run: 4 tapes R1r, 8 tapes R2r, of 12 each.
 | R2r | 168/0/168 | **+0.008194** (+0.004010, 6/8) | +0.000530 (−0.003278, 4/8) | −0.000004 (−0.000040, 5/8) |
 | R2r | 672/0/1344 | **+0.015984** (+0.013369, 8/8) | **−0.008033** (−0.011608, **0/8**) | −0.000017 (−0.000055, 5/8) |
 
-**In R1r the corrected MPC beats every static posture, and the advantage generalises**
-across ret_excel, the uncensored ledger and (against the gate incumbent) the tail. It
-also costs less: κ 450,898 against the incumbent's 469,333.
+**In the four partial R1r tapes, the corrected MPC beat the five static references
+replayed on those same tapes**, on ret_excel, the uncensored ledger and (against the gate
+incumbent) the tail, while costing less: κ 450,898 against 469,333.
+
+This is **not** "beats every static posture". The fold replays five references
+(0/0/0, 168/0/168, 168/168/168, 672/0/1344, 1344/1344/1344), not the 216. The v2 run
+does enumerate all 216 and will compare the MPC against the real incumbent; that
+`result.json`, not this partial fold, decides whether the full static frontier falls.
+Four tapes, CVaR against 168/0/168 still crossing zero — a promising signal, not an
+adjudication, and "generalises" is premature.
 
 **In R2r it does not generalise, and the reason matters.** The MPC *optimises*
-`ret_excel`, so winning that column is close to tautological. On the uncensored ledger it
+`ret_excel`, so that column is objective-aligned and exposed to metric overfitting --
+not tautological, since it could still lose to a strong incumbent while optimising it. On the uncensored ledger it
 **loses to 672/0/1344 on 0 of 8 tapes** (−0.008, LCB −0.0116) and to DDMRP by −0.0127.
 The tail is flat to slightly negative. The advantage is specific to the metric being
 optimised and reverses on the metric that is not.

@@ -67,9 +67,10 @@ it:**
 
 Consequences:
 
-- `fill_rate_on_time` is **structurally zero**. It cannot discriminate between any two
-  policies and should not be reported as a service constraint until the floor is
-  understood.
+- `fill_rate_on_time` is **saturated at zero** and does not discriminate between policies
+  in this panel. The metric itself is computed correctly. `CTj − LTj` is **exactly +6.0 h
+  at min, p05, p50 and p95** (301 of 310 orders sit at CTj = 54.0), so this is a uniform
+  6-hour overshoot, not a dispersion of late orders.
 - **`excel_case_pct_autotomy` is 0.00 in every configuration.** Autotomy — a disruption
   occurs and the order still arrives on time — is the thesis's central absorption
   mechanism, and our DES cannot express it. The `APj/LT` branch of ReT is dead code;
@@ -89,6 +90,54 @@ configurations differ from the thesis row counts by −1,949 to +735. It is stil
 Garrido's own model output, which is what the question needs: his system reaches the
 branch, ours cannot.
 
-**This is a fidelity gap in the thesis's central resilience mechanism**, and it is more
-consequential than the censoring already documented. Open question for the repair: what
-sets the 54 h floor, and is it a modelling artifact or a faithful property of the case.
+## 3. What sets the 54 h floor — answered
+
+`supply_chain/config.py:119`:
+
+```python
+GARRIDO_FULFILLMENT_DELAY_HOURS = 54.0  # Calibrated minimum CTj: no instant orders; just beyond LT=48.
+```
+
+It is a hardcoded calibration constant — `demand_on_hand_fulfillment_delay`, the delay
+applied when demand is met from **on-hand stock** — not emergent physics. Its own comment
+says it was placed *"just beyond LT=48"*. Being just beyond is what makes `CTj <= LTj`
+unsatisfiable.
+
+**ReT is effectively binary in this constant.** Custodied sweep
+(`results/metric_audit/ret_defects_v1/result.json`):
+
+| delay | ret_excel | autotomy % | CTj ≤ 48 | APj > 0 |
+|---:|---:|---:|---:|---:|
+| **54 (shipped)** | **0.004424** | 0.00 | 0 | 0 |
+| 48 | 0.980513 | 98.05 | 301 | 301 |
+| 47 | 0.980576 | 98.05 | 302 | 302 |
+| 36 / 24 / 6 | 0.980576 | 98.05 | 302 | 302 |
+
+**A six-hour change moves ReT by 221.6×**, and everything below the promise saturates to
+the same value. The metric sits on a cliff and the shipped constant is six hours on the
+far side of it.
+
+### Is 54 faithful, though?
+
+Probably yes, and that is the uncomfortable part. Our R1r ReT (0.0038-0.0056) sits in the
+same regime as the thesis's own R1r (0.0052-0.0087). At delay = 48 we would produce
+~0.98, which matches nothing in his data. So the recovery-dominated regime **is** what
+Garrido's numbers look like, and the 54 h floor is what reproduces them.
+
+The defensible reading is therefore not "the constant is wrong" but:
+
+1. ReT, as specified, is **discontinuous** in the fulfilment delay at exactly `LTj`, and
+   our operating point is six hours from that discontinuity.
+2. In that regime the autotomy branch is dead, so **essentially all of ReT's signal flows
+   through `RPj`** — precisely the quantity defect 1 makes step-cadence dependent.
+3. Garrido's own Cf1 reports `Media APj` = 0.4486 > 0, so his data is not *perfectly*
+   autotomy-free. Our zero is stricter than his.
+
+That composition is the real result: the endpoint every null in this project was measured
+against is pinned to one branch by a hand-set constant, and that branch's only free
+quantity is cadence-dependent.
+
+**Do not "fix" the 54 to 48.** It would break agreement with the thesis. The open question
+is whether the ReT *specification* should be used as a primary endpoint at all when it is
+discontinuous six hours from the operating point — which is an argument for the panel, and
+an independent argument for the Cobb-Douglas index, which has no such branch.
