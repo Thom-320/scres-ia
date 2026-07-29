@@ -1,0 +1,48 @@
+{
+  "contract_id": "cvar_gate_instrument_audit_v1",
+  "schema_version": "cvar_gate_instrument_audit_v1",
+  "date_frozen": "2026-07-17",
+  "status": "FROZEN_DESIGN_BEFORE_ANY_EXECUTION",
+  "scientific_question": "Was the zero-margin simultaneous non-inferiority gate on ret_visible_cvar10 -- the sole failed component of the Program O corrective validation -- a calibrated measurement instrument (passable by genuinely non-inferior policies at this design's sample size), or a de-facto superiority test?",
+  "motivation": {
+    "failed_gate": "guardrails_noninferior includes 'ReT CVaR10' with implicit margin 0 under a studentized one-sided max-t over 69 estimands (contracts/program_o_fixed_clock_hobs_corrective_validation_v1.json primary_gate)",
+    "observed": "joint LCB95 -0.0086 (rho75_share90) and -0.0155 (rho90_share75) with POSITIVE point estimates +0.035 / +0.020; ~5 effective tapes per cell in the CVaR10 tail; the program's own guardrail convention elsewhere is a -0.02 margin",
+    "governance": "no_post_failure_changes covers thresholds and guardrails; this audit examines the INSTRUMENT, never the verdict. STOP_PROGRAM_O_AFTER_CORRECTIVE_VALIDATION is immutable under this contract regardless of outcome."
+  },
+  "data_scope": {
+    "allowed": "BURNED data only: the corrective validation's own per-tape outputs (7430001-7430048, already opened) and previously burned development blocks for any re-simulation",
+    "forbidden": "any sealed, virgin, or reserved seed series (742 remainder if any, 747, 4800001+); any new scientific tape"
+  },
+  "analyses": [
+    {
+      "id": "A1_power_curve",
+      "spec": "Estimate the gate's power as a function of the TRUE tail effect: resample per-tape paired deltas (10,000 bootstrap worlds per grid point) with injected known CVaR10 shifts on a frozen grid {0, +0.01, +0.02, +0.03, +0.05, +0.08}; report the probability that joint LCB95 >= 0 under the same 69-estimand max-t machinery, per cell. Output: minimum true CVaR10 improvement needed for 80% power at margin 0."
+    },
+    {
+      "id": "A2_positive_control_oracle",
+      "spec": "Apply the identical gate machinery to the clairvoyant per-tape oracle vs the same comparator on the same burned tapes. The oracle dominates by construction; if IT fails the zero-margin joint CVaR10 gate, the instrument cannot certify any real policy."
+    },
+    {
+      "id": "A3_trivial_control_self",
+      "spec": "Apply the identical gate machinery to the static comparator vs ITSELF under paired resampling (true effect exactly 0 = boundary non-inferior). Report pass probability. A calibrated non-inferiority instrument should pass a truly-equivalent policy with high probability; a margin-0 one-sided 95% test passes it ~5% of the time by construction -- this analysis makes the superiority-in-disguise property explicit and quantified on THIS design."
+    },
+    {
+      "id": "A4_margin_calibration_report_only",
+      "spec": "Repeat A1-A3 at the program-conventional margin -0.02 and at -0.01. REPORT ONLY: no margin is applied retroactively to any verdict; these curves inform the prospectively frozen margin of any FUTURE contract."
+    }
+  ],
+  "decision_rule": {
+    "instrument_defect_certified_if": "A3 pass probability for a truly-equivalent policy < 0.5 at margin 0 (expected ~0.05), OR A2 oracle fails the margin-0 gate",
+    "consequence_if_defect": "documented instrument mis-specification, same class as the simultaneous-inference defect that justified the corrective validation; the record and the STOP remain unchanged; the finding is handed to the INDEPENDENT AUDITOR who alone adjudicates whether it (together with Garrido's written M2 answer) authorizes a new learner contract (program_o_ret_learner_v1) with a properly calibrated, prospectively frozen acceptance rule on fresh sealed tapes",
+    "consequence_if_no_defect": "the gate was strict but valid; the STOP is armored; the ReT-only route proceeds only if M2 removes tail non-inferiority from the acceptance rule, still via auditor adjudication",
+    "forbidden_outcomes": "no retroactive verdict change; no learner authorization from this audit alone; no margin selection by us after seeing which margin flips which cell (the -0.02/-0.01 grid is frozen HERE, before execution, as the program's pre-existing conventions)"
+  },
+  "implementation_split": {
+    "implementer": "PI agent",
+    "independent_verifier": "concurrent auditor process (verifies machinery identity with the corrective validation's gate code before results are read)"
+  },
+  "outputs": [
+    "results/program_o/cvar_gate_instrument_audit_v1/result.json",
+    "docs/CVAR_GATE_INSTRUMENT_AUDIT_VERDICT_2026-07-17.md"
+  ]
+}
