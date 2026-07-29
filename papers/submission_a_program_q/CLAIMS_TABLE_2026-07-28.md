@@ -1,0 +1,20 @@
+# Canonical claim table — Submission A / Program Q
+
+Date: 2026-07-28
+
+This table is editorial guidance derived from frozen evidence. It does not
+alter the scientific adjudication.
+
+| Claim | Contract | Metric | Estimand | Artifact | Status | Allowed wording | Forbidden wording |
+|---|---|---|---|---|---|---|---|
+| Feedback exceeds the complete open-loop frontier | Program Q multiproduct, risk-off, eight weekly decisions | Excel ReT | \(H_{OL}=V(\mathrm{RNN})-V(\mathrm{best\ open\ loop})\) | `source_of_truth.json`; terminal verdict; confirmation result | Supported | RecurrentPPO beats all 65,536 deterministic open-loop calendars in this contract | PPO beats every static policy or planning method |
+| Specifically neural premium | Same Program Q contract and causal information | Excel ReT | \(\Delta_N=V(\mathrm{RNN})-V(\mathrm{best\ structured})\) | confirmation result | Not supported; practical equivalence supported | No material neural premium was identified relative to the strongest tested structured family | RecurrentPPO beats MPC, structured control, or the optimal POMDP policy |
+| Worst-product service non-inferiority | Same Program Q contract | Worst-product fill | Learner minus reselected structured family | confirmation guardrail inference | Not established | The frozen worst-product service margin was not confirmed | The learner is safe, deployment-ready, or service-preserving |
+| Complete open-loop benchmark | Program Q \(4^8\) action calendar | Excel ReT and companion ledger | Exhaustive evaluation of 65,536 calendars | compact frontier summary and manifest | Supported | Complete contract-defined open-loop frontier | Universal control optimum or dynamic-policy ceiling |
+| Structured controller identity | Frozen ten-member state-rich family | Excel ReT | Family maximum, reselected inside each bootstrap | contract; result; comparator code | Supported as strongest tested family | Ten-member base-stock, max-pressure, min-cost-flow, bounded belief-MPC, and approximate belief-DP family | Exact belief-MPC, optimal MPC, or exact POMDP solution |
+| Within-campaign feedback mechanism | Program Q | Action trajectories and replacement controls | Learner versus modal, phase-only, and frequency-matched replacements | confirmation trajectory audits | Supported | The gain is not reproduced by frozen phase or action-frequency replacements | Accumulated learning across campaigns |
+| Garrido-native disruption learning | Program Q risk-off confirmation | Not evaluated | Not applicable | contract and limitations | Not supported | Active-risk adaptation remains outside this study | The policy learns resilience to the original disruption taxonomy |
+| Multiproduct external validity | Researcher-defined product labels and Markov demand regimes | All outcomes | Contract boundary | Methods and limitations | Bounded | Thesis-grounded, researcher-defined multiproduct extension | Validated digital twin or empirically calibrated military product system |
+| Action-selection compute | Frozen checkpoints and selected structured family on one Apple-silicon system | Batch-one latency and descriptive memory | Descriptive controller timing | `latency_benchmark_v1/result.json` | Hardware-specific | Structured family was faster in the measured action-selection benchmark | Universal structured compute advantage or end-to-end system latency |
+| Clean-room evidence regeneration | Pinned evidence generator in independent Linux environment | Hashes, expected outputs, and tests | Reproduction of manuscript evidence package | Kaggle clean-room receipt | Supported | Clean-room regeneration of the frozen evidence package | Independent scientific replication, retraining, or rerun of confirmation |
+| Track B same-contract superiority | Track B 8D | Excel ReT | PPO minus calibration-selected full-contract constant | Track B challenge verdict | Retracted as a general adaptive advantage | The earlier restricted-frontier result was comparator-family sensitive | Track B PPO beats strong same-contract constants |

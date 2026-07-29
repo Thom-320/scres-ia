@@ -4,9 +4,16 @@ This directory is the only manuscript source for Submission A.
 
 Scientific base: `f2dfe356c179bd16f4b89b26e8ed3b19d69f5a71`.
 
+Current coauthor and wording controls:
+
+- `COAUTHOR_EVIDENCE_UPDATE_2026-07-28.md`;
+- `CLAIMS_TABLE_2026-07-28.md`;
+- `GARRIDO_FACE_VALIDATION_REQUEST.md`;
+- `EXECUTION_BOARD_8_WEEKS.md`.
+
 Binding interpretation:
 
-- feedback value over the complete 65,536-calendar static frontier: supported;
+- feedback value over the complete 65,536-calendar open-loop frontier: supported;
 - practical equivalence to the best tested structured controller: supported;
 - neural premium: not supported;
 - worst-product or deployment safety: not established;
