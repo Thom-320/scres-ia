@@ -14,9 +14,11 @@ from supply_chain.cobb_douglas_resilience import (
     SHARE_PER_TERM,
     CobbDouglasRecorder,
     derive_exponents,
+    kappa_from_components,
     kappa_dot,
     resilience_index,
     score_comparison_set,
+    validate_costs,
 )
 
 
@@ -177,6 +179,29 @@ def test_recorder_deltas_are_per_period_not_cumulative():
     row = rec.sample(_FakeSim(produced=2500.0, demanded=1800.0))
     assert row["P_t"] == pytest.approx(1500.0)
     assert row["GR_t"] == pytest.approx(900.0)
+
+
+def test_recorded_cost_components_can_be_repriced_without_replay():
+    rec = CobbDouglasRecorder()
+    rec.sample(_FakeSim(produced=1000.0, demanded=900.0, backorder=20.0,
+                        rations=200.0, shifts=1))
+    aggregate = rec.aggregate()
+    unit = {name: 1.0 for name in (
+        "c_p", "c_h", "c_l", "c_u", "c_i", "c_b", "c_o")}
+    assert kappa_from_components(aggregate, unit) == pytest.approx(
+        aggregate["kappa"])
+    inventory_expensive = dict(unit, c_i=5.0)
+    assert kappa_from_components(aggregate, inventory_expensive) > aggregate["kappa"]
+
+
+def test_cost_vector_is_complete_and_non_negative():
+    with pytest.raises(ValueError, match="missing"):
+        validate_costs({"c_p": 1.0})
+    with pytest.raises(ValueError, match="non-negative"):
+        validate_costs({
+            "c_p": 1.0, "c_h": 1.0, "c_l": 1.0, "c_u": 1.0,
+            "c_i": -1.0, "c_b": 1.0, "c_o": 1.0,
+        })
 
 
 def test_net_requirements_follow_algorithm_2_line_23():

@@ -72,6 +72,47 @@ UNIT_COSTS: dict[str, float] = {
     "c_o": 1.0,  # overtime        -> structurally absent from the MFSC DES
 }
 
+COST_COMPONENT_KEYS: dict[str, str] = {
+    "c_p": "mean_regular_production",
+    "c_h": "mean_shift_increases",
+    "c_l": "mean_shift_decreases",
+    "c_u": "mean_spare_capacity",
+    "c_i": "mean_inventory",
+    "c_b": "mean_backorders",
+    "c_o": "mean_overtime",
+}
+
+
+def validate_costs(costs: Mapping[str, float]) -> dict[str, float]:
+    """Return a complete, finite, non-negative seven-coefficient cost vector."""
+    missing = sorted(set(COST_COMPONENT_KEYS) - set(costs))
+    extra = sorted(set(costs) - set(COST_COMPONENT_KEYS))
+    if missing or extra:
+        raise ValueError(f"invalid cost keys: missing={missing}, extra={extra}")
+    out = {name: float(costs[name]) for name in COST_COMPONENT_KEYS}
+    bad = {name: value for name, value in out.items()
+           if not math.isfinite(value) or value < 0.0}
+    if bad:
+        raise ValueError(f"cost coefficients must be finite and non-negative: {bad}")
+    return out
+
+
+def kappa_from_components(
+    aggregate: Mapping[str, float],
+    costs: Mapping[str, float],
+) -> float:
+    """Reprice a recorded episode without replaying its physical trajectory.
+
+    The recorder persists the seven unpriced means independently of ``kappa``.
+    This keeps Garrido's published ``c=1`` replication baseline separate from
+    prospective economic sensitivity grids or a later domain-calibrated vector.
+    """
+    checked = validate_costs(costs)
+    return float(sum(
+        checked[cost_key] * float(aggregate[component_key])
+        for cost_key, component_key in COST_COMPONENT_KEYS.items()
+    ))
+
 # ln(0) is -inf, and unlike Garrido's always-positive APP series our variables do
 # reach zero: tau is exactly 0 in 88 of 108 calibration episodes, because the thesis
 # operating point carries enough stock that net requirements never go positive.
@@ -228,6 +269,7 @@ class CobbDouglasRecorder:
     costs: Mapping[str, float] = field(default_factory=lambda: dict(UNIT_COSTS))
 
     def __post_init__(self) -> None:
+        self.costs = validate_costs(self.costs)
         self.reset()
 
     def reset(self) -> None:
@@ -319,6 +361,13 @@ class CobbDouglasRecorder:
             "phi": mean("U_t"),
             "tau": mean("tau_t"),
             "kappa": mean("C_t"),
+            "mean_regular_production": mean("P_t"),
+            "mean_shift_increases": mean("H_t"),
+            "mean_shift_decreases": mean("L_t"),
+            "mean_spare_capacity": mean("U_t"),
+            "mean_inventory": mean("I_t"),
+            "mean_backorders": mean("B_t"),
+            "mean_overtime": mean("O_t"),
             "T_periods": float(t),
             "mean_production": mean("P_t"),
             "mean_capacity": mean("Theta_t"),

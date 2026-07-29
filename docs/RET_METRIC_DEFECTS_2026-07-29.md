@@ -1,11 +1,11 @@
-# Two defects in the ReT endpoint
+# ReT endpoint audit and cadence correction
 
-**Status:** `DEVELOPMENT_FINDING`. Both encoded as `xfail(strict=True)` in
-`tests/test_ret_metric_invariants.py`, so they fail loudly the day either is fixed.
-Neither is a defect of any controller or screen; both are properties of the endpoint
-and of the DES, and both affect how existing artifacts may be read.
+**Status:** `DEVELOPMENT_CORRECTIVE_AUDIT`. The RPj cadence carrier is fixed and
+covered by passing invariance tests. The fulfilment-delay/autotomy issue remains an
+open fidelity and measurement question, encoded as two `xfail(strict=True)` tests.
+Historical artifacts retain their original code hash and metric semantics.
 
-## 1. `ret_excel` depends on how often `step()` is called
+## 1. `ret_excel` cadence defect — resolved prospectively
 
 Found when a daily replay of v2's MPC arms failed the fold's replay gate on 24 of 24
 arms by ~29%. On **one identical trajectory**:
@@ -46,8 +46,26 @@ More `step()` calls → more recent `down_since` → smaller overlap → smaller
   but only 2 of 18 rank positions held in R1r. Never quote a full ordering across
   cadences.
 
-**Repair:** derive `RPj` from immutable risk intervals independent of `step()`, then
-make `test_ret_excel_is_step_cadence_invariant` pass.
+**Repair completed.** Completed disruptions are read from their immutable
+`RiskEvent(start_time,end_time)` rows. A still-open disruption is read from
+`_op_down_start`, which records its onset once and is never advanced by `step()`;
+`_op_down_since` remains only the cumulative-hours cursor.
+
+Corrective artifact:
+`results/metric_audit/ret_cadence_corrective_v2/result.json`.
+
+| step cadence | corrected ret_excel | orders with different RPj |
+|---|---:|---:|
+| one step | 0.004424198300 | 0 |
+| 672 h | 0.004424198300 | 0 |
+| 168 h | 0.004424198300 | 0 |
+| 24 h | 0.004424198300 | 0 |
+| 1 h | 0.004424198300 | 0 |
+
+The corrected spread is exactly `1.0`. Physical endpoints, RPj order by order,
+`ret_excel`, and `ret_excel_full_ledger` are invariant in the audit. This correction
+does not relabel v2: its historical `ret_excel` remains the output of commit
+`1dc40c1`; corrected replays live in a new artifact.
 
 ## 2. The autotomy branch of ReT is unreachable
 
@@ -117,12 +135,13 @@ unsatisfiable.
 the same value. The metric sits on a cliff and the shipped constant is six hours on the
 far side of it.
 
-### Is 54 faithful, though?
+### Is 54 faithful?
 
-Probably yes, and that is the uncomfortable part. Our R1r ReT (0.0038-0.0056) sits in the
-same regime as the thesis's own R1r (0.0052-0.0087). At delay = 48 we would produce
-~0.98, which matches nothing in his data. So the recovery-dominated regime **is** what
-Garrido's numbers look like, and the 54 h floor is what reproduces them.
+**Not established.** Delay 54 reproduces the aggregate order of magnitude of the
+raw-Excel ReT, but that is endpoint calibration, not independent behavioral
+validation. The workbook formula gates on `APj > 0` and does not require
+`CTj <= LTj`; the DES currently creates APj only under that timing predicate. Matching
+the aggregate level therefore does not resolve the micro-semantic divergence.
 
 The defensible reading is therefore not "the constant is wrong" but:
 
@@ -137,7 +156,8 @@ That composition is the real result: the endpoint every null in this project was
 against is pinned to one branch by a hand-set constant, and that branch's only free
 quantity is cadence-dependent.
 
-**Do not "fix" the 54 to 48.** It would break agreement with the thesis. The open question
-is whether the ReT *specification* should be used as a primary endpoint at all when it is
-discontinuous six hours from the operating point — which is an argument for the panel, and
-an independent argument for the Cobb-Douglas index, which has no such branch.
+**Do not change 54 retrospectively in existing experiments.** A successor contract
+must select delay/APj semantics from fidelity evidence, not from which value preserves
+more headroom. The full 216-posture delay diagnostic is separately labelled as
+perfect-hindsight selection of one fixed posture per tape; even a zero there cannot
+exclude state-contingent adaptation between epochs.

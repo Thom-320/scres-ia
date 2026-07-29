@@ -852,6 +852,12 @@ class MFSCSimulation:
         # =================================================================
         self.op_down_count = {i: 0 for i in range(1, 14)}
         self._op_down_since = {i: None for i in range(1, 14)}  # Time when op went down
+        # `_op_down_since` is a *cursor*: step() advances it so `_cumulative_down_hours`
+        # does not double count. That makes it useless as an onset, because how often
+        # step() is called then changes it. `_op_down_start` records the onset of the
+        # current down interval once, is cleared only when the op comes back up, and is
+        # never touched by step(). ReT attribution reads this one.
+        self._op_down_start = {i: None for i in range(1, 14)}
         self.risk_events = []
         self._ret_quantity_risk_units = {"R14": 0.0, "R24": 0.0}
         self._ret_quantity_risk_refs: dict[str, list[dict[str, Any]]] = {
@@ -3146,6 +3152,7 @@ class MFSCSimulation:
     def _take_down(self, op_id: int) -> None:
         if self.op_down_count[op_id] == 0:
             self._op_down_since[op_id] = self.env.now
+            self._op_down_start[op_id] = self.env.now
         self.op_down_count[op_id] += 1
 
     def _bring_up(self, op_id: int) -> None:
@@ -3153,6 +3160,7 @@ class MFSCSimulation:
         if self.op_down_count[op_id] == 0 and self._op_down_since[op_id] is not None:
             self._cumulative_down_hours += self.env.now - self._op_down_since[op_id]
             self._op_down_since[op_id] = None
+            self._op_down_start[op_id] = None
 
     def _delayed_bring_up(self, op_id: int, delay: float):
         yield self.env.timeout(delay)
@@ -5742,7 +5750,10 @@ class MFSCSimulation:
 
             # Legacy ongoing-disruption attribution remains bitwise isolated.
             for op_id in range(1, 14):
-                down_since = self._op_down_since.get(op_id)
+                # The immutable onset, not the step()-advanced cursor. Using the
+                # cursor made RPj -- and therefore ReT -- a function of how often
+                # step() was called, on a physically identical trajectory.
+                down_since = self._op_down_start.get(op_id)
                 if self.op_down_count[op_id] > 0 and down_since is not None:
                     overlap_start = max(down_since, order.OPTj)
                     overlap_end = order.OATj

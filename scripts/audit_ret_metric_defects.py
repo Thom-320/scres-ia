@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
-"""Custodied audit of two ReT endpoint defects. Produces one signed artifact.
+"""Custodied audit of the ReT cadence correction and fulfilment-delay cliff.
 
 Both were found in development and written up in prose first; adversarial review
 correctly objected that prose is not custody. This script regenerates every number
 from scratch, with per-order rows, and signs the result.
 
-**A** — step-cadence invariance. ReT must not depend on how often `step()` is called.
-It does: `_op_down_since[op]` is reset to `env.now` at every step boundary
-(supply_chain.py:1856), and the legacy ongoing-disruption attribution then measures a
-still-open disruption from that reset value (supply_chain.py:5743), so `RPj` shrinks as
-cadence rises and ReT rises with it.
+**A** — step-cadence invariance. Historical v1 showed that ReT depended on how often
+``step()`` was called because attribution read the step-advanced
+``_op_down_since`` cursor. The corrective implementation reads the immutable onset
+``_op_down_start``. This audit now fails closed unless RPj and ReT are invariant.
 
 **B** — the fulfilment-delay cliff. `GARRIDO_FULFILLMENT_DELAY_HOURS = 54.0` is the
 delay applied when demand is met from on-hand stock, and it is documented as
@@ -17,9 +16,9 @@ delay applied when demand is met from on-hand stock, and it is documented as
 48 h promise is not a detail: it makes `CTj <= LTj` unsatisfiable, so the autotomy
 branch of ReT is unreachable and every scored order takes `0.5/RPj`.
 
-The two compose, and that is the point of auditing them together: because autotomy is
-dead, essentially all of ReT's signal in this operating regime flows through `RPj` --
-which is exactly the quantity defect A makes cadence-dependent.
+The delay cliff remains a measurement sensitivity even after the cadence carrier is
+repaired. This artifact never interprets a static per-tape headroom result as a bound
+on within-tape dynamic adaptation.
 """
 from __future__ import annotations
 
@@ -101,7 +100,8 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--horizon-weeks", type=int, default=52)
     ap.add_argument("--output", type=Path,
-                    default=Path("results/metric_audit/ret_defects_v1/result.json"))
+                    default=Path(
+                        "results/metric_audit/ret_cadence_corrective_v2/result.json"))
     args = ap.parse_args()
     horizon = float(args.horizon_weeks * HOURS_PER_WEEK)
     started = time.perf_counter()
@@ -130,22 +130,29 @@ def main() -> int:
     at48 = next(r for r in delay if r["delay"] == 48.0)
 
     payload = {
-        "schema_version": "ret_metric_defect_audit_v1",
-        "claim_status": "DEVELOPMENT_FINDING_METRIC_DEFECT",
+        "schema_version": "ret_metric_cadence_corrective_v2",
+        "claim_status": "DEVELOPMENT_CORRECTIVE_AUDIT",
         "created_at": datetime.now(timezone.utc).isoformat(),
         "lead_time_promise": LEAD_TIME_PROMISE,
         "shipped_fulfillment_delay": GARRIDO_FULFILLMENT_DELAY_HOURS,
-        "defect_a_step_cadence": {
-            "mechanism": ("step() resets _op_down_since[op] to env.now at every "
-                          "boundary (supply_chain.py:1856); the legacy "
-                          "ongoing-disruption attribution then measures overlap "
-                          "from that reset value (supply_chain.py:5743), so RPj "
-                          "shrinks as cadence rises and ReT = 0.5/RPj rises"),
+        "rpj_cadence_corrective": {
+            "historical_mechanism": (
+                "step() advances _op_down_since as a cumulative-down-hours cursor; "
+                "historical attribution read it as an onset"),
+            "corrective_mechanism": (
+                "_op_down_start records the current down interval onset once and "
+                "is never advanced by step(); completed intervals come from the "
+                "immutable risk-event ledger"),
             "sweep": [{k: v for k, v in r.items() if k != "rows"} for r in cadence],
             "ret_excel_spread": max(r["ret_excel"] for r in cadence)
             / min(r["ret_excel"] for r in cadence),
             "physics_invariant_across_all_cadences": all(
                 r["physics_matches_one_step"] for r in cadence),
+            "rpj_invariant_across_all_cadences": all(
+                r["n_rpj_differs_from_one_step"] == 0 for r in cadence),
+            "ret_excel_invariant_across_all_cadences": (
+                max(r["ret_excel"] for r in cadence)
+                - min(r["ret_excel"] for r in cadence) < 1e-12),
         },
         "defect_b_fulfillment_delay_cliff": {
             "mechanism": ("demand_on_hand_fulfillment_delay defaults to 54 h, six "
@@ -159,12 +166,21 @@ def main() -> int:
             "saturates_below_lead_time": len({
                 round(r["ret_excel"], 9) for r in delay if r["delay"] < 48.0}) == 1,
         },
-        "defects_compose": (
-            "because autotomy is unreachable at the shipped delay, essentially all "
-            "of ReT's signal flows through RPj -- the quantity defect A makes "
-            "cadence-dependent"),
+        "interpretation_boundary": (
+            "The delay sweep is a metric sensitivity only. It does not select a "
+            "future delay, establish physical fidelity, or bound within-tape "
+            "dynamic adaptation or neural premium."),
         "elapsed_seconds": time.perf_counter() - started,
     }
+    corrective = payload["rpj_cadence_corrective"]
+    if not (
+        corrective["physics_invariant_across_all_cadences"]
+        and corrective["rpj_invariant_across_all_cadences"]
+        and corrective["ret_excel_invariant_across_all_cadences"]
+    ):
+        raise RuntimeError(
+            "STOP_INSTRUMENT_RPJ_CADENCE_CORRECTIVE_FAILED: "
+            f"{corrective}")
     body = json.dumps(payload, indent=1, sort_keys=True)
     payload["self_sha256"] = sha256(body.encode()).hexdigest()
     args.output.parent.mkdir(parents=True, exist_ok=True)

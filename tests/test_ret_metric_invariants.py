@@ -45,16 +45,35 @@ def test_physical_endpoints_are_step_cadence_invariant():
     assert a["lost_orders"] == pytest.approx(b["lost_orders"])
 
 
-@pytest.mark.xfail(strict=True, reason=(
-    "ret_excel depends on how often step() is called. `_op_down_since` is reset to "
-    "env.now at every step boundary (supply_chain.py:1856), and the legacy "
-    "ongoing-disruption attribution then measures overlap from that reset value "
-    "(supply_chain.py:5743), so RPj shrinks as cadence rises and ReT rises with it. "
-    "Measured 0.004369 at one step against 0.005981 hourly on an identical "
-    "trajectory. Fix: derive RPj from immutable risk intervals."))
-def test_ret_excel_is_step_cadence_invariant():
-    a, b = _run(HORIZON)["m"], _run(24.0)["m"]
-    assert a["ret_excel"] == pytest.approx(b["ret_excel"], rel=1e-6)
+@pytest.mark.parametrize("step_hours", [1.0, 24.0, 168.0, 672.0])
+def test_ret_excel_is_step_cadence_invariant(step_hours):
+    """Regression guard for the defect fixed on 2026-07-29.
+
+    `_op_down_since` is a cursor that `step()` advances so `_cumulative_down_hours`
+    does not double count, and the ReT attribution used to read it as if it were the
+    onset of the current down interval. It therefore measured a shorter overlap the
+    more often `step()` was called, shrinking `RPj` and inflating `ReT = 0.5/RPj` by
+    up to 34% on a physically identical trajectory. `_op_down_start` now records the
+    onset once and is never touched by `step()`.
+    """
+    a, b = _run(HORIZON)["m"], _run(step_hours)["m"]
+    assert a["ret_excel"] == pytest.approx(b["ret_excel"], rel=1e-9)
+    assert a["ret_excel_full_ledger"] == pytest.approx(
+        b["ret_excel_full_ledger"], rel=1e-9)
+
+
+def test_rpj_is_step_cadence_invariant_order_by_order():
+    """The carrier itself, not just the aggregate: no order may change RPj."""
+    def rpj(step_hours: float) -> list[float]:
+        sim = _run(step_hours)["sim"]
+        return [float(o.RPj or 0.0) for o in sim.orders
+                if not bool(getattr(o, "metrics_excluded", False))
+                and getattr(o, "OATj", None) is not None]
+
+    coarse, fine = rpj(HORIZON), rpj(1.0)
+    assert len(coarse) == len(fine)
+    differing = sum(1 for a, b in zip(coarse, fine) if abs(a - b) > 1e-9)
+    assert differing == 0, f"{differing} of {len(coarse)} orders changed RPj"
 
 
 @pytest.mark.xfail(strict=True, reason=(
