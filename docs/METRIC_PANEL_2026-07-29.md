@@ -148,6 +148,10 @@ Partial run: 4 tapes R1r, 8 tapes R2r, of 12 each.
 | R2r | 168/0/168 | **+0.008194** (+0.004010, 6/8) | +0.000530 (−0.003278, 4/8) | −0.000004 (−0.000040, 5/8) |
 | R2r | 672/0/1344 | **+0.015984** (+0.013369, 8/8) | **−0.008033** (−0.011608, **0/8**) | −0.000017 (−0.000055, 5/8) |
 
+> **RETRACTED by the terminal v2 result — see the section below.** The five replayed
+> references did not include the true 216-posture incumbent, so the comparison below is
+> against a weaker set than the frontier. The authoritative comparison is v2's own.
+
 **In the four partial R1r tapes, the corrected MPC beat the five static references
 replayed on those same tapes**, on ret_excel, the uncensored ledger and (against the gate
 incumbent) the tail, while costing less: κ 450,898 against 469,333.
@@ -193,3 +197,58 @@ deployable policy.
    are computed from them.
 7. Five postures, not 216 — the buffers×shifts crossing is exploratory and establishes no
    optimum of the expanded contract.
+
+
+---
+
+# Terminal v2 result — the authoritative comparison
+
+v2 closed 12/12 shards per family (`completion_receipt.json`, all prefix state hashes
+match, `confirmation_roots_opened: false`, `claim_status: DEVELOPMENT_INSTRUMENT`). It
+enumerates all 216 postures, so its own incumbent is the real static frontier:
+
+| family | 216-posture incumbent | mean ret_excel |
+|---|---|---:|
+| R1r | **(0, 0, 336)** — no raw-material buffer at either node | 0.00449283 |
+| R2r | **(336, 0, 168)** | 0.46692458 |
+
+**Neither was in the fold's five references.** That is why the fold's headline is
+retracted: it compared against a weaker set. Same error class as v1 defect 2, which I
+had myself written up — references chosen without enumerating.
+
+## Against the real incumbent
+
+| family | arm | Δ | CI95 | tapes + | verdict |
+|---|---|---:|---|---:|---|
+| R1r | **MPC** | **−0.00000001** | [−0.000014, +0.000015] | 4/12 | **statistical tie** |
+| R1r | DDMRP | −0.00012179 | [−0.000170, −0.000086] | 0/12 | **loses** |
+| R1r | greedy PI | +0.00001651 | [+0.000007, +0.000028] | 10/12 | wins |
+| R2r | **MPC** | **−0.01112769** | [−0.058774, +0.015358] | 11/12 | **inconclusive** |
+| R2r | DDMRP | −0.02110897 | [−0.026626, −0.016965] | 0/12 | **loses** |
+| R2r | greedy PI | +0.01519514 | [+0.010233, +0.020578] | 12/12 | wins |
+
+**The corrected MPC does not beat the true static incumbent in either family.** It ties
+in R1r. In R2r it is inconclusive with a fat left tail — 11 of 12 tapes positive but a
+negative mean, so one catastrophic tape dominates, which the sign count alone would have
+hidden in the wrong direction.
+
+**DDMRP loses decisively in both**, 0/12 tapes, CI entirely below zero. That question is
+settled on this contract.
+
+## What this establishes
+
+`pi_action_ranking_reversal: true` in both families, with **9 distinct best actions in
+R1r** and 7 in R2r. So state-dependent optimal actions genuinely exist — the earlier
+claim that "there is nothing to adapt toward" stays retracted.
+
+But the clairvoyant ceiling is small: +1.65e-05 in R1r (0.37% of level) and +0.0152 in
+R2r (3.3%). And a real receding-horizon MPC, replaying the true prefix with verified
+state hashes and five futures per candidate over all 216 candidates, converts **none of
+it observably**.
+
+That is the answer to Garrido's step 3, and it repeats the pattern already recorded
+across Programs D–K: **clairvoyant headroom does not convert to observable value.** The
+label is v2's own: `GREEDY_PI_BEST_FOUND_NOT_EXACT_CEILING`.
+
+All of it is conditioned on `step_hours = 672` and on
+`GARRIDO_FULFILLMENT_DELAY_HOURS = 54`.
