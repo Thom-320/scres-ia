@@ -9,6 +9,9 @@ Canonical paper branch: `codex/submission-a-program-q`
 Canonical reviewed commit before the editorial updates in this branch:
 `031d0af9479fcf73e95f34cece9a0ea76a218c97`
 
+Current editorial merge commit validated by the RC1 clean-room:
+`31ec004ec977b5e276bc573ed62c4534cd434519`
+
 ## Why this note exists
 
 Two results have sometimes been compressed into the sentence “RecurrentPPO
