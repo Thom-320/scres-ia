@@ -24,6 +24,13 @@ shifts + DDMRP at each shift = 18 cells per family.
 
 ## The finding that survives everything: R1r
 
+> **Cadence note.** The numbers in this section are from the original **24 h** run. The
+> artifact `panel_v1.json` has since been regenerated at **672 h** to match the v2
+> comparator, so its absolute values differ — see the addendum. All eight winners, both
+> families, were verified identical across the two cadences; the levels are not, and only
+> 2 of 18 rank positions held in R1r. The finding below is the winner disagreement, which
+> is cadence-stable. Absolute values here should not be quoted against any other artifact.
+
 | cell | ret_excel | full ledger | **R_CD** | cvar10 | fill | lost | unresolved | κ |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
 | 168/0/168 \| **S1** | 0.005568 | 0.005547 | **0.5969** | 0.003442 | 0.99634 | 0 | 0 | **388,544** |
@@ -39,7 +46,7 @@ property of the metrics, not of where a constraint was drawn.
 
 The mechanism is as clean as it gets: at posture `168/0/168`, **S1 and S3 have identical
 fill (0.99634), identical zero lost orders, identical zero unresolved backorder.** Three
-shifts buy exactly zero service and cost **2.15×** (834,377 against 388,544). All three
+shifts do not improve any aggregate service-quantity endpoint, and cost **2.15×** (834,377 against 388,544). All three
 ReT variants prefer S3 anyway. They are not rewarding extra service — they are rewarding
 something that is neither service nor free.
 
@@ -66,11 +73,15 @@ admitting exactly two cells. `agreement_is_floor_robust: false`. The sweep is pe
 the artifact so no reader repeats the error of reading a floor as a threshold.
 
 **What R2r actually shows is not a ranking.** Below 49,000 units of unresolved backorder,
-**zero of eighteen cells qualify.** Under this risk family at full escalation no posture in
-the set delivers acceptable service, and reporting a winner would mean reporting the best
-of a set that should not be deployed.
+**zero of eighteen cells qualify.** 49,000 is an *exploratory cap*, not a validated
+operational threshold, so the defensible statement is exactly that — no cell met it — and
+not "nothing is deployable". Reporting a winner would still mean reporting the best of a
+set none of which cleared the cap.
 
-## Pareto front (resource ↓, fill ↑, lost ↓)
+## Pareto front — (κ↓, fill↑, lost↓) only
+
+Excluded axes: `backorder_qty_final`, `delivered_rations`, `strategic_injected`,
+`fill_rate_on_time`, `tau`. This is a three-dimensional front, not a general one.
 
 - **R1r:** `168/168/168|S1`, `ddmrp|S1`, `ddmrp|S2`, `ddmrp|S3`
 - **R2r:** `168/0/168|S1`, `168/168/168|S1`
