@@ -227,3 +227,65 @@ of the unbounded tail.
 **Repair options, none taken yet:** clip to [0,1] as the metric's own definition implies;
 or floor `RPj` at a physical quantum; or attribute quantity-risk delay to `RPj` in time
 units. Each changes historical numbers, so none should be applied without preregistration.
+
+### What each repair produces
+
+Measured, not argued: `scripts/audit_ret_repair_variants.py`, artifact
+`results/metric_audit/ret_repair_variants_v1/result.json`. All 24 v2 tapes, MPC against
+each family's true 216-posture incumbent, paired within tape, bootstrap 10,000.
+**No repair is applied to the canonical metric.** Variants are produced by mutating the
+inputs and re-calling the *official* ledger; the untouched variant must reproduce
+`compute_episode_metrics`' `ret_excel` to 1e-9 or the run aborts. It did, in all 48 runs.
+
+**R1r — every repair is a no-op.**
+
+| variant | Δ (MPC − static) | CI95 | verdict |
+|---|---:|---|---|
+| all seven | **+0.000000** | [−0.00001, +0.00002] | `NOT_SEPARATED` |
+
+Zero orders out of range, so there is nothing for a repair to change. R1r's verdict is
+robust to all three repairs and to a 48x floor sweep.
+
+**R2r — every repair flips the verdict.**
+
+| variant | Δ (MPC − static) | CI95 | tapes | orders > 1 | max | verdict |
+|---|---:|---|---:|---:|---:|---|
+| **canonical** | **−0.011129** | [−0.05866, +0.01520] | 11/12 | 7 | 73.91 | `NOT_SEPARATED` |
+| clip to [0,1] | **+0.011951** | [+0.00781, +0.01655] | 12/12 | 0 | 1.00 | **`MPC_AHEAD`** |
+| quantity → time | **+0.013141** | [+0.00860, +0.01827] | 11/12 | 5 | 2.01 | **`MPC_AHEAD`** |
+| `RPj` floor 0.5 h | +0.011951 | [+0.00774, +0.01660] | 12/12 | 0 | 1.00 | **`MPC_AHEAD`** |
+| `RPj` floor 1 h | +0.012067 | [+0.00782, +0.01662] | 12/12 | 0 | 0.97 | **`MPC_AHEAD`** |
+| `RPj` floor 6 h | +0.012847 | [+0.00831, +0.01768] | 11/12 | 0 | 0.97 | **`MPC_AHEAD`** |
+| `RPj` floor 24 h | +0.012961 | [+0.00845, +0.01769] | 11/12 | 0 | 0.97 | **`MPC_AHEAD`** |
+
+Three conceptually independent repairs, plus a **48x floor sweep**, all agree: Δ between
++0.0120 and +0.0131, CI entirely above zero. The floor sweep is the check the
+Cobb-Douglas floors originally failed, and here it passes — the answer does not move with
+the decision.
+
+**So R2r's `NOT_SEPARATED` is produced by 7 orders in ~3,100.** Removing the
+out-of-range tail by any principled route reverses it.
+
+Two further findings:
+
+- **`clip_0_1` and `rpj_floor_0.5` are numerically identical** (0.453447 / 0.441495).
+  They should be — flooring `RPj` at 0.5 makes `0.5/RPj <= 1` by construction. Two
+  independently written repairs coinciding exactly where they must is a check on both.
+- **`quantity_time` alone is not sufficient.** It still leaves 5 orders above 1.0
+  (max 2.01), because it only touches orders a quantity risk reached; an order with a
+  tiny `RPj` from a pure timing risk stays unbounded. A repair needs the semantic fix
+  *and* a bound.
+
+### What may and may not be claimed
+
+**May not:** that the MPC beats the static incumbent in R2r. The preregistered endpoint
+is `ret_excel` as specified, and under it the verdict is `NOT_SEPARATED`. Switching
+metric after seeing the result is the Program G error.
+
+**May:** that the R2r verdict is **not robust to a documented defect of the endpoint**,
+and that every principled repair reverses it. That is grounds for preregistering a
+repair — with the sign of the outcome already known and declared, which is exactly why
+the preregistration has to be written before the rerun and not after.
+
+**Unchanged either way:** R1r, where MPC and the true incumbent are not separated under
+any variant.
