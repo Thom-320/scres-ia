@@ -1,0 +1,90 @@
+{
+  "contract_id": "expanded_contract_comparators_v2",
+  "status": "FROZEN_BEFORE_V2_ROOTS_OPEN",
+  "supersedes_for_inference": "expanded_contract_comparators_v1",
+  "v1_disposition": "PRESERVED_AS_DEVELOPMENT_INSTRUMENT_DIAGNOSTIC_NOT_VALID_MPC_OR_DDMRP_ADJUDICATION",
+  "primary_metric": "ret_excel",
+  "mandatory_secondary_metrics": [
+    "ret_excel_full_ledger",
+    "ret_thesis",
+    "flow_fill_rate",
+    "lost_orders",
+    "delivered_rations",
+    "unresolved",
+    "strategic_injected",
+    "terminal_stock"
+  ],
+  "families": [
+    "R1r",
+    "R2r"
+  ],
+  "risk_corner": "all family risks increased",
+  "horizon_weeks": 52,
+  "decision_epoch_weeks": 4,
+  "static_domain": {
+    "nodes": [
+      "op3_rm",
+      "op5_rm",
+      "op9_rations"
+    ],
+    "levels_hours": [
+      0,
+      168,
+      336,
+      504,
+      672,
+      1344
+    ],
+    "posture_count": 216,
+    "enumeration": "complete"
+  },
+  "ddmrp": {
+    "usage": "node-specific balance-derived rolling ADU",
+    "window_days": 28,
+    "net_flow_terms": [
+      "on_hand",
+      "on_order",
+      "qualified_spikes"
+    ],
+    "on_order_semantics": "zero under zero-lead strategic top-up; explicitly recorded",
+    "projection": "nearest posture in common 6^3 domain"
+  },
+  "mpc": {
+    "type": "state-conditioned replay MPC",
+    "prefix_requirement": "replay state hash must equal realized state hash before every branch",
+    "future_scenarios_full": 5,
+    "candidate_domain": "common frozen posture library",
+    "quality_bar": true
+  },
+  "dynamic_diagnostic": {
+    "type": "greedy perfect-information replay",
+    "label": "GREEDY_PI_BEST_FOUND_NOT_EXACT_CEILING",
+    "uses_for_neural_authorization": false,
+    "action_ranking_reversal_required_for_dynamic_story": true
+  },
+  "full_phase": {
+    "tapes_per_family": 12,
+    "bootstrap_draws": 20000,
+    "inference_unit": "tape",
+    "raw_rows_required": true,
+    "action_state_trace_required": true
+  },
+  "gates": {
+    "G0": [
+      "216 static postures present",
+      "all prefix state hashes match",
+      "all arms use common action domain",
+      "opening and completion receipts valid"
+    ],
+    "G1": "report greedy PI best-found headroom and action-ranking reversals",
+    "G2": "report observable MPC and projected DDMRP against the frozen full-static incumbent",
+    "G3": "neural work remains prohibited unless an observable structured residual above the separately frozen SESOI exists"
+  },
+  "claim_boundary": [
+    "development experiment",
+    "no confirmation roots",
+    "no KAN or learner selection",
+    "no exact dynamic ceiling claim",
+    "no full DDMRP claim while strategic procurement has no explicit order pipeline"
+  ]
+}
