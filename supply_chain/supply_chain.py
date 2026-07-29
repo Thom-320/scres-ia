@@ -562,6 +562,19 @@ class MFSCSimulation:
 
         # Apply action (modify mutable params)
         if action:
+            pseudo_action_keys = {"op5_q"}
+            unknown_action_keys = sorted(
+                set(action).difference(self.params).difference(pseudo_action_keys)
+            )
+            if unknown_action_keys:
+                raise KeyError(
+                    "unknown action key(s): "
+                    + ", ".join(unknown_action_keys)
+                    + "; allowed mutable keys are "
+                    + ", ".join(sorted(self.params))
+                    + "; allowed pseudo-action keys are "
+                    + ", ".join(sorted(pseudo_action_keys))
+                )
             for k, v in action.items():
                 if k in self.params:
                     self.params[k] = v

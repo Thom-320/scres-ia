@@ -1,0 +1,256 @@
+{
+  "schema_version": "authority_ladder_v1_preregistration",
+  "created_on": "2026-07-28",
+  "status": "DRAFT_PROSPECTIVE_UNOPENED_NOT_AUTHORITY",
+  "scientific_execution_authorized": false,
+  "temporal_boundary": {
+    "submission_a_receipt_required_before_scientific_execution": true,
+    "fresh_roots_opened": false,
+    "fresh_tapes_opened": false,
+    "optimizer_seeds_assigned": false,
+    "ddmrp_or_mpc_search_authorized": false,
+    "neural_training_authorized": false
+  },
+  "paper_boundary": {
+    "submission_a_canonical_ref": "origin/codex/submission-a-program-q",
+    "submission_a_reviewed_commit": "031d0af9479fcf73e95f34cece9a0ea76a218c97",
+    "program_q_in_authority_ladder": false,
+    "historical_verdicts_mutable": false
+  },
+  "research_question": "Which physically valid decision-right families create deployable contingent value, how much is captured by structured control, and does observable residual remain for a learned controller?",
+  "environment": {
+    "historical_reference_id": "E_Garrido",
+    "prospective_superset_id": "E_star",
+    "attribution": "thesis-grounded reconstruction; not a validated digital twin",
+    "program_q_is_a0": false,
+    "single_kernel_required": true,
+    "required_components": [
+      "approved upstream and downstream nodes",
+      "finite buffers and capacities",
+      "procurement sources and contract state",
+      "routes, transport capacity, and lead times",
+      "inventory in transit",
+      "resource ledger",
+      "fixed risk and demand contract",
+      "superset causal observation",
+      "native review cadences",
+      "mask-controlled decision families"
+    ],
+    "flags_off_bridge": {
+      "required": true,
+      "tolerance_frozen_before_execution": true,
+      "checks": [
+        "event-sequence hashes",
+        "trajectories",
+        "Excel ReT",
+        "inventory",
+        "orders and backlog",
+        "risks",
+        "flow ledger",
+        "resource ledger"
+      ],
+      "failure_status": "STOP_ESTAR_FLAGS_OFF_NON_EQUIVALENT"
+    }
+  },
+  "a0": {
+    "recommended_identity": "monoproduct E_star with Garrido-approved original rights and all new procurement/positioning rights fixed at approved baseline values",
+    "garrido_written_approval_required": true,
+    "manifest_required_fields": [
+      "commit",
+      "horizon",
+      "step cadence",
+      "risks",
+      "products",
+      "observation fields",
+      "reward",
+      "primary endpoint",
+      "physical parameters",
+      "resource budgets",
+      "action keys",
+      "neutral values",
+      "review epochs"
+    ]
+  },
+  "decision_families": {
+    "P": "procurement authority for Op1-Op2",
+    "U": "upstream-buffer authority",
+    "D": "downstream-buffer authority"
+  },
+  "factorial_masks": [
+    {"mask_id": "M000", "P": false, "U": false, "D": false},
+    {"mask_id": "M100", "P": true, "U": false, "D": false},
+    {"mask_id": "M010", "P": false, "U": true, "D": false},
+    {"mask_id": "M001", "P": false, "U": false, "D": true},
+    {"mask_id": "M110", "P": true, "U": true, "D": false},
+    {"mask_id": "M101", "P": true, "U": false, "D": true},
+    {"mask_id": "M011", "P": false, "U": true, "D": true},
+    {"mask_id": "M111", "P": true, "U": true, "D": true}
+  ],
+  "factorial_invariants": [
+    "same kernel hash",
+    "same observation schema",
+    "same endpoint",
+    "same tapes",
+    "same horizon",
+    "same risks",
+    "same resource budgets",
+    "same search budget",
+    "same absolute SESOI",
+    "embedded incumbent from every subset mask"
+  ],
+  "multirate_action_contract": {
+    "required_fields_per_dimension": [
+      "review_epoch",
+      "next_review_in",
+      "current_value",
+      "feasible_range_or_set",
+      "neutral_value",
+      "carry_forward_rule",
+      "resource_consequences"
+    ],
+    "native_cadence_required": true,
+    "off_epoch_behavior": "masked and carried forward",
+    "action_mask_in_observation": true,
+    "next_review_in_observation": true,
+    "unknown_action_keys": "fail_closed"
+  },
+  "physical_sourcing": {
+    "required_zero_fields": [
+      "total_strategic_raw_injected",
+      "total_strategic_rations_injected"
+    ],
+    "external_procurement_is_legitimate_source": true,
+    "transfer_rule": "q_move = min(shortfall, upstream_available, transport_capacity)",
+    "transfer_ledger_fields": [
+      "origin",
+      "destination",
+      "departure",
+      "quantity",
+      "transit_inventory",
+      "lead_time",
+      "arrival",
+      "resource_use"
+    ]
+  },
+  "primary_objective": {
+    "metric": "Excel ReT",
+    "selection": "maximize subject to frozen resource budgets",
+    "resource_fields": [
+      "raw_material_ordered",
+      "raw_material_received",
+      "supplier_order_count",
+      "contract_activations",
+      "lead_time_commitments",
+      "inventory_time",
+      "terminal_stock",
+      "transport_or_vehicle_hours",
+      "expediting",
+      "shift_hours"
+    ],
+    "budget_violation": "policy_ineligible",
+    "pareto_analysis_allowed_if_preregistered": true,
+    "economic_scalarization": {
+      "role": "secondary sensitivity only",
+      "formula": "J_lambda = ReT - lambda_I*I - lambda_P*P - lambda_T*T - lambda_S*S",
+      "preference_grid_frozen_before_results": true
+    }
+  },
+  "sesoi": {
+    "one_common_absolute_ret_sesoi_for_all_masks": true,
+    "value": null,
+    "operational_interpretation": null,
+    "garrido_signature_required_before_fresh_data": true,
+    "physical_guardrails_frozen_separately": true,
+    "normalized_capture_secondary_only": true
+  },
+  "estimands": {
+    "H_PI": "V(pi_PI) - V(pi_static); diagnostic only",
+    "H_obs": "V(pi_flex_obs) - V(pi_static); cross-fitted and non-anticipative",
+    "Delta_obs": "V(pi_flex_obs) - V(pi_BestStructured)",
+    "Delta_N": "V(pi_learner) - V(pi_BestStructured)",
+    "Delta_KAN": "V(pi_KAN) - V(pi_matched_MLP)"
+  },
+  "terminology": {
+    "exact_oracle": "allowed only under exhaustive enumeration",
+    "certified_upper_bound": "allowed only with a certificate",
+    "limited_search": "best-found incumbent or lower bound within the frozen library",
+    "limited_search_called_ceiling": false
+  },
+  "result_record_schema": {
+    "bound_type_required": true,
+    "bound_type_allowed": [
+      "exact",
+      "certified_upper",
+      "best_found"
+    ],
+    "search_budget_required_for_best_found": true,
+    "certificate_required_for_certified_upper": true,
+    "exact_requires_exhaustive_enumeration": true
+  },
+  "gates": {
+    "G0": "physical validity, flags-off equivalence, provenance, replay, liveness, resource closure",
+    "G1": "diagnostic decision relevance; perfect information does not authorize learning",
+    "G2": "observable non-neural conversion exceeds SESOI with positive LCB95 and physical guardrails",
+    "G3": "deployable observable residual over BestStructured exceeds SESOI with positive LCB95",
+    "G4": "architecture bakeoff",
+    "failure_in_one_mask_cancels_other_masks": false
+  },
+  "best_structured_envelope": {
+    "families": [
+      "constant full-contract",
+      "open-loop best-found",
+      "order-up-to",
+      "(s,S)",
+      "DDMRP with net-flow and dynamic buffer adjustment",
+      "direct-DES MPC",
+      "robust/scenario MPC",
+      "interpretable observable policy"
+    ],
+    "ddmrp_scope": "inventory and buffer decisions only",
+    "matched_rights_information_resources_horizon": true,
+    "embedded_incumbents_required": true,
+    "multiple_search_seeds_required": true,
+    "search_gap_uncertainty_reported": true,
+    "mpc_bars": {
+      "quality_bar": "reasonable compute for the strongest scientific comparator",
+      "equal_time_bar": "same online decision-time budget as the learner"
+    }
+  },
+  "architecture_bakeoff": {
+    "authorized_only_after_G3": true,
+    "arms": [
+      "PPO+MLP",
+      "RecurrentPPO+MLP",
+      "PPO+DMLPA",
+      "PPO+Real-KAN"
+    ],
+    "matching_panels": [
+      "identical DES interactions and development configurations",
+      "matched parameter count",
+      "matched FLOPs or action latency",
+      "matched wall-clock and hardware"
+    ],
+    "david_results_role": "external replication only; never selection",
+    "kan_novelty_claim": false
+  },
+  "custody": {
+    "development_roots": null,
+    "selection_roots": null,
+    "test_roots": null,
+    "confirmation_roots": null,
+    "optimizer_seeds": null,
+    "freeze_receipt": null,
+    "opening_receipt": null,
+    "all_fresh_data_remain_closed": true
+  },
+  "required_before_freeze": [
+    "Submission A editorial-system receipt",
+    "Garrido-approved A0 manifest",
+    "Garrido-approved physical nodes, routes, capacities, and cadences",
+    "common absolute ReT SESOI and operational interpretation",
+    "resource budgets and physical guardrails",
+    "disjoint root and seed blocks",
+    "clean commit and tests",
+    "independent pre-freeze audit"
+  ]
+}
