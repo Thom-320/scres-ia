@@ -1,0 +1,175 @@
+{
+  "contract_id": "garrido_h2_h3_confirmation_v1",
+  "status": "DRAFT_PROSPECTIVE_CONFIRMATION_UNOPENED",
+  "purpose": "Confirm the six development directional H2/H3 panels on fresh paired tapes with multiplicity control and mandatory uncensored service concordance.",
+  "parent_development": {
+    "contract": "contracts/garrido_h2_h3_corrective_v1.json",
+    "contract_sha256": "ea283088d528bb9bf9b1cd0e6ab1aac91ff9eca19bac558bbe96c78587dd0c09",
+    "result": "results/garrido_h2_h3_corrective_v1/result.json",
+    "result_sha256": "319cee735a889a5f98f7fba9719b6e53f2e1ba5230d4a865ebdc43d77c8d6ccb",
+    "development_tape_roots": [
+      9420000,
+      9430000,
+      9440000,
+      9450000,
+      9460000,
+      9470000,
+      9480000,
+      9490000,
+      9500000,
+      9510000,
+      9520000,
+      9530000
+    ]
+  },
+  "scientific_scope": {
+    "learners_authorized": false,
+    "architectural_claim_authorized": false,
+    "families": [
+      "R1r",
+      "R2r",
+      "R3"
+    ],
+    "configurations": "Cf1-Cf90",
+    "paired_units": [
+      "Cf_b",
+      "Cf_b+30",
+      "Cf_b+60"
+    ],
+    "development_results_may_not_select_subsets": true
+  },
+  "sources": {
+    "thesis_file": "WRAP_Theses_Garrido_Rios_2017.pdf",
+    "thesis_sha256": "de9192d233b0c728ece6156b754fc64543146868121358b8a95c73b3edaa55cf",
+    "raw_data_1_file": "Raw_data1+Re.xlsx",
+    "raw_data_1_sha256": "30b88c9b9fe68ef527dbfcc70d8e653ea7bd152ab891b3fc0ecf53cb6f043486",
+    "raw_data_2_file": "Raw_data2+Re.xlsx",
+    "raw_data_2_sha256": "4bd462771fefff16fc5666a851256b3780198d474832dec1423c0b6f94be86b0"
+  },
+  "execution": {
+    "hours_per_year": 8064,
+    "common_evaluation_start_hours": 2016,
+    "strict_exogenous_crn": true,
+    "periodic_release_mode": "start_to_start",
+    "assembly_batch_release_mode": "table_6_20_cadence",
+    "raw_material_flow_mode": "bom_total_units",
+    "raw_material_order_up_to_multiplier": 1.0,
+    "downstream_q_source": "figure_6_2",
+    "buffer_rule": "initial target plus order-up-to replenishment every buffer_hours",
+    "confirmation_tape_roots": [
+      97836128,
+      96876420,
+      97613612,
+      97646500,
+      96985702,
+      97185027,
+      96549564,
+      97004217,
+      96643766,
+      97327421,
+      96453941,
+      96111336
+    ],
+    "seed_rule": "seed=confirmation_tape_root+base_index",
+    "root_generation": {
+      "method": "Python secrets.SystemRandom equivalent via secrets.randbelow",
+      "range": [
+        96000000,
+        97999999
+      ],
+      "generated_before_confirmation_rows_opened": true,
+      "exact_text_collision_audit_clean": true
+    }
+  },
+  "source_validation": {
+    "quarantined_configurations": {
+      "1": "workbook horizon approximately 20 years, published design says 10",
+      "2": "workbook horizon approximately 20 years, published design says 10",
+      "5": "workbook ends at approximately 8.94 years, published design says 10"
+    },
+    "source_validation_does_not_change_generated_matrix": true
+  },
+  "mandatory_metrics": [
+    "ret_excel",
+    "ret_excel_full_ledger",
+    "ret_thesis",
+    "ret_continuous",
+    "generated_orders",
+    "scored_rows",
+    "omitted_rows",
+    "served_orders",
+    "unresolved_orders",
+    "lost_orders",
+    "flow_fill_rate",
+    "delivered_rations",
+    "strategic_raw_injected",
+    "strategic_rations_injected"
+  ],
+  "trace_gates": {
+    "op3_quantity_exact": true,
+    "op3_start_to_start_rop_hours": 168,
+    "op7_batch_quantity_by_shift": {
+      "1": 5000,
+      "2": 5000,
+      "3": 7000
+    },
+    "op7_rop_hours_by_shift": {
+      "1": 48,
+      "2": 24,
+      "3": 24
+    },
+    "neutral_shift_pairs_must_be_identical": true,
+    "periodic_buffer_must_inject_after_time_zero": true,
+    "generated_orders_paired_delta_must_equal_zero": true
+  },
+  "confirmation_inference": {
+    "unit": "paired tape",
+    "cluster": "confirmation_tape_root",
+    "primary_panels": [
+      "R1r:H2_buffer",
+      "R1r:H3_shift",
+      "R2r:H2_buffer",
+      "R2r:H3_shift",
+      "R3:H2_buffer",
+      "R3:H3_shift"
+    ],
+    "primary_endpoint": "ret_excel",
+    "alternative": "positive paired tape-level mean",
+    "familywise_alpha": 0.05,
+    "multiplicity": "Holm step-down over six one-sided Student-t tests",
+    "mandatory_panel_concordance": {
+      "ret_excel_full_ledger": "lower two-sided 95% Student-t bound > 0",
+      "flow_fill_rate": "lower two-sided 95% Student-t bound > 0",
+      "delivered_rations": "lower two-sided 95% Student-t bound > 0",
+      "unresolved_orders": "upper two-sided 95% Student-t bound < 0",
+      "generated_orders": "exact paired tape delta = 0"
+    },
+    "sensitivity_only_no_gate": [
+      "ret_thesis",
+      "ret_continuous",
+      "lost_orders",
+      "scored_rows",
+      "omitted_rows"
+    ],
+    "orders_as_independent_replicates": false,
+    "all_six_required_for_global_confirmation": true,
+    "partial_panel_results_must_still_be_reported": true
+  },
+  "compute_routing": {
+    "local": "authorized primary execution",
+    "vps": "excluded after inferior throughput on the same instrument unless local execution fails systemically",
+    "kaggle": "allowed only as a separately identified environment-reproduction shard with identical frozen bytes and private source hashes",
+    "cross_provider_rows_may_be_pooled_only_if_code_contract_and_source_hashes_match": true
+  },
+  "stop_rules": [
+    "STOP_CONFIRMATION_AUTHORITY",
+    "STOP_CONFIRMATION_SOURCE_HASH",
+    "STOP_CONFIRMATION_TRACE_TABLE_6_20",
+    "STOP_CONFIRMATION_COMMON_EVALUATION",
+    "STOP_CONFIRMATION_PERIODIC_BUFFER",
+    "STOP_CONFIRMATION_PAIRING",
+    "STOP_CONFIRMATION_INCOMPLETE_MATRIX",
+    "STOP_CONFIRMATION_DUPLICATE_OR_DEVELOPMENT_ROOT"
+  ],
+  "confirmation_roots_opened": false
+}
