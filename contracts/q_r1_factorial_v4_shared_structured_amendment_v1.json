@@ -1,0 +1,66 @@
+{
+  "schema_version": "q_r1_factorial_v4_shared_structured_amendment_v1",
+  "status": "DRAFT_PROSPECTIVE_UNOPENED_NOT_AUTHORITY",
+  "claim_status": "DEVELOPMENT_NO_CONFIRMATORY_CLAIM",
+  "base_contract": "contracts/q_r1_matched_retention_factorial_v4.json",
+  "base_contract_sha256": "bb92a2cbfcd3691a77f7f9ab8a269d7ffab65823d37b41f70d0b13795d92e764",
+  "reason": "The structured comparator is deterministic in the frozen physical histories, prior path, and comparator configuration and is invariant to neural configuration, optimizer seed, checkpoint, and learned actions. Recomputing it inside every worker caused a deterministic compute-cap failure without changing the scientific estimand.",
+  "scientific_invariants": {
+    "physical_contract_changed": false,
+    "information_rights_changed": false,
+    "comparator_configuration_changed": false,
+    "training_protocol_changed": false,
+    "checkpoint_selection_rule_changed": false,
+    "estimands_changed": false,
+    "seeds_changed": false,
+    "thresholds_changed": false,
+    "confirmation_roots_opened": false
+  },
+  "shared_artifact": {
+    "builder": "scripts/build_q_r1_shared_structured_artifact.py",
+    "selection_roots": [
+      7670101,
+      7670116
+    ],
+    "campaign_indices": [
+      0,
+      1
+    ],
+    "kappa_cells": [
+      0.5,
+      0.75,
+      0.9
+    ],
+    "expected_rows": 192,
+    "expected_arm_counts": {
+      "structured_reset": 96,
+      "structured_retained": 96
+    },
+    "computed_before_any_neural_checkpoint_is_graded": true,
+    "neural_configuration_independent": true,
+    "optimizer_seed_independent": true,
+    "checkpoint_independent": true
+  },
+  "worker_requirements": {
+    "must_load_shared_artifact": true,
+    "must_verify_opening_receipt_hash": true,
+    "must_verify_completion_receipt_hash": true,
+    "must_verify_artifact_hash": true,
+    "must_verify_identity_digest": true,
+    "must_verify_exact_root_kappa_campaign_and_arm_coverage": true,
+    "may_not_recompute_structured_rows": true,
+    "fail_closed_on_any_mismatch": true
+  },
+  "custody": {
+    "output_directory_must_not_exist": true,
+    "artifact_is_immutable_after_completion_receipt": true,
+    "failed_build_directory_must_be_preserved": true,
+    "confirmation_roots_must_remain_sealed": true
+  },
+  "boundaries": {
+    "does_not_rescue_or_reclassify_failed_attempts": true,
+    "does_not_make_the_structured_comparator_optimal": true,
+    "does_not_authorize_confirmation": true,
+    "does_not_modify_submission_a": true
+  }
+}

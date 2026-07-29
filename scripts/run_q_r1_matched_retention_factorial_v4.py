@@ -13,6 +13,7 @@ the first development root is materialized.
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 from datetime import datetime, timezone
 import hashlib
 import importlib.metadata
@@ -57,6 +58,13 @@ FREEZE_RECEIPT_PATH = (
     ROOT / "contracts/q_r1_matched_retention_factorial_v4_freeze_receipt.json"
 )
 COMPARATOR_FREEZE_PATH = ROOT / "contracts/q_r1_comparator_v2_frozen_c256_v1.json"
+STRUCTURED_AMENDMENT_PATH = (
+    ROOT / "contracts/q_r1_factorial_v4_shared_structured_amendment_v1.json"
+)
+STRUCTURED_AMENDMENT_FREEZE_PATH = (
+    ROOT
+    / "contracts/q_r1_factorial_v4_shared_structured_amendment_v1_freeze_receipt.json"
+)
 RHO = 0.90
 SHARE = 0.90
 KAPPAS = (0.50, 0.75, 0.90)
@@ -149,6 +157,90 @@ def validate_shared_static_bar(
     if completion.get("frontier_row") != static_bar.get("frontier_row"):
         raise RuntimeError("static bar completion frontier-row mismatch")
     return static_bar
+
+
+def load_shared_structured_authority() -> tuple[dict[str, Any], dict[str, Any]]:
+    """Verify the prospective amendment that hoists invariant structured work."""
+    if not STRUCTURED_AMENDMENT_PATH.is_file():
+        raise RuntimeError("shared structured amendment is missing")
+    if not STRUCTURED_AMENDMENT_FREEZE_PATH.is_file():
+        raise RuntimeError("shared structured amendment is not frozen")
+    amendment = json.loads(STRUCTURED_AMENDMENT_PATH.read_text())
+    receipt = json.loads(STRUCTURED_AMENDMENT_FREEZE_PATH.read_text())
+    if amendment.get("status") != "DRAFT_PROSPECTIVE_UNOPENED_NOT_AUTHORITY":
+        raise RuntimeError("shared structured amendment content marker mismatch")
+    if receipt.get("status") != "FROZEN_PROSPECTIVE_UNOPENED":
+        raise RuntimeError("shared structured freeze status mismatch")
+    if receipt.get("amendment_sha256") != sha256(STRUCTURED_AMENDMENT_PATH):
+        raise RuntimeError("shared structured amendment hash mismatch")
+    if receipt.get("base_contract_sha256") != sha256(CONTRACT_PATH):
+        raise RuntimeError("shared structured base-contract hash mismatch")
+    if receipt.get("confirmation_roots_opened") is not False:
+        raise RuntimeError("shared structured freeze does not keep confirmation sealed")
+    return amendment, receipt
+
+
+def validate_shared_structured_bar(
+    *,
+    rows_path: Path,
+    completion_receipt_path: Path,
+    opening_receipt_path: Path,
+    expected_contract_sha256: str,
+    expected_amendment_sha256: str,
+    expected_roots: list[int],
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Load the sole structured artifact and verify coverage and custody."""
+    opening = json.loads(opening_receipt_path.read_text())
+    completion = json.loads(completion_receipt_path.read_text())
+    rows = json.loads(rows_path.read_text())
+    if opening.get("schema_version") != "q_r1_shared_structured_opening_v1":
+        raise RuntimeError("shared structured opening schema mismatch")
+    if opening.get("base_contract_sha256") != expected_contract_sha256:
+        raise RuntimeError("shared structured opening base-contract mismatch")
+    if opening.get("amendment_sha256") != expected_amendment_sha256:
+        raise RuntimeError("shared structured opening amendment mismatch")
+    if completion.get("schema_version") != "q_r1_shared_structured_completion_v1":
+        raise RuntimeError("shared structured completion schema mismatch")
+    if completion.get("opening_receipt_sha256") != sha256(opening_receipt_path):
+        raise RuntimeError("shared structured completion opening hash mismatch")
+    if completion.get("base_contract_sha256") != expected_contract_sha256:
+        raise RuntimeError("shared structured completion base-contract mismatch")
+    if completion.get("amendment_sha256") != expected_amendment_sha256:
+        raise RuntimeError("shared structured completion amendment mismatch")
+    if completion.get("structured_rows_sha256") != sha256(rows_path):
+        raise RuntimeError("shared structured artifact hash mismatch")
+    if completion.get("rows_digest_sha256") != json_sha256(rows):
+        raise RuntimeError("shared structured row digest mismatch")
+    if not isinstance(rows, list) or len(rows) != 192:
+        raise RuntimeError("shared structured row count mismatch")
+    if Counter(str(row.get("arm")) for row in rows) != Counter(
+        {"structured_reset": 96, "structured_retained": 96}
+    ):
+        raise RuntimeError("shared structured arm coverage mismatch")
+    if sorted({int(row["history_root"]) for row in rows}) != list(
+        map(int, expected_roots)
+    ):
+        raise RuntimeError("shared structured root coverage mismatch")
+    if {float(row["kappa"]) for row in rows} != set(KAPPAS):
+        raise RuntimeError("shared structured kappa coverage mismatch")
+    if {int(row["campaign_index"]) for row in rows} != {0, 1}:
+        raise RuntimeError("shared structured campaign coverage mismatch")
+    identities = [
+        {
+            "history_root": int(row["history_root"]),
+            "kappa": float(row["kappa"]),
+            "campaign_index": int(row["campaign_index"]),
+            "arm": str(row["arm"]),
+            "skeleton_sha256": str(row["skeleton_sha256"]),
+            "prefix_state_hash": str(row["prefix_state_hash"]),
+        }
+        for row in rows
+    ]
+    if completion.get("identities_sha256") != json_sha256(identities):
+        raise RuntimeError("shared structured identity digest mismatch")
+    if completion.get("confirmation_roots_opened") is not False:
+        raise RuntimeError("shared structured artifact opened confirmation roots")
+    return rows, completion
 
 
 def git(*args: str) -> str:
@@ -631,6 +723,9 @@ def main() -> int:
     parser.add_argument("--static-bar-path", type=Path)
     parser.add_argument("--static-bar-completion-receipt", type=Path)
     parser.add_argument("--development-opening-receipt", type=Path)
+    parser.add_argument("--structured-bar-path", type=Path)
+    parser.add_argument("--structured-bar-completion-receipt", type=Path)
+    parser.add_argument("--structured-bar-opening-receipt", type=Path)
     parser.add_argument("--output-dir", type=Path, required=True)
     args = parser.parse_args()
     if args.output_dir.exists():
@@ -689,6 +784,8 @@ def main() -> int:
                 raise ValueError("optimizer seed is outside the frozen contract")
 
     shared_static_bar: dict[str, Any] | None = None
+    shared_structured_rows: list[dict[str, Any]] | None = None
+    shared_structured_completion: dict[str, Any] | None = None
     if args.mode == "development-worker":
         if (
             args.development_opening_receipt is None
@@ -720,6 +817,28 @@ def main() -> int:
             expected_campaigns=len(expected_roots)
             * CAMPAIGNS_PER_METAEPISODE
             * len(KAPPAS),
+        )
+        amendment, _amendment_receipt = load_shared_structured_authority()
+        if (
+            args.structured_bar_path is None
+            or not args.structured_bar_path.is_file()
+            or args.structured_bar_completion_receipt is None
+            or not args.structured_bar_completion_receipt.is_file()
+            or args.structured_bar_opening_receipt is None
+            or not args.structured_bar_opening_receipt.is_file()
+        ):
+            raise RuntimeError(
+                "development worker requires the frozen shared structured artifact"
+            )
+        shared_structured_rows, shared_structured_completion = (
+            validate_shared_structured_bar(
+                rows_path=args.structured_bar_path,
+                completion_receipt_path=args.structured_bar_completion_receipt,
+                opening_receipt_path=args.structured_bar_opening_receipt,
+                expected_contract_sha256=sha256(CONTRACT_PATH),
+                expected_amendment_sha256=sha256(STRUCTURED_AMENDMENT_PATH),
+                expected_roots=expected_roots,
+            )
         )
 
     args.output_dir.mkdir(parents=True)
@@ -758,6 +877,14 @@ def main() -> int:
                     args.static_bar_completion_receipt
                 ),
                 "contract_sha256": sha256(CONTRACT_PATH),
+                "structured_bar": str(args.structured_bar_path),
+                "structured_bar_sha256": sha256(args.structured_bar_path),
+                "structured_bar_completion_receipt_sha256": sha256(
+                    args.structured_bar_completion_receipt
+                ),
+                "structured_amendment_sha256": sha256(
+                    STRUCTURED_AMENDMENT_PATH
+                ),
             },
         )
 
@@ -957,12 +1084,38 @@ def main() -> int:
         evaluation_histories,
         roots=set(integer_range(scope["history_roots"])),
     )
-    structured, structured_receipt = evaluate_structured(
-        structured_histories,
-        campaign_indices=set(map(int, scope["campaign_indices"])),
-        contract=contract,
-        progress_dir=args.output_dir,
-    )
+    if args.mode == "development-worker":
+        assert shared_structured_rows is not None
+        assert shared_structured_completion is not None
+        structured = shared_structured_rows
+        structured_receipt = {
+            "mode": "shared_immutable_artifact",
+            "elapsed_seconds": 0.0,
+            "rows": len(structured),
+            "source_elapsed_seconds": float(
+                shared_structured_completion["elapsed_seconds"]
+            ),
+            "source_rows_sha256": sha256(args.structured_bar_path),
+            "source_completion_receipt_sha256": sha256(
+                args.structured_bar_completion_receipt
+            ),
+            "source_opening_receipt_sha256": sha256(
+                args.structured_bar_opening_receipt
+            ),
+            "amendment_sha256": sha256(STRUCTURED_AMENDMENT_PATH),
+            "confirmation_roots_opened": False,
+        }
+        write_json(
+            args.output_dir / "structured_bar_reference.json",
+            structured_receipt,
+        )
+    else:
+        structured, structured_receipt = evaluate_structured(
+            structured_histories,
+            campaign_indices=set(map(int, scope["campaign_indices"])),
+            contract=contract,
+            progress_dir=args.output_dir,
+        )
     write_json(args.output_dir / "structured_rows.json", structured)
     write_json(
         args.output_dir / "structured_progress.json",

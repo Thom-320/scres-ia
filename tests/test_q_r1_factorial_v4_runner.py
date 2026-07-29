@@ -19,6 +19,7 @@ from scripts.run_q_r1_matched_retention_factorial_v4 import (
     sha256,
     static_rows,
     validate_shared_static_bar,
+    validate_shared_structured_bar,
 )
 from scripts.salvage_q_r1_matched_retention_factorial_v4 import (
     _verify_source_hashes,
@@ -87,6 +88,68 @@ def _static_bar_chain(tmp_path: Path) -> tuple[Path, Path, Path, list[int]]:
         },
     )
     return bar_path, completion_path, opening_path, roots
+
+
+def _structured_bar_chain(
+    tmp_path: Path,
+) -> tuple[Path, Path, Path, list[int]]:
+    roots = list(range(1001, 1017))
+    rows = [
+        {
+            "history_root": root,
+            "campaign_index": campaign,
+            "kappa": kappa,
+            "arm": arm,
+            "skeleton_sha256": hashlib.sha256(
+                f"skeleton:{root}:{campaign}:{kappa}".encode()
+            ).hexdigest(),
+            "prefix_state_hash": hashlib.sha256(
+                f"prefix:{root}:{campaign}:{kappa}".encode()
+            ).hexdigest(),
+            "early_ret_complete_cohort": 0.5,
+        }
+        for root in roots
+        for kappa in (0.5, 0.75, 0.9)
+        for campaign in (0, 1)
+        for arm in ("structured_reset", "structured_retained")
+    ]
+    identities = [
+        {
+            "history_root": int(row["history_root"]),
+            "kappa": float(row["kappa"]),
+            "campaign_index": int(row["campaign_index"]),
+            "arm": str(row["arm"]),
+            "skeleton_sha256": str(row["skeleton_sha256"]),
+            "prefix_state_hash": str(row["prefix_state_hash"]),
+        }
+        for row in rows
+    ]
+    opening = tmp_path / "structured_bar_opening_receipt.json"
+    _write(
+        opening,
+        {
+            "schema_version": "q_r1_shared_structured_opening_v1",
+            "base_contract_sha256": "contract-sha",
+            "amendment_sha256": "amendment-sha",
+        },
+    )
+    artifact = tmp_path / "structured_rows.json"
+    _write(artifact, rows)
+    completion = tmp_path / "structured_bar_completion_receipt.json"
+    _write(
+        completion,
+        {
+            "schema_version": "q_r1_shared_structured_completion_v1",
+            "opening_receipt_sha256": sha256(opening),
+            "base_contract_sha256": "contract-sha",
+            "amendment_sha256": "amendment-sha",
+            "structured_rows_sha256": sha256(artifact),
+            "rows_digest_sha256": json_sha256(rows),
+            "identities_sha256": json_sha256(identities),
+            "confirmation_roots_opened": False,
+        },
+    )
+    return artifact, completion, opening, roots
 
 
 def test_freeze_receipt_closes_preflight_and_authorizes_development_loader() -> None:
@@ -233,6 +296,58 @@ def test_two_workers_cannot_accept_different_static_bar_hashes(
             expected_contract_sha256="contract-sha",
             expected_roots=roots,
             expected_campaigns=576,
+        )
+
+
+def test_shared_structured_chain_accepts_exact_frozen_coverage(
+    tmp_path: Path,
+) -> None:
+    artifact, completion, opening, roots = _structured_bar_chain(tmp_path)
+    rows, _receipt = validate_shared_structured_bar(
+        rows_path=artifact,
+        completion_receipt_path=completion,
+        opening_receipt_path=opening,
+        expected_contract_sha256="contract-sha",
+        expected_amendment_sha256="amendment-sha",
+        expected_roots=roots,
+    )
+    assert len(rows) == 192
+
+
+def test_shared_structured_chain_rejects_altered_rows(tmp_path: Path) -> None:
+    artifact, completion, opening, roots = _structured_bar_chain(tmp_path)
+    rows = json.loads(artifact.read_text())
+    rows[0]["early_ret_complete_cohort"] = 0.9
+    _write(artifact, rows)
+    with pytest.raises(RuntimeError, match="artifact hash mismatch"):
+        validate_shared_structured_bar(
+            rows_path=artifact,
+            completion_receipt_path=completion,
+            opening_receipt_path=opening,
+            expected_contract_sha256="contract-sha",
+            expected_amendment_sha256="amendment-sha",
+            expected_roots=roots,
+        )
+
+
+def test_shared_structured_chain_rejects_incomplete_coverage(
+    tmp_path: Path,
+) -> None:
+    artifact, completion, opening, roots = _structured_bar_chain(tmp_path)
+    rows = json.loads(artifact.read_text())[:-1]
+    _write(artifact, rows)
+    receipt = json.loads(completion.read_text())
+    receipt["structured_rows_sha256"] = sha256(artifact)
+    receipt["rows_digest_sha256"] = json_sha256(rows)
+    _write(completion, receipt)
+    with pytest.raises(RuntimeError, match="row count mismatch"):
+        validate_shared_structured_bar(
+            rows_path=artifact,
+            completion_receipt_path=completion,
+            opening_receipt_path=opening,
+            expected_contract_sha256="contract-sha",
+            expected_amendment_sha256="amendment-sha",
+            expected_roots=roots,
         )
 
 
