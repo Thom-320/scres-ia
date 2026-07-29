@@ -348,3 +348,13 @@ confirmation blocks plus immutable receipts. Confirmation remains sealed until
 all predeclared gates allow it.
 
 No historical STOP is retroactively changed by this study.
+
+Every reported optimization result must carry a machine-readable
+`bound_type`:
+
+- `exact` only after exhaustive enumeration;
+- `certified_upper` only with its certificate;
+- `best_found` with the frozen search library, budget, seeds, and convergence
+  diagnostics.
+
+No `best_found` result may be described as a ceiling or oracle optimum.

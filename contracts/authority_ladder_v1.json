@@ -176,6 +176,17 @@
     "limited_search": "best-found incumbent or lower bound within the frozen library",
     "limited_search_called_ceiling": false
   },
+  "result_record_schema": {
+    "bound_type_required": true,
+    "bound_type_allowed": [
+      "exact",
+      "certified_upper",
+      "best_found"
+    ],
+    "search_budget_required_for_best_found": true,
+    "certificate_required_for_certified_upper": true,
+    "exact_requires_exhaustive_enumeration": true
+  },
   "gates": {
     "G0": "physical validity, flags-off equivalence, provenance, replay, liveness, resource closure",
     "G1": "diagnostic decision relevance; perfect information does not authorize learning",
