@@ -1,0 +1,96 @@
+{
+ "claim_status": "DEVELOPMENT_METRIC_DIAGNOSTIC_NO_METRIC_CHANGED",
+ "created_at": "2026-07-29T19:45:05.217059+00:00",
+ "elapsed_seconds": 4.285867917002179,
+ "families": {
+  "R1r": {
+   "highest_scoring_order": {
+    "APj": 0.0,
+    "CTj": 54.0,
+    "LTj": 48.0,
+    "RPj": 7.025926824082035,
+    "j": 35,
+    "ret": 0.07116498826691481,
+    "tape_seed": 1430002
+   },
+   "incumbent": [
+    0,
+    0,
+    336
+   ],
+   "inflation_vs_clipped": 1.0,
+   "max_ret": 0.07116498826691481,
+   "mean_ret": 0.004487887661223767,
+   "mean_ret_clipped_0_1": 0.004487887661223767,
+   "most_delayed_is_highest_scoring": false,
+   "most_delayed_order": {
+    "APj": 0.0,
+    "CTj": 1344.0,
+    "LTj": 48.0,
+    "RPj": 1082.611510620727,
+    "j": 37,
+    "ret": 0.0004618461886788176,
+    "tape_seed": 1430008
+   },
+   "n_above_one": 0,
+   "n_scored_orders": 3279,
+   "n_tapes": 12,
+   "pct_above_one": 0.0,
+   "scope": "ReT > 1 tail only, at this family's static incumbent, on these tapes; absolves no other arm, posture, or ReT defect"
+  },
+  "R2r": {
+   "highest_scoring_order": {
+    "APj": 0.0,
+    "CTj": 240.0,
+    "LTj": 48.0,
+    "RPj": 0.006765147881765188,
+    "j": 24,
+    "ret": 73.90821438622243,
+    "tape_seed": 1530011
+   },
+   "incumbent": [
+    336,
+    0,
+    168
+   ],
+   "inflation_vs_clipped": 1.057838998575221,
+   "max_ret": 73.90821438622243,
+   "mean_ret": 0.47052015356399296,
+   "mean_ret_clipped_0_1": 0.4447937296674879,
+   "most_delayed_is_highest_scoring": false,
+   "most_delayed_order": {
+    "APj": 0.0,
+    "CTj": 7152.0,
+    "LTj": 48.0,
+    "RPj": 1692.906513721164,
+    "j": 34,
+    "ret": 0.00029535003613457314,
+    "tape_seed": 1530006
+   },
+   "n_above_one": 7,
+   "n_scored_orders": 3108,
+   "n_tapes": 12,
+   "pct_above_one": 0.22522522522522523,
+   "scope": "ReT > 1 tail only, at this family's static incumbent, on these tapes; absolves no other arm, posture, or ReT defect"
+  }
+ },
+ "rows_path": "results/metric_audit/ret_tail_family_sweep_v1/per_order_rows.json",
+ "rows_sha256": "6603d1ef32882b1ad024b6efceb1aea0149be323e0d879138c69d0872f8f3b0b",
+ "rpj_semantics": "immutable_onset_corrective (commit 125b94f)",
+ "schema_version": "ret_tail_family_sweep_v1",
+ "self_sha256": "73a6fd46c553ae699e1dd17cc787e07df60968732e1a6548c407124800266c30",
+ "tail_tape_warmup_by_arm": {
+  "arms": {
+   "replay_mpc_v2": {
+    "n_scored_orders": 277,
+    "warmup_time_hours": 943.0
+   },
+   "static_incumbent": {
+    "n_scored_orders": 288,
+    "warmup_time_hours": 631.0
+   }
+  },
+  "note": "the warm-up is endogenous and differs by arm, so the scored populations differ too -- policy-dependent censoring sits on top of the unbounded tail",
+  "tape_seed": 1530011
+ }
+}

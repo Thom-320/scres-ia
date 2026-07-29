@@ -179,15 +179,33 @@ order j=24    delivered 240 h after ordering = 5.0x the 48 h promise, 192 h LATE
               ReT = 0.5 / RPj = 73.9082          <- the episode's HIGHEST value
 ```
 
-**The most-delayed order in the episode receives the best possible score, by a factor of
-74, on a metric defined on [0,1].**
+**CORRECTED 2026-07-29.** An earlier draft called `j=24` "the most-delayed order in the
+episode" receiving "the best possible score". Both are false: `j=62` on the same tape
+reaches `CTj = 5,856 h`, and the formula is unbounded so there is no best possible score.
+The verified statement is stronger than the false one:
 
-The mechanism is not simply that `0.5/RPj` is unbounded as `RPj → 0`. It is that **`RPj`
-is a time attribution while the delay was caused by a quantity risk.** `R24` is a
-quantity risk — `_ret_quantity_risk_units = {"R14": 0.0, "R24": 0.0}` — so its 2,516
-missing rations contribute **zero hours**. `RPj` drew only from `R23`'s 24-second overlap.
-The more a delay is driven by shortfall rather than downtime, the *higher* it scores.
-Monotonicity is inverted on exactly the worst-served orders.
+| | most-delayed order | highest-scoring order |
+|---|---|---|
+| **R1r** (3,279 orders) | j=37, `CTj` 1,344 h → ReT **0.000462** | j=35, `CTj` **54 h** → ReT 0.0712 |
+| **R2r** (3,108 orders) | j=34, `CTj` 7,152 h → ReT **0.000295** | j=24, `CTj` 240 h → ReT **73.9082** |
+
+In both families they are **different orders**, and the highest-scoring one is among the
+*least* delayed — in R1r it is at `CTj = 54 h`, the physical minimum. On tape 1530011 an
+order 24x less late than the worst scores 148,000x higher. **ReT is not monotone in
+lateness, in either direction.**
+
+The mechanism is a **dimensional incompatibility**, confirmed: `R24` is a demand shock
+measured in rations — `_ret_quantity_risk_units = {"R14": 0.0, "R24": 0.0}` — while `RPj`
+accumulates hours, and `ret_thesis.py:125` takes `0.5/RPj` with no clipping. An order
+carrying an R24 quantity indicator can therefore enter the recovery branch with a nearly
+null *temporal* `RPj`.
+
+**Not demonstrated, and corrected from an earlier draft:** that R24 *caused* the 192 h
+delay. The `2516` is the recorded surge magnitude, an indicator, not a causal path — this
+contract uses retrospective event attribution. The defensible statement is: *the order
+combines an R24 quantity indicator with only 0.006765 h attributable to temporal risks,
+and that incompatibility lets an order 192 h late receive ReT = 73.91. R24's exact causal
+contribution to the delay is not identified.*
 
 This is orthogonal to defect 1 and survives its repair: the audit above was run with the
 immutable-onset correction in place.
@@ -199,7 +217,9 @@ immutable-onset correction in place.
 | R1r `(0,0,336)` | 3,279 | **0** (0.00%) | 0.07 | 1.00x |
 | R2r `(336,0,168)` | 3,108 | **7** (0.23%) | 73.91 | 1.06x |
 
-**R1r is clean.** Its results are uncontaminated by this defect. **R2r is not**, and R2r
+**R1r is clean of this tail** — and only of this tail, at the static incumbent, on these
+twelve tapes. It absolves no other arm, posture, censoring effect, or ReT defect.
+**R2r is not**, and R2r
 is precisely the family whose escalated set contains `R24` — the quantity risk. Seven
 orders in 3,108 inflate the family mean by 6% and, on one tape, move a paired delta by
 0.275.
@@ -224,9 +244,14 @@ warm-up is endogenous and **differs by arm** (631 h static against 943 h MPC), s
 scored populations differ too (262 against 253). Policy-dependent censoring sits on top
 of the unbounded tail.
 
-**Repair options, none taken yet:** clip to [0,1] as the metric's own definition implies;
-or floor `RPj` at a physical quantum; or attribute quantity-risk delay to `RPj` in time
-units. Each changes historical numbers, so none should be applied without preregistration.
+**Repair options, none taken yet.** Preregistration drafted in
+`docs/RET_REPAIR_PREREGISTRATION_2026-07-29.md`; measurements of all three below.
+
+Custody for the family sweep and the per-arm warm-up:
+`results/metric_audit/ret_tail_family_sweep_v1/`, runner
+`scripts/audit_ret_tail_family_sweep.py`. Warm-up on tape 1530011 is **631 h** for the
+static incumbent against **943 h** for the MPC, so the scored populations differ and
+policy-dependent censoring compounds on top of the tail.
 
 ### What each repair produces
 
