@@ -12,7 +12,11 @@ Current coauthor and wording controls:
 - `EXECUTION_BOARD_8_WEEKS.md`;
 - `INDEPENDENT_REVIEW_PACKET.md`;
 - `SECURITY_AND_DISCLOSURE_CHECKLIST.md`;
-- `SUBMISSION_HANDOFF.md`.
+- `SUBMISSION_HANDOFF.md`;
+- `CIE_GUIDE_AUDIT_2026-07-29.md`;
+- `HIGHLIGHTS.txt`;
+- `TITLE_PAGE.tex`;
+- `GENERATIVE_AI_DISCLOSURE_DRAFT.md`.
 
 Binding interpretation:
 
@@ -45,6 +49,16 @@ Build the same evidence package and a byte-deterministic review PDF:
 ```bash
 python scripts/build_submission_a_pdf.py
 ```
+
+Build the deterministic identity-guarded anonymous-review upload bundle:
+
+```bash
+python scripts/build_submission_a_cie_review_bundle.py \
+  --output /new/path/submission_a_cie_anonymous.zip
+```
+
+The non-anonymized `TITLE_PAGE.tex` is intentionally excluded and must be
+completed and uploaded separately.
 
 The PDF wrapper fixes `SOURCE_DATE_EPOCH`, and the figure generator removes
 volatile PDF metadata. The evidence manifest excludes itself. The generator
