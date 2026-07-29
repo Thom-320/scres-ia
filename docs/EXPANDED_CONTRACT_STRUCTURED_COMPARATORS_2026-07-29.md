@@ -1,5 +1,12 @@
 # Step 3 of Garrido's design: structured control on the expanded contract
 
+> **RECLASSIFIED 2026-07-29 to `DEVELOPMENT_INSTRUMENT_DIAGNOSTIC_NOT_VALID_MPC_OR_DDMRP_ADJUDICATION`.**
+> The MPC ignores observed state and plans against unrelated seeds; only 6 of 216 postures were
+> searched and the true incumbent is heterogeneous; the arms do not share an action domain; the
+> mean-flatness argument below is a fallacy. See
+> `EXPANDED_CONTRACT_COMPARATORS_RECLASSIFICATION_2026-07-29.md`. Do not cite the adjudications.
+
+
 **Status:** `DEVELOPMENT_SCREEN_NO_CLAIM`. No confirmation universe opened, no learner
 trained. Runner `scripts/run_expanded_contract_comparators.py`, result
 `results/expanded_contract_comparators/result.json`.
