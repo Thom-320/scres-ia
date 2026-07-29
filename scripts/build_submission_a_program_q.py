@@ -373,8 +373,12 @@ def figure3_effects(data: dict[str, dict]) -> None:
     for cell in CELLS:
         h = estimates[f"{cell}::H_OL"]
         n = estimates[f"{cell}::Delta_N"]
-        h_points.append(h["point"]); h_low.append(h["point"] - h["lcb95"]); h_high.append(h["ucb95"] - h["point"])
-        n_points.append(n["point"]); n_low.append(n["point"] - n["lcb95"]); n_high.append(n["ucb95"] - n["point"])
+        h_points.append(h["point"])
+        h_low.append(h["point"] - h["lcb95"])
+        h_high.append(h["ucb95"] - h["point"])
+        n_points.append(n["point"])
+        n_low.append(n["point"] - n["lcb95"])
+        n_high.append(n["ucb95"] - n["point"])
     axes[0].errorbar(h_points, y, xerr=[h_low, h_high], fmt="o", color="#2563EB", capsize=3)
     axes[0].axvline(0, color="#475569", lw=1)
     axes[0].axvline(0.01, color="#16A34A", lw=1, ls=":")
