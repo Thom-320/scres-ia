@@ -82,9 +82,23 @@ metric it was computed with. Program Q, the H2/H3 confirmation, the buffer gate 
 | expected result | **R2r `MPC_AHEAD` at Δ ≈ +0.0120, R1r `NOT_SEPARATED` at Δ ≈ 0.000000** — stated because it is already known |
 | reported alongside, always | canonical `ret_excel`, `ret_excel_full_ledger`, `R_cobb_douglas`, fill, lost, unresolved, delivered, injected |
 
-**What would falsify the repair rather than confirm it:** if clipping changed R1r, where
-there is no out-of-range order to clip. R1r must remain `NOT_SEPARATED` at Δ = 0.000000.
-A repair that moves a family it cannot touch is a broken repair.
+**Implementation check — scoped to the retrospective replay only.** On the twelve
+development tapes R1r contained **zero** orders above 1.0, so clipping is a mathematical
+no-op there and R1r must come back at Δ = 0.000000. Movement would mean an implementation
+bug, not a finding.
+
+**CORRECTED 2026-07-29.** An earlier draft stated this as the falsifier for the whole
+repair, including §7's prospective run. That is wrong. The sixteen prospective roots are
+new tapes: an out-of-range tail may legitimately appear in R1r, and clipping would then
+legitimately move it. That would be a *result*, not a broken repair. Reading the
+narrative expectation as a decision rule would have flagged a legitimate outcome as an
+instrument failure.
+
+**The prospective adjudication is governed by the frozen contract**
+(`contracts/ret_metric_repair_confirmation_v1.json`, sha `c1efdc20...`) and its declared
+`PASS_MATERIAL` / directional / fail thresholds — never by the expectations written in
+this document. Nothing in the contract is changed by this correction; only a false
+statement about it is removed.
 
 ## 5. What this will and will not license
 
