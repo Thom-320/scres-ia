@@ -35,23 +35,41 @@ def test_david_architectures_and_audit_are_visible() -> None:
         "source_origin",
         "notebook_class_ast",
         "never hash a class repr as if it were code",
+        'hasattr(policy, "q_net")',
     )
     for token in required:
         assert token in source
 
 
-def test_default_is_bounded_multiseed_screen() -> None:
+def test_default_is_serious_run_all_bakeoff() -> None:
     source = "\n".join("".join(cell["source"]) for cell in _notebook()["cells"])
-    assert 'os.environ.get("DAVID_PRESET", "screen")' in source
-    assert '"screen": dict(total_timesteps=50_000' in source
+    assert 'os.environ.get("DAVID_PRESET", "serious")' in source
+    assert '"serious": dict(total_timesteps=100_000' in source
     assert "optimizer_seeds=[9201, 9202, 9203]" in source
-    assert "eval_tapes_per_cell=12" in source
+    assert "eval_tapes_per_cell=24" in source
+    assert "HISTORY_LENGTH = 8" in source
     for model in (
-        "ppo_mlp", "ppo_mlp_history", "recurrent_ppo",
-        "ppo_dmlpa_faithful", "ppo_dmlpa_positional",
-        "sac_discrete_dmlpa_faithful", "sac_discrete_dmlpa_positional",
+        "recurrent_ppo", "ppo_dmlpa_positional",
+        "recurrent_ppo_dmlpa_positional", "a2c_dmlpa_positional",
+        "dqn_dmlpa_positional", "sac_discrete_dmlpa_positional",
     ):
         assert f'"{model}"' in source
+
+
+def test_verdict_compares_same_run_and_historical_recurrent_ppo() -> None:
+    source = "\n".join("".join(cell["source"]) for cell in _notebook()["cells"])
+    required = (
+        "HISTORICAL_RECURRENT_PPO",
+        "delta_vs_RecurrentPPO_same_run",
+        "beat_recurrent_ppo_all_cells",
+        "achieved_strong_goal_all_cells",
+        "worst_product_fill_vs_classical",
+        "Delta_N_LCB05_dev",
+        "Run all",
+        "NO DEBERÍAS Y NO PUEDES CAMBIAR",
+    )
+    for token in required:
+        assert token in source
 
 
 def test_scientific_seed_ranges_are_rejected() -> None:

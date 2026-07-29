@@ -43,17 +43,19 @@ cells = [
 
         - `FriendDMLPAFaithful`: arquitectura DMLPA original, sin positional encoding.
         - `FriendDMLPAPositional`: la misma arquitectura con PE sinusoidal y `LayerNorm`.
-        - Historia apilada configurable. Con el default, cuatro estados de 21 variables forman
-          cuatro tokens temporales; David puede cambiar la longitud o el agrupamiento.
-        - PPO+MLP, PPO+historia y `RecurrentPPO` como controles.
+        - Historia apilada configurable. El default usa **8 estados de 21 variables**: cubre las
+          ocho decisiones completas del episodio sin inventar frames adicionales.
+        - PPO+MLP y el `RecurrentPPO` histórico como controles.
+        - PPO, RecurrentPPO, A2C, DQN y SAC categórico usando la arquitectura de David.
         - PPO+DMLPA fiel y posicional.
         - SAC-Discrete+DMLPA fiel y posicional. **SB3 SAC no sirve aquí** porque la acción
           `k∈{0,1,2,3}` es discreta; este notebook incluye SAC categórico funcional.
 
-        ## Preset por defecto
+        ## Preset por defecto: `serious`
 
-        `screen`: siete modelos × 3 seeds del optimizador × 50,000 pasos, 12 tapes por cada una de
-        las tres celdas. Es un filtro serio pero sigue siendo desarrollo no promocionable.
+        Se ejecuta con **Run all**, sin editar nada: seis modelos × 3 seeds del optimizador ×
+        100,000 pasos, 24 tapes por cada una de las tres celdas. Es una comparación seria de
+        desarrollo, pero no abre semillas científicas ni convierte el resultado en un claim.
 
         El resultado principal del notebook es `H_OL` contra los 65,536 calendarios open-loop y
         `Delta_N` contra la mejor configuración clásica elegida **por media del panel**, nunca por
@@ -78,17 +80,22 @@ cells = [
         sys.path.insert(0, str(ROOT))
 
         # ── EDITA ESTO ────────────────────────────────────────────────────────────────
-        PRESET = os.environ.get("DAVID_PRESET", "screen")
+        PRESET = os.environ.get("DAVID_PRESET", "serious")
         DEFAULT_MODEL_KINDS = [
-            "ppo_mlp", "ppo_mlp_history", "recurrent_ppo",
-            "ppo_dmlpa_faithful", "ppo_dmlpa_positional",
-            "sac_discrete_dmlpa_faithful", "sac_discrete_dmlpa_positional",
+            "recurrent_ppo",
+            "ppo_dmlpa_positional",
+            "recurrent_ppo_dmlpa_positional",
+            "a2c_dmlpa_positional",
+            "dqn_dmlpa_positional",
+            "sac_discrete_dmlpa_positional",
         ]
         MODEL_KINDS_TO_RUN = json.loads(
             os.environ.get("DAVID_MODEL_KINDS", json.dumps(DEFAULT_MODEL_KINDS))
         )
 
-        HISTORY_LENGTH = 4
+        # PUEDES CAMBIAR AQUÍ. Recomendado: 8, porque el episodio tiene 8 decisiones.
+        # Valores >8 solo agregan padding al comienzo; no crean información nueva.
+        HISTORY_LENGTH = 8
         DMLPA_FEATURES_DIM = 120
         DMLPA_HIDDEN = 100
         DMLPA_NHEAD = 12
@@ -99,6 +106,7 @@ cells = [
         PRESETS = {
             "quick": dict(total_timesteps=10_000, optimizer_seeds=[9201], eval_tapes_per_cell=4),
             "screen": dict(total_timesteps=50_000, optimizer_seeds=[9201, 9202, 9203], eval_tapes_per_cell=12),
+            "serious": dict(total_timesteps=100_000, optimizer_seeds=[9201, 9202, 9203], eval_tapes_per_cell=24),
             "finalist": dict(total_timesteps=100_000, optimizer_seeds=[9201, 9202, 9203, 9204, 9205], eval_tapes_per_cell=24),
             "full_training": dict(total_timesteps=200_192, optimizer_seeds=list(range(9301, 9311)), eval_tapes_per_cell=0),
         }
@@ -122,6 +130,9 @@ cells = [
 
         allowed = {
             "ppo_dmlpa_faithful", "ppo_dmlpa_positional", "recurrent_ppo",
+            "recurrent_ppo_dmlpa_faithful", "recurrent_ppo_dmlpa_positional",
+            "a2c_dmlpa_faithful", "a2c_dmlpa_positional",
+            "dqn_dmlpa_faithful", "dqn_dmlpa_positional",
             "sac_discrete_dmlpa_faithful", "sac_discrete_dmlpa_positional",
             "ppo_mlp", "ppo_mlp_history",
         }
@@ -289,14 +300,22 @@ cells = [
         def build_policy_kwargs(model_kind: str) -> dict[str, Any] | None:
             if model_kind in {"ppo_mlp", "ppo_mlp_history", "recurrent_ppo"}:
                 return None
-            if model_kind in {"ppo_dmlpa_faithful", "sac_discrete_dmlpa_faithful"}:
+            if model_kind in {
+                "ppo_dmlpa_faithful", "recurrent_ppo_dmlpa_faithful",
+                "a2c_dmlpa_faithful", "dqn_dmlpa_faithful",
+                "sac_discrete_dmlpa_faithful",
+            }:
                 extractor = FriendDMLPAFaithful
-            elif model_kind in {"ppo_dmlpa_positional", "sac_discrete_dmlpa_positional"}:
+            elif model_kind in {
+                "ppo_dmlpa_positional", "recurrent_ppo_dmlpa_positional",
+                "a2c_dmlpa_positional", "dqn_dmlpa_positional",
+                "sac_discrete_dmlpa_positional",
+            }:
                 extractor = FriendDMLPAPositional
             else:
                 raise ValueError(f"MODEL_KIND desconocido: {model_kind}")
             factor = history_for(model_kind)
-            return {
+            policy_kwargs = {
                 "features_extractor_class": extractor,
                 "features_extractor_kwargs": {
                     "factor": factor,
@@ -305,17 +324,21 @@ cells = [
                     "nhead": DMLPA_NHEAD,
                     "num_layers": DMLPA_NUM_LAYERS,
                 },
-                "net_arch": dict(pi=[128, 64], vf=[128, 64]),
             }
+            policy_kwargs["net_arch"] = (
+                [128, 64] if model_kind.startswith("dqn_")
+                else dict(pi=[128, 64], vf=[128, 64])
+            )
+            return policy_kwargs
 
         print("Arquitecturas DMLPA cargadas.")
-        print("Nota: factor=1 crea un Transformer de un token; con historia=4 usamos 4 tokens × 21 variables.")
+        print(f"Nota: la arquitectura de David recibe {HISTORY_LENGTH} tokens × 21 variables.")
         """
     ),
     code(
         r"""
         # Celda 4 — constructores de agentes + AUDIT de la red antes de entrenar
-        from stable_baselines3 import PPO
+        from stable_baselines3 import A2C, DQN, PPO
         from sb3_contrib import RecurrentPPO
         from scripts.discrete_sac_dmlpa import DiscreteSACAgent, DiscreteSACConfig
 
@@ -374,6 +397,29 @@ cells = [
                     policy_kwargs=dict(lstm_hidden_size=64, net_arch=dict(pi=[64, 64], vf=[64, 64])),
                     **common,
                 )
+            if model_kind in {
+                "recurrent_ppo_dmlpa_faithful", "recurrent_ppo_dmlpa_positional"
+            }:
+                kwargs = build_policy_kwargs(model_kind)
+                kwargs["lstm_hidden_size"] = 64
+                return RecurrentPPO(
+                    "MlpLstmPolicy", n_steps=512, batch_size=64, gae_lambda=0.95,
+                    clip_range=0.2, ent_coef=0.01, policy_kwargs=kwargs, **common,
+                )
+            if model_kind in {"a2c_dmlpa_faithful", "a2c_dmlpa_positional"}:
+                return A2C(
+                    "MlpPolicy", n_steps=128, gae_lambda=0.95, ent_coef=0.01,
+                    policy_kwargs=build_policy_kwargs(model_kind), **common,
+                )
+            if model_kind in {"dqn_dmlpa_faithful", "dqn_dmlpa_positional"}:
+                dqn_common = dict(common)
+                dqn_common.pop("gamma")
+                return DQN(
+                    "MlpPolicy", buffer_size=100_000, learning_starts=2_000,
+                    batch_size=256, gamma=0.99, train_freq=4, gradient_steps=1,
+                    target_update_interval=1_000,
+                    policy_kwargs=build_policy_kwargs(model_kind), **dqn_common,
+                )
             if model_kind == "sac_discrete_dmlpa_faithful":
                 return build_sac_discrete_dmlpa(env, seed, positional=False)
             if model_kind == "sac_discrete_dmlpa_positional":
@@ -385,6 +431,8 @@ cells = [
             total = sum(p.numel() for p in policy.parameters())
             trainable = sum(p.numel() for p in policy.parameters() if p.requires_grad)
             extractor = getattr(policy, "features_extractor", None)
+            if extractor is None and hasattr(policy, "q_net"):
+                extractor = getattr(policy.q_net, "features_extractor", None)
             source, source_origin = architecture_source_for_audit(
                 type(extractor) if extractor is not None else type(policy)
             )
@@ -666,7 +714,95 @@ cells = [
     ),
     code(
         r"""
-        # Celda 9 — guardar reporte auditable de desarrollo
+        # Celda 9 — VEREDICTO CLARO: ¿la arquitectura de David le ganó a RecurrentPPO?
+        # Resultado histórico congelado (10 checkpoints × 200,192 pasos; 48 tapes por celda).
+        HISTORICAL_RECURRENT_PPO = {
+            "rho75_share90": {"H_OL": 0.07575755307277598, "H_OL_LCB95": 0.04322581779229105,
+                              "Delta_N": -0.001645866256585582, "Delta_N_LCB95": -0.00878915373785542},
+            "rho90_share75": {"H_OL": 0.06261198671266455, "H_OL_LCB95": 0.03659344336503134,
+                              "Delta_N": -0.0027324544170865828, "Delta_N_LCB95": -0.013997239559772895},
+            "rho90_share90": {"H_OL": 0.1045500387434144, "H_OL_LCB95": 0.06629718714588984,
+                              "Delta_N": -0.001496518554404025, "Delta_N_LCB95": -0.008283032412981978},
+        }
+        print("RESULTADOS YA OBTENIDOS — RecurrentPPO histórico")
+        display(pd.DataFrame(HISTORICAL_RECURRENT_PPO).T)
+        print("Ganó al frontier open-loop en las 3 celdas, pero NO ganó al mejor controlador clásico.")
+
+        verdict_rows = []
+        for model_kind in MODEL_KINDS_TO_RUN:
+            if model_kind == "recurrent_ppo":
+                continue
+            cell_passes = []
+            for cell in CONFIRMED_RET_CELLS:
+                candidate = np.asarray([
+                    [m["ret_visible"] for m in seed_rows]
+                    for seed_rows in learner_cache[(model_kind, cell.cell_id)]["metrics"]
+                ])
+                baseline = np.asarray([
+                    [m["ret_visible"] for m in seed_rows]
+                    for seed_rows in learner_cache[("recurrent_ppo", cell.cell_id)]["metrics"]
+                ])
+                paired_delta = candidate - baseline
+                summary = detailed[f"{model_kind}::{cell.cell_id}"]
+                delta_rppo = float(paired_delta.mean())
+                delta_rppo_lcb = two_way_lcb95(paired_delta, rng_seed=920102)
+                worst_product_delta = float(
+                    summary["guardrail_deltas_vs_classical"]["worst_product_fill"]
+                )
+                # Objetivo fuerte de desarrollo: evidencia pareada sobre RecurrentPPO,
+                # margen +0.01 sobre el mejor clásico y sin degradar el peor producto.
+                strong_cell_pass = bool(
+                    delta_rppo_lcb > 0.0
+                    and summary["H_OL_LCB05_dev"] > 0.0
+                    and summary["Delta_N_LCB05_dev"] >= 0.01
+                    and worst_product_delta >= 0.0
+                    and summary["resource_spread"] == 0.0
+                )
+                cell_passes.append(strong_cell_pass)
+                verdict_rows.append({
+                    "model": model_kind,
+                    "cell": cell.cell_id,
+                    "delta_vs_RecurrentPPO_same_run": delta_rppo,
+                    "delta_vs_RecurrentPPO_LCB05_dev": delta_rppo_lcb,
+                    "beat_RecurrentPPO_same_run": bool(delta_rppo_lcb > 0.0),
+                    "H_OL": summary["H_OL"],
+                    "historical_RecurrentPPO_H_OL": HISTORICAL_RECURRENT_PPO[cell.cell_id]["H_OL"],
+                    "beat_historical_H_OL_point_reference": bool(
+                        summary["H_OL"] > HISTORICAL_RECURRENT_PPO[cell.cell_id]["H_OL"]
+                    ),
+                    "Delta_N": summary["Delta_N"],
+                    "worst_product_fill_vs_classical": worst_product_delta,
+                    "strong_cell_pass": strong_cell_pass,
+                })
+            print("\n" + "═" * 88)
+            if all(cell_passes):
+                print(f"✅ {model_kind}: LOGRÓ EL OBJETIVO FUERTE DE DESARROLLO EN LAS 3 CELDAS")
+            elif any(cell_passes):
+                print(f"⚠️ {model_kind}: RESULTADO MIXTO; NO LOGRÓ EL OBJETIVO COMPLETO")
+            else:
+                print(f"❌ {model_kind}: NO LE GANÓ DE FORMA SUFICIENTE AL OBJETIVO COMPLETO")
+
+        verdict_df = pd.DataFrame(verdict_rows)
+        display(verdict_df)
+        final_verdicts = {
+            model_kind: {
+                "beat_recurrent_ppo_all_cells": bool(
+                    verdict_df.loc[verdict_df.model == model_kind, "beat_RecurrentPPO_same_run"].all()
+                ),
+                "achieved_strong_goal_all_cells": bool(
+                    verdict_df.loc[verdict_df.model == model_kind, "strong_cell_pass"].all()
+                ),
+            }
+            for model_kind in verdict_df.model.unique()
+        }
+        print("\nVEREDICTO FINAL MACHINE-READABLE")
+        print(json.dumps(final_verdicts, indent=2))
+        print("IMPORTANTE: sigue siendo desarrollo. Un PASS autoriza preregistrar; no autoriza un claim.")
+        """
+    ),
+    code(
+        r"""
+        # Celda 10 — guardar reporte auditable de desarrollo
         report = {
             "status": "SANDBOX_DEVELOPMENT_ONLY_NOT_PROMOTABLE",
             "preset": PRESET,
@@ -679,6 +815,9 @@ cells = [
             "training": training_rows,
             "summary": summaries,
             "details": detailed,
+            "historical_recurrent_ppo": HISTORICAL_RECURRENT_PPO,
+            "verdict_rows": verdict_rows,
+            "final_verdicts": final_verdicts,
             "claim_boundary": (
                 "A positive sandbox result is only a hypothesis. Freeze architecture and hyperparameters, "
                 "preregister fresh seeds, then evaluate once with the scientific evaluator."
@@ -703,24 +842,62 @@ cells = [
         r"""
         ## Cómo debe usarlo David
 
-        1. Ejecutar primero `quick` para verificar que su código corre.
-        2. Dejar visible el audit de arquitectura: extractor completo, parámetros, entrada y salida.
-        3. Usar `screen` sin cambiar tapes ni métricas para comparar propuestas.
-        4. Usar `finalist` con máximo dos modelos; `full_training` requiere manifiesto congelado.
-        5. No seleccionar un modelo porque ganó una sola seed o una sola celda.
-        6. Un candidato merece preregistro nuevo únicamente si muestra, de forma estable:
+        ### Para correrlo ahora
+
+        Simplemente selecciona **Run all**. El default `serious` entrena y compara:
+        RecurrentPPO histórico, PPO+DMLPA, RecurrentPPO+DMLPA, A2C+DMLPA, DQN+DMLPA y
+        SAC-discreto+DMLPA. Al final imprime `beat_recurrent_ppo_all_cells` y
+        `achieved_strong_goal_all_cells`.
+
+        ### PUEDES CAMBIAR AQUÍ
+
+        - El cuerpo de `FriendDMLPAFaithful` y `FriendDMLPAPositional` en la celda de arquitectura.
+        - `HISTORY_LENGTH` (recomendado: **8**; no hay información temporal nueva después de 8).
+        - Dimensión, capas, heads y hidden size de DMLPA, manteniendo dimensiones divisibles.
+        - `MODEL_KINDS_TO_RUN` para quitar o añadir algoritmos ya soportados.
+        - El preset `quick` para depurar; vuelve a `serious` para una comparación útil.
+
+        ### NO DEBERÍAS Y NO PUEDES CAMBIAR EN ESTE NOTEBOOK
+
+        - Los namespaces de seeds: solo `9491*` para entrenamiento y `9492*` para evaluación.
+        - Las celdas físicas, acciones, observaciones, reward, tapes, métricas, comparadores,
+          selección por media del panel ni igualdad de recursos.
+        - El evaluador de referencia, los artefactos históricos o las semillas reservadas
+          `7480101–7480148`, `7490001–7490256` y `950100001–950100096`.
+        - No debes escoger un modelo porque ganó una seed, una tape o una celda aislada.
+
+        ### Qué tiene que ganar
+
+        1. Al RecurrentPPO ejecutado en el mismo `Run all`, con delta pareado LCB05 > 0.
+        2. Al frontier completo de 65,536 calendarios open-loop, con LCB05 > 0.
+        3. Al mejor controlador clásico por al menos `+0.01`, con LCB05 >= `+0.01`.
+        4. Sin degradar `worst_product_fill` y con igualdad exacta de recursos.
+
+        Un candidato merece preregistro nuevo únicamente si muestra, de forma estable:
            - `H_OL > 0`;
-           - `Delta_N >= 0`;
+           - `Delta_N >= +0.01`;
            - feedback real y derrota de placebos;
            - recursos exactamente iguales;
            - guardrails sin deterioro material.
 
-        `RecurrentPPO` sigue disponible como baseline. La corrida científica RecurrentPPO histórica ya
-        terminó: superó open-loop pero no al mejor controlador clásico. Este notebook no la reabre; permite
-        comprobar si la representación DMLPA de David aporta algo nuevo bajo un contrato prospectivo.
+        **SAC de Stable-Baselines3 no acepta acciones discretas**, y este problema usa cuatro acciones
+        discretas. Por eso el notebook no finge compatibilidad: usa una implementación SAC categórica
+        auditada con la misma interfaz. PPO, A2C y DQN sí vienen de Stable-Baselines3; RecurrentPPO viene
+        de `sb3-contrib`. Todos pueden usar la arquitectura visible de David.
+
+        Sé muy cuidadoso: cambiar entorno, seeds, reward, métricas o comparadores cambia la pregunta.
+        La corrida científica RecurrentPPO histórica superó open-loop en las tres celdas, pero quedó
+        `−0.00150` a `−0.00273` por debajo del mejor clásico. Este notebook no reabre ese resultado.
+
+        No se incluye una estimación previa de tiempo: el artefacto histórico conserva pasos ejecutados,
+        pero no un tiempo de entrenamiento PPO comparable. La tabla `training_rows` sí registra el tiempo
+        real de cada modelo y seed de esta ejecución.
         """
     ),
 ]
+
+for index, cell in enumerate(cells):
+    cell["id"] = f"david-{index:02d}"
 
 notebook = {
     "cells": cells,

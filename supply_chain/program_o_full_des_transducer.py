@@ -291,10 +291,13 @@ def direct_full_des_trace(sim: ProgramOFullDESSimulation) -> dict[str, Any]:
 
 def normalize_scheduler(scheduler: Mapping[str, Sequence[str]]) -> np.ndarray:
     index = {product_id: idx for idx, product_id in enumerate(PRODUCTS)}
+    keys = sorted(int(key) for key in scheduler)
+    if keys != list(range(len(keys))):
+        raise ValueError("scheduler actions must be consecutive from zero")
     return np.asarray(
         [
             [index[product_id] for product_id in scheduler[str(action)]]
-            for action in range(4)
+            for action in keys
         ],
         dtype=np.uint8,
     )
