@@ -14,6 +14,7 @@ from scripts.run_expanded_contract_comparators_v2 import (
     splice_tapes,
     state_hash,
 )
+from scripts.fold_v2_arms_into_panel import PHYSICAL_GATE_KEYS
 
 
 def test_static_domain_is_complete_and_node_independent() -> None:
@@ -74,3 +75,14 @@ def test_hybrid_replay_matches_realized_prefix_hash() -> None:
     )
     assert state_hash(hybrid_sim) == state_hash(actual_sim)
 
+
+def test_corrective_fold_gates_physics_not_historical_rpj_metric() -> None:
+    assert PHYSICAL_GATE_KEYS == (
+        "flow_fill_rate",
+        "lost_orders",
+        "delivered_rations",
+        "unresolved",
+        "strategic_injected",
+        "terminal_stock",
+    )
+    assert "ret_excel" not in PHYSICAL_GATE_KEYS

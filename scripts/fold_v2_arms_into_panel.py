@@ -10,20 +10,20 @@ a fixed posture sequence is one episode with no 216-candidate search, so the who
 fold costs a few seconds rather than re-running the instrument. The v2 run
 establishes what the MPC *chose*; this measures that choice on the full panel.
 
-**The replay is gated on reproducing v2's own numbers.** Every replayed episode must
-return the shard's `ret_excel`, `ret_excel_full_ledger`, `flow_fill_rate` and
-`lost_orders` to within `TOL`. A single mismatch means the replay conditions differ
-from v2's and the fold is refused rather than reported -- the exogenous tape is
-re-materialised from the seed here, so a mismatch would most likely mean the tape
-did not reproduce, which silently invalidates everything downstream.
+**The replay is gated on physical endpoints.** Every replayed episode must reproduce
+the shard's flow fill, lost orders, delivered rations, unresolved orders, strategic
+injection and terminal stock to within `TOL`. A single mismatch means the replay
+conditions differ from v2's and the fold is refused rather than reported.
 
-Note the sampling difference the gate is there to police: v2 steps by `epoch_hours`
-(4 weeks), this must step at the same cadence -- because `ret_excel` is NOT cadence-invariant.
-Measured on one identical trajectory (same fill, same delivered, same risk events),
-ret_excel runs 0.004369 at a single step and 0.005981 at hourly steps, a 37% spread,
-because `RPj` differs in 175 of 311 orders while `OPTj`, `OATj` and `APj` do not.
-The first version of this script stepped daily and the gate caught it: 24 of 24 arms
-failed by ~29%. That is what the gate is for.
+The historical v2 shards used the cadence-dependent RPj implementation frozen at
+commit ``1dc40c1``. The current code derives ongoing disruption overlap from an
+immutable onset, so its corrected ReT is deliberately *not* required to match the
+historical ReT. Both values are retained and labelled; this script may not overwrite
+the historical panel.
+
+The replay keeps v2's four-week decision cadence. The RPj correction removes metric
+dependence on how often ``step()`` is called, but changing the decision cadence would
+still change when actions take effect and therefore would not be the same contract.
 """
 from __future__ import annotations
 
@@ -58,7 +58,14 @@ ARMS = {
     "pi": "greedy_pi_best_found_v2",
     "ddmrp": "ddmrp_projected_v2",
 }
-GATE_KEYS = ("ret_excel", "ret_excel_full_ledger", "flow_fill_rate", "lost_orders")
+PHYSICAL_GATE_KEYS = (
+    "flow_fill_rate",
+    "lost_orders",
+    "delivered_rations",
+    "unresolved",
+    "strategic_injected",
+    "terminal_stock",
+)
 
 
 def replay_arm(*, seed: int, family: str, horizon: float, epoch_hours: float,
@@ -86,8 +93,11 @@ def replay_arm(*, seed: int, family: str, horizon: float, epoch_hours: float,
         "ret_excel", "ret_excel_full_ledger", "ret_thesis", "ret_excel_cvar10",
         "ret_excel_cvar05", "flow_fill_rate", "fill_rate_on_time", "lost_orders",
         "backorder_qty_final", "delivered_rations")})
+    agg["unresolved"] = float(
+        m.get("unresolved_orders", m.get("unresolved", 0.0)))
     agg["strategic_injected"] = float(sim.total_strategic_raw_injected
                                       + sim.total_strategic_rations_injected)
+    agg["terminal_stock"] = float(sum(sim._inventory_detail().values()))
     agg["distinct_postures"] = len({tuple(p) for p in postures})
     agg["posture_changes"] = sum(1 for a, b in zip(postures, postures[1:])
                                  if a != b)
@@ -100,15 +110,18 @@ def main() -> int:
                     help="v2 output dirs; shards are read from <dir>/full/shards")
     ap.add_argument("--horizon-weeks", type=int, default=52)
     ap.add_argument("--epoch-weeks", type=int, default=4)
-    # MUST match v2's epoch cadence. ret_excel is step-cadence dependent (RPj is),
-    # so a daily replay of an identical trajectory fails the gate by 29%.
+    # MUST match v2's epoch cadence because it controls when actions take effect.
+    # The immutable-onset correction removes RPj's former dependence on how often
+    # step() is called, but a different action cadence is still a different contract.
     ap.add_argument("--period-hours", type=float, default=672.0)
     ap.add_argument("--contract", type=Path,
                     default=Path("contracts/cobb_douglas_calibration_v1.json"))
     ap.add_argument("--panel", type=Path,
                     default=Path("results/metric_panel/panel_v1.json"))
     ap.add_argument("--output", type=Path,
-                    default=Path("results/metric_panel/panel_with_v2_arms.json"))
+                    default=Path(
+                        "results/metric_panel/"
+                        "panel_with_v2_arms_rpj_corrected_v2.json"))
     ap.add_argument("--require-complete", type=int, default=0,
                     help="refuse unless each run dir has at least this many shards")
     args = ap.parse_args()
@@ -166,7 +179,7 @@ def main() -> int:
                              period_hours=args.period_hours,
                              postures=postures, tape=tape)
             want = rows_by_arm[arm]
-            bad = {k: (want[k], got[k]) for k in GATE_KEYS
+            bad = {k: (want[k], got[k]) for k in PHYSICAL_GATE_KEYS
                    if abs(float(want[k]) - float(got[k])) > TOL}
             if bad:
                 gate_failures.append({"shard": path.name, "arm": arm,
@@ -186,11 +199,15 @@ def main() -> int:
                        indent=1, sort_keys=True) + "\n")
         return 1
 
-    keys = ("zeta", "epsilon", "phi", "tau", "kappa", "ret_excel",
+    keys = ("zeta", "epsilon", "phi", "tau", "kappa",
+            "mean_regular_production", "mean_shift_increases",
+            "mean_shift_decreases", "mean_spare_capacity", "mean_inventory",
+            "mean_backorders", "mean_overtime", "ret_excel",
             "ret_excel_full_ledger", "ret_thesis", "ret_excel_cvar10",
             "ret_excel_cvar05", "flow_fill_rate", "fill_rate_on_time",
             "lost_orders", "backorder_qty_final", "delivered_rations",
-            "strategic_injected", "distinct_postures", "posture_changes")
+            "unresolved", "strategic_injected", "terminal_stock",
+            "distinct_postures", "posture_changes")
 
     out: dict[str, dict] = {}
     for family, arms in by_family.items():
@@ -237,11 +254,15 @@ def main() -> int:
         "claim_status": "DEVELOPMENT_SCREEN_NO_CLAIM",
         "created_at": datetime.now(timezone.utc).isoformat(),
         "method": ("replay of each v2 arm's recorded per-epoch posture sequence, "
-                   "gated on reproducing the shard's own ret_excel, full_ledger, "
-                   "fill and lost to 1e-9"),
+                   "gated on reproducing the shard's physical endpoints to 1e-9; "
+                   "ReT is recomputed with immutable-onset RPj semantics"),
         "replay_gate_tolerance": TOL,
-        "replay_gate_keys": list(GATE_KEYS),
+        "replay_gate_keys": list(PHYSICAL_GATE_KEYS),
         "replay_gate_failures": 0,
+        "historical_v2_metric_semantics": "cadence_dependent_rpj_at_commit_1dc40c1",
+        "replay_metric_semantics": "immutable_onset_rpj",
+        "historical_ret_excel_used_as_gate": False,
+        "historical_v2_result_remains_authoritative_for_its_frozen_contract": True,
         "tapes_replayed": tapes_replayed,
         "source_run_dirs": [str(d) for d in args.run_dirs],
         "base_panel_read_for_service_floors_only": str(args.panel),

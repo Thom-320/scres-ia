@@ -220,35 +220,91 @@ had myself written up — references chosen without enumerating.
 
 | family | arm | Δ | CI95 | tapes + | verdict |
 |---|---|---:|---|---:|---|
-| R1r | **MPC** | **−0.00000001** | [−0.000014, +0.000015] | 4/12 | **statistical tie** |
+| R1r | **MPC** | **−0.00000001** | [−0.000014, +0.000015] | 4/12 | **no superiority detected** |
 | R1r | DDMRP | −0.00012179 | [−0.000170, −0.000086] | 0/12 | **loses** |
 | R1r | greedy PI | +0.00001651 | [+0.000007, +0.000028] | 10/12 | wins |
 | R2r | **MPC** | **−0.01112769** | [−0.058774, +0.015358] | 11/12 | **inconclusive** |
 | R2r | DDMRP | −0.02110897 | [−0.026626, −0.016965] | 0/12 | **loses** |
 | R2r | greedy PI | +0.01519514 | [+0.010233, +0.020578] | 12/12 | wins |
 
-**The corrected MPC does not beat the true static incumbent in either family.** It ties
-in R1r. In R2r it is inconclusive with a fat left tail — 11 of 12 tapes positive but a
-negative mean, so one catastrophic tape dominates, which the sign count alone would have
-hidden in the wrong direction.
+**The corrected MPC does not beat the true static incumbent in either family.** In R1r
+no difference or superiority is detected; an equivalence claim would require its own
+margin and test. In R2r the interval crosses zero: 11 of 12 `ret_excel` deltas are
+positive, but tape 1530011 carries a −0.263 metric delta. That tape is not a physical
+catastrophe: MPC has slightly higher flow fill than the incumbent and both have zero
+lost and unresolved orders.
 
-**DDMRP loses decisively in both**, 0/12 tapes, CI entirely below zero. That question is
-settled on this contract.
+The attribution audit is complete
+(`results/metric_audit/r2r_1530011_ret_tail_v1/result.json`). The static incumbent
+receives one recovery-row value of **73.9082** because `RPj = 0.006765 h`; that
+single row contributes **37.53%** of its entire visible ReT sum. Removing only the
+maximum contribution changes MPC minus static to **+0.01116**; reporting the formula
+on its natural `[0,1]` interpretation changes it to **+0.01476**. Neither
+counterfactual replaces the frozen primary endpoint, but the negative aggregate is
+identified as an unbounded metric-tail event, not a physical controller catastrophe.
+
+**DDMRP loses decisively against the static incumbent on the primary historical
+`ret_excel` endpoint**, 0/12 tapes with both intervals entirely below zero. This is
+not a universal defeat: in R2r it exceeds MPC on full-ledger ReT, `ret_thesis`, fill,
+and delivered rations while consuming far more strategic material. Report the
+resource/service trade-off rather than collapsing it into one global verdict.
 
 ## What this establishes
 
-`pi_action_ranking_reversal: true` in both families, with **9 distinct best actions in
-R1r** and 7 in R2r. So state-dependent optimal actions genuinely exist — the earlier
-claim that "there is nothing to adapt toward" stays retracted.
+`pi_action_ranking_reversal: true` in both families, with **9 distinct best-found
+actions in R1r** and 7 in R2r. Rankings reverse inside the evaluated 216-action
+library. These are not proven globally optimal actions.
 
-But the clairvoyant ceiling is small: +1.65e-05 in R1r (0.37% of level) and +0.0152 in
-R2r (3.3%). And a real receding-horizon MPC, replaying the true prefix with verified
-state hashes and five futures per candidate over all 216 candidates, converts **none of
-it observably**.
+The greedy perfect-information **best-found diagnostic** is +1.65e-05 in R1r
+(0.37% of level) and +0.0152 in R2r (3.3%). It is explicitly not an exact ceiling.
+A receding-horizon MPC, replaying the true prefix with verified state hashes and five
+futures per candidate over all 216 candidates, shows no superiority over the static
+incumbent on this development instrument.
 
-That is the answer to Garrido's step 3, and it repeats the pattern already recorded
-across Programs D–K: **clairvoyant headroom does not convert to observable value.** The
-label is v2's own: `GREEDY_PI_BEST_FOUND_NOT_EXACT_CEILING`.
+That is the bounded answer to Garrido's step 3 for this development instrument,
+and it repeats the pattern already recorded across Programs D–K: **the evaluated
+receding-horizon MPC did not convert the greedy best-found diagnostic into
+superiority over the static incumbent.** This does not prove that no observable
+policy can convert residual value. The diagnostic's own label is
+`GREEDY_PI_BEST_FOUND_NOT_EXACT_CEILING`.
 
-All of it is conditioned on `step_hours = 672` and on
-`GARRIDO_FULFILLMENT_DELAY_HOURS = 54`.
+All of it is conditioned on `step_hours = 672`,
+`GARRIDO_FULFILLMENT_DELAY_HOURS = 54`, and `shifts = 1`; v2 adjudicates only the
+buffer subcontract, not buffers × turns.
+
+## Prospective corrective replay
+
+The historical v2 metric is not overwritten. Under the immutable-onset RPj
+correction, `scripts/fold_v2_arms_into_panel.py` replays the recorded actions and
+fails closed on six physical endpoints: flow fill, lost orders, delivered rations,
+unresolved orders, strategic injection, and terminal stock. All 24 tapes and all
+three arms passed at tolerance `1e-9`.
+
+Artifact:
+`results/metric_panel/panel_with_v2_arms_rpj_corrected_v2.json`.
+
+The corrected panel preserves the physical metric conflict. In R2r, DDMRP remains
+below MPC on `ret_excel` but above it on full-ledger ReT, `ret_thesis`, fill, and
+delivered rations, at much higher injection. Cobb-Douglas remains secondary and its
+R2r winner changes under plausible relative-price sensitivities; no economically
+calibrated scalar winner is claimed.
+
+## Fulfilment-delay headroom sensitivity
+
+The previous session-level claim that `delay=47` produced zero headroom was not
+custodied and does not survive full enumeration. The corrective diagnostic uses the
+same 12 already-open R1r development roots and all 216 static postures:
+
+| delay | static incumbent | mean ReT | tape-selection headroom | positive tapes |
+|---:|---|---:|---:|---:|
+| 54 | `(0,0,1344)` | 0.004488 | 0.00000970 | 4/12 |
+| 47 | `(168,0,1344)` | 0.987292 | **0.00337061** | 9/12 |
+
+Artifact:
+`results/metric_audit/fulfillment_delay_static_headroom_v1/result.json`.
+
+This reverses the numerical claim but not the methodological boundary. The quantity
+is perfect-hindsight selection of **one fixed posture per tape**. It is neither an
+epoch-level dynamic oracle nor evidence for or against neural premium. Delay remains
+a fidelity/measurement parameter and may not be selected according to which row
+creates more headroom.

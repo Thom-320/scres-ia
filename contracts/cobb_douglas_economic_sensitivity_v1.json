@@ -1,0 +1,37 @@
+{
+  "schema_version": "cobb_douglas_economic_sensitivity_v1",
+  "claim_status": "SENSITIVITY_ONLY_NOT_ECONOMIC_CALIBRATION",
+  "primary_endpoint_authorized": false,
+  "policy_selection_authorized": false,
+  "domain_calibration_status": "AWAITING_SIGNED_COST_VECTOR",
+  "baseline": {
+    "name": "garrido_published_unit_cost_assumption",
+    "costs": {
+      "c_p": 1.0,
+      "c_h": 1.0,
+      "c_l": 1.0,
+      "c_u": 1.0,
+      "c_i": 1.0,
+      "c_b": 1.0,
+      "c_o": 1.0
+    },
+    "provenance": "Garrido 2024 section 3.1 assumption (6); replication baseline only, not calibrated MFSC prices"
+  },
+  "one_factor_scenarios": {
+    "holding_x0_5": {"coefficient": "c_i", "multiplier": 0.5},
+    "holding_x2": {"coefficient": "c_i", "multiplier": 2.0},
+    "holding_x5": {"coefficient": "c_i", "multiplier": 5.0},
+    "backorder_x0_5": {"coefficient": "c_b", "multiplier": 0.5},
+    "backorder_x2": {"coefficient": "c_b", "multiplier": 2.0},
+    "backorder_x5": {"coefficient": "c_b", "multiplier": 5.0},
+    "spare_capacity_x0_5": {"coefficient": "c_u", "multiplier": 0.5},
+    "spare_capacity_x2": {"coefficient": "c_u", "multiplier": 2.0},
+    "spare_capacity_x5": {"coefficient": "c_u", "multiplier": 5.0}
+  },
+  "interpretation_boundary": [
+    "The grid measures ranking sensitivity to relative prices; it does not estimate real monetary costs.",
+    "Strategic procurement and injection are reported as physical resources and are not silently folded into Garrido's seven-term kappa.",
+    "ReT and resource-feasibility remain the primary decision criteria; Cobb-Douglas is secondary.",
+    "A domain-calibrated result requires a signed seven-coefficient vector with units, price year, and source."
+  ]
+}

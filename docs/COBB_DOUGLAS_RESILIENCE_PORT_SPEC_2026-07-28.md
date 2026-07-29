@@ -5,8 +5,8 @@ or hybrid approach? Analysing pure production strategies for enhancing factory r
 demand variability*, International Journal of Production Research, DOI
 10.1080/00207543.2024.2425771. Index defined in §3.4, Equations (2)–(6).
 
-**Status:** specification only. Nothing measured with this index yet. It is written before any
-run so the exponents cannot be chosen after seeing which policy wins.
+**Status:** implemented development sensitivity, not economically calibrated and
+not authorized for primary selection.
 
 ## 1. What the paper actually specifies
 
@@ -153,16 +153,34 @@ So the governing rules here are:
 - **Declare the provenance.** R is Garrido's published index, ported with re-derived scale
   exponents — not the thesis ReT, and not a metric of our invention. State it that way.
 
-## 5. Open items before this can run
+## 5. Implementation and remaining calibration boundary
 
-1. A spare-capacity recorder (φ) — the DES does not currently expose installed-minus-realised
-   capacity per period.
-2. A costed ledger covering the seven κ coefficients. The thesis DES has no cost layer.
-3. Reproduction of τ in the paper's ratio form `NR_t / min{GR_{t+v}, Θ_t}`, which needs a net
-   requirements and gross requirements series the MFSC model does not currently name.
-4. Garrido's sign-off on the cost coefficients, since κ̇ carries the largest exponent in his
-   own fit (0.1771, roughly 7x the inventory exponent) and will therefore dominate R.
+Completed:
 
-Item 4 matters most: in Garrido's own calibration **cost is by far the heaviest term**. Porting
-the index without validated costs would hand the largest weight in the metric to the least
-grounded quantity in our model.
+1. Periodic spare-capacity recorder from Table 6.20 installed capacity minus realised
+   production.
+2. Direct Algorithm-2 implementation of gross requirements, net requirements and τ.
+3. Seven separate unpriced cost-component means persisted for every episode, allowing
+   repricing without replay.
+4. Garrido's published `c=1` assumption preserved only as a replication baseline.
+5. Frozen one-factor relative-price sensitivity for holding, backorders and spare
+   capacity at 0.5×, 2× and 5×.
+
+Still open:
+
+1. A signed domain cost vector with units, price year and source. Until it exists,
+   `c=1` is not an MFSC economic calibration.
+2. Procurement/injection does not appear among Garrido's seven κ terms and therefore
+   remains an explicit physical resource/Pareto axis; it is not silently assigned a
+   price.
+3. Overtime is structurally absent in this DES and remains zero.
+
+Contract:
+`contracts/cobb_douglas_economic_sensitivity_v1.json`.
+Artifact:
+`results/cobb_douglas/economic_sensitivity_v1/result.json`.
+
+The current result makes the limitation material: the R1r winner is stable across
+the frozen relative-price grid, but the R2r winner changes between greedy PI and
+MPC. Therefore no scalar economic winner is reported for R2r, and Cobb-Douglas
+cannot select a checkpoint or architecture.
