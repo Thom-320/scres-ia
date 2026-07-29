@@ -1,0 +1,79 @@
+{
+  "schema_version": "paper_b_metric_gate_v1",
+  "created_on": "2026-07-28",
+  "status": "DRAFT_UNRESOLVED_METRIC_AUTHORITY",
+  "scientific_execution_authorized": false,
+  "fresh_roots_opened": false,
+  "fresh_tapes_opened": false,
+  "purpose": "Resolve the Paper B primary endpoint before any authority-ladder scientific execution.",
+  "source_evidence": {
+    "garrido_2017_thesis_pdf_sha256": "de9192d233b0c728ece6156b754fc64543146868121358b8a95c73b3edaa55cf",
+    "garrido_2024_ijpr_pdf_sha256": "1260863dc295232faf24b820e1f67d53f25f81ffa2d221f7ef02a02310519c43",
+    "rsult_1_xlsx_sha256": "1901f683f6014cf75237c17233b8eba04f541b956f2d19dcecf2edc00e83b00a",
+    "raw_data1_re_xlsx_sha256": "30b88c9b9fe68ef527dbfcc70d8e653ea7bd152ab891b3fc0ecf53cb6f043486",
+    "raw_data2_re_xlsx_sha256": "4bd462771fefff16fc5666a851256b3780198d474832dec1423c0b6f94be86b0"
+  },
+  "metric_candidates": {
+    "ret_2017": {
+      "source": "Garrido-Rios 2017 thesis, Equation 5.5",
+      "role": "historical canonical candidate",
+      "range": "[0,1]",
+      "known_issue": "The inspected workbook contains values slightly above 1 and a policy-dependent observed-order population.",
+      "authority_status": "UNRESOLVED"
+    },
+    "ret_full_ledger": {
+      "source": "repository-defined uncensored secondary proxy",
+      "role": "diagnostic companion only",
+      "authority_status": "NOT_A_RAW_WORKBOOK_METRIC"
+    },
+    "cobb_douglas_2024_port": {
+      "source": "Garrido, Ponguta and Garcia-Reyes 2024, Equations 3-6",
+      "role": "prospective candidate endpoint",
+      "formula": "sigmoid(a*ln(zeta)-b*ln(epsilon)+c*ln(phi)-d*ln(tau)-n*ln(kappa_dot))",
+      "paper_reference_exponents": {
+        "a": 0.024,
+        "b": 0.026,
+        "c": 0.04,
+        "d": 0.06,
+        "n": 0.1771
+      },
+      "paper_calibration_rule": "exponent_x = 0.20 / ln(x_max)",
+      "authority_status": "BLOCKED_PENDING_PORT_CONTRACT"
+    }
+  },
+  "confirmed_audit_findings": [
+    "The 2017 thesis declares ReT normalized on a 0-to-1 scale.",
+    "Rsult_1.xlsx contains ReT values above 1 by at most 0.000155.",
+    "Clipping those values to 1 leaves the mean ranking of Cf1-Cf12 unchanged.",
+    "Deleting observations above 1 or deleting the full tail is not an authorized correction.",
+    "The Re sheet and the Cf sheets are not the same population.",
+    "The inspected workbooks do not contain the 2024 Cobb-Douglas formula.",
+    "The inspected workbooks are insufficient to attribute a published ranking reversal."
+  ],
+  "blocking_decisions": {
+    "primary_endpoint": null,
+    "ret_2017_out_of_range_rule": null,
+    "ret_2017_population_rule": null,
+    "zeta_container_registry": null,
+    "epsilon_backorder_semantics": null,
+    "phi_installed_and_realized_capacity_semantics": null,
+    "tau_net_and_gross_requirements_semantics": null,
+    "kappa_cost_coefficients": null,
+    "kappa_comparison_set": null,
+    "calibration_library": null,
+    "calibration_tapes": null,
+    "zero_and_log_floor_rule": null,
+    "garrido_written_approval": null
+  },
+  "required_negative_checks": [
+    "Reject a metric contract with any unresolved blocking decision.",
+    "Reject maxima calibrated on evaluation or confirmation data.",
+    "Reject a kappa normalization whose comparison set is not frozen.",
+    "Reject a tau proxy substituted for the published ratio without explicit amendment.",
+    "Reject unvalidated cost coefficients.",
+    "Reject deletion of out-of-range workbook observations as if it were clipping.",
+    "Reject reuse of the historical Garrido-2024 implementation as paper-faithful authority without a new audit."
+  ],
+  "pass_status": "PASS_PAPER_B_METRIC_PRE_FREEZE",
+  "stop_status": "STOP_PAPER_B_METRIC_UNRESOLVED"
+}
