@@ -2,10 +2,10 @@
 """What each of the three candidate ReT repairs actually produces.
 
 Defect 3 (`docs/RET_METRIC_DEFECTS_2026-07-29.md`): `RPj` is a *time* attribution,
-but a delay can be caused by a *quantity* risk that contributes zero hours. When it
-is, `RPj -> 0` and `ReT = 0.5/RPj` diverges on exactly the worst-served orders. On
-R2r tape 1530011 one order delivered 192 h late scores 73.9082, the episode maximum,
-on a metric defined on [0,1].
+but an order can carry a *quantity* risk that contributes no commensurate time. In
+that case `RPj -> 0` and `ReT = 0.5/RPj` can diverge on a late order. On R2r tape
+1530011 one order delivered 192 h late scores 73.9082, the episode maximum, on a
+metric intended to be interpreted on [0,1].
 
 Three repairs were named. None is applied to the canonical metric here -- each
 changes historical numbers and needs preregistration. This measures all three so the
@@ -16,6 +16,8 @@ preregistration can be written against evidence instead of intuition.
     rpj_floor_*    floor RPj at a physical quantum before 0.5/RPj is taken
     quantity_time  when a quantity risk (R14/R24) touched the order, credit RPj with
                    the realised lateness CTj - LTj, in hours
+    quantity_time_clip_0_1
+                   apply that disclosed proxy and then enforce the [0,1] range
 
 The floor variant is swept rather than fixed. Choosing one floor and reporting it as
 the answer is how the Cobb-Douglas port first went wrong -- a floor is a decision, and
@@ -45,6 +47,7 @@ from supply_chain.episode_metrics import (  # noqa: E402
     compute_episode_metrics,
     compute_order_level_ret_excel_request_snapshot_ledger as ledger,
 )
+from supply_chain.ret_repair import repaired_ret_values  # noqa: E402
 from scripts.run_expanded_contract_comparators_v2 import (  # noqa: E402
     apply_posture,
     make_replay_sim,
@@ -78,11 +81,17 @@ def variant_values(orders: list, now: float, *, mode: str,
                    rpj_floor: float = 0.0) -> np.ndarray:
     """Per-order ReT under one repair. Inputs are mutated, the formula is not."""
     if mode == "canonical":
-        return np.array(ledger(orders, current_time=now)["ret_values"], dtype=float)
+        return repaired_ret_values(orders, current_time=now, mode="canonical")
 
     if mode == "clip_0_1":
-        base = np.array(ledger(orders, current_time=now)["ret_values"], dtype=float)
-        return np.clip(base, 0.0, 1.0)
+        return repaired_ret_values(orders, current_time=now, mode="clip_0_1")
+
+    if mode == "quantity_time_clip_0_1":
+        return repaired_ret_values(
+            orders,
+            current_time=now,
+            mode="quantity_time_clip_0_1",
+        )
 
     patched = []
     for order in orders:
@@ -128,7 +137,12 @@ def run_arm(*, seed: int, family: str, horizon: float, epoch_hours: float,
     out = {"n_scored": len(orders), "official_ret_excel": official,
            "warmup_time": float(sim.warmup_time),
            "flow_fill_rate": float(compute_episode_metrics(sim)["flow_fill_rate"])}
-    for mode in ("canonical", "clip_0_1", "quantity_time"):
+    for mode in (
+        "canonical",
+        "clip_0_1",
+        "quantity_time",
+        "quantity_time_clip_0_1",
+    ):
         v = variant_values(orders, now, mode=mode)
         out[mode] = float(v.mean())
         out[f"{mode}_n_above_one"] = int((v > 1.0).sum())
@@ -151,7 +165,7 @@ def run_arm(*, seed: int, family: str, horizon: float, epoch_hours: float,
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--runs-root", type=Path,
-                    default=Path("/Users/thom/Projects/research/scres-ia-runs"))
+                    default=Path.home() / "Projects/research/scres-ia-runs")
     ap.add_argument("--families", nargs="+", default=["R1r", "R2r"])
     ap.add_argument("--horizon-weeks", type=int, default=52)
     ap.add_argument("--epoch-weeks", type=int, default=4)
@@ -162,7 +176,8 @@ def main() -> int:
 
     horizon = float(args.horizon_weeks * HOURS_PER_WEEK)
     epoch_hours = float(args.epoch_weeks * HOURS_PER_WEEK)
-    variants = (["canonical", "clip_0_1", "quantity_time"]
+    variants = (["canonical", "clip_0_1", "quantity_time",
+                 "quantity_time_clip_0_1"]
                 + [f"rpj_floor_{f:g}" for f in RPJ_FLOORS])
     started = time.perf_counter()
     rng = np.random.default_rng(20260729)

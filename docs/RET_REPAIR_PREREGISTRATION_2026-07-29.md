@@ -1,7 +1,8 @@
 # Preregistration — repairing the ReT out-of-range tail
 
-**Status:** `PREREGISTRATION_DRAFT_AWAITING_PI_SIGNATURE`. Nothing here is applied. The
-canonical metric is unchanged and every frozen result stands as reported.
+**Status:** `DEVELOPMENT_REPLAY_COMPLETE_PROSPECTIVE_CONFIRMATION_FROZEN`. Nothing here
+is applied retrospectively. The canonical metric is unchanged and every frozen result
+stands as reported.
 
 **This preregistration is written with the sign of the outcome already known**, which is
 unusual and is stated up front rather than buried. `results/metric_audit/ret_repair_variants_v1/`
@@ -99,6 +100,29 @@ That sensitivity is the finding. Neither number is the finding on its own.
 
 ## 6. Signature
 
-Requires the PI's sign-off before execution. Two things need an explicit decision that is
-not mine to make: whether the clipped variant may enter the manuscript as a second column,
-and whether the *quantity → time* causal identification is worth commissioning at all.
+Scientific execution of the separate prospective contract is authorized. Two manuscript
+decisions still require the PI's explicit sign-off: whether the clipped variant may enter
+as a second column, and whether the *quantity → time* causal-identification work is worth
+commissioning at all.
+
+## 7. Prospective corrective confirmation
+
+The existing-tape replay above is a development sensitivity whose sign is already
+known. A separate executable contract now freezes a genuinely prospective check:
+`contracts/ret_metric_repair_confirmation_v1.json`.
+
+- Primary: official request-snapshot ReT clipped per order to `[0,1]`.
+- Mandatory sensitivity: quantity→time proxy followed by the same clip, labelled
+  `DISCLOSED_PROXY_NOT_EXACT_ATTRIBUTION`.
+- Comparator: the development incumbent frozen before new roots open; the best
+  static posture on confirmation roots is descriptive only.
+- Roots: 16 new tapes per family, with five future scenarios per MPC candidate.
+- Material pass: primary LCB95 above 0.005, proxy LCB95 above zero and flow-fill
+  LCB95 no worse than −0.005.
+- Directional-only pass: primary and proxy LCB95 above zero but the primary does
+  not clear 0.005.
+- Neither outcome changes the historical endpoint or authorizes a learner/KAN.
+
+The development signs and exact deltas are disclosed inside the contract. Scientific
+execution is authorized as a separate corrective study; use in the manuscript and
+promotion of the causal proxy still require PI review.

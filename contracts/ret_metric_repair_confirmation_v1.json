@@ -1,0 +1,138 @@
+{
+  "contract_id": "ret_metric_repair_confirmation_v1",
+  "status": "FROZEN_BEFORE_ROOTS_OPEN",
+  "claim_status": "PROSPECTIVE_CORRECTIVE_CONFIRMATION",
+  "historical_endpoint_unchanged": true,
+  "development_sign_disclosed": {
+    "source": "results/metric_audit/ret_repair_variants_v1/result.json",
+    "R1r_clip_delta": 1.0714952657636435e-07,
+    "R2r_clip_delta": 0.011951499305792585,
+    "R2r_quantity_time_clip_delta": 0.013095337529318704,
+    "R2r_quantity_time_clip_direction": "positive_on_open_development_roots"
+  },
+  "primary_endpoint": "ret_excel_clipped_0_1",
+  "primary_repair": {
+    "operation": "clip each official request-snapshot per-order ReT to [0,1] before averaging",
+    "rationale": "minimal range projection without a new causal attribution model",
+    "selection_use": true
+  },
+  "mandatory_semantic_sensitivity": {
+    "endpoint": "ret_excel_quantity_time_clipped_0_1",
+    "operation": "for orders carrying R14/R24 indicators, set effective RPj=max(RPj, max(CTj-LTj,0)); then clip each ReT to [0,1]",
+    "causal_status": "DISCLOSED_PROXY_NOT_EXACT_ATTRIBUTION",
+    "selection_use": false
+  },
+  "historical_endpoint": {
+    "endpoint": "ret_excel",
+    "role": "descriptive compatibility only",
+    "may_override_primary": false
+  },
+  "families": [
+    "R1r",
+    "R2r"
+  ],
+  "risk_corner": "all family risks increased",
+  "horizon_weeks": 52,
+  "decision_epoch_weeks": 4,
+  "future_scenarios_per_candidate": 5,
+  "static_posture_count": 216,
+  "static_enumeration": "complete",
+  "frozen_incumbents": {
+    "R1r": [
+      0,
+      0,
+      336
+    ],
+    "R2r": [
+      336,
+      0,
+      168
+    ]
+  },
+  "roots": {
+    "R1r": [
+      1710001,
+      1710002,
+      1710003,
+      1710004,
+      1710005,
+      1710006,
+      1710007,
+      1710008,
+      1710009,
+      1710010,
+      1710011,
+      1710012,
+      1710013,
+      1710014,
+      1710015,
+      1710016
+    ],
+    "R2r": [
+      1810001,
+      1810002,
+      1810003,
+      1810004,
+      1810005,
+      1810006,
+      1810007,
+      1810008,
+      1810009,
+      1810010,
+      1810011,
+      1810012,
+      1810013,
+      1810014,
+      1810015,
+      1810016
+    ]
+  },
+  "future_root_rule": "actual_root + scenario_index_1_based * 10000",
+  "inference": {
+    "unit": "tape",
+    "paired": true,
+    "bootstrap_draws": 20000,
+    "confidence": 0.95,
+    "directional_threshold": 0.0,
+    "materiality_threshold": 0.005,
+    "materiality_note": "0.5 percentage points on the repaired bounded index; declared after development direction was known and before these roots open"
+  },
+  "adjudication": {
+    "PASS_MATERIAL_REPAIRED_MPC": [
+      "primary LCB95 exceeds 0.005",
+      "semantic proxy LCB95 exceeds 0",
+      "flow-fill delta LCB95 is at least -0.005",
+      "no confirmation root, action, endpoint or comparator mismatch"
+    ],
+    "PASS_DIRECTIONAL_ONLY": [
+      "primary LCB95 exceeds 0",
+      "primary LCB95 does not exceed 0.005",
+      "semantic proxy LCB95 exceeds 0",
+      "flow-fill delta LCB95 is at least -0.005"
+    ],
+    "NOT_CONFIRMED": "all other valid outcomes",
+    "STOP_INSTRUMENT": "any hash, root, replay-prefix, endpoint or comparator mismatch"
+  },
+  "mandatory_report": [
+    "ret_excel_clipped_0_1",
+    "ret_excel_quantity_time_clipped_0_1",
+    "ret_excel",
+    "ret_excel_full_ledger",
+    "ret_thesis",
+    "flow_fill_rate",
+    "lost_orders",
+    "delivered_rations",
+    "unresolved",
+    "strategic_injected",
+    "terminal_stock"
+  ],
+  "claim_boundary": [
+    "the sign on development roots was known before this contract",
+    "quantity_time is a proxy sensitivity, not exact causal attribution",
+    "no neural or KAN authorization",
+    "no resource-adjusted superiority claim",
+    "no retrospective change to Program Q, Q-R1 or v2",
+    "confirmation-root best static posture is descriptive; inference uses the frozen development incumbent"
+  ],
+  "confirmation_roots_opened": false
+}

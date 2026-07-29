@@ -42,6 +42,7 @@ from supply_chain.expanded_contract_controllers_v2 import (  # noqa: E402
     posture_name,
     posture_targets,
 )
+from supply_chain.ret_repair import repaired_ret_mean  # noqa: E402
 from supply_chain.supply_chain import MFSCSimulation  # noqa: E402
 
 FAMILIES = {
@@ -268,8 +269,24 @@ def finish_with_posture(
 
 def episode_row(sim: MFSCSimulation) -> dict[str, float]:
     metric = compute_episode_metrics(sim)
+    scored = [
+        order
+        for order in sim.orders
+        if not bool(getattr(order, "metrics_excluded", False))
+        and float(getattr(order, "OPTj", 0.0)) >= float(sim.warmup_time)
+    ]
     return {
         "ret_excel": float(metric["ret_excel"]),
+        "ret_excel_clipped_0_1": repaired_ret_mean(
+            scored,
+            current_time=float(sim.env.now),
+            mode="clip_0_1",
+        ),
+        "ret_excel_quantity_time_clipped_0_1": repaired_ret_mean(
+            scored,
+            current_time=float(sim.env.now),
+            mode="quantity_time_clip_0_1",
+        ),
         "ret_excel_full_ledger": float(metric["ret_excel_full_ledger"]),
         "ret_thesis": float(metric["ret_thesis"]),
         "flow_fill_rate": float(metric["flow_fill_rate"]),
@@ -569,6 +586,21 @@ def main() -> int:
     parser.add_argument("--workers", type=int, default=4)
     parser.add_argument("--skip-dynamic", action="store_true")
     parser.add_argument(
+        "--contract",
+        type=Path,
+        help="required with --confirmation; freezes roots, endpoint and incumbents",
+    )
+    parser.add_argument(
+        "--confirmation",
+        action="store_true",
+        help="open only roots frozen in the supplied prospective contract",
+    )
+    parser.add_argument(
+        "--execution-freeze",
+        type=Path,
+        help="required with --confirmation; binds contract and implementation hashes",
+    )
+    parser.add_argument(
         "--output-dir",
         type=Path,
         default=Path("results/expanded_contract_comparators_v2"),
@@ -578,6 +610,50 @@ def main() -> int:
     scenarios_n = args.scenarios or (1 if args.phase == "preflight" else 5)
     horizon = float(args.horizon_weeks * HOURS_PER_WEEK)
     epoch_hours = float(args.epoch_weeks * HOURS_PER_WEEK)
+    contract: dict[str, Any] | None = None
+    execution_freeze: dict[str, Any] | None = None
+    if args.confirmation:
+        if args.contract is None:
+            raise ValueError("--confirmation requires --contract")
+        if args.execution_freeze is None:
+            raise ValueError("--confirmation requires --execution-freeze")
+        contract = json.loads(args.contract.read_text())
+        execution_freeze = json.loads(args.execution_freeze.read_text())
+        if contract.get("status") != "FROZEN_BEFORE_ROOTS_OPEN":
+            raise ValueError("confirmation contract is not frozen")
+        expected_hashes = {
+            "contract_sha256": file_sha(args.contract),
+            "runner_sha256": file_sha(Path(__file__).resolve()),
+            "controller_sha256": file_sha(
+                Path(__file__).resolve().parent.parent
+                / "supply_chain"
+                / "expanded_contract_controllers_v2.py"
+            ),
+            "repair_sha256": file_sha(
+                Path(__file__).resolve().parent.parent
+                / "supply_chain"
+                / "ret_repair.py"
+            ),
+        }
+        for key, observed in expected_hashes.items():
+            if execution_freeze.get(key) != observed:
+                raise ValueError(f"execution freeze mismatch for {key}")
+        if args.phase != "full":
+            raise ValueError("confirmation may only run with --phase full")
+        if args.metric != contract.get("primary_endpoint"):
+            raise ValueError("metric does not match confirmation contract")
+        if args.horizon_weeks != int(contract.get("horizon_weeks", -1)):
+            raise ValueError("horizon does not match confirmation contract")
+        if args.epoch_weeks != int(contract.get("decision_epoch_weeks", -1)):
+            raise ValueError("decision epoch does not match confirmation contract")
+        if scenarios_n != int(contract.get("future_scenarios_per_candidate", -1)):
+            raise ValueError("scenario count does not match confirmation contract")
+        allowed_families = set(contract.get("roots", {}))
+        if not set(args.families).issubset(allowed_families):
+            raise ValueError("requested family is absent from confirmation contract")
+        root_counts = {len(contract["roots"][family]) for family in args.families}
+        if root_counts != {tapes_n}:
+            raise ValueError("tape count does not match frozen roots")
     output = args.output_dir / args.phase
     if output.exists() and any(output.iterdir()):
         raise FileExistsError(f"Refusing to reuse non-empty output directory: {output}")
@@ -604,8 +680,26 @@ def main() -> int:
         "epoch_weeks": args.epoch_weeks,
         "metric": args.metric,
         "static_posture_count": len(ALL_POSTURES),
-        "confirmation_roots_opened": False,
-        "claim_status": "DEVELOPMENT_INSTRUMENT",
+        "confirmation_roots_opened": bool(args.confirmation),
+        "claim_status": (
+            str(contract["claim_status"])
+            if contract is not None
+            else "DEVELOPMENT_INSTRUMENT"
+        ),
+        "contract_path": str(args.contract) if args.contract is not None else None,
+        "contract_sha256": (
+            file_sha(args.contract) if args.contract is not None else None
+        ),
+        "execution_freeze_path": (
+            str(args.execution_freeze)
+            if args.execution_freeze is not None
+            else None
+        ),
+        "execution_freeze_sha256": (
+            file_sha(args.execution_freeze)
+            if args.execution_freeze is not None
+            else None
+        ),
     }
     write_json(output / "opening_receipt.json", opened)
 
@@ -615,10 +709,13 @@ def main() -> int:
     family_results: dict[str, Any] = {}
 
     for family_index, family in enumerate(args.families):
-        roots = [
-            args.seed_start + family_index * 100_000 + index
-            for index in range(tapes_n)
-        ]
+        if contract is not None:
+            roots = [int(root) for root in contract["roots"][family]]
+        else:
+            roots = [
+                args.seed_start + family_index * 100_000 + index
+                for index in range(tapes_n)
+            ]
         actual_tapes = [materialize_tape(root, horizon, family) for root in roots]
         future_by_root = {
             root: [
@@ -650,7 +747,14 @@ def main() -> int:
             ]
             posture_means.append((posture, float(np.mean(values))))
         posture_means.sort(key=lambda pair: (-pair[1], pair[0]))
-        incumbent = posture_means[0][0]
+        frontier_best = posture_means[0][0]
+        incumbent = (
+            tuple(int(value) for value in contract["frozen_incumbents"][family])
+            if contract is not None
+            else frontier_best
+        )
+        if incumbent not in ALL_POSTURES:
+            raise ValueError(f"frozen incumbent is outside action domain: {incumbent}")
 
         if args.candidate_limit > 0:
             candidates = tuple(
@@ -727,7 +831,9 @@ def main() -> int:
             "roots": roots,
             "incumbent_posture": list(incumbent),
             "incumbent_name": posture_name(incumbent),
-            "incumbent_mean": posture_means[0][1],
+            "incumbent_mean": float(np.mean(incumbent_values)),
+            "confirmation_frontier_best_posture": list(frontier_best),
+            "confirmation_frontier_best_mean": posture_means[0][1],
             "runner_up_posture": list(posture_means[1][0]),
             "runner_up_mean": posture_means[1][1],
             "candidate_count": len(candidates),
@@ -753,7 +859,7 @@ def main() -> int:
             for scenario in candidate.get("scenario_values", [])
         ),
         "dynamic_headroom_label": "GREEDY_PI_BEST_FOUND_NOT_EXACT_CEILING",
-        "confirmation_roots_opened": False,
+        "confirmation_roots_opened": bool(args.confirmation),
     }
     result["self_sha256"] = canonical_sha(result)
     write_json(output / "result.json", result)
@@ -762,7 +868,7 @@ def main() -> int:
         "rows_sha256": file_sha(output / "rows.json"),
         "traces_sha256": file_sha(output / "traces.json"),
         "status": "COMPLETE",
-        "confirmation_roots_opened": False,
+        "confirmation_roots_opened": bool(args.confirmation),
     }
     write_json(output / "completion_receipt.json", completion)
     print(json.dumps(family_results, indent=2, sort_keys=True), flush=True)

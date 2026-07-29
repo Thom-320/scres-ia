@@ -8,6 +8,7 @@ from supply_chain.expanded_contract_controllers_v2 import (
     posture_targets,
 )
 from scripts.run_expanded_contract_comparators_v2 import (
+    episode_row,
     make_replay_sim,
     materialize_tape,
     replay_prefix,
@@ -86,3 +87,19 @@ def test_corrective_fold_gates_physics_not_historical_rpj_metric() -> None:
         "terminal_stock",
     )
     assert "ret_excel" not in PHYSICAL_GATE_KEYS
+
+
+def test_episode_row_reports_repaired_endpoints_without_replacing_canonical() -> None:
+    horizon = 8 * 168.0
+    tape = materialize_tape(1_499_201, horizon, "R2r")
+    sim = make_replay_sim(
+        seed=int(tape["seed"]),
+        horizon=horizon,
+        family="R2r",
+        tape=tape,
+    )
+    sim.step(action=None, step_hours=horizon)
+    row = episode_row(sim)
+    assert "ret_excel" in row
+    assert 0.0 <= row["ret_excel_clipped_0_1"] <= 1.0
+    assert 0.0 <= row["ret_excel_quantity_time_clipped_0_1"] <= 1.0

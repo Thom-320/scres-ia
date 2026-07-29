@@ -278,6 +278,7 @@ robust to all three repairs and to a 48x floor sweep.
 | **canonical** | **−0.011129** | [−0.05866, +0.01520] | 11/12 | 7 | 73.91 | `NOT_SEPARATED` |
 | clip to [0,1] | **+0.011951** | [+0.00781, +0.01655] | 12/12 | 0 | 1.00 | **`MPC_AHEAD`** |
 | quantity → time | **+0.013141** | [+0.00860, +0.01827] | 11/12 | 5 | 2.01 | **`MPC_AHEAD`** |
+| quantity → time, then clip | **+0.013095** | [+0.00867, +0.01810] | 11/12 | 0 | 1.00 | **`MPC_AHEAD`** |
 | `RPj` floor 0.5 h | +0.011951 | [+0.00774, +0.01660] | 12/12 | 0 | 1.00 | **`MPC_AHEAD`** |
 | `RPj` floor 1 h | +0.012067 | [+0.00782, +0.01662] | 12/12 | 0 | 0.97 | **`MPC_AHEAD`** |
 | `RPj` floor 6 h | +0.012847 | [+0.00831, +0.01768] | 11/12 | 0 | 0.97 | **`MPC_AHEAD`** |
@@ -298,8 +299,9 @@ Two further findings:
   independently written repairs coinciding exactly where they must is a check on both.
 - **`quantity_time` alone is not sufficient.** It still leaves 5 orders above 1.0
   (max 2.01), because it only touches orders a quantity risk reached; an order with a
-  tiny `RPj` from a pure timing risk stays unbounded. A repair needs the semantic fix
-  *and* a bound.
+  tiny `RPj` from a pure timing risk stays unbounded. The prospectively registered
+  sensitivity therefore applies that proxy and then clips. It remains a disclosed
+  proxy, not an exact causal attribution model.
 
 ### What may and may not be claimed
 
