@@ -1,0 +1,82 @@
+{
+  "schema_version": "paper_b_v0_hypothesis_mapping_v1",
+  "status": "DRAFT_PROSPECTIVE_BEFORE_NEURAL_OUTCOME_INSPECTION",
+  "claim_status": "NO_CLAIM_UNTIL_FACTORIAL_ADJUDICATION",
+  "source_documents": {
+    "garrido_scres_ai_2024_sha256": "3e3bc8f82e20b891ee163fb8a035dd37be4312fa11f58dde77452dc1bb903ae6",
+    "garrido_factory_resilience_2024_sha256": "1260863dc295232faf24b820e1f67d53f25f81ffa2d221f7ef02a02310519c43",
+    "v0_neuralnet_scres_pdf_sha256": "521b12770e94f3e70c4c88ce1e38613f4e0aad3e1dab114632c9c89dbfad182d",
+    "v0_neuralnet_scres_docx_sha256": "b111070a05c8f4d1afa058454138bed9b4b74900ab87eaaf6eb5186b6e8293f2"
+  },
+  "execution_contract": {
+    "base": "contracts/q_r1_matched_retention_factorial_v4.json",
+    "base_sha256": "bb92a2cbfcd3691a77f7f9ab8a269d7ffab65823d37b41f70d0b13795d92e764",
+    "shared_structured_amendment": "contracts/q_r1_factorial_v4_shared_structured_amendment_v1.json",
+    "physical_state_reset_between_campaigns": "complete",
+    "retained_information": "explicit prior and/or recurrent hidden state only",
+    "confirmation_roots_opened": false
+  },
+  "hypotheses": {
+    "H1_learning_effect": {
+      "source_wording": "shorter recovery times than static simulation models",
+      "primary_operationalization": "paired difference in right-censoring-aware system recovery time between P1_H1 and P0_H0",
+      "secondary_operationalization": "paired service_loss and worst_product_fill",
+      "direction": "lower recovery time, lower service loss, higher worst-product fill",
+      "selection_use": false
+    },
+    "H2_adaptation": {
+      "source_wording": "improved performance under successive disruptions",
+      "operationalization": "difference in campaign-index slope of early_ret_complete_cohort, P1_H1 minus P0_H0",
+      "direction": "positive",
+      "selection_use": false
+    },
+    "H3_volatility_reduction": {
+      "source_wording": "reduced performance variance across heterogeneous disruption intensities",
+      "operationalization": "difference in absolute deviation from the kappa-stratum median and variance ratio for early_ret_complete_cohort, P1_H1 versus P0_H0",
+      "direction": "lower dispersion for P1_H1",
+      "selection_use": false
+    },
+    "H4_path_dependency": {
+      "source_wording": "positive influence of accumulated learning from prior disruptions",
+      "primary_operationalization": "total_retained_neural_treatment = P1_H1 minus P0_H0",
+      "mechanism_decomposition": [
+        "explicit_context_value = P1_H0 minus P0_H0",
+        "recurrent_residual_given_context = P1_H1 minus P1_H0",
+        "interaction"
+      ],
+      "direction": "positive with the frozen SESOI and iid placebo gate",
+      "selection_use": true
+    }
+  },
+  "architecture_question": {
+    "first_test": "Does recurrent neural state add value beyond the explicit retained prior and the strongest tested structured retained controller?",
+    "neural_bakeoff_authorized_only_if": "development neural premium passes the frozen factorial-v4 gate",
+    "candidate_families_if_authorized": [
+      "PPO+MLP",
+      "RecurrentPPO+MLP",
+      "PPO+DMLPA",
+      "PPO+Real-KAN"
+    ],
+    "no_first_kan_claim": true
+  },
+  "cobb_douglas": {
+    "role": "secondary factory-resilience sensitivity only",
+    "may_select_checkpoint_or_configuration": false,
+    "required_inputs": [
+      "inventory-time",
+      "backorders",
+      "spare production capacity",
+      "time-to-fulfill",
+      "normalized total cost"
+    ],
+    "current_status": "BLOCKED_FROM_SCALAR_CLAIM_UNTIL_COST_AND_CAPACITY_LEDGER_IS_FROZEN",
+    "permitted_before_then": "report the five-dimensional physical/resource vector without scalarization"
+  },
+  "boundaries": {
+    "program_q_reinterpreted_as_retained_learning": false,
+    "cf1_cf20_generative_replication_claim": false,
+    "structured_controller_optimality_claim": false,
+    "neural_superiority_claim_before_results": false,
+    "confirmation_authorized": false
+  }
+}
