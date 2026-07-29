@@ -166,13 +166,22 @@ def main() -> int:
         }
 
     # Primary reporting stays on the canonical metric; the companion is disclosed.
+    #
+    # The LCB is NOT recomputed here. It used to be, drawing from the same `rng`
+    # after the by_metric loop had already advanced it, which produced two
+    # different bootstrap estimates of the identical estimand in one artifact
+    # (7.8858e-05 at the top level against 7.7759e-05 under by_metric.ret_excel).
+    # Nothing was wrong with either -- they differed by 1.4%, which is simply the
+    # Monte-Carlo error of a 10,000-resample bootstrap over 12 tapes. But two
+    # numbers for one quantity invite a reader to pick, so the top level now
+    # reuses the per-metric block. The lesson survives the fix: this instrument
+    # resolves the LCB to about two significant figures, and quoting more is
+    # false precision.
     per_setting_mean = rows["ret_excel"].mean(axis=1)
     best_g = int(per_setting_mean.argmax())
     static_bar = float(per_setting_mean[best_g])
     ceiling = float(rows["ret_excel"].max(axis=0).mean())
     per_tape_gap = rows["ret_excel"].max(axis=0) - rows["ret_excel"][best_g, :]
-    boot = np.array([rng.choice(per_tape_gap, len(tapes), True).mean()
-                     for _ in range(10_000)])
 
     # Is the optimum interior, or does the screen simply want the largest buffer
     # everywhere? The latter is the signature of the unpriced exogenous source.
@@ -195,7 +204,9 @@ def main() -> int:
         "static_bar_mean_ret": static_bar,
         "clairvoyant_ceiling_mean_ret": ceiling,
         "h_pi": ceiling - static_bar,
-        "h_pi_lcb95": float(np.quantile(boot, 0.05)),
+        "h_pi_lcb95": by_metric["ret_excel"]["h_pi_lcb95"],
+        "h_pi_lcb95_source": "by_metric.ret_excel.h_pi_lcb95 (single computation)",
+        "h_pi_lcb95_significant_figures": 2,
         "n_tapes_with_strictly_better_setting": int((per_tape_gap > 1e-12).sum()),
         "zero_buffer_mean_ret": float(per_setting_mean[zero_g]),
         "max_buffer_mean_ret": float(per_setting_mean[max_g]),

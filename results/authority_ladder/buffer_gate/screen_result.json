@@ -50,6 +50,7 @@
  "h_pi": 0.00011578246123941736,
  "h_pi_is_diagnostic_ceiling_not_learner_opportunity": true,
  "h_pi_lcb95": 7.885812387081478e-05,
+ "h_pi_lcb95_duplication_note": "This artifact predates the 2026-07-29 dedupe. It carries TWO bootstrap estimates of the identical ret_excel estimand: h_pi_lcb95 = 7.885812e-05 (top level) and by_metric.ret_excel.h_pi_lcb95 = 7.775893e-05. They are not two methods. The single np.random.default_rng(20260728) was consumed by the by_metric loop and then drawn from again for the primary block, so the two differ only by the Monte-Carlo error of a 10,000-resample bootstrap over 12 tapes -- 1.4% of the value. h_pi = 1.1578246e-04 is identical in both places and is unaffected. The runner now reuses the per-metric value. Operative lesson: this instrument resolves the LCB to ~2 significant figures; quote it as 7.8e-05, not 7.886e-05.",
  "horizon_weeks": 52,
  "levels": {
   "op3_rm": [
@@ -92,7 +93,7 @@
  ],
  "omitted_fraction_span_across_grid": 0.1843611575992678,
  "schema_version": "authority_ladder_buffer_gate_v1",
- "self_sha256": "f7ff9c01312758fdd4ee3ad0939e7848954779e41fbf5c4908390319c72348bc",
+ "self_sha256": "bb760cad85335f0a5126858ddc4b30eaf29e5f2624c9f87e00974afe13e8b8b8",
  "static_bar_mean_ret": 0.0060947639093516665,
  "tapes": [
   1220001,
