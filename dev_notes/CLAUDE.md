@@ -21,13 +21,15 @@ Track A is a benchmark with honest negative results. **No RL configuration beats
 - Root cause: downstream distribution bottleneck (F11), 1% action headroom (F2)
 - Paper framing: "when does RL help?" + mechanistic explanation of structural limitations
 
-### Track B (Extended Action Space) — ACTIVE
+### Track B (Extended Action Space) — CLOSED NEGATIVE (C30)
 
-Track B adds downstream control (Op10/Op12) to the action space, opening real headroom.
+Track B adds downstream control (Op10/Op12) to the action space.
 
-- Contract: `action_contract="track_b_v1"`, `v7` (46 dims), `7D actions`, `ReT_seq_v1`, `adaptive_benchmark_v2`
-- Smoke 100k: PPO fill=1.000 vs best static=0.987 — **PPO WINS**
-- 500k x 5 seeds: **VALIDATED** — PPO fill=1.000 beats all baselines (see `scripts/analyze_track_b_500k.py`)
+- Contract: `action_contract="track_b_v1"`, `v7` (46 dims), **`8D actions`**, `ReT_seq_v1`, `adaptive_benchmark_v2`
+- **The "PPO WINS / VALIDATED" headline is retracted** — it was measured against a restricted
+  147-cell static family. Under the full 8D contract the best constant policy wins:
+  static `0.005906366` vs PPO `0.005888317`. See
+  [TRACK_B_SAME_CONTRACT_CHALLENGE_VERDICT_2026-07-10.md](docs/TRACK_B_SAME_CONTRACT_CHALLENGE_VERDICT_2026-07-10.md).
 - DKANA handoff: [DKANA_CONTRIBUTOR_HANDOFF.md](docs/DKANA_CONTRIBUTOR_HANDOFF.md)
 
 ### Key Rules
@@ -118,12 +120,15 @@ The simulation runs at hourly granularity internally. The Gym envs call `sim.ste
 - **`ReT_thesis`**: Piecewise step-level approximation of Eq. 5.5. **Audit-only** -- NOT suitable as training objective (collapses to S1).
 - **`action_mode`**: `"full"` (5D, default), `"shift_only"` (1D), `"shift_q9"` (2D) — experimental action space reductions.
 
-### Track B action space (7D)
+### Track B action space (8D)
 
-Track B extends the 5D shift_control actions with downstream dispatch control:
-- dims 0-4: same as shift_control (op3_q, op9_q, op3_rop, op9_rop, shift)
-- **dim 5**: `op10_q_multiplier_signal` — controls Op10 transport dispatch quantity
-- **dim 6**: `op12_q_multiplier_signal` — controls Op12 transport dispatch quantity
+Track B extends the 6D Track A actions with downstream dispatch control
+(`env_experimental_shifts.py:2795-2818` is the authority):
+- dims 0-5: same as Track A 6D (op3_q, op9_q, op3_rop, op9_rop, op5_q, shift)
+- **dim 6**: `op10_q_multiplier_signal` — controls Op10 transport dispatch quantity
+- **dim 7**: `op12_q_multiplier_signal` — controls Op12 transport dispatch quantity
+
+The thesis-neutral shift signal is `a = −1/3`, **not** `0.0` — see the decoder.
 
 These target the downstream distribution bottleneck that limits Track A (see F11 in PAPER_FINDINGS_REGISTRY.md). Use `make_track_b_env()` from `external_env_interface.py`.
 
@@ -191,13 +196,29 @@ Full findings with evidence sources: [PAPER_FINDINGS_REGISTRY.md](docs/PAPER_FIN
 - **Root cause**: Downstream distribution bottleneck (F11) + 1% action headroom (F2).
 - **AUDIT WARNING**: Runs named `control_reward_500k_*_stopt` used pre-audit DES with bugs. They are `historical_artifact`, not valid evidence.
 
-### Track B (extended downstream control) — PPO wins
+### Track B (extended downstream control) — RETRACTED, see C30
 
-- **PPO + ReT_seq_v1 (100k smoke)**: fill=1.000 vs best static=0.987. **PPO wins.** [track_b_smoke_initial]
-- **500k x 5 seeds**: **VALIDATED** — PPO fill=1.000 beats all baselines across seeds.
-- **Why it works**: Track B adds Op10/Op12 dispatch actions, giving the agent control over the active bottleneck.
+> **SUPERSEDED BY [TRACK_B_SAME_CONTRACT_CHALLENGE_VERDICT_2026-07-10.md](docs/TRACK_B_SAME_CONTRACT_CHALLENGE_VERDICT_2026-07-10.md) (claim C30).**
+> The "PPO wins" headline below was measured against a *restricted* 147-cell static family
+> that varied shift and dispatch while fixing upstream controls. Given the **full 8D Track B
+> contract**, an optimized constant policy attains Excel ReT `0.005906366` versus `0.005888317`
+> for the ten canonical PPO checkpoints: PPO − static = `−0.000018049`, CI95
+> `[−0.000028615, −0.000008087]`, only 2/10 checkpoints and 2/60 tapes positive.
+> C30 supersedes C1/C7/C11/C16–C21. Do not restate any adaptive-advantage reading of Track B.
+
+- **Historical, bounded**: PPO beats the restricted 147-cell static family. This demonstrates
+  **comparator-family sensitivity**, not adaptive superiority.
+- **Retained secondary**: among freshly trained learned policies, letting dispatch vary
+  dynamically adds a small positive increment over fixing it. Not proof of bottleneck value
+  over static control.
+- **The surviving contribution** is methodological: comparator decision rights must be aligned
+  with learner decision rights before a gain can be read as learning.
 
 ### Next steps
 
-- Write the paper with dual-track framing: "Track A shows structural limitations, Track B shows RL works when the agent controls the right constraint."
+- The dual-track framing ("Track B shows RL works") is retracted with C30. The current
+  paper-facing result is **Program Q**: frozen RecurrentPPO beats the complete 65,536-calendar
+  open-loop frontier in 3/3 cells (10/10 seeds), is practically equivalent to the best
+  same-contract structured controller (no neural premium), and fails the frozen worst-product
+  fill guardrail. See `docs/PROGRAM_Q_TERMINAL_VERDICT_2026-07-18.md`.
 - DKANA handoff ready for David: [DKANA_CONTRIBUTOR_HANDOFF.md](docs/DKANA_CONTRIBUTOR_HANDOFF.md)

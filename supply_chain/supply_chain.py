@@ -1110,6 +1110,13 @@ class MFSCSimulation:
         "op9_rations": (8, 9),
     }
 
+    # Action keys accepted by `step()` that are NOT entries of `self.params`.
+    # Everything outside `self.params | _PSEUDO_ACTION_KEYS` raises, so a typo or
+    # a stale factor name can never again be discarded in silence.
+    _PSEUDO_ACTION_KEYS: frozenset[str] = frozenset(
+        {"backorder_priority_rule", "op5_q"}
+    )
+
     def _buffer_route_open(self, key: str) -> bool:
         if not self.replenishment_route_aware:
             return True
@@ -1763,6 +1770,17 @@ class MFSCSimulation:
 
         # Apply action (modify mutable params)
         if action:
+            # Fail closed on keys we cannot honour. Silently dropping them made
+            # `run_program_i_sensitivity.py` send `op8_rop` (not a params key) for
+            # the `op7_release_period` factor: that factor was a guaranteed no-op
+            # and its Morris index is 0.0 by construction, not by physics.
+            unknown = set(action) - set(self.params) - self._PSEUDO_ACTION_KEYS
+            if unknown:
+                raise KeyError(
+                    f"Unknown action keys: {sorted(unknown)}. Mutable params are "
+                    f"{sorted(self.params)}; pseudo-actions are "
+                    f"{sorted(self._PSEUDO_ACTION_KEYS)}."
+                )
             requested_priority_rule = action.get("backorder_priority_rule")
             if requested_priority_rule is not None:
                 self.set_backorder_priority_rule(str(requested_priority_rule))
