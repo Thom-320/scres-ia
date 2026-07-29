@@ -9,6 +9,7 @@ from supply_chain.expanded_contract_controllers_v2 import (
 )
 from scripts.run_expanded_contract_comparators_v2 import (
     episode_row,
+    git_commit,
     make_replay_sim,
     materialize_tape,
     replay_prefix,
@@ -16,6 +17,11 @@ from scripts.run_expanded_contract_comparators_v2 import (
     state_hash,
 )
 from scripts.fold_v2_arms_into_panel import PHYSICAL_GATE_KEYS
+
+
+def test_git_commit_accepts_frozen_archive_provenance(monkeypatch) -> None:
+    monkeypatch.setenv("SCRES_SOURCE_COMMIT", "frozen-source-commit")
+    assert git_commit() == "frozen-source-commit"
 
 
 def test_static_domain_is_complete_and_node_independent() -> None:

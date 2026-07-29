@@ -21,6 +21,7 @@ from datetime import datetime, timezone
 from hashlib import sha256
 import json
 import math
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -67,6 +68,9 @@ def file_sha(path: Path) -> str:
 
 
 def git_commit() -> str:
+    frozen_source_commit = os.environ.get("SCRES_SOURCE_COMMIT")
+    if frozen_source_commit:
+        return frozen_source_commit
     return subprocess.check_output(
         ["git", "rev-parse", "HEAD"], text=True
     ).strip()
