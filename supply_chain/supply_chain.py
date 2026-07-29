@@ -1762,6 +1762,19 @@ class MFSCSimulation:
 
         # Apply action (modify mutable params)
         if action:
+            pseudo_action_keys = {"backorder_priority_rule", "op5_q"}
+            unknown_action_keys = sorted(
+                set(action).difference(self.params).difference(pseudo_action_keys)
+            )
+            if unknown_action_keys:
+                raise KeyError(
+                    "unknown action key(s): "
+                    + ", ".join(unknown_action_keys)
+                    + "; allowed mutable keys are "
+                    + ", ".join(sorted(self.params))
+                    + "; allowed pseudo-action keys are "
+                    + ", ".join(sorted(pseudo_action_keys))
+                )
             requested_priority_rule = action.get("backorder_priority_rule")
             if requested_priority_rule is not None:
                 self.set_backorder_priority_rule(str(requested_priority_rule))
