@@ -15,6 +15,7 @@ Key guarantees:
 from __future__ import annotations
 
 import argparse
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from hashlib import sha256
@@ -484,6 +485,51 @@ def run_replay_controller(
     )
 
 
+def run_tape_bundle(payload: dict[str, Any]) -> dict[str, Any]:
+    """Run all dynamic arms for one tape; safe in a worker process."""
+    tape = payload["tape"]
+    family = str(payload["family"])
+    horizon = float(payload["horizon"])
+    epoch_hours = float(payload["epoch_hours"])
+    candidates = tuple(tuple(row) for row in payload["candidates"])
+    ddmrp, ddmrp_trace = run_ddmrp(tape, horizon, family, epoch_hours)
+    if bool(payload["skip_dynamic"]):
+        return {
+            "tape_seed": int(tape["seed"]),
+            "rows": [ddmrp],
+            "traces": {"ddmrp": ddmrp_trace},
+        }
+    mpc, mpc_trace = run_replay_controller(
+        actual_tape=tape,
+        scenario_tapes=payload["future_tapes"],
+        candidates=candidates,
+        horizon=horizon,
+        family=family,
+        epoch_hours=epoch_hours,
+        metric=str(payload["metric"]),
+        perfect_information=False,
+    )
+    pi, pi_trace = run_replay_controller(
+        actual_tape=tape,
+        scenario_tapes=(),
+        candidates=candidates,
+        horizon=horizon,
+        family=family,
+        epoch_hours=epoch_hours,
+        metric=str(payload["metric"]),
+        perfect_information=True,
+    )
+    return {
+        "tape_seed": int(tape["seed"]),
+        "rows": [ddmrp, mpc, pi],
+        "traces": {
+            "ddmrp": ddmrp_trace,
+            "mpc": mpc_trace,
+            "pi": pi_trace,
+        },
+    }
+
+
 def paired_interval(
     treatment: Sequence[float], control: Sequence[float], seed: int
 ) -> dict[str, Any]:
@@ -520,6 +566,7 @@ def main() -> int:
     parser.add_argument("--epoch-weeks", type=int, default=4)
     parser.add_argument("--metric", default="ret_excel")
     parser.add_argument("--candidate-limit", type=int, default=0)
+    parser.add_argument("--workers", type=int, default=4)
     parser.add_argument("--skip-dynamic", action="store_true")
     parser.add_argument(
         "--output-dir",
@@ -617,39 +664,41 @@ def main() -> int:
         ddmrp_rows: list[dict[str, Any]] = []
         mpc_rows: list[dict[str, Any]] = []
         pi_rows: list[dict[str, Any]] = []
-        for tape in actual_tapes:
-            ddmrp, ddmrp_trace = run_ddmrp(
-                tape, horizon, family, epoch_hours
-            )
-            ddmrp_rows.append(ddmrp)
-            all_traces[f"{family}:{tape['seed']}:ddmrp"] = ddmrp_trace
-            if args.skip_dynamic:
-                continue
-            mpc, mpc_trace = run_replay_controller(
-                actual_tape=tape,
-                scenario_tapes=future_by_root[int(tape["seed"])],
-                candidates=candidates,
-                horizon=horizon,
-                family=family,
-                epoch_hours=epoch_hours,
-                metric=args.metric,
-                perfect_information=False,
-            )
-            pi, pi_trace = run_replay_controller(
-                actual_tape=tape,
-                scenario_tapes=(),
-                candidates=candidates,
-                horizon=horizon,
-                family=family,
-                epoch_hours=epoch_hours,
-                metric=args.metric,
-                perfect_information=True,
-            )
-            mpc_rows.append(mpc)
-            pi_rows.append(pi)
-            all_traces[f"{family}:{tape['seed']}:mpc"] = mpc_trace
-            all_traces[f"{family}:{tape['seed']}:pi"] = pi_trace
-            print(f"{family} dynamic tape {tape['seed']} complete", flush=True)
+        jobs = [
+            {
+                "tape": tape,
+                "future_tapes": future_by_root[int(tape["seed"])],
+                "candidates": [list(row) for row in candidates],
+                "horizon": horizon,
+                "family": family,
+                "epoch_hours": epoch_hours,
+                "metric": args.metric,
+                "skip_dynamic": args.skip_dynamic,
+            }
+            for tape in actual_tapes
+        ]
+        with ProcessPoolExecutor(max_workers=max(1, int(args.workers))) as pool:
+            futures = {pool.submit(run_tape_bundle, job): job for job in jobs}
+            for future in as_completed(futures):
+                bundle = future.result()
+                tape_seed = int(bundle["tape_seed"])
+                write_json(
+                    output / "shards" / f"{family}_{tape_seed}.json",
+                    bundle,
+                )
+                for row in bundle["rows"]:
+                    if row["arm"] == "ddmrp_projected_v2":
+                        ddmrp_rows.append(row)
+                    elif row["arm"] == "replay_mpc_v2":
+                        mpc_rows.append(row)
+                    elif row["arm"] == "greedy_pi_best_found_v2":
+                        pi_rows.append(row)
+                for arm, trace in bundle["traces"].items():
+                    all_traces[f"{family}:{tape_seed}:{arm}"] = trace
+                print(f"{family} dynamic tape {tape_seed} complete", flush=True)
+        ddmrp_rows.sort(key=lambda row: int(row["tape_seed"]))
+        mpc_rows.sort(key=lambda row: int(row["tape_seed"]))
+        pi_rows.sort(key=lambda row: int(row["tape_seed"]))
         all_rows.extend(ddmrp_rows + mpc_rows + pi_rows)
 
         incumbent_values = [
@@ -722,4 +771,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
