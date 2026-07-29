@@ -286,7 +286,7 @@ def write_tables(data: dict[str, dict], source: dict) -> None:
         columns=r"p{0.26\linewidth}p{0.18\linewidth}p{0.44\linewidth}",
         header=["Statement", "Status", "Reason"],
         rows=[
-            ["Feedback beats the complete static frontier", "Supported", "Prospective confirmation in all cells with simultaneous positive lower bounds"],
+            ["Feedback beats the complete open-loop frontier", "Supported", "Prospective confirmation in all cells with simultaneous positive lower bounds"],
             ["RecurrentPPO has a neural premium", "Not supported", "Practical equivalence, not superiority, versus structured control"],
             ["The learned policy is deployment-safe", "Not supported", "Worst-product service margin failed"],
             ["The model learns across campaigns", "Not tested here", "Program Q resets each episode; Q-R1 is a separate prospective study"],
@@ -349,16 +349,16 @@ def figure2_frontier(data: dict[str, dict]) -> None:
             neural = calibration["inference"]["estimates"][f"{cell}::H_neural"]["estimate"]
             learner = best + h
             structured = learner - neural
-            ax.plot(ranks, values, color="#64748B", lw=1.0, label="65,536 statics")
+            ax.plot(ranks, values, color="#64748B", lw=1.0, label="65,536 open-loop calendars")
             ax.axhline(learner, color="#2563EB", lw=1.8, label="RecurrentPPO")
             ax.axhline(structured, color="#D97706", lw=1.8, ls="--", label="Structured")
             ax.set_xscale("log")
             ax.set_title(CELL_LABELS[cell])
-            ax.set_xlabel("Static-policy rank (log scale)")
+            ax.set_xlabel("Open-loop rank (log scale)")
             ax.grid(alpha=0.18)
         axes[0].set_ylabel("Calibration mean Excel ReT")
         handles, labels = axes[0].get_legend_handles_labels()
-        fig.suptitle("Exact static frontier and adaptive-controller positions", y=0.99, weight="bold")
+        fig.suptitle("Exact open-loop frontier and adaptive-controller positions", y=0.99, weight="bold")
         fig.legend(handles, labels, loc="upper center", bbox_to_anchor=(0.5, 0.92), ncol=3, frameon=False)
         fig.subplots_adjust(top=0.75, wspace=0.24)
         save_figure(fig, "figure2_static_frontier")
@@ -378,7 +378,7 @@ def figure3_effects(data: dict[str, dict]) -> None:
     axes[0].errorbar(h_points, y, xerr=[h_low, h_high], fmt="o", color="#2563EB", capsize=3)
     axes[0].axvline(0, color="#475569", lw=1)
     axes[0].axvline(0.01, color="#16A34A", lw=1, ls=":")
-    axes[0].set_title("Feedback value vs exact static frontier")
+    axes[0].set_title("Feedback value vs exact open-loop frontier")
     axes[0].set_xlabel(r"$H_{OL}$ (Excel ReT)")
     axes[1].errorbar(n_points, y, xerr=[n_low, n_high], fmt="o", color="#D97706", capsize=3)
     axes[1].axvspan(-0.01, 0.01, color="#DCFCE7", alpha=0.8)
@@ -424,7 +424,7 @@ def build_source_of_truth(data: dict[str, dict]) -> dict:
     latency = data["latency"]
     return {
         "schema_version": "submission_a_program_q_source_of_truth_v1",
-        "title": "When Feedback Beats an Exhaustive Static Frontier but Not Structured Control: Exact Benchmarking of Recurrent RL in a Supply-Chain DES",
+        "title": "When Feedback Beats an Exhaustive Open-Loop Frontier but Not Structured Control: Exact Benchmarking of Recurrent RL in a Supply-Chain DES",
         "submission_name": "Submission A -- Program Q",
         "target_journal": "Computers & Industrial Engineering",
         "scientific_base_commit": "f2dfe356c179bd16f4b89b26e8ed3b19d69f5a71",
