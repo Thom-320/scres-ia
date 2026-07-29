@@ -65,6 +65,9 @@ STRUCTURED_AMENDMENT_FREEZE_PATH = (
     ROOT
     / "contracts/q_r1_factorial_v4_shared_structured_amendment_v1_freeze_receipt.json"
 )
+FULL_PHASE_AMENDMENT_PATH = (
+    ROOT / "contracts/q_r1_factorial_v4_full_phase_runner_amendment_v1.json"
+)
 RHO = 0.90
 SHARE = 0.90
 KAPPAS = (0.50, 0.75, 0.90)
@@ -104,6 +107,39 @@ def json_sha256(value: Any) -> str:
         value, sort_keys=True, separators=(",", ":"), default=str
     ).encode()
     return hashlib.sha256(payload).hexdigest()
+
+
+def development_timesteps(contract: dict[str, Any], phase: str) -> int:
+    """Resolve the frozen development budget for the explicitly named phase."""
+    if phase == "screen":
+        return int(contract["training_protocol"]["screen_timesteps_per_seed"])
+    if phase == "full":
+        return int(contract["training_protocol"]["full_timesteps_per_seed"])
+    raise ValueError(f"unknown development phase: {phase}")
+
+
+def validate_full_screen_selection(
+    path: Path | None,
+    *,
+    contract: dict[str, Any],
+    config_id: str,
+) -> dict[str, Any]:
+    """Fail closed unless a full worker belongs to the frozen screen advance."""
+    if path is None or not path.is_file():
+        raise RuntimeError("full worker requires the screen selection artifact")
+    selection = json.loads(path.read_text())
+    if selection.get("phase") != "screen":
+        raise RuntimeError("full worker screen selection has the wrong phase")
+    if selection.get("contract_sha256") != sha256(CONTRACT_PATH):
+        raise RuntimeError("full worker screen selection contract mismatch")
+    if config_id not in set(map(str, selection.get("advanced_config_ids", []))):
+        raise RuntimeError("full worker config did not advance from the screen")
+    expected_advances = int(
+        contract["training_protocol"]["configuration_selection"]["screen_advances"]
+    )
+    if len(selection.get("advanced_config_ids", [])) != expected_advances:
+        raise RuntimeError("screen selection advance count mismatch")
+    return selection
 
 
 def validate_shared_static_bar(
@@ -720,6 +756,10 @@ def main() -> int:
     )
     parser.add_argument("--config-id", default="s01")
     parser.add_argument("--optimizer-seed", type=int, default=7_672_001)
+    parser.add_argument(
+        "--development-phase", choices=("screen", "full"), default="screen"
+    )
+    parser.add_argument("--screen-selection", type=Path)
     parser.add_argument("--static-bar-path", type=Path)
     parser.add_argument("--static-bar-completion-receipt", type=Path)
     parser.add_argument("--development-opening-receipt", type=Path)
@@ -730,6 +770,8 @@ def main() -> int:
     args = parser.parse_args()
     if args.output_dir.exists():
         raise SystemExit(f"refusing to overwrite {args.output_dir}")
+    if args.mode != "development-worker" and args.development_phase != "screen":
+        raise ValueError("development phase applies only to development workers")
 
     contract, freeze_receipt = load_authority(args.mode)
     runtime = runtime_receipt()
@@ -771,7 +813,7 @@ def main() -> int:
             contract["data_splits"]["checkpoint_selection_history_roots"]
         )
         kappas = KAPPAS
-        timesteps = int(contract["training_protocol"]["screen_timesteps_per_seed"])
+        timesteps = development_timesteps(contract, args.development_phase)
         checkpoint_interval = int(
             contract["training_protocol"]["checkpoint_interval_timesteps"]
         )
@@ -782,6 +824,12 @@ def main() -> int:
             allowed = set(map(int, contract["data_splits"]["optimizer_seeds"]))
             if args.optimizer_seed not in allowed:
                 raise ValueError("optimizer seed is outside the frozen contract")
+            if args.development_phase == "full":
+                validate_full_screen_selection(
+                    args.screen_selection,
+                    contract=contract,
+                    config_id=args.config_id,
+                )
 
     shared_static_bar: dict[str, Any] | None = None
     shared_structured_rows: list[dict[str, Any]] | None = None
@@ -877,6 +925,17 @@ def main() -> int:
                     args.static_bar_completion_receipt
                 ),
                 "contract_sha256": sha256(CONTRACT_PATH),
+                "development_phase": args.development_phase,
+                "screen_selection": (
+                    None
+                    if args.screen_selection is None
+                    else str(args.screen_selection)
+                ),
+                "screen_selection_sha256": (
+                    None
+                    if args.screen_selection is None
+                    else sha256(args.screen_selection)
+                ),
                 "structured_bar": str(args.structured_bar_path),
                 "structured_bar_sha256": sha256(args.structured_bar_path),
                 "structured_bar_completion_receipt_sha256": sha256(
@@ -1185,6 +1244,11 @@ def main() -> int:
         "created_at": datetime.now(timezone.utc).isoformat(),
         "claim_status": claim_status,
         "mode": args.mode,
+        "development_phase": (
+            args.development_phase
+            if args.mode == "development-worker"
+            else None
+        ),
         "contract_sha256": sha256(CONTRACT_PATH),
         "config_id": args.config_id,
         "optimizer_seed": args.optimizer_seed,

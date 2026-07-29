@@ -22,7 +22,9 @@ def sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def load_workers(paths: list[Path]) -> list[tuple[Path, dict[str, Any]]]:
+def load_workers(
+    paths: list[Path], *, expected_phase: str
+) -> list[tuple[Path, dict[str, Any]]]:
     workers: list[tuple[Path, dict[str, Any]]] = []
     for path in paths:
         payload = json.loads(path.read_text())
@@ -36,6 +38,18 @@ def load_workers(paths: list[Path]) -> list[tuple[Path, dict[str, Any]]]:
             raise ValueError(f"{path} opened confirmation")
         if payload.get("same_checkpoint_hash_all_neural_arms") is not True:
             raise ValueError(f"{path} did not use the same neural checkpoint")
+        actual_phase = payload.get("development_phase", "screen")
+        if actual_phase != expected_phase:
+            raise ValueError(
+                f"{path} is phase {actual_phase}, expected {expected_phase}"
+            )
+        expected_limit = 96_000 if expected_phase == "screen" else 240_000
+        expected_steps = list(range(0, expected_limit + 1, 24_000))
+        actual_steps = [int(row["timesteps"]) for row in payload["checkpoints"]]
+        if actual_steps != expected_steps:
+            raise ValueError(
+                f"{path} checkpoint schedule does not match {expected_phase}"
+            )
         workers.append((path, payload))
     return workers
 
@@ -143,7 +157,7 @@ def main() -> int:
             map(int, contract["training_protocol"]["full_optimizer_seeds"])
         )
 
-    workers = load_workers(args.worker_results)
+    workers = load_workers(args.worker_results, expected_phase=args.phase)
     ranking = rank(
         workers,
         expected_configs=expected_configs,

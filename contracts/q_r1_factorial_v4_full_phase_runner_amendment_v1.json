@@ -1,0 +1,56 @@
+{
+  "schema_version": "q_r1_factorial_v4_full_phase_runner_amendment_v1",
+  "status": "DRAFT_PROSPECTIVE_BEFORE_FULL_RESULTS",
+  "claim_status": "DEVELOPMENT_SELECTION_NO_CONFIRMATORY_CLAIM",
+  "base_contract": "contracts/q_r1_matched_retention_factorial_v4.json",
+  "base_contract_sha256": "bb92a2cbfcd3691a77f7f9ab8a269d7ffab65823d37b41f70d0b13795d92e764",
+  "shared_structured_amendment_sha256": "31cd2545a501d97010e0e8d70e3ec81c430188e16068a4edefd04ec167432cb0",
+  "reason": "The frozen contract declares a 240000-timestep full phase, but the worker runner previously selected the 96000-timestep screen budget unconditionally. This amendment exposes the already frozen phase choice and makes both worker execution and aggregation fail closed on phase and checkpoint schedule.",
+  "screen_selection": {
+    "sha256": "86fa0ac9623f21df01fbbb8599245017d7325e980bf6b6383ca7cde88b072efa",
+    "advanced_config_ids": [
+      "s07",
+      "s06"
+    ]
+  },
+  "full_phase": {
+    "optimizer_seeds": [
+      7672101,
+      7672102,
+      7672103,
+      7672104,
+      7672105
+    ],
+    "timesteps_per_seed": 240000,
+    "checkpoint_interval_timesteps": 24000,
+    "expected_checkpoint_timesteps": [
+      0,
+      24000,
+      48000,
+      72000,
+      96000,
+      120000,
+      144000,
+      168000,
+      192000,
+      216000,
+      240000
+    ]
+  },
+  "scientific_invariants": {
+    "physical_contract_changed": false,
+    "training_budget_changed": false,
+    "optimizer_seeds_changed": false,
+    "checkpoint_interval_changed": false,
+    "checkpoint_selection_rule_changed": false,
+    "estimands_changed": false,
+    "thresholds_changed": false,
+    "confirmation_roots_opened": false
+  },
+  "custody": {
+    "full_output_directory_must_not_exist": true,
+    "screen_selection_must_be_verified": true,
+    "failed_directories_must_be_preserved": true,
+    "confirmation_roots_must_remain_sealed": true
+  }
+}
