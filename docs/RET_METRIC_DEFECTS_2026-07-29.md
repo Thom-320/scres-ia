@@ -161,3 +161,69 @@ must select delay/APj semantics from fidelity evidence, not from which value pre
 more headroom. The full 216-posture delay diagnostic is separately labelled as
 perfect-hindsight selection of one fixed posture per tape; even a zero there cannot
 exclude state-contingent adaptation between epochs.
+
+---
+
+## 3. `RPj` attributes time, but delays can be caused by quantity risks
+
+Found auditing tape R2r/1530011, where the MPC's per-tape `ret_excel` delta was −0.2634
+against a family mean of −0.0111. Independently reproduced; custody in
+`results/metric_audit/r2r_1530011_ret_tail_v1/`.
+
+The gap is one order. Static incumbent `(336,0,168)`, scored population 262 orders:
+
+```
+order j=24    delivered 240 h after ordering = 5.0x the 48 h promise, 192 h LATE
+              RPj = 0.006765 h = 24.4 seconds
+              risk_indicators = {R23: 0.006765 (hours), R24: 2516.0 (rations)}
+              ReT = 0.5 / RPj = 73.9082          <- the episode's HIGHEST value
+```
+
+**The most-delayed order in the episode receives the best possible score, by a factor of
+74, on a metric defined on [0,1].**
+
+The mechanism is not simply that `0.5/RPj` is unbounded as `RPj → 0`. It is that **`RPj`
+is a time attribution while the delay was caused by a quantity risk.** `R24` is a
+quantity risk — `_ret_quantity_risk_units = {"R14": 0.0, "R24": 0.0}` — so its 2,516
+missing rations contribute **zero hours**. `RPj` drew only from `R23`'s 24-second overlap.
+The more a delay is driven by shortfall rather than downtime, the *higher* it scores.
+Monotonicity is inverted on exactly the worst-served orders.
+
+This is orthogonal to defect 1 and survives its repair: the audit above was run with the
+immutable-onset correction in place.
+
+### Scope, measured over all 24 v2 tapes at each family's true incumbent
+
+| family | scored orders | ReT > 1 | max ReT | mean inflation vs clipped |
+|---|---:|---:|---:|---:|
+| R1r `(0,0,336)` | 3,279 | **0** (0.00%) | 0.07 | 1.00x |
+| R2r `(336,0,168)` | 3,108 | **7** (0.23%) | 73.91 | 1.06x |
+
+**R1r is clean.** Its results are uncontaminated by this defect. **R2r is not**, and R2r
+is precisely the family whose escalated set contains `R24` — the quantity risk. Seven
+orders in 3,108 inflate the family mean by 6% and, on one tape, move a paired delta by
+0.275.
+
+### Consequence for the tape-1530011 verdict
+
+| contrast | value |
+|---|---:|
+| raw `ret_excel`, MPC − static | **−0.263374** |
+| leave the single maximum out of each arm | **+0.011164** |
+| clip both arms to the metric's own [0,1] range | **+0.014757** |
+| difference of medians | **+0.100000** |
+| flow fill, MPC − static | **+0.003484** |
+
+The frozen primary verdict is not changed here — the preregistered endpoint is
+`ret_excel` as specified. But it can no longer be described as a physical failure of the
+MPC: on that tape the MPC delivers **better** fill, zero lost orders, and a higher median
+per-order ReT. Every robust statistic points the other way from the mean.
+
+Two defects compound on this tape, and the second is the one already documented: the
+warm-up is endogenous and **differs by arm** (631 h static against 943 h MPC), so the
+scored populations differ too (262 against 253). Policy-dependent censoring sits on top
+of the unbounded tail.
+
+**Repair options, none taken yet:** clip to [0,1] as the metric's own definition implies;
+or floor `RPj` at a physical quantum; or attribute quantity-risk delay to `RPj` in time
+units. Each changes historical numbers, so none should be applied without preregistration.
