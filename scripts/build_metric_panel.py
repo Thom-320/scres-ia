@@ -188,6 +188,10 @@ def main() -> int:
                 "strategic_injected", "distinct_postures", "posture_changes")
         per_cell = {n: {k: sum(e[k] for e in eps) / len(eps) for k in keys}
                     for n, eps in cells.items()}
+        # Means alone cannot support paired inference. The 4 x 18 rows are kept.
+        per_tape_rows = {n: [{k: e[k] for k in keys} | {"tape": t}
+                             for e, t in zip(eps, args.tapes)]
+                         for n, eps in cells.items()}
         scored = score_comparison_set(per_cell, exponents)
 
         for n, v in per_cell.items():
@@ -239,11 +243,22 @@ def main() -> int:
             "winner_by_metric_among_service_pass": {
                 m: next((n for n in r if n in eligible), None)
                 for m, r in rank_by.items()},
-            "pareto_front_resource_service": pareto_front(per_cell),
+            "pareto_front_kappa_fill_lost_only": pareto_front(per_cell),
+            "pareto_front_axes": ["kappa (down)", "flow_fill_rate (up)",
+                                  "lost_orders (down)"],
+            "pareto_front_excluded_axes": [
+                "backorder_qty_final", "delivered_rations", "strategic_injected",
+                "fill_rate_on_time", "tau"],
+            "per_tape_rows": per_tape_rows,
             "service_floor_sensitivity": floor_sensitivity,
+            # Compares the exact winner VECTOR across floors. The first version
+            # compared `n_distinct_winners`, i.e. how many winners there were --
+            # which would call a panel "robust" if the winners changed completely
+            # but happened to stay the same in number. Both families gave the
+            # right answer by luck; the check did not.
             "agreement_is_floor_robust": len({
-                fs["n_distinct_winners"] for fs in floor_sensitivity
-                if fs["n_pass"] > 0}) == 1,
+                json.dumps(fs["winner_by_metric"], sort_keys=True)
+                for fs in floor_sensitivity if fs["n_pass"] > 0}) == 1,
         }
         print(f"  {family}: {len(per_cell)} cells "
               f"({time.perf_counter() - started:.0f}s)", flush=True)
@@ -258,6 +273,15 @@ def main() -> int:
                          "ret_excel_cvar10"],
         "service_constraints_are_not_objective_terms": True,
         "spans_buffers_and_shifts": True,
+        "step_hours": args.period_hours,
+        "ret_excel_is_step_cadence_dependent": True,
+        "cadence_warning": (
+            "ret_excel depends on step() cadence: identical trajectories (same "
+            "fill, same delivered, same risk events) score 0.004369 at one step "
+            "and 0.005981 at hourly steps, a 37% spread, because RPj differs in "
+            "175 of 311 orders. Numbers here are comparable ONLY to artifacts "
+            "produced at the same step_hours. Winners were verified stable across "
+            "24h and 672h; full rank order was not (2/18 positions held in R1r)."),
         "contract_path": str(args.contract),
         "contract_self_sha256": contract.get("self_sha256"),
         "exponents": exponents,

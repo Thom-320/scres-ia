@@ -87,3 +87,90 @@ owns that, and its MPC arm is deliberately excluded here because that run belong
 another session. `κ̇` remains set-relative, so no number here is comparable to any table
 with a different set. Unit costs are `c = 1`, Garrido's own §3.1 assumption (6), not costs
 calibrated for this DES.
+
+---
+
+# Addendum — `ret_excel` is step-cadence dependent, and the v2 fold
+
+## The cadence defect (found while building the fold)
+
+Replaying a v2 MPC arm daily instead of at v2's 4-week epoch failed the replay gate on
+24 of 24 arms by ~29%. Diagnosis, on one identical trajectory:
+
+| step cadence | ret_excel | full ledger | fill | delivered |
+|---|---:|---:|---:|---:|
+| one step (8,736 h) — *buffer gate* | 0.004369 | 0.004353 | 0.99650 | 689,182 |
+| 672 h — *v2 comparator* | 0.004369 | 0.004353 | 0.99650 | 689,182 |
+| 168 h | 0.004401 | 0.004386 | 0.99650 | 689,182 |
+| 24 h — *panel, C-D screens* | 0.005623 | 0.005603 | 0.99650 | 689,182 |
+| 1 h | 0.005981 | 0.005960 | 0.99650 | 689,182 |
+
+**The physics is invariant** — identical fill, identical delivered rations, identical
+risk events, and `OPTj`, `OATj`, `APj` identical in all 311 scored orders. **`RPj`
+differs in 175 of 311**, and `RPj` enters ReT through the `0.5/RPj` recovery branch.
+Suspected mechanism: `_cumulative_down_hours` is advanced inside `step()`
+(supply_chain.py:1852-1866), closing open downtime intervals at step boundaries.
+
+Consequences, all now enforced in code:
+
+- `ret_excel` numbers are comparable **only** across artifacts at the same `step_hours`.
+  The panel now records `step_hours` and a `cadence_warning`.
+- The panel was regenerated at 672 h to match v2.
+- **Winners were verified stable** across 24 h and 672 h — all eight, both families —
+  but the full rank order was not: only 2 of 18 positions held in R1r.
+
+## The v2 fold, paired within tape
+
+The v2 arms ran seeds 1,430,001+/1,530,001+; the panel ran 1,620,001-4. Merging those
+directly would compare arms across different exogenous streams. Instead every reference
+posture is **re-evaluated on each shard's own materialised tape**, so all comparisons are
+paired. v2 pins `shifts=1`, so only S1 cells can be paired.
+
+Partial run: 4 tapes R1r, 8 tapes R2r, of 12 each.
+
+### Paired deltas, MPC minus reference (LCB95, bootstrap 10,000)
+
+| family | reference | ret_excel | full ledger | cvar10 |
+|---|---|---|---|---|
+| R1r | 168/0/168 | **+0.000074** (LCB +0.000008, 4/4) | **+0.000074** (+0.000008, 4/4) | +0.000025 (−0.000015, 3/4) |
+| R1r | 672/0/1344 | **+0.000116** (+0.000050, 4/4) | **+0.000115** (+0.000049, 4/4) | **+0.000322** (+0.000242, 4/4) |
+| R2r | 168/0/168 | **+0.008194** (+0.004010, 6/8) | +0.000530 (−0.003278, 4/8) | −0.000004 (−0.000040, 5/8) |
+| R2r | 672/0/1344 | **+0.015984** (+0.013369, 8/8) | **−0.008033** (−0.011608, **0/8**) | −0.000017 (−0.000055, 5/8) |
+
+**In R1r the corrected MPC beats every static posture, and the advantage generalises**
+across ret_excel, the uncensored ledger and (against the gate incumbent) the tail. It
+also costs less: κ 450,898 against the incumbent's 469,333.
+
+**In R2r it does not generalise, and the reason matters.** The MPC *optimises*
+`ret_excel`, so winning that column is close to tautological. On the uncensored ledger it
+**loses to 672/0/1344 on 0 of 8 tapes** (−0.008, LCB −0.0116) and to DDMRP by −0.0127.
+The tail is flat to slightly negative. The advantage is specific to the metric being
+optimised and reverses on the metric that is not.
+
+This is precisely what the panel exists to catch, and it is the reason a single-metric
+adjudication of the MPC arm would have been wrong in one of the two families.
+
+Under `R_cobb_douglas` the MPC ranks **second in both families**, behind only
+`greedy_pi_best_found_v2` — the clairvoyant oracle, which is a ceiling and not a
+deployable policy.
+
+## Corrections adopted from review
+
+1. "S3 buys zero service" → **"S3 does not improve the aggregate service-quantity
+   endpoints."** `tau` does change, and `fill_rate_on_time` is identically 0 in every
+   cell — itself a defect worth a separate look, since a metric that is constant across
+   18 cells is measuring nothing.
+2. 49,000 is an **exploratory cap**, not a validated operational threshold. The defensible
+   statement is "no cell met the exploratory backorder cap of 49,000", not "nothing is
+   deployable".
+3. **`agreement_is_floor_robust` was a real bug** — it compared the *count* of distinct
+   winners, not the winners. Both families happened to give the right answer. Now compares
+   the exact winner vector.
+4. "DDMRP is exactly static in R1r" holds **only at S1**; S2 and S3 show three postures
+   and two changes.
+5. The Pareto front is specifically **(κ↓, fill↑, lost↓)** and is renamed
+   `pareto_front_kappa_fill_lost_only`, with excluded axes listed.
+6. Per-tape rows are now persisted in both the panel and the fold; the intervals above
+   are computed from them.
+7. Five postures, not 216 — the buffers×shifts crossing is exploratory and establishes no
+   optimum of the expanded contract.
