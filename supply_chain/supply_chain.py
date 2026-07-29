@@ -230,6 +230,7 @@ class MFSCSimulation:
         risk_impact_multipliers_by_id: Optional[dict[str, float]] = None,
         risk_event_tape: Optional[Iterable[dict[str, Any]]] = None,
         strict_exogenous_crn: bool = False,
+        assembly_batch_release_mode: str = "threshold_immediate",
         risk_recovery_window_hours: float = 0.0,
         risk_recovery_release_rations: float = 0.0,
         risk_recovery_boost_downstream: bool = True,
@@ -317,6 +318,14 @@ class MFSCSimulation:
             raise ValueError(
                 "Invalid seed_stream_mode="
                 f"{seed_stream_mode!r}. Expected one of: {valid}."
+            )
+        if assembly_batch_release_mode not in {
+            "threshold_immediate",
+            "table_6_20_cadence",
+        }:
+            raise ValueError(
+                "assembly_batch_release_mode must be 'threshold_immediate' "
+                "or 'table_6_20_cadence'."
             )
         if procurement_contract_mode not in PROCUREMENT_CONTRACT_MODE_OPTIONS:
             valid = ", ".join(PROCUREMENT_CONTRACT_MODE_OPTIONS)
@@ -427,6 +436,8 @@ class MFSCSimulation:
         self.seed = seed
         self.seed_stream_mode = seed_stream_mode
         self.strict_exogenous_crn = seed_stream_mode == "split"
+        self.assembly_batch_release_mode = str(assembly_batch_release_mode)
+        self._next_assembly_batch_release_at = 0.0
         if self.strict_exogenous_crn:
             general_ss, demand_ss, risk_ss, regime_ss = np.random.SeedSequence(seed).spawn(4)
             self.rng = np.random.default_rng(general_ss)
@@ -651,6 +662,7 @@ class MFSCSimulation:
             capacity = CAPACITY_BY_SHIFTS[shifts]
             self.params["op3_q"] = capacity["op3_q"]
             self.params["batch_size"] = capacity["op7_q"]
+            self.params["op7_rop"] = capacity["op7_rop"]
 
         # =================================================================
         # MATERIAL BUFFERS
@@ -3555,8 +3567,24 @@ class MFSCSimulation:
                 else:
                     # Historical thesis lane: only complete batches leave Op7.
                     while self._pending_batch >= batch_size:
+                        if (
+                            self.assembly_batch_release_mode
+                            == "table_6_20_cadence"
+                            and float(self.env.now) + 1e-9
+                            < float(self._next_assembly_batch_release_at)
+                        ):
+                            break
                         self._pending_batch -= batch_size
                         yield from self._stage_finished_rations(batch_size)
+                        if (
+                            self.assembly_batch_release_mode
+                            == "table_6_20_cadence"
+                        ):
+                            self._next_assembly_batch_release_at = (
+                                float(self.env.now)
+                                + float(self.params["op7_rop"])
+                            )
+                            break
 
                 if (
                     self.warmup_trigger == "production"
@@ -3665,8 +3693,23 @@ class MFSCSimulation:
                 yield from self._stage_finished_rations(op7_qty)
             else:
                 while self._pending_batch >= batch_size:
+                    if (
+                        self.assembly_batch_release_mode
+                        == "table_6_20_cadence"
+                        and float(self.env.now) + 1e-9
+                        < float(self._next_assembly_batch_release_at)
+                    ):
+                        break
                     self._pending_batch -= batch_size
                     yield from self._stage_finished_rations(batch_size)
+                    if (
+                        self.assembly_batch_release_mode
+                        == "table_6_20_cadence"
+                    ):
+                        self._next_assembly_batch_release_at = (
+                            float(self.env.now) + float(self.params["op7_rop"])
+                        )
+                        break
 
             if (
                 self.warmup_trigger == "production"

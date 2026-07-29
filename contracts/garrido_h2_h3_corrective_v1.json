@@ -1,0 +1,136 @@
+{
+  "contract_id": "garrido_h2_h3_corrective_v1",
+  "status": "FROZEN_DEVELOPMENT_AUTHORIZED_BY_USER_2026-07-29",
+  "purpose": "Re-execute Garrido H2/H3 with periodic buffers, common evaluation time, explicit Table 6.20 cadence, and tape-level inference.",
+  "scientific_scope": {
+    "learners_authorized": false,
+    "confirmation_claim_authorized": false,
+    "families": [
+      "R1r",
+      "R2r",
+      "R3"
+    ],
+    "configurations": "Cf1-Cf90",
+    "paired_units": [
+      "Cf_b",
+      "Cf_b+30",
+      "Cf_b+60"
+    ]
+  },
+  "sources": {
+    "thesis_file": "WRAP_Theses_Garrido_Rios_2017.pdf",
+    "thesis_sha256": "de9192d233b0c728ece6156b754fc64543146868121358b8a95c73b3edaa55cf",
+    "raw_data_1_file": "Raw_data1+Re.xlsx",
+    "raw_data_1_sha256": "30b88c9b9fe68ef527dbfcc70d8e653ea7bd152ab891b3fc0ecf53cb6f043486",
+    "raw_data_2_file": "Raw_data2+Re.xlsx",
+    "raw_data_2_sha256": "4bd462771fefff16fc5666a851256b3780198d474832dec1423c0b6f94be86b0"
+  },
+  "execution": {
+    "hours_per_year": 8064,
+    "common_evaluation_start_hours": 2016,
+    "strict_exogenous_crn": true,
+    "periodic_release_mode": "start_to_start",
+    "assembly_batch_release_mode": "table_6_20_cadence",
+    "raw_material_flow_mode": "bom_total_units",
+    "raw_material_order_up_to_multiplier": 1.0,
+    "downstream_q_source": "figure_6_2",
+    "buffer_rule": "initial target plus order-up-to replenishment every buffer_hours",
+    "tape_roots": [
+      9420000,
+      9430000,
+      9440000,
+      9450000,
+      9460000,
+      9470000,
+      9480000,
+      9490000,
+      9500000,
+      9510000,
+      9520000,
+      9530000
+    ],
+    "seed_rule": "seed=tape_root+base_index",
+    "source_seed_validation": true
+  },
+  "source_validation": {
+    "quarantined_configurations": {
+      "1": "workbook horizon approximately 20 years, published design says 10",
+      "2": "workbook horizon approximately 20 years, published design says 10",
+      "5": "workbook horizon approximately 8.94 years, published design says 10"
+    },
+    "eligible_configurations": [
+      3,
+      4,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20
+    ]
+  },
+  "mandatory_metrics": [
+    "ret_excel",
+    "ret_excel_full_ledger",
+    "ret_thesis",
+    "ret_continuous",
+    "generated_orders",
+    "scored_rows",
+    "omitted_rows",
+    "served_orders",
+    "unresolved_orders",
+    "lost_orders",
+    "flow_fill_rate",
+    "delivered_rations",
+    "strategic_raw_injected",
+    "strategic_rations_injected"
+  ],
+  "trace_gates": {
+    "op3_quantity_exact": true,
+    "op3_start_to_start_rop_hours": 168,
+    "op7_batch_quantity_by_shift": {
+      "1": 5000,
+      "2": 5000,
+      "3": 7000
+    },
+    "op7_rop_hours_by_shift": {
+      "1": 48,
+      "2": 24,
+      "3": 24
+    },
+    "neutral_shift_pairs_must_be_identical": true,
+    "periodic_buffer_must_inject_after_time_zero": true
+  },
+  "inference": {
+    "unit": "paired tape",
+    "cluster": "tape_root",
+    "primary_estimand": "mean paired delta in ret_excel across base configurations within family and tape",
+    "mandatory_secondary_endpoints": [
+      "ret_excel_full_ledger",
+      "flow_fill_rate",
+      "unresolved_orders",
+      "delivered_rations"
+    ],
+    "confidence_interval": "exact t interval over 12 tape-level family means plus sign count",
+    "orders_as_independent_replicates": false,
+    "directional_claim_requires": "positive lower 95% confidence bound",
+    "null_in_one_family_does_not_cancel_other_families": true
+  },
+  "stop_rules": [
+    "STOP_INSTRUMENT_SOURCE_HASH",
+    "STOP_INSTRUMENT_TRACE_TABLE_6_20",
+    "STOP_INSTRUMENT_COMMON_EVALUATION",
+    "STOP_INSTRUMENT_PERIODIC_BUFFER",
+    "STOP_INSTRUMENT_PAIRING",
+    "STOP_INSTRUMENT_INCOMPLETE_MATRIX"
+  ]
+}
