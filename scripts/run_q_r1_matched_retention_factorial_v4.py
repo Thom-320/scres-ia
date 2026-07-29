@@ -68,6 +68,10 @@ STRUCTURED_AMENDMENT_FREEZE_PATH = (
 FULL_PHASE_AMENDMENT_PATH = (
     ROOT / "contracts/q_r1_factorial_v4_full_phase_runner_amendment_v1.json"
 )
+FULL_PHASE_FREEZE_PATH = (
+    ROOT
+    / "contracts/q_r1_factorial_v4_full_phase_runner_amendment_v1_freeze_receipt.json"
+)
 RHO = 0.90
 SHARE = 0.90
 KAPPAS = (0.50, 0.75, 0.90)
@@ -140,6 +144,29 @@ def validate_full_screen_selection(
     if len(selection.get("advanced_config_ids", [])) != expected_advances:
         raise RuntimeError("screen selection advance count mismatch")
     return selection
+
+
+def load_full_phase_authority() -> tuple[dict[str, Any], dict[str, Any]]:
+    """Verify the operational amendment before any full result is opened."""
+    if not FULL_PHASE_AMENDMENT_PATH.is_file() or not FULL_PHASE_FREEZE_PATH.is_file():
+        raise RuntimeError("full phase amendment is not frozen")
+    amendment = json.loads(FULL_PHASE_AMENDMENT_PATH.read_text())
+    receipt = json.loads(FULL_PHASE_FREEZE_PATH.read_text())
+    if amendment.get("status") != "DRAFT_PROSPECTIVE_BEFORE_FULL_RESULTS":
+        raise RuntimeError("full phase amendment content marker mismatch")
+    if receipt.get("status") != "FROZEN_BEFORE_FULL_RESULTS":
+        raise RuntimeError("full phase freeze status mismatch")
+    if receipt.get("amendment_sha256") != sha256(FULL_PHASE_AMENDMENT_PATH):
+        raise RuntimeError("full phase amendment hash mismatch")
+    if receipt.get("base_contract_sha256") != sha256(CONTRACT_PATH):
+        raise RuntimeError("full phase base-contract hash mismatch")
+    if receipt.get("worker_runner_sha256") != sha256(Path(__file__)):
+        raise RuntimeError("full phase worker runner hash mismatch")
+    if receipt.get("fresh_full_results_opened") is not False:
+        raise RuntimeError("full phase freeze did not precede full results")
+    if receipt.get("confirmation_roots_opened") is not False:
+        raise RuntimeError("full phase freeze does not keep confirmation sealed")
+    return amendment, receipt
 
 
 def validate_shared_static_bar(
@@ -825,6 +852,7 @@ def main() -> int:
             if args.optimizer_seed not in allowed:
                 raise ValueError("optimizer seed is outside the frozen contract")
             if args.development_phase == "full":
+                load_full_phase_authority()
                 validate_full_screen_selection(
                     args.screen_selection,
                     contract=contract,

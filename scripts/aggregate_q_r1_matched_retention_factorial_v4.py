@@ -16,6 +16,10 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
 CONTRACT_PATH = ROOT / "contracts/q_r1_matched_retention_factorial_v4.json"
+FULL_PHASE_FREEZE_PATH = (
+    ROOT
+    / "contracts/q_r1_factorial_v4_full_phase_runner_amendment_v1_freeze_receipt.json"
+)
 
 
 def sha256(path: Path) -> str:
@@ -145,6 +149,11 @@ def main() -> int:
             )
         )
     else:
+        full_freeze = json.loads(FULL_PHASE_FREEZE_PATH.read_text())
+        if full_freeze.get("status") != "FROZEN_BEFORE_FULL_RESULTS":
+            raise ValueError("full phase is not frozen")
+        if full_freeze.get("aggregator_sha256") != sha256(Path(__file__)):
+            raise ValueError("full phase aggregator hash mismatch")
         if args.screen_selection is None or not args.screen_selection.is_file():
             raise ValueError("full aggregation requires the screen selection")
         screen = json.loads(args.screen_selection.read_text())

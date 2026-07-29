@@ -9,6 +9,7 @@ import pytest
 from scripts.aggregate_q_r1_matched_retention_factorial_v4 import load_workers
 from scripts.run_q_r1_matched_retention_factorial_v4 import (
     development_timesteps,
+    load_full_phase_authority,
     validate_full_screen_selection,
 )
 
@@ -39,6 +40,16 @@ def test_full_phase_amendment_does_not_change_scientific_settings() -> None:
         range(0, 240_001, 24_000)
     )
     assert not any(amendment["scientific_invariants"].values())
+
+
+def test_full_phase_authority_is_frozen_before_results() -> None:
+    amendment, receipt = load_full_phase_authority()
+    assert receipt["authorized_next_step"] == (
+        "RUN_FROZEN_FULL_2X5_DEVELOPMENT_MATRIX"
+    )
+    assert receipt["fresh_full_results_opened"] is False
+    assert receipt["confirmation_roots_opened"] is False
+    assert amendment["screen_selection"]["advanced_config_ids"] == ["s07", "s06"]
 
 
 def test_full_worker_requires_a_selected_configuration(tmp_path: Path) -> None:
