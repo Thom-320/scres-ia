@@ -1,0 +1,188 @@
+{
+  "schema_version": "program_o_fixed_clock_physical_hobs_validation_v1",
+  "status": "FROZEN_BEFORE_SEALED_VALIDATION__EXECUTION_FORBIDDEN_PENDING_PREFLIGHT_VERDICT",
+  "scientific_scope": "Prospective validation of classical observable headroom in a disclosed dedicated-shuttle extension of Program O. This contract does not establish neural value or authorize Paper 3.",
+  "parent_evidence": {
+    "full_des_h_pi_safe": 0.15151378920653932,
+    "full_des_h_pi_simultaneous_lcb95": 0.1156159088651399,
+    "dual_resource_diagnostic_sha256": "e48606e79c4fcbcc7a1f2955476057d2cd9432b95a0bac7337f38f5b44cba535",
+    "dual_resource_status": "DIAGNOSTIC_STABLE_SIGNAL_FIXED_CLOCK_ONLY",
+    "claim": "burned-tape development evidence only"
+  },
+  "intervention_ledger": {
+    "thesis_native": [
+      "Op9, Op10 and Op12 have daily freight rate ROP=24h",
+      "Op10 and Op12 each have 24h processing time",
+      "distribution-vehicle availability and route planning are taken for granted",
+      "all orders traverse the physical Op10-Op12 tandem path before completion"
+    ],
+    "researcher_introduced": [
+      "one dedicated downstream mission is committed at every daily clock slot whether loaded or empty",
+      "each mission reserves 24 vehicle-and-crew hours at Op10 plus 24 at Op12",
+      "each mission reserves capacity for 2600 rations whether used or idle",
+      "loaded payload is utilization of the reserved mission, not an additional purchased resource"
+    ],
+    "not_claimed": [
+      "the thesis explicitly states empty running",
+      "the real MFSC pays a flat fixed freight price",
+      "the two synthetic product classes numerically calibrate the 21 real ration types"
+    ],
+    "falsification_branch": "Under loaded-only or pay-per-use accounting, Program O fails the resource gate and remains a boundary result."
+  },
+  "physics": {
+    "downstream_freight_physics_mode": "fixed_clock_physical_v1",
+    "daily_missions": 112,
+    "mission_legs": ["Op10", "Op12"],
+    "hours_per_leg": 24,
+    "scheduled_vehicle_hours": 5376,
+    "scheduled_crew_hours": 5376,
+    "payload_capacity_per_mission": 2600,
+    "scheduled_payload_capacity": 291200,
+    "loaded_plus_empty_equals_scheduled": true,
+    "gross_production_quantity": 120000,
+    "setup_hours": 0,
+    "substitution_fraction": 0,
+    "bom_and_processing_times_equal": true,
+    "risks_enabled": false
+  },
+  "preflight_gates": {
+    "flags_off_loaded_only_identity_bit_exact": true,
+    "fixed_clock_outcome_parity_with_parent_on_burned_fixtures": true,
+    "all_calendars_receive_identical_scheduled_missions_hours_crew_and_payload_capacity": true,
+    "empty_missions_occupy_real_op10_and_op12_resources": true,
+    "product_and_aggregate_mass_residual_max": 1e-8,
+    "fungible_null_exact": true,
+    "same_time_and_action_trajectory_tests_required": true,
+    "failure_status": "STOP_PROGRAM_O_FIXED_CLOCK_PHYSICAL_PREFLIGHT"
+  },
+  "primary_policy": {
+    "config_id": "belief_mpc__3",
+    "selection_reason": "shorter three-week horizon and parsimony among the two development-passing belief-MPC configurations",
+    "source": "supply_chain/program_o_state_rich.py",
+    "parameters_and_tie_breaks_frozen": true,
+    "observations": [
+      "strictly prior product-request labels through the frozen belief",
+      "Op9 inventory position by product",
+      "backlog quantity count and maximum age by product",
+      "committed and locked product targets",
+      "in-flight quantity by product",
+      "week index and remaining decisions"
+    ],
+    "future_tape_information_forbidden": true
+  },
+  "sensitivity_policy": "belief_mpc__4",
+  "connected_cells": [
+    "rho75_share90",
+    "rho90_share75",
+    "rho90_share90"
+  ],
+  "open_loop_comparator": {
+    "calendars": 65536,
+    "definition": "all base-4 length-eight calendars under centered_minority_v1",
+    "selected_on": "the existing burned development block only",
+    "frozen_before_validation": true,
+    "bootstrap_rule": "reselect the strongest open-loop calendar inside every paired bootstrap resample"
+  },
+  "classical_comparators_reported": [
+    "base_stock__1",
+    "base_stock__2",
+    "max_pressure__0",
+    "max_pressure__5000",
+    "min_cost_flow__1",
+    "min_cost_flow__2",
+    "belief_mpc__4",
+    "belief_dp__3",
+    "belief_dp__4"
+  ],
+  "placebos": {
+    "total_information": [
+      "no_state",
+      "stale_t2",
+      "swapped_state",
+      "cross_tape_shift17"
+    ],
+    "operational_state_given_current_belief": [
+      "belief_only",
+      "stale_operational_current_belief",
+      "swapped_operational_current_belief"
+    ],
+    "belief_given_current_operational_state": [
+      "operational_only",
+      "current_operational_stale_belief"
+    ]
+  },
+  "validation_tapes": {
+    "range": [7420049, 7420096],
+    "status": "SEALED_NOT_ACCESSED",
+    "open_once": true,
+    "opening_forbidden_until": [
+      "immutable implementation commit exists",
+      "contract and source hashes are recorded",
+      "preflight verdict passes",
+      "watcher is ready before producer",
+      "exclusive seed claim succeeds"
+    ]
+  },
+  "primary_gate": {
+    "metric": "ret_excel_request_snapshot_v2 via canonical repository aggregator",
+    "mean_delta_lcb95_minimum": 0.01,
+    "favorable_tapes_minimum": 34,
+    "required_in_each_connected_cell": true,
+    "paired_bootstrap_resamples": 10000,
+    "simultaneous_familywise_one_sided_coverage": 0.95,
+    "all_nine_real_minus_placebo_lcb95_strictly_positive": true,
+    "resource_equality": [
+      "gross production quantity",
+      "scheduled downstream missions",
+      "scheduled downstream vehicle-hours",
+      "scheduled downstream crew-hours",
+      "scheduled payload capacity",
+      "setup hours"
+    ],
+    "guardrails_noninferior": [
+      "quantity-weighted full ReT",
+      "lost orders and lost quantity",
+      "omitted and unresolved orders and quantity",
+      "remaining backlog and maximum age",
+      "ReT CVaR10",
+      "worst-product fill",
+      "service-loss AUC"
+    ],
+    "action_certificate": [
+      "complete sequence per tape",
+      "minimum eight unique sequences",
+      "modal fraction at most 0.50",
+      "at least two varying weeks",
+      "at least two actions with ten-percent support",
+      "modal fixed and phase-only replacements strictly underperform",
+      "state counterfactuals pass"
+    ]
+  },
+  "secondary_resource_estimand": {
+    "name": "pay_per_use",
+    "report": true,
+    "promotion_gate": false,
+    "claim_limit": "If actual loaded trips, payload or loaded vehicle-hours are treated as purchased resources, the development result fails and no pay-per-use claim is allowed."
+  },
+  "terminal_rules": {
+    "pass": "PASS_PROGRAM_O_CLASSICAL_HOBS_FIXED_CLOCK_PHYSICAL_VALIDATION",
+    "fail": "STOP_PROGRAM_O_CLASSICAL_HOBS_VALIDATION",
+    "no_post_failure_rescue": [
+      "no new controller",
+      "no hyperparameter change",
+      "no cell removal",
+      "no setup or BOM change",
+      "no risk addition",
+      "no inventory addition",
+      "no metric substitution"
+    ]
+  },
+  "claim_boundary": {
+    "h_obs_confirmed": false,
+    "learned_advantage_confirmed": false,
+    "learner_authorized": false,
+    "paper2_confirmed": false,
+    "paper3_authorized": false,
+    "cobb_douglas": "outside contract"
+  }
+}

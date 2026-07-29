@@ -1,0 +1,44 @@
+{
+  "schema_version": "program_s_morris_design_freeze_v1_1",
+  "date_frozen": "2026-07-17",
+  "status": "FROZEN_AFTER_GOVERNANCE_AMENDMENT_BEFORE_7510001",
+  "supersedes_unexecuted_design": "program_s_morris_design_freeze_v1",
+  "coordinate_scale": "log2 for positive physical multipliers; categorical product cell analyzed as a block",
+  "levels": 8,
+  "candidate_trajectories_per_mask_stratum": 200,
+  "selected_optimized_trajectories_per_mask_stratum": 10,
+  "design_rng_seed": 20260717,
+  "optimization": "greedy maximin trajectory distance with deterministic tie-breaking",
+  "factors": {
+    "uniform_frequency": [1.0, 2.0, 4.0],
+    "duration_impact": [1.0, 1.5, 2.0],
+    "r14_defect_probability": [1.0, 1.5, 2.0],
+    "r24_frequency": [1.0, 2.0, 4.0],
+    "r24_quantity": [1.0, 1.5, 2.0]
+  },
+  "product_cells": {
+    "rho75_share90": {"rho": 0.75, "share": 0.90},
+    "rho90_share75": {"rho": 0.90, "share": 0.75},
+    "rho90_share90": {"rho": 0.90, "share": 0.90}
+  },
+  "native": {
+    "status": "PRIMARY_ELIGIBLE_AFTER_PREOPEN",
+    "couplings": ["independent"],
+    "alarm_forbidden": true,
+    "seed_block": [7510001, 7510012]
+  },
+  "wartime": {
+    "status": "HYPOTHESIS_GENERATING_NO_SEEDS_ASSIGNED",
+    "couplings": ["disruption_leads_r24_72h", "coincident", "r24_leads_disruption_72h"],
+    "automatic_fallback_forbidden": true,
+    "seed_block": null
+  },
+  "risk_controls": {
+    "R23": {"frequency": 1.0, "impact": 1.0, "selectable": false, "role": "negative_control"}
+  },
+  "primary_outputs": ["H_PI_safe", "classical_H_obs"],
+  "native_early_exit": {"max_lcb95_H_PI_safe_min": 0.01, "verdict_below": "STOP_S1_NO_CONNECTED_PHYSICAL_HEADROOM"},
+  "no_isolated_point_promotion": true,
+  "capacity_rule": "Capacity is fixed at 1.0 inside Morris. 0.9 and 1.1 are discrete post-selection stability anchors and cannot rescue failure at 1.0.",
+  "scientific_seed_block_opened": false
+}

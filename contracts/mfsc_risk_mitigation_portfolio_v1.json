@@ -1,0 +1,117 @@
+{
+  "contract_id": "mfsc_risk_mitigation_portfolio_v1",
+  "status": "PREREGISTERED_BEFORE_PROGRAM_F_TAPES",
+  "parent_terminal_results_unchanged": [
+    "program-e-stop-2026-07-12",
+    "dra2b-stop-2026-07-12"
+  ],
+  "scope": "researcher-imposed Garrido-authorized extension; not an exact recovery of the original Simulink model",
+  "question": "Can an observable policy reallocate a fixed readiness budget among manufacturing maintenance, transport protection, and finite reserve response to beat every constant allocation under persistent heterogeneous risk contexts?",
+  "actions": {
+    "tokens_per_week": 2,
+    "allocations_m_t_r": [[2,0,0],[0,2,0],[0,0,2],[1,1,0],[1,0,1],[0,1,1]],
+    "decision_epoch_hours": 168,
+    "activation_delay_hours": 168,
+    "minimum_dwell_hours": 168,
+    "budget_equal_by_construction": true
+  },
+  "contexts": {
+    "latent_states": ["equipment_pressure", "interdiction_campaign", "mission_surge"],
+    "dwell_weeks_distribution": {"dist": "discrete_uniform", "low": 4, "high": 8},
+    "dominant_risks": {
+      "equipment_pressure": ["R11"],
+      "interdiction_campaign": ["R22", "R23"],
+      "mission_surge": ["R24"]
+    },
+    "background_risks": ["R12", "R13", "R14"],
+    "ood_only": ["R21", "R3"],
+    "latent_state_observable": false
+  },
+  "signals": {
+    "lead_hours": 168,
+    "classification_accuracy": 0.75,
+    "scores": ["equipment_condition_score", "route_threat_score", "mission_tempo_score"],
+    "event_keyed_and_policy_independent": true,
+    "future_event_or_duration_observable": false
+  },
+  "causal_separation": {
+    "threat_occurrence_and_base_damage_are_exogenous": true,
+    "policy_may_change_realized_damage_not_threat_tape": true,
+    "risk_and_demand_hashes_must_match_between_actions": true
+  },
+  "manufacturing_readiness": {
+    "operations": [5,6,7],
+    "condition_range": [0.0,1.0],
+    "weekly_wear_increment_equipment_context": 0.12,
+    "weekly_wear_increment_other_contexts": 0.05,
+    "condition_reduction_per_token": 0.20,
+    "planned_downtime_hours_by_tokens": [0,12,24],
+    "r11_base_duration_multiplier_from_condition": "1 + condition",
+    "r11_protection_factor_by_tokens": [1.0,0.75,0.50],
+    "condition_update_precedes_next_week_damage_only": true
+  },
+  "transport_readiness": {
+    "risks": ["R22","R23"],
+    "realized_duration_factor_by_tokens": [1.0,0.65,0.40],
+    "minimum_realized_duration_hours": 1.0,
+    "does_not_delete_or_reschedule_threats": true
+  },
+  "reserve_readiness": {
+    "capacity_rations": 10000,
+    "initial_stock_rations": 10000,
+    "max_issue_per_r24_by_tokens": [0,2500,5000],
+    "replenishment_source": "op9_supply_battalion_stock",
+    "replenishment_lead_hours": 168,
+    "issue_delay_hours": 24,
+    "route_operations": [10,11,12],
+    "mass_conservation_required": true,
+    "unissued_reserve_remains_costed": true
+  },
+  "data": {
+    "calibration": {"n_tapes": 60, "seed_start": 940001, "per_dominant_context": 20},
+    "observable_holdout": {"n_tapes": 40, "seed_start": 950001},
+    "virgin_learner_test": {"n_tapes": 60, "seed_start": 960001},
+    "program_e_or_dra2b_tapes_reused": false
+  },
+  "prelearner_experiment": {
+    "states_per_calibration_tape": 8,
+    "state_categories": ["pre_change","early_context","sustained_context","recovery","high_backlog","low_inventory","mitigation_mismatch","balanced"],
+    "single_action_horizon_weeks": [4,8],
+    "sequence_subset_states": 60,
+    "sequence_decisions": 3,
+    "sequence_count_per_state": 216,
+    "static_allocations": 6,
+    "tree_max_depth": 3,
+    "cross_fit_group": "tape"
+  },
+  "promotion": {
+    "all_three_levers_physically_live": true,
+    "min_actions_with_optimal_support": 2,
+    "optimal_support_fraction_min": 0.15,
+    "single_action_optimal_fraction_max": 0.85,
+    "oracle_ret_delta_min": 0.01,
+    "oracle_ret_ci95_lower_min": 0.0,
+    "service_loss_reduction_min": 0.05,
+    "observable_policy_oracle_conversion_min": 0.50,
+    "observable_policy_beats_best_constant_on_holdout": true,
+    "horizon_direction_stable": true,
+    "lost_orders_nonincrease": true,
+    "tail_noninferiority": true,
+    "resources_equal_by_tokens": true
+  },
+  "learner_authorization": {
+    "allowed_before_all_promotion_gates_pass": false,
+    "first_methods_if_promoted": ["constrained_lookahead","MaskablePPO"],
+    "recurrent_policy_requires_observable_memory_ablation": true,
+    "retained_learning_requires_confirmed_adaptive_value": true
+  },
+  "forbidden_rescues": [
+    "increase risk after seeing a failed gate",
+    "change efficacy after reading calibration endpoints",
+    "lower service MCID post hoc",
+    "use latent context or exact future warning",
+    "train PPO before prelearner promotion",
+    "reuse Program E validation or virgin tapes",
+    "claim organizational learning from simulated policy performance"
+  ]
+}

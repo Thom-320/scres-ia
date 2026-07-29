@@ -1,12 +1,27 @@
 \hypertarget{5-discussion}{%
-\section{5. Discussion}\label{5-discussion}}
+\section{Discussion}\label{5-discussion}}
+
+\hypertarget{50-terminal-interpretation}{%
+\subsection{Terminal interpretation: comparator scope, not adaptive superiority}\label{50-terminal-interpretation}}
+
+The same-contract challenge in Section~\ref{44b-same-contract-challenge}
+governs interpretation of all earlier positive Track B comparisons. The
+147-cell frontier and local 3$\times$3 bound are valid restricted-family
+benchmarks, but they do not span the learner's full decision contract. Once a
+constant policy is calibrated over that full contract, its held-out Excel ReT
+exceeds the ten-checkpoint PPO mean with a two-way confidence interval wholly
+below zero for PPO minus static. We therefore make no claim that PPO is
+adaptively superior in Track B. The scientific result is an audit result:
+apparently robust learning gains can survive seed expansion, crossed tapes,
+operational metrics, and privileged-information controls yet still disappear
+when comparator decision rights are aligned with learner decision rights.
 
 \hypertarget{51-interpreting-track-a}{%
-\subsection{5.1 Interpreting the Track A negative result}\label{51-interpreting-track-a}}
+\subsection{Interpreting the Track A negative result}\label{51-interpreting-track-a}}
 
 The Track A result should be read as evidence of a structural limitation
 rather than evidence that RL is ineffective for supply chains in general.
-Under the thesis-faithful contract, the static S2 policy already operates
+Under the thesis-grounded contract, the static S2 policy already operates
 near the practical ceiling imposed by downstream distribution capacity:
 Op10--Op12 transport throughput of approximately 2,500 rations per day
 roughly matches demand, so additional upstream production capacity from S3
@@ -21,108 +36,161 @@ and richer observations (v2--v6) do not overturn this structural limitation
 because the binding constraint lies outside the controllable interface.
 
 \hypertarget{52-what-track-b-changes}{%
-\subsection{5.2 What Track B changes}\label{52-what-track-b-changes}}
+\subsection{What Track B changes}\label{52-what-track-b-changes}}
 
 Track B changes the controllable interface, not the underlying DES physics.
 By adding Op10 and Op12 dispatch multipliers to the action space, the agent
 gains leverage over the downstream bottleneck that constrains Track A. The
-learned policy exploits this by running predominantly at S1 (77\% of
-steps)---the lowest-cost assembly configuration---while modulating downstream
-dispatch to maintain perfect fill. This shift mix is a strategy that no
-static policy can replicate: static S3($d{=}2.0$) achieves near-perfect fill
-but at permanently elevated assembly cost, while PPO matches or exceeds it
-with 57\% fewer assembly hours.
+learned policy achieves higher Excel ReT, service continuity, and
+recovery-tail metrics than the best of a restricted dense downstream-dispatch grid of static comparators,
+but it is not a strict cost win on the shift dimension alone: its
+shift-utilization cost index is not statistically distinguishable from
+the best comparator selected by ReT at zero dispatch charge. We report
+the result as Pareto non-dominated on the ReT--cost--tail--flow frontier. The
+dispatch-inclusive cost sensitivity (Section~4.3) sharpens the managerial
+reading: because the learned policy expedites selectively rather than
+holding aggressive dispatch permanently, PPO becomes cheaper in total than
+the best static once dispatch expediting carries a positive charge at the
+tested threshold --- the policy buys recovery with \emph{targeted}, not free,
+transport flexibility.
 
-The causal ablation (Section 4.4) strengthens this interpretation at
-production scale. With 500,000 timesteps and 5 seeds, the
-\emph{shift\_only} condition reproduces Track A's failure (fill = 0.953,
-below the best static), while \emph{downstream\_only} reproduces Track B's
-success (fill = 1.000). The \emph{joint} configuration adds cost efficiency
-but not fill improvement. This three-way decomposition provides causal
-evidence that downstream dispatch---not shifts, not observation enrichment,
-not risk profile changes---is the materially responsible dimension.
+The identified factorial (Section~4.4) refines this restricted-family
+interpretation, but the terminal same-contract challenge supersedes it as a
+superiority gate. At matched 5-seed, 60{,}000-timestep scale on fresh
+held-out tapes against one common comparator, the full \emph{joint}
+contract gains $+0.000517$ over the prespecified static, the
+\emph{upstream\_shift} arm (no dispatch access) retains $+0.000425$ of
+that gain, and the nested contrast identifies the dispatch-access
+increment at $+0.000092$ (two-way CI95 excluding zero, all seeds
+positive), while \emph{dispatch-only} control does not beat the dense
+frontier that already optimizes exactly that subspace. This decomposition
+shows why the original comparison was underpowered: most apparent value lay
+in dimensions that the static family was not allowed to move. The anchored-
+arm rerun retains a small within-learner dispatch increment, but the full-
+contract static reversal prevents interpreting that increment as bottleneck
+value over strong static control.
 
 \hypertarget{53-action-space-alignment}{%
-\subsection{5.3 Action-space alignment as a design principle}\label{53-action-space-alignment}}
+\subsection{Action-space alignment as a design principle}\label{53-action-space-alignment}}
 
 The dual-track result connects three literatures that have not previously
 been linked empirically: the Theory of Constraints \cite{goldratt1984goal},
 which identifies the binding constraint as the lever that determines system
-throughput; RL agent design, which determines what the agent can control; and
-action-space architecture, which determines how decisions are represented.
-Our benchmark demonstrates a concrete instance of this connection: when the
+throughput; organizational-learning accounts of adaptation and forgetting
+\cite{levitt1988organizational}; RL agent design, which determines what the
+agent can control; and action-space architecture, which determines how
+decisions are represented.
+Our benchmark demonstrates a cautionary instance of this connection: when the
 action space does not cover the active constraint (Track A), better
-algorithms and rewards cannot compensate; when it does (Track B), a standard
-PPO+MLP agent produces decisive advantage. The reward sweep (Section 4.5)
-reinforces this: 5 of 7 reward formulations converge to the same strong
-policy, whereas in Track A no reward formulation succeeds. This suggests a
-practical design principle: \emph{before investing in architectural novelty
-or reward engineering, verify that the agent's controllable interface reaches
-the binding operational bottleneck.}
+algorithms and rewards do not convert the measured headroom; when downstream
+dispatch authority is exposed (Track B), a standard PPO+MLP agent produces a
+decisive advantage only against a comparator family with narrower decision
+rights; the advantage disappears under the same-contract challenge. The reward
+sweep (Section~4.6) reinforces this: all 18 screened reward/observation cells
+show positive Excel ReT deltas, whereas in Track A no reward formulation
+succeeds. This suggests a practical design principle: \emph{before attributing
+a gain to learning, grant the non-learning benchmark the same feasible
+decision rights and separate the value of the contract from the value of
+adaptation.}
 
 \hypertarget{54-positioning}{%
-\subsection{5.4 Positioning relative to the AI--SCRES literature}\label{54-positioning}}
+\subsection{Positioning relative to the AI--SCRES literature}\label{54-positioning}}
 
 Recent work at the intersection of AI and supply chain resilience spans
-several paradigms. Rajagopal and Sivasakthivel (2024) use weighted
+several paradigms. Rajagopal and Sivasakthivel~\cite{rajagopal2024} use weighted
 feed-forward neural networks for resilience \emph{strategy selection}---a
 classification task fundamentally different from our online adaptive control.
-Rezki and Mansouri (2024) apply neural networks to \emph{predict} supplier
-risk, while Ordibazar et al.\ (2022) use counterfactual explanations for
+Rezki and Mansouri~\cite{rezki2024} apply neural networks to \emph{predict} supplier
+risk, while Ordibazar et al.~\cite{ordibazar2022} use counterfactual explanations for
 risk \emph{recommendation}. These contributions address complementary
 problems (prediction, classification, explanation) rather than the
-prescriptive operational control explored here. Kogler and Maxera (2026)
-review 72 papers combining DES with ML for supply chain analysis,
-confirming that DES+RL is the dominant hybrid paradigm; our work contributes
+prescriptive operational control explored here. Kogler and Maxera~\cite{kogler2026}
+review 72 papers combining DES with ML for supply chain analysis, in
+which DES+RL emerges as the most common hybrid pairing; our work contributes
 a specific instance with validated thesis-grounded data, honest negative
-results, and causal ablation evidence that is rare in this literature.
+results, and mechanism-ablation evidence that is rare in this literature.
 
-Among RL-specific competitors, Ding et al.\ (2026) apply MAPPO for dynamic
+Among RL-specific competitors, Ding et al.~\cite{ding2026} apply MAPPO for dynamic
 reconfiguration of supply chain topology under disruption, operating at the
 strategic level with abstract network actions. Our single-agent approach
 asks a complementary question at the operational level: given a fixed
 topology, does expanding operational control scope change the outcome? The
-Track B result suggests that when the bottleneck can be identified and
-controlled by a single agent, centralized control with appropriate action
-scope suffices.
+Track B result suggests that, in a fixed-topology supply chain where the
+binding downstream bottleneck can be identified, centralized control with
+appropriate action scope can be a strong benchmark before moving to more
+complex multi-agent architectures.
 
 \hypertarget{55-limitations}{%
-\subsection{5.5 Limitations}\label{55-limitations}}
+\subsection{Limitations}\label{55-limitations}}
 
 Several limitations bound the generalizability of these findings. First, the
 benchmark is one validated military supply chain; generalization to other
 topologies, demand patterns, or organizational structures requires further
-investigation. Second, the observation ablation was conducted at 50,000
-timesteps (3 seeds), a reduced budget compared to the main experiments;
-while preliminary results suggest observation design matters less than
-action-space alignment, stronger replication would increase confidence.
-Third, the problem is better described as partially observed control than a
-fully identified MDP: the agent observes a projection of the simulation
-state, not the full internal state. Fourth, the paper uses PPO exclusively
-(with RecurrentPPO as a comparator); other algorithms (SAC, TD3) were not
-tested, though the reward-insensitivity finding suggests algorithmic choice
-is secondary to action-space alignment in this regime. Fifth,
-ReT\_seq\_v1 is a training reward designed for gradient quality, not a
-theoretically complete resilience index; the paper-facing reporting
-therefore uses multiple complementary metrics. Finally, Track B's
-adaptive\_benchmark\_v2 risk profile differs from Track A's increased
-profile; the matched ablation controls for this, but the production
-comparison across tracks conflates action-contract and risk-profile changes.
+investigation. Second, Track B is not a thesis-grounded decision-variable
+replication of Garrido-Rios: it preserves the DES backbone and resilience
+measurement structure, but extends the controllable surface to downstream
+dispatch valves that the original experiment held fixed. Third, the
+observation ablation removes the seven explicitly privileged regime/forecast
+fields, but the remaining state still contains rich operational feedback; the
+experiment rules out the strongest privileged observation confound but does
+not prove full field deployability of every state variable.
+Fourth, the problem is better described as partially observed control than a
+fully identified MDP: the agent observes a projection of the simulation state,
+not the full internal state. Fifth, the paper's main results use PPO (with
+RecurrentPPO as a comparator) as a stable continuous-control baseline; we
+claim action-space alignment, not algorithmic superiority. A screening run
+under the identical canonical protocol (control\_v1 reward, observation v7,
+track\_b\_v1 action contract, 3 seeds $\times$ 30{,}000 timesteps) confirms
+the win is not an artifact of on-policy learning: SAC improves order-level
+ReT over the best static/heuristic comparator by $+9.10\%$ and TD3 by
+$+8.77\%$, both with all three seeds individually positive and in the same
+range as PPO's own screen-scale result. We report these as a scope check,
+not a confirmatory-scale claim --- they were not run at the 10-seed budget
+used for the headline number. Algorithmic choice is not the mechanism
+tested in this paper,
+and the reward-insensitivity screen suggests the effect is not tied to
+one training configuration. Sixth, the
+cross-regime/horizon matrix uses a fixed dense-comparable static comparator
+set rather than a fully reoptimized 147-cell dense frontier in every
+risk/horizon cell. Seventh, the added 3$\times$3 upstream bound tests
+nearby Op3/Op9 static quantity choices at the best downstream cell and
+does not overturn PPO, but it is still a local bound rather than an
+exhaustive 8D static frontier. Finally, the evidence supports adaptive recovery and
+backlog control, not unqualified anticipation, cross-campaign organizational
+learning, universal cost reduction, or a universal law that bottleneck access
+alone guarantees RL success. A separate, confirmatory-scale probe
+(10 seeds, 8 sequential online-adaptation cycles) finds a small positive
+retained-versus-reset advantage in Excel ReT ($+0.0000493$, 95\% CI
+$[+0.0000167, +0.0000819]$, masked-observation arm), roughly an order of
+magnitude smaller than the Track B headline gain and robust to masking
+the same privileged regime/forecast fields removed in
+Section~\ref{45-privileged-obs}; this is preliminary evidence for a
+retained-adaptation channel distinct from the action-space alignment
+mechanism studied here, not a claim of cross-campaign organizational
+learning, and is not part of the paper's central result.
 
 \hypertarget{56-future-work}{%
-\subsection{5.6 Future work}\label{56-future-work}}
+\subsection{Future work}\label{56-future-work}}
 
-Three directions emerge. First, the action-space alignment principle should
-be tested on other validated supply chain DES models to assess
+Three directions emerge. First, the bottleneck-aligned recovery principle
+should be tested on other validated supply chain DES models to assess
 generalizability beyond the MFSC topology. Second, more expressive policy
 architectures---including attention-based networks, graph neural networks,
-and emerging KAN-based designs as proposed by Garrido et al.\
-(2024b)---remain relevant for supply chains with variable topology or
-multi-agent coordination, but were excluded from this paper because the
-standard PPO+MLP architecture already achieves fill rate 1.000 under Track
-B. Third, training specialized policies for extreme scenarios
-(severe, severe\_extended) rather than relying on the increased-risk-trained
-policy could establish tighter upper bounds on RL effectiveness under
-catastrophic disruptions. The observation ablation at 50k suggests that
-observation design has a secondary effect; scaling this to 500k would
-strengthen the conclusion.
+and Kolmogorov--Arnold networks, which Garrido et
+al.~\cite{garrido2024iccl} name (alongside backpropagation networks and
+reinforcement learning) as candidate families for closing the
+learning gap in SCRES-DES models, though without ranking them or
+arguing for KAN-specific properties---remain relevant for supply chains with variable topology or
+multi-agent coordination, but were not required for this paper's result: a
+standard PPO+MLP architecture already produces a robust, adversarially-tested
+advantage under Track B. Third, the generalization matrix (Section~4.7)
+identifies severe disruption at both evaluated horizons as a genuine boundary case;
+training specialized policies for that regime, rather than relying on the
+policy trained under \texttt{adaptive\_benchmark\_v2}, could establish
+tighter upper bounds on RL effectiveness under catastrophic disruption.
+Cross-campaign organizational learning at longer horizons than the
+8-cycle probe reported above, a confirmatory-scale (10-seed) off-policy
+comparison extending the SAC/TD3 screen reported above, and a full
+147-candidate regime-table fit (the current
+privileged-observation test used a trimmed 75-candidate grid) remain open
+for future work.

@@ -33,9 +33,19 @@ class ThesisFactorizedTrackAEnv(gym.Wrapper):
     action_space_mode = "thesis_factorized"
     inventory_period_mode = "thesis_strict"
 
-    def __init__(self, env: gym.Env, *, initial_action: Any | None = None) -> None:
+    def __init__(
+        self,
+        env: gym.Env,
+        *,
+        initial_action: Any | None = None,
+        learn_initial_decision: bool = False,
+    ) -> None:
         super().__init__(env)
         self.initial_action = initial_action
+        self.learn_initial_decision = bool(learn_initial_decision)
+        self._awaiting_initial_decision = False
+        self._pending_reset_seed: int | None = None
+        self._pending_reset_options: dict[str, Any] = {}
         self.action_fields = THESIS_DECISION_ACTION_FIELDS
         self.factorized_action_fields = THESIS_FACTORIZED_ACTION_FIELDS
         self.action_space = gym.spaces.MultiDiscrete([6, 3])
@@ -212,13 +222,13 @@ class ThesisFactorizedTrackAEnv(gym.Wrapper):
             enriched["weekly_decision"] = decision
         return enriched
 
-    def reset(
-        self, *, seed: int | None = None, options: dict[str, Any] | None = None
+    def _reset_underlying_with_initial_action(
+        self,
+        *,
+        seed: int | None,
+        reset_options: dict[str, Any],
+        initial_action: Any,
     ) -> tuple[np.ndarray, dict[str, Any]]:
-        reset_options = dict(options or {})
-        initial_action = reset_options.pop("initial_action", self.initial_action)
-        if initial_action is None:
-            initial_action = np.asarray([0, 0], dtype=np.int64)
         periods_by_node, shifts, realized_action = (
             self.decode_thesis_factorized_action(initial_action)
         )
@@ -239,7 +249,49 @@ class ThesisFactorizedTrackAEnv(gym.Wrapper):
             phase="reset",
         )
 
+    def reset(
+        self, *, seed: int | None = None, options: dict[str, Any] | None = None
+    ) -> tuple[np.ndarray, dict[str, Any]]:
+        reset_options = dict(options or {})
+        initial_action = reset_options.pop("initial_action", self.initial_action)
+        self._awaiting_initial_decision = (
+            self.learn_initial_decision and initial_action is None
+        )
+        if self._awaiting_initial_decision:
+            self._pending_reset_seed = seed
+            self._pending_reset_options = dict(reset_options)
+            self._realized_decision = self._realized_vector({}, 1)
+            info = self._attach_info(
+                {},
+                periods_by_node={},
+                shifts=1,
+                targets={},
+                action=np.asarray([0, 0], dtype=np.int64),
+                phase="reset",
+            )
+            info["action_phase"] = "initial_decision"
+            info["initial_decision"]["applied_before_warmup"] = False
+            return np.zeros(self.observation_space.shape, dtype=np.float32), info
+
+        if initial_action is None:
+            initial_action = np.asarray([0, 0], dtype=np.int64)
+        return self._reset_underlying_with_initial_action(
+            seed=seed,
+            reset_options=reset_options,
+            initial_action=initial_action,
+        )
+
     def step(self, action: Any) -> tuple[np.ndarray, float, bool, bool, dict[str, Any]]:
+        if self._awaiting_initial_decision:
+            self._awaiting_initial_decision = False
+            obs, info = self._reset_underlying_with_initial_action(
+                seed=self._pending_reset_seed,
+                reset_options=dict(self._pending_reset_options),
+                initial_action=action,
+            )
+            info["action_phase"] = "initial_decision"
+            return obs, 0.0, False, False, info
+
         periods_by_node, shifts, realized_action = (
             self.decode_thesis_factorized_action(action)
         )
@@ -323,6 +375,7 @@ class Discrete18TrackAEnv(gym.Wrapper):
 def make_thesis_factorized_track_a_env(**env_overrides: Any) -> ThesisFactorizedTrackAEnv:
     """Build the torch-free Track A `MultiDiscrete([6, 3])` wrapper."""
     initial_action = env_overrides.pop("initial_action", None)
+    learn_initial_decision = bool(env_overrides.pop("learn_initial_decision", False))
     action_space_mode = str(env_overrides.pop("action_space_mode", "thesis_factorized"))
     if action_space_mode != "thesis_factorized":
         raise ValueError(
@@ -337,7 +390,11 @@ def make_thesis_factorized_track_a_env(**env_overrides: Any) -> ThesisFactorized
         TRACK_A_TRAINING_DOWNSTREAM_Q_SOURCE,
     )
     env = make_thesis_aligned_training_env(**env_overrides)
-    return ThesisFactorizedTrackAEnv(env, initial_action=initial_action)
+    return ThesisFactorizedTrackAEnv(
+        env,
+        initial_action=initial_action,
+        learn_initial_decision=learn_initial_decision,
+    )
 
 
 def make_discrete18_track_a_env(**env_overrides: Any) -> Discrete18TrackAEnv:

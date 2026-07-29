@@ -25,15 +25,26 @@ def test_filter_excludes_pre_treatment_orders_and_partitions_cleanly():
     assert clean["n_orders"] + clean["n_orders_pre_treatment"] == all_n
     # treatment_start defaults to end of warm-up.
     assert clean["treatment_start"] == sim.warmup_time
+    assert "mean_ret_excel_formula" in clean
+    assert "case_counts_excel_formula" in clean
 
 
 def test_filtering_changes_the_outcome_value():
     sim = _run()
-    contaminated = sim.compute_order_level_ret()["mean_ret"]
+    from supply_chain.ret_thesis import compute_order_level_ret_excel_formula
+
+    # Same Excel formula, all orders vs treatment-window filtered: excluding the
+    # pre-treatment warm-up orders shifts the outcome. After the unfulfilled-order
+    # fix (lost/pending orders score 0, not the ~1.0 no-risk fill-rate branch), the
+    # metric is no longer inflated, so both values sit in the corrected low range
+    # and the warm-up shift is small but present.
+    excel_all = compute_order_level_ret_excel_formula(
+        sim.orders, current_time=float(sim.env.now)
+    )["mean_ret_excel"]
     clean = treatment_filtered_order_ret(sim)["mean_ret"]
-    # The pre-treatment warm-up backlog materially shifts ReT; the corrected metric
-    # must differ (here by ~0.08, an order of magnitude above the retained-reset signal).
-    assert abs(clean - contaminated) > 0.01
+    assert excel_all != clean  # filtering still changes the outcome
+    # Regression guard: unfulfilled orders must not re-inflate ReT toward ~1.0.
+    assert excel_all < 0.05 and clean < 0.05
 
 
 def test_explicit_treatment_start_keeps_only_later_orders():

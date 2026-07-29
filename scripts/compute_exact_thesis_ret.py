@@ -42,6 +42,7 @@ def faithful_sim(shifts: int, period: int, seed: int, risk_level: str) -> MFSCSi
         r14_defect_mode=P["r14_defect_mode"], downstream_q_source=DQ,
         raw_material_flow_mode=P["raw_material_flow_mode"],
         raw_material_order_up_to_multiplier=P["raw_material_order_up_to_multiplier"],
+        demand_on_hand_fulfillment_delay=P["demand_on_hand_fulfillment_delay"],
         initial_buffers=bufs,
         inventory_replenishment_period=(float(period) if period else None),
     )

@@ -66,6 +66,17 @@ def build_parser() -> argparse.ArgumentParser:
         help="Evaluation episodes per reward-mode run.",
     )
     parser.add_argument(
+        "--max-steps",
+        type=int,
+        default=104,
+        help="Episode horizon forwarded to each reward-mode run.",
+    )
+    parser.add_argument("--learning-rate", type=float, default=1e-4)
+    parser.add_argument("--n-envs", type=int, default=4)
+    parser.add_argument("--n-steps", type=int, default=1024)
+    parser.add_argument("--batch-size", type=int, default=256)
+    parser.add_argument("--n-epochs", type=int, default=10)
+    parser.add_argument(
         "--seeds",
         nargs="+",
         type=int,
@@ -143,6 +154,18 @@ def build_run_args(
         str(args.train_timesteps),
         "--eval-episodes",
         str(args.eval_episodes),
+        "--max-steps",
+        str(args.max_steps),
+        "--learning-rate",
+        str(args.learning_rate),
+        "--n-envs",
+        str(args.n_envs),
+        "--n-steps",
+        str(args.n_steps),
+        "--batch-size",
+        str(args.batch_size),
+        "--n-epochs",
+        str(args.n_epochs),
         "--heartbeat-interval-seconds",
         str(args.heartbeat_interval_seconds),
         "--seeds",
@@ -204,6 +227,12 @@ def main() -> None:
             "reward_mode": run_args.reward_mode,
             "train_timesteps": run_args.train_timesteps,
             "eval_episodes": run_args.eval_episodes,
+            "max_steps": run_args.max_steps,
+            "learning_rate": run_args.learning_rate,
+            "n_envs": run_args.n_envs,
+            "n_steps": run_args.n_steps,
+            "batch_size": run_args.batch_size,
+            "n_epochs": run_args.n_epochs,
             "seeds": list(run_args.seeds),
             "output_root": str(run_args.output_root),
         }

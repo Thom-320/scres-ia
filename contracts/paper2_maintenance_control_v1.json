@@ -1,0 +1,78 @@
+{
+  "contract_id": "paper2_maintenance_control_v1",
+  "status": "FROZEN_BEFORE_SCREEN_SEEDS",
+  "parent_programs": ["E", "G", "H", "I"],
+  "parent_programs_reopened": false,
+  "question": "Can an observable policy allocate one fixed weekly maintenance slot across Op5-Op7 and outperform every same-contract periodic calendar?",
+  "physics": {
+    "assembly_flow_mode": "serial_wip",
+    "controlled_operations": [5, 6, 7],
+    "decision_epoch_hours": 168,
+    "maintenance_slot_hours": 24,
+    "crew_count": 1,
+    "actions": ["PM5", "PM6", "PM7"],
+    "equal_resource_by_construction": true,
+    "corrective_repairs_share_crew_and_queue": true,
+    "corrective_repairs_preempt_in_progress_preventive": false,
+    "condition_hidden": true,
+    "r11_candidate_tape_exogenous": true,
+    "r14_innovation_tape_exogenous": true
+  },
+  "screen": {
+    "sensor_balanced_accuracy": [0.65, 0.75, 0.85],
+    "pm_restore_fraction": [0.3, 0.5, 0.7],
+    "wip_capacity_days": [1, 2, 3],
+    "wear_heterogeneity": ["low", "high"],
+    "repair_profile": ["current", "increased"],
+    "selection_rule": "lowest-amplitude connected region satisfying every pre-RL gate; never maximum learner outcome"
+  },
+  "observations": {
+    "whitelist": [
+      "condition_signal_op5", "condition_signal_op6", "condition_signal_op7",
+      "utilization_op5", "utilization_op6", "utilization_op7",
+      "recent_failures_op5", "recent_failures_op6", "recent_failures_op7",
+      "recent_downtime_op5", "recent_downtime_op6", "recent_downtime_op7",
+      "wip_op5_op6", "wip_op6_op7", "backlog_qty", "backlog_count",
+      "crew_busy", "crew_eta_hours", "previous_action", "weeks_since_pm_op5",
+      "weeks_since_pm_op6", "weeks_since_pm_op7", "week_phase"
+    ],
+    "explicitly_forbidden": [
+      "true_condition", "next_failure", "future_wear", "future_repair_duration",
+      "future_r14", "oracle_action", "oracle_value", "future_outcome"
+    ]
+  },
+  "comparators": {
+    "periodic_max_period": 6,
+    "deduplicate_rotations": false,
+    "heuristics": ["round_robin", "worst_condition", "wip_bottleneck", "failure_risk", "hysteresis"],
+    "selection_split": "calibration",
+    "test_reselection": false
+  },
+  "tapes": {
+    "screen": [1200001, 1200090],
+    "calibration": [1210001, 1210060],
+    "observable_holdout": [1220001, 1220060],
+    "paper2_virgin": [1230001, 1230060],
+    "paper3": [1240001, 1241000]
+  },
+  "gates": {
+    "action_support_min": 0.15,
+    "single_action_support_max": 0.85,
+    "oracle_ret_delta_min": 0.01,
+    "oracle_ci95_lower_min": 0.0,
+    "service_loss_reduction_min": 0.05,
+    "horizon_action_agreement_min": 0.9,
+    "observable_oracle_capture_min": 0.3,
+    "observable_ret_ci95_lower_min": 0.0,
+    "lost_orders_noninferior": true,
+    "tail_risk_noninferior": true
+  },
+  "terminal_verdicts": [
+    "PROMOTE_MAINTENANCE_TO_LEARNER",
+    "STOP_NO_OBSERVABLE_MAINTENANCE_HEADROOM"
+  ],
+  "forbidden_rescues": [
+    "change metrics after screen", "increase severity after screen", "select cell by PPO",
+    "open virgin tapes before policy freeze", "open Paper 3 before Paper 2 confirmation"
+  ]
+}

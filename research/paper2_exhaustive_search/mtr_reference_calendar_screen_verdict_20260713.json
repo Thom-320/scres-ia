@@ -1,0 +1,94 @@
+{
+  "schema_version": "mtr_reference_calendar_screen_verdict_v1",
+  "generated_date": "2026-07-13",
+  "scientific_status": "SELECTED_REFERENCE_PRECLUDED_RESOURCE_RELAXED_ONLY__MTR_BOUND_UNRESOLVED",
+  "scope": {
+    "contract_id": "paper2_bottleneck_reference_calendar_screen_v1",
+    "candidate_family": "constant M plus every single contiguous T or R excursion of length at least two active weeks",
+    "candidate_count": 507,
+    "calibration_tapes": 60,
+    "locked_tapes": 119,
+    "locked_status": "burned development diagnostic; not virgin or confirmatory",
+    "primary_metric": "ret_excel_visible_v1",
+    "h_pi_computed": false,
+    "h_obs_computed": false,
+    "paper2_authorized": false,
+    "paper3_authorized": false
+  },
+  "selection": {
+    "calendar_index": 121,
+    "calendar": "MMMMMMMTTTTTMMMMMMMMMMMM",
+    "switch_count": 2,
+    "mean_ret_excel": 0.2721450774975049,
+    "constant_m_mean_ret_excel": 0.27170945963243187,
+    "delta_vs_constant_m": 0.0004356178650730125
+  },
+  "locked_resource_relaxed_lower_bound": {
+    "definition": "max(0, max(Y_M,Y_T,Y_R) - Y_selected_reference)",
+    "positive_tapes": 91,
+    "n": 119,
+    "mean": 0.014898193846958544,
+    "lcb95": 0.011281097075741675,
+    "ucb95": 0.019348586651752785,
+    "bootstrap_resamples": 10000,
+    "bootstrap_seed": 20260713,
+    "decision": "The selected calendar cannot support a resource-relaxed exact-oracle-minus-reference UCB95 below 0.01. Do not launch W24 for this reference."
+  },
+  "action_ranking_evidence": {
+    "strict_best_constant_counts": {
+      "M": 55,
+      "T": 36,
+      "R": 28
+    },
+    "interpretation": "Action-ranking diversity exists across tapes. This is incompatible with claiming that the entire M/T/R family is already known to be null, but it is not observable headroom."
+  },
+  "resource_audit": {
+    "total_team_hours_each_policy_each_tape": 4032,
+    "reserve_units_issued_totals": {
+      "selected_reference": 781438,
+      "constant_M": 905881,
+      "constant_T": 369944,
+      "constant_R": 2592626
+    },
+    "reserve_units_replenished_totals": {
+      "selected_reference": 536677,
+      "constant_M": 621725,
+      "constant_T": 337335,
+      "constant_R": 2213150
+    },
+    "reserve_replenishment_request_totals": {
+      "selected_reference": 154,
+      "constant_M": 171,
+      "constant_T": 98,
+      "constant_R": 797
+    },
+    "binding_limitation": "The constants envelope is not componentwise resource-matched to the selected reference. The lower bound is resource-relaxed and cannot estimate resource-restricted H_PI, close M/T/R, or authorize Paper 2."
+  },
+  "execution_and_verification": {
+    "producer_commit": "c0123f496753dccfd9034fdaf53bdb2a5212c9c9",
+    "verifier_commit": "327f6d80b6f86489e5804b9d1dfa0b887ddc52f9",
+    "watcher_started_before_science": true,
+    "producer_elapsed_seconds": 155.87721895900904,
+    "deep_replay_elapsed_seconds": 156.05925870899227,
+    "deep_replay_calibration_rollouts": 30420,
+    "deep_replay_locked_rollouts": 476,
+    "deep_replay_failures": [],
+    "deep_replay_passed": true,
+    "producer_result_sha256": "cc305b94eaf65355ddf2948360d1811cb1ec4297258868756cdd1a1027b6228e",
+    "producer_content_sha256": "8730a2bd755b28a76f1762c2f39b9a562ac34b623f5020742174bea2f2c0d55d",
+    "verification_result_sha256": "00811d102fb3e418b4d45f1b02cc46f83049cfd7f9e4263340b80dd6c57d9eac",
+    "verification_content_sha256": "306f0cf6eb6839c8b1289f0b616e51071c7e71f015908461c44fc79aa1eb9990",
+    "producer_stderr_bytes": 0,
+    "verification_stderr_bytes": 0
+  },
+  "artifact_paths": {
+    "producer_result": "results/paper2_bound_harness/reference_calendar_screen/c0123f4_local_20260713_gate1/result.json",
+    "producer_watcher_log": "results/paper2_bound_harness/reference_calendar_screen/c0123f4_local_20260713_gate1/watcher.jsonl",
+    "producer_launch_receipt": "results/paper2_bound_harness/reference_calendar_screen/c0123f4_local_20260713_gate1/launch_receipt.json",
+    "deep_verification": "results/paper2_bound_harness/reference_calendar_screen/327f6d8_local_20260713_deepverify1/result.json",
+    "verification_watcher_log": "results/paper2_bound_harness/reference_calendar_screen/327f6d8_local_20260713_deepverify1/watcher.jsonl",
+    "verification_launch_receipt": "results/paper2_bound_harness/reference_calendar_screen/327f6d8_local_20260713_deepverify1/launch_receipt.json"
+  },
+  "claim_boundary": "On burned locked tapes, the calibration-selected five-week T excursion was rejected only as a reference for a resource-relaxed exact-oracle ceiling: the constants-envelope lower-gap mean was 0.014898, CI95 [0.011281, 0.019349]. This neither establishes an M/T/R null nor estimates resource-matched H_PI or H_obs; the family remains unresolved.",
+  "next_gate": "Calibration-only complete search over all 11611 feasible W24 calendars with at most three switches, frozen before execution. No locked re-use during selection."
+}

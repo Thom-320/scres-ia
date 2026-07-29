@@ -1,0 +1,105 @@
+{
+  "contract_id": "program_e_policy_realizability_v1",
+  "status": "PREREGISTERED_BEFORE_PROGRAM_E_TAPES",
+  "parent_physics_contract": "op7_op8_finite_convoy_v1",
+  "parent_terminal_results_unchanged": [
+    "dra2-stop-2026-07-12",
+    "dra2b-stop-2026-07-12"
+  ],
+  "question": "Can closed-loop policies using contemporaneous observations recover finite-convoy ReT headroom out of sample, and does MaskablePPO add value beyond static and interpretable policies?",
+  "episode": {
+    "duration_days": 56,
+    "decision_epoch_hours": 24,
+    "actions": ["HOLD", "DISPATCH_NOW"],
+    "invalid_dispatch_masked": true
+  },
+  "observations": [
+    "op7_staged_inventory",
+    "pending_assembly_quantity",
+    "sb_inventory",
+    "downstream_backlog_qty",
+    "downstream_backlog_count",
+    "oldest_backlog_age",
+    "recent_7d_demand",
+    "recent_7d_production",
+    "recent_7d_delivery",
+    "convoy_available",
+    "convoy_return_eta",
+    "time_since_departure",
+    "staging_age",
+    "op8_route_up",
+    "previous_action_dispatch",
+    "day_phase",
+    "departures_to_date",
+    "unavailable_hours_to_date"
+  ],
+  "forbidden_observations": [
+    "future demand",
+    "future risk",
+    "future repair duration",
+    "latent regime",
+    "oracle action",
+    "future ReT or service outcome"
+  ],
+  "reward": {
+    "formula": "-(daily_service_loss_increment / frozen_training_p95_service + 0.1 * daily_backlog_age_increment / frozen_training_p95_backlog_age)",
+    "ret_used_as_reward": false,
+    "resource_penalty_in_reward": false,
+    "normalizers_fit_on": "training tapes only",
+    "normalizers_frozen_for_validation_and_test": true
+  },
+  "policies": {
+    "static": "nine threshold x maximum-wait policies",
+    "static_convex_mixture": "LP mixture selected on validation inside each candidate resource envelope",
+    "heuristic": "single preregistered observable backlog-age/staging rule",
+    "tree": {"max_depth": 3, "cross_fit_group": "tape"},
+    "ppo": {
+      "algorithm": "MaskablePPO",
+      "policy": "MlpPolicy",
+      "net_arch": [64, 64],
+      "activation": "tanh",
+      "learning_rate": 0.0003,
+      "n_steps": 2048,
+      "batch_size": 64,
+      "gamma": 0.99,
+      "gae_lambda": 0.95,
+      "clip_range": 0.2,
+      "ent_coef": 0.01,
+      "total_timesteps_per_seed": 200000,
+      "learner_seeds": [9301, 9302, 9303, 9304, 9305, 9306, 9307, 9308, 9309, 9310],
+      "hyperparameter_sweep_allowed": false
+    }
+  },
+  "data": {
+    "training": {"n_tapes": 80, "seed_start": 900001, "per_family": 20},
+    "validation": {"n_tapes": 20, "seed_start": 910001, "per_family": 5},
+    "virgin_test": {"n_tapes": 60, "seed_start": 920001, "per_family": 15},
+    "dra2_or_dra2b_tapes_reused": false
+  },
+  "primary_estimand": {
+    "outcome": "ret_excel_visible_v1",
+    "contrast": "PPO minus frozen resource-envelope static mixture on paired tapes",
+    "conversion_efficiency": "eta = policy-static / restricted14dOracle-static",
+    "restricted_oracle_is_diagnostic_not_deployable": true
+  },
+  "validation_promotion": {
+    "ret_delta_min": 0.01,
+    "ret_ci95_lower_min": 0.0,
+    "oracle_conversion_min": 0.50,
+    "service_loss_noninferiority_margin": 0.0,
+    "lost_orders_nonincrease": true,
+    "resource_envelope_required": true,
+    "positive_learner_seeds_min": 8,
+    "favorable_tape_fraction_min": 0.70,
+    "tail_noninferiority_required": true
+  },
+  "managerial_claim": {
+    "service_loss_reduction_min": 0.05
+  },
+  "scientific_state": {
+    "training_tapes_opened": false,
+    "validation_tapes_opened": false,
+    "virgin_tapes_opened": 0,
+    "ppo_trained": false
+  }
+}

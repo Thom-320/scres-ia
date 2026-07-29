@@ -1,0 +1,87 @@
+{
+  "contract_id": "paper2_bottleneck_switch_complexity_screen_v1",
+  "frozen_date": "2026-07-13",
+  "status": "CALIBRATION_ONLY_COMPARATOR_GATE_FROZEN_BEFORE_EXECUTION",
+  "parent_contract": "paper2_bottleneck_primary_bound_v2",
+  "purpose": "Determine whether the exact best calibration calendar in the complete at-most-three-switch W24 family lies on the three-switch boundary.",
+  "scientific_scope": "Comparator development on 60 already-burned calibration tapes only. No locked or virgin tape may be opened. This gate cannot estimate H_PI or H_obs, close M/T/R, authorize W24, or support a Paper 2 result.",
+  "physics": {
+    "implementation": "supply_chain.paper2_bottleneck.run_policy",
+    "weeks": 24,
+    "actions": ["M", "T", "R"],
+    "initial_active_action": "M",
+    "request_activation_lag_weeks": 1,
+    "adjacent_week_switches_forbidden": true,
+    "profile": "paper2_bottleneck_high_authority_v1 unchanged"
+  },
+  "candidate_family": {
+    "definition": "Every feasible 24-week active M/T/R calendar beginning in M, obeying the no-adjacent-switch rule, and containing at most three active-action switches.",
+    "counts_by_switches": {"0": 1, "1": 46, "2": 924, "3": 10640},
+    "candidate_count": 11611,
+    "enumeration_order": "Stable lexicographic depth-first action order M,T,R, pruned immediately when a fourth switch would be required.",
+    "complete_within_declared_family": true,
+    "not_the_full_open_loop_frontier": true
+  },
+  "calibration": {
+    "seed_start": 1100001,
+    "seed_end": 1100060,
+    "n": 60,
+    "split": "calibration",
+    "context_rule": "CONTEXTS[(seed-1100001) mod 3]",
+    "locked_seed_access_forbidden": true,
+    "primary_selection": "maximum exact sum of the 60 emitted binary64 ret_excel_visible_v1 values; arithmetic mean is display-only",
+    "tie_break": "minimum candidate-family index among exact primary ties",
+    "all_candidates_and_all_tape_scores_reported": true,
+    "selected_calendar_guardrail_replay": true
+  },
+  "selected_calendar_ledger": {
+    "required": [
+      "ret_excel",
+      "ration_ret_excel",
+      "ret_excel_cvar05",
+      "ret_excel_cvar10",
+      "service_loss_auc_ration_hours",
+      "n_lost",
+      "lost_orders",
+      "backorder_qty_final",
+      "backlog_age_max",
+      "fill_rate",
+      "fill_rate_on_time",
+      "mass_residual",
+      "reserve_units_issued",
+      "reserve_units_replenished",
+      "reserve_inventory_initial",
+      "reserve_inventory_terminal",
+      "reserve_committed_pending_terminal",
+      "reserve_in_transit_terminal",
+      "reserve_capacity",
+      "reserve_target_terminal",
+      "reserve_replenishment_requests",
+      "reserve_stock_balance_residual",
+      "token_hours_m",
+      "token_hours_t",
+      "token_hours_r",
+      "total_token_hours",
+      "consumed_base_threat_sha256",
+      "realized_demand_sha256"
+    ],
+    "resource_interpretation": "All candidates have the same 4032 response-team hours and reserve access rules. Realized reserve issue and replenishment remain policy-dependent outcomes and are reported, not declared equal."
+  },
+  "decision_rules": {
+    "boundary_active": "If the exact selected calendar contains exactly three switches, report CALIBRATION_SWITCH_COMPLEXITY_BOUNDARY_ACTIVE. This authorizes only a separately frozen richer comparator-development gate.",
+    "interior": "If the exact selected calendar contains fewer than three switches, report CALIBRATION_SWITCH_COMPLEXITY_INTERIOR. This stops the switch-complexity sieve but does not prove that calendars with more switches cannot win.",
+    "h_pi_computed": false,
+    "h_obs_computed": false,
+    "w24_authorized": false,
+    "learner_authorized": false,
+    "paper2_authorized": false,
+    "paper3_authorized": false
+  },
+  "execution_discipline": {
+    "clean_immutable_commit": true,
+    "watcher_started_before_science": true,
+    "non_overwriting_artifacts": true,
+    "final_head_status_and_dependency_drift_checks": true,
+    "result_root": "results/paper2_bound_harness/switch_complexity_screen"
+  }
+}

@@ -1,0 +1,66 @@
+\section{Decision-right eligibility framework}\label{sec:framework}
+
+The methodological premise is that an available action is not automatically a useful
+sequential decision. Let $S_t$ denote the physical state, $O_t$ the information available to
+an operator, $A_t$ an admissible action, and $J$ an episode-level resilience outcome. For a
+fixed horizon $H$, define $Q_H(s,a)=\mathbb{E}[J_{t:t+H}\mid S_t=s,A_t=a]$. The value of
+perfect information over the best constant action is
+\begin{equation}
+H_{\mathrm{PI}}=\mathbb{E}_{S}\left[\max_a Q_H(S,a)\right]
+-\max_a\mathbb{E}_{S}[Q_H(S,a)].
+\end{equation}
+The corresponding observable value replaces the true state by the operator's information:
+\begin{equation}
+H_{\mathrm{obs}}=\mathbb{E}_{O}\left[\max_a\mathbb{E}[Q_H(S,a)\mid O]\right]
+-\max_a\mathbb{E}_{S}[Q_H(S,a)].
+\end{equation}
+These quantities separate two questions often conflated in simulation--RL studies. An oracle
+may profit from knowing a future disruption, while a deployable controller cannot infer the
+relevant action ranking from contemporaneous observations. In that case $H_{\mathrm{PI}}>0$
+but $H_{\mathrm{obs}}\approx0$; further optimization of a learner cannot manufacture the
+missing information.
+
+We operationalize eligibility as a six-stage ladder. \emph{Physical liveness} requires that
+two admissible actions produce different physical trajectories under exact replay.
+\emph{Ranking diversity} requires that the preferred action changes across a material fraction
+of states; otherwise a constant posture is sufficient. \emph{Oracle headroom} requires a
+positive and practically material paired outcome over a same-contract static comparator.
+\emph{Observable convertibility} requires a policy using only deployable fields to recover
+value in rollout, rather than merely classify oracle actions accurately. \emph{Resource
+equivalence} requires the apparent gain to survive equal decision rights and an explicit
+budget envelope. Finally, \emph{robustness} requires confirmation on frozen, previously
+unopened tapes and guardrails for service, lost orders, and tail outcomes. Failure at an
+earlier stage blocks claims at every later stage.
+
+The comparator contract is central. If an RL policy controls eight variables while the static
+frontier varies only three, the contrast estimates a mixture of adaptation and additional
+authority. The correct static bar is the strongest implementable constant or open-loop doctrine
+with the same action rights and no greater resource use. Calibration selects the comparator
+once; evaluation does not reselect it per tape. Common random numbers then pair demand,
+processing, repair, and disruption realizations across policies. This design turns differences
+into action effects rather than differences in exogenous luck.
+
+Observable conversion is evaluated by rollout value, not action accuracy. Suppose an oracle
+labels action $a^*(s)$. A classifier minimizes $\mathbf{1}\{\hat a\ne a^*\}$, assigning equal
+weight to harmless and catastrophic mistakes. The decision-relevant loss is instead regret,
+\begin{equation}
+\mathcal{L}_{\mathrm{regret}}(s,\hat a)=Q_H(s,a^*)-Q_H(s,\hat a),
+\end{equation}
+and the decisive endpoint remains episode performance against the frozen comparator. This
+distinction became empirically important: a high oracle-action classification rate did not
+translate into a useful sequential policy.
+
+The framework also separates metric constructs. Order-level ReT treats continuity and lateness
+per order; quantity-weighted ReT weights the same order scores by ration demand; service-loss
+measures physical unmet mass; worst-node fill exposes spatial sacrifice; and a multiplicative
+Cobb--Douglas index encodes a preference over inventory, backlog, time, capacity, and resource
+dimensions. None is a neutral synonym for ``resilience.'' A policy-ranking reversal across
+these measures is reported as construct sensitivity, not resolved by choosing retrospectively
+the metric on which a learner wins.
+
+Preregistration makes the ladder falsifiable. Each program freezes its action contract, tapes,
+estimand, comparator, practical threshold, and stop rule before observing the relevant data.
+A failed gate is retained as a boundary result. New physics or a new information contract
+requires a separately named study and cannot alter the earlier verdict. This discipline is
+particularly important when environment design itself can create or destroy learnability.
+

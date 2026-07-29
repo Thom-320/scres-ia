@@ -1,0 +1,24 @@
+{
+  "contract_id": "global_sensitivity_v1",
+  "status": "PREREGISTERED_BEFORE_PROGRAM_I_SCIENTIFIC_RUN",
+  "catalog": "decision_right_catalog_v1",
+  "primary_metric": "ret_excel",
+  "guardrails": ["service_loss_auc","lost_orders","backlog_auc","worst_node_fill","resource_vector"],
+  "morris": {"trajectories":20,"levels":8,"screen_tapes_per_configuration":12,"seed_start":1090001,"grouped":true},
+  "refinement": {"max_numeric_factors":10,"method":"sobol_with_validated_surrogate","dependent_inputs":"conditional_sampling_or_dependent_indices","holdout_fraction":0.2},
+  "headroom": {"candidate_families_min":3,"candidate_families_max":5,"tapes":60,"states_per_tape":4,"seed_start":1100001,"branch_horizons":["short","long"]},
+  "gates": {
+    "action_support_min":0.15,
+    "single_action_support_max":0.85,
+    "oracle_ret_delta_min":0.01,
+    "oracle_ci95_lower_min":0.0,
+    "service_loss_reduction_min":0.05,
+    "observable_capture_min":0.30,
+    "observable_favorable_tapes_min":0.70,
+    "resource_equivalence_required":true,
+    "adjacent_passing_cells_min":2
+  },
+  "universes": {"screen":"1090001+","branching":"1100001+","confirmation":"1110001+ LOCKED","virgin_rl":"1120001+ LOCKED"},
+  "selection_rule":"lowest-amplitude realistic connected condition; never maximum outcome",
+  "forbidden":["train RL during environment selection","promote on sensitivity alone","promote on action accuracy","mix environment uncertainties with decision rights","open confirmation or virgin universes before freeze"]
+}

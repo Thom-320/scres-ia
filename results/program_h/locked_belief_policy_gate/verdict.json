@@ -1,0 +1,250 @@
+{
+  "action_counts": {
+    "ABAB": {
+      "A": 800,
+      "B": 800,
+      "HOLD": 0
+    },
+    "belief_mpc_2w": {
+      "A": 889,
+      "B": 711,
+      "HOLD": 0
+    },
+    "belief_point_rollout": {
+      "A": 919,
+      "B": 681,
+      "HOLD": 0
+    },
+    "cover_reference": {
+      "A": 1008,
+      "B": 592,
+      "HOLD": 0
+    },
+    "full_tape_oracle_ceiling": {
+      "A": 801,
+      "B": 799,
+      "HOLD": 0
+    },
+    "mpc_reference": {
+      "A": 956,
+      "B": 644,
+      "HOLD": 0
+    },
+    "regret_fitted_q": {
+      "A": 835,
+      "B": 765,
+      "HOLD": 0
+    }
+  },
+  "calibration": {
+    "n": 200,
+    "seed_start": 1060001
+  },
+  "filter": {
+    "informative": true,
+    "log_loss": 0.8567626832876184,
+    "prior_log_loss": 1.001597675909121
+  },
+  "gate": "PROGRAM_H_LOCKED_BELIEF_POLICY_GATE",
+  "interpretation_boundary": "The full-tape oracle is a rigorous but loose information relaxation. If belief policies fail while it remains material, formal information insufficiency is unresolved; Program H still terminates under its last-program rule.",
+  "locked_test": {
+    "n": 400,
+    "seed_start": 1070001
+  },
+  "means": {
+    "ABAB": {
+      "attended_orders": 43.2675,
+      "ret_order": 0.5117342098704929,
+      "ret_quantity": 0.5042087676017779,
+      "unfulfilled_rations_at_horizon": 7525.9025,
+      "worst_cssu_fill": 0.852311794162503
+    },
+    "belief_mpc_2w": {
+      "attended_orders": 42.2025,
+      "ret_order": 0.4942121376451248,
+      "ret_quantity": 0.4913394384163774,
+      "unfulfilled_rations_at_horizon": 8207.632083333332,
+      "worst_cssu_fill": 0.7907693840110747
+    },
+    "belief_point_rollout": {
+      "attended_orders": 41.27,
+      "ret_order": 0.4887532200699401,
+      "ret_quantity": 0.48882054712599654,
+      "unfulfilled_rations_at_horizon": 9478.212916666667,
+      "worst_cssu_fill": 0.7519126857996652
+    },
+    "cover_reference": {
+      "attended_orders": 39.7875,
+      "ret_order": 0.48878091039066435,
+      "ret_quantity": 0.4970683326143972,
+      "unfulfilled_rations_at_horizon": 10929.2675,
+      "worst_cssu_fill": 0.6789805194349873
+    },
+    "full_tape_oracle_ceiling": {
+      "attended_orders": 43.2675,
+      "ret_order": 0.5281480564173833,
+      "ret_quantity": 0.5202584157624891,
+      "unfulfilled_rations_at_horizon": 7533.544583333333,
+      "worst_cssu_fill": 0.8514794781043519
+    },
+    "mpc_reference": {
+      "attended_orders": 41.135,
+      "ret_order": 0.49703986108170434,
+      "ret_quantity": 0.5012433276089958,
+      "unfulfilled_rations_at_horizon": 9212.777083333334,
+      "worst_cssu_fill": 0.7422966029748954
+    },
+    "regret_fitted_q": {
+      "attended_orders": 42.7325,
+      "ret_order": 0.5139848403383803,
+      "ret_quantity": 0.5104618576950961,
+      "unfulfilled_rations_at_horizon": 7752.084166666667,
+      "worst_cssu_fill": 0.8138079408486066
+    }
+  },
+  "passing_belief_policies": [],
+  "policy_audits": {
+    "belief_mpc_2w": {
+      "delta_ci95": {
+        "attended_orders": [
+          -1.065,
+          -1.3725625000000001,
+          -0.765
+        ],
+        "ret_order": [
+          -0.01752207222536814,
+          -0.021537446148033806,
+          -0.013625688584522342
+        ],
+        "ret_quantity": [
+          -0.012869329185400522,
+          -0.01617797192306028,
+          -0.009666479264906791
+        ],
+        "unfulfilled_rations": [
+          681.7295833333334,
+          350.5769375000001,
+          1030.683625
+        ],
+        "worst_cssu_fill": [
+          -0.0615424101514283,
+          -0.07773460662830267,
+          -0.04528901847419286
+        ]
+      },
+      "favorable_tapes": 0.09,
+      "gates": {
+        "attended_noninferior": false,
+        "favorable_tapes_at_least_0_70": false,
+        "filter_informative": true,
+        "pi_conversion_at_least_0_30": false,
+        "resources_equal_rights": true,
+        "ret_order_delta_at_least_0_01": false,
+        "ret_order_lcb_positive": false,
+        "ret_quantity_noninferior": false,
+        "unfulfilled_noninferior": false,
+        "worst_cssu_fill_within_0_02": false
+      },
+      "passes_all": false,
+      "pi_conversion": -1.0675177311614241
+    },
+    "belief_point_rollout": {
+      "delta_ci95": {
+        "attended_orders": [
+          -1.9975,
+          -2.4875624999999997,
+          -1.5375
+        ],
+        "ret_order": [
+          -0.022980989800552826,
+          -0.027773509674770026,
+          -0.018387902048893408
+        ],
+        "ret_quantity": [
+          -0.01538822047578138,
+          -0.018928201120940555,
+          -0.011958859187779655
+        ],
+        "unfulfilled_rations": [
+          1952.310416666667,
+          1501.465489583333,
+          2428.2421770833334
+        ],
+        "worst_cssu_fill": [
+          -0.10039910836283786,
+          -0.12284332392869259,
+          -0.07868190152521273
+        ]
+      },
+      "favorable_tapes": 0.0825,
+      "gates": {
+        "attended_noninferior": false,
+        "favorable_tapes_at_least_0_70": false,
+        "filter_informative": true,
+        "pi_conversion_at_least_0_30": false,
+        "resources_equal_rights": true,
+        "ret_order_delta_at_least_0_01": false,
+        "ret_order_lcb_positive": false,
+        "ret_quantity_noninferior": false,
+        "unfulfilled_noninferior": false,
+        "worst_cssu_fill_within_0_02": false
+      },
+      "passes_all": false,
+      "pi_conversion": -1.4000977610520349
+    },
+    "regret_fitted_q": {
+      "delta_ci95": {
+        "attended_orders": [
+          -0.535,
+          -0.7325,
+          -0.3525
+        ],
+        "ret_order": [
+          0.0022506304678873725,
+          -0.00021266819632288482,
+          0.0046005506211061024
+        ],
+        "ret_quantity": [
+          0.006253090093318135,
+          0.004363990964417045,
+          0.008194688309454974
+        ],
+        "unfulfilled_rations": [
+          226.18166666666664,
+          -30.297552083333287,
+          498.48155208333316
+        ],
+        "worst_cssu_fill": [
+          -0.038503853313896386,
+          -0.051601372766358934,
+          -0.026412279743939896
+        ]
+      },
+      "favorable_tapes": 0.19,
+      "gates": {
+        "attended_noninferior": false,
+        "favorable_tapes_at_least_0_70": false,
+        "filter_informative": true,
+        "pi_conversion_at_least_0_30": false,
+        "resources_equal_rights": true,
+        "ret_order_delta_at_least_0_01": false,
+        "ret_order_lcb_positive": false,
+        "ret_quantity_noninferior": true,
+        "unfulfilled_noninferior": false,
+        "worst_cssu_fill_within_0_02": false
+      },
+      "passes_all": false,
+      "pi_conversion": 0.13711779633481241
+    }
+  },
+  "qmdp_bound_claimed": false,
+  "rigorous_full_information_ceiling_delta_ci95": [
+    0.01641384654689033,
+    0.01396787847679208,
+    0.018861657463710827
+  ],
+  "rl_authorized": false,
+  "scope": "O0_program_g_exact_stylized_contract",
+  "verdict": "STOP_PROGRAM_H_NO_BELIEF_POLICY_PASS_INFORMATION_BOUND_REMAINS_LOOSE",
+  "virgin_1080001_opened": false
+}

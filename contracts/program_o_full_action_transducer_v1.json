@@ -1,0 +1,172 @@
+{
+  "schema_version": "program_o_full_action_transducer_v1",
+  "status": "FROZEN_PRE_SCREEN_NO_7410001_PLUS_TAPES_OPENED",
+  "parent_contract": "contracts/program_o_multi_ration_product_mix_v1.json",
+  "supersedes_for_stage_b_promotion": "contracts/program_o_exact_transducer_v1.json",
+  "purpose": "Gate O-0: complete 4^8 exact-transducer frontier, safe-oracle audit, within-week ordering sensitivity, and exact fungibility null before any full-DES product implementation.",
+  "claim_limit": "A pass authorizes only a separately frozen full-DES H_PI implementation. It is not full-DES evidence, H_obs, learned value, Paper 2 confirmation, or an MFSC numerical product-mix claim.",
+  "metric": "ret_excel_request_snapshot_v2",
+  "weeks": 8,
+  "workdays_per_week": 6,
+  "daily_order_quantity": 2500,
+  "weekly_production_batches": 3,
+  "batch_quantity": 5000,
+  "action_levels": [0, 1, 2, 3],
+  "action_meaning": "k is the number of the week's three fixed gross batch rights assigned to P_C; 3-k are assigned to P_H.",
+  "complete_open_loop_calendars": 65536,
+  "calendar_index_rule": "base-4 big-endian length-8 tuple; lexicographic order; exact primary ties resolved to the lowest index",
+  "within_week_schedulers": {
+    "centered_minority_v1": {
+      "0": ["P_H", "P_H", "P_H"],
+      "1": ["P_H", "P_C", "P_H"],
+      "2": ["P_C", "P_H", "P_C"],
+      "3": ["P_C", "P_C", "P_C"]
+    },
+    "blocked_right_v1": {
+      "0": ["P_H", "P_H", "P_H"],
+      "1": ["P_H", "P_H", "P_C"],
+      "2": ["P_C", "P_C", "P_H"],
+      "3": ["P_C", "P_C", "P_C"]
+    },
+    "blocked_left_v1": {
+      "0": ["P_H", "P_H", "P_H"],
+      "1": ["P_C", "P_H", "P_H"],
+      "2": ["P_H", "P_C", "P_C"],
+      "3": ["P_C", "P_C", "P_C"]
+    }
+  },
+  "primary_scheduler": "centered_minority_v1",
+  "batch_completion_offsets_hours": [24, 72, 120],
+  "demand_offsets_hours": [30, 54, 78, 102, 126, 150],
+  "initial_inventory": {"P_C": 5000, "P_H": 5000},
+  "delivery_lead_hours_after_allocation": 48,
+  "request_window_end_hours": 1344,
+  "clearance_score_time_hours": 2688,
+  "clearance_rule": "No new demand or production rights after week 8; already allocated orders complete after their fixed 48-hour delivery lead, and unresolved orders remain backlog through the common eight-week clearance checkpoint.",
+  "backlog_rule": "Product FIFO; later matching production serves prior remaining quantity before inventory accumulation. Targets cannot be redirected.",
+  "primary_physics": {
+    "products": ["P_C", "P_H"],
+    "nonfungible": true,
+    "identical_BOM_mass_rate_and_processing_time": true,
+    "setup_hours": 0,
+    "substitution_fraction": 0,
+    "expiry": false,
+    "risks": false
+  },
+  "resource_rule": "Every calendar commits exactly 24 batches, 120000 ration units, 24 gross batch slots, and identical gross line and transport capacity. Product identity cannot buy a resource.",
+  "primary_cells": [
+    {"cell_id": "rho75_share75", "regime_persistence": 0.75, "dominant_share": 0.75},
+    {"cell_id": "rho75_share90", "regime_persistence": 0.75, "dominant_share": 0.90},
+    {"cell_id": "rho90_share75", "regime_persistence": 0.90, "dominant_share": 0.75},
+    {"cell_id": "rho90_share90", "regime_persistence": 0.90, "dominant_share": 0.90}
+  ],
+  "ordering_sensitivity": {
+    "cell_id": "rho75_share90",
+    "schedulers": ["blocked_right_v1", "blocked_left_v1"]
+  },
+  "plausibility_sensitivity_cells": [
+    {"cell_id": "rho75_share60", "regime_persistence": 0.75, "dominant_share": 0.60},
+    {"cell_id": "rho75_share70", "regime_persistence": 0.75, "dominant_share": 0.70},
+    {"cell_id": "rho90_share60", "regime_persistence": 0.90, "dominant_share": 0.60},
+    {"cell_id": "rho90_share70", "regime_persistence": 0.90, "dominant_share": 0.70}
+  ],
+  "null_cell": {
+    "cell_id": "null_fungible",
+    "regime_persistence": 0.90,
+    "dominant_share": 0.90,
+    "complete_substitution": true,
+    "schedulers": ["centered_minority_v1", "blocked_right_v1", "blocked_left_v1"],
+    "required_result": "All 65536 calendars have bit-identical aggregate trajectories, completion times, metrics, resources, and conservation ledgers under every scheduler; H_PI_raw=H_PI_safe=0 exactly."
+  },
+  "safe_oracle_constraints_per_tape": {
+    "higher_or_equal": [
+      "visible_rows",
+      "ret_full",
+      "quantity_ret_full",
+      "ret_full_cvar10",
+      "fill_order_P_C",
+      "fill_order_P_H",
+      "fill_quantity_P_C",
+      "fill_quantity_P_H",
+      "worst_order_fill",
+      "worst_quantity_fill"
+    ],
+    "lower_or_equal": [
+      "omitted_rows",
+      "omitted_quantity",
+      "lost_orders",
+      "lost_quantity",
+      "unresolved_orders",
+      "unresolved_quantity",
+      "remaining_quantity_P_C",
+      "remaining_quantity_P_H",
+      "max_backlog_age",
+      "service_loss_auc"
+    ],
+    "equal": [
+      "generated_orders",
+      "production_batches",
+      "production_quantity",
+      "gross_batch_slots"
+    ],
+    "conservation_absolute_tolerance": 1e-8,
+    "selection": "Maximize visible request-snapshot ReT within the safe set; the selected static calendar is always feasible; exact ties use the lowest calendar index."
+  },
+  "tape_blocks": {
+    "screen": {"range": [7410001, 7410024], "status": "SEALED_NOT_OPENED", "claim_role": "development only"},
+    "validation": {"range": [7410025, 7410048], "status": "SEALED_NOT_AUTHORIZED_UNTIL_SCREEN_VERDICT_AND_VALIDATION_FREEZE", "claim_role": "fresh development validation; explicitly not virgin Paper 2 confirmation"},
+    "full_des_screen_preserved": {"range": [7400049, 7400072], "status": "SEALED_NOT_OPENED"},
+    "full_des_validation_preserved": {"range": [7400073, 7400096], "status": "SEALED_NOT_OPENED"}
+  },
+  "screen_pass_rule": {
+    "primary_connected_cells_with_mean_safe_h_pi_at_least_0_015": 3,
+    "must_span_both_persistence_levels": true,
+    "must_span_both_primary_share_levels": true,
+    "minimum_favorable_tapes": 17,
+    "minimum_unique_safe_oracle_calendars": 4,
+    "maximum_modal_safe_oracle_fraction": 0.85,
+    "minimum_material_action_levels": 2,
+    "material_action_level_fraction": 0.10,
+    "all_ordering_sensitivities_mean_safe_h_pi_at_least": 0.015,
+    "all_nulls_exact": true
+  },
+  "validation_pass_rule": {
+    "simultaneous_familywise_one_sided_lcb95_safe_h_pi_minimum": 0.01,
+    "connected_primary_component_minimum_cells": 3,
+    "component_must_span_both_persistence_levels": true,
+    "component_must_span_both_primary_share_levels": true,
+    "all_ordering_sensitivity_safe_lcb95_minimum": 0.01,
+    "minimum_favorable_tapes": 17,
+    "minimum_unique_safe_oracle_calendars": 4,
+    "maximum_modal_safe_oracle_fraction": 0.85,
+    "minimum_material_action_levels": 2,
+    "material_action_level_fraction": 0.10,
+    "all_nulls_exact": true,
+    "bootstrap": {
+      "resamples": 10000,
+      "rng_seed": 7410999,
+      "method": "paired_basic_max_error_one_sided_familywise_95",
+      "static_reselected_over_all_65536_calendars_in_every_resample": true,
+      "safe_set_and_safe_oracle_recomputed_for_every_selected_static": true
+    }
+  },
+  "terminal_labels": {
+    "pass": "PASS_PROGRAM_O_GATE_O0_FULL_ACTION_TRANSDUCER",
+    "raw_pass_safe_fail": "STOP_VISIBLE_LEDGER_OR_GUARDRAIL_CONFOUND",
+    "ordering_fail": "STOP_WITHIN_WEEK_ORDERING_DEPENDENT",
+    "other_scientific_fail": "STOP_BEFORE_FULL_DES",
+    "invalid": "INVALID_PROGRAM_O_GATE_O0_NO_EVIDENCE"
+  },
+  "forbidden_rescues": [
+    "setup loss",
+    "unequal BOM",
+    "partial substitution",
+    "risk escalation",
+    "extra inventory",
+    "metric replacement",
+    "additional cells selected after seeing results"
+  ],
+  "h_obs_authorized": false,
+  "learner_authorized": false,
+  "paper3_authorized": false
+}

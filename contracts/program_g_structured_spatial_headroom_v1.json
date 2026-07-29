@@ -1,0 +1,109 @@
+{
+  "contract_id": "program_g_structured_spatial_headroom_v1",
+  "status": "CHARTER_FROZEN_BUILD_NOT_AUTHORIZED",
+  "parent_terminal_results_unchanged": [
+    "program-e-stop-2026-07-12",
+    "program-f-stop-2026-07-12",
+    "program-f-paper-ready-2026-07-12"
+  ],
+  "question": "Which combinations of persistent operational tempo, advance information, and shared spatial-resource scarcity create observable adaptive headroom beyond full-contract static policies?",
+  "physical_nodes": {
+    "cssus": ["A", "B"],
+    "inventory_separate": true,
+    "backlog_separate": true,
+    "demand_tempo_separate": true,
+    "routes_separate": true
+  },
+  "shared_resources": {
+    "downstream_convoys": 1,
+    "automatic_unused_capacity_reallocation": false,
+    "location_persists": true,
+    "return_required_before_reuse": true,
+    "reserve_is_finite_and_moves_with_convoy": true
+  },
+  "actions": {
+    "decision_epoch_hours": 168,
+    "convoy_destination": ["A", "B", "HOLD"],
+    "assembly_shift": ["S1", "S2"],
+    "joint_action_count": 6,
+    "invalid_action_masking": true,
+    "inventory_creation_allowed": false
+  },
+  "factorial_arms": {
+    "Base": [],
+    "T": ["persistent_tempo"],
+    "TR": ["persistent_tempo", "shared_spatial_resource"],
+    "TS": ["persistent_tempo", "advance_signal"],
+    "TRS": ["persistent_tempo", "shared_spatial_resource", "advance_signal"],
+    "TRSC": ["persistent_tempo", "shared_spatial_resource", "advance_signal", "cost_or_expiry"]
+  },
+  "latent_tempo": {
+    "states": ["low", "routine", "surge"],
+    "independent_by_cssu": true,
+    "observable_label": false,
+    "persistence_and_transition_envelope": "PENDING_DOMAIN_FREEZE"
+  },
+  "advance_information": {
+    "candidate_signals": ["planned_troop_level", "deployment_calendar_pressure", "route_threat_score"],
+    "lead_and_reliability_envelope": "PENDING_DOMAIN_FREEZE",
+    "shuffled_placebo_required": true,
+    "delayed_placebo_required": true
+  },
+  "domain_parameters_required_before_build": [
+    "convoy_capacity",
+    "outbound_and_return_time_by_cssu",
+    "convoy_start_location",
+    "reserve_capacity_and_initial_location",
+    "reserve_expiry_or_holding_cost_if_TRSC",
+    "S2_labor_hours_and_activation_delay",
+    "tempo_transition_envelope",
+    "signal_lead_sensitivity_and_false_positive_envelope"
+  ],
+  "data_universes": {
+    "structural_screen_seed_start": 980001,
+    "fresh_calibration_seed_start": 990001,
+    "observable_holdout_seed_start": 1000001,
+    "virgin_learner_test_seed_start": 1010001,
+    "program_d_e_f_tapes_reused": false
+  },
+  "primary_estimands": [
+    "H_PI",
+    "H_obs_tree",
+    "action_support",
+    "resource_adjusted_ret_excel_visible_v1",
+    "service_loss_auc"
+  ],
+  "learner_eligibility": {
+    "oracle_ret_delta_min": 0.02,
+    "oracle_ret_ci95_lower_min": 0.0,
+    "service_loss_reduction_min": 0.05,
+    "min_actions_supported": 2,
+    "action_support_fraction_min": 0.15,
+    "single_action_support_fraction_max": 0.85,
+    "tree_oracle_conversion_min_for_rl": 0.30,
+    "tree_oracle_conversion_min_for_managerial_solution": 0.50,
+    "tree_holdout_ci95_lower_min": 0.0,
+    "signal_placebo_superiority_required": true,
+    "adjacent_passing_parameter_cells_min": 2,
+    "resource_envelope_required": true,
+    "lost_and_tail_noninferiority_required": true
+  },
+  "environment_selection": {
+    "rl_consulted": false,
+    "ppo_trained_before_selection": false,
+    "all_factorial_arms_reported": true,
+    "selection_by_neural_performance_forbidden": true
+  },
+  "build_gate": {
+    "authorized": false,
+    "reason": "Domain parameter envelope and intervention ledger must be frozen first."
+  },
+  "forbidden_rescues": [
+    "reuse Program E or Program F weights, tapes, thresholds, or selected cells",
+    "increase risks until a provisional learner wins",
+    "reduce the 30 percent learner-eligibility conversion gate after screening",
+    "add a second convoy after seeing a null",
+    "expose latent tempo labels or exact future demand",
+    "train PPO during environment selection"
+  ]
+}

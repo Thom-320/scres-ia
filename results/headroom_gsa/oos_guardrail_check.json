@@ -1,0 +1,12 @@
+{
+  "gate": "PROGRAM_I_GP_REGION_OOS_GUARDRAIL_CHECK",
+  "located_theta": {"signal_q": 0.532, "lead": 2, "surge_mult": 1.946, "persistence": "short", "commonality": 0.887, "r22_prob": 0.107},
+  "blocks": {
+    "GP_search_3000001": {"H_obs": 0.0131, "ci95": [0.0102, 0.0160], "ret_quantity_delta": 0.0142, "worst_cssu_fill_delta": -0.1435, "attended_delta": -0.09},
+    "FRESH_4200001": {"H_obs": 0.0114, "ci95": [0.0087, 0.0141], "ret_quantity_delta": 0.0128, "worst_cssu_fill_delta": -0.1282, "attended_delta": -0.14},
+    "FRESH_4500001": {"H_obs": 0.0100, "ci95": [0.0072, 0.0129], "ret_quantity_delta": 0.0130, "worst_cssu_fill_delta": -0.1258, "attended_delta": -0.28}
+  },
+  "verdict": "H_obs POSITIVE and OOS-STABLE (CI95>0) on ret_order/ret_quantity, but FAILS the worst-CSSU-fill guardrail (~-0.13, threshold -0.02): the win is bought by starving one CSSU -> the Program-G concentration/fairness artifact, NOT deployable adaptive value.",
+  "qualifies_new_lane": false,
+  "reason": "worst_cssu_fill_delta -0.13 << -0.02 fairness guardrail"
+}

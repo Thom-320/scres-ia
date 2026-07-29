@@ -1,0 +1,424 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "targeted_primary_source_discovery_and_inclusion_inventory",
+  "freeze_date": "2026-07-13",
+  "review_artifact": "research/paper2_exhaustive_search/primary_source_literature_review.md",
+  "scope_statement": "Reconstruct and audit the mechanism-first primary-source evidence used by the Paper 2 search. This is not a systematic review and does not claim exhaustive capture of publications through 2026.",
+  "methods": {
+    "review_type": "targeted_mechanism_first_primary_source_review",
+    "discovery_log_status": "The original discovery log was not retained. The queries below were re-executed on 2026-07-13 to reconstruct coverage and verify source identities.",
+    "source_rule": "Include original peer-reviewed research at DOI or publisher pages, original PMLR or arXiv papers, official GAO performance audits for operational semantics, and Garrido primary domain sources. Do not use reviews, vendor pages, or generic RL performance headlines as evidence.",
+    "evidence_rule": "A source is retained only for a mechanism, equation or state requirement, structural result, comparator obligation, bound, experimental-design rule, or operational semantic. Its objective and numerical effects do not transfer to the MFSC unless separately validated.",
+    "range_rule": "No literature parameter range is imported into the MFSC unless the unit and physical referent match. Otherwise the entry is marked domain-blocked or non-transferable.",
+    "search_surfaces": [
+      "INFORMS publisher pages and DOI records",
+      "ScienceDirect publisher pages and DOI records",
+      "Taylor & Francis publisher pages and DOI records",
+      "PMLR original paper pages",
+      "arXiv original paper pages",
+      "United States Government Accountability Office report pages",
+      "local Garrido primary-source PDFs and thesis extraction"
+    ],
+    "claim_limit": "The inventory establishes traceability and identifies gaps. It does not establish H_PI, H_obs, learned value, or retained-learning value in the MFSC."
+  },
+  "search_families": [
+    {
+      "family_id": "Q01_information_value_bounds",
+      "queries_executed": [
+        "site:pubsonline.informs.org information relaxation bounds dynamic programs Brown Smith Sun",
+        "perfect information stochastic programming bound primary research Operations Research"
+      ],
+      "coverage": "EVPI, information relaxation, dual penalties, VSS",
+      "status": "targeted_coverage_verified_not_exhaustive"
+    },
+    {
+      "family_id": "Q02_pomdp_censored_demand",
+      "queries_executed": [
+        "site:pubsonline.informs.org/doi Optimal Control of Partially Observable Markov Processes Sondik",
+        "site:pubsonline.informs.org censored lost sales inventory uncertain supply Management Science 2024 Chen",
+        "site:pubsonline.informs.org/doi lost sales positive lead times censored demand"
+      ],
+      "coverage": "belief-state sufficiency, censored sales, demand learning, uncertain supply",
+      "status": "targeted_coverage_verified_not_exhaustive"
+    },
+    {
+      "family_id": "Q03_inventory_lead_time",
+      "queries_executed": [
+        "censored lost sales inventory learning lead time Operations Research Management Science",
+        "lost sales positive lead time constant order base stock primary research"
+      ],
+      "coverage": "pipeline state and strong constant-order/base-stock comparators",
+      "status": "targeted_coverage_verified_not_exhaustive"
+    },
+    {
+      "family_id": "Q04_product_substitution",
+      "queries_executed": [
+        "substitutable products optimal inventory policy demand learning Management Science primary research"
+      ],
+      "coverage": "substitution compatibility, structured inventory policies and learning",
+      "status": "citation_identity_verified_query_family_not_systematically_refreshed"
+    },
+    {
+      "family_id": "Q05_advance_information_capacity",
+      "queries_executed": [
+        "advance demand information limited capacity temporal commitment primary research",
+        "Markov modulated demand partial information inventory structural policy"
+      ],
+      "coverage": "leading information, delayed commitment, capacity reservation and belief control",
+      "status": "citation_identity_verified_query_family_not_systematically_refreshed"
+    },
+    {
+      "family_id": "Q06_transshipment_inventory_routing",
+      "queries_executed": [
+        "site:pubsonline.informs.org/doi lateral transshipment positive lead times",
+        "site:pubsonline.informs.org mobile condition-based maintenance MDP Transportation Science Sanoubar",
+        "site:pubsonline.informs.org adaptive inventory routing distributionally robust Cui Operations Research 2023"
+      ],
+      "coverage": "lateral recourse, routing delay, inventory-routing ADP and robust recourse",
+      "status": "targeted_coverage_verified_not_exhaustive"
+    },
+    {
+      "family_id": "Q07_maintenance_repair",
+      "queries_executed": [
+        "site:pubsonline.informs.org/doi Group Maintenance restless bandits",
+        "condition based maintenance finite repair crew imperfect repair primary research"
+      ],
+      "coverage": "finite repairers, Whittle indices, mobile maintenance MDP",
+      "status": "mechanism_coverage_verified_imperfect_repair_range_gap_open"
+    },
+    {
+      "family_id": "Q08_inspection_quality",
+      "queries_executed": [
+        "site:sciencedirect.com/science/article inspection allocation serial multistage production quality control 1996"
+      ],
+      "coverage": "scarce inspection machines, inspection fraction/location and imperfect classification",
+      "status": "targeted_coverage_verified_not_exhaustive"
+    },
+    {
+      "family_id": "Q09_assemble_to_order",
+      "queries_executed": [
+        "site:pubsonline.informs.org/doi assemble-to-order component allocation inventory control"
+      ],
+      "coverage": "component replenishment, allocation, BOM-dependent backlog and transport",
+      "status": "targeted_coverage_verified_not_exhaustive"
+    },
+    {
+      "family_id": "Q10_queue_admission_abandonment",
+      "queries_executed": [
+        "site:pubsonline.informs.org/doi queue admission control abandonment multiclass Operations Research"
+      ],
+      "coverage": "due-date admission, rejection, sequencing and abandonment priority",
+      "status": "targeted_coverage_verified_not_exhaustive"
+    },
+    {
+      "family_id": "Q11_multi_echelon_information",
+      "queries_executed": [
+        "multi-echelon allocation information delay primary research Management Science"
+      ],
+      "coverage": "inventory imbalance and information exchange",
+      "status": "citation_identity_verified_query_family_not_systematically_refreshed"
+    },
+    {
+      "family_id": "Q12_adaptive_robust_optimization",
+      "queries_executed": [
+        "site:pubsonline.informs.org/doi multistage adjustable robust optimization inventory routing adaptive decision rules"
+      ],
+      "coverage": "nonanticipative scenario partitions, adaptive robust rules and exact inventory-routing controls",
+      "status": "targeted_coverage_verified_not_exhaustive"
+    },
+    {
+      "family_id": "Q13_sensitivity_design",
+      "queries_executed": [
+        "Morris elementary effects Sobol global sensitivity primary paper DOI"
+      ],
+      "coverage": "Morris screening and Sobol variance decomposition",
+      "status": "foundational_primary_sources_verified"
+    },
+    {
+      "family_id": "Q14_simulation_optimization",
+      "queries_executed": [
+        "site:pubsonline.informs.org/doi ranking selection simulation optimization indifference zone"
+      ],
+      "coverage": "selection bias, indifference zones and probability of correct selection",
+      "status": "targeted_coverage_verified_not_exhaustive"
+    },
+    {
+      "family_id": "Q15_rl_generalization",
+      "queries_executed": [
+        "site:arxiv.org Procgen generalization benchmark procedural generation reinforcement learning"
+      ],
+      "coverage": "generator-disjoint generalization and environment diversity",
+      "status": "method_sources_verified_no_rl_superiority_claim_imported"
+    },
+    {
+      "family_id": "Q16_military_logistics",
+      "queries_executed": [
+        "site:gao.gov/products GAO materiel distribution customer wait time end-to-end performance final destination",
+        "site:gao.gov/products contested mobility military logistics readiness communications asset visibility disconnected"
+      ],
+      "coverage": "distribution metrics, final destination, cost, contested mobility and disconnected asset visibility",
+      "status": "official_audit_sources_verified_not_a_doctrine_review"
+    },
+    {
+      "family_id": "Q17_continual_retained_learning",
+      "queries_executed": [
+        "site:proceedings.mlr.press continual reinforcement learning retention transfer reset compute",
+        "site:proceedings.mlr.press/v199 powers continual reinforcement learning CORA",
+        "site:proceedings.mlr.press/v232 Caccia task agnostic continual reinforcement learning",
+        "site:proceedings.mlr.press/v119 Knoblauch optimal continual learning NP-hard"
+      ],
+      "coverage": "continual evaluation, forgetting, forward transfer, replay and memory",
+      "status": "conditional_method_coverage_only_paper3_not_authorized"
+    },
+    {
+      "family_id": "Q18_factory_cobb_douglas",
+      "queries_executed": [
+        "10.1080/00207543.2024.2425771 Garrido Ponguta factory resilience Cobb Douglas"
+      ],
+      "coverage": "factory APP Cobb-Douglas resilience construct and published coefficient scope",
+      "status": "primary_source_and_local_pdf_verified"
+    }
+  ],
+  "source_to_search_family": {
+    "S01": "Q01_information_value_bounds",
+    "S02": "Q01_information_value_bounds",
+    "S03": "Q01_information_value_bounds",
+    "S04": "Q01_information_value_bounds",
+    "S05": "Q02_pomdp_censored_demand",
+    "S06": "Q02_pomdp_censored_demand",
+    "S07": "Q02_pomdp_censored_demand",
+    "S08": "Q03_inventory_lead_time",
+    "S09": "Q02_pomdp_censored_demand",
+    "S10": "Q03_inventory_lead_time",
+    "S11": "Q04_product_substitution",
+    "S12": "Q04_product_substitution",
+    "S13": "Q05_advance_information_capacity",
+    "S14": "Q05_advance_information_capacity",
+    "S15": "Q05_advance_information_capacity",
+    "S16": "Q06_transshipment_inventory_routing",
+    "S17": "Q06_transshipment_inventory_routing",
+    "S18": "Q06_transshipment_inventory_routing",
+    "S19": "Q07_maintenance_repair",
+    "S20": "Q07_maintenance_repair",
+    "S21": "Q08_inspection_quality",
+    "S22": "Q08_inspection_quality",
+    "S23": "Q08_inspection_quality",
+    "S24": "Q09_assemble_to_order",
+    "S25": "Q09_assemble_to_order",
+    "S26": "Q09_assemble_to_order",
+    "S27": "Q10_queue_admission_abandonment",
+    "S28": "Q10_queue_admission_abandonment",
+    "S29": "Q11_multi_echelon_information",
+    "S30": "Q11_multi_echelon_information",
+    "S31": "Q13_sensitivity_design",
+    "S32": "Q13_sensitivity_design",
+    "S33": "Q12_adaptive_robust_optimization",
+    "S34": "Q12_adaptive_robust_optimization",
+    "S35": "Q12_adaptive_robust_optimization",
+    "S36": "Q06_transshipment_inventory_routing",
+    "S37": "Q06_transshipment_inventory_routing",
+    "S38": "Q06_transshipment_inventory_routing",
+    "S39": "Q16_military_logistics",
+    "S40": "Q16_military_logistics",
+    "S41": "Q16_military_logistics",
+    "S42": "Q14_simulation_optimization",
+    "S43": "Q15_rl_generalization",
+    "S44": "Q15_rl_generalization",
+    "S45": "Q17_continual_retained_learning",
+    "S46": "Q17_continual_retained_learning",
+    "S47": "Q17_continual_retained_learning",
+    "S48": "Q17_continual_retained_learning",
+    "S49": "Q17_continual_retained_learning",
+    "S50": "Q18_factory_cobb_douglas"
+  },
+  "included_records": [
+    {"record_id":"S01","citation":"Avriel and Williams (1970), The Value of Information and Stochastic Programming","primary_source_url":"https://doi.org/10.1287/opre.18.5.947","doi":"10.1287/opre.18.5.947","mechanism":"expected value of perfect information","equation_or_parameter_evidence":"EVPI compares planning with and without advance revelation; no MFSC numerical range transfers","embeddability_family":"information_value_bounds","inclusion_rationale":"foundational definition and upper-bound logic","exclusion_or_limit":"does not establish deployable observable value or resource matching"},
+    {"record_id":"S02","citation":"Brown, Smith, and Sun (2010), Information Relaxations and Duality in Stochastic Dynamic Programs","primary_source_url":"https://doi.org/10.1287/opre.1090.0796","doi":"10.1287/opre.1090.0796","mechanism":"relax nonanticipativity and penalize privileged information","equation_or_parameter_evidence":"dual penalty converts a perfect-information relaxation into an upper bound","embeddability_family":"information_value_bounds","inclusion_rationale":"direct method for tighter H_PI ceilings","exclusion_or_limit":"penalty validity must be proved for the frozen DES state and objective"},
+    {"record_id":"S03","citation":"Balseiro and Brown (2019), Approximations to Stochastic Dynamic Programs via Information Relaxation Duality","primary_source_url":"https://doi.org/10.1287/opre.2018.1782","doi":"10.1287/opre.2018.1782","mechanism":"approximate-value-function penalties for tighter information relaxations","equation_or_parameter_evidence":"penalized perfect-information bound tied to a greedy heuristic and approximate value function","embeddability_family":"information_value_bounds","inclusion_rationale":"shows why raw perfect-information bounds may be weak","exclusion_or_limit":"its application objectives and asymptotic regimes do not transfer; earlier draft attribution to Ye, Zhou, and Zhu was corrected"},
+    {"record_id":"S04","citation":"Delage, Arroyo, and Ye (2014), The Value of Stochastic Modeling in Two-Stage Stochastic Programs with Cost Uncertainty","primary_source_url":"https://doi.org/10.1287/opre.2014.1318","doi":"10.1287/opre.2014.1318","mechanism":"value of stochastic modeling relative to a mean-value solution","equation_or_parameter_evidence":"two-stage mixed-integer objective uncertainty; VSS-like comparison","embeddability_family":"stochastic_solution_value","inclusion_rationale":"prevents assuming stochastic control must beat a robust mean-value calendar","exclusion_or_limit":"two-stage cost-uncertainty results are not an MFSC effect-size bound"},
+    {"record_id":"S05","citation":"Smallwood and Sondik (1973), The Optimal Control of Partially Observable Markov Processes over a Finite Horizon","primary_source_url":"https://doi.org/10.1287/opre.21.5.1071","doi":"10.1287/opre.21.5.1071","mechanism":"belief state as the control state of a finite POMDP","equation_or_parameter_evidence":"finite-horizon value is piecewise-linear and convex in current state probabilities","embeddability_family":"pomdp_belief_sufficiency","inclusion_rationale":"primary structural source for belief-state sufficiency","exclusion_or_limit":"does not prove repository observations or an ad hoc feature vector are Markov-sufficient"},
+    {"record_id":"S06","citation":"Chen (2010), Bounds and Heuristics for Optimal Bayesian Inventory Control with Unobserved Lost Sales","primary_source_url":"https://doi.org/10.1287/opre.1090.0726","doi":"10.1287/opre.1090.0726","mechanism":"Bayesian inventory control under censored sales","equation_or_parameter_evidence":"sales are censored by inventory and the unknown demand parameter enters the posterior","embeddability_family":"censored_demand_information","inclusion_rationale":"direct mechanism for learning value under true lost-sales censoring","exclusion_or_limit":"MFSC logs requested orders, so censoring is currently false unless Garrido validates a different information process"},
+    {"record_id":"S07","citation":"Huh, Janakiraman, Muckstadt, and Rusmevichientong (2009), An Adaptive Algorithm for Finding the Optimal Base-Stock Policy in Lost Sales Inventory Systems with Censored Demand","primary_source_url":"https://doi.org/10.1287/moor.1080.0367","doi":"10.1287/moor.1080.0367","mechanism":"adaptive learning of a base-stock policy from censored demand","equation_or_parameter_evidence":"structured base-stock comparator and regret/convergence rather than generic RL","embeddability_family":"censored_demand_information","inclusion_rationale":"raises the observable-policy comparator bar","exclusion_or_limit":"objective and censoring assumptions require separate MFSC validation"},
+    {"record_id":"S08","citation":"Zhang, Chao, and Shi (2020), Closing the Gap: A Learning Algorithm for Lost-Sales Inventory Systems with Lead Times","primary_source_url":"https://doi.org/10.1287/mnsc.2019.3288","doi":"10.1287/mnsc.2019.3288","mechanism":"censored lost-sales learning with positive replenishment lead time","equation_or_parameter_evidence":"pipeline decisions have lasting impact; regret is measured against a full-information base-stock benchmark","embeddability_family":"lost_sales_lead_time","inclusion_rationale":"supplies the persistence mechanism and a strong structured comparator","exclusion_or_limit":"lead-time distribution and cost objective do not transfer to MFSC canonical ReT"},
+    {"record_id":"S09","citation":"Chen, Jiang, Zhang, and Zhou (2024), Learning to Order for Inventory Systems with Lost Sales and Uncertain Supplies","primary_source_url":"https://doi.org/10.1287/mnsc.2022.02476","doi":"10.1287/mnsc.2022.02476","mechanism":"simultaneous demand censoring and uncertain supply learning","equation_or_parameter_evidence":"order decisions learn under lost sales and supply uncertainty","embeddability_family":"censored_demand_uncertain_supply","inclusion_rationale":"covers an information-and-supply mechanism absent from ordinary replenishment","exclusion_or_limit":"no evidence that MFSC supply yield is unknown or that demand is censored"},
+    {"record_id":"S10","citation":"Goldberg, Katz-Rogozhnikov, Lu, Sharma, and Squillante (2016), Asymptotic Optimality of Constant-Order Policies for Lost Sales Inventory Models with Large Lead Times","primary_source_url":"https://doi.org/10.1287/moor.2015.0760","doi":"10.1287/moor.2015.0760","mechanism":"constant-order policies as strong lost-sales comparators","equation_or_parameter_evidence":"asymptotic optimality in a large-lead-time regime","embeddability_family":"lost_sales_lead_time","inclusion_rationale":"prevents treating a constant calendar as a weak baseline","exclusion_or_limit":"asymptotic regime is not an MFSC guarantee"},
+    {"record_id":"S11","citation":"Nagarajan and Rajagopalan (2008), Inventory Models for Substitutable Products: Optimal Policies and Heuristics","primary_source_url":"https://doi.org/10.1287/mnsc.1080.0871","doi":"10.1287/mnsc.1080.0871","mechanism":"structured inventory control under product substitution","equation_or_parameter_evidence":"compatibility and substitution couple product inventories; optimal/heuristic policies are structured","embeddability_family":"multi_product_substitution","inclusion_rationale":"shows product labels alone do not require a neural controller","exclusion_or_limit":"MFSC compatibility matrix and product demand shares are unavailable"},
+    {"record_id":"S12","citation":"Chen and Chao (2020), Dynamic Inventory Control with Stockout Substitution and Demand Learning","primary_source_url":"https://doi.org/10.1287/mnsc.2019.3474","doi":"10.1287/mnsc.2019.3474","mechanism":"demand learning with stockout-based substitution","equation_or_parameter_evidence":"unknown primary demand and substitution probabilities induce structured exploration","embeddability_family":"multi_product_substitution","inclusion_rationale":"establishes a falsifiable learning mechanism and comparator class","exclusion_or_limit":"substitution suitability and probabilities are domain-blocked"},
+    {"record_id":"S13","citation":"Ozer and Wei (2004), Inventory Control with Limited Capacity and Advance Demand Information","primary_source_url":"https://doi.org/10.1287/opre.1040.0126","doi":"10.1287/opre.1040.0126","mechanism":"advance demand information before limited-capacity decisions","equation_or_parameter_evidence":"information lead interacts with a binding capacity constraint","embeddability_family":"advance_information_capacity","inclusion_rationale":"supports the required leading-signal plus scarce-resource conjunction","exclusion_or_limit":"MFSC signal lead and reservation authority are not documented"},
+    {"record_id":"S14","citation":"Boada-Collado, Chopra, and Smilowitz (2022), The Value of Information and Flexibility with Temporal Commitments","primary_source_url":"https://doi.org/10.1287/msom.2022.1090","doi":"10.1287/msom.2022.1090","mechanism":"information and flexible capacity under temporal commitments","equation_or_parameter_evidence":"commitment timing and flexibility determine information value","embeddability_family":"advance_information_capacity","inclusion_rationale":"direct source for delayed or locked commitment as adaptive headroom mechanism","exclusion_or_limit":"does not validate MFSC activation delay, dwell, cancellation, or capacity units"},
+    {"record_id":"S15","citation":"Avci, Gokbayrak, and Nadar (2020), Structural Results for Average-Cost Inventory Models with Markov-Modulated Demand and Partial Information","primary_source_url":"https://doi.org/10.1111/poms.13088","doi":"10.1111/poms.13088","mechanism":"belief-dependent inventory control under a latent demand regime","equation_or_parameter_evidence":"posterior over a Markov regime enters the structured average-cost policy","embeddability_family":"regime_switching_demand","inclusion_rationale":"supplies a non-neural belief-policy comparator","exclusion_or_limit":"MFSC transition matrix, observation kernel and regime persistence are unavailable"},
+    {"record_id":"S16","citation":"Paterson, Teunter, and Glazebrook (2012), Enhanced Lateral Transshipments in a Multi-Location Inventory System","primary_source_url":"https://doi.org/10.1016/j.ejor.2012.03.005","doi":"10.1016/j.ejor.2012.03.005","mechanism":"dynamic lateral inventory pooling across locations","equation_or_parameter_evidence":"location imbalance and transfer decisions generate transshipment value","embeddability_family":"lateral_transshipment","inclusion_rationale":"mechanism source for spatial recourse","exclusion_or_limit":"MFSC lateral lane, lift and lead time are absent and direct central dispatch may dominate"},
+    {"record_id":"S17","citation":"Olsson (2015), Emergency Lateral Transshipments in a Two-Location Inventory System with Positive Transshipment Leadtimes","primary_source_url":"https://doi.org/10.1016/j.ejor.2014.10.015","doi":"10.1016/j.ejor.2014.10.015","mechanism":"emergency lateral transshipment with nonzero delay","equation_or_parameter_evidence":"positive transshipment lead time affects the recourse ranking","embeddability_family":"lateral_transshipment","inclusion_rationale":"supports the explicit transport-delay domination test","exclusion_or_limit":"no transferable MFSC lane or delay range"},
+    {"record_id":"S18","citation":"Kleywegt, Nori, and Savelsbergh (2004), Dynamic Programming Approximations for a Stochastic Inventory Routing Problem","primary_source_url":"https://doi.org/10.1287/trsc.1030.0041","doi":"10.1287/trsc.1030.0041","mechanism":"ADP for joint stochastic inventory-routing decisions","equation_or_parameter_evidence":"inventory state and route decisions are optimized jointly","embeddability_family":"inventory_routing","inclusion_rationale":"requires a strong dynamic routing comparator rather than static routes","exclusion_or_limit":"fleet, payload, turnaround and route graph are MFSC domain gaps"},
+    {"record_id":"S19","citation":"Abbou and Makis (2019), Group Maintenance: A Restless Bandits Approach","primary_source_url":"https://doi.org/10.1287/ijoc.2018.0863","doi":"10.1287/ijoc.2018.0863","mechanism":"finite repairers allocated among degrading facilities","equation_or_parameter_evidence":"continuous-time Markov degradation, Whittle relaxation and indexability","embeddability_family":"finite_repair_crew","inclusion_rationale":"establishes Whittle index and relaxation bounds as mandatory comparators","exclusion_or_limit":"near-zero gaps in its numerical systems do not transfer to MFSC"},
+    {"record_id":"S20","citation":"Sanoubar, de Jonge, Maillart, and Prokopyev (2023), Optimal Condition-Based Maintenance via a Mobile Maintenance Resource","primary_source_url":"https://doi.org/10.1287/trsc.2021.0302","doi":"10.1287/trsc.2021.0302","mechanism":"one mobile resource chooses travel, idle, positioning and repair","equation_or_parameter_evidence":"graph location plus Markov asset condition form the MDP state","embeddability_family":"finite_repair_crew","inclusion_rationale":"matches scarcity, travel commitment and state-dependent ranking reversal","exclusion_or_limit":"MFSC crew count, skills, travel and repair distributions remain unvalidated"},
+    {"record_id":"S21","citation":"Bai and Yun (1996), Optimal Allocation of Inspection Effort in a Serial Multi-Stage Production System","primary_source_url":"https://doi.org/10.1016/0360-8352(96)00008-3","doi":"10.1016/0360-8352(96)00008-3","mechanism":"limited inspection machines allocated by location and inspection fraction","equation_or_parameter_evidence":"production rate is constrained by scarce inspection capacity","embeddability_family":"inspection_quality_control","inclusion_rationale":"supplies a real throughput-versus-information tradeoff","exclusion_or_limit":"MFSC inspection sensitivity, specificity and inspector-hours are unavailable"},
+    {"record_id":"S22","citation":"Tang (1991), Designing an Optimal Production System with Inspection","primary_source_url":"https://doi.org/10.1016/0377-2217(91)90334-R","doi":"10.1016/0377-2217(91)90334-R","mechanism":"joint inspection and production-system design","equation_or_parameter_evidence":"inspection and capacity choices are coupled","embeddability_family":"inspection_quality_control","inclusion_rationale":"prevents treating inspection as a free signal","exclusion_or_limit":"cost and defect structure do not transfer"},
+    {"record_id":"S23","citation":"Bendavid and Herer (2009), Economic Optimization of Off-Line Inspection in a Process that also Produces Non-Conforming Units When in Control and Conforming Units When Out of Control","primary_source_url":"https://doi.org/10.1016/j.ejor.2008.01.026","doi":"10.1016/j.ejor.2008.01.026","mechanism":"inspection/disposition under an imperfectly informative process state","equation_or_parameter_evidence":"in-control and out-of-control states can both produce conforming and nonconforming output","embeddability_family":"inspection_quality_control","inclusion_rationale":"supports explicit false classification and latent quality state","exclusion_or_limit":"MFSC current kernel detects generated defects perfectly and exposes no inspection action"},
+    {"record_id":"S24","citation":"Akcay and Xu (2004), Joint Inventory Replenishment and Component Allocation Optimization in an Assemble-to-Order System","primary_source_url":"https://doi.org/10.1287/mnsc.1030.0167","doi":"10.1287/mnsc.1030.0167","mechanism":"joint component replenishment and allocation","equation_or_parameter_evidence":"two-stage stochastic integer program; allocation subproblem is multidimensional knapsack","embeddability_family":"component_kit_control","inclusion_rationale":"defines conservation and an exact comparator family","exclusion_or_limit":"MFSC component identities, BOMs and inventories are aggregated away"},
+    {"record_id":"S25","citation":"Plambeck (2008), Asymptotically Optimal Control for an Assemble-to-Order System with Capacitated Component Production and Fixed Transport Costs","primary_source_url":"https://doi.org/10.1287/opre.1070.0497","doi":"10.1287/opre.1070.0497","mechanism":"capacitated component production with transport cost and dynamic sequencing","equation_or_parameter_evidence":"component production, expedition/shipping and order sequencing are coupled","embeddability_family":"component_kit_control","inclusion_rationale":"raises comparator bar to structured threshold or Brownian controls","exclusion_or_limit":"MFSC component transport and setup parameters are unavailable"},
+    {"record_id":"S26","citation":"Reiman, Wan, and Wang (2023), Asymptotically Optimal Inventory Control for Assemble-to-Order Systems","primary_source_url":"https://doi.org/10.1287/stsy.2022.0099","doi":"10.1287/stsy.2022.0099","mechanism":"multistage component replenishment and allocation","equation_or_parameter_evidence":"policies depend on BOMs, component balances, backlogs and outstanding lead times","embeddability_family":"component_kit_control","inclusion_rationale":"supplies a strong multistage stochastic-program comparator","exclusion_or_limit":"asymptotic optimality and system parameters do not transfer"},
+    {"record_id":"S27","citation":"Ata (2006), Dynamic Control of a Multiclass Queue with Thin Arrival Streams","primary_source_url":"https://doi.org/10.1287/opre.1060.0308","doi":"10.1287/opre.1060.0308","mechanism":"admission and sequencing in a due-date multiclass queue","equation_or_parameter_evidence":"rigid due-date lead times, rejection with lost revenue, and nested threshold policy","embeddability_family":"queue_admission_priority","inclusion_rationale":"provides operational admission authority and a strong threshold comparator","exclusion_or_limit":"MFSC has backlog but no validated mission expiry or rejection authority"},
+    {"record_id":"S28","citation":"Long, Shimkin, Zhang, and Zhang (2020), Dynamic Scheduling of Multiclass Many-Server Queues with Abandonment: The Generalized c-mu/h Rule","primary_source_url":"https://doi.org/10.1287/opre.2019.1908","doi":"10.1287/opre.2019.1908","mechanism":"multiclass priority under abandonment","equation_or_parameter_evidence":"abandonment-sensitive generalized priority rule","embeddability_family":"queue_admission_priority","inclusion_rationale":"requires a strong classical scheduling comparator","exclusion_or_limit":"MFSC patience distributions and abandonment costs are unavailable"},
+    {"record_id":"S29","citation":"Zipkin (1984), On the Imbalance of Inventories in Multi-Echelon Systems","primary_source_url":"https://doi.org/10.1287/moor.9.3.402","doi":"10.1287/moor.9.3.402","mechanism":"inventory imbalance across echelons","equation_or_parameter_evidence":"allocation and echelon state create structural imbalance","embeddability_family":"multi_echelon_allocation","inclusion_rationale":"supports explicit echelon inventory and pipeline state","exclusion_or_limit":"information lag alone cannot improve unchanged actions"},
+    {"record_id":"S30","citation":"Moinzadeh (2002), A Multi-Echelon Inventory System with Information Exchange","primary_source_url":"https://doi.org/10.1287/mnsc.48.3.414.7730","doi":"10.1287/mnsc.48.3.414.7730","mechanism":"information exchange in a multi-echelon inventory system","equation_or_parameter_evidence":"inventory information changes ordering or allocation only through a defined authority","embeddability_family":"multi_echelon_information","inclusion_rationale":"supports the information-timing and ownership test","exclusion_or_limit":"MFSC separate authorities and reporting-delay distribution are unavailable"},
+    {"record_id":"S31","citation":"Morris (1991), Factorial Sampling Plans for Preliminary Computational Experiments","primary_source_url":"https://doi.org/10.1080/00401706.1991.10484804","doi":"10.1080/00401706.1991.10484804","mechanism":"elementary-effects screening","equation_or_parameter_evidence":"factorial sampling identifies influential factors in computational experiments","embeddability_family":"global_sensitivity_design","inclusion_rationale":"supports sparse screening before expensive optimization","exclusion_or_limit":"input distributions and ranges must be frozen from the domain"},
+    {"record_id":"S32","citation":"Sobol (2001), Global Sensitivity Indices for Nonlinear Mathematical Models and Their Monte Carlo Estimates","primary_source_url":"https://doi.org/10.1016/S0378-4754(00)00270-6","doi":"10.1016/S0378-4754(00)00270-6","mechanism":"variance-based global sensitivity","equation_or_parameter_evidence":"S_i=Var(E[H|X_i])/Var(H) and related total effects","embeddability_family":"global_sensitivity_design","inclusion_rationale":"supports interaction and connected-region screening","exclusion_or_limit":"indices are meaningful only under explicit input distributions"},
+    {"record_id":"S33","citation":"Postek and den Hertog (2016), Multistage Adjustable Robust Mixed-Integer Optimization via Iterative Splitting of the Uncertainty Set","primary_source_url":"https://doi.org/10.1287/ijoc.2016.0696","doi":"10.1287/ijoc.2016.0696","mechanism":"integer and continuous decision rules adapted to revealed uncertainty","equation_or_parameter_evidence":"uncertainty-set partitions preserve nonanticipativity while permitting later actions to differ","embeddability_family":"adaptive_robust_optimization","inclusion_rationale":"supplies a fair robust adaptive comparator","exclusion_or_limit":"uncertainty sets and decision-rule approximations require a frozen contract"},
+    {"record_id":"S34","citation":"Lorca, Sun, Litvinov, and Zheng (2016), Multistage Adaptive Robust Optimization for the Unit Commitment Problem","primary_source_url":"https://doi.org/10.1287/opre.2015.1456","doi":"10.1287/opre.2015.1456","mechanism":"ramping and commitment under sequentially revealed uncertainty","equation_or_parameter_evidence":"intertemporal ramp and unit-commitment constraints make timing causal","embeddability_family":"dynamic_capacity_commitment","inclusion_rationale":"supports persistence, activation delay and robust comparator obligations","exclusion_or_limit":"power-system units and uncertainty ranges do not transfer"},
+    {"record_id":"S35","citation":"Cui, Long, Qi, and Zhang (2023), The Inventory Routing Problem Under Uncertainty","primary_source_url":"https://doi.org/10.1287/opre.2022.2407","doi":"10.1287/opre.2022.2407","mechanism":"adaptive inventory routing under distributional ambiguity","equation_or_parameter_evidence":"finite-horizon exact algorithms produce decisions that vary with realized demand","embeddability_family":"adaptive_inventory_routing","inclusion_rationale":"requires a resource-matched exact or robust routing comparator","exclusion_or_limit":"uses a service-violation objective, not canonical ReT"},
+    {"record_id":"S36","citation":"Adulyasak, Cordeau, and Jans (2015), Benders Decomposition for Production Routing Under Demand Uncertainty","primary_source_url":"https://doi.org/10.1287/opre.2015.1401","doi":"10.1287/opre.2015.1401","mechanism":"joint production, setup, inventory and routing under uncertainty","equation_or_parameter_evidence":"two-stage and multistage formulations use Benders and rollout","embeddability_family":"integrated_production_routing","inclusion_rationale":"requires joint rather than separately tuned comparators","exclusion_or_limit":"MFSC setup, payload and fleet ledgers are absent"},
+    {"record_id":"S37","citation":"Zhang, Luo, Baldacci, and Lim (2021), A Benders Decomposition Approach for the Multivehicle Production Routing Problem with Order-up-to-Level Policy","primary_source_url":"https://doi.org/10.1287/trsc.2019.0964","doi":"10.1287/trsc.2019.0964","mechanism":"multivehicle production routing with order-up-to replenishment","equation_or_parameter_evidence":"exact Benders comparator couples production, visits and vehicle decisions","embeddability_family":"integrated_production_routing","inclusion_rationale":"sets a strong classical optimization baseline","exclusion_or_limit":"fleet capacity and route data are domain-blocked"},
+    {"record_id":"S38","citation":"Chitsaz, Cordeau, and Jans (2019), A Unified Decomposition Matheuristic for Assembly, Production, and Inventory Routing","primary_source_url":"https://doi.org/10.1287/ijoc.2018.0817","doi":"10.1287/ijoc.2018.0817","mechanism":"integrated assembly, inventory and routing","equation_or_parameter_evidence":"setup and vehicle subproblems are conserved in one optimization","embeddability_family":"integrated_production_routing","inclusion_rationale":"prevents weak decomposed baselines","exclusion_or_limit":"its objective and data do not transfer"},
+    {"record_id":"S39","citation":"GAO (2015), Defense Logistics: Improvements Needed to Accurately Assess the Performance of DOD's Materiel Distribution Pipeline, GAO-15-226","primary_source_url":"https://www.gao.gov/products/gao-15-226","doi":null,"mechanism":"end-to-end military distribution measurement","equation_or_parameter_evidence":"logistics response time, customer wait time, cost and final-destination coverage are separate ledgers","embeddability_family":"military_logistics_semantics","inclusion_rationale":"official primary audit of operational metric requirements","exclusion_or_limit":"provides semantics, not MFSC parameter ranges or an adaptive-policy effect"},
+    {"record_id":"S40","citation":"GAO (2021), Defense Transportation: DOD Can Better Leverage Existing Contested Mobility Studies and Improve Training, GAO-21-125","primary_source_url":"https://www.gao.gov/products/gao-21-125","doi":null,"mechanism":"mobility under contested operations","equation_or_parameter_evidence":"implementation tracking and training are readiness conditions","embeddability_family":"military_logistics_semantics","inclusion_rationale":"prevents reducing contested logistics to a larger stochastic delay","exclusion_or_limit":"does not validate any MFSC risk frequency or impact"},
+    {"record_id":"S41","citation":"GAO (2021), Defense Logistics: Army Should Ensure New System Operates in All Situations and Soldiers Complete Training, GAO-21-313","primary_source_url":"https://www.gao.gov/products/gao-21-313","doi":null,"mechanism":"asset visibility and operation under disconnected conditions","equation_or_parameter_evidence":"information availability depends on communications and user/system operation","embeddability_family":"military_logistics_semantics","inclusion_rationale":"supports explicit observer, timing and communications semantics","exclusion_or_limit":"does not establish a specific MFSC signal or observation kernel"},
+    {"record_id":"S42","citation":"Boesel, Nelson, and Kim (2003), Using Ranking and Selection to Clean Up after Simulation Optimization","primary_source_url":"https://doi.org/10.1287/opre.51.5.814.16751","doi":"10.1287/opre.51.5.814.16751","mechanism":"selection-bias correction after large simulation search","equation_or_parameter_evidence":"subset selection plus indifference-zone sampling targets prespecified probability of correct or near-best selection","embeddability_family":"simulation_optimization_design","inclusion_rationale":"supports fresh validation after adaptive cell search","exclusion_or_limit":"does not choose the project's 0.01 ReT practical threshold"},
+    {"record_id":"S43","citation":"Cobbe, Hesse, Hilton, and Schulman (2019), Leveraging Procedural Generation to Benchmark Reinforcement Learning","primary_source_url":"https://arxiv.org/abs/1912.01588","doi":null,"mechanism":"generalization to unseen procedurally generated environments","equation_or_parameter_evidence":"training and test generator diversity are explicit benchmark variables","embeddability_family":"rl_environment_generalization","inclusion_rationale":"supports disjoint generator universes","exclusion_or_limit":"does not establish any RL advantage in the DES"},
+    {"record_id":"S44","citation":"Justesen, Torrado, Bontrager, Khalifa, Togelius, and Risi (2018), Illuminating Generalization in Deep Reinforcement Learning through Procedural Level Generation","primary_source_url":"https://arxiv.org/abs/1806.10729","doi":null,"mechanism":"procedural distribution affects RL generalization","equation_or_parameter_evidence":"generalization depends on the level-generator distribution","embeddability_family":"rl_environment_generalization","inclusion_rationale":"supports freezing and separating tape generators","exclusion_or_limit":"game-level findings are method evidence only"},
+    {"record_id":"S45","citation":"Powers, Xing, Kolve, Mottaghi, and Gupta (2022), CORA: Benchmarks, Baselines, and Metrics as a Platform for Continual Reinforcement Learning Agents","primary_source_url":"https://proceedings.mlr.press/v199/powers22b.html","doi":null,"mechanism":"continual evaluation, forgetting and forward transfer metrics","equation_or_parameter_evidence":"CORA separates continual evaluation, isolated forgetting and zero-shot forward transfer","embeddability_family":"retained_learning_protocol","inclusion_rationale":"supports separate retention and transfer outcomes","exclusion_or_limit":"Paper 3 remains prohibited until learned Paper 2 value exists"},
+    {"record_id":"S46","citation":"Kaplanis, Shanahan, and Clopath (2019), Policy Consolidation for Continual Reinforcement Learning","primary_source_url":"https://proceedings.mlr.press/v97/kaplanis19a.html","doi":null,"mechanism":"regularization-based policy retention across changing tasks","equation_or_parameter_evidence":"multiple policy timescales reduce catastrophic forgetting","embeddability_family":"retained_learning_protocol","inclusion_rationale":"motivates persistent-weight and frozen-policy controls","exclusion_or_limit":"does not prove organizational learning or matched-compute transfer"},
+    {"record_id":"S47","citation":"Kaplanis, Shanahan, and Clopath (2018), Continual Reinforcement Learning with Complex Synapses","primary_source_url":"https://proceedings.mlr.press/v80/kaplanis18a.html","doi":null,"mechanism":"multi-timescale synaptic retention","equation_or_parameter_evidence":"complex synapses trade plasticity against retention","embeddability_family":"retained_learning_protocol","inclusion_rationale":"supports explicit forgetting/plasticity measurement","exclusion_or_limit":"architecture performance is not an MFSC retained-value result"},
+    {"record_id":"S48","citation":"Caccia, Mueller, Kim, Charlin, and Fakoor (2023), Task-Agnostic Continual Reinforcement Learning: Gaining Insights and Overcoming Challenges","primary_source_url":"https://proceedings.mlr.press/v232/caccia23a.html","doi":null,"mechanism":"task-agnostic recurrent replay under limited data and compute","equation_or_parameter_evidence":"replay and recurrence affect adaptation and forgetting","embeddability_family":"retained_learning_protocol","inclusion_rationale":"supports matched data, compute and replay controls","exclusion_or_limit":"benchmark superiority does not transfer to recurrent disruption campaigns"},
+    {"record_id":"S49","citation":"Knoblauch, Husain, and Diethe (2020), Optimal Continual Learning Has Perfect Memory and Is NP-Hard","primary_source_url":"https://proceedings.mlr.press/v119/knoblauch20a.html","doi":null,"mechanism":"computational and memory limits of continual learning","equation_or_parameter_evidence":"optimal continual learning generally requires perfect memory and solves an NP-hard problem","embeddability_family":"retained_learning_protocol","inclusion_rationale":"requires replay/memory baselines and limits regularization-only claims","exclusion_or_limit":"the theorem is not a Paper 3 impossibility result for the finite experiment"},
+    {"record_id":"S50","citation":"Garrido, Ponguta, and Garcia-Reyes (2025; online 2024), Zero-Inventory Plans, Constant Workforce, or Hybrid Approach? Analysing Pure Production Strategies for Enhancing Factory Resilience with Demand Variability","primary_source_url":"https://doi.org/10.1080/00207543.2024.2425771","doi":"10.1080/00207543.2024.2425771","mechanism":"factory aggregate-production-planning strategies evaluated by a Cobb-Douglas resilience construct","equation_or_parameter_evidence":"logit(R)=0.024 ln(zeta)-0.026 ln(epsilon)+0.040 ln(phi)-0.060 ln(tau)-0.1771 ln(kappa_dot); demand variability is the uncertainty; the reported preferred strategy is fixed","embeddability_family":"factory_app_cobb_douglas","inclusion_rationale":"authoritative source for the exact factory construct requested by Garrido","exclusion_or_limit":"not the canonical order-level MFSC endpoint, not spatially calibrated, and not evidence of adaptive-over-open-loop headroom"}
+  ],
+  "excluded_or_not_promoted": [
+    {
+      "class": "secondary_reviews_and_tutorials",
+      "decision": "excluded_as_authority",
+      "rationale": "Useful for discovery only; every retained scientific claim is tied to original research or an official primary audit."
+    },
+    {
+      "class": "generic_rl_beats_baseline_headlines",
+      "decision": "excluded",
+      "rationale": "No headline comparison is portable across objective, information, resources, action rights, comparator strength, or tape generator."
+    },
+    {
+      "class": "unverified_numerical_ranges",
+      "decision": "excluded",
+      "rationale": "Lead times, crew counts, repair factors, patience, signal accuracy, fleet capacity and costs are not imported without matching MFSC units and operational referents."
+    },
+    {
+      "class": "perishable_inventory_for_current_ration",
+      "decision": "domain_excluded",
+      "rationale": "The thesis product is approximately three-year nonperishable; short shelf-life mechanisms contradict the current product contract."
+    },
+    {
+      "class": "cobb_douglas_as_canonical_rescue",
+      "decision": "excluded",
+      "rationale": "The Garrido index is retained as a factory construct sensitivity, not as a post hoc replacement for ret_excel_visible_v1."
+    },
+    {
+      "class": "paper3_algorithm_selection",
+      "decision": "not_promoted",
+      "rationale": "Continual-learning papers inform controls only; Paper 3 is unauthorized until Paper 2 establishes learned adaptive value."
+    },
+    {
+      "class": "search_results_from_2025_or_2026_without_direct_contract_relevance",
+      "decision": "not_included_in_frozen_mechanism_set",
+      "rationale": "The reconstructive search surfaced newer continual-RL and simulation-optimization papers, but they do not close a recorded mechanism gap or change a current gate. A systematic update remains open."
+    }
+  ],
+  "coverage_gaps": [
+    {
+      "gap_id": "G01_original_search_provenance",
+      "gap": "The original discovery dates, databases, result counts and screening decisions were not retained.",
+      "impact": "The review cannot claim systematic or exhaustive coverage.",
+      "closure_evidence": "A preregistered database search with exported results, deduplication, title/abstract screening and full-text exclusion reasons."
+    },
+    {
+      "gap_id": "G02_full_text_equation_verification",
+      "gap": "Some paywalled sources were verified from publisher metadata/abstracts rather than a newly archived full-text copy.",
+      "impact": "Only the structural evidence stated in the inventory is retained; no unverified coefficient or range is imported.",
+      "closure_evidence": "Archive and hash legally accessible full texts, then record page/equation locators."
+    },
+    {
+      "gap_id": "G03_imperfect_repair",
+      "gap": "No verified MFSC-compatible imperfect-repair factor or post-repair state distribution was found.",
+      "impact": "Imperfect repair remains domain-blocked and cannot be introduced by tuning.",
+      "closure_evidence": "Garrido or a directly applicable military maintenance source supplies the physical state, units and plausible range."
+    },
+    {
+      "gap_id": "G04_route_and_fleet_physics",
+      "gap": "Fleet count, payload, turnaround, lateral lanes, convoy contention and signal ownership are unavailable.",
+      "impact": "Inventory-routing and lateral-transshipment classes are embeddability hypotheses, not licensed MFSC contracts.",
+      "closure_evidence": "Validated Garrido facts with a conservation ledger and pre-action observation timing."
+    },
+    {
+      "gap_id": "G05_product_and_component_physics",
+      "gap": "Twenty-one product demand shares, BOMs, compatibility/substitution, component inventory and mixed-load lift are unavailable.",
+      "impact": "Product-mix and component-kit mechanisms remain blocked.",
+      "closure_evidence": "Named products/components, BOMs, suitability matrix, inventories, lead times and authority."
+    },
+    {
+      "gap_id": "G06_quality_observation_physics",
+      "gap": "Latent quality states, inspection sensitivity/specificity, inspector-hours and unqualified-output consequences are unavailable.",
+      "impact": "Inspection has zero action liveness in the current kernel and the extension is unvalidated.",
+      "closure_evidence": "A Garrido-approved quality and inspection ledger with a null regime."
+    },
+    {
+      "gap_id": "G07_queue_deadlines",
+      "gap": "Mission expiry, patience distributions, class values and rejection authority are unavailable.",
+      "impact": "Admission/abandonment cannot be embedded without inventing demand shedding.",
+      "closure_evidence": "Operational deadlines and a lost-demand ledger approved before results."
+    },
+    {
+      "gap_id": "G08_regime_signal_calibration",
+      "gap": "No validated latent-regime transition probabilities, leading observation kernel, activation delay or minimum dwell were found.",
+      "impact": "A regime-switching reservation contract remains a disclosed researcher extension requiring sign-off.",
+      "closure_evidence": "Primary operational data or Garrido-approved ranges and a falsification cell."
+    },
+    {
+      "gap_id": "G09_current_military_doctrine",
+      "gap": "The GAO sources are official performance audits, not a comprehensive current military-logistics doctrine review.",
+      "impact": "They support observability and readiness semantics only.",
+      "closure_evidence": "A separately scoped search of current official doctrine and technical manuals tied to the modeled echelon."
+    },
+    {
+      "gap_id": "G10_retained_learning_estimand",
+      "gap": "The retained papers do not directly validate persistent-versus-reset learning under identical recurrent-campaign multisets, information and total compute in this DES.",
+      "impact": "They set control obligations but cannot authorize Paper 3.",
+      "closure_evidence": "First confirm learned Paper 2 value, then preregister the exact persistent/reset/frozen/scratch estimand and virgin campaign design."
+    },
+    {
+      "gap_id": "G11_latest_publication_refresh",
+      "gap": "The reconstructive search was targeted and did not systematically screen all 2025-2026 publications across bibliographic databases.",
+      "impact": "No claim of current exhaustive literature coverage is permitted.",
+      "closure_evidence": "A dated systematic update with database exports and inclusion flow."
+    }
+  ],
+  "audit_corrections": [
+    {
+      "correction": "DOI 10.1287/opre.2018.1782 was attributed to Ye, Zhou, and Zhu in the review; publisher metadata identifies Santiago R. Balseiro and David B. Brown.",
+      "action": "Corrected the mechanism matrix and prose attribution."
+    },
+    {
+      "correction": "Several citations used online-first versus issue-year labels inconsistently.",
+      "action": "Standardized Chen to 2010, Boada-Collado et al. to 2022, and Avci et al. to 2020 while retaining Garrido as 2025 with online-2024 disclosure."
+    },
+    {
+      "correction": "The review invoked POMDP belief sufficiency without a direct foundational source.",
+      "action": "Added Smallwood and Sondik (1973) and limited the inference to specified finite-state transition and observation kernels."
+    },
+    {
+      "correction": "The factory Cobb-Douglas construct was absent from the literature matrix despite being a current metric-governance question.",
+      "action": "Added Garrido, Ponguta, and Garcia-Reyes with exact published coefficients and an explicit non-transfer boundary."
+    }
+  ],
+  "validation": {
+    "validated_on": "2026-07-13",
+    "json_parse": "pass",
+    "record_count": 50,
+    "unique_record_ids": true,
+    "unique_primary_source_urls": true,
+    "link_method": "Concurrent GET with redirects from every recorded primary_source_url, followed by publisher/search inspection for access-blocked pages.",
+    "link_results": {
+      "http_2xx": 13,
+      "publisher_403_after_successful_doi_or_canonical_resolution": 37,
+      "unresolved_or_transport_failure": 0
+    },
+    "interpretation": "A 403 is recorded as publisher bot/access blocking only when the DOI or canonical report URL resolved to the expected publisher page. It is not treated as missing source evidence.",
+    "metadata_crosscheck": "DOI metadata and primary publisher pages were checked for title, authorship and publication year; the audit corrections above were applied to the review."
+  }
+}

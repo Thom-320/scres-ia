@@ -1,0 +1,305 @@
+{
+  "contract_id": "war_stress_timing_atlas_v1",
+  "status": "FROZEN_DESIGN_BEFORE_IMPLEMENTATION_AND_SEED_ACCESS",
+  "scientific_question": "Under a preregistered conditional wartime stress envelope, does physically constrained event-timed control improve canonical ReT over the strongest same-cell static and open-loop comparators without buying resources or shedding service?",
+  "relationship_to_prior_work": {
+    "garrido_risk_headroom_sensitivity_v1": "closed bounded null for exact Cf1-Cf20 plus impact <=2 and regime-tailored Track-A constants",
+    "restricted_pi_timing_ceiling_v1": "closed unopened because its obsolete cross-regime posture-reversal prerequisite failed",
+    "new_increment": "tests within-cell event timing directly; no cross-regime constant reversal is required",
+    "not_a_rescue": "new risk masks, amplitudes, temporal coupling estimand, comparator and fresh seed blocks are frozen prospectively and all cells must be reported"
+  },
+  "claim_scope": {
+    "allowed": "conditional military supply-chain stress test under the frozen synthetic wartime envelope",
+    "forbidden": [
+      "estimate of real conflict probabilities",
+      "claim that the selected cell represents the MFSC without external calibration",
+      "choose risk amplitudes after learner performance",
+      "report only a winning cell",
+      "rename restricted timing ceiling as total H_PI",
+      "authorize a learner before classical observable validation"
+    ]
+  },
+  "primary_grid": {
+    "masks": [
+      {
+        "id": "LOC_SURGE",
+        "enabled_risks": ["R22", "R24"],
+        "mechanism": "attacks on lines of communication during contingency-demand surges"
+      },
+      {
+        "id": "THEATER_CAPACITY_SURGE",
+        "enabled_risks": ["R21", "R23", "R24"],
+        "mechanism": "environmental and forward-unit capacity loss during contingency demand"
+      },
+      {
+        "id": "PRODUCTION_QUALITY_SURGE",
+        "enabled_risks": ["R11", "R14", "R24"],
+        "mechanism": "assembly breakdowns and quality defects during contingency demand"
+      }
+    ],
+    "frequency_multipliers": [1.0, 2.0, 4.0, 8.0],
+    "impact_multipliers": [1.0, 2.0, 4.0],
+    "coupling_modes": [
+      {
+        "id": "independent",
+        "non_R24_onset_offset_hours": null,
+        "definition": "policy-independent native per-risk CRN streams"
+      },
+      {
+        "id": "disruption_leads_surge_72h",
+        "non_R24_onset_offset_hours": -72,
+        "definition": "each cluster-driving R24 event has one coupled non-R24 disruption starting 72 hours earlier"
+      },
+      {
+        "id": "coincident",
+        "non_R24_onset_offset_hours": 0,
+        "definition": "coupled disruption and R24 surge share the same onset timestamp"
+      },
+      {
+        "id": "surge_leads_disruption_72h",
+        "non_R24_onset_offset_hours": 72,
+        "definition": "each cluster-driving R24 event has one coupled non-R24 disruption starting 72 hours later"
+      }
+    ],
+    "coupled_schedule_semantics": {
+      "driver": "R24 event onsets generated from the frozen R24 CRN stream",
+      "non_R24_events": "every coupled R24 onset schedules every non-R24 risk in the active mask at the frozen offset; impact draws remain risk-specific and policy-independent",
+      "native_stream_rule": "in coupled modes, native non-R24 occurrence streams are replaced by the coupled schedule rather than added to it; R24 retains its native phi-scaled stream",
+      "frequency_interpretation": "phi controls R24 cluster frequency in coupled modes and each active risk's native stream in independent mode"
+    },
+    "cell_count": 144,
+    "construction": "Cartesian product of 3 masks x 4 frequency levels x 3 impact levels x 4 coupling modes",
+    "frequency_semantics": {
+      "uniform_window_risks": "divide the native inter-arrival upper bound by phi",
+      "R14": "multiply the native per-cycle defect probability by phi, capped only by the existing numerical 0.98 bound",
+      "inactive_risks": "disabled and consume no event or impact RNG",
+      "policy_independence": "event tapes are generated before policy evaluation and replayed identically across every comparator"
+    },
+    "impact_semantics": {
+      "R11_R21_R22_R23": "multiply recovery duration mean by psi",
+      "R24": "multiply surge quantity bounds by psi",
+      "R14": "psi does not apply; R14 severity is controlled only through its defect-event probability phi",
+      "inactive_risks": "no impact"
+    },
+    "saturation_audit": {
+      "R24_pending_demand_cap_current_code": 13000,
+      "required_ledgers": [
+        "generated surge quantity",
+        "admitted surge quantity",
+        "clipped surge quantity",
+        "cap-hit count",
+        "operation downtime fraction by risk and node"
+      ],
+      "promotion_rule": "a cell with positive clipped surge quantity or an unaccounted probability/availability cap is reported as model-saturated and cannot enter the selected component"
+    },
+    "no_posthoc_extension": "No phi, psi, mask, offset, correlation mode or risk may be added after any scientific tape is opened. A more severe future envelope is a new contract and cannot rescue this atlas."
+  },
+  "catastrophic_scenarios": {
+    "excluded_from_primary_connected_region": true,
+    "single_R3": {
+      "label": "R3_SINGLE_CATASTROPHIC_EVENT",
+      "onset_hour": 8736,
+      "duration_hours": 672,
+      "enabled_risks": ["R3"],
+      "event_count": 1,
+      "interpretation": "scheduled black-swan stress fixture; not a probability estimate"
+    },
+    "persistent_campaign": {
+      "label": "PERSISTENT_PRODUCTION_DISTRIBUTION_DISRUPTION_NOT_R3",
+      "onset_hours": [4368, 8736, 13104],
+      "duration_hours_each": 672,
+      "affected_operations": [5, 6, 7, 9],
+      "interpretation": "researcher extension representing repeated campaign disruption; must never be called repeated black swans"
+    },
+    "selection_use": "report-only boundary diagnostics; cannot select or rescue the primary connected region"
+  },
+  "nulls": [
+    {
+      "id": "NO_RISK",
+      "definition": "all risks disabled",
+      "required_result": "restricted timing headroom exactly zero subject to deterministic tie handling"
+    },
+    {
+      "id": "INERT_EVENT_TAG",
+      "definition": "event timestamps are emitted on the observation/event ledger but no physical transition changes",
+      "required_result": "all action-independent physical trajectories and timing headroom exactly zero"
+    }
+  ],
+  "metrics": {
+    "primary": "ret_excel_request_snapshot_v2",
+    "canonical_implementation": "supply_chain.episode_metrics.compute_episode_metrics",
+    "mandatory_guardrails": [
+      "ret_excel_full_ledger",
+      "ration_ret_excel",
+      "ret_excel_cvar10",
+      "lost_orders",
+      "ret_excel_omitted_n",
+      "backorder_qty_final",
+      "backlog_age_max",
+      "worst_node_or_product_fill",
+      "realized_resources",
+      "generated_admitted_and_clipped_risk_quantity",
+      "risk_cap_hits_and_downtime_fraction"
+    ],
+    "secondary_temporal_panel": {
+      "implementation": "supply_chain.resilience_temporal.compute_temporal_resilience_panel",
+      "report_only": true,
+      "includes": [
+        "service_loss_auc_ration_hours",
+        "maximum_service_drop",
+        "system_recovery_to_95pct_for_7_days",
+        "backlog_age_cvar",
+        "worst_node_or_product"
+      ]
+    },
+    "forbidden": [
+      "metric substitution",
+      "select on a temporal secondary",
+      "Cobb-Douglas promotion",
+      "hand-rolled ReT"
+    ]
+  },
+  "physical_control": {
+    "implementation_surface": "supply_chain.event_triggered_env.EventTriggeredTrackAEnv",
+    "review_hours": 24,
+    "HOLD": "preserve the requested posture, create no top-up, and consume no exogenous RNG",
+    "dispatch": "daily immediate when included by the frozen posture",
+    "shifts": "ramp by at most one level per day under the existing finite surge-hour budget",
+    "buffers": "168-hour immutable commitment, no cancellation or overwrite, at most one new commitment per 168 hours",
+    "churn_cost": "none; intervention count and action magnitude are reported",
+    "observation_for_future_nonprivileged_stage": [
+      "inventory and WIP by node",
+      "backlog and age by node",
+      "active and recent realized risks",
+      "pending commitments",
+      "remaining surge resources",
+      "time since last intervention"
+    ],
+    "future_events_in_observation": false
+  },
+  "restricted_privileged_timing_family": {
+    "claim_name": "restricted_PI_war_timing_ceiling",
+    "not_total_H_PI": true,
+    "event_information": "realized future onset and end timestamps for active risks in the current tape",
+    "postures": "the complete frozen 18-posture Track-A constant frontier",
+    "entry_offsets_hours": [-168, -72, -24, 0, 24, 72],
+    "exit_offsets_hours_after_cluster_end": [24, 72, 168],
+    "action_between_boundaries": "HOLD",
+    "same_cell_estimand": "best safe restricted event-timed template minus the strongest same-cell comparator",
+    "cross_regime_posture_reversal_required": false,
+    "cluster_rule": "events separated by no more than 168 hours form one cluster; overlapping intervention windows are unioned",
+    "same_time_rule": "exogenous physical risk transitions occur before the daily observation and decision",
+    "finite_family_requirement": "the implementation freeze must enumerate every posture pair and offset template and publish the exact count before seed access"
+  },
+  "comparators": {
+    "constants": "all 18 Track-A constants evaluated in every cell",
+    "weekly_open_loop": "complete frozen periodic posture-calendar family with an exact enumeration certificate",
+    "weekly_clairvoyant": "the same restricted templates rounded to weekly decision boundaries",
+    "resource_matched_open_loop": "best open-loop schedule with no less scheduled resource entitlement than the dynamic candidate and no greater realized use",
+    "future_observable_if_privileged_passes": "one frozen EWMA plus hysteresis trigger using only realized history",
+    "placebos_if_observable_stage_opens": [
+      "signal_shuffled_within_tape",
+      "signal_stale_168h",
+      "signal_cross_tape_shift17"
+    ]
+  },
+  "resource_and_safe_selection": {
+    "per_tape_safe_oracle": true,
+    "exclude_if_worse": [
+      "lost orders",
+      "omitted orders",
+      "full-order ReT",
+      "quantity-weighted ReT",
+      "remaining backlog",
+      "backlog age",
+      "worst node or product fill",
+      "scheduled or realized shift hours",
+      "surge hours",
+      "buffer commitment quantity",
+      "transport departures, payload or vehicle-hours"
+    ],
+    "anti_shed_fixture_required": true,
+    "same_total_nominal_capacity": true,
+    "report_unconstrained_and_safe": true
+  },
+  "development_screen": {
+    "seed_start": 7470001,
+    "seed_end": 7470012,
+    "seed_count": 12,
+    "use": "development screen and connected-region selection only",
+    "horizon_weeks": 104,
+    "all_144_cells_reported": true,
+    "simultaneous_inference_family": "all 144 primary cells and all mandatory primary/guardrail estimands",
+    "bootstrap": "paired studentized one-sided max-t with comparator re-selection in every resample",
+    "minimum_favorable_tapes": 8
+  },
+  "promotion_and_region_rule": {
+    "cell_pass": [
+      "safe same-cell canonical ReT increment >= 0.01",
+      "simultaneous one-sided LCB95 > 0",
+      "at least 8/12 favorable development tapes",
+      "all mandatory guardrails non-inferior",
+      "resources non-superior",
+      "zero clipped surge quantity and no unaccounted risk saturation",
+      "at least two distinct intervention times and two distinct action sequences"
+    ],
+    "adjacency": "same mask and coupling mode; cells are adjacent when phi or psi moves by one frozen ordinal level and the other coordinate is unchanged",
+    "component_pass": "at least four adjacent passing cells spanning at least two phi levels and two psi levels",
+    "selection": "among passing components choose the one with the smallest minimum severity score log2(phi)+log2(psi); then smallest maximum severity; then mask order LOC_SURGE, THEATER_CAPACITY_SURGE, PRODUCTION_QUALITY_SURGE; then coupling order independent, disruption_leads_surge_72h, coincident, surge_leads_disruption_72h",
+    "single_cell_positive": "a single positive cell is reported but cannot promote",
+    "no_component": "stop the wartime timing family without adding risks or amplitudes"
+  },
+  "validation": {
+    "seed_start": 7470101,
+    "seed_end": 7470148,
+    "seed_count": 48,
+    "opened_only_after": "development component passes and an immutable selected-component execution freeze is committed",
+    "selection_frozen": true,
+    "primary_gate": "simultaneous LCB95 of safe canonical ReT increment >= 0.01 in every frozen component cell, at least 34/48 favorable tapes, all resources and guardrails non-inferior",
+    "if_fail": "close without cell deletion, new risk levels, new timing offsets, policy replacement or metric change",
+    "if_pass": "establish validated restricted perfect-information timing ceiling only; freeze one classical observable controller next"
+  },
+  "observable_stage": {
+    "seed_start": 7470201,
+    "seed_end": 7470248,
+    "seed_count": 48,
+    "status": "RESERVED_NOT_AUTHORIZED",
+    "prerequisite": "validated restricted privileged timing ceiling",
+    "learner_authorized": false
+  },
+  "learner_and_papers": {
+    "learner_seed_block": null,
+    "learner_authorized": false,
+    "paper2_confirmed": false,
+    "paper3_authorized": false,
+    "sequence": "privileged timing ceiling -> observable classical validation -> separately frozen learner versus all classical and open-loop comparators -> Paper 2 -> Paper 3"
+  },
+  "implementation_gates_before_any_seed": [
+    "generate and hash all 144 primary cell identities",
+    "prove risk-event CRN identity across policies",
+    "prove inactive risks consume no event or impact RNG",
+    "prove coupled event tapes implement the frozen offsets exactly",
+    "prove R3 is absent from the primary grid",
+    "prove seven 24-hour HOLD advances equal one 168-hour advance",
+    "prove HOLD creates no top-up and consumes no exogenous RNG",
+    "prove commitments cannot duplicate, cancel or overwrite",
+    "prove no-risk and inert-event nulls",
+    "prove shed-to-win rejection",
+    "enumerate and hash every static, open-loop, weekly-clairvoyant and restricted timing template",
+    "benchmark runtime before VPS launch",
+    "commit source, contract, seed claim, command manifest, environment manifest and PGID/SID watcher"
+  ],
+  "custody": {
+    "watcher": "session-wide PGID/SID or cgroup watcher started before the scientific process",
+    "required": [
+      "atomic heartbeat",
+      "resume cursor",
+      "raw per-tape per-policy matrices",
+      "risk event tape hashes",
+      "action trajectories",
+      "resource ledgers",
+      "remote and retrieved checksums",
+      "producer exit receipt"
+    ]
+  }
+}

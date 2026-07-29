@@ -1,0 +1,89 @@
+{
+  "schema_version": "program_o_multi_ration_product_mix_v1",
+  "status": "FROZEN_PRE_RESULT_AFFECTED_ORDER_BOUND_ONLY",
+  "scientific_scope": "Disclosed two-product researcher extension motivated by the thesis statement that the real MFSC produces 21 ration types while the executable DES models one homogeneous ration.",
+  "claim_limit": "Any positive result is conditional on the stated synthetic product, setup, substitution and signal physics. It is not a numerical claim about the real MFSC product portfolio and is not learned or neural value.",
+  "governing_metric": "ret_excel_request_snapshot_v2",
+  "frozen_endpoint_gate": 0.01,
+  "stages": {
+    "A": "Workbook-based affected-order metric ceiling; no stochastic tape and no policy comparison.",
+    "B": "Corrected two-product exact transducer with complete full-horizon open-loop enumeration; prohibited until Stage A clears.",
+    "C": "Isolated full-DES product-tagged implementation; prohibited until Stage B clears.",
+    "D": "Observable belief/MPC comparison; prohibited until full-DES H_PI validation clears.",
+    "E": "Learner; prohibited until all pre-learner gates clear."
+  },
+  "researcher_introduced_physics": {
+    "products": ["P_C", "P_H"],
+    "nonfungible_primary_fulfillment": true,
+    "gross_ration_mass_and_transport_requirements_equal": true,
+    "total_demand_unchanged": true,
+    "total_line_capacity_unchanged": true,
+    "total_batch_rights_unchanged": true,
+    "action": "At each weekly epoch choose k in {0,1,2,3}, the number of the next three 5000-ration batches committed to P_C; 3-k are committed to P_H.",
+    "commitment": "Weekly batch targets are immutable after action and activate after 24 hours.",
+    "within_week_sequence": "Frozen minimum-changeover sequence shared by every policy; not a policy right.",
+    "candidate_setup_hours": [0, 4, 8],
+    "candidate_substitution_fraction": [0, 0.25],
+    "candidate_regime_persistence": [0.75, 0.9],
+    "candidate_dominant_product_share": [0.75, 0.9],
+    "candidate_warning_accuracy": [0.7, 0.85]
+  },
+  "resource_vector": [
+    "gross line hours",
+    "productive plus setup plus unavailable line hours",
+    "batch commitments",
+    "common ingredient units",
+    "P_C-specific ingredient units",
+    "P_H-specific ingredient units",
+    "transport departures",
+    "payload capacity",
+    "vehicle-hours"
+  ],
+  "mandatory_comparators": [
+    "all 4^8 full-horizon product-mix calendars",
+    "all constants and periodic/cyclic doctrines",
+    "product-specific base-stock and (s,S)",
+    "max-pressure with hysteresis",
+    "robust stationary mix",
+    "compatibility-aware min-cost flow",
+    "rolling deterministic MILP",
+    "stochastic belief MILP/MPC",
+    "exact finite-horizon belief DP where tractable",
+    "convexified mixtures under identical resources"
+  ],
+  "mandatory_guardrails": [
+    "quantity-weighted ReT",
+    "lost orders overall and by requested product",
+    "worst-product fill",
+    "worst-regime fill",
+    "maximum backlog age by product",
+    "lower-tail ReT",
+    "aggregate and component conservation residuals",
+    "all resource-vector components"
+  ],
+  "null_cell": {
+    "identical_BOM_and_rate": true,
+    "setup_hours": 0,
+    "bidirectional_substitution_fraction": 1.0,
+    "product_demand_share": 0.5,
+    "warning_accuracy": 0.5,
+    "required_result": "Relabeling every batch is transition- and metric-identical; H_PI=H_obs=0 exactly."
+  },
+  "stage_a": {
+    "inputs": "The three already-open Garrido Excel workbooks used by the v2 implementation audit.",
+    "method": "For each visible workbook row use the canonical v2 ReT value. Because a row cannot improve beyond ReT=1, sort deficits (1-ReT) and compute the smallest number and fraction of perfectly rescued rows needed to move the sheet mean by 0.01.",
+    "interpretation": "This is a metric-liveness necessary-condition check only. It is not H_PI, H_obs, a product-physics result or authorization to simulate.",
+    "pass_rule": "At least one workbook permits a 0.01 improvement by perfectly rescuing no more than 10 percent of visible rows.",
+    "failure_rule": "If every workbook requires more than 10 percent of visible rows, stop Program O before the transducer."
+  },
+  "tape_blocks": {
+    "transducer_screen": {"range": "7400001-7400024", "status": "SEALED_NOT_AUTHORIZED"},
+    "transducer_validation": {"range": "7400025-7400048", "status": "SEALED_NOT_AUTHORIZED"},
+    "full_des_screen": {"range": "7400049-7400072", "status": "SEALED_NOT_AUTHORIZED"},
+    "full_des_hpi_validation": {"range": "7400073-7400096", "status": "SEALED_NOT_AUTHORIZED"},
+    "h_obs_fit": {"range": "7400097-7400144", "status": "SEALED_NOT_AUTHORIZED"},
+    "h_obs_validation": {"range": "7400145-7400192", "status": "SEALED_NOT_AUTHORIZED"}
+  },
+  "learner_authorized": false,
+  "paper3_authorized": false
+}

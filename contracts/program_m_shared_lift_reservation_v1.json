@@ -1,0 +1,169 @@
+{
+  "schema_version": "program_m_shared_lift_reservation_contract_v1",
+  "contract_id": "program_m_shared_lift_reservation_v1",
+  "frozen_on": "2026-07-14",
+  "status": "FROZEN_PRE_RESULT_AFTER_ADVERSARIAL_CORRECTION__NO_TAPES_OPENED",
+  "scientific_scope": "Burned-tape pre-learner screen of a disclosed full-DES researcher extension. It may establish development H_PI/H_obs eligibility only. It cannot establish Paper 2, open virgin tapes, authorize a learner, or authorize Paper 3.",
+  "governing_metric": "ret_excel_request_snapshot_v2",
+  "mechanism": {
+    "family": "finite_shared_lift_advance_reservation_multimodal_commitment",
+    "operational_interpretation": "At each weekly review the operator irrevocably assigns one aggregate protected-lift slot to CSSU A or CSSU B. The slot can carry at most one thesis-sized daily order over the normal two downstream legs. It preserves the nominal 48-hour transit while bypassing a destination-local access disruption; it does not bypass plant, stock, CSSU-node, quality, or demand constraints.",
+    "why_materially_new": "Program G changed weekly destination priority inside a stylized pooled model. This contract leaves the full-DES balanced terrestrial service in place and adds a conserved, pre-booked protection mode with an activation lead, expiry, destination identity, payload and vehicle-hour ledger. It therefore tests advance reservation under localized route risk rather than spatial ration concentration.",
+    "thesis_native_anchors": [
+      "Op10 and Op12 are 24-hour downstream transport legs.",
+      "Sections 5.2 and 6.2 mention land, water and air transport selected according to urgency and equipment availability.",
+      "Daily theatre orders are 2400-2600 rations and the downstream model contains two CSSUs."
+    ],
+    "primary_source_mechanism_basis": [
+      "Ozer and Wei (Management Science, 2004): advance demand information has value only when it arrives before a binding capacity commitment.",
+      "Boada-Collado, Chopra and Smilowitz (Transportation Science, 2022): advance reservation and capacity allocation couple information timing to scarce transport decisions.",
+      "Bertsimas and van Ryzin (Operations Research, 1991/1993): strong spatial fleet policies are mandatory comparators under stationary demand.",
+      "GAO-21-125: contested mobility is a readiness problem involving constrained distribution under opposition; this supports the mechanism class, not the numerical slot parameters."
+    ],
+    "researcher_introduced_physics": [
+      "one protected-lift reservation slot per week",
+      "destination-specific local access disruption",
+      "one-order payload and 48-hour protected-mode commitment",
+      "advance destination warning with frozen sensitivity and specificity",
+      "protected mode bypasses only the destination-local transport disruption"
+    ],
+    "claim_limit": "Any positive result is conditional on this disclosed synthetic multimodal contested-access extension and is not a numerical reproduction of the thesis transport fleet. The 24-hour lead, one-order payload, protected-slot count, signal and hazard grid are project assumptions whose face validity remains a separate limitation."
+  },
+  "episode": {
+    "warmup_rule": "canonical full-DES warmup; no adaptive decisions and no protected slots during warmup",
+    "decision_horizon_weeks": 8,
+    "decision_cadence_hours": 168,
+    "activation_lead_hours": 24,
+    "active_window_hours": 144,
+    "decision_times_hours_from_scored_start": [0, 168, 336, 504, 672, 840, 1008, 1176],
+    "activation_times_hours_from_scored_start": [24, 192, 360, 528, 696, 864, 1032, 1200],
+    "expiry_times_hours_from_scored_start": [168, 336, 504, 672, 840, 1008, 1176, 1344],
+    "evaluation_end_hours_from_scored_start": 1392,
+    "evaluation_end_rule": "No introduced event starts after hour 1344. The extra 48 hours permit a protected trip departing before the final expiry to complete. The same extra time is applied to every policy.",
+    "actions": ["RESERVE_A", "RESERVE_B"],
+    "full_open_loop_calendar_count": 256,
+    "calendar_rule": "Every admissible open-loop comparator receives exactly one A/B reservation in each of eight weeks. HOLD is excluded so reserved resources are identical by construction."
+  },
+  "resource_envelope": {
+    "protected_slots_per_week": 1,
+    "protected_slot_payload_rations": 2600,
+    "protected_slot_commitment_hours": 48,
+    "episode_reserved_slots": 8,
+    "episode_reserved_capacity_rations": 20800,
+    "episode_reserved_vehicle_hours": 384,
+    "matching_rule": "Every slot is charged as one real 48-hour committed movement, loaded or empty. Every policy therefore has exactly eight committed departures, 20,800 ration-units of charged capacity and 384 committed vehicle-hours. Loaded and empty departures, payload and baseline terrestrial use are still reported; any componentwise inequality outside the fixed charged capacity fails the gate.",
+    "resource_purchase_ablations": [
+      "base DES with no protected mode",
+      "eight identically charged protected movements whose route transition is identical to terrestrial transport"
+    ],
+    "conservation_rule": "A protected shipment removes the same physical rations from Op9 and delivers the same order quantity once. The mode may change only route waiting, never quantity, demand, stock, production, or risk occurrence."
+  },
+  "risk_and_signal_design": {
+    "risk_name": "researcher_introduced_localized_access_disruption",
+    "weekly_event_hazard": [0.25, 0.5, 0.75],
+    "duration_hours": [24, 72, 120],
+    "plausibility_scope": "The duration grid is anchored as stated below. Weekly hazards are synthetic recurrent-campaign intensities, not thesis estimates. All are reported, but no terminal MFSC claim may call an intensity plausible without independent domain support.",
+    "event_generation": "For each week, an exogenous policy-independent uniform draw generates at most one event with the cell hazard. Conditional on an event, destination is an independent fair A/B draw. The policy knows the cell hazard but never the realized episode count or future draws. There is no within-tape balancing or without-replacement sampling.",
+    "start_rule": "Conditional on an event, its start is an independent exogenous uniform draw in [decision_time+24, decision_time+144). It is not aligned to a reservation, order, departure or policy state. Event identities, locations, starts and durations are CRN-frozen across policies.",
+    "signal_quality": [
+      {"sensitivity": 0.7, "specificity": 0.8},
+      {"sensitivity": 0.85, "specificity": 0.9}
+    ],
+    "signal_timing": "Two warning bits are generated on the sealed exogenous tape and observed at the weekly decision, 24 hours before the protected window opens. For destination i, truth means an i-local event overlaps that week's active window; conditional on truth the bit has the frozen sensitivity, otherwise its zero has the frozen specificity. A/B error draws are independent and CRN-isolated, so 00/01/10/11 are all possible. The warning contains no realized onset, duration, future demand, order outcome or oracle action.",
+    "duration_rationale": "24 hours is the thesis R22 mean; 120 hours is the thesis R21/R23 recovery scale; 72 hours is the disclosed midpoint. The grid is frozen before results and every cell, including nulls, must be reported.",
+    "null_cells": [
+      "one unique zero-hazard cell at duration 24 and signal 0.85/0.90",
+      "protected mode obeys the same local disruption as terrestrial mode",
+      "signal destination is tape-cyclic-shuffled, delayed one decision epoch, or swapped A/B"
+    ],
+    "placebo_algorithms": {
+      "tape_cyclic_shuffle": "Within a cell and evaluation block, assign tape k the complete eight-week warning sequence from tape (k+1) mod n; this preserves each sequence's temporal structure and cell marginals while breaking tape linkage.",
+      "delayed": "Use the same tape's warning from week t-1 and 00 at week 0.",
+      "wrong_location": "Swap A and B warning bits at every week without changing their times."
+    },
+    "screen_cells": "18 positive-hazard cells (3 hazards x 3 durations x 2 signal settings) plus one unique zero-hazard null cell. Mode-equivalence and three signal placebos are separate mandatory ablations, not extra selectable cells.",
+    "adjacency": "Positive cells are adjacent only when they differ by one ordered step in exactly one of hazard, duration or signal-quality factors.",
+    "connected_region_rule": "A candidate region must contain at least three adjacent cells, span at least two hazard levels and two duration levels, and pass on a fresh H_PI-validation block with simultaneous one-sided 95% lower bounds. Select the cell with the smallest validated H_PI lower bound inside that region."
+  },
+  "burned_tape_roles": {
+    "classification": "burned_development_only",
+    "screen": {"seed_start": 7300001, "seed_end": 7300024, "n": 24, "use": "cell screening and candidate-region selection only"},
+    "h_pi_validation": {"seed_start": 7300025, "seed_end": 7300048, "n": 24, "use": "fresh validation of every cell in the selected connected region; no H_obs fitting"},
+    "h_obs_fit": {"seed_start": 7300049, "seed_end": 7300096, "n": 48, "use": "fit/tune deployable policies and classical comparators only"},
+    "h_obs_validation": {"seed_start": 7300097, "seed_end": 7300144, "n": 48, "use": "one-time burned validation of frozen H_obs policies, placebos and trajectory replacements"},
+    "common_random_numbers": true,
+    "virgin": false,
+    "locked": false,
+    "selection_rule": "Screen estimates select a connected region. H_PI validation recomputes the per-cell frontier and simultaneous lower bounds. H_obs policies are frozen using only h_obs_fit before h_obs_validation is opened. The best static calendar is reselected inside each resample or evaluated with a nested selection procedure.",
+    "rule": "Opening any seed burns it for its named role. No result from these blocks may be renamed virgin or confirmation evidence."
+  },
+  "estimands": {
+    "h_pi": "within each cell and evaluation block, the mean per-tape best of all 256 full-horizon calendars minus the best tape-independent calendar for that same cell and block under the identical charged resource envelope",
+    "h_obs": "the best frozen deployable non-anticipative policy using only the observation whitelist minus the best tape-independent full-horizon open-loop calendar under the same charged resource envelope",
+    "h_learned": "a later frozen learner minus the maximum of the best open-loop calendar, interpretable feedback, belief policy, DP/MPC and every other implemented same-contract classical comparator; this is not estimated or authorized by this contract",
+    "eta": "H_obs / H_PI when H_PI is positive",
+    "practical_gate": 0.01,
+    "inference": "paired tape bootstrap with 10000 resamples. Screen values are selection-only. Validation uses one-sided simultaneous 95% bounds across the selected region; static-calendar selection is repeated inside each resample or nested. H_PI and H_obs each require LCB95 >= 0.01 on their designated fresh blocks."
+  },
+  "observation_whitelist": [
+    "current and past Op9 inventory",
+    "current and past CSSU A/B inventory, pipeline, backlog quantity/count/age and delivered demand",
+    "current route/node availability",
+    "current week phase and reservation availability",
+    "the current pre-booking A/B warning bits",
+    "past warnings and realized disruptions"
+  ],
+  "forbidden_observations": [
+    "future demand quantities or order identities",
+    "future disruption location, onset, duration or recovery",
+    "latent regime labels",
+    "oracle action or regret labels",
+    "future metric components",
+    "tape seed or tape identifier"
+  ],
+  "comparators": [
+    "all 256 full-horizon A/B reservation calendars",
+    "all constants and alternating/phase calendars",
+    "current-backlog, oldest-order, lowest-fill and max-pressure reservation rules",
+    "signal-following rule with frozen tie-break",
+    "robust worst-case reservation rule",
+    "finite-horizon belief-state stochastic lookahead over the frozen hazard/signal model with full pipeline state and best-open-loop continuation value",
+    "resource-constrained MPC with two-week exact action enumeration, full pipeline state and the same continuation value",
+    "convex mixtures under the identical reservation envelope"
+  ],
+  "mandatory_endpoints": [
+    "canonical order-level ret_excel_request_snapshot_v2",
+    "quantity-weighted ReT",
+    "service-loss AUC",
+    "attended and lost orders",
+    "remaining backlog and maximum backlog age",
+    "worst-CSSU fill",
+    "ret_cvar05 and tape-tail deltas",
+    "mass residual",
+    "reserved and actual protected slots, payload and vehicle-hours",
+    "baseline terrestrial departures and vehicle-hours"
+  ],
+  "prelearner_gates": [
+    "Every weekly action dimension changes a counterfactual rollout on at least 10% of positive-hazard validation tapes.",
+    "Both RESERVE_A and RESERVE_B are uniquely optimal by at least 0.0001 canonical ReT on at least 10% of relevant counterfactual states.",
+    "No constant or full-horizon calendar reproduces the observable policy.",
+    "Resource-restricted H_PI LCB95 is at least 0.01.",
+    "Observable non-anticipative H_obs LCB95 is at least 0.01 against the strongest comparator.",
+    "Lost-order paired UCB95 is <=0; quantity-ReT, worst-CSSU-fill and ret-CVaR05 paired LCB95 are each >=0.",
+    "The validated result satisfies the frozen connected-region rule and the least-favorable passing cell is selected before H_obs fitting.",
+    "Real warnings beat shuffled, delayed and wrong-location placebos.",
+    "Null physics has absolute mean H_obs <=0.001 and a 95% interval containing zero.",
+    "At least 70% of validation tapes are favorable and complete trajectories reject modal-calendar, calibration-calendar and phase-only replacement.",
+    "State-feedback certificate reports unique sequences, action/observation conditional dependence after controlling for week, observation-swap counterfactuals and every replacement rollout."
+  ],
+  "stop_rules": [
+    "If the resource-restricted H_PI UCB95 is below 0.01 in every positive-duration cell, close this frozen family without H_obs fitting.",
+    "If H_PI passes but no observable classical policy has H_obs LCB95 at least 0.01, stop before any learner.",
+    "If any apparent gain increases lost orders, worsens worst-CSSU fill, uses more resources, or disappears under the complete open-loop frontier, retract it.",
+    "No risk cell, threshold, metric or signal quality may be added after results to rescue the contract."
+  ],
+  "external_validation_question": "Is it operationally defensible to model one finite protected land/air/water lift or escort window that must be assigned 24 hours ahead to one of two CSSU destinations, carries at most one 2600-ration daily order, is charged for one 48-hour round trip even when empty, and can bypass only a destination-local access disruption without adding ration stock or baseline terrestrial capacity; if not, which resource, lead, payload, mode, hazard or bypass assumption is wrong?",
+  "paper2_learner_authorized": false,
+  "paper3_authorized": false,
+  "virgin_tapes_authorized": false
+}

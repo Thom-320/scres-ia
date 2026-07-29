@@ -1,0 +1,51 @@
+{
+  "schema_version": "war_stress_gsa_command_manifest_v1",
+  "status": "FROZEN_PREFLIGHT_SCIENTIFIC_COMMAND_DISABLED",
+  "environment": {
+    "PYTHONHASHSEED": "0",
+    "python_requirement": ">=3.11,<3.12",
+    "working_directory": "repository root",
+    "session_rule": "watcher ready receipt must exist before a producer starts in a new SID/PGID"
+  },
+  "benchmark": {
+    "authorized": true,
+    "command": [
+      "${PYTHON}",
+      "scripts/launch_war_stress_gsa_benchmark.py",
+      "--run-dir",
+      "${UNIQUE_BENCHMARK_RUN_DIR}",
+      "--config-id",
+      "morris::LOC_SURGE::coincident::00::00",
+      "--max-daily-steps",
+      "28",
+      "--projected-workers",
+      "32"
+    ]
+  },
+  "watcher": {
+    "path": "scripts/watch_war_stress_gsa_session.py",
+    "heartbeat": "custody/heartbeat.json written atomically",
+    "terminal_condition": "producer PGID/SID empty and producer_exit.json present",
+    "orphan_detection": "all processes sharing producer PGID or SID remain visible until drained"
+  },
+  "producer": {
+    "path": "scripts/run_war_stress_gsa_executor.py",
+    "resume_cursor": "custody/resume_cursor.json",
+    "duplicate_identity_rule": "fail if producer artifacts already exist",
+    "benchmark_seed": 94700001
+  },
+  "scientific": {
+    "authorized": false,
+    "disabled_command_shape": [
+      "${PYTHON}",
+      "scripts/run_war_stress_gsa_executor.py",
+      "--mode",
+      "scientific",
+      "--run-dir",
+      "${UNIQUE_SCIENTIFIC_RUN_DIR}",
+      "--scientific-authorization",
+      "${FUTURE_CONTENT_ADDRESSED_AUTHORIZATION}"
+    ],
+    "current_behavior": "fails closed before creating a run directory or reading a scientific seed"
+  }
+}

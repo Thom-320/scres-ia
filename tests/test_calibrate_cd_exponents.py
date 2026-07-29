@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import math
 
-from scripts.calibrate_cd_exponents import calibrate_from_rows
+from scripts.calibrate_cd_exponents import build_parser, calibrate_from_rows
 
 
 def test_calibrate_from_rows_uses_garrido_maxima_rule() -> None:
@@ -36,3 +36,16 @@ def test_calibrate_from_rows_uses_garrido_maxima_rule() -> None:
     assert payload["c_phi"] == payload["target_contribution"] / math.log(30.0)
     assert payload["d_tau"] == payload["target_contribution"] / math.log(12.0)
     assert payload["n_kappa"] == payload["target_contribution"] / math.log(1.2)
+
+
+def test_calibration_parser_defaults_to_faithful_env_flags() -> None:
+    args = build_parser().parse_args([])
+
+    assert args.year_basis == "thesis"
+    assert args.warmup_trigger == "op9_arrival"
+    assert args.downstream_q_source == "figure_6_2"
+    assert args.r14_defect_mode == "thesis_strict_op6"
+    assert args.risk_occurrence_mode == "thesis_window"
+    assert args.raw_material_flow_mode == "kit_equivalent_order_up_to"
+    assert args.raw_material_order_up_to_multiplier == 2.0
+    assert args.ret_g24_shift_cost == 1.0

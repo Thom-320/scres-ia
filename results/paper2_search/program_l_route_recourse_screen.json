@@ -1,0 +1,241 @@
+{
+  "schema": "program_l_route_recourse_prelearner_screen_v1",
+  "generated": "2026-07-13",
+  "status": "PRE-LEARNER GATE PASS (stylized single-destination screen; NOT full Op1-Op13 DES; NO learner trained)",
+  "mechanism": "event-driven alternate-route recourse; finite single vehicle (mandatory return); route-specific persistent (semi-Markov) R22 inflating transit; imperfect pre-departure signal; single destination (no A/B equity confound); canonical order-level ret_excel ledger",
+  "metric": "compute_order_level_ret_excel_formula (canonical, no proxy)",
+  "disclosed_relaxations_required": [
+    "finite CSSU storage (2-8 demand-days cover; thesis assumes unlimited)",
+    "route disruptions persistent over ~3-5 days (thesis R22 ~24h)",
+    "finite single transport vehicle matched to demand (thesis takes vehicle availability as given)"
+  ],
+  "gates": {
+    "null_cell": {
+      "H_PI": 0.0,
+      "H_obs": 0.0,
+      "pass_zero": true
+    },
+    "headline_cell_q0.90_cover4d": {
+      "H_PI": 0.11044713293145994,
+      "H_PI_ci95": [
+        0.08020103295461277,
+        0.14236663170562633
+      ],
+      "H_obs": 0.07491366370906406,
+      "H_obs_ci95": [
+        0.051835374342714874,
+        0.1006212350489695
+      ],
+      "eta": 0.6782762188634915,
+      "obs_policy": "belief",
+      "H_obs_placebo": -0.023548169203892064,
+      "real_beats_placebo": true,
+      "trips_obs_minus_static": 0.9000000000000021,
+      "veh_busy_obs_minus_static": -4.2000000000000455,
+      "resource_ok": false,
+      "lost_obs_minus_static": -1.8125000000000004,
+      "lost_guardrail_ok": true
+    }
+  },
+  "region_map_cover_x_dwell_q0.90": [
+    {
+      "cover_days": 1,
+      "persistence": 0.7,
+      "dwell_days": 3.3,
+      "H_obs": 0.003592127554974099,
+      "lcb95": -0.0007251064270219523,
+      "pass": false
+    },
+    {
+      "cover_days": 1,
+      "persistence": 0.8,
+      "dwell_days": 5.0,
+      "H_obs": 0.0009950208375641009,
+      "lcb95": 0.0006007525777329654,
+      "pass": false
+    },
+    {
+      "cover_days": 1,
+      "persistence": 0.9,
+      "dwell_days": 10.0,
+      "H_obs": 0.0005780597577165852,
+      "lcb95": 0.00023888517492815357,
+      "pass": false
+    },
+    {
+      "cover_days": 2,
+      "persistence": 0.7,
+      "dwell_days": 3.3,
+      "H_obs": 0.11711465798095648,
+      "lcb95": 0.07068381801203012,
+      "pass": true
+    },
+    {
+      "cover_days": 2,
+      "persistence": 0.8,
+      "dwell_days": 5.0,
+      "H_obs": 0.06976275553821652,
+      "lcb95": 0.035864687813522644,
+      "pass": true
+    },
+    {
+      "cover_days": 2,
+      "persistence": 0.9,
+      "dwell_days": 10.0,
+      "H_obs": 0.05530759266509722,
+      "lcb95": 0.023975334790666034,
+      "pass": true
+    },
+    {
+      "cover_days": 4,
+      "persistence": 0.7,
+      "dwell_days": 3.3,
+      "H_obs": 0.10861385719731963,
+      "lcb95": 0.07221889012085933,
+      "pass": true
+    },
+    {
+      "cover_days": 4,
+      "persistence": 0.8,
+      "dwell_days": 5.0,
+      "H_obs": 0.08040599719620085,
+      "lcb95": 0.0453792379401659,
+      "pass": true
+    },
+    {
+      "cover_days": 4,
+      "persistence": 0.9,
+      "dwell_days": 10.0,
+      "H_obs": 0.03576144981970424,
+      "lcb95": 0.01944146515946029,
+      "pass": true
+    },
+    {
+      "cover_days": 8,
+      "persistence": 0.7,
+      "dwell_days": 3.3,
+      "H_obs": 0.04788060586346854,
+      "lcb95": 0.02889698862801034,
+      "pass": true
+    },
+    {
+      "cover_days": 8,
+      "persistence": 0.8,
+      "dwell_days": 5.0,
+      "H_obs": 0.03532782971485218,
+      "lcb95": 0.01956288806618335,
+      "pass": true
+    },
+    {
+      "cover_days": 8,
+      "persistence": 0.9,
+      "dwell_days": 10.0,
+      "H_obs": 0.023808128288036107,
+      "lcb95": 0.007840992176949167,
+      "pass": false
+    },
+    {
+      "cover_days": 16,
+      "persistence": 0.7,
+      "dwell_days": 3.3,
+      "H_obs": 0.0,
+      "lcb95": 0.0,
+      "pass": false
+    },
+    {
+      "cover_days": 16,
+      "persistence": 0.8,
+      "dwell_days": 5.0,
+      "H_obs": 0.0013020833333333356,
+      "lcb95": 0.0,
+      "pass": false
+    },
+    {
+      "cover_days": 16,
+      "persistence": 0.9,
+      "dwell_days": 10.0,
+      "H_obs": 0.003782663297464179,
+      "lcb95": 0.0,
+      "pass": false
+    }
+  ],
+  "n_passing_cells": 8,
+  "signal_quality_gradient": [
+    {
+      "q": 0.5,
+      "H_PI": 0.1248673487516745,
+      "H_obs": -0.00868281946778461,
+      "lcb95": -0.05447983497294176,
+      "eta": -0.06953634840964115
+    },
+    {
+      "q": 0.6,
+      "H_PI": 0.1248673487516745,
+      "H_obs": 0.007856924322970858,
+      "lcb95": -0.03975014112433439,
+      "eta": 0.06292216821705758
+    },
+    {
+      "q": 0.7,
+      "H_PI": 0.1248673487516745,
+      "H_obs": 0.03086826989605242,
+      "lcb95": -0.021274348596550117,
+      "eta": 0.24720849929664634
+    },
+    {
+      "q": 0.8,
+      "H_PI": 0.1248673487516745,
+      "H_obs": 0.05201697637334363,
+      "lcb95": -0.0014329181423499082,
+      "eta": 0.4165778876012699
+    },
+    {
+      "q": 0.9,
+      "H_PI": 0.1248673487516745,
+      "H_obs": 0.09240110040333631,
+      "lcb95": 0.044377791589460314,
+      "eta": 0.7399940923475176
+    },
+    {
+      "q": 0.95,
+      "H_PI": 0.1248673487516745,
+      "H_obs": 0.11124455773623813,
+      "lcb95": 0.06373424478308465,
+      "eta": 0.8909018958788961
+    }
+  ],
+  "common_mode_gradient": [
+    {
+      "common_mode": 0.0,
+      "H_PI": 0.20422350635242,
+      "H_obs": 0.0719709468736424
+    },
+    {
+      "common_mode": 0.2,
+      "H_PI": 0.11769210950587931,
+      "H_obs": 0.027880515750447588
+    },
+    {
+      "common_mode": 0.4,
+      "H_PI": 0.055478107890187846,
+      "H_obs": 0.009304570309491196
+    },
+    {
+      "common_mode": 0.7,
+      "H_PI": 0.027026093974132196,
+      "H_obs": 0.013687690202588594
+    },
+    {
+      "common_mode": 1.0,
+      "H_PI": 0.0,
+      "H_obs": 0.0
+    }
+  ],
+  "verdict": "ROUTE_RECOURSE_PASSES_STYLIZED_PRELEARNER_GATE_CONDITIONAL_ON_3_GARRIDO_FACTS",
+  "not_yet": [
+    "full Op1-Op13 DES implementation",
+    "Garrido factual sign-off on the 3 relaxations",
+    "frozen-contract virgin-tape confirmation",
+    "any learned/neural claim (winner is an interpretable belief policy = P2-A adaptive control)"
+  ]
+}

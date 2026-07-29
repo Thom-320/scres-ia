@@ -1,19 +1,19 @@
 \hypertarget{3-methodology}{%
-\section{3. Methodology}\label{3-methodology}}
-
-Status: draft prose base aligned to the frozen paper contracts.
+\section{Methodology}\label{3-methodology}}
 
 \hypertarget{31-mfsc-discrete-event-simulation}{%
-\subsection{3.1 MFSC discrete-event
+\subsection{MFSC discrete-event
 simulation}\label{31-mfsc-discrete-event-simulation}}
 
 The experimental platform is a 13-operation military food supply chain
-reconstructed in Python/SimPy from Garrido-Rios' thesis. The model
-preserves the original operational structure rather than replacing it
-with a stylized benchmark environment. This matters for the paper's
-positioning: the contribution is not a generic RL sandbox, but a
-thesis-grounded operational model whose buffers, transport stages, and
-disruption processes already carry domain meaning.
+reconstructed in Python/SimPy from Garrido-Rios' thesis~\cite{garrido2017}
+and checked against the original Garrido workbook artifacts used for
+raw order ledgers and APj/RPj/DPj/Re summaries. The model preserves the
+original operational structure rather than replacing it with a stylized
+benchmark environment. This matters for the paper's positioning: the
+contribution is not a generic RL sandbox, but a thesis-grounded
+operational model whose buffers, transport stages, and disruption
+processes already carry domain meaning.
 
 The DES retains hourly granularity where the original supply chain
 requires sub-day behavior, especially around the assembly-line
@@ -32,74 +32,300 @@ rather than on earlier historical artifacts. This allows the paper to
 claim benchmark fidelity without claiming that the model is a universal
 representation of all supply chains.
 
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{fig2_mfsc_topology}
+\caption{Simplified MFSC topology redrawn from Garrido-Rios' 13-operation military food supply chain. Badges mark the controllable interface: buffer (blue triangle) and shift (green dot) are Track A controls; dispatch (vermilion diamond, Op10/Op12) is added in Track B. The bracket marks the binding recovery bottleneck: downstream dispatch capacity approximately equals demand.}
+\label{fig:mfsc_topology}
+\end{figure}
+
+The stochastic risk environment preserves the full thesis risk
+architecture: four operational known-known risks (R11--R14), four
+known-unknown risks (R21--R24), and one black-swan event (R3), with the
+thesis probability models summarized in
+Table~\ref{tab:risk_provenance_examples}. Regular demand is discrete
+uniform $U(2{,}400,\,2{,}600)$ rations per day, six days per week. The
+benchmark risk regimes used later in the paper (\texttt{current},
+\texttt{increased}, \texttt{severe}, and the sustained-disruption
+\texttt{adaptive\_benchmark\_v2} cell) scale the frequency parameters
+of these same nine processes rather than introducing new disruption
+mechanisms, so every stress cell remains inside the thesis risk
+architecture. The table is not an additional result; it documents that
+the benchmark preserves the stochastic disruption semantics that make
+the MFSC a Garrido-grounded DES rather than a generic
+inventory-control toy problem.
+
+\begin{table}[htbp]
+\centering
+\caption{Risk processes of the MFSC DES, following Garrido-Rios (2017),
+Tables 6.6--6.8~\cite{garrido2017}. $U(a,b)$ = discrete-uniform
+occurrence time within the stated window (hours); $\exp(\beta)$ =
+exponential duration with mean $\beta$ hours; $B(n,p)$ = binomial.}
+\label{tab:risk_provenance_examples}
+\small
+\begin{tabular}{l p{0.17\linewidth} p{0.27\linewidth} p{0.30\linewidth}}
+\toprule
+Risk & Type & Probability model & Effect \\
+\midrule
+R11 & machine breakdown & $U(1,168)$; repair $\exp(2)$ & Op5/Op6 workstation stops \\
+R12 & contracting delay & $B(12,\,1/11)$ & $+168$ h to Op1 processing \\
+R13 & delivery delay & $B(12,\,1/10)$ & $+24$ h to supplier processing \\
+R14 & quality defect & $B(2{,}564,\,0.03)$ per shift & item reworked at previous op \\
+R21 & natural disaster & $U(1,16{,}128)$; recovery $\exp(120)$ & Op3, Op5--Op7, Op9 down \\
+R22 & attack on LOC & $U(1,4{,}032)$; repair $\exp(24)$ & Op4, Op8, Op10, Op12 down \\
+R23 & attack on fwd.\ log.\ unit & $U(1,8{,}064)$; repair $\exp(120)$ & Op11 down \\
+R24 & contingent demand & $U(1,672)$; size $U(2{,}400,2{,}600)$ & demand surge at Op13 \\
+R3 & black swan (airstrike) & $U(1,161{,}280)$ & Op5--Op7, Op9 down 672 h \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \hypertarget{32-control-formulation}{%
-\subsection{3.2 Control formulation}\label{32-control-formulation}}
+\subsection{Control formulation}\label{32-control-formulation}}
 
 The learning problem is defined as weekly operational control over the
 DES. At each decision epoch, the agent observes a state vector derived
 from the simulation, selects a continuous action, and receives a
 resilience-oriented reward. Decisions are taken every \texttt{168}
 simulated hours, which matches the weekly planning cadence already
-embedded in procurement, disruption, and operating rhythms. For
-manuscript language, the problem should be described as an augmented
-observed-state control problem, or equivalently a practical
-\texttt{POMDP}, rather than as a fully sufficient MDP.
+embedded in procurement, disruption, and operating rhythms. Formally, we
+treat the simulator-control loop as a finite-horizon partially observed
+control problem
+\begin{equation}
+\mathcal{M}=(\mathcal{S},\mathcal{O},\mathcal{A},P,r,\gamma,H),
+\label{eq:pomdp}
+\end{equation}
+where $s_t\in\mathcal{S}$ is the full DES state (queues, buffers,
+orders, disruptions, and resource states), $o_t\in\mathcal{O}$ is the
+feature vector exposed to the policy, $a_t\in\mathcal{A}$ is the
+weekly operational-control action, $P$ is the simulator transition
+kernel induced by SimPy events and stochastic disruptions, $r$ is the
+training reward, $\gamma$ is the discount factor, and $H$ is the
+evaluation horizon (52 or 104 weeks in the generalization study). The
+paper-facing outcome is not raw training reward but a trajectory-level
+metric panel $G(\tau)$ headed by Garrido/Excel ReT.
 
 The paper uses two control contracts. \texttt{Track\ A} is the
-thesis-faithful benchmark family. It uses observation version
-\texttt{v1} with \texttt{15} dimensions and a \texttt{5D} action
-contract covering upstream quantity and reorder multipliers together
-with assembly-shift selection. This is the negative paper lane: it asks
-whether RL can beat strong static policies when control remains limited
-to the original scope.
+thesis-grounded benchmark family. Its headline result (Section~4.2) uses
+observation version \texttt{v1} with \texttt{15} dimensions and a
+\texttt{4D} continuous action contract (\texttt{track\_a\_per\_op\_buffer\_v1}):
+one buffer-target fraction per decision point (Op3, Op5, Op9, each
+independently, as a fraction of the thesis-scale $I_{1344}$ buffer level)
+plus one continuous shift signal mapped to $\{S_1,S_2,S_3\}$. This is a
+direct continuous relaxation of Garrido-Rios' own buffer/shift decision
+family (Section~4.2 gives the full derivation from the thesis' discrete
+design); it is the negative paper lane: it asks whether RL can beat
+strong static policies when control remains limited to the original
+scope, parameterized continuously rather than over the thesis' five
+discrete levels.
 
 \texttt{Track\ B} is a separate research lane rather than a retrofit of
 \texttt{Track\ A}. It uses observation version \texttt{v7} with
-\texttt{46} dimensions and a \texttt{7D} action contract. The first five
-actions keep the Track A controls, while the sixth and seventh actions
-add downstream dispatch multipliers at \texttt{Op10} and \texttt{Op12}.
-The paper's central question is whether this minimal extension changes
-the benchmark outcome by exposing the operational bottleneck that Track
-A leaves mostly outside the controllable interface.
+\texttt{52} dimensions and the \texttt{track\_b\_v1} action contract
+(\texttt{8D}): a per-operation quantity/reorder-point multiplier
+parameterization of the same upstream decision family (Op3 and Op9
+order-quantity and reorder-point multipliers, an Op5 pre-assembly
+quantity multiplier, and assembly-shift selection --- 6 dimensions)
+extended with --- decisively --- downstream dispatch multipliers at
+\texttt{Op10} and \texttt{Op12};
+Table~\ref{tab:action_contract} gives the exact decode. Track A's
+fraction-based contract and Track B's multiplier-based upstream
+dimensions are two distinct, richer-than-thesis parameterizations of the
+same conceptual buffer/shift decision points; the paper's central
+question is whether adding downstream dispatch authority on top of
+either changes the benchmark outcome by exposing the operational
+bottleneck that Track A leaves mostly outside the controllable
+interface.
+
+Operationally, the Op10/Op12 dispatch multipliers represent short-term
+downstream transport expediting authority --- additional dispatch
+frequency, vehicle allocation, or priority release at the two
+line-of-communication stages feeding the combat service support units and
+the theatre of operations. This mirrors a recurring authority in
+sustainment doctrine: a distribution manager (or its automated
+equivalent) can accelerate throughput on an already-established supply
+route without changing what is demanded, what disrupts the route, or how
+upstream production responds --- the intervention is downstream expediting,
+not network redesign or requirements planning. This is exactly the scope
+Track B adds and Track A lacks: authority over transport tempo at the
+last two line-of-communication legs, not over sourcing, production, or
+demand. They do not alter demand, risk realization, or
+upstream production physics; Track B preserves the DES process logic and
+risk structure while extending the controllable decision interface.
+Because the Garrido-Rios source does not provide calibrated transport
+cost data, dispatch costs are treated through an explicit sensitivity
+analysis (Section~4.3) rather than as calibrated monetary costs.
+
+\begin{table}[htbp]
+\centering
+\caption{\texttt{track\_b\_v1} action contract. Raw policy outputs
+$x_i \in [-1,1]$ are decoded per dimension; multipliers scale the
+thesis base parameters shown. Dimensions 1--6 are the upstream/assembly
+family; dimensions 7--8 add the downstream dispatch authority that
+distinguishes Track B.}
+\label{tab:action_contract}
+\footnotesize
+\begin{tabular}{c p{0.30\linewidth} c c}
+\toprule
+Dim & Decision variable & Decode & Effective range \\
+\midrule
+1 & Op3 order quantity mult. & $1.25 + 0.75\,x$ & $[0.5, 2.0] \times 15{,}500$ units \\
+2 & Op9 order quantity mult. & $1.25 + 0.75\,x$ & $[0.5, 2.0] \times U(2{,}400, 2{,}600)$ \\
+3 & Op3 reorder point mult. & $1.25 + 0.75\,x$ & $[0.5, 2.0] \times 168$ h \\
+4 & Op9 reorder point mult. & $1.25 + 0.75\,x$ & $[0.5, 2.0] \times 24$ h \\
+5 & Op5 pre-assembly qty mult. & $1.0 + 0.5\,x$ & $[0.5, 1.5]$ \\
+6 & assembly shifts $s_t$ & thresholds at $\pm\tfrac13$ & $\{1,2,3\}$ \\
+7 & Op10 dispatch mult. & $1.25 + 0.75\,x$ & $[0.5, 2.0] \times U(2{,}400, 2{,}600)$ \\
+8 & Op12 dispatch mult. & $1.25 + 0.75\,x$ & $[0.5, 2.0] \times U(2{,}400, 2{,}600)$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.92\linewidth]{fig17_control_loop}
+\caption{The weekly POMDP control loop. The environment emits observation
+$o_t$ and reward $r_t$; the PPO policy returns action $a_t$ under the
+\texttt{track\_b\_v1} 8D contract; the frozen checkpoint is evaluated on
+Garrido/Excel ReT. Track A restricts the agent to dimensions 1--6
+(buffer/shift); Track B adds dimensions 7--8, reaching the downstream
+dispatch bottleneck.}
+\label{fig:control_loop}
+\end{figure}
+
+\begin{table}[htbp]
+\centering
+\caption{Observation classes relevant to the privileged-observation audit.}
+\label{tab:observation_classes}
+\begin{tabular}{p{0.25\linewidth}p{0.32\linewidth}p{0.30\linewidth}}
+\toprule
+Class & Examples & Manuscript role \\
+\midrule
+Operational feedback & backlog, queues, rolling fill, inventory pressure & Plausibly measurable state for closed-loop recovery \\
+Derived simulator summaries & smoothed service and risk-pressure features & Reported as part of the benchmark contract \\
+Privileged fields & five true-regime one-hot fields plus two transition-matrix forecast fields & Removed in E2; also tested by the E1 regime-table comparator \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \hypertarget{33-reward-and-reporting-metrics}{%
-\subsection{3.3 Reward and reporting
+\subsection{Reward and reporting
 metrics}\label{33-reward-and-reporting-metrics}}
 
-The main paper lane uses \texttt{ReT\_seq\_v1} with
-\texttt{ret\_seq\_kappa\ =\ 0.20} as the training reward. The reason for
-centering this reward is not that it is the only reward ever tested in
-the repository, but that it is the best-aligned resilience-index family
-that remains smooth enough for policy-gradient learning while still
-preserving a visible link to the thesis resilience framing. In the
-current paper story, reward design and control-contract design are
-discussed jointly: Track A shows that a reasonable resilience-aware
-reward is not enough when the controllable action scope misses the
-binding downstream constraint, whereas Track B shows that the same
-reward can support strong learning once the action contract is repaired.
+The canonical Track B training reward is \texttt{control\_v1}, a sparse
+operational penalty rather than a resilience-index reward. For weekly
+decision step $t$,
+\begin{equation}
+r_t =
+-\left[
+w_{\mathrm{bo}}\frac{BO_t}{\max(D_t,1)}
++ w_{\mathrm{shift}}(S_t-1)
++ w_{\mathrm{disr}}
+\min\left(1,\frac{H_t}{168|\mathcal{K}|}\right)
+\right],
+\label{eq:control_v1}
+\end{equation}
+where $BO_t$ is new backordered quantity, $D_t$ is new demanded quantity,
+$S_t\in\{1,2,3\}$ is the selected assembly-shift level, $H_t$ is
+step-level disruption time over the tracked operations $\mathcal{K}$, and
+the canonical Track B weights are $w_{\mathrm{bo}}=1.0$,
+$w_{\mathrm{shift}}=0.06$, and $w_{\mathrm{disr}}=0.0$. The inactive
+disruption term is retained in the equation because it is part of the
+frozen environment contract, but it does not contribute under the
+canonical run. This reward is a deliberate design choice, not an
+oversight: the agent is trained on an operational proxy and evaluated on
+the untouched Garrido/Excel resilience metric, so the training signal
+cannot be tuned to directly game the reported evaluation metric. The
+Cobb--Douglas-style reward equation in Garrido's draft is therefore
+historical context for the broader AI-SCRES agenda, not the training
+objective for the winning Track B policy. Track A results draw on a
+broader set of resilience-aligned reward families (including
+Cobb--Douglas and sequential formulations) tested across the
+dense-frontier evaluation; no tested reward family closes the Track A
+gap.
 
-The paper-facing comparison should therefore prioritize service and
-resilience outcomes rather than raw reward totals across incompatible
-families. The primary metrics for the main claim are
-\texttt{fill\_rate}, \texttt{backorder\_rate},
-\texttt{order\_level\_ret\_mean}, and
-\texttt{terminal\_rolling\_fill\_rate\_4w}. Secondary audit metrics such
-as \texttt{ret\_thesis\_corrected\_total}, \texttt{ret\_unified\_total},
-and the order-case shares remain useful for interpretation, but they
-should not replace the main service/resilience metrics when the paper
-compares policies across benchmark families.
+The primary reported metric follows the original Garrido workbook branch
+used in the order ledgers, which operationalizes the thesis measure
+(Garrido-Rios 2017, Eq.~5.5~\cite{garrido2017}): order states are
+weighted at $\overline{\mathrm{Re}}^{\max}{=}1$ during autonomy,
+$\overline{\mathrm{Re}}{=}0.5$ during recovery, and
+$\overline{\mathrm{Re}}^{\min}{=}0$ during non-recovery. For order $j$,
+let $OPT_j$ and $OAT_j$ be its placement and fulfillment times,
+$CT_j = OAT_j - OPT_j$ the realized cycle time, $LT_j = 48$~h the
+promised lead time, $\bar{R}_j$ the mean of the recorded risk
+indicators on the order window, $AP_j$ the
+autonomy period (risk-exposure time absorbed while still delivering on
+time), $RP_j$ the recovery period when the order is served late, and
+$B_j, U_j$ the running counts of backordered and unattended orders. The
+Excel resilience score is
+\begin{equation}
+\mathrm{ReT}^{\mathrm{Excel}}_j =
+\begin{cases}
+AP_j/LT_j, & \bar{R}_j>0,\ AP_j>0,\\[2mm]
+0.5\,(1/RP_j), & \bar{R}_j>0,\ AP_j=0,\ RP_j>0,\\[2mm]
+0, & \bar{R}_j>0,\ AP_j{=}RP_j{=}0,\ \text{or undeliv.},\\[2mm]
+1{-}\tfrac{\min(B_j,60)+U_j}{j}, & \bar{R}_j=0,
+\end{cases}
+\label{eq:ret}
+\end{equation}
+the LaTeX rendering of the workbook formula in the original
+\texttt{Raw\_data+Re} sheets
+(\texttt{IF(AVERAGE(R..)>0,} \texttt{IF(APj>0, APj/LT,} \texttt{0.5*(1/RPj)),} \texttt{1-((Bt+Ut)/j)})),
+including the workbook's backorder-count cap of 60 in the fill-rate
+branch. Our implementation of Eq.~\eqref{eq:ret} is audited row-by-row
+against Garrido's original result workbooks (47{,}546 orders, zero
+mismatches). \emph{Order-level ReT} applies the same case structure with
+the DES's native risk attribution instead of the workbook-visible
+indicators; both conventions are reported.
+Figure~\ref{fig:ret_branch_timeline} illustrates the branch logic on
+three representative orders. Eq.~\eqref{eq:ret} also grounds the ceiling
+interpretation used in Section~4: in the canonical stress regime 99.6\%
+of orders fall in the recovery branch, and no evaluated policy realizes
+a recovery period below 72~h (the 48~h promised lead time plus one 24~h
+downstream dispatch cycle), so the per-order score is empirically capped
+at $0.5/72 \approx 0.006944$.
 
-One language rule should stay explicit in the final manuscript:
-\texttt{reward\_total} is only comparable within a shared reward family.
-Whenever the paper compares Track A and Track B, or different reward
-families inside Track A, the argument should rely on service and
-resilience metrics rather than on raw cumulative reward.
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\linewidth]{fig8_ret_branch_timeline}
+\caption{Branch logic of the order-level resilience metric
+(Eq.~\eqref{eq:ret}), redrawn from the disruption-timeline construction
+of Garrido-Rios (2017, Fig.~5.5). Each order is scored by the state it
+occupies: absorbing risk while delivering on time (autonomy), recovering
+from a late delivery (recovery, weighted 0.5), or unaffected by risk on
+its window (fill rate).}
+\label{fig:ret_branch_timeline}
+\end{figure}
+
+The paper-facing comparison prioritizes service and resilience outcomes
+rather than raw reward totals across incompatible reward families. The
+primary metric for the headline claim is \texttt{order\_ret\_excel}:
+the Garrido/Excel ReT workbook formula in Eq.~\eqref{eq:ret}. All other
+reported outcomes are secondary diagnostics. These include
+\texttt{order\_level\_ret\_mean},
+\texttt{flow\_fill\_rate}, \texttt{terminal\_rolling\_fill\_rate\_4w},
+recovery-tail metrics (\texttt{order\_ctj\_p99},
+\texttt{order\_rpj\_p99}), service-loss AUC, and a shift-utilization cost
+index (an assembly-labor proxy; it does not price dispatch, which is
+costed separately through the sensitivity in Section~4.3)
+reported as a secondary evidence panel, not substitutes for the primary
+metric. \texttt{reward\_total} is only comparable within a shared reward
+family; comparisons across Track A and Track B, or across reward
+families within Track A, rely on the evaluation metric panel rather than
+on raw cumulative reward.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{fig7_ret_metric_lineage}
+\caption{Garrido/Excel ReT evaluation lineage redrawn from Garrido-Rios' resilience metric structure. The paper reports the workbook-formula Excel ReT as the primary outcome, alongside native order-level ReT, service, and recovery-tail diagnostics, while PPO is trained on a separate operational proxy reward.}
+\label{fig:ret_metric_lineage}
+\end{figure}
 
 \hypertarget{34-experimental-protocol}{%
-\subsection{3.4 Experimental protocol}\label{34-experimental-protocol}}
+\subsection{Experimental protocol}\label{34-experimental-protocol}}
 
 The experimental design contains two benchmark families and one matched
-ablation. \texttt{Track\ A} is the thesis-faithful benchmark lane. It
+ablation. \texttt{Track\ A} is the thesis-grounded benchmark lane. It
 retains the validated DES backbone, the original operational scope, and
 strong static baselines as the main comparators. Learned policies are
 reported honestly as negative evidence when they remain below the
@@ -107,24 +333,101 @@ strongest static baseline; this includes PPO in the frozen
 \texttt{ReT\_seq\_v1} lane and RecurrentPPO in the corresponding
 recurrent comparator lane.
 
-\texttt{Track\ B} is the positive paper lane. Its frozen contract is
-\texttt{env\_variant="track\_b\_adaptive\_control"},
-\texttt{reward\_mode="ReT\_seq\_v1"}, \texttt{ret\_seq\_kappa=0.20},
-\texttt{observation\_version="v7"},
-\texttt{action\_contract="track\_b\_v1"},
-\texttt{risk\_level="adaptive\_benchmark\_v2"},
-\texttt{year\_basis="thesis"}, \texttt{step\_size\_hours=168}, and
-\texttt{stochastic\_pt=True}. The production benchmark is trained for
-\texttt{500000} timesteps with seeds \texttt{11\ 22\ 33\ 44\ 55} and
-evaluated over \texttt{20} episodes per seed. Static comparators are
-\texttt{s2\_d1.00}, \texttt{s3\_d1.00}, and \texttt{s3\_d2.00}.
+\texttt{Track\ B} is the positive paper lane. Its canonical contract fixes
+the reward (\texttt{control\_v1}), the observation version (\texttt{v7},
+52 dimensions), the action contract (\texttt{track\_b\_v1}, 8 dimensions),
+the risk level (\texttt{adaptive\_benchmark\_v2}), the thesis year basis,
+a 168-hour decision step, and stochastic processing times. The confirmatory benchmark is trained for
+\texttt{60{,}000} timesteps per seed with seeds \texttt{1--5} and
+evaluated over \texttt{12} common-random-number episodes per seed against
+a dense downstream-dispatch static grid of 147 comparators (3 shift
+levels $\times$
+7 Op10 multipliers $\times$ 7 Op12 multipliers, each in $\{0.5, 0.75,
+1.0, 1.25, 1.5, 2.0, 2.5\}$). The grid is dense over the dispatch/shift
+family that Track B is designed to test; the remaining upstream
+buffer/reorder dimensions are held at their canonical Track B settings
+for all static comparators, and learned control over that upstream family
+alone is separately bounded by the Track A dense-frontier negative result
+(Section~4.2). As a local static-comparator bound, we also evaluate a
+3$\times$3 grid over Op3 and Op9 quantity multipliers
+(\{0.75, 1.00, 1.25\}) at the best downstream-dispatch cell
+(S2, Op10$\times$2.00, Op12$\times$1.50) under the same CRN protocol.
+This bound is not an exhaustive eight-dimensional frontier, but it tests
+whether the nearest upstream static degrees of freedom overturn the
+downstream-grid result.
+The learner is PPO with a two-hidden-layer
+(64$\times$64) multilayer-perceptron policy and value network
+(\texttt{MlpPolicy}, separate actor/critic heads), learning rate
+$3\times10^{-4}$, $n_{\mathrm{steps}}{=}1024$, batch size 256, 10 epochs
+per update, $\gamma{=}0.99$, GAE parameter $0.95$, and clip range 0.2 (the symbol $\lambda_d$ is reserved for the dispatch cost charge of Section~4.3).
 
-To separate the action-contract argument from broader environment
-changes, the paper also uses a matched \texttt{5D\ vs\ 7D} ablation.
-Within that ablation family, the observation version, reward family,
-risk profile, and training budget are held fixed while only the action
-contract changes. This is the cleanest evidence available inside the
-current repo for the claim that downstream control coverage is
-materially responsible for the Track B gain. The manuscript should still
-state the limitation clearly: the ablation is supportive causal evidence
-inside the frozen benchmark family, not universal proof outside it.
+\subsection{Statistical inference}\label{35-statistical-inference}
+
+All learned-versus-static comparisons are paired under common random
+numbers~\cite{law2015simulation}: every policy is evaluated on identical
+disruption and demand realizations, so policy differences are isolated
+from scenario noise. The promoted Track B headline uses 120 evaluation
+pairs (10 seeds $\times$ 12 episodes); the E1-E4 mechanism checks and
+top-12 appendix use their original 5-seed paired designs. Episode-level
+pooled confidence intervals are reported as descriptive only. Primary
+inference treats the \emph{training seed} as the inferential unit:
+per-seed mean paired deltas are computed first, and claims rest on seed
+sign consistency together with seed-clustered bootstrap or $t$-based
+intervals. Where tail resilience is reported for Garrido/Excel ReT, we
+use a single lower-tail convention,
+\begin{equation}
+\begin{aligned}
+\mathrm{CVaR}^{\mathrm{ReT}}_{0.05}
+&= \mathbb{E}\!\left[\mathrm{ReT}\mid
+\mathrm{ReT}\le q_{0.05}(\mathrm{ReT})\right] \\
+&\approx \frac{1}{n}\sum_{i=1}^{n} X_{(i)},
+\qquad n = \max\bigl(1, \lceil 0.05\,N \rceil\bigr),
+\end{aligned}
+\label{eq:cvar}
+\end{equation}
+the mean of the $n$ smallest per-episode Excel ReT values
+$X_{(1)} \le \dots \le X_{(N)}$. Higher values are better. To guard
+against winner's-curse comparator
+selection, the headline delta is additionally recomputed against each of
+the twelve strongest static comparators individually; all twelve deltas
+remain positive with confidence intervals excluding zero
+(Appendix~\ref{appendix-robustness}). Secondary metrics (fill, tails,
+cost) are reported as an evidence panel without multiplicity adjustment
+and are not used as stand-alone claims.
+
+To separate the action-contract argument from action-space size, the
+paper uses a matched action-space ablation at the same 5-seed,
+60{,}000-timestep scale, comparing the full \texttt{joint} 8D contract
+against \texttt{downstream\_only} (shift frozen) and \texttt{shift\_only}
+(dispatch frozen) variants, with observation version, reward family,
+risk profile, and training budget held fixed. This decomposition provides
+mechanism evidence that downstream control access, not action-space
+size, drives the Track B gain; it is supportive evidence inside the
+studied benchmark family, not causal proof outside
+it.
+
+\begin{table}[htbp]
+\centering
+\caption{Experimental evidence map used in the manuscript.}
+\label{tab:evidence_map}
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.18\linewidth}>{\raggedright\arraybackslash}p{0.38\linewidth}>{\raggedright\arraybackslash}p{0.30\linewidth}}
+\toprule
+Lane & Purpose & Claim supported \\
+\midrule
+Track A & Original buffer/shift control against dense static frontiers & Boundary/null: original action surface yields no statistically and operationally material dynamic-control win \\
+Track B canonical & PPO vs 147 dense static dispatch policies under CRN & Main adaptive-recovery result \\
+E1 & Static, heuristic, and true-regime lookup-table comparators & PPO win is not reproduced by zero-learning privileged regime access \\
+E2 & PPO retrained with privileged regime/forecast fields masked & PPO win does not require oracle observation fields \\
+E3 & Frozen PPO across risk levels and horizons & Cross-regime stress transfer; severe service-floor boundary \\
+E4 & Joint, downstream-only, and shift-only ablation & Mechanism evidence for downstream bottleneck authority \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+All DES code, Gymnasium wrappers, training and evaluation scripts, static
+frontier definitions, and the frozen evidence bundles behind every table
+in this paper are available in the project repository
+(\texttt{github.com/Thom-320/scres-ia}, branch
+\texttt{codex/garrido-}\\\texttt{replication-experiments}); each reported number
+traces to a dated artifact directory and the training seeds are stated
+explicitly throughout.

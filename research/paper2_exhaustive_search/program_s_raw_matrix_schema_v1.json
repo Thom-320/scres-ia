@@ -1,0 +1,45 @@
+{
+  "schema_version": "program_s_raw_matrix_schema_v1",
+  "atomic_shard": "stage/cell_id/tape_id",
+  "dimensions": ["policy_or_calendar", "learner_seed_if_applicable"],
+  "required_arrays": [
+    "ret_visible_request_snapshot_v2",
+    "ret_full_ledger",
+    "ret_quantity_weighted",
+    "ret_visible_cvar10",
+    "service_loss_auc",
+    "lost_orders_by_product",
+    "unresolved_quantity_by_product",
+    "worst_product_fill",
+    "max_backlog_age_by_product",
+    "action_trajectory",
+    "observation_hashes",
+    "alarm_hashes",
+    "risk_event_tape_hash",
+    "exogenous_product_tape_hash",
+    "resource_vector",
+    "product_mass_residuals",
+    "aggregate_mass_residuals"
+  ],
+  "selection_artifacts": [
+    "complete_open_loop_tie_sets",
+    "per_tape_safe_oracle_indices",
+    "best_static_reselection",
+    "best_classical_reselection",
+    "connected_component_membership",
+    "bootstrap_indices",
+    "simultaneous_inference_distribution_hash"
+  ],
+  "custody": [
+    "source_commit_sha",
+    "contract_sha256",
+    "environment_lock_sha256",
+    "seed_manifest_sha256",
+    "command_manifest",
+    "stdout_stderr",
+    "watcher_jsonl",
+    "per_shard_sha256",
+    "archive_sha256"
+  ],
+  "write_protocol": "temporary file plus fsync plus atomic rename; existing shard identity cannot be overwritten"
+}

@@ -24,7 +24,7 @@ def test_build_static_policy_action_scales_downstream_dispatch() -> None:
 
 
 def test_extract_downstream_multipliers_handles_learned_and_static_payloads() -> None:
-    learned = {"clipped_action": [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, -1.0]}
+    learned = {"clipped_action": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, -1.0]}
     static = {
         "raw_action": {
             "op10_q_min": 3600.0,
@@ -52,7 +52,7 @@ def test_build_decision_summary_flags_promotable_gap() -> None:
         {"policy": "s3_d1.00", "reward_total_mean": 101.0, "fill_rate_mean": 0.960, "backorder_rate_mean": 0.040, "order_level_ret_mean": 0.49},
         {"policy": "s3_d1.50", "reward_total_mean": 100.8, "fill_rate_mean": 0.965, "backorder_rate_mean": 0.035, "order_level_ret_mean": 0.495},
         {"policy": "s3_d2.00", "reward_total_mean": 99.5, "fill_rate_mean": 0.970, "backorder_rate_mean": 0.030, "order_level_ret_mean": 0.50},
-        {"policy": "ppo", "reward_total_mean": 100.5, "fill_rate_mean": 0.965, "backorder_rate_mean": 0.035, "order_level_ret_mean": 0.495},
+        {"policy": "ppo", "reward_total_mean": 100.5, "fill_rate_mean": 0.965, "backorder_rate_mean": 0.035, "order_level_ret_mean": 0.505},
     ]
 
     decision = track_b_smoke.build_decision_summary(policy_rows)
@@ -61,6 +61,8 @@ def test_build_decision_summary_flags_promotable_gap() -> None:
     assert decision["best_static_policy"] == "s3_d2.00"
     assert decision["ppo_fill_gap_vs_s2_neutral_pp"] == pytest.approx(1.5)
     assert decision["ppo_fill_gap_vs_best_static_pp"] == pytest.approx(-0.5)
+    assert decision["ppo_order_level_ret_gap_vs_best_static"] == pytest.approx(0.005)
+    assert decision["ppo_raw_ret_win_vs_best_static"] is True
     assert decision["promote_to_long_run"] is True
 
 
@@ -84,10 +86,15 @@ def test_main_writes_bundle_from_stubbed_training_and_eval(
         (run_dir / "vec_normalize.pkl").write_text("stub", encoding="utf-8")
         return object(), FakeVecNorm()
 
+    def with_primary_defaults(row: dict[str, object]) -> dict[str, object]:
+        for metric in track_b_smoke.PRIMARY_METRICS:
+            row.setdefault(metric, 0.0)
+        return row
+
     def fake_evaluate_static_policy(
-        policy: track_b_smoke.StaticPolicySpec, *, args: object, seed: int
+        policy: track_b_smoke.StaticPolicySpec, *, args: object, seed: int, **kwargs: object
     ) -> list[dict[str, object]]:
-        del args
+        del args, kwargs
         fill = {
             "s1_d1.00": 0.930,
             "s1_d1.50": 0.935,
@@ -100,7 +107,7 @@ def test_main_writes_bundle_from_stubbed_training_and_eval(
             "s3_d2.00": 0.975,
         }[policy.label]
         return [
-            {
+            with_primary_defaults({
                 "policy": policy.label,
                 "seed": seed,
                 "episode": 1,
@@ -126,16 +133,16 @@ def test_main_writes_bundle_from_stubbed_training_and_eval(
                 "pct_steps_both_downstream_ge_190": 100.0 if policy.downstream_multiplier >= 1.9 else 0.0,
                 "assembly_hours_total": policy.assembly_shifts * 8.0 * 7.0 * 10,
                 "assembly_cost_index": policy.assembly_shifts / 3.0,
-            }
+            })
         ]
 
     def fake_evaluate_trained_policy(
-        *, args: object, seed: int, model: object, vec_norm: FakeVecNorm
+        *, args: object, seed: int, model: object, vec_norm: FakeVecNorm, **kwargs: object
     ) -> list[dict[str, object]]:
-        del args, model, vec_norm
+        del args, model, vec_norm, kwargs
         fill = 0.971
         return [
-            {
+            with_primary_defaults({
                 "policy": "ppo",
                 "seed": seed,
                 "episode": 1,
@@ -161,18 +168,18 @@ def test_main_writes_bundle_from_stubbed_training_and_eval(
                 "pct_steps_both_downstream_ge_190": 55.0,
                 "assembly_hours_total": 1120.0,
                 "assembly_cost_index": 0.867,
-            }
+            })
         ]
 
     def fake_evaluate_heuristic_policy(
-        label: str, heuristic: object, *, args: object, seed: int
+        label: str, heuristic: object, *, args: object, seed: int, **kwargs: object
     ) -> list[dict[str, object]]:
-        del heuristic, args
+        del heuristic, args, kwargs
         fill = {"heur_hysteresis": 0.950, "heur_disruption_aware": 0.945,
                 "heur_tuned": 0.948, "heur_downstream_reactive": 0.935,
                 "heur_s1_max_downstream": 0.940}.get(label, 0.940)
         return [
-            {
+            with_primary_defaults({
                 "policy": label,
                 "seed": seed,
                 "episode": 1,
@@ -198,7 +205,7 @@ def test_main_writes_bundle_from_stubbed_training_and_eval(
                 "pct_steps_both_downstream_ge_190": 20.0,
                 "assembly_hours_total": 840.0,
                 "assembly_cost_index": 0.567,
-            }
+            })
         ]
 
     monkeypatch.setattr(track_b_smoke, "train_ppo", fake_train_ppo)

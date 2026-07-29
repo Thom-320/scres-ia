@@ -1,0 +1,49 @@
+{
+  "contract_id": "garrido_reference_v2_candidate",
+  "status": "blocked_not_promoted",
+  "rl_training_allowed": false,
+  "reason": "Held-out endogenous Cf2/4/.../20 validation failed ReT, risk-attribution, warm-up, CT and RP gates.",
+  "provenance": {
+    "code_parent_commit": "311d375f9804464f34f93c4642771feaba3130f9",
+    "gate_artifact": "outputs/audits/garrido_reference_v2_gate/gate.json",
+    "gate_sha256": "a19fe1ef8a02c6f5f8352aa954310905dc4335dee5f4541afcff2836a8f64d53",
+    "raw_data1_sha256": "30b88c9b9fe68ef527dbfcc70d8e653ea7bd152ab891b3fc0ecf53cb6f043486",
+    "raw_data2_sha256": "4bd462771fefff16fc5666a851256b3780198d474832dec1423c0b6f94be86b0"
+  },
+  "causal_repairs": {
+    "procurement_contract_mode": "causal_coupled",
+    "op1_starts_at_t0": true,
+    "op2_requires_valid_contract": true,
+    "replenishment_route_aware": true,
+    "separate_theatre_inflow_and_order_fulfilled": true,
+    "mass_balance_ledger": true,
+    "order_fulfillment_mode": "op9_linked",
+    "demand_start_after_warmup": true,
+    "ret_recovery_period_mode": "elapsed"
+  },
+  "finite_calibration": {
+    "calibration_cfs": [1, 3, 5, 7, 9, 11, 13, 15, 17, 19],
+    "validation_cfs": [2, 4, 6, 8, 10, 12, 14, 16, 18, 20],
+    "raw_material_multiplier_candidates": [1.0, 1.5, 2.0],
+    "global_delay_candidates": [0.0, 48.00744, 54.0],
+    "single_refinement_delay_candidates": [72.0, 96.0, 120.0],
+    "best_diagnostic_candidate": {
+      "raw_material_order_up_to_multiplier": 1.0,
+      "demand_on_hand_fulfillment_delay": 120.0
+    },
+    "warning": "The 120 h delay is an empirical ledger patch, not a promoted physical mechanism. It must not become a thesis-faithful default."
+  },
+  "held_out_results": {
+    "mean_abs_ret_gap": 0.040789969718874816,
+    "mean_abs_risk_active_share_gap": 0.08123958378405693,
+    "max_abs_raw_mass_residual": 0.0,
+    "max_abs_ration_mass_residual": 0.0,
+    "mass_conservation_passed": true,
+    "ret_gate_passed": false,
+    "risk_attribution_gate_passed": false,
+    "warmup_gate_passed": false,
+    "ct_gate_passed": false,
+    "rp_gate_passed": false
+  },
+  "promotion_rule": "Promote only after every held-out gate in gate.json passes without Excel order/risk tapes."
+}

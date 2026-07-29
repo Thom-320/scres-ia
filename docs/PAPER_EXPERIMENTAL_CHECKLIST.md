@@ -1,5 +1,10 @@
 # Paper Experimental Checklist
 
+> **2026-07-01 status note:** This checklist is historical for the older Track A
+> paper backbone. The active paper framing is Track B as the positive claim and
+> Track A as boundary evidence. Use
+> `docs/CLAIMS_REGISTRY_Q1_DEFENSE_2026-07-01.md` for current submission gates.
+
 Source of truth for the remaining code and experimental work before the paper is submission-ready.
 Updated: 2026-03-30.
 

@@ -1,0 +1,110 @@
+{
+  "contract_id": "program_q_frozen_policy_replication_v1",
+  "schema_version": "program_q_frozen_policy_replication_v1",
+  "date_created": "2026-07-17",
+  "status": "FROZEN_POWER_PASS_N_256_PENDING_SEED_AUTHORIZATION",
+  "historical_verdicts_immutable": {
+    "program_o": "STOP_PROGRAM_O_AFTER_CORRECTIVE_VALIDATION",
+    "program_o_r": "STOP_CALIBRATION_NOT_ELIGIBLE",
+    "program_o_r_scientific_commit": "821c8d8",
+    "old_confirmation_block_7480101_7480148": "SEALED_FOREVER"
+  },
+  "question": "Does one frozen learned policy replicate superiority over the complete open-loop frontier and either establish a neural premium or practical equivalence to the strongest classical family?",
+  "unchanged_contract": {
+    "physics": "Program O-R fixed-clock risk-off full DES",
+    "cells": ["rho75_share90", "rho90_share75", "rho90_share90"],
+    "actions": "Discrete(4), eight weekly decisions",
+    "observation": "same 21-field non-anticipative state; history is architecture preprocessing only",
+    "reward": "zero intermediate, ret_excel_request_snapshot_v2 terminal",
+    "forbidden_information": ["tape_id", "seed", "latent_regime", "true_rho", "true_share", "future_demand", "oracle_calendar"]
+  },
+  "primary_candidate": {
+    "policy": "historical Program O-R RecurrentPPO population",
+    "learner_seeds": [8101, 8102, 8103, 8104, 8105, 8106, 8107, 8108, 8109, 8110],
+    "checkpoints": "frozen by SHA-256 in research/paper2_exhaustive_search/program_q_historical_recurrentppo_fallback_freeze_20260717.json",
+    "retraining": "forbidden",
+    "checkpoint_selection": "final checkpoints only",
+    "replacement_by_external_challenger": "forbidden"
+  },
+  "architecture_sidecar_firewall": {
+    "sandbox_train": [949100001, 949199999],
+    "sandbox_visible_eval": [949200001, 949299999],
+    "status": "SANDBOX_DEVELOPMENT_ONLY_NOT_PROMOTABLE",
+    "former_blind_qualification_block_950100001_950100096": "SEALED_NOT_PART_OF_PROGRAM_Q",
+    "may_delay_or_replace_program_q": false,
+    "future_use": "a separately named prospective architecture study only"
+  },
+  "power": {
+    "script": "scripts/power_program_q_replication.py",
+    "complete_classical_cache": "required; all ten configurations on all 144 burned cell-tapes; built in parallel and checksummed",
+    "burned_data_only": true,
+    "candidate_N": [128, 160, 192, 256],
+    "minimum_joint_power": 0.8,
+    "reselect_open_loop_65536_inside_every_resample": true,
+    "reselect_classical_10_inside_every_resample": true,
+    "failure": "STOP_PROGRAM_Q_UNDERPOWERED_WITHIN_CAP",
+    "authoritative_result": {
+      "run_id": "program-q-power-preopen-v5-20260718",
+      "source_commit": "0cdf753",
+      "selected_N": 256,
+      "joint_power": 0.8755,
+      "result": "results/program_q/power_preopen_v5_20260718/artifacts/program_q_power_v1.json",
+      "result_sha256": "d50bd939e59d4ac3a8e4edf527e6ba9ecd5540ebd06c0c68e721a8eedb542683",
+      "cache_sha256": "a7ef66075dc287fd9d78ddf2abccbbd0a1f3d5e469add2da2c8c679081423405",
+      "independent_audit": "results/program_q/power_preopen_v5_20260718/independent_audit_v1.json",
+      "independent_audit_sha256": "b26385e966477cb2e354cd9e2bee9a2a8e1f055cd0f4705ce4778d0cdce30f80"
+    }
+  },
+  "confirmation": {
+    "reserved_block": [7490001, 7490256],
+    "opened": false,
+    "N": 256,
+    "same_tapes_all_cells_crn": true,
+    "opening_requires": ["repository-wide collision scan", "historical candidate hash verification", "confirmatory launcher audit", "independent authorization"],
+    "preopening_gate_state": {
+      "power": "PASS_SELECT_N_256",
+      "seed_collision_scan": "PASS_PROGRAM_Q_SEEDS_VIRGIN",
+      "historical_candidate_hashes": "PASS_10_OF_10",
+      "confirmatory_launcher_audit": "PENDING",
+      "independent_authorization": "PENDING"
+    }
+  },
+  "comparators": {
+    "open_loop": "all 65536 calendars; family maximum mean; never per-tape maximum",
+    "classical": "all ten frozen state-rich configurations; family maximum mean",
+    "replacement_controls": ["modal", "phase_only", "frequency_matched"],
+    "reselection_inside_bootstrap": true
+  },
+  "inference": {
+    "resampling_units": ["learner_seed", "tape"],
+    "method": "studentized simultaneous max-t",
+    "all_three_cells_simultaneous": true,
+    "H_OL": "learner - max(open_loop)",
+    "Delta_N": "learner - max(classical)",
+    "adaptation_rule": "LCB95(H_OL) >= 0.01 in every cell",
+    "neural_premium_rule": "LCB95(Delta_N) >= 0.01 in every cell",
+    "equivalence_rule": "if neural premium fails, simultaneous CI95(Delta_N) wholly inside [-0.01,+0.01] in every cell",
+    "favorable_tapes_fraction_minimum": 0.7,
+    "learner_seeds_H_OL_positive_minimum": 8
+  },
+  "class_b_integrity_gates": {
+    "scheduled_resources": "exact equality",
+    "mass_partition_demand": "exact within existing numerical tolerances",
+    "feedback_and_replacements": "all pass",
+    "ret_full_margin": -0.02,
+    "quantity_ret_full_margin": -0.02,
+    "worst_product_fill_margin": -0.02
+  },
+  "secondary_nonblocking": ["ret_visible_cvar10", "service_loss_auc", "backlog", "max_backlog_age", "lost_orders", "unresolved_orders", "actual_transport_use"],
+  "terminal_verdicts": [
+    "PASS_Q_NEURAL_PREMIUM",
+    "PASS_Q_LEARNED_ADAPTATION_CLASSICALLY_EQUIVALENT",
+    "BOUND_Q_LEARNED_ADAPTATION_ONLY",
+    "STOP_Q_NO_REPLICATED_LEARNED_ADAPTATION",
+    "STOP_PROGRAM_Q_UNDERPOWERED_WITHIN_CAP"
+  ],
+  "paper3_authorized": false,
+  "prospective_amendments_before_scientific_seed_opening": [
+    "program_q_primary_candidate_independence_v1"
+  ]
+}

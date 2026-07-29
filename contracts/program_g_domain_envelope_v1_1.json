@@ -1,0 +1,152 @@
+{
+  "contract_id": "program_g_domain_envelope_v1_1",
+  "status": "FROZEN_PENDING_GARRIDO_SIGNOFF_BUILD_NOT_AUTHORIZED",
+  "supersedes_minimal_envelope_in": "program_g_structured_spatial_headroom_v1",
+  "amendment_doc": "docs/PROGRAM_G_CHARTER_PREBUILD_AMENDMENT_V1_1.md",
+  "intervention_ledger": "docs/PROGRAM_G_INTERVENTION_LEDGER_2026-07-12.md",
+  "signoff_template": "docs/PROGRAM_G_DOMAIN_SIGNOFF_TEMPLATE_2026-07-12.md",
+  "rationale": "Fixes physical/informational contradictions found in external review 2026-07-12: (a) weekly action leaves the convoy idle 168-48=120h/wk so 'convoy persistent location' was false; (b) convoy cargo ontology undefined; (c) scalar signal accuracy is prevalence-dependent; (d) six-constant static frontier too weak; (e) S1/S2 mixes production with spatial mechanism; (f) 24-cell grid omits the A/B concurrency axis.",
+  "physical_ontology": {
+    "flow_model": "emergency_reserve_overlay",
+    "normal_mfsc_flow_remains_active": true,
+    "normal_flow_serves_aggregate_demand": true,
+    "convoy_moves_only_the_emergency_reserve": true
+  },
+  "reserve": {
+    "role": "emergency reserve overlay",
+    "initial_total_rations": 10000,
+    "initial_location": "supply_battalion",
+    "loads_available": 2,
+    "load_size_rations": 5000,
+    "in_episode_replenishment": "none",
+    "inventory_creation_action": "forbidden",
+    "delivered_reserve_stays_and_is_consumable_at_destination": true,
+    "persistent_state_is": ["reserve_location", "reserve_depletion", "deployed_ration_location", "cssu_backlog"]
+  },
+  "convoy": {
+    "count": 1,
+    "capacity_rations": 5000,
+    "start_location": "supply_battalion",
+    "outbound_time_hours": 24,
+    "return_time_hours": 24,
+    "decision_epoch_hours": 48,
+    "decision_only_when_available_and_load_remains": true,
+    "partial_loads": false,
+    "return_required_before_reuse": true,
+    "full_load_per_departure": true
+  },
+  "r22_semantics": {
+    "interpretation": "bidirectional LOC closure",
+    "before_departure": "dispatch to that destination is masked while its route is down",
+    "during_outbound": "route-specific travel clock pauses",
+    "during_return": "route-specific travel clock pauses",
+    "cargo_destroyed": false,
+    "vehicle_destroyed": false,
+    "availability": "convoy unavailable until physical return",
+    "destruction_variant_deferred_to_separate_contract": true
+  },
+  "shifts": {
+    "primary_screen_shift": "S1_fixed",
+    "s2_is_secondary_liveness_gated_extension": true,
+    "s2_only_enters_after_preflight_shows_shift_changes_reachable_states": true,
+    "s2_spec": {"S1_labor_hours_per_day": 8, "S2_labor_hours_per_day": 16, "decision_epoch_hours": 168, "activation_lag_hours": 168, "minimum_dwell_hours": 168}
+  },
+  "tempo": {
+    "process": "semi_markov",
+    "states": ["low", "routine", "surge"],
+    "initial": "routine",
+    "dwell_weeks_distribution": {"dist": "discrete_uniform", "values": [4, 5, 6]},
+    "transitions": {"routine": ["low", "surge"], "low": ["routine"], "surge": ["routine"]},
+    "latent_label_observable": false,
+    "independent_by_cssu_modulated_by_commonality": true
+  },
+  "demand_split": {
+    "aggregate_conserved": "D_A_t + D_B_t = D_t",
+    "aggregate_generated_once_then_allocated": true,
+    "tempo_changes_spatial_distribution_not_total": true,
+    "weights": {"low": 0.75, "routine": 1.00, "surge_low": 2.00, "surge_high": 3.00},
+    "daily_split": "D_i_t = D_t * w(z_i_t) / (w(z_A_t) + w(z_B_t))"
+  },
+  "information_envelope": {
+    "signal_is_scalar_accuracy": false,
+    "defined_by": ["sensitivity", "false_positive_rate"],
+    "tiers": {
+      "moderate": {"sensitivity": 0.70, "false_positive_rate": 0.20},
+      "high": {"sensitivity": 0.85, "false_positive_rate": 0.10}
+    },
+    "lead_days_options": [7, 14],
+    "alert_type": "binary",
+    "alert_cadence": "weekly",
+    "identifies_cssu": true,
+    "behavior_during_persistent_surge": "PENDING_GARRIDO_SIGNOFF",
+    "temporal_error_correlation": "PENDING_GARRIDO_SIGNOFF",
+    "must_precede_action_and_cover_lead": true
+  },
+  "placebos_required": {
+    "circular_block_shuffled": "preserves frequency + autocorrelation, breaks surge alignment",
+    "delayed": "same alert arrives at onset or later",
+    "wrong_cssu": "A and B alerts swapped -- isolates value of knowing WHERE (new; was missing from v1)"
+  },
+  "static_frontier": {
+    "strategic_static_postures": ["10k_at_SB", "5k_at_A_and_5k_at_B", "10k_at_A", "10k_at_B"],
+    "prepositioning_travel_accounted_in_resource_ledger": true,
+    "open_loop_doctrines": "all sequences of up to two departures over 4 and 8 weeks, selected on calibration only, never on eval tape",
+    "simple_observable_doctrines_reported_separately": ["alternate_A_B", "dispatch_to_lower_days_of_cover", "dispatch_to_older_backlog", "hold_until_backlog_threshold", "fixed_2to1", "fixed_1to2"],
+    "primary_comparison": "pi_observable minus max(strategic_posture, open_loop_doctrine, constant_doctrine) within same resource envelope",
+    "resource_envelope_fields": ["convoy_missions", "unavailable_hours", "forward_reserve_ration_days", "reserve_consumed"]
+  },
+  "enumerable_oracle": {
+    "note": "two loads + 48h epochs -> exact open-loop oracle is cheap; PPO not needed to search it",
+    "sequences_up_to_two_departures_4wk_n14": 393,
+    "sequences_up_to_two_departures_8wk_n28": 1569,
+    "formula": "1 + 2n + 4*C(n,2)"
+  },
+  "mechanism_ladder": {
+    "name": "nested mechanism ladder (staged component decomposition, NOT a full factorial)",
+    "arms": ["Base", "T", "TR", "TS", "TRS", "TRSC"],
+    "identified_contrasts": ["T-Base", "TR-T", "TS-T", "TRS-TR", "TRS-TS", "TRSC-TRS"],
+    "not_identified": ["R without T", "S without T", "RS without T"]
+  },
+  "primary_grid": {
+    "n_cells": 16,
+    "axes": {
+      "signal_tier": ["moderate", "high"],
+      "lead_days": [7, 14],
+      "surge_weight": [2.0, 3.0],
+      "commonality": {"localized": 0.10, "partially_common": 0.35}
+    },
+    "commonality_definition": "P(other CSSU enters surge inside the lead window | one enters surge)",
+    "persistence_6_8_weeks_is_later_sensitivity_not_primary_selection": true
+  },
+  "experimental_sequence": {
+    "G0_physics_no_tapes_980001": ["A+B conservation", "single convoy", "full-load", "finite reserve", "no replenishment", "R22 outbound/return pause", "label-swap symmetry", "same-prefix-same-action identity", "signal ledger", "placebos", "action masks"],
+    "G1_central_cell_all_arms": ["Base", "T", "TR", "TS", "TRS", "TRSC"],
+    "G2_envelope_TRS_and_TRSC_over_16_cells": true,
+    "G3_promotable_region_needs_connected_component_of_at_least_2_cells": {"fresh_calibration_tapes": 60, "tree_and_hysteresis": true, "exact_open_loop_comparator": true, "placebos": true, "resource_frontier": true, "train_eval_on_uniform_over_eligible_connected_component_not_max_ret_cell": true},
+    "G4_holdout_open_1000001_only_after_freezing": ["region", "tree", "thresholds", "observations", "comparator", "analysis_code"],
+    "G5_learner_only_after": ["rollout_MPC", "contextual_bandit", "MaskablePPO"]
+  },
+  "data_universes": {
+    "structural_screen_seed_start": 980001,
+    "fresh_calibration_seed_start": 990001,
+    "observable_holdout_seed_start": 1000001,
+    "virgin_learner_test_seed_start": 1010001,
+    "program_d_e_f_tapes_reused": false
+  },
+  "episode_horizon_days": 56,
+  "build_gate": {
+    "authorized": false,
+    "blocking_requirements": ["Garrido domain sign-off (docs/PROGRAM_G_DOMAIN_SIGNOFF_TEMPLATE_2026-07-12.md)", "intervention ledger every parameter has source/falsifier/sensitivity/claim-limit"],
+    "reason": "Realism is not a substance poured over invented parameters; each extension needs an operational interpretation, range, source or face validation, falsifier, sensitivity and claim limit."
+  },
+  "forbidden_rescues": [
+    "authorize G0 build before Garrido sign-off",
+    "reuse Program D/E/F tapes, weights, thresholds or cells",
+    "select the max-ReT cell instead of a connected passing region",
+    "reduce the tree 30% learner-eligibility gate after screening",
+    "add a second convoy or in-episode replenishment after seeing a null",
+    "expose latent tempo labels or exact future demand",
+    "let S2 occupy the action space before it passes a liveness preflight",
+    "train PPO during environment selection"
+  ]
+}

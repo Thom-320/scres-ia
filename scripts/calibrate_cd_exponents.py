@@ -97,10 +97,20 @@ def collect_episode_rows(args: argparse.Namespace) -> list[dict[str, Any]]:
     env = MFSCGymEnvShifts(
         reward_mode="ReT_garrido2024_raw",
         risk_level=args.risk_level,
+        year_basis=args.year_basis,
         stochastic_pt=args.stochastic_pt,
         step_size_hours=args.step_size_hours,
         max_steps=args.max_steps,
         observation_version=args.observation_version,
+        warmup_trigger=args.warmup_trigger,
+        downstream_q_source=args.downstream_q_source,
+        r14_defect_mode=args.r14_defect_mode,
+        risk_occurrence_mode=args.risk_occurrence_mode,
+        risk_frequency_multiplier=args.risk_frequency_multiplier,
+        risk_impact_multiplier=args.risk_impact_multiplier,
+        raw_material_flow_mode=args.raw_material_flow_mode,
+        raw_material_order_up_to_multiplier=args.raw_material_order_up_to_multiplier,
+        ret_g24_shift_cost=args.ret_g24_shift_cost,
         ret_g24_calibration_path=None,
     )
 
@@ -195,8 +205,21 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--risk-level",
-        choices=["current", "increased", "severe", "severe_training"],
+        choices=[
+            "current",
+            "increased",
+            "severe",
+            "severe_extended",
+            "severe_training",
+            "adaptive_benchmark_v1",
+            "adaptive_benchmark_v2",
+        ],
         default="increased",
+    )
+    parser.add_argument(
+        "--year-basis",
+        choices=["calendar", "thesis"],
+        default="thesis",
     )
     parser.add_argument("--stochastic-pt", action="store_true")
     parser.add_argument("--step-size-hours", type=float, default=168.0)
@@ -206,6 +229,23 @@ def build_parser() -> argparse.ArgumentParser:
         choices=["v1", "v2", "v3", "v4", "v5"],
         default="v1",
     )
+    parser.add_argument("--warmup-trigger", default="op9_arrival")
+    parser.add_argument(
+        "--downstream-q-source",
+        choices=["figure_6_2", "table_6_20"],
+        default="figure_6_2",
+    )
+    parser.add_argument("--r14-defect-mode", default="thesis_strict_op6")
+    parser.add_argument(
+        "--risk-occurrence-mode",
+        choices=["legacy_renewal", "thesis_window"],
+        default="thesis_window",
+    )
+    parser.add_argument("--risk-frequency-multiplier", type=float, default=1.0)
+    parser.add_argument("--risk-impact-multiplier", type=float, default=1.0)
+    parser.add_argument("--raw-material-flow-mode", default="kit_equivalent_order_up_to")
+    parser.add_argument("--raw-material-order-up-to-multiplier", type=float, default=2.0)
+    parser.add_argument("--ret-g24-shift-cost", type=float, default=1.0)
     parser.add_argument(
         "--output",
         type=Path,
@@ -228,10 +268,22 @@ def main() -> dict[str, Any]:
             "seed_start": int(args.seed),
             "policies": list(args.policies),
             "risk_level": str(args.risk_level),
+            "year_basis": str(args.year_basis),
             "stochastic_pt": bool(args.stochastic_pt),
             "step_size_hours": float(args.step_size_hours),
             "max_steps": int(args.max_steps),
             "observation_version": str(args.observation_version),
+            "warmup_trigger": str(args.warmup_trigger),
+            "downstream_q_source": str(args.downstream_q_source),
+            "r14_defect_mode": str(args.r14_defect_mode),
+            "risk_occurrence_mode": str(args.risk_occurrence_mode),
+            "risk_frequency_multiplier": float(args.risk_frequency_multiplier),
+            "risk_impact_multiplier": float(args.risk_impact_multiplier),
+            "raw_material_flow_mode": str(args.raw_material_flow_mode),
+            "raw_material_order_up_to_multiplier": float(
+                args.raw_material_order_up_to_multiplier
+            ),
+            "ret_g24_shift_cost": float(args.ret_g24_shift_cost),
         },
     }
 

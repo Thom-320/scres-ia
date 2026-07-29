@@ -1,0 +1,52 @@
+{
+  "data_source": "existing validation outputs only",
+  "gate": "PROGRAM_E_AUXILIARY_OBSERVABLE_BASELINES",
+  "interpretation": "NO_AUXILIARY_POLICY_CONVERTED_HEADROOM",
+  "new_tapes_opened": 0,
+  "summaries": [
+    {
+      "candidate": {
+        "mean_departures": 26.7,
+        "mean_lost_orders": 0.0,
+        "mean_ret": 0.6669961837220765,
+        "mean_service_loss_auc": 14216630.85,
+        "mean_unavailable_hours": 1319.0
+      },
+      "lost_orders_delta_mean": 0.0,
+      "mixture": {
+        "mean_departures": 26.65,
+        "mean_ret": 0.6670484136214487,
+        "mean_unavailable_hours": 1316.6,
+        "weights": {
+          "threshold_2500__wait_72h": 1.0
+        }
+      },
+      "policy": "heuristic",
+      "resource_comparator_exists": true,
+      "ret_delta_mean": -5.2229899372124854e-05,
+      "ret_delta_tape_fraction_positive": 0.0,
+      "service_loss_reduction_mean": -0.0004404434492652795
+    },
+    {
+      "candidate": {
+        "mean_departures": 13.9,
+        "mean_lost_orders": 0.0,
+        "mean_ret": 0.5247139637234437,
+        "mean_service_loss_auc": 26439696.55,
+        "mean_unavailable_hours": 704.55
+      },
+      "descriptive_min_resource_static": {
+        "departures": 24.5,
+        "lost": 0.0,
+        "policy_id": "threshold_5000__wait_72h",
+        "ret": 0.6559914583769614,
+        "service": 14769436.75,
+        "unavailable_hours": 1189.05
+      },
+      "descriptive_ret_delta": -0.13127749465351768,
+      "policy": "tree",
+      "reason": "NO_CONVEX_STATIC_COMPARATOR: The problem is infeasible. (HiGHS Status 8: model_status is Infeasible; primal_status is None)",
+      "resource_comparator_exists": false
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "contract_id": "garrido_proxy_v1",
+  "status": "frozen_research_environment",
+  "rl_training_allowed": true,
+  "decision": "docs/GARRIDO_ATTRIBUTION_DECISION_2026-07-10.md",
+  "tier1_physical_fidelity": {
+    "mass_conservation": "PASS (residual 0, all 20 CFs)",
+    "placed_order_counts": "PASS (max-j match +-0.3%)",
+    "workbook_ledger_structure": "PASS (attended/lost/pending)",
+    "no_on_time_artifact": "PASS (no CTj<=48h; matches all workbooks)",
+    "risk_liveness": "PASS (9/9 risks physically causal)",
+    "op1_op2_contract_coupling": true,
+    "route_aware_replenishment": true,
+    "op9_daily_freight": true
+  },
+  "tier2_attribution_proxy": {
+    "mechanism": "overlap attribution + fixed 168h R24 stress window",
+    "identifiability": "UNIDENTIFIED for R12/R13/R21 (original Simulink assignment logic lost); mechanism-plausible for R24/R14",
+    "validation_measured_gaps": {
+      "ret_mae": 0.03547263490209769,
+      "risk_share_gap": 0.06559763609221048,
+      "artifact": "outputs/audits/garrido_reference_v2_gate_r3/gate.json",
+      "artifact_sha256": "41dedcfaddf8de2c38a02dec59c6265bec01096a8053c8091a8e5d09c0504133"
+    },
+    "garrido_own_validation_precedent": "Table 6.10: -21.6%..+14.1% annual gaps, RMSE 87,918"
+  },
+  "sim_kwargs": {
+    "risk_level": "current",
+    "risk_occurrence_mode": "thesis_window",
+    "risk_attribution_source": "des_events",
+    "seed_stream_mode": "split",
+    "year_basis": "thesis",
+    "warmup_trigger": "op9_arrival",
+    "raw_material_flow_mode": "kit_equivalent_order_up_to",
+    "raw_material_order_up_to_multiplier": 1.0,
+    "demand_on_hand_fulfillment_delay": 0.0,
+    "replenishment_route_aware": true,
+    "procurement_contract_mode": "causal_coupled",
+    "order_fulfillment_mode": "op9_linked",
+    "op9_dispatch_policy": "fixed_clock_daily",
+    "downstream_transport_capacity_mode": "parallel",
+    "op9_freight_offset_hours": 6.0,
+    "r24_attribution_window_hours": 168.0,
+    "demand_start_after_warmup": true,
+    "ret_recovery_period_mode": "elapsed"
+  },
+  "language_rules": [
+    "NEVER 'thesis-faithful' or 'garrido_reference_v2' for this environment",
+    "attribution-sensitive claims require forensic excel_risk_tape lane or inline proxy disclosure",
+    "paper phrase: 'thesis-grounded reconstruction with audited physical causality and a disclosed attribution proxy'"
+  ]
+}

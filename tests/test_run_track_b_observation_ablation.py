@@ -16,7 +16,7 @@ def test_forecast_mask_wrapper_zeros_only_forecast_channels() -> None:
     forecast_indices = [fields.index(name) for name in FORECAST_FIELD_NAMES]
 
     assert all(obs[idx] == 0.0 for idx in forecast_indices)
-    assert env.observation_space.shape == (46,)
+    assert env.observation_space.shape == (len(fields),)
     env.close()
 
 

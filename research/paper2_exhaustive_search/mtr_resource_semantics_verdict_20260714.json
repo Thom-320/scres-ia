@@ -1,0 +1,93 @@
+{
+  "schema_version": "paper2_mtr_resource_semantics_verdict_v1",
+  "generated_date": "2026-07-14",
+  "source_commit": "8f31f4104c14ebd6bcf559fb5bba1040f1a3fcc3",
+  "scientific_status": "CONTRACT_RESOURCE_SEMANTICS_CLARIFIED__DOMAIN_VALIDITY_AND_NUMERICAL_BOUND_UNRESOLVED",
+  "family_id": "integrated_production_maintenance_routing_recovery_resource",
+  "governing_contract": {
+    "path": "contracts/paper2_bottleneck_full_horizon_bound_v1.json",
+    "sha256": "75434aea84f6a6d5fad06b7628b62ab85f04124b4da2e180fc678fcf33667177"
+  },
+  "named_budget": {
+    "resource": "one mutually exclusive response-team week per epoch",
+    "total_episode_hours": 4032,
+    "allocation_destinations": ["M", "T", "R"],
+    "matching_rule": "Every policy receives exactly the same 4032 team-hours. M/T/R hours are mutually exclusive uses of that one scalar budget, not three separately purchased resources."
+  },
+  "equal_access_envelope": {
+    "reserve_capacity_units": 10000,
+    "reserve_initial_stock_units": 10000,
+    "reserve_target_units": 10000,
+    "reserve_issue_delay_hours": 24,
+    "reserve_replenishment_lead_hours": 168,
+    "exogenous_production": "identical across policies under common random numbers",
+    "op9_source_inventory_access": "identical across policies",
+    "forbidden": [
+      "external stock creation",
+      "superior separately purchased dispatch or handling capacity",
+      "nonzero raw-material or ration mass residual"
+    ]
+  },
+  "endogenous_outcome_flows_not_named_budgets_in_v1": [
+    {
+      "field": "reserve_units_issued",
+      "interpretation": "Realized service from already-positioned finite reserve stock; it increments only after delivery. Equalizing it would condition on an intended service consequence of action R."
+    },
+    {
+      "field": "reserve_units_replenished",
+      "interpretation": "Realized internal transfer into the reserve after the simulator removes the same quantity from Op9/SB stock and completes the frozen lead."
+    },
+    {
+      "field": "reserve_replenishment_requests",
+      "interpretation": "Count of target-gap processes launched. The v1 simulator assigns no separately finite departure, vehicle-hour, handling-hour, fuel, budget or order-processing resource to this counter."
+    }
+  ],
+  "mandatory_conservation_and_reporting": {
+    "reserve_stock_balance": "initial + replenished - issued - terminal - committed_pending = 0",
+    "system_mass_balance": "max(abs(raw_residual), abs(ration_residual)) = 0 within numerical tolerance",
+    "terminal_ledgers": [
+      "reserve_inventory_terminal",
+      "reserve_committed_pending_terminal",
+      "reserve_in_transit_terminal",
+      "reserve_stock_balance_residual",
+      "mass_residual"
+    ],
+    "comparison_rule": "Report all outcome flows for every policy and require the named budget and equal-access envelope to be identical. Do not relabel outcome-flow equality as a frozen resource requirement after results."
+  },
+  "source_evidence": [
+    {
+      "path": "supply_chain/supply_chain.py",
+      "sha256": "74e79d230e565e4d77c7812550948fb46cd9c8ef8595d298372ffa4d3f692741",
+      "fact": "Target-gap requests launch a process; replenishment removes source stock before transit; issued and replenished ledgers increment only after physical delivery."
+    },
+    {
+      "path": "supply_chain/paper2_bottleneck.py",
+      "sha256": "e67db6029a39b084e3c33661b60196f8a0f774b7ccb573521bb451bd1436a49e",
+      "fact": "The evaluator freezes equal reserve access and reports team-hours, reserve flows, pending/in-transit stock and mass residuals."
+    },
+    {
+      "path": "thesis.txt",
+      "sha256": "c0b1671cc8548a19e9b19a53c49c02c7bf6c80912b7af0ebb9a42051c72da1c7",
+      "fact": "The thesis supports periodic strategic-inventory replenishment at Op3, Op5 and Op9, but does not define this event-driven forward-reserve transport and handling resource."
+    },
+    {
+      "path": "docs/PROGRAM_F_RISK_MITIGATION_PORTFOLIO_CHARTER_2026-07-12.md",
+      "sha256": "d7002adc6dd07f20823c4da997cd9355d546d0a666746f899cc89b12af9b6f91",
+      "fact": "The forward reserve is explicitly a researcher extension with finite 10000-unit stock and conserved Op9 replenishment."
+    }
+  ],
+  "domain_validity": {
+    "status": "UNANSWERED_GARRIDO_FACT",
+    "reason": "The executable v1 accounting rule is frozen, but the thesis does not establish that replenishment and issue use non-scarce routine transport/handling or that one real response team can serve M/T/R.",
+    "if_separate_resource_is_finite": "Freeze a new contract naming its units, capacity, lead/turnaround, concurrency, sharing and cancellation/reassignment rules; require componentwise non-superior use before any further evaluation."
+  },
+  "exact_garrido_question": "For the proposed forward reserve, when an R24 requirement is served and the reserve orders back up to 10000 units from Op9: (1) is replenishment only a stock-conserving internal transfer using non-scarce routine order-processing and transport, or does each request/transfer consume a separately finite departure, convoy/vehicle-hour, handling crew-hour, fuel/budget or order-processing slot; (2) is that resource shared with Op10/Op12 or with the M/T/R response team; (3) is the 5000-unit R capability a maximum per R24 event, per week or per episode, and does each issue consume team or handling time; and (4) is the initial 10000-unit stock prepositioned before the episode and how is it costed? If any separate resource is finite, please give its capacity, units, lead/turnaround, concurrency and cancellation/reassignment rules.",
+  "claim_boundary": {
+    "h_pi_computed": false,
+    "h_obs_computed": false,
+    "paper2_authorized": false,
+    "learner_authorized": false,
+    "paper3_authorized": false,
+    "statement": "This verdict resolves only what v1 budgets and reports. It neither validates the researcher-introduced physics nor supplies the unresolved open-loop frontier or resource-restricted PI ceiling."
+  }
+}

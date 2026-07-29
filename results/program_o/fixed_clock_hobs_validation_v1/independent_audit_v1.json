@@ -1,0 +1,73 @@
+{
+  "schema_version": "program_o_fixed_clock_hobs_validation_independent_audit_v1",
+  "audited_status": "STOP_PROGRAM_O_CLASSICAL_HOBS_VALIDATION",
+  "terminal_reason": "The frozen prospective minimum of 34 favorable tapes in every connected cell failed in rho90_share90 (26/48). This failure is exact and does not depend on the defective simultaneous-LCB implementation.",
+  "custody": {
+    "remote_manifest_sha256": "8b2bf7eae368e0c3b8c25e450fdfdb748ddfc13b931ccec0528944e19532e353",
+    "result_sha256": "09ec3f1691d6e5da090d7afb62523124321de666d4441ea2f92f619cb8326362",
+    "remote_manifest_verified_remote": true,
+    "remote_manifest_verified_after_retrieval": true,
+    "scientific_source_commit": "48062f8a52dda8417812cac828978906704a58fa",
+    "custody_harness_commit": "4c686c080e34c6ba391a0f73cad8460b68ae989e",
+    "executed_repository_commit": "de576d4fb1f1560ee0b61e780ff9503726a36a1d",
+    "contract_sha256": "d13508f6694a96dd219cf411a6cc14f1ef4031540805df34b55941289f14d9cc",
+    "execution_freeze_sha256": "23dd8a425af94a64f8af186d9b044b46044fefe087ec4d83a80bec5fa899c935",
+    "seed_range": [7420049, 7420096],
+    "seed_count": 48,
+    "validation_opened_once": true,
+    "raw_calendar_shards": 144,
+    "producer_exit_code": 0,
+    "watcher_terminal_state": "COMPLETE_PENDING_RETRIEVAL"
+  },
+  "prospective_primary_results": {
+    "rho75_share90": {
+      "mean_delta_ret_visible": 0.08379596327890182,
+      "favorable_tapes": 45,
+      "minimum_favorable_tapes": 34,
+      "favorable_tape_gate": true
+    },
+    "rho90_share75": {
+      "mean_delta_ret_visible": 0.0687854592235778,
+      "favorable_tapes": 44,
+      "minimum_favorable_tapes": 34,
+      "favorable_tape_gate": true
+    },
+    "rho90_share90": {
+      "mean_delta_ret_visible": 0.08289111519043368,
+      "favorable_tapes": 26,
+      "minimum_favorable_tapes": 34,
+      "favorable_tape_gate": false
+    }
+  },
+  "valid_physical_and_feedback_findings": {
+    "physical_replay_episodes": 1423,
+    "physical_replay_failures": 0,
+    "unique_scheduled_resource_vectors": 1,
+    "fixed_clock_reserved_resources_equal": true,
+    "action_trajectory_gate_all_cells": true,
+    "state_counterfactual_gate_all_cells": true,
+    "unique_sequences_by_cell": {
+      "rho75_share90": 42,
+      "rho90_share75": 48,
+      "rho90_share90": 34
+    }
+  },
+  "inference_implementation_defect": {
+    "confirmed": true,
+    "description": "The executor forms one unstandardized max-deviation critical value across 69 estimands measured on incompatible scales, including ReT fractions and service-loss AUC in tens of millions, then subtracts that same absolute critical value from every estimand.",
+    "reported_simultaneous_critical": 23651319.391666666,
+    "consequence": "The generated simultaneous LCBs and the derived primary_pass, placebo_pass, and guardrail_pass flags cannot be interpreted as valid 95% familywise inference.",
+    "not_a_rescue": "No alternative inference is used to promote the result. Program O remains stopped because rho90_share90 independently fails the frozen 34/48 favorable-tape rule.",
+    "descriptive_only": {
+      "all_27_individual_placebo_contrasts_report_positive_paired_lcb95": true,
+      "individual_placebo_lcb95_range": [0.0068188623708043536, 0.177662]
+    }
+  },
+  "claim_boundary": {
+    "h_obs_confirmed": false,
+    "learner_authorized": false,
+    "paper2_confirmed": false,
+    "paper3_authorized": false,
+    "program_o_closed_without_rescue": true
+  }
+}

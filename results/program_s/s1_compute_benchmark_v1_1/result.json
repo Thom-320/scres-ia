@@ -1,0 +1,55 @@
+{
+  "burned_seed": 7430001,
+  "conservative_multiplier": 1.25,
+  "design_sha256": "18a8d04fd7dd6988f0bab9f27e03d8b407bc1e5e5064360c2f19ad4658ae629e",
+  "environment": {
+    "platform": "macOS-27.0-arm64-arm-64bit",
+    "python": "3.11.15"
+  },
+  "native_design_points": 160,
+  "pass": true,
+  "product_cells": 3,
+  "projected_shards": 5760,
+  "projected_wall_seconds": 11581.929000013042,
+  "reduction_ladder_if_failed": [
+    "reduce optimized trajectories from 10 to 6 before design refreeze",
+    "retain all three masks but keep R23 fixed as a negative control",
+    "do not execute S-WARTIME under the S-NATIVE budget",
+    "stop before scientific execution if the reduced projection still exceeds seven days"
+  ],
+  "rows": [
+    {
+      "direct_and_skeleton_seconds": 0.01700304100086214,
+      "frontier_65536_seconds": 3.196683624999423,
+      "frontier_rows": 65536,
+      "mask": "PRODUCTION_QUALITY_SURGE",
+      "risk_event_count": 91,
+      "risk_tape_seconds": 0.003515834003337659,
+      "total_seconds": 3.217202500003623
+    },
+    {
+      "direct_and_skeleton_seconds": 0.013036417003604583,
+      "frontier_65536_seconds": 1.8968425830025808,
+      "frontier_rows": 65536,
+      "mask": "LOC_SURGE",
+      "risk_event_count": 2,
+      "risk_tape_seconds": 0.0013857079975423403,
+      "total_seconds": 1.9112647080037277
+    },
+    {
+      "direct_and_skeleton_seconds": 0.012976124999113381,
+      "frontier_65536_seconds": 2.0020204999964335,
+      "frontier_rows": 65536,
+      "mask": "CROSS_ECHELON_SURGE",
+      "risk_event_count": 4,
+      "risk_tape_seconds": 0.0012724170010187663,
+      "total_seconds": 2.0162690419965656
+    }
+  ],
+  "schema_version": "program_s_s1_compute_benchmark_v1_1",
+  "scientific_751_seeds_opened": false,
+  "tapes": 12,
+  "verdict": "PASS_S1_COMPUTE_BENCHMARK_FEASIBLE",
+  "walltime_limit_seconds": 604800,
+  "workers": 2
+}

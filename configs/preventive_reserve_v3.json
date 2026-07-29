@@ -1,0 +1,21 @@
+{
+  "contract_id": "preventive_reserve_v3",
+  "parent_contract": "preventive_reserve_v2",
+  "single_change": "physical_downstream_replenishment",
+  "warning_lead_hours": 336.0,
+  "transport": {
+    "mode": "physical_downstream",
+    "op10_hours": 24.0,
+    "op11_availability_required": true,
+    "op12_hours": 24.0,
+    "minimum_lead_hours": 48.0
+  },
+  "reserve_targets_rations": [0.0, 15000.0, 30000.0],
+  "reserve_capacity_rations": 30000.0,
+  "powered_gate": {
+    "seed_start": 773000,
+    "n_tapes": 30,
+    "horizon_weeks": 52,
+    "ppo_authorized_before_gate": false
+  }
+}

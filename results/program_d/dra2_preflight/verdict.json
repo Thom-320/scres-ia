@@ -1,0 +1,178 @@
+{
+  "contract_id": "op7_op8_finite_convoy_v1",
+  "scope": "disposable preflight only; no calibration, holdout, virgin or PPO data",
+  "g_a_intertemporal_commitment": {
+    "pass": true,
+    "fixtures": [
+      {
+        "staged_quantity": 1000.0,
+        "both_actions_admissible_at_t0": true,
+        "future_states": [
+          {
+            "hour": 24.001,
+            "dispatch": {
+              "convoy_available": false,
+              "dispatch_feasible": false,
+              "staged": 0.0,
+              "in_transit": 0.0,
+              "departures": 1.0,
+              "vehicle_hours": 0.0
+            },
+            "hold": {
+              "convoy_available": true,
+              "dispatch_feasible": true,
+              "staged": 1000.0,
+              "in_transit": 0.0,
+              "departures": 0.0,
+              "vehicle_hours": 0.0
+            },
+            "different": true
+          },
+          {
+            "hour": 48.001,
+            "dispatch": {
+              "convoy_available": true,
+              "dispatch_feasible": false,
+              "staged": 0.0,
+              "in_transit": 0.0,
+              "departures": 1.0,
+              "vehicle_hours": 0.0
+            },
+            "hold": {
+              "convoy_available": true,
+              "dispatch_feasible": true,
+              "staged": 1000.0,
+              "in_transit": 0.0,
+              "departures": 0.0,
+              "vehicle_hours": 0.0
+            },
+            "different": true
+          }
+        ],
+        "strong_live": true,
+        "return_gap_hours": 0.0
+      },
+      {
+        "staged_quantity": 2500.0,
+        "both_actions_admissible_at_t0": true,
+        "future_states": [
+          {
+            "hour": 24.001,
+            "dispatch": {
+              "convoy_available": false,
+              "dispatch_feasible": false,
+              "staged": 0.0,
+              "in_transit": 0.0,
+              "departures": 1.0,
+              "vehicle_hours": 0.0
+            },
+            "hold": {
+              "convoy_available": true,
+              "dispatch_feasible": true,
+              "staged": 2500.0,
+              "in_transit": 0.0,
+              "departures": 0.0,
+              "vehicle_hours": 0.0
+            },
+            "different": true
+          },
+          {
+            "hour": 48.001,
+            "dispatch": {
+              "convoy_available": true,
+              "dispatch_feasible": false,
+              "staged": 0.0,
+              "in_transit": 0.0,
+              "departures": 1.0,
+              "vehicle_hours": 0.0
+            },
+            "hold": {
+              "convoy_available": true,
+              "dispatch_feasible": true,
+              "staged": 2500.0,
+              "in_transit": 0.0,
+              "departures": 0.0,
+              "vehicle_hours": 0.0
+            },
+            "different": true
+          }
+        ],
+        "strong_live": true,
+        "return_gap_hours": 0.0
+      },
+      {
+        "staged_quantity": 5000.0,
+        "both_actions_admissible_at_t0": true,
+        "future_states": [
+          {
+            "hour": 24.001,
+            "dispatch": {
+              "convoy_available": false,
+              "dispatch_feasible": false,
+              "staged": 0.0,
+              "in_transit": 0.0,
+              "departures": 1.0,
+              "vehicle_hours": 0.0
+            },
+            "hold": {
+              "convoy_available": true,
+              "dispatch_feasible": true,
+              "staged": 5000.0,
+              "in_transit": 0.0,
+              "departures": 0.0,
+              "vehicle_hours": 0.0
+            },
+            "different": true
+          },
+          {
+            "hour": 48.001,
+            "dispatch": {
+              "convoy_available": true,
+              "dispatch_feasible": false,
+              "staged": 0.0,
+              "in_transit": 0.0,
+              "departures": 1.0,
+              "vehicle_hours": 0.0
+            },
+            "hold": {
+              "convoy_available": true,
+              "dispatch_feasible": true,
+              "staged": 5000.0,
+              "in_transit": 0.0,
+              "departures": 0.0,
+              "vehicle_hours": 0.0
+            },
+            "different": true
+          }
+        ],
+        "strong_live": true,
+        "return_gap_hours": 0.0
+      }
+    ],
+    "integrated_cycle": {
+      "tape_split": "disposable_preflight",
+      "departed": true,
+      "departed_at": 968.0,
+      "nominal_return_at": 1016.0,
+      "actual_return_at": 1016.0,
+      "cycle_hours": 48.0,
+      "route_wait_hours": 0.0,
+      "pass_exact_48h_without_route_wait": true
+    }
+  },
+  "g_b_strong_liveness_definition": {
+    "pass": true,
+    "definition": "both actions admissible at t0 and exact CRN branches differ physically at t+1 and t+2",
+    "confirmatory_fraction_computed": false
+  },
+  "g_e_default_identity": {
+    "pass": true,
+    "default_ret_excel_visible_v1": 0.7442721321113027,
+    "explicit_ret_excel_visible_v1": 0.7442721321113027
+  },
+  "resource_rule_frozen": true,
+  "garrido_face_validation": "PENDING",
+  "calibration_opened": false,
+  "ppo_trained": false,
+  "verdict": "PASS_SOFTWARE_PREFLIGHT_AWAITING_GARRIDO_FACE_VALIDATION"
+}

@@ -1,0 +1,41 @@
+{
+  "schema_version": "program_o_exact_transducer_validation_freeze_v1",
+  "frozen_date": "2026-07-14",
+  "scientific_commit": "f804c8398f47f64aaf2bd637662b24234a9f6424",
+  "screen_result": {
+    "path": "results/program_o/exact_transducer_screen_v1/result.json",
+    "sha256": "efb21df1006e1593b6261d7a37dd60b1e78e0c4cdf67531dc030cc507b671612",
+    "status": "PASS_SCREEN_ONLY__FREEZE_FRESH_VALIDATION_BEFORE_OPENING"
+  },
+  "selected_cells": [
+    "rho75_share75",
+    "rho75_share90",
+    "rho90_share75",
+    "rho90_share90"
+  ],
+  "validation_seeds": [7400025, 7400048],
+  "n_tapes": 24,
+  "calendar_count": 256,
+  "bootstrap": {
+    "resamples": 10000,
+    "rng_seed": 7400999,
+    "method": "paired_basic_max_error_one_sided_familywise_95",
+    "static_calendar_reselected_in_every_cell_and_resample": true
+  },
+  "pass_rule": {
+    "simultaneous_lcb95_minimum": 0.01,
+    "connected_component_minimum_cells": 3,
+    "component_must_span_persistence_levels": 2,
+    "component_must_span_dominant_share_levels": 2,
+    "oracle_unfulfilled_quantity_mean_delta_maximum": 0.0,
+    "oracle_worst_product_fill_mean_delta_minimum": 0.0,
+    "oracle_full_ret_mean_delta_minimum": 0.0,
+    "minimum_unique_oracle_calendars": 2
+  },
+  "selection_rule_if_passed": "Select the passing cell with the smallest observed H_PI, breaking ties lexicographically. This selection only nominates the first full-DES development cell; it does not transfer the transducer result to the DES.",
+  "if_failed": "Stop Program O exact-transducer lane. Do not add cells or open full-DES seeds.",
+  "if_passed": "A separately frozen full-DES implementation and complete 4^8 comparator screen is allowed. H_obs and learners remain prohibited.",
+  "h_obs_authorized": false,
+  "learner_authorized": false,
+  "paper3_authorized": false
+}

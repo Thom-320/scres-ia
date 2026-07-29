@@ -1,0 +1,35 @@
+{
+  "contract_id": "program_i_branching_v1",
+  "status": "FROZEN_BEFORE_SEEDS_1100001_PLUS",
+  "parent": "global_sensitivity_v1",
+  "purpose": "Test local ranking reversal and perfect-information headroom for the three material Program I families.",
+  "tapes": {"count":60,"seed_start":1100001,"seed_end":1100060},
+  "states": {"per_tape":4,"decision_weeks":[12,24,36,44],"total":240,"prefix_balance":"cyclic across actions within tape"},
+  "horizons_weeks":[4,8],
+  "families": {
+    "production": {
+      "actions":{"S1":{"assembly_shifts":1},"S2":{"assembly_shifts":2},"S3":{"assembly_shifts":3}},
+      "resource":"extra_shift_hours",
+      "resource_equal_by_construction":false
+    },
+    "dispatch": {
+      "actions":{"FAST":{"op9_rop":12},"THESIS":{"op9_rop":24},"SLOW":{"op9_rop":48}},
+      "resource":"release_opportunity_rate",
+      "resource_equal_by_construction":false
+    },
+    "transport": {
+      "actions":{
+        "OP10_PRIORITY":{"op10_rop":16,"op12_rop":48},
+        "BALANCED":{"op10_rop":24,"op12_rop":24},
+        "OP12_PRIORITY":{"op10_rop":48,"op12_rop":16}
+      },
+      "resource":"combined_dispatch_opportunity_rate",
+      "resource_equal_by_construction":true,
+      "resource_identity":"1/op10_rop + 1/op12_rop = 0.0833333333 opportunities/hour"
+    }
+  },
+  "physics":{"risk_level":"current","buffer_period_hours":168,"horizon_weeks":52,"strict_exogenous_crn":true},
+  "gates":{"action_support_min":0.15,"single_action_support_max":0.85,"oracle_ret_delta_min":0.01,"oracle_ci95_lower_min":0.0,"service_loss_reduction_min":0.05,"horizon_ranking_agreement_min":0.90},
+  "claim_boundary":"Production and dispatch are authority/diversity diagnostics until a resource-adjusted comparator is built. Only transport is resource-equal in v1. Observable conversion is not tested here.",
+  "forbidden":["train RL","open seeds 1110001+","select a new action after output","call sensitivity headroom"]
+}

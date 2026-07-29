@@ -1,0 +1,289 @@
+{
+  "calendar_frontier": {
+    "actions": [
+      "M",
+      "T",
+      "R"
+    ],
+    "blocking_implementation_fact": "The SimPy MFSC has no branchable state snapshot and terminal canonical ReT is path-dependent/non-additive.",
+    "calibration_frontier_des_runs": 671088660,
+    "constants_previously_tested": 3,
+    "effective_full_horizon_calendar_count": 11184811,
+    "estimated_serial_cpu_days_frontier": 247.26208121078542,
+    "estimated_serial_cpu_days_pi": 494.52416242157085,
+    "exact_bound_available": false,
+    "measured_seconds_per_run": 0.031834011047976674,
+    "per_tape_pi_des_runs": 1342177320,
+    "weeks": 24
+  },
+  "canonical_metric": "ret_excel_visible_v1",
+  "clairvoyant_diagnostic": {
+    "kind": "feasible_policy_lower_bound_not_H_PI_ceiling",
+    "lost_minus_constant_M_ci95": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "ret_minus_constant_M_ci95": [
+      0.002336149652535881,
+      -0.000993281489951832,
+      0.00584091908414256
+    ],
+    "ret_minus_signal_ci95": [
+      0.003645521270459477,
+      0.00044901195690734663,
+      0.007821625720838802
+    ],
+    "service_reduction_vs_constant_M_ci95": [
+      -0.023904340041271174,
+      -0.03297111307296003,
+      -0.01562412075635157
+    ]
+  },
+  "component_resource_audit": {
+    "allocation_destination_hours_are_separate_contract_resources": false,
+    "allocation_destination_hours_equal": false,
+    "by_policy": {
+      "calibration_per_week_calendar": {
+        "max_reserve_units_issued": 17507.0,
+        "mean_m_hours": 1176.0,
+        "mean_r_hours": 1680.0,
+        "mean_reserve_units_issued": 6892.883333333333,
+        "mean_t_hours": 1176.0,
+        "total_team_hours_unique": [
+          4032.0
+        ]
+      },
+      "calibration_phase_only": {
+        "max_reserve_units_issued": 12525.0,
+        "mean_m_hours": 1344.0,
+        "mean_r_hours": 1344.0,
+        "mean_reserve_units_issued": 4892.625,
+        "mean_t_hours": 1344.0,
+        "total_team_hours_unique": [
+          4032.0
+        ]
+      },
+      "clairvoyant_next_context_feasible": {
+        "max_reserve_units_issued": 22542.0,
+        "mean_m_hours": 1461.6,
+        "mean_r_hours": 1262.8,
+        "mean_reserve_units_issued": 8038.725,
+        "mean_t_hours": 1307.6,
+        "total_team_hours_unique": [
+          4032.0
+        ]
+      },
+      "constant_M": {
+        "max_reserve_units_issued": 0.0,
+        "mean_m_hours": 4032.0,
+        "mean_r_hours": 0.0,
+        "mean_reserve_units_issued": 0.0,
+        "mean_t_hours": 0.0,
+        "total_team_hours_unique": [
+          4032.0
+        ]
+      },
+      "modal_complete_calibration_sequence": {
+        "max_reserve_units_issued": 17670.0,
+        "mean_m_hours": 1008.0,
+        "mean_r_hours": 1680.0,
+        "mean_reserve_units_issued": 6548.55,
+        "mean_t_hours": 1344.0,
+        "total_team_hours_unique": [
+          4032.0
+        ]
+      },
+      "signal_adaptive": {
+        "max_reserve_units_issued": 22542.0,
+        "mean_m_hours": 1415.4,
+        "mean_r_hours": 1318.8,
+        "mean_reserve_units_issued": 7728.983333333334,
+        "mean_t_hours": 1297.8,
+        "total_team_hours_unique": [
+          4032.0
+        ]
+      }
+    },
+    "frozen_contract_resource": "one_response_team_week_equal_by_construction",
+    "reason": "The frozen contract defines one team-week, so unequal M/T/R destination hours are the decision trajectory rather than separate resource purchases. Reserve ration issue/replenishment differs and must be frozen as an outcome or separately matched resource before promotion. The real team's cross-target fungibility is also unvalidated.",
+    "reserve_resource_semantics_resolved": false,
+    "reserve_units_issued_equal": false,
+    "total_team_hours_equal": true
+  },
+  "conclusion": "The tested observable signal policy is a null, but the 24-week integrated-resource family lacks a complete open-loop frontier and resource-restricted PI ceiling. It cannot support either Paper 2 or a family-level boundary certificate yet.",
+  "learner_range_1120001_opened": false,
+  "null_physics": {
+    "definition": "r11 and transport efficacy factors set to 1; reserve issue set to 0",
+    "exact_selected_metric_equivalence": true,
+    "n_retrospective_tapes": 3,
+    "preregistered": false,
+    "rows": [
+      {
+        "metric_hashes": [
+          "5b1e748258932ccdf563e407ddb10c56d48991b0b8e4218e4b88e2fecbf72447",
+          "5b1e748258932ccdf563e407ddb10c56d48991b0b8e4218e4b88e2fecbf72447",
+          "5b1e748258932ccdf563e407ddb10c56d48991b0b8e4218e4b88e2fecbf72447",
+          "5b1e748258932ccdf563e407ddb10c56d48991b0b8e4218e4b88e2fecbf72447"
+        ],
+        "seed": 1099001
+      },
+      {
+        "metric_hashes": [
+          "fdaf49c8d5ced27919883f03852015db0c35baef841d19c6660ec275775c8c5a",
+          "fdaf49c8d5ced27919883f03852015db0c35baef841d19c6660ec275775c8c5a",
+          "fdaf49c8d5ced27919883f03852015db0c35baef841d19c6660ec275775c8c5a",
+          "fdaf49c8d5ced27919883f03852015db0c35baef841d19c6660ec275775c8c5a"
+        ],
+        "seed": 1099002
+      },
+      {
+        "metric_hashes": [
+          "27365600adf6446802d274a00ee6265d9741d68835cc86e92e421dd6b1528cad",
+          "27365600adf6446802d274a00ee6265d9741d68835cc86e92e421dd6b1528cad",
+          "27365600adf6446802d274a00ee6265d9741d68835cc86e92e421dd6b1528cad",
+          "27365600adf6446802d274a00ee6265d9741d68835cc86e92e421dd6b1528cad"
+        ],
+        "seed": 1099003
+      }
+    ],
+    "scope_warning": "Does not hash complete actions, internal state, flow trajectories or full order ledgers.",
+    "selected_metric_keys": [
+      "ret_excel",
+      "ration_ret_excel",
+      "ret_excel_cvar05",
+      "service_loss_auc_ration_hours",
+      "n_lost",
+      "consumed_base_threat_sha256",
+      "realized_demand_sha256"
+    ]
+  },
+  "schema_version": "paper2_bottleneck_corrective_completeness_v1",
+  "scientific_use": "retrospective corrective audit on already-burned calibration/locked tapes; not a confirmatory claim",
+  "status": "ACTIVE_FOR_BOUND_NOT_TERMINAL",
+  "trajectory_audit": {
+    "calibration_modal_complete_sequence": "MMTTMMRRRRRRTTMMTTRRTTRR",
+    "calibration_modal_frequency": 1,
+    "calibration_n_tapes": 60,
+    "calibration_per_week_calendar": "MRTTMRRRTTTRRMMMMMMRRTRR",
+    "calibration_phase_actions": [
+      "M",
+      "T",
+      "R"
+    ],
+    "locked_n_tapes": 120,
+    "locked_unique_signal_sequences": 120,
+    "replacement_comparisons": {
+      "calibration_per_week_calendar": {
+        "lost_minus_constant_M_ci95": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "ret_minus_constant_M_ci95": [
+          -0.0036852324162335703,
+          -0.00869812530785231,
+          0.001149445719748627
+        ],
+        "ret_minus_signal_ci95": [
+          -0.0023758607983099737,
+          -0.00594873323316759,
+          0.00132925325572117
+        ],
+        "service_reduction_vs_constant_M_ci95": [
+          -0.048375213737481354,
+          -0.05755374976893678,
+          -0.03991695482557964
+        ]
+      },
+      "calibration_phase_only": {
+        "lost_minus_constant_M_ci95": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "ret_minus_constant_M_ci95": [
+          -0.0018936383124189408,
+          -0.004597014467105319,
+          0.0007960889280237969
+        ],
+        "ret_minus_signal_ci95": [
+          -0.0005842666944953445,
+          -0.004749017213450829,
+          0.004384028247712614
+        ],
+        "service_reduction_vs_constant_M_ci95": [
+          -0.03346265092209615,
+          -0.03968249394603492,
+          -0.02773544947255674
+        ]
+      },
+      "clairvoyant_next_context_feasible": {
+        "lost_minus_constant_M_ci95": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "ret_minus_constant_M_ci95": [
+          0.002336149652535881,
+          -0.000993281489951832,
+          0.00584091908414256
+        ],
+        "ret_minus_signal_ci95": [
+          0.003645521270459477,
+          0.00044901195690734663,
+          0.007821625720838802
+        ],
+        "service_reduction_vs_constant_M_ci95": [
+          -0.023904340041271174,
+          -0.03297111307296003,
+          -0.01562412075635157
+        ]
+      },
+      "modal_complete_calibration_sequence": {
+        "lost_minus_constant_M_ci95": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "ret_minus_constant_M_ci95": [
+          -0.004274259623841082,
+          -0.008720937169867483,
+          -0.0005057260524708343
+        ],
+        "ret_minus_signal_ci95": [
+          -0.002964888005917486,
+          -0.00583334372540497,
+          -6.434549535359818e-05
+        ],
+        "service_reduction_vs_constant_M_ci95": [
+          -0.043302359465125145,
+          -0.0522455171932789,
+          -0.03453972358274191
+        ]
+      },
+      "signal_adaptive": {
+        "lost_minus_constant_M_ci95": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "ret_minus_constant_M_ci95": [
+          -0.0013093716179235963,
+          -0.006384019811757724,
+          0.003092795281669821
+        ],
+        "ret_minus_signal_ci95": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "service_reduction_vs_constant_M_ci95": [
+          -0.030349914744609387,
+          -0.038768142693140856,
+          -0.022458957058144654
+        ]
+      }
+    }
+  }
+}

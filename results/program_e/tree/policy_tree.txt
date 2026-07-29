@@ -1,0 +1,19 @@
+|--- recent_7d_production <= 0.74
+|   |--- recent_7d_demand <= 0.78
+|   |   |--- class: 0
+|   |--- recent_7d_demand >  0.78
+|   |   |--- recent_7d_demand <= 0.94
+|   |   |   |--- class: 1
+|   |   |--- recent_7d_demand >  0.94
+|   |   |   |--- class: 1
+|--- recent_7d_production >  0.74
+|   |--- downstream_backlog_qty <= 0.37
+|   |   |--- recent_7d_delivery <= 0.66
+|   |   |   |--- class: 1
+|   |   |--- recent_7d_delivery >  0.66
+|   |   |   |--- class: 0
+|   |--- downstream_backlog_qty >  0.37
+|   |   |--- sb_inventory <= 0.63
+|   |   |   |--- class: 0
+|   |   |--- sb_inventory >  0.63
+|   |   |   |--- class: 0

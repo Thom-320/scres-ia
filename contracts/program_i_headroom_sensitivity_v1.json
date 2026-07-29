@@ -1,0 +1,14 @@
+{
+  "contract_id": "program_i_headroom_sensitivity_v1",
+  "status": "FROZEN_SENSITIVITY_STUDY_NOT_A_TRAINING_LANE",
+  "prereg": "docs/PROGRAM_I_HEADROOM_SENSITIVITY_PREREGISTRATION_2026-07-12.md",
+  "outputs": {"H_PI": "oracle - best_static (EVPI)", "H_obs": "best_observable_policy - best_static (VSS analogue)", "eta": "H_obs/H_PI", "metric": "ret_order"},
+  "factors": {"signal_q": [0.5, 0.95], "lead": [1, 3], "surge_mult": [1.1, 3.0], "persistence": [0.0, 1.0], "commonality": [0.0, 0.9], "r22_prob": [0.0, 0.3]},
+  "risk_magnitude_is_a_control_axis_expected_inert": true,
+  "stages": {"1_morris": "elementary effects mu*/sigma", "2_sobol": "S1/ST Saltelli-Jansen", "3_gp_locate": "GP + expected-improvement argmax H_obs"},
+  "estimator_validation": {"sobol_on_ishigami": "PASS", "program_g_anchor_point_check": "PASS (H_PI~0.015 H_obs~-0.02 at commonality=0, after fixing the ABAB/BABA static instability)"},
+  "static_baseline": "strongest full-contract periodic calendar in-sample on eval tapes (A/B-symmetry-aware, stable, conservative headroom)",
+  "decision_rule": {"new_lane_if": "GP-located region has H_obs LCB95 >= 0.01 AND eta >= 0.30 on >=200 fresh tapes (then preregistered G/H gate, NOT a rescue)", "else": "the map is the result: formal boundary characterization"},
+  "anti_p_hacking": ["report whole map incl nulls", "no factor range chosen by learner performance", "a located region is a new preregistered lane, never a GSA managerial claim"],
+  "no_learner_trained_here": true
+}

@@ -1,0 +1,22 @@
+|--- contingent_share <= 0.01
+|   |--- age_p50 <= 6588.00
+|   |   |--- recent_delivered <= 12569.00
+|   |   |   |--- class: spt_contingent
+|   |   |--- recent_delivered >  12569.00
+|   |   |   |--- class: spt_contingent
+|   |--- age_p50 >  6588.00
+|   |   |--- queue_qty <= 153584.50
+|   |   |   |--- class: spt_contingent
+|   |   |--- queue_qty >  153584.50
+|   |   |   |--- class: lpt_contingent
+|--- contingent_share >  0.01
+|   |--- recent_delivered <= 14816.00
+|   |   |--- queue_qty <= 17747.00
+|   |   |   |--- class: spt_flat
+|   |   |--- queue_qty >  17747.00
+|   |   |   |--- class: spt_contingent
+|   |--- recent_delivered >  14816.00
+|   |   |--- age_p25 <= 204.00
+|   |   |   |--- class: spt_flat
+|   |   |--- age_p25 >  204.00
+|   |   |   |--- class: spt_flat

@@ -1,5 +1,15 @@
 # Paper Findings Registry
 
+> **2026-07-11 status notice:** Track B positive-control entries below are
+> `SUPERSEDED/HISTORICAL` as general evidence of adaptive advantage. The
+> same-contract challenge (C30) and Program L/Program D gates govern current
+> claims. Restricted-frontier results remain provenance only.
+
+> **2026-07-01 status note:** This registry contains historical findings from
+> earlier Track A/Track B contracts. Use
+> `docs/CLAIMS_REGISTRY_Q1_DEFENSE_2026-07-01.md` for current claim wording,
+> retired claims, and Q1 reviewer gates.
+
 All empirical findings identified during the experimental campaign (2026-03-27 to 2026-03-30).
 Each finding includes the evidence source, whether it's confirmed, and how it could appear in the paper.
 

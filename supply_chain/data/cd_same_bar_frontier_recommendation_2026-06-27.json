@@ -1,0 +1,65 @@
+{
+  "description": "Cobb-Douglas same-bar Track-A static frontier recommendation before further PPO/DQN training.",
+  "generated_date": "2026-06-27",
+  "primary_resilience_metric": "cd_sigmoid_mean",
+  "reward_lane": "If training reward is Cobb-Douglas, evaluate static and dynamic policies on the same Cobb-Douglas bar.",
+  "selected_headroom_cell": {
+    "name": "cd_same_bar_headroom_phi2_psi1_det_v1",
+    "risk_frequency_multiplier": 2.0,
+    "risk_impact_multiplier": 1.0,
+    "stochastic_pt": false,
+    "demand_mean_multiplier": 1.0,
+    "ret_g24_shift_cost": 1.0,
+    "ret_g24_kappa_train_frac": 1.0,
+    "max_steps": 52,
+    "step_size_hours": 168.0,
+    "top_policy_by_regime": {
+      "current": "static_S1_I168",
+      "increased": "static_S1_I504",
+      "severe": "static_S3_I336"
+    },
+    "avg_static_spread_cd_sigmoid": 0.1679949796240268,
+    "avg_wrong_regime_penalty_cd_sigmoid": 0.04448619384643632,
+    "best_flow_fill_min": 0.5700828561714324,
+    "eligible_for_cd_training": true,
+    "rationale": "Largest robust eligible C-D spread among the three 5-seed candidates; all regime tops are interior inventory policies and the optimum changes by regime without stochastic PT or variable demand."
+  },
+  "minimal_extension_cell": {
+    "name": "cd_same_bar_minimal_spt_v1",
+    "risk_frequency_multiplier": 1.0,
+    "risk_impact_multiplier": 1.0,
+    "stochastic_pt": true,
+    "demand_mean_multiplier": 1.0,
+    "ret_g24_shift_cost": 1.0,
+    "ret_g24_kappa_train_frac": 1.0,
+    "top_policy_by_regime": {
+      "current": "static_S1_I168",
+      "increased": "static_S1_I168",
+      "severe": "static_S2_I168"
+    },
+    "avg_static_spread_cd_sigmoid": 0.13293041711416154,
+    "avg_wrong_regime_penalty_cd_sigmoid": 0.031296504374804,
+    "eligible_for_cd_training": true,
+    "rationale": "Smallest scientific deviation that creates a C-D regime-dependent shift policy, useful as a conservative sensitivity."
+  },
+  "rejected_stress_cell": {
+    "name": "phi2_psi1p5_spt",
+    "risk_frequency_multiplier": 2.0,
+    "risk_impact_multiplier": 1.5,
+    "stochastic_pt": true,
+    "demand_mean_multiplier": 1.0,
+    "top_policy_by_regime": {
+      "current": "static_S1_I168",
+      "increased": "static_S1_I672",
+      "severe": "static_S2_I1344"
+    },
+    "eligible_for_cd_training": false,
+    "rejection_reason": "Severe regime moves to maximum inventory I1344; useful as stress sensitivity but not as the primary efficiency/headroom C-D lane."
+  },
+  "source_artifacts": {
+    "exploratory_grid": "outputs/experiments/cd_same_bar_frontier_grid_2026-06-27",
+    "robust_candidates": "outputs/experiments/cd_same_bar_frontier_robust_2026-06-27",
+    "runner": "scripts/screen_cd_same_bar_frontier.py"
+  },
+  "continuous_buffer_note": "Not part of this freeze. The current Track-A wrapper is Discrete(18); continuous buffers require a separate diagnostic wrapper/action-space claim after exhausting this C-D static frontier."
+}

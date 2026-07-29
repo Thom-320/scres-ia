@@ -1,0 +1,1527 @@
+{
+  "claim_boundary": "Zero formula mismatches do not validate the current Python algorithm that derives Bt/Ut from OPTj, LTj, OATj and lost_time.",
+  "content_sha256": "612518b86eb20cddacc7e9206c28ce040d3f268f55a4ecc6a2380c2736e252f0",
+  "generated_at_utc": "2026-07-14T09:51:09.774744+00:00",
+  "metric_comparison": {
+    "cobb_douglas_2024": "Separate factory APP construct over inventory, backorders, spare capacity, fulfilment effort/time and normalized cost; not thesis order-level ReT and not a rescue endpoint for current Paper 2.",
+    "excel_formula_given_source_ledger": "Latest exact operational artifact: risk switch plus AP/LT or 0.5/RP, otherwise 1-(Bt+Ut)/j; exact on 47,546 cells.",
+    "ret_excel_full_ledger": "Repository secondary proxy that emits every generated order and scores unfulfilled rows zero; not the raw workbook population.",
+    "ret_excel_visible_v1_current": "Correct visible-row intent and exact per-row formula, but current OAT-derived Bt/Ut reconstruction is not source-validated.",
+    "thesis_conceptual_Eq_5_5": "Four conditional AP/RP/DP/fill-rate subindicators; thesis states a 0-1 range, unlike unclipped workbook cells that can exceed one."
+  },
+  "no_tape_access": {
+    "inputs": "three user-provided workbooks, thesis PDF, and repository source only",
+    "stochastic_experiment_tapes_accessed": false,
+    "virgin_tapes_accessed": false
+  },
+  "proposed_ret_excel_visible_v2": {
+    "algorithm": [
+      "At the order-generation callback t=OPTj, read the live source-defined capped Bt queue count and cumulative Ut before inserting order j.",
+      "Freeze Bt, Ut, t and a monotone event-sequence number on OrderRecord; later release, completion or loss events never rewrite them.",
+      "For forensic Excel replay, inject workbook sumBt/sumUt directly into those fields rather than reconstructing them from OATj.",
+      "After the episode, emit only completed non-lost records and apply the unchanged Excel risk switch/formula with the frozen request snapshots and original j."
+    ],
+    "falsifiable_garrido_question": "In the Simulink request barrier, were sumBt and sumUt frozen when order j was generated, and at an identical simulation timestamp did queue removals/losses occur before or after that snapshot?",
+    "request_snapshot_fields": [
+      "ret_bt_at_request",
+      "ret_ut_at_request",
+      "ret_ledger_snapshot_time",
+      "ret_ledger_event_sequence"
+    ],
+    "required_tests": [
+      "The canonical aggregator itself, not a separate helper, must reproduce all 47,546 cached workbook ReT cells exactly when request snapshots are injected.",
+      "Changing OATj after a request snapshot is frozen must not change a no-risk row's fill-rate branch value.",
+      "Permutation and batch-tie fixtures must prove deterministic same-time behavior without removing every completion before every row is scored.",
+      "Source-backed tests must cover j gaps, horizon-unresolved rows, queue cap 60, lost-order Ut carry-forward, risk-active branches, values above one and zero visible rows.",
+      "All active H/J/MTR development outputs must be rescored on identical burned/calibration tapes before any comparator or boundary claim is restored."
+    ],
+    "row_population": "emit completed, non-lost rows only, in original j order; preserve original j and do not clip",
+    "same_timestamp_event_order": "PROPOSED deterministic convention: process events that were already scheduled before the order-generation callback; snapshot Bt/Ut; then enqueue the new request. Events scheduled later at the same timestamp cannot alter that request's snapshot. Record the event sequence so the convention is auditable. This convention remains subject to Garrido/Simulink confirmation.",
+    "status": "PROPOSED_NOT_IMPLEMENTED"
+  },
+  "schema_version": "ret_excel_visible_source_semantics_audit_v1",
+  "scientific_disposition": {
+    "active_vps_switch4": "QUARANTINE_AS_NONCANONICAL_METRIC_DEVELOPMENT_OUTPUT; no H_PI, H_obs, comparator ceiling, null, or positive claim may use it",
+    "current_ret_excel_visible_v1": "HOLD_FOR_LEDGER_SEMANTICS_REPAIR",
+    "historical_formula_replay": "REMAINS_VALID for the narrow statement that cached workbook ReT equals the published cell formula when workbook Bt/Ut are inputs",
+    "program_h_j_visible_v1_repairs": "QUARANTINE_IF_SCORED_BY_THE_CURRENT_OAT_LEDGER; rescore only after the request-snapshot contract and implementation pass"
+  },
+  "sources": {
+    "Rsult_1": {
+      "available": true,
+      "bytes": 9361196,
+      "path": "/Users/thom/Downloads/Rsult_1.xlsx",
+      "role": "secondary transformed/aggregate workbook, not the 20-CF row ledger",
+      "sha256": "1901f683f6014cf75237c17233b8eba04f541b956f2d19dcecf2edc00e83b00a"
+    },
+    "raw_workbooks": [
+      {
+        "bytes": 4181475,
+        "path": "/Users/thom/Downloads/Raw_data1+Re.xlsx",
+        "sha256": "30b88c9b9fe68ef527dbfcc70d8e653ea7bd152ab891b3fc0ecf53cb6f043486",
+        "sheets": {
+          "CF1": {
+            "first_formula": "=IF(AVERAGE(N2:R2)>0,IF(K2>0,1*(K2/I2),0.5*(1/L2)),1-((J2+S2)/E2))",
+            "first_formula_cell": "U2",
+            "formula_count": 4241,
+            "header_row": 1,
+            "last_formula_cell": "U4242",
+            "normalized_formula_patterns": [
+              "=IF(AVERAGE(N{row}:R{row})>0,IF(K{row}>0,1*(K{row}/I{row}),0.5*(1/L{row})),1-((J{row}+S{row})/E{row}))"
+            ],
+            "ret_column": "U"
+          },
+          "CF10": {
+            "first_formula": "=IF(AVERAGE(N2:R2)>0,IF(K2>0,1*(K2/I2),0.5*(1/L2)),1-((J2+S2)/E2))",
+            "first_formula_cell": "U2",
+            "formula_count": 2061,
+            "header_row": 1,
+            "last_formula_cell": "U2062",
+            "normalized_formula_patterns": [
+              "=IF(AVERAGE(N{row}:R{row})>0,IF(K{row}>0,1*(K{row}/I{row}),0.5*(1/L{row})),1-((J{row}+S{row})/E{row}))"
+            ],
+            "ret_column": "U"
+          },
+          "CF2": {
+            "first_formula": "=IF(AVERAGE(N3:R3)>0,IF(K3>0,1*(K3/I3),0.5*(1/L3)),1-((J3+S3)/E3))",
+            "first_formula_cell": "U3",
+            "formula_count": 4420,
+            "header_row": 2,
+            "last_formula_cell": "U4422",
+            "normalized_formula_patterns": [
+              "=IF(AVERAGE(N{row}:R{row})>0,IF(K{row}>0,1*(K{row}/I{row}),0.5*(1/L{row})),1-((J{row}+S{row})/E{row}))"
+            ],
+            "ret_column": "U"
+          },
+          "CF3": {
+            "first_formula": "=IF(AVERAGE(N2:R2)>0,IF(K2>0,1*(K2/I2),0.5*(1/L2)),1-((J2+S2)/E2))",
+            "first_formula_cell": "U2",
+            "formula_count": 2151,
+            "header_row": 1,
+            "last_formula_cell": "U2152",
+            "normalized_formula_patterns": [
+              "=IF(AVERAGE(N{row}:R{row})>0,IF(K{row}>0,1*(K{row}/I{row}),0.5*(1/L{row})),1-((J{row}+S{row})/E{row}))"
+            ],
+            "ret_column": "U"
+          },
+          "CF4": {
+            "first_formula": "=IF(AVERAGE(N2:R2)>0,IF(K2>0,1*(K2/I2),0.5*(1/L2)),1-((J2+S2)/E2))",
+            "first_formula_cell": "U2",
+            "formula_count": 2186,
+            "header_row": 1,
+            "last_formula_cell": "U2187",
+            "normalized_formula_patterns": [
+              "=IF(AVERAGE(N{row}:R{row})>0,IF(K{row}>0,1*(K{row}/I{row}),0.5*(1/L{row})),1-((J{row}+S{row})/E{row}))"
+            ],
+            "ret_column": "U"
+          },
+          "CF5": {
+            "first_formula": "=IF(AVERAGE(N2:R2)>0,IF(K2>0,1*(K2/I2),0.5*(1/L2)),1-((J2+S2)/E2))",
+            "first_formula_cell": "U2",
+            "formula_count": 2279,
+            "header_row": 1,
+            "last_formula_cell": "U2280",
+            "normalized_formula_patterns": [
+              "=IF(AVERAGE(N{row}:R{row})>0,IF(K{row}>0,1*(K{row}/I{row}),0.5*(1/L{row})),1-((J{row}+S{row})/E{row}))"
+            ],
+            "ret_column": "U"
+          },
+          "CF6": {
+            "first_formula": "=IF(AVERAGE(N2:R2)>0,IF(K2>0,1*(K2/I2),0.5*(1/L2)),1-((J2+S2)/E2))",
+            "first_formula_cell": "U2",
+            "formula_count": 2061,
+            "header_row": 1,
+            "last_formula_cell": "U2062",
+            "normalized_formula_patterns": [
+              "=IF(AVERAGE(N{row}:R{row})>0,IF(K{row}>0,1*(K{row}/I{row}),0.5*(1/L{row})),1-((J{row}+S{row})/E{row}))"
+            ],
+            "ret_column": "U"
+          },
+          "CF7": {
+            "first_formula": "=IF(AVERAGE(N2:R2)>0,IF(K2>0,1*(K2/I2),0.5*(1/L2)),1-((J2+S2)/E2))",
+            "first_formula_cell": "U2",
+            "formula_count": 2115,
+            "header_row": 1,
+            "last_formula_cell": "U2116",
+            "normalized_formula_patterns": [
+              "=IF(AVERAGE(N{row}:R{row})>0,IF(K{row}>0,1*(K{row}/I{row}),0.5*(1/L{row})),1-((J{row}+S{row})/E{row}))"
+            ],
+            "ret_column": "U"
+          },
+          "CF8": {
+            "first_formula": "=IF(AVERAGE(N2:R2)>0,IF(K2>0,1*(K2/I2),0.5*(1/L2)),1-((J2+S2)/E2))",
+            "first_formula_cell": "U2",
+            "formula_count": 2278,
+            "header_row": 1,
+            "last_formula_cell": "U2279",
+            "normalized_formula_patterns": [
+              "=IF(AVERAGE(N{row}:R{row})>0,IF(K{row}>0,1*(K{row}/I{row}),0.5*(1/L{row})),1-((J{row}+S{row})/E{row}))"
+            ],
+            "ret_column": "U"
+          },
+          "CF9": {
+            "first_formula": "=IF(AVERAGE(N2:R2)>0,IF(K2>0,1*(K2/I2),0.5*(1/L2)),1-((J2+S2)/E2))",
+            "first_formula_cell": "U2",
+            "formula_count": 2061,
+            "header_row": 1,
+            "last_formula_cell": "U2062",
+            "normalized_formula_patterns": [
+              "=IF(AVERAGE(N{row}:R{row})>0,IF(K{row}>0,1*(K{row}/I{row}),0.5*(1/L{row})),1-((J{row}+S{row})/E{row}))"
+            ],
+            "ret_column": "U"
+          }
+        }
+      },
+      {
+        "bytes": 3692212,
+        "path": "/Users/thom/Downloads/Raw_data2+Re.xlsx",
+        "sha256": "4bd462771fefff16fc5666a851256b3780198d474832dec1423c0b6f94be86b0",
+        "sheets": {
+          "CF11": {
+            "first_formula": "=IF(AVERAGE(N2:X2)>0,IF(K2>0,1*(K2/I2),0.5*(1/L2)),1-((J2+Y2)/E2))",
+            "first_formula_cell": "AA2",
+            "formula_count": 2165,
+            "header_row": 1,
+            "last_formula_cell": "AA2166",
+            "normalized_formula_patterns": [
+              "=IF(AVERAGE(N{row}:X{row})>0,IF(K{row}>0,1*(K{row}/I{row}),0.5*(1/L{row})),1-((J{row}+Y{row})/E{row}))"
+            ],
+            "ret_column": "AA"
+          },
+          "CF12": {
+            "first_formula": "=IF(AVERAGE(N2:X2)>0,IF(K2>0,1*(K2/I2),0.5*(1/L2)),1-((J2+Y2)/E2))",
+            "first_formula_cell": "AA2",
+            "formula_count": 2186,
+            "header_row": 1,
+            "last_formula_cell": "AA2187",
+            "normalized_formula_patterns": [
+              "=IF(AVERAGE(N{row}:X{row})>0,IF(K{row}>0,1*(K{row}/I{row}),0.5*(1/L{row})),1-((J{row}+Y{row})/E{row}))"
+            ],
+            "ret_column": "AA"
+          },
+          "CF13": {
+            "first_formula": "=IF(AVERAGE(N2:X2)>0,IF(K2>0,1*(K2/I2),0.5*(1/L2)),1-((J2+Y2)/E2))",
+            "first_formula_cell": "AA2",
+            "formula_count": 1956,
+            "header_row": 1,
+            "last_formula_cell": "AA1957",
+            "normalized_formula_patterns": [
+              "=IF(AVERAGE(N{row}:X{row})>0,IF(K{row}>0,1*(K{row}/I{row}),0.5*(1/L{row})),1-((J{row}+Y{row})/E{row}))"
+            ],
+            "ret_column": "AA"
+          },
+          "CF14": {
+            "first_formula": "=IF(AVERAGE(N2:X2)>0,IF(K2>0,1*(K2/I2),0.5*(1/L2)),1-((J2+Y2)/E2))",
+            "first_formula_cell": "AA2",
+            "formula_count": 2173,
+            "header_row": 1,
+            "last_formula_cell": "AA2174",
+            "normalized_formula_patterns": [
+              "=IF(AVERAGE(N{row}:X{row})>0,IF(K{row}>0,1*(K{row}/I{row}),0.5*(1/L{row})),1-((J{row}+Y{row})/E{row}))"
+            ],
+            "ret_column": "AA"
+          },
+          "CF15": {
+            "first_formula": "=IF(AVERAGE(N2:X2)>0,IF(K2>0,1*(K2/I2),0.5*(1/L2)),1-((J2+Y2)/E2))",
+            "first_formula_cell": "AA2",
+            "formula_count": 2203,
+            "header_row": 1,
+            "last_formula_cell": "AA2204",
+            "normalized_formula_patterns": [
+              "=IF(AVERAGE(N{row}:X{row})>0,IF(K{row}>0,1*(K{row}/I{row}),0.5*(1/L{row})),1-((J{row}+Y{row})/E{row}))"
+            ],
+            "ret_column": "AA"
+          },
+          "CF16": {
+            "first_formula": "=IF(AVERAGE(N2:X2)>0,IF(K2>0,1*(K2/I2),0.5*(1/L2)),1-((J2+Y2)/E2))",
+            "first_formula_cell": "AA2",
+            "formula_count": 2218,
+            "header_row": 1,
+            "last_formula_cell": "AA2219",
+            "normalized_formula_patterns": [
+              "=IF(AVERAGE(N{row}:X{row})>0,IF(K{row}>0,1*(K{row}/I{row}),0.5*(1/L{row})),1-((J{row}+Y{row})/E{row}))"
+            ],
+            "ret_column": "AA"
+          },
+          "CF17": {
+            "first_formula": "=IF(AVERAGE(N2:X2)>0,IF(K2>0,1*(K2/I2),0.5*(1/L2)),1-((J2+Y2)/E2))",
+            "first_formula_cell": "AA2",
+            "formula_count": 2227,
+            "header_row": 1,
+            "last_formula_cell": "AA2228",
+            "normalized_formula_patterns": [
+              "=IF(AVERAGE(N{row}:X{row})>0,IF(K{row}>0,1*(K{row}/I{row}),0.5*(1/L{row})),1-((J{row}+Y{row})/E{row}))"
+            ],
+            "ret_column": "AA"
+          },
+          "CF18": {
+            "first_formula": "=IF(AVERAGE(N2:X2)>0,IF(K2>0,1*(K2/I2),0.5*(1/L2)),1-((J2+Y2)/E2))",
+            "first_formula_cell": "AA2",
+            "formula_count": 2277,
+            "header_row": 1,
+            "last_formula_cell": "AA2278",
+            "normalized_formula_patterns": [
+              "=IF(AVERAGE(N{row}:X{row})>0,IF(K{row}>0,1*(K{row}/I{row}),0.5*(1/L{row})),1-((J{row}+Y{row})/E{row}))"
+            ],
+            "ret_column": "AA"
+          },
+          "CF19": {
+            "first_formula": "=IF(AVERAGE(N2:X2)>0,IF(K2>0,1*(K2/I2),0.5*(1/L2)),1-((J2+Y2)/E2))",
+            "first_formula_cell": "AA2",
+            "formula_count": 2120,
+            "header_row": 1,
+            "last_formula_cell": "AA2121",
+            "normalized_formula_patterns": [
+              "=IF(AVERAGE(N{row}:X{row})>0,IF(K{row}>0,1*(K{row}/I{row}),0.5*(1/L{row})),1-((J{row}+Y{row})/E{row}))"
+            ],
+            "ret_column": "AA"
+          },
+          "CF20": {
+            "first_formula": "=IF(AVERAGE(N2:X2)>0,IF(K2>0,1*(K2/I2),0.5*(1/L2)),1-((J2+Y2)/E2))",
+            "first_formula_cell": "AA2",
+            "formula_count": 2168,
+            "header_row": 1,
+            "last_formula_cell": "AA2169",
+            "normalized_formula_patterns": [
+              "=IF(AVERAGE(N{row}:X{row})>0,IF(K{row}>0,1*(K{row}/I{row}),0.5*(1/L{row})),1-((J{row}+Y{row})/E{row}))"
+            ],
+            "ret_column": "AA"
+          }
+        }
+      }
+    ],
+    "repository": {
+      "episode_metrics": {
+        "canonical_alias_lines": "170-176,216-224",
+        "path": "supply_chain/episode_metrics.py",
+        "sha256": "3a0ba206ee57904c971f3701dbf21ca676a2e9f5fc7f5029550e04325d5c262f"
+      },
+      "ret_thesis": {
+        "current_OAT_ledger_lines": "333-393",
+        "path": "supply_chain/ret_thesis.py",
+        "sha256": "b7cade35a666eaf306df531625b0887f26910d101b4d56ca32ba08c72cd08c45"
+      },
+      "workbook_formula_auditor": {
+        "formula_audit_lines": "327-369",
+        "limitation": "uses workbook-provided sumBt and sumUt as inputs",
+        "path": "supply_chain/garrido_replication.py",
+        "sha256": "efb30fa9602873b9c05a7004284b9a8113d8905ce4ccc5ff3a80274051fa88f7"
+      }
+    },
+    "thesis": {
+      "available": true,
+      "citation": {
+        "location": "Annex B, printed page 169 (PDF page 170)",
+        "source_fact": "The request-associated barrier matrix contains quantity, order number, generation time, accumulated-order total and lost-order total before being sent to Op9."
+      },
+      "path": "/Users/thom/Library/CloudStorage/GoogleDrive-chisicathomas@gmail.com/My Drive/Archive/Misc_Unsorted/Unsorted/WRAP_Theses_Garrido_Rios_2017.pdf",
+      "sha256": "de9192d233b0c728ece6156b754fc64543146868121358b8a95c73b3edaa55cf"
+    }
+  },
+  "status": "FORMULA_EXACT__VISIBLE_ROWS_OBSERVED__OAT_BT_UT_RECONSTRUCTION_NOT_SOURCE_VALIDATED",
+  "timing_and_population_evidence": {
+    "interpretation": "Rows are in j/OPT order, not OAT order. SumUt is monotone in j but not in OAT, which is consistent with a request-carried ledger snapshot and inconsistent with treating the raw row as an OAT-time cumulative-loss observation.",
+    "sheets": [
+      {
+        "OATj_adjacent_inversions_in_j_order": 1564,
+        "OPTj_nondecreasing_in_j_order": true,
+        "final_workbook_sumBt": 59.0,
+        "final_workbook_sumUt": 993.0,
+        "j_strictly_increasing": true,
+        "max_j": 5714,
+        "omitted_j_count_through_max": 1473,
+        "rows": 4241,
+        "same_exact_OATj_group_count": 0,
+        "sheet": "CF1",
+        "sumUt_adjacent_decreases_in_OATj_order": 864,
+        "sumUt_adjacent_decreases_in_j_order": 0,
+        "visible_rows_only_OAT_Bt_match": {
+          "classification": "diagnostic_not_full_reconstruction_missing_rows_unobserved",
+          "initial_contiguous_j_prefix_matches": 11,
+          "initial_contiguous_j_prefix_rows": 19,
+          "matches": 17,
+          "mismatch_examples": [
+            {
+              "OATj": 1344.95712,
+              "OPTj": 1248.84864,
+              "j": 2,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1447.15584,
+              "OPTj": 1368.04824,
+              "j": 6,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1496.00256,
+              "OPTj": 1416.05256,
+              "j": 8,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1585.69944,
+              "OPTj": 1464.05688,
+              "j": 10,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1759.9452,
+              "OPTj": 1536.054,
+              "j": 12,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            }
+          ],
+          "rate": 0.00400848856401792,
+          "total": 4241
+        }
+      },
+      {
+        "OATj_adjacent_inversions_in_j_order": 1600,
+        "OPTj_nondecreasing_in_j_order": true,
+        "final_workbook_sumBt": 51.0,
+        "final_workbook_sumUt": 764.0,
+        "j_strictly_increasing": true,
+        "max_j": 5714,
+        "omitted_j_count_through_max": 1294,
+        "rows": 4420,
+        "same_exact_OATj_group_count": 0,
+        "sheet": "CF2",
+        "sumUt_adjacent_decreases_in_OATj_order": 750,
+        "sumUt_adjacent_decreases_in_j_order": 0,
+        "visible_rows_only_OAT_Bt_match": {
+          "classification": "diagnostic_not_full_reconstruction_missing_rows_unobserved",
+          "initial_contiguous_j_prefix_matches": 34,
+          "initial_contiguous_j_prefix_rows": 56,
+          "matches": 44,
+          "mismatch_examples": [
+            {
+              "OATj": 1348.17696,
+              "OPTj": 1252.06848,
+              "j": 2,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1446.4476,
+              "OPTj": 1368.04824,
+              "j": 6,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1494.64536,
+              "OPTj": 1416.05256,
+              "j": 8,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1638.69576,
+              "OPTj": 1536.054,
+              "j": 12,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1662.79464,
+              "OPTj": 1584.05832,
+              "j": 14,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            }
+          ],
+          "rate": 0.009954751131221719,
+          "total": 4420
+        }
+      },
+      {
+        "OATj_adjacent_inversions_in_j_order": 761,
+        "OPTj_nondecreasing_in_j_order": true,
+        "final_workbook_sumBt": 60.0,
+        "final_workbook_sumUt": 418.0,
+        "j_strictly_increasing": true,
+        "max_j": 2841,
+        "omitted_j_count_through_max": 690,
+        "rows": 2151,
+        "same_exact_OATj_group_count": 0,
+        "sheet": "CF3",
+        "sumUt_adjacent_decreases_in_OATj_order": 368,
+        "sumUt_adjacent_decreases_in_j_order": 0,
+        "visible_rows_only_OAT_Bt_match": {
+          "classification": "diagnostic_not_full_reconstruction_missing_rows_unobserved",
+          "initial_contiguous_j_prefix_matches": 6,
+          "initial_contiguous_j_prefix_rows": 11,
+          "matches": 11,
+          "mismatch_examples": [
+            {
+              "OATj": 1010.01264,
+              "OPTj": 913.90416,
+              "j": 2,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1080.76488,
+              "OPTj": 961.90848,
+              "j": 4,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1133.17776,
+              "OPTj": 1032.03672,
+              "j": 6,
+              "visible_only_oat_reconstruction_sumBt": 2,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1157.27664,
+              "OPTj": 1056.03888,
+              "j": 7,
+              "visible_only_oat_reconstruction_sumBt": 2,
+              "workbook_sumBt": 1
+            },
+            {
+              "OATj": 1255.76568,
+              "OPTj": 1128.04536,
+              "j": 10,
+              "visible_only_oat_reconstruction_sumBt": 0,
+              "workbook_sumBt": 2
+            }
+          ],
+          "rate": 0.005113900511390051,
+          "total": 2151
+        }
+      },
+      {
+        "OATj_adjacent_inversions_in_j_order": 795,
+        "OPTj_nondecreasing_in_j_order": true,
+        "final_workbook_sumBt": 55.0,
+        "final_workbook_sumUt": 347.0,
+        "j_strictly_increasing": true,
+        "max_j": 2832,
+        "omitted_j_count_through_max": 646,
+        "rows": 2186,
+        "same_exact_OATj_group_count": 0,
+        "sheet": "CF4",
+        "sumUt_adjacent_decreases_in_OATj_order": 372,
+        "sumUt_adjacent_decreases_in_j_order": 0,
+        "visible_rows_only_OAT_Bt_match": {
+          "classification": "diagnostic_not_full_reconstruction_missing_rows_unobserved",
+          "initial_contiguous_j_prefix_matches": 62,
+          "initial_contiguous_j_prefix_rows": 117,
+          "matches": 65,
+          "mismatch_examples": [
+            {
+              "OATj": 1344.23952,
+              "OPTj": 1248.13104,
+              "j": 2,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1440.41664,
+              "OPTj": 1368.04824,
+              "j": 6,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1488.6144,
+              "OPTj": 1416.05256,
+              "j": 8,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1632.9144,
+              "OPTj": 1536.054,
+              "j": 12,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1657.14432,
+              "OPTj": 1584.05832,
+              "j": 14,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            }
+          ],
+          "rate": 0.029734675205855442,
+          "total": 2186
+        }
+      },
+      {
+        "OATj_adjacent_inversions_in_j_order": 763,
+        "OPTj_nondecreasing_in_j_order": true,
+        "final_workbook_sumBt": 56.0,
+        "final_workbook_sumUt": 101.0,
+        "j_strictly_increasing": true,
+        "max_j": 2533,
+        "omitted_j_count_through_max": 254,
+        "rows": 2279,
+        "same_exact_OATj_group_count": 0,
+        "sheet": "CF5",
+        "sumUt_adjacent_decreases_in_OATj_order": 147,
+        "sumUt_adjacent_decreases_in_j_order": 0,
+        "visible_rows_only_OAT_Bt_match": {
+          "classification": "diagnostic_not_full_reconstruction_missing_rows_unobserved",
+          "initial_contiguous_j_prefix_matches": 37,
+          "initial_contiguous_j_prefix_rows": 65,
+          "matches": 103,
+          "mismatch_examples": [
+            {
+              "OATj": 1344.26448,
+              "OPTj": 1248.156,
+              "j": 2,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1441.41192,
+              "OPTj": 1368.04824,
+              "j": 6,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1489.60968,
+              "OPTj": 1416.05256,
+              "j": 8,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1633.7568,
+              "OPTj": 1536.054,
+              "j": 12,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1657.85568,
+              "OPTj": 1584.05832,
+              "j": 14,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            }
+          ],
+          "rate": 0.0451952610794208,
+          "total": 2279
+        }
+      },
+      {
+        "OATj_adjacent_inversions_in_j_order": 747,
+        "OPTj_nondecreasing_in_j_order": true,
+        "final_workbook_sumBt": 58.0,
+        "final_workbook_sumUt": 489.0,
+        "j_strictly_increasing": true,
+        "max_j": 2834,
+        "omitted_j_count_through_max": 773,
+        "rows": 2061,
+        "same_exact_OATj_group_count": 0,
+        "sheet": "CF6",
+        "sumUt_adjacent_decreases_in_OATj_order": 398,
+        "sumUt_adjacent_decreases_in_j_order": 0,
+        "visible_rows_only_OAT_Bt_match": {
+          "classification": "diagnostic_not_full_reconstruction_missing_rows_unobserved",
+          "initial_contiguous_j_prefix_matches": 7,
+          "initial_contiguous_j_prefix_rows": 11,
+          "matches": 14,
+          "mismatch_examples": [
+            {
+              "OATj": 1297.75776,
+              "OPTj": 1200.92544,
+              "j": 2,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1468.98648,
+              "OPTj": 1368.04824,
+              "j": 8,
+              "visible_only_oat_reconstruction_sumBt": 2,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1493.08536,
+              "OPTj": 1392.0504,
+              "j": 9,
+              "visible_only_oat_reconstruction_sumBt": 2,
+              "workbook_sumBt": 1
+            },
+            {
+              "OATj": 1542.60288,
+              "OPTj": 1416.05256,
+              "j": 10,
+              "visible_only_oat_reconstruction_sumBt": 0,
+              "workbook_sumBt": 2
+            },
+            {
+              "OATj": 1632.56808,
+              "OPTj": 1560.05616,
+              "j": 15,
+              "visible_only_oat_reconstruction_sumBt": 2,
+              "workbook_sumBt": 3
+            }
+          ],
+          "rate": 0.006792819019893256,
+          "total": 2061
+        }
+      },
+      {
+        "OATj_adjacent_inversions_in_j_order": 765,
+        "OPTj_nondecreasing_in_j_order": true,
+        "final_workbook_sumBt": 60.0,
+        "final_workbook_sumUt": 385.0,
+        "j_strictly_increasing": true,
+        "max_j": 2834,
+        "omitted_j_count_through_max": 719,
+        "rows": 2115,
+        "same_exact_OATj_group_count": 0,
+        "sheet": "CF7",
+        "sumUt_adjacent_decreases_in_OATj_order": 397,
+        "sumUt_adjacent_decreases_in_j_order": 0,
+        "visible_rows_only_OAT_Bt_match": {
+          "classification": "diagnostic_not_full_reconstruction_missing_rows_unobserved",
+          "initial_contiguous_j_prefix_matches": 14,
+          "initial_contiguous_j_prefix_rows": 23,
+          "matches": 21,
+          "mismatch_examples": [
+            {
+              "OATj": 1345.86504,
+              "OPTj": 1249.75656,
+              "j": 2,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1446.0264,
+              "OPTj": 1368.04824,
+              "j": 6,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1494.84504,
+              "OPTj": 1416.05256,
+              "j": 8,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1584.46392,
+              "OPTj": 1464.05688,
+              "j": 10,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1755.86424,
+              "OPTj": 1536.054,
+              "j": 12,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            }
+          ],
+          "rate": 0.009929078014184398,
+          "total": 2115
+        }
+      },
+      {
+        "OATj_adjacent_inversions_in_j_order": 790,
+        "OPTj_nondecreasing_in_j_order": true,
+        "final_workbook_sumBt": 42.0,
+        "final_workbook_sumUt": 285.0,
+        "j_strictly_increasing": true,
+        "max_j": 2818,
+        "omitted_j_count_through_max": 540,
+        "rows": 2278,
+        "same_exact_OATj_group_count": 0,
+        "sheet": "CF8",
+        "sumUt_adjacent_decreases_in_OATj_order": 311,
+        "sumUt_adjacent_decreases_in_j_order": 0,
+        "visible_rows_only_OAT_Bt_match": {
+          "classification": "diagnostic_not_full_reconstruction_missing_rows_unobserved",
+          "initial_contiguous_j_prefix_matches": 31,
+          "initial_contiguous_j_prefix_rows": 56,
+          "matches": 40,
+          "mismatch_examples": [
+            {
+              "OATj": 1344.23952,
+              "OPTj": 1248.13104,
+              "j": 2,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1440.39168,
+              "OPTj": 1368.04824,
+              "j": 6,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1488.58944,
+              "OPTj": 1416.05256,
+              "j": 8,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1637.75976,
+              "OPTj": 1536.054,
+              "j": 12,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1662.93192,
+              "OPTj": 1584.05832,
+              "j": 14,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            }
+          ],
+          "rate": 0.01755926251097454,
+          "total": 2278
+        }
+      },
+      {
+        "OATj_adjacent_inversions_in_j_order": 747,
+        "OPTj_nondecreasing_in_j_order": true,
+        "final_workbook_sumBt": 56.0,
+        "final_workbook_sumUt": 476.0,
+        "j_strictly_increasing": true,
+        "max_j": 2834,
+        "omitted_j_count_through_max": 773,
+        "rows": 2061,
+        "same_exact_OATj_group_count": 0,
+        "sheet": "CF9",
+        "sumUt_adjacent_decreases_in_OATj_order": 402,
+        "sumUt_adjacent_decreases_in_j_order": 0,
+        "visible_rows_only_OAT_Bt_match": {
+          "classification": "diagnostic_not_full_reconstruction_missing_rows_unobserved",
+          "initial_contiguous_j_prefix_matches": 15,
+          "initial_contiguous_j_prefix_rows": 23,
+          "matches": 21,
+          "mismatch_examples": [
+            {
+              "OATj": 1345.02264,
+              "OPTj": 1248.91416,
+              "j": 2,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1444.30416,
+              "OPTj": 1368.04824,
+              "j": 6,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1493.15712,
+              "OPTj": 1416.05256,
+              "j": 8,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1639.75968,
+              "OPTj": 1536.054,
+              "j": 12,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1705.37016,
+              "OPTj": 1584.05832,
+              "j": 14,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            }
+          ],
+          "rate": 0.010189228529839884,
+          "total": 2061
+        }
+      },
+      {
+        "OATj_adjacent_inversions_in_j_order": 753,
+        "OPTj_nondecreasing_in_j_order": true,
+        "final_workbook_sumBt": 55.0,
+        "final_workbook_sumUt": 481.0,
+        "j_strictly_increasing": true,
+        "max_j": 2834,
+        "omitted_j_count_through_max": 773,
+        "rows": 2061,
+        "same_exact_OATj_group_count": 0,
+        "sheet": "CF10",
+        "sumUt_adjacent_decreases_in_OATj_order": 411,
+        "sumUt_adjacent_decreases_in_j_order": 0,
+        "visible_rows_only_OAT_Bt_match": {
+          "classification": "diagnostic_not_full_reconstruction_missing_rows_unobserved",
+          "initial_contiguous_j_prefix_matches": 7,
+          "initial_contiguous_j_prefix_rows": 11,
+          "matches": 16,
+          "mismatch_examples": [
+            {
+              "OATj": 1298.02608,
+              "OPTj": 1201.01904,
+              "j": 2,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1471.23288,
+              "OPTj": 1368.04824,
+              "j": 8,
+              "visible_only_oat_reconstruction_sumBt": 2,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1495.33176,
+              "OPTj": 1392.0504,
+              "j": 9,
+              "visible_only_oat_reconstruction_sumBt": 2,
+              "workbook_sumBt": 1
+            },
+            {
+              "OATj": 1560.8892,
+              "OPTj": 1416.05256,
+              "j": 10,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 2
+            },
+            {
+              "OATj": 1633.75056,
+              "OPTj": 1560.05616,
+              "j": 15,
+              "visible_only_oat_reconstruction_sumBt": 2,
+              "workbook_sumBt": 3
+            }
+          ],
+          "rate": 0.0077632217370208634,
+          "total": 2061
+        }
+      },
+      {
+        "OATj_adjacent_inversions_in_j_order": 682,
+        "OPTj_nondecreasing_in_j_order": true,
+        "final_workbook_sumBt": 42.0,
+        "final_workbook_sumUt": 381.0,
+        "j_strictly_increasing": true,
+        "max_j": 2844,
+        "omitted_j_count_through_max": 679,
+        "rows": 2165,
+        "same_exact_OATj_group_count": 0,
+        "sheet": "CF11",
+        "sumUt_adjacent_decreases_in_OATj_order": 384,
+        "sumUt_adjacent_decreases_in_j_order": 0,
+        "visible_rows_only_OAT_Bt_match": {
+          "classification": "diagnostic_not_full_reconstruction_missing_rows_unobserved",
+          "initial_contiguous_j_prefix_matches": 15,
+          "initial_contiguous_j_prefix_rows": 25,
+          "matches": 30,
+          "mismatch_examples": [
+            {
+              "OATj": 1014.936,
+              "OPTj": 895.6584,
+              "j": 4,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1039.03488,
+              "OPTj": 943.66272,
+              "j": 6,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1087.23264,
+              "OPTj": 1008.03456,
+              "j": 8,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1111.33152,
+              "OPTj": 1032.03672,
+              "j": 9,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1187.20056,
+              "OPTj": 1080.04104,
+              "j": 11,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            }
+          ],
+          "rate": 0.013856812933025405,
+          "total": 2165
+        }
+      },
+      {
+        "OATj_adjacent_inversions_in_j_order": 755,
+        "OPTj_nondecreasing_in_j_order": true,
+        "final_workbook_sumBt": 30.0,
+        "final_workbook_sumUt": 381.0,
+        "j_strictly_increasing": true,
+        "max_j": 2848,
+        "omitted_j_count_through_max": 662,
+        "rows": 2186,
+        "same_exact_OATj_group_count": 0,
+        "sheet": "CF12",
+        "sumUt_adjacent_decreases_in_OATj_order": 401,
+        "sumUt_adjacent_decreases_in_j_order": 0,
+        "visible_rows_only_OAT_Bt_match": {
+          "classification": "diagnostic_not_full_reconstruction_missing_rows_unobserved",
+          "initial_contiguous_j_prefix_matches": 6,
+          "initial_contiguous_j_prefix_rows": 23,
+          "matches": 21,
+          "mismatch_examples": [
+            {
+              "OATj": 943.76256,
+              "OPTj": 847.65408,
+              "j": 2,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 991.96032,
+              "OPTj": 895.6584,
+              "j": 4,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1016.0592,
+              "OPTj": 943.66272,
+              "j": 6,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1588.94736,
+              "OPTj": 967.66488,
+              "j": 7,
+              "visible_only_oat_reconstruction_sumBt": 5,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1166.04384,
+              "OPTj": 1008.03456,
+              "j": 8,
+              "visible_only_oat_reconstruction_sumBt": 5,
+              "workbook_sumBt": 1
+            }
+          ],
+          "rate": 0.00960658737419945,
+          "total": 2186
+        }
+      },
+      {
+        "OATj_adjacent_inversions_in_j_order": 726,
+        "OPTj_nondecreasing_in_j_order": true,
+        "final_workbook_sumBt": 59.0,
+        "final_workbook_sumUt": 607.0,
+        "j_strictly_increasing": true,
+        "max_j": 2850,
+        "omitted_j_count_through_max": 894,
+        "rows": 1956,
+        "same_exact_OATj_group_count": 0,
+        "sheet": "CF13",
+        "sumUt_adjacent_decreases_in_OATj_order": 440,
+        "sumUt_adjacent_decreases_in_j_order": 0,
+        "visible_rows_only_OAT_Bt_match": {
+          "classification": "diagnostic_not_full_reconstruction_missing_rows_unobserved",
+          "initial_contiguous_j_prefix_matches": 9,
+          "initial_contiguous_j_prefix_rows": 22,
+          "matches": 15,
+          "mismatch_examples": [
+            {
+              "OATj": 1038.4608,
+              "OPTj": 943.66272,
+              "j": 6,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1134.13872,
+              "OPTj": 1008.03456,
+              "j": 8,
+              "visible_only_oat_reconstruction_sumBt": 2,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1314.10032,
+              "OPTj": 1032.03672,
+              "j": 9,
+              "visible_only_oat_reconstruction_sumBt": 4,
+              "workbook_sumBt": 1
+            },
+            {
+              "OATj": 1182.33648,
+              "OPTj": 1080.04104,
+              "j": 11,
+              "visible_only_oat_reconstruction_sumBt": 2,
+              "workbook_sumBt": 1
+            },
+            {
+              "OATj": 1290.00144,
+              "OPTj": 1128.04536,
+              "j": 13,
+              "visible_only_oat_reconstruction_sumBt": 4,
+              "workbook_sumBt": 1
+            }
+          ],
+          "rate": 0.007668711656441718,
+          "total": 1956
+        }
+      },
+      {
+        "OATj_adjacent_inversions_in_j_order": 686,
+        "OPTj_nondecreasing_in_j_order": true,
+        "final_workbook_sumBt": 36.0,
+        "final_workbook_sumUt": 384.0,
+        "j_strictly_increasing": true,
+        "max_j": 2849,
+        "omitted_j_count_through_max": 676,
+        "rows": 2173,
+        "same_exact_OATj_group_count": 0,
+        "sheet": "CF14",
+        "sumUt_adjacent_decreases_in_OATj_order": 395,
+        "sumUt_adjacent_decreases_in_j_order": 0,
+        "visible_rows_only_OAT_Bt_match": {
+          "classification": "diagnostic_not_full_reconstruction_missing_rows_unobserved",
+          "initial_contiguous_j_prefix_matches": 8,
+          "initial_contiguous_j_prefix_rows": 29,
+          "matches": 10,
+          "mismatch_examples": [
+            {
+              "OATj": 990.83712,
+              "OPTj": 895.6584,
+              "j": 4,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1039.03488,
+              "OPTj": 943.66272,
+              "j": 6,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1063.13376,
+              "OPTj": 967.66488,
+              "j": 7,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1206.43536,
+              "OPTj": 1008.03456,
+              "j": 8,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1134.13872,
+              "OPTj": 1032.03672,
+              "j": 9,
+              "visible_only_oat_reconstruction_sumBt": 2,
+              "workbook_sumBt": 1
+            }
+          ],
+          "rate": 0.004601932811780948,
+          "total": 2173
+        }
+      },
+      {
+        "OATj_adjacent_inversions_in_j_order": 716,
+        "OPTj_nondecreasing_in_j_order": true,
+        "final_workbook_sumBt": 56.0,
+        "final_workbook_sumUt": 346.0,
+        "j_strictly_increasing": true,
+        "max_j": 2848,
+        "omitted_j_count_through_max": 645,
+        "rows": 2203,
+        "same_exact_OATj_group_count": 0,
+        "sheet": "CF15",
+        "sumUt_adjacent_decreases_in_OATj_order": 366,
+        "sumUt_adjacent_decreases_in_j_order": 0,
+        "visible_rows_only_OAT_Bt_match": {
+          "classification": "diagnostic_not_full_reconstruction_missing_rows_unobserved",
+          "initial_contiguous_j_prefix_matches": 5,
+          "initial_contiguous_j_prefix_rows": 27,
+          "matches": 21,
+          "mismatch_examples": [
+            {
+              "OATj": 1175.1012,
+              "OPTj": 847.65408,
+              "j": 2,
+              "visible_only_oat_reconstruction_sumBt": 8,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1199.20008,
+              "OPTj": 895.6584,
+              "j": 4,
+              "visible_only_oat_reconstruction_sumBt": 8,
+              "workbook_sumBt": 1
+            },
+            {
+              "OATj": 1151.00232,
+              "OPTj": 919.66056,
+              "j": 5,
+              "visible_only_oat_reconstruction_sumBt": 8,
+              "workbook_sumBt": 2
+            },
+            {
+              "OATj": 1319.69448,
+              "OPTj": 943.66272,
+              "j": 6,
+              "visible_only_oat_reconstruction_sumBt": 7,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1464.28776,
+              "OPTj": 967.66488,
+              "j": 7,
+              "visible_only_oat_reconstruction_sumBt": 7,
+              "workbook_sumBt": 1
+            }
+          ],
+          "rate": 0.009532455742169769,
+          "total": 2203
+        }
+      },
+      {
+        "OATj_adjacent_inversions_in_j_order": 748,
+        "OPTj_nondecreasing_in_j_order": true,
+        "final_workbook_sumBt": 46.0,
+        "final_workbook_sumUt": 330.0,
+        "j_strictly_increasing": true,
+        "max_j": 2849,
+        "omitted_j_count_through_max": 631,
+        "rows": 2218,
+        "same_exact_OATj_group_count": 0,
+        "sheet": "CF16",
+        "sumUt_adjacent_decreases_in_OATj_order": 377,
+        "sumUt_adjacent_decreases_in_j_order": 0,
+        "visible_rows_only_OAT_Bt_match": {
+          "classification": "diagnostic_not_full_reconstruction_missing_rows_unobserved",
+          "initial_contiguous_j_prefix_matches": 11,
+          "initial_contiguous_j_prefix_rows": 19,
+          "matches": 16,
+          "mismatch_examples": [
+            {
+              "OATj": 943.23216,
+              "OPTj": 847.65408,
+              "j": 2,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1015.5288,
+              "OPTj": 895.6584,
+              "j": 4,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1063.72656,
+              "OPTj": 943.66272,
+              "j": 6,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1134.13872,
+              "OPTj": 1008.03456,
+              "j": 8,
+              "visible_only_oat_reconstruction_sumBt": 2,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1158.2376,
+              "OPTj": 1032.03672,
+              "j": 9,
+              "visible_only_oat_reconstruction_sumBt": 2,
+              "workbook_sumBt": 1
+            }
+          ],
+          "rate": 0.007213706041478809,
+          "total": 2218
+        }
+      },
+      {
+        "OATj_adjacent_inversions_in_j_order": 704,
+        "OPTj_nondecreasing_in_j_order": true,
+        "final_workbook_sumBt": 54.0,
+        "final_workbook_sumUt": 380.0,
+        "j_strictly_increasing": true,
+        "max_j": 2844,
+        "omitted_j_count_through_max": 617,
+        "rows": 2227,
+        "same_exact_OATj_group_count": 0,
+        "sheet": "CF17",
+        "sumUt_adjacent_decreases_in_OATj_order": 423,
+        "sumUt_adjacent_decreases_in_j_order": 0,
+        "visible_rows_only_OAT_Bt_match": {
+          "classification": "diagnostic_not_full_reconstruction_missing_rows_unobserved",
+          "initial_contiguous_j_prefix_matches": 4,
+          "initial_contiguous_j_prefix_rows": 23,
+          "matches": 29,
+          "mismatch_examples": [
+            {
+              "OATj": 1008.99552,
+              "OPTj": 936.00936,
+              "j": 3,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1033.0944,
+              "OPTj": 960.01152,
+              "j": 4,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1057.19328,
+              "OPTj": 984.01368,
+              "j": 5,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1081.29216,
+              "OPTj": 1008.03456,
+              "j": 6,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1105.39104,
+              "OPTj": 1032.03672,
+              "j": 7,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            }
+          ],
+          "rate": 0.013022002694207453,
+          "total": 2227
+        }
+      },
+      {
+        "OATj_adjacent_inversions_in_j_order": 685,
+        "OPTj_nondecreasing_in_j_order": true,
+        "final_workbook_sumBt": 43.0,
+        "final_workbook_sumUt": 273.0,
+        "j_strictly_increasing": true,
+        "max_j": 2849,
+        "omitted_j_count_through_max": 572,
+        "rows": 2277,
+        "same_exact_OATj_group_count": 0,
+        "sheet": "CF18",
+        "sumUt_adjacent_decreases_in_OATj_order": 325,
+        "sumUt_adjacent_decreases_in_j_order": 0,
+        "visible_rows_only_OAT_Bt_match": {
+          "classification": "diagnostic_not_full_reconstruction_missing_rows_unobserved",
+          "initial_contiguous_j_prefix_matches": 25,
+          "initial_contiguous_j_prefix_rows": 63,
+          "matches": 29,
+          "mismatch_examples": [
+            {
+              "OATj": 967.33104,
+              "OPTj": 847.65408,
+              "j": 2,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 991.42992,
+              "OPTj": 895.6584,
+              "j": 4,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1015.5288,
+              "OPTj": 919.66056,
+              "j": 5,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1039.62768,
+              "OPTj": 943.66272,
+              "j": 6,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1063.72656,
+              "OPTj": 967.66488,
+              "j": 7,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            }
+          ],
+          "rate": 0.012736056214317084,
+          "total": 2277
+        }
+      },
+      {
+        "OATj_adjacent_inversions_in_j_order": 703,
+        "OPTj_nondecreasing_in_j_order": true,
+        "final_workbook_sumBt": 53.0,
+        "final_workbook_sumUt": 465.0,
+        "j_strictly_increasing": true,
+        "max_j": 2848,
+        "omitted_j_count_through_max": 728,
+        "rows": 2120,
+        "same_exact_OATj_group_count": 0,
+        "sheet": "CF19",
+        "sumUt_adjacent_decreases_in_OATj_order": 424,
+        "sumUt_adjacent_decreases_in_j_order": 0,
+        "visible_rows_only_OAT_Bt_match": {
+          "classification": "diagnostic_not_full_reconstruction_missing_rows_unobserved",
+          "initial_contiguous_j_prefix_matches": 16,
+          "initial_contiguous_j_prefix_rows": 44,
+          "matches": 49,
+          "mismatch_examples": [
+            {
+              "OATj": 943.23216,
+              "OPTj": 823.65192,
+              "j": 1,
+              "visible_only_oat_reconstruction_sumBt": 2,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1015.5288,
+              "OPTj": 895.6584,
+              "j": 4,
+              "visible_only_oat_reconstruction_sumBt": 2,
+              "workbook_sumBt": 1
+            },
+            {
+              "OATj": 1063.72656,
+              "OPTj": 943.66272,
+              "j": 6,
+              "visible_only_oat_reconstruction_sumBt": 2,
+              "workbook_sumBt": 1
+            },
+            {
+              "OATj": 1110.03984,
+              "OPTj": 1032.03672,
+              "j": 9,
+              "visible_only_oat_reconstruction_sumBt": 3,
+              "workbook_sumBt": 2
+            },
+            {
+              "OATj": 1157.6448,
+              "OPTj": 1080.04104,
+              "j": 11,
+              "visible_only_oat_reconstruction_sumBt": 4,
+              "workbook_sumBt": 3
+            }
+          ],
+          "rate": 0.02311320754716981,
+          "total": 2120
+        }
+      },
+      {
+        "OATj_adjacent_inversions_in_j_order": 701,
+        "OPTj_nondecreasing_in_j_order": true,
+        "final_workbook_sumBt": 58.0,
+        "final_workbook_sumUt": 389.0,
+        "j_strictly_increasing": true,
+        "max_j": 2849,
+        "omitted_j_count_through_max": 681,
+        "rows": 2168,
+        "same_exact_OATj_group_count": 0,
+        "sheet": "CF20",
+        "sumUt_adjacent_decreases_in_OATj_order": 385,
+        "sumUt_adjacent_decreases_in_j_order": 0,
+        "visible_rows_only_OAT_Bt_match": {
+          "classification": "diagnostic_not_full_reconstruction_missing_rows_unobserved",
+          "initial_contiguous_j_prefix_matches": 8,
+          "initial_contiguous_j_prefix_rows": 20,
+          "matches": 18,
+          "mismatch_examples": [
+            {
+              "OATj": 943.23216,
+              "OPTj": 847.65408,
+              "j": 2,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1015.5288,
+              "OPTj": 895.6584,
+              "j": 4,
+              "visible_only_oat_reconstruction_sumBt": 1,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1134.13872,
+              "OPTj": 943.66272,
+              "j": 6,
+              "visible_only_oat_reconstruction_sumBt": 3,
+              "workbook_sumBt": 0
+            },
+            {
+              "OATj": 1110.03984,
+              "OPTj": 1008.03456,
+              "j": 8,
+              "visible_only_oat_reconstruction_sumBt": 3,
+              "workbook_sumBt": 1
+            },
+            {
+              "OATj": 1158.2376,
+              "OPTj": 1080.04104,
+              "j": 11,
+              "visible_only_oat_reconstruction_sumBt": 3,
+              "workbook_sumBt": 2
+            }
+          ],
+          "rate": 0.008302583025830259,
+          "total": 2168
+        }
+      }
+    ],
+    "totals": {
+      "OATj_adjacent_inversions_in_j_order": 16391,
+      "initial_contiguous_j_prefix_match_rate": 0.48180494905385735,
+      "initial_contiguous_j_prefix_matches": 331,
+      "initial_contiguous_j_prefix_rows": 687,
+      "rows": 47546,
+      "same_exact_OATj_group_count": 0,
+      "sumUt_adjacent_decreases_in_OATj_order": 8340,
+      "sumUt_adjacent_decreases_in_j_order": 0,
+      "visible_rows_only_OAT_Bt_match_rate": 0.012409035460396248,
+      "visible_rows_only_OAT_Bt_matches": 590,
+      "visible_rows_only_OAT_Bt_total": 47546
+    }
+  },
+  "workbook_formula_replay": {
+    "formula": "IF(AVERAGE(risk_cols)>0, IF(APj>0, APj/LT, 0.5*(1/RPj)), 1-((sumBt+sumUt)/j))",
+    "formula_rows": 47546,
+    "max_abs_diff": 0.0,
+    "mismatches": 0,
+    "verdict": "PASS_EXACT_GIVEN_WORKBOOK_BT_UT"
+  }
+}

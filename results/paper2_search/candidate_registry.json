@@ -1,0 +1,275 @@
+{
+  "schema": "paper2_candidate_registry_v1",
+  "generated": "2026-07-13",
+  "method": "12 blind proposers x 3-lens adversarial panel + synthesis (49 agents, 0 err)",
+  "result": {
+    "ACTIVE": 0,
+    "BLOCKED_PENDING_PI": 2,
+    "FALSIFIED": 10,
+    "strongest_active_candidate": "NONE",
+    "boundary_or_positive": "BOUNDARY_CERTIFIED"
+  },
+  "families": [
+    {
+      "family_id": "L_finite_crew_condition_based_dispatch",
+      "region": "R01_condition_based_repair_crew",
+      "panel": "FALSIFIED",
+      "votes": {
+        "SURVIVES": 0,
+        "FALSIFIED": 3,
+        "BLOCKED_PENDING_PI": 0
+      },
+      "self_status": "LIKELY_FALSIFIED",
+      "failure_arrow": "dominant_calendar",
+      "hypothesis": "A single indivisible repair crew dispatched at breakdown/wear-threshold EVENTS across disaggregated Op5/Op6/Op7, under imperfect repair and observable wear, was hypothesized to admit a state-dependent \"which-station-first\" reversal that a fixed calendar cannot capture; I judge it falsified \u2014 it collapses onto closed lane J's dominant periodic-PM calendar.",
+      "constant_counterexample": "A tape-independent static index policy: per-station control-limit (condition threshold) preventive rule + fixed downstream-priority tie-break for the single crew. Classical CBM theory makes control-limit policies optimal for single-unit imperfect-repair replacement and index (Whittle-type) policies near-optimal for the multi-unit restless-crew problem \u2014 so a learned tape-adaptive dispatcher has almost no room. Empirically J's periodic PM calendar (e.g., PM7|PM6|PM7|PM5|PM6|PM5|PM7|PM6) already beat the condition-based \"worst-condition\" heuristic (H_obs -500 SL) and PPO 0/6 seeds.",
+      "garrido_fact_required": "None that rescues it. The would-be \"new\" facts (imperfect-repair efficacy, wear heterogeneity, sensor quality) were already fixed inside J's rl_convertibility screen. The only lever that could lift H_PI above the bar is a fact that would have to contradict the thesis: that a single Op5/Op6/Op7 outage propagates undamped to theatre order-level ReT. It does not \u2014 thesis buffers, Op7's 5000-ration/48h batch release, ~2h R11 repair, and CSSU inventory decouple short station interruptions from ReT. Inflating wear/efficacy/risk/sensor after the stop is explicitly forbidden by J's terminal verdict."
+    },
+    {
+      "family_id": "L_finite_shared_wip_reallocation_under_blocking",
+      "region": "R02_dynamic_wip_buffer_allocation",
+      "panel": "FALSIFIED",
+      "votes": {
+        "SURVIVES": 0,
+        "FALSIFIED": 3,
+        "BLOCKED_PENDING_PI": 0
+      },
+      "self_status": "LIKELY_FALSIFIED",
+      "failure_arrow": "dominant_calendar",
+      "hypothesis": "Dynamically re-partitioning a fixed total inter-station WIP/buffer budget across the Op3/Op5/Op7/Op9 zones in response to observed blocking/starvation beats the best static bowl allocation, because the line bottleneck migrates when R11 breakdowns or R14 reprocessing load a specific station.",
+      "constant_counterexample": "The best STATIC bowl-optimal split of B_total (slightly heavier in the middle of the balanced line, symmetric enough to hedge both breakdown directions), optionally augmented by a FIXED periodic reallocation calendar keyed to the deterministic Op3-weekly release, Op7-48h batch cycle, and weekly-24h maintenance window. This tape-independent schedule matches the only deterministic time-variation exactly; the random R11/R14 events supply no forecastable pre-action signal, and a symmetric static buffer already absorbs a stationary reject/failure rate.",
+      "garrido_fact_required": "(1) Does the modeled MFSC actually impose a finite, shared, physically reconfigurable inter-station storage cap, and what is its magnitude? The thesis explicitly assumes unlimited storage, so absent this the mechanism has no scarce resource. (2) Is there any aperiodic, station-specific bottleneck-migration signal observable BEFORE the action with lead >= buffer-reconfiguration lead time (e.g., a condition-based R11 breakdown precursor, or an inbound R14 reprocessing forecast)? (3) What is the physical lead time to move buffer/WIP capacity between zones relative to R11 (~2h) and R14 dwell? Note: even if (1) and (3) are granted, no fact rescues the family unless (2) yields an aperiodic forecastable signal, which the thesis physics (random R11, simultaneous-across-line R21, stationary demand) does not supply."
+    },
+    {
+      "family_id": "L_persistent_fleet_route_diversion",
+      "region": "R03_finite_fleet_persistent_location",
+      "panel": "BLOCKED_PENDING_PI",
+      "votes": {
+        "SURVIVES": 0,
+        "FALSIFIED": 1,
+        "BLOCKED_PENDING_PI": 2
+      },
+      "self_status": "BLOCKED_PENDING_PI",
+      "failure_arrow": "blocked_pending_pi",
+      "hypothesis": "A finite fleet with persistent vehicle location reactively diverts dispatches from a primary LOC leg to a longer alternate route when observed R22 route-status/ETA signals a blockage, and this state-dependent rerouting beats any fixed routing/rotation on canonical order-level ReT under equal vehicle-hours.",
+      "constant_counterexample": "\"Always dispatch on the primary route and let the thesis's existing proactive downstream buffer absorb the ~24 h R22 delay,\" or equivalently a fixed cyclic fleet rotation carrying a static diversion fraction sized to the stationary R22 hazard. Because thesis R22 rehab (~24 h) is roughly one transport leg, its recovery is effectively memoryless, and the buffers already absorb R21's 120 h, this open-loop policy reproduces the adaptive policy's ReT almost everywhere without observing route status, and without paying the alternate route's extra vehicle-hours.",
+      "garrido_fact_required": "The conjunction that determines survival, none of which the thesis supplies (Section 6.5 explicitly takes vehicle availability and route planning for granted): (1) does a physically distinct alternate route exist between the same MFSC nodes for the affected LOC legs, and what is its transit time and per-trip vehicle-hour/fuel cost relative to the primary; (2) is R22 route-SPECIFIC (blocks the primary path but leaves the alternate usable) rather than degrading the whole origin-destination LOC regardless of path; (3) is R22 recovery autocorrelated/persistent (not memoryless) and long relative to the 24 h leg, and is per-route status observable at the dispatch epoch with lead >= transit time, so that \"blocked now\" reliably predicts \"blocked at arrival\"; (4) the actual fleet size / vehicle-hour budget so resource-equality can be enforced. If R22 resembles the thesis default (~24 h, memoryless, single-LOC, buffered), the fixed policy dominates and this reclassifies to LIKELY_FALSIFIED via resource_purchase + observable_conversion."
+    },
+    {
+      "family_id": "inspection_effort_vs_throughput",
+      "region": "R04_inspection_qc_vs_throughput",
+      "panel": "FALSIFIED",
+      "votes": {
+        "SURVIVES": 0,
+        "FALSIFIED": 3,
+        "BLOCKED_PENDING_PI": 0
+      },
+      "self_status": "LIKELY_FALSIFIED",
+      "failure_arrow": "dominant_calendar",
+      "hypothesis": "State-dependent Op7 QC inspection intensity (more inspection lowers defective escapes/rework but consumes the balanced-line QC capacity and delays the 5,000-unit/48h release), with the inspect-high vs inspect-fast ranking reversing under changing quality risk and backlog, beats any fixed inspection level.",
+      "constant_counterexample": "Thesis-native R14 returns ALL non-conforming units for reprocessing (modeled full detection, no undetected-escape endpoint) and the defect rate is stationary, so with no qualified-delivery/AQL guardrail the minimum-inspection CONSTANT weakly dominates (inspection only costs throughput). If Garrido supplies an escape endpoint + AQL, the dominant comparator becomes a fixed sampling plan / fixed-limit SPC-CUSUM inspection trigger (a strong constant-threshold observable policy) plus a tape-independent detector-triggered calendar that drops inspection during R24/R23 windows \u2014 these are exactly the classical/calendar comparators that closed K2 (strong classical dominance) and K3 (learner rediscovers a fixed schedule).",
+      "garrido_fact_required": "Whether Op7 inspection intensity is a real controllable lever and, critically, whether R14 non-conforming units can ESCAPE to the field (imperfect detection) with a quantified operational/ReT consequence rather than always being returned \u2014 plus effort\u2192sensitivity/specificity, inspection+rework time, and any minimum qualified-delivery (AQL) guardrail. Without an escape endpoint the lever is action-absent and min-inspection dominates; even with it, the fixed-sampling/SPC comparator dominates, so the fact is largely moot for a Paper-2 win."
+    },
+    {
+      "family_id": "L_release_timing_reservation",
+      "region": "R05_order_release_backlog_timing",
+      "panel": "FALSIFIED",
+      "votes": {
+        "SURVIVES": 0,
+        "FALSIFIED": 3,
+        "BLOCKED_PENDING_PI": 0
+      },
+      "self_status": "LIKELY_FALSIFIED",
+      "failure_arrow": "dominant_calendar",
+      "hypothesis": "A non-work-conserving right to HOLD ready orders and reserve scarce daily downstream throughput for anticipated prioritized contingent (R24) demand produces state-dependent release-timing reversals that beat work-conserving SPT-flat service on order-level ReT.",
+      "constant_counterexample": "SPT-flat work-conserving service plus a FIXED protective reservation K of daily throughput (equivalently a constant order-up-to / base-stock cap on ordinary releases per day). Under stationary, signal-free contingent demand the optimal reservation is a constant, so this tape-independent open-loop policy reproduces the best deployable feedback in every state; property 8 (no open-loop schedule matches feedback everywhere) fails.",
+      "garrido_fact_required": "Two joint facts the thesis does not supply: (1) Do theatre (Op13) orders carry heterogeneous, order-specific due dates or mission-criticality CLASSES (not just the single R24 priority flag), and if so their class labels, due-date offsets, per-class lost/penalty structure, and base rates? (2) Does contingent (R24) demand emit an OBSERVABLE advance-warning signal at least ~48 h (Op10+Op12 transport lead) before it must be fulfilled, and if so its lead time and precision P(R24 | signal) \u2014 including any correlation of R24 onset with observable disruption flags R21/R22/R23? Both are required because, absent them, the source (lines 48/51/60) fixes no due dates, no mission expiry, and no active information acquisition, so release timing is dominated by a constant reservation."
+    },
+    {
+      "family_id": "L_prepositioning_leadtime_R23",
+      "region": "R06_multiechelon_prepositioning",
+      "panel": "FALSIFIED",
+      "votes": {
+        "SURVIVES": 0,
+        "FALSIFIED": 3,
+        "BLOCKED_PENDING_PI": 0
+      },
+      "self_status": "LIKELY_FALSIFIED",
+      "failure_arrow": "dominant_calendar",
+      "hypothesis": "Forward-preposition finite relocatable Op9 stock to a specific CSSU ahead of an R23 outage, over a real 24h Op10 relocation lead, so the reactivated theatre resumes issuing without refill delay.",
+      "constant_counterexample": "Hold a fixed symmetric central safety reserve at Op9 and dispatch reactively to whichever CSSU is up/reactivating (a trivial 'serve the survivor' rule requiring no learning). Because Op10 lead (24h) is far shorter than R23 recovery (120h), reactive central pooling covers the outage window; because no lateral lane exists and an outaged CSSU cannot issue, no forward prepositioning can serve the outaged theatre during the outage. A fixed initial prepositioning/central-reserve level matches or beats any adaptive prepositioning schedule on canonical ReT with zero stranding risk (corroborated by the 2026-06-27 Prepositioning Audit: value is in the static initial decision, not week-by-week switching).",
+      "garrido_fact_required": "Two facts jointly, neither in the thesis: (1) does R23 emit any observable leading indicator (threat/degradation warning) of an impending SPECIFIC-CSSU outage with lead >= the 24h Op10 relocation time; and (2) is there any channel (lateral CSSU-to-CSSU resupply or cross-theatre Op12 service) by which stock positioned before an outage can serve the outaged theatre during/after the outage. Even if both were supplied, a constant central reserve likely still dominates because 24h lead << 120h recovery, so this is named for completeness, not as a live rescue."
+    },
+    {
+      "family_id": "L_kit_completeness_production_mix",
+      "region": "R07_product_mix_kit_completeness",
+      "panel": "FALSIFIED",
+      "votes": {
+        "SURVIVES": 0,
+        "FALSIFIED": 2,
+        "BLOCKED_PENDING_PI": 1
+      },
+      "self_status": "BLOCKED_PENDING_PI",
+      "failure_arrow": "blocked_pending_pi",
+      "hypothesis": "If theatre demand is a coupled multi-component ration KIT fulfilled by min-fill across the real 21 ration types built on a single shared Op5-Op7 line with changeovers, a state-dependent production-mix/changeover policy that re-prioritizes the line toward the currently-most-depleted component can lift kit fill (hence order-level ReT) above any fixed rotation \u2014 but only when component shortfalls are product-idiosyncratic, which the thesis's product-symmetric operation-level shocks are not.",
+      "constant_counterexample": "A fixed cyclic ELSP rotation that runs each of the 21 products in fixed proportion to its stationary demand share, each carrying a robust per-product safety buffer sized once against the disruption envelope. Under stationary shares and product-symmetric shocks (all thesis-native risks \u2014 R21 halts Op3/Op5-Op7/Op9, R22 an LOC, R23 a CSSU, R3 many operations \u2014 hit whole operations, not individual products), this tape-independent rotation catches up proportionally after any shock and matches a feedback policy on every tape. This is the same dominant-calendar result that closed Programs J and K3, and matches the repo's own registered exact-null ceiling (H_PI=H_obs=0) for the homogeneous/fungible condition.",
+      "garrido_fact_required": "The demand-coupling AND shock-locality structure of the real 21-product assortment \u2014 the single make-or-break pair. (1) Is theatre demand a COUPLED kit requiring all/most of the 21 components with min-fill fulfillment, or 21 independent order streams (with what substitution matrix)? (2) Is ANY disruption or yield loss PRODUCT-SPECIFIC \u2014 e.g., a supplier->product raw-material mapping so an Op2/supplier shock or an R14 Op7 reject depletes one component's pipeline \u2014 rather than product-symmetric? Ancillary but also required: product-demand shares, per-product BOMs, Op5-Op7 line rates and changeover/minimum-run times, and a timestamped pre-commitment signal with lead >= pipeline lead. Without BOTH (1)=coupled-kit and (2)=idiosyncratic-shortfall, the lane is falsified by the fixed rotation or reduces to closed Program A; the thesis supplies neither and affirmatively models only one homogeneous product with operation-level (product-symmetric) risks."
+    },
+    {
+      "family_id": "L_active_demand_sensing_under_censoring",
+      "region": "R08_information_acquisition_censored",
+      "panel": "FALSIFIED",
+      "votes": {
+        "SURVIVES": 0,
+        "FALSIFIED": 3,
+        "BLOCKED_PENDING_PI": 0
+      },
+      "self_status": "LIKELY_FALSIFIED",
+      "failure_arrow": "dominant_calendar",
+      "hypothesis": "When theatre stockouts censor true demand, paying a scarce, budget-limited active field report to sharpen the latent-tempo belief before an irreversible replenishment/production commitment yields belief-dependent sense-vs-serve reversals that beat any fixed sensing calendar; this corresponds to registry family censored_demand_active_information_acquisition.",
+      "constant_counterexample": "Under true censoring with NO free predictive side-channel, posterior uncertainty is a monotone deterministic function of elapsed-time-since-last-report and resets on sensing, so the optimal sensing time is a fixed threshold on elapsed time = a periodic 'sense every k weeks' calendar. That tape-independent open-loop schedule reproduces the adaptive sensing policy on every tape (the K3/J/G dominant-calendar confound), and Goldberg et al. constant-order asymptotic optimality (cited in the repo lit review) makes the paired constant order a strong, not weak, comparator. If instead a free predictive side-channel does exist, paid sensing is dominated by passive belief-filtering on it \u2014 which is Program C (regime detectors) / Program H (belief filter), already closed at sub-materiality.",
+      "garrido_fact_required": "System-of-record semantics during a CSSU/theatre stockout: is the COMPLETE REQUESTED quantity recorded/backordered (thesis pending-cap-60 backordering implies YES -> censoring is false -> information-acquisition value = 0, per registry current_physics_ceiling), or only the ISSUED quantity (censoring true)? And only if censored: does a distinct active field-report/reconnaissance channel physically exist, with what cost, accuracy, and information lead versus the ~72-96h resupply lead, and is the latent demand tempo persistent/non-stationary? Absent recorded censoring, the mechanism has no system-of-record basis."
+    },
+    {
+      "family_id": "L_mission_expiry_admission_triage",
+      "region": "R09_admission_priority_abandonment",
+      "panel": "BLOCKED_PENDING_PI",
+      "votes": {
+        "SURVIVES": 0,
+        "FALSIFIED": 1,
+        "BLOCKED_PENDING_PI": 2
+      },
+      "self_status": "BLOCKED_PENDING_PI",
+      "failure_arrow": "blocked_pending_pi",
+      "hypothesis": "Under exogenous mission deadlines that make an unfulfilled ration order EXPIRE (permanent loss, not backorder), state-dependent admission/priority triage \u2014 chiefly early abandonment of doomed high-priority orders during observed outages to save orders that can still make their deadline \u2014 beats fixed contingent-priority sequencing on canonical order-level ReT, with all demand (expired orders included) kept in the denominator.",
+      "constant_counterexample": "Contingent-priority Earliest-Deadline-First with doomed-job abandonment: a fixed, non-learned myopic rule \u2014 serve R24 first, then EDD among the rest, and drop any order whose remaining slack < remaining service time. It is state-dependent but tape-independent in its parameters and is provably near-optimal for single-resource deadline scheduling (EDD / Moore-Hodgson). Given the project's universal pattern (D1, DRA1, E, H, J, K2, K3 all lost to a robust constant/myopic rule or to unconvertible perfect information), this rule is expected to capture essentially all the clairvoyant value, leaving no material learned margin.",
+      "garrido_fact_required": "TWO facts, both absent from the thesis (which \u00a76.5 assumes the opposite: 'late orders remain backorders'). PRIMARY \u2014 Mission-deadline existence and distribution: do theatre ration requirements (specifically R24 contingent demand) carry a hard fulfillment deadline after which the unfulfilled quantity is ABANDONED (permanently lost, not backordered) because the supported unit relocates, the operation concludes, or alternate resupply occurs \u2014 and what is that deadline distribution relative to the 24-120h disruption-recovery timescales? Without a deadline tighter than recovery times the family collapses to the already-failed D1; a deadline is physically dubious for a consumable ration (a hungry unit still needs food tomorrow), so only R24-tied contingent windows plausibly expire. SECONDARY \u2014 Rejection/admission authority: does the military logistics agency have doctrinal authority to decline or triage which orders enter the fulfillment pipeline, or is it obligated to backorder every order (the cap-60 list is an overflow bound, not an admission policy)?"
+    },
+    {
+      "family_id": "L_shifting_bottleneck_mobile_crew_repositioning",
+      "region": "R10_integrated_prod_maint_routing",
+      "panel": "FALSIFIED",
+      "votes": {
+        "SURVIVES": 0,
+        "FALSIFIED": 3,
+        "BLOCKED_PENDING_PI": 0
+      },
+      "self_status": "LIKELY_FALSIFIED",
+      "failure_arrow": "dominant_calendar",
+      "hypothesis": "A single mobile repair/maintenance crew whose best target flips between an upstream production station (Op5/Op6) and a downstream transport lane (Op8/Op10/Op12) as a function of the joint WIP-buffer / disruption / demand-phase state, with a repositioning dwell that turns the choice into a commitment \u2014 a shifting-bottleneck reversal that neither the production-only nor the transport-only allocation exposes.",
+      "constant_counterexample": "Constant crew-pre-positioned-at-production (\"constant M\") with purely reactive dispatch only when production is fully healthy \u2014 the exact open-loop posture that beat the post-K3 signal-adaptive team at ReT -0.0013 / service -3.03% \u2014 composed with a fixed weekly periodic calendar keyed to the deterministic 24h scheduled maintenance and 48h batch-release cadence. This tape-independent schedule plausibly matches the adaptive policy everywhere the reversal is capturable.",
+      "garrido_fact_required": "Two facts the thesis does not supply: (1) whether the real MFSC operates a single indivisible mobile repair/maintenance crew shared across production stations and transport lanes with a material repositioning/mobilization time (vs. co-located independent teams, which would eliminate the commitment); and (2) whether R22 LOC disruptions carry an operational precursor/warning (route threat assessment, convoy-security intel, or weather) available with lead >= crew repositioning time. Without (2) only reactive dispatch is possible and constant M dominates; without (1) there is no commitment and the problem collapses to the closed fungible-allocation cell."
+    },
+    {
+      "family_id": "L_demand_regime_anticipatory_leading_indicator",
+      "region": "R11_regime_forecast_anticipation",
+      "panel": "FALSIFIED",
+      "votes": {
+        "SURVIVES": 0,
+        "FALSIFIED": 3,
+        "BLOCKED_PENDING_PI": 0
+      },
+      "self_status": "LIKELY_FALSIFIED",
+      "failure_arrow": "dominant_calendar",
+      "hypothesis": "An operationally-named leading indicator (a cross-functional demand / operational-tempo forecast, thesis Ch8) observed with lead >= the ~1-2 week pipeline lead time lets in-scope operators pre-shift production posture/buffer/dispatch ahead of a demand-regime change (band shift or R24 surge), producing state-dependent action-ranking reversals that a fixed calendar cannot match.",
+      "constant_counterexample": "A tape-independent standing-reserve policy: hold a fixed moderate-to-maximal buffer sized for the worst thesis-native regime (R24 doubling) and run a fixed weekly shift/release/dispatch calendar. Because storage is unlimited and canonical ReT does not count holding cost, this constant is maximally ready in EVERY regime and matches or beats any anticipatory switcher on ReT; the low-demand periods where anticipation would 'save' offer only holding cost, which the canonical endpoint ignores. Track C's iter-5 (R24-led) confirmation: switcher\u2212constant = +2.78e-5 J [+2.43e-5,+3.14e-5], detector +6.5e-5, both ~3 orders below the 0.05\u00b7ReT bar; raw-ReT lever authority 'compresses to near-indifference'.",
+      "garrido_fact_required": "Diagnostic-only (cannot cure): (1) named signal source and its lead time (e.g., cross-functional demand/op-tempo forecast horizon); (2) sensitivity/specificity and false-pos/false-neg rates for predicting a regime shift or R24 onset; (3) signal acquisition cost; (4) true demand-regime amplitude and persistence beyond the thesis 2400-2600 (\u00b14%) band and the R24 doubling, and whether it must beat block-shuffled/delayed/wrong-location placebos. None can rescue the family: a clairvoyant signal is already bounded by Track C (iter5 oracle 2.78e-5) and Program I (3.95e-5) to ~1e-4 canonical ReT under thesis-native variance, and inflating regime amplitude to force a win is forbidden."
+    },
+    {
+      "family_id": "L_recovery_crew_restoration_sequencing",
+      "region": "R12_recovery_resource_sequencing",
+      "panel": "FALSIFIED",
+      "votes": {
+        "SURVIVES": 0,
+        "FALSIFIED": 3,
+        "BLOCKED_PENDING_PI": 0
+      },
+      "self_status": "LIKELY_FALSIFIED",
+      "failure_arrow": "dominant_calendar",
+      "hypothesis": "A single scarce restoration crew, re-sequencing non-preemptive repairs across the simultaneously-downed serial operations Op3/Op5-Op7/Op9 under R21 (~120h/op) or a 672h R3 black-swan, can exploit observable buffer/backlog state to beat a fixed topological restoration priority on canonical order-level ReT.",
+      "constant_counterexample": "Fixed upstream-first topological restoration permutation (Op3 -> Op5 -> Op6 -> Op7 -> Op9), tie-broken by a WSPT-style ratio of downstream WIP unlocked per repair-hour. Because single-crew full-chain restoration time equals the sum of repair durations regardless of order, this tape-independent open-loop permutation matches the clairvoyant sequence on nearly every tape and requires no state feedback.",
+      "garrido_fact_required": "Whether MFSC disaster recovery competes for one (or few) shared restoration crew(s) that SERIALIZE repairs across concurrently-downed operations, versus the thesis's independent parallel per-op ~120h recovery (under which no sequencing decision exists). If shared: the per-operation repair-time distribution; whether a pre-commitment damage assessment forecasts each op's repair time before the crew is assigned (the only fact that could break order-invariance and create observable reversals); and whether repairs are preemptible. Absent all of these the premise is not thesis-native and the default parallel-independent recovery leaves no lever."
+    }
+  ],
+  "ranked": [
+    {
+      "family_id": "R09_L_mission_expiry_admission_triage",
+      "status": "BLOCKED_PENDING_PI",
+      "strongest_failure_arrow": "Even if mission-expiry and admission authority are granted, single-shared-resource deadline scheduling is captured by a tape-independent-parameter myopic rule (contingent-weighted EDD + Moore-Hodgson doomed-job abandonment); the clairvoyant-to-myopic gap is unobservable future disruption/arrival timing (DRA2b/H EVPI-without-conversion), and on canonical ReT an expired-in-denominator order is metrically identical to a lost backorder, collapsing the estimand to closed D1 (oracle 0.0011, observable tree +23.25% lost orders).",
+      "publishability_note": "Strongest of the two gated candidates; genuinely new decision right (non-work-conserving admission + permanent-expiry estimand) but requires two non-thesis facts, the primary of which (orders expire rather than backorder) directly contradicts the binding Section 6.5 assumption. Publishable only as the nearest-real gated entry in a boundary atlas, not a standalone positive."
+    },
+    {
+      "family_id": "R03_L_persistent_fleet_route_diversion",
+      "status": "BLOCKED_PENDING_PI",
+      "strongest_failure_arrow": "Thesis proactive buffers sized for 120h R21 absorb a single 24h R22 leg delay to ~0 canonical ReT (fact-independent kill), and memoryless ~24h R22 rehab approximately equals the 24h transport leg so route status at dispatch is a near-coin-flip on route status at arrival (signal-lead collapse); the 'always-primary + let the buffer absorb' constant weakly dominates at strictly lower vehicle-hours (resource purchase), reproducing DRA2->E->G/H.",
+      "publishability_note": "Materially new mechanism (persistent fleet location + physical route choice) but one panelist falsified it needing no new fact (buffer intercept). Survives only if R22 is route-specific AND persistently autocorrelated with per-route observability at lead>=24h AND a physical alternate route with priced extra vehicle-hours exists. Gated boundary entry only."
+    },
+    {
+      "family_id": "R07_L_kit_completeness_production_mix",
+      "status": "FALSIFIED",
+      "strongest_failure_arrow": "Under thesis-native product-symmetric operation-level shocks, a fixed proportional-share cyclic ELSP rotation with per-product buffers is tape-independent and matches feedback on every tape (registered exact-null H_PI=H_obs=0); the only generator of positive mix headroom is product-idiosyncratic non-stationary shocks, which route into forbidden Op1-Op2 supplier physics or invented per-product R14 rates, and last-minute mix change violates Section 6.5.",
+      "publishability_note": "Not a positive; best 'new-physics-but-closed-outcome' exhibit for the atlas. Kit-completeness min-fill is a genuinely new estimand but degenerates to 21 parallel Program-A copies (independent streams) or the dominant ELSP calendar (symmetric shocks)."
+    },
+    {
+      "family_id": "R06_L_prepositioning_leadtime_R23",
+      "status": "FALSIFIED",
+      "strongest_failure_arrow": "Thesis topology denies prepositioned stock any channel to the outaged theatre (no lateral CSSU lane; an outaged CSSU cannot issue for ~120h), so forward commitment is pure stranding; 24h Op10 lead << 120h R23 recovery makes reactive central pooling dominant, and R23 emits no pre-onset precursor (info lead 0h < 24h relocation lead). Constant central reserve dominates even under maximal fact concession.",
+      "publishability_note": "Not publishable as positive; genuinely new lead-time + finite-relocatable-stock mechanism that strictly worsens the problem by adding stranding risk. Clean atlas entry showing a new mechanism with an already-dominant failure arrow (G-style fairness/worst-CSSU starvation, H_obs ~ -0.021)."
+    },
+    {
+      "family_id": "R05_L_release_timing_reservation",
+      "status": "FALSIFIED",
+      "strongest_failure_arrow": "No observable advance R24 signal (onset simultaneous with impact) makes P(imminent R24 | state) state-invariant, so the value-maximizing protective reservation is a constant base-stock/order-up-to cap (property-8 open-loop dominance); the non-work-conserving hold also ages ordinary orders into the cap-60 lost-order guardrail (D1 +23.25%).",
+      "publishability_note": "Atlas entry: new decision right (non-work-conserving admission-hold vs D1's work-conserving reorderings) but every value-bearing sub-mechanism maps to closed D1 / DRA2-E / K2."
+    },
+    {
+      "family_id": "R02_L_finite_shared_wip_reallocation_under_blocking",
+      "status": "FALSIFIED",
+      "strongest_failure_arrow": "The finite shared WIP budget contradicts the Section 6.5 unlimited-storage assumption (the only claimed scarce resource does not exist natively); and no aperiodic pre-action bottleneck-migration signal exists (R11 memoryless with ~2h dwell shorter than reconfiguration latency, R21 downs the line simultaneously, R14 stationary), so a static bowl split + fixed periodic calendar dominates.",
+      "publishability_note": "Not publishable; invented finite-storage physics plus dominant-calendar arrow. Useful atlas contrast to R07 (both invent a scarce resource; both die to a static/periodic optimum)."
+    },
+    {
+      "family_id": "R01_L_finite_crew_condition_based_dispatch",
+      "status": "FALSIFIED",
+      "strongest_failure_arrow": "Reopening of closed lane J by decision-epoch/architecture relabeling: a single indivisible crew on a serial Op5-Op7 line makes total restoration time order-invariant (which-station-first ~0 ReT), and J already ran the identical condition-based heuristics and PPO (H_obs -500 SL, PPO 0/6, 0/108 phase cells, oracle 4.7e-5) all dominated by a periodic PM calendar.",
+      "publishability_note": "Not publishable; forbidden reopening of J via architecture/epoch change alone."
+    },
+    {
+      "family_id": "R10_L_shifting_bottleneck_mobile_crew_repositioning",
+      "status": "FALSIFIED",
+      "strongest_failure_arrow": "Timescale pincer: the ~24h repositioning dwell approximately equals R22 rehab (crew arrives as the lane self-heals) and far exceeds the ~2h R11 repair (arrives after repair); no onset precursor and buffer-drain is lagging, so constant-M-at-production + weekly calendar dominates, reopening post-K3 bottleneck migration (already -0.0013, service -3.03%) with added dead time.",
+      "publishability_note": "Not publishable; reopening of the post-K3 integrated-team lane with a strictly value-destroying commitment dwell."
+    },
+    {
+      "family_id": "R12_L_recovery_crew_restoration_sequencing",
+      "status": "FALSIFIED",
+      "strongest_failure_arrow": "A single non-preemptive crew has full-chain restoration time = sum of repair durations (order-invariant), so the dominant lost-demand block over the 120-672h outage is permutation-invariant; a fixed reverse-topological permutation is clairvoyant-optimal AND forecast-independent (neutralizing the requested Garrido fact); the only order-sensitive term (<2 demand-days of WIP drain) is sub-gate, and the CSSU-A/B sub-region collapses to closed G/H.",
+      "publishability_note": "Not publishable; order-invariance + a fixed reverse-topological calendar dominate. Strong atlas exhibit of a large-consequence disruption (R3 672h) with near-zero lever authority."
+    },
+    {
+      "family_id": "R11_L_demand_regime_anticipatory_leading_indicator",
+      "status": "FALSIFIED",
+      "strongest_failure_arrow": "Unlimited storage (Section 6.5) plus a canonical ReT that ignores holding cost make the ReT-optimal posture 'always maximally ready', a tape-independent standing-reserve constant that no anticipatory signal can beat; Track C already ran the anticipatory detector (+6.5e-5 priced, ~0 raw ReT; 'hysteresis beats clairvoyance') and Program I bounds the posture oracle at 3.95e-5.",
+      "publishability_note": "Not publishable; forbidden reopening of Track C by information-source relabeling with no new canonical-ReT mechanism."
+    },
+    {
+      "family_id": "R04_inspection_effort_vs_throughput",
+      "status": "FALSIFIED",
+      "strongest_failure_arrow": "Thesis-native R14 models full detection with no field-escape endpoint, so inspection intensity has zero canonical-ReT trade (action-absent lever) and the min-inspection constant weakly dominates; even granting an imported escape endpoint, stationary defects make a fixed AQL sampling plan / SPC constant-threshold optimal, and 5000-unit/48h batching washes out any R11 post-repair transient (~640 units/2h below batch resolution).",
+      "publishability_note": "Not publishable; action-absent under thesis physics and strong-classical/dominant-calendar under the counterfactual escape endpoint."
+    },
+    {
+      "family_id": "R08_L_active_demand_sensing_under_censoring",
+      "status": "FALSIFIED",
+      "strongest_failure_arrow": "Section 6.5 backorders record the REQUESTED (not merely issued) quantity, so demand is not censored and the EVPI of paid sensing is identically zero; and under stationarity posterior uncertainty is a deterministic monotone function of elapsed-time-since-last-report, making the optimal sense time a fixed 'sense every k weeks' calendar (K3/J/G confound). Finite sensing budget merely replays Program F (0/24).",
+      "publishability_note": "Not publishable; the censoring premise is refuted by the thesis backorder system-of-record, so the mechanism has no basis without contradicting disclosed physics."
+    }
+  ],
+  "garrido_question_set": [
+    "R09 (mission-expiry admission triage): Do theatre requirements \u2014 specifically R24 contingent-demand orders \u2014 carry a hard fulfillment deadline after which the unfulfilled quantity is PERMANENTLY ABANDONED rather than backordered (and does the logistics agency hold doctrinal authority to decline/triage which orders enter the fulfillment pipeline), with a deadline distribution TIGHTER than the 24-120h R21/R23/R22 recovery timescales? If deadlines are absent, looser than recovery times, or orders always backorder, the family is falsified (collapses to closed D1).",
+    "R03 (persistent-fleet route diversion): For the R22-affected legs (Op4/Op8/Op10/Op12), does a physically distinct ALTERNATE route exist between the same origin-destination nodes (with quantified extra transit and per-trip vehicle-hour/fuel cost), is R22 ROUTE-SPECIFIC (blocks the primary path while leaving the alternate usable) rather than degrading the whole O-D leg, and is its recovery PERSISTENTLY AUTOCORRELATED and long relative to the 24h leg so that per-route status observed at dispatch reliably predicts route status at arrival 24h later? If R22 is ~24h memoryless, single-leg, or path-agnostic, the family is falsified (buffer intercept + resource purchase)."
+  ],
+  "recommended_paper2": "Paper 2 = a physics-derived falsification atlas of the open-loop-dominance boundary in resilience operational control: an a-priori structural screen that predicts, WITHOUT training, which decision rights in a canonical military food supply chain are calendar/constant-dominated, validated against ~25 exhaustively red-teamed decision families (Track A-K3 plus this 12-region L-search). Its contribution is the taxonomy of failure MECHANISMS (dominant robust constant/calendar; perfect-information-without-observable-conversion/EVPI; canonical-metric or fairness-guardrail reversal; endpoint-liveness-below-gate) mapped to the underlying thesis-native PHYSICAL INVARIANTS that generate them (unlimited storage + stationary demand + holding-cost-blind ReT -> maximal-readiness constant; single-server serial lines -> order-invariant restoration; short memoryless disruptions damped by proactive buffers -> zero convertible signal lead; no pre-action forecast channel -> periodic-calendar sufficiency). This is a domain/structural boundary-certification paper distinct from Paper 1: Paper 1 establishes the eligibility/equal-resource-comparator METHODOLOGY (the clairvoyant-ceiling and observable-conversion ladder); Paper 2 delivers the diagnostic THEORY that lets a practitioner skip the ladder by reading a decision family's physics, with the MFSC as a fully-worked negative certificate.",
+  "recommended_paper3": "Paper 3 = the constructive inverse and gated-candidate resolution: 'What minimal, disclosed relaxation of thesis assumptions would flip a resilience decision family from calendar-dominated to adaptively convertible?' It formalizes the eight necessary conditions for deployable adaptive value and derives, per condition, the exact physics perturbation that would satisfy it (finite shared storage; non-stationary demand with a forecastable lead >= pipeline lead; route-specific persistently-autocorrelated disruption; hard mission deadlines with admission authority; a physical lateral/multimodal lane). It is anchored empirically on the two BLOCKED_PENDING_PI families \u2014 R03 persistent-fleet route diversion and R09 mission-expiry admission triage \u2014 as the nearest-real candidates, packaged as a prospective, preregistered Garrido domain-elicitation + conditional-design study that will either CONVERT them (if the facts land favorably and an observable policy clears the 0.01 ReT bar with co-directional service and no worst-CSSU starvation) or CERTIFY-close the last two gated mechanisms. This is honest, non-duplicative of Paper 1's retained-learning future-work, and turns the negative result into a forward research program rather than overclaiming a win.",
+  "synthesis_rationale": "All 12 audited L-families reduce to arrows already terminal in the closed set. Nine are FALSIFIED with fact-independent kills: R01 and R10 reopen J and post-K3 by epoch/architecture relabeling; R11 reopens Track C by information relabeling; R02 invents finite storage against Section 6.5; R04's inspection lever is action-absent under full-detection R14; R08's censoring premise is refuted by the backorder system-of-record; R12 is defeated by single-server order-invariance; R05's reservation optimum is a constant base-stock; R07 collapses to a dominant ELSP rotation or 21 Program-A copies. Two are BLOCKED_PENDING_PI: R09 (mission-expiry triage) and R03 (route diversion) have genuinely new decision rights/mechanisms and conditionally material clairvoyant ceilings (~0.01-0.02 ReT if their gating facts land), but each carries a strong-comparator or buffer-intercept kill that would likely defeat observable conversion even if unblocked \u2014 R09 to a myopic EDD+Moore-Hodgson rule and to D1 on canonical ReT, R03 to an 'always-primary + buffer' constant at lower vehicle-hours. No family is ACTIVE (none SURVIVES needing no new facts), so strongest_active_candidate is NONE and the verdict is BOUNDARY_CERTIFIED: no candidate plausibly clears the 0.01 ReT bar with an observable, resource-equal, guardrail-clean policy under thesis-native physics. The strongest merely-gated candidate is R09. The recurring generative fact is that thesis-native physics (unlimited storage, stationarity, holding-cost-blind ReT, proactive buffers that damp short memoryless disruptions, absence of any pre-action forecast channel, and serial/single-server order-invariance) supplies, for every decision right examined, a tape-independent open-loop schedule that matches feedback everywhere \u2014 the exact condition the target mechanism forbids. This makes the honest scientific product a boundary paper (Paper 2) plus a constructive-inverse/gated-resolution program (Paper 3), leaving Paper 1's eligibility-comparator and retained-learning scope intact and unduplicated."
+}

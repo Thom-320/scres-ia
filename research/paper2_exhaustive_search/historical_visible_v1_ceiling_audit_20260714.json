@@ -1,0 +1,94 @@
+{
+  "schema_version": "paper2_historical_visible_v1_ceiling_audit_v1",
+  "generated_date": "2026-07-14",
+  "governing_metric": "ret_excel_visible_v1",
+  "resource_rule": "componentwise matched named resources",
+  "audit_rule": "A tested-policy null, restricted branch oracle, non-governing metric, or incomplete schedule family is not a family-wide quantitative ceiling.",
+  "summary": {
+    "lanes_audited": 10,
+    "existing_family_wide_visible_v1_matched_resource_ceilings": 0,
+    "historical_metric_mislabels_found": ["Program H", "Program J"],
+    "paper2_confirmed": false,
+    "terminal_boundary_supported": false
+  },
+  "lanes": [
+    {
+      "lane": "Track A",
+      "artifact": {"path": "outputs/experiments/track_a_v2_conservation_5d_gate_2026-07-03/gate_summary.json", "sha256": "172cedb5cf0b7e179ce15eab79ff7d75b4b382c69b61a254978f19576c3f91b1"},
+      "strongest_existing_evidence": "192 five-dimensional constants; regime-wise maximum minus best constant 0.0041566",
+      "ceiling_failure": "Restricted maximum is a PI lower bound; the learner had 52 continuous sequential decisions and no componentwise resource envelope.",
+      "smallest_valid_repair": "Freeze Op3 orders, Op9 orders, shift-hours and buffer/ROP commitments, then certify a 52-stage finite-grid transducer/DP or a continuous global bound."
+    },
+    {
+      "lane": "Track B",
+      "artifact": {"path": "outputs/experiments/track_b_same_contract_challenge_2026-07-10/summary.json", "sha256": "d0d88c378856418c3b390ea1af4251f3e6ce52853d3c898f3fa6a6e9539dfc98"},
+      "strongest_existing_evidence": "Optimized constant beats canonical PPO by 0.00001805 with wholly negative CI",
+      "ceiling_failure": "Retires one learner claim only; static search was Sobol plus local refinement against 104 continuous weekly decisions and lacked a complete resource vector.",
+      "smallest_valid_repair": "Freeze all quantity, dispatch, shift-hour, inventory and capacity commitments, then certify a 104-stage global bound or a finite-grid transducer with discretization error."
+    },
+    {
+      "lane": "D1",
+      "artifact": {"path": "results/program_d/d1_v3_visible_branching/verdict.json", "sha256": "f8de6375ea2d8990f0afc999ff3af5d212a1d293f4e5186e7ca3fd1b4277486f"},
+      "strongest_existing_evidence": "Six-rule one-day branch oracle over 600 sampled states, mean 0.0010945",
+      "ceiling_failure": "One-day return-to-SPT branches do not bound 728 daily service choices or arbitrary queue service.",
+      "smallest_valid_repair": "Solve an arbitrary-order-service PI relaxation by MILP or min-cost flow under visible-v1 and lost/service constraints."
+    },
+    {
+      "lane": "DRA-2/2b and E",
+      "artifacts": [
+        {"path": "results/program_d/dra2b_long_horizon_calibration/verdict.json", "sha256": "79f427f67dad15c0e9356a83e8052d9516ba84673cb038977cf75c4df265726e"},
+        {"path": "results/program_e/validation/verdict.json", "sha256": "adfded49c966766eaba0acb3df679337371f71a66a6b0cde48c9bc87a17572ca"}
+      ],
+      "strongest_existing_evidence": "Restricted 14-day oracle 0.02212 and Program-E PPO delta -0.0000506",
+      "ceiling_failure": "The 987 sequences are not the 56-day frontier, the learner loss is a policy null, and departures/vehicle-hours differ.",
+      "smallest_valid_repair": "Exact or certified 56-stage HOLD/DISPATCH transducer with Pareto frontiers over departures and unavailable vehicle-hours."
+    },
+    {
+      "lane": "Program F",
+      "artifact": {"path": "results/program_f/screen/verdict.json", "sha256": "06f5c8e97e80abe87b22944d8a698b06a3b16c58aa198e3a8d70e04be62a85a5"},
+      "strongest_existing_evidence": "Four-week immediate token branches with restricted PI up to 0.022584; one depth-3 tree passes 0/24 cells",
+      "ceiling_failure": "Local branches and one tree do not bound 32 weekly token decisions.",
+      "smallest_valid_repair": "Build a 32-stage token-allocation transducer and, if PI remains material, a belief-MDP or information-relaxation bound."
+    },
+    {
+      "lane": "Program H",
+      "artifact": {"path": "results/program_h/bound/verdict.json", "sha256": "0f2ad526082bd970993dbbc6eaf549273699e14a1fbc0271fba6f722ff2b57f8"},
+      "strongest_existing_evidence": "Exact 81-sequence full-information bound 0.01641, UCB95 0.01889",
+      "evidence_metric": "ret_excel_full_ledger_order_adapter",
+      "ceiling_failure": "The endpoint is not governing visible-v1; even on its own endpoint the bound exceeds 0.01 and tested belief policies do not bound the optimum.",
+      "smallest_valid_repair": "Replay all 81 sequences through compute_order_level_ret_excel_visible_ledger, then solve the four-stage observation-history/belief tree if PI remains material."
+    },
+    {
+      "lane": "Program J",
+      "artifact": {"path": "results/paper2_maintenance/terminal_verdict.json", "sha256": "0a9fe2f59bd06ad2d8c262117dea109473ced904809b969efafeb7e6dbb9fe44"},
+      "strongest_existing_evidence": "Maximum restricted-oracle delta 0.0001338",
+      "evidence_metric": "ret_excel_full_ledger",
+      "ceiling_failure": "Wrong endpoint and incomplete calendars: the central screen uses 1,041 periodic schedules, not all 3^8.",
+      "smallest_valid_repair": "Enumerate all 6,561 eight-week schedules per tape and frozen cell under visible-v1 with complete crew and guardrail ledgers."
+    },
+    {
+      "lane": "K2",
+      "artifact": {"path": "results/k2/strong_comparators.json", "sha256": "5651897dadbb6e2627a9a944a735d3b30e363b1a855903b1bfc7ab6a26b01045"},
+      "strongest_existing_evidence": "Static, base-stock, MPC and myopic clairvoyant comparisons on cost J",
+      "ceiling_failure": "J is not canonical ReT, the greedy clairvoyant is not an upper bound, and total ordering resource is not fixed.",
+      "smallest_valid_repair": "Port outcomes to canonical OrderRecords, freeze order/dispatch budget and solve a finite-horizon resource-constrained DP with a certified continuous-action bound."
+    },
+    {
+      "lane": "K3 visible-v1",
+      "artifact": {"path": "research/paper2_exhaustive_search/k3_frontloading_dominance_certificate.json", "sha256": "4f39e1ace48346c556f641375c4a9c9b66eebdcf335624d54ac21b0b161e4ac1"},
+      "strongest_existing_evidence": "Exact full-ledger H_PI=H_obs=0 plus an explicit visible-v1 counterexample",
+      "ceiling_failure": "The dominance theorem is deliberately invalid for sparse visible-v1 because later batching can outscore earlier completion.",
+      "smallest_valid_repair": "Vectorize all 5,758,374 non-superior-budget schedules on burned tapes using the visible aggregator and preserve exact ties and guardrails."
+    },
+    {
+      "lane": "Program L",
+      "artifact": {"path": "results/paper2_search/program_l_corrective_audit.json", "sha256": "723c4c9730760b8f7444165d4ca0e021e465f2b6084c4d23bbf88cd1e918f263"},
+      "strongest_existing_evidence": "Three route doctrines and one signal heuristic; positive cells have nonpositive LCB and extra departures",
+      "ceiling_failure": "The clairvoyant is myopic and can be negative; comparators, trajectory audit and resources are incomplete; route physics is unvalidated.",
+      "smallest_valid_repair": "After Garrido route/fleet validation, build a 56-day HOLD/R1/R2 transducer with departure, vehicle-hour and payload Pareto frontiers."
+    }
+  ],
+  "current_disposition": "Historical diagnostic only. Visible-v1 is globally quarantined; no lane may be repaired or promoted by completing a visible-v1 ceiling.",
+  "recommended_order": ["Program J request-snapshot-v2 108-cell resource-only PI screen", "M/T/R v2 key-v5/global-bound redesign after Program J", "Do not replay Program H's action-dead adapter", "Other families only after their registered domain/action/resource gates"],
+  "claim_limit": "This audit identifies missing ceilings and metric/comparator defects. It is not evidence that any lane is positive, and it is not a terminal boundary certificate."
+}

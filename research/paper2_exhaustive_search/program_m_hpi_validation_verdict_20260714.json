@@ -1,0 +1,58 @@
+{
+  "schema_version": "program_m_hpi_validation_verdict_v1",
+  "generated_date": "2026-07-14",
+  "contract_id": "program_m_shared_lift_reservation_v1",
+  "effective_verdict": "STOP_PROGRAM_M_NO_VALIDATED_CONNECTED_HPI_REGION__NO_HOBS_OR_LEARNER",
+  "scientific_commit": "c03866a75a11559120f21c7f3fa504b856af6691",
+  "screen_result_sha256": "54d26a8c2e8651159d33694ad56c311f7cef8e6483d9caeb1a449a14b14e8101",
+  "validation_result": {
+    "path": "results/program_m/hpi_validation_v1/result.json",
+    "sha256": "14acf59d5a312a5a1e5cfdf2c1cf670f2e1fdbd1529efa0377b3ed8fb8661d6c",
+    "completed_shards": 144,
+    "expected_shards": 144,
+    "des_evaluations": 36864,
+    "watcher_terminal_state": "completed_verified",
+    "watcher_started_before_science": true,
+    "watcher_scope": "ENTIRE_SCIENTIFIC_SESSION_INCLUDING_REPARENTED_WORKERS",
+    "stderr_bytes": 0,
+    "result_progress_hash_match": true,
+    "remote_archive_sha256": "0622f1517a78573ef7d26f70b171dce923987a8def5a5ec9767ece1e3c4848c1",
+    "remote_file_manifest_sha256": "91902a2024d24c52cc85a4b606a9c70fe110b6277e1ae3438e64410af875567e",
+    "retrieved_files_checked": 162,
+    "retrieval_hash_failures": 0
+  },
+  "inference": {
+    "method": "paired_basic_max_error_one_sided_familywise_95",
+    "bootstrap_resamples": 10000,
+    "static_calendar_reselected_in_every_cell_and_resample": true,
+    "critical_max_error": 0.018368737741680827,
+    "practical_lcb_gate": 0.01,
+    "cells": [
+      {"cell_id": "h50_d120_s70", "observed_h_pi": 0.02737500037647318, "simultaneous_lcb95": 0.009006262634792352, "passes": false},
+      {"cell_id": "h50_d120_s85", "observed_h_pi": 0.02737500037647318, "simultaneous_lcb95": 0.009006262634792352, "passes": false},
+      {"cell_id": "h75_d120_s70", "observed_h_pi": 0.04114780825740077, "simultaneous_lcb95": 0.02277907051571994, "passes": true},
+      {"cell_id": "h75_d120_s85", "observed_h_pi": 0.04114780825740077, "simultaneous_lcb95": 0.02277907051571994, "passes": true},
+      {"cell_id": "h75_d72_s70", "observed_h_pi": 0.011581271684172043, "simultaneous_lcb95": -0.006787466057508785, "passes": false},
+      {"cell_id": "h75_d72_s85", "observed_h_pi": 0.011581271684172043, "simultaneous_lcb95": -0.006787466057508785, "passes": false}
+    ],
+    "passing_connected_components": [],
+    "selected_cell": null
+  },
+  "interpretation": "Program M contains large perfect-information headroom in the high-hazard, 120-hour cell, but the preregistered least-favorable connected-region criterion fails. The headroom is therefore not stable over the adjacent plausible duration/hazard envelope and cannot authorize observable-policy fitting.",
+  "stop_rule_applied": "No passing connected region after simultaneous H_PI validation; stop before H_obs.",
+  "seed_state_after_validation": {
+    "7300001-7300024": "BURNED_SCREEN",
+    "7300025-7300048": "BURNED_H_PI_VALIDATION",
+    "7300049-7300096": "SEALED_H_OBS_FIT_NOT_AUTHORIZED",
+    "7300097-7300144": "SEALED_H_OBS_VALIDATION_NOT_AUTHORIZED"
+  },
+  "prohibited_claims": [
+    "No validated Program M H_PI region",
+    "No Program M H_obs",
+    "No learned or neural advantage",
+    "No Paper 2 confirmation",
+    "No Paper 3 authorization",
+    "No rescue by adding or tuning Program M cells after validation"
+  ],
+  "family_scope": "This closes only the frozen Program M protected-lift contract. It does not prove a global impossibility for all advance-reservation physics. Reopening requires a materially different mechanism, not a new hazard/duration/signal cell."
+}

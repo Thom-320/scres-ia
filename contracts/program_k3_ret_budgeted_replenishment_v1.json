@@ -1,0 +1,48 @@
+{
+  "contract_id": "program_k3_ret_budgeted_replenishment_v1",
+  "status": "FROZEN_AFTER_DEVELOPMENT_BEFORE_CONFIRMATION_OR_LEARNER",
+  "supersedes_for_ret_claim": "program_k2_holding_cost",
+  "primary_metric": "ret_excel_full_ledger_order",
+  "question": "Can observable feedback improve order-level ReT by reallocating an identical finite replenishment budget over time?",
+  "physics": {
+    "episode_weeks": 8,
+    "decision_epoch_weeks": 1,
+    "lead_time_weeks": 1,
+    "initial_inventory_D0": 1.0,
+    "total_replenishment_budget_D0": 10.0,
+    "weekly_order_cap_D0": 1.5,
+    "order_grid_D0": [0.0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5],
+    "shelf_life_weeks": 156,
+    "holding_cost_in_primary": false,
+    "equal_resource_budget_by_construction": true
+  },
+  "observations": [
+    "on_hand", "pipeline", "backlog", "remaining_budget",
+    "weeks_remaining", "noisy_next_week_demand_forecast"
+  ],
+  "comparators": [
+    "all_periodic_calendars_period_1_to_4_within_budget",
+    "budgeted_sS",
+    "inventory_only_paced_replenishment",
+    "signal_inventory_mpc"
+  ],
+  "seed_universes": {
+    "development": [6700001, 6700220],
+    "confirmation": [6800001, 6800120],
+    "learner_virgin": [6900001, 6900120]
+  },
+  "gates": {
+    "ret_delta_min": 0.01,
+    "ret_ci95_lower_min": 0.0,
+    "ret_quantity_noninferior": true,
+    "lost_orders_noninferior": true,
+    "total_ordered_not_greater_than_comparator": true,
+    "confirmation_required_before_learner": true
+  },
+  "forbidden": [
+    "use J or holding cost as the primary endpoint",
+    "open learner seeds before confirmation",
+    "increase budget for the adaptive policy",
+    "call this full-DES evidence before porting the contract"
+  ]
+}

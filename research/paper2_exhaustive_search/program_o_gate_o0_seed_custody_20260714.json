@@ -1,0 +1,55 @@
+{
+  "schema_version": "program_o_gate_o0_seed_custody_v1",
+  "frozen_date": "2026-07-14",
+  "authoritative_local_ledger": "research/paper2_exhaustive_search/seed_burn_ledger.json",
+  "contract": "contracts/program_o_full_action_transducer_v1.json",
+  "historical_blocks": [
+    {
+      "range": [7400001, 7400024],
+      "role": "historical binary transducer screen",
+      "status": "BURNED",
+      "evidence": "results/program_o/exact_transducer_screen_v1/result.json"
+    },
+    {
+      "range": [7400025, 7400048],
+      "role": "historical binary transducer validation",
+      "status": "BURNED",
+      "evidence": "results/program_o/exact_transducer_validation_v1/result.json"
+    }
+  ],
+  "gate_o0_blocks": [
+    {
+      "range": [7410001, 7410024],
+      "role": "complete 4^8 Gate O-0 screen; development only",
+      "status": "SEALED_NOT_OPENED",
+      "authorization": "May open only after the O-0 contract, producer, tests, metric boundary fix, and this custody file are committed."
+    },
+    {
+      "range": [7410025, 7410048],
+      "role": "complete 4^8 Gate O-0 fresh validation; explicitly not Paper-2 virgin",
+      "status": "SEALED_NOT_AUTHORIZED",
+      "authorization": "May open only after a passing screen and an additive validation freeze are committed."
+    }
+  ],
+  "preserved_blocks": [
+    {
+      "range": [7400049, 7400072],
+      "role": "full-DES H_PI development",
+      "status": "SEALED_NOT_OPENED"
+    },
+    {
+      "range": [7400073, 7400096],
+      "role": "full-DES H_PI validation",
+      "status": "SEALED_NOT_OPENED"
+    },
+    {
+      "range": [7400097, 7400192],
+      "role": "H_obs development and validation",
+      "status": "SEALED_NOT_AUTHORIZED"
+    }
+  ],
+  "paper2_virgin_status": "NO_PROGRAM_O_PAPER2_VIRGIN_BLOCK_ALLOCATED_OR_OPENED",
+  "h_obs_authorized": false,
+  "learner_authorized": false,
+  "paper3_authorized": false
+}

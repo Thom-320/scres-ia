@@ -1,0 +1,54 @@
+{
+  "H_PI_dev": [
+    0.014862102437696968,
+    0.011430821545486046,
+    0.018441935486629302
+  ],
+  "abab": [
+    "A",
+    "B",
+    "A",
+    "B"
+  ],
+  "best_belief_policy": "belief_sig_dem",
+  "delta_min": 0.01,
+  "filter_logloss": {
+    "filter_informative": true,
+    "filtered": 0.22999555004984992,
+    "marginal_prior": 1.001597675909121
+  },
+  "gate": "PROGRAM_H_BELIEF_AUDIT_DEVELOPMENT",
+  "interpretation": "H_DEV_CASE_A_INFORMATION_LIMITED_STRONG_PRIOR",
+  "mean_ret_order": {
+    "ABAB": 0.5140746723459503,
+    "belief_sig_dem": 0.4931647128374284,
+    "belief_sig_only": 0.4931647128374284,
+    "pi_oracle": 0.5289367747836472,
+    "qmdp_nowcast": 0.4931647128374284
+  },
+  "minus_ABAB_ci95": {
+    "belief_sig_dem": [
+      -0.020909959508521824,
+      -0.02730284116754315,
+      -0.014548451904675982
+    ],
+    "belief_sig_only": [
+      -0.020909959508521824,
+      -0.02730284116754315,
+      -0.014548451904675982
+    ],
+    "pi_oracle": [
+      0.014862102437696968,
+      0.011430821545486046,
+      0.018441935486629302
+    ],
+    "qmdp_nowcast": [
+      -0.020909959508521824,
+      -0.02730284116754315,
+      -0.014548451904675982
+    ]
+  },
+  "n": 200,
+  "note": "DEVELOPMENT estimate. belief cover policy uses the augmented semi-Markov filter (O0: signal +/- inventory-revealed demand). QMDP-nowcast is a current-tempo clairvoyant diagnostic. If no belief policy beats ABAB by delta_min here, the LOCKED 1070001 confirmatory + rigorous info-relaxation dual bound follow (gated).",
+  "universe": "1060001 development (locked 1070001 NOT opened)"
+}

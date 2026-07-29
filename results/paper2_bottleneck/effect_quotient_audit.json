@@ -1,0 +1,990 @@
+{
+  "collision_validation": {
+    "allocation_destination_hours_differ": true,
+    "calendar_a": "MTTMMMMMMMMMMMMMMMMMMMMM",
+    "calendar_a_digest": "00c0b86633a9c24a3c5e4613452f9a4e189b68effc481f7ac9980d49813480b7",
+    "calendar_b": "MRRMMMMMMMMMMMMMMMMMMMMM",
+    "calendar_b_digest": "00c0b86633a9c24a3c5e4613452f9a4e189b68effc481f7ac9980d49813480b7",
+    "differing_active_weeks": [
+      1,
+      2
+    ],
+    "scope_warning": "Validates the implementation quotient for selected terminal outcomes on one burned tape; it is not itself an H_PI result.",
+    "seed": 1110001,
+    "selected_outcome_keys": [
+      "ret_excel",
+      "ration_ret_excel",
+      "ret_excel_cvar05",
+      "ret_excel_cvar10",
+      "service_loss_auc_ration_hours",
+      "n_lost",
+      "lost_orders",
+      "backorder_qty_final",
+      "backlog_age_max",
+      "mass_residual",
+      "reserve_units_issued",
+      "consumed_base_threat_sha256",
+      "realized_demand_sha256"
+    ],
+    "selected_outcomes_exactly_equal": true,
+    "week_1_2_event_masks": [
+      [
+        true,
+        false,
+        false
+      ],
+      [
+        true,
+        false,
+        false
+      ]
+    ]
+  },
+  "contract_id": "paper2_bottleneck_migration_v1",
+  "execution_protocol": [
+    "Enumerate one representative calendar for every tape-specific effect word.",
+    "Run the canonical DES once per representative and store all endpoints, guardrails, reserve ledgers and hashes.",
+    "Enumerate all 11,184,811 calendars using table lookups across the 60 calibration tapes to obtain the exact open-loop frontier.",
+    "Take the per-tape maximum across each locked tape table for the resource-restricted PI result.",
+    "Apply the frozen reserve-resource rule before optimization and rerun selected winners through run_policy as an integrity check."
+  ],
+  "full_calendar_count": 11184811,
+  "not_done": [
+    "No effect table DES executions have been run.",
+    "No open-loop frontier or PI ceiling has been computed.",
+    "Reserve issue/replenishment semantics and Garrido validation of one fungible cross-stage team remain unresolved."
+  ],
+  "proof": {
+    "dwell_rule": "No active-action switches in adjacent weeks; week 0 is M.",
+    "effect_word": "e_tau,w(a)=(I[R11_w and a=M], I[R22_or_R23_w and a=T], I[R24_w and a=R])",
+    "equivalence": "For a fixed tape, feasible calendars with the same effect word have identical DES outcomes and reserve use; allocation-destination logs may differ.",
+    "implementation_scope": "BottleneckController has no other action-dependent transition: condition is action-independent; reserve target is fixed; R11 reads M, R22/R23 read T, and R24 reads R."
+  },
+  "schema_version": "paper2_bottleneck_effect_quotient_v1",
+  "scientific_status": "EXACT_ACCELERATION_DESIGN_NOT_H_PI_RESULT",
+  "splits": {
+    "calibration": {
+      "distinct_effect_executions": 30765821,
+      "n_tapes": 60,
+      "per_tape": [
+        {
+          "distinct_effect_words": 493880,
+          "seed": 1100001,
+          "tape_sha256": "1da13bb9a9af29ce8d44751c11b0f7ffd94c6a279e97056e3badb4219a9558c6"
+        },
+        {
+          "distinct_effect_words": 371129,
+          "seed": 1100002,
+          "tape_sha256": "da6cd1623fd5ddaa06e90807e60db396e35385eb0b131a90030014e308c67212"
+        },
+        {
+          "distinct_effect_words": 285779,
+          "seed": 1100003,
+          "tape_sha256": "4e90655795cab48367181fb046f89152724a16b498adb22d76821238657aed19"
+        },
+        {
+          "distinct_effect_words": 360960,
+          "seed": 1100004,
+          "tape_sha256": "1c77671ccfd5cd607687a6b3eb734192c3afb62725948535fec61287d8036171"
+        },
+        {
+          "distinct_effect_words": 1296206,
+          "seed": 1100005,
+          "tape_sha256": "8f2759516bc9696859cd4c82b754e81a5acaf663d653bedbef200087e87d620c"
+        },
+        {
+          "distinct_effect_words": 394818,
+          "seed": 1100006,
+          "tape_sha256": "f59922008e0058569b19059a088a69803cca6ceecc16a8e6f71123be13447d30"
+        },
+        {
+          "distinct_effect_words": 174876,
+          "seed": 1100007,
+          "tape_sha256": "5094d8784bf4fb1937a20d55f4315dbe1ccc4d4a4c76cc761fdd0bebdf8e95b5"
+        },
+        {
+          "distinct_effect_words": 147664,
+          "seed": 1100008,
+          "tape_sha256": "b3f4aae19751b557501d68fb9e4cc452b483a435b7a5df4c5b7f2aae8b6bbfec"
+        },
+        {
+          "distinct_effect_words": 730716,
+          "seed": 1100009,
+          "tape_sha256": "963563f44c4b42853f1ede3919a6d63c02e87afa62e429b6a221d35f41e34969"
+        },
+        {
+          "distinct_effect_words": 475938,
+          "seed": 1100010,
+          "tape_sha256": "d594200ed2cce62fc27c530420c986f695990c9271986eefb48f8548140ca872"
+        },
+        {
+          "distinct_effect_words": 205452,
+          "seed": 1100011,
+          "tape_sha256": "450766589b68131e105b41ea9a5068a225c380e2b80a0bbe24f98cb6a68aa4e0"
+        },
+        {
+          "distinct_effect_words": 366914,
+          "seed": 1100012,
+          "tape_sha256": "8fb5e3f2c6f83f44a946f88a85a746dc6bbc95ba07736b2b57f0b0da8dbd38af"
+        },
+        {
+          "distinct_effect_words": 145965,
+          "seed": 1100013,
+          "tape_sha256": "646bbec942c9531a1d56f558257707e171a341d305bdc4946b8d5ba689244d3d"
+        },
+        {
+          "distinct_effect_words": 663146,
+          "seed": 1100014,
+          "tape_sha256": "de6e50266da4b59da3508fb7262d556ea61654db621fe11a9a07a6992abbec6a"
+        },
+        {
+          "distinct_effect_words": 202968,
+          "seed": 1100015,
+          "tape_sha256": "1a9b5c5053e3af9d3e5356680443b4ba809bfbec9c54fe10265a334d82a85905"
+        },
+        {
+          "distinct_effect_words": 224640,
+          "seed": 1100016,
+          "tape_sha256": "52d81b70277d4b754df57dee62a3f860773fc8bf68ffb8243f8d54ca594f8536"
+        },
+        {
+          "distinct_effect_words": 772240,
+          "seed": 1100017,
+          "tape_sha256": "eda34236f8219016bf2f9207e1fd720891ba388da065cf76272e42d18d030fc3"
+        },
+        {
+          "distinct_effect_words": 1173646,
+          "seed": 1100018,
+          "tape_sha256": "1def741a2bf953403345f0964727d7c9ae60bd70bf71dba4c73feb03fb5bd02a"
+        },
+        {
+          "distinct_effect_words": 50666,
+          "seed": 1100019,
+          "tape_sha256": "992fd0dd2d5cbc8665f37a0837b1f191224f8fb59bfd722d4189e3680453aa77"
+        },
+        {
+          "distinct_effect_words": 334864,
+          "seed": 1100020,
+          "tape_sha256": "3b7fc0a41a744a85c58fd67e6313c9ad4845886ea310d7e0416c527a4d421458"
+        },
+        {
+          "distinct_effect_words": 1275982,
+          "seed": 1100021,
+          "tape_sha256": "55c7c34c24d3c49c6c93fbde0c6005653f88712047dcdd066724325ee3881441"
+        },
+        {
+          "distinct_effect_words": 802340,
+          "seed": 1100022,
+          "tape_sha256": "4713199a4f41ea9d3180f01f75755dda18d1dd0057d5a3a66b370e33a2c58da5"
+        },
+        {
+          "distinct_effect_words": 172920,
+          "seed": 1100023,
+          "tape_sha256": "3aa9d420a452e2b2b945b531b2cd632977d696a33f67b96c4ac5938de36afa8c"
+        },
+        {
+          "distinct_effect_words": 357966,
+          "seed": 1100024,
+          "tape_sha256": "6bd840be7933ae943178b6df1ff3510899658310fa854fd91496a68f1dd4d436"
+        },
+        {
+          "distinct_effect_words": 416340,
+          "seed": 1100025,
+          "tape_sha256": "637f0dc967037407d03772b79b681885bd7c7affb77c430224f33d51d96748c8"
+        },
+        {
+          "distinct_effect_words": 259553,
+          "seed": 1100026,
+          "tape_sha256": "74e6cfbdc2065e8763dcfc7a3aef5237d9a2742aeebe6848bb2407ff0ca194ef"
+        },
+        {
+          "distinct_effect_words": 1022814,
+          "seed": 1100027,
+          "tape_sha256": "4d6a113f9eab162599cfa9a52d2a06d1e40d83f4b97c8cdd8ea135736c6fbfbf"
+        },
+        {
+          "distinct_effect_words": 1697376,
+          "seed": 1100028,
+          "tape_sha256": "8cab5f21146be97168dd5e1e788c10ae346837ee5eff169a2f5a3b76514b812d"
+        },
+        {
+          "distinct_effect_words": 576040,
+          "seed": 1100029,
+          "tape_sha256": "0371983389211adac7ee959b01d784b4e8be01806368e603f7af7fdf5d33e0d4"
+        },
+        {
+          "distinct_effect_words": 12852,
+          "seed": 1100030,
+          "tape_sha256": "eef5f1a656058424fdff1ac4ed06404f54563749466311fc17c5ae8685b02c53"
+        },
+        {
+          "distinct_effect_words": 383880,
+          "seed": 1100031,
+          "tape_sha256": "231661a5cc30bf1b67afdc74d4ffde59d7018a43484ffdba3c6b7e9bd801acbb"
+        },
+        {
+          "distinct_effect_words": 353202,
+          "seed": 1100032,
+          "tape_sha256": "4e1c1965b619aa865faff4ee87e9086d26d3eb3e4bde1632cc04d9dd068272f2"
+        },
+        {
+          "distinct_effect_words": 433248,
+          "seed": 1100033,
+          "tape_sha256": "d145b3725fa95eb8c9397e0cba61e5ff60c7d365f8488c03a6008f68a281f21c"
+        },
+        {
+          "distinct_effect_words": 172016,
+          "seed": 1100034,
+          "tape_sha256": "da9876104951f8feea10b63bf693c24d39ccf137c138bb99be350ee3e68dbad9"
+        },
+        {
+          "distinct_effect_words": 474596,
+          "seed": 1100035,
+          "tape_sha256": "845edf00bb1a8c85412fe8eabca1e5c7b461f0a5482ee6dff69f788bf282bb94"
+        },
+        {
+          "distinct_effect_words": 67840,
+          "seed": 1100036,
+          "tape_sha256": "9288a88304fa928e9e654eec46a6deb2e00fc4be4d0ca3fabf45e70442918c12"
+        },
+        {
+          "distinct_effect_words": 188595,
+          "seed": 1100037,
+          "tape_sha256": "a4c1a8f001e91bd7a41d5da1060ad3ba3cc19e85e7a09683a1584753f01c119f"
+        },
+        {
+          "distinct_effect_words": 166925,
+          "seed": 1100038,
+          "tape_sha256": "afec6db69d317c564309293ead875f41ea48537299a01afdfe5f19e2a3d7366f"
+        },
+        {
+          "distinct_effect_words": 550824,
+          "seed": 1100039,
+          "tape_sha256": "1db4c23be860d7c4545f35442d68a5bdd2b5668b00e7815e415a4055e2d70e71"
+        },
+        {
+          "distinct_effect_words": 261948,
+          "seed": 1100040,
+          "tape_sha256": "cc3e828eb217d0c9ba08d992bef4bfe06c5ff6e5bd52b95a0403bcf5784281ce"
+        },
+        {
+          "distinct_effect_words": 217697,
+          "seed": 1100041,
+          "tape_sha256": "ef8869e8733eaed387d0a128f9c5bd2c8200d4c48c3f4a8114522f0faf004ffe"
+        },
+        {
+          "distinct_effect_words": 778159,
+          "seed": 1100042,
+          "tape_sha256": "c53c641cae699d39e289e3f525eb913230a36b0d63a6464dad227f36fb8490dc"
+        },
+        {
+          "distinct_effect_words": 341708,
+          "seed": 1100043,
+          "tape_sha256": "d2061b3036e609e1559b8180140681650e92c7621a075d889e8573293710ec74"
+        },
+        {
+          "distinct_effect_words": 747988,
+          "seed": 1100044,
+          "tape_sha256": "f6683d0bd272790f3748c78c5eeb6a47b0b7a7ed61978b83bf22a4c16ef340ff"
+        },
+        {
+          "distinct_effect_words": 271244,
+          "seed": 1100045,
+          "tape_sha256": "3b8f2fcc7334cdebdd79160e3c1ab9a5df7c2d4f9a92a5070507d2138821aea6"
+        },
+        {
+          "distinct_effect_words": 854388,
+          "seed": 1100046,
+          "tape_sha256": "b8a7276ed85a7a8973af21083c82ca1a784c30b698dfa928cdeae7a2d42700fa"
+        },
+        {
+          "distinct_effect_words": 336474,
+          "seed": 1100047,
+          "tape_sha256": "f5c4a6b7413cf05d0fcc24e5026df8dbb42553e66805cf5fb3bf1b12320a275d"
+        },
+        {
+          "distinct_effect_words": 60720,
+          "seed": 1100048,
+          "tape_sha256": "393184f7c5b80e153b0f8f7543546b6551d1a37d9661f14ce611e05190d9c038"
+        },
+        {
+          "distinct_effect_words": 257728,
+          "seed": 1100049,
+          "tape_sha256": "82b7bc2cd00ff5068c55ceb66dad0a46811472ab939d7e817d375c3eace1b4cc"
+        },
+        {
+          "distinct_effect_words": 143928,
+          "seed": 1100050,
+          "tape_sha256": "f1c28de1d2b3f56181f2a27eff5d04009cde6764e6596f6b5cb371d4c41b347f"
+        },
+        {
+          "distinct_effect_words": 356976,
+          "seed": 1100051,
+          "tape_sha256": "839c9c1da86bebb3769fe88a59fca07f5de4055dbd7ec76ba33cc9786e978711"
+        },
+        {
+          "distinct_effect_words": 111228,
+          "seed": 1100052,
+          "tape_sha256": "c2614354cd0633e7a8fca6410f7c8b5552f291ae1919746fe7b82d8961cc2f18"
+        },
+        {
+          "distinct_effect_words": 1465696,
+          "seed": 1100053,
+          "tape_sha256": "daf8bff1b97205b6d48a7b5e0cf8d1cea897ac5ed7128e8ad45bca43897ce330"
+        },
+        {
+          "distinct_effect_words": 420192,
+          "seed": 1100054,
+          "tape_sha256": "02df028a26e9313c6d3e54b324fbe55cbced685780f1b5d2122c4569e40dbaf9"
+        },
+        {
+          "distinct_effect_words": 50922,
+          "seed": 1100055,
+          "tape_sha256": "683605438e0ba70a7e76a9fc6757ff4e6925fdc86db0dcff21c94c9f15e445ff"
+        },
+        {
+          "distinct_effect_words": 1415517,
+          "seed": 1100056,
+          "tape_sha256": "79de720e64c6a9d7b9c813c773c34edfa849c4016c33ad439001e7bf5f36dca3"
+        },
+        {
+          "distinct_effect_words": 553968,
+          "seed": 1100057,
+          "tape_sha256": "e638e7a8252d9d48bafec032d3585cdc88f042ac2797680e6f2d8d2849e3d347"
+        },
+        {
+          "distinct_effect_words": 751644,
+          "seed": 1100058,
+          "tape_sha256": "e4201bc52eab33cd735c4a4504e04773f1174779ec62537c6317a567154a3f8a"
+        },
+        {
+          "distinct_effect_words": 3077888,
+          "seed": 1100059,
+          "tape_sha256": "469a723658f559effd79a0a2f073ccf48a119fcd5281ba619a71c87266ebb129"
+        },
+        {
+          "distinct_effect_words": 32032,
+          "seed": 1100060,
+          "tape_sha256": "c89b311815a5700c15520562cc7357f712a6f22ed5ecd0cbacb10c45115f69b6"
+        }
+      ],
+      "seed_start": 1100001
+    },
+    "locked": {
+      "distinct_effect_executions": 57918762,
+      "n_tapes": 120,
+      "per_tape": [
+        {
+          "distinct_effect_words": 124516,
+          "seed": 1110001,
+          "tape_sha256": "5bf4e5e932e73732269e4185681edb8137c19b98d7a5c8459816642c02044dec"
+        },
+        {
+          "distinct_effect_words": 89440,
+          "seed": 1110002,
+          "tape_sha256": "4a2c0288a75fa87e13d264ce1095f1be5c04857d0c5f0fd29d9183e59c6f8b47"
+        },
+        {
+          "distinct_effect_words": 488986,
+          "seed": 1110003,
+          "tape_sha256": "8ddc8fe7f4817f1ea70a1553639c6fcd3d461b8dc0fe1685d10e5234443a68e4"
+        },
+        {
+          "distinct_effect_words": 295049,
+          "seed": 1110004,
+          "tape_sha256": "0b15812986710e9d54fb36979862a44052802ff58ad000b4c63407bf38d09e08"
+        },
+        {
+          "distinct_effect_words": 603348,
+          "seed": 1110005,
+          "tape_sha256": "ea360ceead88bd78d817fe5f54c1f7331077bfc6e19032a3d2e37cd7fce015c1"
+        },
+        {
+          "distinct_effect_words": 1875648,
+          "seed": 1110006,
+          "tape_sha256": "6d55599cc512a2310ea7889a4c17fe69e64d84c372a3997953652983787d4afb"
+        },
+        {
+          "distinct_effect_words": 275328,
+          "seed": 1110007,
+          "tape_sha256": "2cd35e301d6fceb48f75d5b1c1bd3fc9b1facf604e229ddd63480485f3730364"
+        },
+        {
+          "distinct_effect_words": 388284,
+          "seed": 1110008,
+          "tape_sha256": "acedf24f0a0be618875351e730bc0a5c4bee7e2b4d98af8cbfe32a34d805ddfd"
+        },
+        {
+          "distinct_effect_words": 148944,
+          "seed": 1110009,
+          "tape_sha256": "ccb5d210c0e972bcd81a49822dd873b1385ad96e4d79c69bd3110f395d53acf9"
+        },
+        {
+          "distinct_effect_words": 209083,
+          "seed": 1110010,
+          "tape_sha256": "276c96ca63328249119030cd1e1b5422d8ac6ed56b1853737c11aa2c519aec3f"
+        },
+        {
+          "distinct_effect_words": 168956,
+          "seed": 1110011,
+          "tape_sha256": "e1145658eb97dc83897827f8f83fd6febd588cd149e217bfb669fa3602633aa5"
+        },
+        {
+          "distinct_effect_words": 483226,
+          "seed": 1110012,
+          "tape_sha256": "558cd360db07dfb3562650d199a252a5fd29826a7c9f6b5185fabc8cff2d1e95"
+        },
+        {
+          "distinct_effect_words": 1323834,
+          "seed": 1110013,
+          "tape_sha256": "f27373dda8096411efea03992793823a418903c3df6fa9219621e13a2bb5cab9"
+        },
+        {
+          "distinct_effect_words": 56052,
+          "seed": 1110014,
+          "tape_sha256": "62e61b24f92da2374ebd003c1b4d17c74895dfcd8fd0bef758dbcfdbdfc76562"
+        },
+        {
+          "distinct_effect_words": 937260,
+          "seed": 1110015,
+          "tape_sha256": "26328e23d70a3df42e8bb83e13b8e78efb483d07c13d20c025e4710bd2e3fb14"
+        },
+        {
+          "distinct_effect_words": 461878,
+          "seed": 1110016,
+          "tape_sha256": "ef9fba062505a1b727e134c3d970768c92e447f1c3dd9af5b9dd01026b8c9987"
+        },
+        {
+          "distinct_effect_words": 1042544,
+          "seed": 1110017,
+          "tape_sha256": "4bb0e1cb5bc8fd865676f6d658d35bba3db2d912efd3846d3a599333b5971025"
+        },
+        {
+          "distinct_effect_words": 150658,
+          "seed": 1110018,
+          "tape_sha256": "6665c9d428d96da231d8214aae3a1e4946e0c014dd26a4424f9f32fb93fdae8b"
+        },
+        {
+          "distinct_effect_words": 315452,
+          "seed": 1110019,
+          "tape_sha256": "dd30e87c262764ac6371a1a96e61bc670bbfe0bb439152ddfb9eafefd78e915f"
+        },
+        {
+          "distinct_effect_words": 1256369,
+          "seed": 1110020,
+          "tape_sha256": "2a5d23bc0a207714d453aecd01faa56cf0f736757df0cb31e8db90bdcf0e7ae4"
+        },
+        {
+          "distinct_effect_words": 270198,
+          "seed": 1110021,
+          "tape_sha256": "ae1e23ee130ac54bb86dfae375bafcb536b0051cf7a6b84e319d8e63cf6848f8"
+        },
+        {
+          "distinct_effect_words": 1046829,
+          "seed": 1110022,
+          "tape_sha256": "a569a641ecdb78937d5fd0766e5dfa2fedc65a516550511fd773b064f3002955"
+        },
+        {
+          "distinct_effect_words": 103608,
+          "seed": 1110023,
+          "tape_sha256": "a55a80034ff9854c2ef3f2c0b794e94b44a7c1ea9051650be34a0a357330cef3"
+        },
+        {
+          "distinct_effect_words": 923128,
+          "seed": 1110024,
+          "tape_sha256": "13bf162788b43a255fb288c4fc328f97f2e325662991974a58bd1b6ff9b3e505"
+        },
+        {
+          "distinct_effect_words": 2184155,
+          "seed": 1110025,
+          "tape_sha256": "eab1dbb8891bdcc078882466d27ecf1a1cd143fff3305cf98a5d7af2491f2033"
+        },
+        {
+          "distinct_effect_words": 1426568,
+          "seed": 1110026,
+          "tape_sha256": "3c88941184e093cb103e1a75631795735fe3889080beb679fe25ab675694f4c9"
+        },
+        {
+          "distinct_effect_words": 739467,
+          "seed": 1110027,
+          "tape_sha256": "7bac0d0d492ec1e0bdfe7ddfc9429f8c223a9e1b3f5f9015bb4ec4c905037a7f"
+        },
+        {
+          "distinct_effect_words": 503136,
+          "seed": 1110028,
+          "tape_sha256": "25ac325e92f22ab5eb4eb9f50a2ba28a160443d8a159eed022e0460beb5d7d6a"
+        },
+        {
+          "distinct_effect_words": 131328,
+          "seed": 1110029,
+          "tape_sha256": "93770c18e858bd6049cc2d7ee3257c78692e524604ff165c139cd6e6de4d30ed"
+        },
+        {
+          "distinct_effect_words": 175768,
+          "seed": 1110030,
+          "tape_sha256": "892b34b33f579f3b3cc9b59b340c2991d6bb91f4900c71e2e559c8d07ac1b01f"
+        },
+        {
+          "distinct_effect_words": 358608,
+          "seed": 1110031,
+          "tape_sha256": "ec86d58d38b3ebe1f9a46adc6de465ecb4fd61da3b2423dff1a875d56b548266"
+        },
+        {
+          "distinct_effect_words": 334020,
+          "seed": 1110032,
+          "tape_sha256": "9a8312f96ae43e6c9be65534f60869ed5fc59f44637e7e2614cf6692091ac9d5"
+        },
+        {
+          "distinct_effect_words": 47262,
+          "seed": 1110033,
+          "tape_sha256": "d280d4130bb946e3dbcbb521f7c40a7d1a87ede193e7c74aa62552d27cf778eb"
+        },
+        {
+          "distinct_effect_words": 507992,
+          "seed": 1110034,
+          "tape_sha256": "38d1bfe08f391b33a14b2ae9138c5451502d05d977f331f2f60c3e8a55ec4ebd"
+        },
+        {
+          "distinct_effect_words": 312480,
+          "seed": 1110035,
+          "tape_sha256": "9099cbd40f998c26781e181b4b7b08a28015aae776c39ba08e61a885dd2f87d1"
+        },
+        {
+          "distinct_effect_words": 457920,
+          "seed": 1110036,
+          "tape_sha256": "6704b5c9d286a6b587c757cf9a22d570994f2e4b3a6ca41c8f37ac8c65b96e6e"
+        },
+        {
+          "distinct_effect_words": 353210,
+          "seed": 1110037,
+          "tape_sha256": "62e0fc8b3fac331d11155aa501a04f14de888794893a7a8384c8937050840726"
+        },
+        {
+          "distinct_effect_words": 953991,
+          "seed": 1110038,
+          "tape_sha256": "c034d74a66dc183fbef456c7772851b3950f86603cc0d2427aaab837a428e417"
+        },
+        {
+          "distinct_effect_words": 497700,
+          "seed": 1110039,
+          "tape_sha256": "975ef24bef0015e9b10cb08b7e8b023a2a3a538d00b8ee771f2e85efc9097daa"
+        },
+        {
+          "distinct_effect_words": 561494,
+          "seed": 1110040,
+          "tape_sha256": "4965984a73f5f70d231c8b0496e624e9bbb7e753591ce26b1f72a38f87895bc4"
+        },
+        {
+          "distinct_effect_words": 318132,
+          "seed": 1110041,
+          "tape_sha256": "02908a946331e7f379d39b5c6b90c8fa2946dbe31b3c81446d4918bcf45e63e4"
+        },
+        {
+          "distinct_effect_words": 703880,
+          "seed": 1110042,
+          "tape_sha256": "1ca59aaafd3a4b956367b560a59e56c4792c71d4feb6a666da78cc8e49e80b7a"
+        },
+        {
+          "distinct_effect_words": 136440,
+          "seed": 1110043,
+          "tape_sha256": "181f9940f52d7a0413ba2c17911bf5f6b02fbf6a464a6344851e8a0dc92a265c"
+        },
+        {
+          "distinct_effect_words": 218856,
+          "seed": 1110044,
+          "tape_sha256": "015716e68630e7693d1eaca83f0779e72459183fbe168299412e4611858afc42"
+        },
+        {
+          "distinct_effect_words": 686992,
+          "seed": 1110045,
+          "tape_sha256": "6938dcd506fefdd6349eb511b84af33bb4e48d5ddf8fdafb14f7e97a51fda862"
+        },
+        {
+          "distinct_effect_words": 618766,
+          "seed": 1110046,
+          "tape_sha256": "fbce159895bdd4668a277418318d454ccd2cb6059cf154f40f3a0996d53d0af9"
+        },
+        {
+          "distinct_effect_words": 511312,
+          "seed": 1110047,
+          "tape_sha256": "c5dc5826c7e847dd92318e3e4c8eeabf6a0fb56bc9e5baea7050e12193600ea8"
+        },
+        {
+          "distinct_effect_words": 527817,
+          "seed": 1110048,
+          "tape_sha256": "ba265c3b7206625dc47c1eb021154f64bfa44a36b4a679de5b31ea98cc29c8de"
+        },
+        {
+          "distinct_effect_words": 419214,
+          "seed": 1110049,
+          "tape_sha256": "8fbd513ce29e2cfaf29246004f60ec744d58b3f35b0ce1f7689f109ba6b3e44b"
+        },
+        {
+          "distinct_effect_words": 403136,
+          "seed": 1110050,
+          "tape_sha256": "253d2a30cf93fa3a53265e53224f3fdc4f62b52fb9f158037eadd3b26afe6700"
+        },
+        {
+          "distinct_effect_words": 566664,
+          "seed": 1110051,
+          "tape_sha256": "c52edcdef9474402d2e69ea6c1fcda5072ffad0323452faf1a90a3cff1b30341"
+        },
+        {
+          "distinct_effect_words": 111428,
+          "seed": 1110052,
+          "tape_sha256": "ccee45a7358ad5ea438eedef9c496ac9d997f4e400c1fb588d740c1a1436f8cc"
+        },
+        {
+          "distinct_effect_words": 515955,
+          "seed": 1110053,
+          "tape_sha256": "6b904fe81c0cd36039ec6bc334c942933268b8921c5f3be8d9dad6bc0f678125"
+        },
+        {
+          "distinct_effect_words": 116037,
+          "seed": 1110054,
+          "tape_sha256": "d475ea7ab0d5faefdb35d71916aaddc86efb85c62dc320524282be62151ea530"
+        },
+        {
+          "distinct_effect_words": 394049,
+          "seed": 1110055,
+          "tape_sha256": "de0bb30461a6dc75e8e5de3c23a682338ca7c348ac451a31c6039b133d83ae71"
+        },
+        {
+          "distinct_effect_words": 56268,
+          "seed": 1110056,
+          "tape_sha256": "41582d30d7f870e405925c6f61622f16812deaf712a166e6d5599e8f81e89dc4"
+        },
+        {
+          "distinct_effect_words": 94464,
+          "seed": 1110057,
+          "tape_sha256": "2d40e4debbdf0dd4228d757a1d97a2db33a3760e780897ec1df214f8f7277bdb"
+        },
+        {
+          "distinct_effect_words": 542280,
+          "seed": 1110058,
+          "tape_sha256": "6b81060b590b69bc77cc01f7d1b725ef8f578e128ae70d6e47c59753c32d409f"
+        },
+        {
+          "distinct_effect_words": 311744,
+          "seed": 1110059,
+          "tape_sha256": "5c8fd4750ec66506c8f2a59c02864b60306904b748ea4b9cd3a69a7e572ca408"
+        },
+        {
+          "distinct_effect_words": 656086,
+          "seed": 1110060,
+          "tape_sha256": "25e417a9636ef0cb788b2c2c2b90592fafdcf546c28a1ec6d96545862fa20596"
+        },
+        {
+          "distinct_effect_words": 1149888,
+          "seed": 1110061,
+          "tape_sha256": "937fb9003ef0247271d3c6a2c2c03434642e8f18e6ce057351fb26643f1a780f"
+        },
+        {
+          "distinct_effect_words": 572476,
+          "seed": 1110062,
+          "tape_sha256": "d2d71979c776c74a0bd128ce011c0497540fd4c721aceaa8a3c3e4a7411d7cff"
+        },
+        {
+          "distinct_effect_words": 157194,
+          "seed": 1110063,
+          "tape_sha256": "7c3478e93a427e8f15e46f55495a39153f461faf0db2262b1585f39931b2f1ea"
+        },
+        {
+          "distinct_effect_words": 245946,
+          "seed": 1110064,
+          "tape_sha256": "42e562f62ff177fa7b0b05144166dcf2357285c99729fa821069eed38ce3deb6"
+        },
+        {
+          "distinct_effect_words": 452628,
+          "seed": 1110065,
+          "tape_sha256": "f31bc976c7a17de31cbadaee986687e5a4f02eba5ab8eefe96e134a2c1ab9ae0"
+        },
+        {
+          "distinct_effect_words": 98784,
+          "seed": 1110066,
+          "tape_sha256": "44f986d243a6bd7ca5378f15e512b393687485006bb0ec44d8e5fc06f5af9ede"
+        },
+        {
+          "distinct_effect_words": 338082,
+          "seed": 1110067,
+          "tape_sha256": "c9bf9292e9b5ec95afaef6dd9083c84aa1f4f7c918677f4d959f5fb902ed2a40"
+        },
+        {
+          "distinct_effect_words": 513272,
+          "seed": 1110068,
+          "tape_sha256": "95a613d1232431f5088ab7713be3cdc3f1262abd2c3f1050ba8042ebf9366734"
+        },
+        {
+          "distinct_effect_words": 1080479,
+          "seed": 1110069,
+          "tape_sha256": "dab91dc1273dbb0659627197a31b1d2c18a14b6057676acba52ebd31fe226e7c"
+        },
+        {
+          "distinct_effect_words": 98568,
+          "seed": 1110070,
+          "tape_sha256": "3f0abf07ea7c512660d1f61497c49e7d2a9d3dce9b00dc1c4f8272ae64322211"
+        },
+        {
+          "distinct_effect_words": 308088,
+          "seed": 1110071,
+          "tape_sha256": "b94f27133b2aa7c46d3d87ab7770374ba208409e090907f1b7b5a32bcea3b161"
+        },
+        {
+          "distinct_effect_words": 478295,
+          "seed": 1110072,
+          "tape_sha256": "d2730f3af192ec920e30ac872ce80e53e0f9ac262a7093ebc5733d3b3303d225"
+        },
+        {
+          "distinct_effect_words": 419108,
+          "seed": 1110073,
+          "tape_sha256": "86536224df486e750b5d921d83b763ab024f52460ec7eeebcc8dcb9e7a5ed9d4"
+        },
+        {
+          "distinct_effect_words": 246662,
+          "seed": 1110074,
+          "tape_sha256": "8eb97e51430f77ccb6ab545f23ee047a8a087257e75c28cf28c7bd79896a0967"
+        },
+        {
+          "distinct_effect_words": 420665,
+          "seed": 1110075,
+          "tape_sha256": "eda8fb73cc4877d16008df0a735d2f5f1aabaacc8a32c29a34166458aafaad54"
+        },
+        {
+          "distinct_effect_words": 179130,
+          "seed": 1110076,
+          "tape_sha256": "daea0365c184dc98e90888bfad737fb2b4260675a24c6ce5754d2ce4e00a52c6"
+        },
+        {
+          "distinct_effect_words": 147384,
+          "seed": 1110077,
+          "tape_sha256": "394577cf586146b426d1094517644f9d26084e067f0bff6de3396cb2a5d48dd9"
+        },
+        {
+          "distinct_effect_words": 1357600,
+          "seed": 1110078,
+          "tape_sha256": "095598f63f221dab1210d06349417bf6433b4c09e66c9bb66659c0361034e4db"
+        },
+        {
+          "distinct_effect_words": 168740,
+          "seed": 1110079,
+          "tape_sha256": "463c3da14912945afc5f6990a2fcfae870db4ba6321304c9cc0eccd238219f70"
+        },
+        {
+          "distinct_effect_words": 86400,
+          "seed": 1110080,
+          "tape_sha256": "ec77bc3a0e6a5868ad11ec6eb0a485c300a1aa1d548d0131d9c8f782606146f9"
+        },
+        {
+          "distinct_effect_words": 197452,
+          "seed": 1110081,
+          "tape_sha256": "80dfbb443b22d69a589acfd9cb3a81531d9d4180f78ea9759e31b04c97eccbfe"
+        },
+        {
+          "distinct_effect_words": 333036,
+          "seed": 1110082,
+          "tape_sha256": "b1c1a302f98e86c37df612e4f22b8b15d805b8515d0dc4ecef830e0bc38f4478"
+        },
+        {
+          "distinct_effect_words": 451296,
+          "seed": 1110083,
+          "tape_sha256": "46a2810d85c43a9fe7fe484e481ba8e27384fb67067485598b9040df4f85fd6e"
+        },
+        {
+          "distinct_effect_words": 362448,
+          "seed": 1110084,
+          "tape_sha256": "23d1679bce050d48273ffc5447941066e3615d5e7838d12bf6ed2563a57fae73"
+        },
+        {
+          "distinct_effect_words": 635440,
+          "seed": 1110085,
+          "tape_sha256": "d007b629830d86ec8e96e24ff7a1e46c53822e84c2b1d5e52bb4244f585e7589"
+        },
+        {
+          "distinct_effect_words": 710867,
+          "seed": 1110086,
+          "tape_sha256": "2199b08c4ccd023008a3467bd0f31bb918020bf8244029f43a25ed360d2c3375"
+        },
+        {
+          "distinct_effect_words": 865368,
+          "seed": 1110087,
+          "tape_sha256": "87a81f53cc7e50898b61a6c9d063194b7869b468972b4f18f7329a2a1206ade2"
+        },
+        {
+          "distinct_effect_words": 255192,
+          "seed": 1110088,
+          "tape_sha256": "0605a9954a9b34872bc9fc3dfb207da345cfd46736e8bcdc7737146db6cfd72f"
+        },
+        {
+          "distinct_effect_words": 510626,
+          "seed": 1110089,
+          "tape_sha256": "be98e4712ccd61800bb56f71cb0333027663f1605f6861b550de06c8b44430d3"
+        },
+        {
+          "distinct_effect_words": 104434,
+          "seed": 1110090,
+          "tape_sha256": "c234f109216c089ab5f81191f92586eab8ff37e6333379d82338542e22fdff27"
+        },
+        {
+          "distinct_effect_words": 806976,
+          "seed": 1110091,
+          "tape_sha256": "420aca75c389232331b935341d19a1f8a8b1f2766c1caebe672dff75639f7bed"
+        },
+        {
+          "distinct_effect_words": 220497,
+          "seed": 1110092,
+          "tape_sha256": "86953e48273639a933bfe02789ccddcd85b3ab0b31a78fcb195d3120c448a4bd"
+        },
+        {
+          "distinct_effect_words": 612600,
+          "seed": 1110093,
+          "tape_sha256": "bb14d6b2dff209da8c238e7017cfbc1120572066f7fd729df92a9374492b46d0"
+        },
+        {
+          "distinct_effect_words": 198289,
+          "seed": 1110094,
+          "tape_sha256": "555a05445545ba918c7bd9eff7c10adb996c1dda14a233daff978cf79917e975"
+        },
+        {
+          "distinct_effect_words": 365064,
+          "seed": 1110095,
+          "tape_sha256": "6e7d7ba8f52b97cd7c1a2f1b7e66f33f057b3ff337775b0d264c7890d6e0ad32"
+        },
+        {
+          "distinct_effect_words": 947741,
+          "seed": 1110096,
+          "tape_sha256": "076cdf0d8ce65f73a591316325cf3534d92fb2768c85b1cf485a813dd28c2a5e"
+        },
+        {
+          "distinct_effect_words": 127350,
+          "seed": 1110097,
+          "tape_sha256": "fd1463a71c4daee29163e5dc5637557e656854cb22b7f5f725df3bb79c08e980"
+        },
+        {
+          "distinct_effect_words": 482046,
+          "seed": 1110098,
+          "tape_sha256": "22e58b7eb02cf26f45fd87226ce5235ad5f61c32dc4aa9633255d585ee6141f6"
+        },
+        {
+          "distinct_effect_words": 255664,
+          "seed": 1110099,
+          "tape_sha256": "d8e134f1e14715c79757dfe979294cde248b2aa66b3737db65ffe8a7f91ff9a4"
+        },
+        {
+          "distinct_effect_words": 193328,
+          "seed": 1110100,
+          "tape_sha256": "ac8a5759db55122011b0811cf4583c918744aa9858e080e8b3426b94ef3adb48"
+        },
+        {
+          "distinct_effect_words": 78258,
+          "seed": 1110101,
+          "tape_sha256": "6511226df34e77b6423290baa6b7f93d28367a6b2e1ff2bcab26626b2639007c"
+        },
+        {
+          "distinct_effect_words": 541262,
+          "seed": 1110102,
+          "tape_sha256": "4565c4a32a9aa20fe297e97b5f1b074a4ae2d7de8aadf2d38bd14eadd7657bc5"
+        },
+        {
+          "distinct_effect_words": 175500,
+          "seed": 1110103,
+          "tape_sha256": "3f7f2f465f6e3384f602ef21f9f9d62393c55a494af462de05390f9a1eeae749"
+        },
+        {
+          "distinct_effect_words": 249200,
+          "seed": 1110104,
+          "tape_sha256": "d2f00c87d6b718d581701500b542f8269a40b08f0d900ac471d753e6cdc57cde"
+        },
+        {
+          "distinct_effect_words": 1814766,
+          "seed": 1110105,
+          "tape_sha256": "2adcdc2b2c931f239c4b085f114a3bf580b32da3920f7d7c50048526e5a5e3da"
+        },
+        {
+          "distinct_effect_words": 373704,
+          "seed": 1110106,
+          "tape_sha256": "72cd4c1f9d884e83cf1397482cbe63feb1a4544edb926a88204590f13ab3e06a"
+        },
+        {
+          "distinct_effect_words": 862556,
+          "seed": 1110107,
+          "tape_sha256": "7f7b13c015aba0c45eda90f51bf8b51559ab0bcaa0fbd8f8e414891d8dca0668"
+        },
+        {
+          "distinct_effect_words": 96432,
+          "seed": 1110108,
+          "tape_sha256": "86dcba6bcad4645e16c0d2e6fcda809710a216d94afcab0458fac8072b36d018"
+        },
+        {
+          "distinct_effect_words": 120430,
+          "seed": 1110109,
+          "tape_sha256": "511819213ea557f511aba1d4826a88be0c22513ef32db1d878b01bd7f8d1de5d"
+        },
+        {
+          "distinct_effect_words": 610248,
+          "seed": 1110110,
+          "tape_sha256": "17cd96c5b3339ac5239c9cd6318e5b4db426ec22215d87eb4991580bccaf84da"
+        },
+        {
+          "distinct_effect_words": 520632,
+          "seed": 1110111,
+          "tape_sha256": "6765ec0679a21e930fa1fe067e5cca0f02a12c77f126b46be3ca6f9720223560"
+        },
+        {
+          "distinct_effect_words": 1522583,
+          "seed": 1110112,
+          "tape_sha256": "97bb1a5a797a2df77ac6665ab182066c4127471989a46bfe25325d9c3db365d6"
+        },
+        {
+          "distinct_effect_words": 513712,
+          "seed": 1110113,
+          "tape_sha256": "e8bf2f2ac7c71db1a62c7946ffd281422d39e0c68e6d91c7cbbd3ad85e91ae7d"
+        },
+        {
+          "distinct_effect_words": 401379,
+          "seed": 1110114,
+          "tape_sha256": "171ca9aa953ae9cf261896ba2e52f40abd68bb841a59761ae3a7be07ba6db22a"
+        },
+        {
+          "distinct_effect_words": 69750,
+          "seed": 1110115,
+          "tape_sha256": "0fffe7fdd71699fa83babb19b0b0bf4b4a8fc01e337921736ebd405b1d81ff1d"
+        },
+        {
+          "distinct_effect_words": 92400,
+          "seed": 1110116,
+          "tape_sha256": "5aefccde72b5cdf5bcb09931268f9dc574545a48c9a1002436036d77af8147d0"
+        },
+        {
+          "distinct_effect_words": 460416,
+          "seed": 1110117,
+          "tape_sha256": "0b4d3822df44666f7e23e4e50100418bcd23dae518ede55d66034d4c4345d463"
+        },
+        {
+          "distinct_effect_words": 202592,
+          "seed": 1110118,
+          "tape_sha256": "7e44a50b04bf288a5cbb68da0868e2bb05406a174a3dd17c2acf1f57443f5a44"
+        },
+        {
+          "distinct_effect_words": 1305456,
+          "seed": 1110119,
+          "tape_sha256": "6ba7d1b496bbd22340aca124546e1ec34cd849511c0dd2bad22cc7558bf45996"
+        },
+        {
+          "distinct_effect_words": 259146,
+          "seed": 1110120,
+          "tape_sha256": "5d4ec9b4e627b84be517e6326d8595df14d55cdf461672a750f13c64cdcff60a"
+        }
+      ],
+      "seed_start": 1110001
+    }
+  },
+  "totals": {
+    "brute_force_des_runs": 2013265980,
+    "effect_quotient_des_runs": 88684583,
+    "estimated_serial_cpu_days": 32.675763831101904,
+    "measured_seconds_per_full_run": 0.031834011047976674,
+    "n_tapes": 180,
+    "run_reduction_factor": 22.701420155519028
+  },
+  "weeks": 24
+}

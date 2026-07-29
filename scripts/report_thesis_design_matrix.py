@@ -6,7 +6,8 @@ This checks the scenario ladder encoded by ``supply_chain.thesis_design``:
 - Cf1-Cf30: risk-only factorial rows.
 - Cf31-Cf60: inventory moderation rows mapped back to Cf1-Cf30.
 - Cf61-Cf90: capacity moderation rows mapped back to Cf1-Cf30.
-- R1/R2 rows run for 10 thesis years; R3 rows run for 20 thesis years.
+- Raw Excel CF1-CF2 and R3 rows run for 20 thesis years; the rest of R1/R2
+  run for 10 thesis years.
 
 The expected design values are duplicated here so this script acts as an
 independent drift check rather than a simple dump of ``thesis_design.py``.
@@ -178,7 +179,7 @@ def expected_overrides(source_cfi: int) -> dict[str, str]:
 
 
 def expected_horizon_hours(source_cfi: int) -> float:
-    years = 20 if 21 <= source_cfi <= 30 else 10
+    years = 20 if source_cfi in (1, 2) or 21 <= source_cfi <= 30 else 10
     return float(years * HOURS_PER_YEAR_THESIS)
 
 

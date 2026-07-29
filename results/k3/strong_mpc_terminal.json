@@ -1,0 +1,112 @@
+{
+  "best_classical": "budgeted_sS",
+  "candidate_minus_best_classical": {
+    "lost": [
+      -0.10666666666666667,
+      -0.16,
+      -0.05333333333333334
+    ],
+    "ordered_D0": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "remaining_qty": [
+      -1676.5110021163966,
+      -2244.04029748365,
+      -1156.6093213136094
+    ],
+    "ret_order": [
+      0.012423115079365079,
+      0.005456324404761906,
+      0.019284226190476192
+    ],
+    "ret_quantity": [
+      0.01653961267878188,
+      0.008753823918358413,
+      0.024143478287265513
+    ]
+  },
+  "confirmation_opened": false,
+  "contract_id": "program_k3_ret_budgeted_replenishment_v1",
+  "gates": {
+    "lost_noninferior": true,
+    "nonnegative_tapes": true,
+    "resource_exact": true,
+    "ret_lcb_positive": true,
+    "ret_material": true,
+    "ret_quantity_noninferior": true
+  },
+  "learner_authorized": false,
+  "n_periodic_calendars": 2690,
+  "nonnegative_tape_fraction": 0.94,
+  "policies": {
+    "budgeted_sS": {
+      "lost": 0.57,
+      "ordered_D0": 10.0,
+      "remaining_qty": 5704.504150023602,
+      "ret_order": 0.9285277777777777,
+      "ret_quantity": 0.9258284733474785
+    },
+    "inventory_paced": {
+      "lost": 0.57,
+      "ordered_D0": 10.0,
+      "remaining_qty": 6075.286642919114,
+      "ret_order": 0.9281904761904762,
+      "ret_quantity": 0.9257858107446384
+    },
+    "periodic_static": {
+      "lost": 0.59,
+      "ordered_D0": 10.0,
+      "remaining_qty": 6562.1339157103885,
+      "ret_order": 0.9037584325396826,
+      "ret_quantity": 0.9038653505273312
+    },
+    "strong_mpc": {
+      "lost": 0.4633333333333333,
+      "ordered_D0": 10.0,
+      "remaining_qty": 4027.9931479072056,
+      "ret_order": 0.9409508928571428,
+      "ret_quantity": 0.9423680860262604
+    }
+  },
+  "positive_tape_fraction": 0.16333333333333333,
+  "seeds": {
+    "calibration": [
+      6710001,
+      6710120
+    ],
+    "test": [
+      6720001,
+      6720300
+    ]
+  },
+  "selected": {
+    "inventory": [
+      0.0,
+      0.0,
+      1.5
+    ],
+    "mpc": [
+      1.25,
+      0.0,
+      1.5
+    ],
+    "sS": [
+      2.0,
+      3.0
+    ],
+    "static": [
+      1.5,
+      1.5,
+      1.5,
+      0.5,
+      1.5,
+      1.5,
+      1.5,
+      0.5
+    ]
+  },
+  "stage": "terminal_prelearner_strong_mpc",
+  "verdict": "PROMOTE_K3_TO_CONFIRMATION"
+}

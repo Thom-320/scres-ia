@@ -43,6 +43,30 @@ NUM_RAW_MATERIALS = 12  # rm1…rm12
 NUM_SUPPLIERS = 12  # cntr1…cntr12
 RATIONS_PER_BATCH = 5_000  # Batch size from Op7 → Op8
 BACKORDER_QUEUE_CAP = 60  # Max pending delayed orders (thesis Section 6.5.4)
+# Thesis Sec. 6.5.4: backorders "accumulate in a list of pending orders" capped at
+# 60; on overflow "the last order in the list is removed and labelled as lost".
+# The pending list is served by SPT. The thesis states that when the pending
+# list exceeds 60, the last order in the list is removed and labelled lost.
+# Because the list is SPT-sorted, the faithful default drops the SPT tail
+# (largest/longest pending order). "oldest" is retained only as a sensitivity
+# for testing age-based eviction.
+BACKORDER_OVERFLOW_MODE = "largest"
+BACKORDER_OVERFLOW_MODE_OPTIONS = ("largest", "oldest")
+# Program D lever D1: the rationing/sequencing rule for the standing backlog.
+# "spt_contingent" is Garrido's thesis rule (default, bitwise-faithful):
+# contingent-first, then shortest-processing-time (smallest remaining qty).
+# The alternatives are pure re-orderings of the same queue used to probe
+# whether the sequencing decision carries state-contingent value; no physics
+# changes. See docs/PROGRAM_D_LEVER_DISCOVERY_PREREG_2026-07-11.md.
+BACKORDER_PRIORITY_RULE = "spt_contingent"
+BACKORDER_PRIORITY_RULE_OPTIONS = (
+    "spt_contingent",
+    "fifo_contingent",
+    "lpt_contingent",
+    "spt_flat",
+    "fifo_flat",
+    "age_threshold",
+)
 RATIONS_PER_SHIFT = int(ASSEMBLY_RATE * HOURS_PER_SHIFT)  # 2,564
 
 # Table 6.1: raw materials required for one "Cold weather combat ration #1".
@@ -92,11 +116,31 @@ RAW_MATERIAL_COMPONENTS = [
 # Sum of processing times Op1–Op12 ≈ 672 + 24×9 + 0 + 0.00312×3×5000 ≈ ~935 hrs
 # But thesis uses LT = 48 hours for the last-mile (Op9→Op13) delivery promise.
 LEAD_TIME_PROMISE = 48  # Hours — thesis Section 6.3.4
+GARRIDO_FULFILLMENT_DELAY_HOURS = 54.0  # Calibrated minimum CTj: no instant orders; just beyond LT=48.
+GARRIDO_R14_RET_PERIOD_HOURS = 72.0  # R14-only RPj median in Raw_data1 is ~72 h; avoid 1h ReT inflation.
+
+# Recovery-period (RPj) attribution for the endogenous DES lane. Garrido's raw
+# workbooks bound RPj to the disruption/recovery duration of the risk affecting
+# the order (thesis Eq. 5.3), NOT the elapsed wall-clock since the first risk
+# onset. The legacy "elapsed" mode lets queued wait-time inflate RPj up to CTj.
+# The forensic excel_risk_tape lane copies RPj from the workbook and is
+# unaffected by this switch.
+RET_RECOVERY_PERIOD_MODE = "disruption"
+RET_RECOVERY_PERIOD_MODE_OPTIONS = ("elapsed", "disruption")
 
 THESIS_REPLICATION_DOWNSTREAM_Q_SOURCE = "figure_6_2"
 THESIS_ROBUSTNESS_DOWNSTREAM_Q_SOURCE = "table_6_20"
 TRACK_A_TRAINING_DOWNSTREAM_Q_SOURCE = THESIS_REPLICATION_DOWNSTREAM_Q_SOURCE
 RISK_OCCURRENCE_MODE_OPTIONS = ("legacy_renewal", "thesis_window")
+RISK_ATTRIBUTION_SOURCE_OPTIONS = ("des_events", "excel_risk_tape", "causal_exposure")
+DEMAND_SOURCE_OPTIONS = (
+    "thesis_calendar",
+    "excel_order_tape",
+    "excel_order_tape_after_calendar_warmup",
+)
+SEED_STREAM_MODE_OPTIONS = ("single", "split")
+PROCUREMENT_CONTRACT_MODE_OPTIONS = ("legacy_independent", "causal_coupled")
+ORDER_FULFILLMENT_MODE_OPTIONS = ("legacy_theatre_stock", "op9_linked")
 TRACK_A_TRAINING_RISK_OCCURRENCE_MODE = "thesis_window"
 TRACK_A_TRAINING_RAW_MATERIAL_FLOW_MODE = "kit_equivalent_order_up_to"
 TRACK_A_TRAINING_RAW_MATERIAL_ORDER_UP_TO_MULTIPLIER = 2.0
@@ -113,6 +157,8 @@ THESIS_FAITHFUL_PROTOCOL = {
     "raw_material_order_up_to_multiplier": (
         TRACK_A_TRAINING_RAW_MATERIAL_ORDER_UP_TO_MULTIPLIER
     ),
+    "demand_on_hand_fulfillment_delay": GARRIDO_FULFILLMENT_DELAY_HOURS,
+    "stochastic_pt": False,
     "ret_weights": {"max": 1.0, "mean": 0.5, "min": 0.0},
     "rl_enabled": False,
     "reward_mode": None,
@@ -612,6 +658,30 @@ ADAPTIVE_BENCHMARK_V2_RECOVERY_MULTIPLIERS = {
 ADAPTIVE_BENCHMARK_V2_SURGE_SCALE_MULTIPLIER = 1.20
 TRACK_B_ROLLING_WINDOW_HOURS = 4 * HOURS_PER_WEEK
 TRACK_B_QUEUE_PRESSURE_LOOKAHEAD_CYCLES = 4.0
+
+# =============================================================================
+# TRACK C CAMPAIGN REGIME (2026-07-10) — campaign_v1
+# =============================================================================
+# Non-stationary calm/campaign schedule over the intentional-attack family
+# (R22/R23/R24) plus an R21 kicker. Grounding:
+#  - Garrido Ch7 moderation evidence: buffers inhibit R22 (92%) / R23 (67%),
+#    capacity inhibits R24 (67%); the association rules driving ReT Low are
+#    R22+R24, R22+R23, R23+R24 (Tables 7.1-7.9).
+#  - Frequency multipliers sit at the measured headroom-on region of the
+#    R21 breadth grid (channel turns on at freq >=x4 AND impact >=x3).
+#  - Dwell times are WEEKS (>= decision epoch 168h and >= replenishment lead)
+#    so a weekly controller can react within a phase — unlike the
+#    adaptive-benchmark process whose ~4-6 DAY dwells are sub-Nyquist.
+# The schedule is sampled once per episode from the seed (exogenous, CRN-safe);
+# frequency modulation is exact thinning (calm keeps the native rate).
+CAMPAIGN_V1_CONFIG = {
+    "initial_state": "calm",
+    "dwell_calm_weeks_mean": 8.0,
+    "dwell_campaign_weeks_mean": 5.0,
+    "dwell_min_weeks": 2.0,
+    "frequency_multipliers": {"R21": 4.0, "R22": 4.0, "R23": 4.0, "R24": 3.0},
+    "impact_multipliers": {"R21": 3.0, "R22": 1.5, "R23": 1.5, "R24": 1.5},
+}
 
 
 # =============================================================================

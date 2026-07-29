@@ -1,0 +1,70 @@
+{
+  "schema_version": "factory_app_cd_v1_forensic_record_v1",
+  "recorded_date": "2026-07-13",
+  "status": "QUARANTINED_FORENSIC_PROVENANCE_ONLY",
+  "chronology": {
+    "recovered_source_header_local": "2026-07-13T16:02:10-05:00",
+    "raw_json_birth_local": "2026-07-13T16:02:15-05:00",
+    "initial_rejection_artifact_birth_local": "2026-07-13T16:09:35-05:00",
+    "interpretation": "The unauthorized execution preceded the written audit rejection. It was discovered only during the later worktree provenance audit."
+  },
+  "raw_output": {
+    "path": "research/paper2_exhaustive_search/factory_app_cd_gate_stageA.json",
+    "sha256": "a409479d30ecd6148d112dc0f3164f7b43c4614816ab14ebb17b98c3ce0aaeda",
+    "status": "quarantined_non_evidence"
+  },
+  "recovered_bytecode": {
+    "path": "research/paper2_exhaustive_search/forensics/factory_app_cd_gate_v1.cpython-311.pyc",
+    "sha256": "46caa45d365e2c3f3ec30d3e7038f955313458cda233e2a711a184e2a8f55a6e",
+    "size_bytes": 16463,
+    "format": "CPython 3.11 timestamp-based pyc",
+    "magic_hex": "a70d0d0a",
+    "header_flags": 0,
+    "header_source_timestamp_epoch": 1783976530,
+    "header_source_size_bytes": 8373,
+    "claim_limit": "Forensic recovery only. Bytecode is not scientific source, does not recover the deleted preregistration, and cannot validate the source/preregistration SHA-256 strings recorded elsewhere."
+  },
+  "recovered_execution_semantics": {
+    "gate_defaults": {
+      "n_tapes": 400,
+      "seed0": 9600001
+    },
+    "tape_generation": "make_tape(seed0 + i) for i=0..399 with NumPy SeedSequence([seed, 2729])",
+    "calibration_tapes": "9600001-9600200",
+    "holdout_tapes": "9600201-9600400",
+    "analysis_rngs_not_additional_tapes": {
+      "bootstrap_seed": 11,
+      "placebo_permutation_seed": 9600001
+    },
+    "hard_coded_field": {
+      "field": "paper_reproduces_dominant_pure",
+      "raw_value": true,
+      "computed_from_results": false,
+      "scientific_effect": "Retracted as evidence. The value cannot support reproduction of the paper's dominant strategy."
+    }
+  },
+  "independent_recovery_check": {
+    "result": "An in-memory CPython 3.11.15 / NumPy 2.4.6 replay of the recovered bytecode reproduced every raw JSON key exactly.",
+    "claim_limit": "This establishes the immediate generator of the quarantined JSON, not the validity of its physics, policy, comparators, resources, metrics or custody."
+  },
+  "seed_custody": {
+    "burned": "9600001-9600400",
+    "explicit_overlap_found_elsewhere": false,
+    "unbounded_remainder": "9600401+ withdrawn and not reusable under the rejected declaration",
+    "uncertainty": "No stdout/stderr, command manifest or invocation log proves that the deleted runner was not executed additional times. Any future valid protocol must use a wholly disjoint block."
+  },
+  "independent_provenance_reaudit": {
+    "date": "2026-07-13",
+    "verdict": "ACCEPT_PROVENANCE_AND_QUARANTINE_ONLY",
+    "checks": [
+      "chronology and status consistency",
+      "hard-coded reproduction-flag disclosure and retraction",
+      "raw and bytecode hashes plus CPython header",
+      "exact calibration/holdout seed split and withdrawn remainder",
+      "absence of stale unopened/unrun statements",
+      "JSON validity and artifact-index presence"
+    ],
+    "scientific_claim_validated": false
+  },
+  "governing_rejection": "research/paper2_exhaustive_search/factory_app_cd_gate_v1_rejection.json"
+}

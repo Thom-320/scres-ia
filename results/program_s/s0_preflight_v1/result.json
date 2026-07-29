@@ -1,0 +1,356 @@
+{
+  "burned_fixture_seed": 7430001,
+  "contract_id": "program_s_product_mix_risk_interaction_gsa_v1",
+  "deterministic_liveness": {
+    "fixtures": {
+      "R11_op5": {
+        "event_start_relative": 48.0,
+        "expected_ops": [
+          5
+        ],
+        "matching_event_count": 1,
+        "partition_residual": 0.0,
+        "pass": true,
+        "product_mass_residual": 0.0,
+        "risk_id": "R11"
+      },
+      "R11_op6": {
+        "event_start_relative": 48.0,
+        "expected_ops": [
+          6
+        ],
+        "matching_event_count": 1,
+        "partition_residual": 0.0,
+        "pass": true,
+        "product_mass_residual": 0.0,
+        "risk_id": "R11"
+      },
+      "R14_op7_rework": {
+        "event_start_relative": 120.0,
+        "expected_ops": [
+          7
+        ],
+        "matching_event_count": 1,
+        "partition_residual": 0.0,
+        "pass": true,
+        "product_mass_residual": 0.0,
+        "rework_product_labels": [
+          "P_C"
+        ],
+        "rework_returned_quantity": 30.0,
+        "rework_started_quantity": 30.0,
+        "risk_id": "R14"
+      },
+      "R21_simultaneous": {
+        "event_start_relative": 48.0,
+        "expected_ops": [
+          3,
+          5,
+          6,
+          7,
+          9
+        ],
+        "matching_event_count": 1,
+        "partition_residual": 0.0,
+        "pass": true,
+        "product_mass_residual": 0.0,
+        "risk_id": "R21"
+      },
+      "R22_op10": {
+        "event_start_relative": 48.0,
+        "expected_ops": [
+          10
+        ],
+        "matching_event_count": 1,
+        "partition_residual": 0.0,
+        "pass": true,
+        "product_mass_residual": 0.0,
+        "risk_id": "R22"
+      },
+      "R22_op12": {
+        "event_start_relative": 48.0,
+        "expected_ops": [
+          12
+        ],
+        "matching_event_count": 1,
+        "partition_residual": 0.0,
+        "pass": true,
+        "product_mass_residual": 0.0,
+        "risk_id": "R22"
+      },
+      "R22_op4": {
+        "event_start_relative": 48.0,
+        "expected_ops": [
+          4
+        ],
+        "matching_event_count": 1,
+        "partition_residual": 0.0,
+        "pass": true,
+        "product_mass_residual": 0.0,
+        "risk_id": "R22"
+      },
+      "R22_op8": {
+        "event_start_relative": 48.0,
+        "expected_ops": [
+          8
+        ],
+        "matching_event_count": 1,
+        "partition_residual": 0.0,
+        "pass": true,
+        "product_mass_residual": 0.0,
+        "risk_id": "R22"
+      },
+      "R23_op11": {
+        "event_start_relative": 48.0,
+        "expected_ops": [
+          11
+        ],
+        "matching_event_count": 1,
+        "partition_residual": 0.0,
+        "pass": true,
+        "product_mass_residual": 0.0,
+        "risk_id": "R23"
+      },
+      "R24_product_preservation": {
+        "contingent_orders": 1,
+        "contingent_product_labels": [
+          "P_H"
+        ],
+        "event_start_relative": 40.0,
+        "expected_ops": [
+          13
+        ],
+        "matching_event_count": 1,
+        "partition_residual": 0.0,
+        "pass": true,
+        "product_mass_residual": 0.0,
+        "r24_generated_quantity": 2500.0,
+        "risk_id": "R24"
+      }
+    },
+    "pass": true
+  },
+  "next_authority": "FREEZE_AND_INDEPENDENTLY_AUDIT_S1_DESIGN_BEFORE_7510001",
+  "pass": true,
+  "riskoff_identity": {
+    "adapter_defaults_bitwise_equal": true,
+    "cell": "rho90_share90",
+    "checks": {
+      "gross_production_quantity": {
+        "abs_diff": 0.0,
+        "custodied_program_o": 120000.0,
+        "program_s_adapter": 120000.0
+      },
+      "ret_visible": {
+        "abs_diff": 1.1102230246251565e-16,
+        "custodied_program_o": 0.5925467318001254,
+        "program_s_adapter": 0.5925467318001255
+      },
+      "ret_visible_cvar10": {
+        "abs_diff": 0.0,
+        "custodied_program_o": 0.430952380952381,
+        "program_s_adapter": 0.430952380952381
+      }
+    },
+    "custodied_numeric_tolerance": 1e-12,
+    "custodied_one_ulp_disclosure": "The parent c2fa5cb checkout already differs from the older custodied ret_visible cell by one IEEE-754 ULP; Program S introduces zero additional drift.",
+    "pass": true,
+    "seed": 7430001,
+    "static_index": 31743
+  },
+  "schema_version": "program_s_s0_preflight_result_v1",
+  "scientific_seed_blocks_opened": [],
+  "thesis_incidence_report_only": {
+    "burned_seed_range": [
+      7430001,
+      7430012
+    ],
+    "masks": {
+      "CROSS_ECHELON_SURGE": {
+        "R21": {
+          "liveness_gate": "NOT_APPLICABLE_INCIDENT_RATE_ONLY",
+          "operations_seen": [],
+          "per_tape_counts": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "total": 0,
+          "zero_tapes": 12
+        },
+        "R23": {
+          "liveness_gate": "NOT_APPLICABLE_INCIDENT_RATE_ONLY",
+          "operations_seen": [
+            11
+          ],
+          "per_tape_counts": [
+            0,
+            1,
+            0,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "total": 3,
+          "zero_tapes": 9
+        },
+        "R24": {
+          "liveness_gate": "NOT_APPLICABLE_INCIDENT_RATE_ONLY",
+          "operations_seen": [
+            13
+          ],
+          "per_tape_counts": [
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2
+          ],
+          "total": 24,
+          "zero_tapes": 0
+        }
+      },
+      "LOC_SURGE": {
+        "R22": {
+          "liveness_gate": "NOT_APPLICABLE_INCIDENT_RATE_ONLY",
+          "operations_seen": [
+            8,
+            10,
+            12
+          ],
+          "per_tape_counts": [
+            0,
+            0,
+            1,
+            1,
+            0,
+            1,
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "total": 5,
+          "zero_tapes": 7
+        },
+        "R24": {
+          "liveness_gate": "NOT_APPLICABLE_INCIDENT_RATE_ONLY",
+          "operations_seen": [
+            13
+          ],
+          "per_tape_counts": [
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2
+          ],
+          "total": 24,
+          "zero_tapes": 0
+        }
+      },
+      "PRODUCTION_QUALITY_SURGE": {
+        "R11": {
+          "liveness_gate": "NOT_APPLICABLE_INCIDENT_RATE_ONLY",
+          "operations_seen": [
+            5,
+            6
+          ],
+          "per_tape_counts": [
+            8,
+            8,
+            8,
+            8,
+            8,
+            8,
+            8,
+            8,
+            8,
+            8,
+            8,
+            8
+          ],
+          "total": 96,
+          "zero_tapes": 0
+        },
+        "R14": {
+          "liveness_gate": "NOT_APPLICABLE_INCIDENT_RATE_ONLY",
+          "operations_seen": [
+            7
+          ],
+          "per_tape_counts": [
+            55,
+            55,
+            55,
+            55,
+            55,
+            55,
+            55,
+            55,
+            55,
+            55,
+            55,
+            55
+          ],
+          "total": 660,
+          "zero_tapes": 0
+        },
+        "R24": {
+          "liveness_gate": "NOT_APPLICABLE_INCIDENT_RATE_ONLY",
+          "operations_seen": [
+            13
+          ],
+          "per_tape_counts": [
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2
+          ],
+          "total": 24,
+          "zero_tapes": 0
+        }
+      }
+    },
+    "rare_zero_events_do_not_invalidate_deterministic_liveness": true
+  },
+  "verdict": "PASS_S0_RISK_ADAPTER_LIVE_AND_RISKOFF_IDENTICAL"
+}

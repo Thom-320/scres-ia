@@ -320,6 +320,12 @@ PRIMARY_METRICS = (
     "ret_garrido2024_train_total",
     "ret_garrido2024_sigmoid_total",
     "order_level_ret_mean",
+    "flow_fill_rate",
+    "cd_zeta_avg",
+    "cd_epsilon_avg",
+    "cd_phi_avg",
+    "cd_tau_avg",
+    "cd_kappa_dot",
     "pct_steps_S1",
     "pct_steps_S2",
     "pct_steps_S3",
@@ -356,6 +362,11 @@ EPISODE_FIELDNAMES = [
     "backorder_qty_total",
     "flow_fill_rate",
     "flow_backorder_rate",
+    "cd_zeta_avg",
+    "cd_epsilon_avg",
+    "cd_phi_avg",
+    "cd_tau_avg",
+    "cd_kappa_dot",
     "fill_rate_state_terminal",
     "backorder_rate_state_terminal",
     "pct_steps_S1",
@@ -639,9 +650,11 @@ def build_parser() -> argparse.ArgumentParser:
             "ReT_garrido2024_raw",
             "ReT_garrido2024",
             "ReT_garrido2024_train",
+            "ReT_excel_delta",
             "ReT_ladder_v1",
             "ReT_cd_v1",
             "ReT_cd_sigmoid",
+            "ReT_cvar_cd",
         ],
         default=BENCHMARK_REWARD_MODE,
         help="Reward mode for training and evaluation.",
@@ -756,9 +769,11 @@ def make_weight_combos(args: argparse.Namespace) -> list[dict[str, float]]:
         "ReT_garrido2024_raw",
         "ReT_garrido2024",
         "ReT_garrido2024_train",
+        "ReT_excel_delta",
         "ReT_ladder_v1",
         "ReT_cd_v1",
         "ReT_cd_sigmoid",
+        "ReT_cvar_cd",
     ):
         return [
             {
@@ -796,6 +811,15 @@ def build_env_kwargs(
         "year_basis": args.year_basis,
         **weight_combo,
     }
+    for optional_key in (
+        "risk_occurrence_mode",
+        "risk_frequency_multiplier",
+        "risk_impact_multiplier",
+        "raw_material_flow_mode",
+        "raw_material_order_up_to_multiplier",
+    ):
+        if hasattr(args, optional_key):
+            kwargs[optional_key] = getattr(args, optional_key)
     reward_mode = kwargs["reward_mode"]
     if reward_mode == "control_v1_pbrs":
         kwargs["pbrs_alpha"] = getattr(args, "pbrs_alpha", 1.0)
@@ -821,6 +845,7 @@ def build_env_kwargs(
         kwargs["ret_g24_kappa_train_frac"] = float(
             getattr(args, "ret_g24_kappa_train_frac", 0.20)
         )
+        kwargs["ret_g24_shift_cost"] = float(getattr(args, "ret_g24_shift_cost", 1.0))
     return kwargs
 
 
@@ -909,9 +934,11 @@ def reward_family(reward_mode: str) -> str:
         "ReT_garrido2024_raw",
         "ReT_garrido2024",
         "ReT_garrido2024_train",
+        "ReT_excel_delta",
         "ReT_ladder_v1",
         "ReT_cd_v1",
         "ReT_cd_sigmoid",
+        "ReT_cvar_cd",
     ):
         return "resilience_index"
     return "other"
@@ -1189,6 +1216,11 @@ def finalize_episode_metrics(
     backorder_qty_total: float,
     shift_counts: dict[int, int],
     terminal_metrics: dict[str, float],
+    cd_zeta_total: float = 0.0,
+    cd_epsilon_total: float = 0.0,
+    cd_phi_total: float = 0.0,
+    cd_tau_total: float = 0.0,
+    cd_kappa_dot_total: float = 0.0,
 ) -> dict[str, Any]:
     if demanded_total > 0:
         flow_backorder_rate = backorder_qty_total / demanded_total
@@ -1231,6 +1263,11 @@ def finalize_episode_metrics(
         "backorder_qty_total": backorder_qty_total,
         "flow_fill_rate": flow_fill_rate,
         "flow_backorder_rate": flow_backorder_rate,
+        "cd_zeta_avg": cd_zeta_total / total_steps,
+        "cd_epsilon_avg": cd_epsilon_total / total_steps,
+        "cd_phi_avg": cd_phi_total / total_steps,
+        "cd_tau_avg": cd_tau_total / total_steps,
+        "cd_kappa_dot": cd_kappa_dot_total / total_steps,
         "fill_rate_state_terminal": float(terminal_metrics["fill_rate_state_terminal"]),
         "backorder_rate_state_terminal": float(
             terminal_metrics["backorder_rate_state_terminal"]
@@ -1277,6 +1314,11 @@ def evaluate_policy(
         ret_garrido2024_raw_total = 0.0
         ret_garrido2024_train_total = 0.0
         ret_garrido2024_sigmoid_total = 0.0
+        cd_zeta_total = 0.0
+        cd_epsilon_total = 0.0
+        cd_phi_total = 0.0
+        cd_tau_total = 0.0
+        cd_kappa_dot_total = 0.0
         demanded_total = 0.0
         delivered_total = 0.0
         backorder_qty_total = 0.0
@@ -1362,6 +1404,11 @@ def evaluate_policy(
             ret_garrido2024_sigmoid_total += float(
                 info.get("ret_garrido2024_sigmoid_step", 0.0)
             )
+            cd_zeta_total += float(info.get("zeta_avg", 0.0))
+            cd_epsilon_total += float(info.get("epsilon_avg", 0.0))
+            cd_phi_total += float(info.get("phi_avg", 0.0))
+            cd_tau_total += float(info.get("tau_avg", 0.0))
+            cd_kappa_dot_total += float(info.get("kappa_dot", 0.0))
             demanded_total += float(info.get("new_demanded", 0.0))
             delivered_total += float(info.get("new_delivered", 0.0))
             backorder_qty_total += float(info.get("new_backorder_qty", 0.0))
@@ -1415,6 +1462,11 @@ def evaluate_policy(
                 backorder_qty_total=backorder_qty_total,
                 shift_counts=shift_counts,
                 terminal_metrics=terminal_metrics,
+                cd_zeta_total=cd_zeta_total,
+                cd_epsilon_total=cd_epsilon_total,
+                cd_phi_total=cd_phi_total,
+                cd_tau_total=cd_tau_total,
+                cd_kappa_dot_total=cd_kappa_dot_total,
             )
         )
         if trajectory_sink is not None:

@@ -1,5 +1,11 @@
 # Publishability Assessment — DES+RL Supply Chain Resilience
 
+> **2026-07-01 status note:** This file is historical. For paper-facing claim
+> wording, use `docs/CLAIMS_REGISTRY_Q1_DEFENSE_2026-07-01.md`. In particular,
+> Track B is now treated as an 8D operational extension, not "7D"; "perfect
+> fill" is not the headline; and retained learning/H4 is not a claim unless
+> confirmed by a retained-vs-reset Track B run.
+
 **Date:** 2026-04-04  
 **Assessor:** Langosta (automated, based on repo analysis + literature search)
 

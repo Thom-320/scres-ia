@@ -29,6 +29,7 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from supply_chain.config import HOURS_PER_WEEK, RAW_MATERIAL_FLOW_MODE_OPTIONS  # noqa: E402
+from supply_chain.config import canonical_raw_material_flow_mode  # noqa: E402
 from supply_chain.external_env_interface import (  # noqa: E402
     THESIS_INVENTORY_PERIODS,
     get_episode_terminal_metrics,
@@ -64,6 +65,8 @@ ROW_FIELDS = [
     "seed",
     "horizon_mode",
     "max_steps_used",
+    "raw_material_flow_mode_requested",
+    "raw_material_flow_mode_canonical",
     "reward_total",
     "fill_rate_order_level",
     "order_level_ret_mean",
@@ -253,6 +256,14 @@ def rollout(
 
     env = make_dkana_thesis_faithful_env(**env_kwargs)
     obs, info = env.reset(seed=seed)
+    sim = getattr(env.unwrapped, "sim", None)
+    canonical_flow_mode = str(
+        getattr(
+            sim,
+            "raw_material_flow_mode",
+            canonical_raw_material_flow_mode(str(args.raw_material_flow_mode)),
+        )
+    )
     terminated = truncated = False
     reward_total = 0.0
     steps = 0
@@ -263,7 +274,6 @@ def rollout(
             steps += 1
 
     terminal = get_episode_terminal_metrics(env)
-    sim = getattr(env.unwrapped, "sim", None)
     pending_orders = getattr(sim, "pending_backorders", []) if sim is not None else []
     row = {
         "profile": profile,
@@ -278,6 +288,8 @@ def rollout(
         "seed": seed,
         "horizon_mode": args.horizon_mode,
         "max_steps_used": max_steps,
+        "raw_material_flow_mode_requested": args.raw_material_flow_mode,
+        "raw_material_flow_mode_canonical": canonical_flow_mode,
         "reward_total": reward_total,
         "fill_rate_order_level": float(terminal["fill_rate_order_level"]),
         "order_level_ret_mean": float(terminal["order_level_ret_mean"]),
@@ -642,6 +654,10 @@ def main() -> int:
         "base_seed": args.base_seed,
         "reward_mode": args.reward_mode,
         "raw_material_flow_mode": args.raw_material_flow_mode,
+        "raw_material_flow_mode_requested": args.raw_material_flow_mode,
+        "raw_material_flow_mode_canonical": sorted(
+            {str(row["raw_material_flow_mode_canonical"]) for row in rows}
+        ),
         "raw_material_order_up_to_multiplier": args.raw_material_order_up_to_multiplier,
         "horizon_mode": args.horizon_mode,
         "max_steps": args.max_steps,

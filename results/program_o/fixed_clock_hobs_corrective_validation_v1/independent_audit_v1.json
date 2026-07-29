@@ -1,0 +1,90 @@
+{
+  "schema_version": "program_o_fixed_clock_hobs_corrective_independent_audit_v1",
+  "audited_status": "STOP_PROGRAM_O_AFTER_CORRECTIVE_VALIDATION",
+  "terminal_reason": "The frozen primary, placebo, physical-resource, trajectory, and state-counterfactual gates passed, but simultaneous CVaR10 non-inferiority failed in rho75_share90 and rho90_share75. The contract forbids a second rescue.",
+  "custody": {
+    "result_sha256": "3d3ff5b37510a993582cfc82b5414868da5cec2f99eda5da1df58013af389877",
+    "remote_manifest_sha256": "635f855228af404165484f8ca1732cd13114a01c16e8ce5e996efdebbe8b938e",
+    "remote_manifest_verified_remote": true,
+    "remote_manifest_verified_after_retrieval": true,
+    "executed_commit": "7a05d448f4d788a19385a0c65c842b8663ed8391",
+    "scientific_source_commit": "14b559cc0c88b8c186673077403d7c4253337cae",
+    "contract_sha256": "8cb665df8fad6bdfe9172d6c224c4b50da4ff14e77f4fbe3c04ff58616b4e278",
+    "execution_freeze_sha256": "ba2adb0068a9225dda8acf3416620df3e236e3e6877c64d3871ec172cde964ff",
+    "seed_range": [7430001, 7430048],
+    "seed_count": 48,
+    "opened_once": true,
+    "producer_exit_code": 0,
+    "raw_calendar_shards": 144
+  },
+  "frozen_comparator": {
+    "mode": "development_selected_full_frontier_frozen_before_validation",
+    "validation_reselection": false,
+    "indices": {
+      "rho75_share90": 39599,
+      "rho90_share75": 39599,
+      "rho90_share90": 31743
+    }
+  },
+  "primary": {
+    "rho75_share90": {
+      "mean_delta": 0.0985211781495476,
+      "simultaneous_lcb95": 0.06595249090039648,
+      "favorable_tapes": 44,
+      "passed": true
+    },
+    "rho90_share75": {
+      "mean_delta": 0.07347005569899683,
+      "simultaneous_lcb95": 0.04302851164856679,
+      "favorable_tapes": 42,
+      "passed": true
+    },
+    "rho90_share90": {
+      "mean_delta": 0.09973538566859201,
+      "simultaneous_lcb95": 0.05860399810214705,
+      "favorable_tapes": 46,
+      "passed": true
+    }
+  },
+  "simultaneous_inference": {
+    "method": "studentized one-sided max-t",
+    "estimands": 69,
+    "critical": 2.8357534289190336,
+    "primary_pass": true,
+    "all_27_placebos_pass": true,
+    "minimum_placebo_lcb95": 0.0071643656220839284,
+    "guardrail_pass": false,
+    "failed_guardrails": {
+      "rho75_share90::ret_visible_cvar10": {
+        "estimate": 0.03501668913903388,
+        "simultaneous_lcb95": -0.008577578152472065
+      },
+      "rho90_share75::ret_visible_cvar10": {
+        "estimate": 0.01953512602297382,
+        "simultaneous_lcb95": -0.01550692444175086
+      }
+    },
+    "all_other_guardrails_pass": true
+  },
+  "physical_and_feedback": {
+    "physical_replay_episodes": 1451,
+    "physical_replay_failures": 0,
+    "unique_scheduled_resource_vectors": 1,
+    "action_gate_all_cells": true,
+    "state_counterfactual_gate_all_cells": true,
+    "unique_action_sequences": {
+      "rho75_share90": 45,
+      "rho90_share75": 48,
+      "rho90_share90": 36
+    }
+  },
+  "claim_boundary": {
+    "classical_primary_ret_advantage_confirmed": true,
+    "safe_joint_h_obs_contract_confirmed": false,
+    "learner_authorized": false,
+    "paper2_confirmed": false,
+    "paper3_authorized": false,
+    "program_o_closed": true,
+    "second_rescue_forbidden": true
+  }
+}
