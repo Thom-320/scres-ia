@@ -1,5 +1,14 @@
 # Las dos preguntas a Garrido, respondidas desde la tesis
 
+> **CORREGIDO 2026-07-30.** La decisión de §Pregunta 1 —«`LT` debe ser 54»— **es
+> incorrecta y queda retirada**. La tesis fija el lead time en 48 h explícitamente en
+> **§6.8.2, p.111**: *«the availability of finished products at this point allows troops to
+> be supplied within a pre-set lead-time of 48 hours»*. Lo desalineado es nuestro pipeline,
+> no la métrica. Lo que sí se sostiene de esa sección es la semántica de igualdad
+> (`CTj = LTj`, sin caso `CTj < LTj`) y los dos defectos de implementación. El sucesor
+> correcto es `PREREGISTRO_LEAD_TIME_2026-07-30.md`, que barre el **delay de cumplimiento**
+> con `LT` fijo en 48 y un criterio de fidelidad multi-momento.
+
 **Estado:** `DECISION_DOCUMENT_NOTHING_APPLIED`. Ninguna constante fue cambiada. Este
 documento fija la decisión y su evidencia; la aplicación requiere el mismo preregistro que
 la reparación de ReT.
