@@ -73,7 +73,11 @@ def scored(sim) -> list:
             and float(getattr(o, "OPTj", 0.0)) >= float(sim.warmup_time)]
 
 
-def run_episode(*, delay: float, family: str, seed: int, horizon: float):
+TRANSPORT_MODES = ("skip_wave", "retry_when_ready")
+
+
+def run_episode(*, delay: float, family: str, seed: int, horizon: float,
+                transport: str = "skip_wave"):
     sim = MFSCSimulation(
         shifts=SHIFTS,
         initial_buffers={n: 0.0 for n in ("op3_rm", "op5_rm", "op9_rations")},
@@ -82,6 +86,7 @@ def run_episode(*, delay: float, family: str, seed: int, horizon: float):
         enabled_risks=set(FAMILIES[family]),
         risk_overrides={r: "increased" for r in FAMILIES[family]},
         demand_on_hand_fulfillment_delay=delay,
+        transport_block_mode=transport,
         strict_exogenous_crn=True, year_basis=P["year_basis"],
         warmup_trigger=P["warmup_trigger"], r14_defect_mode=P["r14_defect_mode"])
     sim.step(action=None, step_hours=horizon)
@@ -144,8 +149,10 @@ def main() -> int:
     for family in FAMILY_SHEETS:
         cells: dict[str, dict] = {}
         for delay in delays:
+          for transport in TRANSPORT_MODES:
             sims = [(s, scored(s)) for s in
-                    (run_episode(delay=delay, family=family, seed=t, horizon=horizon)
+                    (run_episode(delay=delay, family=family, seed=t, horizon=horizon,
+                                 transport=transport)
                      for t in args.roots)]
             for predicate in ("operational_on_time", "thesis_exact_autotomy"):
                 for tol in (TOLERANCES if predicate == "thesis_exact_autotomy" else (0.0,)):
@@ -155,14 +162,15 @@ def main() -> int:
                             for m in MOMENT_NAMES}
                     se = {m: float(np.std([r[m] for r in per_root], ddof=1)
                                    / np.sqrt(len(per_root))) for m in MOMENT_NAMES}
-                    name = (f"delay{delay:g}|{predicate}"
+                    name = (f"delay{delay:g}|{transport}|{predicate}"
                             + (f"|tol{tol:g}" if predicate == "thesis_exact_autotomy"
                                else ""))
                     cells[name] = {
-                        "delay_hours": delay, "predicate": predicate, "tolerance": tol,
+                        "delay_hours": delay, "transport_block_mode": transport,
+                        "predicate": predicate, "tolerance": tol,
                         "moments": mean, "moment_se": se,
                         "discrepancies": discrepancies(mean, se, reference[family])}
-            print(f"  {family} delay={delay:g} "
+            print(f"  {family} delay={delay:g} {transport} "
                   f"({time.perf_counter() - started:.0f}s)", flush=True)
 
         d_only = {n: c["discrepancies"] for n, c in cells.items()}
@@ -196,6 +204,7 @@ def main() -> int:
         "lead_time_source": "Garrido 2017 thesis §6.8.2 p.111",
         "roots": list(args.roots),
         "tolerances_swept": list(TOLERANCES),
+        "transport_modes_swept": list(TRANSPORT_MODES),
         "epsilons_swept": list(EPSILONS),
         "r3_excluded": "no reference workbook exists; external validation only",
         "results": out,
