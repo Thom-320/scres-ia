@@ -61,8 +61,16 @@ MOMENT_NAMES: tuple[str, ...] = (
     "ret_above_one_share",  # count(ReT > 1) / scored rows
     "rpj_mean",            # mean RPj over rows with RPj > 0
     "rpj_p95",             # 95th percentile of RPj over rows with RPj > 0
-    "scored_rows",         # population, not just values
+    "scored_orders_per_year",  # population as a RATE, not a raw count
 )
+
+# The reference workbooks are 20-year runs (thesis §6.8.1: "20 years or 161,280
+# hours"). Ours are typically 52 weeks. Comparing raw counts therefore compares
+# horizons, not fidelity: 2,381 against ~215 is a factor of 11 that is almost all
+# calendar. Normalising to orders per year leaves the part that IS fidelity -- we
+# score roughly twice as many orders per year as he does (119/yr against 215/yr),
+# which is a real difference in how many orders survive to be scored.
+REFERENCE_HORIZON_YEARS: float = 20.0
 
 
 def moments_from_rows(
@@ -70,8 +78,13 @@ def moments_from_rows(
     apj: Sequence[float],
     rpj: Sequence[float],
     ret: Sequence[float],
+    horizon_years: float = REFERENCE_HORIZON_YEARS,
 ) -> dict[str, float]:
-    """The six moments from per-order rows. One definition, used on both sides."""
+    """The six moments from per-order rows. One definition, used on both sides.
+
+    `horizon_years` makes the population moment a rate. It defaults to the reference
+    horizon so a canonical sheet needs no argument; our runs must pass their own.
+    """
     n = len(ret)
     if n == 0:
         raise ValueError("no scored rows")
@@ -82,7 +95,7 @@ def moments_from_rows(
         "ret_above_one_share": sum(1 for v in ret if v > 1.0) / n,
         "rpj_mean": (sum(pos_rpj) / len(pos_rpj)) if pos_rpj else 0.0,
         "rpj_p95": _quantile(pos_rpj, 0.95) if pos_rpj else 0.0,
-        "scored_rows": float(n),
+        "scored_orders_per_year": float(n) / max(float(horizon_years), 1e-9),
     }
 
 

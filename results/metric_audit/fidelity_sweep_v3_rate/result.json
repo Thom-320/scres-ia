@@ -1,0 +1,3356 @@
+{
+ "calibration_provenance": {
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "note": "the swept delay overrides the module constant per cell",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "DEVELOPMENT_FIDELITY_SWEEP_NO_CONSTANT_CHANGED",
+ "contract_path": "contracts/paper_b_independent_calibration_v2.json",
+ "contract_sha256": "a9075e8fe1f09a8fbcc42c6583eea1cc5ca58eb64460b51ac9c13e544d930db8",
+ "created_at": "2026-07-30T17:18:28.759494+00:00",
+ "delays_swept": [
+  42.0,
+  47.0,
+  48.0,
+  49.0,
+  54.0,
+  60.0
+ ],
+ "elapsed_seconds": 7.16576754199923,
+ "epsilons_swept": [
+  0.25,
+  0.5,
+  1.0,
+  2.0
+ ],
+ "exploratory_note": null,
+ "grid_is_the_frozen_contract_grid": true,
+ "lead_time_fixed_at": 48.0,
+ "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+ "r3_excluded": "no reference workbook exists; external validation only",
+ "reference_path": "results/metric_audit/fidelity_reference_v2/result.json",
+ "reference_sha256": "5013dcc811b5d28c715bfb647022706bf639f8fa82db88dcf89ec9995e005dd1",
+ "results": {
+  "R1r": {
+   "cells": {
+    "delay42|retry_when_ready|operational_on_time": {
+     "delay_hours": 42.0,
+     "discrepancies": {
+      "autotomy_share": 37.33790329018343,
+      "ret_above_one_share": 3.9031038103562365,
+      "ret_mean": 37.26237996096416,
+      "rpj_mean": 14.839869515373074,
+      "rpj_p95": 21.206720559241052,
+      "scored_orders_per_year": 8.22526057501619
+     },
+     "moment_se": {
+      "autotomy_share": 0.01705420581829844,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.017051871184700255,
+      "rpj_mean": 71.17418272279394,
+      "rpj_p95": 189.41394473019017,
+      "scored_orders_per_year": 0.8819171036881969
+     },
+     "moments": {
+      "autotomy_share": 0.6412971842451293,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.641878557611399,
+      "rpj_mean": 1256.6252970204248,
+      "rpj_p95": 4475.137618232539,
+      "scored_orders_per_year": 215.66666666666666
+     },
+     "predicate": "operational_on_time",
+     "tolerance": 0.0,
+     "transport_block_mode": "retry_when_ready"
+    },
+    "delay42|retry_when_ready|thesis_exact_autotomy|tol0": {
+     "delay_hours": 42.0,
+     "discrepancies": {
+      "autotomy_share": 37.33790329018343,
+      "ret_above_one_share": 3.9031038103562365,
+      "ret_mean": 37.26237996096416,
+      "rpj_mean": 14.839869515373074,
+      "rpj_p95": 21.206720559241052,
+      "scored_orders_per_year": 8.22526057501619
+     },
+     "moment_se": {
+      "autotomy_share": 0.01705420581829844,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.017051871184700255,
+      "rpj_mean": 71.17418272279394,
+      "rpj_p95": 189.41394473019017,
+      "scored_orders_per_year": 0.8819171036881969
+     },
+     "moments": {
+      "autotomy_share": 0.6412971842451293,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.641878557611399,
+      "rpj_mean": 1256.6252970204248,
+      "rpj_p95": 4475.137618232539,
+      "scored_orders_per_year": 215.66666666666666
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.0,
+     "transport_block_mode": "retry_when_ready"
+    },
+    "delay42|retry_when_ready|thesis_exact_autotomy|tol0.05": {
+     "delay_hours": 42.0,
+     "discrepancies": {
+      "autotomy_share": 37.33790329018343,
+      "ret_above_one_share": 3.9031038103562365,
+      "ret_mean": 37.26237996096416,
+      "rpj_mean": 14.839869515373074,
+      "rpj_p95": 21.206720559241052,
+      "scored_orders_per_year": 8.22526057501619
+     },
+     "moment_se": {
+      "autotomy_share": 0.01705420581829844,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.017051871184700255,
+      "rpj_mean": 71.17418272279394,
+      "rpj_p95": 189.41394473019017,
+      "scored_orders_per_year": 0.8819171036881969
+     },
+     "moments": {
+      "autotomy_share": 0.6412971842451293,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.641878557611399,
+      "rpj_mean": 1256.6252970204248,
+      "rpj_p95": 4475.137618232539,
+      "scored_orders_per_year": 215.66666666666666
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.05,
+     "transport_block_mode": "retry_when_ready"
+    },
+    "delay42|retry_when_ready|thesis_exact_autotomy|tol0.5": {
+     "delay_hours": 42.0,
+     "discrepancies": {
+      "autotomy_share": 37.33790329018343,
+      "ret_above_one_share": 3.9031038103562365,
+      "ret_mean": 37.26237996096416,
+      "rpj_mean": 14.839869515373074,
+      "rpj_p95": 21.206720559241052,
+      "scored_orders_per_year": 8.22526057501619
+     },
+     "moment_se": {
+      "autotomy_share": 0.01705420581829844,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.017051871184700255,
+      "rpj_mean": 71.17418272279394,
+      "rpj_p95": 189.41394473019017,
+      "scored_orders_per_year": 0.8819171036881969
+     },
+     "moments": {
+      "autotomy_share": 0.6412971842451293,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.641878557611399,
+      "rpj_mean": 1256.6252970204248,
+      "rpj_p95": 4475.137618232539,
+      "scored_orders_per_year": 215.66666666666666
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.5,
+     "transport_block_mode": "retry_when_ready"
+    },
+    "delay42|skip_wave|operational_on_time": {
+     "delay_hours": 42.0,
+     "discrepancies": {
+      "autotomy_share": 37.33790329018343,
+      "ret_above_one_share": 3.9031038103562365,
+      "ret_mean": 37.26237996096416,
+      "rpj_mean": 14.839869515373074,
+      "rpj_p95": 21.206720559241052,
+      "scored_orders_per_year": 8.22526057501619
+     },
+     "moment_se": {
+      "autotomy_share": 0.01705420581829844,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.017051871184700255,
+      "rpj_mean": 71.17418272279394,
+      "rpj_p95": 189.41394473019017,
+      "scored_orders_per_year": 0.8819171036881969
+     },
+     "moments": {
+      "autotomy_share": 0.6412971842451293,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.641878557611399,
+      "rpj_mean": 1256.6252970204248,
+      "rpj_p95": 4475.137618232539,
+      "scored_orders_per_year": 215.66666666666666
+     },
+     "predicate": "operational_on_time",
+     "tolerance": 0.0,
+     "transport_block_mode": "skip_wave"
+    },
+    "delay42|skip_wave|thesis_exact_autotomy|tol0": {
+     "delay_hours": 42.0,
+     "discrepancies": {
+      "autotomy_share": 37.33790329018343,
+      "ret_above_one_share": 3.9031038103562365,
+      "ret_mean": 37.26237996096416,
+      "rpj_mean": 14.839869515373074,
+      "rpj_p95": 21.206720559241052,
+      "scored_orders_per_year": 8.22526057501619
+     },
+     "moment_se": {
+      "autotomy_share": 0.01705420581829844,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.017051871184700255,
+      "rpj_mean": 71.17418272279394,
+      "rpj_p95": 189.41394473019017,
+      "scored_orders_per_year": 0.8819171036881969
+     },
+     "moments": {
+      "autotomy_share": 0.6412971842451293,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.641878557611399,
+      "rpj_mean": 1256.6252970204248,
+      "rpj_p95": 4475.137618232539,
+      "scored_orders_per_year": 215.66666666666666
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.0,
+     "transport_block_mode": "skip_wave"
+    },
+    "delay42|skip_wave|thesis_exact_autotomy|tol0.05": {
+     "delay_hours": 42.0,
+     "discrepancies": {
+      "autotomy_share": 37.33790329018343,
+      "ret_above_one_share": 3.9031038103562365,
+      "ret_mean": 37.26237996096416,
+      "rpj_mean": 14.839869515373074,
+      "rpj_p95": 21.206720559241052,
+      "scored_orders_per_year": 8.22526057501619
+     },
+     "moment_se": {
+      "autotomy_share": 0.01705420581829844,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.017051871184700255,
+      "rpj_mean": 71.17418272279394,
+      "rpj_p95": 189.41394473019017,
+      "scored_orders_per_year": 0.8819171036881969
+     },
+     "moments": {
+      "autotomy_share": 0.6412971842451293,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.641878557611399,
+      "rpj_mean": 1256.6252970204248,
+      "rpj_p95": 4475.137618232539,
+      "scored_orders_per_year": 215.66666666666666
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.05,
+     "transport_block_mode": "skip_wave"
+    },
+    "delay42|skip_wave|thesis_exact_autotomy|tol0.5": {
+     "delay_hours": 42.0,
+     "discrepancies": {
+      "autotomy_share": 37.33790329018343,
+      "ret_above_one_share": 3.9031038103562365,
+      "ret_mean": 37.26237996096416,
+      "rpj_mean": 14.839869515373074,
+      "rpj_p95": 21.206720559241052,
+      "scored_orders_per_year": 8.22526057501619
+     },
+     "moment_se": {
+      "autotomy_share": 0.01705420581829844,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.017051871184700255,
+      "rpj_mean": 71.17418272279394,
+      "rpj_p95": 189.41394473019017,
+      "scored_orders_per_year": 0.8819171036881969
+     },
+     "moments": {
+      "autotomy_share": 0.6412971842451293,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.641878557611399,
+      "rpj_mean": 1256.6252970204248,
+      "rpj_p95": 4475.137618232539,
+      "scored_orders_per_year": 215.66666666666666
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.5,
+     "transport_block_mode": "skip_wave"
+    },
+    "delay47|retry_when_ready|operational_on_time": {
+     "delay_hours": 47.0,
+     "discrepancies": {
+      "autotomy_share": 37.33790329018343,
+      "ret_above_one_share": 3.9031038103562365,
+      "ret_mean": 37.26237996096416,
+      "rpj_mean": 14.839869515373074,
+      "rpj_p95": 21.206720559241052,
+      "scored_orders_per_year": 8.22526057501619
+     },
+     "moment_se": {
+      "autotomy_share": 0.01705420581829844,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.017051871184700255,
+      "rpj_mean": 71.17418272279394,
+      "rpj_p95": 189.41394473019017,
+      "scored_orders_per_year": 0.8819171036881969
+     },
+     "moments": {
+      "autotomy_share": 0.6412971842451293,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.641878557611399,
+      "rpj_mean": 1256.6252970204248,
+      "rpj_p95": 4475.137618232539,
+      "scored_orders_per_year": 215.66666666666666
+     },
+     "predicate": "operational_on_time",
+     "tolerance": 0.0,
+     "transport_block_mode": "retry_when_ready"
+    },
+    "delay47|retry_when_ready|thesis_exact_autotomy|tol0": {
+     "delay_hours": 47.0,
+     "discrepancies": {
+      "autotomy_share": 37.33790329018343,
+      "ret_above_one_share": 3.9031038103562365,
+      "ret_mean": 37.26237996096416,
+      "rpj_mean": 14.839869515373074,
+      "rpj_p95": 21.206720559241052,
+      "scored_orders_per_year": 8.22526057501619
+     },
+     "moment_se": {
+      "autotomy_share": 0.01705420581829844,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.017051871184700255,
+      "rpj_mean": 71.17418272279394,
+      "rpj_p95": 189.41394473019017,
+      "scored_orders_per_year": 0.8819171036881969
+     },
+     "moments": {
+      "autotomy_share": 0.6412971842451293,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.641878557611399,
+      "rpj_mean": 1256.6252970204248,
+      "rpj_p95": 4475.137618232539,
+      "scored_orders_per_year": 215.66666666666666
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.0,
+     "transport_block_mode": "retry_when_ready"
+    },
+    "delay47|retry_when_ready|thesis_exact_autotomy|tol0.05": {
+     "delay_hours": 47.0,
+     "discrepancies": {
+      "autotomy_share": 37.33790329018343,
+      "ret_above_one_share": 3.9031038103562365,
+      "ret_mean": 37.26237996096416,
+      "rpj_mean": 14.839869515373074,
+      "rpj_p95": 21.206720559241052,
+      "scored_orders_per_year": 8.22526057501619
+     },
+     "moment_se": {
+      "autotomy_share": 0.01705420581829844,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.017051871184700255,
+      "rpj_mean": 71.17418272279394,
+      "rpj_p95": 189.41394473019017,
+      "scored_orders_per_year": 0.8819171036881969
+     },
+     "moments": {
+      "autotomy_share": 0.6412971842451293,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.641878557611399,
+      "rpj_mean": 1256.6252970204248,
+      "rpj_p95": 4475.137618232539,
+      "scored_orders_per_year": 215.66666666666666
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.05,
+     "transport_block_mode": "retry_when_ready"
+    },
+    "delay47|retry_when_ready|thesis_exact_autotomy|tol0.5": {
+     "delay_hours": 47.0,
+     "discrepancies": {
+      "autotomy_share": 37.33790329018343,
+      "ret_above_one_share": 3.9031038103562365,
+      "ret_mean": 37.26237996096416,
+      "rpj_mean": 14.839869515373074,
+      "rpj_p95": 21.206720559241052,
+      "scored_orders_per_year": 8.22526057501619
+     },
+     "moment_se": {
+      "autotomy_share": 0.01705420581829844,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.017051871184700255,
+      "rpj_mean": 71.17418272279394,
+      "rpj_p95": 189.41394473019017,
+      "scored_orders_per_year": 0.8819171036881969
+     },
+     "moments": {
+      "autotomy_share": 0.6412971842451293,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.641878557611399,
+      "rpj_mean": 1256.6252970204248,
+      "rpj_p95": 4475.137618232539,
+      "scored_orders_per_year": 215.66666666666666
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.5,
+     "transport_block_mode": "retry_when_ready"
+    },
+    "delay47|skip_wave|operational_on_time": {
+     "delay_hours": 47.0,
+     "discrepancies": {
+      "autotomy_share": 37.33790329018343,
+      "ret_above_one_share": 3.9031038103562365,
+      "ret_mean": 37.26237996096416,
+      "rpj_mean": 14.839869515373074,
+      "rpj_p95": 21.206720559241052,
+      "scored_orders_per_year": 8.22526057501619
+     },
+     "moment_se": {
+      "autotomy_share": 0.01705420581829844,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.017051871184700255,
+      "rpj_mean": 71.17418272279394,
+      "rpj_p95": 189.41394473019017,
+      "scored_orders_per_year": 0.8819171036881969
+     },
+     "moments": {
+      "autotomy_share": 0.6412971842451293,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.641878557611399,
+      "rpj_mean": 1256.6252970204248,
+      "rpj_p95": 4475.137618232539,
+      "scored_orders_per_year": 215.66666666666666
+     },
+     "predicate": "operational_on_time",
+     "tolerance": 0.0,
+     "transport_block_mode": "skip_wave"
+    },
+    "delay47|skip_wave|thesis_exact_autotomy|tol0": {
+     "delay_hours": 47.0,
+     "discrepancies": {
+      "autotomy_share": 37.33790329018343,
+      "ret_above_one_share": 3.9031038103562365,
+      "ret_mean": 37.26237996096416,
+      "rpj_mean": 14.839869515373074,
+      "rpj_p95": 21.206720559241052,
+      "scored_orders_per_year": 8.22526057501619
+     },
+     "moment_se": {
+      "autotomy_share": 0.01705420581829844,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.017051871184700255,
+      "rpj_mean": 71.17418272279394,
+      "rpj_p95": 189.41394473019017,
+      "scored_orders_per_year": 0.8819171036881969
+     },
+     "moments": {
+      "autotomy_share": 0.6412971842451293,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.641878557611399,
+      "rpj_mean": 1256.6252970204248,
+      "rpj_p95": 4475.137618232539,
+      "scored_orders_per_year": 215.66666666666666
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.0,
+     "transport_block_mode": "skip_wave"
+    },
+    "delay47|skip_wave|thesis_exact_autotomy|tol0.05": {
+     "delay_hours": 47.0,
+     "discrepancies": {
+      "autotomy_share": 37.33790329018343,
+      "ret_above_one_share": 3.9031038103562365,
+      "ret_mean": 37.26237996096416,
+      "rpj_mean": 14.839869515373074,
+      "rpj_p95": 21.206720559241052,
+      "scored_orders_per_year": 8.22526057501619
+     },
+     "moment_se": {
+      "autotomy_share": 0.01705420581829844,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.017051871184700255,
+      "rpj_mean": 71.17418272279394,
+      "rpj_p95": 189.41394473019017,
+      "scored_orders_per_year": 0.8819171036881969
+     },
+     "moments": {
+      "autotomy_share": 0.6412971842451293,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.641878557611399,
+      "rpj_mean": 1256.6252970204248,
+      "rpj_p95": 4475.137618232539,
+      "scored_orders_per_year": 215.66666666666666
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.05,
+     "transport_block_mode": "skip_wave"
+    },
+    "delay47|skip_wave|thesis_exact_autotomy|tol0.5": {
+     "delay_hours": 47.0,
+     "discrepancies": {
+      "autotomy_share": 37.33790329018343,
+      "ret_above_one_share": 3.9031038103562365,
+      "ret_mean": 37.26237996096416,
+      "rpj_mean": 14.839869515373074,
+      "rpj_p95": 21.206720559241052,
+      "scored_orders_per_year": 8.22526057501619
+     },
+     "moment_se": {
+      "autotomy_share": 0.01705420581829844,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.017051871184700255,
+      "rpj_mean": 71.17418272279394,
+      "rpj_p95": 189.41394473019017,
+      "scored_orders_per_year": 0.8819171036881969
+     },
+     "moments": {
+      "autotomy_share": 0.6412971842451293,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.641878557611399,
+      "rpj_mean": 1256.6252970204248,
+      "rpj_p95": 4475.137618232539,
+      "scored_orders_per_year": 215.66666666666666
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.5,
+     "transport_block_mode": "skip_wave"
+    },
+    "delay48|retry_when_ready|operational_on_time": {
+     "delay_hours": 48.0,
+     "discrepancies": {
+      "autotomy_share": 37.74316793396644,
+      "ret_above_one_share": 3.9031038103562365,
+      "ret_mean": 37.66538471885095,
+      "rpj_mean": 14.839869515373074,
+      "rpj_p95": 21.206720559241052,
+      "scored_orders_per_year": 8.206800253528053
+     },
+     "moment_se": {
+      "autotomy_share": 0.016856856150119053,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.01685519252255122,
+      "rpj_mean": 71.17418272279394,
+      "rpj_p95": 189.41394473019017,
+      "scored_orders_per_year": 0.6666666666666666
+     },
+     "moments": {
+      "autotomy_share": 0.6407638167762778,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.6413460490068955,
+      "rpj_mean": 1256.6252970204248,
+      "rpj_p95": 4475.137618232539,
+      "scored_orders_per_year": 215.33333333333334
+     },
+     "predicate": "operational_on_time",
+     "tolerance": 0.0,
+     "transport_block_mode": "retry_when_ready"
+    },
+    "delay48|retry_when_ready|thesis_exact_autotomy|tol0": {
+     "delay_hours": 48.0,
+     "discrepancies": {
+      "autotomy_share": 37.74316793396644,
+      "ret_above_one_share": 3.9031038103562365,
+      "ret_mean": 37.66538471885095,
+      "rpj_mean": 14.839869515373074,
+      "rpj_p95": 21.206720559241052,
+      "scored_orders_per_year": 8.206800253528053
+     },
+     "moment_se": {
+      "autotomy_share": 0.016856856150119053,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.01685519252255122,
+      "rpj_mean": 71.17418272279394,
+      "rpj_p95": 189.41394473019017,
+      "scored_orders_per_year": 0.6666666666666666
+     },
+     "moments": {
+      "autotomy_share": 0.6407638167762778,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.6413460490068955,
+      "rpj_mean": 1256.6252970204248,
+      "rpj_p95": 4475.137618232539,
+      "scored_orders_per_year": 215.33333333333334
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.0,
+     "transport_block_mode": "retry_when_ready"
+    },
+    "delay48|retry_when_ready|thesis_exact_autotomy|tol0.05": {
+     "delay_hours": 48.0,
+     "discrepancies": {
+      "autotomy_share": 37.74316793396644,
+      "ret_above_one_share": 3.9031038103562365,
+      "ret_mean": 37.66538471885095,
+      "rpj_mean": 14.839869515373074,
+      "rpj_p95": 21.206720559241052,
+      "scored_orders_per_year": 8.206800253528053
+     },
+     "moment_se": {
+      "autotomy_share": 0.016856856150119053,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.01685519252255122,
+      "rpj_mean": 71.17418272279394,
+      "rpj_p95": 189.41394473019017,
+      "scored_orders_per_year": 0.6666666666666666
+     },
+     "moments": {
+      "autotomy_share": 0.6407638167762778,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.6413460490068955,
+      "rpj_mean": 1256.6252970204248,
+      "rpj_p95": 4475.137618232539,
+      "scored_orders_per_year": 215.33333333333334
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.05,
+     "transport_block_mode": "retry_when_ready"
+    },
+    "delay48|retry_when_ready|thesis_exact_autotomy|tol0.5": {
+     "delay_hours": 48.0,
+     "discrepancies": {
+      "autotomy_share": 37.74316793396644,
+      "ret_above_one_share": 3.9031038103562365,
+      "ret_mean": 37.66538471885095,
+      "rpj_mean": 14.839869515373074,
+      "rpj_p95": 21.206720559241052,
+      "scored_orders_per_year": 8.206800253528053
+     },
+     "moment_se": {
+      "autotomy_share": 0.016856856150119053,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.01685519252255122,
+      "rpj_mean": 71.17418272279394,
+      "rpj_p95": 189.41394473019017,
+      "scored_orders_per_year": 0.6666666666666666
+     },
+     "moments": {
+      "autotomy_share": 0.6407638167762778,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.6413460490068955,
+      "rpj_mean": 1256.6252970204248,
+      "rpj_p95": 4475.137618232539,
+      "scored_orders_per_year": 215.33333333333334
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.5,
+     "transport_block_mode": "retry_when_ready"
+    },
+    "delay48|skip_wave|operational_on_time": {
+     "delay_hours": 48.0,
+     "discrepancies": {
+      "autotomy_share": 37.74316793396644,
+      "ret_above_one_share": 3.9031038103562365,
+      "ret_mean": 37.66538471885095,
+      "rpj_mean": 14.839869515373074,
+      "rpj_p95": 21.206720559241052,
+      "scored_orders_per_year": 8.206800253528053
+     },
+     "moment_se": {
+      "autotomy_share": 0.016856856150119053,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.01685519252255122,
+      "rpj_mean": 71.17418272279394,
+      "rpj_p95": 189.41394473019017,
+      "scored_orders_per_year": 0.6666666666666666
+     },
+     "moments": {
+      "autotomy_share": 0.6407638167762778,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.6413460490068955,
+      "rpj_mean": 1256.6252970204248,
+      "rpj_p95": 4475.137618232539,
+      "scored_orders_per_year": 215.33333333333334
+     },
+     "predicate": "operational_on_time",
+     "tolerance": 0.0,
+     "transport_block_mode": "skip_wave"
+    },
+    "delay48|skip_wave|thesis_exact_autotomy|tol0": {
+     "delay_hours": 48.0,
+     "discrepancies": {
+      "autotomy_share": 37.74316793396644,
+      "ret_above_one_share": 3.9031038103562365,
+      "ret_mean": 37.66538471885095,
+      "rpj_mean": 14.839869515373074,
+      "rpj_p95": 21.206720559241052,
+      "scored_orders_per_year": 8.206800253528053
+     },
+     "moment_se": {
+      "autotomy_share": 0.016856856150119053,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.01685519252255122,
+      "rpj_mean": 71.17418272279394,
+      "rpj_p95": 189.41394473019017,
+      "scored_orders_per_year": 0.6666666666666666
+     },
+     "moments": {
+      "autotomy_share": 0.6407638167762778,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.6413460490068955,
+      "rpj_mean": 1256.6252970204248,
+      "rpj_p95": 4475.137618232539,
+      "scored_orders_per_year": 215.33333333333334
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.0,
+     "transport_block_mode": "skip_wave"
+    },
+    "delay48|skip_wave|thesis_exact_autotomy|tol0.05": {
+     "delay_hours": 48.0,
+     "discrepancies": {
+      "autotomy_share": 37.74316793396644,
+      "ret_above_one_share": 3.9031038103562365,
+      "ret_mean": 37.66538471885095,
+      "rpj_mean": 14.839869515373074,
+      "rpj_p95": 21.206720559241052,
+      "scored_orders_per_year": 8.206800253528053
+     },
+     "moment_se": {
+      "autotomy_share": 0.016856856150119053,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.01685519252255122,
+      "rpj_mean": 71.17418272279394,
+      "rpj_p95": 189.41394473019017,
+      "scored_orders_per_year": 0.6666666666666666
+     },
+     "moments": {
+      "autotomy_share": 0.6407638167762778,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.6413460490068955,
+      "rpj_mean": 1256.6252970204248,
+      "rpj_p95": 4475.137618232539,
+      "scored_orders_per_year": 215.33333333333334
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.05,
+     "transport_block_mode": "skip_wave"
+    },
+    "delay48|skip_wave|thesis_exact_autotomy|tol0.5": {
+     "delay_hours": 48.0,
+     "discrepancies": {
+      "autotomy_share": 37.74316793396644,
+      "ret_above_one_share": 3.9031038103562365,
+      "ret_mean": 37.66538471885095,
+      "rpj_mean": 14.839869515373074,
+      "rpj_p95": 21.206720559241052,
+      "scored_orders_per_year": 8.206800253528053
+     },
+     "moment_se": {
+      "autotomy_share": 0.016856856150119053,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.01685519252255122,
+      "rpj_mean": 71.17418272279394,
+      "rpj_p95": 189.41394473019017,
+      "scored_orders_per_year": 0.6666666666666666
+     },
+     "moments": {
+      "autotomy_share": 0.6407638167762778,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.6413460490068955,
+      "rpj_mean": 1256.6252970204248,
+      "rpj_p95": 4475.137618232539,
+      "scored_orders_per_year": 215.33333333333334
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.5,
+     "transport_block_mode": "skip_wave"
+    },
+    "delay49|retry_when_ready|operational_on_time": {
+     "delay_hours": 49.0,
+     "discrepancies": {
+      "autotomy_share": 11.20019085174007,
+      "ret_above_one_share": 3.9031038103562365,
+      "ret_mean": 7.837190904893338,
+      "rpj_mean": 29.920589311524395,
+      "rpj_p95": 8.829765089472096,
+      "scored_orders_per_year": 8.206800253528053
+     },
+     "moment_se": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 7.804163734545147e-05,
+      "rpj_mean": 7.7915962267739145,
+      "rpj_p95": 316.54825192209785,
+      "scored_orders_per_year": 0.6666666666666666
+     },
+     "moments": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.0033249127357106033,
+      "rpj_mean": 528.5340096286355,
+      "rpj_p95": 3251.9904658798782,
+      "scored_orders_per_year": 215.33333333333334
+     },
+     "predicate": "operational_on_time",
+     "tolerance": 0.0,
+     "transport_block_mode": "retry_when_ready"
+    },
+    "delay49|retry_when_ready|thesis_exact_autotomy|tol0": {
+     "delay_hours": 49.0,
+     "discrepancies": {
+      "autotomy_share": 11.20019085174007,
+      "ret_above_one_share": 3.9031038103562365,
+      "ret_mean": 7.837190904893338,
+      "rpj_mean": 29.920589311524395,
+      "rpj_p95": 8.829765089472096,
+      "scored_orders_per_year": 8.206800253528053
+     },
+     "moment_se": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 7.804163734545147e-05,
+      "rpj_mean": 7.7915962267739145,
+      "rpj_p95": 316.54825192209785,
+      "scored_orders_per_year": 0.6666666666666666
+     },
+     "moments": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.0033249127357106033,
+      "rpj_mean": 528.5340096286355,
+      "rpj_p95": 3251.9904658798782,
+      "scored_orders_per_year": 215.33333333333334
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.0,
+     "transport_block_mode": "retry_when_ready"
+    },
+    "delay49|retry_when_ready|thesis_exact_autotomy|tol0.05": {
+     "delay_hours": 49.0,
+     "discrepancies": {
+      "autotomy_share": 11.20019085174007,
+      "ret_above_one_share": 3.9031038103562365,
+      "ret_mean": 7.837190904893338,
+      "rpj_mean": 29.920589311524395,
+      "rpj_p95": 8.829765089472096,
+      "scored_orders_per_year": 8.206800253528053
+     },
+     "moment_se": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 7.804163734545147e-05,
+      "rpj_mean": 7.7915962267739145,
+      "rpj_p95": 316.54825192209785,
+      "scored_orders_per_year": 0.6666666666666666
+     },
+     "moments": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.0033249127357106033,
+      "rpj_mean": 528.5340096286355,
+      "rpj_p95": 3251.9904658798782,
+      "scored_orders_per_year": 215.33333333333334
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.05,
+     "transport_block_mode": "retry_when_ready"
+    },
+    "delay49|retry_when_ready|thesis_exact_autotomy|tol0.5": {
+     "delay_hours": 49.0,
+     "discrepancies": {
+      "autotomy_share": 11.20019085174007,
+      "ret_above_one_share": 3.9031038103562365,
+      "ret_mean": 7.837190904893338,
+      "rpj_mean": 29.920589311524395,
+      "rpj_p95": 8.829765089472096,
+      "scored_orders_per_year": 8.206800253528053
+     },
+     "moment_se": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 7.804163734545147e-05,
+      "rpj_mean": 7.7915962267739145,
+      "rpj_p95": 316.54825192209785,
+      "scored_orders_per_year": 0.6666666666666666
+     },
+     "moments": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.0033249127357106033,
+      "rpj_mean": 528.5340096286355,
+      "rpj_p95": 3251.9904658798782,
+      "scored_orders_per_year": 215.33333333333334
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.5,
+     "transport_block_mode": "retry_when_ready"
+    },
+    "delay49|skip_wave|operational_on_time": {
+     "delay_hours": 49.0,
+     "discrepancies": {
+      "autotomy_share": 11.20019085174007,
+      "ret_above_one_share": 3.9031038103562365,
+      "ret_mean": 7.837190904893338,
+      "rpj_mean": 29.920589311524395,
+      "rpj_p95": 8.829765089472096,
+      "scored_orders_per_year": 8.206800253528053
+     },
+     "moment_se": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 7.804163734545147e-05,
+      "rpj_mean": 7.7915962267739145,
+      "rpj_p95": 316.54825192209785,
+      "scored_orders_per_year": 0.6666666666666666
+     },
+     "moments": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.0033249127357106033,
+      "rpj_mean": 528.5340096286355,
+      "rpj_p95": 3251.9904658798782,
+      "scored_orders_per_year": 215.33333333333334
+     },
+     "predicate": "operational_on_time",
+     "tolerance": 0.0,
+     "transport_block_mode": "skip_wave"
+    },
+    "delay49|skip_wave|thesis_exact_autotomy|tol0": {
+     "delay_hours": 49.0,
+     "discrepancies": {
+      "autotomy_share": 11.20019085174007,
+      "ret_above_one_share": 3.9031038103562365,
+      "ret_mean": 7.837190904893338,
+      "rpj_mean": 29.920589311524395,
+      "rpj_p95": 8.829765089472096,
+      "scored_orders_per_year": 8.206800253528053
+     },
+     "moment_se": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 7.804163734545147e-05,
+      "rpj_mean": 7.7915962267739145,
+      "rpj_p95": 316.54825192209785,
+      "scored_orders_per_year": 0.6666666666666666
+     },
+     "moments": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.0033249127357106033,
+      "rpj_mean": 528.5340096286355,
+      "rpj_p95": 3251.9904658798782,
+      "scored_orders_per_year": 215.33333333333334
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.0,
+     "transport_block_mode": "skip_wave"
+    },
+    "delay49|skip_wave|thesis_exact_autotomy|tol0.05": {
+     "delay_hours": 49.0,
+     "discrepancies": {
+      "autotomy_share": 11.20019085174007,
+      "ret_above_one_share": 3.9031038103562365,
+      "ret_mean": 7.837190904893338,
+      "rpj_mean": 29.920589311524395,
+      "rpj_p95": 8.829765089472096,
+      "scored_orders_per_year": 8.206800253528053
+     },
+     "moment_se": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 7.804163734545147e-05,
+      "rpj_mean": 7.7915962267739145,
+      "rpj_p95": 316.54825192209785,
+      "scored_orders_per_year": 0.6666666666666666
+     },
+     "moments": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.0033249127357106033,
+      "rpj_mean": 528.5340096286355,
+      "rpj_p95": 3251.9904658798782,
+      "scored_orders_per_year": 215.33333333333334
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.05,
+     "transport_block_mode": "skip_wave"
+    },
+    "delay49|skip_wave|thesis_exact_autotomy|tol0.5": {
+     "delay_hours": 49.0,
+     "discrepancies": {
+      "autotomy_share": 11.20019085174007,
+      "ret_above_one_share": 3.9031038103562365,
+      "ret_mean": 7.837190904893338,
+      "rpj_mean": 29.920589311524395,
+      "rpj_p95": 8.829765089472096,
+      "scored_orders_per_year": 8.206800253528053
+     },
+     "moment_se": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 7.804163734545147e-05,
+      "rpj_mean": 7.7915962267739145,
+      "rpj_p95": 316.54825192209785,
+      "scored_orders_per_year": 0.6666666666666666
+     },
+     "moments": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.0033249127357106033,
+      "rpj_mean": 528.5340096286355,
+      "rpj_p95": 3251.9904658798782,
+      "scored_orders_per_year": 215.33333333333334
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.5,
+     "transport_block_mode": "skip_wave"
+    },
+    "delay54|retry_when_ready|operational_on_time": {
+     "delay_hours": 54.0,
+     "discrepancies": {
+      "autotomy_share": 11.20019085174007,
+      "ret_above_one_share": 3.9031038103562365,
+      "ret_mean": 8.087220415709355,
+      "rpj_mean": 30.062058293187928,
+      "rpj_p95": 8.829765089472096,
+      "scored_orders_per_year": 8.206800253528053
+     },
+     "moment_se": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 7.403000194694568e-05,
+      "rpj_mean": 7.860203936862532,
+      "rpj_p95": 316.54825192209785,
+      "scored_orders_per_year": 0.6666666666666666
+     },
+     "moments": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.003235442181155936,
+      "rpj_mean": 531.5564098802099,
+      "rpj_p95": 3251.9904658798782,
+      "scored_orders_per_year": 215.33333333333334
+     },
+     "predicate": "operational_on_time",
+     "tolerance": 0.0,
+     "transport_block_mode": "retry_when_ready"
+    },
+    "delay54|retry_when_ready|thesis_exact_autotomy|tol0": {
+     "delay_hours": 54.0,
+     "discrepancies": {
+      "autotomy_share": 11.20019085174007,
+      "ret_above_one_share": 3.9031038103562365,
+      "ret_mean": 8.087220415709355,
+      "rpj_mean": 30.062058293187928,
+      "rpj_p95": 8.829765089472096,
+      "scored_orders_per_year": 8.206800253528053
+     },
+     "moment_se": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 7.403000194694568e-05,
+      "rpj_mean": 7.860203936862532,
+      "rpj_p95": 316.54825192209785,
+      "scored_orders_per_year": 0.6666666666666666
+     },
+     "moments": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.003235442181155936,
+      "rpj_mean": 531.5564098802099,
+      "rpj_p95": 3251.9904658798782,
+      "scored_orders_per_year": 215.33333333333334
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.0,
+     "transport_block_mode": "retry_when_ready"
+    },
+    "delay54|retry_when_ready|thesis_exact_autotomy|tol0.05": {
+     "delay_hours": 54.0,
+     "discrepancies": {
+      "autotomy_share": 11.20019085174007,
+      "ret_above_one_share": 3.9031038103562365,
+      "ret_mean": 8.087220415709355,
+      "rpj_mean": 30.062058293187928,
+      "rpj_p95": 8.829765089472096,
+      "scored_orders_per_year": 8.206800253528053
+     },
+     "moment_se": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 7.403000194694568e-05,
+      "rpj_mean": 7.860203936862532,
+      "rpj_p95": 316.54825192209785,
+      "scored_orders_per_year": 0.6666666666666666
+     },
+     "moments": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.003235442181155936,
+      "rpj_mean": 531.5564098802099,
+      "rpj_p95": 3251.9904658798782,
+      "scored_orders_per_year": 215.33333333333334
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.05,
+     "transport_block_mode": "retry_when_ready"
+    },
+    "delay54|retry_when_ready|thesis_exact_autotomy|tol0.5": {
+     "delay_hours": 54.0,
+     "discrepancies": {
+      "autotomy_share": 11.20019085174007,
+      "ret_above_one_share": 3.9031038103562365,
+      "ret_mean": 8.087220415709355,
+      "rpj_mean": 30.062058293187928,
+      "rpj_p95": 8.829765089472096,
+      "scored_orders_per_year": 8.206800253528053
+     },
+     "moment_se": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 7.403000194694568e-05,
+      "rpj_mean": 7.860203936862532,
+      "rpj_p95": 316.54825192209785,
+      "scored_orders_per_year": 0.6666666666666666
+     },
+     "moments": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.003235442181155936,
+      "rpj_mean": 531.5564098802099,
+      "rpj_p95": 3251.9904658798782,
+      "scored_orders_per_year": 215.33333333333334
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.5,
+     "transport_block_mode": "retry_when_ready"
+    },
+    "delay54|skip_wave|operational_on_time": {
+     "delay_hours": 54.0,
+     "discrepancies": {
+      "autotomy_share": 11.20019085174007,
+      "ret_above_one_share": 3.9031038103562365,
+      "ret_mean": 8.087220415709355,
+      "rpj_mean": 30.062058293187928,
+      "rpj_p95": 8.829765089472096,
+      "scored_orders_per_year": 8.206800253528053
+     },
+     "moment_se": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 7.403000194694568e-05,
+      "rpj_mean": 7.860203936862532,
+      "rpj_p95": 316.54825192209785,
+      "scored_orders_per_year": 0.6666666666666666
+     },
+     "moments": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.003235442181155936,
+      "rpj_mean": 531.5564098802099,
+      "rpj_p95": 3251.9904658798782,
+      "scored_orders_per_year": 215.33333333333334
+     },
+     "predicate": "operational_on_time",
+     "tolerance": 0.0,
+     "transport_block_mode": "skip_wave"
+    },
+    "delay54|skip_wave|thesis_exact_autotomy|tol0": {
+     "delay_hours": 54.0,
+     "discrepancies": {
+      "autotomy_share": 11.20019085174007,
+      "ret_above_one_share": 3.9031038103562365,
+      "ret_mean": 8.087220415709355,
+      "rpj_mean": 30.062058293187928,
+      "rpj_p95": 8.829765089472096,
+      "scored_orders_per_year": 8.206800253528053
+     },
+     "moment_se": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 7.403000194694568e-05,
+      "rpj_mean": 7.860203936862532,
+      "rpj_p95": 316.54825192209785,
+      "scored_orders_per_year": 0.6666666666666666
+     },
+     "moments": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.003235442181155936,
+      "rpj_mean": 531.5564098802099,
+      "rpj_p95": 3251.9904658798782,
+      "scored_orders_per_year": 215.33333333333334
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.0,
+     "transport_block_mode": "skip_wave"
+    },
+    "delay54|skip_wave|thesis_exact_autotomy|tol0.05": {
+     "delay_hours": 54.0,
+     "discrepancies": {
+      "autotomy_share": 11.20019085174007,
+      "ret_above_one_share": 3.9031038103562365,
+      "ret_mean": 8.087220415709355,
+      "rpj_mean": 30.062058293187928,
+      "rpj_p95": 8.829765089472096,
+      "scored_orders_per_year": 8.206800253528053
+     },
+     "moment_se": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 7.403000194694568e-05,
+      "rpj_mean": 7.860203936862532,
+      "rpj_p95": 316.54825192209785,
+      "scored_orders_per_year": 0.6666666666666666
+     },
+     "moments": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.003235442181155936,
+      "rpj_mean": 531.5564098802099,
+      "rpj_p95": 3251.9904658798782,
+      "scored_orders_per_year": 215.33333333333334
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.05,
+     "transport_block_mode": "skip_wave"
+    },
+    "delay54|skip_wave|thesis_exact_autotomy|tol0.5": {
+     "delay_hours": 54.0,
+     "discrepancies": {
+      "autotomy_share": 11.20019085174007,
+      "ret_above_one_share": 3.9031038103562365,
+      "ret_mean": 8.087220415709355,
+      "rpj_mean": 30.062058293187928,
+      "rpj_p95": 8.829765089472096,
+      "scored_orders_per_year": 8.206800253528053
+     },
+     "moment_se": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 7.403000194694568e-05,
+      "rpj_mean": 7.860203936862532,
+      "rpj_p95": 316.54825192209785,
+      "scored_orders_per_year": 0.6666666666666666
+     },
+     "moments": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.003235442181155936,
+      "rpj_mean": 531.5564098802099,
+      "rpj_p95": 3251.9904658798782,
+      "scored_orders_per_year": 215.33333333333334
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.5,
+     "transport_block_mode": "skip_wave"
+    },
+    "delay60|retry_when_ready|operational_on_time": {
+     "delay_hours": 60.0,
+     "discrepancies": {
+      "autotomy_share": 11.20019085174007,
+      "ret_above_one_share": 3.9031038103562365,
+      "ret_mean": 8.348438592638542,
+      "rpj_mean": 30.22440003348187,
+      "rpj_p95": 8.829765089472096,
+      "scored_orders_per_year": 8.206800253528053
+     },
+     "moment_se": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 7.022471725170448e-05,
+      "rpj_mean": 7.94304939329177,
+      "rpj_p95": 316.54825192209785,
+      "scored_orders_per_year": 0.6666666666666666
+     },
+     "moments": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.0031414416369169086,
+      "rpj_mean": 535.1368426282821,
+      "rpj_p95": 3251.9904658798782,
+      "scored_orders_per_year": 215.33333333333334
+     },
+     "predicate": "operational_on_time",
+     "tolerance": 0.0,
+     "transport_block_mode": "retry_when_ready"
+    },
+    "delay60|retry_when_ready|thesis_exact_autotomy|tol0": {
+     "delay_hours": 60.0,
+     "discrepancies": {
+      "autotomy_share": 11.20019085174007,
+      "ret_above_one_share": 3.9031038103562365,
+      "ret_mean": 8.348438592638542,
+      "rpj_mean": 30.22440003348187,
+      "rpj_p95": 8.829765089472096,
+      "scored_orders_per_year": 8.206800253528053
+     },
+     "moment_se": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 7.022471725170448e-05,
+      "rpj_mean": 7.94304939329177,
+      "rpj_p95": 316.54825192209785,
+      "scored_orders_per_year": 0.6666666666666666
+     },
+     "moments": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.0031414416369169086,
+      "rpj_mean": 535.1368426282821,
+      "rpj_p95": 3251.9904658798782,
+      "scored_orders_per_year": 215.33333333333334
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.0,
+     "transport_block_mode": "retry_when_ready"
+    },
+    "delay60|retry_when_ready|thesis_exact_autotomy|tol0.05": {
+     "delay_hours": 60.0,
+     "discrepancies": {
+      "autotomy_share": 11.20019085174007,
+      "ret_above_one_share": 3.9031038103562365,
+      "ret_mean": 8.348438592638542,
+      "rpj_mean": 30.22440003348187,
+      "rpj_p95": 8.829765089472096,
+      "scored_orders_per_year": 8.206800253528053
+     },
+     "moment_se": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 7.022471725170448e-05,
+      "rpj_mean": 7.94304939329177,
+      "rpj_p95": 316.54825192209785,
+      "scored_orders_per_year": 0.6666666666666666
+     },
+     "moments": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.0031414416369169086,
+      "rpj_mean": 535.1368426282821,
+      "rpj_p95": 3251.9904658798782,
+      "scored_orders_per_year": 215.33333333333334
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.05,
+     "transport_block_mode": "retry_when_ready"
+    },
+    "delay60|retry_when_ready|thesis_exact_autotomy|tol0.5": {
+     "delay_hours": 60.0,
+     "discrepancies": {
+      "autotomy_share": 11.20019085174007,
+      "ret_above_one_share": 3.9031038103562365,
+      "ret_mean": 8.348438592638542,
+      "rpj_mean": 30.22440003348187,
+      "rpj_p95": 8.829765089472096,
+      "scored_orders_per_year": 8.206800253528053
+     },
+     "moment_se": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 7.022471725170448e-05,
+      "rpj_mean": 7.94304939329177,
+      "rpj_p95": 316.54825192209785,
+      "scored_orders_per_year": 0.6666666666666666
+     },
+     "moments": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.0031414416369169086,
+      "rpj_mean": 535.1368426282821,
+      "rpj_p95": 3251.9904658798782,
+      "scored_orders_per_year": 215.33333333333334
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.5,
+     "transport_block_mode": "retry_when_ready"
+    },
+    "delay60|skip_wave|operational_on_time": {
+     "delay_hours": 60.0,
+     "discrepancies": {
+      "autotomy_share": 11.20019085174007,
+      "ret_above_one_share": 3.9031038103562365,
+      "ret_mean": 8.348438592638542,
+      "rpj_mean": 30.22440003348187,
+      "rpj_p95": 8.829765089472096,
+      "scored_orders_per_year": 8.206800253528053
+     },
+     "moment_se": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 7.022471725170448e-05,
+      "rpj_mean": 7.94304939329177,
+      "rpj_p95": 316.54825192209785,
+      "scored_orders_per_year": 0.6666666666666666
+     },
+     "moments": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.0031414416369169086,
+      "rpj_mean": 535.1368426282821,
+      "rpj_p95": 3251.9904658798782,
+      "scored_orders_per_year": 215.33333333333334
+     },
+     "predicate": "operational_on_time",
+     "tolerance": 0.0,
+     "transport_block_mode": "skip_wave"
+    },
+    "delay60|skip_wave|thesis_exact_autotomy|tol0": {
+     "delay_hours": 60.0,
+     "discrepancies": {
+      "autotomy_share": 11.20019085174007,
+      "ret_above_one_share": 3.9031038103562365,
+      "ret_mean": 8.348438592638542,
+      "rpj_mean": 30.22440003348187,
+      "rpj_p95": 8.829765089472096,
+      "scored_orders_per_year": 8.206800253528053
+     },
+     "moment_se": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 7.022471725170448e-05,
+      "rpj_mean": 7.94304939329177,
+      "rpj_p95": 316.54825192209785,
+      "scored_orders_per_year": 0.6666666666666666
+     },
+     "moments": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.0031414416369169086,
+      "rpj_mean": 535.1368426282821,
+      "rpj_p95": 3251.9904658798782,
+      "scored_orders_per_year": 215.33333333333334
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.0,
+     "transport_block_mode": "skip_wave"
+    },
+    "delay60|skip_wave|thesis_exact_autotomy|tol0.05": {
+     "delay_hours": 60.0,
+     "discrepancies": {
+      "autotomy_share": 11.20019085174007,
+      "ret_above_one_share": 3.9031038103562365,
+      "ret_mean": 8.348438592638542,
+      "rpj_mean": 30.22440003348187,
+      "rpj_p95": 8.829765089472096,
+      "scored_orders_per_year": 8.206800253528053
+     },
+     "moment_se": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 7.022471725170448e-05,
+      "rpj_mean": 7.94304939329177,
+      "rpj_p95": 316.54825192209785,
+      "scored_orders_per_year": 0.6666666666666666
+     },
+     "moments": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.0031414416369169086,
+      "rpj_mean": 535.1368426282821,
+      "rpj_p95": 3251.9904658798782,
+      "scored_orders_per_year": 215.33333333333334
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.05,
+     "transport_block_mode": "skip_wave"
+    },
+    "delay60|skip_wave|thesis_exact_autotomy|tol0.5": {
+     "delay_hours": 60.0,
+     "discrepancies": {
+      "autotomy_share": 11.20019085174007,
+      "ret_above_one_share": 3.9031038103562365,
+      "ret_mean": 8.348438592638542,
+      "rpj_mean": 30.22440003348187,
+      "rpj_p95": 8.829765089472096,
+      "scored_orders_per_year": 8.206800253528053
+     },
+     "moment_se": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 7.022471725170448e-05,
+      "rpj_mean": 7.94304939329177,
+      "rpj_p95": 316.54825192209785,
+      "scored_orders_per_year": 0.6666666666666666
+     },
+     "moments": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.0031414416369169086,
+      "rpj_mean": 535.1368426282821,
+      "rpj_p95": 3251.9904658798782,
+      "scored_orders_per_year": 215.33333333333334
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.5,
+     "transport_block_mode": "skip_wave"
+    }
+   },
+   "epsilon_declared": 0.5,
+   "epsilon_stability": {
+    "by_epsilon": {
+     "0.25": [
+      "delay42|retry_when_ready|operational_on_time",
+      "delay42|retry_when_ready|thesis_exact_autotomy|tol0",
+      "delay42|retry_when_ready|thesis_exact_autotomy|tol0.05",
+      "delay42|retry_when_ready|thesis_exact_autotomy|tol0.5",
+      "delay42|skip_wave|operational_on_time",
+      "delay42|skip_wave|thesis_exact_autotomy|tol0",
+      "delay42|skip_wave|thesis_exact_autotomy|tol0.05",
+      "delay42|skip_wave|thesis_exact_autotomy|tol0.5",
+      "delay47|retry_when_ready|operational_on_time",
+      "delay47|retry_when_ready|thesis_exact_autotomy|tol0",
+      "delay47|retry_when_ready|thesis_exact_autotomy|tol0.05",
+      "delay47|retry_when_ready|thesis_exact_autotomy|tol0.5",
+      "delay47|skip_wave|operational_on_time",
+      "delay47|skip_wave|thesis_exact_autotomy|tol0",
+      "delay47|skip_wave|thesis_exact_autotomy|tol0.05",
+      "delay47|skip_wave|thesis_exact_autotomy|tol0.5",
+      "delay49|retry_when_ready|operational_on_time",
+      "delay49|retry_when_ready|thesis_exact_autotomy|tol0",
+      "delay49|retry_when_ready|thesis_exact_autotomy|tol0.05",
+      "delay49|retry_when_ready|thesis_exact_autotomy|tol0.5",
+      "delay49|skip_wave|operational_on_time",
+      "delay49|skip_wave|thesis_exact_autotomy|tol0",
+      "delay49|skip_wave|thesis_exact_autotomy|tol0.05",
+      "delay49|skip_wave|thesis_exact_autotomy|tol0.5"
+     ],
+     "0.5": [
+      "delay42|retry_when_ready|operational_on_time",
+      "delay42|retry_when_ready|thesis_exact_autotomy|tol0",
+      "delay42|retry_when_ready|thesis_exact_autotomy|tol0.05",
+      "delay42|retry_when_ready|thesis_exact_autotomy|tol0.5",
+      "delay42|skip_wave|operational_on_time",
+      "delay42|skip_wave|thesis_exact_autotomy|tol0",
+      "delay42|skip_wave|thesis_exact_autotomy|tol0.05",
+      "delay42|skip_wave|thesis_exact_autotomy|tol0.5",
+      "delay47|retry_when_ready|operational_on_time",
+      "delay47|retry_when_ready|thesis_exact_autotomy|tol0",
+      "delay47|retry_when_ready|thesis_exact_autotomy|tol0.05",
+      "delay47|retry_when_ready|thesis_exact_autotomy|tol0.5",
+      "delay47|skip_wave|operational_on_time",
+      "delay47|skip_wave|thesis_exact_autotomy|tol0",
+      "delay47|skip_wave|thesis_exact_autotomy|tol0.05",
+      "delay47|skip_wave|thesis_exact_autotomy|tol0.5",
+      "delay48|retry_when_ready|operational_on_time",
+      "delay48|retry_when_ready|thesis_exact_autotomy|tol0",
+      "delay48|retry_when_ready|thesis_exact_autotomy|tol0.05",
+      "delay48|retry_when_ready|thesis_exact_autotomy|tol0.5",
+      "delay48|skip_wave|operational_on_time",
+      "delay48|skip_wave|thesis_exact_autotomy|tol0",
+      "delay48|skip_wave|thesis_exact_autotomy|tol0.05",
+      "delay48|skip_wave|thesis_exact_autotomy|tol0.5",
+      "delay49|retry_when_ready|operational_on_time",
+      "delay49|retry_when_ready|thesis_exact_autotomy|tol0",
+      "delay49|retry_when_ready|thesis_exact_autotomy|tol0.05",
+      "delay49|retry_when_ready|thesis_exact_autotomy|tol0.5",
+      "delay49|skip_wave|operational_on_time",
+      "delay49|skip_wave|thesis_exact_autotomy|tol0",
+      "delay49|skip_wave|thesis_exact_autotomy|tol0.05",
+      "delay49|skip_wave|thesis_exact_autotomy|tol0.5",
+      "delay54|retry_when_ready|operational_on_time",
+      "delay54|retry_when_ready|thesis_exact_autotomy|tol0",
+      "delay54|retry_when_ready|thesis_exact_autotomy|tol0.05",
+      "delay54|retry_when_ready|thesis_exact_autotomy|tol0.5",
+      "delay54|skip_wave|operational_on_time",
+      "delay54|skip_wave|thesis_exact_autotomy|tol0",
+      "delay54|skip_wave|thesis_exact_autotomy|tol0.05",
+      "delay54|skip_wave|thesis_exact_autotomy|tol0.5"
+     ],
+     "1.0": [
+      "delay42|retry_when_ready|operational_on_time",
+      "delay42|retry_when_ready|thesis_exact_autotomy|tol0",
+      "delay42|retry_when_ready|thesis_exact_autotomy|tol0.05",
+      "delay42|retry_when_ready|thesis_exact_autotomy|tol0.5",
+      "delay42|skip_wave|operational_on_time",
+      "delay42|skip_wave|thesis_exact_autotomy|tol0",
+      "delay42|skip_wave|thesis_exact_autotomy|tol0.05",
+      "delay42|skip_wave|thesis_exact_autotomy|tol0.5",
+      "delay47|retry_when_ready|operational_on_time",
+      "delay47|retry_when_ready|thesis_exact_autotomy|tol0",
+      "delay47|retry_when_ready|thesis_exact_autotomy|tol0.05",
+      "delay47|retry_when_ready|thesis_exact_autotomy|tol0.5",
+      "delay47|skip_wave|operational_on_time",
+      "delay47|skip_wave|thesis_exact_autotomy|tol0",
+      "delay47|skip_wave|thesis_exact_autotomy|tol0.05",
+      "delay47|skip_wave|thesis_exact_autotomy|tol0.5",
+      "delay48|retry_when_ready|operational_on_time",
+      "delay48|retry_when_ready|thesis_exact_autotomy|tol0",
+      "delay48|retry_when_ready|thesis_exact_autotomy|tol0.05",
+      "delay48|retry_when_ready|thesis_exact_autotomy|tol0.5",
+      "delay48|skip_wave|operational_on_time",
+      "delay48|skip_wave|thesis_exact_autotomy|tol0",
+      "delay48|skip_wave|thesis_exact_autotomy|tol0.05",
+      "delay48|skip_wave|thesis_exact_autotomy|tol0.5",
+      "delay49|retry_when_ready|operational_on_time",
+      "delay49|retry_when_ready|thesis_exact_autotomy|tol0",
+      "delay49|retry_when_ready|thesis_exact_autotomy|tol0.05",
+      "delay49|retry_when_ready|thesis_exact_autotomy|tol0.5",
+      "delay49|skip_wave|operational_on_time",
+      "delay49|skip_wave|thesis_exact_autotomy|tol0",
+      "delay49|skip_wave|thesis_exact_autotomy|tol0.05",
+      "delay49|skip_wave|thesis_exact_autotomy|tol0.5",
+      "delay54|retry_when_ready|operational_on_time",
+      "delay54|retry_when_ready|thesis_exact_autotomy|tol0",
+      "delay54|retry_when_ready|thesis_exact_autotomy|tol0.05",
+      "delay54|retry_when_ready|thesis_exact_autotomy|tol0.5",
+      "delay54|skip_wave|operational_on_time",
+      "delay54|skip_wave|thesis_exact_autotomy|tol0",
+      "delay54|skip_wave|thesis_exact_autotomy|tol0.05",
+      "delay54|skip_wave|thesis_exact_autotomy|tol0.5",
+      "delay60|retry_when_ready|operational_on_time",
+      "delay60|retry_when_ready|thesis_exact_autotomy|tol0",
+      "delay60|retry_when_ready|thesis_exact_autotomy|tol0.05",
+      "delay60|retry_when_ready|thesis_exact_autotomy|tol0.5",
+      "delay60|skip_wave|operational_on_time",
+      "delay60|skip_wave|thesis_exact_autotomy|tol0",
+      "delay60|skip_wave|thesis_exact_autotomy|tol0.05",
+      "delay60|skip_wave|thesis_exact_autotomy|tol0.5"
+     ],
+     "2.0": [
+      "delay42|retry_when_ready|operational_on_time",
+      "delay42|retry_when_ready|thesis_exact_autotomy|tol0",
+      "delay42|retry_when_ready|thesis_exact_autotomy|tol0.05",
+      "delay42|retry_when_ready|thesis_exact_autotomy|tol0.5",
+      "delay42|skip_wave|operational_on_time",
+      "delay42|skip_wave|thesis_exact_autotomy|tol0",
+      "delay42|skip_wave|thesis_exact_autotomy|tol0.05",
+      "delay42|skip_wave|thesis_exact_autotomy|tol0.5",
+      "delay47|retry_when_ready|operational_on_time",
+      "delay47|retry_when_ready|thesis_exact_autotomy|tol0",
+      "delay47|retry_when_ready|thesis_exact_autotomy|tol0.05",
+      "delay47|retry_when_ready|thesis_exact_autotomy|tol0.5",
+      "delay47|skip_wave|operational_on_time",
+      "delay47|skip_wave|thesis_exact_autotomy|tol0",
+      "delay47|skip_wave|thesis_exact_autotomy|tol0.05",
+      "delay47|skip_wave|thesis_exact_autotomy|tol0.5",
+      "delay48|retry_when_ready|operational_on_time",
+      "delay48|retry_when_ready|thesis_exact_autotomy|tol0",
+      "delay48|retry_when_ready|thesis_exact_autotomy|tol0.05",
+      "delay48|retry_when_ready|thesis_exact_autotomy|tol0.5",
+      "delay48|skip_wave|operational_on_time",
+      "delay48|skip_wave|thesis_exact_autotomy|tol0",
+      "delay48|skip_wave|thesis_exact_autotomy|tol0.05",
+      "delay48|skip_wave|thesis_exact_autotomy|tol0.5",
+      "delay49|retry_when_ready|operational_on_time",
+      "delay49|retry_when_ready|thesis_exact_autotomy|tol0",
+      "delay49|retry_when_ready|thesis_exact_autotomy|tol0.05",
+      "delay49|retry_when_ready|thesis_exact_autotomy|tol0.5",
+      "delay49|skip_wave|operational_on_time",
+      "delay49|skip_wave|thesis_exact_autotomy|tol0",
+      "delay49|skip_wave|thesis_exact_autotomy|tol0.05",
+      "delay49|skip_wave|thesis_exact_autotomy|tol0.5",
+      "delay54|retry_when_ready|operational_on_time",
+      "delay54|retry_when_ready|thesis_exact_autotomy|tol0",
+      "delay54|retry_when_ready|thesis_exact_autotomy|tol0.05",
+      "delay54|retry_when_ready|thesis_exact_autotomy|tol0.5",
+      "delay54|skip_wave|operational_on_time",
+      "delay54|skip_wave|thesis_exact_autotomy|tol0",
+      "delay54|skip_wave|thesis_exact_autotomy|tol0.05",
+      "delay54|skip_wave|thesis_exact_autotomy|tol0.5",
+      "delay60|retry_when_ready|operational_on_time",
+      "delay60|retry_when_ready|thesis_exact_autotomy|tol0",
+      "delay60|retry_when_ready|thesis_exact_autotomy|tol0.05",
+      "delay60|retry_when_ready|thesis_exact_autotomy|tol0.5",
+      "delay60|skip_wave|operational_on_time",
+      "delay60|skip_wave|thesis_exact_autotomy|tol0",
+      "delay60|skip_wave|thesis_exact_autotomy|tol0.05",
+      "delay60|skip_wave|thesis_exact_autotomy|tol0.5"
+     ]
+    },
+    "n_distinct_sets": 3,
+    "stable": false
+   },
+   "grid_discriminates": true,
+   "n_cells": 48,
+   "non_dominated_set": [
+    "delay42|retry_when_ready|operational_on_time",
+    "delay42|retry_when_ready|thesis_exact_autotomy|tol0",
+    "delay42|retry_when_ready|thesis_exact_autotomy|tol0.05",
+    "delay42|retry_when_ready|thesis_exact_autotomy|tol0.5",
+    "delay42|skip_wave|operational_on_time",
+    "delay42|skip_wave|thesis_exact_autotomy|tol0",
+    "delay42|skip_wave|thesis_exact_autotomy|tol0.05",
+    "delay42|skip_wave|thesis_exact_autotomy|tol0.5",
+    "delay47|retry_when_ready|operational_on_time",
+    "delay47|retry_when_ready|thesis_exact_autotomy|tol0",
+    "delay47|retry_when_ready|thesis_exact_autotomy|tol0.05",
+    "delay47|retry_when_ready|thesis_exact_autotomy|tol0.5",
+    "delay47|skip_wave|operational_on_time",
+    "delay47|skip_wave|thesis_exact_autotomy|tol0",
+    "delay47|skip_wave|thesis_exact_autotomy|tol0.05",
+    "delay47|skip_wave|thesis_exact_autotomy|tol0.5",
+    "delay48|retry_when_ready|operational_on_time",
+    "delay48|retry_when_ready|thesis_exact_autotomy|tol0",
+    "delay48|retry_when_ready|thesis_exact_autotomy|tol0.05",
+    "delay48|retry_when_ready|thesis_exact_autotomy|tol0.5",
+    "delay48|skip_wave|operational_on_time",
+    "delay48|skip_wave|thesis_exact_autotomy|tol0",
+    "delay48|skip_wave|thesis_exact_autotomy|tol0.05",
+    "delay48|skip_wave|thesis_exact_autotomy|tol0.5",
+    "delay49|retry_when_ready|operational_on_time",
+    "delay49|retry_when_ready|thesis_exact_autotomy|tol0",
+    "delay49|retry_when_ready|thesis_exact_autotomy|tol0.05",
+    "delay49|retry_when_ready|thesis_exact_autotomy|tol0.5",
+    "delay49|skip_wave|operational_on_time",
+    "delay49|skip_wave|thesis_exact_autotomy|tol0",
+    "delay49|skip_wave|thesis_exact_autotomy|tol0.05",
+    "delay49|skip_wave|thesis_exact_autotomy|tol0.5",
+    "delay54|retry_when_ready|operational_on_time",
+    "delay54|retry_when_ready|thesis_exact_autotomy|tol0",
+    "delay54|retry_when_ready|thesis_exact_autotomy|tol0.05",
+    "delay54|retry_when_ready|thesis_exact_autotomy|tol0.5",
+    "delay54|skip_wave|operational_on_time",
+    "delay54|skip_wave|thesis_exact_autotomy|tol0",
+    "delay54|skip_wave|thesis_exact_autotomy|tol0.05",
+    "delay54|skip_wave|thesis_exact_autotomy|tol0.5"
+   ],
+   "reference": {
+    "autotomy_share": {
+     "mean": 0.00436281758032855,
+     "spread": 0.00116859193867685
+    },
+    "ret_above_one_share": {
+     "mean": 0.0005336194895237687,
+     "spread": 0.0004101501129238978
+    },
+    "ret_mean": {
+     "mean": 0.006331160620508499,
+     "spread": 0.0011266939889460563
+    },
+    "rpj_mean": {
+     "mean": 193.70470631912355,
+     "spread": 24.09740062629558
+    },
+    "rpj_p95": {
+     "mean": 456.4973053333325,
+     "spread": 16.974172017736954
+    },
+    "scored_orders_per_year": {
+     "mean": 119.07222222222221,
+     "spread": 35.131414993484746
+    }
+   }
+  },
+  "R2r": {
+   "cells": {
+    "delay42|retry_when_ready|operational_on_time": {
+     "delay_hours": 42.0,
+     "discrepancies": {
+      "autotomy_share": 36.18537517068001,
+      "ret_above_one_share": 3.987596379666523,
+      "ret_mean": 7.0308769994056854,
+      "rpj_mean": 4.923894459987544,
+      "rpj_p95": 10.581863484736303,
+      "scored_orders_per_year": 25.451009616321564
+     },
+     "moment_se": {
+      "autotomy_share": 0.005269302823057026,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.013754278602481544,
+      "rpj_mean": 62.981956653856074,
+      "rpj_p95": 92.99051580843485,
+      "scored_orders_per_year": 4.0
+     },
+     "moments": {
+      "autotomy_share": 0.19137529137529138,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.40509489591651054,
+      "rpj_mean": 290.9777756829844,
+      "rpj_p95": 894.8967506291302,
+      "scored_orders_per_year": 216.0
+     },
+     "predicate": "operational_on_time",
+     "tolerance": 0.0,
+     "transport_block_mode": "retry_when_ready"
+    },
+    "delay42|retry_when_ready|thesis_exact_autotomy|tol0": {
+     "delay_hours": 42.0,
+     "discrepancies": {
+      "autotomy_share": 36.18537517068001,
+      "ret_above_one_share": 3.987596379666523,
+      "ret_mean": 7.0308769994056854,
+      "rpj_mean": 4.923894459987544,
+      "rpj_p95": 10.581863484736303,
+      "scored_orders_per_year": 25.451009616321564
+     },
+     "moment_se": {
+      "autotomy_share": 0.005269302823057026,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.013754278602481544,
+      "rpj_mean": 62.981956653856074,
+      "rpj_p95": 92.99051580843485,
+      "scored_orders_per_year": 4.0
+     },
+     "moments": {
+      "autotomy_share": 0.19137529137529138,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.40509489591651054,
+      "rpj_mean": 290.9777756829844,
+      "rpj_p95": 894.8967506291302,
+      "scored_orders_per_year": 216.0
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.0,
+     "transport_block_mode": "retry_when_ready"
+    },
+    "delay42|retry_when_ready|thesis_exact_autotomy|tol0.05": {
+     "delay_hours": 42.0,
+     "discrepancies": {
+      "autotomy_share": 36.18537517068001,
+      "ret_above_one_share": 3.987596379666523,
+      "ret_mean": 7.0308769994056854,
+      "rpj_mean": 4.923894459987544,
+      "rpj_p95": 10.581863484736303,
+      "scored_orders_per_year": 25.451009616321564
+     },
+     "moment_se": {
+      "autotomy_share": 0.005269302823057026,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.013754278602481544,
+      "rpj_mean": 62.981956653856074,
+      "rpj_p95": 92.99051580843485,
+      "scored_orders_per_year": 4.0
+     },
+     "moments": {
+      "autotomy_share": 0.19137529137529138,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.40509489591651054,
+      "rpj_mean": 290.9777756829844,
+      "rpj_p95": 894.8967506291302,
+      "scored_orders_per_year": 216.0
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.05,
+     "transport_block_mode": "retry_when_ready"
+    },
+    "delay42|retry_when_ready|thesis_exact_autotomy|tol0.5": {
+     "delay_hours": 42.0,
+     "discrepancies": {
+      "autotomy_share": 36.18537517068001,
+      "ret_above_one_share": 3.987596379666523,
+      "ret_mean": 7.0308769994056854,
+      "rpj_mean": 4.923894459987544,
+      "rpj_p95": 10.581863484736303,
+      "scored_orders_per_year": 25.451009616321564
+     },
+     "moment_se": {
+      "autotomy_share": 0.005269302823057026,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.013754278602481544,
+      "rpj_mean": 62.981956653856074,
+      "rpj_p95": 92.99051580843485,
+      "scored_orders_per_year": 4.0
+     },
+     "moments": {
+      "autotomy_share": 0.19137529137529138,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.40509489591651054,
+      "rpj_mean": 290.9777756829844,
+      "rpj_p95": 894.8967506291302,
+      "scored_orders_per_year": 216.0
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.5,
+     "transport_block_mode": "retry_when_ready"
+    },
+    "delay42|skip_wave|operational_on_time": {
+     "delay_hours": 42.0,
+     "discrepancies": {
+      "autotomy_share": 14.239898174046232,
+      "ret_above_one_share": 3.987596379666523,
+      "ret_mean": 6.4067608643740686,
+      "rpj_mean": 5.091454853216132,
+      "rpj_p95": 10.38712061661485,
+      "scored_orders_per_year": 27.64382753402078
+     },
+     "moment_se": {
+      "autotomy_share": 0.013365046859399932,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.01963207731776296,
+      "rpj_mean": 61.62563572463733,
+      "rpj_p95": 106.35900359104234,
+      "scored_orders_per_year": 3.6055512754639896
+     },
+     "moments": {
+      "autotomy_share": 0.19096387483484256,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.4074546957054362,
+      "rpj_mean": 285.92709057150734,
+      "rpj_p95": 867.2678100213037,
+      "scored_orders_per_year": 215.0
+     },
+     "predicate": "operational_on_time",
+     "tolerance": 0.0,
+     "transport_block_mode": "skip_wave"
+    },
+    "delay42|skip_wave|thesis_exact_autotomy|tol0": {
+     "delay_hours": 42.0,
+     "discrepancies": {
+      "autotomy_share": 14.239898174046232,
+      "ret_above_one_share": 3.987596379666523,
+      "ret_mean": 6.4067608643740686,
+      "rpj_mean": 5.091454853216132,
+      "rpj_p95": 10.38712061661485,
+      "scored_orders_per_year": 27.64382753402078
+     },
+     "moment_se": {
+      "autotomy_share": 0.013365046859399932,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.01963207731776296,
+      "rpj_mean": 61.62563572463733,
+      "rpj_p95": 106.35900359104234,
+      "scored_orders_per_year": 3.6055512754639896
+     },
+     "moments": {
+      "autotomy_share": 0.19096387483484256,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.4074546957054362,
+      "rpj_mean": 285.92709057150734,
+      "rpj_p95": 867.2678100213037,
+      "scored_orders_per_year": 215.0
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.0,
+     "transport_block_mode": "skip_wave"
+    },
+    "delay42|skip_wave|thesis_exact_autotomy|tol0.05": {
+     "delay_hours": 42.0,
+     "discrepancies": {
+      "autotomy_share": 14.239898174046232,
+      "ret_above_one_share": 3.987596379666523,
+      "ret_mean": 6.4067608643740686,
+      "rpj_mean": 5.091454853216132,
+      "rpj_p95": 10.38712061661485,
+      "scored_orders_per_year": 27.64382753402078
+     },
+     "moment_se": {
+      "autotomy_share": 0.013365046859399932,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.01963207731776296,
+      "rpj_mean": 61.62563572463733,
+      "rpj_p95": 106.35900359104234,
+      "scored_orders_per_year": 3.6055512754639896
+     },
+     "moments": {
+      "autotomy_share": 0.19096387483484256,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.4074546957054362,
+      "rpj_mean": 285.92709057150734,
+      "rpj_p95": 867.2678100213037,
+      "scored_orders_per_year": 215.0
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.05,
+     "transport_block_mode": "skip_wave"
+    },
+    "delay42|skip_wave|thesis_exact_autotomy|tol0.5": {
+     "delay_hours": 42.0,
+     "discrepancies": {
+      "autotomy_share": 14.239898174046232,
+      "ret_above_one_share": 3.987596379666523,
+      "ret_mean": 6.4067608643740686,
+      "rpj_mean": 5.091454853216132,
+      "rpj_p95": 10.38712061661485,
+      "scored_orders_per_year": 27.64382753402078
+     },
+     "moment_se": {
+      "autotomy_share": 0.013365046859399932,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.01963207731776296,
+      "rpj_mean": 61.62563572463733,
+      "rpj_p95": 106.35900359104234,
+      "scored_orders_per_year": 3.6055512754639896
+     },
+     "moments": {
+      "autotomy_share": 0.19096387483484256,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.4074546957054362,
+      "rpj_mean": 285.92709057150734,
+      "rpj_p95": 867.2678100213037,
+      "scored_orders_per_year": 215.0
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.5,
+     "transport_block_mode": "skip_wave"
+    },
+    "delay47|retry_when_ready|operational_on_time": {
+     "delay_hours": 47.0,
+     "discrepancies": {
+      "autotomy_share": 36.189736737226845,
+      "ret_above_one_share": 3.987596379666523,
+      "ret_mean": 7.338830890322869,
+      "rpj_mean": 4.923894459987544,
+      "rpj_p95": 10.581863484736303,
+      "scored_orders_per_year": 25.451009616321564
+     },
+     "moment_se": {
+      "autotomy_share": 0.005352430071424261,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.011590651049641802,
+      "rpj_mean": 62.981956653856074,
+      "rpj_p95": 92.99051580843485,
+      "scored_orders_per_year": 4.0
+     },
+     "moments": {
+      "autotomy_share": 0.19440559440559443,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.40700639363773217,
+      "rpj_mean": 290.9777756829844,
+      "rpj_p95": 894.8967506291302,
+      "scored_orders_per_year": 216.0
+     },
+     "predicate": "operational_on_time",
+     "tolerance": 0.0,
+     "transport_block_mode": "retry_when_ready"
+    },
+    "delay47|retry_when_ready|thesis_exact_autotomy|tol0": {
+     "delay_hours": 47.0,
+     "discrepancies": {
+      "autotomy_share": 36.189736737226845,
+      "ret_above_one_share": 3.987596379666523,
+      "ret_mean": 7.338830890322869,
+      "rpj_mean": 4.923894459987544,
+      "rpj_p95": 10.581863484736303,
+      "scored_orders_per_year": 25.451009616321564
+     },
+     "moment_se": {
+      "autotomy_share": 0.005352430071424261,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.011590651049641802,
+      "rpj_mean": 62.981956653856074,
+      "rpj_p95": 92.99051580843485,
+      "scored_orders_per_year": 4.0
+     },
+     "moments": {
+      "autotomy_share": 0.19440559440559443,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.40700639363773217,
+      "rpj_mean": 290.9777756829844,
+      "rpj_p95": 894.8967506291302,
+      "scored_orders_per_year": 216.0
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.0,
+     "transport_block_mode": "retry_when_ready"
+    },
+    "delay47|retry_when_ready|thesis_exact_autotomy|tol0.05": {
+     "delay_hours": 47.0,
+     "discrepancies": {
+      "autotomy_share": 36.189736737226845,
+      "ret_above_one_share": 3.987596379666523,
+      "ret_mean": 7.338830890322869,
+      "rpj_mean": 4.923894459987544,
+      "rpj_p95": 10.581863484736303,
+      "scored_orders_per_year": 25.451009616321564
+     },
+     "moment_se": {
+      "autotomy_share": 0.005352430071424261,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.011590651049641802,
+      "rpj_mean": 62.981956653856074,
+      "rpj_p95": 92.99051580843485,
+      "scored_orders_per_year": 4.0
+     },
+     "moments": {
+      "autotomy_share": 0.19440559440559443,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.40700639363773217,
+      "rpj_mean": 290.9777756829844,
+      "rpj_p95": 894.8967506291302,
+      "scored_orders_per_year": 216.0
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.05,
+     "transport_block_mode": "retry_when_ready"
+    },
+    "delay47|retry_when_ready|thesis_exact_autotomy|tol0.5": {
+     "delay_hours": 47.0,
+     "discrepancies": {
+      "autotomy_share": 36.189736737226845,
+      "ret_above_one_share": 3.987596379666523,
+      "ret_mean": 7.338830890322869,
+      "rpj_mean": 4.923894459987544,
+      "rpj_p95": 10.581863484736303,
+      "scored_orders_per_year": 25.451009616321564
+     },
+     "moment_se": {
+      "autotomy_share": 0.005352430071424261,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.011590651049641802,
+      "rpj_mean": 62.981956653856074,
+      "rpj_p95": 92.99051580843485,
+      "scored_orders_per_year": 4.0
+     },
+     "moments": {
+      "autotomy_share": 0.19440559440559443,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.40700639363773217,
+      "rpj_mean": 290.9777756829844,
+      "rpj_p95": 894.8967506291302,
+      "scored_orders_per_year": 216.0
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.5,
+     "transport_block_mode": "retry_when_ready"
+    },
+    "delay47|skip_wave|operational_on_time": {
+     "delay_hours": 47.0,
+     "discrepancies": {
+      "autotomy_share": 15.82768435039692,
+      "ret_above_one_share": 3.987596379666523,
+      "ret_mean": 6.65498268266135,
+      "rpj_mean": 5.091454853216132,
+      "rpj_p95": 10.38712061661485,
+      "scored_orders_per_year": 27.64382753402078
+     },
+     "moment_se": {
+      "autotomy_share": 0.01221694253798989,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.017287143008600032,
+      "rpj_mean": 61.62563572463733,
+      "rpj_p95": 106.35900359104234,
+      "scored_orders_per_year": 3.6055512754639896
+     },
+     "moments": {
+      "autotomy_share": 0.19401512466028595,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.40634141842587806,
+      "rpj_mean": 285.92709057150734,
+      "rpj_p95": 867.2678100213037,
+      "scored_orders_per_year": 215.0
+     },
+     "predicate": "operational_on_time",
+     "tolerance": 0.0,
+     "transport_block_mode": "skip_wave"
+    },
+    "delay47|skip_wave|thesis_exact_autotomy|tol0": {
+     "delay_hours": 47.0,
+     "discrepancies": {
+      "autotomy_share": 15.82768435039692,
+      "ret_above_one_share": 3.987596379666523,
+      "ret_mean": 6.65498268266135,
+      "rpj_mean": 5.091454853216132,
+      "rpj_p95": 10.38712061661485,
+      "scored_orders_per_year": 27.64382753402078
+     },
+     "moment_se": {
+      "autotomy_share": 0.01221694253798989,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.017287143008600032,
+      "rpj_mean": 61.62563572463733,
+      "rpj_p95": 106.35900359104234,
+      "scored_orders_per_year": 3.6055512754639896
+     },
+     "moments": {
+      "autotomy_share": 0.19401512466028595,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.40634141842587806,
+      "rpj_mean": 285.92709057150734,
+      "rpj_p95": 867.2678100213037,
+      "scored_orders_per_year": 215.0
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.0,
+     "transport_block_mode": "skip_wave"
+    },
+    "delay47|skip_wave|thesis_exact_autotomy|tol0.05": {
+     "delay_hours": 47.0,
+     "discrepancies": {
+      "autotomy_share": 15.82768435039692,
+      "ret_above_one_share": 3.987596379666523,
+      "ret_mean": 6.65498268266135,
+      "rpj_mean": 5.091454853216132,
+      "rpj_p95": 10.38712061661485,
+      "scored_orders_per_year": 27.64382753402078
+     },
+     "moment_se": {
+      "autotomy_share": 0.01221694253798989,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.017287143008600032,
+      "rpj_mean": 61.62563572463733,
+      "rpj_p95": 106.35900359104234,
+      "scored_orders_per_year": 3.6055512754639896
+     },
+     "moments": {
+      "autotomy_share": 0.19401512466028595,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.40634141842587806,
+      "rpj_mean": 285.92709057150734,
+      "rpj_p95": 867.2678100213037,
+      "scored_orders_per_year": 215.0
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.05,
+     "transport_block_mode": "skip_wave"
+    },
+    "delay47|skip_wave|thesis_exact_autotomy|tol0.5": {
+     "delay_hours": 47.0,
+     "discrepancies": {
+      "autotomy_share": 15.82768435039692,
+      "ret_above_one_share": 3.987596379666523,
+      "ret_mean": 6.65498268266135,
+      "rpj_mean": 5.091454853216132,
+      "rpj_p95": 10.38712061661485,
+      "scored_orders_per_year": 27.64382753402078
+     },
+     "moment_se": {
+      "autotomy_share": 0.01221694253798989,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.017287143008600032,
+      "rpj_mean": 61.62563572463733,
+      "rpj_p95": 106.35900359104234,
+      "scored_orders_per_year": 3.6055512754639896
+     },
+     "moments": {
+      "autotomy_share": 0.19401512466028595,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.40634141842587806,
+      "rpj_mean": 285.92709057150734,
+      "rpj_p95": 867.2678100213037,
+      "scored_orders_per_year": 215.0
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.5,
+     "transport_block_mode": "skip_wave"
+    },
+    "delay48|retry_when_ready|operational_on_time": {
+     "delay_hours": 48.0,
+     "discrepancies": {
+      "autotomy_share": 34.47695026791711,
+      "ret_above_one_share": 3.987596379666523,
+      "ret_mean": 7.29588011243369,
+      "rpj_mean": 4.923894459987544,
+      "rpj_p95": 10.581863484736303,
+      "scored_orders_per_year": 24.32815129905027
+     },
+     "moment_se": {
+      "autotomy_share": 0.005589004942381238,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.01210197520686754,
+      "rpj_mean": 62.981956653856074,
+      "rpj_p95": 92.99051580843485,
+      "scored_orders_per_year": 4.176654695380556
+     },
+     "moments": {
+      "autotomy_share": 0.1933886211730166,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.4073656248974111,
+      "rpj_mean": 290.9777756829844,
+      "rpj_p95": 894.8967506291302,
+      "scored_orders_per_year": 215.33333333333334
+     },
+     "predicate": "operational_on_time",
+     "tolerance": 0.0,
+     "transport_block_mode": "retry_when_ready"
+    },
+    "delay48|retry_when_ready|thesis_exact_autotomy|tol0": {
+     "delay_hours": 48.0,
+     "discrepancies": {
+      "autotomy_share": 34.47695026791711,
+      "ret_above_one_share": 3.987596379666523,
+      "ret_mean": 7.29588011243369,
+      "rpj_mean": 4.923894459987544,
+      "rpj_p95": 10.581863484736303,
+      "scored_orders_per_year": 24.32815129905027
+     },
+     "moment_se": {
+      "autotomy_share": 0.005589004942381238,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.01210197520686754,
+      "rpj_mean": 62.981956653856074,
+      "rpj_p95": 92.99051580843485,
+      "scored_orders_per_year": 4.176654695380556
+     },
+     "moments": {
+      "autotomy_share": 0.1933886211730166,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.4073656248974111,
+      "rpj_mean": 290.9777756829844,
+      "rpj_p95": 894.8967506291302,
+      "scored_orders_per_year": 215.33333333333334
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.0,
+     "transport_block_mode": "retry_when_ready"
+    },
+    "delay48|retry_when_ready|thesis_exact_autotomy|tol0.05": {
+     "delay_hours": 48.0,
+     "discrepancies": {
+      "autotomy_share": 34.47695026791711,
+      "ret_above_one_share": 3.987596379666523,
+      "ret_mean": 7.29588011243369,
+      "rpj_mean": 4.923894459987544,
+      "rpj_p95": 10.581863484736303,
+      "scored_orders_per_year": 24.32815129905027
+     },
+     "moment_se": {
+      "autotomy_share": 0.005589004942381238,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.01210197520686754,
+      "rpj_mean": 62.981956653856074,
+      "rpj_p95": 92.99051580843485,
+      "scored_orders_per_year": 4.176654695380556
+     },
+     "moments": {
+      "autotomy_share": 0.1933886211730166,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.4073656248974111,
+      "rpj_mean": 290.9777756829844,
+      "rpj_p95": 894.8967506291302,
+      "scored_orders_per_year": 215.33333333333334
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.05,
+     "transport_block_mode": "retry_when_ready"
+    },
+    "delay48|retry_when_ready|thesis_exact_autotomy|tol0.5": {
+     "delay_hours": 48.0,
+     "discrepancies": {
+      "autotomy_share": 34.47695026791711,
+      "ret_above_one_share": 3.987596379666523,
+      "ret_mean": 7.29588011243369,
+      "rpj_mean": 4.923894459987544,
+      "rpj_p95": 10.581863484736303,
+      "scored_orders_per_year": 24.32815129905027
+     },
+     "moment_se": {
+      "autotomy_share": 0.005589004942381238,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.01210197520686754,
+      "rpj_mean": 62.981956653856074,
+      "rpj_p95": 92.99051580843485,
+      "scored_orders_per_year": 4.176654695380556
+     },
+     "moments": {
+      "autotomy_share": 0.1933886211730166,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.4073656248974111,
+      "rpj_mean": 290.9777756829844,
+      "rpj_p95": 894.8967506291302,
+      "scored_orders_per_year": 215.33333333333334
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.5,
+     "transport_block_mode": "retry_when_ready"
+    },
+    "delay48|skip_wave|operational_on_time": {
+     "delay_hours": 48.0,
+     "discrepancies": {
+      "autotomy_share": 20.24689953745079,
+      "ret_above_one_share": 3.987596379666523,
+      "ret_mean": 6.45911851208279,
+      "rpj_mean": 5.0912221263753805,
+      "rpj_p95": 10.38712061661485,
+      "scored_orders_per_year": 25.960996945240414
+     },
+     "moment_se": {
+      "autotomy_share": 0.00957650787055853,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.01884740246521175,
+      "rpj_mean": 61.62993041237408,
+      "rpj_p95": 106.35900359104234,
+      "scored_orders_per_year": 3.844187531556932
+     },
+     "moments": {
+      "autotomy_share": 0.19455179817498658,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.4060995005921535,
+      "rpj_mean": 285.9225243614617,
+      "rpj_p95": 867.2678100213037,
+      "scored_orders_per_year": 214.33333333333334
+     },
+     "predicate": "operational_on_time",
+     "tolerance": 0.0,
+     "transport_block_mode": "skip_wave"
+    },
+    "delay48|skip_wave|thesis_exact_autotomy|tol0": {
+     "delay_hours": 48.0,
+     "discrepancies": {
+      "autotomy_share": 20.24689953745079,
+      "ret_above_one_share": 3.987596379666523,
+      "ret_mean": 6.45911851208279,
+      "rpj_mean": 5.0912221263753805,
+      "rpj_p95": 10.38712061661485,
+      "scored_orders_per_year": 25.960996945240414
+     },
+     "moment_se": {
+      "autotomy_share": 0.00957650787055853,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.01884740246521175,
+      "rpj_mean": 61.62993041237408,
+      "rpj_p95": 106.35900359104234,
+      "scored_orders_per_year": 3.844187531556932
+     },
+     "moments": {
+      "autotomy_share": 0.19455179817498658,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.4060995005921535,
+      "rpj_mean": 285.9225243614617,
+      "rpj_p95": 867.2678100213037,
+      "scored_orders_per_year": 214.33333333333334
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.0,
+     "transport_block_mode": "skip_wave"
+    },
+    "delay48|skip_wave|thesis_exact_autotomy|tol0.05": {
+     "delay_hours": 48.0,
+     "discrepancies": {
+      "autotomy_share": 20.24689953745079,
+      "ret_above_one_share": 3.987596379666523,
+      "ret_mean": 6.45911851208279,
+      "rpj_mean": 5.0912221263753805,
+      "rpj_p95": 10.38712061661485,
+      "scored_orders_per_year": 25.960996945240414
+     },
+     "moment_se": {
+      "autotomy_share": 0.00957650787055853,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.01884740246521175,
+      "rpj_mean": 61.62993041237408,
+      "rpj_p95": 106.35900359104234,
+      "scored_orders_per_year": 3.844187531556932
+     },
+     "moments": {
+      "autotomy_share": 0.19455179817498658,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.4060995005921535,
+      "rpj_mean": 285.9225243614617,
+      "rpj_p95": 867.2678100213037,
+      "scored_orders_per_year": 214.33333333333334
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.05,
+     "transport_block_mode": "skip_wave"
+    },
+    "delay48|skip_wave|thesis_exact_autotomy|tol0.5": {
+     "delay_hours": 48.0,
+     "discrepancies": {
+      "autotomy_share": 20.24689953745079,
+      "ret_above_one_share": 3.987596379666523,
+      "ret_mean": 6.45911851208279,
+      "rpj_mean": 5.0912221263753805,
+      "rpj_p95": 10.38712061661485,
+      "scored_orders_per_year": 25.960996945240414
+     },
+     "moment_se": {
+      "autotomy_share": 0.00957650787055853,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.01884740246521175,
+      "rpj_mean": 61.62993041237408,
+      "rpj_p95": 106.35900359104234,
+      "scored_orders_per_year": 3.844187531556932
+     },
+     "moments": {
+      "autotomy_share": 0.19455179817498658,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.4060995005921535,
+      "rpj_mean": 285.9225243614617,
+      "rpj_p95": 867.2678100213037,
+      "scored_orders_per_year": 214.33333333333334
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.5,
+     "transport_block_mode": "skip_wave"
+    },
+    "delay49|retry_when_ready|operational_on_time": {
+     "delay_hours": 49.0,
+     "discrepancies": {
+      "autotomy_share": 4.555827309688331,
+      "ret_above_one_share": 3.987596379666523,
+      "ret_mean": 4.647821533420202,
+      "rpj_mean": 10.77612616318661,
+      "rpj_p95": 10.289645747513058,
+      "scored_orders_per_year": 24.32815129905027
+     },
+     "moment_se": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.015925234866129827,
+      "rpj_mean": 31.390437614262193,
+      "rpj_p95": 123.31948247743851,
+      "scored_orders_per_year": 4.176654695380556
+     },
+     "moments": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.3408882230655908,
+      "rpj_mean": 186.92538096560818,
+      "rpj_p95": 793.9907858032954,
+      "scored_orders_per_year": 215.33333333333334
+     },
+     "predicate": "operational_on_time",
+     "tolerance": 0.0,
+     "transport_block_mode": "retry_when_ready"
+    },
+    "delay49|retry_when_ready|thesis_exact_autotomy|tol0": {
+     "delay_hours": 49.0,
+     "discrepancies": {
+      "autotomy_share": 4.555827309688331,
+      "ret_above_one_share": 3.987596379666523,
+      "ret_mean": 4.647821533420202,
+      "rpj_mean": 10.77612616318661,
+      "rpj_p95": 10.289645747513058,
+      "scored_orders_per_year": 24.32815129905027
+     },
+     "moment_se": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.015925234866129827,
+      "rpj_mean": 31.390437614262193,
+      "rpj_p95": 123.31948247743851,
+      "scored_orders_per_year": 4.176654695380556
+     },
+     "moments": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.3408882230655908,
+      "rpj_mean": 186.92538096560818,
+      "rpj_p95": 793.9907858032954,
+      "scored_orders_per_year": 215.33333333333334
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.0,
+     "transport_block_mode": "retry_when_ready"
+    },
+    "delay49|retry_when_ready|thesis_exact_autotomy|tol0.05": {
+     "delay_hours": 49.0,
+     "discrepancies": {
+      "autotomy_share": 4.555827309688331,
+      "ret_above_one_share": 3.987596379666523,
+      "ret_mean": 4.647821533420202,
+      "rpj_mean": 10.77612616318661,
+      "rpj_p95": 10.289645747513058,
+      "scored_orders_per_year": 24.32815129905027
+     },
+     "moment_se": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.015925234866129827,
+      "rpj_mean": 31.390437614262193,
+      "rpj_p95": 123.31948247743851,
+      "scored_orders_per_year": 4.176654695380556
+     },
+     "moments": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.3408882230655908,
+      "rpj_mean": 186.92538096560818,
+      "rpj_p95": 793.9907858032954,
+      "scored_orders_per_year": 215.33333333333334
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.05,
+     "transport_block_mode": "retry_when_ready"
+    },
+    "delay49|retry_when_ready|thesis_exact_autotomy|tol0.5": {
+     "delay_hours": 49.0,
+     "discrepancies": {
+      "autotomy_share": 4.555827309688331,
+      "ret_above_one_share": 3.987596379666523,
+      "ret_mean": 4.647821533420202,
+      "rpj_mean": 10.77612616318661,
+      "rpj_p95": 10.289645747513058,
+      "scored_orders_per_year": 24.32815129905027
+     },
+     "moment_se": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.015925234866129827,
+      "rpj_mean": 31.390437614262193,
+      "rpj_p95": 123.31948247743851,
+      "scored_orders_per_year": 4.176654695380556
+     },
+     "moments": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.3408882230655908,
+      "rpj_mean": 186.92538096560818,
+      "rpj_p95": 793.9907858032954,
+      "scored_orders_per_year": 215.33333333333334
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.5,
+     "transport_block_mode": "retry_when_ready"
+    },
+    "delay49|skip_wave|operational_on_time": {
+     "delay_hours": 49.0,
+     "discrepancies": {
+      "autotomy_share": 4.555827309688331,
+      "ret_above_one_share": 3.987596379666523,
+      "ret_mean": 4.461788040100961,
+      "rpj_mean": 10.797612979435936,
+      "rpj_p95": 10.180292527112966,
+      "scored_orders_per_year": 25.960996945240414
+     },
+     "moment_se": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.01448780941065376,
+      "rpj_mean": 31.456099303894423,
+      "rpj_p95": 130.37120031580392,
+      "scored_orders_per_year": 3.844187531556932
+     },
+     "moments": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.3320045001487949,
+      "rpj_mean": 185.50300125187584,
+      "rpj_p95": 776.5851532785391,
+      "scored_orders_per_year": 214.33333333333334
+     },
+     "predicate": "operational_on_time",
+     "tolerance": 0.0,
+     "transport_block_mode": "skip_wave"
+    },
+    "delay49|skip_wave|thesis_exact_autotomy|tol0": {
+     "delay_hours": 49.0,
+     "discrepancies": {
+      "autotomy_share": 4.555827309688331,
+      "ret_above_one_share": 3.987596379666523,
+      "ret_mean": 4.461788040100961,
+      "rpj_mean": 10.797612979435936,
+      "rpj_p95": 10.180292527112966,
+      "scored_orders_per_year": 25.960996945240414
+     },
+     "moment_se": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.01448780941065376,
+      "rpj_mean": 31.456099303894423,
+      "rpj_p95": 130.37120031580392,
+      "scored_orders_per_year": 3.844187531556932
+     },
+     "moments": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.3320045001487949,
+      "rpj_mean": 185.50300125187584,
+      "rpj_p95": 776.5851532785391,
+      "scored_orders_per_year": 214.33333333333334
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.0,
+     "transport_block_mode": "skip_wave"
+    },
+    "delay49|skip_wave|thesis_exact_autotomy|tol0.05": {
+     "delay_hours": 49.0,
+     "discrepancies": {
+      "autotomy_share": 4.555827309688331,
+      "ret_above_one_share": 3.987596379666523,
+      "ret_mean": 4.461788040100961,
+      "rpj_mean": 10.797612979435936,
+      "rpj_p95": 10.180292527112966,
+      "scored_orders_per_year": 25.960996945240414
+     },
+     "moment_se": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.01448780941065376,
+      "rpj_mean": 31.456099303894423,
+      "rpj_p95": 130.37120031580392,
+      "scored_orders_per_year": 3.844187531556932
+     },
+     "moments": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.3320045001487949,
+      "rpj_mean": 185.50300125187584,
+      "rpj_p95": 776.5851532785391,
+      "scored_orders_per_year": 214.33333333333334
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.05,
+     "transport_block_mode": "skip_wave"
+    },
+    "delay49|skip_wave|thesis_exact_autotomy|tol0.5": {
+     "delay_hours": 49.0,
+     "discrepancies": {
+      "autotomy_share": 4.555827309688331,
+      "ret_above_one_share": 3.987596379666523,
+      "ret_mean": 4.461788040100961,
+      "rpj_mean": 10.797612979435936,
+      "rpj_p95": 10.180292527112966,
+      "scored_orders_per_year": 25.960996945240414
+     },
+     "moment_se": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.01448780941065376,
+      "rpj_mean": 31.456099303894423,
+      "rpj_p95": 130.37120031580392,
+      "scored_orders_per_year": 3.844187531556932
+     },
+     "moments": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.3320045001487949,
+      "rpj_mean": 185.50300125187584,
+      "rpj_p95": 776.5851532785391,
+      "scored_orders_per_year": 214.33333333333334
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.5,
+     "transport_block_mode": "skip_wave"
+    },
+    "delay54|retry_when_ready|operational_on_time": {
+     "delay_hours": 54.0,
+     "discrepancies": {
+      "autotomy_share": 4.555827309688331,
+      "ret_above_one_share": 3.987596379666523,
+      "ret_mean": 4.6788507682205145,
+      "rpj_mean": 10.8600684388689,
+      "rpj_p95": 10.29599721684888,
+      "scored_orders_per_year": 24.32815129905027
+     },
+     "moment_se": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.01103335242952344,
+      "rpj_mean": 31.089554463712144,
+      "rpj_p95": 123.11901249606095,
+      "scored_orders_per_year": 4.176654695380556
+     },
+     "moments": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.33119147146156264,
+      "rpj_mean": 186.00947291515217,
+      "rpj_p95": 793.7675590428695,
+      "scored_orders_per_year": 215.33333333333334
+     },
+     "predicate": "operational_on_time",
+     "tolerance": 0.0,
+     "transport_block_mode": "retry_when_ready"
+    },
+    "delay54|retry_when_ready|thesis_exact_autotomy|tol0": {
+     "delay_hours": 54.0,
+     "discrepancies": {
+      "autotomy_share": 4.555827309688331,
+      "ret_above_one_share": 3.987596379666523,
+      "ret_mean": 4.6788507682205145,
+      "rpj_mean": 10.8600684388689,
+      "rpj_p95": 10.29599721684888,
+      "scored_orders_per_year": 24.32815129905027
+     },
+     "moment_se": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.01103335242952344,
+      "rpj_mean": 31.089554463712144,
+      "rpj_p95": 123.11901249606095,
+      "scored_orders_per_year": 4.176654695380556
+     },
+     "moments": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.33119147146156264,
+      "rpj_mean": 186.00947291515217,
+      "rpj_p95": 793.7675590428695,
+      "scored_orders_per_year": 215.33333333333334
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.0,
+     "transport_block_mode": "retry_when_ready"
+    },
+    "delay54|retry_when_ready|thesis_exact_autotomy|tol0.05": {
+     "delay_hours": 54.0,
+     "discrepancies": {
+      "autotomy_share": 4.555827309688331,
+      "ret_above_one_share": 3.987596379666523,
+      "ret_mean": 4.6788507682205145,
+      "rpj_mean": 10.8600684388689,
+      "rpj_p95": 10.29599721684888,
+      "scored_orders_per_year": 24.32815129905027
+     },
+     "moment_se": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.01103335242952344,
+      "rpj_mean": 31.089554463712144,
+      "rpj_p95": 123.11901249606095,
+      "scored_orders_per_year": 4.176654695380556
+     },
+     "moments": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.33119147146156264,
+      "rpj_mean": 186.00947291515217,
+      "rpj_p95": 793.7675590428695,
+      "scored_orders_per_year": 215.33333333333334
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.05,
+     "transport_block_mode": "retry_when_ready"
+    },
+    "delay54|retry_when_ready|thesis_exact_autotomy|tol0.5": {
+     "delay_hours": 54.0,
+     "discrepancies": {
+      "autotomy_share": 4.555827309688331,
+      "ret_above_one_share": 3.987596379666523,
+      "ret_mean": 4.6788507682205145,
+      "rpj_mean": 10.8600684388689,
+      "rpj_p95": 10.29599721684888,
+      "scored_orders_per_year": 24.32815129905027
+     },
+     "moment_se": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.01103335242952344,
+      "rpj_mean": 31.089554463712144,
+      "rpj_p95": 123.11901249606095,
+      "scored_orders_per_year": 4.176654695380556
+     },
+     "moments": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.33119147146156264,
+      "rpj_mean": 186.00947291515217,
+      "rpj_p95": 793.7675590428695,
+      "scored_orders_per_year": 215.33333333333334
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.5,
+     "transport_block_mode": "retry_when_ready"
+    },
+    "delay54|skip_wave|operational_on_time": {
+     "delay_hours": 54.0,
+     "discrepancies": {
+      "autotomy_share": 4.555827309688331,
+      "ret_above_one_share": 3.987596379666523,
+      "ret_mean": 4.332989221827151,
+      "rpj_mean": 11.081279596605606,
+      "rpj_p95": 10.180292527112966,
+      "scored_orders_per_year": 25.960996945240414
+     },
+     "moment_se": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.012109967316441959,
+      "rpj_mean": 30.322619022130777,
+      "rpj_p95": 130.37120031580392,
+      "scored_orders_per_year": 3.844187531556932
+     },
+     "moments": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.3234694778762545,
+      "rpj_mean": 183.51399850176037,
+      "rpj_p95": 776.5851532785391,
+      "scored_orders_per_year": 214.33333333333334
+     },
+     "predicate": "operational_on_time",
+     "tolerance": 0.0,
+     "transport_block_mode": "skip_wave"
+    },
+    "delay54|skip_wave|thesis_exact_autotomy|tol0": {
+     "delay_hours": 54.0,
+     "discrepancies": {
+      "autotomy_share": 4.555827309688331,
+      "ret_above_one_share": 3.987596379666523,
+      "ret_mean": 4.332989221827151,
+      "rpj_mean": 11.081279596605606,
+      "rpj_p95": 10.180292527112966,
+      "scored_orders_per_year": 25.960996945240414
+     },
+     "moment_se": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.012109967316441959,
+      "rpj_mean": 30.322619022130777,
+      "rpj_p95": 130.37120031580392,
+      "scored_orders_per_year": 3.844187531556932
+     },
+     "moments": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.3234694778762545,
+      "rpj_mean": 183.51399850176037,
+      "rpj_p95": 776.5851532785391,
+      "scored_orders_per_year": 214.33333333333334
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.0,
+     "transport_block_mode": "skip_wave"
+    },
+    "delay54|skip_wave|thesis_exact_autotomy|tol0.05": {
+     "delay_hours": 54.0,
+     "discrepancies": {
+      "autotomy_share": 4.555827309688331,
+      "ret_above_one_share": 3.987596379666523,
+      "ret_mean": 4.332989221827151,
+      "rpj_mean": 11.081279596605606,
+      "rpj_p95": 10.180292527112966,
+      "scored_orders_per_year": 25.960996945240414
+     },
+     "moment_se": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.012109967316441959,
+      "rpj_mean": 30.322619022130777,
+      "rpj_p95": 130.37120031580392,
+      "scored_orders_per_year": 3.844187531556932
+     },
+     "moments": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.3234694778762545,
+      "rpj_mean": 183.51399850176037,
+      "rpj_p95": 776.5851532785391,
+      "scored_orders_per_year": 214.33333333333334
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.05,
+     "transport_block_mode": "skip_wave"
+    },
+    "delay54|skip_wave|thesis_exact_autotomy|tol0.5": {
+     "delay_hours": 54.0,
+     "discrepancies": {
+      "autotomy_share": 4.555827309688331,
+      "ret_above_one_share": 3.987596379666523,
+      "ret_mean": 4.332989221827151,
+      "rpj_mean": 11.081279596605606,
+      "rpj_p95": 10.180292527112966,
+      "scored_orders_per_year": 25.960996945240414
+     },
+     "moment_se": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.012109967316441959,
+      "rpj_mean": 30.322619022130777,
+      "rpj_p95": 130.37120031580392,
+      "scored_orders_per_year": 3.844187531556932
+     },
+     "moments": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.3234694778762545,
+      "rpj_mean": 183.51399850176037,
+      "rpj_p95": 776.5851532785391,
+      "scored_orders_per_year": 214.33333333333334
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.5,
+     "transport_block_mode": "skip_wave"
+    },
+    "delay60|retry_when_ready|operational_on_time": {
+     "delay_hours": 60.0,
+     "discrepancies": {
+      "autotomy_share": 4.555827309688331,
+      "ret_above_one_share": 3.987596379666523,
+      "ret_mean": 4.487899731921387,
+      "rpj_mean": 11.429257500478611,
+      "rpj_p95": 10.321388510725752,
+      "scored_orders_per_year": 24.32815129905027
+     },
+     "moment_se": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.00632036589708309,
+      "rpj_mean": 28.694810103637764,
+      "rpj_p95": 122.31792084459435,
+      "scored_orders_per_year": 4.176654695380556
+     },
+     "moments": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.31910210898942765,
+      "rpj_mean": 183.54278939421013,
+      "rpj_p95": 792.8746520011664,
+      "scored_orders_per_year": 215.33333333333334
+     },
+     "predicate": "operational_on_time",
+     "tolerance": 0.0,
+     "transport_block_mode": "retry_when_ready"
+    },
+    "delay60|retry_when_ready|thesis_exact_autotomy|tol0": {
+     "delay_hours": 60.0,
+     "discrepancies": {
+      "autotomy_share": 4.555827309688331,
+      "ret_above_one_share": 3.987596379666523,
+      "ret_mean": 4.487899731921387,
+      "rpj_mean": 11.429257500478611,
+      "rpj_p95": 10.321388510725752,
+      "scored_orders_per_year": 24.32815129905027
+     },
+     "moment_se": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.00632036589708309,
+      "rpj_mean": 28.694810103637764,
+      "rpj_p95": 122.31792084459435,
+      "scored_orders_per_year": 4.176654695380556
+     },
+     "moments": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.31910210898942765,
+      "rpj_mean": 183.54278939421013,
+      "rpj_p95": 792.8746520011664,
+      "scored_orders_per_year": 215.33333333333334
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.0,
+     "transport_block_mode": "retry_when_ready"
+    },
+    "delay60|retry_when_ready|thesis_exact_autotomy|tol0.05": {
+     "delay_hours": 60.0,
+     "discrepancies": {
+      "autotomy_share": 4.555827309688331,
+      "ret_above_one_share": 3.987596379666523,
+      "ret_mean": 4.487899731921387,
+      "rpj_mean": 11.429257500478611,
+      "rpj_p95": 10.321388510725752,
+      "scored_orders_per_year": 24.32815129905027
+     },
+     "moment_se": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.00632036589708309,
+      "rpj_mean": 28.694810103637764,
+      "rpj_p95": 122.31792084459435,
+      "scored_orders_per_year": 4.176654695380556
+     },
+     "moments": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.31910210898942765,
+      "rpj_mean": 183.54278939421013,
+      "rpj_p95": 792.8746520011664,
+      "scored_orders_per_year": 215.33333333333334
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.05,
+     "transport_block_mode": "retry_when_ready"
+    },
+    "delay60|retry_when_ready|thesis_exact_autotomy|tol0.5": {
+     "delay_hours": 60.0,
+     "discrepancies": {
+      "autotomy_share": 4.555827309688331,
+      "ret_above_one_share": 3.987596379666523,
+      "ret_mean": 4.487899731921387,
+      "rpj_mean": 11.429257500478611,
+      "rpj_p95": 10.321388510725752,
+      "scored_orders_per_year": 24.32815129905027
+     },
+     "moment_se": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.00632036589708309,
+      "rpj_mean": 28.694810103637764,
+      "rpj_p95": 122.31792084459435,
+      "scored_orders_per_year": 4.176654695380556
+     },
+     "moments": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.31910210898942765,
+      "rpj_mean": 183.54278939421013,
+      "rpj_p95": 792.8746520011664,
+      "scored_orders_per_year": 215.33333333333334
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.5,
+     "transport_block_mode": "retry_when_ready"
+    },
+    "delay60|skip_wave|operational_on_time": {
+     "delay_hours": 60.0,
+     "discrepancies": {
+      "autotomy_share": 4.555827309688331,
+      "ret_above_one_share": 3.987596379666523,
+      "ret_mean": 4.287931124765687,
+      "rpj_mean": 11.693088044169377,
+      "rpj_p95": 10.061946751874565,
+      "scored_orders_per_year": 25.960996945240414
+     },
+     "moment_se": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.007373985937706282,
+      "rpj_mean": 27.973109297140685,
+      "rpj_p95": 135.8250459174789,
+      "scored_orders_per_year": 3.844187531556932
+     },
+     "moments": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.3149952202150821,
+      "rpj_mean": 179.5259644131811,
+      "rpj_p95": 770.3359555968576,
+      "scored_orders_per_year": 214.33333333333334
+     },
+     "predicate": "operational_on_time",
+     "tolerance": 0.0,
+     "transport_block_mode": "skip_wave"
+    },
+    "delay60|skip_wave|thesis_exact_autotomy|tol0": {
+     "delay_hours": 60.0,
+     "discrepancies": {
+      "autotomy_share": 4.555827309688331,
+      "ret_above_one_share": 3.987596379666523,
+      "ret_mean": 4.287931124765687,
+      "rpj_mean": 11.693088044169377,
+      "rpj_p95": 10.061946751874565,
+      "scored_orders_per_year": 25.960996945240414
+     },
+     "moment_se": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.007373985937706282,
+      "rpj_mean": 27.973109297140685,
+      "rpj_p95": 135.8250459174789,
+      "scored_orders_per_year": 3.844187531556932
+     },
+     "moments": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.3149952202150821,
+      "rpj_mean": 179.5259644131811,
+      "rpj_p95": 770.3359555968576,
+      "scored_orders_per_year": 214.33333333333334
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.0,
+     "transport_block_mode": "skip_wave"
+    },
+    "delay60|skip_wave|thesis_exact_autotomy|tol0.05": {
+     "delay_hours": 60.0,
+     "discrepancies": {
+      "autotomy_share": 4.555827309688331,
+      "ret_above_one_share": 3.987596379666523,
+      "ret_mean": 4.287931124765687,
+      "rpj_mean": 11.693088044169377,
+      "rpj_p95": 10.061946751874565,
+      "scored_orders_per_year": 25.960996945240414
+     },
+     "moment_se": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.007373985937706282,
+      "rpj_mean": 27.973109297140685,
+      "rpj_p95": 135.8250459174789,
+      "scored_orders_per_year": 3.844187531556932
+     },
+     "moments": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.3149952202150821,
+      "rpj_mean": 179.5259644131811,
+      "rpj_p95": 770.3359555968576,
+      "scored_orders_per_year": 214.33333333333334
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.05,
+     "transport_block_mode": "skip_wave"
+    },
+    "delay60|skip_wave|thesis_exact_autotomy|tol0.5": {
+     "delay_hours": 60.0,
+     "discrepancies": {
+      "autotomy_share": 4.555827309688331,
+      "ret_above_one_share": 3.987596379666523,
+      "ret_mean": 4.287931124765687,
+      "rpj_mean": 11.693088044169377,
+      "rpj_p95": 10.061946751874565,
+      "scored_orders_per_year": 25.960996945240414
+     },
+     "moment_se": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.007373985937706282,
+      "rpj_mean": 27.973109297140685,
+      "rpj_p95": 135.8250459174789,
+      "scored_orders_per_year": 3.844187531556932
+     },
+     "moments": {
+      "autotomy_share": 0.0,
+      "ret_above_one_share": 0.0,
+      "ret_mean": 0.3149952202150821,
+      "rpj_mean": 179.5259644131811,
+      "rpj_p95": 770.3359555968576,
+      "scored_orders_per_year": 214.33333333333334
+     },
+     "predicate": "thesis_exact_autotomy",
+     "tolerance": 0.5,
+     "transport_block_mode": "skip_wave"
+    }
+   },
+   "epsilon_declared": 0.5,
+   "epsilon_stability": {
+    "by_epsilon": {
+     "0.25": [
+      "delay42|retry_when_ready|operational_on_time",
+      "delay42|retry_when_ready|thesis_exact_autotomy|tol0",
+      "delay42|retry_when_ready|thesis_exact_autotomy|tol0.05",
+      "delay42|retry_when_ready|thesis_exact_autotomy|tol0.5",
+      "delay42|skip_wave|operational_on_time",
+      "delay42|skip_wave|thesis_exact_autotomy|tol0",
+      "delay42|skip_wave|thesis_exact_autotomy|tol0.05",
+      "delay42|skip_wave|thesis_exact_autotomy|tol0.5",
+      "delay48|retry_when_ready|operational_on_time",
+      "delay48|retry_when_ready|thesis_exact_autotomy|tol0",
+      "delay48|retry_when_ready|thesis_exact_autotomy|tol0.05",
+      "delay48|retry_when_ready|thesis_exact_autotomy|tol0.5",
+      "delay48|skip_wave|operational_on_time",
+      "delay48|skip_wave|thesis_exact_autotomy|tol0",
+      "delay48|skip_wave|thesis_exact_autotomy|tol0.05",
+      "delay48|skip_wave|thesis_exact_autotomy|tol0.5",
+      "delay49|retry_when_ready|operational_on_time",
+      "delay49|retry_when_ready|thesis_exact_autotomy|tol0",
+      "delay49|retry_when_ready|thesis_exact_autotomy|tol0.05",
+      "delay49|retry_when_ready|thesis_exact_autotomy|tol0.5",
+      "delay54|retry_when_ready|operational_on_time",
+      "delay54|retry_when_ready|thesis_exact_autotomy|tol0",
+      "delay54|retry_when_ready|thesis_exact_autotomy|tol0.05",
+      "delay54|retry_when_ready|thesis_exact_autotomy|tol0.5"
+     ],
+     "0.5": [
+      "delay42|skip_wave|operational_on_time",
+      "delay42|skip_wave|thesis_exact_autotomy|tol0",
+      "delay42|skip_wave|thesis_exact_autotomy|tol0.05",
+      "delay42|skip_wave|thesis_exact_autotomy|tol0.5",
+      "delay48|retry_when_ready|operational_on_time",
+      "delay48|retry_when_ready|thesis_exact_autotomy|tol0",
+      "delay48|retry_when_ready|thesis_exact_autotomy|tol0.05",
+      "delay48|retry_when_ready|thesis_exact_autotomy|tol0.5",
+      "delay48|skip_wave|operational_on_time",
+      "delay48|skip_wave|thesis_exact_autotomy|tol0",
+      "delay48|skip_wave|thesis_exact_autotomy|tol0.05",
+      "delay48|skip_wave|thesis_exact_autotomy|tol0.5",
+      "delay49|retry_when_ready|operational_on_time",
+      "delay49|retry_when_ready|thesis_exact_autotomy|tol0",
+      "delay49|retry_when_ready|thesis_exact_autotomy|tol0.05",
+      "delay49|retry_when_ready|thesis_exact_autotomy|tol0.5",
+      "delay54|retry_when_ready|operational_on_time",
+      "delay54|retry_when_ready|thesis_exact_autotomy|tol0",
+      "delay54|retry_when_ready|thesis_exact_autotomy|tol0.05",
+      "delay54|retry_when_ready|thesis_exact_autotomy|tol0.5"
+     ],
+     "1.0": [
+      "delay42|skip_wave|operational_on_time",
+      "delay42|skip_wave|thesis_exact_autotomy|tol0",
+      "delay42|skip_wave|thesis_exact_autotomy|tol0.05",
+      "delay42|skip_wave|thesis_exact_autotomy|tol0.5",
+      "delay48|retry_when_ready|operational_on_time",
+      "delay48|retry_when_ready|thesis_exact_autotomy|tol0",
+      "delay48|retry_when_ready|thesis_exact_autotomy|tol0.05",
+      "delay48|retry_when_ready|thesis_exact_autotomy|tol0.5",
+      "delay48|skip_wave|operational_on_time",
+      "delay48|skip_wave|thesis_exact_autotomy|tol0",
+      "delay48|skip_wave|thesis_exact_autotomy|tol0.05",
+      "delay48|skip_wave|thesis_exact_autotomy|tol0.5",
+      "delay49|retry_when_ready|operational_on_time",
+      "delay49|retry_when_ready|thesis_exact_autotomy|tol0",
+      "delay49|retry_when_ready|thesis_exact_autotomy|tol0.05",
+      "delay49|retry_when_ready|thesis_exact_autotomy|tol0.5",
+      "delay54|retry_when_ready|operational_on_time",
+      "delay54|retry_when_ready|thesis_exact_autotomy|tol0",
+      "delay54|retry_when_ready|thesis_exact_autotomy|tol0.05",
+      "delay54|retry_when_ready|thesis_exact_autotomy|tol0.5",
+      "delay60|retry_when_ready|operational_on_time",
+      "delay60|retry_when_ready|thesis_exact_autotomy|tol0",
+      "delay60|retry_when_ready|thesis_exact_autotomy|tol0.05",
+      "delay60|retry_when_ready|thesis_exact_autotomy|tol0.5"
+     ],
+     "2.0": [
+      "delay42|skip_wave|operational_on_time",
+      "delay42|skip_wave|thesis_exact_autotomy|tol0",
+      "delay42|skip_wave|thesis_exact_autotomy|tol0.05",
+      "delay42|skip_wave|thesis_exact_autotomy|tol0.5",
+      "delay47|skip_wave|operational_on_time",
+      "delay47|skip_wave|thesis_exact_autotomy|tol0",
+      "delay47|skip_wave|thesis_exact_autotomy|tol0.05",
+      "delay47|skip_wave|thesis_exact_autotomy|tol0.5",
+      "delay49|retry_when_ready|operational_on_time",
+      "delay49|retry_when_ready|thesis_exact_autotomy|tol0",
+      "delay49|retry_when_ready|thesis_exact_autotomy|tol0.05",
+      "delay49|retry_when_ready|thesis_exact_autotomy|tol0.5",
+      "delay49|skip_wave|operational_on_time",
+      "delay49|skip_wave|thesis_exact_autotomy|tol0",
+      "delay49|skip_wave|thesis_exact_autotomy|tol0.05",
+      "delay49|skip_wave|thesis_exact_autotomy|tol0.5",
+      "delay54|retry_when_ready|operational_on_time",
+      "delay54|retry_when_ready|thesis_exact_autotomy|tol0",
+      "delay54|retry_when_ready|thesis_exact_autotomy|tol0.05",
+      "delay54|retry_when_ready|thesis_exact_autotomy|tol0.5",
+      "delay54|skip_wave|operational_on_time",
+      "delay54|skip_wave|thesis_exact_autotomy|tol0",
+      "delay54|skip_wave|thesis_exact_autotomy|tol0.05",
+      "delay54|skip_wave|thesis_exact_autotomy|tol0.5",
+      "delay60|retry_when_ready|operational_on_time",
+      "delay60|retry_when_ready|thesis_exact_autotomy|tol0",
+      "delay60|retry_when_ready|thesis_exact_autotomy|tol0.05",
+      "delay60|retry_when_ready|thesis_exact_autotomy|tol0.5",
+      "delay60|skip_wave|operational_on_time",
+      "delay60|skip_wave|thesis_exact_autotomy|tol0",
+      "delay60|skip_wave|thesis_exact_autotomy|tol0.05",
+      "delay60|skip_wave|thesis_exact_autotomy|tol0.5"
+     ]
+    },
+    "n_distinct_sets": 4,
+    "stable": false
+   },
+   "grid_discriminates": true,
+   "n_cells": 48,
+   "non_dominated_set": [
+    "delay42|skip_wave|operational_on_time",
+    "delay42|skip_wave|thesis_exact_autotomy|tol0",
+    "delay42|skip_wave|thesis_exact_autotomy|tol0.05",
+    "delay42|skip_wave|thesis_exact_autotomy|tol0.5",
+    "delay48|retry_when_ready|operational_on_time",
+    "delay48|retry_when_ready|thesis_exact_autotomy|tol0",
+    "delay48|retry_when_ready|thesis_exact_autotomy|tol0.05",
+    "delay48|retry_when_ready|thesis_exact_autotomy|tol0.5",
+    "delay48|skip_wave|operational_on_time",
+    "delay48|skip_wave|thesis_exact_autotomy|tol0",
+    "delay48|skip_wave|thesis_exact_autotomy|tol0.05",
+    "delay48|skip_wave|thesis_exact_autotomy|tol0.5",
+    "delay49|retry_when_ready|operational_on_time",
+    "delay49|retry_when_ready|thesis_exact_autotomy|tol0",
+    "delay49|retry_when_ready|thesis_exact_autotomy|tol0.05",
+    "delay49|retry_when_ready|thesis_exact_autotomy|tol0.5",
+    "delay54|retry_when_ready|operational_on_time",
+    "delay54|retry_when_ready|thesis_exact_autotomy|tol0",
+    "delay54|retry_when_ready|thesis_exact_autotomy|tol0.05",
+    "delay54|retry_when_ready|thesis_exact_autotomy|tol0.5"
+   ],
+   "reference": {
+    "autotomy_share": {
+     "mean": 0.0006365680730137607,
+     "spread": 0.0004418527875687986
+    },
+    "ret_above_one_share": {
+     "mean": 0.0010017914647152037,
+     "spread": 0.0007944492038286931
+    },
+    "ret_mean": {
+     "mean": 0.20074167330380752,
+     "spread": 0.0809691617677563
+    },
+    "rpj_mean": {
+     "mean": 626.6011028375958,
+     "spread": 82.42296051151166
+    },
+    "rpj_p95": {
+     "mean": 3042.023212799998,
+     "spread": 570.2957028346688
+    },
+    "scored_orders_per_year": {
+     "mean": 108.465,
+     "spread": 4.303619277874019
+    }
+   }
+  }
+ },
+ "roots": [
+  2000001,
+  2000002,
+  2000003
+ ],
+ "schema_version": "fidelity_delay_sweep_v1",
+ "selection_rule": "none -- the output is the non-dominated set, never a winner",
+ "self_sha256": "1d31a86a1ad137350c412e92e72df836f697f8adda97dba2f7cc04d1c6b0edf3",
+ "tolerances_swept": [
+  0.0,
+  0.05,
+  0.5
+ ],
+ "transport_modes_swept": [
+  "skip_wave",
+  "retry_when_ready"
+ ]
+}

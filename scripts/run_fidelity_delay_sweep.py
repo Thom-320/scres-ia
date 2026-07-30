@@ -93,7 +93,8 @@ def run_episode(*, delay: float, family: str, seed: int, horizon: float,
     return sim
 
 
-def moments_under(sim, orders: list, *, predicate: str, tol: float) -> dict[str, float]:
+def moments_under(sim, orders: list, *, predicate: str, tol: float,
+                  horizon_years: float) -> dict[str, float]:
     """Moments under one branch predicate, by exact reclassification of the orders."""
     now = float(sim.env.now)
     patched = []
@@ -117,7 +118,8 @@ def moments_under(sim, orders: list, *, predicate: str, tol: float) -> dict[str,
     return moments_from_rows(
         apj=[float(getattr(o, "APj", 0.0) or 0.0) for o in patched],
         rpj=[float(getattr(o, "RPj", 0.0) or 0.0) for o in patched],
-        ret=[float(v) for v in book["ret_values"]])
+        ret=[float(v) for v in book["ret_values"]],
+        horizon_years=horizon_years)
 
 
 def main() -> int:
@@ -125,7 +127,7 @@ def main() -> int:
     ap.add_argument("--contract", type=Path,
                     default=Path("contracts/paper_b_independent_calibration_v2.json"))
     ap.add_argument("--reference", type=Path,
-                    default=Path("results/metric_audit/fidelity_reference_v1/result.json"))
+                    default=Path("results/metric_audit/fidelity_reference_v2/result.json"))
     ap.add_argument("--roots", nargs="+", type=int, default=list(ROOTS))
     ap.add_argument("--delays", nargs="+", type=float, default=None,
                     help="EXPLORATORY override of the contract's frozen grid. The "
@@ -144,6 +146,8 @@ def main() -> int:
     grid_is_contract = args.delays is None
     ref_blob = json.loads(args.reference.read_text())
     horizon = float(args.horizon_weeks * HOURS_PER_WEEK)
+    # Our own calendar, so the population moment is a rate on both sides.
+    horizon_years = float(args.horizon_weeks) / 52.0
     started = time.perf_counter()
 
     reference = {
@@ -162,7 +166,8 @@ def main() -> int:
                      for t in args.roots)]
             for predicate in ("operational_on_time", "thesis_exact_autotomy"):
                 for tol in (TOLERANCES if predicate == "thesis_exact_autotomy" else (0.0,)):
-                    per_root = [moments_under(s, o, predicate=predicate, tol=tol)
+                    per_root = [moments_under(s, o, predicate=predicate, tol=tol,
+                                              horizon_years=horizon_years)
                                 for s, o in sims]
                     mean = {m: float(np.mean([r[m] for r in per_root]))
                             for m in MOMENT_NAMES}

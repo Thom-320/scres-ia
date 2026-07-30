@@ -22,7 +22,23 @@ def test_moments_use_one_definition_for_both_sides():
     assert m["autotomy_share"] == pytest.approx(0.25)
     assert m["ret_above_one_share"] == pytest.approx(0.25)
     assert m["rpj_mean"] == pytest.approx(20.0)     # positives only
-    assert m["scored_rows"] == 4.0
+    assert m["scored_orders_per_year"] == pytest.approx(4.0 / 20.0)
+
+
+def test_population_moment_is_a_rate_not_a_count():
+    """A 20-year reference and a 52-week run must be comparable.
+
+    The raw count made them differ by 11x on calendar alone, which contaminated every
+    aggregate distance with a spurious term identical across cells.
+    """
+    ref = moments_from_rows(apj=[0] * 100, rpj=[1] * 100, ret=[0.1] * 100,
+                            horizon_years=20.0)
+    ours = moments_from_rows(apj=[0] * 5, rpj=[1] * 5, ret=[0.1] * 5,
+                             horizon_years=1.0)
+    assert ref["scored_orders_per_year"] == pytest.approx(5.0)
+    assert ours["scored_orders_per_year"] == pytest.approx(5.0)
+    assert ref["scored_orders_per_year"] == pytest.approx(
+        ours["scored_orders_per_year"]), "same rate must compare equal"
 
 
 def test_a_moment_that_does_not_vary_cannot_set_a_scale():
