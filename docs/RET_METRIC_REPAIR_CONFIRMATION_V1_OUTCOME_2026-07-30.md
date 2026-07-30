@@ -2,8 +2,10 @@
 
 **Status:** `COMPLETE_PROSPECTIVE_CORRECTIVE_CONFIRMATION`
 
-**Frozen contract:** `contracts/ret_metric_repair_confirmation_v1.json`  
-**Contract SHA-256:** `c1efdc20fc9d75743a5789ab3ddf90108d7f18cf1230dcd62fb5a85815dc441e`  
+**Frozen contract:** `contracts/ret_metric_repair_confirmation_v1.json`
+
+**Contract SHA-256:** `c1efdc20fc9d75743a5789ab3ddf90108d7f18cf1230dcd62fb5a85815dc441e`
+
 **Adjudication self hash:** `bde02309f72c9ee11222704a63a4c38dc27ca74cb9c15743dc42bd8b104c0ff4`
 
 The confirmation used sixteen previously unopened tapes per family, five future
@@ -85,4 +87,3 @@ NOT_CONFIRMED_R1R
 HOLD_RESOURCE_ADJUSTED_OR_FULL_LEDGER_SUPERIORITY
 NO_GO_NEURAL_OR_KAN_AUTHORIZATION
 ```
-
