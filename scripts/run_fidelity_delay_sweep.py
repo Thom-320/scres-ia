@@ -127,7 +127,7 @@ def main() -> int:
     ap.add_argument("--contract", type=Path,
                     default=Path("contracts/paper_b_independent_calibration_v2.json"))
     ap.add_argument("--reference", type=Path,
-                    default=Path("results/metric_audit/fidelity_reference_v2/result.json"))
+                    default=Path("results/metric_audit/fidelity_reference_v3/result.json"))
     ap.add_argument("--roots", nargs="+", type=int, default=list(ROOTS))
     ap.add_argument("--delays", nargs="+", type=float, default=None,
                     help="EXPLORATORY override of the contract's frozen grid. The "

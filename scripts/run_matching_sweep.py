@@ -82,7 +82,7 @@ def main() -> int:
     ap.add_argument("--roots", nargs="+", type=int, default=list(ROOTS))
     ap.add_argument("--horizon-weeks", type=int, default=52)
     ap.add_argument("--reference", type=Path,
-                    default=Path("results/metric_audit/fidelity_reference_v2/result.json"))
+                    default=Path("results/metric_audit/fidelity_reference_v3/result.json"))
     ap.add_argument("--output", type=Path,
                     default=Path("results/metric_audit/matching_sweep_v1/result.json"))
     args = ap.parse_args()

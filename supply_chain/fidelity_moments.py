@@ -64,13 +64,23 @@ MOMENT_NAMES: tuple[str, ...] = (
     "scored_orders_per_year",  # population as a RATE, not a raw count
 )
 
-# The reference workbooks are 20-year runs (thesis §6.8.1: "20 years or 161,280
-# hours"). Ours are typically 52 weeks. Comparing raw counts therefore compares
-# horizons, not fidelity: 2,381 against ~215 is a factor of 11 that is almost all
-# calendar. Normalising to orders per year leaves the part that IS fidelity -- we
-# score roughly twice as many orders per year as he does (119/yr against 215/yr),
-# which is a real difference in how many orders survive to be scored.
+# CORRECTED 2026-07-30. An earlier version hard-coded 20 years for every canonical
+# sheet, citing §6.8.1's "20 years or 161,280 hours". Measured from each sheet's own
+# max(OPTj), only CF1 and CF2 run ~20 years; CF3-CF20 run ~10, exactly as Table 6.13
+# prescribes. Dividing every sheet by 20 therefore halved most of the reference and
+# manufactured a discrepancy: it made our order rate look 2x his when it is 1.09x
+# generated and 1.27x scored.
+#
+# The horizon is now MEASURED per sheet rather than assumed. `REFERENCE_HORIZON_YEARS`
+# survives only as the fallback when a sheet carries no OPTj column.
 REFERENCE_HORIZON_YEARS: float = 20.0
+# Thesis year basis, used to convert max(OPTj) in hours into years.
+HOURS_PER_THESIS_YEAR: float = 8064.0
+
+
+def horizon_years_from_optj(max_optj_hours: float) -> float:
+    """A sheet's own simulated horizon, from its last order-placement time."""
+    return max(float(max_optj_hours) / HOURS_PER_THESIS_YEAR, 1e-9)
 
 
 def moments_from_rows(
