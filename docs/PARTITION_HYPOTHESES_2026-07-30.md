@@ -1,5 +1,28 @@
 # Why risk always implies lateness in our DES — both hypotheses tested
 
+> **RETRACTADO 2026-07-30 — el hallazgo central de este documento es falso.**
+>
+> Usé `RPj > 0` como proxy de «tocada por riesgo». **Es el proxy equivocado**: una orden
+> clasificada como autotomía tiene `RPj = 0` y `APj > 0` **por construcción**. Así que la
+> intersección «en horario ∧ `RPj>0`» está vacía por definición de la clasificación, no
+> porque el fenómeno falte. Medí la ausencia de un conjunto que no puede existir.
+>
+> Con el proxy correcto (`APj > 0`), la autotomía **sí dispara**, y el problema es el
+> opuesto al que reporté — sobra, no falta:
+>
+> | familia | delay ≤ 48 | delay ≥ 49 | referencia |
+> |---|---:|---:|---:|
+> | R1r | **0,4994–0,5006** (≈115× la referencia) | 0,000 | 0,00436 |
+> | R2r | **0,1480–0,1504** (≈236× la referencia) | 0,000 | 0,00064 |
+>
+> No hay «partición estricta» ni «ninguna celda produce un solo caso». Hay un salto brusco
+> entre delay 48 y 49: por debajo del lead time la rama dispara para la mitad de las
+> órdenes en R1r, por encima no dispara nunca. Ninguno de los dos lados se acerca a la
+> referencia. El sucesor correcto es
+> `docs/AUTOTOMY_PROXY_CORRECTION_2026-07-30.md`.
+
+
+
 **Status:** `DEVELOPMENT_DIAGNOSTIC_NO_CONSTANT_CHANGED`. Follows
 `FIDELITY_DELAY_SWEEP_2026-07-30.md`, which found that no delay in the calibration grid
 produces a single autotomy case because on-time orders and risk-touched orders are
