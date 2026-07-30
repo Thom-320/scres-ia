@@ -91,6 +91,53 @@
   "strategic_injection_rule": "Strategic procurement/injection remains a separate physical resource unless a sourced conversion into Garrido's seven-term kappa is prospectively frozen."
  },
  "external_signoff_required": false,
+ "fidelity_comparison": {
+  "degenerate_rule": "spread == 0 -> excluded by name in the artifact, never silently rescaled",
+  "epsilon": 0.5,
+  "epsilon_rule": "declared, not fitted; swept, and a non-dominated set that moves with epsilon is reported as unstable rather than shown",
+  "form": "epsilon-dominance over moments; the output is the NON-DOMINATED SET, never a winner",
+  "if_set_is_whole_grid": "report that the grid does not discriminate -- that is the answer, not a failure",
+  "module": "supply_chain/fidelity_moments.py",
+  "moment_rule": "every moment computed identically from a canonical sheet and from one of our episodes; anything readable only from a summary cell or a figure is inadmissible",
+  "moments": [
+   "autotomy_share",
+   "ret_mean",
+   "ret_above_one_share",
+   "rpj_mean",
+   "rpj_p95",
+   "scored_rows"
+  ],
+  "notable": [
+   "all six moments are non-degenerate in both families, so none is excluded",
+   "his ReT>1 share is 0.053% (R1r) and 0.100% (R2r) -- rare but real, confirming the unbounded tail is his",
+   "our R2r tail measured 7/3108 = 0.225%, about 1.6 reference SD above his 0.100%: we reproduce the phenomenon and overshoot its frequency",
+   "our autotomy share is 0.000% against his 0.436%/0.064% -- the moment the delay=54 fit broke"
+  ],
+  "reference_artifact": "results/metric_audit/fidelity_reference_v1/result.json",
+  "reference_by_family": {
+   "R1r": {
+    "autotomy_share": 0.004363,
+    "n_sheets": 9,
+    "ret_above_one_share": 0.000534,
+    "ret_mean": 0.006331,
+    "rpj_mean": 193.7047,
+    "rpj_p95": 456.4973,
+    "scored_rows": 2381.44
+   },
+   "R2r": {
+    "autotomy_share": 0.000637,
+    "n_sheets": 10,
+    "ret_above_one_share": 0.001002,
+    "ret_mean": 0.200742,
+    "rpj_mean": 626.6011,
+    "rpj_p95": 3042.0232,
+    "scored_rows": 2169.3
+   }
+  },
+  "reference_sha256": "742818881a3dbcce",
+  "scale": "each moment divided by its own between-configuration SD within family -- set by Garrido's data, not by us",
+  "uncertainty": "d_k = |M_k - Rbar_k| / sqrt(s_k^2/n_ref + se_k^2), a z-like scale where d_k = 1 is one combined standard error"
+ },
  "fulfillment_delay_decision": {
   "historical_lane_label": "PROVISIONAL_AGGREGATE_REPRODUCTION_ANCHOR",
   "historical_lane_must_not_be_reinterpreted_as": [
@@ -160,7 +207,7 @@
   "rule": "report every row of the grid; no row may be selected as a winner",
   "why": "delay=54 was itself fitted on one moment, ReT magnitude, and that fit drove the autotomy share to 0.00% against a canonical 0.254%. One criterion selected a value that broke another observable. Weighting several moments would repeat the error with more steps."
  },
- "self_sha256": "31f27b2a001384ff060e9ba09f5c53bb943bc4579e503644b98d7ce7f7997475",
+ "self_sha256": "a9075e8fe1f09a8fbcc42c6583eea1cc5ca58eb64460b51ac9c13e544d930db8",
  "status": "CONSOLIDATED_FREEZE_SUPERSEDES_V1_AND_MARKDOWN_PREREG",
  "supersedes": {
   "contracts/paper_b_independent_calibration_v1.json": "absorbed in full; its grid and no-selection rule are retained verbatim",
