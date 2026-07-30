@@ -203,6 +203,8 @@ class MFSCSimulation:
         risk_level: str = "current",
         year_basis: str = DEFAULT_YEAR_BASIS,
         stochastic_pt: bool = False,
+        transport_block_mode: str = "skip_wave",
+        transport_retry_poll_hours: float = 0.25,
         deterministic_baseline: bool = False,
         warmup_trigger: str = "op9_arrival",
         downstream_q_source: str = THESIS_REPLICATION_DOWNSTREAM_Q_SOURCE,
@@ -512,6 +514,15 @@ class MFSCSimulation:
         self.risk_level = risk_level
         self.year_basis = year_basis
         self.stochastic_pt = stochastic_pt
+        # How a downed transport leg is billed. See `_op10_transport_to_cssu`.
+        # Default preserves every historical result byte for byte.
+        if str(transport_block_mode) not in ("skip_wave", "retry_when_ready"):
+            raise ValueError(
+                f"Invalid transport_block_mode={transport_block_mode!r}. "
+                "Expected skip_wave or retry_when_ready.")
+        self.transport_block_mode = str(transport_block_mode)
+        self.transport_retry_poll_hours = max(
+            1e-3, float(transport_retry_poll_hours))
         self.deterministic_baseline = deterministic_baseline
         self.warmup_trigger = warmup_trigger
         self.downstream_q_source = downstream_q_source
@@ -4078,11 +4089,30 @@ class MFSCSimulation:
         yield self.rations_sb_dispatch.put(qty)
 
     def _op10_transport_to_cssu(self):
-        """Op10: LOC SB→CSSUs — dispatch U(q_min, q_max), async PT=24h."""
+        """Op10: LOC SB→CSSUs — dispatch U(q_min, q_max), async PT=24h.
+
+        `transport_block_mode` decides what a downed leg costs.
+
+        `skip_wave` (historical, default) skips the whole daily wave, so ANY
+        outage costs a full 24 h regardless of its length. That is what makes
+        `CTj` land on an exact 24 h grid and, with it, makes autotomy
+        unreachable: a one-hour disruption and a twenty-hour one are billed the
+        same day, so no order can be disrupted and still arrive on schedule.
+
+        `retry_when_ready` preserves the daily freight RATE -- one shipment per
+        24 h of headway -- but resumes as soon as the leg is back up, so an
+        outage costs its own duration plus the poll interval. Garrido's
+        workbooks show absorbed disruptions of 0.45-48 h against overshoots of
+        0.007-0.048 h, which a wave-skipping gate cannot produce.
+        """
+        poll = float(self.transport_retry_poll_hours)
         while True:
             yield self.env.timeout(self.params["op10_rop"])
             if self._is_down(10):
-                continue
+                if self.transport_block_mode != "retry_when_ready":
+                    continue
+                while self._is_down(10):
+                    yield self.env.timeout(poll)
             q_min = int(round(float(self.params["op10_q_min"])))
             q_max = int(round(float(self.params["op10_q_max"])))
             available = self.rations_sb_dispatch.level
@@ -4104,7 +4134,10 @@ class MFSCSimulation:
         while True:
             yield self.env.timeout(self.params["op12_rop"])
             if self._is_down(12) or self._is_down(11):
-                continue
+                if self.transport_block_mode != "retry_when_ready":
+                    continue
+                while self._is_down(12) or self._is_down(11):
+                    yield self.env.timeout(float(self.transport_retry_poll_hours))
             q_min = int(round(float(self.params["op12_q_min"])))
             q_max = int(round(float(self.params["op12_q_max"])))
             available = self.rations_cssu.level
