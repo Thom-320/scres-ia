@@ -124,13 +124,21 @@ LEAD_TIME_PROMISE = 48  # Hours — thesis §6.8.2 p.111, NOT §6.3.4
 GARRIDO_FULFILLMENT_DELAY_HOURS = 54.0  # Calibrated minimum CTj: no instant orders; just beyond LT=48.
 GARRIDO_R14_RET_PERIOD_HOURS = 72.0  # R14-only RPj median in Raw_data1 is ~72 h; avoid 1h ReT inflation.
 
-# Recovery-period (RPj) attribution for the endogenous DES lane. Garrido's raw
-# workbooks bound RPj to the disruption/recovery duration of the risk affecting
-# the order (thesis Eq. 5.3), NOT the elapsed wall-clock since the first risk
-# onset. The legacy "elapsed" mode lets queued wait-time inflate RPj up to CTj.
+# Recovery-period (RPj) attribution for the endogenous DES lane.
+#
+# MIGRATED 2026-07-30 from "disruption" to "elapsed", under
+# `docs/PREREGISTRO_POBLACION_PUNTUADA_2026-07-30.md`. Algorithm 2 (thesis p.69)
+# defines RPj = OATj - (time of the first R^0), which is elapsed wall-clock since
+# the first risk onset, not the risk's own disruption duration. The shipped
+# "disruption" default was an interpretation of Eq. 5.3 that the algorithm
+# contradicts, and it fits the canonical workbooks worse on all four measured RPj
+# moments (`docs/RPJ_MODE_FINDING_2026-07-30.md`).
+#
+# "disruption" stays selectable so any run frozen under it reproduces exactly.
+# It is a definition, not a calibration: neither branch has a free parameter.
 # The forensic excel_risk_tape lane copies RPj from the workbook and is
 # unaffected by this switch.
-RET_RECOVERY_PERIOD_MODE = "disruption"
+RET_RECOVERY_PERIOD_MODE = "elapsed"
 RET_RECOVERY_PERIOD_MODE_OPTIONS = ("elapsed", "disruption")
 
 THESIS_REPLICATION_DOWNSTREAM_Q_SOURCE = "figure_6_2"

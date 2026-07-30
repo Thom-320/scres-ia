@@ -1,6 +1,13 @@
 # `rpj_mean` decomposed — one term is a definition mismatch, the rest is the tail
 
-**Status:** `DEVELOPMENT_DIAGNOSIS`. Reference `fidelity_reference_v3` (horizon measured
+**Status:** `RETRACTED_IN_PART` by `docs/RETRACTACION_POBLACION_PUNTUADA_2026-07-30.md`.
+> The scored-population claim below is **false**: the canonical ledger already
+> filters to served orders (`ret_thesis.py:477`), and `scored_orders_per_year` was
+> already at 0.7 SD. The 274.7 figure came from an ad-hoc script, not the pipeline.
+> What survives: the RPj-mode correction, and that `rpj_mean`'s residual is the
+> `CTj` tail.
+
+**Original status:** `DEVELOPMENT_DIAGNOSIS`. Reference `fidelity_reference_v3` (horizon measured
 per sheet). Roots 2,200,001–3.
 
 ## The decomposition

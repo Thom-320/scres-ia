@@ -1,6 +1,12 @@
 # Preregistro — alinear la población puntuada y el modo de RPj
 
-**Estado:** `PREREGISTRATION_DRAFT_NOTHING_APPLIED`. Requiere firma del PI.
+**Estado:** `CHANGE_A_WITHDRAWN__CHANGE_B_APPLIED_2026-07-30`.
+> El **cambio A queda retirado**: el ledger canónico ya filtraba a servidas, así que
+> era un no-op sobre una perilla muerta. Ver
+> `docs/RETRACTACION_POBLACION_PUNTUADA_2026-07-30.md`.
+> El **cambio B (modo `elapsed`) está aplicado** en `config.py:141`.
+
+**Estado original:** `PREREGISTRATION_DRAFT_NOTHING_APPLIED`.
 Ninguna constante cambiada. Toda cifra congelada permanece como fue reportada.
 
 ## 1. Qué se cambia, y por qué no es un ajuste
