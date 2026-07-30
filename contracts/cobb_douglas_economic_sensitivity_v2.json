@@ -1,0 +1,48 @@
+{
+  "schema_version": "cobb_douglas_economic_sensitivity_v2",
+  "claim_status": "INDEPENDENT_RELATIVE_PRICE_SENSITIVITY_NO_MONETARY_CLAIM",
+  "primary_endpoint_authorized": false,
+  "policy_selection_authorized": false,
+  "domain_calibration_status": "NOT_REQUIRED_FOR_BOUNDED_METHODOLOGICAL_CLAIMS",
+  "supersedes": "contracts/cobb_douglas_economic_sensitivity_v1.json for the collaborator-blocking interpretation only; the v1 artifact remains immutable",
+  "baseline": {
+    "name": "garrido_published_unit_cost_assumption",
+    "costs": {
+      "c_p": 1.0,
+      "c_h": 1.0,
+      "c_l": 1.0,
+      "c_u": 1.0,
+      "c_i": 1.0,
+      "c_b": 1.0,
+      "c_o": 1.0
+    },
+    "provenance": "Garrido 2024 section 3.1 assumption (6); replication baseline only, not calibrated MFSC prices"
+  },
+  "one_factor_scenarios": {
+    "production_x0_5": {"coefficient": "c_p", "multiplier": 0.5},
+    "production_x2": {"coefficient": "c_p", "multiplier": 2.0},
+    "production_x5": {"coefficient": "c_p", "multiplier": 5.0},
+    "spare_capacity_x0_5": {"coefficient": "c_u", "multiplier": 0.5},
+    "spare_capacity_x2": {"coefficient": "c_u", "multiplier": 2.0},
+    "spare_capacity_x5": {"coefficient": "c_u", "multiplier": 5.0},
+    "holding_x0_5": {"coefficient": "c_i", "multiplier": 0.5},
+    "holding_x2": {"coefficient": "c_i", "multiplier": 2.0},
+    "holding_x5": {"coefficient": "c_i", "multiplier": 5.0},
+    "backorder_x0_5": {"coefficient": "c_b", "multiplier": 0.5},
+    "backorder_x2": {"coefficient": "c_b", "multiplier": 2.0},
+    "backorder_x5": {"coefficient": "c_b", "multiplier": 5.0}
+  },
+  "structurally_unidentified_in_static_comparison": [
+    "c_h",
+    "c_l",
+    "c_o"
+  ],
+  "interpretation_boundary": [
+    "The grid measures ranking sensitivity to relative prices; it does not estimate real monetary costs.",
+    "The active static terms are production, spare capacity, inventory holding, and backorders.",
+    "Hiring, firing, and overtime coefficients are not identified by fixed-shift static postures.",
+    "Strategic procurement and injection are reported as physical resources and are not silently folded into Garrido's seven-term kappa.",
+    "The physical Pareto front is primary; Cobb-Douglas cannot select a policy.",
+    "A sourced monetary vector is required only for monetary or deployment-economic claims, not for bounded methodological analysis."
+  ]
+}

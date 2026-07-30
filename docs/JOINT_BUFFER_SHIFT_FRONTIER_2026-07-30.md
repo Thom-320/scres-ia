@@ -42,8 +42,9 @@ tapes, same answer.
 The panel reported that at posture `168/0/168` all three ReT variants preferred shift 3
 while `R_cobb_douglas` preferred shift 1, at identical fill. Over the full domain:
 
-**Survives, and much more strongly than before.** `R_cobb_douglas` prefers **shift 1 in
-216 of 216 buffer postures, in both families** — unanimous, no exceptions. And the
+**Survives as a conditional result.** `R_cobb_douglas` prefers **shift 1 in
+216 of 216 buffer postures, in both families** under the published `c = 1` baseline —
+unanimous, no exceptions. And the
 mechanism holds: at `168/0/168` the fill is identical across all three shift levels
 (0.99635 in R1r; 0.92074/0.92108/0.92108 in R2r) while three shifts cost **2.35×** in R1r
 and **2.40×** in R2r. Extra capacity buys no aggregate service and is not free.
@@ -66,11 +67,16 @@ And across all 216 postures the ReT variants have **no stable shift preference a
 | `ret_excel_cvar10` | S1 64 · S2 48 · S3 104 | S1 163 · S2 30 · S3 23 |
 | `R_cobb_douglas` | **S1 216** · S2 0 · S3 0 | **S1 216** · S2 0 · S3 0 |
 
-This is a **stronger** indictment of ReT than the claim it replaces. The original reading
-was "ReT prefers the expensive option". The correct one is worse: **ReT's ranking over the
-capacity dimension is unstable across the buffer domain** — `ret_excel` picks shift 1 in
-138 postures and shift 3 in 46 of the same family. A metric whose capacity preference
-flips with the buffer vector is not measuring the value of capacity.
+This replaces the earlier context-free claim. **ReT's ranking over the capacity
+dimension interacts with the buffer vector** — `ret_excel` picks shift 1 in 138
+postures and shift 3 in 46 of the same family. That rules out saying that ReT has one
+global preference for capacity. It does **not**, by itself, prove that ReT fails to
+measure capacity: buffers and capacity can be legitimate substitutes, so a full
+interpretation needs the physical endpoints and an explicit interaction analysis.
+
+The Cobb-Douglas unanimity is also conditional, not an independent validation. Its
+cost term uses `c = 1`, which Garrido published as an isolation assumption rather than
+an MFSC economic calibration; relative-price sensitivity can change rankings.
 
 Caveat on the comparison: the panel's numbers were taken at 24 h cadence, before the RPj
 fix, on four tapes. These are 672 h, post-fix, twelve tapes. The difference could be any of
@@ -112,8 +118,9 @@ assembly-line raw-material node, which no hand-picked set would have included.
 
 **Establishes:** the joint frontier exists and is enumerated; pinning shifts cost nothing
 for the primary endpoint but hid a shift-2 optimum for the tail and uncensored ledger in
-R2r; `R_cobb_douglas` has a unanimous shift preference and the ReT variants have none;
-no posture in the complete domain clears a 50,000 unresolved-backorder cap under R2r.
+R2r; the ReT variants show buffer-by-shift interactions while `R_cobb_douglas` has a
+unanimous S1 ranking under `c = 1`; no posture in the complete domain clears a 50,000
+unresolved-backorder cap under R2r.
 
 **Does not establish:** anything about controllers — this is a static enumeration, and
 adaptive value over the joint domain remains unmeasured. Nothing about `H_obs`. Nothing
