@@ -205,6 +205,8 @@ class MFSCSimulation:
         stochastic_pt: bool = False,
         transport_block_mode: str = "skip_wave",
         on_hand_transit_mode: str = "flat_constant",
+        partial_fulfilment: bool = False,
+        queue_blocking: str = "blocking",
         op11_handling_hours: float = 0.0,
         transport_retry_poll_hours: float = 0.25,
         deterministic_baseline: bool = False,
@@ -535,6 +537,25 @@ class MFSCSimulation:
                 f"Invalid on_hand_transit_mode={on_hand_transit_mode!r}. "
                 "Expected flat_constant or modelled_legs.")
         self.on_hand_transit_mode = str(on_hand_transit_mode)
+        # Order-stock matching. Both default to the historical behaviour and are
+        # BINARY by design: parametrising the served fraction would turn a structural
+        # question into a tunable one, which is how op11_handling_hours failed. See
+        # docs/PREREGISTRO_EMPAREJAMIENTO_ORDEN_STOCK_2026-07-30.md.
+        #
+        # `partial_fulfilment` lets an order take what is on hand and requeue the
+        # remainder, so a cycle time can land between the instant value and the tail.
+        # `queue_blocking = skip_head` lets an order that DOES fit be served while the
+        # head cannot, instead of the whole queue waiting behind it.
+        #
+        # Together they address the measured defect: 64.1% of our orders finish at
+        # exactly CTj = 54.0 and 17.8% in a tail beyond 500 h, where Garrido's mass is
+        # in the middle (his p50 is 101.4 against our 54.0).
+        self.partial_fulfilment = bool(partial_fulfilment)
+        if str(queue_blocking) not in ("blocking", "skip_head"):
+            raise ValueError(
+                f"Invalid queue_blocking={queue_blocking!r}. "
+                "Expected blocking or skip_head.")
+        self.queue_blocking = str(queue_blocking)
         # Op11 (CSSU receipt and distribution) is PT=0 in our model, but the thesis
         # §6.3.3 describes it as "in less than 1 hour" -- a bounded positive handling
         # time we dropped. This is the thesis-sourced dispersion component. The bound
@@ -2617,8 +2638,11 @@ class MFSCSimulation:
         """
         if self.order_fulfillment_mode == "op9_linked":
             return
-        while self.pending_backorders:
-            next_order = self.pending_backorders[0]
+        # `skip_head` scans past an unservable head instead of stopping at it; the
+        # SPT priority order is otherwise untouched.
+        idx = 0
+        while idx < len(self.pending_backorders):
+            next_order = self.pending_backorders[idx]
             requested_qty = float(next_order.remaining_qty)
             if requested_qty <= 1e-9:
                 # Order already fully served or numerically empty.
@@ -2631,6 +2655,22 @@ class MFSCSimulation:
                 else self.rations_theatre
             )
             if source.level + 1e-9 < requested_qty:
+                if self.partial_fulfilment and source.level > 1e-9:
+                    # Take what is there and requeue the remainder in place, so the
+                    # order's cycle time can land between the instant value and the
+                    # tail instead of only at one of the two.
+                    part = float(source.level)
+                    yield source.get(part)
+                    next_order.remaining_qty = max(0.0, requested_qty - part)
+                    if self.order_fulfillment_mode != "op9_linked":
+                        self.total_order_fulfilled += part
+                    if self.queue_blocking == "skip_head":
+                        idx += 1
+                        continue
+                    break
+                if self.queue_blocking == "skip_head":
+                    idx += 1
+                    continue
                 break
             yield source.get(requested_qty)
             if self.order_fulfillment_mode == "op9_linked":
