@@ -204,6 +204,8 @@ class MFSCSimulation:
         year_basis: str = DEFAULT_YEAR_BASIS,
         stochastic_pt: bool = False,
         transport_block_mode: str = "skip_wave",
+        on_hand_transit_mode: str = "flat_constant",
+        op11_handling_hours: float = 0.0,
         transport_retry_poll_hours: float = 0.25,
         deterministic_baseline: bool = False,
         warmup_trigger: str = "op9_arrival",
@@ -521,6 +523,23 @@ class MFSCSimulation:
                 f"Invalid transport_block_mode={transport_block_mode!r}. "
                 "Expected skip_wave or retry_when_ready.")
         self.transport_block_mode = str(transport_block_mode)
+        # The on-hand delivery path. `flat_constant` (default) finalises at exactly
+        # OPTj + delay, which is a POINT MASS: CTj has zero variance, so the autotomy
+        # predicate `CTj <= LTj` degenerates into the single global comparison
+        # `delay <= LT` and the autotomy share can only be 0 or 1. Garrido's 0.44% is
+        # the fraction of a DISTRIBUTION inside the tolerance band, so reproducing it
+        # requires dispersion, not a different constant. Measured 2026-07-30: the share
+        # steps from 0.652 to 0.000 between delay 48.000 and 48.005.
+        if str(on_hand_transit_mode) not in ("flat_constant", "modelled_legs"):
+            raise ValueError(
+                f"Invalid on_hand_transit_mode={on_hand_transit_mode!r}. "
+                "Expected flat_constant or modelled_legs.")
+        self.on_hand_transit_mode = str(on_hand_transit_mode)
+        # Op11 (CSSU receipt and distribution) is PT=0 in our model, but the thesis
+        # §6.3.3 describes it as "in less than 1 hour" -- a bounded positive handling
+        # time we dropped. This is the thesis-sourced dispersion component. The bound
+        # is a declared parameter and is SWEPT, never fitted to the target share.
+        self.op11_handling_hours = max(0.0, float(op11_handling_hours))
         self.transport_retry_poll_hours = max(
             1e-3, float(transport_retry_poll_hours))
         self.deterministic_baseline = deterministic_baseline
@@ -2499,10 +2518,18 @@ class MFSCSimulation:
         elapsed time from OPTj to OATj; orders that have already waited longer
         than the delay are finalized immediately.
         """
+        if self.on_hand_transit_mode == "modelled_legs":
+            # The legs the flat constant was standing in for. op10_pt + op12_pt is 48,
+            # so with op11_handling_hours = 0 this is numerically identical to the
+            # constant; the handling draw is what gives CTj a distribution.
+            transit = float(self._pt("op10_pt")) + float(self._pt("op12_pt"))
+            if self.op11_handling_hours > 0.0:
+                transit += float(self.rng.uniform(0.0, self.op11_handling_hours))
+        else:
+            transit = float(self.demand_on_hand_fulfillment_delay)
         remaining_delay = max(
             0.0,
-            float(self.demand_on_hand_fulfillment_delay)
-            - max(0.0, float(self.env.now) - float(order.OPTj)),
+            transit - max(0.0, float(self.env.now) - float(order.OPTj)),
         )
         order.remaining_qty = 0.0
         if remaining_delay > 0.0:
