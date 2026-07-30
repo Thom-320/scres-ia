@@ -32,8 +32,13 @@ Tres lugares independientes, todos con **igualdad**, no con `≤`:
   **`AND CTj = LTj`**`, THEN APj = ΣRσ − Σ(solapamientos)`
 - **p.72:** *«The range of values of APj is 0 < APj ≤ LT, **whenever CTj = LTj**»*
 
-Y el Algoritmo 2 (p.69) dispara `RPj` con **`CTj > LTj`**. La partición es binaria y
-exhaustiva: **en horario** o **tarde**. No existe «más rápido que la promesa».
+Y el Algoritmo 2 (p.69) dispara `RPj` con **`CTj > LTj`**.
+
+**CORREGIDO:** un borrador anterior decía que «la partición es binaria y exhaustiva» y que
+«no existe más rápido que la promesa». Eso es sobrelectura. Los algoritmos **especifican**
+`CT = LT` y `CT > LT`; simplemente **no definen** `CT < LT`. Silencio no es prueba de
+imposibilidad física. Lo que sí queda establecido es la **discrepancia semántica**: la tesis
+activa `APj` con igualdad y nuestro código con `<=`.
 
 ### Consecuencia: `LT` es el horario, no una aspiración
 
@@ -46,12 +51,12 @@ Nuestro pipeline tiene un ciclo programado de **54 h**, y lo comparamos contra u
 
 ### Dos defectos concretos de implementación
 
-1. **`LEAD_TIME_PROMISE = 48` está mal citado.** `config.py:118` lo atribuye a *«thesis
-   Section 6.3.4»*, pero §6.3.4 es **«Demand for combat rations»** y solo define la demanda
-   `U(2.400, 2.600)` cada 24 h, seis días por semana. **No define ningún lead time.** El 48
-   aparece en la tesis como la cadencia de reorden de Op7 y Op8 (*«every 2 days, ROP =
-   every 48 hours»*), que es la frecuencia de despacho al batallón de abasto — no la
-   promesa de entrega a la tropa.
+1. **`LEAD_TIME_PROMISE = 48` está mal citado, pero el valor es correcto.** `config.py:118`
+   lo atribuye a §6.3.4, que es «Demand for combat rations» y no define lead time alguno.
+   **La fuente correcta es §6.8.2, p.111**, que declara un *pre-set lead-time* de 48 horas.
+   **CORREGIDO:** un borrador anterior afirmaba que «el 48 solo es la cadencia ROP de
+   Op7/Op8». Eso es **falso** — §6.8.2 lo enuncia directamente como lead time. Solo hay que
+   arreglar la cita, no el número.
 2. **`supply_chain.py:5810` usa `CTj <= LTj`** donde la tesis usa `CTj = LTj`.
 
 ### Lo que se recupera al alinear `LT` con nuestro propio horario
@@ -63,8 +68,10 @@ Medido sobre la postura incumbente, raíz 1.900.001, 52 semanas:
 | R1r | 287 | **278 (96,9%)** | **0** | 0,00% |
 | R2r | 258 | **180 (69,8%)** | **0** | 0,00% |
 
-Con `LT = 54`, el 96,9% de las órdenes de R1r y el 69,8% de las de R2r entran en la
-población «en horario», y activan la rama de autotomía cuando un riesgo las tocó.
+**CORREGIDO:** estos conteos **no** demuestran que 54 sea el horario de Garrido. Demuestran
+que **nuestra implementación concentra las entregas ahí**, que es un hecho sobre nuestro
+pipeline y no sobre su modelo. Con `LT = 48` fijo (§6.8.2), lo que muestran es cuán lejos
+está nuestro delay ajustado del lead time que la tesis declara.
 
 **Y la diferencia entre familias es la señal que la métrica debería estar capturando.**
 Bajo riesgos frecuentes y leves solo el 3% de las órdenes llega tarde; bajo riesgos raros y
@@ -105,10 +112,14 @@ No es un vacío: es una exclusión razonada **con un orden explícito**.
 
 ### Eso es una regla de decisión, no una ausencia
 
-La proposición dice que en modo guerra el costo de faltante **domina** a los de inventario
-y mano de obra. Traducido a los siete coeficientes de κ:
+La proposición establece una **restricción ordinal**: en guerra el costo de faltante supera
+la *suma* de costos de inventario y trabajo.
 
-    c_b  >>  c_i, c_p, c_h, c_l, c_u, c_o
+**CORREGIDO:** un borrador escribía esto como `c_b >> c_i, c_p, c_h, c_l, c_u, c_o`,
+presentándolo como derivado de la tesis. **No lo es.** La tesis no identifica nuestros siete
+coeficientes ni justifica ese símbolo. La formulación defendible es: *usamos `c_b` como
+**proxy ordinal declarado** del costo militar de faltante y exploramos multiplicadores
+monótonos; no son precios ni coeficientes calibrados por la tesis.*
 
 Y esto **refuerza el hallazgo que ya teníamos**: nuestro port de Cobb-Douglas coloca en
 R2r una postura con 76% de fill y 16 órdenes perdidas cerca del frente, precisamente
