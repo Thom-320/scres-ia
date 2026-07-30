@@ -127,6 +127,10 @@ def main() -> int:
     ap.add_argument("--reference", type=Path,
                     default=Path("results/metric_audit/fidelity_reference_v1/result.json"))
     ap.add_argument("--roots", nargs="+", type=int, default=list(ROOTS))
+    ap.add_argument("--delays", nargs="+", type=float, default=None,
+                    help="EXPLORATORY override of the contract's frozen grid. The "
+                         "contract's no-selection rule still applies: every row is "
+                         "reported and none may be chosen for the result it gives.")
     ap.add_argument("--horizon-weeks", type=int, default=52)
     ap.add_argument("--output", type=Path,
                     default=Path("results/metric_audit/fidelity_delay_sweep_v1/"
@@ -135,7 +139,9 @@ def main() -> int:
 
     contract = json.loads(args.contract.read_text())
     grid = contract["fulfillment_delay_decision"]["prospective_robustness_grid"]
-    delays = [float(d) for d in grid["delay_hours"]]
+    delays = ([float(d) for d in args.delays] if args.delays
+              else [float(d) for d in grid["delay_hours"]])
+    grid_is_contract = args.delays is None
     ref_blob = json.loads(args.reference.read_text())
     horizon = float(args.horizon_weeks * HOURS_PER_WEEK)
     started = time.perf_counter()
@@ -203,6 +209,12 @@ def main() -> int:
         "lead_time_fixed_at": 48.0,
         "lead_time_source": "Garrido 2017 thesis §6.8.2 p.111",
         "roots": list(args.roots),
+        "delays_swept": delays,
+        "grid_is_the_frozen_contract_grid": grid_is_contract,
+        "exploratory_note": (None if grid_is_contract else
+            "EXPLORATORY: delays overridden on the command line to resolve the step "
+            "between 48 and 49 found by the contract grid. No row may be selected for "
+            "the result it produces; the no-selection rule is unchanged."),
         "tolerances_swept": list(TOLERANCES),
         "transport_modes_swept": list(TRANSPORT_MODES),
         "epsilons_swept": list(EPSILONS),
