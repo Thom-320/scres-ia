@@ -115,7 +115,12 @@ RAW_MATERIAL_COMPONENTS = [
 # Lead time: time from Op1 to Op13 under deterministic conditions (no risks).
 # Sum of processing times Op1–Op12 ≈ 672 + 24×9 + 0 + 0.00312×3×5000 ≈ ~935 hrs
 # But thesis uses LT = 48 hours for the last-mile (Op9→Op13) delivery promise.
-LEAD_TIME_PROMISE = 48  # Hours — thesis Section 6.3.4
+LEAD_TIME_PROMISE = 48  # Hours — thesis §6.8.2 p.111, NOT §6.3.4
+# §6.8.2: "the availability of finished products at this point allows
+# troops to be supplied within a pre-set lead-time of 48 hours". The old
+# citation pointed at §6.3.4 "Demand for combat rations", which defines
+# U(2400,2600) every 24 h and no lead time at all. The value is right;
+# only the source was wrong.
 GARRIDO_FULFILLMENT_DELAY_HOURS = 54.0  # Calibrated minimum CTj: no instant orders; just beyond LT=48.
 GARRIDO_R14_RET_PERIOD_HOURS = 72.0  # R14-only RPj median in Raw_data1 is ~72 h; avoid 1h ReT inflation.
 

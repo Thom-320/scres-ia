@@ -4166,10 +4166,19 @@ class MFSCSimulation:
         Fig 6.2 / Table 6.20: Op9 ships Q = 2,400-2,600 rations 'at a daily
         freight rate' (ROP = 24 h). This serving-rate constraint — not an
         artificial delay — is what produces Garrido's congested standing queue
-        (final ΣBt ≈ 60), strictly positive departure waits (no CTj = 48.0
-        exactly, hence zero on-time orders in the workbooks), the ~2,300 h CT
+        (final ΣBt ≈ 60), strictly positive departure waits, the ~2,300 h CT
         p95 (cap-60 queue drained at one order/day), and bounded attended-order
         tails (stragglers are evicted as Ut before aging for years).
+
+        CORRECTED 2026-07-30. This docstring used to read "no CTj = 48.0 exactly,
+        hence zero on-time orders in the workbooks". The premise is right -- his data
+        has no exact 48.0 -- but the conclusion is FALSE: 110 rows sit at CTj =
+        48.00744-48.048 and ARE classified as autotomy, i.e. on schedule. The design
+        below then targets departure waits "up to 6 h", which is where the 54 h
+        fulfilment constant comes from, against his actual waits of 0.007-0.048 h --
+        27 seconds to 3 minutes. The daily-freight congestion reproduces his queue and
+        tail moments and breaks his absorption moment; see
+        docs/WHAT_IS_ACTUALLY_FIXABLE_2026-07-30.md.
 
         Departures happen once per day at `op9_freight_offset_hours` after
         midnight (orders are placed just after midnight in the thesis tapes;
