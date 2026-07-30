@@ -140,3 +140,37 @@ known. A separate executable contract now freezes a genuinely prospective check:
 The development signs and exact deltas are disclosed inside the contract. Scientific
 execution is authorized as a separate corrective study; use in the manuscript and
 promotion of the causal proxy still require PI review.
+
+## 8. Terminal prospective outcome — 2026-07-30
+
+The prospective contract completed with 16/16 tapes in each family, the full
+216-posture domain, five future scenarios per candidate, valid completion receipts,
+and all replay-prefix hashes equal.
+
+```text
+R1r  NOT_CONFIRMED
+      delta = -0.00001954
+      CI95  = [-0.00004940, -0.00000021]
+
+R2r  PASS_MATERIAL_REPAIRED_MPC
+      delta = +0.01247474
+      CI95  = [+0.00910860, +0.01590910]
+      positive tapes = 15/16
+```
+
+The mandatory proxy agrees in both families. It remains a disclosed proxy, not
+identified causal attribution.
+
+**Important correction to the development interpretation in §5:** on the new R2r
+tapes, canonical and clipped ReT both favor MPC by approximately +0.0125. The
+prospective run therefore confirms the preregistered bounded-endpoint MPC result,
+but it does **not** reproduce the development claim that clipping itself reverses
+the sign. Conversely, `ret_excel_full_ledger` favors the static incumbent and MPC
+delivers fewer total rations while using substantially less strategic material.
+The terminal claim is endpoint- and resource-bounded, not dominance.
+
+Full adjudication and custody:
+
+- `results/metric_audit/ret_metric_repair_confirmation_v1/result.json`
+- `results/metric_audit/ret_metric_repair_confirmation_v1/custody.json`
+- `docs/RET_METRIC_REPAIR_CONFIRMATION_V1_OUTCOME_2026-07-30.md`
