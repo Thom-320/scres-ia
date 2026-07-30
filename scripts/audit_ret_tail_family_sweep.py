@@ -32,6 +32,7 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from supply_chain.provenance import calibration_stamp  # noqa: E402
 from supply_chain.config import HOURS_PER_WEEK  # noqa: E402
 from supply_chain.episode_metrics import (  # noqa: E402
     compute_order_level_ret_excel_request_snapshot_ledger as ledger,
@@ -152,6 +153,7 @@ def main() -> int:
     rows_path = args.output.parent / "per_order_rows.json"
     payload = {
         "schema_version": "ret_tail_family_sweep_v1",
+        "calibration_provenance": calibration_stamp(),
         "claim_status": "DEVELOPMENT_METRIC_DIAGNOSTIC_NO_METRIC_CHANGED",
         "created_at": datetime.now(timezone.utc).isoformat(),
         "rpj_semantics": "immutable_onset_corrective (commit 125b94f)",

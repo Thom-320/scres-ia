@@ -37,6 +37,7 @@ from supply_chain.cobb_douglas_resilience import (  # noqa: E402
     CobbDouglasRecorder,
     score_comparison_set,
 )
+from supply_chain.provenance import calibration_stamp  # noqa: E402
 from supply_chain.config import HOURS_PER_WEEK  # noqa: E402
 from supply_chain.config import THESIS_FAITHFUL_PROTOCOL as P  # noqa: E402
 from supply_chain.episode_metrics import compute_episode_metrics  # noqa: E402
@@ -186,6 +187,7 @@ def main() -> int:
 
     payload = {
         "schema_version": "cobb_douglas_dynamic_arms_v2",
+        "calibration_provenance": calibration_stamp(),
         "claim_status": "DEVELOPMENT_SCREEN_NO_CLAIM",
         "created_at": datetime.now(timezone.utc).isoformat(),
         "purpose": ("correct §7 of COBB_DOUGLAS_PORT_RESULTS_2026-07-29.md: apply "

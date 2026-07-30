@@ -1,0 +1,188 @@
+{
+ "authorization": {
+  "continue_paper_b_methodological_analysis": true,
+  "external_email_or_message_authorized": false,
+  "neural_or_kan_authorized": false,
+  "run_declared_development_sensitivities": true
+ },
+ "autotomy_rule_reconstructed_2026_07_30": {
+  "consequence": [
+   "the 1e-9 exact-equality tolerance would classify ZERO rows and is withdrawn",
+   "a tolerance band is also insufficient; per Algorithm 1 the discriminator is risk incidence within [OPTj,OATj], with CTj=LTj holding approximately for essentially every order",
+   "in Garrido's data 43,250 of 43,360 rows exceed LT by at least 0.00744 h, so 'on schedule' is the norm; ours exceed it by 6 h, which is 125x his largest excess -- a pipeline gap, not a metric gap"
+  ],
+  "evidence": {
+   "ctj_minus_lt_min_when_NOT_autotomy": 0.00744,
+   "ctj_minus_lt_when_autotomy": [
+    0.00744,
+    0.048
+   ],
+   "overlap": "the same CTj-LT value appears in both classes, so no tolerance band on CTj can reproduce the classification"
+  },
+  "excluded": {
+   "R3 / Cf21-Cf30": "no reference workbook exists; external validation only, never part of the fit",
+   "Rsult_1.xlsx": "not the thesis final data (row counts differ by -1,949..+735)"
+  },
+  "finding": "CTj does NOT determine the autotomy class",
+  "n_rows": 43360,
+  "n_sheets": 19,
+  "sources": [
+   "Raw_data1+Re.xlsx",
+   "Raw_data2+Re.xlsx"
+  ]
+ },
+ "calibration_targets": {
+  "autotomy_share": {
+   "by_sheet_max": 0.00557,
+   "by_sheet_min": 0.00045,
+   "definition": "count(APj > 0) / scored rows",
+   "note": "replaces the withdrawn 'Media APj = 0.448562', which came from Rsult_1",
+   "overall": 0.00254
+  },
+  "computed_from": "raw rows directly, never from summary cells of an excluded workbook",
+  "moments_requiring_row_level_computation": [
+   "RPj p95 -- cannot be derived from Media/Maximum RPj",
+   "share of ReT > 1 -- counted in raw rows, not read off Figure 6.8a"
+  ]
+ },
+ "created_date": "2026-07-30",
+ "economic_decision": {
+  "cobb_douglas_role": "SECONDARY_SENSITIVITY_ONLY",
+  "monetary_calibration_required_for": [
+   "a monetary cost claim",
+   "a deployment recommendation based on a scalar economic optimum",
+   "promoting Cobb-Douglas to a policy-selection endpoint"
+  ],
+  "monetary_calibration_required_for_current_methodological_claims": false,
+  "primary_resource_comparison": {
+   "axes": [
+    "flow_fill_rate higher",
+    "lost_orders lower",
+    "unresolved_backorder lower",
+    "delivered_rations higher",
+    "strategic_injected lower",
+    "terminal_stock lower",
+    "shift-hours or installed-capacity use lower"
+   ],
+   "method": "PARETO_NO_SCALARIZATION",
+   "service_thresholds": "Report as an explicit sweep; no exploratory threshold is called deployable."
+  },
+  "relative_price_grid": {
+   "active_static_terms": [
+    "c_p",
+    "c_u",
+    "c_i",
+    "c_b"
+   ],
+   "one_factor_multipliers": [
+    0.5,
+    1.0,
+    2.0,
+    5.0
+   ],
+   "reporting_rule": "Report winner/rank stability and the physical Pareto front. Do not label any multiplier a price estimate.",
+   "structurally_unidentified_in_static_postures": [
+    "c_h",
+    "c_l",
+    "c_o"
+   ]
+  },
+  "replication_baseline": "All seven coefficients equal 1, as published by Garrido et al. 2024.",
+  "strategic_injection_rule": "Strategic procurement/injection remains a separate physical resource unless a sourced conversion into Garrido's seven-term kappa is prospectively frozen."
+ },
+ "external_signoff_required": false,
+ "fulfillment_delay_decision": {
+  "historical_lane_label": "PROVISIONAL_AGGREGATE_REPRODUCTION_ANCHOR",
+  "historical_lane_must_not_be_reinterpreted_as": [
+   "a thesis-specified physical constant",
+   "a validated fulfillment-time distribution",
+   "the value that maximizes dynamic or neural headroom"
+  ],
+  "historical_lane_reason": "It was selected before the present audits as the smallest tested delay beyond LT=48 that reproduced the raw-workbook ReT order of magnitude.",
+  "historical_reproduction_lane_hours": 54.0,
+  "historical_rerun_required": false,
+  "prospective_robustness_grid": {
+   "claim_rule": "A delay-universal claim requires directionally consistent results across the declared grid. Otherwise report a delay-by-policy interaction and keep claims conditional.",
+   "delay_hours": [
+    42.0,
+    47.0,
+    48.0,
+    49.0,
+    54.0,
+    60.0
+   ],
+   "lead_time_hours": 48.0,
+   "selection_rule": "All rows are reported. No row may be selected because it creates more headroom or a more favorable controller ranking.",
+   "signed_slack_hours": [
+    -6.0,
+    -1.0,
+    0.0,
+    1.0,
+    6.0,
+    12.0
+   ]
+  },
+  "required_semantic_columns": [
+   "thesis_exact_autotomy: CTj = LTj within a declared numeric tolerance",
+   "operational_on_time: CTj <= LTj",
+   "ret_excel_historical_semantics",
+   "physical service and resource endpoints"
+  ]
+ },
+ "historical_results_modified": false,
+ "joint_frontier_boundary": {
+  "adaptive_joint_controller_adjudicated": false,
+  "cobb_douglas_warning": "Unanimous S1 rankings are conditional on the uncalibrated c=1 cost baseline and cannot be treated as economic validation.",
+  "enumerated_domain": "6^3 buffer vectors x 3 shifts = 648 static postures",
+  "interpretation": "Shift preferences that vary with buffer vectors establish an interaction and rule out a context-free shift ranking. They do not by themselves prove metric invalidity.",
+  "paired_uncertainty_available": false,
+  "status": "DEVELOPMENT_STATIC_ENUMERATION"
+ },
+ "migration_policy": {
+  "historical_lane": "delay 54, retained and labelled, never rewritten",
+  "migrate_historical_body": false,
+  "prerequisite": "supply_chain/provenance.py calibration_stamp() embedded in every new artifact",
+  "prospective_lane": "LT=48 fixed, delay swept, built forward only",
+  "reason": "845 result artifacts, 10 record the fulfilment delay, and all four sealed confirmation runs record none. Neither migration nor parallel operation is executable until artifacts carry provenance."
+ },
+ "optional_domain_face_validation_welcome": true,
+ "purpose": "Resolve the fulfillment-delay and economic-cost choices without treating collaborator input as a scientific execution blocker.",
+ "schema_version": "paper_b_independent_calibration_v2",
+ "selection_rule_final": {
+  "forbidden_selection_criteria": [
+   "H_PI at any level",
+   "any MPC-vs-static contrast",
+   "whether a family passes a service threshold",
+   "publishability",
+   "fit on ReT magnitude alone"
+  ],
+  "if_no_dominant_cell": "retain the non-dominated set; do NOT collapse it with weights",
+  "rule": "report every row of the grid; no row may be selected as a winner",
+  "why": "delay=54 was itself fitted on one moment, ReT magnitude, and that fit drove the autotomy share to 0.00% against a canonical 0.254%. One criterion selected a value that broke another observable. Weighting several moments would repeat the error with more steps."
+ },
+ "self_sha256": "31f27b2a001384ff060e9ba09f5c53bb943bc4579e503644b98d7ce7f7997475",
+ "status": "CONSOLIDATED_FREEZE_SUPERSEDES_V1_AND_MARKDOWN_PREREG",
+ "supersedes": {
+  "contracts/paper_b_independent_calibration_v1.json": "absorbed in full; its grid and no-selection rule are retained verbatim",
+  "docs/PREREGISTRO_LEAD_TIME_2026-07-30.md": "SUPERSEDED. Its equal-weight multi-moment distance and its 10%/smallest-delay tiebreak are WITHDRAWN: both fabricate a winner from an unfrozen analytic choice. Its 1e-9 equality tolerance is WITHDRAWN as refuted by the canonical data. Its roots and its ban on outcome-based selection are retained here."
+ },
+ "thesis_evidence": {
+  "autotomy_semantics": "Garrido thesis section 5.5.1 and Algorithm 1: APj is defined when a risk intersects the order interval and CTj = LTj.",
+  "fulfillment_delay_54_specified_by_thesis": false,
+  "lead_time_hours": 48.0,
+  "lead_time_source": "Garrido thesis section 6.8.2, printed page 111 (PDF page 112): finished products at Op9 allow troops to be supplied within a pre-set lead-time of 48 hours.",
+  "published_cost_baseline": {
+   "costs": {
+    "c_b": 1.0,
+    "c_h": 1.0,
+    "c_i": 1.0,
+    "c_l": 1.0,
+    "c_o": 1.0,
+    "c_p": 1.0,
+    "c_u": 1.0
+   },
+   "interpretation": "Published isolation assumption, not MFSC monetary calibration.",
+   "source": "Garrido et al. 2024 section 3.1 assumption (6), journal printed page 7 (PDF page 8)."
+  }
+ }
+}

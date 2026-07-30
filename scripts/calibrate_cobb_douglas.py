@@ -41,6 +41,7 @@ from supply_chain.cobb_douglas_resilience import (  # noqa: E402
     kappa_dot,
     score_comparison_set,
 )
+from supply_chain.provenance import calibration_stamp  # noqa: E402
 from supply_chain.config import HOURS_PER_WEEK  # noqa: E402
 from supply_chain.config import THESIS_FAITHFUL_PROTOCOL as P  # noqa: E402
 from supply_chain.episode_metrics import compute_episode_metrics  # noqa: E402
@@ -140,6 +141,7 @@ def phase_calibrate(args) -> dict:
 
     payload = {
         "schema_version": "cobb_douglas_calibration_v1",
+        "calibration_provenance": calibration_stamp(),
         "claim_status": "CALIBRATION_ONLY_NO_POLICY_ADJUDICATION",
         "created_at": datetime.now(timezone.utc).isoformat(),
         "provenance": (

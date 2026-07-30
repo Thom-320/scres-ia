@@ -41,6 +41,7 @@ from supply_chain.cobb_douglas_resilience import (  # noqa: E402
     CobbDouglasRecorder,
     score_comparison_set,
 )
+from supply_chain.provenance import calibration_stamp  # noqa: E402
 from supply_chain.config import HOURS_PER_WEEK  # noqa: E402
 from supply_chain.episode_metrics import compute_episode_metrics  # noqa: E402
 
@@ -251,6 +252,7 @@ def main() -> int:
 
     payload = {
         "schema_version": "metric_panel_with_v2_arms_v1",
+        "calibration_provenance": calibration_stamp(),
         "claim_status": "DEVELOPMENT_SCREEN_NO_CLAIM",
         "created_at": datetime.now(timezone.utc).isoformat(),
         "method": ("replay of each v2 arm's recorded per-epoch posture sequence, "

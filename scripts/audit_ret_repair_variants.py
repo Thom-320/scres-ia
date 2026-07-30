@@ -42,6 +42,7 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from supply_chain.provenance import calibration_stamp  # noqa: E402
 from supply_chain.config import HOURS_PER_WEEK  # noqa: E402
 from supply_chain.episode_metrics import (  # noqa: E402
     compute_episode_metrics,
@@ -233,6 +234,7 @@ def main() -> int:
 
     payload = {
         "schema_version": "ret_repair_variants_v1",
+        "calibration_provenance": calibration_stamp(),
         "claim_status": "DEVELOPMENT_PREREGISTRATION_INPUT_NO_METRIC_CHANGED",
         "created_at": datetime.now(timezone.utc).isoformat(),
         "purpose": ("measure what each named repair of ReT defect 3 produces, so a "

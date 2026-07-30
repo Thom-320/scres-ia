@@ -1,6 +1,17 @@
 # Preregistro — alineación del lead time y el delay de cumplimiento
 
-**Estado:** `PREREGISTRATION_DRAFT_NOTHING_APPLIED`. Ninguna constante cambiada. Toda cifra
+**Estado:** `SUPERSEDED_BY_contracts/paper_b_independent_calibration_v2.json`.
+
+> **Retirado 2026-07-30.** Tres piezas de este documento están **refutadas o retiradas**:
+> la tolerancia de igualdad `1e-9` (los datos canónicos no tienen ninguna fila con
+> `CTj = 48` exacto — las 110 filas de autotomía están entre `+0,00744` y `+0,048`); la
+> distancia multi-momento con pesos iguales (fabrica un ganador desde una elección
+> analítica no congelada); y el desempate del 10% hacia el delay menor (arbitrario). Lo
+> que se conserva —las raíces, la prohibición de selección por resultado, y `LT = 48`
+> fijo— está en el contrato v2. **La regla final no elige ganador: reporta toda la grilla
+> y, si no hay celda dominante, conserva el conjunto no dominado.**
+
+**Estado original:** `PREREGISTRATION_DRAFT_NOTHING_APPLIED`. Ninguna constante cambiada. Toda cifra
 congelada permanece como fue reportada.
 
 Este preregistro **corrige una decisión que yo mismo tomé mal** el 2026-07-30 en
