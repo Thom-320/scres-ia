@@ -232,6 +232,7 @@ class MFSCSimulation:
         autotomy_predicate: str = "le",
         autotomy_apj_cap: str = "lt",
         apj_overlap_mode: str = "union",
+        causal_quantity_gate: str = "always",
         r14_r0_seed_mode: str = "pending_min",
         fulfillment_shift_mode: str = "continuous",
         fulfillment_capacity_mode: str = "unlimited",
@@ -702,6 +703,16 @@ class MFSCSimulation:
             raise ValueError("apj_overlap_mode must be 'union' or 'sum', "
                              f"got {apj_overlap_mode!r}")
         self.apj_overlap_mode = str(apj_overlap_mode)
+        # Under `causal_exposure` the R14 quantity gate still attributed to orders whose
+        # only ref started BEFORE OPTj -- measured, 182 orders per seed with a ref at
+        # 912.0 against an OPTj of 1080.0. The clamp then pushed R^0 to OPTj and RPj came
+        # out equal to CTj from a risk that never manifested in the order's interval,
+        # which is exactly what Algorithm 2 line 2 excludes. "in_window" makes the gate
+        # require a ref inside [OPTj, OATj]; "always" is the shipped behaviour.
+        if causal_quantity_gate not in ("always", "in_window"):
+            raise ValueError("causal_quantity_gate must be 'always' or 'in_window', "
+                             f"got {causal_quantity_gate!r}")
+        self.causal_quantity_gate = str(causal_quantity_gate)
         # How the R14 quantity gate seeds R^0. Measured: under "pending_min" the onset
         # lands ON OPTj for half the orders (p10 = p50 = 0.00 h), so RPj = OATj - R^0
         # collapses onto CTj. Algorithm 2 (p.69) wants an onset that MANIFESTS WITHIN
@@ -1253,10 +1264,18 @@ class MFSCSimulation:
         """
         contribution = 0.0
         earliest: float | None = None
+        causal_in_window = (self.risk_attribution_source == "causal_exposure"
+                            and self.causal_quantity_gate == "in_window")
         for risk_id in risk_ids:
             available = float(self._ret_quantity_risk_units.get(risk_id, 0.0))
             if available <= 0.0:
                 continue
+            if causal_in_window:
+                # Algorithm 2 line 2: the impact must MANIFEST WITHIN [OPTj, OATj].
+                _rf = self._ret_quantity_risk_refs.get(risk_id, [])
+                if not any(float(order.OPTj) <= float(r["start_time"])
+                           <= float(order.OATj) for r in _rf):
+                    continue
             consumed = min(available, 1.0)
             if risk_id == "R14":
                 # R14 behaves like a persistent quality-risk gate in the raw
@@ -1276,6 +1295,16 @@ class MFSCSimulation:
                 cand = [float(r["start_time"]) for r in refs
                         if float(r["start_time"]) <= float(order.OATj)]
                 ref_start = max(cand) if cand else None
+            elif causal_in_window:
+                # The gate above only asks whether SOME ref is in window; the selection
+                # has to take the minimum OVER THOSE, not over all of them. Taking the
+                # global minimum here is what kept seeding R^0 at an out-of-window
+                # instant (measured: ref 912.0 against an OPTj of 1080.0) while the gate
+                # reported the order as admissible.
+                _in = [float(r["start_time"]) for r in refs
+                       if float(order.OPTj) <= float(r["start_time"])
+                       <= float(order.OATj)]
+                ref_start = min(_in) if _in else None
             else:
                 ref_start = (min(float(ref["start_time"]) for ref in refs)
                              if refs else float(order.OPTj))
