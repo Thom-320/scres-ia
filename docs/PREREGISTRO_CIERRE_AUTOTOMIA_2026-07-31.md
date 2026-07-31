@@ -3,6 +3,15 @@
 **Estado:** `PREREGISTRATION_NOTHING_APPLIED`. Se ejecuta con `supply_chain/arm_runner.py`
 contra `fidelity_reference_v4`.
 
+> **Corrección al propio contrato, antes de correr nada (`46d16ba` → esta versión).** Escribí
+> «la tolerancia es la que ya está embarcada (0,05 h)» y **es falso**: el default de
+> `autotomy_tolerance_hours` es **0,0** (`supply_chain.py:243`), con lo cual `band` con el
+> default sería idéntico a `le` y el brazo `FDB` no existiría como tal. La banda de 0,05 h se
+> **lee de sus datos** —sus 96 filas de autotomía caen en `CTj − LT ∈ [0,0074, 0,048]`— y por
+> tanto **es un parámetro, uno**, calibrado contra su ledger y **no** contra nuestra salida.
+> La línea «parámetros libres: ninguno» de §6 queda **retractada**: es **uno, declarado y
+> trazable a su banda observada**. Ninguna corrida se ha ejecutado contra la versión anterior.
+
 ## 1. Por qué, y qué ya sabemos antes de correr
 
 `Re(APj)` es el único driver de la Fig. 4 de Garrido que **no existe** en nuestra tabla de 90
@@ -38,8 +47,8 @@ Es decir: **el problema no es el desfase del suelo, es su incidencia.**
 
 `δ` entra porque es lo único que puede volver **raro** el suelo: con `CTj = 48 + δ` y
 `δ ~ U(0,8)`, la fracción dentro de una banda de 0,05 h es `0,05/8 = 0,625%`. Ese cálculo es
-aritmética declarada, no un ajuste: el soporte de `δ` es `HOURS_PER_SHIFT` con `S = 1` y la
-tolerancia es la que ya está embarcada.
+aritmética declarada: el soporte de `δ` es `HOURS_PER_SHIFT` con `S = 1` y la tolerancia sale
+de la banda en la que caen **sus** filas de autotomía.
 
 ## 3. Predicción, declarada antes de correr
 
@@ -91,6 +100,6 @@ sin degradar su propia métrica** — y eso es un hallazgo, no un fracaso.
 | raíces | **3.700.001–3.700.012**, vírgenes |
 | referencia | `fidelity_reference_v4`, sello `32e23a79b43f76a7…` |
 | momentos puntuados | **6** |
-| tolerancia de banda | `autotomy_tolerance_hours` embarcada (0,05 h) |
-| parámetros libres | **ninguno** |
+| tolerancia de banda | **0,05 h, leída de su banda observada** `[0,0074, 0,048]` (el default embarcado es 0,0) |
+| parámetros libres | **uno**: la tolerancia de banda, calibrada contra SU ledger, nunca contra nuestra salida |
 | predicción | §3, incluida la de **no-adopción** |
