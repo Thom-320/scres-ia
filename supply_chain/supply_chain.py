@@ -232,6 +232,7 @@ class MFSCSimulation:
         autotomy_predicate: str = "le",
         autotomy_apj_cap: str = "lt",
         apj_overlap_mode: str = "union",
+        r14_r0_seed_mode: str = "pending_min",
         fulfillment_shift_mode: str = "continuous",
         fulfillment_capacity_mode: str = "unlimited",
         fulfillment_delta_mode: str = "off",
@@ -701,6 +702,16 @@ class MFSCSimulation:
             raise ValueError("apj_overlap_mode must be 'union' or 'sum', "
                              f"got {apj_overlap_mode!r}")
         self.apj_overlap_mode = str(apj_overlap_mode)
+        # How the R14 quantity gate seeds R^0. Measured: under "pending_min" the onset
+        # lands ON OPTj for half the orders (p10 = p50 = 0.00 h), so RPj = OATj - R^0
+        # collapses onto CTj. Algorithm 2 (p.69) wants an onset that MANIFESTS WITHIN
+        # the order window; a persistent gate manifesting at every order's first instant
+        # satisfies the letter while filtering nothing. Preregistered in
+        # docs/PREREGISTRO_SIEMBRA_R0_R14_2026-07-31.md; default stays "pending_min".
+        if r14_r0_seed_mode not in ("pending_min", "none", "event_time"):
+            raise ValueError("r14_r0_seed_mode must be 'pending_min', 'none' or "
+                             f"'event_time', got {r14_r0_seed_mode!r}")
+        self.r14_r0_seed_mode = str(r14_r0_seed_mode)
         # Measured decomposition of Garrido's CTj (docs/DISPERSION_CTJ_RESUELTA):
         #   CTj = 48 + k*24 + delta,  delta ~ U(0,8),  k a queueing tail.
         # 48 is LT, 24 is the declared daily ROP, 8 is HOURS_PER_SHIFT at S = 1. The two
@@ -1256,12 +1267,20 @@ class MFSCSimulation:
             else:
                 self._ret_quantity_risk_units[risk_id] = max(0.0, available - consumed)
             refs = self._ret_quantity_risk_refs.get(risk_id, [])
-            ref_start = (
-                min(float(ref["start_time"]) for ref in refs)
-                if refs
-                else float(order.OPTj)
-            )
-            earliest = ref_start if earliest is None else min(earliest, ref_start)
+            if risk_id == "R14" and self.r14_r0_seed_mode == "none":
+                # The gate marks the indicator but seeds no onset: only duration risks do.
+                ref_start = None
+            elif risk_id == "R14" and self.r14_r0_seed_mode == "event_time":
+                # The MOST RECENT real detection at or before the order arrived -- the
+                # event that actually supplied the defects this order consumed.
+                cand = [float(r["start_time"]) for r in refs
+                        if float(r["start_time"]) <= float(order.OATj)]
+                ref_start = max(cand) if cand else None
+            else:
+                ref_start = (min(float(ref["start_time"]) for ref in refs)
+                             if refs else float(order.OPTj))
+            if ref_start is not None:
+                earliest = ref_start if earliest is None else min(earliest, ref_start)
             order.ret_risk_indicators[risk_id] = max(
                 1.0, order.ret_risk_indicators.get(risk_id, 0.0)
             )
