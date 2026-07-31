@@ -308,6 +308,19 @@ SIM_STATE_FIELDS = (
     "_contingent_cssu_destination_pending",
     "_pending_cssu_action",
     "cssu_local_down_count",
+    # Added 2026-07-31. Four mutable dicts that the AST scan missed because they are never
+    # rebound -- they are written by SUBSCRIPT, which is not an attribute assignment:
+    #   `_op_down_start`    supply_chain.py:3533,3541  (sibling of `_op_down_since`, already here)
+    #   `_freight_day_qty`  supply_chain.py:2798        (daily freight capacity consumed)
+    #   `_shift_day_used`   supply_chain.py:2815        (shift hours consumed that day)
+    #   `_last_freight_wave` supply_chain.py:4478,4504  (last wave departure per leg)
+    # They go in the narrow transition-facing set rather than the inert one because no frozen
+    # invariant asserts them empty: under a freight or shift mode they carry live capacity
+    # state, and a mutable field outside the key is exactly what produces a false merge.
+    "_op_down_start",
+    "_freight_day_qty",
+    "_shift_day_used",
+    "_last_freight_wave",
 )
 CONTAINER_FIELDS = (
     "raw_material_wdc",
@@ -322,7 +335,17 @@ CONTAINER_FIELDS = (
     "rations_theatre",
     "emergency_theatre_reserve",
 )
-RNG_FIELDS = ("rng", "demand_rng", "risk_rng", "regime_rng")
+RNG_FIELDS = (
+    "rng",
+    "demand_rng",
+    "risk_rng",
+    "regime_rng",
+    # Added 2026-07-31. `fulfillment_rng` is a fifth `np.random.Generator` on the simulator
+    # (`supply_chain.py:800`), drawn from whenever the fulfilment delay is not the constant.
+    # A random stream outside `rng_state` is the one omission that can silently merge two
+    # genuinely different futures, so it belongs here and nowhere else.
+    "fulfillment_rng",
+)
 
 # Explicit classification used by ``audit_frozen_state_inventory``.  The
 # inventory is generated from the live object and fails if a new attribute is
@@ -417,6 +440,35 @@ IMMUTABLE_CONTRACT_FIELDS = {
     "risk_recovery_enabled_risks",
     "_step_size",
     "_processes_started",
+    # Added 2026-07-31: the arm switches of the 2026-07-30/31 fidelity work. Each is assigned
+    # EXACTLY ONCE, in `__init__`, and never again -- verified by an AST sweep over
+    # `supply_chain.py` covering rebinding, augmented assignment, subscript writes and the
+    # mutating dict/list methods (`update`, `setdefault`, `pop`, `clear`, ...): zero sites
+    # outside `__init__` for all twenty, including the two that hold containers
+    # (`fulfillment_delay_params`, `fulfillment_delay_distribution`). Immutable run
+    # configuration therefore stays out of the Markov key, exactly like the switches above it.
+    # A field placed here in error -- one that DOES mutate -- would be omitted from the key and
+    # could merge two different futures, so this is the one category that must be earned.
+    "apj_overlap_mode",
+    "autotomy_apj_cap",
+    "autotomy_predicate",
+    "autotomy_tolerance_hours",
+    "causal_quantity_gate",
+    "fulfillment_capacity_mode",
+    "fulfillment_delay_distribution",
+    "fulfillment_delay_params",
+    "fulfillment_delta_mode",
+    "fulfillment_shift_mode",
+    "fulfillment_transit_mode",
+    "on_hand_transit_mode",
+    "op11_handling_hours",
+    "partial_fulfilment",
+    "procurement_delay_accumulation",
+    "queue_blocking",
+    "r14_r0_seed_mode",
+    "rpj_onset_admission",
+    "transport_block_mode",
+    "transport_retry_poll_hours",
 }
 INERT_FROZEN_FIELDS = {
     "adaptive_benchmark_enabled",
@@ -494,6 +546,16 @@ OUTPUT_OR_REPLAY_FIELDS = {
     "daily_inventory_theatre",
     "emergency_reserve_target_changes",
     "program_f_reserve_issue_events",
+    # Added 2026-07-31 (2026-07-16 `eea30d8`, the wartime GSA executor -- the first four
+    # fields that broke this guard). Write-only R24 surge counters: the AST sweep finds each
+    # incremented in `_apply_risk_R24_event` and `_risk_event_tape_event` and READ NOWHERE in
+    # the simulator -- zero load sites -- so they cannot steer a transition. They are still
+    # folded into the key by the `SIM_STATE_FIELDS` union below, which is the conservative
+    # direction: it can only split states, never merge them.
+    "r24_generated_surge_quantity",
+    "r24_admitted_surge_quantity",
+    "r24_clipped_surge_quantity",
+    "r24_cap_hit_count",
 }
 
 # The quotient theorem is deliberately scoped to the primary visible-order ReT

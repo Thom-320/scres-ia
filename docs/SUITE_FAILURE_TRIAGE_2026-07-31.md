@@ -10,7 +10,7 @@ avisando de algo que nadie atendió.
 
 | # | causa raíz | tests | desde | veredicto |
 |---|---|---:|---|---|
-| A | guardia de completitud de Markov: campos del simulador sin clasificar | **15** | 2026-07-16 | **guardia correcto, deuda real** |
+| A | guardia de completitud de Markov: campos del simulador sin clasificar | **15** | 2026-07-16 | **ARREGLADO** ✅ |
 | B | atestaciones congeladas por hash contra fuentes que cambiaron | **7** | 2026-07-15/17 | **6 ARREGLADOS ✅ · 1 bloqueado en el usuario** |
 | C | rutas absolutas del usuario en archivos versionados | 1 | 2026-06-27 | higiene, sedimentada |
 | D | custodia de semillas de Program Q: falso positivo | 1 | 2026-07-29 | **ARREGLADO** ✅ |
@@ -252,6 +252,55 @@ apunte a una copia dentro del repo. El de `~/Downloads` es **otro** archivo, con
 
 **Suite verificada tras B: `1.234 passed, 18 failed`.** Quedan **A (15)**, **C (1)**, **F (1)** y
 el PDF externo ausente **(1)**.
+
+---
+
+## Apéndice — A, resuelto el 2026-07-31
+
+Los 29 campos quedan clasificados **con evidencia medida, no con criterio**. La regla que
+importa: `IMMUTABLE_CONTRACT_FIELDS` **queda fuera** de la clave de Markov; los otros tres
+conjuntos se pliegan dentro (`run_paper2_bottleneck_exact_transducer.py:675`). Por eso un campo
+mal puesto en «inmutable» es el único error que **fusiona** dos futuros distintos; los demás,
+como mucho, los separan de más.
+
+| destino | n | evidencia |
+|---|---:|---|
+| `IMMUTABLE_CONTRACT_FIELDS` | 20 | barrido AST sobre `supply_chain.py`: **cero asignaciones fuera de `__init__`** — contando rebinding, `+=`, escritura por subíndice y los métodos mutadores (`update`, `setdefault`, `pop`, `clear`…), incluidos los dos que guardan contenedores |
+| `SIM_STATE_FIELDS` | 4 | **dicts mutables** escritos por subíndice: `_op_down_start` (3533/3541), `_freight_day_qty` (2798), `_shift_day_used` (2815), `_last_freight_wave` (4478/4504) |
+| `OUTPUT_OR_REPLAY_FIELDS` | 4 | contadores R24: incrementados en dos rutas de riesgo y **leídos en cero sitios** del simulador |
+| `RNG_FIELDS` | 1 | `fulfillment_rng` es un **quinto flujo aleatorio** (`supply_chain.py:800`) |
+
+**Los cuatro dicts casi se me escapan.** Mi primer barrido AST solo veía `self.X = ...` y los
+declaró inmutables con «1 asignación, 0 fuera de `__init__`» — pero se mutan por **subíndice**,
+que no es una asignación de atributo. Era exactamente el error que fusiona estados. El barrido
+ahora cubre subíndices y métodos mutadores, y los cuatro quedaron donde debían.
+
+**Y `fulfillment_rng` es el más serio de todos:** un flujo aleatorio fuera de `rng_state` es la
+única omisión que puede fusionar dos futuros genuinamente distintos. Lo añadí a `RNG_FIELDS`,
+que se serializa por `bit_generator.state`.
+
+`KEY_SCHEMA_VERSION` **se queda en v5** por la regla del propio módulo — añadir solo puede
+partir estados, nunca fusionarlos; quitar exige prueba de grafo de llamadas y versión nueva — y
+las cachés viejas ya se invalidan por `dependency_sha256`, que cubre el fuente de ese archivo.
+
+**Un test rápido, para que no vuelva a tardar dos semanas.** La guardia ya fallaba cerrada,
+pero solo dentro de la construcción de una clave: la suite mostraba **quince `TypeError`
+opacos** y el mensaje real quedaba dos marcos más abajo.
+`test_every_live_simulator_attribute_is_classified_fast` corre la misma auditoría en **2
+segundos** y, si falla, **nombra el campo** y dice a qué conjunto llevarlo.
+
+Resultado: `tests/test_paper2_bottleneck_exact_transducer.py`, `..._full_frontier.py` y
+`..._bound_execution_harness.py` → **141 passed**.
+
+**Suite completa tras A: `1.250 passed, 3 failed`** — desde los 27 del diagnóstico. Quedan
+exactamente tres, y ninguno es un defecto que yo pueda cerrar solo:
+
+1. **C** — 90 rutas absolutas en 61 archivos versionados (higiene sedimentada desde el
+   2026-06-27; obligatorio antes del bundle de replicación de Submission A);
+2. **B, el residuo** — el PDF externo ausente: **decisión tuya**, re-sincronizarlo o reapuntar
+   el manifiesto a una copia dentro del repo;
+3. **F** — Program S, la invalidación **ya registrada** del 2026-07-18, con la cifra que la
+   documenta desactualizada en tres órdenes de magnitud.
 
 ## Orden recomendado
 

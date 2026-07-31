@@ -1041,7 +1041,12 @@ def test_rehashed_request_lag_tamper_is_rejected():
 def test_key_schema_names_required_future_state_families():
     assert KEY_SCHEMA_VERSION.endswith("_v5")
     assert {"rations_sb", "emergency_theatre_reserve"}.issubset(CONTAINER_FIELDS)
-    assert set(RNG_FIELDS) == {"rng", "demand_rng", "risk_rng", "regime_rng"}
+    # `fulfillment_rng` joined the keyed streams on 2026-07-31. The schema version stays v5 by
+    # the module's own rule -- ADDING a field can only split states, never merge them, while
+    # removing one needs a call-graph proof and a new version -- and stale caches are already
+    # invalidated through `dependency_sha256`, which covers this file's own source.
+    assert set(RNG_FIELDS) == {
+        "rng", "demand_rng", "risk_rng", "regime_rng", "fulfillment_rng"}
     assert {
         "pending_backorder_qty",
         "total_unattended_orders",
@@ -1642,3 +1647,27 @@ def test_signed_harness_receipt_normalizes_to_exact_chain_w1(tmp_path):
     assert receipt["receipt_signing_public_key_fingerprint"] == prelaunch[
         "public_key_fingerprint"
     ]
+
+
+def test_every_live_simulator_attribute_is_classified_fast() -> None:
+    """The same guard the transducer enforces, but in two seconds instead of four minutes.
+
+    The Markov-completeness audit already fails closed on an unclassified simulator field --
+    that is how the 2026-07-16 `r24_*` counters and the 2026-07-30/31 arm switches were
+    caught. It only fails deep inside a key build, so the suite reported it as fifteen opaque
+    `TypeError`s and the real message ("live simulator read is unclassified") sat two frames
+    down. Anyone adding an attribute to `MFSCSimulation` should see it here first, named.
+    """
+    from supply_chain.supply_chain import MFSCSimulation
+    from scripts.run_paper2_bottleneck_exact_transducer import audit_frozen_state_inventory
+
+    inventory = audit_frozen_state_inventory(MFSCSimulation(seed=1, horizon=48.0))
+    assert inventory["unclassified_live_attributes"] == [], (
+        "new MFSCSimulation attribute(s) with no scientific role. Put immutable run "
+        "configuration in IMMUTABLE_CONTRACT_FIELDS (it stays OUT of the Markov key, so it "
+        "must never mutate after __init__); anything mutable belongs in SIM_STATE_FIELDS, "
+        "INERT_FROZEN_FIELDS or OUTPUT_OR_REPLAY_FIELDS, all of which are folded into the "
+        "key; a random stream belongs in RNG_FIELDS."
+    )
+    assert inventory["category_overlaps"] == {}
+    assert inventory["classification_complete"] is True
