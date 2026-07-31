@@ -34,7 +34,7 @@ SEED = 1_530_011
 FAMILY = "R2r"
 INCUMBENT = (336, 0, 168)
 SOURCE_SHARD = Path(
-    "/Users/thom/Projects/research/scres-ia-runs/"
+    str(Path(__file__).resolve().parents[2] / "scres-ia-runs") + "/"
     "expanded_contract_comparators_v2_1dc40c1_r2/full/shards/"
     "R2r_1530011.json")
 

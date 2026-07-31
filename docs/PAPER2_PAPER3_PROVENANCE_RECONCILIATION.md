@@ -10,7 +10,7 @@
 
 | Capability | Status | Evidence |
 |---|---|---|
-| Local FS `/Users/thom/Projects/research/scres-ia` | ✅ | working tree read/write |
+| Local FS `<repo>` | ✅ | working tree read/write |
 | Git objects, branches, tags, remotes | ✅ | `git fetch --all` clean; refs enumerated below |
 | Python env | ✅ | `.venv` Python **3.11.15** |
 | RL / DES / SA stack | ✅ | gymnasium 1.3.0, stable_baselines3 2.9.0, **sb3_contrib 2.9.0 (MaskablePPO)**, simpy 4.1.2, torch 2.12.1, numpy 2.4.6, pandas 3.0.3, scipy 1.17.1, scikit-learn 1.9.0, SALib present |

@@ -9,6 +9,7 @@ from scripts.verify_paper2_exhaustion import (
     validate_paper3_claim_supersession,
 )
 from scripts.validate_phase0_failure_taxonomy import validate as validate_phase0_taxonomy
+import scripts.external_sources as external_sources
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -314,20 +315,37 @@ def test_reproducibility_manifest_hashes_every_listed_artifact_and_source():
             path = ROOT / path
         assert path.is_file(), relative
         assert sha256(path) == expected, relative
+    # `source_hashes` holds EXTERNAL primary sources -- the thesis, the 2024 paper, the
+    # workbooks -- which are copyrighted and cannot live in the repository. They used to be
+    # pinned by one machine's absolute path, so a folder rename (`20_RESEARCH` ->
+    # `01_RESEARCH`) reported an unchanged file as missing and kept this test red for weeks.
+    # They are now resolved by CONTENT. `unavailable` is reported, not passed and not failed:
+    # a source you cannot open is unverified, and saying otherwise is the failure mode this
+    # whole layer exists to catch.
+    unverified: list[str] = []
     for source, expected in manifest["source_hashes"].items():
         path = Path(source)
-        assert path.is_file(), source
-        assert sha256(path) == expected, source
+        if path.is_absolute() or path.exists():
+            assert path.is_file(), source
+            assert sha256(path) == expected, source
+            continue
+        row = external_sources.verify(source)[source]
+        assert row["expected_sha256"] == expected, source
+        assert row["status"] != "mismatch", (source, row)
+        if row["status"] == "unavailable":
+            unverified.append(source)
+    if unverified:
+        print(f"external sources not present on this machine, UNVERIFIED: {unverified}")
     coverage = manifest["required_set_coverage"]
     assert coverage["passed"] is True
     assert coverage["missing_required_artifacts"] == []
     assert coverage["missing_required_sources"] == []
     assert coverage["required_artifact_count"] >= 27
     assert coverage["required_source_count"] == 8
+    # Keyed by filename since 2026-07-31: the external sources are copyrighted and live
+    # outside the repository, so their identity is the content, not one machine's path.
     assert {
-        "/Users/thom/Downloads/Raw_data1+Re.xlsx",
-        "/Users/thom/Downloads/Raw_data2+Re.xlsx",
-        "/Users/thom/Downloads/Rsult_1.xlsx",
+        "Raw_data1+Re.xlsx", "Raw_data2+Re.xlsx", "Rsult_1.xlsx",
     }.issubset(manifest["source_hashes"])
 
 

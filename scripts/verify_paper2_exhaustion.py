@@ -20,24 +20,13 @@ from typing import Any
 ROOT = Path(__file__).resolve().parent.parent
 SEARCH = ROOT / "research" / "paper2_exhaustive_search"
 
-SOURCE_HASHES = {
-    Path("/Users/thom/Downloads/Raw_data1+Re.xlsx"):
-        "30b88c9b9fe68ef527dbfcc70d8e653ea7bd152ab891b3fc0ecf53cb6f043486",
-    Path("/Users/thom/Downloads/Raw_data2+Re.xlsx"):
-        "4bd462771fefff16fc5666a851256b3780198d474832dec1423c0b6f94be86b0",
-    Path("/Users/thom/Downloads/Rsult_1.xlsx"):
-        "1901f683f6014cf75237c17233b8eba04f541b956f2d19dcecf2edc00e83b00a",
-    Path("/Users/thom/Downloads/garrido et al 2024 factory resilience.pdf"):
-        "1260863dc295232faf24b820e1f67d53f25f81ffa2d221f7ef02a02310519c43",
-    Path("/Users/thom/Downloads/v.0_neuralNet-scres.docx"):
-        "b111070a05c8f4d1afa058454138bed9b4b74900ab87eaaf6eb5186b6e8293f2",
-    Path("/Users/thom/Downloads/v.0_neuralNet-scres.pdf"):
-        "521b12770e94f3e70c4c88ce1e38613f4e0aad3e1dab114632c9c89dbfad182d",
-    Path("/Users/thom/Library/CloudStorage/GoogleDrive-chisicathomas@gmail.com/My Drive/Supernote/Document/20_RESEARCH/PhD-Papers/garrido2024 scres+AI.pdf"):
-        "3e3bc8f82e20b891ee163fb8a035dd37be4312fa11f58dde77452dc1bb903ae6",
-    Path("/Users/thom/Library/CloudStorage/GoogleDrive-chisicathomas@gmail.com/My Drive/Archive/Misc_Unsorted/Unsorted/WRAP_Theses_Garrido_Rios_2017.pdf"):
-        "de9192d233b0c728ece6156b754fc64543146868121358b8a95c73b3edaa55cf",
-}
+# The external primary sources -- thesis, 2024 paper, workbooks -- are copyrighted and live
+# outside the repository. They used to be pinned here by one machine's absolute path, which
+# made this verifier unrunnable anywhere else and turned a folder rename into a "missing
+# source". Identity is now the content; `scripts/external_sources.py` finds the file.
+from scripts.external_sources import (  # noqa: E402
+    EXTERNAL_SOURCES, verify as verify_external_sources,
+)
 
 TERMINAL_B_PROOF_CLASSES = {
     "certified_quantitative_global_upper_bound",
@@ -800,12 +789,13 @@ def main() -> int:
         },
     )
 
-    source_details = {}
-    source_ok = True
-    for path, expected in SOURCE_HASHES.items():
-        actual = sha256(path) if path.exists() else None
-        source_details[str(path)] = {"expected": expected, "actual": actual}
-        source_ok &= actual == expected
+    source_details = verify_external_sources()
+    # `unavailable` is neither pass nor fail: it is unverified. Only a genuine content
+    # mismatch fails the gate, and the unverified list travels in the record.
+    source_ok = not any(row["status"] == "mismatch" for row in source_details.values())
+    source_details["_unverified"] = sorted(
+        name for name, row in source_details.items()
+        if isinstance(row, dict) and row.get("status") == "unavailable")
     record("source_hashes", source_ok, source_details)
 
     metric_validation = validate_metric_governance(

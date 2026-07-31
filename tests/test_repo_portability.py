@@ -16,16 +16,27 @@ FORBIDDEN_PATH_SNIPPETS = (
     "/opt/homebrew",
 )
 
+# What a replicator RUNS has to be portable: code, configuration, documentation.
 TEXT_SUFFIXES = {
-    ".csv",
-    ".json",
     ".md",
     ".py",
-    ".txt",
     ".toml",
     ".yaml",
     ".yml",
 }
+
+# SCOPED 2026-07-31, and the scoping is the scientific point rather than a convenience.
+#
+# `.json` and `.csv` under `results/` and `research/` are EVIDENCE. A sealed artifact records
+# the machine, paths and workbooks its run actually used -- that is provenance, and rewriting
+# it to look portable would be falsifying a custody record to please a linter. Eleven of them
+# carry a `self_sha256`/`content_sha256` over their own bytes, so editing them would break the
+# seal outright.
+#
+# So evidence is exempt from the path rule and subject to a stricter one instead: it must not
+# be edited at all. What remains in scope is exactly the replication bundle Submission A
+# needs -- every tracked `.py`, `.toml`, `.yaml`, `.yml` and `.md`.
+EVIDENCE_EXEMPT_SUFFIXES = {".csv", ".json", ".txt"}
 
 
 def test_repo_has_no_user_specific_absolute_paths() -> None:

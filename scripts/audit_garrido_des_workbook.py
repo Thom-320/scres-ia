@@ -29,7 +29,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import openpyxl
 from openpyxl.utils import get_column_letter
 
-ROOT = Path("/Users/thom/Projects/research/scres-ia")
+ROOT = Path(__file__).resolve().parents[1]
 EXPORT_ROOT = ROOT / "outputs" / "audits" / "garrido_replication_2026-06-25" / "des_order_exports"
 REPL_AUDIT = ROOT / "outputs" / "audits" / "garrido_replication_2026-06-25" / "replication_audit.csv"
 CONF_SUMMARY = ROOT / "outputs" / "kaggle" / "garrido_envb_confirmatory" / "confirmatory_summary.csv"

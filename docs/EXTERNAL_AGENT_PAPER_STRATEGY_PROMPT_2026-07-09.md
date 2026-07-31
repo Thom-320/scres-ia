@@ -25,9 +25,9 @@ Responde en español. Los títulos, research questions, hypotheses, contribution
 
 ### Borrador y base conceptual de Garrido
 
-- `/Users/thom/Downloads/v.0_neuralNet-scres.pdf`
-- `/Users/thom/Downloads/v.0_neuralNet-scres.docx`
-- `/Users/thom/Library/CloudStorage/GoogleDrive-chisicathomas@gmail.com/My Drive/Supernote/Document/20_RESEARCH/PhD-Papers/garrido2024 scres+AI.pdf`
+- `<downloads>/v.0_neuralNet-scres.pdf`
+- `<downloads>/v.0_neuralNet-scres.docx`
+- `<Drive>/Supernote/Document/20_RESEARCH/PhD-Papers/garrido2024 scres+AI.pdf`
 - La tesis y workbooks de Garrido disponibles o citados dentro del repositorio.
 
 El draft de Garrido propone `R_t=f(S_t,D_t,L_{t-1})`, aprendizaje acumulativo, ANN/RNN/RL, H1–H4 y predictive accuracy. Debes decidir qué partes siguen siendo defendibles a la luz de la evidencia real y cuáles deben reformularse o trasladarse a future work.
@@ -36,7 +36,7 @@ El draft de Garrido propone `R_t=f(S_t,D_t,L_{t-1})`, aprendizaje acumulativo, A
 
 Repositorio local:
 
-- `/Users/thom/Projects/research/scres-ia`
+- `<repo>`
 
 Rama GitHub:
 

@@ -25,9 +25,9 @@ Write the report in Spanish. Write proposed titles, research questions, hypothes
 
 ### Garrido draft and theoretical foundation
 
-- `/Users/thom/Downloads/v.0_neuralNet-scres.pdf`
-- `/Users/thom/Downloads/v.0_neuralNet-scres.docx`
-- `/Users/thom/Library/CloudStorage/GoogleDrive-chisicathomas@gmail.com/My Drive/Supernote/Document/20_RESEARCH/PhD-Papers/garrido2024 scres+AI.pdf`
+- `<downloads>/v.0_neuralNet-scres.pdf`
+- `<downloads>/v.0_neuralNet-scres.docx`
+- `<Drive>/Supernote/Document/20_RESEARCH/PhD-Papers/garrido2024 scres+AI.pdf`
 - The Garrido-Rios thesis and original workbooks referenced or stored in the repository.
 
 Garrido's draft proposes `R_t=f(S_t,D_t,L_{t-1})`, accumulated learning, ANN/RNN/RL, hypotheses H1-H4, and predictive accuracy. Decide which elements remain defensible in light of the actual evidence, which must be reformulated, and which belong only in future work.
@@ -36,7 +36,7 @@ Garrido's draft proposes `R_t=f(S_t,D_t,L_{t-1})`, accumulated learning, ANN/RNN
 
 Local repository:
 
-- `/Users/thom/Projects/research/scres-ia`
+- `<repo>`
 
 GitHub branch:
 

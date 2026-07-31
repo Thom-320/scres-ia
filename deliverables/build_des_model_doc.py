@@ -18,11 +18,11 @@ from docx.shared import Inches, Pt, RGBColor
 
 
 OUTPUT = Path(
-    "/Users/thom/Projects/research/scres-ia/deliverables/"
+    "deliverables/"
     "Program_Q_DES_Model_Description_CIE_reviewed.docx"
 )
 FIG1 = Path(
-    "/Users/thom/Projects/research/scres-ia/deliverables/"
+    "deliverables/"
     "fig1_flow_reviewed.png"
 )
 

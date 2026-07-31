@@ -7,16 +7,18 @@ one sentence per paragraph.
 """
 import copy
 from pathlib import Path
+
+from scripts.external_sources import resolve as resolve_external
 import shutil
 import subprocess
 import tempfile
 from docx import Document
 from docx.shared import Inches
 
-SRC = Path("/Users/thom/Downloads/v.0_neuralNet-scres.docx")
-OUT = Path("/Users/thom/Projects/research/scres-ia/deliverables/"
+SRC = resolve_external("v.0_neuralNet-scres.docx")
+OUT = Path("deliverables/"
            "v0_neuralNet-scres_DES_section_updated.docx")
-FIG = Path("/Users/thom/Projects/research/scres-ia/deliverables/figures")
+FIG = Path("deliverables/figures")
 
 # ---- native Word equations (OMML) generated from LaTeX via pandoc ----------
 EQ_LATEX = r"""

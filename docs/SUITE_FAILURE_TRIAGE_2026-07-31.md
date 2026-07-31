@@ -93,8 +93,8 @@ borrar la pregunta.
 
 ## C. Rutas absolutas (1 test)
 
-`test_repo_portability` encuentra **90 apariciones en 61 archivos versionados**: `/Users/thom`
-(60), `GoogleDrive`/`CloudStorage`/`chisicathomas` (10 cada uno). Concentradas en `results/`
+`test_repo_portability` encuentra **90 apariciones en 61 archivos versionados**: `<home>`
+(60) y los tres marcadores de la cuenta de Drive (10 cada uno). Concentradas en `results/`
 (38) y `scripts/` (27). El archivo más antiguo entra el **2026-06-27** y el más reciente el
 2026-07-29; el merge-base con `main` es literalmente el commit que redactó una de esas rutas.
 **Cero provienen de esta sesión.** Es higiene acumulada, y bloquea la portabilidad del bundle de
@@ -248,7 +248,7 @@ vez, contra el árbol prístino**; el bucle posterior es mecánico y no vuelve a
 (`…/PhD-Papers/garrido2024 scres+AI.pdf`) que **no está en esta máquina**. No se re-atesta: una
 fuente ausente no se puede verificar, y fingir lo contrario es exactamente el modo de fallo que
 todo esto persigue. **Es tuyo el paso:** re-sincronizar ese archivo, o decidir que el manifiesto
-apunte a una copia dentro del repo. El de `~/Downloads` es **otro** archivo, con otro hash.
+apunte a una copia dentro del repo. El de la carpeta de descargas es **otro** archivo, con otro hash.
 
 **Suite verificada tras B: `1.234 passed, 18 failed`.** Quedan **A (15)**, **C (1)**, **F (1)** y
 el PDF externo ausente **(1)**.

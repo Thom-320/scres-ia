@@ -20,7 +20,7 @@ import statistics
 import sys
 from pathlib import Path
 
-ROOT = Path("/Users/thom/Projects/research/scres-ia")
+ROOT = Path(__file__).resolve().parents[1]
 PPO_ROOT = ROOT / "outputs" / "4cases"
 WARPANEL_DIR = ROOT / "outputs" / "experiments" / "cd_same_bar_risk_war_sweep_2026-06-27"
 CONFIRM = ROOT / "outputs" / "kaggle" / "garrido_envb_confirmatory" / "confirmatory_summary.csv"

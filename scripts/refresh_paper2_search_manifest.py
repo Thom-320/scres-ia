@@ -128,16 +128,9 @@ REQUIRED_ARTIFACT_PATHS = {
     "supply_chain/supply_chain.py",
     "supply_chain/program_m_shared_lift.py",
 }
-REQUIRED_SOURCE_PATHS = {
-    "/Users/thom/Downloads/Raw_data1+Re.xlsx",
-    "/Users/thom/Downloads/Raw_data2+Re.xlsx",
-    "/Users/thom/Downloads/Rsult_1.xlsx",
-    "/Users/thom/Downloads/garrido et al 2024 factory resilience.pdf",
-    "/Users/thom/Downloads/v.0_neuralNet-scres.docx",
-    "/Users/thom/Downloads/v.0_neuralNet-scres.pdf",
-    "/Users/thom/Library/CloudStorage/GoogleDrive-chisicathomas@gmail.com/My Drive/Supernote/Document/20_RESEARCH/PhD-Papers/garrido2024 scres+AI.pdf",
-    "/Users/thom/Library/CloudStorage/GoogleDrive-chisicathomas@gmail.com/My Drive/Archive/Misc_Unsorted/Unsorted/WRAP_Theses_Garrido_Rios_2017.pdf",
-}
+# The external primary sources are copyrighted and live outside the repository, so they are
+# identified by CONTENT, not by one machine's path -- see scripts/external_sources.py.
+REQUIRED_SOURCE_PATHS = set(EXTERNAL_SOURCES)
 
 
 def sha256(path: Path) -> str:

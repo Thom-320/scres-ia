@@ -10,10 +10,10 @@ claims that should not be collapsed:
 
 ## Source Files Checked
 
-- `/Users/thom/Downloads/Rsult_1.xlsx`
-- `/Users/thom/Downloads/Raw_data1+Re.xlsx`
-- `/Users/thom/Downloads/Raw_data2+Re.xlsx`
-- `/Users/thom/Library/CloudStorage/GoogleDrive-chisicathomas@gmail.com/My Drive/Archive/Misc_Unsorted/Unsorted/WRAP_Theses_Garrido_Rios_2017.pdf`
+- `<downloads>/Rsult_1.xlsx`
+- `<downloads>/Raw_data1+Re.xlsx`
+- `<downloads>/Raw_data2+Re.xlsx`
+- `<Drive>/Archive/Misc_Unsorted/Unsorted/WRAP_Theses_Garrido_Rios_2017.pdf`
 - `outputs/audits/freeze_check_replicate_garrido_2026-06-26/replication_audit.json`
 - `docs/THESIS_FAITHFUL_ENV_FREEZE_2026-06-26.md`
 - `docs/E6_FIDELITY_MODE_RECONCILIATION_2026-07-02.md`

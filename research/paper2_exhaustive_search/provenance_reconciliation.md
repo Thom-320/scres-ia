@@ -11,7 +11,7 @@ contract or verdict artifacts.
 
 | Capability | Current status | Evidence |
 |---|---|---|
-| Local repository | OK | `/Users/thom/Projects/research/scres-ia` |
+| Local repository | OK | `<repo>` |
 | Git/GitHub | OK | SSH remote `git@github.com:Thom-320/scres-ia.git`; authenticated `gh` |
 | Local Python | OK | Python 3.11.15 and the pinned scientific environment |
 | Tests | OK for current focused gates | Boundary proof, terminal-return, switch-shell, custody and canonical-metric focused tests pass; the final broad rerun remains pending after current documentation changes |

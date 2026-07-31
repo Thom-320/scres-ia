@@ -74,7 +74,7 @@ def scored(sim) -> list:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--runs-root", type=Path,
-                    default=Path("/Users/thom/Projects/research/scres-ia-runs"))
+                    default=Path(__file__).resolve().parents[2] / "scres-ia-runs")
     ap.add_argument("--horizon-weeks", type=int, default=52)
     ap.add_argument("--epoch-weeks", type=int, default=4)
     ap.add_argument("--output", type=Path,

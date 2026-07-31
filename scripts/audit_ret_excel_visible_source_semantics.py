@@ -15,6 +15,8 @@ from datetime import datetime, timezone
 from hashlib import sha256
 import json
 from pathlib import Path
+
+from scripts.external_sources import resolve as resolve_external
 import re
 from typing import Any, Iterable
 
@@ -39,17 +41,8 @@ DEFAULT_OUTPUT = (
     / "paper2_exhaustive_search"
     / "ret_excel_visible_v1_source_semantics_audit_20260714.json"
 )
-DEFAULT_THESIS = (
-    Path.home()
-    / "Library"
-    / "CloudStorage"
-    / "GoogleDrive-chisicathomas@gmail.com"
-    / "My Drive"
-    / "Archive"
-    / "Misc_Unsorted"
-    / "Unsorted"
-    / "WRAP_Theses_Garrido_Rios_2017.pdf"
-)
+# Resolved by content, not by one machine's Drive path -- see scripts/external_sources.py.
+DEFAULT_THESIS = resolve_external("WRAP_Theses_Garrido_Rios_2017.pdf")
 
 
 def file_sha256(path: Path) -> str:

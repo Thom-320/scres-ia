@@ -35,10 +35,10 @@ DEFAULT_RUN_DIR = Path(
 )
 
 DEFAULT_NODE = Path(
-    "/Users/thom/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node"
+    str(Path.home()) + "/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node"
 )
 DEFAULT_NODE_MODULES = Path(
-    "/Users/thom/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules"
+    str(Path.home()) + "/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules"
 )
 
 STATIC_PREFIXES = ("s1_", "s2_", "s3_")

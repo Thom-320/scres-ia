@@ -19,6 +19,8 @@ import csv
 import json
 import statistics
 from pathlib import Path
+
+from scripts.external_sources import resolve as resolve_external
 import sys
 
 import openpyxl
@@ -32,8 +34,8 @@ from supply_chain.ret_thesis import (  # noqa: E402
 )
 
 PROXY_PATH = Path("supply_chain/data/garrido_proxy_v1_freeze_2026-07-10.json")
-WB1 = Path("/Users/thom/Downloads/Raw_data1+Re.xlsx")
-WB2 = Path("/Users/thom/Downloads/Raw_data2+Re.xlsx")
+WB1 = resolve_external("Raw_data1+Re.xlsx")
+WB2 = resolve_external("Raw_data2+Re.xlsx")
 DEFAULT_OUTPUT = Path("results/program_d/garrido_endogenous_fidelity")
 
 

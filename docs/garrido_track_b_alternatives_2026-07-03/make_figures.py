@@ -5,8 +5,9 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.patches import FancyBboxPatch, FancyArrowPatch
 import numpy as np
+from pathlib import Path
 
-OUT = "/Users/thom/Projects/research/scres-ia/docs/garrido_track_b_alternatives_2026-07-03/figures"
+OUT = str(Path(__file__).resolve().parent / "figures")
 
 # ---------------------------------------------------------------------------
 # Figure 1: 13-operation topology, decision-variable authority under Track B 8D

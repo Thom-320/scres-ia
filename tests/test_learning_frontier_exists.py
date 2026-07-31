@@ -19,7 +19,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-ROOT = Path("/Users/thom/Projects/research/scres-ia")
+ROOT = Path(__file__).resolve().parents[1]
 GATE = ROOT / "scripts" / "run_frontier_gate.py"
 OUT = ROOT / "outputs" / "audits" / "frontier_gate"
 OUT.mkdir(parents=True, exist_ok=True)
