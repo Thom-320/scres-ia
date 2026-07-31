@@ -11,7 +11,7 @@ avisando de algo que nadie atendió.
 | # | causa raíz | tests | desde | veredicto |
 |---|---|---:|---|---|
 | A | guardia de completitud de Markov: campos del simulador sin clasificar | **15** | 2026-07-16 | **guardia correcto, deuda real** |
-| B | atestaciones congeladas por hash contra fuentes que cambiaron | **7** | 2026-07-15/17 | **guardia correcto, decisión pendiente** |
+| B | atestaciones congeladas por hash contra fuentes que cambiaron | **7** | 2026-07-15/17 | **6 ARREGLADOS ✅ · 1 bloqueado en el usuario** |
 | C | rutas absolutas del usuario en archivos versionados | 1 | 2026-06-27 | higiene, sedimentada |
 | D | custodia de semillas de Program Q: falso positivo | 1 | 2026-07-29 | **ARREGLADO** ✅ |
 | E | expectativas de test obsoletas frente a la deriva del entorno | 2 | 2026-07-01 | **ARREGLADO** ✅ |
@@ -184,7 +184,74 @@ ejemplo genérico en vez de ensanchar la ventana — **no se afloja una regla de
 acomodar la propia prosa**.
 
 **Suite verificada tras el arreglo: `1.228 passed, 24 failed`** — los tres que quedaban en D y
-E salieron de la lista y ninguno nuevo entró. Quedan A (15), B (7), C (1) y F (1).
+E salieron de la lista y ninguno nuevo entró.
+
+---
+
+## Apéndice — B, resuelto el 2026-07-31 (6 de 7)
+
+**Primero la pregunta, no el hash.** Re-atestar sin responderla habría blanqueado un cambio en
+el endpoint primario. La respuesta está medida y sellada en
+`results/metric_audit/v2_metric_freeze_equivalence/`: se carga el `ret_thesis.py` **congelado**
+(`ff5e4a8`) junto al actual y se puntúa **la misma** población con ambos.
+
+> **Y el primer intento fue inútil, y el falsador lo dijo.** Dio 3.289 filas y 0 diferencias
+> con **0 órdenes en la rama de reconstrucción**: todas llevaban `Bt`/`Ut` capturados, así que
+> ambas implementaciones cortaban por `captured_at_request` y **la rama editada nunca se
+> entró**. Ahora la comparación corre en **dos estratos** — tal como se embarca, y con los
+> campos nativos borrados para forzar la rama — y el falsador falla si el segundo estrato está
+> vacío. Resultado: **3.289 filas en cada estrato, 0 diferencias, max|Δ| = 0**.
+
+Así que el cambio del 07-17 es una **reformulación robusta**, no una redefinición. Eso —y solo
+eso— autoriza re-atestar.
+
+**Cada desajuste con su causa probada.** `scripts/classify_paper2_hash_drift.py` clasifica los
+33 pines rotos y **no queda ninguno sin explicar**:
+
+| causa | n | cómo se prueba |
+|---|---:|---|
+| `superseded_by_commit` | 13 | el pin es una versión del archivo en git y el contenido actual es otra; se nombran ambos extremos |
+| `post_freeze_source_edit` | 11 | fuente de la métrica v2, respaldada por la equivalencia sellada |
+| `line_ending_normalization` | 3 | **`sha256(actual con LF→CRLF) == pin`, byte a byte** |
+| `untracked_now_baselined` | 1 | ver abajo |
+| dependientes / self-hash | 2 | mecánicos de esta misma corrida |
+| **`missing_external_source`** | **1** | **REHUSADO** |
+
+**El hallazgo de los CSV es limpio:** los tres `design.csv`/`branch_rows.csv` los escribió el
+módulo `csv` de Python, cuyo terminador por defecto es `\r\n`; se hashearon entonces y luego se
+normalizaron a LF. **El contenido es idéntico fila por fila** y la prueba es exacta.
+
+**El ledger de quema de semillas estaba fuera de git.** `seed_burn_ledger.json` —«registro
+autoritativo de qué bloques de semillas se han abierto», exigido por la carta §0.4— estaba
+excluido por una línea **local** en `.git/info/exclude`: nunca salió de esta máquina y **su
+historia es irrecuperable**. Queda versionado desde hoy. Su pin se re-atesta como
+`untracked_now_baselined`, y el registro dice explícitamente que **el delta previo no se
+reconstruye y no se afirma inocuo**.
+
+**La promoción no ratificada.** `docs/RET_EXCEL_REQUEST_SNAPSHOT_V2_CONTRACT_2026-07-14.md` se
+editó in situ el 07-17 y **se promovió de «provisional, confirmación de Garrido requerida» a
+«primario congelado»** — mientras `metric_governance_audit.json`, que es la autoridad
+verificable, **sigue exigiendo el estado provisional** y esa aserción pasa hoy. El documento
+vuelve byte a byte a su versión congelada; el registro está en
+[`RET_EXCEL_REQUEST_SNAPSHOT_V2_UNRATIFIED_PROMOTION_2026-07-17.md`](RET_EXCEL_REQUEST_SNAPSHOT_V2_UNRATIFIED_PROMOTION_2026-07-17.md).
+
+**Lo que el proceso me enseñó a mí, dos veces.** (i) La primera versión reescribía cada
+atestación con `json.dumps(indent=2, sort_keys=True)`: **900 líneas reordenadas en tres
+auditorías fechadas para cambiar once hashes**. Un registro de custodia cuyo diff deja de ser
+revisable ya no sirve; ahora sustituye solo las cadenas de hash. (ii) Probar la causa y
+actualizar el pin estaban entrelazados, así que el bucle veía un hash intermedio **producido
+por sí mismo** y clasificaba su propio trabajo como `UNEXPLAINED`. Las causas se prueban **una
+vez, contra el árbol prístino**; el bucle posterior es mecánico y no vuelve a juzgar.
+
+**Lo único que queda rojo, y por qué debe quedarse.**
+`reproducibility_manifest.json` fija un PDF externo en Google Drive
+(`…/PhD-Papers/garrido2024 scres+AI.pdf`) que **no está en esta máquina**. No se re-atesta: una
+fuente ausente no se puede verificar, y fingir lo contrario es exactamente el modo de fallo que
+todo esto persigue. **Es tuyo el paso:** re-sincronizar ese archivo, o decidir que el manifiesto
+apunte a una copia dentro del repo. El de `~/Downloads` es **otro** archivo, con otro hash.
+
+**Suite verificada tras B: `1.234 passed, 18 failed`.** Quedan **A (15)**, **C (1)**, **F (1)** y
+el PDF externo ausente **(1)**.
 
 ## Orden recomendado
 
