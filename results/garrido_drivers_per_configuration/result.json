@@ -1,0 +1,4687 @@
+{
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "DEVELOPMENT_DRIVER_TABLE",
+ "created_at": "2026-07-31T21:32:40.073335+00:00",
+ "driver_definitions": {
+  "Re_APj": "Eq. 5.1  Re^max x APj/LT, Re^max = 1   (case excel_autotomy)",
+  "Re_DPj_RPj": "Eq. 5.3  Re^min x (DPj-RPj)/CTj, Re^min = 0 (case excel_risk_no_recovery)",
+  "Re_FRt": "Eq. 5.4  1 - (Bt+Ut)/j                 (case excel_fill_rate)",
+  "Re_RPj": "Eq. 5.2  Re x 1/RPj, Re = 0.5          (case excel_recovery)",
+  "contribution": "share x mean; the four plus the fifth sum to mean ReT exactly",
+  "not_in_his_ReT_unfulfilled": "OUR term, not his: orders the DES drops, scored 0. Reported separately and never folded into his four"
+ },
+ "elapsed_seconds": 357.7634924169979,
+ "falsifiers": {
+  "all_passed": true,
+  "f1_divergence_from_2026_07_29_is_confined_to_recovery_configs": {
+   "evidence": {
+    "attributed_to": "1e4a69d RET_RECOVERY_PERIOD_MODE disruption -> elapsed",
+    "bisect": {
+     "002db49": 0.007837224876422,
+     "1e4a69d": 0.007837224876422,
+     "3175110": 0.007837224876422,
+     "435d6ed": 0.004070242240102,
+     "64b75ce": 0.007837224876422,
+     "884c035": 0.007837224876422,
+     "config": "Cf1",
+     "note": "bit-identical from 1e4a69d to HEAD"
+    },
+    "configs_with_no_recovery_orders": [],
+    "discriminating_power": "one-sided in practice: EVERY configuration has recovery-branch orders (share > 0 in all 90), so the check can only catch a config that moved WITHOUT them, never one that failed to move with them. Stated rather than left for a reader to notice",
+    "n_compared": 90,
+    "n_configs_moved": 90,
+    "unexplained": [],
+    "why_it_can_fail": "if a configuration with no recovery-branch orders moved anyway, the divergence is not the RPj migration and this driver table describes runs nobody has accounted for"
+   },
+   "passed": true
+  },
+  "f2_decomposition_reconstructs_the_endpoint": {
+   "evidence": {
+    "max_abs_error": 3.219646771412954e-15,
+    "why_it_can_fail": "the four drivers plus the non-Garrido term must sum to mean ReT; a case missed by the mapping, or a row scored outside every branch, breaks the identity"
+   },
+   "passed": true
+  },
+  "f3_his_DPj_term_is_measured_zero_not_absent": {
+   "evidence": {
+    "configs_with_the_case": 4,
+    "max_share": 0.00040404040404040404,
+    "why_it_can_fail": "if the risk-no-recovery case never occurs, its zero is silence rather than a measurement of his Eq. 5.3; if it occurs with a NON-zero contribution, Re^min is not 0 and our port disagrees with his Fig. 5.6"
+   },
+   "passed": true
+  },
+  "f4_autotomy_driver_is_dead_TRIPWIRE": {
+   "evidence": {
+    "lead_time_promise_hours": 48.0,
+    "max_share": 0.0,
+    "shipped_constant_hours": 54.0,
+    "why_it_can_fail": "DELIBERATELY inverted. Under the shipped 54 h fulfilment constant the autotomy branch cannot fire (CTj >= 54 > LT = 48), so his first driver is dead in this table. The day the freight-wave arm lowers the floor to 48, this FAILS -- which is correct: the drivers must be re-emitted before anything is trained on them"
+   },
+   "passed": true
+  },
+  "f5_non_garrido_term_does_not_dominate": {
+   "evidence": {
+    "ceiling": 0.2,
+    "configs_over_ceiling": [],
+    "max_share": 0.0,
+    "why_it_can_fail": "`unfulfilled` is OUR term -- his chain serves every order eventually. If it dominates, mean ReT is mostly a term his formula does not contain and the comparison stops being about his metric"
+   },
+   "passed": true
+  }
+ },
+ "known_gap": "Re(APj) is identically zero here: the shipped fulfilment constant is 54 h against LT = 48, so the autotomy branch is structurally unreachable. Close it with the freight-wave arm before fitting Fig. 5",
+ "purpose": "input table for Figure 5 of Garrido, Ponguta & Adarme (2024): the SCRES drivers d_i per configuration, with rho (buffer_hours, shifts) as the weights. NOT a claim about resilience",
+ "reproduction_sha256": "6495954d42c4954ff3df7e076a8ad1d8ff752637e482c1442e437d4d104c8928",
+ "reproduction_source": "results/garrido_reproduction/reproduction.json",
+ "rows": [
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_RPj": {
+    "contribution": 0.007837224876422026,
+    "contribution_0_100": 0.7837224876422025,
+    "mean": 0.007837224876422026,
+    "n": 2607,
+    "share": 1.0
+   },
+   "cf": 1,
+   "family": "R1r",
+   "horizon_years": 10,
+   "hypothesis": "H1a",
+   "n_visible_rows": 2607,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "--++",
+   "ret_excel": 0.007837224876421918,
+   "ret_excel_0_100": 0.7837224876421918,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 1
+   },
+   "seed": 375,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_RPj": {
+    "contribution": 0.00815567858877739,
+    "contribution_0_100": 0.815567858877739,
+    "mean": 0.00815567858877739,
+    "n": 2743,
+    "share": 1.0
+   },
+   "cf": 2,
+   "family": "R1r",
+   "horizon_years": 10,
+   "hypothesis": "H1a",
+   "n_visible_rows": 2743,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "-+--",
+   "ret_excel": 0.00815567858877727,
+   "ret_excel_0_100": 0.815567858877727,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 1
+   },
+   "seed": 91,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_RPj": {
+    "contribution": 0.007682480623082347,
+    "contribution_0_100": 0.7682480623082347,
+    "mean": 0.007682480623082347,
+    "n": 2492,
+    "share": 1.0
+   },
+   "cf": 3,
+   "family": "R1r",
+   "horizon_years": 10,
+   "hypothesis": "H1a",
+   "n_visible_rows": 2492,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "+-++",
+   "ret_excel": 0.0076824806230822345,
+   "ret_excel_0_100": 0.7682480623082234,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 1
+   },
+   "seed": 22,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_RPj": {
+    "contribution": 0.007879941588911438,
+    "contribution_0_100": 0.7879941588911439,
+    "mean": 0.007879941588911438,
+    "n": 2620,
+    "share": 1.0
+   },
+   "cf": 4,
+   "family": "R1r",
+   "horizon_years": 10,
+   "hypothesis": "H1a",
+   "n_visible_rows": 2620,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "+++-",
+   "ret_excel": 0.007879941588911322,
+   "ret_excel_0_100": 0.7879941588911322,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 1
+   },
+   "seed": 4,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_RPj": {
+    "contribution": 0.008157041652080652,
+    "contribution_0_100": 0.8157041652080652,
+    "mean": 0.008157041652080652,
+    "n": 2712,
+    "share": 1.0
+   },
+   "cf": 5,
+   "family": "R1r",
+   "horizon_years": 10,
+   "hypothesis": "H1a",
+   "n_visible_rows": 2712,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "--+-",
+   "ret_excel": 0.008157041652080536,
+   "ret_excel_0_100": 0.8157041652080536,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 1
+   },
+   "seed": 77,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_RPj": {
+    "contribution": 0.007684079974369602,
+    "contribution_0_100": 0.7684079974369602,
+    "mean": 0.007684079974369602,
+    "n": 2488,
+    "share": 1.0
+   },
+   "cf": 6,
+   "family": "R1r",
+   "horizon_years": 10,
+   "hypothesis": "H1a",
+   "n_visible_rows": 2488,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "++-+",
+   "ret_excel": 0.007684079974369492,
+   "ret_excel_0_100": 0.7684079974369492,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 1
+   },
+   "seed": 206,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_RPj": {
+    "contribution": 0.00767822846348599,
+    "contribution_0_100": 0.767822846348599,
+    "mean": 0.00767822846348599,
+    "n": 2490,
+    "share": 1.0
+   },
+   "cf": 7,
+   "family": "R1r",
+   "horizon_years": 10,
+   "hypothesis": "H1a",
+   "n_visible_rows": 2490,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "+--+",
+   "ret_excel": 0.007678228463485877,
+   "ret_excel_0_100": 0.7678228463485877,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 1
+   },
+   "seed": 82,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_RPj": {
+    "contribution": 0.007858655428796829,
+    "contribution_0_100": 0.7858655428796829,
+    "mean": 0.007858655428796829,
+    "n": 2619,
+    "share": 1.0
+   },
+   "cf": 8,
+   "family": "R1r",
+   "horizon_years": 10,
+   "hypothesis": "H1a",
+   "n_visible_rows": 2619,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "+---",
+   "ret_excel": 0.007858655428796721,
+   "ret_excel_0_100": 0.7858655428796721,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 1
+   },
+   "seed": 33,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_RPj": {
+    "contribution": 0.007783056843740713,
+    "contribution_0_100": 0.7783056843740712,
+    "mean": 0.007783056843740713,
+    "n": 2614,
+    "share": 1.0
+   },
+   "cf": 9,
+   "family": "R1r",
+   "horizon_years": 10,
+   "hypothesis": "H1a",
+   "n_visible_rows": 2614,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "-+++",
+   "ret_excel": 0.007783056843740595,
+   "ret_excel_0_100": 0.7783056843740594,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 1
+   },
+   "seed": 827,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_RPj": {
+    "contribution": 0.007835492500600073,
+    "contribution_0_100": 0.7835492500600073,
+    "mean": 0.007835492500600073,
+    "n": 2609,
+    "share": 1.0
+   },
+   "cf": 10,
+   "family": "R1r",
+   "horizon_years": 10,
+   "hypothesis": "H1a",
+   "n_visible_rows": 2609,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "-+-+",
+   "ret_excel": 0.00783549250059995,
+   "ret_excel_0_100": 0.783549250059995,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 1
+   },
+   "seed": 27,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.36441371678339407,
+    "contribution_0_100": 36.4413716783394,
+    "mean": 0.8063973823386157,
+    "n": 1104,
+    "share": 0.4519033974621367
+   },
+   "Re_RPj": {
+    "contribution": 0.004221888025056275,
+    "contribution_0_100": 0.42218880250562746,
+    "mean": 0.007702817360128811,
+    "n": 1339,
+    "share": 0.5480966025378633
+   },
+   "cf": 11,
+   "family": "R2r",
+   "horizon_years": 10,
+   "hypothesis": "H1b",
+   "n_visible_rows": 2443,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "+-++",
+   "ret_excel": 0.3686356048084504,
+   "ret_excel_0_100": 36.863560480845045,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 1
+   },
+   "seed": 21,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.595080597522514,
+    "contribution_0_100": 59.508059752251405,
+    "mean": 0.8741296912760093,
+    "n": 1770,
+    "share": 0.6807692307692308
+   },
+   "Re_RPj": {
+    "contribution": 0.002863495974673433,
+    "contribution_0_100": 0.2863495974673433,
+    "mean": 0.008969987390543284,
+    "n": 830,
+    "share": 0.3192307692307692
+   },
+   "cf": 12,
+   "family": "R2r",
+   "horizon_years": 10,
+   "hypothesis": "H1b",
+   "n_visible_rows": 2600,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "+---",
+   "ret_excel": 0.5979440934971862,
+   "ret_excel_0_100": 59.79440934971863,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 1
+   },
+   "seed": 47,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.41628732769148913,
+    "contribution_0_100": 41.62873276914891,
+    "mean": 0.8288365650935037,
+    "n": 1225,
+    "share": 0.5022550225502255
+   },
+   "Re_RPj": {
+    "contribution": 0.0043296882316988545,
+    "contribution_0_100": 0.43296882316988544,
+    "mean": 0.008698607575876035,
+    "n": 1214,
+    "share": 0.4977449774497745
+   },
+   "cf": 13,
+   "family": "R2r",
+   "horizon_years": 10,
+   "hypothesis": "H1b",
+   "n_visible_rows": 2439,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "++-+",
+   "ret_excel": 0.4206170159231875,
+   "ret_excel_0_100": 42.06170159231875,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 1
+   },
+   "seed": 101,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.4586383588557935,
+    "contribution_0_100": 45.863835885579356,
+    "mean": 0.8622671132277796,
+    "n": 1359,
+    "share": 0.5318982387475538
+   },
+   "Re_RPj": {
+    "contribution": 0.005059118091842318,
+    "contribution_0_100": 0.5059118091842317,
+    "mean": 0.010807731375131373,
+    "n": 1196,
+    "share": 0.4681017612524462
+   },
+   "cf": 14,
+   "family": "R2r",
+   "horizon_years": 10,
+   "hypothesis": "H1b",
+   "n_visible_rows": 2555,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "+++-",
+   "ret_excel": 0.46369747694763613,
+   "ret_excel_0_100": 46.36974769476361,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 1
+   },
+   "seed": 28,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 1,
+    "share": 0.0003861003861003861
+   },
+   "Re_FRt": {
+    "contribution": 0.45501669931714644,
+    "contribution_0_100": 45.50166993171464,
+    "mean": 0.8690953180172635,
+    "n": 1356,
+    "share": 0.5235521235521235
+   },
+   "Re_RPj": {
+    "contribution": 0.004196000887507521,
+    "contribution_0_100": 0.4196000887507521,
+    "mean": 0.008813984021609472,
+    "n": 1233,
+    "share": 0.4760617760617761
+   },
+   "cf": 15,
+   "family": "R2r",
+   "horizon_years": 10,
+   "hypothesis": "H1b",
+   "n_visible_rows": 2590,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "--++",
+   "ret_excel": 0.4592127002046539,
+   "ret_excel_0_100": 45.921270020465386,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 1
+   },
+   "seed": 10,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.6401933651274565,
+    "contribution_0_100": 64.01933651274565,
+    "mean": 0.9021514017975639,
+    "n": 1916,
+    "share": 0.7096296296296296
+   },
+   "Re_RPj": {
+    "contribution": 0.0029055278812482044,
+    "contribution_0_100": 0.29055278812482044,
+    "mean": 0.010006282244094581,
+    "n": 784,
+    "share": 0.2903703703703704
+   },
+   "cf": 16,
+   "family": "R2r",
+   "horizon_years": 10,
+   "hypothesis": "H1b",
+   "n_visible_rows": 2700,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "-+--",
+   "ret_excel": 0.6430988930087044,
+   "ret_excel_0_100": 64.30988930087044,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 1
+   },
+   "seed": 11,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.5733245841674908,
+    "contribution_0_100": 57.33245841674908,
+    "mean": 0.9132363109231721,
+    "n": 1685,
+    "share": 0.6277943368107303
+   },
+   "Re_RPj": {
+    "contribution": 0.004135303912301125,
+    "contribution_0_100": 0.4135303912301125,
+    "mean": 0.011110265966582803,
+    "n": 999,
+    "share": 0.37220566318926973
+   },
+   "cf": 17,
+   "family": "R2r",
+   "horizon_years": 10,
+   "hypothesis": "H1b",
+   "n_visible_rows": 2684,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "-++-",
+   "ret_excel": 0.577459888079791,
+   "ret_excel_0_100": 57.745988807979096,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 1
+   },
+   "seed": 96,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.5790452983899315,
+    "contribution_0_100": 57.90452983899314,
+    "mean": 0.9116374325891069,
+    "n": 1694,
+    "share": 0.6351706036745407
+   },
+   "Re_RPj": {
+    "contribution": 0.004293125338790799,
+    "contribution_0_100": 0.4293125338790799,
+    "mean": 0.011767487439419386,
+    "n": 973,
+    "share": 0.3648293963254593
+   },
+   "cf": 18,
+   "family": "R2r",
+   "horizon_years": 10,
+   "hypothesis": "H1b",
+   "n_visible_rows": 2667,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "--+-",
+   "ret_excel": 0.5833384237287211,
+   "ret_excel_0_100": 58.33384237287211,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 1
+   },
+   "seed": 498,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.49517922739611525,
+    "contribution_0_100": 49.51792273961153,
+    "mean": 0.8663961312898201,
+    "n": 1478,
+    "share": 0.57153905645785
+   },
+   "Re_RPj": {
+    "contribution": 0.004032717982459924,
+    "contribution_0_100": 0.4032717982459924,
+    "mean": 0.009412101717185347,
+    "n": 1108,
+    "share": 0.42846094354215003
+   },
+   "cf": 19,
+   "family": "R2r",
+   "horizon_years": 10,
+   "hypothesis": "H1b",
+   "n_visible_rows": 2586,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "-+-+",
+   "ret_excel": 0.49921194537857494,
+   "ret_excel_0_100": 49.921194537857495,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 1
+   },
+   "seed": 95,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 1,
+    "share": 0.00040404040404040404
+   },
+   "Re_FRt": {
+    "contribution": 0.3840804331545397,
+    "contribution_0_100": 38.40804331545397,
+    "mean": 0.836058990375977,
+    "n": 1137,
+    "share": 0.4593939393939394
+   },
+   "Re_RPj": {
+    "contribution": 0.00494602002289386,
+    "contribution_0_100": 0.49460200228938594,
+    "mean": 0.009155871022185716,
+    "n": 1337,
+    "share": 0.5402020202020202
+   },
+   "cf": 20,
+   "family": "R2r",
+   "horizon_years": 10,
+   "hypothesis": "H1b",
+   "n_visible_rows": 2475,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "++++",
+   "ret_excel": 0.3890264531774338,
+   "ret_excel_0_100": 38.90264531774338,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 1
+   },
+   "seed": 85,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.9703944447793206,
+    "contribution_0_100": 97.03944447793205,
+    "mean": 0.9763645283734982,
+    "n": 5689,
+    "share": 0.993885394828791
+   },
+   "Re_RPj": {
+    "contribution": 9.797169357686558e-05,
+    "contribution_0_100": 0.009797169357686557,
+    "mean": 0.0160225706866851,
+    "n": 35,
+    "share": 0.006114605171208945
+   },
+   "cf": 21,
+   "family": "R3",
+   "horizon_years": 20,
+   "hypothesis": "H1c",
+   "n_visible_rows": 5724,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "-",
+   "ret_excel": 0.9704924164728963,
+   "ret_excel_0_100": 97.04924164728963,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 1
+   },
+   "seed": 900021,
+   "seed_is_thesis_seed": false
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.9644459116309035,
+    "contribution_0_100": 96.44459116309035,
+    "mean": 0.9769046891125981,
+    "n": 5651,
+    "share": 0.9872466806429071
+   },
+   "Re_RPj": {
+    "contribution": 7.867166691237032e-05,
+    "contribution_0_100": 0.007867166691237031,
+    "mean": 0.006168720841183667,
+    "n": 73,
+    "share": 0.012753319357092943
+   },
+   "cf": 22,
+   "family": "R3",
+   "horizon_years": 20,
+   "hypothesis": "H1c",
+   "n_visible_rows": 5724,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "+",
+   "ret_excel": 0.964524583297817,
+   "ret_excel_0_100": 96.45245832978169,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 1
+   },
+   "seed": 900022,
+   "seed_is_thesis_seed": false
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.9593325242369344,
+    "contribution_0_100": 95.93325242369343,
+    "mean": 0.9718972334039314,
+    "n": 5650,
+    "share": 0.9870719776380154
+   },
+   "Re_RPj": {
+    "contribution": 5.170881317451159e-05,
+    "contribution_0_100": 0.005170881317451159,
+    "mean": 0.003999746575823032,
+    "n": 74,
+    "share": 0.012928022361984625
+   },
+   "cf": 23,
+   "family": "R3",
+   "horizon_years": 20,
+   "hypothesis": "H1c",
+   "n_visible_rows": 5724,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "+",
+   "ret_excel": 0.9593842330501057,
+   "ret_excel_0_100": 95.93842330501057,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 1
+   },
+   "seed": 900023,
+   "seed_is_thesis_seed": false
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.9719769214334409,
+    "contribution_0_100": 97.1976921433441,
+    "mean": 0.9793339021800768,
+    "n": 5681,
+    "share": 0.9924877707896576
+   },
+   "Re_RPj": {
+    "contribution": 0.00012629671254997201,
+    "contribution_0_100": 0.0126296712549972,
+    "mean": 0.016812148433396276,
+    "n": 43,
+    "share": 0.007512229210342418
+   },
+   "cf": 24,
+   "family": "R3",
+   "horizon_years": 20,
+   "hypothesis": "H1c",
+   "n_visible_rows": 5724,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "+",
+   "ret_excel": 0.9721032181459914,
+   "ret_excel_0_100": 97.21032181459914,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 1
+   },
+   "seed": 900024,
+   "seed_is_thesis_seed": false
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.9614927517956122,
+    "contribution_0_100": 96.14927517956122,
+    "mean": 0.9730852175974033,
+    "n": 5640,
+    "share": 0.9880868955851436
+   },
+   "Re_RPj": {
+    "contribution": 2.3942667884977553e-05,
+    "contribution_0_100": 0.0023942667884977553,
+    "mean": 0.0020097757101095863,
+    "n": 68,
+    "share": 0.011913104414856343
+   },
+   "cf": 25,
+   "family": "R3",
+   "horizon_years": 20,
+   "hypothesis": "H1c",
+   "n_visible_rows": 5708,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "+",
+   "ret_excel": 0.9615166944634976,
+   "ret_excel_0_100": 96.15166944634976,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 1
+   },
+   "seed": 900025,
+   "seed_is_thesis_seed": false
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.9733393226920841,
+    "contribution_0_100": 97.33393226920842,
+    "mean": 0.9777806744628799,
+    "n": 5698,
+    "share": 0.9954577218728162
+   },
+   "Re_RPj": {
+    "contribution": 4.925969286556285e-05,
+    "contribution_0_100": 0.0049259692865562844,
+    "mean": 0.010844710844710836,
+    "n": 26,
+    "share": 0.004542278127183787
+   },
+   "cf": 26,
+   "family": "R3",
+   "horizon_years": 20,
+   "hypothesis": "H1c",
+   "n_visible_rows": 5724,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "-",
+   "ret_excel": 0.9733885823849497,
+   "ret_excel_0_100": 97.33885823849498,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 1
+   },
+   "seed": 900026,
+   "seed_is_thesis_seed": false
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.9732065543051792,
+    "contribution_0_100": 97.32065543051793,
+    "mean": 0.9776473002532197,
+    "n": 5698,
+    "share": 0.9954577218728162
+   },
+   "Re_RPj": {
+    "contribution": 6.378046210331319e-05,
+    "contribution_0_100": 0.006378046210331318,
+    "mean": 0.014041514041514028,
+    "n": 26,
+    "share": 0.004542278127183787
+   },
+   "cf": 27,
+   "family": "R3",
+   "horizon_years": 20,
+   "hypothesis": "H1c",
+   "n_visible_rows": 5724,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "-",
+   "ret_excel": 0.9732703347672821,
+   "ret_excel_0_100": 97.3270334767282,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 1
+   },
+   "seed": 900027,
+   "seed_is_thesis_seed": false
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.9678120325421419,
+    "contribution_0_100": 96.78120325421419,
+    "mean": 0.9753091680054965,
+    "n": 5680,
+    "share": 0.9923130677847659
+   },
+   "Re_RPj": {
+    "contribution": 1.0795984673723893e-05,
+    "contribution_0_100": 0.0010795984673723892,
+    "mean": 0.0014044594607362628,
+    "n": 44,
+    "share": 0.007686932215234102
+   },
+   "cf": 28,
+   "family": "R3",
+   "horizon_years": 20,
+   "hypothesis": "H1c",
+   "n_visible_rows": 5724,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "-",
+   "ret_excel": 0.9678228285268158,
+   "ret_excel_0_100": 96.78228285268158,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 1
+   },
+   "seed": 900028,
+   "seed_is_thesis_seed": false
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.9709384941359345,
+    "contribution_0_100": 97.09384941359345,
+    "mean": 0.9798399048720184,
+    "n": 5672,
+    "share": 0.9909154437456325
+   },
+   "Re_RPj": {
+    "contribution": 7.818791944867527e-05,
+    "contribution_0_100": 0.007818791944867527,
+    "mean": 0.008606685594696486,
+    "n": 52,
+    "share": 0.009084556254367574
+   },
+   "cf": 29,
+   "family": "R3",
+   "horizon_years": 20,
+   "hypothesis": "H1c",
+   "n_visible_rows": 5724,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "+",
+   "ret_excel": 0.9710166820553835,
+   "ret_excel_0_100": 97.10166820553835,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 1
+   },
+   "seed": 900029,
+   "seed_is_thesis_seed": false
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.9754023940991815,
+    "contribution_0_100": 97.54023940991816,
+    "mean": 0.9800251542607891,
+    "n": 5697,
+    "share": 0.9952830188679245
+   },
+   "Re_RPj": {
+    "contribution": 0.00013145113624299026,
+    "contribution_0_100": 0.013145113624299027,
+    "mean": 0.027867640883513938,
+    "n": 27,
+    "share": 0.0047169811320754715
+   },
+   "cf": 30,
+   "family": "R3",
+   "horizon_years": 20,
+   "hypothesis": "H1c",
+   "n_visible_rows": 5724,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "-",
+   "ret_excel": 0.9755338452354263,
+   "ret_excel_0_100": 97.55338452354263,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 1
+   },
+   "seed": 900030,
+   "seed_is_thesis_seed": false
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_RPj": {
+    "contribution": 0.009243138185225992,
+    "contribution_0_100": 0.9243138185225992,
+    "mean": 0.009243138185225992,
+    "n": 2875,
+    "share": 1.0
+   },
+   "cf": 31,
+   "family": "R1r",
+   "horizon_years": 10,
+   "hypothesis": "H2a",
+   "n_visible_rows": 2875,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "--++",
+   "ret_excel": 0.00924313818522578,
+   "ret_excel_0_100": 0.9243138185225781,
+   "rho": {
+    "buffer_hours": 504,
+    "shifts": 1
+   },
+   "seed": 375,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_RPj": {
+    "contribution": 0.009246685171653413,
+    "contribution_0_100": 0.9246685171653413,
+    "mean": 0.009246685171653413,
+    "n": 2875,
+    "share": 1.0
+   },
+   "cf": 32,
+   "family": "R1r",
+   "horizon_years": 10,
+   "hypothesis": "H2a",
+   "n_visible_rows": 2875,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "-+--",
+   "ret_excel": 0.009246685171653201,
+   "ret_excel_0_100": 0.9246685171653202,
+   "rho": {
+    "buffer_hours": 336,
+    "shifts": 1
+   },
+   "seed": 91,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_RPj": {
+    "contribution": 0.009242428111341367,
+    "contribution_0_100": 0.9242428111341368,
+    "mean": 0.009242428111341367,
+    "n": 2875,
+    "share": 1.0
+   },
+   "cf": 33,
+   "family": "R1r",
+   "horizon_years": 10,
+   "hypothesis": "H2a",
+   "n_visible_rows": 2875,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "+-++",
+   "ret_excel": 0.009242428111341154,
+   "ret_excel_0_100": 0.9242428111341153,
+   "rho": {
+    "buffer_hours": 168,
+    "shifts": 1
+   },
+   "seed": 22,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_RPj": {
+    "contribution": 0.009244704150038719,
+    "contribution_0_100": 0.9244704150038718,
+    "mean": 0.009244704150038719,
+    "n": 2875,
+    "share": 1.0
+   },
+   "cf": 34,
+   "family": "R1r",
+   "horizon_years": 10,
+   "hypothesis": "H2a",
+   "n_visible_rows": 2875,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "+++-",
+   "ret_excel": 0.009244704150038505,
+   "ret_excel_0_100": 0.9244704150038505,
+   "rho": {
+    "buffer_hours": 1344,
+    "shifts": 1
+   },
+   "seed": 4,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_RPj": {
+    "contribution": 0.009231395449298473,
+    "contribution_0_100": 0.9231395449298473,
+    "mean": 0.009231395449298473,
+    "n": 2875,
+    "share": 1.0
+   },
+   "cf": 35,
+   "family": "R1r",
+   "horizon_years": 10,
+   "hypothesis": "H2a",
+   "n_visible_rows": 2875,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "--+-",
+   "ret_excel": 0.009231395449298262,
+   "ret_excel_0_100": 0.9231395449298262,
+   "rho": {
+    "buffer_hours": 336,
+    "shifts": 1
+   },
+   "seed": 77,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_RPj": {
+    "contribution": 0.009245177869281819,
+    "contribution_0_100": 0.9245177869281819,
+    "mean": 0.009245177869281819,
+    "n": 2875,
+    "share": 1.0
+   },
+   "cf": 36,
+   "family": "R1r",
+   "horizon_years": 10,
+   "hypothesis": "H2a",
+   "n_visible_rows": 2875,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "++-+",
+   "ret_excel": 0.009245177869281605,
+   "ret_excel_0_100": 0.9245177869281606,
+   "rho": {
+    "buffer_hours": 1344,
+    "shifts": 1
+   },
+   "seed": 206,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_RPj": {
+    "contribution": 0.009243079015329867,
+    "contribution_0_100": 0.9243079015329867,
+    "mean": 0.009243079015329867,
+    "n": 2875,
+    "share": 1.0
+   },
+   "cf": 37,
+   "family": "R1r",
+   "horizon_years": 10,
+   "hypothesis": "H2a",
+   "n_visible_rows": 2875,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "+--+",
+   "ret_excel": 0.009243079015329655,
+   "ret_excel_0_100": 0.9243079015329656,
+   "rho": {
+    "buffer_hours": 672,
+    "shifts": 1
+   },
+   "seed": 82,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_RPj": {
+    "contribution": 0.009249370516762032,
+    "contribution_0_100": 0.9249370516762032,
+    "mean": 0.009249370516762032,
+    "n": 2875,
+    "share": 1.0
+   },
+   "cf": 38,
+   "family": "R1r",
+   "horizon_years": 10,
+   "hypothesis": "H2a",
+   "n_visible_rows": 2875,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "+---",
+   "ret_excel": 0.00924937051676182,
+   "ret_excel_0_100": 0.9249370516761821,
+   "rho": {
+    "buffer_hours": 672,
+    "shifts": 1
+   },
+   "seed": 33,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_RPj": {
+    "contribution": 0.009245752818035639,
+    "contribution_0_100": 0.9245752818035639,
+    "mean": 0.009245752818035639,
+    "n": 2875,
+    "share": 1.0
+   },
+   "cf": 39,
+   "family": "R1r",
+   "horizon_years": 10,
+   "hypothesis": "H2a",
+   "n_visible_rows": 2875,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "-+++",
+   "ret_excel": 0.009245752818035427,
+   "ret_excel_0_100": 0.9245752818035426,
+   "rho": {
+    "buffer_hours": 168,
+    "shifts": 1
+   },
+   "seed": 827,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_RPj": {
+    "contribution": 0.009229360997623908,
+    "contribution_0_100": 0.9229360997623908,
+    "mean": 0.009229360997623908,
+    "n": 2875,
+    "share": 1.0
+   },
+   "cf": 40,
+   "family": "R1r",
+   "horizon_years": 10,
+   "hypothesis": "H2a",
+   "n_visible_rows": 2875,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "-+-+",
+   "ret_excel": 0.009229360997623698,
+   "ret_excel_0_100": 0.9229360997623698,
+   "rho": {
+    "buffer_hours": 504,
+    "shifts": 1
+   },
+   "seed": 27,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.48339111317648725,
+    "contribution_0_100": 48.33911131764873,
+    "mean": 0.9609082814466127,
+    "n": 1399,
+    "share": 0.5030564545127651
+   },
+   "Re_RPj": {
+    "contribution": 0.0046396233150647935,
+    "contribution_0_100": 0.46396233150647936,
+    "mean": 0.009336318696957446,
+    "n": 1382,
+    "share": 0.4969435454872348
+   },
+   "cf": 41,
+   "family": "R2r",
+   "horizon_years": 10,
+   "hypothesis": "H2b",
+   "n_visible_rows": 2781,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "+-++",
+   "ret_excel": 0.48803073649155176,
+   "ret_excel_0_100": 48.80307364915517,
+   "rho": {
+    "buffer_hours": 1344,
+    "shifts": 1
+   },
+   "seed": 21,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.7710548320633678,
+    "contribution_0_100": 77.10548320633679,
+    "mean": 0.9930827125007817,
+    "n": 2233,
+    "share": 0.7764255910987483
+   },
+   "Re_RPj": {
+    "contribution": 0.00338399647509887,
+    "contribution_0_100": 0.33839964750988705,
+    "mean": 0.015135884700442226,
+    "n": 643,
+    "share": 0.22357440890125174
+   },
+   "cf": 42,
+   "family": "R2r",
+   "horizon_years": 10,
+   "hypothesis": "H2b",
+   "n_visible_rows": 2876,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "+---",
+   "ret_excel": 0.774438828538467,
+   "ret_excel_0_100": 77.4438828538467,
+   "rho": {
+    "buffer_hours": 336,
+    "shifts": 1
+   },
+   "seed": 47,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.6245921519422892,
+    "contribution_0_100": 62.45921519422892,
+    "mean": 0.9929944881072547,
+    "n": 1809,
+    "share": 0.6289986091794159
+   },
+   "Re_RPj": {
+    "contribution": 0.005054424673263657,
+    "contribution_0_100": 0.5054424673263657,
+    "mean": 0.013623735108065865,
+    "n": 1067,
+    "share": 0.37100139082058414
+   },
+   "cf": 43,
+   "family": "R2r",
+   "horizon_years": 10,
+   "hypothesis": "H2b",
+   "n_visible_rows": 2876,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "++-+",
+   "ret_excel": 0.6296465766155521,
+   "ret_excel_0_100": 62.964657661555215,
+   "rho": {
+    "buffer_hours": 504,
+    "shifts": 1
+   },
+   "seed": 101,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.5605282632191014,
+    "contribution_0_100": 56.052826321910146,
+    "mean": 0.9782772369649644,
+    "n": 1641,
+    "share": 0.5729748603351955
+   },
+   "Re_RPj": {
+    "contribution": 0.005253599216957447,
+    "contribution_0_100": 0.5253599216957447,
+    "mean": 0.012302786719023817,
+    "n": 1223,
+    "share": 0.4270251396648045
+   },
+   "cf": 44,
+   "family": "R2r",
+   "horizon_years": 10,
+   "hypothesis": "H2b",
+   "n_visible_rows": 2864,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "+++-",
+   "ret_excel": 0.5657818624360577,
+   "ret_excel_0_100": 56.578186243605764,
+   "rho": {
+    "buffer_hours": 168,
+    "shifts": 1
+   },
+   "seed": 28,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.5160664805334823,
+    "contribution_0_100": 51.60664805334822,
+    "mean": 0.9510919297935216,
+    "n": 1471,
+    "share": 0.5426042050903725
+   },
+   "Re_RPj": {
+    "contribution": 0.004300144887698038,
+    "contribution_0_100": 0.4300144887698038,
+    "mean": 0.009401365153668855,
+    "n": 1240,
+    "share": 0.45739579490962745
+   },
+   "cf": 45,
+   "family": "R2r",
+   "horizon_years": 10,
+   "hypothesis": "H2b",
+   "n_visible_rows": 2711,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "--++",
+   "ret_excel": 0.5203666254211804,
+   "ret_excel_0_100": 52.03666254211804,
+   "rho": {
+    "buffer_hours": 504,
+    "shifts": 1
+   },
+   "seed": 10,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.7877939229621653,
+    "contribution_0_100": 78.77939229621653,
+    "mean": 0.9945984734149198,
+    "n": 2278,
+    "share": 0.7920723226703755
+   },
+   "Re_RPj": {
+    "contribution": 0.003360347722878141,
+    "contribution_0_100": 0.3360347722878141,
+    "mean": 0.016161137209025976,
+    "n": 598,
+    "share": 0.20792767732962447
+   },
+   "cf": 46,
+   "family": "R2r",
+   "horizon_years": 10,
+   "hypothesis": "H2b",
+   "n_visible_rows": 2876,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "-+--",
+   "ret_excel": 0.7911542706850435,
+   "ret_excel_0_100": 79.11542706850435,
+   "rho": {
+    "buffer_hours": 1344,
+    "shifts": 1
+   },
+   "seed": 11,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.703888246692351,
+    "contribution_0_100": 70.38882466923509,
+    "mean": 0.9967418008307245,
+    "n": 2031,
+    "share": 0.7061891515994436
+   },
+   "Re_RPj": {
+    "contribution": 0.005135734152722504,
+    "contribution_0_100": 0.5135734152722504,
+    "mean": 0.017479729494946653,
+    "n": 845,
+    "share": 0.2938108484005563
+   },
+   "cf": 47,
+   "family": "R2r",
+   "horizon_years": 10,
+   "hypothesis": "H2b",
+   "n_visible_rows": 2876,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "-++-",
+   "ret_excel": 0.7090239808450729,
+   "ret_excel_0_100": 70.9023980845073,
+   "rho": {
+    "buffer_hours": 168,
+    "shifts": 1
+   },
+   "seed": 96,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.7031494274110396,
+    "contribution_0_100": 70.31494274110396,
+    "mean": 0.9906134580290823,
+    "n": 2040,
+    "share": 0.7098121085594989
+   },
+   "Re_RPj": {
+    "contribution": 0.005118919249324704,
+    "contribution_0_100": 0.5118919249324704,
+    "mean": 0.017640016693716065,
+    "n": 834,
+    "share": 0.29018789144050106
+   },
+   "cf": 48,
+   "family": "R2r",
+   "horizon_years": 10,
+   "hypothesis": "H2b",
+   "n_visible_rows": 2874,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "--+-",
+   "ret_excel": 0.7082683466603645,
+   "ret_excel_0_100": 70.82683466603645,
+   "rho": {
+    "buffer_hours": 336,
+    "shifts": 1
+   },
+   "seed": 498,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 1,
+    "share": 0.0003477051460361613
+   },
+   "Re_FRt": {
+    "contribution": 0.6724048639327288,
+    "contribution_0_100": 67.24048639327287,
+    "mean": 0.9963093192532343,
+    "n": 1941,
+    "share": 0.6748956884561892
+   },
+   "Re_RPj": {
+    "contribution": 0.004576363426666079,
+    "contribution_0_100": 0.45763634266660796,
+    "mean": 0.01409167153650069,
+    "n": 934,
+    "share": 0.3247566063977747
+   },
+   "cf": 49,
+   "family": "R2r",
+   "horizon_years": 10,
+   "hypothesis": "H2b",
+   "n_visible_rows": 2876,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "-+-+",
+   "ret_excel": 0.6769812273593933,
+   "ret_excel_0_100": 67.69812273593932,
+   "rho": {
+    "buffer_hours": 672,
+    "shifts": 1
+   },
+   "seed": 95,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.4714569691481646,
+    "contribution_0_100": 47.14569691481646,
+    "mean": 0.9429139382963292,
+    "n": 1398,
+    "share": 0.5
+   },
+   "Re_RPj": {
+    "contribution": 0.0051816127853143365,
+    "contribution_0_100": 0.5181612785314337,
+    "mean": 0.010363225570628673,
+    "n": 1398,
+    "share": 0.5
+   },
+   "cf": 50,
+   "family": "R2r",
+   "horizon_years": 10,
+   "hypothesis": "H2b",
+   "n_visible_rows": 2796,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "++++",
+   "ret_excel": 0.4766385819334787,
+   "ret_excel_0_100": 47.66385819334787,
+   "rho": {
+    "buffer_hours": 672,
+    "shifts": 1
+   },
+   "seed": 85,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.9932778112654912,
+    "contribution_0_100": 99.32778112654913,
+    "mean": 0.9979589948759239,
+    "n": 5729,
+    "share": 0.9953092425295343
+   },
+   "Re_RPj": {
+    "contribution": 0.0001307203446585956,
+    "contribution_0_100": 0.01307203446585956,
+    "mean": 0.027867640883513938,
+    "n": 27,
+    "share": 0.004690757470465601
+   },
+   "cf": 51,
+   "family": "R3",
+   "horizon_years": 20,
+   "hypothesis": "H2c",
+   "n_visible_rows": 5756,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "-",
+   "ret_excel": 0.9934085316101506,
+   "ret_excel_0_100": 99.34085316101506,
+   "rho": {
+    "buffer_hours": 672,
+    "shifts": 1
+   },
+   "seed": 900021,
+   "seed_is_thesis_seed": false
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.9887597063160858,
+    "contribution_0_100": 98.87597063160858,
+    "mean": 0.9979486006584938,
+    "n": 5703,
+    "share": 0.9907922168172342
+   },
+   "Re_RPj": {
+    "contribution": 0.0001113041994296338,
+    "contribution_0_100": 0.011130419942963378,
+    "mean": 0.012088056073905134,
+    "n": 53,
+    "share": 0.00920778318276581
+   },
+   "cf": 52,
+   "family": "R3",
+   "horizon_years": 20,
+   "hypothesis": "H2c",
+   "n_visible_rows": 5756,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "+",
+   "ret_excel": 0.9888710105155161,
+   "ret_excel_0_100": 98.88710105155161,
+   "rho": {
+    "buffer_hours": 1344,
+    "shifts": 1
+   },
+   "seed": 900022,
+   "seed_is_thesis_seed": false
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.9886370934745204,
+    "contribution_0_100": 98.86370934745203,
+    "mean": 0.9974750411988326,
+    "n": 5705,
+    "share": 0.9911396803335649
+   },
+   "Re_RPj": {
+    "contribution": 9.375999647021184e-05,
+    "contribution_0_100": 0.009375999647021184,
+    "mean": 0.010582010582010576,
+    "n": 51,
+    "share": 0.008860319666435024
+   },
+   "cf": 53,
+   "family": "R3",
+   "horizon_years": 20,
+   "hypothesis": "H2c",
+   "n_visible_rows": 5756,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "+",
+   "ret_excel": 0.9887308534709913,
+   "ret_excel_0_100": 98.87308534709913,
+   "rho": {
+    "buffer_hours": 672,
+    "shifts": 1
+   },
+   "seed": 900023,
+   "seed_is_thesis_seed": false
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.991345149371003,
+    "contribution_0_100": 99.1345149371003,
+    "mean": 0.9981078677242424,
+    "n": 5717,
+    "share": 0.9932244614315496
+   },
+   "Re_RPj": {
+    "contribution": 0.00015927348083855607,
+    "contribution_0_100": 0.015927348083855607,
+    "mean": 0.023507132197608426,
+    "n": 39,
+    "share": 0.006775538568450313
+   },
+   "cf": 54,
+   "family": "R3",
+   "horizon_years": 20,
+   "hypothesis": "H2c",
+   "n_visible_rows": 5756,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "+",
+   "ret_excel": 0.991504422851842,
+   "ret_excel_0_100": 99.1504422851842,
+   "rho": {
+    "buffer_hours": 1344,
+    "shifts": 1
+   },
+   "seed": 900024,
+   "seed_is_thesis_seed": false
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.9886960119904977,
+    "contribution_0_100": 98.86960119904977,
+    "mean": 0.9977093697435668,
+    "n": 5704,
+    "share": 0.9909659485753995
+   },
+   "Re_RPj": {
+    "contribution": 8.888779019002293e-05,
+    "contribution_0_100": 0.008888779019002292,
+    "mean": 0.009839194621803308,
+    "n": 52,
+    "share": 0.009034051424600417
+   },
+   "cf": 55,
+   "family": "R3",
+   "horizon_years": 20,
+   "hypothesis": "H2c",
+   "n_visible_rows": 5756,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "+",
+   "ret_excel": 0.9887848997806888,
+   "ret_excel_0_100": 98.87848997806888,
+   "rho": {
+    "buffer_hours": 504,
+    "shifts": 1
+   },
+   "seed": 900025,
+   "seed_is_thesis_seed": false
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.9931990878600853,
+    "contribution_0_100": 99.31990878600853,
+    "mean": 0.9977057503878971,
+    "n": 5730,
+    "share": 0.9954829742876998
+   },
+   "Re_RPj": {
+    "contribution": 4.898583772801976e-05,
+    "contribution_0_100": 0.004898583772801976,
+    "mean": 0.010844710844710836,
+    "n": 26,
+    "share": 0.004517025712300208
+   },
+   "cf": 56,
+   "family": "R3",
+   "horizon_years": 20,
+   "hypothesis": "H2c",
+   "n_visible_rows": 5756,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "-",
+   "ret_excel": 0.9932480736978138,
+   "ret_excel_0_100": 99.32480736978138,
+   "rho": {
+    "buffer_hours": 504,
+    "shifts": 1
+   },
+   "seed": 900026,
+   "seed_is_thesis_seed": false
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.9934859111689871,
+    "contribution_0_100": 99.34859111689872,
+    "mean": 0.9979938751638202,
+    "n": 5730,
+    "share": 0.9954829742876998
+   },
+   "Re_RPj": {
+    "contribution": 6.342587996514328e-05,
+    "contribution_0_100": 0.006342587996514328,
+    "mean": 0.014041514041514028,
+    "n": 26,
+    "share": 0.004517025712300208
+   },
+   "cf": 57,
+   "family": "R3",
+   "horizon_years": 20,
+   "hypothesis": "H2c",
+   "n_visible_rows": 5756,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "-",
+   "ret_excel": 0.9935493370489529,
+   "ret_excel_0_100": 99.35493370489529,
+   "rho": {
+    "buffer_hours": 336,
+    "shifts": 1
+   },
+   "seed": 900027,
+   "seed_is_thesis_seed": false
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.9937803563294159,
+    "contribution_0_100": 99.37803563294159,
+    "mean": 0.9981154651949254,
+    "n": 5731,
+    "share": 0.9956567060458652
+   },
+   "Re_RPj": {
+    "contribution": 4.23838347215088e-05,
+    "contribution_0_100": 0.00423838347215088,
+    "mean": 0.009758454106280186,
+    "n": 25,
+    "share": 0.004343293954134816
+   },
+   "cf": 58,
+   "family": "R3",
+   "horizon_years": 20,
+   "hypothesis": "H2c",
+   "n_visible_rows": 5756,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "-",
+   "ret_excel": 0.9938227401641381,
+   "ret_excel_0_100": 99.3822740164138,
+   "rho": {
+    "buffer_hours": 336,
+    "shifts": 1
+   },
+   "seed": 900028,
+   "seed_is_thesis_seed": false
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.9885634481147995,
+    "contribution_0_100": 98.85634481147994,
+    "mean": 0.9975755973612879,
+    "n": 5704,
+    "share": 0.9909659485753995
+   },
+   "Re_RPj": {
+    "contribution": 9.67266160195651e-05,
+    "contribution_0_100": 0.009672661601956511,
+    "mean": 0.0107068923424734,
+    "n": 52,
+    "share": 0.009034051424600417
+   },
+   "cf": 59,
+   "family": "R3",
+   "horizon_years": 20,
+   "hypothesis": "H2c",
+   "n_visible_rows": 5756,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "+",
+   "ret_excel": 0.9886601747308198,
+   "ret_excel_0_100": 98.86601747308198,
+   "rho": {
+    "buffer_hours": 168,
+    "shifts": 1
+   },
+   "seed": 900029,
+   "seed_is_thesis_seed": false
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.9930759317102363,
+    "contribution_0_100": 99.30759317102364,
+    "mean": 0.9977561638897051,
+    "n": 5729,
+    "share": 0.9953092425295343
+   },
+   "Re_RPj": {
+    "contribution": 0.0001307203446585956,
+    "contribution_0_100": 0.01307203446585956,
+    "mean": 0.027867640883513938,
+    "n": 27,
+    "share": 0.004690757470465601
+   },
+   "cf": 60,
+   "family": "R3",
+   "horizon_years": 20,
+   "hypothesis": "H2c",
+   "n_visible_rows": 5756,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "-",
+   "ret_excel": 0.9932066520548961,
+   "ret_excel_0_100": 99.3206652054896,
+   "rho": {
+    "buffer_hours": 168,
+    "shifts": 1
+   },
+   "seed": 900030,
+   "seed_is_thesis_seed": false
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_RPj": {
+    "contribution": 0.009099431875920825,
+    "contribution_0_100": 0.9099431875920825,
+    "mean": 0.009099431875920825,
+    "n": 2845,
+    "share": 1.0
+   },
+   "cf": 61,
+   "family": "R1r",
+   "horizon_years": 10,
+   "hypothesis": "H3a",
+   "n_visible_rows": 2845,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "--++",
+   "ret_excel": 0.009099431875920617,
+   "ret_excel_0_100": 0.9099431875920617,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 2
+   },
+   "seed": 375,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_RPj": {
+    "contribution": 0.00815567858877739,
+    "contribution_0_100": 0.815567858877739,
+    "mean": 0.00815567858877739,
+    "n": 2743,
+    "share": 1.0
+   },
+   "cf": 62,
+   "family": "R1r",
+   "horizon_years": 10,
+   "hypothesis": "H3a",
+   "n_visible_rows": 2743,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "-+--",
+   "ret_excel": 0.00815567858877727,
+   "ret_excel_0_100": 0.815567858877727,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 1
+   },
+   "seed": 91,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_RPj": {
+    "contribution": 0.009092086235613302,
+    "contribution_0_100": 0.9092086235613303,
+    "mean": 0.009092086235613302,
+    "n": 2845,
+    "share": 1.0
+   },
+   "cf": 63,
+   "family": "R1r",
+   "horizon_years": 10,
+   "hypothesis": "H3a",
+   "n_visible_rows": 2845,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "+-++",
+   "ret_excel": 0.009092086235613096,
+   "ret_excel_0_100": 0.9092086235613096,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 3
+   },
+   "seed": 22,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_RPj": {
+    "contribution": 0.00912613061105776,
+    "contribution_0_100": 0.912613061105776,
+    "mean": 0.00912613061105776,
+    "n": 2845,
+    "share": 1.0
+   },
+   "cf": 64,
+   "family": "R1r",
+   "horizon_years": 10,
+   "hypothesis": "H3a",
+   "n_visible_rows": 2845,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "+++-",
+   "ret_excel": 0.009126130611057551,
+   "ret_excel_0_100": 0.9126130611057551,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 3
+   },
+   "seed": 4,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_RPj": {
+    "contribution": 0.008157041652080652,
+    "contribution_0_100": 0.8157041652080652,
+    "mean": 0.008157041652080652,
+    "n": 2712,
+    "share": 1.0
+   },
+   "cf": 65,
+   "family": "R1r",
+   "horizon_years": 10,
+   "hypothesis": "H3a",
+   "n_visible_rows": 2712,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "--+-",
+   "ret_excel": 0.008157041652080536,
+   "ret_excel_0_100": 0.8157041652080536,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 1
+   },
+   "seed": 77,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_RPj": {
+    "contribution": 0.009126993272242338,
+    "contribution_0_100": 0.9126993272242337,
+    "mean": 0.009126993272242338,
+    "n": 2845,
+    "share": 1.0
+   },
+   "cf": 66,
+   "family": "R1r",
+   "horizon_years": 10,
+   "hypothesis": "H3a",
+   "n_visible_rows": 2845,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "++-+",
+   "ret_excel": 0.009126993272242128,
+   "ret_excel_0_100": 0.9126993272242128,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 2
+   },
+   "seed": 206,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_RPj": {
+    "contribution": 0.00767822846348599,
+    "contribution_0_100": 0.767822846348599,
+    "mean": 0.00767822846348599,
+    "n": 2490,
+    "share": 1.0
+   },
+   "cf": 67,
+   "family": "R1r",
+   "horizon_years": 10,
+   "hypothesis": "H3a",
+   "n_visible_rows": 2490,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "+--+",
+   "ret_excel": 0.007678228463485877,
+   "ret_excel_0_100": 0.7678228463485877,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 1
+   },
+   "seed": 82,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_RPj": {
+    "contribution": 0.009112205859489401,
+    "contribution_0_100": 0.9112205859489402,
+    "mean": 0.009112205859489401,
+    "n": 2845,
+    "share": 1.0
+   },
+   "cf": 68,
+   "family": "R1r",
+   "horizon_years": 10,
+   "hypothesis": "H3a",
+   "n_visible_rows": 2845,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "+---",
+   "ret_excel": 0.009112205859489195,
+   "ret_excel_0_100": 0.9112205859489195,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 2
+   },
+   "seed": 33,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_RPj": {
+    "contribution": 0.009105757760391617,
+    "contribution_0_100": 0.9105757760391617,
+    "mean": 0.009105757760391617,
+    "n": 2845,
+    "share": 1.0
+   },
+   "cf": 69,
+   "family": "R1r",
+   "horizon_years": 10,
+   "hypothesis": "H3a",
+   "n_visible_rows": 2845,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "-+++",
+   "ret_excel": 0.009105757760391409,
+   "ret_excel_0_100": 0.9105757760391409,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 3
+   },
+   "seed": 827,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_RPj": {
+    "contribution": 0.009100183646103804,
+    "contribution_0_100": 0.9100183646103803,
+    "mean": 0.009100183646103804,
+    "n": 2845,
+    "share": 1.0
+   },
+   "cf": 70,
+   "family": "R1r",
+   "horizon_years": 10,
+   "hypothesis": "H3a",
+   "n_visible_rows": 2845,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "-+-+",
+   "ret_excel": 0.009100183646103597,
+   "ret_excel_0_100": 0.9100183646103597,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 3
+   },
+   "seed": 27,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.36441371678339407,
+    "contribution_0_100": 36.4413716783394,
+    "mean": 0.8063973823386157,
+    "n": 1104,
+    "share": 0.4519033974621367
+   },
+   "Re_RPj": {
+    "contribution": 0.004221888025056275,
+    "contribution_0_100": 0.42218880250562746,
+    "mean": 0.007702817360128811,
+    "n": 1339,
+    "share": 0.5480966025378633
+   },
+   "cf": 71,
+   "family": "R2r",
+   "horizon_years": 10,
+   "hypothesis": "H3b",
+   "n_visible_rows": 2443,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "+-++",
+   "ret_excel": 0.3686356048084504,
+   "ret_excel_0_100": 36.863560480845045,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 1
+   },
+   "seed": 21,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.7413125023816023,
+    "contribution_0_100": 74.13125023816023,
+    "mean": 0.9777626654036433,
+    "n": 2157,
+    "share": 0.7581722319859402
+   },
+   "Re_RPj": {
+    "contribution": 0.003326133542916307,
+    "contribution_0_100": 0.33261335429163075,
+    "mean": 0.01375414233953037,
+    "n": 688,
+    "share": 0.24182776801405975
+   },
+   "cf": 72,
+   "family": "R2r",
+   "horizon_years": 10,
+   "hypothesis": "H3b",
+   "n_visible_rows": 2845,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "+---",
+   "ret_excel": 0.7446386359245187,
+   "ret_excel_0_100": 74.46386359245187,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 3
+   },
+   "seed": 47,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.5702794248158871,
+    "contribution_0_100": 57.0279424815887,
+    "mean": 0.9709425275889878,
+    "n": 1671,
+    "share": 0.5873462214411248
+   },
+   "Re_RPj": {
+    "contribution": 0.004318740053765488,
+    "contribution_0_100": 0.4318740053765488,
+    "mean": 0.010465771254653164,
+    "n": 1174,
+    "share": 0.4126537785588752
+   },
+   "cf": 73,
+   "family": "R2r",
+   "horizon_years": 10,
+   "hypothesis": "H3b",
+   "n_visible_rows": 2845,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "++-+",
+   "ret_excel": 0.5745981648696522,
+   "ret_excel_0_100": 57.459816486965224,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 2
+   },
+   "seed": 101,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.5237014922024802,
+    "contribution_0_100": 52.370149220248024,
+    "mean": 0.9398391349153625,
+    "n": 1558,
+    "share": 0.5572246065808297
+   },
+   "Re_RPj": {
+    "contribution": 0.005367117938803839,
+    "contribution_0_100": 0.5367117938803838,
+    "mean": 0.012121536152581207,
+    "n": 1238,
+    "share": 0.4427753934191702
+   },
+   "cf": 74,
+   "family": "R2r",
+   "horizon_years": 10,
+   "hypothesis": "H3b",
+   "n_visible_rows": 2796,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "+++-",
+   "ret_excel": 0.5290686101412839,
+   "ret_excel_0_100": 52.906861014128395,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 3
+   },
+   "seed": 28,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.4810358053078917,
+    "contribution_0_100": 48.10358053078917,
+    "mean": 0.9106788963734872,
+    "n": 1404,
+    "share": 0.5282167042889391
+   },
+   "Re_RPj": {
+    "contribution": 0.0042034413293853806,
+    "contribution_0_100": 0.420344132938538,
+    "mean": 0.008909686645539348,
+    "n": 1254,
+    "share": 0.4717832957110609
+   },
+   "cf": 75,
+   "family": "R2r",
+   "horizon_years": 10,
+   "hypothesis": "H3b",
+   "n_visible_rows": 2658,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "--++",
+   "ret_excel": 0.48523924663727797,
+   "ret_excel_0_100": 48.5239246637278,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 2
+   },
+   "seed": 10,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.765043183297593,
+    "contribution_0_100": 76.5043183297593,
+    "mean": 0.9839728103443274,
+    "n": 2212,
+    "share": 0.7775043936731107
+   },
+   "Re_RPj": {
+    "contribution": 0.0033398218671621795,
+    "contribution_0_100": 0.333982186716218,
+    "mean": 0.015010731772632544,
+    "n": 633,
+    "share": 0.22249560632688928
+   },
+   "cf": 76,
+   "family": "R2r",
+   "horizon_years": 10,
+   "hypothesis": "H3b",
+   "n_visible_rows": 2845,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "-+--",
+   "ret_excel": 0.7683830051647557,
+   "ret_excel_0_100": 76.83830051647557,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 3
+   },
+   "seed": 11,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.6128913791372924,
+    "contribution_0_100": 61.28913791372924,
+    "mean": 0.9645225196068588,
+    "n": 1804,
+    "share": 0.6354350123282846
+   },
+   "Re_RPj": {
+    "contribution": 0.004282482922903829,
+    "contribution_0_100": 0.42824829229038286,
+    "mean": 0.011746829969201903,
+    "n": 1035,
+    "share": 0.3645649876717154
+   },
+   "cf": 77,
+   "family": "R2r",
+   "horizon_years": 10,
+   "hypothesis": "H3b",
+   "n_visible_rows": 2839,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "-++-",
+   "ret_excel": 0.6171738620601959,
+   "ret_excel_0_100": 61.71738620601958,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 2
+   },
+   "seed": 96,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.5790452983899315,
+    "contribution_0_100": 57.90452983899314,
+    "mean": 0.9116374325891069,
+    "n": 1694,
+    "share": 0.6351706036745407
+   },
+   "Re_RPj": {
+    "contribution": 0.004293125338790799,
+    "contribution_0_100": 0.4293125338790799,
+    "mean": 0.011767487439419386,
+    "n": 973,
+    "share": 0.3648293963254593
+   },
+   "cf": 78,
+   "family": "R2r",
+   "horizon_years": 10,
+   "hypothesis": "H3b",
+   "n_visible_rows": 2667,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "--+-",
+   "ret_excel": 0.5833384237287211,
+   "ret_excel_0_100": 58.33384237287211,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 1
+   },
+   "seed": 498,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.6231965622450101,
+    "contribution_0_100": 62.31965622450101,
+    "mean": 0.9716946398162327,
+    "n": 1824,
+    "share": 0.6413502109704642
+   },
+   "Re_RPj": {
+    "contribution": 0.0042496717672259425,
+    "contribution_0_100": 0.42496717672259426,
+    "mean": 0.011849084809794687,
+    "n": 1020,
+    "share": 0.35864978902953587
+   },
+   "cf": 79,
+   "family": "R2r",
+   "horizon_years": 10,
+   "hypothesis": "H3b",
+   "n_visible_rows": 2844,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "-+-+",
+   "ret_excel": 0.6274462340122348,
+   "ret_excel_0_100": 62.74462340122348,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 2
+   },
+   "seed": 95,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 1,
+    "share": 0.00040404040404040404
+   },
+   "Re_FRt": {
+    "contribution": 0.3840804331545397,
+    "contribution_0_100": 38.40804331545397,
+    "mean": 0.836058990375977,
+    "n": 1137,
+    "share": 0.4593939393939394
+   },
+   "Re_RPj": {
+    "contribution": 0.00494602002289386,
+    "contribution_0_100": 0.49460200228938594,
+    "mean": 0.009155871022185716,
+    "n": 1337,
+    "share": 0.5402020202020202
+   },
+   "cf": 80,
+   "family": "R2r",
+   "horizon_years": 10,
+   "hypothesis": "H3b",
+   "n_visible_rows": 2475,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "++++",
+   "ret_excel": 0.3890264531774338,
+   "ret_excel_0_100": 38.90264531774338,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 1
+   },
+   "seed": 85,
+   "seed_is_thesis_seed": true
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.9703944447793206,
+    "contribution_0_100": 97.03944447793205,
+    "mean": 0.9763645283734982,
+    "n": 5689,
+    "share": 0.993885394828791
+   },
+   "Re_RPj": {
+    "contribution": 9.797169357686558e-05,
+    "contribution_0_100": 0.009797169357686557,
+    "mean": 0.0160225706866851,
+    "n": 35,
+    "share": 0.006114605171208945
+   },
+   "cf": 81,
+   "family": "R3",
+   "horizon_years": 20,
+   "hypothesis": "H3c",
+   "n_visible_rows": 5724,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "-",
+   "ret_excel": 0.9704924164728963,
+   "ret_excel_0_100": 97.04924164728963,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 1
+   },
+   "seed": 900021,
+   "seed_is_thesis_seed": false
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.9808095008954042,
+    "contribution_0_100": 98.08095008954041,
+    "mean": 0.9899743287422759,
+    "n": 5672,
+    "share": 0.9907423580786027
+   },
+   "Re_RPj": {
+    "contribution": 0.0001119068946579864,
+    "contribution_0_100": 0.01119068946579864,
+    "mean": 0.012088056073905134,
+    "n": 53,
+    "share": 0.00925764192139738
+   },
+   "cf": 82,
+   "family": "R3",
+   "horizon_years": 20,
+   "hypothesis": "H3c",
+   "n_visible_rows": 5725,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "+",
+   "ret_excel": 0.980921407790063,
+   "ret_excel_0_100": 98.0921407790063,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 3
+   },
+   "seed": 900022,
+   "seed_is_thesis_seed": false
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.9818048374345771,
+    "contribution_0_100": 98.18048374345771,
+    "mean": 0.9906296606120821,
+    "n": 5674,
+    "share": 0.9910917030567685
+   },
+   "Re_RPj": {
+    "contribution": 9.426769252096757e-05,
+    "contribution_0_100": 0.009426769252096758,
+    "mean": 0.010582010582010576,
+    "n": 51,
+    "share": 0.00890829694323144
+   },
+   "cf": 83,
+   "family": "R3",
+   "horizon_years": 20,
+   "hypothesis": "H3c",
+   "n_visible_rows": 5725,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "+",
+   "ret_excel": 0.981899105127099,
+   "ret_excel_0_100": 98.1899105127099,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 2
+   },
+   "seed": 900023,
+   "seed_is_thesis_seed": false
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.9837776004220807,
+    "contribution_0_100": 98.37776004220808,
+    "mean": 0.9905252835765762,
+    "n": 5686,
+    "share": 0.9931877729257642
+   },
+   "Re_RPj": {
+    "contribution": 0.00016013592239418842,
+    "contribution_0_100": 0.016013592239418842,
+    "mean": 0.023507132197608426,
+    "n": 39,
+    "share": 0.006812227074235808
+   },
+   "cf": 84,
+   "family": "R3",
+   "horizon_years": 20,
+   "hypothesis": "H3c",
+   "n_visible_rows": 5725,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "+",
+   "ret_excel": 0.9839377363444758,
+   "ret_excel_0_100": 98.39377363444758,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 3
+   },
+   "seed": 900024,
+   "seed_is_thesis_seed": false
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.9813767728570026,
+    "contribution_0_100": 98.13767728570026,
+    "mean": 0.9903722941312075,
+    "n": 5673,
+    "share": 0.9909170305676855
+   },
+   "Re_RPj": {
+    "contribution": 8.936910398843178e-05,
+    "contribution_0_100": 0.008936910398843178,
+    "mean": 0.009839194621803308,
+    "n": 52,
+    "share": 0.00908296943231441
+   },
+   "cf": 85,
+   "family": "R3",
+   "horizon_years": 20,
+   "hypothesis": "H3c",
+   "n_visible_rows": 5725,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "+",
+   "ret_excel": 0.981466141960992,
+   "ret_excel_0_100": 98.14661419609921,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 2
+   },
+   "seed": 900025,
+   "seed_is_thesis_seed": false
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.9861111773262599,
+    "contribution_0_100": 98.61111773262598,
+    "mean": 0.9906100175807752,
+    "n": 5699,
+    "share": 0.9954585152838428
+   },
+   "Re_RPj": {
+    "contribution": 4.9251088552398555e-05,
+    "contribution_0_100": 0.004925108855239856,
+    "mean": 0.010844710844710836,
+    "n": 26,
+    "share": 0.004541484716157205
+   },
+   "cf": 86,
+   "family": "R3",
+   "horizon_years": 20,
+   "hypothesis": "H3c",
+   "n_visible_rows": 5725,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "-",
+   "ret_excel": 0.9861604284148129,
+   "ret_excel_0_100": 98.61604284148129,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 3
+   },
+   "seed": 900026,
+   "seed_is_thesis_seed": false
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.9861644073789382,
+    "contribution_0_100": 98.61644073789381,
+    "mean": 0.9906634904798072,
+    "n": 5699,
+    "share": 0.9954585152838428
+   },
+   "Re_RPj": {
+    "contribution": 6.376932141124275e-05,
+    "contribution_0_100": 0.006376932141124274,
+    "mean": 0.014041514041514028,
+    "n": 26,
+    "share": 0.004541484716157205
+   },
+   "cf": 87,
+   "family": "R3",
+   "horizon_years": 20,
+   "hypothesis": "H3c",
+   "n_visible_rows": 5725,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "-",
+   "ret_excel": 0.98622817670035,
+   "ret_excel_0_100": 98.622817670035,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 2
+   },
+   "seed": 900027,
+   "seed_is_thesis_seed": false
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.9678120325421419,
+    "contribution_0_100": 96.78120325421419,
+    "mean": 0.9753091680054965,
+    "n": 5680,
+    "share": 0.9923130677847659
+   },
+   "Re_RPj": {
+    "contribution": 1.0795984673723893e-05,
+    "contribution_0_100": 0.0010795984673723892,
+    "mean": 0.0014044594607362628,
+    "n": 44,
+    "share": 0.007686932215234102
+   },
+   "cf": 88,
+   "family": "R3",
+   "horizon_years": 20,
+   "hypothesis": "H3c",
+   "n_visible_rows": 5724,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "-",
+   "ret_excel": 0.9678228285268158,
+   "ret_excel_0_100": 96.78228285268158,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 1
+   },
+   "seed": 900028,
+   "seed_is_thesis_seed": false
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.9816017568186655,
+    "contribution_0_100": 98.16017568186655,
+    "mean": 0.9905993403467055,
+    "n": 5673,
+    "share": 0.9909170305676855
+   },
+   "Re_RPj": {
+    "contribution": 9.725037586176712e-05,
+    "contribution_0_100": 0.00972503758617671,
+    "mean": 0.0107068923424734,
+    "n": 52,
+    "share": 0.00908296943231441
+   },
+   "cf": 89,
+   "family": "R3",
+   "horizon_years": 20,
+   "hypothesis": "H3c",
+   "n_visible_rows": 5725,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "+",
+   "ret_excel": 0.9816990071945281,
+   "ret_excel_0_100": 98.16990071945281,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 2
+   },
+   "seed": 900029,
+   "seed_is_thesis_seed": false
+  },
+  {
+   "Re_APj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_DPj_RPj": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "Re_FRt": {
+    "contribution": 0.9754023940991815,
+    "contribution_0_100": 97.54023940991816,
+    "mean": 0.9800251542607891,
+    "n": 5697,
+    "share": 0.9952830188679245
+   },
+   "Re_RPj": {
+    "contribution": 0.00013145113624299026,
+    "contribution_0_100": 0.013145113624299027,
+    "mean": 0.027867640883513938,
+    "n": 27,
+    "share": 0.0047169811320754715
+   },
+   "cf": 90,
+   "family": "R3",
+   "horizon_years": 20,
+   "hypothesis": "H3c",
+   "n_visible_rows": 5724,
+   "not_in_his_ReT_unfulfilled": {
+    "contribution": 0.0,
+    "contribution_0_100": 0.0,
+    "mean": 0.0,
+    "n": 0,
+    "share": 0.0
+   },
+   "pattern": "-",
+   "ret_excel": 0.9755338452354263,
+   "ret_excel_0_100": 97.55338452354263,
+   "rho": {
+    "buffer_hours": 0,
+    "shifts": 1
+   },
+   "seed": 900030,
+   "seed_is_thesis_seed": false
+  }
+ ],
+ "schema_version": "garrido_drivers_per_configuration_v1",
+ "self_sha256": "6256f5d701fb745f7bfc79b107efdf660357b90fe9b25a91480feecee11c2643"
+}
