@@ -130,3 +130,42 @@ def test_seed_none_is_not_a_constant_stream():
     b = MFSCSimulation(seed=0, deterministic_baseline=True).fulfillment_rng.random()
     c = MFSCSimulation(seed=None, deterministic_baseline=True).fulfillment_rng.random()
     assert a != b and a != c
+
+
+def test_apj_overlap_union_is_inert_on_the_shipped_default():
+    """Algorithm 1's overlap subtraction must not move the shipped lane.
+
+    `total_disruption_hours` feeds only `APj` and the `disruption` RPj branch. Under the
+    shipped defaults autotomy is unreachable (CTj = 54 > LT = 48) and the mode is
+    `elapsed`, so the union changes nothing -- while the `disruption` lane, which does
+    consume it, must change and must reproduce under `apj_overlap_mode="sum"`.
+    """
+    for family in FAMILIES:
+        base = _digest(_run(family, 2_700_001))
+        assert _digest(_run(family, 2_700_001, apj_overlap_mode="union")) == base
+        assert _digest(_run(family, 2_700_001, apj_overlap_mode="sum")) == base
+
+
+def test_union_removes_the_impossible_apj():
+    """`APj > CTj` is physically impossible and the additive form produced it.
+
+    With the LTj cap removed, the shipped `+=` accumulation billed simultaneous risks
+    twice and 145 of 597 orders came out with an autonomy period longer than the cycle
+    that contains it. Algorithm 1 subtracts the overlaps, so the union cannot.
+    """
+    long_h = 26 * HOURS_PER_WEEK
+    counts = {}
+    for mode in ("sum", "union"):
+        bad = 0
+        for family in FAMILIES:
+            sim = _run(family, 2_700_001, horizon=long_h,
+                       fulfillment_transit_mode="freight_waves",
+                       autotomy_apj_cap="none", apj_overlap_mode=mode)
+            for o in sim.orders:
+                if o.CTj is None:
+                    continue
+                if float(getattr(o, "APj", 0.0) or 0.0) > float(o.CTj) + 1e-9:
+                    bad += 1
+        counts[mode] = bad
+    assert counts["union"] == 0
+    assert counts["sum"] > 0, "the additive form must still exhibit the defect it had"

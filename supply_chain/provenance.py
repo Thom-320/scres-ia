@@ -88,6 +88,9 @@ def calibration_stamp(**extra: Any) -> dict[str, Any]:
         "procurement_delay_accumulation": "serial",
         "rpj_onset_admission": "clamped",
         "autotomy_predicate": "le",
+        "autotomy_apj_cap": "lt",
+        "apj_overlap_mode": "union",
+        "fulfillment_transit_mode": "constant",
         "fulfillment_delay_distribution": "constant",
         "calibration_line": (
             "historical"
@@ -109,7 +112,8 @@ def assert_same_calibration(*stamps: dict[str, Any]) -> None:
     """Refuse to compare artifacts from different calibration lines."""
     keys = ("fulfilment_delay_hours", "lead_time_promise_hours",
             "ret_recovery_period_mode", "procurement_delay_accumulation",
-            "rpj_onset_admission", "autotomy_predicate",
+            "rpj_onset_admission", "autotomy_predicate", "autotomy_apj_cap",
+            "apj_overlap_mode", "fulfillment_transit_mode",
             "fulfillment_delay_distribution")
     seen = {tuple(s.get(k) for k in keys) for s in stamps}
     if len(seen) > 1:

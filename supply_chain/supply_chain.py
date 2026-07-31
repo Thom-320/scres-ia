@@ -231,6 +231,7 @@ class MFSCSimulation:
         rpj_onset_admission: str = "clamped",
         autotomy_predicate: str = "le",
         autotomy_apj_cap: str = "lt",
+        apj_overlap_mode: str = "union",
         fulfillment_transit_mode: str = "constant",
         fulfillment_delay_distribution: str = "constant",
         fulfillment_delay_params: Optional[dict] = None,
@@ -686,6 +687,17 @@ class MFSCSimulation:
             raise ValueError("autotomy_apj_cap must be 'lt' or 'none', "
                              f"got {autotomy_apj_cap!r}")
         self.autotomy_apj_cap = str(autotomy_apj_cap)
+        # Algorithm 1 (p.68) line 3: APj = sum(Rcr) - sum(R1r n ... n Rc4), i.e. the
+        # MEASURE OF THE UNION of the risk-impact intervals, not their sum. The shipped
+        # code accumulated with += at six sites and never subtracted overlaps, so two
+        # risks down at once were billed twice. The min(total, LTj) cap masked it; with
+        # the cap off, 1,716 orders came out with APj > CTj, which is impossible
+        # (docs/RESULTADO_DELAY_FISICO_2026-07-31.md). "sum" retains the old arithmetic
+        # for reproducing runs frozen under it.
+        if apj_overlap_mode not in ("union", "sum"):
+            raise ValueError("apj_overlap_mode must be 'union' or 'sum', "
+                             f"got {apj_overlap_mode!r}")
+        self.apj_overlap_mode = str(apj_overlap_mode)
         # Thesis 6.3: Op10 PT 24 h, Op11 PT 0 ("nuisance factor"), Op12 PT 24 h, each
         # dispatching "at a daily freight rate (ROP = 24 hours)" -- and 24+0+24 = 48 = LT,
         # which 6.8.2 confirms. "freight_waves" makes the order WAIT for the next real
@@ -5946,6 +5958,10 @@ class MFSCSimulation:
             return
 
         total_disruption_hours = 0.0
+        # Every risk-impact interval clipped to this order's window. Their UNION is
+        # Algorithm 1's `sum(Rcr) - sum(overlaps)`; the running sum above is kept so
+        # `apj_overlap_mode="sum"` reproduces frozen runs bit for bit.
+        disruption_intervals: list[tuple[float, float]] = []
         earliest_risk_start = float("inf")
         # Every candidate R^0 onset, kept alongside `earliest_risk_start` so the
         # clamped arm stays bitwise identical. Algorithm 2 (p.69) admits only
@@ -5991,6 +6007,8 @@ class MFSCSimulation:
                         continue
                     seen_pairs.add(pair)
                     total_disruption_hours += float(contribution)
+                    disruption_intervals.append(
+                        (float(block["start_time"]), float(block["end_time"])))
                     mark_event(event, float(contribution))
 
             # R24 propagates through explicit queue precedence ids, never a
@@ -6010,6 +6028,8 @@ class MFSCSimulation:
                     ),
                 )
                 total_disruption_hours += contribution
+                _s = max(float(order.OPTj), float(event.start_time))
+                disruption_intervals.append((_s, _s + float(contribution)))
                 mark_event(event, contribution)
         else:
             for event in self.risk_events:
@@ -6023,6 +6043,7 @@ class MFSCSimulation:
                 if raw_start < raw_end:
                     overlap = raw_end - raw_start
                     total_disruption_hours += overlap
+                    disruption_intervals.append((raw_start, raw_end))
                     mark_event(event, overlap)
 
             # Legacy ongoing-disruption attribution remains bitwise isolated.
@@ -6036,6 +6057,8 @@ class MFSCSimulation:
                     overlap_end = order.OATj
                     if overlap_start < overlap_end:
                         total_disruption_hours += overlap_end - overlap_start
+                        disruption_intervals.append(
+                            (float(overlap_start), float(overlap_end)))
                         key = f"ongoing_op{op_id}"
                         order.ret_risk_indicators[key] = (
                             order.ret_risk_indicators.get(key, 0.0)
@@ -6055,6 +6078,8 @@ class MFSCSimulation:
                         else float(order.OPTj))
             earliest_risk_start = min(earliest_risk_start, _q_onset)
             risk_onsets.append(_q_onset)
+            disruption_intervals.append(
+                (_q_onset, _q_onset + float(quantity_risk_hours)))
 
         # R24 is a point event that materializes as a contingent-demand order.
         # If the event happened before OPTj, pure time-overlap attribution misses
@@ -6081,6 +6106,26 @@ class MFSCSimulation:
             )
             earliest_risk_start = min(earliest_risk_start, float(order.OPTj))
             risk_onsets.append(float(order.OPTj))
+
+        if self.apj_overlap_mode == "union" and disruption_intervals:
+            # Algorithm 1 (p.68): sum(Rcr) - sum(overlaps) IS the measure of the union.
+            # Clip to the order window so no term can exceed CTj, which the additive
+            # form violated for 1,716 orders once the LTj cap was removed.
+            lo, hi = float(order.OPTj), float(order.OATj)
+            clipped = sorted((max(a, lo), min(b, hi))
+                             for a, b in disruption_intervals if min(b, hi) > max(a, lo))
+            union = 0.0
+            cur_a, cur_b = None, None
+            for a, b in clipped:
+                if cur_b is None or a > cur_b:
+                    if cur_b is not None:
+                        union += cur_b - cur_a
+                    cur_a, cur_b = a, b
+                else:
+                    cur_b = max(cur_b, b)
+            if cur_b is not None:
+                union += cur_b - cur_a
+            total_disruption_hours = union
 
         if not order.ret_risk_indicators:
             return  # No disruption: fill_rate case
