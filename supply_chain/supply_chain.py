@@ -234,6 +234,7 @@ class MFSCSimulation:
         apj_overlap_mode: str = "union",
         fulfillment_shift_mode: str = "continuous",
         fulfillment_capacity_mode: str = "unlimited",
+        fulfillment_delta_mode: str = "off",
         fulfillment_transit_mode: str = "constant",
         fulfillment_delay_distribution: str = "constant",
         fulfillment_delay_params: Optional[dict] = None,
@@ -715,6 +716,15 @@ class MFSCSimulation:
                              f"'daily_freight', got {fulfillment_capacity_mode!r}")
         self.fulfillment_shift_mode = str(fulfillment_shift_mode)
         self.fulfillment_capacity_mode = str(fulfillment_capacity_mode)
+        # delta, the intra-day offset of CTj = 48 + k*24 + delta. Established as an
+        # ASSUMPTION, not a mechanism: eight endogenous candidates were measured and
+        # refuted (docs/PREREGISTRO_DELTA_SUPUESTO_2026-07-31.md section 1). The
+        # support is HOURS_PER_SHIFT at S = 1, so there is no free parameter. Scoring
+        # an arm on delta itself is forbidden -- it reproduces U(0,8) by construction.
+        if fulfillment_delta_mode not in ("off", "shift_uniform"):
+            raise ValueError("fulfillment_delta_mode must be 'off' or "
+                             f"'shift_uniform', got {fulfillment_delta_mode!r}")
+        self.fulfillment_delta_mode = str(fulfillment_delta_mode)
         # Handover ledger: day index -> (hours already consumed in that shift,
         # rations already dispatched on that day's freight).
         self._shift_day_used: dict[int, float] = {}
@@ -2691,6 +2701,9 @@ class MFSCSimulation:
             transit = self._draw_fulfillment_delay()
         else:
             transit = float(self.demand_on_hand_fulfillment_delay)
+        if self.fulfillment_delta_mode == "shift_uniform":
+            # Drawn ONLY in this mode, so the shipped arm never touches the stream.
+            transit += float(self.fulfillment_rng.uniform(0.0, HOURS_PER_SHIFT))
         remaining_delay = max(
             0.0,
             transit - max(0.0, float(self.env.now) - float(order.OPTj)),
