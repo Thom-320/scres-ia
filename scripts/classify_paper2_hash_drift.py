@@ -114,8 +114,25 @@ def classify(relative: str, pin: str) -> dict:
             "current_content_from": (current_at[0] if current_at else "working tree only"),
             "equivalence_evidence": equivalence,
         }
+    if pin in _own_reattestation_hashes() and current_at:
+        # The pin is a value THIS session's re-attestation wrote for a file that was still
+        # uncommitted, so it names a working-tree state that never became a commit. The
+        # target's current content IS in history, so the chain is still auditable end to end;
+        # what is stale is our own intermediate write, not the evidence.
+        return {"cause": "restated_after_own_reattestation", "current_sha256": current,
+                "current_content_from": current_at[0],
+                "detail": ("pin was written by hash_pin_reattestation_20260731.json for an "
+                           "uncommitted state; restated to the committed content")}
     return {"cause": "UNEXPLAINED", "current_sha256": current,
             "detail": "the pinned hash matches no version of this file in git history"}
+
+
+def _own_reattestation_hashes() -> set[str]:
+    record = SEARCH / "hash_pin_reattestation_20260731.json"
+    if not record.is_file():
+        return set()
+    blob = json.loads(record.read_text())
+    return {row["pin_after"] for row in blob.get("repinned", []) if row.get("pin_after")}
 
 
 def pins() -> dict[str, dict[str, str]]:

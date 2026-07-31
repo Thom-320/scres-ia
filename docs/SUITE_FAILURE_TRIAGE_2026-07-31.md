@@ -11,11 +11,11 @@ avisando de algo que nadie atendió.
 | # | causa raíz | tests | desde | veredicto |
 |---|---|---:|---|---|
 | A | guardia de completitud de Markov: campos del simulador sin clasificar | **15** | 2026-07-16 | **ARREGLADO** ✅ |
-| B | atestaciones congeladas por hash contra fuentes que cambiaron | **7** | 2026-07-15/17 | **6 ARREGLADOS ✅ · 1 bloqueado en el usuario** |
-| C | rutas absolutas del usuario en archivos versionados | 1 | 2026-06-27 | higiene, sedimentada |
+| B | atestaciones congeladas por hash contra fuentes que cambiaron | **7** | 2026-07-15/17 | **ARREGLADOS** ✅ |
+| C | rutas absolutas del usuario en archivos versionados | 1 | 2026-06-27 | **ARREGLADO** ✅ |
 | D | custodia de semillas de Program Q: falso positivo | 1 | 2026-07-29 | **ARREGLADO** ✅ |
 | E | expectativas de test obsoletas frente a la deriva del entorno | 2 | 2026-07-01 | **ARREGLADO** ✅ |
-| F | transductor de Program S inexacto | 1 | 2026-07-18 | **invalidación ya registrada, peor** |
+| F | transductor de Program S inexacto | 1 | 2026-07-18 | **ARREGLADO** ✅ (el test ahora afirma la invalidación) |
 
 ---
 
@@ -309,3 +309,40 @@ exactamente tres, y ninguno es un defecto que yo pueda cerrar solo:
    re-hash.
 3. **A** (15): clasificar los 29 campos. Es el que más trabajo pide y el que más protege.
 4. **C** (1): higiene; obligatorio antes del bundle de replicación de Submission A.
+
+---
+
+## Cierre — 2026-07-31: `1.253 passed, 0 failed`
+
+Los 27 están cerrados. Los tres últimos, y por qué ninguno se cerró re-hasheando:
+
+**El PDF externo (residuo de B).** El PI aportó el archivo: está **byte a byte idéntico**
+(`3e3bc8f8…`) en dos rutas de su Drive. Nunca cambió — se renombró la carpeta
+`20_RESEARCH` → `01_RESEARCH`, y el manifiesto fijaba la **ruta**. Una fuente movida se leyó
+como una fuente corrupta durante semanas.
+
+Arreglo: `scripts/external_sources.py` identifica las ocho fuentes primarias **por contenido**
+(nombre + sha256), resolviéndolas vía `$SCRES_EXTERNAL_SOURCES` o rutas relativas al `$HOME`,
+y devuelve tres estados. La distinción es el punto: `verified`, `mismatch` (falla) y
+**`unavailable`, que no es aprobar ni fallar: es no verificado**. Un chequeo que convierte «no
+pude mirar» en «miré y estaba bien» es justo el modo de fallo que este proyecto lleva toda la
+semana encontrándose. Las ocho verifican en 1,4 s.
+
+**C, y no era mecánico.** De los 61 archivos, **11 son artefactos sellados** cuyo
+`self_sha256` cubre sus propios bytes: «arreglarlos» habría roto el sello, y reescribir un
+registro de custodia para que parezca portable es falsificarlo para complacer a un linter. Un
+artefacto sellado **registra la máquina en la que corrió**: eso es procedencia, no un defecto.
+
+Así que la guardia se **acotó con criterio**, no se relajó: es estricta sobre lo que un
+replicador **ejecuta** —todo `.py`, `.toml`, `.yaml`, `.yml` y `.md` versionado, ahora limpio,
+con 10 archivos de código corregidos y las rutas absolutas sustituidas por
+`Path(__file__)`/el resolutor— y la evidencia queda sujeta a una regla **más** dura: no se
+edita.
+
+**F, Program S.** El test afirmaba `pass is True` y `error == 0.0` sobre un instrumento
+**invalidado el 2026-07-18 precisamente por inexacto**: la suite contradecía a la ciencia, y
+que pasara habría significado que la invalidación estaba mal. Ahora afirma **el estado
+registrado**, con la cota por arriba *y por abajo*: si empeora falla, y si algún día se vuelve
+exacto **también falla**, obligando a reabrir el veredicto en vez de dejar que la invalidación
+sobreviva a su causa. La cifra en acta (`1,36e-05`) queda corregida a la medida real
+(`4,6e-02`).

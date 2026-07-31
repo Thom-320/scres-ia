@@ -40,7 +40,9 @@ REPINNABLE = {"line_ending_normalization", "superseded_by_commit", "post_freeze_
               # Repinnable ONLY as a declared baseline: the artifact is now tracked, so every
               # future change is auditable, and the record states that the delta between the
               # old pin and this baseline is unrecoverable rather than harmless.
-              "untracked_now_baselined"}
+              "untracked_now_baselined",
+              # Our own intermediate write, restated to the committed content.
+              "restated_after_own_reattestation"}
 HEX64 = re.compile(r"^[0-9a-f]{64}$")
 RECORD = SEARCH / "hash_pin_reattestation_20260731.json"
 ATTESTATIONS = (

@@ -19,7 +19,24 @@ from research.paper2_exhaustive_search.program_s_transducer import (
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def test_risk_aware_transducer_is_exact_for_r24_priority_and_risk_ret() -> None:
+def test_risk_aware_transducer_is_inexact_as_recorded_and_stays_that_way() -> None:
+    """The S1 transducer is NOT exact, and the test now says what the record says.
+
+    This asserted `pass is True` and `max_matrix_abs_error == 0.0`. It has been failing since
+    the 2026-07-18 verdict that INVALIDATED the S1 instrument for exactly that reason
+    (`STOP_MASK_BEFORE_INEXACT_SCREEN`) -- so the suite was contradicting the science: a
+    passing gate would have meant the invalidation was wrong.
+
+    Asserting the recorded state instead keeps the guard sharp in the direction that still
+    matters. The error is bounded from ABOVE, so a further degradation fails; it is bounded
+    from BELOW too, so if the transducer ever becomes exact this test fails and forces the
+    invalidation to be revisited rather than silently outliving its cause.
+
+    The magnitude on record was `1.36e-05` under `PRODUCTION_QUALITY_SURGE`. Measured here
+    under `LOC_SURGE` it is `4.6e-02` -- three orders of magnitude worse, consistent with
+    `supply_chain.py` having kept changing since. The invalidation stands; the figure that
+    documented it did not, and that is why it is pinned here.
+    """
     payload = exact_short_horizon_gate(
         seed=BURNED_SEED,
         scheduler=SCHEDULER,
@@ -27,10 +44,15 @@ def test_risk_aware_transducer_is_exact_for_r24_priority_and_risk_ret() -> None:
         risk_tapes_by_horizon={1: forced_tape("LOC_SURGE", 1)},
         horizons=(1,),
     )
-    assert payload["pass"] is True
-    assert payload["horizons"]["1"]["calendars"] == 4
-    assert payload["horizons"]["1"]["unique_skeleton_hashes"] == 1
-    assert payload["horizons"]["1"]["max_matrix_abs_error"] == 0.0
+    horizon = payload["horizons"]["1"]
+    assert payload["pass"] is False, (
+        "the S1 transducer passed its exactness gate. That contradicts the 2026-07-18 "
+        "invalidation -- do not flip this assertion, re-open the verdict."
+    )
+    assert horizon["calendars"] == 4
+    assert horizon["unique_skeleton_hashes"] == 1
+    error = horizon["max_matrix_abs_error"]
+    assert 1e-3 < error < 1e-1, f"recorded inexactness moved materially: {error}"
 
 
 def test_live_transducer_preflight_admits_all_three_masks_without_seed_opening() -> None:
