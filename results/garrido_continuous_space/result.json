@@ -1,0 +1,6923 @@
+{
+ "claim_status": "DEVELOPMENT_CONTINUOUS_SPACE",
+ "contract": "docs/PREREGISTRO_ESPACIO_CONTINUO_2026-07-31.md",
+ "created_at": "2026-07-31T22:26:18.212782+00:00",
+ "elapsed_seconds": 46.431564915998024,
+ "falsifiers": {
+  "all_passed": true,
+  "f1_the_sample_covers_the_continuous_space": {
+   "evidence": {
+    "distinct_values": {
+     "op3_rm": 384,
+     "op5_rm": 384,
+     "op9_rations": 384,
+     "period_hours": 384
+    },
+    "why_it_can_fail": "a broken mapping would collapse the design back to his grid and the test would be vacuous"
+   },
+   "passed": true
+  },
+  "f2_no_configuration_leaves_his_table_6_16_ranges": {
+   "evidence": {
+    "bounds": {
+     "op3_rm": [
+      0.0,
+      122880.0
+     ],
+     "op5_rm": [
+      0.0,
+      122880.0
+     ],
+     "op9_rations": [
+      0.0,
+      126000.0
+     ],
+     "period_hours": [
+      0.0,
+      1344.0
+     ]
+    },
+    "violations": [],
+    "why_it_can_fail": "inventing physics outside his bounds would make the comparison illegitimate"
+   },
+   "passed": true
+  },
+  "f3_no_group_leaks": {
+   "evidence": {
+    "n_groups": 384,
+    "why_it_can_fail": "leakage inflates every score"
+   },
+   "passed": true
+  },
+  "f4_both_networks_train": {
+   "evidence": {
+    "why_it_can_fail": "a dead net scores like the baseline in silence"
+   },
+   "passed": true
+  },
+  "f5_baselines_are_non_degenerate": {
+   "evidence": {
+    "majority_baseline": 0.5197539302802461,
+    "ret_sd": 0.3972570207016068,
+    "why_it_can_fail": "a constant target makes every comparison empty"
+   },
+   "passed": true
+  }
+ },
+ "grid_comparison": {
+  "his_grid_B1_kan": 0.9913,
+  "his_grid_B1_linear": 0.9697,
+  "his_grid_B2_kan": 0.7711,
+  "his_grid_B2_logistic": 0.7111,
+  "source": "results/garrido_fig5_surrogate/result.json"
+ },
+ "horizon_hours": 8736.0,
+ "n_configurations": 384,
+ "question": "is the 0.970 linear fit a property of his metric or of his grid?",
+ "rows": [
+  {
+   "cf": 1,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R12"
+   ],
+   "pattern": "++--",
+   "ret_excel": 0.00913500896196336,
+   "rho": {
+    "op3_rm": 120190.00328063965,
+    "op5_rm": 108811.28036499023,
+    "op9_rations": 122656.65621869266,
+    "period_hours": 49.84272372722626
+   },
+   "seed": 4100001,
+   "shifts": 1
+  },
+  {
+   "cf": 2,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.967005140785609,
+   "rho": {
+    "op3_rm": 11835.156555175781,
+    "op5_rm": 33112.62519836426,
+    "op9_rations": 35946.430049836636,
+    "period_hours": 1209.6353496909142
+   },
+   "seed": 4100002,
+   "shifts": 3
+  },
+  {
+   "cf": 3,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9715180869367153,
+   "rho": {
+    "op3_rm": 81813.87577056885,
+    "op5_rm": 85619.73335266113,
+    "op9_rations": 90101.55569203198,
+    "period_hours": 862.917807161808
+   },
+   "seed": 4100003,
+   "shifts": 2
+  },
+  {
+   "cf": 4,
+   "family": "R2r",
+   "increased": [
+    "R23",
+    "R24"
+   ],
+   "pattern": "--++",
+   "ret_excel": 0.43885326803564106,
+   "rho": {
+    "op3_rm": 34918.72203826904,
+    "op5_rm": 9636.35971069336,
+    "op9_rations": 3533.723574131727,
+    "period_hours": 395.30784273147583
+   },
+   "seed": 4100004,
+   "shifts": 3
+  },
+  {
+   "cf": 5,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.9476129606297098,
+   "rho": {
+    "op3_rm": 73790.81188201904,
+    "op5_rm": 57445.07881164551,
+    "op9_rations": 16723.90897013247,
+    "period_hours": 512.1343742609024
+   },
+   "seed": 4100005,
+   "shifts": 3
+  },
+  {
+   "cf": 6,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R24"
+   ],
+   "pattern": "+--+",
+   "ret_excel": 0.6036240365031768,
+   "rho": {
+    "op3_rm": 59261.90311431885,
+    "op5_rm": 100743.51425170898,
+    "op9_rations": 71750.16446784139,
+    "period_hours": 748.675465285778
+   },
+   "seed": 4100006,
+   "shifts": 2
+  },
+  {
+   "cf": 7,
+   "family": "R1r",
+   "increased": [
+    "R14"
+   ],
+   "pattern": "---+",
+   "ret_excel": 0.00909062660275307,
+   "rho": {
+    "op3_rm": 96803.18389892578,
+    "op5_rm": 18843.90609741211,
+    "op9_rations": 55063.049068674445,
+    "period_hours": 1074.5950167775154
+   },
+   "seed": 4100007,
+   "shifts": 1
+  },
+  {
+   "cf": 8,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R22",
+    "R23"
+   ],
+   "pattern": "+++-",
+   "ret_excel": 0.6249213942739321,
+   "rho": {
+    "op3_rm": 20822.09312438965,
+    "op5_rm": 61947.49946594238,
+    "op9_rations": 110193.24646890163,
+    "period_hours": 187.54894709587097
+   },
+   "seed": 4100008,
+   "shifts": 3
+  },
+  {
+   "cf": 9,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R13"
+   ],
+   "pattern": "+-+-",
+   "ret_excel": 0.009099849531686102,
+   "rho": {
+    "op3_rm": 87330.3018951416,
+    "op5_rm": 26884.071922302246,
+    "op9_rations": 66012.76032999158,
+    "period_hours": 313.4702904224396
+   },
+   "seed": 4100009,
+   "shifts": 3
+  },
+  {
+   "cf": 10,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R14"
+   ],
+   "pattern": "+--+",
+   "ret_excel": 0.00904552003882361,
+   "rho": {
+    "op3_rm": 41875.1481628418,
+    "op5_rm": 75987.33570098877,
+    "op9_rations": 26644.880572333932,
+    "period_hours": 1116.344867527485
+   },
+   "seed": 4100010,
+   "shifts": 2
+  },
+  {
+   "cf": 11,
+   "family": "R2r",
+   "increased": [
+    "R22",
+    "R24"
+   ],
+   "pattern": "-+-+",
+   "ret_excel": 0.5516734648383487,
+   "rho": {
+    "op3_rm": 110353.92963409424,
+    "op5_rm": 50365.068855285645,
+    "op9_rations": 98549.59608614445,
+    "period_hours": 790.5865547060966
+   },
+   "seed": 4100011,
+   "shifts": 2
+  },
+  {
+   "cf": 12,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R22"
+   ],
+   "pattern": "++--",
+   "ret_excel": 0.7310735851010977,
+   "rho": {
+    "op3_rm": 3439.082908630371,
+    "op5_rm": 99183.52626800537,
+    "op9_rations": 59077.77442596853,
+    "period_hours": 637.8944789171219
+   },
+   "seed": 4100012,
+   "shifts": 3
+  },
+  {
+   "cf": 13,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R22",
+    "R24"
+   ],
+   "pattern": "++-+",
+   "ret_excel": 0.6227971617798127,
+   "rho": {
+    "op3_rm": 102806.99306488037,
+    "op5_rm": 83099.80396270752,
+    "op9_rations": 46666.51540249586,
+    "period_hours": 437.21889209747314
+   },
+   "seed": 4100013,
+   "shifts": 2
+  },
+  {
+   "cf": 14,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9827024520979349,
+   "rho": {
+    "op3_rm": 25385.90229034424,
+    "op5_rm": 5436.291160583496,
+    "op9_rations": 117596.76091186702,
+    "period_hours": 988.6780319809914
+   },
+   "seed": 4100014,
+   "shifts": 3
+  },
+  {
+   "cf": 15,
+   "family": "R1r",
+   "increased": [
+    "R11"
+   ],
+   "pattern": "+---",
+   "ret_excel": 0.0090286126746623,
+   "rho": {
+    "op3_rm": 64427.1208190918,
+    "op5_rm": 121891.05800628662,
+    "op9_rations": 8347.562681883574,
+    "period_hours": 1335.5566529631615
+   },
+   "seed": 4100015,
+   "shifts": 2
+  },
+  {
+   "cf": 16,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.961235695294715,
+   "rho": {
+    "op3_rm": 48458.2120513916,
+    "op5_rm": 44032.849617004395,
+    "op9_rations": 79135.41414029896,
+    "period_hours": 91.5926946401596
+   },
+   "seed": 4100016,
+   "shifts": 1
+  },
+  {
+   "cf": 17,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9696911728667973,
+   "rho": {
+    "op3_rm": 65606.03462219238,
+    "op5_rm": 70903.14937591553,
+    "op9_rations": 47756.3159186393,
+    "period_hours": 134.64148449897766
+   },
+   "seed": 4100017,
+   "shifts": 3
+  },
+  {
+   "cf": 18,
+   "family": "R1r",
+   "increased": [
+    "R13",
+    "R14"
+   ],
+   "pattern": "--++",
+   "ret_excel": 0.00910598947156782,
+   "rho": {
+    "op3_rm": 51061.187896728516,
+    "op5_rm": 25912.0064163208,
+    "op9_rations": 102980.41879758239,
+    "period_hours": 1295.1723917126656
+   },
+   "seed": 4100018,
+   "shifts": 3
+  },
+  {
+   "cf": 19,
+   "family": "R2r",
+   "increased": [
+    "R23",
+    "R24"
+   ],
+   "pattern": "--++",
+   "ret_excel": 0.5552196150092351,
+   "rho": {
+    "op3_rm": 104029.96936798096,
+    "op5_rm": 93765.86505889893,
+    "op9_rations": 23198.303310200572,
+    "period_hours": 947.759030520916
+   },
+   "seed": 4100019,
+   "shifts": 2
+  },
+  {
+   "cf": 20,
+   "family": "R2r",
+   "increased": [
+    "R23"
+   ],
+   "pattern": "--+-",
+   "ret_excel": 0.7286521151272103,
+   "rho": {
+    "op3_rm": 28064.815635681152,
+    "op5_rm": 48518.9782333374,
+    "op9_rations": 78318.70836764574,
+    "period_hours": 480.7232848405838
+   },
+   "seed": 4100020,
+   "shifts": 2
+  },
+  {
+   "cf": 21,
+   "family": "R2r",
+   "increased": [
+    "R22",
+    "R24"
+   ],
+   "pattern": "-+-+",
+   "ret_excel": 0.6122182765971771,
+   "rho": {
+    "op3_rm": 113016.90547943115,
+    "op5_rm": 3200.255928039551,
+    "op9_rations": 91440.87777100503,
+    "period_hours": 595.0476980209351
+   },
+   "seed": 4100021,
+   "shifts": 1
+  },
+  {
+   "cf": 22,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R24"
+   ],
+   "pattern": "+--+",
+   "ret_excel": 0.5141003533186318,
+   "rho": {
+    "op3_rm": 4677.996711730957,
+    "op5_rm": 77232.08736419678,
+    "op9_rations": 4901.4623165130615,
+    "period_hours": 830.8505077958107
+   },
+   "seed": 4100022,
+   "shifts": 1
+  },
+  {
+   "cf": 23,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R22",
+    "R23",
+    "R24"
+   ],
+   "pattern": "++++",
+   "ret_excel": 0.4794499790756064,
+   "rho": {
+    "op3_rm": 89949.21524047852,
+    "op5_rm": 41410.72872161865,
+    "op9_rations": 122027.10672654212,
+    "period_hours": 1157.3841771483421
+   },
+   "seed": 4100023,
+   "shifts": 3
+  },
+  {
+   "cf": 24,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R24"
+   ],
+   "pattern": "+--+",
+   "ret_excel": 0.5825547812759323,
+   "rho": {
+    "op3_rm": 43038.12446594238,
+    "op5_rm": 115216.92707061768,
+    "op9_rations": 35345.541302114725,
+    "period_hours": 269.7638887166977
+   },
+   "seed": 4100024,
+   "shifts": 3
+  },
+  {
+   "cf": 25,
+   "family": "R1r",
+   "increased": [
+    "R11"
+   ],
+   "pattern": "+---",
+   "ret_excel": 0.00909463823551689,
+   "rho": {
+    "op3_rm": 95626.16020202637,
+    "op5_rm": 35050.3596496582,
+    "op9_rations": 14852.778822183609,
+    "period_hours": 228.01399791240692
+   },
+   "seed": 4100025,
+   "shifts": 3
+  },
+  {
+   "cf": 26,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R22",
+    "R24"
+   ],
+   "pattern": "++-+",
+   "ret_excel": 0.586553437421052,
+   "rho": {
+    "op3_rm": 18221.006469726562,
+    "op5_rm": 114857.29774475098,
+    "op9_rations": 85673.13623987138,
+    "period_hours": 1031.4627937674522
+   },
+   "seed": 4100026,
+   "shifts": 3
+  },
+  {
+   "cf": 27,
+   "family": "R2r",
+   "increased": [
+    "R23",
+    "R24"
+   ],
+   "pattern": "--++",
+   "ret_excel": 0.6341974928476523,
+   "rho": {
+    "op3_rm": 72569.72568511963,
+    "op5_rm": 12440.531387329102,
+    "op9_rations": 39390.60405269265,
+    "period_hours": 705.0903630852699
+   },
+   "seed": 4100027,
+   "shifts": 1
+  },
+  {
+   "cf": 28,
+   "family": "R1r",
+   "increased": [
+    "R11"
+   ],
+   "pattern": "+---",
+   "ret_excel": 0.00905866275717128,
+   "rho": {
+    "op3_rm": 56584.87895965576,
+    "op5_rm": 91991.81350708008,
+    "op9_rations": 110353.11144031584,
+    "period_hours": 553.1365685462952
+   },
+   "seed": 4100028,
+   "shifts": 2
+  },
+  {
+   "cf": 29,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9676325128935708,
+   "rho": {
+    "op3_rm": 79152.78911590576,
+    "op5_rm": 105645.53260803223,
+    "op9_rations": 97889.22479376197,
+    "period_hours": 354.96310007572174
+   },
+   "seed": 4100029,
+   "shifts": 1
+  },
+  {
+   "cf": 30,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.966959992101254,
+   "rho": {
+    "op3_rm": 33681.69834136963,
+    "op5_rm": 58719.31228637695,
+    "op9_rations": 58507.70747847855,
+    "period_hours": 905.84802120924
+   },
+   "seed": 4100030,
+   "shifts": 3
+  },
+  {
+   "cf": 31,
+   "family": "R2r",
+   "increased": [
+    "R23"
+   ],
+   "pattern": "--+-",
+   "ret_excel": 0.6527778135515292,
+   "rho": {
+    "op3_rm": 117572.97912597656,
+    "op5_rm": 67663.57864379883,
+    "op9_rations": 67321.2606087327,
+    "period_hours": 1253.4224608540535
+   },
+   "seed": 4100031,
+   "shifts": 3
+  },
+  {
+   "cf": 32,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9734770514101208,
+   "rho": {
+    "op3_rm": 10674.070358276367,
+    "op5_rm": 20511.57875061035,
+    "op9_rations": 28043.4411149472,
+    "period_hours": 8.720221281051636
+   },
+   "seed": 4100032,
+   "shifts": 1
+  },
+  {
+   "cf": 33,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.96234518437663,
+   "rho": {
+    "op3_rm": 84378.49811553955,
+    "op5_rm": 53722.04235076904,
+    "op9_rations": 32235.89406721294,
+    "period_hours": 21.471792340278625
+   },
+   "seed": 4100033,
+   "shifts": 2
+  },
+  {
+   "cf": 34,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.967752529680775,
+   "rho": {
+    "op3_rm": 36968.65139007568,
+    "op5_rm": 96794.05002593994,
+    "op9_rations": 118746.94894999266,
+    "period_hours": 1233.7797891497612
+   },
+   "seed": 4100034,
+   "shifts": 2
+  },
+  {
+   "cf": 35,
+   "family": "R1r",
+   "increased": [
+    "R13",
+    "R14"
+   ],
+   "pattern": "--++",
+   "ret_excel": 0.008054932966462832,
+   "rho": {
+    "op3_rm": 122817.37403869629,
+    "op5_rm": 30248.824195861816,
+    "op9_rations": 7558.816390112042,
+    "period_hours": 888.3350227475166
+   },
+   "seed": 4100035,
+   "shifts": 1
+  },
+  {
+   "cf": 36,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9556499886119879,
+   "rho": {
+    "op3_rm": 13957.220306396484,
+    "op5_rm": 73575.08068084717,
+    "op9_rations": 94204.3345682323,
+    "period_hours": 368.2096674442291
+   },
+   "seed": 4100036,
+   "shifts": 3
+  },
+  {
+   "cf": 37,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9663086573441241,
+   "rho": {
+    "op3_rm": 97964.19296264648,
+    "op5_rm": 120461.36203765869,
+    "op9_rations": 75645.50850726664,
+    "period_hours": 571.712448477745
+   },
+   "seed": 4100037,
+   "shifts": 1
+  },
+  {
+   "cf": 38,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R12",
+    "R14"
+   ],
+   "pattern": "++-+",
+   "ret_excel": 0.009103757931882932,
+   "rho": {
+    "op3_rm": 22490.28419494629,
+    "op5_rm": 44510.04283905029,
+    "op9_rations": 20450.72327926755,
+    "period_hours": 692.7483825087547
+   },
+   "seed": 4100038,
+   "shifts": 2
+  },
+  {
+   "cf": 39,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R12",
+    "R14"
+   ],
+   "pattern": "++-+",
+   "ret_excel": 0.009099964454642733,
+   "rho": {
+    "op3_rm": 74881.56154632568,
+    "op5_rm": 81647.76866912842,
+    "op9_rations": 106104.95098493993,
+    "period_hours": 1017.3131666779518
+   },
+   "seed": 4100039,
+   "shifts": 3
+  },
+  {
+   "cf": 40,
+   "family": "R1r",
+   "increased": [
+    "R12",
+    "R13"
+   ],
+   "pattern": "-++-",
+   "ret_excel": 0.009133748196248197,
+   "rho": {
+    "op3_rm": 60865.47077178955,
+    "op5_rm": 5920.823707580566,
+    "op9_rations": 51021.55776321888,
+    "period_hours": 245.7721939086914
+   },
+   "seed": 4100040,
+   "shifts": 2
+  },
+  {
+   "cf": 41,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R12",
+    "R14"
+   ],
+   "pattern": "++-+",
+   "ret_excel": 0.009047309622059364,
+   "rho": {
+    "op3_rm": 107693.68228912354,
+    "op5_rm": 87047.37762451172,
+    "op9_rations": 30678.68496850133,
+    "period_hours": 288.01210927963257
+   },
+   "seed": 4100041,
+   "shifts": 1
+  },
+  {
+   "cf": 42,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9699939662380312,
+   "rho": {
+    "op3_rm": 1233.5285568237305,
+    "op5_rm": 9161.216354370117,
+    "op9_rations": 70093.36937405169,
+    "period_hours": 1143.4020572304726
+   },
+   "seed": 4100042,
+   "shifts": 3
+  },
+  {
+   "cf": 43,
+   "family": "R2r",
+   "increased": [],
+   "pattern": "----",
+   "ret_excel": 0.786372708606264,
+   "rho": {
+    "op3_rm": 84622.30613708496,
+    "op5_rm": 110261.61552429199,
+    "op9_rations": 55343.26569736004,
+    "period_hours": 818.9985517859459
+   },
+   "seed": 4100043,
+   "shifts": 1
+  },
+  {
+   "cf": 44,
+   "family": "R2r",
+   "increased": [],
+   "pattern": "----",
+   "ret_excel": 0.6675323759624687,
+   "rho": {
+    "op3_rm": 39612.459411621094,
+    "op5_rm": 32629.790954589844,
+    "op9_rations": 94646.55809663236,
+    "period_hours": 613.7910851240158
+   },
+   "seed": 4100044,
+   "shifts": 1
+  },
+  {
+   "cf": 45,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R23",
+    "R24"
+   ],
+   "pattern": "+-++",
+   "ret_excel": 0.5035546040549569,
+   "rho": {
+    "op3_rm": 63125.486755371094,
+    "op5_rm": 15488.513717651367,
+    "op9_rations": 113501.67598575354,
+    "period_hours": 494.4597165584564
+   },
+   "seed": 4100045,
+   "shifts": 3
+  },
+  {
+   "cf": 46,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9730402021411768,
+   "rho": {
+    "op3_rm": 46709.39598083496,
+    "op5_rm": 64335.39276123047,
+    "op9_rations": 42649.117005988955,
+    "period_hours": 930.4136994481087
+   },
+   "seed": 4100046,
+   "shifts": 3
+  },
+  {
+   "cf": 47,
+   "family": "R1r",
+   "increased": [],
+   "pattern": "----",
+   "ret_excel": 0.009139213982376576,
+   "rho": {
+    "op3_rm": 101560.61840057373,
+    "op5_rm": 54082.493591308594,
+    "op9_rations": 83052.80784890056,
+    "period_hours": 1276.0195843577385
+   },
+   "seed": 4100047,
+   "shifts": 2
+  },
+  {
+   "cf": 48,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9717416416959632,
+   "rho": {
+    "op3_rm": 23686.709632873535,
+    "op5_rm": 103153.60038757324,
+    "op9_rations": 12065.785573795438,
+    "period_hours": 147.56072294712067
+   },
+   "seed": 4100048,
+   "shifts": 3
+  },
+  {
+   "cf": 49,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9635854893790708,
+   "rho": {
+    "op3_rm": 106082.65720367432,
+    "op5_rm": 14843.291015625,
+    "op9_rations": 106951.90578885376,
+    "period_hours": 109.1845850944519
+   },
+   "seed": 4100049,
+   "shifts": 3
+  },
+  {
+   "cf": 50,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.969672885546517,
+   "rho": {
+    "op3_rm": 30622.81047821045,
+    "op5_rm": 88621.55113220215,
+    "op9_rations": 51897.28971943259,
+    "period_hours": 1322.2308631539345
+   },
+   "seed": 4100050,
+   "shifts": 2
+  },
+  {
+   "cf": 51,
+   "family": "R2r",
+   "increased": [
+    "R22",
+    "R23",
+    "R24"
+   ],
+   "pattern": "-+++",
+   "ret_excel": 0.5250040018150073,
+   "rho": {
+    "op3_rm": 67721.58805847168,
+    "op5_rm": 37445.81016540527,
+    "op9_rations": 74523.83112721145,
+    "period_hours": 976.169745862484
+   },
+   "seed": 4100051,
+   "shifts": 2
+  },
+  {
+   "cf": 52,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.9608474492632474,
+   "rho": {
+    "op3_rm": 53691.434326171875,
+    "op5_rm": 111509.34448242188,
+    "op9_rations": 19357.586480677128,
+    "period_hours": 456.6186093091965
+   },
+   "seed": 4100052,
+   "shifts": 2
+  },
+  {
+   "cf": 53,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R13",
+    "R14"
+   ],
+   "pattern": "+-++",
+   "ret_excel": 0.009107691945475116,
+   "rho": {
+    "op3_rm": 91618.40698242188,
+    "op5_rm": 67173.0672454834,
+    "op9_rations": 744.2101892083883,
+    "period_hours": 652.2872407436371
+   },
+   "seed": 4100053,
+   "shifts": 3
+  },
+  {
+   "cf": 54,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R12",
+    "R13",
+    "R14"
+   ],
+   "pattern": "++++",
+   "ret_excel": 0.009007078130674171,
+   "rho": {
+    "op3_rm": 44194.49821472168,
+    "op5_rm": 21954.58740234375,
+    "op9_rations": 87483.75400900841,
+    "period_hours": 772.5848935246468
+   },
+   "seed": 4100054,
+   "shifts": 3
+  },
+  {
+   "cf": 55,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.970006658384827,
+   "rho": {
+    "op3_rm": 114615.72063446045,
+    "op5_rm": 105177.82836914062,
+    "op9_rations": 39202.65662111342,
+    "period_hours": 1097.8483902812004
+   },
+   "seed": 4100055,
+   "shifts": 2
+  },
+  {
+   "cf": 56,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9638796935567703,
+   "rho": {
+    "op3_rm": 5769.629859924316,
+    "op5_rm": 60154.51377868652,
+    "op9_rations": 125807.50057473779,
+    "period_hours": 325.73319876194
+   },
+   "seed": 4100056,
+   "shifts": 2
+  },
+  {
+   "cf": 57,
+   "family": "R1r",
+   "increased": [
+    "R12",
+    "R13",
+    "R14"
+   ],
+   "pattern": "-+++",
+   "ret_excel": 0.009063947514329937,
+   "rho": {
+    "op3_rm": 70357.66284942627,
+    "op5_rm": 94257.95757293701,
+    "op9_rations": 81900.4288315773,
+    "period_hours": 199.64434826374054
+   },
+   "seed": 4100057,
+   "shifts": 2
+  },
+  {
+   "cf": 58,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R13"
+   ],
+   "pattern": "+-+-",
+   "ret_excel": 0.009078228134387419,
+   "rho": {
+    "op3_rm": 53927.509117126465,
+    "op5_rm": 47074.38663482666,
+    "op9_rations": 11003.350412473083,
+    "period_hours": 1055.6085149645805
+   },
+   "seed": 4100058,
+   "shifts": 2
+  },
+  {
+   "cf": 59,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.9654020114459482,
+   "rho": {
+    "op3_rm": 93366.23176574707,
+    "op5_rm": 71373.02066802979,
+    "op9_rations": 114317.9291523993,
+    "period_hours": 730.5062969326973
+   },
+   "seed": 4100059,
+   "shifts": 1
+  },
+  {
+   "cf": 60,
+   "family": "R2r",
+   "increased": [
+    "R24"
+   ],
+   "pattern": "---+",
+   "ret_excel": 0.653651153812443,
+   "rho": {
+    "op3_rm": 15506.385040283203,
+    "op5_rm": 24474.636039733887,
+    "op9_rations": 43555.550599470735,
+    "period_hours": 526.0371115207672
+   },
+   "seed": 4100060,
+   "shifts": 3
+  },
+  {
+   "cf": 61,
+   "family": "R2r",
+   "increased": [
+    "R22",
+    "R24"
+   ],
+   "pattern": "-+-+",
+   "ret_excel": 0.6320815306120728,
+   "rho": {
+    "op3_rm": 115819.4123840332,
+    "op5_rm": 39005.91739654541,
+    "op9_rations": 62340.729888528585,
+    "period_hours": 414.53989255428314
+   },
+   "seed": 4100061,
+   "shifts": 1
+  },
+  {
+   "cf": 62,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.964252287663396,
+   "rho": {
+    "op3_rm": 9373.32160949707,
+    "op5_rm": 118589.23931121826,
+    "op9_rations": 101676.40808410943,
+    "period_hours": 849.9196566939354
+   },
+   "seed": 4100062,
+   "shifts": 3
+  },
+  {
+   "cf": 63,
+   "family": "R1r",
+   "increased": [
+    "R13",
+    "R14"
+   ],
+   "pattern": "--++",
+   "ret_excel": 0.009148196658273362,
+   "rho": {
+    "op3_rm": 77454.59896087646,
+    "op5_rm": 803.1052780151367,
+    "op9_rations": 23894.78040486574,
+    "period_hours": 1196.1418924927711
+   },
+   "seed": 4100063,
+   "shifts": 3
+  },
+  {
+   "cf": 64,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.9604463350258028,
+   "rho": {
+    "op3_rm": 32430.69019317627,
+    "op5_rm": 80581.73892974854,
+    "op9_rations": 63342.08717755973,
+    "period_hours": 66.94474983215332
+   },
+   "seed": 4100064,
+   "shifts": 1
+  },
+  {
+   "cf": 65,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.968981549053839,
+   "rho": {
+    "op3_rm": 76728.03783416748,
+    "op5_rm": 4337.197151184082,
+    "op9_rations": 10359.394859522581,
+    "period_hours": 83.69828456640244
+   },
+   "seed": 4100065,
+   "shifts": 2
+  },
+  {
+   "cf": 66,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R12",
+    "R13",
+    "R14"
+   ],
+   "pattern": "++++",
+   "ret_excel": 0.009161541821847065,
+   "rho": {
+    "op3_rm": 60039.129066467285,
+    "op5_rm": 84130.46047210693,
+    "op9_rations": 81306.22191913426,
+    "period_hours": 1180.7420386075974
+   },
+   "seed": 4100066,
+   "shifts": 1
+  },
+  {
+   "cf": 67,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9684643388367745,
+   "rho": {
+    "op3_rm": 99747.84759521484,
+    "op5_rm": 43151.94362640381,
+    "op9_rations": 44868.80611628294,
+    "period_hours": 854.8195080757141
+   },
+   "seed": 4100067,
+   "shifts": 1
+  },
+  {
+   "cf": 68,
+   "family": "R2r",
+   "increased": [
+    "R22",
+    "R23",
+    "R24"
+   ],
+   "pattern": "-+++",
+   "ret_excel": 0.4686719842759497,
+   "rho": {
+    "op3_rm": 21606.75682067871,
+    "op5_rm": 122720.4014968872,
+    "op9_rations": 115704.00272123516,
+    "period_hours": 408.2863603234291
+   },
+   "seed": 4100068,
+   "shifts": 1
+  },
+  {
+   "cf": 69,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.963947018533325,
+   "rho": {
+    "op3_rm": 120974.66697692871,
+    "op5_rm": 74919.17873382568,
+    "op9_rations": 101274.7005969286,
+    "period_hours": 540.8218962550163
+   },
+   "seed": 4100069,
+   "shifts": 1
+  },
+  {
+   "cf": 70,
+   "family": "R1r",
+   "increased": [
+    "R12",
+    "R13"
+   ],
+   "pattern": "-++-",
+   "ret_excel": 0.009115630644539439,
+   "rho": {
+    "op3_rm": 14779.820251464844,
+    "op5_rm": 28005.666389465332,
+    "op9_rations": 62011.842330917716,
+    "period_hours": 714.4501930475235
+   },
+   "seed": 4100070,
+   "shifts": 1
+  },
+  {
+   "cf": 71,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9710291604685873,
+   "rho": {
+    "op3_rm": 82591.10172271729,
+    "op5_rm": 98391.68323516846,
+    "op9_rations": 64920.662987977266,
+    "period_hours": 1061.1646163463593
+   },
+   "seed": 4100071,
+   "shifts": 1
+  },
+  {
+   "cf": 72,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R24"
+   ],
+   "pattern": "+--+",
+   "ret_excel": 0.5687820579623551,
+   "rho": {
+    "op3_rm": 37855.94799041748,
+    "op5_rm": 51223.47438812256,
+    "op9_rations": 25523.102978244424,
+    "period_hours": 195.3595660328865
+   },
+   "seed": 4100072,
+   "shifts": 1
+  },
+  {
+   "cf": 73,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R22",
+    "R24"
+   ],
+   "pattern": "++-+",
+   "ret_excel": 0.5763550539849659,
+   "rho": {
+    "op3_rm": 99984.15676116943,
+    "op5_rm": 101631.90559387207,
+    "op9_rations": 52245.40405534208,
+    "period_hours": 321.4455526471138
+   },
+   "seed": 4100073,
+   "shifts": 3
+  },
+  {
+   "cf": 74,
+   "family": "R1r",
+   "increased": [
+    "R12",
+    "R13"
+   ],
+   "pattern": "-++-",
+   "ret_excel": 0.009128152319245506,
+   "rho": {
+    "op3_rm": 24243.0659866333,
+    "op5_rm": 56623.24996948242,
+    "op9_rations": 107349.76641833782,
+    "period_hours": 1103.4073555469513
+   },
+   "seed": 4100074,
+   "shifts": 3
+  },
+  {
+   "cf": 75,
+   "family": "R1r",
+   "increased": [
+    "R12",
+    "R14"
+   ],
+   "pattern": "-+-+",
+   "ret_excel": 0.00911216759431045,
+   "rho": {
+    "op3_rm": 61611.846771240234,
+    "op5_rm": 63039.1081237793,
+    "op9_rations": 17725.418457761407,
+    "period_hours": 756.5259257555008
+   },
+   "seed": 4100075,
+   "shifts": 2
+  },
+  {
+   "cf": 76,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R12",
+    "R13",
+    "R14"
+   ],
+   "pattern": "++++",
+   "ret_excel": 0.009059069756235884,
+   "rho": {
+    "op3_rm": 47322.93800354004,
+    "op5_rm": 17805.734939575195,
+    "op9_rations": 72964.48256447911,
+    "period_hours": 667.0748893618584
+   },
+   "seed": 4100076,
+   "shifts": 2
+  },
+  {
+   "cf": 77,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.9549080424481506,
+   "rho": {
+    "op3_rm": 86195.02784729004,
+    "op5_rm": 33911.95358276367,
+    "op9_rations": 88058.73649008572,
+    "period_hours": 450.36221319437027
+   },
+   "seed": 4100077,
+   "shifts": 3
+  },
+  {
+   "cf": 78,
+   "family": "R1r",
+   "increased": [
+    "R11"
+   ],
+   "pattern": "+---",
+   "ret_excel": 0.009023075498746211,
+   "rho": {
+    "op3_rm": 39059.874114990234,
+    "op5_rm": 107960.38948059082,
+    "op9_rations": 1392.0102529227734,
+    "period_hours": 981.0724611282349
+   },
+   "seed": 4100078,
+   "shifts": 2
+  },
+  {
+   "cf": 79,
+   "family": "R1r",
+   "increased": [
+    "R13"
+   ],
+   "pattern": "--+-",
+   "ret_excel": 0.00911192518275567,
+   "rho": {
+    "op3_rm": 109211.0933303833,
+    "op5_rm": 10697.031326293945,
+    "op9_rations": 124425.27104727924,
+    "period_hours": 1306.8281453847885
+   },
+   "seed": 4100079,
+   "shifts": 1
+  },
+  {
+   "cf": 80,
+   "family": "R1r",
+   "increased": [
+    "R12"
+   ],
+   "pattern": "-+--",
+   "ret_excel": 0.009117468799388441,
+   "rho": {
+    "op3_rm": 616.2466049194336,
+    "op5_rm": 84490.62423706055,
+    "op9_rations": 37870.17526477575,
+    "period_hours": 125.94098371267319
+   },
+   "seed": 4100080,
+   "shifts": 2
+  },
+  {
+   "cf": 81,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R14"
+   ],
+   "pattern": "+--+",
+   "ret_excel": 0.009075879922639493,
+   "rho": {
+    "op3_rm": 113792.17952728271,
+    "op5_rm": 57627.23487854004,
+    "op9_rations": 69518.38407665491,
+    "period_hours": 163.61682683229446
+   },
+   "seed": 4100081,
+   "shifts": 3
+  },
+  {
+   "cf": 82,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R22",
+    "R23",
+    "R24"
+   ],
+   "pattern": "++++",
+   "ret_excel": 0.5242584155188609,
+   "rho": {
+    "op3_rm": 7613.2707595825195,
+    "op5_rm": 106684.17251586914,
+    "op9_rations": 30030.88021092117,
+    "period_hours": 1261.2347996234894
+   },
+   "seed": 4100082,
+   "shifts": 2
+  },
+  {
+   "cf": 83,
+   "family": "R2r",
+   "increased": [
+    "R24"
+   ],
+   "pattern": "---+",
+   "ret_excel": 0.6304488506813429,
+   "rho": {
+    "op3_rm": 90732.05154418945,
+    "op5_rm": 19623.656158447266,
+    "op9_rations": 96028.79044041038,
+    "period_hours": 934.6984816789627
+   },
+   "seed": 4100083,
+   "shifts": 2
+  },
+  {
+   "cf": 84,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R22",
+    "R24"
+   ],
+   "pattern": "++-+",
+   "ret_excel": 0.5812803703733387,
+   "rho": {
+    "op3_rm": 45980.96076965332,
+    "op5_rm": 68484.93873596191,
+    "op9_rations": 56675.75174756348,
+    "period_hours": 488.9036151766777
+   },
+   "seed": 4100084,
+   "shifts": 3
+  },
+  {
+   "cf": 85,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.9602517517539179,
+   "rho": {
+    "op3_rm": 68548.87092590332,
+    "op5_rm": 113796.15737915039,
+    "op9_rations": 42300.999853760004,
+    "period_hours": 629.1909390091896
+   },
+   "seed": 4100085,
+   "shifts": 2
+  },
+  {
+   "cf": 86,
+   "family": "R1r",
+   "increased": [
+    "R11"
+   ],
+   "pattern": "+---",
+   "ret_excel": 0.009099564232537402,
+   "rho": {
+    "op3_rm": 51844.02420043945,
+    "op5_rm": 36179.93751525879,
+    "op9_rations": 113103.8106624037,
+    "period_hours": 802.2450170516968
+   },
+   "seed": 4100086,
+   "shifts": 3
+  },
+  {
+   "cf": 87,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.9664411753772996,
+   "rho": {
+    "op3_rm": 106965.24341583252,
+    "op5_rm": 91192.95387268066,
+    "op9_rations": 13697.956413030624,
+    "period_hours": 1149.6555894613266
+   },
+   "seed": 4100087,
+   "shifts": 1
+  },
+  {
+   "cf": 88,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R22",
+    "R23",
+    "R24"
+   ],
+   "pattern": "++++",
+   "ret_excel": 0.36688367188957455,
+   "rho": {
+    "op3_rm": 28840.089683532715,
+    "op5_rm": 13290.953521728516,
+    "op9_rations": 84612.16110549867,
+    "period_hours": 283.11225789785385
+   },
+   "seed": 4100088,
+   "shifts": 2
+  },
+  {
+   "cf": 89,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9649246562483804,
+   "rho": {
+    "op3_rm": 78008.1254196167,
+    "op5_rm": 78112.52460479736,
+    "op9_rations": 119148.65925349295,
+    "period_hours": 240.86947864294052
+   },
+   "seed": 4100089,
+   "shifts": 3
+  },
+  {
+   "cf": 90,
+   "family": "R1r",
+   "increased": [
+    "R11"
+   ],
+   "pattern": "+---",
+   "ret_excel": 0.00869725643421526,
+   "rho": {
+    "op3_rm": 30857.034645080566,
+    "op5_rm": 2371.381187438965,
+    "op9_rations": 32564.786318689585,
+    "period_hours": 1023.569562792778
+   },
+   "seed": 4100090,
+   "shifts": 3
+  },
+  {
+   "cf": 91,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9697645864871202,
+   "rho": {
+    "op3_rm": 116435.75317382812,
+    "op5_rm": 116316.48983001709,
+    "op9_rations": 92625.7559414953,
+    "period_hours": 675.9919838905334
+   },
+   "seed": 4100091,
+   "shifts": 1
+  },
+  {
+   "cf": 92,
+   "family": "R1r",
+   "increased": [
+    "R13",
+    "R14"
+   ],
+   "pattern": "--++",
+   "ret_excel": 0.008202904996422003,
+   "rho": {
+    "op3_rm": 7856.84440612793,
+    "op5_rm": 40379.60346221924,
+    "op9_rations": 5930.489122867584,
+    "period_hours": 587.115166246891
+   },
+   "seed": 4100092,
+   "shifts": 1
+  },
+  {
+   "cf": 93,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R22",
+    "R23"
+   ],
+   "pattern": "+++-",
+   "ret_excel": 0.5960213563365758,
+   "rho": {
+    "op3_rm": 92808.93424987793,
+    "op5_rm": 26703.380699157715,
+    "op9_rations": 21094.681648537517,
+    "period_hours": 362.65070217847824
+   },
+   "seed": 4100093,
+   "shifts": 3
+  },
+  {
+   "cf": 94,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.9601890406260973,
+   "rho": {
+    "op3_rm": 17083.780517578125,
+    "op5_rm": 70045.21259307861,
+    "op9_rations": 76239.72011357546,
+    "period_hours": 892.6226688623428
+   },
+   "seed": 4100094,
+   "shifts": 1
+  },
+  {
+   "cf": 95,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R22",
+    "R24"
+   ],
+   "pattern": "++-+",
+   "ret_excel": 0.5535062165402932,
+   "rho": {
+    "op3_rm": 69745.06198883057,
+    "op5_rm": 49587.60395050049,
+    "op9_rations": 49708.29943008721,
+    "period_hours": 1218.99214053154
+   },
+   "seed": 4100095,
+   "shifts": 2
+  },
+  {
+   "cf": 96,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R12",
+    "R14"
+   ],
+   "pattern": "++-+",
+   "ret_excel": 0.009092326332920992,
+   "rho": {
+    "op3_rm": 55440.2152633667,
+    "op5_rm": 92643.80184173584,
+    "op9_rations": 104718.8727222383,
+    "period_hours": 37.53076010942459
+   },
+   "seed": 4100096,
+   "shifts": 3
+  },
+  {
+   "cf": 97,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9693513264870939,
+   "rho": {
+    "op3_rm": 97179.54025268555,
+    "op5_rm": 63514.252853393555,
+    "op9_rations": 85286.80632635951,
+    "period_hours": 13.620220363140106
+   },
+   "seed": 4100097,
+   "shifts": 2
+  },
+  {
+   "cf": 98,
+   "family": "R2r",
+   "increased": [],
+   "pattern": "----",
+   "ret_excel": 0.5702557548605707,
+   "rho": {
+    "op3_rm": 19545.63148498535,
+    "op5_rm": 16378.091125488281,
+    "op9_rations": 14508.507119491696,
+    "period_hours": 1247.1691113710403
+   },
+   "seed": 4100098,
+   "shifts": 1
+  },
+  {
+   "cf": 99,
+   "family": "R2r",
+   "increased": [
+    "R22",
+    "R24"
+   ],
+   "pattern": "-+-+",
+   "ret_excel": 0.6023093248115369,
+   "rho": {
+    "op3_rm": 74104.35390472412,
+    "op5_rm": 102114.74029541016,
+    "op9_rations": 111916.30967706442,
+    "period_hours": 922.601368188858
+   },
+   "seed": 4100099,
+   "shifts": 1
+  },
+  {
+   "cf": 100,
+   "family": "R2r",
+   "increased": [
+    "R21"
+   ],
+   "pattern": "+---",
+   "ret_excel": 0.7402502756844699,
+   "rho": {
+    "op3_rm": 57928.26313018799,
+    "op5_rm": 55172.91618347168,
+    "op9_rations": 41034.31077115238,
+    "period_hours": 339.56310349702835
+   },
+   "seed": 4100100,
+   "shifts": 3
+  },
+  {
+   "cf": 101,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.973890522266391,
+   "rho": {
+    "op3_rm": 81441.29047393799,
+    "op5_rm": 8309.138488769531,
+    "op9_rations": 57848.36684167385,
+    "period_hours": 558.6928176283836
+   },
+   "seed": 4100101,
+   "shifts": 2
+  },
+  {
+   "cf": 102,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R14"
+   ],
+   "pattern": "+--+",
+   "ret_excel": 0.009076280539517378,
+   "rho": {
+    "op3_rm": 36191.44374847412,
+    "op5_rm": 87846.0179901123,
+    "op9_rations": 97310.39451621473,
+    "period_hours": 700.8057636022568
+   },
+   "seed": 4100102,
+   "shifts": 1
+  },
+  {
+   "cf": 103,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9685907255908561,
+   "rho": {
+    "op3_rm": 119872.72132873535,
+    "op5_rm": 31501.86882019043,
+    "op9_rations": 29372.081715613604,
+    "period_hours": 1046.2473907470703
+   },
+   "seed": 4100103,
+   "shifts": 3
+  },
+  {
+   "cf": 104,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.9630107554364233,
+   "rho": {
+    "op3_rm": 13172.567596435547,
+    "op5_rm": 111322.9751586914,
+    "op9_rations": 68691.95754267275,
+    "period_hours": 211.95775133371353
+   },
+   "seed": 4100104,
+   "shifts": 1
+  },
+  {
+   "cf": 105,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R22",
+    "R23",
+    "R24"
+   ],
+   "pattern": "++++",
+   "ret_excel": 0.38738980989214783,
+   "rho": {
+    "op3_rm": 64260.77911376953,
+    "op5_rm": 45541.41757965088,
+    "op9_rations": 103570.78542374074,
+    "period_hours": 253.70473819971085
+   },
+   "seed": 4100105,
+   "shifts": 3
+  },
+  {
+   "cf": 106,
+   "family": "R2r",
+   "increased": [
+    "R22",
+    "R23"
+   ],
+   "pattern": "-++-",
+   "ret_excel": 0.6682439594934791,
+   "rho": {
+    "op3_rm": 49524.6883392334,
+    "op5_rm": 119363.4247970581,
+    "op9_rations": 48388.73840868473,
+    "period_hours": 1172.1716780662537
+   },
+   "seed": 4100106,
+   "shifts": 1
+  },
+  {
+   "cf": 107,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R12"
+   ],
+   "pattern": "++--",
+   "ret_excel": 0.009021503171975863,
+   "rho": {
+    "op3_rm": 102703.4656906128,
+    "op5_rm": 6749.4489669799805,
+    "op9_rations": 76921.09469510615,
+    "period_hours": 826.5630043745041
+   },
+   "seed": 4100107,
+   "shifts": 2
+  },
+  {
+   "cf": 108,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R24"
+   ],
+   "pattern": "+--+",
+   "ret_excel": 0.6311120523042105,
+   "rho": {
+    "op3_rm": 26509.556922912598,
+    "op5_rm": 80765.705909729,
+    "op9_rations": 21881.199527531862,
+    "period_hours": 600.606851041317
+   },
+   "seed": 4100108,
+   "shifts": 3
+  },
+  {
+   "cf": 109,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9635086667347397,
+   "rho": {
+    "op3_rm": 110516.5295791626,
+    "op5_rm": 97914.48680877686,
+    "op9_rations": 5234.200017526746,
+    "period_hours": 465.32038432359695
+   },
+   "seed": 4100109,
+   "shifts": 1
+  },
+  {
+   "cf": 110,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R22",
+    "R23"
+   ],
+   "pattern": "+++-",
+   "ret_excel": 0.6700608468584643,
+   "rho": {
+    "op3_rm": 2376.375846862793,
+    "op5_rm": 52653.16806793213,
+    "op9_rations": 91854.12348434329,
+    "period_hours": 964.5152814388275
+   },
+   "seed": 4100110,
+   "shifts": 3
+  },
+  {
+   "cf": 111,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R12",
+    "R14"
+   ],
+   "pattern": "++-+",
+   "ret_excel": 0.009132048528775744,
+   "rho": {
+    "op3_rm": 87437.5984954834,
+    "op5_rm": 74434.64389801025,
+    "op9_rations": 33728.749914094806,
+    "period_hours": 1288.916138291359
+   },
+   "seed": 4100111,
+   "shifts": 3
+  },
+  {
+   "cf": 112,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.8787863170835972,
+   "rho": {
+    "op3_rm": 40747.75177001953,
+    "op5_rm": 29457.69847869873,
+    "op9_rations": 120452.37307995558,
+    "period_hours": 139.5443875193596
+   },
+   "seed": 4100112,
+   "shifts": 2
+  },
+  {
+   "cf": 113,
+   "family": "R2r",
+   "increased": [],
+   "pattern": "----",
+   "ret_excel": 0.8042413955946376,
+   "rho": {
+    "op3_rm": 88675.55969238281,
+    "op5_rm": 117761.08280181885,
+    "op9_rations": 26312.147565186024,
+    "period_hours": 95.87729412317276
+   },
+   "seed": 4100113,
+   "shifts": 2
+  },
+  {
+   "cf": 114,
+   "family": "R2r",
+   "increased": [
+    "R21"
+   ],
+   "pattern": "+---",
+   "ret_excel": 0.7069055398061188,
+   "rho": {
+    "op3_rm": 43411.65092468262,
+    "op5_rm": 39887.511405944824,
+    "op9_rations": 65599.51743297279,
+    "period_hours": 1330.000403881073
+   },
+   "seed": 4100114,
+   "shifts": 3
+  },
+  {
+   "cf": 115,
+   "family": "R2r",
+   "increased": [
+    "R24"
+   ],
+   "pattern": "---+",
+   "ret_excel": 0.7131016946739901,
+   "rho": {
+    "op3_rm": 111680.42827606201,
+    "op5_rm": 79549.89543914795,
+    "op9_rations": 60694.56112012267,
+    "period_hours": 1004.7342785596848
+   },
+   "seed": 4100115,
+   "shifts": 3
+  },
+  {
+   "cf": 116,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R22",
+    "R24"
+   ],
+   "pattern": "++-+",
+   "ret_excel": 0.4705070605990165,
+   "rho": {
+    "op3_rm": 4994.337501525879,
+    "op5_rm": 1901.5112686157227,
+    "op9_rations": 100124.32691641152,
+    "period_hours": 422.4342951178551
+   },
+   "seed": 4100116,
+   "shifts": 1
+  },
+  {
+   "cf": 117,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R22",
+    "R24"
+   ],
+   "pattern": "++-+",
+   "ret_excel": 0.48240681534611174,
+   "rho": {
+    "op3_rm": 105307.36484527588,
+    "op5_rm": 46215.292167663574,
+    "op9_rations": 117006.39897957444,
+    "period_hours": 644.147828400135
+   },
+   "seed": 4100117,
+   "shifts": 1
+  },
+  {
+   "cf": 118,
+   "family": "R2r",
+   "increased": [
+    "R21"
+   ],
+   "pattern": "+---",
+   "ret_excel": 0.6537938458991258,
+   "rho": {
+    "op3_rm": 27687.51811981201,
+    "op5_rm": 95048.6145401001,
+    "op9_rations": 46034.0957287699,
+    "period_hours": 785.6865556240082
+   },
+   "seed": 4100118,
+   "shifts": 3
+  },
+  {
+   "cf": 119,
+   "family": "R1r",
+   "increased": [
+    "R12"
+   ],
+   "pattern": "-+--",
+   "ret_excel": 0.009093056414484987,
+   "rho": {
+    "op3_rm": 66938.74076843262,
+    "op5_rm": 23353.730506896973,
+    "op9_rations": 80533.02311897278,
+    "period_hours": 1131.7448641061783
+   },
+   "seed": 4100119,
+   "shifts": 1
+  },
+  {
+   "cf": 120,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.9638627247267929,
+   "rho": {
+    "op3_rm": 50748.58703613281,
+    "op5_rm": 72442.3637008667,
+    "op9_rations": 9664.663648232818,
+    "period_hours": 296.7169434428215
+   },
+   "seed": 4100120,
+   "shifts": 2
+  },
+  {
+   "cf": 121,
+   "family": "R1r",
+   "increased": [
+    "R14"
+   ],
+   "pattern": "---+",
+   "ret_excel": 0.009156871147913493,
+   "rho": {
+    "op3_rm": 118636.62002563477,
+    "op5_rm": 22993.916244506836,
+    "op9_rations": 36605.76599277556,
+    "period_hours": 170.79269617795944
+   },
+   "seed": 4100121,
+   "shifts": 1
+  },
+  {
+   "cf": 122,
+   "family": "R1r",
+   "increased": [],
+   "pattern": "----",
+   "ret_excel": 0.009174055977801904,
+   "rho": {
+    "op3_rm": 10510.529251098633,
+    "op5_rm": 66082.17590332031,
+    "op9_rations": 123235.48367992043,
+    "period_hours": 1089.9979172945023
+   },
+   "seed": 4100122,
+   "shifts": 1
+  },
+  {
+   "cf": 123,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R13",
+    "R14"
+   ],
+   "pattern": "+-++",
+   "ret_excel": 0.009097504774082443,
+   "rho": {
+    "op3_rm": 80279.2516708374,
+    "op5_rm": 60975.18493652344,
+    "op9_rations": 2205.0876673310995,
+    "period_hours": 743.7725622653961
+   },
+   "seed": 4100123,
+   "shifts": 3
+  },
+  {
+   "cf": 124,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9637033519011698,
+   "rho": {
+    "op3_rm": 33575.34290313721,
+    "op5_rm": 104288.71971130371,
+    "op9_rations": 88730.86157441139,
+    "period_hours": 518.390627682209
+   },
+   "seed": 4100124,
+   "shifts": 1
+  },
+  {
+   "cf": 125,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.9643728883694671,
+   "rho": {
+    "op3_rm": 71502.3155593872,
+    "op5_rm": 89749.94201660156,
+    "op9_rations": 72136.48968748748,
+    "period_hours": 380.5203418135643
+   },
+   "seed": 4100125,
+   "shifts": 3
+  },
+  {
+   "cf": 126,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9687591822056293,
+   "rho": {
+    "op3_rm": 56752.1618270874,
+    "op5_rm": 13781.462631225586,
+    "op9_rations": 17068.177856504917,
+    "period_hours": 878.9769576787949
+   },
+   "seed": 4100126,
+   "shifts": 3
+  },
+  {
+   "cf": 127,
+   "family": "R2r",
+   "increased": [],
+   "pattern": "----",
+   "ret_excel": 0.7782206626328223,
+   "rho": {
+    "op3_rm": 94503.43940734863,
+    "op5_rm": 112360.95359802246,
+    "op9_rations": 108630.05292601883,
+    "period_hours": 1204.0761966705322
+   },
+   "seed": 4100127,
+   "shifts": 1
+  },
+  {
+   "cf": 128,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9653318116208243,
+   "rho": {
+    "op3_rm": 18323.592681884766,
+    "op5_rm": 36647.63854980469,
+    "op9_rations": 53419.345166534185,
+    "period_hours": 54.13022714853287
+   },
+   "seed": 4100128,
+   "shifts": 2
+  },
+  {
+   "cf": 129,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.8867082623442007,
+   "rho": {
+    "op3_rm": 84965.83030700684,
+    "op5_rm": 90345.46886444092,
+    "op9_rations": 99203.14437523484,
+    "period_hours": 61.11779737472534
+   },
+   "seed": 4100129,
+   "shifts": 1
+  },
+  {
+   "cf": 130,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R12"
+   ],
+   "pattern": "++--",
+   "ret_excel": 0.009095629073307644,
+   "rho": {
+    "op3_rm": 40226.92840576172,
+    "op5_rm": 12699.373512268066,
+    "op9_rations": 59899.8503331095,
+    "period_hours": 1200.6563850045204
+   },
+   "seed": 4100130,
+   "shifts": 3
+  },
+  {
+   "cf": 131,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.9673741683578808,
+   "rho": {
+    "op3_rm": 108038.15128326416,
+    "op5_rm": 113683.51535797119,
+    "op9_rations": 66774.93453025818,
+    "period_hours": 874.2853311896324
+   },
+   "seed": 4100131,
+   "shifts": 3
+  },
+  {
+   "cf": 132,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9697190262638271,
+   "rho": {
+    "op3_rm": 1847.0527267456055,
+    "op5_rm": 35811.63951873779,
+    "op9_rations": 27360.252236947417,
+    "period_hours": 386.2367581129074
+   },
+   "seed": 4100132,
+   "shifts": 3
+  },
+  {
+   "cf": 133,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9598667578752655,
+   "rho": {
+    "op3_rm": 101214.9628829956,
+    "op5_rm": 19750.420875549316,
+    "op9_rations": 8493.572182953358,
+    "period_hours": 521.5329530239105
+   },
+   "seed": 4100133,
+   "shifts": 3
+  },
+  {
+   "cf": 134,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R12"
+   ],
+   "pattern": "++--",
+   "ret_excel": 0.009097958225023461,
+   "rho": {
+    "op3_rm": 23070.12393951416,
+    "op5_rm": 68837.23400115967,
+    "op9_rations": 79480.59281520545,
+    "period_hours": 736.3229153752327
+   },
+   "seed": 4100134,
+   "shifts": 3
+  },
+  {
+   "cf": 135,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R22",
+    "R23"
+   ],
+   "pattern": "+++-",
+   "ret_excel": 0.6817779417848537,
+   "rho": {
+    "op3_rm": 62778.90106201172,
+    "op5_rm": 58460.59215545654,
+    "op9_rations": 46951.913472265005,
+    "period_hours": 1083.9014756083488
+   },
+   "seed": 4100135,
+   "shifts": 2
+  },
+  {
+   "cf": 136,
+   "family": "R2r",
+   "increased": [
+    "R22"
+   ],
+   "pattern": "-+--",
+   "ret_excel": 0.6371026443360799,
+   "rho": {
+    "op3_rm": 46093.740463256836,
+    "op5_rm": 107291.75022125244,
+    "op9_rations": 117804.47456426919,
+    "period_hours": 175.28884756565094
+   },
+   "seed": 4100136,
+   "shifts": 2
+  },
+  {
+   "cf": 137,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R22"
+   ],
+   "pattern": "++--",
+   "ret_excel": 0.7196872351321321,
+   "rho": {
+    "op3_rm": 122201.96022033691,
+    "op5_rm": 49220.193786621094,
+    "op9_rations": 89893.84203962982,
+    "period_hours": 301.5313264131546
+   },
+   "seed": 4100137,
+   "shifts": 2
+  },
+  {
+   "cf": 138,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.8791616906418362,
+   "rho": {
+    "op3_rm": 13610.86166381836,
+    "op5_rm": 92532.15019226074,
+    "op9_rations": 3248.325504362583,
+    "period_hours": 1125.987802684307
+   },
+   "seed": 4100138,
+   "shifts": 3
+  },
+  {
+   "cf": 139,
+   "family": "R1r",
+   "increased": [
+    "R12"
+   ],
+   "pattern": "-+--",
+   "ret_excel": 0.009169118641774892,
+   "rho": {
+    "op3_rm": 83762.13947296143,
+    "op5_rm": 26110.667037963867,
+    "op9_rations": 122311.47754378617,
+    "period_hours": 778.5756481289864
+   },
+   "seed": 4100139,
+   "shifts": 3
+  },
+  {
+   "cf": 140,
+   "family": "R2r",
+   "increased": [
+    "R22",
+    "R24"
+   ],
+   "pattern": "-+-+",
+   "ret_excel": 0.6432619394654864,
+   "rho": {
+    "op3_rm": 36623.23757171631,
+    "op5_rm": 69196.98944091797,
+    "op9_rations": 35800.42054876685,
+    "period_hours": 647.6090261936188
+   },
+   "seed": 4100140,
+   "shifts": 2
+  },
+  {
+   "cf": 141,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.9705866697127282,
+   "rho": {
+    "op3_rm": 75495.32741546631,
+    "op5_rm": 116923.21220397949,
+    "op9_rations": 54347.67740406096,
+    "period_hours": 428.4893707036972
+   },
+   "seed": 4100141,
+   "shifts": 3
+  },
+  {
+   "cf": 142,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.9704365264034127,
+   "rho": {
+    "op3_rm": 61210.166816711426,
+    "op5_rm": 41211.944274902344,
+    "op9_rations": 109431.07226863503,
+    "period_hours": 1000.361444413662
+   },
+   "seed": 4100142,
+   "shifts": 3
+  },
+  {
+   "cf": 143,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9640994121074931,
+   "rho": {
+    "op3_rm": 98578.88900756836,
+    "op5_rm": 78465.92742919922,
+    "op9_rations": 15901.8330629915,
+    "period_hours": 1326.8987436890602
+   },
+   "seed": 4100143,
+   "shifts": 3
+  },
+  {
+   "cf": 144,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.9770509602364306,
+   "rho": {
+    "op3_rm": 22834.050064086914,
+    "op5_rm": 2498.916549682617,
+    "op9_rations": 71096.61617875099,
+    "period_hours": 103.20416450500488
+   },
+   "seed": 4100144,
+   "shifts": 2
+  },
+  {
+   "cf": 145,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R22"
+   ],
+   "pattern": "++--",
+   "ret_excel": 0.6965602233342577,
+   "rho": {
+    "op3_rm": 93981.87995910645,
+    "op5_rm": 98519.86450195312,
+    "op9_rations": 40229.44222390652,
+    "period_hours": 144.3587704896927
+   },
+   "seed": 4100145,
+   "shifts": 1
+  },
+  {
+   "cf": 146,
+   "family": "R2r",
+   "increased": [
+    "R24"
+   ],
+   "pattern": "---+",
+   "ret_excel": 0.6720213013490691,
+   "rho": {
+    "op3_rm": 15852.978057861328,
+    "op5_rm": 51576.22764587402,
+    "op9_rations": 110991.81913398206,
+    "period_hours": 1283.1590768694878
+   },
+   "seed": 4100146,
+   "shifts": 2
+  },
+  {
+   "cf": 147,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9715719663584841,
+   "rho": {
+    "op3_rm": 70974.2558670044,
+    "op5_rm": 75751.1190032959,
+    "op9_rations": 15552.22936347127,
+    "period_hours": 957.4043739438057
+   },
+   "seed": 4100147,
+   "shifts": 1
+  },
+  {
+   "cf": 148,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R24"
+   ],
+   "pattern": "+--+",
+   "ret_excel": 0.6533626841622435,
+   "rho": {
+    "op3_rm": 54273.15731048584,
+    "op5_rm": 28612.78564453125,
+    "op9_rations": 86449.30989481509,
+    "period_hours": 468.7815821170807
+   },
+   "seed": 4100148,
+   "shifts": 1
+  },
+  {
+   "cf": 149,
+   "family": "R1r",
+   "increased": [
+    "R11"
+   ],
+   "pattern": "+---",
+   "ret_excel": 0.009079091362391944,
+   "rho": {
+    "op3_rm": 76841.06746673584,
+    "op5_rm": 42304.00840759277,
+    "op9_rations": 67652.56093069911,
+    "period_hours": 606.6619266271591
+   },
+   "seed": 4100149,
+   "shifts": 3
+  },
+  {
+   "cf": 150,
+   "family": "R2r",
+   "increased": [
+    "R21"
+   ],
+   "pattern": "+---",
+   "ret_excel": 0.7454293271302506,
+   "rho": {
+    "op3_rm": 32086.228523254395,
+    "op5_rm": 122127.39624023438,
+    "op9_rations": 28205.252515152097,
+    "period_hours": 822.1901702284813
+   },
+   "seed": 4100150,
+   "shifts": 2
+  },
+  {
+   "cf": 151,
+   "family": "R1r",
+   "increased": [
+    "R11"
+   ],
+   "pattern": "+---",
+   "ret_excel": 0.009154944277452583,
+   "rho": {
+    "op3_rm": 115204.95071411133,
+    "op5_rm": 4225.0048828125,
+    "op9_rations": 98111.89826577902,
+    "period_hours": 1169.0700178742409
+   },
+   "seed": 4100151,
+   "shifts": 3
+  },
+  {
+   "cf": 152,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R12",
+    "R14"
+   ],
+   "pattern": "++-+",
+   "ret_excel": 0.00912647881266151,
+   "rho": {
+    "op3_rm": 9029.790115356445,
+    "op5_rm": 83763.58726501465,
+    "op9_rations": 58776.22218243778,
+    "period_hours": 261.03160858154297
+   },
+   "seed": 4100152,
+   "shifts": 1
+  },
+  {
+   "cf": 153,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R12"
+   ],
+   "pattern": "++--",
+   "ret_excel": 0.009130487342010142,
+   "rho": {
+    "op3_rm": 67377.8295135498,
+    "op5_rm": 11305.141410827637,
+    "op9_rations": 22929.788606241345,
+    "period_hours": 218.945321559906
+   },
+   "seed": 4100153,
+   "shifts": 1
+  },
+  {
+   "cf": 154,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9693071093402944,
+   "rho": {
+    "op3_rm": 53076.73095703125,
+    "op5_rm": 85323.45279693604,
+    "op9_rations": 78096.03489562869,
+    "period_hours": 1042.8275790810585
+   },
+   "seed": 4100154,
+   "shifts": 2
+  },
+  {
+   "cf": 155,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R12",
+    "R13",
+    "R14"
+   ],
+   "pattern": "++++",
+   "ret_excel": 0.009045251849661234,
+   "rho": {
+    "op3_rm": 105737.95383453369,
+    "op5_rm": 34263.96915435791,
+    "op9_rations": 47594.504518434405,
+    "period_hours": 696.1141371130943
+   },
+   "seed": 4100155,
+   "shifts": 3
+  },
+  {
+   "cf": 156,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R23",
+    "R24"
+   ],
+   "pattern": "+-++",
+   "ret_excel": 0.4549299329592239,
+   "rho": {
+    "op3_rm": 30009.051933288574,
+    "op5_rm": 108087.43755340576,
+    "op9_rations": 102649.11847561598,
+    "period_hours": 564.4092339277267
+   },
+   "seed": 4100156,
+   "shifts": 1
+  },
+  {
+   "cf": 157,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9706562863600149,
+   "rho": {
+    "op3_rm": 114961.14177703857,
+    "op5_rm": 62671.218910217285,
+    "op9_rations": 121250.93307159841,
+    "period_hours": 342.70542883872986
+   },
+   "seed": 4100157,
+   "shifts": 3
+  },
+  {
+   "cf": 158,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.9483662830318064,
+   "rho": {
+    "op3_rm": 6385.981178283691,
+    "op5_rm": 17692.687797546387,
+    "op9_rations": 34646.090760827065,
+    "period_hours": 915.1517212986946
+   },
+   "seed": 4100158,
+   "shifts": 3
+  },
+  {
+   "cf": 159,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R24"
+   ],
+   "pattern": "+--+",
+   "ret_excel": 0.6523822374373981,
+   "rho": {
+    "op3_rm": 91964.75830078125,
+    "op5_rm": 101039.67144012451,
+    "op9_rations": 90802.17007733881,
+    "period_hours": 1241.072669684887
+   },
+   "seed": 4100159,
+   "shifts": 3
+  },
+  {
+   "cf": 160,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.9698097946640086,
+   "rho": {
+    "op3_rm": 44809.919357299805,
+    "op5_rm": 55776.42276763916,
+    "op9_rations": 4062.6241452991962,
+    "period_hours": 18.116371750831604
+   },
+   "seed": 4100160,
+   "shifts": 2
+  },
+  {
+   "cf": 161,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.9681820117489318,
+   "rho": {
+    "op3_rm": 109769.21161651611,
+    "op5_rm": 23705.97152709961,
+    "op9_rations": 55997.745249420404,
+    "period_hours": 35.710835695266724
+   },
+   "seed": 4100161,
+   "shifts": 3
+  },
+  {
+   "cf": 162,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.9717808529920099,
+   "rho": {
+    "op3_rm": 3065.309715270996,
+    "op5_rm": 72569.18403625488,
+    "op9_rations": 95469.5652667433,
+    "period_hours": 1227.7443063855171
+   },
+   "seed": 4100162,
+   "shifts": 3
+  },
+  {
+   "cf": 163,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9701987875038269,
+   "rho": {
+    "op3_rm": 86746.52870178223,
+    "op5_rm": 46823.15986633301,
+    "op9_rations": 31439.867824316025,
+    "period_hours": 902.64600867033
+   },
+   "seed": 4100163,
+   "shifts": 1
+  },
+  {
+   "cf": 164,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R23",
+    "R24"
+   ],
+   "pattern": "+-++",
+   "ret_excel": 0.5345224832090923,
+   "rho": {
+    "op3_rm": 41500.43014526367,
+    "op5_rm": 95881.68319702148,
+    "op9_rations": 70807.74969421327,
+    "period_hours": 362.10257256031036
+   },
+   "seed": 4100164,
+   "shifts": 3
+  },
+  {
+   "cf": 165,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9708857772933893,
+   "rho": {
+    "op3_rm": 65013.45748901367,
+    "op5_rm": 78957.90229797363,
+    "op9_rations": 83199.80869442225,
+    "period_hours": 578.8045492172241
+   },
+   "seed": 4100165,
+   "shifts": 2
+  },
+  {
+   "cf": 166,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R13",
+    "R14"
+   ],
+   "pattern": "+-++",
+   "ret_excel": 0.008141669216257672,
+   "rho": {
+    "op3_rm": 48833.61854553223,
+    "op5_rm": 1054.4407653808594,
+    "op9_rations": 12411.955593153834,
+    "period_hours": 678.1099224686623
+   },
+   "seed": 4100166,
+   "shifts": 1
+  },
+  {
+   "cf": 167,
+   "family": "R2r",
+   "increased": [
+    "R22",
+    "R24"
+   ],
+   "pattern": "-+-+",
+   "ret_excel": 0.7021530718077384,
+   "rho": {
+    "op3_rm": 103392.399559021,
+    "op5_rm": 117392.96493530273,
+    "op9_rations": 113786.14279255271,
+    "period_hours": 1024.3336552977562
+   },
+   "seed": 4100167,
+   "shifts": 2
+  },
+  {
+   "cf": 168,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R12",
+    "R13"
+   ],
+   "pattern": "+++-",
+   "ret_excel": 0.009129395682734444,
+   "rho": {
+    "op3_rm": 25762.238960266113,
+    "op5_rm": 39774.69062805176,
+    "op9_rations": 42855.89939542115,
+    "period_hours": 231.20567643642426
+   },
+   "seed": 4100168,
+   "shifts": 1
+  },
+  {
+   "cf": 169,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.9721259797251495,
+   "rho": {
+    "op3_rm": 82190.45413970947,
+    "op5_rm": 113193.12343597412,
+    "op9_rations": 7352.034000679851,
+    "period_hours": 273.12958323955536
+   },
+   "seed": 4100169,
+   "shifts": 2
+  },
+  {
+   "cf": 170,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.9707132020523844,
+   "rho": {
+    "op3_rm": 35504.35558319092,
+    "op5_rm": 37254.534187316895,
+    "op9_rations": 93919.86776143312,
+    "period_hours": 1150.0809425711632
+   },
+   "seed": 4100170,
+   "shifts": 3
+  },
+  {
+   "cf": 171,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9680799441477503,
+   "rho": {
+    "op3_rm": 120565.63682556152,
+    "op5_rm": 89877.88501739502,
+    "op9_rations": 31889.724047854543,
+    "period_hours": 804.0235753655434
+   },
+   "seed": 4100171,
+   "shifts": 3
+  },
+  {
+   "cf": 172,
+   "family": "R1r",
+   "increased": [
+    "R11"
+   ],
+   "pattern": "+---",
+   "ret_excel": 0.009133022553936521,
+   "rho": {
+    "op3_rm": 12421.734924316406,
+    "op5_rm": 14134.460105895996,
+    "op9_rations": 118599.94810447097,
+    "period_hours": 620.5620903968811
+   },
+   "seed": 4100172,
+   "shifts": 1
+  },
+  {
+   "cf": 173,
+   "family": "R2r",
+   "increased": [],
+   "pattern": "----",
+   "ret_excel": 0.8187041013558839,
+   "rho": {
+    "op3_rm": 96428.7075805664,
+    "op5_rm": 60863.237800598145,
+    "op9_rations": 105390.57066477835,
+    "period_hours": 488.0161854028702
+   },
+   "seed": 4100173,
+   "shifts": 2
+  },
+  {
+   "cf": 174,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.9710834146564583,
+   "rho": {
+    "op3_rm": 20238.546981811523,
+    "op5_rm": 103921.60732269287,
+    "op9_rations": 50260.374907404184,
+    "period_hours": 944.4036700129509
+   },
+   "seed": 4100174,
+   "shifts": 1
+  },
+  {
+   "cf": 175,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.9725954959183032,
+   "rho": {
+    "op3_rm": 73417.26573944092,
+    "op5_rm": 22145.756492614746,
+    "op9_rations": 74822.5013371557,
+    "period_hours": 1269.668173134327
+   },
+   "seed": 4100175,
+   "shifts": 3
+  },
+  {
+   "cf": 176,
+   "family": "R1r",
+   "increased": [
+    "R13"
+   ],
+   "pattern": "--+-",
+   "ret_excel": 0.009111990820933695,
+   "rho": {
+    "op3_rm": 58677.42679595947,
+    "op5_rm": 65489.40113067627,
+    "op9_rations": 19796.243727207184,
+    "period_hours": 161.45824313163757
+   },
+   "seed": 4100176,
+   "shifts": 2
+  },
+  {
+   "cf": 177,
+   "family": "R2r",
+   "increased": [
+    "R22",
+    "R24"
+   ],
+   "pattern": "-+-+",
+   "ret_excel": 0.6696579880930965,
+   "rho": {
+    "op3_rm": 72193.381690979,
+    "op5_rm": 30908.458213806152,
+    "op9_rations": 115155.77597916126,
+    "period_hours": 115.9583090543747
+   },
+   "seed": 4100177,
+   "shifts": 2
+  },
+  {
+   "cf": 178,
+   "family": "R2r",
+   "increased": [
+    "R23"
+   ],
+   "pattern": "--+-",
+   "ret_excel": 0.6111585107261133,
+   "rho": {
+    "op3_rm": 55999.47978973389,
+    "op5_rm": 110475.44757843018,
+    "op9_rations": 44193.26694868505,
+    "period_hours": 1307.253498494625
+   },
+   "seed": 4100178,
+   "shifts": 1
+  },
+  {
+   "cf": 179,
+   "family": "R2r",
+   "increased": [
+    "R22",
+    "R23"
+   ],
+   "pattern": "-++-",
+   "ret_excel": 0.6426063476655918,
+   "rho": {
+    "op3_rm": 95250.76103210449,
+    "op5_rm": 7942.438545227051,
+    "op9_rations": 82600.81063583493,
+    "period_hours": 982.8510194420815
+   },
+   "seed": 4100179,
+   "shifts": 1
+  },
+  {
+   "cf": 180,
+   "family": "R1r",
+   "increased": [
+    "R12",
+    "R13",
+    "R14"
+   ],
+   "pattern": "-+++",
+   "ret_excel": 0.009055753186356732,
+   "rho": {
+    "op3_rm": 17634.662475585938,
+    "op5_rm": 87733.65474700928,
+    "op9_rations": 11780.455330386758,
+    "period_hours": 441.73336458206177
+   },
+   "seed": 4100180,
+   "shifts": 1
+  },
+  {
+   "cf": 181,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R23"
+   ],
+   "pattern": "+-+-",
+   "ret_excel": 0.5668075691418664,
+   "rho": {
+    "op3_rm": 117947.68981933594,
+    "op5_rm": 102467.43244171143,
+    "op9_rations": 24225.14946386218,
+    "period_hours": 666.1874595880508
+   },
+   "seed": 4100181,
+   "shifts": 1
+  },
+  {
+   "cf": 182,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.8616788814829931,
+   "rho": {
+    "op3_rm": 11257.850875854492,
+    "op5_rm": 55301.1608505249,
+    "op9_rations": 63502.96731479466,
+    "period_hours": 766.231114089489
+   },
+   "seed": 4100182,
+   "shifts": 3
+  },
+  {
+   "cf": 183,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9643682682345182,
+   "rho": {
+    "op3_rm": 79526.56963348389,
+    "op5_rm": 64121.66988372803,
+    "op9_rations": 62564.39470499754,
+    "period_hours": 1111.8407290577888
+   },
+   "seed": 4100183,
+   "shifts": 1
+  },
+  {
+   "cf": 184,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R12"
+   ],
+   "pattern": "++--",
+   "ret_excel": 0.008988219187291716,
+   "rho": {
+    "op3_rm": 34266.409034729004,
+    "op5_rm": 17209.7359085083,
+    "op9_rations": 101945.91413252056,
+    "period_hours": 319.2869689464569
+   },
+   "seed": 4100184,
+   "shifts": 2
+  },
+  {
+   "cf": 185,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R13"
+   ],
+   "pattern": "+-+-",
+   "ret_excel": 0.009135498410079601,
+   "rho": {
+    "op3_rm": 104614.45301055908,
+    "op5_rm": 74321.30813598633,
+    "op9_rations": 74254.32507880032,
+    "period_hours": 193.53964161872864
+   },
+   "seed": 4100185,
+   "shifts": 3
+  },
+  {
+   "cf": 186,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.9527671312056823,
+   "rho": {
+    "op3_rm": 28438.354454040527,
+    "op5_rm": 29090.09925842285,
+    "op9_rations": 19133.921664208174,
+    "period_hours": 1069.9167822003365
+   },
+   "seed": 4100186,
+   "shifts": 3
+  },
+  {
+   "cf": 187,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R23"
+   ],
+   "pattern": "+-+-",
+   "ret_excel": 0.6718555348547735,
+   "rho": {
+    "op3_rm": 66189.57344055176,
+    "op5_rm": 97067.71522521973,
+    "op9_rations": 106791.02565161884,
+    "period_hours": 724.4735328555107
+   },
+   "seed": 4100187,
+   "shifts": 3
+  },
+  {
+   "cf": 188,
+   "family": "R1r",
+   "increased": [
+    "R13",
+    "R14"
+   ],
+   "pattern": "--++",
+   "ret_excel": 0.00908879455423633,
+   "rho": {
+    "op3_rm": 51435.67153930664,
+    "op5_rm": 52060.87966918945,
+    "op9_rations": 51566.92066043615,
+    "period_hours": 540.2737666368484
+   },
+   "seed": 4100188,
+   "shifts": 1
+  },
+  {
+   "cf": 189,
+   "family": "R2r",
+   "increased": [
+    "R22"
+   ],
+   "pattern": "-+--",
+   "ret_excel": 0.6319173209410445,
+   "rho": {
+    "op3_rm": 89362.64419555664,
+    "op5_rm": 7582.098770141602,
+    "op9_rations": 38425.551703199744,
+    "period_hours": 399.9757432937622
+   },
+   "seed": 4100189,
+   "shifts": 2
+  },
+  {
+   "cf": 190,
+   "family": "R2r",
+   "increased": [
+    "R22",
+    "R23",
+    "R24"
+   ],
+   "pattern": "-+++",
+   "ret_excel": 0.471962213203869,
+   "rho": {
+    "op3_rm": 42662.48359680176,
+    "op5_rm": 81373.99612426758,
+    "op9_rations": 125107.11877048016,
+    "period_hours": 856.9374466538429
+   },
+   "seed": 4100190,
+   "shifts": 2
+  },
+  {
+   "cf": 191,
+   "family": "R2r",
+   "increased": [
+    "R22",
+    "R23",
+    "R24"
+   ],
+   "pattern": "-+++",
+   "ret_excel": 0.37742579884499927,
+   "rho": {
+    "op3_rm": 112431.26461029053,
+    "op5_rm": 45668.8801574707,
+    "op9_rations": 106.49383999407291,
+    "period_hours": 1181.5061311125755
+   },
+   "seed": 4100191,
+   "shifts": 1
+  },
+  {
+   "cf": 192,
+   "family": "R1r",
+   "increased": [
+    "R12",
+    "R14"
+   ],
+   "pattern": "-+-+",
+   "ret_excel": 0.009080130177262212,
+   "rho": {
+    "op3_rm": 4301.425666809082,
+    "op5_rm": 119715.02723693848,
+    "op9_rations": 86645.90718224645,
+    "period_hours": 74.03448235988617
+   },
+   "seed": 4100192,
+   "shifts": 2
+  },
+  {
+   "cf": 193,
+   "family": "R1r",
+   "increased": [
+    "R12",
+    "R13",
+    "R14"
+   ],
+   "pattern": "-+++",
+   "ret_excel": 0.009121828452040178,
+   "rho": {
+    "op3_rm": 102119.69982147217,
+    "op5_rm": 42003.31901550293,
+    "op9_rations": 18562.785571441054,
+    "period_hours": 69.13414531946182
+   },
+   "seed": 4100193,
+   "shifts": 1
+  },
+  {
+   "cf": 194,
+   "family": "R2r",
+   "increased": [
+    "R23",
+    "R24"
+   ],
+   "pattern": "--++",
+   "ret_excel": 0.44579938384212814,
+   "rho": {
+    "op3_rm": 26134.860877990723,
+    "op5_rm": 116065.2749633789,
+    "op9_rations": 73602.67862677574,
+    "period_hours": 1187.7598185539246
+   },
+   "seed": 4100194,
+   "shifts": 2
+  },
+  {
+   "cf": 195,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R22",
+    "R23"
+   ],
+   "pattern": "+++-",
+   "ret_excel": 0.5097161889566583,
+   "rho": {
+    "op3_rm": 63676.083068847656,
+    "op5_rm": 3567.5418090820312,
+    "op9_rations": 52945.304268971086,
+    "period_hours": 840.1837567090988
+   },
+   "seed": 4100195,
+   "shifts": 2
+  },
+  {
+   "cf": 196,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9672210811071812,
+   "rho": {
+    "op3_rm": 49150.92247009277,
+    "op5_rm": 77343.8646697998,
+    "op9_rations": 108127.35292688012,
+    "period_hours": 415.37608283758163
+   },
+   "seed": 4100196,
+   "shifts": 2
+  },
+  {
+   "cf": 197,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R12",
+    "R14"
+   ],
+   "pattern": "++-+",
+   "ret_excel": 0.009056758782515563,
+   "rho": {
+    "op3_rm": 88023.01231384277,
+    "op5_rm": 93412.58697509766,
+    "op9_rations": 124755.16039319336,
+    "period_hours": 534.7171795964241
+   },
+   "seed": 4100197,
+   "shifts": 3
+  },
+  {
+   "cf": 198,
+   "family": "R2r",
+   "increased": [
+    "R23"
+   ],
+   "pattern": "--+-",
+   "ret_excel": 0.725128717736051,
+   "rho": {
+    "op3_rm": 41124.110412597656,
+    "op5_rm": 48391.31950378418,
+    "op9_rations": 38031.53511509299,
+    "period_hours": 728.7584702968597
+   },
+   "seed": 4100198,
+   "shifts": 2
+  },
+  {
+   "cf": 199,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.969989586105936,
+   "rho": {
+    "op3_rm": 111102.88822174072,
+    "op5_rm": 70296.55265808105,
+    "op9_rations": 88281.91971592605,
+    "period_hours": 1055.1318422555923
+   },
+   "seed": 4100199,
+   "shifts": 2
+  },
+  {
+   "cf": 200,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.9458476878543433,
+   "rho": {
+    "op3_rm": 2751.789665222168,
+    "op5_rm": 25079.54132080078,
+    "op9_rations": 1661.9978919625282,
+    "period_hours": 209.59623116254807
+   },
+   "seed": 4100200,
+   "shifts": 1
+  },
+  {
+   "cf": 201,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.9636938049731085,
+   "rho": {
+    "op3_rm": 74480.00942230225,
+    "op5_rm": 67776.09409332275,
+    "op9_rations": 44598.818477243185,
+    "period_hours": 335.3457815051079
+   },
+   "seed": 4100201,
+   "shifts": 3
+  },
+  {
+   "cf": 202,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9669016697586573,
+   "rho": {
+    "op3_rm": 58514.84882354736,
+    "op5_rm": 20879.99828338623,
+    "op9_rations": 115480.81949539483,
+    "period_hours": 1097.0535660982132
+   },
+   "seed": 4100202,
+   "shifts": 1
+  },
+  {
+   "cf": 203,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.9683136730222558,
+   "rho": {
+    "op3_rm": 97556.12594604492,
+    "op5_rm": 106492.89012908936,
+    "op9_rations": 10198.035009205341,
+    "period_hours": 770.5182745456696
+   },
+   "seed": 4100203,
+   "shifts": 2
+  },
+  {
+   "cf": 204,
+   "family": "R1r",
+   "increased": [
+    "R13"
+   ],
+   "pattern": "--+-",
+   "ret_excel": 0.009101563336760706,
+   "rho": {
+    "op3_rm": 20131.287002563477,
+    "op5_rm": 59311.01474761963,
+    "op9_rations": 80976.33257322013,
+    "period_hours": 660.628649532795
+   },
+   "seed": 4100204,
+   "shifts": 2
+  },
+  {
+   "cf": 205,
+   "family": "R1r",
+   "increased": [
+    "R13",
+    "R14"
+   ],
+   "pattern": "--++",
+   "ret_excel": 0.009071523676840236,
+   "rho": {
+    "op3_rm": 119499.19715881348,
+    "op5_rm": 11607.29564666748,
+    "op9_rations": 64143.07647943497,
+    "period_hours": 457.13592714071274
+   },
+   "seed": 4100205,
+   "shifts": 2
+  },
+  {
+   "cf": 206,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R14"
+   ],
+   "pattern": "+--+",
+   "ret_excel": 0.009136700766165053,
+   "rho": {
+    "op3_rm": 12588.098602294922,
+    "op5_rm": 91384.1092300415,
+    "op9_rations": 24823.202764615417,
+    "period_hours": 966.0951064825058
+   },
+   "seed": 4100206,
+   "shifts": 2
+  },
+  {
+   "cf": 207,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R13"
+   ],
+   "pattern": "+-+-",
+   "ret_excel": 0.00912246442380371,
+   "rho": {
+    "op3_rm": 81066.82147979736,
+    "op5_rm": 34923.71738433838,
+    "op9_rations": 100636.50453463197,
+    "period_hours": 1313.5094089508057
+   },
+   "seed": 4100207,
+   "shifts": 3
+  },
+  {
+   "cf": 208,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R13",
+    "R14"
+   ],
+   "pattern": "+-++",
+   "ret_excel": 0.009118191016740659,
+   "rho": {
+    "op3_rm": 35607.919578552246,
+    "op5_rm": 114504.8749923706,
+    "op9_rations": 61174.47521723807,
+    "period_hours": 111.0557489991188
+   },
+   "seed": 4100208,
+   "shifts": 2
+  },
+  {
+   "cf": 209,
+   "family": "R2r",
+   "increased": [
+    "R22",
+    "R23"
+   ],
+   "pattern": "-++-",
+   "ret_excel": 0.5482609047476537,
+   "rho": {
+    "op3_rm": 79903.83052825928,
+    "op5_rm": 18492.016639709473,
+    "op9_rations": 93279.75390292704,
+    "period_hours": 157.17330569028854
+   },
+   "seed": 4100209,
+   "shifts": 3
+  },
+  {
+   "cf": 210,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R12",
+    "R14"
+   ],
+   "pattern": "++-+",
+   "ret_excel": 0.0074919010941016835,
+   "rho": {
+    "op3_rm": 32988.99158477783,
+    "op5_rm": 61820.3275680542,
+    "op9_rations": 6753.977883607149,
+    "period_hours": 1275.2247601747513
+   },
+   "seed": 4100210,
+   "shifts": 1
+  },
+  {
+   "cf": 211,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.9564228696692294,
+   "rho": {
+    "op3_rm": 118260.26870727539,
+    "op5_rm": 56837.093925476074,
+    "op9_rations": 119909.36239622533,
+    "period_hours": 928.3470804691315
+   },
+   "seed": 4100211,
+   "shifts": 2
+  },
+  {
+   "cf": 212,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R12",
+    "R14"
+   ],
+   "pattern": "++-+",
+   "ret_excel": 0.009170995578832329,
+   "rho": {
+    "op3_rm": 9925.108108520508,
+    "op5_rm": 99910.5627822876,
+    "op9_rations": 33279.64635193348,
+    "period_hours": 502.8011253476143
+   },
+   "seed": 4100212,
+   "shifts": 1
+  },
+  {
+   "cf": 213,
+   "family": "R2r",
+   "increased": [
+    "R21"
+   ],
+   "pattern": "+---",
+   "ret_excel": 0.7386147893167588,
+   "rho": {
+    "op3_rm": 94877.19795227051,
+    "op5_rm": 86211.84368133545,
+    "op9_rations": 49854.81868498027,
+    "period_hours": 614.3084029555321
+   },
+   "seed": 4100213,
+   "shifts": 3
+  },
+  {
+   "cf": 214,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R22",
+    "R23",
+    "R24"
+   ],
+   "pattern": "++++",
+   "ret_excel": 0.5072881423111212,
+   "rho": {
+    "op3_rm": 18908.29605102539,
+    "op5_rm": 10483.313026428223,
+    "op9_rations": 105065.52433222532,
+    "period_hours": 808.9239124059677
+   },
+   "seed": 4100214,
+   "shifts": 1
+  },
+  {
+   "cf": 215,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.962427990311259,
+   "rho": {
+    "op3_rm": 71877.01892852783,
+    "op5_rm": 109179.04666900635,
+    "op9_rations": 21378.668742254376,
+    "period_hours": 1134.6806030273438
+   },
+   "seed": 4100215,
+   "shifts": 1
+  },
+  {
+   "cf": 216,
+   "family": "R1r",
+   "increased": [
+    "R12",
+    "R13"
+   ],
+   "pattern": "-++-",
+   "ret_excel": 0.009136556669451408,
+   "rho": {
+    "op3_rm": 57335.92037200928,
+    "op5_rm": 33225.797538757324,
+    "op9_rations": 76446.98221608996,
+    "period_hours": 289.88327318429947
+   },
+   "seed": 4100216,
+   "shifts": 2
+  },
+  {
+   "cf": 217,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R24"
+   ],
+   "pattern": "+--+",
+   "ret_excel": 0.6245991529458292,
+   "rho": {
+    "op3_rm": 112263.95977020264,
+    "op5_rm": 121059.23973083496,
+    "op9_rations": 95821.52833789587,
+    "period_hours": 247.9615893959999
+   },
+   "seed": 4100217,
+   "shifts": 1
+  },
+  {
+   "cf": 218,
+   "family": "R1r",
+   "increased": [
+    "R13",
+    "R14"
+   ],
+   "pattern": "--++",
+   "ret_excel": 0.009031951209803683,
+   "rho": {
+    "op3_rm": 5368.799171447754,
+    "op5_rm": 43425.60241699219,
+    "op9_rations": 56391.76465384662,
+    "period_hours": 1008.9310927391052
+   },
+   "seed": 4100218,
+   "shifts": 3
+  },
+  {
+   "cf": 219,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R22",
+    "R23"
+   ],
+   "pattern": "+++-",
+   "ret_excel": 0.5791561944544931,
+   "rho": {
+    "op3_rm": 89260.02136230469,
+    "op5_rm": 82971.74377441406,
+    "op9_rations": 69171.73246666789,
+    "period_hours": 683.0124825239182
+   },
+   "seed": 4100219,
+   "shifts": 2
+  },
+  {
+   "cf": 220,
+   "family": "R1r",
+   "increased": [
+    "R12",
+    "R13"
+   ],
+   "pattern": "-++-",
+   "ret_excel": 0.009120521172638436,
+   "rho": {
+    "op3_rm": 43785.18241882324,
+    "op5_rm": 5083.410873413086,
+    "op9_rations": 29884.360956028104,
+    "period_hours": 572.5486387610435
+   },
+   "seed": 4100220,
+   "shifts": 1
+  },
+  {
+   "cf": 221,
+   "family": "R2r",
+   "increased": [
+    "R21"
+   ],
+   "pattern": "+---",
+   "ret_excel": 0.7908716160086128,
+   "rho": {
+    "op3_rm": 66353.09257507324,
+    "op5_rm": 50477.13317871094,
+    "op9_rations": 12983.09637978673,
+    "period_hours": 376.889735519886
+   },
+   "seed": 4100221,
+   "shifts": 3
+  },
+  {
+   "cf": 222,
+   "family": "R1r",
+   "increased": [
+    "R13"
+   ],
+   "pattern": "--+-",
+   "ret_excel": 0.009125150768143193,
+   "rho": {
+    "op3_rm": 50371.99401855469,
+    "op5_rm": 99550.52146911621,
+    "op9_rations": 83851.45796276629,
+    "period_hours": 886.5871961116791
+   },
+   "seed": 4100222,
+   "shifts": 2
+  },
+  {
+   "cf": 223,
+   "family": "R2r",
+   "increased": [
+    "R22",
+    "R23"
+   ],
+   "pattern": "-++-",
+   "ret_excel": 0.6243887413243779,
+   "rho": {
+    "op3_rm": 104720.77182769775,
+    "op5_rm": 27731.880111694336,
+    "op9_rations": 41477.51109302044,
+    "period_hours": 1233.303116440773
+   },
+   "seed": 4100223,
+   "shifts": 2
+  },
+  {
+   "cf": 224,
+   "family": "R2r",
+   "increased": [
+    "R22"
+   ],
+   "pattern": "-+--",
+   "ret_excel": 0.7262517344865289,
+   "rho": {
+    "op3_rm": 27311.869926452637,
+    "op5_rm": 76580.46203613281,
+    "op9_rations": 112449.81270097196,
+    "period_hours": 31.42367523908615
+   },
+   "seed": 4100224,
+   "shifts": 2
+  },
+  {
+   "cf": 225,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9674169794608497,
+   "rho": {
+    "op3_rm": 61956.32308959961,
+    "op5_rm": 105049.99866485596,
+    "op9_rations": 77759.4531532377,
+    "period_hours": 1.3625391125679016
+   },
+   "seed": 4100225,
+   "shifts": 1
+  },
+  {
+   "cf": 226,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R12"
+   ],
+   "pattern": "++--",
+   "ret_excel": 0.009012122513751178,
+   "rho": {
+    "op3_rm": 47936.484146118164,
+    "op5_rm": 59801.40895843506,
+    "op9_rations": 22520.386934280396,
+    "period_hours": 1256.4728214740753
+   },
+   "seed": 4100226,
+   "shifts": 1
+  },
+  {
+   "cf": 227,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R12"
+   ],
+   "pattern": "++--",
+   "ret_excel": 0.009153350043008024,
+   "rho": {
+    "op3_rm": 100327.70290374756,
+    "op5_rm": 66341.00978851318,
+    "op9_rations": 104269.75437439978,
+    "period_hours": 910.2515670061111
+   },
+   "seed": 4100227,
+   "shifts": 1
+  },
+  {
+   "cf": 228,
+   "family": "R2r",
+   "increased": [
+    "R21"
+   ],
+   "pattern": "+---",
+   "ret_excel": 0.7045934516007911,
+   "rho": {
+    "op3_rm": 24857.542304992676,
+    "op5_rm": 21347.585334777832,
+    "op9_rations": 49165.39365425706,
+    "period_hours": 348.95926398038864
+   },
+   "seed": 4100228,
+   "shifts": 1
+  },
+  {
+   "cf": 229,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9662116014499831,
+   "rho": {
+    "op3_rm": 108864.51496124268,
+    "op5_rm": 38293.86257171631,
+    "op9_rations": 34059.5705229789,
+    "period_hours": 549.624151289463
+   },
+   "seed": 4100229,
+   "shifts": 1
+  },
+  {
+   "cf": 230,
+   "family": "R2r",
+   "increased": [
+    "R21"
+   ],
+   "pattern": "+---",
+   "ret_excel": 0.6858162994764989,
+   "rho": {
+    "op3_rm": 0.6130599975585938,
+    "op5_rm": 112102.2325515747,
+    "op9_rations": 120614.66419324279,
+    "period_hours": 712.1705389022827
+   },
+   "seed": 4100230,
+   "shifts": 2
+  },
+  {
+   "cf": 231,
+   "family": "R2r",
+   "increased": [
+    "R22"
+   ],
+   "pattern": "-+--",
+   "ret_excel": 0.6024342160925278,
+   "rho": {
+    "op3_rm": 85849.39430236816,
+    "op5_rm": 14955.131721496582,
+    "op9_rations": 5456.391898915172,
+    "period_hours": 1037.271174788475
+   },
+   "seed": 4100231,
+   "shifts": 1
+  },
+  {
+   "cf": 232,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R22",
+    "R23"
+   ],
+   "pattern": "+++-",
+   "ret_excel": 0.44625847504916755,
+   "rho": {
+    "op3_rm": 38443.29574584961,
+    "op5_rm": 88988.77590179443,
+    "op9_rations": 92123.11977893114,
+    "period_hours": 223.2304067015648
+   },
+   "seed": 4100232,
+   "shifts": 1
+  },
+  {
+   "cf": 233,
+   "family": "R1r",
+   "increased": [
+    "R12"
+   ],
+   "pattern": "-+--",
+   "ret_excel": 0.009162429947313668,
+   "rho": {
+    "op3_rm": 99131.51092529297,
+    "op5_rm": 195.3467559814453,
+    "op9_rations": 111647.31338247657,
+    "period_hours": 265.3189567923546
+   },
+   "seed": 4100233,
+   "shifts": 3
+  },
+  {
+   "cf": 234,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9687734254237559,
+   "rho": {
+    "op3_rm": 21261.350326538086,
+    "op5_rm": 79748.55880737305,
+    "op9_rations": 40812.11888976395,
+    "period_hours": 1163.5113505125046
+   },
+   "seed": 4100234,
+   "shifts": 2
+  },
+  {
+   "cf": 235,
+   "family": "R2r",
+   "increased": [
+    "R22",
+    "R23"
+   ],
+   "pattern": "-++-",
+   "ret_excel": 0.6910839381187827,
+   "rho": {
+    "op3_rm": 76112.63134002686,
+    "op5_rm": 38653.78463745117,
+    "op9_rations": 85124.5152130723,
+    "period_hours": 838.2488350868225
+   },
+   "seed": 4100235,
+   "shifts": 1
+  },
+  {
+   "cf": 236,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R12",
+    "R14"
+   ],
+   "pattern": "++-+",
+   "ret_excel": 0.009133097536829303,
+   "rho": {
+    "op3_rm": 59692.79239654541,
+    "op5_rm": 118462.30842590332,
+    "op9_rations": 14177.6865106076,
+    "period_hours": 591.8745809197426
+   },
+   "seed": 4100236,
+   "shifts": 1
+  },
+  {
+   "cf": 237,
+   "family": "R1r",
+   "increased": [
+    "R13",
+    "R14"
+   ],
+   "pattern": "--++",
+   "ret_excel": 0.00902149354650703,
+   "rho": {
+    "op3_rm": 83205.81974029541,
+    "op5_rm": 71741.0270690918,
+    "op9_rations": 28595.426470041275,
+    "period_hours": 475.0376803278923
+   },
+   "seed": 4100237,
+   "shifts": 3
+  },
+  {
+   "cf": 238,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.9706549839684269,
+   "rho": {
+    "op3_rm": 38199.721183776855,
+    "op5_rm": 24587.565994262695,
+    "op9_rations": 67992.98859201372,
+    "period_hours": 952.5019565820694
+   },
+   "seed": 4100238,
+   "shifts": 1
+  },
+  {
+   "cf": 239,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.9741544124574657,
+   "rho": {
+    "op3_rm": 121588.44017028809,
+    "op5_rm": 94849.84016418457,
+    "op9_rations": 57209.17943492532,
+    "period_hours": 1298.561491727829
+   },
+   "seed": 4100239,
+   "shifts": 3
+  },
+  {
+   "cf": 240,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.9735792941229751,
+   "rho": {
+    "op3_rm": 15124.538269042969,
+    "op5_rm": 47921.56539916992,
+    "op9_rations": 96472.03605808318,
+    "period_hours": 127.60267478227615
+   },
+   "seed": 4100240,
+   "shifts": 2
+  },
+  {
+   "cf": 241,
+   "family": "R2r",
+   "increased": [
+    "R22",
+    "R23"
+   ],
+   "pattern": "-++-",
+   "ret_excel": 0.6955671058606109,
+   "rho": {
+    "op3_rm": 117052.32421875,
+    "op5_rm": 82494.43336486816,
+    "op9_rations": 2858.1543657928705,
+    "period_hours": 87.1477627158165
+   },
+   "seed": 4100241,
+   "shifts": 3
+  },
+  {
+   "cf": 242,
+   "family": "R2r",
+   "increased": [
+    "R22",
+    "R24"
+   ],
+   "pattern": "-+-+",
+   "ret_excel": 0.656348449016241,
+   "rho": {
+    "op3_rm": 8202.485275268555,
+    "op5_rm": 6513.224029541016,
+    "op9_rations": 89553.41907218099,
+    "period_hours": 1341.683826327324
+   },
+   "seed": 4100242,
+   "shifts": 1
+  },
+  {
+   "cf": 243,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R13"
+   ],
+   "pattern": "+-+-",
+   "ret_excel": 0.009042452719131523,
+   "rho": {
+    "op3_rm": 78623.76628875732,
+    "op5_rm": 120574.58999633789,
+    "op9_rations": 37367.460479959846,
+    "period_hours": 996.0763592720032
+   },
+   "seed": 4100243,
+   "shifts": 3
+  },
+  {
+   "cf": 244,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.9647829874940447,
+   "rho": {
+    "op3_rm": 31203.60569000244,
+    "op5_rm": 44877.75489807129,
+    "op9_rations": 123951.33505761623,
+    "period_hours": 434.04577499628067
+   },
+   "seed": 4100244,
+   "shifts": 2
+  },
+  {
+   "cf": 245,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R22"
+   ],
+   "pattern": "++--",
+   "ret_excel": 0.7290418154144737,
+   "rho": {
+    "op3_rm": 69130.57834625244,
+    "op5_rm": 30121.473541259766,
+    "op9_rations": 108775.58083646,
+    "period_hours": 632.2088744044304
+   },
+   "seed": 4100245,
+   "shifts": 2
+  },
+  {
+   "cf": 246,
+   "family": "R2r",
+   "increased": [
+    "R23"
+   ],
+   "pattern": "--+-",
+   "ret_excel": 0.5810446582515144,
+   "rho": {
+    "op3_rm": 55096.676445007324,
+    "op5_rm": 73223.37135314941,
+    "op9_rations": 53765.0054320693,
+    "period_hours": 795.3294807672501
+   },
+   "seed": 4100246,
+   "shifts": 3
+  },
+  {
+   "cf": 247,
+   "family": "R2r",
+   "increased": [],
+   "pattern": "----",
+   "ret_excel": 0.8179314677395194,
+   "rho": {
+    "op3_rm": 92195.39543151855,
+    "op5_rm": 52889.50538635254,
+    "op9_rations": 72421.40804417431,
+    "period_hours": 1119.7339675426483
+   },
+   "seed": 4100247,
+   "shifts": 1
+  },
+  {
+   "cf": 248,
+   "family": "R2r",
+   "increased": [
+    "R24"
+   ],
+   "pattern": "---+",
+   "ret_excel": 0.6908793403397018,
+   "rho": {
+    "op3_rm": 16739.296875,
+    "op5_rm": 96185.65200805664,
+    "op9_rations": 17276.371221989393,
+    "period_hours": 306.43148070573807
+   },
+   "seed": 4100248,
+   "shifts": 2
+  },
+  {
+   "cf": 249,
+   "family": "R2r",
+   "increased": [
+    "R22",
+    "R23"
+   ],
+   "pattern": "-++-",
+   "ret_excel": 0.526582988332636,
+   "rho": {
+    "op3_rm": 90387.34085083008,
+    "op5_rm": 54449.08344268799,
+    "op9_rations": 60486.367754638195,
+    "period_hours": 180.19126492738724
+   },
+   "seed": 4100249,
+   "shifts": 3
+  },
+  {
+   "cf": 250,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9643500860771996,
+   "rho": {
+    "op3_rm": 45367.180252075195,
+    "op5_rm": 103266.07234954834,
+    "op9_rations": 99839.40855972469,
+    "period_hours": 1077.6453773975372
+   },
+   "seed": 4100250,
+   "shifts": 3
+  },
+  {
+   "cf": 251,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.9683281231220345,
+   "rho": {
+    "op3_rm": 113448.39900970459,
+    "op5_rm": 16081.813316345215,
+    "op9_rations": 25966.487299650908,
+    "period_hours": 753.0790110826492
+   },
+   "seed": 4100251,
+   "shifts": 1
+  },
+  {
+   "cf": 252,
+   "family": "R1r",
+   "increased": [
+    "R12",
+    "R13",
+    "R14"
+   ],
+   "pattern": "-+++",
+   "ret_excel": 0.00912310369703764,
+   "rho": {
+    "op3_rm": 6998.5600662231445,
+    "op5_rm": 65183.02997589111,
+    "op9_rations": 65453.98952253163,
+    "period_hours": 506.1305381655693
+   },
+   "seed": 4100252,
+   "shifts": 3
+  },
+  {
+   "cf": 253,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R23"
+   ],
+   "pattern": "+-+-",
+   "ret_excel": 0.5880832476422945,
+   "rho": {
+    "op3_rm": 107311.58740997314,
+    "op5_rm": 109654.30721282959,
+    "op9_rations": 79817.17174127698,
+    "period_hours": 391.7954254746437
+   },
+   "seed": 4100253,
+   "shifts": 2
+  },
+  {
+   "cf": 254,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.9556045352795691,
+   "rho": {
+    "op3_rm": 29455.48885345459,
+    "op5_rm": 31798.03607940674,
+    "op9_rations": 8902.969161048532,
+    "period_hours": 869.9979829788208
+   },
+   "seed": 4100254,
+   "shifts": 2
+  },
+  {
+   "cf": 255,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R22",
+    "R23"
+   ],
+   "pattern": "+++-",
+   "ret_excel": 0.6191037817625322,
+   "rho": {
+    "op3_rm": 68894.2700958252,
+    "op5_rm": 86694.79511260986,
+    "op9_rations": 116183.84148180485,
+    "period_hours": 1215.443730711937
+   },
+   "seed": 4100255,
+   "shifts": 3
+  },
+  {
+   "cf": 256,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R22",
+    "R23"
+   ],
+   "pattern": "+++-",
+   "ret_excel": 0.5320885406957148,
+   "rho": {
+    "op3_rm": 52460.36819458008,
+    "op5_rm": 9032.860679626465,
+    "op9_rations": 45381.02903030813,
+    "period_hours": 45.059132516384125
+   },
+   "seed": 4100256,
+   "shifts": 1
+  },
+  {
+   "cf": 257,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9596091926451924,
+   "rho": {
+    "op3_rm": 68790.00549316406,
+    "op5_rm": 59536.05297088623,
+    "op9_rations": 92481.75658844411,
+    "period_hours": 43.36292713880539
+   },
+   "seed": 4100257,
+   "shifts": 2
+  },
+  {
+   "cf": 258,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.8565701801353428,
+   "rho": {
+    "op3_rm": 52614.84672546387,
+    "op5_rm": 104767.85190582275,
+    "op9_rations": 5837.020173668861,
+    "period_hours": 1214.473279595375
+   },
+   "seed": 4100258,
+   "shifts": 2
+  },
+  {
+   "cf": 259,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R23",
+    "R24"
+   ],
+   "pattern": "+-++",
+   "ret_excel": 0.40444143231892926,
+   "rho": {
+    "op3_rm": 107173.62407684326,
+    "op5_rm": 21554.96006011963,
+    "op9_rations": 120960.91107465327,
+    "period_hours": 868.2517898082733
+   },
+   "seed": 4100259,
+   "shifts": 3
+  },
+  {
+   "cf": 260,
+   "family": "R1r",
+   "increased": [
+    "R14"
+   ],
+   "pattern": "---+",
+   "ret_excel": 0.009188274477362425,
+   "rho": {
+    "op3_rm": 29538.78330230713,
+    "op5_rm": 66561.13231658936,
+    "op9_rations": 34450.63607767224,
+    "period_hours": 390.95955687761307
+   },
+   "seed": 4100260,
+   "shifts": 1
+  },
+  {
+   "cf": 261,
+   "family": "R1r",
+   "increased": [
+    "R13"
+   ],
+   "pattern": "--+-",
+   "ret_excel": 0.009110413563956345,
+   "rho": {
+    "op3_rm": 113546.81064605713,
+    "op5_rm": 111879.8514175415,
+    "op9_rations": 48806.88287504017,
+    "period_hours": 507.6245693564415
+   },
+   "seed": 4100261,
+   "shifts": 3
+  },
+  {
+   "cf": 262,
+   "family": "R2r",
+   "increased": [
+    "R23",
+    "R24"
+   ],
+   "pattern": "--++",
+   "ret_excel": 0.5736000527812497,
+   "rho": {
+    "op3_rm": 6845.713920593262,
+    "op5_rm": 38088.74095916748,
+    "op9_rations": 103890.93769714236,
+    "period_hours": 754.1708868741989
+   },
+   "seed": 4100262,
+   "shifts": 3
+  },
+  {
+   "cf": 263,
+   "family": "R2r",
+   "increased": [
+    "R22",
+    "R23"
+   ],
+   "pattern": "-++-",
+   "ret_excel": 0.7119015160616555,
+   "rho": {
+    "op3_rm": 90526.93656921387,
+    "op5_rm": 89269.1328048706,
+    "op9_rations": 22172.587556764483,
+    "period_hours": 1079.2714276313782
+   },
+   "seed": 4100263,
+   "shifts": 1
+  },
+  {
+   "cf": 264,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R12",
+    "R13",
+    "R14"
+   ],
+   "pattern": "++++",
+   "ret_excel": 0.00904243677485337,
+   "rho": {
+    "op3_rm": 45278.03283691406,
+    "op5_rm": 15222.272071838379,
+    "op9_rations": 77368.0325075984,
+    "period_hours": 181.23058944940567
+   },
+   "seed": 4100264,
+   "shifts": 2
+  },
+  {
+   "cf": 265,
+   "family": "R1r",
+   "increased": [],
+   "pattern": "----",
+   "ret_excel": 0.009050771751488156,
+   "rho": {
+    "op3_rm": 92530.28457641602,
+    "op5_rm": 80028.8296508789,
+    "op9_rations": 96861.53386160731,
+    "period_hours": 307.3186188340187
+   },
+   "seed": 4100265,
+   "shifts": 2
+  },
+  {
+   "cf": 266,
+   "family": "R2r",
+   "increased": [
+    "R22"
+   ],
+   "pattern": "-+--",
+   "ret_excel": 0.7605422415042284,
+   "rho": {
+    "op3_rm": 16335.443801879883,
+    "op5_rm": 462.5768280029297,
+    "op9_rations": 57558.90165455639,
+    "period_hours": 1121.5109224319458
+   },
+   "seed": 4100266,
+   "shifts": 2
+  },
+  {
+   "cf": 267,
+   "family": "R1r",
+   "increased": [
+    "R12"
+   ],
+   "pattern": "-+--",
+   "ret_excel": 0.00903111072071671,
+   "rho": {
+    "op3_rm": 69514.16622161865,
+    "op5_rm": 118240.3099822998,
+    "op9_rations": 68369.88242715597,
+    "period_hours": 796.248662352562
+   },
+   "seed": 4100267,
+   "shifts": 1
+  },
+  {
+   "cf": 268,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9712189562782696,
+   "rho": {
+    "op3_rm": 54779.00745391846,
+    "op5_rm": 38448.28399658203,
+    "op9_rations": 28955.860091373324,
+    "period_hours": 633.8743180632591
+   },
+   "seed": 4100268,
+   "shifts": 3
+  },
+  {
+   "cf": 269,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.9720031034268718,
+   "rho": {
+    "op3_rm": 78290.98011016846,
+    "op5_rm": 24794.56169128418,
+    "op9_rations": 13788.543328642845,
+    "period_hours": 433.03721219301224
+   },
+   "seed": 4100269,
+   "shifts": 3
+  },
+  {
+   "cf": 270,
+   "family": "R1r",
+   "increased": [
+    "R11"
+   ],
+   "pattern": "+---",
+   "ret_excel": 0.009096063614839875,
+   "rho": {
+    "op3_rm": 31602.076377868652,
+    "op5_rm": 71961.53228759766,
+    "op9_rations": 84776.34595893323,
+    "period_hours": 994.5015785694122
+   },
+   "seed": 4100270,
+   "shifts": 3
+  },
+  {
+   "cf": 271,
+   "family": "R1r",
+   "increased": [
+    "R13",
+    "R14"
+   ],
+   "pattern": "--++",
+   "ret_excel": 0.00909136090452255,
+   "rho": {
+    "op3_rm": 116663.35395812988,
+    "op5_rm": 47656.29913330078,
+    "op9_rations": 40433.41298773885,
+    "period_hours": 1340.5611888170242
+   },
+   "seed": 4100271,
+   "shifts": 1
+  },
+  {
+   "cf": 272,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R22",
+    "R24"
+   ],
+   "pattern": "++-+",
+   "ret_excel": 0.5597830658475159,
+   "rho": {
+    "op3_rm": 8522.257232666016,
+    "op5_rm": 94567.60734558105,
+    "op9_rations": 111286.75420023501,
+    "period_hours": 85.6024619936943
+   },
+   "seed": 4100272,
+   "shifts": 2
+  },
+  {
+   "cf": 273,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R22",
+    "R23"
+   ],
+   "pattern": "+++-",
+   "ret_excel": 0.5407742744443853,
+   "rho": {
+    "op3_rm": 121726.3444519043,
+    "op5_rm": 6268.3758544921875,
+    "op9_rations": 17634.287053719163,
+    "period_hours": 129.14734464883804
+   },
+   "seed": 4100273,
+   "shifts": 3
+  },
+  {
+   "cf": 274,
+   "family": "R1r",
+   "increased": [
+    "R14"
+   ],
+   "pattern": "---+",
+   "ret_excel": 0.009124314015397076,
+   "rho": {
+    "op3_rm": 15041.185684204102,
+    "op5_rm": 82206.77879333496,
+    "op9_rations": 72800.83468928933,
+    "period_hours": 1299.6834783554077
+   },
+   "seed": 4100274,
+   "shifts": 1
+  },
+  {
+   "cf": 275,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R22"
+   ],
+   "pattern": "++--",
+   "ret_excel": 0.6800565128798932,
+   "rho": {
+    "op3_rm": 83309.90810394287,
+    "op5_rm": 45060.637435913086,
+    "op9_rations": 54112.45394311845,
+    "period_hours": 954.0761064291
+   },
+   "seed": 4100275,
+   "shifts": 3
+  },
+  {
+   "cf": 276,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R22"
+   ],
+   "pattern": "++--",
+   "ret_excel": 0.6467838141202669,
+   "rho": {
+    "op3_rm": 38045.06732940674,
+    "op5_rm": 120804.20471191406,
+    "op9_rations": 109167.36736893654,
+    "period_hours": 476.0455922484398
+   },
+   "seed": 4100276,
+   "shifts": 1
+  },
+  {
+   "cf": 277,
+   "family": "R2r",
+   "increased": [
+    "R23"
+   ],
+   "pattern": "--+-",
+   "ret_excel": 0.760970246076963,
+   "rho": {
+    "op3_rm": 75973.09467315674,
+    "op5_rm": 72995.48240661621,
+    "op9_rations": 123592.10330061615,
+    "period_hours": 590.2084863781929
+   },
+   "seed": 4100277,
+   "shifts": 2
+  },
+  {
+   "cf": 278,
+   "family": "R1r",
+   "increased": [
+    "R12",
+    "R13",
+    "R14"
+   ],
+   "pattern": "-+++",
+   "ret_excel": 0.009040965067023699,
+   "rho": {
+    "op3_rm": 59781.99794769287,
+    "op5_rm": 29936.859741210938,
+    "op9_rations": 36987.442173063755,
+    "period_hours": 837.3290226459503
+   },
+   "seed": 4100278,
+   "shifts": 1
+  },
+  {
+   "cf": 279,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.9633984371289118,
+   "rho": {
+    "op3_rm": 99033.2755279541,
+    "op5_rm": 96475.50109863281,
+    "op9_rations": 89206.82132430375,
+    "period_hours": 1161.7337447404861
+   },
+   "seed": 4100279,
+   "shifts": 2
+  },
+  {
+   "cf": 280,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R22"
+   ],
+   "pattern": "++--",
+   "ret_excel": 0.7162821866628626,
+   "rho": {
+    "op3_rm": 21414.371795654297,
+    "op5_rm": 53132.153549194336,
+    "op9_rations": 2467.4546979367733,
+    "period_hours": 264.43118780851364
+   },
+   "seed": 4100280,
+   "shifts": 2
+  },
+  {
+   "cf": 281,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R22"
+   ],
+   "pattern": "++--",
+   "ret_excel": 0.6980219961831574,
+   "rho": {
+    "op3_rm": 85465.86456298828,
+    "op5_rm": 103555.6010055542,
+    "op9_rations": 45769.80585604906,
+    "period_hours": 222.1917330622673
+   },
+   "seed": 4100281,
+   "shifts": 2
+  },
+  {
+   "cf": 282,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.9648995368543345,
+   "rho": {
+    "op3_rm": 38761.02378845215,
+    "op5_rm": 54692.05570220947,
+    "op9_rations": 116532.36207179725,
+    "period_hours": 1035.6457554101944
+   },
+   "seed": 4100282,
+   "shifts": 3
+  },
+  {
+   "cf": 283,
+   "family": "R1r",
+   "increased": [
+    "R13",
+    "R14"
+   ],
+   "pattern": "--++",
+   "ret_excel": 0.009121381564563383,
+   "rho": {
+    "op3_rm": 108529.80113983154,
+    "op5_rm": 64955.2893447876,
+    "op9_rations": 9281.064625829458,
+    "period_hours": 711.079313993454
+   },
+   "seed": 4100283,
+   "shifts": 2
+  },
+  {
+   "cf": 284,
+   "family": "R1r",
+   "increased": [
+    "R11"
+   ],
+   "pattern": "+---",
+   "ret_excel": 0.009078164268719541,
+   "rho": {
+    "op3_rm": 404.64237213134766,
+    "op5_rm": 15897.054862976074,
+    "op9_rations": 80178.32634039223,
+    "period_hours": 548.1307509541512
+   },
+   "seed": 4100284,
+   "shifts": 3
+  },
+  {
+   "cf": 285,
+   "family": "R1r",
+   "increased": [
+    "R14"
+   ],
+   "pattern": "---+",
+   "ret_excel": 0.008929617277175051,
+   "rho": {
+    "op3_rm": 100716.61502838135,
+    "op5_rm": 31980.773963928223,
+    "op9_rations": 65064.12536278367,
+    "period_hours": 349.7957634329796
+   },
+   "seed": 4100285,
+   "shifts": 2
+  },
+  {
+   "cf": 286,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R22",
+    "R23"
+   ],
+   "pattern": "+++-",
+   "ret_excel": 0.5949155443188937,
+   "rho": {
+    "op3_rm": 24537.711296081543,
+    "op5_rm": 109884.07024383545,
+    "op9_rations": 25617.11641587317,
+    "period_hours": 911.9984110593796
+   },
+   "seed": 4100286,
+   "shifts": 1
+  },
+  {
+   "cf": 287,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R13"
+   ],
+   "pattern": "+-+-",
+   "ret_excel": 0.009041628014842302,
+   "rho": {
+    "op3_rm": 62288.93394470215,
+    "op5_rm": 8788.336601257324,
+    "op9_rations": 99461.90428733826,
+    "period_hours": 1257.4439034461975
+   },
+   "seed": 4100287,
+   "shifts": 1
+  },
+  {
+   "cf": 288,
+   "family": "R1r",
+   "increased": [
+    "R14"
+   ],
+   "pattern": "---+",
+   "ret_excel": 0.009195814590765732,
+   "rho": {
+    "op3_rm": 47537.83721923828,
+    "op5_rm": 86406.82010650635,
+    "op9_rations": 60126.52955017984,
+    "period_hours": 3.0593953728675842
+   },
+   "seed": 4100288,
+   "shifts": 1
+  },
+  {
+   "cf": 289,
+   "family": "R2r",
+   "increased": [
+    "R22"
+   ],
+   "pattern": "-+--",
+   "ret_excel": 0.7049717156026936,
+   "rho": {
+    "op3_rm": 105113.50032806396,
+    "op5_rm": 115837.26974487305,
+    "op9_rations": 1810.2143313735723,
+    "period_hours": 27.133842408657074
+   },
+   "seed": 4100289,
+   "shifts": 3
+  },
+  {
+   "cf": 290,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.9606679172774834,
+   "rho": {
+    "op3_rm": 26973.34156036377,
+    "op5_rm": 41818.823318481445,
+    "op9_rations": 88378.82821261883,
+    "period_hours": 1229.7596057653427
+   },
+   "seed": 4100290,
+   "shifts": 2
+  },
+  {
+   "cf": 291,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.9679398469202746,
+   "rho": {
+    "op3_rm": 66682.1223449707,
+    "op5_rm": 77633.59748840332,
+    "op9_rations": 38161.38351894915,
+    "period_hours": 882.1832885742188
+   },
+   "seed": 4100291,
+   "shifts": 3
+  },
+  {
+   "cf": 292,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R13",
+    "R14"
+   ],
+   "pattern": "+-++",
+   "ret_excel": 0.009195648543655188,
+   "rho": {
+    "op3_rm": 49992.28157043457,
+    "op5_rm": 3810.308074951172,
+    "op9_rations": 124872.38957360387,
+    "period_hours": 373.37570482492447
+   },
+   "seed": 4100292,
+   "shifts": 2
+  },
+  {
+   "cf": 293,
+   "family": "R2r",
+   "increased": [
+    "R24"
+   ],
+   "pattern": "---+",
+   "ret_excel": 0.6938288306509703,
+   "rho": {
+    "op3_rm": 88865.19172668457,
+    "op5_rm": 48146.589431762695,
+    "op9_rations": 107977.58023627102,
+    "period_hours": 576.7170068621635
+   },
+   "seed": 4100293,
+   "shifts": 1
+  },
+  {
+   "cf": 294,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R12",
+    "R13",
+    "R14"
+   ],
+   "pattern": "++++",
+   "ret_excel": 0.009119231229851926,
+   "rho": {
+    "op3_rm": 44129.0950012207,
+    "op5_rm": 93124.8161315918,
+    "op9_rations": 52848.04443642497,
+    "period_hours": 686.7582074403763
+   },
+   "seed": 4100294,
+   "shifts": 3
+  },
+  {
+   "cf": 295,
+   "family": "R1r",
+   "increased": [
+    "R12",
+    "R13"
+   ],
+   "pattern": "-++-",
+   "ret_excel": 0.009061811167127726,
+   "rho": {
+    "op3_rm": 111940.31421661377,
+    "op5_rm": 25262.541961669922,
+    "op9_rations": 73472.96000830829,
+    "period_hours": 1013.1315042972565
+   },
+   "seed": 4100295,
+   "shifts": 2
+  },
+  {
+   "cf": 296,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9700210496082734,
+   "rho": {
+    "op3_rm": 5746.410484313965,
+    "op5_rm": 70526.05110168457,
+    "op9_rations": 18447.3642334342,
+    "period_hours": 251.5958030819893
+   },
+   "seed": 4100296,
+   "shifts": 3
+  },
+  {
+   "cf": 297,
+   "family": "R2r",
+   "increased": [
+    "R22",
+    "R23"
+   ],
+   "pattern": "-++-",
+   "ret_excel": 0.6886207336879068,
+   "rho": {
+    "op3_rm": 71718.66497039795,
+    "op5_rm": 21062.61989593506,
+    "op9_rations": 61291.81892797351,
+    "period_hours": 293.346034348011
+   },
+   "seed": 4100297,
+   "shifts": 2
+  },
+  {
+   "cf": 298,
+   "family": "R2r",
+   "increased": [
+    "R21"
+   ],
+   "pattern": "+---",
+   "ret_excel": 0.6714876589722996,
+   "rho": {
+    "op3_rm": 57428.82419586182,
+    "op5_rm": 68005.97522735596,
+    "op9_rations": 100764.30078037083,
+    "period_hours": 1139.053748846054
+   },
+   "seed": 4100298,
+   "shifts": 1
+  },
+  {
+   "cf": 299,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9631941148414206,
+   "rho": {
+    "op3_rm": 94797.54272460938,
+    "op5_rm": 59066.37439727783,
+    "op9_rations": 24922.384969890118,
+    "period_hours": 812.518692612648
+   },
+   "seed": 4100299,
+   "shifts": 3
+  },
+  {
+   "cf": 300,
+   "family": "R1r",
+   "increased": [
+    "R12"
+   ],
+   "pattern": "-+--",
+   "ret_excel": 0.009185057688722183,
+   "rho": {
+    "op3_rm": 19057.38395690918,
+    "op5_rm": 106205.03322601318,
+    "op9_rations": 64290.92679731548,
+    "period_hours": 618.6289975047112
+   },
+   "seed": 4100300,
+   "shifts": 1
+  },
+  {
+   "cf": 301,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R22",
+    "R24"
+   ],
+   "pattern": "++-+",
+   "ret_excel": 0.5664447713988139,
+   "rho": {
+    "op3_rm": 118424.47380065918,
+    "op5_rm": 91673.7559890747,
+    "op9_rations": 80857.18055069447,
+    "period_hours": 499.1361499428749
+   },
+   "seed": 4100301,
+   "shifts": 3
+  },
+  {
+   "cf": 302,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R12",
+    "R14"
+   ],
+   "pattern": "++-+",
+   "ret_excel": 0.007928708298340227,
+   "rho": {
+    "op3_rm": 9830.570068359375,
+    "op5_rm": 11850.151634216309,
+    "op9_rations": 10070.109447464347,
+    "period_hours": 924.0953993797302
+   },
+   "seed": 4100302,
+   "shifts": 3
+  },
+  {
+   "cf": 303,
+   "family": "R2r",
+   "increased": [
+    "R23"
+   ],
+   "pattern": "--+-",
+   "ret_excel": 0.5195196295662649,
+   "rho": {
+    "op3_rm": 79981.85153961182,
+    "op5_rm": 114277.25246429443,
+    "op9_rations": 115381.98815658689,
+    "period_hours": 1271.5097969770432
+   },
+   "seed": 4100303,
+   "shifts": 1
+  },
+  {
+   "cf": 304,
+   "family": "R1r",
+   "increased": [],
+   "pattern": "----",
+   "ret_excel": 0.00908383126222932,
+   "rho": {
+    "op3_rm": 32845.75481414795,
+    "op5_rm": 34738.84265899658,
+    "op9_rations": 44452.524879947305,
+    "period_hours": 153.05620712041855
+   },
+   "seed": 4100304,
+   "shifts": 3
+  },
+  {
+   "cf": 305,
+   "family": "R1r",
+   "increased": [
+    "R12",
+    "R13",
+    "R14"
+   ],
+   "pattern": "-+++",
+   "ret_excel": 0.009082539699824973,
+   "rho": {
+    "op3_rm": 80737.96703338623,
+    "op5_rm": 61598.06453704834,
+    "op9_rations": 76596.40028513968,
+    "period_hours": 115.1734784245491
+   },
+   "seed": 4100305,
+   "shifts": 1
+  },
+  {
+   "cf": 306,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R12",
+    "R13",
+    "R14"
+   ],
+   "pattern": "++++",
+   "ret_excel": 0.0077481942636640514,
+   "rho": {
+    "op3_rm": 35987.808265686035,
+    "op5_rm": 18286.77875518799,
+    "op9_rations": 21476.298216730356,
+    "period_hours": 1317.2250230312347
+   },
+   "seed": 4100306,
+   "shifts": 1
+  },
+  {
+   "cf": 307,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R13"
+   ],
+   "pattern": "+-+-",
+   "ret_excel": 0.009105214742429726,
+   "rho": {
+    "op3_rm": 119106.5267944336,
+    "op5_rm": 100191.03778839111,
+    "op9_rations": 105194.65175829828,
+    "period_hours": 970.3474184274673
+   },
+   "seed": 4100307,
+   "shifts": 1
+  },
+  {
+   "cf": 308,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R13"
+   ],
+   "pattern": "+-+-",
+   "ret_excel": 0.009174169343143284,
+   "rho": {
+    "op3_rm": 12926.686019897461,
+    "op5_rm": 57104.118003845215,
+    "op9_rations": 49970.846235752106,
+    "period_hours": 460.80155342817307
+   },
+   "seed": 4100308,
+   "shifts": 1
+  },
+  {
+   "cf": 309,
+   "family": "R1r",
+   "increased": [
+    "R12"
+   ],
+   "pattern": "-+--",
+   "ret_excel": 0.008951800275387908,
+   "rho": {
+    "op3_rm": 97879.59617614746,
+    "op5_rm": 10217.840766906738,
+    "op9_rations": 33131.075290963054,
+    "period_hours": 656.3087058663368
+   },
+   "seed": 4100309,
+   "shifts": 1
+  },
+  {
+   "cf": 310,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.9693110839375519,
+   "rho": {
+    "op3_rm": 19753.499450683594,
+    "op5_rm": 85929.81502532959,
+    "op9_rations": 119812.82354146242,
+    "period_hours": 766.9241251945496
+   },
+   "seed": 4100310,
+   "shifts": 1
+  },
+  {
+   "cf": 311,
+   "family": "R1r",
+   "increased": [
+    "R13"
+   ],
+   "pattern": "--+-",
+   "ret_excel": 0.008186292054858102,
+   "rho": {
+    "op3_rm": 74874.78092193604,
+    "op5_rm": 33433.055992126465,
+    "op9_rations": 6623.538287356496,
+    "period_hours": 1092.6810711622238
+   },
+   "seed": 4100311,
+   "shifts": 1
+  },
+  {
+   "cf": 312,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R23",
+    "R24"
+   ],
+   "pattern": "+-++",
+   "ret_excel": 0.5071509529312993,
+   "rho": {
+    "op3_rm": 58170.87718963623,
+    "op5_rm": 109399.28730010986,
+    "op9_rations": 93163.13093528152,
+    "period_hours": 331.88365119695663
+   },
+   "seed": 4100312,
+   "shifts": 1
+  },
+  {
+   "cf": 313,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9730529369843831,
+   "rho": {
+    "op3_rm": 111182.36721038818,
+    "op5_rm": 43632.716217041016,
+    "op9_rations": 112568.35804134607,
+    "period_hours": 205.96136659383774
+   },
+   "seed": 4100313,
+   "shifts": 1
+  },
+  {
+   "cf": 314,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R24"
+   ],
+   "pattern": "+--+",
+   "ret_excel": 0.5508853800542534,
+   "rho": {
+    "op3_rm": 2602.526435852051,
+    "op5_rm": 121279.62867736816,
+    "op9_rations": 41606.028316542506,
+    "period_hours": 1050.9307998418808
+   },
+   "seed": 4100314,
+   "shifts": 1
+  },
+  {
+   "cf": 315,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R12",
+    "R13",
+    "R14"
+   ],
+   "pattern": "++++",
+   "ret_excel": 0.00913526317639799,
+   "rho": {
+    "op3_rm": 88181.30722045898,
+    "op5_rm": 4818.262710571289,
+    "op9_rations": 83949.91919025779,
+    "period_hours": 725.0120944976807
+   },
+   "seed": 4100315,
+   "shifts": 3
+  },
+  {
+   "cf": 316,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9720390562964686,
+   "rho": {
+    "op3_rm": 41031.14845275879,
+    "op5_rm": 82689.39468383789,
+    "op9_rations": 13129.74506802857,
+    "period_hours": 530.5481806397438
+   },
+   "seed": 4100316,
+   "shifts": 3
+  },
+  {
+   "cf": 317,
+   "family": "R2r",
+   "increased": [
+    "R23"
+   ],
+   "pattern": "--+-",
+   "ret_excel": 0.5416683321180809,
+   "rho": {
+    "op3_rm": 63598.23829650879,
+    "op5_rm": 99830.67604064941,
+    "op9_rations": 29766.410563141108,
+    "period_hours": 418.8894826769829
+   },
+   "seed": 4100317,
+   "shifts": 2
+  },
+  {
+   "cf": 318,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R12",
+    "R14"
+   ],
+   "pattern": "++-+",
+   "ret_excel": 0.009003809791239813,
+   "rho": {
+    "op3_rm": 49294.334564208984,
+    "op5_rm": 50744.481353759766,
+    "op9_rations": 69044.5278827101,
+    "period_hours": 844.5870133638382
+   },
+   "seed": 4100318,
+   "shifts": 3
+  },
+  {
+   "cf": 319,
+   "family": "R1r",
+   "increased": [
+    "R12",
+    "R13",
+    "R14"
+   ],
+   "pattern": "-+++",
+   "ret_excel": 0.00905929348913493,
+   "rho": {
+    "op3_rm": 101955.55377960205,
+    "op5_rm": 76358.34732055664,
+    "op9_rations": 56292.21233725548,
+    "period_hours": 1191.3026983737946
+   },
+   "seed": 4100319,
+   "shifts": 2
+  },
+  {
+   "cf": 320,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R22",
+    "R23"
+   ],
+   "pattern": "+++-",
+   "ret_excel": 0.5776614212931284,
+   "rho": {
+    "op3_rm": 26229.457054138184,
+    "op5_rm": 27526.49757385254,
+    "op9_rations": 95674.03311096132,
+    "period_hours": 73.42332726716995
+   },
+   "seed": 4100320,
+   "shifts": 1
+  },
+  {
+   "cf": 321,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.9713895885838348,
+   "rho": {
+    "op3_rm": 112763.99265289307,
+    "op5_rm": 72811.95487976074,
+    "op9_rations": 43249.98404458165,
+    "period_hours": 77.71065294742584
+   },
+   "seed": 4100321,
+   "shifts": 1
+  },
+  {
+   "cf": 322,
+   "family": "R2r",
+   "increased": [
+    "R22"
+   ],
+   "pattern": "-+--",
+   "ret_excel": 0.7281155908773906,
+   "rho": {
+    "op3_rm": 3902.895927429199,
+    "op5_rm": 23995.701599121094,
+    "op9_rations": 114131.32322765887,
+    "period_hours": 1185.744053542614
+   },
+   "seed": 4100322,
+   "shifts": 3
+  },
+  {
+   "cf": 323,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9691676944603421,
+   "rho": {
+    "op3_rm": 89751.67350769043,
+    "op5_rm": 95697.18475341797,
+    "op9_rations": 12785.719558596611,
+    "period_hours": 860.6456606984138
+   },
+   "seed": 4100323,
+   "shifts": 2
+  },
+  {
+   "cf": 324,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.9701036845210053,
+   "rho": {
+    "op3_rm": 42342.769775390625,
+    "op5_rm": 46595.15922546387,
+    "op9_rations": 83563.35716508329,
+    "period_hours": 404.1021544933319
+   },
+   "seed": 4100324,
+   "shifts": 3
+  },
+  {
+   "cf": 325,
+   "family": "R1r",
+   "increased": [
+    "R11"
+   ],
+   "pattern": "+---",
+   "ret_excel": 0.009207319381737985,
+   "rho": {
+    "op3_rm": 65854.74243164062,
+    "op5_rm": 1283.9364624023438,
+    "op9_rations": 70415.47288745642,
+    "period_hours": 536.8042563199997
+   },
+   "seed": 4100325,
+   "shifts": 3
+  },
+  {
+   "cf": 326,
+   "family": "R2r",
+   "increased": [
+    "R23"
+   ],
+   "pattern": "--+-",
+   "ret_excel": 0.5399528719182803,
+   "rho": {
+    "op3_rm": 51839.58366394043,
+    "op5_rm": 79140.90751647949,
+    "op9_rations": 31094.817174598575,
+    "period_hours": 720.1096996665001
+   },
+   "seed": 4100326,
+   "shifts": 2
+  },
+  {
+   "cf": 327,
+   "family": "R2r",
+   "increased": [
+    "R21"
+   ],
+   "pattern": "+---",
+   "ret_excel": 0.7230398837321744,
+   "rho": {
+    "op3_rm": 104230.8060836792,
+    "op5_rm": 39486.92436218262,
+    "op9_rations": 95095.44996544719,
+    "period_hours": 1066.3331971764565
+   },
+   "seed": 4100327,
+   "shifts": 2
+  },
+  {
+   "cf": 328,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R12",
+    "R14"
+   ],
+   "pattern": "++-+",
+   "ret_excel": 0.00909423227725345,
+   "rho": {
+    "op3_rm": 28755.965309143066,
+    "op5_rm": 117148.23211669922,
+    "op9_rations": 55632.64052756131,
+    "period_hours": 189.20528841018677
+   },
+   "seed": 4100328,
+   "shifts": 1
+  },
+  {
+   "cf": 329,
+   "family": "R1r",
+   "increased": [
+    "R12"
+   ],
+   "pattern": "-+--",
+   "ret_excel": 0.00909693193395661,
+   "rho": {
+    "op3_rm": 79428.21704864502,
+    "op5_rm": 36966.67819976807,
+    "op9_rations": 20159.426076337695,
+    "period_hours": 315.1297960281372
+   },
+   "seed": 4100329,
+   "shifts": 3
+  },
+  {
+   "cf": 330,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R13",
+    "R14"
+   ],
+   "pattern": "+-++",
+   "ret_excel": 0.009005014075074614,
+   "rho": {
+    "op3_rm": 34419.313316345215,
+    "op5_rm": 112948.47667694092,
+    "op9_rations": 75198.5390111804,
+    "period_hours": 1108.081245481968
+   },
+   "seed": 4100330,
+   "shifts": 3
+  },
+  {
+   "cf": 331,
+   "family": "R1r",
+   "increased": [],
+   "pattern": "----",
+   "ret_excel": 0.009048870751310627,
+   "rho": {
+    "op3_rm": 117808.03596496582,
+    "op5_rm": 14364.334831237793,
+    "op9_rations": 50603.50318439305,
+    "period_hours": 762.0239533782005
+   },
+   "seed": 4100331,
+   "shifts": 2
+  },
+  {
+   "cf": 332,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R22",
+    "R24"
+   ],
+   "pattern": "++-+",
+   "ret_excel": 0.59037711278677,
+   "rho": {
+    "op3_rm": 11346.939239501953,
+    "op5_rm": 90060.50754547119,
+    "op9_rations": 105784.76984426379,
+    "period_hours": 662.5625585317612
+   },
+   "seed": 4100332,
+   "shifts": 1
+  },
+  {
+   "cf": 333,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.966419567235154,
+   "rho": {
+    "op3_rm": 95354.96658325195,
+    "op5_rm": 103736.72618865967,
+    "op9_rations": 118238.32247592509,
+    "period_hours": 446.01644825935364
+   },
+   "seed": 4100333,
+   "shifts": 3
+  },
+  {
+   "cf": 334,
+   "family": "R1r",
+   "increased": [
+    "R14"
+   ],
+   "pattern": "---+",
+   "ret_excel": 0.009169075919995039,
+   "rho": {
+    "op3_rm": 17480.12580871582,
+    "op5_rm": 60635.61618804932,
+    "op9_rations": 31514.037240296602,
+    "period_hours": 986.4038427472115
+   },
+   "seed": 4100334,
+   "shifts": 2
+  },
+  {
+   "cf": 335,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9704863648742004,
+   "rho": {
+    "op3_rm": 72331.40316009521,
+    "op5_rm": 65732.25803375244,
+    "op9_rations": 93576.61016844213,
+    "period_hours": 1311.6686012148857
+   },
+   "seed": 4100335,
+   "shifts": 1
+  },
+  {
+   "cf": 336,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.9649602602228629,
+   "rho": {
+    "op3_rm": 55916.24439239502,
+    "op5_rm": 22435.396842956543,
+    "op9_rations": 6956.026509404182,
+    "period_hours": 119.45858108997345
+   },
+   "seed": 4100336,
+   "shifts": 3
+  },
+  {
+   "cf": 337,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R23",
+    "R24"
+   ],
+   "pattern": "+-++",
+   "ret_excel": 0.5675723028911841,
+   "rho": {
+    "op3_rm": 73028.4126663208,
+    "op5_rm": 110742.47623443604,
+    "op9_rations": 102338.79715204239,
+    "period_hours": 157.95860195159912
+   },
+   "seed": 4100337,
+   "shifts": 2
+  },
+  {
+   "cf": 338,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R24"
+   ],
+   "pattern": "+--+",
+   "ret_excel": 0.6437887222026573,
+   "rho": {
+    "op3_rm": 58997.31594085693,
+    "op5_rm": 31188.930473327637,
+    "op9_rations": 62908.854162320495,
+    "period_hours": 1265.2537212967873
+   },
+   "seed": 4100338,
+   "shifts": 1
+  },
+  {
+   "cf": 339,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R12"
+   ],
+   "pattern": "++--",
+   "ret_excel": 0.009137359712507247,
+   "rho": {
+    "op3_rm": 96096.03858947754,
+    "op5_rm": 87528.41411590576,
+    "op9_rations": 63877.45225802064,
+    "period_hours": 940.8514775633812
+   },
+   "seed": 4100339,
+   "shifts": 3
+  },
+  {
+   "cf": 340,
+   "family": "R2r",
+   "increased": [
+    "R24"
+   ],
+   "pattern": "---+",
+   "ret_excel": 0.6776720810838639,
+   "rho": {
+    "op3_rm": 20637.134857177734,
+    "op5_rm": 7720.18009185791,
+    "op9_rations": 24589.899564161897,
+    "period_hours": 483.73375260829926
+   },
+   "seed": 4100340,
+   "shifts": 1
+  },
+  {
+   "cf": 341,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.9629975532771935,
+   "rho": {
+    "op3_rm": 120949.10751342773,
+    "op5_rm": 55521.39873504639,
+    "op9_rations": 11386.976893991232,
+    "period_hours": 624.1876423358917
+   },
+   "seed": 4100341,
+   "shifts": 2
+  },
+  {
+   "cf": 342,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9713690189677083,
+   "rho": {
+    "op3_rm": 12103.948745727539,
+    "op5_rm": 102674.69547271729,
+    "op9_rations": 82255.03900833428,
+    "period_hours": 808.2313669323921
+   },
+   "seed": 4100342,
+   "shifts": 1
+  },
+  {
+   "cf": 343,
+   "family": "R2r",
+   "increased": [],
+   "pattern": "----",
+   "ret_excel": 0.805862064844142,
+   "rho": {
+    "op3_rm": 82525.22609710693,
+    "op5_rm": 16927.71183013916,
+    "op9_rations": 43819.87262517214,
+    "period_hours": 1153.841077029705
+   },
+   "seed": 4100343,
+   "shifts": 1
+  },
+  {
+   "cf": 344,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R22"
+   ],
+   "pattern": "++--",
+   "ret_excel": 0.6492021261430702,
+   "rho": {
+    "op3_rm": 35100.3853225708,
+    "op5_rm": 63856.19487762451,
+    "op9_rations": 114791.87288694084,
+    "period_hours": 277.28738701343536
+   },
+   "seed": 4100344,
+   "shifts": 1
+  },
+  {
+   "cf": 345,
+   "family": "R2r",
+   "increased": [
+    "R24"
+   ],
+   "pattern": "---+",
+   "ret_excel": 0.6734548705198495,
+   "rho": {
+    "op3_rm": 103531.87808990479,
+    "op5_rm": 28807.751083374023,
+    "op9_rations": 87007.88790173829,
+    "period_hours": 235.53937876224518
+   },
+   "seed": 4100345,
+   "shifts": 3
+  },
+  {
+   "cf": 346,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.9673789464807332,
+   "rho": {
+    "op3_rm": 25672.97435760498,
+    "op5_rm": 74056.15356445312,
+    "op9_rations": 481.8105362355709,
+    "period_hours": 1027.916609466076
+   },
+   "seed": 4100346,
+   "shifts": 3
+  },
+  {
+   "cf": 347,
+   "family": "R2r",
+   "increased": [
+    "R22",
+    "R23",
+    "R24"
+   ],
+   "pattern": "-+++",
+   "ret_excel": 0.5135885079774726,
+   "rho": {
+    "op3_rm": 65111.75193786621,
+    "op5_rm": 52281.26220703125,
+    "op9_rations": 125450.96802525222,
+    "period_hours": 682.4731047749519
+   },
+   "seed": 4100347,
+   "shifts": 3
+  },
+  {
+   "cf": 348,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.9723189018375624,
+   "rho": {
+    "op3_rm": 48680.655212402344,
+    "op5_rm": 97274.8299407959,
+    "op9_rations": 38820.952512323856,
+    "period_hours": 582.2734286785126
+   },
+   "seed": 4100348,
+   "shifts": 1
+  },
+  {
+   "cf": 349,
+   "family": "R1r",
+   "increased": [
+    "R12"
+   ],
+   "pattern": "-+--",
+   "ret_excel": 0.00907071626961985,
+   "rho": {
+    "op3_rm": 86608.68255615234,
+    "op5_rm": 81168.60717773438,
+    "op9_rations": 51204.0934022516,
+    "period_hours": 357.97553050518036
+   },
+   "seed": 4100349,
+   "shifts": 3
+  },
+  {
+   "cf": 350,
+   "family": "R1r",
+   "increased": [
+    "R12",
+    "R14"
+   ],
+   "pattern": "-+-+",
+   "ret_excel": 0.009019376808616291,
+   "rho": {
+    "op3_rm": 41583.84178161621,
+    "op5_rm": 7359.984970092773,
+    "op9_rations": 106414.6178662777,
+    "period_hours": 898.9371437430382
+   },
+   "seed": 4100350,
+   "shifts": 3
+  },
+  {
+   "cf": 351,
+   "family": "R1r",
+   "increased": [
+    "R13"
+   ],
+   "pattern": "--+-",
+   "ret_excel": 0.009013196624803767,
+   "rho": {
+    "op3_rm": 109665.06420135498,
+    "op5_rm": 119982.37632751465,
+    "op9_rations": 18791.385049000382,
+    "period_hours": 1223.5057530999184
+   },
+   "seed": 4100351,
+   "shifts": 2
+  },
+  {
+   "cf": 352,
+   "family": "R1r",
+   "increased": [
+    "R11"
+   ],
+   "pattern": "+---",
+   "ret_excel": 0.00912874224816189,
+   "rho": {
+    "op3_rm": 3219.905433654785,
+    "op5_rm": 45949.0283203125,
+    "op9_rations": 73859.51921716332,
+    "period_hours": 32.0340142250061
+   },
+   "seed": 4100352,
+   "shifts": 2
+  },
+  {
+   "cf": 353,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9649358304247125,
+   "rho": {
+    "op3_rm": 91800.49507141113,
+    "op5_rm": 12919.495124816895,
+    "op9_rations": 117918.68465021253,
+    "period_hours": 19.11822545528412
+   },
+   "seed": 4100353,
+   "shifts": 1
+  },
+  {
+   "cf": 354,
+   "family": "R2r",
+   "increased": [
+    "R21"
+   ],
+   "pattern": "+---",
+   "ret_excel": 0.706854020481501,
+   "rho": {
+    "op3_rm": 44904.398345947266,
+    "op5_rm": 90552.84999847412,
+    "op9_rations": 47082.828322425485,
+    "period_hours": 1242.6567229628563
+   },
+   "seed": 4100354,
+   "shifts": 3
+  },
+  {
+   "cf": 355,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.9611037303267623,
+   "rho": {
+    "op3_rm": 114883.1798171997,
+    "op5_rm": 35529.499168395996,
+    "op9_rations": 79584.36562120914,
+    "period_hours": 916.2855940461159
+   },
+   "seed": 4100355,
+   "shifts": 3
+  },
+  {
+   "cf": 356,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.9666189421630481,
+   "rho": {
+    "op3_rm": 6529.276084899902,
+    "op5_rm": 113418.15845489502,
+    "op9_rations": 8636.87696121633,
+    "period_hours": 344.23693084716797
+   },
+   "seed": 4100356,
+   "shifts": 2
+  },
+  {
+   "cf": 357,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.970532523185138,
+   "rho": {
+    "op3_rm": 105896.3659286499,
+    "op5_rm": 69104.38076019287,
+    "op9_rations": 27245.687060058117,
+    "period_hours": 563.5333310365677
+   },
+   "seed": 4100357,
+   "shifts": 3
+  },
+  {
+   "cf": 358,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9640826010412312,
+   "rho": {
+    "op3_rm": 29916.207160949707,
+    "op5_rm": 20030.776863098145,
+    "op9_rations": 66642.46718399227,
+    "period_hours": 694.3233835101128
+   },
+   "seed": 4100358,
+   "shifts": 3
+  },
+  {
+   "cf": 359,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R13",
+    "R14"
+   ],
+   "pattern": "+-++",
+   "ret_excel": 0.009115518530971605,
+   "rho": {
+    "op3_rm": 67457.42568969727,
+    "op5_rm": 107086.62769317627,
+    "op9_rations": 59797.88912460208,
+    "period_hours": 1041.9016883969307
+   },
+   "seed": 4100359,
+   "shifts": 3
+  },
+  {
+   "cf": 360,
+   "family": "R1r",
+   "increased": [
+    "R12",
+    "R13"
+   ],
+   "pattern": "-++-",
+   "ret_excel": 0.008960674478569533,
+   "rho": {
+    "op3_rm": 52927.58491516113,
+    "op5_rm": 58238.217430114746,
+    "op9_rations": 99059.96562726796,
+    "period_hours": 217.2891504764557
+   },
+   "seed": 4100360,
+   "shifts": 1
+  },
+  {
+   "cf": 361,
+   "family": "R1r",
+   "increased": [
+    "R13",
+    "R14"
+   ],
+   "pattern": "--++",
+   "ret_excel": 0.0090954755297182,
+   "rho": {
+    "op3_rm": 115599.83940124512,
+    "op5_rm": 92326.64497375488,
+    "op9_rations": 71241.71776883304,
+    "period_hours": 259.53086829185486
+   },
+   "seed": 4100361,
+   "shifts": 1
+  },
+  {
+   "cf": 362,
+   "family": "R1r",
+   "increased": [
+    "R14"
+   ],
+   "pattern": "---+",
+   "ret_excel": 0.008708203166406678,
+   "rho": {
+    "op3_rm": 8685.935668945312,
+    "op5_rm": 48998.19808959961,
+    "op9_rations": 16001.871429383755,
+    "period_hours": 1167.9874146580696
+   },
+   "seed": 4100362,
+   "shifts": 1
+  },
+  {
+   "cf": 363,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9690994208953825,
+   "rho": {
+    "op3_rm": 77164.65488433838,
+    "op5_rm": 69464.22225952148,
+    "op9_rations": 109565.46245701611,
+    "period_hours": 820.5753552317619
+   },
+   "seed": 4100363,
+   "shifts": 3
+  },
+  {
+   "cf": 364,
+   "family": "R2r",
+   "increased": [
+    "R23",
+    "R24"
+   ],
+   "pattern": "--++",
+   "ret_excel": 0.5243920376211366,
+   "rho": {
+    "op3_rm": 31708.55815887451,
+    "op5_rm": 26390.933303833008,
+    "op9_rations": 54460.319738835096,
+    "period_hours": 605.6088033914566
+   },
+   "seed": 4100364,
+   "shifts": 3
+  },
+  {
+   "cf": 365,
+   "family": "R2r",
+   "increased": [
+    "R23"
+   ],
+   "pattern": "--+-",
+   "ret_excel": 0.5209777082641273,
+   "rho": {
+    "op3_rm": 70581.46831512451,
+    "op5_rm": 40929.71420288086,
+    "op9_rations": 35655.19339777529,
+    "period_hours": 470.489022731781
+   },
+   "seed": 4100365,
+   "shifts": 2
+  },
+  {
+   "cf": 366,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9640398674952614,
+   "rho": {
+    "op3_rm": 54611.62754058838,
+    "op5_rm": 116657.94136047363,
+    "op9_rations": 122209.62711051106,
+    "period_hours": 958.3610263466835
+   },
+   "seed": 4100366,
+   "shifts": 3
+  },
+  {
+   "cf": 367,
+   "family": "R3",
+   "increased": [
+    "R3"
+   ],
+   "pattern": "+",
+   "ret_excel": 0.9376435485690134,
+   "rho": {
+    "op3_rm": 93652.90832519531,
+    "op5_rm": 2719.417190551758,
+    "op9_rations": 3115.4882814735174,
+    "period_hours": 1284.8985609412193
+   },
+   "seed": 4100367,
+   "shifts": 3
+  },
+  {
+   "cf": 368,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R12",
+    "R13"
+   ],
+   "pattern": "+++-",
+   "ret_excel": 0.009157146574375727,
+   "rho": {
+    "op3_rm": 16232.749557495117,
+    "op5_rm": 78672.92587280273,
+    "op9_rations": 89781.55432641506,
+    "period_hours": 145.20391166210175
+   },
+   "seed": 4100368,
+   "shifts": 3
+  },
+  {
+   "cf": 369,
+   "family": "R2r",
+   "increased": [
+    "R21",
+    "R23",
+    "R24"
+   ],
+   "pattern": "+-++",
+   "ret_excel": 0.43322662517071114,
+   "rho": {
+    "op3_rm": 98656.7928314209,
+    "op5_rm": 51805.84144592285,
+    "op9_rations": 58891.15324616432,
+    "period_hours": 102.35839247703552
+   },
+   "seed": 4100369,
+   "shifts": 3
+  },
+  {
+   "cf": 370,
+   "family": "R1r",
+   "increased": [
+    "R12",
+    "R14"
+   ],
+   "pattern": "-+-+",
+   "ret_excel": 0.00906838801256277,
+   "rho": {
+    "op3_rm": 22690.69610595703,
+    "op5_rm": 98702.75344848633,
+    "op9_rations": 98244.01474557817,
+    "period_hours": 1325.1586087346077
+   },
+   "seed": 4100370,
+   "shifts": 3
+  },
+  {
+   "cf": 371,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9688278009836077,
+   "rho": {
+    "op3_rm": 75659.4153213501,
+    "op5_rm": 28325.137481689453,
+    "op9_rations": 28307.823691517115,
+    "period_hours": 999.4041611552238
+   },
+   "seed": 4100371,
+   "shifts": 2
+  },
+  {
+   "cf": 372,
+   "family": "R1r",
+   "increased": [
+    "R11"
+   ],
+   "pattern": "+---",
+   "ret_excel": 0.009170950577200576,
+   "rho": {
+    "op3_rm": 61115.51158905029,
+    "op5_rm": 75506.26991271973,
+    "op9_rations": 67795.14473117888,
+    "period_hours": 426.78127920627594
+   },
+   "seed": 4100372,
+   "shifts": 3
+  },
+  {
+   "cf": 373,
+   "family": "R2r",
+   "increased": [
+    "R21"
+   ],
+   "pattern": "+---",
+   "ret_excel": 0.7750519845084337,
+   "rho": {
+    "op3_rm": 83682.6014328003,
+    "op5_rm": 122370.05081176758,
+    "op9_rations": 86335.46569570899,
+    "period_hours": 648.6614985466003
+   },
+   "seed": 4100373,
+   "shifts": 2
+  },
+  {
+   "cf": 374,
+   "family": "R1r",
+   "increased": [
+    "R12",
+    "R13",
+    "R14"
+   ],
+   "pattern": "-+++",
+   "ret_excel": 0.00899238715557211,
+   "rho": {
+    "op3_rm": 36772.4426651001,
+    "op5_rm": 42593.8565826416,
+    "op9_rations": 15420.96364684403,
+    "period_hours": 780.1898322701454
+   },
+   "seed": 4100374,
+   "shifts": 1
+  },
+  {
+   "cf": 375,
+   "family": "R2r",
+   "increased": [
+    "R21"
+   ],
+   "pattern": "+---",
+   "ret_excel": 0.7369600374255437,
+   "rho": {
+    "op3_rm": 122043.72344970703,
+    "op5_rm": 83578.97254943848,
+    "op9_rations": 110888.65629583597,
+    "period_hours": 1127.0697550177574
+   },
+   "seed": 4100375,
+   "shifts": 3
+  },
+  {
+   "cf": 376,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R14"
+   ],
+   "pattern": "+--+",
+   "ret_excel": 0.009184003058587775,
+   "rho": {
+    "op3_rm": 13703.882675170898,
+    "op5_rm": 3997.122344970703,
+    "op9_rations": 40085.54249815643,
+    "period_hours": 303.0314358472824
+   },
+   "seed": 4100376,
+   "shifts": 2
+  },
+  {
+   "cf": 377,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9660341193913493,
+   "rho": {
+    "op3_rm": 62455.37269592285,
+    "op5_rm": 85138.68976593018,
+    "op9_rations": 4208.446713164449,
+    "period_hours": 176.9456695318222
+   },
+   "seed": 4100377,
+   "shifts": 1
+  },
+  {
+   "cf": 378,
+   "family": "R1r",
+   "increased": [
+    "R14"
+   ],
+   "pattern": "---+",
+   "ret_excel": 0.009092804573753138,
+   "rho": {
+    "op3_rm": 46471.46896362305,
+    "op5_rm": 11077.403526306152,
+    "op9_rations": 90903.41007336974,
+    "period_hours": 1084.827997148037
+   },
+   "seed": 4100378,
+   "shifts": 1
+  },
+  {
+   "cf": 379,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9675578738599561,
+   "rho": {
+    "op3_rm": 100820.25043487549,
+    "op5_rm": 108330.41255950928,
+    "op9_rations": 34779.27931956947,
+    "period_hours": 738.1143198609352
+   },
+   "seed": 4100379,
+   "shifts": 2
+  },
+  {
+   "cf": 380,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.973430452974152,
+   "rho": {
+    "op3_rm": 23414.15370941162,
+    "op5_rm": 34553.49323272705,
+    "op9_rations": 121362.85442858934,
+    "period_hours": 522.4094867706299
+   },
+   "seed": 4100380,
+   "shifts": 1
+  },
+  {
+   "cf": 381,
+   "family": "R3",
+   "increased": [],
+   "pattern": "-",
+   "ret_excel": 0.9683346486904808,
+   "rho": {
+    "op3_rm": 108367.06386566162,
+    "op5_rm": 17404.715538024902,
+    "op9_rations": 102504.61230240762,
+    "period_hours": 384.7058869600296
+   },
+   "seed": 4100381,
+   "shifts": 2
+  },
+  {
+   "cf": 382,
+   "family": "R2r",
+   "increased": [
+    "R22"
+   ],
+   "pattern": "-+--",
+   "ret_excel": 0.7885629174862746,
+   "rho": {
+    "op3_rm": 1467.2230911254883,
+    "op5_rm": 62426.690254211426,
+    "op9_rations": 47493.85571479797,
+    "period_hours": 873.1521093249321
+   },
+   "seed": 4100382,
+   "shifts": 1
+  },
+  {
+   "cf": 383,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R13"
+   ],
+   "pattern": "+-+-",
+   "ret_excel": 0.009065959502240997,
+   "rho": {
+    "op3_rm": 85358.44161987305,
+    "op5_rm": 56006.1812210083,
+    "op9_rations": 77961.99604310095,
+    "period_hours": 1199.0729625821114
+   },
+   "seed": 4100383,
+   "shifts": 1
+  },
+  {
+   "cf": 384,
+   "family": "R1r",
+   "increased": [
+    "R11",
+    "R12",
+    "R13",
+    "R14"
+   ],
+   "pattern": "++++",
+   "ret_excel": 0.009110245426993,
+   "rho": {
+    "op3_rm": 39888.28285217285,
+    "op5_rm": 101222.41207122803,
+    "op9_rations": 22816.779915243387,
+    "period_hours": 60.116594552993774
+   },
+   "seed": 4100384,
+   "shifts": 3
+  }
+ ],
+ "schema_version": "garrido_continuous_space_v1",
+ "seed": 20260731,
+ "self_sha256": "8afd916177379bbac9e479272fddb5742d26712fd1e1c8c54b2480426066ff8f",
+ "space": {
+  "op3_rm": [
+   0.0,
+   122880.0
+  ],
+  "op5_rm": [
+   0.0,
+   122880.0
+  ],
+  "op9_rations": [
+   0.0,
+   126000.0
+  ],
+  "period_hours": [
+   0.0,
+   1344.0
+  ]
+ },
+ "task_B1_regression": {
+  "mean": {
+   "backprop": 0.9898214059549011,
+   "constant": 0.0,
+   "kan": 0.9886651352715811,
+   "linear": 0.9823347879441678
+  },
+  "per_fold": {
+   "backprop": [
+    0.9911082334213096,
+    0.9846908198195891,
+    0.9881752783105164,
+    0.9909562868744596,
+    0.9941764113486303
+   ],
+   "constant": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "kan": [
+    0.9911619583550407,
+    0.9830039474804776,
+    0.9868876137151384,
+    0.9887775795195943,
+    0.9934945772876543
+   ],
+   "linear": [
+    0.9852921860145427,
+    0.980404111655842,
+    0.977401350207617,
+    0.9830148408657958,
+    0.9855614509770418
+   ]
+  },
+  "sd": {
+   "backprop": 0.0035687043139897238,
+   "constant": 0.0,
+   "kan": 0.004024267308945175,
+   "linear": 0.0034527651412062225
+  },
+  "training": {
+   "backprop": [
+    {
+     "loss_first": 0.6295135021209717,
+     "loss_last": 0.0012309864396229386
+    },
+    {
+     "loss_first": 0.6370115280151367,
+     "loss_last": 0.0010406202636659145
+    },
+    {
+     "loss_first": 0.6384397745132446,
+     "loss_last": 0.001114227925427258
+    },
+    {
+     "loss_first": 0.6360780000686646,
+     "loss_last": 0.0012088108342140913
+    },
+    {
+     "loss_first": 0.6488544344902039,
+     "loss_last": 0.0013220979599282146
+    }
+   ],
+   "kan": [
+    {
+     "loss_first": 0.37952423095703125,
+     "loss_last": 0.0012089039664715528
+    },
+    {
+     "loss_first": 0.3856961727142334,
+     "loss_last": 0.000978087424300611
+    },
+    {
+     "loss_first": 0.3897917866706848,
+     "loss_last": 0.0011041411198675632
+    },
+    {
+     "loss_first": 0.3837611973285675,
+     "loss_last": 0.0011426497949287295
+    },
+    {
+     "loss_first": 0.3921481668949127,
+     "loss_last": 0.0012719102669507265
+    }
+   ]
+  }
+ },
+ "task_B2_activation": {
+  "mean": {
+   "backprop": 0.5802460697197539,
+   "constant": 0.5197539302802461,
+   "kan": 0.5853383458646617,
+   "linear": 0.6326384142173616
+  },
+  "per_fold": {
+   "backprop": [
+    0.5064935064935064,
+    0.5394736842105263,
+    0.618421052631579,
+    0.6447368421052632,
+    0.5921052631578947
+   ],
+   "constant": [
+    0.4935064935064935,
+    0.5,
+    0.5657894736842105,
+    0.47368421052631576,
+    0.5657894736842105
+   ],
+   "kan": [
+    0.5714285714285714,
+    0.5526315789473685,
+    0.5657894736842105,
+    0.6973684210526315,
+    0.5394736842105263
+   ],
+   "linear": [
+    0.5974025974025974,
+    0.6710526315789473,
+    0.6052631578947368,
+    0.631578947368421,
+    0.6578947368421053
+   ]
+  },
+  "sd": {
+   "backprop": 0.05669845129003887,
+   "constant": 0.04312802827023056,
+   "kan": 0.06383509568772332,
+   "linear": 0.03203757108211127
+  },
+  "training": {
+   "backprop": [
+    {
+     "loss_first": 0.690423309803009,
+     "loss_last": 0.0022356922272592783
+    },
+    {
+     "loss_first": 0.6901453137397766,
+     "loss_last": 0.0011295779841020703
+    },
+    {
+     "loss_first": 0.6926332712173462,
+     "loss_last": 0.0018388329772278666
+    },
+    {
+     "loss_first": 0.6910756826400757,
+     "loss_last": 0.002676529809832573
+    },
+    {
+     "loss_first": 0.6931843757629395,
+     "loss_last": 0.0015589530812576413
+    }
+   ],
+   "kan": [
+    {
+     "loss_first": 0.6933324933052063,
+     "loss_last": 0.0019352773670107126
+    },
+    {
+     "loss_first": 0.6934650540351868,
+     "loss_last": 0.0018260478973388672
+    },
+    {
+     "loss_first": 0.6943903565406799,
+     "loss_last": 0.0023799955379217863
+    },
+    {
+     "loss_first": 0.693571150302887,
+     "loss_last": 0.002387621672824025
+    },
+    {
+     "loss_first": 0.694482147693634,
+     "loss_last": 0.0031605768017470837
+    }
+   ]
+  }
+ },
+ "verdict": {
+  "B1_regression": {
+   "backprop": true,
+   "kan": true
+  },
+  "B2_activation": {
+   "backprop": false,
+   "kan": false
+  },
+  "rule": "beat the linear baseline by more than one of its between-fold SDs"
+ }
+}
