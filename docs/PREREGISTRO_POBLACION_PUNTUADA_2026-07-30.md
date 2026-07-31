@@ -13,8 +13,20 @@ Ninguna constante cambiada. Toda cifra congelada permanece como fue reportada.
 > «0,7 SD» es falso.** Los cuatro runners contaban órdenes sobre **8.736 h** (52 semanas) y
 > dividían entre **`1,0 año`**, mientras la referencia usa el año de tesis de **8.064 h**
 > (`fidelity_moments.py:78`). Además el numerador filtraba por warm-up y el denominador no.
-> Recomputado con la base correcta: **R1r 196,08 → `d_k` 5,33** (no 0,7) y **R2r 192,08 →
-> `d_k` 7,14** (no 2,5). El momento **no** está en buena forma. Enmienda:
+> **Y mi primera corrección fue peor que el error.** Reescalé solo NUESTRO lado a 8.064 h y
+> publiqué «5,33 / 7,14». Pero la referencia tiene la MISMA inconsistencia: sus hojas
+> empiezan en `min(OPTj)` = 823-1.225 h (excluyen el warm-up, §6.8.2), y v3 divide por
+> `max(OPTj)`, que sí lo incluye. Con la ventana puntuada consistente en **ambos** lados
+> —`n / ((max OPTj − min OPTj) / 8064)`— el resultado es:
+>
+> | definición | R1r | R2r |
+> |---|---:|---:|
+> | publicada (dos errores que se cancelan en parte) | 0,98 | 2,52 |
+> | mi corrección parcial (solo nuestro lado) | 4,07 | 7,14 |
+> | **consistente en ambos lados** | **1,72** | **1,61** |
+>
+> **El valor correcto es ~1,7 SD**, no 0,7 y no 5,3. Tres capas de corrección sobre la misma
+> cantidad, y las dos primeras eran mías. Enmienda:
 > `contracts/paper_b_v2_amendment_2026-07-31.json`.
 
 ## 1. Qué se cambia, y por qué no es un ajuste

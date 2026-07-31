@@ -9,7 +9,7 @@
   "status": "OVERSTATED, not wrong"
  },
  "amendment_2_moment_substitution": {
-  "binding_correction": "the rate MUST use HOURS_PER_THESIS_YEAR = 8064, and numerator and denominator MUST share the same window. All four 2026-07-30 runners divided a warm-up-filtered count over 8736 h by 1.0 'year', a systematic +8.33% inflation against the reference's own definition.",
+  "binding_correction": "the rate MUST use HOURS_PER_THESIS_YEAR = 8064 AND the SCORED window on BOTH sides. Garrido's sheets already exclude the warm-up -- min(OPTj) is 823-1225 h -- so the denominator is (max OPTj - min OPTj)/8064, not max(OPTj)/8064 as fidelity_reference_v3 computes it. Our numerator is warm-up-filtered, so ours is (horizon - warmup)/8064. Measured under all three definitions: published 0.98/2.52 (two errors partly cancelling), our-side-only 4.07/7.14, consistent-both-sides 1.72/1.61. The correct value is ~1.7 SD. A successor reference v4 must recompute the denominator; until then no runner may quote this moment.",
   "contract_declares": "fidelity_comparison.moments[5] = 'scored_rows'",
   "rationale": "a raw row count is not comparable across sheets whose horizons differ (CF1/CF2 run ~20 years, CF3-CF20 ~10); a rate is. See fidelity_moments.py:67-75.",
   "runners_use": "scored_orders_per_year (supply_chain/fidelity_moments.py:64)",
@@ -40,7 +40,7 @@
  "created_at": "2026-07-31",
  "historical_results_modified": false,
  "nothing_relabelled": true,
- "self_sha256": "2d49557c2c060ff55b1e4b208146e1a519ed2b4d2787af3340a7b67fc7c68929",
+ "self_sha256": "41b1188d75ba303ccd4618c1f03b01e12a8ddebd775ce399982eed24f778d124",
  "status": "AMENDMENT_PENDING_PI_SIGNATURE",
  "why_an_amendment_and_not_an_edit": "On 2026-07-30 (commit aa51349) I edited the frozen contract IN PLACE, rewriting evidence.overlap and adding three fields, without recalculating self_sha256 -- so the seal broke. Worse, the ordering was c2d4241 (autotomy preregistration) -> 3175110 (the run) -> aa51349 (the edit): I rewrote a frozen contract's finding AFTER the run whose conclusion it now recorded, in the direction of that conclusion. That is a process violation, not a technical slip. The edit is reverted; the contract is byte-identical to e3f03da and its seal verifies again. Every correction lives here instead."
 }
