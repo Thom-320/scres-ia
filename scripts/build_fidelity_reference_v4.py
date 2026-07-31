@@ -16,8 +16,16 @@ SCORED WINDOW, `(max(OPTj) - min(OPTj))/8064`, which is the same convention our 
 must use. See `contracts/paper_b_v2_amendment_2026-07-31.json` section 2.
 
 Nothing else changes: same six moments, same definitions, same two workbooks. `Rsult_1.xlsx`
-stays excluded -- its twelve configurations differ from the raw workbooks by -1,949 to +735
-rows and store `Re` as a pasted constant rather than the live formula.
+stays excluded because it is a DIFFERENT SAMPLE -- twelve configurations, not the twenty
+canonical ones -- and does not carry the per-order operational ledger the six moments need.
+
+CORRECTED 2026-07-31, see `docs/ERRATA_FIDELITY_REFERENCE_V4_2026-07-31.md`. This docstring
+previously said it "stores Re as a pasted constant" and differed by "-1,949 to +735 rows".
+Both are wrong: `Cf1`-`Cf12` carry 43,776-45,234 live formulas each (only the four aggregate
+sheets are materialized, at 26 formulas), and the row range depends on an undeclared counting
+convention that no candidate reproduces. The count is withdrawn rather than restated. The
+sealed v4 artifact still carries the old wording in `excluded_source`; it is NOT edited in
+place -- the errata document is the record.
 """
 from __future__ import annotations
 
@@ -136,8 +144,14 @@ def main() -> int:
         "created_at": datetime.now(timezone.utc).isoformat(),
         "sources": list(WORKBOOKS),
         "excluded_source": (
-            "Rsult_1.xlsx -- its twelve configurations differ from the raw workbooks by "
-            "-1,949 to +735 rows and store Re as a pasted constant, not the live formula"),
+            "Rsult_1.xlsx -- a DIFFERENT SAMPLE (twelve configurations, not the twenty "
+            "canonical ones) that does not carry the per-order operational ledger these "
+            "moments require. CORRECTED 2026-07-31: the earlier wording ('-1,949 to +735 "
+            "rows', 'stores Re as a pasted constant') was wrong on both counts -- Cf1-Cf12 "
+            "hold 43,776-45,234 live formulas each and only the four aggregate sheets are "
+            "materialized; the row range depended on an undeclared counting convention and "
+            "is withdrawn. See docs/ERRATA_FIDELITY_REFERENCE_V4_2026-07-31.md"),
+        "errata": "docs/ERRATA_FIDELITY_REFERENCE_V4_2026-07-31.md",
         "ret_column": "ReT",
         "change_from_v3": {
             "cf2_recovered": (

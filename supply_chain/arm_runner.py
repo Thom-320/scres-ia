@@ -9,10 +9,12 @@ What it owns, and what each replaces:
 * **the scored population** — one list feeds every moment. The old runners passed `APj`/`RPj`
   over ~277 orders while `ret` came from the ledger's ~217, so share denominators and
   numerators disagreed by 28%.
-* **the population rate** — `scored_orders_per_year` on the *scored window*, in thesis years.
-  The old runners counted over 8,736 h and divided by `1.0 "year"` while the reference used
-  8,064 h/year. Garrido's own sheets exclude the warm-up (`min(OPTj)` is 823-1,225 h), so
-  BOTH sides must use `(last - first)/8064`. See `contracts/paper_b_v2_amendment_2026-07-31.json`.
+* **the population rate** — `scored_orders_per_year` on the *observed order span*, in thesis
+  years. The old runners counted over 8,736 h and divided by `1.0 "year"` while the reference
+  used 8,064 h/year. Garrido's own sheets exclude the warm-up (`min(OPTj)` is 823-1,225 h), so
+  BOTH sides use `(last - first)/8064` — since 2026-07-31 on our side too, the earlier
+  `horizon - warmup` differing from it by up to 2.2%. See
+  `contracts/paper_b_v2_amendment_2026-07-31.json`.
 * **`d_k`** — delegated to `fidelity_moments.discrepancies()`, which owns the definition and
   the degenerate-moment guard. Four independent re-implementations is how the `249.8 SD`
   error happened.
@@ -61,16 +63,26 @@ def scored_orders(sim: Any) -> list:
 def episode_moments(sim: Any) -> dict[str, float]:
     """Six moments from one episode, one population, thesis year basis.
 
-    The rate uses the **scored window** -- `horizon - warmup` -- because the numerator is
-    warm-up filtered. Garrido's sheets are filtered the same way, so his denominator is
-    `max(OPTj) - min(OPTj)`; a reference that divides by `max(OPTj)` alone is inconsistent
-    with its own numerator and must be regenerated before this moment is quoted.
+    The rate uses the **observed order span**, `max(OPTj) - min(OPTj)` over the scored
+    population, because that is the estimator `fidelity_reference_v4` applies to Garrido's
+    sheets -- the only rows he ships are already warm-up filtered, so his window can only be
+    read off his own orders.
+
+    CORRECTED 2026-07-31. This used `horizon - warmup`, which ends at the horizon while his
+    ends at the last order. Measured on 12 roots x 2 families, the two conventions differ by
+    **1.5% (R1r) and 2.2% (R2r)** -- larger than the moment's own gap to the reference in
+    R1r, so the convention was deciding the `d_k`, not the data. See
+    `results/metric_audit/fidelity_comparison_v4/`.
+
+    One asymmetry remains and is disclosed rather than corrected: `n / span` counts `n`
+    orders across `n - 1` gaps, an upward bias of `n/(n-1)` -- about 0.45% on our ~220
+    orders against 0.05% on his ~2,100. It is the same estimator on both sides, so it
+    cancels in direction and is an order of magnitude below the gap it replaces.
     """
     orders = scored_orders(sim)
     if not orders:
         raise ValueError("no scored orders; horizon is shorter than the warm-up")
     horizon = float(sim.env.now)
-    window_hours = max(horizon - float(sim.warmup_time), 1e-9)
 
     # The ledger applies its own visibility filter (not lost, OATj present). Score the
     # SAME rows on every moment rather than mixing two populations.
@@ -89,6 +101,10 @@ def episode_moments(sim: Any) -> dict[str, float]:
     rpj = [float(getattr(o, "RPj", 0.0) or 0.0) for o in population]
     pos = sorted(v for v in rpj if v > 0.0)
     n = len(ret)
+    # The observed span of the SAME population the moments are computed on.
+    opt = [float(getattr(o, "OPTj", 0.0)) for o in population]
+    window_hours = max(max(opt) - min(opt), 1e-9) if len(opt) > 1 else max(
+        horizon - float(sim.warmup_time), 1e-9)
     return {
         "autotomy_share": sum(1 for v in apj if v > 0.0) / n,
         "ret_mean": sum(ret) / n,
