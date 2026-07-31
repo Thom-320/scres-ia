@@ -3,6 +3,29 @@
 **Status:** `PREREGISTERED_NO_ARM_ADOPTABLE`. Artefacto
 `results/metric_audit/delta_assumption_arms_v1/result.json`, sellado. Raíces 3.000.001–12.
 
+> **RE-CORRIDO 2026-07-31 tras arreglar el defecto de `op9_linked`.** `δ` no se aplicaba en
+> la ruta física (`_deliver_order_from_op9` llama directo a `_finalize_pending_backorder`),
+> así que `L` y `LD` salían idénticos y el supuesto **nunca se probó bajo el enlace**.
+> Corregido: `δ` se aplica ahora en **ambas** rutas, y el brazo `LD` pasa de 47 a **107
+> valores distintos sobre 107 órdenes**.
+>
+> **El resultado corregido refuta el supuesto como beneficioso.** Con `δ` correctamente
+> aplicado bajo el enlace:
+>
+> | momento (R1r) | A | D | **L** | **LD** |
+> |---|---:|---:|---:|---:|
+> | `ret_mean` | 1,86 | 0,80 | **0,23** | **0,75** |
+> | `rpj_mean` | 7,28 | 7,39 | 7,95 | **8,16** |
+> | `rpj_p95` | 11,32 | 11,32 | 12,11 | **12,15** |
+>
+> `LD` empeora `ret_mean` contra `L` (0,23 → 0,75) y empeora los dos `rpj`. **`LD` sale del
+> conjunto no dominado**, que pasa de `[D, LD, L]` a **`[D, L]`**. Sigue sin haber brazo
+> adoptable y `f6` sigue fallando.
+>
+> **Conclusión: añadir `δ` no ayuda.** La mejora de `ret_mean` viene enteramente de
+> `op9_linked`, y `δ` encima la degrada. El supuesto queda medido y descartado como palanca,
+> que es exactamente lo que un supuesto declarado debe poder recibir.
+
 | brazo | min | `CTj` p50 | demoradas | `δ` p25 | `δ` p50 | `δ` p75 |
 |---|---:|---:|---:|---:|---:|---:|
 | **Garrido** | 48,01 | **101,45** | **83,5%** | **2,00** | **4,02** | **6,00** |

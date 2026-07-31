@@ -4893,6 +4893,14 @@ class MFSCSimulation:
         self._on_order_physical_delivery(order, qty)
         order.in_flight_qty = max(0.0, float(order.in_flight_qty) - qty)
         if order.remaining_qty <= 1e-9 and order.in_flight_qty <= 1e-9:
+            # `delta` is an assumption about WHERE IN THE SHIFT the handover lands, so it
+            # applies to this physical path exactly as it does to the stock-served one.
+            # Applying it in only one place made `op9_linked` silently ignore the option
+            # and made the 2026-07-31 factorial three cells instead of four
+            # (docs/RESULTADO_DELTA_SUPUESTO_2026-07-31.md section 3).
+            if self.fulfillment_delta_mode == "shift_uniform":
+                yield self.env.timeout(
+                    float(self.fulfillment_rng.uniform(0.0, HOURS_PER_SHIFT)))
             self._finalize_pending_backorder(order)
 
     def _on_order_physical_delivery(
