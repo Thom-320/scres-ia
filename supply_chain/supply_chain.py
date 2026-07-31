@@ -228,6 +228,7 @@ class MFSCSimulation:
         seed_stream_mode: Optional[str] = None,
         ret_recovery_period_mode: str = RET_RECOVERY_PERIOD_MODE,
         procurement_delay_accumulation: str = "serial",
+        rpj_onset_admission: str = "clamped",
         backorder_overflow_mode: str = BACKORDER_OVERFLOW_MODE,
         backorder_priority_rule: str = "spt_contingent",
         backorder_age_threshold_hours: float = 336.0,
@@ -646,6 +647,14 @@ class MFSCSimulation:
                 "procurement_delay_accumulation must be 'serial' or 'parallel', "
                 f"got {procurement_delay_accumulation!r}")
         self.procurement_delay_accumulation = str(procurement_delay_accumulation)
+        # "clamped" is the shipped reading; "within_window" is Algorithm 2's
+        # literal condition. Default stays "clamped" until the preregistration
+        # docs/PREREGISTRO_CLAMP_RPJ_2026-07-30.md is adjudicated.
+        if rpj_onset_admission not in ("clamped", "within_window"):
+            raise ValueError(
+                "rpj_onset_admission must be 'clamped' or 'within_window', "
+                f"got {rpj_onset_admission!r}")
+        self.rpj_onset_admission = str(rpj_onset_admission)
         self.backorder_overflow_mode = backorder_overflow_mode
         self.backorder_priority_rule = backorder_priority_rule
         self.backorder_age_threshold_hours = float(backorder_age_threshold_hours)
@@ -5805,9 +5814,16 @@ class MFSCSimulation:
 
         total_disruption_hours = 0.0
         earliest_risk_start = float("inf")
+        # Every candidate R^0 onset, kept alongside `earliest_risk_start` so the
+        # clamped arm stays bitwise identical. Algorithm 2 (p.69) admits only
+        # onsets that manifest WITHIN [OPTj, OATj]; the clamp instead rewrites an
+        # already-running risk's onset to OPTj. See
+        # docs/PREREGISTRO_CLAMP_RPJ_2026-07-30.md.
+        risk_onsets: list[float] = []
 
         def mark_event(event: RiskEvent, contribution: float) -> None:
             nonlocal earliest_risk_start
+            risk_onsets.append(float(event.start_time))
             key = str(event.risk_id)
             order.ret_risk_indicators[key] = (
                 order.ret_risk_indicators.get(key, 0.0) + float(contribution)
@@ -5894,18 +5910,18 @@ class MFSCSimulation:
                             - overlap_start
                         )
                         earliest_risk_start = min(earliest_risk_start, down_since)
+                        risk_onsets.append(float(down_since))
 
         quantity_risk_hours, quantity_risk_start = self._consume_ret_quantity_risk_for_order(
             order, risk_ids=(("R14",) if causal else ("R14", "R24"))
         )
         if quantity_risk_hours > 0.0:
             total_disruption_hours += quantity_risk_hours
-            earliest_risk_start = min(
-                earliest_risk_start,
-                float(quantity_risk_start)
-                if quantity_risk_start is not None
-                else float(order.OPTj),
-            )
+            _q_onset = (float(quantity_risk_start)
+                        if quantity_risk_start is not None
+                        else float(order.OPTj))
+            earliest_risk_start = min(earliest_risk_start, _q_onset)
+            risk_onsets.append(_q_onset)
 
         # R24 is a point event that materializes as a contingent-demand order.
         # If the event happened before OPTj, pure time-overlap attribution misses
@@ -5931,6 +5947,7 @@ class MFSCSimulation:
                 }
             )
             earliest_risk_start = min(earliest_risk_start, float(order.OPTj))
+            risk_onsets.append(float(order.OPTj))
 
         if not order.ret_risk_indicators:
             return  # No disruption: fill_rate case
@@ -5948,6 +5965,14 @@ class MFSCSimulation:
                 # The elapsed mode lets plain queue wait inflate RPj up to CTj,
                 # which diverges from the bounded workbook RPj distribution.
                 order.RPj = max(0.0, total_disruption_hours)
+            elif self.rpj_onset_admission == "within_window":
+                # Algorithm 2 line 2: the onset must manifest within the order's
+                # own interval. An order with none fails the condition, so it
+                # carries no recovery period at all.
+                inside = [t for t in risk_onsets
+                          if float(order.OPTj) < t <= float(order.OATj)]
+                order.RPj = (max(0.0, float(order.OATj) - min(inside))
+                             if inside else 0.0)
             else:
                 eff_risk_start = max(earliest_risk_start, order.OPTj)
                 order.RPj = max(0.0, order.OATj - eff_risk_start)
