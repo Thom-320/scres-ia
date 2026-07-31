@@ -1,5 +1,17 @@
 # `rpj_p95` in R1r: three of four risks have no recovery duration, so RPj degenerates to CTj
 
+> **CORRECCIÓN 2026-07-30 (`8a6aa16`).** Todos los `d_k` de este documento están
+> **inflados**: se calcularon con un script ad-hoc que dividía solo por el error estándar
+> de la referencia y omitía el nuestro, mientras `fidelity_moments.discrepancies` divide
+> por `sqrt(s²/n_ref + se²)`. Los valores correctos son **`rpj_p95` 14,6 (no 249,8)**,
+> `rpj_mean` 11,0 (no 19,3), `ret_mean` 1,7 (no 1,6); `autotomy_share` queda en 11,2
+> porque nuestra SE ahí es exactamente cero. La brecha es real; la magnitud estaba
+> sobrestimada.
+>
+> **Además**, la afirmación central de la §4 —que R12/R13 «no tienen distribución de
+> duración»— es **falsa**: la Tabla 6.6b(3) fija 168 h y 24 h y el código ya las tenía.
+> Y el mecanismo propuesto fue **refutado** (`a1485a0`, `a0912bd`).
+
 **Status:** `DEVELOPMENT_DIAGNOSIS_NOTHING_CHANGED`. Roots 2,200,001–3, one shift, no
 strategic buffers, escalated R1r. Reference `fidelity_reference_v3`.
 

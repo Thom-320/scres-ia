@@ -1,5 +1,11 @@
 # Retraction — the "scored-population mismatch" was my measurement, not the model
 
+> **CORRECCIÓN 2026-07-30 (`8a6aa16`).** La tabla de la §«estado real de fidelidad»
+> cita `d_k` calculados con un script ad-hoc que omitía nuestro propio error estándar.
+> Correctos: `rpj_p95` **14,6** (no 249,8), `rpj_mean` 11,0 (no 19,3). La retractación
+> que da nombre a este documento **se mantiene íntegra**; solo las magnitudes de esa tabla
+> estaban infladas.
+
 **Status:** `RETRACTION`. Retracts the central claim of
 `docs/RPJ_MEAN_DECOMPOSITION_2026-07-30.md` (commit 164f160) and Change A of
 `docs/PREREGISTRO_POBLACION_PUNTUADA_2026-07-30.md` (commit 3a92745).

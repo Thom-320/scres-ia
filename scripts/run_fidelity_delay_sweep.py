@@ -59,10 +59,16 @@ FAMILIES = {"R1r": ("R11", "R12", "R13", "R14"), "R2r": ("R21", "R22", "R23", "R
 SHIFTS = 1
 # Declared in the contract. Disjoint from every previous block.
 ROOTS = tuple(2_000_001 + i for i in range(12))
-# Tolerance for the thesis-exact predicate. Swept, because the canonical data refutes
-# any single value: autotomy rows there run CTj - LT in [0.00744, 0.048] while
-# non-autotomy rows that also exceed LT start at exactly 0.00744, so no band on CTj
-# reproduces his classification. These are reported side by side, none is "the" rule.
+# Tolerance for the thesis-exact predicate, swept and reported side by side.
+#
+# CORRECTED 2026-07-30. The earlier note here said the canonical data "refutes any single
+# value" because non-autotomy rows also start at CTj - LT = 0.00744. They do, but there
+# are 2 of them: his floor band [48.0074, 48.06] holds 98 rows, 96 autotomy and 2 not, so
+# a band at 0.05 reproduces 96/98 of his labels. The overlap was overstated.
+#
+# What the band cannot fix is measured in docs/RESULTADO_AUTOTOMIA_2026-07-30.md: our CTj
+# is a point mass at the fulfilment-delay constant (69.2% of orders at one value) where his
+# is a continuous distribution, so every tolerance gives a bit-identical answer.
 TOLERANCES = (0.0, 0.05, 0.5)
 EPSILONS = (0.25, 0.5, 1.0, 2.0)
 

@@ -121,7 +121,21 @@ LEAD_TIME_PROMISE = 48  # Hours — thesis §6.8.2 p.111, NOT §6.3.4
 # citation pointed at §6.3.4 "Demand for combat rations", which defines
 # U(2400,2600) every 24 h and no lead time at all. The value is right;
 # only the source was wrong.
-GARRIDO_FULFILLMENT_DELAY_HOURS = 54.0  # Calibrated minimum CTj: no instant orders; just beyond LT=48.
+# Minimum CTj for an order served from theatre stock. FITTED 2026-06-26 against a single
+# observable (ReT magnitude) and labelled then "provisional reproduction default, not a
+# complete behavioral calibration". Measured 2026-07-30, it fails on three counts:
+#
+#   1. fitted against one observable while breaking others (the recurring pattern);
+#   2. it makes the autotomy branch STRUCTURALLY unreachable -- CTj >= 54 > LT = 48 for
+#      every order, so 0 of 416 can ever satisfy CTj <= LTj;
+#   3. it is a CONSTANT where the source data is a distribution. Garrido's CTj runs
+#      continuously from min 48.0074 (p1 48.41, p5 50.42, p25 75.00, p50 101.45) with 0.45%
+#      in the floor band; ours puts 69.2% of orders at one value. No value of this constant
+#      reproduces his 0.44% autotomy share, because that needs a thin lower tail.
+#
+# Point 3 is why the repair is not a new number. See
+# docs/RESULTADO_AUTOTOMIA_2026-07-30.md and the successor preregistration.
+GARRIDO_FULFILLMENT_DELAY_HOURS = 54.0
 GARRIDO_R14_RET_PERIOD_HOURS = 72.0  # R14-only RPj median in Raw_data1 is ~72 h; avoid 1h ReT inflation.
 
 # Recovery-period (RPj) attribution for the endogenous DES lane.
