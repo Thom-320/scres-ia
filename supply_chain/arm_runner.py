@@ -36,6 +36,7 @@ from .episode_metrics import (
     compute_order_level_ret_excel_request_snapshot_ledger as _ledger,
 )
 from .fidelity_moments import (
+    EPSILON_BAND,
     EPSILON,
     MOMENT_NAMES,
     MomentReference,
@@ -116,7 +117,7 @@ def aggregate(rows: Sequence[Mapping[str, float]],
 
 
 def verdict(cells: Mapping[str, Mapping[str, float]],
-            epsilons: Sequence[float] = (0.25, 0.5, 1.0, 2.0)) -> dict[str, Any]:
+            epsilons: Sequence[float] = EPSILON_BAND) -> dict[str, Any]:
     """The contract's own output: a non-dominated set plus its epsilon sensitivity."""
     d_only = {name: c["discrepancies"] for name, c in cells.items()}
     stability = epsilon_stability(d_only, epsilons)

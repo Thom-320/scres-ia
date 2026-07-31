@@ -44,7 +44,7 @@
  "claim_status": "HALTED_FALSIFIER_FAILED",
  "contract_path": "docs/PREREGISTRO_OATJ_MATERIAL_2026-07-31.md",
  "contract_sha256": "bfcf488ae89682b8fb86f820fc0814c19b52fe82d9c763cc4865d87864175008",
- "created_at": "2026-07-31T05:25:18.069702+00:00",
+ "created_at": "2026-07-31T06:22:24.002608+00:00",
  "ctj_stats": {
   "A_legacy_const": {
    "delta_gt0_share": 0.6090764331210191,
@@ -91,7 +91,7 @@
    "p_delayed": 0.3909235668789809
   }
  },
- "elapsed_seconds": 7.33362450000277,
+ "elapsed_seconds": 7.8778588749992196,
  "falsifiers": {
   "P31_GENUINE_delta_emerges_in_LW": {
    "evidence": {
@@ -175,8 +175,20 @@
   "f5_epsilon_stable": {
    "evidence": {
     "R1r": {
+     "band": [
+      0.25,
+      0.375,
+      0.5,
+      0.625,
+      0.75
+     ],
      "by_epsilon": {
       "0.25": [
+       "A_legacy_const",
+       "LW_linked_waves",
+       "L_linked_const"
+      ],
+      "0.375": [
        "A_legacy_const",
        "LW_linked_waves",
        "L_linked_const"
@@ -186,21 +198,36 @@
        "LW_linked_waves",
        "L_linked_const"
       ],
-      "1.0": [
+      "0.625": [
+       "A_legacy_const",
        "LW_linked_waves",
        "L_linked_const"
       ],
-      "2.0": [
+      "0.75": [
+       "A_legacy_const",
        "LW_linked_waves",
        "L_linked_const"
       ]
      },
-     "n_distinct_sets": 2,
-     "stable": false
+     "flips": [],
+     "n_distinct_sets": 1,
+     "stable": true
     },
     "R2r": {
+     "band": [
+      0.25,
+      0.375,
+      0.5,
+      0.625,
+      0.75
+     ],
      "by_epsilon": {
       "0.25": [
+       "A_legacy_const",
+       "LW_linked_waves",
+       "L_linked_const"
+      ],
+      "0.375": [
        "A_legacy_const",
        "LW_linked_waves",
        "L_linked_const"
@@ -210,22 +237,23 @@
        "LW_linked_waves",
        "L_linked_const"
       ],
-      "1.0": [
+      "0.625": [
        "A_legacy_const",
        "LW_linked_waves",
        "L_linked_const"
       ],
-      "2.0": [
+      "0.75": [
        "A_legacy_const",
        "LW_linked_waves",
        "L_linked_const"
       ]
      },
+     "flips": [],
      "n_distinct_sets": 1,
      "stable": true
     }
    },
-   "passed": false
+   "passed": true
   }
  },
  "garrido_targets": {
@@ -1046,6 +1074,6 @@
   2900012
  ],
  "schema_version": "oatj_material_arms_v1",
- "self_sha256": "e5ea650e610c3f68b44180368d187e109f1f7d4feaa3ffd113796bcaf0da92a5",
+ "self_sha256": "b04a58f61031037fbc22ed202def259aa2d842a43d780efc5186f4067bc7e4db",
  "verdicts": null
 }

@@ -44,6 +44,14 @@ from typing import Any, Mapping, Sequence
 # non-dominated set that moves with EPSILON is reported as unstable rather than shown.
 EPSILON: float = 0.5
 
+# The swept band, amended 2026-07-31 (contracts/epsilon_range_amendment_2026-07-31.json).
+# Was 0.25/0.5/1.0/2.0 -- an 8x span. EPSILON is in COMBINED STANDARD ERRORS, so an
+# epsilon of 2.0 declares indifference to a two-combined-SE difference, more than
+# separates any pair of arms this project compares: `no_worse` becomes trivially true
+# and `strictly` unsatisfiable, so the check degenerates regardless of the data. The
+# band is now the declared EPSILON +-50%, inside the regime where both terms can bind.
+EPSILON_BAND: tuple[float, ...] = (0.25, 0.375, 0.5, 0.625, 0.75)
+
 # The canonical sheet-to-family map. Cf1-Cf10 are the R1r configurations and Cf11-Cf20
 # the R2r ones (thesis Tables 6.13-6.15). Cf21-Cf30 are R3 and have NO reference
 # workbook, so R3 is external validation and never part of the fit.
@@ -181,8 +189,13 @@ def dominates(a: Mapping[str, float], b: Mapping[str, float],
             and not math.isnan(b.get(k, math.nan))]
     if not live:
         return False
+    # `no_worse` must see EVERY live moment.
     no_worse = all(a[k] <= b[k] + epsilon for k in live)
-    strictly = any(a[k] < b[k] - epsilon for k in live)
+    # Amended 2026-07-31: a moment IDENTICAL between the two arms can never satisfy
+    # `a < b - epsilon` at any positive epsilon, so counting it among the candidates can
+    # only REMOVE strictness and never supply it -- measured, a flip driven by an
+    # autotomy_share gap of exactly +0.00. Zero-gap moments are excluded here only.
+    strictly = any(a[k] < b[k] - epsilon for k in live if a[k] != b[k])
     return no_worse and strictly
 
 
@@ -195,8 +208,38 @@ def non_dominated(cells: Mapping[str, Mapping[str, float]],
                    for k, other in cells.items() if k != name))
 
 
+def dominance_flips(cells: Mapping[str, Mapping[str, float]],
+                    epsilons: Sequence[float] = EPSILON_BAND) -> list[dict[str, Any]]:
+    """Every pair whose dominance changes across the band, with its critical moment.
+
+    The boolean says "do not look"; this says WHICH comparison is fragile and BY HOW
+    MUCH, which is the information the stability rule exists to protect. Amended in
+    `contracts/epsilon_range_amendment_2026-07-31.json`.
+    """
+    out: list[dict[str, Any]] = []
+    names = sorted(cells)
+    for a in names:
+        for b in names:
+            if a == b:
+                continue
+            prev = None
+            for e in epsilons:
+                cur = dominates(cells[a], cells[b], e)
+                if prev is not None and cur != prev:
+                    live = [k for k in MOMENT_NAMES
+                            if not math.isnan(cells[a].get(k, math.nan))
+                            and not math.isnan(cells[b].get(k, math.nan))]
+                    crit = max(live, key=lambda k: cells[a][k] - cells[b][k])
+                    out.append({"pair": [a, b], "flips_at_epsilon": float(e),
+                                "now_dominates": bool(cur),
+                                "critical_moment": crit,
+                                "gap_dk": float(cells[a][crit] - cells[b][crit])})
+                prev = cur
+    return out
+
+
 def epsilon_stability(cells: Mapping[str, Mapping[str, float]],
-                      epsilons: Sequence[float]) -> dict[str, Any]:
+                      epsilons: Sequence[float] = EPSILON_BAND) -> dict[str, Any]:
     """Whether the non-dominated set is a property of the data or of epsilon."""
     sets = {e: non_dominated(cells, e) for e in epsilons}
     distinct = {tuple(v) for v in sets.values()}
@@ -204,4 +247,6 @@ def epsilon_stability(cells: Mapping[str, Mapping[str, float]],
         "by_epsilon": {str(e): v for e, v in sets.items()},
         "n_distinct_sets": len(distinct),
         "stable": len(distinct) == 1,
+        "band": list(epsilons),
+        "flips": dominance_flips(cells, epsilons),
     }

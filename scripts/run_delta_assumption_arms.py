@@ -128,7 +128,7 @@ def main() -> int:
         cells = {a: aggregate(per_arm[a][f], reference[f]) for a in ARMS}
         scored_only = {a: {m: c["discrepancies"][m] for m in SCORED}
                        for a, c in cells.items()}
-        stab = epsilon_stability(scored_only, (0.25, 0.5, 1.0, 2.0))
+        stab = epsilon_stability(scored_only)
         results[f] = cells
         verdicts[f] = {"non_dominated_set": non_dominated(scored_only, EPSILON),
                        "epsilon_stability": stab,

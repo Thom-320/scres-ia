@@ -129,7 +129,7 @@ def main() -> int:
     verdicts = {}
     for f in FAMILIES:
         so = {a: {m: dk(f, a, m) for m in SCORED} for a in ARMS}
-        stab = epsilon_stability(so, (0.25, 0.5, 1.0, 2.0))
+        stab = epsilon_stability(so)
         verdicts[f] = {"non_dominated_set": non_dominated(so, EPSILON),
                        "epsilon_stability": stab,
                        "set_is_epsilon_stable": bool(stab["stable"])}

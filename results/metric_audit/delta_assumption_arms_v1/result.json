@@ -93,7 +93,7 @@
  },
  "contract_path": "docs/PREREGISTRO_DELTA_SUPUESTO_2026-07-31.md",
  "contract_sha256": "5c96cb17f414d574c7e044ff86a8d3382e257032c4fccb0c747f4809533e1b95",
- "created_at": "2026-07-31T05:38:14.593073+00:00",
+ "created_at": "2026-07-31T06:22:32.027840+00:00",
  "ctj_stats": {
   "A_legacy_nodelta": {
    "delta_q": {
@@ -148,7 +148,7 @@
    "p_delayed": 0.5404936367142307
   }
  },
- "elapsed_seconds": 7.456096625002829,
+ "elapsed_seconds": 7.874237832998915,
  "falsifiers": {
   "all_passed": false,
   "f3_no_order_below_lead_time": {
@@ -177,8 +177,19 @@
   "f6_epsilon_stable": {
    "evidence": {
     "R1r": {
+     "band": [
+      0.25,
+      0.375,
+      0.5,
+      0.625,
+      0.75
+     ],
      "by_epsilon": {
       "0.25": [
+       "D_legacy_delta",
+       "L_linked_nodelta"
+      ],
+      "0.375": [
        "D_legacy_delta",
        "L_linked_nodelta"
       ],
@@ -186,38 +197,87 @@
        "D_legacy_delta",
        "L_linked_nodelta"
       ],
-      "1.0": [
-       "D_legacy_delta",
-       "LD_linked_delta",
-       "L_linked_nodelta"
+      "0.625": [
+       "D_legacy_delta"
       ],
-      "2.0": [
-       "A_legacy_nodelta",
-       "D_legacy_delta",
-       "LD_linked_delta",
-       "L_linked_nodelta"
+      "0.75": [
+       "D_legacy_delta"
       ]
      },
-     "n_distinct_sets": 3,
+     "flips": [
+      {
+       "critical_moment": "ret_mean",
+       "flips_at_epsilon": 0.625,
+       "gap_dk": 0.5737075387744258,
+       "now_dominates": true,
+       "pair": [
+        "D_legacy_delta",
+        "L_linked_nodelta"
+       ]
+      },
+      {
+       "critical_moment": "autotomy_share",
+       "flips_at_epsilon": 0.625,
+       "gap_dk": 0.0,
+       "now_dominates": false,
+       "pair": [
+        "L_linked_nodelta",
+        "LD_linked_delta"
+       ]
+      }
+     ],
+     "n_distinct_sets": 2,
      "stable": false
     },
     "R2r": {
+     "band": [
+      0.25,
+      0.375,
+      0.5,
+      0.625,
+      0.75
+     ],
      "by_epsilon": {
       "0.25": [
+       "D_legacy_delta"
+      ],
+      "0.375": [
        "D_legacy_delta"
       ],
       "0.5": [
        "D_legacy_delta"
       ],
-      "1.0": [
+      "0.625": [
        "D_legacy_delta",
        "LD_linked_delta"
       ],
-      "2.0": [
+      "0.75": [
        "D_legacy_delta",
        "LD_linked_delta"
       ]
      },
+     "flips": [
+      {
+       "critical_moment": "autotomy_share",
+       "flips_at_epsilon": 0.625,
+       "gap_dk": 0.0,
+       "now_dominates": false,
+       "pair": [
+        "D_legacy_delta",
+        "LD_linked_delta"
+       ]
+      },
+      {
+       "critical_moment": "ret_mean",
+       "flips_at_epsilon": 0.625,
+       "gap_dk": 0.5834438586636765,
+       "now_dominates": true,
+       "pair": [
+        "LD_linked_delta",
+        "A_legacy_nodelta"
+       ]
+      }
+     ],
      "n_distinct_sets": 2,
      "stable": false
     }
@@ -1277,12 +1337,23 @@
   "rpj_mean",
   "rpj_p95"
  ],
- "self_sha256": "06a06ba9e672e6057ea37ab594579dbe3f2b1f010f51ed81b0a8275f08a1d757",
+ "self_sha256": "e76cf480cf87d38c1a8699791613a548d6600fb428f1452ed8fa37bce2e4654d",
  "verdicts": {
   "R1r": {
    "epsilon_stability": {
+    "band": [
+     0.25,
+     0.375,
+     0.5,
+     0.625,
+     0.75
+    ],
     "by_epsilon": {
      "0.25": [
+      "D_legacy_delta",
+      "L_linked_nodelta"
+     ],
+     "0.375": [
       "D_legacy_delta",
       "L_linked_nodelta"
      ],
@@ -1290,19 +1361,36 @@
       "D_legacy_delta",
       "L_linked_nodelta"
      ],
-     "1.0": [
-      "D_legacy_delta",
-      "LD_linked_delta",
-      "L_linked_nodelta"
+     "0.625": [
+      "D_legacy_delta"
      ],
-     "2.0": [
-      "A_legacy_nodelta",
-      "D_legacy_delta",
-      "LD_linked_delta",
-      "L_linked_nodelta"
+     "0.75": [
+      "D_legacy_delta"
      ]
     },
-    "n_distinct_sets": 3,
+    "flips": [
+     {
+      "critical_moment": "ret_mean",
+      "flips_at_epsilon": 0.625,
+      "gap_dk": 0.5737075387744258,
+      "now_dominates": true,
+      "pair": [
+       "D_legacy_delta",
+       "L_linked_nodelta"
+      ]
+     },
+     {
+      "critical_moment": "autotomy_share",
+      "flips_at_epsilon": 0.625,
+      "gap_dk": 0.0,
+      "now_dominates": false,
+      "pair": [
+       "L_linked_nodelta",
+       "LD_linked_delta"
+      ]
+     }
+    ],
+    "n_distinct_sets": 2,
     "stable": false
    },
    "non_dominated_set": [
@@ -1320,22 +1408,54 @@
   },
   "R2r": {
    "epsilon_stability": {
+    "band": [
+     0.25,
+     0.375,
+     0.5,
+     0.625,
+     0.75
+    ],
     "by_epsilon": {
      "0.25": [
+      "D_legacy_delta"
+     ],
+     "0.375": [
       "D_legacy_delta"
      ],
      "0.5": [
       "D_legacy_delta"
      ],
-     "1.0": [
+     "0.625": [
       "D_legacy_delta",
       "LD_linked_delta"
      ],
-     "2.0": [
+     "0.75": [
       "D_legacy_delta",
       "LD_linked_delta"
      ]
     },
+    "flips": [
+     {
+      "critical_moment": "autotomy_share",
+      "flips_at_epsilon": 0.625,
+      "gap_dk": 0.0,
+      "now_dominates": false,
+      "pair": [
+       "D_legacy_delta",
+       "LD_linked_delta"
+      ]
+     },
+     {
+      "critical_moment": "ret_mean",
+      "flips_at_epsilon": 0.625,
+      "gap_dk": 0.5834438586636765,
+      "now_dominates": true,
+      "pair": [
+       "LD_linked_delta",
+       "A_legacy_nodelta"
+      ]
+     }
+    ],
     "n_distinct_sets": 2,
     "stable": false
    },
