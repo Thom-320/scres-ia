@@ -1,0 +1,295 @@
+{
+ "claim_status": "DEVELOPMENT_FIG5_SURROGATE",
+ "created_at": "2026-07-31T22:11:29.203993+00:00",
+ "driver_table": "results/garrido_drivers_per_configuration/result.json",
+ "driver_table_sha256": "491694175a3975a70d3f6a9d7af90f3cc5b97849a5d348786bd44c9c3455a392",
+ "elapsed_seconds": 13.803842000001168,
+ "falsifiers": {
+  "all_passed": true,
+  "f1_task_A_is_an_identity": {
+   "evidence": {
+    "coefficients": {
+     "Re_APj": 0.0,
+     "Re_DPj_RPj": 0.0,
+     "Re_FRt": 0.9999999999999998,
+     "Re_RPj": 0.9999999999999677,
+     "not_in_his_ReT": 0.0
+    },
+    "degenerate_all_zero_columns": [
+     "Re_APj",
+     "Re_DPj_RPj",
+     "not_in_his_ReT"
+    ],
+    "identified_coefficients": [
+     "Re_RPj",
+     "Re_FRt"
+    ],
+    "max_abs_identity_error": 3.219646771412954e-15,
+    "note": "ReT is exactly the sum of the driver contributions, so the neuron as drawn has nothing to learn. Reported so that a perfect fit here is never mistaken for evidence",
+    "r2": 1.0,
+    "status": "IDENTITY_NOT_A_LEARNING_TASK",
+    "why_it_can_fail": "if ReT were NOT the exact sum of the drivers, the neuron as drawn would be a real learning problem and this whole framing would be wrong. Checked on the identity itself, and on the coefficients only where they are IDENTIFIED -- an all-zero column has no coefficient to check, which is what the first version of this falsifier got wrong"
+   },
+   "passed": true
+  },
+  "f2_no_group_leaks_across_a_fold": {
+   "evidence": {
+    "n_groups": 30,
+    "n_rows": 90,
+    "why_it_can_fail": "his design reuses one seed across each Cf_b/Cf_b+30/Cf_b+60 triple; a random split would put the same trajectory on both sides and inflate every score"
+   },
+   "passed": true
+  },
+  "f3_baselines_are_non_degenerate": {
+   "evidence": {
+    "majority_baseline_accuracy": 0.33333333333333337,
+    "positive_class_share": 0.45977011494252873,
+    "ret_sd": 0.4043332998666026,
+    "why_it_can_fail": "a constant target, or a class balance so skewed that the majority baseline is already ~1.0, would make every comparison below meaningless"
+   },
+   "passed": true
+  },
+  "f4_both_networks_actually_train": {
+   "evidence": {
+    "loss_ratio_median": {
+     "backprop": 0.015084149714318323,
+     "kan": 0.015261448742625966
+    },
+    "why_it_can_fail": "a dead net would score like the constant baseline in silence"
+   },
+   "passed": true
+  },
+  "f5_deterministic_under_a_fixed_seed": {
+   "evidence": {
+    "delta": {
+     "backprop": 0.0,
+     "constant": 0.0,
+     "kan": 0.0,
+     "linear": 0.0
+    },
+    "why_it_can_fail": "with 90 rows a run-to-run swing could be mistaken for a model difference"
+   },
+   "passed": true
+  }
+ },
+ "features": "buffer_hours, shifts, family one-hot, risk pattern flags -- the drivers are deliberately EXCLUDED, they sum to the target",
+ "n_configurations": 90,
+ "n_pairs": 87,
+ "question": "Figure 5 of Garrido, Ponguta & Adarme (2024): can a neural network map the SCRES drivers, weighted by the decision variables, onto SCRES -- and does backpropagation or KAN do it better than a linear rule?",
+ "schema_version": "garrido_fig5_surrogate_v1",
+ "seed": 20260731,
+ "self_sha256": "40bf64852c6e6f44bd08b881bf1be87bdb720fb632c5006d053e6aaf099736df",
+ "task_A_figure_as_drawn": {
+  "coefficients": {
+   "Re_APj": 0.0,
+   "Re_DPj_RPj": 0.0,
+   "Re_FRt": 0.9999999999999998,
+   "Re_RPj": 0.9999999999999677,
+   "not_in_his_ReT": 0.0
+  },
+  "degenerate_all_zero_columns": [
+   "Re_APj",
+   "Re_DPj_RPj",
+   "not_in_his_ReT"
+  ],
+  "identified_coefficients": [
+   "Re_RPj",
+   "Re_FRt"
+  ],
+  "max_abs_identity_error": 3.219646771412954e-15,
+  "note": "ReT is exactly the sum of the driver contributions, so the neuron as drawn has nothing to learn. Reported so that a perfect fit here is never mistaken for evidence",
+  "r2": 1.0,
+  "status": "IDENTITY_NOT_A_LEARNING_TASK"
+ },
+ "task_B1_regression": {
+  "mean": {
+   "backprop": 0.9863153335912018,
+   "constant": 0.0,
+   "kan": 0.9913280603236345,
+   "linear": 0.9697483885147611
+  },
+  "per_fold": {
+   "backprop": [
+    0.9946369666747089,
+    0.9866279909626664,
+    0.9826172524686242,
+    0.9745993794979219,
+    0.9930950783520878
+   ],
+   "constant": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "kan": [
+    0.9971367261982027,
+    0.9800396553675066,
+    0.9961030227178286,
+    0.9876275437571883,
+    0.9957333535774456
+   ],
+   "linear": [
+    0.9900125902506733,
+    0.9681218535099421,
+    0.9708435103589923,
+    0.9443789466131698,
+    0.9753850418410279
+   ]
+  },
+  "sd": {
+   "backprop": 0.008158609794815226,
+   "constant": 0.0,
+   "kan": 0.007366637344686017,
+   "linear": 0.01650653827342437
+  },
+  "training": {
+   "backprop": [
+    {
+     "loss_first": 0.5399235486984253,
+     "loss_last": 0.00038867449620738626
+    },
+    {
+     "loss_first": 0.5292805433273315,
+     "loss_last": 0.00030043558217585087
+    },
+    {
+     "loss_first": 0.5261127948760986,
+     "loss_last": 0.00023714773124083877
+    },
+    {
+     "loss_first": 0.48849689960479736,
+     "loss_last": 0.00034119701012969017
+    },
+    {
+     "loss_first": 0.5352753400802612,
+     "loss_last": 0.0003371856873854995
+    }
+   ],
+   "kan": [
+    {
+     "loss_first": 0.5347115993499756,
+     "loss_last": 0.00043825653847306967
+    },
+    {
+     "loss_first": 0.5040403008460999,
+     "loss_last": 0.00017414428293704987
+    },
+    {
+     "loss_first": 0.5245780944824219,
+     "loss_last": 0.00041357858572155237
+    },
+    {
+     "loss_first": 0.4655226469039917,
+     "loss_last": 0.00033525913022458553
+    },
+    {
+     "loss_first": 0.5293020009994507,
+     "loss_last": 0.0003358662943355739
+    }
+   ]
+  }
+ },
+ "task_B2_activation_question": {
+  "mean": {
+   "backprop": 0.7177777777777778,
+   "constant": 0.33333333333333337,
+   "kan": 0.7711111111111111,
+   "linear": 0.7111111111111111
+  },
+  "per_fold": {
+   "backprop": [
+    0.7777777777777778,
+    0.8666666666666667,
+    0.7222222222222222,
+    0.7222222222222222,
+    0.5
+   ],
+   "constant": [
+    0.5,
+    0.3333333333333333,
+    0.2777777777777778,
+    0.2222222222222222,
+    0.3333333333333333
+   ],
+   "kan": [
+    0.8333333333333334,
+    0.8,
+    0.8333333333333334,
+    0.7777777777777778,
+    0.6111111111111112
+   ],
+   "linear": [
+    0.8333333333333334,
+    0.6666666666666666,
+    0.7222222222222222,
+    0.7222222222222222,
+    0.6111111111111112
+   ]
+  },
+  "sd": {
+   "backprop": 0.13530943047440797,
+   "constant": 0.10393492741038726,
+   "kan": 0.09249624617007737,
+   "linear": 0.08240220541217404
+  },
+  "training": {
+   "backprop": [
+    {
+     "loss_first": 0.6878865361213684,
+     "loss_last": 0.0403410978615284
+    },
+    {
+     "loss_first": 0.6910077333450317,
+     "loss_last": 0.06531091779470444
+    },
+    {
+     "loss_first": 0.7001481056213379,
+     "loss_last": 0.048217106610536575
+    },
+    {
+     "loss_first": 0.7016246914863586,
+     "loss_last": 0.04032092168927193
+    },
+    {
+     "loss_first": 0.6868411302566528,
+     "loss_last": 0.02022639289498329
+    }
+   ],
+   "kan": [
+    {
+     "loss_first": 0.6883809566497803,
+     "loss_last": 0.0405888669192791
+    },
+    {
+     "loss_first": 0.6865031123161316,
+     "loss_last": 0.0654536709189415
+    },
+    {
+     "loss_first": 0.6908133625984192,
+     "loss_last": 0.0482708178460598
+    },
+    {
+     "loss_first": 0.6888286471366882,
+     "loss_last": 0.04043132811784744
+    },
+    {
+     "loss_first": 0.6880061030387878,
+     "loss_last": 0.020436041057109833
+    }
+   ]
+  }
+ },
+ "verdict": {
+  "B1_regression": {
+   "backprop": true,
+   "kan": true
+  },
+  "B2_activation": {
+   "backprop": false,
+   "kan": false
+  },
+  "rule": "a network counts as learning something only if it beats the linear/logistic baseline by more than one between-fold SD of that baseline"
+ }
+}

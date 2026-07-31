@@ -101,11 +101,13 @@ su suelo es raro (0,437%). Olas + `δ ~ U(0,8)` + predicado de banda **sí** cie
 0,95 SE combinados y el contrato lo veta. **La ausencia es ahora una frontera medida:
 reproducir su autotomía degrada su propia métrica.**
 
-**Paso 3 — construir su Fig. 5, tal cual.**
-Un surrogado `(ρ, drivers) → ReT` sobre las 90 configuraciones, y la pregunta de activación que
-él escribe: *«¿ReT en la configuración `x` es mayor que en la `x−1`?»* — una **clasificación
-binaria**, no una política. Comparar backpropagation contra KAN, que es la comparación que él
-nombra. Coste: minutos de CPU, cero PPO.
+**Paso 3 — ~~construir su Fig. 5~~ HECHO 2026-07-31.**
+`docs/RESULTADO_FIG5_BACKPROP_VS_KAN_2026-07-31.md`: la figura **tal como está dibujada es una
+identidad** (`R² = 1` por construcción — con los drivers como entradas la neurona ya tiene la
+respuesta). Reformulada como `ρ → SCRES`: el **lineal ya explica el 0,970**, backprop 0,986 y
+KAN 0,991. Y en **su pregunta de activación**, ninguna red supera a la logística (0,711) por
+más de una SD. Sobre su propio diseño, el reconocimiento de patrones **no tiene qué
+reconocer**.
 
 **Paso 4 — lo que solo él puede contestar.** Dos preguntas exactas, ya preparadas:
 la convención de simultaneidad `Bt`/`Ut` (bloquea sacar v2 de «provisional»), y si su `RPj`
