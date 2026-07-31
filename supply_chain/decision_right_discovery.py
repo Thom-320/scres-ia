@@ -262,3 +262,127 @@ def select_candidate_families(
     if len(selected) < minimum:
         return []
     return selected
+
+
+# ---------------------------------------------------------------------------
+# Variance decomposition (Sobol'), added 2026-07-31.
+#
+# Morris says WHICH factors matter. It cannot say how much of the variance sits
+# in INTERACTIONS, and that is the quantity the headroom question turns on: a
+# surface whose total-order indices equal its first-order indices is additive,
+# and on an additive surface no state-dependent policy and no finer resolution
+# can beat a per-factor constant. `S_T - S_1` is therefore the headroom signal,
+# not `mu_star`.
+#
+# SALib is not installed, so the estimators are here, with `ishigami` beside
+# them: its indices are known in closed form, so the implementation can be
+# falsified against arithmetic instead of trusted.
+# ---------------------------------------------------------------------------
+
+
+def saltelli_sample(k: int, n_base: int, seed: int) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """`(A, B, AB)` in the unit hypercube. `AB[i]` is A with column `i` from B.
+
+    Sobol' sequences would be lower-discrepancy; a scrambled Sobol engine is used
+    when SciPy provides one and an independent uniform draw otherwise, because a
+    silent fallback to a *correlated* draw would bias every index.
+    """
+    try:
+        from scipy.stats import qmc
+
+        engine = qmc.Sobol(d=2 * k, scramble=True, seed=seed)
+        block = engine.random(n_base)
+        a, b = block[:, :k], block[:, k:]
+    except Exception:  # pragma: no cover - exercised only without scipy
+        rng = np.random.default_rng(seed)
+        a, b = rng.random((n_base, k)), rng.random((n_base, k))
+    ab = np.empty((k, n_base, k), dtype=float)
+    for i in range(k):
+        ab[i] = a.copy()
+        ab[i][:, i] = b[:, i]
+    return a, b, ab
+
+
+def sobol_indices(y_a: Sequence[float], y_b: Sequence[float], y_ab: Sequence[Sequence[float]],
+                  names: Sequence[str], *, n_boot: int = 500,
+                  seed: int = 0) -> dict[str, dict[str, float]]:
+    """First-order and total-order indices, Jansen estimators, bootstrap CIs.
+
+    Jansen rather than the classic Sobol' product form: it is the standard choice
+    for small samples because it is unbiased under a shifted output, and these
+    designs are small by construction (one DES episode per row).
+
+        S1_i  = (Var(Y) - mean((Y_B - Y_AB_i)^2) / 2) / Var(Y)
+        ST_i  =  mean((Y_A - Y_AB_i)^2) / (2 Var(Y))
+    """
+    a = np.asarray(y_a, dtype=float)
+    b = np.asarray(y_b, dtype=float)
+    ab = np.asarray(y_ab, dtype=float)
+    if ab.shape != (len(names), a.size):
+        raise ValueError(f"y_ab must be ({len(names)}, {a.size}), got {ab.shape}")
+    var = float(np.var(np.concatenate([a, b]), ddof=1))
+    if var <= 0.0:
+        raise ValueError("output variance is zero; indices are undefined")
+
+    rng = np.random.default_rng(seed)
+    out: dict[str, dict[str, float]] = {}
+    for i, name in enumerate(names):
+        s1 = (var - np.mean((b - ab[i]) ** 2) / 2.0) / var
+        st = np.mean((a - ab[i]) ** 2) / (2.0 * var)
+        boot_s1, boot_st = [], []
+        for _ in range(n_boot):
+            pick = rng.integers(0, a.size, a.size)
+            v = float(np.var(np.concatenate([a[pick], b[pick]]), ddof=1)) or var
+            boot_s1.append((v - np.mean((b[pick] - ab[i][pick]) ** 2) / 2.0) / v)
+            boot_st.append(np.mean((a[pick] - ab[i][pick]) ** 2) / (2.0 * v))
+        out[name] = {
+            "S1": float(s1), "ST": float(st),
+            "interaction": float(st - s1),
+            "S1_ci95": [float(np.percentile(boot_s1, 2.5)),
+                        float(np.percentile(boot_s1, 97.5))],
+            "ST_ci95": [float(np.percentile(boot_st, 2.5)),
+                        float(np.percentile(boot_st, 97.5))],
+        }
+    return out
+
+
+def ishigami(x: np.ndarray, a: float = 7.0, b: float = 0.1) -> np.ndarray:
+    """The standard GSA test function, on `[0,1]^3` mapped to `[-pi, pi]^3`.
+
+    Closed form, with `a = 7`, `b = 0.1`:
+        Var    = a^2/8 + b*pi^4/5 + b^2*pi^8/18 + 1/2
+        V1     = b*pi^4/5 + b^2*pi^8/50 + 1/2 ;  V2 = a^2/8 ;  V3 = 0
+        VT3    = 8*b^2*pi^8/225        (x3 acts ONLY through an interaction)
+    `S3 = 0` while `ST3 > 0` is exactly the property this module was added to
+    measure, which makes it the right thing to validate against.
+    """
+    z = np.asarray(x, dtype=float) * 2.0 * np.pi - np.pi
+    return np.sin(z[:, 0]) + a * np.sin(z[:, 1]) ** 2 + b * (z[:, 2] ** 4) * np.sin(z[:, 0])
+
+
+def ishigami_analytic(a: float = 7.0, b: float = 0.1) -> dict[str, dict[str, float]]:
+    var = a ** 2 / 8 + b * np.pi ** 4 / 5 + b ** 2 * np.pi ** 8 / 18 + 0.5
+    v1 = b * np.pi ** 4 / 5 + b ** 2 * np.pi ** 8 / 50 + 0.5
+    v2 = a ** 2 / 8
+    vt1 = v1 + 8 * b ** 2 * np.pi ** 8 / 225
+    vt3 = 8 * b ** 2 * np.pi ** 8 / 225
+    return {"x1": {"S1": v1 / var, "ST": vt1 / var},
+            "x2": {"S1": v2 / var, "ST": v2 / var},
+            "x3": {"S1": 0.0, "ST": vt3 / var}}
+
+
+def argmax_shift_across_regimes(sweeps: Mapping[str, Sequence[tuple[float, float]]]
+                                ) -> dict[str, float]:
+    """How far a factor's best setting MOVES between risk regimes.
+
+    `sweeps` maps a regime label to `[(factor_value, score), ...]`. A factor with
+    a huge effect but an invariant optimum needs a constant, not a policy -- this
+    project already measured exactly that for the optimal posture across 45 risk
+    profiles. The spread of the argmax is the quantity that separates "matters"
+    from "matters state-dependently".
+    """
+    best = {label: max(points, key=lambda p: p[1])[0] for label, points in sweeps.items()}
+    values = np.asarray(list(best.values()), dtype=float)
+    span = float(values.max() - values.min()) if values.size else 0.0
+    return {"argmax_by_regime": best, "argmax_span": span,
+            "argmax_sd": float(values.std(ddof=1)) if values.size > 1 else 0.0}
