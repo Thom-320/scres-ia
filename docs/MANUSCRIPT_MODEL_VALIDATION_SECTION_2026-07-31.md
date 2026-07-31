@@ -1,5 +1,25 @@
 # Model validation — manuscript section (C&IE), with the two levels kept apart
 
+> **NO USAR AÚN — tres defectos encontrados en mi propia revisión, 2026-07-31.**
+>
+> **(1) `CF2` se descarta en silencio.** La referencia usa 19 de 20 hojas. `CF2` **existe y
+> tiene 4.420 filas completas**, recuperables con `header=1` (`CTj` p50 = 102,0, coherente
+> con las demás R1r); se cayó porque su fila de encabezado está desplazada, no por razón
+> científica. **Eso es ~20% de la evidencia R1r**, y **todos los `d_k` de R1r de esta sección
+> están calculados sobre 9 de 10 hojas sin decirlo.** Hay que regenerar la referencia (v4)
+> antes de que estas cifras entren al manuscrito.
+>
+> **(2) La autotomía está mal atribuida.** La §4 la cuelga del relato de `δ`/`RPj`. La causa
+> real está medida y es otra: `GARRIDO_FULFILLMENT_DELAY_HOURS = 54 > LT = 48`, así que
+> `CTj ≥ 54` siempre y **0 de 416 órdenes** pueden satisfacer `CTj ≤ LTj`. La rama es
+> **estructuralmente inalcanzable**, y eso es un defecto separado con su propia causa.
+>
+> **(3) La afirmación de la cadencia se apoya en una subpoblación mucho menor.** Es cierto
+> que `(CTj − 48) mod 24 = 0` en el **100% de nuestras órdenes demoradas** — pero solo el
+> **36,5%** de las nuestras se demora, contra el **83,5%** de las suyas. Reproducimos la
+> rejilla sobre menos de la mitad de la población en la que él la exhibe, y la sección no lo
+> dice.
+
 **Status:** `DRAFT_FOR_MANUSCRIPT`. Every figure traces to a sealed artifact; nothing here
 is quoted from prose. Written 2026-07-31 to replace an overclaim that would otherwise reach
 reviewers.
