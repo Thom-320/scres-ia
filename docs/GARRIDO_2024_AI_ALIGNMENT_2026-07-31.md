@@ -32,8 +32,15 @@ Simulation Models with AI Algorithms: A Preliminary Exploratory Analysis*, ICCL 
 |---|---|---|---|
 | periodo de autotomía | `Re(APj)` | pedidos que se «amputan» al no llegar a tiempo | `autotomy_share`, `APj` por pedido |
 | periodo de recuperación | `Re(RPj)` | cuánto tarda en recuperarse del riesgo | `rpj_mean`, `rpj_p95` |
-| periodo de disrupción | `Re(DPj)` | duración de la disrupción | **no lo emitimos como momento** |
+| periodo de disrupción | `Re(DPj)` | duración de la disrupción | **idénticamente 0 por definición suya** (ver abajo) |
 | tasa de servicio | `Re(FRj)` | fill rate | `flow_fill_rate` (fuera del set de fidelidad) |
+
+> **Corrección sobre `Re(DPj)`.** Al verificarlo contra la tesis: su Eq. 5.3 es
+> `Re(DPj,RPj) = Re^min × (DPj−RPj)/CTj` con **`Re^min = 0`** (Fig. 5.6, p. 72). El término es
+> **cero por construcción en su propio modelo**, no algo que nosotros dejemos de calcular.
+> `supply_chain/config.py:854` y `env_experimental_shifts.py:51` ya lo documentan así. La
+> brecha de drivers es por tanto **más estrecha** de lo que parece: el problema real es
+> `Re(APj)`, no `Re(DPj)`.
 
 y `ReT = {Re(APj), Re(RPj), Re(DPj), Re(FRj)}`, normalizado 0–100.
 
@@ -54,17 +61,18 @@ contradice su paper: su paper es *exploratorio* y **postula** que integrar IA au
 «dramáticamente» validez y credibilidad. Nosotros tenemos lo que a él le falta: **la medición**.
 Nuestro «cuándo NO entrenar» es la respuesta empírica a su pregunta teórica.
 
-**Tercero, y es lo incómodo: de sus cuatro drivers reproducimos dos.**
+**Tercero, y es lo incómodo: un driver suyo no reproduce en absoluto.**
 
 | driver | estado medido |
 |---|---|
+| `Re(APj)` | **estructuralmente inalcanzable**: nuestro CTj mínimo es 54 h contra `LT = 48`, así que la rama nunca dispara — 0 de 416 pedidos puntuados |
 | `Re(RPj)` | reproducido en dirección, pero largo (`d_k` 7,8 R1r / 3,5 R2r) |
-| `Re(APj)` | **estructuralmente inalcanzable**: nuestro CTj mínimo es 54 h contra `LT = 48` |
-| `Re(DPj)` | **no lo calculamos** |
-| `Re(FRj)` | lo tenemos, pero fuera del set de fidelidad |
+| `Re(DPj)` | **cero en ambos lados, por su propia Eq. 5.3** (`Re^min = 0`) — no es una brecha |
+| `Re(FRj)` | lo tenemos (`flow_fill_rate`), pero fuera del set de fidelidad |
 
-Entrenar la neurona de su Fig. 5 sobre drivers de los que dos no reproducen y uno no existe
-daría un modelo que aprende **nuestro** artefacto, no su cadena.
+Es decir: **la brecha es un solo driver, `Re(APj)`** — y es nuestro, no suyo: viene de una
+constante de cumplimiento de 54 h que ajustamos contra un único observable. Entrenar la neurona
+de su Fig. 5 antes de cerrarla daría un modelo que aprende **nuestro artefacto**.
 
 ## 3. Cómo ayuda lo que arreglamos esta semana
 
@@ -79,11 +87,11 @@ daría un modelo que aprende **nuestro** artefacto, no su cadena.
 
 ## 4. Qué correr para avanzar en lo suyo
 
-**Paso 1 — completar los cuatro drivers (barato, sin entrenar nada).**
-Emitir `Re(APj)`, `Re(RPj)`, `Re(DPj)` y `Re(FRj)` por configuración, normalizados 0–100 como
-él, extendiendo `results/garrido_reproduction/reproduction.json` (ya tiene las 90
-configuraciones con `buffer_hours` y `shifts`, que **son sus `ρ`**). Sin esto, la Fig. 5 no
-tiene entradas.
+**Paso 1 — emitir los drivers por configuración (barato, sin entrenar nada).**
+`Re(APj)`, `Re(RPj)` y `Re(FRj)` normalizados 0–100 como él (`Re(DPj) ≡ 0` por su Eq. 5.3),
+extendiendo `results/garrido_reproduction/reproduction.json` — que ya tiene las 90
+configuraciones con `buffer_hours` y `shifts`, **que son sus `ρ`**. Sin esto la Fig. 5 no tiene
+entradas.
 
 **Paso 2 — cerrar la brecha de autotomía, que es la que bloquea un driver entero.**
 Nuestro piso de 54 h es **nuestra** calibración, ajustada contra un solo observable. El brazo
