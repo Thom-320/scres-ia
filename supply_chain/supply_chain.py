@@ -229,6 +229,8 @@ class MFSCSimulation:
         ret_recovery_period_mode: str = RET_RECOVERY_PERIOD_MODE,
         procurement_delay_accumulation: str = "serial",
         rpj_onset_admission: str = "clamped",
+        autotomy_predicate: str = "le",
+        autotomy_tolerance_hours: float = 0.0,
         backorder_overflow_mode: str = BACKORDER_OVERFLOW_MODE,
         backorder_priority_rule: str = "spt_contingent",
         backorder_age_threshold_hours: float = 336.0,
@@ -655,6 +657,17 @@ class MFSCSimulation:
                 "rpj_onset_admission must be 'clamped' or 'within_window', "
                 f"got {rpj_onset_admission!r}")
         self.rpj_onset_admission = str(rpj_onset_admission)
+        # Algorithm 1 (p.68) branches on CTj = LTj, not CTj <= LTj, and Garrido's
+        # own workbooks contain ZERO rows with CTj <= LT: his 96 autotomy rows sit
+        # in a band CTj - LT in [0.0074, 0.048]. "le" is the shipped predicate;
+        # "band" is CTj - LTj <= tolerance. Preregistered in
+        # docs/PREREGISTRO_AUTOTOMIA_2026-07-30.md; default stays "le".
+        if autotomy_predicate not in ("le", "band"):
+            raise ValueError(
+                "autotomy_predicate must be 'le' or 'band', "
+                f"got {autotomy_predicate!r}")
+        self.autotomy_predicate = str(autotomy_predicate)
+        self.autotomy_tolerance_hours = float(autotomy_tolerance_hours)
         self.backorder_overflow_mode = backorder_overflow_mode
         self.backorder_priority_rule = backorder_priority_rule
         self.backorder_age_threshold_hours = float(backorder_age_threshold_hours)
@@ -5952,7 +5965,10 @@ class MFSCSimulation:
         if not order.ret_risk_indicators:
             return  # No disruption: fill_rate case
 
-        if order.CTj <= order.LTj:
+        if (order.CTj <= order.LTj
+                or (self.autotomy_predicate == "band"
+                    and float(order.CTj) - float(order.LTj or 0.0)
+                    <= self.autotomy_tolerance_hours)):
             # Autotomy: SC absorbed disruption, order still on time
             order.APj = min(total_disruption_hours, order.LTj)
         else:
