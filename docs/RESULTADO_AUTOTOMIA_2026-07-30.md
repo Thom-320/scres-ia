@@ -4,6 +4,26 @@
 `docs/PREREGISTRO_AUTOTOMIA_2026-07-30.md`. Artifact
 `results/metric_audit/autotomy_arms_v1/result.json`. Roots 2,500,001–12.
 
+> **CORRECCIÓN 2026-07-31 — dos de los cuatro falsadores no podían fallar.**
+>
+> **Falsador 3 es aritmética, no verificación.** En B y C el delay es la constante 48,0074, y
+> `supply_chain.py:2603` la asigna a toda orden servida desde stock: `min(CTj) = 48,0074`
+> idénticamente, y `48,0074 > 48` hace `below_lt == 0` idénticamente. Prueba la definición del
+> brazo, no la implementación. Además el contrato pedía «órdenes **no bloqueadas**» y el
+> runner (`:127-131`) recorre todas.
+>
+> **La tolerancia nunca se ejercitó.** Con `CTj ≡ 48,0074`, `CTj − LT ≡ 0,0074 ≤ 0,01`, así
+> que los tres brazos C salen bit-idénticos — como muestra la tabla. **La prueba 96/98 que el
+> contrato ofrece como única justificación del ajuste declarado jamás se corrió contra nuestra
+> salida.**
+>
+> **La regla de aceptación omite los cuatro falsadores.** `adopt_C` (`:219-221`) no incluye
+> ninguno, mientras el contrato §6 los exige todos.
+>
+> **`suma d_k` es una escalarización que el contrato maestro prohíbe** («do NOT collapse it
+> with weights»). Las menciones de §2 y §5 a la suma **no** son evidencia admisible; quedan
+> como descriptivo. Ver `contracts/paper_b_v2_amendment_2026-07-31.json`.
+
 ## 1. Falsifiers
 
 All four passed: arm A reproduced the frozen block; arm B left `autotomy_share` at exactly
@@ -22,8 +42,11 @@ All four passed: arm A reproduced the frozen block; arm B left `autotomy_share` 
 | **R2r** `autotomy_share` | 4.6 | 4.6 | **22.9** | **22.9** | **22.9** |
 | **R2r** suma | 17.0 | **14.1** | 48.1 | 48.1 | 48.1 |
 
-Raw `autotomy_share` under C is **0.659 in R1r** against a reference of **0.004** — 165×
-too much. **`adopt_C = False`.**
+Raw `autotomy_share` under C is **0.659356 in R1r** against a reference of
+**0.00436282** — **151.1×** too much. **`adopt_C = False`.**
+
+> **CORRECCIÓN 2026-07-31.** Decía «165×», obtenido dividiendo por el `0,004` redondeado de
+> la tabla en vez de por el valor de la referencia. El factor es 151,1.
 
 ## 3. My prediction was wrong, and in the direction
 
@@ -45,7 +68,7 @@ that being wrong is visible, and it is.
 | | Garrido | nuestro (piso 48.0074) |
 |---|---|---|
 | forma de `CTj` cerca del piso | distribución continua | **masa puntual** |
-| valor modal | — | 48.0074, **69.2% de las órdenes** |
+| valor modal | — | 54,0 (embarcado): **60,5%**; 48,0074 (brazo C): 69,2% |
 | p1 / p5 / p25 / p50 | 48.41 / 50.42 / 75.00 / 101.45 | 48.007 / 48.007 / 48.007 / 48.007 |
 | filas en [48.007, 48.06] | 98 = **0.45%** | **69.2%** |
 

@@ -5,6 +5,26 @@
 `results/metric_audit/fulfillment_delay_distribution_v1/result.json`.
 **No moment is reported**, per §5 of the contract.
 
+> **CORRECCIÓN 2026-07-31 — dos defectos graves de este documento.**
+>
+> **(a) La columna «`p50` sorteado» de la §2 no existe en el artefacto y es imposible.** Los
+> parámetros son emparejamientos cerrados de la mediana, así que la mediana **sorteada** es
+> **exactamente 101,45 en los tres brazos**, no 101,4 / 101,6 / 101,4. Esas tres cifras
+> salieron de un script ad-hoc no registrado — la cuarta vez en un día.
+>
+> **(b) El falsador que detuvo la corrida no implementó el filtro que el contrato exigía.**
+> La §5.4 del preregistro dice «para órdenes **no bloqueadas**»; el runner
+> (`run_fulfillment_delay_distribution_arms.py:102`) tomó *toda* orden puntuada, incluidas
+> las bloqueadas por riesgo con `CTj` de miles de horas (el `p95` del mismo conjunto es
+> 2.666–2.676 h). **Mi diagnóstico de la §2 —que el contrato confundió el sorteo con el
+> ciclo— está confundido con ese filtro omitido**, y las dos explicaciones no son separables
+> con este artefacto. La §4, que atribuye la culpa al contrato, es por tanto prematura: el
+> contrato **sí** contenía la restricción que el código dejó fuera.
+>
+> **(c)** Los cuantiles reservados `p1`/`p5`/`p95` se calcularon y **nunca se compararon con
+> nada**, y `p95` ni siquiera quedó registrado en `reserved_quantiles`. La falsación de forma
+> que el propio contrato declaraba era ejecutable desde este artefacto y no se ejecutó.
+
 ## 1. What passed and what failed
 
 | falsador | resultado |

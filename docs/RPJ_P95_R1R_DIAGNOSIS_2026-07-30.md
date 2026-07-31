@@ -97,7 +97,7 @@ counts (delayed contracts per cycle, delayed deliveries per cycle, defects per s
 the fourth recovers in 2 h. There is no principled recovery period to attribute, so both
 modes improvise, and both improvisations resolve to the order's blocked time.
 
-R2r reproduces (`rpj_p95` at **0.7 SD**, `rpj_mean` 4.2) because R21/R22/R23 all carry real
+R2r reproduces (`rpj_p95` at **1.5-2.3 SD** across the 12-root artifacts, not the 0.7 quoted here; `rpj_mean` 2.0-2.9) because R21/R22/R23 all carry real
 durations. **The family whose risks have durations reproduces; the family whose risks are
 counts does not.** That is the diagnosis, and R2r is its control.
 

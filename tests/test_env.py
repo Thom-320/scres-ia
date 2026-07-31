@@ -219,10 +219,23 @@ def test_backorder_queue_prioritizes_contingent_then_shortest_orders() -> None:
     assert [order.j for order in sim.pending_backorders] == [3, 2, 1]
 
 
-def test_default_ret_recovery_period_mode_is_workbook_aligned() -> None:
+def test_default_ret_recovery_period_mode_is_algorithm_2_aligned() -> None:
+    """MIGRATED 2026-07-30 (commit 1e4a69d): "disruption" -> "elapsed".
+
+    Algorithm 2 (thesis p.69) defines RPj = OATj - first-R^0, which is elapsed
+    wall-clock since the first admissible onset, not the risk's own disruption
+    duration. The old default was an interpretation of Eq. 5.3 that the algorithm
+    contradicts. This test asserted the old value and was not updated with the
+    migration; it is the guard that caught the omission.
+    """
     sim = MFSCSimulation(seed=42, deterministic_baseline=True)
-    assert RET_RECOVERY_PERIOD_MODE == "disruption"
-    assert sim.ret_recovery_period_mode == "disruption"
+    assert RET_RECOVERY_PERIOD_MODE == "elapsed"
+    assert sim.ret_recovery_period_mode == "elapsed"
+    # "disruption" must stay selectable so runs frozen under it reproduce.
+    legacy = MFSCSimulation(
+        seed=42, deterministic_baseline=True, ret_recovery_period_mode="disruption"
+    )
+    assert legacy.ret_recovery_period_mode == "disruption"
 
 
 def test_pending_backorders_are_served_once_theatre_inventory_arrives() -> None:

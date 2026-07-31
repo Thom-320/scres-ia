@@ -1,0 +1,46 @@
+{
+ "amendment_1_autotomy_band_overlap": {
+  "but_the_band_is_not_the_binding_defect": "our CTj is a POINT MASS at the fulfilment-delay constant where his is continuous. No tolerance and no constant delay reproduces a 0.44% autotomy share.",
+  "caveat_the_96_of_98_test_was_never_run_against_our_output": true,
+  "contract_field": "autotomy_rule_reconstructed_2026_07_30.evidence.overlap",
+  "contract_said": "the same CTj-LT value appears in both classes, so no tolerance band on CTj can reproduce the classification",
+  "evidence": "docs/RESULTADO_AUTOTOMIA_2026-07-30.md, results/metric_audit/autotomy_arms_v1/result.json",
+  "measured": "his floor band [48.0074, 48.06] holds 98 rows: 96 autotomy and 2 not. A band at 0.05 reproduces 96/98 = 98% of his labels. The overlap is 2 rows.",
+  "status": "OVERSTATED, not wrong"
+ },
+ "amendment_2_moment_substitution": {
+  "binding_correction": "the rate MUST use HOURS_PER_THESIS_YEAR = 8064, and numerator and denominator MUST share the same window. All four 2026-07-30 runners divided a warm-up-filtered count over 8736 h by 1.0 'year', a systematic +8.33% inflation against the reference's own definition.",
+  "contract_declares": "fidelity_comparison.moments[5] = 'scored_rows'",
+  "rationale": "a raw row count is not comparable across sheets whose horizons differ (CF1/CF2 run ~20 years, CF3-CF20 ~10); a rate is. See fidelity_moments.py:67-75.",
+  "runners_use": "scored_orders_per_year (supply_chain/fidelity_moments.py:64)",
+  "status": "SUBSTITUTION MADE WITHOUT AMENDMENT -- regularised here"
+ },
+ "amendment_3_reference_upgrade": {
+  "contract_declares": {
+   "artifact": "results/metric_audit/fidelity_reference_v1/result.json",
+   "sha256": "742818881a3dbcce"
+  },
+  "rationale": "v1 assumed a 20-year horizon for every canonical sheet; v3 MEASURES each sheet's horizon from its own max(OPTj). v1 manufactured a 2x discrepancy that is really 1.09x. v3 is strictly more correct.",
+  "runners_use": {
+   "artifact": "results/metric_audit/fidelity_reference_v3/result.json",
+   "sha256": "31ecf9f9dae8058a"
+  },
+  "status": "SUBSTITUTION MADE WITHOUT AMENDMENT -- regularised here"
+ },
+ "amendment_4_method_violations_to_repair_not_authorise": {
+  "d_k_reimplemented_a_fourth_time": "all four runners inline the formula instead of calling fidelity_moments.discrepancies(), dropping the degenerate-moment guard the contract requires. The se^2 term IS present, so no published d_k omits our own SE.",
+  "epsilon_sweep_not_implemented": "contract fidelity_comparison.epsilon_rule requires the sweep; none of the four 2026-07-30 runners calls epsilon_stability(). Every verdict rests on a single un-swept EPSILON = 0.5.",
+  "halt_path_destroys_provenance": "all four runners' halt branches write a two-key artifact with no contract_sha256, no calibration_provenance and no self_sha256, against the contract's stated prerequisite.",
+  "note": "These are NOT authorised by this amendment. They are recorded as violations to fix.",
+  "sum_dk_scalarisation_is_forbidden": "contract selection_rule_final.if_no_dominant_cell says 'do NOT collapse it with weights' and fidelity_comparison.form says 'NEVER a winner'. run_fulfillment_delay_distribution_arms.py:229 selects by min(sum_dk), and docs/RESULTADO_AUTOTOMIA_2026-07-30.md uses sum_dk as evidence. Both must go."
+ },
+ "amendment_doc": "docs/PAPER_B_V2_AMENDMENT_2026-07-31.md",
+ "amends": "contracts/paper_b_independent_calibration_v2.json",
+ "amends_sha256": "a9075e8fe1f09a8fbcc42c6583eea1cc5ca58eb64460b51ac9c13e544d930db8",
+ "created_at": "2026-07-31",
+ "historical_results_modified": false,
+ "nothing_relabelled": true,
+ "self_sha256": "2d49557c2c060ff55b1e4b208146e1a519ed2b4d2787af3340a7b67fc7c68929",
+ "status": "AMENDMENT_PENDING_PI_SIGNATURE",
+ "why_an_amendment_and_not_an_edit": "On 2026-07-30 (commit aa51349) I edited the frozen contract IN PLACE, rewriting evidence.overlap and adding three fields, without recalculating self_sha256 -- so the seal broke. Worse, the ordering was c2d4241 (autotomy preregistration) -> 3175110 (the run) -> aa51349 (the edit): I rewrote a frozen contract's finding AFTER the run whose conclusion it now recorded, in the direction of that conclusion. That is a process violation, not a technical slip. The edit is reverted; the contract is byte-identical to e3f03da and its seal verifies again. Every correction lives here instead."
+}

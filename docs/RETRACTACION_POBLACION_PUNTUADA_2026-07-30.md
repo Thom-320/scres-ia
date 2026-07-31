@@ -10,6 +10,14 @@
 `docs/RPJ_MEAN_DECOMPOSITION_2026-07-30.md` (commit 164f160) and Change A of
 `docs/PREREGISTRO_POBLACION_PUNTUADA_2026-07-30.md` (commit 3a92745).
 
+> **CORRECCIÓN 2026-07-31 — `scored_orders_per_year` estaba inflado un 8,33% y el titular
+> «0,7 SD» es falso.** Los cuatro runners contaban órdenes sobre **8.736 h** (52 semanas) y
+> dividían entre **`1,0 año`**, mientras la referencia usa el año de tesis de **8.064 h**
+> (`fidelity_moments.py:78`). Además el numerador filtraba por warm-up y el denominador no.
+> Recomputado con la base correcta: **R1r 196,08 → `d_k` 5,33** (no 0,7) y **R2r 192,08 →
+> `d_k` 7,14** (no 2,5). El momento **no** está en buena forma. Enmienda:
+> `contracts/paper_b_v2_amendment_2026-07-31.json`.
+
 ## What I claimed
 
 That our ReT scored population included 22.5% never-served orders while Garrido's

@@ -80,6 +80,7 @@ from .config import (
     RISK_OCCURRENCE_MODE_OPTIONS,
     canonical_raw_material_flow_mode,
     RET_CASE_THRESHOLDS,
+    RET_RECOVERY_PERIOD_MODE,
     RET_SHIFT_COST_DELTA_DEFAULT,
     SIMULATION_HORIZON,
     THESIS_DOWNSTREAM_Q_RANGES,
@@ -406,7 +407,12 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         risk_rng_mode: str = "shared",
         risk_event_tape: list[dict[str, Any]] | None = None,
         risk_attribution_source: str = "des_events",
-        ret_recovery_period_mode: str = "disruption",
+        # MIGRATED 2026-07-30. This was the string literal "disruption" while
+        # config.RET_RECOVERY_PERIOD_MODE moved to "elapsed" (Algorithm 2, p.69),
+        # so the gym/RL lane silently stayed on the superseded attribution while
+        # every direct MFSCSimulation caller migrated. Bind the constant so the
+        # lanes cannot diverge again.
+        ret_recovery_period_mode: str = RET_RECOVERY_PERIOD_MODE,
         initial_buffers: dict[str, float] | None = None,
         initial_shifts: int = 1,
         inventory_replenishment_period: float | None = None,

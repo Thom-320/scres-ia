@@ -4,6 +4,28 @@
 `docs/PREREGISTRO_CLAMP_RPJ_2026-07-30.md`. Artifact
 `results/metric_audit/rpj_onset_admission_v1/result.json`. Roots 2,400,001–12.
 
+> **CORRECCIÓN 2026-07-31 — el «los tres falsadores pasaron» es más débil de lo que dice.**
+>
+> **Falsador 3 no podía fallar.** La implementación (`supply_chain.py:6024`) fija `RPj > 0`
+> **si y solo si** existe un inicio en ventana, así que el invariante es cierto por
+> construcción. Peor: el chequeo (`run_rpj_onset_admission_arms.py:161-166`) lee
+> `ret_risk_event_refs`, que la rama `ongoing_op` **nunca escribe**, y añade una cláusula
+> `startswith("ongoing")` **incondicional** que perdona exactamente la población que el
+> Algoritmo 2 excluye. Medido: de 342 órdenes con `RPj>0`, **6 pasan solo por esa cláusula** y
+> quedan sin verificar. Las «0 violaciones, 1.917 órdenes» no podían salir de otra forma.
+>
+> **Falsador 1 no es «exacto».** El objetivo `ret_mean = 0,007` es un redondeo a tres
+> decimales del congelado `0,006978`, y compara **2 de los 6** momentos con una banda del 5%
+> (±120 h en `rpj_p95`). Una perturbación del 4% habría pasado.
+>
+> **La regla de aceptación en código omite conjuntos:** `adopt_W` (`:226-229`) exige el
+> falsador 1 pero **no** el 2 ni el 3, mientras el contrato §5 exige los tres.
+>
+> **Defecto de frontera, medido aparte:** `:6024` usa `OPTj < t` (estricto) mientras la
+> compuerta de eventos puntuales en `:5933` usa `OPTj <= start_time`. Los inicios insertados
+> exactamente en `OPTj` nunca se admiten: **18 de 377 órdenes tardías** obtienen `RPj = 0`
+> por ese desajuste entre dos líneas de la misma función.
+
 ## 1. All three falsifiers passed
 
 | falsador | resultado |

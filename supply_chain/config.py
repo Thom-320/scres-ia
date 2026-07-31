@@ -130,8 +130,16 @@ LEAD_TIME_PROMISE = 48  # Hours — thesis §6.8.2 p.111, NOT §6.3.4
 #      every order, so 0 of 416 can ever satisfy CTj <= LTj;
 #   3. it is a CONSTANT where the source data is a distribution. Garrido's CTj runs
 #      continuously from min 48.0074 (p1 48.41, p5 50.42, p25 75.00, p50 101.45) with 0.45%
-#      in the floor band; ours puts 69.2% of orders at one value. No value of this constant
-#      reproduces his 0.44% autotomy share, because that needs a thin lower tail.
+#      in the floor band; ours puts 60.5% of orders at this one value (5,057 orders over 12
+#      roots x 2 families, 231 distinct values -- matches
+#      results/metric_audit/fulfillment_delay_distribution_v1 arm A_constant exactly).
+#      No value of this constant reproduces his 0.44% autotomy share, because that needs a
+#      thin lower tail.
+#
+#      CORRECTED 2026-07-31: this line previously read "69.2%" with "46 distinct values".
+#      Those were measured under the 48.0074 FLOOR arm, not under this shipped constant --
+#      two different arms conflated into one claim. Single-episode figures also differ from
+#      pooled ones (1 episode R1r: 40 distinct, 65.9% modal), so the scope is now stated.
 #
 # Point 3 is why the repair is not a new number. See
 # docs/RESULTADO_AUTOTOMIA_2026-07-30.md and the successor preregistration.
