@@ -1,7 +1,7 @@
 # Los cuatro drivers de Garrido, configuración por configuración
 
 **Artefacto:** `results/garrido_drivers_per_configuration/result.json`
-(sello `6256f5d701fb745f…`) + `drivers.csv` · **Runner:**
+(sello `491694175a3975a7…`) + `drivers.csv` · **Runner:**
 `scripts/emit_garrido_drivers_per_configuration.py` · **Estado:**
 `DEVELOPMENT_DRIVER_TABLE`, cinco falsadores pasan. **No es una afirmación sobre resiliencia**:
 es la tabla de entrada para la Fig. 5 de Garrido, Pongutá & Adarme (2024).

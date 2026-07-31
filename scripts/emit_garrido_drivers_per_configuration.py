@@ -308,9 +308,18 @@ def main() -> int:
 
     # a flat table, because Figure 5 wants a matrix
     flat = args.output_dir / "drivers.csv"
-    with flat.open("w", newline="") as handle:
+    # `newline="\n"`, not `newline=""`: the csv module's default terminator is CRLF, and git
+    # normalises it to LF on the next touch. That is precisely the drift this morning's audit
+    # traced in three Program I design matrices, whose pinned hashes turned out to be the CRLF
+    # bytes of files that had since become LF. Writing LF here means the hash of this table is
+    # stable from the moment it is created.
+    with flat.open("w", newline="\n") as handle:
         names = list(DRIVERS.values()) + ["not_in_his_ReT_unfulfilled"]
-        writer = csv.writer(handle)
+        # `lineterminator` is the setting that matters -- `newline="\n"` on the file object
+        # only stops translation, it does not change what csv.writer emits, which is CRLF by
+        # default. Checked on the bytes rather than assumed: the first attempt at this fix
+        # left the file CRLF.
+        writer = csv.writer(handle, lineterminator="\n")
         writer.writerow(["cf", "hypothesis", "family", "pattern", "horizon_years",
                          "buffer_hours", "shifts", "ret_excel", "ret_excel_0_100"]
                         + [f"{n}_{k}" for n in names for k in ("share", "mean",
