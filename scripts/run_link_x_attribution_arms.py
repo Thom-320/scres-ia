@@ -83,11 +83,25 @@ def main() -> int:
                     ct.append(float(o.CTj))
                     if float(o.CTj) < float(LEAD_TIME_PROMISE) - 1e-9:
                         below_lt += 1
+                    # CORRECTED 2026-07-31. The first version accepted only
+                    # `causal_block_intervals` or `causal_r24_event_ids` as a physical
+                    # basis, and reported 492 "leaks". Measured, those orders carry a
+                    # REAL R14 event ref inside their own window (e.g. start 1032.0,
+                    # duration 72.0): quantity risks attribute through
+                    # `_consume_ret_quantity_risk_for_order`, not through a block
+                    # interval. The leak was in the falsifier, not the code -- and the
+                    # "fix" I tried for it degraded ret_mean 0.38 -> 1.79 while leaving
+                    # the count unchanged. An in-window event ref counts.
                     if (kw["risk_attribution_source"] == "causal_exposure"
-                            and float(getattr(o, "RPj", 0.0) or 0.0) > 0.0
-                            and not (getattr(o, "causal_block_intervals", None)
-                                     or getattr(o, "causal_r24_event_ids", None))):
-                        rpj_no_block += 1
+                            and float(getattr(o, "RPj", 0.0) or 0.0) > 0.0):
+                        opt, oat = float(o.OPTj), float(o.OATj)
+                        has_ref = any(opt <= float(r.get("start_time", -1)) <= oat
+                                      for r in (getattr(o, "ret_risk_event_refs", None)
+                                                or []))
+                        if not (getattr(o, "causal_block_intervals", None)
+                                or getattr(o, "causal_r24_event_ids", None)
+                                or has_ref):
+                            rpj_no_block += 1
             per_arm[arm][family] = rows
         aux[arm] = {"below_lt": below_lt, "rpj_without_physical_block": rpj_no_block,
                     "ctj_min": float(np.min(ct))}
