@@ -232,6 +232,8 @@ class MFSCSimulation:
         autotomy_predicate: str = "le",
         autotomy_apj_cap: str = "lt",
         apj_overlap_mode: str = "union",
+        fulfillment_shift_mode: str = "continuous",
+        fulfillment_capacity_mode: str = "unlimited",
         fulfillment_transit_mode: str = "constant",
         fulfillment_delay_distribution: str = "constant",
         fulfillment_delay_params: Optional[dict] = None,
@@ -698,6 +700,25 @@ class MFSCSimulation:
             raise ValueError("apj_overlap_mode must be 'union' or 'sum', "
                              f"got {apj_overlap_mode!r}")
         self.apj_overlap_mode = str(apj_overlap_mode)
+        # Measured decomposition of Garrido's CTj (docs/DISPERSION_CTJ_RESUELTA):
+        #   CTj = 48 + k*24 + delta,  delta ~ U(0,8),  k a queueing tail.
+        # 48 is LT, 24 is the declared daily ROP, 8 is HOURS_PER_SHIFT at S = 1. The two
+        # variable terms are MECHANISMS, not draws: handover is sequential inside the
+        # shift window, and a day's freight has finite ration capacity. Implementing
+        # delta as a U(0,8) draw would make the contract's own shape falsifier
+        # tautological, which is the failure mode this project spent a day removing.
+        if fulfillment_shift_mode not in ("continuous", "shift_window"):
+            raise ValueError("fulfillment_shift_mode must be 'continuous' or "
+                             f"'shift_window', got {fulfillment_shift_mode!r}")
+        if fulfillment_capacity_mode not in ("unlimited", "daily_freight"):
+            raise ValueError("fulfillment_capacity_mode must be 'unlimited' or "
+                             f"'daily_freight', got {fulfillment_capacity_mode!r}")
+        self.fulfillment_shift_mode = str(fulfillment_shift_mode)
+        self.fulfillment_capacity_mode = str(fulfillment_capacity_mode)
+        # Handover ledger: day index -> (hours already consumed in that shift,
+        # rations already dispatched on that day's freight).
+        self._shift_day_used: dict[int, float] = {}
+        self._freight_day_qty: dict[int, float] = {}
         # Thesis 6.3: Op10 PT 24 h, Op11 PT 0 ("nuisance factor"), Op12 PT 24 h, each
         # dispatching "at a daily freight rate (ROP = 24 hours)" -- and 24+0+24 = 48 = LT,
         # which 6.8.2 confirms. "freight_waves" makes the order WAIT for the next real
@@ -2661,6 +2682,9 @@ class MFSCSimulation:
             transit = float(self._pt("op10_pt")) + float(self._pt("op12_pt"))
             if self.op11_handling_hours > 0.0:
                 transit += float(self.rng.uniform(0.0, self.op11_handling_hours))
+        elif (self.fulfillment_shift_mode == "shift_window"
+              or self.fulfillment_capacity_mode == "daily_freight"):
+            transit = self._shift_and_capacity_transit(order)
         elif self.fulfillment_transit_mode == "freight_waves":
             transit = self._freight_wave_transit()
         elif self.fulfillment_delay_distribution != "constant":
@@ -2680,6 +2704,56 @@ class MFSCSimulation:
             )
         else:
             self._finalize_pending_backorder(order)
+
+    def _shift_and_capacity_transit(self, order: OrderRecord) -> float:
+        """`LT` plus the handover queue inside the shift and the daily freight limit.
+
+        Two mechanisms, no draws and no free parameters:
+
+        * **shift window** -- handover runs sequentially inside an 8 h working shift
+          (`HOURS_PER_SHIFT`, `S = 1`). An order consumes `q / lambda` hours of it; when
+          the shift is exhausted the rest of the queue rolls to the next day. `delta` is
+          then WHERE in the shift the handover lands, which emerges from queue position
+          rather than being drawn.
+        * **daily freight** -- a day's shipment carries `U(q_min, q_max)` rations
+          (thesis 6.3). An order that does not fit in what is left of the day's freight
+          waits for the next one, which is the `k * 24` term.
+
+        Either mechanism alone is a distinct arm, so a failure attributes to one of them.
+        """
+        base = float(LEAD_TIME_PROMISE)
+        now = float(self.env.now)
+        qty = float(getattr(order, "quantity", 0.0) or 0.0)
+        day = int((now + base) // HOURS_PER_DAY)
+        extra_days = 0
+
+        if self.fulfillment_capacity_mode == "daily_freight":
+            cap = float(self.params.get("op12_q_max", 2600) or 2600)
+            # Roll forward until the day's freight has room for this order.
+            while self._freight_day_qty.get(day + extra_days, 0.0) + qty > cap:
+                extra_days += 1
+                if extra_days > 365:  # pragma: no cover - runaway guard
+                    break
+            self._freight_day_qty[day + extra_days] = (
+                self._freight_day_qty.get(day + extra_days, 0.0) + qty)
+
+        delta = 0.0
+        if self.fulfillment_shift_mode == "shift_window":
+            shift = float(HOURS_PER_SHIFT)
+            need = qty / float(ASSEMBLY_RATE) if ASSEMBLY_RATE else 0.0
+            d = day + extra_days
+            used = self._shift_day_used.get(d, 0.0)
+            while used + need > shift:
+                # The shift is full: this handover rolls to the next working day.
+                extra_days += 1
+                d = day + extra_days
+                used = self._shift_day_used.get(d, 0.0)
+                if extra_days > 365:  # pragma: no cover - runaway guard
+                    break
+            delta = used
+            self._shift_day_used[d] = used + need
+
+        return base + float(extra_days) * HOURS_PER_DAY + delta
 
     def _freight_wave_transit(self) -> float:
         """Op10 -> Op11 -> Op12 with each leg gated on its own daily freight wave.
