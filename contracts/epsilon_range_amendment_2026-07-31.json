@@ -1,0 +1,50 @@
+{
+ "adjudication_rule_declared_before_re_running": {
+  "forbidden": "widening the band again if the new one also blocks a result; any further change needs its own amendment and a stated reason that is not the verdict it produces",
+  "if_now_stable": "the set may be REPORTED, but adoption still requires every other acceptance conjunct; stability is a gate, never a reason to adopt",
+  "if_still_unstable": "the original verdict stands and the instability is a real finding",
+  "no_automatic_re_adjudication": "this amendment does NOT re-adjudicate the three blocked runs. Re-running them under the new band is a separate act, and each must be re-run in FULL -- no cherry-picking a family or a moment that now passes."
+ },
+ "amendment_1_swept_band": {
+  "justification_independent_of_results": "EPSILON is measured in COMBINED STANDARD ERRORS. An epsilon of 2.0 declares indifference to a two-combined-SE difference, which exceeds the separation between any pair of arms this project compares -- so at that end of the band `no_worse` is trivially satisfied and `strictly` is unsatisfiable, and the check degenerates regardless of the data. The band is therefore set to the declared EPSILON +-50%, which spans half to three quarters of a combined SE and stays inside the regime where both terms of `dominates` can bind.",
+  "new_band_span": "3x (0.25 to 0.75), i.e. +-50%",
+  "now": [
+   0.25,
+   0.375,
+   0.5,
+   0.625,
+   0.75
+  ],
+  "old_band_span": "8x (0.25 to 2.0), i.e. -50%/+300% around the declared 0.5",
+  "was": [
+   0.25,
+   0.5,
+   1.0,
+   2.0
+  ]
+ },
+ "amendment_2_zero_gap_moments_excluded_from_strictness": {
+  "defect": "`strictly` requires a[k] < b[k] - epsilon. A moment IDENTICAL between two arms can never satisfy it at any positive epsilon, yet it is counted among the candidates, so it can only remove strictness and never supply it. Measured: a flip driven by an autotomy_share gap of exactly +0.00.",
+  "fix": "moments whose gap is exactly 0 are excluded from the `strictly` quantifier only",
+  "no_effect_on": "`no_worse`, which must still see every live moment"
+ },
+ "amendment_3_report_the_flip_table_not_a_boolean": {
+  "now": "additionally, for every pair whose dominance changes across the band, record the pair, the epsilon at which it flips, the critical moment and the d_k gap",
+  "was": "a single stable/unstable boolean",
+  "why": "the boolean says 'do not look'; the table localises WHICH comparison is fragile and BY HOW MUCH, which is the information the rule is supposed to protect"
+ },
+ "amendment_doc": "docs/EPSILON_RANGE_AMENDMENT_2026-07-31.md",
+ "amends": "contracts/paper_b_independent_calibration_v2.json",
+ "amends_field": "fidelity_comparison.epsilon_rule",
+ "amends_sha256": "a9075e8fe1f09a8fbcc42c6583eea1cc5ca58eb64460b51ac9c13e544d930db8",
+ "conflict_of_interest_disclosed": "I am amending a rule AFTER it blocked three runs I would have preferred to report. That is precisely the conflict this process guards against, so the justification below is made on the SCALE of the statistic and not on any blocked verdict, and section 4 fixes in advance what a pass and a fail each mean.",
+ "created_at": "2026-07-31",
+ "historical_results_modified": false,
+ "nothing_relabelled": true,
+ "self_sha256": "82b0d7ae3e908bf7e1be444c1d2b91874f3098927aed884ce7053c9170e17fee",
+ "status": "AMENDMENT_PENDING_PI_SIGNATURE",
+ "supersedes_nothing": true,
+ "what_is_NOT_amended": "the declared EPSILON stays 0.5; the rule that a moving set is reported unstable stays; the non-dominated set remains the output and sum_dk remains barred from ranking",
+ "what_is_amended": "ONLY the swept band, the strictness definition, and the reporting form",
+ "what_the_contract_says": "epsilon_rule: declared, not fitted; swept, and a non-dominated set that moves with epsilon is reported as unstable rather than shown"
+}
