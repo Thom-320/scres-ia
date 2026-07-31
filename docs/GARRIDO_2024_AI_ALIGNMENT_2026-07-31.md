@@ -93,10 +93,13 @@ extendiendo `results/garrido_reproduction/reproduction.json` — que ya tiene la
 configuraciones con `buffer_hours` y `shifts`, **que son sus `ρ`**. Sin esto la Fig. 5 no tiene
 entradas.
 
-**Paso 2 — cerrar la brecha de autotomía, que es la que bloquea un driver entero.**
-Nuestro piso de 54 h es **nuestra** calibración, ajustada contra un solo observable. El brazo
-`F` (olas de flete) ya existe y da `min CTj = 48,0`, que **haría alcanzable** la rama de
-autotomía. Es el experimento con mejor relación valor/coste del repositorio ahora mismo.
+**Paso 2 — ~~cerrar la brecha de autotomía~~ HECHO 2026-07-31.**
+`docs/RESULTADO_CIERRE_AUTOTOMIA_2026-07-31.md`: el brazo de olas **solo** no cierra —
+sobredispara **151×** porque deja el 62,5% de las órdenes exactamente en `CTj = 48,0` mientras
+su suelo es raro (0,437%). Olas + `δ ~ U(0,8)` + predicado de banda **sí** cierra
+(`autotomy_share` 0,003122 contra su 0,004334, `d_k` 12,40 → **1,26**), pero `ret_mean` empeora
+0,95 SE combinados y el contrato lo veta. **La ausencia es ahora una frontera medida:
+reproducir su autotomía degrada su propia métrica.**
 
 **Paso 3 — construir su Fig. 5, tal cual.**
 Un surrogado `(ρ, drivers) → ReT` sobre las 90 configuraciones, y la pregunta de activación que

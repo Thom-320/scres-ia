@@ -1,0 +1,1475 @@
+{
+ "acceptance": {
+  "adoptable": [],
+  "per_arm": {
+   "FDB_waves_delta_band": {
+    "improves_autotomy_dk": false,
+    "moments_worse_beyond_epsilon": {
+     "R1r.ret_mean": 0.9488920094781048
+    },
+    "qualifies": false,
+    "ret_mean_within_epsilon": false
+   },
+   "FD_waves_delta_le": {
+    "improves_autotomy_dk": false,
+    "moments_worse_beyond_epsilon": {
+     "R1r.ret_mean": 0.7137347168440362
+    },
+    "qualifies": false,
+    "ret_mean_within_epsilon": false
+   },
+   "F_waves_le": {
+    "improves_autotomy_dk": false,
+    "moments_worse_beyond_epsilon": {
+     "R1r.autotomy_share": 50.21765822890737,
+     "R1r.ret_mean": 48.51946655444251,
+     "R1r.rpj_mean": 6.159852678495176,
+     "R1r.rpj_p95": 6.029636948663645,
+     "R2r.autotomy_share": 14.859153106654992,
+     "R2r.ret_mean": 3.96340136599864,
+     "R2r.rpj_mean": 5.371845332690187,
+     "R2r.rpj_p95": 2.3006607670668235
+    },
+    "qualifies": false,
+    "ret_mean_within_epsilon": false
+   }
+  }
+ },
+ "arms": {
+  "A_constant_le": {
+   "delta": "off",
+   "pred": "le",
+   "tol": 0.0,
+   "transit": "constant"
+  },
+  "FDB_waves_delta_band": {
+   "delta": "shift_uniform",
+   "pred": "band",
+   "tol": 0.05,
+   "transit": "freight_waves"
+  },
+  "FD_waves_delta_le": {
+   "delta": "shift_uniform",
+   "pred": "le",
+   "tol": 0.0,
+   "transit": "freight_waves"
+  },
+  "F_waves_le": {
+   "delta": "off",
+   "pred": "le",
+   "tol": 0.0,
+   "transit": "freight_waves"
+  }
+ },
+ "band_tolerance_hours": 0.05,
+ "band_tolerance_provenance": "read off HIS autotomy rows (CTj - LT in [0.0074, 0.048]); one declared parameter, never fitted to our output",
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "arms": [
+   "A_constant_le",
+   "FDB_waves_delta_band",
+   "FD_waves_delta_le",
+   "F_waves_le"
+  ],
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "DEVELOPMENT_PREREGISTERED_AUTOTOMY_CLOSURE",
+ "contract_path": "docs/PREREGISTRO_CIERRE_AUTOTOMIA_2026-07-31.md",
+ "contract_sha256": "57e565761f25db95ad1da71305de29517f52890bf1b806ec62b441ac04eafe9d",
+ "created_at": "2026-07-31T22:02:26.181490+00:00",
+ "elapsed_seconds": 11.034393500005535,
+ "epsilon": 0.5,
+ "falsifiers": {
+  "all_passed": true,
+  "f1_status_quo_block_is_intact": {
+   "evidence": {
+    "autotomy_share": {
+     "R1r": 0.0,
+     "R2r": 0.0
+    },
+    "min_ctj": 54.0,
+    "shipped_constant": 54.0,
+    "why_it_can_fail": "if the shipped default moved, every other arm is being compared against something else"
+   },
+   "passed": true
+  },
+  "f2_his_floor_is_rare_and_ours_is_modal": {
+   "evidence": {
+    "his": {
+     "R1r": {
+      "floor_share": 0.004369992716678805,
+      "min_ctj": 48.0074399999867,
+      "n_in_band_with_autotomy": 114,
+      "n_in_floor_band": 114,
+      "n_rows": 26087,
+      "rule": "CTj in [48.0, 48.05]"
+     },
+     "R2r": {
+      "floor_share": 0.001659521504632831,
+      "min_ctj": 48.007439999994,
+      "n_in_band_with_autotomy": 14,
+      "n_in_floor_band": 36,
+      "n_rows": 21693,
+      "rule": "CTj in [48.0, 48.05]"
+     }
+    },
+    "ours": {
+     "A_constant_le": {
+      "floor_share": 0.0,
+      "n_in_floor_band": 0,
+      "n_orders": 5087
+     },
+     "FDB_waves_delta_band": {
+      "floor_share": 0.003145272262630234,
+      "n_in_floor_band": 16,
+      "n_orders": 5087
+     },
+     "FD_waves_delta_le": {
+      "floor_share": 0.003145272262630234,
+      "n_in_floor_band": 16,
+      "n_orders": 5087
+     },
+     "F_waves_le": {
+      "floor_share": 0.6253194417141734,
+      "n_in_floor_band": 3181,
+      "n_orders": 5087
+     }
+    },
+    "same_rule": "CTj in [48.0, 48.05]",
+    "why_it_can_fail": "this is the MECHANISM claim. If his floor were also modal, the diagnosis that the freight-wave arm fails on incidence rather than offset is simply wrong"
+   },
+   "passed": true
+  },
+  "f3_no_order_completes_below_the_lead_time": {
+   "evidence": {
+    "min_ctj": {
+     "A_constant_le": 54.0,
+     "FDB_waves_delta_band": 48.010328312150705,
+     "FD_waves_delta_le": 48.010328312150705,
+     "F_waves_le": 48.0
+    },
+    "violations": {
+     "A_constant_le": 0,
+     "FDB_waves_delta_band": 0,
+     "FD_waves_delta_le": 0,
+     "F_waves_le": 0
+    },
+    "why_it_can_fail": "the delta draw could subtract instead of add"
+   },
+   "passed": true
+  },
+  "f4_band_predicate_fires_only_inside_its_band": {
+   "evidence": {
+    "tolerance_by_arm": {
+     "A_constant_le": 0.0,
+     "FDB_waves_delta_band": 0.05,
+     "FD_waves_delta_le": 0.0,
+     "F_waves_le": 0.0
+    },
+    "violations": {
+     "A_constant_le": 0,
+     "FDB_waves_delta_band": 0,
+     "FD_waves_delta_le": 0,
+     "F_waves_le": 0
+    },
+    "why_it_can_fail": "if an order outside the tolerance carries APj > 0 the predicate is reading something other than CTj - LT"
+   },
+   "passed": true
+  },
+  "f5_epsilon_stable": {
+   "evidence": {
+    "stability": {
+     "R1r": {
+      "band": [
+       0.25,
+       0.375,
+       0.5,
+       0.625,
+       0.75
+      ],
+      "by_epsilon": {
+       "0.25": [
+        "A_constant_le",
+        "FDB_waves_delta_band"
+       ],
+       "0.375": [
+        "A_constant_le",
+        "FDB_waves_delta_band"
+       ],
+       "0.5": [
+        "A_constant_le",
+        "FDB_waves_delta_band"
+       ],
+       "0.625": [
+        "A_constant_le",
+        "FDB_waves_delta_band"
+       ],
+       "0.75": [
+        "A_constant_le",
+        "FDB_waves_delta_band"
+       ]
+      },
+      "flips": [
+       {
+        "binding_magnitude_dk": 0.7137347168440362,
+        "critical_moment": "ret_mean",
+        "flips_at_epsilon": 0.75,
+        "gap_dk": -0.7137347168440362,
+        "now_dominates": false,
+        "pair": [
+         "A_constant_le",
+         "FD_waves_delta_le"
+        ],
+        "term_that_flipped": "strictly"
+       }
+      ],
+      "n_distinct_sets": 1,
+      "stable": true
+     },
+     "R2r": {
+      "band": [
+       0.25,
+       0.375,
+       0.5,
+       0.625,
+       0.75
+      ],
+      "by_epsilon": {
+       "0.25": [
+        "FDB_waves_delta_band",
+        "FD_waves_delta_le"
+       ],
+       "0.375": [
+        "FDB_waves_delta_band",
+        "FD_waves_delta_le"
+       ],
+       "0.5": [
+        "FDB_waves_delta_band",
+        "FD_waves_delta_le"
+       ],
+       "0.625": [
+        "FDB_waves_delta_band",
+        "FD_waves_delta_le"
+       ],
+       "0.75": [
+        "FDB_waves_delta_band",
+        "FD_waves_delta_le"
+       ]
+      },
+      "flips": [],
+      "n_distinct_sets": 1,
+      "stable": true
+     }
+    },
+    "why_it_can_fail": "a non-dominated set that moves with epsilon is not a result"
+   },
+   "passed": true
+  }
+ },
+ "floor_incidence_his": {
+  "R1r": {
+   "floor_share": 0.004369992716678805,
+   "min_ctj": 48.0074399999867,
+   "n_in_band_with_autotomy": 114,
+   "n_in_floor_band": 114,
+   "n_rows": 26087,
+   "rule": "CTj in [48.0, 48.05]"
+  },
+  "R2r": {
+   "floor_share": 0.001659521504632831,
+   "min_ctj": 48.007439999994,
+   "n_in_band_with_autotomy": 14,
+   "n_in_floor_band": 36,
+   "n_rows": 21693,
+   "rule": "CTj in [48.0, 48.05]"
+  }
+ },
+ "floor_incidence_ours": {
+  "A_constant_le": {
+   "floor_share": 0.0,
+   "n_in_floor_band": 0,
+   "n_orders": 5087
+  },
+  "FDB_waves_delta_band": {
+   "floor_share": 0.003145272262630234,
+   "n_in_floor_band": 16,
+   "n_orders": 5087
+  },
+  "FD_waves_delta_le": {
+   "floor_share": 0.003145272262630234,
+   "n_in_floor_band": 16,
+   "n_orders": 5087
+  },
+  "F_waves_le": {
+   "floor_share": 0.6253194417141734,
+   "n_in_floor_band": 3181,
+   "n_orders": 5087
+  }
+ },
+ "min_ctj_by_arm": {
+  "A_constant_le": 54.0,
+  "FDB_waves_delta_band": 48.010328312150705,
+  "FD_waves_delta_le": 48.010328312150705,
+  "F_waves_le": 48.0
+ },
+ "per_episode": {
+  "A_constant_le": {
+   "R1r": [
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.007056790199411562,
+     "rpj_mean": 339.64383561643837,
+     "rpj_p95": 1526.3999999999992,
+     "scored_orders_per_year": 230.67084639498432
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.0073063449032709366,
+     "rpj_mean": 302.1255605381166,
+     "rpj_p95": 1907.9999999999973,
+     "scored_orders_per_year": 234.88401253918497
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.007436599725553054,
+     "rpj_mean": 256.07339449541286,
+     "rpj_p95": 1262.3999999999978,
+     "scored_orders_per_year": 228.18691588785046
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.0065448374422183465,
+     "rpj_mean": 508.29767441860463,
+     "rpj_p95": 2685.5999999999985,
+     "scored_orders_per_year": 225.75
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.0071916165195070264,
+     "rpj_mean": 384.0821917808219,
+     "rpj_p95": 2423.9999999999986,
+     "scored_orders_per_year": 230.67084639498432
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.0069816159318644815,
+     "rpj_mean": 464.6666666666667,
+     "rpj_p95": 3359.9999999999973,
+     "scored_orders_per_year": 221.5031847133758
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.006783574512918964,
+     "rpj_mean": 403.3867924528302,
+     "rpj_p95": 2194.7999999999997,
+     "scored_orders_per_year": 228.3076923076923
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.006848274348371973,
+     "rpj_mean": 373.9909090909091,
+     "rpj_p95": 2501.999999999998,
+     "scored_orders_per_year": 231.0
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.006834889061062406,
+     "rpj_mean": 420.55882352941177,
+     "rpj_p95": 2540.3999999999996,
+     "scored_orders_per_year": 219.69230769230768
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.007106394600917636,
+     "rpj_mean": 452.13461538461536,
+     "rpj_p95": 2531.9999999999945,
+     "scored_orders_per_year": 224.7202572347267
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.007017266138794026,
+     "rpj_mean": 294.8807339449541,
+     "rpj_p95": 2009.9999999999973,
+     "scored_orders_per_year": 230.33962264150944
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.007384042762194943,
+     "rpj_mean": 231.14018691588785,
+     "rpj_p95": 1088.3999999999999,
+     "scored_orders_per_year": 226.82649842271294
+    }
+   ],
+   "R2r": [
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.2064552414879131,
+     "rpj_mean": 548.3643410852713,
+     "rpj_p95": 2579.7999999999993,
+     "scored_orders_per_year": 204.9811320754717
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.24964371838522437,
+     "rpj_mean": 660.8712121212121,
+     "rpj_p95": 3418.35,
+     "scored_orders_per_year": 227.14018691588785
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.3015519431969218,
+     "rpj_mean": 490.76785714285717,
+     "rpj_p95": 2328.95,
+     "scored_orders_per_year": 221.84615384615384
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.20843209339863034,
+     "rpj_mean": 911.8030303030303,
+     "rpj_p95": 3524.35,
+     "scored_orders_per_year": 208.55172413793105
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.24895696694129732,
+     "rpj_mean": 715.6434108527131,
+     "rpj_p95": 3865.9999999999973,
+     "scored_orders_per_year": 221.90654205607476
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.26310150245145747,
+     "rpj_mean": 756.457627118644,
+     "rpj_p95": 3724.7499999999973,
+     "scored_orders_per_year": 210.39252336448598
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.3350988160522496,
+     "rpj_mean": 599.0438596491229,
+     "rpj_p95": 2707.6999999999994,
+     "scored_orders_per_year": 227.51097178683386
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.2977334562721799,
+     "rpj_mean": 514.0487804878048,
+     "rpj_p95": 2841.099999999998,
+     "scored_orders_per_year": 230.67084639498432
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.2902740200872676,
+     "rpj_mean": 817.8521739130434,
+     "rpj_p95": 3410.7,
+     "scored_orders_per_year": 220.02580645161288
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.3116027437926859,
+     "rpj_mean": 915.0526315789474,
+     "rpj_p95": 4209.149999999998,
+     "scored_orders_per_year": 228.9
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.28088766406728105,
+     "rpj_mean": 467.6484375,
+     "rpj_p95": 2459.999999999998,
+     "scored_orders_per_year": 226.48101265822785
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.2819281349998045,
+     "rpj_mean": 654.2314049586777,
+     "rpj_p95": 2627.0,
+     "scored_orders_per_year": 222.95327102803736
+    }
+   ]
+  },
+  "FDB_waves_delta_band": {
+   "R1r": [
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.007306563601245538,
+     "rpj_mean": 338.3052157583536,
+     "rpj_p95": 1526.3999999999992,
+     "scored_orders_per_year": 230.67084639498432
+    },
+    {
+     "autotomy_share": 0.004484304932735426,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.009786989926698879,
+     "rpj_mean": 301.74729155982936,
+     "rpj_p95": 1913.9999999999986,
+     "scored_orders_per_year": 234.88401253918497
+    },
+    {
+     "autotomy_share": 0.0045871559633027525,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.012274347089616998,
+     "rpj_mean": 255.43690212564564,
+     "rpj_p95": 1267.199999999999,
+     "scored_orders_per_year": 228.18691588785046
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.0067754780913057925,
+     "rpj_mean": 507.07454399062544,
+     "rpj_p95": 2685.5999999999985,
+     "scored_orders_per_year": 225.75
+    },
+    {
+     "autotomy_share": 0.0045662100456621,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.011939323585356855,
+     "rpj_mean": 384.3994228199946,
+     "rpj_p95": 2435.9999999999945,
+     "scored_orders_per_year": 230.67084639498432
+    },
+    {
+     "autotomy_share": 0.00966183574879227,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.01680105421389551,
+     "rpj_mean": 467.33937878433386,
+     "rpj_p95": 3383.999999999996,
+     "scored_orders_per_year": 221.5031847133758
+    },
+    {
+     "autotomy_share": 0.0047169811320754715,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.0093712943992278,
+     "rpj_mean": 403.57604180602544,
+     "rpj_p95": 2196.0,
+     "scored_orders_per_year": 228.3076923076923
+    },
+    {
+     "autotomy_share": 0.004545454545454545,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.0072376380753960915,
+     "rpj_mean": 374.2124120595395,
+     "rpj_p95": 2507.999999999999,
+     "scored_orders_per_year": 231.0
+    },
+    {
+     "autotomy_share": 0.004901960784313725,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.007092670535720667,
+     "rpj_mean": 421.30728257941615,
+     "rpj_p95": 2541.5999999999995,
+     "scored_orders_per_year": 219.69230769230768
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.007339924294587407,
+     "rpj_mean": 450.8868399961314,
+     "rpj_p95": 2531.9999999999945,
+     "scored_orders_per_year": 224.7202572347267
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.007251382719319858,
+     "rpj_mean": 293.6402803261709,
+     "rpj_p95": 2009.9999999999973,
+     "scored_orders_per_year": 230.33962264150944
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.007667952757226009,
+     "rpj_mean": 229.628595510656,
+     "rpj_p95": 1088.3999999999999,
+     "scored_orders_per_year": 226.82649842271294
+    }
+   ],
+   "R2r": [
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.005154639175257732,
+     "ret_mean": 0.2133548475336922,
+     "rpj_mean": 551.1275684026767,
+     "rpj_p95": 2588.1999999999985,
+     "scored_orders_per_year": 204.9811320754717
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.2563859876020305,
+     "rpj_mean": 669.7502824720538,
+     "rpj_p95": 3420.65,
+     "scored_orders_per_year": 227.14018691588785
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.3068977913684818,
+     "rpj_mean": 498.95536147488286,
+     "rpj_p95": 2330.05,
+     "scored_orders_per_year": 221.84615384615384
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.20923049031498372,
+     "rpj_mean": 904.2983599315052,
+     "rpj_p95": 3524.2,
+     "scored_orders_per_year": 208.55172413793105
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.24990176351243876,
+     "rpj_mean": 714.8236667695072,
+     "rpj_p95": 3865.9999999999973,
+     "scored_orders_per_year": 221.90654205607476
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.26326523400561413,
+     "rpj_mean": 755.9348666331358,
+     "rpj_p95": 3724.7499999999973,
+     "scored_orders_per_year": 210.39252336448598
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.33895248155696095,
+     "rpj_mean": 603.1890719186466,
+     "rpj_p95": 2712.7999999999993,
+     "scored_orders_per_year": 227.51097178683386
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.3018853328226986,
+     "rpj_mean": 520.91764510386,
+     "rpj_p95": 2861.0,
+     "scored_orders_per_year": 230.67084639498432
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.290326028693982,
+     "rpj_mean": 817.249679589752,
+     "rpj_p95": 3410.7,
+     "scored_orders_per_year": 220.02580645161288
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.3118338064237164,
+     "rpj_mean": 922.1213160342471,
+     "rpj_p95": 4227.599999999997,
+     "scored_orders_per_year": 228.9
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.2812448076057617,
+     "rpj_mean": 466.87125631794186,
+     "rpj_p95": 2459.999999999998,
+     "scored_orders_per_year": 226.48101265822785
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.004694835680751174,
+     "ret_mean": 0.2988475560257329,
+     "rpj_mean": 668.8993623631114,
+     "rpj_p95": 2739.6499999999937,
+     "scored_orders_per_year": 222.95327102803736
+    }
+   ]
+  },
+  "FD_waves_delta_le": {
+   "R1r": [
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.007306563601245538,
+     "rpj_mean": 338.3052157583536,
+     "rpj_p95": 1526.3999999999992,
+     "scored_orders_per_year": 230.67084639498432
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.0075915333825014655,
+     "rpj_mean": 300.6094831800066,
+     "rpj_p95": 1907.9999999999973,
+     "scored_orders_per_year": 234.88401253918497
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.007734945058226316,
+     "rpj_mean": 254.48549015187032,
+     "rpj_p95": 1262.3999999999978,
+     "scored_orders_per_year": 228.18691588785046
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.0067754780913057925,
+     "rpj_mean": 507.07454399062544,
+     "rpj_p95": 2685.5999999999985,
+     "scored_orders_per_year": 225.75
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.007420650321478549,
+     "rpj_mean": 382.86348106338005,
+     "rpj_p95": 2423.9999999999986,
+     "scored_orders_per_year": 230.67084639498432
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.0072398126684979115,
+     "rpj_mean": 463.28802073987003,
+     "rpj_p95": 3359.9999999999973,
+     "scored_orders_per_year": 221.5031847133758
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.007061889654405102,
+     "rpj_mean": 401.8990241850711,
+     "rpj_p95": 2194.7999999999997,
+     "scored_orders_per_year": 228.3076923076923
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.007085424514089579,
+     "rpj_mean": 372.7297519669131,
+     "rpj_p95": 2501.999999999998,
+     "scored_orders_per_year": 231.0
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.007037922761405856,
+     "rpj_mean": 419.4774653924383,
+     "rpj_p95": 2540.3999999999996,
+     "scored_orders_per_year": 219.69230769230768
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.007339924294587407,
+     "rpj_mean": 450.8868399961314,
+     "rpj_p95": 2531.9999999999945,
+     "scored_orders_per_year": 224.7202572347267
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.007251382719319858,
+     "rpj_mean": 293.6402803261709,
+     "rpj_p95": 2009.9999999999973,
+     "scored_orders_per_year": 230.33962264150944
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.007667952757226009,
+     "rpj_mean": 229.628595510656,
+     "rpj_p95": 1088.3999999999999,
+     "scored_orders_per_year": 226.82649842271294
+    }
+   ],
+   "R2r": [
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.005154639175257732,
+     "ret_mean": 0.21340849728487513,
+     "rpj_mean": 547.2276626824153,
+     "rpj_p95": 2579.7999999999993,
+     "scored_orders_per_year": 204.9811320754717
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.2563859876020305,
+     "rpj_mean": 669.7502824720538,
+     "rpj_p95": 3420.65,
+     "scored_orders_per_year": 227.14018691588785
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.3068977913684818,
+     "rpj_mean": 498.95536147488286,
+     "rpj_p95": 2330.05,
+     "scored_orders_per_year": 221.84615384615384
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.20923049031498372,
+     "rpj_mean": 904.2983599315052,
+     "rpj_p95": 3524.2,
+     "scored_orders_per_year": 208.55172413793105
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.24990176351243876,
+     "rpj_mean": 714.8236667695072,
+     "rpj_p95": 3865.9999999999973,
+     "scored_orders_per_year": 221.90654205607476
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.26326523400561413,
+     "rpj_mean": 755.9348666331358,
+     "rpj_p95": 3724.7499999999973,
+     "scored_orders_per_year": 210.39252336448598
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.33895248155696095,
+     "rpj_mean": 603.1890719186466,
+     "rpj_p95": 2712.7999999999993,
+     "scored_orders_per_year": 227.51097178683386
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.3019328705808494,
+     "rpj_mean": 517.0414938463017,
+     "rpj_p95": 2851.049999999998,
+     "scored_orders_per_year": 230.67084639498432
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.290326028693982,
+     "rpj_mean": 817.249679589752,
+     "rpj_p95": 3410.7,
+     "scored_orders_per_year": 220.02580645161288
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.3119293310642725,
+     "rpj_mean": 914.2431494752814,
+     "rpj_p95": 4209.149999999998,
+     "scored_orders_per_year": 228.9
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.2812448076057617,
+     "rpj_mean": 466.87125631794186,
+     "rpj_p95": 2459.999999999998,
+     "scored_orders_per_year": 226.48101265822785
+    },
+    {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.004694835680751174,
+     "ret_mean": 0.2988475560257329,
+     "rpj_mean": 668.8993623631114,
+     "rpj_p95": 2739.6499999999937,
+     "scored_orders_per_year": 222.95327102803736
+    }
+   ]
+  },
+  "F_waves_le": {
+   "R1r": [
+    {
+     "autotomy_share": 0.6666666666666666,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.519119858054683,
+     "rpj_mean": 947.6571428571428,
+     "rpj_p95": 3860.3999999999996,
+     "scored_orders_per_year": 230.67084639498432
+    },
+    {
+     "autotomy_share": 0.6905829596412556,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.5496788328233287,
+     "rpj_mean": 892.3636363636364,
+     "rpj_p95": 3240.0,
+     "scored_orders_per_year": 234.88401253918497
+    },
+    {
+     "autotomy_share": 0.6880733944954128,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.5145055682754545,
+     "rpj_mean": 764.516129032258,
+     "rpj_p95": 2984.3999999999987,
+     "scored_orders_per_year": 228.18691588785046
+    },
+    {
+     "autotomy_share": 0.5906976744186047,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.45211427114285413,
+     "rpj_mean": 1203.105882352941,
+     "rpj_p95": 4132.799999999999,
+     "scored_orders_per_year": 225.75
+    },
+    {
+     "autotomy_share": 0.6757990867579908,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.5433475743992038,
+     "rpj_mean": 1117.0588235294117,
+     "rpj_p95": 4045.2,
+     "scored_orders_per_year": 230.67084639498432
+    },
+    {
+     "autotomy_share": 0.6618357487922706,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.5278252958553893,
+     "rpj_mean": 1304.1176470588234,
+     "rpj_p95": 4456.799999999999,
+     "scored_orders_per_year": 221.5031847133758
+    },
+    {
+     "autotomy_share": 0.6273584905660378,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.5085153987829989,
+     "rpj_mean": 1041.6,
+     "rpj_p95": 3319.2,
+     "scored_orders_per_year": 228.3076923076923
+    },
+    {
+     "autotomy_share": 0.6,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.4567570196751519,
+     "rpj_mean": 902.1686746987951,
+     "rpj_p95": 3496.7999999999975,
+     "scored_orders_per_year": 231.0
+    },
+    {
+     "autotomy_share": 0.6372549019607843,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.539361538227751,
+     "rpj_mean": 1078.3561643835617,
+     "rpj_p95": 3201.6,
+     "scored_orders_per_year": 219.69230769230768
+    },
+    {
+     "autotomy_share": 0.6826923076923077,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.5574209856853289,
+     "rpj_mean": 1308.7272727272727,
+     "rpj_p95": 4950.0,
+     "scored_orders_per_year": 224.7202572347267
+    },
+    {
+     "autotomy_share": 0.6422018348623854,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.4901198725005809,
+     "rpj_mean": 744.9473684210526,
+     "rpj_p95": 2694.0,
+     "scored_orders_per_year": 230.33962264150944
+    },
+    {
+     "autotomy_share": 0.7009345794392523,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.5437357265991318,
+     "rpj_mean": 665.4193548387096,
+     "rpj_p95": 2637.6,
+     "scored_orders_per_year": 226.82649842271294
+    }
+   ],
+   "R2r": [
+    {
+     "autotomy_share": 0.14948453608247422,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.3232621004638,
+     "rpj_mean": 817.202380952381,
+     "rpj_p95": 3092.9499999999985,
+     "scored_orders_per_year": 204.9811320754717
+    },
+    {
+     "autotomy_share": 0.1935483870967742,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.4173528707210293,
+     "rpj_mean": 1229.7794117647059,
+     "rpj_p95": 3733.2,
+     "scored_orders_per_year": 227.14018691588785
+    },
+    {
+     "autotomy_share": 0.11650485436893204,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.3854889840823444,
+     "rpj_mean": 780.0,
+     "rpj_p95": 3227.349999999998,
+     "scored_orders_per_year": 221.84615384615384
+    },
+    {
+     "autotomy_share": 0.12121212121212122,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.30365001583344736,
+     "rpj_mean": 1326.1460674157304,
+     "rpj_p95": 3959.9999999999995,
+     "scored_orders_per_year": 208.55172413793105
+    },
+    {
+     "autotomy_share": 0.14622641509433962,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.37237667517522555,
+     "rpj_mean": 1226.2328767123288,
+     "rpj_p95": 4215.8,
+     "scored_orders_per_year": 221.90654205607476
+    },
+    {
+     "autotomy_share": 0.13432835820895522,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.3490016098176822,
+     "rpj_mean": 1119.820512820513,
+     "rpj_p95": 4087.1499999999987,
+     "scored_orders_per_year": 210.39252336448598
+    },
+    {
+     "autotomy_share": 0.1111111111111111,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.4364111131210044,
+     "rpj_mean": 953.8840579710145,
+     "rpj_p95": 3583.5999999999926,
+     "scored_orders_per_year": 227.51097178683386
+    },
+    {
+     "autotomy_share": 0.136986301369863,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.3997352852027391,
+     "rpj_mean": 874.7826086956521,
+     "rpj_p95": 3056.3999999999996,
+     "scored_orders_per_year": 230.67084639498432
+    },
+    {
+     "autotomy_share": 0.13793103448275862,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.4013724465915991,
+     "rpj_mean": 1365.044776119403,
+     "rpj_p95": 3691.7,
+     "scored_orders_per_year": 220.02580645161288
+    },
+    {
+     "autotomy_share": 0.11467889908256881,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.398293314767618,
+     "rpj_mean": 1518.7313432835822,
+     "rpj_p95": 5622.399999999998,
+     "scored_orders_per_year": 228.9
+    },
+    {
+     "autotomy_share": 0.1596244131455399,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.4108708993031577,
+     "rpj_mean": 807.056338028169,
+     "rpj_p95": 2841.5,
+     "scored_orders_per_year": 226.48101265822785
+    },
+    {
+     "autotomy_share": 0.17370892018779344,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.434932322221041,
+     "rpj_mean": 1250.6065573770493,
+     "rpj_p95": 4938.0,
+     "scored_orders_per_year": 222.95327102803736
+    }
+   ]
+  }
+ },
+ "reference_path": "results/metric_audit/fidelity_reference_v4/result.json",
+ "reference_sha256": "32e23a79b43f76a7a5e3d3b5eb140182b00084c964942566f9097dea359a133b",
+ "results": {
+  "R1r": {
+   "A_constant_le": {
+    "discrepancies": {
+     "autotomy_share": 12.395847220463516,
+     "ret_above_one_share": 4.4660867884606645,
+     "ret_mean": 2.180765021713939,
+     "rpj_mean": 6.698059828499935,
+     "rpj_p95": 9.129310739924662,
+     "scored_orders_per_year": 2.993791747842988
+    },
+    "moment_se": {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 7.627483883431505e-05,
+     "rpj_mean": 24.946170708809408,
+     "rpj_p95": 187.23661986422894,
+     "scored_orders_per_year": 1.242224224688594
+    },
+    "moments": {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.0070410205121737785,
+     "rpj_mean": 369.24844873622243,
+     "rpj_p95": 2169.4999999999977,
+     "scored_orders_per_year": 227.71268201911073
+    },
+    "n_episodes": 12,
+    "sum_dk_DESCRIPTIVE_NOT_A_RANKING": 37.86386134690571
+   },
+   "FDB_waves_delta_band": {
+    "discrepancies": {
+     "autotomy_share": 1.2632414379417085,
+     "ret_above_one_share": 4.4660867884606645,
+     "ret_mean": 3.129657031192044,
+     "rpj_mean": 6.651364462926127,
+     "rpj_p95": 9.098135958575675,
+     "scored_orders_per_year": 2.993791747842988
+    },
+    "moment_se": {
+     "autotomy_share": 0.0008932856403396847,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.0008809783789340982,
+     "rpj_mean": 25.09099599634062,
+     "rpj_p95": 188.38443045104214,
+     "scored_orders_per_year": 1.242224224688594
+    },
+    "moments": {
+     "autotomy_share": 0.0031219919293613576,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.00923705160746645,
+     "rpj_mean": 368.9628506097269,
+     "rpj_p95": 2174.0999999999976,
+     "scored_orders_per_year": 227.71268201911073
+    },
+    "n_episodes": 12,
+    "sum_dk_DESCRIPTIVE_NOT_A_RANKING": 27.602277426939207
+   },
+   "FD_waves_delta_le": {
+    "discrepancies": {
+     "autotomy_share": 12.395847220463516,
+     "ret_above_one_share": 4.4660867884606645,
+     "ret_mean": 2.8944997385579754,
+     "rpj_mean": 6.639896262982542,
+     "rpj_p95": 9.129310739924662,
+     "scored_orders_per_year": 2.993791747842988
+    },
+    "moment_se": {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 8.15410711354805e-05,
+     "rpj_mean": 24.972537526749942,
+     "rpj_p95": 187.23661986422894,
+     "scored_orders_per_year": 1.242224224688594
+    },
+    "moments": {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.0072927899853574485,
+     "rpj_mean": 367.9073493551239,
+     "rpj_p95": 2169.4999999999977,
+     "scored_orders_per_year": 227.71268201911073
+    },
+    "n_episodes": 12,
+    "sum_dk_DESCRIPTIVE_NOT_A_RANKING": 38.51943249823235
+   },
+   "F_waves_le": {
+    "discrepancies": {
+     "autotomy_share": 62.613505449370884,
+     "ret_above_one_share": 4.4660867884606645,
+     "ret_mean": 50.70023157615645,
+     "rpj_mean": 12.857912506995111,
+     "rpj_p95": 15.158947688588308,
+     "scored_orders_per_year": 2.993791747842988
+    },
+    "moment_se": {
+     "autotomy_share": 0.010391361121370523,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.010065096661826735,
+     "rpj_mean": 61.968669674788366,
+     "rpj_p95": 206.11102700861363,
+     "scored_orders_per_year": 1.242224224688594
+    },
+    "moments": {
+     "autotomy_share": 0.6553414704410806,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.5168751618351548,
+     "rpj_mean": 997.5031746886339,
+     "rpj_p95": 3584.8999999999996,
+     "scored_orders_per_year": 227.71268201911073
+    },
+    "n_episodes": 12,
+    "sum_dk_DESCRIPTIVE_NOT_A_RANKING": 148.7904757574144
+   }
+  },
+  "R2r": {
+   "A_constant_le": {
+    "discrepancies": {
+     "autotomy_share": 4.555827309688331,
+     "ret_above_one_share": 3.987596379666524,
+     "ret_mean": 2.5786181503686536,
+     "rpj_mean": 0.8532095773694565,
+     "rpj_p95": 0.3901970616141829,
+     "scored_orders_per_year": 0.38638812329487027
+    },
+    "moment_se": {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.011359312180374075,
+     "rpj_mean": 45.015108689498895,
+     "rpj_p95": 180.15072625832366,
+     "scored_orders_per_year": 2.4563178918121933
+    },
+    "moments": {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.27297219176107607,
+     "rpj_mean": 670.9820638926104,
+     "rpj_p95": 3141.4874999999993,
+     "scored_orders_per_year": 220.9466808929751
+    },
+    "n_episodes": 12,
+    "sum_dk_DESCRIPTIVE_NOT_A_RANKING": 12.751836602002017
+   },
+   "FDB_waves_delta_band": {
+    "discrepancies": {
+     "autotomy_share": 4.555827309688331,
+     "ret_above_one_share": 0.297508589312391,
+     "ret_mean": 2.714267056241451,
+     "rpj_mean": 0.9300213501038656,
+     "rpj_p95": 0.4474374544098609,
+     "scored_orders_per_year": 0.38638812329487027
+    },
+    "moment_se": {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0005540993295937681,
+     "ret_mean": 0.011424519710011042,
+     "rpj_mean": 44.435158306104384,
+     "rpj_p95": 178.21053829556752,
+     "scored_orders_per_year": 2.4563178918121933
+    },
+    "moments": {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0008207895713340756,
+     "ret_mean": 0.2768438439555078,
+     "rpj_mean": 674.51153641761,
+     "rpj_p95": 3155.4666666666653,
+     "scored_orders_per_year": 220.9466808929751
+    },
+    "n_episodes": 12,
+    "sum_dk_DESCRIPTIVE_NOT_A_RANKING": 9.33144988305077
+   },
+   "FD_waves_delta_le": {
+    "discrepancies": {
+     "autotomy_share": 4.555827309688331,
+     "ret_above_one_share": 0.297508589312391,
+     "ret_mean": 2.714822098861194,
+     "rpj_mean": 0.9068710837640197,
+     "rpj_p95": 0.4359532433319128,
+     "scored_orders_per_year": 0.38638812329487027
+    },
+    "moment_se": {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0005540993295937681,
+     "ret_mean": 0.011425270443113662,
+     "rpj_mean": 44.29201726135206,
+     "rpj_p95": 177.704487950864,
+     "scored_orders_per_year": 2.4563178918121933
+    },
+    "moments": {
+     "autotomy_share": 0.0,
+     "ret_above_one_share": 0.0008207895713340756,
+     "ret_mean": 0.27686023663466536,
+     "rpj_mean": 673.2070177895446,
+     "rpj_p95": 3152.3999999999983,
+     "scored_orders_per_year": 220.9466808929751
+    },
+    "n_episodes": 12,
+    "sum_dk_DESCRIPTIVE_NOT_A_RANKING": 9.29737044825272
+   },
+   "F_waves_le": {
+    "discrepancies": {
+     "autotomy_share": 19.414980416343322,
+     "ret_above_one_share": 3.987596379666524,
+     "ret_mean": 6.542019516367294,
+     "rpj_mean": 6.225054910059644,
+     "rpj_p95": 2.6908578286810063,
+     "scored_orders_per_year": 0.38638812329487027
+    },
+    "moment_se": {
+     "autotomy_share": 0.007242657113848726,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.012118595379209032,
+     "rpj_mean": 72.42773333818064,
+     "rpj_p95": 234.242538079976,
+     "scored_orders_per_year": 2.4563178918121933
+    },
+    "moments": {
+     "autotomy_share": 0.14127877928693597,
+     "ret_above_one_share": 0.0,
+     "ret_mean": 0.3860623031083907,
+     "rpj_mean": 1105.7739109283775,
+     "rpj_p95": 3837.5041666666657,
+     "scored_orders_per_year": 220.9466808929751
+    },
+    "n_episodes": 12,
+    "sum_dk_DESCRIPTIVE_NOT_A_RANKING": 39.24689717441266
+   }
+  }
+ },
+ "results_withheld_note": null,
+ "roots": [
+  3700001,
+  3700002,
+  3700003,
+  3700004,
+  3700005,
+  3700006,
+  3700007,
+  3700008,
+  3700009,
+  3700010,
+  3700011,
+  3700012
+ ],
+ "schema_version": "autotomy_closure_arms_v1",
+ "self_sha256": "3b9e1c5453813c243711458f45d3c4d9c7198e669e02f272e2e1c55d9732b141",
+ "verdicts": {
+  "R1r": {
+   "discriminates": true,
+   "epsilon_declared": 0.5,
+   "epsilon_stability": {
+    "band": [
+     0.25,
+     0.375,
+     0.5,
+     0.625,
+     0.75
+    ],
+    "by_epsilon": {
+     "0.25": [
+      "A_constant_le",
+      "FDB_waves_delta_band"
+     ],
+     "0.375": [
+      "A_constant_le",
+      "FDB_waves_delta_band"
+     ],
+     "0.5": [
+      "A_constant_le",
+      "FDB_waves_delta_band"
+     ],
+     "0.625": [
+      "A_constant_le",
+      "FDB_waves_delta_band"
+     ],
+     "0.75": [
+      "A_constant_le",
+      "FDB_waves_delta_band"
+     ]
+    },
+    "flips": [
+     {
+      "binding_magnitude_dk": 0.7137347168440362,
+      "critical_moment": "ret_mean",
+      "flips_at_epsilon": 0.75,
+      "gap_dk": -0.7137347168440362,
+      "now_dominates": false,
+      "pair": [
+       "A_constant_le",
+       "FD_waves_delta_le"
+      ],
+      "term_that_flipped": "strictly"
+     }
+    ],
+    "n_distinct_sets": 1,
+    "stable": true
+   },
+   "non_dominated_set": [
+    "A_constant_le",
+    "FDB_waves_delta_band"
+   ],
+   "selection_rule": "the non-dominated set IS the output; no arm is chosen here and sum_dk may not be used to rank",
+   "set_is_epsilon_stable": true
+  },
+  "R2r": {
+   "discriminates": true,
+   "epsilon_declared": 0.5,
+   "epsilon_stability": {
+    "band": [
+     0.25,
+     0.375,
+     0.5,
+     0.625,
+     0.75
+    ],
+    "by_epsilon": {
+     "0.25": [
+      "FDB_waves_delta_band",
+      "FD_waves_delta_le"
+     ],
+     "0.375": [
+      "FDB_waves_delta_band",
+      "FD_waves_delta_le"
+     ],
+     "0.5": [
+      "FDB_waves_delta_band",
+      "FD_waves_delta_le"
+     ],
+     "0.625": [
+      "FDB_waves_delta_band",
+      "FD_waves_delta_le"
+     ],
+     "0.75": [
+      "FDB_waves_delta_band",
+      "FD_waves_delta_le"
+     ]
+    },
+    "flips": [],
+    "n_distinct_sets": 1,
+    "stable": true
+   },
+   "non_dominated_set": [
+    "FDB_waves_delta_band",
+    "FD_waves_delta_le"
+   ],
+   "selection_rule": "the non-dominated set IS the output; no arm is chosen here and sum_dk may not be used to rank",
+   "set_is_epsilon_stable": true
+  }
+ }
+}

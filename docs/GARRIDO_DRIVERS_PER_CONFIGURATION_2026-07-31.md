@@ -80,8 +80,12 @@ cazar una celda que se moviera *sin* ellos, nunca una que no se moviera teniénd
 
 ## Lo que sigue
 
-1. **Cerrar `Re(APj)`** con el brazo de olas de flete (`min CTj = 48,0`). Es el único driver
-   suyo que no existe en nuestra tabla, y `f4` ya está armado para exigir la re-emisión.
+1. ~~**Cerrar `Re(APj)`** con el brazo de olas de flete.~~ **HECHO, y el resultado es una
+   frontera, no un cierre adoptado** (`docs/RESULTADO_CIERRE_AUTOTOMIA_2026-07-31.md`): las
+   olas **solas** sobredisparan 151×; olas + `δ` + predicado de banda **sí** cierran
+   (`d_k` 12,40 → 1,26 en R1r) pero degradan `ret_mean` 0,95 SE combinados, por encima del
+   `EPSILON` preregistrado. **No adoptado**, así que esta tabla sigue con `Re(APj) ≡ 0` y el
+   trip-wire `f4` sigue armado.
 2. **Fig. 5** sobre `drivers.csv`: `(ρ, drivers) → ReT` y la pregunta de activación
    *«¿ReT en `x` > ReT en `x−1`?»*, backprop contra KAN.
 3. Recordar al leerla: con `Re(APj) ≡ 0` y `Re(DPj) ≡ 0`, hoy la neurona tendría **dos entradas
