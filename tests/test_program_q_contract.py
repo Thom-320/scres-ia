@@ -136,6 +136,57 @@ def test_live_program_q_seed_custody_declarations_do_not_fake_a_collision() -> N
     assert not payload["suspicious"]
 
 
+def test_naming_the_reserved_range_is_a_declaration_not_a_collision(tmp_path: Path) -> None:
+    """The 2026-07-31 false positive: prose telling the reader the range is off limits."""
+    (tmp_path / "scripts").mkdir()
+    (tmp_path / "scripts/build_notebook.py").write_text(
+        "# las semillas reservadas `7480101-7480148`, `7490001-7490256` y `950100001`\n"
+    )
+    payload = scan(tmp_path)
+    assert payload["pass"], payload["suspicious"]
+    assert payload["declarations"][0]["seeds_declared_as_bounds"] == [7490001, 7490256]
+
+
+def test_the_declaration_exemption_is_not_a_loophole(tmp_path: Path) -> None:
+    """Neither an interior seed nor a consumption cue can hide behind the bounds rule."""
+    (tmp_path / "results").mkdir(parents=True)
+    # An INTERIOR seed is never declarable, even beside both endpoints.
+    (tmp_path / "results/interior.json").write_text(
+        '{"reserved": [7490001, 7490256], "used": 7490137}'
+    )
+    assert not scan(tmp_path)["pass"]
+    (tmp_path / "results/interior.json").unlink()
+    # An ENDPOINT with a consumption cue is a consumption, partner nearby or not.
+    (tmp_path / "results/endpoint.json").write_text(
+        '{"range": "7490001-7490256", "seed_start": 7490001}'
+    )
+    payload = scan(tmp_path)
+    assert not payload["pass"]
+    assert payload["suspicious"][0]["seeds_used"] == [7490001]
+    # And no file, allowlisted or not, may carry a reserved seed in its FILENAME -- an opened
+    # seed materializes as an artifact named after it.
+    (tmp_path / "results/endpoint.json").unlink()
+    (tmp_path / "contracts").mkdir()
+    (tmp_path / "contracts/program_q_frozen_policy_replication_v1.json").write_text(
+        "{}"
+    )
+    (tmp_path / "contracts/tape_7490002.json").write_text("{}")
+    payload = scan(tmp_path)
+    assert not payload["pass"]
+    assert payload["suspicious"][0]["seed_in_filename"] is True
+
+
+def test_underscore_range_key_is_not_swallowed(tmp_path: Path) -> None:
+    """`"7490001_7490256"` must stay two seeds, not one 14-digit run that matches nothing."""
+    (tmp_path / "research").mkdir()
+    (tmp_path / "research/state.json").write_text('{"7490001_7490256": "UNOPENED"}')
+    payload = scan(tmp_path)
+    assert payload["declarations"][0]["seeds"] == [7490001, 7490256]
+    # A Python literal is still ONE seed, and using it is still a consumption.
+    (tmp_path / "research/use.py").write_text("seed = 7_490_001\n")
+    assert not scan(tmp_path)["pass"]
+
+
 def test_early_power_approximation_cannot_select_program_q_N() -> None:
     payload = json.loads(APPROXIMATE_POWER.read_text())
     assert payload["status"] == "NONAUTHORITATIVE_APPROXIMATION"

@@ -13,8 +13,8 @@ avisando de algo que nadie atendió.
 | A | guardia de completitud de Markov: campos del simulador sin clasificar | **15** | 2026-07-16 | **guardia correcto, deuda real** |
 | B | atestaciones congeladas por hash contra fuentes que cambiaron | **7** | 2026-07-15/17 | **guardia correcto, decisión pendiente** |
 | C | rutas absolutas del usuario en archivos versionados | 1 | 2026-06-27 | higiene, sedimentada |
-| D | custodia de semillas de Program Q: falso positivo | 1 | 2026-07-29 | **falso positivo** |
-| E | expectativas de test obsoletas frente a la deriva del entorno | 2 | 2026-07-01 | expectativa vieja |
+| D | custodia de semillas de Program Q: falso positivo | 1 | 2026-07-29 | **ARREGLADO** ✅ |
+| E | expectativas de test obsoletas frente a la deriva del entorno | 2 | 2026-07-01 | **ARREGLADO** ✅ |
 | F | transductor de Program S inexacto | 1 | 2026-07-18 | **invalidación ya registrada, peor** |
 
 ---
@@ -141,6 +141,50 @@ Ninguno de los 27 indica que un número publicado esté mal. Los que vigilan com
 Lo que fallan son **guardias de custodia**: completitud de estado, atestación por hash,
 portabilidad, virginidad de semillas. Es exactamente la capa que este proyecto usa para
 defenderse ante un revisor, y lleva entre dos semanas y un mes en rojo.
+
+---
+
+## Apéndice — D y E, arreglados el 2026-07-31
+
+**D.** El escáner clasificaba por **ruta**, así que cualquier archivo fuera del allowlist que
+*nombrara* el rango era una colisión. Ahora clasifica por **contexto**:
+
+* **cue de consumo** (`seed`/`root`/`tape`/`semilla` justo antes del número, o la semilla en el
+  **nombre del archivo**) → sospechoso, en cualquier archivo;
+* **mención de límites** (el valor es exactamente un extremo del espacio reservado **y** el otro
+  extremo aparece al lado) → declaración. **Una semilla interior nunca es declarable así**, de
+  modo que la excepción no se puede ensanchar hasta ser una puerta.
+
+Medido: los nueve artefactos de custodia declaran **solo límites**; los únicos aciertos con
+forma de consumo en todo el repositorio son las constantes de este mismo script.
+
+**Un defecto que me encontré a mí mismo escribiéndolo.** Mi primera versión hacía
+`text.replace("_","")` para tratar `1_234_567` como un solo número. Eso fusiona una clave de
+rango `"<bajo>_<alto>"` en una corrida de **14 dígitos** que ningún patrón de 7–9 dígitos matchea:
+el escáner habría **dejado de ver** un rango declarado. Un guardia de custodia que subreporta es
+peor que uno que grita. La tokenización ahora quita el `_` solo cuando forma grupos de tres
+(literal de Python) y **parte** el token en cualquier otro caso; hay un test dedicado.
+
+**E.**
+
+* `test_export_trajectories_...`: la aserción `== 46` pasa a `== V7_OBSERVATION_DIM`, **con el
+  literal 52 verificado contra la constante**. Si v7 vuelve a moverse, el test falla nombrando
+  los artefactos exportados, no un número anónimo.
+* `test_run_track_b_smoke`: en vez de `== 15`, cuenta contra el registro
+  (`9 + len(HEURISTIC_POLICY_NAMES) + 1`) **y afirma las etiquetas**. Eso cierra además un
+  agujero real: `run_track_b_smoke` **omite una heurística con un simple warning** cuando su
+  dimensión de acción no encaja con el contrato, y un conteo pelado lo absorbería en cuanto se
+  añadiera otra política.
+
+**Y la guardia corregida me pilló a mí, en este mismo documento.** Un borrador del apéndice
+imprimía un extremo del rango reservado a ~60 caracteres de su pareja, fuera de la ventana de
+límites, así que el escáner lo leyó como consumo y **detuvo la corrida**. Es el comportamiento
+correcto: discutir un extremo suelto es indistinguible de usarlo. Reescribí la frase con un
+ejemplo genérico en vez de ensanchar la ventana — **no se afloja una regla de custodia para
+acomodar la propia prosa**.
+
+**Suite verificada tras el arreglo: `1.228 passed, 24 failed`** — los tres que quedaban en D y
+E salieron de la lista y ninguno nuevo entró. Quedan A (15), B (7), C (1) y F (1).
 
 ## Orden recomendado
 

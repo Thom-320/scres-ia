@@ -7,6 +7,8 @@ from pathlib import Path
 
 import numpy as np
 
+from supply_chain.env_experimental_shifts import V7_OBSERVATION_DIM
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -192,7 +194,14 @@ def test_export_trajectories_supports_track_b_contract(tmp_path: Path) -> None:
         (tmp_path / "action_fields.json").read_text(encoding="utf-8")
     )
 
-    assert observations.shape[1] == 46
+    # CORRECTED 2026-07-31. This asserted 46, the v7 width before `a3d9ea9` (2026-07-01,
+    # "Package Track B Q1 evidence") widened it to 52 -- so Track B's observation vector grew
+    # AFTER the Track B results were produced, and the assertion sat red for a month instead
+    # of saying so. The literal stays (a silent width change is what this guards), and it is
+    # cross-checked against the constant so the two can never disagree again: if V7 moves,
+    # this fails naming the exported artifacts, not an anonymous number.
+    assert V7_OBSERVATION_DIM == 52, "v7 width moved; every v7 export changed shape"
+    assert observations.shape[1] == V7_OBSERVATION_DIM
     assert actions.shape[1] == 8
     assert metadata["action_contract"] == "track_b_v1"
     assert env_spec["env_variant"] == "track_b_adaptive_control"

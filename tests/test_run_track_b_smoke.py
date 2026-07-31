@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 import scripts.run_track_b_smoke as track_b_smoke
+from scripts.track_b_heuristics import HEURISTIC_POLICY_NAMES
 
 
 def test_build_static_policy_action_scales_downstream_dispatch() -> None:
@@ -243,4 +244,15 @@ def test_main_writes_bundle_from_stubbed_training_and_eval(
     assert (output_dir / "summary.md").exists()
     assert payload["decision"]["best_static_policy"] == "s3_d2.00"
     assert payload["decision"]["ppo_beats_s2_neutral_by_fill"] is True
-    assert len(payload["policy_summary"]) == 15  # 9 static + 5 heuristic + 1 ppo
+    # CORRECTED 2026-07-31. This asserted 15 ("9 static + 5 heuristic + 1 ppo") and has been
+    # red since `2fffba3` (2026-07-02) added `heur_forecast_threshold` as the sixth heuristic.
+    # Counting against the registry instead of a literal fixes the number AND closes a real
+    # hole: `run_track_b_smoke` SKIPS a heuristic with a warning when its action dimension
+    # does not match the contract (a legacy 7-dim policy under track_b_v1), which a bare count
+    # would absorb the moment any other policy were added. Assert the labels, not the total.
+    labels = {row["policy"] for row in payload["policy_summary"]}
+    assert set(HEURISTIC_POLICY_NAMES) <= labels, (
+        "a heuristic was silently skipped: "
+        f"{sorted(set(HEURISTIC_POLICY_NAMES) - labels)}"
+    )
+    assert len(payload["policy_summary"]) == 9 + len(HEURISTIC_POLICY_NAMES) + 1
