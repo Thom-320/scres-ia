@@ -227,6 +227,7 @@ class MFSCSimulation:
         demand_on_hand_fulfillment_delay: float = GARRIDO_FULFILLMENT_DELAY_HOURS,
         seed_stream_mode: Optional[str] = None,
         ret_recovery_period_mode: str = RET_RECOVERY_PERIOD_MODE,
+        procurement_delay_accumulation: str = "serial",
         backorder_overflow_mode: str = BACKORDER_OVERFLOW_MODE,
         backorder_priority_rule: str = "spt_contingent",
         backorder_age_threshold_hours: float = 336.0,
@@ -633,6 +634,18 @@ class MFSCSimulation:
         }
         self._lineage_event_index: dict[str, RiskEvent] = {}
         self.ret_recovery_period_mode = ret_recovery_period_mode
+        # How the thesis's per-contract / per-delivery delay accumulates when more
+        # than one of the twelve is delayed in the same draw. Table 6.6b assumption
+        # (3) states the length ("one week", "one day"); assumption (2) states the
+        # processes are "independent of each other". "serial" is the shipped
+        # reading (k * 168, k * 24); "parallel" is the literal one (168, 24 flat).
+        # Preregistered in docs/PREREGISTRO_DURACION_R12_R13_2026-07-30.md; the
+        # default stays "serial" until that preregistration is adjudicated.
+        if procurement_delay_accumulation not in ("serial", "parallel"):
+            raise ValueError(
+                "procurement_delay_accumulation must be 'serial' or 'parallel', "
+                f"got {procurement_delay_accumulation!r}")
+        self.procurement_delay_accumulation = str(procurement_delay_accumulation)
         self.backorder_overflow_mode = backorder_overflow_mode
         self.backorder_priority_rule = backorder_priority_rule
         self.backorder_age_threshold_hours = float(backorder_age_threshold_hours)
@@ -5275,7 +5288,11 @@ class MFSCSimulation:
             first_cycle = False
             delayed = self._risk_rng_for("R12").binomial(n, p)
             if delayed > 0:
-                delay = delayed * 168
+                # Table 6.6b(3): one week per delayed contract. Under the
+                # parallel reading the twelve contracts -- declared
+                # independent by 6.6b(2) -- are late simultaneously.
+                delay = (168.0 if self.procurement_delay_accumulation
+                         == "parallel" else delayed * 168)
                 if self.risk_occurrence_mode == "thesis_window":
                     self.env.process(self._risk_R12_event(delay, delayed))
                 else:
@@ -5310,7 +5327,9 @@ class MFSCSimulation:
             yield self.env.timeout(interval)
             delayed = self._risk_rng_for("R13").binomial(n, p)
             if delayed > 0:
-                delay = delayed * 24
+                # Table 6.6b(3): one day per delayed delivery. Same reading.
+                delay = (24.0 if self.procurement_delay_accumulation
+                         == "parallel" else delayed * 24)
                 if self.risk_occurrence_mode == "thesis_window":
                     self.env.process(self._risk_R13_event(delay, delayed))
                 else:
