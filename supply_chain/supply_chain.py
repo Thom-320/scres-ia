@@ -230,6 +230,8 @@ class MFSCSimulation:
         procurement_delay_accumulation: str = "serial",
         rpj_onset_admission: str = "clamped",
         autotomy_predicate: str = "le",
+        fulfillment_delay_distribution: str = "constant",
+        fulfillment_delay_params: Optional[dict] = None,
         autotomy_tolerance_hours: float = 0.0,
         backorder_overflow_mode: str = BACKORDER_OVERFLOW_MODE,
         backorder_priority_rule: str = "spt_contingent",
@@ -667,6 +669,21 @@ class MFSCSimulation:
                 "autotomy_predicate must be 'le' or 'band', "
                 f"got {autotomy_predicate!r}")
         self.autotomy_predicate = str(autotomy_predicate)
+        # The fulfilment delay is a POINT MASS in the shipped model: 69.2% of orders
+        # complete at exactly one value, where Garrido's CTj is continuous from
+        # 48.0074 with 0.45% in the floor band. No value of the constant reproduces
+        # his 0.44% autotomy share. Preregistered in
+        # docs/PREREGISTRO_DELAY_DISTRIBUCION_2026-07-30.md; default stays "constant".
+        if fulfillment_delay_distribution not in (
+                "constant", "exponential", "lognormal", "weibull"):
+            raise ValueError("unknown fulfillment_delay_distribution: "
+                             f"{fulfillment_delay_distribution!r}")
+        self.fulfillment_delay_distribution = str(fulfillment_delay_distribution)
+        self.fulfillment_delay_params = dict(fulfillment_delay_params or {})
+        # Its own stream, drawn from ONLY when the mode is not "constant", so the
+        # shipped arm stays bitwise identical.
+        self.fulfillment_rng = np.random.default_rng(
+            np.random.SeedSequence([int(seed) if seed is not None else 0, 0xF17F]))
         self.autotomy_tolerance_hours = float(autotomy_tolerance_hours)
         self.backorder_overflow_mode = backorder_overflow_mode
         self.backorder_priority_rule = backorder_priority_rule
@@ -2581,6 +2598,8 @@ class MFSCSimulation:
             transit = float(self._pt("op10_pt")) + float(self._pt("op12_pt"))
             if self.op11_handling_hours > 0.0:
                 transit += float(self.rng.uniform(0.0, self.op11_handling_hours))
+        elif self.fulfillment_delay_distribution != "constant":
+            transit = self._draw_fulfillment_delay()
         else:
             transit = float(self.demand_on_hand_fulfillment_delay)
         remaining_delay = max(
@@ -2596,6 +2615,23 @@ class MFSCSimulation:
             )
         else:
             self._finalize_pending_backorder(order)
+
+    def _draw_fulfillment_delay(self) -> float:
+        """One draw from the declared shifted delay distribution.
+
+        Support is [floor, inf). Parameters are supplied by the caller, derived from
+        Garrido's own {min, p25, p50} by moment matching -- never searched here.
+        """
+        p = self.fulfillment_delay_params
+        floor = float(p.get("floor", 48.0074))
+        kind = self.fulfillment_delay_distribution
+        if kind == "exponential":
+            draw = self.fulfillment_rng.exponential(float(p["beta"]))
+        elif kind == "lognormal":
+            draw = self.fulfillment_rng.lognormal(float(p["mu"]), float(p["sigma"]))
+        else:  # weibull
+            draw = float(p["lam"]) * self.fulfillment_rng.weibull(float(p["k"]))
+        return floor + float(draw)
 
     def _enqueue_backorder(self, order: OrderRecord) -> None:
         """Insert a delayed order into the capped Garrido-style backlog queue.
