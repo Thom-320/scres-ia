@@ -230,6 +230,8 @@ class MFSCSimulation:
         procurement_delay_accumulation: str = "serial",
         rpj_onset_admission: str = "clamped",
         autotomy_predicate: str = "le",
+        autotomy_apj_cap: str = "lt",
+        fulfillment_transit_mode: str = "constant",
         fulfillment_delay_distribution: str = "constant",
         fulfillment_delay_params: Optional[dict] = None,
         autotomy_tolerance_hours: float = 0.0,
@@ -677,6 +679,25 @@ class MFSCSimulation:
                 "autotomy_predicate must be 'le' or 'band', "
                 f"got {autotomy_predicate!r}")
         self.autotomy_predicate = str(autotomy_predicate)
+        # Algorithm 1 (p.68) line 3 defines APj = sum(Rcr) - sum(overlaps), with NO cap.
+        # The shipped min(total, LTj) truncates at exactly 48.0, and 12 of Garrido's 96
+        # autotomy rows (12.5%) exceed that, up to 48.0418. "lt" keeps the shipped cap.
+        if autotomy_apj_cap not in ("lt", "none"):
+            raise ValueError("autotomy_apj_cap must be 'lt' or 'none', "
+                             f"got {autotomy_apj_cap!r}")
+        self.autotomy_apj_cap = str(autotomy_apj_cap)
+        # Thesis 6.3: Op10 PT 24 h, Op11 PT 0 ("nuisance factor"), Op12 PT 24 h, each
+        # dispatching "at a daily freight rate (ROP = 24 hours)" -- and 24+0+24 = 48 = LT,
+        # which 6.8.2 confirms. "freight_waves" makes the order WAIT for the next real
+        # wave on each leg instead of taking a flat constant, which is what turns CTj from
+        # a point mass into a distribution. No RNG and no free parameter.
+        if fulfillment_transit_mode not in ("constant", "freight_waves"):
+            raise ValueError("fulfillment_transit_mode must be 'constant' or "
+                             f"'freight_waves', got {fulfillment_transit_mode!r}")
+        self.fulfillment_transit_mode = str(fulfillment_transit_mode)
+        # Last observed dispatch instant per downstream leg, filled by the transport
+        # loops. Only read when fulfillment_transit_mode == "freight_waves".
+        self._last_freight_wave: dict[int, float] = {}
         # The fulfilment delay is a POINT MASS in the shipped model: 69.2% of orders
         # complete at exactly one value, where Garrido's CTj is continuous from
         # 48.0074 with 0.45% in the floor band. No value of the constant reproduces
@@ -2628,6 +2649,8 @@ class MFSCSimulation:
             transit = float(self._pt("op10_pt")) + float(self._pt("op12_pt"))
             if self.op11_handling_hours > 0.0:
                 transit += float(self.rng.uniform(0.0, self.op11_handling_hours))
+        elif self.fulfillment_transit_mode == "freight_waves":
+            transit = self._freight_wave_transit()
         elif self.fulfillment_delay_distribution != "constant":
             transit = self._draw_fulfillment_delay()
         else:
@@ -2645,6 +2668,35 @@ class MFSCSimulation:
             )
         else:
             self._finalize_pending_backorder(order)
+
+    def _freight_wave_transit(self) -> float:
+        """Op10 -> Op11 -> Op12 with each leg gated on its own daily freight wave.
+
+        Thesis 6.3 gives every downstream leg `ROP = 24 hours`, so an order that becomes
+        available between waves waits for the next one. The waits are SHARED across
+        orders -- they come off the same clock -- which is why this cannot be reproduced
+        by three independent U(0,24) draws, and why it is physics rather than a fit.
+        """
+        now = float(self.env.now)
+        t = now
+        for leg in (10, 11, 12):
+            rop = float(self.params.get(f"op{leg}_rop", HOURS_PER_DAY) or HOURS_PER_DAY)
+            last = self._last_freight_wave.get(leg)
+            if last is None:
+                # No dispatch observed yet on this leg: fall back to the cadence grid
+                # anchored at the simulation origin, which is where the loop starts.
+                nxt = math.ceil(t / rop) * rop if rop > 0 else t
+            else:
+                k = math.ceil((t - last) / rop) if rop > 0 else 0
+                nxt = last + max(k, 0) * rop
+            # Op11's PT is 0 ("nuisance factor", thesis 6.3) and is not carried in
+            # `params` at all, so fall back to the operations table rather than
+            # KeyError-ing mid-episode.
+            pt = (float(self._pt(f"op{leg}_pt"))
+                  if f"op{leg}_pt" in self.params
+                  else float(OPERATIONS[leg].get("pt", 0.0) or 0.0))
+            t = max(t, nxt) + pt
+        return max(0.0, t - now)
 
     def _draw_fulfillment_delay(self) -> float:
         """One draw from the declared shifted delay distribution.
@@ -4276,6 +4328,7 @@ class MFSCSimulation:
         poll = float(self.transport_retry_poll_hours)
         while True:
             yield self.env.timeout(self.params["op10_rop"])
+            self._last_freight_wave[10] = float(self.env.now)
             if self._is_down(10):
                 if self.transport_block_mode != "retry_when_ready":
                     continue
@@ -4301,6 +4354,7 @@ class MFSCSimulation:
         """Op12: LOC CSSUs→Theatre — dispatch U(q_min, q_max), async PT=24h."""
         while True:
             yield self.env.timeout(self.params["op12_rop"])
+            self._last_freight_wave[12] = float(self.env.now)
             if self._is_down(12) or self._is_down(11):
                 if self.transport_block_mode != "retry_when_ready":
                     continue
@@ -6039,7 +6093,9 @@ class MFSCSimulation:
                     and float(order.CTj) - float(order.LTj)
                     <= self.autotomy_tolerance_hours)):
             # Autotomy: SC absorbed disruption, order still on time
-            order.APj = min(total_disruption_hours, order.LTj)
+            order.APj = (max(0.0, total_disruption_hours)
+                         if self.autotomy_apj_cap == "none"
+                         else min(total_disruption_hours, order.LTj))
         else:
             # Recovery / Non-recovery: order delayed beyond lead time
             order.DPj = order.CTj
