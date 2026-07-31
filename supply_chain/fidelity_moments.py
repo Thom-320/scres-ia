@@ -208,6 +208,45 @@ def non_dominated(cells: Mapping[str, Mapping[str, float]],
                    for k, other in cells.items() if k != name))
 
 
+def _flip_terms(a: Mapping[str, float], b: Mapping[str, float],
+                epsilon: float) -> tuple[bool, bool, list[str]]:
+    live = [k for k in MOMENT_NAMES
+            if not math.isnan(a.get(k, math.nan)) and not math.isnan(b.get(k, math.nan))]
+    no_worse = all(a[k] <= b[k] + epsilon for k in live)
+    strictly = any(a[k] < b[k] - epsilon for k in live if a[k] != b[k])
+    return no_worse, strictly, live
+
+
+def _attribute_flip(a: Mapping[str, float], b: Mapping[str, float],
+                    e_prev: float, e: float, now: bool,
+                    name_a: str, name_b: str) -> dict[str, Any]:
+    """Name the moment that actually drove a dominance change, and which term flipped.
+
+    CORRECTED 2026-07-31. The first version reported `argmax(a - b)` unconditionally,
+    which is right only when `no_worse` is what changed. When `strictly` is what changed
+    -- an arm weakly better everywhere losing its strict edge -- the binding moment is the
+    one with the most NEGATIVE gap, and the argmax came out at +0.000, naming a moment
+    that had nothing to do with the flip.
+    """
+    nw0, st0, live = _flip_terms(a, b, e_prev)
+    nw1, st1, _ = _flip_terms(a, b, e)
+    if nw0 != nw1:
+        term = "no_worse"
+        crit = max(live, key=lambda k: a[k] - b[k])
+    elif st0 != st1:
+        term = "strictly"
+        cand = [k for k in live if a[k] != b[k]] or live
+        crit = min(cand, key=lambda k: a[k] - b[k])
+    else:  # pragma: no cover - a flip implies one of the two changed
+        term = "unattributed"
+        crit = max(live, key=lambda k: abs(a[k] - b[k]))
+    return {"pair": [name_a, name_b], "flips_at_epsilon": float(e),
+            "now_dominates": bool(now), "term_that_flipped": term,
+            "critical_moment": crit,
+            "gap_dk": float(a[crit] - b[crit]),
+            "binding_magnitude_dk": float(abs(a[crit] - b[crit]))}
+
+
 def dominance_flips(cells: Mapping[str, Mapping[str, float]],
                     epsilons: Sequence[float] = EPSILON_BAND) -> list[dict[str, Any]]:
     """Every pair whose dominance changes across the band, with its critical moment.
@@ -218,6 +257,7 @@ def dominance_flips(cells: Mapping[str, Mapping[str, float]],
     """
     out: list[dict[str, Any]] = []
     names = sorted(cells)
+    prev_eps = float(epsilons[0]) if epsilons else 0.0
     for a in names:
         for b in names:
             if a == b:
@@ -226,15 +266,8 @@ def dominance_flips(cells: Mapping[str, Mapping[str, float]],
             for e in epsilons:
                 cur = dominates(cells[a], cells[b], e)
                 if prev is not None and cur != prev:
-                    live = [k for k in MOMENT_NAMES
-                            if not math.isnan(cells[a].get(k, math.nan))
-                            and not math.isnan(cells[b].get(k, math.nan))]
-                    crit = max(live, key=lambda k: cells[a][k] - cells[b][k])
-                    out.append({"pair": [a, b], "flips_at_epsilon": float(e),
-                                "now_dominates": bool(cur),
-                                "critical_moment": crit,
-                                "gap_dk": float(cells[a][crit] - cells[b][crit])})
-                prev = cur
+                    out.append(_attribute_flip(cells[a], cells[b], prev_eps, e, cur, a, b))
+                prev, prev_eps = cur, e
     return out
 
 
