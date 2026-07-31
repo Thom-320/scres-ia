@@ -1,0 +1,207 @@
+{
+ "claim_status": "HALTED_FALSIFIER_FAILED",
+ "created_at": "2026-07-31T22:18:27.426072+00:00",
+ "falsifiers": {
+  "all_passed": false,
+  "f1_ties_are_immaterial_in_his_ledger": {
+   "evidence": {
+    "discriminating_rows": 2,
+    "rows": 47780,
+    "share": 4.185851820845542e-05,
+    "why_it_can_fail": "this is the CLAIM, so it is stated in the refutable direction: if a meaningful share of his rows were ties, the same-time convention would change his numbers and the question would genuinely need him. A tie depends only on the timestamps, so this holds whatever sumBt turns out to mean"
+   },
+   "passed": true
+  },
+  "f2_sumBt_is_saturated_at_the_60_cap": {
+   "evidence": {
+    "max_sumBt": 60.0,
+    "rows_below_cap": 41553,
+    "share_at_cap": 0.13032649644202596,
+    "thesis_reference": "backorder queue cap of 60, section 6.5.4",
+    "why_it_can_fail": "a second, independent reason the convention cannot bite: a snapshot one event early or late still reads 60. If sumBt were NOT capped, or not saturated, this argument would not hold"
+   },
+   "passed": false
+  },
+  "f3_our_outstanding_backorder_model_of_sumBt_is_REFUTED": {
+   "evidence": {
+    "best_convention": "snapshot_before_events",
+    "best_exact_share": 0.010925073252406865,
+    "by_convention": {
+     "events_before_snapshot": {
+      "exact_rows": 521,
+      "share": 0.010904143993302638
+     },
+     "half_open_a": {
+      "exact_rows": 522,
+      "share": 0.010925073252406865
+     },
+     "half_open_b": {
+      "exact_rows": 521,
+      "share": 0.010904143993302638
+     },
+     "snapshot_before_events": {
+      "exact_rows": 522,
+      "share": 0.010925073252406865
+     }
+    },
+    "what_this_means": "sumBt is not the outstanding-backorder count at placement. It is capped at 60 and saturates, consistent with the capped backlog LIST of section 6.5.4",
+    "why_it_can_fail": "stated as a refutation because that is what the data did. If a convention HAD reproduced sumBt, this would fail and we would have identified the quantity instead"
+   },
+   "passed": true
+  },
+  "f4_the_population_is_the_full_ledger": {
+   "evidence": {
+    "rows_read": 47780,
+    "sheets": 20,
+    "why_it_can_fail": "a partial read would make every share above unreliable"
+   },
+   "passed": true
+  }
+ },
+ "q1_same_time_convention": {
+  "best": "snapshot_before_events",
+  "by_convention": {
+   "events_before_snapshot": {
+    "exact_rows": 521,
+    "share": 0.010904143993302638
+   },
+   "half_open_a": {
+    "exact_rows": 522,
+    "share": 0.010925073252406865
+   },
+   "half_open_b": {
+    "exact_rows": 521,
+    "share": 0.010904143993302638
+   },
+   "snapshot_before_events": {
+    "exact_rows": 522,
+    "share": 0.010925073252406865
+   }
+  },
+  "discriminating_rows": 2,
+  "rows": 47780,
+  "sumBt_max": 60.0,
+  "sumBt_rows_below_cap": 41553,
+  "sumBt_share_at_cap": 0.13032649644202596
+ },
+ "q2_rpj_structure": {
+  "H_A_DPj_equals_CTj": {
+   "holds": 42814,
+   "of": 42814,
+   "share": 1.0
+  },
+  "H_B_RPj_within_DPj": {
+   "holds": 42814,
+   "of": 42814,
+   "share": 1.0
+  },
+  "H_C_autotomy_excludes_recovery": {
+   "holds": 128,
+   "of": 128,
+   "share": 1.0
+  },
+  "H_D_hard_ceiling": {
+   "max_RPj": 7116.10224,
+   "share_within_1pct_of_max": 4.671369178306161e-05,
+   "verdict": "NO hard ceiling: the maximum is isolated"
+  },
+  "correlations": {
+   "RPj_vs_CTj": 0.5819846521434728,
+   "RPj_vs_risk_count": 0.34708748072359413
+  },
+  "gap_DPj_minus_RPj": {
+   "max": 51580.56072,
+   "meaning": "if H-A and H-B hold this gap is the delay from placement to the first risk onset, i.e. Algorithm 2's RPj = OATj - first R^0",
+   "min": 0.0,
+   "n": 42814,
+   "p50": 2.720639999999598,
+   "p95": 1609.2972479999967,
+   "share_negative": 0.0
+  }
+ },
+ "question": "can Garrido's own 47,546 delivered rows decide the two questions we were about to send him?",
+ "schema_version": "garrido_ledger_conventions_v1",
+ "self_sha256": "f89041450a3f0065ce2fba1ea96d89429a125cd3e6123a1b35393fb6fdcfaaba",
+ "sheets": {
+  "CF1": {
+   "family": "R1r",
+   "n": 4241
+  },
+  "CF10": {
+   "family": "R1r",
+   "n": 2061
+  },
+  "CF11": {
+   "family": "R2r",
+   "n": 2165
+  },
+  "CF12": {
+   "family": "R2r",
+   "n": 2186
+  },
+  "CF13": {
+   "family": "R2r",
+   "n": 1956
+  },
+  "CF14": {
+   "family": "R2r",
+   "n": 2173
+  },
+  "CF15": {
+   "family": "R2r",
+   "n": 2203
+  },
+  "CF16": {
+   "family": "R2r",
+   "n": 2218
+  },
+  "CF17": {
+   "family": "R2r",
+   "n": 2227
+  },
+  "CF18": {
+   "family": "R2r",
+   "n": 2277
+  },
+  "CF19": {
+   "family": "R2r",
+   "n": 2120
+  },
+  "CF2": {
+   "family": "R1r",
+   "n": 4420
+  },
+  "CF20": {
+   "family": "R2r",
+   "n": 2168
+  },
+  "CF3": {
+   "family": "R1r",
+   "n": 2151
+  },
+  "CF4": {
+   "family": "R1r",
+   "n": 2186
+  },
+  "CF5": {
+   "family": "R1r",
+   "n": 2513
+  },
+  "CF6": {
+   "family": "R1r",
+   "n": 2061
+  },
+  "CF7": {
+   "family": "R1r",
+   "n": 2115
+  },
+  "CF8": {
+   "family": "R1r",
+   "n": 2278
+  },
+  "CF9": {
+   "family": "R1r",
+   "n": 2061
+  }
+ }
+}

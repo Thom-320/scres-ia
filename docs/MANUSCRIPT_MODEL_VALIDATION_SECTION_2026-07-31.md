@@ -139,14 +139,21 @@ here. Eight candidate mechanisms were implemented and measured, and all eight re
 inter-order queueing (refuted by counting — the median day serves one order), daily freight
 capacity, the shift window as a queue, order attributes (all correlations below 0.12),
 assembly time `Q/λ`, calendar drift, material availability, and the seeding of `R⁰` by the
-quantity gate. With `RPj ≈ CTj` in our model against a **saturating** `RPj` in his — his
-correlates 0.88 with the risk count and only 0.37 with cycle time, flattening near 400 h above
-`CTj ≈ 500` — our recovery-period statistics run long.
+quantity gate. Our recovery-period statistics run long.
 
-**Stated at its actual strength:** this is a **pattern in his workbooks that none of eight
-tested mechanisms explains**. Algorithm 2 (p.69) as published does not by itself produce a
-saturating recovery period. Without the Simulink logic we do not know the generator, so we
-report the pattern and the eight refutations rather than attributing a property to his model.
+> **CORRECTED 2026-07-31.** This paragraph said his `RPj` **saturates**, correlating «0.88 with
+> the risk count and only 0.37 with cycle time, flattening near 400 h». Measured over his full
+> ledger (47,780 rows, `results/metric_audit/garrido_ledger_conventions/`, sello
+> `f89041450a3f0065…`) **all three numbers are wrong**: `corr(RPj, CTj) = 0.582` and
+> `corr(RPj, risk count) = 0.347` — the ordering is the OPPOSITE — and there is **no ceiling**:
+> the maximum is 7,116 h with 0.005% of rows within 1% of it. The earlier figures came from a
+> subset that was never named.
+
+**What his ledger does show, measured on every row:** `DPj = CTj` in **42,814 of 42,814**
+delayed rows, `RPj ≤ DPj` always, and `APj > 0 ⇒ RPj = 0` in 128 of 128. So `DPj − RPj` is
+exactly the delay from placement to the first risk onset — **Algorithm 2 (p.69) as published**,
+with no undocumented saturation. Our recovery periods run long because our risks start earlier
+relative to the cycle, not because his model does something we cannot see.
 
 **(b) Autotomy — a simpler cause.** The branch requires `CTj ≤ LTj`. Our constant is 54 h
 against `LT = 48`, so `CTj ≥ 54` for every order (measured: minimum exactly 54.0 across all 24
