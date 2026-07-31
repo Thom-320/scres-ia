@@ -50,6 +50,28 @@ current headline claims.
 | "H4 is proven." | H4 is not proven on the winning Track B lane. |
 | "Track A preventive/coarse-frontier wins are publishable." | Dense CRN and rich metrics falsified those lanes. |
 
+**Sync repair 2026-07-31.** `tests/test_manuscript_retired_claims.py` says this table and its
+`RETIRED_CLAIM_PATTERNS` must be kept in sync, but nine banned patterns had been added to the
+test between 2026-07-09 and 2026-07-10 and never recorded here — so the registry, which is the
+authority, was the less complete of the two. The reasons below are transcribed from those
+patterns' own inline comments and the provenance repairs they cite. No new claim is retired
+here; this records retirements that were already being enforced.
+
+| Retired claim (added to the test 2026-07-09) | Reason |
+|---|---|
+| Invented "±15%" validation threshold. | No such threshold was ever preregistered or measured; it was written into the manuscript and traced to nothing. |
+| Stale h104 delta `+0.000244 [+0.000209, …]` (table use). | From a duplicate run whose weaker best-static comparator inflated the delta; the conservative same-source value is `+0.000209`. |
+| Stale h104 `increased` delta `+0.000623 [+0.000584, …]` (table use). | Same duplicate run; the conservative same-source value is `+0.000552` (see C11). |
+| p99 described as "worst-case". | p99 is a high quantile, not a bound; "worst-case resupply/performance/1%" overstates it. |
+| E4 arms described as single-lever isolation ("only op10/op12 dispatch controllable"). | The identified factorial showed the arms were not isolating a single lever. |
+| "Validated digital twin" language. | The environment is a thesis-grounded reconstruction: formula replay is exact, behavioural concordance is not established (`docs/MANUSCRIPT_MODEL_VALIDATION_SECTION_2026-07-31.md`). **Banned as an ASSERTION only** — the manuscript is expected to disclaim it, and `04_mfsc_case.tex` correctly reads "not as a validated digital twin". |
+
+| Retired claim (added to the test 2026-07-10, identified factorial) | Reason |
+|---|---|
+| Downstream dispatch as the "strongest lever". | Retired by the identified factorial: the reading depended on the unidentified E4 arms. |
+| "Only when the action contract / controllable interface exposes it." | Refuted by the `upstream_shift` arm. |
+| "Regardless of algorithm / reward design" universality language. | Never tested across algorithms or reward designs; the evidence is one algorithm on one reward. |
+
 ## Q1 Verification Roadmap
 
 ### 1. Canonical Track B Audit
