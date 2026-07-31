@@ -20,6 +20,7 @@ from __future__ import annotations
 from typing import Any
 
 from supply_chain.config import (
+    RET_RECOVERY_PERIOD_MODE,
     GARRIDO_FULFILLMENT_DELAY_HOURS,
     HOURS_PER_WEEK,
     LEAD_TIME_PROMISE,
@@ -77,6 +78,17 @@ def calibration_stamp(**extra: Any) -> dict[str, Any]:
         "lead_time_promise_hours": float(LEAD_TIME_PROMISE),
         "lead_time_source": THESIS_LEAD_TIME_SOURCE,
         "hours_per_week": float(HOURS_PER_WEEK),
+        # ADDED 2026-07-31. Five switches were introduced on 2026-07-30 and none was
+        # stamped, so a `serial` artifact and a `parallel` one -- or `clamped` vs
+        # `within_window`, or `constant` vs `lognormal` -- carried IDENTICAL provenance
+        # and `assert_same_calibration` compared them without complaint. These are
+        # attribution and physics switches; artifacts differing in any of them are not
+        # comparable. A runner that overrides one per arm must pass it via `extra`.
+        "ret_recovery_period_mode": str(RET_RECOVERY_PERIOD_MODE),
+        "procurement_delay_accumulation": "serial",
+        "rpj_onset_admission": "clamped",
+        "autotomy_predicate": "le",
+        "fulfillment_delay_distribution": "constant",
         "calibration_line": (
             "historical"
             if float(GARRIDO_FULFILLMENT_DELAY_HOURS)
@@ -95,7 +107,10 @@ def calibration_stamp(**extra: Any) -> dict[str, Any]:
 
 def assert_same_calibration(*stamps: dict[str, Any]) -> None:
     """Refuse to compare artifacts from different calibration lines."""
-    keys = ("fulfilment_delay_hours", "lead_time_promise_hours")
+    keys = ("fulfilment_delay_hours", "lead_time_promise_hours",
+            "ret_recovery_period_mode", "procurement_delay_accumulation",
+            "rpj_onset_admission", "autotomy_predicate",
+            "fulfillment_delay_distribution")
     seen = {tuple(s.get(k) for k in keys) for s in stamps}
     if len(seen) > 1:
         raise ValueError(

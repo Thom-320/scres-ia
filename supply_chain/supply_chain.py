@@ -659,6 +659,14 @@ class MFSCSimulation:
                 "rpj_onset_admission must be 'clamped' or 'within_window', "
                 f"got {rpj_onset_admission!r}")
         self.rpj_onset_admission = str(rpj_onset_admission)
+        if (str(rpj_onset_admission) == "within_window"
+                and str(ret_recovery_period_mode) == "disruption"):
+            # The disruption branch is tested first, so within_window was accepted and
+            # then silently discarded.
+            raise ValueError(
+                "rpj_onset_admission='within_window' has no effect under "
+                "ret_recovery_period_mode='disruption'; the onset window only applies to "
+                "the 'elapsed' attribution.")
         # Algorithm 1 (p.68) branches on CTj = LTj, not CTj <= LTj, and Garrido's
         # own workbooks contain ZERO rows with CTj <= LT: his 96 autotomy rows sit
         # in a band CTj - LT in [0.0074, 0.048]. "le" is the shipped predicate;
@@ -680,10 +688,32 @@ class MFSCSimulation:
                              f"{fulfillment_delay_distribution!r}")
         self.fulfillment_delay_distribution = str(fulfillment_delay_distribution)
         self.fulfillment_delay_params = dict(fulfillment_delay_params or {})
+        # Validate at construction. Missing params used to surface as a KeyError from
+        # inside a SimPy process mid-episode, which is unreadable and loses the run.
+        _required = {"exponential": ("beta",), "lognormal": ("mu", "sigma"),
+                     "weibull": ("k", "lam"), "constant": ()}
+        _missing = [k for k in _required[str(fulfillment_delay_distribution)]
+                    if k not in self.fulfillment_delay_params]
+        if _missing:
+            raise ValueError(
+                f"fulfillment_delay_distribution={fulfillment_delay_distribution!r} "
+                f"requires fulfillment_delay_params {_missing}")
+        if (str(fulfillment_delay_distribution) != "constant"
+                and str(on_hand_transit_mode) == "modelled_legs"):
+            # `modelled_legs` is checked first at finalisation, so it silently discarded
+            # the distribution entirely -- measured 0 draws, no warning.
+            raise ValueError(
+                "on_hand_transit_mode='modelled_legs' and a non-constant "
+                "fulfillment_delay_distribution are mutually exclusive: the legs path "
+                "would silently discard the distribution.")
         # Its own stream, drawn from ONLY when the mode is not "constant", so the
         # shipped arm stays bitwise identical.
-        self.fulfillment_rng = np.random.default_rng(
-            np.random.SeedSequence([int(seed) if seed is not None else 0, 0xF17F]))
+        # `seed=None` must stay OS-entropy like every other stream. Mapping it to a
+        # literal 0 made every seed=None replicate draw the IDENTICAL delay sequence and
+        # collide with seed=0 -- measured 2026-07-31.
+        self.fulfillment_rng = (
+            np.random.default_rng(np.random.SeedSequence([int(seed), 0xF17F]))
+            if seed is not None else np.random.default_rng())
         self.autotomy_tolerance_hours = float(autotomy_tolerance_hours)
         self.backorder_overflow_mode = backorder_overflow_mode
         self.backorder_priority_rule = backorder_priority_rule
@@ -6001,9 +6031,12 @@ class MFSCSimulation:
         if not order.ret_risk_indicators:
             return  # No disruption: fill_rate case
 
+        # `LTj` is never None (it defaults to LEAD_TIME_PROMISE), and if it were the
+        # first comparison would raise before any guard here could help -- so no `or 0.0`
+        # fig leaf.
         if (order.CTj <= order.LTj
                 or (self.autotomy_predicate == "band"
-                    and float(order.CTj) - float(order.LTj or 0.0)
+                    and float(order.CTj) - float(order.LTj)
                     <= self.autotomy_tolerance_hours)):
             # Autotomy: SC absorbed disruption, order still on time
             order.APj = min(total_disruption_hours, order.LTj)
@@ -6021,8 +6054,13 @@ class MFSCSimulation:
                 # Algorithm 2 line 2: the onset must manifest within the order's
                 # own interval. An order with none fails the condition, so it
                 # carries no recovery period at all.
+                # INCLUSIVE left, matching the point-event admission gate above and the
+                # `[OPTj, OATj]` interval Algorithm 2 states. A strict `<` here excluded
+                # every onset inserted exactly at OPTj (the R24-contingent and
+                # quantity-risk fallbacks), zeroing RPj for 18 of 377 late orders --
+                # measured 2026-07-31, a mismatch between two lines of one function.
                 inside = [t for t in risk_onsets
-                          if float(order.OPTj) < t <= float(order.OATj)]
+                          if float(order.OPTj) <= t <= float(order.OATj)]
                 order.RPj = (max(0.0, float(order.OATj) - min(inside))
                              if inside else 0.0)
             else:
