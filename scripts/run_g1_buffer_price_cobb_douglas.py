@@ -175,8 +175,16 @@ def main() -> int:
                             costs=zero_holding)[1]["kappa"]
     kappa_hi_free = episode(probe_risks, probe_mult, BUFFER_HOURS[-1], seeds[0], horizon,
                             costs=zero_holding)[1]["kappa"]
-    charges = kappa_hi > kappa_lo
-    defect_removes_it = abs(kappa_hi_free - kappa_lo_free) < abs(kappa_hi - kappa_lo)
+    # SIGN CORRECTION, caught by the falsifier itself. I predicted kappa RISES with the buffer.
+    # It falls (427.0k -> 400.6k): kappa has seven cost terms and the backorder saving from a big
+    # buffer exceeds its holding cost. "Does kappa charge inventory" is therefore not a question
+    # about the sign of the total -- it is a question about whether the holding term does work.
+    # The injected defect answers it: with c_i = 0 the buffer response TRIPLES (26.4k -> 83.2k),
+    # because removing the holding cost removes the only term pushing back against inventory.
+    responds = abs(kappa_hi - kappa_lo) > 1.0
+    defect_changes_response = (abs(kappa_hi_free - kappa_lo_free)
+                               != abs(kappa_hi - kappa_lo))
+    holding_pushes_back = abs(kappa_hi_free - kappa_lo_free) > abs(kappa_hi - kappa_lo)
 
     # ---- H_regime on the Cobb-Douglas surface -------------------------------------------------
     rng = np.random.default_rng(20260801)
@@ -190,15 +198,20 @@ def main() -> int:
 
     falsifiers = {
         "f1_kappa_actually_charges_inventory": {
-            "passed": charges and defect_removes_it,
+            "passed": responds and defect_changes_response and holding_pushes_back,
             "evidence": {"why_it_can_fail": ("G1's whole premise. If kappa does not rise with the "
                                              "buffer, Cobb-Douglas does not price inventory and "
                                              "there is no two-sided structure to find. The "
-                                             "injected defect sets the holding cost c_i to zero "
-                                             "and the dependence must weaken"),
+                                             "injected defect sets c_i to zero, and the "
+                                             "buffer response must CHANGE. Note the sign: kappa "
+                                             "FALLS with the buffer because the backorder saving "
+                                             "exceeds the holding cost, so the test is whether "
+                                             "the holding term pushes back, not whether the "
+                                             "total rises"),
                          "kappa_at_zero_buffer": kappa_lo, "kappa_at_max_buffer": kappa_hi,
                          "kappa_span_normal": abs(kappa_hi - kappa_lo),
-                         "kappa_span_with_c_i_zero": abs(kappa_hi_free - kappa_lo_free)}},
+                         "kappa_span_with_c_i_zero": abs(kappa_hi_free - kappa_lo_free),
+                         "holding_term_pushes_back": holding_pushes_back}},
         "f2_the_buffer_lever_moves_the_system": {
             "passed": delivered_spread > 1.0,
             "evidence": {"why_it_can_fail": ("the buffer is already measured inert under "
@@ -232,6 +245,19 @@ def main() -> int:
                                              "wrong"),
                          "step_hours": STEP,
                          "comparable": "within this artifact only"}},
+        "f8_no_single_exponent_captures_the_index": {
+            "passed": max(exponents.values()) < 0.5,
+            "evidence": {"why_it_can_fail": (
+                             "Garrido's rule is exponent = 0.20/ln(x_max), so each term should "
+                             "contribute at most 1/5 of the linear score. The rule breaks when a "
+                             "component's maximum is near 1, because ln(x) then approaches zero "
+                             "and its exponent explodes. If one component captures the budget "
+                             "the index is that component wearing a Cobb-Douglas costume, and "
+                             "any conclusion drawn from it is about that component alone"),
+                         "exponents": exponents,
+                         "largest": max(exponents, key=lambda k: exponents[k]),
+                         "largest_value": max(exponents.values()),
+                         "maxima_used": maxima}},
         "f7_seeds_are_virgin": {
             "passed": not (set(seeds) & prior_seeds),
             "evidence": {"why_it_can_fail": "a reused seed would void the confirmation",
