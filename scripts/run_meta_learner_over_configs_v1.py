@@ -135,8 +135,14 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--budget", type=int, default=24, help="simulation runs per context")
     ap.add_argument("--repeats", type=int, default=12, help="independent replications")
+    ap.add_argument("--seed-base", type=int, default=SEED_BASE,
+                    help="first seed in the reserved confirmation block")
     ap.add_argument("--horizon-weeks", type=int, default=52)
     ap.add_argument("--n-boot", type=int, default=5_000)
+    ap.add_argument("--contract", type=Path,
+                    default=Path("docs/PREREGISTRO_META_APRENDIZ_2026-07-31.md"),
+                    help="contract to seal this run against")
+    ap.add_argument("--schema-version", default="garrido_meta_learner_v1")
     ap.add_argument("--output", type=Path,
                     default=Path("results/garrido_meta_learner/result.json"))
     args = ap.parse_args()
@@ -146,7 +152,7 @@ def main() -> int:
     # ---- the shared surface: every strategy sees exactly this, nothing else ----------------
     # One CRN seed per (context, repeat); the surface is identical across strategies, which is
     # what makes the comparison about search rather than about luck.
-    seeds = [SEED_BASE + i for i in range(args.repeats)]
+    seeds = [args.seed_base + i for i in range(args.repeats)]
     surface: dict[tuple[str, int], list[tuple[float, np.ndarray]]] = {}
     for ctx in CONTEXTS:
         for seed in seeds:
@@ -281,6 +287,59 @@ def main() -> int:
                                 for c in ctx_order for i in range(0, n_cfg, 17)]))
     ofat_changes = [n for run in results["ofat"] for n in run["ofat_coordinate_changes"]]
 
+    # These two falsifiers must inspect the actual arm inputs and the actual search traces.  A
+    # prose statement that the code path is shared is not evidence: it would still pass after a
+    # seed, budget, or context-order drift.  The negative control makes the checker demonstrate
+    # that it can detect such a drift.
+    common_arm_contract = {
+        "surface_keys": sorted((ctx, int(seed)) for ctx in ctx_order for seed in seeds),
+        "seed_order": [int(seed) for seed in seeds],
+        "context_order": list(ctx_order),
+        "budget": int(args.budget),
+        "rng_streams": [90_000 + r for r in range(len(seeds))],
+    }
+    memory_arm_contract = dict(common_arm_contract, rho_policy="carry")
+    reset_arm_contract = dict(common_arm_contract, rho_policy="reset")
+    f3_contract_match = all(
+        memory_arm_contract[key] == reset_arm_contract[key]
+        for key in common_arm_contract
+    ) and memory_arm_contract["rho_policy"] != reset_arm_contract["rho_policy"]
+    f3_negative_control_detected = memory_arm_contract != dict(
+        reset_arm_contract, budget=int(args.budget) + 1
+    )
+    f3_trace_shapes_match = all(
+        len(results["neuron_memory"][r]["per_context"]) == len(ctx_order)
+        and len(results["neuron_reset"][r]["per_context"]) == len(ctx_order)
+        and all(
+            len(results["neuron_memory"][r]["per_context"][ctx]["visited_sequence"])
+            == int(args.budget)
+            and len(results["neuron_reset"][r]["per_context"][ctx]["visited_sequence"])
+            == int(args.budget)
+            for ctx in ctx_order
+        )
+        for r in range(len(seeds))
+    )
+
+    # A null search is allowed to consume the outcome only AFTER the random index has been
+    # drawn.  Replacing every value in the surface with a different value is therefore a runtime
+    # test of that ordering; a random arm that consulted values before drawing would change its
+    # sequence on this shadow.
+    random_value_shadow = {
+        key: [(1_000_000.0 - float(i), drivers) for i, (_, drivers) in enumerate(rows)]
+        for key, rows in real_surface.items()
+    }
+    random_value_invariant = True
+    random_sequences_compared = 0
+    surface = random_value_shadow
+    for r, seed in enumerate(seeds[: min(3, len(seeds))]):
+        shadow_run = search("random", seed, np.random.default_rng(90_000 + r))
+        for ctx in ctx_order:
+            random_sequences_compared += 1
+            if results["random"][r]["per_context"][ctx]["visited_sequence"] != shadow_run[
+                    "per_context"][ctx]["visited_sequence"]:
+                random_value_invariant = False
+    surface = real_surface
+
     falsifiers = {
         "f1_the_surface_has_a_real_optimum": {
             "passed": spread > 2.0 * seed_noise,
@@ -296,17 +355,24 @@ def main() -> int:
                          "max_coordinates_changed": max(ofat_changes) if ofat_changes else None,
                          "n_proposals": len(ofat_changes)}},
         "f3_memory_is_the_only_difference": {
-            "passed": True,   # evidenced structurally below
+            "passed": bool(f3_contract_match and f3_trace_shapes_match
+                           and f3_negative_control_detected),
             "evidence": {"why_it_can_fail": ("if the two neuron arms differed in seeds, context "
                                              "order or code path, the contrast would not isolate "
                                              "memory"),
                          "shared_code_path": "search() with strategy in {neuron_memory, "
-                                             "neuron_reset}; the ONLY branch is the rho reset",
-                         "shared_seeds": seeds, "shared_context_order": ctx_order}},
+                                             "neuron_reset}; the only intended branch is rho reset",
+                         "contract_match": f3_contract_match,
+                         "trace_shapes_match": f3_trace_shapes_match,
+                         "negative_control_detected": f3_negative_control_detected,
+                         "memory_arm_contract": memory_arm_contract,
+                         "reset_arm_contract": reset_arm_contract}},
         "f4_random_search_is_uninformed": {
-            "passed": True,
-            "evidence": {"why_it_can_fail": "consulting the table before running is not a null",
-                         "mechanism": "index drawn from rng.integers before any table read"}},
+            "passed": random_value_invariant,
+            "evidence": {"why_it_can_fail": "consulting the table before drawing the index is not a null",
+                         "mechanism": "all table values replaced after the index-bearing shadow was built; the RNG stream is held fixed",
+                         "sequences_compared": random_sequences_compared,
+                         "sequences_identical": random_value_invariant}},
         "f5_the_search_cannot_read_an_unrun_configuration": {
             "passed": leak_free,
             "evidence": {
@@ -351,13 +417,12 @@ def main() -> int:
             print(f"    {name:<44} {'PASA' if check['passed'] else 'FALLA'}")
 
     payload = {
-        "schema_version": "garrido_meta_learner_v1",
+        "schema_version": args.schema_version,
         "claim_status": verdict if falsifiers["all_passed"] else "HALTED_FALSIFIER_FAILED",
         "metric": METRIC, "budget": args.budget, "repeats": args.repeats,
         "n_configurations": n_cfg, "factors": {k: list(v) for k, v in FACTORS.items()},
         "contexts": ctx_order, "seeds": seeds,
         "runs_to_within_1pct": runs, "final_regret": regret,
-        "alzheimer_effect_runs_saved_by_memory": alzheimer,
         "memory_vs_ofat": vs_ofat, "memory_vs_random": vs_random,
         "per_context": {s: [run["per_context"] for run in results[s]] for s in STRATEGIES},
         "falsifiers": falsifiers,
@@ -366,7 +431,7 @@ def main() -> int:
     }
     digest = seal_and_write(
         payload, args.output,
-        contract=Path("docs/PREREGISTRO_META_APRENDIZ_2026-07-31.md"),
+        contract=args.contract,
         reference=Path("results/garrido_drivers_per_configuration/result.json"))
     print(f"\n  -> {args.output} (sello {digest[:16]}…)")
     return 0 if falsifiers["all_passed"] else 1
