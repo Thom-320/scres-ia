@@ -7,6 +7,7 @@ from scripts.run_garrido_q2_des288_v1 import (
     DEFAULT,
     FACTOR_NAMES,
     SERVICE_FIRST_V2_COMPONENTS,
+    _paired,
     _falsifiers,
     search,
     selected_configs,
@@ -107,3 +108,29 @@ def test_zero_budget_retained_and_reset_have_identical_trace_contract():
     retained = search("retained", seeds[0], np.random.default_rng(1), surface, configs, contexts, 0)
     reset = search("reset", seeds[0], np.random.default_rng(1), surface, configs, contexts, 0)
     assert retained["per_context"] == reset["per_context"]
+
+
+def test_primary_orientation_is_reset_minus_retained_for_faster_memory():
+    """The preregistered primary is positive when retained needs fewer runs."""
+    results = {
+        "retained": [
+            {"per_context": {"R1r": {"runs_to_oracle": 2.0}}},
+            {"per_context": {"R1r": {"runs_to_oracle": 3.0}}},
+        ],
+        "reset": [
+            {"per_context": {"R1r": {"runs_to_oracle": 4.0}}},
+            {"per_context": {"R1r": {"runs_to_oracle": 5.0}}},
+        ],
+    }
+    delta = _paired(
+        results,
+        "retained",
+        "reset",
+        ("R1r",),
+        "runs_to_oracle",
+        rng=np.random.default_rng(3),
+        n_boot=100,
+        sign="b_minus_a",
+    )
+    assert delta["mean"] == 2.0
+    assert delta["lcb95"] > 0.0

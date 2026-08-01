@@ -659,15 +659,15 @@ def main() -> int:
 
     boot_rng = np.random.default_rng(20260801)
     alzheimer = _paired(
-        results, "reset", "retained", tuple(contexts), "runs_to_oracle",
+        results, "retained", "reset", tuple(contexts), "runs_to_oracle",
         rng=boot_rng, n_boot=args.n_boot, sign="b_minus_a",
     )
     retained_vs_ofat = _paired(
-        results, "ofat", "retained", tuple(contexts), "runs_to_oracle",
+        results, "retained", "ofat", tuple(contexts), "runs_to_oracle",
         rng=boot_rng, n_boot=args.n_boot, sign="b_minus_a",
     )
     retained_vs_random = _paired(
-        results, "random", "retained", tuple(contexts), "runs_to_oracle",
+        results, "retained", "random", tuple(contexts), "runs_to_oracle",
         rng=boot_rng, n_boot=args.n_boot, sign="b_minus_a",
     )
 
