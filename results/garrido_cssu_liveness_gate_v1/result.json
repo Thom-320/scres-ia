@@ -1,0 +1,109 @@
+{
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "GATE_A_PASS_GATE_B_HOLD",
+ "contract_path": "/Users/thom/Projects/research/scres-ia/docs/PREREGISTRO_CSSU_LIVENESS_2026-08-01.md",
+ "contract_sha256": "f6d1815f65bf2c931576190cd770aa841e599cf875d7a317638f8a2e630680cb",
+ "created_at": "2026-08-01T19:40:08.836186+00:00",
+ "falsifiers": {
+  "all_passed": true,
+  "f1_action_is_scheduled": {
+   "evidence": {
+    "events": [
+     {
+      "allocation_a": 0.75,
+      "effective_at": 24.0,
+      "previous_allocation_a": 0.25,
+      "previous_service_rule": "FIFO_PARTIAL",
+      "requested_at": 0.0,
+      "service_rule": "FIFO_PARTIAL",
+      "status": "scheduled"
+     }
+    ]
+   },
+   "passed": true
+  },
+  "f2_latency_is_respected": {
+   "evidence": {
+    "post_activation_share": 0.75,
+    "pre_activation_share": 0.25
+   },
+   "passed": true
+  },
+  "f3_action_changes_destination_ledgers": {
+   "evidence": {
+    "dynamic_dispatched": {
+     "A": 177500.0,
+     "B": 70000.0
+    },
+    "static_dispatched": {
+     "A": 71747.0,
+     "B": 175753.0
+    }
+   },
+   "passed": true
+  },
+  "f4_mass_is_conserved": {
+   "evidence": {
+    "cssu_delivered": {
+     "A": 173750.0,
+     "B": 68750.0
+    },
+    "cssu_demanded": {
+     "A": 219958.0,
+     "B": 204978.0
+    },
+    "total_delivered": 242500.0,
+    "total_demanded": 424936.0
+   },
+   "passed": true
+  },
+  "f5_aggregate_mode_rejects_action": {
+   "evidence": {
+    "error": "CSSU allocation actions require cssu_topology_mode='split_v1'."
+   },
+   "passed": true
+  },
+  "f6_observation_has_no_future_truth": {
+   "evidence": {
+    "forbidden_keys": []
+   },
+   "passed": true
+  }
+ },
+ "gate_a": {
+  "activation_latency_hours": 24.0,
+  "scope": "split CSSU allocation action only",
+  "status": "PASS"
+ },
+ "gate_b": {
+  "required_before": "physical contention claims or neural training",
+  "scope": "finite Op11 handling is not implemented or claimed",
+  "status": "HOLD_OP11_PHYSICS_UNSPECIFIED"
+ },
+ "physics_boundary": {
+  "op11_handling_hours": 0.0,
+  "op11_value_is_not_evidence": true,
+  "thesis_native_unchanged": true
+ },
+ "reference_path": "/Users/thom/Projects/research/scres-ia/results/metric_audit/contention_service_first_v2/result.json",
+ "reference_sha256": "9e4b7bceaac1c5a0a619d688333a1939c6993ada0aacc35a901d75c08ca3192d",
+ "schema_version": "garrido_cssu_liveness_gate_v1",
+ "self_sha256": "e7e39a9efb81bb6a102030844b76122b2e86d883bffd00768e2167ce2b0bd3c7"
+}

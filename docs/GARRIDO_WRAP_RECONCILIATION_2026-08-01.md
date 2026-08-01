@@ -5,6 +5,25 @@
 This ledger reconciles the live repository after the driver-leak discovery. It does
 not rewrite frozen contracts or promote development artifacts into manuscript claims.
 
+## 0. Current custody additions
+
+The following sealed artifacts are now the operational source of truth for this
+reconciliation:
+
+- `docs/GARRIDO_WRAP_CLAIM_LEDGER_2026-08-01.md` maps each paper-facing claim to its
+  artifact, contract, and allowed status.
+- `results/garrido_wrap_custody_manifest_v1.json` hashes the principal source, Q1,
+  replay, CSSU, and active-run artifacts. It records the retired driver-leak claims
+  without deleting their files.
+- `results/garrido_cssu_liveness_gate_v1/result.json` closes **Gate A** as
+  `PASS`; **Gate B** remains `HOLD_OP11_PHYSICS_UNSPECIFIED`.
+- `results/garrido_neural_headroom_gate_v1/result.json` closes E1 as
+  `NO_GO_NEURAL_PREMIUM_E1_HEADROOM_CLOSED` with `training_authorized=false`.
+
+These seals do not change the frozen `thesis_1to1` lane. They make explicit that the
+CSSU action is computationally live, while finite Op11 handling and a neural-premium
+campaign remain unauthorised under the current contracts.
+
 ## 1. Evidence disposition
 
 | object | disposition | allowed use |
@@ -88,3 +107,12 @@ contract if its timing changes.
 - corrected expedition result and metric adjudication;
 - metric contract with an abandonment falsifier and service/queue estimands.
 - any re-specified H1 recovery endpoint or H3 moved-optimum design, if authorized.
+
+## 6. Neural-premium boundary
+
+E0 is the current WRAP panel and has no authorized neural premium. E1 was screened
+against the service-first endpoint and its leading headroom component was exactly zero;
+therefore the model ladder is closed at this stage. E2 (partial observability and a
+persistent latent regime) is a **prospective extension**, not an automatic continuation
+of E1. It requires a new physical/observational contract, a placebo, virgin tapes, and
+the same strong classical-control ladder before MLP or PPO can be trained.
