@@ -1,5 +1,31 @@
 # Resultado — G3-obs: **SIN POTENCIA** en el primario, y el número que hace falta
 
+> **Corrección 2026-08-01, tras revisión externa.** Cuatro afirmaciones de este documento
+> sobrepasaban su evidencia. Se corrigen aquí, sin reescribir el cuerpo:
+>
+> 1. **«Los tres intervalos excluyen el cero» es FALSO.** En `freq3_imp2` el coste del **retardo**
+>    es +0,0075 con **LCB95 −0,0003**, que **cruza el cero**. La tabla del §3 ya lo mostraba y la
+>    frase la contradecía. Sólo **5 de los 6** contrastes de realismo excluyen el cero.
+> 2. **«El valor vive en una contabilidad perfecta desde el primer día» es demasiado fuerte.** Lo
+>    defendible: *bajo este contrato*, ventana, retardo y ruido **reducen sustancialmente** la
+>    señal acumulada. No es una afirmación general sobre operaciones reales, y menos con el
+>    primario sin potencia.
+> 3. **El residual tabular NO está demostrado como cero.** En `freq3_imp2` es cero **porque el
+>    modelo elegido en desarrollo coincide con el umbral** —informativo, no una validación
+>    independiente— y en `base` el IC **cruza el cero**. Lectura correcta: **no se detectó
+>    residual sobre el umbral simple; el contraste no establece equivalencia.**
+> 4. **El bloqueo no es «únicamente editorial».** Operativamente lo es —no se pueden abrir raíces—
+>    pero **inferencialmente el bloqueo es científico**: el experimento **no tiene potencia** para
+>    evaluar el SESOI. Ambas cosas a la vez.
+>
+> Y un matiz sobre §1: la señal es observable **bajo el contrato del simulador**, donde
+> `demanded − delivered` se declara parte del ledger permitido. Eso **no demuestra** que una
+> operación real disponga de esa medición con la misma oportunidad, calidad y semántica.
+>
+> **El estado canónico no cambia:** `STOP_G3_OBS_UNDERPOWERED`. Este artefacto es **un instrumento
+> limpio con resultado primario no interpretable**, y **no** evidencia de
+> `STRUCTURED_CONTROL_SUFFICES`.
+
 **Artefacto:** `results/headroom/g3_obs_conversion/result.json` (sello `1d434485cec99bc7…`) ·
 preregistro `docs/PREREGISTRO_G3_OBS_CONVERSION_OBSERVABLE_2026-08-01.md` (commiteado antes) ·
 bloque **quemado** `5.200.001–16`, **ninguna semilla nueva** · **los ocho falsadores PASAN** ·

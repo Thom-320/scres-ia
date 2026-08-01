@@ -3,8 +3,8 @@
 **Estado:** `DESIGN_ONLY_NOT_AUTHORIZED_UNTIL_SUBMISSION_A_RECEIPT`  
 **Fecha:** 2026-08-01  
 **Artículo activo:** Garrido–WRAP/v0, destinado a *Computers & Industrial Engineering*  
-**Contrato machine-readable:** [`contracts/g3a_asymmetric_claimants_v2.json`](/Users/thom/Projects/research/scres-ia/contracts/g3a_asymmetric_claimants_v2.json)  
-**Registro de semillas:** [`research/seed_custody_registry.json`](/Users/thom/Projects/research/scres-ia/research/seed_custody_registry.json)
+**Contrato machine-readable:** [`contracts/g3a_asymmetric_claimants_v2.json`](contracts/g3a_asymmetric_claimants_v2.json)  
+**Registro de semillas:** [`research/seed_custody_registry.json`](research/seed_custody_registry.json)
 
 ## 1. Frontera de autorización
 
