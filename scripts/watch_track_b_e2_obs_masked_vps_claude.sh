@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set +e
 
-ROOT="/Users/thom/Projects/research/scres-ia"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 REMOTE="ovh-agent-lab"
 REMOTE_DIR="/home/ubuntu/scres-ia"
 RUN_DIR="outputs/experiments/track_b_e2_obs_masked_confirm_vps_2026-07-02"

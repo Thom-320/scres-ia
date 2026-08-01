@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 set +e
 
-cd /Users/thom/Projects/research/scres-ia || exit 2
+cd "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)" || exit 2
 
 SLUG="thomaschisica/scresia-track-b-e2-obs-masked-confirm"
 OUT="outputs/experiments/track_b_e2_obs_masked_confirm_2026-07-02"
 FETCH="$OUT/fetched"
 LOG="$OUT/watcher.log"
-KAGGLE="/Users/thom/.local/bin/kaggle"
+KAGGLE="${KAGGLE_BIN:-kaggle}"
 
 mkdir -p "$FETCH"
 echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] watcher script start slug=$SLUG" >> "$LOG"

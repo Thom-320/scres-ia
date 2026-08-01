@@ -80,6 +80,6 @@ Los ofensores restantes son de **dos clases distintas** y no admiten la misma so
   `docs/track_b_q1_stats_*`) — **no se editan en sitio**; el test debe excluirlos o el defecto se
   declara residual;
 * **scripts** (`scripts/audit_garrido_wrap_sources.py`, ~20 `watch_*.sh`) — aquí sí se corrige,
-  salvo el caso de `CloudStorage`/`GoogleDrive-…`, que **construye rutas relativas a
-  `Path.home()`** y no es literalmente una ruta de usuario: ahí el conflicto es **del test**, que
-  prohíbe por subcadena.
+  salvo un caso que **construye rutas relativas a `Path.home()`** apuntando a una cuenta de
+  nube personal: no es literalmente una ruta de usuario, y se resuelve sacando la cuenta del
+  código a la variable de entorno `SCRES_IA_DRIVE_ROOT`.

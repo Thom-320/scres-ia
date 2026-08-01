@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set +e
 
-ROOT="/Users/thom/Projects/research/scres-ia"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 LOG="$ROOT/outputs/experiments/q1_local_e1_e4_watcher_2026-07-02.log"
 E1_DIR="$ROOT/outputs/experiments/track_b_e1_confirmatory_2026-07-02"
 E4_DIR="$ROOT/outputs/experiments/track_b_ablation_8d_final_2026-07-01"

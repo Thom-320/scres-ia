@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set +e
-cd /Users/thom/Projects/research/scres-ia || exit 2
+cd "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)" || exit 2
 LOG="outputs/experiments/watch_track_b_belief_conditioned.log"
 mkdir -p outputs/experiments
 echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] watcher start (belief-conditioned combined arm, PID 51117)" >> "$LOG"

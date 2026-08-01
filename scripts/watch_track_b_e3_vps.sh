@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set +e
 
-cd /Users/thom/Projects/research/scres-ia || exit 2
+cd "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)" || exit 2
 
 HOST="ovh-agent-lab"
 REMOTE_DIR="~/scres-ia/outputs/experiments/track_b_e3_cross_regime_horizon_matrix_vps_2026-07-02"

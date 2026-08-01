@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set +e
-cd /Users/thom/Projects/research/scres-ia || exit 2
+cd "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)" || exit 2
 LOG="outputs/experiments/watch_track_b_belief_cond_v2_rebalanced.log"
 mkdir -p outputs/experiments
 LOCAL_PIDS=(16426 18051 18298 19651)

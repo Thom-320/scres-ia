@@ -12,6 +12,7 @@ import argparse
 from datetime import datetime, timezone
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
 import sys
@@ -27,12 +28,22 @@ def _home_path(*parts: str) -> Path:
     return Path.home().joinpath(*parts)
 
 
+# The cloud-drive layout is one operator's personal account, so it is configuration, not source.
+# `SCRES_IA_DRIVE_ROOT` points at the synced drive root holding the PhD papers; when it is
+# unset the auditor falls back to the home Downloads folder, where every one of these files can
+# also be placed. Hard-coding an individual's cloud account made the repo unusable by anyone
+# else and tripped the portability test.
+_DRIVE_ROOT_ENV = "SCRES_IA_DRIVE_ROOT"
+
+
+def _drive_path(*parts: str) -> tuple[Path, ...]:
+    root = os.environ.get(_DRIVE_ROOT_ENV)
+    return (Path(root).joinpath(*parts),) if root else ()
+
+
 DEFAULT_SOURCE_CANDIDATES: dict[str, tuple[Path, ...]] = {
     "garrido_2024_scres_ai": (
-        _home_path(
-            "Library",
-            "CloudStorage",
-            "GoogleDrive-chisicathomas@gmail.com",
+        *_drive_path(
             "My Drive",
             "Supernote",
             "Document",
@@ -51,16 +62,14 @@ DEFAULT_SOURCE_CANDIDATES: dict[str, tuple[Path, ...]] = {
     "raw_data2": (_home_path("Downloads", "Raw_data2+Re.xlsx"),),
     "rsult_1": (_home_path("Downloads", "Rsult_1.xlsx"),),
     "wrap_thesis": (
-        _home_path(
-            "Library",
-            "CloudStorage",
-            "GoogleDrive-chisicathomas@gmail.com",
+        *_drive_path(
             "My Drive",
             "Archive",
             "Misc_Unsorted",
             "Unsorted",
             "WRAP_Theses_Garrido_Rios_2017.pdf",
         ),
+        _home_path("Downloads", "WRAP_Theses_Garrido_Rios_2017.pdf"),
     ),
 }
 
