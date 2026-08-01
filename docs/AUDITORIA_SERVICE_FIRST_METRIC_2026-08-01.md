@@ -1,5 +1,10 @@
 # Auditoría de `service_first_resilience_v1` — se sostiene en estructura, **no en el instrumento**
 
+**RECONCILIADO 2026-08-01** tras revisión externa: el §5 describía un sucesor que luego descarté,
+y la tabla venía de un script ad-hoc. Artefacto sellado ahora:
+`results/metric_audit/service_first_v2/result.json` (sello `0e37fe2faa3fd695…`, seis falsadores
+PASA, 30 episodios por `scripts/run_service_first_v2_audit.py`).
+
 Módulo: `supply_chain/service_first_metric.py` · contrato
 `docs/PREREGISTRO_METRICA_SERVICE_FIRST_2026-08-01.md`. **No se edita nada aquí**: el contrato
 está congelado, así que esto es una auditoría con propuesta de **sucesor `v2`**.
@@ -41,16 +46,16 @@ removed and labelled as lost»*. Es decir:
 > **Es un proxy del desbordamiento de cola, no del abandono.**
 
 La columna que lo delata está en la misma corrida — pedidos **ni servidos ni marcados como
-perdidos**, permanentemente pendientes al horizonte:
+perdidos**, **abiertos al horizonte**:
 
 | reparto | 0,1 | 0,3 | **0,5** | 0,7 | 0,9 |
 |---|---:|---:|---:|---:|---:|
-| pendientes para siempre | 60 | 60 | **41** | 60 | 60 |
+| abiertos al horizonte | 60,0 | 59,5 | **42,8** | 58,7 | 60,0 |
 
 Cuatro de los cinco están **clavados en el cap**. El ganador está por debajo.
 
 **La consecuencia es un exploit mecánico:** una política que mantenga su cola en 60 o menos
-**abandona hasta 60 unidades indefinidamente y registra CERO pérdidas**, pasando el gate con
+**deja hasta 60 pedidos abiertos al horizonte y registra CERO pérdidas**, pasando el gate con
 puntuación perfecta. Es **la misma forma** del agujero de `ret_excel` —demanda no servida que no
 cuenta como fallo— por una puerta distinta.
 
@@ -81,25 +86,27 @@ puede decir que este endpoint «integra ReT». No lo integra: lo lleva de adorno
   `ret_excel` sería circular, y el manuscrito debe decir explícitamente que es una **decisión
   declarada**, no un hallazgo.
 
-## 5. El sucesor propuesto — `service_first_resilience_v2`
+## 5. El sucesor implementado — `service_first_resilience_v2`
 
-Un solo cambio en el primer componente, de binario a continuo y sobre la cantidad correcta:
+**Primero, el arreglo que descarté, porque es el obvio y es incorrecto.** Propuse
+`−(cantidad no servida)/(demandada)`. Resulta ser **exactamente `1 − flow_fill_rate`**, así que
+habría colapsado los componentes 1 y 2 en uno solo. Queda escrito para que nadie lo reintente.
 
-    componente 1:  −(cantidad NO SERVIDA) / (cantidad demandada)
+**Lo que distingue ABANDONO de simplemente poco fill es dónde cae el déficit**: el abandono lo
+concentra en un reclamante. Así que el componente líder de `v2` es **el fill del peor
+reclamante** — continuo, no gameable por el cap de cola, no implicado por el fill agregado, y
+degenera al fill agregado cuando hay un solo reclamante, que es correcto porque abandonar a un
+reclamante no está definido entonces.
 
-donde *no servida* = perdida **+ permanentemente pendiente al horizonte**. Con eso:
+    v2 = ( worst_claimant_fill , flow_fill_rate , −backorder_qty_final , ReT acotado )
 
-* **se cierra el exploit del cap**: quedarse en 59 pendientes deja de ser gratis;
-* **desaparece el acantilado**: perder un pedido ya no equivale a perder mil, ni al revés;
-* **el ranking deseado se conserva** — con la misma corrida, no servidos totales por reparto:
-  `0,1 → 140 · 0,3 → 65 · **0,5 → 41** · 0,7 → 72 · 0,9 → 135`. **0,5 sigue ganando**, ahora por
-  un margen continuo en vez de por un umbral.
+**El test que lo acompaña es el exploit escrito como aserción** —*convertir pérdidas en pedidos
+abiertos no debe mejorar la clave*— **y lleva `v1` como control que DEBE dejarse engañar**. Sin el
+control, el test podría pasar vacuamente para ambos. `tests/test_service_first_metric_v2.py`, 5/5.
 
-Y un test que el módulo hoy no tiene, escrito para poder fallar:
-
-> **una política que convierta pedidos perdidos en pedidos permanentemente pendientes no debe
-> mejorar su clave.** Bajo `v1` la mejora; bajo `v2` no. Es la validación del falsador haciéndolo
-> fallar contra el defecto, que es el patrón que ya nos salvó dos veces esta semana.
+**Estado honesto de `v2`: es PROSPECTIVO.** Está implementado y con test, pero **no tiene
+preregistro propio ni ha sido el endpoint de ninguna corrida sellada**. No debe citarse como
+métrica en uso.
 
 ## 6. Qué hacer con `v1`
 

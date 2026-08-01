@@ -1,0 +1,1069 @@
+{
+ "best_by": {
+  "fill": 0.5,
+  "ret": 0.1,
+  "v1": 0.5,
+  "v2": 0.5
+ },
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "SERVICE_FIRST_V2_AUDIT_SEALED",
+ "contract_path": "docs/AUDITORIA_SERVICE_FIRST_METRIC_2026-08-01.md",
+ "contract_sha256": "3f0341baf01377e22f98c7fd8448aca65c25faf161922bb7308c6d11c8c5c59b",
+ "created_at": "2026-08-01T18:26:55.294294+00:00",
+ "elapsed_seconds": 2.508755332994042,
+ "falsifiers": {
+  "all_passed": true,
+  "f1_ret_and_service_disagree": {
+   "evidence": {
+    "best_by_fill": 0.5,
+    "best_by_ret": 0.1,
+    "why_it_can_fail": "if ReT already preferred the service-best split there would be nothing for a service-first endpoint to fix"
+   },
+   "passed": true
+  },
+  "f2_v2_prefers_the_service_best_split": {
+   "evidence": {
+    "best_by_v1": 0.5,
+    "best_by_v2": 0.5,
+    "why_it_can_fail": "v2 exists to rank service first; if it picked the abandoning split it would have failed its purpose"
+   },
+   "passed": true
+  },
+  "f3_lost_is_assigned_only_by_the_overflow_handler": {
+   "evidence": {
+    "all_inside_overflow_handler": true,
+    "assignment_sites": 1,
+    "backorder_queue_cap": 60,
+    "descriptive_only_lost_orders": {
+     "0.1": 82.5,
+     "0.3": 14.333333333333334,
+     "0.5": 0.0,
+     "0.7": 6.333333333333333,
+     "0.9": 74.0
+    },
+    "descriptive_only_orders_open_at_horizon": {
+     "0.1": 60.0,
+     "0.3": 59.5,
+     "0.5": 42.833333333333336,
+     "0.7": 58.666666666666664,
+     "0.9": 60.0
+    },
+    "why_it_can_fail": "this is the audit's central claim, and it is a claim about the CODE. Any second assignment site would mean lost_orders measures abandonment after all, and the v2 rationale would collapse"
+   },
+   "passed": true
+  },
+  "f4_open_orders_are_not_claimed_permanent": {
+   "evidence": {
+    "field_name": "orders_open_at_horizon",
+    "why_it_can_fail": "a wording check, kept explicit because the earlier version DID overclaim: the DES observes orders open at the horizon and cannot establish that they would never complete afterwards"
+   },
+   "passed": true
+  },
+  "f5_measured_through_the_pipeline": {
+   "evidence": {
+    "runner": "scripts/run_service_first_v2_audit.py",
+    "why_it_can_fail": "the table this replaces came from a throwaway script, which the project's standing rule forbids and an external review flagged as unsealed"
+   },
+   "passed": true
+  },
+  "f6_seeds_are_virgin": {
+   "evidence": {
+    "seeds": [
+     6300001,
+     6300002,
+     6300003,
+     6300004,
+     6300005,
+     6300006
+    ],
+    "why_it_can_fail": "reuse would void the audit"
+   },
+   "passed": true
+  }
+ },
+ "reference_path": "results/sensitivity/contention_headroom_v1_3/result.json",
+ "reference_sha256": "6730b4d1e65f68d24005a3f0ebe55b3fad55adb9e1801dcea3570bfc83bdb4dc",
+ "regime": [
+  "R21",
+  "R22",
+  "R23",
+  "R24"
+ ],
+ "rows": {
+  "0.1": [
+   {
+    "claimant_fills": {
+     "A": 0.17449885296349268,
+     "B": 0.8938202775947692
+    },
+    "flow_fill_rate": 0.4325799910710213,
+    "lost_orders": 96.0,
+    "orders_open_at_horizon": 60.0,
+    "ret_excel_risk_conditional": 0.004520801010425795,
+    "ret_excel_visible_clipped_0_1": 0.3202122458471414,
+    "seed": 6300001,
+    "share": 0.1,
+    "v1_key": [
+     0.0,
+     0.4325799910710213,
+     -164010.59999999998,
+     0.3202122458471414
+    ],
+    "v2_components": {
+     "flow_fill_rate": 0.4325799910710213,
+     "negative_backorder_qty_final": -164010.59999999998,
+     "ret_excel_visible_clipped_0_1": 0.3202122458471414,
+     "worst_claimant_fill": 0.17449885296349268
+    },
+    "v2_key": [
+     0.17449885296349268,
+     0.4325799910710213,
+     -164010.59999999998,
+     0.3202122458471414
+    ]
+   },
+   {
+    "claimant_fills": {
+     "A": 0.18234035569136894,
+     "B": 0.9061494491789649
+    },
+    "flow_fill_rate": 0.4661406340121567,
+    "lost_orders": 87.0,
+    "orders_open_at_horizon": 60.0,
+    "ret_excel_risk_conditional": 0.0044120581654486755,
+    "ret_excel_visible_clipped_0_1": 0.3423784710961346,
+    "seed": 6300002,
+    "share": 0.1,
+    "v1_key": [
+     0.0,
+     0.4661406340121567,
+     -160557.8,
+     0.3423784710961346
+    ],
+    "v2_components": {
+     "flow_fill_rate": 0.4661406340121567,
+     "negative_backorder_qty_final": -160557.8,
+     "ret_excel_visible_clipped_0_1": 0.3423784710961346,
+     "worst_claimant_fill": 0.18234035569136894
+    },
+    "v2_key": [
+     0.18234035569136894,
+     0.4661406340121567,
+     -160557.8,
+     0.3423784710961346
+    ]
+   },
+   {
+    "claimant_fills": {
+     "A": 0.19876313914684599,
+     "B": 0.955616497981401
+    },
+    "flow_fill_rate": 0.5253370325016228,
+    "lost_orders": 72.0,
+    "orders_open_at_horizon": 60.0,
+    "ret_excel_risk_conditional": 0.009173117707639228,
+    "ret_excel_visible_clipped_0_1": 0.3928752935579565,
+    "seed": 6300003,
+    "share": 0.1,
+    "v1_key": [
+     0.0,
+     0.5253370325016228,
+     -151079.3,
+     0.3928752935579565
+    ],
+    "v2_components": {
+     "flow_fill_rate": 0.5253370325016228,
+     "negative_backorder_qty_final": -151079.3,
+     "ret_excel_visible_clipped_0_1": 0.3928752935579565,
+     "worst_claimant_fill": 0.19876313914684599
+    },
+    "v2_key": [
+     0.19876313914684599,
+     0.5253370325016228,
+     -151079.3,
+     0.3928752935579565
+    ]
+   },
+   {
+    "claimant_fills": {
+     "A": 0.20755439779344187,
+     "B": 0.9092503556020548
+    },
+    "flow_fill_rate": 0.5341170875462528,
+    "lost_orders": 69.0,
+    "orders_open_at_horizon": 60.0,
+    "ret_excel_risk_conditional": 0.0031358131989583054,
+    "ret_excel_visible_clipped_0_1": 0.3715077348963612,
+    "seed": 6300004,
+    "share": 0.1,
+    "v1_key": [
+     0.0,
+     0.5341170875462528,
+     -161587.9,
+     0.3715077348963612
+    ],
+    "v2_components": {
+     "flow_fill_rate": 0.5341170875462528,
+     "negative_backorder_qty_final": -161587.9,
+     "ret_excel_visible_clipped_0_1": 0.3715077348963612,
+     "worst_claimant_fill": 0.20755439779344187
+    },
+    "v2_key": [
+     0.20755439779344187,
+     0.5341170875462528,
+     -161587.9,
+     0.3715077348963612
+    ]
+   },
+   {
+    "claimant_fills": {
+     "A": 0.18674500387589574,
+     "B": 0.9273046808466711
+    },
+    "flow_fill_rate": 0.48020804719213983,
+    "lost_orders": 82.0,
+    "orders_open_at_horizon": 60.0,
+    "ret_excel_risk_conditional": 0.00704272569052977,
+    "ret_excel_visible_clipped_0_1": 0.3982474097479736,
+    "seed": 6300005,
+    "share": 0.1,
+    "v1_key": [
+     0.0,
+     0.48020804719213983,
+     -162434.86,
+     0.3982474097479736
+    ],
+    "v2_components": {
+     "flow_fill_rate": 0.48020804719213983,
+     "negative_backorder_qty_final": -162434.86,
+     "ret_excel_visible_clipped_0_1": 0.3982474097479736,
+     "worst_claimant_fill": 0.18674500387589574
+    },
+    "v2_key": [
+     0.18674500387589574,
+     0.48020804719213983,
+     -162434.86,
+     0.3982474097479736
+    ]
+   },
+   {
+    "claimant_fills": {
+     "A": 0.17783077514552095,
+     "B": 0.9504524874400956
+    },
+    "flow_fill_rate": 0.46767473062275516,
+    "lost_orders": 89.0,
+    "orders_open_at_horizon": 60.0,
+    "ret_excel_risk_conditional": 0.0067879736287022535,
+    "ret_excel_visible_clipped_0_1": 0.37159963159134984,
+    "seed": 6300006,
+    "share": 0.1,
+    "v1_key": [
+     0.0,
+     0.46767473062275516,
+     -153926.84999999998,
+     0.37159963159134984
+    ],
+    "v2_components": {
+     "flow_fill_rate": 0.46767473062275516,
+     "negative_backorder_qty_final": -153926.84999999998,
+     "ret_excel_visible_clipped_0_1": 0.37159963159134984,
+     "worst_claimant_fill": 0.17783077514552095
+    },
+    "v2_key": [
+     0.17783077514552095,
+     0.46767473062275516,
+     -153926.84999999998,
+     0.37159963159134984
+    ]
+   }
+  ],
+  "0.3": [
+   {
+    "claimant_fills": {
+     "A": 0.5188743911583625,
+     "B": 0.985790846127016
+    },
+    "flow_fill_rate": 0.6932370588552386,
+    "lost_orders": 24.0,
+    "orders_open_at_horizon": 60.0,
+    "ret_excel_risk_conditional": 0.002422049968903379,
+    "ret_excel_visible_clipped_0_1": 0.26990608767305285,
+    "seed": 6300001,
+    "share": 0.3,
+    "v1_key": [
+     0.0,
+     0.6932370588552386,
+     -157856.09000000003,
+     0.26990608767305285
+    ],
+    "v2_components": {
+     "flow_fill_rate": 0.6932370588552386,
+     "negative_backorder_qty_final": -157856.09000000003,
+     "ret_excel_visible_clipped_0_1": 0.26990608767305285,
+     "worst_claimant_fill": 0.5188743911583625
+    },
+    "v2_key": [
+     0.5188743911583625,
+     0.6932370588552386,
+     -157856.09000000003,
+     0.26990608767305285
+    ]
+   },
+   {
+    "claimant_fills": {
+     "A": 0.5371253043402281,
+     "B": 0.9912450633963839
+    },
+    "flow_fill_rate": 0.7205857069967612,
+    "lost_orders": 17.0,
+    "orders_open_at_horizon": 60.0,
+    "ret_excel_risk_conditional": 0.0023861266778362226,
+    "ret_excel_visible_clipped_0_1": 0.2821183733824708,
+    "seed": 6300002,
+    "share": 0.3,
+    "v1_key": [
+     0.0,
+     0.7205857069967612,
+     -153205.83000000002,
+     0.2821183733824708
+    ],
+    "v2_components": {
+     "flow_fill_rate": 0.7205857069967612,
+     "negative_backorder_qty_final": -153205.83000000002,
+     "ret_excel_visible_clipped_0_1": 0.2821183733824708,
+     "worst_claimant_fill": 0.5371253043402281
+    },
+    "v2_key": [
+     0.5371253043402281,
+     0.7205857069967612,
+     -153205.83000000002,
+     0.2821183733824708
+    ]
+   },
+   {
+    "claimant_fills": {
+     "A": 0.5848502043520102,
+     "B": 0.9906039168889856
+    },
+    "flow_fill_rate": 0.7601109750486836,
+    "lost_orders": 8.0,
+    "orders_open_at_horizon": 60.0,
+    "ret_excel_risk_conditional": 0.002085933455589133,
+    "ret_excel_visible_clipped_0_1": 0.3459046190106857,
+    "seed": 6300003,
+    "share": 0.3,
+    "v1_key": [
+     0.0,
+     0.7601109750486836,
+     -144298.1,
+     0.3459046190106857
+    ],
+    "v2_components": {
+     "flow_fill_rate": 0.7601109750486836,
+     "negative_backorder_qty_final": -144298.1,
+     "ret_excel_visible_clipped_0_1": 0.3459046190106857,
+     "worst_claimant_fill": 0.5848502043520102
+    },
+    "v2_key": [
+     0.5848502043520102,
+     0.7601109750486836,
+     -144298.1,
+     0.3459046190106857
+    ]
+   },
+   {
+    "claimant_fills": {
+     "A": 0.6148046666008713,
+     "B": 1.0000000000000002
+    },
+    "flow_fill_rate": 0.794153869837971,
+    "lost_orders": 0.0,
+    "orders_open_at_horizon": 57.0,
+    "ret_excel_risk_conditional": 0.002873609471511049,
+    "ret_excel_visible_clipped_0_1": 0.3456170714150587,
+    "seed": 6300004,
+    "share": 0.3,
+    "v1_key": [
+     1.0,
+     0.794153869837971,
+     -146769.5,
+     0.3456170714150587
+    ],
+    "v2_components": {
+     "flow_fill_rate": 0.794153869837971,
+     "negative_backorder_qty_final": -146769.5,
+     "ret_excel_visible_clipped_0_1": 0.3456170714150587,
+     "worst_claimant_fill": 0.6148046666008713
+    },
+    "v2_key": [
+     0.6148046666008713,
+     0.794153869837971,
+     -146769.5,
+     0.3456170714150587
+    ]
+   },
+   {
+    "claimant_fills": {
+     "A": 0.5482404851487023,
+     "B": 1.0000000000000002
+    },
+    "flow_fill_rate": 0.7321690681716653,
+    "lost_orders": 13.0,
+    "orders_open_at_horizon": 60.0,
+    "ret_excel_risk_conditional": 0.0022559589697827196,
+    "ret_excel_visible_clipped_0_1": 0.33692215332790787,
+    "seed": 6300005,
+    "share": 0.3,
+    "v1_key": [
+     0.0,
+     0.7321690681716653,
+     -156089.80000000002,
+     0.33692215332790787
+    ],
+    "v2_components": {
+     "flow_fill_rate": 0.7321690681716653,
+     "negative_backorder_qty_final": -156089.80000000002,
+     "ret_excel_visible_clipped_0_1": 0.33692215332790787,
+     "worst_claimant_fill": 0.5482404851487023
+    },
+    "v2_key": [
+     0.5482404851487023,
+     0.7321690681716653,
+     -156089.80000000002,
+     0.33692215332790787
+    ]
+   },
+   {
+    "claimant_fills": {
+     "A": 0.5204082458558258,
+     "B": 1.0000000000000002
+    },
+    "flow_fill_rate": 0.7009419522940469,
+    "lost_orders": 24.0,
+    "orders_open_at_horizon": 60.0,
+    "ret_excel_risk_conditional": 0.0017822881725537232,
+    "ret_excel_visible_clipped_0_1": 0.29807245797249476,
+    "seed": 6300006,
+    "share": 0.3,
+    "v1_key": [
+     0.0,
+     0.7009419522940469,
+     -149913.1,
+     0.29807245797249476
+    ],
+    "v2_components": {
+     "flow_fill_rate": 0.7009419522940469,
+     "negative_backorder_qty_final": -149913.1,
+     "ret_excel_visible_clipped_0_1": 0.29807245797249476,
+     "worst_claimant_fill": 0.5204082458558258
+    },
+    "v2_key": [
+     0.5204082458558258,
+     0.7009419522940469,
+     -149913.1,
+     0.29807245797249476
+    ]
+   }
+  ],
+  "0.5": [
+   {
+    "claimant_fills": {
+     "A": 0.7508338543764282,
+     "B": 0.9340975401803757
+    },
+    "flow_fill_rate": 0.8091589759041973,
+    "lost_orders": 0.0,
+    "orders_open_at_horizon": 53.0,
+    "ret_excel_risk_conditional": 0.0011205949079846676,
+    "ret_excel_visible_clipped_0_1": 0.03527289061434736,
+    "seed": 6300001,
+    "share": 0.5,
+    "v1_key": [
+     1.0,
+     0.8091589759041973,
+     -130824.0,
+     0.03527289061434736
+    ],
+    "v2_components": {
+     "flow_fill_rate": 0.8091589759041973,
+     "negative_backorder_qty_final": -130824.0,
+     "ret_excel_visible_clipped_0_1": 0.03527289061434736,
+     "worst_claimant_fill": 0.7508338543764282
+    },
+    "v2_key": [
+     0.7508338543764282,
+     0.8091589759041973,
+     -130824.0,
+     0.03527289061434736
+    ]
+   },
+   {
+    "claimant_fills": {
+     "A": 0.8177075830603816,
+     "B": 0.8996674288089794
+    },
+    "flow_fill_rate": 0.8346837703536093,
+    "lost_orders": 0.0,
+    "orders_open_at_horizon": 45.0,
+    "ret_excel_risk_conditional": 0.0009256708574315996,
+    "ret_excel_visible_clipped_0_1": 0.0070560296759626774,
+    "seed": 6300002,
+    "share": 0.5,
+    "v1_key": [
+     1.0,
+     0.8346837703536093,
+     -110770.0,
+     0.0070560296759626774
+    ],
+    "v2_components": {
+     "flow_fill_rate": 0.8346837703536093,
+     "negative_backorder_qty_final": -110770.0,
+     "ret_excel_visible_clipped_0_1": 0.0070560296759626774,
+     "worst_claimant_fill": 0.8177075830603816
+    },
+    "v2_key": [
+     0.8177075830603816,
+     0.8346837703536093,
+     -110770.0,
+     0.0070560296759626774
+    ]
+   },
+   {
+    "claimant_fills": {
+     "A": 0.8842842680198477,
+     "B": 0.8650350778951795
+    },
+    "flow_fill_rate": 0.8533903405560707,
+    "lost_orders": 0.0,
+    "orders_open_at_horizon": 40.0,
+    "ret_excel_risk_conditional": 0.0038364900567553002,
+    "ret_excel_visible_clipped_0_1": 0.016030978032382272,
+    "seed": 6300003,
+    "share": 0.5,
+    "v1_key": [
+     1.0,
+     0.8533903405560707,
+     -96590.0,
+     0.016030978032382272
+    ],
+    "v2_components": {
+     "flow_fill_rate": 0.8533903405560707,
+     "negative_backorder_qty_final": -96590.0,
+     "ret_excel_visible_clipped_0_1": 0.016030978032382272,
+     "worst_claimant_fill": 0.8650350778951795
+    },
+    "v2_key": [
+     0.8650350778951795,
+     0.8533903405560707,
+     -96590.0,
+     0.016030978032382272
+    ]
+   },
+   {
+    "claimant_fills": {
+     "A": 0.9251741404655174,
+     "B": 0.8375127840408149
+    },
+    "flow_fill_rate": 0.862405913756797,
+    "lost_orders": 0.0,
+    "orders_open_at_horizon": 39.0,
+    "ret_excel_risk_conditional": 0.0012307077886091178,
+    "ret_excel_visible_clipped_0_1": 0.08772410386260505,
+    "seed": 6300004,
+    "share": 0.5,
+    "v1_key": [
+     1.0,
+     0.862405913756797,
+     -92776.0,
+     0.08772410386260505
+    ],
+    "v2_components": {
+     "flow_fill_rate": 0.862405913756797,
+     "negative_backorder_qty_final": -92776.0,
+     "ret_excel_visible_clipped_0_1": 0.08772410386260505,
+     "worst_claimant_fill": 0.8375127840408149
+    },
+    "v2_key": [
+     0.8375127840408149,
+     0.862405913756797,
+     -92776.0,
+     0.08772410386260505
+    ]
+   },
+   {
+    "claimant_fills": {
+     "A": 0.8360165245504906,
+     "B": 0.9128967158201159
+    },
+    "flow_fill_rate": 0.8545695187833484,
+    "lost_orders": 0.0,
+    "orders_open_at_horizon": 40.0,
+    "ret_excel_risk_conditional": 0.0009415357605058387,
+    "ret_excel_visible_clipped_0_1": 0.0041096012199357285,
+    "seed": 6300005,
+    "share": 0.5,
+    "v1_key": [
+     1.0,
+     0.8545695187833484,
+     -98237.0,
+     0.0041096012199357285
+    ],
+    "v2_components": {
+     "flow_fill_rate": 0.8545695187833484,
+     "negative_backorder_qty_final": -98237.0,
+     "ret_excel_visible_clipped_0_1": 0.0041096012199357285,
+     "worst_claimant_fill": 0.8360165245504906
+    },
+    "v2_key": [
+     0.8360165245504906,
+     0.8545695187833484,
+     -98237.0,
+     0.0041096012199357285
+    ]
+   },
+   {
+    "claimant_fills": {
+     "A": 0.7953846949397568,
+     "B": 0.9754868169259531
+    },
+    "flow_fill_rate": 0.8575557574090895,
+    "lost_orders": 0.0,
+    "orders_open_at_horizon": 40.0,
+    "ret_excel_risk_conditional": 0.0010620436802488663,
+    "ret_excel_visible_clipped_0_1": 0.05997854320982327,
+    "seed": 6300006,
+    "share": 0.5,
+    "v1_key": [
+     1.0,
+     0.8575557574090895,
+     -94924.0,
+     0.05997854320982327
+    ],
+    "v2_components": {
+     "flow_fill_rate": 0.8575557574090895,
+     "negative_backorder_qty_final": -94924.0,
+     "ret_excel_visible_clipped_0_1": 0.05997854320982327,
+     "worst_claimant_fill": 0.7953846949397568
+    },
+    "v2_key": [
+     0.7953846949397568,
+     0.8575557574090895,
+     -94924.0,
+     0.05997854320982327
+    ]
+   }
+  ],
+  "0.7": [
+   {
+    "claimant_fills": {
+     "A": 0.9888538312799414,
+     "B": 0.5842705631619451
+    },
+    "flow_fill_rate": 0.7823112232839015,
+    "lost_orders": 1.0,
+    "orders_open_at_horizon": 60.0,
+    "ret_excel_risk_conditional": 0.0035217790403423137,
+    "ret_excel_visible_clipped_0_1": 0.21648720277185565,
+    "seed": 6300001,
+    "share": 0.7,
+    "v1_key": [
+     0.0,
+     0.7823112232839015,
+     -147627.89613999997,
+     0.21648720277185565
+    ],
+    "v2_components": {
+     "flow_fill_rate": 0.7823112232839015,
+     "negative_backorder_qty_final": -147627.89613999997,
+     "ret_excel_visible_clipped_0_1": 0.21648720277185565,
+     "worst_claimant_fill": 0.5842705631619451
+    },
+    "v2_key": [
+     0.5842705631619451,
+     0.7823112232839015,
+     -147627.89613999997,
+     0.21648720277185565
+    ]
+   },
+   {
+    "claimant_fills": {
+     "A": 0.9892352706414108,
+     "B": 0.5844691852005818
+    },
+    "flow_fill_rate": 0.7677511757398288,
+    "lost_orders": 5.0,
+    "orders_open_at_horizon": 60.0,
+    "ret_excel_risk_conditional": 0.0027045225727021453,
+    "ret_excel_visible_clipped_0_1": 0.29170373542824435,
+    "seed": 6300002,
+    "share": 0.7,
+    "v1_key": [
+     0.0,
+     0.7677511757398288,
+     -146468.89999999997,
+     0.29170373542824435
+    ],
+    "v2_components": {
+     "flow_fill_rate": 0.7677511757398288,
+     "negative_backorder_qty_final": -146468.89999999997,
+     "ret_excel_visible_clipped_0_1": 0.29170373542824435,
+     "worst_claimant_fill": 0.5844691852005818
+    },
+    "v2_key": [
+     0.5844691852005818,
+     0.7677511757398288,
+     -146468.89999999997,
+     0.29170373542824435
+    ]
+   },
+   {
+    "claimant_fills": {
+     "A": 0.9870514567111205,
+     "B": 0.5580601398225197
+    },
+    "flow_fill_rate": 0.7389876306743708,
+    "lost_orders": 11.0,
+    "orders_open_at_horizon": 60.0,
+    "ret_excel_risk_conditional": 0.001883370914457117,
+    "ret_excel_visible_clipped_0_1": 0.2720754661464535,
+    "seed": 6300003,
+    "share": 0.7,
+    "v1_key": [
+     0.0,
+     0.7389876306743708,
+     -155981.47999999998,
+     0.2720754661464535
+    ],
+    "v2_components": {
+     "flow_fill_rate": 0.7389876306743708,
+     "negative_backorder_qty_final": -155981.47999999998,
+     "ret_excel_visible_clipped_0_1": 0.2720754661464535,
+     "worst_claimant_fill": 0.5580601398225197
+    },
+    "v2_key": [
+     0.5580601398225197,
+     0.7389876306743708,
+     -155981.47999999998,
+     0.2720754661464535
+    ]
+   },
+   {
+    "claimant_fills": {
+     "A": 0.983191873964377,
+     "B": 0.5471999717869438
+    },
+    "flow_fill_rate": 0.7232022586196469,
+    "lost_orders": 17.0,
+    "orders_open_at_horizon": 60.0,
+    "ret_excel_risk_conditional": 0.0015314408525906732,
+    "ret_excel_visible_clipped_0_1": 0.2594029045224534,
+    "seed": 6300004,
+    "share": 0.7,
+    "v1_key": [
+     0.0,
+     0.7232022586196469,
+     -149899.39999999997,
+     0.2594029045224534
+    ],
+    "v2_components": {
+     "flow_fill_rate": 0.7232022586196469,
+     "negative_backorder_qty_final": -149899.39999999997,
+     "ret_excel_visible_clipped_0_1": 0.2594029045224534,
+     "worst_claimant_fill": 0.5471999717869438
+    },
+    "v2_key": [
+     0.5471999717869438,
+     0.7232022586196469,
+     -149899.39999999997,
+     0.2594029045224534
+    ]
+   },
+   {
+    "claimant_fills": {
+     "A": 0.984479637367416,
+     "B": 0.5970296830402536
+    },
+    "flow_fill_rate": 0.771343705171213,
+    "lost_orders": 4.0,
+    "orders_open_at_horizon": 60.0,
+    "ret_excel_risk_conditional": 0.0019360107712560618,
+    "ret_excel_visible_clipped_0_1": 0.3063313604884625,
+    "seed": 6300005,
+    "share": 0.7,
+    "v1_key": [
+     0.0,
+     0.771343705171213,
+     -147437.67999999996,
+     0.3063313604884625
+    ],
+    "v2_components": {
+     "flow_fill_rate": 0.771343705171213,
+     "negative_backorder_qty_final": -147437.67999999996,
+     "ret_excel_visible_clipped_0_1": 0.3063313604884625,
+     "worst_claimant_fill": 0.5970296830402536
+    },
+    "v2_key": [
+     0.5970296830402536,
+     0.771343705171213,
+     -147437.67999999996,
+     0.3063313604884625
+    ]
+   },
+   {
+    "claimant_fills": {
+     "A": 0.992751039275509,
+     "B": 0.6396670260462916
+    },
+    "flow_fill_rate": 0.8092567438061984,
+    "lost_orders": 0.0,
+    "orders_open_at_horizon": 52.0,
+    "ret_excel_risk_conditional": 0.0017841194457538514,
+    "ret_excel_visible_clipped_0_1": 0.331880924465926,
+    "seed": 6300006,
+    "share": 0.7,
+    "v1_key": [
+     1.0,
+     0.8092567438061984,
+     -129144.87699999998,
+     0.331880924465926
+    ],
+    "v2_components": {
+     "flow_fill_rate": 0.8092567438061984,
+     "negative_backorder_qty_final": -129144.87699999998,
+     "ret_excel_visible_clipped_0_1": 0.331880924465926,
+     "worst_claimant_fill": 0.6396670260462916
+    },
+    "v2_key": [
+     0.6396670260462916,
+     0.8092567438061984,
+     -129144.87699999998,
+     0.331880924465926
+    ]
+   }
+  ],
+  "0.9": [
+   {
+    "claimant_fills": {
+     "A": 0.9374726035169851,
+     "B": 0.21845459880524606
+    },
+    "flow_fill_rate": 0.5675582284132265,
+    "lost_orders": 62.0,
+    "orders_open_at_horizon": 60.0,
+    "ret_excel_risk_conditional": 0.008319922223411144,
+    "ret_excel_visible_clipped_0_1": 0.34245285894049454,
+    "seed": 6300001,
+    "share": 0.9,
+    "v1_key": [
+     0.0,
+     0.5675582284132265,
+     -148978.85000000003,
+     0.34245285894049454
+    ],
+    "v2_components": {
+     "flow_fill_rate": 0.5675582284132265,
+     "negative_backorder_qty_final": -148978.85000000003,
+     "ret_excel_visible_clipped_0_1": 0.34245285894049454,
+     "worst_claimant_fill": 0.21845459880524606
+    },
+    "v2_key": [
+     0.21845459880524606,
+     0.5675582284132265,
+     -148978.85000000003,
+     0.34245285894049454
+    ]
+   },
+   {
+    "claimant_fills": {
+     "A": 0.9322297187199645,
+     "B": 0.2012891030970692
+    },
+    "flow_fill_rate": 0.5272693997071742,
+    "lost_orders": 72.0,
+    "orders_open_at_horizon": 60.0,
+    "ret_excel_risk_conditional": 0.005365357774849737,
+    "ret_excel_visible_clipped_0_1": 0.3407901436004314,
+    "seed": 6300002,
+    "share": 0.9,
+    "v1_key": [
+     0.0,
+     0.5272693997071742,
+     -148671.95000000004,
+     0.3407901436004314
+    ],
+    "v2_components": {
+     "flow_fill_rate": 0.5272693997071742,
+     "negative_backorder_qty_final": -148671.95000000004,
+     "ret_excel_visible_clipped_0_1": 0.3407901436004314,
+     "worst_claimant_fill": 0.2012891030970692
+    },
+    "v2_key": [
+     0.2012891030970692,
+     0.5272693997071742,
+     -148671.95000000004,
+     0.3407901436004314
+    ]
+   },
+   {
+    "claimant_fills": {
+     "A": 0.8844754965066431,
+     "B": 0.19258510271502183
+    },
+    "flow_fill_rate": 0.4744781017484408,
+    "lost_orders": 85.0,
+    "orders_open_at_horizon": 60.0,
+    "ret_excel_risk_conditional": 0.004573367731073768,
+    "ret_excel_visible_clipped_0_1": 0.3403360379605402,
+    "seed": 6300003,
+    "share": 0.9,
+    "v1_key": [
+     0.0,
+     0.4744781017484408,
+     -160108.40000000002,
+     0.3403360379605402
+    ],
+    "v2_components": {
+     "flow_fill_rate": 0.4744781017484408,
+     "negative_backorder_qty_final": -160108.40000000002,
+     "ret_excel_visible_clipped_0_1": 0.3403360379605402,
+     "worst_claimant_fill": 0.19258510271502183
+    },
+    "v2_key": [
+     0.19258510271502183,
+     0.4744781017484408,
+     -160108.40000000002,
+     0.3403360379605402
+    ]
+   },
+   {
+    "claimant_fills": {
+     "A": 0.9128702919742153,
+     "B": 0.18728343540973602
+    },
+    "flow_fill_rate": 0.4726455759535081,
+    "lost_orders": 88.0,
+    "orders_open_at_horizon": 60.0,
+    "ret_excel_risk_conditional": 0.003631898131107822,
+    "ret_excel_visible_clipped_0_1": 0.36805928223426065,
+    "seed": 6300004,
+    "share": 0.9,
+    "v1_key": [
+     0.0,
+     0.4726455759535081,
+     -149793.70000000004,
+     0.36805928223426065
+    ],
+    "v2_components": {
+     "flow_fill_rate": 0.4726455759535081,
+     "negative_backorder_qty_final": -149793.70000000004,
+     "ret_excel_visible_clipped_0_1": 0.36805928223426065,
+     "worst_claimant_fill": 0.18728343540973602
+    },
+    "v2_key": [
+     0.18728343540973602,
+     0.4726455759535081,
+     -149793.70000000004,
+     0.36805928223426065
+    ]
+   },
+   {
+    "claimant_fills": {
+     "A": 0.9093914843735229,
+     "B": 0.20310585454226388
+    },
+    "flow_fill_rate": 0.5159281796009423,
+    "lost_orders": 76.0,
+    "orders_open_at_horizon": 60.0,
+    "ret_excel_risk_conditional": 0.0041588741409141795,
+    "ret_excel_visible_clipped_0_1": 0.37991574914538107,
+    "seed": 6300005,
+    "share": 0.9,
+    "v1_key": [
+     0.0,
+     0.5159281796009423,
+     -150062.60000000003,
+     0.37991574914538107
+    ],
+    "v2_components": {
+     "flow_fill_rate": 0.5159281796009423,
+     "negative_backorder_qty_final": -150062.60000000003,
+     "ret_excel_visible_clipped_0_1": 0.37991574914538107,
+     "worst_claimant_fill": 0.20310585454226388
+    },
+    "v2_key": [
+     0.20310585454226388,
+     0.5159281796009423,
+     -150062.60000000003,
+     0.37991574914538107
+    ]
+   },
+   {
+    "claimant_fills": {
+     "A": 0.9420245019459014,
+     "B": 0.21688790113108053
+    },
+    "flow_fill_rate": 0.5611616207912844,
+    "lost_orders": 61.0,
+    "orders_open_at_horizon": 60.0,
+    "ret_excel_risk_conditional": 0.004242430828924967,
+    "ret_excel_visible_clipped_0_1": 0.38556774975894914,
+    "seed": 6300006,
+    "share": 0.9,
+    "v1_key": [
+     0.0,
+     0.5611616207912844,
+     -153253.60000000003,
+     0.38556774975894914
+    ],
+    "v2_components": {
+     "flow_fill_rate": 0.5611616207912844,
+     "negative_backorder_qty_final": -153253.60000000003,
+     "ret_excel_visible_clipped_0_1": 0.38556774975894914,
+     "worst_claimant_fill": 0.21688790113108053
+    },
+    "v2_key": [
+     0.21688790113108053,
+     0.5611616207912844,
+     -153253.60000000003,
+     0.38556774975894914
+    ]
+   }
+  ]
+ },
+ "schema_version": "service_first_v2_audit_v1",
+ "seeds": [
+  6300001,
+  6300002,
+  6300003,
+  6300004,
+  6300005,
+  6300006
+ ],
+ "self_sha256": "0e37fe2faa3fd695452b7ea5cd0f68543e6e814a1972989598c33ee79b69ea76",
+ "shares": [
+  0.1,
+  0.3,
+  0.5,
+  0.7,
+  0.9
+ ],
+ "status_note": "AUDIT artifact. v2 is prospective: it has no preregistration of its own and has not been used as the endpoint of any sealed experiment"
+}
