@@ -51,17 +51,33 @@ tengo escrita.
 3. **Se validó que el falsador caza el defecto**: se reintrodujo la fuga en una copia de control y
    se comprobó que `f5` falla con ella. Un falsador que nunca se ha visto fallar no está probado.
 
-## El hallazgo que esto deja, y no es un parche
+## Cómo lo interpretamos — y por qué el arreglo es MÁS fiel, no una desviación
 
-> **La Fig. 5 de Garrido, tomada literalmente, no puede elegir la siguiente configuración.**
+**Su Fig. 5 es un concepto, no una especificación.** Su paper es explícitamente exploratorio
+(*«the scope of this study is purely exploratory»*): dibuja una neurona cuyas dendritas son los
+cuatro drivers `d_i`, ponderadas por `ρ`, con una activación del tipo *«¿es la medida de SCRES en
+la configuración x mayor que en la x−1?»*. Lo que pide es **la idea**: poner un aprendiz entre
+sus nodos ③ y ⑧ para que la cadena recuerde entre corridas. Operacionalizarla es **nuestro**
+trabajo, y una lectura literal no sería fidelidad — sería pedantería.
 
-Sus dendritas son los cuatro drivers `d_i`, y un driver es una propiedad de un episodio **ya
-corrido**. Su neurona, tal como está dibujada, **evalúa** —su activación es *«¿es ReT en la
-configuración x mayor que en la x−1?»*, que se pregunta **después** de correr `x`— pero **no
-planifica**. Para cerrar el lazo entre sus nodos ③ y ⑧ hace falta un modelo sobre `ρ`, que es
-precisamente el nodo ③.
+**La interpretación que adoptamos, y la razón:**
 
-Eso es una observación sustantiva sobre su propuesta, y es material de §4.3 del borrador.
+| en su figura | en nuestro caso | por qué |
+|---|---|---|
+| dendritas `d_i` = los cuatro drivers | **la señal de actualización** tras cada corrida | un driver es una propiedad de un episodio ya simulado: es lo que el DES **reporta**, el nodo ⑧ |
+| pesos `ρ` | **lo que el aprendiz retiene** entre configuraciones y contextos | es literalmente `L_{t−1}`, la variable de estado endógena que el borrador introduce |
+| activación «¿ReT(x) > ReT(x−1)?» | **el gradiente** que compara la configuración actual con lo aprendido | su forma comparativa, hecha continua para que pueda entrenar |
+| — | **entrada del modelo = las variables de decisión** | son el nodo ③, y son lo único que un planificador tiene **antes** de correr |
+
+**La decisión de diseño que esto fuerza, dicha claramente:** su figura no distingue entre *lo que
+el aprendiz observa* y *lo que el aprendiz usa para elegir*, porque a nivel conceptual no hace
+falta. Al implementarla sí: **los drivers entran por la actualización, las variables de decisión
+por la predicción.** Mezclarlas fue mi error — y es el error que un lector cuidadoso predeciría de
+una implementación apresurada de esta figura, lo cual la convierte en una **nota metodológica
+útil para el paper**, no en una objeción a su propuesta.
+
+Eso es material de §4.3, redactado como *«así se operacionaliza su Fig. 5, y ésta es la
+distinción que hay que hacer al bajarla a código»*.
 
 ## Reproducción
 

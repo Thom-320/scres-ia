@@ -98,15 +98,19 @@ def evaluate(config: dict, context: str, seed: int, horizon: float) -> tuple[flo
 def features(config: dict) -> np.ndarray:
     """Inputs available BEFORE running a configuration: its decision coordinates, and a bias.
 
-    Garrido's Fig. 5 draws the dendrites as the four SCRES drivers. Taken literally that neuron
-    cannot choose the next configuration, because a driver is a property of an episode that has
-    already been simulated -- reading it for an unrun candidate is reading the answer. An earlier
-    version of this runner did exactly that, and `f5` did not catch it because it asserted a
-    claim about rho rather than testing the ranking step.
+    Garrido's Fig. 5 is a CONCEPT, not a specification -- his paper is explicitly exploratory --
+    so operationalising it is our job. It draws the dendrites as the four SCRES drivers, weighted
+    by rho, activated by comparing SCRES at configuration x against x-1.
 
-    So the model is over rho, which is what a planner actually holds at decision time, and the
-    drivers are kept as reported diagnostics. That his figure's inputs are post-hoc is itself a
-    finding about the proposal, not a workaround.
+    Our reading: the drivers are what the DES REPORTS (his node 8) and so they belong in the
+    UPDATE; rho is what the learner retains, which is the manuscript's `L_{t-1}`; and the input
+    the model predicts FROM has to be the decision variables (his node 3), because they are the
+    only thing a planner holds before running anything. His figure does not distinguish what the
+    learner observes from what it selects on, because conceptually it need not; in code it must.
+
+    An earlier version of this runner used the drivers for BOTH, which meant ranking unrun
+    candidates by a property of episodes that had not happened. `f5` now tests this rather than
+    asserting it.
     """
     coords = [float(FACTORS[n].index(config[n])) / (len(FACTORS[n]) - 1) for n in FACTOR_NAMES]
     return np.concatenate([np.array(coords), [1.0]])
