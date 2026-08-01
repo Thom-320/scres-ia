@@ -114,6 +114,13 @@ def build_manifest() -> dict[str, object]:
                 allowed_use="none until full DES-288 seal and falsifier merge",
             ),
             record(
+                artifact="results/garrido_meta_learner_h3power_merge_v1/result.json",
+                runner="scripts/merge_garrido_h3_power_v1.py",
+                contract="docs/PREREGISTRO_H3_POTENCIA_2026-08-01.md",
+                status="PENDING_H3_INPUTS",
+                allowed_use="none until local/VPS seals, source hash and merge falsifiers pass",
+            ),
+            record(
                 artifact="results/garrido_meta_learner_h3power_local/result.json",
                 runner="scripts/run_meta_learner_over_configs_v1.py",
                 contract="docs/PREREGISTRO_H3_POTENCIA_2026-08-01.md",
