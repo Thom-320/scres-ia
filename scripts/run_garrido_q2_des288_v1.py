@@ -354,6 +354,9 @@ def search(
         "ofat_coordinate_changes": ofat_coordinate_changes,
         "final_state_digest": learner.state_digest() if learner is not None else None,
         "final_n_learner_observations": learner.n_observations if learner is not None else 0,
+        "surface_sha256": _surface_digest(surface),
+        "budget": int(budget),
+        "context_order": list(contexts),
     }
 
 
@@ -446,6 +449,17 @@ def _falsifiers(
     }
     memory_contract = dict(common, rho_policy="carry", update="after_selected_outcome")
     reset_contract = dict(common, rho_policy="reset", update="after_selected_outcome")
+    arm_surface_digests = {
+        strategy: {
+            run["surface_sha256"] for run in results[strategy]
+        }
+        for strategy in ("retained", "reset")
+    }
+    same_surface = (
+        len(arm_surface_digests["retained"]) == 1
+        and len(arm_surface_digests["reset"]) == 1
+        and arm_surface_digests["retained"] == arm_surface_digests["reset"]
+    )
     zero_surface = {
         key: [dict(row) for row in rows]
         for key, rows in surface.items()
@@ -540,6 +554,7 @@ def _falsifiers(
         },
         "f3_memory_reset_share_contract": {
             "passed": memory_contract.copy() | {"rho_policy": "reset"} == reset_contract
+            and same_surface
             and all(
                 len(results["retained"][r]["per_context"])
                 == len(results["reset"][r]["per_context"])
@@ -550,6 +565,10 @@ def _falsifiers(
                 "why_it_can_fail": "a seed, order, budget or trace-shape difference confounds retained-reset",
                 "retained_contract": memory_contract,
                 "reset_contract": reset_contract,
+                "arm_surface_digests": {
+                    key: sorted(value) for key, value in arm_surface_digests.items()
+                },
+                "same_surface": same_surface,
             },
         },
         "f4_zero_budget_is_identical": {
