@@ -220,11 +220,14 @@ def main() -> int:
         local = load(args.local)
         vps = load(args.vps)
         remote_source_manifest = json.loads(args.remote_source_manifest.read_text())
-    except (FileNotFoundError, ValueError) as exc:
+    except FileNotFoundError as exc:
         print(f"H3 merge halted: {exc}")
         return 1
     except json.JSONDecodeError as exc:
         print(f"H3 merge halted: invalid source manifest: {exc}")
+        return 1
+    except ValueError as exc:
+        print(f"H3 merge halted: {exc}")
         return 1
     falsifiers = checks(
         local,
