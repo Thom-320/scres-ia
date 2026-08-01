@@ -88,6 +88,10 @@ def checks(
     vps_contexts = tuple(vps.get("contexts", ()))
     local_falsifiers = local.get("falsifiers", {})
     vps_falsifiers = vps.get("falsifiers", {})
+    input_seals_valid = (
+        local.get("self_sha256") == recompute_seal(local)
+        and vps.get("self_sha256") == recompute_seal(vps)
+    )
     input_falsifiers_pass = all(
         bool(item.get("passed"))
         for item in list(local_falsifiers.values()) + list(vps_falsifiers.values())
@@ -144,11 +148,12 @@ def checks(
             },
         },
         "f_input_seals_are_valid": {
-            "passed": True,
+            "passed": input_seals_valid,
             "evidence": {
                 "why_it_can_fail": "editing a sealed input after completion invalidates the merge",
                 "local_self_sha256": local.get("self_sha256"),
                 "vps_self_sha256": vps.get("self_sha256"),
+                "recomputed_match": input_seals_valid,
             },
         },
         "f_input_falsifiers_pass": {

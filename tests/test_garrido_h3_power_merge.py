@@ -53,3 +53,11 @@ def test_merge_checks_reject_seed_overlap():
     vps = _payload(EXPECTED_LOCAL_SEEDS)
     checks_out = checks(local, vps, remote_runner_sha256=file_sha256(RUNNER))
     assert checks_out["f_merge_seeds_are_disjoint"]["passed"] is False
+
+
+def test_merge_checks_rejects_edited_sealed_input():
+    local = _payload(EXPECTED_LOCAL_SEEDS)
+    vps = _payload(EXPECTED_VPS_SEEDS)
+    local["budget"] = 23
+    checks_out = checks(local, vps, remote_runner_sha256=file_sha256(RUNNER))
+    assert checks_out["f_input_seals_are_valid"]["passed"] is False
