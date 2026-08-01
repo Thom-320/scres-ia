@@ -1,0 +1,18 @@
+{
+  "schema_version": "seed_manifest_expedition_headroom_v2",
+  "status": "RESERVED_NOT_OPENED",
+  "purpose": "Fase 1B expedition timing headroom",
+  "seed_base": 5800001,
+  "default_seed_count": 8,
+  "calibration_seed_count": 4,
+  "excluded_blocks": [
+    [4900001, 4900006],
+    [4900501, 4900506],
+    [5100001, 5100012],
+    [5200001, 5200008],
+    [5400001, 5400008],
+    [5600001, 5600008]
+  ],
+  "custody_rule": "No execution is valid unless the requested block is disjoint from every excluded block and no earlier artifact names a requested seed.",
+  "confirmation_rule": "Calibration seeds are the first block; evaluation seeds are the remaining disjoint block. The split is fixed before execution."
+}

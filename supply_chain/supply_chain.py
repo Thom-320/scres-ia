@@ -284,6 +284,9 @@ class MFSCSimulation:
         # pool effectively fungible and the share nearly moot. False makes the shares hard.
         # See `cssu_allocation.allocate_shared_capacity` for why this is the mechanism knob.
         cssu_reallocate_unused: bool = True,
+        expedite_budget_hours: float = 0.0,
+        expedite_reduction_hours: float = 12.0,
+        expedite_charge_hours: float = 24.0,
         op8_dispatch_mode: str = "thesis_full_batch",
         op8_convoy_capacity: float = 5_000.0,
         op8_convoy_outbound_hours: float = 24.0,
@@ -421,6 +424,12 @@ class MFSCSimulation:
             raise ValueError(f"cssu_service_rule must be one of {SERVICE_RULES}.")
         if cssu_daily_capacity is not None and float(cssu_daily_capacity) <= 0:
             raise ValueError("cssu_daily_capacity must be positive when provided.")
+        if float(expedite_budget_hours) < 0.0:
+            raise ValueError("expedite_budget_hours must be non-negative.")
+        if float(expedite_reduction_hours) <= 0.0:
+            raise ValueError("expedite_reduction_hours must be positive.")
+        if float(expedite_charge_hours) <= 0.0:
+            raise ValueError("expedite_charge_hours must be positive.")
         if op8_dispatch_mode not in {"thesis_full_batch", "finite_convoy_v1"}:
             raise ValueError(
                 "op8_dispatch_mode must be 'thesis_full_batch' or "
@@ -485,6 +494,17 @@ class MFSCSimulation:
         self.cssu_reallocate_unused = bool(cssu_reallocate_unused)
         self._pending_cssu_action: Optional[dict[str, Any]] = None
         self.cssu_action_events: list[dict[str, Any]] = []
+        self.expedite_budget_hours = float(expedite_budget_hours)
+        self.expedite_budget_remaining = float(expedite_budget_hours)
+        self.expedite_reduction_hours = float(expedite_reduction_hours)
+        self.expedite_charge_hours = float(expedite_charge_hours)
+        # Requests are queued per leg.  A fixed calendar may issue the next
+        # request while a disruption is still blocking the previous eligible
+        # invocation; rejecting that request would make the nominal budget
+        # depend on an unregistered implementation accident.  Each `_pt` call
+        # consumes at most one queued request, so physical effects never stack.
+        self._pending_expeditions: dict[str, list[dict[str, Any]]] = {}
+        self.expedite_events: list[dict[str, Any]] = []
         self.cssu_demand_events: list[tuple[float, str, float]] = []
         self.cssu_delivery_events: list[tuple[float, str, float]] = []
         self.op8_dispatch_mode = str(op8_dispatch_mode)
@@ -1374,7 +1394,12 @@ class MFSCSimulation:
     # Everything outside `self.params | _PSEUDO_ACTION_KEYS` raises, so a typo or
     # a stale factor name can never again be discarded in silence.
     _PSEUDO_ACTION_KEYS: frozenset[str] = frozenset(
-        {"backorder_priority_rule", "op5_q"}
+        {
+            "backorder_priority_rule",
+            "op5_q",
+            "cssu_allocation_a",
+            "cssu_service_rule",
+        }
     )
 
     def _buffer_route_open(self, key: str) -> bool:
@@ -2013,7 +2038,7 @@ class MFSCSimulation:
 
     def step(
         self,
-        action: Optional[dict[str, float]] = None,
+        action: Optional[dict[str, Any]] = None,
         step_hours: Optional[float] = None,
     ) -> tuple[np.ndarray, float, bool, dict[str, Any]]:
         """
@@ -2022,7 +2047,10 @@ class MFSCSimulation:
         Parameters
         ----------
         action : dict or None
-            Parameter overrides, e.g. {'op9_rop': 12, 'op3_q': 20000}
+            Parameter overrides, e.g. {'op9_rop': 12, 'op3_q': 20000}. In
+            ``split_v1`` the CSSU decision may be supplied as
+            ``cssu_allocation_a`` and/or ``cssu_service_rule``; those actions
+            use the fixed one-day activation latency.
         step_hours : float
             Hours to advance. Default: self._step_size (24h).
         """
@@ -2044,6 +2072,21 @@ class MFSCSimulation:
             requested_priority_rule = action.get("backorder_priority_rule")
             if requested_priority_rule is not None:
                 self.set_backorder_priority_rule(str(requested_priority_rule))
+            requested_cssu_a = action.get("cssu_allocation_a")
+            requested_cssu_rule = action.get("cssu_service_rule")
+            if requested_cssu_a is not None or requested_cssu_rule is not None:
+                if self.cssu_topology_mode != "split_v1":
+                    raise ValueError(
+                        "CSSU allocation actions require cssu_topology_mode='split_v1'."
+                    )
+                self.set_cssu_allocation_action(
+                    self.cssu_allocation_a
+                    if requested_cssu_a is None
+                    else float(requested_cssu_a),
+                    self.cssu_service_rule
+                    if requested_cssu_rule is None
+                    else str(requested_cssu_rule),
+                )
             for k, v in action.items():
                 if k == "backorder_priority_rule":
                     continue
@@ -3674,6 +3717,56 @@ class MFSCSimulation:
     # STOCHASTIC PROCESSING TIMES
     # =====================================================================
 
+    _EXPEDITE_PARAM_BY_LEG: dict[str, str] = {
+        "op8": "op8_pt",
+        "op10": "op10_pt",
+        "op12": "op12_pt",
+    }
+
+    def arm_expedition(self, leg: str) -> dict[str, Any]:
+        """Reserve budget for the next eligible transport leg.
+
+        The feature is inert when the budget is zero. An arm consumes only the
+        declared budget charge; the physical PT change is applied once, at the
+        next invocation of the selected leg's ``_pt`` hook. Requests may queue
+        behind an already pending request, but one invocation consumes at most
+        one request, so effects never stack on an already-running shipment.
+        """
+        leg = str(leg)
+        param_key = self._EXPEDITE_PARAM_BY_LEG.get(leg)
+        if param_key is None:
+            raise ValueError(
+                f"leg must be one of {tuple(self._EXPEDITE_PARAM_BY_LEG)}; got {leg!r}"
+            )
+        now = float(self.env.now)
+        if self.expedite_budget_remaining + 1e-9 < self.expedite_charge_hours:
+            event = {
+                "time": now,
+                "leg": leg,
+                "param_key": param_key,
+                "status": "rejected_budget",
+                "budget_before": float(self.expedite_budget_remaining),
+                "budget_charge": float(self.expedite_charge_hours),
+            }
+            self.expedite_events.append(event)
+            return dict(event)
+        self.expedite_budget_remaining -= self.expedite_charge_hours
+        event = {
+            "armed_at": now,
+            "leg": leg,
+            "param_key": param_key,
+            "status": "armed",
+            "budget_before": float(
+                self.expedite_budget_remaining + self.expedite_charge_hours
+            ),
+            "budget_charge": float(self.expedite_charge_hours),
+            "budget_after_arm": float(self.expedite_budget_remaining),
+            "queue_depth_after_arm": len(self._pending_expeditions.get(leg, ())) + 1,
+        }
+        self._pending_expeditions.setdefault(leg, []).append(event)
+        self.expedite_events.append(dict(event))
+        return dict(event)
+
     def _pt(self, param_key: str) -> float:
         """
         Return processing time for the given param, optionally with noise.
@@ -3684,7 +3777,34 @@ class MFSCSimulation:
 
         Returns the deterministic base value when stochastic_pt is False.
         """
-        base = self.params[param_key]
+        nominal = float(self.params[param_key])
+        base = nominal
+        leg = next(
+            (candidate for candidate, key in self._EXPEDITE_PARAM_BY_LEG.items()
+             if key == param_key),
+            None,
+        )
+        pending = None
+        if leg is not None:
+            queue = self._pending_expeditions.get(leg, [])
+            if queue:
+                pending = queue.pop(0)
+            if not queue:
+                self._pending_expeditions.pop(leg, None)
+        if pending is not None:
+            base = max(0.0, base - self.expedite_reduction_hours)
+            applied = dict(pending)
+            applied.update(
+                {
+                    "applied_at": float(self.env.now),
+                    "status": "applied",
+                    "nominal_pt": nominal,
+                    "effective_base_pt": base,
+                    "reduction_hours": min(self.expedite_reduction_hours, nominal),
+                    "budget_remaining": float(self.expedite_budget_remaining),
+                }
+            )
+            self.expedite_events.append(applied)
         if not self.stochastic_pt or self.deterministic_baseline or base <= 0:
             return base
         return float(self.rng.triangular(0.75 * base, base, 1.5 * base))
@@ -4673,6 +4793,10 @@ class MFSCSimulation:
         Static frontier policies are configured in the constructor and require
         no runtime mutation.
         """
+        if self.cssu_topology_mode != "split_v1":
+            raise ValueError(
+                "CSSU allocation actions require cssu_topology_mode='split_v1'."
+            )
         allocation_a = validate_allocation_a(allocation_a)
         if service_rule not in SERVICE_RULES:
             raise ValueError(f"service_rule must be one of {SERVICE_RULES}")

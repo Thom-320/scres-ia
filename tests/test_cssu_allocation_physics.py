@@ -153,6 +153,35 @@ def test_dynamic_action_obeys_one_day_activation_latency():
     assert sim.cssu_service_rule == "FIFO_PARTIAL"
 
 
+def test_step_exposes_cssu_action_with_fixed_latency():
+    sim = MFSCSimulation(cssu_topology_mode="split_v1", horizon=48.0)
+
+    sim.step(
+        action={
+            "cssu_allocation_a": 0.75,
+            "cssu_service_rule": "FIFO_PARTIAL",
+        },
+        step_hours=1.0,
+    )
+
+    assert sim.cssu_allocation_a == 0.50
+    assert sim.cssu_service_rule == "SPT_FULL"
+    assert sim.cssu_action_events[-1]["status"] == "scheduled"
+    assert sim.cssu_action_events[-1]["effective_at"] == pytest.approx(24.0)
+
+    sim.env.run(until=24.0)
+    sim._activate_due_cssu_action()
+    assert sim.cssu_allocation_a == 0.75
+    assert sim.cssu_service_rule == "FIFO_PARTIAL"
+
+
+def test_cssu_step_action_fails_closed_in_aggregate_mode():
+    sim = MFSCSimulation(cssu_topology_mode="aggregate")
+
+    with pytest.raises(ValueError, match="split_v1"):
+        sim.step(action={"cssu_allocation_a": 0.75}, step_hours=1.0)
+
+
 def test_localized_cssu_outage_does_not_take_down_other_destination():
     sim = MFSCSimulation(cssu_topology_mode="split_v1")
     sim._take_down_cssu(11, "A")
@@ -187,3 +216,38 @@ def test_cssu_observation_contains_current_state_but_no_future_truth():
         for key in obs
         for fragment in forbidden_fragments
     )
+
+
+def test_step_cssu_action_is_physically_live_after_activation():
+    kwargs = {
+        "seed": 321,
+        "horizon": 5_000.0,
+        "initial_buffers": {"op9_rations": 1_000_000.0},
+        "order_fulfillment_mode": "op9_linked",
+        "op9_dispatch_policy": "fixed_clock_daily",
+        "downstream_transport_capacity_mode": "parallel",
+        "cssu_topology_mode": "split_v1",
+        "cssu_service_rule": "FIFO_PARTIAL",
+        "cssu_daily_capacity": 2_500.0,
+        "demand_mean_multiplier": 2.0,
+        "risks_enabled": False,
+    }
+    dynamic = MFSCSimulation(**kwargs, cssu_allocation_a=0.25)
+    static = MFSCSimulation(**kwargs, cssu_allocation_a=0.75)
+
+    for day in range(100):
+        action = (
+            {"cssu_allocation_a": 0.75, "cssu_service_rule": "FIFO_PARTIAL"}
+            if day == 5
+            else None
+        )
+        dynamic.step(action=action, step_hours=24.0)
+        static.step(step_hours=24.0)
+
+    assert any(event["status"] == "activated" for event in dynamic.cssu_action_events)
+    assert dynamic.cssu_allocation_a == pytest.approx(0.75)
+    # The action changes the destination-specific physical ledger after its
+    # one-day latency; total capacity and total delivered quantity stay fixed.
+    assert dynamic.cssu_dispatched["A"] < static.cssu_dispatched["A"]
+    assert dynamic.cssu_dispatched["B"] > static.cssu_dispatched["B"]
+    assert dynamic.total_delivered == pytest.approx(static.total_delivered)
