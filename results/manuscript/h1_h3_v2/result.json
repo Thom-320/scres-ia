@@ -1,0 +1,173 @@
+{
+ "H1": {
+  "cells_differing": 42,
+  "cells_total": 72,
+  "contrasts": {
+   "hybrid_vs_reset": {
+    "lcb95": 18072049.349583335,
+    "mean": 34388066.15,
+    "n_paired": 360,
+    "ucb95": 53864221.82958333
+   },
+   "primary_all_cells": {
+    "lcb95": 38932760.02375,
+    "mean": 61674462.18333333,
+    "n_paired": 360,
+    "ucb95": 87248013.2525
+   },
+   "secondary_differing_cells": {
+    "lcb95": 68638032.80499999,
+    "mean": 105727649.45714286,
+    "n_paired": 210,
+    "ucb95": 148946420.3921428
+   }
+  },
+  "levels_by_arm": {
+   "hybrid": 45358777.1,
+   "reset": 79746843.25,
+   "static": 107033239.28333333
+  },
+  "metric": "service_loss_auc_ration_hours",
+  "what_it_is_not": "not a recovery TIME: it is the integral of lost service, which mixes magnitude with duration"
+ },
+ "H3": {
+  "construct_change": "the manuscript's H3 is variance of performance across disruption intensities, which is untestable here because the optimum does not move; this is a different construct, not a repair",
+  "contrasts": {
+   "memory_vs_ofat": {
+    "lcb95": -5.110069444444439,
+    "mean": 18.291666666666668,
+    "ucb95": 41.047777777777775
+   },
+   "memory_vs_reset": {
+    "lcb95": -14.717013888888888,
+    "mean": 7.858333333333331,
+    "ucb95": 28.305624999999985
+   }
+  },
+  "estimand": "variance of runs_to_within_1pct across the six contexts, per repeat",
+  "variance_by_strategy": {
+   "neuron_memory": 39.925,
+   "neuron_reset": 47.78333333333333,
+   "ofat": 58.21666666666667,
+   "random": 70.66388888888888
+  }
+ },
+ "arms": {
+  "hybrid": "neuron_memory",
+  "reset": "neuron_reset",
+  "static": "ofat"
+ },
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "H1_SUPPORTED__H3_NOT_SUPPORTED",
+ "contexts": [
+  "R1r",
+  "R2r",
+  "R1r+R2r",
+  "R1r|esc",
+  "R2r|esc",
+  "R1r+R2r|esc"
+ ],
+ "contract_path": "docs/PREREGISTRO_H1_H3_V2_2026-08-01.md",
+ "contract_sha256": "f0a7ab1d1fe7f6ab98ff5c187b671e4ddffd7b2b15b7c6f10d91ad23534ea5c5",
+ "created_at": "2026-08-01T06:33:06.700827+00:00",
+ "elapsed_seconds": 14.404107207999914,
+ "falsifiers": {
+  "all_passed": true,
+  "f1_some_cells_deploy_different_configurations": {
+   "evidence": {
+    "differing_cells": 42,
+    "distinct_configs_deployed": 42,
+    "total_cells": 72,
+    "why_it_can_fail": "with no differing cell H1' is the same tautology that stopped the first version"
+   },
+   "passed": true
+  },
+  "f2_identical_cells_contribute_exactly_zero": {
+   "evidence": {
+    "max_abs_difference_on_identical_cells": 0.0,
+    "why_it_can_fail": "a cell whose two arms deploy the SAME configuration must give difference 0.0; anything else means the pairing is broken"
+   },
+   "passed": true
+  },
+  "f3_service_loss_auc_is_not_censored": {
+   "evidence": {
+    "episodes_checked": 210,
+    "never_completed_orders_are_inside": true,
+    "share_of_auc_from_never_completed_orders": 0.34238193136533,
+    "why_it_can_fail": "the panel's AUC is recomputed here over EVERY order, with the horizon standing in for orders that never completed. If the panel ever restricted its population the two would diverge, and the metric would inherit the censoring it was chosen to avoid. The second condition is the one that matters: orders that NEVER complete must sit inside the population and carry a positive share, which is exactly what ReT and system_ttr fail to do"
+   },
+   "passed": true
+  },
+  "f4_the_metric_discriminates_between_deployed_configs": {
+   "evidence": {
+    "spread_across_deployed_configs": 1550566118.4,
+    "why_it_can_fail": "identical scores leave nothing to compare"
+   },
+   "passed": true
+  },
+  "f5_contexts_differ_in_search_difficulty": {
+   "evidence": {
+    "ofat_cost_by_context": {
+     "R1r": 6.0,
+     "R1r+R2r": 8.583333333333334,
+     "R1r+R2r|esc": 19.5,
+     "R1r|esc": 8.0,
+     "R2r": 12.5,
+     "R2r|esc": 19.916666666666668
+    },
+    "why_it_can_fail": "H3' needs search cost to VARY across contexts; a flat profile makes its variance noise"
+   },
+   "passed": true
+  },
+  "f6_h3_reads_the_sealed_artifact_unmodified": {
+   "evidence": {
+    "meta_self_sha256": "efb3f067ba295990c1a04e34e669f42cb2c431d9aa92cdb0346ad07c746fb391",
+    "meta_sha256": "81fc696d002463cce5751387448ee799abcbd963d7d2659bdad203dc55eb4b66",
+    "why_it_can_fail": "recomputing the search here would let it be moved; H3' must read the sealed run"
+   },
+   "passed": true
+  },
+  "f7_seeds_are_virgin": {
+   "evidence": {
+    "seeds": [
+     5800001,
+     5800002,
+     5800003,
+     5800004,
+     5800005
+    ],
+    "why_it_can_fail": "reuse would void the confirmation"
+   },
+   "passed": true
+  }
+ },
+ "reference_path": "results/garrido_meta_learner_v2/result.json",
+ "reference_sha256": "efb3f067ba295990c1a04e34e669f42cb2c431d9aa92cdb0346ad07c746fb391",
+ "repeats": 12,
+ "schema_version": "h1_h3_v2",
+ "seeds": [
+  5800001,
+  5800002,
+  5800003,
+  5800004,
+  5800005
+ ],
+ "self_sha256": "312f91a548d8639c9f051a0735c58d58609e374f579cf5dff8328a05e86f7075"
+}

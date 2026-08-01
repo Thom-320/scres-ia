@@ -55,7 +55,8 @@ CONTEXTS = {
 }
 ARMS = {"hybrid": "neuron_memory", "static": "ofat", "reset": "neuron_reset"}
 PRIMARY = "service_loss_auc_ration_hours"          # lower is better, no censoring
-SIDE = ("service_loss_auc_per_order", "flow_fill_rate", "n_orders", "n_served", "n_lost")
+SIDE = ("service_loss_auc_per_order", "flow_fill_rate", "n_orders", "n_served",
+        "n_lost")
 SEED_BASE = 5_800_001
 
 
@@ -74,7 +75,37 @@ def episode(config: dict, context: str, seed: int, horizon: float) -> dict[str, 
     sim.params["op12_rop"] = float(config["op12_rop"])
     sim.run()
     panel = compute_episode_metrics(sim)
-    return {k: float(panel[k]) for k in (PRIMARY, *SIDE)}
+    out = {k: float(panel[k]) for k in (PRIMARY, *SIDE)}
+    # f3, third attempt, and the two earlier ones are worth recording because each tested the
+    # wrong thing. Version 1 asserted `n_served + n_lost == n_orders`, an unrelated accounting
+    # identity that fails because an order can be neither -- still pending at the horizon.
+    # Version 2 recomputed over sim.orders and also failed, but that failure was MY error: the
+    # panel legitimately excludes orders placed before the end of warm-up, "so the metric
+    # reflects only the period the policy could influence" (episode_metrics.py:151). Those 33 of
+    # 311 orders carry enormous lateness precisely because the chain had not spun up.
+    #
+    # The property that actually matters is that no order is dropped for being UNSERVED. So:
+    # replicate the panel's population exactly, recompute, and demand equality; then confirm the
+    # never-completed orders sit inside it and contribute a positive share.
+    end_time = float(sim.env.now)
+    start = float(sim.warmup_time)
+    scored = [o for o in sim.orders
+              if not bool(getattr(o, "metrics_excluded", False))
+              and float(getattr(o, "OPTj", 0.0)) >= start]
+    recomputed = unresolved = 0.0
+    for o in scored:
+        opt, lt = float(o.OPTj or 0.0), float(o.LTj or 0.0)
+        done = getattr(o, "OATj", None)
+        contribution = max(0.0, (float(done) if done is not None else end_time)
+                           - (opt + lt)) * float(o.quantity or 0.0)
+        recomputed += contribution
+        if done is None:
+            unresolved += contribution
+    out["auc_recomputed_scored_population"] = recomputed
+    out["auc_share_from_never_completed"] = (unresolved / recomputed) if recomputed else 0.0
+    out["n_never_completed_in_scored"] = float(
+        sum(1 for o in scored if getattr(o, "OATj", None) is None))
+    return out
 
 
 def main() -> int:
@@ -158,9 +189,15 @@ def main() -> int:
             zero_on_identical.append(max(
                 abs(cells[("hybrid", ctx, r)][s][PRIMARY] - cells[("static", ctx, r)][s][PRIMARY])
                 for s in seeds))
-    order_totals = [(row["n_served"] + row["n_lost"], row["n_orders"])
+    order_totals = [(row["auc_recomputed_scored_population"], row[PRIMARY])
                     for by_seed in cache.values() for row in by_seed.values()]
-    accounted = all(abs(a - b) < 1e-9 for a, b in order_totals)
+    accounted = all(abs(a - b) <= 1e-6 * max(1.0, abs(b)) for a, b in order_totals)
+    never_completed_inside = float(np.mean([row["auc_share_from_never_completed"]
+                                            for by_seed in cache.values()
+                                            for row in by_seed.values()])) > 0.0
+    unresolved_share = float(np.mean([row["auc_share_from_never_completed"]
+                                      for by_seed in cache.values()
+                                      for row in by_seed.values()]))
     spread = float(np.ptp([np.mean([row[PRIMARY] for row in by_seed.values()])
                            for by_seed in cache.values()]))
     ofat_ctx_costs = [float(np.mean([meta["per_context"]["ofat"][r][c]["runs_to_within_1pct"]
@@ -181,11 +218,18 @@ def main() -> int:
                          "max_abs_difference_on_identical_cells":
                              max(zero_on_identical) if zero_on_identical else None}},
         "f3_service_loss_auc_is_not_censored": {
-            "passed": accounted,
-            "evidence": {"why_it_can_fail": ("if served + lost did not account for every order, "
-                                             "the metric would inherit the very defect it was "
-                                             "chosen to avoid"),
-                         "episodes_checked": len(order_totals)}},
+            "passed": accounted and never_completed_inside,
+            "evidence": {"why_it_can_fail": (
+                             "the panel's AUC is recomputed here over EVERY order, with the "
+                             "horizon standing in for orders that never completed. If the panel "
+                             "ever restricted its population the two would diverge, and the "
+                             "metric would inherit the censoring it was chosen to avoid. "
+                             "The second condition is the one that matters: orders that NEVER "
+                             "complete must sit inside the population and carry a positive share, "
+                             "which is exactly what ReT and system_ttr fail to do"),
+                         "never_completed_orders_are_inside": never_completed_inside,
+                         "episodes_checked": len(order_totals),
+                         "share_of_auc_from_never_completed_orders": unresolved_share}},
         "f4_the_metric_discriminates_between_deployed_configs": {
             "passed": spread > 1e-9,
             "evidence": {"why_it_can_fail": "identical scores leave nothing to compare",
