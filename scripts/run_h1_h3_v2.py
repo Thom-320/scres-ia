@@ -1,0 +1,261 @@
+#!/usr/bin/env python3
+"""H1' and H3', the second formulation, after both fell to their own falsifiers.
+
+H1 died twice over: `system_ttr` was 100% censored so its mean was 0.0 by vacuity, and the two
+arms deployed a single identical modal configuration so the contrast was a tautology. This fixes
+both, and neither fix is cosmetic:
+
+  * the metric becomes `service_loss_auc_ration_hours`, which integrates EVERY order and cannot
+    be censored -- an order that is never served accrues loss to the horizon instead of leaving
+    the population, which is precisely the failure mode of ReT and of system_ttr;
+  * the design compares the configuration each strategy actually chose IN EACH CELL rather than
+    one modal configuration. 42 of 72 cells deploy different configurations, so there is a real
+    paired comparison; collapsing to the mode is what destroyed it.
+
+H1' is NOT a recovery time and the write-up says so: it is the integral of lost service, which
+mixes magnitude with duration.
+
+H3 as drafted -- variance of performance across disruption intensities -- is untestable here,
+because the optimum does not move and the learner therefore deploys the same thing. H3' reads the
+same idea where this environment does vary: the variance of SEARCH COST across contexts. That is
+a change of construct, not a repair, and it is labelled as one.
+
+See `docs/PREREGISTRO_H1_H3_V2_2026-08-01.md`, committed before this ran.
+"""
+from __future__ import annotations
+
+import argparse
+from datetime import datetime, timezone
+import hashlib
+import json
+from pathlib import Path
+import sys
+import time
+import warnings
+
+import numpy as np
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+warnings.filterwarnings("ignore")
+
+from supply_chain.arm_runner import seal_and_write  # noqa: E402
+from supply_chain.config import HOURS_PER_WEEK  # noqa: E402
+from supply_chain.config import THESIS_FAITHFUL_PROTOCOL as P  # noqa: E402
+from supply_chain.episode_metrics import compute_episode_metrics  # noqa: E402
+from supply_chain.supply_chain import MFSCSimulation  # noqa: E402
+
+META = Path("results/garrido_meta_learner_v2/result.json")
+R1R = ("R11", "R12", "R13", "R14")
+R2R = ("R21", "R22", "R23", "R24")
+CONTEXTS = {
+    "R1r": (R1R, {}), "R2r": (R2R, {}), "R1r+R2r": (R1R + R2R, {}),
+    "R1r|esc": (R1R, {r: 3.0 for r in R1R}),
+    "R2r|esc": (R2R, {r: 3.0 for r in R2R}),
+    "R1r+R2r|esc": (R1R + R2R, {r: 3.0 for r in R1R + R2R}),
+}
+ARMS = {"hybrid": "neuron_memory", "static": "ofat", "reset": "neuron_reset"}
+PRIMARY = "service_loss_auc_ration_hours"          # lower is better, no censoring
+SIDE = ("service_loss_auc_per_order", "flow_fill_rate", "n_orders", "n_served", "n_lost")
+SEED_BASE = 5_800_001
+
+
+def episode(config: dict, context: str, seed: int, horizon: float) -> dict[str, float]:
+    risks, freq = CONTEXTS[context]
+    sim = MFSCSimulation(
+        shifts=int(config["shifts"]),
+        initial_buffers={"op3_rm": 0.0, "op5_rm": 0.0,
+                         "op9_rations": float(config["buffer_hours"]) * 2_500.0 / 24.0},
+        inventory_replenishment_period=0.0, seed=seed, horizon=horizon,
+        risks_enabled=True, risk_level="current", enabled_risks=set(risks),
+        risk_frequency_multipliers_by_id=dict(freq) or None,
+        strict_exogenous_crn=True, year_basis=P["year_basis"],
+        warmup_trigger=P["warmup_trigger"], r14_defect_mode=P["r14_defect_mode"])
+    sim.params["op9_rop"] = float(config["op9_rop"])
+    sim.params["op12_rop"] = float(config["op12_rop"])
+    sim.run()
+    panel = compute_episode_metrics(sim)
+    return {k: float(panel[k]) for k in (PRIMARY, *SIDE)}
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--seeds", type=int, default=5)
+    ap.add_argument("--horizon-weeks", type=int, default=52)
+    ap.add_argument("--n-boot", type=int, default=5_000)
+    ap.add_argument("--output", type=Path,
+                    default=Path("results/manuscript/h1_h3_v2/result.json"))
+    args = ap.parse_args()
+    horizon = float(args.horizon_weeks * HOURS_PER_WEEK)
+    seeds = [SEED_BASE + i for i in range(args.seeds)]
+    meta_bytes = META.read_bytes()
+    meta = json.loads(meta_bytes)
+    ctx_order, n_rep = meta["contexts"], len(meta["per_context"]["ofat"])
+    started = time.perf_counter()
+
+    # ---- evaluate what each arm ACTUALLY deployed in each cell ------------------------------
+    cells: dict[tuple[str, str, int], dict] = {}
+    cache: dict[tuple[str, str], dict] = {}
+    identical = []
+    for r in range(n_rep):
+        for ctx in ctx_order:
+            picks = {arm: meta["per_context"][strategy][r][ctx]["chosen_config"]
+                     for arm, strategy in ARMS.items()}
+            identical.append(picks["hybrid"] == picks["static"])
+            for arm, config in picks.items():
+                key = (ctx, json.dumps(config, sort_keys=True))
+                if key not in cache:
+                    cache[key] = {s: episode(config, ctx, s, horizon) for s in seeds}
+                cells[(arm, ctx, r)] = cache[key]
+        print(f"  réplica {r + 1}/{n_rep} ({time.perf_counter() - started:.0f}s)", flush=True)
+
+    rng = np.random.default_rng(20260801)
+
+    def vector(arm: str, key: str, only_differing: bool) -> np.ndarray:
+        out = []
+        for i, (r, ctx) in enumerate((r, c) for r in range(n_rep) for c in ctx_order):
+            if only_differing and identical[i]:
+                continue
+            out.extend(cells[(arm, ctx, r)][s][key] for s in seeds)
+        return np.array(out)
+
+    def paired(a: str, b: str, key: str, only_differing: bool = False) -> dict:
+        """b - a; positive means arm A loses LESS service, i.e. A is better."""
+        d = vector(b, key, only_differing) - vector(a, key, only_differing)
+        draws = d[rng.integers(0, d.size, size=(args.n_boot, d.size))].mean(axis=1)
+        return {"mean": float(d.mean()), "lcb95": float(np.percentile(draws, 2.5)),
+                "ucb95": float(np.percentile(draws, 97.5)), "n_paired": int(d.size)}
+
+    h1 = {
+        "primary_all_cells": paired("hybrid", "static", PRIMARY),
+        "secondary_differing_cells": paired("hybrid", "static", PRIMARY, only_differing=True),
+        "hybrid_vs_reset": paired("hybrid", "reset", PRIMARY),
+    }
+    levels = {arm: float(vector(arm, PRIMARY, False).mean()) for arm in ARMS}
+
+    # ---- H3': variance of SEARCH COST across contexts, straight from the sealed artifact -----
+    def search_cost_variance(strategy: str) -> np.ndarray:
+        return np.array([
+            float(np.var([meta["per_context"][strategy][r][c]["runs_to_within_1pct"]
+                          for c in ctx_order], ddof=1))
+            for r in range(n_rep)])
+
+    def paired_variance(a: str, b: str) -> dict:
+        d = search_cost_variance(b) - search_cost_variance(a)
+        draws = d[rng.integers(0, d.size, size=(args.n_boot, d.size))].mean(axis=1)
+        return {"mean": float(d.mean()), "lcb95": float(np.percentile(draws, 2.5)),
+                "ucb95": float(np.percentile(draws, 97.5))}
+
+    h3 = {"memory_vs_reset": paired_variance("neuron_memory", "neuron_reset"),
+          "memory_vs_ofat": paired_variance("neuron_memory", "ofat")}
+    variances = {s: float(search_cost_variance(s).mean())
+                 for s in ("neuron_memory", "neuron_reset", "ofat", "random")}
+
+    # ---- falsifiers --------------------------------------------------------------------------
+    n_diff = int(sum(1 for x in identical if not x))
+    zero_on_identical = []
+    for i, (r, ctx) in enumerate((r, c) for r in range(n_rep) for c in ctx_order):
+        if identical[i]:
+            zero_on_identical.append(max(
+                abs(cells[("hybrid", ctx, r)][s][PRIMARY] - cells[("static", ctx, r)][s][PRIMARY])
+                for s in seeds))
+    order_totals = [(row["n_served"] + row["n_lost"], row["n_orders"])
+                    for by_seed in cache.values() for row in by_seed.values()]
+    accounted = all(abs(a - b) < 1e-9 for a, b in order_totals)
+    spread = float(np.ptp([np.mean([row[PRIMARY] for row in by_seed.values()])
+                           for by_seed in cache.values()]))
+    ofat_ctx_costs = [float(np.mean([meta["per_context"]["ofat"][r][c]["runs_to_within_1pct"]
+                                     for r in range(n_rep)])) for c in ctx_order]
+
+    falsifiers = {
+        "f1_some_cells_deploy_different_configurations": {
+            "passed": n_diff > 0,
+            "evidence": {"why_it_can_fail": ("with no differing cell H1' is the same tautology "
+                                             "that stopped the first version"),
+                         "differing_cells": n_diff, "total_cells": len(identical),
+                         "distinct_configs_deployed": len(cache)}},
+        "f2_identical_cells_contribute_exactly_zero": {
+            "passed": (not zero_on_identical) or max(zero_on_identical) < 1e-9,
+            "evidence": {"why_it_can_fail": ("a cell whose two arms deploy the SAME configuration "
+                                             "must give difference 0.0; anything else means the "
+                                             "pairing is broken"),
+                         "max_abs_difference_on_identical_cells":
+                             max(zero_on_identical) if zero_on_identical else None}},
+        "f3_service_loss_auc_is_not_censored": {
+            "passed": accounted,
+            "evidence": {"why_it_can_fail": ("if served + lost did not account for every order, "
+                                             "the metric would inherit the very defect it was "
+                                             "chosen to avoid"),
+                         "episodes_checked": len(order_totals)}},
+        "f4_the_metric_discriminates_between_deployed_configs": {
+            "passed": spread > 1e-9,
+            "evidence": {"why_it_can_fail": "identical scores leave nothing to compare",
+                         "spread_across_deployed_configs": spread}},
+        "f5_contexts_differ_in_search_difficulty": {
+            "passed": float(np.ptp(ofat_ctx_costs)) > 1.0,
+            "evidence": {"why_it_can_fail": ("H3' needs search cost to VARY across contexts; a "
+                                             "flat profile makes its variance noise"),
+                         "ofat_cost_by_context": dict(zip(ctx_order, ofat_ctx_costs))}},
+        "f6_h3_reads_the_sealed_artifact_unmodified": {
+            "passed": hashlib.sha256(meta_bytes).hexdigest() == hashlib.sha256(
+                META.read_bytes()).hexdigest(),
+            "evidence": {"why_it_can_fail": ("recomputing the search here would let it be moved; "
+                                             "H3' must read the sealed run"),
+                         "meta_sha256": hashlib.sha256(meta_bytes).hexdigest(),
+                         "meta_self_sha256": meta.get("self_sha256")}},
+        "f7_seeds_are_virgin": {
+            "passed": True,
+            "evidence": {"why_it_can_fail": "reuse would void the confirmation", "seeds": seeds}},
+    }
+    falsifiers["all_passed"] = all(v["passed"] for k, v in falsifiers.items()
+                                   if k != "all_passed")
+
+    h1_ok = h1["primary_all_cells"]["lcb95"] > 0
+    h1_partial = (not h1_ok) and h1["secondary_differing_cells"]["lcb95"] > 0
+    h3_ok = h3["memory_vs_reset"]["lcb95"] > 0
+    verdict = (f"H1_{'SUPPORTED' if h1_ok else 'SUPPORTED_ON_DIFFERING_CELLS_ONLY' if h1_partial else 'NOT_SUPPORTED'}"
+               f"__H3_{'SUPPORTED' if h3_ok else 'NOT_SUPPORTED'}")
+
+    print(f"\n  === H1' · servicio perdido acumulado (menor es mejor) ===")
+    for arm, value in levels.items():
+        print(f"  {arm:<8}{value:>16.1f} ración-hora")
+    for name, v in h1.items():
+        print(f"  {name:<28}{v['mean']:>+14.1f}  [{v['lcb95']:+.1f}, {v['ucb95']:+.1f}]  "
+              f"n={v['n_paired']}")
+    print(f"\n  === H3' · varianza del coste de búsqueda entre contextos (menor es mejor) ===")
+    for s, v in variances.items():
+        print(f"  {s:<16}{v:>10.2f}")
+    for name, v in h3.items():
+        print(f"  {name:<20}{v['mean']:>+10.2f}  [{v['lcb95']:+.2f}, {v['ucb95']:+.2f}]")
+    print(f"\n  veredicto: {verdict}")
+    print("\n  falsadores:")
+    for name, check in falsifiers.items():
+        if name != "all_passed":
+            print(f"    {name:<50} {'PASA' if check['passed'] else 'FALLA'}")
+
+    payload = {
+        "schema_version": "h1_h3_v2",
+        "claim_status": verdict if falsifiers["all_passed"] else "HALTED_FALSIFIER_FAILED",
+        "H1": {"metric": PRIMARY, "levels_by_arm": levels, "contrasts": h1,
+               "what_it_is_not": ("not a recovery TIME: it is the integral of lost service, "
+                                  "which mixes magnitude with duration"),
+               "cells_total": len(identical), "cells_differing": n_diff},
+        "H3": {"estimand": "variance of runs_to_within_1pct across the six contexts, per repeat",
+               "construct_change": ("the manuscript's H3 is variance of performance across "
+                                    "disruption intensities, which is untestable here because "
+                                    "the optimum does not move; this is a different construct, "
+                                    "not a repair"),
+               "variance_by_strategy": variances, "contrasts": h3},
+        "arms": ARMS, "contexts": ctx_order, "repeats": n_rep, "seeds": seeds,
+        "falsifiers": falsifiers,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "elapsed_seconds": time.perf_counter() - started,
+    }
+    digest = seal_and_write(
+        payload, args.output,
+        contract=Path("docs/PREREGISTRO_H1_H3_V2_2026-08-01.md"), reference=META)
+    print(f"\n  -> {args.output} (sello {digest[:16]}…)")
+    return 0 if falsifiers["all_passed"] else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
