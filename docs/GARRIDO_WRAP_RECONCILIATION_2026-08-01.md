@@ -16,7 +16,7 @@ not rewrite frozen contracts or promote development artifacts into manuscript cl
 | `results/garrido_meta_learner_v2/result.json` | legacy/pending | VPS process opened before the v2 f3/f4 runtime checks; do not use for contrasts |
 | `results/garrido_meta_learner_thesis90_v2/result.json` | valid replay only | 90 thesis-native cells; all six runtime falsifiers pass; `SURFACE_REPLAY_ONLY` |
 | `results/garrido_meta_learner_v2_corrected/result.json` | pending | 288 DES rerun under v2 seed block and contract |
-| H1/H3 | pending | wait for corrected final-configuration selections |
+| H1/H3 | valid halted development result | H1 has no estimand (100% TTR censoring and identical deployed arms); H3 is not sustained; no positive claim |
 | Fase 1A contention | valid but subcritical | mechanism is live; `H_regime` is below the 0.01 authorization bar |
 | Fase 1B expedition | valid complete `NO_TIMING_HEADROOM_UNDER_SERVICE_FIRST` | 240 held-out episodes; all nine falsifiers pass; ReT diagnostic gain does not survive the service-first gate |
 
@@ -69,7 +69,8 @@ contract if its timing changes.
 
 ## 4. Immediate gates
 
-1. Do not open H1/H3 on the retired search result.
+1. Do not convert the halted H1/H3 result into a positive claim; a new recovery
+   estimand or a moved-optimum contract requires a new preregistration.
 2. Do not duplicate the VPS meta-learner process.
 3. Keep the expedition result bounded to its extended-DES contract; it does not
    authorize MLP/PPO because the service-first timing gate is negative.
@@ -86,3 +87,4 @@ contract if its timing changes.
 - CSSU physical Op11 timing addendum or explicit no-go;
 - corrected expedition result and metric adjudication;
 - metric contract with an abandonment falsifier and service/queue estimands.
+- any re-specified H1 recovery endpoint or H3 moved-optimum design, if authorized.
