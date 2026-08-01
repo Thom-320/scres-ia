@@ -1,0 +1,433 @@
+{
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "POLICY_CLASS_WAS_THE_BINDING_CONSTRAINT",
+ "contract_path": "docs/PREREGISTRO_REAUDITORIA_CLASE_DE_POLITICA_2026-08-01.md",
+ "contract_sha256": "4275b92afa2845af03d46982bb0b532ac6181d20b39017a0c4e2929bae95b93d",
+ "created_at": "2026-08-01T22:44:08.897495+00:00",
+ "elapsed_seconds": 11.783742500003427,
+ "falsifiers": {
+  "all_passed": true,
+  "f1_adaptive_action_is_live": {
+   "evidence": {
+    "alpha_sd": {
+     "FIFO_PARTIAL|R1r+R2r|base": 0.396458807947106,
+     "FIFO_PARTIAL|R1r+R2r|freq3_imp2": 0.39596585040603227,
+     "R24_AGE_PARTIAL|R1r+R2r|base": 0.396458807947106,
+     "R24_AGE_PARTIAL|R1r+R2r|freq3_imp2": 0.39603266632638395
+    },
+    "alpha_switches": {
+     "FIFO_PARTIAL|R1r+R2r|base": 45.0,
+     "FIFO_PARTIAL|R1r+R2r|freq3_imp2": 44.5,
+     "R24_AGE_PARTIAL|R1r+R2r|base": 45.0,
+     "R24_AGE_PARTIAL|R1r+R2r|freq3_imp2": 42.5
+    },
+    "why_it_can_fail": "a dead actuator or a latency that cancels the swing would make the whole comparison vacuous"
+   },
+   "passed": true
+  },
+  "f2_placebo_does_not_reproduce": {
+   "evidence": {
+    "placebo_minus_constant": {
+     "FIFO_PARTIAL|R1r+R2r|base": {
+      "lcb95": 0.0061124671467183145,
+      "mean": 0.012473468697653756
+     },
+     "FIFO_PARTIAL|R1r+R2r|freq3_imp2": {
+      "lcb95": -0.02177903652988389,
+      "mean": -0.012575435241571176
+     },
+     "R24_AGE_PARTIAL|R1r+R2r|base": {
+      "lcb95": 0.01576395298174238,
+      "mean": 0.017179365185822748
+     },
+     "R24_AGE_PARTIAL|R1r+R2r|freq3_imp2": {
+      "lcb95": -0.02530752423455407,
+      "mean": -0.01433967909390621
+     }
+    },
+    "why_it_can_fail": "op12 already showed an uninformed placebo beating a state-conditioned rule; if it happens here the value is in varying, not in what varies it"
+   },
+   "passed": true
+  },
+  "f3_direction_matters_not_just_cadence": {
+   "evidence": {
+    "clairvoyant_minus_wrong_claimant": {
+     "FIFO_PARTIAL|R1r+R2r|base": {
+      "lcb95": 0.5968231498030783,
+      "mean": 0.6210819818150184
+     },
+     "FIFO_PARTIAL|R1r+R2r|freq3_imp2": {
+      "lcb95": 0.6128266215489672,
+      "mean": 0.6297833166363933
+     },
+     "R24_AGE_PARTIAL|R1r+R2r|base": {
+      "lcb95": 0.5968231498030783,
+      "mean": 0.6210819818150184
+     },
+     "R24_AGE_PARTIAL|R1r+R2r|freq3_imp2": {
+      "lcb95": 0.6098859656721416,
+      "mean": 0.6283129886979805
+     }
+    },
+    "why_it_can_fail": "pointing the same policy at the WRONG claimant, with identical cadence and alpha support, must destroy the gain. If it does not, the value is in moving alpha, not in which claimant it moves toward"
+   },
+   "passed": true
+  },
+  "f3b_true_equivariance_is_not_testable_here": {
+   "evidence": {
+    "blocking_symbols": [
+     "cssu_allocation.stable_cssu_destination (digest[0] & 1)",
+     "supply_chain._risk_R22/R23/R24_event (rng.choice(('A','B')))"
+    ],
+    "status": "NOT_EXPRESSIBLE_IN_split_v1_DEFERRED_TO_G3A",
+    "why_it_can_fail": "it cannot fail here, and that is the finding: the model has no parameter that distinguishes A from B, so equivariance is true by construction and carries no information"
+   },
+   "passed": true
+  },
+  "f4_constant_arm_is_the_sealed_lever": {
+   "evidence": {
+    "note": "endpoint differs by design (worst_claimant_fill vs ret_excel_risk_conditional); what must match is the LEVER: same shares, same rules, same non-fungible regimes",
+    "sealed_artifact": "results/sensitivity/contention_headroom_v1_1/result.json",
+    "shares_match": {
+     "rules_here": [
+      "FIFO_PARTIAL",
+      "R24_AGE_PARTIAL"
+     ],
+     "rules_sealed": [
+      "SPT_FULL",
+      "FIFO_PARTIAL",
+      "R24_AGE_PARTIAL"
+     ],
+     "seeds_are_a_prefix_of_sealed": true,
+     "shares_here": [
+      0.1,
+      0.2,
+      0.3,
+      0.4,
+      0.5,
+      0.6,
+      0.7,
+      0.8,
+      0.9
+     ],
+     "shares_sealed": [
+      0.1,
+      0.2,
+      0.3,
+      0.4,
+      0.5,
+      0.6,
+      0.7,
+      0.8,
+      0.9
+     ]
+    },
+    "why_it_can_fail": "if the constant arm's share ordering does not match the sealed sweep's, this is not a comparison against the published null but against a different system"
+   },
+   "passed": true
+  },
+  "f5_no_fresh_seeds_opened": {
+   "evidence": {
+    "burned_block": [
+     5200001,
+     5200016
+    ],
+    "seeds": [
+     5200001,
+     5200002
+    ],
+    "why_it_can_fail": "authority_ladder_v1 on main sets fresh_roots_opened=false; any seed outside the burned block would violate a binding contract"
+   },
+   "passed": true
+  },
+  "f6_endpoint_is_scalar_not_lexicographic": {
+   "evidence": {
+    "primary": "worst_claimant_fill",
+    "why_it_can_fail": "an LCB95 over a lexicographic tuple is meaningless; service_first_v2 is a selection rule, not an estimand"
+   },
+   "passed": true
+  },
+  "f7_no_gain_by_abandonment": {
+   "evidence": {
+    "lost_orders": {
+     "FIFO_PARTIAL|R1r+R2r|base": {
+      "clairvoyant": 0.0,
+      "placebo": 0.0
+     },
+     "FIFO_PARTIAL|R1r+R2r|freq3_imp2": {
+      "clairvoyant": 0.0,
+      "placebo": 0.0
+     },
+     "R24_AGE_PARTIAL|R1r+R2r|base": {
+      "clairvoyant": 0.0,
+      "placebo": 0.0
+     },
+     "R24_AGE_PARTIAL|R1r+R2r|freq3_imp2": {
+      "clairvoyant": 1.5,
+      "placebo": 1.5
+     }
+    },
+    "why_it_can_fail": "ret_excel is MEASURED to reward abandoning a claimant; a worst-fill gain bought with lost orders is the same failure in a new coordinate"
+   },
+   "passed": true
+  }
+ },
+ "fungible": false,
+ "primary_metric": "worst_claimant_fill",
+ "reference_path": "results/sensitivity/contention_headroom_v1_1/result.json",
+ "reference_sha256": "1b8011dc9f4e27ac93b2a1e04f737a0a8b8b8f45d14de9af9d210c5234001564",
+ "regimes": [
+  "R1r+R2r|base",
+  "R1r+R2r|freq3_imp2"
+ ],
+ "results": {
+  "FIFO_PARTIAL|R1r+R2r|base": {
+   "alpha_sd_clairvoyant": 0.396458807947106,
+   "alpha_switches_clairvoyant": 45.0,
+   "best_constant_share": 0.5,
+   "clairvoyant_minus_constant": {
+    "lcb95": 0.0354006125110653,
+    "mean": 0.03694717874158432
+   },
+   "clairvoyant_minus_wrong_claimant": {
+    "lcb95": 0.5968231498030783,
+    "mean": 0.6210819818150184
+   },
+   "constant_by_share": {
+    "0.1": 0.20185665455708673,
+    "0.2": 0.39529444326130986,
+    "0.3": 0.5544846907114349,
+    "0.4": 0.6967950961496949,
+    "0.5": 0.778461801543729,
+    "0.6": 0.6670405030691423,
+    "0.7": 0.5291338130125163,
+    "0.8": 0.3590921073952037,
+    "0.9": 0.18121825508520623
+   },
+   "diagnostics": {
+    "flow_fill_rate": {
+     "clairvoyant": 0.7969373193498525,
+     "placebo": 0.7950155514046036
+    },
+    "lost_orders": {
+     "clairvoyant": 0.0,
+     "placebo": 0.0
+    },
+    "ret_excel_full_ledger": {
+     "clairvoyant": 0.0003067174620077139,
+     "placebo": 0.00031403794152023545
+    },
+    "ret_excel_risk_conditional": {
+     "clairvoyant": 0.00038534586198669095,
+     "placebo": 0.00039453679062368525
+    }
+   },
+   "incremental_state_value": {
+    "definition": "clairvoyant - uninformed_placebo",
+    "lcb95": 0.016566142262476102,
+    "mean": 0.024473710043930563
+   },
+   "placebo_minus_constant": {
+    "lcb95": 0.0061124671467183145,
+    "mean": 0.012473468697653756
+   },
+   "worst_fill_best_constant": 0.778461801543729
+  },
+  "FIFO_PARTIAL|R1r+R2r|freq3_imp2": {
+   "alpha_sd_clairvoyant": 0.39596585040603227,
+   "alpha_switches_clairvoyant": 44.5,
+   "best_constant_share": 0.5,
+   "clairvoyant_minus_constant": {
+    "lcb95": 0.011421228102079128,
+    "mean": 0.027442712183926576
+   },
+   "clairvoyant_minus_wrong_claimant": {
+    "lcb95": 0.6128266215489672,
+    "mean": 0.6297833166363933
+   },
+   "constant_by_share": {
+    "0.1": 0.19756498705334158,
+    "0.2": 0.389164174223732,
+    "0.3": 0.5589955350551822,
+    "0.4": 0.6821282557194914,
+    "0.5": 0.7903770293238833,
+    "0.6": 0.6531232876288471,
+    "0.7": 0.5337776480491361,
+    "0.8": 0.36330600302420196,
+    "0.9": 0.18291212274658514
+   },
+   "diagnostics": {
+    "flow_fill_rate": {
+     "clairvoyant": 0.7927061755162752,
+     "placebo": 0.7927909573723864
+    },
+    "lost_orders": {
+     "clairvoyant": 0.0,
+     "placebo": 0.0
+    },
+    "ret_excel_full_ledger": {
+     "clairvoyant": 0.000303078848634167,
+     "placebo": 0.0003113276584716423
+    },
+    "ret_excel_risk_conditional": {
+     "clairvoyant": 0.0003817198034112208,
+     "placebo": 0.00039233768085670054
+    }
+   },
+   "incremental_state_value": {
+    "definition": "clairvoyant - uninformed_placebo",
+    "lcb95": 0.03320026463196302,
+    "mean": 0.04001814742549775
+   },
+   "placebo_minus_constant": {
+    "lcb95": -0.02177903652988389,
+    "mean": -0.012575435241571176
+   },
+   "worst_fill_best_constant": 0.7903770293238833
+  },
+  "R24_AGE_PARTIAL|R1r+R2r|base": {
+   "alpha_sd_clairvoyant": 0.396458807947106,
+   "alpha_switches_clairvoyant": 45.0,
+   "best_constant_share": 0.5,
+   "clairvoyant_minus_constant": {
+    "lcb95": 0.03540061251106541,
+    "mean": 0.03694717874158432
+   },
+   "clairvoyant_minus_wrong_claimant": {
+    "lcb95": 0.5968231498030783,
+    "mean": 0.6210819818150184
+   },
+   "constant_by_share": {
+    "0.1": 0.2018566545570868,
+    "0.2": 0.3942277973428764,
+    "0.3": 0.5548555933208887,
+    "0.4": 0.6967950961496946,
+    "0.5": 0.778461801543729,
+    "0.6": 0.6641363445754023,
+    "0.7": 0.5291338130125164,
+    "0.8": 0.35851703034277566,
+    "0.9": 0.1812182550852063
+   },
+   "diagnostics": {
+    "flow_fill_rate": {
+     "clairvoyant": 0.7968819071985015,
+     "placebo": 0.8002646709442623
+    },
+    "lost_orders": {
+     "clairvoyant": 0.0,
+     "placebo": 0.0
+    },
+    "ret_excel_full_ledger": {
+     "clairvoyant": 0.0004028396811165055,
+     "placebo": 0.0004157945814777526
+    },
+    "ret_excel_risk_conditional": {
+     "clairvoyant": 0.0005095604569298964,
+     "placebo": 0.0005236452049837687
+    }
+   },
+   "incremental_state_value": {
+    "definition": "clairvoyant - uninformed_placebo",
+    "lcb95": 0.016805835121162294,
+    "mean": 0.01976781355576157
+   },
+   "placebo_minus_constant": {
+    "lcb95": 0.01576395298174238,
+    "mean": 0.017179365185822748
+   },
+   "worst_fill_best_constant": 0.778461801543729
+  },
+  "R24_AGE_PARTIAL|R1r+R2r|freq3_imp2": {
+   "alpha_sd_clairvoyant": 0.39603266632638395,
+   "alpha_switches_clairvoyant": 42.5,
+   "best_constant_share": 0.5,
+   "clairvoyant_minus_constant": {
+    "lcb95": 0.008480572225253447,
+    "mean": 0.02597238424551368
+   },
+   "clairvoyant_minus_wrong_claimant": {
+    "lcb95": 0.6098859656721416,
+    "mean": 0.6283129886979805
+   },
+   "constant_by_share": {
+    "0.1": 0.19756498705334152,
+    "0.2": 0.38916417422373195,
+    "0.3": 0.5589955350551821,
+    "0.4": 0.6821020740184864,
+    "0.5": 0.7903770293238833,
+    "0.6": 0.6531232876288471,
+    "0.7": 0.5337776480491359,
+    "0.8": 0.3633060030242018,
+    "0.9": 0.1829121227465851
+   },
+   "diagnostics": {
+    "flow_fill_rate": {
+     "clairvoyant": 0.7912151476340896,
+     "placebo": 0.7908353716034375
+    },
+    "lost_orders": {
+     "clairvoyant": 1.5,
+     "placebo": 1.5
+    },
+    "ret_excel_full_ledger": {
+     "clairvoyant": 0.0003861135850230904,
+     "placebo": 0.00039236917769410574
+    },
+    "ret_excel_risk_conditional": {
+     "clairvoyant": 0.0004935257668427979,
+     "placebo": 0.0005018602363976268
+    }
+   },
+   "incremental_state_value": {
+    "definition": "clairvoyant - uninformed_placebo",
+    "lcb95": 0.033788096459807515,
+    "mean": 0.04031206333941989
+   },
+   "placebo_minus_constant": {
+    "lcb95": -0.02530752423455407,
+    "mean": -0.01433967909390621
+   },
+   "worst_fill_best_constant": 0.7903770293238833
+  }
+ },
+ "rules": [
+  "FIFO_PARTIAL",
+  "R24_AGE_PARTIAL"
+ ],
+ "schema_version": "contention_policy_class_v1",
+ "scope": "CLAIRVOYANT_CEILING_FOR_THE_EQUIVARIANT_CLASS_NOT_A_DEPLOYABLE_HEADROOM",
+ "seeds": [
+  5200001,
+  5200002
+ ],
+ "self_sha256": "9e1a25f642e2801f224878132ce23d4ba7b5b0668e20cb6c76b9ef6e4f2608d7",
+ "shares": [
+  0.1,
+  0.2,
+  0.3,
+  0.4,
+  0.5,
+  0.6,
+  0.7,
+  0.8,
+  0.9
+ ],
+ "step_hours": 24.0
+}
