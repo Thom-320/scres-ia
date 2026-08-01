@@ -1,6 +1,6 @@
 # Garrido–WRAP reconciliation ledger — 2026-08-01
 
-**Status:** `RECONCILIATION_COMPLETE_CSSU_IN_PROGRESS`
+**Status:** `RECONCILIATION_COMPLETE_FASE4_PENDING`
 
 This ledger reconciles the live repository after the driver-leak discovery. It does
 not rewrite frozen contracts or promote development artifacts into manuscript claims.
@@ -16,7 +16,7 @@ not rewrite frozen contracts or promote development artifacts into manuscript cl
 | `results/garrido_meta_learner_v2/result.json` | pending | VPS rerun of the corrected search |
 | H1/H3 | pending | wait for corrected final-configuration selections |
 | Fase 1A contention | valid but subcritical | mechanism is live; `H_regime` is below the 0.01 authorization bar |
-| Fase 1B expedition | not runnable yet | preregistration names a missing runner and does not freeze the physical time reduction |
+| Fase 1B expedition | valid complete `NO_TIMING_HEADROOM_UNDER_SERVICE_FIRST` | 240 held-out episodes; all nine falsifiers pass; ReT diagnostic gain does not survive the service-first gate |
 
 The old meta-learner contrasts (`+6.31`, `+5.18`, `+12.31`) remain withdrawn.
 The corrected runner and the control that reintroduces the leak are the relevant
@@ -68,8 +68,8 @@ contract if its timing changes.
 
 1. Do not open H1/H3 on the retired search result.
 2. Do not duplicate the VPS meta-learner process.
-3. Do not run expedition until its physical effect size, eligible leg, action epoch,
-   and budget accounting are frozen in one executable preregistration.
+3. Keep the expedition result bounded to its extended-DES contract; it does not
+   authorize MLP/PPO because the service-first timing gate is negative.
 4. Keep canonical ReT, service/backorder outcomes, and Cobb–Douglas in separate
    columns; do not let one construct silently replace another.
 5. Do not authorize MLP/PPO from a headroom signal whose objective still rewards
@@ -81,5 +81,5 @@ contract if its timing changes.
 - thesis-native 90-configuration search result;
 - separate 288-configuration extended search result;
 - CSSU physical Op11 timing addendum or explicit no-go;
-- expedition preregistration amendment plus runner;
+- corrected expedition result and metric adjudication;
 - metric contract with an abandonment falsifier and service/queue estimands.
