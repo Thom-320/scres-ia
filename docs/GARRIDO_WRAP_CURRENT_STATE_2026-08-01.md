@@ -7,7 +7,7 @@ carril separado y no aporta claims a este manuscrito.
 
 ## Estado de implementación
 
-- HEAD de referencia: `35088f1` (custody manifest actualizado).
+- HEAD de referencia: `51e2ccd` (custody manifest se actualizará tras este estado).
 - Contrato: `garrido_wrap_scres_ai_v1`.
 - Estado global: `HOLD_WRAP_BEHAVIORAL_FIDELITY` / `DEVELOPMENT_ONLY`.
 - `thesis_1to1` permanece congelado.
@@ -18,6 +18,7 @@ carril separado y no aporta claims a este manuscrito.
 - E1 neural-headroom gate: `NO_GO`; `training_authorized=false`.
 - Q2: replay de 90 válido como replay; contrato/runner DES-288 listo, ejecución bloqueada
   hasta cerrar H3′.
+- Registro de entornos: `docs/GARRIDO_WRAP_ENVIRONMENT_REGISTRY_2026-08-01.md`.
 
 ## Corridas activas
 
