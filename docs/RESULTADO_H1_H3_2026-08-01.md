@@ -87,3 +87,30 @@ honestidad:
 y hoy quedó medido que no se mueve. Reescribir `H3` como *«el aprendiz reduce la varianza del
 COSTE DE BÚSQUEDA entre contextos»* sería fiel al espíritu del borrador y **sí** es medible con lo
 que ya tenemos.
+
+---
+
+## Apéndice — reproducción cruzada entre máquinas (2026-08-01)
+
+La misma corrida corregida se ejecutó **en paralelo** en dos arquitecturas distintas: el M1 Pro
+local (arm64) y el VPS `ovh-agent-lab` (Intel Haswell, x86-64).
+
+**Coinciden exactamente:**
+
+| | local | VPS |
+|---|---:|---:|
+| memoria | 6,986111111111111 | 6,986111111111111 |
+| reinicio | 14,888888888888891 | 14,888888888888891 |
+| OFAT | 12,416666666666666 | 12,416666666666666 |
+| aleatoria | 19,541666666666668 | 19,541666666666668 |
+| efecto Alzheimer | +7,902777777777778 [6,875 · 8,930555555555555] | idéntico |
+
+Cero diferencias en las seis claves numéricas comparadas, mismo veredicto, y las **secuencias de
+configuraciones visitadas son idénticas índice a índice**. El DES, la búsqueda y el bootstrap son
+deterministas e independientes de plataforma.
+
+**Los sellos SÍ difieren** (`efb3f067…` local vs `c4381a71…` VPS) y la razón es mundana y hay que
+declararla: el VPS ejecutó el fichero **anterior al reencuadre del docstring**, y el sello incluye
+el hash de la fuente. Números idénticos, procedencia distinta. El artefacto de registro es el
+local, producido por la fuente commiteada; el del VPS se conserva en
+`results/garrido_meta_learner_v2_vps_crosscheck/` como verificación independiente.
