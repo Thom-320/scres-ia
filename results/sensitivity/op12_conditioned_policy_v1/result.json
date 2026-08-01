@@ -1,0 +1,201 @@
+{
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "DEVELOPMENT_OP12_CONDITIONED_POLICY",
+ "contract_path": "docs/RESULTADO_SIJ_Y_NODO_2026-07-31.md",
+ "contract_sha256": "a7ee58c6380027238a5ad713260d1c403b9594290d98574753346b38d05a8c18",
+ "created_at": "2026-08-01T00:11:50.484274+00:00",
+ "elapsed_seconds": 143.48136312499992,
+ "falsifiers": {
+  "all_passed": true,
+  "f1_observable_is_non_degenerate": {
+   "evidence": {
+    "span": [
+     0,
+     17
+    ],
+    "why_it_can_fail": "a constant observable makes the rule a constant and the comparison empty",
+    "window_hours": 336.0
+   },
+   "passed": true
+  },
+  "f2_placebo_captures_less_than_the_signal": {
+   "evidence": {
+    "placebo_capture": -0.23552947669522023,
+    "reactive_capture": -0.2052223108351779,
+    "why_it_can_fail": "THE check that matters. If a rule driven by another episode's trace captures as much, the gain is the extra flexibility, not the signal"
+   },
+   "passed": true
+  },
+  "f3_oracle_bounds_every_policy": {
+   "evidence": {
+    "constant": 0.0058657931778576195,
+    "oracle": 0.006104271511820837,
+    "placebo": 0.005809624500656115,
+    "reactive": 0.005816852103077565,
+    "why_it_can_fail": "nothing can beat the regime-informed choice; exceeding it would mean the oracle is mis-built"
+   },
+   "passed": true
+  },
+  "f4_train_and_test_seeds_are_disjoint": {
+   "evidence": {
+    "test": [
+     4601001,
+     4601002,
+     4601003,
+     4601004,
+     4601005,
+     4601006
+    ],
+    "train": [
+     4600001,
+     4600002,
+     4600003,
+     4600004,
+     4600005,
+     4600006
+    ],
+    "why_it_can_fail": "fitting and scoring on one seed is not a result"
+   },
+   "passed": true
+  },
+  "f5_oracle_gap_is_positive": {
+   "evidence": {
+    "oracle_gap": 0.00023847833396321762,
+    "why_it_can_fail": "with no gap there is no headroom to capture and the capture fraction is undefined"
+   },
+   "passed": true
+  },
+  "f6_the_fitted_rule_actually_switches": {
+   "evidence": {
+    "candidates": [
+     15,
+     16
+    ],
+    "observable_span": [
+     0,
+     17
+    ],
+    "share_of_steps_above_threshold": 0.23351648351648358,
+    "threshold": 16,
+    "why_it_can_fail": "a threshold the observable almost never crosses makes the rule a constant wearing a policy's clothes -- exactly what the smoke run produced with hand-picked thresholds"
+   },
+   "passed": true
+  }
+ },
+ "fitted_rule": {
+  "best_constant_period": 21.0,
+  "high": 30.0,
+  "low": 21.0,
+  "switch_share_on_test": 0.23351648351648358,
+  "threshold": 16,
+  "threshold_candidates": [
+   15,
+   16
+  ]
+ },
+ "metric": "ret_excel_risk_conditional",
+ "observable": "realised R1r events in the last 336.0 h",
+ "out_of_sample": {
+  "capture_placebo": -0.23552947669522023,
+  "capture_reactive": -0.2052223108351779,
+  "constant": 0.0058657931778576195,
+  "oracle": 0.006104271511820837,
+  "oracle_gap": 0.00023847833396321762,
+  "placebo": 0.005809624500656115,
+  "reactive": 0.005816852103077565
+ },
+ "reference_path": "results/sensitivity/second_order_risk_search_v1/result.json",
+ "reference_sha256": "8ea65af8f227bac4d36bd357fa264bc3ef0830dcf8e67e38765545f27b946335",
+ "regimes": {
+  "R1r": [
+   "R11",
+   "R12",
+   "R13",
+   "R14"
+  ],
+  "R1r+R2r": [
+   "R11",
+   "R12",
+   "R13",
+   "R14",
+   "R21",
+   "R22",
+   "R23",
+   "R24"
+  ],
+  "R1r+R2r+R3": [
+   "R11",
+   "R12",
+   "R13",
+   "R14",
+   "R21",
+   "R22",
+   "R23",
+   "R24",
+   "R3"
+  ],
+  "R1r+R3": [
+   "R11",
+   "R12",
+   "R13",
+   "R14",
+   "R3"
+  ],
+  "R2r": [
+   "R21",
+   "R22",
+   "R23",
+   "R24"
+  ],
+  "R2r+R3": [
+   "R21",
+   "R22",
+   "R23",
+   "R24",
+   "R3"
+  ],
+  "R3": [
+   "R3"
+  ]
+ },
+ "schema_version": "op12_conditioned_policy_v1",
+ "self_sha256": "95efc4a1ca6662542a9a3045a86a4e8f818e3e738b2e9f5c9ec0884a0414aede",
+ "target_pair": {
+  "S_ij": 0.219,
+  "pair": "op12_rop x impact_R1r",
+  "source": "results/sensitivity/second_order_risk_search_v1/result.json"
+ },
+ "test_seeds": [
+  4601001,
+  4601002,
+  4601003,
+  4601004,
+  4601005,
+  4601006
+ ],
+ "train_seeds": [
+  4600001,
+  4600002,
+  4600003,
+  4600004,
+  4600005,
+  4600006
+ ]
+}
