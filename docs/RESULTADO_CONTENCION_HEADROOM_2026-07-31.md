@@ -54,17 +54,43 @@ diferencias entre los dos montajes son concretas y comprobables:
    determinó.
 2. **Sus dos reclamantes eran ASIMÉTRICOS** (dos productos distintos, con demandas distintas).
    Los nuestros son **simétricos por construcción**: el destino de cada pedido se asigna por hash
-   50/50 (`stable_cssu_destination`), así que la demanda esperada de A y B es idéntica **en todos
-   los regímenes**. Un reparto óptimo que no depende del régimen es exactamente lo que un
-   `H_regime` ≈ 0 describe.
+   50/50 (`stable_cssu_destination`), así que la demanda esperada de A y B es idéntica en todos
+   los regímenes.
 
-**Hipótesis que esto deja, y que es la siguiente prueba, no una conclusión:** la contención crea
-headroom sólo cuando los reclamantes son **asimétricos de una forma que varía con el estado**.
-Contención sin asimetría es un reparto fijo con más pasos.
+## 4b. CORRECCIÓN — el diagnóstico refuta mi propia explicación
 
-El artefacto `v1_1` añade `argmax_by_regime` —qué reparto gana en cada régimen— para que
-«el óptimo es invariante» se pueda **leer** en vez de inferirse. Mismo código, mismas semillas,
-mismos `H_regime`; sólo suma el diagnóstico.
+Escribí arriba que «un reparto óptimo que no depende del régimen es exactamente lo que un
+`H_regime ≈ 0` describe». **Es falso, y el diagnóstico `v1_1` lo demuestra**
+(`results/sensitivity/contention_headroom_v1_1/result.json`, reproduce `v1` al dígito y sólo
+añade `argmax_by_regime`).
+
+**El óptimo SÍ se mueve, y de extremo a extremo:**
+
+| régimen | mejor reparto |
+|---|---:|
+| `R2r` (las tres escaladas) | **0,1** |
+| `R1r+R2r` (las tres escaladas) | **0,9** |
+
+**Y la superficie no es plana — es una U profunda.** En `FIFO_PARTIAL` no fungible, `R1r+R2r`
+base:
+
+    reparto  0,1    0,2    0,3    0,4    0,5    0,6    0,7    0,8    0,9
+    ReT      0,0047 0,0037 0,0025 0,0009 0,0004 0,0012 0,0030 0,0041 0,0051
+
+**El reparto equilibrado (0,5) puntúa 12× peor que los extremos.** Dispersión relativa
+**78–92 %** en las seis celdas.
+
+Entonces, ¿por qué `H_regime = 1,5e-04`? Porque `H_regime` compara *la mejor constante por
+régimen* contra *la mejor constante única*, y **el reparto 0,1 está cerca del máximo en ambas
+familias**. El `argmax` salta, pero el precio de no saber el régimen es sólo ~3 % de una cifra
+ya pequeña. **Superficie empinada, `argmax` móvil, y aun así casi nada que ganar sabiendo dónde
+estás.** Las tres cosas a la vez, que es justo lo que yo había descartado como imposible.
+
+**El hallazgo que esto abre, y que ahora es la pregunta principal:** la U dice que **abandonar
+una unidad puntúa ~12× mejor que repartir**. Eso huele a la censura de `ret_excel` —los pedidos
+nunca servidos salen de la población puntuada— y sería la métrica premiando exactamente lo que
+una cadena militar no puede hacer. `v1_2` mide `flow_fill_rate` por reparto para decidirlo. **No
+lo afirmo hasta verlo.**
 
 ## 5. Lo que NO afirma
 

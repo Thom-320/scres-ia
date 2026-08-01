@@ -138,12 +138,15 @@ def main() -> int:
         summary[key] = {m: h_regime(table, m) for m in (PRIMARY, *SIDE)}
         # WHICH share wins in each regime. H_regime can only be large if this moves; storing it
         # turns "the optimum is invariant" from an inference into something readable.
+        # Every metric, not just the primary: if ReT prefers a share that service does not, the
+        # metric is rewarding something the chain would not want, and that has to be readable.
         argmax_by_regime[key] = {
             rname: {
                 "best_share": max(SHARES, key=lambda a: float(
                     np.mean([r[PRIMARY] for r in table[rname][a]]))),
-                "by_share": {str(a): float(np.mean([r[PRIMARY] for r in table[rname][a]]))
-                             for a in SHARES}}
+                "by_share": {m: {str(a): float(np.mean([r[m] for r in table[rname][a]]))
+                                 for a in SHARES}
+                             for m in (PRIMARY, *SIDE, "forfeited_rations")}}
             for rname in table}
 
     def best(fungible: bool) -> tuple[str, float]:
