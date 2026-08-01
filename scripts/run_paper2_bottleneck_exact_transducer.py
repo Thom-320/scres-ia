@@ -416,6 +416,10 @@ IMMUTABLE_CONTRACT_FIELDS = {
     "cssu_allocation_a",
     "cssu_service_rule",
     "cssu_daily_capacity_override",
+    # Set once in __init__ and never mutated. It selects whether an unused share may flow to
+    # the other destination, so it is contract rather than state: it cannot distinguish two
+    # states WITHIN a run, and across runs the contract is bound separately.
+    "cssu_reallocate_unused",
     "op8_dispatch_mode",
     "op8_convoy_capacity",
     "op8_convoy_outbound_hours",
@@ -485,6 +489,11 @@ INERT_FROZEN_FIELDS = {
     "cssu_dispatched",
     "cssu_allocation_live_epochs",
     "cssu_allocation_moot_epochs",
+    # Monotone diagnostic counters of capacity a hard share refused to hand over. Written by the
+    # dispatch loop, read by nothing inside the simulator -- the exact siblings of the two
+    # counters above, and classified with them so they are folded into the key conservatively.
+    "cssu_forfeited_epochs",
+    "cssu_forfeited_rations",
     "cssu_action_events",
     "cssu_demand_events",
     "cssu_delivery_events",

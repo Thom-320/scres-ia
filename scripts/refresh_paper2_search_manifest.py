@@ -9,6 +9,11 @@ import json
 from pathlib import Path
 import platform
 import subprocess
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from external_sources import EXTERNAL_SOURCES  # noqa: E402
 
 
 ROOT = Path(__file__).resolve().parent.parent

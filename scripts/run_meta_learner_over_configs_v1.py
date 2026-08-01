@@ -199,8 +199,14 @@ def main() -> int:
                     neuron.update(features(CONFIGS[idx], drivers), (value - lo) / span)
             within = next((i + 1 for i, r in enumerate(curve) if r <= 0.01 * abs(best)),
                           args.budget + 1)
+            # The configuration the strategy would actually DEPLOY: the best it ever ran here.
+            # H1 (recovery time) and H3 (variance) are properties of that configuration, so
+            # without recording it the two hypotheses cannot be evaluated at all.
+            chosen = max(seen, key=lambda i: table[i][0])
             per_ctx[ctx] = {"regret_curve": curve, "final_regret": curve[-1],
-                            "runs_to_within_1pct": within, "best": best}
+                            "runs_to_within_1pct": within, "best": best,
+                            "chosen_config": dict(CONFIGS[chosen]),
+                            "chosen_value": table[chosen][0]}
         return {"per_context": per_ctx, "ofat_coordinate_changes": ofat_steps}
 
     STRATEGIES = ("ofat", "random", "neuron_reset", "neuron_memory")
