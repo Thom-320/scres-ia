@@ -905,6 +905,11 @@ class MFSCSimulation:
         self.cssu_dispatched = {"A": 0.0, "B": 0.0}
         self.cssu_allocation_live_epochs = 0
         self.cssu_allocation_moot_epochs = 0
+        # Capacity a HARD share refused to hand to the other destination. This is the direct
+        # instrument for whether `cssu_reallocate_unused=False` actually binds: under the
+        # fungible default it must stay at zero, because nothing is ever forfeited.
+        self.cssu_forfeited_epochs = 0
+        self.cssu_forfeited_rations = 0.0
         self.cssu_local_down_count = {
             (op_id, cssu): 0
             for op_id in (10, 11, 12)
@@ -4836,6 +4841,12 @@ class MFSCSimulation:
                 budgets = {"A": 0.0, "B": 0.0}
                 if selected is not None:
                     budgets[selected] = float(queues[selected][0].remaining_qty)
+                else:
+                    # The preferred destination could not use the lane and the hard share
+                    # forbids handing it over: capacity is forfeited this epoch.
+                    self.cssu_forfeited_epochs += 1
+                    self.cssu_forfeited_rations += float(
+                        queues[candidates[0]][0].remaining_qty)
             else:
                 budgets = {"A": 0.0, "B": 0.0}
         else:
@@ -4851,6 +4862,17 @@ class MFSCSimulation:
             nominal_a = allocation.available * self.cssu_allocation_a
             nominal_b = allocation.available - nominal_a
             jointly_constrained = self.cssu_allocation_is_live()
+            # Unused capacity that some destination still wanted is capacity the hard share
+            # forfeited. Under the fungible default `allocate_shared_capacity` has already
+            # handed it over, so this stays zero there.
+            unmet = sum(max(0.0, float(requested.get(c, 0.0)) - allocation.dispatched_a
+                            if c == "A" else
+                            float(requested.get(c, 0.0)) - allocation.dispatched_b)
+                        for c in ("A", "B"))
+            forfeited = min(float(allocation.unused), unmet)
+            if forfeited > 1e-9:
+                self.cssu_forfeited_epochs += 1
+                self.cssu_forfeited_rations += forfeited
             budgets = {"A": allocation.dispatched_a, "B": allocation.dispatched_b}
         if jointly_constrained:
             self.cssu_allocation_live_epochs += 1
