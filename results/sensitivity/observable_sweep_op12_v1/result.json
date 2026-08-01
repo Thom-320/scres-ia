@@ -1,0 +1,210 @@
+{
+ "baseline": {
+  "best_constant_period": 21.0,
+  "constant": 0.005927277272079367,
+  "gap": 3.4780749012913205e-05,
+  "oracle": 0.00596205802109228
+ },
+ "best_observable": "backlog",
+ "by_observable": {
+  "all_events": {
+   "beats_placebo": false,
+   "capture": -1.4505750082833166,
+   "capture_placebo": -1.0061031818413975,
+   "placebo": 0.005892284249830648,
+   "reactive": 0.00587682518679186,
+   "rule": {
+    "high": 30.0,
+    "low": 21.0,
+    "threshold": 15.0
+   },
+   "switch_share": 0.4615384615384615
+  },
+  "backlog": {
+   "beats_placebo": true,
+   "capture": 0.4322826788777923,
+   "capture_placebo": -0.647899439851157,
+   "placebo": 0.005904742844276297,
+   "reactive": 0.005942312387436045,
+   "rule": {
+    "high": 30.0,
+    "low": 21.0,
+    "threshold": 116361.6
+   },
+   "switch_share": 0.20009157509157507
+  },
+  "hours_since_last": {
+   "beats_placebo": false,
+   "capture": -1.3478658640228545,
+   "capture_placebo": 3.0007896460606687,
+   "placebo": 0.0060316469835995515,
+   "reactive": 0.0058803974877597144,
+   "rule": {
+    "high": 30.0,
+    "low": 21.0,
+    "threshold": 24.0
+   },
+   "switch_share": 0.9065934065934065
+  },
+  "op9_stock": {
+   "beats_placebo": true,
+   "capture": -2.1970583785671836,
+   "capture_placebo": -5.282329448228964,
+   "placebo": 0.005743553897336995,
+   "reactive": 0.0058508619360477035,
+   "rule": {
+    "high": 30.0,
+    "low": 21.0,
+    "threshold": 5067.0
+   },
+   "switch_share": 0.20238095238095238
+  },
+  "ops_down": {
+   "candidates": [
+    0.0
+   ],
+   "sensor_unusable": true,
+   "switch_shares": {
+    "0.0": 1.0
+   }
+  },
+  "r1r_events": {
+   "beats_placebo": true,
+   "capture": -1.295924335403948,
+   "capture_placebo": -1.3618551724634085,
+   "placebo": 0.005879910929133979,
+   "reactive": 0.005882204053029956,
+   "rule": {
+    "high": 30.0,
+    "low": 21.0,
+    "threshold": 15.0
+   },
+   "switch_share": 0.44734432234432236
+  },
+  "severity": {
+   "beats_placebo": true,
+   "capture": -5.6422498716870955,
+   "capture_placebo": -11.91720216867608,
+   "placebo": 0.005512788054514499,
+   "reactive": 0.005731035595424076,
+   "rule": {
+    "high": 39.0,
+    "low": 21.0,
+    "threshold": 923.0
+   },
+   "switch_share": 0.402014652014652
+  }
+ },
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "DEVELOPMENT_OBSERVABLE_SWEEP",
+ "contract_path": "docs/RESULTADO_POLITICA_OP12_2026-07-31.md",
+ "contract_sha256": "fb9417461a947e3d3a6a022dfcc3e784dc8871dc64f5c179c3b96e115dea3090",
+ "created_at": "2026-08-01T01:46:27.125977+00:00",
+ "elapsed_seconds": 1046.7267999589967,
+ "falsifiers": {
+  "all_passed": true,
+  "f1_every_observable_varies": {
+   "evidence": {
+    "why_it_can_fail": "a constant sensor makes its rule a constant"
+   },
+   "passed": true
+  },
+  "f2_every_fitted_rule_actually_switches": {
+   "evidence": {
+    "sensors_unusable": [
+     "ops_down"
+    ],
+    "switch_share": {
+     "all_events": 0.4615384615384615,
+     "backlog": 0.20009157509157507,
+     "hours_since_last": 0.9065934065934065,
+     "op9_stock": 0.20238095238095238,
+     "r1r_events": 0.44734432234432236,
+     "severity": 0.402014652014652
+    },
+    "why_it_can_fail": "a rule that cannot switch is a constant wearing a policy's clothes -- it halted this experiment twice before"
+   },
+   "passed": true
+  },
+  "f3_oracle_bounds_the_CONSTANTS_only": {
+   "evidence": {
+    "constant": 0.005927277272079367,
+    "correction": "the earlier framing said the oracle bounds EVERY policy. It does not: `H_regime` is the value of knowing the regime FOR CHOOSING A CONSTANT, and a rule that switches WITHIN an episode is a different class that this bound does not cover. A capture above 100% would therefore be legitimate, not a bug",
+    "gap": 3.4780749012913205e-05,
+    "oracle": 0.00596205802109228,
+    "why_it_can_fail": "a bad aggregation would let a constant beat its own maximum"
+   },
+   "passed": true
+  },
+  "f4_seeds_are_disjoint": {
+   "evidence": {
+    "test": [
+     4900501,
+     4900502,
+     4900503,
+     4900504,
+     4900505,
+     4900506
+    ],
+    "train": [
+     4900001,
+     4900002,
+     4900003,
+     4900004,
+     4900005,
+     4900006
+    ]
+   },
+   "passed": true
+  },
+  "f5_gap_is_positive": {
+   "evidence": {
+    "gap": 3.4780749012913205e-05
+   },
+   "passed": true
+  }
+ },
+ "gate_reading": "the declared gate bars richer POLICIES, not richer SENSORS. The policy class is frozen at the two-level threshold that already failed; only the observable moves",
+ "metric": "ret_excel_risk_conditional",
+ "observables": [
+  "r1r_events",
+  "all_events",
+  "severity",
+  "hours_since_last",
+  "backlog",
+  "op9_stock",
+  "ops_down"
+ ],
+ "observables_with_positive_capture": [
+  "backlog"
+ ],
+ "reference_path": "results/sensitivity/op12_conditioned_policy_v1/result.json",
+ "reference_sha256": "95efc4a1ca6662542a9a3045a86a4e8f818e3e738b2e9f5c9ec0884a0414aede",
+ "schema_version": "observable_sweep_op12_v1",
+ "self_sha256": "bfe60ca8d4aa7266ea038b3085ba8aeb9eefe8ae494d487344d3d3e76e1a09f3",
+ "usable_observables": [
+  "r1r_events",
+  "all_events",
+  "severity",
+  "hours_since_last",
+  "backlog",
+  "op9_stock"
+ ]
+}
