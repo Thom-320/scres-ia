@@ -95,10 +95,21 @@ def evaluate(config: dict, context: str, seed: int, horizon: float) -> tuple[flo
     return float(panel[METRIC]), drivers
 
 
-def features(config: dict, drivers: np.ndarray) -> np.ndarray:
-    """The neuron's dendrites: the four drivers plus the normalised decision coordinates."""
+def features(config: dict) -> np.ndarray:
+    """Inputs available BEFORE running a configuration: its decision coordinates, and a bias.
+
+    Garrido's Fig. 5 draws the dendrites as the four SCRES drivers. Taken literally that neuron
+    cannot choose the next configuration, because a driver is a property of an episode that has
+    already been simulated -- reading it for an unrun candidate is reading the answer. An earlier
+    version of this runner did exactly that, and `f5` did not catch it because it asserted a
+    claim about rho rather than testing the ranking step.
+
+    So the model is over rho, which is what a planner actually holds at decision time, and the
+    drivers are kept as reported diagnostics. That his figure's inputs are post-hoc is itself a
+    finding about the proposal, not a workaround.
+    """
     coords = [float(FACTORS[n].index(config[n])) / (len(FACTORS[n]) - 1) for n in FACTOR_NAMES]
-    return np.concatenate([drivers, np.array(coords), [1.0]])
+    return np.concatenate([np.array(coords), [1.0]])
 
 
 class Fig5Neuron:
@@ -147,15 +158,15 @@ def main() -> int:
 
     def search(strategy: str, seed: int, rng: np.random.Generator) -> dict:
         """Returns per-context regret curves. `neuron_memory` is the only arm that carries rho."""
-        neuron = Fig5Neuron(len(FACTOR_NAMES) + 5) if strategy.startswith("neuron") else None
+        neuron = Fig5Neuron(len(FACTOR_NAMES) + 1) if strategy.startswith("neuron") else None
         per_ctx, ofat_steps = {}, []
         for ctx in ctx_order:
             table = surface[(ctx, seed)]
             values = [v for v, _ in table]
             best, lo, span = max(values), *scaled(values)
             if strategy == "neuron_reset":
-                neuron = Fig5Neuron(len(FACTOR_NAMES) + 5)
-            seen, curve, running = set(), [], -np.inf
+                neuron = Fig5Neuron(len(FACTOR_NAMES) + 1)
+            seen, curve, running, visited = set(), [], -np.inf, []
 
             # The thesis's design, generated LAZILY from the incumbent: sweep one factor's
             # levels, commit its best, move to the next. Proposals must be built against the
@@ -188,15 +199,15 @@ def main() -> int:
                     if len(seen) < 3:                      # cold start: cannot predict yet
                         idx = int(rng.choice(unseen))
                     else:
-                        preds = [neuron.predict(features(CONFIGS[i], table[i][1]))
-                                 for i in unseen]
+                        preds = [neuron.predict(features(CONFIGS[i])) for i in unseen]
                         idx = unseen[int(np.argmax(preds))]
                 seen.add(idx)
+                visited.append(int(idx))
                 value, drivers = table[idx]
                 running = max(running, value)
                 curve.append(best - running)
                 if neuron is not None:
-                    neuron.update(features(CONFIGS[idx], drivers), (value - lo) / span)
+                    neuron.update(features(CONFIGS[idx]), (value - lo) / span)
             within = next((i + 1 for i, r in enumerate(curve) if r <= 0.01 * abs(best)),
                           args.budget + 1)
             # The configuration the strategy would actually DEPLOY: the best it ever ran here.
@@ -206,7 +217,8 @@ def main() -> int:
             per_ctx[ctx] = {"regret_curve": curve, "final_regret": curve[-1],
                             "runs_to_within_1pct": within, "best": best,
                             "chosen_config": dict(CONFIGS[chosen]),
-                            "chosen_value": table[chosen][0]}
+                            "chosen_value": table[chosen][0],
+                            "visited_sequence": list(visited)}
         return {"per_context": per_ctx, "ofat_coordinate_changes": ofat_steps}
 
     STRATEGIES = ("ofat", "random", "neuron_reset", "neuron_memory")
@@ -218,6 +230,28 @@ def main() -> int:
                 search(strategy, seed, np.random.default_rng(90_000 + r)))
         print(f"  réplica {r + 1}/{args.repeats} ({time.perf_counter() - started:.0f}s)",
               flush=True)
+
+    # ---- f5's actual test: permute the drivers and demand the search does not notice ---------
+    shadow = {}
+    perm_rng = np.random.default_rng(4242)
+    for key, rows in surface.items():
+        order = perm_rng.permutation(len(rows))
+        shadow[key] = [(value, rows[order[i]][1]) for i, (value, _) in enumerate(rows)]
+
+    real_surface = surface
+    leak_compared = 0
+    leak_free = True
+    for r, seed in enumerate(seeds[: min(3, len(seeds))]):
+        for strategy in ("neuron_memory", "neuron_reset"):
+            base = results[strategy][r]["per_context"]
+            surface = shadow                                    # noqa: F841 - read by search()
+            shadow_run = search(strategy, seed, np.random.default_rng(90_000 + r))
+            surface = real_surface
+            for ctx in ctx_order:
+                leak_compared += 1
+                if base[ctx]["visited_sequence"] != shadow_run["per_context"][ctx][
+                        "visited_sequence"]:
+                    leak_free = False
 
     rng_boot = np.random.default_rng(20260731)
 
@@ -269,12 +303,20 @@ def main() -> int:
             "passed": True,
             "evidence": {"why_it_can_fail": "consulting the table before running is not a null",
                          "mechanism": "index drawn from rng.integers before any table read"}},
-        "f5_no_context_leakage": {
-            "passed": True,
-            "evidence": {"why_it_can_fail": ("evaluating a config of the current context before "
-                                             "choosing in it would leak the answer"),
-                         "mechanism": "`seen` starts empty at every context; the neuron carries "
-                                      "only rho, never rows"}},
+        "f5_the_search_cannot_read_an_unrun_configuration": {
+            "passed": leak_free,
+            "evidence": {
+                "why_it_can_fail": (
+                    "a driver is a property of an episode that has ALREADY been simulated, so "
+                    "ranking an unrun candidate by its drivers is reading the answer. An earlier "
+                    "version of this runner did exactly that and the previous f5 could not catch "
+                    "it, because it asserted `passed: True` with a claim about rho instead of "
+                    "testing the ranking step"),
+                "test": ("the whole search is replayed on a SHADOW surface whose driver vectors "
+                         "are permuted across configurations, values untouched; if the visited "
+                         "sequence changes by a single index, the search read a driver"),
+                "sequences_compared": leak_compared,
+                "sequences_identical": leak_free}},
         "f6_seeds_are_virgin": {
             "passed": not (set(seeds) & PRIOR_SEEDS),
             "evidence": {"why_it_can_fail": "a reused seed would void the confirmation",
