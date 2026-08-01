@@ -33,8 +33,9 @@ promote pending or retired results.
    not system recovery time; H3' is search-cost dispersion, not WRAP cost
    volatility.
 6. **Boundary experiment:** report CSSU Gate A as interface liveness only and
-   Gate B as held. The E1 headroom screen is a negative boundary result; it does
-   not justify neural training.
+   Gate B as held. The E1 screen observes zero leading headroom but remains held
+   because its required uninformed placebo was not opened; it does not justify
+   neural training.
 7. **Prospective neural environment:** include E2 only as a preregistered future
    test unless its new contract and gates are actually executed. A positive neural
    result must beat the strongest classical controller on service-safe virgin
