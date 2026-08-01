@@ -1,0 +1,173 @@
+{
+ "beats_placebo": false,
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "REFUTED_BACKLOG_SENSOR_WAS_SELECTION_NOISE",
+ "confirmed": false,
+ "constant_period": 21.0,
+ "contract_path": "docs/PREREGISTRO_CONFIRMACION_BACKLOG_2026-07-31.md",
+ "contract_sha256": "c7f31bdc4fa7f4988c3dc82827613348d66cdc546fb0f83f3346275d43daffd9",
+ "created_at": "2026-08-01T01:49:09.309274+00:00",
+ "elapsed_seconds": 18.67759149998892,
+ "falsifiers": {
+  "all_passed": true,
+  "f1_seeds_are_virgin": {
+   "evidence": {
+    "excluded": [
+     4900001,
+     4900002,
+     4900003,
+     4900004,
+     4900005,
+     4900006,
+     4900501,
+     4900502,
+     4900503,
+     4900504,
+     4900505,
+     4900506
+    ],
+    "seeds": [
+     5100001,
+     5100002,
+     5100003,
+     5100004,
+     5100005,
+     5100006,
+     5100007,
+     5100008,
+     5100009,
+     5100010,
+     5100011,
+     5100012
+    ],
+    "why_it_can_fail": "reusing a fit or sweep seed would make this a re-read of the same data, not a confirmation"
+   },
+   "passed": true
+  },
+  "f2_rule_is_the_frozen_one": {
+   "evidence": {
+    "rule": {
+     "high": 30.0,
+     "low": 21.0,
+     "threshold": 116361.6
+    },
+    "sweep_best_observable": "backlog",
+    "sweep_sha256": "bfe60ca8d4aa7266ea038b3085ba8aeb9eefe8ae494d487344d3d3e76e1a09f3",
+    "why_it_can_fail": "a retyped or drifted parameter would make this a different policy wearing the same name"
+   },
+   "passed": true
+  },
+  "f3_rule_switches_on_new_seeds": {
+   "evidence": {
+    "switch_share": 0.19917582417582416,
+    "why_it_can_fail": "a rule that never switches is the constant, and the comparison would be vacuous"
+   },
+   "passed": true
+  },
+  "f4_paired_difference_has_variance": {
+   "evidence": {
+    "n_seeds": 12,
+    "sd": 0.0001916430991958967,
+    "why_it_can_fail": "zero variance makes the interval degenerate"
+   },
+   "passed": true
+  },
+  "f5_placebo_is_not_the_signal": {
+   "evidence": {
+    "why_it_can_fail": "if the donor trace equalled the real one the control would control for nothing"
+   },
+   "passed": true
+  }
+ },
+ "magnitude_note": "even a full capture of the oracle gap is ~290x below the 0.01 bar; a PASS authorises spending on a richer policy class, it does not claim material headroom",
+ "metric": "ret_excel_risk_conditional",
+ "observable": "backlog",
+ "oracle_gap_for_scale": 3.4780749012913205e-05,
+ "placebo_minus_constant": {
+  "lcb95": 1.9710093047067616e-05,
+  "mean": 6.911327926406706e-05,
+  "per_seed": [
+   5.058905813380277e-06,
+   -2.5034857823805087e-05,
+   6.65963713401429e-05,
+   9.343913951061893e-05,
+   3.0823825403388257e-05,
+   9.93932309739381e-06,
+   -1.4583938666466102e-05,
+   1.5124211571605885e-05,
+   0.00019533698126962168,
+   0.0003532139499424,
+   6.316038122747033e-05,
+   3.62850584830537e-05
+  ],
+  "ucb95": 0.0001336905307935893
+ },
+ "reactive_minus_constant": {
+  "lcb95": -6.990930181600651e-05,
+  "mean": 5.024344339383109e-05,
+  "per_seed": [
+   3.174969734785115e-05,
+   0.0001368260780089713,
+   -6.311482096127444e-06,
+   -2.7248432326050882e-05,
+   -0.00046691890037936837,
+   0.0003554179334618923,
+   -4.2254718768567235e-06,
+   7.507693652022229e-05,
+   4.004991474719722e-05,
+   0.0002488167175018498,
+   0.0001900664761133691,
+   2.962185370302334e-05
+  ],
+  "ucb95": 0.00014866476732496917
+ },
+ "reference_path": "results/sensitivity/observable_sweep_op12_v1/result.json",
+ "reference_sha256": "bfe60ca8d4aa7266ea038b3085ba8aeb9eefe8ae494d487344d3d3e76e1a09f3",
+ "regimes": [
+  "R1r",
+  "R2r",
+  "R3",
+  "R1r+R2r",
+  "R1r+R3",
+  "R2r+R3",
+  "R1r+R2r+R3"
+ ],
+ "rule": {
+  "high": 30.0,
+  "low": 21.0,
+  "threshold": 116361.6
+ },
+ "schema_version": "backlog_confirmation_v1",
+ "seeds": [
+  5100001,
+  5100002,
+  5100003,
+  5100004,
+  5100005,
+  5100006,
+  5100007,
+  5100008,
+  5100009,
+  5100010,
+  5100011,
+  5100012
+ ],
+ "self_sha256": "894bea94e51b8a6e241cd491833b7a3b30317362f2d69144b7c165e9b805bcd5"
+}
