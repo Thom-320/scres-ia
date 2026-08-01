@@ -56,7 +56,7 @@
   "rpj_onset_admission": "clamped",
   "schema": "calibration_provenance_v1"
  },
- "claim_status": "HALTED_FALSIFIER_FAILED",
+ "claim_status": "G1_GENERATES_CURVATURE",
  "cobb_douglas_by_cell": {
   "R1r+R2r|base|0.0": 0.5473726772584366,
   "R1r+R2r|base|1008.0": 0.5569514268587031,
@@ -116,8 +116,8 @@
  "contract_path": "docs/PREREGISTRO_G1_PRECIO_INVENTARIO_2026-08-01.md",
  "contract_sha256": "760dbd498ca633353671f1031e429023e288c7ea926e7db79511822612b6561c",
  "contrast_metric": "ret_excel_risk_conditional",
- "created_at": "2026-08-01T19:45:46.140139+00:00",
- "elapsed_seconds": 36.92933833398274,
+ "created_at": "2026-08-01T20:46:59.898644+00:00",
+ "elapsed_seconds": 31.868940875021508,
  "exponents": {
   "epsilon": 0.01686448934076705,
   "kappa_dot": 0.050138079687799375,
@@ -126,7 +126,10 @@
   "zeta": 0.015508793304832328
  },
  "falsifiers": {
-  "all_passed": false,
+  "all_passed": true,
+  "diagnostic_only": [
+   "f8_no_single_exponent_captures_the_index"
+  ],
   "f1_kappa_actually_charges_inventory": {
    "evidence": {
     "holding_term_pushes_back": true,
@@ -147,14 +150,6 @@
   },
   "f3_optimum_is_interior_not_at_a_bound": {
    "evidence": {
-    "argmax_cobb_douglas": {
-     "R1r+R2r|base": 1344.0,
-     "R1r+R2r|freq_x3": 1344.0,
-     "R1r|base": 1008.0,
-     "R1r|freq_x3": 1344.0,
-     "R2r|base": 1008.0,
-     "R2r|freq_x3": 1344.0
-    },
     "interior_levels": [
      168.0,
      336.0,
@@ -164,7 +159,28 @@
      1008.0,
      1176.0
     ],
-    "regimes_with_interior_optimum": [
+    "note": "ties matter: max() returns the first of an equal set, so a profile that rises then goes FLAT would report a false interior optimum. Interior now requires that NO bound belongs to the optimal set",
+    "optimal_sets_cobb_douglas": {
+     "R1r+R2r|base": [
+      1344.0
+     ],
+     "R1r+R2r|freq_x3": [
+      1344.0
+     ],
+     "R1r|base": [
+      1008.0
+     ],
+     "R1r|freq_x3": [
+      1344.0
+     ],
+     "R2r|base": [
+      1008.0
+     ],
+     "R2r|freq_x3": [
+      1344.0
+     ]
+    },
+    "regimes_with_strictly_interior_optimum": [
      "R1r|base",
      "R2r|base"
     ],
@@ -174,14 +190,6 @@
   },
   "f4_ret_excel_stays_monotone": {
    "evidence": {
-    "argmax_ret_excel": {
-     "R1r+R2r|base": 1344.0,
-     "R1r+R2r|freq_x3": 1344.0,
-     "R1r|base": 1008.0,
-     "R1r|freq_x3": 1344.0,
-     "R2r|base": 1008.0,
-     "R2r|freq_x3": 1344.0
-    },
     "curvature_cd": {
      "R1r+R2r|base": 0.012932851244138899,
      "R1r+R2r|freq_x3": 0.6020200402536188,
@@ -198,9 +206,74 @@
      "R2r|base": 0.05982848089226822,
      "R2r|freq_x3": 0.05751935857201329
     },
+    "fill_is_monotone": {
+     "R1r+R2r|base": true,
+     "R1r+R2r|freq_x3": true,
+     "R1r|base": true,
+     "R1r|freq_x3": true,
+     "R2r|base": true,
+     "R2r|freq_x3": true
+    },
+    "note": "now tested by SUCCESSIVE DIFFERENCES, not by where argmax lands. Saturation is monotone; only a turn-down is deterioration",
+    "optimal_sets_fill": {
+     "R1r+R2r|base": [
+      1344.0
+     ],
+     "R1r+R2r|freq_x3": [
+      1344.0
+     ],
+     "R1r|base": [
+      1008.0,
+      1176.0,
+      1344.0
+     ],
+     "R1r|freq_x3": [
+      1344.0
+     ],
+     "R2r|base": [
+      1008.0,
+      1176.0,
+      1344.0
+     ],
+     "R2r|freq_x3": [
+      1344.0
+     ]
+    },
+    "optimal_sets_ret": {
+     "R1r+R2r|base": [
+      1344.0
+     ],
+     "R1r+R2r|freq_x3": [
+      1344.0
+     ],
+     "R1r|base": [
+      1008.0,
+      1176.0,
+      1344.0
+     ],
+     "R1r|freq_x3": [
+      1344.0
+     ],
+     "R2r|base": [
+      1008.0,
+      1176.0,
+      1344.0
+     ],
+     "R2r|freq_x3": [
+      1344.0
+     ]
+    },
+    "ret_is_monotone": {
+     "R1r+R2r|base": true,
+     "R1r+R2r|freq_x3": true,
+     "R1r|base": true,
+     "R1r|freq_x3": true,
+     "R2r|base": true,
+     "R2r|freq_x3": true
+    },
     "why_it_can_fail": "contrast control: if ret_excel ALSO curves, the difference is not attributable to pricing inventory and G1's mechanism claim collapses"
    },
-   "passed": false
+   "passed": true
   },
   "f5_H_regime_is_non_negative": {
    "evidence": {
@@ -220,7 +293,7 @@
   "f7_seeds_are_virgin": {
    "evidence": {
     "collisions": [],
-    "prior_seeds_scanned": 344,
+    "prior_seeds_scanned": 354,
     "seeds": [
      6700001,
      6700002,
@@ -251,7 +324,8 @@
      "tau": 1.254230996742184,
      "zeta": 398678.1895604396
     },
-    "why_it_can_fail": "Garrido's rule is exponent = 0.20/ln(x_max), so each term should contribute at most 1/5 of the linear score. The rule breaks when a component's maximum is near 1, because ln(x) then approaches zero and its exponent explodes. If one component captures the budget the index is that component wearing a Cobb-Douglas costume, and any conclusion drawn from it is about that component alone"
+    "status": "post_hoc_diagnostic_not_preregistered",
+    "why_it_can_fail": "Garrido's rule is exponent = 0.20/ln(x_max), so each term should contribute at most 1/5 of the linear score. The rule breaks when a component's maximum is near 1, because ln(x) then approaches zero and its exponent explodes. If one component captures the budget the index is that component wearing a Cobb-Douglas costume, and any conclusion drawn from it is about that component alone. CORRECTED after review: a large exponent is NOT a large share of the index -- by construction the term contributes about 0.20 at its own maximum. What a large exponent means is ill CONDITIONING, high sensitivity per unit of ln(x). This check was also added mid-analysis, so it is an exploratory diagnostic and not a preregistered gate"
    },
    "passed": false
   }
@@ -276,7 +350,295 @@
    "R2r|freq_x3": 0.05751935857201329
   }
  },
+ "optimal_sets": {
+  "R1r+R2r|base": {
+   "R_cobb_douglas": [
+    1344.0
+   ],
+   "flow_fill_rate": [
+    1344.0
+   ],
+   "ret_excel_risk_conditional": [
+    1344.0
+   ]
+  },
+  "R1r+R2r|freq_x3": {
+   "R_cobb_douglas": [
+    1344.0
+   ],
+   "flow_fill_rate": [
+    1344.0
+   ],
+   "ret_excel_risk_conditional": [
+    1344.0
+   ]
+  },
+  "R1r|base": {
+   "R_cobb_douglas": [
+    1008.0
+   ],
+   "flow_fill_rate": [
+    1008.0,
+    1176.0,
+    1344.0
+   ],
+   "ret_excel_risk_conditional": [
+    1008.0,
+    1176.0,
+    1344.0
+   ]
+  },
+  "R1r|freq_x3": {
+   "R_cobb_douglas": [
+    1344.0
+   ],
+   "flow_fill_rate": [
+    1344.0
+   ],
+   "ret_excel_risk_conditional": [
+    1344.0
+   ]
+  },
+  "R2r|base": {
+   "R_cobb_douglas": [
+    1008.0
+   ],
+   "flow_fill_rate": [
+    1008.0,
+    1176.0,
+    1344.0
+   ],
+   "ret_excel_risk_conditional": [
+    1008.0,
+    1176.0,
+    1344.0
+   ]
+  },
+  "R2r|freq_x3": {
+   "R_cobb_douglas": [
+    1344.0
+   ],
+   "flow_fill_rate": [
+    1344.0
+   ],
+   "ret_excel_risk_conditional": [
+    1344.0
+   ]
+  }
+ },
  "primary_metric": "R_cobb_douglas",
+ "profiles": {
+  "R1r+R2r|base": {
+   "R_cobb_douglas": [
+    0.5473726772584366,
+    0.5484579182225677,
+    0.5496941474910307,
+    0.5511658553801085,
+    0.5529296681796154,
+    0.5550543793492951,
+    0.5569514268587031,
+    0.5580338339282886,
+    0.5585435805474938
+   ],
+   "flow_fill_rate": [
+    0.7922801598609581,
+    0.81612119847644,
+    0.8410893410950497,
+    0.8653873923784351,
+    0.8892608309934924,
+    0.9117802675157889,
+    0.9364799466940986,
+    0.9532391059745966,
+    0.963096404058153
+   ],
+   "ret_excel_risk_conditional": [
+    0.0003949096633757652,
+    0.0004742357424231082,
+    0.0005994480637479577,
+    0.0008105513819630774,
+    0.001222822075828001,
+    0.002092170079110394,
+    0.002758325016836843,
+    0.003024915029622993,
+    0.0031704973199101574
+   ]
+  },
+  "R1r+R2r|freq_x3": {
+   "R_cobb_douglas": [
+    0.4973176914390982,
+    0.5476269336324381,
+    0.5481415074078617,
+    0.5487245551807075,
+    0.5494147771496496,
+    0.5502557612183357,
+    0.5511908301906668,
+    0.552167326865062,
+    0.5531014127469718
+   ],
+   "flow_fill_rate": [
+    0.6181010420729776,
+    0.6386404606295019,
+    0.662980154902434,
+    0.6841175638871896,
+    0.7082678426272699,
+    0.7286466761781156,
+    0.7525380680862744,
+    0.7742548244334708,
+    0.7986105357298227
+   ],
+   "ret_excel_risk_conditional": [
+    0.00027262675651429125,
+    0.0002965797984571936,
+    0.00032878990116255876,
+    0.00038033815740271627,
+    0.0004712458273591691,
+    0.0006764083429628068,
+    0.0009674799169218773,
+    0.0012881111083983324,
+    0.0014668800097808663
+   ]
+  },
+  "R1r|base": {
+   "R_cobb_douglas": [
+    0.5485447597818515,
+    0.549991244525849,
+    0.5516647771793991,
+    0.5537469862948967,
+    0.5566560700440168,
+    0.5610723760438627,
+    0.5616770783618182,
+    0.5612892617416773,
+    0.5609182445159379
+   ],
+   "flow_fill_rate": [
+    0.8502776512809221,
+    0.8743442399820439,
+    0.9007986620327095,
+    0.9260721513895938,
+    0.9495454777371668,
+    0.9705533412908949,
+    0.9801358498492309,
+    0.9801358498492309,
+    0.9801358498492309
+   ],
+   "ret_excel_risk_conditional": [
+    0.00048195442835225806,
+    0.0006266531953470053,
+    0.0008497907565344524,
+    0.0012630559727937589,
+    0.0020148378498767356,
+    0.003576380979030458,
+    0.003953664545948383,
+    0.003953664545948383,
+    0.003953664545948383
+   ]
+  },
+  "R1r|freq_x3": {
+   "R_cobb_douglas": [
+    0.5397958086978936,
+    0.5492848903585372,
+    0.5505714989635411,
+    0.5520218211012462,
+    0.5537278326640259,
+    0.5558256686294697,
+    0.5580621193362003,
+    0.5603395245362257,
+    0.562179485022676
+   ],
+   "flow_fill_rate": [
+    0.7623165470329694,
+    0.7873732408177517,
+    0.8125979705787799,
+    0.8385252432214423,
+    0.8632216244689822,
+    0.8892365883171087,
+    0.9139369175694828,
+    0.9391790198141073,
+    0.9620221065844552
+   ],
+   "ret_excel_risk_conditional": [
+    0.0003536730449071837,
+    0.0004206129723788534,
+    0.0005150243363069887,
+    0.00067633381324373,
+    0.0010342474518567637,
+    0.0018424904120638008,
+    0.00264760253188508,
+    0.003257369365425948,
+    0.003764299763031111
+   ]
+  },
+  "R2r|base": {
+   "R_cobb_douglas": [
+    0.5475886283596157,
+    0.5490008902689004,
+    0.5506187758914848,
+    0.5525916506875442,
+    0.5552240295164887,
+    0.5589203583888583,
+    0.559140426203253,
+    0.5587551830428467,
+    0.5583865006416728
+   ],
+   "flow_fill_rate": [
+    0.8517105938287051,
+    0.8741992838563611,
+    0.8990428260316506,
+    0.9227071949149308,
+    0.9475496317619284,
+    0.9659970379917061,
+    0.9746114833273474,
+    0.9746114833273474,
+    0.9746114833273474
+   ],
+   "ret_excel_risk_conditional": [
+    0.0010045104838613276,
+    0.001310814216178016,
+    0.001775402884198668,
+    0.002722358186229653,
+    0.0043712048438879925,
+    0.006201095051200738,
+    0.00784845086389223,
+    0.00784845086389223,
+    0.00784845086389223
+   ]
+  },
+  "R2r|freq_x3": {
+   "R_cobb_douglas": [
+    0.5459710094127582,
+    0.54662332042927,
+    0.5474896773977357,
+    0.5485301027733974,
+    0.549764253658976,
+    0.5511476635676215,
+    0.5523021720487071,
+    0.5532752604787712,
+    0.5542137502639215
+   ],
+   "flow_fill_rate": [
+    0.7266594050071338,
+    0.7487937955223595,
+    0.77160776887513,
+    0.792608983669186,
+    0.818277598657411,
+    0.839693759657188,
+    0.8630929960414279,
+    0.8845729860904826,
+    0.9086202092998596
+   ],
+   "ret_excel_risk_conditional": [
+    0.0003600939797328267,
+    0.0004132082942382255,
+    0.0005037403262371219,
+    0.0007315238561743861,
+    0.001048948516250305,
+    0.0017246701700677682,
+    0.0022657957533336243,
+    0.0025911798335741683,
+    0.00280886864453541
+   ]
+  }
+ },
  "reference_path": "results/headroom/cobb_douglas_v1/result.json",
  "reference_sha256": "8ef2833be75bb736e79128d5601e52ba3518a1fa79bd61c3e04376a6c55244c4",
  "regimes": [
@@ -296,7 +658,7 @@
   6700005,
   6700006
  ],
- "self_sha256": "b3cc51cc0e819bcf2ff976f8d5b05d6de8a618c77c6746326ca0be2f053d2b67",
+ "self_sha256": "fd9e9ee5a959f56d846c7e5b18abda48967cee6c40c8bcbf93a199008ba5b143",
  "step_hours": 24.0,
  "what_a_pass_authorises": "measuring the PREDICTION premium on this surface (MLP/KAN vs linear, SESOI 0.05). It does NOT authorise training control, which additionally requires the full headroom gate"
 }

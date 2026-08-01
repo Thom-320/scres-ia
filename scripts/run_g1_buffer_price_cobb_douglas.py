@@ -148,6 +148,33 @@ def main() -> int:
         return float(np.mean([r[key] for r in panels[(name, buf)]]))
 
     interior = BUFFER_HOURS[1:-1]
+
+    # An external review caught the defect that made the first version of f3/f4 unsound: `max()`
+    # returns the FIRST of any tied maxima, so a profile that rises and then goes FLAT reports an
+    # "interior optimum" that is really saturation. Ties must be found explicitly, and an optimum
+    # counts as interior only when NO bound belongs to the optimal set.
+    TOL = 1e-9
+
+    def profile(name: str, key: str) -> list[float]:
+        if key == PRIMARY:
+            return [cd_at(name, b) for b in BUFFER_HOURS]
+        return [mean(name, b, key) for b in BUFFER_HOURS]
+
+    def optimal_set(values: list[float]) -> list[float]:
+        top = max(values)
+        return [BUFFER_HOURS[i] for i, v in enumerate(values) if top - v <= TOL]
+
+    def strictly_interior(values: list[float]) -> bool:
+        best = optimal_set(values)
+        return all(b in interior for b in best)
+
+    def is_monotone(values: list[float]) -> bool:
+        diffs = [values[i + 1] - values[i] for i in range(len(values) - 1)]
+        return all(d >= -TOL for d in diffs) or all(d <= TOL for d in diffs)
+
+    profiles = {n: {k: profile(n, k) for k in (PRIMARY, CONTRAST, "flow_fill_rate")}
+                for n in reg}
+    optimal_sets = {n: {k: optimal_set(profiles[n][k]) for k in profiles[n]} for n in reg}
     argmax_cd = {n: max(BUFFER_HOURS, key=lambda b: cd_at(n, b)) for n in reg}
     argmax_ret = {n: max(BUFFER_HOURS, key=lambda b: mean(n, b, CONTRAST)) for n in reg}
     argmax_fill = {n: max(BUFFER_HOURS, key=lambda b: mean(n, b, "flow_fill_rate")) for n in reg}
@@ -219,20 +246,32 @@ def main() -> int:
                                              "the physical ledger either, the sweep is vacuous"),
                          "mean_delivered_spread_across_buffers": delivered_spread}},
         "f3_optimum_is_interior_not_at_a_bound": {
-            "passed": any(argmax_cd[n] in interior for n in reg),
+            "passed": any(strictly_interior(profiles[n][PRIMARY]) for n in reg),
             "evidence": {"why_it_can_fail": ("THE hypothesis. An optimum at 0 or at the maximum "
                                              "is a monotone surface, which a linear model "
                                              "represents exactly and no network can improve on"),
-                         "argmax_cobb_douglas": argmax_cd,
+                         "note": ("ties matter: max() returns the first of an equal set, "
+                                  "so a profile that rises then goes FLAT would report a false "
+                                  "interior optimum. Interior now requires that NO bound belongs "
+                                  "to the optimal set"),
+                         "optimal_sets_cobb_douglas": {n: optimal_sets[n][PRIMARY] for n in reg},
                          "interior_levels": list(interior),
-                         "regimes_with_interior_optimum": [n for n in reg
-                                                           if argmax_cd[n] in interior]}},
+                         "regimes_with_strictly_interior_optimum": [
+                             n for n in reg if strictly_interior(profiles[n][PRIMARY])]}},
         "f4_ret_excel_stays_monotone": {
-            "passed": all(argmax_ret[n] in (BUFFER_HOURS[0], BUFFER_HOURS[-1]) for n in reg),
+            "passed": all(is_monotone(profiles[n][CONTRAST]) for n in reg),
             "evidence": {"why_it_can_fail": ("contrast control: if ret_excel ALSO curves, the "
                                              "difference is not attributable to pricing "
                                              "inventory and G1's mechanism claim collapses"),
-                         "argmax_ret_excel": argmax_ret,
+                         "note": ("now tested by SUCCESSIVE DIFFERENCES, not by where "
+                                  "argmax lands. Saturation is monotone; only a turn-down is "
+                                  "deterioration"),
+                         "ret_is_monotone": {n: is_monotone(profiles[n][CONTRAST]) for n in reg},
+                         "fill_is_monotone": {n: is_monotone(profiles[n]["flow_fill_rate"])
+                                              for n in reg},
+                         "optimal_sets_ret": {n: optimal_sets[n][CONTRAST] for n in reg},
+                         "optimal_sets_fill": {n: optimal_sets[n]["flow_fill_rate"]
+                                               for n in reg},
                          "curvature_ret": curv_ret, "curvature_cd": curv_cd}},
         "f5_H_regime_is_non_negative": {
             "passed": h_regime_cd >= -1e-12,
@@ -253,7 +292,14 @@ def main() -> int:
                              "component's maximum is near 1, because ln(x) then approaches zero "
                              "and its exponent explodes. If one component captures the budget "
                              "the index is that component wearing a Cobb-Douglas costume, and "
-                             "any conclusion drawn from it is about that component alone"),
+                             "any conclusion drawn from it is about that component "
+                             "alone. CORRECTED after review: a large exponent is NOT a large "
+                             "share of the index -- by construction the term contributes about "
+                             "0.20 at its own maximum. What a large exponent means is ill "
+                             "CONDITIONING, high sensitivity per unit of ln(x). This check was "
+                             "also added mid-analysis, so it is an exploratory diagnostic and "
+                             "not a preregistered gate"),
+                         "status": "post_hoc_diagnostic_not_preregistered",
                          "exponents": exponents,
                          "largest": max(exponents, key=lambda k: exponents[k]),
                          "largest_value": max(exponents.values()),
@@ -264,10 +310,15 @@ def main() -> int:
                          "seeds": seeds, "collisions": sorted(set(seeds) & prior_seeds),
                          "prior_seeds_scanned": len(prior_seeds)}},
     }
+    # f8 was added mid-analysis and its first interpretation was wrong (a large exponent is not
+    # a large share of the index). It reports as a diagnostic and does NOT gate the verdict --
+    # a post hoc check must not be able to halt a preregistered one.
+    DIAGNOSTIC_ONLY = {"f8_no_single_exponent_captures_the_index"}
     falsifiers["all_passed"] = all(v["passed"] for k, v in falsifiers.items()
-                                   if k != "all_passed")
+                                   if k != "all_passed" and k not in DIAGNOSTIC_ONLY)
+    falsifiers["diagnostic_only"] = sorted(DIAGNOSTIC_ONLY)
 
-    interior_optimum = any(argmax_cd[n] in interior for n in reg)
+    interior_optimum = any(strictly_interior(profiles[n][PRIMARY]) for n in reg)
     argmax_moves = len(set(argmax_cd.values())) > 1
     if interior_optimum and argmax_moves:
         verdict = "G1_GENERATES_CURVATURE"
@@ -289,8 +340,12 @@ def main() -> int:
     print(f"\n  veredicto: {verdict}")
     print("\n  falsadores:")
     for name, check in falsifiers.items():
-        if name != "all_passed":
-            print(f"    {name:<44} {'PASA' if check['passed'] else 'FALLA'}")
+        if not isinstance(check, dict):
+            continue                       # `all_passed` and `diagnostic_only` are not checks
+        mark = "PASA" if check["passed"] else "FALLA"
+        if name in falsifiers.get("diagnostic_only", ()):
+            mark += " (diagnóstico, no vinculante)"
+        print(f"    {name:<44} {mark}")
 
     payload = {
         "schema_version": "g1_buffer_price_v1",
@@ -300,6 +355,7 @@ def main() -> int:
         "buffer_hours": list(BUFFER_HOURS), "regimes": list(reg), "seeds": seeds,
         "step_hours": STEP,
         "cobb_douglas_by_cell": cd, "exponents": exponents,
+        "profiles": profiles, "optimal_sets": optimal_sets,
         "argmax": {"cobb_douglas": argmax_cd, "ret_excel": argmax_ret, "fill": argmax_fill},
         "nonlinearity_one_minus_linear_r2": {"cobb_douglas": curv_cd, "ret_excel": curv_ret},
         "H_regime_cobb_douglas": h_regime_cd,

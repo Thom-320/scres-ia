@@ -1,4 +1,51 @@
-# Resultado G1 — **HALTED**, y los dos falsadores que fallan son los hallazgos
+# Resultado G1 — RETRACTADO Y REVERTIDO: **G1 se sostiene**
+
+> ## ⚠️ RETRACCIÓN 2026-08-01 — la conclusión de abajo está INVERTIDA
+>
+> Una revisión externa señaló que `f4` no probaba monotonicidad: `max()` devuelve **el primero de
+> un empate**, así que un perfil que sube y luego queda **plano** reportaba un falso «óptimo
+> interior». Lo comprobé y **tenía razón**.
+>
+> Con el test correcto —**diferencias sucesivas** y **conjuntos óptimos con tolerancia**—:
+>
+> | | resultado |
+> |---|---|
+> | `ret_excel` | **monótona en las seis celdas** |
+> | `flow_fill_rate` | **monótona en las seis**; `R1r\|base` tiene conjunto óptimo **`[1008, 1176, 1344]`** — empate a tres |
+> | **Cobb-Douglas** | **estrictamente interior** en `R1r\|base` y `R2r\|base`, sin empates, con diferencias negativas después |
+>
+> **Por tanto G1 se SOSTIENE.** Cobb-Douglas curva **porque cobra el inventario**; ReT y fill
+> **saturan** porque no lo cobran. Es exactamente la hipótesis de G1, y la rechacé por un
+> artefacto de mi propio falsador.
+>
+> **Se retiran de este documento:** «el óptimo interior es físico, no de la métrica», «todo
+> curva», y «la primera curvatura del proyecto» (el barrido de contención ya tenía U — que
+> resultaron ser censura de `ret_excel`). Lo correcto: **la primera auditoría directa del perfil
+> de `op9_rations`**.
+>
+> **Y dos errores más, ambos señalados y ambos ciertos:**
+>
+> * **`τ = 0,79092` es del SMOKE de 2 semillas**, no de la corrida de 6, que da **0,8829**.
+>   Transcribí el número equivocado.
+> * **«τ disfrazado» es una mala interpretación.** Un exponente grande **no** es una cuota grande
+>   del índice: por construcción `exponente × ln(x_max) ≈ 0,20` en su propio máximo. Indica **mal
+>   condicionamiento**, no dominancia. `f8` queda además **degradado a diagnóstico no vinculante**
+>   porque se añadió a mitad de análisis, y **un check post hoc no puede detener uno
+>   preregistrado**.
+>
+> Artefacto corregido: `results/headroom/g1_buffer_price/result.json`, re-sellado con `f3` por
+> conjuntos óptimos, `f4` por diferencias sucesivas y los perfiles completos almacenados — que el
+> artefacto original **no guardaba**, y por eso el empate no era auditable desde él.
+>
+> **Consecuencia para la prima de predicción:** su resultado **no cambia de signo** (se midió
+> sobre `ret_excel`, monótona, curvatura 0,076 contra ruido 0,317), pero **su encuadre sí**: la
+> superficie medida no era la curva de Cobb-Douglas. La condición *«curvatura > ruido»* se
+> mantiene; **falta medir la prima sobre la superficie de CD**, que es la que tiene el máximo
+> estricto.
+
+---
+
+## Texto original, conservado como registro de la lectura equivocada
 
 **Artefacto:** `results/headroom/g1_buffer_price/result.json` (sello `b3cc51cc0e819bcf…`,
 `HALTED_FALSIFIER_FAILED`) · preregistro `docs/PREREGISTRO_G1_PRECIO_INVENTARIO_2026-08-01.md`,
