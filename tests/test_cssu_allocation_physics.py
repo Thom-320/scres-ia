@@ -3,7 +3,9 @@ import pytest
 from supply_chain.cssu_allocation import (
     ALLOCATION_LEVELS,
     allocate_shared_capacity,
+    event_keyed_uniform_u64,
     stable_cssu_destination,
+    stable_cssu_destination_weighted,
 )
 from supply_chain.supply_chain import MFSCSimulation
 
@@ -13,6 +15,60 @@ def test_destination_assignment_is_deterministic_and_rng_free():
     second = [stable_cssu_destination(simulation_seed=101, order_id=j) for j in range(100)]
     assert first == second
     assert set(first) == {"A", "B"}
+
+
+def test_weighted_destination_none_is_exact_legacy_lane():
+    for seed in (0, 101, 9999):
+        for event_id in range(32):
+            assert stable_cssu_destination_weighted(
+                simulation_seed=seed,
+                event_id=event_id,
+                weights=None,
+            ) == stable_cssu_destination(simulation_seed=seed, order_id=event_id)
+
+
+def test_weighted_destination_is_event_keyed_and_validates_distribution():
+    first = [
+        stable_cssu_destination_weighted(
+            simulation_seed=101,
+            event_id=event_id,
+            weights={"A": 0.7, "B": 0.3},
+        )
+        for event_id in range(100)
+    ]
+    second = [
+        stable_cssu_destination_weighted(
+            simulation_seed=101,
+            event_id=event_id,
+            weights={"A": 0.7, "B": 0.3},
+        )
+        for event_id in range(100)
+    ]
+    assert first == second
+    assert all(0.0 <= event_keyed_uniform_u64(simulation_seed=101, event_id=i) < 1.0 for i in range(100))
+    assert all(
+        stable_cssu_destination_weighted(
+            simulation_seed=101,
+            event_id=event_id,
+            weights={"A": 1.0, "B": 0.0},
+        ) == "A"
+        for event_id in range(20)
+    )
+    assert all(
+        stable_cssu_destination_weighted(
+            simulation_seed=101,
+            event_id=event_id,
+            weights={"A": 0.0, "B": 1.0},
+        ) == "B"
+        for event_id in range(20)
+    )
+    for invalid in ({"A": 0.7}, {"A": -0.1, "B": 1.1}, {"A": 0.0, "B": 0.0}):
+        with pytest.raises(ValueError):
+            stable_cssu_destination_weighted(
+                simulation_seed=101,
+                event_id=1,
+                weights=invalid,
+            )
 
 
 @pytest.mark.parametrize("alpha", ALLOCATION_LEVELS)
@@ -39,6 +95,22 @@ def test_unused_share_can_be_reallocated_without_enlarging_pool():
     assert result.dispatched_a == pytest.approx(100)
     assert result.dispatched_b == pytest.approx(2_400)
     assert result.unused == pytest.approx(0)
+
+
+def test_spare_reallocation_is_not_an_action_invariant_pooling_null():
+    results = [
+        allocate_shared_capacity(
+            stock=10_000,
+            daily_capacity=2_500,
+            allocation_a=alpha,
+            requested={"A": 5_000, "B": 5_000},
+            reallocate_unused=True,
+        )
+        for alpha in ALLOCATION_LEVELS
+    ]
+    assert len({result.dispatched_a for result in results}) == len(ALLOCATION_LEVELS)
+    assert len({result.dispatched_b for result in results}) == len(ALLOCATION_LEVELS)
+    assert all(result.total_dispatched == pytest.approx(2_500) for result in results)
 
 
 def test_invalid_action_and_negative_physics_are_rejected():

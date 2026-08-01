@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from hashlib import sha256
+from math import isfinite
 from typing import Mapping
 
 
@@ -45,6 +46,69 @@ def stable_cssu_destination(*, simulation_seed: int, order_id: int) -> str:
     return CSSU_IDS[digest[0] & 1]
 
 
+def event_keyed_uniform_u64(
+    *,
+    simulation_seed: int,
+    event_id: int,
+    namespace: str = "g3a-cssu-v2",
+) -> float:
+    """Return a deterministic ``[0, 1)`` uniform for one exogenous event.
+
+    This is deliberately separate from the simulator RNG.  A weighted G3a arm
+    may transform this same event key through a CDF without changing any later
+    simulator draws.  The namespace is part of the key so that a future
+    extension cannot silently reuse the historical DRA-1 destination stream.
+    """
+    digest = sha256(f"{namespace}:{simulation_seed}:{event_id}".encode()).digest()
+    return int.from_bytes(digest[:8], byteorder="big", signed=False) / float(1 << 64)
+
+
+def _normalise_cssu_weights(weights: Mapping[str, float]) -> tuple[float, float]:
+    """Validate and normalize a two-claimant destination distribution."""
+    if set(weights) != set(CSSU_IDS):
+        raise ValueError(f"weights must contain exactly {CSSU_IDS}; got {sorted(weights)!r}")
+    values = {cssu: float(weights[cssu]) for cssu in CSSU_IDS}
+    if any(not isfinite(value) or value < 0.0 for value in values.values()):
+        raise ValueError("weights must be finite and non-negative")
+    total = values["A"] + values["B"]
+    if total <= 0.0:
+        raise ValueError("weights must have positive total mass")
+    return values["A"] / total, values["B"] / total
+
+
+def stable_cssu_destination_weighted(
+    *,
+    simulation_seed: int,
+    event_id: int,
+    weights: Mapping[str, float] | None,
+    namespace: str = "g3a-cssu-v2",
+) -> str:
+    """Map one event to A/B while preserving the exact legacy ``None`` lane.
+
+    ``weights=None`` delegates to :func:`stable_cssu_destination` and therefore
+    preserves the historical ``dra1-cssu-v1`` mapping byte for byte.  Weighted
+    arms use a new 64-bit event-keyed uniform and never consume simulator RNG.
+    This helper is intentionally not wired into the DES yet; the G3a contract
+    must freeze the exogenous risk tape before scientific execution.
+    """
+    if weights is None:
+        return stable_cssu_destination(
+            simulation_seed=simulation_seed,
+            order_id=event_id,
+        )
+    share_a, _ = _normalise_cssu_weights(weights)
+    return (
+        "A"
+        if event_keyed_uniform_u64(
+            simulation_seed=simulation_seed,
+            event_id=event_id,
+            namespace=namespace,
+        )
+        < share_a
+        else "B"
+    )
+
+
 def allocate_shared_capacity(
     *,
     stock: float,
@@ -60,13 +124,12 @@ def allocate_shared_capacity(
     demand at the other destination.  This prevents intentional idling from
     masquerading as an allocation benefit.
 
-    `reallocate_unused` is the FUNGIBILITY control, and it is the mechanism knob rather than a
-    convenience.  With it True the pool is effectively fungible: whatever one destination cannot
-    take flows to the other, so the share barely binds.  With it False the shares are hard and
-    the resource is non-fungible.  Program O measured H_PI = 0.1515 under a non-fungible share
-    and EXACTLY 0 once the same resource was made fungible, so this flag decides whether there
-    is a contention problem at all.  It stays True by default: that is the shipped behaviour and
-    every prior artifact was produced under it.
+    ``reallocate_unused`` only reallocates genuinely unused spare capacity.  It
+    is *not* a full-pooling, action-invariant null: when both destinations can
+    absorb their shares, ``allocation_a`` still changes the ledger.  A true
+    action-invariant pooling arm therefore requires a separate contract and is
+    not implemented by this historical primitive.  The shipped default remains
+    unchanged so that prior artifacts keep their original semantics.
     """
     allocation_a = validate_allocation_a(allocation_a)
     if stock < 0 or daily_capacity < 0:

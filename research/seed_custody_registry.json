@@ -1,0 +1,91 @@
+{
+  "schema_version": "seed_custody_registry_v1",
+  "status": "BASELINE_INVENTORY_INCOMPLETE_NO_NEW_SEEDS_AUTHORIZED",
+  "authority": "contracts/authority_ladder_v1.json",
+  "scientific_execution_authorized": false,
+  "new_seed_opening": false,
+  "inventory_scope": [
+    "contracts",
+    "docs",
+    "research",
+    "results",
+    "scripts",
+    "tests",
+    "git_refs",
+    "local_and_remote_manifests"
+  ],
+  "inventory_limitations": [
+    "This registry is a conservative baseline, not evidence that unlisted seeds are virgin.",
+    "Untracked or remote artifacts must be reconciled before a confirmation block can open.",
+    "A seed block is not confirmation-eligible merely because no result.json was found."
+  ],
+  "blocks": [
+    {
+      "id": "program_q_terminal_confirmation",
+      "start": 7490001,
+      "end": 7490256,
+      "status": "BURNED",
+      "source": "f2dfe35",
+      "purpose": "Program Q terminal confirmation; immutable and outside Garrido-WRAP"
+    },
+    {
+      "id": "garrido_q2_des288",
+      "start": 5300001,
+      "end": 5300012,
+      "status": "ARTIFACT_PRESENT_PENDING_CANONICAL_CUSTODY",
+      "source": "results/garrido_meta_learner_v2/result.json",
+      "purpose": "DES-288 development artifact; no manuscript use before ledger adjudication"
+    },
+    {
+      "id": "garrido_h3_local",
+      "start": 6000001,
+      "end": 6000090,
+      "status": "ARTIFACT_PRESENT_PENDING_MERGE",
+      "source": "results/garrido_meta_learner_h3power_local/result.json",
+      "purpose": "H3-prime local slice; do not interpret or combine before merge contract"
+    },
+    {
+      "id": "garrido_h3_vps",
+      "start": 6000091,
+      "end": 6000120,
+      "status": "USED_PENDING_SOURCE_AUDIT",
+      "source": "results/garrido_meta_learner_h3power_vps/result.json",
+      "purpose": "H3-prime VPS slice; source-manifest equivalence remains unresolved"
+    },
+    {
+      "id": "g2_autotomy_threshold",
+      "start": 7000001,
+      "end": 7000008,
+      "status": "USED_DEVELOPMENT_NOT_VIRGIN",
+      "source": "results/headroom/g2_autotomy_threshold/result.json",
+      "purpose": "G2 development screen; no neural confirmation"
+    },
+    {
+      "id": "g3_old_bottleneck_asymmetry",
+      "start": 7600001,
+      "end": 7600010,
+      "status": "USED_DEVELOPMENT_NOT_VIRGIN",
+      "source": "results/sensitivity/bottleneck_asymmetry_v1/result.json",
+      "purpose": "Historical asymmetry development; metric-defect claim boundary"
+    },
+    {
+      "id": "g3a_v2_development",
+      "start": 7700001,
+      "end": 7700120,
+      "status": "RESERVED_NOT_OPENED",
+      "source": "contracts/g3a_asymmetric_claimants_v2.json",
+      "purpose": "Prospective G3a development only; blocked until submission receipt and power plan"
+    }
+  ],
+  "rules": {
+    "new_blocks_require_contract_and_authority": true,
+    "development_is_not_confirmation": true,
+    "confirmation_requires_independent_virgin_block": true,
+    "overlap_check_includes_git_and_remote_manifests": true,
+    "untracked_results_are_not_virginity_evidence": true,
+    "no_result_file_is_not_virginity_evidence": true,
+    "submission_a_receipt_required_before_g3a_open": true,
+    "program_q_and_program_o_are_immutable": true,
+    "thesis_1to1_is_immutable": true
+  }
+}

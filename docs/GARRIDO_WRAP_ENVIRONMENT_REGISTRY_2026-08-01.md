@@ -8,12 +8,13 @@ mismo experimento. La prima neural sólo es interpretable dentro del entorno que
 | **E0 / thesis-native WRAP** | ¿Una familia neural supera al lineal en el panel de Garrido? | Q1 `NO_GO_NEURAL_PREMIUM_IN_WRAP_PANEL`; fidelidad conductual global aún `HOLD` | el lineal es suficiente en el panel; backprop/KAN no alcanzan el SESOI |
 | **Figura 5 literal** | ¿Los drivers post-episodio pueden ser entradas para elegir una configuración no corrida? | invalidada como tarea de planificación; `drivers → ReT` es identidad/leakage | los drivers actualizan el estado después de la corrida; no rankean candidatos futuros |
 | **Replay thesis90** | ¿La interfaz de memoria/orden puede reproducirse sobre Cf1–Cf90? | `SURFACE_REPLAY_ONLY`; falsadores corregidos pasan | replay algorítmico, no réplica DES independiente |
-| **DES-288 Q2** | ¿`rho` retenido entre contextos mejora la búsqueda bajo endpoint service-first? | preregistro y runner listos; ejecución bloqueada por H3′ | sólo el estimando `retained − reset` tras sellado completo |
+| **DES-288 Q2** | ¿`rho` retenido entre contextos mejora la búsqueda bajo endpoint service-first? | artefacto DES presente; `ARTIFACT_PRESENT_CANONICAL_CUSTODY_PENDING` | sólo el estimando `retained − reset` tras reconciliación completa |
 | **E1 / CSSU split** | ¿La contención no fungible mueve el valor de la acción? | Gate A `PASS`; Gate B físico de Op11 `HOLD`; headroom observado `0`, pero placebo neural no abierto | interfaz CSSU viva; no Op11 físico validado ni prima neural |
 | **Expedición** | ¿Las palancas de tiempo abren headroom? | `NO_TIMING_HEADROOM_UNDER_SERVICE_FIRST` bajo ese contrato | negativo acotado al contrato de expedición ejecutado |
 | **Program O** | ¿Un recurso compartido no fungible puede crear decisión? | headroom de desarrollo alto, pero física y métrica propias | evidencia motivadora separada; no se transfiere al WRAP |
 | **Program Q / Track A/B/PPO** | ¿Control adaptativo o RL supera comparadores en otros sustratos? | carriles separados; claims históricos/pre-auditoría no se transfieren | no aporta claims al artículo Garrido–WRAP/v0 |
-| **E2 prospectivo** | ¿La memoria/recurrente ayuda con estado latente aliasado? | no abierto: E1 no pasó el gate | sólo un nuevo preregistro puede abrirlo |
+| **G3a prospectivo** | ¿Asimetría de demanda y riesgo localizado crean valor observable de asignación? | diseño-only; `NOT_AUTHORIZED_UNTIL_SUBMISSION_A_RECEIPT`; dos reclamantes | sólo el contrato G3a; no cierra N=3 ni autoriza learners |
+| **E2 prospectivo** | ¿La memoria/recurrente ayuda con estado latente aliasado? | no abierto; sólo podrá entrar tras un gate físico/observable y un contrato nuevo | sólo un nuevo preregistro puede abrirlo |
 
 ## Cambios de física y precio de fidelidad
 

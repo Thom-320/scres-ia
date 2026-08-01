@@ -10,7 +10,8 @@ fuera de este artículo.
 | Q1 held-out | `results/garrido_wrap_q1/result.json` | `NO_GO_NEURAL_PREMIUM_IN_WRAP_PANEL` | lineal suficiente para el panel actual | promover MLP/KAN |
 | Q2 smoke | `results/garrido_wrap_q2_smoke_2016h/result.json` | `DEVELOPMENT_Q2_CLOSED_LOOP` | validar interfaz | confirmar H4 |
 | Replay thesis90 | `results/garrido_meta_learner_thesis90_v2/result.json` | `SURFACE_REPLAY_ONLY` | validar orden, memoria y ausencia de leakage | llamarlo réplica DES |
-| Q2 DES-288 | `results/garrido_q2_des288_v1/result.json` | `READY_NOT_STARTED` | ninguno hasta sellado | usar cifras antiguas |
+| Q2 DES-288 | `results/garrido_meta_learner_v2/result.json` | `ARTIFACT_PRESENT_CANONICAL_CUSTODY_PENDING` | auditar contrato, hash, seeds, falsadores y ledger antes de cualquier cifra | tratarlo como réplica adjudicada o importar cifras retiradas |
+| G3a v2 — asimetría N=2 | `docs/PREREGISTRO_G3_ASIMETRIA_V2_2026-08-01.md` + `contracts/g3a_asymmetric_claimants_v2.json` | `DESIGN_ONLY_NOT_AUTHORIZED_UNTIL_SUBMISSION_A_RECEIPT` | tests sintéticos, compatibilidad legacy, custodia y preregistro | abrir semillas, llamar observable al régimen privilegiado o entrenar learners |
 | E1 neural headroom | `results/garrido_neural_headroom_gate_v1/result.json` | `HOLD_E1_PLACEBO_NOT_OPENED` | reportar H=0 como screening incompleto; no entrenar | llamarlo no-go cerrado o autorizar MLP/PPO |
 | CSSU Gate A | `results/garrido_cssu_liveness_gate_v1/result.json` | `GATE_A_PASS_GATE_B_HOLD` | acción split viva | Op11 físico validado |
 | Contención constante | `results/metric_audit/contention_service_first_v2/result.json` | `NEGATIVE_EXTENDS_TO_THE_SOUND_ENDPOINT` | headroom de constantes bajo seis regímenes | acotar políticas intraepisodio |
@@ -18,7 +19,7 @@ fuera de este artículo.
 | H1 original | `docs/RESULTADO_H1_H3_V2_2026-08-01.md` | `NO_EVALUABLE` | reportar la censura | llamarlo TTR medido |
 | H1′ | mismo artefacto | `DEVELOPMENT_SIGNAL` | reportar como `service_loss_auc` | equipararlo a H1 |
 | H2 | meta-aprendiz v1 retirado | `RETIRED_LEAKAGE` | conservar como historial | usar la curva antigua |
-| H3′ | `results/garrido_meta_learner_h3power_merge_v1/result.json` | `PENDING_SOURCE_AUDIT` | esperar merge de 120 semillas, varianza derivada y manifest de módulos | inferir desde las 12 exploratorias |
+| H3′ | `results/garrido_meta_learner_h3power_local/result.json` + `results/garrido_meta_learner_h3power_vps/result.json` | `ARTIFACTS_PRESENT_MERGE_PENDING` | comprobar runner, equivalencia DES, manifest VPS, falsadores y custodia antes de combinar | inferir una réplica de 120 semillas o publicar una rebanada |
 | H4 | Q2 retained–reset | `PENDING_CONFIRMATION` | estimando declarado | usar `+6.31` antiguo |
 | PPO/RecurrentPPO de carriles previos | `docs/PAPER_FINDINGS_REGISTRY.md` y artefactos históricos | `RETIRED_CONTEXT_DRIFT` | conservar como historial metodológico | transferirlo al WRAP/DES corregido |
 | CSSU con acción muerta/fungible | resultados de preauditoría | `RETIRED_PHYSICS_OR_INTERFACE` | documentar qué fue corregido | llamarlo contención física validada |

@@ -1,0 +1,174 @@
+{
+  "schema_version": "g3a_asymmetric_claimants_v2",
+  "status": "DESIGN_ONLY_NOT_AUTHORIZED_UNTIL_SUBMISSION_A_RECEIPT",
+  "effective_date": "2026-08-01",
+  "authority": {
+    "operational_gate": "contracts/authority_ladder_v1.json",
+    "preregistration": "docs/PREREGISTRO_G3_ASIMETRIA_V2_2026-08-01.md",
+    "submission_a_receipt_required": true,
+    "scientific_execution_authorized": false,
+    "neural_training_authorized": false,
+    "fresh_seed_blocks_opened": false
+  },
+  "scope": {
+    "program": "Garrido-WRAP",
+    "role": "MECHANISM_SCREEN_ONLY",
+    "question": "Does demand heterogeneity plus partial localized risk create safe observable allocation value beyond a universal allocation under the two-claimant CSSU contract?",
+    "claim_boundary": "A result applies only to this two-claimant contract, its physical risks, observations, endpoints, budgets, and comparator envelope.",
+    "program_q_and_program_o": "CLOSED_IMMUTABLE_NO_CLAIM_TRANSFER",
+    "thesis_1to1": "CLOSED_IMMUTABLE"
+  },
+  "physical_contract": {
+    "claimants": ["A", "B"],
+    "action_name": "allocation_a",
+    "initial_screen_action_levels": [0.25, 0.5, 0.75],
+    "continuous_action_support_in_code": true,
+    "continuous_grid_authorization": "NOT_AUTHORIZED_WITHOUT_DECLARED_DEVELOPMENT_AMENDMENT",
+    "demand_shares": [
+      {"id": "symmetric", "A": 0.5, "B": 0.5},
+      {"id": "A_heavy", "A": 0.7, "B": 0.3},
+      {"id": "B_heavy", "A": 0.3, "B": 0.7}
+    ],
+    "risk_modes": [
+      "neutral",
+      "partial_local_A",
+      "partial_local_B"
+    ],
+    "risk_constraints": {
+      "partial_not_total_outage": true,
+      "both_claimants_operational_in_material_live_states": true,
+      "both_stress_directions_required": true,
+      "onset_duration_impact_shared_by_arms": true
+    },
+    "pooling_modes": {
+      "nonfungible": {
+        "status": "IMPLEMENTED_HISTORICAL_PRIMITIVE",
+        "semantics": "allocation shares bind when both claimants can absorb their shares"
+      },
+      "full_pool_action_invariant": {
+        "status": "CONTRACT_REQUIRED_NOT_IMPLEMENTED_BY_reallocate_unused",
+        "required_identity": "For a fixed exogenous tape, every permitted action produces the same trajectory, ledger, primary endpoint, and guardrails.",
+        "action_invariance_must_be_measured": true
+      }
+    }
+  },
+  "exogenous_generation": {
+    "legacy_lane": {
+      "weights": null,
+      "function": "supply_chain.cssu_allocation.stable_cssu_destination",
+      "must_remain_bytewise_compatible": true
+    },
+    "weighted_lane": {
+      "function": "supply_chain.cssu_allocation.stable_cssu_destination_weighted",
+      "uniform": "sha256(namespace + simulation_seed + event_id) first 64 bits",
+      "rng_global_consumption": false,
+      "target_is_cdf_transform_of_same_uniform": true,
+      "namespace": "g3a-cssu-v2"
+    },
+    "risk_tape": {
+      "required_fields": ["event_id", "risk_id", "onset", "duration", "impact", "u_target"],
+      "arms_share_onset_duration_impact": true,
+      "only_target_mapping_may_change": true,
+      "event_tape_hash_required": true
+    }
+  },
+  "information_contract": {
+    "regime_mixed_within_tape": true,
+    "cell_id_or_true_regime_as_observation": false,
+    "decision_must_be_nonanticipative": true,
+    "allowed_observation_manifest_required_before_execution": true,
+    "observation_examples": [
+      "current CSSU availability",
+      "backlog by claimant",
+      "inventory and in-transit quantities",
+      "recent realized fill and service loss",
+      "causal route or alarm state available before action"
+    ],
+    "future_risk_target_or_duration_visible": false
+  },
+  "estimands": {
+    "primary_endpoint": "worst_claimant_fill",
+    "H_PI": "Expected value using the true physical claimant/regime minus the best universal allocation; diagnostic only.",
+    "H_obs": "Value of one cross-fitted nonanticipative policy using only the frozen allowed observations minus the best universal allocation.",
+    "H_structured": "Value of the best predeclared structured controller among lookup, threshold/hysteresis, tree/tabular, DP/rollout, MPC, and belief controller when applicable.",
+    "H_residual": "Observable ceiling minus H_structured under the same information and resource rights.",
+    "Delta_N": "Closed-loop value of one frozen neural policy minus the best structured controller; only valid after neural authorization.",
+    "guardrails": [
+      "aggregate_fill",
+      "lost_quantity",
+      "unresolved_quantity",
+      "backlog",
+      "service_loss",
+      "resource_use",
+      "full_ledger_ReT"
+    ],
+    "selection_rule": "service_first_v2 may select among admissible candidates, but no confidence interval is computed on its lexicographic tuple",
+    "diagnostic_metrics": ["full_ledger_ReT", "Cobb-Douglas sensitivity", "ret_excel historical diagnostic"]
+  },
+  "falsifiers": [
+    {"id": "f1_weights_realized_by_orders_and_quantity", "binding": true},
+    {"id": "f2_action_live_in_both_directions", "binding": true},
+    {"id": "f3_full_pool_action_invariance", "binding": true},
+    {"id": "f4_label_swap_equivariance", "binding": true},
+    {"id": "f5_event_timing_duration_impact_identity", "binding": true},
+    {"id": "f6_no_future_or_true_regime_leakage", "binding": true},
+    {"id": "f7_shuffled_signal_placebo", "binding": true},
+    {"id": "f8_delayed_signal_placebo", "binding": true},
+    {"id": "f9_wrong_claimant_signal_placebo", "binding": true},
+    {"id": "f10_scientific_payload_hash_separate_from_provenance", "binding": true},
+    {"id": "m1_ignored_weights_mutation_is_caught", "binding": true, "kind": "mutation_test"},
+    {"id": "m2_future_target_mutation_is_caught", "binding": true, "kind": "mutation_test"},
+    {"id": "m3_failed_cssu_path_mutation_is_caught", "binding": true, "kind": "mutation_test"}
+  ],
+  "control_ladder": [
+    "best_universal_constant",
+    "lookup",
+    "threshold_or_hysteresis",
+    "tree_or_tabular",
+    "spline_or_gam_if_appropriate",
+    "DP_or_rollout",
+    "MPC",
+    "belief_MPC_or_belief_DP_only_if_partial_observability_is_demonstrated"
+  ],
+  "neural_gate": {
+    "training_before_residual": false,
+    "required_state": "AUTHORIZE_NEURAL_DEVELOPMENT_G3A",
+    "policy_endpoint_only": true,
+    "delta_R2_is_not_a_control_gate": true,
+    "same_information_resource_and_online_budget": true,
+    "independent_confirmation_required": true
+  },
+  "seed_policy": {
+    "registry": "research/seed_custody_registry.json",
+    "development_block": {"start": 7700001, "end": 7700120, "status": "RESERVED_NOT_OPENED"},
+    "selection_validation_confirmation_blocks": "NOT_ASSIGNED",
+    "opening_requires": [
+      "Submission A receipt",
+      "complete preregistration",
+      "power and SESOI memorandum",
+      "remote and local seed-custody audit",
+      "explicit authority update"
+    ]
+  },
+  "confirmation": {
+    "development_positive_is_not_confirmation": true,
+    "first_eligible_candidate_freezes_one_confirmation": true,
+    "confirmation_uses_virgin_tapes_and_seeds": true,
+    "confirmation_source_code_frozen": true,
+    "if_confirmation_fails": "continue only within this predeclared portfolio; no rescue physics, metric, or architecture"
+  },
+  "terminal_states": [
+    "STOP_G3A_N2_NO_MATERIAL_PHYSICAL_HEADROOM",
+    "STOP_G3A_HEADROOM_NOT_DEPLOYABLY_OBSERVABLE",
+    "G3A_STRUCTURED_CONTROL_SUFFICES",
+    "AUTHORIZE_NEURAL_DEVELOPMENT_G3A",
+    "NEURAL_PREMIUM_CONFIRMED_IN_G3A_CONTRACT",
+    "BUDGET_EXHAUSTED_WITHOUT_PREMIUM"
+  ],
+  "nonclaims": [
+    "No result from this contract generalizes to N=3 or all G3 mechanisms.",
+    "No result transfers to Program Q or Program O.",
+    "No development result is a confirmed neural premium.",
+    "reallocate_unused is not the full-pooling null."
+  ]
+}
