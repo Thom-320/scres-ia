@@ -19,6 +19,9 @@ reconciliation:
   `PASS`; **Gate B** remains `HOLD_OP11_PHYSICS_UNSPECIFIED`.
 - `results/garrido_neural_headroom_gate_v1/result.json` closes E1 as
   `NO_GO_NEURAL_PREMIUM_E1_HEADROOM_CLOSED` with `training_authorized=false`.
+- `docs/PREREGISTRO_GARRIDO_Q2_DES288_V1_2026-08-01.md` and
+  `scripts/run_garrido_q2_des288_v1.py` define the corrected DES-288 confirmation; its
+  result remains pending while H3′ is active.
 
 These seals do not change the frozen `thesis_1to1` lane. They make explicit that the
 CSSU action is computationally live, while finite Op11 handling and a neural-premium

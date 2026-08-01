@@ -7,7 +7,7 @@ carril separado y no aporta claims a este manuscrito.
 
 ## Estado de implementación
 
-- HEAD de referencia: `8526445cea46204fbae1ea4d8719df3af877f0b3`.
+- HEAD de referencia: `35088f1` (custody manifest actualizado).
 - Contrato: `garrido_wrap_scres_ai_v1`.
 - Estado global: `HOLD_WRAP_BEHAVIORAL_FIDELITY` / `DEVELOPMENT_ONLY`.
 - `thesis_1to1` permanece congelado.
@@ -16,7 +16,8 @@ carril separado y no aporta claims a este manuscrito.
 - CSSU Gate B: manejo físico de Op11 no especificado; `HOLD`.
 - Contención y expedición: no abren headroom bajo `service_first_v2`.
 - E1 neural-headroom gate: `NO_GO`; `training_authorized=false`.
-- Q2: replay de 90 válido como replay; DES-288 pendiente.
+- Q2: replay de 90 válido como replay; contrato/runner DES-288 listo, ejecución bloqueada
+  hasta cerrar H3′.
 
 ## Corridas activas
 
@@ -33,9 +34,8 @@ evidencia. El motivo es la fuga de drivers al rankear candidatos no ejecutados.
 ## Próxima lectura válida
 
 1. cerrar H3′ sin ampliar retrospectivamente su bloque exploratorio;
-2. sellar el gate CSSU A;
-3. ejecutar/validar replay thesis90;
-4. ejecutar DES-288 corregido;
-5. adjudicar H1–H4;
-6. sólo entonces abrir E2 si un nuevo contrato observacional/físico lo autoriza;
-7. no entrenar MLP/PPO mientras E1 siga cerrado.
+2. auditar el merge y las semillas de H3′;
+3. ejecutar DES-288 con `7_100_001…7_100_012`;
+4. adjudicar H1–H4 y custodiar el resultado;
+5. sólo entonces abrir E2 si un nuevo contrato observacional/físico lo autoriza;
+6. no entrenar MLP/PPO mientras E1 siga cerrado.
