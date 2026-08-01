@@ -1,0 +1,413 @@
+{
+ "available_margin_vs_posthoc_best": {
+  "baseline": "spline_buffer",
+  "ci95_high": 0.23093880662459793,
+  "ci95_low": -0.11783130587840766,
+  "df": 4,
+  "mean_difference": 0.05655375037309514,
+  "passes_sesoi_and_ci": false,
+  "sesoi": 0.05,
+  "t_critical": 2.776
+ },
+ "available_margin_vs_primary": {
+  "baseline": "linear_interactions",
+  "ci95_high": 0.1855918564987526,
+  "ci95_low": -0.06063115208369399,
+  "df": 4,
+  "mean_difference": 0.0624803522075293,
+  "passes_sesoi_and_ci": false,
+  "sesoi": 0.05,
+  "t_critical": 2.776
+ },
+ "best_classical": "spline_buffer",
+ "buffer_levels": [
+  0.0,
+  84.0,
+  168.0,
+  252.0,
+  336.0,
+  420.0,
+  504.0,
+  588.0,
+  672.0,
+  756.0,
+  840.0,
+  924.0,
+  1008.0,
+  1092.0,
+  1176.0,
+  1260.0,
+  1344.0
+ ],
+ "cadence_hours": 24.0,
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "PREMIUM_WAS_AVAILABLE_AND_NOT_CAPTURED",
+ "contract_path": "docs/PREREGISTRO_PRIMA_CD_2026-08-01.md",
+ "contract_sha256": "297086cc5e17dbf27b80602d9063a0f2270905045760780215db79ba7cf5e3d5",
+ "created_at": "2026-08-01T21:06:10.136221+00:00",
+ "elapsed_seconds": 164.90307329202187,
+ "escalations": [
+  "base",
+  "freq_x3",
+  "freq_x5"
+ ],
+ "estimand_declaration": "NOT a single fixed Cobb-Douglas index. Closing the kappa_dot leak means each fold calibrates its own exponents and cost normaliser on its TRAINING rows, so the target varies by fold and the estimand is 'predicting a Cobb-Douglas calibrated on train'. Within a fold every model sees the same target, which is what makes the contrasts valid; across folds the label is not the same quantity",
+ "exponents_by_fold": [
+  {
+   "epsilon": 0.01664072144890509,
+   "kappa_dot": 0.029316067617007145,
+   "phi": 0.028242075941633416,
+   "tau": 0.2208630006443931,
+   "zeta": 0.015500416700168551
+  },
+  {
+   "epsilon": 0.01663431864094957,
+   "kappa_dot": 0.029316067617007145,
+   "phi": 0.028242075941633416,
+   "tau": 0.19239109365681756,
+   "zeta": 0.015500416700168551
+  },
+  {
+   "epsilon": 0.01663431864094957,
+   "kappa_dot": 0.029316067617007145,
+   "phi": 0.028242075941633416,
+   "tau": 0.19239109365681756,
+   "zeta": 0.015503899786647657
+  },
+  {
+   "epsilon": 0.01663431864094957,
+   "kappa_dot": 0.028668294354063647,
+   "phi": 0.028242075941633416,
+   "tau": 0.19239109365681756,
+   "zeta": 0.015500416700168551
+  },
+  {
+   "epsilon": 0.01663431864094957,
+   "kappa_dot": 0.028668294354063647,
+   "phi": 0.02834362462458554,
+   "tau": 0.19239109365681756,
+   "zeta": 0.015500416700168551
+  }
+ ],
+ "falsifiers": {
+  "all_passed": true,
+  "f1_target_is_the_curved_surface": {
+   "evidence": {
+    "profile_lack_of_fit": {
+     "R1r+R2r|base": 0.015665982125061963,
+     "R1r+R2r|freq_x3": 0.40353919807950567,
+     "R1r+R2r|freq_x5": 0.3981668255737981,
+     "R1r|base": 0.07051150693903996,
+     "R1r|freq_x3": 0.053502913353133404,
+     "R1r|freq_x5": 0.3196747106089848,
+     "R2r|base": 0.05602078198844435,
+     "R2r|freq_x3": 0.005141168249209354,
+     "R2r|freq_x5": 0.09738626554850191
+    },
+    "strictly_interior_by_cell": {
+     "R1r+R2r|base": false,
+     "R1r+R2r|freq_x3": false,
+     "R1r+R2r|freq_x5": false,
+     "R1r|base": true,
+     "R1r|freq_x3": false,
+     "R1r|freq_x5": false,
+     "R2r|base": true,
+     "R2r|freq_x3": false,
+     "R2r|freq_x5": false
+    },
+    "why_it_can_fail": "the previous premium run measured ret_excel, which the corrected G1 showed is MONOTONE, while framing it as the curved surface. If Cobb-Douglas has no strictly interior optimum here either, this run repeats that mistake"
+   },
+   "passed": true
+  },
+  "f2_baseline_includes_interactions": {
+   "evidence": {
+    "best_classical": "spline_buffer",
+    "classical_competitors": [
+     "linear_additive",
+     "linear_interactions",
+     "spline_buffer",
+     "tree"
+    ],
+    "n_features_additive": 7,
+    "n_features_rich": 14,
+    "r2_by_classical": {
+     "linear_additive": 0.6061981378422423,
+     "linear_interactions": 0.6305948828087959,
+     "spline_buffer": 0.6365214846432302,
+     "tree": 0.6224682485333719
+    },
+    "why_it_can_fail": "an additive baseline lets a network 'win' by representing interactions a better classical model also represents; the premium must be over the BEST classical competitor"
+   },
+   "passed": true
+  },
+  "f3_inference_uses_t_not_normal": {
+   "evidence": {
+    "df": 4,
+    "t_critical": 2.776,
+    "why_it_can_fail": "1.96 on five folds understates the interval; with 4 df the multiplier is 2.776. The old run used 1.96 and its intervals were too narrow"
+   },
+   "passed": true
+  },
+  "f4_available_premium_is_measured_not_asserted": {
+   "evidence": {
+    "oracle_minus_best_classical": {
+     "baseline": "linear_interactions",
+     "ci95_high": 0.1855918564987526,
+     "ci95_low": -0.06063115208369399,
+     "df": 4,
+     "mean_difference": 0.0624803522075293,
+     "passes_sesoi_and_ci": false,
+     "sesoi": 0.05,
+     "t_critical": 2.776
+    },
+    "why_it_can_fail": "I previously compared 0.0763, a lack-of-fit on profile MEANS, against 0.3174, predictive error on individual EPISODES, and claimed curvature sits below noise. Different scales, claim withdrawn. The cell-mean ORACLE is the comparable quantity: its R2 is the ceiling any function of these features can reach, so this gap is the maximum premium ANY model could earn"
+   },
+   "passed": true
+  },
+  "f5_folds_grouped_by_seed": {
+   "evidence": {
+    "why_it_can_fail": "a shared seed would inflate every R2"
+   },
+   "passed": true
+  },
+  "f6_seeds_are_virgin": {
+   "evidence": {
+    "collisions": [],
+    "seeds": [
+     6900001,
+     6900002,
+     6900003,
+     6900004,
+     6900005,
+     6900006,
+     6900007,
+     6900008
+    ],
+    "why_it_can_fail": "reuse would void the comparison"
+   },
+   "passed": true
+  },
+  "f7_target_is_built_from_training_rows_only": {
+   "evidence": {
+    "exponents_by_fold": [
+     {
+      "epsilon": 0.01664072144890509,
+      "kappa_dot": 0.029316067617007145,
+      "phi": 0.028242075941633416,
+      "tau": 0.2208630006443931,
+      "zeta": 0.015500416700168551
+     },
+     {
+      "epsilon": 0.01663431864094957,
+      "kappa_dot": 0.029316067617007145,
+      "phi": 0.028242075941633416,
+      "tau": 0.19239109365681756,
+      "zeta": 0.015500416700168551
+     },
+     {
+      "epsilon": 0.01663431864094957,
+      "kappa_dot": 0.029316067617007145,
+      "phi": 0.028242075941633416,
+      "tau": 0.19239109365681756,
+      "zeta": 0.015503899786647657
+     },
+     {
+      "epsilon": 0.01663431864094957,
+      "kappa_dot": 0.028668294354063647,
+      "phi": 0.028242075941633416,
+      "tau": 0.19239109365681756,
+      "zeta": 0.015500416700168551
+     },
+     {
+      "epsilon": 0.01663431864094957,
+      "kappa_dot": 0.028668294354063647,
+      "phi": 0.02834362462458554,
+      "tau": 0.19239109365681756,
+      "zeta": 0.015500416700168551
+     }
+    ],
+    "why_it_can_fail": "kappa_dot is set-relative and the maxima that set the exponents are too, so building the target over ALL rows leaks the test fold into its own label. An external review caught this before the run. Exponents and the kappa normaliser are now frozen on TRAIN inside each fold -- if they were identical across folds the freezing would not be happening"
+   },
+   "passed": true
+  },
+  "post_preregistration_amendments": [
+   "f7_target_is_built_from_training_rows_only"
+  ]
+ },
+ "families": [
+  "R1r",
+  "R2r",
+  "R1r+R2r"
+ ],
+ "held_out_r2_mean": {
+  "backprop": 0.5841403884990883,
+  "constant": -0.016748904305133826,
+  "kan": 0.6018625428369326,
+  "linear_additive": 0.6061981378422423,
+  "linear_interactions": 0.6305948828087959,
+  "spline_buffer": 0.6365214846432302,
+  "train_cell_mean_comparator": 0.6930752350163253,
+  "tree": 0.6224682485333719
+ },
+ "held_out_r2_per_fold": {
+  "backprop": [
+   0.48395163288829046,
+   0.538561354984906,
+   0.5622310693960799,
+   0.7519509969048737,
+   0.5840068883212912
+  ],
+  "constant": [
+   -0.003226749853441291,
+   -0.02516535424395827,
+   -0.017338706347831412,
+   -0.03801324463575706,
+   -4.664446811020184e-07
+  ],
+  "kan": [
+   0.5679199395818431,
+   0.6089594751802825,
+   0.5134974681834396,
+   0.7082171493901386,
+   0.6107186818489587
+  ],
+  "linear_additive": [
+   0.5259008463103825,
+   0.6410082118681728,
+   0.5616027440900941,
+   0.7399391825593193,
+   0.562539704383243
+  ],
+  "linear_interactions": [
+   0.6035512965759467,
+   0.6001044799889992,
+   0.6398420145881958,
+   0.6736970259290347,
+   0.6357795969618035
+  ],
+  "spline_buffer": [
+   0.573666336495543,
+   0.6588013339563954,
+   0.618432148664938,
+   0.718536203922282,
+   0.6131714001769923
+  ],
+  "train_cell_mean_comparator": [
+   0.7285931189916401,
+   0.5171471538409229,
+   0.7889948764588328,
+   0.6761825538035706,
+   0.7544584719866599
+  ],
+  "tree": [
+   0.669854289268865,
+   0.42013034707984154,
+   0.7107450197738105,
+   0.5726349793565069,
+   0.7389766071878358
+  ]
+ },
+ "known_defect_baseline_selection": "best_classical is chosen by test-fold performance, which is selection on test. The contrast against the PRE-DECLARED primary baseline (linear_interactions, the most expressive classical competitor, chosen on principle rather than on results) is reported beside it and is the one to cite",
+ "n_rows": 1224,
+ "neural_comparisons_vs_posthoc_best": {
+  "backprop": {
+   "baseline": "spline_buffer",
+   "ci95_high": 0.020836825779197536,
+   "ci95_low": -0.12559901806748133,
+   "df": 4,
+   "mean_difference": -0.0523810961441419,
+   "passes_sesoi_and_ci": false,
+   "sesoi": 0.05,
+   "t_critical": 2.776
+  },
+  "kan": {
+   "baseline": "spline_buffer",
+   "ci95_high": 0.01957903541380722,
+   "ci95_low": -0.08889691902640257,
+   "df": 4,
+   "mean_difference": -0.03465894180629767,
+   "passes_sesoi_and_ci": false,
+   "sesoi": 0.05,
+   "t_critical": 2.776
+  }
+ },
+ "neural_comparisons_vs_primary": {
+  "backprop": {
+   "baseline": "linear_interactions",
+   "ci95_high": 0.045884737759183954,
+   "ci95_low": -0.13879372637859944,
+   "df": 4,
+   "mean_difference": -0.04645449430970774,
+   "passes_sesoi_and_ci": false,
+   "sesoi": 0.05,
+   "t_critical": 2.776
+  },
+  "kan": {
+   "baseline": "linear_interactions",
+   "ci95_high": 0.04729890098915989,
+   "ci95_low": -0.1047635809328869,
+   "df": 4,
+   "mean_difference": -0.02873233997186351,
+   "passes_sesoi_and_ci": false,
+   "sesoi": 0.05,
+   "t_critical": 2.776
+  }
+ },
+ "primary_baseline": "linear_interactions",
+ "profile_lack_of_fit": {
+  "R1r+R2r|base": 0.015665982125061963,
+  "R1r+R2r|freq_x3": 0.40353919807950567,
+  "R1r+R2r|freq_x5": 0.3981668255737981,
+  "R1r|base": 0.07051150693903996,
+  "R1r|freq_x3": 0.053502913353133404,
+  "R1r|freq_x5": 0.3196747106089848,
+  "R2r|base": 0.05602078198844435,
+  "R2r|freq_x3": 0.005141168249209354,
+  "R2r|freq_x5": 0.09738626554850191
+ },
+ "reference_path": "results/headroom/g1_buffer_price/result.json",
+ "reference_sha256": "fd9e9ee5a959f56d846c7e5b18abda48967cee6c40c8bcbf93a199008ba5b143",
+ "schema_version": "cd_surface_prediction_premium_v1",
+ "seeds": [
+  6900001,
+  6900002,
+  6900003,
+  6900004,
+  6900005,
+  6900006,
+  6900007,
+  6900008
+ ],
+ "self_sha256": "527227bd96eb8d8d9ed534aebea410da79efb91bb2d1e2aa365e85b5a9f43a99",
+ "sesoi": 0.05,
+ "strictly_interior_by_cell": {
+  "R1r+R2r|base": false,
+  "R1r+R2r|freq_x3": false,
+  "R1r+R2r|freq_x5": false,
+  "R1r|base": true,
+  "R1r|freq_x3": false,
+  "R1r|freq_x5": false,
+  "R2r|base": true,
+  "R2r|freq_x3": false,
+  "R2r|freq_x5": false
+ },
+ "supersedes": "results/headroom/buffer_prediction_premium/result.json -- same question on the monotone ret_excel surface, with an additive baseline and 1.96 intervals",
+ "target": "R_cobb_douglas"
+}

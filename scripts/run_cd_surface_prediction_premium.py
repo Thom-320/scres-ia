@@ -15,9 +15,11 @@ Three repairs an external review demanded, all of them real:
 3. THE "CURVATURE BELOW NOISE" CLAIM WAS NOT MEASURED. I compared 0.0763, a lack-of-fit statistic
    on profile MEANS, against 0.3174, predictive error on individual EPISODES. Those are different
    scales and the comparison does not support the claim. It is withdrawn and replaced by the
-   quantity that IS comparable: the CELL-MEAN ORACLE, a model that knows each cell's true mean.
-   Its R^2 is the ceiling any function class can reach, so `R2_oracle - R2_best_classical` is the
-   maximum premium available. If that gap is below the SESOI, no model can earn one.
+   quantity that IS comparable: a TRAIN-CELL-MEAN COMPARATOR. It is NOT an oracle and NOT a
+   mathematical ceiling -- a reviewer was right to insist on the distinction. It predicts each
+   test row by the EMPIRICAL mean of its cell over the TRAINING rows, so its R^2 estimates how
+   much a perfectly cell-wise model could reach given this much data. The gap to the best
+   classical model is an ESTIMATE of the available margin, not a bound.
 
 And the target is Cobb-Douglas, because the corrected G1 showed it is the surface with a strictly
 interior optimum while ret_excel and flow_fill_rate merely saturate. The previous premium run
@@ -189,7 +191,7 @@ def main() -> int:
 
     folds = grouped_folds(g, n_folds=args.folds)
     models = ("constant", "linear_additive", "linear_interactions", "spline_buffer",
-              "tree", "oracle_cell_mean", "backprop", "kan")
+              "tree", "train_cell_mean_comparator", "backprop", "kan")
     per_fold: dict[str, list[float]] = {m: [] for m in models}
     exponents_by_fold = []
 
@@ -244,7 +246,7 @@ def main() -> int:
             cell_mean[key] = float(y[rows].mean())
         # The oracle knows each cell's mean FROM TRAINING ROWS ONLY -- a test cell unseen in
         # training falls back to the global training mean rather than to its own value.
-        y_oracle_te = np.array([cell_mean.get(cell_key[i], float(y[tr].mean())) for i in te])
+        y_cellmean_te = np.array([cell_mean.get(cell_key[i], float(y[tr].mean())) for i in te])
 
         per_fold["constant"].append(r2(y[te], np.full(len(te), y[tr].mean())))
         per_fold["linear_additive"].append(r2(y[te], ols(x_base[tr], y[tr], x_base[te])))
@@ -252,7 +254,7 @@ def main() -> int:
         sp_tr, sp_te = spline_features(list(tr)), spline_features(list(te))
         per_fold["spline_buffer"].append(r2(y[te], ols(sp_tr, y[tr], sp_te)))
         per_fold["tree"].append(r2(y[te], tree_predict(x_base[tr], y[tr], x_base[te])))
-        per_fold["oracle_cell_mean"].append(r2(y[te], y_oracle_te))
+        per_fold["train_cell_mean_comparator"].append(r2(y[te], y_cellmean_te))
         pred, _ = fit_mlp(x_base[tr], y[tr], x_base[te], seed=2000 + fi, classify=False)
         per_fold["backprop"].append(r2(y[te], pred))
         try:
@@ -277,8 +279,11 @@ def main() -> int:
                 "t_critical": t_crit, "df": int(d.size - 1), "sesoi": SESOI,
                 "passes_sesoi_and_ci": bool(d.mean() >= SESOI and low > 0)}
 
-    comparisons = {m: paired(m, best_classical) for m in ("backprop", "kan")}
-    available = paired("oracle_cell_mean", best_classical)
+    PRIMARY_BASELINE = "linear_interactions"   # declared on principle: most expressive classical
+    comparisons = {m: paired(m, PRIMARY_BASELINE) for m in ("backprop", "kan")}
+    comparisons_vs_posthoc_best = {m: paired(m, best_classical) for m in ("backprop", "kan")}
+    available = paired("train_cell_mean_comparator", PRIMARY_BASELINE)
+    available_vs_posthoc_best = paired("train_cell_mean_comparator", best_classical)
 
     y_diag, _ = target_from_training(np.arange(len(index)))
     diag_mean = {}
@@ -361,8 +366,13 @@ def main() -> int:
             "evidence": {"why_it_can_fail": "reuse would void the comparison", "seeds": seeds,
                          "collisions": sorted(set(seeds) & prior_seeds)}},
     }
+    # f7 was added while implementing, after the preregistration was committed. It is a real
+    # check and it caught a real leak, but it must not become a preregistered gate
+    # retroactively -- so it reports as a declared AMENDMENT and does not gate the verdict.
+    AMENDMENTS = {"f7_target_is_built_from_training_rows_only"}
     falsifiers["all_passed"] = all(v["passed"] for k, v in falsifiers.items()
-                                   if k != "all_passed")
+                                   if k != "all_passed" and k not in AMENDMENTS)
+    falsifiers["post_preregistration_amendments"] = sorted(AMENDMENTS)
 
     any_premium = any(c["passes_sesoi_and_ci"] for c in comparisons.values())
     premium_possible = available["mean_difference"] >= SESOI
@@ -383,19 +393,37 @@ def main() -> int:
     print(f"\n  veredicto: {verdict}")
     print("\n  falsadores:")
     for name, check in falsifiers.items():
-        if isinstance(check, dict):
-            print(f"    {name:<46} {'PASA' if check['passed'] else 'FALLA'}")
+        if not isinstance(check, dict):
+            continue
+        mark = "PASA" if check["passed"] else "FALLA"
+        if name in falsifiers.get("post_preregistration_amendments", ()):
+            mark += " (enmienda posterior al preregistro, no vinculante)"
+        print(f"    {name:<46} {mark}")
 
     payload = {
         "schema_version": "cd_surface_prediction_premium_v1",
         "claim_status": verdict if falsifiers["all_passed"] else "HALTED_FALSIFIER_FAILED",
         "target": "R_cobb_douglas", "sesoi": SESOI, "cadence_hours": STEP,
+        "estimand_declaration": (
+            "NOT a single fixed Cobb-Douglas index. Closing the kappa_dot leak means each fold "
+            "calibrates its own exponents and cost normaliser on its TRAINING rows, so the "
+            "target varies by fold and the estimand is 'predicting a Cobb-Douglas calibrated on "
+            "train'. Within a fold every model sees the same target, which is what makes the "
+            "contrasts valid; across folds the label is not the same quantity"),
+        "known_defect_baseline_selection": (
+            "best_classical is chosen by test-fold performance, which is selection on test. The "
+            "contrast against the PRE-DECLARED primary baseline (linear_interactions, the most "
+            "expressive classical competitor, chosen on principle rather than on results) is "
+            "reported beside it and is the one to cite"),
         "buffer_levels": list(BUFFER_HOURS), "families": list(FAMILIES),
         "escalations": list(ESCALATIONS), "seeds": seeds, "n_rows": len(index),
         "held_out_r2_mean": means, "held_out_r2_per_fold": per_fold,
         "best_classical": best_classical,
-        "available_premium_oracle_minus_classical": available,
-        "neural_comparisons": comparisons,
+        "primary_baseline": PRIMARY_BASELINE,
+        "available_margin_vs_primary": available,
+        "available_margin_vs_posthoc_best": available_vs_posthoc_best,
+        "neural_comparisons_vs_primary": comparisons,
+        "neural_comparisons_vs_posthoc_best": comparisons_vs_posthoc_best,
         "profile_lack_of_fit": curv, "strictly_interior_by_cell": strict_interior,
         "exponents_by_fold": exponents_by_fold,
         "supersedes": ("results/headroom/buffer_prediction_premium/result.json -- same question "
