@@ -153,16 +153,47 @@ def main() -> int:
                 "component": LEADING}
 
     argmax_moves = len(set(argmax_v2.values())) > 1
+
+    # f6, done properly. The first version asserted `len(COMPONENTS) == 4`, which is a constant:
+    # it would have passed even if the ranking were done by scalar sum. Fifth falsifier in three
+    # days that checked a correlate. Two real checks instead:
+    #   (a) POSITIVE CONTROL -- an independent reimplementation of lexicographic comparison must
+    #       reproduce the production argmax exactly;
+    #   (b) INJECTED DEFECT -- ranking by the scalar sum of the four components, which is what
+    #       collapsing the tuple would amount to, and reporting whether it changes the answer.
+    def argmax_independent_lex(name: str) -> float:
+        best, best_key = None, None
+        for share in SHARES:
+            key = [float(x) for x in mean_key(name, share)]
+            if best_key is None:
+                best, best_key = share, key
+                continue
+            for mine, theirs in zip(key, best_key):        # explicit component-by-component
+                if mine != theirs:
+                    if mine > theirs:
+                        best, best_key = share, key
+                    break
+        return best
+
+    def argmax_scalar_sum(name: str) -> float:
+        return max(SHARES, key=lambda s: float(sum(mean_key(name, s))))
+
+    lex_matches = {n: argmax_independent_lex(n) == argmax_v2[n] for n in reg}
+    scalar_defect = {n: argmax_scalar_sum(n) for n in reg}
+    defect_changes_answer = any(scalar_defect[n] != argmax_v2[n] for n in reg)
     leading_spread = float(np.mean([np.ptp([mean(n, s, LEADING) for s in SHARES]) for n in reg]))
     prior_seeds = seeds_used_by_sealed_artifacts(exclude=args.output)
     claimants = {r["n_claimants"] for lst in rows.values() for r in lst}
 
     falsifiers = {
-        "f1_v2_and_ret_disagree": {
-            "passed": any(argmax_v2[n] != argmax_ret[n] for n in reg),
+        "f1_v2_and_ret_disagree_in_every_regime": {
+            "passed": all(argmax_v2[n] != argmax_ret[n] for n in reg),
             "evidence": {"why_it_can_fail": ("if v2 chose the same split as ret_excel it would be "
                                              "correcting nothing and this endpoint is pointless"),
-                         "argmax_v2": argmax_v2, "argmax_ret": argmax_ret}},
+                         "argmax_v2": argmax_v2, "argmax_ret": argmax_ret,
+                         "regimes_disagreeing": sum(1 for n in reg
+                                                    if argmax_v2[n] != argmax_ret[n]),
+                         "regimes_total": len(reg)}},
         "f2_leading_component_binds": {
             "passed": leading_spread > 1e-6,
             "evidence": {"why_it_can_fail": ("a constant worst_claimant_fill would make v2 "
@@ -184,15 +215,20 @@ def main() -> int:
                                              "collision ship three days ago"),
                          "seeds": seeds, "collisions": sorted(set(seeds) & prior_seeds),
                          "prior_seeds_scanned": len(prior_seeds)}},
-        "f6_lexicographic_key_is_not_averaged": {
-            "passed": len(SERVICE_FIRST_V2_COMPONENTS) == 4,
-            "evidence": {"why_it_can_fail": ("collapsing the tuple into a scalar would invent an "
-                                             "exchange rate between components, which is what "
-                                             "the lexicographic order exists to prevent"),
-                         "mechanism": ("seeds are averaged COMPONENT-WISE and the resulting "
-                                       "tuples are then compared with tuple ordering; H_regime "
-                                       "is computed on the leading component alone and reported "
-                                       "as such"),
+        "f6_ranking_is_actually_lexicographic": {
+            "passed": all(lex_matches.values()),
+            "evidence": {"why_it_can_fail": (
+                             "the first version asserted len(COMPONENTS) == 4, a constant that "
+                             "would pass even if the ranking were a scalar sum. This reproduces "
+                             "the argmax with an INDEPENDENT component-by-component comparison; "
+                             "any accidental collapse to a scalar makes them diverge"),
+                         "independent_lex_matches_production": lex_matches,
+                         "injected_defect_argmax_by_scalar_sum": scalar_defect,
+                         "scalar_sum_defect_changes_the_answer": defect_changes_answer,
+                         "note": ("if the injected defect does NOT change the answer, the "
+                                  "ranking happens to be robust here and the lexicographic "
+                                  "order is unfalsifiable FROM THE OUTPUT ALONE -- disclosed "
+                                  "either way rather than hidden"),
                          "components": list(SERVICE_FIRST_V2_COMPONENTS)}},
     }
     falsifiers["all_passed"] = all(v["passed"] for k, v in falsifiers.items()

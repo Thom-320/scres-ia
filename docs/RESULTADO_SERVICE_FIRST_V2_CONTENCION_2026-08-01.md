@@ -1,7 +1,7 @@
 # Resultado — `v2` sellada, y el negativo **se extiende al endpoint sano**
 
 **Artefacto:** `results/metric_audit/contention_service_first_v2/result.json` (sello
-`01b755bad9bd405e…`, `NEGATIVE_EXTENDS_TO_THE_SOUND_ENDPOINT`) · **los seis falsadores PASAN** ·
+`9e4b7bceaac1c5a0…`, `NEGATIVE_EXTENDS_TO_THE_SOUND_ENDPOINT`) · **los seis falsadores PASAN** ·
 preregistro `docs/PREREGISTRO_METRICA_SERVICE_FIRST_V2_2026-08-01.md`, commiteado antes de correr.
 
 **Con esto `service_first_resilience_v2` deja de ser prospectiva:** tiene contrato propio y una
@@ -21,11 +21,23 @@ corrida sellada que la usa como endpoint.
 **`v2` coincide con el servicio en las seis celdas y discrepa de `ret_excel` en las seis.** El
 endpoint hace lo que se contrató que hiciera.
 
-**Y aparece algo que no buscaba:** `ret_excel` no sólo elige el reparto equivocado — elige
-**repartos equivocados DISTINTOS según la familia de riesgo**: `0,9` bajo `R2r`, `0,1` bajo
-`R1r+R2r`. Los dos son extremos, los dos abandonan una CSSU, pero **por lados opuestos**. Una
-métrica que recomienda estrangular al reclamante A o al B según qué riesgos estén activos no está
-midiendo resiliencia.
+**Corregido tras revisión externa — mi lectura de la orientación era un artefacto del bloque de
+semillas.** Escribí que `ret_excel` elige «`0,9` bajo `R2r` y `0,1` bajo `R1r+R2r`». Comparando
+los tres bloques:
+
+| bloque | `R2r` | `R1r+R2r` |
+|---|---:|---:|
+| histórico `5.200.001+` | 0,1 | 0,9 |
+| Cobb-Douglas `5.600.001+` | 0,1 | 0,1 |
+| esta corrida `6.400.001+` | 0,9 | 0,1 |
+
+**La orientación NO es estable.** Lo que sí lo es, y en los tres bloques y las dieciocho celdas:
+
+> **`ret_excel` elige SIEMPRE un extremo —`0,1` o `0,9`, nunca `0,5`— y los endpoints sanos eligen
+> SIEMPRE `0,5`.** De qué lado de la U cae el extremo es ruido; que caiga en un extremo, no.
+
+La afirmación estructural —la métrica puede premiar el abandono— se conserva y sale reforzada.
+La atribución por familia se retira.
 
 ## 2. El headroom
 
@@ -41,17 +53,26 @@ objeción legítima — el 31 de julio quedó medido que `ret_excel` prefiere el
 
 Ahora hay **tres endpoints independientes** sobre el **mismo** barrido:
 
-| endpoint | `argmax` | `H_regime` |
-|---|---|---:|
-| `ret_excel` (censurada, explotable) | 0,9 / 0,1 según familia | 1,5e-04 |
-| **Cobb-Douglas** (de su IJPR 2024) | **0,5 en las seis** | **0,000000** |
-| **`service_first_v2`** (construida para no premiar el abandono) | **0,5 en las seis** | **0,000000** |
+| endpoint | bloque de semillas | `argmax` | `H_regime` |
+|---|---|---|---:|
+| `ret_excel_risk_conditional` (censurada) | `5.200.001+` | un **extremo** en las seis | 1,527e-04 |
+| **Cobb-Douglas** (su IJPR 2024) | `5.600.001+` | **0,5 en las seis** | **0,000000** |
+| **`service_first_v2`** | `6.400.001+` | **0,5 en las seis** | **0,000000** |
+
+**Esta tabla es CONVERGENCIA DESCRIPTIVA, no una comparación pareada.** Los tres endpoints
+comparten diseño, regímenes y cadencia pero **corren sobre bloques de semillas distintos**, así
+que son realizaciones aleatorias distintas. El `1,527e-04` es de
+`ret_excel_risk_conditional` en la celda `FIFO_PARTIAL|fungible=False` del barrido histórico —
+la etiqueta genérica «1,5e-4» que puse antes era imprecisa.
 
 > **Los dos endpoints sanos coinciden entre sí y discrepan del roto. Y los dos dan exactamente
 > cero.** El reparto equilibrado gana en todos los regímenes, y escalar R23 ×3 en frecuencia y ×2
 > en impacto no lo mueve.
 
-**No hay nada que decidir.** Eso ya no se puede atribuir al instrumento: uno de los dos endpoints
+**No hay nada que decidir — y el alcance exacto de esa frase es:** repartos **constantes** de
+`0,1` a `0,9`, bajo estos **seis** regímenes, con capacidad no fungible. **No evalúa políticas que
+conmutan dentro del episodio**, que son otra clase que `H_regime` no acota. Dentro de ese alcance,
+ya no se puede atribuir al instrumento: uno de los dos endpoints
 sanos viene del propio Garrido y el otro se construyó explícitamente contra el defecto que
 encontramos.
 
@@ -69,5 +90,18 @@ encontramos.
 Una clave lexicográfica **no admite media**, así que `H_regime` no está definida sobre `v2`
 completa. Se reportan dos estimandos separados —`argmax` bajo la clave completa, y `H_regime`
 sobre el componente **líder** solo— en vez de inventar una agregación. `f6` verifica que las
-semillas se promedian **componente a componente** y que las tuplas resultantes se comparan con
-orden de tupla, **nunca colapsadas en un escalar**.
+semillas se promedian **componente a componente** y que las tuplas se comparan con orden de
+tupla, **nunca colapsadas en un escalar**.
+
+**`f6` corregido tras la revisión.** La primera versión comprobaba `len(COMPONENTS) == 4` — una
+constante, que habría pasado igual si el ranking fuese una suma escalar. **Quinto falsador en tres
+días que probaba un correlato.** Ahora hace dos cosas reales:
+
+* **control positivo**: una reimplementación **independiente** de la comparación lexicográfica
+  reproduce el `argmax` de producción en las seis celdas;
+* **defecto inyectado**: rankear por la **suma escalar** de los cuatro componentes — que es en lo
+  que consistiría colapsar la tupla — **cambia la respuesta** (`0,6` en vez de `0,5` en
+  `R1r+R2r|base`). Es decir, el orden lexicográfico **está haciendo trabajo** y un colapso
+  accidental sería detectable.
+
+Y `f1` pasó de `any(...)` a exigir **las seis** celdas: discrepan **6/6**.

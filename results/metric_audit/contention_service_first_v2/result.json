@@ -649,8 +649,8 @@
  "claim_status": "NEGATIVE_EXTENDS_TO_THE_SOUND_ENDPOINT",
  "contract_path": "docs/PREREGISTRO_METRICA_SERVICE_FIRST_V2_2026-08-01.md",
  "contract_sha256": "d252787b635f60eaaf5dff6033e6ddb680e4669d8eec0eb65031c20872be8e18",
- "created_at": "2026-08-01T18:33:06.347274+00:00",
- "elapsed_seconds": 56.2703834999993,
+ "created_at": "2026-08-01T18:57:47.844400+00:00",
+ "elapsed_seconds": 57.188489082996966,
  "endpoint": "service_first_resilience_v2",
  "endpoint_components": [
   "worst_claimant_fill",
@@ -661,7 +661,7 @@
  "endpoint_status": "CONTRACTED AND USED: this run is what makes v2 no longer prospective. It remains a STIPULATED normative endpoint, never evidence that abandonment is bad",
  "falsifiers": {
   "all_passed": true,
-  "f1_v2_and_ret_disagree": {
+  "f1_v2_and_ret_disagree_in_every_regime": {
    "evidence": {
     "argmax_ret": {
      "R1r+R2r|base": 0.1,
@@ -679,6 +679,8 @@
      "R2r|freq3_imp2": 0.5,
      "R2r|freq_x3": 0.5
     },
+    "regimes_disagreeing": 6,
+    "regimes_total": 6,
     "why_it_can_fail": "if v2 chose the same split as ret_excel it would be correcting nothing and this endpoint is pointless"
    },
    "passed": true
@@ -725,7 +727,7 @@
    },
    "passed": true
   },
-  "f6_lexicographic_key_is_not_averaged": {
+  "f6_ranking_is_actually_lexicographic": {
    "evidence": {
     "components": [
      "worst_claimant_fill",
@@ -733,8 +735,25 @@
      "negative_backorder_qty_final",
      "ret_excel_visible_clipped_0_1"
     ],
-    "mechanism": "seeds are averaged COMPONENT-WISE and the resulting tuples are then compared with tuple ordering; H_regime is computed on the leading component alone and reported as such",
-    "why_it_can_fail": "collapsing the tuple into a scalar would invent an exchange rate between components, which is what the lexicographic order exists to prevent"
+    "independent_lex_matches_production": {
+     "R1r+R2r|base": true,
+     "R1r+R2r|freq3_imp2": true,
+     "R1r+R2r|freq_x3": true,
+     "R2r|base": true,
+     "R2r|freq3_imp2": true,
+     "R2r|freq_x3": true
+    },
+    "injected_defect_argmax_by_scalar_sum": {
+     "R1r+R2r|base": 0.6,
+     "R1r+R2r|freq3_imp2": 0.5,
+     "R1r+R2r|freq_x3": 0.5,
+     "R2r|base": 0.5,
+     "R2r|freq3_imp2": 0.5,
+     "R2r|freq_x3": 0.5
+    },
+    "note": "if the injected defect does NOT change the answer, the ranking happens to be robust here and the lexicographic order is unfalsifiable FROM THE OUTPUT ALONE -- disclosed either way rather than hidden",
+    "scalar_sum_defect_changes_the_answer": true,
+    "why_it_can_fail": "the first version asserted len(COMPONENTS) == 4, a constant that would pass even if the ranking were a scalar sum. This reproduces the argmax with an INDEPENDENT component-by-component comparison; any accidental collapse to a scalar makes them diverge"
    },
    "passed": true
   }
@@ -762,7 +781,7 @@
   6400009,
   6400010
  ],
- "self_sha256": "01b755bad9bd405e181988255bafc2328d64c2451abf848e101fe6c1e6a7bb38",
+ "self_sha256": "9e4b7bceaac1c5a0a619d688333a1939c6993ada0aacc35a901d75c08ca3192d",
  "shares": [
   0.1,
   0.2,
