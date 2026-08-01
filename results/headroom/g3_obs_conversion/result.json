@@ -1,0 +1,601 @@
+{
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "STOP_G3_OBS_UNDERPOWERED",
+ "contract_path": "docs/PREREGISTRO_G3_OBS_CONVERSION_OBSERVABLE_2026-08-01.md",
+ "contract_sha256": "70f2e8adffa8f070a433177ab600468c82aafdb6257ac16853eca55b5b9745a8",
+ "created_at": "2026-08-01T23:21:45.632388+00:00",
+ "delay_days": 3,
+ "development_seeds": [
+  5200001,
+  5200002,
+  5200003,
+  5200004,
+  5200005,
+  5200006,
+  5200007,
+  5200008
+ ],
+ "elapsed_seconds": 54.68052208298468,
+ "falsifiers": {
+  "all_passed": true,
+  "f1_signal_is_causal_and_pre_action": {
+   "evidence": {
+    "construction": "unmet demand per claimant, read before the decision; the action then waits the model's own 24h activation latency",
+    "future_symbols_read": [],
+    "why_it_can_fail": "a signal containing the future risk target would be an oracle in disguise"
+   },
+   "passed": true
+  },
+  "f2_real_signal_beats_shuffled_delayed_and_wrong": {
+   "evidence": {
+    "vs_constant": {
+     "FIFO_PARTIAL|R1r+R2r|base": {
+      "threshold_windowed": 0.010695785002780456,
+      "uninformed_placebo": -0.019424095763089094,
+      "wrong_claimant": -0.15709258365508866
+     },
+     "FIFO_PARTIAL|R1r+R2r|freq3_imp2": {
+      "threshold_windowed": 0.008995537095905698,
+      "uninformed_placebo": -0.022551554305907245,
+      "wrong_claimant": -0.21866968608691648
+     }
+    },
+    "why_it_can_fail": "if an uninformed or inverted signal matches the real one, the signal carries no information"
+   },
+   "passed": true
+  },
+  "f3_thresholds_fit_on_development_only": {
+   "evidence": {
+    "dev": [
+     5200001,
+     5200002,
+     5200003,
+     5200004,
+     5200005,
+     5200006,
+     5200007,
+     5200008
+    ],
+    "test": [
+     5200009,
+     5200010,
+     5200011,
+     5200012,
+     5200013,
+     5200014,
+     5200015,
+     5200016
+    ],
+    "why_it_can_fail": "picking tau or bins on the test block would select the best threshold by looking at its own result -- the defect shipped in the Cobb-Douglas run"
+   },
+   "passed": true
+  },
+  "f4_every_guardrail_has_a_signed_margin": {
+   "evidence": {
+    "margins": {
+     "backorder_qty_final_rel": 0.01,
+     "flow_fill_rate": 0.005,
+     "lost_orders": 0.25
+    },
+    "why_it_can_fail": "a zero-margin guardrail on point estimates is what halted the re-audit on ONE lost order"
+   },
+   "passed": true
+  },
+  "f5_power_is_published_pass_or_fail": {
+   "evidence": {
+    "mde": {
+     "FIFO_PARTIAL|R1r+R2r|base": 0.025648740862863662,
+     "FIFO_PARTIAL|R1r+R2r|freq3_imp2": 0.028612011975909447
+    },
+    "powered": false,
+    "sesoi": 0.01,
+    "why_it_can_fail": "it cannot; that is the point -- the MDE is published whether or not it clears the SESOI, so an underpowered null can never be read as a claim"
+   },
+   "passed": true
+  },
+  "f6_actuator_is_live": {
+   "evidence": {
+    "alpha_sd": {
+     "FIFO_PARTIAL|R1r+R2r|base": 0.3976483801927338,
+     "FIFO_PARTIAL|R1r+R2r|freq3_imp2": 0.3840011304551435
+    },
+    "why_it_can_fail": "a dead actuator already caught me once on this lever"
+   },
+   "passed": true
+  },
+  "f7_no_gain_by_abandonment": {
+   "evidence": {
+    "guardrails": {
+     "FIFO_PARTIAL|R1r+R2r|base": {
+      "backorder_qty_final_rel": {
+       "delta": 0.01,
+       "lcb95": -1.1323425336164104e-05,
+       "mean": -5.661712668082052e-06,
+       "passes": true,
+       "ucb95": 0.0
+      },
+      "flow_fill_rate": {
+       "delta": 0.005,
+       "lcb95": -0.0011862821140614932,
+       "mean": -0.0003420367851779682,
+       "passes": true,
+       "ucb95": 0.0001540395759621079
+      },
+      "lost_orders": {
+       "delta": 0.25,
+       "lcb95": 0.0,
+       "mean": 0.0,
+       "passes": true,
+       "ucb95": 0.0
+      }
+     },
+     "FIFO_PARTIAL|R1r+R2r|freq3_imp2": {
+      "backorder_qty_final_rel": {
+       "delta": 0.01,
+       "lcb95": 0.0,
+       "mean": 1.3586258331217154e-17,
+       "passes": true,
+       "ucb95": 4.0758774993651464e-17
+      },
+      "flow_fill_rate": {
+       "delta": 0.005,
+       "lcb95": -0.00012653813904248655,
+       "mean": 0.0004425890969538271,
+       "passes": true,
+       "ucb95": 0.0014005310663506322
+      },
+      "lost_orders": {
+       "delta": 0.25,
+       "lcb95": 0.0,
+       "mean": 0.0,
+       "passes": true,
+       "ucb95": 0.0
+      }
+     }
+    },
+    "why_it_can_fail": "a worst-fill gain bought with lost orders is the measured failure mode of ret_excel in a new coordinate"
+   },
+   "passed": true
+  },
+  "f8_no_fresh_seeds_opened": {
+   "evidence": {
+    "seeds": [
+     5200001,
+     5200002,
+     5200003,
+     5200004,
+     5200005,
+     5200006,
+     5200007,
+     5200008,
+     5200009,
+     5200010,
+     5200011,
+     5200012,
+     5200013,
+     5200014,
+     5200015,
+     5200016
+    ],
+    "why_it_can_fail": "authority_ladder_v1 sets fresh_roots_opened=false"
+   },
+   "passed": true
+  }
+ },
+ "fungible": false,
+ "margins": {
+  "backorder_qty_final_rel": 0.01,
+  "flow_fill_rate": 0.005,
+  "lost_orders": 0.25
+ },
+ "noise_sd": 0.3,
+ "primary_metric": "worst_claimant_fill",
+ "reference_path": "results/sensitivity/contention_headroom_v1_1/result.json",
+ "reference_sha256": "1b8011dc9f4e27ac93b2a1e04f737a0a8b8b8f45d14de9af9d210c5234001564",
+ "regimes": [
+  "R1r+R2r|base",
+  "R1r+R2r|freq3_imp2"
+ ],
+ "results": {
+  "FIFO_PARTIAL|R1r+R2r|base": {
+   "H_obs_windowed_minus_constant": {
+    "lcb95": -0.005504911861916317,
+    "mean": 0.010695785002780456,
+    "ucb95": 0.02687882847969082
+   },
+   "alpha_sd": 0.3976483801927338,
+   "development": {
+    "best_bins": [
+     0.1,
+     0.3,
+     0.5,
+     0.7,
+     0.9
+    ],
+    "best_share": 0.5,
+    "best_tau": 0.0,
+    "dev_seeds": [
+     5200001,
+     5200002,
+     5200003,
+     5200004,
+     5200005,
+     5200006,
+     5200007,
+     5200008
+    ]
+   },
+   "diagnostics": {
+    "backorder_qty_final": {
+     "best_constant": 132468.75,
+     "tabular_5bin": 133087.25,
+     "threshold_cumulative": 132143.875,
+     "threshold_delayed": 132459.625,
+     "threshold_noisy": 132468.0,
+     "threshold_windowed": 132468.0,
+     "uninformed_placebo": 133106.0,
+     "wrong_claimant": 133912.7083125
+    },
+    "flow_fill_rate": {
+     "best_constant": 0.8030023245934371,
+     "tabular_5bin": 0.8042354691157517,
+     "threshold_cumulative": 0.803394742575522,
+     "threshold_delayed": 0.8034857326278617,
+     "threshold_noisy": 0.8033443613786151,
+     "threshold_windowed": 0.8033443613786151,
+     "uninformed_placebo": 0.8034929603925294,
+     "wrong_claimant": 0.7221927162022854
+    },
+    "lost_orders": {
+     "best_constant": 0.625,
+     "tabular_5bin": 0.625,
+     "threshold_cumulative": 0.75,
+     "threshold_delayed": 0.75,
+     "threshold_noisy": 0.625,
+     "threshold_windowed": 0.625,
+     "uninformed_placebo": 0.5,
+     "wrong_claimant": 23.75
+    },
+    "ret_excel_full_ledger": {
+     "best_constant": 0.0003368425026795489,
+     "tabular_5bin": 0.0003330642876884949,
+     "threshold_cumulative": 0.00031999351317754833,
+     "threshold_delayed": 0.00032802085534483586,
+     "threshold_noisy": 0.0003327677288779584,
+     "threshold_windowed": 0.0003327677288779584,
+     "uninformed_placebo": 0.0003707966328949005,
+     "wrong_claimant": 0.0016656237282339369
+    },
+    "ret_excel_risk_conditional": {
+     "best_constant": 0.0004195280900577379,
+     "tabular_5bin": 0.0004140429263243784,
+     "threshold_cumulative": 0.0003982583532581931,
+     "threshold_delayed": 0.00040842263850432404,
+     "threshold_noisy": 0.00041425407694191895,
+     "threshold_windowed": 0.00041425407694191895,
+     "uninformed_placebo": 0.00046228594817267525,
+     "wrong_claimant": 0.0024390711403661468
+    }
+   },
+   "guardrails": {
+    "backorder_qty_final_rel": {
+     "delta": 0.01,
+     "lcb95": -1.1323425336164104e-05,
+     "mean": -5.661712668082052e-06,
+     "passes": true,
+     "ucb95": 0.0
+    },
+    "flow_fill_rate": {
+     "delta": 0.005,
+     "lcb95": -0.0011862821140614932,
+     "mean": -0.0003420367851779682,
+     "passes": true,
+     "ucb95": 0.0001540395759621079
+    },
+    "lost_orders": {
+     "delta": 0.25,
+     "lcb95": 0.0,
+     "mean": 0.0,
+     "passes": true,
+     "ucb95": 0.0
+    }
+   },
+   "mde_primary": 0.025648740862863662,
+   "realism_cost_vs_cumulative": {
+    "threshold_delayed": {
+     "lcb95": 0.0005195745799899121,
+     "mean": 0.011272553792419968,
+     "ucb95": 0.023351947910695697
+    },
+    "threshold_noisy": {
+     "lcb95": 0.00253321469036843,
+     "mean": 0.012101560802460318,
+     "ucb95": 0.02526600916034546
+    },
+    "threshold_windowed": {
+     "lcb95": 0.002421994732990554,
+     "mean": 0.012101560802460318,
+     "ucb95": 0.025304672109233317
+    }
+   },
+   "residual_over_simple": {
+    "lcb95": -0.012103802294649182,
+    "mean": -0.004380593979422892,
+    "ucb95": 0.002180221283099044
+   },
+   "test_seeds": [
+    5200009,
+    5200010,
+    5200011,
+    5200012,
+    5200013,
+    5200014,
+    5200015,
+    5200016
+   ],
+   "vs_constant": {
+    "tabular_5bin": {
+     "lcb95": -0.014189467714809268,
+     "mean": 0.006315191023357564,
+     "ucb95": 0.025633440937452918
+    },
+    "threshold_cumulative": {
+     "lcb95": 0.008254193921827108,
+     "mean": 0.022797345805240773,
+     "ucb95": 0.03766185097647133
+    },
+    "threshold_delayed": {
+     "lcb95": -0.0038479907227660965,
+     "mean": 0.011524792012820806,
+     "ucb95": 0.02715542585153965
+    },
+    "threshold_noisy": {
+     "lcb95": -0.005130397714130472,
+     "mean": 0.010695785002780456,
+     "ucb95": 0.026534827684489157
+    },
+    "threshold_windowed": {
+     "lcb95": -0.005504911861916317,
+     "mean": 0.010695785002780456,
+     "ucb95": 0.02687882847969082
+    },
+    "uninformed_placebo": {
+     "lcb95": -0.045374864637985166,
+     "mean": -0.019424095763089094,
+     "ucb95": 0.0034077779133939584
+    },
+    "wrong_claimant": {
+     "lcb95": -0.2760007708181705,
+     "mean": -0.15709258365508866,
+     "ucb95": -0.07396462861817804
+    }
+   }
+  },
+  "FIFO_PARTIAL|R1r+R2r|freq3_imp2": {
+   "H_obs_windowed_minus_constant": {
+    "lcb95": -0.008126487856224884,
+    "mean": 0.008995537095905698,
+    "ucb95": 0.027012673582897925
+   },
+   "alpha_sd": 0.3840011304551435,
+   "development": {
+    "best_bins": [
+     0.1,
+     0.1,
+     0.5,
+     0.9,
+     0.9
+    ],
+    "best_share": 0.5,
+    "best_tau": 0.15,
+    "dev_seeds": [
+     5200001,
+     5200002,
+     5200003,
+     5200004,
+     5200005,
+     5200006,
+     5200007,
+     5200008
+    ]
+   },
+   "diagnostics": {
+    "backorder_qty_final": {
+     "best_constant": 133884.5,
+     "tabular_5bin": 133884.5,
+     "threshold_cumulative": 133895.5,
+     "threshold_delayed": 133895.625,
+     "threshold_noisy": 133573.5,
+     "threshold_windowed": 133884.5,
+     "uninformed_placebo": 133886.875,
+     "wrong_claimant": 140959.61475
+    },
+    "flow_fill_rate": {
+     "best_constant": 0.8019485516775288,
+     "tabular_5bin": 0.8015059625805749,
+     "threshold_cumulative": 0.802366857918454,
+     "threshold_delayed": 0.8010413321226844,
+     "threshold_noisy": 0.8032351669913531,
+     "threshold_windowed": 0.8015059625805749,
+     "uninformed_placebo": 0.8016143820137877,
+     "wrong_claimant": 0.7057118197498523
+    },
+    "lost_orders": {
+     "best_constant": 0.375,
+     "tabular_5bin": 0.375,
+     "threshold_cumulative": 0.375,
+     "threshold_delayed": 0.375,
+     "threshold_noisy": 0.375,
+     "threshold_windowed": 0.375,
+     "uninformed_placebo": 0.5,
+     "wrong_claimant": 25.125
+    },
+    "ret_excel_full_ledger": {
+     "best_constant": 0.0003382530258523339,
+     "tabular_5bin": 0.00032911137334683846,
+     "threshold_cumulative": 0.00031441244836254736,
+     "threshold_delayed": 0.0003286873948833087,
+     "threshold_noisy": 0.0003326156460199645,
+     "threshold_windowed": 0.00032911137334683846,
+     "uninformed_placebo": 0.0003752446685450215,
+     "wrong_claimant": 0.001744655568406514
+    },
+    "ret_excel_risk_conditional": {
+     "best_constant": 0.0004219879981660527,
+     "tabular_5bin": 0.00040999495549172893,
+     "threshold_cumulative": 0.00039142986580574795,
+     "threshold_delayed": 0.0004099408576075669,
+     "threshold_noisy": 0.00041372457824751007,
+     "threshold_windowed": 0.00040999495549172893,
+     "uninformed_placebo": 0.00046953644102229073,
+     "wrong_claimant": 0.0025375699481249825
+    }
+   },
+   "guardrails": {
+    "backorder_qty_final_rel": {
+     "delta": 0.01,
+     "lcb95": 0.0,
+     "mean": 1.3586258331217154e-17,
+     "passes": true,
+     "ucb95": 4.0758774993651464e-17
+    },
+    "flow_fill_rate": {
+     "delta": 0.005,
+     "lcb95": -0.00012653813904248655,
+     "mean": 0.0004425890969538271,
+     "passes": true,
+     "ucb95": 0.0014005310663506322
+    },
+    "lost_orders": {
+     "delta": 0.25,
+     "lcb95": 0.0,
+     "mean": 0.0,
+     "passes": true,
+     "ucb95": 0.0
+    }
+   },
+   "mde_primary": 0.028612011975909447,
+   "realism_cost_vs_cumulative": {
+    "threshold_delayed": {
+     "lcb95": -0.0003417650379146073,
+     "mean": 0.007450132292815964,
+     "ucb95": 0.014957045918323307
+    },
+    "threshold_noisy": {
+     "lcb95": 0.0012041520431142483,
+     "mean": 0.009481943109778776,
+     "ucb95": 0.018739096482589642
+    },
+    "threshold_windowed": {
+     "lcb95": 0.0009875401379781518,
+     "mean": 0.00789121296837178,
+     "ucb95": 0.01705223076751023
+    }
+   },
+   "residual_over_simple": {
+    "lcb95": 0.0,
+    "mean": 0.0,
+    "ucb95": 0.0
+   },
+   "test_seeds": [
+    5200009,
+    5200010,
+    5200011,
+    5200012,
+    5200013,
+    5200014,
+    5200015,
+    5200016
+   ],
+   "vs_constant": {
+    "tabular_5bin": {
+     "lcb95": -0.00864308605565005,
+     "mean": 0.008995537095905698,
+     "ucb95": 0.026834051118330038
+    },
+    "threshold_cumulative": {
+     "lcb95": 0.0035447755364019715,
+     "mean": 0.016886750064277478,
+     "ucb95": 0.03219627084303919
+    },
+    "threshold_delayed": {
+     "lcb95": -0.0018438833478950302,
+     "mean": 0.009436617771461514,
+     "ucb95": 0.022446278273320144
+    },
+    "threshold_noisy": {
+     "lcb95": -0.007467916800605448,
+     "mean": 0.007404806954498702,
+     "ucb95": 0.025626321467685245
+    },
+    "threshold_windowed": {
+     "lcb95": -0.008126487856224884,
+     "mean": 0.008995537095905698,
+     "ucb95": 0.027012673582897925
+    },
+    "uninformed_placebo": {
+     "lcb95": -0.04006706865869403,
+     "mean": -0.022551554305907245,
+     "ucb95": -0.008832092871249128
+    },
+    "wrong_claimant": {
+     "lcb95": -0.346824630480815,
+     "mean": -0.21866968608691648,
+     "ucb95": -0.12020240444168716
+    }
+   }
+  }
+ },
+ "rule": "FIFO_PARTIAL",
+ "schema_version": "g3_obs_conversion_v1",
+ "scope": "OBSERVABLE_CONVERSION_ON_BURNED_TAPES_NO_TRAINING_AUTHORIZED",
+ "seeds": [
+  5200001,
+  5200002,
+  5200003,
+  5200004,
+  5200005,
+  5200006,
+  5200007,
+  5200008,
+  5200009,
+  5200010,
+  5200011,
+  5200012,
+  5200013,
+  5200014,
+  5200015,
+  5200016
+ ],
+ "self_sha256": "1d434485cec99bc730538a0862a4042d8f8a9e21a9b2a32e45ffa4d4dc76c3fa",
+ "sesoi": 0.01,
+ "step_hours": 24.0,
+ "test_seeds": [
+  5200009,
+  5200010,
+  5200011,
+  5200012,
+  5200013,
+  5200014,
+  5200015,
+  5200016
+ ],
+ "window_days": 14
+}
