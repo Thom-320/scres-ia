@@ -1,0 +1,264 @@
+{
+ "arms": {
+  "FDB_live_autotomy": {
+   "delta": "shift_uniform",
+   "pred": "band",
+   "tol": 0.05,
+   "transit": "freight_waves"
+  },
+  "shipped_dead_autotomy": {
+   "delta": "off",
+   "pred": "le",
+   "tol": 0.0,
+   "transit": "constant"
+  }
+ },
+ "autotomy_share": {
+  "FDB": 0.0017494800439314612,
+  "garrido": 0.0044,
+  "shipped": 0.0
+ },
+ "available_margin": {
+  "baseline": "linear_interactions",
+  "ci95_high": 0.026185187102685192,
+  "ci95_low": -0.1751091555088239,
+  "mean_difference": -0.07446198420306935,
+  "passes_sesoi_and_ci": false,
+  "sesoi": 0.05
+ },
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "THRESHOLD_RULE_SUFFICES",
+ "contract_path": "docs/PREREGISTRO_G2_UMBRAL_AUTOTOMIA_2026-08-01.md",
+ "contract_sha256": "bd0cbb5b4bf693f645aa3ecabceee5ea9ffa2aeb704a04f7f137238b74230dbd",
+ "created_at": "2026-08-01T21:20:13.008332+00:00",
+ "elapsed_seconds": 249.40834158402868,
+ "falsifiers": {
+  "all_passed": true,
+  "f1_autotomy_is_actually_alive": {
+   "evidence": {
+    "autotomy_share_FDB": 0.0017494800439314612,
+    "autotomy_share_shipped": 0.0,
+    "garrido_reference": 0.0044,
+    "why_it_can_fail": "if FDB does not revive the branch, or if the shipped arm already has it, there is no threshold switched on and G2 has no premise"
+   },
+   "passed": true
+  },
+  "f2_threshold_is_crossed_often_enough": {
+   "evidence": {
+    "fraction_of_episodes_with_any_crossing": 0.3416666666666667,
+    "label_noise_within_cell_sd": 0.0020339200546739254,
+    "mean_autotomy_share": 0.0017494800439314612,
+    "why_it_can_fail": "a discontinuity almost never crossed is noise, not structure. Reported whether it passes or fails"
+   },
+   "passed": true
+  },
+  "f3_a_threshold_rule_is_among_the_comparators": {
+   "evidence": {
+    "networks_vs_threshold_rule": {
+     "backprop": {
+      "baseline": "threshold_rule",
+      "ci95_high": 0.11442910318710044,
+      "ci95_low": -0.13366484738692108,
+      "mean_difference": -0.00961787209991032,
+      "passes_sesoi_and_ci": false,
+      "sesoi": 0.05
+     },
+     "kan": {
+      "baseline": "threshold_rule",
+      "ci95_high": 0.10003888001786626,
+      "ci95_low": -0.13685119860224093,
+      "mean_difference": -0.018406159292187342,
+      "passes_sesoi_and_ci": false,
+      "sesoi": 0.05
+     }
+    },
+    "r2_threshold_rule": 0.1432174418920059,
+    "why_it_can_fail": "without it a 'neural premium' could just be a network rediscovering an if-statement"
+   },
+   "passed": true
+  },
+  "f4_primary_baseline_declared_before": {
+   "evidence": {
+    "primary_baseline": "linear_interactions",
+    "why_it_can_fail": "selecting the baseline on test performance was a real defect of the CD run; here it is fixed in the preregistration"
+   },
+   "passed": true
+  },
+  "f5_folds_grouped_by_seed": {
+   "evidence": {
+    "why_it_can_fail": "a shared seed inflates every R2"
+   },
+   "passed": true
+  },
+  "f6_fidelity_price_is_disclosed": {
+   "evidence": {
+    "documented_price": "0.95 SE of ret_mean, docs/RESULTADO_CIERRE_AUTOTOMIA_2026-07-31.md",
+    "ret_excel_mean_FDB_minus_shipped": 0.0023232511544589163,
+    "why_it_can_fail": "FDB WORSENS ret_mean by a measured 0.95 SE; using it without saying so would be selling convenient physics"
+   },
+   "passed": true
+  },
+  "f7_seeds_are_virgin": {
+   "evidence": {
+    "collisions": [],
+    "seeds": [
+     7000001,
+     7000002,
+     7000003,
+     7000004,
+     7000005,
+     7000006,
+     7000007,
+     7000008
+    ],
+    "why_it_can_fail": "reuse would void the comparison"
+   },
+   "passed": true
+  }
+ },
+ "fidelity_price_ret_excel": 0.0023232511544589163,
+ "generator": "G2_hard_threshold",
+ "held_out_r2_mean": {
+  "backprop": 0.13359956979209558,
+  "constant": -0.01787545702446911,
+  "kan": 0.12481128259981855,
+  "linear_additive": 0.1393055038530946,
+  "linear_interactions": 0.1553032829995014,
+  "threshold_rule": 0.1432174418920059,
+  "train_cell_mean_comparator": 0.08084129879643207
+ },
+ "held_out_r2_per_fold": {
+  "backprop": [
+   0.07095828525682124,
+   0.2477792767789283,
+   0.06897371593109758,
+   -0.015242169596386024,
+   0.29552874059001677
+  ],
+  "constant": [
+   -0.012465822921102987,
+   -0.013649463324813427,
+   -0.0026512880669296024,
+   -0.060043211396115126,
+   -0.0005674994133844091
+  ],
+  "kan": [
+   0.053044075627455944,
+   0.20585994367176141,
+   0.08412781080568088,
+   -0.010368351365825257,
+   0.2913929342600198
+  ],
+  "linear_additive": [
+   0.050841749441113304,
+   0.2512663346092965,
+   0.0905435376387479,
+   0.0004899822716363245,
+   0.30338591530467895
+  ],
+  "linear_interactions": [
+   0.03432191367314685,
+   0.28567282311813824,
+   0.10538380596979358,
+   0.0013464466181669632,
+   0.3497914256182615
+  ],
+  "threshold_rule": [
+   0.176024309470188,
+   0.17150743455322748,
+   0.07066260835537452,
+   0.10169123452237627,
+   0.1962016225588632
+  ],
+  "train_cell_mean_comparator": [
+   -0.1651289025371312,
+   0.29227478141816066,
+   0.023195913005288116,
+   -0.08405327814062558,
+   0.33791798023646835
+  ]
+ },
+ "primary_baseline": "linear_interactions",
+ "reference_path": "results/headroom/cd_surface_prediction_premium/result.json",
+ "reference_sha256": "527227bd96eb8d8d9ed534aebea410da79efb91bb2d1e2aa365e85b5a9f43a99",
+ "schema_version": "g2_autotomy_threshold_v1",
+ "scope": "prediction only. H_regime in this lane is ~1e-4, so even a predictive premium would not be control headroom, and the two must stay separate",
+ "seeds": [
+  7000001,
+  7000002,
+  7000003,
+  7000004,
+  7000005,
+  7000006,
+  7000007,
+  7000008
+ ],
+ "self_sha256": "3ed41860e829b83c4124d78adaecd118d8f6999d52e3c1d42fe04d3b34db2980",
+ "sesoi": 0.05,
+ "target": "ret_excel_risk_conditional",
+ "threshold_diagnostics": {
+  "episodes_with_crossing": 0.3416666666666667,
+  "label_noise_within_cell_sd": 0.0020339200546739254
+ },
+ "vs_primary_baseline": {
+  "backprop": {
+   "baseline": "linear_interactions",
+   "ci95_high": 0.02204892033841683,
+   "ci95_low": -0.06545634675322853,
+   "mean_difference": -0.02170371320740585,
+   "passes_sesoi_and_ci": false,
+   "sesoi": 0.05
+  },
+  "kan": {
+   "baseline": "linear_interactions",
+   "ci95_high": 0.017874341871719098,
+   "ci95_low": -0.07885834267108484,
+   "mean_difference": -0.030492000399682872,
+   "passes_sesoi_and_ci": false,
+   "sesoi": 0.05
+  },
+  "threshold_rule": {
+   "baseline": "linear_interactions",
+   "ci95_high": 0.14888318580231863,
+   "ci95_low": -0.17305486801730968,
+   "mean_difference": -0.012085841107495532,
+   "passes_sesoi_and_ci": false,
+   "sesoi": 0.05
+  }
+ },
+ "vs_threshold_rule": {
+  "backprop": {
+   "baseline": "threshold_rule",
+   "ci95_high": 0.11442910318710044,
+   "ci95_low": -0.13366484738692108,
+   "mean_difference": -0.00961787209991032,
+   "passes_sesoi_and_ci": false,
+   "sesoi": 0.05
+  },
+  "kan": {
+   "baseline": "threshold_rule",
+   "ci95_high": 0.10003888001786626,
+   "ci95_low": -0.13685119860224093,
+   "mean_difference": -0.018406159292187342,
+   "passes_sesoi_and_ci": false,
+   "sesoi": 0.05
+  }
+ }
+}
