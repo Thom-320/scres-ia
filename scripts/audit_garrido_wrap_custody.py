@@ -103,8 +103,8 @@ def build_manifest() -> dict[str, object]:
                 artifact="results/garrido_neural_headroom_gate_v1/result.json",
                 runner="scripts/adjudicate_neural_headroom_gate_v1.py",
                 contract="docs/PREREGISTRO_NEURAL_HEADROOM_ENV_V1_2026-08-01.md",
-                status="NO_GO_NEURAL_PREMIUM_E1_HEADROOM_CLOSED",
-                allowed_use="E1 boundary result; no MLP/PPO training authorization",
+                status="HOLD_E1_PLACEBO_NOT_OPENED",
+                allowed_use="E1 incomplete boundary screen; no MLP/PPO training authorization",
             ),
             record(
                 artifact="results/garrido_q2_des288_v1/result.json",

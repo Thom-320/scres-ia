@@ -7,7 +7,7 @@ carril separado y no aporta claims a este manuscrito.
 
 ## Estado de implementación
 
-- HEAD de referencia: `94478e9` (custody manifest actualizado).
+- HEAD de referencia: `69498f1` (custody manifest se actualiza con el estado de E1).
 - Contrato: `garrido_wrap_scres_ai_v1`.
 - Estado global: `HOLD_WRAP_BEHAVIORAL_FIDELITY` / `DEVELOPMENT_ONLY`.
 - `thesis_1to1` permanece congelado.
