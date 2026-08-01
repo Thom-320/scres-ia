@@ -157,34 +157,30 @@ def main() -> int:
                 neuron = Fig5Neuron(len(FACTOR_NAMES) + 5)
             seen, curve, running = set(), [], -np.inf
 
-            if strategy == "ofat":
-                # The thesis's design: start at the default, sweep ONE factor, keep its best,
-                # move to the next factor. Exactly one coordinate changes per proposal.
-                current = dict(DEFAULT)
-                order = list(FACTOR_NAMES)
-                proposals = []
-                for name in order:
-                    for level in FACTORS[name]:
-                        proposals.append(dict(current, **{name: level}))
-                    # keep the best of that factor before moving on -- resolved lazily below
-                    proposals.append(("__commit__", name))
-                queue = proposals
+            # The thesis's design, generated LAZILY from the incumbent: sweep one factor's
+            # levels, commit its best, move to the next. Proposals must be built against the
+            # CURRENT incumbent -- precomputing them makes later proposals differ in more than
+            # one coordinate, which is not OFAT at all (f2 caught exactly that).
+            current, fi, li = dict(DEFAULT), 0, 0
+            factor_best: tuple[float, dict] | None = None
             for step in range(args.budget):
                 if strategy == "random":
                     idx = int(rng.integers(0, n_cfg))
                 elif strategy == "ofat":
-                    while queue and isinstance(queue[0], tuple):
-                        _, name = queue.pop(0)
-                        pool = [(values[CONFIGS.index(c)], c) for c in
-                                (dict(current, **{name: lv}) for lv in FACTORS[name])]
-                        current = max(pool, key=lambda t: t[0])[1]
-                    if not queue:
-                        idx = CONFIGS.index(current)
+                    if fi >= len(FACTOR_NAMES):
+                        idx = CONFIGS.index(current)          # design exhausted: re-run the best
                     else:
-                        cand = queue.pop(0)
-                        ofat_steps.append(sum(1 for n in FACTOR_NAMES
-                                              if cand[n] != current[n]))
+                        name = FACTOR_NAMES[fi]
+                        cand = dict(current, **{name: FACTORS[name][li]})
+                        ofat_steps.append(sum(1 for n in FACTOR_NAMES if cand[n] != current[n]))
                         idx = CONFIGS.index(cand)
+                        value_here = values[idx]
+                        if factor_best is None or value_here > factor_best[0]:
+                            factor_best = (value_here, cand)
+                        li += 1
+                        if li >= len(FACTORS[name]):          # commit this factor and advance
+                            current, fi, li = factor_best[1], fi + 1, 0
+                            factor_best = None
                 else:
                     unseen = [i for i in range(n_cfg) if i not in seen]
                     if not unseen:
