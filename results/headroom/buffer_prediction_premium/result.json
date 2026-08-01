@@ -1,0 +1,231 @@
+{
+ "buffer_levels": [
+  0.0,
+  84.0,
+  168.0,
+  252.0,
+  336.0,
+  420.0,
+  504.0,
+  588.0,
+  672.0,
+  756.0,
+  840.0,
+  924.0,
+  1008.0,
+  1092.0,
+  1176.0,
+  1260.0,
+  1344.0
+ ],
+ "cadence": "sim.run()",
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "NO_NEURAL_PREMIUM_EVEN_WITH_MEASURED_CURVATURE",
+ "contract_path": "docs/PREREGISTRO_PRIMA_PREDICCION_BUFFER_2026-08-01.md",
+ "contract_sha256": "ebb65c9c3043faa6363ddd1ee89fb523ef24b7d7a2f0571b46750f1996d766b7",
+ "created_at": "2026-08-01T20:29:37.760166+00:00",
+ "elapsed_seconds": 198.2067533750087,
+ "escalations": [
+  "base",
+  "freq_x3",
+  "freq_x5"
+ ],
+ "falsifiers": {
+  "all_passed": true,
+  "f1_the_surface_actually_has_curvature": {
+   "evidence": {
+    "by_cell": {
+     "R1r+R2r|base": 0.058695852081026345,
+     "R1r+R2r|freq_x3": 0.07859518560559065,
+     "R1r+R2r|freq_x5": 0.11087704201736692,
+     "R1r|base": 0.0839994670358698,
+     "R1r|freq_x3": 0.08328945100447582,
+     "R1r|freq_x5": 0.13428686933720857,
+     "R2r|base": 0.02388177309515338,
+     "R2r|freq_x3": 0.03708250294738924,
+     "R2r|freq_x5": 0.07562229166869239
+    },
+    "mean_one_minus_linear_r2": 0.07625893719919702,
+    "why_it_can_fail": "this is the PREMISE. Q1 already showed no premium on a near-linear surface; asking again on another linear surface would prove nothing. Recomputed here rather than trusting the G1 artifact"
+   },
+   "passed": true
+  },
+  "f2_no_driver_leakage": {
+   "evidence": {
+    "features": [
+     "buffer_hours/1344",
+     "R1r",
+     "R2r",
+     "R1r+R2r",
+     "base",
+     "freq_x3",
+     "freq_x5"
+    ],
+    "n_features": 7,
+    "why_it_can_fail": "a driver is a post-simulation quantity and the four sum to ReT exactly, so one of them in the features would hand over the answer"
+   },
+   "passed": true
+  },
+  "f3_folds_are_grouped_by_seed": {
+   "evidence": {
+    "n_folds": 5,
+    "n_seeds": 10,
+    "why_it_can_fail": "a seed in both train and test would let a model memorise that episode's noise and inflate every R2 including the linear one"
+   },
+   "passed": true
+  },
+  "f4_linear_baseline_is_not_a_straw_man": {
+   "evidence": {
+    "r2_constant": -0.0033610961798922643,
+    "r2_linear": 0.682606466674648,
+    "why_it_can_fail": "a premium over a badly fitted linear model would measure our own incompetence, not non-linearity"
+   },
+   "passed": true
+  },
+  "f5_sesoi_was_fixed_in_advance": {
+   "evidence": {
+    "sesoi": 0.05,
+    "source": "the same 0.05 preregistered for the Q1 surrogate",
+    "why_it_can_fail": "choosing the threshold after seeing the difference is how a negligible gain becomes a headline"
+   },
+   "passed": true
+  },
+  "f6_seeds_are_virgin": {
+   "evidence": {
+    "collisions": [],
+    "prior_seeds_scanned": 350,
+    "seeds": [
+     6800001,
+     6800002,
+     6800003,
+     6800004,
+     6800005,
+     6800006,
+     6800007,
+     6800008,
+     6800009,
+     6800010
+    ],
+    "why_it_can_fail": "reuse would void the comparison"
+   },
+   "passed": true
+  }
+ },
+ "families": [
+  "R1r",
+  "R2r",
+  "R1r+R2r"
+ ],
+ "held_out_r2_mean": {
+  "backprop": 0.5548262724413864,
+  "constant": -0.0033610961798922643,
+  "kan": 0.716317881832606,
+  "linear": 0.682606466674648
+ },
+ "held_out_r2_per_fold": {
+  "backprop": [
+   0.732677089882471,
+   0.48338623238276845,
+   0.7349267813458373,
+   0.5589299740352526,
+   0.26421128456060206
+  ],
+  "constant": [
+   -0.0034405377903328205,
+   -0.0010531549962282671,
+   -0.00761966402616987,
+   -0.0007925264430497236,
+   -0.003899597643680641
+  ],
+  "kan": [
+   0.8023991776908285,
+   0.4365162856230068,
+   0.7409704039520677,
+   0.84897908364166,
+   0.7527244582554676
+  ],
+  "linear": [
+   0.731174325224613,
+   0.6178977498291549,
+   0.6311761858379488,
+   0.7044514502964406,
+   0.7283326221850824
+  ]
+ },
+ "n_rows": 1530,
+ "paired_comparisons": {
+  "backprop": {
+   "ci95_high": 0.06011727794735067,
+   "ci95_low": -0.31567766641387396,
+   "mean_difference": -0.12778019423326165,
+   "n_folds": 5,
+   "passes_sesoi_and_ci": false,
+   "sd": 0.21436302071235958,
+   "sesoi": 0.05
+  },
+  "kan": {
+   "ci95_high": 0.14615793765068746,
+   "ci95_low": -0.07873510733477114,
+   "mean_difference": 0.03371141515795817,
+   "n_folds": 5,
+   "passes_sesoi_and_ci": false,
+   "sd": 0.12828472863632748,
+   "sesoi": 0.05
+  }
+ },
+ "profile_curvature": {
+  "by_cell": {
+   "R1r+R2r|base": 0.058695852081026345,
+   "R1r+R2r|freq_x3": 0.07859518560559065,
+   "R1r+R2r|freq_x5": 0.11087704201736692,
+   "R1r|base": 0.0839994670358698,
+   "R1r|freq_x3": 0.08328945100447582,
+   "R1r|freq_x5": 0.13428686933720857,
+   "R2r|base": 0.02388177309515338,
+   "R2r|freq_x3": 0.03708250294738924,
+   "R2r|freq_x5": 0.07562229166869239
+  },
+  "mean_one_minus_linear_r2": 0.07625893719919702
+ },
+ "q1_panel_reference": {
+  "backprop": 0.9863153335912018,
+  "kan": 0.9913280603236345,
+  "linear": 0.9697483885147611,
+  "note": "the near-linear surface this one is contrasted against"
+ },
+ "reference_path": "results/headroom/g1_buffer_price/result.json",
+ "reference_sha256": "b3cc51cc0e819bcf2ff976f8d5b05d6de8a618c77c6746326ca0be2f053d2b67",
+ "schema_version": "buffer_prediction_premium_v1",
+ "seeds": [
+  6800001,
+  6800002,
+  6800003,
+  6800004,
+  6800005,
+  6800006,
+  6800007,
+  6800008,
+  6800009,
+  6800010
+ ],
+ "self_sha256": "ae1a545bb4274e75859e6665ceacbe129d8683af0d05c025e8f5bdbddc5a787a",
+ "sesoi": 0.05,
+ "target": "ret_excel_risk_conditional"
+}
