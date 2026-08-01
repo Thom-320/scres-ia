@@ -1,7 +1,14 @@
-# Resultado — la prima **estaba disponible y las redes no la capturaron**
+# Resultado — margen **estimado pero no confirmado**, y ninguna red alcanza al clásico
+
+> **Corrección de titular 2026-08-01.** La primera versión se titulaba «la prima estaba
+> disponible y las redes no la capturaron». El `+0,0625` tiene IC95 **[−0,0606, +0,1856]**, que
+> **cruza el cero**: es un estimado puntual, no un hecho inferencial. Mi propio §2(d) ya lo
+> decía y el título lo contradecía. Lo defendible es: **margen disponible estimado, no
+> confirmado; ninguna red muestra evidencia de superar al baseline clásico.**
 
 **Artefacto:** `results/headroom/cd_surface_prediction_premium/result.json` (sello
-`527227bd96eb8d8d…`, `PREMIUM_WAS_AVAILABLE_AND_NOT_CAPTURED`) · falsadores vinculantes **PASAN**
+`527227bd96eb8d8d…`, `PREMIUM_WAS_AVAILABLE_AND_NOT_CAPTURED` — **etiqueta del runner que sobreafirma; léase
+«margen estimado, no confirmado»**) · falsadores vinculantes **PASAN**
 · 1.224 episodios · preregistro `docs/PREREGISTRO_PRIMA_CD_2026-08-01.md`.
 
 ## 1. Los números
@@ -23,9 +30,14 @@
 | KAN − primario | **−0,0287** | [−0,1048, +0,0473] |
 | backprop − primario | **−0,0465** | [−0,1388, +0,0459] |
 
-**Había margen por encima del SESOI (+0,0625 > 0,05) y las dos redes quedaron POR DEBAJO del
-baseline clásico.** Es el tercer desenlace del preregistro: **un resultado sobre las
-arquitecturas, no sobre el entorno**.
+**El estimado puntual del margen supera el SESOI (+0,0625 > 0,05) pero su IC cruza el cero**, así
+que **no se distingue estadísticamente de cero**. Lo que sí es robusto en dirección: **las dos
+redes quedan POR DEBAJO del baseline clásico**.
+
+**Y una limitación de contrato, señalada y aceptada:** el preregistro commiteado **no** contiene
+spline, CART, el baseline primario ni `f7`. Por tanto esta corrida es un **análisis ampliado y
+transparente**, no una confirmación estrictamente preregistrada. El preregistro antiguo **se
+conserva sin tocar**; una confirmación citable exigiría una **V2 preregistrada antes** de correr.
 
 ## 2. Cuatro límites que impongo al resultado
 

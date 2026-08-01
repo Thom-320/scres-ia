@@ -78,7 +78,8 @@ estaba presente. **Eso ya no es cierto y hay que leerlo con esta corrección.**
 | `flow_fill_rate` | **monótona** en las seis (empate a tres en `R1r\|base`) |
 | **`R_cobb_douglas`** | **máximo estrictamente interior** en `R1r\|base` y `R2r\|base` |
 
-**El mecanismo queda ESTABLECIDO por ablación completa** (`results/headroom/g1_ablation_ci_zero/result.json`).
+**El mecanismo queda APOYADO por ablación completa** (`CAUSAL_MECHANISM_SUPPORTED_DEVELOPMENT`,
+no «establecido para publicación») (`results/headroom/g1_ablation_ci_zero/result.json`).
 La revisión pedía exactamente esto y tenía razón en no aceptar el falsador local como prueba
 causal. Recorriendo el perfil entero con el coste de mantener a cero:
 
@@ -91,9 +92,20 @@ causal. Recorriendo el perfil entero con el coste de mantener a cero:
 ablación del `argmax`, no sólo del tamaño de la respuesta, y establece la causalidad: **el
 término de mantener en `κ` es lo que crea el óptimo interior**.
 
-El brazo de ablación sale como `HALTED_FALSIFIER_FAILED`, y **es lo correcto**: `f3` exige óptimo
-interior y en el control **debe** fallar. Un falsador que pasa en el tratamiento y falla en el
-control es la forma de validar una afirmación causal, no un defecto.
+El brazo de ablación sale como `HALTED_FALSIFIER_FAILED` por **dos** razones, y sólo una es
+esperable:
+
+* **`f3` falla, y debe fallar**: exige óptimo interior, y en el control negativo su fallo *es* el
+  resultado. Un falsador que pasa en tratamiento y falla en control valida una afirmación causal.
+* **`f7` falla porque el brazo REUTILIZA las semillas `6.700.001–06`** del brazo tratamiento. Eso
+  es deliberado —un contraste pareado con números aleatorios comunes es lo correcto para una
+  ablación— **pero no está declarado como tal**, así que el artefacto no pasa su propio contrato
+  de semillas vírgenes.
+
+**Consecuencia, aceptada:** el estado es `CAUSAL_MECHANISM_SUPPORTED_DEVELOPMENT`, **no**
+causalidad establecida para publicación. Para elevarlo hace falta **declarar formalmente el
+diseño pareado** y **separar los falsadores de tratamiento de los del control negativo**, de modo
+que un control no herede el contrato del tratamiento.
 
 **Y lo que G1 NO abre:** `H_regime = 0,000252`, dos órdenes bajo la barra. G1 abre una
 **superficie predictiva**, **no headroom de control**. El estado autorizado es
