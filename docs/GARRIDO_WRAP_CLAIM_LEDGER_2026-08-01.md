@@ -17,7 +17,7 @@ fuera de este artículo.
 | H1 original | `docs/RESULTADO_H1_H3_V2_2026-08-01.md` | `NO_EVALUABLE` | reportar la censura | llamarlo TTR medido |
 | H1′ | mismo artefacto | `DEVELOPMENT_SIGNAL` | reportar como `service_loss_auc` | equipararlo a H1 |
 | H2 | meta-aprendiz v1 retirado | `RETIRED_LEAKAGE` | conservar como historial | usar la curva antigua |
-| H3′ | `results/garrido_meta_learner_h3power_merge_v1/result.json` | `PENDING` | esperar merge de 120 semillas y varianza derivada | inferir desde las 12 exploratorias |
+| H3′ | `results/garrido_meta_learner_h3power_merge_v1/result.json` | `PENDING_SOURCE_AUDIT` | esperar merge de 120 semillas, varianza derivada y manifest de módulos | inferir desde las 12 exploratorias |
 | H4 | Q2 retained–reset | `PENDING_CONFIRMATION` | estimando declarado | usar `+6.31` antiguo |
 | PPO/RecurrentPPO de carriles previos | `docs/PAPER_FINDINGS_REGISTRY.md` y artefactos históricos | `RETIRED_CONTEXT_DRIFT` | conservar como historial metodológico | transferirlo al WRAP/DES corregido |
 | CSSU con acción muerta/fungible | resultados de preauditoría | `RETIRED_PHYSICS_OR_INTERFACE` | documentar qué fue corregido | llamarlo contención física validada |

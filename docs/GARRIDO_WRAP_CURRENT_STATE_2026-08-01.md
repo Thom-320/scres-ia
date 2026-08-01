@@ -25,7 +25,9 @@ carril separado y no aporta claims a este manuscrito.
 La corrida H3′ usa el runner corregido y semillas separadas. Al momento de este estado, los
 procesos local y VPS estaban activos y no habían escrito su `result.json`. No se duplican ni se
 interpretan hasta comprobar el hash del script, la disjunción de semillas y los falsadores de
-merge.
+merge. La inspección previa al cierre detectó además que el snapshot VPS tiene un
+`supply_chain/supply_chain.py` distinto al local y carece de `service_first_metric.py`; por eso
+el merge queda `HOLD_SOURCE_DRIFT` salvo que el manifest de módulos demuestre identidad.
 
 ## Cifras retiradas
 
