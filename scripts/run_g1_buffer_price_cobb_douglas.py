@@ -114,6 +114,10 @@ def main() -> int:
     ap.add_argument("--seeds", type=int, default=6)
     ap.add_argument("--horizon-weeks", type=int, default=52)
     ap.add_argument("--n-boot", type=int, default=5_000)
+    ap.add_argument("--holding-cost", type=float, default=None,
+                    help="override c_i. Setting it to 0 is the FULL ablation: if the strictly "
+                         "interior optimum survives with no holding cost, the cost is not what "
+                         "causes it and G1's mechanism claim fails")
     ap.add_argument("--output", type=Path,
                     default=Path("results/headroom/g1_buffer_price/result.json"))
     args = ap.parse_args()
@@ -126,7 +130,9 @@ def main() -> int:
     aggs: dict[tuple, list[dict]] = {}
     for name, (risks, mult) in reg.items():
         for buf in BUFFER_HOURS:
-            rows = [episode(risks, mult, buf, s, horizon) for s in seeds]
+            costs = (None if args.holding_cost is None
+                     else {**dict(UNIT_COSTS), "c_i": float(args.holding_cost)})
+            rows = [episode(risks, mult, buf, s, horizon, costs=costs) for s in seeds]
             panels[(name, buf)] = [r[0] for r in rows]
             aggs[(name, buf)] = [r[1] for r in rows]
         print(f"  {name} listo ({time.perf_counter() - started:.0f}s)", flush=True)
@@ -351,6 +357,9 @@ def main() -> int:
         "schema_version": "g1_buffer_price_v1",
         "claim_status": verdict if falsifiers["all_passed"] else "HALTED_FALSIFIER_FAILED",
         "generator": "G1_inventory_has_a_price",
+        "holding_cost_c_i": (float(args.holding_cost) if args.holding_cost is not None
+                             else UNIT_COSTS["c_i"]),
+        "arm": ("ablation_c_i_zero" if args.holding_cost == 0.0 else "shipped_costs"),
         "primary_metric": PRIMARY, "contrast_metric": CONTRAST,
         "buffer_hours": list(BUFFER_HOURS), "regimes": list(reg), "seeds": seeds,
         "step_hours": STEP,

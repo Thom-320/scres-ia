@@ -56,13 +56,57 @@ respuesta sea no lineal en las entradas que el aprendiz ve**. Eso no ocurre por 
 
 | generador | qué crea | ¿presente hoy? | por qué no |
 |---|---|---|---|
-| **G1 · óptimo interior con penalización a dos lados** | curvatura: poco **y** mucho hacen daño | ❌ | el inventario **no tiene coste**: más es débilmente mejor, así que la superficie es monótona |
+| **G1 · óptimo interior con penalización a dos lados** | curvatura: poco **y** mucho hacen daño | ✅ **MEDIDO 2026-08-01** | bajo `ret_excel` y fill, sí: **monótonas, saturan**. Bajo **Cobb-Douglas, NO**: óptimo **estrictamente interior** en `R1r\|base` y `R2r\|base` |
 | **G2 · umbral duro en el objetivo** | discontinuidad que un lineal no representa | ❌ | la rama de **autotomía** (`CTj ≤ LT`) está **muerta**: `delay = 54 > LT = 48`, 0 de 416 pedidos |
 | **G3 · asignación combinatoria (≥3 reclamantes no sustituibles)** | superficie tipo mochila | ❌ | sólo **2** CSSU, **simétricas** por construcción (hash 50/50) |
 | **G4 · observabilidad parcial con inferencia** | el mapa observación→acción es no lineal aunque el valor sea lineal en el estado | ❌ | el aprendiz ve `ρ` **directamente**; no hay nada que inferir |
 
 **Ésa es la explicación completa del `R² = 0,982`.** No es que las redes fallen: es que **no hay
 función no lineal que aprender**. Y decirlo así convierte un negativo en una caracterización.
+
+## 2bis. RECONCILIACIÓN 2026-08-01 — G1 ya no está ausente
+
+Este documento se escribió antes de correr G1 y decía que **ninguno** de los cuatro generadores
+estaba presente. **Eso ya no es cierto y hay que leerlo con esta corrección.**
+
+`results/headroom/g1_buffer_price/result.json` (sello `fd9e9ee5a959f56d…`,
+`G1_GENERATES_CURVATURE`, falsadores vinculantes `f1–f7` en PASA):
+
+| superficie | forma del perfil de buffer |
+|---|---|
+| `ret_excel_risk_conditional` | **monótona** en las seis celdas (satura, con empates) |
+| `flow_fill_rate` | **monótona** en las seis (empate a tres en `R1r\|base`) |
+| **`R_cobb_douglas`** | **máximo estrictamente interior** en `R1r\|base` y `R2r\|base` |
+
+**El mecanismo queda ESTABLECIDO por ablación completa** (`results/headroom/g1_ablation_ci_zero/result.json`).
+La revisión pedía exactamente esto y tenía razón en no aceptar el falsador local como prueba
+causal. Recorriendo el perfil entero con el coste de mantener a cero:
+
+| | óptimo estrictamente interior en |
+|---|---|
+| **con coste** (`c_i = 1`, lo embarcado) | `R1r\|base`, `R2r\|base` |
+| **sin coste** (`c_i = 0`) | **ninguno** — las seis celdas se van al extremo `1344` |
+
+**Quitar el coste de mantener destruye el máximo interior en todas las celdas.** Eso es la
+ablación del `argmax`, no sólo del tamaño de la respuesta, y establece la causalidad: **el
+término de mantener en `κ` es lo que crea el óptimo interior**.
+
+El brazo de ablación sale como `HALTED_FALSIFIER_FAILED`, y **es lo correcto**: `f3` exige óptimo
+interior y en el control **debe** fallar. Un falsador que pasa en el tratamiento y falla en el
+control es la forma de validar una afirmación causal, no un defecto.
+
+**Y lo que G1 NO abre:** `H_regime = 0,000252`, dos órdenes bajo la barra. G1 abre una
+**superficie predictiva**, **no headroom de control**. El estado autorizado es
+`PASS_FOR_PREDICTION_SCREEN`.
+
+**Tres afirmaciones de este documento quedan retiradas** por el G1 corregido y su revisión:
+
+* «ninguno de los cuatro generadores está presente» → **G1 sí**, bajo Cobb-Douglas;
+* «la curvatura está por debajo del ruido» → comparaba **falta de ajuste sobre medias** contra
+  **error predictivo sobre episodios**; escalas distintas, **retirada**;
+* «la primera curvatura del proyecto» → el barrido de contención ya tenía U (que resultaron ser
+  censura de `ret_excel`). Lo correcto: **la primera auditoría directa del perfil de
+  `op9_rations`**.
 
 ## 3. Los cuatro generadores, ordenados por coste y por probabilidad de funcionar
 
