@@ -42,10 +42,18 @@ def test_unused_share_can_be_reallocated_without_enlarging_pool():
 
 
 def test_invalid_action_and_negative_physics_are_rejected():
-    with pytest.raises(ValueError):
-        allocate_shared_capacity(
-            stock=1, daily_capacity=1, allocation_a=0.6, requested={"A": 1, "B": 1}
-        )
+    # A share off the three-point grid is now ACCEPTED: the grid was a resolution limit, not
+    # physics, and a share that tracks which unit is down cannot be expressed on three points.
+    off_grid = allocate_shared_capacity(
+        stock=1, daily_capacity=1, allocation_a=0.6, requested={"A": 1, "B": 1}
+    )
+    assert off_grid.total_dispatched <= off_grid.available + 1e-9
+    # Out of [0, 1] is still physics and is still rejected.
+    for bad in (-0.01, 1.01):
+        with pytest.raises(ValueError):
+            allocate_shared_capacity(
+                stock=1, daily_capacity=1, allocation_a=bad, requested={"A": 1, "B": 1}
+            )
     with pytest.raises(ValueError):
         allocate_shared_capacity(
             stock=-1, daily_capacity=1, allocation_a=0.5, requested={"A": 1, "B": 1}

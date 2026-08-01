@@ -12,8 +12,19 @@ from typing import Mapping
 
 
 CSSU_IDS = ("A", "B")
+# The three thesis-aligned static levels. They remain the DEFAULT grid, but they are no longer
+# the only admissible values: `validate_allocation_a` accepts the whole interval, because a
+# three-point grid cannot express an allocation that tracks which unit is currently down.
 ALLOCATION_LEVELS = (0.25, 0.50, 0.75)
 SERVICE_RULES = ("SPT_FULL", "FIFO_PARTIAL", "R24_AGE_PARTIAL")
+
+
+def validate_allocation_a(value: float) -> float:
+    """Accept any share in [0, 1]; the old membership test was a resolution limit, not physics."""
+    share = float(value)
+    if not 0.0 <= share <= 1.0:
+        raise ValueError(f"allocation_a must lie in [0, 1]; got {share!r}")
+    return share
 
 
 @dataclass(frozen=True)
@@ -48,9 +59,16 @@ def allocate_shared_capacity(
     destination cannot use its share, spare capacity may be assigned to unmet
     demand at the other destination.  This prevents intentional idling from
     masquerading as an allocation benefit.
+
+    `reallocate_unused` is the FUNGIBILITY control, and it is the mechanism knob rather than a
+    convenience.  With it True the pool is effectively fungible: whatever one destination cannot
+    take flows to the other, so the share barely binds.  With it False the shares are hard and
+    the resource is non-fungible.  Program O measured H_PI = 0.1515 under a non-fungible share
+    and EXACTLY 0 once the same resource was made fungible, so this flag decides whether there
+    is a contention problem at all.  It stays True by default: that is the shipped behaviour and
+    every prior artifact was produced under it.
     """
-    if allocation_a not in ALLOCATION_LEVELS:
-        raise ValueError(f"allocation_a must be one of {ALLOCATION_LEVELS}")
+    allocation_a = validate_allocation_a(allocation_a)
     if stock < 0 or daily_capacity < 0:
         raise ValueError("stock and daily_capacity must be non-negative")
     demand = {cssu: float(requested.get(cssu, 0.0)) for cssu in CSSU_IDS}

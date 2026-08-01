@@ -27,6 +27,7 @@ from .cssu_allocation import (
     SERVICE_RULES,
     allocate_shared_capacity,
     stable_cssu_destination,
+    validate_allocation_a,
 )
 
 from .config import (
@@ -278,6 +279,11 @@ class MFSCSimulation:
         cssu_allocation_a: float = 0.50,
         cssu_service_rule: str = "SPT_FULL",
         cssu_daily_capacity: Optional[float] = None,
+        # The fungibility control. True (the shipped default, under which every prior artifact
+        # was produced) lets a destination's unused share flow to the other, which makes the
+        # pool effectively fungible and the share nearly moot. False makes the shares hard.
+        # See `cssu_allocation.allocate_shared_capacity` for why this is the mechanism knob.
+        cssu_reallocate_unused: bool = True,
         op8_dispatch_mode: str = "thesis_full_batch",
         op8_convoy_capacity: float = 5_000.0,
         op8_convoy_outbound_hours: float = 24.0,
@@ -410,10 +416,7 @@ class MFSCSimulation:
             raise ValueError(
                 "cssu_topology_mode must be 'aggregate' or 'split_v1'."
             )
-        if float(cssu_allocation_a) not in ALLOCATION_LEVELS:
-            raise ValueError(
-                f"cssu_allocation_a must be one of {ALLOCATION_LEVELS}."
-            )
+        cssu_allocation_a = validate_allocation_a(cssu_allocation_a)
         if cssu_service_rule not in SERVICE_RULES:
             raise ValueError(f"cssu_service_rule must be one of {SERVICE_RULES}.")
         if cssu_daily_capacity is not None and float(cssu_daily_capacity) <= 0:
@@ -479,6 +482,7 @@ class MFSCSimulation:
         self.cssu_daily_capacity_override = (
             None if cssu_daily_capacity is None else float(cssu_daily_capacity)
         )
+        self.cssu_reallocate_unused = bool(cssu_reallocate_unused)
         self._pending_cssu_action: Optional[dict[str, Any]] = None
         self.cssu_action_events: list[dict[str, Any]] = []
         self.cssu_demand_events: list[tuple[float, str, float]] = []
@@ -4664,9 +4668,7 @@ class MFSCSimulation:
         Static frontier policies are configured in the constructor and require
         no runtime mutation.
         """
-        allocation_a = float(allocation_a)
-        if allocation_a not in ALLOCATION_LEVELS:
-            raise ValueError(f"allocation_a must be one of {ALLOCATION_LEVELS}")
+        allocation_a = validate_allocation_a(allocation_a)
         if service_rule not in SERVICE_RULES:
             raise ValueError(f"service_rule must be one of {SERVICE_RULES}")
         if activation_delay_hours < 0:
@@ -4822,10 +4824,18 @@ class MFSCSimulation:
                     "A" if self._cssu_daily_allocation_draw() < self.cssu_allocation_a
                     else "B"
                 )
-                selected = preferred if preferred in candidates else candidates[0]
-                selected_qty = float(queues[selected][0].remaining_qty)
+                # Falling back to the other destination is the SPT_FULL form of making the lane
+                # fungible, so it obeys the same flag as the partial rules. Without this the
+                # control would only bite on two of the three service rules.
+                if preferred in candidates:
+                    selected = preferred
+                elif self.cssu_reallocate_unused:
+                    selected = candidates[0]
+                else:
+                    selected = None
                 budgets = {"A": 0.0, "B": 0.0}
-                budgets[selected] = selected_qty
+                if selected is not None:
+                    budgets[selected] = float(queues[selected][0].remaining_qty)
             else:
                 budgets = {"A": 0.0, "B": 0.0}
         else:
@@ -4834,7 +4844,7 @@ class MFSCSimulation:
                 daily_capacity=self._cssu_daily_capacity(),
                 allocation_a=self.cssu_allocation_a,
                 requested=requested,
-                reallocate_unused=True,
+                reallocate_unused=self.cssu_reallocate_unused,
             )
             # V1-A audit: the split is live only when both destinations exhaust
             # their nominal shares. Preserve this diagnostic for state sampling.
