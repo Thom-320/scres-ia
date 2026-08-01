@@ -1,0 +1,488 @@
+{
+ "by_rule": {
+  "FIFO_PARTIAL": 0.7307881181056547,
+  "R24_AGE_PARTIAL": 0.7291630007046165,
+  "SPT_FULL": 0.0
+ },
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "CSSU_ACTUATOR_SCOPE_DECLARED",
+ "contract_path": "docs/PREREGISTRO_CONTENCION_HEADROOM_2026-07-31.md",
+ "contract_sha256": "d8b477d345353f562a530c184e5ee5353fdef132d5257f1e5bda491f48800a4b",
+ "created_at": "2026-08-01T19:28:45.685160+00:00",
+ "elapsed_seconds": 32.715144374989904,
+ "falsifiers": {
+  "all_passed": true,
+  "f1_liveness_is_recorded_at_all": {
+   "evidence": {
+    "min_epochs_observed": 293.1666666666667,
+    "why_it_can_fail": "zero epochs classified would mean the counter never ran and every fraction below is 0/0"
+   },
+   "passed": true
+  },
+  "f2_the_actuator_is_neither_dead_nor_always_on": {
+   "evidence": {
+    "by_rule": {
+     "FIFO_PARTIAL": 0.7307881181056547,
+     "R24_AGE_PARTIAL": 0.7291630007046165,
+     "SPT_FULL": 0.0
+    },
+    "overall_live_fraction": 0.48665037293675706,
+    "why_it_can_fail": "an actuator live in no epoch has nothing to set; one live in every epoch regardless of the share is not an actuator whose SETTING can be learned. Either way there is nothing for a learner to capture, neural or linear"
+   },
+   "passed": true
+  },
+  "f3_liveness_responds_to_the_share": {
+   "evidence": {
+    "max_spread_across_shares": 0.5291454305787915,
+    "spread_by_cell": {
+     "FIFO_PARTIAL|fungible=False|R1r+R2r": 0.4909254812776659,
+     "FIFO_PARTIAL|fungible=False|R2r": 0.5248995536429675,
+     "FIFO_PARTIAL|fungible=True|R1r+R2r": 0.35845715486575014,
+     "FIFO_PARTIAL|fungible=True|R2r": 0.4132225485049136,
+     "R24_AGE_PARTIAL|fungible=False|R1r+R2r": 0.49466752823245697,
+     "R24_AGE_PARTIAL|fungible=False|R2r": 0.5291454305787915,
+     "R24_AGE_PARTIAL|fungible=True|R1r+R2r": 0.3591192224130193,
+     "R24_AGE_PARTIAL|fungible=True|R2r": 0.4132225485049136,
+     "SPT_FULL|fungible=False|R1r+R2r": 0.0,
+     "SPT_FULL|fungible=False|R2r": 0.0,
+     "SPT_FULL|fungible=True|R1r+R2r": 0.0,
+     "SPT_FULL|fungible=True|R2r": 0.0
+    },
+    "why_it_can_fail": "if the live fraction is flat in the share, the lever cannot change how often it matters and its value surface is that much flatter"
+   },
+   "passed": true
+  },
+  "f4_seeds_are_virgin": {
+   "evidence": {
+    "seeds": [
+     6600001,
+     6600002,
+     6600003,
+     6600004,
+     6600005,
+     6600006
+    ],
+    "why_it_can_fail": "reuse would void the scope declaration"
+   },
+   "passed": true
+  }
+ },
+ "live_fraction_spread_across_shares": {
+  "FIFO_PARTIAL|fungible=False|R1r+R2r": 0.4909254812776659,
+  "FIFO_PARTIAL|fungible=False|R2r": 0.5248995536429675,
+  "FIFO_PARTIAL|fungible=True|R1r+R2r": 0.35845715486575014,
+  "FIFO_PARTIAL|fungible=True|R2r": 0.4132225485049136,
+  "R24_AGE_PARTIAL|fungible=False|R1r+R2r": 0.49466752823245697,
+  "R24_AGE_PARTIAL|fungible=False|R2r": 0.5291454305787915,
+  "R24_AGE_PARTIAL|fungible=True|R1r+R2r": 0.3591192224130193,
+  "R24_AGE_PARTIAL|fungible=True|R2r": 0.4132225485049136,
+  "SPT_FULL|fungible=False|R1r+R2r": 0.0,
+  "SPT_FULL|fungible=False|R2r": 0.0,
+  "SPT_FULL|fungible=True|R1r+R2r": 0.0,
+  "SPT_FULL|fungible=True|R2r": 0.0
+ },
+ "overall_live_fraction": 0.48665037293675706,
+ "reference_path": "results/metric_audit/contention_service_first_v2/result.json",
+ "reference_sha256": "9e4b7bceaac1c5a0a619d688333a1939c6993ada0aacc35a901d75c08ca3192d",
+ "regimes": [
+  "R2r",
+  "R1r+R2r"
+ ],
+ "schema_version": "cssu_liveness_scope_v1",
+ "scope_statement": "the CSSU allocation lever is an actuator only in the fraction of dispatch epochs reported here; every headroom result on this lever is bounded by it",
+ "seeds": [
+  6600001,
+  6600002,
+  6600003,
+  6600004,
+  6600005,
+  6600006
+ ],
+ "self_sha256": "5f9e89dafb5bab87c94b0e2f0802ba7eca1088a476b7d13fbc5433b07ada607d",
+ "shares": [
+  0.1,
+  0.3,
+  0.5,
+  0.7,
+  0.9
+ ],
+ "table": {
+  "FIFO_PARTIAL|fungible=False|R1r+R2r|a=0.1": {
+   "live": 165.5,
+   "live_fraction": 0.5329603474558718,
+   "moot": 145.0,
+   "total": 310.5
+  },
+  "FIFO_PARTIAL|fungible=False|R1r+R2r|a=0.3": {
+   "live": 225.33333333333334,
+   "live_fraction": 0.742209401727655,
+   "moot": 78.16666666666667,
+   "total": 303.5
+  },
+  "FIFO_PARTIAL|fungible=False|R1r+R2r|a=0.5": {
+   "live": 294.1666666666667,
+   "live_fraction": 1.0,
+   "moot": 0.0,
+   "total": 294.1666666666667
+  },
+  "FIFO_PARTIAL|fungible=False|R1r+R2r|a=0.7": {
+   "live": 223.0,
+   "live_fraction": 0.7339911228803947,
+   "moot": 82.83333333333333,
+   "total": 305.8333333333333
+  },
+  "FIFO_PARTIAL|fungible=False|R1r+R2r|a=0.9": {
+   "live": 158.0,
+   "live_fraction": 0.5090745187223341,
+   "moot": 153.66666666666666,
+   "total": 311.6666666666667
+  },
+  "FIFO_PARTIAL|fungible=False|R2r|a=0.1": {
+   "live": 166.16666666666666,
+   "live_fraction": 0.5310355724158572,
+   "moot": 147.16666666666666,
+   "total": 313.3333333333333
+  },
+  "FIFO_PARTIAL|fungible=False|R2r|a=0.3": {
+   "live": 230.83333333333334,
+   "live_fraction": 0.7493561277287958,
+   "moot": 77.66666666666667,
+   "total": 308.5
+  },
+  "FIFO_PARTIAL|fungible=False|R2r|a=0.5": {
+   "live": 302.6666666666667,
+   "live_fraction": 1.0,
+   "moot": 0.0,
+   "total": 302.6666666666667
+  },
+  "FIFO_PARTIAL|fungible=False|R2r|a=0.7": {
+   "live": 203.83333333333334,
+   "live_fraction": 0.6545761380616585,
+   "moot": 108.16666666666667,
+   "total": 312.0
+  },
+  "FIFO_PARTIAL|fungible=False|R2r|a=0.9": {
+   "live": 150.5,
+   "live_fraction": 0.4751004463570325,
+   "moot": 166.83333333333334,
+   "total": 317.3333333333333
+  },
+  "FIFO_PARTIAL|fungible=True|R1r+R2r|a=0.1": {
+   "live": 188.5,
+   "live_fraction": 0.6417192893149598,
+   "moot": 105.16666666666667,
+   "total": 293.6666666666667
+  },
+  "FIFO_PARTIAL|fungible=True|R1r+R2r|a=0.3": {
+   "live": 242.0,
+   "live_fraction": 0.8236200394598522,
+   "moot": 51.666666666666664,
+   "total": 293.6666666666667
+  },
+  "FIFO_PARTIAL|fungible=True|R1r+R2r|a=0.5": {
+   "live": 294.1666666666667,
+   "live_fraction": 1.0,
+   "moot": 0.0,
+   "total": 294.1666666666667
+  },
+  "FIFO_PARTIAL|fungible=True|R1r+R2r|a=0.7": {
+   "live": 241.33333333333334,
+   "live_fraction": 0.8246362015393961,
+   "moot": 52.0,
+   "total": 293.3333333333333
+  },
+  "FIFO_PARTIAL|fungible=True|R1r+R2r|a=0.9": {
+   "live": 188.33333333333334,
+   "live_fraction": 0.6415428451342499,
+   "moot": 105.83333333333333,
+   "total": 294.1666666666667
+  },
+  "FIFO_PARTIAL|fungible=True|R2r|a=0.1": {
+   "live": 188.0,
+   "live_fraction": 0.6235892114727766,
+   "moot": 113.66666666666667,
+   "total": 301.6666666666667
+  },
+  "FIFO_PARTIAL|fungible=True|R2r|a=0.3": {
+   "live": 241.16666666666666,
+   "live_fraction": 0.8001399161854756,
+   "moot": 60.5,
+   "total": 301.6666666666667
+  },
+  "FIFO_PARTIAL|fungible=True|R2r|a=0.5": {
+   "live": 302.6666666666667,
+   "live_fraction": 1.0,
+   "moot": 0.0,
+   "total": 302.6666666666667
+  },
+  "FIFO_PARTIAL|fungible=True|R2r|a=0.7": {
+   "live": 225.33333333333334,
+   "live_fraction": 0.7454337321616968,
+   "moot": 77.33333333333333,
+   "total": 302.6666666666667
+  },
+  "FIFO_PARTIAL|fungible=True|R2r|a=0.9": {
+   "live": 177.5,
+   "live_fraction": 0.5867774514950864,
+   "moot": 125.33333333333333,
+   "total": 302.8333333333333
+  },
+  "R24_AGE_PARTIAL|fungible=False|R1r+R2r|a=0.1": {
+   "live": 163.16666666666666,
+   "live_fraction": 0.5249868442350271,
+   "moot": 147.5,
+   "total": 310.6666666666667
+  },
+  "R24_AGE_PARTIAL|fungible=False|R1r+R2r|a=0.3": {
+   "live": 224.16666666666666,
+   "live_fraction": 0.7381251326184016,
+   "moot": 79.33333333333333,
+   "total": 303.5
+  },
+  "R24_AGE_PARTIAL|fungible=False|R1r+R2r|a=0.5": {
+   "live": 293.5,
+   "live_fraction": 1.0,
+   "moot": 0.0,
+   "total": 293.5
+  },
+  "R24_AGE_PARTIAL|fungible=False|R1r+R2r|a=0.7": {
+   "live": 222.0,
+   "live_fraction": 0.7309606881198634,
+   "moot": 83.66666666666667,
+   "total": 305.6666666666667
+  },
+  "R24_AGE_PARTIAL|fungible=False|R1r+R2r|a=0.9": {
+   "live": 156.83333333333334,
+   "live_fraction": 0.505332471767543,
+   "moot": 154.83333333333334,
+   "total": 311.6666666666667
+  },
+  "R24_AGE_PARTIAL|fungible=False|R2r|a=0.1": {
+   "live": 164.5,
+   "live_fraction": 0.5260003225410927,
+   "moot": 148.66666666666666,
+   "total": 313.1666666666667
+  },
+  "R24_AGE_PARTIAL|fungible=False|R2r|a=0.3": {
+   "live": 231.0,
+   "live_fraction": 0.749019753420631,
+   "moot": 77.83333333333333,
+   "total": 308.8333333333333
+  },
+  "R24_AGE_PARTIAL|fungible=False|R2r|a=0.5": {
+   "live": 303.0,
+   "live_fraction": 1.0,
+   "moot": 0.0,
+   "total": 303.0
+  },
+  "R24_AGE_PARTIAL|fungible=False|R2r|a=0.7": {
+   "live": 205.0,
+   "live_fraction": 0.6583318844403557,
+   "moot": 107.0,
+   "total": 312.0
+  },
+  "R24_AGE_PARTIAL|fungible=False|R2r|a=0.9": {
+   "live": 149.16666666666666,
+   "live_fraction": 0.47085456942120857,
+   "moot": 168.16666666666666,
+   "total": 317.3333333333333
+  },
+  "R24_AGE_PARTIAL|fungible=True|R1r+R2r|a=0.1": {
+   "live": 188.5,
+   "live_fraction": 0.6409037063535122,
+   "moot": 105.5,
+   "total": 294.0
+  },
+  "R24_AGE_PARTIAL|fungible=True|R1r+R2r|a=0.3": {
+   "live": 240.33333333333334,
+   "live_fraction": 0.8190885776749046,
+   "moot": 52.833333333333336,
+   "total": 293.1666666666667
+  },
+  "R24_AGE_PARTIAL|fungible=True|R1r+R2r|a=0.5": {
+   "live": 293.5,
+   "live_fraction": 1.0,
+   "moot": 0.0,
+   "total": 293.5
+  },
+  "R24_AGE_PARTIAL|fungible=True|R1r+R2r|a=0.7": {
+   "live": 240.16666666666666,
+   "live_fraction": 0.8207377723018788,
+   "moot": 53.166666666666664,
+   "total": 293.3333333333333
+  },
+  "R24_AGE_PARTIAL|fungible=True|R1r+R2r|a=0.9": {
+   "live": 188.16666666666666,
+   "live_fraction": 0.6408807775869807,
+   "moot": 106.0,
+   "total": 294.1666666666667
+  },
+  "R24_AGE_PARTIAL|fungible=True|R2r|a=0.1": {
+   "live": 187.5,
+   "live_fraction": 0.6225038226034566,
+   "moot": 113.83333333333333,
+   "total": 301.3333333333333
+  },
+  "R24_AGE_PARTIAL|fungible=True|R2r|a=0.3": {
+   "live": 242.83333333333334,
+   "live_fraction": 0.8026038083321829,
+   "moot": 60.0,
+   "total": 302.8333333333333
+  },
+  "R24_AGE_PARTIAL|fungible=True|R2r|a=0.5": {
+   "live": 303.0,
+   "live_fraction": 1.0,
+   "moot": 0.0,
+   "total": 303.0
+  },
+  "R24_AGE_PARTIAL|fungible=True|R2r|a=0.7": {
+   "live": 225.16666666666666,
+   "live_fraction": 0.7461524311802056,
+   "moot": 77.0,
+   "total": 302.1666666666667
+  },
+  "R24_AGE_PARTIAL|fungible=True|R2r|a=0.9": {
+   "live": 177.5,
+   "live_fraction": 0.5867774514950864,
+   "moot": 125.33333333333333,
+   "total": 302.8333333333333
+  },
+  "SPT_FULL|fungible=False|R1r+R2r|a=0.1": {
+   "live": 0.0,
+   "live_fraction": 0.0,
+   "moot": 317.6666666666667,
+   "total": 317.6666666666667
+  },
+  "SPT_FULL|fungible=False|R1r+R2r|a=0.3": {
+   "live": 0.0,
+   "live_fraction": 0.0,
+   "moot": 317.6666666666667,
+   "total": 317.6666666666667
+  },
+  "SPT_FULL|fungible=False|R1r+R2r|a=0.5": {
+   "live": 0.0,
+   "live_fraction": 0.0,
+   "moot": 317.6666666666667,
+   "total": 317.6666666666667
+  },
+  "SPT_FULL|fungible=False|R1r+R2r|a=0.7": {
+   "live": 0.0,
+   "live_fraction": 0.0,
+   "moot": 317.6666666666667,
+   "total": 317.6666666666667
+  },
+  "SPT_FULL|fungible=False|R1r+R2r|a=0.9": {
+   "live": 0.0,
+   "live_fraction": 0.0,
+   "moot": 317.6666666666667,
+   "total": 317.6666666666667
+  },
+  "SPT_FULL|fungible=False|R2r|a=0.1": {
+   "live": 0.0,
+   "live_fraction": 0.0,
+   "moot": 319.0,
+   "total": 319.0
+  },
+  "SPT_FULL|fungible=False|R2r|a=0.3": {
+   "live": 0.0,
+   "live_fraction": 0.0,
+   "moot": 319.0,
+   "total": 319.0
+  },
+  "SPT_FULL|fungible=False|R2r|a=0.5": {
+   "live": 0.0,
+   "live_fraction": 0.0,
+   "moot": 319.0,
+   "total": 319.0
+  },
+  "SPT_FULL|fungible=False|R2r|a=0.7": {
+   "live": 0.0,
+   "live_fraction": 0.0,
+   "moot": 319.0,
+   "total": 319.0
+  },
+  "SPT_FULL|fungible=False|R2r|a=0.9": {
+   "live": 0.0,
+   "live_fraction": 0.0,
+   "moot": 319.0,
+   "total": 319.0
+  },
+  "SPT_FULL|fungible=True|R1r+R2r|a=0.1": {
+   "live": 0.0,
+   "live_fraction": 0.0,
+   "moot": 317.6666666666667,
+   "total": 317.6666666666667
+  },
+  "SPT_FULL|fungible=True|R1r+R2r|a=0.3": {
+   "live": 0.0,
+   "live_fraction": 0.0,
+   "moot": 317.6666666666667,
+   "total": 317.6666666666667
+  },
+  "SPT_FULL|fungible=True|R1r+R2r|a=0.5": {
+   "live": 0.0,
+   "live_fraction": 0.0,
+   "moot": 317.6666666666667,
+   "total": 317.6666666666667
+  },
+  "SPT_FULL|fungible=True|R1r+R2r|a=0.7": {
+   "live": 0.0,
+   "live_fraction": 0.0,
+   "moot": 317.6666666666667,
+   "total": 317.6666666666667
+  },
+  "SPT_FULL|fungible=True|R1r+R2r|a=0.9": {
+   "live": 0.0,
+   "live_fraction": 0.0,
+   "moot": 317.6666666666667,
+   "total": 317.6666666666667
+  },
+  "SPT_FULL|fungible=True|R2r|a=0.1": {
+   "live": 0.0,
+   "live_fraction": 0.0,
+   "moot": 319.0,
+   "total": 319.0
+  },
+  "SPT_FULL|fungible=True|R2r|a=0.3": {
+   "live": 0.0,
+   "live_fraction": 0.0,
+   "moot": 319.0,
+   "total": 319.0
+  },
+  "SPT_FULL|fungible=True|R2r|a=0.5": {
+   "live": 0.0,
+   "live_fraction": 0.0,
+   "moot": 319.0,
+   "total": 319.0
+  },
+  "SPT_FULL|fungible=True|R2r|a=0.7": {
+   "live": 0.0,
+   "live_fraction": 0.0,
+   "moot": 319.0,
+   "total": 319.0
+  },
+  "SPT_FULL|fungible=True|R2r|a=0.9": {
+   "live": 0.0,
+   "live_fraction": 0.0,
+   "moot": 319.0,
+   "total": 319.0
+  }
+ }
+}

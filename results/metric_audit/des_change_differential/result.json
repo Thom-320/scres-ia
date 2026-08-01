@@ -1,0 +1,206 @@
+{
+ "baseline_commit": "d89f6d2",
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "cells": 30,
+ "claim_status": "DES_CHANGES_ARE_BEHAVIOURALLY_INERT",
+ "configs": [
+  {
+   "name": "aggregate_S1_R1r",
+   "risks": [
+    "R11",
+    "R12",
+    "R13",
+    "R14"
+   ],
+   "shifts": 1
+  },
+  {
+   "name": "aggregate_S1_R2r",
+   "risks": [
+    "R21",
+    "R22",
+    "R23",
+    "R24"
+   ],
+   "shifts": 1
+  },
+  {
+   "name": "aggregate_S2_both",
+   "risks": [
+    "R11",
+    "R12",
+    "R13",
+    "R14",
+    "R21",
+    "R22",
+    "R23",
+    "R24"
+   ],
+   "shifts": 2
+  },
+  {
+   "name": "aggregate_S3_R2r",
+   "risks": [
+    "R21",
+    "R22",
+    "R23",
+    "R24"
+   ],
+   "shifts": 3
+  },
+  {
+   "allocation": 0.25,
+   "name": "split_a25_SPT",
+   "risks": [
+    "R21",
+    "R22",
+    "R23",
+    "R24"
+   ],
+   "rule": "SPT_FULL",
+   "shifts": 1,
+   "topology": "split_v1"
+  },
+  {
+   "allocation": 0.5,
+   "name": "split_a50_SPT",
+   "risks": [
+    "R21",
+    "R22",
+    "R23",
+    "R24"
+   ],
+   "rule": "SPT_FULL",
+   "shifts": 1,
+   "topology": "split_v1"
+  },
+  {
+   "allocation": 0.75,
+   "name": "split_a75_SPT",
+   "risks": [
+    "R21",
+    "R22",
+    "R23",
+    "R24"
+   ],
+   "rule": "SPT_FULL",
+   "shifts": 1,
+   "topology": "split_v1"
+  },
+  {
+   "allocation": 0.25,
+   "name": "split_a25_FIFO",
+   "risks": [
+    "R21",
+    "R22",
+    "R23",
+    "R24"
+   ],
+   "rule": "FIFO_PARTIAL",
+   "shifts": 1,
+   "topology": "split_v1"
+  },
+  {
+   "allocation": 0.5,
+   "name": "split_a50_R24AGE",
+   "risks": [
+    "R11",
+    "R12",
+    "R13",
+    "R14"
+   ],
+   "rule": "R24_AGE_PARTIAL",
+   "shifts": 1,
+   "topology": "split_v1"
+  },
+  {
+   "allocation": 0.75,
+   "name": "split_a75_FIFO_both",
+   "risks": [
+    "R11",
+    "R12",
+    "R13",
+    "R14",
+    "R21",
+    "R22",
+    "R23",
+    "R24"
+   ],
+   "rule": "FIFO_PARTIAL",
+   "shifts": 2,
+   "topology": "split_v1"
+  }
+ ],
+ "contract_path": "scripts/reattest_source_pins.py",
+ "contract_sha256": "2deaf499bbdce1a5b31ada7d1081e57f798983fde72558ddc11644c001741bdd",
+ "created_at": "2026-08-01T19:26:51.147879+00:00",
+ "differences": [],
+ "elapsed_seconds": 2.2614481250056997,
+ "falsifiers": {
+  "all_passed": true,
+  "f1_no_metric_moved": {
+   "evidence": {
+    "cells": 30,
+    "comparisons": 1830,
+    "differences": [],
+    "metrics_per_cell": 61,
+    "n_differences": 0,
+    "why_it_can_fail": "a single differing metric on a single configuration invalidates every artifact sealed before the change; this is the whole probe"
+   },
+   "passed": true
+  },
+  "f2_the_two_trees_really_differ": {
+   "evidence": {
+    "baseline_commit": "d89f6d2",
+    "baseline_tree": "/private/tmp/claude-501/-Users-thom-Projects-research-scres-ia/091a3905-ebf9-481b-beaa-fc646c3902d5/scratchpad/pre_des",
+    "current_tree": "/Users/thom/Projects/research/scres-ia",
+    "why_it_can_fail": "comparing a tree with itself would pass vacuously, which is the failure mode I have hit twice this week"
+   },
+   "passed": true
+  },
+  "f3_coverage_includes_the_changed_paths": {
+   "evidence": {
+    "allocation_levels": [
+     0.25,
+     0.5,
+     0.75
+    ],
+    "service_rules_covered": [
+     "FIFO_PARTIAL",
+     "R24_AGE_PARTIAL",
+     "SPT_FULL"
+    ],
+    "why_it_can_fail": "a probe that never exercises split_v1 or the three service rules would miss exactly the code that changed"
+   },
+   "passed": true
+  }
+ },
+ "metrics_per_cell": 61,
+ "n_differences": 0,
+ "reference_path": "results/metric_audit/service_first_v2/result.json",
+ "reference_sha256": "0e37fe2faa3fd695452b7ea5cd0f68543e6e814a1972989598c33ee79b69ea76",
+ "schema_version": "des_change_differential_v1",
+ "seeds": [
+  6500001,
+  6500002,
+  6500003
+ ],
+ "self_sha256": "335ca8c812483917730096a8849472bd3ea36512190194f0d4e4631a1d0d4ca6"
+}
