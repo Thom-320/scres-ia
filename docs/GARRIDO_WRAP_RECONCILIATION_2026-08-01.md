@@ -100,7 +100,7 @@ contract if its timing changes.
 
 ## 5. Next artifacts
 
-- corrected 288 VPS result: `results/garrido_meta_learner_v2_corrected/result.json`;
+- corrected 288 DES result: `results/garrido_q2_des288_v1/result.json`;
 - thesis-native 90-configuration search result: `results/garrido_meta_learner_thesis90_v2/result.json`;
 - separate 288-configuration extended search result;
 - CSSU physical Op11 timing addendum or explicit no-go;

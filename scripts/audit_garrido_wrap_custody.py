@@ -107,6 +107,13 @@ def build_manifest() -> dict[str, object]:
                 allowed_use="E1 boundary result; no MLP/PPO training authorization",
             ),
             record(
+                artifact="results/garrido_q2_des288_v1/result.json",
+                runner="scripts/run_garrido_q2_des288_v1.py",
+                contract="docs/PREREGISTRO_GARRIDO_Q2_DES288_V1_2026-08-01.md",
+                status="READY_NOT_STARTED_DES288",
+                allowed_use="none until full DES-288 seal and falsifier merge",
+            ),
+            record(
                 artifact="results/garrido_meta_learner_h3power_local/result.json",
                 runner="scripts/run_meta_learner_over_configs_v1.py",
                 contract="docs/PREREGISTRO_H3_POTENCIA_2026-08-01.md",

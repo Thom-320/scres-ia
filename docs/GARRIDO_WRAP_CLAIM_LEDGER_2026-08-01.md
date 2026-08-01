@@ -10,7 +10,7 @@ fuera de este artículo.
 | Q1 held-out | `results/garrido_wrap_q1/result.json` | `NO_GO_NEURAL_PREMIUM_IN_WRAP_PANEL` | lineal suficiente para el panel actual | promover MLP/KAN |
 | Q2 smoke | `results/garrido_wrap_q2_smoke_2016h/result.json` | `DEVELOPMENT_Q2_CLOSED_LOOP` | validar interfaz | confirmar H4 |
 | Replay thesis90 | `results/garrido_meta_learner_thesis90_v2/result.json` | `SURFACE_REPLAY_ONLY` | validar orden, memoria y ausencia de leakage | llamarlo réplica DES |
-| Q2 DES-288 | `results/garrido_meta_learner_v2_corrected/result.json` | `PENDING` | ninguno hasta sellado | usar cifras antiguas |
+| Q2 DES-288 | `results/garrido_q2_des288_v1/result.json` | `READY_NOT_STARTED` | ninguno hasta sellado | usar cifras antiguas |
 | CSSU Gate A | `results/garrido_cssu_liveness_gate_v1/result.json` | `GATE_A_PASS_GATE_B_HOLD` | acción split viva | Op11 físico validado |
 | Contención constante | `results/metric_audit/contention_service_first_v2/result.json` | `NEGATIVE_EXTENDS_TO_THE_SOUND_ENDPOINT` | headroom de constantes bajo seis regímenes | acotar políticas intraepisodio |
 | Expedición | `results/sensitivity/expedite_headroom_v2/result.json` | `NO_TIMING_HEADROOM_UNDER_SERVICE_FIRST` | negativo bajo ese contrato | generalizar a toda expedición |
