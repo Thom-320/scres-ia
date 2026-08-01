@@ -34,10 +34,26 @@ EXPECTED_VPS_SEEDS = list(range(6_000_091, 6_000_121))
 EXPECTED_CONTEXTS = (
     "R1r", "R2r", "R1r+R2r", "R1r|esc", "R2r|esc", "R1r+R2r|esc"
 )
+SOURCE_FILES = (
+    "scripts/run_meta_learner_over_configs_v1.py",
+    "supply_chain/supply_chain.py",
+    "supply_chain/episode_metrics.py",
+    "supply_chain/config.py",
+    "supply_chain/arm_runner.py",
+    "supply_chain/provenance.py",
+    "supply_chain/fidelity_moments.py",
+)
 
 
 def file_sha256(path: Path) -> str:
     return sha256(path.read_bytes()).hexdigest()
+
+
+def current_source_manifest() -> dict[str, str]:
+    return {
+        relative: file_sha256(ROOT / relative)
+        for relative in SOURCE_FILES
+    }
 
 
 def recompute_seal(payload: dict[str, Any]) -> str:
@@ -81,6 +97,7 @@ def checks(
     vps: dict[str, Any],
     *,
     remote_runner_sha256: str | None,
+    remote_source_manifest: dict[str, str] | None,
 ) -> dict[str, Any]:
     local_seeds = [int(seed) for seed in local.get("seeds", [])]
     vps_seeds = [int(seed) for seed in vps.get("seeds", [])]
@@ -110,6 +127,12 @@ def checks(
         for strategy in ("neuron_memory", "neuron_reset", "ofat", "random")
     )
     runner_sha = file_sha256(RUNNER)
+    source_manifest = current_source_manifest()
+    source_match = (
+        remote_source_manifest is not None
+        and remote_source_manifest == source_manifest
+        and remote_source_manifest.get("scripts/run_meta_learner_over_configs_v1.py") == runner_sha
+    )
     return {
         "f_merge_seeds_are_disjoint": {
             "passed": local_seeds == EXPECTED_LOCAL_SEEDS
@@ -140,11 +163,16 @@ def checks(
             },
         },
         "f_merge_source_is_identical": {
-            "passed": remote_runner_sha256 is not None and remote_runner_sha256 == runner_sha,
+            "passed": remote_runner_sha256 is not None
+            and remote_runner_sha256 == runner_sha
+            and source_match,
             "evidence": {
-                "why_it_can_fail": "slices from different runner revisions are not one experiment",
+                "why_it_can_fail": "slices from different runner or DES module revisions are not one experiment",
                 "local_runner_sha256": runner_sha,
                 "remote_runner_sha256": remote_runner_sha256,
+                "local_source_manifest": source_manifest,
+                "remote_source_manifest": remote_source_manifest,
+                "source_manifest_match": source_match,
             },
         },
         "f_input_seals_are_valid": {
@@ -180,6 +208,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--vps", type=Path, default=DEFAULT_VPS)
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument("--remote-runner-sha256", required=True)
+    parser.add_argument("--remote-source-manifest", type=Path, required=True,
+                        help="JSON mapping of SOURCE_FILES to hashes captured on the VPS")
     parser.add_argument("--n-boot", type=int, default=10_000)
     return parser
 
@@ -189,10 +219,19 @@ def main() -> int:
     try:
         local = load(args.local)
         vps = load(args.vps)
+        remote_source_manifest = json.loads(args.remote_source_manifest.read_text())
     except (FileNotFoundError, ValueError) as exc:
         print(f"H3 merge halted: {exc}")
         return 1
-    falsifiers = checks(local, vps, remote_runner_sha256=args.remote_runner_sha256)
+    except json.JSONDecodeError as exc:
+        print(f"H3 merge halted: invalid source manifest: {exc}")
+        return 1
+    falsifiers = checks(
+        local,
+        vps,
+        remote_runner_sha256=args.remote_runner_sha256,
+        remote_source_manifest=remote_source_manifest,
+    )
     falsifiers["all_passed"] = all(item["passed"] for item in falsifiers.values())
     if not falsifiers["all_passed"]:
         print("H3 merge halted: falsifier failed")

@@ -7,6 +7,7 @@ from scripts.merge_garrido_h3_power_v1 import (
     EXPECTED_LOCAL_SEEDS,
     EXPECTED_VPS_SEEDS,
     RUNNER,
+    current_source_manifest,
     checks,
     file_sha256,
     recompute_seal,
@@ -44,14 +45,24 @@ def test_variance_trace_uses_six_contexts_and_sample_variance():
 def test_merge_checks_accept_disjoint_matching_slices():
     local = _payload(EXPECTED_LOCAL_SEEDS)
     vps = _payload(EXPECTED_VPS_SEEDS)
-    checks_out = checks(local, vps, remote_runner_sha256=file_sha256(RUNNER))
+    checks_out = checks(
+        local,
+        vps,
+        remote_runner_sha256=file_sha256(RUNNER),
+        remote_source_manifest=current_source_manifest(),
+    )
     assert all(item["passed"] for item in checks_out.values())
 
 
 def test_merge_checks_reject_seed_overlap():
     local = _payload(EXPECTED_LOCAL_SEEDS)
     vps = _payload(EXPECTED_LOCAL_SEEDS)
-    checks_out = checks(local, vps, remote_runner_sha256=file_sha256(RUNNER))
+    checks_out = checks(
+        local,
+        vps,
+        remote_runner_sha256=file_sha256(RUNNER),
+        remote_source_manifest=current_source_manifest(),
+    )
     assert checks_out["f_merge_seeds_are_disjoint"]["passed"] is False
 
 
@@ -59,5 +70,24 @@ def test_merge_checks_rejects_edited_sealed_input():
     local = _payload(EXPECTED_LOCAL_SEEDS)
     vps = _payload(EXPECTED_VPS_SEEDS)
     local["budget"] = 23
-    checks_out = checks(local, vps, remote_runner_sha256=file_sha256(RUNNER))
+    checks_out = checks(
+        local,
+        vps,
+        remote_runner_sha256=file_sha256(RUNNER),
+        remote_source_manifest=current_source_manifest(),
+    )
     assert checks_out["f_input_seals_are_valid"]["passed"] is False
+
+
+def test_merge_checks_rejects_des_module_drift():
+    local = _payload(EXPECTED_LOCAL_SEEDS)
+    vps = _payload(EXPECTED_VPS_SEEDS)
+    remote_sources = current_source_manifest()
+    remote_sources["supply_chain/supply_chain.py"] = "drifted"
+    checks_out = checks(
+        local,
+        vps,
+        remote_runner_sha256=file_sha256(RUNNER),
+        remote_source_manifest=remote_sources,
+    )
+    assert checks_out["f_merge_source_is_identical"]["passed"] is False
