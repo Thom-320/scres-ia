@@ -132,10 +132,19 @@ def main() -> int:
         return {"H_regime": point, "lcb95": float(np.percentile(draws, 2.5)),
                 "ucb95": float(np.percentile(draws, 97.5))}
 
-    summary = {}
+    summary, argmax_by_regime = {}, {}
     for (rule, fungible), table in cells.items():
-        summary[f"{rule}|fungible={fungible}"] = {
-            m: h_regime(table, m) for m in (PRIMARY, *SIDE)}
+        key = f"{rule}|fungible={fungible}"
+        summary[key] = {m: h_regime(table, m) for m in (PRIMARY, *SIDE)}
+        # WHICH share wins in each regime. H_regime can only be large if this moves; storing it
+        # turns "the optimum is invariant" from an inference into something readable.
+        argmax_by_regime[key] = {
+            rname: {
+                "best_share": max(SHARES, key=lambda a: float(
+                    np.mean([r[PRIMARY] for r in table[rname][a]]))),
+                "by_share": {str(a): float(np.mean([r[PRIMARY] for r in table[rname][a]]))
+                             for a in SHARES}}
+            for rname in table}
 
     def best(fungible: bool) -> tuple[str, float]:
         keys = [k for k in summary if k.endswith(f"fungible={fungible}")]
@@ -225,7 +234,7 @@ def main() -> int:
         "claim_status": verdict if falsifiers["all_passed"] else "HALTED_FALSIFIER_FAILED",
         "primary_metric": PRIMARY, "side_metrics": list(SIDE),
         "shares": list(SHARES), "regimes": list(reg), "service_rules": list(args.rules),
-        "seeds": seeds, "summary": summary,
+        "seeds": seeds, "summary": summary, "argmax_by_regime": argmax_by_regime,
         "best_non_fungible": {"cell": best_nf, "H_regime": h_nf, "lcb95": lcb_nf},
         "best_fungible": {"cell": best_f, "H_regime": h_f},
         "mechanism_check": {"H_non_fungible_minus_H_fungible": h_nf - h_f,

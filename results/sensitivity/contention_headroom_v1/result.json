@@ -1,0 +1,288 @@
+{
+ "best_fungible": {
+  "H_regime": 6.787358230600634e-05,
+  "cell": "R24_AGE_PARTIAL|fungible=True"
+ },
+ "best_non_fungible": {
+  "H_regime": 0.00015271791080907066,
+  "cell": "FIFO_PARTIAL|fungible=False",
+  "lcb95": 0.0
+ },
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "CONTENTION_DOES_NOT_OPEN_THE_DOOR",
+ "contract_path": "docs/PREREGISTRO_CONTENCION_HEADROOM_2026-07-31.md",
+ "contract_sha256": "d8b477d345353f562a530c184e5ee5353fdef132d5257f1e5bda491f48800a4b",
+ "created_at": "2026-08-01T02:47:34.858681+00:00",
+ "elapsed_seconds": 410.76180704099534,
+ "falsifiers": {
+  "all_passed": true,
+  "f1_the_lever_actually_moves_the_system": {
+   "evidence": {
+    "mean_spread_across_shares": 0.0024556900790451775,
+    "why_it_can_fail": "an inert lever makes H_regime a measurement of noise rather than of a decision"
+   },
+   "passed": true
+  },
+  "f2_non_fungible_actually_binds": {
+   "evidence": {
+    "forfeited_rations_fungible": 0.0,
+    "forfeited_rations_non_fungible": 113631.85214734505,
+    "why_it_can_fail": "if the hard share never forfeits capacity the flag changed nothing, both arms are the same run and the mechanism claim H2 is vacuous"
+   },
+   "passed": true
+  },
+  "f3_escalation_actually_escalates": {
+   "evidence": {
+    "note": "H_regime is computed across regimes, so escalation is checked by event count",
+    "r23_events_by_escalation": {
+     "base": 1.09375,
+     "freq3_imp2": 3.25,
+     "freq_x3": 3.3125
+    },
+    "why_it_can_fail": "without more R23 events the escalation arm is a relabelling and H3 has not been tested"
+   },
+   "passed": true
+  },
+  "f4_crn_is_common": {
+   "evidence": {
+    "seeds": [
+     5200001,
+     5200002,
+     5200003,
+     5200004,
+     5200005,
+     5200006,
+     5200007,
+     5200008,
+     5200009,
+     5200010,
+     5200011,
+     5200012,
+     5200013,
+     5200014,
+     5200015,
+     5200016
+    ],
+    "why_it_can_fail": "distinct seeds per cell would be sampling, not CRN"
+   },
+   "passed": true
+  },
+  "f5_H_regime_is_non_negative": {
+   "evidence": {
+    "why_it_can_fail": "mean[max] >= max[mean] by construction; a negative would be an aggregation bug, not a finding"
+   },
+   "passed": true
+  },
+  "f6_seeds_are_virgin": {
+   "evidence": {
+    "excluded": [
+     4900001,
+     4900002,
+     4900003,
+     4900004,
+     4900005,
+     4900006,
+     4900501,
+     4900502,
+     4900503,
+     4900504,
+     4900505,
+     4900506,
+     5100001,
+     5100002,
+     5100003,
+     5100004,
+     5100005,
+     5100006,
+     5100007,
+     5100008,
+     5100009,
+     5100010,
+     5100011,
+     5100012
+    ],
+    "why_it_can_fail": "a reused seed would void any later confirmation"
+   },
+   "passed": true
+  }
+ },
+ "mechanism_check": {
+  "H_non_fungible_minus_H_fungible": 8.484432850306431e-05,
+  "program_o_reference": {
+   "H_PI": 0.15151,
+   "fungible_null": 0.0
+  }
+ },
+ "primary_metric": "ret_excel_risk_conditional",
+ "reference_path": "results/sensitivity/observable_sweep_op12_v1/result.json",
+ "reference_sha256": "bfe60ca8d4aa7266ea038b3085ba8aeb9eefe8ae494d487344d3d3e76e1a09f3",
+ "regimes": [
+  "R2r|base",
+  "R2r|freq_x3",
+  "R2r|freq3_imp2",
+  "R1r+R2r|base",
+  "R1r+R2r|freq_x3",
+  "R1r+R2r|freq3_imp2"
+ ],
+ "schema_version": "contention_headroom_v1",
+ "seeds": [
+  5200001,
+  5200002,
+  5200003,
+  5200004,
+  5200005,
+  5200006,
+  5200007,
+  5200008,
+  5200009,
+  5200010,
+  5200011,
+  5200012,
+  5200013,
+  5200014,
+  5200015,
+  5200016
+ ],
+ "self_sha256": "b54ee3225043630b0904cafee03cec4af6cd08d8fd5cfc5449584ab664a1b38c",
+ "service_rules": [
+  "SPT_FULL",
+  "FIFO_PARTIAL",
+  "R24_AGE_PARTIAL"
+ ],
+ "shares": [
+  0.1,
+  0.2,
+  0.3,
+  0.4,
+  0.5,
+  0.6,
+  0.7,
+  0.8,
+  0.9
+ ],
+ "side_metrics": [
+  "ret_excel_visible_clipped_0_1",
+  "flow_fill_rate"
+ ],
+ "summary": {
+  "FIFO_PARTIAL|fungible=False": {
+   "flow_fill_rate": {
+    "H_regime": 0.0,
+    "lcb95": 0.0,
+    "ucb95": 1.5388545904615236e-05
+   },
+   "ret_excel_risk_conditional": {
+    "H_regime": 0.00015271791080907066,
+    "lcb95": 0.0,
+    "ucb95": 0.00037366362084393994
+   },
+   "ret_excel_visible_clipped_0_1": {
+    "H_regime": 0.00015271791080909147,
+    "lcb95": 0.0,
+    "ucb95": 0.002695826282306202
+   }
+  },
+  "FIFO_PARTIAL|fungible=True": {
+   "flow_fill_rate": {
+    "H_regime": 0.0003739303394961757,
+    "lcb95": 0.0,
+    "ucb95": 0.0008143306472150859
+   },
+   "ret_excel_risk_conditional": {
+    "H_regime": 3.140243658605879e-05,
+    "lcb95": 0.0,
+    "ucb95": 0.0002057995797814909
+   },
+   "ret_excel_visible_clipped_0_1": {
+    "H_regime": 0.0006266259842276078,
+    "lcb95": 0.0,
+    "ucb95": 0.0018484932343968367
+   }
+  },
+  "R24_AGE_PARTIAL|fungible=False": {
+   "flow_fill_rate": {
+    "H_regime": 0.0,
+    "lcb95": 0.0,
+    "ucb95": 0.00011089392459788514
+   },
+   "ret_excel_risk_conditional": {
+    "H_regime": 0.00014090690967484033,
+    "lcb95": 0.0,
+    "ucb95": 0.00040307494634323133
+   },
+   "ret_excel_visible_clipped_0_1": {
+    "H_regime": 0.00014090690967488717,
+    "lcb95": 3.2954714687033506e-06,
+    "ucb95": 0.0021313727472911754
+   }
+  },
+  "R24_AGE_PARTIAL|fungible=True": {
+   "flow_fill_rate": {
+    "H_regime": 9.511113539029115e-05,
+    "lcb95": 0.0,
+    "ucb95": 0.0007249236378719992
+   },
+   "ret_excel_risk_conditional": {
+    "H_regime": 6.787358230600634e-05,
+    "lcb95": 1.84324362638924e-06,
+    "ucb95": 0.00022212030012624094
+   },
+   "ret_excel_visible_clipped_0_1": {
+    "H_regime": 0.00041580950826480834,
+    "lcb95": 0.0,
+    "ucb95": 0.0020375384034792415
+   }
+  },
+  "SPT_FULL|fungible=False": {
+   "flow_fill_rate": {
+    "H_regime": 0.0015061798861750863,
+    "lcb95": 3.590473707536738e-05,
+    "ucb95": 0.00447949384386691
+   },
+   "ret_excel_risk_conditional": {
+    "H_regime": 4.098937147919675e-05,
+    "lcb95": 3.7014646034905728e-06,
+    "ucb95": 0.0006956245410399698
+   },
+   "ret_excel_visible_clipped_0_1": {
+    "H_regime": 0.00028849951749044395,
+    "lcb95": 1.5367743168267898e-06,
+    "ucb95": 0.0016032070889350576
+   }
+  },
+  "SPT_FULL|fungible=True": {
+   "flow_fill_rate": {
+    "H_regime": 0.0,
+    "lcb95": 0.0,
+    "ucb95": 0.0
+   },
+   "ret_excel_risk_conditional": {
+    "H_regime": 0.0,
+    "lcb95": 0.0,
+    "ucb95": 0.0
+   },
+   "ret_excel_visible_clipped_0_1": {
+    "H_regime": 0.0,
+    "lcb95": 0.0,
+    "ucb95": 0.0
+   }
+  }
+ }
+}
