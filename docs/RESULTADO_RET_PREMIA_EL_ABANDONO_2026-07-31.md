@@ -22,7 +22,48 @@ Un **12×** de «mejora en resiliencia» comprado con **30 puntos de servicio**.
 Y no es una celda: **se repite en las seis** (dos familias × tres escaladas), con la misma forma
 y casi los mismos números.
 
-## Por qué pasa — el mecanismo, no la anécdota
+## AUDITORÍA (misma tarde) — el hallazgo se sostiene, **mi explicación no**
+
+El PI pidió auditar el porqué en vez de deducirlo. Se midió, y **corrige la sección siguiente**.
+Artefacto: `results/sensitivity/contention_headroom_v1_3/result.json`.
+
+**La censura existe y es grande** — eso se confirma:
+
+| reparto | 0,1 | 0,5 | 0,9 |
+|---|---|---|---|
+| pedidos **omitidos** de la puntuación | 136 | **58** | 138 |
+| pedidos **perdidos** | 76 | **1,6** | 78 |
+
+Los extremos omiten **2,4×** más pedidos y pierden **~50×** más. La forma de la censura es la
+misma U que la de la métrica.
+
+**Pero la censura NO basta para explicar la U, y la reparación que propuse no funciona.** Se
+midieron las cuatro variantes sobre el mismo barrido:
+
+| variante | ¿qué repara? | ¿desaparece la U? |
+|---|---|---|
+| `ret_excel_risk_conditional` | — | **no** |
+| `ret_excel_full_ledger` | **quita la censura** (los no servidos puntúan 0) | **NO** — 0,0024 / 0,0003 / 0,0025 |
+| `ret_excel_visible_clipped_0_1` | **acota** la cola `0,5/RPj` | **NO, y es la peor**: en `R2r` va 0,367 → **0,027** → 0,353, un **14×** |
+| `ret_thesis` | acota **y** puntúa todo | **parcial**: plana en `R2r`, con U en `R1r+R2r` |
+
+**Retiro dos afirmaciones que hice antes de medir:**
+
+1. «la censura **es** el mecanismo» → la censura es **un** mecanismo, y **no el suficiente**;
+2. «la reparación ya está en el panel» → **falso**. `full_ledger` no la quita y el recorte
+   tampoco. **El endpoint que yo mismo propuse para el paper
+   (`ret_excel_visible_clipped_0_1`) falla su propia prueba.**
+
+**Y el titular sale reforzado, no debilitado:** que la U sobreviva a quitar la censura **y** a
+acotar la cola significa que la preferencia por el abandono **está en el constructo ReT**, no en
+un defecto aislado de una de sus variantes. Eso es peor para la métrica, no mejor.
+
+**Lo que queda por medir, y está corriendo:** la **mezcla de ramas**
+(`excel_case_pct_*`) por reparto. La hipótesis viva es que el reparto extremo cambia **en qué
+rama caen los pedidos** —de la rama de fill rate, que castiga las pérdidas, a la rama de riesgo
+`0,5/RPj`, que no las ve— y que ése es el mecanismo dominante. **No lo afirmo hasta verlo.**
+
+## Por qué pasa — el mecanismo, no la anécdota  *(SUPERSEDIDO por la auditoría de arriba)*
 
 `ret_excel` puntúa sobre la población **visible**: los pedidos que nunca se sirven **salen** del
 denominador. Al estrangular un destino:
@@ -66,9 +107,10 @@ Explica hacia atrás tres cosas que quedaron sin mecanismo:
   tres mecanismos distintos**.
 * **No** propone todavía el endpoint sustituto. Eso es la Fase 2, y ahora tiene un requisito
   duro que antes era una preferencia: **el endpoint del paper debe hacer perder a esta política.**
-  El candidato mínimo es `ret_excel_visible_clipped_0_1` con `flow_fill_rate` y
-  `worst_product_fill` como guardarraíles simultáneos — que es a donde el propio repo ya había
-  convergido, y ahora se sabe **por qué** hacía falta.
+  Mi candidato anterior —`ret_excel_visible_clipped_0_1` con guardarraíles— **queda descartado
+  por la auditoría de arriba**: acotar no quita la U, la **agrava** (14× en `R2r`). Ninguna
+  variante de ReT medida hasta ahora pasa la prueba, así que el endpoint tendrá que **cargar el
+  servicio dentro**, no al lado.
 * **No** es un defecto nuestro de implementación. La censura está en la fórmula del Excel de la
   tesis; nuestra reproducción está verificada contra sus 47.546 filas sin discrepancia de
   fórmula.

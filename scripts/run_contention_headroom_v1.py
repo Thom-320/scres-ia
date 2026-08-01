@@ -47,7 +47,13 @@ ESCALATIONS = {
 FAMILIES = {"R2r": R2R, "R1r+R2r": R1R + R2R}
 SHARES = tuple(round(0.1 + 0.1 * i, 2) for i in range(9))   # 0.1 .. 0.9, continuous lever
 PRIMARY = "ret_excel_risk_conditional"
-SIDE = ("ret_excel_visible_clipped_0_1", "flow_fill_rate")
+SIDE = ("ret_excel_visible_clipped_0_1", "flow_fill_rate",
+        # The censoring audit. `full_ledger` scores EVERY generated order, with unfulfilled ones
+        # at 0, so it is the same formula without the visible-population restriction. If the
+        # U-shape lives in `ret_excel` and dies in `full_ledger`, censoring IS the mechanism and
+        # the repair is already in the panel. `omitted_n` is the count that leaves the score.
+        "ret_excel_full_ledger", "ret_excel_visible_n", "ret_excel_omitted_n",
+        "lost_orders", "ret_thesis")
 SEED_BASE = 5_200_001
 PRIOR_SEEDS = set(range(4_900_001, 4_900_007)) | set(range(4_900_501, 4_900_507)) | set(
     range(5_100_001, 5_100_013))

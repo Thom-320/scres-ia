@@ -1,0 +1,258 @@
+{
+ "H_PI_by_asymmetry": {
+  "0.5": 0.0011689868361851492,
+  "0.6": 0.001379485970404026,
+  "0.7": 0.001553379506445558,
+  "0.8": 0.0020640187605740386,
+  "0.9": 0.0020942379471449724
+ },
+ "actions": [
+  0,
+  3
+ ],
+ "best_cell": {
+  "H_PI": 0.0020942379471449724,
+  "cell": "share=0.9|persist=0.9|subst=False",
+  "lcb95": 0.0007255533914888469
+ },
+ "best_share": 0.9,
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "HEADROOM_IS_A_METRIC_DEFECT_NOT_A_DECISION",
+ "contract_path": "docs/PREREGISTRO_ASIMETRIA_CUELLO_2026-07-31.md",
+ "contract_sha256": "30bfbc9d1f5e4852123d045211b960d9f1ea416d17bc0333407e2df5f7059466",
+ "created_at": "2026-08-01T03:14:54.424197+00:00",
+ "elapsed_seconds": 592.6229404579935,
+ "falsifiers": {
+  "all_passed": true,
+  "f1_asymmetry_is_actually_asymmetric": {
+   "evidence": {
+    "mean_abs_demand_gap_by_share": {
+     "0.5": 16921.9,
+     "0.6": 18747.7,
+     "0.7": 36266.3,
+     "0.8": 60261.5,
+     "0.9": 78744.9
+    },
+    "why_it_can_fail": "if realised demand does not separate, the lever creates no asymmetry and H1 is vacuous"
+   },
+   "passed": true
+  },
+  "f2_substitution_control_binds": {
+   "evidence": {
+    "H_PI_best_non_substituting": 0.0020942379471449724,
+    "H_PI_best_substituting": 0.0,
+    "why_it_can_fail": "if H_PI does not fall under complete substitution the fungibility control controls nothing"
+   },
+   "passed": true
+  },
+  "f3_the_calendar_changes_the_outcome": {
+   "evidence": {
+    "mean_spread_across_calendars": 0.0032137733844920073,
+    "n_calendars": 256,
+    "why_it_can_fail": "if all 256 calendars score alike there is no decision and H_PI measures noise"
+   },
+   "passed": true
+  },
+  "f4_H_PI_is_non_negative": {
+   "evidence": {
+    "why_it_can_fail": "mean[max] >= max[mean] by construction; negative would be an aggregation bug, not a finding"
+   },
+   "passed": true
+  },
+  "f5_seeds_are_virgin_and_disjoint_from_program_o": {
+   "evidence": {
+    "program_o_burned": "7420049-7420096, 7430001-7430048",
+    "seeds": [
+     7600001,
+     7600002,
+     7600003,
+     7600004,
+     7600005,
+     7600006,
+     7600007,
+     7600008,
+     7600009,
+     7600010
+    ],
+    "why_it_can_fail": "touching a burned validation block would contaminate a sealed verdict"
+   },
+   "passed": true
+  },
+  "f6_this_is_not_a_program_o_rescue": {
+   "evidence": {
+    "cells_reused": false,
+    "estimand": "H_PI as a function of asymmetry, not H_obs",
+    "learner_trained": false,
+    "own_preregistration": "docs/PREREGISTRO_ASIMETRIA_CUELLO_2026-07-31.md",
+    "why_it_can_fail": "re-running its cells to flip its verdict would be a rescue and is forbidden by its contract"
+   },
+   "passed": true
+  }
+ },
+ "fase_1a_reference": {
+  "H_regime": 0.000153,
+  "condition": "downstream, symmetric"
+ },
+ "fungible_null_best": 0.0,
+ "n_calendars": 256,
+ "persistence": [
+  0.5,
+  0.9
+ ],
+ "primary_metric": "ret_excel_risk_conditional",
+ "program_o_reference": {
+  "H_PI": 0.15151,
+  "fungible_null": 0.0
+ },
+ "reference_path": "results/sensitivity/contention_headroom_v1/result.json",
+ "reference_sha256": "b54ee3225043630b0904cafee03cec4af6cd08d8fd5cfc5449584ab664a1b38c",
+ "schema_version": "bottleneck_asymmetry_v1",
+ "seeds": [
+  7600001,
+  7600002,
+  7600003,
+  7600004,
+  7600005,
+  7600006,
+  7600007,
+  7600008,
+  7600009,
+  7600010
+ ],
+ "self_sha256": "2129b3508435cab5f0380d6c585faf99b4f668945390cfb00803c361ba2bf69d",
+ "service_check": {
+  "rule": "headroom bought by dropping a product is a metric defect, not a decision",
+  "worst_product_fill_at_best_calendar": 0.18499879679766604,
+  "worst_product_fill_at_worst_calendar": 0.5510579687543872
+ },
+ "shares": [
+  0.5,
+  0.6,
+  0.7,
+  0.8,
+  0.9
+ ],
+ "side_metrics": [
+  "ret_excel_visible_clipped_0_1"
+ ],
+ "summary": {
+  "share=0.5|persist=0.5|subst=False": {
+   "H_PI": 0.0005306182999219779,
+   "lcb95": 0.0001761350603830314,
+   "ucb95": 0.0009066115319345221
+  },
+  "share=0.5|persist=0.5|subst=True": {
+   "H_PI": 0.0,
+   "lcb95": -1.734723475976807e-18,
+   "ucb95": 1.734723475976807e-18
+  },
+  "share=0.5|persist=0.9|subst=False": {
+   "H_PI": 0.0011689868361851492,
+   "lcb95": 0.00028391062154874136,
+   "ucb95": 0.0019896581585926087
+  },
+  "share=0.5|persist=0.9|subst=True": {
+   "H_PI": 0.0,
+   "lcb95": -1.734723475976807e-18,
+   "ucb95": 1.734723475976807e-18
+  },
+  "share=0.6|persist=0.5|subst=False": {
+   "H_PI": 0.001379485970404026,
+   "lcb95": 0.000412320943037782,
+   "ucb95": 0.002133413156497127
+  },
+  "share=0.6|persist=0.5|subst=True": {
+   "H_PI": 0.0,
+   "lcb95": -1.734723475976807e-18,
+   "ucb95": 1.734723475976807e-18
+  },
+  "share=0.6|persist=0.9|subst=False": {
+   "H_PI": 0.0010781568927103191,
+   "lcb95": 0.0005995567548867405,
+   "ucb95": 0.0015251518572763144
+  },
+  "share=0.6|persist=0.9|subst=True": {
+   "H_PI": 0.0,
+   "lcb95": -1.734723475976807e-18,
+   "ucb95": 1.734723475976807e-18
+  },
+  "share=0.7|persist=0.5|subst=False": {
+   "H_PI": 0.0013878709275409028,
+   "lcb95": 0.0002644397081310538,
+   "ucb95": 0.002375933725743618
+  },
+  "share=0.7|persist=0.5|subst=True": {
+   "H_PI": 0.0,
+   "lcb95": -1.734723475976807e-18,
+   "ucb95": 1.734723475976807e-18
+  },
+  "share=0.7|persist=0.9|subst=False": {
+   "H_PI": 0.001553379506445558,
+   "lcb95": 0.0005352991448587896,
+   "ucb95": 0.0025269904537721633
+  },
+  "share=0.7|persist=0.9|subst=True": {
+   "H_PI": 0.0,
+   "lcb95": -1.734723475976807e-18,
+   "ucb95": 1.734723475976807e-18
+  },
+  "share=0.8|persist=0.5|subst=False": {
+   "H_PI": 0.0012668509318847655,
+   "lcb95": 0.00036397916572408014,
+   "ucb95": 0.002235073610308455
+  },
+  "share=0.8|persist=0.5|subst=True": {
+   "H_PI": 0.0,
+   "lcb95": -1.734723475976807e-18,
+   "ucb95": 1.734723475976807e-18
+  },
+  "share=0.8|persist=0.9|subst=False": {
+   "H_PI": 0.0020640187605740386,
+   "lcb95": 0.0006963366324564787,
+   "ucb95": 0.0034060599433713866
+  },
+  "share=0.8|persist=0.9|subst=True": {
+   "H_PI": 0.0,
+   "lcb95": -1.734723475976807e-18,
+   "ucb95": 1.734723475976807e-18
+  },
+  "share=0.9|persist=0.5|subst=False": {
+   "H_PI": 0.0012508531069713256,
+   "lcb95": 0.00030051593631021285,
+   "ucb95": 0.0022883909214517274
+  },
+  "share=0.9|persist=0.5|subst=True": {
+   "H_PI": 0.0,
+   "lcb95": -1.734723475976807e-18,
+   "ucb95": 1.734723475976807e-18
+  },
+  "share=0.9|persist=0.9|subst=False": {
+   "H_PI": 0.0020942379471449724,
+   "lcb95": 0.0007255533914888469,
+   "ucb95": 0.0033115905993828893
+  },
+  "share=0.9|persist=0.9|subst=True": {
+   "H_PI": 0.0,
+   "lcb95": -1.734723475976807e-18,
+   "ucb95": 1.734723475976807e-18
+  }
+ },
+ "weeks": 8
+}
