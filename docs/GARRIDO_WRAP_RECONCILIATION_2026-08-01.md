@@ -17,8 +17,9 @@ reconciliation:
   without deleting their files.
 - `results/garrido_cssu_liveness_gate_v1/result.json` closes **Gate A** as
   `PASS`; **Gate B** remains `HOLD_OP11_PHYSICS_UNSPECIFIED`.
-- `results/garrido_neural_headroom_gate_v1/result.json` closes E1 as
-  `NO_GO_NEURAL_PREMIUM_E1_HEADROOM_CLOSED` with `training_authorized=false`.
+- `results/garrido_neural_headroom_gate_v1/result.json` keeps E1 at
+  `HOLD_E1_PLACEBO_NOT_OPENED` because the required uninformed placebo was not opened;
+  `training_authorized=false` regardless of the observed zero headroom.
 - `docs/PREREGISTRO_GARRIDO_Q2_DES288_V1_2026-08-01.md` and
   `scripts/run_garrido_q2_des288_v1.py` define the corrected DES-288 confirmation; its
   result remains pending while H3′ is active.

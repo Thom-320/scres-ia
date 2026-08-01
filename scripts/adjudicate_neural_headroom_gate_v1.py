@@ -18,13 +18,18 @@ def main() -> int:
     h = source["H_regime_leading_component"]
     falsifiers = source.get("falsifiers", {})
     source_passed = bool(falsifiers.get("all_passed", False))
-    headroom_passed = float(h["H_regime"]) >= 0.01 and float(h["lcb95"]) > 0.0
-    placebo_status = "NOT_OPENED_BY_E1_CONTRACT"
-    status = (
-        "NEURAL_SEARCH_AUTHORIZED"
-        if source_passed and headroom_passed
-        else "NO_GO_NEURAL_PREMIUM_E1_HEADROOM_CLOSED"
+    placebo_passed = bool(
+        source.get("placebo", {}).get("status") == "PASS"
+        or source.get("placebo_status") == "PASS"
     )
+    headroom_passed = float(h["H_regime"]) >= 0.01 and float(h["lcb95"]) > 0.0
+    placebo_status = "PASS" if placebo_passed else "NOT_OPENED_BY_E1_CONTRACT"
+    if not source_passed or not placebo_passed:
+        status = "HOLD_E1_PLACEBO_NOT_OPENED"
+    elif headroom_passed:
+        status = "NEURAL_SEARCH_AUTHORIZED"
+    else:
+        status = "NO_GO_NEURAL_PREMIUM_E1_HEADROOM_CLOSED"
     payload = {
         "schema_version": "garrido_neural_headroom_gate_v1",
         "claim_status": status,
@@ -35,7 +40,9 @@ def main() -> int:
         "contract_sha256": sha256(CONTRACT.read_bytes()).hexdigest(),
         "environment": "E1_CSSU_SPLIT_NONFUNGIBLE",
         "headroom": h,
-        "falsifiers_all_passed": source_passed,
+        "source_falsifiers_all_passed": source_passed,
+        "gate_falsifiers_all_passed": bool(source_passed and placebo_passed),
+        "placebo_required": True,
         "placebo_status": placebo_status,
         "training_authorized": bool(status == "NEURAL_SEARCH_AUTHORIZED"),
         "next_environment": (

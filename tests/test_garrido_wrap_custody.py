@@ -13,7 +13,7 @@ def test_custody_manifest_keeps_active_runs_pending_and_retired_claims_explicit(
         "PENDING_ACTIVE_LOCAL_RUN"
     )
     assert records["results/garrido_neural_headroom_gate_v1/result.json"]["status"] == (
-        "NO_GO_NEURAL_PREMIUM_E1_HEADROOM_CLOSED"
+        "HOLD_E1_PLACEBO_NOT_OPENED"
     )
     assert payload["retired_claims"]["old_meta_learner_contrasts"] == (
         "RETIRED_DRIVER_LEAK"

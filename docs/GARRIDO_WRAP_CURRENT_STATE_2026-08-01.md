@@ -15,7 +15,7 @@ carril separado y no aporta claims a este manuscrito.
 - CSSU Gate A: acción de reasignación viva.
 - CSSU Gate B: manejo físico de Op11 no especificado; `HOLD`.
 - Contención y expedición: no abren headroom bajo `service_first_v2`.
-- E1 neural-headroom gate: `NO_GO`; `training_authorized=false`.
+- E1 neural-headroom gate: `HOLD_E1_PLACEBO_NOT_OPENED`; `training_authorized=false`.
 - Q2: replay de 90 válido como replay; contrato/runner DES-288 listo, ejecución bloqueada
   hasta cerrar H3′.
 - Registro de entornos: `docs/GARRIDO_WRAP_ENVIRONMENT_REGISTRY_2026-08-01.md`.
