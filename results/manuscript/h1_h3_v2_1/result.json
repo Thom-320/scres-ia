@@ -1,0 +1,182 @@
+{
+ "H1": {
+  "cells_differing": 42,
+  "cells_total": 72,
+  "contrasts": {
+   "hybrid_vs_reset": {
+    "inference_unit": "cell (context x repeat); seeds recur across cells",
+    "lcb95": 3893251.24625,
+    "mean": 33547084.650000002,
+    "n_cells": 72,
+    "n_seeds_per_cell": 5,
+    "ucb95": 81838777.70708323
+   },
+   "primary_all_cells": {
+    "inference_unit": "cell (context x repeat); seeds recur across cells",
+    "lcb95": 14432891.773750002,
+    "mean": 61349290.03333334,
+    "n_cells": 72,
+    "n_seeds_per_cell": 5,
+    "ucb95": 121804658.42541659
+   },
+   "secondary_differing_cells": {
+    "inference_unit": "cell (context x repeat); seeds recur across cells",
+    "lcb95": 28008967.28071429,
+    "mean": 105170211.48571427,
+    "n_cells": 42,
+    "n_seeds_per_cell": 5,
+    "ucb95": 204916732.27571425
+   }
+  },
+  "levels_by_arm": {
+   "hybrid": 47444828.28333333,
+   "reset": 80991912.93333334,
+   "static": 108794118.31666666
+  },
+  "metric": "service_loss_auc_ration_hours",
+  "what_it_is_not": "not a recovery TIME: it is the integral of lost service, which mixes magnitude with duration"
+ },
+ "H3": {
+  "construct_change": "the manuscript's H3 is variance of performance across disruption intensities, which is untestable here because the optimum does not move; this is a different construct, not a repair",
+  "contrasts": {
+   "memory_vs_ofat": {
+    "lcb95": -5.334236111111105,
+    "mean": 18.291666666666668,
+    "ucb95": 41.27805555555555
+   },
+   "memory_vs_reset": {
+    "lcb95": -14.842291666666663,
+    "mean": 7.858333333333331,
+    "ucb95": 28.80916666666665
+   }
+  },
+  "estimand": "variance of runs_to_within_1pct across the six contexts, per repeat",
+  "variance_by_strategy": {
+   "neuron_memory": 39.925,
+   "neuron_reset": 47.78333333333333,
+   "ofat": 58.21666666666667,
+   "random": 70.66388888888888
+  }
+ },
+ "arms": {
+  "hybrid": "neuron_memory",
+  "reset": "neuron_reset",
+  "static": "ofat"
+ },
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "H1_SUPPORTED__H3_NOT_SUPPORTED",
+ "contexts": [
+  "R1r",
+  "R2r",
+  "R1r+R2r",
+  "R1r|esc",
+  "R2r|esc",
+  "R1r+R2r|esc"
+ ],
+ "contract_path": "docs/PREREGISTRO_H1_H3_V2_2026-08-01.md",
+ "contract_sha256": "f0a7ab1d1fe7f6ab98ff5c187b671e4ddffd7b2b15b7c6f10d91ad23534ea5c5",
+ "created_at": "2026-08-01T18:20:03.102341+00:00",
+ "elapsed_seconds": 17.1535520000034,
+ "falsifiers": {
+  "all_passed": true,
+  "f1_some_cells_deploy_different_configurations": {
+   "evidence": {
+    "context_config_pairs_evaluated": 42,
+    "differing_cells": 42,
+    "distinct_configs_deployed": 23,
+    "total_cells": 72,
+    "why_it_can_fail": "with no differing cell H1' is the same tautology that stopped the first version"
+   },
+   "passed": true
+  },
+  "f2_identical_cells_contribute_exactly_zero": {
+   "evidence": {
+    "max_abs_difference_on_identical_cells": 0.0,
+    "why_it_can_fail": "a cell whose two arms deploy the SAME configuration must give difference 0.0; anything else means the pairing is broken"
+   },
+   "passed": true
+  },
+  "f3_service_loss_auc_is_not_censored": {
+   "evidence": {
+    "episodes_checked": 210,
+    "never_completed_orders_are_inside": true,
+    "share_of_auc_from_never_completed_orders": 0.3590652471405567,
+    "why_it_can_fail": "the panel's AUC is recomputed here over EVERY order, with the horizon standing in for orders that never completed. If the panel ever restricted its population the two would diverge, and the metric would inherit the censoring it was chosen to avoid. The second condition is the one that matters: orders that NEVER complete must sit inside the population and carry a positive share, which is exactly what ReT and system_ttr fail to do"
+   },
+   "passed": true
+  },
+  "f4_the_metric_discriminates_between_deployed_configs": {
+   "evidence": {
+    "spread_across_deployed_configs": 1553026130.3999999,
+    "why_it_can_fail": "identical scores leave nothing to compare"
+   },
+   "passed": true
+  },
+  "f5_contexts_differ_in_search_difficulty": {
+   "evidence": {
+    "ofat_cost_by_context": {
+     "R1r": 6.0,
+     "R1r+R2r": 8.583333333333334,
+     "R1r+R2r|esc": 19.5,
+     "R1r|esc": 8.0,
+     "R2r": 12.5,
+     "R2r|esc": 19.916666666666668
+    },
+    "why_it_can_fail": "H3' needs search cost to VARY across contexts; a flat profile makes its variance noise"
+   },
+   "passed": true
+  },
+  "f6_h3_artifact_matches_its_own_seal": {
+   "evidence": {
+    "recomputed": "efb3f067ba295990c1a04e34e669f42cb2c431d9aa92cdb0346ad07c746fb391",
+    "stored_self_sha256": "efb3f067ba295990c1a04e34e669f42cb2c431d9aa92cdb0346ad07c746fb391",
+    "why_it_can_fail": "the first version compared the file with ITSELF -- it read the same bytes twice and could never fail. This recomputes the payload digest the way seal_and_write does and compares it to the stored seal, so any edit to the artifact since sealing fails it"
+   },
+   "passed": true
+  },
+  "f7_seeds_are_virgin": {
+   "evidence": {
+    "collisions": [],
+    "prior_seeds_scanned": 314,
+    "seeds": [
+     6200001,
+     6200002,
+     6200003,
+     6200004,
+     6200005
+    ],
+    "why_it_can_fail": "this was hardcoded True in the first version, and an external review caught that the block 5_800_001-05 collided with the expedition run's 5_800_001-08. It now scans every sealed artifact for the seeds it declares"
+   },
+   "passed": true
+  }
+ },
+ "reference_path": "results/garrido_meta_learner_v2/result.json",
+ "reference_sha256": "efb3f067ba295990c1a04e34e669f42cb2c431d9aa92cdb0346ad07c746fb391",
+ "repeats": 12,
+ "schema_version": "h1_h3_v2",
+ "seeds": [
+  6200001,
+  6200002,
+  6200003,
+  6200004,
+  6200005
+ ],
+ "self_sha256": "76f303d8e09b1e524989296a858f7f8f9f9f79110b88a0fc56aca1b322022420"
+}

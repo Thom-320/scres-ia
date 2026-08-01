@@ -57,7 +57,37 @@ ARMS = {"hybrid": "neuron_memory", "static": "ofat", "reset": "neuron_reset"}
 PRIMARY = "service_loss_auc_ration_hours"          # lower is better, no censoring
 SIDE = ("service_loss_auc_per_order", "flow_fill_rate", "n_orders", "n_served",
         "n_lost")
-SEED_BASE = 5_800_001
+# 5_800_001-08 collided with the expedition run: the external review caught it and was right.
+# 6_000_001+ is the H3 power block. 6_200_001 is verified free against every sealed artifact.
+SEED_BASE = 6_200_001
+
+
+def seeds_used_by_sealed_artifacts(root: Path = Path("results"),
+                                  exclude: Path | None = None) -> set[int]:
+    """Every seed any sealed artifact declares. `f7` was hardcoded True; this makes it testable."""
+    used: set[int] = set()
+
+    def walk(node: Any) -> None:
+        if isinstance(node, dict):
+            for key, value in node.items():
+                if key in {"seeds", "crn_seeds", "seed_block"} and isinstance(value, list):
+                    used.update(int(x) for x in value if isinstance(x, (int, float)))
+                else:
+                    walk(value)
+        elif isinstance(node, list):
+            for value in node[:50]:
+                walk(value)
+
+    for path in root.glob("**/result.json"):
+        # The artifact this run is about to replace is not a PRIOR use of its own seeds.
+        # Excluding exactly that one file, and nothing else, keeps the check honest.
+        if exclude is not None and path.resolve() == Path(exclude).resolve():
+            continue
+        try:
+            walk(json.loads(path.read_text()))
+        except (json.JSONDecodeError, UnicodeDecodeError, OSError):
+            continue
+    return used
 
 
 def episode(config: dict, context: str, seed: int, horizon: float) -> dict[str, float]:
@@ -121,6 +151,14 @@ def main() -> int:
     meta_bytes = META.read_bytes()
     meta = json.loads(meta_bytes)
     ctx_order, n_rep = meta["contexts"], len(meta["per_context"]["ofat"])
+    # Reproduce seal_and_write's convention exactly (arm_runner.py:175-176): the digest is over
+    # the payload WITHOUT `self_sha256`, serialised with indent=1, sort_keys=True, default=str.
+    # My first attempt used compact separators and failed -- correctly, because it was not the
+    # sealing convention. The test was right and I was wrong about how the seal is formed.
+    probe = {k: v for k, v in meta.items() if k != "self_sha256"}
+    meta_recomputed_digest = hashlib.sha256(
+        json.dumps(probe, indent=1, sort_keys=True, default=str).encode()).hexdigest()
+    prior_seeds = seeds_used_by_sealed_artifacts(exclude=args.output)
     started = time.perf_counter()
 
     # ---- evaluate what each arm ACTUALLY deployed in each cell ------------------------------
@@ -141,27 +179,37 @@ def main() -> int:
 
     rng = np.random.default_rng(20260801)
 
-    def vector(arm: str, key: str, only_differing: bool) -> np.ndarray:
-        out = []
+    def cell_matrix(arm: str, key: str, only_differing: bool) -> np.ndarray:
+        """(cells, seeds). Kept two-dimensional so the bootstrap can resample CELLS."""
+        rows = []
         for i, (r, ctx) in enumerate((r, c) for r in range(n_rep) for c in ctx_order):
             if only_differing and identical[i]:
                 continue
-            out.extend(cells[(arm, ctx, r)][s][key] for s in seeds)
-        return np.array(out)
+            rows.append([cells[(arm, ctx, r)][s][key] for s in seeds])
+        return np.array(rows)
 
     def paired(a: str, b: str, key: str, only_differing: bool = False) -> dict:
-        """b - a; positive means arm A loses LESS service, i.e. A is better."""
-        d = vector(b, key, only_differing) - vector(a, key, only_differing)
-        draws = d[rng.integers(0, d.size, size=(args.n_boot, d.size))].mean(axis=1)
-        return {"mean": float(d.mean()), "lcb95": float(np.percentile(draws, 2.5)),
-                "ucb95": float(np.percentile(draws, 97.5)), "n_paired": int(d.size)}
+        """b - a; positive means arm A loses LESS service, i.e. A is better.
+
+        The bootstrap resamples CELLS, not the flattened observations. The same five seeds recur
+        in every cell, so the 360 rows are not exchangeable -- treating them as if they were,
+        which the first version did, understates the interval. An external review caught this.
+        """
+        diff = cell_matrix(b, key, only_differing) - cell_matrix(a, key, only_differing)
+        per_cell = diff.mean(axis=1)
+        draws = per_cell[rng.integers(0, per_cell.size,
+                                      size=(args.n_boot, per_cell.size))].mean(axis=1)
+        return {"mean": float(per_cell.mean()), "lcb95": float(np.percentile(draws, 2.5)),
+                "ucb95": float(np.percentile(draws, 97.5)),
+                "n_cells": int(per_cell.size), "n_seeds_per_cell": len(seeds),
+                "inference_unit": "cell (context x repeat); seeds recur across cells"}
 
     h1 = {
         "primary_all_cells": paired("hybrid", "static", PRIMARY),
         "secondary_differing_cells": paired("hybrid", "static", PRIMARY, only_differing=True),
         "hybrid_vs_reset": paired("hybrid", "reset", PRIMARY),
     }
-    levels = {arm: float(vector(arm, PRIMARY, False).mean()) for arm in ARMS}
+    levels = {arm: float(cell_matrix(arm, PRIMARY, False).mean()) for arm in ARMS}
 
     # ---- H3': variance of SEARCH COST across contexts, straight from the sealed artifact -----
     def search_cost_variance(strategy: str) -> np.ndarray:
@@ -209,7 +257,9 @@ def main() -> int:
             "evidence": {"why_it_can_fail": ("with no differing cell H1' is the same tautology "
                                              "that stopped the first version"),
                          "differing_cells": n_diff, "total_cells": len(identical),
-                         "distinct_configs_deployed": len(cache)}},
+                         "context_config_pairs_evaluated": len(cache),
+                         "distinct_configs_deployed": len(
+                             {config for _, config in cache})}},
         "f2_identical_cells_contribute_exactly_zero": {
             "passed": (not zero_on_identical) or max(zero_on_identical) < 1e-9,
             "evidence": {"why_it_can_fail": ("a cell whose two arms deploy the SAME configuration "
@@ -239,16 +289,25 @@ def main() -> int:
             "evidence": {"why_it_can_fail": ("H3' needs search cost to VARY across contexts; a "
                                              "flat profile makes its variance noise"),
                          "ofat_cost_by_context": dict(zip(ctx_order, ofat_ctx_costs))}},
-        "f6_h3_reads_the_sealed_artifact_unmodified": {
-            "passed": hashlib.sha256(meta_bytes).hexdigest() == hashlib.sha256(
-                META.read_bytes()).hexdigest(),
-            "evidence": {"why_it_can_fail": ("recomputing the search here would let it be moved; "
-                                             "H3' must read the sealed run"),
-                         "meta_sha256": hashlib.sha256(meta_bytes).hexdigest(),
-                         "meta_self_sha256": meta.get("self_sha256")}},
+        "f6_h3_artifact_matches_its_own_seal": {
+            "passed": meta_recomputed_digest == meta.get("self_sha256"),
+            "evidence": {"why_it_can_fail": (
+                             "the first version compared the file with ITSELF -- it read the same "
+                             "bytes twice and could never fail. This recomputes the payload digest "
+                             "the way seal_and_write does and compares it to the stored seal, so "
+                             "any edit to the artifact since sealing fails it"),
+                         "recomputed": meta_recomputed_digest,
+                         "stored_self_sha256": meta.get("self_sha256")}},
         "f7_seeds_are_virgin": {
-            "passed": True,
-            "evidence": {"why_it_can_fail": "reuse would void the confirmation", "seeds": seeds}},
+            "passed": not (set(seeds) & prior_seeds),
+            "evidence": {"why_it_can_fail": (
+                             "this was hardcoded True in the first version, and an external "
+                             "review caught that the block 5_800_001-05 collided with the "
+                             "expedition run's 5_800_001-08. It now scans every sealed artifact "
+                             "for the seeds it declares"),
+                         "seeds": seeds,
+                         "collisions": sorted(set(seeds) & prior_seeds),
+                         "prior_seeds_scanned": len(prior_seeds)}},
     }
     falsifiers["all_passed"] = all(v["passed"] for k, v in falsifiers.items()
                                    if k != "all_passed")
@@ -264,7 +323,7 @@ def main() -> int:
         print(f"  {arm:<8}{value:>16.1f} ración-hora")
     for name, v in h1.items():
         print(f"  {name:<28}{v['mean']:>+14.1f}  [{v['lcb95']:+.1f}, {v['ucb95']:+.1f}]  "
-              f"n={v['n_paired']}")
+              f"celdas={v['n_cells']}")
     print(f"\n  === H3' · varianza del coste de búsqueda entre contextos (menor es mejor) ===")
     for s, v in variances.items():
         print(f"  {s:<16}{v:>10.2f}")

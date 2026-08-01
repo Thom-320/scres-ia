@@ -93,3 +93,45 @@ la mitad de las veces** — lo que cuesta es *cuándo* lo encuentra (12,42 corri
 *cuánto pierde por el camino* en las celdas donde no converge.
 
 Eso es un resultado favorable a su método, y va dicho aunque `H1′` salga a favor del híbrido.
+
+---
+
+## Adenda 2026-08-01 — auditoría externa: cinco defectos, cuatro reales, y H1′ sobrevive
+
+Una revisión externa bloqueó la etiqueta «H1′ sostenida». **Verifiqué cada punto y cuatro eran
+correctos.** Artefacto corregido: `results/manuscript/h1_h3_v2_1/result.json` (sello
+`76f303d8e09b1e52…`), **los siete falsadores PASAN**.
+
+| defecto señalado | verificado | arreglo |
+|---|---|---|
+| `f7` hardcodeado a `True` | **sí** — el mismo pecado sobre el que escribí una memoria el día anterior | escanea **todos** los artefactos sellados: 314 semillas registradas |
+| semillas no vírgenes: `5.800.001–05` chocan con expedición `5.800.001–08` | **sí, colisión real** | bloque nuevo `6.200.001+`, verificado libre; **0 colisiones** |
+| `f6` compara el fichero consigo mismo | **sí, tautológico** | recalcula el digest con la convención de `seal_and_write` (`indent=1, sort_keys, default=str`) y lo compara con el `self_sha256` almacenado |
+| `distinct_configs_deployed: 42` mal etiquetado | **sí** | son **42 pares (contexto, configuración)** y **23 configuraciones únicas**; ambos campos ahora |
+| bootstrap trata 360 obs como intercambiables | **sí** — las 5 semillas se repiten en todas las celdas | remuestrea **celdas**, no observaciones |
+
+**Y `f6` volvió a fallar tras el primer arreglo**, porque usé separadores compactos en vez de la
+convención real de sellado. El test tenía razón y yo estaba equivocado sobre cómo se forma el
+sello. Después `f7` falló contra **el artefacto que esta misma corrida iba a reemplazar** — se
+excluye ese fichero y sólo ése.
+
+### H1′ con la inferencia correcta
+
+| contraste | ventaja del híbrido | IC95 (agrupado por celda) | celdas |
+|---|---:|---|---:|
+| **primario — 72 celdas** | **+61.349.290** | **[+14.432.892, +121.804.658]** | 72 |
+| secundario — 42 celdas distintas | +105.170.212 | [+28.008.967, +204.916.732] | 42 |
+| híbrido vs reinicio | +33.547.085 | [+3.893.251, +81.838.778] | 72 |
+
+Niveles: híbrido **47,4 M** · reinicio **81,0 M** · estático **108,8 M** ración-hora.
+
+**El intervalo se ensanchó mucho —de [+38,9 M, +87,2 M] a [+14,4 M, +121,8 M]— y eso es
+correcto**: la inferencia anterior subestimaba la incertidumbre. **`LCB95` sigue muy por encima de
+cero, así que `H1′` se sostiene**, ahora sobre terreno defendible.
+
+### El punto 6 de la revisión, que es de encuadre y lo acepto
+
+`service_loss_auc` **no es** el endpoint lexicográfico `service_first_resilience_v1/v2`. Son dos
+cosas distintas y el manuscrito debe nombrarlas por separado: `H1′` se mide sobre la integral de
+servicio perdido, **sin** los guardarraíles de fill/pérdidas/backorder del endpoint lexicográfico.
+Añadirlos es trabajo pendiente, no algo ya hecho.
