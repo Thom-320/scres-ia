@@ -44,7 +44,10 @@ from supply_chain.config import THESIS_FAITHFUL_PROTOCOL as P  # noqa: E402
 from supply_chain.episode_metrics import compute_episode_metrics  # noqa: E402
 from supply_chain.supply_chain import MFSCSimulation  # noqa: E402
 
-META = Path("results/garrido_meta_learner_v1_1/result.json")
+# The leak-free run. v1/v1_1 ranked unrun configurations by their drivers; see
+# docs/CORRECCION_META_APRENDIZ_FUGA_2026-07-31.md. Arms taken from a contaminated search
+# would have propagated the defect into H1 and H3.
+META = Path("results/garrido_meta_learner_v2/result.json")
 RISKS = ("R11", "R12", "R13", "R14", "R21", "R22", "R23", "R24")
 INTENSITIES = (1.0, 2.0, 3.0, 4.0)
 ARMS = {"hybrid": "neuron_memory", "static": "ofat", "reset": "neuron_reset"}
@@ -178,14 +181,19 @@ def main() -> int:
             "evidence": {"why_it_can_fail": ("without more risk events, 'heterogeneous "
                                              "intensities' has not been tested"),
                          "mean_risk_events_by_intensity": events}},
-        "f3_ttr_censoring_is_disclosed_and_comparable": {
-            "passed": censor_gap < 0.10,
+        "f3_ttr_censoring_leaves_an_estimand_at_all": {
+            "passed": censor_gap < 0.10 and max(censored.values()) < 0.999,
             "evidence": {"why_it_can_fail": ("system_ttr is right-censored, so its mean is "
                                              "optimistic; if the censored FRACTION also differs "
                                              "between arms, an arm that simply never recovers "
                                              "looks fast and the comparison is confounded"),
+                         "and_worse": ("comparability is not enough. If the censored fraction is "
+                                       "1.0 then NO recovery cluster ever closes, system_ttr_mean "
+                                       "is 0.0 for every arm by vacuity, and H1 has no estimand. "
+                                       "The first version of this falsifier checked only the gap "
+                                       "and would have passed a fully censored measurement"),
                          "censored_fraction_by_arm": censored, "gap": censor_gap,
-                         "threshold": 0.10}},
+                         "gap_threshold": 0.10, "max_censoring_allowed": 0.999}},
         "f4_arms_share_seeds_and_ladder": {
             "passed": True,
             "evidence": {"why_it_can_fail": "different seeds would measure luck, not policy",
@@ -202,7 +210,7 @@ def main() -> int:
     falsifiers["all_passed"] = all(v["passed"] for k, v in falsifiers.items()
                                    if k != "all_passed")
 
-    h1_ok = (falsifiers["f3_ttr_censoring_is_disclosed_and_comparable"]["passed"]
+    h1_ok = (falsifiers["f3_ttr_censoring_leaves_an_estimand_at_all"]["passed"]
              and h1["hybrid_vs_static"]["lcb95"] > 0)
     h3_ok = h3["flow_fill_rate"]["hybrid_vs_static"]["lcb95"] > 0
     verdict = f"H1_{'SUPPORTED' if h1_ok else 'NOT_SUPPORTED'}__H3_{'SUPPORTED' if h3_ok else 'NOT_SUPPORTED'}"

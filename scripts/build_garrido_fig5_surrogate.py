@@ -36,6 +36,7 @@ import argparse
 from datetime import datetime, timezone
 from hashlib import sha256
 import json
+import math
 from pathlib import Path
 import sys
 import time
@@ -140,6 +141,95 @@ def grouped_folds(groups: np.ndarray, n_folds: int = 5) -> list[tuple[np.ndarray
     return folds
 
 
+def paired_difference_summary(
+    task: dict,
+    model: str,
+    *,
+    baseline: str = "linear",
+    sesoi: float = 0.05,
+) -> dict[str, object]:
+    """Summarize a paired model-vs-baseline fold comparison.
+
+    Both models are scored on exactly the same held-out folds, so inference is
+    performed on their fold-wise differences rather than on independent SDs.
+    """
+    if model not in task["per_fold"] or baseline not in task["per_fold"]:
+        raise KeyError(f"unknown model comparison: {model} vs {baseline}")
+    differences = np.asarray(task["per_fold"][model], dtype=np.float64) - np.asarray(
+        task["per_fold"][baseline], dtype=np.float64
+    )
+    n = int(differences.size)
+    if n == 0:
+        raise ValueError("paired comparison requires at least one fold")
+    mean = float(np.mean(differences))
+    sd = float(np.std(differences, ddof=1)) if n > 1 else 0.0
+    if n > 1 and sd > 0.0:
+        from scipy.stats import t
+
+        half_width = float(t.ppf(0.975, n - 1) * sd / math.sqrt(n))
+    else:
+        half_width = 0.0
+    ci_low = mean - half_width
+    ci_high = mean + half_width
+    return {
+        "model": model,
+        "baseline": baseline,
+        "n_folds": n,
+        "mean_difference": mean,
+        "sd_difference": sd,
+        "ci95_low": float(ci_low),
+        "ci95_high": float(ci_high),
+        "sesoi": float(sesoi),
+        "passes_sesoi_and_ci": bool(mean >= sesoi and ci_low > 0.0),
+    }
+
+
+def q1_decision(
+    b1: dict,
+    b2: dict,
+    *,
+    sesoi_r2: float = 0.05,
+) -> dict:
+    """Apply the Q1 decision rule without promoting a paper claim."""
+    b1_comparisons = {
+        model: paired_difference_summary(b1, model, sesoi=sesoi_r2)
+        for model in ("backprop", "kan")
+    }
+    b2_comparisons = {
+        model: paired_difference_summary(b2, model, sesoi=sesoi_r2)
+        for model in ("backprop", "kan")
+    }
+    eligible = [
+        model
+        for model, summary in b1_comparisons.items()
+        if summary["passes_sesoi_and_ci"]
+    ]
+    selected = max(
+        eligible,
+        key=lambda model: b1_comparisons[model]["mean_difference"],
+        default="linear_null",
+    )
+    return {
+        "primary_endpoint": "B1_held_out_R2",
+        "secondary_endpoint": "B2_activation_accuracy",
+        "sesoi_r2": float(sesoi_r2),
+        "b1_paired_comparisons": b1_comparisons,
+        "b2_paired_comparisons": b2_comparisons,
+        "eligible_neural_models": eligible,
+        "selected_model_before_gates": selected,
+        "decision": (
+            "PASS_Q1_NEURAL_PREMIUM"
+            if eligible
+            else "NO_GO_NEURAL_PREMIUM_IN_WRAP_PANEL"
+        ),
+        "promotion_eligible": False,
+        "promotion_block_reason": [
+            "HOLD_WRAP_BEHAVIORAL_FIDELITY",
+            "HOLD_METRIC_PROVISIONAL",
+        ],
+    }
+
+
 def evaluate(x, y, groups, *, classify: bool, seed: int) -> dict:
     """Grouped CV for every model and every baseline, on identical folds."""
     from sklearn.linear_model import LinearRegression, LogisticRegression
@@ -179,6 +269,12 @@ def evaluate(x, y, groups, *, classify: bool, seed: int) -> dict:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--seed", type=int, default=20260731)
+    ap.add_argument(
+        "--sesoi-r2",
+        type=float,
+        default=0.05,
+        help="minimum paired held-out R2 gain required by the WRAP contract",
+    )
     ap.add_argument("--output", type=Path,
                     default=Path("results/garrido_fig5_surrogate/result.json"))
     args = ap.parse_args()
@@ -239,6 +335,7 @@ def main() -> int:
 
     # --- determinism ----------------------------------------------------------------------
     repeat = evaluate(x_design, y_ret, groups, classify=False, seed=args.seed)
+    q1 = q1_decision(b1, b2, sesoi_r2=args.sesoi_r2)
 
     falsifiers = {
         "f1_task_A_is_an_identity": {
@@ -306,6 +403,7 @@ def main() -> int:
         "B2_activation": {m: beats(b2, m) for m in ("backprop", "kan")},
         "rule": ("a network counts as learning something only if it beats the linear/logistic "
                  "baseline by more than one between-fold SD of that baseline"),
+        "q1_decision": q1,
     }
 
     print("  === Task A: la figura tal cual está dibujada ===")
@@ -323,6 +421,10 @@ def main() -> int:
             print(f"    {name:<40} {'PASA' if check['passed'] else 'FALLA'}")
     print(f"\n  ¿alguna red supera al lineal? {verdict['B1_regression']} / "
           f"{verdict['B2_activation']}")
+    print(
+        "  decisión Q1 con SESOI/IC pareado: "
+        f"{q1['decision']} (selección previa a gates: {q1['selected_model_before_gates']})"
+    )
 
     payload = {
         "schema_version": "garrido_fig5_surrogate_v1",
@@ -336,6 +438,7 @@ def main() -> int:
         "task_B1_regression": b1,
         "task_B2_activation_question": b2,
         "verdict": verdict,
+        "q1_decision": q1,
         "n_configurations": len(rows), "n_pairs": int(len(pair_y)),
         "features": ("buffer_hours, shifts, family one-hot, risk pattern flags -- "
                      "the drivers are deliberately EXCLUDED, they sum to the target"),

@@ -1,0 +1,232 @@
+{
+ "H1": {
+  "caveat": "system_ttr is right-censored by construction; its mean is optimistic",
+  "censored_fraction_by_arm": {
+   "hybrid": 1.0,
+   "reset": 1.0,
+   "static": 1.0
+  },
+  "contrasts": {
+   "hybrid_vs_reset": {
+    "lcb95": 0.0,
+    "mean": 0.0,
+    "ucb95": 0.0
+   },
+   "hybrid_vs_static": {
+    "lcb95": 0.0,
+    "mean": 0.0,
+    "ucb95": 0.0
+   }
+  },
+  "system_ttr_mean_by_arm": {
+   "hybrid": 0.0,
+   "reset": 0.0,
+   "static": 0.0
+  }
+ },
+ "H3": {
+  "cobb_douglas_variance_by_arm": {
+   "hybrid": 2.1835633737440482e-05,
+   "reset": 3.092409035787406e-05,
+   "static": 2.1835633737440482e-05
+  },
+  "contrasts": {
+   "flow_fill_rate": {
+    "hybrid_vs_reset": {
+     "lcb95": -1.5733997312215498e-05,
+     "mean": 5.483517199911409e-05,
+     "ucb95": 0.00014195774975503468
+    },
+    "hybrid_vs_static": {
+     "lcb95": 0.0,
+     "mean": 0.0,
+     "ucb95": 0.0
+    }
+   },
+   "ret_excel_risk_conditional": {
+    "hybrid_vs_static": {
+     "lcb95": 0.0,
+     "mean": 0.0,
+     "ucb95": 0.0
+    }
+   }
+  },
+  "primary": "flow_fill_rate",
+  "why_not_ret": "ret_excel prefers abandoning a claimant, so a variance reduction read on it would not mean what H3 claims"
+ },
+ "arms": {
+  "hybrid": "neuron_memory",
+  "reset": "neuron_reset",
+  "static": "ofat"
+ },
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "HALTED_FALSIFIER_FAILED",
+ "configs": {
+  "hybrid": {
+   "buffer_hours": 1344.0,
+   "op12_rop": 12.0,
+   "op9_rop": 12.0,
+   "shifts": 2
+  },
+  "reset": {
+   "buffer_hours": 1344.0,
+   "op12_rop": 12.0,
+   "op9_rop": 12.0,
+   "shifts": 3
+  },
+  "static": {
+   "buffer_hours": 1344.0,
+   "op12_rop": 12.0,
+   "op9_rop": 12.0,
+   "shifts": 2
+  }
+ },
+ "contract_path": "docs/PREREGISTRO_H1_H3_2026-07-31.md",
+ "contract_sha256": "ec4a305c177ad83e87d3ffffb7f3bde34c6335a220a5ea57afc15e010d0527f3",
+ "created_at": "2026-08-01T05:31:26.287184+00:00",
+ "elapsed_seconds": 13.493543416989269,
+ "falsifiers": {
+  "all_passed": false,
+  "f1_the_arms_are_actually_different_configurations": {
+   "evidence": {
+    "configs": {
+     "hybrid": {
+      "buffer_hours": 1344.0,
+      "op12_rop": 12.0,
+      "op9_rop": 12.0,
+      "shifts": 2
+     },
+     "reset": {
+      "buffer_hours": 1344.0,
+      "op12_rop": 12.0,
+      "op9_rop": 12.0,
+      "shifts": 3
+     },
+     "static": {
+      "buffer_hours": 1344.0,
+      "op12_rop": 12.0,
+      "op9_rop": 12.0,
+      "shifts": 2
+     }
+    },
+    "why_it_can_fail": "identical configurations give identical results, so H1 and H3 would be vacuous by construction"
+   },
+   "passed": false
+  },
+  "f2_the_intensity_ladder_actually_escalates": {
+   "evidence": {
+    "mean_risk_events_by_intensity": {
+     "1.0": 384.3,
+     "2.0": 461.06666666666666,
+     "3.0": 523.8000000000001,
+     "4.0": 591.4
+    },
+    "why_it_can_fail": "without more risk events, 'heterogeneous intensities' has not been tested"
+   },
+   "passed": true
+  },
+  "f3_ttr_censoring_leaves_an_estimand_at_all": {
+   "evidence": {
+    "and_worse": "comparability is not enough. If the censored fraction is 1.0 then NO recovery cluster ever closes, system_ttr_mean is 0.0 for every arm by vacuity, and H1 has no estimand. The first version of this falsifier checked only the gap and would have passed a fully censored measurement",
+    "censored_fraction_by_arm": {
+     "hybrid": 1.0,
+     "reset": 1.0,
+     "static": 1.0
+    },
+    "gap": 0.0,
+    "gap_threshold": 0.1,
+    "max_censoring_allowed": 0.999,
+    "why_it_can_fail": "system_ttr is right-censored, so its mean is optimistic; if the censored FRACTION also differs between arms, an arm that simply never recovers looks fast and the comparison is confounded"
+   },
+   "passed": false
+  },
+  "f4_arms_share_seeds_and_ladder": {
+   "evidence": {
+    "intensities": [
+     1.0,
+     2.0,
+     3.0,
+     4.0
+    ],
+    "seeds": [
+     5700001,
+     5700002,
+     5700003,
+     5700004,
+     5700005,
+     5700006,
+     5700007,
+     5700008,
+     5700009,
+     5700010
+    ],
+    "why_it_can_fail": "different seeds would measure luck, not policy"
+   },
+   "passed": true
+  },
+  "f5_variance_is_across_intensities_not_within": {
+   "evidence": {
+    "mechanism": "variance_vector stacks the four rungs per seed, ddof=1",
+    "why_it_can_fail": "H3 is about variance ACROSS intensities; taking it within one rung would be a different hypothesis"
+   },
+   "passed": true
+  },
+  "f6_seeds_are_virgin": {
+   "evidence": {
+    "seeds": [
+     5700001,
+     5700002,
+     5700003,
+     5700004,
+     5700005,
+     5700006,
+     5700007,
+     5700008,
+     5700009,
+     5700010
+    ],
+    "why_it_can_fail": "reuse would void the confirmation"
+   },
+   "passed": true
+  }
+ },
+ "intensities": [
+  1.0,
+  2.0,
+  3.0,
+  4.0
+ ],
+ "reference_path": "results/garrido_meta_learner_v2/result.json",
+ "reference_sha256": "efb3f067ba295990c1a04e34e669f42cb2c431d9aa92cdb0346ad07c746fb391",
+ "schema_version": "h1_h3_recovery_volatility_v1",
+ "seeds": [
+  5700001,
+  5700002,
+  5700003,
+  5700004,
+  5700005,
+  5700006,
+  5700007,
+  5700008,
+  5700009,
+  5700010
+ ],
+ "self_sha256": "5a01aa2e47aff29cabce69ea25517a0ec06c612885d06dd2a47ab77f693e5f3c"
+}

@@ -1,0 +1,831 @@
+{
+ "budget": 4,
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "NEURON_DOES_NOT_BEAT_THE_NULL",
+ "contexts": [
+  "R1r",
+  "R2r",
+  "R1r+R2r",
+  "R1r|esc",
+  "R2r|esc",
+  "R1r+R2r|esc"
+ ],
+ "contract_path": "docs/PREREGISTRO_META_APRENDIZ_V2_2026-08-01.md",
+ "contract_sha256": "91614d392a727af4ea7c5f995869e53ed7ce3593e6c9b53949092055a600293b",
+ "created_at": "2026-08-01T05:27:41.925666+00:00",
+ "elapsed_seconds": 1.2256085829867516,
+ "factors": {
+  "buffer_hours": [
+   0.0,
+   168.0,
+   336.0,
+   504.0,
+   672.0,
+   1344.0
+  ],
+  "op12_rop": [
+   12.0,
+   24.0,
+   36.0,
+   48.0
+  ],
+  "op9_rop": [
+   12.0,
+   24.0,
+   36.0,
+   48.0
+  ],
+  "shifts": [
+   1,
+   2,
+   3
+  ]
+ },
+ "falsifiers": {
+  "all_passed": true,
+  "f1_the_surface_has_a_real_optimum": {
+   "evidence": {
+    "mean_seed_sd": 0.0,
+    "mean_spread_across_configs": 0.021215127465127465,
+    "why_it_can_fail": "if configurations differ by less than seed noise, 'finding the best' is meaningless and every strategy ties by construction"
+   },
+   "passed": true
+  },
+  "f2_ofat_is_really_one_factor_at_a_time": {
+   "evidence": {
+    "max_coordinates_changed": 1,
+    "n_proposals": 24,
+    "why_it_can_fail": "if a proposal moves more than one coordinate it is not the thesis's design and the comparison is against a straw man"
+   },
+   "passed": true
+  },
+  "f3_memory_is_the_only_difference": {
+   "evidence": {
+    "contract_match": true,
+    "memory_arm_contract": {
+     "budget": 4,
+     "context_order": [
+      "R1r",
+      "R2r",
+      "R1r+R2r",
+      "R1r|esc",
+      "R2r|esc",
+      "R1r+R2r|esc"
+     ],
+     "rho_policy": "carry",
+     "rng_streams": [
+      90000
+     ],
+     "seed_order": [
+      5910001
+     ],
+     "surface_keys": [
+      [
+       "R1r",
+       5910001
+      ],
+      [
+       "R1r+R2r",
+       5910001
+      ],
+      [
+       "R1r+R2r|esc",
+       5910001
+      ],
+      [
+       "R1r|esc",
+       5910001
+      ],
+      [
+       "R2r",
+       5910001
+      ],
+      [
+       "R2r|esc",
+       5910001
+      ]
+     ]
+    },
+    "negative_control_detected": true,
+    "reset_arm_contract": {
+     "budget": 4,
+     "context_order": [
+      "R1r",
+      "R2r",
+      "R1r+R2r",
+      "R1r|esc",
+      "R2r|esc",
+      "R1r+R2r|esc"
+     ],
+     "rho_policy": "reset",
+     "rng_streams": [
+      90000
+     ],
+     "seed_order": [
+      5910001
+     ],
+     "surface_keys": [
+      [
+       "R1r",
+       5910001
+      ],
+      [
+       "R1r+R2r",
+       5910001
+      ],
+      [
+       "R1r+R2r|esc",
+       5910001
+      ],
+      [
+       "R1r|esc",
+       5910001
+      ],
+      [
+       "R2r",
+       5910001
+      ],
+      [
+       "R2r|esc",
+       5910001
+      ]
+     ]
+    },
+    "shared_code_path": "search() with strategy in {neuron_memory, neuron_reset}; the only intended branch is rho reset",
+    "trace_shapes_match": true,
+    "why_it_can_fail": "if the two neuron arms differed in seeds, context order or code path, the contrast would not isolate memory"
+   },
+   "passed": true
+  },
+  "f4_random_search_is_uninformed": {
+   "evidence": {
+    "mechanism": "all table values replaced after the index-bearing shadow was built; the RNG stream is held fixed",
+    "sequences_compared": 6,
+    "sequences_identical": true,
+    "why_it_can_fail": "consulting the table before drawing the index is not a null"
+   },
+   "passed": true
+  },
+  "f5_the_search_cannot_read_an_unrun_configuration": {
+   "evidence": {
+    "sequences_compared": 12,
+    "sequences_identical": true,
+    "test": "the whole search is replayed on a SHADOW surface whose driver vectors are permuted across configurations, values untouched; if the visited sequence changes by a single index, the search read a driver",
+    "why_it_can_fail": "a driver is a property of an episode that has ALREADY been simulated, so ranking an unrun candidate by its drivers is reading the answer. An earlier version of this runner did exactly that and the previous f5 could not catch it, because it asserted `passed: True` with a claim about rho instead of testing the ranking step"
+   },
+   "passed": true
+  },
+  "f6_seeds_are_virgin": {
+   "evidence": {
+    "seeds": [
+     5910001
+    ],
+    "why_it_can_fail": "a reused seed would void the confirmation"
+   },
+   "passed": true
+  }
+ },
+ "final_regret": {
+  "neuron_memory": 0.0057938474724701415,
+  "neuron_reset": 0.0057938474724701415,
+  "ofat": 0.021215127465127465,
+  "random": 0.009121665371665373
+ },
+ "memory_vs_ofat": {
+  "lcb95": 0.9999999999999996,
+  "mean": 0.9999999999999996,
+  "ucb95": 0.9999999999999996
+ },
+ "memory_vs_random": {
+  "lcb95": 0.0,
+  "mean": 0.0,
+  "ucb95": 0.0
+ },
+ "metric": "ret_excel_risk_conditional",
+ "n_configurations": 288,
+ "per_context": {
+  "neuron_memory": [
+   {
+    "R1r": {
+     "best": 0.045454545454545456,
+     "chosen_config": {
+      "buffer_hours": 672.0,
+      "op12_rop": 36.0,
+      "op9_rop": 12.0,
+      "shifts": 2
+     },
+     "chosen_value": 0.029411764705882353,
+     "final_regret": 0.016042780748663103,
+     "regret_curve": [
+      0.045454545454545456,
+      0.016042780748663103,
+      0.016042780748663103,
+      0.016042780748663103
+     ],
+     "runs_to_within_1pct": 5,
+     "visited_sequence": [
+      269,
+      210,
+      70,
+      0
+     ]
+    },
+    "R1r+R2r": {
+     "best": 0.045454545454545456,
+     "chosen_config": {
+      "buffer_hours": 1344.0,
+      "op12_rop": 12.0,
+      "op9_rop": 36.0,
+      "shifts": 2
+     },
+     "chosen_value": 0.028824833702882482,
+     "final_regret": 0.016629711751662973,
+     "regret_curve": [
+      0.045454545454545456,
+      0.016629711751662973,
+      0.016629711751662973,
+      0.016629711751662973
+     ],
+     "runs_to_within_1pct": 5,
+     "visited_sequence": [
+      205,
+      264,
+      38,
+      0
+     ]
+    },
+    "R1r+R2r|esc": {
+     "best": 0.015151515151515152,
+     "chosen_config": {
+      "buffer_hours": 672.0,
+      "op12_rop": 24.0,
+      "op9_rop": 12.0,
+      "shifts": 1
+     },
+     "chosen_value": 0.015151515151515152,
+     "final_regret": 0.0,
+     "regret_curve": [
+      0.00543900543900544,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "runs_to_within_1pct": 2,
+     "visited_sequence": [
+      232,
+      227,
+      193,
+      275
+     ]
+    },
+    "R1r|esc": {
+     "best": 0.014285714285714285,
+     "chosen_config": {
+      "buffer_hours": 504.0,
+      "op12_rop": 36.0,
+      "op9_rop": 36.0,
+      "shifts": 1
+     },
+     "chosen_value": 0.012195121951219513,
+     "final_regret": 0.0020905923344947726,
+     "regret_curve": [
+      0.014285714285714285,
+      0.004851752021563342,
+      0.0020905923344947726,
+      0.0020905923344947726
+     ],
+     "runs_to_within_1pct": 5,
+     "visited_sequence": [
+      197,
+      172,
+      154,
+      0
+     ]
+    },
+    "R2r": {
+     "best": 0.0,
+     "chosen_config": {
+      "buffer_hours": 1344.0,
+      "op12_rop": 12.0,
+      "op9_rop": 12.0,
+      "shifts": 3
+     },
+     "chosen_value": 0.0,
+     "final_regret": 0.0,
+     "regret_curve": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "runs_to_within_1pct": 1,
+     "visited_sequence": [
+      14,
+      221,
+      272,
+      0
+     ]
+    },
+    "R2r|esc": {
+     "best": 0.006944444444444444,
+     "chosen_config": {
+      "buffer_hours": 336.0,
+      "op12_rop": 12.0,
+      "op9_rop": 24.0,
+      "shifts": 2
+     },
+     "chosen_value": 0.006944444444444444,
+     "final_regret": 0.0,
+     "regret_curve": [
+      0.006944444444444444,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "runs_to_within_1pct": 2,
+     "visited_sequence": [
+      40,
+      116,
+      285,
+      0
+     ]
+    }
+   }
+  ],
+  "neuron_reset": [
+   {
+    "R1r": {
+     "best": 0.045454545454545456,
+     "chosen_config": {
+      "buffer_hours": 672.0,
+      "op12_rop": 36.0,
+      "op9_rop": 12.0,
+      "shifts": 2
+     },
+     "chosen_value": 0.029411764705882353,
+     "final_regret": 0.016042780748663103,
+     "regret_curve": [
+      0.045454545454545456,
+      0.016042780748663103,
+      0.016042780748663103,
+      0.016042780748663103
+     ],
+     "runs_to_within_1pct": 5,
+     "visited_sequence": [
+      269,
+      210,
+      70,
+      0
+     ]
+    },
+    "R1r+R2r": {
+     "best": 0.045454545454545456,
+     "chosen_config": {
+      "buffer_hours": 1344.0,
+      "op12_rop": 12.0,
+      "op9_rop": 36.0,
+      "shifts": 2
+     },
+     "chosen_value": 0.028824833702882482,
+     "final_regret": 0.016629711751662973,
+     "regret_curve": [
+      0.045454545454545456,
+      0.016629711751662973,
+      0.016629711751662973,
+      0.016629711751662973
+     ],
+     "runs_to_within_1pct": 5,
+     "visited_sequence": [
+      205,
+      264,
+      38,
+      0
+     ]
+    },
+    "R1r+R2r|esc": {
+     "best": 0.015151515151515152,
+     "chosen_config": {
+      "buffer_hours": 672.0,
+      "op12_rop": 24.0,
+      "op9_rop": 12.0,
+      "shifts": 1
+     },
+     "chosen_value": 0.015151515151515152,
+     "final_regret": 0.0,
+     "regret_curve": [
+      0.00543900543900544,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "runs_to_within_1pct": 2,
+     "visited_sequence": [
+      232,
+      227,
+      193,
+      287
+     ]
+    },
+    "R1r|esc": {
+     "best": 0.014285714285714285,
+     "chosen_config": {
+      "buffer_hours": 504.0,
+      "op12_rop": 36.0,
+      "op9_rop": 36.0,
+      "shifts": 1
+     },
+     "chosen_value": 0.012195121951219513,
+     "final_regret": 0.0020905923344947726,
+     "regret_curve": [
+      0.014285714285714285,
+      0.004851752021563342,
+      0.0020905923344947726,
+      0.0020905923344947726
+     ],
+     "runs_to_within_1pct": 5,
+     "visited_sequence": [
+      197,
+      172,
+      154,
+      47
+     ]
+    },
+    "R2r": {
+     "best": 0.0,
+     "chosen_config": {
+      "buffer_hours": 1344.0,
+      "op12_rop": 12.0,
+      "op9_rop": 12.0,
+      "shifts": 3
+     },
+     "chosen_value": 0.0,
+     "final_regret": 0.0,
+     "regret_curve": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "runs_to_within_1pct": 1,
+     "visited_sequence": [
+      14,
+      221,
+      272,
+      0
+     ]
+    },
+    "R2r|esc": {
+     "best": 0.006944444444444444,
+     "chosen_config": {
+      "buffer_hours": 336.0,
+      "op12_rop": 12.0,
+      "op9_rop": 24.0,
+      "shifts": 2
+     },
+     "chosen_value": 0.006944444444444444,
+     "final_regret": 0.0,
+     "regret_curve": [
+      0.006944444444444444,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "runs_to_within_1pct": 2,
+     "visited_sequence": [
+      40,
+      116,
+      285,
+      0
+     ]
+    }
+   }
+  ],
+  "ofat": [
+   {
+    "R1r": {
+     "best": 0.045454545454545456,
+     "chosen_config": {
+      "buffer_hours": 336.0,
+      "op12_rop": 24.0,
+      "op9_rop": 24.0,
+      "shifts": 1
+     },
+     "chosen_value": 0.0,
+     "final_regret": 0.045454545454545456,
+     "regret_curve": [
+      0.045454545454545456,
+      0.045454545454545456,
+      0.045454545454545456,
+      0.045454545454545456
+     ],
+     "runs_to_within_1pct": 5,
+     "visited_sequence": [
+      5,
+      53,
+      101,
+      149
+     ]
+    },
+    "R1r+R2r": {
+     "best": 0.045454545454545456,
+     "chosen_config": {
+      "buffer_hours": 336.0,
+      "op12_rop": 24.0,
+      "op9_rop": 24.0,
+      "shifts": 1
+     },
+     "chosen_value": 0.0,
+     "final_regret": 0.045454545454545456,
+     "regret_curve": [
+      0.045454545454545456,
+      0.045454545454545456,
+      0.045454545454545456,
+      0.045454545454545456
+     ],
+     "runs_to_within_1pct": 5,
+     "visited_sequence": [
+      5,
+      53,
+      101,
+      149
+     ]
+    },
+    "R1r+R2r|esc": {
+     "best": 0.015151515151515152,
+     "chosen_config": {
+      "buffer_hours": 336.0,
+      "op12_rop": 24.0,
+      "op9_rop": 24.0,
+      "shifts": 1
+     },
+     "chosen_value": 0.0,
+     "final_regret": 0.015151515151515152,
+     "regret_curve": [
+      0.015151515151515152,
+      0.015151515151515152,
+      0.015151515151515152,
+      0.015151515151515152
+     ],
+     "runs_to_within_1pct": 5,
+     "visited_sequence": [
+      5,
+      53,
+      101,
+      149
+     ]
+    },
+    "R1r|esc": {
+     "best": 0.014285714285714285,
+     "chosen_config": {
+      "buffer_hours": 336.0,
+      "op12_rop": 24.0,
+      "op9_rop": 24.0,
+      "shifts": 1
+     },
+     "chosen_value": 0.0,
+     "final_regret": 0.014285714285714285,
+     "regret_curve": [
+      0.014285714285714285,
+      0.014285714285714285,
+      0.014285714285714285,
+      0.014285714285714285
+     ],
+     "runs_to_within_1pct": 5,
+     "visited_sequence": [
+      5,
+      53,
+      101,
+      149
+     ]
+    },
+    "R2r": {
+     "best": 0.0,
+     "chosen_config": {
+      "buffer_hours": 336.0,
+      "op12_rop": 24.0,
+      "op9_rop": 24.0,
+      "shifts": 1
+     },
+     "chosen_value": 0.0,
+     "final_regret": 0.0,
+     "regret_curve": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "runs_to_within_1pct": 1,
+     "visited_sequence": [
+      5,
+      53,
+      101,
+      149
+     ]
+    },
+    "R2r|esc": {
+     "best": 0.006944444444444444,
+     "chosen_config": {
+      "buffer_hours": 336.0,
+      "op12_rop": 24.0,
+      "op9_rop": 24.0,
+      "shifts": 1
+     },
+     "chosen_value": 0.0,
+     "final_regret": 0.006944444444444444,
+     "regret_curve": [
+      0.006944444444444444,
+      0.006944444444444444,
+      0.006944444444444444,
+      0.006944444444444444
+     ],
+     "runs_to_within_1pct": 5,
+     "visited_sequence": [
+      5,
+      53,
+      101,
+      149
+     ]
+    }
+   }
+  ],
+  "random": [
+   {
+    "R1r": {
+     "best": 0.045454545454545456,
+     "chosen_config": {
+      "buffer_hours": 672.0,
+      "op12_rop": 48.0,
+      "op9_rop": 12.0,
+      "shifts": 2
+     },
+     "chosen_value": 0.045454545454545456,
+     "final_regret": 0.0,
+     "regret_curve": [
+      0.045454545454545456,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "runs_to_within_1pct": 2,
+     "visited_sequence": [
+      269,
+      211,
+      70,
+      14
+     ]
+    },
+    "R1r+R2r": {
+     "best": 0.045454545454545456,
+     "chosen_config": {
+      "buffer_hours": 504.0,
+      "op12_rop": 48.0,
+      "op9_rop": 36.0,
+      "shifts": 1
+     },
+     "chosen_value": 0.0,
+     "final_regret": 0.045454545454545456,
+     "regret_curve": [
+      0.045454545454545456,
+      0.045454545454545456,
+      0.045454545454545456,
+      0.045454545454545456
+     ],
+     "runs_to_within_1pct": 5,
+     "visited_sequence": [
+      38,
+      197,
+      173,
+      155
+     ]
+    },
+    "R1r+R2r|esc": {
+     "best": 0.015151515151515152,
+     "chosen_config": {
+      "buffer_hours": 672.0,
+      "op12_rop": 36.0,
+      "op9_rop": 36.0,
+      "shifts": 2
+     },
+     "chosen_value": 0.01282051282051282,
+     "final_regret": 0.002331002331002332,
+     "regret_curve": [
+      0.005347593582887701,
+      0.005347593582887701,
+      0.005347593582887701,
+      0.002331002331002332
+     ],
+     "runs_to_within_1pct": 5,
+     "visited_sequence": [
+      188,
+      197,
+      86,
+      218
+     ]
+    },
+    "R1r|esc": {
+     "best": 0.014285714285714285,
+     "chosen_config": {
+      "buffer_hours": 336.0,
+      "op12_rop": 48.0,
+      "op9_rop": 12.0,
+      "shifts": 2
+     },
+     "chosen_value": 0.014285714285714285,
+     "final_regret": 0.0,
+     "regret_curve": [
+      0.014285714285714285,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "runs_to_within_1pct": 2,
+     "visited_sequence": [
+      40,
+      115,
+      285,
+      232
+     ]
+    },
+    "R2r": {
+     "best": 0.0,
+     "chosen_config": {
+      "buffer_hours": 1344.0,
+      "op12_rop": 12.0,
+      "op9_rop": 12.0,
+      "shifts": 3
+     },
+     "chosen_value": 0.0,
+     "final_regret": 0.0,
+     "regret_curve": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "runs_to_within_1pct": 1,
+     "visited_sequence": [
+      221,
+      272,
+      205,
+      264
+     ]
+    },
+    "R2r|esc": {
+     "best": 0.006944444444444444,
+     "chosen_config": {
+      "buffer_hours": 672.0,
+      "op12_rop": 36.0,
+      "op9_rop": 12.0,
+      "shifts": 1
+     },
+     "chosen_value": 0.0,
+     "final_regret": 0.006944444444444444,
+     "regret_curve": [
+      0.006944444444444444,
+      0.006944444444444444,
+      0.006944444444444444,
+      0.006944444444444444
+     ],
+     "runs_to_within_1pct": 5,
+     "visited_sequence": [
+      227,
+      194,
+      93,
+      86
+     ]
+    }
+   }
+  ]
+ },
+ "reference_path": "results/garrido_drivers_per_configuration/result.json",
+ "reference_sha256": "491694175a3975a70d3f6a9d7af90f3cc5b97849a5d348786bd44c9c3455a392",
+ "repeats": 1,
+ "runs_to_within_1pct": {
+  "neuron_memory": 3.3333333333333335,
+  "neuron_reset": 3.3333333333333335,
+  "ofat": 4.333333333333333,
+  "random": 3.3333333333333335
+ },
+ "schema_version": "garrido_meta_learner_v2",
+ "seeds": [
+  5910001
+ ],
+ "self_sha256": "802dfda1cd46681b512d15eddfbcc4736be0a8b167409862d059077e841315df"
+}

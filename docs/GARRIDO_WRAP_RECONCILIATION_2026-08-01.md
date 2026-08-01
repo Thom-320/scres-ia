@@ -1,6 +1,6 @@
 # Garrido–WRAP reconciliation ledger — 2026-08-01
 
-**Status:** `RECONCILIATION_COMPLETE_FASE4_PENDING`
+**Status:** `RECONCILIATION_COMPLETE_FASE4_90_DONE_288_PENDING`
 
 This ledger reconciles the live repository after the driver-leak discovery. It does
 not rewrite frozen contracts or promote development artifacts into manuscript claims.
@@ -13,15 +13,18 @@ not rewrite frozen contracts or promote development artifacts into manuscript cl
 | `results/garrido_wrap_q1/result.json` | valid development result | Q1 neural-vs-linear panel; `NO_GO_NEURAL_PREMIUM_IN_WRAP_PANEL` |
 | `results/garrido_wrap_q2_smoke_2016h/result.json` | valid smoke only | interface test; not H4 confirmation |
 | `results/garrido_meta_learner/result.json` | **retired for contrasts** | provenance only; its search used the leaked driver ranking |
-| `results/garrido_meta_learner_v2/result.json` | pending | VPS rerun of the corrected search |
+| `results/garrido_meta_learner_v2/result.json` | legacy/pending | VPS process opened before the v2 f3/f4 runtime checks; do not use for contrasts |
+| `results/garrido_meta_learner_thesis90_v2/result.json` | valid replay only | 90 thesis-native cells; all six runtime falsifiers pass; `SURFACE_REPLAY_ONLY` |
+| `results/garrido_meta_learner_v2_corrected/result.json` | pending | 288 DES rerun under v2 seed block and contract |
 | H1/H3 | pending | wait for corrected final-configuration selections |
 | Fase 1A contention | valid but subcritical | mechanism is live; `H_regime` is below the 0.01 authorization bar |
 | Fase 1B expedition | valid complete `NO_TIMING_HEADROOM_UNDER_SERVICE_FIRST` | 240 held-out episodes; all nine falsifiers pass; ReT diagnostic gain does not survive the service-first gate |
 
 The old meta-learner contrasts (`+6.31`, `+5.18`, `+12.31`) remain withdrawn.
-The corrected runner and the control that reintroduces the leak are the relevant
-validation objects; the corrected VPS artifact is required before reporting new
-effect sizes.
+The 90-cell replay is now the relevant thesis-native validation object for the search
+interface, but its `ret_excel` endpoint remains provisional and its replay repetitions
+are not independent DES replications. The 288 corrected DES artifact is still required
+before reporting a physical confirmation effect size.
 
 ## 2. Cobb–Douglas boundary
 
@@ -77,8 +80,8 @@ contract if its timing changes.
 
 ## 5. Next artifacts
 
-- corrected VPS result: `results/garrido_meta_learner_v2/result.json`;
-- thesis-native 90-configuration search result;
+- corrected 288 VPS result: `results/garrido_meta_learner_v2_corrected/result.json`;
+- thesis-native 90-configuration search result: `results/garrido_meta_learner_thesis90_v2/result.json`;
 - separate 288-configuration extended search result;
 - CSSU physical Op11 timing addendum or explicit no-go;
 - corrected expedition result and metric adjudication;
