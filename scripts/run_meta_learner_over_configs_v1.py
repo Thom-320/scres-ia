@@ -311,13 +311,35 @@ def main() -> int:
     }
     memory_arm_contract = dict(common_arm_contract, rho_policy="carry")
     reset_arm_contract = dict(common_arm_contract, rho_policy="reset")
-    f3_contract_match = all(
-        memory_arm_contract[key] == reset_arm_contract[key]
-        for key in common_arm_contract
-    ) and memory_arm_contract["rho_policy"] != reset_arm_contract["rho_policy"]
-    f3_negative_control_detected = memory_arm_contract != dict(
-        reset_arm_contract, budget=int(args.budget) + 1
-    )
+    def arms_share_everything_but_rho(a: dict, b: dict) -> bool:
+        """THE checker f3 exists to exercise: the two arms may differ in rho and nothing else."""
+        return (all(a.get(key) == b.get(key) for key in common_arm_contract)
+                and a.get("rho_policy") != b.get("rho_policy"))
+
+    def traces_have_contracted_shape(store: dict, budget: int) -> bool:
+        """Every arm must visit exactly `budget` configurations in every context."""
+        return all(
+            len(store[arm][r]["per_context"]) == len(ctx_order)
+            and all(len(store[arm][r]["per_context"][ctx]["visited_sequence"]) == int(budget)
+                    for ctx in ctx_order)
+            for arm in ("neuron_memory", "neuron_reset") for r in range(len(seeds)))
+
+    f3_contract_match = arms_share_everything_but_rho(memory_arm_contract, reset_arm_contract)
+    # The v2 contract demands that "una diferencia deliberada de presupuesto sea DETECTADA por el
+    # checker". The previous form compared memory_arm_contract with a budget-tampered
+    # reset_arm_contract -- but those two already differ in rho_policy, so `!=` was True by
+    # construction and would have held with an identical budget. It was tautological. The check
+    # now feeds a budget-tampered arm to the SAME comparator and requires it to reject:
+    f3_budget_tamper_rejected = not arms_share_everything_but_rho(
+        dict(memory_arm_contract, budget=int(args.budget) + 1), reset_arm_contract)
+    # And the trace-shape checker gets its own mutant: a sequence one visit too long must fail.
+    _tampered = {arm: [dict(rep, per_context={
+        ctx: (dict(cell, visited_sequence=list(cell["visited_sequence"]) + [cell["visited_sequence"][0]])
+              if (arm, r, ctx) == ("neuron_memory", 0, ctx_order[0]) else cell)
+        for ctx, cell in rep["per_context"].items()}) for r, rep in enumerate(results[arm])]
+        for arm in ("neuron_memory", "neuron_reset")}
+    f3_trace_tamper_rejected = not traces_have_contracted_shape(_tampered, args.budget)
+    f3_negative_control_detected = bool(f3_budget_tamper_rejected and f3_trace_tamper_rejected)
     f3_trace_shapes_match = all(
         len(results["neuron_memory"][r]["per_context"]) == len(ctx_order)
         and len(results["neuron_reset"][r]["per_context"]) == len(ctx_order)
@@ -376,6 +398,8 @@ def main() -> int:
                          "contract_match": f3_contract_match,
                          "trace_shapes_match": f3_trace_shapes_match,
                          "negative_control_detected": f3_negative_control_detected,
+                         "budget_tamper_rejected": f3_budget_tamper_rejected,
+                         "trace_tamper_rejected": f3_trace_tamper_rejected,
                          "memory_arm_contract": memory_arm_contract,
                          "reset_arm_contract": reset_arm_contract}},
         "f4_random_search_is_uninformed": {
