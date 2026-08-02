@@ -148,10 +148,15 @@ def main() -> int:
     ap.add_argument("--replay-of", default=None,
                     help="registry block id this run deliberately re-executes; makes the custody "
                          "falsifier NOT_APPLICABLE instead of a pass or a failure")
+    ap.add_argument("--audit-status", default=None,
+                    help="explicit adjudication scope for a declared replay; kept separate from "
+                         "the runner's scientific claim_status")
     ap.add_argument("--schema-version", default="garrido_meta_learner_v1")
     ap.add_argument("--output", type=Path,
                     default=Path("results/garrido_meta_learner/result.json"))
     args = ap.parse_args()
+    if args.audit_status and not args.replay_of:
+        ap.error("--audit-status requires --replay-of")
     horizon = float(args.horizon_weeks * HOURS_PER_WEEK)
     started = time.perf_counter()
 
@@ -410,6 +415,9 @@ def main() -> int:
     verdict = ("ALZHEIMER_EFFECT_HAS_A_MEASURED_PRICE" if memory_pays and beats_null
                else "MEMORY_DOES_NOT_PAY_IN_THIS_SPACE" if beats_null
                else "NEURON_DOES_NOT_BEAT_THE_NULL")
+    run_claim_status = verdict if falsifiers["all_passed"] else "HALTED_FALSIFIER_FAILED"
+    audit_status = args.audit_status or (
+        "BEHAVIORAL_REPRODUCIBILITY_ONLY_NOT_SOURCE_IDENTITY" if args.replay_of else None)
 
     print(f"\n  === corridas hasta el 1% del óptimo (presupuesto {args.budget}) ===")
     for s in STRATEGIES:
@@ -437,11 +445,11 @@ def main() -> int:
         # number the whole contract exists to produce was absent from its own artifact.
         "alzheimer_effect_reset_minus_memory": alzheimer,
         "schema_version": args.schema_version,
-        "claim_status": verdict if falsifiers["all_passed"] else "HALTED_FALSIFIER_FAILED",
+        "claim_status": run_claim_status,
+        "run_claim_status": run_claim_status,
         # A replay is an audit, not a fresh claim. Keeping one field would let the runner's
         # generic verdict be read as the audit's scope, which is a dangerous ambiguity.
-        "audit_status": ("BEHAVIORAL_REPRODUCIBILITY_ONLY_NOT_SOURCE_IDENTITY"
-                         if args.replay_of else None),
+        "audit_status": audit_status,
         "replay_of": args.replay_of,
         "metric": METRIC, "budget": args.budget, "repeats": args.repeats,
         "n_configurations": n_cfg, "factors": {k: list(v) for k, v in FACTORS.items()},

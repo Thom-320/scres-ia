@@ -106,3 +106,16 @@ def test_real_registry_marks_the_h3_vps_block_as_used(tmp_path: Path):
     out = sc.check_seeds([6_000_091, 6_000_120], results_root=tmp_path)
     assert out["status"] == sc.COLLISION
     assert any(c["id"] == "garrido_h3_vps" for c in out["registry_conflicts"])
+
+
+def test_module_manifest_uses_repo_relative_entry_path(monkeypatch):
+    """Manifest equality must not depend on the checkout's absolute filesystem path."""
+    repo = Path(__file__).resolve().parents[1]
+    monkeypatch.chdir(repo)
+    manifest = sc.module_manifest(
+        script=repo / "scripts" / "run_meta_learner_over_configs_v1.py")
+    assert manifest["schema"] == "module_manifest_v2"
+    assert manifest["entry_script"] == "scripts/run_meta_learner_over_configs_v1.py"
+    assert not manifest["entry_script"].startswith("/")
+    assert manifest["entry_script_sha256"]
+    assert "NOT the full execution dependency set" in manifest["scope"]

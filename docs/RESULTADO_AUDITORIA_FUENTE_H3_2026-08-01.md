@@ -44,8 +44,10 @@ serlo para otros.
 | **contrato H3′** | `PREREGISTRO_H3_POTENCIA_2026-08-01.md` · **`576d02b5…`** |
 
 **Ninguna de las dos rebanadas es un artefacto H3′ contratado.** Yo había supuesto que el problema
-era sólo el VPS; es de las dos. Por tanto **ambas permanecen no promovibles**, y ni `+4,92` ni
-`+7,61` entran al manuscrito. El estado canónico sigue siendo **`ARTIFACTS_PRESENT_MERGE_PENDING`**.
+era sólo el VPS; es de las dos. Por tanto **ambas permanecen no promovibles**. Aquí las dos cifras
+son estimandos distintos: `+7,61` es el efecto Alzheimer (`reset − memory`) y `+4,92` es la
+comparación `memory − OFAT`; ninguno entra al manuscrito. El estado canónico sigue siendo
+**`ARTIFACTS_PRESENT_MERGE_PENDING`**.
 
 ## 3. Un defecto que introduje y que obligó a regenerar
 
@@ -67,9 +69,10 @@ hacía algo distinto de lo que su nombre prometía.**
   sellados, en un solo módulo en vez de seis copias.
 * **La réplica se declara en la EJECUCIÓN**, no en un documento. `--replay-of garrido_h3_vps`
   produce `DECLARED_REPLAY` y `not_applicable=True`, **contado en ninguna de las dos columnas**.
-* **`module_manifest()`** sella los hashes de los módulos de los que depende la corrida. Hace
-  decidible `f_merge_source_is_identical` para rebanadas **futuras**; no rescata retroactivamente
-  las que se sellaron sin él.
+* **`module_manifest()`** sella los hashes de los módulos declarados y del entry point, con rutas
+  relativas al repositorio. Hace decidible la comparación de ese conjunto declarado para rebanadas
+  **futuras**; no cubre el intérprete, paquetes de terceros ni todo el entorno, y no rescata
+  retroactivamente las rebanadas selladas sin él.
 
 ## 5. Qué haría falta para un H3′ citable
 
