@@ -156,3 +156,21 @@ def test_null_arm_matches_the_frozen_golden_hash(default_run):
         "the null arm no longer reproduces the frozen science. Either a real defect was "
         "introduced, or the physics changed deliberately -- in which case re-freeze the golden "
         "hash in a commit that says why, never silently.")
+
+
+def test_runtime_activation_drift_is_caught_by_the_golden_hash(default_run, monkeypatch):
+    """Inject a real production-path drift and prove the independent anchor rejects it."""
+    original_activate = MFSCSimulation._activate_due_cssu_action
+
+    def mutated_activate(sim):
+        before = len(sim.cssu_action_events)
+        original_activate(sim)
+        if len(sim.cssu_action_events) > before:
+            # Deliberate defect: 0.001 absolute share drift after every activation.
+            sim.cssu_allocation_a += 0.001
+
+    monkeypatch.setattr(MFSCSimulation, "_activate_due_cssu_action", mutated_activate)
+    mutated = run()
+
+    assert mutated["scientific_payload_sha256"] != GOLDEN_NULL_PAYLOAD_SHA256
+    assert mutated["scientific_payload_sha256"] != default_run["scientific_payload_sha256"]

@@ -1,0 +1,26 @@
+{
+  "schema_version": "g3c_mutation_receipt_v1",
+  "status": "DESIGN_ONLY_NOT_AUTHORIZED_UNTIL_SUBMISSION_A_RECEIPT",
+  "parent_contract": "contracts/g3c_temporal_coupling_v2.json",
+  "scope": "blocker_3_falsifier_receipt_only",
+  "fixture": {
+    "test": "tests/test_g3c_temporal_coupling_physics.py::test_null_arm_matches_the_frozen_golden_hash",
+    "seed": 5200001,
+    "horizon_weeks": 8,
+    "step_hours": 24.0,
+    "action_schedule": "alternating_0.9_0.1_requests",
+    "min_dwell_days": 1,
+    "switch_cost_rations": 0.0,
+    "scientific_payload_sha256": "be9d1bc227d498cb093f654014b791066ea945ad5c71cfc7cf74b2d9a4df9c37"
+  },
+  "mutation": {
+    "test": "tests/test_g3c_temporal_coupling_physics.py::test_runtime_activation_drift_is_caught_by_the_golden_hash",
+    "injected_defect": "add 0.001 absolute allocation share after every production-path activation",
+    "expected": "scientific_payload_sha256 differs from the frozen fixture",
+    "fresh_seeds_opened": false
+  },
+  "interpretation": {
+    "what_is_verified": "the null guard detects a production-path physical drift",
+    "what_is_not_verified": "G3c scientific performance, a neural premium, or execution authority"
+  }
+}
