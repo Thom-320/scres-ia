@@ -106,12 +106,22 @@
    "id": "g3_obs_v2_powered",
    "start": 7800001,
    "end": 7800140,
-   "status": "RESERVED_NOT_OPENED",
-   "source": null,
+   "status": "USED_DEVELOPMENT_NOT_VIRGIN",
+   "source": "results/headroom/g3_obs_conversion_v2/result.json",
    "purpose": "G3-obs powered re-run. The 16-seed run gave MDE 0.0256/0.0286 against a SESOI of 0.010, so its primary was undecidable by POWER, not by science. 66 test seeds are required per the observed paired SD; 140 reserved for a 70/70 split with margin.",
    "authorization": {
     "granted_by": "PI, in session 2026-08-02",
     "note": "authority_ladder_v1 is status DRAFT_PROSPECTIVE_UNOPENED_NOT_AUTHORITY: it neither prohibits nor authorizes. The authority is the PI, and the PI authorized. This block is opened on that authorization, not on a reading of the draft."
+   },
+   "outcome": {
+    "claim_status": "STRUCTURED_CONTROL_SUFFICES_G3_OBS",
+    "mde": [
+     0.0092,
+     0.0085
+    ],
+    "sesoi": 0.01,
+    "powered": true,
+    "note": "70 development / 70 test, disjoint; block now consumed"
    }
   }
  ],
