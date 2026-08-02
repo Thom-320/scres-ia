@@ -1,0 +1,71 @@
+{
+  "schema_version": "g3c_temporal_coupling_v2",
+  "status": "DESIGN_ONLY_NOT_AUTHORIZED_UNTIL_SUBMISSION_A_RECEIPT",
+  "supersedes": {
+    "document": "docs/PREREGISTRO_G3C_ACOPLAMIENTO_TEMPORAL_2026-08-01.md",
+    "scope": "blocker_1_and_blocker_3_only"
+  },
+  "mechanism": {
+    "name": "minimum_dwell",
+    "parameter": "cssu_min_dwell_days",
+    "unit": "days",
+    "levels": [1, 3, 7],
+    "null_level": 1,
+    "null_role": "legacy_regression",
+    "switch_cost_rations": null,
+    "switch_cost_status": "not_part_of_this_contract_requires_a_separate_preregistration"
+  },
+  "scope": {
+    "claimants": 2,
+    "topology": "split_v1",
+    "action": "cssu_allocation_a",
+    "activation_delay_hours": 24,
+    "learner_authorized": false
+  },
+  "estimands": {
+    "primary": "worst_claimant_fill",
+    "incumbent": "best_myopic_equivariant_rule",
+    "sesoi": 0.01,
+    "guardrails": {
+      "flow_fill_rate": {"delta": 0.005, "type": "non_inferiority"},
+      "lost_orders": {"delta": 0.5, "type": "non_inferiority"},
+      "backorder_qty_final_relative": {"delta": 0.01, "type": "non_inferiority"},
+      "mass_capacity_resources": {"delta": 0.0, "type": "algebraic_identity"}
+    }
+  },
+  "null_identity": {
+    "required": true,
+    "comparison": "canonical_scientific_payload_sha256",
+    "fields": ["orders", "risk_events", "actions", "ledgers", "metrics"],
+    "excluded_from_scientific_hash": [
+      "created_at",
+      "elapsed_seconds",
+      "calibration_provenance",
+      "module_manifest",
+      "self_sha256",
+      "contract_path",
+      "reference_path"
+    ],
+    "expected": "explicit_min_dwell_1_equals_legacy_default"
+  },
+  "falsifiers": {
+    "f1_null_arm_payload_identity": "must_pass",
+    "f2_min_dwell_actually_binds_at_3_or_7_days": "must_pass",
+    "f3_incumbent_is_myopic_equivariant_rule": "must_pass",
+    "f4_uninformed_placebo_fails": "must_pass",
+    "f5_wrong_claimant_fails": "must_pass",
+    "f6_guardrails_use_signed_margins": "must_pass",
+    "f7_power_frozen_before_execution": "must_pass",
+    "f8_no_fresh_seeds_before_authority": "must_pass",
+    "f9_no_gain_by_abandonment": "must_pass"
+  },
+  "mutations": {
+    "ignore_min_dwell": "f2_must_fail",
+    "compare_against_constant_instead_of_myopic_rule": "f3_must_fail",
+    "set_stochastic_guardrail_delta_to_zero": "f6_must_fail"
+  },
+  "authority": {
+    "seed_opening": "forbidden_until_submission_receipt_or_explicit_supersession",
+    "program_q_and_program_o": "immutable"
+  }
+}

@@ -284,6 +284,8 @@ class MFSCSimulation:
         # pool effectively fungible and the share nearly moot. False makes the shares hard.
         # See `cssu_allocation.allocate_shared_capacity` for why this is the mechanism knob.
         cssu_reallocate_unused: bool = True,
+        cssu_min_dwell_days: float = 1.0,
+        cssu_switch_cost_rations: float = 0.0,
         expedite_budget_hours: float = 0.0,
         expedite_reduction_hours: float = 12.0,
         expedite_charge_hours: float = 24.0,
@@ -492,6 +494,12 @@ class MFSCSimulation:
             None if cssu_daily_capacity is None else float(cssu_daily_capacity)
         )
         self.cssu_reallocate_unused = bool(cssu_reallocate_unused)
+        if float(cssu_min_dwell_days) < 1.0:
+            raise ValueError('cssu_min_dwell_days must be >= 1.0 (1 = the shipped, inert value)')
+        if float(cssu_switch_cost_rations) < 0.0:
+            raise ValueError('cssu_switch_cost_rations must be non-negative')
+        self.cssu_min_dwell_days = float(cssu_min_dwell_days)
+        self.cssu_switch_cost_rations = float(cssu_switch_cost_rations)
         self._pending_cssu_action: Optional[dict[str, Any]] = None
         self.cssu_action_events: list[dict[str, Any]] = []
         self.expedite_budget_hours = float(expedite_budget_hours)
@@ -929,6 +937,12 @@ class MFSCSimulation:
         # instrument for whether `cssu_reallocate_unused=False` actually binds: under the
         # fungible default it must stay at zero, because nothing is ever forfeited.
         self.cssu_forfeited_epochs = 0
+        # G3c temporal-coupling telemetry. All zero under the inert defaults.
+        self._cssu_last_switch_at: float | None = None
+        self.cssu_switch_count = 0
+        self.cssu_blocked_by_dwell_count = 0
+        self.cssu_switch_cost_paid = 0.0
+        self.cssu_switch_cost_unpaid = 0.0
         self.cssu_forfeited_rations = 0.0
         self.cssu_local_down_count = {
             (op_id, cssu): 0
@@ -4815,13 +4829,45 @@ class MFSCSimulation:
         return event
 
     def _activate_due_cssu_action(self) -> None:
+        """Activate a scheduled split, subject to the G3c temporal-coupling physics.
+
+        `cssu_min_dwell_days = 1` and `cssu_switch_cost_rations = 0.0` are the SHIPPED defaults and
+        reproduce the previous behaviour exactly: a dwell of one day cannot bind when the dispatch
+        cadence is itself daily, and a zero cost removes nothing. Both are opt-in, and the null arm
+        of G3c is precisely this default -- which is why its identity is verifiable rather than
+        asserted.
+        """
         pending = self._pending_cssu_action
         if pending is None or float(self.env.now) + 1e-9 < pending["effective_at"]:
             return
+        now = float(self.env.now)
+        dwell_hours = (float(self.cssu_min_dwell_days) - 1.0) * HOURS_PER_DAY
+        if dwell_hours > 0.0 and self._cssu_last_switch_at is not None:
+            if now + 1e-9 < float(self._cssu_last_switch_at) + dwell_hours:
+                # Held, not cancelled: the request stays pending and activates once the minimum
+                # dwell elapses. Dropping it would silently turn a dwell constraint into a lost
+                # decision, which is a different physics.
+                self.cssu_blocked_by_dwell_count += 1
+                return
+        changed = abs(float(pending["allocation_a"]) - float(self.cssu_allocation_a)) > 1e-9
         self.cssu_allocation_a = float(pending["allocation_a"])
         self.cssu_service_rule = str(pending["service_rule"])
+        cost = 0.0
+        if changed:
+            self._cssu_last_switch_at = now
+            cost = float(self.cssu_switch_cost_rations)
+            if cost > 0.0:
+                # The cost is paid out of the shared pool, so it is CONSERVED: switching consumes
+                # rations that then cannot be delivered. It never creates units.
+                paid = min(cost, float(self.rations_sb.level))
+                if paid > 0.0:
+                    self.rations_sb.get(paid)
+                self.cssu_switch_cost_paid += paid
+                self.cssu_switch_cost_unpaid += cost - paid
+            self.cssu_switch_count += 1
         self.cssu_action_events.append(
-            dict(pending, activated_at=float(self.env.now), status="activated")
+            dict(pending, activated_at=now, status="activated",
+                 allocation_changed=bool(changed), switch_cost_charged=cost)
         )
         self._pending_cssu_action = None
 

@@ -47,6 +47,7 @@ from .fidelity_moments import (
     non_dominated,
 )
 from .provenance import calibration_stamp
+from .scientific_payload import scientific_payload_sha256 as _scientific_payload_sha256
 
 THESIS_YEAR_HOURS = 8064.0
 
@@ -192,3 +193,27 @@ def run_falsifiers(checks: Mapping[str, Callable[[], tuple[bool, Any]]]) -> dict
         out[name] = {"passed": bool(ok), "evidence": evidence}
     out["all_passed"] = all(v["passed"] for k, v in out.items() if k != "all_passed")
     return out
+
+
+#: Keys excluded from the canonical scientific payload hash: they change on every run or every
+#: commit without the science changing. `self_sha256` covers the whole envelope INCLUDING these,
+#: which is why it can never be used to compare two runs of different code -- the H3' audit hit
+#: exactly that wall.
+VOLATILE_KEYS = frozenset({
+    "created_at", "elapsed_seconds", "self_sha256", "calibration_provenance",
+    "contract_path", "reference_path", "module_manifest", "audit_status", "replay_of",
+})
+
+
+def canonical_payload_sha256(payload: Mapping[str, Any], *,
+                             extra_exclude: frozenset[str] = frozenset()) -> str:
+    """Hash of the SCIENTIFIC content only: events, actions, ledgers, metrics, verdicts.
+
+    Two runs of different code that produce identical science must produce the same value here,
+    while `self_sha256` must differ because the provenance genuinely changed. Without this split
+    a null-arm identity check is untestable: you cannot demand that a hash ignore the fact that
+    the program was just modified.
+    """
+    body = {k: v for k, v in payload.items()
+            if k not in VOLATILE_KEYS and k not in extra_exclude}
+    return _scientific_payload_sha256(body)
