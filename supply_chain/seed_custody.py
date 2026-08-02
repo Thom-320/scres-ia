@@ -176,7 +176,10 @@ def module_manifest(modules: Iterable[str] = (
     """
     from hashlib import sha256
 
-    out: dict[str, Any] = {"schema": "module_manifest_v1", "modules": {}, "missing": []}
+    out: dict[str, Any] = {"schema": "module_manifest_v2", "modules": {}, "missing": [],
+                           "scope": "declared modules and entry script only; NOT the full "
+                                    "execution dependency set (interpreter, third-party "
+                                    "packages and environment are not covered)"}
     for rel in modules:
         path = Path(rel)
         if path.is_file():
@@ -185,7 +188,14 @@ def module_manifest(modules: Iterable[str] = (
             out["missing"].append(rel)
     if script is not None:
         script_path = Path(script)
-        out["entry_script"] = str(script_path)
+        # Repo-relative, never absolute: an absolute path is machine-specific, so two identical
+        # checkouts on different hosts would produce different manifests and a comparison would
+        # fail for a reason that has nothing to do with the source.
+        try:
+            recorded = script_path.resolve().relative_to(Path.cwd().resolve())
+        except ValueError:
+            recorded = Path(script_path.name)
+        out["entry_script"] = str(recorded)
         out["entry_script_sha256"] = (
             sha256(script_path.read_bytes()).hexdigest() if script_path.is_file() else None)
     return out

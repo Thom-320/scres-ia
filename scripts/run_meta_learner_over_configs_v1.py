@@ -433,8 +433,16 @@ def main() -> int:
 
     payload = {
         "module_manifest": module_manifest(script=__file__),
+        # THE headline estimand of this runner. It was only ever printed, never sealed, so the
+        # number the whole contract exists to produce was absent from its own artifact.
+        "alzheimer_effect_reset_minus_memory": alzheimer,
         "schema_version": args.schema_version,
         "claim_status": verdict if falsifiers["all_passed"] else "HALTED_FALSIFIER_FAILED",
+        # A replay is an audit, not a fresh claim. Keeping one field would let the runner's
+        # generic verdict be read as the audit's scope, which is a dangerous ambiguity.
+        "audit_status": ("BEHAVIORAL_REPRODUCIBILITY_ONLY_NOT_SOURCE_IDENTITY"
+                         if args.replay_of else None),
+        "replay_of": args.replay_of,
         "metric": METRIC, "budget": args.budget, "repeats": args.repeats,
         "n_configurations": n_cfg, "factors": {k: list(v) for k, v in FACTORS.items()},
         "contexts": ctx_order, "seeds": seeds,
