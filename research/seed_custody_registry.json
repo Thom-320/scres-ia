@@ -43,7 +43,19 @@
    "status": "ARTIFACT_PRESENT_PENDING_MERGE",
    "source": "results/garrido_meta_learner_h3power_local/result.json",
    "purpose": "H3-prime local slice; do not interpret or combine before merge contract",
-   "note": "also sealed against PREREGISTRO_META_APRENDIZ, not the H3-prime contract; not promotable either"
+   "audit": {
+    "artifact": "results/garrido_meta_learner_h3power_h3_contract_local_v2/result.json",
+    "contract": "docs/PREREGISTRO_H3_POTENCIA_2026-08-01.md",
+    "verdict": "BEHAVIORAL_REPRODUCIBILITY_FOR_H3_ESTIMAND",
+    "quantities_compared": 14,
+    "quantities_differing": 0,
+    "merge_falsifiers_checked": [
+     "f_merge_seeds_are_disjoint",
+     "f_merge_contexts_and_budget_match",
+     "f_merge_source_is_identical"
+    ],
+    "what_it_does_not_establish": "source identity of the ORIGINAL VPS snapshot (unreconstructable), and NOT a virgin H3-prime confirmation: f6 is DECLARED_REPLAY on burned seeds. The 120-replicate merge is not computed here."
+   }
   },
   {
    "id": "garrido_h3_vps",
@@ -53,11 +65,17 @@
    "source": "results/garrido_meta_learner_h3power_vps/result.json",
    "purpose": "H3-prime VPS slice; source-manifest equivalence remains unresolved",
    "audit": {
-    "artifact": "results/garrido_meta_learner_h3power_vps_local_replay/result.json",
+    "artifact": "results/garrido_meta_learner_h3power_h3_contract_vps_v2/result.json",
+    "contract": "docs/PREREGISTRO_H3_POTENCIA_2026-08-01.md",
     "verdict": "BEHAVIORAL_REPRODUCIBILITY_FOR_H3_ESTIMAND",
     "quantities_compared": 14,
     "quantities_differing": 0,
-    "what_it_does_not_establish": "source identity: a behavioural replay cannot satisfy f_merge_source_is_identical, and BOTH slices are sealed against PREREGISTRO_META_APRENDIZ (a24b164d), not the H3-prime contract (576d02b5)"
+    "merge_falsifiers_checked": [
+     "f_merge_seeds_are_disjoint",
+     "f_merge_contexts_and_budget_match",
+     "f_merge_source_is_identical"
+    ],
+    "what_it_does_not_establish": "source identity of the ORIGINAL VPS snapshot (unreconstructable), and NOT a virgin H3-prime confirmation: f6 is DECLARED_REPLAY on burned seeds. The 120-replicate merge is not computed here."
    }
   },
   {

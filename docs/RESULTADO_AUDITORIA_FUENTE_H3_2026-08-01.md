@@ -1,5 +1,11 @@
 # Resultado — auditoría de fuente H3′: reproducción exacta, y aun así **no hay merge**
 
+> **SUPERSEDIDO 2026-08-02** por `docs/RESULTADO_H3_AMBAS_REBANADAS_CONTRATADAS_2026-08-02.md`.
+> Este documento cubre **un solo lado** del experimento y está atado al artefacto replay antiguo.
+> Ambas rebanadas se re-sellaron después bajo el contrato H3′ con manifiesto de módulos, lo que
+> hace **decidibles por primera vez** los tres falsadores de fusión. Su §5 pedía exactamente eso.
+> Se conserva sin tocar el cuerpo; las conclusiones vigentes están en el sucesor.
+
 **Artefacto:** `results/garrido_meta_learner_h3power_vps_local_replay/result.json`
 (sello `dbab2f27d42f0638…`) · contrato **H3′** `docs/PREREGISTRO_H3_POTENCIA_2026-08-01.md`
 (`576d02b5…`) · semillas `6.000.091–120`, **bloque quemado, ninguna nueva** ·
