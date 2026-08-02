@@ -31,6 +31,7 @@ from supply_chain.arm_runner import seal_and_write  # noqa: E402
 from supply_chain.config import HOURS_PER_WEEK  # noqa: E402
 from supply_chain.config import THESIS_FAITHFUL_PROTOCOL as P  # noqa: E402
 from supply_chain.episode_metrics import compute_episode_metrics  # noqa: E402
+from supply_chain.seed_custody import custody_falsifier  # noqa: E402
 from supply_chain.service_first_metric import claimant_fills  # noqa: E402
 from supply_chain.supply_chain import MFSCSimulation  # noqa: E402
 
@@ -50,11 +51,12 @@ NOISE_SD = 0.30
 PRIMARY = "worst_claimant_fill"
 SESOI = 0.010
 # Signed non-inferiority margins, inherited verbatim from the G3c preregistration.
-MARGINS = {"flow_fill_rate": 0.005, "lost_orders": 0.25, "backorder_qty_final_rel": 0.010}
+# lost_orders re-derived from operations (one lost delivery every two years), NOT from
+# Monte Carlo granularity -- see docs/ENMIENDA_G3C_MARGENES_OPERACIONALES_2026-08-02.md
+MARGINS = {"flow_fill_rate": 0.005, "lost_orders": 0.50, "backorder_qty_final_rel": 0.010}
 DIAGNOSTICS = ("flow_fill_rate", "lost_orders", "backorder_qty_final",
                "ret_excel_full_ledger", "ret_excel_risk_conditional")
-SEED_BASE = 5_200_001
-BURNED_BLOCK = set(range(5_200_001, 5_200_017))
+SEED_BASE = 5_200_001          # default: the burned block of the underpowered run
 STEP_HOURS = 24.0
 Z90, Z95 = 1.2816, 1.6449          # one-sided 90% power, one-sided 95% test
 SEALED_REFERENCE = Path("results/sensitivity/contention_headroom_v1_1/result.json")
@@ -169,10 +171,13 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--n-boot", type=int, default=5_000)
     ap.add_argument("--seeds", type=int, default=16)
+    ap.add_argument("--seed-base", type=int, default=SEED_BASE)
+    ap.add_argument("--replay-of", default=None,
+                    help="registry block id this run deliberately re-executes")
     ap.add_argument("--output", type=Path,
                     default=Path("results/headroom/g3_obs_conversion/result.json"))
     args = ap.parse_args()
-    seeds = [SEED_BASE + i for i in range(args.seeds)]
+    seeds = [args.seed_base + i for i in range(args.seeds)]
     half = len(seeds) // 2
     dev, test = seeds[:half], seeds[half:]      # disjoint; every parameter is fit on dev only
     started = time.perf_counter()
@@ -316,13 +321,17 @@ def main() -> int:
             "evidence": {"why_it_can_fail": "a worst-fill gain bought with lost orders is the "
                                             "measured failure mode of ret_excel in a new coordinate",
                          "guardrails": {k: r["guardrails"] for k, r in results.items()}}},
-        "f8_no_fresh_seeds_opened": {
-            "passed": bool(set(seeds) <= BURNED_BLOCK),
-            "evidence": {"why_it_can_fail": "authority_ladder_v1 sets fresh_roots_opened=false",
-                         "seeds": seeds}},
+        # Custody now goes through the central registry instead of a hard-coded block. A run on
+        # a newly authorized block must find it RESERVED_NOT_OPENED there, or it is a collision.
+        "f8_seed_custody": custody_falsifier(seeds, replay_of=args.replay_of,
+                                            exclude=args.output),
     }
-    falsifiers["all_passed"] = all(v["passed"] for k, v in falsifiers.items()
-                                   if k != "all_passed")
+    falsifiers["all_passed"] = all(
+        v["passed"] for k, v in falsifiers.items()
+        if k != "all_passed" and not v.get("not_applicable"))
+    falsifiers["not_applicable"] = sorted(
+        k for k, v in falsifiers.items()
+        if k != "all_passed" and isinstance(v, dict) and v.get("not_applicable"))
 
     if not powered:
         verdict = "STOP_G3_OBS_UNDERPOWERED"
@@ -350,8 +359,10 @@ def main() -> int:
                   f"  {'PASA' if g['passes'] else 'FALLA'}")
     print(f"\n  veredicto: {verdict}\n")
     for name, f in falsifiers.items():
-        if name != "all_passed":
-            print(f"    {name:<48} {'PASA' if f['passed'] else 'FALLA'}")
+        if name in ("all_passed", "not_applicable") or not isinstance(f, dict):
+            continue
+        label = "NO APLICA" if f.get("not_applicable") else ("PASA" if f["passed"] else "FALLA")
+        print(f"    {name:<48} {label}")
 
     payload = {
         "schema_version": "g3_obs_conversion_v1",
