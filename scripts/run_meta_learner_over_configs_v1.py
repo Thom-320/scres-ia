@@ -425,11 +425,11 @@ def main() -> int:
     for name, check in falsifiers.items():
         if name in ("all_passed", "not_applicable") or not isinstance(check, dict):
             continue
-        if check.get("not_applicable"):
-            verdict = "NO APLICA"
-        else:
-            verdict = "PASA" if check["passed"] else "FALLA"
-        print(f"    {name:<44} {verdict}")
+        # NOT `verdict`: that name holds the scientific claim, and shadowing it here once
+        # sealed "NO APLICA" as the claim_status of a run whose falsifiers all passed.
+        label = "NO APLICA" if check.get("not_applicable") else (
+            "PASA" if check["passed"] else "FALLA")
+        print(f"    {name:<44} {label}")
 
     payload = {
         "module_manifest": module_manifest(script=__file__),
