@@ -40,6 +40,8 @@ warnings.filterwarnings("ignore")
 
 from build_garrido_fig5_surrogate import fit_kan, fit_mlp, grouped_folds  # noqa: E402
 from supply_chain.arm_runner import seal_and_write  # noqa: E402
+from supply_chain.seed_custody import (  # noqa: E402
+    custody_falsifier, seeds_used_by_sealed_artifacts)
 from supply_chain.config import HOURS_PER_WEEK  # noqa: E402
 from supply_chain.config import THESIS_FAITHFUL_PROTOCOL as P  # noqa: E402
 from supply_chain.episode_metrics import compute_episode_metrics  # noqa: E402
@@ -66,29 +68,6 @@ SEED_BASE = 7_000_001
 T_CRIT = {4: 2.776, 5: 2.571, 6: 2.447, 9: 2.262}
 
 
-def seeds_used_by_sealed_artifacts(root: Path = Path("results"),
-                                   exclude: Path | None = None) -> set[int]:
-    used: set[int] = set()
-
-    def walk(node: Any) -> None:
-        if isinstance(node, dict):
-            for key, value in node.items():
-                if key in {"seeds", "crn_seeds", "seed_block"} and isinstance(value, list):
-                    used.update(int(x) for x in value if isinstance(x, (int, float)))
-                else:
-                    walk(value)
-        elif isinstance(node, list):
-            for value in node[:50]:
-                walk(value)
-
-    for path in root.glob("**/result.json"):
-        if exclude is not None and path.resolve() == Path(exclude).resolve():
-            continue
-        try:
-            walk(json.loads(path.read_text()))
-        except (json.JSONDecodeError, UnicodeDecodeError, OSError):
-            continue
-    return used
 
 
 def episode(arm: dict, family: str, esc: float, buf: float, shifts: int, rop: float,

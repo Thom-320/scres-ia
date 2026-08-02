@@ -41,6 +41,7 @@ from supply_chain.arm_runner import seal_and_write  # noqa: E402
 from supply_chain.config import HOURS_PER_WEEK  # noqa: E402
 from supply_chain.config import THESIS_FAITHFUL_PROTOCOL as P  # noqa: E402
 from supply_chain.episode_metrics import compute_episode_metrics  # noqa: E402
+from supply_chain.seed_custody import custody_falsifier  # noqa: E402
 from supply_chain.supply_chain import MFSCSimulation  # noqa: E402
 
 R1R = ("R11", "R12", "R13", "R14")
@@ -67,8 +68,10 @@ CONTEXTS = {
 }
 METRIC = "ret_excel_risk_conditional"
 SEED_BASE = 5_300_001
-PRIOR_SEEDS = (set(range(4_900_001, 4_900_007)) | set(range(4_900_501, 4_900_507))
-               | set(range(5_100_001, 5_100_013)) | set(range(5_200_001, 5_200_017)))
+# The hand-maintained PRIOR_SEEDS tuple that used to live here had drifted: it never learned
+# about the 6_000_0xx blocks, so f6 could print PASS for seeds the central registry already
+# marked as used. Custody now goes through supply_chain.seed_custody, which reads
+# research/seed_custody_registry.json AND scans sealed artifacts.
 
 
 def evaluate(config: dict, context: str, seed: int, horizon: float) -> tuple[float, np.ndarray]:
@@ -142,6 +145,9 @@ def main() -> int:
     ap.add_argument("--contract", type=Path,
                     default=Path("docs/PREREGISTRO_META_APRENDIZ_2026-07-31.md"),
                     help="contract to seal this run against")
+    ap.add_argument("--replay-of", default=None,
+                    help="registry block id this run deliberately re-executes; makes the custody "
+                         "falsifier NOT_APPLICABLE instead of a pass or a failure")
     ap.add_argument("--schema-version", default="garrido_meta_learner_v1")
     ap.add_argument("--output", type=Path,
                     default=Path("results/garrido_meta_learner/result.json"))
@@ -387,13 +393,17 @@ def main() -> int:
                          "sequence changes by a single index, the search read a driver"),
                 "sequences_compared": leak_compared,
                 "sequences_identical": leak_free}},
-        "f6_seeds_are_virgin": {
-            "passed": not (set(seeds) & PRIOR_SEEDS),
-            "evidence": {"why_it_can_fail": "a reused seed would void the confirmation",
-                         "seeds": seeds}},
+        "f6_seed_custody": custody_falsifier(seeds, replay_of=args.replay_of,
+                                            exclude=args.output),
     }
-    falsifiers["all_passed"] = all(v["passed"] for k, v in falsifiers.items()
-                                   if k != "all_passed")
+    # A declared custody replay is counted in NEITHER column: it cannot fail, so calling it a
+    # pass would inflate the tally the way "eight falsifiers pass" once did.
+    falsifiers["all_passed"] = all(
+        v["passed"] for k, v in falsifiers.items()
+        if k != "all_passed" and not v.get("not_applicable"))
+    falsifiers["not_applicable"] = sorted(
+        k for k, v in falsifiers.items()
+        if k != "all_passed" and isinstance(v, dict) and v.get("not_applicable"))
 
     memory_pays = alzheimer["lcb95"] > 0
     beats_null = vs_random["lcb95"] > 0
@@ -413,8 +423,13 @@ def main() -> int:
     print(f"\n  veredicto: {verdict}")
     print("\n  falsadores:")
     for name, check in falsifiers.items():
-        if name != "all_passed":
-            print(f"    {name:<44} {'PASA' if check['passed'] else 'FALLA'}")
+        if name in ("all_passed", "not_applicable") or not isinstance(check, dict):
+            continue
+        if check.get("not_applicable"):
+            verdict = "NO APLICA"
+        else:
+            verdict = "PASA" if check["passed"] else "FALLA"
+        print(f"    {name:<44} {verdict}")
 
     payload = {
         "schema_version": args.schema_version,

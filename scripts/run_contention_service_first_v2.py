@@ -32,6 +32,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 warnings.filterwarnings("ignore")
 
 from supply_chain.arm_runner import seal_and_write  # noqa: E402
+from supply_chain.seed_custody import (  # noqa: E402
+    custody_falsifier, seeds_used_by_sealed_artifacts)
 from supply_chain.config import HOURS_PER_WEEK  # noqa: E402
 from supply_chain.config import THESIS_FAITHFUL_PROTOCOL as P  # noqa: E402
 from supply_chain.episode_metrics import compute_episode_metrics  # noqa: E402
@@ -49,29 +51,6 @@ LEADING = "worst_claimant_fill"
 SEED_BASE = 6_400_001
 
 
-def seeds_used_by_sealed_artifacts(root: Path = Path("results"),
-                                   exclude: Path | None = None) -> set[int]:
-    used: set[int] = set()
-
-    def walk(node: Any) -> None:
-        if isinstance(node, dict):
-            for key, value in node.items():
-                if key in {"seeds", "crn_seeds", "seed_block"} and isinstance(value, list):
-                    used.update(int(x) for x in value if isinstance(x, (int, float)))
-                else:
-                    walk(value)
-        elif isinstance(node, list):
-            for value in node[:50]:
-                walk(value)
-
-    for path in root.glob("**/result.json"):
-        if exclude is not None and path.resolve() == Path(exclude).resolve():
-            continue
-        try:
-            walk(json.loads(path.read_text()))
-        except (json.JSONDecodeError, UnicodeDecodeError, OSError):
-            continue
-    return used
 
 
 def regimes() -> dict[str, tuple]:
