@@ -132,3 +132,27 @@ def test_scientific_payload_changes_when_a_physical_order_changes(default_run):
     assert changed["orders"]
     changed["orders"][0]["quantity"] = float(changed["orders"][0]["quantity"]) + 1.0
     assert scientific_payload_sha256(changed) != default_run["scientific_payload_sha256"]
+
+
+# Frozen on 2026-08-02 from the verified-correct coupling code, on the burned unit-test tape
+# (SEED 5_200_001, 8 weeks, alternating 0.9/0.1 requests, dwell=1 / cost=0).
+GOLDEN_NULL_PAYLOAD_SHA256 = (
+    "be9d1bc227d498cb093f654014b791066ea945ad5c71cfc7cf74b2d9a4df9c37")
+
+
+def test_null_arm_matches_the_frozen_golden_hash(default_run):
+    """The null test that can ACTUALLY fail on a code defect.
+
+    `test_null_arm_is_identical_to_the_shipped_defaults` compares `run()` with
+    `run(cssu_min_dwell_days=1)`. Both execute the SAME coupling code, so a defect inside that
+    code breaks both equally and they stay identical to each other -- the check compares
+    something with itself. Verified by injecting an off-by-one into the dwell computation
+    (`- 1.0` dropped, so dwell=1 would block): all ten tests still passed.
+
+    Anchoring to a hash frozen from known-good code removes the self-reference: any change to
+    realized orders, risk events, action traces, ledgers or metrics moves this value.
+    """
+    assert default_run["scientific_payload_sha256"] == GOLDEN_NULL_PAYLOAD_SHA256, (
+        "the null arm no longer reproduces the frozen science. Either a real defect was "
+        "introduced, or the physics changed deliberately -- in which case re-freeze the golden "
+        "hash in a commit that says why, never silently.")
