@@ -1,5 +1,26 @@
 # Nota — cómo debe leerse la auditoría de fuente H3′, escrita ANTES de que aterrice
 
+> **Corrección 2026-08-01, antes de que exista el artefacto.** Dos frases de esta nota eran
+> defectuosas, y ambas se reparan **en la ejecución**, no en el texto:
+>
+> **(1) `f6` no estaba realmente en `NOT_APPLICABLE`.** La corrida se lanzó **antes de que
+> existiera el flag `--replay-of`**, así que la réplica quedaba declarada en esta nota y **no en
+> el artefacto**. Eso es precisamente la reinterpretación post hoc que la nota dice evitar.
+> **Corrección aplicada: corrida detenida y relanzada con `--replay-of garrido_h3_vps`**, de modo
+> que el estado `DECLARED_REPLAY` queda **sellado dentro del resultado**.
+>
+> **(2) «Si difieren, H3′ se queda con las 90 locales» es FALSO.** Verificado: **ambas** rebanadas
+> están selladas contra `PREREGISTRO_META_APRENDIZ_2026-07-31.md` (`a24b164d…`), **no** contra el
+> contrato H3′ (`576d02b5…`). Ninguna de las dos es un artefacto H3′ contratado. La lectura
+> correcta: **ambas rebanadas permanecen no promovibles hasta resolver contrato y procedencia**,
+> y el efecto Alzheimer sigue **pendiente de custodia** en los dos desenlaces.
+>
+> **(3) Y el hash del script no bastaría** para identidad de fuente: el runner importa
+> `supply_chain`, así que dos rebanadas pueden compartir un entry point idéntico y haber
+> ejecutado física distinta — que es exactamente lo que pasó con el snapshot del VPS. Añadido
+> `module_manifest()`, sellado dentro del payload. Hace decidible `f_merge_source_is_identical`
+> para rebanadas **futuras**; **no rescata retroactivamente** las selladas sin él.
+
 **Escrita mientras la corrida está en vuelo y `results/garrido_meta_learner_h3power_vps_local_replay/result.json`
 NO existe.** Declarar la lectura después de ver el artefacto sería reinterpretación post hoc;
 por eso se fija aquí.
