@@ -157,3 +157,35 @@ def custody_falsifier(seeds: Iterable[int], *, replay_of: str | None = None,
                                             "sealed artifact would make this run a re-use rather "
                                             "than an independent one",
                          **result}}
+
+
+def module_manifest(modules: Iterable[str] = (
+        "supply_chain/supply_chain.py", "supply_chain/config.py",
+        "supply_chain/episode_metrics.py", "supply_chain/arm_runner.py",
+        "supply_chain/cssu_allocation.py", "supply_chain/service_first_metric.py",
+        "supply_chain/seed_custody.py"),
+        *, script: Path | str | None = None) -> dict[str, Any]:
+    """Content hashes of the modules a run actually depends on, plus its entry script.
+
+    A script hash alone cannot establish source identity: the runner imports `supply_chain`, so
+    two slices can share a byte-identical entry point and still have executed different physics.
+    That is precisely why the H3-prime VPS slice sits in HOLD_SOURCE_AUDIT -- its snapshot had a
+    different supply_chain.py and no service_first_metric.py at all. Recording this manifest is
+    what makes `f_merge_source_is_identical` decidable for FUTURE slices; it cannot retroactively
+    rescue artifacts that were sealed without one.
+    """
+    from hashlib import sha256
+
+    out: dict[str, Any] = {"schema": "module_manifest_v1", "modules": {}, "missing": []}
+    for rel in modules:
+        path = Path(rel)
+        if path.is_file():
+            out["modules"][rel] = sha256(path.read_bytes()).hexdigest()
+        else:
+            out["missing"].append(rel)
+    if script is not None:
+        script_path = Path(script)
+        out["entry_script"] = str(script_path)
+        out["entry_script_sha256"] = (
+            sha256(script_path.read_bytes()).hexdigest() if script_path.is_file() else None)
+    return out

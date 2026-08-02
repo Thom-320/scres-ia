@@ -41,7 +41,7 @@ from supply_chain.arm_runner import seal_and_write  # noqa: E402
 from supply_chain.config import HOURS_PER_WEEK  # noqa: E402
 from supply_chain.config import THESIS_FAITHFUL_PROTOCOL as P  # noqa: E402
 from supply_chain.episode_metrics import compute_episode_metrics  # noqa: E402
-from supply_chain.seed_custody import custody_falsifier  # noqa: E402
+from supply_chain.seed_custody import custody_falsifier, module_manifest  # noqa: E402
 from supply_chain.supply_chain import MFSCSimulation  # noqa: E402
 
 R1R = ("R11", "R12", "R13", "R14")
@@ -432,6 +432,7 @@ def main() -> int:
         print(f"    {name:<44} {verdict}")
 
     payload = {
+        "module_manifest": module_manifest(script=__file__),
         "schema_version": args.schema_version,
         "claim_status": verdict if falsifiers["all_passed"] else "HALTED_FALSIFIER_FAILED",
         "metric": METRIC, "budget": args.budget, "repeats": args.repeats,
