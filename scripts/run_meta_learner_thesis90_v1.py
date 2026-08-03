@@ -143,6 +143,12 @@ def main() -> int:
     ap.add_argument("--repeats", type=int, default=256,
                     help="paired algorithmic replays over the fixed 90-row surface")
     ap.add_argument("--n-boot", type=int, default=5000)
+    # REQUIRED, and previously ABSENT: the contract was hard-coded in the seal_and_write call, so
+    # this runner could not be pointed at the right document even deliberately. That is a worse
+    # version of the default-contract defect that sealed both H3' slices against the wrong
+    # preregistration.
+    ap.add_argument("--contract", type=Path, required=True,
+                    help="contract to seal this run against (no default, and no hard-coding)")
     ap.add_argument("--replay-base", type=int, default=REPLAY_BASE)
     ap.add_argument("--output", type=Path,
                     default=Path("results/garrido_meta_learner_thesis90_v2/result.json"))
@@ -295,7 +301,7 @@ def main() -> int:
     }
     digest = seal_and_write(
         payload, args.output,
-        contract=Path("docs/PREREGISTRO_META_APRENDIZ_V2_2026-08-01.md"),
+        contract=args.contract,
         reference=SURFACE)
     print(f"\n  thesis-native replay: {verdict}")
     print(f"  memory vs reset: {alzheimer['mean']:+.2f} [{alzheimer['lcb95']:+.2f}, {alzheimer['ucb95']:+.2f}]")
