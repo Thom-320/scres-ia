@@ -27,7 +27,7 @@ RISKS = ("R11", "R12", "R13", "R14", "R21", "R22", "R23", "R24")
 SEED = 5_200_001          # burned block; a unit test, not an experiment
 WEEKS = 52
 # R22 fires on a Uniform(1, 4032h) clock, so a short tape yields ONE event. The first version of
-# this file used 12 weeks and drew a single op4 event -- the exact arc the mutant maps everything
+# an earlier diagnostic version used WEEKS=12 and drew a single op4 event -- the exact arc the mutant maps everything
 # onto, which made the mutation indistinguishable and the mapping test vacuous. The multiplier
 # buys several events across different operations so the check has something to bite on.
 R22_FREQUENCY = 6.0

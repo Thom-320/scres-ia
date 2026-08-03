@@ -188,11 +188,17 @@ def main() -> int:
     ap.add_argument("--contract", type=Path, required=True,
                     help="contract to seal into the result at execution time (no default: "
                          "a default is how runs get sealed against the wrong document)")
-    ap.add_argument("--run-role", choices=("DEVELOPMENT", "CONFIRMATORY"),
+    ap.add_argument("--run-role", choices=("DEVELOPMENT", "REPLAY", "CONFIRMATORY"),
                     default="DEVELOPMENT")
     ap.add_argument("--output", type=Path,
                     default=Path("results/headroom/g3_obs_conversion/result.json"))
     args = ap.parse_args()
+    if args.run_role == "REPLAY" and not args.replay_of:
+        ap.error("--run-role REPLAY requires --replay-of")
+    if args.run_role == "CONFIRMATORY" and args.replay_of:
+        ap.error("a confirmatory run cannot use --replay-of")
+    if not args.contract.is_file():
+        ap.error(f"contract does not exist: {args.contract}")
     seeds = [args.seed_base + i for i in range(args.seeds)]
     half = len(seeds) // 2
     dev, test = seeds[:half], seeds[half:]      # disjoint; every parameter is fit on dev only
@@ -383,11 +389,19 @@ def main() -> int:
         "claim_status": verdict if falsifiers["all_passed"] else "HALTED_FALSIFIER_FAILED",
         "scope": ("G3_OBS_V2_CONFIRMATORY_EXECUTION_NO_TRAINING"
                   if args.run_role == "CONFIRMATORY"
-                  else "OBSERVABLE_CONVERSION_DEVELOPMENT_NO_TRAINING"),
+                  else ("G3_OBS_CONTRACT_REPLAY_NO_NEW_CONFIRMATION"
+                        if args.run_role == "REPLAY"
+                        else "OBSERVABLE_CONVERSION_DEVELOPMENT_NO_TRAINING")),
         "run_role": args.run_role,
+        "replay_of": args.replay_of,
         "execution_authorization": ("the explicit PI authorization recorded in the v2 "
                                      "confirmation contract" if args.run_role == "CONFIRMATORY"
-                                     else "development execution"),
+                                     else ("declared replay of a burned registry block"
+                                           if args.run_role == "REPLAY"
+                                           else "development execution")),
+        "scientific_verdict": verdict,
+        "audit_status": ("BEHAVIORAL_REPLAY_NO_NEW_CONFIRMATION"
+                          if args.run_role == "REPLAY" else None),
         "primary_metric": PRIMARY, "sesoi": SESOI, "margins": MARGINS,
         "window_days": WINDOW_DAYS, "delay_days": DELAY_DAYS, "noise_sd": NOISE_SD,
         "step_hours": STEP_HOURS, "seeds": seeds, "development_seeds": dev, "test_seeds": test,
@@ -396,6 +410,8 @@ def main() -> int:
         "module_manifest": module_manifest(script=Path(__file__)),
         "elapsed_seconds": time.perf_counter() - started,
     }
+    if args.run_role == "REPLAY" and falsifiers["all_passed"]:
+        payload["claim_status"] = "REPLAY_OF_BURNED_BLOCK_NO_NEW_CONFIRMATION"
     digest = seal_and_write(
         payload, args.output,
         contract=args.contract,
