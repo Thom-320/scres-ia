@@ -67,7 +67,9 @@ def test_graph_mode_reproduces_the_shipped_science_exactly(serial, graph):
 
 
 # Frozen 2026-08-02 from the verified bridge, on the burned unit-test tape (SEED 5_200_001,
-# 12 weeks, split_v1, non-fungible). Anchors the null OUTSIDE the code path it guards.
+# WEEKS=52 with R22_FREQUENCY=6.0, split_v1, non-fungible). Anchors the null OUTSIDE the code
+# path it guards. The tape parameters belong in this comment because the hash is meaningless
+# without them -- an earlier version said 12 weeks after the tape had already been lengthened.
 GOLDEN_SERIAL_PAYLOAD_SHA256 = "371c5975386868a57c3fa71b16fd02df082d3c90d74408a8cc75b3f303e2bbc1"
 
 
