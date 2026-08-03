@@ -23,6 +23,9 @@ def test_seed_registry_is_fail_closed_before_submission_receipt():
             "ARTIFACT_PRESENT_PENDING_CANONICAL_CUSTODY",
             "ARTIFACT_PRESENT_PENDING_MERGE",
             "USED_PENDING_SOURCE_AUDIT",
+            # Opened but produced no sealed artifact. Distinct from the others on
+            # purpose: the block is NOT virgin, and there is nothing to audit either.
+            "ATTEMPTED_NO_SEALED_ARTIFACT",
             "RESERVED_NOT_OPENED",
         }
         ranges.append((block["start"], block["end"], block["id"]))

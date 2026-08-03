@@ -119,3 +119,23 @@ def test_module_manifest_uses_repo_relative_entry_path(monkeypatch):
     assert not manifest["entry_script"].startswith("/")
     assert manifest["entry_script_sha256"]
     assert "NOT the full execution dependency set" in manifest["scope"]
+
+
+def test_an_attempted_block_with_no_artifact_is_a_collision_not_an_opening(tmp_path):
+    """A block that was opened but produced nothing must NOT read as available.
+
+    The G3-obs confirmation attempt died with a 0-byte log. It was recorded with the warning in
+    the block's PROSE while `status` stayed RESERVED_NOT_OPENED -- and the code reads `status`,
+    so `check_seeds` returned NO_KNOWN_COLLISION and would have handed the block to the next run
+    as virgin. Machine-readable state and prose disagreeing, with the code trusting the field, is
+    the same shape as f6 checking a stale internal list.
+    """
+    out = sc.check_seeds([7_900_001, 7_900_140], results_root=tmp_path)
+    assert out["status"] == sc.COLLISION
+    assert any(c["status"] == "ATTEMPTED_NO_SEALED_ARTIFACT"
+               for c in out["registry_conflicts"])
+
+
+def test_attempted_is_not_treated_as_unopened():
+    """Guards the guard: adding the status to UNOPENED_STATUSES would silently undo the fix."""
+    assert "ATTEMPTED_NO_SEALED_ARTIFACT" not in sc.UNOPENED_STATUSES
