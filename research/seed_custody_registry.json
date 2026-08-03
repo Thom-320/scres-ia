@@ -110,7 +110,7 @@
    "id": "g3a_v2_development",
    "start": 7700001,
    "end": 7700120,
-   "status": "RESERVED_NOT_OPENED",
+   "status": "ATTEMPTED_NO_SEALED_ARTIFACT",
    "source": "contracts/g3a_asymmetric_claimants_v2.json",
    "purpose": "Prospective G3a development only; blocked until submission receipt and power plan"
   },
@@ -142,11 +142,17 @@
    "end": 7900140,
    "status": "RESERVED_NOT_OPENED",
    "source": "docs/PREREGISTRO_G3_OBS_V2_CONFIRMACION_2026-08-02.md",
-   "purpose": "Single independent G3-obs v2 confirmation; no smoke, no replay, no neural training",
+   "purpose": "Aborted G3-obs v2 confirmation attempt; do not reuse as virgin confirmation",
    "authorization": {
     "granted_by": "PI, explicit instruction in session 2026-08-02",
     "scope": "this block and this contract only",
     "supersedes_for_this_block": "the prior unopened-execution hold; does not authorize G3a, G3c, E*, or other fresh roots"
+   },
+   "attempt_audit": {
+    "result_artifact_present": false,
+    "run_log_bytes": 0,
+    "process_after_check": "not alive",
+    "claim": "absence of result is not evidence of virginity; block is conservatively unavailable"
    }
   }
  ],
