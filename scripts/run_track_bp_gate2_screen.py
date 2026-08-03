@@ -62,10 +62,12 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--calendar-cycle-weeks", type=int, default=24)
     p.add_argument("--step-size-hours", type=float, default=168.0)
     p.add_argument("--learning-rate", type=float, default=3e-4)
+    # --contract is REQUIRED: a default is how three artifacts got sealed against
+    # the wrong document. Previous default was "track_bp"
     p.add_argument(
         "--contract",
         choices=["track_bp", "track_b", "track_b_fixed_buffers"],
-        default="track_bp",
+        required=True,
                    help="track_b (8D, no buffer dims) is the contract-ablation arm that "
                         "isolates the preventive increment: PPO_11D - PPO_8D on the same "
                         "cell/seeds. Clock-policy arms are skipped for track_b (buffers "

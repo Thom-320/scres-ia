@@ -623,8 +623,10 @@ def _falsifiers(
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, default=ROOT / "results/garrido_q2_des288_v1/result.json")
+    # --contract is REQUIRED: a default is how three artifacts got sealed against
+    # the wrong document. Previous default was ROOT / "docs/PREREGISTRO_GARRIDO_Q2_DES288_V1_2026-08-01.md"
     parser.add_argument("--contract", type=Path,
-                        default=ROOT / "docs/PREREGISTRO_GARRIDO_Q2_DES288_V1_2026-08-01.md")
+                        required=True)
     parser.add_argument("--reference", type=Path, default=ROOT / "results/garrido_wrap_q1/result.json")
     parser.add_argument("--seed-base", type=int, default=SEED_BASE)
     parser.add_argument("--repeats", type=int, default=12)

@@ -1006,7 +1006,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--workers", type=int, default=max(1, (os.cpu_count() or 2) - 1)
     )
-    parser.add_argument("--contract", type=Path, default=DEFAULT_CONTRACT)
+    # --contract is REQUIRED: a default is how three artifacts got sealed against
+    # the wrong document. Previous default was DEFAULT_CONTRACT
+    parser.add_argument("--contract", type=Path, required=True)
     parser.add_argument("--output-root", type=Path, default=DEFAULT_OUTPUT_ROOT)
     parser.add_argument("--run-dir", type=Path, required=True)
     parser.add_argument("--run-id", required=True)

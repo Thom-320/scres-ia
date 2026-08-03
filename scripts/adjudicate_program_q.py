@@ -75,10 +75,12 @@ def adjudicate(result: dict, contract: dict) -> dict:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--result", type=Path, required=True)
+    # --contract is REQUIRED: a default is how three artifacts got sealed against
+    # the wrong document. Previous default was Path("contracts/program_q_frozen_policy_replication_v1.json")
     parser.add_argument(
         "--contract",
         type=Path,
-        default=Path("contracts/program_q_frozen_policy_replication_v1.json"),
+        required=True,
     )
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()

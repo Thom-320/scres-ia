@@ -130,8 +130,10 @@ def main() -> int:
     ap.add_argument("--horizon-weeks", type=int, default=52)
     ap.add_argument("--period-hours", type=float, default=672.0)
     ap.add_argument("--workers", type=int, default=6)
+    # --contract is REQUIRED: a default is how three artifacts got sealed against
+    # the wrong document. Previous default was Path("contracts/cobb_douglas_calibration_v1.json")
     ap.add_argument("--contract", type=Path,
-                    default=Path("contracts/cobb_douglas_calibration_v1.json"))
+                    required=True)
     ap.add_argument("--output", type=Path,
                     default=Path("results/joint_frontier/"
                                  "buffer_shift_648_v1/result.json"))

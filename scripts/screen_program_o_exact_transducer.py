@@ -278,7 +278,9 @@ def produce(contract_path: Path) -> dict[str, Any]:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--contract", type=Path, default=DEFAULT_CONTRACT)
+    # --contract is REQUIRED: a default is how three artifacts got sealed against
+    # the wrong document. Previous default was DEFAULT_CONTRACT
+    parser.add_argument("--contract", type=Path, required=True)
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     return parser.parse_args()
 

@@ -39,8 +39,10 @@ SAT_CRITERION = 0.60       # contract 4.1: median RPj/CTj below this for CTj > 5
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
+    # --contract is REQUIRED: a default is how three artifacts got sealed against
+    # the wrong document. Previous default was Path("docs/PREREGISTRO_SIEMBRA_R0_R14_2026-07-31.md")
     ap.add_argument("--contract", type=Path,
-                    default=Path("docs/PREREGISTRO_SIEMBRA_R0_R14_2026-07-31.md"))
+                    required=True)
     ap.add_argument("--reference", type=Path,
                     default=Path("results/metric_audit/fidelity_reference_v3/result.json"))
     ap.add_argument("--roots", nargs="+", type=int, default=list(ROOTS))

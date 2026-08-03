@@ -1132,7 +1132,9 @@ def execute_stage(
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--contract", type=Path, default=DEFAULT_CONTRACT)
+    # --contract is REQUIRED: a default is how three artifacts got sealed against
+    # the wrong document. Previous default was DEFAULT_CONTRACT
+    parser.add_argument("--contract", type=Path, required=True)
     parser.add_argument("--output-root", type=Path, default=DEFAULT_OUTPUT_ROOT)
     parser.add_argument("--stage", choices=("screen", "validation"), required=True)
     parser.add_argument("--workers", type=int, default=max(1, min(4, os.cpu_count() or 1)))

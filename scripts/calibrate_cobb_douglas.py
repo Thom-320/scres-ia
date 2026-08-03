@@ -240,8 +240,10 @@ def main() -> int:
     ap.add_argument("--period-hours", type=float, default=24.0,
                     help="C-D sampling period; Garrido's t is one planning period")
     ap.add_argument("--replenishment-hours", type=float, default=168.0)
+    # --contract is REQUIRED: a default is how three artifacts got sealed against
+    # the wrong document. Previous default was Path("contracts/cobb_douglas_calibration_v1.json")
     ap.add_argument("--contract", type=Path,
-                    default=Path("contracts/cobb_douglas_calibration_v1.json"))
+                    required=True)
     ap.add_argument("--buffer-hours", nargs="+", type=int, default=[0, 168, 1344])
     ap.add_argument("--shifts", nargs="+", type=int, default=[1, 2, 3])
     ap.add_argument("--tapes", nargs="+", type=int,

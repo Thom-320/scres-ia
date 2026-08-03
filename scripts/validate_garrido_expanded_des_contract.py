@@ -81,7 +81,9 @@ def validate_contract(
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--contract", type=Path, default=CONTRACT_PATH)
+    # --contract is REQUIRED: a default is how three artifacts got sealed against
+    # the wrong document. Previous default was CONTRACT_PATH
+    parser.add_argument("--contract", type=Path, required=True)
     parser.add_argument("--seed-registry", type=Path, default=SEED_REGISTRY_PATH)
     args = parser.parse_args()
 

@@ -152,10 +152,12 @@ def verify(contract_path: Path, custody_path: Path, repo_root: Path) -> dict[str
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", type=Path, default=Path("."))
+    # --contract is REQUIRED: a default is how three artifacts got sealed against
+    # the wrong document. Previous default was Path("contracts/war_stress_timing_atlas_v1.json")
     parser.add_argument(
         "--contract",
         type=Path,
-        default=Path("contracts/war_stress_timing_atlas_v1.json"),
+        required=True,
     )
     parser.add_argument(
         "--custody",

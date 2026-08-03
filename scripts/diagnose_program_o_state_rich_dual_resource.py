@@ -418,7 +418,9 @@ def run(
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--contract", type=Path, default=DEFAULT_CONTRACT)
+    # --contract is REQUIRED: a default is how three artifacts got sealed against
+    # the wrong document. Previous default was DEFAULT_CONTRACT
+    parser.add_argument("--contract", type=Path, required=True)
     parser.add_argument("--source-result", type=Path, default=DEFAULT_SOURCE_RESULT)
     parser.add_argument("--parent-run", type=Path, default=DEFAULT_PARENT_RUN)
     parser.add_argument("--output", type=Path, required=True)

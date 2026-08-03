@@ -72,7 +72,9 @@ def write_rows(path: Path, rows: list[dict[str, Any]]) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--contract", type=Path, default=Path("contracts/program_i_branching_v1.json"))
+    # --contract is REQUIRED: a default is how three artifacts got sealed against
+    # the wrong document. Previous default was Path("contracts/program_i_branching_v1.json")
+    parser.add_argument("--contract", type=Path, required=True)
     parser.add_argument("--tapes", type=int, default=None)
     parser.add_argument("--output-dir", type=Path, default=Path("results/program_i/branching"))
     args = parser.parse_args()

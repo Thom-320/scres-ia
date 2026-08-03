@@ -177,11 +177,13 @@ def audit(run_dir: Path, contract_path: Path) -> dict[str, Any]:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--run-dir", type=Path, required=True)
+    # --contract is REQUIRED: a default is how three artifacts got sealed against the wrong
+    # document. Previous default was
+    # contracts/program_q_frozen_policy_replication_v1.json
     parser.add_argument(
         "--contract",
         type=Path,
-        default=Path(__file__).resolve().parents[1]
-        / "contracts/program_q_frozen_policy_replication_v1.json",
+        required=True,
     )
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()

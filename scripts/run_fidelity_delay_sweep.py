@@ -130,8 +130,10 @@ def moments_under(sim, orders: list, *, predicate: str, tol: float,
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
+    # --contract is REQUIRED: a default is how three artifacts got sealed against
+    # the wrong document. Previous default was Path("contracts/paper_b_independent_calibration_v2.json")
     ap.add_argument("--contract", type=Path,
-                    default=Path("contracts/paper_b_independent_calibration_v2.json"))
+                    required=True)
     ap.add_argument("--reference", type=Path,
                     default=Path("results/metric_audit/fidelity_reference_v3/result.json"))
     ap.add_argument("--roots", nargs="+", type=int, default=list(ROOTS))

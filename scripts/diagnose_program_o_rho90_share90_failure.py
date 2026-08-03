@@ -559,7 +559,9 @@ def run(contract_path: Path, validation_dir: Path, output: Path) -> dict[str, An
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--contract", type=Path, default=DEFAULT_CONTRACT)
+    # --contract is REQUIRED: a default is how three artifacts got sealed against
+    # the wrong document. Previous default was DEFAULT_CONTRACT
+    parser.add_argument("--contract", type=Path, required=True)
     parser.add_argument("--validation-dir", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()

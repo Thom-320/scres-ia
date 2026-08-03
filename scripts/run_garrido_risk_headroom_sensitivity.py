@@ -329,7 +329,9 @@ def write_json_atomic(path: Path, value: Any) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--contract", default="contracts/garrido_risk_headroom_sensitivity_v1.json")
+    # --contract is REQUIRED: a default is how three artifacts got sealed against
+    # the wrong document. Previous default was "contracts/garrido_risk_headroom_sensitivity_v1.json"
+    parser.add_argument("--contract", required=True)
     parser.add_argument("--output", default="results/garrido_risk_headroom_sensitivity_v1/development")
     parser.add_argument("--seeds", default="")
     parser.add_argument("--max-steps", type=int, default=0)

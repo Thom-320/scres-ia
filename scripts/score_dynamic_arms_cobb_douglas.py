@@ -134,8 +134,10 @@ def main() -> int:
     ap.add_argument("--epoch-weeks", type=int, default=4)
     ap.add_argument("--period-hours", type=float, default=24.0)
     ap.add_argument("--replenishment-hours", type=float, default=168.0)
+    # --contract is REQUIRED: a default is how three artifacts got sealed against
+    # the wrong document. Previous default was Path("contracts/cobb_douglas_calibration_v1.json")
     ap.add_argument("--contract", type=Path,
-                    default=Path("contracts/cobb_douglas_calibration_v1.json"))
+                    required=True)
     ap.add_argument("--output", type=Path,
                     default=Path("results/cobb_douglas/dynamic_arms_v2.json"))
     args = ap.parse_args()

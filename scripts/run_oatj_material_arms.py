@@ -42,8 +42,10 @@ GARRIDO = {"p_delayed": 0.835, "ctj_p50": 101.45, "delta_p50": 4.02}
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
+    # --contract is REQUIRED: a default is how three artifacts got sealed against
+    # the wrong document. Previous default was Path("docs/PREREGISTRO_OATJ_MATERIAL_2026-07-31.md")
     ap.add_argument("--contract", type=Path,
-                    default=Path("docs/PREREGISTRO_OATJ_MATERIAL_2026-07-31.md"))
+                    required=True)
     ap.add_argument("--reference", type=Path,
                     default=Path("results/metric_audit/fidelity_reference_v3/result.json"))
     ap.add_argument("--roots", nargs="+", type=int, default=list(ROOTS))

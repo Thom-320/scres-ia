@@ -50,10 +50,12 @@ def main() -> int:
         default=Path(
             "results/metric_panel/panel_with_v2_arms_rpj_corrected_v2.json"),
     )
+    # --contract is REQUIRED: a default is how three artifacts got sealed against
+    # the wrong document. Previous default was Path("contracts/cobb_douglas_economic_sensitivity_v1.json")
     parser.add_argument(
         "--contract",
         type=Path,
-        default=Path("contracts/cobb_douglas_economic_sensitivity_v1.json"),
+        required=True,
     )
     parser.add_argument(
         "--output",

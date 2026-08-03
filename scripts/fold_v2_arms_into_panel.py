@@ -115,8 +115,10 @@ def main() -> int:
     # The immutable-onset correction removes RPj's former dependence on how often
     # step() is called, but a different action cadence is still a different contract.
     ap.add_argument("--period-hours", type=float, default=672.0)
+    # --contract is REQUIRED: a default is how three artifacts got sealed against
+    # the wrong document. Previous default was Path("contracts/cobb_douglas_calibration_v1.json")
     ap.add_argument("--contract", type=Path,
-                    default=Path("contracts/cobb_douglas_calibration_v1.json"))
+                    required=True)
     ap.add_argument("--panel", type=Path,
                     default=Path("results/metric_panel/panel_v1.json"))
     ap.add_argument("--output", type=Path,
