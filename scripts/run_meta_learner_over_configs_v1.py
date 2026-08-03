@@ -142,9 +142,12 @@ def main() -> int:
                     help="first seed in the reserved confirmation block")
     ap.add_argument("--horizon-weeks", type=int, default=52)
     ap.add_argument("--n-boot", type=int, default=5_000)
-    ap.add_argument("--contract", type=Path,
-                    default=Path("docs/PREREGISTRO_META_APRENDIZ_2026-07-31.md"),
-                    help="contract to seal this run against")
+    # REQUIRED, no default. This runner's default is exactly how both H3' slices got sealed
+    # against PREREGISTRO_META_APRENDIZ instead of the H3' power contract, which cost a full
+    # re-execution of 120 replicates to repair.
+    ap.add_argument("--contract", type=Path, required=True,
+                    help="contract to seal this run against (no default: the default is how the "
+                         "H3-prime slices were sealed against the wrong document)")
     ap.add_argument("--replay-of", default=None,
                     help="registry block id this run deliberately re-executes; makes the custody "
                          "falsifier NOT_APPLICABLE instead of a pass or a failure")

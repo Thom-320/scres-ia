@@ -181,9 +181,13 @@ def main() -> int:
     ap.add_argument("--seed-base", type=int, default=SEED_BASE)
     ap.add_argument("--replay-of", default=None,
                     help="registry block id this run deliberately re-executes")
-    ap.add_argument("--contract", type=Path,
-                    default=Path("docs/PREREGISTRO_G3_OBS_CONVERSION_OBSERVABLE_2026-08-01.md"),
-                    help="contract to seal into the result at execution time")
+    # REQUIRED, with no default on purpose. A default contract path is how three artifacts got
+    # sealed against the wrong document without anyone noticing: the H3' slices against
+    # PREREGISTRO_META_APRENDIZ, and this runner's own v2 run against the v1 contract. The
+    # convenience is not worth the failure mode.
+    ap.add_argument("--contract", type=Path, required=True,
+                    help="contract to seal into the result at execution time (no default: "
+                         "a default is how runs get sealed against the wrong document)")
     ap.add_argument("--run-role", choices=("DEVELOPMENT", "CONFIRMATORY"),
                     default="DEVELOPMENT")
     ap.add_argument("--output", type=Path,
