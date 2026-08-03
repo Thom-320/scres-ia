@@ -19,7 +19,7 @@ import math
 import simpy
 import numpy as np
 from dataclasses import dataclass, field
-from typing import Any, Iterable, Optional
+from typing import Any, Iterable, Mapping, Optional
 from collections import Counter
 
 from .loc_graph import arc_for_operation as _loc_arc_for_operation
@@ -287,6 +287,7 @@ class MFSCSimulation:
         # See `cssu_allocation.allocate_shared_capacity` for why this is the mechanism knob.
         cssu_reallocate_unused: bool = True,
         loc_topology_mode: str = "serial_v1",
+        cssu_storage_capacity: Mapping[str, float] | None = None,
         cssu_min_dwell_days: float = 1.0,
         cssu_switch_cost_rations: float = 0.0,
         expedite_budget_hours: float = 0.0,
@@ -504,6 +505,14 @@ class MFSCSimulation:
         if str(loc_topology_mode) not in ("serial_v1", "graph_v1"):
             raise ValueError("loc_topology_mode must be 'serial_v1' or 'graph_v1'")
         self.loc_topology_mode = str(loc_topology_mode)
+        # Finite storage at the CSSUs: Section 6.5.5 assumes it unlimited, and every storage
+        # container is built that way. None keeps the shipped behaviour exactly. Surplus that does
+        # not fit is NOT dispatched, so it stays in rations_sb -- blocked upstream, never spilled.
+        self._cssu_capacity_ledger = None
+        if cssu_storage_capacity is not None:
+            from .node_capacity import NodeCapacityLedger
+            caps = {f"cssu_{k.lower()}": float(v) for k, v in cssu_storage_capacity.items()}
+            self._cssu_capacity_ledger = NodeCapacityLedger(caps)
         # `serial_v1` is the shipped model and builds nothing at all. `graph_v1` names the arc
         # each R22 event destroys WITHOUT touching a single RNG call, because the legacy draw
         # (operation, then CSSU for op10/op12) already IS an arc selection. The null arm is
@@ -5073,6 +5082,14 @@ class MFSCSimulation:
                 if self.cssu_service_rule == "SPT_FULL" and remaining > budget + 1e-9:
                     break
                 qty = min(remaining, budget)
+                if self._cssu_capacity_ledger is not None:
+                    admitted = self._cssu_capacity_ledger.admit(
+                        f"cssu_{cssu.lower()}",
+                        level=float(self.cssu_inventory[cssu]),
+                        arriving=qty)["admitted"]
+                    if admitted <= 1e-9:
+                        break          # the CSSU is full: the rest stays at the SB
+                    qty = admitted
                 yield self.rations_sb.get(qty)
                 self._record_material_availability("order_release", qty)
                 order.remaining_qty -= qty

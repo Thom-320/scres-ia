@@ -132,15 +132,67 @@ def test_invalid_configurations_are_rejected(bad):
         bad()
 
 
-def test_a_spilling_mutant_would_break_conservation():
-    """The mutant, to show the conservation test can fail.
+def test_a_spilling_mutant_ACTUALLY_breaks_conservation(monkeypatch):
+    """A mutation test that reasons about a hypothetical mutant proves nothing.
 
-    If `admit` dropped the surplus instead of returning it, admitted + blocked would fall short of
-    arriving and the parametrised conservation test above would fire on the first full node.
+    The first version of this ran the CORRECT code and asserted what a spilling variant would do.
+    That is the same shape as every self-referential falsifier caught this week. Here the
+    production method is genuinely replaced, and conservation must fail.
     """
+    import supply_chain.node_capacity as nc
+
+    ledger = nc.NodeCapacityLedger({"sb": 100.0})
+    healthy = ledger.admit("sb", level=0.0, arriving=1000.0)
+    assert healthy["admitted"] + healthy["blocked"] == pytest.approx(1000.0)
+
+    def spilling_admit(self, node, level, arriving):
+        room = self.headroom(node, level)
+        admitted = float(arriving) if room == INF else min(float(arriving), room)
+        return {"admitted": admitted, "blocked": 0.0}      # the surplus is silently destroyed
+
+    monkeypatch.setattr(nc.NodeCapacityLedger, "admit", spilling_admit)
+    mutated = nc.NodeCapacityLedger({"sb": 100.0}).admit("sb", level=0.0, arriving=1000.0)
+    assert mutated["admitted"] + mutated["blocked"] != pytest.approx(1000.0), (
+        "the mutant conserved mass, so it is not a mutant and this test proves nothing")
+
+
+def test_binding_fraction_is_a_fraction():
+    """It returned 3.0 for three blocks at one node: a normaliser dividing by nodes, not calls."""
     ledger = NodeCapacityLedger({"sb": 100.0})
-    out = ledger.admit("sb", level=0.0, arriving=1000.0)
-    spilled = out["admitted"]                 # what a spilling implementation would report alone
-    assert spilled < 1000.0
-    assert out["admitted"] + out["blocked"] == pytest.approx(1000.0), (
-        "conservation holds only because the surplus is returned; a spilling variant fails here")
+    for _ in range(3):
+        ledger.admit("sb", level=0.0, arriving=1000.0)
+    assert ledger.binding_fraction() == pytest.approx(1.0)
+
+    mixed = NodeCapacityLedger({"sb": 100.0, "cssu_a": INF})
+    mixed.admit("sb", level=0.0, arriving=1000.0)      # blocks
+    mixed.admit("cssu_a", level=0.0, arriving=1000.0)  # does not
+    assert mixed.binding_fraction() == pytest.approx(0.5)
+    assert 0.0 <= mixed.binding_fraction() <= 1.0
+
+
+def test_a_budgeted_ledger_records_and_enforces_its_total():
+    """Turns "shared budget" from a convention into a checkable invariant."""
+    from supply_chain.node_capacity import budgeted_ledger
+
+    ledger = budgeted_ledger(10_000.0, {"sb": 1.0, "cssu_a": 1.0, "cssu_b": 2.0})
+    assert ledger.total_budget == pytest.approx(10_000.0)
+    assert sum(ledger.capacities.values()) == pytest.approx(10_000.0)
+    assert ledger.is_inert is False
+
+
+@pytest.mark.parametrize("bad", [
+    # capacities that do not sum to the declared budget
+    lambda: NodeCapacityLedger({n: 10.0 for n in CAPACITY_NODES}, total_budget=999.0),
+    # an unlimited node inside a budget returns the scarce resource to being abundant
+    lambda: NodeCapacityLedger({"sb": 100.0}, total_budget=100.0),
+])
+def test_a_budget_that_is_not_conserved_is_rejected(bad):
+    with pytest.raises(ValueError):
+        bad()
+
+
+def test_the_simulators_INF_is_not_float_inf():
+    """Stated because the docstring used to overclaim: the simulator's INF is 10_000_000, and the
+    two WIP containers can carry a genuinely finite cap via serial_wip_capacity_rations. So the
+    defensible claim is that every STORAGE node is effectively unlimited, not every container."""
+    assert INF == float("inf"), "this module's INF is the real infinity, unlike the simulator's"
