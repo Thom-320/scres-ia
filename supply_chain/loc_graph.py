@@ -265,3 +265,21 @@ def arc_down_tape(*, simulation_seed: int, event_id: int, arcs: Sequence[str]) -
         raise ValueError("no arcs to target")
     digest = sha256(f"estar-arc-v1:{simulation_seed}:{event_id}".encode()).digest()
     return sorted(arcs)[int.from_bytes(digest[:8], "big") % len(arcs)]
+
+
+def arc_for_operation(op: int, cssu: str | None) -> str:
+    """Map the legacy R22 target `(operation, cssu)` onto an arc id.
+
+    The shipped risk already draws an operation and then, for op10/op12 under `split_v1`, a CSSU.
+    That two-step draw IS an arc selection, so `graph_v1` can name the arc WITHOUT changing a
+    single RNG call. That is what makes the null arm bitwise identical rather than merely close.
+    """
+    for (tail, head), operation in HOP_OPERATION.items():
+        if operation != op:
+            continue
+        # Exact node match, NOT a suffix test: `"SB".endswith("B")` is True, so a suffix check
+        # silently routed every op10/CSSU_B event to the CSSU_A arc. Caught by asserting the
+        # mapping is a bijection before wiring it into the simulator.
+        if cssu is None or f"CSSU_{cssu}" in (tail, head):
+            return f"op{op}_{tail}_{head}".lower()
+    raise ValueError(f"no arc for operation {op!r} / cssu {cssu!r}")

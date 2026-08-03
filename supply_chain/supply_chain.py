@@ -22,6 +22,8 @@ from dataclasses import dataclass, field
 from typing import Any, Iterable, Optional
 from collections import Counter
 
+from .loc_graph import arc_for_operation as _loc_arc_for_operation
+from .loc_graph import baseline_graph as _loc_baseline_graph
 from .cssu_allocation import (
     ALLOCATION_LEVELS,
     SERVICE_RULES,
@@ -284,6 +286,7 @@ class MFSCSimulation:
         # pool effectively fungible and the share nearly moot. False makes the shares hard.
         # See `cssu_allocation.allocate_shared_capacity` for why this is the mechanism knob.
         cssu_reallocate_unused: bool = True,
+        loc_topology_mode: str = "serial_v1",
         cssu_min_dwell_days: float = 1.0,
         cssu_switch_cost_rations: float = 0.0,
         expedite_budget_hours: float = 0.0,
@@ -498,6 +501,17 @@ class MFSCSimulation:
             raise ValueError('cssu_min_dwell_days must be >= 1.0 (1 = the shipped, inert value)')
         if float(cssu_switch_cost_rations) < 0.0:
             raise ValueError('cssu_switch_cost_rations must be non-negative')
+        if str(loc_topology_mode) not in ("serial_v1", "graph_v1"):
+            raise ValueError("loc_topology_mode must be 'serial_v1' or 'graph_v1'")
+        self.loc_topology_mode = str(loc_topology_mode)
+        # `serial_v1` is the shipped model and builds nothing at all. `graph_v1` names the arc
+        # each R22 event destroys WITHOUT touching a single RNG call, because the legacy draw
+        # (operation, then CSSU for op10/op12) already IS an arc selection. The null arm is
+        # therefore bitwise identical, and that is asserted against a frozen golden hash rather
+        # than claimed.
+        self.loc_graph = _loc_baseline_graph() if self.loc_topology_mode == "graph_v1" else None
+        self.loc_arcs_down: set[str] = set()
+        self.loc_arc_down_events: list[dict[str, Any]] = []
         self.cssu_min_dwell_days = float(cssu_min_dwell_days)
         self.cssu_switch_cost_rations = float(cssu_switch_cost_rations)
         self._pending_cssu_action: Optional[dict[str, Any]] = None
@@ -5978,6 +5992,10 @@ class MFSCSimulation:
             else None
         )
         start = self.env.now
+        arc_id = (_loc_arc_for_operation(target, target_cssu)
+                  if self.loc_topology_mode == "graph_v1" else None)
+        if arc_id is not None:
+            self.loc_arcs_down.add(arc_id)
         if target_cssu is None:
             self._take_down(target)
         else:
@@ -5988,6 +6006,11 @@ class MFSCSimulation:
             self._bring_up(target)
         else:
             self._bring_up_cssu(target, target_cssu)
+        if arc_id is not None:
+            self.loc_arcs_down.discard(arc_id)
+            self.loc_arc_down_events.append(
+                {"arc_id": arc_id, "op_id": int(target), "cssu": target_cssu,
+                 "start_time": float(start), "end_time": float(self.env.now)})
         event = RiskEvent(
             "R22", start, self.env.now, recovery, [target],
             affected_cssu=target_cssu,
