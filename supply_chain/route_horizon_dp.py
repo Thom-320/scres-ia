@@ -91,47 +91,56 @@ def solve(tape: RouteTape) -> dict[str, Any]:
     # ARRIVES, so a schedule is only as good as its arrival times.
     # Value function over (epoch, convoy_free_at) with convoy_free_at clipped to the horizon.
     best: dict[tuple[int, int], float] = {}
-    move: dict[tuple[int, int], str] = {}
+    move: dict[tuple, str] = {}
     expansions = 0
 
-    def value(epoch: int, free_at: int, carried: float) -> float:
-        """Cost-to-go. `carried` is undelivered demand entering this epoch."""
+    def value(epoch: int, free_at: int, carried: float,
+              pending_qty: float, pending_arrival: int) -> float:
+        """Cost-to-go. `carried` is demand not yet DELIVERED; goods in transit still count.
+
+        Rations on a convoy have not reached the troops, so they keep costing until `arrival`.
+        The first version cleared them at departure, which made a 72 h route look as good as a
+        24 h one and turned the bound into a bound on a fiction.
+        """
         nonlocal expansions
         if epoch >= n:
             return 0.0
-        key = (epoch, free_at, round(carried, 6))
+        # Delivery lands first: in-transit goods arrive and only then stop costing.
+        if pending_qty > 0.0 and pending_arrival <= epoch:
+            carried = max(0.0, carried - pending_qty)
+            pending_qty, pending_arrival = 0.0, 0
+        key = (epoch, free_at, round(carried, 6), round(pending_qty, 6), pending_arrival)
         cached = best.get(key)
         if cached is not None:
             return cached
         expansions += 1
         carried_now = carried + tape.demand_per_epoch[epoch]
-        # Stage cost: everything still undelivered sits for one epoch.
         stage = carried_now * tape.epoch_hours
 
-        options: list[tuple[float, str]] = [(stage + value(epoch + 1, free_at, carried_now), HOLD)]
-        if free_at <= epoch:
+        options: list[tuple[float, str]] = [
+            (stage + value(epoch + 1, free_at, carried_now, pending_qty, pending_arrival), HOLD)]
+        if free_at <= epoch and pending_qty == 0.0:
             for action in (ROUTE_1, ROUTE_2):
                 busy = _epochs_busy(tape, action, epoch)
                 if busy == INF:
                     continue
-                arrival = epoch + max(1, int(round(busy / 2.0)))   # one-way leg delivers
+                arrival = epoch + max(1, int(round(busy / 2.0)))
                 if arrival >= n:
                     continue
-                # The convoy is unavailable for the whole round trip.
                 nxt_free = epoch + max(1, int(round(busy)))
-                delivered = min(carried_now, tape.convoy_capacity)
-                # Demand cleared at arrival, so it keeps costing until then.
-                remaining = carried_now - delivered
-                options.append((stage + value(epoch + 1, nxt_free, remaining), action))
+                loaded = min(carried_now, tape.convoy_capacity)
+                options.append((stage + value(epoch + 1, nxt_free, carried_now, loaded, arrival),
+                                action))
 
         chosen = min(options, key=lambda t: t[0])
         best[key] = chosen[0]
-        move[(epoch, free_at)] = chosen[1]
+        move[key] = chosen[1]
         return chosen[0]
 
-    total = value(0, 0, 0.0)
+    total = value(0, 0, 0.0, 0.0, 0)
     return {"optimal_cost": total, "expansions": expansions,
-            "horizon": n, "scope": "ADDITIVE_SERVICE_LOSS_SURROGATE_NOT_CANONICAL_RET"}
+            "horizon": n, "scope": "ARRIVAL_TIMED_ADDITIVE_SERVICE_LOSS_SURROGATE_NOT_CANONICAL_RET",
+            "direction": "MINIMISED_LOSS: a lower cost is better, so the clairvoyant optimum is a LOWER bound on achievable loss"}
 
 
 def evaluate_schedule(tape: RouteTape, schedule: Sequence[str]) -> float:
@@ -143,10 +152,14 @@ def evaluate_schedule(tape: RouteTape, schedule: Sequence[str]) -> float:
     if len(schedule) != tape.horizon:
         raise ValueError("schedule length must match the horizon")
     carried, free_at, total = 0.0, 0, 0.0
+    pending_qty, pending_arrival = 0.0, 0
     for epoch, action in enumerate(schedule):
+        if pending_qty > 0.0 and pending_arrival <= epoch:
+            carried = max(0.0, carried - pending_qty)
+            pending_qty, pending_arrival = 0.0, 0
         carried += tape.demand_per_epoch[epoch]
         total += carried * tape.epoch_hours
-        if action == HOLD or free_at > epoch:
+        if action == HOLD or free_at > epoch or pending_qty > 0.0:
             continue
         busy = _epochs_busy(tape, action, epoch)
         if busy == INF:
@@ -154,7 +167,7 @@ def evaluate_schedule(tape: RouteTape, schedule: Sequence[str]) -> float:
         arrival = epoch + max(1, int(round(busy / 2.0)))
         if arrival >= tape.horizon:
             continue
-        carried -= min(carried, tape.convoy_capacity)
+        pending_qty, pending_arrival = min(carried, tape.convoy_capacity), arrival
         free_at = epoch + max(1, int(round(busy)))
     return total
 

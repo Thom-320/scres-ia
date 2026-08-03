@@ -103,7 +103,10 @@ def test_zero_demand_makes_every_schedule_free():
 def test_the_scope_is_declared_in_the_result():
     """The surrogate limit must travel WITH the number, not live in a document nobody opens."""
     out = solve(tape(3))
-    assert out["scope"] == "ADDITIVE_SERVICE_LOSS_SURROGATE_NOT_CANONICAL_RET"
+    assert out["scope"] == "ARRIVAL_TIMED_ADDITIVE_SERVICE_LOSS_SURROGATE_NOT_CANONICAL_RET"
+    assert "LOWER bound" in out["direction"], (
+        "the direction of the bound must travel with it: this minimises a loss, so the\n"
+        "clairvoyant optimum bounds achievable loss from BELOW")
     assert out["expansions"] > 0
 
 
@@ -122,3 +125,35 @@ def test_search_cost_is_reported_so_the_dp_is_comparable_to_astar():
 def test_malformed_tapes_are_rejected(bad):
     with pytest.raises(ValueError):
         bad()
+
+
+def test_goods_in_transit_keep_costing_until_they_arrive():
+    """The adversarial arrival test. The first version cleared the load at DEPARTURE, which made a
+    72 h route look identical to a 24 h one and turned the bound into a bound on a fiction.
+
+    Here the only live route takes 72 h round trip, so it arrives one epoch after departure and
+    the demand must be paid for BOTH epochs.
+    """
+    t = RouteTape(route1_down=(True,) * 4, route2_degraded=(False,) * 4,
+                  demand_per_epoch=(5000.0, 0.0, 0.0, 0.0),
+                  route2_base_hours=36.0, route2_penalty_hours=0.0, convoy_capacity=5000.0)
+    cost = evaluate_schedule(t, [ROUTE_2, HOLD, HOLD, HOLD])
+    assert cost == pytest.approx(5000.0 * 24.0 * 2), (
+        "demand cleared before arrival: the load is being discounted at departure")
+
+
+def test_a_faster_route_is_strictly_better_when_both_are_available():
+    """Directly guards the defect: with clearance at departure these two tie, which is how the
+    error hid. With arrival timing the fast route must win."""
+    common = dict(route2_degraded=(False,) * 5, demand_per_epoch=(4000.0, 0.0, 0.0, 0.0, 0.0),
+                  convoy_capacity=5000.0, route2_base_hours=60.0, route2_penalty_hours=0.0)
+    t = RouteTape(route1_down=(False,) * 5, **common)
+    assert evaluate_schedule(t, [ROUTE_1, HOLD, HOLD, HOLD, HOLD]) < \
+        evaluate_schedule(t, [ROUTE_2, HOLD, HOLD, HOLD, HOLD])
+
+
+def test_the_convoy_cannot_carry_a_second_load_while_one_is_in_transit():
+    """One convoy, one shipment. Without this the DP could deliver twice from one carrier."""
+    t = RouteTape(route1_down=(False,) * 6, route2_degraded=(False,) * 6,
+                  demand_per_epoch=(1000.0,) * 6, convoy_capacity=100.0)
+    assert solve(t)["optimal_cost"] == pytest.approx(brute_force(t))
