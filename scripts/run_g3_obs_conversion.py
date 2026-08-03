@@ -31,7 +31,7 @@ from supply_chain.arm_runner import seal_and_write  # noqa: E402
 from supply_chain.config import HOURS_PER_WEEK  # noqa: E402
 from supply_chain.config import THESIS_FAITHFUL_PROTOCOL as P  # noqa: E402
 from supply_chain.episode_metrics import compute_episode_metrics  # noqa: E402
-from supply_chain.seed_custody import custody_falsifier  # noqa: E402
+from supply_chain.seed_custody import custody_falsifier, module_manifest  # noqa: E402
 from supply_chain.service_first_metric import claimant_fills  # noqa: E402
 from supply_chain.supply_chain import MFSCSimulation  # noqa: E402
 
@@ -60,6 +60,13 @@ SEED_BASE = 5_200_001          # default: the burned block of the underpowered r
 STEP_HOURS = 24.0
 Z90, Z95 = 1.2816, 1.6449          # one-sided 90% power, one-sided 95% test
 SEALED_REFERENCE = Path("results/sensitivity/contention_headroom_v1_1/result.json")
+F2_ORDER = ("threshold_windowed", "threshold_delayed", "uninformed_placebo", "wrong_claimant")
+
+
+def f2_order_passes(vs_constant: dict[str, dict[str, float]]) -> bool:
+    """Require the complete preregistered f2 ordering, including the delayed arm."""
+    means = [float(vs_constant[name]["mean"]) for name in F2_ORDER]
+    return all(left > right for left, right in zip(means, means[1:]))
 
 
 def _build(seed, risks, freq, impact, *, share):
@@ -174,6 +181,11 @@ def main() -> int:
     ap.add_argument("--seed-base", type=int, default=SEED_BASE)
     ap.add_argument("--replay-of", default=None,
                     help="registry block id this run deliberately re-executes")
+    ap.add_argument("--contract", type=Path,
+                    default=Path("docs/PREREGISTRO_G3_OBS_CONVERSION_OBSERVABLE_2026-08-01.md"),
+                    help="contract to seal into the result at execution time")
+    ap.add_argument("--run-role", choices=("DEVELOPMENT", "CONFIRMATORY"),
+                    default="DEVELOPMENT")
     ap.add_argument("--output", type=Path,
                     default=Path("results/headroom/g3_obs_conversion/result.json"))
     args = ap.parse_args()
@@ -271,10 +283,7 @@ def main() -> int:
                             and r["residual_over_simple"]["mean"] >= SESOI
                             for r in results.values())
     guards_ok = all(g["passes"] for r in results.values() for g in r["guardrails"].values())
-    signal_ordering = all(
-        r["vs_constant"]["threshold_windowed"]["mean"]
-        > max(r["vs_constant"]["uninformed_placebo"]["mean"],
-              r["vs_constant"]["wrong_claimant"]["mean"]) for r in results.values())
+    signal_ordering = all(f2_order_passes(r["vs_constant"]) for r in results.values())
     live = all(r["alpha_sd"] > 1e-6 for r in results.values())
 
     falsifiers = {
@@ -287,11 +296,12 @@ def main() -> int:
                          "future_symbols_read": []}},
         "f2_real_signal_beats_shuffled_delayed_and_wrong": {
             "passed": bool(signal_ordering),
-            "evidence": {"why_it_can_fail": "if an uninformed or inverted signal matches the real "
-                                            "one, the signal carries no information",
-                         "vs_constant": {k: {a: r["vs_constant"][a]["mean"] for a in
-                                             ("threshold_windowed", "uninformed_placebo",
-                                              "wrong_claimant")} for k, r in results.items()}}},
+            "evidence": {"required_order": list(F2_ORDER),
+                         "why_it_can_fail": "if the complete ordering fails, the signal is not "
+                                            "demonstrably directional over delay, placebo and wrong "
+                                            "claimant",
+                         "vs_constant": {k: {a: r["vs_constant"][a]["mean"] for a in F2_ORDER}
+                                          for k, r in results.items()}}},
         "f3_thresholds_fit_on_development_only": {
             "passed": all(not (set(r["development"]["dev_seeds"]) & set(r["test_seeds"]))
                           for r in results.values()),
@@ -367,17 +377,24 @@ def main() -> int:
     payload = {
         "schema_version": "g3_obs_conversion_v1",
         "claim_status": verdict if falsifiers["all_passed"] else "HALTED_FALSIFIER_FAILED",
-        "scope": "OBSERVABLE_CONVERSION_ON_BURNED_TAPES_NO_TRAINING_AUTHORIZED",
+        "scope": ("G3_OBS_V2_CONFIRMATORY_EXECUTION_NO_TRAINING"
+                  if args.run_role == "CONFIRMATORY"
+                  else "OBSERVABLE_CONVERSION_DEVELOPMENT_NO_TRAINING"),
+        "run_role": args.run_role,
+        "execution_authorization": ("the explicit PI authorization recorded in the v2 "
+                                     "confirmation contract" if args.run_role == "CONFIRMATORY"
+                                     else "development execution"),
         "primary_metric": PRIMARY, "sesoi": SESOI, "margins": MARGINS,
         "window_days": WINDOW_DAYS, "delay_days": DELAY_DAYS, "noise_sd": NOISE_SD,
         "step_hours": STEP_HOURS, "seeds": seeds, "development_seeds": dev, "test_seeds": test,
         "rule": RULE, "regimes": list(REGIMES), "fungible": False,
         "results": results, "falsifiers": falsifiers,
+        "module_manifest": module_manifest(script=Path(__file__)),
         "elapsed_seconds": time.perf_counter() - started,
     }
     digest = seal_and_write(
         payload, args.output,
-        contract=Path("docs/PREREGISTRO_G3_OBS_CONVERSION_OBSERVABLE_2026-08-01.md"),
+        contract=args.contract,
         reference=SEALED_REFERENCE)
     print(f"\n  -> {args.output} (sello {digest[:16]}…)")
     return 0 if falsifiers["all_passed"] else 1
