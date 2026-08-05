@@ -1,0 +1,196 @@
+{
+  "schema_version": "garrido_expanded_des_e_star_v2_hcompute",
+  "contract_id": "garrido_expanded_des_e_star_v2_hcompute",
+  "status": "DESIGN_ONLY_NOT_AUTHORIZED_UNTIL_SUBMISSION_A_RECEIPT",
+  "supersedes": "garrido_expanded_des_e_star_v1",
+  "authority": {
+    "source": "main:contracts/authority_ladder_v1.json",
+    "scientific_execution_authorized": false,
+    "submission_a_receipt_required_before_scientific_execution": true,
+    "fresh_roots_opened": false,
+    "fresh_tapes_opened": false,
+    "optimizer_seeds_assigned": false,
+    "neural_training_authorized": false,
+    "garrido_written_approval_required": true
+  },
+  "purpose": "Freeze a single source-conserving expanded DES kernel and measure whether structured planning cost is material before any learner is considered.",
+  "research_question": "Which physically valid procurement, upstream-buffer, and downstream-dispatch rights create observable resilience value, how much is captured by structured control, and does an amortized controller provide a defensible efficiency or quality advantage?",
+  "scope": {
+    "historical_reference": "E_Garrido",
+    "prospective_kernel": "E_star",
+    "attribution": "thesis-grounded reconstruction; not a validated digital twin",
+    "immutable_programs": ["Program Q", "Program O", "thesis_1to1"],
+    "approved_nodes": ["wdc", "al", "sb", "cssu_a", "cssu_b"],
+    "required_physics": [
+      "approved upstream procurement sources",
+      "finite per-node storage and capacity",
+      "explicit lead times and inventory in transit",
+      "downstream dispatch and transport capacity",
+      "production and replenishment conservation",
+      "service, resource, and material ledgers",
+      "fixed exogenous demand and risk tapes",
+      "native decision cadences"
+    ],
+    "forbidden_shortcuts": [
+      "strategic inventory or rations injected without an external source",
+      "action creating inventory without upstream supply and capacity",
+      "future risk, demand, or outcome in observations",
+      "new nodes, transitions, risks, costs, or observation fields after freeze",
+      "post-hoc physics changes after a structural result"
+    ]
+  },
+  "decision_families": {
+    "P": "procurement quantities and approved supplier-lane selection",
+    "U": "upstream buffer targets and replenishment priorities",
+    "D": "downstream buffer and dispatch quantities"
+  },
+  "factorial_masks": [
+    {"mask_id": "M000", "P": false, "U": false, "D": false},
+    {"mask_id": "M100", "P": true, "U": false, "D": false},
+    {"mask_id": "M010", "P": false, "U": true, "D": false},
+    {"mask_id": "M001", "P": false, "U": false, "D": true},
+    {"mask_id": "M110", "P": true, "U": true, "D": false},
+    {"mask_id": "M101", "P": true, "U": false, "D": true},
+    {"mask_id": "M011", "P": false, "U": true, "D": true},
+    {"mask_id": "M111", "P": true, "U": true, "D": true}
+  ],
+  "action_contract": {
+    "native_cadence_required": true,
+    "off_epoch_behavior": "masked_and_carried_forward",
+    "unknown_action_keys": "fail_closed",
+    "continuous_fields": ["procurement_qty", "buffer_targets", "dispatch_qty"],
+    "finite_choice_fields": ["active_supplier_lanes", "active_dispatch_lanes"],
+    "resource_rule": "q_move = min(shortfall, upstream_available, transport_capacity)",
+    "inventory_rule": "buffer targets do not create inventory; procurement enters transit and arrives only after its lead time"
+  },
+  "flags_off_bridge": {
+    "status": "GOLDEN_VECTOR_REQUIRED_BEFORE_H_COMPUTE",
+    "fixture": "results/expanded_contract_comparators_v2_preflight_1dc40c1/preflight/R1r_actual_tapes.json",
+    "golden_payload_sha256": "e24d4ef6408276d30987dc27c065fe7f2a274d139c468b8eb6354bcb4d22725d",
+    "expected_flow_residual": 0.0,
+    "expected_strategic_injected": 0.0,
+    "bridge_scope": "M000 flags-off fixture only; this does not validate expanded P/U/D physics"
+  },
+  "expanded_des_bridge": {
+    "status": "PENDING_SOURCE_CONSERVING_ADAPTER",
+    "required_before_h_compute_adjudication": true,
+    "historical_des": "supply_chain.supply_chain.MFSCSimulation",
+    "required_rights": ["procurement_qty", "buffer_targets", "dispatch_qty"],
+    "failure_state": "STOP_ESTAR_DES_BRIDGE_NOT_READY"
+  },
+  "h_compute": {
+    "status": "ENGINEERING_PREFLIGHT_ONLY",
+    "estimand": "planning wall time, planner calls, and kernel/DES rollouts as a function of frozen decision complexity",
+    "burned_only": true,
+    "horizon_changes_forbidden": true,
+    "size_ladder": [
+      {"id": "S0_M000", "mask_id": "M000", "active_supplier_lanes": 0, "active_dispatch_lanes": 0},
+      {"id": "S1_P", "mask_id": "M100", "active_supplier_lanes": 1, "active_dispatch_lanes": 0},
+      {"id": "S2_U", "mask_id": "M010", "active_supplier_lanes": 0, "active_dispatch_lanes": 0},
+      {"id": "S3_PU", "mask_id": "M110", "active_supplier_lanes": 1, "active_dispatch_lanes": 0},
+      {"id": "S4_FULL", "mask_id": "M111", "active_supplier_lanes": 3, "active_dispatch_lanes": 2}
+    ],
+    "timing_repetitions": 30,
+    "warmup_repetitions": 5,
+    "horizon_hours": 8736.0,
+    "decision_cadence_hours": 168.0,
+    "native_cadence_fraction_budget": 0.10,
+    "relative_call_budget_vs_m000": 10.0,
+    "pass_rule": "p95 planning latency exceeds the signed budget or planner calls exceed the signed M000 multiple, and the same quantity increases across two consecutive frozen levels",
+    "failure_state": "STOP_ESTAR_PLANNER_NOT_BINDING",
+    "des_bridge_required": true
+  },
+  "metric_hierarchy": {
+    "primary_selection_status": "PENDING_PI_AND_GARRIDO_SIGNATURE_BEFORE_FRESH_DATA",
+    "recommended_primary_endpoint": "ret_excel_request_snapshot_v2",
+    "allowed_primary_endpoints": [
+      {"id": "ret_excel_request_snapshot_v2", "role": "source_aligned_resilience"},
+      {"id": "cobb_douglas_index", "role": "calibrated_sensitivity"}
+    ],
+    "always_reported": [
+      "ret_excel_request_snapshot_v2",
+      "ret_excel_full_ledger",
+      "ret_thesis",
+      "cobb_douglas_index",
+      "flow_fill_rate",
+      "worst_claimant_fill",
+      "lost_orders",
+      "unresolved_orders",
+      "backorder_qty_final",
+      "service_loss_auc",
+      "delivered_rations",
+      "resource_ledger"
+    ],
+    "cvar": {
+      "fields": ["ret_excel_cvar05", "ret_excel_cvar10"],
+      "role": "secondary_non_promoting_tail_diagnostic",
+      "may_be_primary": false,
+      "may_promote_alone": false,
+      "may_block_alone": false
+    },
+    "weighted_sum_forbidden": true,
+    "lexicographic_tuple_is_not_an_estimand": true
+  },
+  "estimands": {
+    "H_PI": "V(pi_perfect_information) - V(pi_best_static); diagnostic only",
+    "H_obs": "V(pi_cross_fitted_observable) - V(pi_best_static); non-anticipative",
+    "Delta_obs": "V(pi_cross_fitted_observable) - V(pi_best_structured)",
+    "Delta_efficiency": "quality and guardrails matched while online latency or planner/DES calls decrease",
+    "Delta_quality": "V(pi_neural) - V(pi_best_structured) in closed-loop rollout",
+    "Delta_generalization": "performance on frozen unseen active subsets, permutations, regimes, or lead times at matched rights and budget"
+  },
+  "control_ladder": [
+    "best_constant",
+    "lookup_or_order_up_to",
+    "threshold_or_hysteresis",
+    "tree_or_tabular_policy",
+    "spline_or_GAM",
+    "DP_or_rollout",
+    "direct_DES_MPC",
+    "neural_amortized_controller_only_after_H_compute"
+  ],
+  "neural_lanes": {
+    "primary": "amortization",
+    "amortization_authorization": "H_compute_pass plus service/resource non-inferiority; no quality residual is required to test a surrogate of an expensive planner",
+    "quality_authorization": "LCB95(Delta_obs) >= SESOI",
+    "representations": {
+      "fixed_vector": "MLP",
+      "variable_set_or_permutation": "DeepSets_or_attention_only_if_predeclared_active_set_is_used",
+      "separable_structure": "KAN_as_predeclared_comparator_not_rescue",
+      "history": "GRU_or_LSTM_only_if_history_aliasing_gate_passes"
+    },
+    "single_primary_architecture_for_confirmation": true,
+    "r2_is_not_a_control_gate": true
+  },
+  "authority_and_execution": {
+    "allowed_before_submission_receipt": [
+      "contract and documentation",
+      "synthetic tests",
+      "burned-data timing audit",
+      "flags-off bridge construction",
+      "portable provenance and mutation tests"
+    ],
+    "forbidden_before_submission_receipt": [
+      "fresh tapes or roots",
+      "confirmatory structural screens",
+      "learner training",
+      "architecture selection from scientific outcomes"
+    ],
+    "seed_registry": "research/seed_custody_registry.json",
+    "run_role": "BURNED_COMPUTE_PREFLIGHT",
+    "replay_of_required": true
+  },
+  "terminal_states": [
+    "STOP_ESTAR_FLAGS_OFF_NON_EQUIVALENT",
+    "STOP_ESTAR_DES_BRIDGE_NOT_READY",
+    "STOP_ESTAR_PLANNER_NOT_BINDING",
+    "STOP_NO_PHYSICAL_HEADROOM",
+    "STOP_HEADROOM_NOT_OBSERVABLE",
+    "STOP_STRUCTURED_CONTROL_SUFFICES",
+    "STOP_NEURAL_EQUIVALENT",
+    "NEURAL_AMORTIZATION_PREMIUM",
+    "NEURAL_GENERALIZATION_PREMIUM",
+    "NEURAL_PREMIUM_CONFIRMED",
+    "BUDGET_EXHAUSTED_WITHOUT_PREMIUM"
+  ]
+}
