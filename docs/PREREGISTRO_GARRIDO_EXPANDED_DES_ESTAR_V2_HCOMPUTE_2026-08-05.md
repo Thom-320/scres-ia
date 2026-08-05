@@ -134,3 +134,18 @@ hiperparámetros, comparador, presupuesto y análisis. Sólo una confirmación i
 seeds vírgenes permite declarar `NEURAL_PREMIUM_CONFIRMED`.
 
 Program Q, Program O y `thesis_1to1` permanecen cerrados e inmutables durante todo el proceso.
+
+## Recibo de ingeniería burned-only (2026-08-05)
+
+El bridge source-conserving quedó implementado y pasó el smoke de las ocho
+ máscaras sobre un tape burned. El recibo está en
+ `results/estar_expanded_bridge_smoke_v1/result.json`; su digest observado es
+ `feaef05c0f31e9f82091d063b004b45823694341b7dc6225d4f4341ff37fc206`.
+
+El preflight de coste usa ahora el DES histórico a través de `EStarDESAdapter`
+ y el backend explícito `DirectDESMPC`, no el kernel sintético aislado. El gate
+ de llamadas pasa en el fixture burned y el resultado es
+ `H_COMPUTE_PASS_NEURAL_AMORTIZATION_ELIGIBLE`. Este estado no es autoridad
+ científica: no abrió semillas, no entrenó learners y no autoriza la frontera
+ estructurada ni una confirmación. La selección de endpoint, SESOI, márgenes y
+ autoridad de Submission A/Garrido siguen pendientes.
