@@ -43,6 +43,29 @@ corridas.
 
 ---
 
+## R1b · La fuga, medida en vez de argumentada
+
+`results/twin_surface/result.json` · `f6` del mismo contrato · figura `fig_a_normaliser_leak`
+
+El test afín pasaba con **ambos** normalizadores, y por eso era insuficiente: es ciego a una fuga
+invariante a escala —un brazo que leyera el **rango** o el **argmax** lo pasaría—. El test de
+**superficies gemelas** no lo es: conserva intactas todas las celdas que la ruta de referencia
+visitó, altera **dos que ningún brazo tocó**, y repite el mismo flujo de RNG.
+
+| normalizador | `ofat` | `random` | `neuron_reset` | `neuron_memory` |
+|---|---:|---:|---:|---:|
+| oráculo | 6/6 | 6/6 | **0/6** | **0/6** |
+| prefijo | 6/6 | 6/6 | **6/6** | **6/6** |
+
+*(contextos cuya ruta de búsqueda queda inalterada)*
+
+**Bajo el oráculo los dos brazos neuronales cambian su ruta en los seis contextos** al alterar
+celdas que nunca corrieron. Bajo el prefijo, en ninguno. `ofat` y `random` no se mueven en ningún
+caso — nunca llaman al normalizador. Es un falsador con **un PASA y un FALLA obligatorios**, y
+ninguno de los dos puede satisfacerse por acuerdo del código consigo mismo.
+
+---
+
 ## R2 · La superficie es difícil de buscar, y la respuesta es la misma en todas partes
 
 `results/surface_gates/result.json` · contrato `docs/ENMIENDA_GATES_SUPERFICIE_2026-08-05.md`
@@ -169,6 +192,50 @@ ejecutadas **imposibles por construcción**, no prohibidas por convención.
 (`H_regime` +0,0038). Esto es desarrollo sobre tapes quemados: **no adjudica, no abre semillas y no
 autoriza entrenar**. Las cifras retiradas 7,24 / 12,42 / 13,54 / +6,31 siguen prohibidas.
 
-**Lo que falta para cerrar el paper.** La transferencia de **rejilla** 288 → 4.608 —el único eje de
-transferencia que sigue vivo tras `g1`— y requiere la firma del PI para el bloque de desarrollo
-extendido.
+---
+
+## Integridad reparada por el camino, y que va al apartado de reproducibilidad
+
+**Los tres defectos de la plataforma Q2** (`scripts/run_garrido_q2_des288_v1.py`). El grave: OFAT
+re-corría **su última propuesta** en vez de la incumbente al agotar el diseño, porque el guardián
+`"idx" not in locals()` era falso desde el paso 1 —`del idx` se ejecuta una vez por *contexto*—.
+**Validado reintroduciendo el defecto**: el brazo con bug repite `op12_rop = 48` mientras su
+incumbente es `12`, y `tests/test_q2_ofat_exhaustion.py` falla sobre él. Además, `f9` pasa por el
+registro central en vez de una tupla mantenida a mano, y `all_passed` deja de contar los
+`not_applicable`.
+
+**El registro de custodia: de 10 a 32 bloques, 327 semillas recuperadas**
+(`results/custody/registry_reconciliation.json`). La captura que lo justifica: **`7.100.001`**,
+reservada por el preregistro del DES-288 como bloque **virgen de confirmación**, está consumida por
+tres artefactos de humo —**cada uno de los cuales selló `virgin_seed_block: true`**—. La custodia
+ahora devuelve `COLLISION`. Las semillas de optimizador (`9301–9310`) quedan **excluidas a
+propósito**: indexan una inicialización de torch, no una cinta CRN, y registrarlas fabricaría
+colisiones inexistentes.
+
+## Figuras
+
+`scripts/build_cie_outer_loop_figures.py` → `docs/manuscript_current/submission/elsevier/figures/`.
+**Ningún número está cableado**: cada valor se carga de su `result.json`, así que una figura no
+puede alejarse de la evidencia que dice mostrar y re-correr es todo el camino de actualización.
+
+| figura | qué muestra |
+|---|---|
+| `fig_a_normaliser_leak` | R1b: la fuga y su reparación, medidas |
+| `fig_b_surface_gates` | R2: no separabilidad por contexto, y `H_regime` contra su umbral |
+| `fig_c_comparator_ladder` | R3+R4: la escalera con y sin memoria |
+| `fig_d_memory_price` | R4: lo que la retención vale a cada familia |
+| `fig_e_delta_efficiency` | R5: calidad contra coste, **con banda de equivalencia explícita** |
+
+La banda de `fig_e` no es decorativa: los tres puntos difieren en la página pero **todos los
+intervalos cruzan cero**, y sin ella la figura afirmaría un orden que sus propios datos niegan.
+
+---
+
+## Lo que falta para cerrar el paper
+
+**La transferencia de rejilla 288 → 4.608**, el único eje de transferencia vivo tras `g1`.
+Contrato escrito (`docs/ENMIENDA_TRANSFERENCIA_REJILLA_2026-08-05.md`) y runner implementado
+(`scripts/run_grid_transfer_v1.py`); la superficie extendida está construyéndose.
+
+**No requiere firma**: la extensión añade **configuraciones, no cintas**, así que corre sobre el
+mismo bloque quemado como réplica declarada. No hay nada que abrir.
