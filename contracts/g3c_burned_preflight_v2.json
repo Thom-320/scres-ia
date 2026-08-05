@@ -1,0 +1,99 @@
+{
+  "schema_version": "g3c_burned_preflight_v2",
+  "status": "BURNED_PREFLIGHT_AUTHORIZED_NO_FRESH_SEEDS",
+  "parent_contract": "contracts/g3c_temporal_coupling_v2.json",
+  "supersedes": {
+    "contract": "contracts/g3c_burned_preflight_v1.json",
+    "reason": "El preflight v1 demostró que dwell=3 es inerte; una caracterización burned-only día por día deriva niveles materialmente vivos.",
+    "old_result": "results/headroom/g3c_preflight_burned/result.json"
+  },
+  "level_derivation_evidence": "results/headroom/g3c_dwell_inertia/result.json",
+  "scientific_supersession": "docs/ENMIENDA_G3C_PREFLIGHT_BURNED_V2_2026-08-05.md",
+  "authority": {
+    "granted_by": "PI, explicit instruction in session 2026-08-05",
+    "scope": "BURNED_PREFLIGHT_ONLY",
+    "fresh_roots_opened": false,
+    "fresh_tapes_opened": false,
+    "neural_training_authorized": false,
+    "program_q_and_program_o": "immutable"
+  },
+  "tape_governance": {
+    "source_block_id": "contention_headroom",
+    "start": 5200001,
+    "end": 5200016,
+    "status": "USED_DEVELOPMENT_NOT_VIRGIN",
+    "replay_required": true,
+    "new_seed_opening": false
+  },
+  "mechanism": {
+    "name": "minimum_dwell",
+    "levels_days": [1, 6, 12],
+    "null_level_days": 1,
+    "treatment_levels_days": [6, 12],
+    "switch_cost_rations": 0,
+    "claimants": 2,
+    "topology": "split_v1",
+    "activation_delay_hours": 24,
+    "step_hours": 24,
+    "horizon_weeks": 52
+  },
+  "regimes": {
+    "R1r+R2r|base": {
+      "risks": ["R11", "R12", "R13", "R14", "R21", "R22", "R23", "R24"],
+      "frequency_multipliers": {},
+      "impact_multipliers": {}
+    },
+    "R1r+R2r|freq3_imp2": {
+      "risks": ["R11", "R12", "R13", "R14", "R21", "R22", "R23", "R24"],
+      "frequency_multipliers": {"R23": 3.0},
+      "impact_multipliers": {"R23": 2.0}
+    }
+  },
+  "policy": {
+    "incumbent": "myopic_equivariant_tau0",
+    "candidate": "two_state_hysteresis",
+    "hysteresis_tau_in_normalized_unmet": 0.10,
+    "hysteresis_tau_out_normalized_unmet": 0.02,
+    "constant_grid": [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
+    "signal": "observed cumulative unmet demand per claimant before action",
+    "placebo": "same cadence and support, target sampled without reading state",
+    "wrong_claimant": "invert the myopic direction",
+    "future_leakage": false
+  },
+  "estimands": {
+    "primary": "hysteresis_minus_myopic_worst_claimant_fill",
+    "base_metric": "worst_claimant_fill",
+    "sesoi": 0.01,
+    "guardrails": {
+      "flow_fill_rate": {"delta": 0.005, "direction": "non_inferiority"},
+      "lost_orders": {"delta": 0.5, "direction": "non_inferiority"},
+      "backorder_qty_final_relative": {"delta": 0.01, "direction": "non_inferiority"},
+      "mass_capacity_resources": {"delta": 0.0, "direction": "exact_identity"}
+    }
+  },
+  "power": {
+    "unit": "seed",
+    "contrasts": 4,
+    "simultaneous_method": "Bonferroni over 2 treatment levels x 2 regimes",
+    "alpha": 0.05,
+    "power_target": 0.90,
+    "mde_target": 0.010,
+    "max_seeds_per_cell": 96,
+    "underpowered_state": "STOP_G3C_UNDERPOWERED",
+    "formula": "(z_0.90 + z_(1 - 0.05/4)) * paired_sd / sqrt(N)"
+  },
+  "run_contract": {
+    "run_role": "BURNED_PREFLIGHT",
+    "replay_of": "contention_headroom",
+    "requires_module_manifest": true,
+    "requires_canonical_scientific_payload": true,
+    "requires_execution_time_provenance": true
+  },
+  "terminal_states": [
+    "STOP_G3C_INSTRUMENT_INVALID",
+    "STOP_G3C_DIRECTIONALITY_NOT_ESTABLISHED",
+    "STOP_G3C_GUARDRAIL",
+    "STOP_G3C_UNDERPOWERED",
+    "G3C_PREFLIGHT_POWER_SUFFICIENT_NO_FRESH_SEEDS"
+  ]
+}
