@@ -1,0 +1,187 @@
+{
+ "arms": [
+  "neuron_memory",
+  "surrogate_mlp",
+  "surrogate_kan"
+ ],
+ "budget": 24,
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "NEURAL_SURROGATE_PREMIUM_IN_THE_OUTER_LOOP",
+ "contexts": [
+  "R1r",
+  "R1r+R2r",
+  "R1r+R2r|esc",
+  "R1r|esc",
+  "R2r",
+  "R2r|esc"
+ ],
+ "contract_path": "docs/ENMIENDA_SURROGATES_Y_EFICIENCIA_2026-08-05.md",
+ "contract_sha256": "9d97b7ccf0de680bba209f912c2c842dbd4f4170fe95cef1a872bf532be69b8a",
+ "created_at": "2026-08-05T19:14:51.097365+00:00",
+ "delta_efficiency": {
+  "neuron_memory": {
+   "median_seconds_per_decision": 1.8437499420542736e-05,
+   "p95_seconds_per_decision": 2.0998250602133335e-05,
+   "parameters": 5,
+   "total_search_seconds": 0.0068656560106319375
+  },
+  "surrogate_kan": {
+   "median_seconds_per_decision": 0.0006046250000508735,
+   "p95_seconds_per_decision": 0.0007001001004027785,
+   "parameters": 380,
+   "total_search_seconds": 0.1596208610026224
+  },
+  "surrogate_mlp": {
+   "median_seconds_per_decision": 0.00019572899964259705,
+   "p95_seconds_per_decision": 0.0005053374000453909,
+   "parameters": 369,
+   "total_search_seconds": 0.06709554399458284
+  }
+ },
+ "elapsed_seconds": 14.468984832999922,
+ "falsifiers": {
+  "all_passed": true,
+  "f1_every_arm_spends_the_same_budget": {
+   "evidence": {
+    "budget": 24,
+    "decisions_per_arm": {
+     "neuron_memory": 288,
+     "surrogate_kan": 288,
+     "surrogate_mlp": 288
+    },
+    "why_it_can_fail": "DES calls are equalised by construction here, so the only currency left is per-decision cost; if budgets differed the efficiency comparison would be vacuous"
+   },
+   "passed": true
+  },
+  "f2_the_surrogates_actually_retain_weights": {
+   "evidence": {
+    "contexts_per_instance": 6,
+    "instances_per_replicate": 1,
+    "why_it_can_fail": "a surrogate re-initialised per context would be the memoryless arm under a new name, and ladder v2 showed that comparison is a tautology. One model instance is built per replicate and carried across all contexts"
+   },
+   "passed": true
+  },
+  "f3_parameter_counts_are_read_from_the_model": {
+   "evidence": {
+    "parameters": {
+     "neuron_memory": 5,
+     "surrogate_kan": 380,
+     "surrogate_mlp": 369
+    },
+    "why_it_can_fail": "counted from the live modules, not declared; a wrong architecture would show a wrong count"
+   },
+   "passed": true
+  },
+  "f4_no_fresh_seeds": {
+   "evidence": {
+    "n_sealed_artifact_overlap": 2,
+    "n_seeds": 2,
+    "note": "deliberate re-execution of registry block 'garrido_q2_des288'; these seeds are NOT virgin and are not meant to be",
+    "registry_conflicts": [
+     {
+      "id": "garrido_q2_des288",
+      "n_overlapping": 2,
+      "range": [
+       5300001,
+       5300012
+      ],
+      "source": "results/garrido_meta_learner_v2/result.json",
+      "status": "ARTIFACT_PRESENT_PENDING_CANONICAL_CUSTODY"
+     }
+    ],
+    "registry_is_complete": false,
+    "registry_status": "BASELINE_INVENTORY_INCOMPLETE_NO_NEW_SEEDS_AUTHORIZED",
+    "replay_of": "garrido_q2_des288",
+    "sealed_artifact_overlap": [
+     5300001,
+     5300002
+    ],
+    "seeds": [
+     5300001,
+     5300002
+    ],
+    "status": "DECLARED_REPLAY",
+    "why_it_can_fail": "it cannot: this is a declared custody replay of registry block 'garrido_q2_des288', so the seeds are used on purpose. Counted in neither column."
+   },
+   "not_applicable": true,
+   "passed": null
+  }
+ },
+ "mean_auc_regret": {
+  "neuron_memory": 0.05302784584049432,
+  "surrogate_kan": 0.04749695903708315,
+  "surrogate_mlp": 0.0504699986937351
+ },
+ "module_manifest": {
+  "entry_script": "scripts/run_search_surrogates_v1.py",
+  "entry_script_sha256": "3742b6d84336e3398a292bb3fe9a45d89b920795d9ebbf0e5cdff1f0730f9245",
+  "missing": [],
+  "modules": {
+   "supply_chain/arm_runner.py": "35135c537d9260832677ab6b4e344229d6b9f4810df8bdef9efd51b58fcac68a",
+   "supply_chain/seed_custody.py": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "neural_premium_point_estimate": {
+  "surrogate_kan": 0.00553088680341117,
+  "surrogate_mlp": 0.002557847146759218
+ },
+ "per_arm_auc": {
+  "neuron_memory": [
+   0.04009359276271913,
+   0.0659620989182695
+  ],
+  "surrogate_kan": [
+   0.03370542271055176,
+   0.061288495363614526
+  ],
+  "surrogate_mlp": [
+   0.04213766936457788,
+   0.058802328022892314
+  ]
+ },
+ "primary_metric": "auc_regret_norm",
+ "reference_path": "results/search_ladder_v2/result.json",
+ "reference_sha256": "238fb61bc20da22d4e74753c9f940528958200d994c228cc1083c57c538e8126",
+ "replay_of": "garrido_q2_des288",
+ "run_role": "CACHE_ANALYSIS",
+ "schema_version": "search_surrogates_v1",
+ "scope": "DEVELOPMENT_ON_BURNED_TAPES_NO_ADJUDICATION_NO_LEARNER",
+ "seeds": [
+  5300001,
+  5300002
+ ],
+ "self_sha256": "45c4ade11af4c287b13335bb789497ba92852a12737bf012fd288a1c49a6e5a3",
+ "vs_neuron_memory": {
+  "surrogate_kan": {
+   "lcb95": -0.006388170052167366,
+   "mean": -0.00553088680341117,
+   "n": 2,
+   "ucb95": -0.004673603554654973
+  },
+  "surrogate_mlp": {
+   "lcb95": -0.007159770895377185,
+   "mean": -0.002557847146759218,
+   "n": 2,
+   "ucb95": 0.002044076601858749
+  }
+ }
+}

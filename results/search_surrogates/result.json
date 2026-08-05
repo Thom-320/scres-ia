@@ -1,0 +1,247 @@
+{
+ "arms": [
+  "neuron_memory",
+  "surrogate_mlp",
+  "surrogate_kan"
+ ],
+ "budget": 24,
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "APPROXIMATOR_IS_NOT_THE_INGREDIENT_RETENTION_IS",
+ "contexts": [
+  "R1r",
+  "R1r+R2r",
+  "R1r+R2r|esc",
+  "R1r|esc",
+  "R2r",
+  "R2r|esc"
+ ],
+ "contract_path": "docs/ENMIENDA_SURROGATES_Y_EFICIENCIA_2026-08-05.md",
+ "contract_sha256": "9d97b7ccf0de680bba209f912c2c842dbd4f4170fe95cef1a872bf532be69b8a",
+ "created_at": "2026-08-05T19:16:05.626256+00:00",
+ "delta_efficiency": {
+  "neuron_memory": {
+   "median_seconds_per_decision": 1.7917000150191598e-05,
+   "p95_seconds_per_decision": 2.031864942182437e-05,
+   "parameters": 5,
+   "total_search_seconds": 0.03253584104095353
+  },
+  "surrogate_kan": {
+   "median_seconds_per_decision": 0.0006026664996170439,
+   "p95_seconds_per_decision": 0.000868173150502115,
+   "parameters": 380,
+   "total_search_seconds": 1.0251607240224985
+  },
+  "surrogate_mlp": {
+   "median_seconds_per_decision": 0.00019035449986404274,
+   "p95_seconds_per_decision": 0.00033123520088338353,
+   "parameters": 369,
+   "total_search_seconds": 0.3420224959409097
+  }
+ },
+ "elapsed_seconds": 61.35233899999912,
+ "falsifiers": {
+  "all_passed": true,
+  "f1_every_arm_spends_the_same_budget": {
+   "evidence": {
+    "budget": 24,
+    "decisions_per_arm": {
+     "neuron_memory": 1728,
+     "surrogate_kan": 1728,
+     "surrogate_mlp": 1728
+    },
+    "why_it_can_fail": "DES calls are equalised by construction here, so the only currency left is per-decision cost; if budgets differed the efficiency comparison would be vacuous"
+   },
+   "passed": true
+  },
+  "f2_the_surrogates_actually_retain_weights": {
+   "evidence": {
+    "contexts_per_instance": 6,
+    "instances_per_replicate": 1,
+    "why_it_can_fail": "a surrogate re-initialised per context would be the memoryless arm under a new name, and ladder v2 showed that comparison is a tautology. One model instance is built per replicate and carried across all contexts"
+   },
+   "passed": true
+  },
+  "f3_parameter_counts_are_read_from_the_model": {
+   "evidence": {
+    "parameters": {
+     "neuron_memory": 5,
+     "surrogate_kan": 380,
+     "surrogate_mlp": 369
+    },
+    "why_it_can_fail": "counted from the live modules, not declared; a wrong architecture would show a wrong count"
+   },
+   "passed": true
+  },
+  "f4_no_fresh_seeds": {
+   "evidence": {
+    "n_sealed_artifact_overlap": 12,
+    "n_seeds": 12,
+    "note": "deliberate re-execution of registry block 'garrido_q2_des288'; these seeds are NOT virgin and are not meant to be",
+    "registry_conflicts": [
+     {
+      "id": "garrido_q2_des288",
+      "n_overlapping": 12,
+      "range": [
+       5300001,
+       5300012
+      ],
+      "source": "results/garrido_meta_learner_v2/result.json",
+      "status": "ARTIFACT_PRESENT_PENDING_CANONICAL_CUSTODY"
+     }
+    ],
+    "registry_is_complete": false,
+    "registry_status": "BASELINE_INVENTORY_INCOMPLETE_NO_NEW_SEEDS_AUTHORIZED",
+    "replay_of": "garrido_q2_des288",
+    "sealed_artifact_overlap": [
+     5300001,
+     5300002,
+     5300003,
+     5300004,
+     5300005,
+     5300006,
+     5300007,
+     5300008,
+     5300009,
+     5300010,
+     5300011,
+     5300012
+    ],
+    "seeds": [
+     5300001,
+     5300002,
+     5300003,
+     5300004,
+     5300005,
+     5300006,
+     5300007,
+     5300008,
+     5300009,
+     5300010,
+     5300011,
+     5300012
+    ],
+    "status": "DECLARED_REPLAY",
+    "why_it_can_fail": "it cannot: this is a declared custody replay of registry block 'garrido_q2_des288', so the seeds are used on purpose. Counted in neither column."
+   },
+   "not_applicable": true,
+   "passed": null
+  }
+ },
+ "mean_auc_regret": {
+  "neuron_memory": 0.04901138647318378,
+  "surrogate_kan": 0.04799913724143231,
+  "surrogate_mlp": 0.04745016676548195
+ },
+ "module_manifest": {
+  "entry_script": "scripts/run_search_surrogates_v1.py",
+  "entry_script_sha256": "3742b6d84336e3398a292bb3fe9a45d89b920795d9ebbf0e5cdff1f0730f9245",
+  "missing": [],
+  "modules": {
+   "supply_chain/arm_runner.py": "35135c537d9260832677ab6b4e344229d6b9f4810df8bdef9efd51b58fcac68a",
+   "supply_chain/seed_custody.py": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "neural_premium_point_estimate": {
+  "surrogate_kan": 0.0010122492317514702,
+  "surrogate_mlp": 0.001561219707701832
+ },
+ "per_arm_auc": {
+  "neuron_memory": [
+   0.04009359276271913,
+   0.0659620989182695,
+   0.061764992772480785,
+   0.03980031598999204,
+   0.047962601991229016,
+   0.057024403448366706,
+   0.05148845139626702,
+   0.03606829712431402,
+   0.04738229866239926,
+   0.04273973219144674,
+   0.06494068340268211,
+   0.03290916901803903
+  ],
+  "surrogate_kan": [
+   0.03370542271055176,
+   0.061288495363614526,
+   0.05528149971113345,
+   0.05219889438011279,
+   0.03257229096130156,
+   0.06914398890570428,
+   0.05693625290237578,
+   0.04098848083546384,
+   0.04481535093051465,
+   0.03193668902607566,
+   0.054929740916016434,
+   0.04219254025432298
+  ],
+  "surrogate_mlp": [
+   0.03953734241475302,
+   0.058802328022892314,
+   0.04953353281635122,
+   0.04470930182801706,
+   0.043394093822705905,
+   0.06252116932449149,
+   0.05697153231653793,
+   0.041548116153078234,
+   0.05282680554487301,
+   0.038334875518705326,
+   0.04767234865278059,
+   0.03355055477059726
+  ]
+ },
+ "primary_metric": "auc_regret_norm",
+ "reference_path": "results/search_ladder_v2/result.json",
+ "reference_sha256": "238fb61bc20da22d4e74753c9f940528958200d994c228cc1083c57c538e8126",
+ "replay_of": "garrido_q2_des288",
+ "run_role": "CACHE_ANALYSIS",
+ "schema_version": "search_surrogates_v1",
+ "scope": "DEVELOPMENT_ON_BURNED_TAPES_NO_ADJUDICATION_NO_LEARNER",
+ "seeds": [
+  5300001,
+  5300002,
+  5300003,
+  5300004,
+  5300005,
+  5300006,
+  5300007,
+  5300008,
+  5300009,
+  5300010,
+  5300011,
+  5300012
+ ],
+ "self_sha256": "7a543f6b2066f82e2aed0bfa2857742650f416d28bbd136a422dde0798c7c042",
+ "vs_neuron_memory": {
+  "surrogate_kan": {
+   "lcb95": -0.006130431615626372,
+   "mean": -0.0010122492317514702,
+   "n": 12,
+   "ucb95": 0.004259958023086185
+  },
+  "surrogate_mlp": {
+   "lcb95": -0.005942054454332779,
+   "mean": -0.001561219707701832,
+   "n": 12,
+   "ucb95": 0.002597813540918106
+  }
+ }
+}
