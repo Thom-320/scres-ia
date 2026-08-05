@@ -31,6 +31,7 @@ from supply_chain.arm_runner import seal_and_write  # noqa: E402
 from supply_chain.config import HOURS_PER_WEEK  # noqa: E402
 from supply_chain.config import THESIS_FAITHFUL_PROTOCOL as P  # noqa: E402
 from supply_chain.episode_metrics import compute_episode_metrics  # noqa: E402
+from supply_chain.seed_custody import custody_falsifier  # noqa: E402
 from supply_chain.service_first_metric import (  # noqa: E402
     SERVICE_FIRST_V2_COMPONENTS,
     claimant_fills,
@@ -65,22 +66,6 @@ CONTEXTS = {
 CONTEXT_ORDER = tuple(CONTEXTS)
 METRIC = "service_first_resilience_v2"
 SEED_BASE = 7_100_001
-
-# These are the blocks already used or reserved by the WRAP/SCRES campaigns known to this
-# repository.  The confirmation block is checked against this set before sealing.
-PRIOR_SEEDS = (
-    set(range(4_900_001, 4_900_007))
-    | set(range(4_900_501, 4_900_507))
-    | set(range(5_100_001, 5_100_013))
-    | set(range(5_200_001, 5_200_017))
-    | set(range(5_300_001, 5_300_013))
-    | set(range(5_600_001, 5_600_013))
-    | set(range(5_800_001, 5_800_009))
-    | set(range(5_910_001, 5_910_013))
-    | set(range(6_000_001, 6_000_091))
-    | set(range(6_200_001, 6_200_013))
-    | set(range(6_400_001, 6_400_013))
-)
 
 # Fixed a priori scales.  They are not estimated from the observed surface and are not
 # retained as adaptive normalizers.  The third component is negative final backorder.
@@ -294,7 +279,12 @@ def search(
                 idx = int(rng.choice(sorted(remaining)))
             elif strategy == "ofat":
                 if factor_index >= len(FACTOR_NAMES):
-                    candidate = dict(current)
+                    # Design exhausted: re-run the INCUMBENT. The previous guard was
+                    # `"idx" not in locals()`, but `del idx` fires once per CONTEXT rather than
+                    # once per step, so from step 1 onwards idx was already bound and this branch
+                    # silently re-ran the arm's last PROPOSAL instead -- inside the comparator the
+                    # headline contrast is measured against.
+                    idx = index_by_key[_config_key(current)]
                 else:
                     name = FACTOR_NAMES[factor_index]
                     candidate = dict(current, **{name: FACTORS[name][level_index]})
@@ -315,8 +305,6 @@ def search(
                         factor_index += 1
                         level_index = 0
                         factor_best = None
-                if factor_index >= len(FACTOR_NAMES) and "idx" not in locals():
-                    idx = index_by_key[_config_key(current)]
             else:
                 idx = learner.select(sorted(remaining), configs)  # type: ignore[union-attr]
 
@@ -415,6 +403,7 @@ def _falsifiers(
     seeds: list[int],
     budget: int,
     rng: np.random.Generator,
+    replay_of: str | None = None,
 ) -> dict[str, Any]:
     all_rows = [row for rows in surface.values() for row in rows]
     # The endpoint is a tuple, so variation is checked component-wise rather than by inventing
@@ -609,19 +598,23 @@ def _falsifiers(
                 "claimant_modes": sorted(n_claimant_modes),
             },
         },
-        "f9_confirmation_seeds_are_virgin": {
-            "passed": not (set(seeds) & PRIOR_SEEDS) and len(set(seeds)) == len(seeds),
-            "evidence": {
-                "why_it_can_fail": "a reused or duplicated seed invalidates confirmation",
-                "seeds": [int(s) for s in seeds],
-                "collisions": sorted(set(seeds) & PRIOR_SEEDS),
-            },
-        },
+        # Custody goes through the central registry, which also scans sealed artifacts. The
+        # hand-maintained PRIOR_SEEDS tuple is exactly what supply_chain.seed_custody exists to
+        # abolish: it never learned that 7_100_001 had already been consumed by the smokes, so
+        # every smoke artifact sealed `virgin_seed_block: true` for a burned seed.
+        "f9_confirmation_seeds_are_virgin": custody_falsifier(
+            [int(s) for s in seeds], replay_of=replay_of),
     }
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--replay-of",
+        default=None,
+        help="registry block id this run deliberately re-executes; makes the custody falsifier "
+             "NOT_APPLICABLE instead of a pass or a failure",
+    )
     parser.add_argument("--output", type=Path, default=ROOT / "results/garrido_q2_des288_v1/result.json")
     # --contract is REQUIRED: a default is how three artifacts got sealed against
     # the wrong document. Previous default was ROOT / "docs/PREREGISTRO_GARRIDO_Q2_DES288_V1_2026-08-01.md"
@@ -730,8 +723,18 @@ def main() -> int:
         seeds=seeds,
         budget=args.budget,
         rng=boot_rng,
+        replay_of=getattr(args, "replay_of", None),
     )
-    falsifiers["all_passed"] = all(check["passed"] for check in falsifiers.values())
+    # A declared replay returns `not_applicable=True, passed=None`; counting it as a failure
+    # would make every replay look broken, and counting it as a pass would let a falsifier that
+    # cannot fail be reported as evidence. It belongs in neither column.
+    falsifiers["all_passed"] = all(
+        check["passed"] for key, check in falsifiers.items()
+        if key != "all_passed" and isinstance(check, dict) and not check.get("not_applicable"))
+    falsifiers["not_applicable"] = sorted(
+        key for key, check in falsifiers.items()
+        if key not in ("all_passed", "not_applicable")
+        and isinstance(check, dict) and check.get("not_applicable"))
     service_guardrail = {
         name: service_deltas[name] for name in SERVICE_FIRST_V2_COMPONENTS[:3]
     }
@@ -766,7 +769,7 @@ def main() -> int:
         "horizon_hours": horizon,
         "seeds": seeds,
         "seed_base": int(args.seed_base),
-        "virgin_seed_block": not bool(set(seeds) & PRIOR_SEEDS),
+        "virgin_seed_block": bool(falsifiers["f9_confirmation_seeds_are_virgin"].get("passed") is True),
         "surface_evaluations": evaluations,
         "surface_sha256": _surface_digest(surface),
         "factors": {name: list(levels) for name, levels in FACTORS.items()},
