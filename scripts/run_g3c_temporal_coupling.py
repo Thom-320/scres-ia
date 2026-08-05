@@ -174,7 +174,8 @@ def _panel(sim: MFSCSimulation) -> dict[str, float]:
 
 
 def episode_policy(seed: int, risks, freq, impact, *, dwell: int | None,
-                   mode: str, constant_share: float | None = None) -> dict[str, object]:
+                   mode: str, constant_share: float | None = None,
+                   retain_trace: bool = False) -> dict[str, object]:
     """Run one frozen policy on one tape and retain compact decision evidence."""
     valid = {"myopic", "hysteresis", "placebo", "wrong_claimant", "constant"}
     if mode not in valid:
@@ -184,6 +185,7 @@ def episode_policy(seed: int, risks, freq, impact, *, dwell: int | None,
     sim = _build(seed, risks, freq, impact, dwell=dwell)
     placebo_rng = np.random.default_rng(seed ^ 0x9E3779B9)
     trace: list[dict[str, float | str | int]] = []
+    n_decisions = 0
     alphas: list[float] = []
     done = False
     hysteresis_state = 0
@@ -201,15 +203,18 @@ def episode_policy(seed: int, risks, freq, impact, *, dwell: int | None,
             target = float(constant_share)
         else:
             hysteresis_state, target = hysteresis_target(hysteresis_state, delta)
-        trace.append({
-            "time": float(sim.env.now),
-            "unmet_a": unmet_a,
-            "unmet_b": unmet_b,
-            "normalized_delta": delta,
-            "target": float(target),
-            "mode": mode,
-            "hysteresis_state": int(hysteresis_state),
-        })
+        if target != TARGET_NEUTRAL:
+            n_decisions += 1
+        if retain_trace:
+            trace.append({
+                "time": float(sim.env.now),
+                "unmet_a": unmet_a,
+                "unmet_b": unmet_b,
+                "normalized_delta": delta,
+                "target": float(target),
+                "mode": mode,
+                "hysteresis_state": int(hysteresis_state),
+            })
         action = None
         if (sim._pending_cssu_action is None
                 and abs(float(sim.cssu_allocation_a) - target) > 1e-9):
@@ -226,7 +231,7 @@ def episode_policy(seed: int, risks, freq, impact, *, dwell: int | None,
         "metrics": panel,
         "scientific_payload_sha256": scientific_payload_sha256(scientific_payload),
         "n_steps": len(trace),
-        "n_decisions": sum(1 for row in trace if row["target"] != TARGET_NEUTRAL),
+        "n_decisions": n_decisions,
         "trace": trace,
         "alpha_sd": float(np.std(alphas)) if alphas else 0.0,
     }
@@ -352,7 +357,18 @@ def _check_frozen_plan(contract: dict[str, object]) -> dict[str, object]:
     mismatches = {k: {"expected": v, "observed": observed[k]}
                   for k, v in expected.items() if observed[k] != v}
     return {"passed": not mismatches, "mismatches": mismatches,
-            "plan_sha256": sha256(json.dumps(contract, sort_keys=True).encode()).hexdigest()}
+        "plan_sha256": sha256(json.dumps(contract, sort_keys=True).encode()).hexdigest()}
+
+
+def _run_rows(seeds: list[int], risks, freq, impact, *, dwell: int | None,
+              mode: str, constant_share: float | None = None,
+              retain_trace_for_first: bool = False) -> list[dict[str, object]]:
+    """Run a cell without retaining O(N * horizon) traces in memory."""
+    return [episode_policy(
+        seed, risks, freq, impact, dwell=dwell, mode=mode,
+        constant_share=constant_share,
+        retain_trace=retain_trace_for_first and index == 0,
+    ) for index, seed in enumerate(seeds)]
 
 
 def main() -> int:
@@ -384,26 +400,26 @@ def main() -> int:
         cells[regime] = {}
         for dwell in DWELL_LEVELS:
             cells[regime][dwell] = {
-                "myopic": [episode_policy(s, risks, freq, impact, dwell=dwell, mode="myopic")
-                           for s in seeds],
-                "hysteresis": [episode_policy(s, risks, freq, impact, dwell=dwell,
-                                               mode="hysteresis") for s in seeds],
+                "myopic": _run_rows(
+                    seeds, risks, freq, impact, dwell=dwell, mode="myopic",
+                    retain_trace_for_first=(dwell == 1)),
+                "hysteresis": _run_rows(
+                    seeds, risks, freq, impact, dwell=dwell, mode="hysteresis"),
             }
-        cells[regime][1]["placebo"] = [
-            episode_policy(s, risks, freq, impact, dwell=1, mode="placebo") for s in seeds]
-        cells[regime][1]["wrong_claimant"] = [
-            episode_policy(s, risks, freq, impact, dwell=1, mode="wrong_claimant") for s in seeds]
+        cells[regime][1]["placebo"] = _run_rows(
+            seeds, risks, freq, impact, dwell=1, mode="placebo")
+        cells[regime][1]["wrong_claimant"] = _run_rows(
+            seeds, risks, freq, impact, dwell=1, mode="wrong_claimant")
         for share in CONSTANT_SHARES:
             cells[regime][1].setdefault("constants", {})[str(share)] = [
-                episode_policy(s, risks, freq, impact, dwell=1, mode="constant",
-                               constant_share=share) for s in seeds]
+                *_run_rows(seeds, risks, freq, impact, dwell=1, mode="constant",
+                           constant_share=share)]
         print(f"  {regime}: {len(seeds)} seeds x dwell {DWELL_LEVELS}")
 
     null_identity: dict[str, object] = {"checks": 0, "mismatches": 0, "examples": []}
     for regime, (risks, freq, impact) in REGIMES.items():
         explicit = cells[regime][1]["myopic"]
-        legacy = [episode_policy(s, risks, freq, impact, dwell=None, mode="myopic")
-                  for s in seeds]
+        legacy = _run_rows(seeds, risks, freq, impact, dwell=None, mode="myopic")
         for exp, old in zip(explicit, legacy):
             null_identity["checks"] += 1
             if exp["scientific_payload_sha256"] != old["scientific_payload_sha256"]:
@@ -520,7 +536,7 @@ def main() -> int:
     falsifiers: dict[str, object] = {
         "f1_null_arm_payload_identity": {"passed": bool(null_identity["passed"]),
                                           "evidence": null_identity},
-        "f2_min_dwell_actually_binds_at_7_or_14_days": {"passed": bool(f2_pass),
+        "f2_min_dwell_actually_binds_at_treatment_levels": {"passed": bool(f2_pass),
                                                           "evidence": f2_evidence},
         "f3_incumbent_beats_best_constant": {"passed": bool(f3_pass),
                                                "evidence": constant_evidence},
@@ -546,7 +562,7 @@ def main() -> int:
         if k != "all_passed" and isinstance(v, dict) and v.get("not_applicable"))
 
     if not all_passed:
-        if not f1["passed"] or not f2_pass or not f3_pass or not f6["passed"] or not f7["passed"]:
+        if not null_identity["passed"] or not f2_pass or not f3_pass or not f6["passed"] or not f7["passed"]:
             verdict = "STOP_G3C_INSTRUMENT_INVALID"
         elif not f4_pass or not f5_pass:
             verdict = "STOP_G3C_DIRECTIONALITY_NOT_ESTABLISHED"
