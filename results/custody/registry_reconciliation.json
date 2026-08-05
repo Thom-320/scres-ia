@@ -1,149 +1,5 @@
 {
- "authority": "contracts/authority_ladder_v1.json",
- "blocks": [
-  {
-   "end": 5200016,
-   "id": "contention_headroom",
-   "purpose": "Contention headroom block, reused across the contention sweeps, the policy-class re-audit and the G3-obs underpowered run. It was never registered -- only the artifact scan saw it -- so a replay could not be declared against it by name.",
-   "source": "results/sensitivity/contention_headroom_v1/result.json",
-   "start": 5200001,
-   "status": "USED_DEVELOPMENT_NOT_VIRGIN"
-  },
-  {
-   "audit": {
-    "artifact": "results/garrido_q2_des288_reconciled_v2/result.json",
-    "contract": "docs/PREREGISTRO_META_APRENDIZ_V2_2026-08-01.md",
-    "f3_subcontrols": [
-     "budget_tamper_rejected",
-     "trace_tamper_rejected"
-    ],
-    "quantities_compared": 14,
-    "quantities_differing": 0,
-    "verdict": "RUNTIME_F3_F4_RECONCILIATION_NOT_A_NEW_CONFIRMATION",
-    "what_it_does_not_establish": "full v2 contractual coverage of Q2, and not a new confirmation: the block is a DECLARED_REPLAY at n=12, the exploratory run"
-   },
-   "end": 5300012,
-   "id": "garrido_q2_des288",
-   "purpose": "DES-288 development artifact; no manuscript use before ledger adjudication",
-   "source": "results/garrido_meta_learner_v2/result.json",
-   "start": 5300001,
-   "status": "ARTIFACT_PRESENT_PENDING_CANONICAL_CUSTODY"
-  },
-  {
-   "audit": {
-    "artifact": "results/garrido_meta_learner_h3power_h3_contract_local_v2/result.json",
-    "contract": "docs/PREREGISTRO_H3_POTENCIA_2026-08-01.md",
-    "merge_falsifiers_checked": [
-     "f_merge_seeds_are_disjoint",
-     "f_merge_contexts_and_budget_match",
-     "f_merge_source_is_identical"
-    ],
-    "quantities_compared": 14,
-    "quantities_differing": 0,
-    "verdict": "BEHAVIORAL_REPRODUCIBILITY_FOR_H3_ESTIMAND",
-    "what_it_does_not_establish": "source identity of the ORIGINAL VPS snapshot (unreconstructable), and NOT a virgin H3-prime confirmation: f6 is DECLARED_REPLAY on burned seeds. The 120-replicate merge is not computed here."
-   },
-   "end": 6000090,
-   "id": "garrido_h3_local",
-   "purpose": "H3-prime local slice; do not interpret or combine before merge contract",
-   "source": "results/garrido_meta_learner_h3power_local/result.json",
-   "start": 6000001,
-   "status": "ARTIFACT_PRESENT_PENDING_MERGE"
-  },
-  {
-   "audit": {
-    "artifact": "results/garrido_meta_learner_h3power_h3_contract_vps_v2/result.json",
-    "contract": "docs/PREREGISTRO_H3_POTENCIA_2026-08-01.md",
-    "merge_falsifiers_checked": [
-     "f_merge_seeds_are_disjoint",
-     "f_merge_contexts_and_budget_match",
-     "f_merge_source_is_identical"
-    ],
-    "quantities_compared": 14,
-    "quantities_differing": 0,
-    "verdict": "BEHAVIORAL_REPRODUCIBILITY_FOR_H3_ESTIMAND",
-    "what_it_does_not_establish": "source identity of the ORIGINAL VPS snapshot (unreconstructable), and NOT a virgin H3-prime confirmation: f6 is DECLARED_REPLAY on burned seeds. The 120-replicate merge is not computed here."
-   },
-   "end": 6000120,
-   "id": "garrido_h3_vps",
-   "purpose": "H3-prime VPS slice. Original-snapshot source identity: NOT DEMONSTRABLE (that snapshot no longer exists). v2 replay-pair source identity: VERIFIED (seven module hashes + entry script + contract all equal).",
-   "source": "results/garrido_meta_learner_h3power_vps/result.json",
-   "start": 6000091,
-   "status": "ARTIFACT_PRESENT_PENDING_MERGE"
-  },
-  {
-   "end": 7000008,
-   "id": "g2_autotomy_threshold",
-   "purpose": "G2 development screen; no neural confirmation",
-   "source": "results/headroom/g2_autotomy_threshold/result.json",
-   "start": 7000001,
-   "status": "USED_DEVELOPMENT_NOT_VIRGIN"
-  },
-  {
-   "end": 7490256,
-   "id": "program_q_terminal_confirmation",
-   "purpose": "Program Q terminal confirmation; immutable and outside Garrido-WRAP",
-   "source": "f2dfe35",
-   "start": 7490001,
-   "status": "BURNED"
-  },
-  {
-   "end": 7600010,
-   "id": "g3_old_bottleneck_asymmetry",
-   "purpose": "Historical asymmetry development; metric-defect claim boundary",
-   "source": "results/sensitivity/bottleneck_asymmetry_v1/result.json",
-   "start": 7600001,
-   "status": "USED_DEVELOPMENT_NOT_VIRGIN"
-  },
-  {
-   "end": 7700120,
-   "id": "g3a_v2_development",
-   "purpose": "G3a asymmetric-claimant development block. NEVER OPENED. It was briefly quarantined as ATTEMPTED_NO_SEALED_ARTIFACT in 96b960f, but the block that was actually attempted is g3_obs_v2_confirmation_20260802; this one was never touched and stays virgin.",
-   "source": "contracts/g3a_asymmetric_claimants_v2.json",
-   "start": 7700001,
-   "status": "RESERVED_NOT_OPENED"
-  },
-  {
-   "authorization": {
-    "granted_by": "PI, in session 2026-08-02",
-    "note": "authority_ladder_v1 is status DRAFT_PROSPECTIVE_UNOPENED_NOT_AUTHORITY: it neither prohibits nor authorizes. The authority is the PI, and the PI authorized. This block is opened on that authorization, not on a reading of the draft."
-   },
-   "end": 7800140,
-   "id": "g3_obs_v2_powered",
-   "outcome": {
-    "claim_status": "STRUCTURED_CONTROL_SUFFICES_G3_OBS",
-    "mde": [
-     0.0092,
-     0.0085
-    ],
-    "note": "70 development / 70 test, disjoint; block now consumed",
-    "powered": true,
-    "sesoi": 0.01
-   },
-   "purpose": "G3-obs powered re-run. The 16-seed run gave MDE 0.0256/0.0286 against a SESOI of 0.010, so its primary was undecidable by POWER, not by science. 66 test seeds are required per the observed paired SD; 140 reserved for a 70/70 split with margin.",
-   "source": "results/headroom/g3_obs_conversion_v2/result.json",
-   "start": 7800001,
-   "status": "USED_DEVELOPMENT_NOT_VIRGIN"
-  },
-  {
-   "attempt_audit": {
-    "claim": "absence of result is not evidence of virginity; block is conservatively unavailable",
-    "process_after_check": "not alive",
-    "result_artifact_present": false,
-    "run_log_bytes": 0
-   },
-   "authorization": {
-    "granted_by": "PI, explicit instruction in session 2026-08-02",
-    "scope": "this block and this contract only",
-    "supersedes_for_this_block": "the prior unopened-execution hold; does not authorize G3a, G3c, E*, or other fresh roots"
-   },
-   "end": 7900140,
-   "id": "g3_obs_v2_confirmation_20260802",
-   "purpose": "Aborted G3-obs v2 confirmation attempt: the process started and produced a 0-byte log with no result.json. Whether any episode ran cannot be determined, so the block is treated as consumed. NOT reusable as a virgin confirmation block.",
-   "source": "docs/PREREGISTRO_G3_OBS_V2_CONFIRMACION_2026-08-02.md",
-   "start": 7900001,
-   "status": "ATTEMPTED_NO_SEALED_ARTIFACT"
-  },
+ "added": [
   {
    "all_sources": [
     "results/sensitivity/backlog_confirmation_v1/result.json"
@@ -424,36 +280,28 @@
    "status": "USED_DEVELOPMENT_NOT_VIRGIN"
   }
  ],
- "inventory_limitations": [
-  "This registry is a conservative baseline, not evidence that unlisted seeds are virgin.",
-  "Untracked or remote artifacts must be reconciled before a confirmation block can open.",
-  "A seed block is not confirmation-eligible merely because no result.json was found."
+ "applied": true,
+ "blocks_added": 22,
+ "blocks_before": 10,
+ "created_at": "2026-08-05T19:35:28.196901+00:00",
+ "non_tape_values_ignored": [
+  101,
+  102,
+  103,
+  9301,
+  9302,
+  9303,
+  9304,
+  9305,
+  9306,
+  9307,
+  9308,
+  9309,
+  9310,
+  9399
  ],
- "inventory_scope": [
-  "contracts",
-  "docs",
-  "research",
-  "results",
-  "scripts",
-  "tests",
-  "git_refs",
-  "local_and_remote_manifests"
- ],
- "new_seed_opening": false,
- "reconciled_at": "2026-08-05T19:35:28.196901+00:00",
- "reconciliation_receipt": "results/custody/registry_reconciliation.json",
- "rules": {
-  "confirmation_requires_independent_virgin_block": true,
-  "development_is_not_confirmation": true,
-  "new_blocks_require_contract_and_authority": true,
-  "no_result_file_is_not_virginity_evidence": true,
-  "overlap_check_includes_git_and_remote_manifests": true,
-  "program_q_and_program_o_are_immutable": true,
-  "submission_a_receipt_required_before_g3a_open": true,
-  "thesis_1to1_is_immutable": true,
-  "untracked_results_are_not_virginity_evidence": true
- },
- "schema_version": "seed_custody_registry_v1",
- "scientific_execution_authorized": false,
- "status": "BASELINE_INVENTORY_INCOMPLETE_NO_NEW_SEEDS_AUTHORIZED"
+ "registry": "research/seed_custody_registry.json",
+ "rule": "additive only: existing entries are never modified; discovered ranges are registered as USED_DEVELOPMENT_NOT_VIRGIN because a sealed artifact consumed them",
+ "schema_version": "seed_custody_reconciliation_v1",
+ "tape_floor": 1000000
 }
