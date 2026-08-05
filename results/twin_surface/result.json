@@ -1,0 +1,280 @@
+{
+ "budget": 24,
+ "cache": "results/surface_cache/wrap288_v1",
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "PREFIX_NORMALISER_IS_BLIND_TO_THE_UNRUN_SURFACE",
+ "contract_path": "docs/PREREGISTRO_AUDITORIA_NORMALIZADOR_2026-08-05.md",
+ "contract_sha256": "bc9d8cf78d370e82ac05574e0d917a9b4bff07ce23e694f6b9bdf5ad8ed863f6",
+ "created_at": "2026-08-05T19:29:40.867206+00:00",
+ "elapsed_seconds": 1.681093499999406,
+ "falsifiers": {
+  "all_passed": true,
+  "f6_surface_twins_have_identical_prefix_paths": {
+   "evidence": {
+    "budget": 24,
+    "by_normaliser": {
+     "oracle": {
+      "all_paths_unchanged": false,
+      "changed_cells": {
+       "R1r": {
+        "protected": 54,
+        "tail_indices": [
+         3,
+         4
+        ]
+       },
+       "R1r+R2r": {
+        "protected": 60,
+        "tail_indices": [
+         2,
+         3
+        ]
+       },
+       "R1r+R2r|esc": {
+        "protected": 70,
+        "tail_indices": [
+         2,
+         3
+        ]
+       },
+       "R1r|esc": {
+        "protected": 67,
+        "tail_indices": [
+         1,
+         2
+        ]
+       },
+       "R2r": {
+        "protected": 64,
+        "tail_indices": [
+         1,
+         2
+        ]
+       },
+       "R2r|esc": {
+        "protected": 71,
+        "tail_indices": [
+         6,
+         7
+        ]
+       }
+      },
+      "path_unchanged": {
+       "neuron_memory": {
+        "R1r": false,
+        "R1r+R2r": false,
+        "R1r+R2r|esc": false,
+        "R1r|esc": false,
+        "R2r": false,
+        "R2r|esc": false
+       },
+       "neuron_reset": {
+        "R1r": false,
+        "R1r+R2r": false,
+        "R1r+R2r|esc": false,
+        "R1r|esc": false,
+        "R2r": false,
+        "R2r|esc": false
+       },
+       "ofat": {
+        "R1r": true,
+        "R1r+R2r": true,
+        "R1r+R2r|esc": true,
+        "R1r|esc": true,
+        "R2r": true,
+        "R2r|esc": true
+       },
+       "random": {
+        "R1r": true,
+        "R1r+R2r": true,
+        "R1r+R2r|esc": true,
+        "R1r|esc": true,
+        "R2r": true,
+        "R2r|esc": true
+       }
+      }
+     },
+     "prefix": {
+      "all_paths_unchanged": true,
+      "changed_cells": {
+       "R1r": {
+        "protected": 54,
+        "tail_indices": [
+         1,
+         2
+        ]
+       },
+       "R1r+R2r": {
+        "protected": 56,
+        "tail_indices": [
+         0,
+         1
+        ]
+       },
+       "R1r+R2r|esc": {
+        "protected": 59,
+        "tail_indices": [
+         0,
+         2
+        ]
+       },
+       "R1r|esc": {
+        "protected": 68,
+        "tail_indices": [
+         2,
+         3
+        ]
+       },
+       "R2r": {
+        "protected": 64,
+        "tail_indices": [
+         2,
+         3
+        ]
+       },
+       "R2r|esc": {
+        "protected": 68,
+        "tail_indices": [
+         6,
+         7
+        ]
+       }
+      },
+      "path_unchanged": {
+       "neuron_memory": {
+        "R1r": true,
+        "R1r+R2r": true,
+        "R1r+R2r|esc": true,
+        "R1r|esc": true,
+        "R2r": true,
+        "R2r|esc": true
+       },
+       "neuron_reset": {
+        "R1r": true,
+        "R1r+R2r": true,
+        "R1r+R2r|esc": true,
+        "R1r|esc": true,
+        "R2r": true,
+        "R2r|esc": true
+       },
+       "ofat": {
+        "R1r": true,
+        "R1r+R2r": true,
+        "R1r+R2r|esc": true,
+        "R1r|esc": true,
+        "R2r": true,
+        "R2r|esc": true
+       },
+       "random": {
+        "R1r": true,
+        "R1r+R2r": true,
+        "R1r+R2r|esc": true,
+        "R1r|esc": true,
+        "R2r": true,
+        "R2r|esc": true
+       }
+      }
+     }
+    },
+    "oracle_reacted": true,
+    "passed": true,
+    "prefix_passed": true,
+    "required_fail": "the oracle arm must change, or the twin is too weak to detect anything and the test proves nothing",
+    "required_pass": "the prefix arm keeps an identical path",
+    "seed": 5300001,
+    "why_it_can_fail": "an affine-invariant oracle leak can leave the scale test green while changing the path when hidden tails change"
+   },
+   "passed": true
+  },
+  "f_no_fresh_seeds": {
+   "evidence": {
+    "n_sealed_artifact_overlap": 12,
+    "n_seeds": 12,
+    "note": "deliberate re-execution of registry block 'garrido_q2_des288'; these seeds are NOT virgin and are not meant to be",
+    "registry_conflicts": [
+     {
+      "id": "garrido_q2_des288",
+      "n_overlapping": 12,
+      "range": [
+       5300001,
+       5300012
+      ],
+      "source": "results/garrido_meta_learner_v2/result.json",
+      "status": "ARTIFACT_PRESENT_PENDING_CANONICAL_CUSTODY"
+     }
+    ],
+    "registry_is_complete": false,
+    "registry_status": "BASELINE_INVENTORY_INCOMPLETE_NO_NEW_SEEDS_AUTHORIZED",
+    "replay_of": "garrido_q2_des288",
+    "sealed_artifact_overlap": [
+     5300001,
+     5300002,
+     5300003,
+     5300004,
+     5300005,
+     5300006,
+     5300007,
+     5300008,
+     5300009,
+     5300010,
+     5300011,
+     5300012
+    ],
+    "seeds": [
+     5300001,
+     5300002,
+     5300003,
+     5300004,
+     5300005,
+     5300006,
+     5300007,
+     5300008,
+     5300009,
+     5300010,
+     5300011,
+     5300012
+    ],
+    "status": "DECLARED_REPLAY",
+    "why_it_can_fail": "it cannot: this is a declared custody replay of registry block 'garrido_q2_des288', so the seeds are used on purpose. Counted in neither column."
+   },
+   "not_applicable": true,
+   "passed": null
+  }
+ },
+ "module_manifest": {
+  "entry_script": "scripts/run_twin_surface_falsifier_v1.py",
+  "entry_script_sha256": "883cff3b9173dacb77504bcd3370d18da68f7bea5ce3664f8202bee783673b3f",
+  "missing": [],
+  "modules": {
+   "supply_chain/arm_runner.py": "35135c537d9260832677ab6b4e344229d6b9f4810df8bdef9efd51b58fcac68a",
+   "supply_chain/seed_custody.py": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "reference_path": "results/garrido_normaliser_audit/result.json",
+ "reference_sha256": "346c6abc169921882e18a6baa4e3f43cc009f0d71f0fdf4f1ec99a4b101a4452",
+ "replay_of": "garrido_q2_des288",
+ "run_role": "CACHE_ANALYSIS",
+ "schema_version": "twin_surface_falsifier_v1",
+ "scope": "DEVELOPMENT_ON_BURNED_TAPES_STRUCTURAL_SPY_TEST",
+ "seed": 5300001,
+ "self_sha256": "e6ffc9705ebf9c5317325c73294448e4a7af6301bb58060b1b0d11a6efb93379"
+}
