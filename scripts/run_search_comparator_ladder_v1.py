@@ -36,6 +36,7 @@ warnings.filterwarnings("ignore")
 
 from supply_chain.arm_runner import seal_and_write  # noqa: E402
 from supply_chain.seed_custody import custody_falsifier, module_manifest  # noqa: E402
+from scripts.seal_garrido_surface_cache_v1 import verify_sealed_slice  # noqa: E402
 
 FACTORS = {
     "buffer_hours": (0.0, 168.0, 336.0, 504.0, 672.0, 1344.0),
@@ -244,7 +245,10 @@ def load_cache(root: Path):
     surface, contexts, seeds = {}, [], set()
     for path in sorted(root.rglob("*.json")):
         p = json.loads(path.read_text())
+        verify_sealed_slice(p)
         ctx, seed = p["context"], int(p["seed"])
+        if len(p["cells"]) != N_CFG:
+            raise ValueError(f"{path}: incomplete surface slice")
         surface[(ctx, seed)] = np.array([c["value"] for c in p["cells"]], dtype=float)
         seeds.add(seed)
         if ctx not in contexts:

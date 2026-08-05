@@ -1,0 +1,348 @@
+{
+ "argmax_by_context": {
+  "R1r": {
+   "buffer_hours": 1344.0,
+   "op12_rop": 12.0,
+   "op3_rm": 0.0,
+   "op5_rm": 0.0,
+   "op9_rop": 12.0,
+   "shifts": 1
+  },
+  "R1r+R2r": {
+   "buffer_hours": 1344.0,
+   "op12_rop": 12.0,
+   "op3_rm": 0.0,
+   "op5_rm": 0.0,
+   "op9_rop": 12.0,
+   "shifts": 3
+  },
+  "R1r+R2r|esc": {
+   "buffer_hours": 1344.0,
+   "op12_rop": 12.0,
+   "op3_rm": 0.0,
+   "op5_rm": 0.0,
+   "op9_rop": 12.0,
+   "shifts": 2
+  },
+  "R1r|esc": {
+   "buffer_hours": 1344.0,
+   "op12_rop": 12.0,
+   "op3_rm": 0.0,
+   "op5_rm": 0.0,
+   "op9_rop": 12.0,
+   "shifts": 2
+  },
+  "R2r": {
+   "buffer_hours": 504.0,
+   "op12_rop": 24.0,
+   "op3_rm": 0.0,
+   "op5_rm": 70000.0,
+   "op9_rop": 12.0,
+   "shifts": 3
+  },
+  "R2r|esc": {
+   "buffer_hours": 1344.0,
+   "op12_rop": 12.0,
+   "op3_rm": 0.0,
+   "op5_rm": 0.0,
+   "op9_rop": 12.0,
+   "shifts": 2
+  }
+ },
+ "best_common_config": {
+  "buffer_hours": 168.0,
+  "op12_rop": 12.0,
+  "op3_rm": 17500.0,
+  "op5_rm": 140000.0,
+  "op9_rop": 12.0,
+  "shifts": 2
+ },
+ "bootstrap_repetitions": 5000,
+ "cache": "results/surface_cache/wrap288_compat_extended_v1",
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "NON_SEPARABLE_BUT_CONTEXT_INVARIANT",
+ "contexts": [
+  "R1r",
+  "R1r+R2r",
+  "R1r+R2r|esc",
+  "R1r|esc",
+  "R2r",
+  "R2r|esc"
+ ],
+ "contract_path": "docs/ENMIENDA_REJILLA_EXTENDIDA_4608_2026-08-05.md",
+ "contract_sha256": "c6b834ec209deaa9ac99ea08622fa91da17111a5a06f3598b6e63e51f34a8ddc",
+ "created_at": "2026-08-05T21:01:37.540257+00:00",
+ "elapsed_seconds": 10.551589834001788,
+ "falsifiers": {
+  "all_passed": false,
+  "f_no_fresh_seeds": {
+   "evidence": {
+    "n_sealed_artifact_overlap": 12,
+    "n_seeds": 12,
+    "note": "deliberate re-execution of registry block 'garrido_q2_des288'; these seeds are NOT virgin and are not meant to be",
+    "registry_conflicts": [
+     {
+      "id": "garrido_q2_des288",
+      "n_overlapping": 12,
+      "range": [
+       5300001,
+       5300012
+      ],
+      "source": "results/garrido_meta_learner_v2/result.json",
+      "status": "ARTIFACT_PRESENT_PENDING_CANONICAL_CUSTODY"
+     }
+    ],
+    "registry_is_complete": false,
+    "registry_status": "BASELINE_INVENTORY_INCOMPLETE_NO_NEW_SEEDS_AUTHORIZED",
+    "replay_of": "garrido_q2_des288",
+    "sealed_artifact_overlap": [
+     5300001,
+     5300002,
+     5300003,
+     5300004,
+     5300005,
+     5300006,
+     5300007,
+     5300008,
+     5300009,
+     5300010,
+     5300011,
+     5300012
+    ],
+    "seeds": [
+     5300001,
+     5300002,
+     5300003,
+     5300004,
+     5300005,
+     5300006,
+     5300007,
+     5300008,
+     5300009,
+     5300010,
+     5300011,
+     5300012
+    ],
+    "status": "DECLARED_REPLAY",
+    "why_it_can_fail": "it cannot: this is a declared custody replay of registry block 'garrido_q2_des288', so the seeds are used on purpose. Counted in neither column."
+   },
+   "not_applicable": true,
+   "passed": null
+  },
+  "g1_context_adaptation_is_worth_something": {
+   "evidence": {
+    "argmax_by_context": {
+     "R1r": {
+      "buffer_hours": 1344.0,
+      "op12_rop": 12.0,
+      "op3_rm": 0.0,
+      "op5_rm": 0.0,
+      "op9_rop": 12.0,
+      "shifts": 1
+     },
+     "R1r+R2r": {
+      "buffer_hours": 1344.0,
+      "op12_rop": 12.0,
+      "op3_rm": 0.0,
+      "op5_rm": 0.0,
+      "op9_rop": 12.0,
+      "shifts": 3
+     },
+     "R1r+R2r|esc": {
+      "buffer_hours": 1344.0,
+      "op12_rop": 12.0,
+      "op3_rm": 0.0,
+      "op5_rm": 0.0,
+      "op9_rop": 12.0,
+      "shifts": 2
+     },
+     "R1r|esc": {
+      "buffer_hours": 1344.0,
+      "op12_rop": 12.0,
+      "op3_rm": 0.0,
+      "op5_rm": 0.0,
+      "op9_rop": 12.0,
+      "shifts": 2
+     },
+     "R2r": {
+      "buffer_hours": 504.0,
+      "op12_rop": 24.0,
+      "op3_rm": 0.0,
+      "op5_rm": 70000.0,
+      "op9_rop": 12.0,
+      "shifts": 3
+     },
+     "R2r|esc": {
+      "buffer_hours": 1344.0,
+      "op12_rop": 12.0,
+      "op3_rm": 0.0,
+      "op5_rm": 0.0,
+      "op9_rop": 12.0,
+      "shifts": 2
+     }
+    },
+    "best_common_config": {
+     "buffer_hours": 168.0,
+     "op12_rop": 12.0,
+     "op3_rm": 17500.0,
+     "op5_rm": 140000.0,
+     "op9_rop": 12.0,
+     "shifts": 2
+    },
+    "h_regime": {
+     "H_regime": 0.02829448338047058,
+     "lcb95": 0.014715148015042251,
+     "n_boot": 5000,
+     "normalisation": "per-context min-max of the seed-averaged surface",
+     "ucb95": 0.045323414443648916
+    },
+    "threshold": 0.05,
+    "why_it_can_fail": "a moving argmax is nearly free under noise; H_regime asks whether knowing the regime BUYS anything, and it has measured exactly zero elsewhere in this project"
+   },
+   "passed": false
+  },
+  "g2_surface_is_non_separable": {
+   "evidence": {
+    "by_context": {
+     "R1r": {
+      "lcb95": 0.17545387495228226,
+      "mean": 0.18480689404096187,
+      "n": 12,
+      "ucb95": 0.19470250453476698
+     },
+     "R1r+R2r": {
+      "lcb95": 0.16671587591787376,
+      "mean": 0.17442647257969215,
+      "n": 12,
+      "ucb95": 0.1824924340955567
+     },
+     "R1r+R2r|esc": {
+      "lcb95": 0.14293110542500587,
+      "mean": 0.15169340781593765,
+      "n": 12,
+      "ucb95": 0.16038722350258622
+     },
+     "R1r|esc": {
+      "lcb95": 0.17892550037869195,
+      "mean": 0.18981625533203664,
+      "n": 12,
+      "ucb95": 0.20092544053589284
+     },
+     "R2r": {
+      "lcb95": 0.07459529349738217,
+      "mean": 0.13075643998630118,
+      "n": 12,
+      "ucb95": 0.17995625840661839
+     },
+     "R2r|esc": {
+      "lcb95": 0.07665099114240091,
+      "mean": 0.11195551790662417,
+      "n": 12,
+      "ucb95": 0.13988843815592036
+     }
+    },
+    "cv": "leave-one-seed-out, 12 folds; the seed is the resampling unit",
+    "threshold": 0.05,
+    "why_it_can_fail": "on a separable surface the additive model predicts held-out seeds just as well and the interaction gain collapses to zero or below, paying for its extra parameters; then OFAT is near-optimal by construction"
+   },
+   "passed": true
+  }
+ },
+ "g1_h_regime": {
+  "H_regime": 0.02829448338047058,
+  "lcb95": 0.014715148015042251,
+  "n_boot": 5000,
+  "normalisation": "per-context min-max of the seed-averaged surface",
+  "ucb95": 0.045323414443648916
+ },
+ "g2_separability": {
+  "R1r": {
+   "lcb95": 0.17545387495228226,
+   "mean": 0.18480689404096187,
+   "n": 12,
+   "ucb95": 0.19470250453476698
+  },
+  "R1r+R2r": {
+   "lcb95": 0.16671587591787376,
+   "mean": 0.17442647257969215,
+   "n": 12,
+   "ucb95": 0.1824924340955567
+  },
+  "R1r+R2r|esc": {
+   "lcb95": 0.14293110542500587,
+   "mean": 0.15169340781593765,
+   "n": 12,
+   "ucb95": 0.16038722350258622
+  },
+  "R1r|esc": {
+   "lcb95": 0.17892550037869195,
+   "mean": 0.18981625533203664,
+   "n": 12,
+   "ucb95": 0.20092544053589284
+  },
+  "R2r": {
+   "lcb95": 0.07459529349738217,
+   "mean": 0.13075643998630118,
+   "n": 12,
+   "ucb95": 0.17995625840661839
+  },
+  "R2r|esc": {
+   "lcb95": 0.07665099114240091,
+   "mean": 0.11195551790662417,
+   "n": 12,
+   "ucb95": 0.13988843815592036
+  }
+ },
+ "grid_id": "wrap288_compat_extended_v1",
+ "module_manifest": {
+  "entry_script": "scripts/run_surface_gates_v1.py",
+  "entry_script_sha256": "b7c1b5d6d3b0e53b9ddfc9a5f05714d46d55214df4d3237b89b2a4e2fffa4211",
+  "missing": [],
+  "modules": {
+   "supply_chain/arm_runner.py": "35135c537d9260832677ab6b4e344229d6b9f4810df8bdef9efd51b58fcac68a",
+   "supply_chain/seed_custody.py": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "n_configurations": 4608,
+ "reference_path": "results/garrido_normaliser_audit/result.json",
+ "reference_sha256": "346c6abc169921882e18a6baa4e3f43cc009f0d71f0fdf4f1ec99a4b101a4452",
+ "replay_of": "garrido_q2_des288",
+ "run_role": "CACHE_ANALYSIS",
+ "schema_version": "surface_gates_v2",
+ "scope": "DEVELOPMENT_ON_BURNED_TAPES_NO_ADJUDICATION_NO_LEARNER",
+ "seeds": [
+  5300001,
+  5300002,
+  5300003,
+  5300004,
+  5300005,
+  5300006,
+  5300007,
+  5300008,
+  5300009,
+  5300010,
+  5300011,
+  5300012
+ ],
+ "self_sha256": "a52cf79a43e6e76f04c9c02dde5f743b5cfff1c572c1b3ccf0eca1a1c85db2db",
+ "threshold": 0.05
+}

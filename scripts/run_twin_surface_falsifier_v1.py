@@ -30,6 +30,7 @@ warnings.filterwarnings("ignore")
 
 from supply_chain.arm_runner import seal_and_write  # noqa: E402
 from supply_chain.seed_custody import custody_falsifier, module_manifest  # noqa: E402
+from scripts.seal_garrido_surface_cache_v1 import verify_sealed_slice  # noqa: E402
 
 AUDIT = Path(__file__).resolve().parent / "run_meta_learner_normaliser_audit_v1.py"
 MODULES = ("supply_chain/arm_runner.py", "supply_chain/seed_custody.py")
@@ -57,6 +58,8 @@ def main() -> int:
     surface, seeds = {}, set()
     for path in sorted(args.cache.rglob("*.json")):
         payload = json.loads(path.read_text())
+        verify_sealed_slice(payload, expected_cells=len(audit.CONFIGS),
+                            expected_grid_id="wrap288_v1")
         surface[(payload["context"], int(payload["seed"]))] = payload["cells"]
         seeds.add(int(payload["seed"]))
     print(f"  caché: {len(surface)} rebanadas, {len({k[0] for k in surface})} contextos")

@@ -64,14 +64,15 @@ N_BOOT = 5_000
 MODULES = ("supply_chain/arm_runner.py", "supply_chain/seed_custody.py")
 
 
-def load_cache(root: Path) -> tuple[dict, list[str], list[int]]:
-    """`surface[(context, seed)]` -> np.array of 288 values, in canonical CONFIGS order."""
+def load_cache(root: Path, *, expected_grid_id: str | None = None) -> tuple[dict, list[str], list[int]]:
+    """`surface[(context, seed)]` -> values in the selected grid's canonical order."""
     surface, contexts, seeds = {}, [], set()
     for path in sorted(root.rglob("*.json")):
         payload = json.loads(path.read_text())
         # The gates are only meaningful on the complete, sealed panel cache.  A scalar-only
         # cache or a silently edited slice must fail closed before any statistic is computed.
-        verify_sealed_slice(payload)
+        verify_sealed_slice(payload, expected_cells=len(CONFIGS),
+                            expected_grid_id=expected_grid_id)
         ctx, seed = payload["context"], int(payload["seed"])
         values = np.array([c["value"] for c in payload["cells"]], dtype=float)
         if values.size != len(CONFIGS):
@@ -168,7 +169,8 @@ def main() -> int:
     rng = np.random.default_rng(20260805)
 
     use_grid(args.grid or args.cache.name)
-    surface, contexts, seeds = load_cache(args.cache)
+    surface, contexts, seeds = load_cache(args.cache,
+                                          expected_grid_id=args.grid or args.cache.name)
     print(f"  caché: {len(contexts)} contextos x {len(seeds)} semillas x {len(CONFIGS)} configs")
 
     # ---- g2: separability, leave-one-seed-out ------------------------------------------------

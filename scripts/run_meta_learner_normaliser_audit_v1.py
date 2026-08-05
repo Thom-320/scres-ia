@@ -36,6 +36,7 @@ from supply_chain.config import THESIS_FAITHFUL_PROTOCOL as P  # noqa: E402
 from supply_chain.episode_metrics import compute_episode_metrics  # noqa: E402
 from supply_chain.seed_custody import custody_falsifier, module_manifest  # noqa: E402
 from supply_chain.supply_chain import MFSCSimulation  # noqa: E402
+from scripts.seal_garrido_surface_cache_v1 import verify_sealed_slice  # noqa: E402
 
 R1R = ("R11", "R12", "R13", "R14")
 R2R = ("R21", "R22", "R23", "R24")
@@ -100,6 +101,29 @@ def evaluate(config: dict, context: str, seed: int, horizon: float) -> dict:
 def features(config: dict) -> np.ndarray:
     coords = [float(FACTORS[n].index(config[n])) / (len(FACTORS[n]) - 1) for n in FACTOR_NAMES]
     return np.concatenate([np.array(coords), [1.0]])
+
+
+def cache_is_compatible(blob: dict, current_manifest: dict) -> bool:
+    """Accept a sealed cache when only this audit harness changed.
+
+    The evaluator's imported physics modules are the scientific identity.  Adding a falsifier to
+    this entry script must not trigger 20,736 duplicate DES episodes; an unsealed or physically
+    mismatched cache still fails closed.
+    """
+    cached_manifest = blob.get("module_manifest", {})
+    same_declared_modules = (
+        cached_manifest.get("modules") == current_manifest.get("modules")
+        and cached_manifest.get("missing") == current_manifest.get("missing")
+    )
+    if not same_declared_modules:
+        return False
+    if blob.get("schema_version") == "garrido_surface_cache_v1":
+        try:
+            verify_sealed_slice(blob)
+        except (KeyError, ValueError, TypeError):
+            return False
+        return True
+    return cached_manifest == current_manifest
 
 
 class Fig5Neuron:
@@ -254,6 +278,67 @@ def optimum_moves(surface, seeds) -> dict:
             "moves": bool(len(set(keys.values())) > 1)}
 
 
+def twin_surface_falsifier(surface, seed: int, budget: int) -> dict:
+    """Check that changing only unvisited tail cells cannot change a prefix path.
+
+    The affine-rescaling falsifier is blind to an oracle leak that is invariant to scale.  For each
+    normaliser we first record a reference path, alter two cells that no arm on that path visited,
+    and replay the same seed/RNG stream.  A legitimate prefix arm must be identical; the oracle
+    arm is expected to react because its global min/max changed.  The test is intentionally run on
+    one burned seed: it is a structural spy test, not a new scientific replication.
+    """
+    out = {}
+    ctx_order = list(CONTEXTS)
+    for normaliser in NORMALISERS:
+        reference = run_all(surface, [seed], budget, normaliser)
+        twin = {key: [dict(cell) for cell in cells] for key, cells in surface.items()}
+        changed = {}
+        for ctx in ctx_order:
+            protected = {
+                index
+                for strategy in STRATEGIES
+                for index in reference[strategy][0][ctx]["visited_sequence"]
+            }
+            tail = [index for index in range(len(CONFIGS)) if index not in protected]
+            if len(tail) < 2:
+                return {"passed": False, "reason": f"not enough hidden tail in {ctx}"}
+            low_index, high_index = tail[:2]
+            low = dict(twin[(ctx, seed)][low_index])
+            high = dict(twin[(ctx, seed)][high_index])
+            low["value"] = -10.0
+            high["value"] = 10.0
+            twin[(ctx, seed)][low_index] = low
+            twin[(ctx, seed)][high_index] = high
+            changed[ctx] = {"protected": len(protected), "tail_indices": [low_index, high_index]}
+
+        replay = run_all(twin, [seed], budget, normaliser)
+        same = {
+            strategy: {
+                ctx: reference[strategy][0][ctx]["visited_sequence"]
+                == replay[strategy][0][ctx]["visited_sequence"]
+                for ctx in ctx_order
+            }
+            for strategy in STRATEGIES
+        }
+        out[normaliser] = {
+            "path_unchanged": same,
+            "all_paths_unchanged": all(flag for values in same.values() for flag in values.values()),
+            "changed_cells": changed,
+        }
+
+    prefix_passed = bool(out["prefix"]["all_paths_unchanged"])
+    oracle_reacted = not bool(out["oracle"]["all_paths_unchanged"])
+    return {
+        "passed": prefix_passed and oracle_reacted,
+        "seed": int(seed),
+        "budget": int(budget),
+        "prefix_passed": prefix_passed,
+        "oracle_reacted": oracle_reacted,
+        "by_normaliser": out,
+        "why_it_can_fail": "an affine-invariant oracle leak can leave the scale test green while changing the path when hidden tails change",
+    }
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--budget", type=int, default=24)
@@ -280,7 +365,7 @@ def main() -> int:
             slice_path = args.cache_dir / ctx.replace("|", "_").replace("+", "_") / f"{seed}.json"
             if slice_path.is_file():
                 blob = json.loads(slice_path.read_text())
-                if blob.get("module_manifest") == manifest:
+                if cache_is_compatible(blob, manifest):
                     surface[(ctx, seed)] = blob["cells"]
                     continue
                 print(f"  cache descartada (deriva de modulos): {slice_path}")
@@ -343,6 +428,7 @@ def main() -> int:
 
     sep = separability(surface, seeds)
     opt = optimum_moves(surface, seeds)
+    twins = twin_surface_falsifier(surface, seeds[0], args.budget)
 
     falsifiers = {
         "f1_harness_reproduces_the_sealed_artifact": {
@@ -373,6 +459,10 @@ def main() -> int:
                                             "unbiased and changing the estimand would be "
                                             "unjustified",
                          "rates": {n: summary[n]["censoring_rate"] for n in NORMALISERS}}},
+        "f6_surface_twins_do_not_change_prefix_paths": {
+            "passed": bool(twins["passed"]),
+            "evidence": twins,
+        },
         "f5_no_fresh_seeds": custody_falsifier(seeds, replay_of=args.replay_of,
                                                exclude=args.output),
     }
@@ -431,6 +521,7 @@ def main() -> int:
         "gates": {"g1_optimum_moves_across_contexts": opt,
                   "g2_surface_separability": sep},
         "falsifiers": falsifiers,
+        "twin_surface_falsifier": twins,
         "elapsed_seconds": time.perf_counter() - started,
     }
     digest = seal_and_write(payload, args.output, contract=args.contract, reference=SEALED_V2)

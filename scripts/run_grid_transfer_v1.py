@@ -33,6 +33,7 @@ warnings.filterwarnings("ignore")
 
 from supply_chain.arm_runner import seal_and_write  # noqa: E402
 from supply_chain.seed_custody import custody_falsifier, module_manifest  # noqa: E402
+from scripts.seal_garrido_surface_cache_v1 import verify_sealed_slice  # noqa: E402
 
 BASE_FACTORS = {
     "buffer_hours": (0.0, 168.0, 336.0, 504.0, 672.0, 1344.0),
@@ -260,12 +261,11 @@ def build(kind, state, grid):
             "gp": lambda: gp_arm(state, EXT_COORDS)}[kind]()
 
 
-def load(root: Path, n_expected: int):
+def load(root: Path, n_expected: int, expected_grid_id: str):
     surface, contexts, seeds = {}, [], set()
     for path in sorted(root.rglob("*.json")):
         p = json.loads(path.read_text())
-        if len(p["cells"]) != n_expected:
-            continue
+        verify_sealed_slice(p, expected_cells=n_expected, expected_grid_id=expected_grid_id)
         surface[(p["context"], int(p["seed"]))] = np.array([c["value"] for c in p["cells"]],
                                                            dtype=float)
         seeds.add(int(p["seed"]))
@@ -301,8 +301,10 @@ def main() -> int:
     args = ap.parse_args()
     started = time.perf_counter()
 
-    base, base_ctx, seeds = load(args.base_cache, len(BASE_CONFIGS))
-    ext, ext_ctx, ext_seeds = load(args.ext_cache, len(EXT_CONFIGS))
+    base, base_ctx, seeds = load(args.base_cache, len(BASE_CONFIGS), "wrap288_v1")
+    ext, ext_ctx, ext_seeds = load(
+        args.ext_cache, len(EXT_CONFIGS), "wrap288_compat_extended_v1"
+    )
     if not ext:
         raise SystemExit("the extended cache is empty or still building")
     # Intersect on PAIRS, not on the two axes separately: a context and a seed can each be present

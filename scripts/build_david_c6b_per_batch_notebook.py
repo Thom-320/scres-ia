@@ -51,8 +51,12 @@ cells = [
         60 segundos. Al terminar entrega una interpretación en español, una tarjeta para pantallazo y
         un ZIP pequeño listo para enviar a Thomas.
 
-        Sin editar nada ejecuta cinco brazos, tres seeds y el mismo presupuesto
-        de 200,192 pasos por seed:
+        Sin editar nada ejecuta cinco brazos. Cada brazo se inicializa **una sola vez** y continúa
+        durante tres fases de 200,192 pasos, conservando pesos y estado del optimizador; SAC conserva
+        también su replay buffer. No vuelve a empezar al cambiar de fase:
+
+        > El entorno seguirá usando `env.reset()` al terminar cada episodio de 24 lotes. Eso reinicia
+        > la **campaña física**, no la red. Los pesos aprendidos permanecen en el mismo objeto agente.
 
         - RecurrentPPO con la arquitectura histórica MLP-LSTM: baseline en este mismo C6-B.
         - PPO + DMLPA con historia física completa de 24 epochs.
@@ -69,7 +73,7 @@ cells = [
         > dominio. Un PASS aquí autoriza preregistrar; no autoriza publicación ni despliegue.
 
         **Tiempo orientativo:** extrapolando el smoke PPO medido en un Mac CPU, los cuatro brazos de
-        la familia PPO suman aproximadamente **12 horas** para las tres seeds `serious`. No se incluye
+        la familia PPO suman aproximadamente **12 horas** para las tres fases `serious`. No se incluye
         SAC en esa cifra: su costo depende mucho de GPU y de las actualizaciones off-policy, y puede
         dominar la corrida. Para `serious`, usa GPU y evita asumir que terminará en una sesión corta.
         """
@@ -83,6 +87,8 @@ cells = [
         from typing import Any
 
         RUN_PROFILE = os.environ.get("DAVID_C6B_PROFILE", "serious")
+        TRAINING_CONTINUITY = "retained_across_phases"  # ⛔ conserva pesos/optimizador entre fases
+        MODEL_INITIALIZATION_SEED = 9201                 # una sola inicialización por algoritmo
         MODEL_KINDS = [
             "recurrent_ppo_mlp",
             "ppo_dmlpa_stack24",
@@ -107,13 +113,14 @@ cells = [
         }
 
         PROFILES = {
-            "debug": dict(timesteps=768, optimizer_seeds=[9201], selection_tapes=2, eval_tapes=2),
-            "screen": dict(timesteps=50_000, optimizer_seeds=[9201, 9202, 9203], selection_tapes=6, eval_tapes=8),
-            "serious": dict(timesteps=200_192, optimizer_seeds=[9201, 9202, 9203], selection_tapes=12, eval_tapes=24),
+            "debug": dict(timesteps_per_phase=768, phases=2, selection_tapes=2, eval_tapes=2),
+            "screen": dict(timesteps_per_phase=50_000, phases=3, selection_tapes=6, eval_tapes=8),
+            "serious": dict(timesteps_per_phase=200_192, phases=3, selection_tapes=12, eval_tapes=24),
         }
         CFG = PROFILES[RUN_PROFILE]
-        TOTAL_TIMESTEPS = CFG["timesteps"]
-        OPTIMIZER_SEEDS = CFG["optimizer_seeds"]
+        TIMESTEPS_PER_PHASE = CFG["timesteps_per_phase"]
+        PHASE_IDS = list(range(1, int(CFG["phases"]) + 1))
+        TOTAL_RETAINED_TIMESTEPS = TIMESTEPS_PER_PHASE * len(PHASE_IDS)
         SELECTION_TAPES_PER_CELL = CFG["selection_tapes"]
         EVAL_TAPES_PER_CELL = CFG["eval_tapes"]
 
@@ -128,12 +135,13 @@ cells = [
 
         for tape in (TRAIN_TAPE_START, TRAIN_TAPE_END, *SELECTION_SEEDS, *EVAL_SEEDS):
             assert_dev_tape(tape)
-        total_jobs = len(MODEL_KINDS) * len(OPTIMIZER_SEEDS)
+        total_jobs = len(MODEL_KINDS) * len(PHASE_IDS)
         print("=" * 76)
         print("NOTEBOOK 6 · PLAN DE EJECUCIÓN")
         print("Perfil:", RUN_PROFILE, "| trabajos de entrenamiento:", total_jobs)
-        print("Pasos por modelo/seed:", f"{TOTAL_TIMESTEPS:,}", "| frame stack:", FRAME_STACK)
-        print("Seeds de optimización:", OPTIMIZER_SEEDS)
+        print("Continuidad:", TRAINING_CONTINUITY, "| inicialización única:", MODEL_INITIALIZATION_SEED)
+        print("Fases retenidas:", PHASE_IDS, "| pasos por fase:", f"{TIMESTEPS_PER_PHASE:,}")
+        print("Pasos acumulados por modelo:", f"{TOTAL_RETAINED_TIMESTEPS:,}", "| frame stack:", FRAME_STACK)
         for number, kind in enumerate(MODEL_KINDS, 1):
             print(f"  {number}. {MODEL_LABELS[kind]} [{kind}]")
         print("Al finalizar se mostrará el veredicto y se generará un ZIP de auditoría.")
@@ -147,7 +155,9 @@ cells = [
         IN_KAGGLE = Path("/kaggle/working").exists()
         GIT_URL = "https://github.com/Thom-320/scres-ia.git"
         GIT_BRANCH = "qr1-c1-natural-continuation"
-        CORE_COMMIT = "49f7802baedb47e0b1d23e23fa317504be059b71"
+        # Fijamos exactamente la revisión pública que contiene este notebook y sus auxiliares.
+        # Así Colab/Kaggle no pueden clonar una versión anterior por accidente.
+        CORE_COMMIT = "58d52089e698621cd167c18127ea32301a0aeffe"
         PACKAGES = [
             "simpy>=4.1", "numpy>=1.26", "gymnasium>=1.3", "stable-baselines3>=2.9",
             "sb3-contrib>=2.9", "torch>=2.1", "einops>=0.8", "pandas>=2.2",
@@ -348,18 +358,19 @@ cells = [
                                     gae_lambda=0.95, ent_coef=0.01, policy_kwargs=kwargs, **common)
             if model_kind == "sac_discrete_dmlpa_stack24":
                 kwargs = dmlpa_policy_kwargs(model_kind)["features_extractor_kwargs"]
-                learning_starts = 744 if RUN_PROFILE == "debug" else 2_000
+                learning_starts = 240 if RUN_PROFILE == "debug" else 2_000
                 return DiscreteSACAgent(
                     env=env, seed=int(optimizer_seed), features_dim=FEATURES_DIM,
                     extractor_factory=lambda: DavidDMLPAPositional(env.observation_space, **kwargs),
-                    config=DiscreteSACConfig(buffer_size=100_000, batch_size=256,
-                                             learning_starts=learning_starts, learning_rate=3e-4),
+                    config=DiscreteSACConfig(buffer_size=100_000, batch_size=64,
+                                             learning_starts=learning_starts, train_freq=24,
+                                             gradient_steps=1, learning_rate=3e-4),
                 )
             raise ValueError(model_kind)
 
         architecture_reports = {}
         for kind in MODEL_KINDS:
-            agent = build_agent(kind, OPTIMIZER_SEEDS[0])
+            agent = build_agent(kind, MODEL_INITIALIZATION_SEED)
             policy = getattr(agent, "policy", agent)
             architecture_reports[kind] = {
                 "modelo_legible": MODEL_LABELS[kind],
@@ -376,7 +387,7 @@ cells = [
     ),
     code(
         r"""
-        # 7 — Entrenamiento multiseed con progreso y tiempo visible
+        # 7 — Entrenamiento continuo: una inicialización, varias fases retenidas
         RUN_ROOT = REPO / "outputs" / "david_c6b" / f"{RUN_PROFILE}_{int(time.time())}"
         RUN_ROOT.mkdir(parents=True, exist_ok=True)
         RUN_STARTED = time.time()
@@ -397,30 +408,74 @@ cells = [
             def __exit__(self, exc_type, exc, tb):
                 self.stop_event.set(); self.thread.join(timeout=2)
 
+        def parameter_sha256(agent):
+            digest = hashlib.sha256()
+            parameter_module = getattr(agent, "policy", agent)
+            for name, parameter in parameter_module.named_parameters():
+                digest.update(name.encode())
+                digest.update(parameter.detach().cpu().contiguous().numpy().tobytes())
+            return digest.hexdigest()
+
+        def optimizer_identity(agent):
+            optimizer = getattr(getattr(agent, "policy", None), "optimizer", None)
+            if optimizer is None:
+                optimizer = getattr(agent, "actor_optimizer", None)
+            return id(optimizer)
+
         agents = {}; training_rows = []
-        total_jobs = len(MODEL_KINDS) * len(OPTIMIZER_SEEDS); job_number = 0
+        total_jobs = len(MODEL_KINDS) * len(PHASE_IDS); job_number = 0
         for kind in MODEL_KINDS:
-            for optimizer_seed in OPTIMIZER_SEEDS:
+            # ÚNICA construcción: no se vuelve a llamar build_agent dentro de las fases.
+            agent = build_agent(kind, MODEL_INITIALIZATION_SEED)
+            agent_identity = id(agent)
+            retained_optimizer_identity = optimizer_identity(agent)
+            retained_buffer_identity = id(agent.replay_buffer) if hasattr(agent, "replay_buffer") else None
+            previous_phase_sha = None
+            for phase_id in PHASE_IDS:
                 job_number += 1
                 label = MODEL_LABELS[kind]
+                assert id(agent) == agent_identity
+                assert optimizer_identity(agent) == retained_optimizer_identity
+                if retained_buffer_identity is not None:
+                    assert id(agent.replay_buffer) == retained_buffer_identity
+                before_sha = parameter_sha256(agent)
+                if previous_phase_sha is not None:
+                    assert before_sha == previous_phase_sha, "los pesos no continuaron desde la fase anterior"
                 print("\n" + "=" * 76)
-                print(f"TRABAJO {job_number}/{total_jobs}: {label}")
-                print(f"ID={kind} | seed={optimizer_seed} | pasos={TOTAL_TIMESTEPS:,} | historia={history_for(kind)}")
+                print(f"TRABAJO {job_number}/{total_jobs}: {label} · FASE RETENIDA {phase_id}/{len(PHASE_IDS)}")
+                print(f"ID={kind} | init_seed={MODEL_INITIALIZATION_SEED} | pasos_fase={TIMESTEPS_PER_PHASE:,} | historia={history_for(kind)}")
+                print("Continuidad:", "INICIALIZACIÓN ÚNICA" if phase_id == 1 else "PESOS + OPTIMIZADOR RETENIDOS")
                 print("Estado: ENTRENANDO", flush=True)
-                started = time.time(); agent = build_agent(kind, optimizer_seed)
-                with TrainingHeartbeat(f"{kind} seed={optimizer_seed}"):
-                    agent.learn(total_timesteps=TOTAL_TIMESTEPS, progress_bar=False)
+                started = time.time(); steps_before = int(getattr(agent, "num_timesteps", 0))
+                with TrainingHeartbeat(f"{kind} fase={phase_id}"):
+                    if kind.startswith("sac_discrete"):
+                        agent.learn(total_timesteps=steps_before + TIMESTEPS_PER_PHASE, progress_bar=False)
+                    else:
+                        agent.learn(total_timesteps=TIMESTEPS_PER_PHASE, progress_bar=False,
+                                    reset_num_timesteps=(phase_id == 1))
                 elapsed = time.time() - started
-                agents[(kind, optimizer_seed)] = agent
-                training_rows.append({"model": kind, "model_label": label, "seed": optimizer_seed,
-                                      "timesteps": TOTAL_TIMESTEPS, "history": history_for(kind),
-                                      "elapsed_seconds": elapsed, "steps_per_second": TOTAL_TIMESTEPS / elapsed})
+                actual_steps = int(getattr(agent, "num_timesteps", 0)) - steps_before
+                after_sha = parameter_sha256(agent); previous_phase_sha = after_sha
+                if phase_id > 1 and before_sha == after_sha:
+                    raise AssertionError("la fase retenida no actualizó ningún peso")
+                training_rows.append({"model": kind, "model_label": label,
+                                      "initialization_seed": MODEL_INITIALIZATION_SEED,
+                                      "phase": phase_id, "retained_from_previous": phase_id > 1,
+                                      "requested_timesteps": TIMESTEPS_PER_PHASE,
+                                      "actual_timesteps": actual_steps, "cumulative_timesteps": int(agent.num_timesteps),
+                                      "history": history_for(kind), "agent_object_id": agent_identity,
+                                      "optimizer_object_id": retained_optimizer_identity,
+                                      "replay_buffer_object_id": retained_buffer_identity,
+                                      "parameter_sha_before": before_sha, "parameter_sha_after": after_sha,
+                                      "elapsed_seconds": elapsed, "steps_per_second": actual_steps / elapsed})
                 suffix = ".pt" if kind.startswith("sac_discrete") else ".zip"
-                agent.save(RUN_ROOT / f"{kind}_seed{optimizer_seed}{suffix}")
+                agent.save(RUN_ROOT / f"{kind}_retained_phase{phase_id}{suffix}")
                 completed_average = (time.time() - RUN_STARTED) / job_number
                 remaining_minutes = completed_average * (total_jobs - job_number) / 60.0
-                print(f"Estado: TERMINADO · {elapsed/60:.2f} min · {TOTAL_TIMESTEPS/elapsed:.1f} pasos/s")
+                print(f"Estado: TERMINADO · {elapsed/60:.2f} min · {actual_steps/elapsed:.1f} pasos/s")
+                print("Prueba de continuidad: mismo objeto/agente y optimizador; SHA pesos", before_sha[:10], "→", after_sha[:10])
                 print(f"Progreso global: {job_number}/{total_jobs} · ETA aproximado restante: {remaining_minutes:.1f} min")
+            agents[kind] = agent
         training_df = pd.DataFrame(training_rows)
         print("\nENTRENAMIENTO COMPLETO · tiempo total:", f"{(time.time()-RUN_STARTED)/60:.2f} min")
         display(training_df)
@@ -498,20 +553,9 @@ cells = [
                     downstream_freight_physics_mode="fixed_clock_physical_v1")
                 structured = rollout_structured(BEST_STRUCTURED, skeleton, cell_index, tape_seed)
                 for kind in MODEL_KINDS:
-                    for optimizer_seed in OPTIMIZER_SEEDS:
-                        metrics = rollout_agent(agents[(kind, optimizer_seed)], kind, skeleton,
-                                                cell_index, tape_seed)
-                        row = {"model": kind, "optimizer_seed": optimizer_seed,
-                               "cell": cell.cell_id, "tape_seed": tape_seed,
-                               "ret_visible": metrics["ret_visible"],
-                               "delta_structured": metrics["ret_visible"] - structured["ret_visible"],
-                               "worst_delta_structured": metrics["worst_product_fill"] - structured["worst_product_fill"]}
-                        for key in RESOURCE_KEYS:
-                            row[f"resource_delta::{key}"] = metrics[key] - structured[key]
-                        evaluation_rows.append(row)
-                for optimizer_seed in OPTIMIZER_SEEDS:
-                    metrics = rollout_random_binary(skeleton, cell_index, tape_seed, optimizer_seed)
-                    row = {"model": "random_binary", "optimizer_seed": optimizer_seed,
+                    metrics = rollout_agent(agents[kind], kind, skeleton, cell_index, tape_seed)
+                    row = {"model": kind, "initialization_seed": MODEL_INITIALIZATION_SEED,
+                           "training_continuity": TRAINING_CONTINUITY,
                            "cell": cell.cell_id, "tape_seed": tape_seed,
                            "ret_visible": metrics["ret_visible"],
                            "delta_structured": metrics["ret_visible"] - structured["ret_visible"],
@@ -519,6 +563,16 @@ cells = [
                     for key in RESOURCE_KEYS:
                         row[f"resource_delta::{key}"] = metrics[key] - structured[key]
                     evaluation_rows.append(row)
+                metrics = rollout_random_binary(skeleton, cell_index, tape_seed, MODEL_INITIALIZATION_SEED)
+                row = {"model": "random_binary", "initialization_seed": MODEL_INITIALIZATION_SEED,
+                       "training_continuity": "not_applicable",
+                       "cell": cell.cell_id, "tape_seed": tape_seed,
+                       "ret_visible": metrics["ret_visible"],
+                       "delta_structured": metrics["ret_visible"] - structured["ret_visible"],
+                       "worst_delta_structured": metrics["worst_product_fill"] - structured["worst_product_fill"]}
+                for key in RESOURCE_KEYS:
+                    row[f"resource_delta::{key}"] = metrics[key] - structured[key]
+                evaluation_rows.append(row)
         evaluation_df = pd.DataFrame(evaluation_rows)
         print("Evaluación terminada en", f"{(time.time()-evaluation_started)/60:.2f} min")
         result_summary = evaluation_df.groupby(["model", "cell"]).ret_visible.agg(["mean", "std", "count"])
@@ -530,18 +584,20 @@ cells = [
         r"""
         # 10 — Veredicto claro: RecurrentPPO, estructurado y memoria
         BOOTSTRAP_RESAMPLES = 5_000
-        def two_way_lcb(delta, seed=20260722):
+        INDEPENDENT_INITIALIZATIONS = 1
+        ROBUSTNESS_GATE_ELIGIBLE = INDEPENDENT_INITIALIZATIONS >= 3
+
+        def tape_bootstrap_lcb(delta, seed=20260722):
             delta = np.asarray(delta, dtype=float)
             rng = np.random.default_rng(seed); sims = np.empty(BOOTSTRAP_RESAMPLES)
             for i in range(BOOTSTRAP_RESAMPLES):
-                si = rng.integers(0, delta.shape[0], delta.shape[0])
                 ti = rng.integers(0, delta.shape[1], delta.shape[1])
-                sims[i] = delta[np.ix_(si, ti)].mean()
+                sims[i] = delta[:, ti].mean()
             return float(np.quantile(sims, 0.05))
 
         def matrix(model, cell, column):
             subset = evaluation_df[(evaluation_df.model == model) & (evaluation_df.cell == cell)]
-            return subset.pivot(index="optimizer_seed", columns="tape_seed", values=column).to_numpy()
+            return subset.pivot(index="initialization_seed", columns="tape_seed", values=column).to_numpy()
 
         verdict_rows = []
         candidates = [kind for kind in MODEL_KINDS if kind != "recurrent_ppo_mlp"]
@@ -562,18 +618,19 @@ cells = [
                 )
                 row = {"model": kind, "cell": cell,
                        "delta_vs_RecurrentPPO": float(delta_rppo.mean()),
-                       "delta_vs_RecurrentPPO_LCB05": two_way_lcb(delta_rppo),
+                       "delta_vs_RecurrentPPO_LCB05": tape_bootstrap_lcb(delta_rppo),
                        "delta_vs_random": float(delta_random.mean()),
-                       "delta_vs_random_LCB05": two_way_lcb(delta_random, 20260726),
+                       "delta_vs_random_LCB05": tape_bootstrap_lcb(delta_random, 20260726),
                        "delta_vs_structured": float(delta_structured.mean()),
-                       "delta_vs_structured_LCB05": two_way_lcb(delta_structured, 20260723),
-                       "worst_product_delta_LCB05": two_way_lcb(worst, 20260724),
+                       "delta_vs_structured_LCB05": tape_bootstrap_lcb(delta_structured, 20260723),
+                       "worst_product_delta_LCB05": tape_bootstrap_lcb(worst, 20260724),
                        "resource_max_abs": resource_max}
-                row["strong_cell_pass"] = bool(
+                row["observed_cell_win"] = bool(
                     row["delta_vs_RecurrentPPO_LCB05"] > 0.0
                     and row["delta_vs_structured_LCB05"] >= 0.01
                     and row["worst_product_delta_LCB05"] >= -0.02
                     and resource_max == 0.0)
+                row["strong_cell_pass"] = bool(row["observed_cell_win"] and ROBUSTNESS_GATE_ELIGIBLE)
                 verdict_rows.append(row)
 
         verdict_df = pd.DataFrame(verdict_rows)
@@ -585,6 +642,7 @@ cells = [
                 "beat_recurrent_ppo_all_cells": bool((rows.delta_vs_RecurrentPPO_LCB05 > 0).all()),
                 "learned_signal_vs_random_all_cells": bool((rows.delta_vs_random_LCB05 > 0).all()),
                 "beat_structured_plus_0p01_all_cells": bool((rows.delta_vs_structured_LCB05 >= 0.01).all()),
+                "observed_goal_all_cells_single_trajectory": bool(rows.observed_cell_win.all()),
                 "strong_goal_all_cells": bool(rows.strong_cell_pass.all()),
             }
 
@@ -595,27 +653,24 @@ cells = [
             stack1 = matrix("ppo_dmlpa_stack1", cell, "ret_visible")
             delta = stack24 - stack1
             memory_rows.append({"cell": cell, "memory_delta": float(delta.mean()),
-                                "memory_delta_LCB05": two_way_lcb(delta, 20260725),
-                                "memory_helped": bool(two_way_lcb(delta, 20260725) > 0.0)})
+                                "memory_delta_LCB05": tape_bootstrap_lcb(delta, 20260725),
+                                "memory_helped": bool(tape_bootstrap_lcb(delta, 20260725) > 0.0)})
         memory_df = pd.DataFrame(memory_rows); display(memory_df)
         final_verdict["DMLPA_MEMORY"] = {
             "helped_all_cells": bool(memory_df.memory_helped.all()),
             "interpretation": "stack24 beat the otherwise identical stack1 PPO only if all paired LCB05 values exceed zero",
         }
-        any_strong = any(
-            value.get("strong_goal_all_cells", False)
-            for value in final_verdict.values() if isinstance(value, dict)
-        )
         if RUN_PROFILE != "serious":
             RUN_OUTCOME = "SMOKE_ONLY_NO_SCIENTIFIC_CONCLUSION"
-        elif any_strong and final_verdict["DMLPA_MEMORY"]["helped_all_cells"]:
-            RUN_OUTCOME = "C6B_DEVELOPMENT_PASS_TO_PREREGISTRATION"
+        elif any(value.get("observed_goal_all_cells_single_trajectory", False)
+                 for value in final_verdict.values() if isinstance(value, dict)):
+            RUN_OUTCOME = "OBSERVED_RETAINED_WIN_REQUIRES_INDEPENDENT_REPLICATION"
         else:
-            RUN_OUTCOME = "C6B_DEVELOPMENT_NO_GO_UNDER_TESTED_ENVELOPE"
+            RUN_OUTCOME = "NO_GO_ON_SINGLE_RETAINED_TRAJECTORY_UNDER_TESTED_ENVELOPE"
         print("\nVEREDICTO FINAL")
         print(json.dumps(final_verdict, indent=2))
         print("RESULTADO GLOBAL:", RUN_OUTCOME)
-        print("Incluso un PASS solo autoriza preregistrar; NO es claim científico ni validación Garrido.")
+        print("Una sola trayectoria retenida NO reemplaza réplicas con inicializaciones independientes.")
         """
     ),
     code(
@@ -641,9 +696,10 @@ cells = [
             operator_rows.append({
                 "modelo": MODEL_LABELS[kind],
                 "señal_aprendizaje_vs_azar": "SÍ" if flags["learned_signal_vs_random_all_cells"] else "NO",
-                "ganó_a_RecurrentPPO": "SÍ" if flags["beat_recurrent_ppo_all_cells"] else "NO",
-                "ganó_al_estructurado": "SÍ" if flags["beat_structured_plus_0p01_all_cells"] else "NO",
-                "objetivo_fuerte_completo": "SÍ" if flags["strong_goal_all_cells"] else "NO",
+                "ganó_observado_a_RecurrentPPO": "SÍ" if flags["beat_recurrent_ppo_all_cells"] else "NO",
+                "ganó_observado_al_estructurado": "SÍ" if flags["beat_structured_plus_0p01_all_cells"] else "NO",
+                "objetivo_observado_trayectoria_única": "SÍ" if flags["observed_goal_all_cells_single_trajectory"] else "NO",
+                "objetivo_científico_replicado": "SÍ" if flags["strong_goal_all_cells"] else "NO",
             })
         operator_df = pd.DataFrame(operator_rows)
 
@@ -652,8 +708,9 @@ cells = [
             "=" * 72,
             f"Resultado global: {RUN_OUTCOME}",
             f"Perfil ejecutado: {RUN_PROFILE}",
-            f"Modelos entrenados: {len(MODEL_KINDS)} tipos x {len(OPTIMIZER_SEEDS)} seeds = {len(training_rows)} trabajos",
-            f"Pasos por trabajo: {TOTAL_TIMESTEPS:,}",
+            f"Modelos entrenados: {len(MODEL_KINDS)} tipos, una inicialización cada uno",
+            f"Continuidad: {TRAINING_CONTINUITY}; fases retenidas: {PHASE_IDS}",
+            f"Pasos por fase: {TIMESTEPS_PER_PHASE:,}; acumulados por modelo: {TOTAL_RETAINED_TIMESTEPS:,}",
             f"Tiempo total de entrenamiento: {total_training_minutes:.2f} minutos",
             f"Mejor media observada: {best_observed_label}",
             f"Controlador estructurado seleccionado: {BEST_STRUCTURED_ID}",
@@ -667,7 +724,8 @@ cells = [
                 f"    Señal frente a política aleatoria: {'SÍ' if flags['learned_signal_vs_random_all_cells'] else 'NO'}",
                 f"    Superó RecurrentPPO en todas las celdas: {'SÍ' if flags['beat_recurrent_ppo_all_cells'] else 'NO'}",
                 f"    Superó estructurado +0.01 en todas: {'SÍ' if flags['beat_structured_plus_0p01_all_cells'] else 'NO'}",
-                f"    Cumplió objetivo fuerte completo: {'SÍ' if flags['strong_goal_all_cells'] else 'NO'}",
+                f"    Cumplió objetivo observado en trayectoria única: {'SÍ' if flags['observed_goal_all_cells_single_trajectory'] else 'NO'}",
+                "    Cumplió objetivo científico replicado: NO (solo una inicialización retenida)",
             ])
         interpretation_lines.extend([
             "",
@@ -681,9 +739,9 @@ cells = [
             interpretation_lines.append(
                 "Esta fue una corrida de prueba. Verifica que el código funciona, pero NO permite concluir que aprendió o ganó científicamente."
             )
-        elif RUN_OUTCOME == "C6B_DEVELOPMENT_PASS_TO_PREREGISTRATION":
+        elif RUN_OUTCOME == "OBSERVED_RETAINED_WIN_REQUIRES_INDEPENDENT_REPLICATION":
             interpretation_lines.append(
-                "PASS de desarrollo: existe evidencia para preregistrar una confirmación. Aún requiere validación física de Garrido."
+                "Victoria observada en una trayectoria retenida: es prometedora, pero exige una corrida separada con inicializaciones independientes."
             )
         else:
             interpretation_lines.append(
@@ -697,9 +755,13 @@ cells = [
         EXECUTIVE_TEXT = "\n".join(interpretation_lines) + "\n"
         print("\n" + EXECUTIVE_TEXT)
 
-        report = {"status": "C6B_DEVELOPMENT_ONLY_NOT_PROMOTABLE", "profile": RUN_PROFILE,
-                  "models": MODEL_KINDS, "timesteps_per_seed": TOTAL_TIMESTEPS,
-                  "optimizer_seeds": OPTIMIZER_SEEDS, "frame_stack": FRAME_STACK,
+        report = {"status": "C6B_RETAINED_TRAJECTORY_DEVELOPMENT_ONLY", "profile": RUN_PROFILE,
+                  "models": MODEL_KINDS, "training_continuity": TRAINING_CONTINUITY,
+                  "model_initialization_seed": MODEL_INITIALIZATION_SEED,
+                  "independent_initializations": INDEPENDENT_INITIALIZATIONS,
+                  "phase_ids": PHASE_IDS, "timesteps_per_phase": TIMESTEPS_PER_PHASE,
+                  "total_retained_timesteps_per_model": TOTAL_RETAINED_TIMESTEPS,
+                  "frame_stack": FRAME_STACK,
                   "best_structured": BEST_STRUCTURED_ID, "architecture": architecture_reports,
                   "training": training_rows, "verdict": verdict_rows,
                   "memory_ablation": memory_rows, "final_verdict": final_verdict,
@@ -744,7 +806,7 @@ cells = [
             f'<p><b>Mejor media observada:</b> {html.escape(best_observed_label)}</p>'
             '<h2>¿Quién aprendió y quién ganó?</h2>' + operator_df.to_html(index=False) +
             '<h2>¿Sirvió la memoria?</h2>' + memory_df.to_html(index=False, float_format=lambda x: f"{x:.4f}") +
-            '<p style="font-weight:700">Un smoke no permite conclusión científica. Un PASS serious solo autoriza preregistrar y requiere validación Garrido.</p></div>'
+            '<p style="font-weight:700">Una trayectoria retenida puede mostrar una victoria observada, pero no sustituye réplicas con inicializaciones independientes ni la validación Garrido.</p></div>'
         )
         (AUDIT_DIR / "REPORTE_VISUAL_PARA_PANTALLAZO.html").write_text(
             "<!doctype html><meta charset='utf-8'><title>Resultado C6-B</title>" + screenshot_html
@@ -804,6 +866,8 @@ cells = [
 
         ### ⛔ NO CAMBIES
 
+        - `TRAINING_CONTINUITY="retained_across_phases"`: es la solicitud de David y conserva el modelo.
+        - No llames `build_agent` dentro del loop de fases; eso volvería a reiniciar los pesos.
         - La física C6-B, el momento de decisión, reward, observación, máscaras o tapes.
         - Los namespaces `972*`, `982*`, `983*` ni ninguna seed científica/reservada.
         - El controlador estructurado después de ver evaluación: se selecciona únicamente en tapes separadas.
