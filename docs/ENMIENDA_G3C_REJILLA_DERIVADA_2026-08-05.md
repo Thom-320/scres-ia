@@ -41,22 +41,24 @@ La condición (b) es la que no existía, y es la que descarta 4 y 5.
 ## 3. La rejilla nueva
 
 ```text
-cssu_min_dwell_days ∈ {1, 7, 14}
+cssu_min_dwell_days ∈ {1, 6, 12}
 1  = nulo de regresión legacy  (0 retenciones, verificado)
-7  = tratamiento débil          (13,7 % de supresión)
-14 = tratamiento fuerte         (45,1 % de supresión)
+6  = tratamiento débil          (10,6 % de supresión) = el umbral material MEDIDO
+12 = tratamiento fuerte         (36,9 % de supresión) = su doble
 ```
 
-**Por qué 7 y no 6**, que es el umbral material medido: 6 apenas cruza el criterio (10,6 %), y **7
-ya se corrió** en el preflight detenido, de modo que la celda es directamente comparable con lo ya
-medido en vez de empezar de cero. 14 dobla 7 y triplica la separación. Es una decisión nuestra, y
-queda declarada como tal.
+**La rejilla es exactamente la que sale del criterio**, sin capa de juicio encima. Se consideró
+`{1, 7, 14}` porque 7 ya se había corrido en el preflight detenido y la celda sería directamente
+comparable, pero eso es una razón de conveniencia y no de mecanismo: **6 es el primer nivel que
+cumple el criterio declarado**, y elegir 7 «porque ya lo teníamos» es dejar que un artefacto
+previo escoja el diseño. La rejilla congelada en `contracts/g3c_burned_preflight_v2.json` es
+`{1, 6, 12}`.
 
 ## 4. Lo que esta enmienda NO cambia
 
 Primario `worst_claimant_fill`, SESOI `+0,010`, márgenes firmados, unidad de resampling = la
-semilla, corrección simultánea Bonferroni sobre las **6** celdas (siguen siendo 3 niveles × 2
-regímenes), presupuesto **96** semillas frescas y la regla `STOP_G3C_UNDERPOWERED`. **Ninguna
+semilla, corrección simultánea Bonferroni sobre los **4 contrastes** (2 niveles de tratamiento × 2
+regímenes; el nulo no es un contraste consigo mismo), presupuesto **96** semillas frescas y la regla `STOP_G3C_UNDERPOWERED`. **Ninguna
 semilla nueva**, ningún learner, ninguna adjudicación.
 
 ## 5. Runner canónico
