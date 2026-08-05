@@ -27,15 +27,38 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from supply_chain.arm_runner import seal_and_write  # noqa: E402
 from supply_chain.seed_custody import custody_falsifier, module_manifest  # noqa: E402
+from scripts.seal_garrido_surface_cache_v1 import verify_sealed_slice  # noqa: E402
 
-FACTORS = {
-    "buffer_hours": (0.0, 168.0, 336.0, 504.0, 672.0, 1344.0),
-    "shifts": (1, 2, 3),
-    "op9_rop": (12.0, 24.0, 36.0, 48.0),
-    "op12_rop": (12.0, 24.0, 36.0, 48.0),
+#: Both grids this project has built. The extended one is the same design with the two upstream
+#: buffers exposed as factors, so its `op3_rm = op5_rm = 0` subgrid IS the 288 grid.
+RAW_LEVELS = (0.0, 17_500.0, 70_000.0, 140_000.0)
+GRIDS = {
+    "wrap288_v1": {
+        "buffer_hours": (0.0, 168.0, 336.0, 504.0, 672.0, 1344.0),
+        "shifts": (1, 2, 3),
+        "op9_rop": (12.0, 24.0, 36.0, 48.0),
+        "op12_rop": (12.0, 24.0, 36.0, 48.0),
+    },
 }
-FACTOR_NAMES = tuple(FACTORS)
-CONFIGS = tuple(dict(zip(FACTOR_NAMES, combo)) for combo in itertools.product(*FACTORS.values()))
+GRIDS["wrap288_compat_extended_v1"] = dict(
+    GRIDS["wrap288_v1"], op3_rm=RAW_LEVELS, op5_rm=RAW_LEVELS)
+
+#: Module-level names, rebound by `use_grid()` before anything reads them. They stay module-level
+#: because the design matrix and H_regime are pure functions of the grid, not of a run.
+FACTORS: dict = GRIDS["wrap288_v1"]
+FACTOR_NAMES: tuple = tuple(FACTORS)
+CONFIGS: tuple = tuple(dict(zip(FACTOR_NAMES, combo))
+                       for combo in itertools.product(*FACTORS.values()))
+
+
+def use_grid(grid_id: str) -> None:
+    global FACTORS, FACTOR_NAMES, CONFIGS
+    if grid_id not in GRIDS:
+        raise SystemExit(f"unknown grid {grid_id!r}; known: {sorted(GRIDS)}")
+    FACTORS = GRIDS[grid_id]
+    FACTOR_NAMES = tuple(FACTORS)
+    CONFIGS = tuple(dict(zip(FACTOR_NAMES, combo))
+                    for combo in itertools.product(*FACTORS.values()))
 GATE_THRESHOLD = 0.05
 N_BOOT = 5_000
 MODULES = ("supply_chain/arm_runner.py", "supply_chain/seed_custody.py")
@@ -46,6 +69,9 @@ def load_cache(root: Path) -> tuple[dict, list[str], list[int]]:
     surface, contexts, seeds = {}, [], set()
     for path in sorted(root.rglob("*.json")):
         payload = json.loads(path.read_text())
+        # The gates are only meaningful on the complete, sealed panel cache.  A scalar-only
+        # cache or a silently edited slice must fail closed before any statistic is computed.
+        verify_sealed_slice(payload)
         ctx, seed = payload["context"], int(payload["seed"])
         values = np.array([c["value"] for c in payload["cells"]], dtype=float)
         if values.size != len(CONFIGS):
@@ -126,14 +152,22 @@ def boot_lcb(values: np.ndarray, rng, n_boot: int = N_BOOT) -> dict:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--cache", type=Path, default=Path("results/surface_cache/wrap288_v1"))
+    ap.add_argument("--grid", default=None,
+                    help="grid id; defaults to the cache directory name")
     ap.add_argument("--contract", type=Path, required=True)
     ap.add_argument("--replay-of", required=True)
+    ap.add_argument("--reference", type=Path,
+                    default=Path("results/garrido_normaliser_audit/result.json"),
+                    help="sealed audit artifact used as the provenance reference")
+    ap.add_argument("--n-boot", type=int, default=N_BOOT,
+                    help="bootstrap repetitions for both g2 and g1")
     ap.add_argument("--output", type=Path,
                     default=Path("results/surface_gates/result.json"))
     args = ap.parse_args()
     started = time.perf_counter()
     rng = np.random.default_rng(20260805)
 
+    use_grid(args.grid or args.cache.name)
     surface, contexts, seeds = load_cache(args.cache)
     print(f"  caché: {len(contexts)} contextos x {len(seeds)} semillas x {len(CONFIGS)} configs")
 
@@ -141,16 +175,16 @@ def main() -> int:
     g2 = {}
     for ctx in contexts:
         deltas = leave_one_seed_out_delta(surface, ctx, seeds)
-        g2[ctx] = boot_lcb(deltas, rng)
+        g2[ctx] = boot_lcb(deltas, rng, n_boot=args.n_boot)
     g2_pass = any(v["lcb95"] >= GATE_THRESHOLD for v in g2.values())
 
     # ---- g1: H_regime, bootstrapped over seeds ----------------------------------------------
     point = h_regime(surface, contexts, seeds)
     draws = np.array([h_regime(surface, contexts,
                                [seeds[i] for i in rng.integers(0, len(seeds), len(seeds))])
-                      for _ in range(1_000)])
+                               for _ in range(args.n_boot)])
     g1 = {"H_regime": point, "lcb95": float(np.percentile(draws, 2.5)),
-          "ucb95": float(np.percentile(draws, 97.5)), "n_boot": 1_000,
+          "ucb95": float(np.percentile(draws, 97.5)), "n_boot": args.n_boot,
           "normalisation": "per-context min-max of the seed-averaged surface"}
     g1_pass = g1["lcb95"] >= GATE_THRESHOLD
 
@@ -206,20 +240,22 @@ def main() -> int:
         print(f"    {name:<46} {label}")
 
     payload = {
-        "schema_version": "surface_gates_v1",
+        "schema_version": "surface_gates_v2",
         "claim_status": verdict,
         "scope": "DEVELOPMENT_ON_BURNED_TAPES_NO_ADJUDICATION_NO_LEARNER",
         "run_role": "CACHE_ANALYSIS", "replay_of": args.replay_of,
         "module_manifest": module_manifest(MODULES, script=__file__),
-        "cache": str(args.cache), "contexts": contexts, "seeds": seeds,
+        "cache": str(args.cache), "grid_id": args.grid or args.cache.name,
+        "contexts": contexts, "seeds": seeds,
         "n_configurations": len(CONFIGS), "threshold": GATE_THRESHOLD,
+        "bootstrap_repetitions": args.n_boot,
         "g2_separability": g2, "g1_h_regime": g1,
         "argmax_by_context": argmax, "best_common_config": common_config,
         "falsifiers": falsifiers,
         "elapsed_seconds": time.perf_counter() - started,
     }
     digest = seal_and_write(payload, args.output, contract=args.contract,
-                            reference=Path("results/garrido_normaliser_audit/result.json"))
+                            reference=args.reference)
     print(f"\n  -> {args.output} (sello {digest[:16]}…)")
     return 0 if falsifiers["all_passed"] else 1
 
