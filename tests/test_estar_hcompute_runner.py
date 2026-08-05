@@ -14,7 +14,9 @@ TAPE = ROOT / (
 RUNNER = ROOT / "scripts/run_estar_hcompute_preflight.py"
 
 
-def test_burned_preflight_is_fail_closed_until_expanded_bridge(tmp_path: Path) -> None:
+def test_burned_preflight_uses_expanded_bridge_and_stays_non_scientific(
+    tmp_path: Path,
+) -> None:
     output = tmp_path / "preflight.json"
     completed = subprocess.run(
         [
@@ -38,8 +40,8 @@ def test_burned_preflight_is_fail_closed_until_expanded_bridge(tmp_path: Path) -
     )
     assert completed.returncode == 0
     payload = json.loads(output.read_text(encoding="utf-8"))
-    assert payload["claim_status"] == "STOP_ESTAR_DES_BRIDGE_NOT_READY"
-    assert payload["expanded_des_bridge_ready"] is False
+    assert payload["claim_status"] == "H_COMPUTE_PASS_NEURAL_AMORTIZATION_ELIGIBLE"
+    assert payload["expanded_des_bridge_ready"] is True
     assert payload["fresh_seeds_opened"] is False
     assert payload["learner_trained"] is False
     assert payload["command_argv"]
@@ -54,3 +56,6 @@ def test_burned_preflight_is_fail_closed_until_expanded_bridge(tmp_path: Path) -
         for name, row in payload["falsifiers"].items()
         if name != "all_passed"
     )
+    assert payload["h_compute_adjudicated"] is True
+    assert payload["h_compute_adjudication"]["calls_gate"] is True
+    assert payload["h_compute_adjudication"]["calls_two_consecutive_increases"] is True

@@ -18,7 +18,9 @@ DESIGN_ONLY = "DESIGN_ONLY_NOT_AUTHORIZED_UNTIL_SUBMISSION_A_RECEIPT"
 REQUIRED_TERMINALS = {
     "STOP_ESTAR_FLAGS_OFF_NON_EQUIVALENT",
     "STOP_ESTAR_DES_BRIDGE_NOT_READY",
+    "STOP_ESTAR_FALSIFIER_FAILED",
     "STOP_ESTAR_PLANNER_NOT_BINDING",
+    "H_COMPUTE_PASS_NEURAL_AMORTIZATION_ELIGIBLE",
     "NEURAL_AMORTIZATION_PREMIUM",
 }
 
@@ -60,10 +62,21 @@ def validate_contract(contract: dict[str, Any], registry: dict[str, Any]) -> dic
     ) != 64:
         errors.append("flags-off bridge golden digest is missing or malformed")
     expanded_bridge = contract.get("expanded_des_bridge", {})
-    if expanded_bridge.get("status") != "PENDING_SOURCE_CONSERVING_ADAPTER":
-        errors.append("expanded DES bridge must remain pending before implementation")
+    if expanded_bridge.get("status") not in {
+        "PENDING_SOURCE_CONSERVING_ADAPTER",
+        "PASS_BURNED_SOURCE_CONSERVING_SMOKE",
+    }:
+        errors.append("expanded DES bridge has an unknown status")
     if expanded_bridge.get("required_before_h_compute_adjudication") is not True:
         errors.append("expanded DES bridge must gate H_compute adjudication")
+    if expanded_bridge.get("status") == "PASS_BURNED_SOURCE_CONSERVING_SMOKE":
+        smoke_digest = expanded_bridge.get("smoke_payload_sha256")
+        if not isinstance(smoke_digest, str) or len(smoke_digest) != 64:
+            errors.append("expanded bridge smoke digest is missing or malformed")
+        if not expanded_bridge.get("smoke_fixture"):
+            errors.append("expanded bridge smoke fixture is missing")
+        if "burned" not in str(expanded_bridge.get("smoke_scope", "")):
+            errors.append("expanded bridge smoke scope must be burned-only")
     masks = contract.get("factorial_masks", [])
     ids = [row.get("mask_id") for row in masks if isinstance(row, dict)]
     if ids != list(MASKS):
@@ -79,6 +92,17 @@ def validate_contract(contract: dict[str, Any], registry: dict[str, Any]) -> dic
         errors.append("native cadence budget must remain 0.10")
     if float(h_compute.get("relative_call_budget_vs_m000", 0.0)) != 10.0:
         errors.append("relative call budget must remain 10.0")
+    subsets = h_compute.get("approved_supplier_subsets", [])
+    if not subsets or not any(row.get("id") == "P_ALL" for row in subsets):
+        errors.append("approved supplier subsets are incomplete")
+    dispatch_subsets = h_compute.get("approved_dispatch_subsets", [])
+    if not dispatch_subsets or not any(
+        row.get("id") == "D_AB" for row in dispatch_subsets
+    ):
+        errors.append("approved dispatch subsets are incomplete")
+    active_set_protocol = h_compute.get("active_set_protocol", {})
+    if active_set_protocol.get("selection_before_outcomes") is not True:
+        errors.append("active-set selection must be frozen before outcomes")
     metrics = contract.get("metric_hierarchy", {})
     if metrics.get("recommended_primary_endpoint") != "ret_excel_request_snapshot_v2":
         errors.append("recommended primary endpoint must remain Excel/ReT")

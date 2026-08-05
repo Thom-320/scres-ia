@@ -72,11 +72,22 @@
     "bridge_scope": "M000 flags-off fixture only; this does not validate expanded P/U/D physics"
   },
   "expanded_des_bridge": {
-    "status": "PENDING_SOURCE_CONSERVING_ADAPTER",
+    "status": "PASS_BURNED_SOURCE_CONSERVING_SMOKE",
     "required_before_h_compute_adjudication": true,
     "historical_des": "supply_chain.supply_chain.MFSCSimulation",
     "required_rights": ["procurement_qty", "buffer_targets", "dispatch_qty"],
-    "failure_state": "STOP_ESTAR_DES_BRIDGE_NOT_READY"
+    "failure_state": "STOP_ESTAR_DES_BRIDGE_NOT_READY",
+    "smoke_fixture": "results/estar_expanded_bridge_smoke_v1/result.json",
+    "smoke_payload_sha256": "feaef05c0f31e9f82091d063b004b45823694341b7dc6225d4f4341ff37fc206",
+    "smoke_scope": "burned engineering bridge receipt; not a scientific confirmation",
+    "source_conserving_invariants": [
+      "raw_material_conservation",
+      "ration_conservation",
+      "no_strategic_injection",
+      "explicit_procurement_lead_time",
+      "explicit_dispatch_lead_time",
+      "full_buffer_blocks_without_spill"
+    ]
   },
   "h_compute": {
     "status": "ENGINEERING_PREFLIGHT_ONLY",
@@ -90,6 +101,25 @@
       {"id": "S3_PU", "mask_id": "M110", "active_supplier_lanes": 1, "active_dispatch_lanes": 0},
       {"id": "S4_FULL", "mask_id": "M111", "active_supplier_lanes": 3, "active_dispatch_lanes": 2}
     ],
+    "approved_supplier_subsets": [
+      {"id": "P0", "lanes": []},
+      {"id": "P_WDC", "lanes": ["supplier_wdc"]},
+      {"id": "P_AL", "lanes": ["supplier_al"]},
+      {"id": "P_SB", "lanes": ["supplier_sb"]},
+      {"id": "P_ALL", "lanes": ["supplier_wdc", "supplier_al", "supplier_sb"]}
+    ],
+    "approved_dispatch_subsets": [
+      {"id": "D0", "lanes": []},
+      {"id": "D_A", "lanes": ["sb_to_cssu_a"]},
+      {"id": "D_B", "lanes": ["sb_to_cssu_b"]},
+      {"id": "D_AB", "lanes": ["sb_to_cssu_a", "sb_to_cssu_b"]}
+    ],
+    "active_set_protocol": {
+      "fixed_unseen_subsets": ["P_AL", "P_SB", "D_B"],
+      "permutations": ["identity", "reverse_supplier_labels", "reverse_dispatch_labels"],
+      "selection_before_outcomes": true,
+      "variable_size_claim_requires_frozen_subset_split": true
+    },
     "timing_repetitions": 30,
     "warmup_repetitions": 5,
     "horizon_hours": 8736.0,
@@ -183,7 +213,9 @@
   "terminal_states": [
     "STOP_ESTAR_FLAGS_OFF_NON_EQUIVALENT",
     "STOP_ESTAR_DES_BRIDGE_NOT_READY",
+    "STOP_ESTAR_FALSIFIER_FAILED",
     "STOP_ESTAR_PLANNER_NOT_BINDING",
+    "H_COMPUTE_PASS_NEURAL_AMORTIZATION_ELIGIBLE",
     "STOP_NO_PHYSICAL_HEADROOM",
     "STOP_HEADROOM_NOT_OBSERVABLE",
     "STOP_STRUCTURED_CONTROL_SUFFICES",
