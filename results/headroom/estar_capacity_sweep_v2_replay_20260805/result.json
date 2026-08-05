@@ -1,0 +1,658 @@
+{
+ "budgets": [
+  600.0,
+  1200.0
+ ],
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "module_manifest": {
+   "entry_script": "scripts/run_estar_capacity_sweep_v1.py",
+   "entry_script_sha256": "6d0dd8052ba23e6180b71a79932a0c872464b87a49cc858d53ab76e2b94e80ce",
+   "missing": [],
+   "modules": {
+    "supply_chain/arm_runner.py": "35135c537d9260832677ab6b4e344229d6b9f4810df8bdef9efd51b58fcac68a",
+    "supply_chain/config.py": "ae702a4991966504eaa1036106fa5f4b9c11e913d376dfb67e3f3c83147904cc",
+    "supply_chain/cssu_allocation.py": "cb9569a87b65e77055944f1003ad8b860ad0606f2f4ab1e34628ff5f05fa2918",
+    "supply_chain/episode_metrics.py": "e09199d48a747f67aef600e9482b812fc1be16e337167d7dfc7215bcb57fb55e",
+    "supply_chain/node_capacity.py": "08017a14f04951dd66c4b149dd3c289f635f9fd73f5fe9231f8be59c4a969310",
+    "supply_chain/seed_custody.py": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd",
+    "supply_chain/service_first_metric.py": "1d9220ce5c292f800f942549b8512e24d591f1f7c8a96ae942cdc01ea016cc7c",
+    "supply_chain/supply_chain.py": "2f348e5922cbbecf167b45cf0045765010beaaecdcb0fe6de88f259c989460f6"
+   },
+   "schema": "module_manifest_v2",
+   "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+  },
+  "procurement_delay_accumulation": "serial",
+  "replay_of": "contention_headroom",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "run_role": "REPLAY",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "HALTED_FALSIFIER_FAILED",
+ "contract_path": "docs/ENMIENDA_ESTAR_CAPACIDAD_BARRIDO_V2_REPLAY_2026-08-05.md",
+ "contract_sha256": "05ce14200a0c786bab2321f5b205f4aba24adc4fee84a30927a58b19fc84961b",
+ "created_at": "2026-08-05T17:05:45.068002+00:00",
+ "elapsed_seconds": 31.126132249999955,
+ "falsifiers": {
+  "all_passed": false,
+  "f1_capacity_actually_binds": {
+   "evidence": {
+    "binding_fraction": {
+     "budget=1200": {
+      "budget=1200|R1r+R2r|base": 0.5841672158643493,
+      "budget=1200|R1r+R2r|freq3_imp2": 0.593513120046719
+     },
+     "budget=600": {
+      "budget=600|R1r+R2r|base": 0.7658634112729773,
+      "budget=600|R1r+R2r|freq3_imp2": 0.7696152543101069
+     }
+    },
+    "binding_fraction_by_share": {
+     "budget=1200": {
+      "budget=1200|R1r+R2r|base": {
+       "0.1": 0.7708615413444567,
+       "0.2": 0.6307095419539314,
+       "0.3": 0.5249885536896193,
+       "0.4": 0.4526859219480994,
+       "0.5": 0.5000656268717825,
+       "0.6": 0.4558288636960798,
+       "0.7": 0.5235918606788222,
+       "0.8": 0.6291520673616181,
+       "0.9": 0.7696209652347344
+      },
+      "budget=1200|R1r+R2r|freq3_imp2": {
+       "0.1": 0.7725321193073355,
+       "0.2": 0.6367866903539202,
+       "0.3": 0.536677968564794,
+       "0.4": 0.46966545063197546,
+       "0.5": 0.510332675142489,
+       "0.6": 0.4695684218211537,
+       "0.7": 0.5359726773409386,
+       "0.8": 0.6371865540013376,
+       "0.9": 0.7728955232565262
+      }
+     },
+     "budget=600": {
+      "budget=600|R1r+R2r|base": {
+       "0.1": 0.8827998639125161,
+       "0.2": 0.7884100697328273,
+       "0.3": 0.7252509801547378,
+       "0.4": 0.702666748341453,
+       "0.5": 0.6984997938809334,
+       "0.6": 0.7021499548956192,
+       "0.7": 0.7244438764322976,
+       "0.8": 0.7880350415197611,
+       "0.9": 0.8805143725866503
+      },
+      "budget=600|R1r+R2r|freq3_imp2": {
+       "0.1": 0.8834530024493015,
+       "0.2": 0.7911251171773395,
+       "0.3": 0.7303331317285879,
+       "0.4": 0.7077275282095787,
+       "0.5": 0.7039996087397056,
+       "0.6": 0.7077057962278048,
+       "0.7": 0.7298728881329208,
+       "0.8": 0.7913705303439389,
+       "0.9": 0.8809496857817847
+      }
+     }
+    },
+    "why_it_can_fail": "a cap that never fills makes everything downstream vacuous; the probe showed 3000 binds nothing at all"
+   },
+   "passed": true
+  },
+  "f2_mass_and_demand_are_untouched": {
+   "evidence": {
+    "baseline": "same seed and regime with cssu_storage_capacity=None",
+    "checks": 576,
+    "examples": [],
+    "mass": {
+     "budget=1200": {
+      "budget=1200|R1r+R2r|base": {
+       "admitted": 297883.06944444444,
+       "blocked": 237667.08767361112,
+       "budget_error_max": 0.0,
+       "delivered": 292931.2361111111,
+       "demanded": 403814.0625
+      },
+      "budget=1200|R1r+R2r|freq3_imp2": {
+       "admitted": 294210.0052083333,
+       "blocked": 243065.58940972222,
+       "budget_error_max": 0.0,
+       "delivered": 289414.0677083333,
+       "demanded": 403516.6875
+      }
+     },
+     "budget=600": {
+      "budget=600|R1r+R2r|base": {
+       "admitted": 297899.5954861111,
+       "blocked": 606273.7684461805,
+       "budget_error_max": 0.0,
+       "delivered": 292948.94444444444,
+       "demanded": 403814.0625
+      },
+      "budget=600|R1r+R2r|freq3_imp2": {
+       "admitted": 294242.2204861111,
+       "blocked": 605395.4279513889,
+       "budget_error_max": 0.0,
+       "delivered": 289447.4670138889,
+       "demanded": 403516.6875
+      }
+     }
+    },
+    "max_claimant_abs_delta": 0.0,
+    "max_total_abs_delta": 0.0,
+    "mismatches": 0,
+    "passed": true,
+    "tolerance": 1e-09,
+    "why_it_can_fail": "a capacity that reduced DEMAND would be deleting the problem instead of constraining the solution; every capped arm is compared with its OWN no-capacity tape, total and per claimant, so a single drifting cell fails it"
+   },
+   "passed": true
+  },
+  "f3_the_endpoint_responds_to_the_lever": {
+   "evidence": {
+    "spread": {
+     "budget=1200": {
+      "budget=1200|R1r+R2r|base": 0.043062771440739556,
+      "budget=1200|R1r+R2r|freq3_imp2": 0.03986565571859446
+     },
+     "budget=600": {
+      "budget=600|R1r+R2r|base": 0.1037423719444901,
+      "budget=600|R1r+R2r|freq3_imp2": 0.09656521167038179
+     }
+    },
+    "why_it_can_fail": "worst_claimant_fill is MEASURED blind to this mechanism (0.6791 at every budget); if flow_fill_rate is blind too, the sweep measures nothing"
+   },
+   "passed": true
+  },
+  "f4_argmax_moves_with_regime": {
+   "evidence": {
+    "argmax": {
+     "budget=1200": {
+      "budget=1200|R1r+R2r|base": 0.6,
+      "budget=1200|R1r+R2r|freq3_imp2": 0.6
+     },
+     "budget=600": {
+      "budget=600|R1r+R2r|base": 0.6,
+      "budget=600|R1r+R2r|freq3_imp2": 0.5
+     }
+    },
+    "why_it_can_fail": "a fixed optimum means constraint without decision"
+   },
+   "passed": true,
+   "terminal_diagnostic": true
+  },
+  "f5_no_fresh_seeds": {
+   "evidence": {
+    "n_sealed_artifact_overlap": 16,
+    "n_seeds": 16,
+    "note": "deliberate re-execution of registry block 'contention_headroom'; these seeds are NOT virgin and are not meant to be",
+    "registry_conflicts": [
+     {
+      "id": "contention_headroom",
+      "n_overlapping": 16,
+      "range": [
+       5200001,
+       5200016
+      ],
+      "source": "results/sensitivity/contention_headroom_v1/result.json",
+      "status": "USED_DEVELOPMENT_NOT_VIRGIN"
+     }
+    ],
+    "registry_is_complete": false,
+    "registry_status": "BASELINE_INVENTORY_INCOMPLETE_NO_NEW_SEEDS_AUTHORIZED",
+    "replay_of": "contention_headroom",
+    "sealed_artifact_overlap": [
+     5200001,
+     5200002,
+     5200003,
+     5200004,
+     5200005,
+     5200006,
+     5200007,
+     5200008,
+     5200009,
+     5200010,
+     5200011,
+     5200012,
+     5200013,
+     5200014,
+     5200015,
+     5200016
+    ],
+    "seeds": [
+     5200001,
+     5200002,
+     5200003,
+     5200004,
+     5200005,
+     5200006,
+     5200007,
+     5200008,
+     5200009,
+     5200010,
+     5200011,
+     5200012,
+     5200013,
+     5200014,
+     5200015,
+     5200016
+    ],
+    "status": "DECLARED_REPLAY",
+    "why_it_can_fail": "it cannot: this is a declared custody replay of registry block 'contention_headroom', so the seeds are used on purpose. Counted in neither column."
+   },
+   "not_applicable": true,
+   "passed": null
+  },
+  "f6_no_gain_by_abandonment": {
+   "evidence": {
+    "by_cell": {
+     "budget=1200|R1r+R2r|base": {
+      "metrics": {
+       "lost_orders": {
+        "delta": 0.5,
+        "lcb95": 0.0,
+        "mean": 0.0,
+        "n": 16,
+        "n_boot": 5000,
+        "passes": true,
+        "ucb95": 0.0
+       },
+       "worst_claimant_fill": {
+        "delta": 0.01,
+        "lcb95": -0.0013383103494942412,
+        "mean": 0.0005660981958953565,
+        "n": 16,
+        "n_boot": 5000,
+        "passes": true,
+        "ucb95": 0.0025793676646631934
+       }
+      },
+      "passed": true,
+      "reference": "same-tape no-capacity arm",
+      "selected_share": 0.6
+     },
+     "budget=1200|R1r+R2r|freq3_imp2": {
+      "metrics": {
+       "lost_orders": {
+        "delta": 0.5,
+        "lcb95": 0.0,
+        "mean": 0.375,
+        "n": 16,
+        "n_boot": 5000,
+        "passes": false,
+        "ucb95": 1.125
+       },
+       "worst_claimant_fill": {
+        "delta": 0.01,
+        "lcb95": -0.008054536613789512,
+        "mean": 0.007677623560385757,
+        "n": 16,
+        "n_boot": 5000,
+        "passes": false,
+        "ucb95": 0.030549078724299124
+       }
+      },
+      "passed": false,
+      "reference": "same-tape no-capacity arm",
+      "selected_share": 0.6
+     },
+     "budget=600|R1r+R2r|base": {
+      "metrics": {
+       "lost_orders": {
+        "delta": 0.5,
+        "lcb95": 0.0,
+        "mean": 0.0,
+        "n": 16,
+        "n_boot": 5000,
+        "passes": true,
+        "ucb95": 0.0
+       },
+       "worst_claimant_fill": {
+        "delta": 0.01,
+        "lcb95": -0.0012775847894874672,
+        "mean": 0.0005660981958953565,
+        "n": 16,
+        "n_boot": 5000,
+        "passes": true,
+        "ucb95": 0.0026366994185400144
+       }
+      },
+      "passed": true,
+      "reference": "same-tape no-capacity arm",
+      "selected_share": 0.6
+     },
+     "budget=600|R1r+R2r|freq3_imp2": {
+      "metrics": {
+       "lost_orders": {
+        "delta": 0.5,
+        "lcb95": 0.0,
+        "mean": 0.5,
+        "n": 16,
+        "n_boot": 5000,
+        "passes": false,
+        "ucb95": 1.5
+       },
+       "worst_claimant_fill": {
+        "delta": 0.01,
+        "lcb95": -0.007871550527109186,
+        "mean": 0.007677623560385757,
+        "n": 16,
+        "n_boot": 5000,
+        "passes": false,
+        "ucb95": 0.029999941055769933
+       }
+      },
+      "passed": false,
+      "reference": "same-tape no-capacity arm",
+      "selected_share": 0.5
+     }
+    },
+    "guardrails": {
+     "budget=1200": {
+      "lost_orders": {
+       "budget=1200|R1r+R2r|base": 0.0,
+       "budget=1200|R1r+R2r|freq3_imp2": 0.4375
+      },
+      "worst_claimant_fill": {
+       "budget=1200|R1r+R2r|base": 0.6948183408889808,
+       "budget=1200|R1r+R2r|freq3_imp2": 0.6653097647259195
+      }
+     },
+     "budget=600": {
+      "lost_orders": {
+       "budget=600|R1r+R2r|base": 0.041666666666666664,
+       "budget=600|R1r+R2r|freq3_imp2": 0.8263888888888888
+      },
+      "worst_claimant_fill": {
+       "budget=600|R1r+R2r|base": 0.6953761425057725,
+       "budget=600|R1r+R2r|freq3_imp2": 0.6659874409730604
+      }
+     }
+    },
+    "margins": {
+     "flow_fill_rate": 0.005,
+     "lost_orders": 0.5,
+     "worst_claimant_fill": 0.01
+    },
+    "passed": false,
+    "why_it_can_fail": "a primary gain bought with lost orders is the measured failure mode of ret_excel in a new coordinate; harm at the SELECTED share is bootstrapped against the same-tape no-capacity arm and must satisfy UCB95(harm) <= delta"
+   },
+   "passed": false
+  },
+  "not_applicable": [
+   "f5_no_fresh_seeds"
+  ]
+ },
+ "margins": {
+  "flow_fill_rate": 0.005,
+  "lost_orders": 0.5,
+  "worst_claimant_fill": 0.01
+ },
+ "module_manifest": {
+  "entry_script": "scripts/run_estar_capacity_sweep_v1.py",
+  "entry_script_sha256": "6d0dd8052ba23e6180b71a79932a0c872464b87a49cc858d53ab76e2b94e80ce",
+  "missing": [],
+  "modules": {
+   "supply_chain/arm_runner.py": "35135c537d9260832677ab6b4e344229d6b9f4810df8bdef9efd51b58fcac68a",
+   "supply_chain/config.py": "ae702a4991966504eaa1036106fa5f4b9c11e913d376dfb67e3f3c83147904cc",
+   "supply_chain/cssu_allocation.py": "cb9569a87b65e77055944f1003ad8b860ad0606f2f4ab1e34628ff5f05fa2918",
+   "supply_chain/episode_metrics.py": "e09199d48a747f67aef600e9482b812fc1be16e337167d7dfc7215bcb57fb55e",
+   "supply_chain/node_capacity.py": "08017a14f04951dd66c4b149dd3c289f635f9fd73f5fe9231f8be59c4a969310",
+   "supply_chain/seed_custody.py": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd",
+   "supply_chain/service_first_metric.py": "1d9220ce5c292f800f942549b8512e24d591f1f7c8a96ae942cdc01ea016cc7c",
+   "supply_chain/supply_chain.py": "2f348e5922cbbecf167b45cf0045765010beaaecdcb0fe6de88f259c989460f6"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "primary_choice_rationale": "worst_claimant_fill did not respond in the burned-tape liveness probe: blocking 1,306,164 rations left it at 0.6791 in that tested horizon. It is a cumulative delivered/demanded ratio, so this is an empirical contract result rather than a universal structural theorem. The endpoint was chosen against the mechanism before the sweep, not against a result.",
+ "primary_metric": "flow_fill_rate",
+ "reference_path": "results/sensitivity/contention_headroom_v1_1/result.json",
+ "reference_sha256": "1b8011dc9f4e27ac93b2a1e04f737a0a8b8b8f45d14de9af9d210c5234001564",
+ "regimes": [
+  "R1r+R2r|base",
+  "R1r+R2r|freq3_imp2"
+ ],
+ "replay_of": "contention_headroom",
+ "results": {
+  "budget=1200": {
+   "argmax_by_regime": {
+    "budget=1200|R1r+R2r|base": 0.6,
+    "budget=1200|R1r+R2r|freq3_imp2": 0.6
+   },
+   "binding_fraction": {
+    "budget=1200|R1r+R2r|base": 0.5841672158643493,
+    "budget=1200|R1r+R2r|freq3_imp2": 0.593513120046719
+   },
+   "binding_fraction_by_share": {
+    "budget=1200|R1r+R2r|base": {
+     "0.1": 0.7708615413444567,
+     "0.2": 0.6307095419539314,
+     "0.3": 0.5249885536896193,
+     "0.4": 0.4526859219480994,
+     "0.5": 0.5000656268717825,
+     "0.6": 0.4558288636960798,
+     "0.7": 0.5235918606788222,
+     "0.8": 0.6291520673616181,
+     "0.9": 0.7696209652347344
+    },
+    "budget=1200|R1r+R2r|freq3_imp2": {
+     "0.1": 0.7725321193073355,
+     "0.2": 0.6367866903539202,
+     "0.3": 0.536677968564794,
+     "0.4": 0.46966545063197546,
+     "0.5": 0.510332675142489,
+     "0.6": 0.4695684218211537,
+     "0.7": 0.5359726773409386,
+     "0.8": 0.6371865540013376,
+     "0.9": 0.7728955232565262
+    }
+   },
+   "guardrails": {
+    "lost_orders": {
+     "budget=1200|R1r+R2r|base": 0.0,
+     "budget=1200|R1r+R2r|freq3_imp2": 0.4375
+    },
+    "worst_claimant_fill": {
+     "budget=1200|R1r+R2r|base": 0.6948183408889808,
+     "budget=1200|R1r+R2r|freq3_imp2": 0.6653097647259195
+    }
+   },
+   "h_regime": {
+    "H_regime": 0.0,
+    "lcb95": 0.0,
+    "ucb95": 0.0010115536609307195
+   },
+   "mass": {
+    "budget=1200|R1r+R2r|base": {
+     "admitted": 297883.06944444444,
+     "blocked": 237667.08767361112,
+     "budget_error_max": 0.0,
+     "delivered": 292931.2361111111,
+     "demanded": 403814.0625
+    },
+    "budget=1200|R1r+R2r|freq3_imp2": {
+     "admitted": 294210.0052083333,
+     "blocked": 243065.58940972222,
+     "budget_error_max": 0.0,
+     "delivered": 289414.0677083333,
+     "demanded": 403516.6875
+    }
+   },
+   "mean_by_share": {
+    "budget=1200|R1r+R2r|base": {
+     "0.1": 0.5883853841850236,
+     "0.2": 0.6195973343742398,
+     "0.3": 0.626595801895697,
+     "0.4": 0.6290376924878576,
+     "0.5": 0.6299623047997551,
+     "0.6": 0.6314481556257632,
+     "0.7": 0.6274745710142793,
+     "0.8": 0.621478770930174,
+     "0.9": 0.5927413934401853
+    },
+    "budget=1200|R1r+R2r|freq3_imp2": {
+     "0.1": 0.5835259758305531,
+     "0.2": 0.6103319651417367,
+     "0.3": 0.6148790937846327,
+     "0.4": 0.6173546989189074,
+     "0.5": 0.6183669758952322,
+     "0.6": 0.618368146492577,
+     "0.7": 0.6123772561481557,
+     "0.8": 0.6073437915470103,
+     "0.9": 0.5785024907739825
+    }
+   },
+   "spread": {
+    "budget=1200|R1r+R2r|base": 0.043062771440739556,
+    "budget=1200|R1r+R2r|freq3_imp2": 0.03986565571859446
+   }
+  },
+  "budget=600": {
+   "argmax_by_regime": {
+    "budget=600|R1r+R2r|base": 0.6,
+    "budget=600|R1r+R2r|freq3_imp2": 0.5
+   },
+   "binding_fraction": {
+    "budget=600|R1r+R2r|base": 0.7658634112729773,
+    "budget=600|R1r+R2r|freq3_imp2": 0.7696152543101069
+   },
+   "binding_fraction_by_share": {
+    "budget=600|R1r+R2r|base": {
+     "0.1": 0.8827998639125161,
+     "0.2": 0.7884100697328273,
+     "0.3": 0.7252509801547378,
+     "0.4": 0.702666748341453,
+     "0.5": 0.6984997938809334,
+     "0.6": 0.7021499548956192,
+     "0.7": 0.7244438764322976,
+     "0.8": 0.7880350415197611,
+     "0.9": 0.8805143725866503
+    },
+    "budget=600|R1r+R2r|freq3_imp2": {
+     "0.1": 0.8834530024493015,
+     "0.2": 0.7911251171773395,
+     "0.3": 0.7303331317285879,
+     "0.4": 0.7077275282095787,
+     "0.5": 0.7039996087397056,
+     "0.6": 0.7077057962278048,
+     "0.7": 0.7298728881329208,
+     "0.8": 0.7913705303439389,
+     "0.9": 0.8809496857817847
+    }
+   },
+   "guardrails": {
+    "lost_orders": {
+     "budget=600|R1r+R2r|base": 0.041666666666666664,
+     "budget=600|R1r+R2r|freq3_imp2": 0.8263888888888888
+    },
+    "worst_claimant_fill": {
+     "budget=600|R1r+R2r|base": 0.6953761425057725,
+     "budget=600|R1r+R2r|freq3_imp2": 0.6659874409730604
+    }
+   },
+   "h_regime": {
+    "H_regime": 0.0002480439221355102,
+    "lcb95": 0.0,
+    "ucb95": 0.0017124767592135623
+   },
+   "mass": {
+    "budget=600|R1r+R2r|base": {
+     "admitted": 297899.5954861111,
+     "blocked": 606273.7684461805,
+     "budget_error_max": 0.0,
+     "delivered": 292948.94444444444,
+     "demanded": 403814.0625
+    },
+    "budget=600|R1r+R2r|freq3_imp2": {
+     "admitted": 294242.2204861111,
+     "blocked": 605395.4279513889,
+     "budget_error_max": 0.0,
+     "delivered": 289447.4670138889,
+     "demanded": 403516.6875
+    }
+   },
+   "mean_by_share": {
+    "budget=600|R1r+R2r|base": {
+     "0.1": 0.5118300041212865,
+     "0.2": 0.5843783332244242,
+     "0.3": 0.6066661852212026,
+     "0.4": 0.6116397572185392,
+     "0.5": 0.6126208860389794,
+     "0.6": 0.6131169738832503,
+     "0.7": 0.6086325649643831,
+     "0.8": 0.5883092310620075,
+     "0.9": 0.5093746019387602
+    },
+    "budget=600|R1r+R2r|freq3_imp2": {
+     "0.1": 0.5131015387006669,
+     "0.2": 0.5785411296983634,
+     "0.3": 0.5959348330896561,
+     "0.4": 0.5998383874280493,
+     "0.5": 0.6023274053673634,
+     "0.6": 0.5983747723120805,
+     "0.7": 0.5953142801451344,
+     "0.8": 0.5730085752741471,
+     "0.9": 0.5057621936969816
+    }
+   },
+   "spread": {
+    "budget=600|R1r+R2r|base": 0.1037423719444901,
+    "budget=600|R1r+R2r|freq3_imp2": 0.09656521167038179
+   }
+  }
+ },
+ "run_role": "REPLAY",
+ "schema_version": "estar_capacity_sweep_v1",
+ "scope": "DEVELOPMENT_SCREEN_ON_BURNED_TAPES_G1_NOT_GRANTED",
+ "scope_caveat": "The helper admits wdc/al/sb, but only CSSU A/B are connected to the DES, so this is a CSSU storage screen and not yet the per-node expansion Garrido asked for. And flow_fill_rate is a censored terminal ratio, not a pure timing metric: it is sensitive to delay only through what is still undelivered at the horizon.",
+ "seeds": [
+  5200001,
+  5200002,
+  5200003,
+  5200004,
+  5200005,
+  5200006,
+  5200007,
+  5200008,
+  5200009,
+  5200010,
+  5200011,
+  5200012,
+  5200013,
+  5200014,
+  5200015,
+  5200016
+ ],
+ "self_sha256": "6e1dcfc8f54716a16054854611dc849c86591dd1d363c96c22453b58cc4df0f7",
+ "sesoi": 0.01,
+ "shares": [
+  0.1,
+  0.2,
+  0.3,
+  0.4,
+  0.5,
+  0.6,
+  0.7,
+  0.8,
+  0.9
+ ],
+ "weeks": 26,
+ "wired_capacity_nodes": [
+  "cssu_a",
+  "cssu_b"
+ ]
+}
