@@ -92,6 +92,7 @@ def main() -> int:
     for block in new_blocks:
         sources = sorted(block["sources"])
         added.append({
+            # start and end adjacent, for the same reason the registry is not key-sorted.
             "id": f"reconciled_{block['start']}",
             "start": int(block["start"]), "end": int(block["end"]),
             "status": "USED_DEVELOPMENT_NOT_VIRGIN",
@@ -136,7 +137,12 @@ def main() -> int:
         registry["blocks"] = registry["blocks"] + added
         registry["reconciled_at"] = receipt["created_at"]
         registry["reconciliation_receipt"] = str(args.receipt)
-        args.registry.write_text(json.dumps(registry, indent=1, sort_keys=True))
+        # NOT sort_keys: the Program Q custody auditor classifies a reserved-range endpoint as a
+        # DECLARATION only when its partner endpoint is within a short window of text. Sorting the
+        # keys puts `end` first and `start` last, separated by the long `purpose` string, so a
+        # declared range starts reading as a consumption. Reformatting a file you are only
+        # appending to is how a cosmetic write becomes a false collision.
+        args.registry.write_text(json.dumps(registry, indent=1))
         print(f"  -> registro actualizado con {len(added)} bloques")
     elif not args.apply:
         print("  (dry run: usa --apply para escribir)")
