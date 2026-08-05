@@ -98,6 +98,10 @@ def main() -> int:
     ap.add_argument("--seeds", type=int, default=12)
     ap.add_argument("--horizon-weeks", type=int, default=52)
     ap.add_argument("--out", type=Path, default=Path("results/surface_cache") / GRID_ID)
+    # One worker per context. Slices are independent and every worker skips what already exists,
+    # so the only cost of overlap is a wasted recompute, never a corrupt slice.
+    ap.add_argument("--context", action="append", default=None,
+                    help="restrict this worker to a context; repeatable")
     args = ap.parse_args()
     horizon = float(args.horizon_weeks * HOURS_PER_WEEK)
     seeds = [SEED_BASE + i for i in range(args.seeds)]
@@ -106,7 +110,11 @@ def main() -> int:
     print(f"  {len(CONFIGS)} configs x {len(CONTEXTS)} contextos x {len(seeds)} semillas "
           f"= {len(CONFIGS) * len(CONTEXTS) * len(seeds):,} episodios")
 
-    for ctx in CONTEXTS:
+    contexts = args.context or list(CONTEXTS)
+    unknown = [c for c in contexts if c not in CONTEXTS]
+    if unknown:
+        raise SystemExit(f"unknown contexts: {unknown}")
+    for ctx in contexts:
         for seed in seeds:
             path = args.out / ctx.replace("+", "_").replace("|", "_") / f"{seed}.json"
             if path.exists():
