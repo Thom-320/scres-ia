@@ -155,7 +155,9 @@ cells = [
         IN_KAGGLE = Path("/kaggle/working").exists()
         GIT_URL = "https://github.com/Thom-320/scres-ia.git"
         GIT_BRANCH = "qr1-c1-natural-continuation"
-        CORE_COMMIT = "49f7802baedb47e0b1d23e23fa317504be059b71"
+        # Fijamos exactamente la revisión pública que contiene este notebook y sus auxiliares.
+        # Así Colab/Kaggle no pueden clonar una versión anterior por accidente.
+        CORE_COMMIT = "58d52089e698621cd167c18127ea32301a0aeffe"
         PACKAGES = [
             "simpy>=4.1", "numpy>=1.26", "gymnasium>=1.3", "stable-baselines3>=2.9",
             "sb3-contrib>=2.9", "torch>=2.1", "einops>=0.8", "pandas>=2.2",
