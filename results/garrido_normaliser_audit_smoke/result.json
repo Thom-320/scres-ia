@@ -1,0 +1,419 @@
+{
+ "budget": 8,
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "HALTED_FALSIFIER_FAILED",
+ "contexts": [
+  "R1r",
+  "R2r",
+  "R1r+R2r",
+  "R1r|esc",
+  "R2r|esc",
+  "R1r+R2r|esc"
+ ],
+ "contract_path": "docs/PREREGISTRO_AUDITORIA_NORMALIZADOR_2026-08-05.md",
+ "contract_sha256": "64f69ddbfc312f318237b2ff01e15af11ecd0ee4150f6029ddce7bd9509d5a63",
+ "created_at": "2026-08-05T18:32:51.433652+00:00",
+ "elapsed_seconds": 138.5507150829999,
+ "falsifiers": {
+  "all_passed": false,
+  "f1_harness_reproduces_the_sealed_artifact": {
+   "evidence": {
+    "abs_delta": {
+     "neuron_memory": 2.3194444444444438,
+     "neuron_reset": 7.055555555555558,
+     "ofat": 4.083333333333332,
+     "random": 12.041666666666668
+    },
+    "observed_means": {
+     "neuron_memory": 4.666666666666667,
+     "neuron_reset": 7.833333333333333,
+     "ofat": 8.333333333333334,
+     "random": 7.5
+    },
+    "sealed_artifact": "results/garrido_meta_learner_v2/result.json",
+    "sealed_means": {
+     "neuron_memory": 6.986111111111111,
+     "neuron_reset": 14.888888888888891,
+     "ofat": 12.416666666666666,
+     "random": 19.541666666666668
+    },
+    "sealed_present": true,
+    "why_it_can_fail": "any drift in the simulator, the metric, the CRN or the RNG consumption order since v2 was sealed breaks the equality -- and then the prefix number would be uninterpretable, because the difference could be physics rather than the normaliser"
+   },
+   "passed": false
+  },
+  "f2_visit_sequences_are_scale_invariant": {
+   "evidence": {
+    "by_normaliser": {
+     "oracle": true,
+     "prefix": true
+    },
+    "rescale": {
+     "R1r": [
+      2.614979720290841,
+      0.43905395026925254
+     ],
+     "R1r+R2r": [
+      3.604021718659155,
+      0.48767359432226076
+     ],
+     "R1r+R2r|esc": [
+      4.554332375498752,
+      0.17219455685682994
+     ],
+     "R1r|esc": [
+      2.395469709013245,
+      0.8193342868134355
+     ],
+     "R2r": [
+      4.22563831357799,
+      0.8191156634969468
+     ],
+     "R2r|esc": [
+      2.801943698071084,
+      0.057232929385305775
+     ]
+    },
+    "why_it_can_fail": "a positive affine rescaling of the surface leaves every legitimate decision rule unchanged; an arm whose sequence moves is reading the surface in a scale-dependent way"
+   },
+   "passed": true
+  },
+  "f3_non_neural_arms_are_untouched": {
+   "evidence": {
+    "why_it_can_fail": "ofat and random never call the normaliser, so their sequences must be byte-identical across arms; if they differ the harness changed something else"
+   },
+   "passed": true
+  },
+  "f4_censoring_is_reported": {
+   "evidence": {
+    "rates": {
+     "oracle": {
+      "neuron_memory": 0.16666666666666666,
+      "neuron_reset": 0.8333333333333334,
+      "ofat": 0.6666666666666666,
+      "random": 0.6666666666666666
+     },
+     "prefix": {
+      "neuron_memory": 0.16666666666666666,
+      "neuron_reset": 0.6666666666666666,
+      "ofat": 0.6666666666666666,
+      "random": 0.6666666666666666
+     }
+    },
+    "why_it_can_fail": "if nothing were censored the old primary would be unbiased and changing the estimand would be unjustified"
+   },
+   "passed": true
+  },
+  "f5_no_fresh_seeds": {
+   "evidence": {
+    "n_sealed_artifact_overlap": 1,
+    "n_seeds": 1,
+    "note": "deliberate re-execution of registry block 'garrido_q2_des288'; these seeds are NOT virgin and are not meant to be",
+    "registry_conflicts": [
+     {
+      "id": "garrido_q2_des288",
+      "n_overlapping": 1,
+      "range": [
+       5300001,
+       5300012
+      ],
+      "source": "results/garrido_meta_learner_v2/result.json",
+      "status": "ARTIFACT_PRESENT_PENDING_CANONICAL_CUSTODY"
+     }
+    ],
+    "registry_is_complete": false,
+    "registry_status": "BASELINE_INVENTORY_INCOMPLETE_NO_NEW_SEEDS_AUTHORIZED",
+    "replay_of": "garrido_q2_des288",
+    "sealed_artifact_overlap": [
+     5300001
+    ],
+    "seeds": [
+     5300001
+    ],
+    "status": "DECLARED_REPLAY",
+    "why_it_can_fail": "it cannot: this is a declared custody replay of registry block 'garrido_q2_des288', so the seeds are used on purpose. Counted in neither column."
+   },
+   "not_applicable": true,
+   "passed": null
+  },
+  "not_applicable": [
+   "f5_no_fresh_seeds"
+  ]
+ },
+ "gates": {
+  "g1_optimum_moves_across_contexts": {
+   "by_context": {
+    "R1r": {
+     "argmax_config": {
+      "buffer_hours": 1344.0,
+      "op12_rop": 12.0,
+      "op9_rop": 12.0,
+      "shifts": 1
+     },
+     "best_mean": 0.009259259259259241
+    },
+    "R1r+R2r": {
+     "argmax_config": {
+      "buffer_hours": 1344.0,
+      "op12_rop": 12.0,
+      "op9_rop": 12.0,
+      "shifts": 2
+     },
+     "best_mean": 0.00925925925925924
+    },
+    "R1r+R2r|esc": {
+     "argmax_config": {
+      "buffer_hours": 1344.0,
+      "op12_rop": 12.0,
+      "op9_rop": 12.0,
+      "shifts": 2
+     },
+     "best_mean": 0.009152472160143624
+    },
+    "R1r|esc": {
+     "argmax_config": {
+      "buffer_hours": 1344.0,
+      "op12_rop": 12.0,
+      "op9_rop": 12.0,
+      "shifts": 2
+     },
+     "best_mean": 0.00925925925925924
+    },
+    "R2r": {
+     "argmax_config": {
+      "buffer_hours": 504.0,
+      "op12_rop": 24.0,
+      "op9_rop": 48.0,
+      "shifts": 1
+     },
+     "best_mean": 0.01791305032400518
+    },
+    "R2r|esc": {
+     "argmax_config": {
+      "buffer_hours": 1344.0,
+      "op12_rop": 12.0,
+      "op9_rop": 12.0,
+      "shifts": 3
+     },
+     "best_mean": 0.010868331026382872
+    }
+   },
+   "distinct_argmax": 4,
+   "moves": true,
+   "n_contexts": 6
+  },
+  "g2_surface_separability": {
+   "R1r": {
+    "additive": 0.6733706525115886,
+    "gain": 0.1521871694893232,
+    "interactions": 0.8255578220009118
+   },
+   "R1r+R2r": {
+    "additive": 0.6343824838234859,
+    "gain": 0.1713689669182068,
+    "interactions": 0.8057514507416927
+   },
+   "R1r+R2r|esc": {
+    "additive": 0.5701910417247881,
+    "gain": 0.14348392694087775,
+    "interactions": 0.7136749686656658
+   },
+   "R1r|esc": {
+    "additive": 0.6536982184500746,
+    "gain": 0.14832044849885817,
+    "interactions": 0.8020186669489328
+   },
+   "R2r": {
+    "additive": 0.3932388873698377,
+    "gain": 0.05121143268357131,
+    "interactions": 0.444450320053409
+   },
+   "R2r|esc": {
+    "additive": 0.5689724189217258,
+    "gain": 0.058538643415902314,
+    "interactions": 0.6275110623376281
+   }
+  }
+ },
+ "module_manifest": {
+  "entry_script": "scripts/run_meta_learner_normaliser_audit_v1.py",
+  "entry_script_sha256": "1653fdb84f39f8b47cf85fb74a3fd7798ce324c5c79cb527d8b43fbda28cb9e1",
+  "missing": [],
+  "modules": {
+   "supply_chain/arm_runner.py": "35135c537d9260832677ab6b4e344229d6b9f4810df8bdef9efd51b58fcac68a",
+   "supply_chain/config.py": "ae702a4991966504eaa1036106fa5f4b9c11e913d376dfb67e3f3c83147904cc",
+   "supply_chain/episode_metrics.py": "e09199d48a747f67aef600e9482b812fc1be16e337167d7dfc7215bcb57fb55e",
+   "supply_chain/seed_custody.py": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd",
+   "supply_chain/supply_chain.py": "2f348e5922cbbecf167b45cf0045765010beaaecdcb0fe6de88f259c989460f6"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "n_configurations": 288,
+ "normalisers": [
+  "oracle",
+  "prefix"
+ ],
+ "primary_metric": "auc_regret_norm",
+ "primary_rationale": "runs_to_within_1pct imputes budget+1 and is censored at very different rates per arm, so its mean is not comparable across arms. AUC of the normalised regret curve is defined in every cell and uncensored.",
+ "reference_path": "results/garrido_meta_learner_v2/result.json",
+ "reference_sha256": "efb3f067ba295990c1a04e34e669f42cb2c431d9aa92cdb0346ad07c746fb391",
+ "repeats": 1,
+ "replay_of": "garrido_q2_des288",
+ "run_role": "BURNED_REPLAY_AUDIT",
+ "schema_version": "garrido_normaliser_audit_v1",
+ "scope": "DEVELOPMENT_REPLAY_ON_BURNED_TAPES_NO_ADJUDICATION_NO_LEARNER",
+ "seeds": [
+  5300001
+ ],
+ "self_sha256": "09ea2968e3d3b6581d16fb597a3ad6f23955bf84ac453c2c3b931f7257896f8e",
+ "strategies": [
+  "ofat",
+  "random",
+  "neuron_reset",
+  "neuron_memory"
+ ],
+ "summary": {
+  "oracle": {
+   "censoring_rate": {
+    "neuron_memory": 0.16666666666666666,
+    "neuron_reset": 0.8333333333333334,
+    "ofat": 0.6666666666666666,
+    "random": 0.6666666666666666
+   },
+   "contrasts": {
+    "auc_regret_norm": {
+     "memory_vs_ofat": {
+      "lcb95": 0.12693009070532874,
+      "mean": 0.12693009070532874,
+      "n": 1,
+      "ucb95": 0.12693009070532874
+     },
+     "memory_vs_random": {
+      "lcb95": 0.07523165981644035,
+      "mean": 0.07523165981644035,
+      "n": 1,
+      "ucb95": 0.07523165981644035
+     },
+     "memory_vs_reset": {
+      "lcb95": 0.09576903400723798,
+      "mean": 0.09576903400723798,
+      "n": 1,
+      "ucb95": 0.09576903400723798
+     }
+    },
+    "runs_to_within_1pct": {
+     "memory_vs_ofat": {
+      "lcb95": 3.666666666666667,
+      "mean": 3.666666666666667,
+      "n": 1,
+      "ucb95": 3.666666666666667
+     },
+     "memory_vs_random": {
+      "lcb95": 2.833333333333333,
+      "mean": 2.833333333333333,
+      "n": 1,
+      "ucb95": 2.833333333333333
+     },
+     "memory_vs_reset": {
+      "lcb95": 3.166666666666666,
+      "mean": 3.166666666666666,
+      "n": 1,
+      "ucb95": 3.166666666666666
+     }
+    }
+   },
+   "means_auc_regret_norm": {
+    "neuron_memory": 0.11137808000993092,
+    "neuron_reset": 0.2071471140171689,
+    "ofat": 0.23830817071525967,
+    "random": 0.18660973982637127
+   },
+   "means_runs_to_within_1pct": {
+    "neuron_memory": 4.666666666666667,
+    "neuron_reset": 7.833333333333333,
+    "ofat": 8.333333333333334,
+    "random": 7.5
+   }
+  },
+  "prefix": {
+   "censoring_rate": {
+    "neuron_memory": 0.16666666666666666,
+    "neuron_reset": 0.6666666666666666,
+    "ofat": 0.6666666666666666,
+    "random": 0.6666666666666666
+   },
+   "contrasts": {
+    "auc_regret_norm": {
+     "memory_vs_ofat": {
+      "lcb95": 0.12678939806463613,
+      "mean": 0.12678939806463613,
+      "n": 1,
+      "ucb95": 0.12678939806463613
+     },
+     "memory_vs_random": {
+      "lcb95": 0.07509096717574773,
+      "mean": 0.07509096717574773,
+      "n": 1,
+      "ucb95": 0.07509096717574773
+     },
+     "memory_vs_reset": {
+      "lcb95": 0.06889930613324938,
+      "mean": 0.06889930613324938,
+      "n": 1,
+      "ucb95": 0.06889930613324938
+     }
+    },
+    "runs_to_within_1pct": {
+     "memory_vs_ofat": {
+      "lcb95": 3.666666666666667,
+      "mean": 3.666666666666667,
+      "n": 1,
+      "ucb95": 3.666666666666667
+     },
+     "memory_vs_random": {
+      "lcb95": 2.833333333333333,
+      "mean": 2.833333333333333,
+      "n": 1,
+      "ucb95": 2.833333333333333
+     },
+     "memory_vs_reset": {
+      "lcb95": 2.5,
+      "mean": 2.5,
+      "n": 1,
+      "ucb95": 2.5
+     }
+    }
+   },
+   "means_auc_regret_norm": {
+    "neuron_memory": 0.11151877265062354,
+    "neuron_reset": 0.18041807878387292,
+    "ofat": 0.23830817071525967,
+    "random": 0.18660973982637127
+   },
+   "means_runs_to_within_1pct": {
+    "neuron_memory": 4.666666666666667,
+    "neuron_reset": 7.166666666666667,
+    "ofat": 8.333333333333334,
+    "random": 7.5
+   }
+  }
+ }
+}
