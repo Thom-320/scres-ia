@@ -52,6 +52,36 @@ def make_flags_off_sim(tape: Mapping[str, Any]) -> MFSCSimulation:
     )
 
 
+def make_m000_adapter_sim(tape: Mapping[str, Any]) -> EStarDESAdapter:
+    """Build the adapter in the historical M000 mode.
+
+    Keeping this constructor beside ``make_flags_off_sim`` makes the golden
+    comparison explicit: the adapter receives the same exogenous tape and
+    historical arguments, but its M000 path must remain byte-compatible with
+    the original DES payload.
+    """
+    family = str(tape["family"])
+    if family not in FAMILY_RISKS:
+        raise ValueError(f"unsupported bridge family {family!r}")
+    return EStarDESAdapter(
+        mask_id="M000",
+        expanded=False,
+        shifts=1,
+        initial_buffers={"op3_rm": 0.0, "op5_rm": 0.0, "op9_rations": 0.0},
+        inventory_replenishment_period=168.0,
+        seed=int(tape["seed"]),
+        horizon=float(tape["horizon"]),
+        risks_enabled=True,
+        risk_level="current",
+        enabled_risks=set(FAMILY_RISKS[family]),
+        risk_overrides={risk: "increased" for risk in FAMILY_RISKS[family]},
+        strict_exogenous_crn=True,
+        demand_source="excel_order_tape",
+        excel_order_tape=list(tape["orders"]),
+        risk_event_tape=list(tape["risks"]),
+    )
+
+
 def make_expanded_sim(tape: Mapping[str, Any], mask_id: str) -> EStarDESAdapter:
     """Build the E* adapter on the same burned exogenous tape.
 
@@ -242,23 +272,7 @@ def check_flags_off_adapter_golden(
 ) -> dict[str, Any]:
     """Check that the adapter's M000 mode reaches the historical golden payload."""
     family = str(tape["family"])
-    sim = EStarDESAdapter(
-        mask_id="M000",
-        expanded=False,
-        shifts=1,
-        initial_buffers={"op3_rm": 0.0, "op5_rm": 0.0, "op9_rations": 0.0},
-        inventory_replenishment_period=168.0,
-        seed=int(tape["seed"]),
-        horizon=float(tape["horizon"]),
-        risks_enabled=True,
-        risk_level="current",
-        enabled_risks=set(FAMILY_RISKS[family]),
-        risk_overrides={risk: "increased" for risk in FAMILY_RISKS[family]},
-        strict_exogenous_crn=True,
-        demand_source="excel_order_tape",
-        excel_order_tape=list(tape["orders"]),
-        risk_event_tape=list(tape["risks"]),
-    )
+    sim = make_m000_adapter_sim(tape)
     sim.step(action=None, step_hours=float(tape["horizon"]))
     observed = _canonical_sha(
         flags_off_payload_from_sim(
