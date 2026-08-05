@@ -38,6 +38,7 @@ from supply_chain.estar_kernel import (
     SUPPLIER_LANES,
     flags_off_bridge_descriptor,
 )
+from supply_chain.estar_planners import DirectDESMPC
 from supply_chain.seed_custody import module_manifest
 from scripts.validate_estar_hcompute_contract import load, validate_contract
 
@@ -135,24 +136,26 @@ def _des_action(
 
 def _measure(
     name: str,
-    fn: Callable[[], tuple[int, int]],
+    fn: Callable[[], tuple[int, int, int]],
     repetitions: int,
     warmups: int,
 ) -> dict[str, Any]:
     cold_started = time.perf_counter()
-    cold_count, cold_calls = fn()
+    cold_count, cold_calls, cold_iterations = fn()
     cold_seconds = time.perf_counter() - cold_started
     for _ in range(warmups):
         fn()
     durations: list[float] = []
     rollouts: list[int] = []
     des_calls: list[int] = []
+    solver_iterations: list[int] = []
     for _ in range(repetitions):
         started = time.perf_counter()
-        count, calls = fn()
+        count, calls, iterations = fn()
         durations.append(time.perf_counter() - started)
         rollouts.append(int(count))
         des_calls.append(int(calls))
+        solver_iterations.append(int(iterations))
     return {
         "planner": name,
         "repetitions": repetitions,
@@ -161,13 +164,14 @@ def _measure(
         "cold_seconds": cold_seconds,
         "cold_kernel_rollouts": int(cold_count),
         "cold_des_calls": int(cold_calls),
+        "cold_solver_iterations": int(cold_iterations),
         "cold_p50_seconds": cold_seconds,
         "cold_p95_seconds": cold_seconds,
         "p50_seconds": _percentile(durations, 0.50),
         "p95_seconds": _percentile(durations, 0.95),
         "kernel_rollouts": int(sum(rollouts) / len(rollouts)),
         "des_calls": int(sum(des_calls) / len(des_calls)),
-        "solver_iterations": 0,
+        "solver_iterations": int(sum(solver_iterations) / len(solver_iterations)),
         "peak_memory_bytes": None,
     }
 
@@ -178,17 +182,18 @@ def _run_des_once(
     index: int,
     supplier_count: int,
     dispatch_count: int,
-) -> None:
+) -> float:
     step_hours = min(DES_STEP_HOURS, float(tape["horizon"]))
     if mask_id == "M000":
         sim = make_m000_adapter_sim(tape)
-        sim.step(action=None, step_hours=step_hours)
-        return
+        _, reward, _, _ = sim.step(action=None, step_hours=step_hours)
+        return float(reward)
     sim = make_expanded_sim(tape, mask_id)
-    sim.step_e_star(
+    _, reward, _, _ = sim.step_e_star(
         _des_action(mask_id, index, supplier_count, dispatch_count),
         step_hours=step_hours,
     )
+    return float(reward)
 
 
 def _benchmark_level(
@@ -203,15 +208,25 @@ def _benchmark_level(
     complexity = max(1, supplier_count + dispatch_count + 1)
     candidate_count = 2**complexity
 
-    def one_action() -> tuple[int, int]:
+    def one_action() -> tuple[int, int, int]:
         _run_des_once(tape, mask_id, 0, supplier_count, dispatch_count)
-        return 1, 1
+        return 1, 1, 1
 
-    def rollout_search(multiplier: int) -> tuple[int, int]:
+    def rollout_search(multiplier: int) -> tuple[int, int, int]:
         count = candidate_count * multiplier
         for index in range(count):
             _run_des_once(tape, mask_id, index, supplier_count, dispatch_count)
-        return count, count
+        return count, count, count
+
+    def direct_mpc() -> tuple[int, int, int]:
+        planner = DirectDESMPC(candidate_multiplier=3)
+        result = planner.plan(
+            lambda index: _run_des_once(
+                tape, mask_id, index, supplier_count, dispatch_count
+            ),
+            candidate_count,
+        )
+        return result.rollouts, result.des_calls, result.solver_iterations
 
     return {
         "level_id": str(level["id"]),
@@ -222,7 +237,7 @@ def _benchmark_level(
         "planner_backend": "EStarDESAdapter",
         "step_hours": min(DES_STEP_HOURS, float(tape["horizon"])),
         "planners": [
-            _measure("constant", lambda: (0, 0), repetitions, warmups),
+            _measure("constant", lambda: (0, 0, 0), repetitions, warmups),
             _measure("lookup_order_up_to", one_action, repetitions, warmups),
             _measure("threshold_hysteresis", one_action, repetitions, warmups),
             _measure(
@@ -232,8 +247,8 @@ def _benchmark_level(
                 warmups,
             ),
             _measure(
-                "mpc_direct",
-                lambda: rollout_search(3),
+                "direct_DES_MPC",
+                direct_mpc,
                 repetitions,
                 warmups,
             ),
@@ -348,7 +363,7 @@ def _adjudicate_h_compute(
     timing: list[dict[str, Any]], h_compute: dict[str, Any]
 ) -> dict[str, Any]:
     mpc = [
-        next(row for row in level["planners"] if row["planner"] == "mpc_direct")
+        next(row for row in level["planners"] if row["planner"] == "direct_DES_MPC")
         for level in timing
     ]
     p95_seconds = [float(row["p95_seconds"]) for row in mpc]
@@ -486,6 +501,7 @@ def main() -> int:
                 "supply_chain/estar_kernel.py",
                 "supply_chain/estar_des_adapter.py",
                 "supply_chain/estar_bridge.py",
+                "supply_chain/estar_planners.py",
                 "supply_chain/supply_chain.py",
                 "supply_chain/seed_custody.py",
                 "supply_chain/arm_runner.py",
