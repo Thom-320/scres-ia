@@ -64,28 +64,134 @@ def sobol_indices(f, bounds, N=256, seed=0):
     return out
 
 
-def gp_locate(f, bounds, n_init=16, n_iter=24, seed=0):
-    """GP + expected-improvement active learning to maximize f. Returns best (x, y) + history."""
+def gp_locate(f, bounds, n_init=16, n_iter=24, seed=0, grid=None):
+    """GP + expected-improvement active learning to maximize ``f``.
+
+    ``n_init`` is explicit because it consumes the evaluation budget before EI starts.  The
+    returned ``history`` is the authoritative visit log.  When ``grid`` is supplied, continuous
+    EI proposals are snapped to the nearest *unvisited* grid point in bounds-normalised distance;
+    duplicate proposals are skipped and the next EI candidate is tried.  If all continuous
+    proposals snap to visited points, the highest-EI unvisited grid point is used as a deterministic
+    fallback.  This makes the continuous-to-discrete rule and duplicate policy part of the API
+    rather than an undocumented comparator choice.
+    """
     from sklearn.gaussian_process import GaussianProcessRegressor
     from sklearn.gaussian_process.kernels import ConstantKernel, Matern, WhiteKernel
     from scipy.stats import norm
+    if int(n_init) < 1:
+        raise ValueError("n_init must be at least 1")
+    if int(n_iter) < 0:
+        raise ValueError("n_iter must be non-negative")
     k = len(bounds); rng = np.random.default_rng(seed)
     lo = np.array([b[0] for b in bounds]); hi = np.array([b[1] for b in bounds])
-    X = _scale(qmc.LatinHypercube(d=k, seed=seed).random(n_init), bounds)
-    y = np.array([f(x) for x in X])
-    kern = ConstantKernel(1.0) * Matern(nu=2.5, length_scale=np.ones(k)) + WhiteKernel(1e-4)
-    for _ in range(n_iter):
+    span = np.maximum(hi - lo, 1e-12)
+
+    grid_arr = None
+    grid_seen: set[tuple[float, ...]] = set()
+    available: set[int] | None = None
+    if grid is not None:
+        grid_arr = np.asarray(grid, dtype=float)
+        if grid_arr.ndim != 2 or grid_arr.shape[1] != k or grid_arr.shape[0] == 0:
+            raise ValueError("grid must be a non-empty 2D array with one column per bound")
+        if np.any(grid_arr < lo) or np.any(grid_arr > hi):
+            raise ValueError("grid contains a point outside bounds")
+        # Duplicate grid rows are not separate configurations.  Keep the first occurrence so the
+        # visit index remains deterministic and the no-replacement rule is explicit.
+        unique_rows = []
+        for row in grid_arr:
+            key = tuple(float(value) for value in row)
+            if key not in grid_seen:
+                grid_seen.add(key)
+                unique_rows.append(row)
+        grid_arr = np.asarray(unique_rows, dtype=float)
+        available = set(range(len(grid_arr)))
+
+    X_rows: list[np.ndarray] = []
+    y_rows: list[float] = []
+    history: list[dict] = []
+
+    def evaluate_point(x: np.ndarray, *, source: str, grid_index: int | None = None,
+                       snap_distance: float | None = None) -> None:
+        x = np.asarray(x, dtype=float)
+        X_rows.append(x.copy())
+        y_value = float(f(x))
+        y_rows.append(y_value)
+        row = {"x": x.tolist(), "y": y_value, "source": source}
+        if grid_index is not None:
+            row["grid_index"] = int(grid_index)
+        if snap_distance is not None:
+            row["snap_distance_normalised"] = float(snap_distance)
+        history.append(row)
+
+    def nearest_unvisited(x: np.ndarray) -> tuple[int, float] | None:
+        if grid_arr is None or not available:
+            return None
+        candidates = np.array(sorted(available), dtype=int)
+        distance = np.sum(((grid_arr[candidates] - x) / span) ** 2, axis=1)
+        position = int(np.argmin(distance))
+        return int(candidates[position]), float(np.sqrt(distance[position]))
+
+    n_initial = int(n_init)
+    initial_u = qmc.LatinHypercube(d=k, seed=seed).random(n_initial)
+    initial_x = _scale(initial_u, bounds)
+    if grid_arr is None:
+        for x in initial_x:
+            evaluate_point(x, source="lhs")
+    else:
+        for x in initial_x:
+            nearest = nearest_unvisited(x)
+            if nearest is None:
+                break
+            grid_index, distance = nearest
+            available.remove(grid_index)
+            evaluate_point(grid_arr[grid_index], source="lhs_snap",
+                           grid_index=grid_index, snap_distance=distance)
+
+    def fit_and_ei(candidates: np.ndarray) -> np.ndarray:
+        kern = (ConstantKernel(1.0) * Matern(nu=2.5, length_scale=np.ones(k))
+                + WhiteKernel(1e-4))
         gp = GaussianProcessRegressor(kernel=kern, normalize_y=True, n_restarts_optimizer=2,
-                                      random_state=seed).fit(X, y)
-        cand = lo + rng.random((2048, k)) * (hi - lo)
-        mu, sd = gp.predict(cand, return_std=True)
-        best = y.max(); imp = mu - best
+                                      random_state=seed).fit(np.asarray(X_rows), np.asarray(y_rows))
+        mu, sd = gp.predict(candidates, return_std=True)
+        best = max(y_rows)
+        imp = mu - best
         z = np.where(sd > 1e-9, imp / sd, 0.0)
-        ei = np.where(sd > 1e-9, imp * norm.cdf(z) + sd * norm.pdf(z), 0.0)
-        xn = cand[int(ei.argmax())]
-        X = np.vstack([X, xn]); y = np.append(y, f(xn))
+        return np.where(sd > 1e-9, imp * norm.cdf(z) + sd * norm.pdf(z), 0.0)
+
+    for _ in range(int(n_iter)):
+        if grid_arr is not None and not available:
+            break
+        cand = lo + rng.random((2048, k)) * (hi - lo)
+        ei = fit_and_ei(cand)
+        if grid_arr is None:
+            evaluate_point(cand[int(np.argmax(ei))], source="ei")
+            continue
+
+        order = np.argsort(-ei, kind="stable")
+        selected = None
+        for position in order:
+            nearest = nearest_unvisited(cand[int(position)])
+            if nearest is not None:
+                selected = nearest
+                break
+        if selected is None:
+            break
+        grid_index, distance = selected
+        available.remove(grid_index)
+        evaluate_point(grid_arr[grid_index], source="ei_snap",
+                       grid_index=grid_index, snap_distance=distance)
+
+    X = np.asarray(X_rows, dtype=float)
+    y = np.asarray(y_rows, dtype=float)
     j = int(y.argmax())
-    return {"x_best": X[j].tolist(), "y_best": float(y[j]), "n_eval": len(y)}
+    return {
+        "x_best": X[j].tolist(), "y_best": float(y[j]), "n_eval": len(y),
+        "history": history, "visited": [row["x"] for row in history],
+        "n_init": int(n_init), "n_iter": int(n_iter),
+        "grid_anchored": grid_arr is not None,
+        "grid_size": None if grid_arr is None else int(len(grid_arr)),
+        "duplicate_policy": "skip_duplicate_grid_points_and_use_next_EI_candidate",
+    }
 
 
 # --- validation test function (known Sobol indices) ---

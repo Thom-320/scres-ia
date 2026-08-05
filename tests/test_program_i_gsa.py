@@ -8,7 +8,7 @@
 """
 import numpy as np
 
-from supply_chain.gsa import sobol_indices, morris_screen, ishigami, ISHIGAMI_BOUNDS
+from supply_chain.gsa import gp_locate, sobol_indices, morris_screen, ishigami, ISHIGAMI_BOUNDS
 
 
 def test_sobol_recovers_ishigami_indices():
@@ -26,6 +26,25 @@ def test_morris_ranks_active_factors_above_inert():
     bounds = [(0.0, 1.0, "x1"), (0.0, 1.0, "x2")]
     m = morris_screen(lambda x: 3.0 * x[0], bounds, r=20, seed=0)
     assert m["x1"]["mu_star"] > 10 * max(m["x2"]["mu_star"], 1e-9)
+
+
+def test_gp_locate_returns_history_and_declares_grid_snapping():
+    grid = np.array([[x, y] for x in (0.0, 0.5, 1.0) for y in (0.0, 0.5, 1.0)])
+    result = gp_locate(
+        lambda point: 1.0 - (point[0] - 0.75) ** 2 - (point[1] - 0.25) ** 2,
+        [(0.0, 1.0), (0.0, 1.0)],
+        n_init=3,
+        n_iter=4,
+        seed=11,
+        grid=grid,
+    )
+
+    assert result["grid_anchored"] is True
+    assert result["n_init"] == 3
+    assert result["n_eval"] == len(result["history"]) == 7
+    assert len({tuple(row["x"]) for row in result["history"]}) == result["n_eval"]
+    assert all(row["source"] in {"lhs_snap", "ei_snap"} for row in result["history"])
+    assert result["duplicate_policy"].startswith("skip_duplicate_grid_points")
 
 
 def _gate(H_obs_samples, worst_fill_delta=0.0, delta_min=0.01):

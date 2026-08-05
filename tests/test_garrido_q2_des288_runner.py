@@ -96,8 +96,14 @@ def test_synthetic_q2_contract_falsifiers_pass_without_running_des():
         seeds=seeds,
         budget=4,
         rng=np.random.default_rng(20260801),
+        # These IDs deliberately exercise the reconciled smoke block; the test is a replay
+        # harness, not a virginity claim.
+        replay_of="reconciled_7100001",
     )
-    assert all(check["passed"] for check in falsifiers.values())
+    assert all(
+        check.get("not_applicable") or check["passed"]
+        for check in falsifiers.values()
+    )
 
 
 def test_zero_budget_retained_and_reset_have_identical_trace_contract():

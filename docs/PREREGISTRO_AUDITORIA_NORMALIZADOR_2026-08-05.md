@@ -87,6 +87,7 @@ Se declaran aquí porque son **go/no-go de todo el programa**, no resultados acc
 | `f2_prefix_normaliser_never_reads_an_unrun_value` | reproducir con la superficie **reescalada afínmente** por un factor positivo aleatorio por contexto: la secuencia de visitas del brazo `prefix` debe ser **invariante** y la del brazo `oracle` también (el reescalado afín preserva su min/max relativo), pero un brazo que leyera un estadístico global **no invariante** cambiaría. Se reporta la comparación explícita |
 | `f3_the_two_arms_differ_only_in_the_normaliser` | los brazos no neuronales (`ofat`, `random`) deben dar secuencias **idénticas** bajo ambos normalizadores. Si difieren, el arnés cambió algo más |
 | `f4_censoring_is_reported_not_hidden` | tasas de censura por brazo presentes y distintas de cero para `random`; si salieran todas cero, el primario antiguo no estaría censurado y el cambio de estimando sobraría |
+| `f6_surface_twins_have_identical_prefix_paths` | se conservan idénticas las celdas visitadas por la corrida de referencia y se alteran sólo dos celdas de la cola no observada; `prefix` debe conservar su trayectoria y el brazo `oracle` debe reaccionar al cambio de min/max |
 | `f5_no_fresh_seeds` | custodia central, réplica declarada de `garrido_q2_des288` |
 
 ## 7. Reglas de lectura, fijadas de antemano
