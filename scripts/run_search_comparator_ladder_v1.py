@@ -52,6 +52,7 @@ BUDGET = 24
 GP_N_INIT = 8                       # of a budget of 24; gp_locate's default 16 would spend 2/3
 N_BOOT = 5_000
 MODULES = ("supply_chain/arm_runner.py", "supply_chain/seed_custody.py")
+CONTEXT_ORDER = ("R1r", "R2r", "R1r+R2r", "R1r|esc", "R2r|esc", "R1r+R2r|esc")
 
 COORDS = np.array([[FACTORS[n].index(c[n]) / (len(FACTORS[n]) - 1) for n in FACTOR_NAMES]
                    for c in CONFIGS], dtype=float)
@@ -253,7 +254,10 @@ def load_cache(root: Path):
         seeds.add(seed)
         if ctx not in contexts:
             contexts.append(ctx)
-    return surface, contexts, sorted(seeds)
+    missing = [ctx for ctx in CONTEXT_ORDER if ctx not in contexts]
+    if missing:
+        raise ValueError(f"cache is missing contracted contexts: {missing}")
+    return surface, [ctx for ctx in CONTEXT_ORDER if ctx in contexts], sorted(seeds)
 
 
 def main() -> int:

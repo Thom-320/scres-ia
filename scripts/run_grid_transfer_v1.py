@@ -247,6 +247,7 @@ def extend_state(kind: str, state, factors):
 
 
 ARMS = ("neuron", "ucb1", "ofat", "gp")
+CONTEXT_ORDER = ("R1r", "R2r", "R1r+R2r", "R1r|esc", "R2r|esc", "R1r+R2r|esc")
 
 
 def build(kind, state, grid):
@@ -263,15 +264,25 @@ def build(kind, state, grid):
 
 def load(root: Path, n_expected: int, expected_grid_id: str):
     surface, contexts, seeds = {}, [], set()
+    manifest = None
+    manifest_variants = []
     for path in sorted(root.rglob("*.json")):
         p = json.loads(path.read_text())
         verify_sealed_slice(p, expected_cells=n_expected, expected_grid_id=expected_grid_id)
+        current_manifest = p.get("module_manifest")
+        if manifest is None:
+            manifest = current_manifest
+        if current_manifest not in manifest_variants:
+            manifest_variants.append(current_manifest)
+        if (manifest and current_manifest
+                and current_manifest.get("modules") != manifest.get("modules")):
+            raise ValueError(f"cache physics module drift in {path}")
         surface[(p["context"], int(p["seed"]))] = np.array([c["value"] for c in p["cells"]],
                                                            dtype=float)
         seeds.add(int(p["seed"]))
         if p["context"] not in contexts:
             contexts.append(p["context"])
-    return surface, contexts, sorted(seeds)
+    return surface, contexts, sorted(seeds), manifest, manifest_variants
 
 
 def marginal_replay(visit_counts: np.ndarray, s: Surface, rng, budget: int) -> None:
@@ -296,13 +307,24 @@ def main() -> int:
                     default=Path("results/surface_cache/wrap288_compat_extended_v1"))
     ap.add_argument("--budget", type=int, default=BUDGET)
     ap.add_argument("--contract", type=Path, required=True)
-    ap.add_argument("--replay-of", required=True)
+    ap.add_argument("--replay-of", default=None,
+                    help="name of a burned registry block only for a declared replay")
+    ap.add_argument("--confirmation", action="store_true",
+                    help="freeze the confirmation claim/status and require fresh-seed custody")
+    ap.add_argument("--reference", type=Path,
+                    default=Path("results/search_ladder_v2/result.json"),
+                    help="sealed development/reference artifact used by the envelope seal")
+    ap.add_argument("--seed-block", default=None,
+                    help="human-readable reserved block, e.g. 8100001-8100060")
+    ap.add_argument("--expected-seed-start", type=int, default=None)
+    ap.add_argument("--expected-seeds", type=int, default=None)
     ap.add_argument("--output", type=Path, default=Path("results/grid_transfer/result.json"))
     args = ap.parse_args()
     started = time.perf_counter()
 
-    base, base_ctx, seeds = load(args.base_cache, len(BASE_CONFIGS), "wrap288_v1")
-    ext, ext_ctx, ext_seeds = load(
+    base, base_ctx, seeds, base_manifest, base_manifest_variants = load(
+        args.base_cache, len(BASE_CONFIGS), "wrap288_v1")
+    ext, ext_ctx, ext_seeds, ext_manifest, ext_manifest_variants = load(
         args.ext_cache, len(EXT_CONFIGS), "wrap288_compat_extended_v1"
     )
     if not ext:
@@ -311,7 +333,11 @@ def main() -> int:
     # while their (context, seed) slice is not, which is exactly what a partially built cache looks
     # like. Then keep only seeds whose FULL set of contexts exists in both, because the career loop
     # walks every context for a seed and a missing one would silently shorten the training run.
-    contexts = [c for c in base_ctx if c in ext_ctx]
+    contexts = [c for c in CONTEXT_ORDER if c in base_ctx and c in ext_ctx]
+    if not contexts:
+        raise SystemExit("no contracted contexts are present in both caches")
+    if args.confirmation and tuple(contexts) != CONTEXT_ORDER:
+        raise SystemExit(f"confirmation contexts are incomplete or reordered: {contexts}")
     seeds = [s for s in seeds
              if s in ext_seeds
              and all((c, s) in base and (c, s) in ext for c in contexts)]
@@ -319,6 +345,19 @@ def main() -> int:
         raise SystemExit(
             f"no seed has all {len(contexts)} contexts in both caches yet "
             f"(extended cache has {len(ext)} of {len(contexts) * len(ext_seeds)} slices)")
+    if args.confirmation:
+        if args.expected_seed_start is None or args.expected_seeds is None:
+            raise SystemExit("confirmation requires --expected-seed-start and --expected-seeds")
+        expected = list(range(args.expected_seed_start,
+                              args.expected_seed_start + args.expected_seeds))
+        if seeds != expected:
+            raise SystemExit(
+                f"confirmation cache is incomplete or has unexpected seeds: "
+                f"got {seeds[:3]}…{seeds[-3:] if seeds else []}, "
+                f"expected {expected[0]}…{expected[-1]}"
+            )
+        if len(base_manifest_variants) != 1 or len(ext_manifest_variants) != 1:
+            raise SystemExit("confirmation cache has manifest drift within a grid")
     print(f"  base {len(base)} rebanadas · extendida {len(ext)} · "
           f"{len(contexts)} contextos x {len(seeds)} semillas")
 
@@ -347,6 +386,7 @@ def main() -> int:
 
     # ---- the transfer experiment -------------------------------------------------------------
     rows = {f"{a}_{m}": [] for a in ARMS for m in ("transfer", "cold", "marginal")}
+    budget_failures = []
     visits = {a: np.ones(len(EXT_CONFIGS)) for a in ARMS}
     for r, seed in enumerate(seeds):
         for kind in ARMS:
@@ -362,6 +402,8 @@ def main() -> int:
             for ctx in contexts:
                 s = Surface(ext[(ctx, seed)])
                 build(kind, carried, "ext")(s, np.random.default_rng(70_000 + r), args.budget)
+                if len(s.visited) != args.budget:
+                    budget_failures.append((kind, "transfer", ctx, seed, len(s.visited)))
                 aucs["transfer"].append(s.auc(args.budget))
                 for i in s.visited:
                     visits[kind][i] += 1.0
@@ -369,10 +411,14 @@ def main() -> int:
                 cold = fresh_state(kind, EXT_FACTORS)
                 s2 = Surface(ext[(ctx, seed)])
                 build(kind, cold, "ext")(s2, np.random.default_rng(70_000 + r), args.budget)
+                if len(s2.visited) != args.budget:
+                    budget_failures.append((kind, "cold", ctx, seed, len(s2.visited)))
                 aucs["cold"].append(s2.auc(args.budget))
 
                 s3 = Surface(ext[(ctx, seed)])
                 marginal_replay(visits[kind], s3, np.random.default_rng(70_000 + r), args.budget)
+                if len(s3.visited) != args.budget:
+                    budget_failures.append((kind, "marginal", ctx, seed, len(s3.visited)))
                 aucs["marginal"].append(s3.auc(args.budget))
             for mode in aucs:
                 rows[f"{kind}_{mode}"].append(float(np.mean(aucs[mode])))
@@ -396,8 +442,12 @@ def main() -> int:
     transfers = {k: (v["vs_cold"]["lcb95"] > 0.0 and v["vs_marginal_replay"]["lcb95"] > 0.0)
                  for k, v in contrasts.items()}
     winners = [k for k, ok in transfers.items() if ok]
-    verdict = ("GRID_TRANSFER_ESTABLISHED__" + "_".join(sorted(winners)).upper() if winners
-               else "NO_GRID_TRANSFER")
+    if args.confirmation:
+        verdict = ("GRID_TRANSFER_CONFIRMED__" + "_".join(sorted(winners)).upper()
+                   if winners else "GRID_TRANSFER_CONFIRMATION_FAILS")
+    else:
+        verdict = ("GRID_TRANSFER_ESTABLISHED__" + "_".join(sorted(winners)).upper() if winners
+                   else "NO_GRID_TRANSFER")
 
     falsifiers = {
         "f1_the_null_subgrid_reproduces_the_288_cache": {
@@ -419,6 +469,36 @@ def main() -> int:
                                             "marginals, what crossed the boundary was a lookup "
                                             "table and not the shape of the surface",
                          "contrasts": {k: v["vs_marginal_replay"] for k, v in contrasts.items()}}},
+        "f_budgets_are_matched": {
+            "passed": not budget_failures,
+            "evidence": {
+                "expected_per_search": int(args.budget),
+                "failures": budget_failures[:20],
+                "n_failures": len(budget_failures),
+                "why_it_can_fail": "a truncated search would make AUC comparisons unequal-cost",
+            },
+        },
+        "f_source_manifest_is_identical": {
+            "passed": bool(
+                base_manifest and ext_manifest
+                and set(base_manifest.get("modules", {})).intersection(ext_manifest.get("modules", {}))
+                and (not args.confirmation
+                     or (len(base_manifest_variants) == 1 and len(ext_manifest_variants) == 1))
+                and all(
+                    base_manifest["modules"][name] == ext_manifest["modules"][name]
+                    for name in set(base_manifest.get("modules", {})).intersection(
+                        ext_manifest.get("modules", {})
+                    )
+                )
+            ),
+            "evidence": {
+                "base_entry_script": (base_manifest or {}).get("entry_script"),
+                "extended_entry_script": (ext_manifest or {}).get("entry_script"),
+                "base_manifest_variants": len(base_manifest_variants),
+                "extended_manifest_variants": len(ext_manifest_variants),
+                "why_it_can_fail": "the two grids must share the same DES physics hashes",
+            },
+        },
         "f4_no_fresh_seeds": custody_falsifier(seeds, replay_of=args.replay_of,
                                                exclude=args.output),
     }
@@ -446,17 +526,37 @@ def main() -> int:
 
     payload = {
         "schema_version": "grid_transfer_v1", "claim_status": verdict,
-        "scope": "DEVELOPMENT_ON_BURNED_TAPES_NO_ADJUDICATION_NO_LEARNER",
-        "run_role": "CACHE_ANALYSIS", "replay_of": args.replay_of,
+        "scope": ("CONFIRMATION_ON_RESERVED_VIRGIN_BLOCK_NO_RL_NO_NEURAL_LEARNER"
+                  if args.confirmation
+                  else "DEVELOPMENT_ON_BURNED_TAPES_NO_ADJUDICATION_NO_LEARNER"),
+        "run_role": "CONFIRMATION" if args.confirmation else "CACHE_ANALYSIS",
+        "seed_block": args.seed_block,
+        "replay_of": args.replay_of,
         "module_manifest": module_manifest(MODULES, script=__file__),
         "budget": args.budget, "contexts": contexts, "seeds": seeds,
         "n_base_configs": len(BASE_CONFIGS), "n_ext_configs": len(EXT_CONFIGS),
+        "cache_module_manifests": {
+            "base": base_manifest,
+            "extended": ext_manifest,
+            "base_variants": base_manifest_variants,
+            "extended_variants": ext_manifest_variants,
+            "physics_hashes_match": bool(
+                base_manifest and ext_manifest
+                and set(base_manifest.get("modules", {})).intersection(ext_manifest.get("modules", {}))
+                and all(
+                    base_manifest["modules"][name] == ext_manifest["modules"][name]
+                    for name in set(base_manifest.get("modules", {})).intersection(
+                        ext_manifest.get("modules", {})
+                    )
+                )
+            ),
+        },
         "mean_auc": means, "contrasts": contrasts, "transfers": transfers,
         "per_arm": rows, "falsifiers": falsifiers,
         "elapsed_seconds": time.perf_counter() - started,
     }
     digest = seal_and_write(payload, args.output, contract=args.contract,
-                            reference=Path("results/search_ladder_v2/result.json"))
+                            reference=args.reference)
     print(f"\n  -> {args.output} (sello {digest[:16]}…)")
     return 0 if falsifiers["all_passed"] else 1
 

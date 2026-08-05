@@ -21,6 +21,41 @@
  ],
  "blocks": [
   {
+   "id": "garrido_grid_transfer_v1_confirmation",
+   "start": 8100001,
+   "end": 8100060,
+   "status": "ATTEMPTED_NO_SEALED_ARTIFACT",
+   "source": "docs/PREREGISTRO_CONFIRMACION_TRANSFERENCIA_REJILLA_2026-08-05.md",
+   "purpose": "Aborted unauthorized/invalid confirmation attempt. Entire range is quarantined; no result from this attempt is confirmatory and the range is not reusable as virgin evidence.",
+   "authorization": {
+    "granted_by": "UNRECORDED",
+    "note": "No explicit PI authorization for opening this virgin block was recorded. The phrase 'freedom as PI' was not a seed-opening receipt."
+   },
+   "attempt_audit": {
+    "status": "ABORTED_AFTER_PARTIAL_RAW_CACHE",
+    "stopped_at": "2026-08-05T23:53:44.633545+00:00",
+    "termination": "explicit SIGKILL of the named workers after custody/order audit",
+    "complete_extended_slices_on_disk": 17,
+    "complete_base_slices_on_disk": 17,
+    "complete_slice_seed_names_seen": [
+     8100001,
+     8100002,
+     8100031
+    ],
+    "complete_slice_context_names_seen": [
+     "R1r",
+     "R1r_R2r",
+     "R1r_R2r_esc",
+     "R1r_esc",
+     "R2r",
+     "R2r_esc"
+    ],
+    "raw_slices_are_unsealed": true,
+    "result_artifact_present": false,
+    "why_entire_block_is_quarantined": "workers were killed without an execution receipt for every episode; a missing raw slice is not evidence that its seed was untouched, so the reserved block cannot be reused as virgin evidence"
+   }
+  },
+  {
    "id": "contention_headroom",
    "start": 5200001,
    "end": 5200016,
