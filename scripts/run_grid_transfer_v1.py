@@ -305,8 +305,18 @@ def main() -> int:
     ext, ext_ctx, ext_seeds = load(args.ext_cache, len(EXT_CONFIGS))
     if not ext:
         raise SystemExit("the extended cache is empty or still building")
+    # Intersect on PAIRS, not on the two axes separately: a context and a seed can each be present
+    # while their (context, seed) slice is not, which is exactly what a partially built cache looks
+    # like. Then keep only seeds whose FULL set of contexts exists in both, because the career loop
+    # walks every context for a seed and a missing one would silently shorten the training run.
     contexts = [c for c in base_ctx if c in ext_ctx]
-    seeds = [s for s in seeds if s in ext_seeds]
+    seeds = [s for s in seeds
+             if s in ext_seeds
+             and all((c, s) in base and (c, s) in ext for c in contexts)]
+    if not seeds:
+        raise SystemExit(
+            f"no seed has all {len(contexts)} contexts in both caches yet "
+            f"(extended cache has {len(ext)} of {len(contexts) * len(ext_seeds)} slices)")
     print(f"  base {len(base)} rebanadas · extendida {len(ext)} · "
           f"{len(contexts)} contextos x {len(seeds)} semillas")
 
