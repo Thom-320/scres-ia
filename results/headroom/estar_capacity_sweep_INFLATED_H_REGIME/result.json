@@ -1,0 +1,381 @@
+{
+ "budgets": [
+  600.0,
+  1200.0
+ ],
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "ARGMAX_MOVES_WITHOUT_VALUE",
+ "contract_path": "docs/PREREGISTRO_ESTAR_CAPACIDAD_BARRIDO_2026-08-03.md",
+ "contract_sha256": "2719ff7c79fbbbe979246d26d6b6548a6fd3787a8e91428d9a099701f7061aea",
+ "created_at": "2026-08-04T01:17:37.686936+00:00",
+ "elapsed_seconds": 33.95176237499982,
+ "falsifiers": {
+  "all_passed": true,
+  "f1_capacity_actually_binds": {
+   "evidence": {
+    "binding_fraction": {
+     "budget=1200": {
+      "budget=1200|R1r+R2r|base": 0.5841672158643493,
+      "budget=1200|R1r+R2r|freq3_imp2": 0.593513120046719
+     },
+     "budget=600": {
+      "budget=600|R1r+R2r|base": 0.7658634112729773,
+      "budget=600|R1r+R2r|freq3_imp2": 0.7696152543101069
+     }
+    },
+    "why_it_can_fail": "a cap that never fills makes everything downstream vacuous; the probe showed 3000 binds nothing at all"
+   },
+   "passed": true
+  },
+  "f2_mass_and_demand_are_untouched": {
+   "evidence": {
+    "mass": {
+     "budget=1200": {
+      "budget=1200|R1r+R2r|base": {
+       "delivered": 292931.2361111111,
+       "demanded": 403814.0625
+      },
+      "budget=1200|R1r+R2r|freq3_imp2": {
+       "delivered": 289414.0677083333,
+       "demanded": 403516.6875
+      }
+     },
+     "budget=600": {
+      "budget=600|R1r+R2r|base": {
+       "delivered": 292948.94444444444,
+       "demanded": 403814.0625
+      },
+      "budget=600|R1r+R2r|freq3_imp2": {
+       "delivered": 289447.4670138889,
+       "demanded": 403516.6875
+      }
+     }
+    },
+    "why_it_can_fail": "a capacity that reduced DEMAND would be deleting the problem instead of constraining the solution"
+   },
+   "passed": true
+  },
+  "f3_the_endpoint_responds_to_the_lever": {
+   "evidence": {
+    "spread": {
+     "budget=1200": {
+      "budget=1200|R1r+R2r|base": 0.043062771440739556,
+      "budget=1200|R1r+R2r|freq3_imp2": 0.03986565571859446
+     },
+     "budget=600": {
+      "budget=600|R1r+R2r|base": 0.1037423719444901,
+      "budget=600|R1r+R2r|freq3_imp2": 0.09656521167038179
+     }
+    },
+    "why_it_can_fail": "worst_claimant_fill is MEASURED blind to this mechanism (0.6791 at every budget); if flow_fill_rate is blind too, the sweep measures nothing"
+   },
+   "passed": true
+  },
+  "f4_argmax_moves_with_regime": {
+   "evidence": {
+    "argmax": {
+     "budget=1200": {
+      "budget=1200|R1r+R2r|base": 0.6,
+      "budget=1200|R1r+R2r|freq3_imp2": 0.6
+     },
+     "budget=600": {
+      "budget=600|R1r+R2r|base": 0.6,
+      "budget=600|R1r+R2r|freq3_imp2": 0.5
+     }
+    },
+    "why_it_can_fail": "a fixed optimum means constraint without decision"
+   },
+   "passed": true
+  },
+  "f5_no_fresh_seeds": {
+   "evidence": {
+    "n_sealed_artifact_overlap": 16,
+    "n_seeds": 16,
+    "note": "deliberate re-execution of registry block 'contention_headroom'; these seeds are NOT virgin and are not meant to be",
+    "registry_conflicts": [
+     {
+      "id": "contention_headroom",
+      "n_overlapping": 16,
+      "range": [
+       5200001,
+       5200016
+      ],
+      "source": "results/sensitivity/contention_headroom_v1/result.json",
+      "status": "USED_DEVELOPMENT_NOT_VIRGIN"
+     }
+    ],
+    "registry_is_complete": false,
+    "registry_status": "BASELINE_INVENTORY_INCOMPLETE_NO_NEW_SEEDS_AUTHORIZED",
+    "replay_of": "contention_headroom",
+    "sealed_artifact_overlap": [
+     5200001,
+     5200002,
+     5200003,
+     5200004,
+     5200005,
+     5200006,
+     5200007,
+     5200008,
+     5200009,
+     5200010,
+     5200011,
+     5200012,
+     5200013,
+     5200014,
+     5200015,
+     5200016
+    ],
+    "seeds": [
+     5200001,
+     5200002,
+     5200003,
+     5200004,
+     5200005,
+     5200006,
+     5200007,
+     5200008,
+     5200009,
+     5200010,
+     5200011,
+     5200012,
+     5200013,
+     5200014,
+     5200015,
+     5200016
+    ],
+    "status": "DECLARED_REPLAY",
+    "why_it_can_fail": "it cannot: this is a declared custody replay of registry block 'contention_headroom', so the seeds are used on purpose. Counted in neither column."
+   },
+   "not_applicable": true,
+   "passed": null
+  },
+  "f6_no_gain_by_abandonment": {
+   "evidence": {
+    "guardrails": {
+     "budget=1200": {
+      "lost_orders": {
+       "budget=1200|R1r+R2r|base": 0.0,
+       "budget=1200|R1r+R2r|freq3_imp2": 0.4375
+      },
+      "worst_claimant_fill": {
+       "budget=1200|R1r+R2r|base": 0.6948183408889808,
+       "budget=1200|R1r+R2r|freq3_imp2": 0.6653097647259195
+      }
+     },
+     "budget=600": {
+      "lost_orders": {
+       "budget=600|R1r+R2r|base": 0.041666666666666664,
+       "budget=600|R1r+R2r|freq3_imp2": 0.8263888888888888
+      },
+      "worst_claimant_fill": {
+       "budget=600|R1r+R2r|base": 0.6953761425057725,
+       "budget=600|R1r+R2r|freq3_imp2": 0.6659874409730604
+      }
+     }
+    },
+    "margins": {
+     "flow_fill_rate": 0.005,
+     "lost_orders": 0.5,
+     "worst_claimant_fill": 0.01
+    },
+    "why_it_can_fail": "a primary gain bought with lost orders is the measured failure mode of ret_excel in a new coordinate"
+   },
+   "passed": true
+  },
+  "not_applicable": [
+   "f5_no_fresh_seeds"
+  ]
+ },
+ "margins": {
+  "flow_fill_rate": 0.005,
+  "lost_orders": 0.5,
+  "worst_claimant_fill": 0.01
+ },
+ "primary_choice_rationale": "worst_claimant_fill is MEASURED structurally blind to this mechanism: blocking 1,306,164 rations leaves it at 0.6791 exactly, because it is a cumulative delivered/demanded ratio and capacity delays rather than destroys. The endpoint was chosen against the MECHANISM before any sweep, not against a result.",
+ "primary_metric": "flow_fill_rate",
+ "reference_path": "results/sensitivity/contention_headroom_v1_1/result.json",
+ "reference_sha256": "1b8011dc9f4e27ac93b2a1e04f737a0a8b8b8f45d14de9af9d210c5234001564",
+ "regimes": [
+  "R1r+R2r|base",
+  "R1r+R2r|freq3_imp2"
+ ],
+ "results": {
+  "budget=1200": {
+   "argmax_by_regime": {
+    "budget=1200|R1r+R2r|base": 0.6,
+    "budget=1200|R1r+R2r|freq3_imp2": 0.6
+   },
+   "binding_fraction": {
+    "budget=1200|R1r+R2r|base": 0.5841672158643493,
+    "budget=1200|R1r+R2r|freq3_imp2": 0.593513120046719
+   },
+   "guardrails": {
+    "lost_orders": {
+     "budget=1200|R1r+R2r|base": 0.0,
+     "budget=1200|R1r+R2r|freq3_imp2": 0.4375
+    },
+    "worst_claimant_fill": {
+     "budget=1200|R1r+R2r|base": 0.6948183408889808,
+     "budget=1200|R1r+R2r|freq3_imp2": 0.6653097647259195
+    }
+   },
+   "h_regime": {
+    "H_regime": 0.002275611553734236,
+    "lcb95": 0.0012306060483438768,
+    "ucb95": 0.0032475869396133197
+   },
+   "mass": {
+    "budget=1200|R1r+R2r|base": {
+     "delivered": 292931.2361111111,
+     "demanded": 403814.0625
+    },
+    "budget=1200|R1r+R2r|freq3_imp2": {
+     "delivered": 289414.0677083333,
+     "demanded": 403516.6875
+    }
+   },
+   "mean_by_share": {
+    "budget=1200|R1r+R2r|base": {
+     "0.1": 0.5883853841850236,
+     "0.2": 0.6195973343742398,
+     "0.3": 0.626595801895697,
+     "0.4": 0.6290376924878576,
+     "0.5": 0.6299623047997551,
+     "0.6": 0.6314481556257632,
+     "0.7": 0.6274745710142793,
+     "0.8": 0.621478770930174,
+     "0.9": 0.5927413934401853
+    },
+    "budget=1200|R1r+R2r|freq3_imp2": {
+     "0.1": 0.5835259758305531,
+     "0.2": 0.6103319651417367,
+     "0.3": 0.6148790937846327,
+     "0.4": 0.6173546989189074,
+     "0.5": 0.6183669758952322,
+     "0.6": 0.618368146492577,
+     "0.7": 0.6123772561481557,
+     "0.8": 0.6073437915470103,
+     "0.9": 0.5785024907739825
+    }
+   },
+   "spread": {
+    "budget=1200|R1r+R2r|base": 0.043062771440739556,
+    "budget=1200|R1r+R2r|freq3_imp2": 0.03986565571859446
+   }
+  },
+  "budget=600": {
+   "argmax_by_regime": {
+    "budget=600|R1r+R2r|base": 0.6,
+    "budget=600|R1r+R2r|freq3_imp2": 0.5
+   },
+   "binding_fraction": {
+    "budget=600|R1r+R2r|base": 0.7658634112729773,
+    "budget=600|R1r+R2r|freq3_imp2": 0.7696152543101069
+   },
+   "guardrails": {
+    "lost_orders": {
+     "budget=600|R1r+R2r|base": 0.041666666666666664,
+     "budget=600|R1r+R2r|freq3_imp2": 0.8263888888888888
+    },
+    "worst_claimant_fill": {
+     "budget=600|R1r+R2r|base": 0.6953761425057725,
+     "budget=600|R1r+R2r|freq3_imp2": 0.6659874409730604
+    }
+   },
+   "h_regime": {
+    "H_regime": 0.002533888987794164,
+    "lcb95": 0.0012939909230491181,
+    "ucb95": 0.0035142895044720872
+   },
+   "mass": {
+    "budget=600|R1r+R2r|base": {
+     "delivered": 292948.94444444444,
+     "demanded": 403814.0625
+    },
+    "budget=600|R1r+R2r|freq3_imp2": {
+     "delivered": 289447.4670138889,
+     "demanded": 403516.6875
+    }
+   },
+   "mean_by_share": {
+    "budget=600|R1r+R2r|base": {
+     "0.1": 0.5118300041212865,
+     "0.2": 0.5843783332244242,
+     "0.3": 0.6066661852212026,
+     "0.4": 0.6116397572185392,
+     "0.5": 0.6126208860389794,
+     "0.6": 0.6131169738832503,
+     "0.7": 0.6086325649643831,
+     "0.8": 0.5883092310620075,
+     "0.9": 0.5093746019387602
+    },
+    "budget=600|R1r+R2r|freq3_imp2": {
+     "0.1": 0.5131015387006669,
+     "0.2": 0.5785411296983634,
+     "0.3": 0.5959348330896561,
+     "0.4": 0.5998383874280493,
+     "0.5": 0.6023274053673634,
+     "0.6": 0.5983747723120805,
+     "0.7": 0.5953142801451344,
+     "0.8": 0.5730085752741471,
+     "0.9": 0.5057621936969816
+    }
+   },
+   "spread": {
+    "budget=600|R1r+R2r|base": 0.1037423719444901,
+    "budget=600|R1r+R2r|freq3_imp2": 0.09656521167038179
+   }
+  }
+ },
+ "schema_version": "estar_capacity_sweep_v1",
+ "scope": "DEVELOPMENT_SCREEN_ON_BURNED_TAPES_G1_NOT_GRANTED",
+ "seeds": [
+  5200001,
+  5200002,
+  5200003,
+  5200004,
+  5200005,
+  5200006,
+  5200007,
+  5200008,
+  5200009,
+  5200010,
+  5200011,
+  5200012,
+  5200013,
+  5200014,
+  5200015,
+  5200016
+ ],
+ "self_sha256": "fc944a17f7eae4655568bdb2656e76829185065906872c0010f2bee0ce7a3803",
+ "sesoi": 0.01,
+ "shares": [
+  0.1,
+  0.2,
+  0.3,
+  0.4,
+  0.5,
+  0.6,
+  0.7,
+  0.8,
+  0.9
+ ],
+ "weeks": 26
+}

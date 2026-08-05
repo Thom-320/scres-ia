@@ -85,8 +85,11 @@ def episode(seed, risks, freq, impact, *, share_a, budget):
 def boot_h_regime(cube: np.ndarray, n_boot: int, rng) -> dict:
     """H_regime over (regimes, actions, seeds), bootstrapped on the seed axis."""
     def stat(idx):
-        sub = cube[:, :, idx]
-        return float(sub.max(axis=1).mean() - sub.mean(axis=2).mean(axis=0).max())
+        # Average over SEEDS FIRST, then take the best action within each regime. Taking the max
+        # per (regime, seed) instead lets the optimum vary with the seed, which is per-seed
+        # clairvoyance and not H_regime at all -- it inflated the estimate roughly tenfold here.
+        sub = cube[:, :, idx].mean(axis=2)          # (regimes, actions)
+        return float(sub.max(axis=1).mean() - sub.mean(axis=0).max())
     n = cube.shape[2]
     draws = np.array([stat(rng.integers(0, n, n)) for _ in range(n_boot)])
     return {"H_regime": stat(np.arange(n)),
