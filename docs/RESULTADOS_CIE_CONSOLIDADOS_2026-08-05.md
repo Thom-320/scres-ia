@@ -21,7 +21,7 @@ con contrato, hash y falsadores.
 
 ## R1 · El efecto Alzheimer sobrevive a un normalizador honesto
 
-`results/garrido_normaliser_audit/result.json` · contrato
+`results/garrido_normaliser_audit_v2/result.json` · contrato
 `docs/PREREGISTRO_AUDITORIA_NORMALIZADOR_2026-08-05.md`
 
 El aprendiz normalizaba su objetivo con el min/max de **las 288 configuraciones**, incluidas las no
@@ -68,7 +68,7 @@ ninguno de los dos puede satisfacerse por acuerdo del código consigo mismo.
 
 ## R2 · La superficie es difícil de buscar, y la respuesta es la misma en todas partes
 
-`results/surface_gates/result.json` · contrato `docs/ENMIENDA_GATES_SUPERFICIE_2026-08-05.md`
+`results/surface_gates_v2/result.json` · contrato `docs/ENMIENDA_GATES_SUPERFICIE_2026-08-05.md`
 
 **`g2` separabilidad** — ΔCV-R² con validación cruzada **dejando una semilla fuera**:
 
@@ -85,7 +85,8 @@ ninguno de los dos puede satisfacerse por acuerdo del código consigo mismo.
 **OFAT no es óptimo por construcción** y existe un problema de búsqueda real. Es lo que da objeto a
 todo lo que sigue.
 
-**`g1` valor de conocer el régimen** — `H_regime` **+0,0038 [LCB95 +0,0000]** contra 0,05:
+**`g1` valor de conocer el régimen** — `H_regime` **+0,0038 [LCB95 +0,0000]** contra 0,05
+(5.000 bootstrap):
 **13× por debajo**. El argmax se mueve en 4 de 6 contextos y **moverse vale el 0,4 % del rango
 alcanzable**.
 
@@ -194,6 +195,60 @@ autoriza entrenar**. Las cifras retiradas 7,24 / 12,42 / 13,54 / +6,31 siguen pr
 
 ---
 
+## R6 · La rejilla extendida: añadir variables **sí** sube `H_regime`, y aun así no llega
+
+`results/surface_gates_extended/result.json` · 4.608 configuraciones · contrato
+`docs/ENMIENDA_REJILLA_EXTENDIDA_4608_2026-08-05.md`
+
+| gate | 288 | **4.608** |
+|---|---|---|
+| `g2` no separabilidad | 5/6 contextos, ΔCV-R² 0,072–0,159 | **6/6**, 0,112–0,190 (LCB95 hasta +0,179) |
+| `g1` `H_regime` | +0,0038 [LCB95 +0,0000] | **+0,0283 [LCB95 +0,0147]** |
+
+**Exponer los dos buffers aguas arriba multiplica `H_regime` por 7,4×** y saca su límite inferior
+del cero. Es la instrucción de Garrido del 28 de julio —añadir nodos y variables de decisión, no
+alargar el episodio— **medida, y en la dirección que él predijo**.
+
+Y aun así el gate **falla**: sigue **1,8× por debajo** del umbral de 0,05. La superficie se volvió
+más difícil de buscar, no más dependiente del régimen.
+
+---
+
+## R7 · Transferencia de rejilla 288 → 4.608: **la representación importa, y no es la red**
+
+`results/grid_transfer/result.json` · contrato
+`docs/ENMIENDA_TRANSFERENCIA_REJILLA_2026-08-05.md` · `GRID_TRANSFER_ESTABLISHED__UCB1`
+
+Cada familia entrena su carrera de seis contextos sobre 288 y **el mismo estado retenido** busca
+sobre 4.608. Control: la misma familia **arrancando en frío**. Placebo decisivo: **réplica
+marginal**, que reproduce su distribución de visitas ignorando el estado.
+
+| familia | vs arranque en frío | vs **réplica marginal** |
+|---|---:|---:|
+| neurona | +0,0622 **[+0,0343]** | +0,0063 [−0,0061] |
+| **UCB1** | +0,0615 **[+0,0434]** | **+0,0366 [+0,0153]** |
+| OFAT | +0,0252 **[+0,0110]** | +0,0071 [−0,0122] |
+| GP-EI | +0,0209 **[+0,0084]** | −0,0083 [−0,0351] |
+
+**Las cuatro transfieren mejor que arrancar de cero.** Eso **refuta nuestra propia hipótesis** de
+que un prior GP no cruza un cambio de espacio de diseño — por eso la enmienda lo puso como brazo a
+medir y no como premisa.
+
+**Pero sólo el bandido bate a su réplica marginal.** Para la neurona, OFAT y el GP, lo que cruzó la
+frontera es **una distribución de visitas** —una tabla de consulta sobre configuraciones— y **no la
+forma de la superficie**.
+
+> **La representación que transfiere es la que está factorizada como el espacio de diseño**: un
+> estadístico por nivel de factor. Ni la red, ni el proceso gaussiano. El estado de UCB1 son
+> exactamente los objetos que sobreviven a añadir factores nuevos; `ρ` vive sobre coordenadas cuyo
+> significado se desplaza, y los puntos del GP están todos en `(…,0,0)`.
+
+**Advertencia metodológica, la segunda del paquete**: el humo con **una** semilla daba el orden
+**exactamente invertido** —neurona y OFAT peor que en frío, el GP el único que ayudaba—. Se declaró
+ininterpretable antes de correrlo, y a n = 12 se dio la vuelta.
+
+---
+
 ## Integridad reparada por el camino, y que va al apartado de reproducibilidad
 
 **Los tres defectos de la plataforma Q2** (`scripts/run_garrido_q2_des288_v1.py`). El grave: OFAT
@@ -231,11 +286,17 @@ intervalos cruzan cero**, y sin ella la figura afirmaría un orden que sus propi
 
 ---
 
-## Lo que falta para cerrar el paper
+## El paquete está cerrado
 
-**La transferencia de rejilla 288 → 4.608**, el único eje de transferencia vivo tras `g1`.
-Contrato escrito (`docs/ENMIENDA_TRANSFERENCIA_REJILLA_2026-08-05.md`) y runner implementado
-(`scripts/run_grid_transfer_v1.py`); la superficie extendida está construyéndose.
+Los siete resultados están medidos, sellados y con falsadores. **Ninguna semilla nueva se abrió**:
+la rejilla extendida añade **configuraciones, no cintas**, así que corrió sobre el mismo bloque
+quemado como réplica declarada.
 
-**No requiere firma**: la extensión añade **configuraciones, no cintas**, así que corre sobre el
-mismo bloque quemado como réplica declarada. No hay nada que abrir.
+**Lo que queda es editorial**, no experimental: escribir el manuscrito sobre este paquete. Y una
+decisión del PI que este paquete **no** toma — si alguna de estas mediciones justifica gastar un
+bloque virgen en una confirmación prospectiva. Nada aquí lo autoriza.
+
+**El eje de la red está cerrado por medición, no por cansancio.** Dentro del episodio no hay prima
+neural en cuatro contratos. Entre corridas, tres aproximadores son estadísticamente equivalentes y
+el más barato es el de cinco parámetros. Y al cruzar espacios de diseño, **lo que transfiere no es
+un aproximador sino una factorización**.
