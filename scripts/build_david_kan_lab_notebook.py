@@ -686,9 +686,22 @@ print('Cuando tengas los tres JSON, mandanoslos y los adjudicamos aqui.')
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--output", type=Path, default=NOTEBOOK)
+    ap.add_argument("--arch", default=None, choices=("KAN", "MLP", "DMLPA"),
+                    help="fija ARCH en la celda 0 (para kernels de Kaggle sin edición manual)")
+    ap.add_argument("--quiet", action="store_true")
     args = ap.parse_args()
+    cells = CELLS
+    if args.arch:
+        cells = [dict(c) for c in CELLS]
+        for c in cells:
+            src = "".join(c["source"])
+            if "ARCH          = 'KAN'" in src:
+                src = src.replace(
+                    "ARCH          = 'KAN'           #",
+                    f"ARCH          = {args.arch!r}".ljust(31) + "#")
+                c["source"] = src.splitlines(keepends=True)
     notebook = {
-        "cells": CELLS,
+        "cells": cells,
         "metadata": {
             "kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},
             "language_info": {"name": "python"},
@@ -699,7 +712,10 @@ def main() -> int:
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(notebook, indent=1, ensure_ascii=False) + "\n")
-    print(f"  {args.output}  ({len(CELLS)} celdas)")
+    if args.quiet:
+        print(f"  {args.output}  (ARCH={args.arch or 'KAN'})")
+        return 0
+    print(f"  {args.output}  ({len(cells)} celdas)")
     print(f"  Colab : https://colab.research.google.com/github/{REPO}/blob/{BRANCH}/{args.output}")
     print(f"  Kaggle: https://www.kaggle.com/kernels/welcome?src=https://github.com/{REPO}/blob/"
           f"{BRANCH}/{args.output}")
