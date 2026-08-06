@@ -108,3 +108,16 @@ es un comparador y su transferencia se mide descriptivamente.
 
 Un resultado nulo o un falsador fallido cierra la afirmación confirmatoria correspondiente. No se
 abrirán PPO, MLP, KAN ni una nueva rejilla para rescatarlo dentro de este bloque.
+
+## 7. Adjudicación de la tentativa del 5 de agosto
+
+La primera tentativa de apertura de este bloque fue iniciada sin una autorización PI registrada y
+con el orden de contextos todavía pendiente de corrección en las escaleras de desarrollo. Se
+detuvo antes de producir un resultado y se selló el recibo
+`results/custody/garrido_grid_transfer_confirmation_abort.json`.
+
+Se conservaron 17 rebanadas raw completas para auditoría, pero no llevan sello científico y no son
+un resultado. Como pudo existir trabajo parcial no materializado, el registro trata todo
+`8.100.001–8.100.060` como `ATTEMPTED_NO_SEALED_ARTIFACT`; el rango no puede volver a usarse como
+evidencia virgen. Esta adjudicación supersede cualquier lenguaje prospectivo de las secciones
+anteriores: no hay confirmación abierta ni autorización para un bloque sustituto.

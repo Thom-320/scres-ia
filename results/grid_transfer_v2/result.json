@@ -1,0 +1,428 @@
+{
+ "budget": 24,
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "GRID_TRANSFER_ESTABLISHED__UCB1",
+ "contexts": [
+  "R1r",
+  "R1r+R2r",
+  "R1r+R2r|esc",
+  "R1r|esc",
+  "R2r",
+  "R2r|esc"
+ ],
+ "contract_path": "docs/ENMIENDA_TRANSFERENCIA_REJILLA_2026-08-05.md",
+ "contract_sha256": "879a8287cc0d3f5a81875c4901478b588e796bae8e52764b6a04be366e457747",
+ "contrasts": {
+  "gp": {
+   "vs_cold": {
+    "lcb95": 0.008434772680665491,
+    "mean": 0.02094445459097223,
+    "n": 12,
+    "ucb95": 0.035797249366408226
+   },
+   "vs_marginal_replay": {
+    "lcb95": -0.03510893380051194,
+    "mean": -0.008287944840670275,
+    "n": 12,
+    "ucb95": 0.019414655000637025
+   }
+  },
+  "neuron": {
+   "vs_cold": {
+    "lcb95": 0.03431644264540011,
+    "mean": 0.06221968458614761,
+    "n": 12,
+    "ucb95": 0.09220148893723065
+   },
+   "vs_marginal_replay": {
+    "lcb95": -0.006051253709459005,
+    "mean": 0.00624660105930602,
+    "n": 12,
+    "ucb95": 0.0192789332550147
+   }
+  },
+  "ofat": {
+   "vs_cold": {
+    "lcb95": 0.01101639639875468,
+    "mean": 0.025197430807708695,
+    "n": 12,
+    "ucb95": 0.03781530835585708
+   },
+   "vs_marginal_replay": {
+    "lcb95": -0.012167287232115815,
+    "mean": 0.007098210165968837,
+    "n": 12,
+    "ucb95": 0.025210916448409837
+   }
+  },
+  "ucb1": {
+   "vs_cold": {
+    "lcb95": 0.04343679713636624,
+    "mean": 0.06149385972783777,
+    "n": 12,
+    "ucb95": 0.08027253205635444
+   },
+   "vs_marginal_replay": {
+    "lcb95": 0.015315139911790324,
+    "mean": 0.03654749974722587,
+    "n": 12,
+    "ucb95": 0.05992619417122418
+   }
+  }
+ },
+ "created_at": "2026-08-05T23:29:08.501199+00:00",
+ "elapsed_seconds": 917.6788267500015,
+ "falsifiers": {
+  "all_passed": true,
+  "f1_the_null_subgrid_reproduces_the_288_cache": {
+   "evidence": {
+    "cells_checked": 20736,
+    "max_abs_delta": 0.0,
+    "mismatches": 0,
+    "why_it_can_fail": "exposing the two factors must not have moved the physics; the 288 cache was written by an earlier run so this anchor is external"
+   },
+   "passed": true
+  },
+  "f2_the_new_factors_move_the_endpoint": {
+   "evidence": {
+    "mean_within_base_config_spread": {
+     "R1r": 0.00048494566261942187,
+     "R1r+R2r": 0.0005826551805591044,
+     "R1r+R2r|esc": 0.0005967013954790142,
+     "R1r|esc": 0.0004916759596228515,
+     "R2r": 0.002143211122213759,
+     "R2r|esc": 0.0009171026214854965
+    },
+    "why_it_can_fail": "this project has already measured 4.56M units of raw material moving exactly zero ReT; if the new factors are decoration the extension is padding"
+   },
+   "passed": true
+  },
+  "f3_transfer_beats_its_marginal_replay": {
+   "evidence": {
+    "contrasts": {
+     "gp": {
+      "lcb95": -0.03510893380051194,
+      "mean": -0.008287944840670275,
+      "n": 12,
+      "ucb95": 0.019414655000637025
+     },
+     "neuron": {
+      "lcb95": -0.006051253709459005,
+      "mean": 0.00624660105930602,
+      "n": 12,
+      "ucb95": 0.0192789332550147
+     },
+     "ofat": {
+      "lcb95": -0.012167287232115815,
+      "mean": 0.007098210165968837,
+      "n": 12,
+      "ucb95": 0.025210916448409837
+     },
+     "ucb1": {
+      "lcb95": 0.015315139911790324,
+      "mean": 0.03654749974722587,
+      "n": 12,
+      "ucb95": 0.05992619417122418
+     }
+    },
+    "why_it_can_fail": "if no arm beats a state-blind replay of its own visit marginals, what crossed the boundary was a lookup table and not the shape of the surface"
+   },
+   "passed": true
+  },
+  "f4_no_fresh_seeds": {
+   "evidence": {
+    "n_sealed_artifact_overlap": 12,
+    "n_seeds": 12,
+    "note": "deliberate re-execution of registry block 'garrido_q2_des288'; these seeds are NOT virgin and are not meant to be",
+    "registry_conflicts": [
+     {
+      "id": "garrido_q2_des288",
+      "n_overlapping": 12,
+      "range": [
+       5300001,
+       5300012
+      ],
+      "source": "results/garrido_meta_learner_v2/result.json",
+      "status": "ARTIFACT_PRESENT_PENDING_CANONICAL_CUSTODY"
+     }
+    ],
+    "registry_is_complete": false,
+    "registry_status": "BASELINE_INVENTORY_INCOMPLETE_NO_NEW_SEEDS_AUTHORIZED",
+    "replay_of": "garrido_q2_des288",
+    "sealed_artifact_overlap": [
+     5300001,
+     5300002,
+     5300003,
+     5300004,
+     5300005,
+     5300006,
+     5300007,
+     5300008,
+     5300009,
+     5300010,
+     5300011,
+     5300012
+    ],
+    "seeds": [
+     5300001,
+     5300002,
+     5300003,
+     5300004,
+     5300005,
+     5300006,
+     5300007,
+     5300008,
+     5300009,
+     5300010,
+     5300011,
+     5300012
+    ],
+    "status": "DECLARED_REPLAY",
+    "why_it_can_fail": "it cannot: this is a declared custody replay of registry block 'garrido_q2_des288', so the seeds are used on purpose. Counted in neither column."
+   },
+   "not_applicable": true,
+   "passed": null
+  }
+ },
+ "mean_auc": {
+  "gp_cold": 0.11392493001857905,
+  "gp_marginal": 0.08469253058693653,
+  "gp_transfer": 0.09298047542760679,
+  "neuron_cold": 0.14180903950099807,
+  "neuron_marginal": 0.08583595597415648,
+  "neuron_transfer": 0.07958935491485046,
+  "ofat_cold": 0.11594284795287631,
+  "ofat_marginal": 0.09784362731113645,
+  "ofat_transfer": 0.09074541714516764,
+  "ucb1_cold": 0.14108232735176662,
+  "ucb1_marginal": 0.11613596737115471,
+  "ucb1_transfer": 0.07958846762392884
+ },
+ "module_manifest": {
+  "entry_script": "scripts/run_grid_transfer_v1.py",
+  "entry_script_sha256": "669a4c0443dfb8f10570c3ef01829571e3fb1b57c74d01051651a70cbb5f3fe7",
+  "missing": [],
+  "modules": {
+   "supply_chain/arm_runner.py": "35135c537d9260832677ab6b4e344229d6b9f4810df8bdef9efd51b58fcac68a",
+   "supply_chain/seed_custody.py": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "n_base_configs": 288,
+ "n_ext_configs": 4608,
+ "per_arm": {
+  "gp_cold": [
+   0.11163524620431868,
+   0.18807860201398383,
+   0.10680100327621056,
+   0.10961356938044947,
+   0.10370324587415923,
+   0.11081141974003239,
+   0.07015794938949459,
+   0.12757664071964156,
+   0.1990601302880528,
+   0.07186041742304987,
+   0.12527384436030076,
+   0.042527091553254716
+  ],
+  "gp_marginal": [
+   0.17305749134451942,
+   0.041327423510821824,
+   0.12883746828504808,
+   0.035092609520405355,
+   0.12703924077381248,
+   0.13372729367263778,
+   0.08529374939851629,
+   0.1225552342636921,
+   0.03911384406366029,
+   0.04298203284671967,
+   0.04018633865510005,
+   0.047097640708305084
+  ],
+  "gp_transfer": [
+   0.09697709683450911,
+   0.12552148349650927,
+   0.09922743029057211,
+   0.08927542200469507,
+   0.09219941705601231,
+   0.10446031370513366,
+   0.07175875277456636,
+   0.11954999374859958,
+   0.11954662626073313,
+   0.058717562242399345,
+   0.09084097075745357,
+   0.047690635960098204
+  ],
+  "neuron_cold": [
+   0.1123293367015585,
+   0.12052110084695696,
+   0.10715630686590953,
+   0.12564628211766596,
+   0.2744858263572809,
+   0.15586772617000821,
+   0.10083329657136175,
+   0.2627069682127552,
+   0.13272520508316854,
+   0.187040271295095,
+   0.04227966269033149,
+   0.0801164910998849
+  ],
+  "neuron_marginal": [
+   0.13272915388949305,
+   0.05609103136684215,
+   0.13230987416550227,
+   0.04621017660895696,
+   0.16362561070791262,
+   0.08581869611523245,
+   0.104466961693091,
+   0.11550254715379871,
+   0.04690069842038433,
+   0.044132331916597246,
+   0.033075473488630054,
+   0.06916891616343694
+  ],
+  "neuron_transfer": [
+   0.10150494094620564,
+   0.06172396515426049,
+   0.10961696177811696,
+   0.05865934846424962,
+   0.11091467438969121,
+   0.09580064416696811,
+   0.07099702103470383,
+   0.13518633186379983,
+   0.04957383425597892,
+   0.05945265663312624,
+   0.03640673607603551,
+   0.06523514421506917
+  ],
+  "ofat_cold": [
+   0.09384951819451859,
+   0.1368412413059037,
+   0.1237324104200385,
+   0.095102424050642,
+   0.1317711453687359,
+   0.12558073419465757,
+   0.11953542637050218,
+   0.15092928454277413,
+   0.09470579129345753,
+   0.07924719486727815,
+   0.11674909679739816,
+   0.12326990802860949
+  ],
+  "ofat_marginal": [
+   0.11080454423852863,
+   0.05354489780632346,
+   0.15014360713208133,
+   0.08256438048038495,
+   0.12429586962024673,
+   0.11509570013585146,
+   0.09159476427407698,
+   0.16841752408719726,
+   0.05252201054855595,
+   0.07843496856128762,
+   0.07346303920288927,
+   0.07324222164621395
+  ],
+  "ofat_transfer": [
+   0.12003583802356099,
+   0.11958912822902368,
+   0.1418497276827186,
+   0.0596211252268422,
+   0.11100062337547227,
+   0.08828522226636348,
+   0.07875331004367783,
+   0.10528753788803198,
+   0.04381225961458005,
+   0.029480132337604135,
+   0.08692675206872309,
+   0.1043033489854132
+  ],
+  "ucb1_cold": [
+   0.1850036822753317,
+   0.10953659406593876,
+   0.0858771562678151,
+   0.13054523814485638,
+   0.26827344862199237,
+   0.12378295771346305,
+   0.1310165099306527,
+   0.20271798317311218,
+   0.11706673225230063,
+   0.13607930844775892,
+   0.055355501254673804,
+   0.14773281607330382
+  ],
+  "ucb1_marginal": [
+   0.14808876672005386,
+   0.1279169254231085,
+   0.1523540838069717,
+   0.097226518068541,
+   0.14374862733498317,
+   0.10268962261980459,
+   0.09294947612406233,
+   0.1343777277699749,
+   0.05619793971636843,
+   0.10184432712508289,
+   0.04046365261445118,
+   0.19577394113045407
+  ],
+  "ucb1_transfer": [
+   0.1316257099362926,
+   0.06798018015412657,
+   0.0812693189979478,
+   0.0677965303078397,
+   0.14348193290736244,
+   0.0728899653841631,
+   0.06454065333411084,
+   0.15506064928551824,
+   0.04730571315167446,
+   0.02007858382161553,
+   0.03723734056744179,
+   0.06579503363905315
+  ]
+ },
+ "reference_path": "results/search_ladder_v2/result.json",
+ "reference_sha256": "238fb61bc20da22d4e74753c9f940528958200d994c228cc1083c57c538e8126",
+ "replay_of": "garrido_q2_des288",
+ "run_role": "CACHE_ANALYSIS",
+ "schema_version": "grid_transfer_v1",
+ "scope": "DEVELOPMENT_ON_BURNED_TAPES_NO_ADJUDICATION_NO_LEARNER",
+ "seeds": [
+  5300001,
+  5300002,
+  5300003,
+  5300004,
+  5300005,
+  5300006,
+  5300007,
+  5300008,
+  5300009,
+  5300010,
+  5300011,
+  5300012
+ ],
+ "self_sha256": "da5487387694267902944144667c210dd5488dc369a8f6b0488f003b60ef8304",
+ "transfers": {
+  "gp": false,
+  "neuron": false,
+  "ofat": false,
+  "ucb1": true
+ }
+}
