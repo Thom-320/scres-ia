@@ -71,9 +71,11 @@ forward por esos flags. Aquí se usan apagados.
 """),
 
     code(f"""# 0) LA ÚNICA CELDA QUE TIENES QUE TOCAR
-RUN_PROFILE   = 'preliminary'   # 'smoke' (cableado, ~2 min) | 'preliminary' (1 semilla) | 'final' (multi-semilla)
+# DEFAULTS = LO QUE PEDISTE. Dale a "Ejecutar todo" y sale tu corrida completa.
+RUN_PROFILE   = 'final'         # 'smoke' (cableado, ~2 min) | 'preliminary' (1 semilla) | 'final' (COMPLETA)
 ARCH          = 'KAN'           # 'KAN' | 'MLP' | 'DMLPA' | 'CUSTOM'
-MEMORY_ARM    = 'independent'   # 'independent' (compara arquitecturas) | 'persistent' (aprendizaje entre corridas)
+MEMORY_ARM    = 'persistent'    # PEDISTE ESTO: los pesos NO se reinician entre semillas.
+                                # Corre ademas su gemelo 'independent' como control (celda 6).
 
 TARGET_PARAMS = 200_000         # presupuesto COMPARTIDO de parámetros del extractor
 PARAM_TOLERANCE = 0.10          # el cuaderno aborta si dos arquitecturas quedan a más de esto
@@ -81,7 +83,7 @@ PARAM_TOLERANCE = 0.10          # el cuaderno aborta si dos arquitecturas quedan
 DEVICE        = 'auto'          # 'auto' mide CPU vs GPU y elige | 'cpu' | 'cuda'
 N_ENVS        = 'auto'          # 'auto' = núcleos-1 (máx 8). El cuello es el DES, no la red.
 
-HISTORY_LEN   = 8               # frame stack: 101 x HISTORY_LEN entra a la red
+HISTORY_LEN   = 16              # frame stack ALTO, como pediste: 101 x 16 = 1.616 dims de entrada
 OBS_VERSION   = 'v10'           # v7=52 | v8=79 | v9=89 | v10=101 features
 MAX_STEPS     = 104             # decisiones por episodio (semanales)
 
@@ -98,7 +100,10 @@ elif RUN_PROFILE == 'preliminary':
 elif RUN_PROFILE == 'final':
     # Medido: ~97 pasos/s con 4 envs paralelos y KAN de 200k parámetros.
     # 150k x 5 semillas ~ 2,2 h de entrenamiento + evaluación. Cabe en las 9 h con holgura.
-    TOTAL_STEPS, N_STEPS, SEEDS = 150_000, 512, [9491, 9492, 9493, 9494, 9495]
+    # Dimensionado para que quepan LOS DOS BRAZOS (persistente + su control) en las 9 h de
+    # Kaggle: 100k x 5 semillas x 2 brazos = 1M pasos. La sonda de la celda 3-bis lo verifica
+    # en tu maquina y avisa si no cabe.
+    TOTAL_STEPS, N_STEPS, SEEDS = 100_000, 512, [9491, 9492, 9493, 9494, 9495]
     EVAL_EPISODES = 24
 else:
     raise ValueError(RUN_PROFILE)
@@ -510,6 +515,157 @@ print()
 print('Regla de lectura fijada de antemano: si dos arquitecturas EMPATAN en ReT')
 print('(intervalos que se solapan), gana la más barata en parámetros y ms/decisión.')
 print('Medimos eso mismo para surrogates y ganó una neurona de 5 parámetros.')"""),
+
+    code("""# 8) VEREDICTO PRELIMINAR — leelo tu antes de mandarnos nada
+import numpy as _np
+
+def verdict(df):
+    out = {}
+    ind = df.query("arm == 'independent'")
+    per = df.query("arm == 'persistent'")
+    out['n_seeds'] = int(ind['seed'].nunique())
+    out['independent_mean'] = float(ind['ret_mean'].mean())
+    out['independent_sd_between_seeds'] = float(ind['ret_mean'].std()) if len(ind) > 1 else None
+    if len(per):
+        out['persistent_mean'] = float(per['ret_mean'].mean())
+        # Pareado por ORDEN, no por semilla: el brazo persistente depende de la posicion.
+        paired = (per.sort_values('order')['ret_mean'].values
+                  - ind.sort_values('order')['ret_mean'].values)
+        out['persistent_minus_independent_mean'] = float(paired.mean())
+        out['persistent_minus_independent_sd'] = float(paired.std(ddof=1)) if len(paired) > 1 else None
+        if len(per) > 2:
+            o = per.sort_values('order')
+            out['persistent_trend_slope'] = float(
+                _np.polyfit(o['order'].values, o['ret_mean'].values, 1)[0])
+    return out
+
+V = verdict(results)
+print('=== VEREDICTO PRELIMINAR ===')
+for k, v in V.items():
+    print(f'  {k:<34} {v}')
+print()
+if V['n_seeds'] < 2:
+    print('LECTURA: una sola semilla. Esto es un humo, no un resultado. Sube SEEDS.')
+else:
+    d, sd = V.get('persistent_minus_independent_mean'), V.get('persistent_minus_independent_sd')
+    if d is not None and sd:
+        se = sd / (V['n_seeds'] ** 0.5)
+        lo, hi = d - 1.96 * se, d + 1.96 * se
+        print(f'LECTURA: persistente - independiente = {d:+.4f}  [IC95 {lo:+.4f}, {hi:+.4f}]')
+        if lo > 0:
+            print('  El estado retenido AYUDA por encima del ruido entre semillas.')
+        elif hi < 0:
+            print('  El estado retenido PERJUDICA.')
+        else:
+            print('  El intervalo cruza cero: no se distingue de no retener nada.')
+    print()
+    print('  AVISO que importa: el brazo persistente NO tiene replicas independientes -- cada')
+    print('  semilla hereda de la anterior. Su ventaja tambien puede ser sencillamente haber')
+    print('  entrenado mas veces. Por eso corre el gemelo reseteado, y por eso se reporta la')
+    print('  pendiente contra el ORDEN. Este diseno NO separa del todo ambas explicaciones;')
+    print('  eso lo separa un contrato preregistrado, y ese es el paso siguiente.')
+"""),
+
+    code("""# 9) EXPORTA EL PAQUETE PARA THOMAS — mandanos SOLO este JSON, no el notebook
+import hashlib, inspect, platform, json as _json
+
+def sha(text):
+    return hashlib.sha256(text.encode()).hexdigest()
+
+def source_of(obj):
+    try:
+        return inspect.getsource(obj)
+    except Exception:
+        return None
+
+# Lo que CAMBIASTE: se hashea el codigo de tus objetos editables y, si IPython lo permite, el
+# texto de todas las celdas que ejecutaste. Asi vemos que tocaste sin pedirte el .ipynb.
+edited = {}
+for name, obj in [('DMLPA', DMLPA), ('MLPExtractor', MLPExtractor),
+                  ('kan_factory', kan_factory), ('mlp_factory', mlp_factory),
+                  ('dmlpa_factory', dmlpa_factory), ('build_model', build_model)]:
+    src = source_of(obj)
+    edited[name] = {'sha256': sha(src) if src else None,
+                    'n_lines': len(src.splitlines()) if src else None, 'source': src}
+
+try:
+    cells_run = [{'index': i, 'sha256': sha(c), 'source': c} for i, c in enumerate(In) if c.strip()]
+except NameError:
+    cells_run = None
+
+package = {
+    'schema_version': 'david_kan_lab_export_v1',
+    'created_at': datetime.now(timezone.utc).isoformat(),
+    'who': 'David',
+    'config': {'RUN_PROFILE': RUN_PROFILE, 'ARCH': ARCH, 'MEMORY_ARM': MEMORY_ARM,
+               'TARGET_PARAMS': TARGET_PARAMS, 'PARAM_TOLERANCE': PARAM_TOLERANCE,
+               'HISTORY_LEN': HISTORY_LEN, 'OBS_VERSION': OBS_VERSION, 'MAX_STEPS': MAX_STEPS,
+               'TOTAL_STEPS': TOTAL_STEPS, 'N_STEPS': N_STEPS, 'SEEDS': SEEDS,
+               'EVAL_EPISODES': EVAL_EPISODES},
+    'environment': {'flat_obs_dim': int(FLAT_DIM), 'action_space': str(_e.action_space),
+                    'device_chosen': BEST_DEVICE, 'device_speeds_steps_per_s': device_speeds,
+                    'n_envs': n_envs, 'python': platform.python_version(),
+                    'platform': platform.platform(), 'torch': torch.__version__,
+                    'cuda_available': torch.cuda.is_available(),
+                    'gpu': torch.cuda.get_device_name(0) if torch.cuda.is_available() else None,
+                    'repo_commit': subprocess.check_output(['git', 'rev-parse', 'HEAD'],
+                                                           cwd=ROOT, text=True).strip()},
+    'parameter_matching': sizes,
+    'results': results.to_dict(orient='records'),
+    'efficiency': row,
+    'verdict_preliminary': V,
+    'edited_objects': edited,
+    'cells_executed': cells_run,
+}
+
+out_json = OUT / 'david_export.json'
+out_json.write_text(_json.dumps(package, indent=2, ensure_ascii=False, default=str))
+results.to_csv(OUT / 'david_results.csv', index=False)
+try:
+    with pd.ExcelWriter(OUT / 'david_results.xlsx') as xl:
+        results.to_excel(xl, sheet_name='resultados', index=False)
+        pd.DataFrame([package['config']]).to_excel(xl, sheet_name='config', index=False)
+        pd.DataFrame(sizes).T.to_excel(xl, sheet_name='parametros')
+        pd.DataFrame([V]).to_excel(xl, sheet_name='veredicto', index=False)
+except Exception as exc:
+    print(f'  (sin Excel: {type(exc).__name__}; el JSON y el CSV bastan)')
+
+print(f'PAQUETE LISTO  ->  {out_json}   ({out_json.stat().st_size/1024:.0f} KB)')
+print()
+print('Mandanos SOLO ese archivo. Lleva: tu config, la maquina y el dispositivo elegido, los')
+print('parametros de cada arquitectura, todos los resultados por semilla, el veredicto, EL')
+print('CODIGO de tus objetos editables con su hash, y el texto de las celdas que ejecutaste.')
+print('Con eso reproducimos e interpretamos aqui sin pedirte el notebook.')
+if 'google.colab' in sys.modules:
+    from google.colab import files as _files
+    _files.download(str(out_json))
+"""),
+
+    code("""# 10) QUE YA CORRISTE Y QUE TE FALTA
+done, missing = [], []
+done.append(f'{ARCH} - {MEMORY_ARM} - {len(SEEDS)} semilla(s) - {TOTAL_STEPS:,} pasos')
+if MEMORY_ARM == 'persistent':
+    done.append('control reseteado (independent) sobre las mismas semillas')
+
+for other in [a for a in ('KAN', 'MLP', 'DMLPA') if a != ARCH]:
+    missing.append(f"ARCH='{other}'  -- sin esto no hay COMPARACION, solo una medicion")
+if len(SEEDS) < 3:
+    missing.append('RUN_PROFILE=final (5 semillas) -- con menos no hay varianza entre semillas')
+
+print('YA CORRISTE:')
+for d in done:
+    print(f'  [x] {d}')
+print()
+print('TE FALTA, en este orden:')
+for i, m in enumerate(missing, 1):
+    print(f'  [ ] {i}. {m}')
+print()
+print('El orden importa. La pregunta es si KAN le gana al MLP con los MISMOS parametros, y')
+print('una sola arquitectura no la responde por muy bien que salga. Cambia ARCH en la celda 0,')
+print('vuelve a ejecutar todo, y exporta un JSON por arquitectura.')
+print()
+print('Cuando tengas los tres JSON, mandanoslos y los adjudicamos aqui.')
+"""),
 
     md("""## Reglas de interpretación
 
