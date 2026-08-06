@@ -1,0 +1,97 @@
+{
+ "alpha": 0.05,
+ "arm": "ucb1",
+ "authorisation_note": "The registry still declares new_seed_opening: false. This artifact sizes an experiment; it does not authorise one.",
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "checks": {
+  "all_passed": true,
+  "f1_design_effect_did_not_move": {
+   "evidence": {
+    "delta_star": 0.015,
+    "why_it_can_fail": "if delta* were re-derived from the corrected mean the power calculation would be circular -- sized to detect exactly the effect already seen, adequate by construction. It was fixed before the block was reserved and is asserted against that value here"
+   },
+   "passed": true
+  },
+  "f2_the_two_artifacts_really_differ": {
+   "evidence": {
+    "sd_alphabetical": 0.042153988155667156,
+    "sd_contractual": 0.027526705223398396,
+    "why_it_can_fail": "if the ordered and alphabetical artifacts gave the identical paired SD, the ordering defect would not touch this estimand and re-powering would be theatre"
+   },
+   "passed": true
+  },
+  "f3_seed_counts_match": {
+   "evidence": {
+    "n": 12,
+    "why_it_can_fail": "a different number of seeds would confound the SD change with a sample-size change"
+   },
+   "passed": true
+  }
+ },
+ "claim_status": "BLOCK_SIZE_STILL_ADEQUATE_UNDER_CORRECTED_SD",
+ "contract_path": "docs/PREREGISTRO_CONFIRMACION_TRANSFERENCIA_REJILLA_2026-08-05.md",
+ "contract_sha256": "1455e3cf6873f7aa94b5df6574a63ae4aa0fb33acdcfaacd2704e7ed9d0b5003",
+ "created_at": "2026-08-06T00:29:19.508032+00:00",
+ "design_effect": 0.015,
+ "elapsed_seconds": 0.0021050830000604037,
+ "module_manifest": {
+  "entry_script": "scripts/repower_grid_transfer_confirmation_v1.py",
+  "entry_script_sha256": "893ea4759a2ec3930f645b21e67985917d99d2332377e1f50755b06442405816",
+  "missing": [],
+  "modules": {
+   "supply_chain/arm_runner.py": "35135c537d9260832677ab6b4e344229d6b9f4810df8bdef9efd51b58fcac68a",
+   "supply_chain/seed_custody.py": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "power": {
+  "contractual_order": {
+   "delta_C_mean": 0.063906236790733,
+   "delta_C_sd": 0.03901509228892827,
+   "delta_M_mean": 0.03049668015043722,
+   "delta_M_sd": 0.027526705223398396,
+   "n_seeds": 12,
+   "power_at_block_n": 0.995004203712986,
+   "required_n_for_target": 26
+  },
+  "superseded_alphabetical": {
+   "delta_C_mean": 0.06149385972783777,
+   "delta_C_sd": 0.03486982863557215,
+   "delta_M_mean": 0.03654749974722587,
+   "delta_M_sd": 0.042153988155667156,
+   "n_seeds": 12,
+   "power_at_block_n": 0.8668142313282049,
+   "required_n_for_target": 59
+  }
+ },
+ "reference_path": "results/grid_transfer_ordered_v1/result.json",
+ "reference_sha256": "5fa117707b148cf1b981b76d317bb1527f8256e6e9f3eb3fc9d5577dba59040d",
+ "reserved_block_n": 60,
+ "run_role": "CONTRACT_ARITHMETIC",
+ "schema_version": "grid_transfer_confirmation_repower_v1",
+ "scope": "POWER_RECOMPUTATION_ONLY_NO_ADJUDICATION_NO_SEED_AUTHORISATION",
+ "self_sha256": "4d17ab2c2d10008d6604b69b2ce42809b8f7525d023dba279a996ae2f8f9487c",
+ "sources": {
+  "contractual_order": "results/grid_transfer_ordered_v1/result.json",
+  "superseded_alphabetical": "results/grid_transfer_v2/result.json"
+ },
+ "target_power": 0.86
+}
