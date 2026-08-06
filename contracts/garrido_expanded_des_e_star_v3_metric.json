@@ -1,0 +1,279 @@
+{
+  "schema_version": "garrido_expanded_des_e_star_v3_metric",
+  "contract_id": "garrido_expanded_des_e_star_v1",
+  "status": "DESIGN_ONLY_NOT_AUTHORIZED_UNTIL_SUBMISSION_A_RECEIPT",
+  "authority": {
+    "source": "main:contracts/authority_ladder_v1.json",
+    "scientific_execution_authorized": false,
+    "submission_a_receipt_required_before_scientific_execution": true,
+    "fresh_roots_opened": false,
+    "fresh_tapes_opened": false,
+    "optimizer_seeds_assigned": false,
+    "neural_training_authorized": false,
+    "garrido_written_approval_required": true
+  },
+  "purpose": "Design the single thesis-grounded expanded DES kernel requested by Garrido before any new scientific execution.",
+  "research_question": "Which physically valid expanded decision-right families create deployable contingent resilience value, how much is captured by structured control, and does any observable residual remain for a learned controller?",
+  "scope": {
+    "historical_reference": "E_Garrido",
+    "prospective_kernel": "E_star",
+    "attribution": "thesis-grounded reconstruction; not a validated digital twin",
+    "program_q_is_a0": false,
+    "program_o_is_a0": false,
+    "required_physics": [
+      "approved upstream supplier/procurement nodes",
+      "approved downstream buffers and dispatch points",
+      "finite buffers and capacities",
+      "routes, transport capacity, and lead times",
+      "inventory in transit",
+      "production and replenishment conservation",
+      "resource and service ledgers",
+      "fixed exogenous demand and risk tapes",
+      "native review cadences"
+    ],
+    "forbidden_shortcuts": [
+      "strategic inventory or rations injected without an external source",
+      "action creating inventory without upstream production/procurement and capacity",
+      "future risk, future demand, or future outcome in the observation",
+      "new nodes, transitions, risks, costs, or observation fields after kernel freeze",
+      "post-hoc physics changes after a structural result"
+    ]
+  },
+  "decision_families": {
+    "P": "procurement authority for approved upstream sources",
+    "U": "upstream-buffer authority",
+    "D": "downstream-buffer and dispatch authority"
+  },
+  "factorial_masks": [
+    {
+      "mask_id": "M000",
+      "P": false,
+      "U": false,
+      "D": false
+    },
+    {
+      "mask_id": "M100",
+      "P": true,
+      "U": false,
+      "D": false
+    },
+    {
+      "mask_id": "M010",
+      "P": false,
+      "U": true,
+      "D": false
+    },
+    {
+      "mask_id": "M001",
+      "P": false,
+      "U": false,
+      "D": true
+    },
+    {
+      "mask_id": "M110",
+      "P": true,
+      "U": true,
+      "D": false
+    },
+    {
+      "mask_id": "M101",
+      "P": true,
+      "U": false,
+      "D": true
+    },
+    {
+      "mask_id": "M011",
+      "P": false,
+      "U": true,
+      "D": true
+    },
+    {
+      "mask_id": "M111",
+      "P": true,
+      "U": true,
+      "D": true
+    }
+  ],
+  "factorial_invariants": [
+    "same frozen kernel hash",
+    "same observation schema",
+    "same exogenous demand and risk tapes",
+    "same horizon and native cadences",
+    "same resource budgets",
+    "same metric hierarchy",
+    "same SESOI and guardrail margins",
+    "same search budget",
+    "lower-mask incumbent embedded in every superset mask"
+  ],
+  "action_contract": {
+    "native_cadence_required": true,
+    "required_fields_per_dimension": [
+      "review_epoch",
+      "next_review_in",
+      "current_value",
+      "feasible_range_or_set",
+      "neutral_value",
+      "carry_forward_rule",
+      "resource_consequences"
+    ],
+    "off_epoch_behavior": "masked_and_carried_forward",
+    "unknown_action_keys": "fail_closed",
+    "resource_rule": "q_move = min(shortfall, upstream_available, transport_capacity)"
+  },
+  "metric_hierarchy": {
+    "primary_selection_status": "CO_PRIMARY_SELECTED_BY_PI_2026-08-06",
+    "primary_selection_rule": "Select exactly one primary resilience endpoint before fresh data; never switch after inspecting results.",
+    "allowed_primary_endpoints": [
+      {
+        "id": "service_first_resilience_v2",
+        "role": "abandonment_proof_service_first",
+        "status": "SELECTED_PRIMARY",
+        "interpretation": "Lexicographic (worst_claimant_fill, flow_fill_rate, -backorder_qty_final, ret_excel_visible_clipped_0_1). Its leading term is the WORST claimant's fill, so it cannot be won by abandoning a claimant -- the failure mode measured in ret_excel. Never scalarised, so no hidden weighting can invert as the Cobb-Douglas exponents do on this chain. STIPULATED normative endpoint, not derived from the thesis."
+      },
+      {
+        "id": "ret_excel_request_snapshot_v2",
+        "role": "source_aligned_resilience",
+        "status": "provisional_until_sumBt_metric_gate_closes",
+        "interpretation": "Garrido/Excel continuity endpoint; report with full-ledger and service diagnostics."
+      },
+      {
+        "id": "cobb_douglas_index",
+        "role": "calibrated_physical_economic_sensitivity",
+        "status": "candidate_primary_only_after_calibration_freeze",
+        "interpretation": "Separate index with frozen coefficients, calibration rows, and train/test boundary; not an automatic repair of Excel ReT."
+      }
+    ],
+    "always_reported_resilience_panel": [
+      "ret_excel_request_snapshot_v2",
+      "ret_excel_full_ledger",
+      "ret_thesis",
+      "cobb_douglas_index",
+      "flow_fill_rate",
+      "worst_claimant_fill",
+      "lost_orders",
+      "unresolved_orders",
+      "backorder_qty_final",
+      "service_loss_auc",
+      "delivered_rations",
+      "resource_ledger"
+    ],
+    "cvar": {
+      "fields": [
+        "ret_excel_cvar05",
+        "ret_excel_cvar10"
+      ],
+      "role": "secondary_non_promoting_tail_diagnostic",
+      "may_be_used_in_development_reward": true,
+      "may_be_primary": false,
+      "may_promote_alone": false,
+      "may_block_alone": false,
+      "promotion_rule": "A CVaR safety gate requires a separately frozen contract, margin, power calculation, and explicit amendment; it cannot silently become the primary endpoint."
+    },
+    "scalarization": {
+      "unregistered_weighted_sum_forbidden": true,
+      "economic_scalarization": "sensitivity_only_and_frozen_before_results",
+      "lexicographic_service_selection_not_an_estimand": true
+    },
+    "primary_endpoint": [
+      "ret_excel_full_ledger",
+      "cobb_douglas_index"
+    ],
+    "selection_rationale": {
+      "criterion": "mechanism and source-fidelity, never observed headroom",
+      "why_not_headroom": "We already know both numbers: ret_excel_full_ledger H_regime +0.00978 on the extended grid against cobb_douglas 0.00000. full_ledger is higher AND still 5x below the 0.05 bar, so selecting on headroom would buy no positive result and would forfeit the paper's credibility. ret_excel_risk_conditional, with 65x the normalised headroom of the canonical metric, remains declined -- which is the evidence that selection was not on H.",
+      "why_these_two": "Both are Garrido's own. service_first_v2 was stipulated by us, and a primary we invented is attackable in a paper he co-authors. full_ledger is his Excel formula with the censoring removed -- the measured mechanism behind ret_excel rewarding abandonment. cobb_douglas is his published IJPR 2024 index and it SURVIVES the abandonment test.",
+      "guardrail_demotion": "service_first_v2 stops ranking and starts vetoing. It is the only endpoint that cannot be won by abandoning a claimant by construction, so it remains blocking: no configuration is promoted if it worsens the worst claimant's fill beyond its margin.",
+      "declared_before": "results/cobb_douglas_component_headroom_extended/result.json"
+    },
+    "blocking_guardrail_endpoint": "service_first_resilience_v2",
+    "multiplicity": {
+      "method": "Bonferroni over the 2 co-primary endpoints",
+      "rule": "A contrast counts only if it survives the correction. Reporting 'the better of the two' without it is forbidden; if one passes and the other does not, BOTH are reported with the correction applied."
+    }
+  },
+  "estimands": {
+    "H_PI": "V(pi_perfect_information) - V(pi_best_static); diagnostic only",
+    "H_obs": "V(pi_cross_fitted_observable) - V(pi_best_static); non_anticipative",
+    "Delta_obs": "V(pi_cross_fitted_observable) - V(pi_best_structured)",
+    "Delta_N": "V(pi_neural) - V(pi_best_structured) in closed-loop rollout",
+    "Delta_efficiency": "quality_and_guardrails_matched while online latency or DES calls decrease",
+    "Delta_generalization": "performance on frozen unseen regimes/topologies at matched rights and budget"
+  },
+  "control_ladder": [
+    "best_constant",
+    "lookup_or_order_up_to",
+    "threshold_or_hysteresis",
+    "tree_or_tabular_policy",
+    "spline_or_GAM",
+    "DP_or_rollout",
+    "direct_DES_MPC",
+    "robust_or_scenario_MPC_if_contractually_justified",
+    "belief_DP_or_belief_MPC_only_if_history_gate_passes",
+    "neural_controller_only_after_observable_structured_residual"
+  ],
+  "gates": {
+    "G0": [
+      "Garrido-approved manifest",
+      "flags-off bridge to E_Garrido",
+      "mass/capacity/WIP/inventory/resource closure",
+      "causal observation audit",
+      "event-tape and payload custody",
+      "legacy regression",
+      "liveness of every new action"
+    ],
+    "G1": "physical and perfect-information relevance; diagnostic only",
+    "G2": "observable non-neural policy exceeds best static by the signed SESOI with service/resource guardrails",
+    "G3": "observable residual over BestStructured exceeds the signed SESOI with grouped positive LCB95",
+    "G4": "one frozen neural development candidate under matched information, resources, and online budget",
+    "G5": "one independent confirmation; only G5 authorizes a neural-premium claim"
+  },
+  "neural_ladder": {
+    "representations": {
+      "fixed_vector": "MLP",
+      "variable_set_or_permutation": "DeepSets_or_attention_only_if_needed",
+      "history": "GRU_or_LSTM_only_if_history_predicts_action_or_value_out_of_sample",
+      "separable_univariate_structure": "KAN_as_a_predeclared_comparator_not_a_rescue"
+    },
+    "algorithms": [
+      "supervised_policy_approximation_for_convertibility_or_amortization",
+      "fitted_Q_or_DP_approximation_for_small_discrete_actions",
+      "PPO_for_closed_loop_control",
+      "RecurrentPPO_only_after_observability_aliasing_gate"
+    ],
+    "r2_not_a_control_gate": true,
+    "single_primary_architecture_for_confirmation": true
+  },
+  "seed_and_execution_policy": {
+    "seed_registry": "research/seed_custody_registry.json",
+    "new_seed_opening": false,
+    "fresh_root_opening": false,
+    "allowed_before_receipt": [
+      "contract and documentation",
+      "synthetic tests",
+      "already burned data audits",
+      "flags-off harness construction",
+      "portable manifests and falsifier mutation tests"
+    ],
+    "forbidden_before_receipt": [
+      "fresh tapes",
+      "MPC or DDMRP scientific screens",
+      "PPO/MLP/KAN training",
+      "neural architecture selection"
+    ]
+  },
+  "terminal_states": [
+    "STOP_ESTAR_FLAGS_OFF_NON_EQUIVALENT",
+    "STOP_NO_PHYSICAL_HEADROOM",
+    "STOP_HEADROOM_NOT_OBSERVABLE",
+    "STOP_STRUCTURED_CONTROL_SUFFICES",
+    "STOP_NEURAL_EQUIVALENT",
+    "NEURAL_AMORTIZATION_PREMIUM",
+    "NEURAL_PREMIUM_CONFIRMED",
+    "BUDGET_EXHAUSTED_WITHOUT_PREMIUM"
+  ],
+  "supersedes": {
+    "document": "contracts/garrido_expanded_des_e_star_v2_metric.json",
+    "scope": "metric_hierarchy.primary_selection only"
+  },
+  "amendment": "docs/ENMIENDA_METRICA_COPRIMARIA_2026-08-06.md"
+}

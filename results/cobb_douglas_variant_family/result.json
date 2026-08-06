@@ -1,0 +1,618 @@
+{
+ "axes": {
+  "exponents": [
+   "published",
+   "ours",
+   "per_context"
+  ],
+  "kappa_set": [
+   "within",
+   "global"
+  ],
+  "variables": [
+   "his_five",
+   "no_tau",
+   "plus_service"
+  ]
+ },
+ "best": {
+  "H_regime": 0.06396287315898175,
+  "exponents": "published",
+  "holm_adjusted_p": 0.0,
+  "kappa_set": "within",
+  "lcb95": 0.05836275215907498,
+  "max_term_magnitude": 0.3362716185538272,
+  "n_variables": 4,
+  "p_not_above_gate": 0.0,
+  "respects_share_bound": false,
+  "share_bound": 0.25,
+  "term_magnitudes": {
+   "epsilon": 0.3074672335490333,
+   "kappa_dot": 0.07935756483784487,
+   "phi": 0.3171994126011073,
+   "zeta": 0.3362716185538272
+  },
+  "variables": "no_tau"
+ },
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "ONLY_MISSCALED_VARIANTS_REACH_THE_BAR",
+ "contract_path": "docs/PREREGISTRO_FAMILIA_DERIVACIONES_METRICA_2026-08-06.md",
+ "contract_sha256": "718fcc283ed25c710a9b1a4df39e79a410a2a2970183234db442a56f0aebe527",
+ "created_at": "2026-08-06T13:54:38.190348+00:00",
+ "crossing_the_gate": [
+  {
+   "H_regime": 0.06392623652738239,
+   "exponents": "published",
+   "holm_adjusted_p": 0.0,
+   "kappa_set": "within",
+   "lcb95": 0.0563811952563299,
+   "max_term_magnitude": 0.3362716185538272,
+   "n_variables": 5,
+   "p_not_above_gate": 0.0,
+   "respects_share_bound": false,
+   "share_bound": 0.2,
+   "term_magnitudes": {
+    "epsilon": 0.3074672335490333,
+    "kappa_dot": 0.07935756483784487,
+    "phi": 0.3171994126011073,
+    "tau": 0.0176964463985675,
+    "zeta": 0.3362716185538272
+   },
+   "variables": "his_five"
+  },
+  {
+   "H_regime": 0.06389894601622015,
+   "exponents": "published",
+   "holm_adjusted_p": 0.0,
+   "kappa_set": "global",
+   "lcb95": 0.05627862575696369,
+   "max_term_magnitude": 0.3362716185538272,
+   "n_variables": 5,
+   "p_not_above_gate": 0.0,
+   "respects_share_bound": false,
+   "share_bound": 0.2,
+   "term_magnitudes": {
+    "epsilon": 0.3074672335490333,
+    "kappa_dot": 0.09013049064415032,
+    "phi": 0.3171994126011073,
+    "tau": 0.0176964463985675,
+    "zeta": 0.3362716185538272
+   },
+   "variables": "his_five"
+  },
+  {
+   "H_regime": 0.06396287315898175,
+   "exponents": "published",
+   "holm_adjusted_p": 0.0,
+   "kappa_set": "within",
+   "lcb95": 0.05836275215907498,
+   "max_term_magnitude": 0.3362716185538272,
+   "n_variables": 4,
+   "p_not_above_gate": 0.0,
+   "respects_share_bound": false,
+   "share_bound": 0.25,
+   "term_magnitudes": {
+    "epsilon": 0.3074672335490333,
+    "kappa_dot": 0.07935756483784487,
+    "phi": 0.3171994126011073,
+    "zeta": 0.3362716185538272
+   },
+   "variables": "no_tau"
+  },
+  {
+   "H_regime": 0.06393554750352282,
+   "exponents": "published",
+   "holm_adjusted_p": 0.0,
+   "kappa_set": "global",
+   "lcb95": 0.055841237516023656,
+   "max_term_magnitude": 0.3362716185538272,
+   "n_variables": 4,
+   "p_not_above_gate": 0.0,
+   "respects_share_bound": false,
+   "share_bound": 0.25,
+   "term_magnitudes": {
+    "epsilon": 0.3074672335490333,
+    "kappa_dot": 0.09013049064415032,
+    "phi": 0.3171994126011073,
+    "zeta": 0.3362716185538272
+   },
+   "variables": "no_tau"
+  }
+ ],
+ "elapsed_seconds": 5.657167999999956,
+ "falsifiers": {
+  "all_passed": false,
+  "f1_all_variants_reported": {
+   "evidence": {
+    "n_scored": 14,
+    "n_variants": 18,
+    "why_it_can_fail": "the preregistration commits to 18; reporting fewer would be selective reporting by omission"
+   },
+   "passed": true
+  },
+  "f2_the_family_separates": {
+   "evidence": {
+    "why_it_can_fail": "if every variant returned the same H_regime the axes would not be doing anything and the family would be measuring the estimator"
+   },
+   "passed": true
+  },
+  "f3_the_service_join_is_aligned": {
+   "evidence": {
+    "cells_joined": 36,
+    "configs_per_cell": 288,
+    "contexts": [
+     "R1r",
+     "R1r+R2r",
+     "R1r+R2r|esc",
+     "R1r|esc",
+     "R2r",
+     "R2r|esc"
+    ],
+    "seeds": [
+     5300001,
+     5300002,
+     5300003,
+     5300004,
+     5300005,
+     5300006
+    ],
+    "why_it_can_fail": "the service variable is joined from a different artifact; a mismatched configuration order would silently pair the wrong rows"
+   },
+   "passed": true
+  },
+  "f4_multiplicity_over_the_whole_family": {
+   "evidence": {
+    "family_a": 144,
+    "family_b": 14,
+    "k_pooled": 158,
+    "why_it_can_fail": "correcting these 18 against 18 would understate the search; Holm runs over A and B pooled"
+   },
+   "passed": true
+  },
+  "f5_crossing_variants_respect_his_share_bound": {
+   "evidence": {
+    "crossing": [
+     {
+      "H_regime": 0.06392623652738239,
+      "exponents": "published",
+      "kappa_set": "within",
+      "max_term_magnitude": 0.3362716185538272,
+      "respects_share_bound": false,
+      "share_bound": 0.2,
+      "variables": "his_five"
+     },
+     {
+      "H_regime": 0.06389894601622015,
+      "exponents": "published",
+      "kappa_set": "global",
+      "max_term_magnitude": 0.3362716185538272,
+      "respects_share_bound": false,
+      "share_bound": 0.2,
+      "variables": "his_five"
+     },
+     {
+      "H_regime": 0.06396287315898175,
+      "exponents": "published",
+      "kappa_set": "within",
+      "max_term_magnitude": 0.3362716185538272,
+      "respects_share_bound": false,
+      "share_bound": 0.25,
+      "variables": "no_tau"
+     },
+     {
+      "H_regime": 0.06393554750352282,
+      "exponents": "published",
+      "kappa_set": "global",
+      "max_term_magnitude": 0.3362716185538272,
+      "respects_share_bound": false,
+      "share_bound": 0.25,
+      "variables": "no_tau"
+     }
+    ],
+    "share_bound_rule": "1/len(variables), his 1/5 generalised",
+    "why_it_can_fail": "his rule 0.20/ln(x_max) exists so no term exceeds 1/5 at its own maximum. A variant that crosses the gate while breaking that bound is not his index applied to our chain, it is his index MISAPPLIED, and its headroom is a scale error rather than a finding"
+   },
+   "passed": false
+  },
+  "f6_no_fresh_seeds": {
+   "evidence": {
+    "n_sealed_artifact_overlap": 6,
+    "n_seeds": 6,
+    "note": "deliberate re-execution of registry block 'garrido_q2_des288'; these seeds are NOT virgin and are not meant to be",
+    "registry_conflicts": [
+     {
+      "id": "garrido_q2_des288",
+      "n_overlapping": 6,
+      "range": [
+       5300001,
+       5300012
+      ],
+      "source": "results/garrido_meta_learner_v2/result.json",
+      "status": "ARTIFACT_PRESENT_PENDING_CANONICAL_CUSTODY"
+     }
+    ],
+    "registry_is_complete": false,
+    "registry_status": "BASELINE_INVENTORY_INCOMPLETE_NO_NEW_SEEDS_AUTHORIZED",
+    "replay_of": "garrido_q2_des288",
+    "sealed_artifact_overlap": [
+     5300001,
+     5300002,
+     5300003,
+     5300004,
+     5300005,
+     5300006
+    ],
+    "seeds": [
+     5300001,
+     5300002,
+     5300003,
+     5300004,
+     5300005,
+     5300006
+    ],
+    "status": "DECLARED_REPLAY",
+    "why_it_can_fail": "it cannot: this is a declared custody replay of registry block 'garrido_q2_des288', so the seeds are used on purpose. Counted in neither column."
+   },
+   "not_applicable": true,
+   "passed": null
+  }
+ },
+ "gate": 0.05,
+ "k_pooled_with_family_a": 158,
+ "module_manifest": {
+  "entry_script": "scripts/run_cobb_douglas_variant_family_v1.py",
+  "entry_script_sha256": "84cf8e8fe5984d113722e62ea4998a5b6623aa04a55fd3bb05f16fbc16f40e1b",
+  "missing": [],
+  "modules": {
+   "supply_chain/arm_runner.py": "35135c537d9260832677ab6b4e344229d6b9f4810df8bdef9efd51b58fcac68a",
+   "supply_chain/cobb_douglas_resilience.py": "d9d88376d666115c8dab4018b903c45986a43811649c3b57ebe5770e57204884",
+   "supply_chain/seed_custody.py": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "reference_path": "results/metric_derivation_family/result.json",
+ "reference_sha256": "e3ba9412e792262f69357f8ddfe1182d706f856b06b89516792e6a832b4851be",
+ "replay_of": "garrido_q2_des288",
+ "run_role": "CACHE_ANALYSIS",
+ "schema_version": "cobb_douglas_variant_family_v1",
+ "scope": "DEVELOPMENT_ON_BURNED_TAPES_NO_ADJUDICATION",
+ "self_sha256": "c34063e8b2b6ddb401cc247684f3e0c9b1697f35d4d84dd8c8e8974ec3134f92",
+ "service_variable": {
+  "definition": "demanded_rations - delivered_rations at horizon",
+  "joined_from": "results/surface_cache/wrap288_v1",
+  "name": "upsilon",
+  "sign": -1.0,
+  "why": "Garrido's section 6.2 asks for drivers his index did not consider. This is the one whose absence lets an abandoned order stop costing anything: epsilon prices the backorder QUEUE, and an order that is never served leaves it."
+ },
+ "share_bound_rule": {
+  "source": "Garrido IJPR 2024 p. 11: 'each function argument was equated to 1/5'. The 0.20 is 1/5 BECAUSE he has five variables, so it moves with the count: 0.25 for four, 0.1667 for six. The first pass held it at 0.20 for every variable set, which changes the index's total weight rather than redistributing it.",
+  "value": "1 / number_of_variables"
+ },
+ "variants": [
+  {
+   "H_regime": 0.06392623652738239,
+   "exponents": "published",
+   "holm_adjusted_p": 0.0,
+   "kappa_set": "within",
+   "lcb95": 0.0563811952563299,
+   "max_term_magnitude": 0.3362716185538272,
+   "n_variables": 5,
+   "p_not_above_gate": 0.0,
+   "respects_share_bound": false,
+   "share_bound": 0.2,
+   "term_magnitudes": {
+    "epsilon": 0.3074672335490333,
+    "kappa_dot": 0.07935756483784487,
+    "phi": 0.3171994126011073,
+    "tau": 0.0176964463985675,
+    "zeta": 0.3362716185538272
+   },
+   "variables": "his_five"
+  },
+  {
+   "H_regime": 0.06389894601622015,
+   "exponents": "published",
+   "holm_adjusted_p": 0.0,
+   "kappa_set": "global",
+   "lcb95": 0.05627862575696369,
+   "max_term_magnitude": 0.3362716185538272,
+   "n_variables": 5,
+   "p_not_above_gate": 0.0,
+   "respects_share_bound": false,
+   "share_bound": 0.2,
+   "term_magnitudes": {
+    "epsilon": 0.3074672335490333,
+    "kappa_dot": 0.09013049064415032,
+    "phi": 0.3171994126011073,
+    "tau": 0.0176964463985675,
+    "zeta": 0.3362716185538272
+   },
+   "variables": "his_five"
+  },
+  {
+   "H_regime": 0.06396287315898175,
+   "exponents": "published",
+   "holm_adjusted_p": 0.0,
+   "kappa_set": "within",
+   "lcb95": 0.05836275215907498,
+   "max_term_magnitude": 0.3362716185538272,
+   "n_variables": 4,
+   "p_not_above_gate": 0.0,
+   "respects_share_bound": false,
+   "share_bound": 0.25,
+   "term_magnitudes": {
+    "epsilon": 0.3074672335490333,
+    "kappa_dot": 0.07935756483784487,
+    "phi": 0.3171994126011073,
+    "zeta": 0.3362716185538272
+   },
+   "variables": "no_tau"
+  },
+  {
+   "H_regime": 0.06393554750352282,
+   "exponents": "published",
+   "holm_adjusted_p": 0.0,
+   "kappa_set": "global",
+   "lcb95": 0.055841237516023656,
+   "max_term_magnitude": 0.3362716185538272,
+   "n_variables": 4,
+   "p_not_above_gate": 0.0,
+   "respects_share_bound": false,
+   "share_bound": 0.25,
+   "term_magnitudes": {
+    "epsilon": 0.3074672335490333,
+    "kappa_dot": 0.09013049064415032,
+    "phi": 0.3171994126011073,
+    "zeta": 0.3362716185538272
+   },
+   "variables": "no_tau"
+  },
+  {
+   "H_regime": 0.0266081153642439,
+   "exponents": "published",
+   "holm_adjusted_p": 1.0,
+   "kappa_set": "within",
+   "lcb95": 0.01652168716610778,
+   "max_term_magnitude": 1.0,
+   "n_variables": 6,
+   "p_not_above_gate": 1.0,
+   "respects_share_bound": false,
+   "share_bound": 0.16666666666666666,
+   "term_magnitudes": {
+    "epsilon": 0.3074672335490333,
+    "kappa_dot": 0.07935756483784487,
+    "phi": 0.3171994126011073,
+    "tau": 0.0176964463985675,
+    "upsilon": 1.0,
+    "zeta": 0.3362716185538272
+   },
+   "variables": "plus_service"
+  },
+  {
+   "H_regime": 0.02661779676763487,
+   "exponents": "published",
+   "holm_adjusted_p": 1.0,
+   "kappa_set": "global",
+   "lcb95": 0.015825996140289622,
+   "max_term_magnitude": 1.0,
+   "n_variables": 6,
+   "p_not_above_gate": 1.0,
+   "respects_share_bound": false,
+   "share_bound": 0.16666666666666666,
+   "term_magnitudes": {
+    "epsilon": 0.3074672335490333,
+    "kappa_dot": 0.09013049064415032,
+    "phi": 0.3171994126011073,
+    "tau": 0.0176964463985675,
+    "upsilon": 1.0,
+    "zeta": 0.3362716185538272
+   },
+   "variables": "plus_service"
+  },
+  {
+   "H_regime": 0.0,
+   "exponents": "ours",
+   "holm_adjusted_p": 1.0,
+   "kappa_set": "within",
+   "lcb95": 0.0,
+   "max_term_magnitude": 0.2,
+   "n_variables": 5,
+   "p_not_above_gate": 1.0,
+   "respects_share_bound": true,
+   "share_bound": 0.2,
+   "term_magnitudes": {
+    "epsilon": 0.19999999999999998,
+    "kappa_dot": 0.2,
+    "phi": 0.2,
+    "tau": 0.2,
+    "zeta": 0.2
+   },
+   "variables": "his_five"
+  },
+  {
+   "H_regime": 0.0,
+   "exponents": "ours",
+   "holm_adjusted_p": 1.0,
+   "kappa_set": "global",
+   "lcb95": 0.0,
+   "max_term_magnitude": 0.2,
+   "n_variables": 5,
+   "p_not_above_gate": 1.0,
+   "respects_share_bound": true,
+   "share_bound": 0.2,
+   "term_magnitudes": {
+    "epsilon": 0.19999999999999998,
+    "kappa_dot": 0.2,
+    "phi": 0.2,
+    "tau": 0.2,
+    "zeta": 0.2
+   },
+   "variables": "his_five"
+  },
+  {
+   "H_regime": 0.0,
+   "exponents": "ours",
+   "holm_adjusted_p": 1.0,
+   "kappa_set": "within",
+   "lcb95": 0.0,
+   "max_term_magnitude": 0.25,
+   "n_variables": 4,
+   "p_not_above_gate": 1.0,
+   "respects_share_bound": true,
+   "share_bound": 0.25,
+   "term_magnitudes": {
+    "epsilon": 0.25,
+    "kappa_dot": 0.25,
+    "phi": 0.25,
+    "zeta": 0.24999999999999997
+   },
+   "variables": "no_tau"
+  },
+  {
+   "H_regime": 0.0,
+   "exponents": "ours",
+   "holm_adjusted_p": 1.0,
+   "kappa_set": "global",
+   "lcb95": 0.0,
+   "max_term_magnitude": 0.25,
+   "n_variables": 4,
+   "p_not_above_gate": 1.0,
+   "respects_share_bound": true,
+   "share_bound": 0.25,
+   "term_magnitudes": {
+    "epsilon": 0.25,
+    "kappa_dot": 0.25,
+    "phi": 0.25,
+    "zeta": 0.24999999999999997
+   },
+   "variables": "no_tau"
+  },
+  {
+   "H_regime": 0.0,
+   "exponents": "ours",
+   "holm_adjusted_p": 1.0,
+   "kappa_set": "within",
+   "lcb95": 0.0,
+   "max_term_magnitude": 0.16666666666666666,
+   "n_variables": 6,
+   "p_not_above_gate": 1.0,
+   "respects_share_bound": true,
+   "share_bound": 0.16666666666666666,
+   "term_magnitudes": {
+    "epsilon": 0.16666666666666666,
+    "kappa_dot": 0.16666666666666666,
+    "phi": 0.16666666666666666,
+    "tau": 0.16666666666666666,
+    "upsilon": 0.16666666666666666,
+    "zeta": 0.16666666666666666
+   },
+   "variables": "plus_service"
+  },
+  {
+   "H_regime": 0.0024799906013696082,
+   "exponents": "ours",
+   "holm_adjusted_p": 1.0,
+   "kappa_set": "global",
+   "lcb95": 0.0,
+   "max_term_magnitude": 0.16666666666666666,
+   "n_variables": 6,
+   "p_not_above_gate": 1.0,
+   "respects_share_bound": true,
+   "share_bound": 0.16666666666666666,
+   "term_magnitudes": {
+    "epsilon": 0.16666666666666666,
+    "kappa_dot": 0.16666666666666666,
+    "phi": 0.16666666666666666,
+    "tau": 0.16666666666666666,
+    "upsilon": 0.16666666666666666,
+    "zeta": 0.16666666666666666
+   },
+   "variables": "plus_service"
+  },
+  {
+   "H_regime": null,
+   "excluded": "tau_max = 0.967786185766747 <= 1; the rule 0.2000/ln(x_max) is undefined",
+   "exponents": "per_context",
+   "kappa_set": "within",
+   "variables": "his_five"
+  },
+  {
+   "H_regime": null,
+   "excluded": "tau_max = 0.967786185766747 <= 1; the rule 0.2000/ln(x_max) is undefined",
+   "exponents": "per_context",
+   "kappa_set": "global",
+   "variables": "his_five"
+  },
+  {
+   "H_regime": 0.0,
+   "exponents": "per_context",
+   "holm_adjusted_p": 1.0,
+   "kappa_set": "within",
+   "lcb95": 0.0,
+   "max_term_magnitude": 0.26045357187620205,
+   "n_variables": 4,
+   "p_not_above_gate": 1.0,
+   "respects_share_bound": false,
+   "share_bound": 0.25,
+   "term_magnitudes": {
+    "epsilon": 0.250478401090131,
+    "kappa_dot": 0.2517640988257037,
+    "phi": 0.26045357187620205,
+    "zeta": 0.2509678790778933
+   },
+   "variables": "no_tau"
+  },
+  {
+   "H_regime": 0.0,
+   "exponents": "per_context",
+   "holm_adjusted_p": 1.0,
+   "kappa_set": "global",
+   "lcb95": 0.0,
+   "max_term_magnitude": 0.28182791234143295,
+   "n_variables": 4,
+   "p_not_above_gate": 1.0,
+   "respects_share_bound": false,
+   "share_bound": 0.25,
+   "term_magnitudes": {
+    "epsilon": 0.250478401090131,
+    "kappa_dot": 0.28182791234143295,
+    "phi": 0.26045357187620205,
+    "zeta": 0.2509678790778933
+   },
+   "variables": "no_tau"
+  },
+  {
+   "H_regime": null,
+   "excluded": "tau_max = 0.967786185766747 <= 1; the rule 0.1667/ln(x_max) is undefined",
+   "exponents": "per_context",
+   "kappa_set": "within",
+   "variables": "plus_service"
+  },
+  {
+   "H_regime": null,
+   "excluded": "tau_max = 0.967786185766747 <= 1; the rule 0.1667/ln(x_max) is undefined",
+   "exponents": "per_context",
+   "kappa_set": "global",
+   "variables": "plus_service"
+  }
+ ],
+ "winners": []
+}

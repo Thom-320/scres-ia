@@ -1,0 +1,278 @@
+{
+ "atlas": {
+  "wrap288_compat_extended_v1": {
+   "contexts": [
+    "R1r",
+    "R1r+R2r",
+    "R1r+R2r|esc",
+    "R1r|esc",
+    "R2r",
+    "R2r|esc"
+   ],
+   "endpoints": {
+    "delivered_rations": {
+     "H_regime": 0.0,
+     "lcb95": 0.0,
+     "lower_is_better": false,
+     "raw_spread": 481771.7916666667,
+     "ucb95": 0.00019316836846014208
+    },
+    "demanded_rations": {
+     "H_regime": 0.0,
+     "lcb95": 0.0,
+     "lower_is_better": true,
+     "raw_spread": 88091.08333333333,
+     "ucb95": 0.0
+    },
+    "flow_fill_rate": {
+     "H_regime": 0.0,
+     "lcb95": 0.0,
+     "lower_is_better": false,
+     "raw_spread": 0.5389625109136854,
+     "ucb95": 6.072616205221593e-07
+    },
+    "lost_orders": {
+     "H_regime": 0.0,
+     "lcb95": 0.0,
+     "lower_is_better": true,
+     "raw_spread": 108.2638888888889,
+     "ucb95": 0.0
+    },
+    "ret_excel": {
+     "H_regime": 0.00045371281989192713,
+     "lcb95": 0.0,
+     "lower_is_better": false,
+     "raw_spread": 0.17164764852059808,
+     "ucb95": 0.003190920505805928
+    },
+    "ret_excel_full_ledger": {
+     "H_regime": 0.009779601404764193,
+     "lcb95": 0.006160935371482323,
+     "lower_is_better": false,
+     "raw_spread": 0.10132448716827337,
+     "ucb95": 0.011051961188076668
+    },
+    "ret_excel_risk_conditional": {
+     "H_regime": 0.02829448338047058,
+     "lcb95": 0.016181349111474213,
+     "lower_is_better": false,
+     "raw_spread": 0.005268914991195889,
+     "ucb95": 0.043337093026439164
+    }
+   },
+   "seeds": [
+    5300001,
+    5300002,
+    5300003,
+    5300004,
+    5300005,
+    5300006,
+    5300007,
+    5300008,
+    5300009,
+    5300010,
+    5300011,
+    5300012
+   ]
+  },
+  "wrap288_v1": {
+   "contexts": [
+    "R1r",
+    "R1r+R2r",
+    "R1r+R2r|esc",
+    "R1r|esc",
+    "R2r",
+    "R2r|esc"
+   ],
+   "endpoints": {
+    "delivered_rations": {
+     "H_regime": 0.00014997229968150005,
+     "lcb95": 0.0,
+     "lower_is_better": false,
+     "raw_spread": 396745.75,
+     "ucb95": 0.0005110576874139822
+    },
+    "demanded_rations": {
+     "H_regime": 0.0,
+     "lcb95": 0.0,
+     "lower_is_better": true,
+     "raw_spread": 3101.847222222248,
+     "ucb95": 0.0
+    },
+    "flow_fill_rate": {
+     "H_regime": 7.815586437531774e-05,
+     "lcb95": 0.0,
+     "lower_is_better": false,
+     "raw_spread": 0.5385545164513017,
+     "ucb95": 0.0001561389196629348
+    },
+    "lost_orders": {
+     "H_regime": 0.0,
+     "lcb95": 0.0,
+     "lower_is_better": true,
+     "raw_spread": 103.08333333333333,
+     "ucb95": 0.0
+    },
+    "ret_excel": {
+     "H_regime": 0.0004967141323680702,
+     "lcb95": 0.0,
+     "lower_is_better": false,
+     "raw_spread": 0.17141726219916212,
+     "ucb95": 0.0029579465218704582
+    },
+    "ret_excel_full_ledger": {
+     "H_regime": 0.0002824568473430711,
+     "lcb95": 7.760935112058333e-06,
+     "lower_is_better": false,
+     "raw_spread": 0.09287888941804157,
+     "ucb95": 0.0030125658824834457
+    },
+    "ret_excel_risk_conditional": {
+     "H_regime": 0.003802243800697269,
+     "lcb95": 0.00045817894026569685,
+     "lower_is_better": false,
+     "raw_spread": 0.004649032439464037,
+     "ucb95": 0.015382321736391017
+    }
+   },
+   "seeds": [
+    5300001,
+    5300002,
+    5300003,
+    5300004,
+    5300005,
+    5300006,
+    5300007,
+    5300008,
+    5300009,
+    5300010,
+    5300011,
+    5300012
+   ]
+  }
+ },
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "NO_ENDPOINT_CARRIES_REGIME_HEADROOM",
+ "contract_path": "docs/ENMIENDA_GATES_SUPERFICIE_2026-08-05.md",
+ "contract_sha256": "3d54e4ccd27f50ae1f63d55ddc0ff74f0984db3b924e49b7b7bc697353fb8a74",
+ "created_at": "2026-08-06T02:25:09.651937+00:00",
+ "elapsed_seconds": 2.1016728750037146,
+ "falsifiers": {
+  "all_passed": true,
+  "f1_the_atlas_can_separate_endpoints": {
+   "evidence": {
+    "why_it_can_fail": "if every endpoint returned the identical H_regime the atlas would be measuring the estimator, not the endpoints, and no comparison would be possible"
+   },
+   "passed": true
+  },
+  "f2_direction_is_handled": {
+   "evidence": {
+    "flipped": [
+     "demanded_rations",
+     "lost_orders"
+    ],
+    "why_it_can_fail": "an endpoint where lower is better would otherwise have its H_regime measure the value of knowing the regime in order to do the WORST thing"
+   },
+   "passed": true
+  },
+  "f3_no_fresh_seeds": {
+   "evidence": {
+    "n_sealed_artifact_overlap": 12,
+    "n_seeds": 12,
+    "note": "deliberate re-execution of registry block 'garrido_q2_des288'; these seeds are NOT virgin and are not meant to be",
+    "registry_conflicts": [
+     {
+      "id": "garrido_q2_des288",
+      "n_overlapping": 12,
+      "range": [
+       5300001,
+       5300012
+      ],
+      "source": "results/garrido_meta_learner_v2/result.json",
+      "status": "ARTIFACT_PRESENT_PENDING_CANONICAL_CUSTODY"
+     }
+    ],
+    "registry_is_complete": false,
+    "registry_status": "BASELINE_INVENTORY_INCOMPLETE_NO_NEW_SEEDS_AUTHORIZED",
+    "replay_of": "garrido_q2_des288",
+    "sealed_artifact_overlap": [
+     5300001,
+     5300002,
+     5300003,
+     5300004,
+     5300005,
+     5300006,
+     5300007,
+     5300008,
+     5300009,
+     5300010,
+     5300011,
+     5300012
+    ],
+    "seeds": [
+     5300001,
+     5300002,
+     5300003,
+     5300004,
+     5300005,
+     5300006,
+     5300007,
+     5300008,
+     5300009,
+     5300010,
+     5300011,
+     5300012
+    ],
+    "status": "DECLARED_REPLAY",
+    "why_it_can_fail": "it cannot: this is a declared custody replay of registry block 'garrido_q2_des288', so the seeds are used on purpose. Counted in neither column."
+   },
+   "not_applicable": true,
+   "passed": null
+  }
+ },
+ "lower_is_better": [
+  "demanded_rations",
+  "lost_orders"
+ ],
+ "material_endpoints": {
+  "wrap288_compat_extended_v1": [],
+  "wrap288_v1": []
+ },
+ "module_manifest": {
+  "entry_script": "scripts/run_endpoint_headroom_atlas_v1.py",
+  "entry_script_sha256": "dbc0e1941a3fc8b8441b22b57fb1fb60e4702567bc5cefee9969499aa421b5dc",
+  "missing": [],
+  "modules": {
+   "supply_chain/arm_runner.py": "35135c537d9260832677ab6b4e344229d6b9f4810df8bdef9efd51b58fcac68a",
+   "supply_chain/seed_custody.py": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "normalisation": "per-context min-max of the seed-averaged surface",
+ "reference_path": "results/surface_gates_extended/result.json",
+ "reference_sha256": "a52cf79a43e6e76f04c9c02dde5f743b5cfff1c572c1b3ccf0eca1a1c85db2db",
+ "replay_of": "garrido_q2_des288",
+ "run_role": "CACHE_ANALYSIS",
+ "schema_version": "endpoint_headroom_atlas_v1",
+ "scope": "DEVELOPMENT_ON_BURNED_TAPES_NO_ADJUDICATION",
+ "self_sha256": "86cf97da8a96c9df98d1a79d24db36dd60d0dd45a46f38e6f0d66f12dbb3e0c5",
+ "threshold": 0.05
+}

@@ -1,0 +1,243 @@
+{
+ "schema_version": "architecture_bakeoff_v1",
+ "claim_status": "DEVELOPMENT_ARCHITECTURE_BAKEOFF_NO_ADJUDICATION",
+ "scope": "DEVELOPMENT_ONLY_NO_VIRGIN_SEEDS_NO_LEARNER_AUTHORISATION",
+ "created_at": "2026-08-06T04:55:49.869169+00:00",
+ "module_manifest": {
+  "schema": "module_manifest_v2",
+  "modules": {
+   "supply_chain/supply_chain.py": "2f348e5922cbbecf167b45cf0045765010beaaecdcb0fe6de88f259c989460f6",
+   "supply_chain/env_experimental_shifts.py": "e8da43b215a42aa5e1c1d7e14cd310bfd07eb0adae811b354e71154e4f89a7ec",
+   "supply_chain/external_env_interface.py": "4d8404af6c97a10e27bbaaa0409691420027b285f4784721d3e54468b42628e1",
+   "supply_chain/config.py": "ae702a4991966504eaa1036106fa5f4b9c11e913d376dfb67e3f3c83147904cc",
+   "supply_chain/seed_custody.py": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd"
+  },
+  "missing": [],
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)",
+  "entry_script": "scripts/run_architecture_bakeoff_v1.py",
+  "entry_script_sha256": "3b231baa9dcdf536053f5e1857623b05b97c2ad49096e8fbd9a64ced7b3d16b4"
+ },
+ "host": {
+  "platform": "Linux-7.0.0-28-generic-x86_64-with-glibc2.43",
+  "python": "3.11.15",
+  "torch": "2.12.1+cu130",
+  "cores": 6,
+  "n_envs": 5
+ },
+ "design": {
+  "env": "track_b_v1",
+  "obs_version": "v10",
+  "history_len": 16,
+  "max_steps": 104,
+  "total_steps": 60000,
+  "seeds": [
+   9491,
+   9492,
+   9493,
+   9494,
+   9495
+  ],
+  "eval_episodes": 16,
+  "target_params": 200000,
+  "arm": "independent_only"
+ },
+ "parameter_matching": {
+  "KAN": {
+   "width": 8,
+   "error": 0.02408,
+   "params": 204816
+  },
+  "MLP": {
+   "width": 111,
+   "error": 0.003925,
+   "params": 199215
+  },
+  "DMLPA": {
+   "width": 90,
+   "error": 0.06298,
+   "params": 187404
+  }
+ },
+ "by_arch": {
+  "KAN": {
+   "mean": 97.04885864117553,
+   "sd_between_seeds": 0.6335900150477174,
+   "n": 5,
+   "params": 204816,
+   "ms_per_decision": 2.8155386447906494
+  },
+  "MLP": {
+   "mean": 97.52395958347986,
+   "sd_between_seeds": 0.8134682481287362,
+   "n": 5,
+   "params": 199215,
+   "ms_per_decision": 0.6864736080169678
+  },
+  "DMLPA": {
+   "mean": 97.65966171837127,
+   "sd_between_seeds": 0.858459042966171,
+   "n": 5,
+   "params": 187404,
+   "ms_per_decision": 1.596996545791626
+  }
+ },
+ "contrasts": {
+  "KAN_minus_MLP": {
+   "mean": -0.47510094230432853,
+   "se": 0.5475800966317521,
+   "lcb95": -1.5483579317025629,
+   "ucb95": 0.5981560470939057
+  },
+  "DMLPA_minus_KAN": {
+   "mean": 0.6108030771957431,
+   "se": 0.49019297798327066,
+   "lcb95": -0.3499751596514674,
+   "ucb95": 1.5715813140429535
+  },
+  "DMLPA_minus_MLP": {
+   "mean": 0.13570213489141453,
+   "se": 0.35967080918181427,
+   "lcb95": -0.5692526511049414,
+   "ucb95": 0.8406569208877706
+  }
+ },
+ "rows": [
+  {
+   "arch": "KAN",
+   "seed": 9491,
+   "ret_mean": 98.05913165133404,
+   "ret_sd_within": 0.9011055834938603,
+   "params": 204816,
+   "train_s": 771.3647353649139,
+   "ms_per_decision": 2.9338932037353516
+  },
+  {
+   "arch": "KAN",
+   "seed": 9492,
+   "ret_mean": 96.51502059803337,
+   "ret_sd_within": 6.350795292716487,
+   "params": 204816,
+   "train_s": 653.3584024906158,
+   "ms_per_decision": 2.923227548599243
+  },
+  {
+   "arch": "KAN",
+   "seed": 9493,
+   "ret_mean": 97.27501130753232,
+   "ret_sd_within": 0.8960193886821443,
+   "params": 204816,
+   "train_s": 651.8655712604523,
+   "ms_per_decision": 2.9352104663848877
+  },
+  {
+   "arch": "KAN",
+   "seed": 9494,
+   "ret_mean": 96.66477078899968,
+   "ret_sd_within": 2.4252150197817666,
+   "params": 204816,
+   "train_s": 645.1012635231018,
+   "ms_per_decision": 2.5856494903564453
+  },
+  {
+   "arch": "KAN",
+   "seed": 9495,
+   "ret_mean": 96.73035885997822,
+   "ret_sd_within": 0.8368241195715225,
+   "params": 204816,
+   "train_s": 642.4730610847473,
+   "ms_per_decision": 2.6997125148773193
+  },
+  {
+   "arch": "MLP",
+   "seed": 9491,
+   "ret_mean": 96.86439939800604,
+   "ret_sd_within": 0.8118935891381001,
+   "params": 199215,
+   "train_s": 403.3477053642273,
+   "ms_per_decision": 0.6774115562438965
+  },
+  {
+   "arch": "MLP",
+   "seed": 9492,
+   "ret_mean": 97.71506290776756,
+   "ret_sd_within": 1.2520518722035268,
+   "params": 199215,
+   "train_s": 440.487167596817,
+   "ms_per_decision": 0.6745362281799316
+  },
+  {
+   "arch": "MLP",
+   "seed": 9493,
+   "ret_mean": 97.51397806046499,
+   "ret_sd_within": 1.0027404974739276,
+   "params": 199215,
+   "train_s": 441.41407799720764,
+   "ms_per_decision": 0.73325514793396
+  },
+  {
+   "arch": "MLP",
+   "seed": 9494,
+   "ret_mean": 96.74808494506556,
+   "ret_sd_within": 1.0429603598377852,
+   "params": 199215,
+   "train_s": 436.54781889915466,
+   "ms_per_decision": 0.7321035861968994
+  },
+  {
+   "arch": "MLP",
+   "seed": 9495,
+   "ret_mean": 98.77827260609513,
+   "ret_sd_within": 1.0777544553718272,
+   "params": 199215,
+   "train_s": 436.53902411460876,
+   "ms_per_decision": 0.6150615215301514
+  },
+  {
+   "arch": "DMLPA",
+   "seed": 9491,
+   "ret_mean": 97.14004556511424,
+   "ret_sd_within": 1.0464863152344819,
+   "params": 187404,
+   "train_s": 897.200252532959,
+   "ms_per_decision": 1.4657020568847656
+  },
+  {
+   "arch": "DMLPA",
+   "seed": 9492,
+   "ret_mean": 96.57072195029846,
+   "ret_sd_within": 1.0535102302352621,
+   "params": 187404,
+   "train_s": 863.4797866344452,
+   "ms_per_decision": 1.562429666519165
+  },
+  {
+   "arch": "DMLPA",
+   "seed": 9493,
+   "ret_mean": 98.2588063923582,
+   "ret_sd_within": 1.1293516106987962,
+   "params": 187404,
+   "train_s": 863.3391842842102,
+   "ms_per_decision": 1.6039955615997314
+  },
+  {
+   "arch": "DMLPA",
+   "seed": 9494,
+   "ret_mean": 97.60598258442153,
+   "ret_sd_within": 1.1032661998428115,
+   "params": 187404,
+   "train_s": 845.9671010971069,
+   "ms_per_decision": 1.788332462310791
+  },
+  {
+   "arch": "DMLPA",
+   "seed": 9495,
+   "ret_mean": 98.72275209966394,
+   "ret_sd_within": 1.1342781593878044,
+   "params": 187404,
+   "train_s": 828.0933127403259,
+   "ms_per_decision": 1.5645229816436768
+  }
+ ],
+ "reading_rule": "Equal quality goes to the cheaper architecture: that is Delta_efficiency, and ms_per_decision is only comparable within this single host.",
+ "elapsed_seconds": 9835.869622364058
+}
