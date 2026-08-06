@@ -150,14 +150,44 @@ frente a 0,07 de ζ. Nuestro puerto ya lo declaraba como aviso; ahora está medi
 > tienen. Es una limitación de alcance de su Ec. (5), y es exactamente el tipo de hallazgo que su
 > §6.2 invita a producir.
 
-## 7. Lo que falta medir, y corre ahora
+## 7. Cobb-Douglas por componente: el cero es de la cadena, no del índice
 
-`H_regime` **por componente** del Cobb-Douglas (ζ, ε, φ, τ, κ̇) en vez de sobre el escalar. La
-hipótesis es concreta: el cero del escalar podría ser un **artefacto de agregación**, porque los
-pesos son muy desiguales —κ̇ pesa ~7× ζ en el ajuste de Garrido— y **τ está muerta en nuestra
-cadena** (exactamente 0 en 88 de 108 episodios de calibración, porque el punto de operación de la
-tesis lleva stock suficiente para que los requerimientos netos nunca se vuelvan positivos).
+`results/cobb_douglas_component_headroom/result.json` · `NO_COMPONENT_CARRIES_HEADROOM_EITHER`
+· 288 configuraciones × 6 contextos × 6 semillas
 
-Si algún componente lleva headroom que el escalar esconde, **el cero es del índice**. Si ninguno lo
-lleva, **el cero es de la cadena** — y eso es mucho más fuerte de lo que hemos podido afirmar hasta
-ahora.
+| componente | H_regime | peso | recorrido | celdas muertas |
+|---|---:|---:|---:|---:|
+| κ̇ coste | **+0,00187** | 0,4463 | 1,08 | 0 % |
+| ε backorders | +0,00035 | 0,0169 | 1,33e5 | 0 % |
+| ζ inventario | 0,00000 | 0,0143 | 7,90e5 | 0 % |
+| φ capacidad ociosa | 0,00000 | 0,0252 | 1.456 | 0 % |
+| τ tiempo | 0,00000 | **0,6781** | 1,03 | **18 %** |
+| **escalar R** | **0,00000** | — | — | — |
+
+**La hipótesis del artefacto de agregación queda REFUTADA.** El mejor componente llega a +0,00187,
+**27× por debajo** del umbral de 0,05. Ninguno esconde headroom que el escalar borre.
+
+Y eso es una afirmación **más fuerte** que la que teníamos: el cero del Cobb-Douglas **no es un
+defecto del índice — es una propiedad de la cadena**. Ni siquiera desagregándolo en sus cinco
+variables físicas, cada una en sus propias unidades y sin ponderar, aparece nada.
+
+**La agregación sí es patológica, pero arreglarla no produciría headroom.** El 91 % del peso vive
+en τ y κ̇, las dos de menor recorrido, y τ está muerta en el 18 % de las celdas. Las tres variables
+con recorrido físico real —ζ 7,9e5, ε 1,3e5, φ 1.456— se reparten el 5 % del peso restante… y
+también dan cero.
+
+### Un defecto de mi propia regla de lectura
+
+La primera adjudicación imprimió `SCALAR_ZERO_IS_AN_AGGREGATION_ARTIFACT`. Era mía y estaba mal: la
+regla decía `mejor_componente > 3 × max(escalar, 1e-9)` y, con el escalar exactamente 0, **cualquier
+número no nulo la dispara**. Un falsador que no puede fallar en el caso que existe para juzgar.
+Corregida al mismo umbral de 0,05 que usa todo lo demás, el veredicto se invierte.
+
+## 8. Qué queda, y qué no
+
+**No queda ningún endpoint por probar que pueda cambiar la historia.** Siete endpoints del panel,
+dos rejillas, dieciséis métricas del banco previo, y ahora las cinco variables físicas del índice de
+Garrido por separado. **Todo por debajo del umbral, y el mejor de todos es el que ya usábamos.**
+
+Lo que sí cambia la historia es lo de la §4: **las métricas discrepan por completo en qué
+recomiendan, y dos de ellas premian dejar de servir**. Ése es el resultado, y es metodológico.

@@ -115,11 +115,22 @@ def main() -> int:
     horizon = float(WEEKS * HOURS_PER_WEEK)
     contexts = list(CONTEXTS)
 
+    # The aggregates cost ~950 s to produce. Cache them: a defect in the arithmetic downstream
+    # must cost a rerun of the arithmetic, not a rerun of the simulator.
+    cache = args.output.parent / "aggregates.json"
     aggregates: dict[tuple[str, int], list[dict]] = {}
-    for ctx in contexts:
-        for seed in seeds:
-            aggregates[(ctx, seed)] = [episode(c, ctx, seed, horizon) for c in CONFIGS]
-        print(f"  {ctx} listo ({time.perf_counter() - started:.0f}s)", flush=True)
+    if cache.exists():
+        raw = json.loads(cache.read_text())
+        # rsplit, not split: context names contain "|" themselves (R1r|esc).
+        aggregates = {(k.rsplit("|", 1)[0], int(k.rsplit("|", 1)[1])): v for k, v in raw.items()}
+        print(f"  agregados leídos de {cache} ({len(aggregates)} celdas)")
+    else:
+        for ctx in contexts:
+            for seed in seeds:
+                aggregates[(ctx, seed)] = [episode(c, ctx, seed, horizon) for c in CONFIGS]
+            print(f"  {ctx} listo ({time.perf_counter() - started:.0f}s)", flush=True)
+        cache.parent.mkdir(parents=True, exist_ok=True)
+        cache.write_text(json.dumps({f"{c}|{s}": v for (c, s), v in aggregates.items()}))
 
     # Exponents from OUR maxima, by Garrido's own rule. Copying his five numbers would rescale
     # every term by orders of magnitude, because they encode HIS observed maxima.
@@ -145,7 +156,7 @@ def main() -> int:
                 [kd_row[i] if v == "kappa_dot" else float(a[v]) for i, a in enumerate(cell)])
         scalar_surface[key] = np.array([
             resilience_index({vv: (kd_row[i] if vv == "kappa_dot" else float(a[vv]))
-                              for vv in VARIABLES}, exponents)["R"]
+                              for vv in VARIABLES}, exponents)["R_cobb_douglas"]
             for i, a in enumerate(cell)])
 
     rows = {}
@@ -159,9 +170,14 @@ def main() -> int:
     per_ctx_R = [np.mean([scalar_surface[(c, s)] for s in seeds], axis=0) for c in contexts]
     scalar_h = h_regime(per_ctx_R, +1.0)
 
+    # The first version of this rule was `best > 3 * max(scalar, 1e-9)`, which with a scalar of
+    # exactly 0 fires on ANY non-zero component -- it could not fail in the case it existed to
+    # judge. A component only reveals hidden headroom if it clears the same bar every other gate
+    # in this project uses.
+    GATE = 0.05
     best_component = max(rows, key=lambda v: rows[v]["H_regime"])
-    aggregation_artifact = rows[best_component]["H_regime"] > max(scalar_h, 1e-9) * 3.0
-    verdict = ("SCALAR_ZERO_IS_AN_AGGREGATION_ARTIFACT" if aggregation_artifact
+    hidden = rows[best_component]["H_regime"] >= GATE > scalar_h
+    verdict = ("SCALAR_ZERO_IS_AN_AGGREGATION_ARTIFACT" if hidden
                else "NO_COMPONENT_CARRIES_HEADROOM_EITHER")
 
     falsifiers = {
@@ -209,7 +225,13 @@ def main() -> int:
         "module_manifest": module_manifest(MODULES, script=__file__),
         "comparison_set_for_kappa_dot": "all configurations within one (context, seed)",
         "exponents_ours": exponents, "maxima_ours": maxima,
+        "gate": 0.05, "best_component": best_component,
         "scalar_h_regime": scalar_h, "components": rows,
+        "weight_concentration": {
+            "note": ("share of total exponent mass carried by each component; the index is "
+                     "dominated by the two variables with the smallest observed range"),
+            "shares": {v: rows[v]["exponent"] / sum(r["exponent"] for r in rows.values())
+                       for v in rows}},
         "seeds": seeds, "contexts": contexts, "n_configurations": len(CONFIGS),
         "falsifiers": falsifiers, "elapsed_seconds": time.perf_counter() - started,
     }
