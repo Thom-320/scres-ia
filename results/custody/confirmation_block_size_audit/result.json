@@ -1,0 +1,110 @@
+{
+ "alpha": 0.05,
+ "asymmetry": "Unused seeds remain available to the next contract. Seeds spent on an underpowered confirmation are gone and yield nothing, because a virgin block cannot be reopened to add power after the fact.",
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "checks": {
+  "all_passed": true,
+  "f1_sd_is_treated_as_estimated_not_known": {
+   "evidence": {
+    "n_development": 12,
+    "sd_95_band": [
+     0.01950019895320653,
+     0.0468783179128488
+    ],
+    "sd_hat": 0.027526705223398396,
+    "why_it_can_fail": "if the band collapsed onto the point estimate the audit would be asserting that 12 seeds pin a variance, which is the very assumption under test"
+   },
+   "passed": true
+  },
+  "f2_design_effect_did_not_move": {
+   "evidence": {
+    "delta_star": 0.015,
+    "why_it_can_fail": "re-deriving delta* from the observed mean makes every sample size adequate by construction"
+   },
+   "passed": true
+  },
+  "f3_the_frugal_option_is_actually_evaluated": {
+   "evidence": {
+    "power_of_26_at_sd_upper": 0.49470105790128316,
+    "why_it_can_fail": "an audit that only prices the option it prefers is advocacy; n = 26 is scored on the same footing"
+   },
+   "passed": true
+  }
+ },
+ "claim_status": "KEEP_THE_RESERVED_BLOCK",
+ "contract_path": "docs/PREREGISTRO_CONFIRMACION_TRANSFERENCIA_REJILLA_2026-08-05.md",
+ "contract_sha256": "1455e3cf6873f7aa94b5df6574a63ae4aa0fb33acdcfaacd2704e7ed9d0b5003",
+ "created_at": "2026-08-06T00:32:36.428204+00:00",
+ "design_effect": 0.015,
+ "elapsed_seconds": 0.0015437500005646143,
+ "module_manifest": {
+  "entry_script": "scripts/audit_confirmation_block_size_v1.py",
+  "entry_script_sha256": "86627fa29ca2a17a7f1a4bd6aa27536af726fc1e5a3d00f6e9981fce1534843c",
+  "missing": [],
+  "modules": {
+   "supply_chain/arm_runner.py": "35135c537d9260832677ab6b4e344229d6b9f4810df8bdef9efd51b58fcac68a",
+   "supply_chain/seed_custody.py": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "power_by_n": {
+  "26": {
+   "power_at_sd_hat": 0.8715463961147781,
+   "power_at_sd_lower": 0.9886196917352533,
+   "power_at_sd_upper": 0.49470105790128316
+  },
+  "40": {
+   "power_at_sd_hat": 0.9641924352782436,
+   "power_at_sd_lower": 0.9993593583787114,
+   "power_at_sd_upper": 0.6476043946322246
+  },
+  "60": {
+   "power_at_sd_hat": 0.995004203712986,
+   "power_at_sd_lower": 0.9999919662746284,
+   "power_at_sd_upper": 0.7977694129114568
+  },
+  "72": {
+   "power_at_sd_hat": 0.9985540057917722,
+   "power_at_sd_lower": 0.9999994755074875,
+   "power_at_sd_upper": 0.8577453053824062
+  },
+  "90": {
+   "power_at_sd_hat": 0.9997880685547811,
+   "power_at_sd_lower": 0.999999992099704,
+   "power_at_sd_upper": 0.9178445309336047
+  }
+ },
+ "reference_path": "results/custody/grid_transfer_confirmation_repower/result.json",
+ "reference_sha256": "4d17ab2c2d10008d6604b69b2ce42809b8f7525d023dba279a996ae2f8f9487c",
+ "required_n_point_estimate": 26,
+ "required_n_robust": 73,
+ "run_role": "CONTRACT_ARITHMETIC",
+ "schema_version": "confirmation_block_size_audit_v1",
+ "scope": "DESIGN_ARITHMETIC_ONLY_NO_ADJUDICATION_NO_SEED_AUTHORISATION",
+ "sd_95_band": [
+  0.01950019895320653,
+  0.0468783179128488
+ ],
+ "sd_development_n": 12,
+ "sd_point_estimate": 0.027526705223398396,
+ "self_sha256": "390e22b80a97e8d448b2cc057a800d4cb4b439630c703bdeaeab2b8a2ae1f772",
+ "target_power": 0.86
+}
