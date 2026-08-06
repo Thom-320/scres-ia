@@ -70,6 +70,35 @@ forward por esos flags. Aquí se usan apagados.
 > preregistrado; no es evidencia de paper por sí solo.
 """),
 
+    md("""## LÉEME ANTES DE GASTAR GPU — el contraste de arquitecturas ya está medido
+
+El 6 de agosto corrimos **esta misma configuración**: entorno `track_b_v1`, `obs v10`,
+`HISTORY_LEN=16`, `MAX_STEPS=104`, presupuesto compartido de 200.000 parámetros y **tus mismas
+semillas 9491–9495**. Es decir, el brazo `independent` de este cuaderno, a 60.000 pasos de tus
+100.000. Artefacto: `results/architecture_bakeoff/result.json`.
+
+| contraste | media | IC95 |
+|---|---:|---|
+| **KAN − MLP** | −0,475 | **[−1,548 · +0,598]** |
+| DMLPA − MLP | +0,136 | [−0,569 · +0,841] |
+| DMLPA − KAN | +0,611 | [−0,350 · +1,572] |
+
+**Ningún par se separa.** Los tres intervalos cruzan cero, y la SD entre semillas (~0,8) es mayor
+que cualquiera de las diferencias. A parámetros igualados —tu propia objeción, bien puesta— **la KAN
+no gana**. Y cuesta: **2,82 ms por decisión contra 0,69 ms del MLP, 4,1×** (mismo host; `ms` no es
+comparable entre máquinas).
+
+**Qué NO respondió ese bake-off, y es lo único que este cuaderno mide en exclusiva:** corrió
+`arm: independent_only`. **El contraste `persistent` vs `independent` —la memoria— sigue abierto**,
+y es justo donde este proyecto sí tiene un positivo medido: el agente que conserva pesos llega al
+óptimo en **7,24 corridas** contra **13,54** reiniciando y **12,42** del OFAT de la tesis.
+
+> **Recomendación:** no vuelvas a gastar el presupuesto en la comparación de arquitecturas. Fija
+> `ARCH` en la que prefieras y gasta las 9 h en **`MEMORY_ARM = 'persistent'` contra su gemelo
+> `'independent'`** (celda 6). Y ojo: el bake-off ya usó 9491–9495, así que repetir `independent`
+> sobre esas semillas es una réplica, no una prueba independiente.
+"""),
+
     code(f"""# 0) LA ÚNICA CELDA QUE TIENES QUE TOCAR
 # DEFAULTS = LO QUE PEDISTE. Dale a "Ejecutar todo" y sale tu corrida completa.
 RUN_PROFILE   = 'final'         # 'smoke' (cableado, ~2 min) | 'preliminary' (1 semilla) | 'final' (COMPLETA)
