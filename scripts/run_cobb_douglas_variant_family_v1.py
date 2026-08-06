@@ -72,14 +72,24 @@ def variable_set(level: str) -> tuple[str, ...]:
     return BASE_VARS + (SERVICE_VAR,)
 
 
+def share_for(variables) -> float:
+    """His 0.20 is `1/5` BECAUSE he has five variables (IJPR p. 11: "each function argument was
+    equated to 1/5"). It is an equal-share scale normaliser, not a preference weight, so it moves
+    with the count: 1/4 = 0.25 when tau is dropped, 1/6 = 0.1667 when the service driver is added.
+    Holding 0.20 fixed across variable sets -- which the first pass did -- silently changes the
+    total weight of the index instead of redistributing it."""
+    return 1.0 / len(variables)
+
+
 def exponents_from(maxima, variables) -> dict[str, float]:
-    """His rule, `0.20/ln(x_max)`. A maximum at or below 1 cannot normalise anything."""
+    """His rule, `share/ln(x_max)`. A maximum at or below 1 cannot normalise anything."""
+    share = share_for(variables)
     out = {}
     for v in variables:
         x = float(maxima[v])
         if x <= 1.0:
-            raise ValueError(f"{v}_max = {x} <= 1; the rule 0.20/ln(x_max) is undefined")
-        out[v] = SHARE_PER_TERM / math.log(x)
+            raise ValueError(f"{v}_max = {x} <= 1; the rule {share:.4f}/ln(x_max) is undefined")
+        out[v] = share / math.log(x)
     return out
 
 
@@ -208,7 +218,8 @@ def main() -> int:
             e = used[contexts[0]][v] if exp_lvl == "per_context" else used[v]
             biggest = max(max(surfaces[k][v]) for k in cells)
             term_max[v] = abs(e * math.log(max(biggest, FLOORS[v])))
-        respects_bound = all(t <= SHARE_PER_TERM + 1e-9 for t in term_max.values())
+        share = share_for(variables)
+        respects_bound = all(t <= share + 1e-9 for t in term_max.values())
 
         point = h_regime(per_ctx)
         draws = []
@@ -227,7 +238,7 @@ def main() -> int:
             "H_regime": point, "lcb95": float(np.percentile(draws, 2.5)),
             "p_not_above_gate": float(np.mean(draws <= GATE)),
             "n_variables": len(variables),
-            "respects_share_bound": bool(respects_bound),
+            "respects_share_bound": bool(respects_bound), "share_bound": share,
             "max_term_magnitude": max(term_max.values()),
             "term_magnitudes": term_max,
         })
@@ -290,10 +301,10 @@ def main() -> int:
                                             "while breaking that bound is not his index applied to "
                                             "our chain, it is his index MISAPPLIED, and its "
                                             "headroom is a scale error rather than a finding",
-                         "share_bound": SHARE_PER_TERM,
+                         "share_bound_rule": "1/len(variables), his 1/5 generalised",
                          "crossing": [{k: v[k] for k in ("exponents", "variables", "kappa_set",
                                                          "H_regime", "respects_share_bound",
-                                                         "max_term_magnitude")}
+                                                         "max_term_magnitude", "share_bound")}
                                       for v in crossing]}},
         "f6_no_fresh_seeds": custody_falsifier(seeds, replay_of=args.replay_of,
                                                exclude=args.output),
@@ -335,7 +346,13 @@ def main() -> int:
                     "prices the backorder QUEUE, and an order that is never served leaves it."),
             "joined_from": str(args.surface)},
         "variants": variants, "crossing_the_gate": crossing, "winners": winners, "best": best,
-        "share_bound": SHARE_PER_TERM,
+        "share_bound_rule": {
+            "value": "1 / number_of_variables",
+            "source": ("Garrido IJPR 2024 p. 11: 'each function argument was equated to 1/5'. The "
+                       "0.20 is 1/5 BECAUSE he has five variables, so it moves with the count: "
+                       "0.25 for four, 0.1667 for six. The first pass held it at 0.20 for every "
+                       "variable set, which changes the index's total weight rather than "
+                       "redistributing it.")},
         "falsifiers": falsifiers, "elapsed_seconds": time.perf_counter() - started,
     }
     digest = seal_and_write(payload, args.output, contract=args.contract,
