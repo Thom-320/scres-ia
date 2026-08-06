@@ -19,12 +19,16 @@ from supply_chain.seed_custody import (  # noqa: E402
     seeds_used_by_sealed_artifacts,
 )
 
-DEFAULT_CONTRACT = Path("docs/PREREGISTRO_CONFIRMACION_TRANSFERENCIA_REJILLA_2026-08-05.md")
+DEFAULT_CONTRACT = Path("docs/ENMIENDA_CONFIRMACION_BLOQUE_LIMPIO_2026-08-05.md")
 DEFAULT_REGISTRY = Path("research/seed_custody_registry.json")
-DEFAULT_REFERENCE = Path("results/grid_transfer_v2/result.json")
-DEFAULT_OUTPUT = Path("results/custody/garrido_grid_transfer_confirmation_preflight.json")
-BLOCK_ID = "garrido_grid_transfer_v1_confirmation"
-START, END = 8_100_001, 8_100_060
+#: The ordered artifact, not the alphabetical one it superseded: the estimand this confirmation
+#: tests was re-frozen under the contractual career order.
+DEFAULT_REFERENCE = Path("results/grid_transfer_ordered_v1/result.json")
+DEFAULT_OUTPUT = Path("results/custody/garrido_grid_transfer_confirmation_v2_preflight.json")
+#: v1's block is quarantined as ATTEMPTED_NO_SEALED_ARTIFACT and is NOT recycled: partial
+#: consumption leaves no trace, so which of its seeds stayed virgin cannot be shown.
+BLOCK_ID = "garrido_grid_transfer_v2_confirmation"
+START, END = 8_200_001, 8_200_060
 
 
 def sha256(path: Path) -> str:
