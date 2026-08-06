@@ -973,3 +973,27 @@ seeds and 117/120 episodes positive. The two-stage mechanism is confirmed at ful
 the heterogeneous strategic posture carries the full buffer-contract value; weekly dynamic
 buffer actions add nothing measurable. Next gate: classical held-out per-op posture
 optimization, not more dynamic-policy training.
+
+---
+
+**⭐ Curvatura de la métrica (2026-08-06) — ABIERTA, con una pregunta bien planteada.** `H_regime`
+**no es invariante a reparametrizaciones monótonas**. Familia declarada `K=661`, Holm sobre las 661,
+LCB por bootstrap exacto sobre semillas, proxy de señal validado reintroduciendo el defecto
+(pares resolubles: 0,9530 -> 0,0212 bajo escalon), prueba de potencia superada (optimo plantado a
+`H=0,10` -> LCB 0,0965), control negativo limpio (rejilla de 288: **0 en las 661**). Resultado:
+`A_MONOTONE_RESCALING_SURVIVES_ALL_THREE`, 9/9 falsadores
+(`results/monotone_transform_family_v4/result.json`).
+
+* **Bajo la curvatura que Garrido declaro (`gamma=1`, su sigma publicada): 0,0000 en 288 y 0,0195
+  en la extendida - ambas bajo el umbral.** Ese es el resultado que no depende de nada nuestro.
+* Con curvatura adicional: `H*` va de **+0,1311** (piso de senal 0,99) a **+0,3815** (piso 0,80),
+  **2,9x por una constante que elegimos nosotros**. La transformacion que decide es interior
+  (`power(gamma~20)` en una rejilla 0,001-1000).
+* **La rejilla de 288 es a prueba de curvatura**: la configuracion 240 es optima en los seis
+  regimenes, luego toda `f` creciente da 0. Los nulos de esa rejilla **no se reabren**.
+
+**Siguiente prueba, y puede fallar:** alguna actitud ante el riesgo **citable** de la literatura
+-utilidad de potencia con coeficiente publicado, CVaR con nivel estandar- cae dentro del conjunto
+que califica? Si todas dan `gamma < 3`, ninguna llega al umbral y la via se cierra por numero.
+Reglas de reporte vinculantes en
+`docs/ENMIENDA_REPORTE_H_REGIME_CURVATURA_DECLARADA_2026-08-06.md`.
