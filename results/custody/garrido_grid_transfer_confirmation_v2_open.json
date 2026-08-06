@@ -1,0 +1,72 @@
+{
+ "block": {
+  "end": 8200060,
+  "id": "garrido_grid_transfer_v2_confirmation",
+  "n_seeds": 60,
+  "start": 8200001
+ },
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "CONFIRMATION_BLOCK_OPEN_NO_RESULT_YET",
+ "contract_path": "docs/ENMIENDA_CONFIRMACION_BLOQUE_LIMPIO_2026-08-05.md",
+ "contract_sha256": "1abbb2df6526f82b887e1ba07cb66f5fa06bb2fbf1f847e79a63b036938c5c9d",
+ "cost": {
+  "des_episodes": 1658880,
+  "note": "The 288-cell base grid is PROJECTED from the extended surface, not re-simulated: it is the subgrid op3_rm = op5_rm = 0. Reporting stored cells as episodes overstates the run by 103,680.",
+  "stored_cells": 1762560
+ },
+ "created_at": "2026-08-06T00:46:27.875848+00:00",
+ "execution": {
+  "command": "scripts/build_transfer_confirmation_cache_v1.py --seed-start 8200001 --seeds 60 --context <ctx> --contract docs/ENMIENDA_CONFIRMACION_BLOQUE_LIMPIO_2026-08-05.md",
+  "pool": "local M1 Pro, 10 cores",
+  "routing_rationale": "Kaggle is excluded: a 9-hour session cap plus session death yields a partial confirmation, which this contract refuses to rescue. The VPS is excluded for THIS run: it is ~4x slower per episode and its checkout is missing supply_chain/service_first_metric.py -- the same absence that put the H3-prime VPS slice into HOLD_SOURCE_AUDIT with its source identity unprovable.",
+  "sharding": "one worker per context, seeds shared, disjoint output paths",
+  "workers": 6
+ },
+ "module_manifest": {
+  "entry_script": "scripts/record_grid_transfer_confirmation_open_v1.py",
+  "entry_script_sha256": "5a9835dfba73d69aa89aa23f3f2e915467b8828ea292902b22223a381d02fba7",
+  "missing": [],
+  "modules": {
+   "supply_chain/arm_runner.py": "35135c537d9260832677ab6b4e344229d6b9f4810df8bdef9efd51b58fcac68a",
+   "supply_chain/seed_custody.py": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "preflight_note": "results/custody/garrido_grid_transfer_confirmation_v2_preflight.json keeps its RESERVED_BLOCK_NOT_OPENED_NO_SIMULATION scope. It is a pre-opening receipt and was true when it ran; it is not a status.",
+ "progress_at_receipt": {
+  "base_slices": 6,
+  "caveat": "Only complete slices are written, so this counts what was WRITTEN, not what was consumed. Any seed the workers touched is spent whether or not it reached disk.",
+  "extended_slices": 6,
+  "seeds_with_a_complete_slice": [
+   8200001
+  ]
+ },
+ "reference_path": "results/grid_transfer_ordered_v1/result.json",
+ "reference_sha256": "5fa117707b148cf1b981b76d317bb1527f8256e6e9f3eb3fc9d5577dba59040d",
+ "registry_status": {
+  "now": "OPEN_IN_PROGRESS",
+  "previous": "RESERVED_NOT_OPENED"
+ },
+ "run_role": "CUSTODY_RECEIPT",
+ "schema_version": "grid_transfer_confirmation_open_v1",
+ "scope": "CUSTODY_STATE_ONLY_NO_SCIENTIFIC_CLAIM",
+ "self_sha256": "6972cfb5b757a8bb189aedf93d36c0a69b0d40900b03b103171defa2e542dbb0"
+}

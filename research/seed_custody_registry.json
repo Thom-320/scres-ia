@@ -481,7 +481,7 @@
    "id": "garrido_grid_transfer_v2_confirmation",
    "start": 8200001,
    "end": 8200060,
-   "status": "RESERVED_NOT_OPENED",
+   "status": "OPEN_IN_PROGRESS",
    "source": "docs/ENMIENDA_CONFIRMACION_BLOQUE_LIMPIO_2026-08-05.md",
    "purpose": "Clean virgin block for the UCB1 factor-wise grid-transfer confirmation, after 8100001-8100060 was quarantined as ATTEMPTED_NO_SEALED_ARTIFACT. The quarantined block is not recycled: partial consumption leaves no trace on disk, so which of its seeds remain virgin cannot be demonstrated.",
    "authorization": {
@@ -489,7 +489,9 @@
     "instruction": "arranca con la confirmacion",
     "scope": "this contract and this seed block only",
     "note": "The PI reviewed KEEP_THE_RESERVED_BLOCK and chose to hold n = 60 rather than shrink to 26. The previous block's authorization field was written by an agent and was never granted; it is not reused here."
-   }
+   },
+   "opened_at": "2026-08-06T00:46:27.874145+00:00",
+   "opening_receipt": "results/custody/garrido_grid_transfer_confirmation_v2_open.json"
   }
  ],
  "rules": {
