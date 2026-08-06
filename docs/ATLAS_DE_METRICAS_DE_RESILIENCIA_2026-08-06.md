@@ -114,7 +114,43 @@ Garrido señala en su §6.2**: *«otros drivers importantes de la resiliencia de
 tenidos en cuenta… futuros estudios deberían incluir eventos de riesgo recurrentes»*. Nuestra cadena
 **los tiene**, y es al aplicarle su índice a una cadena con riesgo cuando aparece la ceguera.
 
-## 6. Lo que falta medir, y corre ahora
+## 6. Cobb-Douglas: la regla de exponentes se rompe en nuestra cadena
+
+Aplicamos **su propia regla** —`exponente = 0,20/ln(x_max)`, sobre NUESTROS máximos, como manda—
+y sale esto:
+
+| var | su max (implícito) | nuestro max | su exp | **nuestro exp** | ratio vs ζ |
+|---|---:|---:|---:|---:|---:|
+| ζ inventario | 4.160 | 1.216.000 | 0,024 | 0,01427 | 1,0× |
+| ε backorders | 2.191 | 136.700 | 0,026 | 0,01691 | 1,2× |
+| φ capacidad ociosa | 148 | 2.779 | 0,040 | 0,02522 | 1,8× |
+| **τ tiempo** | **28** | **1,343** | 0,060 | **0,67810** | **47,5×** |
+| **κ̇ coste** | **3** | **1,565** | 0,1771 | **0,44633** | **31,3×** |
+
+*(su max implícito = `exp(0,20/exponente_publicado)`; el de ζ da 4.160 contra el 3.612 que él
+reporta, diferencia de redondeo en el tercer decimal del exponente)*
+
+**En su ajuste el peso máximo es κ̇/ζ = 7,4×. En el nuestro es τ/ζ = 47,5×.**
+
+El mecanismo es aritmético: la regla divide por `ln(x_max)`, así que **cuanto MENOR es el recorrido
+observado de una variable, MAYOR es su exponente**. Está pensada para variables cuyo máximo son
+miles —los suyos lo son—. Nuestro τ recorre `[1 · 1,343]`, así que `0,20/ln(1,343) = 0,678`.
+
+Y la variable que se queda con el 68 % del peso **es la que está muerta**: nuestro τ_max es 1,343
+contra los 28 suyos, porque el punto de operación de la tesis lleva stock suficiente para que los
+requerimientos netos casi nunca se vuelvan positivos.
+
+La amplificación de error `1/ln(x_max)` lo confirma: **τ 3,39 y κ̇ 2,23, ambas mal condicionadas**
+—un error relativo en el máximo observado se amplifica más que proporcionalmente en el exponente—
+frente a 0,07 de ζ. Nuestro puerto ya lo declaraba como aviso; ahora está medido.
+
+> **Su índice no es transportable a una cadena con riesgo tal cual.** No porque la fórmula esté
+> mal, sino porque **la regla de normalización presupone que las cinco variables tienen recorridos
+> comparables en órdenes de magnitud**, y en una cadena militar con eventos de riesgo no los
+> tienen. Es una limitación de alcance de su Ec. (5), y es exactamente el tipo de hallazgo que su
+> §6.2 invita a producir.
+
+## 7. Lo que falta medir, y corre ahora
 
 `H_regime` **por componente** del Cobb-Douglas (ζ, ε, φ, τ, κ̇) en vez de sobre el escalar. La
 hipótesis es concreta: el cero del escalar podría ser un **artefacto de agregación**, porque los
