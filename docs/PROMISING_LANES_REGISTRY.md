@@ -973,3 +973,44 @@ seeds and 117/120 episodes positive. The two-stage mechanism is confirmed at ful
 the heterogeneous strategic posture carries the full buffer-contract value; weekly dynamic
 buffer actions add nothing measurable. Next gate: classical held-out per-op posture
 optimization, not more dynamic-policy training.
+
+---
+
+**⭐ Curvatura de la métrica (2026-08-06) — ABIERTA, con una pregunta bien planteada.** `H_regime`
+**no es invariante a reparametrizaciones monótonas**. Familia declarada `K=661`, Holm sobre las 661,
+LCB por bootstrap exacto sobre semillas, proxy de señal validado reintroduciendo el defecto
+(pares resolubles: 0,9530 -> 0,0212 bajo escalon), prueba de potencia superada (optimo plantado a
+`H=0,10` -> LCB 0,0965), control negativo limpio (rejilla de 288: **0 en las 661**). Resultado:
+`A_MONOTONE_RESCALING_SURVIVES_ALL_THREE`, 9/9 falsadores
+(`results/monotone_transform_family_v4/result.json`).
+
+* **Bajo la curvatura que Garrido declaro (`gamma=1`, su sigma publicada): 0,0000 en 288 y 0,0195
+  en la extendida - ambas bajo el umbral.** Ese es el resultado que no depende de nada nuestro.
+* Con curvatura adicional: `H*` va de **+0,1311** (piso de senal 0,99) a **+0,3815** (piso 0,80),
+  **2,9x por una constante que elegimos nosotros**. La transformacion que decide es interior
+  (`power(gamma~20)` en una rejilla 0,001-1000).
+* **La rejilla de 288 es a prueba de curvatura**: la configuracion 240 es optima en los seis
+  regimenes, luego toda `f` creciente da 0. Los nulos de esa rejilla **no se reabren**.
+
+**Siguiente prueba, y puede fallar:** alguna actitud ante el riesgo **citable** de la literatura
+-utilidad de potencia con coeficiente publicado, CVaR con nivel estandar- cae dentro del conjunto
+que califica? Si todas dan `gamma < 3`, ninguna llega al umbral y la via se cierra por numero.
+Reglas de reporte vinculantes en
+`docs/ENMIENDA_REPORTE_H_REGIME_CURVATURA_DECLARADA_2026-08-06.md`.
+
+**Cierre del lane de curvatura (2026-08-06):** `ONLY_RISK_SEEKING_CURVATURE_REACHES_THE_BAR`
+(`results/citable_risk_attitudes/result_after_anchor_fix.json`, preregistro
+`docs/PREREGISTRO_ACTITUDES_DE_RIESGO_CITABLES_2026-08-06.md`). **Toda** actitud aversa cae por
+debajo de la curvatura neutral de Garrido, y **empeora cuanto mas aversa**: CRRA eta=0,25 -> 0,0158;
+eta=1 -> 0,0050; eta=10 -> 4e-7; CARA a=10 -> 4,5e-5, contra la identidad 0,0195 y un umbral de
+0,05. Solo el control convexo califica (gamma 5/10/20 -> H 0,085/0,159/0,277), que es lo que exigia
+`f2`. CVaR sobre regimenes, aparte por cambiar el ESTIMADOR: 0,0482 en alpha 0,90/0,95/0,99 -
+bajo el umbral, e identico en los tres porque con seis regimenes todos se reducen al peor regimen.
+
+**La lectura, y es mas fuerte de lo que se pregunto:** la aversion al riesgo no solo no llega al
+umbral, **mueve el headroom hacia cero**. Un planificador que teme al peor regimen tiene MENOS que
+ganar sabiendo cual es, porque la concavidad comprime la parte alta y hace que una sola
+configuracion robusta se vea mejor. El headroom exige un planificador que quiera el lado bueno.
+`f4` fallo y no se relajo: `H(gamma)` es monotona hasta gamma=30 -todo el rango donde vive alguna
+actitud- y la unica violacion esta sobre gamma=199 con magnitud 1,9e-4, en la asintota 0,666667 =
+1 - 2/6 (la configuracion 3845 es argmax en dos de los seis regimenes).
