@@ -1,0 +1,5282 @@
+{
+ "cache_custody": {
+  "expected_cells_per_slice": 288,
+  "observable_key_schema": "value_plus_panel_v1",
+  "runtime": {
+   "packages": {
+    "kan": null,
+    "numpy": "2.4.6",
+    "scikit-learn": "1.9.0",
+    "scipy": "1.17.1",
+    "torch": "2.12.1"
+   },
+   "platform": "macOS-27.0-arm64-arm-64bit",
+   "python": "3.11.15 (main, Jun 11 2026, 04:04:09) [Clang 22.1.3 ]",
+   "python_version": "3.11.15"
+  },
+  "sealer_script": "scripts/seal_garrido_surface_cache_v1.py",
+  "sealer_script_sha256": "d33371597a2e77f3d2bea0411e5e7a406209924629937849426bbaf96c75838f",
+  "source_artifact": "results/garrido_normaliser_audit/result.json",
+  "source_artifact_sha256": "346c6abc169921882e18a6baa4e3f43cc009f0d71f0fdf4f1ec99a4b101a4452"
+ },
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "cells": [
+  {
+   "drivers": [
+    0.0,
+    0.7065217391304348,
+    0.0,
+    0.29347826086956524
+   ],
+   "panel": {
+    "delivered_rations": 538330.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.6936366283639437,
+    "lost_orders": 45.0,
+    "ret_excel": 0.18447818052916296,
+    "ret_excel_full_ledger": 0.06894519785518137,
+    "ret_excel_risk_conditional": 0.006053653960468203
+   },
+   "value": 0.006053653960468203
+  },
+  {
+   "drivers": [
+    0.0,
+    0.707182320441989,
+    0.0,
+    0.292817679558011
+   ],
+   "panel": {
+    "delivered_rations": 530916.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.6840837110777247,
+    "lost_orders": 44.0,
+    "ret_excel": 0.18405937904934275,
+    "ret_excel_full_ledger": 0.06885828383536893,
+    "ret_excel_risk_conditional": 0.005801384476873589
+   },
+   "value": 0.005801384476873589
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7266666666666667,
+    0.0,
+    0.2733333333333333
+   ],
+   "panel": {
+    "delivered_rations": 453297.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.5840718569046692,
+    "lost_orders": 76.0,
+    "ret_excel": 0.13621281676913477,
+    "ret_excel_full_ledger": 0.04393321941347773,
+    "ret_excel_risk_conditional": 0.0071183653001487095
+   },
+   "value": 0.0071183653001487095
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7647058823529411,
+    0.0,
+    0.23529411764705885
+   ],
+   "panel": {
+    "delivered_rations": 334586.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.4311130810799667,
+    "lost_orders": 122.0,
+    "ret_excel": 0.08083142896450667,
+    "ret_excel_full_ledger": 0.01533094869001329,
+    "ret_excel_risk_conditional": 0.004683041218816121
+   },
+   "value": 0.004683041218816121
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7043010752688172,
+    0.0,
+    0.2956989247311828
+   ],
+   "panel": {
+    "delivered_rations": 543384.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.7001486925620218,
+    "lost_orders": 43.0,
+    "ret_excel": 0.18818955153293307,
+    "ret_excel_full_ledger": 0.07074347349918099,
+    "ret_excel_risk_conditional": 0.005727438025076013
+   },
+   "value": 0.005727438025076013
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6983240223463687,
+    0.0,
+    0.3016759776536313
+   ],
+   "panel": {
+    "delivered_rations": 525927.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.6776553991892776,
+    "lost_orders": 46.0,
+    "ret_excel": 0.18973474868269732,
+    "ret_excel_full_ledger": 0.06658233605283731,
+    "ret_excel_risk_conditional": 0.005723766690932639
+   },
+   "value": 0.005723766690932639
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7094594594594595,
+    0.0,
+    0.2905405405405405
+   ],
+   "panel": {
+    "delivered_rations": 448317.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.5776551414898634,
+    "lost_orders": 78.0,
+    "ret_excel": 0.14293127523622326,
+    "ret_excel_full_ledger": 0.04408120978652501,
+    "ret_excel_risk_conditional": 0.007235486522177792
+   },
+   "value": 0.007235486522177792
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7647058823529411,
+    0.0,
+    0.23529411764705885
+   ],
+   "panel": {
+    "delivered_rations": 334601.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.4311324085360354,
+    "lost_orders": 121.0,
+    "ret_excel": 0.08139900829970342,
+    "ret_excel_full_ledger": 0.01554802333831482,
+    "ret_excel_risk_conditional": 0.004702346787284319
+   },
+   "value": 0.004702346787284319
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7162162162162162,
+    0.0,
+    0.28378378378378377
+   ],
+   "panel": {
+    "delivered_rations": 448185.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.5774850598764589,
+    "lost_orders": 79.0,
+    "ret_excel": 0.13984211346119232,
+    "ret_excel_full_ledger": 0.04500735909068656,
+    "ret_excel_risk_conditional": 0.008614269542724476
+   },
+   "value": 0.008614269542724476
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7054794520547945,
+    0.0,
+    0.2945205479452055
+   ],
+   "panel": {
+    "delivered_rations": 443251.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.5711276153269303,
+    "lost_orders": 80.0,
+    "ret_excel": 0.14290243546867903,
+    "ret_excel_full_ledger": 0.044670036172846934,
+    "ret_excel_risk_conditional": 0.00652818416486301
+   },
+   "value": 0.00652818416486301
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7112676056338029,
+    0.0,
+    0.2887323943661972
+   ],
+   "panel": {
+    "delivered_rations": 433390.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.558421745707372,
+    "lost_orders": 82.0,
+    "ret_excel": 0.13886757681153872,
+    "ret_excel_full_ledger": 0.04167704973452376,
+    "ret_excel_risk_conditional": 0.006827363699093199
+   },
+   "value": 0.006827363699093199
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7647058823529411,
+    0.0,
+    0.23529411764705885
+   ],
+   "panel": {
+    "delivered_rations": 334601.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.4311324085360354,
+    "lost_orders": 121.0,
+    "ret_excel": 0.0817184632537317,
+    "ret_excel_full_ledger": 0.015548119656836607,
+    "ret_excel_risk_conditional": 0.004702688841521952
+   },
+   "value": 0.004702688841521952
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7647058823529411,
+    0.0,
+    0.23529411764705885
+   ],
+   "panel": {
+    "delivered_rations": 334565.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.43108602264147056,
+    "lost_orders": 122.0,
+    "ret_excel": 0.08206208782405473,
+    "ret_excel_full_ledger": 0.015851209807825548,
+    "ret_excel_risk_conditional": 0.005475269219414733
+   },
+   "value": 0.005475269219414733
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7575757575757575,
+    0.0,
+    0.24242424242424243
+   ],
+   "panel": {
+    "delivered_rations": 327228.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.42163231962973746,
+    "lost_orders": 124.0,
+    "ret_excel": 0.08303739980424807,
+    "ret_excel_full_ledger": 0.015327368317889613,
+    "ret_excel_risk_conditional": 0.004334071483191428
+   },
+   "value": 0.004334071483191428
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7448979591836735,
+    0.0,
+    0.25510204081632654
+   ],
+   "panel": {
+    "delivered_rations": 324788.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.41848838677589684,
+    "lost_orders": 124.0,
+    "ret_excel": 0.08703603498819472,
+    "ret_excel_full_ledger": 0.01577010336675066,
+    "ret_excel_risk_conditional": 0.004221398936680959
+   },
+   "value": 0.004221398936680959
+  },
+  {
+   "drivers": [
+    0.0,
+    0.75,
+    0.0,
+    0.25
+   ],
+   "panel": {
+    "delivered_rations": 319892.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.4121799051150757,
+    "lost_orders": 126.0,
+    "ret_excel": 0.08261113846165073,
+    "ret_excel_full_ledger": 0.014322388036731137,
+    "ret_excel_risk_conditional": 0.004618352083660083
+   },
+   "value": 0.004618352083660083
+  },
+  {
+   "drivers": [
+    0.0,
+    0.644,
+    0.0,
+    0.35600000000000004
+   ],
+   "panel": {
+    "delivered_rations": 706306.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.9072431116003592,
+    "lost_orders": 0.0,
+    "ret_excel": 0.28606698182950197,
+    "ret_excel_full_ledger": 0.17620527864357238,
+    "ret_excel_risk_conditional": 0.01057847696390688
+   },
+   "value": 0.01057847696390688
+  },
+  {
+   "drivers": [
+    0.0,
+    0.635593220338983,
+    0.0,
+    0.364406779661017
+   ],
+   "panel": {
+    "delivered_rations": 670655.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.8614497526714184,
+    "lost_orders": 0.0,
+    "ret_excel": 0.28409198943428327,
+    "ret_excel_full_ledger": 0.1726990978067823,
+    "ret_excel_risk_conditional": 0.010668983381871212
+   },
+   "value": 0.010668983381871212
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7181208053691275,
+    0.0,
+    0.28187919463087246
+   ],
+   "panel": {
+    "delivered_rations": 450738.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.5789685287064285,
+    "lost_orders": 78.0,
+    "ret_excel": 0.13837888404731702,
+    "ret_excel_full_ledger": 0.04307362537022053,
+    "ret_excel_risk_conditional": 0.007164842289073441
+   },
+   "value": 0.007164842289073441
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7692307692307692,
+    0.0,
+    0.23076923076923075
+   ],
+   "panel": {
+    "delivered_rations": 339462.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.4360356009294571,
+    "lost_orders": 120.0,
+    "ret_excel": 0.07999475636724489,
+    "ret_excel_full_ledger": 0.01624128675530109,
+    "ret_excel_risk_conditional": 0.004971475203481713
+   },
+   "value": 0.004971475203481713
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6495726495726495,
+    0.0,
+    0.35042735042735046
+   ],
+   "panel": {
+    "delivered_rations": 665260.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.8545199282226895,
+    "lost_orders": 0.0,
+    "ret_excel": 0.26670728147548506,
+    "ret_excel_full_ledger": 0.1583746145184825,
+    "ret_excel_risk_conditional": 0.0104375483431681
+   },
+   "value": 0.0104375483431681
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6506550218340611,
+    0.0,
+    0.3493449781659389
+   ],
+   "panel": {
+    "delivered_rations": 652714.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.8384047145927075,
+    "lost_orders": 0.0,
+    "ret_excel": 0.26602348975234225,
+    "ret_excel_full_ledger": 0.15759287052535073,
+    "ret_excel_risk_conditional": 0.010554397446291325
+   },
+   "value": 0.010554397446291325
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7152317880794702,
+    0.0,
+    0.2847682119205298
+   ],
+   "panel": {
+    "delivered_rations": 455718.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.5853652897360244,
+    "lost_orders": 76.0,
+    "ret_excel": 0.14211993905710424,
+    "ret_excel_full_ledger": 0.04738646219431313,
+    "ret_excel_risk_conditional": 0.00727723367354608
+   },
+   "value": 0.00727723367354608
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7647058823529411,
+    0.0,
+    0.23529411764705885
+   ],
+   "panel": {
+    "delivered_rations": 334567.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.4297480215640209,
+    "lost_orders": 122.0,
+    "ret_excel": 0.08084546787204652,
+    "ret_excel_full_ledger": 0.015568034791324188,
+    "ret_excel_risk_conditional": 0.004701399790214395
+   },
+   "value": 0.004701399790214395
+  },
+  {
+   "drivers": [
+    0.0,
+    0.728476821192053,
+    0.0,
+    0.271523178807947
+   ],
+   "panel": {
+    "delivered_rations": 455581.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.5851893145832022,
+    "lost_orders": 78.0,
+    "ret_excel": 0.13642188540174774,
+    "ret_excel_full_ledger": 0.04560956678984886,
+    "ret_excel_risk_conditional": 0.008391345391183132
+   },
+   "value": 0.008391345391183132
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7162162162162162,
+    0.0,
+    0.28378378378378377
+   ],
+   "panel": {
+    "delivered_rations": 448159.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.5756558285668044,
+    "lost_orders": 79.0,
+    "ret_excel": 0.139794241941079,
+    "ret_excel_full_ledger": 0.04397256204503985,
+    "ret_excel_risk_conditional": 0.006516722611299229
+   },
+   "value": 0.006516722611299229
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7083333333333333,
+    0.0,
+    0.2916666666666667
+   ],
+   "panel": {
+    "delivered_rations": 438298.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.5629894710341045,
+    "lost_orders": 81.0,
+    "ret_excel": 0.140817957323309,
+    "ret_excel_full_ledger": 0.04231673078890109,
+    "ret_excel_risk_conditional": 0.006831167953924269
+   },
+   "value": 0.006831167953924269
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7669902912621359,
+    0.0,
+    0.23300970873786409
+   ],
+   "panel": {
+    "delivered_rations": 337012.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.4328886000213225,
+    "lost_orders": 121.0,
+    "ret_excel": 0.08021523098317303,
+    "ret_excel_full_ledger": 0.01579883934617863,
+    "ret_excel_risk_conditional": 0.004715396688227356
+   },
+   "value": 0.004715396688227356
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7669902912621359,
+    0.0,
+    0.23300970873786409
+   ],
+   "panel": {
+    "delivered_rations": 336986.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.43285520327699134,
+    "lost_orders": 122.0,
+    "ret_excel": 0.08126810184063218,
+    "ret_excel_full_ledger": 0.016071039931580967,
+    "ret_excel_risk_conditional": 0.005409525704378237
+   },
+   "value": 0.005409525704378237
+  },
+  {
+   "drivers": [
+    0.0,
+    0.76,
+    0.0,
+    0.24
+   ],
+   "panel": {
+    "delivered_rations": 329649.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.4234308989247533,
+    "lost_orders": 124.0,
+    "ret_excel": 0.08220980358398339,
+    "ret_excel_full_ledger": 0.015550270059068259,
+    "ret_excel_risk_conditional": 0.004280699197593879
+   },
+   "value": 0.004280699197593879
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7474747474747475,
+    0.0,
+    0.25252525252525254
+   ],
+   "panel": {
+    "delivered_rations": 327209.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.4202967429182846,
+    "lost_orders": 124.0,
+    "ret_excel": 0.08615965203686969,
+    "ret_excel_full_ledger": 0.016013191864655326,
+    "ret_excel_risk_conditional": 0.004168057367361183
+   },
+   "value": 0.004168057367361183
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7525773195876289,
+    0.0,
+    0.24742268041237114
+   ],
+   "panel": {
+    "delivered_rations": 322313.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.4140078790626818,
+    "lost_orders": 126.0,
+    "ret_excel": 0.08176223078696457,
+    "ret_excel_full_ledger": 0.01456345153415044,
+    "ret_excel_risk_conditional": 0.004558745808775617
+   },
+   "value": 0.004558745808775617
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6454183266932272,
+    0.0,
+    0.3545816733067729
+   ],
+   "panel": {
+    "delivered_rations": 708876.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.9105442513284839,
+    "lost_orders": 0.0,
+    "ret_excel": 0.28570664856531525,
+    "ret_excel_full_ledger": 0.17624384196706022,
+    "ret_excel_risk_conditional": 0.010579354290855731
+   },
+   "value": 0.010579354290855731
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6371308016877637,
+    0.0,
+    0.3628691983122363
+   ],
+   "panel": {
+    "delivered_rations": 673220.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.8647444699487103,
+    "lost_orders": 0.0,
+    "ret_excel": 0.28262139506905487,
+    "ret_excel_full_ledger": 0.17274687148759654,
+    "ret_excel_risk_conditional": 0.010686282056602952
+   },
+   "value": 0.010686282056602952
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7266666666666667,
+    0.0,
+    0.2733333333333333
+   ],
+   "panel": {
+    "delivered_rations": 453228.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.5821669092212265,
+    "lost_orders": 77.0,
+    "ret_excel": 0.1363698095125748,
+    "ret_excel_full_ledger": 0.04352661772216739,
+    "ret_excel_risk_conditional": 0.007027407859433482
+   },
+   "value": 0.007027407859433482
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7647058823529411,
+    0.0,
+    0.23529411764705885
+   ],
+   "panel": {
+    "delivered_rations": 334567.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.4297480215640209,
+    "lost_orders": 122.0,
+    "ret_excel": 0.08245112220136207,
+    "ret_excel_full_ledger": 0.016438737733384473,
+    "ret_excel_risk_conditional": 0.0078046743785831095
+   },
+   "value": 0.0078046743785831095
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6495726495726495,
+    0.0,
+    0.35042735042735046
+   ],
+   "panel": {
+    "delivered_rations": 665260.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.8545199282226895,
+    "lost_orders": 0.0,
+    "ret_excel": 0.26670728147548506,
+    "ret_excel_full_ledger": 0.1583746145184825,
+    "ret_excel_risk_conditional": 0.0104375483431681
+   },
+   "value": 0.0104375483431681
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6506550218340611,
+    0.0,
+    0.3493449781659389
+   ],
+   "panel": {
+    "delivered_rations": 652714.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.8384047145927075,
+    "lost_orders": 0.0,
+    "ret_excel": 0.26602348975234225,
+    "ret_excel_full_ledger": 0.15759287052535073,
+    "ret_excel_risk_conditional": 0.010554397446291325
+   },
+   "value": 0.010554397446291325
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7152317880794702,
+    0.0,
+    0.2847682119205298
+   ],
+   "panel": {
+    "delivered_rations": 455718.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.5853652897360244,
+    "lost_orders": 76.0,
+    "ret_excel": 0.14211993905710424,
+    "ret_excel_full_ledger": 0.04738646219431313,
+    "ret_excel_risk_conditional": 0.00727723367354608
+   },
+   "value": 0.00727723367354608
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7647058823529411,
+    0.0,
+    0.23529411764705885
+   ],
+   "panel": {
+    "delivered_rations": 334567.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.4297480215640209,
+    "lost_orders": 122.0,
+    "ret_excel": 0.08084546787204652,
+    "ret_excel_full_ledger": 0.015568034791324188,
+    "ret_excel_risk_conditional": 0.004701399790214395
+   },
+   "value": 0.004701399790214395
+  },
+  {
+   "drivers": [
+    0.0,
+    0.728476821192053,
+    0.0,
+    0.271523178807947
+   ],
+   "panel": {
+    "delivered_rations": 455581.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.5851893145832022,
+    "lost_orders": 78.0,
+    "ret_excel": 0.13642188540174774,
+    "ret_excel_full_ledger": 0.04560956678984886,
+    "ret_excel_risk_conditional": 0.008391345391183132
+   },
+   "value": 0.008391345391183132
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7162162162162162,
+    0.0,
+    0.28378378378378377
+   ],
+   "panel": {
+    "delivered_rations": 448159.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.5756558285668044,
+    "lost_orders": 79.0,
+    "ret_excel": 0.139794241941079,
+    "ret_excel_full_ledger": 0.04397256204503985,
+    "ret_excel_risk_conditional": 0.006516722611299229
+   },
+   "value": 0.006516722611299229
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7083333333333333,
+    0.0,
+    0.2916666666666667
+   ],
+   "panel": {
+    "delivered_rations": 438298.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.5629894710341045,
+    "lost_orders": 81.0,
+    "ret_excel": 0.140817957323309,
+    "ret_excel_full_ledger": 0.04231673078890109,
+    "ret_excel_risk_conditional": 0.006831167953924269
+   },
+   "value": 0.006831167953924269
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7669902912621359,
+    0.0,
+    0.23300970873786409
+   ],
+   "panel": {
+    "delivered_rations": 337012.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.4328886000213225,
+    "lost_orders": 121.0,
+    "ret_excel": 0.08021523098317303,
+    "ret_excel_full_ledger": 0.01579883934617863,
+    "ret_excel_risk_conditional": 0.004715396688227356
+   },
+   "value": 0.004715396688227356
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7669902912621359,
+    0.0,
+    0.23300970873786409
+   ],
+   "panel": {
+    "delivered_rations": 336986.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.43285520327699134,
+    "lost_orders": 122.0,
+    "ret_excel": 0.08126810184063218,
+    "ret_excel_full_ledger": 0.016071039931580967,
+    "ret_excel_risk_conditional": 0.005409525704378237
+   },
+   "value": 0.005409525704378237
+  },
+  {
+   "drivers": [
+    0.0,
+    0.76,
+    0.0,
+    0.24
+   ],
+   "panel": {
+    "delivered_rations": 329649.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.4234308989247533,
+    "lost_orders": 124.0,
+    "ret_excel": 0.08220980358398339,
+    "ret_excel_full_ledger": 0.015550270059068259,
+    "ret_excel_risk_conditional": 0.004280699197593879
+   },
+   "value": 0.004280699197593879
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7474747474747475,
+    0.0,
+    0.25252525252525254
+   ],
+   "panel": {
+    "delivered_rations": 327209.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.4202967429182846,
+    "lost_orders": 124.0,
+    "ret_excel": 0.08615965203686969,
+    "ret_excel_full_ledger": 0.016013191864655326,
+    "ret_excel_risk_conditional": 0.004168057367361183
+   },
+   "value": 0.004168057367361183
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7525773195876289,
+    0.0,
+    0.24742268041237114
+   ],
+   "panel": {
+    "delivered_rations": 322313.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.4140078790626818,
+    "lost_orders": 126.0,
+    "ret_excel": 0.08176223078696457,
+    "ret_excel_full_ledger": 0.01456345153415044,
+    "ret_excel_risk_conditional": 0.004558745808775617
+   },
+   "value": 0.004558745808775617
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6858638743455497,
+    0.0,
+    0.31413612565445026
+   ],
+   "panel": {
+    "delivered_rations": 555999.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.716403083115792,
+    "lost_orders": 37.0,
+    "ret_excel": 0.2098849477720981,
+    "ret_excel_full_ledger": 0.07764368781046818,
+    "ret_excel_risk_conditional": 0.00611233710117456
+   },
+   "value": 0.00611233710117456
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6918918918918919,
+    0.0,
+    0.3081081081081081
+   ],
+   "panel": {
+    "delivered_rations": 540982.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.6970537225968886,
+    "lost_orders": 38.0,
+    "ret_excel": 0.2067907889849402,
+    "ret_excel_full_ledger": 0.07311510454876555,
+    "ret_excel_risk_conditional": 0.006328573864785207
+   },
+   "value": 0.006328573864785207
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7142857142857143,
+    0.0,
+    0.28571428571428575
+   ],
+   "panel": {
+    "delivered_rations": 463276.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.5969297691786346,
+    "lost_orders": 71.0,
+    "ret_excel": 0.1534527342702155,
+    "ret_excel_full_ledger": 0.04733700528919956,
+    "ret_excel_risk_conditional": 0.007538851713616709
+   },
+   "value": 0.007538851713616709
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7735849056603773,
+    0.0,
+    0.22641509433962262
+   ],
+   "panel": {
+    "delivered_rations": 344432.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.44379962324345634,
+    "lost_orders": 115.0,
+    "ret_excel": 0.08771099469841881,
+    "ret_excel_full_ledger": 0.017405819183608316,
+    "ret_excel_risk_conditional": 0.004946238559322124
+   },
+   "value": 0.004946238559322124
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6878306878306879,
+    0.0,
+    0.3121693121693122
+   ],
+   "panel": {
+    "delivered_rations": 551004.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.7099670402449175,
+    "lost_orders": 37.0,
+    "ret_excel": 0.2115288255107564,
+    "ret_excel_full_ledger": 0.07532776366684557,
+    "ret_excel_risk_conditional": 0.00601708496527906
+   },
+   "value": 0.00601708496527906
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6830601092896176,
+    0.0,
+    0.31693989071038253
+   ],
+   "panel": {
+    "delivered_rations": 536000.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.6906344301879401,
+    "lost_orders": 39.0,
+    "ret_excel": 0.21115169100476708,
+    "ret_excel_full_ledger": 0.07444748189718872,
+    "ret_excel_risk_conditional": 0.006066851178816136
+   },
+   "value": 0.006066851178816136
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7189542483660131,
+    0.0,
+    0.28104575163398693
+   ],
+   "panel": {
+    "delivered_rations": 460791.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.593727853956588,
+    "lost_orders": 73.0,
+    "ret_excel": 0.1496195149249708,
+    "ret_excel_full_ledger": 0.044932307183902724,
+    "ret_excel_risk_conditional": 0.006955328610937827
+   },
+   "value": 0.006955328610937827
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7685185185185185,
+    0.0,
+    0.23148148148148148
+   ],
+   "panel": {
+    "delivered_rations": 349337.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.4501197013779188,
+    "lost_orders": 114.0,
+    "ret_excel": 0.0906624823632974,
+    "ret_excel_full_ledger": 0.017741355452907802,
+    "ret_excel_risk_conditional": 0.005368204611270999
+   },
+   "value": 0.005368204611270999
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7096774193548387,
+    0.0,
+    0.29032258064516125
+   ],
+   "panel": {
+    "delivered_rations": 465611.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.5999384098399945,
+    "lost_orders": 72.0,
+    "ret_excel": 0.1553169057414848,
+    "ret_excel_full_ledger": 0.050453202655841356,
+    "ret_excel_risk_conditional": 0.008572663044048464
+   },
+   "value": 0.008572663044048464
+  },
+  {
+   "drivers": [
+    0.0,
+    0.72,
+    0.0,
+    0.28
+   ],
+   "panel": {
+    "delivered_rations": 453207.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.583955892168257,
+    "lost_orders": 76.0,
+    "ret_excel": 0.14825842884305837,
+    "ret_excel_full_ledger": 0.04355503054526869,
+    "ret_excel_risk_conditional": 0.00785594462397967
+   },
+   "value": 0.00785594462397967
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7094594594594595,
+    0.0,
+    0.2905405405405405
+   ],
+   "panel": {
+    "delivered_rations": 448317.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.5776551414898634,
+    "lost_orders": 78.0,
+    "ret_excel": 0.15137893926339602,
+    "ret_excel_full_ledger": 0.04262624969568623,
+    "ret_excel_risk_conditional": 0.006902968422383168
+   },
+   "value": 0.006902968422383168
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7641509433962264,
+    0.0,
+    0.2358490566037736
+   ],
+   "panel": {
+    "delivered_rations": 344436.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.44380477723174133,
+    "lost_orders": 116.0,
+    "ret_excel": 0.09141890927412552,
+    "ret_excel_full_ledger": 0.01719136005777486,
+    "ret_excel_risk_conditional": 0.0050839905461797265
+   },
+   "value": 0.0050839905461797265
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7358490566037736,
+    0.0,
+    0.2641509433962264
+   ],
+   "panel": {
+    "delivered_rations": 344384.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.4437377753840365,
+    "lost_orders": 116.0,
+    "ret_excel": 0.10467899703298274,
+    "ret_excel_full_ledger": 0.020579990142497607,
+    "ret_excel_risk_conditional": 0.007924402753844373
+   },
+   "value": 0.007924402753844373
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7307692307692308,
+    0.0,
+    0.2692307692307692
+   ],
+   "panel": {
+    "delivered_rations": 339486.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.43742671672907285,
+    "lost_orders": 118.0,
+    "ret_excel": 0.1018842455456514,
+    "ret_excel_full_ledger": 0.018135425164936297,
+    "ret_excel_risk_conditional": 0.004574920561905772
+   },
+   "value": 0.004574920561905772
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7254901960784313,
+    0.0,
+    0.2745098039215686
+   ],
+   "panel": {
+    "delivered_rations": 334618.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.43115431298624657,
+    "lost_orders": 119.0,
+    "ret_excel": 0.10369483113735163,
+    "ret_excel_full_ledger": 0.017319029256300713,
+    "ret_excel_risk_conditional": 0.0047565043574700604
+   },
+   "value": 0.0047565043574700604
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7669902912621359,
+    0.0,
+    0.23300970873786409
+   ],
+   "panel": {
+    "delivered_rations": 337041.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.43427634138987603,
+    "lost_orders": 118.0,
+    "ret_excel": 0.09072505212542782,
+    "ret_excel_full_ledger": 0.017316798098139904,
+    "ret_excel_risk_conditional": 0.008258275499462094
+   },
+   "value": 0.008258275499462094
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6124031007751938,
+    0.0,
+    0.38759689922480617
+   ],
+   "panel": {
+    "delivered_rations": 726878.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.9336676433073566,
+    "lost_orders": 0.0,
+    "ret_excel": 0.3187135746316247,
+    "ret_excel_full_ledger": 0.1839513462822568,
+    "ret_excel_risk_conditional": 0.010759731568174486
+   },
+   "value": 0.010759731568174486
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6213991769547325,
+    0.0,
+    0.3786008230452675
+   ],
+   "panel": {
+    "delivered_rations": 688621.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.884526903004294,
+    "lost_orders": 0.0,
+    "ret_excel": 0.3050926846406864,
+    "ret_excel_full_ledger": 0.1731397505358162,
+    "ret_excel_risk_conditional": 0.010958940969436417
+   },
+   "value": 0.010958940969436417
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7051282051282051,
+    0.0,
+    0.2948717948717949
+   ],
+   "panel": {
+    "delivered_rations": 468142.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.601323795565683,
+    "lost_orders": 71.0,
+    "ret_excel": 0.15876381436971249,
+    "ret_excel_full_ledger": 0.050833120111866095,
+    "ret_excel_risk_conditional": 0.00736197343701999
+   },
+   "value": 0.00736197343701999
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7735849056603773,
+    0.0,
+    0.22641509433962262
+   ],
+   "panel": {
+    "delivered_rations": 344397.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.44237455990155666,
+    "lost_orders": 116.0,
+    "ret_excel": 0.08745052312446096,
+    "ret_excel_full_ledger": 0.017395904669442047,
+    "ret_excel_risk_conditional": 0.00487328422878477
+   },
+   "value": 0.00487328422878477
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6141078838174274,
+    0.0,
+    0.3858921161825726
+   ],
+   "panel": {
+    "delivered_rations": 683201.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.8775649663014005,
+    "lost_orders": 0.0,
+    "ret_excel": 0.303703001782129,
+    "ret_excel_full_ledger": 0.16826006551834258,
+    "ret_excel_risk_conditional": 0.01088063375083043
+   },
+   "value": 0.01088063375083043
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6153846153846154,
+    0.0,
+    0.3846153846153846
+   ],
+   "panel": {
+    "delivered_rations": 665526.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.8548616026070013,
+    "lost_orders": 0.0,
+    "ret_excel": 0.2983661685797835,
+    "ret_excel_full_ledger": 0.16550826140910133,
+    "ret_excel_risk_conditional": 0.01112753856170764
+   },
+   "value": 0.01112753856170764
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7161290322580645,
+    0.0,
+    0.2838709677419355
+   ],
+   "panel": {
+    "delivered_rations": 465697.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.5981832171083814,
+    "lost_orders": 72.0,
+    "ret_excel": 0.1523169798511514,
+    "ret_excel_full_ledger": 0.04713694484641149,
+    "ret_excel_risk_conditional": 0.007144155658142397
+   },
+   "value": 0.007144155658142397
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7777777777777777,
+    0.0,
+    0.2222222222222222
+   ],
+   "panel": {
+    "delivered_rations": 349318.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.44869553601132406,
+    "lost_orders": 115.0,
+    "ret_excel": 0.08665401498683006,
+    "ret_excel_full_ledger": 0.01767952068212816,
+    "ret_excel_risk_conditional": 0.004918495265789896
+   },
+   "value": 0.004918495265789896
+  },
+  {
+   "drivers": [
+    0.0,
+    0.694267515923567,
+    0.0,
+    0.3057324840764331
+   ],
+   "panel": {
+    "delivered_rations": 470526.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.6043860201228229,
+    "lost_orders": 71.0,
+    "ret_excel": 0.16342672563416122,
+    "ret_excel_full_ledger": 0.050965160520026115,
+    "ret_excel_risk_conditional": 0.008796563607519008
+   },
+   "value": 0.008796563607519008
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6993464052287581,
+    0.0,
+    0.3006535947712418
+   ],
+   "panel": {
+    "delivered_rations": 460609.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.5916477311407943,
+    "lost_orders": 74.0,
+    "ret_excel": 0.15887058875549237,
+    "ret_excel_full_ledger": 0.048165443039302626,
+    "ret_excel_risk_conditional": 0.007924957057901298
+   },
+   "value": 0.007924957057901298
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7181208053691275,
+    0.0,
+    0.28187919463087246
+   ],
+   "panel": {
+    "delivered_rations": 450738.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.5789685287064285,
+    "lost_orders": 78.0,
+    "ret_excel": 0.14686723627160533,
+    "ret_excel_full_ledger": 0.041551646213320435,
+    "ret_excel_risk_conditional": 0.007114381900367927
+   },
+   "value": 0.007114381900367927
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7777777777777777,
+    0.0,
+    0.2222222222222222
+   ],
+   "panel": {
+    "delivered_rations": 349318.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.44869553601132406,
+    "lost_orders": 115.0,
+    "ret_excel": 0.08876877659175644,
+    "ret_excel_full_ledger": 0.018547951284782746,
+    "ret_excel_risk_conditional": 0.0077925870221943515
+   },
+   "value": 0.0077925870221943515
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7383177570093459,
+    0.0,
+    0.26168224299065423
+   ],
+   "panel": {
+    "delivered_rations": 346805.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.44546761222269465,
+    "lost_orders": 116.0,
+    "ret_excel": 0.10370474498386865,
+    "ret_excel_full_ledger": 0.020821672096324132,
+    "ret_excel_risk_conditional": 0.007829587880729606
+   },
+   "value": 0.007829587880729606
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7333333333333333,
+    0.0,
+    0.26666666666666666
+   ],
+   "panel": {
+    "delivered_rations": 341907.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.4391761793867587,
+    "lost_orders": 118.0,
+    "ret_excel": 0.1009179686363407,
+    "ret_excel_full_ledger": 0.018377969376727598,
+    "ret_excel_risk_conditional": 0.004521027698348907
+   },
+   "value": 0.004521027698348907
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7281553398058253,
+    0.0,
+    0.27184466019417475
+   ],
+   "panel": {
+    "delivered_rations": 337039.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.43292328125582036,
+    "lost_orders": 119.0,
+    "ret_excel": 0.10269234342234072,
+    "ret_excel_full_ledger": 0.017549934499967706,
+    "ret_excel_risk_conditional": 0.004698932252586833
+   },
+   "value": 0.004698932252586833
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7692307692307692,
+    0.0,
+    0.23076923076923075
+   ],
+   "panel": {
+    "delivered_rations": 339462.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.4360356009294571,
+    "lost_orders": 118.0,
+    "ret_excel": 0.08985670226524745,
+    "ret_excel_full_ledger": 0.017538335254660975,
+    "ret_excel_risk_conditional": 0.008160255389052152
+   },
+   "value": 0.008160255389052152
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6078431372549019,
+    0.0,
+    0.3921568627450981
+   ],
+   "panel": {
+    "delivered_rations": 719160.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.9237539482016496,
+    "lost_orders": 0.0,
+    "ret_excel": 0.32229112454683106,
+    "ret_excel_full_ledger": 0.18398421390124656,
+    "ret_excel_risk_conditional": 0.011026934102262685
+   },
+   "value": 0.011026934102262685
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6204081632653061,
+    0.0,
+    0.3795918367346939
+   ],
+   "panel": {
+    "delivered_rations": 693760.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.8911278979703771,
+    "lost_orders": 0.0,
+    "ret_excel": 0.30723785039541834,
+    "ret_excel_full_ledger": 0.17557608543919623,
+    "ret_excel_risk_conditional": 0.0108305086524934
+   },
+   "value": 0.0108305086524934
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7051282051282051,
+    0.0,
+    0.2948717948717949
+   ],
+   "panel": {
+    "delivered_rations": 468196.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.6013931580346786,
+    "lost_orders": 71.0,
+    "ret_excel": 0.15881875164606088,
+    "ret_excel_full_ledger": 0.049402429622425525,
+    "ret_excel_risk_conditional": 0.007430253660289502
+   },
+   "value": 0.007430253660289502
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7735849056603773,
+    0.0,
+    0.22641509433962262
+   ],
+   "panel": {
+    "delivered_rations": 344383.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.4423565770392245,
+    "lost_orders": 116.0,
+    "ret_excel": 0.086814653935331,
+    "ret_excel_full_ledger": 0.01741128100084825,
+    "ret_excel_risk_conditional": 0.00492541374257653
+   },
+   "value": 0.00492541374257653
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6141078838174274,
+    0.0,
+    0.3858921161825726
+   ],
+   "panel": {
+    "delivered_rations": 683201.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.8775649663014005,
+    "lost_orders": 0.0,
+    "ret_excel": 0.303703001782129,
+    "ret_excel_full_ledger": 0.16826006551834258,
+    "ret_excel_risk_conditional": 0.01088063375083043
+   },
+   "value": 0.01088063375083043
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6153846153846154,
+    0.0,
+    0.3846153846153846
+   ],
+   "panel": {
+    "delivered_rations": 665526.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.8548616026070013,
+    "lost_orders": 0.0,
+    "ret_excel": 0.2983661685797835,
+    "ret_excel_full_ledger": 0.16550826140910133,
+    "ret_excel_risk_conditional": 0.01112753856170764
+   },
+   "value": 0.01112753856170764
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7161290322580645,
+    0.0,
+    0.2838709677419355
+   ],
+   "panel": {
+    "delivered_rations": 465697.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.5981832171083814,
+    "lost_orders": 72.0,
+    "ret_excel": 0.1523169798511514,
+    "ret_excel_full_ledger": 0.04713694484641149,
+    "ret_excel_risk_conditional": 0.007144155658142397
+   },
+   "value": 0.007144155658142397
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7777777777777777,
+    0.0,
+    0.2222222222222222
+   ],
+   "panel": {
+    "delivered_rations": 349318.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.44869553601132406,
+    "lost_orders": 115.0,
+    "ret_excel": 0.08665401498683006,
+    "ret_excel_full_ledger": 0.01767952068212816,
+    "ret_excel_risk_conditional": 0.004918495265789896
+   },
+   "value": 0.004918495265789896
+  },
+  {
+   "drivers": [
+    0.0,
+    0.694267515923567,
+    0.0,
+    0.3057324840764331
+   ],
+   "panel": {
+    "delivered_rations": 470526.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.6043860201228229,
+    "lost_orders": 71.0,
+    "ret_excel": 0.16342672563416122,
+    "ret_excel_full_ledger": 0.050965160520026115,
+    "ret_excel_risk_conditional": 0.008796563607519008
+   },
+   "value": 0.008796563607519008
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6993464052287581,
+    0.0,
+    0.3006535947712418
+   ],
+   "panel": {
+    "delivered_rations": 460609.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.5916477311407943,
+    "lost_orders": 74.0,
+    "ret_excel": 0.15887058875549237,
+    "ret_excel_full_ledger": 0.048165443039302626,
+    "ret_excel_risk_conditional": 0.007924957057901298
+   },
+   "value": 0.007924957057901298
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7181208053691275,
+    0.0,
+    0.28187919463087246
+   ],
+   "panel": {
+    "delivered_rations": 450738.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.5789685287064285,
+    "lost_orders": 78.0,
+    "ret_excel": 0.14686723627160533,
+    "ret_excel_full_ledger": 0.041551646213320435,
+    "ret_excel_risk_conditional": 0.007114381900367927
+   },
+   "value": 0.007114381900367927
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7777777777777777,
+    0.0,
+    0.2222222222222222
+   ],
+   "panel": {
+    "delivered_rations": 349318.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.44869553601132406,
+    "lost_orders": 115.0,
+    "ret_excel": 0.08876877659175644,
+    "ret_excel_full_ledger": 0.018547951284782746,
+    "ret_excel_risk_conditional": 0.0077925870221943515
+   },
+   "value": 0.0077925870221943515
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7383177570093459,
+    0.0,
+    0.26168224299065423
+   ],
+   "panel": {
+    "delivered_rations": 346805.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.44546761222269465,
+    "lost_orders": 116.0,
+    "ret_excel": 0.10370474498386865,
+    "ret_excel_full_ledger": 0.020821672096324132,
+    "ret_excel_risk_conditional": 0.007829587880729606
+   },
+   "value": 0.007829587880729606
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7333333333333333,
+    0.0,
+    0.26666666666666666
+   ],
+   "panel": {
+    "delivered_rations": 341907.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.4391761793867587,
+    "lost_orders": 118.0,
+    "ret_excel": 0.1009179686363407,
+    "ret_excel_full_ledger": 0.018377969376727598,
+    "ret_excel_risk_conditional": 0.004521027698348907
+   },
+   "value": 0.004521027698348907
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7281553398058253,
+    0.0,
+    0.27184466019417475
+   ],
+   "panel": {
+    "delivered_rations": 337039.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.43292328125582036,
+    "lost_orders": 119.0,
+    "ret_excel": 0.10269234342234072,
+    "ret_excel_full_ledger": 0.017549934499967706,
+    "ret_excel_risk_conditional": 0.004698932252586833
+   },
+   "value": 0.004698932252586833
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7692307692307692,
+    0.0,
+    0.23076923076923075
+   ],
+   "panel": {
+    "delivered_rations": 339462.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.4360356009294571,
+    "lost_orders": 118.0,
+    "ret_excel": 0.08985670226524745,
+    "ret_excel_full_ledger": 0.017538335254660975,
+    "ret_excel_risk_conditional": 0.008160255389052152
+   },
+   "value": 0.008160255389052152
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6237113402061856,
+    0.0,
+    0.37628865979381443
+   ],
+   "panel": {
+    "delivered_rations": 563628.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.726233027272329,
+    "lost_orders": 32.0,
+    "ret_excel": 0.26113652351723793,
+    "ret_excel_full_ledger": 0.08554964798673038,
+    "ret_excel_risk_conditional": 0.00672584761343131
+   },
+   "value": 0.00672584761343131
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6296296296296297,
+    0.0,
+    0.3703703703703704
+   ],
+   "panel": {
+    "delivered_rations": 551224.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.7102505096005917,
+    "lost_orders": 33.0,
+    "ret_excel": 0.2580467559642185,
+    "ret_excel_full_ledger": 0.08078421728546707,
+    "ret_excel_risk_conditional": 0.006688388094987751
+   },
+   "value": 0.006688388094987751
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6772151898734177,
+    0.0,
+    0.3227848101265823
+   ],
+   "panel": {
+    "delivered_rations": 473273.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.6098108743998825,
+    "lost_orders": 66.0,
+    "ret_excel": 0.18346380615631128,
+    "ret_excel_full_ledger": 0.051717422733432314,
+    "ret_excel_risk_conditional": 0.007695506861883129
+   },
+   "value": 0.007695506861883129
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7391304347826088,
+    0.0,
+    0.2608695652173913
+   ],
+   "panel": {
+    "delivered_rations": 366587.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.47234627585691497,
+    "lost_orders": 109.0,
+    "ret_excel": 0.11225047772981639,
+    "ret_excel_full_ledger": 0.0192746433608999,
+    "ret_excel_risk_conditional": 0.007846006285319992
+   },
+   "value": 0.007846006285319992
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6288659793814433,
+    0.0,
+    0.3711340206185567
+   ],
+   "panel": {
+    "delivered_rations": 563666.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.7262819901610363,
+    "lost_orders": 32.0,
+    "ret_excel": 0.2590323736946403,
+    "ret_excel_full_ledger": 0.08560320383613983,
+    "ret_excel_risk_conditional": 0.00679231583206234
+   },
+   "value": 0.00679231583206234
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6243386243386244,
+    0.0,
+    0.37566137566137564
+   ],
+   "panel": {
+    "delivered_rations": 551224.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.7102505096005917,
+    "lost_orders": 33.0,
+    "ret_excel": 0.2627093936470777,
+    "ret_excel_full_ledger": 0.08239434273705915,
+    "ret_excel_risk_conditional": 0.006557947686538697
+   },
+   "value": 0.006557947686538697
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6772151898734177,
+    0.0,
+    0.3227848101265823
+   ],
+   "panel": {
+    "delivered_rations": 473273.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.6098108743998825,
+    "lost_orders": 66.0,
+    "ret_excel": 0.18344254112250477,
+    "ret_excel_full_ledger": 0.051746919590600265,
+    "ret_excel_risk_conditional": 0.007771867884645015
+   },
+   "value": 0.007771867884645015
+  },
+  {
+   "drivers": [
+    0.0,
+    0.736842105263158,
+    0.0,
+    0.2631578947368421
+   ],
+   "panel": {
+    "delivered_rations": 364142.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.46919590051771815,
+    "lost_orders": 110.0,
+    "ret_excel": 0.11114547121568236,
+    "ret_excel_full_ledger": 0.018310160044591527,
+    "ret_excel_risk_conditional": 0.004991868777919856
+   },
+   "value": 0.004991868777919856
+  },
+  {
+   "drivers": [
+    0.0,
+    0.670886075949367,
+    0.0,
+    0.3291139240506329
+   ],
+   "panel": {
+    "delivered_rations": 473109.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.6095995608801981,
+    "lost_orders": 69.0,
+    "ret_excel": 0.18582725892631155,
+    "ret_excel_full_ledger": 0.053156120378723005,
+    "ret_excel_risk_conditional": 0.009248091711222131
+   },
+   "value": 0.009248091711222131
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6815286624203821,
+    0.0,
+    0.3184713375796178
+   ],
+   "panel": {
+    "delivered_rations": 470619.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.6063912031727952,
+    "lost_orders": 70.0,
+    "ret_excel": 0.17935133057677757,
+    "ret_excel_full_ledger": 0.05028662696635313,
+    "ret_excel_risk_conditional": 0.009303767759948295
+   },
+   "value": 0.009303767759948295
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6644736842105263,
+    0.0,
+    0.3355263157894737
+   ],
+   "panel": {
+    "delivered_rations": 458290.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.5905053227814013,
+    "lost_orders": 73.0,
+    "ret_excel": 0.18473843215046867,
+    "ret_excel_full_ledger": 0.04886465351371955,
+    "ret_excel_risk_conditional": 0.00730855068652303
+   },
+   "value": 0.00730855068652303
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7391304347826088,
+    0.0,
+    0.2608695652173913
+   ],
+   "panel": {
+    "delivered_rations": 366598.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.4723604493246987,
+    "lost_orders": 109.0,
+    "ret_excel": 0.11064592083338348,
+    "ret_excel_full_ledger": 0.01838850850944766,
+    "ret_excel_risk_conditional": 0.00495824918117562
+   },
+   "value": 0.00495824918117562
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7117117117117117,
+    0.0,
+    0.2882882882882883
+   ],
+   "panel": {
+    "delivered_rations": 356710.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.4596197902842167,
+    "lost_orders": 111.0,
+    "ret_excel": 0.12145720789622554,
+    "ret_excel_full_ledger": 0.019571704992515756,
+    "ret_excel_risk_conditional": 0.005223773236305072
+   },
+   "value": 0.005223773236305072
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7142857142857143,
+    0.0,
+    0.28571428571428575
+   ],
+   "panel": {
+    "delivered_rations": 359166.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.46278433909119726,
+    "lost_orders": 111.0,
+    "ret_excel": 0.1193908916189766,
+    "ret_excel_full_ledger": 0.01880770298949237,
+    "ret_excel_risk_conditional": 0.004225262575942871
+   },
+   "value": 0.004225262575942871
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7090909090909091,
+    0.0,
+    0.2909090909090909
+   ],
+   "panel": {
+    "delivered_rations": 354284.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.4564938963893735,
+    "lost_orders": 113.0,
+    "ret_excel": 0.12118144081392308,
+    "ret_excel_full_ledger": 0.018950626211158342,
+    "ret_excel_risk_conditional": 0.004936516055144611
+   },
+   "value": 0.004936516055144611
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7272727272727273,
+    0.0,
+    0.2727272727272727
+   ],
+   "panel": {
+    "delivered_rations": 354267.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.4564719919391623,
+    "lost_orders": 113.0,
+    "ret_excel": 0.11256309329314679,
+    "ret_excel_full_ledger": 0.017591412957144417,
+    "ret_excel_risk_conditional": 0.004805732371231839
+   },
+   "value": 0.004805732371231839
+  },
+  {
+   "drivers": [
+    0.0,
+    0.5954198473282443,
+    0.0,
+    0.40458015267175573
+   ],
+   "panel": {
+    "delivered_rations": 737180.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.9469004610035208,
+    "lost_orders": 0.0,
+    "ret_excel": 0.34490007236353065,
+    "ret_excel_full_ledger": 0.18523964968268924,
+    "ret_excel_risk_conditional": 0.011590935468537025
+   },
+   "value": 0.011590935468537025
+  },
+  {
+   "drivers": [
+    0.0,
+    0.5951417004048583,
+    0.0,
+    0.4048582995951417
+   ],
+   "panel": {
+    "delivered_rations": 698900.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.8977301774266268,
+    "lost_orders": 0.0,
+    "ret_excel": 0.33605084304839594,
+    "ret_excel_full_ledger": 0.17696798030105354,
+    "ret_excel_risk_conditional": 0.011646983079447991
+   },
+   "value": 0.011646983079447991
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6729559748427673,
+    0.0,
+    0.32704402515723274
+   ],
+   "panel": {
+    "delivered_rations": 475694.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.611024265303737,
+    "lost_orders": 66.0,
+    "ret_excel": 0.1863260883598713,
+    "ret_excel_full_ledger": 0.052384854468743525,
+    "ret_excel_risk_conditional": 0.007642701202612151
+   },
+   "value": 0.007642701202612151
+  },
+  {
+   "drivers": [
+    0.0,
+    0.736842105263158,
+    0.0,
+    0.2631578947368421
+   ],
+   "panel": {
+    "delivered_rations": 364097.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.4676790161832916,
+    "lost_orders": 111.0,
+    "ret_excel": 0.11036215407776762,
+    "ret_excel_full_ledger": 0.018358017028196363,
+    "ret_excel_risk_conditional": 0.004987664363724829
+   },
+   "value": 0.004987664363724829
+  },
+  {
+   "drivers": [
+    0.0,
+    0.5894308943089431,
+    0.0,
+    0.41056910569105687
+   ],
+   "panel": {
+    "delivered_rations": 696032.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.8940462596288594,
+    "lost_orders": 0.0,
+    "ret_excel": 0.337212404723475,
+    "ret_excel_full_ledger": 0.1699710441356967,
+    "ret_excel_risk_conditional": 0.01121006575833017
+   },
+   "value": 0.01121006575833017
+  },
+  {
+   "drivers": [
+    0.0,
+    0.5941422594142259,
+    0.0,
+    0.40585774058577406
+   ],
+   "panel": {
+    "delivered_rations": 678352.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.8713364734836272,
+    "lost_orders": 0.0,
+    "ret_excel": 0.3305840078738407,
+    "ret_excel_full_ledger": 0.16962629567580065,
+    "ret_excel_risk_conditional": 0.011442094975855214
+   },
+   "value": 0.011442094975855214
+  },
+  {
+   "drivers": [
+    0.0,
+    0.66875,
+    0.0,
+    0.33125
+   ],
+   "panel": {
+    "delivered_rations": 478195.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.6142367752103673,
+    "lost_orders": 66.0,
+    "ret_excel": 0.18823538040864163,
+    "ret_excel_full_ledger": 0.05548903647483484,
+    "ret_excel_risk_conditional": 0.007686293930011911
+   },
+   "value": 0.007686293930011911
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7391304347826088,
+    0.0,
+    0.2608695652173913
+   ],
+   "panel": {
+    "delivered_rations": 366542.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.47081959464059325,
+    "lost_orders": 110.0,
+    "ret_excel": 0.10966843332863245,
+    "ret_excel_full_ledger": 0.01859562340648495,
+    "ret_excel_risk_conditional": 0.005085645243869502
+   },
+   "value": 0.005085645243869502
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6770186335403727,
+    0.0,
+    0.32298136645962733
+   ],
+   "panel": {
+    "delivered_rations": 480526.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.6172309217886782,
+    "lost_orders": 67.0,
+    "ret_excel": 0.18423233618692045,
+    "ret_excel_full_ledger": 0.053972097078048495,
+    "ret_excel_risk_conditional": 0.009017548857090954
+   },
+   "value": 0.009017548857090954
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6855345911949685,
+    0.0,
+    0.31446540880503143
+   ],
+   "panel": {
+    "delivered_rations": 475588.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.610888109346079,
+    "lost_orders": 68.0,
+    "ret_excel": 0.17741536500721836,
+    "ret_excel_full_ledger": 0.04980565192875639,
+    "ret_excel_risk_conditional": 0.006986353157489036
+   },
+   "value": 0.006986353157489036
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6838709677419356,
+    0.0,
+    0.31612903225806455
+   ],
+   "panel": {
+    "delivered_rations": 465703.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.5981909240493809,
+    "lost_orders": 71.0,
+    "ret_excel": 0.17732080817242898,
+    "ret_excel_full_ledger": 0.04752655243536569,
+    "ret_excel_risk_conditional": 0.007211364328225386
+   },
+   "value": 0.007211364328225386
+  },
+  {
+   "drivers": [
+    0.0,
+    0.736842105263158,
+    0.0,
+    0.2631578947368421
+   ],
+   "panel": {
+    "delivered_rations": 364097.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.4676790161832916,
+    "lost_orders": 111.0,
+    "ret_excel": 0.11036215407776762,
+    "ret_excel_full_ledger": 0.018358017028196363,
+    "ret_excel_risk_conditional": 0.004987664363724829
+   },
+   "value": 0.004987664363724829
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7142857142857143,
+    0.0,
+    0.28571428571428575
+   ],
+   "panel": {
+    "delivered_rations": 359131.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.4613002380160279,
+    "lost_orders": 111.0,
+    "ret_excel": 0.12037896893683464,
+    "ret_excel_full_ledger": 0.019810957526612636,
+    "ret_excel_risk_conditional": 0.0051671566264068144
+   },
+   "value": 0.0051671566264068144
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7168141592920354,
+    0.0,
+    0.2831858407079646
+   ],
+   "panel": {
+    "delivered_rations": 361587.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.46445494586516195,
+    "lost_orders": 111.0,
+    "ret_excel": 0.1183402823392578,
+    "ret_excel_full_ledger": 0.01905851959479708,
+    "ret_excel_risk_conditional": 0.004181395667730646
+   },
+   "value": 0.004181395667730646
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7117117117117117,
+    0.0,
+    0.2882882882882883
+   ],
+   "panel": {
+    "delivered_rations": 356705.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.4581840648718914,
+    "lost_orders": 113.0,
+    "ret_excel": 0.12009549112768077,
+    "ret_excel_full_ledger": 0.019200916286574412,
+    "ret_excel_risk_conditional": 0.0048821427587633585
+   },
+   "value": 0.0048821427587633585
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7297297297297297,
+    0.0,
+    0.2702702702702703
+   ],
+   "panel": {
+    "delivered_rations": 356688.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.4581622285390594,
+    "lost_orders": 113.0,
+    "ret_excel": 0.1115537035637791,
+    "ret_excel_full_ledger": 0.017837996599192243,
+    "ret_excel_risk_conditional": 0.0047528323831096345
+   },
+   "value": 0.0047528323831096345
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6037735849056604,
+    0.0,
+    0.3962264150943396
+   ],
+   "panel": {
+    "delivered_rations": 744923.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.9568462683633926,
+    "lost_orders": 0.0,
+    "ret_excel": 0.3390587912880794,
+    "ret_excel_full_ledger": 0.18273458164755674,
+    "ret_excel_risk_conditional": 0.011454420324269247
+   },
+   "value": 0.011454420324269247
+  },
+  {
+   "drivers": [
+    0.0,
+    0.5934959349593496,
+    0.0,
+    0.4065040650406504
+   ],
+   "panel": {
+    "delivered_rations": 696330.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.8944290376985019,
+    "lost_orders": 0.0,
+    "ret_excel": 0.3361961469838922,
+    "ret_excel_full_ledger": 0.17738820662977017,
+    "ret_excel_risk_conditional": 0.011571785550473194
+   },
+   "value": 0.011571785550473194
+  },
+  {
+   "drivers": [
+    0.0,
+    0.675,
+    0.0,
+    0.325
+   ],
+   "panel": {
+    "delivered_rations": 478197.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.6142393441907006,
+    "lost_orders": 65.0,
+    "ret_excel": 0.18583733875138794,
+    "ret_excel_full_ledger": 0.05334794195770967,
+    "ret_excel_risk_conditional": 0.007617786745027771
+   },
+   "value": 0.007617786745027771
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7391304347826088,
+    0.0,
+    0.2608695652173913
+   ],
+   "panel": {
+    "delivered_rations": 366555.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.47083629301275887,
+    "lost_orders": 110.0,
+    "ret_excel": 0.11029036334358941,
+    "ret_excel_full_ledger": 0.018595066563108525,
+    "ret_excel_risk_conditional": 0.00508382403847366
+   },
+   "value": 0.00508382403847366
+  },
+  {
+   "drivers": [
+    0.0,
+    0.5894308943089431,
+    0.0,
+    0.41056910569105687
+   ],
+   "panel": {
+    "delivered_rations": 696032.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.8940462596288594,
+    "lost_orders": 0.0,
+    "ret_excel": 0.337212404723475,
+    "ret_excel_full_ledger": 0.1699710441356967,
+    "ret_excel_risk_conditional": 0.01121006575833017
+   },
+   "value": 0.01121006575833017
+  },
+  {
+   "drivers": [
+    0.0,
+    0.5941422594142259,
+    0.0,
+    0.40585774058577406
+   ],
+   "panel": {
+    "delivered_rations": 678352.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.8713364734836272,
+    "lost_orders": 0.0,
+    "ret_excel": 0.3305840078738407,
+    "ret_excel_full_ledger": 0.16962629567580065,
+    "ret_excel_risk_conditional": 0.011442094975855214
+   },
+   "value": 0.011442094975855214
+  },
+  {
+   "drivers": [
+    0.0,
+    0.66875,
+    0.0,
+    0.33125
+   ],
+   "panel": {
+    "delivered_rations": 478195.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.6142367752103673,
+    "lost_orders": 66.0,
+    "ret_excel": 0.18823538040864163,
+    "ret_excel_full_ledger": 0.05548903647483484,
+    "ret_excel_risk_conditional": 0.007686293930011911
+   },
+   "value": 0.007686293930011911
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7391304347826088,
+    0.0,
+    0.2608695652173913
+   ],
+   "panel": {
+    "delivered_rations": 366542.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.47081959464059325,
+    "lost_orders": 110.0,
+    "ret_excel": 0.10966843332863245,
+    "ret_excel_full_ledger": 0.01859562340648495,
+    "ret_excel_risk_conditional": 0.005085645243869502
+   },
+   "value": 0.005085645243869502
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6770186335403727,
+    0.0,
+    0.32298136645962733
+   ],
+   "panel": {
+    "delivered_rations": 480526.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.6172309217886782,
+    "lost_orders": 67.0,
+    "ret_excel": 0.18423233618692045,
+    "ret_excel_full_ledger": 0.053972097078048495,
+    "ret_excel_risk_conditional": 0.009017548857090954
+   },
+   "value": 0.009017548857090954
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6855345911949685,
+    0.0,
+    0.31446540880503143
+   ],
+   "panel": {
+    "delivered_rations": 475588.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.610888109346079,
+    "lost_orders": 68.0,
+    "ret_excel": 0.17741536500721836,
+    "ret_excel_full_ledger": 0.04980565192875639,
+    "ret_excel_risk_conditional": 0.006986353157489036
+   },
+   "value": 0.006986353157489036
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6838709677419356,
+    0.0,
+    0.31612903225806455
+   ],
+   "panel": {
+    "delivered_rations": 465703.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.5981909240493809,
+    "lost_orders": 71.0,
+    "ret_excel": 0.17732080817242898,
+    "ret_excel_full_ledger": 0.04752655243536569,
+    "ret_excel_risk_conditional": 0.007211364328225386
+   },
+   "value": 0.007211364328225386
+  },
+  {
+   "drivers": [
+    0.0,
+    0.736842105263158,
+    0.0,
+    0.2631578947368421
+   ],
+   "panel": {
+    "delivered_rations": 364097.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.4676790161832916,
+    "lost_orders": 111.0,
+    "ret_excel": 0.11036215407776762,
+    "ret_excel_full_ledger": 0.018358017028196363,
+    "ret_excel_risk_conditional": 0.004987664363724829
+   },
+   "value": 0.004987664363724829
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7142857142857143,
+    0.0,
+    0.28571428571428575
+   ],
+   "panel": {
+    "delivered_rations": 359131.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.4613002380160279,
+    "lost_orders": 111.0,
+    "ret_excel": 0.12037896893683464,
+    "ret_excel_full_ledger": 0.019810957526612636,
+    "ret_excel_risk_conditional": 0.0051671566264068144
+   },
+   "value": 0.0051671566264068144
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7168141592920354,
+    0.0,
+    0.2831858407079646
+   ],
+   "panel": {
+    "delivered_rations": 361587.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.46445494586516195,
+    "lost_orders": 111.0,
+    "ret_excel": 0.1183402823392578,
+    "ret_excel_full_ledger": 0.01905851959479708,
+    "ret_excel_risk_conditional": 0.004181395667730646
+   },
+   "value": 0.004181395667730646
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7117117117117117,
+    0.0,
+    0.2882882882882883
+   ],
+   "panel": {
+    "delivered_rations": 356705.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.4581840648718914,
+    "lost_orders": 113.0,
+    "ret_excel": 0.12009549112768077,
+    "ret_excel_full_ledger": 0.019200916286574412,
+    "ret_excel_risk_conditional": 0.0048821427587633585
+   },
+   "value": 0.0048821427587633585
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7297297297297297,
+    0.0,
+    0.2702702702702703
+   ],
+   "panel": {
+    "delivered_rations": 356688.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.4581622285390594,
+    "lost_orders": 113.0,
+    "ret_excel": 0.1115537035637791,
+    "ret_excel_full_ledger": 0.017837996599192243,
+    "ret_excel_risk_conditional": 0.0047528323831096345
+   },
+   "value": 0.0047528323831096345
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6119402985074627,
+    0.0,
+    0.3880597014925373
+   ],
+   "panel": {
+    "delivered_rations": 581459.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.7492082185497192,
+    "lost_orders": 24.0,
+    "ret_excel": 0.28920814211389106,
+    "ret_excel_full_ledger": 0.09151007008826081,
+    "ret_excel_risk_conditional": 0.006805303230369269
+   },
+   "value": 0.006805303230369269
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6153846153846154,
+    0.0,
+    0.3846153846153846
+   ],
+   "panel": {
+    "delivered_rations": 566511.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.7299477643287317,
+    "lost_orders": 26.0,
+    "ret_excel": 0.28516089312639065,
+    "ret_excel_full_ledger": 0.0840225915973152,
+    "ret_excel_risk_conditional": 0.006854805734830389
+   },
+   "value": 0.006854805734830389
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6385542168674698,
+    0.0,
+    0.3614457831325301
+   ],
+   "panel": {
+    "delivered_rations": 493307.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.635624624725228,
+    "lost_orders": 59.0,
+    "ret_excel": 0.21988545339346108,
+    "ret_excel_full_ledger": 0.05953359860011581,
+    "ret_excel_risk_conditional": 0.008352261548055058
+   },
+   "value": 0.008352261548055058
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7217391304347827,
+    0.0,
+    0.2782608695652174
+   ],
+   "panel": {
+    "delivered_rations": 366611.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.4723771997866249,
+    "lost_orders": 108.0,
+    "ret_excel": 0.12126314343284897,
+    "ret_excel_full_ledger": 0.018804086949633644,
+    "ret_excel_risk_conditional": 0.005169805509253936
+   },
+   "value": 0.005169805509253936
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6060606060606061,
+    0.0,
+    0.3939393939393939
+   ],
+   "panel": {
+    "delivered_rations": 573899.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.7394671806910983,
+    "lost_orders": 27.0,
+    "ret_excel": 0.29175691775454543,
+    "ret_excel_full_ledger": 0.08914523076071774,
+    "ret_excel_risk_conditional": 0.006826901240890681
+   },
+   "value": 0.006826901240890681
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6062176165803109,
+    0.0,
+    0.3937823834196891
+   ],
+   "panel": {
+    "delivered_rations": 561412.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.7233777177624475,
+    "lost_orders": 28.0,
+    "ret_excel": 0.28935760822148443,
+    "ret_excel_full_ledger": 0.08475271428590186,
+    "ret_excel_risk_conditional": 0.00670437786539962
+   },
+   "value": 0.00670437786539962
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6325301204819277,
+    0.0,
+    0.36746987951807225
+   ],
+   "panel": {
+    "delivered_rations": 493307.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.635624624725228,
+    "lost_orders": 59.0,
+    "ret_excel": 0.22324868613888815,
+    "ret_excel_full_ledger": 0.059902545213947056,
+    "ret_excel_risk_conditional": 0.008189317730066705
+   },
+   "value": 0.008189317730066705
+  },
+  {
+   "drivers": [
+    0.0,
+    0.717948717948718,
+    0.0,
+    0.28205128205128205
+   ],
+   "panel": {
+    "delivered_rations": 371521.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.4787037204064435,
+    "lost_orders": 106.0,
+    "ret_excel": 0.12413125649015917,
+    "ret_excel_full_ledger": 0.019491536377367454,
+    "ret_excel_risk_conditional": 0.005587306756437839
+   },
+   "value": 0.005587306756437839
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6358024691358025,
+    0.0,
+    0.36419753086419754
+   ],
+   "panel": {
+    "delivered_rations": 483141.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.6225257634989396,
+    "lost_orders": 64.0,
+    "ret_excel": 0.21878382447456482,
+    "ret_excel_full_ledger": 0.055269944330803865,
+    "ret_excel_risk_conditional": 0.009645471514956738
+   },
+   "value": 0.009645471514956738
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6524390243902439,
+    0.0,
+    0.34756097560975613
+   ],
+   "panel": {
+    "delivered_rations": 488164.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.628997884287809,
+    "lost_orders": 63.0,
+    "ret_excel": 0.21014504630044706,
+    "ret_excel_full_ledger": 0.05454471469713547,
+    "ret_excel_risk_conditional": 0.007255610400881482
+   },
+   "value": 0.007255610400881482
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6329113924050633,
+    0.0,
+    0.36708860759493667
+   ],
+   "panel": {
+    "delivered_rations": 473329.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.6098830302358723,
+    "lost_orders": 66.0,
+    "ret_excel": 0.21939959588579225,
+    "ret_excel_full_ledger": 0.049871006866518575,
+    "ret_excel_risk_conditional": 0.0077767035284668105
+   },
+   "value": 0.0077767035284668105
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7264957264957265,
+    0.0,
+    0.2735042735042735
+   ],
+   "panel": {
+    "delivered_rations": 371526.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.47871016289179974,
+    "lost_orders": 106.0,
+    "ret_excel": 0.12192916695963249,
+    "ret_excel_full_ledger": 0.02024165478180415,
+    "ret_excel_risk_conditional": 0.007966077241996978
+   },
+   "value": 0.007966077241996978
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7094017094017094,
+    0.0,
+    0.2905982905982906
+   ],
+   "panel": {
+    "delivered_rations": 371493.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.4786676424884486,
+    "lost_orders": 106.0,
+    "ret_excel": 0.13503388267574665,
+    "ret_excel_full_ledger": 0.02157055754549223,
+    "ret_excel_risk_conditional": 0.00847531360126276
+   },
+   "value": 0.00847531360126276
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7017543859649124,
+    0.0,
+    0.2982456140350877
+   ],
+   "panel": {
+    "delivered_rations": 364137.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.4691894580323619,
+    "lost_orders": 109.0,
+    "ret_excel": 0.13471233632314208,
+    "ret_excel_full_ledger": 0.02065424233880322,
+    "ret_excel_risk_conditional": 0.004759944814836074
+   },
+   "value": 0.004759944814836074
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6814159292035399,
+    0.0,
+    0.3185840707964602
+   ],
+   "panel": {
+    "delivered_rations": 361700.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.466049390669735,
+    "lost_orders": 109.0,
+    "ret_excel": 0.14352825927600235,
+    "ret_excel_full_ledger": 0.02016626974399516,
+    "ret_excel_risk_conditional": 0.004723623511463439
+   },
+   "value": 0.004723623511463439
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7192982456140351,
+    0.0,
+    0.2807017543859649
+   ],
+   "panel": {
+    "delivered_rations": 364121.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.46916884207922194,
+    "lost_orders": 110.0,
+    "ret_excel": 0.12103885030982081,
+    "ret_excel_full_ledger": 0.018302538068850824,
+    "ret_excel_risk_conditional": 0.005087874269086509
+   },
+   "value": 0.005087874269086509
+  },
+  {
+   "drivers": [
+    0.0,
+    0.5814814814814815,
+    0.0,
+    0.41851851851851857
+   ],
+   "panel": {
+    "delivered_rations": 757869.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.9734752780600088,
+    "lost_orders": 0.0,
+    "ret_excel": 0.3774322869894523,
+    "ret_excel_full_ledger": 0.1896021052464595,
+    "ret_excel_risk_conditional": 0.013404026501905749
+   },
+   "value": 0.013404026501905749
+  },
+  {
+   "drivers": [
+    0.0,
+    0.578125,
+    0.0,
+    0.421875
+   ],
+   "panel": {
+    "delivered_rations": 722057.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.9274751162142478,
+    "lost_orders": 0.0,
+    "ret_excel": 0.3659732535305886,
+    "ret_excel_full_ledger": 0.18179817617245694,
+    "ret_excel_risk_conditional": 0.011969430098015718
+   },
+   "value": 0.011969430098015718
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6347305389221557,
+    0.0,
+    0.3652694610778443
+   ],
+   "panel": {
+    "delivered_rations": 495728.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.6367577413011115,
+    "lost_orders": 59.0,
+    "ret_excel": 0.22264044810669806,
+    "ret_excel_full_ledger": 0.06181276553163404,
+    "ret_excel_risk_conditional": 0.007589404792255258
+   },
+   "value": 0.007589404792255258
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7203389830508474,
+    0.0,
+    0.2796610169491525
+   ],
+   "panel": {
+    "delivered_rations": 373947.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.4803312443241591,
+    "lost_orders": 106.0,
+    "ret_excel": 0.12236018613525067,
+    "ret_excel_full_ledger": 0.020745622824329225,
+    "ret_excel_risk_conditional": 0.004636778414987946
+   },
+   "value": 0.004636778414987946
+  },
+  {
+   "drivers": [
+    0.0,
+    0.58203125,
+    0.0,
+    0.41796875
+   ],
+   "panel": {
+    "delivered_rations": 721732.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.9270576569101076,
+    "lost_orders": 0.0,
+    "ret_excel": 0.3665484264982224,
+    "ret_excel_full_ledger": 0.1744775694841271,
+    "ret_excel_risk_conditional": 0.013166155455038993
+   },
+   "value": 0.013166155455038993
+  },
+  {
+   "drivers": [
+    0.0,
+    0.5708502024291497,
+    0.0,
+    0.4291497975708502
+   ],
+   "panel": {
+    "delivered_rations": 698900.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.8977301774266268,
+    "lost_orders": 0.0,
+    "ret_excel": 0.3673046153005596,
+    "ret_excel_full_ledger": 0.17502903583955887,
+    "ret_excel_risk_conditional": 0.012035647887497065
+   },
+   "value": 0.012035647887497065
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6227544910179641,
+    0.0,
+    0.37724550898203596
+   ],
+   "panel": {
+    "delivered_rations": 495728.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.6367577413011115,
+    "lost_orders": 59.0,
+    "ret_excel": 0.2299155583712771,
+    "ret_excel_full_ledger": 0.06429520996685836,
+    "ret_excel_risk_conditional": 0.008097562908246427
+   },
+   "value": 0.008097562908246427
+  },
+  {
+   "drivers": [
+    0.0,
+    0.735042735042735,
+    0.0,
+    0.26495726495726496
+   ],
+   "panel": {
+    "delivered_rations": 371502.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.47719066586685743,
+    "lost_orders": 107.0,
+    "ret_excel": 0.1164807382727576,
+    "ret_excel_full_ledger": 0.018164586615923822,
+    "ret_excel_risk_conditional": 0.005118057645334768
+   },
+   "value": 0.005118057645334768
+  },
+  {
+   "drivers": [
+    0.0,
+    0.644578313253012,
+    0.0,
+    0.35542168674698793
+   ],
+   "panel": {
+    "delivered_rations": 493069.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.6333422819481606,
+    "lost_orders": 61.0,
+    "ret_excel": 0.21881567792368875,
+    "ret_excel_full_ledger": 0.05831400145908816,
+    "ret_excel_risk_conditional": 0.009352393409444102
+   },
+   "value": 0.009352393409444102
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6219512195121951,
+    0.0,
+    0.3780487804878049
+   ],
+   "panel": {
+    "delivered_rations": 488135.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.6270046074662275,
+    "lost_orders": 63.0,
+    "ret_excel": 0.22962480977239105,
+    "ret_excel_full_ledger": 0.057756641265541274,
+    "ret_excel_risk_conditional": 0.007320802759386291
+   },
+   "value": 0.007320802759386291
+  },
+  {
+   "drivers": [
+    0.0,
+    0.625,
+    0.0,
+    0.375
+   ],
+   "panel": {
+    "delivered_rations": 478225.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.6142753099153649,
+    "lost_orders": 65.0,
+    "ret_excel": 0.2238802881156854,
+    "ret_excel_full_ledger": 0.05458846606577768,
+    "ret_excel_risk_conditional": 0.0076935740418352236
+   },
+   "value": 0.0076935740418352236
+  },
+  {
+   "drivers": [
+    0.0,
+    0.728813559322034,
+    0.0,
+    0.2711864406779661
+   ],
+   "panel": {
+    "delivered_rations": 373942.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.48032482187332615,
+    "lost_orders": 106.0,
+    "ret_excel": 0.11976467280316949,
+    "ret_excel_full_ledger": 0.01973657256414065,
+    "ret_excel_risk_conditional": 0.005398366785940732
+   },
+   "value": 0.005398366785940732
+  },
+  {
+   "drivers": [
+    0.0,
+    0.711864406779661,
+    0.0,
+    0.288135593220339
+   ],
+   "panel": {
+    "delivered_rations": 373914.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.48028885614866174,
+    "lost_orders": 106.0,
+    "ret_excel": 0.13391159694685614,
+    "ret_excel_full_ledger": 0.021871746521680994,
+    "ret_excel_risk_conditional": 0.00840541899489852
+   },
+   "value": 0.00840541899489852
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7043478260869566,
+    0.0,
+    0.2956521739130435
+   ],
+   "panel": {
+    "delivered_rations": 366558.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.4708401464832586,
+    "lost_orders": 109.0,
+    "ret_excel": 0.13355904064496985,
+    "ret_excel_full_ledger": 0.020912306168964005,
+    "ret_excel_risk_conditional": 0.004726900228644684
+   },
+   "value": 0.004726900228644684
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6842105263157895,
+    0.0,
+    0.3157894736842105
+   ],
+   "panel": {
+    "delivered_rations": 364121.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.46770984394728965,
+    "lost_orders": 109.0,
+    "ret_excel": 0.142287514311593,
+    "ret_excel_full_ledger": 0.02043468464046208,
+    "ret_excel_risk_conditional": 0.004689773637384848
+   },
+   "value": 0.004689773637384848
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7217391304347827,
+    0.0,
+    0.2782608695652174
+   ],
+   "panel": {
+    "delivered_rations": 366542.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.47081959464059325,
+    "lost_orders": 110.0,
+    "ret_excel": 0.11999280854729234,
+    "ret_excel_full_ledger": 0.018544076255244783,
+    "ret_excel_risk_conditional": 0.005035539008242666
+   },
+   "value": 0.005035539008242666
+  },
+  {
+   "drivers": [
+    0.0,
+    0.5814814814814815,
+    0.0,
+    0.41851851851851857
+   ],
+   "panel": {
+    "delivered_rations": 757869.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.9734752780600088,
+    "lost_orders": 0.0,
+    "ret_excel": 0.3774322869894523,
+    "ret_excel_full_ledger": 0.1896021052464595,
+    "ret_excel_risk_conditional": 0.013404026501905749
+   },
+   "value": 0.013404026501905749
+  },
+  {
+   "drivers": [
+    0.0,
+    0.5719844357976654,
+    0.0,
+    0.4280155642023346
+   ],
+   "panel": {
+    "delivered_rations": 724634.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.9307852473735387,
+    "lost_orders": 0.0,
+    "ret_excel": 0.37295947722117123,
+    "ret_excel_full_ledger": 0.1849192692054863,
+    "ret_excel_risk_conditional": 0.012186118305024403
+   },
+   "value": 0.012186118305024403
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6347305389221557,
+    0.0,
+    0.3652694610778443
+   ],
+   "panel": {
+    "delivered_rations": 495669.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.6366819563812829,
+    "lost_orders": 60.0,
+    "ret_excel": 0.22217888984012849,
+    "ret_excel_full_ledger": 0.05956760688706453,
+    "ret_excel_risk_conditional": 0.007944266640003347
+   },
+   "value": 0.007944266640003347
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7203389830508474,
+    0.0,
+    0.2796610169491525
+   ],
+   "panel": {
+    "delivered_rations": 373933.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.4803132614618269,
+    "lost_orders": 106.0,
+    "ret_excel": 0.1223235708407394,
+    "ret_excel_full_ledger": 0.020681075016249252,
+    "ret_excel_risk_conditional": 0.005087235077909079
+   },
+   "value": 0.005087235077909079
+  },
+  {
+   "drivers": [
+    0.0,
+    0.58203125,
+    0.0,
+    0.41796875
+   ],
+   "panel": {
+    "delivered_rations": 721732.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.9270576569101076,
+    "lost_orders": 0.0,
+    "ret_excel": 0.3665484264982224,
+    "ret_excel_full_ledger": 0.1744775694841271,
+    "ret_excel_risk_conditional": 0.013166155455038993
+   },
+   "value": 0.013166155455038993
+  },
+  {
+   "drivers": [
+    0.0,
+    0.5708502024291497,
+    0.0,
+    0.4291497975708502
+   ],
+   "panel": {
+    "delivered_rations": 698900.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.8977301774266268,
+    "lost_orders": 0.0,
+    "ret_excel": 0.3673046153005596,
+    "ret_excel_full_ledger": 0.17502903583955887,
+    "ret_excel_risk_conditional": 0.012035647887497065
+   },
+   "value": 0.012035647887497065
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6227544910179641,
+    0.0,
+    0.37724550898203596
+   ],
+   "panel": {
+    "delivered_rations": 495728.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.6367577413011115,
+    "lost_orders": 59.0,
+    "ret_excel": 0.2299155583712771,
+    "ret_excel_full_ledger": 0.06429520996685836,
+    "ret_excel_risk_conditional": 0.008097562908246427
+   },
+   "value": 0.008097562908246427
+  },
+  {
+   "drivers": [
+    0.0,
+    0.735042735042735,
+    0.0,
+    0.26495726495726496
+   ],
+   "panel": {
+    "delivered_rations": 371502.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.47719066586685743,
+    "lost_orders": 107.0,
+    "ret_excel": 0.1164807382727576,
+    "ret_excel_full_ledger": 0.018164586615923822,
+    "ret_excel_risk_conditional": 0.005118057645334768
+   },
+   "value": 0.005118057645334768
+  },
+  {
+   "drivers": [
+    0.0,
+    0.644578313253012,
+    0.0,
+    0.35542168674698793
+   ],
+   "panel": {
+    "delivered_rations": 493069.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.6333422819481606,
+    "lost_orders": 61.0,
+    "ret_excel": 0.21881567792368875,
+    "ret_excel_full_ledger": 0.05831400145908816,
+    "ret_excel_risk_conditional": 0.009352393409444102
+   },
+   "value": 0.009352393409444102
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6219512195121951,
+    0.0,
+    0.3780487804878049
+   ],
+   "panel": {
+    "delivered_rations": 488135.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.6270046074662275,
+    "lost_orders": 63.0,
+    "ret_excel": 0.22962480977239105,
+    "ret_excel_full_ledger": 0.057756641265541274,
+    "ret_excel_risk_conditional": 0.007320802759386291
+   },
+   "value": 0.007320802759386291
+  },
+  {
+   "drivers": [
+    0.0,
+    0.625,
+    0.0,
+    0.375
+   ],
+   "panel": {
+    "delivered_rations": 478225.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.6142753099153649,
+    "lost_orders": 65.0,
+    "ret_excel": 0.2238802881156854,
+    "ret_excel_full_ledger": 0.05458846606577768,
+    "ret_excel_risk_conditional": 0.0076935740418352236
+   },
+   "value": 0.0076935740418352236
+  },
+  {
+   "drivers": [
+    0.0,
+    0.728813559322034,
+    0.0,
+    0.2711864406779661
+   ],
+   "panel": {
+    "delivered_rations": 373942.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.48032482187332615,
+    "lost_orders": 106.0,
+    "ret_excel": 0.11976467280316949,
+    "ret_excel_full_ledger": 0.01973657256414065,
+    "ret_excel_risk_conditional": 0.005398366785940732
+   },
+   "value": 0.005398366785940732
+  },
+  {
+   "drivers": [
+    0.0,
+    0.711864406779661,
+    0.0,
+    0.288135593220339
+   ],
+   "panel": {
+    "delivered_rations": 373914.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.48028885614866174,
+    "lost_orders": 106.0,
+    "ret_excel": 0.13391159694685614,
+    "ret_excel_full_ledger": 0.021871746521680994,
+    "ret_excel_risk_conditional": 0.00840541899489852
+   },
+   "value": 0.00840541899489852
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7043478260869566,
+    0.0,
+    0.2956521739130435
+   ],
+   "panel": {
+    "delivered_rations": 366558.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.4708401464832586,
+    "lost_orders": 109.0,
+    "ret_excel": 0.13355904064496985,
+    "ret_excel_full_ledger": 0.020912306168964005,
+    "ret_excel_risk_conditional": 0.004726900228644684
+   },
+   "value": 0.004726900228644684
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6842105263157895,
+    0.0,
+    0.3157894736842105
+   ],
+   "panel": {
+    "delivered_rations": 364121.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.46770984394728965,
+    "lost_orders": 109.0,
+    "ret_excel": 0.142287514311593,
+    "ret_excel_full_ledger": 0.02043468464046208,
+    "ret_excel_risk_conditional": 0.004689773637384848
+   },
+   "value": 0.004689773637384848
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7217391304347827,
+    0.0,
+    0.2782608695652174
+   ],
+   "panel": {
+    "delivered_rations": 366542.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.47081959464059325,
+    "lost_orders": 110.0,
+    "ret_excel": 0.11999280854729234,
+    "ret_excel_full_ledger": 0.018544076255244783,
+    "ret_excel_risk_conditional": 0.005035539008242666
+   },
+   "value": 0.005035539008242666
+  },
+  {
+   "drivers": [
+    0.0,
+    0.5980861244019139,
+    0.0,
+    0.4019138755980861
+   ],
+   "panel": {
+    "delivered_rations": 601915.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.7755657146391306,
+    "lost_orders": 16.0,
+    "ret_excel": 0.324855861487502,
+    "ret_excel_full_ledger": 0.10302563957424796,
+    "ret_excel_risk_conditional": 0.009069742569649803
+   },
+   "value": 0.009069742569649803
+  },
+  {
+   "drivers": [
+    0.0,
+    0.5891089108910891,
+    0.0,
+    0.4108910891089109
+   ],
+   "panel": {
+    "delivered_rations": 584460.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.7530749982605289,
+    "lost_orders": 19.0,
+    "ret_excel": 0.3296755478356856,
+    "ret_excel_full_ledger": 0.10058405981369051,
+    "ret_excel_risk_conditional": 0.007194422538350425
+   },
+   "value": 0.007194422538350425
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6325301204819277,
+    0.0,
+    0.36746987951807225
+   ],
+   "panel": {
+    "delivered_rations": 493325.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.6356478176725104,
+    "lost_orders": 58.0,
+    "ret_excel": 0.2302149327222865,
+    "ret_excel_full_ledger": 0.0598226922890755,
+    "ret_excel_risk_conditional": 0.008294237501311653
+   },
+   "value": 0.008294237501311653
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7241379310344827,
+    0.0,
+    0.27586206896551724
+   ],
+   "panel": {
+    "delivered_rations": 369056.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.4755275751258217,
+    "lost_orders": 107.0,
+    "ret_excel": 0.12028049678777242,
+    "ret_excel_full_ledger": 0.01891781986402231,
+    "ret_excel_risk_conditional": 0.005090423598471695
+   },
+   "value": 0.005090423598471695
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6009615384615384,
+    0.0,
+    0.3990384615384615
+   ],
+   "panel": {
+    "delivered_rations": 599409.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.7723367409785877,
+    "lost_orders": 17.0,
+    "ret_excel": 0.32119643280439214,
+    "ret_excel_full_ledger": 0.10297307871789582,
+    "ret_excel_risk_conditional": 0.009038164960641625
+   },
+   "value": 0.009038164960641625
+  },
+  {
+   "drivers": [
+    0.0,
+    0.5862068965517241,
+    0.0,
+    0.41379310344827586
+   ],
+   "panel": {
+    "delivered_rations": 586903.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.7562227966055833,
+    "lost_orders": 18.0,
+    "ret_excel": 0.33043321590588554,
+    "ret_excel_full_ledger": 0.10494625797175437,
+    "ret_excel_risk_conditional": 0.007286524585541893
+   },
+   "value": 0.007286524585541893
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6287425149700598,
+    0.0,
+    0.37125748502994016
+   ],
+   "panel": {
+    "delivered_rations": 495816.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.6388574638769846,
+    "lost_orders": 58.0,
+    "ret_excel": 0.2312114004479625,
+    "ret_excel_full_ledger": 0.06334171785699201,
+    "ret_excel_risk_conditional": 0.008163494992058252
+   },
+   "value": 0.008163494992058252
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7155172413793103,
+    0.0,
+    0.28448275862068967
+   ],
+   "panel": {
+    "delivered_rations": 369081.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.4755597875526029,
+    "lost_orders": 107.0,
+    "ret_excel": 0.12491220780885094,
+    "ret_excel_full_ledger": 0.018967772969049466,
+    "ret_excel_risk_conditional": 0.005318464968242718
+   },
+   "value": 0.005318464968242718
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6153846153846154,
+    0.0,
+    0.3846153846153846
+   ],
+   "panel": {
+    "delivered_rations": 500685.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.6451311561168821,
+    "lost_orders": 57.0,
+    "ret_excel": 0.24659160819563294,
+    "ret_excel_full_ledger": 0.06330440380220667,
+    "ret_excel_risk_conditional": 0.00980536813550802
+   },
+   "value": 0.00980536813550802
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6303030303030304,
+    0.0,
+    0.3696969696969697
+   ],
+   "panel": {
+    "delivered_rations": 490807.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.6324033820471127,
+    "lost_orders": 60.0,
+    "ret_excel": 0.23683649812730487,
+    "ret_excel_full_ledger": 0.056709000863261895,
+    "ret_excel_risk_conditional": 0.008770764493749767
+   },
+   "value": 0.008770764493749767
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6319018404907976,
+    0.0,
+    0.36809815950920244
+   ],
+   "panel": {
+    "delivered_rations": 485813.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.6259686276733093,
+    "lost_orders": 61.0,
+    "ret_excel": 0.2279554186038519,
+    "ret_excel_full_ledger": 0.055776312285780144,
+    "ret_excel_risk_conditional": 0.007413143890749864
+   },
+   "value": 0.007413143890749864
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7241379310344827,
+    0.0,
+    0.27586206896551724
+   ],
+   "panel": {
+    "delivered_rations": 369081.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.4755597875526029,
+    "lost_orders": 106.0,
+    "ret_excel": 0.12182261576912692,
+    "ret_excel_full_ledger": 0.019353028632766833,
+    "ret_excel_risk_conditional": 0.00513056097960008
+   },
+   "value": 0.00513056097960008
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7094017094017094,
+    0.0,
+    0.2905982905982906
+   ],
+   "panel": {
+    "delivered_rations": 371493.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.4786676424884486,
+    "lost_orders": 106.0,
+    "ret_excel": 0.13503388267574665,
+    "ret_excel_full_ledger": 0.02157055754549223,
+    "ret_excel_risk_conditional": 0.00847531360126276
+   },
+   "value": 0.00847531360126276
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7017543859649124,
+    0.0,
+    0.2982456140350877
+   ],
+   "panel": {
+    "delivered_rations": 364137.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.4691894580323619,
+    "lost_orders": 109.0,
+    "ret_excel": 0.13471233632314208,
+    "ret_excel_full_ledger": 0.02065424233880322,
+    "ret_excel_risk_conditional": 0.004759944814836074
+   },
+   "value": 0.004759944814836074
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6814159292035399,
+    0.0,
+    0.3185840707964602
+   ],
+   "panel": {
+    "delivered_rations": 361700.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.466049390669735,
+    "lost_orders": 109.0,
+    "ret_excel": 0.14352825927600235,
+    "ret_excel_full_ledger": 0.02016626974399516,
+    "ret_excel_risk_conditional": 0.004723623511463439
+   },
+   "value": 0.004723623511463439
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7192982456140351,
+    0.0,
+    0.2807017543859649
+   ],
+   "panel": {
+    "delivered_rations": 364121.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.46916884207922194,
+    "lost_orders": 110.0,
+    "ret_excel": 0.12103885030982081,
+    "ret_excel_full_ledger": 0.018302538068850824,
+    "ret_excel_risk_conditional": 0.005087874269086509
+   },
+   "value": 0.005087874269086509
+  },
+  {
+   "drivers": [
+    0.0,
+    0.5631768953068592,
+    0.0,
+    0.43682310469314084
+   ],
+   "panel": {
+    "delivered_rations": 776037.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.9968118954065347,
+    "lost_orders": 0.0,
+    "ret_excel": 0.41583269122651,
+    "ret_excel_full_ledger": 0.2023680617311477,
+    "ret_excel_risk_conditional": 0.013845878064231529
+   },
+   "value": 0.013845878064231529
+  },
+  {
+   "drivers": [
+    0.0,
+    0.5703422053231939,
+    0.0,
+    0.42965779467680604
+   ],
+   "panel": {
+    "delivered_rations": 740140.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.9507025518966139,
+    "lost_orders": 0.0,
+    "ret_excel": 0.39593443844618675,
+    "ret_excel_full_ledger": 0.18508941896206776,
+    "ret_excel_risk_conditional": 0.012042686391014069
+   },
+   "value": 0.012042686391014069
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6287425149700598,
+    0.0,
+    0.37125748502994016
+   ],
+   "panel": {
+    "delivered_rations": 495736.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.6367680172224441,
+    "lost_orders": 58.0,
+    "ret_excel": 0.2319385992554733,
+    "ret_excel_full_ledger": 0.061561346720969995,
+    "ret_excel_risk_conditional": 0.00807589344530891
+   },
+   "value": 0.00807589344530891
+  },
+  {
+   "drivers": [
+    0.0,
+    0.728813559322034,
+    0.0,
+    0.2711864406779661
+   ],
+   "panel": {
+    "delivered_rations": 373958.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.4803453737159915,
+    "lost_orders": 106.0,
+    "ret_excel": 0.11903057389300957,
+    "ret_excel_full_ledger": 0.019642864358577147,
+    "ret_excel_risk_conditional": 0.005095449563305219
+   },
+   "value": 0.005095449563305219
+  },
+  {
+   "drivers": [
+    0.0,
+    0.5817490494296578,
+    0.0,
+    0.4182509505703422
+   ],
+   "panel": {
+    "delivered_rations": 739776.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.9502349974759768,
+    "lost_orders": 0.0,
+    "ret_excel": 0.3876407541270633,
+    "ret_excel_full_ledger": 0.17453845102063986,
+    "ret_excel_risk_conditional": 0.012932563594453307
+   },
+   "value": 0.012932563594453307
+  },
+  {
+   "drivers": [
+    0.0,
+    0.5669291338582677,
+    0.0,
+    0.4330708661417323
+   ],
+   "panel": {
+    "delivered_rations": 716909.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.9208625608366655,
+    "lost_orders": 0.0,
+    "ret_excel": 0.39225504312327697,
+    "ret_excel_full_ledger": 0.17760920062782956,
+    "ret_excel_risk_conditional": 0.011899623690745788
+   },
+   "value": 0.011899623690745788
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6407185628742514,
+    0.0,
+    0.3592814371257485
+   ],
+   "panel": {
+    "delivered_rations": 495736.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.6367680172224441,
+    "lost_orders": 59.0,
+    "ret_excel": 0.2225683337511051,
+    "ret_excel_full_ledger": 0.060029181542761,
+    "ret_excel_risk_conditional": 0.008060623485219664
+   },
+   "value": 0.008060623485219664
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7241379310344827,
+    0.0,
+    0.27586206896551724
+   ],
+   "panel": {
+    "delivered_rations": 369049.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.47403981148822316,
+    "lost_orders": 107.0,
+    "ret_excel": 0.12114946063353628,
+    "ret_excel_full_ledger": 0.018149335962638104,
+    "ret_excel_risk_conditional": 0.005189443760539996
+   },
+   "value": 0.005189443760539996
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6176470588235294,
+    0.0,
+    0.38235294117647056
+   ],
+   "panel": {
+    "delivered_rations": 503106.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.6462347097501795,
+    "lost_orders": 57.0,
+    "ret_excel": 0.245157409193175,
+    "ret_excel_full_ledger": 0.06390508272168997,
+    "ret_excel_risk_conditional": 0.009738438703529636
+   },
+   "value": 0.009738438703529636
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6325301204819277,
+    0.0,
+    0.36746987951807225
+   ],
+   "panel": {
+    "delivered_rations": 493228.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.6335465158846476,
+    "lost_orders": 60.0,
+    "ret_excel": 0.2354223224357749,
+    "ret_excel_full_ledger": 0.05716632796644461,
+    "ret_excel_risk_conditional": 0.008707074673174373
+   },
+   "value": 0.008707074673174373
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6341463414634146,
+    0.0,
+    0.36585365853658536
+   ],
+   "panel": {
+    "delivered_rations": 488234.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.6271317719927195,
+    "lost_orders": 61.0,
+    "ret_excel": 0.22657814979122679,
+    "ret_excel_full_ledger": 0.05628502834832832,
+    "ret_excel_risk_conditional": 0.007361895712313166
+   },
+   "value": 0.007361895712313166
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7264957264957265,
+    0.0,
+    0.2735042735042735
+   ],
+   "panel": {
+    "delivered_rations": 371502.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.47719066586685743,
+    "lost_orders": 106.0,
+    "ret_excel": 0.12078775621228867,
+    "ret_excel_full_ledger": 0.019619492083257743,
+    "ret_excel_risk_conditional": 0.005078954940064169
+   },
+   "value": 0.005078954940064169
+  },
+  {
+   "drivers": [
+    0.0,
+    0.711864406779661,
+    0.0,
+    0.288135593220339
+   ],
+   "panel": {
+    "delivered_rations": 373914.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.48028885614866174,
+    "lost_orders": 106.0,
+    "ret_excel": 0.13391159694685614,
+    "ret_excel_full_ledger": 0.021871746521680994,
+    "ret_excel_risk_conditional": 0.00840541899489852
+   },
+   "value": 0.00840541899489852
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7043478260869566,
+    0.0,
+    0.2956521739130435
+   ],
+   "panel": {
+    "delivered_rations": 366558.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.4708401464832586,
+    "lost_orders": 109.0,
+    "ret_excel": 0.13355904064496985,
+    "ret_excel_full_ledger": 0.020912306168964005,
+    "ret_excel_risk_conditional": 0.004726900228644684
+   },
+   "value": 0.004726900228644684
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6842105263157895,
+    0.0,
+    0.3157894736842105
+   ],
+   "panel": {
+    "delivered_rations": 364121.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.46770984394728965,
+    "lost_orders": 109.0,
+    "ret_excel": 0.142287514311593,
+    "ret_excel_full_ledger": 0.02043468464046208,
+    "ret_excel_risk_conditional": 0.004689773637384848
+   },
+   "value": 0.004689773637384848
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7217391304347827,
+    0.0,
+    0.2782608695652174
+   ],
+   "panel": {
+    "delivered_rations": 366542.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.47081959464059325,
+    "lost_orders": 110.0,
+    "ret_excel": 0.11999280854729234,
+    "ret_excel_full_ledger": 0.018544076255244783,
+    "ret_excel_risk_conditional": 0.005035539008242666
+   },
+   "value": 0.005035539008242666
+  },
+  {
+   "drivers": [
+    0.0,
+    0.5615942028985507,
+    0.0,
+    0.4384057971014493
+   ],
+   "panel": {
+    "delivered_rations": 773438.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.9934735054635789,
+    "lost_orders": 0.0,
+    "ret_excel": 0.41712552025519384,
+    "ret_excel_full_ledger": 0.202302277413594,
+    "ret_excel_risk_conditional": 0.01381721895316253
+   },
+   "value": 0.01381721895316253
+  },
+  {
+   "drivers": [
+    0.0,
+    0.5703422053231939,
+    0.0,
+    0.42965779467680604
+   ],
+   "panel": {
+    "delivered_rations": 740140.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.9507025518966139,
+    "lost_orders": 0.0,
+    "ret_excel": 0.39531359199916805,
+    "ret_excel_full_ledger": 0.1850864685551834,
+    "ret_excel_risk_conditional": 0.012037218303588337
+   },
+   "value": 0.012037218303588337
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6272189349112426,
+    0.0,
+    0.37278106508875736
+   ],
+   "panel": {
+    "delivered_rations": 500679.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.6431172521158764,
+    "lost_orders": 58.0,
+    "ret_excel": 0.2322244119228929,
+    "ret_excel_full_ledger": 0.06441909575181529,
+    "ret_excel_risk_conditional": 0.008100684109179706
+   },
+   "value": 0.008100684109179706
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7264957264957265,
+    0.0,
+    0.2735042735042735
+   ],
+   "panel": {
+    "delivered_rations": 371502.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.47719066586685743,
+    "lost_orders": 106.0,
+    "ret_excel": 0.12046995529627302,
+    "ret_excel_full_ledger": 0.01966324307418041,
+    "ret_excel_risk_conditional": 0.00522204641625829
+   },
+   "value": 0.00522204641625829
+  },
+  {
+   "drivers": [
+    0.0,
+    0.5817490494296578,
+    0.0,
+    0.4182509505703422
+   ],
+   "panel": {
+    "delivered_rations": 739776.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.9502349974759768,
+    "lost_orders": 0.0,
+    "ret_excel": 0.3876407541270633,
+    "ret_excel_full_ledger": 0.17453845102063986,
+    "ret_excel_risk_conditional": 0.012932563594453307
+   },
+   "value": 0.012932563594453307
+  },
+  {
+   "drivers": [
+    0.0,
+    0.5669291338582677,
+    0.0,
+    0.4330708661417323
+   ],
+   "panel": {
+    "delivered_rations": 716909.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.9208625608366655,
+    "lost_orders": 0.0,
+    "ret_excel": 0.39225504312327697,
+    "ret_excel_full_ledger": 0.17760920062782956,
+    "ret_excel_risk_conditional": 0.011899623690745788
+   },
+   "value": 0.011899623690745788
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6407185628742514,
+    0.0,
+    0.3592814371257485
+   ],
+   "panel": {
+    "delivered_rations": 495736.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.6367680172224441,
+    "lost_orders": 59.0,
+    "ret_excel": 0.2225683337511051,
+    "ret_excel_full_ledger": 0.060029181542761,
+    "ret_excel_risk_conditional": 0.008060623485219664
+   },
+   "value": 0.008060623485219664
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7241379310344827,
+    0.0,
+    0.27586206896551724
+   ],
+   "panel": {
+    "delivered_rations": 369049.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.47403981148822316,
+    "lost_orders": 107.0,
+    "ret_excel": 0.12114946063353628,
+    "ret_excel_full_ledger": 0.018149335962638104,
+    "ret_excel_risk_conditional": 0.005189443760539996
+   },
+   "value": 0.005189443760539996
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6176470588235294,
+    0.0,
+    0.38235294117647056
+   ],
+   "panel": {
+    "delivered_rations": 503106.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.6462347097501795,
+    "lost_orders": 57.0,
+    "ret_excel": 0.245157409193175,
+    "ret_excel_full_ledger": 0.06390508272168997,
+    "ret_excel_risk_conditional": 0.009738438703529636
+   },
+   "value": 0.009738438703529636
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6325301204819277,
+    0.0,
+    0.36746987951807225
+   ],
+   "panel": {
+    "delivered_rations": 493228.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.6335465158846476,
+    "lost_orders": 60.0,
+    "ret_excel": 0.2354223224357749,
+    "ret_excel_full_ledger": 0.05716632796644461,
+    "ret_excel_risk_conditional": 0.008707074673174373
+   },
+   "value": 0.008707074673174373
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6341463414634146,
+    0.0,
+    0.36585365853658536
+   ],
+   "panel": {
+    "delivered_rations": 488234.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.6271317719927195,
+    "lost_orders": 61.0,
+    "ret_excel": 0.22657814979122679,
+    "ret_excel_full_ledger": 0.05628502834832832,
+    "ret_excel_risk_conditional": 0.007361895712313166
+   },
+   "value": 0.007361895712313166
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7264957264957265,
+    0.0,
+    0.2735042735042735
+   ],
+   "panel": {
+    "delivered_rations": 371502.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.47719066586685743,
+    "lost_orders": 106.0,
+    "ret_excel": 0.12078775621228867,
+    "ret_excel_full_ledger": 0.019619492083257743,
+    "ret_excel_risk_conditional": 0.005078954940064169
+   },
+   "value": 0.005078954940064169
+  },
+  {
+   "drivers": [
+    0.0,
+    0.711864406779661,
+    0.0,
+    0.288135593220339
+   ],
+   "panel": {
+    "delivered_rations": 373914.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.48028885614866174,
+    "lost_orders": 106.0,
+    "ret_excel": 0.13391159694685614,
+    "ret_excel_full_ledger": 0.021871746521680994,
+    "ret_excel_risk_conditional": 0.00840541899489852
+   },
+   "value": 0.00840541899489852
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7043478260869566,
+    0.0,
+    0.2956521739130435
+   ],
+   "panel": {
+    "delivered_rations": 366558.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.4708401464832586,
+    "lost_orders": 109.0,
+    "ret_excel": 0.13355904064496985,
+    "ret_excel_full_ledger": 0.020912306168964005,
+    "ret_excel_risk_conditional": 0.004726900228644684
+   },
+   "value": 0.004726900228644684
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6842105263157895,
+    0.0,
+    0.3157894736842105
+   ],
+   "panel": {
+    "delivered_rations": 364121.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.46770984394728965,
+    "lost_orders": 109.0,
+    "ret_excel": 0.142287514311593,
+    "ret_excel_full_ledger": 0.02043468464046208,
+    "ret_excel_risk_conditional": 0.004689773637384848
+   },
+   "value": 0.004689773637384848
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7217391304347827,
+    0.0,
+    0.2782608695652174
+   ],
+   "panel": {
+    "delivered_rations": 366542.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.47081959464059325,
+    "lost_orders": 110.0,
+    "ret_excel": 0.11999280854729234,
+    "ret_excel_full_ledger": 0.018544076255244783,
+    "ret_excel_risk_conditional": 0.005035539008242666
+   },
+   "value": 0.005035539008242666
+  },
+  {
+   "drivers": [
+    0.0,
+    0.5454545454545454,
+    0.0,
+    0.45454545454545453
+   ],
+   "panel": {
+    "delivered_rations": 658564.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.8485577852281542,
+    "lost_orders": 0.0,
+    "ret_excel": 0.44198280730566675,
+    "ret_excel_full_ledger": 0.1286107934006801,
+    "ret_excel_risk_conditional": 0.00887052437570823
+   },
+   "value": 0.00887052437570823
+  },
+  {
+   "drivers": [
+    0.0,
+    0.5822222222222222,
+    0.0,
+    0.4177777777777778
+   ],
+   "panel": {
+    "delivered_rations": 643432.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.8290602475460573,
+    "lost_orders": 0.0,
+    "ret_excel": 0.38842349094257284,
+    "ret_excel_full_ledger": 0.12278073448906288,
+    "ret_excel_risk_conditional": 0.007238010582898477
+   },
+   "value": 0.007238010582898477
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6287425149700598,
+    0.0,
+    0.37125748502994016
+   ],
+   "panel": {
+    "delivered_rations": 495816.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.6388574638769846,
+    "lost_orders": 57.0,
+    "ret_excel": 0.2325013258557388,
+    "ret_excel_full_ledger": 0.0602360478020896,
+    "ret_excel_risk_conditional": 0.00808212663570994
+   },
+   "value": 0.00808212663570994
+  },
+  {
+   "drivers": [
+    0.0,
+    0.717948717948718,
+    0.0,
+    0.28205128205128205
+   ],
+   "panel": {
+    "delivered_rations": 371537.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.47872433635958345,
+    "lost_orders": 105.0,
+    "ret_excel": 0.12599542967703148,
+    "ret_excel_full_ledger": 0.020891054262670385,
+    "ret_excel_risk_conditional": 0.005166591549092818
+   },
+   "value": 0.005166591549092818
+  },
+  {
+   "drivers": [
+    0.0,
+    0.5594713656387665,
+    0.0,
+    0.44052863436123346
+   ],
+   "panel": {
+    "delivered_rations": 648382.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.8354383080487258,
+    "lost_orders": 0.0,
+    "ret_excel": 0.42072235911087336,
+    "ret_excel_full_ledger": 0.12421189644657483,
+    "ret_excel_risk_conditional": 0.008020796351251122
+   },
+   "value": 0.008020796351251122
+  },
+  {
+   "drivers": [
+    0.0,
+    0.5964125560538117,
+    0.0,
+    0.40358744394618834
+   ],
+   "panel": {
+    "delivered_rations": 638144.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.8222466750333076,
+    "lost_orders": 0.0,
+    "ret_excel": 0.36773200327605193,
+    "ret_excel_full_ledger": 0.11867108404786417,
+    "ret_excel_risk_conditional": 0.007848953495429096
+   },
+   "value": 0.007848953495429096
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6407185628742514,
+    0.0,
+    0.3592814371257485
+   ],
+   "panel": {
+    "delivered_rations": 495816.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.6388574638769846,
+    "lost_orders": 57.0,
+    "ret_excel": 0.22436370555813687,
+    "ret_excel_full_ledger": 0.06025788302400301,
+    "ret_excel_risk_conditional": 0.007987585544108049
+   },
+   "value": 0.007987585544108049
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7241379310344827,
+    0.0,
+    0.27586206896551724
+   ],
+   "panel": {
+    "delivered_rations": 369081.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.4755597875526029,
+    "lost_orders": 107.0,
+    "ret_excel": 0.12045057397022814,
+    "ret_excel_full_ledger": 0.018795794388038273,
+    "ret_excel_risk_conditional": 0.004688030064571962
+   },
+   "value": 0.004688030064571962
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6153846153846154,
+    0.0,
+    0.3846153846153846
+   ],
+   "panel": {
+    "delivered_rations": 500685.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.6451311561168821,
+    "lost_orders": 57.0,
+    "ret_excel": 0.24659160819563294,
+    "ret_excel_full_ledger": 0.06330440380220667,
+    "ret_excel_risk_conditional": 0.00980536813550802
+   },
+   "value": 0.00980536813550802
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6303030303030304,
+    0.0,
+    0.3696969696969697
+   ],
+   "panel": {
+    "delivered_rations": 490807.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.6324033820471127,
+    "lost_orders": 60.0,
+    "ret_excel": 0.23683649812730487,
+    "ret_excel_full_ledger": 0.056709000863261895,
+    "ret_excel_risk_conditional": 0.008770764493749767
+   },
+   "value": 0.008770764493749767
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6319018404907976,
+    0.0,
+    0.36809815950920244
+   ],
+   "panel": {
+    "delivered_rations": 485813.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.6259686276733093,
+    "lost_orders": 61.0,
+    "ret_excel": 0.2279554186038519,
+    "ret_excel_full_ledger": 0.055776312285780144,
+    "ret_excel_risk_conditional": 0.007413143890749864
+   },
+   "value": 0.007413143890749864
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7241379310344827,
+    0.0,
+    0.27586206896551724
+   ],
+   "panel": {
+    "delivered_rations": 369081.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.4755597875526029,
+    "lost_orders": 106.0,
+    "ret_excel": 0.12182261576912692,
+    "ret_excel_full_ledger": 0.019353028632766833,
+    "ret_excel_risk_conditional": 0.00513056097960008
+   },
+   "value": 0.00513056097960008
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7094017094017094,
+    0.0,
+    0.2905982905982906
+   ],
+   "panel": {
+    "delivered_rations": 371493.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.4786676424884486,
+    "lost_orders": 106.0,
+    "ret_excel": 0.13503388267574665,
+    "ret_excel_full_ledger": 0.02157055754549223,
+    "ret_excel_risk_conditional": 0.00847531360126276
+   },
+   "value": 0.00847531360126276
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7017543859649124,
+    0.0,
+    0.2982456140350877
+   ],
+   "panel": {
+    "delivered_rations": 364137.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.4691894580323619,
+    "lost_orders": 109.0,
+    "ret_excel": 0.13471233632314208,
+    "ret_excel_full_ledger": 0.02065424233880322,
+    "ret_excel_risk_conditional": 0.004759944814836074
+   },
+   "value": 0.004759944814836074
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6814159292035399,
+    0.0,
+    0.3185840707964602
+   ],
+   "panel": {
+    "delivered_rations": 361700.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.466049390669735,
+    "lost_orders": 109.0,
+    "ret_excel": 0.14352825927600235,
+    "ret_excel_full_ledger": 0.02016626974399516,
+    "ret_excel_risk_conditional": 0.004723623511463439
+   },
+   "value": 0.004723623511463439
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7192982456140351,
+    0.0,
+    0.2807017543859649
+   ],
+   "panel": {
+    "delivered_rations": 364121.0,
+    "demanded_rations": 776098.0,
+    "flow_fill_rate": 0.46916884207922194,
+    "lost_orders": 110.0,
+    "ret_excel": 0.12103885030982081,
+    "ret_excel_full_ledger": 0.018302538068850824,
+    "ret_excel_risk_conditional": 0.005087874269086509
+   },
+   "value": 0.005087874269086509
+  },
+  {
+   "drivers": [
+    0.0,
+    0.5090252707581228,
+    0.0,
+    0.4909747292418773
+   ],
+   "panel": {
+    "delivered_rations": 776037.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.9968118954065347,
+    "lost_orders": 0.0,
+    "ret_excel": 0.49391531584747933,
+    "ret_excel_full_ledger": 0.21248109626256306,
+    "ret_excel_risk_conditional": 0.014939819328566478
+   },
+   "value": 0.014939819328566478
+  },
+  {
+   "drivers": [
+    0.0,
+    0.5444444444444444,
+    0.0,
+    0.45555555555555555
+   ],
+   "panel": {
+    "delivered_rations": 758293.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.974019901890641,
+    "lost_orders": 0.0,
+    "ret_excel": 0.44268920563495906,
+    "ret_excel_full_ledger": 0.1952183019439227,
+    "ret_excel_risk_conditional": 0.012791108881420935
+   },
+   "value": 0.012791108881420935
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6272189349112426,
+    0.0,
+    0.37278106508875736
+   ],
+   "panel": {
+    "delivered_rations": 500679.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.6431172521158764,
+    "lost_orders": 57.0,
+    "ret_excel": 0.23360112364304642,
+    "ret_excel_full_ledger": 0.06450953864522288,
+    "ret_excel_risk_conditional": 0.008137784472903474
+   },
+   "value": 0.008137784472903474
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7264957264957265,
+    0.0,
+    0.2735042735042735
+   ],
+   "panel": {
+    "delivered_rations": 371502.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.47719066586685743,
+    "lost_orders": 107.0,
+    "ret_excel": 0.12125615111049398,
+    "ret_excel_full_ledger": 0.01919271659198405,
+    "ret_excel_risk_conditional": 0.0050528315150968435
+   },
+   "value": 0.0050528315150968435
+  },
+  {
+   "drivers": [
+    0.0,
+    0.5468164794007491,
+    0.0,
+    0.453183520599251
+   ],
+   "panel": {
+    "delivered_rations": 750154.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.9635654364248014,
+    "lost_orders": 0.0,
+    "ret_excel": 0.4445871550544963,
+    "ret_excel_full_ledger": 0.18193043506423914,
+    "ret_excel_risk_conditional": 0.013128050367469465
+   },
+   "value": 0.013128050367469465
+  },
+  {
+   "drivers": [
+    0.0,
+    0.5637065637065637,
+    0.0,
+    0.4362934362934363
+   ],
+   "panel": {
+    "delivered_rations": 729796.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.9374157856134533,
+    "lost_orders": 0.0,
+    "ret_excel": 0.4093265718286273,
+    "ret_excel_full_ledger": 0.18155649995464043,
+    "ret_excel_risk_conditional": 0.012413978974850774
+   },
+   "value": 0.012413978974850774
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6369047619047619,
+    0.0,
+    0.3630952380952381
+   ],
+   "panel": {
+    "delivered_rations": 498237.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.6399805271290746,
+    "lost_orders": 57.0,
+    "ret_excel": 0.22682870685206855,
+    "ret_excel_full_ledger": 0.06271032788157144,
+    "ret_excel_risk_conditional": 0.00803746825135952
+   },
+   "value": 0.00803746825135952
+  },
+  {
+   "drivers": [
+    0.0,
+    0.728813559322034,
+    0.0,
+    0.2711864406779661
+   ],
+   "panel": {
+    "delivered_rations": 373958.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.4803453737159915,
+    "lost_orders": 106.0,
+    "ret_excel": 0.11891763089629229,
+    "ret_excel_full_ledger": 0.01962302747224071,
+    "ret_excel_risk_conditional": 0.0050313256749153264
+   },
+   "value": 0.0050313256749153264
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6176470588235294,
+    0.0,
+    0.38235294117647056
+   ],
+   "panel": {
+    "delivered_rations": 503106.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.6462347097501795,
+    "lost_orders": 57.0,
+    "ret_excel": 0.245157409193175,
+    "ret_excel_full_ledger": 0.06390508272168997,
+    "ret_excel_risk_conditional": 0.009738438703529636
+   },
+   "value": 0.009738438703529636
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6325301204819277,
+    0.0,
+    0.36746987951807225
+   ],
+   "panel": {
+    "delivered_rations": 493228.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.6335465158846476,
+    "lost_orders": 60.0,
+    "ret_excel": 0.2354223224357749,
+    "ret_excel_full_ledger": 0.05716632796644461,
+    "ret_excel_risk_conditional": 0.008707074673174373
+   },
+   "value": 0.008707074673174373
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6341463414634146,
+    0.0,
+    0.36585365853658536
+   ],
+   "panel": {
+    "delivered_rations": 488234.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.6271317719927195,
+    "lost_orders": 61.0,
+    "ret_excel": 0.22657814979122679,
+    "ret_excel_full_ledger": 0.05628502834832832,
+    "ret_excel_risk_conditional": 0.007361895712313166
+   },
+   "value": 0.007361895712313166
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7264957264957265,
+    0.0,
+    0.2735042735042735
+   ],
+   "panel": {
+    "delivered_rations": 371502.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.47719066586685743,
+    "lost_orders": 106.0,
+    "ret_excel": 0.12078775621228867,
+    "ret_excel_full_ledger": 0.019619492083257743,
+    "ret_excel_risk_conditional": 0.005078954940064169
+   },
+   "value": 0.005078954940064169
+  },
+  {
+   "drivers": [
+    0.0,
+    0.711864406779661,
+    0.0,
+    0.288135593220339
+   ],
+   "panel": {
+    "delivered_rations": 373914.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.48028885614866174,
+    "lost_orders": 106.0,
+    "ret_excel": 0.13391159694685614,
+    "ret_excel_full_ledger": 0.021871746521680994,
+    "ret_excel_risk_conditional": 0.00840541899489852
+   },
+   "value": 0.00840541899489852
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7043478260869566,
+    0.0,
+    0.2956521739130435
+   ],
+   "panel": {
+    "delivered_rations": 366558.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.4708401464832586,
+    "lost_orders": 109.0,
+    "ret_excel": 0.13355904064496985,
+    "ret_excel_full_ledger": 0.020912306168964005,
+    "ret_excel_risk_conditional": 0.004726900228644684
+   },
+   "value": 0.004726900228644684
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6842105263157895,
+    0.0,
+    0.3157894736842105
+   ],
+   "panel": {
+    "delivered_rations": 364121.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.46770984394728965,
+    "lost_orders": 109.0,
+    "ret_excel": 0.142287514311593,
+    "ret_excel_full_ledger": 0.02043468464046208,
+    "ret_excel_risk_conditional": 0.004689773637384848
+   },
+   "value": 0.004689773637384848
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7217391304347827,
+    0.0,
+    0.2782608695652174
+   ],
+   "panel": {
+    "delivered_rations": 366542.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.47081959464059325,
+    "lost_orders": 110.0,
+    "ret_excel": 0.11999280854729234,
+    "ret_excel_full_ledger": 0.018544076255244783,
+    "ret_excel_risk_conditional": 0.005035539008242666
+   },
+   "value": 0.005035539008242666
+  },
+  {
+   "drivers": [
+    0.0,
+    0.5090252707581228,
+    0.0,
+    0.4909747292418773
+   ],
+   "panel": {
+    "delivered_rations": 776037.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.9968118954065347,
+    "lost_orders": 0.0,
+    "ret_excel": 0.4937780813082837,
+    "ret_excel_full_ledger": 0.2124053235474019,
+    "ret_excel_risk_conditional": 0.014790423478816019
+   },
+   "value": 0.014790423478816019
+  },
+  {
+   "drivers": [
+    0.0,
+    0.5539033457249071,
+    0.0,
+    0.44609665427509293
+   ],
+   "panel": {
+    "delivered_rations": 755696.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.9706840809280185,
+    "lost_orders": 0.0,
+    "ret_excel": 0.4307420086972282,
+    "ret_excel_full_ledger": 0.19368955763433016,
+    "ret_excel_risk_conditional": 0.012530649620030206
+   },
+   "value": 0.012530649620030206
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6347305389221557,
+    0.0,
+    0.3652694610778443
+   ],
+   "panel": {
+    "delivered_rations": 495760.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.6367988449864422,
+    "lost_orders": 58.0,
+    "ret_excel": 0.22906467952456547,
+    "ret_excel_full_ledger": 0.060347712458890285,
+    "ret_excel_risk_conditional": 0.008084381147983391
+   },
+   "value": 0.008084381147983391
+  },
+  {
+   "drivers": [
+    0.0,
+    0.728813559322034,
+    0.0,
+    0.2711864406779661
+   ],
+   "panel": {
+    "delivered_rations": 373958.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.4803453737159915,
+    "lost_orders": 106.0,
+    "ret_excel": 0.12052940934116643,
+    "ret_excel_full_ledger": 0.019635150822103632,
+    "ret_excel_risk_conditional": 0.005070515108193155
+   },
+   "value": 0.005070515108193155
+  },
+  {
+   "drivers": [
+    0.0,
+    0.5468164794007491,
+    0.0,
+    0.453183520599251
+   ],
+   "panel": {
+    "delivered_rations": 750154.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.9635654364248014,
+    "lost_orders": 0.0,
+    "ret_excel": 0.4445871550544963,
+    "ret_excel_full_ledger": 0.18193043506423914,
+    "ret_excel_risk_conditional": 0.013128050367469465
+   },
+   "value": 0.013128050367469465
+  },
+  {
+   "drivers": [
+    0.0,
+    0.5637065637065637,
+    0.0,
+    0.4362934362934363
+   ],
+   "panel": {
+    "delivered_rations": 729796.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.9374157856134533,
+    "lost_orders": 0.0,
+    "ret_excel": 0.4093265718286273,
+    "ret_excel_full_ledger": 0.18155649995464043,
+    "ret_excel_risk_conditional": 0.012413978974850774
+   },
+   "value": 0.012413978974850774
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6369047619047619,
+    0.0,
+    0.3630952380952381
+   ],
+   "panel": {
+    "delivered_rations": 498237.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.6399805271290746,
+    "lost_orders": 57.0,
+    "ret_excel": 0.22682870685206855,
+    "ret_excel_full_ledger": 0.06271032788157144,
+    "ret_excel_risk_conditional": 0.00803746825135952
+   },
+   "value": 0.00803746825135952
+  },
+  {
+   "drivers": [
+    0.0,
+    0.728813559322034,
+    0.0,
+    0.2711864406779661
+   ],
+   "panel": {
+    "delivered_rations": 373958.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.4803453737159915,
+    "lost_orders": 106.0,
+    "ret_excel": 0.11891763089629229,
+    "ret_excel_full_ledger": 0.01962302747224071,
+    "ret_excel_risk_conditional": 0.0050313256749153264
+   },
+   "value": 0.0050313256749153264
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6176470588235294,
+    0.0,
+    0.38235294117647056
+   ],
+   "panel": {
+    "delivered_rations": 503106.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.6462347097501795,
+    "lost_orders": 57.0,
+    "ret_excel": 0.245157409193175,
+    "ret_excel_full_ledger": 0.06390508272168997,
+    "ret_excel_risk_conditional": 0.009738438703529636
+   },
+   "value": 0.009738438703529636
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6325301204819277,
+    0.0,
+    0.36746987951807225
+   ],
+   "panel": {
+    "delivered_rations": 493228.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.6335465158846476,
+    "lost_orders": 60.0,
+    "ret_excel": 0.2354223224357749,
+    "ret_excel_full_ledger": 0.05716632796644461,
+    "ret_excel_risk_conditional": 0.008707074673174373
+   },
+   "value": 0.008707074673174373
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6341463414634146,
+    0.0,
+    0.36585365853658536
+   ],
+   "panel": {
+    "delivered_rations": 488234.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.6271317719927195,
+    "lost_orders": 61.0,
+    "ret_excel": 0.22657814979122679,
+    "ret_excel_full_ledger": 0.05628502834832832,
+    "ret_excel_risk_conditional": 0.007361895712313166
+   },
+   "value": 0.007361895712313166
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7264957264957265,
+    0.0,
+    0.2735042735042735
+   ],
+   "panel": {
+    "delivered_rations": 371502.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.47719066586685743,
+    "lost_orders": 106.0,
+    "ret_excel": 0.12078775621228867,
+    "ret_excel_full_ledger": 0.019619492083257743,
+    "ret_excel_risk_conditional": 0.005078954940064169
+   },
+   "value": 0.005078954940064169
+  },
+  {
+   "drivers": [
+    0.0,
+    0.711864406779661,
+    0.0,
+    0.288135593220339
+   ],
+   "panel": {
+    "delivered_rations": 373914.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.48028885614866174,
+    "lost_orders": 106.0,
+    "ret_excel": 0.13391159694685614,
+    "ret_excel_full_ledger": 0.021871746521680994,
+    "ret_excel_risk_conditional": 0.00840541899489852
+   },
+   "value": 0.00840541899489852
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7043478260869566,
+    0.0,
+    0.2956521739130435
+   ],
+   "panel": {
+    "delivered_rations": 366558.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.4708401464832586,
+    "lost_orders": 109.0,
+    "ret_excel": 0.13355904064496985,
+    "ret_excel_full_ledger": 0.020912306168964005,
+    "ret_excel_risk_conditional": 0.004726900228644684
+   },
+   "value": 0.004726900228644684
+  },
+  {
+   "drivers": [
+    0.0,
+    0.6842105263157895,
+    0.0,
+    0.3157894736842105
+   ],
+   "panel": {
+    "delivered_rations": 364121.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.46770984394728965,
+    "lost_orders": 109.0,
+    "ret_excel": 0.142287514311593,
+    "ret_excel_full_ledger": 0.02043468464046208,
+    "ret_excel_risk_conditional": 0.004689773637384848
+   },
+   "value": 0.004689773637384848
+  },
+  {
+   "drivers": [
+    0.0,
+    0.7217391304347827,
+    0.0,
+    0.2782608695652174
+   ],
+   "panel": {
+    "delivered_rations": 366542.0,
+    "demanded_rations": 778519.0,
+    "flow_fill_rate": 0.47081959464059325,
+    "lost_orders": 110.0,
+    "ret_excel": 0.11999280854729234,
+    "ret_excel_full_ledger": 0.018544076255244783,
+    "ret_excel_risk_conditional": 0.005035539008242666
+   },
+   "value": 0.005035539008242666
+  }
+ ],
+ "context": "R2r|esc",
+ "contract": "docs/ENMIENDA_CONFIRMACION_BLOQUE_LIMPIO_2026-08-05.md",
+ "contract_path": "docs/ENMIENDA_CONFIRMACION_BLOQUE_LIMPIO_2026-08-05.md",
+ "contract_sha256": "1abbb2df6526f82b887e1ba07cb66f5fa06bb2fbf1f847e79a63b036938c5c9d",
+ "created_at": "2026-08-06T07:30:24.054870+00:00",
+ "factors": {
+  "buffer_hours": [
+   0.0,
+   168.0,
+   336.0,
+   504.0,
+   672.0,
+   1344.0
+  ],
+  "op12_rop": [
+   12.0,
+   24.0,
+   36.0,
+   48.0
+  ],
+  "op9_rop": [
+   12.0,
+   24.0,
+   36.0,
+   48.0
+  ],
+  "shifts": [
+   1,
+   2,
+   3
+  ]
+ },
+ "grid_id": "wrap288_v1",
+ "horizon_hours": 8736.0,
+ "metric": "ret_excel_risk_conditional",
+ "module_manifest": {
+  "entry_script": "scripts/build_transfer_confirmation_cache_v1.py",
+  "entry_script_sha256": "ccb85cbfa0f12636f9852f4ed002b6f803105cce374726c28b0db8d3c9a56cbd",
+  "missing": [],
+  "modules": {
+   "supply_chain/config.py": "ae702a4991966504eaa1036106fa5f4b9c11e913d376dfb67e3f3c83147904cc",
+   "supply_chain/episode_metrics.py": "e09199d48a747f67aef600e9482b812fc1be16e337167d7dfc7215bcb57fb55e",
+   "supply_chain/seed_custody.py": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd",
+   "supply_chain/supply_chain.py": "2f348e5922cbbecf167b45cf0045765010beaaecdcb0fe6de88f259c989460f6"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "projection_of": "wrap288_compat_extended_v1",
+ "reference_path": "results/garrido_normaliser_audit/result.json",
+ "reference_sha256": "346c6abc169921882e18a6baa4e3f43cc009f0d71f0fdf4f1ec99a4b101a4452",
+ "replay_of": "garrido_grid_transfer_confirmation",
+ "schema_version": "garrido_surface_cache_v1",
+ "scientific_payload_sha256": "07d7dd726892c3c6420f11abd5bbd2fb650a9d1e8a3b4451492fc77a5418fb67",
+ "seed": 8200005,
+ "self_sha256": "840042ddd311eff29005210604774d487335de1a2faa2ad14038aaa03b96d791"
+}

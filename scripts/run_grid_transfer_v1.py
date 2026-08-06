@@ -299,6 +299,52 @@ def marginal_replay(visit_counts: np.ndarray, s: Surface, rng, budget: int) -> N
         s.select(int(rng.choice(u, p=w)))
 
 
+def _seed_custody_falsifier(seeds, args) -> dict:
+    """The custody question a CONFIRMATION has to answer, which is not the replay question.
+
+    `custody_falsifier` asks "were these seeds already used?", which is right for a replay and
+    unanswerable for a confirmation: the block is registered and OPEN precisely because this run is
+    opening it, so the check flags the block against its own entry and can never pass. That is a
+    falsifier that cannot pass in the one case it exists to judge -- the mirror image of one that
+    cannot fail.
+
+    What a confirmation must show instead: the seeds are exactly the declared block, and NO OTHER
+    sealed artifact has consumed them.
+    """
+    from supply_chain.seed_custody import check_seeds
+
+    if not args.confirmation:
+        return custody_falsifier(seeds, replay_of=args.replay_of, exclude=args.output)
+
+    result = check_seeds(seeds, exclude=args.output)
+    expected = list(range(int(args.expected_seed_start),
+                          int(args.expected_seed_start) + int(args.expected_seeds)))
+    own_block = str(args.seed_block or "")
+    foreign = [c for c in result.get("registry_conflicts", [])
+               if str(c.get("id")) != own_block]
+    passed = (list(seeds) == expected
+              and not result.get("sealed_artifact_overlap")
+              and not foreign)
+    return {
+        "passed": bool(passed),
+        "evidence": {
+            "why_it_can_fail": ("the seeds must be exactly the declared block and must appear in "
+                                "no OTHER sealed artifact; a foreign registry block or any sealed "
+                                "overlap fails it. The block's OWN entry is excluded because this "
+                                "run is what opened it"),
+            "seeds_match_declared_block": list(seeds) == expected,
+            "declared_block": own_block,
+            "declared_range": [expected[0], expected[-1]],
+            "sealed_artifact_overlap": result.get("sealed_artifact_overlap"),
+            "foreign_registry_conflicts": foreign,
+            "registry_status": result.get("registry_status"),
+            "registry_is_complete": result.get("registry_is_complete"),
+            "caveat": ("the central inventory declares itself incomplete, so this is "
+                       "NO_KNOWN_COLLISION and not a proof of virginity"),
+        },
+    }
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--base-cache", type=Path,
@@ -499,8 +545,7 @@ def main() -> int:
                 "why_it_can_fail": "the two grids must share the same DES physics hashes",
             },
         },
-        "f4_no_fresh_seeds": custody_falsifier(seeds, replay_of=args.replay_of,
-                                               exclude=args.output),
+        "f4_seed_custody": _seed_custody_falsifier(seeds, args),
     }
     falsifiers["all_passed"] = all(
         v["passed"] for k, v in falsifiers.items()
