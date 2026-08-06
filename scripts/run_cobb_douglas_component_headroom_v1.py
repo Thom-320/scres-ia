@@ -58,13 +58,25 @@ CONTEXTS = {
     "R2r|esc": (R2R, {r: 3.0 for r in R2R}),
     "R1r+R2r|esc": (R1R + R2R, {r: 3.0 for r in R1R + R2R}),
 }
-FACTORS = {
-    "buffer_hours": (0.0, 168.0, 336.0, 504.0, 672.0, 1344.0),
-    "shifts": (1, 2, 3),
-    "op9_rop": (12.0, 24.0, 36.0, 48.0),
-    "op12_rop": (12.0, 24.0, 36.0, 48.0),
+RAW_LEVELS = (0.0, 17_500.0, 70_000.0, 140_000.0)
+GRIDS = {
+    "wrap288_v1": {
+        "buffer_hours": (0.0, 168.0, 336.0, 504.0, 672.0, 1344.0),
+        "shifts": (1, 2, 3),
+        "op9_rop": (12.0, 24.0, 36.0, 48.0),
+        "op12_rop": (12.0, 24.0, 36.0, 48.0),
+    },
 }
+GRIDS["wrap288_compat_extended_v1"] = dict(GRIDS["wrap288_v1"],
+                                           op3_rm=RAW_LEVELS, op5_rm=RAW_LEVELS)
+FACTORS = GRIDS["wrap288_v1"]
 CONFIGS = tuple(dict(zip(FACTORS, c)) for c in itertools.product(*FACTORS.values()))
+
+
+def use_grid(grid_id: str) -> None:
+    global FACTORS, CONFIGS
+    FACTORS = GRIDS[grid_id]
+    CONFIGS = tuple(dict(zip(FACTORS, c)) for c in itertools.product(*FACTORS.values()))
 SEED_BASE, WEEKS, PERIOD_HOURS = 5_300_001, 52, 24.0
 MODULES = ("supply_chain/supply_chain.py", "supply_chain/cobb_douglas_resilience.py",
            "supply_chain/config.py", "supply_chain/seed_custody.py")
@@ -74,7 +86,8 @@ def episode(config, context, seed, horizon):
     risks, freq = CONTEXTS[context]
     sim = MFSCSimulation(
         shifts=int(config["shifts"]),
-        initial_buffers={"op3_rm": 0.0, "op5_rm": 0.0,
+        initial_buffers={"op3_rm": float(config.get("op3_rm", 0.0)),
+                         "op5_rm": float(config.get("op5_rm", 0.0)),
                          "op9_rations": float(config["buffer_hours"]) * 2_500.0 / 24.0},
         inventory_replenishment_period=0.0, seed=seed, horizon=horizon,
         risks_enabled=True, risk_level="current", enabled_risks=set(risks),
@@ -105,13 +118,16 @@ def h_regime(values_by_ctx, sign=+1.0) -> float:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--seeds", type=int, default=3)
+    ap.add_argument("--grid", default="wrap288_v1", choices=tuple(GRIDS))
     ap.add_argument("--contract", type=Path, required=True)
     ap.add_argument("--replay-of", required=True)
     ap.add_argument("--output", type=Path,
                     default=Path("results/cobb_douglas_component_headroom/result.json"))
     args = ap.parse_args()
+    use_grid(args.grid)
     started = time.perf_counter()
     seeds = [SEED_BASE + i for i in range(args.seeds)]
+    print(f"  rejilla {args.grid}: {len(CONFIGS):,} configuraciones")
     horizon = float(WEEKS * HOURS_PER_WEEK)
     contexts = list(CONTEXTS)
 
@@ -223,6 +239,7 @@ def main() -> int:
         "run_role": "CACHE_ANALYSIS", "replay_of": args.replay_of,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "module_manifest": module_manifest(MODULES, script=__file__),
+        "grid_id": args.grid,
         "comparison_set_for_kappa_dot": "all configurations within one (context, seed)",
         "exponents_ours": exponents, "maxima_ours": maxima,
         "gate": 0.05, "best_component": best_component,

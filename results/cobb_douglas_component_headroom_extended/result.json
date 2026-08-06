@@ -1,0 +1,202 @@
+{
+ "best_component": "phi",
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "NO_COMPONENT_CARRIES_HEADROOM_EITHER",
+ "comparison_set_for_kappa_dot": "all configurations within one (context, seed)",
+ "components": {
+  "epsilon": {
+   "H_regime": 0.0008887251307165833,
+   "dead_fraction": 0.0,
+   "exponent": 0.016912371246774593,
+   "max": 136716.24175824175,
+   "mean_spread": 133272.106990232,
+   "sign": -1.0
+  },
+  "kappa_dot": {
+   "H_regime": 0.006969173692197406,
+   "dead_fraction": 0.0,
+   "exponent": 0.3631387241850346,
+   "max": 1.734559882395747,
+   "mean_spread": 1.2852495042227043,
+   "sign": -1.0
+  },
+  "phi": {
+   "H_regime": 0.011767049614428315,
+   "dead_fraction": 0.0,
+   "exponent": 0.025106847717572548,
+   "max": 2881.177197802198,
+   "mean_spread": 1689.3655372405374,
+   "sign": 1.0
+  },
+  "tau": {
+   "H_regime": 0.0,
+   "dead_fraction": 0.7867838541666666,
+   "exponent": 0.5629124551834823,
+   "max": 1.4266014883864484,
+   "mean_spread": 1.024089493349475,
+   "sign": -1.0
+  },
+  "zeta": {
+   "H_regime": 0.0,
+   "dead_fraction": 0.0,
+   "exponent": 0.014076952195919637,
+   "max": 1480100.995879121,
+   "mean_spread": 1051964.0902014654,
+   "sign": 1.0
+  }
+ },
+ "contexts": [
+  "R1r",
+  "R2r",
+  "R1r+R2r",
+  "R1r|esc",
+  "R2r|esc",
+  "R1r+R2r|esc"
+ ],
+ "contract_path": "docs/ENMIENDA_METRICA_PRIMARIA_ESTAR_2026-08-06.md",
+ "contract_sha256": "d43f9732fd4769fe7720a1feeb740421c9230165072d7e06a9ba563474821786",
+ "created_at": "2026-08-06T05:46:35.199731+00:00",
+ "elapsed_seconds": 7391.5819835,
+ "exponents_ours": {
+  "epsilon": 0.016912371246774593,
+  "kappa_dot": 0.3631387241850346,
+  "phi": 0.025106847717572548,
+  "tau": 0.5629124551834823,
+  "zeta": 0.014076952195919637
+ },
+ "falsifiers": {
+  "all_passed": true,
+  "f1_exponents_are_ours_not_his": {
+   "evidence": {
+    "his": {
+     "epsilon": 0.026,
+     "kappa_dot": 0.1771,
+     "phi": 0.04,
+     "tau": 0.06,
+     "zeta": 0.024
+    },
+    "ours": {
+     "epsilon": 0.016912371246774593,
+     "kappa_dot": 0.3631387241850346,
+     "phi": 0.025106847717572548,
+     "tau": 0.5629124551834823,
+     "zeta": 0.014076952195919637
+    },
+    "why_it_can_fail": "his five exponents encode HIS observed maxima; reusing them on our chain would rescale every term by orders of magnitude. If ours came out identical, the derivation is not running"
+   },
+   "passed": true
+  },
+  "f2_components_are_not_all_dead": {
+   "evidence": {
+    "dead_fraction": {
+     "epsilon": 0.0,
+     "kappa_dot": 0.0,
+     "phi": 0.0,
+     "tau": 0.7867838541666666,
+     "zeta": 0.0
+    },
+    "why_it_can_fail": "a component that never moves across configurations cannot carry headroom and would make its zero uninformative rather than a finding"
+   },
+   "passed": true
+  },
+  "f3_no_fresh_seeds": {
+   "evidence": {
+    "n_sealed_artifact_overlap": 3,
+    "n_seeds": 3,
+    "note": "deliberate re-execution of registry block 'garrido_q2_des288'; these seeds are NOT virgin and are not meant to be",
+    "registry_conflicts": [
+     {
+      "id": "garrido_q2_des288",
+      "n_overlapping": 3,
+      "range": [
+       5300001,
+       5300012
+      ],
+      "source": "results/garrido_meta_learner_v2/result.json",
+      "status": "ARTIFACT_PRESENT_PENDING_CANONICAL_CUSTODY"
+     }
+    ],
+    "registry_is_complete": false,
+    "registry_status": "BASELINE_INVENTORY_INCOMPLETE_NO_NEW_SEEDS_AUTHORIZED",
+    "replay_of": "garrido_q2_des288",
+    "sealed_artifact_overlap": [
+     5300001,
+     5300002,
+     5300003
+    ],
+    "seeds": [
+     5300001,
+     5300002,
+     5300003
+    ],
+    "status": "DECLARED_REPLAY",
+    "why_it_can_fail": "it cannot: this is a declared custody replay of registry block 'garrido_q2_des288', so the seeds are used on purpose. Counted in neither column."
+   },
+   "not_applicable": true,
+   "passed": null
+  }
+ },
+ "gate": 0.05,
+ "grid_id": "wrap288_compat_extended_v1",
+ "maxima_ours": {
+  "epsilon": 136716.24175824175,
+  "kappa_dot": 1.734559882395747,
+  "phi": 2881.177197802198,
+  "tau": 1.4266014883864484,
+  "zeta": 1480100.995879121
+ },
+ "module_manifest": {
+  "entry_script": "scripts/run_cobb_douglas_component_headroom_v1.py",
+  "entry_script_sha256": "9e7991be61a2548b83a97c4d654d002c94348c53aec2a0e9fb81cff53a4d39ed",
+  "missing": [],
+  "modules": {
+   "supply_chain/cobb_douglas_resilience.py": "d9d88376d666115c8dab4018b903c45986a43811649c3b57ebe5770e57204884",
+   "supply_chain/config.py": "ae702a4991966504eaa1036106fa5f4b9c11e913d376dfb67e3f3c83147904cc",
+   "supply_chain/seed_custody.py": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd",
+   "supply_chain/supply_chain.py": "2f348e5922cbbecf167b45cf0045765010beaaecdcb0fe6de88f259c989460f6"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "n_configurations": 4608,
+ "reference_path": "results/endpoint_headroom_atlas/result.json",
+ "reference_sha256": "86cf97da8a96c9df98d1a79d24db36dd60d0dd45a46f38e6f0d66f12dbb3e0c5",
+ "replay_of": "garrido_q2_des288",
+ "run_role": "CACHE_ANALYSIS",
+ "scalar_h_regime": 0.019501265924434907,
+ "schema_version": "cobb_douglas_component_headroom_v1",
+ "scope": "DEVELOPMENT_ON_BURNED_TAPES_NO_ADJUDICATION",
+ "seeds": [
+  5300001,
+  5300002,
+  5300003
+ ],
+ "self_sha256": "48a69a26213bec09a9c341ff6d9974b72c25aabf4a18ec44d7ac0d0ab16fe4a0",
+ "weight_concentration": {
+  "note": "share of total exponent mass carried by each component; the index is dominated by the two variables with the smallest observed range",
+  "shares": {
+   "epsilon": 0.01721979012382312,
+   "kappa_dot": 0.3697395548534773,
+   "phi": 0.025563218904022026,
+   "tau": 0.5731446049112823,
+   "zeta": 0.014332831207395378
+  }
+ }
+}
