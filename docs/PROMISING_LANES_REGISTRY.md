@@ -997,3 +997,20 @@ LCB por bootstrap exacto sobre semillas, proxy de señal validado reintroduciend
 que califica? Si todas dan `gamma < 3`, ninguna llega al umbral y la via se cierra por numero.
 Reglas de reporte vinculantes en
 `docs/ENMIENDA_REPORTE_H_REGIME_CURVATURA_DECLARADA_2026-08-06.md`.
+
+**Cierre del lane de curvatura (2026-08-06):** `ONLY_RISK_SEEKING_CURVATURE_REACHES_THE_BAR`
+(`results/citable_risk_attitudes/result_after_anchor_fix.json`, preregistro
+`docs/PREREGISTRO_ACTITUDES_DE_RIESGO_CITABLES_2026-08-06.md`). **Toda** actitud aversa cae por
+debajo de la curvatura neutral de Garrido, y **empeora cuanto mas aversa**: CRRA eta=0,25 -> 0,0158;
+eta=1 -> 0,0050; eta=10 -> 4e-7; CARA a=10 -> 4,5e-5, contra la identidad 0,0195 y un umbral de
+0,05. Solo el control convexo califica (gamma 5/10/20 -> H 0,085/0,159/0,277), que es lo que exigia
+`f2`. CVaR sobre regimenes, aparte por cambiar el ESTIMADOR: 0,0482 en alpha 0,90/0,95/0,99 -
+bajo el umbral, e identico en los tres porque con seis regimenes todos se reducen al peor regimen.
+
+**La lectura, y es mas fuerte de lo que se pregunto:** la aversion al riesgo no solo no llega al
+umbral, **mueve el headroom hacia cero**. Un planificador que teme al peor regimen tiene MENOS que
+ganar sabiendo cual es, porque la concavidad comprime la parte alta y hace que una sola
+configuracion robusta se vea mejor. El headroom exige un planificador que quiera el lado bueno.
+`f4` fallo y no se relajo: `H(gamma)` es monotona hasta gamma=30 -todo el rango donde vive alguna
+actitud- y la unica violacion esta sobre gamma=199 con magnitud 1,9e-4, en la asintota 0,666667 =
+1 - 2/6 (la configuracion 3845 es argmax en dos de los seis regimenes).
