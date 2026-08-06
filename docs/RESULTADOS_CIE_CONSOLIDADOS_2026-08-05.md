@@ -1,9 +1,10 @@
 # Resultados consolidados para C&IE — el paquete, sin prosa de manuscrito
 
-**Estado:** desarrollo sobre el bloque quemado `5.300.001–012`, réplica declarada. **Ninguna
-semilla nueva, ninguna adjudicación, ningún aprendiz autorizado.** Todo lo de abajo sale de la
-caché sellada `results/surface_cache/wrap288_v1` (72 rebanadas, 20.736 episodios) y de artefactos
-con contrato, hash y falsadores.
+**Estado:** el paquete de desarrollo sobre `5.300.001–012` está cerrado. La única tentativa de
+confirmación prospectiva fue **abortada y puesta en cuarentena** después de escribir 17 rebanadas
+sin sello; no existe resultado confirmatorio. El bloque `8.100.001–8.100.060` no es reutilizable
+como bloque virgen y no hay autorización registrada para abrir otro. Todo R0–R7 debajo es
+desarrollo o réplica declarada.
 
 ---
 
@@ -21,7 +22,7 @@ con contrato, hash y falsadores.
 
 ## R1 · El efecto Alzheimer sobrevive a un normalizador honesto
 
-`results/garrido_normaliser_audit_v2/result.json` · contrato
+`results/garrido_normaliser_audit_v3/result.json` · contrato
 `docs/PREREGISTRO_AUDITORIA_NORMALIZADOR_2026-08-05.md`
 
 El aprendiz normalizaba su objetivo con el min/max de **las 288 configuraciones**, incluidas las no
@@ -45,7 +46,7 @@ corridas.
 
 ## R1b · La fuga, medida en vez de argumentada
 
-`results/twin_surface/result.json` · `f6` del mismo contrato · figura `fig_a_normaliser_leak`
+`results/twin_surface_v2/result.json` · `f6` del mismo contrato · figura `fig_a_normaliser_leak`
 
 El test afín pasaba con **ambos** normalizadores, y por eso era insuficiente: es ciego a una fuga
 invariante a escala —un brazo que leyera el **rango** o el **argmax** lo pasaría—. El test de
@@ -98,31 +99,31 @@ alcanzable**.
 
 ## R3 · Contra buscadores sin memoria, la neurona gana a todos
 
-`results/search_ladder/result.json` · contrato
+`results/search_ladder_v3/result.json` · contrato
 `docs/ENMIENDA_ESCALERA_COMPARADORES_2026-08-05.md` · `B = 24`, mismo CRN, lecturas **enforzadas**
 (`Surface.value_of_visited` lanza `LookupError`, no se afirma)
 
 | brazo | AUC de regret |
 |---|---:|
 | oráculo (techo) | 0,00000 |
-| **neuron_memory** | **0,04975** |
-| ucb1 | 0,09850 |
+| **neuron_memory** | **0,05203** |
+| ucb1 | 0,09655 |
 | ofat | 0,10024 |
-| neuron_reset | 0,10067 |
-| gp_ei (**optimización bayesiana**) | 0,10862 |
-| lhs_local | 0,11836 |
-| random | 0,14516 |
-| annealing | 0,16484 |
+| gp_ei (**optimización bayesiana**) | 0,10661 |
+| lhs_local | 0,10949 |
+| neuron_reset | 0,11274 |
+| random | 0,13979 |
+| annealing | 0,17420 |
 
-Los siete contrastes con LCB95 > 0. **Pero `neuron_reset` (0,10067) se sienta junto a `ofat`
-(0,10024) y `gp_ei` (0,10862)**: sin memoria la neurona es un buscador del montón. Ese titular
+Los siete contrastes con LCB95 > 0. **Pero `neuron_reset` (0,11274) se sienta junto a `ofat`
+(0,10024) y `gp_ei` (0,10661)**: sin memoria la neurona es un buscador del montón. Ese titular
 compara **un buscador con memoria contra buscadores sin memoria**, que es casi una tautología.
 
 ---
 
 ## R4 · Con memoria para todos, el ingrediente es la retención
 
-`results/search_ladder_v2/result.json` · contrato
+`results/search_ladder_v4/result.json` · contrato
 `docs/ENMIENDA_ESCALERA_TRANSFERENCIA_2026-08-05.md`
 
 Los tres clásicos más fuertes reciben **exactamente la información de la neurona** —observaciones de
@@ -130,24 +131,25 @@ contextos previos, normalizadas por prefijo dentro de cada contexto, **sin etiqu
 
 | brazo | AUC |
 |---|---:|
-| **ucb1_transfer** | **0,04253** |
-| neuron_memory | 0,04975 |
-| ofat_transfer | 0,06609 |
-| gp_ei_transfer | 0,08366 |
-| … sin memoria | 0,0985 – 0,1648 |
+| **ucb1_transfer** | **0,04502** |
+| neuron_memory | 0,05203 |
+| ofat_transfer | 0,06274 |
+| gp_ei_transfer | 0,08390 |
+| … sin memoria | 0,0966 – 0,1742 |
 
-**`ucb1_transfer` empata o supera a la neurona**: −0,00721 **[LCB95 −0,01772]**, el intervalo cruza
-cero con el punto estimado en contra. Y **el OFAT de Garrido con memoria (0,06609) bate a la
-optimización bayesiana sin memoria (0,10862)**.
+**`ucb1_transfer` empata o supera a la neurona**: −0,00701 **[LCB95 −0,02434]**, el intervalo cruza
+cero con el punto estimado en contra. Y **el OFAT de Garrido con memoria (0,06274) bate a la
+optimización bayesiana sin memoria (0,10661)**. Bajo el orden contractual la ventaja de la neurona
+sobre el OFAT **con** memoria apenas cruza el cero: **+0,01071 [LCB95 −0,00003]**.
 
 **El valor de la memoria, por familia** (gemelo sin memoria menos su versión con memoria):
 
 | familia | ganancia | LCB95 |
 |---|---:|---:|
-| ucb1 | +0,0560 | +0,0437 |
-| neurona | +0,0509 | +0,0392 |
-| ofat | +0,0342 | +0,0264 |
-| gp_ei | +0,0250 | +0,0164 |
+| ucb1 | +0,0515 | +0,0362 |
+| neurona | +0,0607 | +0,0461 |
+| ofat | +0,0375 | +0,0293 |
+| gp_ei | +0,0227 | +0,0128 |
 
 > **El ingrediente medido es la RETENCIÓN, no el aproximador.** Cuatro familias distintas ganan
 > materialmente al cruzar estado entre corridas.
@@ -197,7 +199,7 @@ autoriza entrenar**. Las cifras retiradas 7,24 / 12,42 / 13,54 / +6,31 siguen pr
 
 ## R6 · La rejilla extendida: añadir variables **sí** sube `H_regime`, y aun así no llega
 
-`results/surface_gates_extended/result.json` · 4.608 configuraciones · contrato
+`results/surface_gates_extended_v2/result.json` · 4.608 configuraciones · contrato
 `docs/ENMIENDA_REJILLA_EXTENDIDA_4608_2026-08-05.md`
 
 | gate | 288 | **4.608** |
@@ -216,8 +218,8 @@ más difícil de buscar, no más dependiente del régimen.
 
 ## R7 · Transferencia de rejilla 288 → 4.608: **la representación importa, y no es la red**
 
-`results/grid_transfer/result.json` · contrato
-`docs/ENMIENDA_TRANSFERENCIA_REJILLA_2026-08-05.md` · `GRID_TRANSFER_ESTABLISHED__UCB1`
+`results/grid_transfer_ordered_v1/result.json` · contrato
+`docs/ENMIENDA_TRANSFERENCIA_REJILLA_ORDEN_CONTRACTUAL_2026-08-05.md` · `GRID_TRANSFER_ESTABLISHED__UCB1`
 
 Cada familia entrena su carrera de seis contextos sobre 288 y **el mismo estado retenido** busca
 sobre 4.608. Control: la misma familia **arrancando en frío**. Placebo decisivo: **réplica
@@ -225,12 +227,12 @@ marginal**, que reproduce su distribución de visitas ignorando el estado.
 
 | familia | vs arranque en frío | vs **réplica marginal** |
 |---|---:|---:|
-| neurona | +0,0622 **[+0,0343]** | +0,0063 [−0,0061] |
-| **UCB1** | +0,0615 **[+0,0434]** | **+0,0366 [+0,0153]** |
-| OFAT | +0,0252 **[+0,0110]** | +0,0071 [−0,0122] |
-| GP-EI | +0,0209 **[+0,0084]** | −0,0083 [−0,0351] |
+| neurona | +0,0623 **[+0,0344]** | +0,0133 [−0,0030] |
+| **UCB1** | +0,0639 **[+0,0431]** | **+0,0305 [+0,0154]** |
+| OFAT | +0,0152 **[+0,0094]** | +0,0030 [−0,0193] |
+| GP-EI | +0,0199 **[+0,0071]** | −0,0044 [−0,0260] |
 
-**Las cuatro transfieren mejor que arrancar de cero.** Eso **refuta nuestra propia hipótesis** de
+**Las cuatro transfieren mejor que arrancar de cero en este bloque de desarrollo.** Eso **refuta nuestra propia hipótesis** de
 que un prior GP no cruza un cambio de espacio de diseño — por eso la enmienda lo puso como brazo a
 medir y no como premisa.
 
@@ -286,15 +288,19 @@ intervalos cruzan cero**, y sin ella la figura afirmaría un orden que sus propi
 
 ---
 
-## El paquete está cerrado
+## Estado de confirmación
 
-Los siete resultados están medidos, sellados y con falsadores. **Ninguna semilla nueva se abrió**:
-la rejilla extendida añade **configuraciones, no cintas**, así que corrió sobre el mismo bloque
-quemado como réplica declarada.
+Los siete resultados de desarrollo están medidos, sellados y con falsadores. El replay R7 ordenado
+seleccionó UCB1 en el bloque quemado; el resultado exploratorio con orden alfabético queda
+supersedido. La tentativa confirmatoria no produjo resultado. El contrato
+`docs/PREREGISTRO_CONFIRMACION_TRANSFERENCIA_REJILLA_2026-08-05.md` fijó el estimando, la potencia,
+el bloque y la regla de lectura; el preflight
+`results/custody/garrido_grid_transfer_confirmation_preflight.json` pasó, pero el recibo
+`results/custody/garrido_grid_transfer_confirmation_abort.json` adjudicó el intento como
+`CONFIRMATION_BLOCK_QUARANTINED_NO_SCIENTIFIC_RESULT`.
 
-**Lo que queda es editorial**, no experimental: escribir el manuscrito sobre este paquete. Y una
-decisión del PI que este paquete **no** toma — si alguna de estas mediciones justifica gastar un
-bloque virgen en una confirmación prospectiva. Nada aquí lo autoriza.
+No hay un bloque virgen confirmatorio disponible ni autorización registrada para abrir otro. El
+único resultado defendible es el de desarrollo R7; RL, PPO, MLP y KAN siguen fuera del carril.
 
 **El eje de la red está cerrado por medición, no por cansancio.** Dentro del episodio no hay prima
 neural en cuatro contratos. Entre corridas, tres aproximadores son estadísticamente equivalentes y
