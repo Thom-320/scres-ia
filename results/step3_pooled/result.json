@@ -1,0 +1,309 @@
+{
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "ceiling_diagnostic": {
+  "arm": "greedy_pi_best_found_v2",
+  "by_family": {
+   "R1r": {
+    "beats_incumbent": true,
+    "delta_mean": 2.3737781128803516e-05,
+    "lcb95": 4.3232264695715615e-06,
+    "mean_flow_fill_rate": 0.9962908340840061,
+    "n_tapes": 12,
+    "positive_tapes": 9,
+    "ucb95": 4.92942600925825e-05
+   },
+   "R2r": {
+    "beats_incumbent": true,
+    "delta_mean": 0.0010016228531676784,
+    "lcb95": 8.827830742864223e-05,
+    "mean_flow_fill_rate": 0.9256688797956847,
+    "n_tapes": 12,
+    "positive_tapes": 6,
+    "ucb95": 0.002202324971160838
+   }
+  },
+  "why_excluded_from_the_verdict": "perfect-information best-found, not a deployable policy; the runner labels it GREEDY_PI_BEST_FOUND_NOT_EXACT_CEILING and it belongs with the oracle"
+ },
+ "claim_status": "NO_STRUCTURED_CONTROLLER_CONVERTS",
+ "contract_path": "contracts/garrido_expanded_des_e_star_v3_metric.json",
+ "contract_sha256": "25f33961a6f43713050584c9723d214c8369eba74ef567ac8076aec9d873bc2b",
+ "created_at": "2026-08-07T02:38:52.403511+00:00",
+ "ddmrp_domain_note": "Garrido named DDMRP as the incumbent to beat. If f6 fails, the artifact supports NO claim about DDMRP -- not that it converts and not that it does not. Repair is either widening the admissible domain until top-of-green fits, or reporting DDMRP outside the shared domain with the asymmetry declared. Both are design decisions.",
+ "falsifiers": {
+  "all_passed": false,
+  "f1_shards_are_disjoint_in_tapes": {
+   "evidence": {
+    "overlaps": {},
+    "seeds_per_shard": {
+     "step3_s1_r1r_a": [
+      1420001,
+      1420002,
+      1420003,
+      1420004,
+      1420005,
+      1420006
+     ],
+     "step3_s2_r1r_b": [
+      1421001,
+      1421002,
+      1421003,
+      1421004,
+      1421005,
+      1421006
+     ],
+     "step3_s3_r2r_a": [
+      1422001,
+      1422002,
+      1422003,
+      1422004,
+      1422005,
+      1422006
+     ],
+     "step3_s4_r2r_b": [
+      1423001,
+      1423002,
+      1423003,
+      1423004,
+      1423005,
+      1423006
+     ]
+    },
+    "why_it_can_fail": "pooling is concatenation of per-tape rows; a tape in two shards would be counted twice and the bootstrap would understate its own uncertainty"
+   },
+   "passed": true
+  },
+  "f2_the_incumbent_comes_from_the_full_posture_set": {
+   "evidence": {
+    "complete_postures": {
+     "R1r": 216,
+     "R2r": 216
+    },
+    "why_it_can_fail": "v1's central defect was picking the incumbent from 6 of 216 postures. If the pooled set is short, the incumbent is again the best HOMOGENEOUS posture rather than the real one"
+   },
+   "passed": true
+  },
+  "f3_families_are_not_averaged_together": {
+   "evidence": {
+    "families": [
+     "R1r",
+     "R2r"
+    ],
+    "why_it_can_fail": "R1r and R2r are different estimands; averaging them would invent a number that describes neither"
+   },
+   "passed": true
+  },
+  "f4_the_preregistered_guardrail_is_not_available": {
+   "evidence": {
+    "applied": "flow_fill_rate",
+    "preregistered": "worst_product_fill",
+    "why_it_can_fail": "declared, not discovered: the preregistration names worst_product_fill as the blocking guardrail and this runner does not persist it. flow_fill_rate is an aggregate and cannot see one product abandoned while the aggregate holds. Any arm passing here has NOT passed the preregistered screen"
+   },
+   "passed": false
+  },
+  "f5_the_ceiling_arm_is_not_counted_as_a_winner": {
+   "evidence": {
+    "why_it_can_fail": "greedy_pi is perfect-information and beats the incumbent by construction. Counting it as a structured controller would manufacture the headline this whole run exists to test",
+    "winners": {
+     "R1r": [],
+     "R2r": []
+    }
+   },
+   "passed": true
+  },
+  "f6_ddmrp_actually_varies_its_posture": {
+   "evidence": {
+    "n_distinct_postures": 1,
+    "postures": [
+     [
+      1344,
+      1344,
+      504
+     ]
+    ],
+    "why_it_can_fail": "v1's defect 4 was a stylised DDMRP. v2 projected it onto the shared 6^3 domain, which is correct for rights-matching -- but if the projection saturates, the arm emits ONE posture and the paired contrast against the best static is zero by construction. Then we are not measuring DDMRP, we are measuring 'saturate the buffers', and no claim about DDMRP is supported in either direction"
+   },
+   "passed": false
+  }
+ },
+ "families": {
+  "R1r": {
+   "best_static_mean": 0.00914972132702242,
+   "best_static_posture": "[0, 0, 336]",
+   "comparisons": {
+    "ddmrp_projected_v2": {
+     "beats_incumbent": false,
+     "delta_mean": -0.0003029240528163556,
+     "lcb95": -0.00034234897043016653,
+     "mean_flow_fill_rate": 0.9966476149079472,
+     "n_tapes": 12,
+     "positive_tapes": 0,
+     "ucb95": -0.00026613035568597736
+    },
+    "greedy_pi_best_found_v2": {
+     "beats_incumbent": true,
+     "delta_mean": 2.3737781128803516e-05,
+     "lcb95": 4.3232264695715615e-06,
+     "mean_flow_fill_rate": 0.9962908340840061,
+     "n_tapes": 12,
+     "positive_tapes": 9,
+     "ucb95": 4.92942600925825e-05
+    },
+    "replay_mpc_v2": {
+     "beats_incumbent": false,
+     "delta_mean": -2.1383599774512426e-05,
+     "lcb95": -4.635861152125526e-05,
+     "mean_flow_fill_rate": 0.996280491451358,
+     "n_tapes": 12,
+     "positive_tapes": 3,
+     "ucb95": 4.31420167334875e-06
+    }
+   },
+   "n_postures_complete": 216,
+   "n_tapes": 12,
+   "tapes": [
+    1420001,
+    1420002,
+    1420003,
+    1420004,
+    1420005,
+    1420006,
+    1421001,
+    1421002,
+    1421003,
+    1421004,
+    1421005,
+    1421006
+   ]
+  },
+  "R2r": {
+   "best_static_mean": 0.24174348211270144,
+   "best_static_posture": "[0, 672, 168]",
+   "comparisons": {
+    "ddmrp_projected_v2": {
+     "beats_incumbent": false,
+     "delta_mean": 0.0,
+     "lcb95": 0.0,
+     "mean_flow_fill_rate": 0.9258415909583473,
+     "n_tapes": 12,
+     "positive_tapes": 0,
+     "ucb95": 0.0
+    },
+    "greedy_pi_best_found_v2": {
+     "beats_incumbent": true,
+     "delta_mean": 0.0010016228531676784,
+     "lcb95": 8.827830742864223e-05,
+     "mean_flow_fill_rate": 0.9256688797956847,
+     "n_tapes": 12,
+     "positive_tapes": 6,
+     "ucb95": 0.002202324971160838
+    },
+    "replay_mpc_v2": {
+     "beats_incumbent": false,
+     "delta_mean": -0.0009908485520556398,
+     "lcb95": -0.0037005969730673867,
+     "mean_flow_fill_rate": 0.9243695163382525,
+     "n_tapes": 12,
+     "positive_tapes": 2,
+     "ucb95": 0.0006825842011338549
+    }
+   },
+   "n_postures_complete": 216,
+   "n_tapes": 12,
+   "tapes": [
+    1422001,
+    1422002,
+    1422003,
+    1422004,
+    1422005,
+    1422006,
+    1423001,
+    1423002,
+    1423003,
+    1423004,
+    1423005,
+    1423006
+   ]
+  }
+ },
+ "metric": "ret_excel_full_ledger",
+ "module_manifest": {
+  "entry_script": "scripts/merge_step3_shards.py",
+  "entry_script_sha256": "5c6eacb82fe1fe9c1cbc2e373ddfaae63751f36b6bb1e6641b46bdfd02973cc1",
+  "missing": [],
+  "modules": {
+   "supply_chain/arm_runner.py": "35135c537d9260832677ab6b4e344229d6b9f4810df8bdef9efd51b58fcac68a",
+   "supply_chain/seed_custody.py": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "preregistration": "docs/PREREGISTRO_PASO3_GARRIDO_MPC_EXPANDIDO_2026-08-06.md",
+ "reference_path": "results/step3_s1_r1r_a/full/result.json",
+ "reference_sha256": "bb07c66f9dd9141ce6b761ef9266197f35bd3cc8d084ff4fe98e6407e7a477ca",
+ "schema_version": "step3_pooled_v1",
+ "scope": "DEVELOPMENT_POOLED_ANALYSIS_SERVICE_GUARDRAIL_INCOMPLETE",
+ "seeds_per_shard": {
+  "step3_s1_r1r_a": [
+   1420001,
+   1420002,
+   1420003,
+   1420004,
+   1420005,
+   1420006
+  ],
+  "step3_s2_r1r_b": [
+   1421001,
+   1421002,
+   1421003,
+   1421004,
+   1421005,
+   1421006
+  ],
+  "step3_s3_r2r_a": [
+   1422001,
+   1422002,
+   1422003,
+   1422004,
+   1422005,
+   1422006
+  ],
+  "step3_s4_r2r_b": [
+   1423001,
+   1423002,
+   1423003,
+   1423004,
+   1423005,
+   1423006
+  ]
+ },
+ "self_sha256": "25d722ddc16448141540904e52df6022f51f2f70987afbb30ab7889ce8d2908a",
+ "service_guardrail_deviation": "The preregistration names worst_product_fill; the runner persists only flow_fill_rate, an aggregate that cannot detect a single product being abandoned. The screen applied here is strictly weaker than the one preregistered.",
+ "service_metric_applied": "flow_fill_rate",
+ "shards": [
+  "step3_s1_r1r_a",
+  "step3_s2_r1r_b",
+  "step3_s3_r2r_a",
+  "step3_s4_r2r_b"
+ ],
+ "winners": {
+  "R1r": [],
+  "R2r": []
+ }
+}
