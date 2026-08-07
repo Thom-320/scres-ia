@@ -1,0 +1,167 @@
+{
+ "H_PI": 0.012926135742150043,
+ "H_obs": {
+  "lcb95": 0.00867686813365007,
+  "mean": 0.012286775167294721,
+  "n": 120,
+  "ucb95": 0.01615513451498119
+ },
+ "authorisation": "docs/AUTORIZACION_PI_REPROPOSITO_BLOQUE_7700001_2026-08-07.md",
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "cell": {
+  "cell_id": "gsa",
+  "commonality": 0.887,
+  "lead_weeks": 2,
+  "persistence": "short",
+  "r22_weekly_prob": 0.107,
+  "signal_q": 0.532,
+  "surge_mult": 1.946
+ },
+ "claim_status": "GSA_CONFIRMED_ON_VIRGIN_BLOCK",
+ "contract_path": "docs/PREREGISTRO_CONFIRMACION_GSA_2026-08-07.md",
+ "contract_sha256": "302c2e21499ad5cbfaa54589a2946d395db273811fffde8a7dfd6b0002b286ce",
+ "corr_ret_gain_with_attended_gain": -0.08118741440217522,
+ "created_at": "2026-08-07T18:52:30.454155+00:00",
+ "declared_practical_margin": 0.005,
+ "development_reference": {
+  "claim_status": "GSA_QUALIFIES_UNDER_RESILIENCE_ONLY",
+  "path": "results/gsa_resilience_only/result.json",
+  "self_sha256": "759c2955cccf40623dde2b786bc09557a27f9d24c85d5c3d6c3432361668e52e"
+ },
+ "elapsed_seconds": 4.665047667003819,
+ "eta": 0.9505373773253464,
+ "falsifiers": {
+  "all_passed": false,
+  "f1_the_block_is_virgin_and_opened_once": {
+   "evidence": {
+    "block_id": "g3a_v2_development",
+    "output_did_not_exist": true,
+    "range": [
+     7700001,
+     7700120
+    ],
+    "why_it_can_fail": "an artifact already present, or a seed outside the authorised range, would mean the block was touched"
+   },
+   "passed": true
+  },
+  "f2_theta_is_frozen_from_development": {
+   "evidence": {
+    "development_seal": "759c2955cccf40623dde2b786bc09557a27f9d24c85d5c3d6c3432361668e52e",
+    "development_theta": {
+     "commonality": 0.887,
+     "lead": 2,
+     "persistence": 0.0,
+     "r22_prob": 0.107,
+     "signal_q": 0.532,
+     "surge_mult": 1.946
+    },
+    "theta": {
+     "commonality": 0.887,
+     "lead": 2,
+     "persistence": 0.0,
+     "r22_prob": 0.107,
+     "signal_q": 0.532,
+     "surge_mult": 1.946
+    },
+    "why_it_can_fail": "a parameter moved on the virgin block would make this a second search wearing a confirmation's clothes"
+   },
+   "passed": true
+  },
+  "f3_the_gain_is_not_bought_by_attending_fewer": {
+   "evidence": {
+    "corr_ret_gain_with_attended_gain": -0.08118741440217522,
+    "threshold": -0.3,
+    "why_it_can_fail": "a strongly negative correlation would mean the resilience gain is bought by abandonment, and the lane dies whether or not the guardrail blocks"
+   },
+   "passed": true
+  },
+  "f4_the_placebo_is_uninformed": {
+   "evidence": {
+    "construction": "belief-policy sequence from tape (i+1) mod n",
+    "why_it_can_fail": "a placebo using this tape's own sequence would be the policy itself and could not separate signal from cadence"
+   },
+   "passed": false
+  },
+  "f5_the_static_baseline_is_the_argmax": {
+   "evidence": {
+    "chosen": 3,
+    "n_calendars": 81,
+    "why_it_can_fail": "a weaker static comparator inflates the headroom"
+   },
+   "passed": true
+  },
+  "f6_the_result_can_be_negative": {
+   "evidence": {
+    "min_per_tape_gap": 0.0,
+    "n_tapes_non_positive": 89,
+    "why_it_can_fail": "an estimator that cannot return a non-positive headroom cannot fail to confirm, and confirms nothing"
+   },
+   "passed": false
+  }
+ },
+ "module_manifest": {
+  "entry_script": "scripts/run_gsa_confirmation_v1.py",
+  "entry_script_sha256": "69fdb330f16c8cd04962274d3af6681109c32c35f2b1f1c9ab88408706f1636a",
+  "missing": [],
+  "modules": {
+   "supply_chain/arm_runner.py": "35135c537d9260832677ab6b4e344229d6b9f4810df8bdef9efd51b58fcac68a",
+   "supply_chain/headroom_sensitivity.py": "dd195ebc86d3abfd9b4470bdc4a9492ac1a7d324027534f60457690dd3991bac",
+   "supply_chain/program_g.py": "0d172fffb53a0edc9069de86b33d292439db86792313eb2f36a7d1423e7ce51e"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "n_tapes": 120,
+ "obs_minus_placebo": {
+  "lcb95": 0.0504619478342132,
+  "mean": 0.0715180378293156,
+  "n": 120,
+  "ucb95": 0.09429398762433945
+ },
+ "preregistration": "docs/PREREGISTRO_CONFIRMACION_GSA_2026-08-07.md",
+ "reference_path": "results/gsa_resilience_only/result.json",
+ "reference_sha256": "759c2955cccf40623dde2b786bc09557a27f9d24c85d5c3d6c3432361668e52e",
+ "reported_not_blocking": {
+  "attended_delta": -0.03333333333333333,
+  "lost_delta": 0.03333333333333333,
+  "ret_quantity_delta": 0.0128413498879756,
+  "worst_cssu_fill_delta": -0.12916666666666668
+ },
+ "run_role": "CONFIRMATION",
+ "schema_version": "gsa_confirmation_v1",
+ "scope": "CONFIRMATION_ON_REPURPOSED_VIRGIN_BLOCK_NO_TRAINING_AUTHORISED",
+ "seed_block": {
+  "end": 7700120,
+  "gate_lifted_by_pi": "submission_a_receipt_required_before_g3a_open",
+  "id": "g3a_v2_development",
+  "opens_once": true,
+  "repurposed_from": "G3a asymmetric-claimant development",
+  "start": 7700001
+ },
+ "self_sha256": "f1181706cf591edb669a1735eab6d6c1b9f116caed3e4175bfb1bafe1ab8adc9",
+ "theta": {
+  "commonality": 0.887,
+  "lead": 2,
+  "persistence": 0.0,
+  "r22_prob": 0.107,
+  "signal_q": 0.532,
+  "surge_mult": 1.946
+ }
+}
