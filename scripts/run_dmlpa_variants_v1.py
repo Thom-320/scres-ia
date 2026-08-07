@@ -98,6 +98,8 @@ def main() -> int:
     ap.add_argument("--seeds", type=int, nargs="+", default=[9491, 9492, 9493, 9494, 9495])
     ap.add_argument("--eval-episodes", type=int, default=24)
     ap.add_argument("--n-envs", type=int, default=0)
+    ap.add_argument("--arms", nargs="+",
+                    help="subset of variants to run; the base is always included")
     ap.add_argument("--contract", type=Path, required=True)
     ap.add_argument("--output", type=Path,
                     default=Path("results/dmlpa_variants/result.json"))
@@ -110,6 +112,13 @@ def main() -> int:
     flat = int(probe.observation_space.shape[0])
     space = gym.spaces.Box(-np.inf, np.inf, (flat,), dtype=np.float32)
     specs = variant_specs(space)
+    if args.arms:
+        keep = {BASE, *args.arms}
+        unknown = set(args.arms) - set(specs)
+        if unknown:
+            raise SystemExit(f"variantes desconocidas: {sorted(unknown)}")
+        specs = {k: v for k, v in specs.items() if k in keep}
+        print(f"  subconjunto: {list(specs)}")
 
     sizes = {}
     for name, (factory, cls, kw, lo, hi) in specs.items():
