@@ -1,0 +1,284 @@
+{
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "A_DMLPA_VARIANT_SEPARATES",
+ "contract_path": "docs/PREREGISTRO_VARIANTES_DMLPA_2026-08-07.md",
+ "contract_sha256": "bb0928d6e6af8ee7f705e0982e495071f60bb4ebc5b7a426625daa6c871618f0",
+ "created_at": "2026-08-07T11:50:28.201715+00:00",
+ "design": {
+  "env": "track_b_v1",
+  "eval_episodes": 24,
+  "history_len": 16,
+  "seeds": [
+   9491,
+   9492,
+   9493,
+   9494,
+   9495
+  ],
+  "target_params": 200000,
+  "total_steps": 100000
+ },
+ "elapsed_seconds": 14787.01158775,
+ "falsifiers": {
+  "all_passed": true,
+  "f1_all_variants_are_parameter_matched": {
+   "evidence": {
+    "sizes": {
+     "dmlpa_1layer": {
+      "error": 0.0068,
+      "params": 201360,
+      "width": 121
+     },
+     "dmlpa_base": {
+      "error": 0.06298,
+      "params": 187404,
+      "width": 90
+     },
+     "dmlpa_ff2": {
+      "error": 0.06002,
+      "params": 212004,
+      "width": 111
+     },
+     "dmlpa_meanpool": {
+      "error": 0.06298,
+      "params": 187404,
+      "width": 90
+     },
+     "dmlpa_nhead4": {
+      "error": 0.06298,
+      "params": 187404,
+      "width": 90
+     }
+    },
+    "why_it_can_fail": "David's objection: without matching we measure capacity, not architecture"
+   },
+   "passed": true
+  },
+  "f2_the_variants_are_actually_different": {
+   "evidence": {
+    "distinct_outputs": 5,
+    "n_variants": 5,
+    "sizes": {
+     "dmlpa_1layer": {
+      "error": 0.0068,
+      "params": 201360,
+      "width": 121
+     },
+     "dmlpa_base": {
+      "error": 0.06298,
+      "params": 187404,
+      "width": 90
+     },
+     "dmlpa_ff2": {
+      "error": 0.06002,
+      "params": 212004,
+      "width": 111
+     },
+     "dmlpa_meanpool": {
+      "error": 0.06298,
+      "params": 187404,
+      "width": 90
+     },
+     "dmlpa_nhead4": {
+      "error": 0.06298,
+      "params": 187404,
+      "width": 90
+     }
+    },
+    "why_it_can_fail": "two variants that compute the same function are one network under two names, and parameter counts do not reveal it -- three of these share a count"
+   },
+   "passed": true
+  },
+  "f3_training_beats_not_training": {
+   "evidence": {
+    "lcb95": 18.960612097311085,
+    "mean": 20.437718128895412,
+    "p_two_sided": 0.0,
+    "ucb95": 22.06914710895535,
+    "why_it_can_fail": "Garrido asked for this on 22 July and it was never run. If training does not beat the same architecture at zero steps, nothing here is bought by learning and no architecture comparison is interpretable"
+   },
+   "passed": true
+  },
+  "f4_budgets_are_matched": {
+   "evidence": {
+    "note": "untrained arm trains 0 steps BY DESIGN and is not a competitor",
+    "total_steps": 100000,
+    "why_it_can_fail": "an arm trained longer would buy its ranking"
+   },
+   "passed": true
+  },
+  "f5_no_fresh_seeds": {
+   "evidence": {
+    "seeds": [
+     9491,
+     9492,
+     9493,
+     9494,
+     9495
+    ],
+    "status": "USED_DEVELOPMENT_NOT_VIRGIN, same block as the bake-off"
+   },
+   "not_applicable": true,
+   "passed": true
+  }
+ },
+ "means": {
+  "dmlpa_1layer": 93.84973692764325,
+  "dmlpa_base": 92.63924507109468,
+  "dmlpa_ff2": 91.52626959536448,
+  "dmlpa_meanpool": 93.11093649395042,
+  "dmlpa_nhead4": 94.22797427557812,
+  "dmlpa_untrained": 72.20152694219925
+ },
+ "module_manifest": {
+  "entry_script": "scripts/run_dmlpa_variants_v1.py",
+  "entry_script_sha256": "475b5cecc4c5a7405829026867e709d02096c51b7caf20112a464fcb747ba989",
+  "missing": [],
+  "modules": {
+   "supply_chain/arm_runner.py": "35135c537d9260832677ab6b4e344229d6b9f4810df8bdef9efd51b58fcac68a",
+   "supply_chain/seed_custody.py": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "per_arm": {
+  "dmlpa_1layer": [
+   95.02740661661845,
+   92.42884576192439,
+   94.21204827145179,
+   94.34173019667087,
+   93.2386537915507
+  ],
+  "dmlpa_base": [
+   94.28889594011541,
+   92.11413309565746,
+   91.56950533115986,
+   92.97849528729044,
+   92.24519570125018
+  ],
+  "dmlpa_ff2": [
+   93.89396396767829,
+   82.65544937907663,
+   93.85138387661453,
+   94.60400645426374,
+   92.62654429918923
+  ],
+  "dmlpa_meanpool": [
+   93.62215106180274,
+   91.33361992644143,
+   93.84563145271555,
+   93.78900037593856,
+   92.96427965285379
+  ],
+  "dmlpa_nhead4": [
+   94.34903146009839,
+   94.59432738556539,
+   94.8981383990591,
+   93.54567833559763,
+   93.75269579757003
+  ],
+  "dmlpa_untrained": [
+   71.19660282088718,
+   72.92152263014937,
+   69.6932596095759,
+   74.58809706990799,
+   72.60815258047586
+  ]
+ },
+ "preregistration": "docs/PREREGISTRO_VARIANTES_DMLPA_2026-08-07.md",
+ "reference_path": "results/architecture_bakeoff/result.json",
+ "reference_sha256": null,
+ "schema_version": "dmlpa_variants_v1",
+ "scope": "DEVELOPMENT_NOT_VIRGIN_NO_ADJUDICATION",
+ "self_sha256": "05fb46d010501a87a2a936e42b5e0a14593c958805add6f3af80d6327990f16a",
+ "sizes": {
+  "dmlpa_1layer": {
+   "error": 0.0068,
+   "params": 201360,
+   "width": 121
+  },
+  "dmlpa_base": {
+   "error": 0.06298,
+   "params": 187404,
+   "width": 90
+  },
+  "dmlpa_ff2": {
+   "error": 0.06002,
+   "params": 212004,
+   "width": 111
+  },
+  "dmlpa_meanpool": {
+   "error": 0.06298,
+   "params": 187404,
+   "width": 90
+  },
+  "dmlpa_nhead4": {
+   "error": 0.06298,
+   "params": 187404,
+   "width": 90
+  }
+ },
+ "trained_minus_untrained": {
+  "lcb95": 18.960612097311085,
+  "mean": 20.437718128895412,
+  "p_two_sided": 0.0,
+  "ucb95": 22.06914710895535
+ },
+ "vs_base": {
+  "dmlpa_1layer": {
+   "holm_adjusted_p": 0.0,
+   "lcb95": 0.6091767169368495,
+   "mean": 1.210491856548569,
+   "p_two_sided": 0.0,
+   "ucb95": 1.9829090002953678
+  },
+  "dmlpa_ff2": {
+   "holm_adjusted_p": 0.7488,
+   "lcb95": -5.429094391041266,
+   "mean": -1.1129754757301868,
+   "p_two_sided": 0.6496,
+   "ucb95": 1.6392256045589988
+  },
+  "dmlpa_meanpool": {
+   "holm_adjusted_p": 0.7488,
+   "lcb95": -0.4395558594625328,
+   "mean": 0.4716914228557414,
+   "p_two_sided": 0.3744,
+   "ucb95": 1.3944277150005036
+  },
+  "dmlpa_nhead4": {
+   "holm_adjusted_p": 0.0,
+   "lcb95": 0.6390813505177249,
+   "mean": 1.5887292044834367,
+   "p_two_sided": 0.0,
+   "ucb95": 2.625030962386839
+  },
+  "dmlpa_untrained": {
+   "lcb95": -21.91482416047974,
+   "mean": -20.437718128895412,
+   "p_two_sided": 0.0,
+   "ucb95": -18.960612097311085
+  }
+ },
+ "winners": [
+  "dmlpa_1layer",
+  "dmlpa_nhead4"
+ ]
+}
