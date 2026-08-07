@@ -1,0 +1,609 @@
+{
+ "arms": {
+  "hybrid": "neuron_memory",
+  "reset": "neuron_reset",
+  "static": "ofat"
+ },
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "H1_SUPPORTED__H3_NOT_SUPPORTED",
+ "contract_path": "docs/PREREGISTRO_H1_H3_ORIGINALES_V3_2026-08-07.md",
+ "contract_sha256": "24a1fe62fcaab9ad547bd85aa702cd60982168fc1804b40659957ff9c7fc4d0d",
+ "contrasts": {
+  "H1_hybrid_vs_reset": {
+   "lcb95": 51.523828125,
+   "mean": 74.04583333333333,
+   "n_cells": 960,
+   "p_one_sided": 0.0,
+   "ucb95": 97.46838541666664
+  },
+  "H1_hybrid_vs_static": {
+   "lcb95": 98.346796875,
+   "mean": 125.98541666666667,
+   "n_cells": 960,
+   "p_one_sided": 0.0,
+   "ucb95": 154.54471354166665
+  },
+  "H3_hybrid_vs_reset": {
+   "lcb95": -3648590718211967.0,
+   "mean": -1109446832360510.6,
+   "n_cells": 360,
+   "p_one_sided": 0.8208,
+   "ucb95": 1292965823805314.2
+  },
+  "H3_hybrid_vs_static": {
+   "lcb95": -3299057815968604.5,
+   "mean": -104973404727988.98,
+   "n_cells": 360,
+   "p_one_sided": 0.5248,
+   "ucb95": 2939228658503357.5
+  }
+ },
+ "created_at": "2026-08-07T16:09:05.173070+00:00",
+ "differing_cell_share": 0.7875,
+ "distinct_configurations_deployed": {
+  "hybrid": 20,
+  "reset": 37,
+  "static": 21
+ },
+ "elapsed_seconds": 564.7580437919969,
+ "endpoint_redefinition_declared": "H1 uses restricted_ttr = min(TTR, tau) with a paired placebo, not system_ttr. It is a different estimand, written 2026-08-06 for the v0 lane and before this preregistration, not a loosened version of the one that returned 1.000.",
+ "f4_rows": [
+  {
+   "abs_delta": 0.0,
+   "arm": "static",
+   "context": "R1r+R2r",
+   "match": true,
+   "reproduced": 0.008525756041378793,
+   "seed": 6000096,
+   "stored": 0.008525756041378793
+  },
+  {
+   "abs_delta": 0.0,
+   "arm": "hybrid",
+   "context": "R1r",
+   "match": true,
+   "reproduced": 0.00925925925925924,
+   "seed": 6000028,
+   "stored": 0.00925925925925924
+  },
+  {
+   "abs_delta": 0.0,
+   "arm": "reset",
+   "context": "R1r",
+   "match": true,
+   "reproduced": 0.00925925925925924,
+   "seed": 6000032,
+   "stored": 0.00925925925925924
+  },
+  {
+   "abs_delta": 0.0,
+   "arm": "static",
+   "context": "R1r|esc",
+   "match": true,
+   "reproduced": 0.00925925925925924,
+   "seed": 6000068,
+   "stored": 0.00925925925925924
+  },
+  {
+   "abs_delta": 0.0,
+   "arm": "hybrid",
+   "context": "R1r+R2r|esc",
+   "match": true,
+   "reproduced": 0.00916888716978968,
+   "seed": 6000004,
+   "stored": 0.00916888716978968
+  },
+  {
+   "abs_delta": 0.0,
+   "arm": "hybrid",
+   "context": "R2r",
+   "match": true,
+   "reproduced": 0.010442025589512426,
+   "seed": 6000113,
+   "stored": 0.010442025589512426
+  },
+  {
+   "abs_delta": 0.0,
+   "arm": "static",
+   "context": "R1r",
+   "match": true,
+   "reproduced": 0.009259259259259241,
+   "seed": 6000015,
+   "stored": 0.009259259259259241
+  },
+  {
+   "abs_delta": 0.0,
+   "arm": "static",
+   "context": "R1r+R2r|esc",
+   "match": true,
+   "reproduced": 0.009003829482150623,
+   "seed": 6000065,
+   "stored": 0.009003829482150623
+  },
+  {
+   "abs_delta": 0.0,
+   "arm": "hybrid",
+   "context": "R2r",
+   "match": true,
+   "reproduced": 0.014884487767270306,
+   "seed": 6000053,
+   "stored": 0.014884487767270306
+  },
+  {
+   "abs_delta": 0.0,
+   "arm": "static",
+   "context": "R1r",
+   "match": true,
+   "reproduced": 0.009259259259259241,
+   "seed": 6000028,
+   "stored": 0.009259259259259241
+  },
+  {
+   "abs_delta": 0.0,
+   "arm": "static",
+   "context": "R1r",
+   "match": true,
+   "reproduced": 0.009259259259259241,
+   "seed": 6000051,
+   "stored": 0.009259259259259241
+  },
+  {
+   "abs_delta": 0.0,
+   "arm": "hybrid",
+   "context": "R2r|esc",
+   "match": true,
+   "reproduced": 0.011448910454880397,
+   "seed": 6000029,
+   "stored": 0.011448910454880397
+  },
+  {
+   "abs_delta": 0.0,
+   "arm": "static",
+   "context": "R2r|esc",
+   "match": true,
+   "reproduced": 0.012075308805089396,
+   "seed": 6000018,
+   "stored": 0.012075308805089396
+  },
+  {
+   "abs_delta": 0.0,
+   "arm": "static",
+   "context": "R2r",
+   "match": true,
+   "reproduced": 0.011674225864380241,
+   "seed": 6000073,
+   "stored": 0.011674225864380241
+  },
+  {
+   "abs_delta": 0.0,
+   "arm": "hybrid",
+   "context": "R1r+R2r",
+   "match": true,
+   "reproduced": 0.00925925925925924,
+   "seed": 6000065,
+   "stored": 0.00925925925925924
+  },
+  {
+   "abs_delta": 0.0,
+   "arm": "reset",
+   "context": "R1r+R2r|esc",
+   "match": true,
+   "reproduced": 0.009003829482150623,
+   "seed": 6000065,
+   "stored": 0.009003829482150623
+  },
+  {
+   "abs_delta": 0.0,
+   "arm": "hybrid",
+   "context": "R1r+R2r",
+   "match": true,
+   "reproduced": 0.009259259259259241,
+   "seed": 6000027,
+   "stored": 0.009259259259259241
+  },
+  {
+   "abs_delta": 0.0,
+   "arm": "hybrid",
+   "context": "R1r+R2r|esc",
+   "match": true,
+   "reproduced": 0.009171931407942221,
+   "seed": 6000002,
+   "stored": 0.009171931407942221
+  },
+  {
+   "abs_delta": 0.0,
+   "arm": "static",
+   "context": "R2r|esc",
+   "match": true,
+   "reproduced": 0.015313551399198684,
+   "seed": 6000054,
+   "stored": 0.015313551399198684
+  },
+  {
+   "abs_delta": 0.0,
+   "arm": "reset",
+   "context": "R1r+R2r|esc",
+   "match": true,
+   "reproduced": 0.009106719051439251,
+   "seed": 6000069,
+   "stored": 0.009106719051439251
+  },
+  {
+   "abs_delta": 0.0,
+   "arm": "reset",
+   "context": "R1r|esc",
+   "match": true,
+   "reproduced": 0.00925925925925924,
+   "seed": 6000060,
+   "stored": 0.00925925925925924
+  },
+  {
+   "abs_delta": 0.0,
+   "arm": "reset",
+   "context": "R1r|esc",
+   "match": true,
+   "reproduced": 0.00925925925925924,
+   "seed": 6000112,
+   "stored": 0.00925925925925924
+  },
+  {
+   "abs_delta": 0.0,
+   "arm": "static",
+   "context": "R1r|esc",
+   "match": true,
+   "reproduced": 0.00925925925925924,
+   "seed": 6000013,
+   "stored": 0.00925925925925924
+  },
+  {
+   "abs_delta": 0.0,
+   "arm": "hybrid",
+   "context": "R1r|esc",
+   "match": true,
+   "reproduced": 0.00925925925925924,
+   "seed": 6000082,
+   "stored": 0.00925925925925924
+  }
+ ],
+ "falsifiers": {
+  "all_passed": true,
+  "f1_the_arms_deploy_different_configurations": {
+   "evidence": {
+    "differing_share": 0.7875,
+    "n_cells": 960,
+    "n_differing_cells": 756,
+    "threshold": 0.3,
+    "why_it_can_fail": "if hybrid and static deploy the same configuration the hypotheses are empty by construction, which is exactly how the v1 attempt halted"
+   },
+   "passed": true
+  },
+  "f2_the_recovery_endpoint_has_range": {
+   "evidence": {
+    "absorbed_fraction": 0.8517361111111111,
+    "censored_at_tau_fraction": 0.071875,
+    "per_arm": {
+     "hybrid": {
+      "absorbed": 875,
+      "censored": 37,
+      "n": 960,
+      "recovered": 923
+     },
+     "reset": {
+      "absorbed": 823,
+      "censored": 75,
+      "n": 960,
+      "recovered": 885
+     },
+     "static": {
+      "absorbed": 755,
+      "censored": 95,
+      "n": 960,
+      "recovered": 865
+     }
+    },
+    "why_it_can_fail": "an endpoint that is absorbed everywhere, or censored everywhere, is identical across arms precisely because it measures nothing -- this is the criterion that killed system_ttr at 1.000"
+   },
+   "passed": true
+  },
+  "f3_the_placebo_is_really_shock_free": {
+   "evidence": {
+    "checked_every_episode": true,
+    "impact_rule": "excess AUC or excess max drop over the paired placebo",
+    "n_placebo_episodes": 426,
+    "why_it_can_fail": "a placebo carrying a real risk event, or an impact decided without the incremental comparison, would let routine backlog masquerade as shock impact"
+   },
+   "passed": true
+  },
+  "f4_the_sealed_surface_still_reproduces": {
+   "evidence": {
+    "max_abs_delta": 0.0,
+    "n_sampled": 24,
+    "tolerance": 1e-12,
+    "why_it_can_fail": "if supply_chain.py drifted since the block was sealed, the deployed configurations are not the ones this artifact names"
+   },
+   "passed": true
+  },
+  "f5_the_intensity_ladder_escalates": {
+   "evidence": {
+    "mean_risk_events_by_intensity": {
+     "1.0": 256.65277777777777,
+     "2.0": 308.6648148148148,
+     "3.0": 354.72314814814814,
+     "4.0": 398.7916666666667
+    },
+    "why_it_can_fail": "H3 has no axis if the ladder does not escalate"
+   },
+   "passed": true
+  },
+  "f6_variance_is_across_intensities_not_within": {
+   "evidence": {
+    "across_intensities_hybrid": 1.6107490760087546e+16,
+    "why_it_can_fail": "taking the variance along seeds instead of along intensities answers a different question; the control recomputes it the wrong way and demands a different number",
+    "wrong_axis_control": 7.083638040488689e+32
+   },
+   "passed": true
+  },
+  "f7_no_new_seeds_are_opened": {
+   "evidence": {
+    "block": "6000001-6000120",
+    "max": 6000120,
+    "min": 6000001,
+    "n_seeds": 120,
+    "why_it_can_fail": "a seed outside the already-open power block would mean this run consumed custody it never declared"
+   },
+   "passed": true
+  }
+ },
+ "h1_horizon_hours": 6048.0,
+ "h3_horizon_hours": 8736.0,
+ "holm": {
+  "H1_hybrid_vs_reset": {
+   "p_holm": 0.0,
+   "p_raw": 0.0,
+   "rejected_at_05": true
+  },
+  "H1_hybrid_vs_static": {
+   "p_holm": 0.0,
+   "p_raw": 0.0,
+   "rejected_at_05": true
+  },
+  "H3_hybrid_vs_reset": {
+   "p_holm": 1.0,
+   "p_raw": 0.8208,
+   "rejected_at_05": false
+  },
+  "H3_hybrid_vs_static": {
+   "p_holm": 1.0,
+   "p_raw": 0.5248,
+   "rejected_at_05": false
+  }
+ },
+ "intensities": [
+  1.0,
+  2.0,
+  3.0,
+  4.0
+ ],
+ "levels": {
+  "H1_restricted_ttr_hours": {
+   "hybrid": 75.7,
+   "reset": 149.74583333333334,
+   "static": 201.68541666666667
+  },
+  "H3_variance_service_loss_auc": {
+   "hybrid": 1.6107490760087546e+16,
+   "reset": 1.4998043927727036e+16,
+   "static": 1.6002517355359556e+16
+  }
+ },
+ "module_manifest": {
+  "entry_script": "scripts/run_h1_h3_originales_v3.py",
+  "entry_script_sha256": "8b3aacb1e621f6ff07591aafb931aa4d4c3c0f3d10d139c7d514a02fcf516fc2",
+  "missing": [],
+  "modules": {
+   "supply_chain/arm_runner.py": "35135c537d9260832677ab6b4e344229d6b9f4810df8bdef9efd51b58fcac68a",
+   "supply_chain/episode_metrics.py": "e09199d48a747f67aef600e9482b812fc1be16e337167d7dfc7215bcb57fb55e",
+   "supply_chain/garrido_v0_recovery.py": "df41e3018fff0c635a83984e44ff691cd23e1b65d1c55f410931d19045ffb9be",
+   "supply_chain/resilience_temporal.py": "e6efa238293d3f5fd00ec885c62a4776ec660c6a151c44c34da695e9628881fa",
+   "supply_chain/supply_chain.py": "2f348e5922cbbecf167b45cf0045765010beaaecdcb0fe6de88f259c989460f6"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "preregistration": "docs/PREREGISTRO_H1_H3_ORIGINALES_V3_2026-08-07.md",
+ "reference_path": "results/garrido_meta_learner_h3power_h3_contract_local_v2/result.json",
+ "reference_sha256": "e768e0f69f18727232ee6346718933540d79fead9af40a864c7f3cf3ed154c1c",
+ "regime_note": "Under the recurrent R11-R24 regime at 52 weeks the events merge into one cluster that never ends, so no return-to-normal exists to time. H1 is therefore measured under isolated shocks, and that is a property of Garrido's risk regime, not of the instrument.",
+ "schema_version": "h1_h3_originales_v3",
+ "scope": "DEVELOPMENT_ALREADY_OPEN_BLOCK_NO_VIRGIN_SEEDS_NO_ADJUDICATION",
+ "secondary_descriptive": {
+  "H1_hybrid_vs_static_on_differing_cells": {
+   "lcb95": 123.99262566137567,
+   "mean": 159.9814814814815,
+   "n_cells": 756,
+   "p_one_sided": 0.0,
+   "ucb95": 195.61435185185184
+  },
+  "H3_ret_excel_not_primary_rewards_abandonment": {
+   "hybrid": 4.005122444264847e-06,
+   "reset": 4.170787267301283e-06,
+   "static": 4.348030563274829e-06
+  }
+ },
+ "seeds": [
+  6000001,
+  6000002,
+  6000003,
+  6000004,
+  6000005,
+  6000006,
+  6000007,
+  6000008,
+  6000009,
+  6000010,
+  6000011,
+  6000012,
+  6000013,
+  6000014,
+  6000015,
+  6000016,
+  6000017,
+  6000018,
+  6000019,
+  6000020,
+  6000021,
+  6000022,
+  6000023,
+  6000024,
+  6000025,
+  6000026,
+  6000027,
+  6000028,
+  6000029,
+  6000030,
+  6000031,
+  6000032,
+  6000033,
+  6000034,
+  6000035,
+  6000036,
+  6000037,
+  6000038,
+  6000039,
+  6000040,
+  6000041,
+  6000042,
+  6000043,
+  6000044,
+  6000045,
+  6000046,
+  6000047,
+  6000048,
+  6000049,
+  6000050,
+  6000051,
+  6000052,
+  6000053,
+  6000054,
+  6000055,
+  6000056,
+  6000057,
+  6000058,
+  6000059,
+  6000060,
+  6000061,
+  6000062,
+  6000063,
+  6000064,
+  6000065,
+  6000066,
+  6000067,
+  6000068,
+  6000069,
+  6000070,
+  6000071,
+  6000072,
+  6000073,
+  6000074,
+  6000075,
+  6000076,
+  6000077,
+  6000078,
+  6000079,
+  6000080,
+  6000081,
+  6000082,
+  6000083,
+  6000084,
+  6000085,
+  6000086,
+  6000087,
+  6000088,
+  6000089,
+  6000090,
+  6000091,
+  6000092,
+  6000093,
+  6000094,
+  6000095,
+  6000096,
+  6000097,
+  6000098,
+  6000099,
+  6000100,
+  6000101,
+  6000102,
+  6000103,
+  6000104,
+  6000105,
+  6000106,
+  6000107,
+  6000108,
+  6000109,
+  6000110,
+  6000111,
+  6000112,
+  6000113,
+  6000114,
+  6000115,
+  6000116,
+  6000117,
+  6000118,
+  6000119,
+  6000120
+ ],
+ "self_sha256": "dc46ce6069755a28929b5b107196232a399dd374820b31dc1b186c70e6ef807e",
+ "shock_contexts": [
+  "R11",
+  "R12",
+  "R13",
+  "R14",
+  "R21",
+  "R22",
+  "R23",
+  "R24"
+ ],
+ "shock_to_meta_context": {
+  "R11": "R1r",
+  "R12": "R1r",
+  "R13": "R1r",
+  "R14": "R1r",
+  "R21": "R2r",
+  "R22": "R2r",
+  "R23": "R2r",
+  "R24": "R2r"
+ },
+ "source_slices": [
+  {
+   "contract_sha256": "576d02b5de7609eb2188f22fcaaffbb5b99a8206ba86c02d903cac7d7fc999d3",
+   "path": "results/garrido_meta_learner_h3power_h3_contract_local_v2/result.json",
+   "repeats": 90,
+   "self_sha256": "e768e0f69f18727232ee6346718933540d79fead9af40a864c7f3cf3ed154c1c"
+  },
+  {
+   "contract_sha256": "576d02b5de7609eb2188f22fcaaffbb5b99a8206ba86c02d903cac7d7fc999d3",
+   "path": "results/garrido_meta_learner_h3power_h3_contract_vps_v2/result.json",
+   "repeats": 30,
+   "self_sha256": "ad240fbb9dda507ad255416dc1295918e890d4ccc40c77d4f8d4a6e06799c6a1"
+  }
+ ],
+ "tau_hours": 1344.0,
+ "what_this_does_not_touch": "H1' (results/manuscript/h1_h3_v2_1) and H3' (results/garrido_h3_merge_adjudication) are declared reformulations, already supported, and are not reopened."
+}
