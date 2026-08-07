@@ -1,0 +1,114 @@
+{
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "DEEPER_THAN_BOTH_ENVIRONMENT_LIMIT",
+ "configurations": {
+  "A_8envs_threads_default": {
+   "delta": 0.47235723844329414,
+   "deterministic": false,
+   "n_envs": 8,
+   "threads": null,
+   "values": [
+    94.78876193812152,
+    94.31640469967823
+   ]
+  },
+  "B_8envs_threads_1": {
+   "delta": 1.6198479289422352,
+   "deterministic": false,
+   "n_envs": 8,
+   "threads": 1,
+   "values": [
+    92.78094904585363,
+    94.40079697479587
+   ]
+  },
+  "C_1env_threads_1": {
+   "delta": 1.5388935190847377,
+   "deterministic": false,
+   "n_envs": 1,
+   "threads": 1,
+   "values": [
+    98.13593014918172,
+    96.59703663009698
+   ]
+  }
+ },
+ "contract_path": "docs/PREREGISTRO_DIAGNOSTICO_DETERMINISMO_2026-08-07.md",
+ "contract_sha256": "d99f0b364784ccffbf4a994251d58a2893381499b0be4763519734322c27eaae",
+ "created_at": "2026-08-07T17:38:51.212682+00:00",
+ "elapsed_seconds": 898.3913882500055,
+ "eval_episodes": 8,
+ "falsifiers": {
+  "all_passed": true,
+  "f1_the_diagnostic_can_come_back_empty": {
+   "evidence": {
+    "A_deterministic": false,
+    "steps": 20000,
+    "why_it_can_fail": "if configuration A reproduces at this horizon the run has isolated nothing, and the declared reading rule sends it to INCONCLUSIVE instead of letting a downstream branch claim a cause"
+   },
+   "passed": true
+  },
+  "f2_all_three_share_seed_arch_and_hyperparameters": {
+   "evidence": {
+    "arch": "DMLPA",
+    "ent_coef": 0.01,
+    "learning_rate": 0.0003,
+    "n_steps": 512,
+    "seed": 9492,
+    "varies_only": [
+     "n_envs",
+     "torch_threads"
+    ],
+    "why_it_can_fail": "a configuration differing in more than the isolated layer would not isolate that layer"
+   },
+   "passed": true
+  },
+  "f3_the_tolerance_is_exact_not_approximate": {
+   "evidence": {
+    "tolerance": 1e-09,
+    "why_it_can_fail": "a loose tolerance would call a drifting pipeline deterministic"
+   },
+   "passed": true
+  }
+ },
+ "module_manifest": {
+  "entry_script": "scripts/run_determinism_diagnostic_v1.py",
+  "entry_script_sha256": "067aab21b5f246cea7639d136e57d1b869d7bcff0c885389794c26f094313548",
+  "missing": [],
+  "modules": {
+   "supply_chain/arm_runner.py": "35135c537d9260832677ab6b4e344229d6b9f4810df8bdef9efd51b58fcac68a",
+   "supply_chain/env.py": "85be5222635db5e2cda0bd7c1005fa52d6ce81c978d1c36bd4644d1a9e928f44",
+   "supply_chain/external_env_interface.py": "4d8404af6c97a10e27bbaaa0409691420027b285f4784721d3e54468b42628e1"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "motivation": "results/repro_probe closed on branch R3: 96.747 / 94.383 / 96.023 at a fixed seed, spread 2.363, versus 2.102 across five different seeds.",
+ "preregistered_suspicion_status": "make_vec discards its `seed` argument in the multi-worker branch. That is a real defect, but SB3 2.9 BaseAlgorithm.set_random_seed calls self.env.seed(seed) and VecEnv.seed assigns seed+idx per worker, so the workers ARE seeded by another path. The suspicion is therefore probably not the cause, and this run measures instead of assuming.",
+ "preregistration": "docs/PREREGISTRO_DIAGNOSTICO_DETERMINISMO_2026-08-07.md",
+ "reference_path": "results/repro_probe/A/result.json",
+ "reference_sha256": null,
+ "schema_version": "determinism_diagnostic_v1",
+ "scope": "INSTRUMENT_DIAGNOSTIC_NO_SEEDS_OPENED_NO_SCIENTIFIC_CLAIM",
+ "seed": 9492,
+ "self_sha256": "b8f23013df815addbb819327a56b886403dac2a59828421a7bc67cdc6e32fa69",
+ "steps": 20000,
+ "tolerance": 1e-09
+}
