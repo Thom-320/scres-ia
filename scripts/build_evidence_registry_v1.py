@@ -66,6 +66,11 @@ def seed_signature(d: dict) -> str | None:
     blk = d.get("seed_block")
     if isinstance(blk, dict) and "start" in blk:
         return f"{blk['start']}-{blk['end']}"
+    # Discrete tape roots are a custody unit too. Reading only `seeds` is why a valid confirmation
+    # whose roots are recorded as a registered block still looked unregistered.
+    roots = d.get("confirmation_tape_roots")
+    if isinstance(roots, list) and roots:
+        return f"{int(min(roots))}-{int(max(roots))}"
     for k in ("blocks", "source_slices", "sources"):
         if k in d:
             return sig(d[k])
@@ -104,7 +109,15 @@ def grade(d: dict, seed_sig: str | None, virgin_blocks: dict) -> tuple[str, str]
     virgin = seed_sig in virgin_blocks
     if "HALT" in status or "STOP" in status or "VOID" in status or "REFUT" in status:
         return "NEGATIVE_OR_HALTED", "the run's own terminal state is a stop or a refutation"
-    if role == "CONFIRMATION" or "CONFIRMATION_ON" in scope:
+    # A confirmation is recognised from checkable structure, not only from a `run_role` string.
+    # Evidence does not become development because the field did not exist when it was written:
+    # an artifact that asserts its confirmation roots were opened and its development roots were
+    # not is making the same claim the string makes, in a form that can be checked.
+    declares_confirmation = bool(
+        role == "CONFIRMATION" or "CONFIRMATION_ON" in scope
+        or (d.get("confirmation_roots_opened") is True
+            and d.get("development_roots_opened") is False))
+    if declares_confirmation:
         if virgin:
             return "CONFIRMATORY", f"confirmation role over custody block {seed_sig}"
         return "CONFIRMATION_ROLE_WITHOUT_VIRGIN_BLOCK", (
@@ -167,6 +180,7 @@ def main() -> int:
         g, why = grade(d, ss, virgin_blocks)
         rows.append({
             "artifact_path": str(path), "branch": branch or "HEAD",
+            "content_sha256": sig(d),
             "claim_status_as_authored": d.get("claim_status") or d.get("status")
             or d.get("verdict"),
             "evidence_grade": g, "grade_rationale": why,
@@ -179,18 +193,35 @@ def main() -> int:
         })
 
     # Collapse only COMPLETE keys. An incomplete key never merges: a missing field is not a match.
+    # Two merge bases, kept distinct on purpose.
+    #  IDENTITY: byte-identical content is the same experiment no matter which branch it was read
+    #            from. This is not a relaxation of the key -- it is an exact check on a different
+    #            field, and it is what collapses an artifact rescued onto HEAD against the copy
+    #            still living on its origin branch. Some artifacts carry no self_sha256, so the
+    #            content hash is the fallback and is always available.
+    #  KEY:      the five-part experiment key, and ONLY when complete.
     groups: dict[str, list[dict]] = {}
     for r in rows:
+        groups.setdefault(f"identity:{r['content_sha256']}", []).append(r)
+    for members in list(groups.values()):
+        members.sort(key=lambda r: (str(r.get("created_at") or ""), r["branch"] != "HEAD"))
+        for r in members[:-1]:
+            r["duplicate_of"], r["merge_basis"] = members[-1]["artifact_path"], "identity"
+        members[-1]["duplicate_of"], members[-1]["merge_basis"] = None, None
+
+    survivors = [r for r in rows if r["duplicate_of"] is None]
+    key_groups: dict[str, list[dict]] = {}
+    for r in survivors:
         if r["dedup_key_complete"]:
-            groups.setdefault(r["dedup_key_hash"], []).append(r)
-    n_experiments = len(groups) + sum(1 for r in rows if not r["dedup_key_complete"])
-    for h, members in groups.items():
+            key_groups.setdefault(r["dedup_key_hash"], []).append(r)
+    for members in key_groups.values():
         members.sort(key=lambda r: str(r.get("created_at") or ""))
         for r in members[:-1]:
-            r["duplicate_of"] = members[-1]["artifact_path"]
-        members[-1]["duplicate_of"] = None
+            r["duplicate_of"], r["merge_basis"] = members[-1]["artifact_path"], "key"
     for r in rows:
         r.setdefault("duplicate_of", None)
+        r.setdefault("merge_basis", None)
+    n_experiments = sum(1 for r in rows if r["duplicate_of"] is None)
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text("".join(json.dumps(r, sort_keys=True) + "\n" for r in rows))
@@ -226,11 +257,17 @@ def main() -> int:
                                             "erase the independence the n=120 merge depends on",
                          "n_slices": len(slices), "n_distinct_keys": slices_distinct}},
         "f3_incomplete_keys_are_never_merged": {
-            "passed": all(r["duplicate_of"] is None for r in rows if not r["dedup_key_complete"]),
+            "passed": not any(r["merge_basis"] == "key" and not r["dedup_key_complete"]
+                              for r in rows),
             "evidence": {"why_it_can_fail": "treating a missing field as equal to another missing "
                                             "field fuses unrelated runs, which is the exact "
-                                            "failure this registry exists to end",
-                         "n_incomplete": sum(1 for r in rows if not r["dedup_key_complete"])}},
+                                            "failure this registry exists to end. Merging on an "
+                                            "IDENTICAL content hash is a different, exact check "
+                                            "and is permitted",
+                         "n_incomplete": sum(1 for r in rows if not r["dedup_key_complete"]),
+                         "merged_by_identity": sum(1 for r in rows
+                                                   if r["merge_basis"] == "identity"),
+                         "merged_by_key": sum(1 for r in rows if r["merge_basis"] == "key")}},
         "f4_the_grade_is_derived_not_copied": {
             "passed": any(r["evidence_grade"] != "CONFIRMATORY"
                           and "CONFIRM" in str(r["claim_status_as_authored"]).upper()

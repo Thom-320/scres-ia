@@ -1,7 +1,7 @@
 {
  "by_evidence_grade": {
-  "CONFIRMATORY": 2,
-  "DEVELOPMENT": 89,
+  "CONFIRMATORY": 3,
+  "DEVELOPMENT": 87,
   "DIAGNOSTIC": 5,
   "NEGATIVE_OR_HALTED": 20,
   "REPLAY": 39,
@@ -28,11 +28,12 @@
  "claim_status": "EVIDENCE_REGISTRY_BUILT",
  "confirmatory": [
   "results/grid_transfer_confirmation_v2/result.json",
-  "results/gsa_confirmation/result.json"
+  "results/gsa_confirmation/result.json",
+  "results/garrido_h2_h3_confirmation_v1/result.json"
  ],
  "contract_path": "docs/ENMIENDA_REGISTRO_DE_EVIDENCIA_2026-08-07.md",
  "contract_sha256": "8e78b344536e8c6440d29ff4e437a0ea9b84c5fe73980d0b40c842aa90947ff5",
- "created_at": "2026-08-07T22:48:33.176787+00:00",
+ "created_at": "2026-08-07T22:53:51.663292+00:00",
  "dedup_key": [
   "contract_sha256",
   "execution_fingerprint",
@@ -60,18 +61,20 @@
   },
   "f3_incomplete_keys_are_never_merged": {
    "evidence": {
-    "n_incomplete": 190,
-    "why_it_can_fail": "treating a missing field as equal to another missing field fuses unrelated runs, which is the exact failure this registry exists to end"
+    "merged_by_identity": 2,
+    "merged_by_key": 3,
+    "n_incomplete": 191,
+    "why_it_can_fail": "treating a missing field as equal to another missing field fuses unrelated runs, which is the exact failure this registry exists to end. Merging on an IDENTICAL content hash is a different, exact check and is permitted"
    },
    "passed": true
   },
   "f4_the_grade_is_derived_not_copied": {
    "evidence": {
     "examples": [
-     "results/garrido_h2_h3_confirmation_v1/result.json",
      "results/gsa_confirmation_corrective/result.json",
      "results/headroom/g3_obs_conversion_v2_replay_20260803/result.json",
-     "results/metric_audit/ret_metric_repair_confirmation_v1/adjudication.json"
+     "results/metric_audit/ret_metric_repair_confirmation_v1/adjudication.json",
+     "results/metric_audit/ret_metric_repair_confirmation_v1/result.json"
     ],
     "why_it_can_fail": "if no artifact authored as CONFIRM is graded anything else, the grade is just echoing claim_status and certifies nothing"
    },
@@ -90,7 +93,7 @@
  },
  "module_manifest": {
   "entry_script": "scripts/build_evidence_registry_v1.py",
-  "entry_script_sha256": "c63c25697bdc7fdfdff51ee8d9f2a37b933c1680a3af3207691b9b200a0a5ad7",
+  "entry_script_sha256": "7b2400c3071c8bc9f3e0ae5bf4086a38af3b4a2bb67ff64fe64d2fd0f9aa992a",
   "missing": [],
   "modules": {
    "supply_chain/arm_runner.py": "35135c537d9260832677ab6b4e344229d6b9f4810df8bdef9efd51b58fcac68a",
@@ -99,9 +102,9 @@
   "schema": "module_manifest_v2",
   "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
  },
- "n_artifacts": 215,
- "n_collapsed_as_rereport": 3,
- "n_distinct_experiments": 212,
+ "n_artifacts": 216,
+ "n_collapsed_as_rereport": 5,
+ "n_distinct_experiments": 211,
  "n_skipped_no_verdict": 41,
  "preregistration": "docs/ENMIENDA_REGISTRO_DE_EVIDENCIA_2026-08-07.md",
  "reference_path": "results/step3_split_pooled/result.json",
@@ -109,5 +112,5 @@
  "registry_path": "research/evidence_registry.jsonl",
  "schema_version": "evidence_registry_v1",
  "scope": "INDEX_ONLY_NO_SCIENTIFIC_CLAIM_NO_SEEDS",
- "self_sha256": "00a472f21c7158683fae649fef8e9e41659d96a6ec0efb4fa2165138d41f4825"
+ "self_sha256": "6286c409718840983e555e5f70c0ef245144fa187dcaf98c0b00a77c9ac11f47"
 }

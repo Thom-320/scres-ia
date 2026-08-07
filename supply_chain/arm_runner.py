@@ -167,6 +167,24 @@ def seal_and_write(payload: dict[str, Any], path: Path, *,
     """
     payload = dict(payload)
     payload.setdefault("created_at", datetime.now(timezone.utc).isoformat())
+    # First-class fields the evidence registry deduplicates on. Measured 2026-08-07: seed_block was
+    # missing from 111 of 216 artifacts and endpoint from 138, so 88% of experiment keys were
+    # incomplete and the corpus could not be deduplicated at all. Both are DERIVED when the payload
+    # already carries the information, so every existing runner that passes `seeds` gets a block
+    # signature for free rather than needing 229 edits.
+    if "seed_block" not in payload:
+        seeds = payload.get("seeds")
+        if isinstance(seeds, list) and seeds:
+            try:
+                payload["seed_block"] = {"start": int(min(seeds)), "end": int(max(seeds)),
+                                         "n": len(seeds), "derived_from": "seeds"}
+            except (TypeError, ValueError):
+                pass
+    if "endpoint" not in payload:
+        for key in ("primary_metric", "metric"):
+            if isinstance(payload.get(key), str):
+                payload["endpoint"] = payload[key]
+                break
     payload["contract_path"] = str(contract)
     payload["contract_sha256"] = sha256(Path(contract).read_bytes()).hexdigest()
     payload["reference_path"] = str(reference)
