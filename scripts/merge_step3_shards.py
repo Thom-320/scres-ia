@@ -149,6 +149,19 @@ def main() -> int:
                   f"[{c['lcb95']:+.6f} · {c['ucb95']:+.6f}]  "
                   f"{c['positive_tapes']}/{c['n_tapes']} tapes{flag}")
 
+    # The guardrail, read from the rows rather than asserted. GUARD is the preregistered blocking
+    # metric; SERVICE is the aggregate that was applied in its place before it existed.
+    GUARD = "worst_product_fill"
+    guard_vals = [float(r[GUARD]) for r in rows if r.get(GUARD) is not None]
+    agg_vals = [float(r[SERVICE]) for r in rows if r.get(GUARD) is not None]
+    n_guard = len(guard_vals)
+    guard_present = bool(n_guard == len(rows) and n_guard > 0)
+    guard_varies = bool(n_guard and (max(guard_vals) - min(guard_vals)) > 1e-9)
+    guard_distinct_from_aggregate = bool(
+        n_guard and any(abs(g - a) > 1e-9 for g, a in zip(guard_vals, agg_vals)))
+    guard_range = [min(guard_vals), max(guard_vals)] if n_guard else None
+    topologies = {str(r.get("cssu_topology")) for r in rows}
+
     winners = {f: [a for a, c in b["comparisons"].items()
                    if c["beats_incumbent"] and a != CEILING_ARM]
                for f, b in report.items()}
@@ -196,15 +209,31 @@ def main() -> int:
                                             "structured controller would manufacture the headline "
                                             "this whole run exists to test",
                          "winners": winners}},
-        "f4_the_preregistered_guardrail_is_not_available": {
-            "passed": False,
-            "evidence": {"why_it_can_fail": "declared, not discovered: the preregistration names "
-                                            "worst_product_fill as the blocking guardrail and this "
-                                            "runner does not persist it. flow_fill_rate is an "
-                                            "aggregate and cannot see one product abandoned while "
-                                            "the aggregate holds. Any arm passing here has NOT "
-                                            "passed the preregistered screen",
-                         "preregistered": "worst_product_fill", "applied": SERVICE}},
+        # This was hardcoded to False, which was TRUE when written -- the runner did not persist
+        # worst_product_fill -- but a constant is not a check. It now reads the rows: the guardrail
+        # must be present, must vary (a constant column cannot veto anything), and under the
+        # aggregate one-claimant topology it is measured to BE flow_fill_rate, in which case it is
+        # present but inexpressible and this still fails. See
+        # docs/ENMIENDA_PASO3_GUARDARRAIL_INEXPRESABLE_2026-08-07.md.
+        "f4_the_preregistered_guardrail_is_available_and_can_veto": {
+            "passed": bool(guard_present and guard_varies and guard_distinct_from_aggregate),
+            "evidence": {"why_it_can_fail": "the preregistration names worst_product_fill as the "
+                                            "blocking guardrail. If the rows do not carry it, or "
+                                            "it never varies, or it is numerically identical to "
+                                            "the aggregate fill (which is what a one-claimant "
+                                            "contract gives), then no arm passing here has passed "
+                                            "the preregistered screen",
+                         "preregistered": "worst_product_fill", "aggregate_reported": SERVICE,
+                         "present": guard_present, "varies": guard_varies,
+                         "distinct_from_aggregate": guard_distinct_from_aggregate,
+                         "topologies": sorted(topologies),
+                         "range": guard_range, "n_rows_with_guardrail": n_guard}},
+        "f7_all_rows_share_one_topology": {
+            "passed": bool(len(topologies) == 1),
+            "evidence": {"why_it_can_fail": "arms that ran different physics are not comparable; "
+                                            "the first split_v1 attempt mixed 1,296 static rows "
+                                            "under split_v1 with 18 dynamic rows under aggregate",
+                         "topologies": sorted(topologies)}},
     }
     falsifiers["all_passed"] = all(
         v["passed"] for k, v in falsifiers.items()
