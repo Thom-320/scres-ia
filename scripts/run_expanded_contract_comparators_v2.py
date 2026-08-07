@@ -134,6 +134,14 @@ def materialize_tape(seed: int, horizon: float, family: str) -> dict[str, Any]:
     return payload
 
 
+# Set once from --cssu-topology before any arm runs. "aggregate" is the historical contract: one
+# claimant, so worst_product_fill IS flow_fill_rate and the preregistered guardrail is not
+# expressible (measured: results/step3_expressiveness/result.json). "split_v1" partitions the same
+# order stream into claimants A/B by stable hash WITHOUT changing the physics -- verified to
+# reproduce ret_excel_full_ledger and flow_fill_rate to 0.000e+00 on 8 tapes across both families.
+CSSU_TOPOLOGY = "aggregate"
+
+
 def make_replay_sim(
     *,
     seed: int,
@@ -142,6 +150,7 @@ def make_replay_sim(
     tape: dict[str, Any],
 ) -> MFSCSimulation:
     return MFSCSimulation(
+        cssu_topology_mode=CSSU_TOPOLOGY,
         shifts=1,
         initial_buffers={node: 0.0 for node in NODES},
         inventory_replenishment_period=168.0,
@@ -271,6 +280,26 @@ def finish_with_posture(
     return episode_row(sim)
 
 
+def worst_claimant_fill(sim: MFSCSimulation) -> float:
+    """Fill of the worst-served claimant, over the scored population.
+
+    An aggregate fill cannot see one claimant abandoned while the total holds; that is exactly
+    what the step-3 preregistration asked to guard against and what the runner never computed."""
+    served: dict[str, list[int]] = {}
+    for order in sim.orders:
+        if bool(getattr(order, "metrics_excluded", False)):
+            continue
+        if float(getattr(order, "OPTj", 0.0)) < float(sim.warmup_time):
+            continue
+        key = str(getattr(order, "cssu_destination", None))
+        row = served.setdefault(key, [0, 0])
+        row[0] += 1
+        row[1] += int(getattr(order, "OATj", None) is not None)
+    if not served:
+        return 1.0
+    return float(min(hit / total for total, hit in served.values() if total > 0))
+
+
 def episode_row(sim: MFSCSimulation) -> dict[str, float]:
     metric = compute_episode_metrics(sim)
     scored = [
@@ -294,6 +323,11 @@ def episode_row(sim: MFSCSimulation) -> dict[str, float]:
         "ret_excel_full_ledger": float(metric["ret_excel_full_ledger"]),
         "ret_thesis": float(metric["ret_thesis"]),
         "flow_fill_rate": float(metric["flow_fill_rate"]),
+        # The guardrail the preregistration named and the runner never persisted. Under
+        # "aggregate" there is exactly one claimant, so this equals the aggregate fill by
+        # construction and cannot veto; under "split_v1" it is the real worst-claimant fill.
+        "worst_product_fill": worst_claimant_fill(sim),
+        "cssu_topology": CSSU_TOPOLOGY,
         "lost_orders": float(metric["lost_orders"]),
         "delivered_rations": float(metric["delivered_rations"]),
         "unresolved": float(metric.get("unresolved_orders", metric.get("unresolved", 0.0))),
@@ -592,6 +626,12 @@ def main() -> int:
     parser.add_argument("--metric", required=True,
                         help="scoring endpoint (no default: ret_excel rewards abandonment and "
                              "must be chosen explicitly, never inherited)")
+    parser.add_argument("--cssu-topology", default="aggregate",
+                        choices=["aggregate", "split_v1"],
+                        help="'aggregate' is the historical one-claimant contract, where "
+                             "worst_product_fill IS flow_fill_rate and cannot veto. 'split_v1' "
+                             "partitions the same orders into claimants A/B by stable hash and "
+                             "reproduces ret_excel_full_ledger to 0.000e+00")
     parser.add_argument("--candidate-limit", type=int, default=0)
     parser.add_argument("--workers", type=int, default=4)
     parser.add_argument("--skip-dynamic", action="store_true")
@@ -616,6 +656,9 @@ def main() -> int:
         default=Path("results/expanded_contract_comparators_v2"),
     )
     args = parser.parse_args()
+    # Set before any arm builds a simulator; every make_replay_sim call reads this.
+    global CSSU_TOPOLOGY
+    CSSU_TOPOLOGY = str(args.cssu_topology)
     tapes_n = args.tapes or (1 if args.phase == "preflight" else 12)
     scenarios_n = args.scenarios or (1 if args.phase == "preflight" else 5)
     horizon = float(args.horizon_weeks * HOURS_PER_WEEK)
