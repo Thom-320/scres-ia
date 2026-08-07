@@ -80,16 +80,38 @@ nuestro favor: la ventaja de la KAN viene de **la base B-spline**, y un MLP con 
 **Hueco de novedad: intacto.** Nada publicado combina KAN × resiliencia de cadena × DES.
 (`docs/REVISION_LITERATURA_KAN_2026-08-06.md`)
 
-## 5. La conversación incómoda, y hay que tenerla
+## 5. La KAN: pierde como política, gana como surrogate
 
-El argumento de venta de la KAN tenía dos patas:
+Su argumento tenía dos patas. **Una cae y la otra se sostiene**, y la frontera entre ambas es
+justamente la contribución.
 
-* **ahorro de parámetros** — **medido, y no se sostiene**: a parámetros igualados no gana, y cuesta
-  **4,1×** por decisión;
-* **interpretabilidad** — **no la hemos tocado**, y es justo donde el preprint **no** contradice a
-  Garrido, porque compara exactitud y no auditabilidad.
+**Ahorro de parámetros como política de control: medido, y no se sostiene.** A 200.000 parámetros
+igualados, KAN − MLP = **−0,475 [−1,548 · +0,598]**, y cuesta **4,1×** por decisión.
 
-**Si la KAN entra al paper, tiene que entrar por la interpretabilidad, y eso hay que construirlo.**
+**Como surrogate supervisado de la superficie de diseño: gana, y con margen.** A **532 contra 529
+parámetros**, evaluado sobre un cuarto **retenido** (`results/kan_interpretability/`):
+
+| contexto | KAN R²_out | MLP R²_out |
+|---|---:|---:|
+| R1r | 0,9978 | 0,9418 |
+| **R2r** | **0,9777** | **0,7424** |
+| R1r+R2r | 0,9945 | 0,9425 |
+| R1r\|esc | 0,9915 | 0,9312 |
+| R2r\|esc | 0,9673 | 0,8912 |
+| R1r+R2r\|esc | 0,9908 | 0,9599 |
+
+**No es una contradicción, es la distinción que hace el propio preprint KANbeFair:** la ventaja de
+la KAN está en **representación de funciones**. Una superficie de diseño *es* una función; una
+política de control no lo es.
+
+**Y las curvas univariadas son legibles y no son artefacto de la base.** Reajustado sobre superficie
+**barajada**, el R² retenido sale **negativo (−0,556 a −1,938)** y la distancia de curvas es
+0,317–0,428. Las formas son la cadena, no el spline. Eso es la interpretabilidad que él vende,
+hecha concreta y con su control.
+
+De paso confirma el resultado de turnos por otra vía: el recorrido de `shifts` en las curvas es
+**0,05–0,28** frente a **1,5–2,6** de `op9_rop`. El turno es la variable que menos mueve la
+superficie.
 
 ## 6. Lo demás que pidió
 
