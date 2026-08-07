@@ -124,7 +124,11 @@ def main() -> int:
     evals = {n: score(p, EVAL_SEED0, args.eval_episodes) for n, p in arms.items()}
     means = {n: float(np.mean(v)) for n, v in evals.items()}
 
-    # Networks come from the sealed artifacts; nothing is retrained here.
+    # Networks come from the bake-off artifacts; nothing is retrained here. Those artifacts are
+    # NOT sealed: run_architecture_bakeoff_v1.py never called seal_and_write, so they carry no
+    # self_sha256 and no contract. A content-only seal was added afterwards from the outside
+    # (results/*/sealed_record.json, docs/ENMIENDA_SELLADO_RETROACTIVO_BAKEOFF_2026-08-07.md); it
+    # fixes the bytes from that date forward and certifies nothing about provenance.
     nets = {}
     bk = Path("results/architecture_bakeoff_200k/result.json")
     if bk.exists():
@@ -150,7 +154,7 @@ def main() -> int:
     print("\n  brazos NO neuronales (bloque de evaluacion 777_000):")
     for n, m in sorted(means.items(), key=lambda kv: -kv[1]):
         print(f"    {n:<16} {m:+.4f}")
-    print("\n  redes (de artefactos sellados) menos la mejor constante:")
+    print("\n  redes (bake-off, SIN sellar al ejecutarse) menos la mejor constante:")
     for n, g in sorted(net_gap.items(), key=lambda kv: -kv[1]):
         print(f"    {n:<16} {nets[n]:+.4f}   gap {g:+.4f}")
 
@@ -213,7 +217,7 @@ def main() -> int:
         "rule_fit_score": best_rv,
         "nonneural_eval_means": means, "nonneural_eval_episodes": evals,
         "vs_constant": vs_const,
-        "network_means_from_sealed_artifacts": nets, "network_minus_constant": net_gap,
+        "network_means_from_bakeoff_unsealed_at_execution": nets, "network_minus_constant": net_gap,
         "falsifiers": falsifiers, "elapsed_seconds": time.perf_counter() - started,
     }
     digest = seal_and_write(payload, args.output, contract=args.contract,
