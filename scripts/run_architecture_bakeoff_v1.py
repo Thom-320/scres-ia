@@ -110,12 +110,24 @@ class DMLPA(BaseFeaturesExtractor):
     """
 
     def __init__(self, observation_space, factor=HISTORY_LEN, features_dim=120,
-                 hidden_dim=100, nhead=12, num_layers=2, ff_mult=4):
+                 hidden_dim=100, nhead=12, num_layers=2, ff_mult=4, use_kan=False):
         super().__init__(observation_space, features_dim)
         flat = int(observation_space.shape[0])
         self.obs_dimension, self.factor = flat // factor, factor
-        self.latent_rw = nn.Sequential(nn.Linear(self.obs_dimension, hidden_dim), nn.GELU(),
-                                       nn.Linear(hidden_dim, features_dim))
+        # David's own DMLPA puts a KAN in the latent_rw and always did; the notebook we shipped
+        # him silently set use_kan=False, so what this repo has measured as "DMLPA" is a de-KAN'd
+        # version of his architecture. The switch exists here so the two can be compared. The
+        # DEFAULT stays False on purpose: flipping it would retroactively change every DMLPA
+        # number already sealed.
+        self.use_kan = bool(use_kan)
+        if self.use_kan:
+            from kan import KAN
+            self.latent_rw = KAN(width=[self.obs_dimension, hidden_dim, features_dim],
+                                 grid=3, k=3, auto_save=False, save_act=False,
+                                 symbolic_enabled=False)
+        else:
+            self.latent_rw = nn.Sequential(nn.Linear(self.obs_dimension, hidden_dim), nn.GELU(),
+                                           nn.Linear(hidden_dim, features_dim))
         self.pre_norm = nn.LayerNorm(features_dim)
         layer = nn.TransformerEncoderLayer(d_model=features_dim, nhead=nhead, batch_first=True,
                                            dim_feedforward=ff_mult * features_dim)
@@ -128,7 +140,14 @@ class DMLPA(BaseFeaturesExtractor):
 
     def forward(self, x):
         x = x.float().view(x.shape[0], self.factor, self.obs_dimension)
-        x = self.pre_norm(self.latent_rw(x) + self.pos)
+        if self.use_kan:
+            # pykan's KAN takes 2-D input, so the token axis is folded into the batch and unfolded
+            # after -- the same reshape David does with einops.
+            b, t, d = x.shape
+            x = self.latent_rw(x.reshape(b * t, d)).reshape(b, t, -1)
+        else:
+            x = self.latent_rw(x)
+        x = self.pre_norm(x + self.pos)
         return self.accumulated(x)[:, -1, :]
 
 
