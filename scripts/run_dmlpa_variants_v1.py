@@ -148,7 +148,14 @@ def main() -> int:
         factory, cls, kw, _, _ = specs[src]
         width = sizes[src]["width"]
         for seed in args.seeds:
+            # These hyperparameters are NOT optional. Omitting them took SB3's defaults --
+            # n_steps 2048 instead of 512 and ent_coef 0.0 instead of 0.01 -- which made this
+            # sweep incomparable with the bake-off, with David's notebook, and with every other
+            # number in the project. The within-sweep contrasts survived because all arms shared
+            # the mistake; the cross-run ones did not.
             model = PPO("MlpPolicy", make_vec(n_envs, seed), seed=seed, verbose=0,
+                        device="cpu", learning_rate=3e-4, n_steps=512, batch_size=64,
+                        gamma=0.99, gae_lambda=0.95, clip_range=0.2, ent_coef=0.01,
                         policy_kwargs={"features_extractor_class": cls,
                                        "features_extractor_kwargs": kw(width),
                                        "net_arch": dict(pi=[64, 64], vf=[64, 64])})
