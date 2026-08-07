@@ -40,12 +40,19 @@ SERVICE = "flow_fill_rate"          # NOT worst_product_fill -- see the module d
 N_BOOT = 5_000
 MODULES = ("supply_chain/arm_runner.py", "supply_chain/seed_custody.py")
 STATIC_ARM = "static"
+#: NOT a controller. The runner itself labels it GREEDY_PI_BEST_FOUND_NOT_EXACT_CEILING: it is a
+#: perfect-information best-found diagnostic, so it belongs with the oracle and can never count as
+#: a structured controller converting the rights. The first version of this script let it into the
+#: winner set and produced A_STRUCTURED_CONTROLLER_CONVERTS off the back of it.
+CEILING_ARM = "greedy_pi_best_found_v2"
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--shards", nargs="+", type=Path, required=True)
     ap.add_argument("--contract", type=Path, required=True)
+    ap.add_argument("--reference", type=Path,
+                    help="artifact this pooling is downstream of; defaults to the first shard")
     ap.add_argument("--output", type=Path, default=Path("results/step3_pooled/result.json"))
     args = ap.parse_args()
     rng = np.random.default_rng(20260806)
@@ -126,8 +133,10 @@ def main() -> int:
                   f"[{c['lcb95']:+.6f} · {c['ucb95']:+.6f}]  "
                   f"{c['positive_tapes']}/{c['n_tapes']} tapes{flag}")
 
-    winners = {f: [a for a, c in b["comparisons"].items() if c["beats_incumbent"]]
+    winners = {f: [a for a, c in b["comparisons"].items()
+                   if c["beats_incumbent"] and a != CEILING_ARM]
                for f, b in report.items()}
+    ceiling = {f: b["comparisons"].get(CEILING_ARM) for f, b in report.items()}
     any_win = any(winners.values())
     verdict = ("A_STRUCTURED_CONTROLLER_CONVERTS_THE_EXPANDED_RIGHTS" if any_win
                else "NO_STRUCTURED_CONTROLLER_CONVERTS")
@@ -152,6 +161,13 @@ def main() -> int:
             "evidence": {"why_it_can_fail": "R1r and R2r are different estimands; averaging them "
                                             "would invent a number that describes neither",
                          "families": families}},
+        "f5_the_ceiling_arm_is_not_counted_as_a_winner": {
+            "passed": all(CEILING_ARM not in w for w in winners.values()),
+            "evidence": {"why_it_can_fail": "greedy_pi is perfect-information and beats the "
+                                            "incumbent by construction. Counting it as a "
+                                            "structured controller would manufacture the headline "
+                                            "this whole run exists to test",
+                         "winners": winners}},
         "f4_the_preregistered_guardrail_is_not_available": {
             "passed": False,
             "evidence": {"why_it_can_fail": "declared, not discovered: the preregistration names "
@@ -186,9 +202,18 @@ def main() -> int:
             "The screen applied here is strictly weaker than the one preregistered."),
         "shards": shard_names, "seeds_per_shard": per_shard_seeds,
         "families": report, "winners": winners,
+        "ceiling_diagnostic": {
+            "arm": CEILING_ARM, "by_family": ceiling,
+            "why_excluded_from_the_verdict": (
+                "perfect-information best-found, not a deployable policy; the runner labels it "
+                "GREEDY_PI_BEST_FOUND_NOT_EXACT_CEILING and it belongs with the oracle")},
         "falsifiers": falsifiers,
     }
-    digest = seal_and_write(payload, args.output, contract=args.contract)
+    # seal_and_write parses the reference as JSON, so it has to be an artifact and not the
+    # preregistration markdown. The first shard's own result.json is the honest anchor: the pooled
+    # analysis is downstream of it.
+    reference = args.reference or (args.shards[0] / "result.json")
+    digest = seal_and_write(payload, args.output, contract=args.contract, reference=reference)
     print(f"\n  -> {args.output} (sello {digest[:16]}…)")
     return 0 if not overlaps else 1
 
