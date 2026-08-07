@@ -44,6 +44,7 @@ from stable_baselines3 import PPO  # noqa: E402
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor  # noqa: E402
 from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv  # noqa: E402
 
+from supply_chain.arm_runner import seal_and_write  # noqa: E402
 from supply_chain.external_env_interface import make_track_b_env  # noqa: E402
 from supply_chain.seed_custody import module_manifest  # noqa: E402
 from real_kan_extractor import RealKANFeaturesExtractor  # noqa: E402
@@ -202,6 +203,15 @@ def main() -> int:
     ap.add_argument("--eval-episodes", type=int, default=16)
     ap.add_argument("--n-envs", type=int, default=0, help="0 = cores-1")
     ap.add_argument("--arch", nargs="+", default=list(ARCHS))
+    # REQUIRED, no default. This runner never called seal_and_write, so results/architecture_bakeoff*
+    # carry no self_sha256, no contract and no provenance -- and one of them feeds the project's
+    # only neural positive through a field that was literally named
+    # `network_means_from_sealed_artifacts`. See docs/ENMIENDA_SELLADO_RETROACTIVO_BAKEOFF_2026-08-07.md.
+    ap.add_argument("--contract", type=Path, required=True,
+                    help="contract to seal this run against (no default: the absence of one is "
+                         "how two unsealed artifacts ended up being cited as sealed)")
+    ap.add_argument("--reference", type=Path,
+                    default=Path("results/architecture_bakeoff_200k/sealed_record.json"))
     ap.add_argument("--output", type=Path,
                     default=Path("results/architecture_bakeoff/result.json"))
     args = ap.parse_args()
@@ -285,14 +295,15 @@ def main() -> int:
                          "and ms_per_decision is only comparable within this single host."),
         "elapsed_seconds": time.perf_counter() - started,
     }
-    args.output.write_text(json.dumps(payload, indent=1))
+    digest = seal_and_write(payload, args.output, contract=args.contract,
+                            reference=args.reference)
     print("\n  === resumen ===", flush=True)
     for a, v in by_arch.items():
         print(f"    {a:<6} ReT {v['mean']:+.5f} ± {v['sd_between_seeds']:.5f}  "
               f"params {v['params']:,}  {v['ms_per_decision']:.2f} ms/dec")
     for k, v in contrasts.items():
         print(f"    {k:<16} {v['mean']:+.5f} [{v['lcb95']:+.5f}, {v['ucb95']:+.5f}]")
-    print(f"\n  -> {args.output}")
+    print(f"\n  -> {args.output} (sello {digest[:16]}…)")
     return 0
 
 
