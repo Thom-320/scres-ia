@@ -106,16 +106,31 @@ por brazo (6 % la memoria contra 61 % el azar):
 
 En corridas ahorradas -**secundario censurado**- eso son 5,83 [4,44 . 7,31] y 5,33 [3,25 . 7,13].
 
-> **Recomendación:** no vuelvas a gastar el presupuesto en la comparación de arquitecturas. Fija
-> `ARCH` en la que prefieras y gasta las 9 h en **`MEMORY_ARM = 'persistent'` contra su gemelo
-> `'independent'`** (celda 6). Y ojo: el bake-off ya usó 9491–9495, así que repetir `independent`
-> sobre esas semillas es una réplica, no una prueba independiente.
+> **Recomendación, actualizada a lo que pediste:** `ARCH` viene ya en **`DMLPA`**, la tuya.
+>
+> Pero mira la tabla: a 200.000 parámetros igualados tu DMLPA quedó en **187.404** contra 199.215
+> del MLP, y **+0,136 [−0,569 · +0,841]** — no separa. Eso fue a **60.000 pasos**, así que la
+> lectura honesta no es «DMLPA no sirve», es **«a ese presupuesto nada separa»**.
+>
+> **Nosotros estamos corriendo ahora mismo tu DMLPA a 200.000 pasos**, 5 semillas, 24 episodios de
+> evaluación, contra MLP y KAN igualados. No dependemos de que lo corras tú.
+>
+> **Lo que sólo puedes aportar tú, y es lo único de arquitectura que sigue abierto:**
+> **`ARCH = 'DMLPA_KAN'`** — tu mismo transformer con `use_kan=True` en el `latent_rw`. Tu código
+> ya lo soporta y **nunca se ha corrido**. Si el híbrido separa, es tuyo y es nuevo.
+>
+> Y ojo con las semillas: el bake-off ya usó 9491–9495, así que repetir `independent` sobre ellas
+> es una réplica, no una prueba independiente.
 """),
 
     code(f"""# 0) LA ÚNICA CELDA QUE TIENES QUE TOCAR
 # DEFAULTS = LO QUE PEDISTE. Dale a "Ejecutar todo" y sale tu corrida completa.
 RUN_PROFILE   = 'final'         # 'smoke' (cableado, ~2 min) | 'preliminary' (1 semilla) | 'final' (COMPLETA)
-ARCH          = 'KAN'           # 'KAN' | 'MLP' | 'DMLPA' | 'CUSTOM'
+ARCH          = 'DMLPA'         # 'DMLPA' | 'DMLPA_KAN' | 'KAN' | 'MLP' | 'CUSTOM'
+                                # DMLPA por defecto: es la TUYA y es la prioridad.
+                                # DMLPA_KAN = tu mismo transformer con use_kan=True en el
+                                # latent_rw. Esa variante la soporta tu codigo y NUNCA se
+                                # ha corrido: es la unica pregunta abierta de arquitectura.
 MEMORY_ARM    = 'persistent'    # PEDISTE ESTO: los pesos NO se reinician entre semillas.
                                 # Corre ademas su gemelo 'independent' como control (celda 6).
 
@@ -430,8 +445,15 @@ def dmlpa_factory(width):
     return DMLPA(gym.spaces.Box(-np.inf, np.inf, (FLAT_DIM,), dtype=np.float32),
                  hidden_dim=max(32, d), features_dim=d, nhead=12, num_layers=2)
 
+def dmlpa_kan_factory(width):
+    # TU transformer con use_kan=True en el latent_rw. Tu codigo ya lo soporta y esta variante
+    # NUNCA se ha corrido: es la unica pregunta de arquitectura que sigue abierta.
+    d = max(12, int(width) // 12 * 12)
+    return DMLPA(gym.spaces.Box(-np.inf, np.inf, (FLAT_DIM,), dtype=np.float32),
+                 hidden_dim=max(32, d), features_dim=d, nhead=12, num_layers=2, use_kan=True)
+
 FACTORIES = {'KAN': (kan_factory, 4, 64), 'MLP': (mlp_factory, 8, 512),
-             'DMLPA': (dmlpa_factory, 12, 480)}
+             'DMLPA': (dmlpa_factory, 12, 480), 'DMLPA_KAN': (dmlpa_kan_factory, 12, 480)}
 print('arquitecturas disponibles:', list(FACTORIES))"""),
 
     code("""# 5) IGUALDAD DE PARÁMETROS — el cuaderno aborta si no se cumple
