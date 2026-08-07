@@ -541,7 +541,14 @@ def run_replay_controller(
 
 
 def run_tape_bundle(payload: dict[str, Any]) -> dict[str, Any]:
-    """Run all dynamic arms for one tape; safe in a worker process."""
+    """Run all dynamic arms for one tape; safe in a worker process.
+
+    The topology travels IN THE PAYLOAD, not in a module global. On macOS ProcessPoolExecutor
+    spawns rather than forks, so a worker re-imports this module and would silently fall back to
+    the "aggregate" default -- which is exactly what happened on the first split_v1 attempt: the
+    1,296 static rows ran split_v1 while the 18 dynamic rows ran aggregate."""
+    global CSSU_TOPOLOGY
+    CSSU_TOPOLOGY = str(payload.get("cssu_topology", CSSU_TOPOLOGY))
     tape = payload["tape"]
     family = str(payload["family"])
     horizon = float(payload["horizon"])
@@ -831,6 +838,7 @@ def main() -> int:
                 "epoch_hours": epoch_hours,
                 "metric": args.metric,
                 "skip_dynamic": args.skip_dynamic,
+                "cssu_topology": CSSU_TOPOLOGY,
             }
             for tape in actual_tapes
         ]
@@ -895,6 +903,16 @@ def main() -> int:
             "pi_distinct_best_actions": [list(row) for row in sorted(pi_best_actions)],
         }
 
+    # Fail loudly rather than seal a mixed artifact. The first split_v1 attempt produced 1,296
+    # static rows under split_v1 and 18 dynamic rows under aggregate, and the only reason it was
+    # caught is that the topology is written on every row. A comparison whose arms ran different
+    # physics is not a comparison.
+    topologies = sorted({str(row.get("cssu_topology")) for row in all_rows})
+    if len(topologies) > 1:
+        raise SystemExit(
+            f"rows mix cssu topologies {topologies}: the arms did not share physics, so no "
+            "contrast in this run is valid. Refusing to write."
+        )
     write_json(output / "rows.json", all_rows)
     write_json(output / "traces.json", all_traces)
     result = {
