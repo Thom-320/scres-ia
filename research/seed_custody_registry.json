@@ -57,6 +57,18 @@
         "verdict": "RUNTIME_F3_F4_RECONCILIATION_NOT_A_NEW_CONFIRMATION",
         "what_it_does_not_establish": "full v2 contractual coverage of Q2, and not a new confirmation: the block is a DECLARED_REPLAY at n=12, the exploratory run"
       },
+      "consumers": [
+        {
+          "id": "garrido_v0_recovery_holdout",
+          "note": "The v0 \"holdout\" half sits INSIDE this already-burned block, so it was never virgin -- the preregistration said as much: \"un holdout de desarrollo, no virginidad\". Opening it after the development STOP cost a development holdout, not a confirmation block. Recorded as a consumer rather than as a block of its own, which would have overlapped and broken the registry.",
+          "opened_against_preregistration": true,
+          "seeds": [
+            5300007,
+            5300012
+          ],
+          "source": "docs/APERTURA_HOLDOUT_V0_CONTRA_EL_PREREGISTRO_2026-08-07.md"
+        }
+      ],
       "end": 5300012,
       "id": "garrido_q2_des288",
       "purpose": "DES-288 development artifact; no manuscript use before ledger adjudication",
@@ -475,15 +487,6 @@
       "source": "docs/ENMIENDA_CONFIRMACION_BLOQUE_LIMPIO_2026-08-05.md",
       "start": 8200001,
       "status": "BURNED_CONFIRMATION_COMPLETE"
-    },
-    {
-      "consequence": "Not available as a prospective confirmation block for this family again. The result replicates the development STOP and carries no independent authority.",
-      "end": 5300012,
-      "id": "garrido_v0_recovery_holdout",
-      "purpose": "Held-out half of the v0 recovery surface. Opened AFTER development returned STOP_NO_RECOVERY_LEARNING_HEADROOM, which the preregistration says authorises neither new seeds nor looking at the holdout, and with no frozen learner. The PI reaffirmed the request after the objection was raised.",
-      "source": "docs/APERTURA_HOLDOUT_V0_CONTRA_EL_PREREGISTRO_2026-08-07.md",
-      "start": 5300007,
-      "status": "BURNED_OPENED_AGAINST_PREREGISTRATION"
     }
   ],
   "inventory_limitations": [
