@@ -1,0 +1,477 @@
+{
+ "amendment": "docs/ENMIENDA_DDMRP_FUERA_DEL_DOMINIO_COMPARTIDO_2026-08-06.md",
+ "arm": "ddmrp_unprojected_v3",
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "DEVELOPMENT_ASYMMETRIC_RIGHTS_NO_METHOD_CLAIM",
+ "contract_path": "docs/ENMIENDA_DDMRP_FUERA_DEL_DOMINIO_COMPARTIDO_2026-08-06.md",
+ "contract_sha256": "f8650ea18723a2d6909b32be4e30bc15f3ca9ea6cdad666cdc47cc4655e99550",
+ "corrects": "results/step3_pooled/result.json (f6 failed)",
+ "created_at": "2026-08-07T02:45:46.272894+00:00",
+ "decision_rights_asymmetry": {
+  "every_other_arm": "the 6^3 posture domain",
+  "how_to_read_a_loss": "STRONGER than a loss under equal rights: more freedom and still no better than the best fixed posture.",
+  "how_to_read_a_win": "NOT method superiority. Confounded with a wider action set; report as 'wins with rights the others do not have'.",
+  "this_arm": "continuous targets, unbounded by the thesis ladder"
+ },
+ "distinct_targets_per_node": {
+  "op3_rm": 114,
+  "op5_rm": 209,
+  "op9_rations": 282
+ },
+ "falsifiers": {
+  "all_passed": true,
+  "f1_the_targets_actually_vary": {
+   "evidence": {
+    "distinct_per_node": {
+     "op3_rm": 114,
+     "op5_rm": 209,
+     "op9_rations": 282
+    },
+    "why_it_can_fail": "this is f6 of the pooled run without the projection that flattened it. If the targets are STILL constant, the projection was not the cause and the method is degenerate on its own"
+   },
+   "passed": true
+  },
+  "f2_the_targets_leave_the_old_ceiling": {
+   "evidence": {
+    "ceiling": {
+     "op3_rm": 122880.0,
+     "op5_rm": 122880.0,
+     "op9_rations": 126000.0
+    },
+    "n_decision_points": 312,
+    "points_above_ceiling": {
+     "op3_rm": 312,
+     "op5_rm": 312,
+     "op9_rations": 0
+    },
+    "why_it_can_fail": "if no target ever exceeds the ladder ceiling, taking DDMRP out of the shared domain changed nothing and the whole amendment was unnecessary"
+   },
+   "passed": true
+  },
+  "f3_the_tapes_are_the_same_ones": {
+   "evidence": {
+    "n_tapes": 24,
+    "seeds": [
+     1420001,
+     1420002,
+     1420003,
+     1420004,
+     1420005,
+     1420006,
+     1421001,
+     1421002,
+     1421003,
+     1421004,
+     1421005,
+     1421006,
+     1422001,
+     1422002,
+     1422003,
+     1422004,
+     1422005,
+     1422006,
+     1423001,
+     1423002,
+     1423003,
+     1423004,
+     1423005,
+     1423006
+    ],
+    "why_it_can_fail": "the contrast is paired against an incumbent computed on these exact tapes; a different or duplicated tape set would break the pairing"
+   },
+   "passed": true
+  },
+  "f4_the_asymmetry_is_recorded": {
+   "evidence": {
+    "recorded": true,
+    "why_it_can_fail": "if the artifact ever reports this as a symmetric comparison the field is missing and the claim is unsupportable"
+   },
+   "passed": true
+  }
+ },
+ "ladder_ceiling": {
+  "op3_rm": 122880.0,
+  "op5_rm": 122880.0,
+  "op9_rations": 126000.0
+ },
+ "metric": "ret_excel_full_ledger",
+ "module_manifest": {
+  "entry_script": "scripts/run_ddmrp_unprojected_v1.py",
+  "entry_script_sha256": "d6faf15d346a02b7e4aab3ae0e4cb5447353000f332a03f10037aec371a7f0cd",
+  "missing": [],
+  "modules": {
+   "supply_chain/arm_runner.py": "35135c537d9260832677ab6b4e344229d6b9f4810df8bdef9efd51b58fcac68a",
+   "supply_chain/expanded_contract_controllers_v2.py": "65e6239ee33e71fe5a5bf1330ef3d924ec1ea3e58a9c496e95c10528581c4f3a"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "n_decision_points": 312,
+ "points_above_ladder_ceiling": {
+  "op3_rm": 312,
+  "op5_rm": 312,
+  "op9_rations": 0
+ },
+ "reference_path": "results/step3_pooled/result.json",
+ "reference_sha256": "25d722ddc16448141540904e52df6022f51f2f70987afbb30ab7889ce8d2908a",
+ "rows": [
+  {
+   "arm": "ddmrp_unprojected_v3",
+   "delivered_rations": 754036.0,
+   "demanded_rations": 756621.0,
+   "family": "R1r",
+   "flow_fill_rate": 0.9965834942461285,
+   "lost_orders": 0.0,
+   "posture": null,
+   "ret_excel": 0.008924023138649016,
+   "ret_excel_full_ledger": 0.008894570917069316,
+   "tape_seed": 1420001,
+   "terminal_stock": 0.0
+  },
+  {
+   "arm": "ddmrp_unprojected_v3",
+   "delivered_rations": 751347.0,
+   "demanded_rations": 753941.0,
+   "family": "R1r",
+   "flow_fill_rate": 0.9965594124739203,
+   "lost_orders": 0.0,
+   "posture": null,
+   "ret_excel": 0.008812437515492436,
+   "ret_excel_full_ledger": 0.00878325725881862,
+   "tape_seed": 1420002,
+   "terminal_stock": 0.0
+  },
+  {
+   "arm": "ddmrp_unprojected_v3",
+   "delivered_rations": 752862.0,
+   "demanded_rations": 755342.0,
+   "family": "R1r",
+   "flow_fill_rate": 0.9967167190491195,
+   "lost_orders": 0.0,
+   "posture": null,
+   "ret_excel": 0.008870231995133286,
+   "ret_excel_full_ledger": 0.008840860366010329,
+   "tape_seed": 1420003,
+   "terminal_stock": 0.0
+  },
+  {
+   "arm": "ddmrp_unprojected_v3",
+   "delivered_rations": 754234.0,
+   "demanded_rations": 756691.0,
+   "family": "R1r",
+   "flow_fill_rate": 0.9967529678560998,
+   "lost_orders": 0.0,
+   "posture": null,
+   "ret_excel": 0.00888851553469988,
+   "ret_excel_full_ledger": 0.008859180499931892,
+   "tape_seed": 1420004,
+   "terminal_stock": 0.0
+  },
+  {
+   "arm": "ddmrp_unprojected_v3",
+   "delivered_rations": 752825.0,
+   "demanded_rations": 755393.0,
+   "family": "R1r",
+   "flow_fill_rate": 0.9966004450663429,
+   "lost_orders": 0.0,
+   "posture": null,
+   "ret_excel": 0.008921871673056586,
+   "ret_excel_full_ledger": 0.008892426552023394,
+   "tape_seed": 1420005,
+   "terminal_stock": 0.0
+  },
+  {
+   "arm": "ddmrp_unprojected_v3",
+   "delivered_rations": 754282.0,
+   "demanded_rations": 756878.0,
+   "family": "R1r",
+   "flow_fill_rate": 0.9965701209441944,
+   "lost_orders": 0.0,
+   "posture": null,
+   "ret_excel": 0.008816925426933808,
+   "ret_excel_full_ledger": 0.008787826663148547,
+   "tape_seed": 1420006,
+   "terminal_stock": 0.0
+  },
+  {
+   "arm": "ddmrp_unprojected_v3",
+   "delivered_rations": 754845.0,
+   "demanded_rations": 757368.0,
+   "family": "R1r",
+   "flow_fill_rate": 0.9966687264315366,
+   "lost_orders": 0.0,
+   "posture": null,
+   "ret_excel": 0.008908476800837761,
+   "ret_excel_full_ledger": 0.008879075887303642,
+   "tape_seed": 1421001,
+   "terminal_stock": 0.0
+  },
+  {
+   "arm": "ddmrp_unprojected_v3",
+   "delivered_rations": 752331.0,
+   "demanded_rations": 754912.0,
+   "family": "R1r",
+   "flow_fill_rate": 0.9965810584544954,
+   "lost_orders": 0.0,
+   "posture": null,
+   "ret_excel": 0.008856266255976688,
+   "ret_excel_full_ledger": 0.008826940871023124,
+   "tape_seed": 1421002,
+   "terminal_stock": 0.0
+  },
+  {
+   "arm": "ddmrp_unprojected_v3",
+   "delivered_rations": 752262.0,
+   "demanded_rations": 754848.0,
+   "family": "R1r",
+   "flow_fill_rate": 0.9965741447284752,
+   "lost_orders": 0.0,
+   "posture": null,
+   "ret_excel": 0.00892066812641323,
+   "ret_excel_full_ledger": 0.008891129490233055,
+   "tape_seed": 1421003,
+   "terminal_stock": 0.0
+  },
+  {
+   "arm": "ddmrp_unprojected_v3",
+   "delivered_rations": 755430.0,
+   "demanded_rations": 757849.0,
+   "family": "R1r",
+   "flow_fill_rate": 0.9968080712648562,
+   "lost_orders": 0.0,
+   "posture": null,
+   "ret_excel": 0.008914237199822624,
+   "ret_excel_full_ledger": 0.008884817275070735,
+   "tape_seed": 1421004,
+   "terminal_stock": 0.0
+  },
+  {
+   "arm": "ddmrp_unprojected_v3",
+   "delivered_rations": 755675.0,
+   "demanded_rations": 758253.0,
+   "family": "R1r",
+   "flow_fill_rate": 0.9966000793930259,
+   "lost_orders": 0.0,
+   "posture": null,
+   "ret_excel": 0.00878830782597339,
+   "ret_excel_full_ledger": 0.008759303509716052,
+   "tape_seed": 1421005,
+   "terminal_stock": 0.0
+  },
+  {
+   "arm": "ddmrp_unprojected_v3",
+   "delivered_rations": 755281.0,
+   "demanded_rations": 757739.0,
+   "family": "R1r",
+   "flow_fill_rate": 0.9967561389871711,
+   "lost_orders": 0.0,
+   "posture": null,
+   "ret_excel": 0.008891522960389376,
+   "ret_excel_full_ledger": 0.008862178000124066,
+   "tape_seed": 1421006,
+   "terminal_stock": 0.0
+  },
+  {
+   "arm": "ddmrp_unprojected_v3",
+   "delivered_rations": 757419.0,
+   "demanded_rations": 824408.0,
+   "family": "R2r",
+   "flow_fill_rate": 0.9187429039989908,
+   "lost_orders": 0.0,
+   "posture": null,
+   "ret_excel": 0.38060837794475355,
+   "ret_excel_full_ledger": 0.21639300823537244,
+   "tape_seed": 1422001,
+   "terminal_stock": 0.0
+  },
+  {
+   "arm": "ddmrp_unprojected_v3",
+   "delivered_rations": 771586.0,
+   "demanded_rations": 820382.0,
+   "family": "R2r",
+   "flow_fill_rate": 0.9405203917199548,
+   "lost_orders": 0.0,
+   "posture": null,
+   "ret_excel": 0.47288386716782504,
+   "ret_excel_full_ledger": 0.23403790480430323,
+   "tape_seed": 1422002,
+   "terminal_stock": 0.0
+  },
+  {
+   "arm": "ddmrp_unprojected_v3",
+   "delivered_rations": 793683.0,
+   "demanded_rations": 819441.0,
+   "family": "R2r",
+   "flow_fill_rate": 0.9685663763468023,
+   "lost_orders": 0.0,
+   "posture": null,
+   "ret_excel": 0.4750743476298565,
+   "ret_excel_full_ledger": 0.27303942388935265,
+   "tape_seed": 1422003,
+   "terminal_stock": 0.0
+  },
+  {
+   "arm": "ddmrp_unprojected_v3",
+   "delivered_rations": 708987.0,
+   "demanded_rations": 822546.0,
+   "family": "R2r",
+   "flow_fill_rate": 0.861942067677674,
+   "lost_orders": 0.0,
+   "posture": null,
+   "ret_excel": 0.33547407246876726,
+   "ret_excel_full_ledger": 0.19690079301279748,
+   "tape_seed": 1422004,
+   "terminal_stock": 0.0
+  },
+  {
+   "arm": "ddmrp_unprojected_v3",
+   "delivered_rations": 712758.0,
+   "demanded_rations": 818208.0,
+   "family": "R2r",
+   "flow_fill_rate": 0.8711207908013611,
+   "lost_orders": 0.0,
+   "posture": null,
+   "ret_excel": 0.378849483330979,
+   "ret_excel_full_ledger": 0.21455566367604317,
+   "tape_seed": 1422005,
+   "terminal_stock": 0.0
+  },
+  {
+   "arm": "ddmrp_unprojected_v3",
+   "delivered_rations": 797075.0,
+   "demanded_rations": 820359.0,
+   "family": "R2r",
+   "flow_fill_rate": 0.971617304131484,
+   "lost_orders": 0.0,
+   "posture": null,
+   "ret_excel": 0.49896181283022656,
+   "ret_excel_full_ledger": 0.2755507450963942,
+   "tape_seed": 1422006,
+   "terminal_stock": 0.0
+  },
+  {
+   "arm": "ddmrp_unprojected_v3",
+   "delivered_rations": 767692.0,
+   "demanded_rations": 819458.0,
+   "family": "R2r",
+   "flow_fill_rate": 0.9368289772020042,
+   "lost_orders": 0.0,
+   "posture": null,
+   "ret_excel": 0.41319830484305203,
+   "ret_excel_full_ledger": 0.25550866100416403,
+   "tape_seed": 1423001,
+   "terminal_stock": 0.0
+  },
+  {
+   "arm": "ddmrp_unprojected_v3",
+   "delivered_rations": 771148.0,
+   "demanded_rations": 820321.0,
+   "family": "R2r",
+   "flow_fill_rate": 0.9400563925585228,
+   "lost_orders": 0.0,
+   "posture": null,
+   "ret_excel": 0.4504832548657032,
+   "ret_excel_full_ledger": 0.25626374521901296,
+   "tape_seed": 1423002,
+   "terminal_stock": 0.0
+  },
+  {
+   "arm": "ddmrp_unprojected_v3",
+   "delivered_rations": 752588.0,
+   "demanded_rations": 817259.0,
+   "family": "R2r",
+   "flow_fill_rate": 0.9208684150312202,
+   "lost_orders": 0.0,
+   "posture": null,
+   "ret_excel": 0.4242772726216792,
+   "ret_excel_full_ledger": 0.23929548583881816,
+   "tape_seed": 1423003,
+   "terminal_stock": 0.0
+  },
+  {
+   "arm": "ddmrp_unprojected_v3",
+   "delivered_rations": 781704.0,
+   "demanded_rations": 817999.0,
+   "family": "R2r",
+   "flow_fill_rate": 0.9556295301094501,
+   "lost_orders": 0.0,
+   "posture": null,
+   "ret_excel": 0.4741361224437945,
+   "ret_excel_full_ledger": 0.2962739900336286,
+   "tape_seed": 1423004,
+   "terminal_stock": 0.0
+  },
+  {
+   "arm": "ddmrp_unprojected_v3",
+   "delivered_rations": 736029.0,
+   "demanded_rations": 821370.0,
+   "family": "R2r",
+   "flow_fill_rate": 0.8960992001168779,
+   "lost_orders": 0.0,
+   "posture": null,
+   "ret_excel": 0.3373706023545063,
+   "ret_excel_full_ledger": 0.21225427817028075,
+   "tape_seed": 1423005,
+   "terminal_stock": 0.0
+  },
+  {
+   "arm": "ddmrp_unprojected_v3",
+   "delivered_rations": 761532.0,
+   "demanded_rations": 820522.0,
+   "family": "R2r",
+   "flow_fill_rate": 0.9281067418058261,
+   "lost_orders": 0.0,
+   "posture": null,
+   "ret_excel": 0.45949555729211017,
+   "ret_excel_full_ledger": 0.23084808637224952,
+   "tape_seed": 1423006,
+   "terminal_stock": 0.0
+  }
+ ],
+ "schema_version": "ddmrp_unprojected_v1",
+ "scope": "DEVELOPMENT_ON_MATERIALISED_TAPES_NO_FRESH_SEEDS",
+ "seeds": [
+  1420001,
+  1420002,
+  1420003,
+  1420004,
+  1420005,
+  1420006,
+  1421001,
+  1421002,
+  1421003,
+  1421004,
+  1421005,
+  1421006,
+  1422001,
+  1422002,
+  1422003,
+  1422004,
+  1422005,
+  1422006,
+  1423001,
+  1423002,
+  1423003,
+  1423004,
+  1423005,
+  1423006
+ ],
+ "self_sha256": "e174f13058a933362e0ed2426cdccdd0b58f936ea386b88fe5f28f6e427a234d"
+}
