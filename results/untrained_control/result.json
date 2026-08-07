@@ -1,0 +1,118 @@
+{
+ "arch": "DMLPA",
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "UNTRAINED_SIDE_ONLY_NO_CONTRAST_YET",
+ "contract_path": "docs/PREREGISTRO_VARIANTES_DMLPA_2026-08-07.md",
+ "contract_sha256": "bb0928d6e6af8ee7f705e0982e495071f60bb4ebc5b7a426625daa6c871618f0",
+ "created_at": "2026-08-07T04:41:40.762975+00:00",
+ "elapsed_seconds": 79.54408570800297,
+ "eval_episodes": 24,
+ "eval_seed0": 777000,
+ "falsifiers": {
+  "all_passed": true,
+  "f1_nothing_was_trained": {
+   "evidence": {
+    "learn_called": false,
+    "total_timesteps": 0,
+    "why_it_can_fail": "a stray learn() call would make this an ordinary arm and destroy the contrast"
+   },
+   "passed": true
+  },
+  "f2_pairs_with_the_bakeoff": {
+   "evidence": {
+    "eval_episodes": 24,
+    "eval_seed0": 777000,
+    "seeds": [
+     9491,
+     9492,
+     9493,
+     9494,
+     9495
+    ],
+    "why_it_can_fail": "the contrast is paired seed by seed against the bake-off's DMLPA rows; different seeds or a different episode count would break the pairing"
+   },
+   "passed": true
+  },
+  "f3_parameters_match_the_bakeoff_arm": {
+   "evidence": {
+    "error": 0.06298,
+    "why_it_can_fail": "an untrained network of a different size is not the control for the trained one",
+    "width": 90
+   },
+   "passed": true
+  }
+ },
+ "module_manifest": {
+  "entry_script": "scripts/run_untrained_control_v1.py",
+  "entry_script_sha256": "852e74169bd9e8dce79cf7d6b0ca876840c30ecd7e1d245c350d30603634e16f",
+  "missing": [],
+  "modules": {
+   "supply_chain/arm_runner.py": "35135c537d9260832677ab6b4e344229d6b9f4810df8bdef9efd51b58fcac68a",
+   "supply_chain/seed_custody.py": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "param_error": 0.06298,
+ "preregistration": "docs/PREREGISTRO_VARIANTES_DMLPA_2026-08-07.md",
+ "reference_path": "results/architecture_bakeoff/result.json",
+ "reference_sha256": null,
+ "rows": [
+  {
+   "ret_mean": 71.19660282088718,
+   "ret_sd_within": 4.550948663923314,
+   "seed": 9491
+  },
+  {
+   "ret_mean": 72.92152263014937,
+   "ret_sd_within": 5.118280595054029,
+   "seed": 9492
+  },
+  {
+   "ret_mean": 69.6932596095759,
+   "ret_sd_within": 3.6512125878029926,
+   "seed": 9493
+  },
+  {
+   "ret_mean": 74.58809706990799,
+   "ret_sd_within": 5.602242584469068,
+   "seed": 9494
+  },
+  {
+   "ret_mean": 72.60815258047586,
+   "ret_sd_within": 5.228571847313372,
+   "seed": 9495
+  }
+ ],
+ "schema_version": "untrained_control_v1",
+ "scope": "DEVELOPMENT_NOT_VIRGIN_ONE_SIDE_OF_A_PAIRED_CONTRAST",
+ "seeds": [
+  9491,
+  9492,
+  9493,
+  9494,
+  9495
+ ],
+ "self_sha256": "e380ed978ce406a4d464c9f62a979e4407c35d208b1ef9a18d966e9e45109c07",
+ "untrained_mean": 72.20152694219925,
+ "untrained_sd_between_seeds": 1.8493737234765855,
+ "what_this_is_not": "Not a result. This is the untrained half of the trained-vs-untrained contrast Garrido asked for; the trained half comes from the 200k bake-off and the contrast is computed once that lands.",
+ "width": 90
+}
