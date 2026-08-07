@@ -585,7 +585,13 @@ def main() -> int:
     parser.add_argument("--seed-start", type=int, default=1_410_001)
     parser.add_argument("--horizon-weeks", type=int, default=52)
     parser.add_argument("--epoch-weeks", type=int, default=4)
-    parser.add_argument("--metric", default="ret_excel")
+    # REQUIRED, no default. `ret_excel` used to be the silent default, and `ret_excel` is MEASURED
+    # to reward abandoning a claimant: the split that maximises it delivers 50% fill against 80%
+    # for the split that minimises it. A default that quietly selects a gameable endpoint is a
+    # trap for whoever invokes this next -- see docs/REGISTRO_DE_HUECOS_2026-08-07.md B4.
+    parser.add_argument("--metric", required=True,
+                        help="scoring endpoint (no default: ret_excel rewards abandonment and "
+                             "must be chosen explicitly, never inherited)")
     parser.add_argument("--candidate-limit", type=int, default=0)
     parser.add_argument("--workers", type=int, default=4)
     parser.add_argument("--skip-dynamic", action="store_true")
