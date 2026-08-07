@@ -1,0 +1,126 @@
+{
+ "arrays_identical": {
+  "neuron_memory_vs_ofat_transfer": true,
+  "neuron_memory_vs_ucb1_transfer": true
+ },
+ "boot": 50000,
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "OFAT_LCB_SIGN_IS_RESAMPLING_UNSTABLE",
+ "contract_path": "docs/ENMIENDA_RECONCILIACION_LCB_OFAT_2026-08-07.md",
+ "contract_sha256": "c0b17233460fd3e4f89b790e06890a6eb9b1607ca173329286a448a56d6badb4",
+ "contrasts": {
+  "search_ladder_v2_ordered": {
+   "neuron_memory_minus_ofat_transfer": {
+    "lcb95": 0.0001551174847040456,
+    "lcb_positive_fraction_over_rng_seeds": 0.65,
+    "mean": 0.01071031949336522,
+    "n": 12,
+    "stored_lcb95": -2.761381942678142e-05,
+    "ucb95": 0.021477852311749167
+   },
+   "neuron_memory_minus_ucb1_transfer": {
+    "lcb95": -0.024346366852235294,
+    "lcb_positive_fraction_over_rng_seeds": 0.0,
+    "mean": -0.007009740616816028,
+    "n": 12,
+    "stored_lcb95": -0.0243435788876766,
+    "ucb95": 0.014105120222992797
+   }
+  },
+  "search_ladder_v5": {
+   "neuron_memory_minus_ofat_transfer": {
+    "lcb95": 0.0001551174847040456,
+    "lcb_positive_fraction_over_rng_seeds": 0.65,
+    "mean": 0.01071031949336522,
+    "n": 12,
+    "stored_lcb95": 3.564844184833131e-05,
+    "ucb95": 0.021477852311749167
+   },
+   "neuron_memory_minus_ucb1_transfer": {
+    "lcb95": -0.024346366852235294,
+    "lcb_positive_fraction_over_rng_seeds": 0.0,
+    "mean": -0.007009740616816028,
+    "n": 12,
+    "stored_lcb95": -0.024441318883473704,
+    "ucb95": 0.014105120222992797
+   }
+  }
+ },
+ "created_at": "2026-08-07T18:44:35.801132+00:00",
+ "elapsed_seconds": 0.10160183299740311,
+ "falsifiers": {
+  "all_passed": true,
+  "f1_the_two_ladders_score_the_same_replicates": {
+   "evidence": {
+    "arrays_identical": {
+     "neuron_memory_vs_ofat_transfer": true,
+     "neuron_memory_vs_ucb1_transfer": true
+    },
+    "why_it_can_fail": "if the per-arm arrays differ, the two ladders are two experiments and the sign disagreement is not a bootstrap artifact at all"
+   },
+   "passed": true
+  },
+  "f2_the_instability_is_measured_not_asserted": {
+   "evidence": {
+    "lcb_positive_fraction": 0.65,
+    "n_rng_seeds": 40,
+    "why_it_can_fail": "declaring a bound unstable from one resample is an opinion; this repeats the whole bootstrap under independent RNG seeds and counts"
+   },
+   "passed": true
+  },
+  "f3_a_stable_bound_would_be_reported_as_stable": {
+   "evidence": {
+    "threshold_band": [
+     0.05,
+     0.95
+    ],
+    "unstable": true,
+    "why_it_can_fail": "if the fraction were 0 or 1 the verdict must say the bound is stable and name the sign, not hedge"
+   },
+   "passed": true
+  }
+ },
+ "how_to_report_it": "Report the contrast as indistinguishable from zero and quote both sealed bounds. Do NOT write 'excludes zero'. An external audit quoted the negative bound and was told it was wrong; it was quoting the other sealed artifact, and that correction is owed.",
+ "module_manifest": {
+  "entry_script": "scripts/run_ofat_lcb_reconciliation_v1.py",
+  "entry_script_sha256": "339874564684c02577b4c82308329ed2f30672c59cfc2cb65d2a2040b712f5cb",
+  "missing": [],
+  "modules": {
+   "supply_chain/arm_runner.py": "35135c537d9260832677ab6b4e344229d6b9f4810df8bdef9efd51b58fcac68a",
+   "supply_chain/seed_custody.py": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "preregistration": "docs/ENMIENDA_RECONCILIACION_LCB_OFAT_2026-08-07.md",
+ "reference_path": "results/search_ladder_v5/result.json",
+ "reference_sha256": "f7dfb1e8bc1c036bcac28c83535e7a5dd8ebd723dd01d3ec604e8228c20cc511",
+ "rng_seed": 20260807,
+ "schema_version": "ofat_lcb_reconciliation_v1",
+ "scope": "DEVELOPMENT_REANALYSIS_OF_SEALED_ARTIFACTS_NO_SEEDS",
+ "self_sha256": "a35bb6ec721d683892000e74aae4a1c08b901aa13d36ee1f7aa5c956536e93ba",
+ "stability_seeds": 40,
+ "the_disagreement": {
+  "note": "the mean is identical to the last digit, so the disagreement is the bootstrap draw and not the data",
+  "search_ladder_v2_ordered_lcb95": -2.761381942678142e-05,
+  "search_ladder_v5_lcb95": 3.564844184833131e-05,
+  "shared_mean": 0.01071031949336522
+ }
+}

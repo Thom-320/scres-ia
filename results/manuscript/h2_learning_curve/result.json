@@ -1,0 +1,168 @@
+{
+ "advantage_by_context": {
+  "R1r": 0.0,
+  "R1r+R2r": 0.1905162315685694,
+  "R1r+R2r|esc": 0.26868607643557035,
+  "R1r|esc": 0.22111385282764517,
+  "R2r": 0.2827524501250933,
+  "R2r|esc": 0.31709366608535716
+ },
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "H2_SUPPORTED_LEARNING_CURVE",
+ "context_order": [
+  "R1r",
+  "R2r",
+  "R1r+R2r",
+  "R1r|esc",
+  "R2r|esc",
+  "R1r+R2r|esc"
+ ],
+ "contract_path": "docs/PREREGISTRO_H2_CURVA_DE_APRENDIZAJE_2026-08-07.md",
+ "contract_sha256": "7741309cf93fa4e0a49995f0900b1062bce986eb292fc0dc7b66fbc782345cfb",
+ "created_at": "2026-08-07T18:39:39.305504+00:00",
+ "elapsed_seconds": 0.0687450420082314,
+ "estimand": "OLS slope of (reset AUC - memory AUC) against the context ordinal 1..6, per replicate. A large but FLAT advantage supports H4, not H2.",
+ "falsifiers": {
+  "all_passed": true,
+  "f1_the_source_is_the_contracted_pair_at_n120": {
+   "evidence": {
+    "n_replicates": 120,
+    "sources": [
+     {
+      "contract_path": "docs/PREREGISTRO_H3_POTENCIA_2026-08-01.md",
+      "path": "results/garrido_meta_learner_h3power_h3_contract_local_v2/result.json",
+      "repeats": 90,
+      "seeds": [
+       6000001,
+       6000090
+      ],
+      "self_sha256": "e768e0f69f18727232ee6346718933540d79fead9af40a864c7f3cf3ed154c1c"
+     },
+     {
+      "contract_path": "docs/PREREGISTRO_H3_POTENCIA_2026-08-01.md",
+      "path": "results/garrido_meta_learner_h3power_h3_contract_vps_v2/result.json",
+      "repeats": 30,
+      "seeds": [
+       6000091,
+       6000120
+      ],
+      "self_sha256": "ad240fbb9dda507ad255416dc1295918e890d4ccc40c77d4f8d4a6e06799c6a1"
+     }
+    ],
+    "why_it_can_fail": "a different source, or a short merge, would not be the contracted block the reading rule assumes"
+   },
+   "passed": true
+  },
+  "f2_the_normaliser_is_prefix_not_oracle": {
+   "evidence": {
+    "normaliser": "prefix (running best-so-far of the observed curve)",
+    "why_it_can_fail": "the oracle normaliser divided by the span of the whole surface including never-run cells; reproducing that panel would reintroduce the leak that retired the original H2 figure"
+   },
+   "passed": true
+  },
+  "f3_the_order_confound_is_absorbed": {
+   "evidence": {
+    "null_pair": "random minus ofat",
+    "null_slope": {
+     "lcb95": -0.015570216666852871,
+     "mean": -0.0050880611149445275,
+     "n": 120,
+     "ucb95": 0.0056579986049085955
+    },
+    "why_it_can_fail": "the last three contexts are escalated, so an arm can look better by position rather than by learning. If a pair that retains NOTHING shows the same rising trend, the trend is the ordering"
+   },
+   "passed": true
+  },
+  "f4_the_slope_can_be_negative": {
+   "evidence": {
+    "max_slope_observed": 0.1477783164540918,
+    "min_slope_observed": -0.0564365828492133,
+    "n_negative": 22,
+    "why_it_can_fail": "an estimator that cannot return a negative slope cannot refute H2 and measures nothing"
+   },
+   "passed": true
+  },
+  "f5_no_new_seeds": {
+   "evidence": {
+    "block": "6000001-6000120",
+    "why_it_can_fail": "a seed outside the already-open block would consume custody this run never declared"
+   },
+   "passed": true
+  }
+ },
+ "mean_auc_by_arm": {
+  "neuron_memory": 0.17022357795416482,
+  "neuron_reset": 0.38358395746120394,
+  "ofat": 0.2619659335765739,
+  "random": 0.4434164832167541
+ },
+ "module_manifest": {
+  "entry_script": "scripts/run_h2_learning_curve_v1.py",
+  "entry_script_sha256": "68096d489be0d984038b72d8bd25d97f230351d0e15f94abe8ac68bae9843a00",
+  "missing": [],
+  "modules": {
+   "supply_chain/arm_runner.py": "35135c537d9260832677ab6b4e344229d6b9f4810df8bdef9efd51b58fcac68a",
+   "supply_chain/seed_custody.py": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "n_replicates": 120,
+ "null_slope_random_minus_ofat": {
+  "lcb95": -0.015570216666852871,
+  "mean": -0.0050880611149445275,
+  "n": 120,
+  "ucb95": 0.0056579986049085955
+ },
+ "preregistration": "docs/PREREGISTRO_H2_CURVA_DE_APRENDIZAJE_2026-08-07.md",
+ "primary_slope": {
+  "lcb95": 0.03466393985914079,
+  "mean": 0.04220147575193482,
+  "n": 120,
+  "ucb95": 0.04992205677530306
+ },
+ "reference_path": "results/garrido_meta_learner_h3power_h3_contract_local_v2/result.json",
+ "reference_sha256": "e768e0f69f18727232ee6346718933540d79fead9af40a864c7f3cf3ed154c1c",
+ "schema_version": "h2_learning_curve_v1",
+ "scope": "DEVELOPMENT_REANALYSIS_OF_SEALED_ARTIFACTS_NO_SEEDS_NO_ADJUDICATION",
+ "self_sha256": "74b75141241ba7639f629e2ba8db0ef28bff480fe706489f8977dcd4d4bf48fa",
+ "sources": [
+  {
+   "contract_path": "docs/PREREGISTRO_H3_POTENCIA_2026-08-01.md",
+   "path": "results/garrido_meta_learner_h3power_h3_contract_local_v2/result.json",
+   "repeats": 90,
+   "seeds": [
+    6000001,
+    6000090
+   ],
+   "self_sha256": "e768e0f69f18727232ee6346718933540d79fead9af40a864c7f3cf3ed154c1c"
+  },
+  {
+   "contract_path": "docs/PREREGISTRO_H3_POTENCIA_2026-08-01.md",
+   "path": "results/garrido_meta_learner_h3power_h3_contract_vps_v2/result.json",
+   "repeats": 30,
+   "seeds": [
+    6000091,
+    6000120
+   ],
+   "self_sha256": "ad240fbb9dda507ad255416dc1295918e890d4ccc40c77d4f8d4a6e06799c6a1"
+  }
+ ]
+}
