@@ -1,0 +1,151 @@
+{
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "BOTH_STEP3_FALSIFIERS_FAIL_ON_DOMAIN_EXPRESSIVENESS_NOT_ON_A_DEFECT",
+ "contract_path": "docs/ENMIENDA_PASO3_GUARDARRAIL_INEXPRESABLE_2026-08-07.md",
+ "contract_sha256": "42eaa55cfc9d7a5cd3001b4af2f6d3dc4fe3048d48c18e1047e43fa498a54456",
+ "created_at": "2026-08-07T17:42:17.897453+00:00",
+ "e1_guardrail_expressible": false,
+ "e2_ddmrp_saturates_shared_domain": true,
+ "e2_evidence": {
+  "coordinates_at_ceiling": [
+   true,
+   true,
+   false
+  ],
+  "corroborating_artifact": "results/ddmrp_unprojected_v1/result.json measured the same fact from the other side: unprojected DDMRP holds +1.02M/+1.27M more units for a bit-identical full-ledger metric",
+  "domain_ceiling": 1344.0,
+  "posture": [
+   1344,
+   1344,
+   504
+  ]
+ },
+ "elapsed_seconds": 0.037123583009815775,
+ "falsifiers": {
+  "all_passed": true,
+  "f1_the_claimant_count_is_measured_not_assumed": {
+   "evidence": {
+    "families_measured": [
+     "R1r",
+     "R2r"
+    ],
+    "why_it_can_fail": "with no tape file readable there is no measurement and the amendment would rest on an assumption"
+   },
+   "passed": true
+  },
+  "f2_the_guardrail_would_be_expressible_if_the_domain_had_it": {
+   "evidence": {
+    "guardrail_expressible": false,
+    "n_distinct_claimants": 1,
+    "product_like_attributes_found": false,
+    "why_it_can_fail": "if the simulator emits more than one claimant, or carries a product attribute, then worst_product_fill IS expressible, this diagnostic is wrong, and the preregistered re-run must happen"
+   },
+   "passed": true
+  },
+  "f3_the_ddmrp_posture_is_read_from_the_sealed_artifact": {
+   "evidence": {
+    "coordinates_at_ceiling": [
+     true,
+     true,
+     false
+    ],
+    "domain_levels": [
+     0.0,
+     168.0,
+     336.0,
+     504.0,
+     672.0,
+     1344.0
+    ],
+    "posture": [
+     1344,
+     1344,
+     504
+    ],
+    "source": "results/step3_pooled/result.json f6 evidence",
+    "why_it_can_fail": "inventing the posture instead of reading the one the sealed run reported would make E2 circular"
+   },
+   "passed": true
+  }
+ },
+ "families": {
+  "R1r": {
+   "distinct_cssu_destinations": [
+    "None"
+   ],
+   "inventory_nodes": [
+    "rations_al",
+    "rations_cssu",
+    "rations_sb",
+    "rations_sb_dispatch",
+    "rations_theatre",
+    "raw_material_al",
+    "raw_material_wdc",
+    "rework_op6",
+    "wip_op5_op6",
+    "wip_op6_op7"
+   ],
+   "n_distinct_claimants": 1,
+   "n_orders": 141,
+   "n_tapes": 3,
+   "product_like_attributes": []
+  },
+  "R2r": {
+   "distinct_cssu_destinations": [
+    "None"
+   ],
+   "inventory_nodes": [
+    "rations_al",
+    "rations_cssu",
+    "rations_sb",
+    "rations_sb_dispatch",
+    "rations_theatre",
+    "raw_material_al",
+    "raw_material_wdc",
+    "rework_op6",
+    "wip_op5_op6",
+    "wip_op6_op7"
+   ],
+   "n_distinct_claimants": 1,
+   "n_orders": 141,
+   "n_tapes": 3,
+   "product_like_attributes": []
+  }
+ },
+ "module_manifest": {
+  "entry_script": "scripts/run_step3_expressiveness_diagnostic_v1.py",
+  "entry_script_sha256": "36645f5520e1f75f39d146d2045594ffa54b5ebb9fc244ea230ef9f62a9b16d2",
+  "missing": [],
+  "modules": {
+   "supply_chain/arm_runner.py": "35135c537d9260832677ab6b4e344229d6b9f4810df8bdef9efd51b58fcac68a",
+   "supply_chain/episode_metrics.py": "e09199d48a747f67aef600e9482b812fc1be16e337167d7dfc7215bcb57fb55e",
+   "supply_chain/supply_chain.py": "2f348e5922cbbecf167b45cf0045765010beaaecdcb0fe6de88f259c989460f6"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "preregistration": "docs/ENMIENDA_PASO3_GUARDARRAIL_INEXPRESABLE_2026-08-07.md",
+ "reference_path": "results/step3_pooled/result.json",
+ "reference_sha256": "25d722ddc16448141540904e52df6022f51f2f70987afbb30ab7889ce8d2908a",
+ "schema_version": "step3_expressiveness_v1",
+ "scope": "DIAGNOSTIC_NO_SEEDS_NO_ADJUDICATION_DOES_NOT_LIFT_THE_STEP3_VERDICT",
+ "self_sha256": "2c25fcc62de75ec8daa474e2b670304de9bf2c0032cb0ae70a5beed886f867cc",
+ "what_the_gap_register_assumed": "docs/REGISTRO_DE_HUECOS_2026-08-07.md A1 read the failure as a dropped field with a ~5 h re-run as the fix. That assumed the dimension exists."
+}
