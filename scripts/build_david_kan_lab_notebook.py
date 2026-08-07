@@ -90,8 +90,10 @@ comparable entre máquinas).
 
 **Qué NO respondió ese bake-off, y es lo único que este cuaderno mide en exclusiva:** corrió
 `arm: independent_only`. **El contraste `persistent` vs `independent` —la memoria— sigue abierto**,
-y es justo donde este proyecto sí tiene un positivo medido: el agente que conserva pesos llega al
-óptimo en **7,24 corridas** contra **13,54** reiniciando y **12,42** del OFAT de la tesis.
+y es donde este proyecto tiene su positivo medido. **Las cifras 7,24 / 12,42 / 13,54 están
+RETIRADAS** — salieron de un runner con fuga de normalizador. Las vigentes, del artefacto
+`results/garrido_meta_learner_v2/result.json`: la memoria ahorra **7,90 corridas [6,88 · 8,93]**
+frente a la misma neurona reseteada, y **5,43 [4,01 · 6,78]** frente al OFAT de la tesis.
 
 > **Recomendación:** no vuelvas a gastar el presupuesto en la comparación de arquitecturas. Fija
 > `ARCH` en la que prefieras y gasta las 9 h en **`MEMORY_ARM = 'persistent'` contra su gemelo
