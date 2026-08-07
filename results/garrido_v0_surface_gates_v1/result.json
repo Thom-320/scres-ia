@@ -1,0 +1,535 @@
+{
+ "cache": "results/surface_cache/garrido_v0_recovery216_v1/development",
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "STOP_NO_RECOVERY_LEARNING_HEADROOM",
+ "contract_path": "docs/PREREGISTRO_GARRIDO_V0_RECOVERY_SURFACE_V1_2026-08-06.md",
+ "contract_sha256": "f73d4592c09b797d4e93edff80a21b33ed393b7b4f0ab77ed419bf595013acb9",
+ "created_at": "2026-08-07T03:01:05.521518+00:00",
+ "elapsed_seconds": 2.626581874999829,
+ "falsifiers": {
+  "all_passed": true,
+  "f1_only_development_seeds_are_loaded": {
+   "evidence": {
+    "holdout_not_loaded": [
+     5300007,
+     5300008,
+     5300009,
+     5300010,
+     5300011,
+     5300012
+    ],
+    "seeds": [
+     5300001,
+     5300002,
+     5300003,
+     5300004,
+     5300005,
+     5300006
+    ]
+   },
+   "passed": true
+  },
+  "f2_leave_one_seed_out_is_not_in_sample_r2": {
+   "evidence": {
+    "fit_seeds_per_fold": 5,
+    "n_folds": 6
+   },
+   "passed": true
+  },
+  "f3_contextual_postures_are_selected_without_the_heldout_seed": {
+   "evidence": {
+    "mechanism": "np.delete(all_utility, holdout, axis=0) before argmax"
+   },
+   "passed": true
+  },
+  "f4_seed_custody_is_declared_replay": {
+   "evidence": {
+    "n_sealed_artifact_overlap": 6,
+    "n_seeds": 6,
+    "note": "deliberate re-execution of registry block 'garrido_q2_des288'; these seeds are NOT virgin and are not meant to be",
+    "registry_conflicts": [
+     {
+      "id": "garrido_q2_des288",
+      "n_overlapping": 6,
+      "range": [
+       5300001,
+       5300012
+      ],
+      "source": "results/garrido_meta_learner_v2/result.json",
+      "status": "ARTIFACT_PRESENT_PENDING_CANONICAL_CUSTODY"
+     }
+    ],
+    "registry_is_complete": false,
+    "registry_status": "BASELINE_INVENTORY_INCOMPLETE_NO_NEW_SEEDS_AUTHORIZED",
+    "replay_of": "garrido_q2_des288",
+    "sealed_artifact_overlap": [
+     5300001,
+     5300002,
+     5300003,
+     5300004,
+     5300005,
+     5300006
+    ],
+    "seeds": [
+     5300001,
+     5300002,
+     5300003,
+     5300004,
+     5300005,
+     5300006
+    ],
+    "status": "DECLARED_REPLAY",
+    "why_it_can_fail": "it cannot: this is a declared custody replay of registry block 'garrido_q2_des288', so the seeds are used on purpose. Counted in neither column."
+   },
+   "not_applicable": true,
+   "passed": null
+  }
+ },
+ "gates": {
+  "g0_complete_sealed_crn_surface": {
+   "cells_per_seed": 1944,
+   "observed_seeds": 6,
+   "passed": true
+  },
+  "g1_null_controls_remain_null": {
+   "contexts": {
+    "R12": {
+     "passed": true,
+     "positive_ttr_fraction": 0.0,
+     "restricted_ttr_range_hours": 0.0
+    },
+    "R13": {
+     "passed": true,
+     "positive_ttr_fraction": 0.0,
+     "restricted_ttr_range_hours": 0.0
+    }
+   },
+   "passed": true
+  },
+  "g2_surface_is_nonseparable_out_of_seed": {
+   "by_context": {
+    "R11": {
+     "fold_values": [
+      0.027064716141485978,
+      0.07300613934932898,
+      0.011434436309611273,
+      -0.004087123449236563,
+      0.01740930322222034,
+      -0.05611002323451186
+     ],
+     "lcb95": -0.020346171158247273,
+     "mean": 0.011452908056483024,
+     "n": 6,
+     "passed": false,
+     "ucb95": 0.04162498350719851
+    },
+    "R14": {
+     "fold_values": [
+      -0.0982656213009152,
+      -0.015627161362584796,
+      -0.09289351451423433,
+      0.01290187611192184,
+      -0.025202679574733766,
+      -0.5763629021129795
+     ],
+     "lcb95": -0.31699564320924756,
+     "mean": -0.13257500045892096,
+     "n": 6,
+     "passed": false,
+     "ucb95": -0.016731638983744707
+    },
+    "R21": {
+     "fold_values": [
+      0.023487605272185852,
+      0.022965687457379702,
+      0.014187817321832386,
+      -0.014064536579056819,
+      -0.0016941155946285091,
+      0.02146149677888909
+     ],
+     "lcb95": -0.001122370092097813,
+     "mean": 0.011057325776100283,
+     "n": 6,
+     "passed": false,
+     "ucb95": 0.02142598325997543
+    },
+    "R22": {
+     "fold_values": [
+      -0.014851906994753139,
+      -0.019088710389554064,
+      -0.010460547400635622,
+      -0.02214450517760136,
+      0.005438024972413857,
+      -0.015650253701598227
+     ],
+     "lcb95": -0.018828098638443702,
+     "mean": -0.012792983115288092,
+     "n": 6,
+     "passed": false,
+     "ucb95": -0.004969730135506197
+    },
+    "R23": {
+     "fold_values": [
+      -0.0038887995278331644,
+      -0.006239100508250162,
+      0.0003614601732276901,
+      -0.012007476794646754,
+      0.02418983550147147,
+      -0.0012655308698967804
+     ],
+     "lcb95": -0.0072397615443964836,
+     "mean": 0.00019173132901204962,
+     "n": 6,
+     "passed": false,
+     "ucb95": 0.010214158342703838
+    },
+    "R24": {
+     "fold_values": [
+      0.33346915559052204,
+      0.18853799868907717,
+      0.18998884582623088,
+      0.09721380185929485,
+      0.3079162773145927,
+      0.36439584490384747
+     ],
+     "lcb95": 0.16751470880347807,
+     "mean": 0.24692032069726086,
+     "n": 6,
+     "passed": true,
+     "ucb95": 0.320518494384289
+    }
+   },
+   "minimum_mean_gain": 0.02,
+   "observed_contexts": 1,
+   "passed": false,
+   "required_contexts": 4
+  },
+  "g3_context_specific_postures_have_operational_value": {
+   "fold_selections": [
+    {
+     "common_posture": [
+      0,
+      672,
+      168
+     ],
+     "contextual_postures": {
+      "R11": [
+       0,
+       672,
+       168
+      ],
+      "R14": [
+       0,
+       672,
+       168
+      ],
+      "R21": [
+       0,
+       672,
+       168
+      ],
+      "R22": [
+       0,
+       672,
+       168
+      ],
+      "R23": [
+       0,
+       672,
+       168
+      ],
+      "R24": [
+       0,
+       672,
+       168
+      ]
+     },
+     "heldout_seed": 5300001,
+     "mean_ttr_gain_hours": 0.0,
+     "mean_utility_gain": 0.0
+    },
+    {
+     "common_posture": [
+      0,
+      672,
+      168
+     ],
+     "contextual_postures": {
+      "R11": [
+       0,
+       672,
+       168
+      ],
+      "R14": [
+       0,
+       672,
+       168
+      ],
+      "R21": [
+       0,
+       672,
+       168
+      ],
+      "R22": [
+       0,
+       672,
+       168
+      ],
+      "R23": [
+       0,
+       672,
+       168
+      ],
+      "R24": [
+       0,
+       672,
+       168
+      ]
+     },
+     "heldout_seed": 5300002,
+     "mean_ttr_gain_hours": 0.0,
+     "mean_utility_gain": 0.0
+    },
+    {
+     "common_posture": [
+      0,
+      672,
+      168
+     ],
+     "contextual_postures": {
+      "R11": [
+       0,
+       672,
+       168
+      ],
+      "R14": [
+       0,
+       672,
+       168
+      ],
+      "R21": [
+       0,
+       672,
+       168
+      ],
+      "R22": [
+       0,
+       672,
+       168
+      ],
+      "R23": [
+       0,
+       672,
+       168
+      ],
+      "R24": [
+       0,
+       672,
+       168
+      ]
+     },
+     "heldout_seed": 5300003,
+     "mean_ttr_gain_hours": 0.0,
+     "mean_utility_gain": 0.0
+    },
+    {
+     "common_posture": [
+      0,
+      672,
+      168
+     ],
+     "contextual_postures": {
+      "R11": [
+       0,
+       672,
+       168
+      ],
+      "R14": [
+       0,
+       672,
+       168
+      ],
+      "R21": [
+       0,
+       672,
+       168
+      ],
+      "R22": [
+       0,
+       672,
+       168
+      ],
+      "R23": [
+       0,
+       672,
+       168
+      ],
+      "R24": [
+       0,
+       672,
+       168
+      ]
+     },
+     "heldout_seed": 5300004,
+     "mean_ttr_gain_hours": 0.0,
+     "mean_utility_gain": 0.0
+    },
+    {
+     "common_posture": [
+      0,
+      672,
+      168
+     ],
+     "contextual_postures": {
+      "R11": [
+       0,
+       672,
+       168
+      ],
+      "R14": [
+       0,
+       672,
+       168
+      ],
+      "R21": [
+       0,
+       672,
+       168
+      ],
+      "R22": [
+       0,
+       672,
+       168
+      ],
+      "R23": [
+       0,
+       672,
+       168
+      ],
+      "R24": [
+       0,
+       672,
+       168
+      ]
+     },
+     "heldout_seed": 5300005,
+     "mean_ttr_gain_hours": 0.0,
+     "mean_utility_gain": 0.0
+    },
+    {
+     "common_posture": [
+      0,
+      672,
+      168
+     ],
+     "contextual_postures": {
+      "R11": [
+       0,
+       672,
+       168
+      ],
+      "R14": [
+       0,
+       672,
+       168
+      ],
+      "R21": [
+       0,
+       672,
+       168
+      ],
+      "R22": [
+       0,
+       672,
+       168
+      ],
+      "R23": [
+       0,
+       672,
+       168
+      ],
+      "R24": [
+       0,
+       672,
+       168
+      ]
+     },
+     "heldout_seed": 5300006,
+     "mean_ttr_gain_hours": 0.0,
+     "mean_utility_gain": 0.0
+    }
+   ],
+   "minimum_lcb95_hours": 24.0,
+   "passed": false,
+   "ttr_gain_hours": {
+    "lcb95": 0.0,
+    "mean": 0.0,
+    "n": 6,
+    "ucb95": 0.0
+   },
+   "utility_gain": {
+    "lcb95": 0.0,
+    "mean": 0.0,
+    "n": 6,
+    "ucb95": 0.0
+   }
+  }
+ },
+ "grid_id": "garrido_v0_recovery216_v1",
+ "live_contexts": [
+  "R11",
+  "R14",
+  "R21",
+  "R22",
+  "R23",
+  "R24"
+ ],
+ "module_manifest": {
+  "entry_script": "scripts/run_garrido_v0_surface_gates_v1.py",
+  "entry_script_sha256": "ac99fe7015d821bb4c0c76570652b243ae388b58d25a4dca514f49dbef518d7b",
+  "missing": [],
+  "modules": {
+   "scripts/build_garrido_v0_recovery_surface_v1.py": "3424edc04e75b7d33d27c0afec705825ad142753a0541c09a51b96f8dc82ba07",
+   "supply_chain/arm_runner.py": "35135c537d9260832677ab6b4e344229d6b9f4810df8bdef9efd51b58fcac68a",
+   "supply_chain/expanded_contract_controllers_v2.py": "65e6239ee33e71fe5a5bf1330ef3d924ec1ea3e58a9c496e95c10528581c4f3a",
+   "supply_chain/garrido_v0_recovery.py": "df41e3018fff0c635a83984e44ff691cd23e1b65d1c55f410931d19045ffb9be",
+   "supply_chain/seed_custody.py": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "null_contexts": [
+  "R12",
+  "R13"
+ ],
+ "reference_path": "results/garrido_v0_recovery_gate_v2/result.json",
+ "reference_sha256": "487457b59eb506076922e6b568c210acb3cd9a58a72fd85e5c362b5f391caf0b",
+ "schema_version": "garrido_v0_surface_gates_v1",
+ "scope": "DEVELOPMENT_GATE_ON_BURNED_REPLAYS_NO_HYPOTHESIS_ADJUDICATION",
+ "seeds": [
+  5300001,
+  5300002,
+  5300003,
+  5300004,
+  5300005,
+  5300006
+ ],
+ "self_sha256": "24ed3ed3cfdc3d0f5ba4de009fe88a849caf1968e3d9339be8d5e31134de3495"
+}
