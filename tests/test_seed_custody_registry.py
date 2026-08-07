@@ -26,6 +26,13 @@ def test_seed_registry_is_fail_closed_before_submission_receipt():
             # Opened but produced no sealed artifact. Distinct from the others on
             # purpose: the block is NOT virgin, and there is nothing to audit either.
             "ATTEMPTED_NO_SEALED_ARTIFACT",
+            # Consumed by a prospective confirmation that ran to completion. Strictly
+            # MORE specific than BURNED -- it says both that the seeds are spent and
+            # that the confirmation they were opened for finished -- so admitting it
+            # permits nothing BURNED would not. Introduced by ed16b9e for the
+            # grid-transfer confirmation and never added here, which is why this
+            # guardrail sat red instead of guarding.
+            "BURNED_CONFIRMATION_COMPLETE",
             "RESERVED_NOT_OPENED",
         }
         ranges.append((block["start"], block["end"], block["id"]))
