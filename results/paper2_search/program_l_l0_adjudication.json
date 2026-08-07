@@ -1,0 +1,91 @@
+{
+  "schema_version": "program_l_l0_adjudication_v1",
+  "generated": "2026-08-07",
+  "authority": "PI, reading B, after both readings were put in writing before any resolution",
+  "verdict": "CLOSE_PROGRAM_L_ROUTE_FAMILY",
+  "scope": "DEVELOPMENT_ADJUDICATED_NO_LEARNER_NO_VIRGIN_SEEDS",
+
+  "custody": {
+    "preregistration_path": "docs/PREREGISTRO_PROGRAM_L_L0_REJILLA_EXTENDIDA_2026-08-07.md",
+    "preregistration_sha256": "f166c6855ba4a5e51de012c264d1b9905557d1d5bbd3f3c42e3392595964aba5",
+    "result_path": "results/paper2_search/program_l_l0_extended_grid.json",
+    "result_sha256": "51f3d207d3c68517b43239a9e42d3fbec1807b5638d371082fbcd16a76805164",
+    "predecessor_result_path": "results/paper2_search/program_l_full_des_gate.json",
+    "predecessor_result_sha256": "13597e8e0fe42dd1817b2eee144aea145419da24988b2822e92ba5e4f764b85c",
+    "runner_path": "research/paper2_exhaustive_search/program_l_full_des_gate.py",
+    "runner_sha256": "45168695dfd317eea28a3fc775fc22f0bc626191b0223311b1b2de690e4bab5f",
+    "adjudicated_at_commit": "4d82765",
+    "tape_seeds": {"start": 8500001, "end": 8500040, "identical_across_all_cells": true},
+    "new_seed_values_opened": 0
+  },
+
+  "falsifiers": {
+    "f1_reproduction": {
+      "passed_as_written": false,
+      "quantitative_condition_passed": "8/8 — no cell moves more than its own CI95 half-width",
+      "sign_condition_passed": "7/8 — cell (4,120) reads -0.00239 stored vs +0.00201 in L-0",
+      "defect": "SIGN_TEST_ON_A_ZERO_STRADDLING_QUANTITY",
+      "defect_note": "half-width at (4,120) is 0.01126, so both measurements are indistinguishable from zero and from each other; the test cannot reliably pass and therefore does not discriminate what it claimed to"
+    },
+    "f2_beats_placebo": {
+      "passed": true,
+      "cells": "18/18",
+      "caveat": "the placebo is weak (-0.007 to -0.042) and the signal policy sits near zero, so it beats the placebo without beating zero; low bar, not evidence of value"
+    },
+    "f3_saturation_reached": {
+      "passed": true,
+      "shape": "INVERTED_U",
+      "peak_coverage_range": [0.43, 0.54],
+      "peak_h_obs": 0.005411,
+      "evidence": "H_obs climbs from -0.00704 at coverage 0.02 to +0.00541 at 0.54, then falls to -0.03484 at 1.25"
+    },
+    "f4_static_comparator_flips": {
+      "passed": true,
+      "cells_where_best_static_is_alternate": [[8, 72], [6, 120]],
+      "note": "the flip occurs at exactly the two peak cells; the mechanism exists there, but the signal-informed policy does not beat the static significantly in the same region"
+    }
+  },
+
+  "decision_rule_evaluation": {
+    "open_l1": {"met": false, "why": "no extension cell reaches LCB95 > 0; best is (6,72) at -0.00445"},
+    "close": {"met_by_letter": false, "met_by_intent": true, "why": "letter asks for H_obs <= 0 across the whole extension, but (6,72)=+0.00298 and (10,72)=+0.00324 are positive and non-significant; the preregistration's own clause states that a positive H_obs whose LCB95 crosses zero does not open L-1"},
+    "still_truncated": {"met": false, "why": "F3 passed; saturation reached and passed"},
+    "instrument_mismatch": {"met_by_letter": true, "met_by_intent": false, "why": "F1 failed only on the sign half, at the one cell where a sign test could not work"},
+    "preregistration_defects": [
+      "CLOSE branch misworded relative to its own stated intent",
+      "F1 applies a sign criterion to a quantity that straddles zero",
+      "the four branches were asserted to be exhaustive ('no hay cuarta salida') but do not partition the outcome space"
+    ],
+    "resolution_authority": "PI — not resolved by the author of the falsifier after seeing the data (rule R4)"
+  },
+
+  "findings_independent_of_the_branch": {
+    "no_cell_clears_the_bar": "0 of 18 cells reach LCB95 > 0",
+    "max_h_obs": {"value": 0.005411, "cell": [6, 120], "lcb95": -0.007353},
+    "grid_exhausted_on_this_axis": true,
+    "magnitude_vs_program_o_contention": "peak is about 28x smaller than H_PI = 0.1515",
+    "mechanism_shape": "value is in ALTERNATING routes, not in KNOWING when to switch — same shape as the op12 uninformed-placebo result"
+  },
+
+  "claim_boundary": {
+    "route_family_has_headroom": false,
+    "learner_authorized": false,
+    "l1_authorized": false,
+    "h_pi_certified": false,
+    "reportable_as_characterised_negative": true
+  },
+
+  "reopen_conditions": {
+    "note": "the standing instruction is that a negative under old physics is not a negative under new physics; this lane closes with its reopeners named, it is not deleted",
+    "would_reopen_if": [
+      "the metric changes: this screen used canonical ret_excel, which loses monotonicity under risk; a re-measurement under full_ledger or Cobb-Douglas is L-1 and was NOT run",
+      "the fleet becomes contended: a single vehicle with mandatory return was assumed, but the fungible-fleet null (L-2) was never measured, so contention was never isolated here",
+      "Garrido supplies R03 physics that differ from our three declared relaxations",
+      "the dispatch trigger becomes a decision variable: this screen froze a shared staging-threshold trigger across all policies to isolate route choice, so dispatch TIMING was held constant by construction"
+    ],
+    "would_not_reopen_for": [
+      "extending the grid further along frequency or duration — saturation is reached and passed",
+      "training a learner on the same contract — no headroom exists for one to capture"
+    ]
+  }
+}
