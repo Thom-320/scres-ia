@@ -213,12 +213,39 @@ def screen(n_r22, dur, contract, n_tapes=40, seed0=8_500_001):
     }
 
 
+DEFAULT_CELLS = [(1, 24), (2, 24), (4, 24), (2, 72), (4, 72), (4, 120), (6, 120), (8, 72)]
+
+
+def parse_cells(spec: str):
+    """`6x120,8x72` -> [(6, 120.0), (8, 72.0)]. Lets L-0 extend the grid past the sign change
+    without deriving a second runner from this one."""
+    out = []
+    for tok in spec.split(","):
+        tok = tok.strip()
+        if not tok:
+            continue
+        n, dur = tok.lower().split("x")
+        out.append((int(n), float(dur)))
+    return out
+
+
 if __name__ == "__main__":
+    import argparse
+
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--cells", default=None, help="e.g. '6x120,10x168'; default = the v2 grid")
+    ap.add_argument("--n-tapes", type=int, default=40)
+    ap.add_argument("--out", default="results/paper2_search/program_l_full_des_gate.json")
+    ap.add_argument("--label", default="program_l_full_des_development_screen_v2")
+    args = ap.parse_args()
+
+    cells = DEFAULT_CELLS if args.cells is None else parse_cells(args.cells)
+
     C = RouteContract()
     grid = []
     # thesis-native-ish -> disclosed multi-day/frequent
-    for n_r22, dur in [(1, 24), (2, 24), (4, 24), (2, 72), (4, 72), (4, 120), (6, 120), (8, 72)]:
-        grid.append(screen(n_r22, dur, C, n_tapes=40))
+    for n_r22, dur in cells:
+        grid.append(screen(n_r22, dur, C, n_tapes=args.n_tapes))
         r = grid[-1]
         print(
             f"n_R22={r['n_r22']} dur={r['dur_h']:.0f}h  heuristic_true_state_delta={r['heuristic_true_state_delta']:+.4f}  H_obs={r['H_obs']:+.4f} "
@@ -227,14 +254,17 @@ if __name__ == "__main__":
         )
     json.dump(
         {
-            "schema": "program_l_full_des_development_screen_v2",
+            "schema": args.label,
             "generated": "2026-07-13",
             "contract": C.__dict__,
             "episode_days": EP_DAYS,
+            "cells_requested": [[n, d] for n, d in cells],
+            "n_tapes": args.n_tapes,
+            "tape_seed0": 8_500_001,
             "note": "FULL-DES development screen on canonical ret_excel; diagnostic true-state rule is NOT H_PI; comparator frontier incomplete; NO learner trained",
             "grid": grid,
         },
-        open("results/paper2_search/program_l_full_des_gate.json", "w"),
+        open(args.out, "w"),
         indent=2,
     )
-    print("saved results/paper2_search/program_l_full_des_gate.json")
+    print(f"saved {args.out}")
