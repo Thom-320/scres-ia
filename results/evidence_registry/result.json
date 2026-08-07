@@ -1,0 +1,113 @@
+{
+ "by_evidence_grade": {
+  "CONFIRMATORY": 2,
+  "DEVELOPMENT": 89,
+  "DIAGNOSTIC": 5,
+  "NEGATIVE_OR_HALTED": 20,
+  "REPLAY": 39,
+  "UNCONTRACTED": 57
+ },
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "EVIDENCE_REGISTRY_BUILT",
+ "confirmatory": [
+  "results/grid_transfer_confirmation_v2/result.json",
+  "results/gsa_confirmation/result.json"
+ ],
+ "contract_path": "docs/ENMIENDA_REGISTRO_DE_EVIDENCIA_2026-08-07.md",
+ "contract_sha256": "8e78b344536e8c6440d29ff4e437a0ea9b84c5fe73980d0b40c842aa90947ff5",
+ "created_at": "2026-08-07T22:48:33.176787+00:00",
+ "dedup_key": [
+  "contract_sha256",
+  "execution_fingerprint",
+  "seed_block_signature",
+  "endpoint",
+  "estimand_family"
+ ],
+ "falsifiers": {
+  "all_passed": true,
+  "f1_the_key_collapses_a_known_duplicate_family": {
+   "evidence": {
+    "n_artifacts": 10,
+    "n_distinct_keys": 3,
+    "why_it_can_fail": "the meta-learner family is many directories over two tape sets; a key that leaves them all distinct is counting files again"
+   },
+   "passed": true
+  },
+  "f2_the_key_does_not_over_merge_different_blocks": {
+   "evidence": {
+    "n_distinct_keys": 2,
+    "n_slices": 2,
+    "why_it_can_fail": "the local and vps H3 slices are DIFFERENT seed blocks (6000001-90 and 6000091-120); merging them would erase the independence the n=120 merge depends on"
+   },
+   "passed": true
+  },
+  "f3_incomplete_keys_are_never_merged": {
+   "evidence": {
+    "n_incomplete": 190,
+    "why_it_can_fail": "treating a missing field as equal to another missing field fuses unrelated runs, which is the exact failure this registry exists to end"
+   },
+   "passed": true
+  },
+  "f4_the_grade_is_derived_not_copied": {
+   "evidence": {
+    "examples": [
+     "results/garrido_h2_h3_confirmation_v1/result.json",
+     "results/gsa_confirmation_corrective/result.json",
+     "results/headroom/g3_obs_conversion_v2_replay_20260803/result.json",
+     "results/metric_audit/ret_metric_repair_confirmation_v1/adjudication.json"
+    ],
+    "why_it_can_fail": "if no artifact authored as CONFIRM is graded anything else, the grade is just echoing claim_status and certifies nothing"
+   },
+   "passed": true
+  },
+  "f5_off_head_artifacts_are_included": {
+   "evidence": {
+    "off_head": [
+     "results/garrido_h2_h3_confirmation_v1/result.json",
+     "results/q_r1/successor_confirmation_v1/merged/result.json"
+    ],
+    "why_it_can_fail": "a glob over the worktree cannot see other branches, and leaving them out is how the census concluded the project had one confirmation"
+   },
+   "passed": true
+  }
+ },
+ "module_manifest": {
+  "entry_script": "scripts/build_evidence_registry_v1.py",
+  "entry_script_sha256": "c63c25697bdc7fdfdff51ee8d9f2a37b933c1680a3af3207691b9b200a0a5ad7",
+  "missing": [],
+  "modules": {
+   "supply_chain/arm_runner.py": "35135c537d9260832677ab6b4e344229d6b9f4810df8bdef9efd51b58fcac68a",
+   "supply_chain/seed_custody.py": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "n_artifacts": 215,
+ "n_collapsed_as_rereport": 3,
+ "n_distinct_experiments": 212,
+ "n_skipped_no_verdict": 41,
+ "preregistration": "docs/ENMIENDA_REGISTRO_DE_EVIDENCIA_2026-08-07.md",
+ "reference_path": "results/step3_split_pooled/result.json",
+ "reference_sha256": "1cfc4000b163a9865d7ca704e30d043c2697618a25645c03f43e9d6e16759eea",
+ "registry_path": "research/evidence_registry.jsonl",
+ "schema_version": "evidence_registry_v1",
+ "scope": "INDEX_ONLY_NO_SCIENTIFIC_CLAIM_NO_SEEDS",
+ "self_sha256": "00a472f21c7158683fae649fef8e9e41659d96a6ec0efb4fa2165138d41f4825"
+}
