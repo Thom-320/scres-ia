@@ -58,11 +58,27 @@ def main() -> int:
     rng = np.random.default_rng(20260806)
 
     rows, per_shard_seeds, shard_names = [], {}, []
+    ddmrp_postures: set = set()
     for shard in args.shards:
         path = shard / "rows.json" if shard.is_dir() else shard
         data = json.loads(path.read_text())
-        name = shard.name
+        # `results/step3_s3_r2r_a/full` and `.../s4_r2r_b/full` both end in "full", so shard.name
+        # collided and made every shard look like the same one -- which f1 then read as total
+        # overlap. Take the parent when the basename is a phase directory.
+        name = shard.parent.name if shard.name in {"full", "preflight"} else shard.name
         shard_names.append(name)
+        # How many DISTINCT postures does DDMRP actually emit? Projecting it onto the shared 6^3
+        # domain was the right repair for rights-matching, but if the projection saturates it the
+        # arm stops being DDMRP and becomes a constant wearing its name.
+        traces = (shard / "traces.json") if shard.is_dir() else None
+        if traces and traces.exists():
+            for tr in json.loads(traces.read_text()).values():
+                for ev in (tr if isinstance(tr, list) else []):
+                    d = ev.get("ddmrp") if isinstance(ev, dict) else None
+                    if isinstance(d, dict):
+                        post = d.get("projected_posture") or d.get("posture")
+                        if post is not None:
+                            ddmrp_postures.add(tuple(post))
         per_shard_seeds[name] = sorted({int(r["tape_seed"]) for r in data})
         for r in data:
             rows.append(dict(r, shard=name))
@@ -161,6 +177,18 @@ def main() -> int:
             "evidence": {"why_it_can_fail": "R1r and R2r are different estimands; averaging them "
                                             "would invent a number that describes neither",
                          "families": families}},
+        "f6_ddmrp_actually_varies_its_posture": {
+            "passed": len(ddmrp_postures) > 1,
+            "evidence": {"why_it_can_fail": "v1's defect 4 was a stylised DDMRP. v2 projected it "
+                                            "onto the shared 6^3 domain, which is correct for "
+                                            "rights-matching -- but if the projection saturates, "
+                                            "the arm emits ONE posture and the paired contrast "
+                                            "against the best static is zero by construction. Then "
+                                            "we are not measuring DDMRP, we are measuring "
+                                            "'saturate the buffers', and no claim about DDMRP is "
+                                            "supported in either direction",
+                         "n_distinct_postures": len(ddmrp_postures),
+                         "postures": [list(p) for p in sorted(ddmrp_postures)][:8]}},
         "f5_the_ceiling_arm_is_not_counted_as_a_winner": {
             "passed": all(CEILING_ARM not in w for w in winners.values()),
             "evidence": {"why_it_can_fail": "greedy_pi is perfect-information and beats the "
@@ -196,6 +224,11 @@ def main() -> int:
         "module_manifest": module_manifest(MODULES, script=__file__),
         "preregistration": "docs/PREREGISTRO_PASO3_GARRIDO_MPC_EXPANDIDO_2026-08-06.md",
         "metric": METRIC, "service_metric_applied": SERVICE,
+        "ddmrp_domain_note": (
+            "Garrido named DDMRP as the incumbent to beat. If f6 fails, the artifact supports NO "
+            "claim about DDMRP -- not that it converts and not that it does not. Repair is either "
+            "widening the admissible domain until top-of-green fits, or reporting DDMRP outside "
+            "the shared domain with the asymmetry declared. Both are design decisions."),
         "service_guardrail_deviation": (
             "The preregistration names worst_product_fill; the runner persists only "
             "flow_fill_rate, an aggregate that cannot detect a single product being abandoned. "
