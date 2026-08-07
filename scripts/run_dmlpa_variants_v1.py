@@ -146,6 +146,14 @@ def main() -> int:
             if name != UNTRAINED:
                 model.learn(total_timesteps=args.total_steps, progress_bar=False)
             mean, sd = evaluate(model, args.eval_episodes)
+            # The vec env is NOT closed by garbage collection here: measured 8 worker processes
+            # left behind per cell, 24 alive and 4.41 GB after three cells on a 16 GB machine.
+            # Thirty cells would have reached ~240 processes and OOMed around cell twelve.
+            try:
+                model.env.close()
+            except Exception:
+                pass
+            del model
             per_arm[name].append(mean)
             tag = " (SIN ENTRENAR)" if name == UNTRAINED else ""
             print(f"    {name:<16} semilla {seed}  ReT {mean:+.5f} ± {sd:.5f}"
