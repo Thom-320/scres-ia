@@ -1,0 +1,146 @@
+{
+ "H_PI": 0.012926135742150043,
+ "H_obs": {
+  "lcb95": 0.00867768343802695,
+  "mean": 0.012286775167294721,
+  "n": 120,
+  "ucb95": 0.016043205900984406
+ },
+ "best_static_calendar": [
+  "A",
+  "B",
+  "A",
+  "B"
+ ],
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "GSA_CONFIRMED_ON_VIRGIN_BLOCK_AS_A_ONE_BIT_CALENDAR_CHOICE",
+ "contract_path": "docs/CORRECCION_FALSADORES_CONFIRMACION_GSA_2026-08-07.md",
+ "contract_sha256": "13e7ccf20176dc9469241181ccabc58e2963ee76d5ed8966e9f745761f9f1f67",
+ "created_at": "2026-08-07T18:55:24.672333+00:00",
+ "elapsed_seconds": 5.394338625003002,
+ "eta": 0.9505373773253464,
+ "falsifiers": {
+  "all_passed": true,
+  "f1_theta_and_seeds_are_unchanged_from_the_confirmation": {
+   "evidence": {
+    "supersedes": "results/gsa_confirmation/result.json",
+    "supersedes_seal": "f1181706cf591edb669a1735eab6d6c1b9f116caed3e4175bfb1bafe1ab8adc9",
+    "why_it_can_fail": "a corrective analysis that also moved theta or the seeds would be a new experiment on a burned block"
+   },
+   "passed": true
+  },
+  "f2_the_placebo_preserves_the_action_marginal": {
+   "evidence": {
+    "n_distinct_sequences": 2,
+    "tie_fraction": 0.6166666666666667,
+    "ties_expected_with_two_valued_treatment": 74,
+    "why_it_can_fail": "a placebo that changes how often each sequence is played is not an assignment null; it is a different policy"
+   },
+   "passed": true
+  },
+  "f3_the_estimator_returns_a_negative_on_a_known_negative_control": {
+   "evidence": {
+    "control": "obs minus perfect-information oracle",
+    "result": {
+     "lcb95": -0.001447611268211855,
+     "mean": -0.0006393605748553234,
+     "n": 120,
+     "ucb95": -7.048799550112284e-05
+    },
+    "why_it_can_fail": "if the estimator cannot return a negative even where the sign is known a priori, it cannot fail to confirm and confirms nothing"
+   },
+   "passed": true
+  },
+  "f4_the_gain_is_not_bought_by_attending_fewer": {
+   "evidence": {
+    "corr": -0.08118741440217522,
+    "why_it_can_fail": "a strongly negative correlation would mean the resilience gain is bought by abandonment"
+   },
+   "passed": true
+  }
+ },
+ "module_manifest": {
+  "entry_script": "scripts/run_gsa_confirmation_corrective_v1.py",
+  "entry_script_sha256": "7f59ef2a06989799c195dd265884a801dc2c1ebf9f9ebe881bfca06ffa32d83c",
+  "missing": [],
+  "modules": {
+   "supply_chain/arm_runner.py": "35135c537d9260832677ab6b4e344229d6b9f4810df8bdef9efd51b58fcac68a",
+   "supply_chain/headroom_sensitivity.py": "dd195ebc86d3abfd9b4470bdc4a9492ac1a7d324027534f60457690dd3991bac",
+   "supply_chain/program_g.py": "0d172fffb53a0edc9069de86b33d292439db86792313eb2f36a7d1423e7ce51e"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "n_tapes": 120,
+ "negative_control_obs_minus_oracle": {
+  "lcb95": -0.001447611268211855,
+  "mean": -0.0006393605748553234,
+  "n": 120,
+  "ucb95": -7.048799550112284e-05
+ },
+ "obs_minus_permuted_placebo": {
+  "lcb95": 0.049801679249144644,
+  "mean": 0.07210657135008629,
+  "n": 120,
+  "ucb95": 0.0959939565344071
+ },
+ "placebo_ties": 74,
+ "policy_sequences": {
+  "AAAA": 31,
+  "ABAB": 89
+ },
+ "preregistration": "docs/CORRECCION_FALSADORES_CONFIRMACION_GSA_2026-08-07.md",
+ "reference_path": "results/gsa_confirmation/result.json",
+ "reference_sha256": "f1181706cf591edb669a1735eab6d6c1b9f116caed3e4175bfb1bafe1ab8adc9",
+ "reported_not_blocking": {
+  "attended_delta": -0.03333333333333333,
+  "lost_delta": 0.03333333333333333,
+  "ret_quantity_delta": 0.0128413498879756,
+  "worst_cssu_fill_delta": -0.12916666666666668
+ },
+ "run_role": "CORRECTIVE_REANALYSIS_OF_A_CONFIRMATION",
+ "schema_version": "gsa_confirmation_corrective_v1",
+ "scope": "SAME_BURNED_BLOCK_SAME_THETA_ONLY_THE_FALSIFIERS_AND_PLACEBO_ARE_CORRECTED",
+ "seed_block": {
+  "end": 7700120,
+  "id": "g3a_v2_development",
+  "start": 7700001
+ },
+ "self_sha256": "e26b2b16107274ca08549b5c2bfa44c593246557f9105a647310222b60d774fe",
+ "sequences_in_static_comparator": {
+  "AAAA": true,
+  "ABAB": true
+ },
+ "supersedes": {
+  "claim_status": "GSA_CONFIRMED_ON_VIRGIN_BLOCK",
+  "path": "results/gsa_confirmation/result.json",
+  "self_sha256": "f1181706cf591edb669a1735eab6d6c1b9f116caed3e4175bfb1bafe1ab8adc9",
+  "why": "f4 demanded an unsatisfiable property and f6 tested the data instead of the estimator; both were my specification errors"
+ },
+ "theta": {
+  "commonality": 0.887,
+  "lead": 2,
+  "persistence": 0.0,
+  "r22_prob": 0.107,
+  "signal_q": 0.532,
+  "surge_mult": 1.946
+ },
+ "what_the_defect_exposed": "The belief policy emits only two distinct action sequences across 120 tapes, and BOTH are members of the periodic-calendar comparator set; the best static calendar is one of them. The lane therefore shows that a ONE-BIT per-tape choice between two fixed calendars captures most of the perfect-information ceiling -- sharper, and more defensible, than 'an adaptive policy beats static'."
+}
