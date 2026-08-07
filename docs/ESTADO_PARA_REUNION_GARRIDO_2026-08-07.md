@@ -15,13 +15,17 @@ declara como no medido.
 | sustitutos a presupuesto igualado | una neurona de **5 parámetros** empata a MLP de 369 y KAN de 380 | `results/search_surrogates/` |
 | bake-off a **200.000 parámetros igualados** | **KAN − MLP = −0,475 [−1,548 · +0,598]** — nada separa | `results/architecture_bakeoff/` |
 
-**No hay prima neural en ningún entorno medido.** Y eso es la respuesta a Q1, no un fracaso: lo que
-imita el aprendizaje de la cadena es **lo que cierra el lazo ③→⑧**, que es exactamente su Fig. 5 — y
-le bastan cinco parámetros.
+**No hay prima neural como política o buscador en los entornos medidos.** Sí aparece una ventaja
+descriptiva de KAN como *surrogate* supervisado de una superficie ya construida (§5), que es una
+tarea distinta. La respuesta provisional a Q1 es por tanto funcional, no arquitectónica: lo que
+imita el aprendizaje de la cadena es **lo que cierra el lazo ③→⑧ y conserva estado entre
+corridas**. En la búsqueda, cinco parámetros bastan para empatar a aproximadores mayores.
 
-**El efecto Alzheimer tiene precio medido:** la memoria ahorra **7,90 corridas [6,88 · 8,93]** frente
-a la misma neurona reseteada, y **5,43 [4,01 · 6,78]** frente al OFAT de la tesis
-(`results/garrido_meta_learner_v2/`).
+**El efecto Alzheimer sobrevive al normalizador de prefijo**, en un *replay* de desarrollo sobre
+cintas ya usadas: AUC de *regret* `memoria−reset` **+0,06070 [LCB95 +0,04556]** y
+`memoria−OFAT` **+0,04821 [LCB95 +0,03325]**. El secundario censurado equivale a 5,83 y 5,33
+corridas ahorradas, respectivamente (`results/garrido_normaliser_audit_v3/`). Las cifras 7,90 y
+5,43 corresponden al normalizador oráculo y no son el titular corregido.
 
 > **Las cifras 7,24 / 12,42 / 13,54 están retiradas** — vinieron de un runner con fuga de
 > normalizador. Si aparecen en algún borrador, hay que quitarlas.
@@ -32,9 +36,12 @@ Como **optimización por simulación sobre configuraciones**: el resultado obser
 alimenta el estado retenido que elige la configuración siguiente. Es su Fig. 2 leída entre corridas,
 no dentro del episodio.
 
-**Confirmación prospectiva, semillas vírgenes, ya cerrada:** transferencia de rejilla 288 → 4.608,
-`GRID_TRANSFER_CONFIRMED__UCB1`, δ **+0,03073 [LCB +0,01990]** y **+0,05744 [+0,04989]**, 60
-semillas vírgenes (`results/grid_transfer_v1/`).
+**Confirmación prospectiva ya cerrada:** transferencia de rejilla 288 → 4.608,
+`GRID_TRANSFER_CONFIRMED__UCB1`, δ **+0,03073 [LCB +0,01990]** contra su réplica marginal y
+**+0,05744 [+0,04989]** contra arranque en frío, n = 60
+(`results/grid_transfer_confirmation_v2/`). La custodia demuestra coincidencia exacta con el
+bloque declarado y **ninguna colisión conocida**; el inventario central se declara incompleto, por
+lo que no prueba virginidad absoluta.
 
 ## 2. Su método del oráculo — y una advertencia
 
@@ -61,7 +68,7 @@ lo que retiene va por delante de todo lo que no.**
 |---|---|
 | 1 · baseline (simulación de Garrido, políticas estáticas) | **hecho** — las 216 posturas enumeradas |
 | 2 · MPC sobre las variables originales | **hecho**, y reclasificado como no válido en su v1; reparado en v2 |
-| 3 · **MPC sobre las variables expandidas** | **CORRIENDO** — 4 shards, 6 tapes × 5 escenarios × 216 posturas × 52 semanas, semillas vírgenes 1.420.001+ |
+| 3 · **MPC sobre las variables expandidas** | **CORRIENDO, DESARROLLO** — 4 shards, 6 tapes × 5 escenarios × 216 posturas × 52 semanas. El bloque 1.420.001+ no consta aún en el inventario central y no se describe como virgen |
 | 4 · KAN bajo la misma configuración ampliada | **cuaderno entregado a David**, con los rivales embebidos |
 
 **El paso 3 es el que define dónde puede vivir la prima neural**, porque el residual se mide contra
@@ -77,8 +84,9 @@ DOI externo, y sus autores lo etiquetan «Technical Report». **Dos años sin pu
 defendible es *«coincidimos con ellos en un dominio que ellos no tocaron»*. Y su ablación juega a
 nuestro favor: la ventaja de la KAN viene de **la base B-spline**, y un MLP con B-splines la iguala.
 
-**Hueco de novedad: intacto.** Nada publicado combina KAN × resiliencia de cadena × DES.
-(`docs/REVISION_LITERATURA_KAN_2026-08-06.md`)
+**Hueco de novedad, formulado de manera auditable:** la búsqueda documentada no encontró un
+estudio *peer-reviewed* que combine KAN, medición de SCRES y DES. No es una afirmación universal de
+ausencia y debe acompañarse de fecha, bases y consulta (`docs/REVISION_LITERATURA_KAN_2026-08-06.md`).
 
 ## 5. La KAN: pierde como política, gana como surrogate
 
@@ -88,8 +96,9 @@ justamente la contribución.
 **Ahorro de parámetros como política de control: medido, y no se sostiene.** A 200.000 parámetros
 igualados, KAN − MLP = **−0,475 [−1,548 · +0,598]**, y cuesta **4,1×** por decisión.
 
-**Como surrogate supervisado de la superficie de diseño: gana, y con margen.** A **532 contra 529
-parámetros**, evaluado sobre un cuarto **retenido** (`results/kan_interpretability/`):
+**Como surrogate supervisado de la superficie de diseño: ventaja descriptiva clara.** A **532
+contra 529 parámetros**, evaluado sobre una partición aleatoria retenida
+(`results/kan_interpretability/`, desarrollo, sin adjudicación):
 
 | contexto | KAN R²_out | MLP R²_out |
 |---|---:|---:|
@@ -104,10 +113,12 @@ parámetros**, evaluado sobre un cuarto **retenido** (`results/kan_interpretabil
 la KAN está en **representación de funciones**. Una superficie de diseño *es* una función; una
 política de control no lo es.
 
-**Y las curvas univariadas son legibles y no son artefacto de la base.** Reajustado sobre superficie
-**barajada**, el R² retenido sale **negativo (−0,556 a −1,938)** y la distancia de curvas es
-0,317–0,428. Las formas son la cadena, no el spline. Eso es la interpretabilidad que él vende,
-hecha concreta y con su control.
+Las curvas mostradas son **cortes de respuesta** con las otras coordenadas fijadas en su mediana;
+no son, por sí solas, las funciones de arista internas de la KAN. El control barajado confirma que
+la superficie real contiene señal predictiva (R² retenido −0,556 a −1,938 al barajar), pero una
+sola partición y una distancia de curvas no demuestran estabilidad ni fidelidad interpretativa.
+Antes de citarlas como mecanismo hacen falta CV agrupada/por ejes, escalado ajustado sólo en
+entrenamiento y estabilidad de las formas entre folds.
 
 De paso confirma el resultado de turnos por otra vía: el recorrido de `shifts` en las curvas es
 **0,05–0,28** frente a **1,5–2,6** de `op9_rop`. El turno es la variable que menos mueve la
@@ -121,10 +132,10 @@ superficie.
   (`results/shift_pareto_diagnostic/`)
 * **Riesgo de acumular inventario al final del horizonte:** las filas del paso 3 traen
   `terminal_stock`; **se reporta en cuanto aterricen los shards**.
-* **Métrica de resiliencia:** 162 derivaciones de sus dos métricas + 661 recurvaturas. **Bajo la
-  curvatura que él publicó no hay headroom** (0,0000 en 288, 0,0195 en la extendida). El headroom
-  sólo aparece con curvatura que él no declaró, y **sólo la amante del riesgo llega al umbral** —
-  la aversión mueve el headroom **hacia cero**.
+* **Métrica de resiliencia:** 162 derivaciones de sus dos métricas + 661 recurvaturas. Bajo la
+  curvatura publicada no aparece el *headroom* requerido (0,0000 en 288, 0,0195 en la extendida).
+  La lectura de curvatura sigue siendo **descriptiva**: el artefacto endurecido falla el falsador de
+  monotonicidad, por lo que no autoriza el veredicto «únicamente la postura amante del riesgo».
 
 ## 7. Lo que le debemos y va con retraso
 
