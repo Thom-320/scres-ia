@@ -1,0 +1,144 @@
+{
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "DETERMINISM_REPAIRED_SEED_IS_A_REPLICATION_UNIT_AGAIN",
+ "consequence": "the seed is a replication unit again and the +-2.4 band collapses, so the track_b neural premium becomes MEASURABLE. It is still not CONFIRMABLE: no virgin seed block remains.",
+ "contract_path": "docs/RESULTADO_REPARACION_DETERMINISMO_2026-08-07.md",
+ "contract_sha256": "94f3ec59273dab8409c05527c4dd27243ec8eb2def0d4381298220c094f0a6db",
+ "created_at": "2026-08-07T19:49:00.385079+00:00",
+ "elapsed_seconds": 6.688647999995737,
+ "env_control": {
+  "different_seed": [
+   56.21840544204477,
+   57.69380306084522,
+   58.5271741752818,
+   61.51239545467496,
+   54.80959081946854
+  ],
+  "run_a": [
+   57.797947306929046,
+   59.8326627741988,
+   58.7558557729154,
+   62.930698606724086,
+   52.34539670302954
+  ],
+  "run_b": [
+   57.797947306929046,
+   59.8326627741988,
+   58.7558557729154,
+   62.930698606724086,
+   52.34539670302954
+  ]
+ },
+ "false_start_recorded": "the same line exists in MFSCGymEnv; repairing only the base class changed nothing because track_b_v1 uses the subclass",
+ "falsifiers": {
+  "all_passed": true,
+  "f1_unseeded_episodes_now_reproduce": {
+   "evidence": {
+    "pre_fix_episode_two": [
+     48.67418738570144,
+     51.8196314158834
+    ],
+    "run_a": [
+     57.797947306929046,
+     59.8326627741988,
+     58.7558557729154,
+     62.930698606724086,
+     52.34539670302954
+    ],
+    "run_b": [
+     57.797947306929046,
+     59.8326627741988,
+     58.7558557729154,
+     62.930698606724086,
+     52.34539670302954
+    ],
+    "why_it_can_fail": "if episodes after the first still diverge the repair did not reach the path the vec env uses, and the DEEPER_THAN_BOTH verdict stands"
+   },
+   "passed": true
+  },
+  "f2_the_tape_is_not_pinned": {
+   "evidence": {
+    "different_seed_trajectory": [
+     56.21840544204477,
+     57.69380306084522,
+     58.5271741752818,
+     61.51239545467496,
+     54.80959081946854
+    ],
+    "why_it_can_fail": "deriving every episode from a constant would make all episodes identical, which is determinism bought by destroying the experiment"
+   },
+   "passed": true
+  },
+  "f3_a_full_training_run_reproduces": {
+   "evidence": {
+    "delta": 0.0,
+    "n_envs": 8,
+    "replicas": [
+     93.973236562416,
+     93.973236562416
+    ],
+    "seed": 9492,
+    "steps": 20000,
+    "why_it_can_fail": "the env reproducing is necessary but not sufficient; two full PPO runs at 8 envs must land on the same number or something else is still leaking"
+   },
+   "passed": true
+  }
+ },
+ "module_manifest": {
+  "entry_script": "scripts/run_determinism_repair_control_v1.py",
+  "entry_script_sha256": "a828813abfc49cae3e237ba38d19f23ae6712ddf11cbd801484508b86d23665a",
+  "missing": [],
+  "modules": {
+   "supply_chain/arm_runner.py": "35135c537d9260832677ab6b4e344229d6b9f4810df8bdef9efd51b58fcac68a",
+   "supply_chain/env.py": "8d37e81291e08e937f06aac290de734899979f837252b9adfb804196771e9537",
+   "supply_chain/env_experimental_shifts.py": "44d09032babece858577d4ed7f9c60b7d605d1a7b869b6e321ab7e1c25669851",
+   "supply_chain/supply_chain.py": "2f348e5922cbbecf167b45cf0045765010beaaecdcb0fe6de88f259c989460f6"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "pre_fix_evidence": {
+  "across_seed_spread": 2.102,
+  "episode_two": [
+   48.67418738570144,
+   51.8196314158834
+  ],
+  "fixed_seed_spread": 2.363
+ },
+ "preregistration": "docs/RESULTADO_REPARACION_DETERMINISMO_2026-08-07.md",
+ "reference_path": "results/determinism_diagnostic/result.json",
+ "reference_sha256": "b8f23013df815addbb819327a56b886403dac2a59828421a7bc67cdc6e32fa69",
+ "root_cause": "MFSCGymEnvShifts.reset passed seed=None straight to MFSCSimulation on unseeded resets, so the simulator reseeded from OS entropy. Vec envs seed only the first reset.",
+ "schema_version": "determinism_repair_control_v1",
+ "scope": "INSTRUMENT_REPAIR_CONTROL_NO_SEEDS_NO_SCIENTIFIC_CLAIM",
+ "self_sha256": "6aea0c525e2f24494c77baa68e89234a53bba4a92972eb4baa33e43873e237b1",
+ "supersedes": {
+  "claim_status": "DEEPER_THAN_BOTH_ENVIRONMENT_LIMIT",
+  "path": "results/determinism_diagnostic/result.json",
+  "why": "that verdict was correct and honest: the defect sat in a layer all three tested configurations shared, so no contrast among them could isolate it. Naming it needed a learner-free test"
+ },
+ "training_control": {
+  "delta": 0.0,
+  "replicas": [
+   93.973236562416,
+   93.973236562416
+  ]
+ }
+}
