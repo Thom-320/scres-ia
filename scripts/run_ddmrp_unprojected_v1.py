@@ -74,7 +74,10 @@ def run_unprojected(tape, horizon: float, family: str, epoch_hours: float):
            "lost_orders": float(metric.get("lost_orders", 0.0)),
            "delivered_rations": float(metric.get("delivered_rations", 0.0)),
            "demanded_rations": float(metric.get("demanded_rations", 0.0)),
-           "terminal_stock": float(metric.get("terminal_stock", 0.0))}
+           # NOT metric.get(...): compute_episode_metrics does not provide terminal_stock, so a
+           # default silently wrote 0 into every row. The step-3 runner reads it off the simulator
+           # (run_expanded_contract_comparators_v2.py:304) and so does this.
+           "terminal_stock": float(sum(sim._inventory_detail().values()))}
     return row, trace
 
 
