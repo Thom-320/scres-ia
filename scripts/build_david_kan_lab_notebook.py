@@ -90,10 +90,21 @@ comparable entre máquinas).
 
 **Qué NO respondió ese bake-off, y es lo único que este cuaderno mide en exclusiva:** corrió
 `arm: independent_only`. **El contraste `persistent` vs `independent` —la memoria— sigue abierto**,
-y es donde este proyecto tiene su positivo medido. **Las cifras 7,24 / 12,42 / 13,54 están
-RETIRADAS** — salieron de un runner con fuga de normalizador. Las vigentes, del artefacto
-`results/garrido_meta_learner_v2/result.json`: la memoria ahorra **7,90 corridas [6,88 · 8,93]**
-frente a la misma neurona reseteada, y **5,43 [4,01 · 6,78]** frente al OFAT de la tesis.
+y es donde este proyecto tiene su positivo medido. **Cuidado con las cifras que circulan:**
+7,24 / 12,42 / 13,54 estan **retiradas** (fuga de normalizador), y 7,90 / 5,43 son del
+normalizador **oraculo**, que escala mirando el rango de configuraciones aun no corridas.
+
+Las vigentes salen del normalizador de **prefijo** -solo lo ya ejecutado-, artefacto
+`results/garrido_normaliser_audit_v3/` (`ALZHEIMER_EFFECT_SURVIVES_AN_HONEST_NORMALISER`).
+Primario `auc_regret_norm`, porque el conteo de corridas esta censurado a tasas muy distintas
+por brazo (6 % la memoria contra 61 % el azar):
+
+| contraste | AUC de regret | IC95 |
+|---|---:|---|
+| memoria - reset | **+0,06070** | [+0,04556 . +0,08020] |
+| memoria - OFAT | **+0,04821** | [+0,03325 . +0,06320] |
+
+En corridas ahorradas -**secundario censurado**- eso son 5,83 [4,44 . 7,31] y 5,33 [3,25 . 7,13].
 
 > **Recomendación:** no vuelvas a gastar el presupuesto en la comparación de arquitecturas. Fija
 > `ARCH` en la que prefieras y gasta las 9 h en **`MEMORY_ARM = 'persistent'` contra su gemelo
