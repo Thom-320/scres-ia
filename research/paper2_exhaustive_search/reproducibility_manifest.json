@@ -102,7 +102,7 @@
     "scripts/audit_paper2_switch4_exact_ties.py": "8e96b602b844285261102a59c4906a19b6aed634b443b9ffbb0ddbc34f0704f3",
     "scripts/audit_ret_excel_request_snapshot_v2.py": "fe6341943b455b6c695fb6100ac671ca556ab5087b8fcc2efec85da7de0dc3e5",
     "scripts/audit_ret_excel_visible_source_semantics.py": "05c0c912cb54d7c0dbd467a952c584d1046d660ac18a09a71afbbaf24fc0765d",
-    "scripts/bound_program_o_affected_orders.py": "b7afb67c3fc76c6e0111eb42f4dd3a18cc0754670716ee62a3abb01f97dfbb02",
+    "scripts/bound_program_o_affected_orders.py": "93e075a389ab16d1eb9b66b43d895b0bf5f15c881623168cca9ebf97c0f9e870",
     "scripts/launch_paper2_switch4.py": "19b1fc8bf23a922db6622f188a061e37929771f35186c7a0d7b4fa95cf6c2f79",
     "scripts/launch_program_j_request_snapshot_v2_108cell.py": "b57f2e8ebdb8fc830df715381e5d912cbc1b347607b6c7f32185104810de0eb3",
     "scripts/launch_program_m_shared_lift_hpi.py": "dc74d11a08913b54167ff37dd266fa8ac16a1505b87245f9f12ba186f4512fa2",
@@ -112,12 +112,12 @@
     "scripts/record_mtr_switch4_metric_quarantine.py": "3929e9ea396a70310e481633c327c27bd17de19e79e5af31c4663efb7c1985cf",
     "scripts/refresh_paper2_search_manifest.py": "be022235794645282b220b578069c365cf1cac6a69cfd9078aee30f7827da847",
     "scripts/screen_program_m_shared_lift_hpi.py": "3dbcc53256606aaf0738f5ca9781668268d4af78be45d9de3ca6d0458bf8804f",
-    "scripts/screen_program_o_exact_transducer.py": "7738e3a69888b1bfc35904645785891edaab24add200d26035f186c5b602fea1",
+    "scripts/screen_program_o_exact_transducer.py": "bd6ae66ba9590dac8f9684d7dc924e2b15d916699dc0f12fafa76140b594a55e",
     "scripts/search_paper2_bottleneck_switch4.py": "4bbd7348b7cfcdcfb9bbef9b19ab54e154bb00bfc083bcbefa20d35cf4c04a56",
     "scripts/validate_paper2_switch4_producer_custody.py": "e9b14a64ddd5cfb0632448a1defcfe12840901123fd26028d600f2c826a37aaa",
     "scripts/validate_phase0_failure_taxonomy.py": "8c1bb4840fca21972e5a1c37a510a335207d3abc4e26b8889c0ef6625c35fd21",
     "scripts/validate_program_m_shared_lift_hpi.py": "21a7e96158b38190f3973f575dca3b1b74ba78bca23515856bfa6a0d49c64416",
-    "scripts/validate_program_o_exact_transducer.py": "657d3e6715c8ee2a5664fafe9f78a349b52d2923787f6b0984e62509eb233c73",
+    "scripts/validate_program_o_exact_transducer.py": "5fbf208fce7d56d145def11a4a02db3e5af333a7499db7213433a618c6f96986",
     "scripts/verify_paper2_bottleneck_switch4.py": "6008cff57b13e1c1cf9085c30b8e9057ef10e3885d8281f6db2fe4211b0045a4",
     "scripts/verify_paper2_exhaustion.py": "ab40f04bb4d75fd814f347364296ac56b65c5ac9e7ba420c3c1728751d029b63",
     "scripts/verify_paper2_terminal_return.py": "efa4e3d8c981ee9f4efca63150727ee7f7637d8568590d1537e2638ee7d2ac0d",
@@ -209,6 +209,50 @@
   ],
   "paper2_confirmed": false,
   "paper3_authorized": false,
+  "refreeze_log": [
+    {
+      "date": "2026-08-06",
+      "declared_broken": [
+        {
+          "consequence": "test_reproducibility_manifest_hashes_every_listed_artifact_and_source stays RED on this entry, deliberately. Closing it needs either a re-run of the affected artifacts under current physics or a written retirement of the claims they anchor -- a PI decision, not a manifest edit.",
+          "current_sha256": "2f348e5922cbbecf167b45cf0045765010beaaecdcb0fe6de88f259c989460f6",
+          "expected_sha256": "d8fd93475b3904bcc48206b803cc842c5f2ad05f9c97a775e4eedf5c5ca8401a",
+          "path": "supply_chain/supply_chain.py",
+          "why_not_refrozen": "This is the simulator, not a CLI. It carries 12+ commits since the 2026-07-14 manifest, and they change physics and metric, not argument parsing: 64b75ce subtracts APj overlaps and sends 145 orders to zero, ea246ac closes a causal_exposure gap 'at double the ret_mean error', 3b70dd9 wires finite CSSU storage into the DES. Re-freezing would assert that today's physics reproduces the sealed Paper 2 artifacts, and that is measurably false."
+        }
+      ],
+      "reason": "Hash drift found by test_reproducibility_manifest_hashes_every_listed_artifact_and_source. Four entries drifted; three are re-frozen and one is NOT.",
+      "refrozen": [
+        {
+          "cause_commit": "ca84f39",
+          "caveat": "The historical invocation without --contract is no longer executable as-is.",
+          "diff": "+3 -1, one argparse line and its comment",
+          "justification": "--contract went from default=DEFAULT_CONTRACT to required=True. The computation is byte-identical; only the CLI hardened. The sealed runs are reproducible by passing the previous default explicitly, which the comment records in the file itself.",
+          "new_sha256": "93e075a389ab16d1eb9b66b43d895b0bf5f15c881623168cca9ebf97c0f9e870",
+          "path": "scripts/bound_program_o_affected_orders.py",
+          "previous_sha256": "b7afb67c3fc76c6e0111eb42f4dd3a18cc0754670716ee62a3abb01f97dfbb02"
+        },
+        {
+          "cause_commit": "ca84f39",
+          "caveat": "The historical invocation without --contract is no longer executable as-is.",
+          "diff": "+3 -1, one argparse line and its comment",
+          "justification": "--contract went from default=DEFAULT_CONTRACT to required=True. The computation is byte-identical; only the CLI hardened. The sealed runs are reproducible by passing the previous default explicitly, which the comment records in the file itself.",
+          "new_sha256": "bd6ae66ba9590dac8f9684d7dc924e2b15d916699dc0f12fafa76140b594a55e",
+          "path": "scripts/screen_program_o_exact_transducer.py",
+          "previous_sha256": "7738e3a69888b1bfc35904645785891edaab24add200d26035f186c5b602fea1"
+        },
+        {
+          "cause_commit": "ca84f39",
+          "caveat": "The historical invocation without --contract is no longer executable as-is.",
+          "diff": "+3 -1, one argparse line and its comment",
+          "justification": "--contract went from default=DEFAULT_CONTRACT to required=True. The computation is byte-identical; only the CLI hardened. The sealed runs are reproducible by passing the previous default explicitly, which the comment records in the file itself.",
+          "new_sha256": "5fbf208fce7d56d145def11a4a02db3e5af333a7499db7213433a618c6f96986",
+          "path": "scripts/validate_program_o_exact_transducer.py",
+          "previous_sha256": "657d3e6715c8ee2a5664fafe9f78a349b52d2923787f6b0984e62509eb233c73"
+        }
+      ]
+    }
+  ],
   "repository": {
     "branch": "codex/paper2-maintenance-headroom",
     "head_input": "07572663ca5a7e0bf42ce568b5d3eaa1c766c68e",
@@ -243,10 +287,10 @@
     "Raw_data1+Re.xlsx": "30b88c9b9fe68ef527dbfcc70d8e653ea7bd152ab891b3fc0ecf53cb6f043486",
     "Raw_data2+Re.xlsx": "4bd462771fefff16fc5666a851256b3780198d474832dec1423c0b6f94be86b0",
     "Rsult_1.xlsx": "1901f683f6014cf75237c17233b8eba04f541b956f2d19dcecf2edc00e83b00a",
-    "garrido et al 2024 factory resilience.pdf": "1260863dc295232faf24b820e1f67d53f25f81ffa2d221f7ef02a02310519c43",
-    "v.0_neuralNet-scres.docx": "b111070a05c8f4d1afa058454138bed9b4b74900ab87eaaf6eb5186b6e8293f2",
-    "v.0_neuralNet-scres.pdf": "521b12770e94f3e70c4c88ce1e38613f4e0aad3e1dab114632c9c89dbfad182d",
     "WRAP_Theses_Garrido_Rios_2017.pdf": "de9192d233b0c728ece6156b754fc64543146868121358b8a95c73b3edaa55cf",
-    "garrido2024 scres+AI.pdf": "3e3bc8f82e20b891ee163fb8a035dd37be4312fa11f58dde77452dc1bb903ae6"
+    "garrido et al 2024 factory resilience.pdf": "1260863dc295232faf24b820e1f67d53f25f81ffa2d221f7ef02a02310519c43",
+    "garrido2024 scres+AI.pdf": "3e3bc8f82e20b891ee163fb8a035dd37be4312fa11f58dde77452dc1bb903ae6",
+    "v.0_neuralNet-scres.docx": "b111070a05c8f4d1afa058454138bed9b4b74900ab87eaaf6eb5186b6e8293f2",
+    "v.0_neuralNet-scres.pdf": "521b12770e94f3e70c4c88ce1e38613f4e0aad3e1dab114632c9c89dbfad182d"
   }
 }
