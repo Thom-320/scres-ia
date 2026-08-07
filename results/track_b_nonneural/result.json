@@ -1,0 +1,228 @@
+{
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "NEURAL_PREMIUM_LIKELY_IN_TRACK_B",
+ "constant_best": [
+  0.11570153385400772,
+  0.9875032901763916,
+  -0.007953151129186153,
+  -0.08769244700670242,
+  -0.4263008236885071,
+  -0.2202376425266266,
+  0.6683650016784668,
+  0.6225888133049011
+ ],
+ "constant_fit_score": 96.74154199866008,
+ "contract_path": "docs/PREREGISTRO_COMPARADOR_NO_NEURONAL_TRACK_B_2026-08-07.md",
+ "contract_sha256": "69e54e25be6e8a2019d24b8f8e60166823e1a1f1a7e9d34040c7e1dc444b1e54",
+ "created_at": "2026-08-07T15:33:06.583303+00:00",
+ "elapsed_seconds": 1064.107469999988,
+ "eval_block_seed0": 777000,
+ "eval_episodes": 24,
+ "falsifiers": {
+  "all_passed": true,
+  "f1_the_constant_is_not_fitted_on_the_evaluation_block": {
+   "evidence": {
+    "eval_episodes": 24,
+    "eval_seed0": 777000,
+    "fit_episodes": 8,
+    "fit_seed0": 888000,
+    "why_it_can_fail": "fitting the constant on the episodes it is scored on makes it an oracle and voids the comparison"
+   },
+   "passed": true
+  },
+  "f2_the_arms_share_the_action_space_and_protocol": {
+   "evidence": {
+    "action_space": "Box(-1,1,(8,))",
+    "eval_episodes": 24,
+    "eval_seed0": 777000,
+    "why_it_can_fail": "an arm scored on a different block or episode count is not comparable"
+   },
+   "passed": true
+  },
+  "f3_the_harness_can_detect_skill": {
+   "evidence": {
+    "best_net": "trained_mlp",
+    "best_net_minus_random": 31.859875488263057,
+    "why_it_can_fail": "if the trained networks cannot beat uniform random actions, the harness separates nothing and no tie here means anything"
+   },
+   "passed": true
+  },
+  "f4_the_constant_search_actually_searched": {
+   "evidence": {
+    "best": 96.74154199866008,
+    "first": 28.136193872072056,
+    "fit_spread": 19.383798565906606,
+    "n_candidates": 160,
+    "why_it_can_fail": "a search whose best is its first draw, or whose candidates all score the same, did not search"
+   },
+   "passed": true
+  }
+ },
+ "fit_block_seed0": 888000,
+ "fit_episodes": 8,
+ "module_manifest": {
+  "entry_script": "scripts/run_track_b_nonneural_v1.py",
+  "entry_script_sha256": "5c66840225b7bf1ff1bb83a78489594519d661fefb32a255a08ae5bb1027e702",
+  "missing": [],
+  "modules": {
+   "supply_chain/arm_runner.py": "35135c537d9260832677ab6b4e344229d6b9f4810df8bdef9efd51b58fcac68a",
+   "supply_chain/seed_custody.py": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "network_means_from_sealed_artifacts": {
+  "trained_dmlpa": 98.0037408940151,
+  "trained_kan": 98.51622795481971,
+  "trained_mlp": 98.74303791918337,
+  "untrained_net": 72.20152694219925
+ },
+ "network_minus_constant": {
+  "trained_dmlpa": 1.4367151964938643,
+  "trained_kan": 1.9492022572984808,
+  "trained_mlp": 2.176012221662134,
+  "untrained_net": -24.36549875532198
+ },
+ "nonneural_eval_episodes": {
+  "constant_best": [
+   95.98267589432695,
+   97.35545560563938,
+   97.9507983714504,
+   97.36427662967796,
+   97.53739275030591,
+   97.79194752100982,
+   96.56744006001803,
+   96.69732319231025,
+   97.60455201296438,
+   96.6939032988926,
+   96.88252789918211,
+   97.38406319368994,
+   96.94586678068245,
+   94.41318459213149,
+   94.02068386629915,
+   97.63579963605409,
+   96.32247960083822,
+   95.95361294965541,
+   96.32843178738345,
+   94.30891052922763,
+   97.03221064348992,
+   94.91471419334324,
+   96.47726517057748,
+   97.44310056135974
+  ],
+  "random_action": [
+   63.64957583120899,
+   72.04694744988082,
+   73.1461555674138,
+   63.378683896066086,
+   78.8637649124945,
+   63.36090759872426,
+   59.691176288438804,
+   76.72829936991879,
+   73.5629884292015,
+   59.10230142518547,
+   54.819249353625395,
+   68.98266538592499,
+   59.519004967619075,
+   59.40738179995048,
+   63.62189441990025,
+   61.08886612774507,
+   69.22811956090871,
+   63.27507122210583,
+   55.02887761383313,
+   81.95631645135629,
+   74.32655826351952,
+   74.6064893001141,
+   70.47561899461795,
+   65.32898411233354
+  ],
+  "threshold_rule": [
+   97.01593996333357,
+   97.29558563779992,
+   98.38635296769098,
+   97.64025827978884,
+   97.670374411966,
+   97.95887481779268,
+   97.83193061539531,
+   96.4690482471239,
+   97.94820824396267,
+   97.35179752736745,
+   96.70487755262688,
+   98.22505380221372,
+   97.92496561103388,
+   94.58925693120294,
+   94.73112009601469,
+   97.80102087208557,
+   97.35375653130531,
+   97.45827277336649,
+   95.68970864594948,
+   96.31764723841565,
+   97.28836060125008,
+   96.29086722153207,
+   97.6494051817008,
+   97.80433084173004
+  ]
+ },
+ "nonneural_eval_means": {
+  "constant_best": 96.56702569752123,
+  "random_action": 66.88316243092031,
+  "threshold_rule": 97.14154227552704
+ },
+ "preregistration": "docs/PREREGISTRO_COMPARADOR_NO_NEURONAL_TRACK_B_2026-08-07.md",
+ "reference_path": "results/untrained_control/result.json",
+ "reference_sha256": "e380ed978ce406a4d464c9f62a979e4407c35d208b1ef9a18d966e9e45109c07",
+ "rule_fit_score": 97.3989067315461,
+ "rule_gain": [
+  0.28750407695770264,
+  0.13973435759544373,
+  -0.17767810821533203,
+  -0.2576567828655243,
+  0.09849022328853607,
+  0.2873760163784027,
+  -0.48028749227523804,
+  -0.2544073164463043
+ ],
+ "rule_index": [
+  91,
+  81,
+  34,
+  72,
+  18,
+  19,
+  19,
+  75
+ ],
+ "schema_version": "track_b_nonneural_v1",
+ "scope": "DEVELOPMENT_NO_CUSTODY_SEEDS_NO_ADJUDICATION",
+ "self_sha256": "0c5304b1eb3b0a23d2b38a8997bce05cfac08319bb769df487846b5bc289034b",
+ "vs_constant": {
+  "random_action": {
+   "lcb95": -32.63198802079854,
+   "mean": -29.68386326660094,
+   "ucb95": -26.709904573977106
+  },
+  "threshold_rule": {
+   "lcb95": 0.3304118174965454,
+   "mean": 0.5745165780057876,
+   "ucb95": 0.8214864274274412
+  }
+ },
+ "why": "track_b_v1 had no non-neural arm, so 'neural premium' was untestable there. The ordering was wrong: this should have preceded the architecture comparisons."
+}
