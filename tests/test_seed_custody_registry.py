@@ -33,6 +33,12 @@ def test_seed_registry_is_fail_closed_before_submission_receipt():
             # grid-transfer confirmation and never added here, which is why this
             # guardrail sat red instead of guarding.
             "BURNED_CONFIRMATION_COMPLETE",
+            # Opened in violation of its own preregistration's exit rule, by explicit PI decision
+            # recorded in the block's `source`. Admitted here so the registry can SAY what
+            # happened -- a state the registry cannot express is worse than one it can -- but its
+            # presence is a red flag and never a routine state. Blocks in it are spent and carry
+            # no prospective-confirmation value.
+            "BURNED_OPENED_AGAINST_PREREGISTRATION",
             "RESERVED_NOT_OPENED",
         }
         ranges.append((block["start"], block["end"], block["id"]))
