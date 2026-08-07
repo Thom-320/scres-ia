@@ -2533,12 +2533,24 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             maxlen=self.ret_excel_cvar_window
         )
         self._post_warmup_start_time = self.warmup_hours
+        # Passing `seed` straight through means an unseeded reset hands the simulator None, and it
+        # seeds itself from OS entropy. Vec envs seed only the FIRST reset, so from episode two
+        # onward every training run diverged: measured at 48.674 vs 51.820 on episode two from an
+        # identical initial seed, while episode one was bit-identical. That single line is why the
+        # Track B harness showed 2.4 points of spread at a fixed seed -- larger than its spread
+        # ACROSS seeds -- while the DES itself reproduces exactly. `self.np_random` is seeded by
+        # super().reset() and persists across episodes, so deriving from it keeps the whole chain
+        # deterministic without pinning every episode to the same tape.
+        episode_seed = (
+            int(seed) if seed is not None
+            else int(self.np_random.integers(0, 2**31 - 1))
+        )
         self.sim = MFSCSimulation(
             shifts=initial_shifts,
             initial_buffers=initial_buffers,
             risks_enabled=self.risks_enabled,
             risk_level=self.risk_level,
-            seed=seed,
+            seed=episode_seed,
             strict_exogenous_crn=True,
             horizon=SIMULATION_HORIZON,
             year_basis=self.year_basis,
