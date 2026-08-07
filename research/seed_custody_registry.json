@@ -1,524 +1,542 @@
 {
-  "authority": "contracts/authority_ladder_v1.json",
-  "blocks": [
-    {
-      "attempt_audit": {
-        "complete_base_slices_on_disk": 17,
-        "complete_extended_slices_on_disk": 17,
-        "complete_slice_context_names_seen": [
-          "R1r",
-          "R1r_R2r",
-          "R1r_R2r_esc",
-          "R1r_esc",
-          "R2r",
-          "R2r_esc"
-        ],
-        "complete_slice_seed_names_seen": [
-          8100001,
-          8100002,
-          8100031
-        ],
-        "raw_slices_are_unsealed": true,
-        "result_artifact_present": false,
-        "status": "ABORTED_AFTER_PARTIAL_RAW_CACHE",
-        "stopped_at": "2026-08-05T23:53:44.633545+00:00",
-        "termination": "explicit SIGKILL of the named workers after custody/order audit",
-        "why_entire_block_is_quarantined": "workers were killed without an execution receipt for every episode; a missing raw slice is not evidence that its seed was untouched, so the reserved block cannot be reused as virgin evidence"
-      },
-      "authorization": {
-        "granted_by": "UNRECORDED",
-        "note": "No explicit PI authorization for opening this virgin block was recorded. The phrase 'freedom as PI' was not a seed-opening receipt."
-      },
-      "end": 8100060,
-      "id": "garrido_grid_transfer_v1_confirmation",
-      "purpose": "Aborted unauthorized/invalid confirmation attempt. Entire range is quarantined; no result from this attempt is confirmatory and the range is not reusable as virgin evidence.",
-      "source": "docs/PREREGISTRO_CONFIRMACION_TRANSFERENCIA_REJILLA_2026-08-05.md",
-      "start": 8100001,
-      "status": "ATTEMPTED_NO_SEALED_ARTIFACT"
-    },
-    {
-      "end": 5200016,
-      "id": "contention_headroom",
-      "purpose": "Contention headroom block, reused across the contention sweeps, the policy-class re-audit and the G3-obs underpowered run. It was never registered -- only the artifact scan saw it -- so a replay could not be declared against it by name.",
-      "source": "results/sensitivity/contention_headroom_v1/result.json",
-      "start": 5200001,
-      "status": "USED_DEVELOPMENT_NOT_VIRGIN"
-    },
-    {
-      "audit": {
-        "artifact": "results/garrido_q2_des288_reconciled_v2/result.json",
-        "contract": "docs/PREREGISTRO_META_APRENDIZ_V2_2026-08-01.md",
-        "f3_subcontrols": [
-          "budget_tamper_rejected",
-          "trace_tamper_rejected"
-        ],
-        "quantities_compared": 14,
-        "quantities_differing": 0,
-        "verdict": "RUNTIME_F3_F4_RECONCILIATION_NOT_A_NEW_CONFIRMATION",
-        "what_it_does_not_establish": "full v2 contractual coverage of Q2, and not a new confirmation: the block is a DECLARED_REPLAY at n=12, the exploratory run"
-      },
-      "consumers": [
-        {
-          "id": "garrido_v0_recovery_holdout",
-          "note": "The v0 \"holdout\" half sits INSIDE this already-burned block, so it was never virgin -- the preregistration said as much: \"un holdout de desarrollo, no virginidad\". Opening it after the development STOP cost a development holdout, not a confirmation block. Recorded as a consumer rather than as a block of its own, which would have overlapped and broken the registry.",
-          "opened_against_preregistration": true,
-          "seeds": [
-            5300007,
-            5300012
-          ],
-          "source": "docs/APERTURA_HOLDOUT_V0_CONTRA_EL_PREREGISTRO_2026-08-07.md"
-        }
-      ],
-      "end": 5300012,
-      "id": "garrido_q2_des288",
-      "purpose": "DES-288 development artifact; no manuscript use before ledger adjudication",
-      "source": "results/garrido_meta_learner_v2/result.json",
-      "start": 5300001,
-      "status": "ARTIFACT_PRESENT_PENDING_CANONICAL_CUSTODY"
-    },
-    {
-      "audit": {
-        "artifact": "results/garrido_meta_learner_h3power_h3_contract_local_v2/result.json",
-        "contract": "docs/PREREGISTRO_H3_POTENCIA_2026-08-01.md",
-        "merge_falsifiers_checked": [
-          "f_merge_seeds_are_disjoint",
-          "f_merge_contexts_and_budget_match",
-          "f_merge_source_is_identical"
-        ],
-        "quantities_compared": 14,
-        "quantities_differing": 0,
-        "verdict": "BEHAVIORAL_REPRODUCIBILITY_FOR_H3_ESTIMAND",
-        "what_it_does_not_establish": "source identity of the ORIGINAL VPS snapshot (unreconstructable), and NOT a virgin H3-prime confirmation: f6 is DECLARED_REPLAY on burned seeds. The 120-replicate merge is not computed here."
-      },
-      "end": 6000090,
-      "id": "garrido_h3_local",
-      "purpose": "H3-prime local slice; do not interpret or combine before merge contract",
-      "source": "results/garrido_meta_learner_h3power_local/result.json",
-      "start": 6000001,
-      "status": "ARTIFACT_PRESENT_PENDING_MERGE"
-    },
-    {
-      "audit": {
-        "artifact": "results/garrido_meta_learner_h3power_h3_contract_vps_v2/result.json",
-        "contract": "docs/PREREGISTRO_H3_POTENCIA_2026-08-01.md",
-        "merge_falsifiers_checked": [
-          "f_merge_seeds_are_disjoint",
-          "f_merge_contexts_and_budget_match",
-          "f_merge_source_is_identical"
-        ],
-        "quantities_compared": 14,
-        "quantities_differing": 0,
-        "verdict": "BEHAVIORAL_REPRODUCIBILITY_FOR_H3_ESTIMAND",
-        "what_it_does_not_establish": "source identity of the ORIGINAL VPS snapshot (unreconstructable), and NOT a virgin H3-prime confirmation: f6 is DECLARED_REPLAY on burned seeds. The 120-replicate merge is not computed here."
-      },
-      "end": 6000120,
-      "id": "garrido_h3_vps",
-      "purpose": "H3-prime VPS slice. Original-snapshot source identity: NOT DEMONSTRABLE (that snapshot no longer exists). v2 replay-pair source identity: VERIFIED (seven module hashes + entry script + contract all equal).",
-      "source": "results/garrido_meta_learner_h3power_vps/result.json",
-      "start": 6000091,
-      "status": "ARTIFACT_PRESENT_PENDING_MERGE"
-    },
-    {
-      "end": 7000008,
-      "id": "g2_autotomy_threshold",
-      "purpose": "G2 development screen; no neural confirmation",
-      "source": "results/headroom/g2_autotomy_threshold/result.json",
-      "start": 7000001,
-      "status": "USED_DEVELOPMENT_NOT_VIRGIN"
-    },
-    {
-      "end": 7490256,
-      "id": "program_q_terminal_confirmation",
-      "purpose": "Program Q terminal confirmation; immutable and outside Garrido-WRAP",
-      "source": "f2dfe35",
-      "start": 7490001,
-      "status": "BURNED"
-    },
-    {
-      "end": 7600010,
-      "id": "g3_old_bottleneck_asymmetry",
-      "purpose": "Historical asymmetry development; metric-defect claim boundary",
-      "source": "results/sensitivity/bottleneck_asymmetry_v1/result.json",
-      "start": 7600001,
-      "status": "USED_DEVELOPMENT_NOT_VIRGIN"
-    },
-    {
-      "end": 7700120,
-      "id": "g3a_v2_development",
-      "purpose": "G3a asymmetric-claimant development block. NEVER OPENED. It was briefly quarantined as ATTEMPTED_NO_SEALED_ARTIFACT in 96b960f, but the block that was actually attempted is g3_obs_v2_confirmation_20260802; this one was never touched and stays virgin.",
-      "source": "contracts/g3a_asymmetric_claimants_v2.json",
-      "start": 7700001,
-      "status": "RESERVED_NOT_OPENED"
-    },
-    {
-      "authorization": {
-        "granted_by": "PI, in session 2026-08-02",
-        "note": "authority_ladder_v1 is status DRAFT_PROSPECTIVE_UNOPENED_NOT_AUTHORITY: it neither prohibits nor authorizes. The authority is the PI, and the PI authorized. This block is opened on that authorization, not on a reading of the draft."
-      },
-      "end": 7800140,
-      "id": "g3_obs_v2_powered",
-      "outcome": {
-        "claim_status": "STRUCTURED_CONTROL_SUFFICES_G3_OBS",
-        "mde": [
-          0.0092,
-          0.0085
-        ],
-        "note": "70 development / 70 test, disjoint; block now consumed",
-        "powered": true,
-        "sesoi": 0.01
-      },
-      "purpose": "G3-obs powered re-run. The 16-seed run gave MDE 0.0256/0.0286 against a SESOI of 0.010, so its primary was undecidable by POWER, not by science. 66 test seeds are required per the observed paired SD; 140 reserved for a 70/70 split with margin.",
-      "source": "results/headroom/g3_obs_conversion_v2/result.json",
-      "start": 7800001,
-      "status": "USED_DEVELOPMENT_NOT_VIRGIN"
-    },
-    {
-      "attempt_audit": {
-        "claim": "absence of result is not evidence of virginity; block is conservatively unavailable",
-        "process_after_check": "not alive",
-        "result_artifact_present": false,
-        "run_log_bytes": 0
-      },
-      "authorization": {
-        "granted_by": "PI, explicit instruction in session 2026-08-02",
-        "scope": "this block and this contract only",
-        "supersedes_for_this_block": "the prior unopened-execution hold; does not authorize G3a, G3c, E*, or other fresh roots"
-      },
-      "end": 7900140,
-      "id": "g3_obs_v2_confirmation_20260802",
-      "purpose": "Aborted G3-obs v2 confirmation attempt: the process started and produced a 0-byte log with no result.json. Whether any episode ran cannot be determined, so the block is treated as consumed. NOT reusable as a virgin confirmation block.",
-      "source": "docs/PREREGISTRO_G3_OBS_V2_CONFIRMACION_2026-08-02.md",
-      "start": 7900001,
-      "status": "ATTEMPTED_NO_SEALED_ARTIFACT"
-    },
-    {
-      "all_sources": [
-        "results/sensitivity/backlog_confirmation_v1/result.json"
-      ],
-      "end": 5100012,
-      "id": "reconciled_5100001",
-      "purpose": "Discovered by reconciling the registry against sealed artifacts. It was consumed but never registered, so a replay could not be declared against it by name and its absence weakened every NO_KNOWN_COLLISION verdict.",
-      "registered_by": "scripts/reconcile_seed_custody_registry_v1.py",
-      "source": "results/sensitivity/backlog_confirmation_v1/result.json",
-      "start": 5100001,
-      "status": "USED_DEVELOPMENT_NOT_VIRGIN"
-    },
-    {
-      "all_sources": [
-        "results/metric_audit/abandonment_v1/result.json"
-      ],
-      "end": 5500008,
-      "id": "reconciled_5500001",
-      "purpose": "Discovered by reconciling the registry against sealed artifacts. It was consumed but never registered, so a replay could not be declared against it by name and its absence weakened every NO_KNOWN_COLLISION verdict.",
-      "registered_by": "scripts/reconcile_seed_custody_registry_v1.py",
-      "source": "results/metric_audit/abandonment_v1/result.json",
-      "start": 5500001,
-      "status": "USED_DEVELOPMENT_NOT_VIRGIN"
-    },
-    {
-      "all_sources": [
-        "results/headroom/cobb_douglas_v1/result.json"
-      ],
-      "end": 5600008,
-      "id": "reconciled_5600001",
-      "purpose": "Discovered by reconciling the registry against sealed artifacts. It was consumed but never registered, so a replay could not be declared against it by name and its absence weakened every NO_KNOWN_COLLISION verdict.",
-      "registered_by": "scripts/reconcile_seed_custody_registry_v1.py",
-      "source": "results/headroom/cobb_douglas_v1/result.json",
-      "start": 5600001,
-      "status": "USED_DEVELOPMENT_NOT_VIRGIN"
-    },
-    {
-      "all_sources": [
-        "results/manuscript/h1_h3_v1/result.json"
-      ],
-      "end": 5700010,
-      "id": "reconciled_5700001",
-      "purpose": "Discovered by reconciling the registry against sealed artifacts. It was consumed but never registered, so a replay could not be declared against it by name and its absence weakened every NO_KNOWN_COLLISION verdict.",
-      "registered_by": "scripts/reconcile_seed_custody_registry_v1.py",
-      "source": "results/manuscript/h1_h3_v1/result.json",
-      "start": 5700001,
-      "status": "USED_DEVELOPMENT_NOT_VIRGIN"
-    },
-    {
-      "all_sources": [
-        "results/manuscript/h1_h3_v2/result.json",
-        "results/sensitivity/expedite_headroom_v2/result.json"
-      ],
-      "end": 5800008,
-      "id": "reconciled_5800001",
-      "purpose": "Discovered by reconciling the registry against sealed artifacts. It was consumed but never registered, so a replay could not be declared against it by name and its absence weakened every NO_KNOWN_COLLISION verdict.",
-      "registered_by": "scripts/reconcile_seed_custody_registry_v1.py",
-      "source": "results/manuscript/h1_h3_v2/result.json",
-      "start": 5800001,
-      "status": "USED_DEVELOPMENT_NOT_VIRGIN"
-    },
-    {
-      "all_sources": [
-        "results/sensitivity/expedite_headroom_v2_smoke/result.json",
-        "results/sensitivity/expedite_headroom_v2_smoke_v2/result.json"
-      ],
-      "end": 5800102,
-      "id": "reconciled_5800101",
-      "purpose": "Discovered by reconciling the registry against sealed artifacts. It was consumed but never registered, so a replay could not be declared against it by name and its absence weakened every NO_KNOWN_COLLISION verdict.",
-      "registered_by": "scripts/reconcile_seed_custody_registry_v1.py",
-      "source": "results/sensitivity/expedite_headroom_v2_smoke/result.json",
-      "start": 5800101,
-      "status": "USED_DEVELOPMENT_NOT_VIRGIN"
-    },
-    {
-      "all_sources": [
-        "results/garrido_meta_learner_smoke_v2/result.json",
-        "results/garrido_meta_learner_v2/smoke_result.json"
-      ],
-      "end": 5910001,
-      "id": "reconciled_5910001",
-      "purpose": "Discovered by reconciling the registry against sealed artifacts. It was consumed but never registered, so a replay could not be declared against it by name and its absence weakened every NO_KNOWN_COLLISION verdict.",
-      "registered_by": "scripts/reconcile_seed_custody_registry_v1.py",
-      "source": "results/garrido_meta_learner_smoke_v2/result.json",
-      "start": 5910001,
-      "status": "USED_DEVELOPMENT_NOT_VIRGIN"
-    },
-    {
-      "all_sources": [
-        "results/manuscript/h1_h3_v2_1/result.json"
-      ],
-      "end": 6200005,
-      "id": "reconciled_6200001",
-      "purpose": "Discovered by reconciling the registry against sealed artifacts. It was consumed but never registered, so a replay could not be declared against it by name and its absence weakened every NO_KNOWN_COLLISION verdict.",
-      "registered_by": "scripts/reconcile_seed_custody_registry_v1.py",
-      "source": "results/manuscript/h1_h3_v2_1/result.json",
-      "start": 6200001,
-      "status": "USED_DEVELOPMENT_NOT_VIRGIN"
-    },
-    {
-      "all_sources": [
-        "results/metric_audit/service_first_v2/result.json"
-      ],
-      "end": 6300006,
-      "id": "reconciled_6300001",
-      "purpose": "Discovered by reconciling the registry against sealed artifacts. It was consumed but never registered, so a replay could not be declared against it by name and its absence weakened every NO_KNOWN_COLLISION verdict.",
-      "registered_by": "scripts/reconcile_seed_custody_registry_v1.py",
-      "source": "results/metric_audit/service_first_v2/result.json",
-      "start": 6300001,
-      "status": "USED_DEVELOPMENT_NOT_VIRGIN"
-    },
-    {
-      "all_sources": [
-        "results/metric_audit/contention_service_first_v2/result.json"
-      ],
-      "end": 6400010,
-      "id": "reconciled_6400001",
-      "purpose": "Discovered by reconciling the registry against sealed artifacts. It was consumed but never registered, so a replay could not be declared against it by name and its absence weakened every NO_KNOWN_COLLISION verdict.",
-      "registered_by": "scripts/reconcile_seed_custody_registry_v1.py",
-      "source": "results/metric_audit/contention_service_first_v2/result.json",
-      "start": 6400001,
-      "status": "USED_DEVELOPMENT_NOT_VIRGIN"
-    },
-    {
-      "all_sources": [
-        "results/metric_audit/des_change_differential/result.json",
-        "results/metric_audit/vps_vs_local_differential/result.json"
-      ],
-      "end": 6500003,
-      "id": "reconciled_6500001",
-      "purpose": "Discovered by reconciling the registry against sealed artifacts. It was consumed but never registered, so a replay could not be declared against it by name and its absence weakened every NO_KNOWN_COLLISION verdict.",
-      "registered_by": "scripts/reconcile_seed_custody_registry_v1.py",
-      "source": "results/metric_audit/des_change_differential/result.json",
-      "start": 6500001,
-      "status": "USED_DEVELOPMENT_NOT_VIRGIN"
-    },
-    {
-      "all_sources": [
-        "results/metric_audit/cssu_liveness_scope/result.json"
-      ],
-      "end": 6600006,
-      "id": "reconciled_6600001",
-      "purpose": "Discovered by reconciling the registry against sealed artifacts. It was consumed but never registered, so a replay could not be declared against it by name and its absence weakened every NO_KNOWN_COLLISION verdict.",
-      "registered_by": "scripts/reconcile_seed_custody_registry_v1.py",
-      "source": "results/metric_audit/cssu_liveness_scope/result.json",
-      "start": 6600001,
-      "status": "USED_DEVELOPMENT_NOT_VIRGIN"
-    },
-    {
-      "all_sources": [
-        "results/headroom/g1_ablation_ci_zero/result.json",
-        "results/headroom/g1_buffer_price/result.json"
-      ],
-      "end": 6700006,
-      "id": "reconciled_6700001",
-      "purpose": "Discovered by reconciling the registry against sealed artifacts. It was consumed but never registered, so a replay could not be declared against it by name and its absence weakened every NO_KNOWN_COLLISION verdict.",
-      "registered_by": "scripts/reconcile_seed_custody_registry_v1.py",
-      "source": "results/headroom/g1_ablation_ci_zero/result.json",
-      "start": 6700001,
-      "status": "USED_DEVELOPMENT_NOT_VIRGIN"
-    },
-    {
-      "all_sources": [
-        "results/headroom/buffer_prediction_premium/result.json",
-        "results/k3/confirmation.json"
-      ],
-      "end": 6800010,
-      "id": "reconciled_6800001",
-      "purpose": "Discovered by reconciling the registry against sealed artifacts. It was consumed but never registered, so a replay could not be declared against it by name and its absence weakened every NO_KNOWN_COLLISION verdict.",
-      "registered_by": "scripts/reconcile_seed_custody_registry_v1.py",
-      "source": "results/headroom/buffer_prediction_premium/result.json",
-      "start": 6800001,
-      "status": "USED_DEVELOPMENT_NOT_VIRGIN"
-    },
-    {
-      "all_sources": [
-        "results/k3/confirmation.json"
-      ],
-      "end": 6800120,
-      "id": "reconciled_6800120",
-      "purpose": "Discovered by reconciling the registry against sealed artifacts. It was consumed but never registered, so a replay could not be declared against it by name and its absence weakened every NO_KNOWN_COLLISION verdict.",
-      "registered_by": "scripts/reconcile_seed_custody_registry_v1.py",
-      "source": "results/k3/confirmation.json",
-      "start": 6800120,
-      "status": "USED_DEVELOPMENT_NOT_VIRGIN"
-    },
-    {
-      "all_sources": [
-        "results/headroom/cd_surface_prediction_premium/result.json"
-      ],
-      "end": 6900008,
-      "id": "reconciled_6900001",
-      "purpose": "Discovered by reconciling the registry against sealed artifacts. It was consumed but never registered, so a replay could not be declared against it by name and its absence weakened every NO_KNOWN_COLLISION verdict.",
-      "registered_by": "scripts/reconcile_seed_custody_registry_v1.py",
-      "source": "results/headroom/cd_surface_prediction_premium/result.json",
-      "start": 6900001,
-      "status": "USED_DEVELOPMENT_NOT_VIRGIN"
-    },
-    {
-      "all_sources": [
-        "results/garrido_q2_des288_v1/smoke_fullsurface_result.json",
-        "results/garrido_q2_des288_v1/smoke_fullsurface_result_v2.json",
-        "results/garrido_q2_des288_v1/smoke_result_after_fix.json"
-      ],
-      "end": 7100001,
-      "id": "reconciled_7100001",
-      "purpose": "Discovered by reconciling the registry against sealed artifacts. It was consumed but never registered, so a replay could not be declared against it by name and its absence weakened every NO_KNOWN_COLLISION verdict.",
-      "registered_by": "scripts/reconcile_seed_custody_registry_v1.py",
-      "source": "results/garrido_q2_des288_v1/smoke_fullsurface_result.json",
-      "start": 7100001,
-      "status": "USED_DEVELOPMENT_NOT_VIRGIN"
-    },
-    {
-      "all_sources": [
-        "results/program_o/exact_transducer_validation_v1/result.json"
-      ],
-      "end": 7400048,
-      "id": "reconciled_7400025",
-      "purpose": "Discovered by reconciling the registry against sealed artifacts. It was consumed but never registered, so a replay could not be declared against it by name and its absence weakened every NO_KNOWN_COLLISION verdict.",
-      "registered_by": "scripts/reconcile_seed_custody_registry_v1.py",
-      "source": "results/program_o/exact_transducer_validation_v1/result.json",
-      "start": 7400025,
-      "status": "USED_DEVELOPMENT_NOT_VIRGIN"
-    },
-    {
-      "all_sources": [
-        "results/program_o/gate_o0_full_action_transducer_v1/screen/result.json",
-        "results/program_o/gate_o0_full_action_transducer_v1/screen/run_manifest.json",
-        "results/program_o/gate_o0_full_action_transducer_v1/validation/result.json",
-        "results/program_o/gate_o0_full_action_transducer_v1/validation/run_manifest.json"
-      ],
-      "end": 7410048,
-      "id": "reconciled_7410001",
-      "purpose": "Discovered by reconciling the registry against sealed artifacts. It was consumed but never registered, so a replay could not be declared against it by name and its absence weakened every NO_KNOWN_COLLISION verdict.",
-      "registered_by": "scripts/reconcile_seed_custody_registry_v1.py",
-      "source": "results/program_o/gate_o0_full_action_transducer_v1/screen/result.json",
-      "start": 7410001,
-      "status": "USED_DEVELOPMENT_NOT_VIRGIN"
-    },
-    {
-      "all_sources": [
-        "results/program_o/dual_resource_diagnostic_v1/remote_run/artifacts/diagnostic/result.json",
-        "results/program_o/fixed_clock_hobs_validation_v1/remote_run/artifacts/validation/result.json",
-        "results/program_o/state_rich_comparator_fit_v1/result.json"
-      ],
-      "end": 7420096,
-      "id": "reconciled_7420001",
-      "purpose": "Discovered by reconciling the registry against sealed artifacts. It was consumed but never registered, so a replay could not be declared against it by name and its absence weakened every NO_KNOWN_COLLISION verdict.",
-      "registered_by": "scripts/reconcile_seed_custody_registry_v1.py",
-      "source": "results/program_o/dual_resource_diagnostic_v1/remote_run/artifacts/diagnostic/result.json",
-      "start": 7420001,
-      "status": "USED_DEVELOPMENT_NOT_VIRGIN"
-    },
-    {
-      "all_sources": [
-        "results/program_o/fixed_clock_hobs_corrective_validation_v1/remote_run/artifacts/validation/result.json",
-        "results/program_s/s0_hot_path_riskoff_parity_v1_1/corrective_result_v2.json",
-        "results/program_s/s0_hot_path_riskoff_parity_v1_1/result.json"
-      ],
-      "end": 7430048,
-      "id": "reconciled_7430001",
-      "purpose": "Discovered by reconciling the registry against sealed artifacts. It was consumed but never registered, so a replay could not be declared against it by name and its absence weakened every NO_KNOWN_COLLISION verdict.",
-      "registered_by": "scripts/reconcile_seed_custody_registry_v1.py",
-      "source": "results/program_o/fixed_clock_hobs_corrective_validation_v1/remote_run/artifacts/validation/result.json",
-      "start": 7430001,
-      "status": "USED_DEVELOPMENT_NOT_VIRGIN"
-    },
-    {
-      "all_sources": [
-        "results/garrido_risk_headroom_sensitivity_v1/result.json"
-      ],
-      "end": 7450006,
-      "id": "reconciled_7450001",
-      "purpose": "Discovered by reconciling the registry against sealed artifacts. It was consumed but never registered, so a replay could not be declared against it by name and its absence weakened every NO_KNOWN_COLLISION verdict.",
-      "registered_by": "scripts/reconcile_seed_custody_registry_v1.py",
-      "source": "results/garrido_risk_headroom_sensitivity_v1/result.json",
-      "start": 7450001,
-      "status": "USED_DEVELOPMENT_NOT_VIRGIN"
-    },
-    {
-      "authorization": {
-        "granted_by": "PI, explicitly, in session 2026-08-05",
-        "instruction": "arranca con la confirmacion",
-        "note": "The PI reviewed KEEP_THE_RESERVED_BLOCK and chose to hold n = 60 rather than shrink to 26. The previous block's authorization field was written by an agent and was never granted; it is not reused here.",
-        "scope": "this contract and this seed block only"
-      },
-      "closed_at": "2026-08-06",
-      "end": 8200060,
-      "id": "garrido_grid_transfer_v2_confirmation",
-      "opened_at": "2026-08-06T00:46:27.874145+00:00",
-      "opening_receipt": "results/custody/garrido_grid_transfer_confirmation_v2_open.json",
-      "purpose": "Clean virgin block for the UCB1 factor-wise grid-transfer confirmation, after 8100001-8100060 was quarantined as ATTEMPTED_NO_SEALED_ARTIFACT. The quarantined block is not recycled: partial consumption leaves no trace on disk, so which of its seeds remain virgin cannot be demonstrated.",
-      "result": "results/grid_transfer_confirmation_v2/result.json",
-      "source": "docs/ENMIENDA_CONFIRMACION_BLOQUE_LIMPIO_2026-08-05.md",
-      "start": 8200001,
-      "status": "BURNED_CONFIRMATION_COMPLETE"
-    }
-  ],
-  "inventory_limitations": [
-    "This registry is a conservative baseline, not evidence that unlisted seeds are virgin.",
-    "Untracked or remote artifacts must be reconciled before a confirmation block can open.",
-    "A seed block is not confirmation-eligible merely because no result.json was found."
-  ],
-  "inventory_scope": [
-    "contracts",
-    "docs",
-    "research",
-    "results",
-    "scripts",
-    "tests",
-    "git_refs",
-    "local_and_remote_manifests"
-  ],
-  "new_seed_opening": false,
-  "reconciled_at": "2026-08-05T21:26:49.866224+00:00",
-  "reconciliation_receipt": "results/custody/registry_reconciliation.json",
-  "rules": {
-    "confirmation_requires_independent_virgin_block": true,
-    "development_is_not_confirmation": true,
-    "new_blocks_require_contract_and_authority": true,
-    "no_result_file_is_not_virginity_evidence": true,
-    "overlap_check_includes_git_and_remote_manifests": true,
-    "program_q_and_program_o_are_immutable": true,
-    "submission_a_receipt_required_before_g3a_open": true,
-    "thesis_1to1_is_immutable": true,
-    "untracked_results_are_not_virginity_evidence": true
+ "authority": "contracts/authority_ladder_v1.json",
+ "blocks": [
+  {
+   "attempt_audit": {
+    "complete_base_slices_on_disk": 17,
+    "complete_extended_slices_on_disk": 17,
+    "complete_slice_context_names_seen": [
+     "R1r",
+     "R1r_R2r",
+     "R1r_R2r_esc",
+     "R1r_esc",
+     "R2r",
+     "R2r_esc"
+    ],
+    "complete_slice_seed_names_seen": [
+     8100001,
+     8100002,
+     8100031
+    ],
+    "raw_slices_are_unsealed": true,
+    "result_artifact_present": false,
+    "status": "ABORTED_AFTER_PARTIAL_RAW_CACHE",
+    "stopped_at": "2026-08-05T23:53:44.633545+00:00",
+    "termination": "explicit SIGKILL of the named workers after custody/order audit",
+    "why_entire_block_is_quarantined": "workers were killed without an execution receipt for every episode; a missing raw slice is not evidence that its seed was untouched, so the reserved block cannot be reused as virgin evidence"
+   },
+   "authorization": {
+    "granted_by": "UNRECORDED",
+    "note": "No explicit PI authorization for opening this virgin block was recorded. The phrase 'freedom as PI' was not a seed-opening receipt."
+   },
+   "end": 8100060,
+   "id": "garrido_grid_transfer_v1_confirmation",
+   "purpose": "Aborted unauthorized/invalid confirmation attempt. Entire range is quarantined; no result from this attempt is confirmatory and the range is not reusable as virgin evidence.",
+   "source": "docs/PREREGISTRO_CONFIRMACION_TRANSFERENCIA_REJILLA_2026-08-05.md",
+   "start": 8100001,
+   "status": "ATTEMPTED_NO_SEALED_ARTIFACT"
   },
-  "schema_version": "seed_custody_registry_v1",
-  "scientific_execution_authorized": false,
-  "status": "BASELINE_INVENTORY_INCOMPLETE_NO_NEW_SEEDS_AUTHORIZED"
+  {
+   "end": 5200016,
+   "id": "contention_headroom",
+   "purpose": "Contention headroom block, reused across the contention sweeps, the policy-class re-audit and the G3-obs underpowered run. It was never registered -- only the artifact scan saw it -- so a replay could not be declared against it by name.",
+   "source": "results/sensitivity/contention_headroom_v1/result.json",
+   "start": 5200001,
+   "status": "USED_DEVELOPMENT_NOT_VIRGIN"
+  },
+  {
+   "audit": {
+    "artifact": "results/garrido_q2_des288_reconciled_v2/result.json",
+    "contract": "docs/PREREGISTRO_META_APRENDIZ_V2_2026-08-01.md",
+    "f3_subcontrols": [
+     "budget_tamper_rejected",
+     "trace_tamper_rejected"
+    ],
+    "quantities_compared": 14,
+    "quantities_differing": 0,
+    "verdict": "RUNTIME_F3_F4_RECONCILIATION_NOT_A_NEW_CONFIRMATION",
+    "what_it_does_not_establish": "full v2 contractual coverage of Q2, and not a new confirmation: the block is a DECLARED_REPLAY at n=12, the exploratory run"
+   },
+   "consumers": [
+    {
+     "id": "garrido_v0_recovery_holdout",
+     "note": "The v0 \"holdout\" half sits INSIDE this already-burned block, so it was never virgin -- the preregistration said as much: \"un holdout de desarrollo, no virginidad\". Opening it after the development STOP cost a development holdout, not a confirmation block. Recorded as a consumer rather than as a block of its own, which would have overlapped and broken the registry.",
+     "opened_against_preregistration": true,
+     "seeds": [
+      5300007,
+      5300012
+     ],
+     "source": "docs/APERTURA_HOLDOUT_V0_CONTRA_EL_PREREGISTRO_2026-08-07.md"
+    }
+   ],
+   "end": 5300012,
+   "id": "garrido_q2_des288",
+   "purpose": "DES-288 development artifact; no manuscript use before ledger adjudication",
+   "source": "results/garrido_meta_learner_v2/result.json",
+   "start": 5300001,
+   "status": "ARTIFACT_PRESENT_PENDING_CANONICAL_CUSTODY"
+  },
+  {
+   "audit": {
+    "artifact": "results/garrido_meta_learner_h3power_h3_contract_local_v2/result.json",
+    "contract": "docs/PREREGISTRO_H3_POTENCIA_2026-08-01.md",
+    "merge_falsifiers_checked": [
+     "f_merge_seeds_are_disjoint",
+     "f_merge_contexts_and_budget_match",
+     "f_merge_source_is_identical"
+    ],
+    "quantities_compared": 14,
+    "quantities_differing": 0,
+    "verdict": "BEHAVIORAL_REPRODUCIBILITY_FOR_H3_ESTIMAND",
+    "what_it_does_not_establish": "source identity of the ORIGINAL VPS snapshot (unreconstructable), and NOT a virgin H3-prime confirmation: f6 is DECLARED_REPLAY on burned seeds. The 120-replicate merge is not computed here."
+   },
+   "end": 6000090,
+   "id": "garrido_h3_local",
+   "purpose": "H3-prime local slice; do not interpret or combine before merge contract",
+   "source": "results/garrido_meta_learner_h3power_local/result.json",
+   "start": 6000001,
+   "status": "ARTIFACT_PRESENT_PENDING_MERGE"
+  },
+  {
+   "audit": {
+    "artifact": "results/garrido_meta_learner_h3power_h3_contract_vps_v2/result.json",
+    "contract": "docs/PREREGISTRO_H3_POTENCIA_2026-08-01.md",
+    "merge_falsifiers_checked": [
+     "f_merge_seeds_are_disjoint",
+     "f_merge_contexts_and_budget_match",
+     "f_merge_source_is_identical"
+    ],
+    "quantities_compared": 14,
+    "quantities_differing": 0,
+    "verdict": "BEHAVIORAL_REPRODUCIBILITY_FOR_H3_ESTIMAND",
+    "what_it_does_not_establish": "source identity of the ORIGINAL VPS snapshot (unreconstructable), and NOT a virgin H3-prime confirmation: f6 is DECLARED_REPLAY on burned seeds. The 120-replicate merge is not computed here."
+   },
+   "end": 6000120,
+   "id": "garrido_h3_vps",
+   "purpose": "H3-prime VPS slice. Original-snapshot source identity: NOT DEMONSTRABLE (that snapshot no longer exists). v2 replay-pair source identity: VERIFIED (seven module hashes + entry script + contract all equal).",
+   "source": "results/garrido_meta_learner_h3power_vps/result.json",
+   "start": 6000091,
+   "status": "ARTIFACT_PRESENT_PENDING_MERGE"
+  },
+  {
+   "end": 7000008,
+   "id": "g2_autotomy_threshold",
+   "purpose": "G2 development screen; no neural confirmation",
+   "source": "results/headroom/g2_autotomy_threshold/result.json",
+   "start": 7000001,
+   "status": "USED_DEVELOPMENT_NOT_VIRGIN"
+  },
+  {
+   "end": 7490256,
+   "id": "program_q_terminal_confirmation",
+   "purpose": "Program Q terminal confirmation; immutable and outside Garrido-WRAP",
+   "source": "f2dfe35",
+   "start": 7490001,
+   "status": "BURNED"
+  },
+  {
+   "end": 7600010,
+   "id": "g3_old_bottleneck_asymmetry",
+   "purpose": "Historical asymmetry development; metric-defect claim boundary",
+   "source": "results/sensitivity/bottleneck_asymmetry_v1/result.json",
+   "start": 7600001,
+   "status": "USED_DEVELOPMENT_NOT_VIRGIN"
+  },
+  {
+   "authorisation": "docs/AUTORIZACION_PI_REPROPOSITO_BLOQUE_7700001_2026-08-07.md",
+   "end": 7700120,
+   "gate_lifted_by_pi": "submission_a_receipt_required_before_g3a_open",
+   "id": "g3a_v2_development",
+   "opened_at": "2026-08-07T18:05:00+00:00",
+   "opened_by_contract": "docs/PREREGISTRO_CONFIRMACION_GSA_2026-08-07.md",
+   "purpose": "REPURPOSED 2026-08-07 by PI authorisation: prospective confirmation of the GSA lane under the declared resilience-only objective. G3a is left with no reserved virgin block; that cost is recorded, not hidden.",
+   "repurposed_from": "G3a asymmetric-claimant development block. NEVER OPENED. It was briefly quarantined as ATTEMPTED_NO_SEALED_ARTIFACT in 96b960f, but the block that was actually attempted is g3_obs_v2_confirmation_20260802; this one was never touched and stays virgin.",
+   "source": "contracts/g3a_asymmetric_claimants_v2.json",
+   "start": 7700001,
+   "status": "OPEN_CONFIRMATION_IN_PROGRESS"
+  },
+  {
+   "authorization": {
+    "granted_by": "PI, in session 2026-08-02",
+    "note": "authority_ladder_v1 is status DRAFT_PROSPECTIVE_UNOPENED_NOT_AUTHORITY: it neither prohibits nor authorizes. The authority is the PI, and the PI authorized. This block is opened on that authorization, not on a reading of the draft."
+   },
+   "end": 7800140,
+   "id": "g3_obs_v2_powered",
+   "outcome": {
+    "claim_status": "STRUCTURED_CONTROL_SUFFICES_G3_OBS",
+    "mde": [
+     0.0092,
+     0.0085
+    ],
+    "note": "70 development / 70 test, disjoint; block now consumed",
+    "powered": true,
+    "sesoi": 0.01
+   },
+   "purpose": "G3-obs powered re-run. The 16-seed run gave MDE 0.0256/0.0286 against a SESOI of 0.010, so its primary was undecidable by POWER, not by science. 66 test seeds are required per the observed paired SD; 140 reserved for a 70/70 split with margin.",
+   "source": "results/headroom/g3_obs_conversion_v2/result.json",
+   "start": 7800001,
+   "status": "USED_DEVELOPMENT_NOT_VIRGIN"
+  },
+  {
+   "attempt_audit": {
+    "claim": "absence of result is not evidence of virginity; block is conservatively unavailable",
+    "process_after_check": "not alive",
+    "result_artifact_present": false,
+    "run_log_bytes": 0
+   },
+   "authorization": {
+    "granted_by": "PI, explicit instruction in session 2026-08-02",
+    "scope": "this block and this contract only",
+    "supersedes_for_this_block": "the prior unopened-execution hold; does not authorize G3a, G3c, E*, or other fresh roots"
+   },
+   "end": 7900140,
+   "id": "g3_obs_v2_confirmation_20260802",
+   "purpose": "Aborted G3-obs v2 confirmation attempt: the process started and produced a 0-byte log with no result.json. Whether any episode ran cannot be determined, so the block is treated as consumed. NOT reusable as a virgin confirmation block.",
+   "source": "docs/PREREGISTRO_G3_OBS_V2_CONFIRMACION_2026-08-02.md",
+   "start": 7900001,
+   "status": "ATTEMPTED_NO_SEALED_ARTIFACT"
+  },
+  {
+   "all_sources": [
+    "results/sensitivity/backlog_confirmation_v1/result.json"
+   ],
+   "end": 5100012,
+   "id": "reconciled_5100001",
+   "purpose": "Discovered by reconciling the registry against sealed artifacts. It was consumed but never registered, so a replay could not be declared against it by name and its absence weakened every NO_KNOWN_COLLISION verdict.",
+   "registered_by": "scripts/reconcile_seed_custody_registry_v1.py",
+   "source": "results/sensitivity/backlog_confirmation_v1/result.json",
+   "start": 5100001,
+   "status": "USED_DEVELOPMENT_NOT_VIRGIN"
+  },
+  {
+   "all_sources": [
+    "results/metric_audit/abandonment_v1/result.json"
+   ],
+   "end": 5500008,
+   "id": "reconciled_5500001",
+   "purpose": "Discovered by reconciling the registry against sealed artifacts. It was consumed but never registered, so a replay could not be declared against it by name and its absence weakened every NO_KNOWN_COLLISION verdict.",
+   "registered_by": "scripts/reconcile_seed_custody_registry_v1.py",
+   "source": "results/metric_audit/abandonment_v1/result.json",
+   "start": 5500001,
+   "status": "USED_DEVELOPMENT_NOT_VIRGIN"
+  },
+  {
+   "all_sources": [
+    "results/headroom/cobb_douglas_v1/result.json"
+   ],
+   "end": 5600008,
+   "id": "reconciled_5600001",
+   "purpose": "Discovered by reconciling the registry against sealed artifacts. It was consumed but never registered, so a replay could not be declared against it by name and its absence weakened every NO_KNOWN_COLLISION verdict.",
+   "registered_by": "scripts/reconcile_seed_custody_registry_v1.py",
+   "source": "results/headroom/cobb_douglas_v1/result.json",
+   "start": 5600001,
+   "status": "USED_DEVELOPMENT_NOT_VIRGIN"
+  },
+  {
+   "all_sources": [
+    "results/manuscript/h1_h3_v1/result.json"
+   ],
+   "end": 5700010,
+   "id": "reconciled_5700001",
+   "purpose": "Discovered by reconciling the registry against sealed artifacts. It was consumed but never registered, so a replay could not be declared against it by name and its absence weakened every NO_KNOWN_COLLISION verdict.",
+   "registered_by": "scripts/reconcile_seed_custody_registry_v1.py",
+   "source": "results/manuscript/h1_h3_v1/result.json",
+   "start": 5700001,
+   "status": "USED_DEVELOPMENT_NOT_VIRGIN"
+  },
+  {
+   "all_sources": [
+    "results/manuscript/h1_h3_v2/result.json",
+    "results/sensitivity/expedite_headroom_v2/result.json"
+   ],
+   "end": 5800008,
+   "id": "reconciled_5800001",
+   "purpose": "Discovered by reconciling the registry against sealed artifacts. It was consumed but never registered, so a replay could not be declared against it by name and its absence weakened every NO_KNOWN_COLLISION verdict.",
+   "registered_by": "scripts/reconcile_seed_custody_registry_v1.py",
+   "source": "results/manuscript/h1_h3_v2/result.json",
+   "start": 5800001,
+   "status": "USED_DEVELOPMENT_NOT_VIRGIN"
+  },
+  {
+   "all_sources": [
+    "results/sensitivity/expedite_headroom_v2_smoke/result.json",
+    "results/sensitivity/expedite_headroom_v2_smoke_v2/result.json"
+   ],
+   "end": 5800102,
+   "id": "reconciled_5800101",
+   "purpose": "Discovered by reconciling the registry against sealed artifacts. It was consumed but never registered, so a replay could not be declared against it by name and its absence weakened every NO_KNOWN_COLLISION verdict.",
+   "registered_by": "scripts/reconcile_seed_custody_registry_v1.py",
+   "source": "results/sensitivity/expedite_headroom_v2_smoke/result.json",
+   "start": 5800101,
+   "status": "USED_DEVELOPMENT_NOT_VIRGIN"
+  },
+  {
+   "all_sources": [
+    "results/garrido_meta_learner_smoke_v2/result.json",
+    "results/garrido_meta_learner_v2/smoke_result.json"
+   ],
+   "end": 5910001,
+   "id": "reconciled_5910001",
+   "purpose": "Discovered by reconciling the registry against sealed artifacts. It was consumed but never registered, so a replay could not be declared against it by name and its absence weakened every NO_KNOWN_COLLISION verdict.",
+   "registered_by": "scripts/reconcile_seed_custody_registry_v1.py",
+   "source": "results/garrido_meta_learner_smoke_v2/result.json",
+   "start": 5910001,
+   "status": "USED_DEVELOPMENT_NOT_VIRGIN"
+  },
+  {
+   "all_sources": [
+    "results/manuscript/h1_h3_v2_1/result.json"
+   ],
+   "end": 6200005,
+   "id": "reconciled_6200001",
+   "purpose": "Discovered by reconciling the registry against sealed artifacts. It was consumed but never registered, so a replay could not be declared against it by name and its absence weakened every NO_KNOWN_COLLISION verdict.",
+   "registered_by": "scripts/reconcile_seed_custody_registry_v1.py",
+   "source": "results/manuscript/h1_h3_v2_1/result.json",
+   "start": 6200001,
+   "status": "USED_DEVELOPMENT_NOT_VIRGIN"
+  },
+  {
+   "all_sources": [
+    "results/metric_audit/service_first_v2/result.json"
+   ],
+   "end": 6300006,
+   "id": "reconciled_6300001",
+   "purpose": "Discovered by reconciling the registry against sealed artifacts. It was consumed but never registered, so a replay could not be declared against it by name and its absence weakened every NO_KNOWN_COLLISION verdict.",
+   "registered_by": "scripts/reconcile_seed_custody_registry_v1.py",
+   "source": "results/metric_audit/service_first_v2/result.json",
+   "start": 6300001,
+   "status": "USED_DEVELOPMENT_NOT_VIRGIN"
+  },
+  {
+   "all_sources": [
+    "results/metric_audit/contention_service_first_v2/result.json"
+   ],
+   "end": 6400010,
+   "id": "reconciled_6400001",
+   "purpose": "Discovered by reconciling the registry against sealed artifacts. It was consumed but never registered, so a replay could not be declared against it by name and its absence weakened every NO_KNOWN_COLLISION verdict.",
+   "registered_by": "scripts/reconcile_seed_custody_registry_v1.py",
+   "source": "results/metric_audit/contention_service_first_v2/result.json",
+   "start": 6400001,
+   "status": "USED_DEVELOPMENT_NOT_VIRGIN"
+  },
+  {
+   "all_sources": [
+    "results/metric_audit/des_change_differential/result.json",
+    "results/metric_audit/vps_vs_local_differential/result.json"
+   ],
+   "end": 6500003,
+   "id": "reconciled_6500001",
+   "purpose": "Discovered by reconciling the registry against sealed artifacts. It was consumed but never registered, so a replay could not be declared against it by name and its absence weakened every NO_KNOWN_COLLISION verdict.",
+   "registered_by": "scripts/reconcile_seed_custody_registry_v1.py",
+   "source": "results/metric_audit/des_change_differential/result.json",
+   "start": 6500001,
+   "status": "USED_DEVELOPMENT_NOT_VIRGIN"
+  },
+  {
+   "all_sources": [
+    "results/metric_audit/cssu_liveness_scope/result.json"
+   ],
+   "end": 6600006,
+   "id": "reconciled_6600001",
+   "purpose": "Discovered by reconciling the registry against sealed artifacts. It was consumed but never registered, so a replay could not be declared against it by name and its absence weakened every NO_KNOWN_COLLISION verdict.",
+   "registered_by": "scripts/reconcile_seed_custody_registry_v1.py",
+   "source": "results/metric_audit/cssu_liveness_scope/result.json",
+   "start": 6600001,
+   "status": "USED_DEVELOPMENT_NOT_VIRGIN"
+  },
+  {
+   "all_sources": [
+    "results/headroom/g1_ablation_ci_zero/result.json",
+    "results/headroom/g1_buffer_price/result.json"
+   ],
+   "end": 6700006,
+   "id": "reconciled_6700001",
+   "purpose": "Discovered by reconciling the registry against sealed artifacts. It was consumed but never registered, so a replay could not be declared against it by name and its absence weakened every NO_KNOWN_COLLISION verdict.",
+   "registered_by": "scripts/reconcile_seed_custody_registry_v1.py",
+   "source": "results/headroom/g1_ablation_ci_zero/result.json",
+   "start": 6700001,
+   "status": "USED_DEVELOPMENT_NOT_VIRGIN"
+  },
+  {
+   "all_sources": [
+    "results/headroom/buffer_prediction_premium/result.json",
+    "results/k3/confirmation.json"
+   ],
+   "end": 6800010,
+   "id": "reconciled_6800001",
+   "purpose": "Discovered by reconciling the registry against sealed artifacts. It was consumed but never registered, so a replay could not be declared against it by name and its absence weakened every NO_KNOWN_COLLISION verdict.",
+   "registered_by": "scripts/reconcile_seed_custody_registry_v1.py",
+   "source": "results/headroom/buffer_prediction_premium/result.json",
+   "start": 6800001,
+   "status": "USED_DEVELOPMENT_NOT_VIRGIN"
+  },
+  {
+   "all_sources": [
+    "results/k3/confirmation.json"
+   ],
+   "end": 6800120,
+   "id": "reconciled_6800120",
+   "purpose": "Discovered by reconciling the registry against sealed artifacts. It was consumed but never registered, so a replay could not be declared against it by name and its absence weakened every NO_KNOWN_COLLISION verdict.",
+   "registered_by": "scripts/reconcile_seed_custody_registry_v1.py",
+   "source": "results/k3/confirmation.json",
+   "start": 6800120,
+   "status": "USED_DEVELOPMENT_NOT_VIRGIN"
+  },
+  {
+   "all_sources": [
+    "results/headroom/cd_surface_prediction_premium/result.json"
+   ],
+   "end": 6900008,
+   "id": "reconciled_6900001",
+   "purpose": "Discovered by reconciling the registry against sealed artifacts. It was consumed but never registered, so a replay could not be declared against it by name and its absence weakened every NO_KNOWN_COLLISION verdict.",
+   "registered_by": "scripts/reconcile_seed_custody_registry_v1.py",
+   "source": "results/headroom/cd_surface_prediction_premium/result.json",
+   "start": 6900001,
+   "status": "USED_DEVELOPMENT_NOT_VIRGIN"
+  },
+  {
+   "all_sources": [
+    "results/garrido_q2_des288_v1/smoke_fullsurface_result.json",
+    "results/garrido_q2_des288_v1/smoke_fullsurface_result_v2.json",
+    "results/garrido_q2_des288_v1/smoke_result_after_fix.json"
+   ],
+   "end": 7100001,
+   "id": "reconciled_7100001",
+   "purpose": "Discovered by reconciling the registry against sealed artifacts. It was consumed but never registered, so a replay could not be declared against it by name and its absence weakened every NO_KNOWN_COLLISION verdict.",
+   "registered_by": "scripts/reconcile_seed_custody_registry_v1.py",
+   "source": "results/garrido_q2_des288_v1/smoke_fullsurface_result.json",
+   "start": 7100001,
+   "status": "USED_DEVELOPMENT_NOT_VIRGIN"
+  },
+  {
+   "all_sources": [
+    "results/program_o/exact_transducer_validation_v1/result.json"
+   ],
+   "end": 7400048,
+   "id": "reconciled_7400025",
+   "purpose": "Discovered by reconciling the registry against sealed artifacts. It was consumed but never registered, so a replay could not be declared against it by name and its absence weakened every NO_KNOWN_COLLISION verdict.",
+   "registered_by": "scripts/reconcile_seed_custody_registry_v1.py",
+   "source": "results/program_o/exact_transducer_validation_v1/result.json",
+   "start": 7400025,
+   "status": "USED_DEVELOPMENT_NOT_VIRGIN"
+  },
+  {
+   "all_sources": [
+    "results/program_o/gate_o0_full_action_transducer_v1/screen/result.json",
+    "results/program_o/gate_o0_full_action_transducer_v1/screen/run_manifest.json",
+    "results/program_o/gate_o0_full_action_transducer_v1/validation/result.json",
+    "results/program_o/gate_o0_full_action_transducer_v1/validation/run_manifest.json"
+   ],
+   "end": 7410048,
+   "id": "reconciled_7410001",
+   "purpose": "Discovered by reconciling the registry against sealed artifacts. It was consumed but never registered, so a replay could not be declared against it by name and its absence weakened every NO_KNOWN_COLLISION verdict.",
+   "registered_by": "scripts/reconcile_seed_custody_registry_v1.py",
+   "source": "results/program_o/gate_o0_full_action_transducer_v1/screen/result.json",
+   "start": 7410001,
+   "status": "USED_DEVELOPMENT_NOT_VIRGIN"
+  },
+  {
+   "all_sources": [
+    "results/program_o/dual_resource_diagnostic_v1/remote_run/artifacts/diagnostic/result.json",
+    "results/program_o/fixed_clock_hobs_validation_v1/remote_run/artifacts/validation/result.json",
+    "results/program_o/state_rich_comparator_fit_v1/result.json"
+   ],
+   "end": 7420096,
+   "id": "reconciled_7420001",
+   "purpose": "Discovered by reconciling the registry against sealed artifacts. It was consumed but never registered, so a replay could not be declared against it by name and its absence weakened every NO_KNOWN_COLLISION verdict.",
+   "registered_by": "scripts/reconcile_seed_custody_registry_v1.py",
+   "source": "results/program_o/dual_resource_diagnostic_v1/remote_run/artifacts/diagnostic/result.json",
+   "start": 7420001,
+   "status": "USED_DEVELOPMENT_NOT_VIRGIN"
+  },
+  {
+   "all_sources": [
+    "results/program_o/fixed_clock_hobs_corrective_validation_v1/remote_run/artifacts/validation/result.json",
+    "results/program_s/s0_hot_path_riskoff_parity_v1_1/corrective_result_v2.json",
+    "results/program_s/s0_hot_path_riskoff_parity_v1_1/result.json"
+   ],
+   "end": 7430048,
+   "id": "reconciled_7430001",
+   "purpose": "Discovered by reconciling the registry against sealed artifacts. It was consumed but never registered, so a replay could not be declared against it by name and its absence weakened every NO_KNOWN_COLLISION verdict.",
+   "registered_by": "scripts/reconcile_seed_custody_registry_v1.py",
+   "source": "results/program_o/fixed_clock_hobs_corrective_validation_v1/remote_run/artifacts/validation/result.json",
+   "start": 7430001,
+   "status": "USED_DEVELOPMENT_NOT_VIRGIN"
+  },
+  {
+   "all_sources": [
+    "results/garrido_risk_headroom_sensitivity_v1/result.json"
+   ],
+   "end": 7450006,
+   "id": "reconciled_7450001",
+   "purpose": "Discovered by reconciling the registry against sealed artifacts. It was consumed but never registered, so a replay could not be declared against it by name and its absence weakened every NO_KNOWN_COLLISION verdict.",
+   "registered_by": "scripts/reconcile_seed_custody_registry_v1.py",
+   "source": "results/garrido_risk_headroom_sensitivity_v1/result.json",
+   "start": 7450001,
+   "status": "USED_DEVELOPMENT_NOT_VIRGIN"
+  },
+  {
+   "authorization": {
+    "granted_by": "PI, explicitly, in session 2026-08-05",
+    "instruction": "arranca con la confirmacion",
+    "note": "The PI reviewed KEEP_THE_RESERVED_BLOCK and chose to hold n = 60 rather than shrink to 26. The previous block's authorization field was written by an agent and was never granted; it is not reused here.",
+    "scope": "this contract and this seed block only"
+   },
+   "closed_at": "2026-08-06",
+   "end": 8200060,
+   "id": "garrido_grid_transfer_v2_confirmation",
+   "opened_at": "2026-08-06T00:46:27.874145+00:00",
+   "opening_receipt": "results/custody/garrido_grid_transfer_confirmation_v2_open.json",
+   "purpose": "Clean virgin block for the UCB1 factor-wise grid-transfer confirmation, after 8100001-8100060 was quarantined as ATTEMPTED_NO_SEALED_ARTIFACT. The quarantined block is not recycled: partial consumption leaves no trace on disk, so which of its seeds remain virgin cannot be demonstrated.",
+   "result": "results/grid_transfer_confirmation_v2/result.json",
+   "source": "docs/ENMIENDA_CONFIRMACION_BLOQUE_LIMPIO_2026-08-05.md",
+   "start": 8200001,
+   "status": "BURNED_CONFIRMATION_COMPLETE"
+  }
+ ],
+ "inventory_limitations": [
+  "This registry is a conservative baseline, not evidence that unlisted seeds are virgin.",
+  "Untracked or remote artifacts must be reconciled before a confirmation block can open.",
+  "A seed block is not confirmation-eligible merely because no result.json was found."
+ ],
+ "inventory_scope": [
+  "contracts",
+  "docs",
+  "research",
+  "results",
+  "scripts",
+  "tests",
+  "git_refs",
+  "local_and_remote_manifests"
+ ],
+ "new_seed_opening": false,
+ "pi_exceptions": [
+  {
+   "at": "2026-08-07T18:05:00+00:00",
+   "authorisation": "docs/AUTORIZACION_PI_REPROPOSITO_BLOQUE_7700001_2026-08-07.md",
+   "block": "g3a_v2_development",
+   "lifts": [
+    "submission_a_receipt_required_before_g3a_open",
+    "new_seed_opening",
+    "scientific_execution_authorized"
+   ],
+   "scope": "this opening only; the registry header stays unchanged and no general authorisation is granted"
+  }
+ ],
+ "reconciled_at": "2026-08-05T21:26:49.866224+00:00",
+ "reconciliation_receipt": "results/custody/registry_reconciliation.json",
+ "rules": {
+  "confirmation_requires_independent_virgin_block": true,
+  "development_is_not_confirmation": true,
+  "new_blocks_require_contract_and_authority": true,
+  "no_result_file_is_not_virginity_evidence": true,
+  "overlap_check_includes_git_and_remote_manifests": true,
+  "program_q_and_program_o_are_immutable": true,
+  "submission_a_receipt_required_before_g3a_open": true,
+  "thesis_1to1_is_immutable": true,
+  "untracked_results_are_not_virginity_evidence": true
+ },
+ "schema_version": "seed_custody_registry_v1",
+ "scientific_execution_authorized": false,
+ "status": "BASELINE_INVENTORY_INCOMPLETE_NO_NEW_SEEDS_AUTHORIZED"
 }

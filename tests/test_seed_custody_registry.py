@@ -39,6 +39,9 @@ def test_seed_registry_is_fail_closed_before_submission_receipt():
             # presence is a red flag and never a routine state. Blocks in it are spent and carry
             # no prospective-confirmation value.
             "BURNED_OPENED_AGAINST_PREREGISTRATION",
+            # A confirmation is running on this block right now. Admitted so the registry can say
+            # so between opening and sealing; a block cannot be virgin and in flight at once.
+            "OPEN_CONFIRMATION_IN_PROGRESS",
             "RESERVED_NOT_OPENED",
         }
         ranges.append((block["start"], block["end"], block["id"]))
@@ -48,6 +51,28 @@ def test_seed_registry_is_fail_closed_before_submission_receipt():
             assert end < other_start or other_end < start, (block_id, other_id)
 
     g3a = next(block for block in blocks if block["id"] == "g3a_v2_development")
-    assert g3a["status"] == "RESERVED_NOT_OPENED"
     assert g3a["start"] == 7_700_001
     assert g3a["end"] == 7_700_120
+
+    # This block is the last virgin one in the project and its opening is gated by
+    # `submission_a_receipt_required_before_g3a_open`. It may leave RESERVED_NOT_OPENED ONLY with a
+    # recorded PI exception that names this block and the rule it lifts, plus the contract the
+    # block was opened under. An undocumented opening still fails here, which is the property this
+    # guardrail exists for -- weakening it to "any status is fine now" would have thrown that away.
+    if g3a["status"] != "RESERVED_NOT_OPENED":
+        exceptions = [
+            entry for entry in registry.get("pi_exceptions", [])
+            if entry.get("block") == "g3a_v2_development"
+            and "submission_a_receipt_required_before_g3a_open" in entry.get("lifts", [])
+            and entry.get("authorisation")
+            and entry.get("at")
+        ]
+        assert exceptions, (
+            "g3a_v2_development left RESERVED_NOT_OPENED with no recorded PI exception lifting "
+            "submission_a_receipt_required_before_g3a_open"
+        )
+        assert g3a.get("opened_by_contract"), "opened without naming the contract it opened under"
+        assert g3a.get("authorisation") == exceptions[-1]["authorisation"]
+        # The exception is per-opening. The header must NOT have been flipped to a general
+        # authorisation, which the assertions at the top of this test already require.
+        assert "this opening only" in exceptions[-1].get("scope", "")
