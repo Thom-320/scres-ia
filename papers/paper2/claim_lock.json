@@ -1,0 +1,333 @@
+{
+ "claims": [
+  {
+   "allowed": "In a prospective expansion from 288 to 4,608 configurations, only a factorized UCB search strategy outperformed both cold start and a state-blind replay of its own search marginals (+0.03073, LCB95 +0.01990, n=60); the neural carrier did not (-0.01178, [-0.01849, -0.00484]).",
+   "artifact": "results/grid_transfer_confirmation_v2/result.json",
+   "claim_id": "RQ2_UCB1_TRANSFERS_BEYOND_MARGINAL_REPLAY",
+   "claim_status": "GRID_TRANSFER_CONFIRMED__UCB1",
+   "contract_sha256": "1abbb2df6526f82b887e1ba07cb66f5fa06bb2fbf1f847e79a63b036938c5c9d",
+   "endpoint": "auc_regret_norm",
+   "estimand": "transfer vs cold start and vs state-blind marginal replay",
+   "evidence_grade": "CONFIRMATORY",
+   "exists": true,
+   "falsifiers_all_passed": true,
+   "file_sha256": "7bc33823ccd90b5e83068287ddffa387427734c098900aa9710e72890ca0cd4a",
+   "forbidden": [
+    "only UCB1 learns",
+    "the neuron has no memory",
+    "UCB1 is universally superior",
+    "factorized UCB policy"
+   ],
+   "missing_top_level_fields": [],
+   "run_role": "CONFIRMATION",
+   "scope": "CONFIRMATION_ON_RESERVED_VIRGIN_BLOCK_NO_RL_NO_NEURAL_LEARNER",
+   "section": "RQ2 (confirmation, leads Results)",
+   "self_sha256": "eceb9ee97613e172130b7175a79cf6c7d5ddfb54f0ec5435b1174842c20b0f5a",
+   "why_forbidden": "'policy' would conflate the outer loop with within-episode control"
+  },
+  {
+   "allowed": "The reconstruction prospectively reproduced six thesis-derived comparative panels, 12/12 tapes each under Holm correction, with generated_orders exactly zero in every tape of every panel and lost orders falling in all six.",
+   "artifact": "results/garrido_h2_h3_confirmation_v1/result.json",
+   "claim_id": "VALIDATION_SIX_THESIS_PANELS",
+   "claim_status": null,
+   "contract_sha256": "1d3c80bd48feac4c71065ad3e432accfcc99cfe7c0cbf20a8166ea95103cfe98",
+   "endpoint": "flow_fill_rate + delivered + full_ledger + unresolved (concordant)",
+   "estimand": "directional buffer and shift response, six preregistered panels",
+   "evidence_grade": "GRADE_IN_SIBLING_RECEIPT",
+   "exists": true,
+   "falsifiers_all_passed": null,
+   "file_sha256": "bc375d3021b64d1069f4111d5350294db77317c04e81ec222ac1ebdd17e8b195",
+   "forbidden": [
+    "validation of the DES",
+    "the DES is validated",
+    "order-level behavioural replication",
+    "reproduces the Simulink model"
+   ],
+   "missing_top_level_fields": [
+    "run_role",
+    "scope",
+    "claim_status",
+    "self_sha256"
+   ],
+   "run_role": null,
+   "scope": null,
+   "section": "Methods / targeted validation",
+   "self_sha256": null,
+   "sibling_receipt": "results/garrido_h2_h3_confirmation_v1/completion_receipt.json",
+   "sibling_receipt_file_sha256": "d4305bcf6bf5209d52f0d44ff6238efb0b4a053bf1f3a9d5d3311e534faa61dc",
+   "why_forbidden": "the artifact's own claim_boundary says it establishes no learner, feedback or architectural value; and sumBt is unreconstructed above 1.09% of 47,780 rows"
+  },
+  {
+   "allowed": "Under the literal reading of Fig. 5, ReT is exactly the sum of the driver contributions supplied as inputs (R2 = 1.0, maximum identity error 3.22e-15), so reconstructing ReT from them is an identity rather than a non-trivial predictive task.",
+   "artifact": "results/garrido_fig5_surrogate/result.json",
+   "claim_id": "FIG5_IS_AN_IDENTITY",
+   "claim_status": "DEVELOPMENT_FIG5_SURROGATE",
+   "contract_sha256": null,
+   "endpoint": "R2 of the drawn network on its own drivers",
+   "estimand": "identity check",
+   "evidence_grade": "GRADE_NOT_MACHINE_DISCOVERABLE",
+   "exists": true,
+   "falsifiers_all_passed": true,
+   "file_sha256": "58d4c8a071cec86abee18900f98b3c783c0e71fb275b31fe327b0706d5c80281",
+   "forbidden": [
+    "Garrido's neuron is absurd",
+    "the proposal is wrong",
+    "the neuron cannot learn"
+   ],
+   "missing_top_level_fields": [
+    "run_role",
+    "scope"
+   ],
+   "run_role": null,
+   "scope": null,
+   "section": "Methods, as an algebraic proposition",
+   "self_sha256": "40bf64852c6e6f44bd08b881bf1be87bdb720fb632c5006d053e6aaf099736df",
+   "why_forbidden": "it relocates where the learning is; it does not disparage the proposal"
+  },
+  {
+   "allowed": "In a development replay, the six state-retaining arms occupied the six leading positions of fifteen, and the same approximator fell from rank 2 to rank 12 when its memory was removed.",
+   "artifact": "results/search_ladder_v5/result.json",
+   "claim_id": "LADDER_STATEFUL_ARMS_LEAD",
+   "claim_status": "THE_NEURON_HOLDS_AGAINST_LOOKAHEAD_SEARCH",
+   "contract_sha256": "25f33961a6f43713050584c9723d214c8369eba74ef567ac8076aec9d873bc2b",
+   "endpoint": "auc_regret_norm",
+   "estimand": "ranking of 15 deployable methods at budget 24",
+   "evidence_grade": "DEVELOPMENT",
+   "exists": true,
+   "falsifiers_all_passed": true,
+   "file_sha256": "f648a1da5aefaf2ff6bf94d6aff82912dcf94de2fba97df63bb507bb5e796361",
+   "forbidden": [
+    "retention was prospectively confirmed",
+    "retention is confirmed across families",
+    "the top-six ranking shows retention causes"
+   ],
+   "missing_top_level_fields": [],
+   "run_role": "CACHE_ANALYSIS",
+   "scope": "DEVELOPMENT_ON_BURNED_TAPES_NO_ADJUDICATION",
+   "section": "RQ1",
+   "self_sha256": "f7dfb1e8bc1c036bcac28c83535e7a5dd8ebd723dd01d3ec604e8228c20cc511",
+   "why_forbidden": "burned tapes, no adjudication; and rank position is not a causal estimand -- the within-family paired contrasts are"
+  },
+  {
+   "allowed": "Retaining state improved the same approximator by +0.06070 AUC [LCB95 +0.04556] under a prefix normaliser blind to the unrun surface.",
+   "artifact": "results/garrido_normaliser_audit_v3/result.json",
+   "claim_id": "RETENTION_NEURON_VS_RESET",
+   "claim_status": "ALZHEIMER_EFFECT_SURVIVES_AN_HONEST_NORMALISER",
+   "contract_sha256": "bc9d8cf78d370e82ac05574e0d917a9b4bff07ce23e694f6b9bdf5ad8ed863f6",
+   "endpoint": "auc_regret_norm (prefix normaliser)",
+   "estimand": "memory minus reset, within the neural family",
+   "evidence_grade": "REPLAY",
+   "exists": true,
+   "falsifiers_all_passed": true,
+   "file_sha256": "fd617753949947e699f63c2e632c849dec5b41d4a27a01eca8a1abe68426303d",
+   "forbidden": [
+    "7.90 runs",
+    "7.24 runs",
+    "13.54",
+    "12.42",
+    "5.83 runs saved"
+   ],
+   "missing_top_level_fields": [],
+   "run_role": "BURNED_REPLAY_AUDIT",
+   "scope": "DEVELOPMENT_REPLAY_ON_BURNED_TAPES_NO_ADJUDICATION_NO_LEARNER",
+   "section": "RQ1",
+   "self_sha256": "b1cf3705a070a19157e446a0c31027a3fe853376b0252ab36f7f76afed889231",
+   "why_forbidden": "the runs-to-threshold figures are censored at 0.056/0.153/0.222/0.611 per arm and the +7.90 variant used the oracle normaliser"
+  },
+  {
+   "allowed": "Two sealed artifacts place the bound on opposite sides of zero over byte-identical replicates, and the bound is positive in 65% of 40 resampling seeds; the contrast is not distinguishable under the resampling procedure.",
+   "artifact": "results/ofat_lcb_reconciliation/result.json",
+   "claim_id": "OFAT_CONTRAST_IS_RESAMPLING_UNSTABLE",
+   "claim_status": "OFAT_LCB_SIGN_IS_RESAMPLING_UNSTABLE",
+   "contract_sha256": "c0b17233460fd3e4f89b790e06890a6eb9b1607ca173329286a448a56d6badb4",
+   "endpoint": "auc_regret_norm",
+   "estimand": "neuron_memory vs ofat_transfer",
+   "evidence_grade": "GRADE_NOT_MACHINE_DISCOVERABLE",
+   "exists": true,
+   "falsifiers_all_passed": true,
+   "file_sha256": "4a383abeceda9d66888bb395b95ddfd500496d858574b068b76354c480dd1c8e",
+   "forbidden": [
+    "excludes zero",
+    "excluye el cero",
+    "the neuron beats OFAT"
+   ],
+   "missing_top_level_fields": [
+    "run_role"
+   ],
+   "run_role": null,
+   "scope": "DEVELOPMENT_REANALYSIS_OF_SEALED_ARTIFACTS_NO_SEEDS",
+   "section": "RQ1, stated as a limit",
+   "self_sha256": "a35bb6ec721d683892000e74aae4a1c08b901aa13d36ee1f7aa5c956536e93ba",
+   "why_forbidden": "Amendment 1 section 3 forbids it; the fossil survived four documents"
+  },
+  {
+   "allowed": "At matched parameter budgets (532 vs 529) the KAN attained better supervised fit yet searched worse (+0.01037, CI95 [+0.00302, +0.01893], p = 0.0012), and the best searcher of the seven-architecture bake-off was a five-parameter neuron.",
+   "artifact": "results/surrogate_architecture_bakeoff/result.json",
+   "claim_id": "KAN_FIT_DOES_NOT_CONVERT_TO_SEARCH",
+   "claim_status": "KAN_SEARCHES_WORSE_THAN_A_MATCHED_MLP",
+   "contract_sha256": "212743cefdf526e3d3b5e8103633c2d033a94a6a538d1bed8c5b742e628bbda8",
+   "endpoint": "auc_regret_norm (lower is better)",
+   "estimand": "kan minus parameter-matched mlp",
+   "evidence_grade": "DEVELOPMENT",
+   "exists": true,
+   "falsifiers_all_passed": true,
+   "file_sha256": "f96e5b6ff04899320103527c72b859b740aa5dd3a501abc3c051e3be4d5b29dd",
+   "forbidden": [
+    "KAN is worse",
+    "KANs do not work",
+    "neural networks are unnecessary"
+   ],
+   "missing_top_level_fields": [],
+   "run_role": "CACHE_ANALYSIS",
+   "scope": "DEVELOPMENT_ON_BURNED_TAPES_NO_ADJUDICATION",
+   "section": "RQ3b",
+   "self_sha256": "965c477d91ebc322cb7bfe788035673130e557924fc316a4ec6a2b5266d81ddc",
+   "why_forbidden": "the claim is about fit-versus-search on this task, not about KANs at large"
+  },
+  {
+   "allowed": "Under the parameter-matched latent contract tested, the KAN arm underperformed its MLP counterpart: 97.58 against 98.44, a paired -0.862 [-1.605, -0.119] over five seeds with four of five negative -- -0.88% relative, smaller than the 0.76-1.06 within-seed evaluation SD, and at matched parameter count the KAN affords hidden_dim=10 against the MLP's 152.",
+   "artifact": "results/dmlpa_kan_latent/result.json",
+   "claim_id": "KAN_LATENT_UNDERPERFORMS_UNDER_MATCHED_CONTRACT",
+   "claim_status": "KAN_LATENT_HURTS",
+   "contract_sha256": "1c23273417a5b0d69dcd00fd35a83a21965ce61778785c598b5597eaa822f235",
+   "endpoint": "ret_mean_track_b_v1 (HIGHER is better)",
+   "estimand": "kan latent minus mlp latent, paired over 5 seeds",
+   "evidence_grade": "GRADE_NOT_MACHINE_DISCOVERABLE",
+   "exists": true,
+   "falsifiers_all_passed": true,
+   "file_sha256": "b301833949b4386bd811fbd6d2c371fbdc198b93214b28895e2d04a8f22e3836",
+   "forbidden": [
+    "KAN hurts",
+    "KAN is worse",
+    "-0.86225"
+   ],
+   "missing_top_level_fields": [
+    "run_role"
+   ],
+   "run_role": null,
+   "scope": "DEVELOPMENT_OPEN_SEEDS_NO_CONFIRMATION_POSSIBLE_NO_VIRGIN_BLOCKS_REMAIN",
+   "section": "Supplement (different contract from RQ3b)",
+   "self_sha256": "f79ca248bb983bd4eb77e05f119eafc837b72d53d291c00c97ee8d4b30699ae9",
+   "why_forbidden": "the bare difference is uninterpretable without endpoint, orientation, absolute means and the 15x width confound"
+  },
+  {
+   "allowed": "On a deliberately curved surface the backpropagation MLP scored below a straight line (-0.128 [-0.316, +0.060]) and neither approximator reached the preregistered SESOI of 0.05, with in-situ curvature 0.0763 against 0.3174 of unexplained episode-level variance.",
+   "artifact": "results/headroom/buffer_prediction_premium/result.json",
+   "claim_id": "NEURAL_PREMIUM_NEEDS_CURVATURE_ABOVE_NOISE",
+   "claim_status": "NO_NEURAL_PREMIUM_EVEN_WITH_MEASURED_CURVATURE",
+   "contract_sha256": "ebb65c9c3043faa6363ddd1ee89fb523ef24b7d7a2f0571b46750f1996d766b7",
+   "endpoint": "held-out R2, seed-grouped CV",
+   "estimand": "MLP and KAN minus linear",
+   "evidence_grade": "GRADE_NOT_MACHINE_DISCOVERABLE",
+   "exists": true,
+   "falsifiers_all_passed": true,
+   "file_sha256": "54bf5fa2594262bd96777534650622bb31894c8ab2abef775a95632b98f85cb0",
+   "forbidden": [
+    "networks never help",
+    "curvature is always below noise"
+   ],
+   "missing_top_level_fields": [
+    "run_role",
+    "scope"
+   ],
+   "run_role": null,
+   "scope": null,
+   "section": "Discussion",
+   "self_sha256": "ae1a545bb4274e75859e6665ceacbe129d8683af0d05c025e8f5bdbddc5a787a",
+   "why_forbidden": "it is a condition, measured on one surface, not a law"
+  },
+  {
+   "allowed": "Ramsey RESET rejects linearity in all six contexts (F 384-2463), and both AIC and seed-grouped held-out R2 select quadratic-with-interactions in all six; the non-linearity buys +0.19 to +0.23 of held-out R2 in the R1r family. The architecture tie is therefore not explained by a linear surface.",
+   "artifact": "results/functional_form_diagnostics/result.json",
+   "claim_id": "SURFACE_IS_MATERIALLY_NONLINEAR",
+   "claim_status": "FUNCTIONAL_FORM_DIAGNOSTICS_REQUESTED_BY_DOMAIN_EXPERT",
+   "contract_sha256": "8b72e79ede838623a221f64cf04815dc3dd4bad710c48801eddeb2817d28d0f7",
+   "endpoint": "held-out R2, folds cut on seed",
+   "estimand": "quadratic+interactions minus linear",
+   "evidence_grade": "DIAGNOSTIC",
+   "exists": true,
+   "falsifiers_all_passed": true,
+   "file_sha256": "504589fc230b86a0fe857b7381b33097eca05abaffbe677c89b244fd4c328a8b",
+   "forbidden": [
+    "the surface is linear",
+    "AIC proves linearity",
+    "RESET shows the variables are linear"
+   ],
+   "missing_top_level_fields": [],
+   "run_role": "DIAGNOSTIC",
+   "scope": "DEVELOPMENT_DIAGNOSTIC_ON_SEALED_SURFACE_NO_SEEDS_OPENED_NO_ADJUDICATION",
+   "section": "Supplement + RQ3 discussion",
+   "self_sha256": "4c240eb65906a7578a10902a96124dfbb97ac499ce5e08a7f94d972a88dc8b9c",
+   "why_forbidden": "AIC is a relative criterion and a non-significant RESET would have been failure to reject, not evidence; here it rejects"
+  },
+  {
+   "allowed": "Within the thesis-inherited U(2400,2600) demand process: realised weekly CV 7.1%, 24.8% of weeks already exceed single-shift capacity, and lag-1 autocorrelation -0.228 against an iid band of +/-0.065.",
+   "artifact": "results/demand_process/result.json",
+   "claim_id": "DEMAND_PROCESS_SCOPE",
+   "claim_status": "DEMAND_PROCESS_CHARACTERISED",
+   "contract_sha256": "bcf75652208988a0e7dc4d81e7a43bc7c542b6b379e2eb5f330625986c8047fe",
+   "endpoint": "weekly CV and lag-1 autocorrelation",
+   "estimand": "realised demand process",
+   "evidence_grade": "DIAGNOSTIC",
+   "exists": true,
+   "falsifiers_all_passed": false,
+   "file_sha256": "cb4f88398c4f93a418d5b96c3e12563a2bae5b281f11fd2a5570fd5cd8e68a6e",
+   "forbidden": [
+    "demand is static",
+    "almost deterministic demand",
+    "weekly CV 0.94%",
+    "demand is iid"
+   ],
+   "missing_top_level_fields": [],
+   "run_role": "DIAGNOSTIC",
+   "scope": "DEVELOPMENT_DIAGNOSTIC_NO_ADJUDICATION_NO_LEARNER",
+   "section": "Results 3.1, scope stated up front",
+   "self_sha256": "9711cb366b74f4d870ed8db960458175f8d7c8ea4f6d924af9d8c80f311939e6",
+   "why_forbidden": "0.94% was hand-derived and wrong; and the series is not iid, which retracts the 'no demand state to condition on' argument"
+  },
+  {
+   "allowed": "Across 45 risk profiles escalating the thesis's own recurrent risks one at a time (4,860 evaluations), no door passes: max H_profile_safe 6.93e-05 [0, 2.08e-04] against a 0.01 bar. The optimum varies across at most three postures; following it buys nothing.",
+   "artifact": "results/garrido_risk_headroom_sensitivity_v1/result.json",
+   "claim_id": "RISK_PROFILE_TAILORING_BUYS_NOTHING",
+   "claim_status": null,
+   "contract_sha256": "57310d977377acaf400979f7770833bf51b5e2ab15c6a8c62e354fa186c5478e",
+   "endpoint": "H_profile_safe",
+   "estimand": "value of tailoring the posture to the risk profile",
+   "evidence_grade": "GRADE_NOT_MACHINE_DISCOVERABLE",
+   "exists": true,
+   "falsifiers_all_passed": null,
+   "file_sha256": "e4a3d4a05d604234ac9ef0c34811e96870e0daf8747bda60385f0e0eb2ac2d35",
+   "forbidden": [
+    "the optimal posture is invariant across all 45 profiles",
+    "the optimum does not move",
+    "randomised R2 is answered"
+   ],
+   "missing_top_level_fields": [
+    "run_role",
+    "scope",
+    "claim_status",
+    "self_sha256"
+   ],
+   "run_role": null,
+   "scope": null,
+   "section": "Discussion / answer to the randomised-R2 request",
+   "self_sha256": null,
+   "why_forbidden": "unique_profile_optima is 1, 2 or 3 by row; and the screen varied PROFILES, not the within-episode realisation"
+  }
+ ],
+ "generated_at_commit": "ccaa75991b64b50d287e42ec575a56c1d5ed5211",
+ "n_claims": 12,
+ "problems": [
+  "DEMAND_PROCESS_SCOPE: falsifiers did not all pass -- cite WITH the failure"
+ ],
+ "schema_version": "paper2_claim_lock_v1",
+ "supersedes_for_citation": [
+  "docs/TABLA_CANONICA_DE_CLAIMS_2026-08-07.md",
+  "docs/GARRIDO_Q1_Q2_CLAIM_FREEZE_2026-08-07.md",
+  "docs/GARRIDO_Q1_Q2_CLAIM_FREEZE_2026-08-07_ENMIENDA_1.md",
+  "docs/GARRIDO_Q1_Q2_CLAIM_FREEZE_2026-08-07_ENMIENDA_2.md",
+  "docs/GARRIDO_Q1_Q2_CLAIM_FREEZE_2026-08-07_ENMIENDA_3.md",
+  "docs/GARRIDO_Q1_Q2_CLAIM_FREEZE_2026-08-07_ENMIENDA_4.md"
+ ],
+ "supersession_note": "those documents remain the adjudication record and are NOT retired; this file is the single place the manuscript and figure builder resolve a citation, so authority no longer depends on remembering which amendment came last"
+}
