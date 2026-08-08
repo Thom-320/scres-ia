@@ -182,7 +182,12 @@ def rerun_chain(target: dict, workdir: Path) -> dict:
            "--budget", str(target["budget"]),
            "--contract", target["contract_path"],
            "--reference", target["reference_path"],
-           "--replay-of", str(TARGET),
+           # The block NAME, not the artifact path. `--replay-of` is matched against the seed
+           # registry, so a path falls through to the collision check and fails on the very
+           # artifact being reproduced -- which is what the 2026-08-08 run reported as
+           # f4_seed_custody FALLA while reproducing every scientific key exactly. Derived from
+           # the target rather than written here, so it cannot drift from the artifact.
+           "--replay-of", str(target.get("seed_block") or ""),
            "--output", str(out)]
     started = time.perf_counter()
     proc = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, check=False)
