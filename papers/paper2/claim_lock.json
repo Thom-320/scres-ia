@@ -554,31 +554,33 @@
   },
   {
    "allow_failed_falsifiers": true,
-   "allowed": "The literal Garrido-style generator produced weekly CV 0.177 and seasonal lag-12 ACF 0.839 against 0.071 and 0.015 for the thesis-uniform control. The initial 12-draw coverage test and the forecast-correlation test failed, so this artifact supports trajectory structure only, not sampler validity or forecast skill.",
+   "allowed": "The source-faithful generator produces weekly CV 0.1775 and lag-12 ACF 0.839 against 0.0713 and 0.015 for the thesis-uniform control, and the alpha/gamma sampler covers the unit interval over 2,000 instrument draws (0.504 +/- 0.290 and 0.497 +/- 0.288). The researcher-defined Holt-Winters observable signal is NOT established as informative: it correlates 0.826 with realised demand at t+1 against 0.006 for a shuffled placebo and reaches MASE 0.367 against a naive baseline, but MASE 4.344 against a SEASONAL-naive one -- so it is roughly four times worse than repeating the previous season. The engine remains ENGINE_PARTIAL and no forecast-information claim is made.",
    "artifact": "results/demand_seasonal_engine/result.json",
    "claim_id": "DEMAND_PROCESS_LITERAL_GENERATOR",
    "claim_status": "ENGINE_PARTIAL",
-   "contract_sha256": "44e5eb948ddb5cd2ad60194f05c7c255ef6156117dac514d057c44a3e1f60cd9",
-   "endpoint": "weekly CV and seasonal-lag ACF",
+   "contract_sha256": "7cd067366cbf38780385f62c93ac276624ab451c34a4589a20072217112eb44b",
+   "endpoint": "weekly CV, seasonal-lag ACF, sampler moments, forecast skill at t+1",
    "estimand": "structure of the researcher-implemented Garrido-style trajectory generator",
-   "evidence_grade": "DIAGNOSTIC",
+   "evidence_grade": "DEVELOPMENT",
    "exists": true,
    "falsifiers_all_passed": false,
-   "file_sha256": "49cf0a6674efab386411eb4336b0c5596cf70ec3713a6fe33ede274f41131984",
+   "file_sha256": "8592655aeeaf81f7b72935b197ef2090095b67918a1191d8c61761977222ca97",
    "forbidden": [
     "Garrido's equation is a forecast validated against realised demand",
     "forecast skill is established",
+    "the forecast is informative",
+    "the observable signal beats its baselines",
     "alpha and gamma are validated by 12 episodes",
     "seasonal demand is confirmed"
    ],
    "missing_top_level_fields": [],
    "paper_id": "P2",
    "registration_status": null,
-   "run_role": "DIAGNOSTIC",
-   "scope": "DEVELOPMENT_ENGINE_CHARACTERISATION_NO_ADJUDICATION_NO_LEARNER",
-   "section": "Results 3.2, bounded demand-process sensitivity",
-   "self_sha256": "f6eea651e931f57fdcf260940e5efbce879f3d001f1b0f426ae8f823530f7e94",
-   "why_forbidden": "the current artifact is ENGINE_PARTIAL with g4 and g5 failed; GR is used by the source as an input/generator, while forecast skill is our separate observable construct"
+   "run_role": "DEVELOPMENT_SENSITIVITY",
+   "scope": "DEVELOPMENT_SENSITIVITY_NO_ADJUDICATION_NO_LEARNER",
+   "section": "Results 3.1, bounded demand-process sensitivity",
+   "self_sha256": "a725ca16a2aed328c574d05bab46d0f41fba311ad2dae65381852e1830c3db45",
+   "why_forbidden": "a 0.826 correlation is nearly free when the series carries a strong seasonal component -- the trivial seasonal-naive baseline beats this instrument by 4.3x, which is exactly what the amended g5 exists to catch and what the previous correlation-only gate would have passed"
   },
   {
    "allowed": "Across 45 risk profiles escalating the thesis's own recurrent risks one at a time (4,860 evaluations), no door passes: max H_profile_safe 6.93e-05 [0, 2.08e-04] against a 0.01 bar. The optimum varies across at most three postures; following it buys nothing.",
@@ -612,7 +614,7 @@
    "why_forbidden": "unique_profile_optima is 1, 2 or 3 by row; and the screen varied PROFILES, not the within-episode realisation"
   }
  ],
- "generated_at_commit": "fea7b6fac254aed611d417dc8443c262997dbbd7",
+ "generated_at_commit": "2832e0a090917eded9bbed5b534c6b3e876a0828",
  "grader_self_test": {
   "a_real_confirmation_still_grades_confirmatory": {
    "passed": true,

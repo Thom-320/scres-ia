@@ -401,21 +401,28 @@ CLAIMS: list[dict] = [
     {
         "claim_id": "DEMAND_PROCESS_LITERAL_GENERATOR",
         "artifact": "results/demand_seasonal_engine/result.json",
-        "section": "Results 3.2, bounded demand-process sensitivity",
-        "endpoint": "weekly CV and seasonal-lag ACF",
+        "section": "Results 3.1, bounded demand-process sensitivity",
+        "endpoint": "weekly CV, seasonal-lag ACF, sampler moments, forecast skill at t+1",
         "estimand": "structure of the researcher-implemented Garrido-style trajectory generator",
-        "allowed": ("The literal Garrido-style generator produced weekly CV 0.177 and seasonal "
-                    "lag-12 ACF 0.839 against 0.071 and 0.015 for the thesis-uniform control. "
-                    "The initial 12-draw coverage test and the forecast-correlation test failed, "
-                    "so this artifact supports trajectory structure only, not sampler validity or "
-                    "forecast skill."),
-        "forbidden": ["Garrido's equation is a forecast validated against realised demand",
-                      "forecast skill is established", "alpha and gamma are validated by 12 episodes",
-                      "seasonal demand is confirmed"],
-        "why_forbidden": ("the current artifact is ENGINE_PARTIAL with g4 and g5 failed; GR is "
-                          "used by the source as an input/generator, while forecast skill is our "
-                          "separate observable construct"),
         "allow_failed_falsifiers": True,
+        "allowed": ("The source-faithful generator produces weekly CV 0.1775 and lag-12 ACF 0.839 "
+                    "against 0.0713 and 0.015 for the thesis-uniform control, and the alpha/gamma "
+                    "sampler covers the unit interval over 2,000 instrument draws (0.504 +/- 0.290 "
+                    "and 0.497 +/- 0.288). The researcher-defined Holt-Winters observable signal is "
+                    "NOT established as informative: it correlates 0.826 with realised demand at "
+                    "t+1 against 0.006 for a shuffled placebo and reaches MASE 0.367 against a "
+                    "naive baseline, but MASE 4.344 against a SEASONAL-naive one -- so it is "
+                    "roughly four times worse than repeating the previous season. The engine "
+                    "remains ENGINE_PARTIAL and no forecast-information claim is made."),
+        "forbidden": ["Garrido's equation is a forecast validated against realised demand",
+                      "forecast skill is established", "the forecast is informative",
+                      "the observable signal beats its baselines",
+                      "alpha and gamma are validated by 12 episodes",
+                      "seasonal demand is confirmed"],
+        "why_forbidden": ("a 0.826 correlation is nearly free when the series carries a strong "
+                          "seasonal component -- the trivial seasonal-naive baseline beats this "
+                          "instrument by 4.3x, which is exactly what the amended g5 exists to "
+                          "catch and what the previous correlation-only gate would have passed"),
     },
     {
         "claim_id": "RISK_PROFILE_TAILORING_BUYS_NOTHING",
