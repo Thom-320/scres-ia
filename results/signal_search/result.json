@@ -1,0 +1,719 @@
+{
+ "best_feature": "prefix_events_R23",
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "ceiling_gap_on_test": 0.04510303513633616,
+ "ceiling_source": {
+  "path": "results/priced_clairvoyant_ceiling/result.json",
+  "self_sha256": "118fa95fa320ca741dd44f2b0841efcc077c048c9a54159519ed56a029dba8ef",
+  "survived_null": "results/ceiling_null_diagnostic/result.json"
+ },
+ "claim_status": "NO_PREFIX_SIGNAL_CAPTURES_THE_CEILING_IN_THIS_DESIGN",
+ "contract_path": "docs/ENMIENDA_COSTE_BUFFER_DECLARADO_2026-08-08.md",
+ "contract_sha256": "c30c824317e41e94622045c1a69538231e18a767f6312542e8535dcab5dfcd2d",
+ "created_at": "2026-08-08T22:39:31.325610+00:00",
+ "decision_week": 4,
+ "elapsed_seconds": 1.0841191669751424,
+ "ex_ante_distinct_levels": {
+  "initial_phase": 2,
+  "warmup_end_hours": 3
+ },
+ "falsifier_summary": {
+  "all_passed": true,
+  "disclosures": [
+   "d1_ex_ante_signal_is_nearly_absent",
+   "d2_six_training_tapes"
+  ],
+  "failed": [],
+  "n_computed": 5,
+  "n_disclosures": 2,
+  "n_failed": 0,
+  "n_not_applicable": 1,
+  "not_applicable": [
+   "d3_no_fresh_seeds"
+  ]
+ },
+ "falsifiers": {
+  "d1_ex_ante_signal_is_nearly_absent": {
+   "computed": false,
+   "disclosure": true,
+   "evidence": {
+    "distinct_levels": {
+     "initial_phase": 2,
+     "warmup_end_hours": 3
+    },
+    "statement": "only warm-up end time and initial phase are known at t = 0, and across twelve tapes they take three and two distinct values -- essentially one odd tape out. Any real signal must therefore be a PREFIX statistic, not a property known before the episode"
+   },
+   "passed": null
+  },
+  "d2_six_training_tapes": {
+   "computed": false,
+   "disclosure": true,
+   "evidence": {
+    "n_test": 6,
+    "n_train": 6,
+    "statement": "a map is fitted on six tapes and applied to six; nearest-neighbour on one feature is the most that supports, and no negative here rules out a signal a larger design would find"
+   },
+   "passed": null
+  },
+  "d3_no_fresh_seeds": {
+   "computed": false,
+   "evidence": {
+    "custody": {
+     "evidence": {
+      "n_sealed_artifact_overlap": 12,
+      "n_seeds": 12,
+      "note": "deliberate re-execution of registry block 'reconciled_8600001'; these seeds are NOT virgin and are not meant to be",
+      "registry_conflicts": [
+       {
+        "id": "reconciled_8600001",
+        "n_overlapping": 12,
+        "range": [
+         8600001,
+         8600012
+        ],
+        "source": "results/demand_process/result.json",
+        "status": "USED_DEVELOPMENT_NOT_VIRGIN"
+       }
+      ],
+      "registry_is_complete": false,
+      "registry_status": "BASELINE_INVENTORY_INCOMPLETE_NO_NEW_SEEDS_AUTHORIZED",
+      "replay_of": "reconciled_8600001",
+      "sealed_artifact_overlap": [
+       8600001,
+       8600002,
+       8600003,
+       8600004,
+       8600005,
+       8600006,
+       8600007,
+       8600008,
+       8600009,
+       8600010,
+       8600011,
+       8600012
+      ],
+      "seeds": [
+       8600001,
+       8600002,
+       8600003,
+       8600004,
+       8600005,
+       8600006,
+       8600007,
+       8600008,
+       8600009,
+       8600010,
+       8600011,
+       8600012
+      ],
+      "status": "DECLARED_REPLAY",
+      "why_it_can_fail": "it cannot: this is a declared custody replay of registry block 'reconciled_8600001', so the seeds are used on purpose. Counted in neither column."
+     },
+     "not_applicable": true,
+     "passed": null
+    },
+    "reason": "declared replay of an already-consumed development block"
+   },
+   "not_applicable": true,
+   "passed": null
+  },
+  "f1_features_are_prefix_only": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": 4.0,
+     "threshold": 4.0
+    },
+    "decision_week": 4,
+    "excluded": "anything realised after the decision week",
+    "features": [
+     "initial_phase",
+     "prefix_backlog_mean",
+     "prefix_backlog_slope",
+     "prefix_demand_mean",
+     "prefix_events_R11",
+     "prefix_events_R12",
+     "prefix_events_R13",
+     "prefix_events_R14",
+     "prefix_events_R21",
+     "prefix_events_R22",
+     "prefix_events_R23",
+     "prefix_events_R24",
+     "prefix_events_total",
+     "warmup_end_hours"
+    ],
+    "why_it_can_fail": "a feature measured over the whole episode is hindsight, not a signal; correlating it with the optimal schedule measures nothing a policy could act on, and the previous diagnostic ranked exactly such features"
+   },
+   "passed": true
+  },
+  "f2_ceiling_is_positive_on_these_tapes": {
+   "computed": true,
+   "evidence": {
+    "ceiling_gap": 0.04510303513633616,
+    "computed_from": {
+     "observed": 0.04510303513633616,
+     "threshold": 0.0
+    },
+    "why_it_can_fail": "a signal search is undefined where there is nothing to capture"
+   },
+   "passed": true
+  },
+  "f3_multiplicity_is_paid": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": 13.0,
+     "threshold": 13.0
+    },
+    "n_features_tested": 13,
+    "why_it_can_fail": "reporting the best of thirteen signals uncorrected is the metric shopping this project has already measured and priced"
+   },
+   "passed": true
+  },
+  "f4_placebo_keeps_the_mechanism": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": 500.0,
+     "threshold": 100.0
+    },
+    "n_placebo": 500,
+    "why_it_can_fail": "the placebo applies the SAME nearest-neighbour map to a shuffled feature, so a gain it also produces belongs to the mapping and not to the signal"
+   },
+   "passed": true
+  },
+  "f5_no_map_exceeds_the_ceiling": {
+   "computed": true,
+   "evidence": {
+    "best_gain": 0.009564583161991472,
+    "computed_from": {
+     "observed": 0.03553845197434469,
+     "threshold": -1e-09
+    },
+    "why_it_can_fail": "no train-fitted map may beat a tape-knowing chooser; exceeding the ceiling means the map saw the test tapes"
+   },
+   "passed": true
+  }
+ },
+ "features": [
+  "initial_phase",
+  "prefix_backlog_mean",
+  "prefix_backlog_slope",
+  "prefix_demand_mean",
+  "prefix_events_R11",
+  "prefix_events_R12",
+  "prefix_events_R13",
+  "prefix_events_R14",
+  "prefix_events_R21",
+  "prefix_events_R22",
+  "prefix_events_R23",
+  "prefix_events_R24",
+  "prefix_events_total",
+  "warmup_end_hours"
+ ],
+ "lambda": 0.35,
+ "map": "nearest-neighbour in one feature, fitted on train, applied to test",
+ "module_manifest": {
+  "entry_script": "scripts/run_signal_search_v1.py",
+  "entry_script_sha256": "526fc9126b7f516403cb61f891a70bc5199f40ed4698d2f9d81a4354a033e46b",
+  "missing": [],
+  "modules": {
+   "supply_chain/arm_runner.py": "1afea4fa248db5beb2d86c6ab2033d6f24a95115ea544b08966b7a538456ac99",
+   "supply_chain/continuous_its_env.py": "9600402e8cdef496a548628a41cd6bb974ae83d9ef66dbe78db1c5dce07d16ca",
+   "supply_chain/falsifiers.py": "99a64c66b62ee43ab9cf532a34932dc27ff4b4fae72d9b331fcf2a8f2a554fb7",
+   "supply_chain/seed_custody.py": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "reference_path": "results/priced_clairvoyant_ceiling/result.json",
+ "reference_sha256": "118fa95fa320ca741dd44f2b0841efcc077c048c9a54159519ed56a029dba8ef",
+ "replay_of": "reconciled_8600001",
+ "rows": {
+  "initial_phase": {
+   "gain_vs_open_loop": -0.009364193580557123,
+   "holm_adjusted_p": 1.0,
+   "lcb95": -0.02698365601379747,
+   "p_vs_placebo": 1.0,
+   "picks": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "placebo_mean_gain": -0.009364193580557123,
+   "sd": 0.27638539919628335,
+   "share_of_ceiling": -0.20761781446085187,
+   "ucb95": 0.007130589634927557,
+   "usable": true
+  },
+  "prefix_backlog_mean": {
+   "gain_vs_open_loop": 0.0008804929181432386,
+   "holm_adjusted_p": 1.0,
+   "lcb95": -0.012574459853304687,
+   "p_vs_placebo": 0.652,
+   "picks": [
+    0,
+    0,
+    0,
+    13,
+    0,
+    0
+   ],
+   "placebo_mean_gain": 0.005534055231276391,
+   "sd": 4714.767238352305,
+   "share_of_ceiling": 0.01952181079348008,
+   "ucb95": 0.013773806402647174,
+   "usable": true
+  },
+  "prefix_backlog_slope": {
+   "gain_vs_open_loop": 0.007106314643341401,
+   "holm_adjusted_p": 1.0,
+   "lcb95": -0.01874321576144794,
+   "p_vs_placebo": 0.446,
+   "picks": [
+    0,
+    13,
+    0,
+    0,
+    9,
+    13
+   ],
+   "placebo_mean_gain": 0.006084428113434569,
+   "sd": 4224.180601364971,
+   "share_of_ceiling": 0.1575573488981537,
+   "ucb95": 0.03121347429837945,
+   "usable": true
+  },
+  "prefix_demand_mean": {
+   "gain_vs_open_loop": 0.005271148623845386,
+   "holm_adjusted_p": 1.0,
+   "lcb95": -0.012545731850203542,
+   "p_vs_placebo": 0.502,
+   "picks": [
+    0,
+    0,
+    0,
+    13,
+    9,
+    9
+   ],
+   "placebo_mean_gain": 0.006103948699655554,
+   "sd": 525.9662324780666,
+   "share_of_ceiling": 0.11686904457564573,
+   "ucb95": 0.026522272532428892,
+   "usable": true
+  },
+  "prefix_events_R11": {
+   "gain_vs_open_loop": -0.009364193580557123,
+   "holm_adjusted_p": 1.0,
+   "lcb95": -0.02768396890663094,
+   "p_vs_placebo": 0.932,
+   "picks": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "placebo_mean_gain": -0.005052749406497051,
+   "sd": 0.4714045207910317,
+   "share_of_ceiling": -0.20761781446085187,
+   "ucb95": 0.007130589634927557,
+   "usable": true
+  },
+  "prefix_events_R12": {
+   "sd": 0.0,
+   "usable": false
+  },
+  "prefix_events_R13": {
+   "gain_vs_open_loop": 0.004907954369419376,
+   "holm_adjusted_p": 1.0,
+   "lcb95": -0.007880754487253616,
+   "p_vs_placebo": 0.112,
+   "picks": [
+    7,
+    0,
+    0,
+    13,
+    13,
+    0
+   ],
+   "placebo_mean_gain": -0.002770811936200756,
+   "sd": 1.5275252316519468,
+   "share_of_ceiling": 0.10881649881396568,
+   "ucb95": 0.017725010814207482,
+   "usable": true
+  },
+  "prefix_events_R14": {
+   "gain_vs_open_loop": -0.01334001229602825,
+   "holm_adjusted_p": 1.0,
+   "lcb95": -0.027899023685612638,
+   "p_vs_placebo": 1.0,
+   "picks": [
+    0,
+    0,
+    0,
+    0,
+    7,
+    0
+   ],
+   "placebo_mean_gain": -0.007682100755746996,
+   "sd": 0.3726779962499649,
+   "share_of_ceiling": -0.2957675077897628,
+   "ucb95": -0.001566310686039768,
+   "usable": true
+  },
+  "prefix_events_R21": {
+   "gain_vs_open_loop": -0.009364193580557123,
+   "holm_adjusted_p": 1.0,
+   "lcb95": -0.025851435953401072,
+   "p_vs_placebo": 1.0,
+   "picks": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "placebo_mean_gain": -0.009364193580557123,
+   "sd": 0.2763853991962833,
+   "share_of_ceiling": -0.20761781446085187,
+   "ucb95": 0.008027646002970809,
+   "usable": true
+  },
+  "prefix_events_R22": {
+   "gain_vs_open_loop": -0.0019612547647644787,
+   "holm_adjusted_p": 1.0,
+   "lcb95": -0.014042485501732425,
+   "p_vs_placebo": 0.234,
+   "picks": [
+    0,
+    7,
+    0,
+    7,
+    0,
+    0
+   ],
+   "placebo_mean_gain": -0.005288271474806631,
+   "sd": 0.4714045207910317,
+   "share_of_ceiling": -0.04348387550496445,
+   "ucb95": 0.009797987687176046,
+   "usable": true
+  },
+  "prefix_events_R23": {
+   "gain_vs_open_loop": 0.009564583161991472,
+   "holm_adjusted_p": 0.624,
+   "lcb95": -0.004312058616840771,
+   "p_vs_placebo": 0.048,
+   "picks": [
+    14,
+    14,
+    0,
+    14,
+    0,
+    0
+   ],
+   "placebo_mean_gain": -0.005082602345061275,
+   "sd": 0.4714045207910317,
+   "share_of_ceiling": 0.2120607434306788,
+   "ucb95": 0.020143090792695478,
+   "usable": true
+  },
+  "prefix_events_R24": {
+   "gain_vs_open_loop": -0.0027729097687101967,
+   "holm_adjusted_p": 1.0,
+   "lcb95": -0.021462400993322306,
+   "p_vs_placebo": 0.292,
+   "picks": [
+    7,
+    0,
+    0,
+    0,
+    0,
+    7
+   ],
+   "placebo_mean_gain": -0.0051440935477279764,
+   "sd": 0.4714045207910317,
+   "share_of_ceiling": -0.0614794494500941,
+   "ucb95": 0.011881353585191231,
+   "usable": true
+  },
+  "prefix_events_total": {
+   "gain_vs_open_loop": -0.0027729097687101967,
+   "holm_adjusted_p": 1.0,
+   "lcb95": -0.021462400993322306,
+   "p_vs_placebo": 0.638,
+   "picks": [
+    7,
+    0,
+    0,
+    0,
+    0,
+    7
+   ],
+   "placebo_mean_gain": 0.0013692703456896094,
+   "sd": 1.6244657241348273,
+   "share_of_ceiling": -0.0614794494500941,
+   "ucb95": 0.011927456146413384,
+   "usable": true
+  },
+  "warmup_end_hours": {
+   "gain_vs_open_loop": -0.009364193580557123,
+   "holm_adjusted_p": 1.0,
+   "lcb95": -0.027896240132834833,
+   "p_vs_placebo": 1.0,
+   "picks": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "placebo_mean_gain": -0.009251823257590438,
+   "sd": 29.88624265443885,
+   "share_of_ceiling": -0.20761781446085187,
+   "ucb95": 0.008027646002970809,
+   "usable": true
+  }
+ },
+ "run_role": "SIGNAL_SEARCH",
+ "schema_version": "signal_search_v1",
+ "scope": "DEVELOPMENT_ON_DECLARED_REPLAY_SIGNAL_SEARCH",
+ "self_sha256": "7cec336e2939338f03d21f0c74cd8402eda6508352b7be49f1aca3bbcca54282",
+ "splits": {
+  "test": [
+   8600007,
+   8600008,
+   8600009,
+   8600010,
+   8600011,
+   8600012
+  ],
+  "train": [
+   8600001,
+   8600002,
+   8600003,
+   8600004,
+   8600005,
+   8600006
+  ]
+ },
+ "tape_features": {
+  "8600001": {
+   "initial_phase": 5.0,
+   "prefix_backlog_mean": 112992.12045454547,
+   "prefix_backlog_slope": 34634.27727272728,
+   "prefix_demand_mean": 16686.695454545454,
+   "prefix_events_R11": 10.0,
+   "prefix_events_R12": 0.0,
+   "prefix_events_R13": 6.0,
+   "prefix_events_R14": 26.0,
+   "prefix_events_R21": 0.0,
+   "prefix_events_R22": 1.0,
+   "prefix_events_R23": 0.0,
+   "prefix_events_R24": 2.0,
+   "prefix_events_total": 36.0,
+   "warmup_end_hours": 943.8
+  },
+  "8600002": {
+   "initial_phase": 5.0,
+   "prefix_backlog_mean": 111526.05227272725,
+   "prefix_backlog_slope": 26879.581818181803,
+   "prefix_demand_mean": 15823.524242424246,
+   "prefix_events_R11": 10.0,
+   "prefix_events_R12": 0.0,
+   "prefix_events_R13": 6.0,
+   "prefix_events_R14": 26.0,
+   "prefix_events_R21": 0.0,
+   "prefix_events_R22": 1.0,
+   "prefix_events_R23": 0.0,
+   "prefix_events_R24": 2.0,
+   "prefix_events_total": 37.0,
+   "warmup_end_hours": 943.8
+  },
+  "8600003": {
+   "initial_phase": 5.0,
+   "prefix_backlog_mean": 116973.4,
+   "prefix_backlog_slope": 34293.804545454506,
+   "prefix_demand_mean": 15708.789393939398,
+   "prefix_events_R11": 10.0,
+   "prefix_events_R12": 0.0,
+   "prefix_events_R13": 9.0,
+   "prefix_events_R14": 27.0,
+   "prefix_events_R21": 0.0,
+   "prefix_events_R22": 0.0,
+   "prefix_events_R23": 0.0,
+   "prefix_events_R24": 3.0,
+   "prefix_events_total": 39.0,
+   "warmup_end_hours": 961.8
+  },
+  "8600004": {
+   "initial_phase": 5.0,
+   "prefix_backlog_mean": 111933.2272727273,
+   "prefix_backlog_slope": 29810.1409090909,
+   "prefix_demand_mean": 16726.916666666675,
+   "prefix_events_R11": 10.0,
+   "prefix_events_R12": 0.0,
+   "prefix_events_R13": 6.0,
+   "prefix_events_R14": 26.0,
+   "prefix_events_R21": 0.0,
+   "prefix_events_R22": 0.0,
+   "prefix_events_R23": 1.0,
+   "prefix_events_R24": 2.0,
+   "prefix_events_total": 36.0,
+   "warmup_end_hours": 943.8
+  },
+  "8600005": {
+   "initial_phase": 5.0,
+   "prefix_backlog_mean": 112493.13977272724,
+   "prefix_backlog_slope": 36922.136363636324,
+   "prefix_demand_mean": 16671.856060606064,
+   "prefix_events_R11": 10.0,
+   "prefix_events_R12": 0.0,
+   "prefix_events_R13": 5.0,
+   "prefix_events_R14": 26.0,
+   "prefix_events_R21": 0.0,
+   "prefix_events_R22": 1.0,
+   "prefix_events_R23": 0.0,
+   "prefix_events_R24": 2.0,
+   "prefix_events_total": 36.0,
+   "warmup_end_hours": 943.8
+  },
+  "8600006": {
+   "initial_phase": 5.0,
+   "prefix_backlog_mean": 111820.5465909091,
+   "prefix_backlog_slope": 32609.222727272776,
+   "prefix_demand_mean": 16839.059090909086,
+   "prefix_events_R11": 10.0,
+   "prefix_events_R12": 0.0,
+   "prefix_events_R13": 6.0,
+   "prefix_events_R14": 26.0,
+   "prefix_events_R21": 0.0,
+   "prefix_events_R22": 1.0,
+   "prefix_events_R23": 0.0,
+   "prefix_events_R24": 3.0,
+   "prefix_events_total": 37.0,
+   "warmup_end_hours": 943.8
+  },
+  "8600007": {
+   "initial_phase": 5.0,
+   "prefix_backlog_mean": 114707.6375,
+   "prefix_backlog_slope": 35061.29545454547,
+   "prefix_demand_mean": 15973.56212121211,
+   "prefix_events_R11": 10.0,
+   "prefix_events_R12": 0.0,
+   "prefix_events_R13": 8.0,
+   "prefix_events_R14": 26.0,
+   "prefix_events_R21": 0.0,
+   "prefix_events_R22": 1.0,
+   "prefix_events_R23": 1.0,
+   "prefix_events_R24": 3.0,
+   "prefix_events_total": 39.0,
+   "warmup_end_hours": 943.8
+  },
+  "8600008": {
+   "initial_phase": 5.0,
+   "prefix_backlog_mean": 113043.50000000003,
+   "prefix_backlog_slope": 37251.61363636365,
+   "prefix_demand_mean": 16685.793939393956,
+   "prefix_events_R11": 9.0,
+   "prefix_events_R12": 0.0,
+   "prefix_events_R13": 6.0,
+   "prefix_events_R14": 26.0,
+   "prefix_events_R21": 0.0,
+   "prefix_events_R22": 0.0,
+   "prefix_events_R23": 1.0,
+   "prefix_events_R24": 2.0,
+   "prefix_events_total": 37.0,
+   "warmup_end_hours": 943.8
+  },
+  "8600009": {
+   "initial_phase": 5.0,
+   "prefix_backlog_mean": 110220.16249999999,
+   "prefix_backlog_slope": 24394.48636363633,
+   "prefix_demand_mean": 15876.831818181812,
+   "prefix_events_R11": 10.0,
+   "prefix_events_R12": 0.0,
+   "prefix_events_R13": 7.0,
+   "prefix_events_R14": 26.0,
+   "prefix_events_R21": 0.0,
+   "prefix_events_R22": 1.0,
+   "prefix_events_R23": 0.0,
+   "prefix_events_R24": 2.0,
+   "prefix_events_total": 37.0,
+   "warmup_end_hours": 943.8
+  },
+  "8600010": {
+   "initial_phase": 5.0,
+   "prefix_backlog_mean": 112614.16477272726,
+   "prefix_backlog_slope": 34663.02727272728,
+   "prefix_demand_mean": 16653.433333333323,
+   "prefix_events_R11": 9.0,
+   "prefix_events_R12": 0.0,
+   "prefix_events_R13": 3.0,
+   "prefix_events_R14": 26.0,
+   "prefix_events_R21": 0.0,
+   "prefix_events_R22": 0.0,
+   "prefix_events_R23": 1.0,
+   "prefix_events_R24": 2.0,
+   "prefix_events_total": 33.0,
+   "warmup_end_hours": 943.8
+  },
+  "8600011": {
+   "initial_phase": 4.0,
+   "prefix_backlog_mean": 96947.025,
+   "prefix_backlog_slope": 32630.15000000001,
+   "prefix_demand_mean": 16810.83484848485,
+   "prefix_events_R11": 9.0,
+   "prefix_events_R12": 0.0,
+   "prefix_events_R13": 4.0,
+   "prefix_events_R14": 27.0,
+   "prefix_events_R21": 1.0,
+   "prefix_events_R22": 1.0,
+   "prefix_events_R23": 0.0,
+   "prefix_events_R24": 2.0,
+   "prefix_events_total": 36.0,
+   "warmup_end_hours": 838.8
+  },
+  "8600012": {
+   "initial_phase": 5.0,
+   "prefix_backlog_mean": 113964.51477272727,
+   "prefix_backlog_slope": 39936.89545454545,
+   "prefix_demand_mean": 17588.683333333338,
+   "prefix_events_R11": 9.0,
+   "prefix_events_R12": 0.0,
+   "prefix_events_R13": 6.0,
+   "prefix_events_R14": 26.0,
+   "prefix_events_R21": 0.0,
+   "prefix_events_R22": 1.0,
+   "prefix_events_R23": 0.0,
+   "prefix_events_R24": 3.0,
+   "prefix_events_total": 39.0,
+   "warmup_end_hours": 943.8
+  }
+ },
+ "winners": []
+}
