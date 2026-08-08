@@ -202,6 +202,36 @@ frequency-matched replays of a carrier's visit marginals; retention beat its own
 in one family and lost distinguishably in three. This re-read does not select a new winner and was
 not preregistered.
 
+### The comparator, repaired
+
+The state-blind label was wrong twice over, and a preregistered repair
+(`results/comparator_repair/result.json`, replay on the burned block, seven falsifiers passing)
+measures both defects instead of arguing about them. The visit histogram that defines the comparator
+is created once and updated throughout the run, including with the transferred arm's own visits on
+the case being scored. Removing that current case changes each contrast by about 0.001 and leaves
+the drift untouched — the causal-prefix comparator still strengthens over the run in 4 of 4 families
+(ρ −0.167 to −0.366) — so accumulation across cases, not contamination by the current one, is the
+whole effect. The bound on the latter is arithmetic and tight: observed total variation 0.005160
+against a derived ceiling of 0.005181 over 1,440 measurements.
+
+The repair therefore adds the comparator the label promised: a **level-frequency prior frozen during
+base-grid training**, transportable, and deployable without running the carrier on the target case
+at all. It does not drift (ρ −0.070 to +0.148). Against it:
+
+| Family | Transferred state vs a frozen ex-ante level prior |
+|---|---|
+| **`ucb1`** | **+0.04179 [+0.03221, +0.05188]** ✔ |
+| `neuron` | −0.02204 [−0.02599, −0.01829] ✘ |
+| `gp` | −0.02097 [−0.02872, −0.01294] ✘ |
+| `ofat` | −0.04284 [−0.04963, −0.03720] ✘ |
+
+**A transportable visit prior replaces the transferred state of three of four carriers and fails
+only against factorized UCB** — whose advantage over it is *larger* than over the online comparator.
+The neural negative is not an artifact of a strengthening comparator: against one that does not
+strengthen, the same carrier loses by more. Both arms reproduce the sealed `transfer` and `cold`
+values exactly, so the two additions perturbed nothing. Burned seeds, replay grade: this qualifies
+an interpretation and raises no claim.
+
 This is the central result. It licenses a narrower and more useful statement than the ladder alone
 would support:
 

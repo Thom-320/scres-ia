@@ -85,18 +85,21 @@ CLAIMS: list[dict] = [
         "allowed": ("Prespecified secondary analyses found no corresponding advantage for the "
                     "evaluated neural, GP-EI or OFAT carriers over the full run; the neural "
                     "carrier's contrast averaged -0.01178 [-0.01849, -0.00484]. This average is not "
-                    "stationary: over the first twenty seeds the neural contrast was +0.00032, and "
-                    "it reaches -0.02146 over the last twenty as the comparator accumulates visits "
-                    "(rho = -0.378 with run order, permutation p = 0.003). The secondary negative "
-                    "is therefore contingent on the comparator's accumulated strength."),
+                    "stationary against that comparator: over the first twenty seeds the neural "
+                    "contrast was +0.00032 and it reaches -0.02146 over the last twenty as the "
+                    "histogram accumulates (rho = -0.378, permutation p = 0.003). The negative is "
+                    "not an artifact of that drift: against a frozen ex-ante level prior, which "
+                    "does not drift, the same carrier loses by MORE (-0.02204 [-0.02599, "
+                    "-0.01829])."),
         "forbidden": ["the neuron has no memory", "neural carriers cannot transfer",
                       "this confirms the neural carrier fails", "a confirmatory negative",
                       "the neural carrier did not transfer"],
         "why_forbidden": ("the preregistration declares these arms secondary and exploratory, so a "
-                          "prospective negative at secondary grade is not a confirmed negative; and "
-                          "the negative is not present in the first third of the run, so an "
-                          "unqualified 'did not transfer' misstates a non-stationary contrast"),
-        "must_be_cited_with": ["COMPARATOR_IS_NOT_FIXED_DURING_THE_RUN"],
+                          "prospective negative at secondary grade is not a confirmed negative -- "
+                          "even though the repaired comparator makes the negative larger rather "
+                          "than smaller"),
+        "must_be_cited_with": ["COMPARATOR_IS_NOT_FIXED_DURING_THE_RUN",
+                               "RQ2D_A_TRANSPORTABLE_PRIOR_BEATS_THREE_OF_FOUR_CARRIERS"],
     },
     {
         "claim_id": "RQ2C_THE_TOP_FOUR_ARMS_ARE_INDISTINGUISHABLE",
@@ -124,6 +127,28 @@ CLAIMS: list[dict] = [
                           "forbids for ofat; and the preregistration forbids selecting a different "
                           "winner after the seeds were opened -- this row reports a tie, not a "
                           "winner"),
+    },
+    {
+        "claim_id": "RQ2D_A_TRANSPORTABLE_PRIOR_BEATS_THREE_OF_FOUR_CARRIERS",
+        "artifact": "results/comparator_repair/result.json",
+        "section": "RQ2d (preregistered comparator repair, replay on the burned block)",
+        "endpoint": "auc_regret_norm",
+        "estimand": "each carrier's transferred state against a frozen ex-ante level prior",
+        "allowed": ("Against a level-frequency prior frozen during base-grid training -- "
+                    "transportable, and deployable without running the carrier on the target case "
+                    "-- factorized UCB search retains an advantage of +0.04179 [+0.03221, +0.05188], "
+                    "larger than its advantage over the online comparator. The other three carriers "
+                    "lose to that prior: the neural carrier by -0.02204 [-0.02599, -0.01829], GP-EI "
+                    "by -0.02097 [-0.02872, -0.01294] and OFAT by -0.04284 [-0.04963, -0.03720]. So "
+                    "a transportable visit prior is sufficient to replace the transferred state of "
+                    "three of four carriers, and insufficient only for factorized UCB."),
+        "forbidden": ["this confirms UCB1", "the frozen prior is the best comparator overall",
+                      "a level-frequency prior is enough", "retained state is unnecessary",
+                      "this raises the grade of RQ2a"],
+        "why_forbidden": ("the seeds are burned and the run is a replay, so no grade improves; and "
+                          "the sufficiency of a prior is carrier-specific -- true for three "
+                          "carriers, false for the one the paper recommends"),
+        "must_be_cited_with": ["RQ2A_UCB1_TRANSFERS_BEYOND_ITS_OWN_MARGINAL_REPLAY"],
     },
     {
         "claim_id": "RQ1_RETENTION_SIX_FAMILIES",
@@ -167,7 +192,14 @@ CLAIMS: list[dict] = [
                     "family. The current case contributes between 0.52% and 0.18% of the histogram "
                     "mass. Declared falsifier f2, which asked the same question of the contrast "
                     "rather than of the comparator, required resolution in at least three of four "
-                    "families and returned two; it is reported failed and its bar was not moved."),
+                    "families and returned two; it is reported failed and its bar was not moved. "
+                    "The preregistered repair separates the two defects: removing the current case "
+                    "leaves the drift intact (the causal-prefix comparator still drifts in 4 of 4 "
+                    "families, rho -0.167 to -0.366) and moves each contrast by about 0.001, while "
+                    "a prior frozen before the target grid is touched does not drift at all (rho "
+                    "-0.070 to +0.148). Accumulation across cases was the whole effect; current-case "
+                    "contamination was bounded and negligible, with observed total variation "
+                    "0.005160 against a derived ceiling of 0.005181 over 1,440 measurements."),
         "forbidden": ["state-blind marginal replay", "the comparator is a fixed control",
                       "an ex-ante transportable prior", "the histogram can be deployed alone",
                       "this invalidates the confirmation"],
