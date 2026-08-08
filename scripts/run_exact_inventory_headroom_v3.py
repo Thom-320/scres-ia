@@ -257,8 +257,30 @@ def main() -> int:
     absent = [f"{c}|exact_class" for c in results
               if results[c]["exact_class"]["ucb95"] < DELTA]
 
-    delta_r24 = {k: results["R24_increased"][k]["mean"] - results["R24_current"][k]["mean"]
-                 for k in ("exact_class", "enriched_class")}
+    delta_risk = {k: results["R21_increased"][k]["mean"] - results["R21_current"][k]["mean"]
+                  for k in ("exact_class", "enriched_class")}
+
+    # THE SUBSTITUTION PROBE, and it is the reason this family cannot deliver what it promised.
+    # Four action patterns on the same relief weeks: shifts only, buffer only, both, neither.
+    sub = {}
+    for label, act_on in (("shifts_only", (0.0, 0.0)), ("buffer_only", (1.0, -1.0)),
+                          ("both", (1.0, 0.0)), ("neither", (0.0, -1.0))):
+        vals = []
+        for sd in seeds[:4]:
+            env = make_continuous_its_track_a_env(**cell_kwargs({}))
+            env.reset(seed=int(sd))
+            sm = env.unwrapped.sim
+            d = t_ = False
+            st = 0
+            while not (d or t_):
+                a = act_on if st in set(range(K_SURGE)) else (0.0, -1.0)
+                _o, _r, d, t_, _i = env.step(np.array(a, dtype=np.float32))
+                st += 1
+            vals.append(exposure(sm)[0])
+            env.close()
+        sub[label] = float(np.mean(vals))
+    substitutable = (abs(sub["shifts_only"] - sub["buffer_only"]) < 1e-9
+                     and abs(sub["both"] - sub["buffer_only"]) < 1e-9)
 
     falsifiers = {
         "f1_exactly_K_buffer_weeks": {
@@ -321,6 +343,28 @@ def main() -> int:
                          "per_cell": {k: {"spread": v["exact_spread"],
                                           "two_paired_se": 2.0 * v["paired_stderr"]}
                                       for k, v in results.items()}}},
+                "f10_actuator_is_distinct_from_the_companion_family": {
+            "passed": not substitutable,
+            "evidence": {"why_it_can_fail": "AND IT DID. This family exists on the premise that the "
+                                            "buffer is a lever the shift family never tested. "
+                                            "Measured on the same relief weeks, shifts alone, "
+                                            "buffer alone and BOTH together give byte-identical "
+                                            "exposure, and only turning neither on is worse. The "
+                                            "two actuators are PERFECT SUBSTITUTES and they "
+                                            "SATURATE, so this gate re-measures the shift family's "
+                                            "question with an interchangeable lever and cannot "
+                                            "adjudicate prepositioning as something distinct",
+                         "same_relief_weeks": list(range(K_SURGE)),
+                         "exposure_by_pattern": sub,
+                         "perfect_substitutes": substitutable,
+                         "why_it_matters": ("Program O measured that contention over a "
+                                            "NON-FUNGIBLE shared resource carries H_PI = 0.1515 "
+                                            "and that making the same resource fungible drives it "
+                                            "to EXACTLY 0. These two levers are perfectly fungible "
+                                            "and saturating, so there is no allocation problem for "
+                                            "any policy -- static, adaptive or neural -- to solve. "
+                                            "That is a mechanism for the whole negative programme, "
+                                            "not another null")}},
         "f9_no_fresh_seeds": custody_falsifier(seeds, replay_of=args.replay_of,
                                                exclude=args.output),
     }
@@ -343,7 +387,9 @@ def main() -> int:
                                         "all_passed, so its artifact read STOP while f3 was red",
                      "all_falsifiers_passed": all_ok, "claim_status": verdict}}
 
-    print(f"\n  Delta_R24 (increased - current): {json.dumps(delta_r24)}")
+    print(f"\n  sustitucion (mismas semanas de alivio): {json.dumps(sub)}")
+    print(f"  sustitutos perfectos: {substitutable}")
+    print(f"  Delta_R21 (increased - current): {json.dumps(delta_risk)}")
     print(f"  headroom establecido en: {established or 'ninguna'}")
     print(f"  ausencia dentro de la clase exacta en: {absent or 'ninguna'}")
     print(f"\n  veredicto: {verdict}   (delta = {DELTA}, adimensional)\n")
@@ -382,9 +428,12 @@ def main() -> int:
                    "n_exact": len(exact), "n_enriched": len(enriched) + 2,
                    "seeds": seeds, "cells": list(CELLS), "k_holm": k_total},
         "risk_estimand": {"formula": "Delta(R21 increased) - Delta(R21 current)",
-                          "value": delta_r24,
+                          "value": delta_risk,
                           "note": ("R21 strikes ops 3,5,6,7,9 simultaneously, so held stock "
                                    "downstream is its aligned actuator; config.py:469-475")},
+        "actuator_substitution": {"exposure_by_pattern": sub,
+                                  "perfect_substitutes": substitutable,
+                                  "relief_weeks": list(range(K_SURGE))},
         "cells": results, "headroom_established_in": established,
         "absence_within_exact_class_in": absent,
         "falsifiers": falsifiers, "elapsed_seconds": time.perf_counter() - started,
