@@ -1014,3 +1014,39 @@ configuracion robusta se vea mejor. El headroom exige un planificador que quiera
 `f4` fallo y no se relajo: `H(gamma)` es monotona hasta gamma=30 -todo el rango donde vive alguna
 actitud- y la unica violacion esta sobre gamma=199 con magnitud 1,9e-4, en la asintota 0,666667 =
 1 - 2/6 (la configuracion 3845 es argmax en dos de los seis regimenes).
+
+---
+
+## Lane del buffer priced: el techo clarividente NO replico en semillas virgenes (2026-08-08)
+
+**Estado: `CEILING_DID_NOT_REPLICATE`.** Artefacto que decide:
+`results/expanded_signal_search/result.json` (sello `4607522c500b7894...`), autorizacion
+`docs/AUTORIZACION_PI_BLOQUE_8700001_2026-08-08.md`, diseno congelado en `b9115292` **antes** de
+abrir una semilla. Retractacion completa en `docs/RETRACTACION_TECHO_CLARIVIDENTE_2026-08-08.md`.
+
+Sobre 48 semillas virgenes (24 train / 24 test), 27 calendarios, lambda 0,35: hueco **+0,024054**
+contra un nulo de interaccion de media **+0,026641**, **p = 0,7482**. El hueco medido esta **por
+debajo** de la media de su propio nulo. Con doce tapes reutilizadas daba +0,045103 y p = 0,0132:
+doce tapes no separaban el techo del sesgo de Jensen del minimo sobre 27 opciones ruidosas.
+
+**Lo que retracta:** `results/ceiling_null_diagnostic/result.json`
+(`CEILING_SURVIVES_THE_PERMUTATION_NULL`) queda superado por replicacion fallida - se conserva y se
+etiqueta, no se borra. `results/signal_search/result.json` queda vacio de objeto: buscaba senal para
+un techo inexistente. Los cuatro intentos de conversion de esta semana (regla de backlog, fase sola,
+fase+desviacion, busqueda de 13 rasgos) perseguian un artefacto de doce tapes.
+
+**Lo que NO se lee, por la regla congelada §4:** la tabla de 26 rasgos x mapas del artefacto. Se
+conserva por custodia y se declara no leida.
+
+**Lo que sigue en pie y no depende del techo:** el espacio de decision del buffer **si** esta priced
+y tiene estructura - 21 niveles distintos, 6 puntos no dominados, optimo que se mueve con lambda
+(22 -> 18 -> 0 semanas). Lo que no hay es evidencia de que el optimo se mueva **con el estado dentro
+de una lambda fija**, que es lo unico que un aprendiz podria vender.
+
+**Bloque `8700001-8700048`: `BURNED_CONFIRMATION_COMPLETE`.** Puerta de un solo sentido, ya cruzada.
+Un sucesor necesita otro bloque y otra autorizacion del PI; no hay reejecucion sobre estas semillas
+ni con un instrumento mejor.
+
+**Reapertura posible, y puede fallar:** el nulo se aplica al hueco *clarividente*, no al espacio
+priced. Si una fisica nueva -no un instrumento nuevo- hace que el optimo por tape se separe mas alla
+del ruido de seleccion, el techo se vuelve a medir con bloque nuevo. Bajo la fisica de hoy, no.
