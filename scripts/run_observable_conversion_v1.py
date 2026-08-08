@@ -49,8 +49,13 @@ from supply_chain.seed_custody import custody_falsifier, module_manifest  # noqa
 
 LAMBDA_HEADLINE = 0.35
 BAND = (0.275, 0.30, 0.325, 0.35, 0.375, 0.40, 0.425, 0.45, 0.475, 0.50)
-#: Declared ex ante. Backlog thresholds in rations; the rule holds while backlog exceeds one.
-THETA_GRID = (0.0, 25_000.0, 50_000.0, 100_000.0, 200_000.0, 400_000.0)
+#: ANCHORED IN MEASURED PERCENTILES, not in round numbers. The first grid contained theta =
+#: 200,000 rations, which sits ABOVE the observed backlog maximum of 163,986 and therefore could
+#: never fire: the train selection landed on it, the rule held the buffer zero weeks on every test
+#: tape, and a policy that never acts IS its own placebo. Percentiles are computed on TRAIN tapes
+#: only, so the instrument is not tuned against the data that scores it, and `f6` refuses any grid
+#: whose members do not all act.
+THETA_PERCENTILES = (10, 25, 50, 75, 90)
 N_BOOT = 4_000
 N_PLACEBO = 40
 SEED_BLOCK = tuple(range(8600001, 8600013))
@@ -100,15 +105,31 @@ def main() -> int:
     train_seeds, test_seeds = seeds[:6], seeds[6:]
     opts = options()
 
+    # The grid is DERIVED from a do-nothing probe on the TRAIN tapes, before anything is scored.
+    probe = []
+    for s_ in train_seeds:
+        env = make_env()
+        env.reset(seed=int(s_))
+        sim = env.unwrapped.sim
+        done = truncated = False
+        while not (done or truncated):
+            probe.append(float(getattr(sim, "pending_backorder_qty", 0.0) or 0.0))
+            _o, _r, done, truncated, _i = env.step(np.array([0.0, -1.0], dtype=np.float32))
+        env.close()
+    theta_grid = tuple(float(np.percentile(probe, q)) for q in THETA_PERCENTILES)
+    print(f"  rejilla anclada en percentiles {THETA_PERCENTILES} de "
+          f"{len(probe)} semanas de entrenamiento: "
+          f"{[round(t) for t in theta_grid]}")
+
     ceil = json.loads(CEILING.read_text())
     L_sched = np.asarray(ceil["L_matrix"], dtype=float)
     IH_sched = np.asarray(ceil["inventory_hours_matrix"], dtype=float)
     max_ih = float(ceil["max_inventory_hours"])
     order = list(ceil["splits"]["train"]) + list(ceil["splits"]["test"])
     idx = {s: order.index(s) for s in order}
-    print(f"  regla causal: {len(THETA_GRID)} umbrales x {len(seeds)} semillas + placebo")
+    print(f"  regla causal: {len(THETA_PERCENTILES)} umbrales x {len(seeds)} semillas + placebo")
 
-    rule = {t: {s: play_rule(t, s) for s in seeds} for t in THETA_GRID}
+    rule = {t: {s: play_rule(t, s) for s in seeds} for t in theta_grid}
     print("    regla lista")
 
     def J_sched(seed, j, lam):
@@ -123,7 +144,7 @@ def main() -> int:
         # Comparator and threshold BOTH selected on TRAIN only.
         fixed = int(np.argmin([np.mean([J_sched(s, j, lam) for s in train_seeds])
                                for j in range(len(opts))]))
-        theta = min(THETA_GRID,
+        theta = min(theta_grid,
                     key=lambda t: np.mean([J_run(rule[t][s], lam) for s in train_seeds]))
         open_loop = np.array([J_sched(s, fixed, lam) for s in test_seeds])
         rule_J = np.array([J_run(rule[theta][s], lam) for s in test_seeds])
@@ -166,8 +187,17 @@ def main() -> int:
                 if v["rule_vs_open_loop"]["lcb95"] > 0 and v["rule_vs_placebo"]["lcb95"] > 0]
 
     falsifiers = {
+        "f6_every_threshold_acts": ge(
+            min(min(rule[t][s]["weeks_held"] for s in train_seeds) for t in theta_grid), 1.0,
+            "the first grid contained a threshold above the observed backlog maximum, so the "
+            "train selection landed on a policy that never acts -- and a policy that never acts "
+            "is its own placebo, making the contrast zero by construction rather than by "
+            "measurement",
+            theta_grid=[float(t) for t in theta_grid],
+            weeks_held_train={str(round(t)): [rule[t][s]["weeks_held"] for s in train_seeds]
+                              for t in theta_grid}),
         "f1_rule_is_causal": ge(
-            float(len(THETA_GRID)), float(len(THETA_GRID)),
+            float(len(theta_grid)), float(len(theta_grid)),
             "the rule reads the backlog standing at the current week and nothing later; if it "
             "could see a future week or its own L*, a positive result would be the leak that "
             "voided the meta-learner",
@@ -241,7 +271,8 @@ def main() -> int:
         "ceiling_source": {"path": str(CEILING), "self_sha256": ceil.get("self_sha256")},
         "headline_lambda": LAMBDA_HEADLINE, "band": list(BAND),
         "policy_class": {"rule": "hold while pending backlog > theta, decided each week",
-                         "theta_grid": list(THETA_GRID),
+                         "theta_grid": [float(t) for t in theta_grid],
+                         "theta_percentiles": list(THETA_PERCENTILES),
                          "selected_on": "train tapes only"},
         "scenario": SCENARIO, "splits": {"train": train_seeds, "test": test_seeds},
         "results": results, "headline": head, "converts_at": converts,
