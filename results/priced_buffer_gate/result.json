@@ -1,0 +1,1288 @@
+{
+ "best_k_by_lambda": {
+  "0.0": 22,
+  "0.25": 18,
+  "0.5": 0,
+  "1.0": 0,
+  "2.0": 0,
+  "4.0": 0
+ },
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "PRICED_DECISION_SPACE_ELIGIBLE",
+ "contract_path": "docs/ENMIENDA_COSTE_BUFFER_DECLARADO_2026-08-08.md",
+ "contract_sha256": "c30c824317e41e94622045c1a69538231e18a767f6312542e8535dcab5dfcd2d",
+ "created_at": "2026-08-08T21:20:11.287726+00:00",
+ "declared_assumptions": {
+  "fidelity_price": "release and lead time are extensions with no source event, so any result here is OURS and never presented as reproducing Garrido-Rios (2017)",
+  "holding_price": "J = L* + lambda * inventory_hours / max_inventory_hours; lambda is an exchange rate in ENDPOINT units, never a currency figure",
+  "lead_hours": 336.0,
+  "reference_lambda": "1.0 = holding the maximum buffer for the whole horizon costs as much as total exposure (Garrido IJPR 2024 s3.4 equal-at-maximum logic, applied to two quantities we measure ourselves)",
+  "why_not_monetary": "the thesis excludes cost (p.147) and gives no values (p.148); inventing a currency rate would fabricate provenance"
+ },
+ "elapsed_seconds": 11.335384542006068,
+ "falsifier_summary": {
+  "all_passed": true,
+  "disclosures": [
+   "d1_cost_has_no_thesis_provenance",
+   "d2_reference_lambda_convention"
+  ],
+  "failed": [],
+  "n_computed": 7,
+  "n_disclosures": 2,
+  "n_failed": 0,
+  "n_not_applicable": 1,
+  "not_applicable": [
+   "d3_no_fresh_seeds"
+  ]
+ },
+ "falsifiers": {
+  "d1_cost_has_no_thesis_provenance": {
+   "computed": false,
+   "disclosure": true,
+   "evidence": {
+    "lead_hours_is_also_ours": 336.0,
+    "statement": "the holding price is OUR declared assumption, in endpoint units, not a monetary rate",
+    "thesis_48h_is": "delivery lead time to the user (p.111), not buffer rebuild",
+    "thesis_p147": "cost deliberately excluded from the wartime military model",
+    "thesis_p148": "cost and SC lead time listed as future extensions, no values given"
+   },
+   "passed": null
+  },
+  "d2_reference_lambda_convention": {
+   "computed": false,
+   "disclosure": true,
+   "evidence": {
+    "lambdas": [
+     0.0,
+     0.25,
+     0.5,
+     1.0,
+     2.0,
+     4.0
+    ],
+    "max_inventory_hours": 3696.0,
+    "statement": "lambda = 1 means holding the maximum possible buffer for the whole horizon costs exactly as much as total exposure; the answer is reported across a sweep, and the break-even is derived from the data rather than assumed"
+   },
+   "passed": null
+  },
+  "d3_no_fresh_seeds": {
+   "computed": false,
+   "evidence": {
+    "custody": {
+     "evidence": {
+      "n_sealed_artifact_overlap": 6,
+      "n_seeds": 6,
+      "note": "deliberate re-execution of registry block 'reconciled_8600001'; these seeds are NOT virgin and are not meant to be",
+      "registry_conflicts": [
+       {
+        "id": "reconciled_8600001",
+        "n_overlapping": 6,
+        "range": [
+         8600001,
+         8600012
+        ],
+        "source": "results/demand_process/result.json",
+        "status": "USED_DEVELOPMENT_NOT_VIRGIN"
+       }
+      ],
+      "registry_is_complete": false,
+      "registry_status": "BASELINE_INVENTORY_INCOMPLETE_NO_NEW_SEEDS_AUTHORIZED",
+      "replay_of": "reconciled_8600001",
+      "sealed_artifact_overlap": [
+       8600001,
+       8600002,
+       8600003,
+       8600004,
+       8600005,
+       8600006
+      ],
+      "seeds": [
+       8600001,
+       8600002,
+       8600003,
+       8600004,
+       8600005,
+       8600006
+      ],
+      "status": "DECLARED_REPLAY",
+      "why_it_can_fail": "it cannot: this is a declared custody replay of registry block 'reconciled_8600001', so the seeds are used on purpose. Counted in neither column."
+     },
+     "not_applicable": true,
+     "passed": null
+    },
+    "reason": "declared replay of an already-consumed development block"
+   },
+   "not_applicable": true,
+   "passed": null
+  },
+  "f5_pareto_front_is_wide_enough": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": 6.0,
+     "threshold": 3.0
+    },
+    "front": [
+     [
+      0.5863490410317869,
+      0.0
+     ],
+     [
+      0.5863490410317869,
+      0.0
+     ],
+     [
+      0.5863490410317869,
+      0.0
+     ],
+     [
+      0.5863490410317869,
+      0.0
+     ],
+     [
+      0.5863490410317869,
+      0.0
+     ],
+     [
+      0.5863490410317869,
+      0.0
+     ],
+     [
+      0.5863490410317869,
+      0.0
+     ],
+     [
+      0.5187162292178524,
+      672.0
+     ],
+     [
+      0.462629524612776,
+      1344.0
+     ],
+     [
+      0.38425850427154434,
+      2184.0
+     ],
+     [
+      0.31737008567596603,
+      3024.0
+     ],
+     [
+      0.29378620043844234,
+      3696.0
+     ]
+    ],
+    "why_it_can_fail": "a front of one or two points is hold-or-do-not, which is the collapsed space the benchmark measured; a priced decision needs an interior trade-off"
+   },
+   "passed": true
+  },
+  "f6_price_actually_moves_the_optimum": {
+   "computed": true,
+   "evidence": {
+    "best_k_by_lambda": {
+     "0.0": 22,
+     "0.25": 18,
+     "0.5": 0,
+     "1.0": 0,
+     "2.0": 0,
+     "4.0": 0
+    },
+    "computed_from": {
+     "observed": 3.0,
+     "threshold": 2.0
+    },
+    "switches": [
+     [
+      0.25,
+      22,
+      18
+     ],
+     [
+      0.5,
+      18,
+      0
+     ]
+    ],
+    "why_it_can_fail": "if the optimal holding duration is the same at every lambda, the price is inert and the cost is decoration rather than a decision variable"
+   },
+   "passed": true
+  },
+  "f7_release_actually_fired": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": 232123.83333333334,
+     "threshold": 0.0
+    },
+    "released_by_option": {
+     "(0, 0)": 128577.33333333333,
+     "(0, 13)": 196574.5,
+     "(0, 18)": 169893.0,
+     "(0, 22)": 150642.83333333334,
+     "(0, 4)": 230724.33333333334,
+     "(0, 8)": 221950.66666666666,
+     "(12, 0)": 128577.33333333333,
+     "(12, 13)": 189954.83333333334,
+     "(12, 4)": 230106.0,
+     "(12, 8)": 212167.83333333334,
+     "(16, 0)": 128577.33333333333,
+     "(16, 4)": 231745.66666666666,
+     "(16, 8)": 213328.0,
+     "(20, 0)": 128577.33333333333,
+     "(20, 4)": 232123.83333333334,
+     "(24, 0)": 128577.33333333333,
+     "(4, 0)": 128577.33333333333,
+     "(4, 13)": 189245.33333333334,
+     "(4, 18)": 166123.83333333334,
+     "(4, 22)": 21388.833333333332,
+     "(4, 4)": 228781.66666666666,
+     "(4, 8)": 215297.66666666666,
+     "(8, 0)": 128577.33333333333,
+     "(8, 13)": 186886.16666666666,
+     "(8, 18)": 38185.333333333336,
+     "(8, 4)": 231181.16666666666,
+     "(8, 8)": 207827.5
+    },
+    "why_it_can_fail": "with release enabled some schedule must free stock; zero released would mean the physics change is inert and the whole pricing rests on nothing"
+   },
+   "passed": true
+  },
+  "p1_endpoint_responds_to_the_action": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": 0.3050768049358474,
+     "threshold": 0.0
+    },
+    "values": [
+     0.5973173053354025,
+     0.5973173053354025,
+     0.5973173053354025,
+     0.5973173053354025,
+     0.5973173053354025,
+     0.5973173053354025,
+     0.5973173053354025,
+     0.5410298483524872,
+     0.541315171064991,
+     0.5538737040063701,
+     0.554327094249735,
+     0.5582940938530182,
+     0.5763903300813235,
+     0.4810668988729181,
+     0.504692667662411,
+     0.5101648370331574,
+     0.51714265225751,
+     0.536336739172077,
+     0.39503206975146093,
+     0.42852760043828,
+     0.45290317092671073,
+     0.4920766746419488,
+     0.33091539807757747,
+     0.38476367615656165,
+     0.43712049177901696,
+     0.2922405003995551,
+     0.3761869596402865
+    ],
+    "why_it_can_fail": "a dead action reads as a measured null: a posture grid that never reached S1 returned byte-identical episodes and shipped H = 0 with every other falsifier green"
+   },
+   "passed": true
+  },
+  "p2_decision_space_has_more_than_one_effective_level": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": 21.0,
+     "threshold": 3.0
+    },
+    "values": [
+     0.5973173053354025,
+     0.5973173053354025,
+     0.5973173053354025,
+     0.5973173053354025,
+     0.5973173053354025,
+     0.5973173053354025,
+     0.5973173053354025,
+     0.5410298483524872,
+     0.541315171064991,
+     0.5538737040063701,
+     0.554327094249735,
+     0.5582940938530182,
+     0.5763903300813235,
+     0.4810668988729181,
+     0.504692667662411,
+     0.5101648370331574,
+     0.51714265225751,
+     0.536336739172077,
+     0.39503206975146093,
+     0.42852760043828,
+     0.45290317092671073,
+     0.4920766746419488,
+     0.33091539807757747,
+     0.38476367615656165,
+     0.43712049177901696,
+     0.2922405003995551,
+     0.3761869596402865
+    ],
+    "why_it_can_fail": "an effective dimension of one means a single bit predicts the optimum, so any comparison between things that choose is unidentifiable -- the benchmark's decision space collapsed to 'activate in the first eligible week'"
+   },
+   "passed": true
+  },
+  "p3_reset_leaves_time_inside_the_horizon": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": 943.8,
+     "threshold": 4368.0
+    },
+    "why_it_can_fail": "a warm-up that consumes the horizon makes the cell ineligible rather than hard: R13 at x16 left env.now at 161,280 h against a 4,368 h horizon and was reported as a one-step episode"
+   },
+   "passed": true
+  },
+  "p4_scenario_is_the_declared_one": {
+   "computed": true,
+   "evidence": {
+    "actual": {
+     "demand_process": "garrido_seasonal_v1",
+     "inventory_replenishment_lead_time": 336.0,
+     "strategic_buffer_release_mode": "immediate"
+    },
+    "computed_from": {
+     "observed": 3.0,
+     "threshold": 3.0
+    },
+    "declared": {
+     "demand_process": "garrido_seasonal_v1",
+     "inventory_replenishment_lead_time": 336.0,
+     "strategic_buffer_release_mode": "immediate"
+    },
+    "why_it_can_fail": "a runner that silently falls back to a default scenario is not measuring the experiment it names: the per-risk sensitivity reverted to thesis_uniform while the benchmark it was meant to explain used garrido_seasonal_v1"
+   },
+   "passed": true
+  }
+ },
+ "lambdas": [
+  0.0,
+  0.25,
+  0.5,
+  1.0,
+  2.0,
+  4.0
+ ],
+ "live_scenario": {
+  "demand_process": "garrido_seasonal_v1",
+  "inventory_replenishment_lead_time": 336.0,
+  "strategic_buffer_release_mode": "immediate"
+ },
+ "max_inventory_hours": 3696.0,
+ "module_manifest": {
+  "entry_script": "scripts/run_priced_buffer_gate_v1.py",
+  "entry_script_sha256": "114c6254bf3caf0ee33d6d57dbcbb28770412076b24487aadffbe98a0c437953",
+  "missing": [],
+  "modules": {
+   "supply_chain/arm_runner.py": "1afea4fa248db5beb2d86c6ab2033d6f24a95115ea544b08966b7a538456ac99",
+   "supply_chain/continuous_its_env.py": "9600402e8cdef496a548628a41cd6bb974ae83d9ef66dbe78db1c5dce07d16ca",
+   "supply_chain/falsifiers.py": "a152144589e58bc1a658b002c39ff5c0332cd3a2796cb9cf443cd0de36443788",
+   "supply_chain/seed_custody.py": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd",
+   "supply_chain/supply_chain.py": "7706aa26e65ce8498f30d896180914a57c7f9710373347331cbd93cd9fb1026a"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "optimum_switches": [
+  [
+   0.25,
+   22,
+   18
+  ],
+  [
+   0.5,
+   18,
+   0
+  ]
+ ],
+ "options": [
+  [
+   0,
+   0
+  ],
+  [
+   4,
+   0
+  ],
+  [
+   8,
+   0
+  ],
+  [
+   12,
+   0
+  ],
+  [
+   16,
+   0
+  ],
+  [
+   20,
+   0
+  ],
+  [
+   24,
+   0
+  ],
+  [
+   0,
+   4
+  ],
+  [
+   4,
+   4
+  ],
+  [
+   8,
+   4
+  ],
+  [
+   12,
+   4
+  ],
+  [
+   16,
+   4
+  ],
+  [
+   20,
+   4
+  ],
+  [
+   0,
+   8
+  ],
+  [
+   4,
+   8
+  ],
+  [
+   8,
+   8
+  ],
+  [
+   12,
+   8
+  ],
+  [
+   16,
+   8
+  ],
+  [
+   0,
+   13
+  ],
+  [
+   4,
+   13
+  ],
+  [
+   8,
+   13
+  ],
+  [
+   12,
+   13
+  ],
+  [
+   0,
+   18
+  ],
+  [
+   4,
+   18
+  ],
+  [
+   8,
+   18
+  ],
+  [
+   0,
+   22
+  ],
+  [
+   4,
+   22
+  ]
+ ],
+ "pareto_front_distinct": 6,
+ "preflight_summary": {
+  "all_passed": true,
+  "disclosures": [],
+  "failed": [],
+  "n_computed": 4,
+  "n_disclosures": 0,
+  "n_failed": 0,
+  "n_not_applicable": 0,
+  "not_applicable": []
+ },
+ "priced": {
+  "0.0": {
+   "J_by_option": {
+    "(0, 0)": 0.5863490410317869,
+    "(0, 13)": 0.38425850427154434,
+    "(0, 18)": 0.31737008567596603,
+    "(0, 22)": 0.29378620043844234,
+    "(0, 4)": 0.5187162292178524,
+    "(0, 8)": 0.462629524612776,
+    "(12, 0)": 0.5863490410317869,
+    "(12, 13)": 0.49570880447032906,
+    "(12, 4)": 0.5464799104835162,
+    "(12, 8)": 0.5123251092724715,
+    "(16, 0)": 0.5863490410317869,
+    "(16, 4)": 0.5607956544353109,
+    "(16, 8)": 0.5437895057013601,
+    "(20, 0)": 0.5863490410317869,
+    "(20, 4)": 0.5736759830153703,
+    "(24, 0)": 0.5863490410317869,
+    "(4, 0)": 0.5863490410317869,
+    "(4, 13)": 0.3990556051415491,
+    "(4, 18)": 0.3663372792394046,
+    "(4, 22)": 0.3592295875433051,
+    "(4, 4)": 0.5233919646407935,
+    "(4, 8)": 0.46815776234874046,
+    "(8, 0)": 0.5863490410317869,
+    "(8, 13)": 0.4414734093458099,
+    "(8, 18)": 0.4280211757071432,
+    "(8, 4)": 0.53780049231914,
+    "(8, 8)": 0.4803767936213607
+   },
+   "best_J": 0.29378620043844234,
+   "best_k_weeks": 22,
+   "best_option": "(0, 22)"
+  },
+  "0.25": {
+   "J_by_option": {
+    "(0, 0)": 0.5863490410317869,
+    "(0, 13)": 0.5319857769988171,
+    "(0, 18)": 0.5219155402214206,
+    "(0, 22)": 0.5437862004384424,
+    "(0, 4)": 0.5641707746723978,
+    "(0, 8)": 0.5535386155218669,
+    "(12, 0)": 0.5863490410317869,
+    "(12, 13)": 0.6434360771976018,
+    "(12, 4)": 0.5919344559380616,
+    "(12, 8)": 0.6032342001815625,
+    "(16, 0)": 0.5863490410317869,
+    "(16, 4)": 0.6062501998898563,
+    "(16, 8)": 0.634698596610451,
+    "(20, 0)": 0.5863490410317869,
+    "(20, 4)": 0.6191305284699157,
+    "(24, 0)": 0.5863490410317869,
+    "(4, 0)": 0.5863490410317869,
+    "(4, 13)": 0.5467828778688218,
+    "(4, 18)": 0.5708827337848592,
+    "(4, 22)": 0.6092295875433051,
+    "(4, 4)": 0.5688465100953389,
+    "(4, 8)": 0.5590668532578313,
+    "(8, 0)": 0.5863490410317869,
+    "(8, 13)": 0.5892006820730826,
+    "(8, 18)": 0.6325666302525977,
+    "(8, 4)": 0.5832550377736854,
+    "(8, 8)": 0.5712858845304516
+   },
+   "best_J": 0.5219155402214206,
+   "best_k_weeks": 18,
+   "best_option": "(0, 18)"
+  },
+  "0.5": {
+   "J_by_option": {
+    "(0, 0)": 0.5863490410317869,
+    "(0, 13)": 0.6797130497260898,
+    "(0, 18)": 0.7264609947668752,
+    "(0, 22)": 0.7937862004384424,
+    "(0, 4)": 0.6096253201269434,
+    "(0, 8)": 0.6444477064309578,
+    "(12, 0)": 0.5863490410317869,
+    "(12, 13)": 0.7911633499248745,
+    "(12, 4)": 0.6373890013926071,
+    "(12, 8)": 0.6941432910906533,
+    "(16, 0)": 0.5863490410317869,
+    "(16, 4)": 0.6517047453444018,
+    "(16, 8)": 0.7256076875195419,
+    "(20, 0)": 0.5863490410317869,
+    "(20, 4)": 0.6645850739244612,
+    "(24, 0)": 0.5863490410317869,
+    "(4, 0)": 0.5863490410317869,
+    "(4, 13)": 0.6945101505960946,
+    "(4, 18)": 0.7754281883303138,
+    "(4, 22)": 0.8592295875433051,
+    "(4, 4)": 0.6143010555498845,
+    "(4, 8)": 0.6499759441669223,
+    "(8, 0)": 0.5863490410317869,
+    "(8, 13)": 0.7369279548003553,
+    "(8, 18)": 0.8371120847980523,
+    "(8, 4)": 0.6287095832282309,
+    "(8, 8)": 0.6621949754395425
+   },
+   "best_J": 0.5863490410317869,
+   "best_k_weeks": 0,
+   "best_option": "(0, 0)"
+  },
+  "1.0": {
+   "J_by_option": {
+    "(0, 0)": 0.5863490410317869,
+    "(0, 13)": 0.9751675951806353,
+    "(0, 18)": 1.1355519038577842,
+    "(0, 22)": 1.2937862004384424,
+    "(0, 4)": 0.7005344110360343,
+    "(0, 8)": 0.8262658882491396,
+    "(12, 0)": 0.5863490410317869,
+    "(12, 13)": 1.0866178953794199,
+    "(12, 4)": 0.728298092301698,
+    "(12, 8)": 0.8759614729088352,
+    "(16, 0)": 0.5863490410317869,
+    "(16, 4)": 0.7426138362534926,
+    "(16, 8)": 0.9074258693377237,
+    "(20, 0)": 0.5863490410317869,
+    "(20, 4)": 0.755494164833552,
+    "(24, 0)": 0.5863490410317869,
+    "(4, 0)": 0.5863490410317869,
+    "(4, 13)": 0.9899646960506401,
+    "(4, 18)": 1.184519097421223,
+    "(4, 22)": 1.3592295875433051,
+    "(4, 4)": 0.7052101464589753,
+    "(4, 8)": 0.831794125985104,
+    "(8, 0)": 0.5863490410317869,
+    "(8, 13)": 1.0323825002549007,
+    "(8, 18)": 1.2462029938889614,
+    "(8, 4)": 0.7196186741373218,
+    "(8, 8)": 0.8440131572577243
+   },
+   "best_J": 0.5863490410317869,
+   "best_k_weeks": 0,
+   "best_option": "(0, 0)"
+  },
+  "2.0": {
+   "J_by_option": {
+    "(0, 0)": 0.5863490410317869,
+    "(0, 13)": 1.5660766860897262,
+    "(0, 18)": 1.9537337220396025,
+    "(0, 22)": 2.293786200438442,
+    "(0, 4)": 0.8823525928542161,
+    "(0, 8)": 1.1899022518855034,
+    "(12, 0)": 0.5863490410317869,
+    "(12, 13)": 1.677526986288511,
+    "(12, 4)": 0.9101162741198798,
+    "(12, 8)": 1.2395978365451987,
+    "(16, 0)": 0.5863490410317869,
+    "(16, 4)": 0.9244320180716745,
+    "(16, 8)": 1.2710622329740873,
+    "(20, 0)": 0.5863490410317869,
+    "(20, 4)": 0.9373123466517339,
+    "(24, 0)": 0.5863490410317869,
+    "(4, 0)": 0.5863490410317869,
+    "(4, 13)": 1.580873786959731,
+    "(4, 18)": 2.0027009156030413,
+    "(4, 22)": 2.359229587543305,
+    "(4, 4)": 0.8870283282771572,
+    "(4, 8)": 1.1954304896214678,
+    "(8, 0)": 0.5863490410317869,
+    "(8, 13)": 1.6232915911639918,
+    "(8, 18)": 2.0643848120707795,
+    "(8, 4)": 0.9014368559555036,
+    "(8, 8)": 1.207649520894088
+   },
+   "best_J": 0.5863490410317869,
+   "best_k_weeks": 0,
+   "best_option": "(0, 0)"
+  },
+  "4.0": {
+   "J_by_option": {
+    "(0, 0)": 0.5863490410317869,
+    "(0, 13)": 2.7478948679079083,
+    "(0, 18)": 3.5900973584032387,
+    "(0, 22)": 4.293786200438443,
+    "(0, 4)": 1.2459889564905797,
+    "(0, 8)": 1.9171749791582307,
+    "(12, 0)": 0.5863490410317869,
+    "(12, 13)": 2.859345168106693,
+    "(12, 4)": 1.2737526377562434,
+    "(12, 8)": 1.9668705638179262,
+    "(16, 0)": 0.5863490410317869,
+    "(16, 4)": 1.288068381708038,
+    "(16, 8)": 1.9983349602468148,
+    "(20, 0)": 0.5863490410317869,
+    "(20, 4)": 1.3009487102880977,
+    "(24, 0)": 0.5863490410317869,
+    "(4, 0)": 0.5863490410317869,
+    "(4, 13)": 2.762691968777913,
+    "(4, 18)": 3.6390645519666776,
+    "(4, 22)": 4.359229587543305,
+    "(4, 4)": 1.2506646919135207,
+    "(4, 8)": 1.922703216894195,
+    "(8, 0)": 0.5863490410317869,
+    "(8, 13)": 2.8051097729821737,
+    "(8, 18)": 3.700748448434416,
+    "(8, 4)": 1.2650732195918672,
+    "(8, 8)": 1.9349222481668154
+   },
+   "best_J": 0.5863490410317869,
+   "best_k_weeks": 0,
+   "best_option": "(0, 0)"
+  }
+ },
+ "reference_path": "results/kan_mlp_r2_benchmark_v2/result.json",
+ "reference_sha256": "627448cf0bd1630f897e0d1c9e557bf5837d84b68fe5ee7dc595f6dbb0dd4247",
+ "replay_of": "reconciled_8600001",
+ "rows": {
+  "(0, 0)": {
+   "L_by_seed": [
+    0.5973173053354025,
+    0.538491008137233,
+    0.5436454798832911,
+    0.5727101531181228,
+    0.6345465470411182,
+    0.6313837526755529
+   ],
+   "L_mean": 0.5863490410317869,
+   "inventory_hours": 0.0,
+   "k_weeks": 0,
+   "option": [
+    0,
+    0
+   ],
+   "released_units": 128577.33333333333,
+   "start": 0
+  },
+  "(0, 13)": {
+   "L_by_seed": [
+    0.39503206975146093,
+    0.3740267576164918,
+    0.3589698163459827,
+    0.343283861071188,
+    0.40018318046657103,
+    0.4340553403775714
+   ],
+   "L_mean": 0.38425850427154434,
+   "inventory_hours": 2184.0,
+   "k_weeks": 13,
+   "option": [
+    0,
+    13
+   ],
+   "released_units": 196574.5,
+   "start": 0
+  },
+  "(0, 18)": {
+   "L_by_seed": [
+    0.33091539807757747,
+    0.29360319273950203,
+    0.2934124165703554,
+    0.29118808290726345,
+    0.3147019137372746,
+    0.3803995100238232
+   ],
+   "L_mean": 0.31737008567596603,
+   "inventory_hours": 3024.0,
+   "k_weeks": 18,
+   "option": [
+    0,
+    18
+   ],
+   "released_units": 169893.0,
+   "start": 0
+  },
+  "(0, 22)": {
+   "L_by_seed": [
+    0.2922405003995551,
+    0.27131632214560886,
+    0.2788138247707133,
+    0.2589530479426576,
+    0.3001475803223373,
+    0.36124592704978203
+   ],
+   "L_mean": 0.29378620043844234,
+   "inventory_hours": 3696.0,
+   "k_weeks": 22,
+   "option": [
+    0,
+    22
+   ],
+   "released_units": 150642.83333333334,
+   "start": 0
+  },
+  "(0, 4)": {
+   "L_by_seed": [
+    0.5410298483524872,
+    0.5145221726762144,
+    0.45952827586058737,
+    0.5032228539496575,
+    0.5348050377968002,
+    0.5591891866713682
+   ],
+   "L_mean": 0.5187162292178524,
+   "inventory_hours": 672.0,
+   "k_weeks": 4,
+   "option": [
+    0,
+    4
+   ],
+   "released_units": 230724.33333333334,
+   "start": 0
+  },
+  "(0, 8)": {
+   "L_by_seed": [
+    0.4810668988729181,
+    0.4470570297661295,
+    0.42014400241817257,
+    0.45137703461270545,
+    0.4657324611443612,
+    0.5103997208623691
+   ],
+   "L_mean": 0.462629524612776,
+   "inventory_hours": 1344.0,
+   "k_weeks": 8,
+   "option": [
+    0,
+    8
+   ],
+   "released_units": 221950.66666666666,
+   "start": 0
+  },
+  "(12, 0)": {
+   "L_by_seed": [
+    0.5973173053354025,
+    0.538491008137233,
+    0.5436454798832911,
+    0.5727101531181228,
+    0.6345465470411182,
+    0.6313837526755529
+   ],
+   "L_mean": 0.5863490410317869,
+   "inventory_hours": 0.0,
+   "k_weeks": 0,
+   "option": [
+    12,
+    0
+   ],
+   "released_units": 128577.33333333333,
+   "start": 12
+  },
+  "(12, 13)": {
+   "L_by_seed": [
+    0.4920766746419488,
+    0.43343344691716446,
+    0.4727847254061319,
+    0.4679081827945039,
+    0.5547830382187591,
+    0.5532667588434661
+   ],
+   "L_mean": 0.49570880447032906,
+   "inventory_hours": 2184.0,
+   "k_weeks": 13,
+   "option": [
+    12,
+    13
+   ],
+   "released_units": 189954.83333333334,
+   "start": 12
+  },
+  "(12, 4)": {
+   "L_by_seed": [
+    0.554327094249735,
+    0.4908515227494539,
+    0.5051815188462173,
+    0.5333142853960146,
+    0.5924866462958523,
+    0.6027183953638232
+   ],
+   "L_mean": 0.5464799104835162,
+   "inventory_hours": 672.0,
+   "k_weeks": 4,
+   "option": [
+    12,
+    4
+   ],
+   "released_units": 230106.0,
+   "start": 12
+  },
+  "(12, 8)": {
+   "L_by_seed": [
+    0.51714265225751,
+    0.4492501869725103,
+    0.49031384811383777,
+    0.48211755916795723,
+    0.5673051609197112,
+    0.5678212482033033
+   ],
+   "L_mean": 0.5123251092724715,
+   "inventory_hours": 1344.0,
+   "k_weeks": 8,
+   "option": [
+    12,
+    8
+   ],
+   "released_units": 212167.83333333334,
+   "start": 12
+  },
+  "(16, 0)": {
+   "L_by_seed": [
+    0.5973173053354025,
+    0.538491008137233,
+    0.5436454798832911,
+    0.5727101531181228,
+    0.6345465470411182,
+    0.6313837526755529
+   ],
+   "L_mean": 0.5863490410317869,
+   "inventory_hours": 0.0,
+   "k_weeks": 0,
+   "option": [
+    16,
+    0
+   ],
+   "released_units": 128577.33333333333,
+   "start": 16
+  },
+  "(16, 4)": {
+   "L_by_seed": [
+    0.5582940938530182,
+    0.5111671364958786,
+    0.5280488549581566,
+    0.5483212818549382,
+    0.6209944526433986,
+    0.5979481068064743
+   ],
+   "L_mean": 0.5607956544353109,
+   "inventory_hours": 672.0,
+   "k_weeks": 4,
+   "option": [
+    16,
+    4
+   ],
+   "released_units": 231745.66666666666,
+   "start": 16
+  },
+  "(16, 8)": {
+   "L_by_seed": [
+    0.536336739172077,
+    0.4941117805891196,
+    0.5164279220759201,
+    0.5248693746965395,
+    0.6042426467838009,
+    0.5867485708907031
+   ],
+   "L_mean": 0.5437895057013601,
+   "inventory_hours": 1344.0,
+   "k_weeks": 8,
+   "option": [
+    16,
+    8
+   ],
+   "released_units": 213328.0,
+   "start": 16
+  },
+  "(20, 0)": {
+   "L_by_seed": [
+    0.5973173053354025,
+    0.538491008137233,
+    0.5436454798832911,
+    0.5727101531181228,
+    0.6345465470411182,
+    0.6313837526755529
+   ],
+   "L_mean": 0.5863490410317869,
+   "inventory_hours": 0.0,
+   "k_weeks": 0,
+   "option": [
+    20,
+    0
+   ],
+   "released_units": 128577.33333333333,
+   "start": 20
+  },
+  "(20, 4)": {
+   "L_by_seed": [
+    0.5763903300813235,
+    0.5286813650123343,
+    0.5339558783063806,
+    0.5597806347012385,
+    0.623014902630333,
+    0.6202327873606116
+   ],
+   "L_mean": 0.5736759830153703,
+   "inventory_hours": 672.0,
+   "k_weeks": 4,
+   "option": [
+    20,
+    4
+   ],
+   "released_units": 232123.83333333334,
+   "start": 20
+  },
+  "(24, 0)": {
+   "L_by_seed": [
+    0.5973173053354025,
+    0.538491008137233,
+    0.5436454798832911,
+    0.5727101531181228,
+    0.6345465470411182,
+    0.6313837526755529
+   ],
+   "L_mean": 0.5863490410317869,
+   "inventory_hours": 0.0,
+   "k_weeks": 0,
+   "option": [
+    24,
+    0
+   ],
+   "released_units": 128577.33333333333,
+   "start": 24
+  },
+  "(4, 0)": {
+   "L_by_seed": [
+    0.5973173053354025,
+    0.538491008137233,
+    0.5436454798832911,
+    0.5727101531181228,
+    0.6345465470411182,
+    0.6313837526755529
+   ],
+   "L_mean": 0.5863490410317869,
+   "inventory_hours": 0.0,
+   "k_weeks": 0,
+   "option": [
+    4,
+    0
+   ],
+   "released_units": 128577.33333333333,
+   "start": 4
+  },
+  "(4, 13)": {
+   "L_by_seed": [
+    0.42852760043828,
+    0.3544728390947509,
+    0.3938787071696762,
+    0.3466701580505167,
+    0.4183489129711718,
+    0.452435413124899
+   ],
+   "L_mean": 0.3990556051415491,
+   "inventory_hours": 2184.0,
+   "k_weeks": 13,
+   "option": [
+    4,
+    13
+   ],
+   "released_units": 189245.33333333334,
+   "start": 4
+  },
+  "(4, 18)": {
+   "L_by_seed": [
+    0.38476367615656165,
+    0.3212274719288892,
+    0.3680305536237327,
+    0.3065980405543692,
+    0.3913315559246189,
+    0.426072377248256
+   ],
+   "L_mean": 0.3663372792394046,
+   "inventory_hours": 3024.0,
+   "k_weeks": 18,
+   "option": [
+    4,
+    18
+   ],
+   "released_units": 166123.83333333334,
+   "start": 4
+  },
+  "(4, 22)": {
+   "L_by_seed": [
+    0.3761869596402865,
+    0.3179425856685222,
+    0.3638240926280871,
+    0.29833174606616086,
+    0.38240273859432217,
+    0.41668940266245164
+   ],
+   "L_mean": 0.3592295875433051,
+   "inventory_hours": 3696.0,
+   "k_weeks": 22,
+   "option": [
+    4,
+    22
+   ],
+   "released_units": 21388.833333333332,
+   "start": 4
+  },
+  "(4, 4)": {
+   "L_by_seed": [
+    0.541315171064991,
+    0.49116351646786943,
+    0.487630402610827,
+    0.5015441726012916,
+    0.5400077883101236,
+    0.5786907367896584
+   ],
+   "L_mean": 0.5233919646407935,
+   "inventory_hours": 672.0,
+   "k_weeks": 4,
+   "option": [
+    4,
+    4
+   ],
+   "released_units": 228781.66666666666,
+   "start": 4
+  },
+  "(4, 8)": {
+   "L_by_seed": [
+    0.504692667662411,
+    0.43043701066299495,
+    0.44830168817483823,
+    0.41526536265135355,
+    0.496473023322141,
+    0.5137768216187037
+   ],
+   "L_mean": 0.46815776234874046,
+   "inventory_hours": 1344.0,
+   "k_weeks": 8,
+   "option": [
+    4,
+    8
+   ],
+   "released_units": 215297.66666666666,
+   "start": 4
+  },
+  "(8, 0)": {
+   "L_by_seed": [
+    0.5973173053354025,
+    0.538491008137233,
+    0.5436454798832911,
+    0.5727101531181228,
+    0.6345465470411182,
+    0.6313837526755529
+   ],
+   "L_mean": 0.5863490410317869,
+   "inventory_hours": 0.0,
+   "k_weeks": 0,
+   "option": [
+    8,
+    0
+   ],
+   "released_units": 128577.33333333333,
+   "start": 8
+  },
+  "(8, 13)": {
+   "L_by_seed": [
+    0.45290317092671073,
+    0.390277409422273,
+    0.4396074568552982,
+    0.39588280943919585,
+    0.5068469827868477,
+    0.463322626644534
+   ],
+   "L_mean": 0.4414734093458099,
+   "inventory_hours": 2184.0,
+   "k_weeks": 13,
+   "option": [
+    8,
+    13
+   ],
+   "released_units": 186886.16666666666,
+   "start": 8
+  },
+  "(8, 18)": {
+   "L_by_seed": [
+    0.43712049177901696,
+    0.3756644649765947,
+    0.4280391143407297,
+    0.3810822245925737,
+    0.4956965794662357,
+    0.45052417908770853
+   ],
+   "L_mean": 0.4280211757071432,
+   "inventory_hours": 3024.0,
+   "k_weeks": 18,
+   "option": [
+    8,
+    18
+   ],
+   "released_units": 38185.333333333336,
+   "start": 8
+  },
+  "(8, 4)": {
+   "L_by_seed": [
+    0.5538737040063701,
+    0.502338353767047,
+    0.5033228914717233,
+    0.512989458126115,
+    0.6040138696084286,
+    0.5502646769351558
+   ],
+   "L_mean": 0.53780049231914,
+   "inventory_hours": 672.0,
+   "k_weeks": 4,
+   "option": [
+    8,
+    4
+   ],
+   "released_units": 231181.16666666666,
+   "start": 8
+  },
+  "(8, 8)": {
+   "L_by_seed": [
+    0.5101648370331574,
+    0.4381927483120606,
+    0.458171068162393,
+    0.4425521136610074,
+    0.5376649655940536,
+    0.4955150289654924
+   ],
+   "L_mean": 0.4803767936213607,
+   "inventory_hours": 1344.0,
+   "k_weeks": 8,
+   "option": [
+    8,
+    8
+   ],
+   "released_units": 207827.5,
+   "start": 8
+  }
+ },
+ "run_role": "PRICED_ELIGIBILITY_GATE",
+ "scenario": {
+  "demand_process": "garrido_seasonal_v1",
+  "inventory_replenishment_lead_time": 336.0,
+  "strategic_buffer_release_mode": "immediate"
+ },
+ "schema_version": "priced_buffer_gate_v1",
+ "scope": "DEVELOPMENT_ON_DECLARED_REPLAY_ELIGIBILITY_GATE_NOT_A_RESULT",
+ "seed_block": {
+  "derived_from": "seeds",
+  "end": 8600006,
+  "n": 6,
+  "start": 8600001
+ },
+ "seeds": [
+  8600001,
+  8600002,
+  8600003,
+  8600004,
+  8600005,
+  8600006
+ ],
+ "self_sha256": "7a21380c0be5abf0aeb358568357194f544814226e8c696e241f209d6d09cc62"
+}
