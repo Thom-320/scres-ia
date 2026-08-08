@@ -11,16 +11,16 @@ at the start and an informed histogram at the end.
 THE TWO ARMS, AND WHY BOTH.
 
 `frozen_prior` counts the carrier's visits PER FACTOR LEVEL during the base-288 training phase and
-freezes them before the extended grid is touched, expanding to the 4,608 configurations by product
-with the two new factors uniform -- the same extension rule `extend_state` uses for the carrier, so
-the only difference between arms is what is kept, never how it is spread. It contains no part of the
-target case, does not accumulate during evaluation, and can be deployed WITHOUT running the carrier
-on the case being scored. It is, literally, the transportable level-frequency prior whose sufficiency
-this project claimed and then had to retract for lack of identification. This arm identifies it.
+freezes them before the extended grid is touched. It is a researcher-defined independent
+factor-level compression: inherited factor levels receive Laplace-smoothed counts and the two new
+factors are uniform. It contains no part of the target case, does not accumulate during evaluation,
+and can be exploited without running the carrier on the extended target case. The carrier is still
+needed to generate the prior during base-grid training.
 
 `causal_prefix` is the original comparator with `visits += 1` moved to AFTER the replay instead of
 before. It keeps cross-case accumulation and removes exactly the current-case contamination, so the
-pair separates the two defects instead of confounding them.
+pair separates the two defects instead of confounding them. Its trajectory is descriptive because
+the accumulated cases are not exchangeable replicates.
 
 THE GRADE IS FIXED AND CANNOT IMPROVE. Seeds 8200001-8200060 are burned -- this block was opened for
 the confirmation. This run is REPLAY/DEVELOPMENT. It cannot raise RQ2a, replace the preregistered
@@ -34,6 +34,7 @@ from __future__ import annotations
 
 import argparse
 from datetime import datetime, timezone
+import hashlib
 import json
 from pathlib import Path
 import sys
@@ -62,7 +63,7 @@ def level_prior(base_visits: list[int]) -> np.ndarray:
     Laplace-smoothed by one so every extended configuration keeps positive mass -- f5 fails
     otherwise, and a comparator that cannot reach 4,320 of the 4,608 configurations would be
     crippled rather than fair. The two new factors carry a flat count, which is the frequency
-    analogue of `extend_state` giving their new levels a zero UCB count.
+    comparator. It is not asserted to be the same representation as every carrier's `extend_state`.
     """
     counts = {n: np.zeros(len(G.EXT_FACTORS[n])) for n in G.EXT_NAMES}
     for i in base_visits:
@@ -76,6 +77,11 @@ def level_prior(base_visits: list[int]) -> np.ndarray:
     return p
 
 
+def digest(values: np.ndarray) -> str:
+    """Stable digest for the frozen, unnormalised prior vector."""
+    return hashlib.sha256(np.asarray(values, dtype=np.float64).tobytes()).hexdigest()
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--base-cache", type=Path,
@@ -84,9 +90,9 @@ def main() -> int:
                     default=Path("results/surface_cache/garrido_transfer_confirmation_v2_ext"))
     ap.add_argument("--budget", type=int, default=G.BUDGET)
     ap.add_argument("--contract", type=Path,
-                    default=Path("docs/PREREGISTRO_COMPARADOR_REPARADO_2026-08-08.md"))
+                    default=Path("docs/ENMIENDA_COMPARADOR_REPARADO_V2_2026-08-08.md"))
     ap.add_argument("--max-seeds", type=int, default=0, help="smoke only; 0 means all")
-    ap.add_argument("--out", type=Path, default=Path("results/comparator_repair/result.json"))
+    ap.add_argument("--out", type=Path, default=Path("results/comparator_repair_v2/result.json"))
     args = ap.parse_args()
 
     base, base_ctx, seeds, *_ = G.load(args.base_cache, len(G.BASE_CONFIGS), "wrap288_v1")
@@ -96,6 +102,14 @@ def main() -> int:
     if args.max_seeds:
         seeds = seeds[: args.max_seeds]
 
+    expected_seeds = list(range(BURNED_BLOCK[0], BURNED_BLOCK[1] + 1))
+    if not args.max_seeds and seeds != expected_seeds:
+        raise SystemExit(f"full repair requires the exact burned block; got {seeds[:2]}…{seeds[-2:]}")
+    if contexts != list(G.CONTEXT_ORDER):
+        raise SystemExit(f"repair requires all contexts in declared order; got {contexts}")
+    if not args.max_seeds and sorted(ext_seeds) != expected_seeds:
+        raise SystemExit("extended cache seeds do not match the declared burned block")
+
     outside = [s for s in seeds if not BURNED_BLOCK[0] <= s <= BURNED_BLOCK[1]]
     print(f"  {len(seeds)} semillas x {len(contexts)} contextos x {len(MODES)} modos "
           f"x {len(G.ARMS)} familias")
@@ -104,6 +118,7 @@ def main() -> int:
     visits_orig = {a: np.ones(len(G.EXT_CONFIGS)) for a in G.ARMS}
     visits_prefix = {a: np.ones(len(G.EXT_CONFIGS)) for a in G.ARMS}
     frozen_mass_zero, budget_failures, tv_observed = [], [], []
+    frozen_hashes, frozen_mutations, prefix_mass_failures = {}, [], []
     started = time.perf_counter()
 
     for r, seed in enumerate(seeds):
@@ -120,6 +135,9 @@ def main() -> int:
             prior = level_prior(base_visits)
             if float(prior.min()) <= 0.0:
                 frozen_mass_zero.append((kind, seed))
+            prior_key = (kind, int(seed))
+            prior_hash = digest(prior)
+            frozen_hashes[prior_key] = prior_hash
 
             carried = G.extend_state(kind, trained, G.EXT_FACTORS)
             aucs = {m: [] for m in MODES}
@@ -142,6 +160,8 @@ def main() -> int:
                 s5 = G.Surface(ext[(ctx, seed)])
                 G.marginal_replay(prior, s5, np.random.default_rng(70_000 + r), args.budget)
                 aucs["frozen_prior"].append(s5.auc(args.budget))
+                if digest(prior) != prior_hash:
+                    frozen_mutations.append((kind, int(seed), ctx))
 
                 # Original ordering, reproduced exactly: the transfer visits enter first.
                 for i in s.visited:
@@ -157,6 +177,15 @@ def main() -> int:
                 aucs["marginal"].append(s3.auc(args.budget))
                 for i in s.visited:
                     visits_prefix[kind][i] += 1.0        # loo catches up AFTER its own replay
+
+                expected_prefix_mass = len(G.EXT_CONFIGS) + args.budget * (
+                    r * len(contexts) + contexts.index(ctx) + 1)
+                if float(visits_prefix[kind].sum()) != float(expected_prefix_mass):
+                    prefix_mass_failures.append({
+                        "kind": kind, "seed": int(seed), "context": ctx,
+                        "expected": expected_prefix_mass,
+                        "observed": float(visits_prefix[kind].sum()),
+                    })
 
                 for m, surf in (("transfer", s), ("cold", s2), ("marginal", s3),
                                 ("causal_prefix", s4), ("frozen_prior", s5)):
@@ -220,14 +249,10 @@ def main() -> int:
     if full_run:
         for kind in G.ARMS:
             for m in ("transfer", "cold", "marginal"):
-                a = [round(x, 12) for x in sealed_arms.get(f"{kind}_{m}", [])]
-                b = [round(x, 12) for x in rows[f"{kind}_{m}"]]
+                a = list(sealed_arms.get(f"{kind}_{m}", []))
+                b = list(rows[f"{kind}_{m}"])
                 reproduced[f"{kind}_{m}"] = a == b
 
-    n_frozen_drifting = sum(1 for k in G.ARMS if drift_evaluable
-                            and abs(drift[k]["frozen_prior"]) > 0.25)
-    n_prefix_drifting = sum(1 for k in G.ARMS if drift_evaluable
-                         and drift[k]["causal_prefix"] < -0.15)
     # DERIVED, NOT ASSERTED. The old bound compared two MEAN AUCs against 0.01 and called it "the
     # mass bound". Nothing about 0.18-0.52% of probability mass implies an AUC difference of 0.01 --
     # that threshold was a number chosen to look small. What the mass DOES bound is the total
@@ -245,17 +270,17 @@ def main() -> int:
             "checked": full_run, "detail": reproduced,
             "why_it_can_fail": ("adding arms would have perturbed the existing ones if any RNG "
                                 "stream were shared; each arm draws its own default_rng")},
-        "f2_frozen_prior_does_not_drift_with_run_order": {
-            "passed": (not drift_evaluable) or n_frozen_drifting == 0,
-            "applicable": drift_evaluable, "min_seeds": DRIFT_MIN_SEEDS, "rho": {k: drift[k]["frozen_prior"] for k in G.ARMS},
-            "threshold_abs_rho": 0.25,
-            "why_it_can_fail": "if the frozen prior drifts it is not frozen and the arm is not what it claims"},
-        "f3_prefix_still_drifts_with_run_order": {
-            "passed": (not drift_evaluable) or n_prefix_drifting >= 2,
-            "applicable": drift_evaluable, "min_seeds": DRIFT_MIN_SEEDS, "rho": {k: drift[k]["causal_prefix"] for k in G.ARMS},
-            "threshold_rho": -0.15, "n_drifting": n_prefix_drifting,
-            "why_it_can_fail": ("removing the current case would have removed the drift, which "
-                                "would refute the cross-case-accumulation diagnosis outright")},
+        "f2_frozen_prior_is_immutable_within_each_seed": {
+            "passed": not frozen_mutations,
+            "n_mutations": len(frozen_mutations),
+            "examples": frozen_mutations[:5],
+            "n_frozen_seed_priors": len(frozen_hashes),
+            "why_it_can_fail": "the prior must not change after it is frozen or while target contexts are scored"},
+        "f3_causal_prefix_uses_only_prior_cases": {
+            "passed": not prefix_mass_failures,
+            "n_failures": len(prefix_mass_failures),
+            "examples": prefix_mass_failures[:5],
+            "why_it_can_fail": "the prefix mass must increase by exactly 24 only after each case is scored"},
         "f4_prefix_differs_from_the_original_within_the_derived_total_variation_bound": {
             "passed": tv_max <= tv_bound + 1e-12,
             "total_variation_max_observed": tv_max, "derived_bound": tv_bound,
@@ -281,11 +306,11 @@ def main() -> int:
                "UCB1_INDISTINGUISHABLE_FROM_A_FROZEN_EX_ANTE_LEVEL_PRIOR")
 
     payload = {
-        "schema_version": "comparator_repair_v1",
+        "schema_version": "comparator_repair_v2",
         "claim_status": verdict,
         "scope": "REPLAY_ON_THE_BURNED_CONFIRMATION_BLOCK_NO_NEW_SEEDS_NO_ADJUDICATION",
         "run_role": "REPLAY_REANALYSIS",
-        "registration_status": "PREREGISTERED_REPAIR_ON_BURNED_SEEDS_CANNOT_RAISE_RQ2A",
+        "registration_status": "CORRECTIVE_V2_AFTER_LEGACY_REPLAY_NO_GRADE_CHANGE",
         "endpoint": "auc_regret_norm",
         "estimand": "paired per-seed (comparator - transfer); primary is ucb1 vs frozen_prior",
         "created_at": datetime.now(timezone.utc).isoformat(),
@@ -302,6 +327,7 @@ def main() -> int:
         "total_variation": {"max_observed": tv_max, "derived_bound": tv_bound,
                             "n_measurements": len(tv_observed)},
         "drift_rho_with_run_order": drift,
+        "frozen_prior_sha256": {f"{k[0]}::{k[1]}": v for k, v in frozen_hashes.items()},
         "reproduces_sealed_arms": reproduced,
         "what_this_cannot_do": [
             "raise the grade of RQ2a -- the seeds are burned and this is a replay",

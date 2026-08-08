@@ -676,6 +676,9 @@ class MFSCSimulation:
             self.demand_seasonal = SeasonalDemandProcess(
                 contract, np.random.default_rng(season_ss))
             self._season_week_accum: dict[int, float] = {}
+            self._demand_forecast_rng = np.random.default_rng(
+                np.random.SeedSequence([int(seed or 0), 0x5EA5, 0xF0FE])
+            )
         # Garrido-authorized risk modulation (fine-tuning, frozen per calibrated regime):
         # phi scales FREQUENCY (smaller window b, larger binomial p); psi scales IMPACT
         # (longer recovery, bigger demand surge). 1.0 = thesis baseline.
@@ -2096,6 +2099,22 @@ class MFSCSimulation:
         self.env.run(until=self.horizon)
         return self
 
+    def demand_forecast_observation(self) -> float:
+        """Return the declared GR observation without changing native-demand semantics.
+
+        ``garrido_generator`` is a source-faithful trajectory input. The optional
+        ``holt_winters_observable`` mode is the researcher-defined forecast instrument. Hidden
+        observations return NaN; the shuffled placebo samples a previously issued marginal value.
+        """
+        if self.demand_seasonal is None or self.demand_forecast_visibility == "hidden":
+            return float("nan")
+        if self.demand_forecast_visibility == "shuffled":
+            history = [float(h["gr"]) for h in self.demand_seasonal.forecast_history
+                       if np.isfinite(h.get("gr", float("nan")))]
+            if len(history) > 1:
+                return float(self._demand_forecast_rng.choice(history[:-1]))
+        return float(self.demand_seasonal.gross_requirements())
+
     def step(
         self,
         action: Optional[dict[str, Any]] = None,
@@ -2199,6 +2218,8 @@ class MFSCSimulation:
                     "pending_backorder_qty_delta": 0.0,
                     "unattended_orders_total": self.total_unattended_orders,
                     "flow_ledger": self.flow_ledger(),
+                    "demand_forecast": self.demand_forecast_observation(),
+                    "demand_forecast_visibility": self.demand_forecast_visibility,
                 },
             )
 
@@ -2290,6 +2311,8 @@ class MFSCSimulation:
                 else None
             ),
             "flow_ledger": self.flow_ledger(),
+            "demand_forecast": self.demand_forecast_observation(),
+            "demand_forecast_visibility": self.demand_forecast_visibility,
         }
         return obs, reward, done, info
 

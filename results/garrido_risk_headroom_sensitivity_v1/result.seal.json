@@ -1,0 +1,43 @@
+{
+ "artifact": "results/garrido_risk_headroom_sensitivity_v1/result.json",
+ "artifact_already_carried": [],
+ "artifact_top_level_keys": [
+  "black_swan_R3_scaled",
+  "candidates",
+  "claim_boundary",
+  "contract_sha256",
+  "group_budget_summaries",
+  "max_steps",
+  "metric",
+  "n_candidates",
+  "n_evaluations",
+  "n_profiles",
+  "passing_doors",
+  "profiles",
+  "schema_version",
+  "seeds",
+  "status",
+  "workers"
+ ],
+ "artifact_verdict": "DEVELOPMENT_NO_DOOR_UNDER_TESTED_FRONTIER",
+ "artifact_verdict_field": "status",
+ "canonicalisation": "json.dumps(payload minus integrity fields, sort_keys=True, separators=(',',':'), ensure_ascii=False), UTF-8",
+ "content_sha256": "416a1abb7a73eaa44ad949e6c252478efa52d79438ffd85d30730dbcf844f92a",
+ "excluded_fields": [
+  "self_sha256",
+  "content_sha256",
+  "file_sha256",
+  "sealed_payload_sha256"
+ ],
+ "file_sha256": "e4a3d4a05d604234ac9ef0c34811e96870e0daf8747bda60385f0e0eb2ac2d35",
+ "schema_version": "retrospective_seal_v1",
+ "sealed_at": "2026-08-08T14:39:14.899475+00:00",
+ "sealed_at_commit": "7ff06e1deeb95649515f52e489853ff15d4a5410",
+ "verify_with": "python3 -c \"import json,hashlib;p=json.load(open(ARTIFACT));b={k:v for k,v in p.items() if k not in ['self_sha256', 'content_sha256', 'file_sha256', 'sealed_payload_sha256']};print(hashlib.sha256(json.dumps(b,sort_keys=True,separators=(',',':'),ensure_ascii=False).encode()).hexdigest())\"",
+ "what_this_certifies": "that these bytes and this payload are what existed at the commit named above. From this point an edit is detectable",
+ "what_this_does_not_certify": [
+  "that the payload was correct when it was written -- a seal applied after the fact certifies the future, not the past",
+  "that the artifact is confirmatory or has any grade it did not already declare",
+  "the value a sealing runner would have written as self_sha256, which is computed before its own seal is inserted and cannot be reconstructed from outside"
+ ]
+}

@@ -515,7 +515,15 @@ CLAIMS: list[dict] = [
         "declared_grade": "DEVELOPMENT",
         "grade_declared_in": ("the artifact uses an older schema (garrido_risk_headroom_sensitivity_result_v1) whose verdict field is named status, not claim_status: DEVELOPMENT_NO_DOOR_UNDER_TESTED_FRONTIER. The producer is 45 profiles x 18 postures x 6 seeds = 4,860 evaluations"),
         "artifact_is_unsealed": True,
-        "unsealed_note": ("this artifact carries NO self_sha256, so only its bytes on disk are pinned (file_sha256) and there is no payload digest to detect an edit that preserved the file size. It is the one citation in this lock without a payload seal, and that is a custody gap rather than a formatting one"),
+        "unsealed_note": ("this artifact carries no self_sha256 of its own. A retrospective sidecar "
+                          "seal now pins both its bytes and its canonical payload -- "
+                          "results/garrido_risk_headroom_sensitivity_v1/result.seal.json, "
+                          "content_sha256 416a1abb7a73eaa4 -- written beside it rather than into it, "
+                          "because repairing a custody gap by editing the artifact would do the very "
+                          "thing the gap makes dangerous. The seal certifies the future, not the "
+                          "past: from that commit an edit is detectable, and nothing about the "
+                          "payload's correctness when written is implied"),
+        "retrospective_seal": "results/garrido_risk_headroom_sensitivity_v1/result.seal.json",
         "artifact": "results/garrido_risk_headroom_sensitivity_v1/result.json",
         "section": "Discussion / answer to the randomised-R2 request",
         "endpoint": "H_profile_safe", "estimand": "value of tailoring the posture to the risk profile",

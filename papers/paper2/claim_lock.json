@@ -695,15 +695,16 @@
    ],
    "paper_id": "P2",
    "registration_status": null,
+   "retrospective_seal": "results/garrido_risk_headroom_sensitivity_v1/result.seal.json",
    "run_role": null,
    "scope": null,
    "section": "Discussion / answer to the randomised-R2 request",
    "self_sha256": null,
-   "unsealed_note": "this artifact carries NO self_sha256, so only its bytes on disk are pinned (file_sha256) and there is no payload digest to detect an edit that preserved the file size. It is the one citation in this lock without a payload seal, and that is a custody gap rather than a formatting one",
+   "unsealed_note": "this artifact carries no self_sha256 of its own. A retrospective sidecar seal now pins both its bytes and its canonical payload -- results/garrido_risk_headroom_sensitivity_v1/result.seal.json, content_sha256 416a1abb7a73eaa4 -- written beside it rather than into it, because repairing a custody gap by editing the artifact would do the very thing the gap makes dangerous. The seal certifies the future, not the past: from that commit an edit is detectable, and nothing about the payload's correctness when written is implied",
    "why_forbidden": "unique_profile_optima is 1, 2 or 3 by row; and the screen varied PROFILES, not the within-episode realisation"
   }
  ],
- "generated_at_commit": "68cf57d8252b35c0eaf9ac0c77c690ee12d7d032",
+ "generated_at_commit": "7ff06e1deeb95649515f52e489853ff15d4a5410",
  "grader_self_test": {
   "a_provenance_artifact_is_not_graded_as_evidence": {
    "passed": true,

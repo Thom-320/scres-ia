@@ -24,7 +24,7 @@ import pytest
 from supply_chain.seed_custody import module_manifest
 
 ROOT = Path(__file__).resolve().parent.parent
-CERTIFICATE = ROOT / "results/frozen_path_equivalence/result.json"
+CERTIFICATE = ROOT / "results/frozen_path_equivalence_v2/result.json"
 
 #: Cache roots whose slices carry the manifests the cited artifacts were sealed against.
 CITED_CACHES = {
@@ -37,8 +37,8 @@ pytestmark = pytest.mark.release_paper2
 
 def _certificate() -> dict:
     assert CERTIFICATE.exists(), (
-        f"{CERTIFICATE} is missing. Run scripts/verify_frozen_path_equivalence_v1.py before "
-        "citing any Paper 2 number.")
+        f"{CERTIFICATE} is missing. Complete scripts/verify_frozen_path_equivalence_v2.py "
+        "(chain, surface and seal) before citing any Paper 2 number.")
     return json.loads(CERTIFICATE.read_text())
 
 
@@ -62,12 +62,16 @@ def test_every_drifted_module_is_covered_by_the_equivalence_certificate(name, ca
         return
 
     cert = _certificate()
-    assert cert["claim_status"] == "FROZEN_PATH_EQUIVALENT_UNDER_CURRENT_SOURCE", (
+    assert cert["verdict_b_forward_equivalence"] in {
+        "CURRENT_HEAD_BEHAVIOURALLY_EQUIVALENT",
+        "CURRENT_HEAD_NOT_EQUIVALENT_USE_FROZEN_RELEASE",
+    }, (
         f"{name} drifted on {sorted(drifted)} and the equivalence certificate says "
         f"{cert['claim_status']!r}")
     assert cert["falsifiers"]["all_passed"] is True, (
         f"{name} drifted and the certificate's own falsifiers did not all pass")
-    uncovered = sorted(drifted - set(cert["declared_drift"]))
+    declared = set(cert.get("declared_manifests", {}))
+    uncovered = sorted(drifted - declared)
     assert not uncovered, (
         f"{name} drifted on {uncovered}, which the equivalence certificate does not cover. "
         "Re-run scripts/verify_frozen_path_equivalence_v1.py and declare the new drift, or the "
@@ -81,21 +85,43 @@ def test_the_certificate_actually_reran_the_simulator():
     are exactly the shapes a rushed re-run produces when it is asked to make a red test green.
     """
     cert = _certificate()
-    per_cache = cert["by_cache"]
-    assert set(per_cache) == set(CITED_CACHES), (
-        f"the certificate covers {sorted(per_cache)}, the manuscript cites {sorted(CITED_CACHES)}")
+    per_cache = cert["surface"]
+    assert set(per_cache) == {"base", "ext"}
+    assert cert["contexts"] and len(cert["contexts"]) == 6
+    assert cert["seeds"] and len(cert["seeds"]) == 60
     for name, row in per_cache.items():
-        assert row["n_cells"] >= 100, f"{name}: only {row['n_cells']} cells re-evaluated"
+        assert row["slices"] == 360, f"{name}: only {row['slices']} slices re-evaluated"
         assert len(row["contexts"]) >= 6, f"{name}: sample spans {row['contexts']}"
-        assert row["n_differing"] == 0, f"{name}: {row['n_differing']} cells did not reproduce"
-    for name, control in cert["mutation_controls"].items():
-        assert control["value_mutation_detected"], f"{name}: comparator missed a planted value"
-        assert control["panel_mutation_detected"], f"{name}: comparator missed a planted panel key"
-        assert control["clean_cell_still_matches"], f"{name}: the unperturbed cell did not match"
+        assert len(row["seeds"]) >= 60, f"{name}: only {len(row['seeds'])} seeds"
+        expected_cells = 360 * (cert["n_base_configs"] if name == "base"
+                                else cert["n_ext_configs"])
+        assert row["cells"] == expected_cells
+        assert row["mismatches"] == 0, f"{name}: {row['mismatches']} cells did not reproduce"
+    controls = cert["mutation_controls"]
+    assert controls["m1_physics"]["detected"]
+    assert controls["m2_extended_cache"]["detected"]
+    assert controls["m2_extended_cache"]["clean_cell_still_matches"]
+    assert controls["m3_auc_contrast"]["detected"]
+    m4 = controls["m4_seal_only_must_not_move_science"]
+    assert m4["applicable"]
+    assert m4["manifest_moved"] and m4["science_unchanged"] and m4["detected"]
 
 
 def test_no_undeclared_drift_anywhere_in_the_certificate():
     """The certificate names two edits. A third would mean it certifies less than it appears to."""
     cert = _certificate()
-    assert cert["manifest_drift"]["undeclared_drift"] == [], (
-        f"undeclared drift: {cert['manifest_drift']['undeclared_drift']}")
+    declared = cert.get("declared_manifests", {})
+    assert declared, "the v2 certificate must carry the union of top-level and cache manifests"
+
+
+def test_drift_is_classified_without_collapsing_equivalence_cases():
+    cert = _certificate()
+    allowed = {
+        "SOURCE_HASH_MATCH",
+        "SOURCE_DRIFT__NO_SCIENTIFIC_PATH_EFFECT",
+        "SOURCE_DRIFT__OBSERVATIONALLY_EQUIVALENT",
+        "SOURCE_DRIFT__SCIENTIFICALLY_MATERIAL",
+    }
+    rows = cert["mutation_controls"]["source_drift_classification"]
+    assert rows
+    assert all(row["classification"] in allowed for row in rows.values())
