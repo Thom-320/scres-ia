@@ -20,7 +20,7 @@
  "claim_status": "TWO_METRICS_ONE_NAME__H_REGIME_MUST_BE_LABELLED_BY_METRIC",
  "contract_path": "/Users/thom/Projects/research/scres-ia/docs/ENMIENDA_REGISTRO_DE_EVIDENCIA_2026-08-07.md",
  "contract_sha256": "8e78b344536e8c6440d29ff4e437a0ea9b84c5fe73980d0b40c842aa90947ff5",
- "created_at": "2026-08-08T06:54:23.893668+00:00",
+ "created_at": "2026-08-08T14:58:53.573415+00:00",
  "crosswalk": {
   "grid_288": {
    "argmax_universal_at_all_seeds": false,
@@ -247,7 +247,7 @@
  "integrity_falsifier_passed": true,
  "module_manifest": {
   "entry_script": "scripts/run_h_regime_crosswalk_v1.py",
-  "entry_script_sha256": "aa9c1a175e5c6da0b9af59ca7bffb095db5250647b943d992eba0bfa352446eb",
+  "entry_script_sha256": "2172a39d414f17a73924c2a22933e8192448913744389f7b02ea5060b2988218",
   "missing": [],
   "modules": {
    "scripts/run_grid_transfer_v1.py": "c08a170dc7f5f6903178b680754518eda971a78130db4616ef62dc68df5419f3",
@@ -320,7 +320,7 @@
  "run_role": "POST_HOC_REREAD",
  "schema_version": "h_regime_crosswalk_v1",
  "scope": "REREAD_OF_SEALED_CACHES_AND_ARTIFACTS_NO_SEEDS_NO_SIMULATION",
- "self_sha256": "37640cd978c65cc285d82b280dde7e3e6a3f1f57035f0b6993ecb8784e2c6109",
+ "self_sha256": "16e5592d3c5b88476451d76b831de3e5f2176eb06fafd202a696f22a541b82e5",
  "sources": {
   "bootstrap_estimate": {
    "path": "results/surface_gates_v2/result.json",
@@ -337,6 +337,50 @@
    "path": "results/monotone_transform_ceiling/result.json",
    "self_sha256": "6a9346fd1c66c7f723af620d0da143ddfd2364bd87a7eb555c887a95aa8af2f5"
   }
+ },
+ "transform_family_supersedes_the_ceiling": {
+  "artifact": "results/monotone_transform_family_v4/result.json",
+  "claim_status": "A_MONOTONE_RESCALING_SURVIVES_ALL_THREE",
+  "deciding_transform": {
+   "H_regime": 0.2776365784991137,
+   "gamma": 19.952623149688787,
+   "hi": 0.638435756625303,
+   "holm_adjusted_p": 0.0,
+   "kind": "power",
+   "label": "power(gamma=19.95)",
+   "lcb95": 0.25712580297045895,
+   "lo": 0.4961444445183107,
+   "n_bootstrap_atoms": 10,
+   "on_grid_boundary": false,
+   "p_not_above_gate": 0.0,
+   "resolvable": 0.8893783333333333
+  },
+  "gate": 0.05,
+  "k_declared": 661,
+  "per_grid": {
+   "wrap288_compat_extended_v1": {
+    "k_family": 661,
+    "n_configurations": 4608,
+    "n_passing_lcb_and_holm": 29,
+    "n_rejected_on_signal_only": 17,
+    "reference_floor": 0.9,
+    "sealed_scalar_h_regime": 0.019501265924434907,
+    "signal_proxy_falls_on_a_step": true
+   },
+   "wrap288_v1": {
+    "deciding_transform": null,
+    "k_family": 661,
+    "n_configurations": 288,
+    "n_passing_lcb_and_holm": 0,
+    "n_rejected_on_signal_only": 0,
+    "reference_floor": 0.9,
+    "sealed_scalar_h_regime": 0.0,
+    "signal_proxy_falls_on_a_step": true
+   }
+  },
+  "retires": "results/monotone_transform_family_v3/result.json",
+  "self_sha256": "ff3803946fea76fc74c87e53ffbfbeb92a5985ffa4fb171b7d001ba9a0fa1d8b",
+  "why": "the ceiling reported ONE transform chosen from a family and never corrected for the family; monotone_transform_family_v2 retired it with THE_CEILING_DOES_NOT_SURVIVE_MULTIPLICITY. v4 declares K = 661, applies Holm across all of them, and adds an LCB requirement and a signal floor"
  },
  "transform_invariance_demonstration": {
   "grid_288": {
@@ -443,9 +487,9 @@
   }
  },
  "withdrawn_claim": {
-  "also_withdrawn": "the transform-proof reading of the 288 zero: it comes from the artifact this crosswalk cannot reproduce, and the argmax is not universal at any seed subset of the same cache",
+  "also_withdrawn": "the transform-proof reading of the 288 zero as a property of the ret_excel surface: it comes from the Cobb-Douglas artifact, whose argmax is not universal on the ret_excel cache at any seed subset. On the Cobb-Douglas metric it is REINFORCED rather than withdrawn: family_v4's f5 is the negative control, and 0 of 661 transforms pass on the 288 grid where one configuration is optimal in all six regimes",
   "phrase": "no context-conditioned architecture can pay, because H_regime = 0.0038 < 0.05",
   "what_may_be_said_instead": "Contextual rankings exist, but their cardinal value depends on the declared utility scale. On the Cobb-Douglas metric at the six seeds of the ceiling artifact a single configuration is optimal in every context; on the ret_excel_risk_conditional surface of the same grid at twelve seeds there are four distinct argmaxes and H is 0.003802, which a strictly increasing rescaling moves to 0.010776. Neither statement may be made without naming its metric and its seeds.",
-  "why_withdrawn": "two reasons, and either alone suffices. The statistic is not invariant to the utility scale -- a strictly increasing rescaling moves it on BOTH grids, 0.003802 to 0.010776 on the 288 and 0.028294 to 0.067539 on the extended. And two sealed artifacts do not agree on its value, so there is no single number to cite"
+  "why_withdrawn": "three reasons now, and any one suffices. The statistic is not invariant to the utility scale -- a strictly increasing rescaling moves it on BOTH grids, 0.003802 to 0.010776 on the 288 and 0.028294 to 0.067539 on the extended. Two sealed artifacts do not agree on its value, so there is no single number to cite. And the non-invariance is far larger than this artifact first reported: over a declared family of 661 transforms with Holm multiplicity, an LCB requirement and a signal floor, 29 survive on the extended grid and the deciding one -- power(gamma = 19.95) -- takes H from 0.019501 to 0.27764 [LCB95 0.25713], fourteen times, against a 0.05 gate"
  }
 }

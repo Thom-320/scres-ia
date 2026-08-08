@@ -32,13 +32,13 @@
    "why_this_half_is_clean": "the cold comparator is rebuilt from scratch on every case and carries nothing across them, so the paired bootstrap's exchangeability assumption holds. comparator_drift measures no drift in any family for this contrast, permutation p 0.30 to 0.98"
   },
   {
-   "allowed": "Against the replay of its own visit marginals as implemented -- a histogram created once and updated throughout the run -- factorized UCB search led by +0.03073 over 60 seeds, from +0.04302 over the first twenty to +0.02877 over the last twenty as the comparator accumulates. The lead is positive across the whole run including its final window.",
+   "allowed": "Against the carrier-state-blind, sequence-blind online cumulative frequency replay actually implemented -- a histogram created once, updated with the transferred arm's visits, and then used on the same target case -- factorized UCB search led by +0.03073 over the exact run order. The descriptive lead was +0.04302 in the first twenty seeds and +0.02877 in the last twenty. These are trajectory summaries, not an i.i.d. bootstrap inference, because the comparator changes as cases accumulate.",
    "artifact": "results/grid_transfer_confirmation_v2/result.json",
    "claim_id": "RQ2A2_UCB1_VS_THE_ONLINE_CUMULATIVE_REPLAY",
    "claim_status": "GRID_TRANSFER_CONFIRMED__UCB1",
    "contract_sha256": "1abbb2df6526f82b887e1ba07cb66f5fa06bb2fbf1f847e79a63b036938c5c9d",
    "endpoint": "auc_regret_norm",
-   "estimand": "UCB1 transfer minus an online cumulative frequency replay, paired per seed",
+   "estimand": "UCB1 transfer minus the carrier-state-blind, sequence-blind online cumulative frequency replay implemented in the original run; trajectory, not an exchangeable per-seed effect",
    "evidence_grade": "CONFIRMATORY",
    "exists": true,
    "falsifiers_all_passed": true,
@@ -64,13 +64,13 @@
    "why_forbidden": "the comparator strengthens over the run, so the sixty seeds are not exchangeable replicates of one contrast and a paired i.i.d. bootstrap does not mean what its label says. The point estimate and the trajectory survive; the interval does not, and quoting it would repeat with a sealed number the defect the repair campaign exists to remove"
   },
   {
-   "allowed": "Prespecified secondary analyses found no corresponding advantage for the evaluated neural, GP-EI or OFAT carriers over the full run; the neural carrier's contrast averaged -0.01178 [-0.01849, -0.00484]. This average is not stationary against that comparator: over the first twenty seeds the neural contrast was +0.00032 and it reaches -0.02146 over the last twenty as the histogram accumulates (rho = -0.378, permutation p = 0.003). The negative is not an artifact of that drift: against a frozen ex-ante level prior, which does not drift, the same carrier loses by MORE (-0.02204 [-0.02599, -0.01829]).",
+   "allowed": "The prespecified secondary contrasts against the historical online cumulative frequency replay are descriptive and depend on the strength of that accumulating comparator. The neural contrast averaged -0.01178 over the full run, was +0.00032 in the first twenty seeds, and reached -0.02146 in the last twenty; GP-EI and OFAT were -0.02160 and -0.02467 over the full run. Because the comparator is not fixed, these trajectories do not support an unqualified claim that the neural carrier cannot transfer. The separate frozen-prior development replay is adjudicated in RQ2D.",
    "artifact": "results/grid_transfer_confirmation_v2/result.json",
    "claim_id": "RQ2B_SECONDARY_CARRIERS_SHOW_NO_SUCH_ADVANTAGE",
    "claim_status": "GRID_TRANSFER_CONFIRMED__UCB1",
    "contract_sha256": "1abbb2df6526f82b887e1ba07cb66f5fa06bb2fbf1f847e79a63b036938c5c9d",
    "endpoint": "auc_regret_norm",
-   "estimand": "each secondary carrier's transfer vs its own state-blind marginal replay",
+   "estimand": "each secondary carrier's transfer minus its own online cumulative frequency replay, interpreted as an order-dependent trajectory",
    "evidence_grade": "PRESPECIFIED_SECONDARY_IN_A_CONFIRMATORY_RUN",
    "exists": true,
    "falsifiers_all_passed": true,
@@ -80,7 +80,9 @@
     "neural carriers cannot transfer",
     "this confirms the neural carrier fails",
     "a confirmatory negative",
-    "the neural carrier did not transfer"
+    "the neural carrier did not transfer",
+    "no corresponding neural advantage",
+    "the neural carrier fails"
    ],
    "missing_top_level_fields": [],
    "must_be_cited_with": [
@@ -97,7 +99,7 @@
    "why_forbidden": "the preregistration declares these arms secondary and exploratory, so a prospective negative at secondary grade is not a confirmed negative -- even though the repaired comparator makes the negative larger rather than smaller"
   },
   {
-   "allowed": "Re-read as twelve arms rather than four within-family contrasts, the four cold-start arms occupy ranks 9-12 without exception, the four lowest-regret arms are mutually indistinguishable -- all six pairwise contrasts among them straddle zero and none is rejected under Holm -- and three of those four are frequency-matched replays of a carrier's visit marginals; retention beat a carrier's own marginal replay in one of four families and lost distinguishably in three.",
+   "allowed": "Re-read descriptively as twelve arms rather than four within-family contrasts, the four cold-start arms occupy ranks 9-12 without exception and three of the four lowest-mean arms are the original online frequency replays. The original pairwise comparisons among the low-mean arms crossed zero, but their i.i.d. bootstrap/Holm reading is quarantined because those replays accumulate across the run; this row therefore records a ranking pattern, not an inferential tie or a new winner.",
    "artifact": "results/best_arm_reanalysis/result.json",
    "claim_id": "RQ2C_THE_TOP_FOUR_ARMS_ARE_INDISTINGUISHABLE",
    "claim_status": "THE_BEST_MEAN_ARM_IS_A_MARGINAL_REPLAY_AND_THE_TOP_FOUR_ARE_INDISTINGUISHABLE",
@@ -130,20 +132,17 @@
    "scope": "REREAD_OF_ONE_SEALED_CONFIRMATION_NO_SEEDS_NO_NEW_RUN",
    "section": "RQ2c (post-hoc re-read of the same prospective artifact)",
    "self_sha256": "525b1a54c8a64801f28559543514a37e5f32e5eccfaa4b10a26918f2e36acf57",
-   "why_forbidden": "the three paired contrasts against the incumbent all cross zero, so reading the mean ranking as a verdict is the same defect ENMIENDA_1 forbids for ofat; and the preregistration forbids selecting a different winner after the seeds were opened -- this row reports a tie, not a winner"
+   "why_forbidden": "the original replay is nonstationary across the ordered cases, so its per-seed bootstrap does not establish an exchangeable tie; and the preregistration forbids selecting a different winner after the seeds were opened"
   },
   {
-   "allowed": "Against a level-frequency prior frozen during base-grid training -- transportable, and deployable without running the carrier on the target case -- factorized UCB search retains an advantage of +0.04179 [+0.03221, +0.05188], larger than its advantage over the online comparator. The other three carriers lose to that prior: the neural carrier by -0.02204 [-0.02599, -0.01829], GP-EI by -0.02097 [-0.02872, -0.01294] and OFAT by -0.04284 [-0.04963, -0.03720]. So a transportable visit prior is sufficient to replace the transferred state of three of four carriers, and insufficient only for factorized UCB.",
-   "artifact": "results/comparator_repair/result.json",
+   "allowed": "In the corrective development replay, a researcher-defined factor-level prior was generated from base-grid visits, Laplace-smoothed, and frozen before the target grid was touched. Against this prior, factorized UCB search retained an advantage of +0.04179 [+0.03221, +0.05188], while the neural, GP-EI, and OFAT transfers were lower than their corresponding frozen-prior replays by -0.02204 [-0.02599, -0.01829], -0.02097 [-0.02872, -0.01294], and -0.04284 [-0.04963, -0.03720]. This is a carrier- and contract-specific development comparison; it does not establish that a level-frequency prior is generally sufficient or that the carrier can be discarded in the original experiment.",
+   "artifact": "results/comparator_repair_v2/result.json",
    "claim_id": "RQ2D_A_TRANSPORTABLE_PRIOR_BEATS_THREE_OF_FOUR_CARRIERS",
-   "claim_status": "UCB1_BEATS_A_FROZEN_EX_ANTE_LEVEL_PRIOR",
-   "contract_sha256": "51458ca77903d1a40a173ce4fec33f21a42d0227a2021dd69563a57b12bc703a",
    "endpoint": "auc_regret_norm",
    "estimand": "each carrier's transferred state against a frozen ex-ante level prior",
-   "evidence_grade": "REPLAY",
-   "exists": true,
-   "falsifiers_all_passed": true,
-   "file_sha256": "4b19a5a9fb31706bb511ffba527188885371df654bef1a1395baa1217776ccf4",
+   "evidence_grade": "GRADE_NOT_MACHINE_DISCOVERABLE",
+   "exists": false,
+   "file_sha256": null,
    "forbidden": [
     "this confirms UCB1",
     "the frozen prior is the best comparator overall",
@@ -151,17 +150,19 @@
     "retained state is unnecessary",
     "this raises the grade of RQ2a"
    ],
-   "missing_top_level_fields": [],
+   "missing_top_level_fields": [
+    "run_role",
+    "scope",
+    "claim_status",
+    "self_sha256"
+   ],
    "must_be_cited_with": [
     "RQ2A1_UCB1_BEATS_COLD_START"
    ],
    "paper_id": "P2",
-   "registration_status": "PREREGISTERED_REPAIR_ON_BURNED_SEEDS_CANNOT_RAISE_RQ2A",
-   "run_role": "REPLAY_REANALYSIS",
-   "scope": "REPLAY_ON_THE_BURNED_CONFIRMATION_BLOCK_NO_NEW_SEEDS_NO_ADJUDICATION",
-   "section": "RQ2d (preregistered comparator repair, replay on the burned block)",
-   "self_sha256": "cbb2e559283db7846073453577e0759f87093626bc1ae95a5fb18d68f44a2aaa",
-   "why_forbidden": "the seeds are burned and the run is a replay, so no grade improves; and the sufficiency of a prior is carrier-specific -- true for three carriers, false for the one the paper recommends"
+   "section": "RQ2d (corrective comparator replay on the burned block)",
+   "self_sha256": null,
+   "why_forbidden": "the seeds are burned and the run is a replay, so no grade improves; and the result identifies a comparison under one researcher-defined prior, not a generic sufficiency theorem"
   },
   {
    "allowed": "In a development reanalysis of a sealed replay, state retention lowered AUC regret in all six matched families: neuron +0.06070 [+0.04568, +0.07953], UCB1 +0.05153 [+0.03583, +0.06593], OFAT +0.03750 [+0.02920, +0.04675], KG +0.03461 [+0.02610, +0.04315], GP-EI +0.02271 [+0.01276, +0.03410], and Thompson +0.01985 [+0.01022, +0.02956], with n=12 paired seeds per family.",
@@ -195,7 +196,7 @@
   },
   {
    "allow_failed_falsifiers": true,
-   "allowed": "The marginal-replay comparator is built from a visit histogram that is created once and updated throughout the run, including with the transferred arm's visits on the case being scored. It is therefore not carrier-independent and not fixed: at the first evaluation it holds 24 real visits against 4,608 pseudocounts and samples almost uniformly, and by the last it holds 8,640, 65% of the mass. The four marginal arms are the four most strongly negatively-correlated with run order of all twelve, ahead of every cold and transfer arm, resolved at p < 0.05 in three of four; no cold arm drifts in any family. The current case contributes between 0.52% and 0.18% of the histogram mass. Declared falsifier f2, which asked the same question of the contrast rather than of the comparator, required resolution in at least three of four families and returned two; it is reported failed and its bar was not moved. The preregistered repair separates the two defects: removing the current case leaves the drift intact (the causal-prefix comparator still drifts in 4 of 4 families, rho -0.167 to -0.366) and moves each contrast by about 0.001, while a prior frozen before the target grid is touched does not drift at all (rho -0.070 to +0.148). Accumulation across cases was the whole effect; current-case contamination was bounded and negligible, with observed total variation 0.005160 against a derived ceiling of 0.005181 over 1,440 measurements.",
+   "allowed": "The historical online frequency comparator is built from a visit histogram that is created once and updated throughout the run, including with the transferred arm's visits on the case being scored. It is therefore not carrier-independent and not fixed: at the first evaluation it holds 24 real visits against 4,608 pseudocounts and samples almost uniformly, and by the last it holds 8,640, 65% of the mass. The four marginal arms are the four most strongly negatively-correlated with run order of all twelve, ahead of every cold and transfer arm, resolved at p < 0.05 in three of four; no cold arm drifts in any family. The current case contributes between 0.52% and 0.18% of the histogram mass. Declared falsifier f2, which asked the same question of the contrast rather than of the comparator, required resolution in at least three of four families and returned two; it is reported failed and its bar was not moved. The corrective design therefore separates current-case contamination from cross-case accumulation: the causal-prefix replay moves the current visits after scoring, while the frozen-prior replay is rebuilt from base-grid counts before target scoring. The original result supports a qualified comparison against cold start, but its cumulative-replay contrasts are not exchangeable per-seed effects.",
    "artifact": "results/comparator_drift/result.json",
    "claim_id": "COMPARATOR_IS_NOT_FIXED_DURING_THE_RUN",
    "claim_status": "COMPARATOR_DRIFT_DIRECTIONAL_IN_4_OF_4_RESOLVED_IN_2_OF_4",
@@ -211,7 +212,9 @@
     "the comparator is a fixed control",
     "an ex-ante transportable prior",
     "the histogram can be deployed alone",
-    "this invalidates the confirmation"
+    "this invalidates the confirmation",
+    "the transferable object is a prior",
+    "the comparator is state-blind"
    ],
    "missing_top_level_fields": [],
    "paper_id": "P2",
@@ -251,7 +254,7 @@
   },
   {
    "allow_failed_falsifiers": true,
-   "allowed": "H_regime names one statistic computed on two different metrics, and each citation must say which. On the ret_excel_risk_conditional surface of the 288 grid at twelve seeds it is 0.003802, reproduced here to the last digit against surface_gates_v2; on the Cobb-Douglas index reconstructed from aggregates.json at six seeds it is 0.0 with a universal argmax. The ret_excel figure is not scale-invariant: a strictly increasing rescaling that leaves every ordering untouched moves it to 0.010776, and 0.028294 to 0.067539 on the extended grid. What is invariant is ordinal -- mean pairwise rank correlation +0.844 and +0.909, top-25 overlap 91.7% and 23.5%.",
+   "allowed": "H_regime names one statistic computed on two different metrics, and each citation must say which. On the ret_excel_risk_conditional surface of the 288 grid at twelve seeds it is 0.003802, reproduced here to the last digit against surface_gates_v2; on the Cobb-Douglas index reconstructed from aggregates.json at six seeds it is 0.0 with a universal argmax. The ret_excel figure is not scale-invariant: a strictly increasing rescaling that leaves every ordering untouched moves it to 0.010776. On the Cobb-Douglas metric the non-invariance is far larger and survives multiplicity: over a declared family of 661 transforms with Holm correction, an LCB requirement and a signal floor, 29 pass on the extended grid and the deciding one takes H from 0.019501 to 0.27764 [LCB95 0.25713] against a 0.05 gate -- while 0 of 661 pass on the 288 grid, which is the negative control. What is invariant is ordinal -- mean pairwise rank correlation +0.844 and +0.909, top-25 overlap 91.7% and 23.5%.",
    "artifact": "results/h_regime_crosswalk/result.json",
    "claim_id": "H_REGIME_MUST_BE_LABELLED_BY_METRIC",
    "claim_status": "TWO_METRICS_ONE_NAME__H_REGIME_MUST_BE_LABELLED_BY_METRIC",
@@ -261,7 +264,7 @@
    "evidence_grade": "POST_HOC_ON_DEVELOPMENT_DATA",
    "exists": true,
    "falsifiers_all_passed": false,
-   "file_sha256": "f66830871263eecb8aebf0c117b593914ca27bd0ac126675cf82a9594a489c3a",
+   "file_sha256": "d558151dfd55e0efc89e0f65fb70c445acb359fc4cb792afb0c34a296a7da1aa",
    "forbidden": [
     "H_regime = 0.0038",
     "no context-conditioned architecture can pay",
@@ -275,7 +278,7 @@
    "run_role": "POST_HOC_REREAD",
    "scope": "REREAD_OF_SEALED_CACHES_AND_ARTIFACTS_NO_SEEDS_NO_SIMULATION",
    "section": "Results 3.4 -- H_regime cited with its metric, or not at all",
-   "self_sha256": "37640cd978c65cc285d82b280dde7e3e6a3f1f57035f0b6993ecb8784e2c6109",
+   "self_sha256": "16e5592d3c5b88476451d76b831de3e5f2176eb06fafd202a696f22a541b82e5",
    "why_forbidden": "an unlabelled figure conflates two metrics; the transform-proof zero and the universal argmax belong to the Cobb-Douglas surface and may not be transferred to the one the manuscript cites; and no bar comparison survives a statistic that moves under a rescaling that preserves every ordering"
   },
   {
@@ -735,7 +738,7 @@
    "why_forbidden": "unique_profile_optima is 1, 2 or 3 by row; and the screen varied PROFILES, not the within-episode realisation"
   }
  ],
- "generated_at_commit": "faaea83c8258f74904670451c293270e8429eb8e",
+ "generated_at_commit": "449d4085c6c090928935cedde87359b31cbb0b1a",
  "grader_self_test": {
   "a_provenance_artifact_is_not_graded_as_evidence": {
    "passed": true,
@@ -753,7 +756,9 @@
  "n_claims": 25,
  "portfolio_map": "papers/PORTFOLIO_MAP.json",
  "portfolio_map_sha256": "22c106e8c4d9754000f993f95c82b7d39f06b45bf063a84d0c7c5443d365593e",
- "problems": [],
+ "problems": [
+  "RQ2D_A_TRANSPORTABLE_PRIOR_BEATS_THREE_OF_FOUR_CARRIERS: artifact missing at results/comparator_repair_v2/result.json"
+ ],
  "schema_version": "paper2_claim_lock_v1",
  "supersedes_for_citation": [
   "docs/TABLA_CANONICA_DE_CLAIMS_2026-08-07.md",

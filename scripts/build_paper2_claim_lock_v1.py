@@ -79,12 +79,16 @@ CLAIMS: list[dict] = [
         "artifact": "results/grid_transfer_confirmation_v2/result.json",
         "section": "RQ2a-2 (the same confirmation, against a comparator that is not fixed)",
         "endpoint": "auc_regret_norm",
-        "estimand": "UCB1 transfer minus an online cumulative frequency replay, paired per seed",
-        "allowed": ("Against the replay of its own visit marginals as implemented -- a histogram "
-                    "created once and updated throughout the run -- factorized UCB search led by "
-                    "+0.03073 over 60 seeds, from +0.04302 over the first twenty to +0.02877 over "
-                    "the last twenty as the comparator accumulates. The lead is positive across the "
-                    "whole run including its final window."),
+        "estimand": ("UCB1 transfer minus the carrier-state-blind, sequence-blind online cumulative "
+                     "frequency replay implemented in the original run; trajectory, not an "
+                     "exchangeable per-seed effect"),
+        "allowed": ("Against the carrier-state-blind, sequence-blind online cumulative frequency "
+                    "replay actually implemented -- a histogram created once, updated with the "
+                    "transferred arm's visits, and then used on the same target case -- factorized "
+                    "UCB search led by +0.03073 over the exact run order. The descriptive lead was "
+                    "+0.04302 in the first twenty seeds and +0.02877 in the last twenty. These are "
+                    "trajectory summaries, not an i.i.d. bootstrap inference, because the comparator "
+                    "changes as cases accumulate."),
         "forbidden": ["state-blind marginal replay", "LCB95 +0.01990",
                       "the interval excludes zero", "+0.03073 [+0.01990, +0.04256]",
                       "a fixed state-blind control"],
@@ -105,19 +109,20 @@ CLAIMS: list[dict] = [
             "UCB1 factor-wise is named the confirmatory arm, and neuron, OFAT and GP-EI are "
             "'secundarios y exploratorios en esta confirmacion'"),
         "endpoint": "auc_regret_norm",
-        "estimand": "each secondary carrier's transfer vs its own state-blind marginal replay",
-        "allowed": ("Prespecified secondary analyses found no corresponding advantage for the "
-                    "evaluated neural, GP-EI or OFAT carriers over the full run; the neural "
-                    "carrier's contrast averaged -0.01178 [-0.01849, -0.00484]. This average is not "
-                    "stationary against that comparator: over the first twenty seeds the neural "
-                    "contrast was +0.00032 and it reaches -0.02146 over the last twenty as the "
-                    "histogram accumulates (rho = -0.378, permutation p = 0.003). The negative is "
-                    "not an artifact of that drift: against a frozen ex-ante level prior, which "
-                    "does not drift, the same carrier loses by MORE (-0.02204 [-0.02599, "
-                    "-0.01829])."),
+        "estimand": ("each secondary carrier's transfer minus its own online cumulative frequency "
+                     "replay, interpreted as an order-dependent trajectory"),
+        "allowed": ("The prespecified secondary contrasts against the historical online cumulative "
+                    "frequency replay are descriptive and depend on the strength of that accumulating "
+                    "comparator. The neural contrast averaged -0.01178 over the full run, was +0.00032 "
+                    "in the first twenty seeds, and reached -0.02146 in the last twenty; GP-EI and OFAT "
+                    "were -0.02160 and -0.02467 over the full run. Because the comparator is not fixed, "
+                    "these trajectories do not support an unqualified claim that the neural carrier "
+                    "cannot transfer. The separate frozen-prior development replay is adjudicated in "
+                    "RQ2D."),
         "forbidden": ["the neuron has no memory", "neural carriers cannot transfer",
                       "this confirms the neural carrier fails", "a confirmatory negative",
-                      "the neural carrier did not transfer"],
+                      "the neural carrier did not transfer", "no corresponding neural advantage",
+                      "the neural carrier fails"],
         "why_forbidden": ("the preregistration declares these arms secondary and exploratory, so a "
                           "prospective negative at secondary grade is not a confirmed negative -- "
                           "even though the repaired comparator makes the negative larger rather "
@@ -131,13 +136,13 @@ CLAIMS: list[dict] = [
         "section": "RQ2c (post-hoc re-read of the same prospective artifact)",
         "endpoint": "auc_regret_norm",
         "estimand": "paired per-seed difference of every arm against the lowest-mean arm, n=60",
-        "allowed": ("Re-read as twelve arms rather than four within-family contrasts, the four "
-                    "cold-start arms occupy ranks 9-12 without exception, the four lowest-regret "
-                    "arms are mutually indistinguishable -- all six pairwise contrasts among them "
-                    "straddle zero and none is rejected under Holm -- and three of those four are "
-                    "frequency-matched replays of a carrier's visit marginals; retention beat a "
-                    "carrier's own marginal replay in one of four families and lost distinguishably "
-                    "in three."),
+        "allowed": ("Re-read descriptively as twelve arms rather than four within-family contrasts, "
+                    "the four cold-start arms occupy ranks 9-12 without exception and three of the "
+                    "four lowest-mean arms are the original online frequency replays. The original "
+                    "pairwise comparisons among the low-mean arms crossed zero, but their i.i.d. "
+                    "bootstrap/Holm reading is quarantined because those replays accumulate across "
+                    "the run; this row therefore records a ranking pattern, not an inferential tie "
+                    "or a new winner."),
         "forbidden": ["the state-blind control wins", "marginal replay is the best procedure",
                       "retention does not help", "this was preregistered",
                       "the ranking selects a new winner",
@@ -146,32 +151,32 @@ CLAIMS: list[dict] = [
                       "the transferable object is a level-frequency prior",
                       "a visit histogram is enough", "state-blind marginal replay"],
         "must_be_cited_with": ["COMPARATOR_IS_NOT_FIXED_DURING_THE_RUN"],
-        "why_forbidden": ("the three paired contrasts against the incumbent all cross zero, so "
-                          "reading the mean ranking as a verdict is the same defect ENMIENDA_1 "
-                          "forbids for ofat; and the preregistration forbids selecting a different "
-                          "winner after the seeds were opened -- this row reports a tie, not a "
-                          "winner"),
+        "why_forbidden": ("the original replay is nonstationary across the ordered cases, so its "
+                          "per-seed bootstrap does not establish an exchangeable tie; and the "
+                          "preregistration forbids selecting a different winner after the seeds "
+                          "were opened"),
     },
     {
         "claim_id": "RQ2D_A_TRANSPORTABLE_PRIOR_BEATS_THREE_OF_FOUR_CARRIERS",
-        "artifact": "results/comparator_repair/result.json",
-        "section": "RQ2d (preregistered comparator repair, replay on the burned block)",
+        "artifact": "results/comparator_repair_v2/result.json",
+        "section": "RQ2d (corrective comparator replay on the burned block)",
         "endpoint": "auc_regret_norm",
         "estimand": "each carrier's transferred state against a frozen ex-ante level prior",
-        "allowed": ("Against a level-frequency prior frozen during base-grid training -- "
-                    "transportable, and deployable without running the carrier on the target case "
-                    "-- factorized UCB search retains an advantage of +0.04179 [+0.03221, +0.05188], "
-                    "larger than its advantage over the online comparator. The other three carriers "
-                    "lose to that prior: the neural carrier by -0.02204 [-0.02599, -0.01829], GP-EI "
-                    "by -0.02097 [-0.02872, -0.01294] and OFAT by -0.04284 [-0.04963, -0.03720]. So "
-                    "a transportable visit prior is sufficient to replace the transferred state of "
-                    "three of four carriers, and insufficient only for factorized UCB."),
+        "allowed": ("In the corrective development replay, a researcher-defined factor-level prior "
+                    "was generated from base-grid visits, Laplace-smoothed, and frozen before the "
+                    "target grid was touched. Against this prior, factorized UCB search retained an "
+                    "advantage of +0.04179 [+0.03221, +0.05188], while the neural, GP-EI, and OFAT "
+                    "transfers were lower than their corresponding frozen-prior replays by -0.02204 "
+                    "[-0.02599, -0.01829], -0.02097 [-0.02872, -0.01294], and -0.04284 "
+                    "[-0.04963, -0.03720]. This is a carrier- and contract-specific development "
+                    "comparison; it does not establish that a level-frequency prior is generally "
+                    "sufficient or that the carrier can be discarded in the original experiment."),
         "forbidden": ["this confirms UCB1", "the frozen prior is the best comparator overall",
                       "a level-frequency prior is enough", "retained state is unnecessary",
                       "this raises the grade of RQ2a"],
         "why_forbidden": ("the seeds are burned and the run is a replay, so no grade improves; and "
-                          "the sufficiency of a prior is carrier-specific -- true for three "
-                          "carriers, false for the one the paper recommends"),
+                          "the result identifies a comparison under one researcher-defined prior, "
+                          "not a generic sufficiency theorem"),
         "must_be_cited_with": ["RQ2A1_UCB1_BEATS_COLD_START"],
     },
     {
@@ -205,7 +210,7 @@ CLAIMS: list[dict] = [
         "endpoint": "auc_regret_norm",
         "estimand": "per-seed contrast and per-arm regret regressed on run order",
         "allow_failed_falsifiers": True,
-        "allowed": ("The marginal-replay comparator is built from a visit histogram that is created "
+        "allowed": ("The historical online frequency comparator is built from a visit histogram that is created "
                     "once and updated throughout the run, including with the transferred arm's "
                     "visits on the case being scored. It is therefore not carrier-independent and "
                     "not fixed: at the first evaluation it holds 24 real visits against 4,608 "
@@ -217,16 +222,16 @@ CLAIMS: list[dict] = [
                     "mass. Declared falsifier f2, which asked the same question of the contrast "
                     "rather than of the comparator, required resolution in at least three of four "
                     "families and returned two; it is reported failed and its bar was not moved. "
-                    "The preregistered repair separates the two defects: removing the current case "
-                    "leaves the drift intact (the causal-prefix comparator still drifts in 4 of 4 "
-                    "families, rho -0.167 to -0.366) and moves each contrast by about 0.001, while "
-                    "a prior frozen before the target grid is touched does not drift at all (rho "
-                    "-0.070 to +0.148). Accumulation across cases was the whole effect; current-case "
-                    "contamination was bounded and negligible, with observed total variation "
-                    "0.005160 against a derived ceiling of 0.005181 over 1,440 measurements."),
+                    "The corrective design therefore separates current-case contamination from "
+                    "cross-case accumulation: the causal-prefix replay moves the current visits "
+                    "after scoring, while the frozen-prior replay is rebuilt from base-grid counts "
+                    "before target scoring. The original result supports a qualified comparison "
+                    "against cold start, but its cumulative-replay contrasts are not exchangeable "
+                    "per-seed effects."),
         "forbidden": ["state-blind marginal replay", "the comparator is a fixed control",
                       "an ex-ante transportable prior", "the histogram can be deployed alone",
-                      "this invalidates the confirmation"],
+                      "this invalidates the confirmation", "the transferable object is a prior",
+                      "the comparator is state-blind"],
         "why_forbidden": ("the accurate name is a carrier-state-blind, sequence-blind ONLINE "
                           "frequency replay; and the UCB1 contrast stays positive across the whole "
                           "run including its last window, so the confirmation is qualified rather "
@@ -266,7 +271,12 @@ CLAIMS: list[dict] = [
                     "surface_gates_v2; on the Cobb-Douglas index reconstructed from aggregates.json "
                     "at six seeds it is 0.0 with a universal argmax. The ret_excel figure is not "
                     "scale-invariant: a strictly increasing rescaling that leaves every ordering "
-                    "untouched moves it to 0.010776, and 0.028294 to 0.067539 on the extended grid. "
+                    "untouched moves it to 0.010776. On the Cobb-Douglas metric the non-invariance "
+                    "is far larger and survives multiplicity: over a declared family of 661 "
+                    "transforms with Holm correction, an LCB requirement and a signal floor, 29 "
+                    "pass on the extended grid and the deciding one takes H from 0.019501 to "
+                    "0.27764 [LCB95 0.25713] against a 0.05 gate -- while 0 of 661 pass on the 288 "
+                    "grid, which is the negative control. "
                     "What is invariant is ordinal -- mean pairwise rank correlation +0.844 and "
                     "+0.909, top-25 overlap 91.7% and 23.5%."),
         "forbidden": ["H_regime = 0.0038", "no context-conditioned architecture can pay",

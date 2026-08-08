@@ -68,7 +68,14 @@ MODULES = ("supply_chain/arm_runner.py", "supply_chain/seed_custody.py",
            "scripts/run_monotone_transform_ceiling_v1.py")
 CONTRACT = Path("docs/ENMIENDA_REGISTRO_DE_EVIDENCIA_2026-08-07.md")
 GATES = Path("results/surface_gates_v2/result.json")
+# SUPERSEDED TWICE, AND THIS ARTIFACT WAS CITING THE FIRST VERSION. `monotone_transform_ceiling`
+# is explicitly retired by `monotone_transform_family_v2`, whose verdict is
+# THE_CEILING_DOES_NOT_SURVIVE_MULTIPLICITY -- the ceiling was one transform picked from a family and
+# never corrected for the family. v3 and v4 rebuild it properly: K = 661 declared transforms, Holm
+# across all of them, an LCB requirement and a signal floor. It is kept as CEILING because its
+# per-grid H_identity is what f1d reproduces, and the FAMILY is what the number now comes from.
 CEILING = Path("results/monotone_transform_ceiling/result.json")
+FAMILY = Path("results/monotone_transform_family_v4/result.json")
 TOP_K = (1, 5, 10, 25)
 BAR = 0.05
 
@@ -123,6 +130,7 @@ def main() -> int:
 
     gates = json.loads((ROOT / GATES).read_text())
     ceiling = json.loads((ROOT / CEILING).read_text())
+    family = json.loads((ROOT / FAMILY).read_text())
 
     rows, ordinals, invariance = {}, {}, {}
     for name, cache, n_cfg in (
@@ -330,19 +338,42 @@ def main() -> int:
             "transform_ceiling": {"path": str(CEILING),
                                   "self_sha256": ceiling.get("self_sha256")},
         },
+        "transform_family_supersedes_the_ceiling": {
+            "artifact": str(FAMILY), "self_sha256": family.get("self_sha256"),
+            "claim_status": family.get("claim_status"),
+            "k_declared": family.get("k_family"), "gate": family.get("gate"),
+            "retires": family.get("predecessor"),
+            "why": ("the ceiling reported ONE transform chosen from a family and never corrected "
+                    "for the family; monotone_transform_family_v2 retired it with "
+                    "THE_CEILING_DOES_NOT_SURVIVE_MULTIPLICITY. v4 declares K = 661, applies Holm "
+                    "across all of them, and adds an LCB requirement and a signal floor"),
+            "per_grid": {g: {k: v for k, v in row.items() if not isinstance(v, (list, dict))}
+                         for g, row in family.get("grids", {}).items()},
+            "deciding_transform": family.get("grids", {})
+                .get("wrap288_compat_extended_v1", {}).get("deciding_transform"),
+        },
         "crosswalk": rows,
         "ordinal_statistics": ordinals,
         "transform_invariance_demonstration": invariance,
         "withdrawn_claim": {
             "phrase": "no context-conditioned architecture can pay, because H_regime = 0.0038 < 0.05",
-            "why_withdrawn": ("two reasons, and either alone suffices. The statistic is not "
+            "why_withdrawn": ("three reasons now, and any one suffices. The statistic is not "
                               "invariant to the utility scale -- a strictly increasing rescaling "
                               "moves it on BOTH grids, 0.003802 to 0.010776 on the 288 and 0.028294 "
-                              "to 0.067539 on the extended. And two sealed artifacts do not agree "
-                              "on its value, so there is no single number to cite"),
-            "also_withdrawn": ("the transform-proof reading of the 288 zero: it comes from the "
-                               "artifact this crosswalk cannot reproduce, and the argmax is not "
-                               "universal at any seed subset of the same cache"),
+                              "to 0.067539 on the extended. Two sealed artifacts do not agree on "
+                              "its value, so there is no single number to cite. And the "
+                              "non-invariance is far larger than this artifact first reported: over "
+                              "a declared family of 661 transforms with Holm multiplicity, an LCB "
+                              "requirement and a signal floor, 29 survive on the extended grid and "
+                              "the deciding one -- power(gamma = 19.95) -- takes H from 0.019501 to "
+                              "0.27764 [LCB95 0.25713], fourteen times, against a 0.05 gate"),
+            "also_withdrawn": ("the transform-proof reading of the 288 zero as a property of the "
+                               "ret_excel surface: it comes from the Cobb-Douglas artifact, whose "
+                               "argmax is not universal on the ret_excel cache at any seed subset. "
+                               "On the Cobb-Douglas metric it is REINFORCED rather than withdrawn: "
+                               "family_v4's f5 is the negative control, and 0 of 661 transforms "
+                               "pass on the 288 grid where one configuration is optimal in all six "
+                               "regimes"),
             "what_may_be_said_instead": ("Contextual rankings exist, but their cardinal value "
                                          "depends on the declared utility scale. On the "
                                          "Cobb-Douglas metric at the six seeds of the ceiling "
