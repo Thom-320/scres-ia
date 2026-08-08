@@ -279,15 +279,20 @@ CLAIMS: list[dict] = [
     },
     {
         "claim_id": "SURFACE_REPRODUCES_UNDER_TODAYS_CODE",
-        "artifact": "results/frozen_path_equivalence_v2/result.chain.json",
+        "artifact": "results/frozen_path_equivalence_v2/result.json",
         "section": "Methods / reproducibility statement",
-        "endpoint": "cell-level exact reproduction of both sealed surface caches",
-        "estimand": "every cached cell re-evaluated under the current tree and compared bit for bit",
-        "allowed": ("Both surface caches re-evaluate cell by cell under the current tree with zero "
-                    "differences: 103,680 cells on the 288 grid and 1,658,880 on the 4,608 grid, "
-                    "1,762,560 in total across six contexts and sixty seeds, maximum absolute "
-                    "difference 0.0. The authoritative verification runs on the platform that "
-                    "produced the caches."),
+        "endpoint": "cell-level exact reproduction of both surfaces plus the downstream chain",
+        "estimand": "every cached cell and the whole downstream path re-run under the current tree",
+        "allowed": ("Provenance closes on both verdicts: the historical source tree is recovered and "
+                    "reproduces, and the current head is behaviourally equivalent. Both surface "
+                    "caches re-evaluate cell by cell with zero differences -- 103,680 cells on the "
+                    "288 grid and 1,658,880 on the 4,608 grid, 1,762,560 in total across six "
+                    "contexts and sixty seeds, maximum absolute difference 0.0 -- and the downstream "
+                    "chain re-executes with zero differing scientific keys and an identical "
+                    "transfers dictionary. All four planted-defect controls are detected, including "
+                    "the seal-only edit that must move the manifest and leave the payload "
+                    "untouched. Six falsifiers pass. The authoritative verification runs on the "
+                    "platform that produced the caches."),
         "forbidden": ["the simulator is platform-independent",
                       "the surfaces reproduce bit-exactly across architectures",
                       "reproducibility is established for any environment"],
@@ -299,7 +304,7 @@ CLAIMS: list[dict] = [
     },
     {
         "claim_id": "CROSS_PLATFORM_DIVERGENCE_IS_REAL_AND_NARROW",
-        "artifact": "results/frozen_path_equivalence_v2/cross_platform_divergence/ext__R1r_esc__8200011.json",
+        "artifact": "results/cross_platform_divergence/result.json",
         "section": "Limitations / reproducibility",
         "endpoint": "panel keys of one cached cell re-evaluated on a second architecture",
         "estimand": "macOS arm64 against Linux x86_64 on identical config, context, seed and horizon",
@@ -311,7 +316,11 @@ CLAIMS: list[dict] = [
                     "lost orders by four. All three slices reproduce with zero differences on the "
                     "platform that produced the cache. The mechanism is not identified; the size of "
                     "the gap from an identical seed points at event ordering under ties rather than "
-                    "at arithmetic."),
+                    "at arithmetic, and the two environments share a Python minor version so it is "
+                    "not a language-version effect. All 129 divergent cells set at least one "
+                    "raw-material factor above zero -- the level at which every configuration of "
+                    "the 288 grid pins them, which is why the base surface could not have found "
+                    "this."),
         "forbidden": ["one platform is correct", "the cache is wrong", "the divergence is rounding",
                       "reproduction failed", "the simulator is non-deterministic"],
         "why_forbidden": ("neither environment is adjudicated, the artifact reproduces exactly on "
@@ -553,6 +562,11 @@ def grade(meta: dict, row: dict) -> tuple[str, list[str]]:
         # The tapes may be prospective; the analysis is not. Both halves go in the grade.
         return ("POST_HOC_ON_PROSPECTIVE_DATA" if "CONFIRMATION" in sc
                 else "POST_HOC_ON_DEVELOPMENT_DATA"), []
+    if "PROVENANCE" in rr or "PROVENANCE" in sc:
+        # Not a science grade and it must not borrow one. A provenance artifact adjudicates whether
+        # code and artifacts still name each other; it opens no seed and measures no effect, so
+        # falling through to DEVELOPMENT would file it beside evidence about the supply chain.
+        return "PROVENANCE_NOT_SCIENTIFIC_EVIDENCE", []
     if "CONFIRMATION" in rr:
         # A confirmatory RUN can carry estimands the preregistration declared secondary. The grade
         # belongs to the (artifact, estimand) pair, and the artifact cannot express which of its
@@ -604,7 +618,11 @@ def validate_grader() -> dict:
                   "POST_HOC_REREAD_PROMPTED_BY_EXTERNAL_REVIEW_NOT_PREREGISTERED"}, {})[0]
     ctrl = grade({**full, "scope": "CONFIRMATION_ON_RESERVED_VIRGIN_BLOCK_NO_RL_NO_NEURAL_LEARNER",
                   "run_role": "CONFIRMATION"}, {})[0]
+    prov = grade({**full, "scope": "PROVENANCE_ONLY_NO_SCIENTIFIC_CLAIM_NO_NEW_SEEDS",
+                  "run_role": "PROVENANCE_VERIFICATION"}, {})[0]
     return {
+        "a_provenance_artifact_is_not_graded_as_evidence": {
+            "passed": prov == "PROVENANCE_NOT_SCIENTIFIC_EVIDENCE", "returned": prov},
         "post_hoc_reread_is_not_graded_confirmatory": {
             "passed": trap != "CONFIRMATORY", "returned": trap},
         "a_real_confirmation_still_grades_confirmatory": {

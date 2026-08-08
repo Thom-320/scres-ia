@@ -1,0 +1,303 @@
+{
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "REPRODUCTION_IS_ENVIRONMENT_CONDITIONAL_ON_THE_RAW_MATERIAL_PATH",
+ "contract_path": "/Users/thom/Projects/research/scres-ia/docs/ENMIENDA_TOLERANCIA_EQUIVALENCIA_CROSS_PLATFORM_2026-08-08.md",
+ "contract_sha256": "b1a6f9f1727ee494e2cee0924a1b3b572a8f596a660995fd68f036dfbc0e0673",
+ "coverage": {
+  "cells_diverging": 129,
+  "cells_examined_in_those_slices": 13824,
+  "slices_diverging": 3,
+  "slices_reproducing_exactly_there": 52,
+  "slices_verified_on_the_second_architecture": 55
+ },
+ "created_at": "2026-08-08T14:31:31.272675+00:00",
+ "endpoint": "panel keys of cached cells re-evaluated on two architectures",
+ "environments": {
+  "producer_and_authoritative_verifier": "macOS arm64 (this machine)",
+  "second_architecture": {
+   "machine": "x86_64",
+   "platform": "Linux-7.0.0-28-generic-x86_64-with-glibc2.43",
+   "python": "3.11.15"
+  }
+ },
+ "estimand": "identical config, context, seed and horizon across two environments",
+ "falsifiers": {
+  "all_passed": true,
+  "f1_the_cache_reproduces_on_the_platform_that_produced_it": {
+   "detail": {
+    "8200011": {
+     "recomputed_max_abs_delta": 0.0,
+     "shard": 0
+    },
+    "8200053": {
+     "recomputed_max_abs_delta": 0.0,
+     "shard": 0
+    },
+    "8200054": {
+     "recomputed_max_abs_delta": 0.0,
+     "shard": 0
+    }
+   },
+   "passed": true,
+   "why_it_can_fail": "if the divergent cells did not come back at zero here, the artifact would not reproduce on its own environment either and this would be a defect rather than a platform difference"
+  },
+  "f2_the_capture_and_the_second_architectures_shard_agree": {
+   "detail": {
+    "8200011": [
+     39,
+     39
+    ],
+    "8200053": [
+     72,
+     72
+    ],
+    "8200054": [
+     18,
+     18
+    ]
+   },
+   "passed": true,
+   "why_it_can_fail": "the capture is a separate run on that machine; if its cell count disagreed with the shard, one of the two would be unrepeatable and the divergence would be non-determinism rather than platform"
+  },
+  "f3_the_divergence_is_confined_to_one_context": {
+   "contexts": [
+    "R1r|esc"
+   ],
+   "passed": true,
+   "why_it_can_fail": "a divergence spread across contexts would be a different and much larger finding than one confined to R1r|esc"
+  },
+  "f4_every_divergent_cell_uses_a_raw_material_factor_the_base_grid_never_exercises": {
+   "examples_at_null": [],
+   "n_at_the_null_level_of_both": 0,
+   "n_divergent_cells": 129,
+   "n_with_a_raw_material_factor_above_zero": 129,
+   "passed": true,
+   "why_it_can_fail": "the base grid pins op3_rm = op5_rm = 0 everywhere, so if a divergent cell sat at the null level of both, the explanation for why 103,680 base cells agreed would be wrong"
+  },
+  "f5_the_gap_is_outside_the_frozen_tolerance_band": {
+   "atol": 1e-12,
+   "detail": [
+    [
+     "8200011",
+     10006.0
+    ],
+    [
+     "8200053",
+     5.303447843992698e-08
+    ],
+    [
+     "8200054",
+     5111.0
+    ]
+   ],
+   "passed": true,
+   "rtol": 1e-12,
+   "why_it_can_fail": "if every difference fell inside atol + rtol|x| this would be the numerically-equivalent case the amendment already covers, not a material divergence needing its own artifact"
+  },
+  "f6_the_authoritative_certificate_is_clean": {
+   "certificate_self_sha256": "a434aafa2e2cb79b15825df62ed28d44a48a7167ce0b1ef4f6306be93e1a888c",
+   "passed": true,
+   "why_it_matters": "this artifact narrows a reproducibility claim; if the certificate it narrows had not closed, there would be nothing to narrow"
+  }
+ },
+ "module_manifest": {
+  "entry_script": "scripts/run_cross_platform_divergence_v1.py",
+  "entry_script_sha256": "2f85e79e7cf86ac79f44fc32cc5ea08fa00b78945a9fe6b53a9af4e9b077d9e7",
+  "missing": [],
+  "modules": {
+   "scripts/verify_frozen_path_equivalence_v2.py": "3effbe5eac2190b9275430eb235a8a7032a412b1c36648dad4e42b07f8b0a266",
+   "supply_chain/arm_runner.py": "1afea4fa248db5beb2d86c6ab2033d6f24a95115ea544b08966b7a538456ac99",
+   "supply_chain/seed_custody.py": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd",
+   "supply_chain/supply_chain.py": "d9095439271d27e279bd460bbaf280ac405032d619d9fd2fec137621f5f22092"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "open": "the mechanism is unidentified. A 10,006-ration gap from an identical seed points at event ordering under ties rather than at arithmetic, and the two environments share a Python minor version, so it is not a language-version effect",
+ "preregistration": "docs/ENMIENDA_TOLERANCIA_EQUIVALENCIA_CROSS_PLATFORM_2026-08-08.md",
+ "reference_path": "/Users/thom/Projects/research/scres-ia/results/frozen_path_equivalence_v2/result.json",
+ "reference_sha256": "a434aafa2e2cb79b15825df62ed28d44a48a7167ce0b1ef4f6306be93e1a888c",
+ "registration_status": "POST_HOC_CHARACTERISATION_UNDER_THE_FROZEN_TOLERANCE_AMENDMENT",
+ "run_role": "PROVENANCE_VERIFICATION",
+ "schema_version": "cross_platform_divergence_v1",
+ "scope": "PROVENANCE_ONLY_NO_SCIENTIFIC_CLAIM_NO_NEW_SEEDS",
+ "self_sha256": "bf062ef148d01cb9d73f51974e2fe53536353d1ab7332a4a3afd90ead0c678a9",
+ "slices": {
+  "8200011": {
+   "capture_n_differing": 39,
+   "cells": 4608,
+   "context": "R1r|esc",
+   "local_recomputed_max_abs_delta": 0.0,
+   "local_shard_mismatches": 0,
+   "seed": 8200011,
+   "vps_shard_max_abs_delta": 10006.0,
+   "vps_shard_mismatches": 39,
+   "worst_cell": {
+    "cache_value": 0.006945845632425081,
+    "cell_index": 2873,
+    "config": {
+     "buffer_hours": 504.0,
+     "op12_rop": 48.0,
+     "op3_rm": 70000.0,
+     "op5_rm": 17500.0,
+     "op9_rop": 12.0,
+     "shifts": 3
+    },
+    "max_abs_delta": 10006.0,
+    "panel_differences": {
+     "delivered_rations": {
+      "cache": 440123.0,
+      "delta": 10006.0,
+      "vps": 430117.0
+     },
+     "flow_fill_rate": {
+      "cache": 0.5701104668936109,
+      "delta": 0.012961207052886281,
+      "vps": 0.5571492598407246
+     },
+     "lost_orders": {
+      "cache": 70.0,
+      "delta": 4.0,
+      "vps": 74.0
+     },
+     "ret_excel": {
+      "cache": 0.006945845632425066,
+      "delta": 7.926511459968155e-05,
+      "vps": 0.007025110747024748
+     },
+     "ret_excel_full_ledger": {
+      "cache": 0.0040236452045439705,
+      "delta": 4.5022613186914036e-05,
+      "vps": 0.0039786225913570564
+     },
+     "ret_excel_risk_conditional": {
+      "cache": 0.006945845632425081,
+      "delta": 7.926511459968068e-05,
+      "vps": 0.007025110747024762
+     }
+    },
+    "vps_value": 0.007025110747024762
+   }
+  },
+  "8200053": {
+   "capture_n_differing": 72,
+   "cells": 4608,
+   "context": "R1r|esc",
+   "local_recomputed_max_abs_delta": 0.0,
+   "local_shard_mismatches": 0,
+   "seed": 8200053,
+   "vps_shard_max_abs_delta": 5.303447843992698e-08,
+   "vps_shard_mismatches": 72,
+   "worst_cell": {
+    "cache_value": 0.006893161795245067,
+    "cell_index": 548,
+    "config": {
+     "buffer_hours": 0.0,
+     "op12_rop": 36.0,
+     "op3_rm": 17500.0,
+     "op5_rm": 0.0,
+     "op9_rop": 12.0,
+     "shifts": 3
+    },
+    "max_abs_delta": 5.303447843992698e-08,
+    "panel_differences": {
+     "ret_excel": {
+      "cache": 0.006893161795245051,
+      "delta": 5.303447843905962e-08,
+      "vps": 0.00689321482972349
+     },
+     "ret_excel_full_ledger": {
+      "cache": 0.004907383397277106,
+      "delta": 3.7756333988100965e-08,
+      "vps": 0.004907421153611094
+     },
+     "ret_excel_risk_conditional": {
+      "cache": 0.006893161795245067,
+      "delta": 5.303447843992698e-08,
+      "vps": 0.006893214829723507
+     }
+    },
+    "vps_value": 0.006893214829723507
+   }
+  },
+  "8200054": {
+   "capture_n_differing": 18,
+   "cells": 4608,
+   "context": "R1r|esc",
+   "local_recomputed_max_abs_delta": 0.0,
+   "local_shard_mismatches": 0,
+   "seed": 8200054,
+   "vps_shard_max_abs_delta": 5111.0,
+   "vps_shard_mismatches": 18,
+   "worst_cell": {
+    "cache_value": 0.007668518652347071,
+    "cell_index": 1827,
+    "config": {
+     "buffer_hours": 336.0,
+     "op12_rop": 36.0,
+     "op3_rm": 0.0,
+     "op5_rm": 140000.0,
+     "op9_rop": 12.0,
+     "shifts": 2
+    },
+    "max_abs_delta": 5111.0,
+    "panel_differences": {
+     "delivered_rations": {
+      "cache": 589169.0,
+      "delta": 5111.0,
+      "vps": 584058.0
+     },
+     "flow_fill_rate": {
+      "cache": 0.7630922144179173,
+      "delta": 0.006619771759698745,
+      "vps": 0.7564724426582186
+     },
+     "lost_orders": {
+      "cache": 12.0,
+      "delta": 2.0,
+      "vps": 14.0
+     },
+     "ret_excel": {
+      "cache": 0.007668518652347054,
+      "delta": 1.6571037105101057e-05,
+      "vps": 0.007651947615241953
+     },
+     "ret_excel_full_ledger": {
+      "cache": 0.005906496567179931,
+      "delta": 6.229062155824628e-05,
+      "vps": 0.005844205945621685
+     },
+     "ret_excel_risk_conditional": {
+      "cache": 0.007668518652347071,
+      "delta": 1.657103710510019e-05,
+      "vps": 0.007651947615241971
+     }
+    },
+    "vps_value": 0.007651947615241971
+   }
+  }
+ },
+ "what_this_does_not_say": [
+  "which platform is correct -- neither is adjudicated and both reproduce their own value",
+  "that the simulator is non-deterministic -- repeated evaluation on either machine returns that machine's value",
+  "that the authoritative certificate is affected -- it runs on the producing platform and closed clean"
+ ],
+ "why_the_base_surface_was_blind": "every configuration of the 288 grid has op3_rm = op5_rm = 0, and the extended grid is the addition of exactly those two factors, so the bit-exact agreement measured over 103,680 base cells was measured on a subspace where the divergent code path cannot be reached"
+}

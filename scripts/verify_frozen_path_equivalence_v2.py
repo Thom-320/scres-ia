@@ -555,6 +555,12 @@ def main() -> int:
         "verdict_a_historical_identity": verdict_a,
         "verdict_b_forward_equivalence": verdict_b,
         "scope": "PROVENANCE_ONLY_NO_SCIENTIFIC_CLAIM_NO_NEW_SEEDS",
+        # Without a run_role the claim lock's grader reports GRADE_NOT_MACHINE_DISCOVERABLE and
+        # refuses to guess, which is correct behaviour and useless to a manuscript that needs to
+        # cite this. The role is not a science grade: this artifact adjudicates provenance and
+        # opens no seed, so it says exactly that rather than borrowing CONFIRMATION or REPLAY.
+        "run_role": "PROVENANCE_VERIFICATION",
+        "registration_status": "PREREGISTERED_PROVENANCE_CONTRACT_NO_SEEDS_NO_SCIENTIFIC_CLAIM",
         "endpoint": "cell_and_verdict_level_exact_reproduction",
         "budget": target["budget"],
         "contexts": target["contexts"],
