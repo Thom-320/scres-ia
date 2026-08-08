@@ -198,6 +198,28 @@ CLAIMS: list[dict] = [
                           "opposite directions"),
     },
     {
+        "claim_id": "V0_HYPOTHESES_ADJUDICATED",
+        "artifact": "results/v0_adjudication_matrix/result.json",
+        "section": "Appendix A (reconciliation with the v0 hypotheses)",
+        "endpoint": "not applicable -- adjudicates other artifacts' endpoints",
+        "estimand": "the distance between each v0 sentence and the estimand actually measured",
+        "allowed": ("Of the four v0 hypotheses, three are supported on development evidence and "
+                    "none is confirmatory: H1 on a redefined endpoint (restricted TTR, +125.99 h "
+                    "[+98.35, +154.54]) whose companion recovery gate returned no learning "
+                    "headroom, H2 on a context ordinal (+0.04220 [+0.03466, +0.04992]) rather than "
+                    "successive within-run disruptions, H4 for search cost rather than delivered "
+                    "resilience. H3 is not supported with a live estimand of the wrong sign "
+                    "(-1.109e15, p = 0.821). Of the two research questions, dynamic "
+                    "operationalization is answered only for an outer loop and predictive accuracy "
+                    "is not answered at all."),
+        "forbidden": ["we answered the v0 questions", "three of four hypotheses hold",
+                      "resilience is learning-dependent", "R_t = f(S_t, D_t, L_{t-1})",
+                      "H1 is unanswerable as written", "the hypotheses were confirmed"],
+        "why_forbidden": ("each bare summary is true only with qualifiers that travel separately "
+                          "from the sentence; and 'unanswerable as written' is now false -- "
+                          "h1_h3_originales_v3 is a preregistered recovery-time comparison"),
+    },
+    {
         "claim_id": "VALIDATION_SIX_THESIS_PANELS",
         "artifact": "results/garrido_h2_h3_confirmation_v1/result.json",
         "sibling_receipt": "results/garrido_h2_h3_confirmation_v1/completion_receipt.json",

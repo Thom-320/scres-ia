@@ -1,0 +1,366 @@
+{
+ "by_verdict": {
+  "NOT_ANSWERED": [
+   "RQ_PREDICTIVE_ACCURACY"
+  ],
+  "NOT_SUPPORTED__LIVE_ESTIMAND_WRONG_SIGN": [
+   "H3_VARIANCE_REDUCTION"
+  ],
+  "PARTIALLY_ANSWERED": [
+   "RQ_DYNAMIC_OPERATIONALIZATION"
+  ],
+  "SUPPORTED_BUT_A_DIFFERENT_OBJECT_ON_A_DIFFERENT_INDEX": [
+   "FORMALISM_L_IS_ENDOGENOUS"
+  ],
+  "SUPPORTED_FOR_SEARCH_ONLY__DEVELOPMENT_ONLY": [
+   "H4_PATH_DEPENDENCE_ON_L"
+  ],
+  "SUPPORTED_ON_A_REDEFINED_ENDPOINT__DEVELOPMENT_ONLY": [
+   "H1_RECOVERY_TIME"
+  ],
+  "SUPPORTED_ON_ITS_OWN_ESTIMAND__DEVELOPMENT_ONLY": [
+   "H2_LEARNING_CURVE"
+  ]
+ },
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "3_OF_4_HYPOTHESES_SUPPORTED_ON_DEVELOPMENT_EVIDENCE_NONE_CONFIRMATORY",
+ "contract_path": "/Users/thom/Projects/research/scres-ia/docs/ENMIENDA_REGISTRO_DE_EVIDENCIA_2026-08-07.md",
+ "contract_sha256": "8e78b344536e8c6440d29ff4e437a0ea9b84c5fe73980d0b40c842aa90947ff5",
+ "created_at": "2026-08-08T05:52:21.270444+00:00",
+ "elements": [
+  {
+   "answered_on": "an outer loop over restarted DES runs: search state persists across runs, the physical system does not",
+   "artifact": "results/grid_transfer_confirmation_v2/result.json",
+   "artifact_claim_status": "GRID_TRANSFER_CONFIRMED__UCB1",
+   "artifact_preregistration": "docs/ENMIENDA_CONFIRMACION_BLOQUE_LIMPIO_2026-08-05.md",
+   "artifact_scope": "CONFIRMATION_ON_RESERVED_VIRGIN_BLOCK_NO_RL_NO_NEURAL_LEARNER",
+   "artifact_self_sha256": "eceb9ee97613e172130b7175a79cf6c7d5ddfb54f0ec5435b1174842c20b0f5a",
+   "id": "RQ_DYNAMIC_OPERATIONALIZATION",
+   "not_answered": "dynamic operationalization INSIDE an episode. The DES is reset between runs and no arm observes or acts during one",
+   "resolved_figures": {},
+   "v0_asked": "Can the SCRES model be operationalised dynamically, so that the chain's behaviour responds to accumulated experience?",
+   "verdict": "PARTIALLY_ANSWERED"
+  },
+  {
+   "answered_on": null,
+   "artifact": null,
+   "id": "RQ_PREDICTIVE_ACCURACY",
+   "not_answered": "no held-out predictive validation of a resilience index exists in this repository. Fit quality was measured only inside search contracts, where it is an input to a search comparison and not a predictive claim",
+   "resolved_figures": {},
+   "v0_asked": "Does the neural component improve predictive accuracy of the resilience index?",
+   "verdict": "NOT_ANSWERED"
+  },
+  {
+   "answered_on": "L survives as an endogenous state variable, but it is a factorised bandit statistic living on the RUN index k, not on physical time t: L_k = U(L_{k-1}, x_k, Y_k) and x_{k+1} = pi(L_k, c_{k+1})",
+   "artifact": "results/retention_simultaneous/result.json",
+   "artifact_claim_status": "RETENTION_SURVIVES_SIMULTANEOUS_INFERENCE_IN_6_OF_6",
+   "artifact_preregistration": "/Users/thom/Projects/research/scres-ia/docs/ENMIENDA_REGISTRO_DE_EVIDENCIA_2026-08-07.md",
+   "artifact_scope": "DEVELOPMENT_REANALYSIS_OF_A_SEALED_REPLAY_NO_SEEDS_NO_ADJUDICATION",
+   "artifact_self_sha256": "7bf98dea5c26676be90820eff3c7115f22897a56b376b1ee3fc35667689e0ca1",
+   "id": "FORMALISM_L_IS_ENDOGENOUS",
+   "not_answered": "the subscript t in the v0 expression promises within-episode adaptive control, which nothing here tests",
+   "resolved_figures": {},
+   "v0_asked": "R_t = f(S_t, D_t, L_{t-1}) -- learning as an endogenous state variable",
+   "verdict": "SUPPORTED_BUT_A_DIFFERENT_OBJECT_ON_A_DIFFERENT_INDEX"
+  },
+  {
+   "answered_on": "restricted_ttr = min(TTR, tau) with tau = 1344 h and a paired placebo, under isolated shocks. The declared redefinition is in the artifact",
+   "artifact": "results/manuscript/h1_h3_originales_v3/result.json",
+   "artifact_claim_status": "H1_SUPPORTED__H3_NOT_SUPPORTED",
+   "artifact_preregistration": "docs/PREREGISTRO_H1_H3_ORIGINALES_V3_2026-08-07.md",
+   "artifact_scope": "DEVELOPMENT_ALREADY_OPEN_BLOCK_NO_VIRGIN_SEEDS_NO_ADJUDICATION",
+   "artifact_self_sha256": "dc46ce6069755a28929b5b107196232a399dd374820b31dc1b186c70e6ef807e",
+   "companion_stop": "results/garrido_v0_surface_gates_v1/result.json",
+   "id": "H1_RECOVERY_TIME",
+   "not_answered": "no neural causality is identified: the contrast is between postures, not between a learner and its ablation. And a companion surface gate on the recovery lane returned STOP_NO_RECOVERY_LEARNING_HEADROOM, so a learner exploiting this endpoint is not established",
+   "resolved_figures": {
+    "hybrid_vs_static_lcb95": {
+     "json_path": [
+      "contrasts",
+      "H1_hybrid_vs_static",
+      "lcb95"
+     ],
+     "resolved": true,
+     "value": 98.346796875
+    },
+    "hybrid_vs_static_mean": {
+     "json_path": [
+      "contrasts",
+      "H1_hybrid_vs_static",
+      "mean"
+     ],
+     "resolved": true,
+     "value": 125.98541666666667
+    },
+    "hybrid_vs_static_ucb95": {
+     "json_path": [
+      "contrasts",
+      "H1_hybrid_vs_static",
+      "ucb95"
+     ],
+     "resolved": true,
+     "value": 154.54471354166665
+    },
+    "n_cells": {
+     "json_path": [
+      "contrasts",
+      "H1_hybrid_vs_static",
+      "n_cells"
+     ],
+     "resolved": true,
+     "value": 960
+    },
+    "tau_hours": {
+     "json_path": [
+      "tau_hours"
+     ],
+     "resolved": true,
+     "value": 1344.0
+    }
+   },
+   "v0_asked": "A hybrid neural model recovers faster than a static simulation",
+   "verdict": "SUPPORTED_ON_A_REDEFINED_ENDPOINT__DEVELOPMENT_ONLY"
+  },
+  {
+   "answered_on": "OLS slope of (reset AUC - memory AUC) against the context ordinal 1..6, with a null control that crosses zero, so the trend is not the rising difficulty of the escalated contexts",
+   "artifact": "results/manuscript/h2_learning_curve/result.json",
+   "artifact_claim_status": "H2_SUPPORTED_LEARNING_CURVE",
+   "artifact_preregistration": "docs/PREREGISTRO_H2_CURVA_DE_APRENDIZAJE_2026-08-07.md",
+   "artifact_scope": "DEVELOPMENT_REANALYSIS_OF_SEALED_ARTIFACTS_NO_SEEDS_NO_ADJUDICATION",
+   "artifact_self_sha256": "74b75141241ba7639f629e2ba8db0ef28bff480fe706489f8977dcd4d4bf48fa",
+   "id": "H2_LEARNING_CURVE",
+   "not_answered": "successive DISRUPTIONS within a run. The ordinal is a context sequence in an outer loop, and the artifact's own estimand note says a large but FLAT advantage would support H4 rather than H2",
+   "resolved_figures": {
+    "null_slope": {
+     "json_path": [
+      "null_slope_random_minus_ofat"
+     ],
+     "resolved": true,
+     "value": {
+      "lcb95": -0.015570216666852871,
+      "mean": -0.0050880611149445275,
+      "n": 120,
+      "ucb95": 0.0056579986049085955
+     }
+    },
+    "primary_slope": {
+     "json_path": [
+      "primary_slope"
+     ],
+     "resolved": true,
+     "value": {
+      "lcb95": 0.03466393985914079,
+      "mean": 0.04220147575193482,
+      "n": 120,
+      "ucb95": 0.04992205677530306
+     }
+    }
+   },
+   "v0_asked": "Performance improves over successive disruptions",
+   "verdict": "SUPPORTED_ON_ITS_OWN_ESTIMAND__DEVELOPMENT_ONLY"
+  },
+  {
+   "answered_on": "the estimand exists and was measured; the point estimate has the wrong sign and the interval spans zero by fifteen orders of magnitude",
+   "artifact": "results/manuscript/h1_h3_originales_v3/result.json",
+   "artifact_claim_status": "H1_SUPPORTED__H3_NOT_SUPPORTED",
+   "artifact_preregistration": "docs/PREREGISTRO_H1_H3_ORIGINALES_V3_2026-08-07.md",
+   "artifact_scope": "DEVELOPMENT_ALREADY_OPEN_BLOCK_NO_VIRGIN_SEEDS_NO_ADJUDICATION",
+   "artifact_self_sha256": "dc46ce6069755a28929b5b107196232a399dd374820b31dc1b186c70e6ef807e",
+   "id": "H3_VARIANCE_REDUCTION",
+   "not_answered": "H3' -- variance of SEARCH cost -- is a different construct and does not rescue H3. This is no longer 'no estimand', it is 'no effect', which is the stronger negative",
+   "resolved_figures": {
+    "hybrid_vs_reset_lcb95": {
+     "json_path": [
+      "contrasts",
+      "H3_hybrid_vs_reset",
+      "lcb95"
+     ],
+     "resolved": true,
+     "value": -3648590718211967.0
+    },
+    "hybrid_vs_reset_mean": {
+     "json_path": [
+      "contrasts",
+      "H3_hybrid_vs_reset",
+      "mean"
+     ],
+     "resolved": true,
+     "value": -1109446832360510.6
+    },
+    "hybrid_vs_reset_ucb95": {
+     "json_path": [
+      "contrasts",
+      "H3_hybrid_vs_reset",
+      "ucb95"
+     ],
+     "resolved": true,
+     "value": 1292965823805314.2
+    },
+    "n_cells": {
+     "json_path": [
+      "contrasts",
+      "H3_hybrid_vs_reset",
+      "n_cells"
+     ],
+     "resolved": true,
+     "value": 360
+    },
+    "p_one_sided": {
+     "json_path": [
+      "contrasts",
+      "H3_hybrid_vs_reset",
+      "p_one_sided"
+     ],
+     "resolved": true,
+     "value": 0.8208
+    }
+   },
+   "v0_asked": "Learning reduces outcome variance across disruption intensities",
+   "verdict": "NOT_SUPPORTED__LIVE_ESTIMAND_WRONG_SIGN"
+  },
+  {
+   "answered_on": "retained search state lowers AUC regret in all six matched families, and the six survive simultaneous max-T inference and Holm",
+   "artifact": "results/retention_simultaneous/result.json",
+   "artifact_claim_status": "RETENTION_SURVIVES_SIMULTANEOUS_INFERENCE_IN_6_OF_6",
+   "artifact_preregistration": "/Users/thom/Projects/research/scres-ia/docs/ENMIENDA_REGISTRO_DE_EVIDENCIA_2026-08-07.md",
+   "artifact_scope": "DEVELOPMENT_REANALYSIS_OF_A_SEALED_REPLAY_NO_SEEDS_NO_ADJUDICATION",
+   "artifact_self_sha256": "7bf98dea5c26676be90820eff3c7115f22897a56b376b1ee3fc35667689e0ca1",
+   "forbidden_figure": "+7.90 runs -- the oracle-normaliser panel, cited in the v0 draft without naming its normaliser",
+   "id": "H4_PATH_DEPENDENCE_ON_L",
+   "not_answered": "DELIVERED RESILIENCE at time t is not shown to depend on history. What depends on history is the cost of FINDING a good configuration. On the simple regret of the recommendation actually deployed, only one of six keeps a simultaneous lower bound above zero",
+   "resolved_figures": {
+    "c_simultaneous": {
+     "json_path": [
+      "by_endpoint",
+      "auc",
+      "c_simultaneous"
+     ],
+     "resolved": true,
+     "value": 2.5910652522919815
+    },
+    "n_families_holm": {
+     "json_path": [
+      "summary",
+      "n_families_rejected_under_holm"
+     ],
+     "resolved": true,
+     "value": 6
+    },
+    "n_families_simultaneous_above_zero": {
+     "json_path": [
+      "summary",
+      "n_families_simultaneous_lcb_above_zero"
+     ],
+     "resolved": true,
+     "value": 6
+    },
+    "neuron_mean": {
+     "json_path": [
+      "by_endpoint",
+      "auc",
+      "per_family",
+      "neuron",
+      "mean"
+     ],
+     "resolved": true,
+     "value": 0.06070331006303109
+    }
+   },
+   "v0_asked": "Resilience at time t depends positively on accumulated prior learning",
+   "verdict": "SUPPORTED_FOR_SEARCH_ONLY__DEVELOPMENT_ONLY"
+  }
+ ],
+ "endpoint": "not applicable -- this artifact adjudicates other artifacts' endpoints",
+ "estimand": "the distance between each v0 sentence and the estimand actually measured",
+ "falsifiers": {
+  "all_passed": true,
+  "f1_every_cited_figure_resolves_inside_its_named_artifact": {
+   "passed": true,
+   "unresolved": [],
+   "why_it_can_fail": "a figure whose JSON path does not exist is a transcribed number, and a transcribed number is how the +7.90 oracle fossil survived for months"
+  },
+  "f2_every_named_artifact_exists": {
+   "missing": [],
+   "passed": true
+  },
+  "f3_no_hypothesis_is_graded_confirmatory": {
+   "n_confirmatory": 0,
+   "passed": true,
+   "scopes": {
+    "H1_RECOVERY_TIME": "DEVELOPMENT_ALREADY_OPEN_BLOCK_NO_VIRGIN_SEEDS_NO_ADJUDICATION",
+    "H2_LEARNING_CURVE": "DEVELOPMENT_REANALYSIS_OF_SEALED_ARTIFACTS_NO_SEEDS_NO_ADJUDICATION",
+    "H3_VARIANCE_REDUCTION": "DEVELOPMENT_ALREADY_OPEN_BLOCK_NO_VIRGIN_SEEDS_NO_ADJUDICATION",
+    "H4_PATH_DEPENDENCE_ON_L": "DEVELOPMENT_REANALYSIS_OF_A_SEALED_REPLAY_NO_SEEDS_NO_ADJUDICATION"
+   },
+   "why_it_can_fail": "if any H1-H4 artifact were confirmatory this row would say so; all four sit on already-open blocks and their own scopes declare NO_ADJUDICATION"
+  },
+  "f4_an_unanswered_element_names_no_artifact": {
+   "passed": true,
+   "why_it_can_fail": "citing an artifact beside NOT_ANSWERED would be the shape of a claim being smuggled in under a negative label"
+  },
+  "f5_the_count_of_supported_hypotheses_is_computed_not_asserted": {
+   "n_hypotheses": 4,
+   "n_supported": 3,
+   "passed": true,
+   "why_it_can_fail": "a hard-coded 'three of four' would survive a change in the rows"
+  }
+ },
+ "forbidden_summaries": [
+  {
+   "phrase": "we answered the v0 questions",
+   "why": "one of the two research questions has no held-out predictive validation at all, and the other is answered for an outer loop the v0 draft did not describe"
+  },
+  {
+   "phrase": "three of four hypotheses hold",
+   "why": "true only with every qualifier attached: H1 on a redefined endpoint whose own recovery lane returned STOP, H2 on a context ordinal rather than successive disruptions, H4 for search cost rather than delivered resilience, and none of the three confirmatory"
+  },
+  {
+   "phrase": "resilience is learning-dependent",
+   "why": "the measured dependence is of SEARCH on its own history, not of resilience"
+  },
+  {
+   "phrase": "R_t = f(S_t, D_t, L_{t-1})",
+   "why": "the subscript promises within-episode adaptive control; the measured object lives on the run index k"
+  }
+ ],
+ "module_manifest": {
+  "entry_script": "scripts/build_v0_adjudication_matrix_v1.py",
+  "entry_script_sha256": "25e3e2212158257b1424a2532d336ecdeb469de6e84385c725c51b36f274afe8",
+  "missing": [],
+  "modules": {
+   "supply_chain/arm_runner.py": "1afea4fa248db5beb2d86c6ab2033d6f24a95115ea544b08966b7a538456ac99",
+   "supply_chain/seed_custody.py": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "n_elements": 7,
+ "n_hypotheses": 4,
+ "n_hypotheses_confirmatory": 0,
+ "n_hypotheses_supported": 3,
+ "preregistration": null,
+ "reference_path": "/Users/thom/Projects/research/scres-ia/results/manuscript/h1_h3_originales_v3/result.json",
+ "reference_sha256": "dc46ce6069755a28929b5b107196232a399dd374820b31dc1b186c70e6ef807e",
+ "registration_status": "ADJUDICATION_MATRIX_NOT_PREREGISTERED_READS_ONLY_SEALED_VERDICTS",
+ "run_role": "POST_HOC_REREAD",
+ "schema_version": "v0_adjudication_matrix_v1",
+ "scope": "REREAD_OF_SEALED_ARTIFACTS_NO_SEEDS_NO_NEW_RUN",
+ "self_sha256": "c70ca02f5e35d12f59f669b1930090ebfc683f229cbd50bf5f38bfbaa14f51e4"
+}
