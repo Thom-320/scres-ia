@@ -295,6 +295,21 @@ Stated as prohibitions rather than hedges:
   does not act on the event stream inside a replication.
 - **No architecture-specific transfer advantage.** None is confirmed anywhere in this study, and the one carrier tested
   prospectively fails the marginal-replay contrast.
+- **The absence of headroom is not an artifact of the scoring metric, and tuning does not recover
+  it.** The inherited `ret_excel` fails a direct abandonment test: its optimal rationing share is
+  **0.1**, which delivers **50.7 %** fill and forfeits **318,621** rations, against **0.5**, which
+  delivers **79.5 %** and forfeits none. The Cobb-Douglas index passes that test — its optimum sits
+  at 0.5, in agreement with service, in every regime — and measured under it the regime headroom is
+  **still absent** (`results/headroom/cobb_douglas_v1/result.json`,
+  `NO_HEADROOM_EVEN_UNDER_A_SOUND_METRIC`), as it is for all seven endpoints of the headroom atlas
+  on both grids. Nor does re-specification rescue it: **158** pooled Cobb-Douglas variants spanning
+  published, fitted and per-context exponents, two κ̇ comparison sets and three variable sets —
+  one of which adds a service term — yield **four** that cross the 0.05 gate, and **all four
+  violate their own share bound**; a separate family of **144** defensible `ret_excel` derivations
+  has a best of **0.04143** at Holm *p* = 1.0. We therefore report the negative under the metric
+  that passes the abandonment test, and treat headroom as a property of the surface rather than of
+  the scale.
+
 - **No regime-tailored adaptation claim in either direction.** `H_regime` is reported per metric
   and never against a bar: it is not invariant to the declared utility scale. What is measured is
   ordinal — contextual rankings are strongly aligned — and retention buys rediscovery cost, not

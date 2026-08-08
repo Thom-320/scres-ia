@@ -158,7 +158,12 @@ CLAIMS: list[dict] = [
     },
     {
         "claim_id": "RQ2D_A_TRANSPORTABLE_PRIOR_BEATS_THREE_OF_FOUR_CARRIERS",
-        "artifact": "results/comparator_repair_v2/result.json",
+        # POINTS AT WHAT EXISTS. A concurrent session repointed this row to a v2 that is
+        # still running, which left the lock reporting a missing artifact -- a claim lock
+        # whose own build says "artifact missing" cannot govern a sentence. It returns to
+        # the sealed v1 and moves to v2 when v2 is sealed, not when it is announced.
+        "artifact": "results/comparator_repair/result.json",
+        "successor_when_sealed": "results/comparator_repair_v2/result.json",
         "section": "RQ2d (corrective comparator replay on the burned block)",
         "endpoint": "auc_regret_norm",
         "estimand": "each carrier's transferred state against a frozen ex-ante level prior",
@@ -360,6 +365,39 @@ CLAIMS: list[dict] = [
         "why_forbidden": ("neither environment is adjudicated, the artifact reproduces exactly on "
                           "its own, and the divergence is between platforms rather than between "
                           "runs -- it repeats on demand on each machine"),
+    },
+    {
+        "claim_id": "THE_NEGATIVE_SURVIVES_A_SOUND_METRIC",
+        "artifact": "results/headroom/cobb_douglas_v1/result.json",
+        "declared_grade": "DEVELOPMENT",
+        "grade_declared_in": (
+            "the artifact carries claim_status NO_HEADROOM_EVEN_UNDER_A_SOUND_METRIC and "
+            "self_sha256 but no run_role or scope; its three corroborating families -- "
+            "metric_audit/abandonment_v1, cobb_douglas_variant_family and "
+            "metric_derivation_family -- all declare DEVELOPMENT_ON_BURNED_TAPES_NO_ADJUDICATION, "
+            "and re-running it would re-simulate the rationing sweep to add a schema field"),
+        "section": "Limitations -- the objection that the metric was broken",
+        "endpoint": "R_cobb_douglas, with flow_fill_rate and ret_excel as comparators",
+        "estimand": "regime headroom under a metric that passes the abandonment test",
+        "allowed": ("The absence of regime headroom is not an artifact of the scoring metric. "
+                    "ret_excel fails a direct abandonment test -- its optimal rationing share is "
+                    "0.1, which delivers 50.7% fill and forfeits 318,621 rations, against 0.5 which "
+                    "delivers 79.5% and forfeits none -- while the Cobb-Douglas index passes it, "
+                    "placing its optimum at 0.5 in agreement with service in every regime. Measured "
+                    "under that sound metric the headroom is still absent, and a seven-endpoint "
+                    "atlas returns no material endpoint on either grid. Tuning does not rescue it: "
+                    "158 pooled Cobb-Douglas variants spanning published, fitted and per-context "
+                    "exponents, two kappa sets and three variable sets including one with an added "
+                    "service term produce four that cross the 0.05 gate, and all four violate their "
+                    "own share bound; a separate family of 144 defensible ret_excel derivations has "
+                    "a best of 0.04143 with Holm p = 1.0."),
+        "forbidden": ["Cobb-Douglas fails", "the metric is broken", "no metric works",
+                      "tuning the exponents could recover the effect",
+                      "a fused metric would find headroom"],
+        "why_forbidden": ("Cobb-Douglas passes the test that matters and reports no headroom "
+                          "because there is none -- headroom is a property of the surface, not of "
+                          "the scale; and per-context exponents and an added service term are two "
+                          "of the axes the variant family already swept"),
     },
     {
         "claim_id": "V0_HYPOTHESES_ADJUDICATED",

@@ -136,13 +136,16 @@
   },
   {
    "allowed": "In the corrective development replay, a researcher-defined factor-level prior was generated from base-grid visits, Laplace-smoothed, and frozen before the target grid was touched. Against this prior, factorized UCB search retained an advantage of +0.04179 [+0.03221, +0.05188], while the neural, GP-EI, and OFAT transfers were lower than their corresponding frozen-prior replays by -0.02204 [-0.02599, -0.01829], -0.02097 [-0.02872, -0.01294], and -0.04284 [-0.04963, -0.03720]. This is a carrier- and contract-specific development comparison; it does not establish that a level-frequency prior is generally sufficient or that the carrier can be discarded in the original experiment.",
-   "artifact": "results/comparator_repair_v2/result.json",
+   "artifact": "results/comparator_repair/result.json",
    "claim_id": "RQ2D_A_TRANSPORTABLE_PRIOR_BEATS_THREE_OF_FOUR_CARRIERS",
+   "claim_status": "UCB1_BEATS_A_FROZEN_EX_ANTE_LEVEL_PRIOR",
+   "contract_sha256": "51458ca77903d1a40a173ce4fec33f21a42d0227a2021dd69563a57b12bc703a",
    "endpoint": "auc_regret_norm",
    "estimand": "each carrier's transferred state against a frozen ex-ante level prior",
-   "evidence_grade": "GRADE_NOT_MACHINE_DISCOVERABLE",
-   "exists": false,
-   "file_sha256": null,
+   "evidence_grade": "REPLAY",
+   "exists": true,
+   "falsifiers_all_passed": true,
+   "file_sha256": "4b19a5a9fb31706bb511ffba527188885371df654bef1a1395baa1217776ccf4",
    "forbidden": [
     "this confirms UCB1",
     "the frozen prior is the best comparator overall",
@@ -150,18 +153,17 @@
     "retained state is unnecessary",
     "this raises the grade of RQ2a"
    ],
-   "missing_top_level_fields": [
-    "run_role",
-    "scope",
-    "claim_status",
-    "self_sha256"
-   ],
+   "missing_top_level_fields": [],
    "must_be_cited_with": [
     "RQ2A1_UCB1_BEATS_COLD_START"
    ],
    "paper_id": "P2",
+   "registration_status": "PREREGISTERED_REPAIR_ON_BURNED_SEEDS_CANNOT_RAISE_RQ2A",
+   "run_role": "REPLAY_REANALYSIS",
+   "scope": "REPLAY_ON_THE_BURNED_CONFIRMATION_BLOCK_NO_NEW_SEEDS_NO_ADJUDICATION",
    "section": "RQ2d (corrective comparator replay on the burned block)",
-   "self_sha256": null,
+   "self_sha256": "cbb2e559283db7846073453577e0759f87093626bc1ae95a5fb18d68f44a2aaa",
+   "successor_when_sealed": "results/comparator_repair_v2/result.json",
    "why_forbidden": "the seeds are burned and the run is a replay, so no grade improves; and the result identifies a comparison under one researcher-defined prior, not a generic sufficiency theorem"
   },
   {
@@ -361,6 +363,39 @@
    "section": "Limitations / reproducibility",
    "self_sha256": "bf062ef148d01cb9d73f51974e2fe53536353d1ab7332a4a3afd90ead0c678a9",
    "why_forbidden": "neither environment is adjudicated, the artifact reproduces exactly on its own, and the divergence is between platforms rather than between runs -- it repeats on demand on each machine"
+  },
+  {
+   "allowed": "The absence of regime headroom is not an artifact of the scoring metric. ret_excel fails a direct abandonment test -- its optimal rationing share is 0.1, which delivers 50.7% fill and forfeits 318,621 rations, against 0.5 which delivers 79.5% and forfeits none -- while the Cobb-Douglas index passes it, placing its optimum at 0.5 in agreement with service in every regime. Measured under that sound metric the headroom is still absent, and a seven-endpoint atlas returns no material endpoint on either grid. Tuning does not rescue it: 158 pooled Cobb-Douglas variants spanning published, fitted and per-context exponents, two kappa sets and three variable sets including one with an added service term produce four that cross the 0.05 gate, and all four violate their own share bound; a separate family of 144 defensible ret_excel derivations has a best of 0.04143 with Holm p = 1.0.",
+   "artifact": "results/headroom/cobb_douglas_v1/result.json",
+   "claim_id": "THE_NEGATIVE_SURVIVES_A_SOUND_METRIC",
+   "claim_status": "NO_HEADROOM_EVEN_UNDER_A_SOUND_METRIC",
+   "contract_sha256": "d0dcd31828e12c6d9ac5efa9d9a232df3275014857799c0b7a62eaa2746e898e",
+   "declared_grade": "DEVELOPMENT",
+   "endpoint": "R_cobb_douglas, with flow_fill_rate and ret_excel as comparators",
+   "estimand": "regime headroom under a metric that passes the abandonment test",
+   "evidence_grade": "DEVELOPMENT__DECLARED_NOT_DISCOVERED",
+   "exists": true,
+   "falsifiers_all_passed": true,
+   "file_sha256": "3ef467b7e4c7cf9866fb06db4196b882ed54451ed8a52f8bbd125f337e24227c",
+   "forbidden": [
+    "Cobb-Douglas fails",
+    "the metric is broken",
+    "no metric works",
+    "tuning the exponents could recover the effect",
+    "a fused metric would find headroom"
+   ],
+   "grade_declared_in": "the artifact carries claim_status NO_HEADROOM_EVEN_UNDER_A_SOUND_METRIC and self_sha256 but no run_role or scope; its three corroborating families -- metric_audit/abandonment_v1, cobb_douglas_variant_family and metric_derivation_family -- all declare DEVELOPMENT_ON_BURNED_TAPES_NO_ADJUDICATION, and re-running it would re-simulate the rationing sweep to add a schema field",
+   "missing_top_level_fields": [
+    "run_role",
+    "scope"
+   ],
+   "paper_id": "P2",
+   "registration_status": null,
+   "run_role": null,
+   "scope": null,
+   "section": "Limitations -- the objection that the metric was broken",
+   "self_sha256": "8ef2833be75bb736e79128d5601e52ba3518a1fa79bd61c3e04376a6c55244c4",
+   "why_forbidden": "Cobb-Douglas passes the test that matters and reports no headroom because there is none -- headroom is a property of the surface, not of the scale; and per-context exponents and an added service term are two of the axes the variant family already swept"
   },
   {
    "allowed": "Of the four v0 hypotheses, three are supported on development evidence and none is confirmatory: H1 on a redefined endpoint (restricted TTR, +125.99 h [+98.35, +154.54]) whose companion recovery gate returned no learning headroom, H2 on a context ordinal (+0.04220 [+0.03466, +0.04992]) rather than successive within-run disruptions, H4 for search cost rather than delivered resilience. H3 is not supported with a live estimand of the wrong sign (-1.109e15, p = 0.821). Of the two research questions, dynamic operationalization is answered only for an outer loop and predictive accuracy is not answered at all.",
@@ -738,7 +773,7 @@
    "why_forbidden": "unique_profile_optima is 1, 2 or 3 by row; and the screen varied PROFILES, not the within-episode realisation"
   }
  ],
- "generated_at_commit": "449d4085c6c090928935cedde87359b31cbb0b1a",
+ "generated_at_commit": "ea8ffa5b663909e6dcb3e55c375acd21907ffb5f",
  "grader_self_test": {
   "a_provenance_artifact_is_not_graded_as_evidence": {
    "passed": true,
@@ -753,12 +788,10 @@
    "returned": "POST_HOC_ON_PROSPECTIVE_DATA"
   }
  },
- "n_claims": 25,
+ "n_claims": 26,
  "portfolio_map": "papers/PORTFOLIO_MAP.json",
  "portfolio_map_sha256": "22c106e8c4d9754000f993f95c82b7d39f06b45bf063a84d0c7c5443d365593e",
- "problems": [
-  "RQ2D_A_TRANSPORTABLE_PRIOR_BEATS_THREE_OF_FOUR_CARRIERS: artifact missing at results/comparator_repair_v2/result.json"
- ],
+ "problems": [],
  "schema_version": "paper2_claim_lock_v1",
  "supersedes_for_citation": [
   "docs/TABLA_CANONICA_DE_CLAIMS_2026-08-07.md",
