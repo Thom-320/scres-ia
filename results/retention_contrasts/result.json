@@ -99,7 +99,7 @@
    "ucb95": 0.06593053388065225
   }
  },
- "created_at": "2026-08-08T02:54:20.241636+00:00",
+ "created_at": "2026-08-08T03:43:44.238658+00:00",
  "endpoint": "auc_regret_norm",
  "estimand": "paired per-seed AUC(reset) - AUC(retained), positive means retention helps",
  "falsifiers": {
@@ -258,6 +258,7 @@
    "passed": true
   }
  },
+ "governing_contract": "docs/ENMIENDA_REGISTRO_DE_EVIDENCIA_2026-08-07.md",
  "limits_that_travel_with_this_result": [
   "The six contexts are averaged inside each seed before storage (run_search_comparator_ladder_v5.py:218), so a within-context contrast is NOT recoverable from this artifact and would require a re-run.",
   "The twelve seeds are a declared re-execution of the burned block garrido_q2_des288. This is REPLAY evidence and cannot be reported as a prospective confirmation.",
@@ -265,7 +266,7 @@
  ],
  "module_manifest": {
   "entry_script": "scripts/run_retention_contrasts_v1.py",
-  "entry_script_sha256": "b86d330138d3a9ee44ea6fa7dfd64e3fe4eab34ecae6c5c22c6a638b192457a3",
+  "entry_script_sha256": "bf1a923e76bc01a98cf86146147fe60371aae54569f017142df141322493e1db",
   "missing": [],
   "modules": {
    "supply_chain/arm_runner.py": "1afea4fa248db5beb2d86c6ab2033d6f24a95115ea544b08966b7a538456ac99",
@@ -274,9 +275,10 @@
   "schema": "module_manifest_v2",
   "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
  },
- "preregistration": "docs/ENMIENDA_REGISTRO_DE_EVIDENCIA_2026-08-07.md",
+ "preregistration": null,
  "reference_path": "/Users/thom/Projects/research/scres-ia/results/search_ladder_v5/result.json",
  "reference_sha256": "f7dfb1e8bc1c036bcac28c83535e7a5dd8ebd723dd01d3ec604e8228c20cc511",
+ "registration_status": "POST_HOC_REANALYSIS_OF_A_SEALED_ARTIFACT_NOT_PREREGISTERED",
  "schema_version": "retention_contrasts_v1",
  "scope": "DEVELOPMENT_REANALYSIS_OF_A_SEALED_REPLAY_NO_SEEDS_NO_ADJUDICATION",
  "seed_block": {
@@ -299,7 +301,8 @@
   5300011,
   5300012
  ],
- "self_sha256": "e9132c95c4dda0bc29b3db67c4feb82f1175c2cefc102eff800cecdf6369355d",
+ "self_sha256": "0f2dc8bc88e70c3ae6ea33e9e0fa3abdb3fd440b9152197db4562759f5a1aeeb",
  "source": "results/search_ladder_v5/result.json",
- "source_self_sha256": "f7dfb1e8bc1c036bcac28c83535e7a5dd8ebd723dd01d3ec604e8228c20cc511"
+ "source_self_sha256": "f7dfb1e8bc1c036bcac28c83535e7a5dd8ebd723dd01d3ec604e8228c20cc511",
+ "why_it_is_citable_anyway": "the estimand is the source artifact's own -- f3 reproduces its sealed contrast to the last bit -- and the five new contrasts apply that identical estimand to twin pairs it never formed; no new degree of freedom is introduced by this script"
 }

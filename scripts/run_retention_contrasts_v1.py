@@ -194,7 +194,20 @@ def main() -> int:
         "estimand": "paired per-seed AUC(reset) - AUC(retained), positive means retention helps",
         "created_at": datetime.now(timezone.utc).isoformat(),
         "module_manifest": module_manifest(MODULES, script=__file__),
-        "preregistration": str(args.contract),
+        # NOT preregistered, and saying so is the point. `--contract` names the evidence-registry
+        # amendment, which fixes custody and reporting rules but contains no estimand, no arms and
+        # no falsifiers for THIS analysis. Grep of docs/ finds no document that preregisters these
+        # six contrasts. What makes them citable is not a prior registration but that f3 reproduces
+        # the one contrast the source already sealed, bit-for-bit. Calling this "preregistered"
+        # would be the cheapest possible lie in a paper whose second contribution is falsifier
+        # discipline.
+        "preregistration": None,
+        "registration_status": "POST_HOC_REANALYSIS_OF_A_SEALED_ARTIFACT_NOT_PREREGISTERED",
+        "why_it_is_citable_anyway": (
+            "the estimand is the source artifact's own -- f3 reproduces its sealed contrast to the "
+            "last bit -- and the five new contrasts apply that identical estimand to twin pairs it "
+            "never formed; no new degree of freedom is introduced by this script"),
+        "governing_contract": str(args.contract),
         "source": str(SOURCE),
         "source_self_sha256": src.get("self_sha256"),
         "seeds": seeds,
