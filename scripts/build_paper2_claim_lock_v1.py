@@ -55,23 +55,47 @@ CLAIMS: list[dict] = [
     # the claim from its grade: RQ2a is confirmatory, RQ2b is prespecified-secondary, RQ2c is
     # post-hoc on prospective data. RQ2a may not be cited without RQ2c on the same page.
     {
-        "claim_id": "RQ2A_UCB1_TRANSFERS_BEYOND_ITS_OWN_MARGINAL_REPLAY",
+        "claim_id": "RQ2A1_UCB1_BEATS_COLD_START",
         "artifact": "results/grid_transfer_confirmation_v2/result.json",
-        "section": "RQ2a (the preregistered confirmation, leads Results)",
+        "section": "RQ2a-1 (the clean half of the confirmation, leads Results)",
         "endpoint": "auc_regret_norm",
-        "estimand": "UCB1 transfer vs cold start and vs a state-blind replay of its own marginals",
+        "estimand": "UCB1 transfer minus UCB1 cold start, paired per seed, n=60",
         "allowed": ("In a prospective expansion from 288 to 4,608 configurations, the preregistered "
-                    "confirmatory arm -- factorized UCB search -- outperformed both cold start and a "
-                    "state-blind replay of its own search marginals (+0.03073, LCB95 +0.01990, "
-                    "n=60)."),
+                    "confirmatory arm -- factorized UCB search -- outperformed a cold start by "
+                    "+0.05744 [+0.04989, +0.06481], n=60."),
         "forbidden": ["only UCB1 learns", "UCB1 is universally superior", "factorized UCB policy",
-                      "UCB1 was the best arm", "only UCB1 transferred"],
+                      "UCB1 was the best arm"],
         "why_forbidden": ("'policy' would conflate the outer loop with within-episode control; and "
-                          "'best arm' is false -- RQ2C ranks ucb1_transfer fourth of twelve and "
-                          "indistinguishable from the three above it"),
-        "must_be_cited_with": ["RQ2C_THE_TOP_FOUR_ARMS_ARE_INDISTINGUISHABLE",
-                               "COMPARATOR_IS_NOT_FIXED_DURING_THE_RUN"],
+                          "'best arm' is false -- RQ2C ranks ucb1_transfer fourth of twelve"),
+        "why_this_half_is_clean": ("the cold comparator is rebuilt from scratch on every case and "
+                                   "carries nothing across them, so the paired bootstrap's "
+                                   "exchangeability assumption holds. comparator_drift measures no "
+                                   "drift in any family for this contrast, permutation p 0.30 to "
+                                   "0.98"),
+        "must_be_cited_with": ["RQ2C_THE_TOP_FOUR_ARMS_ARE_INDISTINGUISHABLE"],
     },
+    {
+        "claim_id": "RQ2A2_UCB1_VS_THE_ONLINE_CUMULATIVE_REPLAY",
+        "artifact": "results/grid_transfer_confirmation_v2/result.json",
+        "section": "RQ2a-2 (the same confirmation, against a comparator that is not fixed)",
+        "endpoint": "auc_regret_norm",
+        "estimand": "UCB1 transfer minus an online cumulative frequency replay, paired per seed",
+        "allowed": ("Against the replay of its own visit marginals as implemented -- a histogram "
+                    "created once and updated throughout the run -- factorized UCB search led by "
+                    "+0.03073 over 60 seeds, from +0.04302 over the first twenty to +0.02877 over "
+                    "the last twenty as the comparator accumulates. The lead is positive across the "
+                    "whole run including its final window."),
+        "forbidden": ["state-blind marginal replay", "LCB95 +0.01990",
+                      "the interval excludes zero", "+0.03073 [+0.01990, +0.04256]",
+                      "a fixed state-blind control"],
+        "why_forbidden": ("the comparator strengthens over the run, so the sixty seeds are not "
+                          "exchangeable replicates of one contrast and a paired i.i.d. bootstrap "
+                          "does not mean what its label says. The point estimate and the trajectory "
+                          "survive; the interval does not, and quoting it would repeat with a "
+                          "sealed number the defect the repair campaign exists to remove"),
+        "must_be_cited_with": ["COMPARATOR_IS_NOT_FIXED_DURING_THE_RUN",
+                               "RQ2D_A_TRANSPORTABLE_PRIOR_BEATS_THREE_OF_FOUR_CARRIERS"],
+   },
     {
         "claim_id": "RQ2B_SECONDARY_CARRIERS_SHOW_NO_SUCH_ADVANTAGE",
         "artifact": "results/grid_transfer_confirmation_v2/result.json",
@@ -148,7 +172,7 @@ CLAIMS: list[dict] = [
         "why_forbidden": ("the seeds are burned and the run is a replay, so no grade improves; and "
                           "the sufficiency of a prior is carrier-specific -- true for three "
                           "carriers, false for the one the paper recommends"),
-        "must_be_cited_with": ["RQ2A_UCB1_TRANSFERS_BEYOND_ITS_OWN_MARGINAL_REPLAY"],
+        "must_be_cited_with": ["RQ2A1_UCB1_BEATS_COLD_START"],
     },
     {
         "claim_id": "RQ1_RETENTION_SIX_FAMILIES",
