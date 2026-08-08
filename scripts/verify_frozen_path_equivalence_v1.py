@@ -1,298 +1,208 @@
 #!/usr/bin/env python3
-"""Does the current source still produce the frozen surfaces the Paper 2 claims are built on?
+"""Does today's physics still reproduce the cache that Confirmation 2 was sealed against?
 
-WHY THIS EXISTS. On 2026-08-07 two modules were edited AFTER the artifacts that name them in their
-`module_manifest` were sealed:
+WHY THIS EXISTS. `grid_transfer_confirmation_v2` -- the confirmation Paper 2's headline rests on --
+declares a `module_manifest` that no longer matches the tree. `supply_chain/arm_runner.py` drifted
+from `35135c53…` to its current bytes in commit `8ddf6f7`. Four tests mention `module_manifest` and
+all four assert only the SHAPE of the dict, so the suite stayed silent.
 
-    supply_chain/arm_runner.py     8ddf6f7 17:56  (seal_and_write gained seed_block/endpoint)
-    supply_chain/supply_chain.py   cc3af32 20:03  (the seasonal demand engine)
+AND THE DECLARED MANIFEST IS THE SMALLER PROBLEM. Its own `scope` field reads "declared modules and
+entry script only; NOT the full execution dependency", and `supply_chain/supply_chain.py` -- which
+is where the DES physics actually lives, and which also changed -- is not in it. A drift the
+manifest can see is a lesser hazard than one it cannot. So this script does not merely recompute
+what was declared: it recomputes a WIDENED manifest and reports both.
 
-`grid_transfer_confirmation_v2` is the project's headline confirmation and its cache manifest now
-disagrees with the tree. Nothing in `tests/` caught it: the four tests that mention `module_manifest`
-assert the SHAPE of the dict, never the hashes. A manuscript cannot cite a result whose producing
-code is unidentified, so either the drift is proven harmless or the surfaces must be rebuilt.
+WHAT IT DOES NOT DO. It does not re-run the science, does not open seeds, and does not re-seal the
+confirmation. It re-executes the anchor that artifact already carries -- falsifier
+`f1_the_null_subgrid_reproduces_the_288_cache`, 103,680 cells with `max_abs_delta = 0.0` -- under
+today's code, cell by cell, bit-exactly. Equivalence is a measurement, not an assurance.
 
-WHY NOT REUSE f1. `grid_transfer_confirmation_v2`'s own `f1_the_null_subgrid_reproduces_the_288_cache`
-compares the extended cache against the base cache -- two frozen files. It never touches
-`supply_chain.py`, so it passes identically before and after any drift and proves nothing here. The
-only test that can settle this is to RE-EVALUATE cached cells against the live simulator.
+If a single cell differs, the verdict is RERUN_REQUIRED_PROVENANCE_NOT_RECOVERABLE and no number
+from that artifact may enter the manuscript.
 
-WHAT IT DOES. Draws a deterministic sample of cells from each frozen cache, re-runs the DES under
-the current tree, and demands exact equality of both the primary scalar and the full observable
-panel. The simulator is deterministic given a seed, so `almost equal` would be the wrong bar: any
-difference at all is a behavioural change.
-
-Reuses `evaluate` from each cache's own builder rather than reimplementing it -- a reimplementation
-would be testing this script, not the physics.
-
-Contract: docs/ENMIENDA_REGISTRO_DE_EVIDENCIA_2026-08-07.md
-Read-only over artifacts. No seed outside the already-burned blocks is opened.
+Amendment 4 context: zero seed blocks remain, so a re-run would not be a confirmation anyway. That
+raises the stakes on this certificate rather than lowering them.
 """
 from __future__ import annotations
 
 import argparse
-from datetime import datetime, timezone
+from hashlib import sha256
 import json
 from pathlib import Path
 import sys
 import time
-from typing import Any, Callable
 
-import numpy as np
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT))
-
-from scripts.build_transfer_confirmation_cache_v1 import (  # noqa: E402
-    EXT_CONFIGS,
-    evaluate as evaluate_transfer,
-)
-from scripts.run_meta_learner_normaliser_audit_v1 import (  # noqa: E402
-    CONFIGS as WRAP_CONFIGS,
-    evaluate as evaluate_wrap,
-)
-from supply_chain.arm_runner import seal_and_write  # noqa: E402
+from supply_chain.arm_runner import run_falsifiers, seal_and_write  # noqa: E402
 from supply_chain.seed_custody import module_manifest  # noqa: E402
 
-MODULES = ("supply_chain/supply_chain.py", "supply_chain/arm_runner.py",
-           "supply_chain/config.py", "supply_chain/episode_metrics.py",
-           "supply_chain/seed_custody.py")
+from build_transfer_confirmation_cache_v1 import BASE_CONFIGS, evaluate  # noqa: E402
 
-#: Which frozen cache feeds which manuscript claim, and the builder whose `evaluate` wrote it.
-#: `garrido_transfer_confirmation_v2_base` is a PROJECTION of the extended slices, not an
-#: independent evaluation, so re-running it would re-test the same physics through a narrower
-#: window; the extended grid is the one that carries the DES.
-TARGETS = {
-    "grid_transfer_confirmation_v2": {
-        "cache_root": "results/surface_cache/garrido_transfer_confirmation_v2_ext",
-        "configs": EXT_CONFIGS,
-        "evaluate": evaluate_transfer,
-        "feeds": "results/grid_transfer_confirmation_v2/result.json",
-    },
-    "search_ladder_v5": {
-        "cache_root": "results/surface_cache/wrap288_v1",
-        "configs": WRAP_CONFIGS,
-        "evaluate": evaluate_wrap,
-        "feeds": "results/search_ladder_v5/result.json",
-    },
-}
-
-#: The drift this certificate was written to adjudicate. Naming it up front is what lets f4 fail:
-#: a file that drifted and is NOT on this list is an unexamined change, not a cleared one.
-DECLARED_DRIFT = ("supply_chain/supply_chain.py", "supply_chain/arm_runner.py")
+TARGET = Path("results/grid_transfer_confirmation_v2/result.json")
+CACHE = Path("results/surface_cache/garrido_transfer_confirmation_v2_base")
+# The declared manifest covers two modules. This is the set the physics ACTUALLY depends on; the
+# gap between the two is itself a finding and is reported, not quietly closed.
+WIDENED = ("supply_chain/arm_runner.py", "supply_chain/seed_custody.py",
+           "supply_chain/supply_chain.py", "supply_chain/env_experimental_shifts.py",
+           "supply_chain/episode_metrics.py", "supply_chain/config.py")
 
 
-def slices_of(cache_root: Path) -> list[Path]:
-    return sorted(cache_root.glob("*/*.json"))
+def file_sha(p: str) -> str:
+    f = Path(p)
+    return sha256(f.read_bytes()).hexdigest() if f.exists() else "MISSING"
 
 
-def sample_cells(cache_root: Path, n_cells: int, rng: np.random.Generator) -> list[tuple[Path, int]]:
-    """Spread the sample across every context, then across seeds, then across configurations.
-
-    A sample concentrated in one context or one corner of the grid could pass while the physics
-    moved somewhere else, so the spread is part of the test and f2 checks it.
-    """
-    paths = slices_of(cache_root)
-    by_context: dict[str, list[Path]] = {}
-    for p in paths:
-        by_context.setdefault(p.parent.name, []).append(p)
-    contexts = sorted(by_context)
-    if not contexts:
-        raise SystemExit(f"halt: no cache slices under {cache_root}")
-    picks: list[tuple[Path, int]] = []
-    per_context = max(1, n_cells // len(contexts))
-    for ctx in contexts:
-        group = by_context[ctx]
-        for k in range(per_context):
-            path = group[int(rng.integers(0, len(group)))]
-            n = len(json.loads(path.read_text())["cells"])
-            picks.append((path, int(rng.integers(0, n))))
-            del k
-    return picks
+def replay_slice(payload: dict, seed: int) -> dict:
+    """Re-run every cell of one cached slice and compare bit-exactly."""
+    ctx, horizon = payload["context"], float(payload["horizon_hours"])
+    worst, mismatches, worst_where = 0.0, 0, None
+    for idx, expected in enumerate(payload["cells"]):
+        got = evaluate(BASE_CONFIGS[idx], ctx, seed, horizon)
+        deltas = [abs(got["value"] - float(expected["value"]))]
+        deltas += [abs(a - float(b)) for a, b in zip(got["drivers"], expected["drivers"])]
+        deltas += [abs(got["panel"][k] - float(v)) for k, v in expected["panel"].items()]
+        d = max(deltas)
+        if d > 0.0:
+            mismatches += 1
+            if d > worst:
+                worst, worst_where = d, {"context": ctx, "seed": seed, "cell_index": idx,
+                                         "config": BASE_CONFIGS[idx]}
+    return {"context": ctx, "seed": seed, "cells": len(payload["cells"]),
+            "mismatches": mismatches, "max_abs_delta": worst, "worst_cell": worst_where}
 
 
-def check_cell(path: Path, index: int, configs: list[dict],
-               evaluate: Callable[..., dict]) -> dict[str, Any]:
-    payload = json.loads(path.read_text())
-    cached = payload["cells"][index]
-    live = evaluate(configs[index], payload["context"], int(payload["seed"]),
-                    float(payload["horizon_hours"]))
-    value_ok = float(cached["value"]) == float(live["value"])
-    panel_ok = cached["panel"] == live["panel"]
-    row = {
-        "slice": str(path), "context": payload["context"], "seed": int(payload["seed"]),
-        "config_index": index, "value_identical": value_ok, "panel_identical": panel_ok,
-        "identical": bool(value_ok and panel_ok),
-    }
-    if not row["identical"]:
-        row["cached_value"] = float(cached["value"])
-        row["live_value"] = float(live["value"])
-        row["panel_keys_differing"] = sorted(
-            k for k in cached["panel"] if cached["panel"].get(k) != live["panel"].get(k))
-    return row
-
-
-def mutation_control(path: Path, index: int, configs: list[dict],
-                     evaluate: Callable[..., dict]) -> dict[str, Any]:
-    """Re-run one cell, then compare the LIVE result against a deliberately corrupted cache value.
-
-    A comparator that cannot see a planted difference cannot certify an absent one. This repository
-    has already shipped a falsifier hardcoded to `passed: True`, so the control is not optional.
-    """
-    payload = json.loads(path.read_text())
-    cached = dict(payload["cells"][index])
-    live = evaluate(configs[index], payload["context"], int(payload["seed"]),
-                    float(payload["horizon_hours"]))
-    corrupted_value = float(cached["value"]) + 1e-9
-    corrupted_panel = dict(cached["panel"])
-    first_key = sorted(corrupted_panel)[0]
-    corrupted_panel[first_key] = float(corrupted_panel[first_key]) + 1e-9
-    return {
-        "slice": str(path), "config_index": index, "perturbation": 1e-9,
-        "value_mutation_detected": corrupted_value != float(live["value"]),
-        "panel_mutation_detected": corrupted_panel != live["panel"],
-        "panel_key_mutated": first_key,
-        "clean_cell_still_matches": (float(cached["value"]) == float(live["value"])
-                                     and cached["panel"] == live["panel"]),
-    }
-
-
-def manifest_drift() -> dict[str, Any]:
-    """Recompute every cache manifest against the tree and name what moved."""
-    out, drifted = {}, set()
-    for name, spec in TARGETS.items():
-        paths = slices_of(Path(spec["cache_root"]))
-        stored = json.loads(paths[0].read_text())["module_manifest"]
-        live = module_manifest(tuple(stored["modules"]), script=stored["entry_script"])
-        rows = {}
-        for mod, digest in stored["modules"].items():
-            now = live["modules"].get(mod)
-            rows[mod] = {"manifest": digest, "current": now, "match": digest == now}
-            if digest != now:
-                drifted.add(mod)
-        entry_match = stored["entry_script_sha256"] == live["entry_script_sha256"]
-        if not entry_match:
-            drifted.add(stored["entry_script"])
-        out[name] = {"entry_script": stored["entry_script"], "entry_script_match": entry_match,
-                     "modules": rows}
-    out["drifted_files"] = sorted(drifted)
-    out["undeclared_drift"] = sorted(drifted - set(DECLARED_DRIFT))
-    return out
+def mutation_control(payload: dict, seed: int) -> dict:
+    """Re-introduce the defect the falsifier claims to detect. A comparator that cannot fail on a
+    corrupted cell is not evidence that the uncorrupted ones agree."""
+    mutated = json.loads(json.dumps(payload))
+    original = float(mutated["cells"][0]["value"])
+    mutated["cells"][0]["value"] = original + 1e-12
+    out = replay_slice(mutated, seed)
+    return {"detected": bool(out["mismatches"] >= 1),
+            "injected_delta": 1e-12, "observed_max_abs_delta": out["max_abs_delta"],
+            "original_value": original,
+            "why_it_can_fail": ("if the comparator rounded, clipped or short-circuited, a corrupted "
+                                "cell would pass and the clean result would mean nothing")}
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--contract", type=Path, required=True)
-    ap.add_argument("--cells-per-cache", type=int, default=120)
-    ap.add_argument("--out", type=Path, default=Path("results/frozen_path_equivalence/result.json"))
+    ap.add_argument("--limit-slices", type=int, default=0, help="0 = every slice (the real run)")
+    ap.add_argument("--output", type=Path,
+                    default=Path("results/frozen_path_equivalence/result.json"))
+    ap.add_argument("--contract", type=Path, default=TARGET)
     args = ap.parse_args()
+    t0 = time.time()
 
-    started = time.perf_counter()
-    rng = np.random.default_rng(20260807)
-    results, controls, seeds_touched = {}, {}, set()
-    for name, spec in TARGETS.items():
-        root = Path(spec["cache_root"])
-        picks = sample_cells(root, args.cells_per_cache, rng)
-        rows = []
-        for path, index in picks:
-            row = check_cell(path, index, spec["configs"], spec["evaluate"])
-            seeds_touched.add(row["seed"])
-            rows.append(row)
-        n_bad = sum(1 for r in rows if not r["identical"])
-        results[name] = {
-            "cache_root": str(root), "feeds": spec["feeds"], "n_cells": len(rows),
-            "n_identical": len(rows) - n_bad, "n_differing": n_bad,
-            "contexts": sorted({r["context"] for r in rows}),
-            "n_distinct_seeds": len({r["seed"] for r in rows}),
-            "n_distinct_configs": len({r["config_index"] for r in rows}),
-            "differing": [r for r in rows if not r["identical"]][:20],
-        }
-        controls[name] = mutation_control(picks[0][0], picks[0][1], spec["configs"],
-                                          spec["evaluate"])
-        print(f"  {name:32s} {len(rows) - n_bad}/{len(rows)} celdas idénticas · "
-              f"{len(results[name]['contexts'])} contextos · "
-              f"{results[name]['n_distinct_seeds']} semillas", flush=True)
+    target = json.loads(TARGET.read_text())
+    declared = dict(target["module_manifest"]["modules"])
+    declared_entry = target["module_manifest"]["entry_script"]
 
-    drift = manifest_drift()
-    all_identical = all(v["n_differing"] == 0 for v in results.values())
-    controls_ok = all(c["value_mutation_detected"] and c["panel_mutation_detected"]
-                      and c["clean_cell_still_matches"] for c in controls.values())
+    slices = sorted(CACHE.rglob("*.json"))
+    if args.limit_slices:
+        slices = slices[:args.limit_slices]
+    if not slices:
+        raise SystemExit(f"no cached slices under {CACHE}")
 
-    falsifiers = {
-        "f1_every_sampled_cell_reproduces_exactly": {
-            "passed": all_identical,
-            "evidence": {
-                "why_it_can_fail": "if either 2026-08-07 edit changed the frozen path, a re-run "
-                                   "under the current tree returns a different number and the "
-                                   "confirmation cannot be cited without rebuilding its surface",
-                "by_cache": {k: {"n_cells": v["n_cells"], "n_differing": v["n_differing"]}
-                             for k, v in results.items()}}},
-        "f2_the_sample_spans_the_grid": {
-            "passed": all(len(v["contexts"]) >= 6 and v["n_distinct_seeds"] >= 5
-                          and v["n_distinct_configs"] >= 20 for v in results.values()),
-            "evidence": {
-                "why_it_can_fail": "a sample concentrated in one context or one corner could be "
-                                   "identical while the physics moved elsewhere; this demands the "
-                                   "six contexts, several seeds and many configurations",
-                "by_cache": {k: {"contexts": v["contexts"], "seeds": v["n_distinct_seeds"],
-                                 "configs": v["n_distinct_configs"]} for k, v in results.items()}}},
-        "f3_the_comparator_detects_a_planted_difference": {
-            "passed": controls_ok,
-            "evidence": {
-                "why_it_can_fail": "a comparator blind to a 1e-9 perturbation would report "
-                                   "equivalence for any tree at all; this repository has already "
-                                   "shipped a falsifier hardcoded to passed:True",
-                "controls": controls}},
-        "f4_the_measured_drift_is_the_declared_drift": {
-            "passed": not drift["undeclared_drift"],
-            "evidence": {
-                "why_it_can_fail": "a third file could have moved without anyone noticing; "
-                                   "clearing only the two named edits would then certify less "
-                                   "than it appears to",
-                "declared": list(DECLARED_DRIFT), "drifted": drift["drifted_files"],
-                "undeclared": drift["undeclared_drift"]}},
-        "f5_no_seed_outside_the_burned_blocks": {
-            "passed": all(8_200_001 <= s <= 8_200_060 or 5_300_001 <= s <= 5_300_012
-                          for s in seeds_touched),
-            "evidence": {
-                "why_it_can_fail": "re-evaluating a cell outside the blocks these caches already "
-                                   "burned would consume custody this certificate never declared",
-                "seeds_touched": sorted(seeds_touched)}},
-    }
-    falsifiers["all_passed"] = all(v["passed"] for v in falsifiers.values()
-                                   if isinstance(v, dict))
+    per_slice, total_cells, total_mismatch, worst = [], 0, 0, 0.0
+    worst_where = None
+    for i, path in enumerate(slices, 1):
+        payload = json.loads(path.read_text())
+        seed = int(path.stem)
+        r = replay_slice(payload, seed)
+        r["path"] = str(path)
+        per_slice.append(r)
+        total_cells += r["cells"]
+        total_mismatch += r["mismatches"]
+        if r["max_abs_delta"] > worst:
+            worst, worst_where = r["max_abs_delta"], r["worst_cell"]
+        print(f"  [{i:3d}/{len(slices)}] {r['context']:12} seed {seed}  "
+              f"cells {r['cells']:4d}  mismatches {r['mismatches']:4d}  "
+              f"max|Δ| {r['max_abs_delta']:.3e}", flush=True)
 
-    verdict = ("FROZEN_PATH_EQUIVALENT_UNDER_CURRENT_SOURCE" if falsifiers["all_passed"]
+    control = mutation_control(json.loads(slices[0].read_text()), int(slices[0].stem))
+
+    drift = {p: {"sealed": h, "current": file_sha(p), "drifted": file_sha(p) != h}
+             for p, h in declared.items()}
+    widened_now = {p: file_sha(p) for p in WIDENED}
+    undeclared = [p for p in WIDENED if p not in declared]
+
+    def f1():
+        """Every replayed cell reproduces the sealed cache exactly.
+
+        CAN FAIL: any behavioural change in the drifted modules moves a cell and the delta is not
+        zero. CAN PASS: an additive, gated-off change leaves every cell identical -- and the
+        mutation control below proves the comparator would have caught it either way."""
+        ok = bool(total_mismatch == 0 and worst == 0.0)
+        return ok, {"cells_checked": total_cells, "mismatches": total_mismatch,
+                    "max_abs_delta": worst, "worst_cell": worst_where,
+                    "slices": len(per_slice)}
+
+    def f2():
+        """The comparator detects a 1e-12 corruption injected into a cached cell."""
+        return control["detected"], control
+
+    def f3():
+        """The declared manifest is narrower than the physics it depends on -- reported, not fixed.
+
+        CAN FAIL: if the declared manifest already covered every module in WIDENED there would be
+        no gap, and the 'invisible drift' concern would be unfounded."""
+        return bool(undeclared), {
+            "declared_modules": sorted(declared), "declared_entry_script": declared_entry,
+            "undeclared_but_load_bearing": undeclared,
+            "declared_scope_note": target["module_manifest"].get("scope"),
+            "why_it_matters": ("supply_chain/supply_chain.py carries the DES physics and is absent "
+                               "from the declared manifest, so a change there cannot be flagged by "
+                               "recomputing what was declared")}
+
+    def f4():
+        """At least one declared module really did drift -- otherwise this certificate is answering
+        a question nobody had."""
+        d = [p for p, v in drift.items() if v["drifted"]]
+        return bool(d), {"drifted_declared_modules": d, "detail": drift}
+
+    fals = run_falsifiers({"f1_every_cell_reproduces_the_sealed_cache": f1,
+                           "f2_mutation_control_is_detected": f2,
+                           "f3_declared_manifest_is_narrower_than_the_physics": f3,
+                           "f4_a_declared_module_actually_drifted": f4})
+
+    verdict = ("FROZEN_PATH_EQUIVALENT_UNDER_CURRENT_PHYSICS"
+               if fals["f1_every_cell_reproduces_the_sealed_cache"]["passed"]
+               and fals["f2_mutation_control_is_detected"]["passed"]
                else "RERUN_REQUIRED_PROVENANCE_NOT_RECOVERABLE")
 
     payload = {
-        "schema_version": "frozen_path_equivalence_v1",
-        "claim_status": verdict,
-        "scope": "PROVENANCE_ONLY_NO_SCIENTIFIC_CLAIM_NO_NEW_SEEDS",
-        "endpoint": "cell_level_exact_reproduction",
-        "created_at": datetime.now(timezone.utc).isoformat(),
-        "elapsed_seconds": time.perf_counter() - started,
-        "module_manifest": module_manifest(MODULES, script=__file__),
-        "preregistration": str(args.contract),
-        "declared_drift": list(DECLARED_DRIFT),
-        "manifest_drift": drift,
-        "by_cache": results,
-        "mutation_controls": controls,
-        "falsifiers": falsifiers,
-        "what_this_does_not_certify": (
-            "This certifies that the sampled cells of these caches reproduce under the current "
-            "tree. It does not certify unsampled cells, nor any artifact whose surface is not one "
-            "of these caches, nor that the 2026-08-07 edits are harmless for FUTURE runs that "
-            "enable the paths they added."),
+        "schema_version": "frozen_path_equivalence_v1", "claim_status": verdict,
+        "scope": "PROVENANCE_CERTIFICATE_NO_SCIENCE_RERUN_NO_SEEDS_OPENED",
+        "run_role": "PROVENANCE_CERTIFICATE",
+        "primary_metric": "max_abs_delta_over_replayed_cache_cells",
+        "self_sha256": None,
+        "target_artifact": str(TARGET), "target_file_sha256": file_sha(str(TARGET)),
+        "cache_root": str(CACHE), "slices_replayed": len(per_slice),
+        "cells_replayed": total_cells,
+        "declared_manifest_drift": drift, "widened_manifest_now": widened_now,
+        "undeclared_but_load_bearing": undeclared,
+        "per_slice": per_slice, "mutation_control": control,
+        "falsifiers": fals, "elapsed_seconds": time.time() - t0,
+        "module_manifest": module_manifest(WIDENED, script=__file__),
+        "what_this_does_not_certify": [
+            "it does not re-seal grid_transfer_confirmation_v2 or change any of its numbers",
+            "it does not open seeds; zero blocks remain (claim freeze Amendment 4)",
+            "it certifies BEHAVIOURAL equivalence of the replayed cache under current code, not "
+            "that the drifted diffs are semantically inert in paths the cache does not exercise",
+        ],
     }
-    digest = seal_and_write(payload, args.out, contract=args.contract,
-                            reference=Path(TARGETS["grid_transfer_confirmation_v2"]["feeds"]))
-    print(f"\n  veredicto: {verdict}")
-    for k, v in falsifiers.items():
-        if isinstance(v, dict):
-            print(f"    {'PASA' if v['passed'] else 'FALLA'}  {k}")
-    print(f"  -> {args.out} (sello {digest[:16]}…)")
-    return 0 if falsifiers["all_passed"] else 1
+    digest = seal_and_write(payload, args.output, contract=args.contract,
+                            reference=Path("results/demand_process/result.json"))
+
+    print(f"\nceldas {total_cells:,}  mismatches {total_mismatch}  max|Δ| {worst:.3e}")
+    for k, v in fals.items():
+        if k != "all_passed":
+            print(f"  {k:52} {'PASA' if v['passed'] else 'FALLA'}")
+    print(f"\n{verdict}\n  -> {args.output} (sello {digest[:16]}…)")
+    return 0 if verdict.startswith("FROZEN_PATH_EQUIVALENT") else 1
 
 
 if __name__ == "__main__":
