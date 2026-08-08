@@ -112,22 +112,44 @@ CLAIMS: list[dict] = [
         "section": "RQ1 (development/replay reanalysis)",
         "endpoint": "auc_regret_norm",
         "estimand": "memoryless twin minus state-retaining twin, paired by seed within family",
-        # POINT-ESTIMATE LANGUAGE UNTIL SIMULTANEOUS INFERENCE CLOSES. Six marginal bootstrap
-        # intervals from the same 12 tapes are six correlated looks, not six adjudications, and
-        # `ofat_lcb_reconciliation` already showed that at n=12 the bound can change sign with the
-        # resampling seed. The stronger sentence returns only if Holm or max-T intervals survive.
-        "allowed": ("In a development reanalysis of a sealed replay, point estimates favoured state "
-                    "retention in all six matched families: neuron +0.06070 "
+        # The six-family sentence was point-estimate-only until simultaneous inference closed. It
+        # closed: `retention_simultaneous` reports max-T intervals from ONE shared bootstrap index
+        # matrix, all six above zero, Holm rejecting all six, and the bound's sign stable in 40 of 40
+        # resampling seeds -- so the strong wording is earned rather than assumed. The per-family
+        # numbers below stay in this row; anything JOINT is cited from RQ1_SIMULTANEOUS.
+        "allowed": ("In a development reanalysis of a sealed replay, state retention lowered AUC "
+                    "regret in all six matched families: neuron +0.06070 "
                     "[+0.04568, +0.07953], UCB1 +0.05153 [+0.03583, +0.06593], OFAT +0.03750 "
                     "[+0.02920, +0.04675], KG +0.03461 [+0.02610, +0.04315], GP-EI +0.02271 "
                     "[+0.01276, +0.03410], and Thompson +0.01985 [+0.01022, +0.02956], "
                     "with n=12 paired seeds per family."),
         "forbidden": ["retention was prospectively confirmed", "six families prove causality",
-                      "excludes zero", "the six leading ranks establish retention",
-                      "all six contrasts are significant", "retention lowered regret in all six"],
+                      "excludes zero", "the six leading ranks establish retention"],
+        "must_be_cited_with": ["RQ1_SIMULTANEOUS_AND_THE_DEPLOYED_ENDPOINT"],
         "why_forbidden": ("the analysis is a sealed-tape reanalysis with no new seeds or "
                           "adjudication; its estimand is within-family AUC, not a prospective "
                           "confirmation or a context-specific effect"),
+    },
+    {
+        "claim_id": "RQ1_SIMULTANEOUS_AND_THE_DEPLOYED_ENDPOINT",
+        "artifact": "results/retention_simultaneous/result.json",
+        "section": "RQ1 (joint inference) and Limitations (endpoint sensitivity)",
+        "endpoint": "auc_regret_norm (primary) and final simple regret at budget 24 (secondary)",
+        "estimand": "the six paired within-family contrasts treated as one inferential family",
+        "allowed": ("Treated as one inferential family with a shared bootstrap index matrix, all six "
+                    "contrasts survive max-T simultaneous intervals and Holm on the preregistered "
+                    "AUC endpoint (simultaneous critical value 2.591 against a 1.906 marginal "
+                    "reference), and the sign of each lower bound is stable across 40 resampling "
+                    "seeds. On the simple regret of the recommendation actually deployed at budget "
+                    "24, all six point estimates keep the same sign but the joint resolution "
+                    "collapses: one of six retains a simultaneous lower bound above zero, and the "
+                    "family ordering is not preserved between the two endpoints."),
+        "forbidden": ["retention was prospectively confirmed", "the endpoints agree",
+                      "AUC and final regret give the same ranking",
+                      "retention fails on the deployed endpoint"],
+        "why_forbidden": ("the direction holds in all six under BOTH endpoints -- what changes is "
+                          "resolution, not sign, and reporting either half alone misleads in "
+                          "opposite directions"),
     },
     {
         "claim_id": "VALIDATION_SIX_THESIS_PANELS",
@@ -394,7 +416,8 @@ def main() -> int:
         if meta.get("falsifiers_all_passed") is False and not c.get("allow_failed_falsifiers"):
             problems.append(f"{c['claim_id']}: falsifiers did not all pass -- cite WITH the failure")
         row = dict(c)
-        row.update({"evidence_grade": g, "missing_top_level_fields": missing, **meta})
+        row.update({"paper_id": "P2", "evidence_grade": g,
+                    "missing_top_level_fields": missing, **meta})
         if c.get("sibling_receipt"):
             row["sibling_receipt_file_sha256"] = digests(Path(c["sibling_receipt"]))["file_sha256"]
         rows.append(row)

@@ -23,6 +23,7 @@
    "must_be_cited_with": [
     "RQ2C_THE_TOP_FOUR_ARMS_ARE_INDISTINGUISHABLE"
    ],
+   "paper_id": "P2",
    "registration_status": null,
    "run_role": "CONFIRMATION",
    "scope": "CONFIRMATION_ON_RESERVED_VIRGIN_BLOCK_NO_RL_NO_NEURAL_LEARNER",
@@ -49,6 +50,7 @@
     "a confirmatory negative"
    ],
    "missing_top_level_fields": [],
+   "paper_id": "P2",
    "registration_status": null,
    "run_role": "CONFIRMATION",
    "scope": "CONFIRMATION_ON_RESERVED_VIRGIN_BLOCK_NO_RL_NO_NEURAL_LEARNER",
@@ -77,6 +79,7 @@
     "the ranking selects a new winner"
    ],
    "missing_top_level_fields": [],
+   "paper_id": "P2",
    "registration_status": "POST_HOC_REREAD_PROMPTED_BY_EXTERNAL_REVIEW_NOT_PREREGISTERED",
    "run_role": "POST_HOC_REREAD",
    "scope": "REREAD_OF_ONE_SEALED_CONFIRMATION_NO_SEEDS_NO_NEW_RUN",
@@ -85,7 +88,7 @@
    "why_forbidden": "the three paired contrasts against the incumbent all cross zero, so reading the mean ranking as a verdict is the same defect ENMIENDA_1 forbids for ofat; and the preregistration forbids selecting a different winner after the seeds were opened -- this row reports a tie, not a winner"
   },
   {
-   "allowed": "In a development reanalysis of a sealed replay, point estimates favoured state retention in all six matched families: neuron +0.06070 [+0.04568, +0.07953], UCB1 +0.05153 [+0.03583, +0.06593], OFAT +0.03750 [+0.02920, +0.04675], KG +0.03461 [+0.02610, +0.04315], GP-EI +0.02271 [+0.01276, +0.03410], and Thompson +0.01985 [+0.01022, +0.02956], with n=12 paired seeds per family.",
+   "allowed": "In a development reanalysis of a sealed replay, state retention lowered AUC regret in all six matched families: neuron +0.06070 [+0.04568, +0.07953], UCB1 +0.05153 [+0.03583, +0.06593], OFAT +0.03750 [+0.02920, +0.04675], KG +0.03461 [+0.02610, +0.04315], GP-EI +0.02271 [+0.01276, +0.03410], and Thompson +0.01985 [+0.01022, +0.02956], with n=12 paired seeds per family.",
    "artifact": "results/retention_contrasts/result.json",
    "claim_id": "RQ1_RETENTION_SIX_FAMILIES",
    "claim_status": "RETENTION_LOWERS_REGRET_IN_6_OF_6_FAMILIES",
@@ -100,17 +103,46 @@
     "retention was prospectively confirmed",
     "six families prove causality",
     "excludes zero",
-    "the six leading ranks establish retention",
-    "all six contrasts are significant",
-    "retention lowered regret in all six"
+    "the six leading ranks establish retention"
    ],
    "missing_top_level_fields": [],
+   "must_be_cited_with": [
+    "RQ1_SIMULTANEOUS_AND_THE_DEPLOYED_ENDPOINT"
+   ],
+   "paper_id": "P2",
    "registration_status": "POST_HOC_REANALYSIS_OF_A_SEALED_ARTIFACT_NOT_PREREGISTERED",
    "run_role": "REPLAY_REANALYSIS",
    "scope": "DEVELOPMENT_REANALYSIS_OF_A_SEALED_REPLAY_NO_SEEDS_NO_ADJUDICATION",
    "section": "RQ1 (development/replay reanalysis)",
    "self_sha256": "d818321d399b9dc430210cd7cf49b9b3356cbf06b343f932d837ba7f9cd563e5",
    "why_forbidden": "the analysis is a sealed-tape reanalysis with no new seeds or adjudication; its estimand is within-family AUC, not a prospective confirmation or a context-specific effect"
+  },
+  {
+   "allowed": "Treated as one inferential family with a shared bootstrap index matrix, all six contrasts survive max-T simultaneous intervals and Holm on the preregistered AUC endpoint (simultaneous critical value 2.591 against a 1.906 marginal reference), and the sign of each lower bound is stable across 40 resampling seeds. On the simple regret of the recommendation actually deployed at budget 24, all six point estimates keep the same sign but the joint resolution collapses: one of six retains a simultaneous lower bound above zero, and the family ordering is not preserved between the two endpoints.",
+   "artifact": "results/retention_simultaneous/result.json",
+   "claim_id": "RQ1_SIMULTANEOUS_AND_THE_DEPLOYED_ENDPOINT",
+   "claim_status": "RETENTION_SURVIVES_SIMULTANEOUS_INFERENCE_IN_6_OF_6",
+   "contract_sha256": "8e78b344536e8c6440d29ff4e437a0ea9b84c5fe73980d0b40c842aa90947ff5",
+   "endpoint": "auc_regret_norm (primary) and final simple regret at budget 24 (secondary)",
+   "estimand": "the six paired within-family contrasts treated as one inferential family",
+   "evidence_grade": "POST_HOC_ON_DEVELOPMENT_DATA",
+   "exists": true,
+   "falsifiers_all_passed": true,
+   "file_sha256": "5a31e1d5cb79c2187b38ab750a67ec777feeccb8431ee5dca7c2d95cfecfcdd7",
+   "forbidden": [
+    "retention was prospectively confirmed",
+    "the endpoints agree",
+    "AUC and final regret give the same ranking",
+    "retention fails on the deployed endpoint"
+   ],
+   "missing_top_level_fields": [],
+   "paper_id": "P2",
+   "registration_status": "POST_HOC_MULTIPLICITY_REPAIR_REQUESTED_BY_REVIEW_NOT_PREREGISTERED",
+   "run_role": "REPLAY_REANALYSIS",
+   "scope": "DEVELOPMENT_REANALYSIS_OF_A_SEALED_REPLAY_NO_SEEDS_NO_ADJUDICATION",
+   "section": "RQ1 (joint inference) and Limitations (endpoint sensitivity)",
+   "self_sha256": "7bf98dea5c26676be90820eff3c7115f22897a56b376b1ee3fc35667689e0ca1",
+   "why_forbidden": "the direction holds in all six under BOTH endpoints -- what changes is resolution, not sign, and reporting either half alone misleads in opposite directions"
   },
   {
    "allowed": "The reconstruction prospectively reproduced six thesis-derived comparative panels, 12/12 tapes each under Holm correction, with generated_orders exactly zero in every tape of every panel and lost orders falling in all six.",
@@ -136,6 +168,7 @@
     "claim_status",
     "self_sha256"
    ],
+   "paper_id": "P2",
    "registration_status": null,
    "run_role": null,
    "scope": null,
@@ -166,6 +199,7 @@
     "run_role",
     "scope"
    ],
+   "paper_id": "P2",
    "registration_status": null,
    "run_role": null,
    "scope": null,
@@ -191,6 +225,7 @@
     "the top-six ranking shows retention causes"
    ],
    "missing_top_level_fields": [],
+   "paper_id": "P2",
    "registration_status": null,
    "run_role": "CACHE_ANALYSIS",
    "scope": "DEVELOPMENT_ON_BURNED_TAPES_NO_ADJUDICATION",
@@ -218,6 +253,7 @@
     "5.83 runs saved"
    ],
    "missing_top_level_fields": [],
+   "paper_id": "P2",
    "registration_status": null,
    "run_role": "BURNED_REPLAY_AUDIT",
    "scope": "DEVELOPMENT_REPLAY_ON_BURNED_TAPES_NO_ADJUDICATION_NO_LEARNER",
@@ -245,6 +281,7 @@
    "missing_top_level_fields": [
     "run_role"
    ],
+   "paper_id": "P2",
    "registration_status": null,
    "run_role": null,
    "scope": "DEVELOPMENT_REANALYSIS_OF_SEALED_ARTIFACTS_NO_SEEDS",
@@ -270,6 +307,7 @@
     "neural networks are unnecessary"
    ],
    "missing_top_level_fields": [],
+   "paper_id": "P2",
    "registration_status": null,
    "run_role": "CACHE_ANALYSIS",
    "scope": "DEVELOPMENT_ON_BURNED_TAPES_NO_ADJUDICATION",
@@ -297,6 +335,7 @@
    "missing_top_level_fields": [
     "run_role"
    ],
+   "paper_id": "P2",
    "registration_status": null,
    "run_role": null,
    "scope": "DEVELOPMENT_OPEN_SEEDS_NO_CONFIRMATION_POSSIBLE_NO_VIRGIN_BLOCKS_REMAIN",
@@ -324,6 +363,7 @@
     "run_role",
     "scope"
    ],
+   "paper_id": "P2",
    "registration_status": null,
    "run_role": null,
    "scope": null,
@@ -349,6 +389,7 @@
     "RESET shows the variables are linear"
    ],
    "missing_top_level_fields": [],
+   "paper_id": "P2",
    "registration_status": null,
    "run_role": "DIAGNOSTIC",
    "scope": "DEVELOPMENT_DIAGNOSTIC_ON_SEALED_SURFACE_NO_SEEDS_OPENED_NO_ADJUDICATION",
@@ -376,6 +417,7 @@
     "demand is iid"
    ],
    "missing_top_level_fields": [],
+   "paper_id": "P2",
    "registration_status": null,
    "run_role": "DIAGNOSTIC",
    "scope": "DEVELOPMENT_DIAGNOSTIC_NO_ADJUDICATION_NO_LEARNER",
@@ -403,6 +445,7 @@
     "seasonal demand is confirmed"
    ],
    "missing_top_level_fields": [],
+   "paper_id": "P2",
    "registration_status": null,
    "run_role": "DIAGNOSTIC",
    "scope": "DEVELOPMENT_ENGINE_CHARACTERISATION_NO_ADJUDICATION_NO_LEARNER",
@@ -433,6 +476,7 @@
     "claim_status",
     "self_sha256"
    ],
+   "paper_id": "P2",
    "registration_status": null,
    "run_role": null,
    "scope": null,
@@ -441,7 +485,7 @@
    "why_forbidden": "unique_profile_optima is 1, 2 or 3 by row; and the screen varied PROFILES, not the within-episode realisation"
   }
  ],
- "generated_at_commit": "7477fc018c35d7841e1202c59f01438f7dcc675e",
+ "generated_at_commit": "8752d4f0708558ae6f8c844ca941a39f22ecb19c",
  "grader_self_test": {
   "a_real_confirmation_still_grades_confirmatory": {
    "passed": true,
@@ -452,7 +496,7 @@
    "returned": "POST_HOC_ON_PROSPECTIVE_DATA"
   }
  },
- "n_claims": 16,
+ "n_claims": 17,
  "portfolio_lock": "papers/PORTFOLIO_CLAIM_LOCK.json",
  "portfolio_lock_sha256": "b7608b2cfc205cba3731679e48730af5efaee5b715e00241813b0d278e9aebc7",
  "problems": [],
