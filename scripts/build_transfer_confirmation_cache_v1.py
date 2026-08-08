@@ -76,7 +76,10 @@ PANEL_KEYS = (
 )
 
 
-def evaluate(config: dict[str, float | int], context: str, seed: int, horizon: float) -> dict[str, Any]:
+def evaluate(config: dict[str, float | int], context: str, seed: int, horizon: float,
+             *, demand_process: str = "thesis_uniform",
+             demand_seasonal_contract: dict[str, Any] | None = None,
+             demand_forecast_visibility: str = "visible") -> dict[str, Any]:
     """Evaluate one frozen configuration and retain the complete observable panel."""
     risks, freq = CONTEXTS[context]
     sim = MFSCSimulation(
@@ -97,6 +100,9 @@ def evaluate(config: dict[str, float | int], context: str, seed: int, horizon: f
         year_basis=P["year_basis"],
         warmup_trigger=P["warmup_trigger"],
         r14_defect_mode=P["r14_defect_mode"],
+        demand_process=demand_process,
+        demand_seasonal_contract=demand_seasonal_contract,
+        demand_forecast_visibility=demand_forecast_visibility,
     )
     sim.params["op9_rop"] = float(config["op9_rop"])
     sim.params["op12_rop"] = float(config["op12_rop"])

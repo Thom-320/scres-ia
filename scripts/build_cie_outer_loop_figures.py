@@ -44,9 +44,12 @@ LABEL = {
     "annealing": "simulated annealing", "neuron_reset": "Fig. 5 neuron, reset",
     "neuron_memory": "Fig. 5 neuron, memory", "gp_ei_transfer": "Bayesian opt. + memory",
     "ucb1_transfer": "UCB1 bandit + memory", "ofat_transfer": "OFAT + memory",
+    "lookahead_kg_transfer": "knowledge-gradient + memory",
+    "thompson_transfer": "Thompson + memory",
     "surrogate_mlp": "MLP surrogate", "surrogate_kan": "KAN surrogate",
 }
-MEMORY_ARMS = {"neuron_memory", "gp_ei_transfer", "ucb1_transfer", "ofat_transfer"}
+MEMORY_ARMS = {"neuron_memory", "gp_ei_transfer", "ucb1_transfer", "ofat_transfer",
+               "lookahead_kg_transfer", "thompson_transfer"}
 
 
 def load(path: str) -> dict:
@@ -63,7 +66,7 @@ def save(fig, stem: str) -> None:
 
 def fig_a_leak() -> None:
     """The falsifier that turned 'we fixed the leak' into a measurement."""
-    twin = load("twin_surface/result.json")["falsifiers"][
+    twin = load("twin_surface_v2/result.json")["falsifiers"][
         "f6_surface_twins_have_identical_prefix_paths"]["evidence"]["by_normaliser"]
     arms = ["ofat", "random", "neuron_reset", "neuron_memory"]
     counts = {norm: [sum(1 for f in twin[norm]["path_unchanged"][a].values() if f) for a in arms]
@@ -89,7 +92,7 @@ def fig_a_leak() -> None:
 
 def fig_b_gates() -> None:
     """Why there is a search problem at all, and why context adaptation is not it."""
-    gates = load("surface_gates/result.json")
+    gates = load("surface_gates_v2/result.json")
     g2 = gates["g2_separability"]
     g1 = gates["g1_h_regime"]
     order = sorted(g2, key=lambda c: -g2[c]["mean"])
@@ -132,7 +135,7 @@ def fig_b_gates() -> None:
 
 def fig_c_ladder() -> None:
     """The referee's ladder, memoryless and with memory, on one axis."""
-    means = load("search_ladder_v2/result.json")["mean_auc_regret"]
+    means = load("search_ladder_v5/result.json")["mean_auc_regret"]
     arms = [a for a in sorted(means, key=lambda a: means[a]) if a != "oracle"]
 
     fig, ax = plt.subplots(figsize=(5.8, 3.5))
@@ -157,16 +160,14 @@ def fig_c_ladder() -> None:
 
 def fig_d_memory() -> None:
     """The Alzheimer price, paid to four different families."""
-    per = load("search_ladder_v2/result.json")["per_arm"]
-    pairs = [("ucb1_transfer", "ucb1"), ("neuron_memory", "neuron_reset"),
-             ("ofat_transfer", "ofat"), ("gp_ei_transfer", "gp_ei")]
-    rng = np.random.default_rng(20260805)
+    contrasts = load("retention_contrasts/result.json")["contrasts"]
+    pairs = [("ucb1_transfer", "ucb1"), ("neuron_memory", "neuron"),
+             ("ofat_transfer", "ofat"), ("lookahead_kg_transfer", "lookahead_kg"),
+             ("gp_ei_transfer", "gp_ei"), ("thompson_transfer", "thompson")]
     rows = []
-    for mem, twin in pairs:
-        d = np.asarray(per[twin]["auc"]) - np.asarray(per[mem]["auc"])
-        boot = d[rng.integers(0, d.size, size=(5000, d.size))].mean(axis=1)
-        rows.append((mem, float(d.mean()), float(np.percentile(boot, 2.5)),
-                     float(np.percentile(boot, 97.5))))
+    for mem, family in pairs:
+        d = contrasts[family]
+        rows.append((mem, float(d["mean"]), float(d["lcb95"]), float(d["ucb95"])))
     rows.sort(key=lambda r: r[1])
 
     fig, ax = plt.subplots(figsize=(5.6, 2.4))

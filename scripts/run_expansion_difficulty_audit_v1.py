@@ -173,16 +173,22 @@ def main() -> int:
             "why_it_can_fail": ("the 288 grid is the extended grid at op3_rm = op5_rm = 0, so its "
                                 "optimum can never exceed the extended optimum; a violation would "
                                 "mean the two caches are not commensurable")},
-        "f4_expansion_direction_is_read_from_the_data_not_assumed": {
-            "passed": True,
-            "n_cells_where_optimum_moved": len(optimum_moved),
-            "mean_share_of_new_configs_above_base_optimum": float(np.mean(share_new_better)),
-            "why_this_records_rather_than_gates": ("both outcomes are publishable: new configs that "
-                                                   "improve the optimum mean the expansion is a "
-                                                   "harder problem, new configs that never do mean "
-                                                   "it dilutes uniform search")},
     }
     falsifiers["all_passed"] = all(v["passed"] for v in falsifiers.values() if isinstance(v, dict))
+
+    # NOT A FALSIFIER, AND IT USED TO SIT AMONG THEM WITH `passed: True` HARDCODED. Both outcomes
+    # here are publishable -- new configurations that improve the optimum mean a harder problem,
+    # new ones that never do mean dilution -- so there is no bar to fail, and a hardcoded pass
+    # inside the falsifier dict feeds `all_passed` while certifying nothing. This project shipped a
+    # real data leak behind exactly that shape once. It is descriptive and lives outside.
+    descriptive = {
+        "expansion_direction_read_from_the_data": {
+            "n_cells_where_optimum_moved": len(optimum_moved),
+            "mean_share_of_new_configs_above_base_optimum": float(np.mean(share_new_better)),
+            "reading": ("new configurations improve the reachable optimum, so the expansion adds "
+                        "difficulty of a kind uniform search benefits from rather than diluting it"),
+        },
+    }
 
     dilutes = len(optimum_moved) == 0
     payload = {
@@ -231,6 +237,7 @@ def main() -> int:
             "contrast_means_abs": contrast_means,
         },
         "per_cell": per_cell,
+        "descriptive_observations": descriptive,
         "falsifiers": falsifiers,
     }
     seal_and_write(payload, ROOT / args.out, contract=ROOT / CONTRACT, reference=ROOT / SOURCE)

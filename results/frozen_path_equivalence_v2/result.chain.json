@@ -1,0 +1,112 @@
+{
+ "historical": [
+  {
+   "path": "scripts/build_transfer_confirmation_cache_v1.py",
+   "found": true,
+   "commit": "857241381de84d2691897d1a6b367b2c4b65dcaf",
+   "sha256": "ccb85cbfa0f12636f9852f4ed002b6f803105cce374726c28b0db8d3c9a56cbd",
+   "current_matches": true
+  },
+  {
+   "path": "scripts/run_grid_transfer_v1.py",
+   "found": true,
+   "commit": "ed16b9e38ddc0ace67f59b421554d25f899aa68a",
+   "sha256": "727a8d7d2d5ed6fd65eecea60378005bfcd1ecba412c14c9b5370b06ac4d44a3",
+   "current_matches": true
+  },
+  {
+   "path": "supply_chain/arm_runner.py",
+   "found": true,
+   "commit": "646c65a96cec69505b5cb2dcd689021a52772d2d",
+   "sha256": "35135c537d9260832677ab6b4e344229d6b9f4810df8bdef9efd51b58fcac68a",
+   "current_matches": false
+  },
+  {
+   "path": "supply_chain/config.py",
+   "found": true,
+   "commit": "002db4947fc4752130933731178ed2cfba427a60",
+   "sha256": "ae702a4991966504eaa1036106fa5f4b9c11e913d376dfb67e3f3c83147904cc",
+   "current_matches": true
+  },
+  {
+   "path": "supply_chain/episode_metrics.py",
+   "found": true,
+   "commit": "d85e3dad0434be628ab72652d8efc6385805c714",
+   "sha256": "e09199d48a747f67aef600e9482b812fc1be16e337167d7dfc7215bcb57fb55e",
+   "current_matches": true
+  },
+  {
+   "path": "supply_chain/seed_custody.py",
+   "found": true,
+   "commit": "9862f15450d6b08fce82bb61c48cbf8e426f7b35",
+   "sha256": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd",
+   "current_matches": true
+  },
+  {
+   "path": "supply_chain/supply_chain.py",
+   "found": true,
+   "commit": "3b70dd93b7eb050426a5691417270e987a5d1a44",
+   "sha256": "2f348e5922cbbecf167b45cf0045765010beaaecdcb0fe6de88f259c989460f6",
+   "current_matches": false
+  }
+ ],
+ "chain": {
+  "ran": false,
+  "returncode": 1,
+  "stderr": "",
+  "cmd": [
+   "/Users/thom/Projects/research/scres-ia/.venv/bin/python",
+   "scripts/run_grid_transfer_v1.py",
+   "--base-cache",
+   "results/surface_cache/garrido_transfer_confirmation_v2_base",
+   "--ext-cache",
+   "results/surface_cache/garrido_transfer_confirmation_v2_ext",
+   "--budget",
+   "24",
+   "--contract",
+   "docs/ENMIENDA_CONFIRMACION_BLOQUE_LIMPIO_2026-08-05.md",
+   "--reference",
+   "results/grid_transfer_ordered_v1/result.json",
+   "--confirmation",
+   "--expected-seed-start",
+   "8200001",
+   "--expected-seeds",
+   "60",
+   "--output",
+   "/var/folders/_j/xv6ylwmx1w726ptqztl7xq080000gn/T/tmphdrhymn6/chain_result.json"
+  ]
+ },
+ "controls": {
+  "m1_physics": {
+   "detected": true,
+   "injected": 1e-12,
+   "on": "value returned by the simulator"
+  },
+  "m2_extended_cache": {
+   "detected": true,
+   "injected": 1e-12,
+   "on": "cached cell of the 4,608-wide surface",
+   "clean_cell_still_matches": true
+  },
+  "m3_auc_contrast": {
+   "detected": true,
+   "injected": 1e-12,
+   "on": "contrasts[gp].vs_marginal_replay.mean"
+  },
+  "m4_seal_only_must_not_move_science": {
+   "file": "supply_chain/arm_runner.py",
+   "manifest_moved": true,
+   "science_expected_to_move": false,
+   "note": "a seal-only edit must break the manifest and leave the payload identical; if this file's drift moved the chain replay it would be a physics change wearing an infrastructure label"
+  }
+ },
+ "declared_manifests": {
+  "supply_chain/arm_runner.py": "35135c537d9260832677ab6b4e344229d6b9f4810df8bdef9efd51b58fcac68a",
+  "supply_chain/seed_custody.py": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd",
+  "scripts/run_grid_transfer_v1.py": "727a8d7d2d5ed6fd65eecea60378005bfcd1ecba412c14c9b5370b06ac4d44a3",
+  "supply_chain/config.py": "ae702a4991966504eaa1036106fa5f4b9c11e913d376dfb67e3f3c83147904cc",
+  "supply_chain/episode_metrics.py": "e09199d48a747f67aef600e9482b812fc1be16e337167d7dfc7215bcb57fb55e",
+  "supply_chain/supply_chain.py": "2f348e5922cbbecf167b45cf0045765010beaaecdcb0fe6de88f259c989460f6",
+  "scripts/build_transfer_confirmation_cache_v1.py": "ccb85cbfa0f12636f9852f4ed002b6f803105cce374726c28b0db8d3c9a56cbd"
+ }
+}

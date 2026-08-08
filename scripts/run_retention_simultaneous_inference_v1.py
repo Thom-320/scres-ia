@@ -221,11 +221,18 @@ def main() -> int:
     n_simul = (sum(r["simultaneous_lcb95"] > 0 for r in results["auc"]["per_family"].values())
                if results else 0)
     n_holm = (sum(r["rejected"] for r in results["auc"]["holm"].values()) if results else 0)
+    n_simul_final = (sum(r["simultaneous_lcb95"] > 0
+                         for r in results["final"]["per_family"].values()) if results else 0)
 
     payload = {
         "schema_version": "retention_simultaneous_v1",
-        "claim_status": (f"RETENTION_SURVIVES_SIMULTANEOUS_INFERENCE_IN_{n_simul}_OF_{len(TWINS)}"
-                         if falsifiers["all_passed"] else "HALTED_FALSIFIER_FAILED"),
+        # THE ENDPOINT IS PART OF THE COUNT. "6 of 6" is true on AUC and false on the simple regret
+        # of the recommendation actually deployed, where it is 1 of 6, and a status naming neither
+        # invites the reader to carry the flattering half. Both go in the string.
+        "claim_status": (
+            f"RETENTION_SURVIVES_SIMULTANEOUS_INFERENCE_{n_simul}_OF_{len(TWINS)}_ON_AUC_BUT_"
+            f"{n_simul_final}_OF_{len(TWINS)}_ON_FINAL_SIMPLE_REGRET"
+            if falsifiers["all_passed"] else "HALTED_FALSIFIER_FAILED"),
         "scope": "DEVELOPMENT_REANALYSIS_OF_A_SEALED_REPLAY_NO_SEEDS_NO_ADJUDICATION",
         "run_role": "REPLAY_REANALYSIS",
         "endpoint": "auc_regret_norm (primary) and final simple regret at budget 24 (secondary)",

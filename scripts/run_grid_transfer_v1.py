@@ -357,6 +357,8 @@ def main() -> int:
                     help="name of a burned registry block only for a declared replay")
     ap.add_argument("--confirmation", action="store_true",
                     help="freeze the confirmation claim/status and require fresh-seed custody")
+    ap.add_argument("--development-sensitivity", action="store_true",
+                    help="label the run as seasonal development sensitivity; never confirmation")
     ap.add_argument("--reference", type=Path,
                     default=Path("results/search_ladder_v2/result.json"),
                     help="sealed development/reference artifact used by the envelope seal")
@@ -391,6 +393,8 @@ def main() -> int:
         raise SystemExit(
             f"no seed has all {len(contexts)} contexts in both caches yet "
             f"(extended cache has {len(ext)} of {len(contexts) * len(ext_seeds)} slices)")
+    if args.confirmation and args.development_sensitivity:
+        raise SystemExit("--confirmation and --development-sensitivity are mutually exclusive")
     if args.confirmation:
         if args.expected_seed_start is None or args.expected_seeds is None:
             raise SystemExit("confirmation requires --expected-seed-start and --expected-seeds")
@@ -491,6 +495,9 @@ def main() -> int:
     if args.confirmation:
         verdict = ("GRID_TRANSFER_CONFIRMED__" + "_".join(sorted(winners)).upper()
                    if winners else "GRID_TRANSFER_CONFIRMATION_FAILS")
+    elif args.development_sensitivity:
+        verdict = ("DEMAND_SENSITIVITY__" + "_".join(sorted(winners)).upper()
+                   if winners else "DEMAND_SENSITIVITY_NO_TRANSFER")
     else:
         verdict = ("GRID_TRANSFER_ESTABLISHED__" + "_".join(sorted(winners)).upper() if winners
                    else "NO_GRID_TRANSFER")
@@ -573,8 +580,12 @@ def main() -> int:
         "schema_version": "grid_transfer_v1", "claim_status": verdict,
         "scope": ("CONFIRMATION_ON_RESERVED_VIRGIN_BLOCK_NO_RL_NO_NEURAL_LEARNER"
                   if args.confirmation
+                  else "DEVELOPMENT_SENSITIVITY_NO_ADJUDICATION_NO_NEW_SEEDS"
+                  if args.development_sensitivity
                   else "DEVELOPMENT_ON_BURNED_TAPES_NO_ADJUDICATION_NO_LEARNER"),
-        "run_role": "CONFIRMATION" if args.confirmation else "CACHE_ANALYSIS",
+        "run_role": ("CONFIRMATION" if args.confirmation
+                     else "DEVELOPMENT_SENSITIVITY" if args.development_sensitivity
+                     else "CACHE_ANALYSIS"),
         "seed_block": args.seed_block,
         "replay_of": args.replay_of,
         "module_manifest": module_manifest(MODULES, script=__file__),

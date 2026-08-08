@@ -163,14 +163,14 @@
    "allowed": "Treated as one inferential family with a shared bootstrap index matrix, all six contrasts survive max-T simultaneous intervals and Holm on the preregistered AUC endpoint (simultaneous critical value 2.591 against a 1.906 marginal reference), and the sign of each lower bound is stable across 40 resampling seeds. On the simple regret of the recommendation actually deployed at budget 24, all six point estimates keep the same sign but the joint resolution collapses: one of six retains a simultaneous lower bound above zero, and the family ordering is not preserved between the two endpoints.",
    "artifact": "results/retention_simultaneous/result.json",
    "claim_id": "RQ1_SIMULTANEOUS_AND_THE_DEPLOYED_ENDPOINT",
-   "claim_status": "RETENTION_SURVIVES_SIMULTANEOUS_INFERENCE_IN_6_OF_6",
+   "claim_status": "RETENTION_SURVIVES_SIMULTANEOUS_INFERENCE_6_OF_6_ON_AUC_BUT_1_OF_6_ON_FINAL_SIMPLE_REGRET",
    "contract_sha256": "8e78b344536e8c6440d29ff4e437a0ea9b84c5fe73980d0b40c842aa90947ff5",
    "endpoint": "auc_regret_norm (primary) and final simple regret at budget 24 (secondary)",
    "estimand": "the six paired within-family contrasts treated as one inferential family",
    "evidence_grade": "POST_HOC_ON_DEVELOPMENT_DATA",
    "exists": true,
    "falsifiers_all_passed": true,
-   "file_sha256": "5a31e1d5cb79c2187b38ab750a67ec777feeccb8431ee5dca7c2d95cfecfcdd7",
+   "file_sha256": "026ce9ea14f869a6dfff0ef2ef77d2c662f330d9a74e5f3e6c30092ade413854",
    "forbidden": [
     "retention was prospectively confirmed",
     "the endpoints agree",
@@ -183,7 +183,7 @@
    "run_role": "REPLAY_REANALYSIS",
    "scope": "DEVELOPMENT_REANALYSIS_OF_A_SEALED_REPLAY_NO_SEEDS_NO_ADJUDICATION",
    "section": "RQ1 (joint inference) and Limitations (endpoint sensitivity)",
-   "self_sha256": "7bf98dea5c26676be90820eff3c7115f22897a56b376b1ee3fc35667689e0ca1",
+   "self_sha256": "1d083b16c21f6b09160a30ccde0fa304297b532eee07541a5dd00a72d40db85b",
    "why_forbidden": "the direction holds in all six under BOTH endpoints -- what changes is resolution, not sign, and reporting either half alone misleads in opposite directions"
   },
   {
@@ -198,7 +198,7 @@
    "evidence_grade": "POST_HOC_ON_DEVELOPMENT_DATA",
    "exists": true,
    "falsifiers_all_passed": false,
-   "file_sha256": "5fd6acc866f01a3e9d37051077584d74f1820dd8ae7d063b3100c0f04b0d7c8c",
+   "file_sha256": "f66830871263eecb8aebf0c117b593914ca27bd0ac126675cf82a9594a489c3a",
    "forbidden": [
     "H_regime = 0.0038",
     "no context-conditioned architecture can pay",
@@ -212,7 +212,7 @@
    "run_role": "POST_HOC_REREAD",
    "scope": "REREAD_OF_SEALED_CACHES_AND_ARTIFACTS_NO_SEEDS_NO_SIMULATION",
    "section": "Results 3.4 -- H_regime cited with its metric, or not at all",
-   "self_sha256": "7b3c5f9b225b716512eeaf7bba7ef4988081cb01fe374343c367b8a7f1828742",
+   "self_sha256": "37640cd978c65cc285d82b280dde7e3e6a3f1f57035f0b6993ecb8784e2c6109",
    "why_forbidden": "an unlabelled figure conflates two metrics; the transform-proof zero and the universal argmax belong to the Cobb-Douglas surface and may not be transferred to the one the manuscript cites; and no bar comparison survives a statistic that moves under a rescaling that preserves every ordering"
   },
   {
@@ -226,7 +226,7 @@
    "evidence_grade": "POST_HOC_ON_DEVELOPMENT_DATA",
    "exists": true,
    "falsifiers_all_passed": true,
-   "file_sha256": "f7ac1477f17f22276264cb86db1da17c48151b7a72ec2e3c22fed4967e525bb3",
+   "file_sha256": "7173833ab426a0e52045b2c5ed98ac300f9e2c563254c1181228d11a393f8ec5",
    "forbidden": [
     "the expansion dilutes cold start",
     "the new factors move the endpoint 18x less than the contrasts",
@@ -239,21 +239,21 @@
    "run_role": "POST_HOC_REREAD",
    "scope": "REREAD_OF_SEALED_CACHES_NO_SEEDS_NO_SIMULATION",
    "section": "RQ2 methods (why the expanded grid is the right test)",
-   "self_sha256": "e99bc6c1c2da8a6c0b37a1f2b27b4b036de220e100878d3f5175fb987e7c3a40",
+   "self_sha256": "c3375cdd39e9fa5a9d78a9f52eecb086ed05e0f77cc098ba5156a5a39bdbd554",
    "why_forbidden": "the dilution claim is measured false under both normalisers; the 18x ratio has no single value (7.0x, 30.5x and 67.5x for the three canonical choices, and 18x is none of them); and 'harder' is not established either -- uniform search does BETTER on the larger grid"
   },
   {
    "allowed": "Of the four v0 hypotheses, three are supported on development evidence and none is confirmatory: H1 on a redefined endpoint (restricted TTR, +125.99 h [+98.35, +154.54]) whose companion recovery gate returned no learning headroom, H2 on a context ordinal (+0.04220 [+0.03466, +0.04992]) rather than successive within-run disruptions, H4 for search cost rather than delivered resilience. H3 is not supported with a live estimand of the wrong sign (-1.109e15, p = 0.821). Of the two research questions, dynamic operationalization is answered only for an outer loop and predictive accuracy is not answered at all.",
    "artifact": "results/v0_adjudication_matrix/result.json",
    "claim_id": "V0_HYPOTHESES_ADJUDICATED",
-   "claim_status": "3_OF_4_HYPOTHESES_SUPPORTED_ON_DEVELOPMENT_EVIDENCE_NONE_CONFIRMATORY",
+   "claim_status": "3_OF_4_SUPPORTED_NONE_AS_WRITTEN__FOR_SEARCH_ONLY__ON_A_REDEFINED_ENDPOINT__ON_ITS_OWN_ESTIMAND",
    "contract_sha256": "8e78b344536e8c6440d29ff4e437a0ea9b84c5fe73980d0b40c842aa90947ff5",
    "endpoint": "not applicable -- adjudicates other artifacts' endpoints",
    "estimand": "the distance between each v0 sentence and the estimand actually measured",
    "evidence_grade": "POST_HOC_ON_DEVELOPMENT_DATA",
    "exists": true,
    "falsifiers_all_passed": true,
-   "file_sha256": "8c2107d06e1d8de4f3abba96faf35936cb24c792e02098abf24f3d8f0b669068",
+   "file_sha256": "fb055d431433762fb77c657d023cd4389fbdd9a67949f47633115463956b61ae",
    "forbidden": [
     "we answered the v0 questions",
     "three of four hypotheses hold",
@@ -268,7 +268,7 @@
    "run_role": "POST_HOC_REREAD",
    "scope": "REREAD_OF_SEALED_ARTIFACTS_NO_SEEDS_NO_NEW_RUN",
    "section": "Appendix A (reconciliation with the v0 hypotheses)",
-   "self_sha256": "c70ca02f5e35d12f59f669b1930090ebfc683f229cbd50bf5f38bfbaa14f51e4",
+   "self_sha256": "a477224b96dae606701694f63e62f3a45b1f9cf7862a277aa40a345dd7699d37",
    "why_forbidden": "each bare summary is true only with qualifiers that travel separately from the sentence; and 'unanswerable as written' is now false -- h1_h3_originales_v3 is a preregistered recovery-time comparison"
   },
   {
@@ -614,7 +614,7 @@
    "why_forbidden": "unique_profile_optima is 1, 2 or 3 by row; and the screen varied PROFILES, not the within-episode realisation"
   }
  ],
- "generated_at_commit": "2832e0a090917eded9bbed5b534c6b3e876a0828",
+ "generated_at_commit": "e99a19522ed5ef8afc024df5cb008ece4800072a",
  "grader_self_test": {
   "a_real_confirmation_still_grades_confirmatory": {
    "passed": true,

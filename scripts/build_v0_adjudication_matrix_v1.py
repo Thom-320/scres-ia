@@ -232,8 +232,15 @@ def main() -> int:
 
     payload = {
         "schema_version": "v0_adjudication_matrix_v1",
-        "claim_status": (f"{n_supported}_OF_{len(hyp)}_HYPOTHESES_SUPPORTED_ON_DEVELOPMENT_"
-                         f"EVIDENCE_NONE_CONFIRMATORY"
+        # "3 of 4 supported on development evidence" is the sentence this very file forbids, wearing
+        # the evidence-grade qualifier instead of the one that makes it true: NONE of the three is
+        # supported as the v0 draft wrote it. Each is supported on a different object -- a redefined
+        # endpoint, its own ordinal, search cost rather than delivered resilience -- and the status
+        # names them, so the string cannot be quoted without them.
+        "claim_status": (f"{n_supported}_OF_{len(hyp)}_SUPPORTED_NONE_AS_WRITTEN__"
+                         + "__".join(sorted(
+                             r["verdict"].replace("SUPPORTED_", "").replace("__DEVELOPMENT_ONLY", "")
+                             for r in hyp if r["verdict"].startswith("SUPPORTED")))
                          if falsifiers["all_passed"] else "HALTED_FALSIFIER_FAILED"),
         "scope": "REREAD_OF_SEALED_ARTIFACTS_NO_SEEDS_NO_NEW_RUN",
         "run_role": "POST_HOC_REREAD",

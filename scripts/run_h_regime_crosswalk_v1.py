@@ -27,7 +27,7 @@ reproduces `surface_gates_v2` to the last digit (0.003802243800697269) and repro
     grid 4,608  sealed H_identity 0.019501   recomputed 0.048573 (its 3 seeds) / 0.028294 (all 12)
 
 And the ceiling artifact reports `argmax_is_universal: True` with index 240 in all six contexts,
-while the same cache gives four distinct argmaxes at either seed subset -- as does
+while the same cache gives three distinct argmaxes at its six seeds and four at all twelve -- as does
 `surface_gates_v2`'s own `argmax_by_context`, where `shifts` moves 1/3/2/2/3/2.
 
 So the "transform-proof zero on the 288 grid", which this project has repeated, rests on the artifact
@@ -57,11 +57,15 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 import scripts.run_grid_transfer_v1 as G  # noqa: E402
+import scripts.run_monotone_transform_ceiling_v1 as MTC  # noqa: E402
 from supply_chain.arm_runner import seal_and_write  # noqa: E402
 from supply_chain.seed_custody import module_manifest  # noqa: E402
 
 MODULES = ("supply_chain/arm_runner.py", "supply_chain/seed_custody.py",
-           "scripts/run_grid_transfer_v1.py")
+           "scripts/run_grid_transfer_v1.py",
+           # In the manifest because this artifact now RUNS it: the two-metric resolution is
+           # computed from the ceiling artifact's own surface builder, not read off its prose.
+           "scripts/run_monotone_transform_ceiling_v1.py")
 CONTRACT = Path("docs/ENMIENDA_REGISTRO_DE_EVIDENCIA_2026-08-07.md")
 GATES = Path("results/surface_gates_v2/result.json")
 CEILING = Path("results/monotone_transform_ceiling/result.json")
@@ -165,6 +169,24 @@ def main() -> int:
         invariance[name]["ordinals_identical"] = (
             invariance[name]["ordinal_before"] == invariance[name]["ordinal_after"])
 
+    # Rebuild the ceiling artifact's own surface and score it with THIS crosswalk's estimator.
+    cobb = {}
+    for grid_id in ("wrap288_v1", "wrap288_compat_extended_v1"):
+        try:
+            surf, ctxs_c, seeds_c = MTC.load_surface(grid_id)
+            mine = h_regime(np.asarray(surf, float))
+            theirs = float(ceiling["grids"][grid_id]["H_identity"])
+            o = ordinal_stats(np.asarray(surf, float))
+            cobb[grid_id] = {
+                "recomputed_h_identity": mine, "sealed_h_identity": theirs,
+                "reproduces": abs(mine - theirs) < 1e-9,
+                "n_seeds": len(seeds_c), "contexts": ctxs_c,
+                "argmax_per_context": o["argmax_per_context"],
+                "argmax_is_universal": o["argmax_is_universal"],
+            }
+        except Exception as exc:                       # noqa: BLE001 -- reported, never swallowed
+            cobb[grid_id] = {"reproduces": False, "error": f"{type(exc).__name__}: {exc}"}
+
     sealed_bootstrap = gates["g1_h_regime"]
 
     falsifiers = {
@@ -198,24 +220,33 @@ def main() -> int:
             "why_it_can_fail": ("this is the comparison f1 should have made: same metric, same "
                                 "cache, same seeds. If it failed, the estimator here would be "
                                 "wrong and nothing in this artifact would be readable")},
-        "f1d_the_two_artifacts_are_on_different_metrics": {
-            "passed": True,
-            "ceiling_metric": ("R_cobb_douglas, reconstructed from aggregates.json at "
-                               "scripts/run_monotone_transform_ceiling_v1.py:94-114"),
+        # COMPUTED, NOT ASSERTED. This falsifier used to carry `passed: True` with prose evidence,
+        # which meant the claim the whole artifact rests on -- that the two numbers are two metrics
+        # rather than two estimators -- was self-attested. It now rebuilds the Cobb-Douglas surface
+        # with the ceiling artifact's OWN loader and requires this crosswalk's estimator to
+        # reproduce the ceiling's sealed H on it. If it does, the estimator is common and the metric
+        # is the whole difference. If it does not, the two-metric resolution is wrong and the
+        # verdict returns to unreconciled.
+        "f1d_the_ceiling_number_reproduces_ON_ITS_OWN_METRIC": {
+            "passed": all(v["reproduces"] for v in cobb.values()),
+            "detail": cobb,
+            "ceiling_metric": "R_cobb_douglas, rebuilt here via run_monotone_transform_ceiling_v1.load_surface",
             "gates_metric": "ret_excel_risk_conditional, stored in results/surface_cache/wrap288_v1",
             "consequence": ("H_regime is not one number with two values; it is one statistic on two "
-                            "metrics. Every citation must name the metric"),
-            "why_this_records_rather_than_gates": ("it was established by reading the producer, not "
-                                                   "by a computation this script performs")},
-        "f1b_the_two_sealed_artifacts_differ_because_of_their_SEED_SUBSET": {
+                            "metrics, and every citation must name the metric"),
+            "why_it_can_fail": ("if the ceiling's H does not come back from its own surface under "
+                                "this estimator, the difference is not the metric and the "
+                                "two-metric resolution collapses")},
+        "f1b_the_seed_subsets_also_differ_but_do_not_explain_the_gap": {
             "passed": (rows["grid_288"]["n_seeds_used_by_ceiling_artifact"]
                        != rows["grid_288"]["n_seeds_in_cache"]),
             "ceiling_artifact_seeds": rows["grid_288"]["n_seeds_used_by_ceiling_artifact"],
             "gates_artifact_seeds": len(gates.get("seeds", [])),
             "cache_seeds": rows["grid_288"]["n_seeds_in_cache"],
-            "why_it_matters": ("the manuscript cites H_regime on the 288 grid as one number; two "
-                               "sealed artifacts compute it over different halves of the same "
-                               "cache and reach 0.0 and 0.003802")},
+            "why_it_matters": ("the two artifacts also use different halves of the seed block, "
+                               "which was the first hypothesis and is NOT the cause: matching the "
+                               "subset gives 0.000795, still not 0.0. The metric is the cause "
+                               "(f1d)")},
         "f2_the_288_bootstrap_and_identity_values_are_not_a_contradiction": {
             "passed": (sealed_bootstrap["lcb95"] > 0
                        and rows["grid_288"]["h_identity_sealed"] == 0.0
@@ -250,8 +281,12 @@ def main() -> int:
             "h_identity_at_ceiling_seeds": rows["grid_288"]["h_identity_at_ceiling_artifact_seeds"],
             "h_identity_at_all_cache_seeds": rows["grid_288"]["h_identity_at_all_cache_seeds"],
             "gates_argmax_by_context": gates.get("argmax_by_context"),
-            "consequence": ("the transform-proof reading of the 288 zero is withdrawn: it holds "
-                            "only on the six-seed average")},
+            "consequence": ("the transform-proof reading is CONFINED, not seed-dependent. The zero "
+                            "never appears on the ret_excel surface at any seed subset -- this "
+                            "artifact's own row gives 0.000795 at the ceiling's six seeds -- so the "
+                            "seed count was never the explanation. It is a property of the "
+                            "Cobb-Douglas metric alone, and its own seed stability cannot be "
+                            "tested from the ret_excel cache")},
     }
     falsifiers["all_passed"] = all(v["passed"] for v in falsifiers.values() if isinstance(v, dict))
     # f1 failing is this artifact's RESULT, not a broken instrument: it is a comparison between two
@@ -309,10 +344,14 @@ def main() -> int:
                                "artifact this crosswalk cannot reproduce, and the argmax is not "
                                "universal at any seed subset of the same cache"),
             "what_may_be_said_instead": ("Contextual rankings exist, but their cardinal value "
-                                         "depends on the declared utility scale. On the 288 grid a "
-                                         "single configuration is optimal in every context, so the "
-                                         "zero is a property of the ordering and no rescaling can "
-                                         "move it."),
+                                         "depends on the declared utility scale. On the "
+                                         "Cobb-Douglas metric at the six seeds of the ceiling "
+                                         "artifact a single configuration is optimal in every "
+                                         "context; on the ret_excel_risk_conditional surface of "
+                                         "the same grid at twelve seeds there are four distinct "
+                                         "argmaxes and H is 0.003802, which a strictly increasing "
+                                         "rescaling moves to 0.010776. Neither statement may be "
+                                         "made without naming its metric and its seeds."),
         },
         "falsifiers": falsifiers,
     }

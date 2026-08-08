@@ -20,7 +20,7 @@
  "claim_status": "TWO_METRICS_ONE_NAME__H_REGIME_MUST_BE_LABELLED_BY_METRIC",
  "contract_path": "/Users/thom/Projects/research/scres-ia/docs/ENMIENDA_REGISTRO_DE_EVIDENCIA_2026-08-07.md",
  "contract_sha256": "8e78b344536e8c6440d29ff4e437a0ea9b84c5fe73980d0b40c842aa90947ff5",
- "created_at": "2026-08-08T06:21:45.213304+00:00",
+ "created_at": "2026-08-08T06:54:23.893668+00:00",
  "crosswalk": {
   "grid_288": {
    "argmax_universal_at_all_seeds": false,
@@ -97,12 +97,12 @@
    "why_it_can_fail": "if the estimator disagreed at MATCHED seeds the difference would be in the computation rather than in the sample, and this artifact would be crosswalking its own estimator",
    "why_it_could_never_pass": "it compares a ret_excel_risk_conditional surface against a Cobb-Douglas one"
   },
-  "f1b_the_two_sealed_artifacts_differ_because_of_their_SEED_SUBSET": {
+  "f1b_the_seed_subsets_also_differ_but_do_not_explain_the_gap": {
    "cache_seeds": 12,
    "ceiling_artifact_seeds": 6,
    "gates_artifact_seeds": 12,
    "passed": true,
-   "why_it_matters": "the manuscript cites H_regime on the 288 grid as one number; two sealed artifacts compute it over different halves of the same cache and reach 0.0 and 0.003802"
+   "why_it_matters": "the two artifacts also use different halves of the seed block, which was the first hypothesis and is NOT the cause: matching the subset gives 0.000795, still not 0.0. The metric is the cause (f1d)"
   },
   "f1c_the_recomputation_reproduces_the_artifact_ON_THE_SAME_METRIC": {
    "metric": "ret_excel_risk_conditional, the surface cache's stored value",
@@ -111,12 +111,60 @@
    "sealed_surface_gates_v2": 0.003802243800697269,
    "why_it_can_fail": "this is the comparison f1 should have made: same metric, same cache, same seeds. If it failed, the estimator here would be wrong and nothing in this artifact would be readable"
   },
-  "f1d_the_two_artifacts_are_on_different_metrics": {
-   "ceiling_metric": "R_cobb_douglas, reconstructed from aggregates.json at scripts/run_monotone_transform_ceiling_v1.py:94-114",
-   "consequence": "H_regime is not one number with two values; it is one statistic on two metrics. Every citation must name the metric",
+  "f1d_the_ceiling_number_reproduces_ON_ITS_OWN_METRIC": {
+   "ceiling_metric": "R_cobb_douglas, rebuilt here via run_monotone_transform_ceiling_v1.load_surface",
+   "consequence": "H_regime is not one number with two values; it is one statistic on two metrics, and every citation must name the metric",
+   "detail": {
+    "wrap288_compat_extended_v1": {
+     "argmax_is_universal": false,
+     "argmax_per_context": [
+      2312,
+      3840,
+      3841,
+      3845,
+      3845,
+      3849
+     ],
+     "contexts": [
+      "R1r",
+      "R2r",
+      "R1r+R2r",
+      "R1r|esc",
+      "R2r|esc",
+      "R1r+R2r|esc"
+     ],
+     "n_seeds": 3,
+     "recomputed_h_identity": 0.019501265924434907,
+     "reproduces": true,
+     "sealed_h_identity": 0.019501265924434907
+    },
+    "wrap288_v1": {
+     "argmax_is_universal": true,
+     "argmax_per_context": [
+      240,
+      240,
+      240,
+      240,
+      240,
+      240
+     ],
+     "contexts": [
+      "R1r",
+      "R2r",
+      "R1r+R2r",
+      "R1r|esc",
+      "R2r|esc",
+      "R1r+R2r|esc"
+     ],
+     "n_seeds": 6,
+     "recomputed_h_identity": 0.0,
+     "reproduces": true,
+     "sealed_h_identity": 0.0
+    }
+   },
    "gates_metric": "ret_excel_risk_conditional, stored in results/surface_cache/wrap288_v1",
    "passed": true,
-   "why_this_records_rather_than_gates": "it was established by reading the producer, not by a computation this script performs"
+   "why_it_can_fail": "if the ceiling's H does not come back from its own surface under this estimator, the difference is not the metric and the two-metric resolution collapses"
   },
   "f2_the_288_bootstrap_and_identity_values_are_not_a_contradiction": {
    "bootstrap": {
@@ -152,7 +200,7 @@
   "f4_the_288_transform_proof_zero_is_seed_dependent": {
    "argmax_universal_at_all_cache_seeds": false,
    "argmax_universal_at_ceiling_seeds": false,
-   "consequence": "the transform-proof reading of the 288 zero is withdrawn: it holds only on the six-seed average",
+   "consequence": "the transform-proof reading is CONFINED, not seed-dependent. The zero never appears on the ret_excel surface at any seed subset -- this artifact's own row gives 0.000795 at the ceiling's six seeds -- so the seed count was never the explanation. It is a property of the Cobb-Douglas metric alone, and its own seed stability cannot be tested from the ret_excel cache",
    "gates_argmax_by_context": {
     "R1r": {
      "buffer_hours": 1344.0,
@@ -199,10 +247,11 @@
  "integrity_falsifier_passed": true,
  "module_manifest": {
   "entry_script": "scripts/run_h_regime_crosswalk_v1.py",
-  "entry_script_sha256": "e83bc20edb950076f57ff539a15a5d8de1ebda67b6ce05feece470685102bfdf",
+  "entry_script_sha256": "aa9c1a175e5c6da0b9af59ca7bffb095db5250647b943d992eba0bfa352446eb",
   "missing": [],
   "modules": {
    "scripts/run_grid_transfer_v1.py": "c08a170dc7f5f6903178b680754518eda971a78130db4616ef62dc68df5419f3",
+   "scripts/run_monotone_transform_ceiling_v1.py": "b6d36a360c186bb3bef72fb3ffb5fa9b80e62270f0734b70641ff72dba9f4652",
    "supply_chain/arm_runner.py": "1afea4fa248db5beb2d86c6ab2033d6f24a95115ea544b08966b7a538456ac99",
    "supply_chain/seed_custody.py": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd"
   },
@@ -271,7 +320,7 @@
  "run_role": "POST_HOC_REREAD",
  "schema_version": "h_regime_crosswalk_v1",
  "scope": "REREAD_OF_SEALED_CACHES_AND_ARTIFACTS_NO_SEEDS_NO_SIMULATION",
- "self_sha256": "7b3c5f9b225b716512eeaf7bba7ef4988081cb01fe374343c367b8a7f1828742",
+ "self_sha256": "37640cd978c65cc285d82b280dde7e3e6a3f1f57035f0b6993ecb8784e2c6109",
  "sources": {
   "bootstrap_estimate": {
    "path": "results/surface_gates_v2/result.json",
@@ -396,7 +445,7 @@
  "withdrawn_claim": {
   "also_withdrawn": "the transform-proof reading of the 288 zero: it comes from the artifact this crosswalk cannot reproduce, and the argmax is not universal at any seed subset of the same cache",
   "phrase": "no context-conditioned architecture can pay, because H_regime = 0.0038 < 0.05",
-  "what_may_be_said_instead": "Contextual rankings exist, but their cardinal value depends on the declared utility scale. On the 288 grid a single configuration is optimal in every context, so the zero is a property of the ordering and no rescaling can move it.",
+  "what_may_be_said_instead": "Contextual rankings exist, but their cardinal value depends on the declared utility scale. On the Cobb-Douglas metric at the six seeds of the ceiling artifact a single configuration is optimal in every context; on the ret_excel_risk_conditional surface of the same grid at twelve seeds there are four distinct argmaxes and H is 0.003802, which a strictly increasing rescaling moves to 0.010776. Neither statement may be made without naming its metric and its seeds.",
   "why_withdrawn": "two reasons, and either alone suffices. The statistic is not invariant to the utility scale -- a strictly increasing rescaling moves it on BOTH grids, 0.003802 to 0.010776 on the 288 and 0.028294 to 0.067539 on the extended. And two sealed artifacts do not agree on its value, so there is no single number to cite"
  }
 }
