@@ -1,0 +1,782 @@
+{
+ "architecture_role": "Garrido's Fig. 5: a SUPERVISED SURROGATE between his nodes 3 and 8, predicting L* and choosing a schedule -- not an RL policy",
+ "arms_beating_open_loop": [],
+ "budgets": {
+  "p100": 1.0,
+  "p25": 0.25,
+  "p50": 0.5
+ },
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "NEITHER_ARCHITECTURE_BEATS_THE_OPEN_LOOP_CALENDAR",
+ "contract_path": "docs/ENMIENDA_BENCHMARK_SIGNO_SESOI_HORIZONTE_2026-08-08.md",
+ "contract_sha256": "5c355a3533ac37d30c54e543a390c3bc42e5b20707621e4184bea3953dd1535b",
+ "contrast": {
+  "A": "E[L*_MLP - L*_KAN], positive means KAN better because L* is a loss",
+  "delta": "A_stressed - A_baseline",
+  "sesoi": {
+   "definition": "relative reduction of L*",
+   "value": 0.05
+  }
+ },
+ "created_at": "2026-08-08T19:25:04.402189+00:00",
+ "declared_before_the_numbers": {
+  "clairvoyant_ceiling_ucb95": 0.0028,
+  "r21_exposure": "at most 1.00 events per episode against R24's 32.08",
+  "r2_arm": "PARAMETRIC stress within the source family",
+  "r2_distribution_family_change": "NOT_IMPLEMENTED \u2014 requires a risk-scheduler change",
+  "shifts_add_nothing_given_buffer": "M_S = 0.000000 in all nine diagnostic cells"
+ },
+ "elapsed_seconds": 51.15756120899459,
+ "environments": {
+  "baseline": {
+   "r2_multiplier_by_id": 1.0
+  },
+  "r2_stressed": {
+   "r2_multiplier_by_id": 4.0
+  }
+ },
+ "falsifiers": {
+  "all_passed": true,
+  "f1_parameters_are_matched_within_budget": {
+   "evidence": {
+    "per_cell": {
+     "baseline|p100": {
+      "kan": 1488,
+      "mlp": 1025
+     },
+     "baseline|p25": {
+      "kan": 372,
+      "mlp": 257
+     },
+     "baseline|p50": {
+      "kan": 744,
+      "mlp": 513
+     },
+     "r2_stressed|p100": {
+      "kan": 1488,
+      "mlp": 1025
+     },
+     "r2_stressed|p25": {
+      "kan": 372,
+      "mlp": 257
+     },
+     "r2_stressed|p50": {
+      "kan": 744,
+      "mlp": 513
+     }
+    },
+    "why_it_can_fail": "a benchmark where one architecture carries several times the parameters of the other measures capacity, not architecture"
+   },
+   "passed": true
+  },
+  "f2_equal_des_interactions": {
+   "evidence": {
+    "shared_cache": true,
+    "total_des_episodes": 636,
+    "why_it_can_fail": "disclosure carried as a falsifier so it cannot be dropped: every arm reads the SAME cached episodes, so no architecture can buy an advantage with more simulator calls"
+   },
+   "not_applicable": false,
+   "passed": true
+  },
+  "f3_no_per_architecture_tuning": {
+   "evidence": {
+    "epochs": 200,
+    "lr": 0.01,
+    "optimiser": "Adam",
+    "why_it_can_fail": "disclosure. Same data, same 200 epochs, same Adam at lr 1e-2 for both. Tuning one and not the other is the commonest way this benchmark becomes meaningless"
+   },
+   "not_applicable": false,
+   "passed": true
+  },
+  "f4_surrogate_reads_no_outcome": {
+   "evidence": {
+    "context_weeks": 4,
+    "feature_dim": 30,
+    "why_it_can_fail": "disclosure. Features are the schedule encoding plus the first four weeks of observed backlog. A surrogate that read the episode's own L* would be the leak that voided the meta-learner v1"
+   },
+   "not_applicable": false,
+   "passed": true
+  },
+  "f5_held_out_tapes": {
+   "evidence": {
+    "test_seeds": [
+     8600007,
+     8600008,
+     8600009,
+     8600010,
+     8600011,
+     8600012
+    ],
+    "train_seeds": [
+     8600001,
+     8600002,
+     8600003,
+     8600004,
+     8600005,
+     8600006
+    ],
+    "why_it_can_fail": "picking on the tapes it was fitted on would measure memorisation"
+   },
+   "passed": true
+  },
+  "f6_ceiling_is_declared": {
+   "evidence": {
+    "clairvoyant_L_by_env": {
+     "baseline": 0.22266816071783388,
+     "r2_stressed": 0.6761410581043007
+    },
+    "clairvoyant_ucb95": 0.0028,
+    "r2_family_change": "NOT_IMPLEMENTED",
+    "why_it_can_fail": "disclosure placed BEFORE the numbers: the exact class has a clairvoyant ceiling of UCB95 <= 0.0028, shifts add nothing given the buffer, R21 fires at most once per episode, and the R2 arm is PARAMETRIC stress -- the distribution-family change Garrido asked for is NOT IMPLEMENTED"
+   },
+   "not_applicable": false,
+   "passed": true
+  },
+  "f7_no_fresh_seeds": {
+   "evidence": {
+    "n_sealed_artifact_overlap": 12,
+    "n_seeds": 12,
+    "note": "deliberate re-execution of registry block 'reconciled_8600001'; these seeds are NOT virgin and are not meant to be",
+    "registry_conflicts": [
+     {
+      "id": "reconciled_8600001",
+      "n_overlapping": 12,
+      "range": [
+       8600001,
+       8600012
+      ],
+      "source": "results/demand_process/result.json",
+      "status": "USED_DEVELOPMENT_NOT_VIRGIN"
+     }
+    ],
+    "registry_is_complete": false,
+    "registry_status": "BASELINE_INVENTORY_INCOMPLETE_NO_NEW_SEEDS_AUTHORIZED",
+    "replay_of": "reconciled_8600001",
+    "sealed_artifact_overlap": [
+     8600001,
+     8600002,
+     8600003,
+     8600004,
+     8600005,
+     8600006,
+     8600007,
+     8600008,
+     8600009,
+     8600010,
+     8600011,
+     8600012
+    ],
+    "seeds": [
+     8600001,
+     8600002,
+     8600003,
+     8600004,
+     8600005,
+     8600006,
+     8600007,
+     8600008,
+     8600009,
+     8600010,
+     8600011,
+     8600012
+    ],
+    "status": "DECLARED_REPLAY",
+    "why_it_can_fail": "it cannot: this is a declared custody replay of registry block 'reconciled_8600001', so the seeds are used on purpose. Counted in neither column."
+   },
+   "not_applicable": true,
+   "passed": null
+  },
+  "f8_decision_space_is_not_degenerate": {
+   "evidence": {
+    "mean_within_tape_spread": {
+     "baseline": 0.097567357253045,
+     "r2_stressed": 0.03244490660242486
+    },
+    "picks_differ_but_scores_do_not": {
+     "baseline": {
+      "kan|p100": [
+       19,
+       19,
+       19,
+       19,
+       19,
+       19
+      ],
+      "kan|p25": [
+       24,
+       24,
+       24,
+       24,
+       24,
+       24
+      ],
+      "kan|p50": [
+       17,
+       17,
+       17,
+       17,
+       17,
+       17
+      ],
+      "mlp|p100": [
+       0,
+       0,
+       0,
+       0,
+       0,
+       0
+      ],
+      "mlp|p25": [
+       0,
+       0,
+       0,
+       0,
+       0,
+       0
+      ],
+      "mlp|p50": [
+       0,
+       0,
+       0,
+       0,
+       0,
+       0
+      ]
+     },
+     "r2_stressed": {
+      "kan|p100": [
+       25,
+       25,
+       25,
+       25,
+       25,
+       25
+      ],
+      "kan|p25": [
+       0,
+       0,
+       0,
+       0,
+       0,
+       0
+      ],
+      "kan|p50": [
+       25,
+       25,
+       25,
+       25,
+       25,
+       25
+      ],
+      "mlp|p100": [
+       25,
+       25,
+       0,
+       25,
+       0,
+       25
+      ],
+      "mlp|p25": [
+       0,
+       0,
+       0,
+       0,
+       0,
+       0
+      ],
+      "mlp|p50": [
+       24,
+       24,
+       24,
+       24,
+       24,
+       24
+      ]
+     }
+    },
+    "why_it_can_fail": "AND IT DID. A benchmark whose options are indistinguishable cannot compare the things choosing between them"
+   },
+   "passed": true
+  }
+ },
+ "interaction": {
+  "p100": {
+   "A_baseline": {
+    "lcb95": 0.0,
+    "mean": 0.0,
+    "meets_sesoi": false,
+    "relative": 0.0,
+    "ucb95": 0.0
+   },
+   "A_stressed": {
+    "lcb95": 0.0,
+    "mean": 0.0,
+    "meets_sesoi": false,
+    "relative": 0.0,
+    "ucb95": 0.0
+   },
+   "delta_lcb95": 0.0,
+   "delta_mean": 0.0,
+   "delta_ucb95": 0.0,
+   "favours_kan": false
+  },
+  "p25": {
+   "A_baseline": {
+    "lcb95": 0.0,
+    "mean": 0.0,
+    "meets_sesoi": false,
+    "relative": 0.0,
+    "ucb95": 0.0
+   },
+   "A_stressed": {
+    "lcb95": 0.0,
+    "mean": 0.0,
+    "meets_sesoi": false,
+    "relative": 0.0,
+    "ucb95": 0.0
+   },
+   "delta_lcb95": 0.0,
+   "delta_mean": 0.0,
+   "delta_ucb95": 0.0,
+   "favours_kan": false
+  },
+  "p50": {
+   "A_baseline": {
+    "lcb95": 0.0,
+    "mean": 0.0,
+    "meets_sesoi": false,
+    "relative": 0.0,
+    "ucb95": 0.0
+   },
+   "A_stressed": {
+    "lcb95": 0.0,
+    "mean": 0.0,
+    "meets_sesoi": false,
+    "relative": 0.0,
+    "ucb95": 0.0
+   },
+   "delta_lcb95": 0.0,
+   "delta_mean": 0.0,
+   "delta_ucb95": 0.0,
+   "favours_kan": false
+  }
+ },
+ "module_manifest": {
+  "entry_script": "scripts/run_kan_mlp_r2_benchmark_v1.py",
+  "entry_script_sha256": "740e1f91b647fd04baa6189bacc13ef15003a6411315f4525cf59b8d5f802005",
+  "missing": [],
+  "modules": {
+   "supply_chain/arm_runner.py": "1afea4fa248db5beb2d86c6ab2033d6f24a95115ea544b08966b7a538456ac99",
+   "supply_chain/continuous_its_env.py": "a1d7771e6f4f52dfc11c1b272eedf9eb31f45d44e92efcba1acd69709e2553f3",
+   "supply_chain/seed_custody.py": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "reference_path": "results/lever_redundancy_diagnostic/result.json",
+ "reference_sha256": "81085aa752b78b5faf37dadff677fd4b80a5262da6534a953b7d1c73ca924804",
+ "replay_of": "reconciled_8600001",
+ "results": {
+  "baseline": {
+   "arms": {
+    "clairvoyant_ceiling": {
+     "L": [
+      0.24892602195588956,
+      0.2064606895976982,
+      0.2464974359378078,
+      0.1985323688713041,
+      0.18244720644694018,
+      0.2531452414973633
+     ]
+    },
+    "kan|p100": {
+     "L": [
+      0.24892602195588956,
+      0.2064606895976982,
+      0.2464974359378078,
+      0.1985323688713041,
+      0.18244720644694018,
+      0.2531452414973633
+     ],
+     "fit_seconds": 2.854396207985701,
+     "inference_seconds": 0.02164137500221841,
+     "n_params": 1488,
+     "picks": [
+      19,
+      19,
+      19,
+      19,
+      19,
+      19
+     ],
+     "train_mse": 0.001184101332910359,
+     "width": 32
+    },
+    "kan|p25": {
+     "L": [
+      0.24892602195588956,
+      0.2064606895976982,
+      0.2464974359378078,
+      0.1985323688713041,
+      0.18244720644694018,
+      0.2531452414973633
+     ],
+     "fit_seconds": 3.196671084006084,
+     "inference_seconds": 0.008740957971895114,
+     "n_params": 372,
+     "picks": [
+      24,
+      24,
+      24,
+      24,
+      24,
+      24
+     ],
+     "train_mse": 0.0012912044767290354,
+     "width": 8
+    },
+    "kan|p50": {
+     "L": [
+      0.24892602195588956,
+      0.2064606895976982,
+      0.2464974359378078,
+      0.1985323688713041,
+      0.18244720644694018,
+      0.2531452414973633
+     ],
+     "fit_seconds": 1.7978272920008749,
+     "inference_seconds": 0.012907833006465808,
+     "n_params": 744,
+     "picks": [
+      17,
+      17,
+      17,
+      17,
+      17,
+      17
+     ],
+     "train_mse": 0.001211082562804222,
+     "width": 16
+    },
+    "mlp|p100": {
+     "L": [
+      0.24892602195588956,
+      0.2064606895976982,
+      0.2464974359378078,
+      0.1985323688713041,
+      0.18244720644694018,
+      0.2531452414973633
+     ],
+     "fit_seconds": 0.053628416993888095,
+     "inference_seconds": 0.0002616669808048755,
+     "n_params": 1025,
+     "picks": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     "train_mse": 0.001174652366898954,
+     "width": 32
+    },
+    "mlp|p25": {
+     "L": [
+      0.24892602195588956,
+      0.2064606895976982,
+      0.2464974359378078,
+      0.1985323688713041,
+      0.18244720644694018,
+      0.2531452414973633
+     ],
+     "fit_seconds": 0.8812265410088003,
+     "inference_seconds": 0.0007516659970860928,
+     "n_params": 257,
+     "picks": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     "train_mse": 0.0011936097871512175,
+     "width": 8
+    },
+    "mlp|p50": {
+     "L": [
+      0.24892602195588956,
+      0.2064606895976982,
+      0.2464974359378078,
+      0.1985323688713041,
+      0.18244720644694018,
+      0.2531452414973633
+     ],
+     "fit_seconds": 0.052168166992487386,
+     "inference_seconds": 0.00022816701675765216,
+     "n_params": 513,
+     "picks": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     "train_mse": 0.0011994155356660485,
+     "width": 16
+    },
+    "open_loop": {
+     "L": [
+      0.24892602195588956,
+      0.2064606895976982,
+      0.2464974359378078,
+      0.1985323688713041,
+      0.18244720644694018,
+      0.2531452414973633
+     ]
+    },
+    "rule": {
+     "L": [
+      0.24892602195588956,
+      0.2064606895976982,
+      0.2464974359378078,
+      0.1985323688713041,
+      0.18244720644694018,
+      0.2531452414973633
+     ]
+    }
+   },
+   "best_fixed_index": 0,
+   "multiplier": 1.0,
+   "test_seeds": [
+    8600007,
+    8600008,
+    8600009,
+    8600010,
+    8600011,
+    8600012
+   ],
+   "train_seeds": [
+    8600001,
+    8600002,
+    8600003,
+    8600004,
+    8600005,
+    8600006
+   ]
+  },
+  "r2_stressed": {
+   "arms": {
+    "clairvoyant_ceiling": {
+     "L": [
+      0.6202152907546754,
+      0.596535120102468,
+      0.6051158124191821,
+      0.5733811565584206,
+      0.7580670953828869,
+      0.9035318734081708
+     ]
+    },
+    "kan|p100": {
+     "L": [
+      0.6202152907546754,
+      0.596535120102468,
+      0.6051158124191821,
+      0.5733811565584206,
+      0.7580670953828869,
+      0.9035318734081708
+     ],
+     "fit_seconds": 2.7530159169982653,
+     "inference_seconds": 0.01954475001548417,
+     "n_params": 1488,
+     "picks": [
+      25,
+      25,
+      25,
+      25,
+      25,
+      25
+     ],
+     "train_mse": 0.0025373222306370735,
+     "width": 32
+    },
+    "kan|p25": {
+     "L": [
+      0.6202152907546754,
+      0.596535120102468,
+      0.6051158124191821,
+      0.5733811565584206,
+      0.7580670953828869,
+      0.9035318734081708
+     ],
+     "fit_seconds": 1.0705707500164863,
+     "inference_seconds": 0.007471208984497935,
+     "n_params": 372,
+     "picks": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     "train_mse": 0.0026900016237050295,
+     "width": 8
+    },
+    "kan|p50": {
+     "L": [
+      0.6202152907546754,
+      0.596535120102468,
+      0.6051158124191821,
+      0.5733811565584206,
+      0.7580670953828869,
+      0.9035318734081708
+     ],
+     "fit_seconds": 1.6357536670111585,
+     "inference_seconds": 0.01224570898921229,
+     "n_params": 744,
+     "picks": [
+      25,
+      25,
+      25,
+      25,
+      25,
+      25
+     ],
+     "train_mse": 0.0028809572104364634,
+     "width": 16
+    },
+    "mlp|p100": {
+     "L": [
+      0.6202152907546754,
+      0.596535120102468,
+      0.6051158124191821,
+      0.5733811565584206,
+      0.7580670953828869,
+      0.9035318734081708
+     ],
+     "fit_seconds": 0.052956709027057514,
+     "inference_seconds": 0.00018216599710285664,
+     "n_params": 1025,
+     "picks": [
+      25,
+      25,
+      0,
+      25,
+      0,
+      25
+     ],
+     "train_mse": 0.0027380515821278095,
+     "width": 32
+    },
+    "mlp|p25": {
+     "L": [
+      0.6202152907546754,
+      0.596535120102468,
+      0.6051158124191821,
+      0.5733811565584206,
+      0.7580670953828869,
+      0.9035318734081708
+     ],
+     "fit_seconds": 0.03277595899999142,
+     "inference_seconds": 0.00017424998804926872,
+     "n_params": 257,
+     "picks": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     "train_mse": 0.002820386551320553,
+     "width": 8
+    },
+    "mlp|p50": {
+     "L": [
+      0.6202152907546754,
+      0.596535120102468,
+      0.6051158124191821,
+      0.5733811565584206,
+      0.7580670953828869,
+      0.9035318734081708
+     ],
+     "fit_seconds": 0.0455169589840807,
+     "inference_seconds": 0.0001888750120997429,
+     "n_params": 513,
+     "picks": [
+      24,
+      24,
+      24,
+      24,
+      24,
+      24
+     ],
+     "train_mse": 0.00298714661039412,
+     "width": 16
+    },
+    "open_loop": {
+     "L": [
+      0.6202152907546754,
+      0.596535120102468,
+      0.6051158124191821,
+      0.5733811565584206,
+      0.7580670953828869,
+      0.9035318734081708
+     ]
+    },
+    "rule": {
+     "L": [
+      0.6202152907546754,
+      0.596535120102468,
+      0.6051158124191821,
+      0.5733811565584206,
+      0.7580670953828869,
+      0.9035318734081708
+     ]
+    }
+   },
+   "best_fixed_index": 0,
+   "multiplier": 4.0,
+   "test_seeds": [
+    8600007,
+    8600008,
+    8600009,
+    8600010,
+    8600011,
+    8600012
+   ],
+   "train_seeds": [
+    8600001,
+    8600002,
+    8600003,
+    8600004,
+    8600005,
+    8600006
+   ]
+  }
+ },
+ "run_role": "ARCHITECTURE_BENCHMARK",
+ "schema_version": "kan_mlp_r2_benchmark_v1",
+ "scope": "DEVELOPMENT_ON_DECLARED_REPLAY_SURROGATE_ROLE_NOT_RL",
+ "self_sha256": "02a674feddc292d8976db0b2e2caa89db2d4139c3ca0d0bd21a46a0f07417088"
+}

@@ -193,7 +193,7 @@ def main() -> int:
             cache[(env_name, s)] = runs
         print(f"    cache {env_name} listo")
 
-    results = {}
+    results, spread = {}, {}
     for env_name, mult in ENVIRONMENTS.items():
         ctx0 = {s: cache[(env_name, s)][0]["context"] for s in seeds}
         X_tr = np.array([features(SCHEDULES[i], ctx0[s])
@@ -224,6 +224,7 @@ def main() -> int:
                                            "picks": picks, "width": width}
                 print(f"    {env_name:12s} {kind}|{bname:4s} L {L_arm.mean():.6f}  "
                       f"params {meta['n_params']}  fit {meta['fit_seconds']:.2f}s")
+        spread[env_name] = L_te.tolist()
         results[env_name] = {"multiplier": mult, "arms": arms,
                              "best_fixed_index": best_fixed,
                              "test_seeds": test_seeds, "train_seeds": train_seeds}
@@ -320,6 +321,28 @@ def main() -> int:
                          "r2_family_change": "NOT_IMPLEMENTED",
                          "clairvoyant_L_by_env": {
                              e: float(np.mean(results[e]["arms"]["clairvoyant_ceiling"]["L"]))
+                             for e in ENVIRONMENTS}}},
+        "f8_decision_space_is_not_degenerate": {
+            # THE FALSIFIER I DROPPED, and dropping it is how this run first read as "equivalence".
+            # Two earlier runners were fixed by exactly this check and I did not carry it here.
+            # The arms pick DIFFERENT schedules -- MLP 0, KAN 24 and 19 -- and all score identical
+            # L*, and the clairvoyant per-tape minimum equals the fixed column. If every schedule
+            # ties on every tape there is no decision for a surrogate to make, and a tie between
+            # architectures is a fact about the decision space, not about the architectures.
+            "passed": all(
+                float(np.mean(np.max(np.asarray(spread[e]), axis=1)
+                              - np.min(np.asarray(spread[e]), axis=1))) > 1e-9
+                for e in ENVIRONMENTS),
+            "evidence": {"why_it_can_fail": "AND IT DID. A benchmark whose options are "
+                                            "indistinguishable cannot compare the things choosing "
+                                            "between them",
+                         "mean_within_tape_spread": {
+                             e: float(np.mean(np.max(np.asarray(spread[e]), axis=1)
+                                              - np.min(np.asarray(spread[e]), axis=1)))
+                             for e in ENVIRONMENTS},
+                         "picks_differ_but_scores_do_not": {
+                             e: {k: results[e]["arms"][k]["picks"]
+                                 for k in results[e]["arms"] if "picks" in results[e]["arms"][k]}
                              for e in ENVIRONMENTS}}},
         "f7_no_fresh_seeds": custody_falsifier(seeds, replay_of=args.replay_of,
                                                exclude=args.output),
