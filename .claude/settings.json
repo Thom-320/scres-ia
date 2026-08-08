@@ -1,0 +1,27 @@
+{
+  "hooks": {
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/tools/save_agent_output.py\" --event SubagentStop 2>/dev/null || true",
+            "statusMessage": "Guardando la respuesta del subagente",
+            "timeout": 20
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/tools/save_agent_output.py\" --event SubagentStart 2>/dev/null || true",
+            "timeout": 20
+          }
+        ]
+      }
+    ]
+  }
+}

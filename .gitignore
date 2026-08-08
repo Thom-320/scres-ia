@@ -34,7 +34,7 @@ output/
 *.out
 
 # Claude Code
-.claude/
+.claude/*
 
 # AI agent instructions (local only)
 AGENTS.md
@@ -64,3 +64,8 @@ scres_ia_payload.tar.gz
 
 # Detached Paper-2 switch4 custody runs (force-add only after audit)
 /results/paper2_bound_harness/switch_complexity_screen_v2/
+
+# El hook que guarda la salida de cada agente es politica del repositorio, no preferencia
+# personal: si no viaja con el repo, la regla no existe para quien clone. El resto de .claude/
+# (settings.local.json, caches) sigue ignorado.
+!.claude/settings.json
