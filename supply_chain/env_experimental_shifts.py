@@ -406,6 +406,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         risk_frequency_multiplier: float = 1.0,
         risk_impact_multiplier: float = 1.0,
         risk_frequency_multipliers_by_id: dict[str, float] | None = None,
+        risk_occurrence_family_by_id: dict[str, str] | None = None,
         risk_impact_multipliers_by_id: dict[str, float] | None = None,
         risk_rng_mode: str = "shared",
         risk_event_tape: list[dict[str, Any]] | None = None,
@@ -548,6 +549,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self.risk_occurrence_mode = risk_occurrence_mode
         self.risk_frequency_multiplier = max(1e-6, float(risk_frequency_multiplier))
         self.risk_impact_multiplier = max(1e-6, float(risk_impact_multiplier))
+        self.risk_occurrence_family_by_id = dict(risk_occurrence_family_by_id or {})
         self.risk_frequency_multipliers_by_id = {
             str(risk_id): max(1e-6, float(value))
             for risk_id, value in (risk_frequency_multipliers_by_id or {}).items()
@@ -2578,6 +2580,7 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             risk_frequency_multiplier=self.risk_frequency_multiplier,
             risk_impact_multiplier=self.risk_impact_multiplier,
             risk_frequency_multipliers_by_id=self.risk_frequency_multipliers_by_id,
+            risk_occurrence_family_by_id=self.risk_occurrence_family_by_id,
             risk_impact_multipliers_by_id=self.risk_impact_multipliers_by_id,
             risk_rng_mode=self.risk_rng_mode,
             risk_event_tape=self.risk_event_tape,

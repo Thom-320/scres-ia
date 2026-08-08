@@ -220,6 +220,7 @@ class MFSCSimulation:
         enabled_risks: Optional[set[str]] = None,
         risk_overrides: Optional[dict[str, str]] = None,
         risk_occurrence_mode: str = "thesis_window",
+        risk_occurrence_family_by_id: Optional[dict[str, str]] = None,
         risk_attribution_source: str = "des_events",
         inventory_replenishment_period: Optional[float] = None,
         inventory_replenishment_lead_time: float = 0.0,
@@ -703,6 +704,18 @@ class MFSCSimulation:
         self.enabled_risks = set(enabled_risks) if enabled_risks is not None else None
         self.risk_overrides = dict(risk_overrides or {})
         self.risk_occurrence_mode = risk_occurrence_mode
+        # THE R2 DISTRIBUTION FAMILY, per Garrido's 2026-08-07 request: R1 and R3 keep their
+        # families and only their parameters may move, while R2 may change family outright. Every
+        # alternative is MOMENT-MATCHED to the source uniform's mean inter-arrival, so a difference
+        # is attributable to distributional SHAPE and not to a change in average frequency -- the
+        # confound that would otherwise make the arm uninterpretable.
+        fam = dict(risk_occurrence_family_by_id or {})
+        _allowed = {"uniform", "exponential", "lognormal"}
+        _bad = {k: v for k, v in fam.items() if v not in _allowed}
+        if _bad:
+            raise ValueError(
+                f"unknown risk occurrence family {_bad}; expected one of {sorted(_allowed)}")
+        self.risk_occurrence_family_by_id = fam
         self.risk_attribution_source = risk_attribution_source
         self.material_lineage_mode = material_lineage_mode
         # Causal-exposure attribution state (lazy; only populated when used).
@@ -5818,11 +5831,39 @@ class MFSCSimulation:
         return self.risk_rng
 
     def _sample_uniform_risk_window(self, risk_id: str) -> tuple[float, float]:
-        """Sample the event offset for a thesis uniform-occurrence window."""
+        """Sample the event offset for the risk's declared occurrence family.
+
+        The source family is the thesis's uniform window on [a, b]. An alternative family is
+        MOMENT-MATCHED on the mean inter-arrival, (a + b) / 2, so mean frequency is held and only
+        the SHAPE moves: the exponential is memoryless and bursty in the tail, the lognormal is
+        right-skewed with long quiet stretches. Both are renewal processes, so they return a window
+        equal to their own delay and `_tail_after_uniform_occurrence` yields zero -- the loop then
+        draws the next inter-arrival, which is what a renewal process does and what the fixed
+        thesis window deliberately does not.
+        """
         a = int(RISKS_CURRENT[risk_id]["occurrence"]["a"])
         b_val = max(a, int(round(self._get_risk_b(risk_id))))
-        delay = float(self._risk_rng_for(risk_id).integers(a, b_val + 1))
-        return delay, float(b_val)
+        family = self.risk_occurrence_family_by_id.get(str(risk_id), "uniform")
+        if family == "uniform":
+            delay = float(self._risk_rng_for(risk_id).integers(a, b_val + 1))
+            return delay, float(b_val)
+        # MOMENT-MATCH ON THE INTER-ARRIVAL, not on the offset inside the window. Under
+        # `thesis_window` the loop waits `delay` and then the remaining tail, so exactly one event
+        # occurs per window of length b and the mean inter-arrival is b -- NOT (a + b) / 2, which
+        # is the mean offset. Matching the offset doubled the event rate, 10.4 to 19.3 per episode,
+        # which would have confounded distributional shape with mean frequency: exactly the
+        # confound this arm exists to avoid.
+        mean = float(b_val) if self.risk_occurrence_mode == "thesis_window" else (
+            (float(a) + float(b_val)) / 2.0)
+        rng = self._risk_rng_for(risk_id)
+        if family == "exponential":
+            delay = float(rng.exponential(mean))
+        else:                                   # lognormal, CV = 1 so it matches the exponential's
+            sigma = math.sqrt(math.log(2.0))    # spread while carrying a much heavier right tail
+            mu = math.log(max(mean, 1e-9)) - 0.5 * sigma * sigma
+            delay = float(rng.lognormal(mu, sigma))
+        delay = max(float(a), delay)
+        return delay, delay
 
     def _tail_after_uniform_occurrence(self, delay: float, window: float) -> float:
         if self.risk_occurrence_mode == "thesis_window":

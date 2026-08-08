@@ -373,6 +373,9 @@ IMMUTABLE_CONTRACT_FIELDS = {
     "risks_enabled",
     "risk_level",
     "risk_occurrence_mode",
+    # Frozen per episode and read only when sampling an inter-arrival, so it belongs with the
+    # other risk-configuration fields rather than in the Markov key.
+    "risk_occurrence_family_by_id",
     "risk_attribution_source",
     "risk_event_tape",
     "enabled_risks",
