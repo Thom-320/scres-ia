@@ -395,6 +395,9 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         raw_material_flow_mode: str = "kit_equivalent_order_up_to",
         raw_material_order_up_to_multiplier: float = 2.0,
         demand_mean_multiplier: float = 1.0,
+        demand_process: str = "thesis_uniform",
+        demand_seasonal_contract: Optional[dict] = None,
+        demand_forecast_visibility: str = "visible",
         demand_on_hand_fulfillment_delay: float = GARRIDO_FULFILLMENT_DELAY_HOURS,
         surge_inertia: bool = False,
         surge_ramp_per_step: int = 1,
@@ -529,6 +532,10 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             raw_material_order_up_to_multiplier
         )
         self.demand_mean_multiplier = float(demand_mean_multiplier)
+        # Paper 2 demand engine. Pure pass-through: the default keeps the frozen native path.
+        self.demand_process = demand_process
+        self.demand_seasonal_contract = demand_seasonal_contract
+        self.demand_forecast_visibility = demand_forecast_visibility
         self.demand_on_hand_fulfillment_delay = max(
             0.0, float(demand_on_hand_fulfillment_delay)
         )
@@ -2563,6 +2570,9 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
                 self.raw_material_order_up_to_multiplier
             ),
             demand_mean_multiplier=self.demand_mean_multiplier,
+            demand_process=self.demand_process,
+            demand_seasonal_contract=self.demand_seasonal_contract,
+            demand_forecast_visibility=self.demand_forecast_visibility,
             demand_on_hand_fulfillment_delay=self.demand_on_hand_fulfillment_delay,
             risk_occurrence_mode=self.risk_occurrence_mode,
             risk_frequency_multiplier=self.risk_frequency_multiplier,

@@ -22,6 +22,7 @@ from dataclasses import dataclass, field
 from typing import Any, Iterable, Mapping, Optional
 from collections import Counter
 
+from .demand_seasonal import SeasonalDemandContract, SeasonalDemandProcess
 from .loc_graph import arc_for_operation as _loc_arc_for_operation
 from .loc_graph import baseline_graph as _loc_baseline_graph
 from .cssu_allocation import (
@@ -225,6 +226,9 @@ class MFSCSimulation:
         raw_material_flow_mode: str = "kit_equivalent_order_up_to",
         raw_material_order_up_to_multiplier: float = 2.0,
         demand_mean_multiplier: float = 1.0,
+        demand_process: str = "thesis_uniform",
+        demand_seasonal_contract: Optional[dict[str, Any]] = None,
+        demand_forecast_visibility: str = "visible",
         demand_source: str = "thesis_calendar",
         excel_order_tape: Optional[list[dict[str, Any]]] = None,
         demand_on_hand_fulfillment_delay: float = GARRIDO_FULFILLMENT_DELAY_HOURS,
@@ -653,6 +657,25 @@ class MFSCSimulation:
         # docs/PAPER_CONTRACT_2026-06-24.md). 1.0 = thesis baseline; >1 raises the
         # regular daily-demand mean. Independent of the adaptive_benchmark machinery.
         self.demand_mean_multiplier = float(demand_mean_multiplier)
+        # Paper 2 demand engine (Garrido IJPR 2024 §3.2). `thesis_uniform` is the frozen native
+        # path and MUST stay bit-identical: falsifier g1 of
+        # docs/PREREGISTRO_DEMANDA_ESTACIONAL_P2_2026-08-07.md halts the run if it is not. The
+        # seasonal object is built from a SEPARATE rng stream so that turning the engine on cannot
+        # shift the draws of the native one.
+        if demand_process not in ("thesis_uniform", "garrido_seasonal_v1"):
+            raise ValueError(f"unknown demand_process: {demand_process!r}")
+        if demand_forecast_visibility not in ("visible", "hidden", "shuffled"):
+            raise ValueError(
+                f"unknown demand_forecast_visibility: {demand_forecast_visibility!r}")
+        self.demand_process = demand_process
+        self.demand_forecast_visibility = demand_forecast_visibility
+        self.demand_seasonal: Optional[SeasonalDemandProcess] = None
+        if demand_process == "garrido_seasonal_v1":
+            contract = SeasonalDemandContract(**(demand_seasonal_contract or {}))
+            season_ss = np.random.SeedSequence([int(seed or 0), 0x5EA5])
+            self.demand_seasonal = SeasonalDemandProcess(
+                contract, np.random.default_rng(season_ss))
+            self._season_week_accum: dict[int, float] = {}
         # Garrido-authorized risk modulation (fine-tuning, frozen per calibrated regime):
         # phi scales FREQUENCY (smaller window b, larger binomial p); psi scales IMPACT
         # (longer recovery, bigger demand surge). 1.0 = thesis baseline.
@@ -5445,6 +5468,17 @@ class MFSCSimulation:
             self.demand_rng.integers(int(DEMAND["a"]), int(DEMAND["b"]) + 1)
         )
         demand_qty *= self.demand_mean_multiplier
+        if self.demand_seasonal is not None:
+            now = float(self.env.now)
+            demand_qty *= self.demand_seasonal.scale(now)
+            # Accumulate the week's realised demand and hand the smoother the PREVIOUS complete
+            # week, never the one in progress: feeding a partial week would let the forecast see
+            # its own period and stop being a forecast.
+            w = self.demand_seasonal.week_index(now)
+            self._season_week_accum[w] = self._season_week_accum.get(w, 0.0) + demand_qty
+            if w - 1 in self._season_week_accum:
+                self.demand_seasonal.observe(
+                    (w - 1) * 168.0 + 1.0, self._season_week_accum[w - 1])
         if self.adaptive_benchmark_enabled:
             demand_scale = float(self._adaptive_regime_params()["demand_scale"])
             demand_qty *= demand_scale
