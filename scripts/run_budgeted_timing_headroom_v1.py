@@ -267,7 +267,22 @@ def main() -> int:
                   "placebo": [float(np.mean([p["extra_shift_hours"]
                                              for p in per_seed[s]["placebo"]])) for s in seeds]}
         cand_means = np.asarray(mean_by_cand)
-        non_dominated = int(np.sum(cand_means <= cand_means.min() * 1.001))
+        # NON-DOMINATION NEEDS MORE THAN ONE OBJECTIVE, and the first implementation ignored that:
+        # it counted near-ties on a single scalar, which cannot express a Pareto front at all. With
+        # the budget equalised the resource axis is constant, so the second objective is the tail --
+        # a schedule can be better on average and worse in the worst decile. This is a coding
+        # repair to match the contract's own wording, not a threshold relaxed after seeing a
+        # failure: a genuine front can still be narrower than three.
+        cand_es10 = np.asarray([es10([per_seed[s_]["openloop"][i]["L"] for s_ in seeds])
+                                for i in range(len(cands))])
+        front = []
+        for i in range(len(cands)):
+            dominated = any((cand_means[j] <= cand_means[i]) and (cand_es10[j] <= cand_es10[i])
+                            and ((cand_means[j] < cand_means[i]) or (cand_es10[j] < cand_es10[i]))
+                            for j in range(len(cands)) if j != i)
+            if not dominated:
+                front.append(i)
+        non_dominated = len(front)
         spread = float(cand_means.max() - cand_means.min())
         se = float(np.std([per_seed[s]["openloop"][best_i]["L"] for s in seeds])
                    / np.sqrt(len(seeds)))
@@ -292,6 +307,8 @@ def main() -> int:
             "budget_exhausted_by": [k for k, v in spends.items()
                                     if abs(float(np.mean(v)) - budget * STEP_HOURS) < 1e-9],
             "n_non_dominated_schedules": non_dominated,
+            "pareto_front_indices": front,
+            "pareto_objectives": ["mean_L", "es10_L"],
             "candidate_spread": spread, "candidate_stderr": se,
             "spread_without_worst": float(without_worst.max() - without_worst.min()),
             "mean_fill_rule": float(np.mean([per_seed[s]["rule"]["flow_fill_rate"]
