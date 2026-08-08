@@ -275,6 +275,70 @@
    "why_forbidden": "the dilution claim is measured false under both normalisers; the 18x ratio has no single value (7.0x, 30.5x and 67.5x for the three canonical choices, and 18x is none of them); and 'harder' is not established either -- uniform search does BETTER on the larger grid"
   },
   {
+   "allowed": "Both surface caches re-evaluate cell by cell under the current tree with zero differences: 103,680 cells on the 288 grid and 1,658,880 on the 4,608 grid, 1,762,560 in total across six contexts and sixty seeds, maximum absolute difference 0.0. The authoritative verification runs on the platform that produced the caches.",
+   "artifact": "results/frozen_path_equivalence_v2/result.chain.json",
+   "claim_id": "SURFACE_REPRODUCES_UNDER_TODAYS_CODE",
+   "claim_status": null,
+   "contract_sha256": null,
+   "endpoint": "cell-level exact reproduction of both sealed surface caches",
+   "estimand": "every cached cell re-evaluated under the current tree and compared bit for bit",
+   "evidence_grade": "GRADE_NOT_MACHINE_DISCOVERABLE",
+   "exists": true,
+   "falsifiers_all_passed": null,
+   "file_sha256": "2cac0f41043d0bb7f39767891a358ac4c1800495f21035bda83ba7e890f026be",
+   "forbidden": [
+    "the simulator is platform-independent",
+    "the surfaces reproduce bit-exactly across architectures",
+    "reproducibility is established for any environment"
+   ],
+   "missing_top_level_fields": [
+    "run_role",
+    "scope",
+    "claim_status",
+    "self_sha256"
+   ],
+   "paper_id": "P2",
+   "registration_status": null,
+   "run_role": null,
+   "scope": null,
+   "section": "Methods / reproducibility statement",
+   "self_sha256": null,
+   "why_forbidden": "cross-architecture agreement was established on the base grid, whose every configuration pins the two raw-material factors at zero; the extended grid exercises that path and three of its slices diverge materially on a second platform -- see CROSS_PLATFORM_DIVERGENCE_IS_REAL_AND_NARROW"
+  },
+  {
+   "allowed": "Reproduction is environment-conditional. Of 55 extended-surface slices verified on a second architecture, 52 reproduce exactly and three diverge, all within one context of six and 129 cells of 18,432. The largest is not rounding: on one configuration exercising both raw-material buffers, delivered rations differ by 10,006 (440,123 against 430,117), flow fill rate by 1.30 percentage points and lost orders by four. All three slices reproduce with zero differences on the platform that produced the cache. The mechanism is not identified; the size of the gap from an identical seed points at event ordering under ties rather than at arithmetic.",
+   "artifact": "results/frozen_path_equivalence_v2/cross_platform_divergence/ext__R1r_esc__8200011.json",
+   "claim_id": "CROSS_PLATFORM_DIVERGENCE_IS_REAL_AND_NARROW",
+   "claim_status": null,
+   "contract_sha256": null,
+   "endpoint": "panel keys of one cached cell re-evaluated on a second architecture",
+   "estimand": "macOS arm64 against Linux x86_64 on identical config, context, seed and horizon",
+   "evidence_grade": "GRADE_NOT_MACHINE_DISCOVERABLE",
+   "exists": true,
+   "falsifiers_all_passed": null,
+   "file_sha256": "7566606a69b55a4f64c27fc30a52e08123f8434ebcd8dd7fb7207f471107cb00",
+   "forbidden": [
+    "one platform is correct",
+    "the cache is wrong",
+    "the divergence is rounding",
+    "reproduction failed",
+    "the simulator is non-deterministic"
+   ],
+   "missing_top_level_fields": [
+    "run_role",
+    "scope",
+    "claim_status",
+    "self_sha256"
+   ],
+   "paper_id": "P2",
+   "registration_status": null,
+   "run_role": null,
+   "scope": null,
+   "section": "Limitations / reproducibility",
+   "self_sha256": null,
+   "why_forbidden": "neither environment is adjudicated, the artifact reproduces exactly on its own, and the divergence is between platforms rather than between runs -- it repeats on demand on each machine"
+  },
+  {
    "allowed": "Of the four v0 hypotheses, three are supported on development evidence and none is confirmatory: H1 on a redefined endpoint (restricted TTR, +125.99 h [+98.35, +154.54]) whose companion recovery gate returned no learning headroom, H2 on a context ordinal (+0.04220 [+0.03466, +0.04992]) rather than successive within-run disruptions, H4 for search cost rather than delivered resilience. H3 is not supported with a live estimand of the wrong sign (-1.109e15, p = 0.821). Of the two research questions, dynamic operationalization is answered only for an outer loop and predictive accuracy is not answered at all.",
    "artifact": "results/v0_adjudication_matrix/result.json",
    "claim_id": "V0_HYPOTHESES_ADJUDICATED",
@@ -646,7 +710,7 @@
    "why_forbidden": "unique_profile_optima is 1, 2 or 3 by row; and the screen varied PROFILES, not the within-episode realisation"
   }
  ],
- "generated_at_commit": "023d05398577d1fd57d9b7acb464deca1723cabf",
+ "generated_at_commit": "8588cf636b9c3fe5384bab1d99f746a7f96bf255",
  "grader_self_test": {
   "a_real_confirmation_still_grades_confirmatory": {
    "passed": true,
@@ -657,7 +721,7 @@
    "returned": "POST_HOC_ON_PROSPECTIVE_DATA"
   }
  },
- "n_claims": 22,
+ "n_claims": 24,
  "portfolio_map": "papers/PORTFOLIO_MAP.json",
  "portfolio_map_sha256": "22c106e8c4d9754000f993f95c82b7d39f06b45bf063a84d0c7c5443d365593e",
  "problems": [],

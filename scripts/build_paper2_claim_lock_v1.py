@@ -278,6 +278,47 @@ CLAIMS: list[dict] = [
                           "either -- uniform search does BETTER on the larger grid"),
     },
     {
+        "claim_id": "SURFACE_REPRODUCES_UNDER_TODAYS_CODE",
+        "artifact": "results/frozen_path_equivalence_v2/result.chain.json",
+        "section": "Methods / reproducibility statement",
+        "endpoint": "cell-level exact reproduction of both sealed surface caches",
+        "estimand": "every cached cell re-evaluated under the current tree and compared bit for bit",
+        "allowed": ("Both surface caches re-evaluate cell by cell under the current tree with zero "
+                    "differences: 103,680 cells on the 288 grid and 1,658,880 on the 4,608 grid, "
+                    "1,762,560 in total across six contexts and sixty seeds, maximum absolute "
+                    "difference 0.0. The authoritative verification runs on the platform that "
+                    "produced the caches."),
+        "forbidden": ["the simulator is platform-independent",
+                      "the surfaces reproduce bit-exactly across architectures",
+                      "reproducibility is established for any environment"],
+        "why_forbidden": ("cross-architecture agreement was established on the base grid, whose "
+                          "every configuration pins the two raw-material factors at zero; the "
+                          "extended grid exercises that path and three of its slices diverge "
+                          "materially on a second platform -- see CROSS_PLATFORM_DIVERGENCE_IS_"
+                          "REAL_AND_NARROW"),
+    },
+    {
+        "claim_id": "CROSS_PLATFORM_DIVERGENCE_IS_REAL_AND_NARROW",
+        "artifact": "results/frozen_path_equivalence_v2/cross_platform_divergence/ext__R1r_esc__8200011.json",
+        "section": "Limitations / reproducibility",
+        "endpoint": "panel keys of one cached cell re-evaluated on a second architecture",
+        "estimand": "macOS arm64 against Linux x86_64 on identical config, context, seed and horizon",
+        "allowed": ("Reproduction is environment-conditional. Of 55 extended-surface slices verified "
+                    "on a second architecture, 52 reproduce exactly and three diverge, all within "
+                    "one context of six and 129 cells of 18,432. The largest is not rounding: on one "
+                    "configuration exercising both raw-material buffers, delivered rations differ by "
+                    "10,006 (440,123 against 430,117), flow fill rate by 1.30 percentage points and "
+                    "lost orders by four. All three slices reproduce with zero differences on the "
+                    "platform that produced the cache. The mechanism is not identified; the size of "
+                    "the gap from an identical seed points at event ordering under ties rather than "
+                    "at arithmetic."),
+        "forbidden": ["one platform is correct", "the cache is wrong", "the divergence is rounding",
+                      "reproduction failed", "the simulator is non-deterministic"],
+        "why_forbidden": ("neither environment is adjudicated, the artifact reproduces exactly on "
+                          "its own, and the divergence is between platforms rather than between "
+                          "runs -- it repeats on demand on each machine"),
+    },
+    {
         "claim_id": "V0_HYPOTHESES_ADJUDICATED",
         "artifact": "results/v0_adjudication_matrix/result.json",
         "section": "Appendix A (reconciliation with the v0 hypotheses)",
