@@ -150,24 +150,25 @@ owes the reader that comparison.
 This is **development evidence on previously opened tapes** and adjudicates nothing. It motivates
 the mechanism; it does not confirm it.
 
-The surface property that would constrain this comparison, `H_regime`, is **suspended rather than
-softened** (`results/h_regime_crosswalk/result.json`). Two sealed artifacts disagree on its value:
-recomputing the runners' own estimator reproduces `surface_gates_v2` to the last digit
-(0.003802243800697269) and reproduces `monotone_transform_ceiling` at no seed subset of the same
-cache — 0.000795 against a sealed 0.0 on the 288 grid, 0.048573 against a sealed 0.019501 on the
-extended. The statistic is also not invariant to the declared utility scale: a strictly increasing
-rescaling that leaves every ordering untouched moves it from 0.003802 to 0.010776 on the 288 grid
-and from 0.028294 to 0.067539 on the extended one. We therefore cite **no** `H_regime` figure, and
-no conclusion resting on one.
+The surface property that constrains this comparison, `H_regime`, is reported **with its metric
+named**, because the name alone covers two statistics (`results/h_regime_crosswalk/result.json`).
+On the `ret_excel_risk_conditional` surface of the 288 grid over twelve seeds it is **0.003802**,
+reproduced here to the last digit against `surface_gates_v2`; on the Cobb-Douglas index
+reconstructed from `aggregates.json` over six seeds it is **0.0** with a single configuration
+optimal in every context. Those are different surfaces, and neither figure transfers to the other.
 
-What the same caches support is ordinal, and no monotone transform can move it — the crosswalk's
-`f3` demonstrates exactly that, rescaling the surface and requiring every ordinal statistic back
-bit-identical while *H* moves. Contextual rankings exist and are strongly but not perfectly aligned:
-mean pairwise rank correlation **+0.844** on the 288 grid and **+0.909** on the extended, with
-top-25 configuration sets overlapping **91.7%** and **23.5%** respectively. Retention here is buying
-**the avoided cost of rediscovering a near-common good configuration**, not regime-tailored
-adaptation. Search-transfer value and operational adaptation value are distinct quantities, and only
-the first is measured.
+We draw no bar comparison from either, because the statistic is not invariant to the declared
+utility scale: a strictly increasing rescaling that leaves every ordering untouched moves the
+ret_excel figure from 0.003802 to 0.010776 on the 288 grid and from 0.028294 to 0.067539 on the
+extended one. The crosswalk's `f3` demonstrates this rather than asserting it, rescaling the surface
+and requiring every ordinal statistic back bit-identical while *H* moves.
+
+What the same caches support is ordinal, and no monotone transform can move it: contextual rankings
+exist and are strongly but not perfectly aligned, with mean pairwise rank correlation **+0.844** on
+the 288 grid and **+0.909** on the extended, and top-25 configuration sets overlapping **91.7%** and
+**23.5%** respectively. Retention here is buying **the avoided cost of rediscovering a near-common
+good configuration**, not regime-tailored adaptation. Search-transfer value and operational
+adaptation value are distinct quantities, and only the first is measured.
 
 ---
 
@@ -254,9 +255,10 @@ Stated as prohibitions rather than hedges:
   does not act on the event stream inside a replication.
 - **No architecture-specific transfer advantage.** None is confirmed anywhere in this study, and the one carrier tested
   prospectively fails the marginal-replay contrast.
-- **No regime-tailored adaptation claim in either direction.** `H_regime` is suspended: its two
-  sealed estimators disagree and the statistic is not scale-invariant. What is measured is ordinal —
-  contextual rankings are strongly aligned — and retention buys rediscovery cost, not tailoring.
+- **No regime-tailored adaptation claim in either direction.** `H_regime` is reported per metric
+  and never against a bar: it is not invariant to the declared utility scale. What is measured is
+  ordinal — contextual rankings are strongly aligned — and retention buys rediscovery cost, not
+  tailoring.
 - **No claim beyond the tested demand and risk process**, whose realised properties are given in
   §3.1.
 

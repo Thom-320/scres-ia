@@ -17,10 +17,10 @@
   "rpj_onset_admission": "clamped",
   "schema": "calibration_provenance_v1"
  },
- "claim_status": "H_REGIME_ESTIMATORS_DISAGREE__NO_FIGURE_MAY_BE_CITED",
+ "claim_status": "TWO_METRICS_ONE_NAME__H_REGIME_MUST_BE_LABELLED_BY_METRIC",
  "contract_path": "/Users/thom/Projects/research/scres-ia/docs/ENMIENDA_REGISTRO_DE_EVIDENCIA_2026-08-07.md",
  "contract_sha256": "8e78b344536e8c6440d29ff4e437a0ea9b84c5fe73980d0b40c842aa90947ff5",
- "created_at": "2026-08-08T06:10:46.023757+00:00",
+ "created_at": "2026-08-08T06:21:45.213304+00:00",
  "crosswalk": {
   "grid_288": {
    "argmax_universal_at_all_seeds": false,
@@ -93,7 +93,9 @@
     }
    },
    "passed": false,
-   "why_it_can_fail": "if the estimator disagreed at MATCHED seeds the difference would be in the computation rather than in the sample, and this artifact would be crosswalking its own estimator"
+   "superseded_by": "f1c",
+   "why_it_can_fail": "if the estimator disagreed at MATCHED seeds the difference would be in the computation rather than in the sample, and this artifact would be crosswalking its own estimator",
+   "why_it_could_never_pass": "it compares a ret_excel_risk_conditional surface against a Cobb-Douglas one"
   },
   "f1b_the_two_sealed_artifacts_differ_because_of_their_SEED_SUBSET": {
    "cache_seeds": 12,
@@ -101,6 +103,20 @@
    "gates_artifact_seeds": 12,
    "passed": true,
    "why_it_matters": "the manuscript cites H_regime on the 288 grid as one number; two sealed artifacts compute it over different halves of the same cache and reach 0.0 and 0.003802"
+  },
+  "f1c_the_recomputation_reproduces_the_artifact_ON_THE_SAME_METRIC": {
+   "metric": "ret_excel_risk_conditional, the surface cache's stored value",
+   "passed": true,
+   "recomputed": 0.003802243800697269,
+   "sealed_surface_gates_v2": 0.003802243800697269,
+   "why_it_can_fail": "this is the comparison f1 should have made: same metric, same cache, same seeds. If it failed, the estimator here would be wrong and nothing in this artifact would be readable"
+  },
+  "f1d_the_two_artifacts_are_on_different_metrics": {
+   "ceiling_metric": "R_cobb_douglas, reconstructed from aggregates.json at scripts/run_monotone_transform_ceiling_v1.py:94-114",
+   "consequence": "H_regime is not one number with two values; it is one statistic on two metrics. Every citation must name the metric",
+   "gates_metric": "ret_excel_risk_conditional, stored in results/surface_cache/wrap288_v1",
+   "passed": true,
+   "why_this_records_rather_than_gates": "it was established by reading the producer, not by a computation this script performs"
   },
   "f2_the_288_bootstrap_and_identity_values_are_not_a_contradiction": {
    "bootstrap": {
@@ -183,7 +199,7 @@
  "integrity_falsifier_passed": true,
  "module_manifest": {
   "entry_script": "scripts/run_h_regime_crosswalk_v1.py",
-  "entry_script_sha256": "0d3b7bda555cbacef7647998b74af49e692728001fbc0eb18fa1307ac5d78dad",
+  "entry_script_sha256": "e83bc20edb950076f57ff539a15a5d8de1ebda67b6ce05feece470685102bfdf",
   "missing": [],
   "modules": {
    "scripts/run_grid_transfer_v1.py": "c08a170dc7f5f6903178b680754518eda971a78130db4616ef62dc68df5419f3",
@@ -243,10 +259,19 @@
  "reference_path": "/Users/thom/Projects/research/scres-ia/results/monotone_transform_ceiling/result.json",
  "reference_sha256": "6a9346fd1c66c7f723af620d0da143ddfd2364bd87a7eb555c887a95aa8af2f5",
  "registration_status": "POST_HOC_CROSSWALK_REPLACING_AN_OVERCLAIM_NOT_PREREGISTERED",
+ "resolution": {
+  "artifact_a": "results/surface_gates_v2/result.json",
+  "artifact_b": "results/monotone_transform_ceiling/result.json",
+  "consequence_for_the_manuscript": "H_regime may be cited WITH its metric named. The 0.003802 figure is the ret_excel_risk_conditional surface at twelve seeds, and it is NOT transform-proof: a strictly increasing rescaling takes it to 0.010776. The transform-proof zero and the universal argmax belong to the Cobb-Douglas surface and may not be transferred to the other",
+  "evidence": "scripts/run_monotone_transform_ceiling_v1.py:94-114",
+  "finding": "the two are the same statistic on different metrics, not two estimators of one. Each is correct for its own surface",
+  "metric_a": "ret_excel_risk_conditional",
+  "metric_b": "R_cobb_douglas"
+ },
  "run_role": "POST_HOC_REREAD",
  "schema_version": "h_regime_crosswalk_v1",
  "scope": "REREAD_OF_SEALED_CACHES_AND_ARTIFACTS_NO_SEEDS_NO_SIMULATION",
- "self_sha256": "06e9ae3f9a73a975eff0e0bf432a0b23b4c9139b1a1e5187a958aa0db176d4fc",
+ "self_sha256": "7b3c5f9b225b716512eeaf7bba7ef4988081cb01fe374343c367b8a7f1828742",
  "sources": {
   "bootstrap_estimate": {
    "path": "results/surface_gates_v2/result.json",
@@ -367,12 +392,6 @@
    "ordinals_identical": true,
    "transform": "x -> lo + (hi-lo) * ((x-lo)/(hi-lo))**3, strictly increasing"
   }
- },
- "unreconciled": {
-  "artifact_a": "results/surface_gates_v2/result.json",
-  "artifact_b": "results/monotone_transform_ceiling/result.json",
-  "next_step": "read the producer of monotone_transform_ceiling and determine which estimator its H_identity implements; until then H_regime is not citable and the transform-proof reading of the 288 zero is withdrawn",
-  "this_crosswalk_reproduces": "results/surface_gates_v2/result.json"
  },
  "withdrawn_claim": {
   "also_withdrawn": "the transform-proof reading of the 288 zero: it comes from the artifact this crosswalk cannot reproduce, and the argmax is not universal at any seed subset of the same cache",

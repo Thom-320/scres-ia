@@ -188,32 +188,32 @@
   },
   {
    "allow_failed_falsifiers": true,
-   "allowed": "No H_regime figure is cited. Two sealed artifacts disagree on its value: recomputing the runners' estimator reproduces surface_gates_v2 to the last digit (0.003802243800697269) and reproduces monotone_transform_ceiling at no seed subset of the same cache. The statistic is also not scale-invariant -- a strictly increasing rescaling moves it on both grids, 0.003802 to 0.010776 on the 288 and 0.028294 to 0.067539 on the extended -- while every ordinal statistic stays bit-identical under the same transform. What may be said is ordinal: contextual rankings exist, mean pairwise rank correlation is +0.844 on the 288 grid and +0.909 on the extended, and top-25 sets overlap 91.7% and 23.5% respectively.",
+   "allowed": "H_regime names one statistic computed on two different metrics, and each citation must say which. On the ret_excel_risk_conditional surface of the 288 grid at twelve seeds it is 0.003802, reproduced here to the last digit against surface_gates_v2; on the Cobb-Douglas index reconstructed from aggregates.json at six seeds it is 0.0 with a universal argmax. The ret_excel figure is not scale-invariant: a strictly increasing rescaling that leaves every ordering untouched moves it to 0.010776, and 0.028294 to 0.067539 on the extended grid. What is invariant is ordinal -- mean pairwise rank correlation +0.844 and +0.909, top-25 overlap 91.7% and 23.5%.",
    "artifact": "results/h_regime_crosswalk/result.json",
-   "claim_id": "H_REGIME_IS_NOT_CITABLE_UNTIL_ITS_ESTIMATORS_AGREE",
-   "claim_status": "H_REGIME_ESTIMATORS_DISAGREE__NO_FIGURE_MAY_BE_CITED",
+   "claim_id": "H_REGIME_MUST_BE_LABELLED_BY_METRIC",
+   "claim_status": "TWO_METRICS_ONE_NAME__H_REGIME_MUST_BE_LABELLED_BY_METRIC",
    "contract_sha256": "8e78b344536e8c6440d29ff4e437a0ea9b84c5fe73980d0b40c842aa90947ff5",
    "endpoint": "H_regime and its transform-invariant ordinal companions",
-   "estimand": "the same statistic on two grids under identity and monotone rescaling",
+   "estimand": "the same statistic on two metrics, two grids, and under monotone rescaling",
    "evidence_grade": "POST_HOC_ON_DEVELOPMENT_DATA",
    "exists": true,
    "falsifiers_all_passed": false,
-   "file_sha256": "e38cab884f739702b8bc68b7cf89419289fa6949285e3fc39593ad960fec688c",
+   "file_sha256": "5fd6acc866f01a3e9d37051077584d74f1820dd8ae7d063b3100c0f04b0d7c8c",
    "forbidden": [
     "H_regime = 0.0038",
-    "H_regime is 0.0038 against a bar of 0.05",
     "no context-conditioned architecture can pay",
     "the 288 zero is transform-proof",
-    "a single configuration is optimal in every context"
+    "a single configuration is optimal in every context",
+    "H_regime is 0.0038 against a bar of 0.05"
    ],
    "missing_top_level_fields": [],
    "paper_id": "P2",
    "registration_status": "POST_HOC_CROSSWALK_REPLACING_AN_OVERCLAIM_NOT_PREREGISTERED",
    "run_role": "POST_HOC_REREAD",
    "scope": "REREAD_OF_SEALED_CACHES_AND_ARTIFACTS_NO_SEEDS_NO_SIMULATION",
-   "section": "Results 3.4 -- the H_regime sentence is suspended, not softened",
-   "self_sha256": "06e9ae3f9a73a975eff0e0bf432a0b23b4c9139b1a1e5187a958aa0db176d4fc",
-   "why_forbidden": "the value is disputed between two sealed artifacts, the statistic is not invariant to the declared utility scale, and the universal-argmax claim does not reproduce from the cache at any seed subset"
+   "section": "Results 3.4 -- H_regime cited with its metric, or not at all",
+   "self_sha256": "7b3c5f9b225b716512eeaf7bba7ef4988081cb01fe374343c367b8a7f1828742",
+   "why_forbidden": "an unlabelled figure conflates two metrics; the transform-proof zero and the universal argmax belong to the Cobb-Douglas surface and may not be transferred to the one the manuscript cites; and no bar comparison survives a statistic that moves under a rescaling that preserves every ordering"
   },
   {
    "allowed": "The expansion from 288 to 4,608 configurations adds reachable improvement rather than diluting a uniform starting policy: the extended optimum is strictly better in 136 of 360 cells, 0.97% of the 4,320 added configurations exceed the base optimum, and the expected simple regret of a uniform 24-draw falls from 0.07429 to 0.06755 against each grid's own optimum and from 0.10284 to 0.06755 against a common reference. Computed exactly by order statistics and checked against a 20,000-draw Monte Carlo control.",
@@ -612,7 +612,7 @@
    "why_forbidden": "unique_profile_optima is 1, 2 or 3 by row; and the screen varied PROFILES, not the within-episode realisation"
   }
  ],
- "generated_at_commit": "d75f042beb26d44437fc3a6bae6423871d8d3d82",
+ "generated_at_commit": "fea7b6fac254aed611d417dc8443c262997dbbd7",
  "grader_self_test": {
   "a_real_confirmation_still_grades_confirmatory": {
    "passed": true,

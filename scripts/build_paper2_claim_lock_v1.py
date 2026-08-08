@@ -198,29 +198,30 @@ CLAIMS: list[dict] = [
                           "opposite directions"),
     },
     {
-        "claim_id": "H_REGIME_IS_NOT_CITABLE_UNTIL_ITS_ESTIMATORS_AGREE",
+        "claim_id": "H_REGIME_MUST_BE_LABELLED_BY_METRIC",
         "artifact": "results/h_regime_crosswalk/result.json",
-        "section": "Results 3.4 -- the H_regime sentence is suspended, not softened",
+        "section": "Results 3.4 -- H_regime cited with its metric, or not at all",
         "endpoint": "H_regime and its transform-invariant ordinal companions",
         "allow_failed_falsifiers": True,
-        "estimand": "the same statistic on two grids under identity and monotone rescaling",
-        "allowed": ("No H_regime figure is cited. Two sealed artifacts disagree on its value: "
-                    "recomputing the runners' estimator reproduces surface_gates_v2 to the last "
-                    "digit (0.003802243800697269) and reproduces monotone_transform_ceiling at no "
-                    "seed subset of the same cache. The statistic is also not scale-invariant -- a "
-                    "strictly increasing rescaling moves it on both grids, 0.003802 to 0.010776 on "
-                    "the 288 and 0.028294 to 0.067539 on the extended -- while every ordinal "
-                    "statistic stays bit-identical under the same transform. What may be said is "
-                    "ordinal: contextual rankings exist, mean pairwise rank correlation is +0.844 "
-                    "on the 288 grid and +0.909 on the extended, and top-25 sets overlap 91.7% and "
-                    "23.5% respectively."),
-        "forbidden": ["H_regime = 0.0038", "H_regime is 0.0038 against a bar of 0.05",
-                      "no context-conditioned architecture can pay",
+        "estimand": "the same statistic on two metrics, two grids, and under monotone rescaling",
+        "allowed": ("H_regime names one statistic computed on two different metrics, and each "
+                    "citation must say which. On the ret_excel_risk_conditional surface of the 288 "
+                    "grid at twelve seeds it is 0.003802, reproduced here to the last digit against "
+                    "surface_gates_v2; on the Cobb-Douglas index reconstructed from aggregates.json "
+                    "at six seeds it is 0.0 with a universal argmax. The ret_excel figure is not "
+                    "scale-invariant: a strictly increasing rescaling that leaves every ordering "
+                    "untouched moves it to 0.010776, and 0.028294 to 0.067539 on the extended grid. "
+                    "What is invariant is ordinal -- mean pairwise rank correlation +0.844 and "
+                    "+0.909, top-25 overlap 91.7% and 23.5%."),
+        "forbidden": ["H_regime = 0.0038", "no context-conditioned architecture can pay",
                       "the 288 zero is transform-proof",
-                      "a single configuration is optimal in every context"],
-        "why_forbidden": ("the value is disputed between two sealed artifacts, the statistic is "
-                          "not invariant to the declared utility scale, and the universal-argmax "
-                          "claim does not reproduce from the cache at any seed subset"),
+                      "a single configuration is optimal in every context",
+                      "H_regime is 0.0038 against a bar of 0.05"],
+        "why_forbidden": ("an unlabelled figure conflates two metrics; the transform-proof zero and "
+                          "the universal argmax belong to the Cobb-Douglas surface and may not be "
+                          "transferred to the one the manuscript cites; and no bar comparison "
+                          "survives a statistic that moves under a rescaling that preserves every "
+                          "ordering"),
     },
     {
         "claim_id": "EXPANSION_ADDS_REACHABLE_OPTIMA",

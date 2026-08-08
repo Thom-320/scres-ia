@@ -1,5 +1,18 @@
 #!/usr/bin/env python3
-"""Two sealed artifacts compute H_regime differently, and the manuscript cites whichever one it opened.
+"""H_regime names two statistics on two metrics, and the manuscript cites one without saying which.
+
+RESOLVED AFTER THE FIRST SEALING, AND THE RESOLUTION IS BETTER THAN THE SUSPENSION. The first run of
+this crosswalk found that `monotone_transform_ceiling` could not be reproduced from the surface cache
+at any seed subset and concluded the two estimators disagreed. The cause is now identified in the
+producer: `scripts/run_monotone_transform_ceiling_v1.py:94-114` reads `aggregates.json` and builds
+`resilience_index(...)["R_cobb_douglas"]`, while the surface cache stores
+`ret_excel_risk_conditional`. They are not two computations of one number; they are the SAME
+statistic on TWO METRICS, and each is correct for its own.
+
+That changes the verdict from "not citable" to "not citable UNLABELLED", and it relocates the
+transform-proof zero: it is a property of the Cobb-Douglas surface, where one configuration is
+optimal in every context, and NOT of the ret_excel surface the manuscript's 0.003802 comes from --
+which a strictly increasing rescaling moves to 0.010776.
 
 WHAT THIS CROSSWALK WAS FOR AND WHAT IT FOUND INSTEAD. The manuscript cites `H_regime = 0.003802`
 against a 0.05 bar and concludes that no context-conditioned architecture can pay. The job here was
@@ -155,9 +168,20 @@ def main() -> int:
     sealed_bootstrap = gates["g1_h_regime"]
 
     falsifiers = {
+        # ASKED THE WRONG QUESTION AND IS KEPT SO THE RECORD SHOWS IT. This falsifier assumed the
+        # two artifacts computed one statistic, so it required the surface-cache recomputation to
+        # reproduce the ceiling artifact. They compute different METRICS
+        # (run_monotone_transform_ceiling_v1.py:94-114 builds R_cobb_douglas from aggregates.json;
+        # the surface cache stores ret_excel_risk_conditional), so reproduction was never possible
+        # and the failure carries no information about either. f1c below is the correctly-posed
+        # comparison. The row stays failed rather than deleted: a falsifier that asked the wrong
+        # question is part of the record, not an embarrassment to tidy away.
         "f1_the_recomputed_identity_matches_the_sealed_one_AT_MATCHED_SEEDS": {
             "passed": all(abs(r["h_identity_at_ceiling_artifact_seeds"] - r["h_identity_sealed"])
                           < 1e-9 for r in rows.values()),
+            "superseded_by": "f1c",
+            "why_it_could_never_pass": ("it compares a ret_excel_risk_conditional surface against a "
+                                        "Cobb-Douglas one"),
             "detail": {k: {"recomputed_at_sealed_seeds": r["h_identity_at_ceiling_artifact_seeds"],
                            "sealed": r["h_identity_sealed"],
                            "recomputed_at_all_cache_seeds": r["h_identity_at_all_cache_seeds"]}
@@ -165,6 +189,24 @@ def main() -> int:
             "why_it_can_fail": ("if the estimator disagreed at MATCHED seeds the difference would "
                                 "be in the computation rather than in the sample, and this "
                                 "artifact would be crosswalking its own estimator")},
+        "f1c_the_recomputation_reproduces_the_artifact_ON_THE_SAME_METRIC": {
+            "passed": abs(rows["grid_288"]["h_identity_at_all_cache_seeds"]
+                          - gates["g1_h_regime"]["H_regime"]) < 1e-12,
+            "recomputed": rows["grid_288"]["h_identity_at_all_cache_seeds"],
+            "sealed_surface_gates_v2": gates["g1_h_regime"]["H_regime"],
+            "metric": "ret_excel_risk_conditional, the surface cache's stored value",
+            "why_it_can_fail": ("this is the comparison f1 should have made: same metric, same "
+                                "cache, same seeds. If it failed, the estimator here would be "
+                                "wrong and nothing in this artifact would be readable")},
+        "f1d_the_two_artifacts_are_on_different_metrics": {
+            "passed": True,
+            "ceiling_metric": ("R_cobb_douglas, reconstructed from aggregates.json at "
+                               "scripts/run_monotone_transform_ceiling_v1.py:94-114"),
+            "gates_metric": "ret_excel_risk_conditional, stored in results/surface_cache/wrap288_v1",
+            "consequence": ("H_regime is not one number with two values; it is one statistic on two "
+                            "metrics. Every citation must name the metric"),
+            "why_this_records_rather_than_gates": ("it was established by reading the producer, not "
+                                                   "by a computation this script performs")},
         "f1b_the_two_sealed_artifacts_differ_because_of_their_SEED_SUBSET": {
             "passed": (rows["grid_288"]["n_seeds_used_by_ceiling_artifact"]
                        != rows["grid_288"]["n_seeds_in_cache"]),
@@ -215,22 +257,29 @@ def main() -> int:
     # f1 failing is this artifact's RESULT, not a broken instrument: it is a comparison between two
     # sealed artifacts and it found them inconsistent. f3 is the integrity check -- if the
     # invariance demonstration failed, nothing below would be readable.
-    integrity_ok = falsifiers["f3_ordinal_statistics_survive_a_monotone_transform_and_h_does_not"][
-        "passed"]
+    integrity_ok = (
+        falsifiers["f3_ordinal_statistics_survive_a_monotone_transform_and_h_does_not"]["passed"]
+        and falsifiers["f1c_the_recomputation_reproduces_the_artifact_ON_THE_SAME_METRIC"]["passed"])
 
     payload = {
         "schema_version": "h_regime_crosswalk_v1",
         "claim_status": ("HALTED_INTEGRITY_FALSIFIER_FAILED" if not integrity_ok else
-                         "H_REGIME_ESTIMATORS_DISAGREE__NO_FIGURE_MAY_BE_CITED"
+                         "TWO_METRICS_ONE_NAME__H_REGIME_MUST_BE_LABELLED_BY_METRIC"
                          if not falsifiers["all_passed"] else
                          "H_REGIME_IS_NEITHER_SCALE_INVARIANT_NOR_SEED_STABLE_ON_EITHER_GRID"),
         "integrity_falsifier_passed": integrity_ok,
-        "unreconciled": {
-            "artifact_a": str(GATES), "artifact_b": str(CEILING),
-            "this_crosswalk_reproduces": str(GATES),
-            "next_step": ("read the producer of monotone_transform_ceiling and determine which "
-                          "estimator its H_identity implements; until then H_regime is not "
-                          "citable and the transform-proof reading of the 288 zero is withdrawn"),
+        "resolution": {
+            "artifact_a": str(GATES), "metric_a": "ret_excel_risk_conditional",
+            "artifact_b": str(CEILING), "metric_b": "R_cobb_douglas",
+            "evidence": "scripts/run_monotone_transform_ceiling_v1.py:94-114",
+            "finding": ("the two are the same statistic on different metrics, not two estimators "
+                        "of one. Each is correct for its own surface"),
+            "consequence_for_the_manuscript": (
+                "H_regime may be cited WITH its metric named. The 0.003802 figure is the "
+                "ret_excel_risk_conditional surface at twelve seeds, and it is NOT transform-proof: "
+                "a strictly increasing rescaling takes it to 0.010776. The transform-proof zero and "
+                "the universal argmax belong to the Cobb-Douglas surface and may not be transferred "
+                "to the other"),
         },
         "scope": "REREAD_OF_SEALED_CACHES_AND_ARTIFACTS_NO_SEEDS_NO_SIMULATION",
         "run_role": "POST_HOC_REREAD",
