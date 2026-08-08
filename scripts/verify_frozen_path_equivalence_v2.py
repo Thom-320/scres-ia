@@ -198,7 +198,8 @@ def replay_slice(args: tuple[str, str]) -> dict:
             "max_abs_delta": worst, "worst_cell": where}
 
 
-def run_surface(kinds: list[str], workers: int, shard_i: int = 0, shard_n: int = 1) -> None:
+def run_surface(kinds: list[str], workers: int, shard_i: int = 0, shard_n: int = 1,
+                shard_list: list[int] | None = None) -> None:
     """Resumable. A shard already on disk is not recomputed, so a killed run continues.
 
     PARALLELISM IS BY INDEPENDENT PROCESS, NOT ProcessPoolExecutor. On macOS the executor uses
@@ -209,11 +210,16 @@ def run_surface(kinds: list[str], workers: int, shard_i: int = 0, shard_n: int =
     pattern the rest of the repository already uses.
     """
     SHARDS.mkdir(parents=True, exist_ok=True)
+    # A process may own SEVERAL partition indices. Needed to split one fine partition across two
+    # machines of different speed without overlap: the VPS is ~4x slower per core, so its fair
+    # share is ~15% of the slices, which no 8-way or 5-way split expresses. Overlapping instead
+    # would have both pools recompute the same slices and eat the whole saving.
+    mine = set(shard_list) if shard_list else {shard_i}
     jobs = []
     for kind in kinds:
         cache = BASE_CACHE if kind == "base" else EXT_CACHE
         for idx, path in enumerate(sorted(cache.rglob("*.json"))):
-            if idx % shard_n != shard_i:
+            if idx % shard_n not in mine:
                 continue
             shard = SHARDS / f"{kind}__{path.parent.name}__{path.stem}.json"
             if not shard.exists():
@@ -221,7 +227,7 @@ def run_surface(kinds: list[str], workers: int, shard_i: int = 0, shard_n: int =
     if not jobs:
         print("  todas las rebanadas ya están; nada que recomputar")
         return
-    print(f"  shard {shard_i+1}/{shard_n}: {len(jobs)} rebanadas pendientes", flush=True)
+    print(f"  shards {sorted(mine)} de {shard_n}: {len(jobs)} rebanadas pendientes", flush=True)
     started = time.perf_counter()
     for done, job in enumerate(jobs, 1):
         row = replay_slice(job)
@@ -310,6 +316,8 @@ def main() -> int:
                     help="kept for the launcher's arithmetic; parallelism is by --shard")
     ap.add_argument("--shard", type=int, default=0)
     ap.add_argument("--of", type=int, default=1)
+    ap.add_argument("--shards", default=None,
+                    help="comma list of partition indices this process owns, e.g. 0,1,2")
     ap.add_argument("--contract", type=Path,
                     default=Path("docs/ENMIENDA_REGISTRO_DE_EVIDENCIA_2026-08-07.md"))
     ap.add_argument("--out", type=Path,
@@ -319,7 +327,8 @@ def main() -> int:
 
     if args.phase == "surface":
         kinds = ["base", "ext"] if args.surface == "both" else [args.surface]
-        run_surface(kinds, args.workers, args.shard, args.of)
+        shard_list = ([int(x) for x in args.shards.split(",")] if args.shards else None)
+        run_surface(kinds, args.workers, args.shard, args.of, shard_list)
         return 0
 
     if args.phase == "chain":
