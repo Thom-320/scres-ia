@@ -427,6 +427,8 @@ CLAIMS: list[dict] = [
     },
     {
         "claim_id": "KAN_LATENT_UNDERPERFORMS_UNDER_MATCHED_CONTRACT",
+        "declared_grade": "DEVELOPMENT",
+        "grade_declared_in": ("the artifact's own scope field: DEVELOPMENT_OPEN_SEEDS_NO_CONFIRMATION_POSSIBLE_NO_VIRGIN_BLOCKS_REMAIN. It carries claim_status, scope and self_sha256 and lacks only run_role; the producer trains five networks per arm, so re-running it to add one field would resample the result it is cited for"),
         "artifact": "results/dmlpa_kan_latent/result.json",
         "section": "Supplement (different contract from RQ3b)",
         "endpoint": "ret_mean_track_b_v1 (HIGHER is better)",
@@ -442,6 +444,8 @@ CLAIMS: list[dict] = [
     },
     {
         "claim_id": "NEURAL_PREMIUM_NEEDS_CURVATURE_ABOVE_NOISE",
+        "declared_grade": "DEVELOPMENT",
+        "grade_declared_in": ("the artifact carries claim_status NO_NEURAL_PREMIUM_EVEN_WITH_MEASURED_CURVATURE and self_sha256, and its preregistration fixes the design as 1,530 episodes under seed-grouped cross-validation with six falsifiers. It lacks run_role and scope; the producer re-runs 1,530 episodes"),
         "artifact": "results/headroom/buffer_prediction_premium/result.json",
         "section": "Discussion", "endpoint": "held-out R2, seed-grouped CV",
         "estimand": "MLP and KAN minus linear",
@@ -508,6 +512,10 @@ CLAIMS: list[dict] = [
     },
     {
         "claim_id": "RISK_PROFILE_TAILORING_BUYS_NOTHING",
+        "declared_grade": "DEVELOPMENT",
+        "grade_declared_in": ("the artifact uses an older schema (garrido_risk_headroom_sensitivity_result_v1) whose verdict field is named status, not claim_status: DEVELOPMENT_NO_DOOR_UNDER_TESTED_FRONTIER. The producer is 45 profiles x 18 postures x 6 seeds = 4,860 evaluations"),
+        "artifact_is_unsealed": True,
+        "unsealed_note": ("this artifact carries NO self_sha256, so only its bytes on disk are pinned (file_sha256) and there is no payload digest to detect an edit that preserved the file size. It is the one citation in this lock without a payload seal, and that is a custody gap rather than a formatting one"),
         "artifact": "results/garrido_risk_headroom_sensitivity_v1/result.json",
         "section": "Discussion / answer to the randomised-R2 request",
         "endpoint": "H_profile_safe", "estimand": "value of tailoring the posture to the risk profile",
@@ -554,6 +562,16 @@ def grade(meta: dict, row: dict) -> tuple[str, list[str]]:
     missing = [k for k in ("run_role", "scope", "claim_status", "self_sha256") if not meta.get(k)]
     if missing and row.get("sibling_receipt"):
         return "GRADE_IN_SIBLING_RECEIPT", missing
+    # A DECLARED GRADE, AND THE STRING SAYS SO. Three artifacts cannot be re-run to add the fields
+    # the grader reads: one trains networks, one is 1,530 episodes, one is 4,860 evaluations, and
+    # re-running a sealed result to satisfy a schema would trade real numbers for bureaucracy. Those
+    # rows declare the grade with a citation to where it is established. The guard below is what
+    # keeps this from becoming a way to overrule the artifact: a declaration is honoured ONLY when
+    # the artifact is genuinely missing the field, never as an override of a discoverable grade.
+    if row.get("grade_declared_in") and row.get("declared_grade"):
+        if not missing:
+            return "DECLARATION_REFUSED__ARTIFACT_CARRIES_ITS_OWN_GRADE", []
+        return f"{row['declared_grade']}__DECLARED_NOT_DISCOVERED", missing
     if missing:
         return "GRADE_NOT_MACHINE_DISCOVERABLE", missing
     rr, sc = str(meta["run_role"]), str(meta["scope"])

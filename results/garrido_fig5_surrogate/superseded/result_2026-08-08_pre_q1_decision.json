@@ -1,9 +1,9 @@
 {
  "claim_status": "DEVELOPMENT_FIG5_SURROGATE",
- "created_at": "2026-08-08T14:36:17.585963+00:00",
+ "created_at": "2026-07-31T22:11:29.203993+00:00",
  "driver_table": "results/garrido_drivers_per_configuration/result.json",
  "driver_table_sha256": "491694175a3975a70d3f6a9d7af90f3cc5b97849a5d348786bd44c9c3455a392",
- "elapsed_seconds": 17.120017416018527,
+ "elapsed_seconds": 13.803842000001168,
  "falsifiers": {
   "all_passed": true,
   "f1_task_A_is_an_identity": {
@@ -75,73 +75,10 @@
  "features": "buffer_hours, shifts, family one-hot, risk pattern flags -- the drivers are deliberately EXCLUDED, they sum to the target",
  "n_configurations": 90,
  "n_pairs": 87,
- "q1_decision": {
-  "b1_paired_comparisons": {
-   "backprop": {
-    "baseline": "linear",
-    "ci95_high": 0.028298610013162334,
-    "ci95_low": 0.0048352801397191485,
-    "mean_difference": 0.016566945076440742,
-    "model": "backprop",
-    "n_folds": 5,
-    "passes_sesoi_and_ci": false,
-    "sd_difference": 0.009448341059814123,
-    "sesoi": 0.05
-   },
-   "kan": {
-    "baseline": "linear",
-    "ci95_high": 0.03899524378054278,
-    "ci95_low": 0.0041640998372037795,
-    "mean_difference": 0.02157967180887328,
-    "model": "kan",
-    "n_folds": 5,
-    "passes_sesoi_and_ci": false,
-    "sd_difference": 0.014025994147260043,
-    "sesoi": 0.05
-   }
-  },
-  "b2_paired_comparisons": {
-   "backprop": {
-    "baseline": "linear",
-    "ci95_high": 0.15254220822410422,
-    "ci95_low": -0.1392088748907709,
-    "mean_difference": 0.006666666666666665,
-    "model": "backprop",
-    "n_folds": 5,
-    "passes_sesoi_and_ci": false,
-    "sd_difference": 0.11748391011454497,
-    "sesoi": 0.05
-   },
-   "kan": {
-    "baseline": "linear",
-    "ci95_high": 0.13656617255891867,
-    "ci95_low": -0.016566172558918603,
-    "mean_difference": 0.06000000000000003,
-    "model": "kan",
-    "n_folds": 5,
-    "passes_sesoi_and_ci": false,
-    "sd_difference": 0.06166416411338496,
-    "sesoi": 0.05
-   }
-  },
-  "decision": "NO_GO_NEURAL_PREMIUM_IN_WRAP_PANEL",
-  "eligible_neural_models": [],
-  "primary_endpoint": "B1_held_out_R2",
-  "promotion_block_reason": [
-   "HOLD_WRAP_BEHAVIORAL_FIDELITY",
-   "HOLD_METRIC_PROVISIONAL"
-  ],
-  "promotion_eligible": false,
-  "secondary_endpoint": "B2_activation_accuracy",
-  "selected_model_before_gates": "linear_null",
-  "sesoi_r2": 0.05
- },
  "question": "Figure 5 of Garrido, Ponguta & Adarme (2024): can a neural network map the SCRES drivers, weighted by the decision variables, onto SCRES -- and does backpropagation or KAN do it better than a linear rule?",
- "run_role": "DIAGNOSTIC",
  "schema_version": "garrido_fig5_surrogate_v1",
- "scope": "DEVELOPMENT_ALGEBRAIC_CHECK_ON_A_FROZEN_DRIVER_TABLE_NO_SEEDS",
  "seed": 20260731,
- "self_sha256": "5f004cbc35962084f591a36d35fb2c8a2fb1b59401eb240686df497ac7c6fbb5",
+ "self_sha256": "40bf64852c6e6f44bd08b881bf1be87bdb720fb632c5006d053e6aaf099736df",
  "task_A_figure_as_drawn": {
   "coefficients": {
    "Re_APj": 0.0,
@@ -352,67 +289,6 @@
   "B2_activation": {
    "backprop": false,
    "kan": false
-  },
-  "q1_decision": {
-   "b1_paired_comparisons": {
-    "backprop": {
-     "baseline": "linear",
-     "ci95_high": 0.028298610013162334,
-     "ci95_low": 0.0048352801397191485,
-     "mean_difference": 0.016566945076440742,
-     "model": "backprop",
-     "n_folds": 5,
-     "passes_sesoi_and_ci": false,
-     "sd_difference": 0.009448341059814123,
-     "sesoi": 0.05
-    },
-    "kan": {
-     "baseline": "linear",
-     "ci95_high": 0.03899524378054278,
-     "ci95_low": 0.0041640998372037795,
-     "mean_difference": 0.02157967180887328,
-     "model": "kan",
-     "n_folds": 5,
-     "passes_sesoi_and_ci": false,
-     "sd_difference": 0.014025994147260043,
-     "sesoi": 0.05
-    }
-   },
-   "b2_paired_comparisons": {
-    "backprop": {
-     "baseline": "linear",
-     "ci95_high": 0.15254220822410422,
-     "ci95_low": -0.1392088748907709,
-     "mean_difference": 0.006666666666666665,
-     "model": "backprop",
-     "n_folds": 5,
-     "passes_sesoi_and_ci": false,
-     "sd_difference": 0.11748391011454497,
-     "sesoi": 0.05
-    },
-    "kan": {
-     "baseline": "linear",
-     "ci95_high": 0.13656617255891867,
-     "ci95_low": -0.016566172558918603,
-     "mean_difference": 0.06000000000000003,
-     "model": "kan",
-     "n_folds": 5,
-     "passes_sesoi_and_ci": false,
-     "sd_difference": 0.06166416411338496,
-     "sesoi": 0.05
-    }
-   },
-   "decision": "NO_GO_NEURAL_PREMIUM_IN_WRAP_PANEL",
-   "eligible_neural_models": [],
-   "primary_endpoint": "B1_held_out_R2",
-   "promotion_block_reason": [
-    "HOLD_WRAP_BEHAVIORAL_FIDELITY",
-    "HOLD_METRIC_PROVISIONAL"
-   ],
-   "promotion_eligible": false,
-   "secondary_endpoint": "B2_activation_accuracy",
-   "selected_model_before_gates": "linear_null",
-   "sesoi_r2": 0.05
   },
   "rule": "a network counts as learning something only if it beats the linear/logistic baseline by more than one between-fold SD of that baseline"
  }

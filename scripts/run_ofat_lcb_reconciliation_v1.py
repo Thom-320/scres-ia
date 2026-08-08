@@ -143,6 +143,9 @@ def main() -> int:
         "schema_version": "ofat_lcb_reconciliation_v1",
         "claim_status": verdict,
         "scope": "DEVELOPMENT_REANALYSIS_OF_SEALED_ARTIFACTS_NO_SEEDS",
+        # A controlled field for the claim lock's grader, which does not interpret prose. `scope`
+        # already said this; saying it where a machine reads it is the whole fix.
+        "run_role": "REPLAY_REANALYSIS",
         "created_at": datetime.now(timezone.utc).isoformat(),
         "module_manifest": module_manifest(MODULES, script=__file__),
         "preregistration": str(args.contract),

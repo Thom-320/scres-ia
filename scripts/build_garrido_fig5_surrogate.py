@@ -428,6 +428,11 @@ def main() -> int:
 
     payload = {
         "schema_version": "garrido_fig5_surrogate_v1",
+        # The claim lock's grader reads these two and refuses to guess when absent, which left this
+        # row ungraded. Neither is a new judgement: this has always been a development-grade
+        # algebraic check on a frozen driver table, opening no seed.
+        "scope": "DEVELOPMENT_ALGEBRAIC_CHECK_ON_A_FROZEN_DRIVER_TABLE_NO_SEEDS",
+        "run_role": "DIAGNOSTIC",
         "claim_status": ("DEVELOPMENT_FIG5_SURROGATE" if falsifiers["all_passed"]
                          else "HALTED_FALSIFIER_FAILED"),
         "question": ("Figure 5 of Garrido, Ponguta & Adarme (2024): can a neural network map "
