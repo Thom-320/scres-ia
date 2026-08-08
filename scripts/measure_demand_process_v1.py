@@ -59,6 +59,22 @@ def demand_series(sim) -> list[dict]:
     ]
 
 
+def weekly_count(events: list[dict], t0: float, t1: float) -> np.ndarray:
+    """Orders per complete week. A 6-day ordering calendar does not tile a 168 h week evenly, so
+    weeks alternate between 5 and 6 orders. That alternation alone produces a negative lag-1
+    autocorrelation in the QUANTITY series without any demand memory whatsoever, and this is the
+    series that tells the two apart."""
+    n = int((t1 - t0) // WEEK_H)
+    if n < 1:
+        return np.zeros(0)
+    out = np.zeros(n)
+    for e in events:
+        k = int((e["t"] - t0) // WEEK_H)
+        if 0 <= k < n:
+            out[k] += 1.0
+    return out
+
+
 def weekly(events: list[dict], t0: float, t1: float, contingent: bool = True) -> np.ndarray:
     """Bin into complete weeks. Partial trailing weeks are dropped, not padded with zeros --
     a padded partial week reads as a demand collapse and would fake variance."""
@@ -104,9 +120,17 @@ def run_env(name: str, seeds: list[int]) -> dict:
             continue
         rows.append(ev)
         cap_s1 = RATIONS_PER_SHIFT * DEMAND["operating_days_per_week"]
+        w_cnt = weekly_count(ev, t0, t1)
+        # Per-week mean order size: divides the aliasing out. If the negative ACF survives HERE it
+        # is demand memory; if it vanishes it was the 5-vs-6 order calendar.
+        w_size = np.divide(w_all, w_cnt, out=np.zeros_like(w_all), where=w_cnt > 0)
         per_ep.append({
             "seed": s, "n_weeks": len(w_all),
             "weeks_over_capacity_S1": float(np.mean(w_all > cap_s1)),
+            "orders_per_week_mean": float(w_cnt.mean()),
+            "orders_per_week_sd": float(w_cnt.std(ddof=1)),
+            "acf1_order_count": acf(w_cnt, 1),
+            "acf1_mean_order_size": acf(w_size[w_cnt > 0], 1),
             "weekly_mean": float(w_all.mean()), "weekly_sd": float(w_all.std(ddof=1)),
             "weekly_mean_regular": float(w_reg.mean()),
             "weekly_sd_regular": float(w_reg.std(ddof=1)),
@@ -148,6 +172,10 @@ def run_env(name: str, seeds: list[int]) -> dict:
         "weekly_mean_regular_only": wmr["mean"],
         "acf1": agg("acf1"), "acf2": agg("acf2"), "acf4": agg("acf4"),
         "acf1_regular": agg("acf1_regular"),
+        "orders_per_week_mean": agg("orders_per_week_mean"),
+        "orders_per_week_sd": agg("orders_per_week_sd"),
+        "acf1_order_count": agg("acf1_order_count"),
+        "acf1_mean_order_size": agg("acf1_mean_order_size"),
         "contingent_share_qty": agg("contingent_share_qty"),
         "weekly_capacity": {
             f"S{s}": float(s * RATIONS_PER_SHIFT * DEMAND["operating_days_per_week"])
@@ -210,11 +238,28 @@ def main() -> int:
         a, b = tn["weekly_cv"], tb["weekly_cv"]
         return bool(b > a), {"thesis_native_cv": a, "track_b_cv": b}
 
+    def f5():
+        """ATTRIBUTION. If the negative lag-1 ACF is calendar aliasing, it lives in the ORDER
+        COUNT series and vanishes once each week is divided by its own order count. If it is
+        demand memory, it survives in the mean-order-size series.
+
+        Declared PASS = the aliasing explanation holds, i.e. |acf1(mean order size)| is inside the
+        iid band while |acf1(order count)| is not.
+
+        CAN FAIL: genuine demand memory keeps the mean-order-size ACF outside the band, and then
+        the process really does carry state. CAN PASS: pure aliasing puts it inside."""
+        nw = float(np.mean([p["n_weeks"] for p in tn["per_episode"]])) if tn["per_episode"] else 0.0
+        band = 2.0 / np.sqrt(max(nw, 1.0))
+        size, cnt = tn["acf1_mean_order_size"]["mean"], tn["acf1_order_count"]["mean"]
+        return bool(abs(size) < band <= abs(cnt)), {
+            "acf1_mean_order_size": size, "acf1_order_count": cnt, "iid_band": float(band)}
+
     from supply_chain.arm_runner import run_falsifiers
     fals = run_falsifiers({"f1_regular_draws_inside_contract_bounds": f1,
                            "f2_weekly_series_varies": f2,
                            "f3_lag1_acf_inside_iid_band": f3,
-                           "f4_track_b_is_a_different_process": f4})
+                           "f4_track_b_is_a_different_process": f4,
+                           "f5_negative_acf_is_calendar_aliasing": f5})
 
     payload = {
         "schema_version": "demand_process_measurement_v1",

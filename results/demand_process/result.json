@@ -1,0 +1,576 @@
+{
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "DEMAND_PROCESS_CHARACTERISED",
+ "contract_demand": {
+  "a": 2400,
+  "b": 2600,
+  "distribution": "uniform_discrete",
+  "frequency_hrs": 24,
+  "operating_days_per_week": 6
+ },
+ "contract_path": "docs/PREREGISTRO_PROCESO_DEMANDA_2026-08-07.md",
+ "contract_sha256": "bcf75652208988a0e7dc4d81e7a43bc7c542b6b379e2eb5f330625986c8047fe",
+ "created_at": "2026-08-08T00:37:27.640251+00:00",
+ "elapsed_seconds": 736.2723019123077,
+ "endpoint": "weekly_demand_cv_and_lag1_autocorrelation",
+ "environments": {
+  "thesis_native": {
+   "acf1": {
+    "mean": -0.22834947925105253,
+    "n": 12,
+    "se": 0.003766206607563948
+   },
+   "acf1_regular": {
+    "mean": -0.22866730719984604,
+    "n": 12,
+    "se": 0.0033292159777894795
+   },
+   "acf2": {
+    "mean": -0.16984908640397386,
+    "n": 12,
+    "se": 0.006038270257034828
+   },
+   "acf4": {
+    "mean": -0.01511092888364519,
+    "n": 12,
+    "se": 0.012239039099338244
+   },
+   "contingent_order_qty": {
+    "max": 5200.0,
+    "mean": 5001.887879846315,
+    "min": 4802.0,
+    "n": 2863
+   },
+   "contingent_share_qty": {
+    "mean": 0.08004842713742029,
+    "n": 12,
+    "se": 5.783588960087478e-05
+   },
+   "n_episodes": 12,
+   "per_episode": [
+    {
+     "acf1": -0.2387215548503973,
+     "acf1_regular": -0.2298314528769279,
+     "acf2": -0.1572819416248879,
+     "acf4": -0.06207862938768095,
+     "contingent_share_qty": 0.0803625018427242,
+     "n_weeks": 954,
+     "seed": 8600001,
+     "weekly_mean": 15621.810272536688,
+     "weekly_mean_regular": 14366.40251572327,
+     "weekly_sd": 1108.642518416297,
+     "weekly_sd_regular": 1105.4784805547008,
+     "weeks_over_capacity_S1": 0.25157232704402516
+    },
+    {
+     "acf1": -0.22356656199474753,
+     "acf1_regular": -0.24084337202585232,
+     "acf2": -0.1841723619036154,
+     "acf4": -0.03218485474540434,
+     "contingent_share_qty": 0.07984882643676561,
+     "n_weeks": 954,
+     "seed": 8600002,
+     "weekly_mean": 15626.449685534591,
+     "weekly_mean_regular": 14378.696016771488,
+     "weekly_sd": 1122.4152931648946,
+     "weekly_sd_regular": 1119.395059348051,
+     "weeks_over_capacity_S1": 0.24633123689727462
+    },
+    {
+     "acf1": -0.20488455216735108,
+     "acf1_regular": -0.20777980945588576,
+     "acf2": -0.16234058116280978,
+     "acf4": -0.06270879846745614,
+     "contingent_share_qty": 0.07984914028775192,
+     "n_weeks": 954,
+     "seed": 8600003,
+     "weekly_mean": 15624.77358490566,
+     "weekly_mean_regular": 14377.148846960168,
+     "weekly_sd": 1104.7168558881783,
+     "weekly_sd_regular": 1102.1824399897478,
+     "weeks_over_capacity_S1": 0.24947589098532494
+    },
+    {
+     "acf1": -0.2246712461035561,
+     "acf1_regular": -0.22871584161315206,
+     "acf2": -0.16792241902485805,
+     "acf4": 0.015078391457881977,
+     "contingent_share_qty": 0.08023977230364143,
+     "n_weeks": 954,
+     "seed": 8600004,
+     "weekly_mean": 15627.859538784067,
+     "weekly_mean_regular": 14373.883647798742,
+     "weekly_sd": 1110.834714073976,
+     "weekly_sd_regular": 1114.0689006090256,
+     "weeks_over_capacity_S1": 0.24947589098532494
+    },
+    {
+     "acf1": -0.23020512813560035,
+     "acf1_regular": -0.23630294029600862,
+     "acf2": -0.14899486261995337,
+     "acf4": -0.05061724317375336,
+     "contingent_share_qty": 0.07993125627105058,
+     "n_weeks": 954,
+     "seed": 8600005,
+     "weekly_mean": 15624.524109014676,
+     "weekly_mean_regular": 14375.636268343815,
+     "weekly_sd": 1105.7248385654832,
+     "weekly_sd_regular": 1105.1988424765264,
+     "weeks_over_capacity_S1": 0.24737945492662475
+    },
+    {
+     "acf1": -0.2238831627124064,
+     "acf1_regular": -0.2210083420603987,
+     "acf2": -0.20476473191037362,
+     "acf4": 0.051731279707367676,
+     "contingent_share_qty": 0.08010413247607462,
+     "n_weeks": 954,
+     "seed": 8600006,
+     "weekly_mean": 15635.622641509433,
+     "weekly_mean_regular": 14383.14465408805,
+     "weekly_sd": 1099.1414059022982,
+     "weekly_sd_regular": 1110.5339781941623,
+     "weeks_over_capacity_S1": 0.24947589098532494
+    },
+    {
+     "acf1": -0.23348611151377022,
+     "acf1_regular": -0.22328993272839243,
+     "acf2": -0.16213969175904885,
+     "acf4": 0.01736900934522091,
+     "contingent_share_qty": 0.07996228994926946,
+     "n_weeks": 954,
+     "seed": 8600007,
+     "weekly_mean": 15628.462264150943,
+     "weekly_mean_regular": 14378.77463312369,
+     "weekly_sd": 1098.7532604392231,
+     "weekly_sd_regular": 1105.2313250131233,
+     "weeks_over_capacity_S1": 0.24947589098532494
+    },
+    {
+     "acf1": -0.22595896990910366,
+     "acf1_regular": -0.22936250400403982,
+     "acf2": -0.19237305943985009,
+     "acf4": 0.01771589636136907,
+     "contingent_share_qty": 0.07983580722667472,
+     "n_weeks": 954,
+     "seed": 8600008,
+     "weekly_mean": 15622.328092243186,
+     "weekly_mean_regular": 14375.106918238993,
+     "weekly_sd": 1146.4452904957216,
+     "weekly_sd_regular": 1142.8656023298688,
+     "weeks_over_capacity_S1": 0.24213836477987422
+    },
+    {
+     "acf1": -0.25622985827457195,
+     "acf1_regular": -0.2532742893598269,
+     "acf2": -0.14645565316012424,
+     "acf4": 0.036950744117159005,
+     "contingent_share_qty": 0.0801765020795614,
+     "n_weeks": 954,
+     "seed": 8600009,
+     "weekly_mean": 15634.5964360587,
+     "weekly_mean_regular": 14381.069182389938,
+     "weekly_sd": 1116.4561615105642,
+     "weekly_sd_regular": 1129.5952238812274,
+     "weeks_over_capacity_S1": 0.24842767295597484
+    },
+    {
+     "acf1": -0.21929421956285614,
+     "acf1_regular": -0.22125526633667592,
+     "acf2": -0.14430550981960796,
+     "acf4": -0.06839316093467805,
+     "contingent_share_qty": 0.0797952977272619,
+     "n_weeks": 954,
+     "seed": 8600010,
+     "weekly_mean": 15624.67610062893,
+     "weekly_mean_regular": 14377.900419287213,
+     "weekly_sd": 1108.9225946846775,
+     "weekly_sd_regular": 1108.8793457831857,
+     "weeks_over_capacity_S1": 0.24842767295597484
+    },
+    {
+     "acf1": -0.24103859437057554,
+     "acf1_regular": -0.2315518596191849,
+     "acf2": -0.1666254432721898,
+     "acf4": -0.03927587188385971,
+     "contingent_share_qty": 0.08028813185083528,
+     "n_weeks": 954,
+     "seed": 8600011,
+     "weekly_mean": 15623.525157232705,
+     "weekly_mean_regular": 14369.141509433963,
+     "weekly_sd": 1124.3119961731963,
+     "weekly_sd_regular": 1113.6079136799096,
+     "weeks_over_capacity_S1": 0.24737945492662475
+    },
+    {
+     "acf1": -0.21825379141769408,
+     "acf1_regular": -0.22079207602180678,
+     "acf2": -0.20081278115036716,
+     "acf4": -0.004917908999908351,
+     "contingent_share_qty": 0.08018746719743242,
+     "n_weeks": 954,
+     "seed": 8600012,
+     "weekly_mean": 15628.170859538784,
+     "weekly_mean_regular": 14374.987421383648,
+     "weekly_sd": 1125.725027954129,
+     "weekly_sd_regular": 1107.914009342623,
+     "weeks_over_capacity_S1": 0.24633123689727462
+    }
+   ],
+   "regular_order_qty": {
+    "max": 2600.0,
+    "mean": 2500.2114528746106,
+    "min": 2400.0,
+    "n": 65835
+   },
+   "weekly_capacity": {
+    "S1": 15384.0,
+    "S2": 30768.0,
+    "S3": 46152.0
+   },
+   "weekly_cv": 0.07130914239210204,
+   "weekly_cv_regular_only": 0.07747263660295076,
+   "weekly_mean": {
+    "mean": 15626.899895178198,
+    "n": 12,
+    "se": 1.2726978956919273
+   },
+   "weekly_mean_regular_only": 14375.991002795248,
+   "weekly_sd": {
+    "mean": 1114.3408297723865,
+    "n": 12,
+    "se": 3.9354295576029843
+   },
+   "weeks_over_capacity_S1": {
+    "mean": 0.24799091544374563,
+    "n": 12,
+    "se": 0.0006883104902605481
+   }
+  },
+  "track_b": {
+   "acf1": {
+    "mean": -0.17613837992001571,
+    "n": 12,
+    "se": 0.008899304631329456
+   },
+   "acf1_regular": {
+    "mean": -0.21182523819296603,
+    "n": 12,
+    "se": 0.010875832920687842
+   },
+   "acf2": {
+    "mean": -0.08208445222311908,
+    "n": 12,
+    "se": 0.008530666827924548
+   },
+   "acf4": {
+    "mean": 0.003275391562786734,
+    "n": 12,
+    "se": 0.007580581539496079
+   },
+   "contingent_order_qty": {
+    "max": 11053.4,
+    "mean": 5713.885054917624,
+    "min": 4878.85,
+    "n": 4006
+   },
+   "contingent_share_qty": {
+    "mean": 0.12202528393951377,
+    "n": 12,
+    "se": 0.00043129458961582885
+   },
+   "n_episodes": 12,
+   "per_episode": [
+    {
+     "acf1": -0.18879376628297453,
+     "acf1_regular": -0.1958892384938132,
+     "acf2": -0.07161094086953369,
+     "acf4": -0.014604370516092131,
+     "contingent_share_qty": 0.1215612134786982,
+     "n_weeks": 954,
+     "seed": 8600001,
+     "weekly_mean": 16395.28641509434,
+     "weekly_mean_regular": 14402.255503144654,
+     "weekly_sd": 1745.9927509517368,
+     "weekly_sd_regular": 1448.5574233196883,
+     "weeks_over_capacity_S1": 0.6132075471698113
+    },
+    {
+     "acf1": -0.1944590698149319,
+     "acf1_regular": -0.20346496785501256,
+     "acf2": -0.09695299892294605,
+     "acf4": 0.00700330197873474,
+     "contingent_share_qty": 0.12327527620088041,
+     "n_weeks": 954,
+     "seed": 8600002,
+     "weekly_mean": 16441.029161425577,
+     "weekly_mean_regular": 14414.25675052411,
+     "weekly_sd": 1825.9382552130573,
+     "weekly_sd_regular": 1428.5901567301676,
+     "weeks_over_capacity_S1": 0.59958071278826
+    },
+    {
+     "acf1": -0.11303401397800071,
+     "acf1_regular": -0.23252755302073205,
+     "acf2": -0.12860683530981856,
+     "acf4": 0.0032999297644731307,
+     "contingent_share_qty": 0.12124561002563261,
+     "n_weeks": 954,
+     "seed": 8600003,
+     "weekly_mean": 16345.608039832285,
+     "weekly_mean_regular": 14363.774821802936,
+     "weekly_sd": 1780.5775426227237,
+     "weekly_sd_regular": 1387.0425872008152,
+     "weeks_over_capacity_S1": 0.5911949685534591
+    },
+    {
+     "acf1": -0.21831291650154577,
+     "acf1_regular": -0.2186230608173011,
+     "acf2": -0.08248376195988663,
+     "acf4": -0.025417364051640565,
+     "contingent_share_qty": 0.12093520642558886,
+     "n_weeks": 954,
+     "seed": 8600004,
+     "weekly_mean": 16357.610618448638,
+     "weekly_mean_regular": 14379.399601677147,
+     "weekly_sd": 1778.8340507273901,
+     "weekly_sd_regular": 1421.3242095152293,
+     "weeks_over_capacity_S1": 0.589098532494759
+    },
+    {
+     "acf1": -0.14641717508682323,
+     "acf1_regular": -0.14748534776922825,
+     "acf2": -0.07161526127530321,
+     "acf4": 0.03431461649599864,
+     "contingent_share_qty": 0.12041714908273538,
+     "n_weeks": 954,
+     "seed": 8600005,
+     "weekly_mean": 16287.914203354296,
+     "weekly_mean_regular": 14326.570010482179,
+     "weekly_sd": 1764.6018940777064,
+     "weekly_sd_regular": 1407.046930417748,
+     "weeks_over_capacity_S1": 0.5660377358490566
+    },
+    {
+     "acf1": -0.1732191589184724,
+     "acf1_regular": -0.1975265282280147,
+     "acf2": -0.11434872583937102,
+     "acf4": 0.04484221992974626,
+     "contingent_share_qty": 0.12505136453952914,
+     "n_weeks": 954,
+     "seed": 8600006,
+     "weekly_mean": 16468.869150943396,
+     "weekly_mean_regular": 14409.414591194967,
+     "weekly_sd": 1841.2171304127908,
+     "weekly_sd_regular": 1430.1799925589578,
+     "weeks_over_capacity_S1": 0.6268343815513627
+    },
+    {
+     "acf1": -0.16723531305005843,
+     "acf1_regular": -0.22742151466440153,
+     "acf2": -0.05159908672901619,
+     "acf4": 0.03283302863519523,
+     "contingent_share_qty": 0.12280582922219963,
+     "n_weeks": 954,
+     "seed": 8600007,
+     "weekly_mean": 16380.279570230607,
+     "weekly_mean_regular": 14368.685754716982,
+     "weekly_sd": 1782.832482383021,
+     "weekly_sd_regular": 1430.5315085811094,
+     "weeks_over_capacity_S1": 0.5985324947589099
+    },
+    {
+     "acf1": -0.16257338873207422,
+     "acf1_regular": -0.1991360372068231,
+     "acf2": -0.0667004648504945,
+     "acf4": -0.023586286085118445,
+     "contingent_share_qty": 0.12316184110506456,
+     "n_weeks": 954,
+     "seed": 8600008,
+     "weekly_mean": 16439.86929769392,
+     "weekly_mean_regular": 14415.104727463313,
+     "weekly_sd": 1784.1943079015232,
+     "weekly_sd_regular": 1422.3614248682293,
+     "weeks_over_capacity_S1": 0.6174004192872118
+    },
+    {
+     "acf1": -0.20037606775151037,
+     "acf1_regular": -0.212072342665497,
+     "acf2": -0.13139713998240707,
+     "acf4": 0.02748911266675861,
+     "contingent_share_qty": 0.12173706511115723,
+     "n_weeks": 954,
+     "seed": 8600009,
+     "weekly_mean": 16358.156666666668,
+     "weekly_mean_regular": 14366.762683438157,
+     "weekly_sd": 1842.2113661927901,
+     "weekly_sd_regular": 1403.1983387372488,
+     "weeks_over_capacity_S1": 0.5775681341719078
+    },
+    {
+     "acf1": -0.21559767255688064,
+     "acf1_regular": -0.3097538746522927,
+     "acf2": -0.0416262396706982,
+     "acf4": -0.02667320234069141,
+     "contingent_share_qty": 0.12021443130201381,
+     "n_weeks": 954,
+     "seed": 8600010,
+     "weekly_mean": 16354.757327044026,
+     "weekly_mean_regular": 14388.679475890984,
+     "weekly_sd": 1728.3604713274076,
+     "weekly_sd_regular": 1429.5714682379246,
+     "weeks_over_capacity_S1": 0.6079664570230608
+    },
+    {
+     "acf1": -0.14779269199440442,
+     "acf1_regular": -0.20758846056612446,
+     "acf2": -0.05795460062857691,
+     "acf4": 0.0021735050431496085,
+     "contingent_share_qty": 0.12335666806535994,
+     "n_weeks": 954,
+     "seed": 8600011,
+     "weekly_mean": 16435.799737945494,
+     "weekly_mean_regular": 14408.33424528302,
+     "weekly_sd": 1793.5461278143753,
+     "weekly_sd_regular": 1504.4260272705233,
+     "weeks_over_capacity_S1": 0.6184486373165619
+    },
+    {
+     "acf1": -0.18584932437251214,
+     "acf1_regular": -0.19041393237635146,
+     "acf2": -0.07011737063937686,
+     "acf4": -0.022369792767072856,
+     "contingent_share_qty": 0.12054175271530532,
+     "n_weeks": 954,
+     "seed": 8600012,
+     "weekly_mean": 16356.023081761006,
+     "weekly_mean_regular": 14384.439392033544,
+     "weekly_sd": 1762.594577620214,
+     "weekly_sd_regular": 1422.988201656783,
+     "weeks_over_capacity_S1": 0.5974842767295597
+    }
+   ],
+   "regular_order_qty": {
+    "max": 2912.0000000000005,
+    "mean": 2546.1038182324114,
+    "min": 2280.0,
+    "n": 64687
+   },
+   "weekly_capacity": {
+    "S1": 15384.0,
+    "S2": 30768.0,
+    "S3": 46152.0
+   },
+   "weekly_cv": 0.1089958793903212,
+   "weekly_cv_regular_only": 0.09926460525642895,
+   "weekly_mean": {
+    "mean": 16385.10027253669,
+    "n": 12,
+    "se": 15.099400202075913
+   },
+   "weekly_mean_regular_only": 14385.639796471,
+   "weekly_sd": {
+    "mean": 1785.908413103728,
+    "n": 12,
+    "se": 10.255520441510289
+   },
+   "weeks_over_capacity_S1": {
+    "mean": 0.6002795248078266,
+    "n": 12,
+    "se": 0.005121131040792681
+   }
+  }
+ },
+ "falsifiers": {
+  "all_passed": false,
+  "f1_regular_draws_inside_contract_bounds": {
+   "evidence": {
+    "max": 2600.0,
+    "mean": 2500.2114528746106,
+    "min": 2400.0,
+    "n": 65835
+   },
+   "passed": true
+  },
+  "f2_weekly_series_varies": {
+   "evidence": {
+    "weekly_sd": 1114.3408297723865
+   },
+   "passed": true
+  },
+  "f3_lag1_acf_inside_iid_band": {
+   "evidence": {
+    "acf1": -0.22834947925105253,
+    "iid_band": 0.0647523908238176,
+    "mean_n_weeks": 954.0
+   },
+   "passed": false
+  },
+  "f4_track_b_is_a_different_process": {
+   "evidence": {
+    "thesis_native_cv": 0.07130914239210204,
+    "track_b_cv": 0.1089958793903212
+   },
+   "passed": true
+  }
+ },
+ "module_manifest": {
+  "entry_script": "scripts/measure_demand_process_v1.py",
+  "entry_script_sha256": "10f66e8ab9492636930624d083ebc5be2f121d13ecce1bb330c86066e5f5f4fc",
+  "missing": [],
+  "modules": {
+   "supply_chain/arm_runner.py": "1afea4fa248db5beb2d86c6ab2033d6f24a95115ea544b08966b7a538456ac99",
+   "supply_chain/config.py": "ae702a4991966504eaa1036106fa5f4b9c11e913d376dfb67e3f3c83147904cc",
+   "supply_chain/external_env_interface.py": "4d8404af6c97a10e27bbaaa0409691420027b285f4784721d3e54468b42628e1",
+   "supply_chain/supply_chain.py": "2f348e5922cbbecf167b45cf0045765010beaaecdcb0fe6de88f259c989460f6"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "primary_metric": "weekly_demand_cv_and_lag1_autocorrelation",
+ "rations_per_shift": 2564.0,
+ "reference_path": "results/track_b_nonneural/result.json",
+ "reference_sha256": "0c5304b1eb3b0a23d2b38a8997bce05cfac08319bb769df487846b5bc289034b",
+ "run_role": "DIAGNOSTIC",
+ "schema_version": "demand_process_measurement_v1",
+ "scope": "DEVELOPMENT_DIAGNOSTIC_NO_ADJUDICATION_NO_LEARNER",
+ "seed_block": {
+  "derived_from": "seeds",
+  "end": 8600012,
+  "n": 12,
+  "start": 8600001
+ },
+ "seeds": [
+  8600001,
+  8600002,
+  8600003,
+  8600004,
+  8600005,
+  8600006,
+  8600007,
+  8600008,
+  8600009,
+  8600010,
+  8600011,
+  8600012
+ ],
+ "self_sha256": "9711cb366b74f4d870ed8db960458175f8d7c8ea4f6d924af9d8c80f311939e6",
+ "why": "Asked whether demand is static or variable, the honest answer needs the realized series, not a hand-derived CV off config.py. Variable and PREDICTABLE are different questions: an iid process varies without offering any state to condition on, which would be a structural reason a constant cannot be beaten from the demand side."
+}
