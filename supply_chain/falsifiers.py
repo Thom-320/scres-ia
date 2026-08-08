@@ -112,6 +112,79 @@ def summarise(falsifiers: Mapping[str, Any]) -> dict:
 
 
 # --------------------------------------------------------------------------------------------
+# The permutation null. Added 2026-08-08 after it retracted a positive claim of our own.
+# --------------------------------------------------------------------------------------------
+
+def selection_gap(matrix: np.ndarray, train_idx: Sequence[int],
+                  test_idx: Sequence[int]) -> float:
+    """`E_test[min over options]` minus the train-selected fixed column, evaluated on test.
+
+    This is the shape of every "clairvoyant ceiling" this project computes, and it is BIASED
+    UPWARD: a minimum over K noisy draws sits below the minimum of their means by Jensen, so the
+    gap is positive even when every option has the same true value.
+    """
+    fixed = int(np.argmin(np.asarray(matrix)[list(train_idx)].mean(axis=0)))
+    block = np.asarray(matrix)[list(test_idx)]
+    return float((block[:, fixed] - block.min(axis=1)).mean())
+
+
+def permutation_null(matrix: np.ndarray, train_idx: Sequence[int], test_idx: Sequence[int],
+                     *, n_draws: int = 20_000, rng=None,
+                     statistic: Callable[..., float] = selection_gap) -> dict:
+    """Null distribution of `statistic` when the TAPE x OPTION INTERACTION carries no information.
+
+    THE FIRST VERSION OF THIS FUNCTION WAS WRONG, and the mutation tests below caught it. It
+    permuted labels within each row, which leaves `row.min()` numerically UNCHANGED -- a
+    permutation of a row cannot move its minimum -- so it never touched the term it claimed to
+    test. It only randomised the fixed column, which means a gap SMALLER than that null was
+    evidence the train-selected schedule beats a random one, the opposite of how it was read.
+
+    Per-tape headroom IS the interaction: some schedules suit some tapes. So the null fits the
+    additive model `J[i,j] ~ mu + a_i + b_j`, keeps it, and permutes only the RESIDUALS. Tape
+    difficulty and schedule quality both survive; only "this schedule suits this tape" is
+    destroyed. Under that null a positive gap is exactly the Jensen bias of a minimum over K
+    options, which is what an observed gap has to beat.
+    """
+    rng = np.random.default_rng() if rng is None else rng
+    m = np.asarray(matrix, dtype=float)
+    observed = float(statistic(m, train_idx, test_idx))
+    grand = m.mean()
+    fitted = m.mean(axis=1, keepdims=True) + m.mean(axis=0, keepdims=True) - grand
+    resid = m - fitted
+    flat = resid.ravel()
+    draws = np.empty(int(n_draws))
+    for b in range(int(n_draws)):
+        draws[b] = statistic(fitted + rng.permutation(flat).reshape(m.shape),
+                             train_idx, test_idx)
+    return {"gap_observed": observed, "n_draws": int(n_draws),
+            "null_mean": float(draws.mean()),
+            "null_p50": float(np.percentile(draws, 50)),
+            "null_p95": float(np.percentile(draws, 95)),
+            "p_value": float((draws >= observed).mean()),
+            "null_model": "additive mu + a_i + b_j retained; residuals permuted"}
+
+
+def survives_permutation_null(matrix: np.ndarray, train_idx: Sequence[int],
+                              test_idx: Sequence[int], *, alpha: float = 0.05,
+                              n_draws: int = 20_000, rng=None,
+                              statistic: Callable[..., float] = selection_gap) -> dict:
+    """A falsifier: does the measured gap exceed what a no-interaction world produces?
+
+    Without it, the winner's curse gets reported as headroom: a minimum over K options is biased
+    upward whatever the truth. With the WRONG null it is worse than useless, which is why the
+    mutation tests below assert that it both rejects pure noise AND accepts a genuine per-tape
+    advantage. A check that can only fail is a rejection rule, not a test.
+    """
+    out = permutation_null(matrix, train_idx, test_idx, n_draws=n_draws, rng=rng,
+                           statistic=statistic)
+    return lt(out["p_value"], alpha,
+              "a minimum over K options is biased upward, so a positive gap is what a world with "
+              "no tape-option interaction already produces; without this the winner's curse is "
+              "reported as headroom",
+              **out)
+
+
+# --------------------------------------------------------------------------------------------
 # The pre-flight. Every item below corresponds to a defect that reached a sealed artifact.
 # --------------------------------------------------------------------------------------------
 

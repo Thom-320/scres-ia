@@ -17,22 +17,20 @@
   "rpj_onset_admission": "clamped",
   "schema": "calibration_provenance_v1"
  },
- "claim_status": "CEILING_IS_A_MINIMUM_OVER_NOISE_HEADROOM_WITHDRAWN",
+ "claim_status": "CEILING_SURVIVES_THE_PERMUTATION_NULL",
  "contract_path": "docs/ENMIENDA_COSTE_BUFFER_DECLARADO_2026-08-08.md",
  "contract_sha256": "c30c824317e41e94622045c1a69538231e18a767f6312542e8535dcab5dfcd2d",
- "created_at": "2026-08-08T22:21:02.237633+00:00",
- "elapsed_seconds": 1.802434874989558,
+ "created_at": "2026-08-08T22:28:31.035762+00:00",
+ "elapsed_seconds": 1.6727436250075698,
  "falsifier_summary": {
-  "all_passed": false,
+  "all_passed": true,
   "disclosures": [
    "d1_no_new_episodes_for_the_null"
   ],
-  "failed": [
-   "f2_observed_gap_exceeds_the_null"
-  ],
+  "failed": [],
   "n_computed": 4,
   "n_disclosures": 1,
-  "n_failed": 1,
+  "n_failed": 0,
   "n_not_applicable": 1,
   "not_applicable": [
    "d2_no_fresh_seeds"
@@ -115,11 +113,12 @@
    "computed": true,
    "evidence": {
     "computed_from": {
-     "observed": 0.0654095257305136,
+     "observed": 0.02284014462594435,
      "threshold": 0.0
     },
     "n_draws": 20000,
-    "null_mean": 0.0654095257305136,
+    "null_mean": 0.02284014462594435,
+    "null_model": "additive mu + a_i + b_j retained; residuals permuted",
     "why_it_can_fail": "the permutation null must itself produce a POSITIVE gap, because a minimum over 27 draws is biased downward whatever the truth; a null centred at zero would mean the permutation destroyed the very bias it exists to measure"
    },
    "passed": true
@@ -128,16 +127,16 @@
    "computed": true,
    "evidence": {
     "computed_from": {
-     "observed": 0.8895,
+     "observed": 0.01315,
      "threshold": 0.05
     },
-    "null_mean": 0.0654095257305136,
-    "null_p95": 0.09438679040204294,
+    "null_mean": 0.02284014462594435,
+    "null_p95": 0.0384350206394074,
     "observed_gap": 0.04510303513633616,
-    "p_value": 0.8895,
+    "p_value": 0.01315,
     "why_it_can_fail": "THE test of my own positive claim. If the observed gap sits inside the distribution produced by shuffling schedule labels, the ceiling is an artifact of taking a minimum over 27 noisy options and HEADROOM_ESTABLISHED must be withdrawn"
    },
-   "passed": false
+   "passed": true
   },
   "f3_optima_actually_differ_across_tapes": {
    "computed": true,
@@ -289,11 +288,11 @@
  "lambda": 0.35,
  "module_manifest": {
   "entry_script": "scripts/run_ceiling_null_diagnostic_v1.py",
-  "entry_script_sha256": "bb49ffda9b6505e79373f06d6cea09f3ac323a40954aa1b73aa9dffe39a3d31b",
+  "entry_script_sha256": "e4bee5eab83274912999fcbff83a766b975bd45c9a6dbf5a656b4a5780c0b8aa",
   "missing": [],
   "modules": {
    "supply_chain/arm_runner.py": "1afea4fa248db5beb2d86c6ab2033d6f24a95115ea544b08966b7a538456ac99",
-   "supply_chain/falsifiers.py": "a152144589e58bc1a658b002c39ff5c0332cd3a2796cb9cf443cd0de36443788",
+   "supply_chain/falsifiers.py": "99a64c66b62ee43ab9cf532a34932dc27ff4b4fae72d9b331fcf2a8f2a554fb7",
    "supply_chain/seed_custody.py": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd"
   },
   "schema": "module_manifest_v2",
@@ -301,13 +300,13 @@
  },
  "n_distinct_optima": 7,
  "null": {
-  "mean": 0.0654095257305136,
-  "method": "schedule labels permuted independently within each tape; whole pipeline rerun, comparator selected on permuted train",
+  "gap_observed": 0.04510303513633616,
   "n_draws": 20000,
-  "p50": 0.06466037577353859,
-  "p95": 0.09438679040204294,
-  "p99": 0.10682193072753306,
-  "p_value": 0.8895
+  "null_mean": 0.02284014462594435,
+  "null_model": "additive mu + a_i + b_j retained; residuals permuted",
+  "null_p50": 0.022160443383727517,
+  "null_p95": 0.0384350206394074,
+  "p_value": 0.01315
  },
  "observed_gap": 0.04510303513633616,
  "per_tape_optimum": {
@@ -382,7 +381,11 @@
  "run_role": "PERMUTATION_NULL_AND_TAPE_FEATURES",
  "schema_version": "ceiling_null_diagnostic_v1",
  "scope": "DEVELOPMENT_DIAGNOSTIC_TESTS_OUR_OWN_POSITIVE_CLAIM",
- "self_sha256": "b13f06ceb7dea7634986a19149251c842292fd51f3028704ba2fa702ef9810b1",
+ "self_sha256": "ab9348cd5b48e55bbb334e6e290bc34d7e12edfad8e3d9b2c34e831b6af9fb09",
+ "superseded_null": {
+  "method": "labels permuted within row",
+  "why_withdrawn": "a within-row permutation cannot move that row's minimum, so it never tested the interaction; it only randomised the fixed column"
+ },
  "tape_features": {
   "8600001": {
    "backlog_max": 163985.8818181818,

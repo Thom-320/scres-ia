@@ -41,7 +41,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from scripts.run_priced_buffer_gate_v1 import STEP_HOURS, make_env, options  # noqa: E402
 from supply_chain.arm_runner import seal_and_write  # noqa: E402
 from supply_chain.falsifiers import (  # noqa: E402
-    disclosure, ge, gt, lt, not_applicable, summarise,
+    disclosure, ge, gt, lt, not_applicable, permutation_null, selection_gap, summarise,
 )
 from supply_chain.seed_custody import custody_falsifier, module_manifest  # noqa: E402
 
@@ -113,16 +113,15 @@ def main() -> int:
     observed = pipeline_gap(J, tr, te)
     print(f"  hueco observado en lambda {LAMBDA}: {observed:+.6f}")
 
-    # ---- THE NULL: permute schedule labels WITHIN each tape ---------------------------------
-    null = np.empty(N_NULL)
-    for b in range(N_NULL):
-        P = np.empty_like(J)
-        for i in range(J.shape[0]):
-            P[i] = J[i, rng.permutation(J.shape[1])]
-        null[b] = pipeline_gap(P, tr, te)
-    p_value = float((null >= observed).mean())
-    print(f"  nulo por permutacion ({N_NULL} sorteos): media {null.mean():+.6f} "
-          f"p95 {np.percentile(null, 95):+.6f} p99 {np.percentile(null, 99):+.6f}")
+    # ---- THE NULL, from the shared module. The first hand-rolled version permuted labels
+    # WITHIN each row, which cannot move that row's minimum, so it never tested the interaction it
+    # claimed to; under it a gap SMALLER than null meant the train-selected schedule beats a random
+    # one, the opposite of how it was read. The module now retains the additive mu + a_i + b_j and
+    # permutes only the residuals, destroying exactly "this schedule suits this tape".
+    nul = permutation_null(J, tr, te, n_draws=N_NULL, rng=rng, statistic=selection_gap)
+    p_value = nul["p_value"]
+    print(f"  nulo de interaccion ({N_NULL} sorteos): media {nul['null_mean']:+.6f} "
+          f"p95 {nul['null_p95']:+.6f}")
     print(f"  p = P(nulo >= observado) = {p_value:.4f}")
 
     # ---- what distinguishes the tapes ------------------------------------------------------
@@ -148,19 +147,20 @@ def main() -> int:
 
     falsifiers = {
         "f1_null_preserves_the_selection_bias": ge(
-            float(null.mean()), 0.0,
+            float(nul["null_mean"]), 0.0,
             "the permutation null must itself produce a POSITIVE gap, because a minimum over 27 "
             "draws is biased downward whatever the truth; a null centred at zero would mean the "
             "permutation destroyed the very bias it exists to measure",
-            null_mean=float(null.mean()), n_draws=N_NULL),
+            null_mean=float(nul["null_mean"]), n_draws=N_NULL,
+            null_model=nul["null_model"]),
         "f2_observed_gap_exceeds_the_null": lt(
             p_value, 0.05,
             "THE test of my own positive claim. If the observed gap sits inside the distribution "
             "produced by shuffling schedule labels, the ceiling is an artifact of taking a "
             "minimum over 27 noisy options and HEADROOM_ESTABLISHED must be withdrawn",
             observed_gap=observed, p_value=p_value,
-            null_mean=float(null.mean()),
-            null_p95=float(np.percentile(null, 95))),
+            null_mean=float(nul["null_mean"]),
+            null_p95=float(nul["null_p95"])),
         "f3_optima_actually_differ_across_tapes": ge(
             float(n_distinct_optima), 2.0,
             "if one schedule were optimal on every tape the gap would be zero by construction and "
@@ -209,13 +209,11 @@ def main() -> int:
         "tests": {"path": "results/lambda_refinement/result.json",
                   "claim": "HEADROOM_ESTABLISHED_IN_A_PRICE_BAND"},
         "lambda": LAMBDA, "observed_gap": observed,
-        "null": {"n_draws": N_NULL, "mean": float(null.mean()),
-                 "p50": float(np.percentile(null, 50)),
-                 "p95": float(np.percentile(null, 95)),
-                 "p99": float(np.percentile(null, 99)),
-                 "p_value": p_value,
-                 "method": "schedule labels permuted independently within each tape; whole "
-                           "pipeline rerun, comparator selected on permuted train"},
+        "null": dict(nul),
+        "superseded_null": {"method": "labels permuted within row",
+                            "why_withdrawn": ("a within-row permutation cannot move that row's "
+                                              "minimum, so it never tested the interaction; it "
+                                              "only randomised the fixed column")},
         "per_tape_optimum": {str(s): best_opt[s] for s in all_seeds},
         "n_distinct_optima": n_distinct_optima,
         "tape_features": {str(s): feats[s] for s in all_seeds},
