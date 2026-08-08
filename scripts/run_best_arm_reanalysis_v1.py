@@ -116,6 +116,30 @@ def main() -> int:
     indistinguishable = [a for a, v in vs_incumbent.items()
                          if not v["distinguishable_from_incumbent"]]
     top4 = ranking[:4]
+
+    # ALL SIX PAIRS, BECAUSE "MUTUALLY INDISTINGUISHABLE" IS NOT WHAT THE INCUMBENT CONTRASTS SAY.
+    # Contrasting each arm against the best-mean arm gives three comparisons among the top four, and
+    # three comparisons cannot establish a statement about six pairs: arms 2 and 4 could differ from
+    # each other while both straddle zero against arm 1. An external review caught the gap. The six
+    # pairs are computed here, Holm-corrected as one family, and the claim now rests on what was
+    # measured rather than on what three of the six suggested.
+    pairwise, pw_p = {}, {}
+    for i, a in enumerate(top4):
+        for b in top4[i + 1:]:
+            d = per_arm[b] - per_arm[a]
+            row = boot(d, rng)
+            st = d[rng.integers(0, d.size, size=(N_BOOT, d.size))].mean(axis=1)
+            pv = 2.0 * min((st <= 0).mean(), (st >= 0).mean())
+            row.update({"p_two_sided": float(pv),
+                        "distinguishable": bool(row["lcb95"] > 0 or row["ucb95"] < 0)})
+            pairwise[f"{b}__minus__{a}"] = row
+            pw_p[f"{b}__minus__{a}"] = float(pv)
+    for k, h in holm(pw_p).items():
+        pairwise[k]["holm"] = h
+    n_pairs_distinguishable = sum(1 for v in pairwise.values() if v["distinguishable"])
+    n_pairs_holm_rejected = sum(1 for v in pairwise.values() if v["holm"]["rejected_at_05"])
+    top4_mutually_indistinguishable = (n_pairs_distinguishable == 0
+                                       and n_pairs_holm_rejected == 0)
     n_marginal_in_top4 = sum(1 for a in top4 if a.endswith("_marginal"))
     cold_arms = [a for a in ranking if a.endswith("_cold")]
     cold_ranks = [ranking.index(a) for a in cold_arms]
@@ -160,6 +184,20 @@ def main() -> int:
                                    "falsifier would fail and the ranking WOULD be a verdict; it "
                                    "exists so the ranking cannot be read as one by default",
                 "indistinguishable_from_incumbent": indistinguishable}},
+        # The claim this artifact makes about the top four must be checked on all six pairs, not on
+        # the three that touch the incumbent. It can fail: if any pair separates, the sentence
+        # "mutually indistinguishable" is retired and the ranking is reported without it.
+        "f6_the_mutual_claim_rests_on_all_six_pairs": {
+            "passed": True,          # this falsifier records, it does not gate: both outcomes are
+                                     # publishable, and only the WORDING depends on which occurred
+            "n_pairs_checked": len(pairwise),
+            "n_distinguishable": n_pairs_distinguishable,
+            "n_rejected_under_holm": n_pairs_holm_rejected,
+            "mutually_indistinguishable": top4_mutually_indistinguishable,
+            "why_it_can_change_the_claim": ("three contrasts against the incumbent cannot establish "
+                                            "a statement about six pairs; arms two and four may "
+                                            "separate from each other while both straddle zero "
+                                            "against arm one")},
         "f5_no_seed_is_opened": {
             "passed": True,
             "evidence": {"why_it_can_fail": "it cannot -- this script reads one sealed artifact and "
@@ -189,6 +227,10 @@ def main() -> int:
         "mean_auc": mean_auc,
         "incumbent": incumbent,
         "vs_incumbent": vs_incumbent,
+        "top4_pairwise": pairwise,
+        "top4_mutually_indistinguishable": top4_mutually_indistinguishable,
+        "n_top4_pairs_distinguishable": n_pairs_distinguishable,
+        "n_top4_pairs_rejected_under_holm": n_pairs_holm_rejected,
         "within_family_retention_vs_own_marginal": within,
         "structure": {
             "cold_arms_ranks": dict(zip(cold_arms, [r + 1 for r in cold_ranks])),

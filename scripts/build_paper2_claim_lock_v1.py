@@ -106,13 +106,15 @@ CLAIMS: list[dict] = [
         "estimand": "paired per-seed difference of every arm against the lowest-mean arm, n=60",
         "allowed": ("Re-read as twelve arms rather than four within-family contrasts, the four "
                     "cold-start arms occupy ranks 9-12 without exception, the four lowest-regret "
-                    "arms are mutually indistinguishable under Holm, and three of those four are "
+                    "arms are mutually indistinguishable -- all six pairwise contrasts among them "
+                    "straddle zero and none is rejected under Holm -- and three of those four are "
                     "frequency-matched replays of a carrier's visit marginals; retention beat a "
                     "carrier's own marginal replay in one of four families and lost distinguishably "
                     "in three."),
         "forbidden": ["the state-blind control wins", "marginal replay is the best procedure",
                       "retention does not help", "this was preregistered",
                       "the ranking selects a new winner",
+                      "the top four are indistinguishable from the best arm",
                       "three of the four discard the carrier entirely",
                       "the transferable object is a level-frequency prior",
                       "a visit histogram is enough", "state-blind marginal replay"],

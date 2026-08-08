@@ -20,7 +20,7 @@
  "claim_status": "THE_BEST_MEAN_ARM_IS_A_MARGINAL_REPLAY_AND_THE_TOP_FOUR_ARE_INDISTINGUISHABLE",
  "contract_path": "/Users/thom/Projects/research/scres-ia/docs/ENMIENDA_REGISTRO_DE_EVIDENCIA_2026-08-07.md",
  "contract_sha256": "8e78b344536e8c6440d29ff4e437a0ea9b84c5fe73980d0b40c842aa90947ff5",
- "created_at": "2026-08-08T04:48:25.034982+00:00",
+ "created_at": "2026-08-08T05:46:02.916832+00:00",
  "endpoint": "auc_regret_norm",
  "estimand": "paired per-seed (arm - best-mean arm); lower AUC is better, so positive = worse",
  "falsifiers": {
@@ -83,6 +83,14 @@
     "why_it_can_fail": "it cannot -- this script reads one sealed artifact and runs no simulation; recorded so the scope is explicit"
    },
    "passed": true
+  },
+  "f6_the_mutual_claim_rests_on_all_six_pairs": {
+   "mutually_indistinguishable": true,
+   "n_distinguishable": 0,
+   "n_pairs_checked": 6,
+   "n_rejected_under_holm": 0,
+   "passed": true,
+   "why_it_can_change_the_claim": "three contrasts against the incumbent cannot establish a statement about six pairs; arms two and four may separate from each other while both straddle zero against arm one"
   }
  },
  "governing_contract": "docs/ENMIENDA_REGISTRO_DE_EVIDENCIA_2026-08-07.md",
@@ -103,7 +111,7 @@
  },
  "module_manifest": {
   "entry_script": "scripts/run_best_arm_reanalysis_v1.py",
-  "entry_script_sha256": "ae0d23d71eee8f85cc4cdd33c48636deda04324d5eef1711598116fec1df5fb6",
+  "entry_script_sha256": "2cf5c7446ca66acc2a1fa6a6e67432fd8efca9eff45a999c5de1935c4ea0cd26",
   "missing": [],
   "modules": {
    "supply_chain/arm_runner.py": "1afea4fa248db5beb2d86c6ab2033d6f24a95115ea544b08966b7a538456ac99",
@@ -113,6 +121,8 @@
   "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
  },
  "n_seeds": 60,
+ "n_top4_pairs_distinguishable": 0,
+ "n_top4_pairs_rejected_under_holm": 0,
  "ranking_best_first": [
   "neuron_marginal",
   "ofat_marginal",
@@ -133,7 +143,7 @@
  "run_role": "POST_HOC_REREAD",
  "schema_version": "best_arm_reanalysis_v1",
  "scope": "REREAD_OF_ONE_SEALED_CONFIRMATION_NO_SEEDS_NO_NEW_RUN",
- "self_sha256": "cbc15f0d768c42ed72d20d8d18b7bb63d1fe17d3f29422f0c3c4bc2282e8285e",
+ "self_sha256": "525b1a54c8a64801f28559543514a37e5f32e5eccfaa4b10a26918f2e36acf57",
  "source": "results/grid_transfer_confirmation_v2/result.json",
  "source_self_sha256": "eceb9ee97613e172130b7175a79cf6c7d5ddfb54f0ec5435b1174842c20b0f5a",
  "structure": {
@@ -146,6 +156,87 @@
   },
   "n_indistinguishable_from_incumbent": 3,
   "n_marginal_replays_in_top_four": 3
+ },
+ "top4_mutually_indistinguishable": true,
+ "top4_pairwise": {
+  "gp_marginal__minus__neuron_marginal": {
+   "distinguishable": false,
+   "holm": {
+    "p_raw": 0.1792,
+    "rejected_at_05": false,
+    "threshold": 0.008333333333333333
+   },
+   "lcb95": -0.0016121127782767759,
+   "mean": 0.0037974707914546677,
+   "n": 60,
+   "p_two_sided": 0.1792,
+   "ucb95": 0.009465544789843825
+  },
+  "gp_marginal__minus__ofat_marginal": {
+   "distinguishable": false,
+   "holm": {
+    "p_raw": 0.3916,
+    "rejected_at_05": false,
+    "threshold": 0.0125
+   },
+   "lcb95": -0.0029203507790995214,
+   "mean": 0.002449875737466122,
+   "n": 60,
+   "p_two_sided": 0.3916,
+   "ucb95": 0.007917377176521878
+  },
+  "ofat_marginal__minus__neuron_marginal": {
+   "distinguishable": false,
+   "holm": {
+    "p_raw": 0.7044,
+    "rejected_at_05": false,
+    "threshold": 0.025
+   },
+   "lcb95": -0.004499480143449805,
+   "mean": 0.0013475950539885467,
+   "n": 60,
+   "p_two_sided": 0.7044,
+   "ucb95": 0.007404957415032206
+  },
+  "ucb1_transfer__minus__gp_marginal": {
+   "distinguishable": false,
+   "holm": {
+    "p_raw": 0.8136,
+    "rejected_at_05": false,
+    "threshold": 0.05
+   },
+   "lcb95": -0.006502613171323786,
+   "mean": 0.0008647230941142615,
+   "n": 60,
+   "p_two_sided": 0.8136,
+   "ucb95": 0.008233015308070865
+  },
+  "ucb1_transfer__minus__neuron_marginal": {
+   "distinguishable": false,
+   "holm": {
+    "p_raw": 0.2044,
+    "rejected_at_05": false,
+    "threshold": 0.01
+   },
+   "lcb95": -0.0025204640135300317,
+   "mean": 0.004662193885568932,
+   "n": 60,
+   "p_two_sided": 0.2044,
+   "ucb95": 0.01202572105212643
+  },
+  "ucb1_transfer__minus__ofat_marginal": {
+   "distinguishable": false,
+   "holm": {
+    "p_raw": 0.4052,
+    "rejected_at_05": false,
+    "threshold": 0.016666666666666666
+   },
+   "lcb95": -0.005169614968927501,
+   "mean": 0.0033145988315803833,
+   "n": 60,
+   "p_two_sided": 0.4052,
+   "ucb95": 0.011232164552064975
+  }
  },
  "vs_incumbent": {
   "gp_cold": {
@@ -307,36 +398,36 @@
  "what_this_does_not_say": "It does not say a state-blind replay beats retained state: the paired intervals against the incumbent straddle zero. Reading the mean ranking as a verdict would repeat, in the opposite direction, the error this repository already forbids for the ofat contrast.",
  "within_family_retention_vs_own_marginal": {
   "gp": {
-   "lcb95": -0.030669572556488323,
+   "lcb95": -0.030741476373259403,
    "mean": -0.021595031378833847,
    "n": 60,
    "retention_loses": true,
    "retention_wins": false,
-   "ucb95": -0.01228466907614214
+   "ucb95": -0.012281702106135101
   },
   "neuron": {
-   "lcb95": -0.018281893692688924,
+   "lcb95": -0.01840136148672488,
    "mean": -0.011782983814352867,
    "n": 60,
    "retention_loses": true,
    "retention_wins": false,
-   "ucb95": -0.004640461192514599
+   "ucb95": -0.004864931938211002
   },
   "ofat": {
-   "lcb95": -0.033095199701732955,
+   "lcb95": -0.0326434439142972,
    "mean": -0.024672161316045497,
    "n": 60,
    "retention_loses": true,
    "retention_wins": false,
-   "ucb95": -0.016506877862795408
+   "ucb95": -0.01647368962368414
   },
   "ucb1": {
-   "lcb95": 0.01967892337650148,
+   "lcb95": 0.01981534152175707,
    "mean": 0.03073311127302739,
    "n": 60,
    "retention_loses": false,
    "retention_wins": true,
-   "ucb95": 0.04194741426268322
+   "ucb95": 0.04224930531048157
   }
  }
 }
