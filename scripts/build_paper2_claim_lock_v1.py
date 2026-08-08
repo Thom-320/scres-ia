@@ -60,6 +60,7 @@ CLAIMS: list[dict] = [
         "section": "RQ2a-1 (the clean half of the confirmation, leads Results)",
         "endpoint": "auc_regret_norm",
         "estimand": "UCB1 transfer minus UCB1 cold start, paired per seed, n=60",
+        "inference_status": "CLEAN_PAIRED_BOOTSTRAP_COMPONENT_OF_CONFIRMATORY_ARM",
         "allowed": ("In a prospective expansion from 288 to 4,608 configurations, the preregistered "
                     "confirmatory arm -- factorized UCB search -- outperformed a cold start by "
                     "+0.05744 [+0.04989, +0.06481], n=60."),
@@ -82,6 +83,7 @@ CLAIMS: list[dict] = [
         "estimand": ("UCB1 transfer minus the carrier-state-blind, sequence-blind online cumulative "
                      "frequency replay implemented in the original run; trajectory, not an "
                      "exchangeable per-seed effect"),
+        "inference_status": "DESCRIPTIVE_ORDERED_TRAJECTORY_NO_IID_INTERVAL",
         "allowed": ("Against the carrier-state-blind, sequence-blind online cumulative frequency "
                     "replay actually implemented -- a histogram created once, updated with the "
                     "transferred arm's visits, and then used on the same target case -- factorized "
@@ -111,6 +113,7 @@ CLAIMS: list[dict] = [
         "endpoint": "auc_regret_norm",
         "estimand": ("each secondary carrier's transfer minus its own online cumulative frequency "
                      "replay, interpreted as an order-dependent trajectory"),
+        "inference_status": "PRESPECIFIED_SECONDARY_ORDERED_TRAJECTORY_NO_IID_INTERVAL",
         "allowed": ("The prespecified secondary contrasts against the historical online cumulative "
                     "frequency replay are descriptive and depend on the strength of that accumulating "
                     "comparator. The neural contrast averaged -0.01178 over the full run, was +0.00032 "
@@ -136,6 +139,7 @@ CLAIMS: list[dict] = [
         "section": "RQ2c (post-hoc re-read of the same prospective artifact)",
         "endpoint": "auc_regret_norm",
         "estimand": "paired per-seed difference of every arm against the lowest-mean arm, n=60",
+        "inference_status": "POST_HOC_DESCRIPTIVE_RANKING_NO_INFERENTIAL_TIE",
         "allowed": ("Re-read descriptively as twelve arms rather than four within-family contrasts, "
                     "the four cold-start arms occupy ranks 9-12 without exception and three of the "
                     "four lowest-mean arms are the original online frequency replays. The original "
@@ -167,6 +171,7 @@ CLAIMS: list[dict] = [
         "section": "RQ2d (corrective comparator replay on the burned block)",
         "endpoint": "auc_regret_norm",
         "estimand": "each carrier's transferred state against a frozen ex-ante level prior",
+        "inference_status": "DEVELOPMENT_REPLAY_PAIRED_BOOTSTRAP_NO_GRADE_CHANGE",
         "allowed": ("In the corrective development replay, a researcher-defined factor-level prior "
                     "was generated from base-grid visits, Laplace-smoothed, and frozen before the "
                     "target grid was touched. Against this prior, factorized UCB search retained an "
