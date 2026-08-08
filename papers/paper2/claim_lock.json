@@ -1,29 +1,116 @@
 {
  "claims": [
   {
-   "allowed": "In a prospective expansion from 288 to 4,608 configurations, only a factorized UCB search strategy outperformed both cold start and a state-blind replay of its own search marginals (+0.03073, LCB95 +0.01990, n=60); the neural carrier did not (-0.01178, [-0.01849, -0.00484]).",
+   "allowed": "In a prospective expansion from 288 to 4,608 configurations, the preregistered confirmatory arm -- factorized UCB search -- outperformed both cold start and a state-blind replay of its own search marginals (+0.03073, LCB95 +0.01990, n=60).",
    "artifact": "results/grid_transfer_confirmation_v2/result.json",
-   "claim_id": "RQ2_UCB1_TRANSFERS_BEYOND_MARGINAL_REPLAY",
+   "claim_id": "RQ2A_UCB1_TRANSFERS_BEYOND_ITS_OWN_MARGINAL_REPLAY",
    "claim_status": "GRID_TRANSFER_CONFIRMED__UCB1",
    "contract_sha256": "1abbb2df6526f82b887e1ba07cb66f5fa06bb2fbf1f847e79a63b036938c5c9d",
    "endpoint": "auc_regret_norm",
-   "estimand": "transfer vs cold start and vs state-blind marginal replay",
+   "estimand": "UCB1 transfer vs cold start and vs a state-blind replay of its own marginals",
    "evidence_grade": "CONFIRMATORY",
    "exists": true,
    "falsifiers_all_passed": true,
    "file_sha256": "7bc33823ccd90b5e83068287ddffa387427734c098900aa9710e72890ca0cd4a",
    "forbidden": [
     "only UCB1 learns",
-    "the neuron has no memory",
     "UCB1 is universally superior",
-    "factorized UCB policy"
+    "factorized UCB policy",
+    "UCB1 was the best arm",
+    "only UCB1 transferred"
    ],
    "missing_top_level_fields": [],
+   "must_be_cited_with": [
+    "RQ2C_THE_TOP_FOUR_ARMS_ARE_INDISTINGUISHABLE"
+   ],
+   "registration_status": null,
    "run_role": "CONFIRMATION",
    "scope": "CONFIRMATION_ON_RESERVED_VIRGIN_BLOCK_NO_RL_NO_NEURAL_LEARNER",
-   "section": "RQ2 (confirmation, leads Results)",
+   "section": "RQ2a (the preregistered confirmation, leads Results)",
    "self_sha256": "eceb9ee97613e172130b7175a79cf6c7d5ddfb54f0ec5435b1174842c20b0f5a",
-   "why_forbidden": "'policy' would conflate the outer loop with within-episode control"
+   "why_forbidden": "'policy' would conflate the outer loop with within-episode control; and 'best arm' is false -- RQ2C ranks ucb1_transfer fourth of twelve and indistinguishable from the three above it"
+  },
+  {
+   "allowed": "Prespecified secondary analyses found no corresponding advantage for the evaluated neural, GP-EI or OFAT carriers; the neural carrier's contrast fell on the wrong side of zero (-0.01178, [-0.01849, -0.00484]).",
+   "artifact": "results/grid_transfer_confirmation_v2/result.json",
+   "claim_id": "RQ2B_SECONDARY_CARRIERS_SHOW_NO_SUCH_ADVANTAGE",
+   "claim_status": "GRID_TRANSFER_CONFIRMED__UCB1",
+   "contract_sha256": "1abbb2df6526f82b887e1ba07cb66f5fa06bb2fbf1f847e79a63b036938c5c9d",
+   "endpoint": "auc_regret_norm",
+   "estimand": "each secondary carrier's transfer vs its own state-blind marginal replay",
+   "evidence_grade": "PRESPECIFIED_SECONDARY_IN_A_CONFIRMATORY_RUN",
+   "exists": true,
+   "falsifiers_all_passed": true,
+   "file_sha256": "7bc33823ccd90b5e83068287ddffa387427734c098900aa9710e72890ca0cd4a",
+   "forbidden": [
+    "the neuron has no memory",
+    "neural carriers cannot transfer",
+    "this confirms the neural carrier fails",
+    "a confirmatory negative"
+   ],
+   "missing_top_level_fields": [],
+   "registration_status": null,
+   "run_role": "CONFIRMATION",
+   "scope": "CONFIRMATION_ON_RESERVED_VIRGIN_BLOCK_NO_RL_NO_NEURAL_LEARNER",
+   "secondary_estimand_declared_in": "docs/PREREGISTRO_CONFIRMACION_TRANSFERENCIA_REJILLA_2026-08-05.md lines 15 and 39-41: UCB1 factor-wise is named the confirmatory arm, and neuron, OFAT and GP-EI are 'secundarios y exploratorios en esta confirmacion'",
+   "section": "RQ2b (prespecified secondary, prospective)",
+   "self_sha256": "eceb9ee97613e172130b7175a79cf6c7d5ddfb54f0ec5435b1174842c20b0f5a",
+   "why_forbidden": "the preregistration declares these arms secondary and exploratory; a prospective negative at secondary grade is not a confirmed negative"
+  },
+  {
+   "allowed": "Re-read as twelve arms rather than four within-family contrasts, the four cold-start arms occupy ranks 9-12 without exception, the four lowest-regret arms are mutually indistinguishable under Holm, and three of those four are frequency-matched replays of a carrier's visit marginals; retention beat a carrier's own marginal replay in one of four families and lost distinguishably in three.",
+   "artifact": "results/best_arm_reanalysis/result.json",
+   "claim_id": "RQ2C_THE_TOP_FOUR_ARMS_ARE_INDISTINGUISHABLE",
+   "claim_status": "THE_BEST_MEAN_ARM_IS_A_MARGINAL_REPLAY_AND_THE_TOP_FOUR_ARE_INDISTINGUISHABLE",
+   "contract_sha256": "8e78b344536e8c6440d29ff4e437a0ea9b84c5fe73980d0b40c842aa90947ff5",
+   "endpoint": "auc_regret_norm",
+   "estimand": "paired per-seed difference of every arm against the lowest-mean arm, n=60",
+   "evidence_grade": "POST_HOC_ON_PROSPECTIVE_DATA",
+   "exists": true,
+   "falsifiers_all_passed": true,
+   "file_sha256": "0cd8a9473a622437896f7f9ddfd5b39b3b5b56bcf31b1a307e82bb9e4ea51770",
+   "forbidden": [
+    "the state-blind control wins",
+    "marginal replay is the best procedure",
+    "retention does not help",
+    "this was preregistered",
+    "the ranking selects a new winner"
+   ],
+   "missing_top_level_fields": [],
+   "registration_status": "POST_HOC_REREAD_PROMPTED_BY_EXTERNAL_REVIEW_NOT_PREREGISTERED",
+   "run_role": "POST_HOC_REREAD",
+   "scope": "REREAD_OF_ONE_SEALED_CONFIRMATION_NO_SEEDS_NO_NEW_RUN",
+   "section": "RQ2c (post-hoc re-read of the same prospective artifact)",
+   "self_sha256": "cbc15f0d768c42ed72d20d8d18b7bb63d1fe17d3f29422f0c3c4bc2282e8285e",
+   "why_forbidden": "the three paired contrasts against the incumbent all cross zero, so reading the mean ranking as a verdict is the same defect ENMIENDA_1 forbids for ofat; and the preregistration forbids selecting a different winner after the seeds were opened -- this row reports a tie, not a winner"
+  },
+  {
+   "allowed": "In a development reanalysis of a sealed replay, point estimates favoured state retention in all six matched families: neuron +0.06070 [+0.04568, +0.07953], UCB1 +0.05153 [+0.03583, +0.06593], OFAT +0.03750 [+0.02920, +0.04675], KG +0.03461 [+0.02610, +0.04315], GP-EI +0.02271 [+0.01276, +0.03410], and Thompson +0.01985 [+0.01022, +0.02956], with n=12 paired seeds per family.",
+   "artifact": "results/retention_contrasts/result.json",
+   "claim_id": "RQ1_RETENTION_SIX_FAMILIES",
+   "claim_status": "RETENTION_LOWERS_REGRET_IN_6_OF_6_FAMILIES",
+   "contract_sha256": "8e78b344536e8c6440d29ff4e437a0ea9b84c5fe73980d0b40c842aa90947ff5",
+   "endpoint": "auc_regret_norm",
+   "estimand": "memoryless twin minus state-retaining twin, paired by seed within family",
+   "evidence_grade": "POST_HOC_ON_DEVELOPMENT_DATA",
+   "exists": true,
+   "falsifiers_all_passed": true,
+   "file_sha256": "4341961e345cb16317d99af4b415fac7ffc888fcfa9ee54207c33a0f725e0b55",
+   "forbidden": [
+    "retention was prospectively confirmed",
+    "six families prove causality",
+    "excludes zero",
+    "the six leading ranks establish retention",
+    "all six contrasts are significant",
+    "retention lowered regret in all six"
+   ],
+   "missing_top_level_fields": [],
+   "registration_status": "POST_HOC_REANALYSIS_OF_A_SEALED_ARTIFACT_NOT_PREREGISTERED",
+   "run_role": "REPLAY_REANALYSIS",
+   "scope": "DEVELOPMENT_REANALYSIS_OF_A_SEALED_REPLAY_NO_SEEDS_NO_ADJUDICATION",
+   "section": "RQ1 (development/replay reanalysis)",
+   "self_sha256": "d818321d399b9dc430210cd7cf49b9b3356cbf06b343f932d837ba7f9cd563e5",
+   "why_forbidden": "the analysis is a sealed-tape reanalysis with no new seeds or adjudication; its estimand is within-family AUC, not a prospective confirmation or a context-specific effect"
   },
   {
    "allowed": "The reconstruction prospectively reproduced six thesis-derived comparative panels, 12/12 tapes each under Holm correction, with generated_orders exactly zero in every tape of every panel and lost orders falling in all six.",
@@ -49,6 +136,7 @@
     "claim_status",
     "self_sha256"
    ],
+   "registration_status": null,
    "run_role": null,
    "scope": null,
    "section": "Methods / targeted validation",
@@ -78,6 +166,7 @@
     "run_role",
     "scope"
    ],
+   "registration_status": null,
    "run_role": null,
    "scope": null,
    "section": "Methods, as an algebraic proposition",
@@ -102,6 +191,7 @@
     "the top-six ranking shows retention causes"
    ],
    "missing_top_level_fields": [],
+   "registration_status": null,
    "run_role": "CACHE_ANALYSIS",
    "scope": "DEVELOPMENT_ON_BURNED_TAPES_NO_ADJUDICATION",
    "section": "RQ1",
@@ -128,6 +218,7 @@
     "5.83 runs saved"
    ],
    "missing_top_level_fields": [],
+   "registration_status": null,
    "run_role": "BURNED_REPLAY_AUDIT",
    "scope": "DEVELOPMENT_REPLAY_ON_BURNED_TAPES_NO_ADJUDICATION_NO_LEARNER",
    "section": "RQ1",
@@ -154,6 +245,7 @@
    "missing_top_level_fields": [
     "run_role"
    ],
+   "registration_status": null,
    "run_role": null,
    "scope": "DEVELOPMENT_REANALYSIS_OF_SEALED_ARTIFACTS_NO_SEEDS",
    "section": "RQ1, stated as a limit",
@@ -161,7 +253,7 @@
    "why_forbidden": "Amendment 1 section 3 forbids it; the fossil survived four documents"
   },
   {
-   "allowed": "At matched parameter budgets (532 vs 529) the KAN attained better supervised fit yet searched worse (+0.01037, CI95 [+0.00302, +0.01893], p = 0.0012), and the best searcher of the seven-architecture bake-off was a five-parameter neuron.",
+   "allowed": "At matched parameter budgets (532 vs 529), the KAN search arm had higher AUC regret than its matched MLP by +0.01037, CI95 [+0.00302, +0.01893], p = 0.0012; this bakeoff adjudicates search, not supervised fit. The best searcher of the seven-architecture bake-off was a five-parameter neuron.",
    "artifact": "results/surrogate_architecture_bakeoff/result.json",
    "claim_id": "KAN_FIT_DOES_NOT_CONVERT_TO_SEARCH",
    "claim_status": "KAN_SEARCHES_WORSE_THAN_A_MATCHED_MLP",
@@ -178,6 +270,7 @@
     "neural networks are unnecessary"
    ],
    "missing_top_level_fields": [],
+   "registration_status": null,
    "run_role": "CACHE_ANALYSIS",
    "scope": "DEVELOPMENT_ON_BURNED_TAPES_NO_ADJUDICATION",
    "section": "RQ3b",
@@ -204,6 +297,7 @@
    "missing_top_level_fields": [
     "run_role"
    ],
+   "registration_status": null,
    "run_role": null,
    "scope": "DEVELOPMENT_OPEN_SEEDS_NO_CONFIRMATION_POSSIBLE_NO_VIRGIN_BLOCKS_REMAIN",
    "section": "Supplement (different contract from RQ3b)",
@@ -230,6 +324,7 @@
     "run_role",
     "scope"
    ],
+   "registration_status": null,
    "run_role": null,
    "scope": null,
    "section": "Discussion",
@@ -254,6 +349,7 @@
     "RESET shows the variables are linear"
    ],
    "missing_top_level_fields": [],
+   "registration_status": null,
    "run_role": "DIAGNOSTIC",
    "scope": "DEVELOPMENT_DIAGNOSTIC_ON_SEALED_SURFACE_NO_SEEDS_OPENED_NO_ADJUDICATION",
    "section": "Supplement + RQ3 discussion",
@@ -261,6 +357,7 @@
    "why_forbidden": "AIC is a relative criterion and a non-significant RESET would have been failure to reject, not evidence; here it rejects"
   },
   {
+   "allow_failed_falsifiers": true,
    "allowed": "Within the thesis-inherited U(2400,2600) demand process: realised weekly CV 7.1%, 24.8% of weeks already exceed single-shift capacity, and lag-1 autocorrelation -0.228 against an iid band of +/-0.065.",
    "artifact": "results/demand_process/result.json",
    "claim_id": "DEMAND_PROCESS_SCOPE",
@@ -279,11 +376,39 @@
     "demand is iid"
    ],
    "missing_top_level_fields": [],
+   "registration_status": null,
    "run_role": "DIAGNOSTIC",
    "scope": "DEVELOPMENT_DIAGNOSTIC_NO_ADJUDICATION_NO_LEARNER",
    "section": "Results 3.1, scope stated up front",
    "self_sha256": "9711cb366b74f4d870ed8db960458175f8d7c8ea4f6d924af9d8c80f311939e6",
    "why_forbidden": "0.94% was hand-derived and wrong; and the series is not iid, which retracts the 'no demand state to condition on' argument"
+  },
+  {
+   "allow_failed_falsifiers": true,
+   "allowed": "The literal Garrido-style generator produced weekly CV 0.177 and seasonal lag-12 ACF 0.839 against 0.071 and 0.015 for the thesis-uniform control. The initial 12-draw coverage test and the forecast-correlation test failed, so this artifact supports trajectory structure only, not sampler validity or forecast skill.",
+   "artifact": "results/demand_seasonal_engine/result.json",
+   "claim_id": "DEMAND_PROCESS_LITERAL_GENERATOR",
+   "claim_status": "ENGINE_PARTIAL",
+   "contract_sha256": "44e5eb948ddb5cd2ad60194f05c7c255ef6156117dac514d057c44a3e1f60cd9",
+   "endpoint": "weekly CV and seasonal-lag ACF",
+   "estimand": "structure of the researcher-implemented Garrido-style trajectory generator",
+   "evidence_grade": "DIAGNOSTIC",
+   "exists": true,
+   "falsifiers_all_passed": false,
+   "file_sha256": "49cf0a6674efab386411eb4336b0c5596cf70ec3713a6fe33ede274f41131984",
+   "forbidden": [
+    "Garrido's equation is a forecast validated against realised demand",
+    "forecast skill is established",
+    "alpha and gamma are validated by 12 episodes",
+    "seasonal demand is confirmed"
+   ],
+   "missing_top_level_fields": [],
+   "registration_status": null,
+   "run_role": "DIAGNOSTIC",
+   "scope": "DEVELOPMENT_ENGINE_CHARACTERISATION_NO_ADJUDICATION_NO_LEARNER",
+   "section": "Results 3.2, bounded demand-process sensitivity",
+   "self_sha256": "f6eea651e931f57fdcf260940e5efbce879f3d001f1b0f426ae8f823530f7e94",
+   "why_forbidden": "the current artifact is ENGINE_PARTIAL with g4 and g5 failed; GR is used by the source as an input/generator, while forecast skill is our separate observable construct"
   },
   {
    "allowed": "Across 45 risk profiles escalating the thesis's own recurrent risks one at a time (4,860 evaluations), no door passes: max H_profile_safe 6.93e-05 [0, 2.08e-04] against a 0.01 bar. The optimum varies across at most three postures; following it buys nothing.",
@@ -308,6 +433,7 @@
     "claim_status",
     "self_sha256"
    ],
+   "registration_status": null,
    "run_role": null,
    "scope": null,
    "section": "Discussion / answer to the randomised-R2 request",
@@ -315,11 +441,21 @@
    "why_forbidden": "unique_profile_optima is 1, 2 or 3 by row; and the screen varied PROFILES, not the within-episode realisation"
   }
  ],
- "generated_at_commit": "ccaa75991b64b50d287e42ec575a56c1d5ed5211",
- "n_claims": 12,
- "problems": [
-  "DEMAND_PROCESS_SCOPE: falsifiers did not all pass -- cite WITH the failure"
- ],
+ "generated_at_commit": "7477fc018c35d7841e1202c59f01438f7dcc675e",
+ "grader_self_test": {
+  "a_real_confirmation_still_grades_confirmatory": {
+   "passed": true,
+   "returned": "CONFIRMATORY"
+  },
+  "post_hoc_reread_is_not_graded_confirmatory": {
+   "passed": true,
+   "returned": "POST_HOC_ON_PROSPECTIVE_DATA"
+  }
+ },
+ "n_claims": 16,
+ "portfolio_lock": "papers/PORTFOLIO_CLAIM_LOCK.json",
+ "portfolio_lock_sha256": "b7608b2cfc205cba3731679e48730af5efaee5b715e00241813b0d278e9aebc7",
+ "problems": [],
  "schema_version": "paper2_claim_lock_v1",
  "supersedes_for_citation": [
   "docs/TABLA_CANONICA_DE_CLAIMS_2026-08-07.md",

@@ -190,6 +190,9 @@ def main() -> int:
         "claim_status": (f"RETENTION_LOWERS_REGRET_IN_{n_positive}_OF_{len(TWINS)}_FAMILIES"
                          if falsifiers["all_passed"] else "HALTED_FALSIFIER_FAILED"),
         "scope": "DEVELOPMENT_REANALYSIS_OF_A_SEALED_REPLAY_NO_SEEDS_NO_ADJUDICATION",
+        # Without this the claim lock's grader has no controlled field to read and reports
+        # GRADE_NOT_MACHINE_DISCOVERABLE -- a claim with no legible grade cannot govern a sentence.
+        "run_role": "REPLAY_REANALYSIS",
         "endpoint": src["primary_metric"],
         "estimand": "paired per-seed AUC(reset) - AUC(retained), positive means retention helps",
         "created_at": datetime.now(timezone.utc).isoformat(),

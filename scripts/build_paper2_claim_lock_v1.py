@@ -37,22 +37,97 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 OUT = Path("papers/paper2/claim_lock.json")
+PORTFOLIO_LOCK = Path("papers/PORTFOLIO_CLAIM_LOCK.json")
 
 # One row per claim the manuscript cites. `allowed` and `forbidden` are the wording contract; every
 # forbidden phrase here was actually written somewhere and had to be retracted.
 CLAIMS: list[dict] = [
+    # RQ2 IS THREE ROWS, NOT ONE. The preregistration names factorized UCB1 as the sole confirmatory
+    # arm (lines 15, 40, 104: the other carriers "son secundarios y exploratorios ... no pueden
+    # seleccionar otro ganador despues de abrir las semillas"). A single row asserting both the UCB1
+    # result and the neural result at grade CONFIRMATORY over-graded the second one, which four
+    # external audits caught. And a row stating only the within-family contrasts concealed the
+    # absolute ranking, which the twelve-arm re-read caught. Both defects are fixed by separating
+    # the claim from its grade: RQ2a is confirmatory, RQ2b is prespecified-secondary, RQ2c is
+    # post-hoc on prospective data. RQ2a may not be cited without RQ2c on the same page.
     {
-        "claim_id": "RQ2_UCB1_TRANSFERS_BEYOND_MARGINAL_REPLAY",
+        "claim_id": "RQ2A_UCB1_TRANSFERS_BEYOND_ITS_OWN_MARGINAL_REPLAY",
         "artifact": "results/grid_transfer_confirmation_v2/result.json",
-        "section": "RQ2 (confirmation, leads Results)",
-        "endpoint": "auc_regret_norm", "estimand": "transfer vs cold start and vs state-blind marginal replay",
-        "allowed": ("In a prospective expansion from 288 to 4,608 configurations, only a factorized "
-                    "UCB search strategy outperformed both cold start and a state-blind replay of "
-                    "its own search marginals (+0.03073, LCB95 +0.01990, n=60); the neural carrier "
-                    "did not (-0.01178, [-0.01849, -0.00484])."),
-        "forbidden": ["only UCB1 learns", "the neuron has no memory",
-                      "UCB1 is universally superior", "factorized UCB policy"],
-        "why_forbidden": "'policy' would conflate the outer loop with within-episode control",
+        "section": "RQ2a (the preregistered confirmation, leads Results)",
+        "endpoint": "auc_regret_norm",
+        "estimand": "UCB1 transfer vs cold start and vs a state-blind replay of its own marginals",
+        "allowed": ("In a prospective expansion from 288 to 4,608 configurations, the preregistered "
+                    "confirmatory arm -- factorized UCB search -- outperformed both cold start and a "
+                    "state-blind replay of its own search marginals (+0.03073, LCB95 +0.01990, "
+                    "n=60)."),
+        "forbidden": ["only UCB1 learns", "UCB1 is universally superior", "factorized UCB policy",
+                      "UCB1 was the best arm", "only UCB1 transferred"],
+        "why_forbidden": ("'policy' would conflate the outer loop with within-episode control; and "
+                          "'best arm' is false -- RQ2C ranks ucb1_transfer fourth of twelve and "
+                          "indistinguishable from the three above it"),
+        "must_be_cited_with": ["RQ2C_THE_TOP_FOUR_ARMS_ARE_INDISTINGUISHABLE"],
+    },
+    {
+        "claim_id": "RQ2B_SECONDARY_CARRIERS_SHOW_NO_SUCH_ADVANTAGE",
+        "artifact": "results/grid_transfer_confirmation_v2/result.json",
+        "section": "RQ2b (prespecified secondary, prospective)",
+        "secondary_estimand_declared_in": (
+            "docs/PREREGISTRO_CONFIRMACION_TRANSFERENCIA_REJILLA_2026-08-05.md lines 15 and 39-41: "
+            "UCB1 factor-wise is named the confirmatory arm, and neuron, OFAT and GP-EI are "
+            "'secundarios y exploratorios en esta confirmacion'"),
+        "endpoint": "auc_regret_norm",
+        "estimand": "each secondary carrier's transfer vs its own state-blind marginal replay",
+        "allowed": ("Prespecified secondary analyses found no corresponding advantage for the "
+                    "evaluated neural, GP-EI or OFAT carriers; the neural carrier's contrast fell "
+                    "on the wrong side of zero (-0.01178, [-0.01849, -0.00484])."),
+        "forbidden": ["the neuron has no memory", "neural carriers cannot transfer",
+                      "this confirms the neural carrier fails", "a confirmatory negative"],
+        "why_forbidden": ("the preregistration declares these arms secondary and exploratory; a "
+                          "prospective negative at secondary grade is not a confirmed negative"),
+    },
+    {
+        "claim_id": "RQ2C_THE_TOP_FOUR_ARMS_ARE_INDISTINGUISHABLE",
+        "artifact": "results/best_arm_reanalysis/result.json",
+        "section": "RQ2c (post-hoc re-read of the same prospective artifact)",
+        "endpoint": "auc_regret_norm",
+        "estimand": "paired per-seed difference of every arm against the lowest-mean arm, n=60",
+        "allowed": ("Re-read as twelve arms rather than four within-family contrasts, the four "
+                    "cold-start arms occupy ranks 9-12 without exception, the four lowest-regret "
+                    "arms are mutually indistinguishable under Holm, and three of those four are "
+                    "frequency-matched replays of a carrier's visit marginals; retention beat a "
+                    "carrier's own marginal replay in one of four families and lost distinguishably "
+                    "in three."),
+        "forbidden": ["the state-blind control wins", "marginal replay is the best procedure",
+                      "retention does not help", "this was preregistered",
+                      "the ranking selects a new winner"],
+        "why_forbidden": ("the three paired contrasts against the incumbent all cross zero, so "
+                          "reading the mean ranking as a verdict is the same defect ENMIENDA_1 "
+                          "forbids for ofat; and the preregistration forbids selecting a different "
+                          "winner after the seeds were opened -- this row reports a tie, not a "
+                          "winner"),
+    },
+    {
+        "claim_id": "RQ1_RETENTION_SIX_FAMILIES",
+        "artifact": "results/retention_contrasts/result.json",
+        "section": "RQ1 (development/replay reanalysis)",
+        "endpoint": "auc_regret_norm",
+        "estimand": "memoryless twin minus state-retaining twin, paired by seed within family",
+        # POINT-ESTIMATE LANGUAGE UNTIL SIMULTANEOUS INFERENCE CLOSES. Six marginal bootstrap
+        # intervals from the same 12 tapes are six correlated looks, not six adjudications, and
+        # `ofat_lcb_reconciliation` already showed that at n=12 the bound can change sign with the
+        # resampling seed. The stronger sentence returns only if Holm or max-T intervals survive.
+        "allowed": ("In a development reanalysis of a sealed replay, point estimates favoured state "
+                    "retention in all six matched families: neuron +0.06070 "
+                    "[+0.04568, +0.07953], UCB1 +0.05153 [+0.03583, +0.06593], OFAT +0.03750 "
+                    "[+0.02920, +0.04675], KG +0.03461 [+0.02610, +0.04315], GP-EI +0.02271 "
+                    "[+0.01276, +0.03410], and Thompson +0.01985 [+0.01022, +0.02956], "
+                    "with n=12 paired seeds per family."),
+        "forbidden": ["retention was prospectively confirmed", "six families prove causality",
+                      "excludes zero", "the six leading ranks establish retention",
+                      "all six contrasts are significant", "retention lowered regret in all six"],
+        "why_forbidden": ("the analysis is a sealed-tape reanalysis with no new seeds or "
+                          "adjudication; its estimand is within-family AUC, not a prospective "
+                          "confirmation or a context-specific effect"),
     },
     {
         "claim_id": "VALIDATION_SIX_THESIS_PANELS",
@@ -123,10 +198,10 @@ CLAIMS: list[dict] = [
         "artifact": "results/surrogate_architecture_bakeoff/result.json",
         "section": "RQ3b", "endpoint": "auc_regret_norm (lower is better)",
         "estimand": "kan minus parameter-matched mlp",
-        "allowed": ("At matched parameter budgets (532 vs 529) the KAN attained better supervised "
-                    "fit yet searched worse (+0.01037, CI95 [+0.00302, +0.01893], p = 0.0012), and "
-                    "the best searcher of the seven-architecture bake-off was a five-parameter "
-                    "neuron."),
+        "allowed": ("At matched parameter budgets (532 vs 529), the KAN search arm had higher AUC "
+                    "regret than its matched MLP by +0.01037, CI95 [+0.00302, +0.01893], "
+                    "p = 0.0012; this bakeoff adjudicates search, not supervised fit. The best "
+                    "searcher of the seven-architecture bake-off was a five-parameter neuron."),
         "forbidden": ["KAN is worse", "KANs do not work", "neural networks are unnecessary"],
         "why_forbidden": "the claim is about fit-versus-search on this task, not about KANs at large",
     },
@@ -183,6 +258,26 @@ CLAIMS: list[dict] = [
                       "demand is iid"],
         "why_forbidden": ("0.94% was hand-derived and wrong; and the series is not iid, which "
                           "retracts the 'no demand state to condition on' argument"),
+        "allow_failed_falsifiers": True,
+    },
+    {
+        "claim_id": "DEMAND_PROCESS_LITERAL_GENERATOR",
+        "artifact": "results/demand_seasonal_engine/result.json",
+        "section": "Results 3.2, bounded demand-process sensitivity",
+        "endpoint": "weekly CV and seasonal-lag ACF",
+        "estimand": "structure of the researcher-implemented Garrido-style trajectory generator",
+        "allowed": ("The literal Garrido-style generator produced weekly CV 0.177 and seasonal "
+                    "lag-12 ACF 0.839 against 0.071 and 0.015 for the thesis-uniform control. "
+                    "The initial 12-draw coverage test and the forecast-correlation test failed, "
+                    "so this artifact supports trajectory structure only, not sampler validity or "
+                    "forecast skill."),
+        "forbidden": ["Garrido's equation is a forecast validated against realised demand",
+                      "forecast skill is established", "alpha and gamma are validated by 12 episodes",
+                      "seasonal demand is confirmed"],
+        "why_forbidden": ("the current artifact is ENGINE_PARTIAL with g4 and g5 failed; GR is "
+                          "used by the source as an input/generator, while forecast skill is our "
+                          "separate observable construct"),
+        "allow_failed_falsifiers": True,
     },
     {
         "claim_id": "RISK_PROFILE_TAILORING_BUYS_NOTHING",
@@ -212,26 +307,71 @@ def digests(path: Path) -> dict:
         "claim_status": payload.get("claim_status"),
         "scope": payload.get("scope"),
         "run_role": payload.get("run_role"),
+        "registration_status": payload.get("registration_status"),
         "contract_sha256": payload.get("contract_sha256"),
         "falsifiers_all_passed": payload.get("falsifiers", {}).get("all_passed"),
     }
 
 
 def grade(meta: dict, row: dict) -> tuple[str, list[str]]:
-    """Read the grade; never assume it. Missing fields are named, not filled in."""
+    """Read the grade; never assume it. Missing fields are named, not filled in.
+
+    WHY `registration_status` IS CONSULTED FIRST. `scope` is free text that describes what the run
+    DID, and a post-hoc re-read of a confirmation legitimately says so: `best_arm_reanalysis` carries
+    `REREAD_OF_ONE_SEALED_CONFIRMATION_NO_SEEDS_NO_NEW_RUN`. A substring test on that string returns
+    CONFIRMATORY for an analysis that was never preregistered -- the exact over-grading four external
+    audits flagged in the manuscript, manufactured here by the instrument that is supposed to prevent
+    it. So an artifact that declares itself unregistered can never be graded confirmatory, whatever
+    else its prose contains, and `run_role` (a controlled field) outranks `scope` (a descriptive one).
+    """
     missing = [k for k in ("run_role", "scope", "claim_status", "self_sha256") if not meta.get(k)]
     if missing and row.get("sibling_receipt"):
         return "GRADE_IN_SIBLING_RECEIPT", missing
     if missing:
         return "GRADE_NOT_MACHINE_DISCOVERABLE", missing
     rr, sc = str(meta["run_role"]), str(meta["scope"])
-    if "CONFIRMATION" in rr or "CONFIRMATION" in sc:
+    reg = str(meta.get("registration_status") or "")
+    if "NOT_PREREGISTERED" in reg or "POST_HOC" in reg or "POST_HOC" in rr:
+        # The tapes may be prospective; the analysis is not. Both halves go in the grade.
+        return ("POST_HOC_ON_PROSPECTIVE_DATA" if "CONFIRMATION" in sc
+                else "POST_HOC_ON_DEVELOPMENT_DATA"), []
+    if "CONFIRMATION" in rr:
+        # A confirmatory RUN can carry estimands the preregistration declared secondary. The grade
+        # belongs to the (artifact, estimand) pair, and the artifact cannot express which of its
+        # estimands is which -- so the row declares it, and must cite the lines that say so. The
+        # field name keeps the distinction visible: this grade was declared, not discovered.
+        if row.get("secondary_estimand_declared_in"):
+            return "PRESPECIFIED_SECONDARY_IN_A_CONFIRMATORY_RUN", []
         return "CONFIRMATORY", []
     if "REPLAY" in rr or "REPLAY" in sc:
         return "REPLAY", []
     if "DIAGNOSTIC" in rr:
         return "DIAGNOSTIC", []
+    if "CONFIRMATION" in sc:
+        return "CONFIRMATORY", []
     return "DEVELOPMENT", []
+
+
+def validate_grader() -> dict:
+    """Run the grader against the case that fooled it, and against a control that must still pass.
+
+    A guard nobody watches fail is not a guard. The first case is the real string from
+    `best_arm_reanalysis`; before the fix it returned CONFIRMATORY. The second is the real string
+    from `grid_transfer_confirmation_v2`, which must keep grading CONFIRMATORY -- otherwise the fix
+    would have bought correctness by refusing to grade anything, which is not correctness.
+    """
+    full = {"claim_status": "X", "self_sha256": "X", "scope": "", "run_role": ""}
+    trap = grade({**full, "scope": "REREAD_OF_ONE_SEALED_CONFIRMATION_NO_SEEDS_NO_NEW_RUN",
+                  "run_role": "REREAD", "registration_status":
+                  "POST_HOC_REREAD_PROMPTED_BY_EXTERNAL_REVIEW_NOT_PREREGISTERED"}, {})[0]
+    ctrl = grade({**full, "scope": "CONFIRMATION_ON_RESERVED_VIRGIN_BLOCK_NO_RL_NO_NEURAL_LEARNER",
+                  "run_role": "CONFIRMATION"}, {})[0]
+    return {
+        "post_hoc_reread_is_not_graded_confirmatory": {
+            "passed": trap != "CONFIRMATORY", "returned": trap},
+        "a_real_confirmation_still_grades_confirmatory": {
+            "passed": ctrl == "CONFIRMATORY", "returned": ctrl},
+    }
 
 
 def main() -> int:
@@ -241,13 +381,17 @@ def main() -> int:
 
     commit = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
     rows, problems = [], []
+    grader = validate_grader()
+    for name, chk in grader.items():
+        if not chk["passed"]:
+            problems.append(f"GRADER: {name} returned {chk['returned']!r}")
     for c in CLAIMS:
         p = Path(c["artifact"])
         meta = digests(p)
         g, missing = grade(meta, c)
         if not meta["exists"]:
             problems.append(f"{c['claim_id']}: artifact missing at {p}")
-        if meta.get("falsifiers_all_passed") is False:
+        if meta.get("falsifiers_all_passed") is False and not c.get("allow_failed_falsifiers"):
             problems.append(f"{c['claim_id']}: falsifiers did not all pass -- cite WITH the failure")
         row = dict(c)
         row.update({"evidence_grade": g, "missing_top_level_fields": missing, **meta})
@@ -257,6 +401,9 @@ def main() -> int:
 
     payload = {
         "schema_version": "paper2_claim_lock_v1",
+        "portfolio_lock": str(PORTFOLIO_LOCK),
+        "portfolio_lock_sha256": sha256(PORTFOLIO_LOCK.read_bytes()).hexdigest()
+        if PORTFOLIO_LOCK.exists() else None,
         "generated_at_commit": commit,
         "n_claims": len(rows),
         "supersedes_for_citation": [
@@ -272,6 +419,7 @@ def main() -> int:
                               "resolve a citation, so authority no longer depends on remembering "
                               "which amendment came last"),
         "problems": problems,
+        "grader_self_test": grader,
         "claims": rows,
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)

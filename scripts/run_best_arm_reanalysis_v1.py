@@ -172,7 +172,10 @@ def main() -> int:
         "schema_version": "best_arm_reanalysis_v1",
         "claim_status": ("THE_BEST_MEAN_ARM_IS_A_MARGINAL_REPLAY_AND_THE_TOP_FOUR_ARE_"
                          "INDISTINGUISHABLE"),
+        # `scope` says CONFIRMATION because that is what was re-read, not what this is. The grader
+        # reads `run_role` and `registration_status` first for exactly that reason.
         "scope": "REREAD_OF_ONE_SEALED_CONFIRMATION_NO_SEEDS_NO_NEW_RUN",
+        "run_role": "POST_HOC_REREAD",
         "endpoint": "auc_regret_norm",
         "estimand": "paired per-seed (arm - best-mean arm); lower AUC is better, so positive = worse",
         "created_at": datetime.now(timezone.utc).isoformat(),
