@@ -23,7 +23,7 @@ physical chain.
 1. Does retaining search state across DES runs reduce development regret relative to a matched
    memoryless search procedure?
 2. Does retained state transfer when the design space expands from 288 to 4,608 configurations,
-   beyond cold start and state-blind marginal replay?
+   beyond cold start and a replay of its own visit marginals?
 3. Is any transfer advantage specific to the neural carrier, or does it arise from a simpler search
    statistic?
 

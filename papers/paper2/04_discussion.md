@@ -5,7 +5,7 @@
 The evidence supports a narrow conclusion: development point estimates favour retaining search
 state as a way to avoid rediscovery, but transfer is not an intrinsic property of “learning” or of
 neural architecture. The prespecified factorized-UCB arm meets the prospective transfer criterion
-against cold start and state-blind marginal replay. Secondary carrier contrasts show no corresponding
+against cold start and against an online replay of its own visit marginals. Secondary carrier contrasts show no corresponding
 advantage for the evaluated neural arm.
 
 This makes search strategy the correct level of explanation. The result does not show that a real

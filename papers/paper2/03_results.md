@@ -182,17 +182,27 @@ a cold start, and a **state-blind replay of its own visit marginals**. The secon
 method's marginal sampling frequencies while destroying the retained structure, so only transferred
 structure can beat it. n = 60.
 
-| Family | vs cold start (mean, LCB95) | **vs state-blind marginal replay** (mean, LCB95, UCB95) |
-|---|---|---|
-| **`ucb1`** | +0.05744, +0.04989 | **+0.03073, +0.01990, +0.04256** ✔ |
-| `neuron` | +0.05439, +0.04290 | **−0.01178, −0.01849, −0.00484** ✘ |
-| `gp` | +0.01433, +0.00879 | −0.02160, −0.03051, −0.01227 ✘ |
-| `ofat` | +0.01422, +0.00800 | −0.02467, −0.03258, −0.01666 ✘ |
+The two comparators are reported apart, because they do not have the same standing. The cold arm is
+rebuilt from scratch on every case and carries nothing across them, so a paired bootstrap over the
+sixty seeds means what its label says. The marginal replay is a histogram created once and updated
+throughout the run, so the seeds are **not** exchangeable replicates of one contrast and no interval
+is quoted for it — only the point estimate and the trajectory across the run.
 
-**Every family beats a cold start.** The preregistered confirmatory arm — factorized UCB search —
-outperformed both cold start and a state-blind replay of its own search marginals. Prespecified
-secondary analyses found no corresponding advantage for the evaluated neural, GP-EI or OFAT
-carriers; the neural contrast fell on the wrong side of zero. The secondary negative is not a
+| Family | vs cold start (mean, LCB95, UCB95) | vs the online cumulative replay (mean; first 20 → last 20) |
+|---|---|---|
+| **`ucb1`** | **+0.05744, +0.04989, +0.06481** ✔ | **+0.03073**; +0.04302 → +0.02877 |
+| `neuron` | +0.05439, +0.04290, +0.06352 ✔ | −0.01178; +0.00032 → −0.02146 |
+| `gp` | +0.01433, +0.00879, +0.02012 ✔ | −0.02160; −0.01352 → −0.02989 |
+| `ofat` | +0.01422, +0.00800, +0.02053 ✔ | −0.02467; −0.00561 → −0.03088 |
+
+**Every family beats a cold start, and that half is clean.** The preregistered confirmatory arm —
+factorized UCB search — outperformed a cold start by +0.05744 [+0.04989, +0.06481], and its lead
+over the online replay is positive across the whole run including its final window, where the
+comparator is strongest. Prespecified secondary analyses found no corresponding advantage for the
+evaluated neural, GP-EI or OFAT carriers. Those contrasts are not stationary either: the neural one
+is +0.00032 over the first twenty seeds and −0.02146 over the last, so the negative is read against
+a comparator that is growing rather than as a fixed effect — and §*The comparator, repaired* shows
+it is larger, not smaller, against one that does not grow. The secondary negative is not a
 confirmatory negative. Frozen verdict: `GRID_TRANSFER_CONFIRMED__UCB1`.
 
 A post-hoc re-read of the same prospective artifact as twelve arms rather than four within-family
@@ -237,7 +247,7 @@ would support:
 
 > **Under simultaneous inference, retaining search state lowered development regret in all six
 > matched families, and the prespecified factorized-UCB arm met the prospective transfer criterion
-> beyond cold start and state-blind marginal replay. Secondary carrier contrasts showed no
+> beyond cold start and beyond an online replay of its own visit marginals. Secondary carrier contrasts showed no
 > corresponding neural advantage under this contract. Re-read as twelve arms, however, the four
 > lowest-regret arms are indistinguishable and three of them discard the carrier entirely — so what
 > reliably transfers is a first-order visit distribution, not a sequential search procedure.**

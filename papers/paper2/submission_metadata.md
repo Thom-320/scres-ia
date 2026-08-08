@@ -19,7 +19,7 @@ resilience optimization is claimed to adapt across runs.
 ## Highlights
 
 - Retained search state has positive development point estimates across six matched families.
-- Prospective transfer is tested beyond state-blind marginal replay.
+- Prospective transfer is tested beyond a replay of the carrier's own visit marginals, and beyond a frozen ex-ante level prior.
 - Factorized UCB transfers; the evaluated neural carrier does not.
 - Search memory is separated from within-episode supply-chain adaptation.
 
