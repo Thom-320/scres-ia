@@ -1,0 +1,259 @@
+{
+ "arm_means": {
+  "dmlpa_kan": 97.5808931153368,
+  "dmlpa_mlp": 98.44314398434753
+ },
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "KAN_LATENT_HURTS",
+ "contract_path": "docs/PREREGISTRO_DMLPA_KAN_LATENT_2026-08-07.md",
+ "contract_sha256": "1c23273417a5b0d69dcd00fd35a83a21965ce61778785c598b5597eaa822f235",
+ "created_at": "2026-08-08T01:40:36.203082+00:00",
+ "design": {
+  "eval_episodes": 24,
+  "features_dim": 84,
+  "ff_mult": 4,
+  "n_envs": 8,
+  "nhead": 12,
+  "num_layers": 2,
+  "total_steps": 100000
+ },
+ "elapsed_seconds": 8850.86945975,
+ "endpoint": "ret_mean_track_b_v1",
+ "falsifiers": {
+  "all_passed": true,
+  "f1_parameters_are_matched_within_our_tolerance": {
+   "evidence": {
+    "sizes": {
+     "dmlpa_kan": {
+      "error": 0.00459,
+      "features_dim": 84,
+      "hidden_dim": 10,
+      "params": 199082,
+      "use_kan": true
+     },
+     "dmlpa_mlp": {
+      "error": 0.00026,
+      "features_dim": 84,
+      "hidden_dim": 152,
+      "params": 200052,
+      "use_kan": false
+     }
+    },
+    "tolerance": 0.1,
+    "why_it_can_fail": "comparing different capacities measures capacity, not architecture; David had to loosen this to 30%"
+   },
+   "passed": true
+  },
+  "f2_only_the_latent_rw_differs": {
+   "evidence": {
+    "held_fixed": {
+     "features_dim": 84,
+     "ff_mult": 4,
+     "nhead": 12,
+     "num_layers": 2
+    },
+    "not_covered": "normalisation order differs from David's version",
+    "why_it_can_fail": "a second differing factor would make this the same confound the preregistration exists to remove"
+   },
+   "passed": true
+  },
+  "f3_the_two_arms_are_behaviourally_distinct": {
+   "evidence": {
+    "fingerprints": {
+     "dmlpa_kan": [
+      -0.369356,
+      -1.769662,
+      -1.072951,
+      0.535967,
+      -1.437132,
+      -2.501684
+     ],
+     "dmlpa_mlp": [
+      -0.241437,
+      -2.219524,
+      -1.059008,
+      0.76903,
+      -0.90835,
+      -1.902737
+     ]
+    },
+    "why_it_can_fail": "identical outputs on a fixed input would mean the same model was trained twice -- which is exactly what happened to David when both labels resolved to one object"
+   },
+   "passed": true
+  },
+  "f4_the_harness_reproduces": {
+   "evidence": {
+    "delta": 0.0,
+    "replicas": [
+     89.23527051364351,
+     89.23527051364351
+    ],
+    "why_it_can_fail": "if the determinism repair does not hold at this budget the paired contrast is void"
+   },
+   "passed": true
+  },
+  "f5_no_new_seeds": {
+   "evidence": {
+    "seeds": [
+     9491,
+     9492,
+     9493,
+     9494,
+     9495
+    ],
+    "why_it_can_fail": "a seed outside the development set would consume custody this run never declared"
+   },
+   "passed": true
+  }
+ },
+ "kan_minus_mlp": {
+  "lcb95": -1.605043533470689,
+  "mean": -0.8622508690107338,
+  "n": 5,
+  "ucb95": -0.11945820455077864
+ },
+ "module_manifest": {
+  "entry_script": "scripts/run_dmlpa_kan_latent_v1.py",
+  "entry_script_sha256": "e367e1f88b831bf18a765943b803b78ba0ac78c01800624def963bcae7dec299",
+  "missing": [],
+  "modules": {
+   "supply_chain/arm_runner.py": "1afea4fa248db5beb2d86c6ab2033d6f24a95115ea544b08966b7a538456ac99",
+   "supply_chain/env_experimental_shifts.py": "2c594754d170ea707f71cc205a8c841c291dfac64e92c8fbc81415de9a09af48",
+   "supply_chain/external_env_interface.py": "4d8404af6c97a10e27bbaaa0409691420027b285f4784721d3e54468b42628e1"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "not_covered": "David's version also differs in normalisation order: pre_norm(latent+pos) here, pre_norm(latent)+pos there. Only the latent_rw is tested.",
+ "preregistration": "docs/PREREGISTRO_DMLPA_KAN_LATENT_2026-08-07.md",
+ "reference_path": "results/determinism_repair_control/result.json",
+ "reference_sha256": "6aea0c525e2f24494c77baa68e89234a53bba4a92972eb4baa33e43873e237b1",
+ "reproducibility_check": [
+  89.23527051364351,
+  89.23527051364351
+ ],
+ "result_before_training": "at equal budget the KAN affords hidden_dim=10 against the MLP's 152; KAN edges are expensive and the width they buy is fifteen times narrower",
+ "rows": [
+  {
+   "arm": "dmlpa_mlp",
+   "params": 200052,
+   "ret_mean": 98.91837163513163,
+   "ret_sd_within": 0.7766228365348222,
+   "seed": 9491
+  },
+  {
+   "arm": "dmlpa_mlp",
+   "params": 200052,
+   "ret_mean": 97.47920713248368,
+   "ret_sd_within": 1.059935921704918,
+   "seed": 9492
+  },
+  {
+   "arm": "dmlpa_mlp",
+   "params": 200052,
+   "ret_mean": 97.97826418309762,
+   "ret_sd_within": 0.800749898441005,
+   "seed": 9493
+  },
+  {
+   "arm": "dmlpa_mlp",
+   "params": 200052,
+   "ret_mean": 99.13093262043155,
+   "ret_sd_within": 0.8097438889870702,
+   "seed": 9494
+  },
+  {
+   "arm": "dmlpa_mlp",
+   "params": 200052,
+   "ret_mean": 98.7089443505932,
+   "ret_sd_within": 1.0351837419393308,
+   "seed": 9495
+  },
+  {
+   "arm": "dmlpa_kan",
+   "params": 199082,
+   "ret_mean": 98.23892572453418,
+   "ret_sd_within": 0.8310205871882346,
+   "seed": 9491
+  },
+  {
+   "arm": "dmlpa_kan",
+   "params": 199082,
+   "ret_mean": 97.38433545680061,
+   "ret_sd_within": 0.9142330838401106,
+   "seed": 9492
+  },
+  {
+   "arm": "dmlpa_kan",
+   "params": 199082,
+   "ret_mean": 98.11421330270247,
+   "ret_sd_within": 0.7622763281978748,
+   "seed": 9493
+  },
+  {
+   "arm": "dmlpa_kan",
+   "params": 199082,
+   "ret_mean": 97.32553990549793,
+   "ret_sd_within": 0.8761586462977329,
+   "seed": 9494
+  },
+  {
+   "arm": "dmlpa_kan",
+   "params": 199082,
+   "ret_mean": 96.84145118714882,
+   "ret_sd_within": 0.883917058269791,
+   "seed": 9495
+  }
+ ],
+ "schema_version": "dmlpa_kan_latent_v1",
+ "scope": "DEVELOPMENT_OPEN_SEEDS_NO_CONFIRMATION_POSSIBLE_NO_VIRGIN_BLOCKS_REMAIN",
+ "seed_block": {
+  "derived_from": "seeds",
+  "end": 9495,
+  "n": 5,
+  "start": 9491
+ },
+ "seeds": [
+  9491,
+  9492,
+  9493,
+  9494,
+  9495
+ ],
+ "self_sha256": "f79ca248bb983bd4eb77e05f119eafc837b72d53d291c00c97ee8d4b30699ae9",
+ "sizes": {
+  "dmlpa_kan": {
+   "error": 0.00459,
+   "features_dim": 84,
+   "hidden_dim": 10,
+   "params": 199082,
+   "use_kan": true
+  },
+  "dmlpa_mlp": {
+   "error": 0.00026,
+   "features_dim": 84,
+   "hidden_dim": 152,
+   "params": 200052,
+   "use_kan": false
+  }
+ },
+ "what_it_broke": "DMLPA and DMLPA_KAN became the same object in his run -- his parameter_matching reports both at 225,410 params, 12.71% off -- so his DMLPA label stopped meaning what ours means",
+ "whose_defect": "the notebook we shipped declares use_kan=False and David's executed cell declares use_kan=True: his DMLPA has the KAN by design and we had switched it off. The origin defect is ours."
+}
