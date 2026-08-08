@@ -41,6 +41,11 @@ HEADER_FIELDS = ("event", "agent_type", "subagent_type", "description", "label",
 #: Keys whose value is likely to BE the answer. First hit wins.
 ANSWER_KEYS = ("final_response", "response", "result", "output", "text", "content", "message")
 
+#: Keys carrying a POINTER to the transcript rather than the answer itself. Measured on the first
+#: real SubagentStop payload of 2026-08-08: it contains no response at all, only
+#: `agent_transcript_path`. A saver that reads the payload and stops has saved the envelope.
+TRANSCRIPT_KEYS = ("agent_transcript_path", "transcript_path")
+
 
 def slug(value: str, limit: int = 48) -> str:
     s = re.sub(r"[^a-zA-Z0-9]+", "-", str(value)).strip("-").lower()
@@ -65,6 +70,33 @@ def find_answer(node, depth: int = 0):
             found = find_answer(v, depth + 1)
             if found:
                 return found
+    return None
+
+
+def last_assistant_text(path: Path) -> str | None:
+    """The final assistant message of a transcript file, which is where the answer actually is."""
+    try:
+        rows = [json.loads(l) for l in path.read_text(errors="replace").splitlines() if l.strip()]
+    except Exception:                                   # noqa: BLE001
+        return None
+    for row in reversed(rows):
+        if row.get("type") != "assistant":
+            continue
+        msg = row.get("message")
+        if isinstance(msg, str):
+            hits = re.findall(r"'text':\s*'(.*?)'\}", msg, re.S)
+            if hits:
+                return "\n\n".join(hits).replace("\\n", "\n").replace("\\'", "'")
+            continue
+        if isinstance(msg, dict):
+            c = msg.get("content")
+            if isinstance(c, str) and c.strip():
+                return c
+            if isinstance(c, list):
+                t = "\n\n".join(b.get("text", "") for b in c
+                                  if isinstance(b, dict) and b.get("type") == "text")
+                if t.strip():
+                    return t
     return None
 
 
@@ -107,11 +139,22 @@ def main() -> int:
     path = OUT_DIR / name
 
     answer = find_answer(payload) if parsed else raw
+    followed = None
+    if parsed and isinstance(payload, dict):
+        for k in TRANSCRIPT_KEYS:
+            tp = payload.get(k)
+            if isinstance(tp, str) and Path(tp).exists():
+                tail = last_assistant_text(Path(tp))
+                if tail and len(tail) > len(answer or ""):
+                    answer, followed = tail, tp
+                break
     lines = [f"# Agent run — {args.event}", ""]
     lines += [f"- **{k}**: `{v}`" for k, v in meta.items() if v not in (None, "")]
     lines += [f"- **saved_at**: `{now.isoformat()}`"]
     if commit:
         lines += [f"- **commit**: `{commit}`"]
+    if followed:
+        lines += [f"- **answer read from**: `{followed}`"]
     lines += ["", "## Final response", ""]
     lines += [answer.strip() if answer else "_(no final-response field found in the payload; "
               "the raw payload below is the complete record)_"]
