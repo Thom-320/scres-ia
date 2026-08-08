@@ -1,6 +1,6 @@
 # SEALED-EVIDENCE INVENTORY — C&IE manuscript, "Retained Search State Before Neural Architecture"
 
-Repo `/Users/thom/Projects/research/scres-ia`, branch `codex/expanded-contract-comparators-v2`, HEAD `9b1afa9`. All digests below are **sha256 of the file** (`shasum -a 256 <path> | cut -c1-16`), which is what `claim_lock.json` calls `file_sha256`. Where an artifact also carries an internal `self_sha256` I give it separately, because the two differ and the repo has confused them before.
+Repo `<HOME>/Projects/research/scres-ia`, branch `codex/expanded-contract-comparators-v2`, HEAD `9b1afa9`. All digests below are **sha256 of the file** (`shasum -a 256 <path> | cut -c1-16`), which is what `claim_lock.json` calls `file_sha256`. Where an artifact also carries an internal `self_sha256` I give it separately, because the two differ and the repo has confused them before.
 
 ---
 

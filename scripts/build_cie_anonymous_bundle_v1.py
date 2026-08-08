@@ -10,7 +10,7 @@ import zipfile
 
 FIXED_ZIP_TIME = (1980, 1, 1, 0, 0, 0)
 DEFAULT_TOKENS = (
-    "thomas chisica", "thom chisica", "chisica", "urosario", "github.com/thom-320", "chisicathomas",
+    "thomas chisica", "thom chisica", "chisica", "urosario", "github.com/thom-320", "<USER>",
     "alexander.garrido@",
 )
 CANONICAL = (

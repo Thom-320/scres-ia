@@ -1,17 +1,21 @@
-# Explore — Read-only census in /Users/thom/Projects/research/scres-ia. Machine is busy — no pytest, n
+# Explore — Read-only census in <HOME>/Projects/research/scres-ia. Machine is busy — no pytest, n
+
+> **`UNADJUDICATED_DO_NOT_CITE`** — transcripción cruda de un agente, guardada por el hook
+> `SubagentStop`. Puede contener afirmaciones **retiradas**; el canon vive en los artefactos
+> sellados y en las enmiendas, nunca aquí.
 
 - **agent_id**: `a7fa964d35b2e3bc4`
 - **session**: `2c6b3a01-62a0-499d-957d-694424855dff`
 - **branch**: `codex/expanded-contract-comparators-v2`
 - **finished**: `2026-08-08T03:57:09.085Z`
 - **effort**: `xhigh` · **version**: `2.1.222`
-- **transcript**: `/Users/thom/.claude/projects/-Users-thom-Projects-research-scres-ia/2c6b3a01-62a0-499d-957d-694424855dff/subagents/agent-a7fa964d35b2e3bc4.jsonl`
+- **transcript**: `<HOME>/.claude/projects/-Users-thom-Projects-research-scres-ia/2c6b3a01-62a0-499d-957d-694424855dff/subagents/agent-a7fa964d35b2e3bc4.jsonl`
 - **turns**: 96 · **assistant messages**: 4
 
 ## Task given
 
 ```text
-Read-only census in /Users/thom/Projects/research/scres-ia. Machine is busy — no pytest, nothing heavy. Read artifacts, registries and docs.
+Read-only census in <HOME>/Projects/research/scres-ia. Machine is busy — no pytest, nothing heavy. Read artifacts, registries and docs.
 
 QUESTION: across EVERYTHING in this repository, what is the maximum set of defensible claims we could publish, and how many papers' worth is it?
 
@@ -40,7 +44,7 @@ I have the full picture. Here is the census.
 
 ---
 
-# REPO-WIDE CLAIM CENSUS — `/Users/thom/Projects/research/scres-ia`
+# REPO-WIDE CLAIM CENSUS — `<HOME>/Projects/research/scres-ia`
 
 **Bottom line first: two papers are real and nearly written; the third is a real paper whose evidence is one metric-generation stale and can never be confirmed (zero virgin seed blocks remain). Call it 2.5.**
 
@@ -48,7 +52,7 @@ I have the full picture. Here is the census.
 
 ## 1. `research/evidence_registry.jsonl` — 216 rows
 
-`/Users/thom/Projects/research/scres-ia/research/evidence_registry.jsonl`
+`<HOME>/Projects/research/scres-ia/research/evidence_registry.jsonl`
 Schema keys: `artifact_path, claim_status_as_authored, evidence_grade, grade_rationale, contract_path, content_sha256, self_sha256, dedup_key{,_complete,_hash}, duplicate_of, supersedes, replay_of, merge_basis, branch, created_at`.
 
 | evidence_grade | rows | unique (artifact, claim_status) |

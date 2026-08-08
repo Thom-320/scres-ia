@@ -1,17 +1,21 @@
-# Explore — Read-only investigation in /Users/thom/Projects/research/scres-ia. I need the exact curren
+# Explore — Read-only investigation in <HOME>/Projects/research/scres-ia. I need the exact curren
+
+> **`UNADJUDICATED_DO_NOT_CITE`** — transcripción cruda de un agente, guardada por el hook
+> `SubagentStop`. Puede contener afirmaciones **retiradas**; el canon vive en los artefactos
+> sellados y en las enmiendas, nunca aquí.
 
 - **agent_id**: `ab95814f721cb1336`
 - **session**: `c4c70a0d-d0da-4c53-824e-5d7a181768e6`
 - **branch**: `codex/expanded-contract-comparators-v2`
 - **finished**: `2026-08-08T02:07:38.331Z`
 - **effort**: `high` · **version**: `2.1.222`
-- **transcript**: `/Users/thom/.claude/projects/-Users-thom-Projects-research-scres-ia/c4c70a0d-d0da-4c53-824e-5d7a181768e6/subagents/agent-ab95814f721cb1336.jsonl`
+- **transcript**: `<HOME>/.claude/projects/-Users-thom-Projects-research-scres-ia/c4c70a0d-d0da-4c53-824e-5d7a181768e6/subagents/agent-ab95814f721cb1336.jsonl`
 - **turns**: 51 · **assistant messages**: 5
 
 ## Task given
 
 ```text
-Read-only investigation in /Users/thom/Projects/research/scres-ia. I need the exact current state, because a concurrent session has been committing alongside me and may have overwritten my work.
+Read-only investigation in <HOME>/Projects/research/scres-ia. I need the exact current state, because a concurrent session has been committing alongside me and may have overwritten my work.
 
 1. `git log --oneline -15`, current branch, exact full HEAD SHA. Then `git status --porcelain`. Then: is HEAD pushed? Run `git rev-parse origin/codex/expanded-contract-comparators-v2` and report ahead/behind counts vs HEAD. Report every local branch that has unpushed commits.
 

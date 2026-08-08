@@ -1,17 +1,21 @@
-# Plan — Repo: /Users/thom/Projects/research/scres-ia. Target journal: Computers & Industrial Engin
+# Plan — Repo: <HOME>/Projects/research/scres-ia. Target journal: Computers & Industrial Engin
+
+> **`UNADJUDICATED_DO_NOT_CITE`** — transcripción cruda de un agente, guardada por el hook
+> `SubagentStop`. Puede contener afirmaciones **retiradas**; el canon vive en los artefactos
+> sellados y en las enmiendas, nunca aquí.
 
 - **agent_id**: `ad5124e4e938018a3`
 - **session**: `c4c70a0d-d0da-4c53-824e-5d7a181768e6`
 - **branch**: `codex/expanded-contract-comparators-v2`
 - **finished**: `2026-08-07T17:23:01.866Z`
 - **effort**: `medium` · **version**: `2.1.222`
-- **transcript**: `/Users/thom/.claude/projects/-Users-thom-Projects-research-scres-ia/c4c70a0d-d0da-4c53-824e-5d7a181768e6/subagents/agent-ad5124e4e938018a3.jsonl`
+- **transcript**: `<HOME>/.claude/projects/-Users-thom-Projects-research-scres-ia/c4c70a0d-d0da-4c53-824e-5d7a181768e6/subagents/agent-ad5124e4e938018a3.jsonl`
 - **turns**: 117 · **assistant messages**: 4
 
 ## Task given
 
 ```text
-Repo: /Users/thom/Projects/research/scres-ia. Target journal: Computers & Industrial Engineering. Task: design the SPINE of a manuscript, not the prose.
+Repo: <HOME>/Projects/research/scres-ia. Target journal: Computers & Industrial Engineering. Task: design the SPINE of a manuscript, not the prose.
 
 CONTEXT — the two questions the paper must answer (Garrido, Pongutá & Adarme, ICCL 2024, LNCS 15168 pp.80-94):
 Q1: what category of AI algorithms best mimics the supply-chain-learning (SCL) attribute?
@@ -235,8 +239,8 @@ No new seeds are authorised (`new_seed_opening: false`, `scientific_execution_au
 ---
 
 ### Critical files for implementation
-- `/Users/thom/Projects/research/scres-ia/docs/GARRIDO_Q1_Q2_CLAIM_FREEZE_2026-08-07.md` — the artifact register A1–A9 and the claim ladder; the spine's authority.
-- `/Users/thom/Projects/research/scres-ia/results/grid_transfer_confirmation_v2/result.json` — the only confirmation-grade artifact; §6.5 and Fig. 8.
-- `/Users/thom/Projects/research/scres-ia/results/manuscript/h1_h3_originales_v3/result.json` — H1/H3 originals, the absorption mechanism, and the TTR-undefined regime note.
-- `/Users/thom/Projects/research/scres-ia/results/garrido_normaliser_audit_v3/result.json` — the prefix normaliser, the twin-surface falsifier, and the correct H4 replacement numbers.
-- `/Users/thom/Projects/research/scres-ia/scripts/build_cie_outer_loop_figures.py` — the no-hardcoded-numbers figure pipeline the six new figures must extend.
+- `<HOME>/Projects/research/scres-ia/docs/GARRIDO_Q1_Q2_CLAIM_FREEZE_2026-08-07.md` — the artifact register A1–A9 and the claim ladder; the spine's authority.
+- `<HOME>/Projects/research/scres-ia/results/grid_transfer_confirmation_v2/result.json` — the only confirmation-grade artifact; §6.5 and Fig. 8.
+- `<HOME>/Projects/research/scres-ia/results/manuscript/h1_h3_originales_v3/result.json` — H1/H3 originals, the absorption mechanism, and the TTR-undefined regime note.
+- `<HOME>/Projects/research/scres-ia/results/garrido_normaliser_audit_v3/result.json` — the prefix normaliser, the twin-surface falsifier, and the correct H4 replacement numbers.
+- `<HOME>/Projects/research/scres-ia/scripts/build_cie_outer_loop_figures.py` — the no-hardcoded-numbers figure pipeline the six new figures must extend.

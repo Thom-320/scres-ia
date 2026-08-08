@@ -1,17 +1,21 @@
-# Plan — Repo: /Users/thom/Projects/research/scres-ia. Target venue: Computers & Industrial Enginee
+# Plan — Repo: <HOME>/Projects/research/scres-ia. Target venue: Computers & Industrial Enginee
+
+> **`UNADJUDICATED_DO_NOT_CITE`** — transcripción cruda de un agente, guardada por el hook
+> `SubagentStop`. Puede contener afirmaciones **retiradas**; el canon vive en los artefactos
+> sellados y en las enmiendas, nunca aquí.
 
 - **agent_id**: `a6b9614b65faa729d`
 - **session**: `c4c70a0d-d0da-4c53-824e-5d7a181768e6`
 - **branch**: `codex/expanded-contract-comparators-v2`
 - **finished**: `2026-08-08T01:01:59.129Z`
 - **effort**: `high` · **version**: `2.1.222`
-- **transcript**: `/Users/thom/.claude/projects/-Users-thom-Projects-research-scres-ia/c4c70a0d-d0da-4c53-824e-5d7a181768e6/subagents/agent-a6b9614b65faa729d.jsonl`
+- **transcript**: `<HOME>/.claude/projects/-Users-thom-Projects-research-scres-ia/c4c70a0d-d0da-4c53-824e-5d7a181768e6/subagents/agent-a6b9614b65faa729d.jsonl`
 - **turns**: 157 · **assistant messages**: 2
 
 ## Task given
 
 ```text
-Repo: /Users/thom/Projects/research/scres-ia. Target venue: Computers & Industrial Engineering (C&IE, Elsevier).
+Repo: <HOME>/Projects/research/scres-ia. Target venue: Computers & Industrial Engineering (C&IE, Elsevier).
 
 TASK: design TWO manuscripts, section by section, with the exact artifact and number behind each section. Do not write prose — design structure and evidence mapping, and judge acceptance risk honestly.
 
@@ -66,7 +70,7 @@ Six falsifiers, each with a stated failure mode, are supplied as a reusable prot
 
 ## 2. Section skeleton — artifact and number per section
 
-All paths below are under `/Users/thom/Projects/research/scres-ia/`.
+All paths below are under `<HOME>/Projects/research/scres-ia/`.
 
 | § | Content | Artifact + SHA-16 | The number it carries | Figure/Table |
 |---|---|---|---|---|
@@ -86,7 +90,7 @@ All paths below are under `/Users/thom/Projects/research/scres-ia/`.
 
 ## 3. Figures
 
-- **Reusable: 1 of 5.** `fig_a_leak` in `/Users/thom/Projects/research/scres-ia/scripts/build_cie_outer_loop_figures.py:64` — repoint `twin_surface/result.json` → `twin_surface_v2/result.json`. Schema is identical; verified.
+- **Reusable: 1 of 5.** `fig_a_leak` in `<HOME>/Projects/research/scres-ia/scripts/build_cie_outer_loop_figures.py:64` — repoint `twin_surface/result.json` → `twin_surface_v2/result.json`. Schema is identical; verified.
 - **New: 4.** F1 abandonment inverted-U (ReT and fill on twin axes, forfeited rations annotated); F2 TTR censoring→absorption; F4 H_regime vs γ over the 661-transform family with the 0.05 gate and identity marked; and the five-cadence panel if you prefer it as a figure over T6.
 - `fig_b_surface_gates`'s **right panel only** (H_regime against its bar) could seed F4's "before" state, but its left panel (separability by context) belongs to Paper 2. Recommend not sharing the figure across papers.
 
@@ -171,8 +175,8 @@ The four draft hypotheses land as: **H1 supported** +126.0 h [+98.4, +154.5] by 
 **Both papers**
 1. **`ENMIENDA_2` to the claim freeze.** Fourteen artifacts Paper 1 depends on are **not in the freeze's citable table**, and the freeze's own rule says a number without a row does not circulate. Rows needed (SHA-16 computed today): `contention_headroom_v1_2` `a47e89831fe6f130`, `contention_headroom_v1_3` `60537d88bbc2b1a9`, `metric_audit/abandonment_v1` `48746e7c386782e5`, `manuscript/h1_h3_v1` `12abb332afe73c85`, `manuscript/h1_h3_originales_v3` `39061791dd37eef4`, `manuscript/h2_learning_curve` `2894e525dc360c8f`, `twin_surface_v2` `cbefeb716d1eda3f`, `surface_gates_v2` `5abd006f27be0d55`, `monotone_transform_family_v4` `e7514c85e7be3141`, `metric_audit/ret_cadence_corrective_v2` `03025ec734721ee8`, `ret_defects_v1` `37208e3c141270a3`, `ret_repair_variants_v1` `b9ac35565f47cb9a`, `determinism_diagnostic` `2126f260a20a9953`, `determinism_repair_control` `9e988da25ee8c9f5`, `endpoint_headroom_atlas` `14317d68c9bebf49`, `demand_process` `cb4f88398c4f93a4`.
 2. **Resolve the A7 conflict.** The freeze cites `results/surface_gates/result.json` (`954ac48301ff1234`) with H_regime 0.003802, LCB95 **1.08e-16**, UCB95 **0.014413**. `results/surface_gates_v2/result.json` (`5abd006f27be0d55`) gives the same point estimate but LCB95 **1.352e-05**, UCB95 **0.014856**. The figure script can only point at one. Declare which and supersede the other.
-3. **Repoint `/Users/thom/Projects/research/scres-ia/scripts/build_cie_outer_loop_figures.py`:** line 66 `twin_surface` → `twin_surface_v2`; line 92 `surface_gates` → `surface_gates_v2`; lines 135 and 160 `search_ladder_v2` → `search_ladder_v5`; extend `LABEL`; replace the hardcoded `MEMORY_ARMS` with the artifact's own list; decide `fig_e`.
-4. **Parameterise `/Users/thom/Projects/research/scres-ia/scripts/build_submission_a_cie_review_bundle.py`** — `PAPER_ROOT` is hardcoded to `papers/submission_a_program_q`; both new paper roots need it as an argument, and `IDENTITY_TOKENS` needs any new author's tokens added before the guard means anything.
+3. **Repoint `<HOME>/Projects/research/scres-ia/scripts/build_cie_outer_loop_figures.py`:** line 66 `twin_surface` → `twin_surface_v2`; line 92 `surface_gates` → `surface_gates_v2`; lines 135 and 160 `search_ladder_v2` → `search_ladder_v5`; extend `LABEL`; replace the hardcoded `MEMORY_ARMS` with the artifact's own list; decide `fig_e`.
+4. **Parameterise `<HOME>/Projects/research/scres-ia/scripts/build_submission_a_cie_review_bundle.py`** — `PAPER_ROOT` is hardcoded to `papers/submission_a_program_q`; both new paper roots need it as an argument, and `IDENTITY_TOKENS` needs any new author's tokens added before the guard means anything.
 5. **Branch/tag decision.** Science is on `codex/expanded-contract-comparators-v2`, the chassis on `origin/codex/submission-a-program-q`, `main` far behind. The checklist item "clean-room build succeeds from the tagged release" cannot be satisfied while they are separate. Per R3, never hand-write the drift number.
 
 **Paper 1 only**
@@ -220,8 +224,8 @@ Why:
 
 ### Critical Files for Implementation
 
-- `/Users/thom/Projects/research/scres-ia/scripts/build_cie_outer_loop_figures.py` — the figure pipeline; four artifact paths to repoint, `LABEL`/`MEMORY_ARMS` to extend, `fig_e` to decide
-- `/Users/thom/Projects/research/scres-ia/docs/GARRIDO_Q1_Q2_CLAIM_FREEZE_2026-08-07_ENMIENDA_1.md` — the frozen claim wording, permitted/forbidden vocabulary and custody rules both manuscripts must obey; successor `ENMIENDA_2` must admit the fourteen Paper-1 artifacts
-- `/Users/thom/Projects/research/scres-ia/results/grid_transfer_confirmation_v2/result.json` — the only prospective confirmation in either paper; Paper 2's centre and its new F5
-- `/Users/thom/Projects/research/scres-ia/results/metric_audit/abandonment_v1/result.json` — Paper 1's only virgin-seed replication of the headline abandonment result, plus the refutation of our own proposed mechanism
-- `/Users/thom/Projects/research/scres-ia/scripts/build_submission_a_cie_review_bundle.py` — the anonymity-guarded bundle builder; `PAPER_ROOT` and `IDENTITY_TOKENS` must be parameterised for two new paper roots
+- `<HOME>/Projects/research/scres-ia/scripts/build_cie_outer_loop_figures.py` — the figure pipeline; four artifact paths to repoint, `LABEL`/`MEMORY_ARMS` to extend, `fig_e` to decide
+- `<HOME>/Projects/research/scres-ia/docs/GARRIDO_Q1_Q2_CLAIM_FREEZE_2026-08-07_ENMIENDA_1.md` — the frozen claim wording, permitted/forbidden vocabulary and custody rules both manuscripts must obey; successor `ENMIENDA_2` must admit the fourteen Paper-1 artifacts
+- `<HOME>/Projects/research/scres-ia/results/grid_transfer_confirmation_v2/result.json` — the only prospective confirmation in either paper; Paper 2's centre and its new F5
+- `<HOME>/Projects/research/scres-ia/results/metric_audit/abandonment_v1/result.json` — Paper 1's only virgin-seed replication of the headline abandonment result, plus the refutation of our own proposed mechanism
+- `<HOME>/Projects/research/scres-ia/scripts/build_submission_a_cie_review_bundle.py` — the anonymity-guarded bundle builder; `PAPER_ROOT` and `IDENTITY_TOKENS` must be parameterised for two new paper roots

@@ -1,17 +1,21 @@
-# Explore — In the repo /Users/thom/Projects/research/scres-ia, establish EXACTLY how many artifacts c
+# Explore — In the repo <HOME>/Projects/research/scres-ia, establish EXACTLY how many artifacts c
+
+> **`UNADJUDICATED_DO_NOT_CITE`** — transcripción cruda de un agente, guardada por el hook
+> `SubagentStop`. Puede contener afirmaciones **retiradas**; el canon vive en los artefactos
+> sellados y en las enmiendas, nunca aquí.
 
 - **agent_id**: `adbbacbe4aa935994`
 - **session**: `c4c70a0d-d0da-4c53-824e-5d7a181768e6`
 - **branch**: `codex/expanded-contract-comparators-v2`
 - **finished**: `2026-08-08T01:25:16.699Z`
 - **effort**: `high` · **version**: `2.1.222`
-- **transcript**: `/Users/thom/.claude/projects/-Users-thom-Projects-research-scres-ia/c4c70a0d-d0da-4c53-824e-5d7a181768e6/subagents/agent-adbbacbe4aa935994.jsonl`
+- **transcript**: `<HOME>/.claude/projects/-Users-thom-Projects-research-scres-ia/c4c70a0d-d0da-4c53-824e-5d7a181768e6/subagents/agent-adbbacbe4aa935994.jsonl`
 - **turns**: 70 · **assistant messages**: 4
 
 ## Task given
 
 ```text
-In the repo /Users/thom/Projects/research/scres-ia, establish EXACTLY how many artifacts carry CONFIRMATION grade, and pull their numbers. Four external audits all assert "there are two confirmations, not three" — I need to verify that against the repo itself.
+In the repo <HOME>/Projects/research/scres-ia, establish EXACTLY how many artifacts carry CONFIRMATION grade, and pull their numbers. Four external audits all assert "there are two confirmations, not three" — I need to verify that against the repo itself.
 
 Do this:
 1. Find the authoritative index (likely `docs/INDICE_DE_ARTEFACTOS_AUTORITATIVOS.md`) and the canonical claims table (`docs/TABLA_CANONICA_DE_CLAIMS_2026-08-07.md`) and its amendments (`docs/GARRIDO_Q1_Q2_CLAIM_FREEZE_2026-08-07_ENMIENDA*.md`). Report what each says about evidence grades.
@@ -29,26 +33,26 @@ Report concrete values and file paths. Do not summarise vaguely — I need citab
 
 **The "two confirmations" claim is stale, not wrong-in-spirit.** The repo's own machine-readable registry carries **4 rows** at `evidence_grade: CONFIRMATORY`, which resolve to **3 distinct artifacts** — the fourth is `garrido_h2_h3_confirmation_v1` counted twice (once on `HEAD`, once on `codex/paper-b-retained-v5`, identical `content_sha256`).
 
-The four audits are reading `/Users/thom/Projects/research/scres-ia/docs/INDICE_DE_ARTEFACTOS_AUTORITATIVOS.md`, which was committed `a9b878d` at **Fri Aug 7 12:35:39 2026**. The third confirmation (`gsa_confirmation`) was created **2026-08-07T18:52:30Z** and its corrective landed in `c4162b9` at **13:55:18 local**. The index predates it. The index is not lying; it is 6 hours behind.
+The four audits are reading `<HOME>/Projects/research/scres-ia/docs/INDICE_DE_ARTEFACTOS_AUTORITATIVOS.md`, which was committed `a9b878d` at **Fri Aug 7 12:35:39 2026**. The third confirmation (`gsa_confirmation`) was created **2026-08-07T18:52:30Z** and its corrective landed in `c4162b9` at **13:55:18 local**. The index predates it. The index is not lying; it is 6 hours behind.
 
 ---
 
 ## 1. What each authority document says
 
-`/Users/thom/Projects/research/scres-ia/docs/INDICE_DE_ARTEFACTOS_AUTORITATIVOS.md` (line 16, 20):
+`<HOME>/Projects/research/scres-ia/docs/INDICE_DE_ARTEFACTOS_AUTORITATIVOS.md` (line 16, 20):
 
 > `| **CONFIRMACIÓN** | prospectivo, bloque de semillas virgen, contrato preregistrado | **2** |`
 > `### Las dos confirmaciones, y son sólo dos`
 
 Lists exactly `grid_transfer_confirmation_v2` and `garrido_h2_h3_confirmation_v1`. It *does* mention GSA at line 66–67, but only as `gsa_resilience_only/` — a development artifact — and at line 92 flags `g3a_v2_development` / `7700001–7700120` as "the one virgin block left in the whole project." That block is precisely the one `gsa_confirmation` later burned.
 
-`/Users/thom/Projects/research/scres-ia/docs/TABLA_CANONICA_DE_CLAIMS_2026-08-07.md` line 63 is stricter still:
+`<HOME>/Projects/research/scres-ia/docs/TABLA_CANONICA_DE_CLAIMS_2026-08-07.md` line 63 is stricter still:
 
 > `## 3. La única confirmación prospectiva no es neuronal`
 
 i.e. the canonical claims table counts **one** (scoped to the learning/transfer line). Line 61 explicitly demotes the `search_ladder_v5` numbers: `DEVELOPMENT_ON_BURNED_TAPES_NO_ADJUDICATION`, `run_role = CACHE_ANALYSIS`, seeds `5300001–012` reused, "**No es confirmación prospectiva.**"
 
-`/Users/thom/Projects/research/scres-ia/docs/GARRIDO_Q1_Q2_CLAIM_FREEZE_2026-08-07.md` line 17 registers A2 = `grid_transfer_confirmation_v2` with file hash `7bc33823ccd90b5e` and `run_role: CONFIRMATION` / `CONFIRMATION_ON_RESERVED_VIRGIN_BLOCK_NO_RL_NO_NEURAL_LEARNER`.
+`<HOME>/Projects/research/scres-ia/docs/GARRIDO_Q1_Q2_CLAIM_FREEZE_2026-08-07.md` line 17 registers A2 = `grid_transfer_confirmation_v2` with file hash `7bc33823ccd90b5e` and `run_role: CONFIRMATION` / `CONFIRMATION_ON_RESERVED_VIRGIN_BLOCK_NO_RL_NO_NEURAL_LEARNER`.
 
 `..._ENMIENDA_1.md` adds A10 (`garrido_h2_h3_confirmation_v1`, file hash `bc375d3021b64d10`) and A11 (`q_r1/successor_confirmation_v1`), and states the rule the audits are missing (line 182–186):
 
@@ -60,7 +64,7 @@ A11 is the witness: `PROSPECTIVE_EXECUTION_COMPLETED · COMPOUND_VERDICT_STOP ·
 
 ---
 
-## 2. Registry counts — `/Users/thom/Projects/research/scres-ia/research/evidence_registry.jsonl` (216 rows)
+## 2. Registry counts — `<HOME>/Projects/research/scres-ia/research/evidence_registry.jsonl` (216 rows)
 
 | evidence_grade | rows |
 |---|---:|
@@ -88,7 +92,7 @@ The HEAD row for `garrido_h2_h3` carries `duplicate_of: "results/garrido_h2_h3_c
 
 ## 3. `results/grid_transfer_confirmation_v2/result.json`
 
-Path is exactly `/Users/thom/Projects/research/scres-ia/results/grid_transfer_confirmation_v2/result.json`.
+Path is exactly `<HOME>/Projects/research/scres-ia/results/grid_transfer_confirmation_v2/result.json`.
 
 - `self_sha256` = `eceb9ee97613e172130b7175a79cf6c7d5ddfb54f0ec5435b1174842c20b0f5a`
 - file sha256 (bytes on disk) = `7bc33823ccd90b5e83068287ddffa387427734c098900aa9710e72890ca0cd4a`
@@ -133,7 +137,7 @@ Note the mechanism directly: `neuron_marginal` (0.0680) is *lower* than `neuron_
 
 ## 4. `results/garrido_h2_h3_confirmation_v1/result.json`
 
-Path: `/Users/thom/Projects/research/scres-ia/results/garrido_h2_h3_confirmation_v1/result.json`.
+Path: `<HOME>/Projects/research/scres-ia/results/garrido_h2_h3_confirmation_v1/result.json`.
 
 - **`self_sha256` does not exist in this artifact** — registry has `self_sha256: null`, and the top-level key set has no such field. The citable digests are `content_sha256` = `19e2c1ec4aab387e` (registry) and file sha256 = `bc375d3021b64d1069f4111d5350294db77317c04e81ec222ac1ebdd17e8b195` (matches the `bc375d3021b64d10` in ENMIENDA_1 A10). If an audit hands you a `self_sha256` for this artifact, it is a mislabelled file digest — exactly the error ENMIENDA_2 §"Los dos hashes" documents.
 - `status` = `CONFIRM_H2_H3_ALL_SIX_PANELS`; `global_confirmation_pass` = `true`
@@ -170,7 +174,7 @@ Each panel also carries a full secondary ledger (`ret_thesis`, `ret_excel_full_l
 
 ### The actual third confirmation: `results/gsa_confirmation/result.json`
 
-`/Users/thom/Projects/research/scres-ia/results/gsa_confirmation/result.json` — grade **CONFIRMATORY**, `run_role: CONFIRMATION`, `scope: CONFIRMATION_ON_REPURPOSED_VIRGIN_BLOCK_NO_TRAINING_AUTHORISED`.
+`<HOME>/Projects/research/scres-ia/results/gsa_confirmation/result.json` — grade **CONFIRMATORY**, `run_role: CONFIRMATION`, `scope: CONFIRMATION_ON_REPURPOSED_VIRGIN_BLOCK_NO_TRAINING_AUTHORISED`.
 
 - `self_sha256` = `f1181706cf591edb669a1735eab6d6c1b9f116caed3e4175bfb1bafe1ab8adc9`; file sha256 = `1f487d91900e2ea42e792b0b1873e2230ee47388df4d4a602bbc9a932c5969dd`
 - `seed_block` = `g3a_v2_development`, 7700001–7700120, `opens_once: true`, `repurposed_from: "G3a asymmetric-claimant development"`, gate lifted per `docs/AUTORIZACION_PI_REPROPOSITO_BLOQUE_7700001_2026-08-07.md`
@@ -183,7 +187,7 @@ Each panel also carries a full secondary ledger (`ret_thesis`, `ret_excel_full_l
 
 ### Its corrective — graded DEVELOPMENT, deliberately
 
-`/Users/thom/Projects/research/scres-ia/results/gsa_confirmation_corrective/result.json`
+`<HOME>/Projects/research/scres-ia/results/gsa_confirmation_corrective/result.json`
 
 - `evidence_grade` = **DEVELOPMENT**, rationale `"contracted, but not a confirmation over a virgin block"`
 - `run_role` = `CORRECTIVE_REANALYSIS_OF_A_CONFIRMATION`; `scope` = `SAME_BURNED_BLOCK_SAME_THETA_ONLY_THE_FALSIFIERS_AND_PLACEBO_ARE_CORRECTED`
@@ -199,7 +203,7 @@ So the *fixed* GSA analysis is graded DEVELOPMENT and the *broken* one is graded
 
 ### The ReT repair instrument you asked about — grade DEVELOPMENT, and half of it is NOT_CONFIRMED
 
-`/Users/thom/Projects/research/scres-ia/results/metric_audit/ret_metric_repair_confirmation_v1/result.json`
+`<HOME>/Projects/research/scres-ia/results/metric_audit/ret_metric_repair_confirmation_v1/result.json`
 
 - `evidence_grade` = **DEVELOPMENT** (both `result.json` and `adjudication.json`), rationale `"contracted, but not a confirmation over a virgin block"`
 - `claim_status` = `PROSPECTIVE_CORRECTIVE_CONFIRMATION` — the *name* says confirmation, the grade does not

@@ -6,7 +6,7 @@ Prepared 2026-08-07. Everything below is either read from the repo or read from 
 
 ## PART 1 — WHAT THE CHASSIS ALREADY ENCODES
 
-Files: `/Users/thom/Projects/research/scres-ia/papers/cie_chassis/`
+Files: `<HOME>/Projects/research/scres-ia/papers/cie_chassis/`
 
 ### 1.1 `CIE_GUIDE_AUDIT_2026-07-29.md` — 17 requirements
 
@@ -305,4 +305,4 @@ The brief's phrasing — *"one ledger column (sumBt) is unreconstructed in >1.09
 - Target SI: <https://www.sciencedirect.com/special-issue/327465/simulation-driven-industrial-transformation-towards-resilient-sustainable-and-human-centric-operations>
 - Submission portal: <https://submit.elsevier.com/CAIE>
 
-**Repo paths referenced:** `/Users/thom/Projects/research/scres-ia/papers/cie_chassis/` (all five chassis files + `README.md`), `/Users/thom/Projects/research/scres-ia/docs/ESTRATEGIA_CIE_2026-08-06.md`, `/Users/thom/Projects/research/scres-ia/docs/TABLA_CANONICA_DE_CLAIMS_2026-08-07.md`, `/Users/thom/Projects/research/scres-ia/docs/REGISTRO_DE_HUECOS_2026-08-07.md`, `/Users/thom/Projects/research/scres-ia/docs/PREGUNTAS_GARRIDO_2026-08-07.md`, `/Users/thom/Projects/research/scres-ia/docs/RESULTADOS_CIE_CONSOLIDADOS_2026-08-05.md`. Missing script to recover from commit `ba96890`: `scripts/build_submission_a_cie_review_bundle.py`.
+**Repo paths referenced:** `<HOME>/Projects/research/scres-ia/papers/cie_chassis/` (all five chassis files + `README.md`), `<HOME>/Projects/research/scres-ia/docs/ESTRATEGIA_CIE_2026-08-06.md`, `<HOME>/Projects/research/scres-ia/docs/TABLA_CANONICA_DE_CLAIMS_2026-08-07.md`, `<HOME>/Projects/research/scres-ia/docs/REGISTRO_DE_HUECOS_2026-08-07.md`, `<HOME>/Projects/research/scres-ia/docs/PREGUNTAS_GARRIDO_2026-08-07.md`, `<HOME>/Projects/research/scres-ia/docs/RESULTADOS_CIE_CONSOLIDADOS_2026-08-05.md`. Missing script to recover from commit `ba96890`: `scripts/build_submission_a_cie_review_bundle.py`.

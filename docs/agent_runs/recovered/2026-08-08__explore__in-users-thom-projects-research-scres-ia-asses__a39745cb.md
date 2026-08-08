@@ -1,17 +1,21 @@
-# Explore — In /Users/thom/Projects/research/scres-ia, assess release readiness for a journal submissi
+# Explore — In <HOME>/Projects/research/scres-ia, assess release readiness for a journal submissi
+
+> **`UNADJUDICATED_DO_NOT_CITE`** — transcripción cruda de un agente, guardada por el hook
+> `SubagentStop`. Puede contener afirmaciones **retiradas**; el canon vive en los artefactos
+> sellados y en las enmiendas, nunca aquí.
 
 - **agent_id**: `a39745cb91016db33`
 - **session**: `c4c70a0d-d0da-4c53-824e-5d7a181768e6`
 - **branch**: `codex/expanded-contract-comparators-v2`
 - **finished**: `2026-08-08T01:38:43.686Z`
 - **effort**: `high` · **version**: `2.1.222`
-- **transcript**: `/Users/thom/.claude/projects/-Users-thom-Projects-research-scres-ia/c4c70a0d-d0da-4c53-824e-5d7a181768e6/subagents/agent-a39745cb91016db33.jsonl`
+- **transcript**: `<HOME>/.claude/projects/-Users-thom-Projects-research-scres-ia/c4c70a0d-d0da-4c53-824e-5d7a181768e6/subagents/agent-a39745cb91016db33.jsonl`
 - **turns**: 256 · **assistant messages**: 3
 
 ## Task given
 
 ```text
-In /Users/thom/Projects/research/scres-ia, assess release readiness for a journal submission. Read-only. Be concrete.
+In <HOME>/Projects/research/scres-ia, assess release readiness for a journal submission. Read-only. Be concrete.
 
 1. Run `.venv/bin/python -m pytest tests/ -q --timeout=600 2>&1 | tail -40` (read-only test run is fine) and report the exact collected/passed/failed counts and the names of failing tests grouped by cause. Four audits claim "21 known failures". Verify the real current number.
 2. Find any triage doc for those failures (grep docs/ for triage / TRIAGE / fallos / test). Report what it says.
@@ -31,7 +35,7 @@ Suite finished. Here are the verified findings.
 
 ## 1. Test suite — real current number: **21 failed, 2277 passed**, 2 skipped, 2 xfailed, 705.27s (11:45)
 
-`--timeout=600` is **not a valid flag** — `pytest-timeout` is not installed in `.venv`; the command in the request errors out immediately (`unrecognized arguments: --timeout=600`, `inifile: /Users/thom/Projects/research/scres-ia/pytest.ini`). Re-run without it. Working tree was clean (`git status --porcelain` → 0 lines), so this reflects committed state at `e027fd5`.
+`--timeout=600` is **not a valid flag** — `pytest-timeout` is not installed in `.venv`; the command in the request errors out immediately (`unrecognized arguments: --timeout=600`, `inifile: <HOME>/Projects/research/scres-ia/pytest.ini`). Re-run without it. Working tree was clean (`git status --porcelain` → 0 lines), so this reflects committed state at `e027fd5`.
 
 The **count** 21 is right; the **set** is not what the audits describe. Grouped by cause:
 
@@ -153,7 +157,7 @@ Present on exactly two refs, **both remote-only**:
 
 It does **not** exist in the current working tree, and it does **not** exist on the local `codex/submission-a-program-q` branch (`031d0af9`, which is **0 ahead / 10 behind** origin). I scanned every branch tree — no other repo has an anonymiser. `papers/submission_a_program_q/` also does not exist locally (`papers/` has only `cie_chassis`, `paper1_unobserved_frontier`, `paper2`).
 
-The identity guard is `assert_anonymous()`, raising `STOP_ANONYMITY_GUARD`, scanning `.tex/.bib/.txt/.md/.json` for `IDENTITY_TOKENS = ("thom", "chisica", "urosario", "github.com/thom-320", "chisicathomas", "alexander.garrido@")`. Deterministic ZIP via `FIXED_ZIP_TIME = (1980,1,1,0,0,0)` + `ZIP_STORED`.
+The identity guard is `assert_anonymous()`, raising `STOP_ANONYMITY_GUARD`, scanning `.tex/.bib/.txt/.md/.json` for `IDENTITY_TOKENS = ("thom", "chisica", "urosario", "github.com/thom-320", "<USER>", "alexander.garrido@")`. Deterministic ZIP via `FIXED_ZIP_TIME = (1980,1,1,0,0,0)` + `ZIP_STORED`.
 
 ---
 

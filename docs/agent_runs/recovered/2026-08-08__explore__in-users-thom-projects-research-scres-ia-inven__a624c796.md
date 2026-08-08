@@ -1,17 +1,21 @@
-# Explore — In /Users/thom/Projects/research/scres-ia, inventory everything a manuscript titled roughl
+# Explore — In <HOME>/Projects/research/scres-ia, inventory everything a manuscript titled roughl
+
+> **`UNADJUDICATED_DO_NOT_CITE`** — transcripción cruda de un agente, guardada por el hook
+> `SubagentStop`. Puede contener afirmaciones **retiradas**; el canon vive en los artefactos
+> sellados y en las enmiendas, nunca aquí.
 
 - **agent_id**: `a624c796fc1e3bea2`
 - **session**: `c4c70a0d-d0da-4c53-824e-5d7a181768e6`
 - **branch**: `codex/expanded-contract-comparators-v2`
 - **finished**: `2026-08-08T01:26:42.815Z`
 - **effort**: `high` · **version**: `2.1.222`
-- **transcript**: `/Users/thom/.claude/projects/-Users-thom-Projects-research-scres-ia/c4c70a0d-d0da-4c53-824e-5d7a181768e6/subagents/agent-a624c796fc1e3bea2.jsonl`
+- **transcript**: `<HOME>/.claude/projects/-Users-thom-Projects-research-scres-ia/c4c70a0d-d0da-4c53-824e-5d7a181768e6/subagents/agent-a624c796fc1e3bea2.jsonl`
 - **turns**: 98 · **assistant messages**: 2
 
 ## Task given
 
 ```text
-In /Users/thom/Projects/research/scres-ia, inventory everything a manuscript titled roughly "Retained search state before neural architecture" would need. Read-only, be concrete with numbers and paths.
+In <HOME>/Projects/research/scres-ia, inventory everything a manuscript titled roughly "Retained search state before neural architecture" would need. Read-only, be concrete with numbers and paths.
 
 1. `results/search_ladder_v5/` — the comparator ladder. How many methods, what is the ranking, is it true that the top six are exactly the six that retain state? Give the ordered list with scores, the endpoint, the seed block, evidence grade and scope string.
 2. `results/garrido_fig5_surrogate/` and `results/garrido_wrap_q1/` — the "Fig. 5 is an algebraic identity" diagnostic. Exact residual, how many columns are identically zero, claim_status.

@@ -1,17 +1,21 @@
-# Explore — Read-only investigation in /Users/thom/Projects/research/scres-ia. Four external audits sa
+# Explore — Read-only investigation in <HOME>/Projects/research/scres-ia. Four external audits sa
+
+> **`UNADJUDICATED_DO_NOT_CITE`** — transcripción cruda de un agente, guardada por el hook
+> `SubagentStop`. Puede contener afirmaciones **retiradas**; el canon vive en los artefactos
+> sellados y en las enmiendas, nunca aquí.
 
 - **agent_id**: `aa9d682fc32c35d0f`
 - **session**: `c4c70a0d-d0da-4c53-824e-5d7a181768e6`
 - **branch**: `codex/expanded-contract-comparators-v2`
 - **finished**: `2026-08-08T02:09:19.249Z`
 - **effort**: `high` · **version**: `2.1.222`
-- **transcript**: `/Users/thom/.claude/projects/-Users-thom-Projects-research-scres-ia/c4c70a0d-d0da-4c53-824e-5d7a181768e6/subagents/agent-aa9d682fc32c35d0f.jsonl`
+- **transcript**: `<HOME>/.claude/projects/-Users-thom-Projects-research-scres-ia/c4c70a0d-d0da-4c53-824e-5d7a181768e6/subagents/agent-aa9d682fc32c35d0f.jsonl`
 - **turns**: 57 · **assistant messages**: 2
 
 ## Task given
 
 ```text
-Read-only investigation in /Users/thom/Projects/research/scres-ia. Four external audits say Paper 2's RQ1 must NOT rest on "the top six of fifteen methods are exactly the six that retain state" (a ranking observation) but on PAIRED WITHIN-FAMILY contrasts: for each method family f, Delta_f = AUC(f_reset) - AUC(f_retained), with intervals. I need to know whether the existing sealed artifacts can support that without any new computation.
+Read-only investigation in <HOME>/Projects/research/scres-ia. Four external audits say Paper 2's RQ1 must NOT rest on "the top six of fifteen methods are exactly the six that retain state" (a ranking observation) but on PAIRED WITHIN-FAMILY contrasts: for each method family f, Delta_f = AUC(f_reset) - AUC(f_retained), with intervals. I need to know whether the existing sealed artifacts can support that without any new computation.
 
 1. `results/search_ladder_v5/result.json`. Report its FULL structure: what per-arm data exists. Specifically: are there per-seed / per-context AUC values for each arm (something like per_arm[arm]["auc"] being an array over seeds x contexts), or only aggregate means? Quote the actual keys and array shapes. If per-seed values exist, the paired contrasts are computable; say so explicitly.
 
@@ -56,7 +60,7 @@ per_arm[arm]["final"]       -> list, len 12   (one float PER SEED)
 per_arm[arm]["budget_used"] -> list, len 72   (12 seeds x 6 contexts)
 ```
 
-So it is **per-seed, not seed x context**. The generating line in `/Users/thom/Projects/research/scres-ia/scripts/run_search_comparator_ladder_v5.py:218` is:
+So it is **per-seed, not seed x context**. The generating line in `<HOME>/Projects/research/scres-ia/scripts/run_search_comparator_ladder_v5.py:218` is:
 
 ```python
 per_arm[name]["auc"].append(float(np.mean(aucs)))   # aucs = one entry per context

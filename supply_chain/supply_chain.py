@@ -224,6 +224,7 @@ class MFSCSimulation:
         risk_attribution_source: str = "des_events",
         inventory_replenishment_period: Optional[float] = None,
         inventory_replenishment_lead_time: float = 0.0,
+        strategic_buffer_release_mode: str = "none",
         raw_material_flow_mode: str = "kit_equivalent_order_up_to",
         raw_material_order_up_to_multiplier: float = 2.0,
         demand_mean_multiplier: float = 1.0,
@@ -922,6 +923,26 @@ class MFSCSimulation:
         # arrives this many hours after it is triggered, so a sustained disruption can
         # drain the buffer faster than it refills -> anticipating the regime pays.
         self.inventory_replenishment_lead_time = max(0.0, float(inventory_replenishment_lead_time))
+        # STRATEGIC-BUFFER RELEASE. OUR DECLARED MODELLING ASSUMPTION, not a thesis fact: the
+        # source (p.107) replenishes buffers periodically and never describes what happens when a
+        # planner lowers the target, so the shipped model only ever ADDS -- `_top_up_inventory_buffer`
+        # has no counterpart and a grep for any drawdown returns nothing. The consequence was
+        # measured on 2026-08-08: switching the target off leaves the delivered units in place, so
+        # holding for 8 weeks and holding for 26 are the same episode, "how long you hold" is not a
+        # decision variable, and the schedule class collapses to one bit. Pricing a holding cost on
+        # top of that would charge for something the policy cannot control.
+        #
+        #   "none"      the shipped physics, default, so nothing frozen changes
+        #   "immediate" the excess above target is released at the next replenishment tick
+        #
+        # Fidelity price: the thesis has no release event, so `immediate` is an extension and any
+        # result under it is OURS, never presented as reproducing Garrido-Rios (2017).
+        if strategic_buffer_release_mode not in ("none", "immediate"):
+            raise ValueError(
+                "strategic_buffer_release_mode must be 'none' or 'immediate', got "
+                f"{strategic_buffer_release_mode!r}")
+        self.strategic_buffer_release_mode = str(strategic_buffer_release_mode)
+        self.strategic_buffer_released_units = 0.0
         self.hours_per_year = resolve_hours_per_year(year_basis)
         downstream_ranges = THESIS_DOWNSTREAM_Q_RANGES[downstream_q_source]
         op9_q = downstream_ranges["op9"]
@@ -1547,6 +1568,8 @@ class MFSCSimulation:
             if period <= 0.0:
                 return
             yield self.env.timeout(period)
+            if self.strategic_buffer_release_mode == "immediate":
+                self._release_strategic_buffer()
             lead = float(self.inventory_replenishment_lead_time)
             if lead > 0.0:
                 # Refill arrives `lead` hours later, without shifting the period clock.
@@ -1556,6 +1579,34 @@ class MFSCSimulation:
                     event = self._top_up_inventory_buffer(key, float(target))
                     if event is not None:
                         yield event
+
+    def _release_strategic_buffer(self) -> float:
+        """Draw stock back down to the CURRENT target, so lowering it actually frees inventory.
+
+        Released units leave the container; they are not re-issued anywhere, because the strategic
+        buffer is prepositioned stock and releasing it means declining to hold it, not consuming
+        it. A node with no target left is drawn to its operating level, never below zero.
+        """
+        released = 0.0
+        for key in list(self._buffer_container_keys()):
+            container = getattr(self, key, None)
+            if container is None:
+                continue
+            target = float(self.inventory_buffer_targets.get(key, 0.0))
+            excess = float(container.level) - target
+            if excess > 1e-9:
+                container.get(excess)
+                released += excess
+        self.strategic_buffer_released_units += released
+        return released
+
+    def _buffer_container_keys(self):
+        """Containers a strategic target can name. Read from the declared targets when present so
+        the release cannot touch a node the buffer never filled."""
+        keys = set(self.inventory_buffer_targets)
+        if not keys:
+            keys = {"rations_al", "rations_sb", "rations_cssu"}
+        return [k for k in keys if getattr(self, k, None) is not None]
 
     def _delayed_buffer_top_up(self, lead: float):
         """Strategic-buffer refill that arrives after a rebuild lead time (Ed.2)."""

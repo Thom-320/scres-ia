@@ -1,17 +1,21 @@
-# Explore — Repo: /Users/thom/Projects/research/scres-ia
+# Explore — Repo: <HOME>/Projects/research/scres-ia
+
+> **`UNADJUDICATED_DO_NOT_CITE`** — transcripción cruda de un agente, guardada por el hook
+> `SubagentStop`. Puede contener afirmaciones **retiradas**; el canon vive en los artefactos
+> sellados y en las enmiendas, nunca aquí.
 
 - **agent_id**: `aad5fc6e24d7410ee`
 - **session**: `c4c70a0d-d0da-4c53-824e-5d7a181768e6`
 - **branch**: `codex/expanded-contract-comparators-v2`
 - **finished**: `2026-08-08T00:49:12.499Z`
 - **effort**: `high` · **version**: `2.1.222`
-- **transcript**: `/Users/thom/.claude/projects/-Users-thom-Projects-research-scres-ia/c4c70a0d-d0da-4c53-824e-5d7a181768e6/subagents/agent-aad5fc6e24d7410ee.jsonl`
+- **transcript**: `<HOME>/.claude/projects/-Users-thom-Projects-research-scres-ia/c4c70a0d-d0da-4c53-824e-5d7a181768e6/subagents/agent-aad5fc6e24d7410ee.jsonl`
 - **turns**: 122 · **assistant messages**: 2
 
 ## Task given
 
 ```text
-Repo: /Users/thom/Projects/research/scres-ia
+Repo: <HOME>/Projects/research/scres-ia
 
 GOAL: inventory everything that already exists toward a Computers & Industrial Engineering (C&IE) submission, so I can judge how close we are to a submittable manuscript.
 
@@ -37,12 +41,12 @@ OUTPUT: a compact readiness assessment — what exists, what is reusable, and wh
 
 ## 1. The two planning docs
 
-### `/Users/thom/Projects/research/scres-ia/docs/ESTRATEGIA_CIE_2026-08-06.md` (5.8k, Aug 6)
+### `<HOME>/Projects/research/scres-ia/docs/ESTRATEGIA_CIE_2026-08-06.md` (5.8k, Aug 6)
 Planned paper: the **outer loop as Garrido's AI bridge**. Reads Garrido 2024 page-by-page and anchors the paper to his own figure nodes — Fig. 2 node ③ (`Decision variables, ρ`) → node ⑧ (`Metric of SCRES`), with `L` accumulating *across runs and configurations*. Claim: our outer loop **is** that bridge — simulation-optimization over configuration space, not intra-episode control. Justifies C&IE as venue because Garrido 2024 cites **seven** C&IE papers (refs 8, 9, 26, 28, 34, 38, 41), incl. Bruckler et al. 2024 C&IE 192 (SCRES *metrics* review) — which the `ret_excel`-rewards-abandonment finding speaks to directly.
 
 Stated gap at that date: **R0–R7 were all development; nothing confirmatory.** Two runs launched to fix that (R7 prospective confirmation on virgin block 8.200.001–060; VPS KAN/MLP/DMLPA bake-off at matched 200k params).
 
-### `/Users/thom/Projects/research/scres-ia/docs/RESULTADOS_CIE_CONSOLIDADOS_2026-08-05.md` (15k, Aug 5)
+### `<HOME>/Projects/research/scres-ia/docs/RESULTADOS_CIE_CONSOLIDADOS_2026-08-05.md` (15k, Aug 5)
 The results package, explicitly "sin prosa de manuscrito" — **it is a results inventory, not a draft**. R0–R7 with artifact paths and contracts:
 - R1 normaliser leak repaired (prefix normaliser), R1b twin-surface falsifier
 - R2 `NON_SEPARABLE_BUT_CONTEXT_INVARIANT`, `H_regime` +0.0038

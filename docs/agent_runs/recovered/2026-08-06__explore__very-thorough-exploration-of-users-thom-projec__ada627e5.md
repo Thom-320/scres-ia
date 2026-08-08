@@ -1,17 +1,21 @@
-# Explore — Very thorough exploration of /Users/thom/Projects/research/scres-ia across ALL branches (u
+# Explore — Very thorough exploration of <HOME>/Projects/research/scres-ia across ALL branches (u
+
+> **`UNADJUDICATED_DO_NOT_CITE`** — transcripción cruda de un agente, guardada por el hook
+> `SubagentStop`. Puede contener afirmaciones **retiradas**; el canon vive en los artefactos
+> sellados y en las enmiendas, nunca aquí.
 
 - **agent_id**: `ada627e5f50f29531`
 - **session**: `155226df-d03c-4d02-9e9f-9e30785a6895`
 - **branch**: `codex/expanded-contract-comparators-v2`
 - **finished**: `2026-08-06T02:30:10.382Z`
 - **effort**: `medium` · **version**: `2.1.221`
-- **transcript**: `/Users/thom/.claude/projects/-Users-thom-Projects-research-scres-ia/155226df-d03c-4d02-9e9f-9e30785a6895/subagents/agent-ada627e5f50f29531.jsonl`
+- **transcript**: `<HOME>/.claude/projects/-Users-thom-Projects-research-scres-ia/155226df-d03c-4d02-9e9f-9e30785a6895/subagents/agent-ada627e5f50f29531.jsonl`
 - **turns**: 112 · **assistant messages**: 4
 
 ## Task given
 
 ```text
-Very thorough exploration of /Users/thom/Projects/research/scres-ia across ALL branches (use `git branch -a` and `git log --all`).
+Very thorough exploration of <HOME>/Projects/research/scres-ia across ALL branches (use `git branch -a` and `git log --all`).
 
 I need a COMPLETE inventory of every resilience metric / endpoint this project has ever defined, and what was measured with each. For each metric report: exact name, the file and function that computes it, its definition in one sentence, and every sealed result that used it as PRIMARY.
 
@@ -42,7 +46,7 @@ Scope checked: all 90 local+remote branches (`git branch -a`, `git log --all`), 
 
 ## 1. The ReT family — where each is computed and what is broken
 
-All order-level ReT lives in **`/Users/thom/Projects/research/scres-ia/supply_chain/ret_thesis.py`** (603 lines). A byte-identical fork exists at `/Users/thom/Projects/research/scres-ia/research/thesis_native_timing/canonical_ret.py`. The panel that surfaces them is **`/Users/thom/Projects/research/scres-ia/supply_chain/episode_metrics.py`**.
+All order-level ReT lives in **`<HOME>/Projects/research/scres-ia/supply_chain/ret_thesis.py`** (603 lines). A byte-identical fork exists at `<HOME>/Projects/research/scres-ia/research/thesis_native_timing/canonical_ret.py`. The panel that surfaces them is **`<HOME>/Projects/research/scres-ia/supply_chain/episode_metrics.py`**.
 
 | key | computing function | one-line definition |
 |---|---|---|

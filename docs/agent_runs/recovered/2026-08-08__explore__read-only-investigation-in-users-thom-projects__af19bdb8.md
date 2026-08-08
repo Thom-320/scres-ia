@@ -1,17 +1,21 @@
-# Explore — Read-only investigation in /Users/thom/Projects/research/scres-ia. The machine is busy wit
+# Explore — Read-only investigation in <HOME>/Projects/research/scres-ia. The machine is busy wit
+
+> **`UNADJUDICATED_DO_NOT_CITE`** — transcripción cruda de un agente, guardada por el hook
+> `SubagentStop`. Puede contener afirmaciones **retiradas**; el canon vive en los artefactos
+> sellados y en las enmiendas, nunca aquí.
 
 - **agent_id**: `af19bdb8cdb10991e`
 - **session**: `2c6b3a01-62a0-499d-957d-694424855dff`
 - **branch**: `codex/expanded-contract-comparators-v2`
 - **finished**: `2026-08-08T03:56:50.880Z`
 - **effort**: `xhigh` · **version**: `2.1.222`
-- **transcript**: `/Users/thom/.claude/projects/-Users-thom-Projects-research-scres-ia/2c6b3a01-62a0-499d-957d-694424855dff/subagents/agent-af19bdb8cdb10991e.jsonl`
+- **transcript**: `<HOME>/.claude/projects/-Users-thom-Projects-research-scres-ia/2c6b3a01-62a0-499d-957d-694424855dff/subagents/agent-af19bdb8cdb10991e.jsonl`
 - **turns**: 114 · **assistant messages**: 2
 
 ## Task given
 
 ```text
-Read-only investigation in /Users/thom/Projects/research/scres-ia. The machine is busy with a long verification job — do NOT run pytest or anything heavy. Read artifacts and docs only.
+Read-only investigation in <HOME>/Projects/research/scres-ia. The machine is busy with a long verification job — do NOT run pytest or anything heavy. Read artifacts and docs only.
 
 There is a v.0 draft of a paper with a research question and four hypotheses. I need to know, for EACH, exactly what sealed evidence answers it, at what evidence grade, with the exact numbers, and what is NOT answered.
 
@@ -45,9 +49,9 @@ Be exhaustive and exact. Quote claim_status strings verbatim.
 
 ## Where things live
 
-- v.0 draft text: `/Users/thom/Projects/research/scres-ia/tmp/v0_draft.txt` (RQ at l.35–38, L_{t−1} claim l.68–77, H1–H4 at l.78–90); DOCX renders in `/Users/thom/Projects/research/scres-ia/deliverables/v0_neuralNet-scres_DES_section_updated.docx`
-- Adjudicating docs: `/Users/thom/Projects/research/scres-ia/docs/TABLA_CANONICA_DE_CLAIMS_2026-08-07.md`, `…_ENMIENDA_1.md`, `/Users/thom/Projects/research/scres-ia/docs/GARRIDO_Q1_Q2_CLAIM_FREEZE_2026-08-07.md` + `_ENMIENDA_1..4.md`, `/Users/thom/Projects/research/scres-ia/docs/INDICE_DE_ARTEFACTOS_AUTORITATIVOS.md`, `/Users/thom/Projects/research/scres-ia/docs/TABLA_CANONICA_GENERADA.md`
-- Machine-derived evidence grades: `/Users/thom/Projects/research/scres-ia/research/evidence_registry.jsonl` (216 artifacts, 211 distinct experiments; grade is **derived**, never copied from `claim_status`). Repo-wide: `CONFIRMATORY` n=3, `DEVELOPMENT` 87, `UNCONTRACTED` 57, `REPLAY` 39, `NEGATIVE_OR_HALTED` 20, `DIAGNOSTIC` 5. **Virgin seed blocks remaining: 0.**
+- v.0 draft text: `<HOME>/Projects/research/scres-ia/tmp/v0_draft.txt` (RQ at l.35–38, L_{t−1} claim l.68–77, H1–H4 at l.78–90); DOCX renders in `<HOME>/Projects/research/scres-ia/deliverables/v0_neuralNet-scres_DES_section_updated.docx`
+- Adjudicating docs: `<HOME>/Projects/research/scres-ia/docs/TABLA_CANONICA_DE_CLAIMS_2026-08-07.md`, `…_ENMIENDA_1.md`, `<HOME>/Projects/research/scres-ia/docs/GARRIDO_Q1_Q2_CLAIM_FREEZE_2026-08-07.md` + `_ENMIENDA_1..4.md`, `<HOME>/Projects/research/scres-ia/docs/INDICE_DE_ARTEFACTOS_AUTORITATIVOS.md`, `<HOME>/Projects/research/scres-ia/docs/TABLA_CANONICA_GENERADA.md`
+- Machine-derived evidence grades: `<HOME>/Projects/research/scres-ia/research/evidence_registry.jsonl` (216 artifacts, 211 distinct experiments; grade is **derived**, never copied from `claim_status`). Repo-wide: `CONFIRMATORY` n=3, `DEVELOPMENT` 87, `UNCONTRACTED` 57, `REPLAY` 39, `NEGATIVE_OR_HALTED` 20, `DIAGNOSTIC` 5. **Virgin seed blocks remaining: 0.**
 
 ---
 
@@ -60,11 +64,11 @@ The RQ decomposes into two measurable halves, and **both are answered negatively
 ### 1a. "Dynamic operationalization" = does knowing the regime buy a different posture?
 
 **Artifacts:**
-- `/Users/thom/Projects/research/scres-ia/results/surface_gates/result.json` — `claim_status`: **`"NON_SEPARABLE_BUT_CONTEXT_INVARIANT"`**; scope `"DEVELOPMENT_ON_BURNED_TAPES_NO_ADJUDICATION_NO_LEARNER"`; `run_role: CACHE_ANALYSIS`; grade **REPLAY**; seeds 5300001–5300012 (n=12, declared replay of `garrido_q2_des288`).
-- `/Users/thom/Projects/research/scres-ia/results/surface_gates_v2/result.json` — same status, 5000 bootstrap reps.
-- `/Users/thom/Projects/research/scres-ia/results/endpoint_headroom_atlas/result.json` — `claim_status`: **`"NO_ENDPOINT_CARRIES_REGIME_HEADROOM"`**; grade REPLAY.
-- `/Users/thom/Projects/research/scres-ia/results/garrido_v0_surface_gates_v1/result.json` — `claim_status`: **`"STOP_NO_RECOVERY_LEARNING_HEADROOM"`**; grade **NEGATIVE_OR_HALTED**; seeds 5300001–006.
-- `/Users/thom/Projects/research/scres-ia/results/garrido_v0_surface_gates_holdout/result.json` — `claim_status`: **`"OPENED_AGAINST_PREREGISTRATION_STOP_NO_RECOVERY_LEARNING_HEADROOM"`**; grade NEGATIVE_OR_HALTED; seeds 5300007–012.
+- `<HOME>/Projects/research/scres-ia/results/surface_gates/result.json` — `claim_status`: **`"NON_SEPARABLE_BUT_CONTEXT_INVARIANT"`**; scope `"DEVELOPMENT_ON_BURNED_TAPES_NO_ADJUDICATION_NO_LEARNER"`; `run_role: CACHE_ANALYSIS`; grade **REPLAY**; seeds 5300001–5300012 (n=12, declared replay of `garrido_q2_des288`).
+- `<HOME>/Projects/research/scres-ia/results/surface_gates_v2/result.json` — same status, 5000 bootstrap reps.
+- `<HOME>/Projects/research/scres-ia/results/endpoint_headroom_atlas/result.json` — `claim_status`: **`"NO_ENDPOINT_CARRIES_REGIME_HEADROOM"`**; grade REPLAY.
+- `<HOME>/Projects/research/scres-ia/results/garrido_v0_surface_gates_v1/result.json` — `claim_status`: **`"STOP_NO_RECOVERY_LEARNING_HEADROOM"`**; grade **NEGATIVE_OR_HALTED**; seeds 5300001–006.
+- `<HOME>/Projects/research/scres-ia/results/garrido_v0_surface_gates_holdout/result.json` — `claim_status`: **`"OPENED_AGAINST_PREREGISTRATION_STOP_NO_RECOVERY_LEARNING_HEADROOM"`**; grade NEGATIVE_OR_HALTED; seeds 5300007–012.
 
 **Exact numbers:**
 - `H_regime = 0.003802243800697269`, LCB95 `1.0824674490095292e-16` (n_boot 1000) / `1.3519330929717688e-05` (n_boot 5000), UCB95 `0.014413327648688967` / `0.014856419878462748`, against a **preregistered gate of 0.05** → **gate fails**.
@@ -73,16 +77,16 @@ The RQ decomposes into two measurable halves, and **both are answered negatively
 
 **Falsifiers:** surface_gates `all_passed: false` (the `f_no_fresh_seeds` is `not_applicable`/declared replay; the *gate* `g1_context_adaptation_is_worth_something` fails). v0 gates: f1–f4 pass in development; in the holdout `f1_only_development_seeds_are_loaded` is **`passed: false`** by construction, and `all_passed: false` — that is the point of the `OPENED_AGAINST_PREREGISTRATION_` prefix.
 
-**Estimand redefinition / timing:** the holdout opening is documented in `/Users/thom/Projects/research/scres-ia/docs/APERTURA_HOLDOUT_V0_CONTRA_EL_PREREGISTRO_2026-08-07.md`, marked **"Escrito ANTES de correr"**, and states explicitly that the opening violates the preregistration's own stop rule twice, that the block `5300007–012` is burned, and that **"si el holdout contradice el STOP … NO es un positivo citable."** The block is registered as `BURNED_OPENED_AGAINST_PREREGISTRATION`. This is the cleanest possible handling of a rule violation, but it does mean the holdout adds no authority.
+**Estimand redefinition / timing:** the holdout opening is documented in `<HOME>/Projects/research/scres-ia/docs/APERTURA_HOLDOUT_V0_CONTRA_EL_PREREGISTRO_2026-08-07.md`, marked **"Escrito ANTES de correr"**, and states explicitly that the opening violates the preregistration's own stop rule twice, that the block `5300007–012` is burned, and that **"si el holdout contradice el STOP … NO es un positivo citable."** The block is registered as `BURNED_OPENED_AGAINST_PREREGISTRATION`. This is the cleanest possible handling of a rule violation, but it does mean the holdout adds no authority.
 
 **Verdict: NOT SUPPORTED for the neural mechanism, and largely unanswerable as posed.** There is no measurable regime-adaptive headroom on any endpoint in this chain, so "dynamic operationalization" has almost nothing to operationalize. What *is* supported is a strictly weaker and different thing: retained **search** state finds the (invariant) optimum faster.
 
 ### 1b. "Predictive accuracy"
 
 **Artifacts:**
-- `/Users/thom/Projects/research/scres-ia/results/garrido_wrap_q1/result.json` — `claim_status`: **`"DEVELOPMENT_FIG5_SURROGATE"`**, `q1_decision.decision`: **`"NO_GO_NEURAL_PREMIUM_IN_WRAP_PANEL"`**; grade **UNCONTRACTED** (`contract_path: null` — "no contract hash: nothing fixes what this run was allowed to claim"). n=90 configurations, 5 grouped folds, seed 20260731.
-- `/Users/thom/Projects/research/scres-ia/results/garrido_fig5_surrogate/result.json` — same numbers, same grade UNCONTRACTED.
-- `/Users/thom/Projects/research/scres-ia/results/headroom/buffer_prediction_premium/result.json` — `claim_status`: **`"NO_NEURAL_PREMIUM_EVEN_WITH_MEASURED_CURVATURE"`**; grade **DEVELOPMENT**; seeds 6800001–6800010 (virgin, `f6` scanned 350 prior seeds, zero collisions); n_rows 1530.
+- `<HOME>/Projects/research/scres-ia/results/garrido_wrap_q1/result.json` — `claim_status`: **`"DEVELOPMENT_FIG5_SURROGATE"`**, `q1_decision.decision`: **`"NO_GO_NEURAL_PREMIUM_IN_WRAP_PANEL"`**; grade **UNCONTRACTED** (`contract_path: null` — "no contract hash: nothing fixes what this run was allowed to claim"). n=90 configurations, 5 grouped folds, seed 20260731.
+- `<HOME>/Projects/research/scres-ia/results/garrido_fig5_surrogate/result.json` — same numbers, same grade UNCONTRACTED.
+- `<HOME>/Projects/research/scres-ia/results/headroom/buffer_prediction_premium/result.json` — `claim_status`: **`"NO_NEURAL_PREMIUM_EVEN_WITH_MEASURED_CURVATURE"`**; grade **DEVELOPMENT**; seeds 6800001–6800010 (virgin, `f6` scanned 350 prior seeds, zero collisions); n_rows 1530.
 
 **Exact numbers (near-linear panel, B1 held-out R²):** linear `0.9697483885147611`, backprop `0.9863153335912018`, KAN `0.9913280603236345`. Paired vs linear: backprop `+0.016566945076440742` [`+0.0048352801397191485`, `+0.028298610013162334`]; KAN `+0.02157967180887328` [`+0.0041640998372037795`, `+0.03899524378054278`]. **SESOI `0.05` fixed in advance; `passes_sesoi_and_ci: false` for both.** B2 activation accuracy: linear `0.7111111111111111`, backprop `0.7177777777777778` (`+0.006666666666666665` [`−0.1392088748907709`, `+0.15254220822410422`]), KAN `0.7711111111111111` (`+0.06000000000000003` [`−0.016566172558918603`, `+0.13656617255891867`]) — **CI crosses zero for both**; `eligible_neural_models: []`.
 
@@ -96,7 +100,7 @@ The RQ decomposes into two measurable halves, and **both are answered negatively
 
 # 2. The L_{t−1} formal claim (`R_t = f(S_t, D_t, L_{t−1})`)
 
-**Adjudicating artifact:** `/Users/thom/Projects/research/scres-ia/results/grid_transfer_confirmation_v2/result.json`
+**Adjudicating artifact:** `<HOME>/Projects/research/scres-ia/results/grid_transfer_confirmation_v2/result.json`
 
 - `claim_status`: **`"GRID_TRANSFER_CONFIRMED__UCB1"`**
 - `scope`: **`"CONFIRMATION_ON_RESERVED_VIRGIN_BLOCK_NO_RL_NO_NEURAL_LEARNER"`**
@@ -116,7 +120,7 @@ The RQ decomposes into two measurable halves, and **both are answered negatively
 
 **Falsifiers:** `all_passed: true` — f1 (103,680 cells reproduced against the 288-cache, `max_abs_delta: 0.0`, 0 mismatches), f2, **f3_transfer_beats_its_marginal_replay** (the falsifier the neuron fails on numbers while the falsifier itself "passes" as a test), f4_seed_custody (`NO_KNOWN_COLLISION`, registry declares itself incomplete), f_budgets_are_matched, f_source_manifest_is_identical.
 
-**Estimand:** exactly the one the claim needs, and the falsifier separates "I transferred surface structure" from "I revisited configurations that already worked." Written in `/Users/thom/Projects/research/scres-ia/docs/ENMIENDA_CONFIRMACION_BLOQUE_LIMPIO_2026-08-05.md` (contract sha `1abbb2df…`), **before** the run of 2026-08-06T09:39.
+**Estimand:** exactly the one the claim needs, and the falsifier separates "I transferred surface structure" from "I revisited configurations that already worked." Written in `<HOME>/Projects/research/scres-ia/docs/ENMIENDA_CONFIRMACION_BLOQUE_LIMPIO_2026-08-05.md` (contract sha `1abbb2df…`), **before** the run of 2026-08-06T09:39.
 
 **Verdict: SUPPORTED-BUT-DIFFERENT-CARRIER.** `L_{t−1}` as an endogenous state variable is confirmed prospectively — but `L` is a **factor-level bandit statistic**, not a neural weight vector. The neural `L` beats cold start and **fails** the demanding counterfactual with the entire interval on the wrong side. `L` also lives in the **outer loop between DES runs**, not inside the event kernel — `GARRIDO_Q1_Q2_CLAIM_FREEZE` §2 lists `"embedded inside the DES transition kernel"` and `"closed-loop adaptive control within the episode"` as **forbidden phrasings**.
 
@@ -124,12 +128,12 @@ The RQ decomposes into two measurable halves, and **both are answered negatively
 
 # 3. H1 — Learning Effect (shorter recovery times)
 
-**Artifact:** `/Users/thom/Projects/research/scres-ia/results/manuscript/h1_h3_originales_v3/result.json`
+**Artifact:** `<HOME>/Projects/research/scres-ia/results/manuscript/h1_h3_originales_v3/result.json`
 
 - `claim_status`: **`"H1_SUPPORTED__H3_NOT_SUPPORTED"`**
 - `scope`: **`"DEVELOPMENT_ALREADY_OPEN_BLOCK_NO_VIRGIN_SEEDS_NO_ADJUDICATION"`**
 - Evidence grade: **`DEVELOPMENT`** ("contracted, but not a confirmation over a virgin block")
-- Preregistration `/Users/thom/Projects/research/scres-ia/docs/PREREGISTRO_H1_H3_ORIGINALES_V3_2026-08-07.md`, contract sha `24a1fe62fcaab9ad547bd85aa702cd60982168fc1804b40659957ff9c7fc4d0d`; `self_sha256` `dc46ce6069755a28929b5b107196232a399dd374820b31dc1b186c70e6ef807e`
+- Preregistration `<HOME>/Projects/research/scres-ia/docs/PREREGISTRO_H1_H3_ORIGINALES_V3_2026-08-07.md`, contract sha `24a1fe62fcaab9ad547bd85aa702cd60982168fc1804b40659957ff9c7fc4d0d`; `self_sha256` `dc46ce6069755a28929b5b107196232a399dd374820b31dc1b186c70e6ef807e`
 - Seed block **6000001–6000120** (n=120 replicates), already open; cell = (seed × shock context), **n_cells = 960 per arm**
 - Endpoint: `restricted_ttr_hours = min(TTR, τ)`, τ = 1344 h (8 weeks), horizon 6048 h, with a **paired shock-free placebo**
 - Arms: hybrid = `neuron_memory`, reset = `neuron_reset`, static = `ofat`
@@ -149,8 +153,8 @@ The artifact carries a dedicated field, verbatim:
 > `"endpoint_redefinition_declared": "H1 uses restricted_ttr = min(TTR, tau) with a paired placebo, not system_ttr. It is a different estimand, written 2026-08-06 for the v0 lane and before this preregistration, not a loosened version of the one that returned 1.000."`
 
 Corroboration of the timing:
-- The prior attempt `/Users/thom/Projects/research/scres-ia/results/manuscript/h1_h3_v1/result.json` is **`"HALTED_FALSIFIER_FAILED"`** (grade NEGATIVE_OR_HALTED): `f1` failed (hybrid and static deployed the identical config) **and** `f3` failed with `censored_fraction_by_arm = {hybrid: 1.0, reset: 1.0, static: 1.0}` — `system_ttr` gave `0.0 ± [0.0, 0.0]` by vacuity.
-- `restricted_ttr` was built in `supply_chain/garrido_v0_recovery.py` for the v0 lane, preregistered in `/Users/thom/Projects/research/scres-ia/docs/PREREGISTRO_GARRIDO_V0_RECOVERY_GATE_2026-08-06.md` (file mtime 2026-08-06 20:47, committed `ab9d5f5` 2026-08-06 20:50:59).
+- The prior attempt `<HOME>/Projects/research/scres-ia/results/manuscript/h1_h3_v1/result.json` is **`"HALTED_FALSIFIER_FAILED"`** (grade NEGATIVE_OR_HALTED): `f1` failed (hybrid and static deployed the identical config) **and** `f3` failed with `censored_fraction_by_arm = {hybrid: 1.0, reset: 1.0, static: 1.0}` — `system_ttr` gave `0.0 ± [0.0, 0.0]` by vacuity.
+- `restricted_ttr` was built in `supply_chain/garrido_v0_recovery.py` for the v0 lane, preregistered in `<HOME>/Projects/research/scres-ia/docs/PREREGISTRO_GARRIDO_V0_RECOVERY_GATE_2026-08-06.md` (file mtime 2026-08-06 20:47, committed `ab9d5f5` 2026-08-06 20:50:59).
 - The H1 preregistration was committed `189c2c8` at **2026-08-07 10:57:00**; the run created at **2026-08-07T16:09:05Z**. So: instrument written 2026-08-06 for a different lane → preregistration 2026-08-07 10:57 → run 2026-08-07 16:09. **Preregistration precedes the run by ~5h; the instrument precedes the preregistration by ~14h.**
 - The preregistration itself flags the exposure honestly (§1): the 2026-08-01 document listed "fix `system_ttr`" as the *last* of three options "precisely because changing an instrument after seeing it return 1.000 is suspicious", and then states: **"Aun así, es una redefinición del endpoint y el manuscrito la presenta como tal."**
 
@@ -160,18 +164,18 @@ Corroboration of the timing:
 
 **Verdict: SUPPORTED-BUT-DIFFERENT-ESTIMAND (declared, pre-dated, and honestly labelled), at DEVELOPMENT grade, under isolated shocks, by absorption rather than by faster restoration.** Not confirmatory. Also see §7 — the "hybrid" arm here is a 5-parameter logistic unit.
 
-**Reformulation H1′ (also supported):** `/Users/thom/Projects/research/scres-ia/results/manuscript/h1_h3_v2_1/result.json`, `claim_status` **`"H1_SUPPORTED__H3_NOT_SUPPORTED"`**, grade DEVELOPMENT, seeds 6200001–6200005 (virgin, f7 scanned 314 prior seeds), 12 repeats, 72 cells. Endpoint `service_loss_auc_ration_hours`. Primary all cells **+61,349,290.03** [**+14,432,891.77**, +121,804,658.43]; hybrid_vs_reset +33,547,084.65 [+3,893,251.25, +81,838,777.71]; on the 42 differing cells +105,170,211.49 [+28,008,967.28, +204,916,732.28]. Levels: hybrid 47,444,828.28 / reset 80,991,912.93 / static 108,794,118.32. All seven falsifiers pass. The artifact self-labels: `"what_it_is_not": "not a recovery TIME: it is the integral of lost service, which mixes magnitude with duration"`.
+**Reformulation H1′ (also supported):** `<HOME>/Projects/research/scres-ia/results/manuscript/h1_h3_v2_1/result.json`, `claim_status` **`"H1_SUPPORTED__H3_NOT_SUPPORTED"`**, grade DEVELOPMENT, seeds 6200001–6200005 (virgin, f7 scanned 314 prior seeds), 12 repeats, 72 cells. Endpoint `service_loss_auc_ration_hours`. Primary all cells **+61,349,290.03** [**+14,432,891.77**, +121,804,658.43]; hybrid_vs_reset +33,547,084.65 [+3,893,251.25, +81,838,777.71]; on the 42 differing cells +105,170,211.49 [+28,008,967.28, +204,916,732.28]. Levels: hybrid 47,444,828.28 / reset 80,991,912.93 / static 108,794,118.32. All seven falsifiers pass. The artifact self-labels: `"what_it_is_not": "not a recovery TIME: it is the integral of lost service, which mixes magnitude with duration"`.
 
 ---
 
 # 4. H2 — Adaptation / learning curve
 
-**Artifact:** `/Users/thom/Projects/research/scres-ia/results/manuscript/h2_learning_curve/result.json`
+**Artifact:** `<HOME>/Projects/research/scres-ia/results/manuscript/h2_learning_curve/result.json`
 
 - `claim_status`: **`"H2_SUPPORTED_LEARNING_CURVE"`**
 - `scope`: **`"DEVELOPMENT_REANALYSIS_OF_SEALED_ARTIFACTS_NO_SEEDS_NO_ADJUDICATION"`**
 - Evidence grade: **`DEVELOPMENT`**
-- `self_sha256` `74b75141241ba7639f629e2ba8db0ef28bff480fe706489f8977dcd4d4bf48fa`; preregistration `/Users/thom/Projects/research/scres-ia/docs/PREREGISTRO_H2_CURVA_DE_APRENDIZAJE_2026-08-07.md`, contract sha `7741309cf93fa4e0a49995f0900b1062bce986eb292fc0dc7b66fbc782345cfb`
+- `self_sha256` `74b75141241ba7639f629e2ba8db0ef28bff480fe706489f8977dcd4d4bf48fa`; preregistration `<HOME>/Projects/research/scres-ia/docs/PREREGISTRO_H2_CURVA_DE_APRENDIZAJE_2026-08-07.md`, contract sha `7741309cf93fa4e0a49995f0900b1062bce986eb292fc0dc7b66fbc782345cfb`
 - Seed block **6000001–6000120**, n=120; zero seeds consumed (pure re-analysis); normaliser = **prefix**
 - Endpoint: `auc_regret_norm`; estimand string verbatim: `"OLS slope of (reset AUC - memory AUC) against the context ordinal 1..6, per replicate. A large but FLAT advantage supports H4, not H2."`
 
@@ -185,7 +189,7 @@ Corroboration of the timing:
 
 **Estimand: SHARPENED, and written before the run.** The preregistration is headed "Escrito y commiteado ANTES de mirar los datos", committed `093a38a` at **2026-08-07 13:39:38**; the run created **2026-08-07T18:39:39Z** — five hours later. It fixes the reading rule in advance with four named outcomes including `H2_NOT_SUPPORTED_ADVANTAGE_IS_FLAT`, and states: **"si sale plana no se reescribe como «la memoria ayuda en todos los contextos» — eso ya lo dice H4."** This is a slope-not-level estimand, which is strictly *stricter* than the draft's wording, not looser. **No endpoint shopping here.**
 
-**Retracted predecessor figure (explicitly named):** the circulating H2 form "**ventaja +0,00 → +10,00 entre contextos**" is **RETIRED** — it came from the runner with the normaliser leak documented in `/Users/thom/Projects/research/scres-ia/docs/CORRECCION_META_APRENDIZ_FUGA_2026-07-31.md` (a `f5_no_context_leakage` falsifier with `"passed": True` **hardcoded**; the searcher was reading driver vectors of *unrun* configurations). The zero at the first context survives as a structural check.
+**Retracted predecessor figure (explicitly named):** the circulating H2 form "**ventaja +0,00 → +10,00 entre contextos**" is **RETIRED** — it came from the runner with the normaliser leak documented in `<HOME>/Projects/research/scres-ia/docs/CORRECCION_META_APRENDIZ_FUGA_2026-07-31.md` (a `f5_no_context_leakage` falsifier with `"passed": True` **hardcoded**; the searcher was reading driver vectors of *unrun* configurations). The zero at the first context survives as a structural check.
 
 **Verdict: SUPPORTED, on the hypothesis's own estimand, with the order confound explicitly controlled — but at DEVELOPMENT grade on an already-open block, and on search-cost AUC, not on operational resilience.** Carrier caveat in §7 applies.
 
@@ -193,7 +197,7 @@ Corroboration of the timing:
 
 # 5. H3 — Volatility Reduction
 
-**Artifact:** `/Users/thom/Projects/research/scres-ia/results/manuscript/h1_h3_originales_v3/result.json` (same run as H1)
+**Artifact:** `<HOME>/Projects/research/scres-ia/results/manuscript/h1_h3_originales_v3/result.json` (same run as H1)
 
 - `claim_status`: **`"H1_SUPPORTED__H3_NOT_SUPPORTED"`**; same scope, grade DEVELOPMENT, same seed block 6000001–6000120
 - Endpoint: **`service_loss_auc_ration_hours`** (preregistration §4 forbids `ret_excel` as primary because it "rewards abandonment"); cell = (seed × base context), variance ddof=1 across the four intensity rungs ×1…×4; **n_cells = 360 per arm**; horizon 8736 h
@@ -210,15 +214,15 @@ Corroboration of the timing:
 
 **Verdict: NOT SUPPORTED — with the sign on the wrong side and 78.75% of cells deploying different configurations.** `TABLA_CANONICA_DE_CLAIMS_2026-08-07.md` §6: *"ya no es «sin estimando», es «sin efecto»."* That is a meaningful strengthening of the negative: on 2026-08-01 H3 was `NO EVALUABLE`; it is now refuted with a live estimand.
 
-**Reformulation H3′ (supported, different construct):** `/Users/thom/Projects/research/scres-ia/results/garrido_h3_merge_adjudication/result.json`, `claim_status` **`"H3_PRIME_SUSTAINED_AT_N120"`**, grade DEVELOPMENT, seeds 6000001–6000120 (n=120), contract `/Users/thom/Projects/research/scres-ia/docs/PREREGISTRO_H3_POTENCIA_2026-08-01.md`, `reading_rule: "LCB95 > 0 -> sustained; LCB95 <= 0 at n=120 -> refuted with power"`. Estimand verbatim: `"variance of search cost ACROSS CONTEXTS, per replicate; memory minus reset."` Numbers: memory_vs_ofat **+16.220277777777778** [**+9.61070833333333**, +22.740534722222215]; memory_vs_reset **+9.314444444444444** [**+2.3491250000000012**, +16.34740972222222]. Variance by strategy: neuron_memory 44.264166666666675, neuron_reset 53.57861111111111, ofat 60.48444444444444, random 67.50333333333333. All four merge falsifiers pass. **Per-slice caveat you should know:** local_90 +10.2659 [+2.3609, +18.1927] but **vps_30 +6.46 [−7.3088, +20.3281] crosses zero** — the n=120 merge is what carries it.
+**Reformulation H3′ (supported, different construct):** `<HOME>/Projects/research/scres-ia/results/garrido_h3_merge_adjudication/result.json`, `claim_status` **`"H3_PRIME_SUSTAINED_AT_N120"`**, grade DEVELOPMENT, seeds 6000001–6000120 (n=120), contract `<HOME>/Projects/research/scres-ia/docs/PREREGISTRO_H3_POTENCIA_2026-08-01.md`, `reading_rule: "LCB95 > 0 -> sustained; LCB95 <= 0 at n=120 -> refuted with power"`. Estimand verbatim: `"variance of search cost ACROSS CONTEXTS, per replicate; memory minus reset."` Numbers: memory_vs_ofat **+16.220277777777778** [**+9.61070833333333**, +22.740534722222215]; memory_vs_reset **+9.314444444444444** [**+2.3491250000000012**, +16.34740972222222]. Variance by strategy: neuron_memory 44.264166666666675, neuron_reset 53.57861111111111, ofat 60.48444444444444, random 67.50333333333333. All four merge falsifiers pass. **Per-slice caveat you should know:** local_90 +10.2659 [+2.3609, +18.1927] but **vps_30 +6.46 [−7.3088, +20.3281] crosses zero** — the n=120 merge is what carries it.
 
-The predecessor `/Users/thom/Projects/research/scres-ia/results/manuscript/h1_h3_v2_1/result.json` states the redefinition in the artifact itself: `"the manuscript's H3 is variance of performance across disruption intensities, which is untestable here because the optimum does not move; this is a different construct, not a repair"`. **H3′ is a different construct, and it is labelled as one.**
+The predecessor `<HOME>/Projects/research/scres-ia/results/manuscript/h1_h3_v2_1/result.json` states the redefinition in the artifact itself: `"the manuscript's H3 is variance of performance across disruption intensities, which is untestable here because the optimum does not move; this is a different construct, not a repair"`. **H3′ is a different construct, and it is labelled as one.**
 
 ---
 
 # 6. H4 — Path Dependency (`L_{t−1}`)
 
-**Primary artifact:** `/Users/thom/Projects/research/scres-ia/results/garrido_normaliser_audit_v3/result.json`
+**Primary artifact:** `<HOME>/Projects/research/scres-ia/results/garrido_normaliser_audit_v3/result.json`
 
 - `claim_status`: **`"ALZHEIMER_EFFECT_SURVIVES_AN_HONEST_NORMALISER"`**
 - `scope`: **`"DEVELOPMENT_REPLAY_ON_BURNED_TAPES_NO_ADJUDICATION_NO_LEARNER"`**; `run_role: "BURNED_REPLAY_AUDIT"`; `replay_of: "garrido_q2_des288"`
@@ -247,7 +251,7 @@ The predecessor `/Users/thom/Projects/research/scres-ia/results/manuscript/h1_h3
 
 **Verdict: SUPPORTED as measured, at REPLAY grade on burned tapes, on a search-cost endpoint — but the number in the draft must be replaced.** `TABLA_CANONICA_ENMIENDA_1` §1 grades it as "**medida** +0,06070 [+0,04556]", deliberately not "SOSTENIDA", because it is a replay, not an adjudication.
 
-**Related but distinct — do not conflate:** `/Users/thom/Projects/research/scres-ia/docs/H4_RETAINED_VS_RESET_VERDICT_2026-07-02.md` is **Paper 2's** H4 (Track B RL retained-vs-reset, seeds 8101–8110, obs_hidden +0.0000493 [+0.0000167, +0.0000819]). Same letter, different paper, different estimand, third-decimal-order effect. It is not the v.0 H4.
+**Related but distinct — do not conflate:** `<HOME>/Projects/research/scres-ia/docs/H4_RETAINED_VS_RESET_VERDICT_2026-07-02.md` is **Paper 2's** H4 (Track B RL retained-vs-reset, seeds 8101–8110, obs_hidden +0.0000493 [+0.0000167, +0.0000819]). Same letter, different paper, different estimand, third-decimal-order effect. It is not the v.0 H4.
 
 ---
 
@@ -256,48 +260,48 @@ The predecessor `/Users/thom/Projects/research/scres-ia/results/manuscript/h1_h3
 **Short answer: no.** The v.0 framing — "integration of *neural network–based* learning mechanisms" — is not what the evidence carries. Here is every sealed artifact that bears on it.
 
 ### 7.1 The single confirmatory test says the carrier is a bandit, not a net
-`/Users/thom/Projects/research/scres-ia/results/grid_transfer_confirmation_v2/result.json` — `GRID_TRANSFER_CONFIRMED__UCB1`, CONFIRMATORY, virgin block 8200001–8200060, n=60. `neuron` vs its own state-blind marginal replay: **−0.011782983814352867 [−0.01848914143725492, −0.004835955987826106]** — the *entire* interval on the wrong side. `ucb1` **+0.03073311127302739 [+0.019896866431745156, +0.042561504429982196]**. `transfers.neuron = false`.
+`<HOME>/Projects/research/scres-ia/results/grid_transfer_confirmation_v2/result.json` — `GRID_TRANSFER_CONFIRMED__UCB1`, CONFIRMATORY, virgin block 8200001–8200060, n=60. `neuron` vs its own state-blind marginal replay: **−0.011782983814352867 [−0.01848914143725492, −0.004835955987826106]** — the *entire* interval on the wrong side. `ucb1` **+0.03073311127302739 [+0.019896866431745156, +0.042561504429982196]**. `transfers.neuron = false`.
 
 ### 7.2 The neuron ties with, or loses to, classical methods with matched memory
-`/Users/thom/Projects/research/scres-ia/results/search_ladder_v5/result.json` — `claim_status` **`"THE_NEURON_HOLDS_AGAINST_LOOKAHEAD_SEARCH"`**, `run_role: CACHE_ANALYSIS`, `scope: "DEVELOPMENT_ON_BURNED_TAPES_NO_ADJUDICATION"`, grade REPLAY, seeds 5300001–012, 15 methods + oracle.
+`<HOME>/Projects/research/scres-ia/results/search_ladder_v5/result.json` — `claim_status` **`"THE_NEURON_HOLDS_AGAINST_LOOKAHEAD_SEARCH"`**, `run_role: CACHE_ANALYSIS`, `scope: "DEVELOPMENT_ON_BURNED_TAPES_NO_ADJUDICATION"`, grade REPLAY, seeds 5300001–012, 15 methods + oracle.
 - `ucb1_transfer` **0.04502300698358852** ranks #1; `neuron_memory` **0.05203274760040456** ranks #2; `ofat_transfer` 0.06274306709376977 #3; then `lookahead_kg_transfer` 0.08018189890560519, `gp_ei_transfer` 0.08390483487553962, `thompson_transfer` 0.08907820238728746; everything else ≥ 0.09655146536034616. **The six memory arms are exactly the top six.** `neuron_reset` falls to #12 at 0.11273605766343564.
 - vs `neuron_memory`: `ucb1_transfer` **−0.007009740616816028 [−0.024441318883473704, +0.014076439977282206]** → tie, point to UCB1; `ofat_transfer` +0.01071031949336522 [+3.564844184833131e-05, +0.02171366105332719].
 - All falsifiers pass; f7 is `not_applicable` (declared replay, `passed: null`).
 
-`/Users/thom/Projects/research/scres-ia/results/ofat_lcb_reconciliation/result.json` — `claim_status` **`"OFAT_LCB_SIGN_IS_RESAMPLING_UNSTABLE"`**, grade DEVELOPMENT, B=50,000, 40 resampling seeds, `self_sha256` `a35bb6ec721d683892000e74aae4a1c08b901aa13d36ee1f7aa5c956536e93ba`. The two sealed ladders score **identical arrays** (`f1` passes) and give opposite signs: `search_ladder_v2_ordered` LCB `−2.761381942678142e-05`, `search_ladder_v5` LCB `+3.564844184833131e-05`, shared mean `+0.01071031949336522`. **`lcb_positive_fraction_over_rng_seeds = 0.65`.** The artifact's own instruction, verbatim: `"Report the contrast as indistinguishable from zero and quote both sealed bounds. Do NOT write 'excludes zero'."` By contrast, `neuron_memory` vs `ucb1_transfer` has `lcb_positive_fraction = 0.0` — **"the neuron does not beat UCB1 with transfer" is robust.**
+`<HOME>/Projects/research/scres-ia/results/ofat_lcb_reconciliation/result.json` — `claim_status` **`"OFAT_LCB_SIGN_IS_RESAMPLING_UNSTABLE"`**, grade DEVELOPMENT, B=50,000, 40 resampling seeds, `self_sha256` `a35bb6ec721d683892000e74aae4a1c08b901aa13d36ee1f7aa5c956536e93ba`. The two sealed ladders score **identical arrays** (`f1` passes) and give opposite signs: `search_ladder_v2_ordered` LCB `−2.761381942678142e-05`, `search_ladder_v5` LCB `+3.564844184833131e-05`, shared mean `+0.01071031949336522`. **`lcb_positive_fraction_over_rng_seeds = 0.65`.** The artifact's own instruction, verbatim: `"Report the contrast as indistinguishable from zero and quote both sealed bounds. Do NOT write 'excludes zero'."` By contrast, `neuron_memory` vs `ucb1_transfer` has `lcb_positive_fraction = 0.0` — **"the neuron does not beat UCB1 with transfer" is robust.**
 
 ### 7.3 The neuron that "wins" is a 5-parameter single logistic unit
 Source: `scripts/run_meta_learner_normaliser_audit_v1.py:129` (`class Fig5Neuron`) and `scripts/run_search_comparator_ladder_v2.py:331` (`make_neuron_arm`). It is `rho` (one weight vector, `np.zeros(dim)`), `predict = sigmoid(rho @ x)`, `update: rho += 0.35 * (y − predict(x)) * x`. **No hidden layer. It is logistic regression trained by the delta rule.** `results/surrogate_architecture_bakeoff/result.json` names it `neuron_5p` and reports `parameters = {kan: 532, mlp_matched: 529}` against it. The v.0 draft's own gap statement says "ANN, RNN, or Reinforcement Learning, guys, we have to figure it out!" — none of those three is what the winning arm is.
 
 ### 7.4 Real networks lose to a 5-parameter unit and to each other
-`/Users/thom/Projects/research/scres-ia/results/surrogate_architecture_bakeoff/result.json` — `claim_status` **`"KAN_SEARCHES_WORSE_THAN_A_MATCHED_MLP"`**, grade REPLAY, seeds 5300001–012, all six falsifiers pass, parameter-matched 532 vs 529.
+`<HOME>/Projects/research/scres-ia/results/surrogate_architecture_bakeoff/result.json` — `claim_status` **`"KAN_SEARCHES_WORSE_THAN_A_MATCHED_MLP"`**, grade REPLAY, seeds 5300001–012, all six falsifiers pass, parameter-matched 532 vs 529.
 - AUC regret: `neuron_5p` **0.05203274760040456**, `mlp_matched` 0.08852563418951176, `spline_poly` 0.09753786839357298, `kan` 0.09889468682109304, `gbt` 0.1083233875544609, `gp_matern` 0.11379409899242587, `random` 0.1397945613431999
 - `kan_minus_matched_mlp` **+0.01036905263158129 [+0.0030182183544574972, +0.018926078870915616]**, p = 0.0012 (lower is better → wholly against the KAN)
 - vs the 5-parameter reference: `mlp_matched` **+0.0364928865891072 [+0.024450252001980696, +0.04767301535079317]**, Holm p = 0.0. **A 529-parameter MLP loses to a 5-parameter unit by an interval that excludes zero.**
 
 ### 7.5 As a control policy, architecture buys nothing
-`/Users/thom/Projects/research/scres-ia/results/architecture_bakeoff/result.json` — `claim_status` **`"DEVELOPMENT_ARCHITECTURE_BAKEOFF_NO_ADJUDICATION"`**, scope `"DEVELOPMENT_ONLY_NO_VIRGIN_SEEDS_NO_LEARNER_AUTHORISATION"`, **evidence grade `UNCONTRACTED`** (no contract hash), 5 seeds 9491–9495, 60,000 steps.
+`<HOME>/Projects/research/scres-ia/results/architecture_bakeoff/result.json` — `claim_status` **`"DEVELOPMENT_ARCHITECTURE_BAKEOFF_NO_ADJUDICATION"`**, scope `"DEVELOPMENT_ONLY_NO_VIRGIN_SEEDS_NO_LEARNER_AUTHORISATION"`, **evidence grade `UNCONTRACTED`** (no contract hash), 5 seeds 9491–9495, 60,000 steps.
 - KAN 97.04885864117553 (sd 0.6336, 204,816 params, **2.8155 ms/decision**), MLP 97.52395958347986 (sd 0.8135, 199,215 params, 0.6865 ms), DMLPA 97.65966171837127 (sd 0.8585, 187,404 params, 1.5970 ms)
 - `KAN_minus_MLP` **−0.47510094230432853 [−1.5483579317025629, +0.5981560470939057]**; `DMLPA_minus_MLP` +0.13570213489141453 [−0.5692526511049414, +0.8406569208877706]; `DMLPA_minus_KAN` +0.6108030771957431 [−0.3499751596514674, +1.5715813140429535] — **all three cross zero.** KAN is 4.1× slower per decision.
 - `TABLA_CANONICA` §6 records the defect nobody caught: **`run_architecture_bakeoff_v1.py` never sealed anything.** `results/architecture_bakeoff/sealed_record.json` is content-only, `claim_status: "CONTENT_SEALED_PROVENANCE_NOT_CERTIFIABLE"` — **provenance is not certifiable backwards.** Several external audits built tables on these figures.
 
-`/Users/thom/Projects/research/scres-ia/results/dmlpa_kan_latent/result.json` — `claim_status` **`"KAN_LATENT_HURTS"`**, scope **`"DEVELOPMENT_OPEN_SEEDS_NO_CONFIRMATION_POSSIBLE_NO_VIRGIN_BLOCKS_REMAIN"`**, all five falsifiers pass, params matched 199,082 vs 200,052. `kan_minus_mlp` **−0.8622508690107338 [−1.605043533470689, −0.11945820455077864]**, n=5. Arm means dmlpa_kan 97.5808931153368 vs dmlpa_mlp 98.44314398434753. At equal budget the KAN affords hidden_dim 10 vs the MLP's 152.
+`<HOME>/Projects/research/scres-ia/results/dmlpa_kan_latent/result.json` — `claim_status` **`"KAN_LATENT_HURTS"`**, scope **`"DEVELOPMENT_OPEN_SEEDS_NO_CONFIRMATION_POSSIBLE_NO_VIRGIN_BLOCKS_REMAIN"`**, all five falsifiers pass, params matched 199,082 vs 200,052. `kan_minus_mlp` **−0.8622508690107338 [−1.605043533470689, −0.11945820455077864]**, n=5. Arm means dmlpa_kan 97.5808931153368 vs dmlpa_mlp 98.44314398434753. At equal budget the KAN affords hidden_dim 10 vs the MLP's 152.
 
 ### 7.6 The residual neural premium in Track B is small, uncontracted, and was inside the instrument's noise
-`/Users/thom/Projects/research/scres-ia/results/track_b_nonneural/result.json` — `claim_status` **`"NEURAL_PREMIUM_LIKELY_IN_TRACK_B"`**, scope `"DEVELOPMENT_NO_CUSTODY_SEEDS_NO_ADJUDICATION"`, grade DEVELOPMENT, 24 eval episodes, all four falsifiers pass.
+`<HOME>/Projects/research/scres-ia/results/track_b_nonneural/result.json` — `claim_status` **`"NEURAL_PREMIUM_LIKELY_IN_TRACK_B"`**, scope `"DEVELOPMENT_NO_CUSTODY_SEEDS_NO_ADJUDICATION"`, grade DEVELOPMENT, 24 eval episodes, all four falsifiers pass.
 - trained_mlp 98.74303791918337 (**+2.176012221662134** over best constant), trained_kan 98.51622795481971 (+1.9492022572984808), trained_dmlpa 98.0037408940151 (+1.4367151964938643), untrained_net 72.20152694219925 (−24.36549875532198)
 - `threshold_rule` 97.14154227552704, **+0.5745165780057876 [+0.3304118174965454, +0.8214864274274412]** over `constant_best` 96.56702569752123
 - **The three networks span 0.739 among themselves.** `CLAIM_FREEZE` §6: *"elegir arquitectura no compra nada; usar una compra poco."*
 - Artifact's own `why`: `"track_b_v1 had no non-neural arm, so 'neural premium' was untestable there. The ordering was wrong: this should have preceded the architecture comparisons."`
 
-`/Users/thom/Projects/research/scres-ia/results/determinism_diagnostic/result.json` — `claim_status` **`"DEEPER_THAN_BOTH_ENVIRONMENT_LIMIT"`**, grade DIAGNOSTIC. Replicate deltas: A (8 envs, default threads) 0.47235723844329414; B (8 envs, threads=1) 1.6198479289422352; C (1 env, threads=1) 1.5388935190847377, at tolerance 1e-9. `TABLA_CANONICA_ENMIENDA_1` §6: the +1.44…+2.18 neural premium **fell inside a ±2.4 band** — "no es «sin confirmar»: el instrumento no la resuelve."
-**Update you must carry:** `/Users/thom/Projects/research/scres-ia/results/determinism_repair_control/result.json`, `claim_status` **`"DETERMINISM_REPAIRED_SEED_IS_A_REPLICATION_UNIT_AGAIN"`**, created 2026-08-07T19:49Z, root cause `"MFSCGymEnvShifts.reset passed seed=None straight to MFSCSimulation on unseeded resets"`. Its `consequence` field, verbatim: `"the seed is a replication unit again and the +-2.4 band collapses, so the track_b neural premium becomes MEASURABLE. It is still not CONFIRMABLE: no virgin seed block remains."` The preregistered suspicion (`make_vec` discarding `seed`) was **refuted**, and that is reported as such.
+`<HOME>/Projects/research/scres-ia/results/determinism_diagnostic/result.json` — `claim_status` **`"DEEPER_THAN_BOTH_ENVIRONMENT_LIMIT"`**, grade DIAGNOSTIC. Replicate deltas: A (8 envs, default threads) 0.47235723844329414; B (8 envs, threads=1) 1.6198479289422352; C (1 env, threads=1) 1.5388935190847377, at tolerance 1e-9. `TABLA_CANONICA_ENMIENDA_1` §6: the +1.44…+2.18 neural premium **fell inside a ±2.4 band** — "no es «sin confirmar»: el instrumento no la resuelve."
+**Update you must carry:** `<HOME>/Projects/research/scres-ia/results/determinism_repair_control/result.json`, `claim_status` **`"DETERMINISM_REPAIRED_SEED_IS_A_REPLICATION_UNIT_AGAIN"`**, created 2026-08-07T19:49Z, root cause `"MFSCGymEnvShifts.reset passed seed=None straight to MFSCSimulation on unseeded resets"`. Its `consequence` field, verbatim: `"the seed is a replication unit again and the +-2.4 band collapses, so the track_b neural premium becomes MEASURABLE. It is still not CONFIRMABLE: no virgin seed block remains."` The preregistered suspicion (`make_vec` discarding `seed`) was **refuted**, and that is reported as such.
 
 ### 7.7 The figure the whole framing rests on is an algebraic identity
-`/Users/thom/Projects/research/scres-ia/results/garrido_fig5_surrogate/result.json` and `/Users/thom/Projects/research/scres-ia/results/garrido_wrap_q1/result.json` — both grade **UNCONTRACTED**. `f1_task_A_is_an_identity`: R² = 1.0, `max_abs_identity_error = 3.219646771412954e-15`, `Re_FRt = 0.9999999999999998`, `Re_RPj = 0.9999999999999677`, and **three of the five driver columns identically zero** (`Re_APj`, `Re_DPj_RPj`, `not_in_his_ReT`). `status: "IDENTITY_NOT_A_LEARNING_TASK"`. **ReT is exactly the sum of the drivers handed to the neuron as dendrites — the network as drawn has nothing to learn.**
+`<HOME>/Projects/research/scres-ia/results/garrido_fig5_surrogate/result.json` and `<HOME>/Projects/research/scres-ia/results/garrido_wrap_q1/result.json` — both grade **UNCONTRACTED**. `f1_task_A_is_an_identity`: R² = 1.0, `max_abs_identity_error = 3.219646771412954e-15`, `Re_FRt = 0.9999999999999998`, `Re_RPj = 0.9999999999999677`, and **three of the five driver columns identically zero** (`Re_APj`, `Re_DPj_RPj`, `not_in_his_ReT`). `status: "IDENTITY_NOT_A_LEARNING_TASK"`. **ReT is exactly the sum of the drivers handed to the neuron as dendrites — the network as drawn has nothing to learn.**
 
 ### 7.8 The measured precondition for a neural premium is not met
-`/Users/thom/Projects/research/scres-ia/results/headroom/buffer_prediction_premium/result.json` — `NO_NEURAL_PREMIUM_EVEN_WITH_MEASURED_CURVATURE`. Curvature **0.076259** vs episodic noise **0.317394**. Backprop **0.5548** — worse than a straight line at 0.6826. The frozen formulation: *"Una prima neural requiere que la curvatura de la superficie supere el ruido que la oculta."*
+`<HOME>/Projects/research/scres-ia/results/headroom/buffer_prediction_premium/result.json` — `NO_NEURAL_PREMIUM_EVEN_WITH_MEASURED_CURVATURE`. Curvature **0.076259** vs episodic noise **0.317394**. Backprop **0.5548** — worse than a straight line at 0.6826. The frozen formulation: *"Una prima neural requiere que la curvatura de la superficie supere el ruido que la oculta."*
 
 ### How much of the v.0 framing survives
 

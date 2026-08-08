@@ -1,17 +1,21 @@
-# Explore — In the repo /Users/thom/Projects/research/scres-ia, investigate the current state precisel
+# Explore — In the repo <HOME>/Projects/research/scres-ia, investigate the current state precisel
+
+> **`UNADJUDICATED_DO_NOT_CITE`** — transcripción cruda de un agente, guardada por el hook
+> `SubagentStop`. Puede contener afirmaciones **retiradas**; el canon vive en los artefactos
+> sellados y en las enmiendas, nunca aquí.
 
 - **agent_id**: `ae532469e68dbc21b`
 - **session**: `1fab0490-70ae-4d2e-a373-23cec6b3ba5f`
 - **branch**: `codex/expanded-contract-comparators-v2`
 - **finished**: `2026-08-08T02:09:18.021Z`
 - **effort**: `medium` · **version**: `2.1.222`
-- **transcript**: `/Users/thom/.claude/projects/-Users-thom-Projects-research-scres-ia/1fab0490-70ae-4d2e-a373-23cec6b3ba5f/subagents/agent-ae532469e68dbc21b.jsonl`
+- **transcript**: `<HOME>/.claude/projects/-Users-thom-Projects-research-scres-ia/1fab0490-70ae-4d2e-a373-23cec6b3ba5f/subagents/agent-ae532469e68dbc21b.jsonl`
 - **turns**: 33 · **assistant messages**: 2
 
 ## Task given
 
 ```text
-In the repo /Users/thom/Projects/research/scres-ia, investigate the current state precisely. Read-only. Report facts with exact values, no interpretation.
+In the repo <HOME>/Projects/research/scres-ia, investigate the current state precisely. Read-only. Report facts with exact values, no interpretation.
 
 1. REMOTE vs LOCAL: run `git rev-parse HEAD`, `git log --oneline -12`, `git rev-parse origin/codex/expanded-contract-comparators-v2`, and `git status --short | head -20`. Report whether local commits are pushed, and the exact SHA the remote branch points to. Also `git log --oneline origin/codex/expanded-contract-comparators-v2 -3`.
 
@@ -59,7 +63,7 @@ Remote `-3`: `7187d14 Five questions for Garrido…`, `e50242d Run David's archi
 
 ## 2. CERTIFICATE COLLISION — the script WAS rewritten by commit f99ba5f
 
-(a) Current `/Users/thom/Projects/research/scres-ia/scripts/verify_frozen_path_equivalence_v1.py` (209 lines, mtime Aug 7 21:03):
+(a) Current `<HOME>/Projects/research/scres-ia/scripts/verify_frozen_path_equivalence_v1.py` (209 lines, mtime Aug 7 21:03):
 - **Cache read: exactly one** — `CACHE = Path("results/surface_cache/garrido_transfer_confirmation_v2_base")` (line 44). It does *not* read `..._v2_ext` and does *not* read `wrap288_v1`.
 - **Surface coverage: BASE 288 only.** It replays cells via `BASE_CONFIGS` imported from `build_transfer_confirmation_cache_v1`; indexing is `BASE_CONFIGS[idx]` per cached cell. No extended/4608 path exists in the file.
 - **Falsifier names (4):** `f1_every_cell_reproduces_the_sealed_cache`, `f2_mutation_control_is_detected`, `f3_declared_manifest_is_narrower_than_the_physics`, `f4_a_declared_module_actually_drifted`.
@@ -72,7 +76,7 @@ f99ba5f Re-run Confirmation 2's own anchor under today's code, cell by cell
 ```
 `git show --stat f99ba5f`: single file changed, **448 lines touched, 179 insertions / 269 deletions** — a rewrite, not an extension. The prior (18a4174) version read TWO cache roots — `results/surface_cache/garrido_transfer_confirmation_v2_ext` and `results/surface_cache/wrap288_v1` — with `--cells-per-cache` default 120 and required `--contract`.
 
-(c) Other verification scripts present in `/Users/thom/Projects/research/scres-ia/scripts/`:
+(c) Other verification scripts present in `<HOME>/Projects/research/scres-ia/scripts/`:
 - `check_garrido_surface_cache_live_v1.py` (4.4k, Aug 5, last commit `ad8163c`) — "Recompute eight cached cells against the live DES"; uses `run_meta_learner_normaliser_audit_v1` CONFIGS, the 5.3M seed block.
 - `audit_v2_metric_freeze_equivalence.py` (11k, Jul 31)
 - `audit_track_bp_frozen_posture.py` (6.0k, Jul 18)
@@ -133,7 +137,7 @@ b1ec6ac David asked for retained weights, and the price is the replication we lo
 ```
 **`f99ba5f` (the script rewrite) touched no tests** — its `--stat` shows one file changed. The last tests change is `18a4174`, which added `tests/test_paper2_manifest_identity.py` (101 lines), `pytest.ini` (+4), and `results/frozen_path_equivalence/result.json` (345 lines).
 
-Matching test files in `/Users/thom/Projects/research/scres-ia/tests/`:
+Matching test files in `<HOME>/Projects/research/scres-ia/tests/`:
 ```
 test_garrido_surface_cache_custody.py
 test_garrido_wrap_custody.py

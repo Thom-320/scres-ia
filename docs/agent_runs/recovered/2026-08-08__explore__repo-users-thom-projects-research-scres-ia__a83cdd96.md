@@ -1,17 +1,21 @@
-# Explore — Repo: /Users/thom/Projects/research/scres-ia
+# Explore — Repo: <HOME>/Projects/research/scres-ia
+
+> **`UNADJUDICATED_DO_NOT_CITE`** — transcripción cruda de un agente, guardada por el hook
+> `SubagentStop`. Puede contener afirmaciones **retiradas**; el canon vive en los artefactos
+> sellados y en las enmiendas, nunca aquí.
 
 - **agent_id**: `a83cdd966dedfb36c`
 - **session**: `c4c70a0d-d0da-4c53-824e-5d7a181768e6`
 - **branch**: `codex/expanded-contract-comparators-v2`
 - **finished**: `2026-08-08T00:50:10.388Z`
 - **effort**: `high` · **version**: `2.1.222`
-- **transcript**: `/Users/thom/.claude/projects/-Users-thom-Projects-research-scres-ia/c4c70a0d-d0da-4c53-824e-5d7a181768e6/subagents/agent-a83cdd966dedfb36c.jsonl`
+- **transcript**: `<HOME>/.claude/projects/-Users-thom-Projects-research-scres-ia/c4c70a0d-d0da-4c53-824e-5d7a181768e6/subagents/agent-a83cdd966dedfb36c.jsonl`
 - **turns**: 63 · **assistant messages**: 3
 
 ## Task given
 
 ```text
-Repo: /Users/thom/Projects/research/scres-ia
+Repo: <HOME>/Projects/research/scres-ia
 
 GOAL: produce the definitive list of POSITIVE, citable results — the ones a paper could lead with — with exact numbers, intervals, artifact paths and evidence grade.
 

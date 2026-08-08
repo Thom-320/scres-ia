@@ -1,17 +1,21 @@
-# Plan — You are designing an implementation plan for a research repo at /Users/thom/Projects/resea
+# Plan — You are designing an implementation plan for a research repo at <HOME>/Projects/resea
+
+> **`UNADJUDICATED_DO_NOT_CITE`** — transcripción cruda de un agente, guardada por el hook
+> `SubagentStop`. Puede contener afirmaciones **retiradas**; el canon vive en los artefactos
+> sellados y en las enmiendas, nunca aquí.
 
 - **agent_id**: `a06e128f3aec59b78`
 - **session**: `091a3905-ebf9-481b-beaa-fc646c3902d5`
 - **branch**: `codex/expanded-contract-comparators-v2`
 - **finished**: `2026-08-05T18:18:56.492Z`
 - **effort**: `xhigh` · **version**: `2.1.219`
-- **transcript**: `/Users/thom/.claude/projects/-Users-thom-Projects-research-scres-ia/091a3905-ebf9-481b-beaa-fc646c3902d5/subagents/agent-a06e128f3aec59b78.jsonl`
+- **transcript**: `<HOME>/.claude/projects/-Users-thom-Projects-research-scres-ia/091a3905-ebf9-481b-beaa-fc646c3902d5/subagents/agent-a06e128f3aec59b78.jsonl`
 - **turns**: 135 · **assistant messages**: 2
 
 ## Task given
 
 ```text
-You are designing an implementation plan for a research repo at /Users/thom/Projects/research/scres-ia. Be adversarial and concrete. Read the files I cite before concluding.
+You are designing an implementation plan for a research repo at <HOME>/Projects/research/scres-ia. Be adversarial and concrete. Read the files I cite before concluding.
 
 # The goal
 Produce a submittable paper for *Computers & Industrial Engineering* that answers the two questions in Garrido, Pongutá & Adarme (ICCL 2024, LNCS 15168, pp. 80-94):
@@ -54,14 +58,14 @@ I read every artifact you cited plus the ones you did not know existed. Here is 
 | claim | verified value | source |
 |---|---|---|
 | inner loop saturated | `STRUCTURED_CONTROL_SUFFICES_G3_OBS`, `THRESHOLD_RULE_SUFFICES`, MLP R² 0.5548 < linear 0.6826 < KAN 0.7163, all `passes_sesoi_and_ci: false` | the four `results/headroom/*/result.json` |
-| outer loop numbers | memory 6.986 / reset 14.889 / OFAT 12.417 / random 19.542; Alzheimer +7.903 [6.875, 8.931] | `/Users/thom/Projects/research/scres-ia/results/garrido_meta_learner_v2/result.json` |
-| H3′ at n=120 | memory−reset +9.3144 [2.3491, 16.3474]; memory−OFAT +16.2203 [9.6107, 22.7405] | `/Users/thom/Projects/research/scres-ia/results/garrido_h3_merge_adjudication/result.json` |
+| outer loop numbers | memory 6.986 / reset 14.889 / OFAT 12.417 / random 19.542; Alzheimer +7.903 [6.875, 8.931] | `<HOME>/Projects/research/scres-ia/results/garrido_meta_learner_v2/result.json` |
+| H3′ at n=120 | memory−reset +9.3144 [2.3491, 16.3474]; memory−OFAT +16.2203 [9.6107, 22.7405] | `<HOME>/Projects/research/scres-ia/results/garrido_h3_merge_adjudication/result.json` |
 
 **Wrong, and it matters:**
 
 - **The surface is not expensive.** Measured across four sealed artifacts: **72–91 ms per DES episode** (`garrido_meta_learner_v2`: 20,736 episodes / 1,492.8 s = 72.0 ms; `h3power_local_v2`: 155,520 / 11,357.1 s = 73.0 ms; `h3power_vps_v2`: 86.0 ms; `q2_des288` smoke: 91.0 ms). Your "~46 s/config" is off by ~600×. The full 288×6×12 surface is **25 minutes**, and the n=120 surface is **4.3 hours**. The cache is still the right call, but not because the surface is expensive — because it makes *strategy comparison and RL training* free, and because it is the only way to re-measure the headline under a corrected learner (see §2.1).
 
-- **Hole #3 is half wrong.** Upstream buffers at WDC and AL are **already decision variables**. `MFSCSimulation.__init__` takes `initial_buffers` with keys `op3_rm` → `raw_material_wdc`, `op5_rm` → `raw_material_al`, `op9_rations` → `rations_sb` (`/Users/thom/Projects/research/scres-ia/supply_chain/supply_chain.py:1467-1484`, `_deliver_buffer_top_up`). Both meta-learner runners already pass them, pinned at `0.0`. And `/Users/thom/Projects/research/scres-ia/results/garrido_continuous_space/result.json` already swept 384 points over `{op3_rm, op5_rm, op9_rations, period_hours}`. What is *not* wired is finite **capacity** at wdc/al/sb — a different lever from the buffer level.
+- **Hole #3 is half wrong.** Upstream buffers at WDC and AL are **already decision variables**. `MFSCSimulation.__init__` takes `initial_buffers` with keys `op3_rm` → `raw_material_wdc`, `op5_rm` → `raw_material_al`, `op9_rations` → `rations_sb` (`<HOME>/Projects/research/scres-ia/supply_chain/supply_chain.py:1467-1484`, `_deliver_buffer_top_up`). Both meta-learner runners already pass them, pinned at `0.0`. And `<HOME>/Projects/research/scres-ia/results/garrido_continuous_space/result.json` already swept 384 points over `{op3_rm, op5_rm, op9_rations, period_hours}`. What is *not* wired is finite **capacity** at wdc/al/sb — a different lever from the buffer level.
 
 - **You are planning against the wrong runner.** `scripts/run_garrido_q2_des288_v1.py` (804 lines, 2026-08-01) already supersedes `run_meta_learner_over_configs_v1.py`: five arms (`ofat/random/no_update/retained/reset`), the service-first v2 lexicographic endpoint, `surface_sha256`, learner `state_digest()`, nine falsifiers including a zero-budget identity and an endpoint-recomputation check. It has only ever been run as a smoke (`results/garrido_q2_des288_v1/smoke_*.json`, 288 configs × **1 context × 1 seed**, `Q2_EFFECT_NOT_ESTABLISHED`). This is the platform. Do not extend the v1 runner.
 
@@ -69,7 +73,7 @@ I read every artifact you cited plus the ones you did not know existed. Here is 
 
 ### 2.1 The headline learner reads the unrun surface (a third leak of the family already retired twice)
 
-`/Users/thom/Projects/research/scres-ia/scripts/run_meta_learner_over_configs_v1.py:189-190`:
+`<HOME>/Projects/research/scres-ia/scripts/run_meta_learner_over_configs_v1.py:189-190`:
 
 ```python
 values = [v for v, _ in table]           # ALL 288 values, including unrun configs
@@ -84,7 +88,7 @@ The learner's target normaliser is min/max over the **entire surface**, i.e. ove
 
 Two independent reasons this is fatal as written:
 
-1. `/Users/thom/Projects/research/scres-ia/docs/CORRECCION_META_APRENDIZ_FUGA_2026-07-31.md` set the precedent explicitly: memory-vs-reset survived a leak because both arms shared it, but **memory-vs-OFAT and memory-vs-random were RETIRED** because "OFAT no recibe esa información". By the repo's own rule, `memory_vs_ofat` = +5.431 and `memory_vs_random` = +12.556 in `garrido_meta_learner_v2` are exposed to the identical objection.
+1. `<HOME>/Projects/research/scres-ia/docs/CORRECCION_META_APRENDIZ_FUGA_2026-07-31.md` set the precedent explicitly: memory-vs-reset survived a leak because both arms shared it, but **memory-vs-OFAT and memory-vs-random were RETIRED** because "OFAT no recibe esa información". By the repo's own rule, `memory_vs_ofat` = +5.431 and `memory_vs_random` = +12.556 in `garrido_meta_learner_v2` are exposed to the identical objection.
 2. The successor runner **already fixed it**. `scripts/run_garrido_q2_des288_v1.py:85-87` defines `TARGET_SCALES` with the comment *"Fixed a priori scales. They are not estimated from the observed surface and are not retained as adaptive normalizers."* The fix exists; the headline artifact predates it.
 
 All H3′ slices inherit the defect — I checked the manifests: `garrido_meta_learner_h3power_h3_contract_local_v2` and `_vps_v2` both carry `entry_script: scripts/run_meta_learner_over_configs_v1.py`, sha `41f73ce8addf`.
@@ -119,7 +123,7 @@ This is the hardest thing in your dossier. The 288-configuration surface is **mo
 - "Memory beats reset" therefore reduces to **"the answer is the same in every context, so remembering it is free."** That is the *same* invariance result as the inner loop (`docs/PAPER2_EXHAUSTION_CERTIFICATE_2026-07-15.md` §2.6: *"The optimal constant posture is INVARIANT across all 45 risk profiles"*). Your outer-loop positive and your inner-loop null may be one finding wearing two hats.
 - On a monotone, separable, corner-optimum surface, **OFAT is near-optimal by construction and GP-EI will crush everything**. Wiring in `gp_locate` on *this* surface is the fastest way to lose the paper.
 
-**Verdict on your framing.** The diagnosis (Garrido's loop is over runs, not timesteps) is right and well-supported — `CLAUDE.md`, the runner docstrings, and `/Users/thom/Projects/research/scres-ia/docs/FRONTERA_DE_CLAIMS_H3_Y_AUTORIZACION_2026-08-02.md` §7 already say so. The *mechanism* you propose is wrong. Search cost does not grow because dimension grows; **OFAT fails when the surface is non-separable**. On a separable surface OFAT costs Σᵢ Lᵢ — *linear* in dimension — and finds the global optimum. The 288 grid is close to separable, which is why OFAT is only 12.4 vs memory's 7.0 rather than catastrophically worse.
+**Verdict on your framing.** The diagnosis (Garrido's loop is over runs, not timesteps) is right and well-supported — `CLAUDE.md`, the runner docstrings, and `<HOME>/Projects/research/scres-ia/docs/FRONTERA_DE_CLAIMS_H3_Y_AUTORIZACION_2026-08-02.md` §7 already say so. The *mechanism* you propose is wrong. Search cost does not grow because dimension grows; **OFAT fails when the surface is non-separable**. On a separable surface OFAT costs Σᵢ Lᵢ — *linear* in dimension — and finds the global optimum. The 288 grid is close to separable, which is why OFAT is only 12.4 vs memory's 7.0 rather than catastrophically worse.
 
 Your argument survives only if the extended grid is **non-separable**. And there is direct evidence it is. Refitting `garrido_continuous_space` rows with pattern and shift fixed effects:
 
@@ -139,7 +143,7 @@ So: **the upstream buffers are where the interaction and the moving interior opt
 
 Everything here is explicitly permitted by `contracts/garrido_expanded_des_e_star_v1.json` → `seed_and_execution_policy.allowed_before_receipt`: *"already burned data audits"*, *"flags-off harness construction"*, *"synthetic tests"*, *"falsifier mutation tests"*.
 
-**P0.1 — Build the surface cache** (§(a) below), populated by a **declared replay** of blocks `garrido_q2_des288` (5,300,001–012) and `garrido_h3_local`/`garrido_h3_vps` (6,000,001–120). `custody_falsifier(..., replay_of="garrido_q2_des288")` in `/Users/thom/Projects/research/scres-ia/supply_chain/seed_custody.py:176` already returns `not_applicable=True` for exactly this. Cost: 25 min + 4.3 h, one time.
+**P0.1 — Build the surface cache** (§(a) below), populated by a **declared replay** of blocks `garrido_q2_des288` (5,300,001–012) and `garrido_h3_local`/`garrido_h3_vps` (6,000,001–120). `custody_falsifier(..., replay_of="garrido_q2_des288")` in `<HOME>/Projects/research/scres-ia/supply_chain/seed_custody.py:176` already returns `not_applicable=True` for exactly this. Cost: 25 min + 4.3 h, one time.
 
 **P0.2 — Re-measure the headline under an honest normaliser.** Replay the search on the cached surface with a **prefix normaliser** (running min/max over configurations *already run*, with a declared cold-start rule) instead of `scaled(values)`. Report both. Three outcomes, all publishable:
 - effect survives → the leak was cosmetic, and you can now say so *with a measurement*;
@@ -164,7 +168,7 @@ results/surface_cache/<grid_id>/manifest.json
 
 **Row schema.** Reuse `evaluate()`'s return in `run_garrido_q2_des288_v1.py:117-202` verbatim — it already stores `config`, `context`, `seed`, `service_key`, `claimant_fills`, `demanded_by_claimant`, `delivered_by_claimant`, `drivers`, and a 12-field `panel`. Do **not** store a scalar. Storing the panel is what makes `f7_endpoint_key_recomputes_independently` possible off the cache, and it means a future endpoint change (v2 → v3) does not invalidate the cache.
 
-**Sealing.** Write via `seal_and_write` from `/Users/thom/Projects/research/scres-ia/supply_chain/arm_runner.py:170`, which stamps `contract_path`, `contract_sha256`, `reference_sha256`, `calibration_provenance` and `self_sha256`. Each cache slice additionally carries `module_manifest(script=__file__)` from `seed_custody.py:180` — `module_manifest_v2`, which hashes `supply_chain/supply_chain.py`, `config.py`, `episode_metrics.py`, `arm_runner.py`, `cssu_allocation.py`, `service_first_metric.py`, `seed_custody.py`. The H3′ VPS slice sat in `HOLD_SOURCE_AUDIT` for exactly the absence of this.
+**Sealing.** Write via `seal_and_write` from `<HOME>/Projects/research/scres-ia/supply_chain/arm_runner.py:170`, which stamps `contract_path`, `contract_sha256`, `reference_sha256`, `calibration_provenance` and `self_sha256`. Each cache slice additionally carries `module_manifest(script=__file__)` from `seed_custody.py:180` — `module_manifest_v2`, which hashes `supply_chain/supply_chain.py`, `config.py`, `episode_metrics.py`, `arm_runner.py`, `cssu_allocation.py`, `service_first_metric.py`, `seed_custody.py`. The H3′ VPS slice sat in `HOLD_SOURCE_AUDIT` for exactly the absence of this.
 
 **Validation on read.** A consumer must refuse a cache whose:
 1. `module_manifest.modules` differs from the current tree → **physics drift**, hard stop, no silent recompute;
@@ -197,13 +201,13 @@ Grid size: `6 × 3 × 4 × 4 × 4 × 4 = 4,608` configurations. Surface cost at 
 ```
 test_extended_grid_null_arm_reproduces_the_frozen_288_surface
 ```
-asserts that for a frozen set of `(config, context, seed)` cells, `scientific_payload_sha256(canonical_scientific_payload(sim, panel))` on the extended runner equals a **golden constant frozen from the sealed 288 cache**. Follow `/Users/thom/Projects/research/scres-ia/tests/test_cssu_capacity_bridge.py` exactly — its two-test structure is the pattern:
+asserts that for a frozen set of `(config, context, seed)` cells, `scientific_payload_sha256(canonical_scientific_payload(sim, panel))` on the extended runner equals a **golden constant frozen from the sealed 288 cache**. Follow `<HOME>/Projects/research/scres-ia/tests/test_cssu_capacity_bridge.py` exactly — its two-test structure is the pattern:
 - `test_the_flag_is_inert_when_the_caps_cannot_bind` (shipped == extension-off), which alone proves only that two paths agree;
 - `test_the_null_is_anchored_outside_the_code_path_it_guards` against `GOLDEN_SHIPPED_PAYLOAD_SHA256 = "f3fe61b1e2b1f4a63ff30beb296d4c6bf54be029fed0ab7877b69e24201af385"`, which is the one that can fail on a shared-code defect.
 
 Add the third test from that file — `test_a_spilling_mutant_in_the_production_path_is_caught` — adapted: monkeypatch `_deliver_buffer_top_up` to ignore its `key` argument and assert the tight arm stops differing. Without a mutation test you have not shown the extension reaches the production path.
 
-**Phase 2 (only if Phase 1 does not produce interaction).** Wire `NodeCapacityLedger` to `wdc`/`al`/`sb`. `CAPACITY_NODES` in `/Users/thom/Projects/research/scres-ia/supply_chain/node_capacity.py:37` already names all five; only `cssu_a`/`cssu_b` reach the DES (`supply_chain.py:511-515` construction, `supply_chain.py:5085-5086` the single `admit()` call site). You need `admit()` at the three `put` sites: `raw_material_wdc`, `raw_material_al`, `rations_sb` in `_deliver_buffer_top_up` and in the `t=0` injection at `supply_chain.py:1066-1080`. Use `budgeted_ledger(total, shares)` (node_capacity.py:154), **not** independent caps — the module docstring states the measured reason: *"Capping each node independently only makes the chain worse; nothing has to be traded off, so there is no decision and no headroom"*, and Program O measured H_PI = 0.1515 under non-fungibility versus **exactly 0** when fungible. This is the single most likely source of genuine outer-loop interaction, because a shared budget makes the three buffer levels *compete*.
+**Phase 2 (only if Phase 1 does not produce interaction).** Wire `NodeCapacityLedger` to `wdc`/`al`/`sb`. `CAPACITY_NODES` in `<HOME>/Projects/research/scres-ia/supply_chain/node_capacity.py:37` already names all five; only `cssu_a`/`cssu_b` reach the DES (`supply_chain.py:511-515` construction, `supply_chain.py:5085-5086` the single `admit()` call site). You need `admit()` at the three `put` sites: `raw_material_wdc`, `raw_material_al`, `rations_sb` in `_deliver_buffer_top_up` and in the `t=0` injection at `supply_chain.py:1066-1080`. Use `budgeted_ledger(total, shares)` (node_capacity.py:154), **not** independent caps — the module docstring states the measured reason: *"Capping each node independently only makes the chain worse; nothing has to be traded off, so there is no decision and no headroom"*, and Program O measured H_PI = 0.1515 under non-fungibility versus **exactly 0** when fungible. This is the single most likely source of genuine outer-loop interaction, because a shared budget makes the three buffer levels *compete*.
 
 ### (c) The comparator ladder, in referee order
 
@@ -215,7 +219,7 @@ A C&IE referee reading "our learner beats one-factor-at-a-time and random" will 
 | 1 | random without replacement | exists (`search(strategy="random")`) | the null |
 | 2 | OFAT / thesis order | exists, **fix the `idx` staleness bug** | Garrido's own design |
 | 3 | Latin-hypercube + greedy local refinement | write | the standard simulation-optimization baseline |
-| 4 | **GP-EI (Bayesian optimization)** | **reuse `gp_locate`**, `/Users/thom/Projects/research/scres-ia/supply_chain/gsa.py:68` | the one the referee will name |
+| 4 | **GP-EI (Bayesian optimization)** | **reuse `gp_locate`**, `<HOME>/Projects/research/scres-ia/supply_chain/gsa.py:68` | the one the referee will name |
 | 5 | UCB1 and Thompson sampling over factor-level arms | write, ~40 lines | cheap, and the honest "bandit" answer |
 | 6 | simulated annealing on the grid graph | write, ~30 lines | discrete-space standard |
 | 7 | CMA-ES on the continuous relaxation, snapped | `scipy`/`cma` | only if you go continuous |
@@ -360,9 +364,9 @@ Note that `docs/GARRIDO_WRAP_CLAIM_LEDGER_2026-08-01.md` currently marks `result
 
 ### Critical Files for Implementation
 
-- `/Users/thom/Projects/research/scres-ia/scripts/run_garrido_q2_des288_v1.py` — the platform to extend (surface build in `main()`, `evaluate()`, `search()`, `_falsifiers()`, the `PRIOR_SEEDS`/OFAT-`idx` defects)
-- `/Users/thom/Projects/research/scres-ia/supply_chain/arm_runner.py` — `seal_and_write`, `canonical_payload_sha256`, `VOLATILE_KEYS`, `run_falsifiers`: the cache's sealing and cross-version comparison primitives
-- `/Users/thom/Projects/research/scres-ia/supply_chain/seed_custody.py` — `custody_falsifier`, `check_seeds`, `module_manifest`: replay declaration and the anti-drift manifest
-- `/Users/thom/Projects/research/scres-ia/supply_chain/supply_chain.py` — `initial_buffers` handling at lines 1063-1080 and `_deliver_buffer_top_up` at 1467-1490 (Phase 1 grid extension); `_cssu_capacity_ledger` at 511-515 and the `admit()` call at 5085 (Phase 2 capacity wiring)
-- `/Users/thom/Projects/research/scres-ia/supply_chain/gsa.py` — `gp_locate`, the BO comparator to reuse (needs `n_init` exposure, history return, and grid snapping)
-- `/Users/thom/Projects/research/scres-ia/tests/test_cssu_capacity_bridge.py` — the golden-anchor + mutation-test pattern the null-arm identity test must follow
+- `<HOME>/Projects/research/scres-ia/scripts/run_garrido_q2_des288_v1.py` — the platform to extend (surface build in `main()`, `evaluate()`, `search()`, `_falsifiers()`, the `PRIOR_SEEDS`/OFAT-`idx` defects)
+- `<HOME>/Projects/research/scres-ia/supply_chain/arm_runner.py` — `seal_and_write`, `canonical_payload_sha256`, `VOLATILE_KEYS`, `run_falsifiers`: the cache's sealing and cross-version comparison primitives
+- `<HOME>/Projects/research/scres-ia/supply_chain/seed_custody.py` — `custody_falsifier`, `check_seeds`, `module_manifest`: replay declaration and the anti-drift manifest
+- `<HOME>/Projects/research/scres-ia/supply_chain/supply_chain.py` — `initial_buffers` handling at lines 1063-1080 and `_deliver_buffer_top_up` at 1467-1490 (Phase 1 grid extension); `_cssu_capacity_ledger` at 511-515 and the `admit()` call at 5085 (Phase 2 capacity wiring)
+- `<HOME>/Projects/research/scres-ia/supply_chain/gsa.py` — `gp_locate`, the BO comparator to reuse (needs `n_init` exposure, history return, and grid snapping)
+- `<HOME>/Projects/research/scres-ia/tests/test_cssu_capacity_bridge.py` — the golden-anchor + mutation-test pattern the null-arm identity test must follow

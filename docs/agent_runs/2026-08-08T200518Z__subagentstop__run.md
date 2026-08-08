@@ -1,13 +1,17 @@
 # Agent run — SubagentStop
 
+> **`UNADJUDICATED_DO_NOT_CITE`** — transcripción cruda de un agente, guardada por el hook
+> `SubagentStop`. Puede contener afirmaciones **retiradas**; el canon vive en los artefactos
+> sellados y en las enmiendas, nunca aquí.
+
 - **event**: `SubagentStop`
 - **session_id**: `fc8fefc1-10a6-4eea-bcbf-d92791120134`
 - **agent_id**: `a53f9ae4644947f6d`
-- **cwd**: `/Users/thom/Projects/research/scres-ia`
-- **transcript_path**: `/Users/thom/.claude/projects/-Users-thom-Projects-research-scres-ia/fc8fefc1-10a6-4eea-bcbf-d92791120134.jsonl`
+- **cwd**: `<HOME>/Projects/research/scres-ia`
+- **transcript_path**: `<HOME>/.claude/projects/-Users-thom-Projects-research-scres-ia/fc8fefc1-10a6-4eea-bcbf-d92791120134.jsonl`
 - **saved_at**: `2026-08-08T20:05:18.456502+00:00`
 - **commit**: `1e09161a`
-- **answer read from**: `/Users/thom/.claude/projects/-Users-thom-Projects-research-scres-ia/fc8fefc1-10a6-4eea-bcbf-d92791120134.jsonl`
+- **answer read from**: `<HOME>/.claude/projects/-Users-thom-Projects-research-scres-ia/fc8fefc1-10a6-4eea-bcbf-d92791120134.jsonl`
 
 ## Final response
 
@@ -45,11 +49,11 @@ Te doy el veredicto, la figura y el commit en cuanto cierre.
 ```json
 {
  "agent_id": "a53f9ae4644947f6d",
- "agent_transcript_path": "/Users/thom/.claude/projects/-Users-thom-Projects-research-scres-ia/fc8fefc1-10a6-4eea-bcbf-d92791120134/subagents/agent-a53f9ae4644947f6d.jsonl",
+ "agent_transcript_path": "<HOME>/.claude/projects/-Users-thom-Projects-research-scres-ia/fc8fefc1-10a6-4eea-bcbf-d92791120134/subagents/agent-a53f9ae4644947f6d.jsonl",
  "agent_type": "",
  "background_tasks": [
   {
-   "command": "SP=/private/tmp/claude-501/-Users-thom-Projects-research-scres-ia/2c6b3a01-62a0-499d-957d-694424855dff/scratchpad\nuntil ssh -o ConnectTimeout=15 ovh-agent-lab 'pgrep -f vps_capture.py > /dev/null' 2>/dev/null; do sleep 30; done\nuntil ! ssh -o ConnectTimeout=15 ovh-agent-lab 'pgrep -f vps_capture.py > /dev/null' 2>/dev/null; do sleep 120; done\nscp -q ovh-agent-lab:/tmp/vps_capture.json \"$SP/vps_capture.json\"\necho \"=== CAPTURA DEL VPS LISTA ===\"\n.venv/bin/python -c \"\nimport json;d=json.load(open('$SP/vps_capture.json'))\nprint('host:',d['host'])\nfor s,v in d['slices'].items():\n    print(f\\\"  {s}: {v['n_differing']} celdas difieren de {v['cells']}\\\")\n\"",
+   "command": "SP=<TMP>/-Users-thom-Projects-research-scres-ia/2c6b3a01-62a0-499d-957d-694424855dff/scratchpad\nuntil ssh -o ConnectTimeout=15 ovh-agent-lab 'pgrep -f vps_capture.py > /dev/null' 2>/dev/null; do sleep 30; done\nuntil ! ssh -o ConnectTimeout=15 ovh-agent-lab 'pgrep -f vps_capture.py > /dev/null' 2>/dev/null; do sleep 120; done\nscp -q ovh-agent-lab:/tmp/vps_capture.json \"$SP/vps_capture.json\"\necho \"=== CAPTURA DEL VPS LISTA ===\"\n.venv/bin/python -c \"\nimport json;d=json.load(open('$SP/vps_capture.json'))\nprint('host:',d['host'])\nfor s,v in d['slices'].items():\n    print(f\\\"  {s}: {v['n_differing']} celdas difieren de {v['cells']}\\\")\n\"",
    "description": "Watcher: VPS divergence capture",
    "id": "bj4tha3xz",
    "status": "running",
@@ -77,7 +81,7 @@ Te doy el veredicto, la figura y el commit en cuanto cierre.
    "type": "shell"
   }
  ],
- "cwd": "/Users/thom/Projects/research/scres-ia",
+ "cwd": "<HOME>/Projects/research/scres-ia",
  "effort": {
   "level": "medium"
  },
@@ -88,6 +92,6 @@ Te doy el veredicto, la figura y el commit en cuanto cierre.
  "session_crons": [],
  "session_id": "fc8fefc1-10a6-4eea-bcbf-d92791120134",
  "stop_hook_active": false,
- "transcript_path": "/Users/thom/.claude/projects/-Users-thom-Projects-research-scres-ia/fc8fefc1-10a6-4eea-bcbf-d92791120134.jsonl"
+ "transcript_path": "<HOME>/.claude/projects/-Users-thom-Projects-research-scres-ia/fc8fefc1-10a6-4eea-bcbf-d92791120134.jsonl"
 }
 ```

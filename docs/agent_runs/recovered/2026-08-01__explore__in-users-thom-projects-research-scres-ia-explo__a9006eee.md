@@ -1,17 +1,21 @@
-# Explore — In /Users/thom/Projects/research/scres-ia, explore VERY THOROUGHLY the CSSU (shared scarce
+# Explore — In <HOME>/Projects/research/scres-ia, explore VERY THOROUGHLY the CSSU (shared scarce
+
+> **`UNADJUDICATED_DO_NOT_CITE`** — transcripción cruda de un agente, guardada por el hook
+> `SubagentStop`. Puede contener afirmaciones **retiradas**; el canon vive en los artefactos
+> sellados y en las enmiendas, nunca aquí.
 
 - **agent_id**: `a9006eeeb987f3b5a`
 - **session**: `091a3905-ebf9-481b-beaa-fc646c3902d5`
 - **branch**: `codex/expanded-contract-comparators-v2`
 - **finished**: `2026-08-01T21:25:45.478Z`
 - **effort**: `low` · **version**: `2.1.219`
-- **transcript**: `/Users/thom/.claude/projects/-Users-thom-Projects-research-scres-ia/091a3905-ebf9-481b-beaa-fc646c3902d5/subagents/agent-a9006eeeb987f3b5a.jsonl`
+- **transcript**: `<HOME>/.claude/projects/-Users-thom-Projects-research-scres-ia/091a3905-ebf9-481b-beaa-fc646c3902d5/subagents/agent-a9006eeeb987f3b5a.jsonl`
 - **turns**: 49 · **assistant messages**: 2
 
 ## Task given
 
 ```text
-In /Users/thom/Projects/research/scres-ia, explore VERY THOROUGHLY the CSSU (shared scarce resource) machinery, because I need to know exactly what it would take to go from TWO claimants to THREE asymmetric claimants.
+In <HOME>/Projects/research/scres-ia, explore VERY THOROUGHLY the CSSU (shared scarce resource) machinery, because I need to know exactly what it would take to go from TWO claimants to THREE asymmetric claimants.
 
 Focus on:
 1. supply_chain/cssu_allocation.py and supply_chain/supply_chain.py — how is the two-product share of Op5-Op7 implemented? Is the allocation a scalar in [0,1] (`validate_allocation_a`) or a vector? What exactly is hard-coded to two products? Show me the concrete symbols/functions/fields (product names, allocation param, `reallocate_unused` fungibility flag, forfeited counters, per-claimant fill accounting).
@@ -35,7 +39,7 @@ I have what I need.
 
 ### 1. The allocation interface — scalar, not a vector
 
-`/Users/thom/Projects/research/scres-ia/supply_chain/cssu_allocation.py`
+`<HOME>/Projects/research/scres-ia/supply_chain/cssu_allocation.py`
 
 - `CSSU_IDS = ("A", "B")` — line 14. The single source of truth for the claimant set, a 2-tuple.
 - `ALLOCATION_LEVELS = (0.25, 0.50, 0.75)` — line 18, default static grid only.
@@ -48,7 +52,7 @@ I have what I need.
 
 ### 2. Simulator state and per-claimant accounting
 
-`/Users/thom/Projects/research/scres-ia/supply_chain/supply_chain.py`
+`<HOME>/Projects/research/scres-ia/supply_chain/supply_chain.py`
 
 Constructor params (lines 278-286, validated 418-426, stored 488-495):
 `cssu_topology_mode` ∈ {`"aggregate"`, `"split_v1"`}, `cssu_allocation_a: float = 0.50`, `cssu_service_rule`, `cssu_daily_capacity`, `cssu_reallocate_unused: bool = True`.
@@ -71,7 +75,7 @@ Other 2-hardcodings: `OrderRecord.cssu_destination` (133) and `RiskEvent.affecte
 
 ### 3. `claimant_fill` — where it comes from
 
-`/Users/thom/Projects/research/scres-ia/supply_chain/service_first_metric.py:91-100` — `claimant_fills(sim)` reads `sim.cssu_demanded` / `sim.cssu_delivered` and returns `{name: delivered/demanded}`. **This function is already fully N-generic** (it iterates the mapping, no A/B literals). Returns `{}` when there is no partition.
+`<HOME>/Projects/research/scres-ia/supply_chain/service_first_metric.py:91-100` — `claimant_fills(sim)` reads `sim.cssu_demanded` / `sim.cssu_delivered` and returns `{name: delivered/demanded}`. **This function is already fully N-generic** (it iterates the mapping, no A/B literals). Returns `{}` when there is no partition.
 
 `service_first_key_v2(panel, claimant_fill)` — 103-112, `worst = min(fills.values())`, also N-generic. Consumers: `scripts/run_contention_service_first_v2.py:96,102` (`n_claimants`), `scripts/run_service_first_v2_audit.py:64,74`, `scripts/run_garrido_q2_des288_v1.py:152-169`.
 

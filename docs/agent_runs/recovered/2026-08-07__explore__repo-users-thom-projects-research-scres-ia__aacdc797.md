@@ -1,17 +1,21 @@
-# Explore — Repo: /Users/thom/Projects/research/scres-ia.
+# Explore — Repo: <HOME>/Projects/research/scres-ia.
+
+> **`UNADJUDICATED_DO_NOT_CITE`** — transcripción cruda de un agente, guardada por el hook
+> `SubagentStop`. Puede contener afirmaciones **retiradas**; el canon vive en los artefactos
+> sellados y en las enmiendas, nunca aquí.
 
 - **agent_id**: `aacdc7972ec8de620`
 - **session**: `c4c70a0d-d0da-4c53-824e-5d7a181768e6`
 - **branch**: `codex/expanded-contract-comparators-v2`
 - **finished**: `2026-08-07T16:49:02.251Z`
 - **effort**: `high` · **version**: `2.1.222`
-- **transcript**: `/Users/thom/.claude/projects/-Users-thom-Projects-research-scres-ia/c4c70a0d-d0da-4c53-824e-5d7a181768e6/subagents/agent-aacdc7972ec8de620.jsonl`
+- **transcript**: `<HOME>/.claude/projects/-Users-thom-Projects-research-scres-ia/c4c70a0d-d0da-4c53-824e-5d7a181768e6/subagents/agent-aacdc7972ec8de620.jsonl`
 - **turns**: 101 · **assistant messages**: 2
 
 ## Task given
 
 ```text
-Repo: /Users/thom/Projects/research/scres-ia.
+Repo: <HOME>/Projects/research/scres-ia.
 
 GOAL: find every lane that is CLOSE to yielding a claim but did not get there — i.e. where a modest amount of further work could plausibly convert a negative/blocked result into a positive one.
 

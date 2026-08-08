@@ -1,17 +1,21 @@
-# Explore — Very thorough exploration of the repo /Users/thom/Projects/research/scres-ia.
+# Explore — Very thorough exploration of the repo <HOME>/Projects/research/scres-ia.
+
+> **`UNADJUDICATED_DO_NOT_CITE`** — transcripción cruda de un agente, guardada por el hook
+> `SubagentStop`. Puede contener afirmaciones **retiradas**; el canon vive en los artefactos
+> sellados y en las enmiendas, nunca aquí.
 
 - **agent_id**: `a70ec8d81e30dd9bf`
 - **session**: `091a3905-ebf9-481b-beaa-fc646c3902d5`
 - **branch**: `codex/expanded-contract-comparators-v2`
 - **finished**: `2026-08-05T18:01:19.742Z`
 - **effort**: `xhigh` · **version**: `2.1.219`
-- **transcript**: `/Users/thom/.claude/projects/-Users-thom-Projects-research-scres-ia/091a3905-ebf9-481b-beaa-fc646c3902d5/subagents/agent-a70ec8d81e30dd9bf.jsonl`
+- **transcript**: `<HOME>/.claude/projects/-Users-thom-Projects-research-scres-ia/091a3905-ebf9-481b-beaa-fc646c3902d5/subagents/agent-a70ec8d81e30dd9bf.jsonl`
 - **turns**: 167 · **assistant messages**: 2
 
 ## Task given
 
 ```text
-Very thorough exploration of the repo /Users/thom/Projects/research/scres-ia.
+Very thorough exploration of the repo <HOME>/Projects/research/scres-ia.
 
 I need a complete map of the "Alzheimer effect / memory-carrying neuron / meta-learner across simulation RUNS" lane. This is the lane where a Fig-5-style neuron learns ACROSS successive DES runs (configuration x vs configuration x-1), as opposed to within-episode RL control.
 
@@ -40,7 +44,7 @@ I have a complete map. Here it is.
 
 There are **four distinct implementations** of the across-run learner in this repo. All of them are **online linear/logistic learners, not RL, not bandits, not surrogate-model BO**.
 
-### 1a. `/Users/thom/Projects/research/scres-ia/scripts/run_meta_learner_over_configs_v1.py` (500 lines) — the canonical 288-config DES runner
+### 1a. `<HOME>/Projects/research/scres-ia/scripts/run_meta_learner_over_configs_v1.py` (500 lines) — the canonical 288-config DES runner
 
 - `class Fig5Neuron` (line 122): `self.rho = np.zeros(dim)`, `predict` = `1/(1+exp(-clip(rho@x, -30, 30)))`, `update` = `self.rho += self.lr * (y - self.predict(x)) * x`, `lr=0.35`. **A single logistic (perceptron-style) unit with plain logistic-loss gradient steps.** Dim = 5 (4 factor coordinates normalised to [0,1] + bias).
 - `def features(config)` (line 101): **decision coordinates only** — `[FACTORS[n].index(config[n])/(len-1) for n in FACTOR_NAMES] + [1.0]`. This is the post-leak-fix version; the drivers are update-signal only.
@@ -50,7 +54,7 @@ There are **four distinct implementations** of the across-run learner in this re
 - Falsifiers `f1`–`f6` built at lines 379–438; `f5` is the shadow-surface driver-permutation test (lines 258–279).
 - `--contract` is **required, no default** (line 148), with an in-code comment that the default "is how the H3-prime slices got sealed against the wrong document".
 
-### 1b. `/Users/thom/Projects/research/scres-ia/scripts/run_garrido_q2_des288_v1.py` (804 lines) — the preregistered Q2 DES-288 runner
+### 1b. `<HOME>/Projects/research/scres-ia/scripts/run_garrido_q2_des288_v1.py` (804 lines) — the preregistered Q2 DES-288 runner
 
 - `class VectorLinearLearner` (line 205): `self.rho = np.zeros((len(FACTOR_NAMES)+1, len(SERVICE_FIRST_V2_COMPONENTS)))` — a **5×4 linear coefficient matrix**, LMS update `self.rho += lr * np.outer(x, target - prediction)`, `lr=0.25`. Predicts the **four endpoint components separately** and ranks by **lexicographic tuple comparison** (no scalarisation).
 - Five arms: `{"ofat", "random", "no_update", "retained", "reset"}`.
@@ -58,23 +62,23 @@ There are **four distinct implementations** of the across-run learner in this re
 - Nine falsifiers `f1`–`f9` (lines 537–621).
 - Metric is `runs_to_oracle` (exact match to the oracle key), not `runs_to_within_1pct`.
 
-### 1c. `/Users/thom/Projects/research/scres-ia/scripts/run_meta_learner_thesis90_v1.py` (318 lines) — thesis-native 90-cell **replay**
+### 1c. `<HOME>/Projects/research/scres-ia/scripts/run_meta_learner_thesis90_v1.py` (318 lines) — thesis-native 90-cell **replay**
 
 - Same `class Fig5Neuron` (line 66). `features(row)` (line 55) = `[buffer_hours/1344, (shifts-1)/2, family one-hot(3), scenario one-hot(3), pattern flags(4), bias]` → dim 13.
 - **Does not run the DES.** `load_surface()` reads `results/garrido_drivers_per_configuration/result.json` and refuses if `claim_status != "DEVELOPMENT_DRIVER_TABLE"`.
 - Arms: `thesis_order` (deliberately *not* called OFAT), `random`, `neuron_memory`, `neuron_reset`. Contexts are the nine published blocks `H1a…H3c`.
 
-### 1d. `/Users/thom/Projects/research/scres-ia/scripts/run_garrido_wrap_closed_loop.py` (501 lines) — the WRAP closed-loop smoke
+### 1d. `<HOME>/Projects/research/scres-ia/scripts/run_garrido_wrap_closed_loop.py` (501 lines) — the WRAP closed-loop smoke
 
 - `class BetweenRunLearner` (line 150): retained state is the **observation list**, not weights. Refits from scratch each selection with `kind ∈ {"linear", "backprop", "kan"}` (`sklearn.LinearRegression`, `fit_mlp`, `fit_kan`). **This is the only lane member that can swap in an MLP/KAN surrogate.** Default is `linear` because the Q1 gate says `NO_GO_NEURAL_PREMIUM_IN_WRAP_PANEL`.
 - Has an in-process DES cache (line 453: `cache: dict[tuple[int, float | None], dict]`), reported as `simulation_cache_entries`. **Not persisted to disk.**
 
 ### Adjacent / supporting
-- `/Users/thom/Projects/research/scres-ia/scripts/build_garrido_fig5_surrogate.py` (459) — Fig-5-as-drawn (drivers→ReT) vs learnable version; backprop/KAN/linear/constant.
-- `/Users/thom/Projects/research/scres-ia/scripts/run_continuous_space_fig5.py` (214) — continuous-space version of the Fig-5 fit question.
-- `/Users/thom/Projects/research/scres-ia/scripts/run_h1_h3_v2.py:191` — `search_cost_variance(strategy)`, the H3′ estimand, computed **off the sealed meta-learner artifact with no new simulation**.
-- `/Users/thom/Projects/research/scres-ia/scripts/adjudicate_h3_merge_v1.py`, `/Users/thom/Projects/research/scres-ia/scripts/merge_garrido_h3_power_v1.py`.
-- Tests: `/Users/thom/Projects/research/scres-ia/tests/test_garrido_q2_des288_runner.py` (136 lines), `tests/test_garrido_wrap_custody.py`, `tests/test_seed_custody_module.py:116`.
+- `<HOME>/Projects/research/scres-ia/scripts/build_garrido_fig5_surrogate.py` (459) — Fig-5-as-drawn (drivers→ReT) vs learnable version; backprop/KAN/linear/constant.
+- `<HOME>/Projects/research/scres-ia/scripts/run_continuous_space_fig5.py` (214) — continuous-space version of the Fig-5 fit question.
+- `<HOME>/Projects/research/scres-ia/scripts/run_h1_h3_v2.py:191` — `search_cost_variance(strategy)`, the H3′ estimand, computed **off the sealed meta-learner artifact with no new simulation**.
+- `<HOME>/Projects/research/scres-ia/scripts/adjudicate_h3_merge_v1.py`, `<HOME>/Projects/research/scres-ia/scripts/merge_garrido_h3_power_v1.py`.
+- Tests: `<HOME>/Projects/research/scres-ia/tests/test_garrido_q2_des288_runner.py` (136 lines), `tests/test_garrido_wrap_custody.py`, `tests/test_seed_custody_module.py:116`.
 
 ## 2. Contracts and preregistrations
 
@@ -137,13 +141,13 @@ All the 288-surface runs share `budget=24`, `n_configurations=288`, `metric="ret
 
 **Recorded in exactly two places:**
 
-1. **Doc:** `/Users/thom/Projects/research/scres-ia/docs/RESULTADO_META_APRENDIZ_2026-07-31.md`, lines 15–18 and 35:
+1. **Doc:** `<HOME>/Projects/research/scres-ia/docs/RESULTADO_META_APRENDIZ_2026-07-31.md`, lines 15–18 and 35:
    - `| **neurona con memoria** (\`ρ\` cruza contextos) | **7,24** | **0,000090** |`
    - `| OFAT — **el diseño de su propia tesis** | 12,42 | 0,000297 |`
    - `| neurona **reiniciada** en cada contexto | 13,54 | 0,000404 |`
    - `| búsqueda aleatoria — el nulo | 19,54 | 0,000821 |`
    - `| ventaja de la memoria | **+0,00** | +2,67 | +8,08 | +8,75 | +8,33 | **+10,00** |`
-2. **Result json:** `/Users/thom/Projects/research/scres-ia/results/garrido_meta_learner/result.json`, `self_sha256 = "230a0074a10f12ee…"`, `runs_to_within_1pct = {"neuron_memory": 7.236111111111112, "neuron_reset": 13.541666666666666, "ofat": 12.416666666666666, "random": 19.541666666666668}`.
+2. **Result json:** `<HOME>/Projects/research/scres-ia/results/garrido_meta_learner/result.json`, `self_sha256 = "230a0074a10f12ee…"`, `runs_to_within_1pct = {"neuron_memory": 7.236111111111112, "neuron_reset": 13.541666666666666, "ofat": 12.416666666666666, "random": 19.541666666666668}`.
 
 **The six contexts** (`CONTEXTS` dict, `run_meta_learner_over_configs_v1.py:63`) are traversed **in fixed order** as "successive experiences":
 
@@ -171,7 +175,7 @@ ADV(reset−mem)   0.00    2.67    8.08     8.75     8.33     10.00
 
 **Stated limitations — this is the load-bearing part:**
 
-- **The numbers are RETIRED.** `/Users/thom/Projects/research/scres-ia/docs/CORRECCION_META_APRENDIZ_FUGA_2026-07-31.md` documents that `run_meta_learner_over_configs_v1.py` ranked unrun candidates with `preds = [neuron.predict(features(CONFIGS[i], table[i][1])) for i in unseen]` where `table[i][1]` is the **driver vector of an already-simulated episode** — i.e. reading the answer. And `"f5_no_context_leakage": {"passed": True, ...}` was **hardcoded**: *"Un falsador que no puede fallar no es un falsador."*
+- **The numbers are RETIRED.** `<HOME>/Projects/research/scres-ia/docs/CORRECCION_META_APRENDIZ_FUGA_2026-07-31.md` documents that `run_meta_learner_over_configs_v1.py` ranked unrun candidates with `preds = [neuron.predict(features(CONFIGS[i], table[i][1])) for i in unseen]` where `table[i][1]` is the **driver vector of an already-simulated episode** — i.e. reading the answer. And `"f5_no_context_leakage": {"passed": True, ...}` was **hardcoded**: *"Un falsador que no puede fallar no es un falsador."*
   - `memoria vs OFAT = +5,18` → **RETIRADO**. `memoria vs aleatorio = +12,31` → **RETIRADO**. The `+6,31` Alzheimer number → *"el estimando sobrevive … pero **el número se retira**"*. The H2 curve → *"forma retirada como medida; el cero del primer contexto sigue siendo una comprobación estructural válida"*.
 - `docs/GARRIDO_WRAP_CURRENT_STATE_2026-08-01.md`: *"Los contrastes del meta-aprendiz v1 (`+6.31`, `+5.18`, `+12.31`) y la curva H2 antigua **no son evidencia**."*
 - Claim ledger `docs/GARRIDO_WRAP_CLAIM_LEDGER_2026-08-01.md`: row `H2` → artifact "meta-aprendiz v1 retirado", status **`RETIRED_LEAKAGE`**, prohibited: *"usar la curva antigua"*. Row `H4` → **`PENDING_CONFIRMATION`**, prohibited: *"usar el `+6.31` antiguo"*.
@@ -243,8 +247,8 @@ I searched for surface caches (`find … -iname "*surface*"`, and grepped the ru
 Cost, quoted from `docs/PREREGISTRO_H3_POTENCIA_2026-08-01.md`: *"288 configuraciones × 6 contextos = **1.728 episodios por réplica**, ~126 s en el M1 Pro y ~504 s en el VPS"*. Measured wall-clocks: 12 reps = 1515.9 s local / 4491.7 s VPS; 90 reps local and 30 reps VPS ≈ 3.4 h in parallel. **A surface cache is the highest-leverage engineering change in this lane.**
 
 ### The 90-config Garrido reproduction
-- Design as data: `/Users/thom/Projects/research/scres-ia/supply_chain/garrido_thesis_design.py` — `build_design() -> dict[int, Configuration]`, transcribed from WRAP_Theses_Garrido_Rios_2017.pdf Ch. 6, Tables 6.11–6.23. `FACTOR_CODING` (line 49) gives the `-`/`+` risk levels for R11–R14, R21–R24, R3. Structure: Scenario I = Cf1–Cf30 (risk frequency only, buffers 0, S=1), Scenario II = Cf31–Cf60 (buffers × risk, S=1), Scenario III = Cf61–Cf90 (shifts × risk, buffers 0). Blocks map to `H1a…H3c`, 10 configs each. Seeds repeat with stride 30 (*"the seed used for ReT(Cf7) is the same for ReT(Cf37) and ReT(Cf67)"*).
-- **This grid IS fully cached.** `/Users/thom/Projects/research/scres-ia/results/garrido_drivers_per_configuration/result.json` (`self_sha256 = 491694175a3975a70d3f6a9d7af90f3cc5b97849a5d348786bd44c9c3455a392`, `claim_status = "DEVELOPMENT_DRIVER_TABLE"`), 90 rows, each with `ret_excel`, the four driver shares/means/contributions, `rho: {buffer_hours, shifts}`, `family`, `pattern`, `seed`, `seed_is_thesis_seed`. Flat CSV at `results/garrido_drivers_per_configuration/drivers.csv` (91 lines incl. header, 24 columns).
+- Design as data: `<HOME>/Projects/research/scres-ia/supply_chain/garrido_thesis_design.py` — `build_design() -> dict[int, Configuration]`, transcribed from WRAP_Theses_Garrido_Rios_2017.pdf Ch. 6, Tables 6.11–6.23. `FACTOR_CODING` (line 49) gives the `-`/`+` risk levels for R11–R14, R21–R24, R3. Structure: Scenario I = Cf1–Cf30 (risk frequency only, buffers 0, S=1), Scenario II = Cf31–Cf60 (buffers × risk, S=1), Scenario III = Cf61–Cf90 (shifts × risk, buffers 0). Blocks map to `H1a…H3c`, 10 configs each. Seeds repeat with stride 30 (*"the seed used for ReT(Cf7) is the same for ReT(Cf37) and ReT(Cf67)"*).
+- **This grid IS fully cached.** `<HOME>/Projects/research/scres-ia/results/garrido_drivers_per_configuration/result.json` (`self_sha256 = 491694175a3975a70d3f6a9d7af90f3cc5b97849a5d348786bd44c9c3455a392`, `claim_status = "DEVELOPMENT_DRIVER_TABLE"`), 90 rows, each with `ret_excel`, the four driver shares/means/contributions, `rho: {buffer_hours, shifts}`, `family`, `pattern`, `seed`, `seed_is_thesis_seed`. Flat CSV at `results/garrido_drivers_per_configuration/drivers.csv` (91 lines incl. header, 24 columns).
 - Upstream source: `results/garrido_reproduction/reproduction.json` (`DEVELOPMENT_REPRODUCTION_NO_CLAIM`, 90 rows, 20 validatable against `Raw_data1+Re.xlsx` / `Raw_data2+Re.xlsx`).
 - **Known gap sealed in the table:** `"known_gap": "Re(APj) is identically zero here: the shipped fulfilment constant is 54 h against LT = 48, so the autotomy branch is structurally unreachable. Close it with the freight-wave arm before fitting Fig. 5"`.
 - **Why this cache is scientifically limited:** one seed per Cf, so `run_meta_learner_thesis90_v1.py` repetitions are *"replays algorítmicos sobre una misma tabla, no réplicas físicas independientes"*, and the endpoint state is `HOLD_METRIC_PROVISIONAL`. Result label is `SURFACE_REPLAY_ONLY`.

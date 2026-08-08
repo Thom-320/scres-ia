@@ -1,5 +1,9 @@
 # Agent runs — every agent leaves a file, or it never happened
 
+> **`UNADJUDICATED_DO_NOT_CITE`** — transcripción cruda de un agente, guardada por el hook
+> `SubagentStop`. Puede contener afirmaciones **retiradas**; el canon vive en los artefactos
+> sellados y en las enmiendas, nunca aquí.
+
 ## Why
 
 On 2026-08-08 two external review agents produced substantial findings and both reports were lost.

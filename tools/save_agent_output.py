@@ -47,6 +47,26 @@ ANSWER_KEYS = ("final_response", "response", "result", "output", "text", "conten
 TRANSCRIPT_KEYS = ("agent_transcript_path", "transcript_path")
 
 
+#: A tracked markdown file may not carry a developer's home directory: `test_repo_portability.py`
+#: forbids it, and the first batch of saved transcripts broke that test. Sanitising here is the fix
+#: at the source rather than a cleanup pass that has to be remembered.
+_REDACTIONS = ((re.compile(r"/Users/[A-Za-z0-9_.-]+"), "<HOME>"),
+               (re.compile(r"/home/[A-Za-z0-9_.-]+"), "<HOME>"),
+               (re.compile(r"/private/tmp/claude-\d+"), "<TMP>"))
+
+#: Every saved transcript is a raw agent log, not adjudicated evidence, and says so in its own text
+#: so a later reader or script cannot mistake a withdrawn claim for canon.
+BANNER = ("> **`UNADJUDICATED_DO_NOT_CITE`** — raw agent transcript saved by the `SubagentStop` "
+          "hook. It may contain WITHDRAWN claims; the canon lives in sealed artifacts and "
+          "amendments, never here.")
+
+
+def redact(text: str) -> str:
+    for pattern, replacement in _REDACTIONS:
+        text = pattern.sub(replacement, text)
+    return text
+
+
 def slug(value: str, limit: int = 48) -> str:
     s = re.sub(r"[^a-zA-Z0-9]+", "-", str(value)).strip("-").lower()
     return (s[:limit] or "agent")
@@ -148,7 +168,7 @@ def main() -> int:
                 if tail and len(tail) > len(answer or ""):
                     answer, followed = tail, tp
                 break
-    lines = [f"# Agent run — {args.event}", ""]
+    lines = [f"# Agent run — {args.event}", "", BANNER, ""]
     lines += [f"- **{k}**: `{v}`" for k, v in meta.items() if v not in (None, "")]
     lines += [f"- **saved_at**: `{now.isoformat()}`"]
     if commit:
@@ -159,7 +179,7 @@ def main() -> int:
     lines += [answer.strip() if answer else "_(no final-response field found in the payload; "
               "the raw payload below is the complete record)_"]
     lines += ["", "## Raw payload", "", "```json" if parsed else "```text", pretty, "```", ""]
-    path.write_text("\n".join(lines))
+    path.write_text(redact("\n".join(lines)))
     print(str(path.relative_to(ROOT)))
     return 0
 

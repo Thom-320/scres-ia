@@ -1,17 +1,21 @@
-# Explore — Repo: /Users/thom/Projects/research/scres-ia (git, ~70 branches, ~112 dirs under results/)
+# Explore — Repo: <HOME>/Projects/research/scres-ia (git, ~70 branches, ~112 dirs under results/)
+
+> **`UNADJUDICATED_DO_NOT_CITE`** — transcripción cruda de un agente, guardada por el hook
+> `SubagentStop`. Puede contener afirmaciones **retiradas**; el canon vive en los artefactos
+> sellados y en las enmiendas, nunca aquí.
 
 - **agent_id**: `a73a768783cc8d34f`
 - **session**: `c4c70a0d-d0da-4c53-824e-5d7a181768e6`
 - **branch**: `codex/expanded-contract-comparators-v2`
 - **finished**: `2026-08-07T16:44:29.518Z`
 - **effort**: `high` · **version**: `2.1.222`
-- **transcript**: `/Users/thom/.claude/projects/-Users-thom-Projects-research-scres-ia/c4c70a0d-d0da-4c53-824e-5d7a181768e6/subagents/agent-a73a768783cc8d34f.jsonl`
+- **transcript**: `<HOME>/.claude/projects/-Users-thom-Projects-research-scres-ia/c4c70a0d-d0da-4c53-824e-5d7a181768e6/subagents/agent-a73a768783cc8d34f.jsonl`
 - **turns**: 55 · **assistant messages**: 4
 
 ## Task given
 
 ```text
-Repo: /Users/thom/Projects/research/scres-ia (git, ~70 branches, ~112 dirs under results/).
+Repo: <HOME>/Projects/research/scres-ia (git, ~70 branches, ~112 dirs under results/).
 
 GOAL: build a census of which scientific results are CONFIRMATION-GRADE versus DEVELOPMENT-GRADE, across the WHOLE repository AND across all git branches (not just the current one).
 
@@ -46,10 +50,10 @@ Census complete. Findings below.
 
 | Path | claim_status | scope / run_role | Seed block | Date |
 |---|---|---|---|---|
-| `/Users/thom/Projects/research/scres-ia/results/grid_transfer_confirmation_v2/result.json` | `GRID_TRANSFER_CONFIRMED__UCB1` | `CONFIRMATION_ON_RESERVED_VIRGIN_BLOCK_NO_RL_NO_NEURAL_LEARNER` / `run_role=CONFIRMATION` | 8200001–8200060 (n=60), block `garrido_grid_transfer_v2_confirmation`, now `BURNED_CONFIRMATION_COMPLETE` | 2026-08-06T09:39:38Z |
-| `/Users/thom/Projects/research/scres-ia/results/metric_audit/ret_metric_repair_confirmation_v1/result.json` + `adjudication.json` | `PROSPECTIVE_CORRECTIVE_CONFIRMATION` | no `scope`, no `run_role`, no `created_at`; contract `contracts/ret_metric_repair_confirmation_v1.json` | not declared in artifact | (absent) |
-| `/Users/thom/Projects/research/scres-ia/results/sensitivity/backlog_confirmation_v1/result.json` | `REFUTED_BACKLOG_SENSOR_WAS_SELECTION_NOISE` | preregistered confirmation, refuted | 5100001–5100012 (n=12), block `reconciled_5100001` = `USED_DEVELOPMENT_NOT_VIRGIN` | 2026-08-01T01:49:09Z |
-| `/Users/thom/Projects/research/scres-ia/results/k3/confirmation.json` | (no `claim_status`) `verdict=CONFIRM_K3_OBSERVABLE_RET_HEADROOM`, **`effective_verdict=RETRACT_K3_ADAPTIVE_AND_NEURAL_CLAIMS_STATIC_PERIOD8_CONFOUND`**, superseded by `results/k3/open_loop_confound_audit.json` | `stage=locked_confirmation` | 6800001–6800120 | — |
+| `<HOME>/Projects/research/scres-ia/results/grid_transfer_confirmation_v2/result.json` | `GRID_TRANSFER_CONFIRMED__UCB1` | `CONFIRMATION_ON_RESERVED_VIRGIN_BLOCK_NO_RL_NO_NEURAL_LEARNER` / `run_role=CONFIRMATION` | 8200001–8200060 (n=60), block `garrido_grid_transfer_v2_confirmation`, now `BURNED_CONFIRMATION_COMPLETE` | 2026-08-06T09:39:38Z |
+| `<HOME>/Projects/research/scres-ia/results/metric_audit/ret_metric_repair_confirmation_v1/result.json` + `adjudication.json` | `PROSPECTIVE_CORRECTIVE_CONFIRMATION` | no `scope`, no `run_role`, no `created_at`; contract `contracts/ret_metric_repair_confirmation_v1.json` | not declared in artifact | (absent) |
+| `<HOME>/Projects/research/scres-ia/results/sensitivity/backlog_confirmation_v1/result.json` | `REFUTED_BACKLOG_SENSOR_WAS_SELECTION_NOISE` | preregistered confirmation, refuted | 5100001–5100012 (n=12), block `reconciled_5100001` = `USED_DEVELOPMENT_NOT_VIRGIN` | 2026-08-01T01:49:09Z |
+| `<HOME>/Projects/research/scres-ia/results/k3/confirmation.json` | (no `claim_status`) `verdict=CONFIRM_K3_OBSERVABLE_RET_HEADROOM`, **`effective_verdict=RETRACT_K3_ADAPTIVE_AND_NEURAL_CLAIMS_STATIC_PERIOD8_CONFOUND`**, superseded by `results/k3/open_loop_confound_audit.json` | `stage=locked_confirmation` | 6800001–6800120 | — |
 
 Confirmation-adjacent custody records (no science): `results/custody/garrido_grid_transfer_confirmation_preflight.json` and `..._v2_preflight.json` (`PREOPEN_CONFIRMATION_PREFLIGHT_PASS`), `..._v2_open.json` (`CONFIRMATION_BLOCK_OPEN_NO_RESULT_YET`), `garrido_grid_transfer_confirmation_abort.json` (`CONFIRMATION_BLOCK_QUARANTINED_NO_SCIENTIFIC_RESULT`), `results/headroom/g3_obs_conversion_v2_replay_20260803/result.json` (`REPLAY_OF_BURNED_BLOCK_NO_NEW_CONFIRMATION`, seeds 7800001–7800140).
 
@@ -113,7 +117,7 @@ The other ~143 off-HEAD artifacts are development/exploratory, clustered by bran
 
 ---
 
-## Table D — Seed blocks by state (`/Users/thom/Projects/research/scres-ia/research/seed_custody_registry.json`)
+## Table D — Seed blocks by state (`<HOME>/Projects/research/scres-ia/research/seed_custody_registry.json`)
 
 Registry header: `status = BASELINE_INVENTORY_INCOMPLETE_NO_NEW_SEEDS_AUTHORIZED`, `scientific_execution_authorized = false`, `new_seed_opening = false`, reconciled 2026-08-05T21:26:49Z. 32 blocks.
 

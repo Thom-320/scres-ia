@@ -1,17 +1,21 @@
-# Explore — In the repo /Users/thom/Projects/research/scres-ia, investigate three things. Read-only, r
+# Explore — In the repo <HOME>/Projects/research/scres-ia, investigate three things. Read-only, r
+
+> **`UNADJUDICATED_DO_NOT_CITE`** — transcripción cruda de un agente, guardada por el hook
+> `SubagentStop`. Puede contener afirmaciones **retiradas**; el canon vive en los artefactos
+> sellados y en las enmiendas, nunca aquí.
 
 - **agent_id**: `a6c7c59bd617d2ffc`
 - **session**: `1fab0490-70ae-4d2e-a373-23cec6b3ba5f`
 - **branch**: `codex/expanded-contract-comparators-v2`
 - **finished**: `2026-08-08T02:11:09.872Z`
 - **effort**: `medium` · **version**: `2.1.222`
-- **transcript**: `/Users/thom/.claude/projects/-Users-thom-Projects-research-scres-ia/1fab0490-70ae-4d2e-a373-23cec6b3ba5f/subagents/agent-a6c7c59bd617d2ffc.jsonl`
+- **transcript**: `<HOME>/.claude/projects/-Users-thom-Projects-research-scres-ia/1fab0490-70ae-4d2e-a373-23cec6b3ba5f/subagents/agent-a6c7c59bd617d2ffc.jsonl`
 - **turns**: 69 · **assistant messages**: 4
 
 ## Task given
 
 ```text
-In the repo /Users/thom/Projects/research/scres-ia, investigate three things. Read-only, report exact numbers.
+In the repo <HOME>/Projects/research/scres-ia, investigate three things. Read-only, report exact numbers.
 
 1. WITHIN-FAMILY PAIRED CONTRASTS for RQ1. Open `results/search_ladder_v5/result.json`. It has `mean_auc_regret` (a dict of arm -> AUC) and `per_arm` (each arm has an `auc` list, one entry per seed/context replicate). Report:
    (a) the full `mean_auc_regret` dict;
@@ -35,8 +39,8 @@ Findings below. Nothing was modified.
 
 # 1. Within-family paired contrasts (RQ1)
 
-Source: `/Users/thom/Projects/research/scres-ia/results/search_ladder_v5/result.json`
-Generator: `/Users/thom/Projects/research/scres-ia/scripts/run_search_comparator_ladder_v5.py`
+Source: `<HOME>/Projects/research/scres-ia/results/search_ladder_v5/result.json`
+Generator: `<HOME>/Projects/research/scres-ia/scripts/run_search_comparator_ladder_v5.py`
 
 ### (a) `mean_auc_regret` (metric `auc_regret_norm`, **lower is better**; budget 24)
 
@@ -113,13 +117,13 @@ The file's own precedent confirms this is the intended operation: `vs_neuron_mem
 
 **So: the only within-family retention contrast that exists anywhere as a sealed artifact is `neuron_memory` vs `neuron_reset`.** The other five families (ucb1, ofat, gp_ei, thompson, lookahead_kg) have **no** stored within-family contrast — they are only compared to `neuron_memory`, which is a cross-family baseline.
 
-That same neuron number is the canonical claim, in `/Users/thom/Projects/research/scres-ia/docs/TABLA_CANONICA_DE_CLAIMS_2026-08-07_ENMIENDA_1.md` (line ~50): `AUC +0,06070 [+0,04556, +0,08020]` — mean identical, CI differs only by bootstrap draw. It also appears in `results/search_ladder_v4/result.json` (mean 0.06070331006303109, [0.04573646060596155, 0.07986029555425553]) and `results/search_ladder_v3/result.json` ([0.04590124512602244, 0.07980176463078424]).
+That same neuron number is the canonical claim, in `<HOME>/Projects/research/scres-ia/docs/TABLA_CANONICA_DE_CLAIMS_2026-08-07_ENMIENDA_1.md` (line ~50): `AUC +0,06070 [+0,04556, +0,08020]` — mean identical, CI differs only by bootstrap draw. It also appears in `results/search_ladder_v4/result.json` (mean 0.06070331006303109, [0.04573646060596155, 0.07986029555425553]) and `results/search_ladder_v3/result.json` ([0.04590124512602244, 0.07980176463078424]).
 
 Other `memory_vs_reset` hits, all on the **ReT lane, not the AUC lane** (different endpoint, do not mix):
 
-- `/Users/thom/Projects/research/scres-ia/results/manuscript/h1_h3_v2/result.json` → `H3.contrasts.memory_vs_reset` = mean **7.858333333333331**, [−14.717013888888888, 28.305624999999985] (claim_status `H1_SUPPORTED__H3_NOT_SUPPORTED`)
-- `/Users/thom/Projects/research/scres-ia/results/manuscript/h1_h3_v2_1/result.json` → mean **7.858333333333331**, [−14.842291666666663, 28.80916666666665]
-- `/Users/thom/Projects/research/scres-ia/results/garrido_h3_merge_adjudication/result.json` → `h3_prime.memory_vs_reset` = mean **9.314444444444444**, [2.3491250000000012, 16.34740972222222], n=120 (claim_status `H3_PRIME_SUSTAINED_AT_N120`)
+- `<HOME>/Projects/research/scres-ia/results/manuscript/h1_h3_v2/result.json` → `H3.contrasts.memory_vs_reset` = mean **7.858333333333331**, [−14.717013888888888, 28.305624999999985] (claim_status `H1_SUPPORTED__H3_NOT_SUPPORTED`)
+- `<HOME>/Projects/research/scres-ia/results/manuscript/h1_h3_v2_1/result.json` → mean **7.858333333333331**, [−14.842291666666663, 28.80916666666665]
+- `<HOME>/Projects/research/scres-ia/results/garrido_h3_merge_adjudication/result.json` → `h3_prime.memory_vs_reset` = mean **9.314444444444444**, [2.3491250000000012, 16.34740972222222], n=120 (claim_status `H3_PRIME_SUSTAINED_AT_N120`)
 - `results/garrido_normaliser_audit{,_v2,_v3}/result.json` contain further `memory_vs_reset` blocks under normaliser variants (4 each).
 - `docs/CLAIMS_REGISTRY_Q1_DEFENSE_2026-07-01.md:223` defines `Delta_memory = ReT_retained − ReT_reset` as an H4 protocol estimand — **specified only, never executed**.
 
@@ -152,14 +156,14 @@ The only R2-adjacent material is the existing **fixed/deterministic** R2 treatme
 
 `ramsey` and `akaike` appear in **exactly one file in the whole repository**, and only as a mention of the ask itself, not as work:
 
-`/Users/thom/Projects/research/scres-ia/docs/GARRIDO_Q1_Q2_CLAIM_FREEZE_2026-08-07_ENMIENDA_3.md:115`
+`<HOME>/Projects/research/scres-ia/docs/GARRIDO_Q1_Q2_CLAIM_FREEZE_2026-08-07_ENMIENDA_3.md:115`
 
 > `| bloqueantes de escritura | ninguno: ni KAN-latente, ni AIC/Ramsey, ni R2 aleatorio, ni el motor estacional |`
 
 i.e. the claim freeze explicitly declares AIC/Ramsey, randomised R2, KAN-latent and the seasonal engine to be **non-blockers for writing** — which is precisely the mechanism by which they remain unaddressed. There is no `reset_test`, no AIC/BIC computation, no `statsmodels` RESET call anywhere.
 
 The nearest existing linearity work is a **different construct** — a curvature share, not a specification test:
-- `/Users/thom/Projects/research/scres-ia/scripts/run_g1_buffer_price_cobb_douglas.py:348` — `"nonlinearity_one_minus_linear_r2": {"cobb_douglas": curv_cd, "ret_excel": curv_ret}` (this is 1 − R², not an F-test)
+- `<HOME>/Projects/research/scres-ia/scripts/run_g1_buffer_price_cobb_douglas.py:348` — `"nonlinearity_one_minus_linear_r2": {"cobb_douglas": curv_cd, "ret_excel": curv_ret}` (this is 1 − R², not an F-test)
 - Results in `results/headroom/g1_buffer_price/result.json:335` and `results/headroom/g1_ablation_ci_zero/result.json:341`
 - `scripts/run_g2_autotomy_threshold.py:6` and `scripts/run_buffer_profile_prediction_premium.py:203` discuss non-linearity narratively
 - `docs/PROGRAM_I_HEADROOM_*_2026-07-12.md` — Morris elementary effects σ as an interaction/non-linearity proxy
@@ -170,9 +174,9 @@ The nearest existing linearity work is a **different construct** — a curvature
 
 # 3. KAN latent endpoint
 
-Source: `/Users/thom/Projects/research/scres-ia/results/dmlpa_kan_latent/result.json`
-Generator: `/Users/thom/Projects/research/scres-ia/scripts/run_dmlpa_kan_latent_v1.py`
-Preregistration: `/Users/thom/Projects/research/scres-ia/docs/PREREGISTRO_DMLPA_KAN_LATENT_2026-08-07.md`
+Source: `<HOME>/Projects/research/scres-ia/results/dmlpa_kan_latent/result.json`
+Generator: `<HOME>/Projects/research/scres-ia/scripts/run_dmlpa_kan_latent_v1.py`
+Preregistration: `<HOME>/Projects/research/scres-ia/docs/PREREGISTRO_DMLPA_KAN_LATENT_2026-08-07.md`
 
 - **`claim_status`**: `KAN_LATENT_HURTS`
 - **`scope`**: `DEVELOPMENT_OPEN_SEEDS_NO_CONFIRMATION_POSSIBLE_NO_VIRGIN_BLOCKS_REMAIN`

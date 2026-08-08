@@ -4,7 +4,7 @@
 
 I used WebSearch plus Crossref/OpenAlex metadata APIs. **ScienceDirect, Taylor & Francis, SSRN and ResearchGate all returned 403 to automated fetches**, so for paywalled items I have verified *bibliographic* data against Crossref/OpenAlex but have **read abstracts/snippets, not full texts**, for: Ding et al. 2026, Preil & Krapp 2022, Rachman et al. 2026, Stranieri et al. 2024, Lang et al. 2026. Every "no one has done X" statement in §4 is therefore a **title/abstract-level absence claim**, not a full-text systematic screen. I give you the exact screening protocol you would need before writing the word "first" in print.
 
-Existing repo bibliography: `/Users/thom/Projects/research/scres-ia/docs/manuscript_current/submission/elsevier/references.bib` (37 entries). Existing related work: `/Users/thom/Projects/research/scres-ia/docs/manuscript_current/submission/elsevier/sections/02_related_work.tex` — this is written for the **old** Track A/Track B action-space-alignment paper and does not survive the pivot to outer-loop search state. It must be rewritten, not patched: its entire gap argument ("does the policy's action space reach the bottleneck?") is a within-episode argument, i.e. exactly the layer the new paper's vocabulary rule forbids conflating.
+Existing repo bibliography: `<HOME>/Projects/research/scres-ia/docs/manuscript_current/submission/elsevier/references.bib` (37 entries). Existing related work: `<HOME>/Projects/research/scres-ia/docs/manuscript_current/submission/elsevier/sections/02_related_work.tex` — this is written for the **old** Track A/Track B action-space-alignment paper and does not survive the pivot to outer-loop search state. It must be rewritten, not patched: its entire gap argument ("does the policy's action space reach the bottleneck?") is a within-episode argument, i.e. exactly the layer the new paper's vocabulary rule forbids conflating.
 
 **Bibliography defect found:** `kim2024` is wrong on both author and title. Actual record (Crossref-verified): Byeongmok Kim, Jong Gwang Kim, Seokcheon Lee, "A multi-agent reinforcement learning model for inventory transshipments under supply chain disruption", *IISE Transactions* 56(7):715–728, 2024, DOI 10.1080/24725854.2023.2217248. The bib currently says "Kim, Sungwook" and "Cooperative MARL model for…". Fix before submission.
 
@@ -180,10 +180,10 @@ These are the nine you will face. Six of them we are already immune to; note whi
 
 ## 8. Concrete repo actions
 
-- Fix `kim2024` in `/Users/thom/Projects/research/scres-ia/docs/manuscript_current/submission/elsevier/references.bib` (wrong author, wrong title — see §1 item 5).
+- Fix `kim2024` in `<HOME>/Projects/research/scres-ia/docs/manuscript_current/submission/elsevier/references.bib` (wrong author, wrong title — see §1 item 5).
 - Verify `boute2022` author list; the repo currently lists Boute/Gijsbrechts/Van Mieghem/Zhang for the EJOR roadmap, which I believe should be Boute/Gijsbrechts/van Jaarsveld/Vanvuchelen.
 - Add entries 4, 8, 19, 20, 21, 22 (Ding-verified DOI, Preil & Krapp, Bruckler, Lang, ASlib, NAS-eval) — these six carry the new paper's positioning.
-- `/Users/thom/Projects/research/scres-ia/docs/manuscript_current/submission/elsevier/sections/02_related_work.tex` needs full replacement, not editing: its gap argument and its Table 1 columns ("Bottleneck action test", "Priv.-obs. defense") belong to the abandoned within-episode framing and would actively contradict the new vocabulary rules.
+- `<HOME>/Projects/research/scres-ia/docs/manuscript_current/submission/elsevier/sections/02_related_work.tex` needs full replacement, not editing: its gap argument and its Table 1 columns ("Bottleneck action test", "Priv.-obs. defense") belong to the abandoned within-episode framing and would actively contradict the new vocabulary rules.
 
 **Sources:**
 - [Bruckler et al. 2024, C&IE 192:110176 (OpenAlex)](https://api.openalex.org/works/doi:10.1016/j.cie.2024.110176)

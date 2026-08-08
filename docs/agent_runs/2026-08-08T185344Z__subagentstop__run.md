@@ -1,13 +1,17 @@
 # Agent run — SubagentStop
 
+> **`UNADJUDICATED_DO_NOT_CITE`** — transcripción cruda de un agente, guardada por el hook
+> `SubagentStop`. Puede contener afirmaciones **retiradas**; el canon vive en los artefactos
+> sellados y en las enmiendas, nunca aquí.
+
 - **event**: `SubagentStop`
 - **session_id**: `fc8fefc1-10a6-4eea-bcbf-d92791120134`
 - **agent_id**: `ab7ba137d50aee243`
-- **cwd**: `/Users/thom/Projects/research/scres-ia`
-- **transcript_path**: `/Users/thom/.claude/projects/-Users-thom-Projects-research-scres-ia/fc8fefc1-10a6-4eea-bcbf-d92791120134.jsonl`
+- **cwd**: `<HOME>/Projects/research/scres-ia`
+- **transcript_path**: `<HOME>/.claude/projects/-Users-thom-Projects-research-scres-ia/fc8fefc1-10a6-4eea-bcbf-d92791120134.jsonl`
 - **saved_at**: `2026-08-08T18:53:44.317277+00:00`
 - **commit**: `083eef37`
-- **answer read from**: `/Users/thom/.claude/projects/-Users-thom-Projects-research-scres-ia/fc8fefc1-10a6-4eea-bcbf-d92791120134.jsonl`
+- **answer read from**: `<HOME>/.claude/projects/-Users-thom-Projects-research-scres-ia/fc8fefc1-10a6-4eea-bcbf-d92791120134.jsonl`
 
 ## Final response
 
@@ -49,11 +53,11 @@ Te confirmo el sello y commiteo todo en cuanto cierre la corrida.
 ```json
 {
  "agent_id": "ab7ba137d50aee243",
- "agent_transcript_path": "/Users/thom/.claude/projects/-Users-thom-Projects-research-scres-ia/fc8fefc1-10a6-4eea-bcbf-d92791120134/subagents/agent-ab7ba137d50aee243.jsonl",
+ "agent_transcript_path": "<HOME>/.claude/projects/-Users-thom-Projects-research-scres-ia/fc8fefc1-10a6-4eea-bcbf-d92791120134/subagents/agent-ab7ba137d50aee243.jsonl",
  "agent_type": "",
  "background_tasks": [
   {
-   "command": "SP=/private/tmp/claude-501/-Users-thom-Projects-research-scres-ia/2c6b3a01-62a0-499d-957d-694424855dff/scratchpad\nuntil ssh -o ConnectTimeout=15 ovh-agent-lab 'pgrep -f vps_capture.py > /dev/null' 2>/dev/null; do sleep 30; done\nuntil ! ssh -o ConnectTimeout=15 ovh-agent-lab 'pgrep -f vps_capture.py > /dev/null' 2>/dev/null; do sleep 120; done\nscp -q ovh-agent-lab:/tmp/vps_capture.json \"$SP/vps_capture.json\"\necho \"=== CAPTURA DEL VPS LISTA ===\"\n.venv/bin/python -c \"\nimport json;d=json.load(open('$SP/vps_capture.json'))\nprint('host:',d['host'])\nfor s,v in d['slices'].items():\n    print(f\\\"  {s}: {v['n_differing']} celdas difieren de {v['cells']}\\\")\n\"",
+   "command": "SP=<TMP>/-Users-thom-Projects-research-scres-ia/2c6b3a01-62a0-499d-957d-694424855dff/scratchpad\nuntil ssh -o ConnectTimeout=15 ovh-agent-lab 'pgrep -f vps_capture.py > /dev/null' 2>/dev/null; do sleep 30; done\nuntil ! ssh -o ConnectTimeout=15 ovh-agent-lab 'pgrep -f vps_capture.py > /dev/null' 2>/dev/null; do sleep 120; done\nscp -q ovh-agent-lab:/tmp/vps_capture.json \"$SP/vps_capture.json\"\necho \"=== CAPTURA DEL VPS LISTA ===\"\n.venv/bin/python -c \"\nimport json;d=json.load(open('$SP/vps_capture.json'))\nprint('host:',d['host'])\nfor s,v in d['slices'].items():\n    print(f\\\"  {s}: {v['n_differing']} celdas difieren de {v['cells']}\\\")\n\"",
    "description": "Watcher: VPS divergence capture",
    "id": "bj4tha3xz",
    "status": "running",
@@ -81,7 +85,7 @@ Te confirmo el sello y commiteo todo en cuanto cierre la corrida.
    "type": "shell"
   }
  ],
- "cwd": "/Users/thom/Projects/research/scres-ia",
+ "cwd": "<HOME>/Projects/research/scres-ia",
  "effort": {
   "level": "medium"
  },
@@ -92,6 +96,6 @@ Te confirmo el sello y commiteo todo en cuanto cierre la corrida.
  "session_crons": [],
  "session_id": "fc8fefc1-10a6-4eea-bcbf-d92791120134",
  "stop_hook_active": false,
- "transcript_path": "/Users/thom/.claude/projects/-Users-thom-Projects-research-scres-ia/fc8fefc1-10a6-4eea-bcbf-d92791120134.jsonl"
+ "transcript_path": "<HOME>/.claude/projects/-Users-thom-Projects-research-scres-ia/fc8fefc1-10a6-4eea-bcbf-d92791120134.jsonl"
 }
 ```

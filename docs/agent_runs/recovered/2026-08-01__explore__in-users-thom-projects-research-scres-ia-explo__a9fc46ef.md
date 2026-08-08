@@ -1,17 +1,21 @@
-# Explore — In /Users/thom/Projects/research/scres-ia, explore VERY THOROUGHLY the reusable experiment
+# Explore — In <HOME>/Projects/research/scres-ia, explore VERY THOROUGHLY the reusable experiment
+
+> **`UNADJUDICATED_DO_NOT_CITE`** — transcripción cruda de un agente, guardada por el hook
+> `SubagentStop`. Puede contener afirmaciones **retiradas**; el canon vive en los artefactos
+> sellados y en las enmiendas, nunca aquí.
 
 - **agent_id**: `a9fc46ef4dee40981`
 - **session**: `091a3905-ebf9-481b-beaa-fc646c3902d5`
 - **branch**: `codex/expanded-contract-comparators-v2`
 - **finished**: `2026-08-01T21:26:39.228Z`
 - **effort**: `low` · **version**: `2.1.219`
-- **transcript**: `/Users/thom/.claude/projects/-Users-thom-Projects-research-scres-ia/091a3905-ebf9-481b-beaa-fc646c3902d5/subagents/agent-a9fc46ef4dee40981.jsonl`
+- **transcript**: `<HOME>/.claude/projects/-Users-thom-Projects-research-scres-ia/091a3905-ebf9-481b-beaa-fc646c3902d5/subagents/agent-a9fc46ef4dee40981.jsonl`
 - **turns**: 79 · **assistant messages**: 3
 
 ## Task given
 
 ```text
-In /Users/thom/Projects/research/scres-ia, explore VERY THOROUGHLY the reusable experimental infrastructure I would need to build a new headroom experiment ("G3: three asymmetric claimants"). I want to REUSE, not rewrite.
+In <HOME>/Projects/research/scres-ia, explore VERY THOROUGHLY the reusable experimental infrastructure I would need to build a new headroom experiment ("G3: three asymmetric claimants"). I want to REUSE, not rewrite.
 
 Find and report with file:line:
 1. `arm_runner.py` — its public interface, especially `seal_and_write`, how arms/cells are specified, how episodes are run, how metrics panels come back. What is the canonical way to run a sweep through the pipeline?

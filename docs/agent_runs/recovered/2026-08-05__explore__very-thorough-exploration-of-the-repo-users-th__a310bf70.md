@@ -1,17 +1,21 @@
-# Explore — Very thorough exploration of the repo /Users/thom/Projects/research/scres-ia.
+# Explore — Very thorough exploration of the repo <HOME>/Projects/research/scres-ia.
+
+> **`UNADJUDICATED_DO_NOT_CITE`** — transcripción cruda de un agente, guardada por el hook
+> `SubagentStop`. Puede contener afirmaciones **retiradas**; el canon vive en los artefactos
+> sellados y en las enmiendas, nunca aquí.
 
 - **agent_id**: `a310bf702234dca30`
 - **session**: `091a3905-ebf9-481b-beaa-fc646c3902d5`
 - **branch**: `codex/expanded-contract-comparators-v2`
 - **finished**: `2026-08-05T18:03:20.311Z`
 - **effort**: `xhigh` · **version**: `2.1.219`
-- **transcript**: `/Users/thom/.claude/projects/-Users-thom-Projects-research-scres-ia/091a3905-ebf9-481b-beaa-fc646c3902d5/subagents/agent-a310bf702234dca30.jsonl`
+- **transcript**: `<HOME>/.claude/projects/-Users-thom-Projects-research-scres-ia/091a3905-ebf9-481b-beaa-fc646c3902d5/subagents/agent-a310bf702234dca30.jsonl`
 - **turns**: 231 · **assistant messages**: 2
 
 ## Task given
 
 ```text
-Very thorough exploration of the repo /Users/thom/Projects/research/scres-ia.
+Very thorough exploration of the repo <HOME>/Projects/research/scres-ia.
 
 I need a complete map of the reinforcement-learning and neural-architecture infrastructure that already exists, so I can plan a paper comparing KAN vs MLP vs MPC vs RL.
 
@@ -53,7 +57,7 @@ Here is the complete map.
 
 | Class | File | Obs space | Action space | Reward |
 |---|---|---|---|---|
-| `MFSCGymEnv` | `/Users/thom/Projects/research/scres-ia/supply_chain/env.py:19` | `Box(0, inf, (15,))` | `Box(-1,1,(4,))` — op3_q, op9_q, op3_rop, op9_rop multipliers (`1.25+0.75*a`) | `proxy` or `rt_v0` = `-(α·recovery/46 + β·inventory/1.72e7 + γ·service_loss)` (lines 89–115) |
+| `MFSCGymEnv` | `<HOME>/Projects/research/scres-ia/supply_chain/env.py:19` | `Box(0, inf, (15,))` | `Box(-1,1,(4,))` — op3_q, op9_q, op3_rop, op9_rop multipliers (`1.25+0.75*a`) | `proxy` or `rt_v0` = `-(α·recovery/46 + β·inventory/1.72e7 + γ·service_loss)` (lines 89–115) |
 | **`MFSCGymEnvShifts`** (main RL env) | `supply_chain/env_experimental_shifts.py:242` (3413 lines) | `Box(0, 20, (obs_dim,))`, obs_dim ∈ {15 (v1), 18 (v2), 20 (v3), 24 (v4), 30 (v5), 42 (v6), **52 (v7)**, 79 (v8), 89 (v9), 101 (v10)} — dims at lines 212–221 | Track A `Box(-1,1,(6,))`; Track B (`track_b_v1`) `Box(-1,1,(8,))`; `shift_only` (1,); `shift_q9` (2,) | 20+ reward modes: `ReT_thesis`, `ReT_corrected`, `ReT_unified_v1`, `ReT_seq_v1`, `ReT_ladder_v1`, `control_v1`, `control_v1_pbrs`, `control_v2`, `ReT_garrido2024{,_raw,_train}`, `ReT_cd_v1`, `ReT_cd_sigmoid`, `ReT_cvar_cd`, `ReT_excel_delta`, `ReT_excel_plus_cvar`, `ReT_tail_v2` (dispatch at lines 2901–3049 and 3221–3400) |
 | `ProgramORetOnlyEnv` | `supply_chain/program_o_ret_env.py:70` | `Box(0,1,(21,))` — `OBSERVATION_DIM=21` (line 36); fields at 40–64 (on_hand, locked_pipeline, backlog qty/orders/age, in_flight, `belief_c`, `predicted_share_c`, 5-hot previous action, week/7, remaining/8) | `Discrete(4)` — product mix k over 3 weekly batch slots | **zero for decisions 1–7; terminal `ret_excel_request_snapshot_v2` only**; 8 weekly decisions |
 | `ProgramOPerBatchEnv` | `supply_chain/program_o_per_batch_env.py:107` | `Box(0,1,(OBSERVATION_DIM,))` | `Discrete(2)` | terminal ReT |
@@ -74,7 +78,7 @@ Here is the complete map.
 
 ## 1.3 Training entry points
 
-- **`/Users/thom/Projects/research/scres-ia/train_agent.py`** — canonical PPO trainer. `PPO` + `DummyVecEnv` + `VecNormalize`. Defaults: `--n-envs 1`, `lr 3e-4`, `n_steps 1024`, `batch 64`, `n_epochs 10`, `gamma 0.99`, `gae_lambda 0.95`, `clip 0.2`, `ent_coef 0.01`, `eval-episodes 30`, `step-size-hours 168`.
+- **`<HOME>/Projects/research/scres-ia/train_agent.py`** — canonical PPO trainer. `PPO` + `DummyVecEnv` + `VecNormalize`. Defaults: `--n-envs 1`, `lr 3e-4`, `n_steps 1024`, `batch 64`, `n_epochs 10`, `gamma 0.99`, `gae_lambda 0.95`, `clip 0.2`, `ent_coef 0.01`, `eval-episodes 30`, `step-size-hours 168`.
 - **`reproduce_paper.sh`** — 7 steps, `SEEDS="11 22 33 44 55"`, `TIMESTEPS=500000`, `MAX_STEPS=260`. Header comment: **"~48h on M3 Pro (all experiments)"**, smoke ~30 min.
 - **`scripts/train_program_o_ret_learner.py`** — `sb3_contrib.RecurrentPPO`, one frozen seed per invocation (the Paper-2 Level-3/4 learner).
 - **`scripts/train_program_e_ppo.py`** — `MaskablePPO`.
@@ -97,7 +101,7 @@ Here is the complete map.
 
 | File | What it is |
 |---|---|
-| `/Users/thom/Projects/research/scres-ia/scripts/real_kan_extractor.py:28` | `RealKANFeaturesExtractor` — **official `pykan` `kan.KAN`** as an SB3 `BaseFeaturesExtractor`. `width=[input, hidden_width, features_dim]`, `grid=3`, `k=3`, `grid_range=(-6,6)`, `auto_save=False`, `save_act=False`, `symbolic_enabled=False`. Docstring records **"~160x forward-pass slowdown at batch=1 on this machine"** with the interpretability flags on. |
+| `<HOME>/Projects/research/scres-ia/scripts/real_kan_extractor.py:28` | `RealKANFeaturesExtractor` — **official `pykan` `kan.KAN`** as an SB3 `BaseFeaturesExtractor`. `width=[input, hidden_width, features_dim]`, `grid=3`, `k=3`, `grid_range=(-6,6)`, `auto_save=False`, `save_act=False`, `symbolic_enabled=False`. Docstring records **"~160x forward-pass slowdown at batch=1 on this machine"** with the interpretability flags on. |
 | `scripts/kan_extractor.py:18` | `RBFKANFeaturesExtractor` — RBF/KAN-*inspired* additive layer with a **linear skip**; docstring explicitly says it avoids the third-party KAN dependency. Not a real KAN. |
 | `scripts/build_garrido_fig5_surrogate.py:106` `fit_kan` | supervised `KAN(width=[d,4,1], grid=3, k=3, ...)`, Adam lr 0.01, 600 steps. Paired with `fit_mlp:78` = `Linear(d,16)-Tanh-Linear(16,16)-Tanh-Linear(16,1)`, Adam lr 0.01, 600 steps. **These are the two networks reused by both prediction-premium runners.** |
 | `scripts/belief_extractor.py:52` | `RealKANBeliefExtractor` |
@@ -136,7 +140,7 @@ Here is the complete map.
 
 | File | Content |
 |---|---|
-| `/Users/thom/Projects/research/scres-ia/supply_chain/program_o_state_rich.py` (824 lines) | The Paper-2 classical family. `finite_state_rich_configurations():138` returns exactly 10 frozen configs: `base_stock__{1,2}`, `max_pressure__{0,5000}`, `min_cost_flow__{1,2}`, **`belief_mpc__{3,4}`**, `belief_dp__{3,4}`. `_deterministic_mpc_action():235` enumerates `product(range(4), repeat=effective_horizon)` — **4³ = 64 (or 4⁴ = 256) action sequences against a closed-form expected-demand model, zero DES calls**. `_belief_dp_action():292` is a seven-branch weekly-count approximate belief DP. |
+| `<HOME>/Projects/research/scres-ia/supply_chain/program_o_state_rich.py` (824 lines) | The Paper-2 classical family. `finite_state_rich_configurations():138` returns exactly 10 frozen configs: `base_stock__{1,2}`, `max_pressure__{0,5000}`, `min_cost_flow__{1,2}`, **`belief_mpc__{3,4}`**, `belief_dp__{3,4}`. `_deterministic_mpc_action():235` enumerates `product(range(4), repeat=effective_horizon)` — **4³ = 64 (or 4⁴ = 256) action sequences against a closed-form expected-demand model, zero DES calls**. `_belief_dp_action():292` is a seven-branch weekly-count approximate belief DP. |
 | `supply_chain/expanded_contract_controllers.py` | `StaticPosture:96`, `DDMRPController:110` (real DDMRP: decoupled lead time, rolling ADU, red/yellow/green, net-flow, dynamic buffer adjustment), **`ReceedingHorizonMPC:188`** — plans by *re-running the real DES* over prefix+candidate under CRN, and **counts `self.plan_calls` (lines 204/208/216)**. Docstring: "That is expensive and it is the honest cost of planning in a contract where the cheap transducer is invalid." |
 | `supply_chain/expanded_contract_controllers_v2.py` | `VectorStaticPosture:59`, `ProjectedDDMRPController:76`; state-conditioned replay MPC lives in the v2 runner |
 | `supply_chain/route_horizon_dp.py` | Full-horizon backward-induction DP over `(epoch, convoy_free_at)`; `solve():82`, `evaluate_schedule():146`, `myopic_schedule():175` |
@@ -187,7 +191,7 @@ The prose claim, verbatim from `04_discussion_draft.md:31-35`: the MPC "replans 
 
 ## 4.1 Curvature 0.076 vs noise 0.317 — MLP WORSE than linear
 
-**Artifact**: `/Users/thom/Projects/research/scres-ia/results/headroom/buffer_prediction_premium/result.json`
+**Artifact**: `<HOME>/Projects/research/scres-ia/results/headroom/buffer_prediction_premium/result.json`
 - `self_sha256 = ae1a545bb4274e75859e6665ceacbe129d8683af0d05c025e8f5bdbddc5a787a`
 - `claim_status = "NO_NEURAL_PREMIUM_EVEN_WITH_MEASURED_CURVATURE"`
 - `schema_version = buffer_prediction_premium_v1`, `target = "ret_excel_risk_conditional"`, `n_rows = 1530`, `sesoi = 0.05`, `elapsed_seconds = 198.207`
@@ -226,7 +230,7 @@ The buffer artifact is **superseded**: `results/headroom/cd_surface_prediction_p
 
 ## 4.3 The superseding run — Cobb–Douglas surface
 
-`/Users/thom/Projects/research/scres-ia/results/headroom/cd_surface_prediction_premium/result.json`
+`<HOME>/Projects/research/scres-ia/results/headroom/cd_surface_prediction_premium/result.json`
 - `self_sha256 = 527227bd96eb8d8d9ed534aebea410da79efb91bb2d1e2aa365e85b5a9f43a99`, `claim_status = "PREMIUM_WAS_AVAILABLE_AND_NOT_CAPTURED"` (the doc explicitly labels this runner label as **over-claiming**)
 - `n_rows = 1224`, `elapsed_seconds = 164.903`, `target = "R_cobb_douglas"`, `sesoi = 0.05`, daily cadence, runner `scripts/run_cd_surface_prediction_premium.py`, preregistration `docs/PREREGISTRO_PRIMA_CD_2026-08-01.md`
 
@@ -284,7 +288,7 @@ There is **no runner that computes `Delta_efficiency` today**, but every ingredi
 
 | Instrument | File | What it measures |
 |---|---|---|
-| **Per-decision latency** | `/Users/thom/Projects/research/scres-ia/scripts/benchmark_program_q_latency.py` | `benchmark_callable(policy, observations, warmup=100, repeats=1000)` → `median_ms`, `p95_ms`, `mean_ms`, `batch_size=1`, `failures`, `tracemalloc_peak_bytes`, plus `setup_seconds_excluded_from_online_latency`, python/platform/torch/`torch_threads`. Schema `program_q_latency_benchmark_v1`. Refuses to overwrite (`FileExistsError`). Takes any `module:function` factory. **This is the Delta_efficiency instrument.** Tested at `tests/test_program_q_contract.py:220`. |
+| **Per-decision latency** | `<HOME>/Projects/research/scres-ia/scripts/benchmark_program_q_latency.py` | `benchmark_callable(policy, observations, warmup=100, repeats=1000)` → `median_ms`, `p95_ms`, `mean_ms`, `batch_size=1`, `failures`, `tracemalloc_peak_bytes`, plus `setup_seconds_excluded_from_online_latency`, python/platform/torch/`torch_threads`. Schema `program_q_latency_benchmark_v1`. Refuses to overwrite (`FileExistsError`). Takes any `module:function` factory. **This is the Delta_efficiency instrument.** Tested at `tests/test_program_q_contract.py:220`. |
 | **DES / planner calls** | `supply_chain/expanded_contract_controllers.py:204, 208, 216` — `ReceedingHorizonMPC.plan_calls` | counts full-DES rollouts per MPC decision; printed per tape at `scripts/run_expanded_contract_comparators.py:183` |
 | **Parameter counts** | `scripts/build_david_sandbox_notebook.py:431-432`, `scripts/build_david_c6b_per_batch_notebook.py:379` — `architecture_audit()` | `total_parameters`, `trainable_parameters`, `policy_class`, `source_sha256`, `history_length`, `observation_shape`, `device`, versions of torch/gymnasium/sb3/sb3-contrib, extractor dummy-forward shapes, `has_layer_norm` |
 | **Wall-clock per episode** | `research/paper2_exhaustive_search/war_stress_gsa_h104_benchmark_20260716.json` | `seconds_per_episode = 1.2606108539998786` (H104, 104 weeks / 728 days, seed 94700001), `policy_wall_seconds = [1.2653, 1.2559]` |
@@ -330,7 +334,7 @@ The paper text already commits to reporting this separately: `papers/paper2/03_r
 
 | Path | Contents | Status |
 |---|---|---|
-| `/Users/thom/Projects/research/scres-ia/results/program_o/ret_only_learner_v1/vps_run/models/` | `recurrent_ppo_seed_8101…8110.zip` (10 RecurrentPPO checkpoints) + `training_manifest_seed_81NN.json` each (`contract_sha256 4471ffd4…`, `executed_timesteps 200192`, `model_sha256`, `git_commit 02aad62f`, `tape_range [748100001, 748125025]`) | training `result.json` → `status = "COMPLETE_PENDING_EVALUATION"`; custody in `vps_run/custody/model_files.sha256` |
+| `<HOME>/Projects/research/scres-ia/results/program_o/ret_only_learner_v1/vps_run/models/` | `recurrent_ppo_seed_8101…8110.zip` (10 RecurrentPPO checkpoints) + `training_manifest_seed_81NN.json` each (`contract_sha256 4471ffd4…`, `executed_timesteps 200192`, `model_sha256`, `git_commit 02aad62f`, `tape_range [748100001, 748125025]`) | training `result.json` → `status = "COMPLETE_PENDING_EVALUATION"`; custody in `vps_run/custody/model_files.sha256` |
 | `results/program_o/ret_only_learner_v1/calibration_run/result.json` | Level-3/4 estimands (§3.2, §4.4) | `terminal_verdict = "PENDING_DIRECT_FULL_DES_REPLAY_AND_INTEGRITY_AUDIT"`; amendment gates `base_cells: false`, `base_lcb: false`; contract verdict **`STOP_CALIBRATION_NOT_ELIGIBLE`** |
 | `results/program_e/ppo/` | `maskable_ppo_seed_9301…9310.zip` + `training_verdict.json` (`algorithm: MaskablePPO`, 200,000 steps, 170.4 s/seed) | `PROGRAM_E_PPO_TRAINING_COMPLETE`; `results/program_e/ppo_smoke/maskable_ppo_seed_9399.zip` → `PROGRAM_E_PPO_TECHNICAL_SMOKE` |
 | Hash freeze for Program Q | `research/paper2_exhaustive_search/program_q_historical_recurrentppo_fallback_freeze_20260717.json` | `historical_candidate_hashes: PASS_10_OF_10`; retraining forbidden |

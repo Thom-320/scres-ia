@@ -1,17 +1,21 @@
-# Explore — Very thorough exploration of the repo /Users/thom/Projects/research/scres-ia.
+# Explore — Very thorough exploration of the repo <HOME>/Projects/research/scres-ia.
+
+> **`UNADJUDICATED_DO_NOT_CITE`** — transcripción cruda de un agente, guardada por el hook
+> `SubagentStop`. Puede contener afirmaciones **retiradas**; el canon vive en los artefactos
+> sellados y en las enmiendas, nunca aquí.
 
 - **agent_id**: `ae87d0c15e99cc52c`
 - **session**: `091a3905-ebf9-481b-beaa-fc646c3902d5`
 - **branch**: `codex/expanded-contract-comparators-v2`
 - **finished**: `2026-08-05T18:01:18.633Z`
 - **effort**: `xhigh` · **version**: `2.1.219`
-- **transcript**: `/Users/thom/.claude/projects/-Users-thom-Projects-research-scres-ia/091a3905-ebf9-481b-beaa-fc646c3902d5/subagents/agent-ae87d0c15e99cc52c.jsonl`
+- **transcript**: `<HOME>/.claude/projects/-Users-thom-Projects-research-scres-ia/091a3905-ebf9-481b-beaa-fc646c3902d5/subagents/agent-ae87d0c15e99cc52c.jsonl`
 - **turns**: 153 · **assistant messages**: 2
 
 ## Task given
 
 ```text
-Very thorough exploration of the repo /Users/thom/Projects/research/scres-ia.
+Very thorough exploration of the repo <HOME>/Projects/research/scres-ia.
 
 I need a complete map of the MANUSCRIPT state and the CLAIM LEDGER, to plan a submission to Computers & Industrial Engineering.
 
@@ -38,7 +42,7 @@ Report exact paths, quoted status strings and numbers. Be specific and complete.
 
 ### A. The compiled Elsevier manuscript (most complete artifact in repo)
 
-`/Users/thom/Projects/research/scres-ia/docs/manuscript_current/submission/elsevier/`
+`<HOME>/Projects/research/scres-ia/docs/manuscript_current/submission/elsevier/`
 
 - **`main.tex`** — title: *"When Is Reinforcement Learning Warranted in a Supply Chain DES? Decision-Rights Eligibility, Comparator Design, and Oracle-to-Policy Conversion"*. Uses `elsarticle` with `\IfFileExists` fallback → **Elsevier-formatted, i.e. already targeted at a C&IE-family journal**. Compiled PDF exists: `main.pdf` (661 KB, dated 9 Jul).
 - Section files actually `\input`-ed by `main.tex`:
@@ -56,11 +60,11 @@ Report exact paths, quoted status strings and numbers. Be specific and complete.
   - line 73: `\emph{[TO UPDATE: re-pin to the camera-ready commit before final submission]}` (currently pinned to commit `10c7de9`, branch `codex/garrido-replication-experiments`)
   - line 80: `[TO COMPLETE: acknowledge A. Garrido for the thesis materials and ...]`
 - Abstract headline numbers already in it: PPO advantage `+0.000486` vs restricted static frontier, reversing to `-0.000018049`, CI95 `[-0.000028615,-0.000008087]`; finite-convoy oracle headroom `+0.02212`; 400 locked tapes spatial audit.
-- A duplicate/stale build tree exists at `/Users/thom/Projects/research/scres-ia/tmp/manuscript_compile/` (older section set: 01,02,03_methodology,04_results,05_discussion,06_conclusion + main.pdf).
+- A duplicate/stale build tree exists at `<HOME>/Projects/research/scres-ia/tmp/manuscript_compile/` (older section set: 01,02,03_methodology,04_results,05_discussion,06_conclusion + main.pdf).
 
 ### B. Paper 2 skeleton (markdown, complete-ish, different paper)
 
-`/Users/thom/Projects/research/scres-ia/papers/paper2/`
+`<HOME>/Projects/research/scres-ia/papers/paper2/`
 - `01_introduction_draft.md` (622 w) — **Working title:** *"Learning Adaptive Control Without a Neural Premium: Exhaustive Open-Loop, Belief-MPC, and Recurrent-RL Comparisons in a Full-DES Military Supply Chain"*. Status line: `calibration-evidence framing (Program Q replication pending)`. References `docs/PAPER2_CLAIM_LADDER_2026-07-18.md` — **that file does not exist in the repo** (dangling pointer).
 - `02_methods_draft.md` (1,156 w), `03_results_draft.md` (814 w), `04_discussion_draft.md` (789 w)
 - `results_table.md` / `results_table.json` / `build_results_table.py` — machine-generated master table with per-cell source hashes; L1 `H_PI = 0.15151` (LCB95 0.11562), L2 classical `H_obs` LCB95 +0.06595/+0.04303/+0.05860, L3 learned `H_OL` +0.07576/+0.06261/+0.10455, L4 neural premium `Δ_N` all negative. Last row: `| Q prospective replication | all | PENDING | contract frozen: N=128/cell, block 7490001+ |`.
@@ -68,14 +72,14 @@ Report exact paths, quoted status strings and numbers. Be specific and complete.
 
 ### C. v0 draft fragments (the Garrido/David shared Word document)
 
-- `/Users/thom/Projects/research/scres-ia/docs/manuscript_draft/section_3_3_rl_formulation.md` (8.9 KB) — "*replaces the placeholder text in the v0 under 3.3 Hybrid Simulation Neural Model*", written 2026-03-24, 15-D observation (now obsolete).
-- `/Users/thom/Projects/research/scres-ia/docs/manuscript_draft/section_4_2_hybrid_results.md` (5.7 KB) — "*replaces the placeholder text in the v0 under 4.2*".
-- `/Users/thom/Projects/research/scres-ia/docs/for_team/v0_additions_for_thom.md` — paste-in blocks; explicit note: "*Do NOT change David's sections (3.3, 4.2) or Garrido's framing (Intro, Hypotheses)*".
-- `/Users/thom/Projects/research/scres-ia/docs/manuscript_notes/` — 17 notes (source-of-truth for §4.2/§4.3, claim language, backlog).
+- `<HOME>/Projects/research/scres-ia/docs/manuscript_draft/section_3_3_rl_formulation.md` (8.9 KB) — "*replaces the placeholder text in the v0 under 3.3 Hybrid Simulation Neural Model*", written 2026-03-24, 15-D observation (now obsolete).
+- `<HOME>/Projects/research/scres-ia/docs/manuscript_draft/section_4_2_hybrid_results.md` (5.7 KB) — "*replaces the placeholder text in the v0 under 4.2*".
+- `<HOME>/Projects/research/scres-ia/docs/for_team/v0_additions_for_thom.md` — paste-in blocks; explicit note: "*Do NOT change David's sections (3.3, 4.2) or Garrido's framing (Intro, Hypotheses)*".
+- `<HOME>/Projects/research/scres-ia/docs/manuscript_notes/` — 17 notes (source-of-truth for §4.2/§4.3, claim language, backlog).
 
 ### D. The C&IE writing contract (authoritative outline, no prose)
 
-`/Users/thom/Projects/research/scres-ia/docs/CIE_MANUSCRIPT_REWRITE_MAP_GARRIDO_WRAP_2026-08-01.md`
+`<HOME>/Projects/research/scres-ia/docs/CIE_MANUSCRIPT_REWRITE_MAP_GARRIDO_WRAP_2026-08-01.md`
 - `**Paper lane:** Garrido–WRAP/v0`, `**Target:** *Computers & Industrial Engineering*`, `**Status:** HOLD_RESULTS_BEFORE_MANUSCRIPT_CLAIMS`
 - Contains a 7-item evidence order, a "Claim language currently permitted" list and a "Claim language prohibited until gates close" list, plus a "Required figures/tables after the 288 rerun" list (6 items).
 - Final line: *"The v0 DOCX should be rewritten only after the pending H3' and DES-288 artifacts are sealed. Until then, this file is the authoritative outline for §4.2 and §4.3."*
@@ -162,7 +166,7 @@ Living tracker. Only one row still carries a non-terminal status string: lane �
 
 ### 3.1 H3′ — search-cost variance, SUSTAINED at n=120 ✅ (the strongest positive)
 
-- **Doc:** `/Users/thom/Projects/research/scres-ia/docs/RESULTADO_H3_ADJUDICACION_FUSION_2026-08-02.md`
+- **Doc:** `<HOME>/Projects/research/scres-ia/docs/RESULTADO_H3_ADJUDICACION_FUSION_2026-08-02.md`
 - **Artifact:** `results/garrido_h3_merge_adjudication/result.json`, `self_sha256 = 1ac02efa1618e5a9cd4d910e87819c5c6da25fc7b37a2654214323338d3a41bf` (git-tracked)
 - **Contract:** `docs/PREREGISTRO_H3_POTENCIA_2026-08-01.md` (`576d02b5de7609eb…`); runner `scripts/adjudicate_h3_merge_v1.py`; **no new seeds**
 - `claim_status = H3_PRIME_SUSTAINED_AT_N120`
@@ -207,7 +211,7 @@ Original (retired) run-count table: memory 7.24 runs to 1% of optimum, OFAT 12.4
 
 ### 3.3 G3-obs — `STRUCTURED_CONTROL_SUFFICES_G3_OBS` ✅/❌ (two-sided, "both faces publishable")
 
-- **Doc:** `/Users/thom/Projects/research/scres-ia/docs/RESULTADO_G3_OBS_V2_2026-08-02.md`
+- **Doc:** `<HOME>/Projects/research/scres-ia/docs/RESULTADO_G3_OBS_V2_2026-08-02.md`
 - **Artifact:** `results/headroom/g3_obs_conversion_v2/result.json`, seal `317daf920579ec6e…` (git-tracked)
 - Seed block `7.800.001–140` (70 development / 70 test disjoint); **8 falsifiers pass**, 3 guardrails pass; `primary_metric = worst_claimant_fill`; SESOI 0.010
 
@@ -227,7 +231,7 @@ Negative side — no residual over a 2-branch `if`:
 Realism cost: 3-day delay `+0.0080/+0.0054`, noise σ=0.30 `+0.0052/+0.0033`, 14-day window `+0.0055/+0.0037`; 4 of 6 exclude zero.
 Doc §6 (the C&IE framing): "*Eso responde la Q1 de Garrido con más precisión que «no hay prima»: **la propiedad que importa es el feedback dependiente del estado, no la capacidad del aproximador.***"
 
-**Serious caveat — the formal custody adjudication:** `/Users/thom/Projects/research/scres-ia/docs/RESULTADO_ADJUDICACION_ALCANCE_G3_OBS_2026-08-02.md` (+ `docs/CONTRATO_ADJUDICACION_ALCANCE_G3_OBS_2026-08-02.md`, receipt `results/headroom/g3_obs_conversion_v2/contract_scope_adjudication.json`, seal `eee480febd401873…`):
+**Serious caveat — the formal custody adjudication:** `<HOME>/Projects/research/scres-ia/docs/RESULTADO_ADJUDICACION_ALCANCE_G3_OBS_2026-08-02.md` (+ `docs/CONTRATO_ADJUDICACION_ALCANCE_G3_OBS_2026-08-02.md`, receipt `results/headroom/g3_obs_conversion_v2/contract_scope_adjudication.json`, seal `eee480febd401873…`):
 ```
 claim_status:     SOURCE_ARTIFACT_PRESERVED_SCOPE_MISMATCH_NOT_PROMOTABLE
 promotion_status: BLOCKED_NO_RETROACTIVE_RESEAL_AND_NO_CONTRACT_CONFORMITY
@@ -238,7 +242,7 @@ Also relevant: `docs/RESULTADO_AUDITORIA_G3_OBS_F2_2026-08-02.md`, `docs/PREREGI
 
 ### 3.4 DES validation −4.43% vs the thesis ECS ✅
 
-- **Primary docs:** `/Users/thom/Projects/research/scres-ia/docs/PRESENTACION_GARRIDO_2026-03-25.md` (lines 109–124, 368) and `/Users/thom/Projects/research/scres-ia/docs/meetings/2026-03-26_GARRIDO_DEMO.md` (line 21) and `/Users/thom/Projects/research/scres-ia/docs/REPRODUCIBILITY.md` (lines 46–49).
+- **Primary docs:** `<HOME>/Projects/research/scres-ia/docs/PRESENTACION_GARRIDO_2026-03-25.md` (lines 109–124, 368) and `<HOME>/Projects/research/scres-ia/docs/meetings/2026-03-26_GARRIDO_DEMO.md` (line 21) and `<HOME>/Projects/research/scres-ia/docs/REPRODUCIBILITY.md` (lines 46–49).
 
 | Comparison | Hrs/yr | Our model | Thesis ECS | Relative gap |
 |---|---|---|---|---|
@@ -251,11 +255,11 @@ Deterministic Cf0 (S=1, no risks, Table 6.10): production 734,458/yr, delivery 7
 
 - **Data source:** `outputs/validation/validation_table_dual_basis.csv` (per-year, dual basis)
 - **Figure:** `fig12_des_validation` (PDF+PNG) — panel (a) year-by-year fidelity with RMSE and avg gap; panel (b) degradation: deterministic 733,621 / fill 99.3% / 41 BO → current risk 677,750 / 68.3% / 1,825 BO → increased risk 549,250 / 45.6% / 3,132 BO.
-- Broader validation state: `/Users/thom/Projects/research/scres-ia/docs/DES_VALIDATION_DOSSIER.md` (Gate 0 v3 PASS, Gate 1 v3 complete, Gate 2 v3 `STOP_NO_DEPLOYABLE_ADAPTIVE_HEADROOM`; runtime freeze with SHA256s) and `docs/DES_MODEL_DOCUMENTATION.md` (**overall fidelity 97%, 102/105 items match**).
+- Broader validation state: `<HOME>/Projects/research/scres-ia/docs/DES_VALIDATION_DOSSIER.md` (Gate 0 v3 PASS, Gate 1 v3 complete, Gate 2 v3 `STOP_NO_DEPLOYABLE_ADAPTIVE_HEADROOM`; runtime freeze with SHA256s) and `docs/DES_MODEL_DOCUMENTATION.md` (**overall fidelity 97%, 102/105 items match**).
 
 ### 3.5 H1′ — sustained (a positive you did not list)
 
-- **Doc:** `/Users/thom/Projects/research/scres-ia/docs/RESULTADO_H1_H3_V2_2026-08-01.md`
+- **Doc:** `<HOME>/Projects/research/scres-ia/docs/RESULTADO_H1_H3_V2_2026-08-01.md`
 - **Artifact:** `results/manuscript/h1_h3_v2/result.json`, seal `312f91a548d8639c…`, `claim_status = H1_SUPPORTED__H3_NOT_SUPPORTED`; **7 falsifiers pass**; contract `docs/PREREGISTRO_H1_H3_V2_2026-08-01.md`
 
 Cumulative lost service (`service_loss_auc_ration_hours`, lower is better): hybrid **45,358,777**; reset 79,746,843; static/OFAT **107,033,239**.
@@ -301,14 +305,14 @@ Closing line: "*La contribución fuerte para C&IE no es «la red ganó». Es una
 **Yes — there is a full matplotlib figure pipeline, in two independent sets.**
 
 ### Set A — the Elsevier manuscript figure pipeline (17 figures)
-- **Code:** `/Users/thom/Projects/research/scres-ia/scripts/build_manuscript_figures.py` (~1,350 lines). Docstring: *"Publication-grade manuscript figures for the Q1 submission... Okabe-Ito colorblind-safe palette, serif typography, vector PDF (for LaTeX) + 300-dpi PNG (for the Word port)."* Output dir hard-coded: `docs/manuscript_current/submission/elsevier/figures`. Numbers are **hard-coded deliberately** "*so the figure script is self-contained and auditable against the claims registry*".
+- **Code:** `<HOME>/Projects/research/scres-ia/scripts/build_manuscript_figures.py` (~1,350 lines). Docstring: *"Publication-grade manuscript figures for the Q1 submission... Okabe-Ito colorblind-safe palette, serif typography, vector PDF (for LaTeX) + 300-dpi PNG (for the Word port)."* Output dir hard-coded: `docs/manuscript_current/submission/elsevier/figures`. Numbers are **hard-coded deliberately** "*so the figure script is self-contained and auditable against the claims registry*".
 - **Functions:** `fig1_bottleneck_alignment`, `fig2_mfsc_topology`, `fig3_gap_decomposition`, `fig4_pareto_ret_tail_ctj`, `fig5_generalization_heatmap`, `fig6_action_space_ablation`, `fig7_ret_metric_lineage`, `fig8_ret_branch_timeline`, `fig9_prevention_ceiling`, `fig10_efficiency_architecture`, `fig11_no_forecast_defense`, `fig12_des_validation`, `fig13_track_a_boundary`, `fig14_dispatch_cost_sensitivity`, `fig15_learning_curves`, `fig16_reward_sensitivity`, `fig17_control_loop`.
 - **Rendered assets:** `docs/manuscript_current/submission/elsevier/figures/` — 17 × (.pdf + .png). Duplicated in `tmp/manuscript_compile/figures/`.
 
 ### Set B — the deliverables/DOCX figure pipeline (7 figures)
-- `/Users/thom/Projects/research/scres-ia/deliverables/figures/build_figures.py` → `fig1_mfsc_flow`, `fig2_framework`, `fig3_ladder`, `fig4_results`, `fig5_ret_tree`, `fig6_timeline` (each .png + .pdf, 300 dpi)
-- `/Users/thom/Projects/research/scres-ia/deliverables/figures/build_fig_oracle_metric.py` → `fig7_oracle_metric.png/.pdf`
-- `/Users/thom/Projects/research/scres-ia/deliverables/figures/build_review_pdf.py` → `deliverables/REVIEW_figures_and_formulas_2026-07-23.pdf` (982 KB, a figures+formulas review package)
+- `<HOME>/Projects/research/scres-ia/deliverables/figures/build_figures.py` → `fig1_mfsc_flow`, `fig2_framework`, `fig3_ladder`, `fig4_results`, `fig5_ret_tree`, `fig6_timeline` (each .png + .pdf, 300 dpi)
+- `<HOME>/Projects/research/scres-ia/deliverables/figures/build_fig_oracle_metric.py` → `fig7_oracle_metric.png/.pdf`
+- `<HOME>/Projects/research/scres-ia/deliverables/figures/build_review_pdf.py` → `deliverables/REVIEW_figures_and_formulas_2026-07-23.pdf` (982 KB, a figures+formulas review package)
 - `deliverables/figures/thesis_fig62_reference.png`, `deliverables/fig1_flow.png`
 
 ### Other figure builders
@@ -327,17 +331,17 @@ Closing line: "*La contribución fuerte para C&IE no es «la red ganó». Es una
 
 ## 5. The DES model description DOCX delivered to Garrido
 
-**`/Users/thom/Projects/research/scres-ia/deliverables/Program_Q_DES_Model_Description_CIE.docx`** (153 KB, 23 Jul 2026, ~5,054 words, 593 text paragraphs)
-- **Generator:** `/Users/thom/Projects/research/scres-ia/deliverables/build_des_model_doc.py` (66 KB — builds both the DOCX via `python-docx` and `fig1_flow` via matplotlib; note its `OUTPUT` currently points at `Program_Q_DES_Model_Description_CIE_reviewed.docx`, which is not on disk, so the shipped file is one build behind the script).
+**`<HOME>/Projects/research/scres-ia/deliverables/Program_Q_DES_Model_Description_CIE.docx`** (153 KB, 23 Jul 2026, ~5,054 words, 593 text paragraphs)
+- **Generator:** `<HOME>/Projects/research/scres-ia/deliverables/build_des_model_doc.py` (66 KB — builds both the DOCX via `python-docx` and `fig1_flow` via matplotlib; note its `OUTPUT` currently points at `Program_Q_DES_Model_Description_CIE_reviewed.docx`, which is not on disk, so the shipped file is one build behind the script).
 - **Structure (Heading1s, verbatim):** Editorial control note · Recommended paper position · 1. Model genealogy and scope · 2. Baseline 0 and the fair comparison ladder · 3. The thirteen-operation discrete-event system · 4. Material flow, queues, and conservation · 5. Time, warm-up, and episode boundaries · 6. Demand process and partial observability · 7. Program Q decision contract · 8. Same-time event convention · 9. Observation supplied to the controller · 10. Resilience metric and reward · 11. The learning context · 12. Why RecurrentPPO with an MLP-LSTM policy is the executed baseline · 13. DMLPA and KAN as matched architecture tests · 14. How learning is identified · 15. Resource equality and the end-of-horizon artifact · 16. Sensitive assumptions and validity checks · 17. Supported and unsupported manuscript statements · 18. Manuscript-ready methods narrative · Appendix A. Coauthor integration checklist · Appendix B. Internal source traceability
 - **Central claim boundary callout (verbatim):** "*Program Q outperforms every open-loop calendar in its disclosed two-product extension. / Program Q is practically equivalent to the strongest tested structured feedback family. / Program Q does not establish a neural premium, worst-product safety, cumulative learning, or improvement under active Garrido-native risks.*"
 - **Editorial control note (verbatim):** "*The two supplied v0 DOCX files are byte-identical copies of the same unfinished manuscript. The v0 manuscript contains placeholders, an obsolete five-dimensional action space, an obsolete fifteen-dimensional observation, and claims that precede the executed Program Q evidence. This insert should replace the v0 model and learning-environment prose instead of being appended to it without reconciliation.*"
 
 **Two companion DOCX files (the v0 manuscript with our sections injected):**
-- `/Users/thom/Projects/research/scres-ia/deliverables/v0_neuralNet-scres_DES_section_updated.docx` (2.2 MB, 23 Jul, ~4,509 words of body text) — built/updated by `deliverables/update_v0_model_section.py`
-- `/Users/thom/Projects/research/scres-ia/deliverables/v0_neuralNet-scres_DES_and_oracle_metric.docx` (2.5 MB, 26 Jul, ~6,063 words) — the later one, adds the oracle-metric section via `deliverables/insert_oracle_metric_section.py` (+ `deliverables/fix_v0_oracle_table_header.py`)
+- `<HOME>/Projects/research/scres-ia/deliverables/v0_neuralNet-scres_DES_section_updated.docx` (2.2 MB, 23 Jul, ~4,509 words of body text) — built/updated by `deliverables/update_v0_model_section.py`
+- `<HOME>/Projects/research/scres-ia/deliverables/v0_neuralNet-scres_DES_and_oracle_metric.docx` (2.5 MB, 26 Jul, ~6,063 words) — the later one, adds the oracle-metric section via `deliverables/insert_oracle_metric_section.py` (+ `deliverables/fix_v0_oracle_table_header.py`)
 
-**Markdown counterpart:** `/Users/thom/Projects/research/scres-ia/docs/DES_MODEL_DOCUMENTATION.md` (56 KB, 1,151 lines) — *"DES Model Documentation: 1:1 Thesis Verification"*, audit date 2026-03-18, **overall fidelity 97% (102/105 items match)**. 5 parts: function docs (Op1–Op13, risk processes), parameter docs (config.py, Tables 6.2/6.3/6.10/6.25), environment docs (env.py, env_experimental_shifts.py), external interface docs, and **§5 Discrepancy analysis with 5 named bugs** (R12 not gating Op2, Op8 event-triggered, R14 defects discarded, warmup triggers on production not Op9 receipt, PT rounding).
+**Markdown counterpart:** `<HOME>/Projects/research/scres-ia/docs/DES_MODEL_DOCUMENTATION.md` (56 KB, 1,151 lines) — *"DES Model Documentation: 1:1 Thesis Verification"*, audit date 2026-03-18, **overall fidelity 97% (102/105 items match)**. 5 parts: function docs (Op1–Op13, risk processes), parameter docs (config.py, Tables 6.2/6.3/6.10/6.25), environment docs (env.py, env_experimental_shifts.py), external interface docs, and **§5 Discrepancy analysis with 5 named bugs** (R12 not gating Op2, Op8 event-triggered, R14 defects discarded, warmup triggers on production not Op9 receipt, PT rounding).
 
 ---
 
@@ -350,11 +354,11 @@ Closing line: "*La contribución fuerte para C&IE no es «la red ganó». Es una
 - **Section ownership rule:** `docs/for_team/v0_additions_for_thom.md` — "*Do NOT change David's sections (3.3, 4.2) or Garrido's framing (Intro, Hypotheses)*" ⇒ implicit author map: Garrido = Intro/Hypotheses, David = §3.3/§4.2, Thom = DES (§3.2/§4.1).
 
 ### "What we would tell Garrido" documents
-- **`/Users/thom/Projects/research/scres-ia/docs/ESTADO_CONTRA_GARRIDO_2026-07-31.md`** — the definitive one. Section-by-section state of the v0 draft (Abstract ❌ literal placeholder; §1/§2 ✅; §3.2 ✅; §3.3.1–3.3.5 ✅; **§4.2 ❌ EMPTY**; **§4.3 ❌ EMPTY**; §5 🟡 skeleton). Flags a journal conflict: "*el destino declarado en el encabezado es IEEE TAI / Journal of Simulation, no C&IE — hay que reconciliarlo antes de dar formato.*" H1–H4 vs what we have. §4: "*Nosotros llevamos meses atacando un problema más duro... no es la que él formuló.*" §6: 5-step plan.
-- **`/Users/thom/Projects/research/scres-ia/docs/DONDE_PODEMOS_SER_LAXOS_2026-08-02.md`** — where to loosen vs not; establishes that `contracts/authority_ladder_v1.json` self-declares `"status": "DRAFT_PROSPECTIVE_UNOPENED_NOT_AUTHORITY"` and is therefore not a hard block. Key calendar note: "*el bloqueo real de Submission A es **editorial y humano**, no experimental.*"
-- **`/Users/thom/Projects/research/scres-ia/docs/DECISIONES_SIN_GARRIDO_2026-07-30.md`** — `DECISION_DOCUMENT_NOTHING_APPLIED`; answers the two questions we were going to ask Garrido directly from the 2017 thesis (lead time 48 h per §6.8.2 p.111; `CTj = LTj` vs our `<=`), with a self-retraction banner.
-- `/Users/thom/Projects/research/scres-ia/docs/LECTURA_GARRIDO_2026-07-30.md`, `docs/GARRIDO_2024_AI_ALIGNMENT_2026-07-31.md`
-- `/Users/thom/Projects/research/scres-ia/paper_results_package/BRIEF_PARA_GARRIDO_Y_DAVID.md` — *"Para: Alexander Garrido, David / De: Thomas / Fecha: 4 de abril 2026"* (historical, superseded)
+- **`<HOME>/Projects/research/scres-ia/docs/ESTADO_CONTRA_GARRIDO_2026-07-31.md`** — the definitive one. Section-by-section state of the v0 draft (Abstract ❌ literal placeholder; §1/§2 ✅; §3.2 ✅; §3.3.1–3.3.5 ✅; **§4.2 ❌ EMPTY**; **§4.3 ❌ EMPTY**; §5 🟡 skeleton). Flags a journal conflict: "*el destino declarado en el encabezado es IEEE TAI / Journal of Simulation, no C&IE — hay que reconciliarlo antes de dar formato.*" H1–H4 vs what we have. §4: "*Nosotros llevamos meses atacando un problema más duro... no es la que él formuló.*" §6: 5-step plan.
+- **`<HOME>/Projects/research/scres-ia/docs/DONDE_PODEMOS_SER_LAXOS_2026-08-02.md`** — where to loosen vs not; establishes that `contracts/authority_ladder_v1.json` self-declares `"status": "DRAFT_PROSPECTIVE_UNOPENED_NOT_AUTHORITY"` and is therefore not a hard block. Key calendar note: "*el bloqueo real de Submission A es **editorial y humano**, no experimental.*"
+- **`<HOME>/Projects/research/scres-ia/docs/DECISIONES_SIN_GARRIDO_2026-07-30.md`** — `DECISION_DOCUMENT_NOTHING_APPLIED`; answers the two questions we were going to ask Garrido directly from the 2017 thesis (lead time 48 h per §6.8.2 p.111; `CTj = LTj` vs our `<=`), with a self-retraction banner.
+- `<HOME>/Projects/research/scres-ia/docs/LECTURA_GARRIDO_2026-07-30.md`, `docs/GARRIDO_2024_AI_ALIGNMENT_2026-07-31.md`
+- `<HOME>/Projects/research/scres-ia/paper_results_package/BRIEF_PARA_GARRIDO_Y_DAVID.md` — *"Para: Alexander Garrido, David / De: Thomas / Fecha: 4 de abril 2026"* (historical, superseded)
 - **Meeting/presentation packages:** `docs/PRESENTACION_GARRIDO_2026-03-25.md` (contains the −4.43% table and 5 discussion questions), `docs/meetings/2026-03-26_GARRIDO_DEMO.md`, `docs/meeting_packages/garrido_presentation.html`, `docs/meeting_packages/garrido_2026-03-11/`, `docs/meeting_packages/garrido_2026-03-13/`, `docs/garrido_meeting_2026-06-24/reporte_garrido.pdf|.tex`, `docs/garrido_meeting_decision_variables_2026-07-03/main.tex|main_es.tex`, `docs/garrido_track_b_alternatives_2026-07-03/`
 - **Briefs:** `docs/briefs/garrido_thesis_alignment_audit.md` (12 KB), `docs/briefs/garrido_control_reward_memo.md`, `docs/briefs/garrido_track_b_meeting_script_2026-04-03.md`, `docs/briefs/garrido_track_b_audit_brief_2026-04-03.md`, `docs/briefs/thesis_decision_learning_claim.md`
 - **Handoffs to David:** `docs/DKANA_CONTRIBUTOR_HANDOFF.md` (15 KB), `docs/DKANA_INTEGRATION_GUIDE.md`, `docs/DAVID_DKANA_THESIS_FAITHFUL_TUTORIAL.md`, `scripts/export_trajectories_for_david.py`
