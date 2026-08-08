@@ -1,0 +1,718 @@
+{
+ "budget": 24,
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "HISTORICAL_SOURCE_RECOVERED_AND_REPRODUCES__CURRENT_HEAD_BEHAVIOURALLY_EQUIVALENT",
+ "contexts": [
+  "R1r",
+  "R2r",
+  "R1r+R2r",
+  "R1r|esc",
+  "R2r|esc",
+  "R1r+R2r|esc"
+ ],
+ "contract_path": "/Users/thom/Projects/research/scres-ia/docs/ENMIENDA_REGISTRO_DE_EVIDENCIA_2026-08-07.md",
+ "contract_sha256": "8e78b344536e8c6440d29ff4e437a0ea9b84c5fe73980d0b40c842aa90947ff5",
+ "created_at": "2026-08-08T14:27:27.719713+00:00",
+ "declared_manifests": {
+  "scripts/build_transfer_confirmation_cache_v1.py": "ccb85cbfa0f12636f9852f4ed002b6f803105cce374726c28b0db8d3c9a56cbd",
+  "scripts/run_grid_transfer_v1.py": "727a8d7d2d5ed6fd65eecea60378005bfcd1ecba412c14c9b5370b06ac4d44a3",
+  "supply_chain/arm_runner.py": "35135c537d9260832677ab6b4e344229d6b9f4810df8bdef9efd51b58fcac68a",
+  "supply_chain/config.py": "ae702a4991966504eaa1036106fa5f4b9c11e913d376dfb67e3f3c83147904cc",
+  "supply_chain/episode_metrics.py": "e09199d48a747f67aef600e9482b812fc1be16e337167d7dfc7215bcb57fb55e",
+  "supply_chain/seed_custody.py": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd",
+  "supply_chain/supply_chain.py": "2f348e5922cbbecf167b45cf0045765010beaaecdcb0fe6de88f259c989460f6"
+ },
+ "downstream_chain": {
+  "compared_keys": [
+   "contrasts",
+   "transfers",
+   "mean_auc",
+   "per_arm",
+   "claim_status",
+   "n_base_configs",
+   "n_ext_configs",
+   "budget",
+   "contexts",
+   "seeds"
+  ],
+  "differing": {},
+  "elapsed_seconds": 3828.7736269999878,
+  "n_differing": 0,
+  "ran": true,
+  "transfers_replayed": {
+   "gp": false,
+   "neuron": false,
+   "ofat": false,
+   "ucb1": true
+  },
+  "transfers_sealed": {
+   "gp": false,
+   "neuron": false,
+   "ofat": false,
+   "ucb1": true
+  },
+  "verdict_replayed": "GRID_TRANSFER_ESTABLISHED__UCB1",
+  "verdict_sealed": "GRID_TRANSFER_CONFIRMED__UCB1"
+ },
+ "endpoint": "cell_and_verdict_level_exact_reproduction",
+ "falsifiers": {
+  "all_passed": true,
+  "f1_every_cell_of_both_surfaces_reproduces": {
+   "evidence": {
+    "by_surface": {
+     "base": {
+      "cells": 103680,
+      "max_abs_delta": 0.0,
+      "mismatches": 0,
+      "slices": 360
+     },
+     "ext": {
+      "cells": 1658880,
+      "max_abs_delta": 0.0,
+      "mismatches": 0,
+      "slices": 360
+     }
+    },
+    "why_it_can_fail": "a behavioural change in either drifted module moves a cell and the delta stops being zero"
+   },
+   "passed": true
+  },
+  "f2_the_downstream_chain_reproduces_the_verdict": {
+   "evidence": {
+    "differing": {},
+    "n_differing": 0,
+    "ran": true,
+    "transfers_replayed": {
+     "gp": false,
+     "neuron": false,
+     "ofat": false,
+     "ucb1": true
+    },
+    "transfers_sealed": {
+     "gp": false,
+     "neuron": false,
+     "ofat": false,
+     "ucb1": true
+    },
+    "verdict_replayed": "GRID_TRANSFER_ESTABLISHED__UCB1",
+    "verdict_sealed": "GRID_TRANSFER_CONFIRMED__UCB1",
+    "why_it_can_fail": "the claim is a verdict, not a surface: visit sequences, AUC, marginal replay and contrasts could move while every cached cell stayed identical"
+   },
+   "passed": true
+  },
+  "f3_the_sample_spans_the_whole_grid": {
+   "evidence": {
+    "by_surface": {
+     "base": {
+      "contexts": [
+       "R1r",
+       "R1r+R2r",
+       "R1r+R2r|esc",
+       "R1r|esc",
+       "R2r",
+       "R2r|esc"
+      ],
+      "n_seeds": 60
+     },
+     "ext": {
+      "contexts": [
+       "R1r",
+       "R1r+R2r",
+       "R1r+R2r|esc",
+       "R1r|esc",
+       "R2r",
+       "R2r|esc"
+      ],
+      "n_seeds": 60
+     }
+    },
+    "why_it_can_fail": "exhausting one surface while never touching the 4,608-wide one is the defect this version exists to repair; both must be complete"
+   },
+   "passed": true
+  },
+  "f4_planted_defects_are_detected": {
+   "evidence": {
+    "m1_physics": {
+     "detected": true,
+     "injected": 1e-12,
+     "on": "value returned by the simulator"
+    },
+    "m2_extended_cache": {
+     "clean_cell_still_matches": true,
+     "comparator": {
+      "cells": 4608,
+      "context": "R1r",
+      "kind": "ext",
+      "max_abs_delta": 1.0000004296850662e-12,
+      "mismatches": 1,
+      "path": "/var/folders/_j/xv6ylwmx1w726ptqztl7xq080000gn/T/tmp2t0mj3x1/corrupted.json",
+      "seed": 8200001,
+      "worst_cell": {
+       "cell_index": 0,
+       "config": {
+        "buffer_hours": 0.0,
+        "op12_rop": 12.0,
+        "op3_rm": 0.0,
+        "op5_rm": 0.0,
+        "op9_rop": 12.0,
+        "shifts": 1
+       }
+      }
+     },
+     "detected": true,
+     "injected": 1e-12,
+     "on": "cached cell of the 4,608-wide surface"
+    },
+    "m3_auc_contrast": {
+     "comparator": {
+      "differing_keys": [
+       "contrasts"
+      ],
+      "n_differing": 1,
+      "ran": true
+     },
+     "detected": true,
+     "injected": 1e-12,
+     "on": "contrasts[gp].vs_marginal_replay.mean"
+    },
+    "m4_seal_only_must_not_move_science": {
+     "applicable": true,
+     "comparator": {
+      "n_differing": 0,
+      "ran": true
+     },
+     "detected": true,
+     "file": "supply_chain/arm_runner.py",
+     "live_arm_runner_drift": true,
+     "manifest_moved": true,
+     "note": "a seal-only edit must break the manifest and leave the downstream scientific payload identical; if this file's drift moved the chain replay it would be a physics change wearing an infrastructure label",
+     "science_expected_to_move": false,
+     "science_unchanged": true
+    },
+    "source_drift_classification": {
+     "scripts/build_transfer_confirmation_cache_v1.py": {
+      "classification": "SOURCE_DRIFT__OBSERVATIONALLY_EQUIVALENT",
+      "current_sha256": "f84c4ae2a4d2fe0c3784e09d83ddde3beb3a6a5665208190d7b0208555be8dc2",
+      "declared_sha256": "ccb85cbfa0f12636f9852f4ed002b6f803105cce374726c28b0db8d3c9a56cbd"
+     },
+     "scripts/run_grid_transfer_v1.py": {
+      "classification": "SOURCE_DRIFT__OBSERVATIONALLY_EQUIVALENT",
+      "current_sha256": "c08a170dc7f5f6903178b680754518eda971a78130db4616ef62dc68df5419f3",
+      "declared_sha256": "727a8d7d2d5ed6fd65eecea60378005bfcd1ecba412c14c9b5370b06ac4d44a3"
+     },
+     "supply_chain/arm_runner.py": {
+      "classification": "SOURCE_DRIFT__OBSERVATIONALLY_EQUIVALENT",
+      "current_sha256": "1afea4fa248db5beb2d86c6ab2033d6f24a95115ea544b08966b7a538456ac99",
+      "declared_sha256": "35135c537d9260832677ab6b4e344229d6b9f4810df8bdef9efd51b58fcac68a"
+     },
+     "supply_chain/config.py": {
+      "classification": "SOURCE_HASH_MATCH",
+      "current_sha256": "ae702a4991966504eaa1036106fa5f4b9c11e913d376dfb67e3f3c83147904cc",
+      "declared_sha256": "ae702a4991966504eaa1036106fa5f4b9c11e913d376dfb67e3f3c83147904cc"
+     },
+     "supply_chain/episode_metrics.py": {
+      "classification": "SOURCE_HASH_MATCH",
+      "current_sha256": "e09199d48a747f67aef600e9482b812fc1be16e337167d7dfc7215bcb57fb55e",
+      "declared_sha256": "e09199d48a747f67aef600e9482b812fc1be16e337167d7dfc7215bcb57fb55e"
+     },
+     "supply_chain/seed_custody.py": {
+      "classification": "SOURCE_HASH_MATCH",
+      "current_sha256": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd",
+      "declared_sha256": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd"
+     },
+     "supply_chain/supply_chain.py": {
+      "classification": "SOURCE_DRIFT__OBSERVATIONALLY_EQUIVALENT",
+      "current_sha256": "d9095439271d27e279bd460bbaf280ac405032d619d9fd2fec137621f5f22092",
+      "declared_sha256": "2f348e5922cbbecf167b45cf0045765010beaaecdcb0fe6de88f259c989460f6"
+     }
+    },
+    "why_it_can_fail": "a comparator blind to a 1e-12 corruption would certify any tree at all; this repository has shipped a falsifier hardcoded to passed:True"
+   },
+   "passed": true
+  },
+  "f5_no_seed_outside_the_burned_block": {
+   "evidence": {
+    "block": [
+     8200001,
+     8200060
+    ],
+    "why_it_can_fail": "re-evaluating outside 8200001-8200060 would consume custody this certificate never declared"
+   },
+   "passed": true
+  },
+  "f6_the_historical_tree_is_recoverable": {
+   "evidence": {
+    "modules": [
+     {
+      "commit": "857241381de84d2691897d1a6b367b2c4b65dcaf",
+      "current_matches": false,
+      "found": true,
+      "path": "scripts/build_transfer_confirmation_cache_v1.py",
+      "sha256": "ccb85cbfa0f12636f9852f4ed002b6f803105cce374726c28b0db8d3c9a56cbd"
+     },
+     {
+      "commit": "ed16b9e38ddc0ace67f59b421554d25f899aa68a",
+      "current_matches": false,
+      "found": true,
+      "path": "scripts/run_grid_transfer_v1.py",
+      "sha256": "727a8d7d2d5ed6fd65eecea60378005bfcd1ecba412c14c9b5370b06ac4d44a3"
+     },
+     {
+      "commit": "646c65a96cec69505b5cb2dcd689021a52772d2d",
+      "current_matches": false,
+      "found": true,
+      "path": "supply_chain/arm_runner.py",
+      "sha256": "35135c537d9260832677ab6b4e344229d6b9f4810df8bdef9efd51b58fcac68a"
+     },
+     {
+      "commit": "002db4947fc4752130933731178ed2cfba427a60",
+      "current_matches": true,
+      "found": true,
+      "path": "supply_chain/config.py",
+      "sha256": "ae702a4991966504eaa1036106fa5f4b9c11e913d376dfb67e3f3c83147904cc"
+     },
+     {
+      "commit": "d85e3dad0434be628ab72652d8efc6385805c714",
+      "current_matches": true,
+      "found": true,
+      "path": "supply_chain/episode_metrics.py",
+      "sha256": "e09199d48a747f67aef600e9482b812fc1be16e337167d7dfc7215bcb57fb55e"
+     },
+     {
+      "commit": "9862f15450d6b08fce82bb61c48cbf8e426f7b35",
+      "current_matches": true,
+      "found": true,
+      "path": "supply_chain/seed_custody.py",
+      "sha256": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd"
+     },
+     {
+      "commit": "3b70dd93b7eb050426a5691417270e987a5d1a44",
+      "current_matches": false,
+      "found": true,
+      "path": "supply_chain/supply_chain.py",
+      "sha256": "2f348e5922cbbecf167b45cf0045765010beaaecdcb0fe6de88f259c989460f6"
+     }
+    ],
+    "why_it_can_fail": "if a declared blob is unreachable in the whole object graph then the tree that sealed A2 is genuinely lost, and only then is the artifact unpublishable"
+   },
+   "passed": true
+  }
+ },
+ "historical_source": [
+  {
+   "commit": "857241381de84d2691897d1a6b367b2c4b65dcaf",
+   "current_matches": false,
+   "found": true,
+   "path": "scripts/build_transfer_confirmation_cache_v1.py",
+   "sha256": "ccb85cbfa0f12636f9852f4ed002b6f803105cce374726c28b0db8d3c9a56cbd"
+  },
+  {
+   "commit": "ed16b9e38ddc0ace67f59b421554d25f899aa68a",
+   "current_matches": false,
+   "found": true,
+   "path": "scripts/run_grid_transfer_v1.py",
+   "sha256": "727a8d7d2d5ed6fd65eecea60378005bfcd1ecba412c14c9b5370b06ac4d44a3"
+  },
+  {
+   "commit": "646c65a96cec69505b5cb2dcd689021a52772d2d",
+   "current_matches": false,
+   "found": true,
+   "path": "supply_chain/arm_runner.py",
+   "sha256": "35135c537d9260832677ab6b4e344229d6b9f4810df8bdef9efd51b58fcac68a"
+  },
+  {
+   "commit": "002db4947fc4752130933731178ed2cfba427a60",
+   "current_matches": true,
+   "found": true,
+   "path": "supply_chain/config.py",
+   "sha256": "ae702a4991966504eaa1036106fa5f4b9c11e913d376dfb67e3f3c83147904cc"
+  },
+  {
+   "commit": "d85e3dad0434be628ab72652d8efc6385805c714",
+   "current_matches": true,
+   "found": true,
+   "path": "supply_chain/episode_metrics.py",
+   "sha256": "e09199d48a747f67aef600e9482b812fc1be16e337167d7dfc7215bcb57fb55e"
+  },
+  {
+   "commit": "9862f15450d6b08fce82bb61c48cbf8e426f7b35",
+   "current_matches": true,
+   "found": true,
+   "path": "supply_chain/seed_custody.py",
+   "sha256": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd"
+  },
+  {
+   "commit": "3b70dd93b7eb050426a5691417270e987a5d1a44",
+   "current_matches": false,
+   "found": true,
+   "path": "supply_chain/supply_chain.py",
+   "sha256": "2f348e5922cbbecf167b45cf0045765010beaaecdcb0fe6de88f259c989460f6"
+  }
+ ],
+ "module_manifest": {
+  "entry_script": "scripts/verify_frozen_path_equivalence_v2.py",
+  "entry_script_sha256": "ca55804fcc6133a94d50401cecca4f2367eb616eda9edc583bd994e1aa9bf391",
+  "missing": [],
+  "modules": {
+   "supply_chain/arm_runner.py": "1afea4fa248db5beb2d86c6ab2033d6f24a95115ea544b08966b7a538456ac99",
+   "supply_chain/config.py": "ae702a4991966504eaa1036106fa5f4b9c11e913d376dfb67e3f3c83147904cc",
+   "supply_chain/episode_metrics.py": "e09199d48a747f67aef600e9482b812fc1be16e337167d7dfc7215bcb57fb55e",
+   "supply_chain/seed_custody.py": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd",
+   "supply_chain/supply_chain.py": "d9095439271d27e279bd460bbaf280ac405032d619d9fd2fec137621f5f22092"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "mutation_controls": {
+  "m1_physics": {
+   "detected": true,
+   "injected": 1e-12,
+   "on": "value returned by the simulator"
+  },
+  "m2_extended_cache": {
+   "clean_cell_still_matches": true,
+   "comparator": {
+    "cells": 4608,
+    "context": "R1r",
+    "kind": "ext",
+    "max_abs_delta": 1.0000004296850662e-12,
+    "mismatches": 1,
+    "path": "/var/folders/_j/xv6ylwmx1w726ptqztl7xq080000gn/T/tmp2t0mj3x1/corrupted.json",
+    "seed": 8200001,
+    "worst_cell": {
+     "cell_index": 0,
+     "config": {
+      "buffer_hours": 0.0,
+      "op12_rop": 12.0,
+      "op3_rm": 0.0,
+      "op5_rm": 0.0,
+      "op9_rop": 12.0,
+      "shifts": 1
+     }
+    }
+   },
+   "detected": true,
+   "injected": 1e-12,
+   "on": "cached cell of the 4,608-wide surface"
+  },
+  "m3_auc_contrast": {
+   "comparator": {
+    "differing_keys": [
+     "contrasts"
+    ],
+    "n_differing": 1,
+    "ran": true
+   },
+   "detected": true,
+   "injected": 1e-12,
+   "on": "contrasts[gp].vs_marginal_replay.mean"
+  },
+  "m4_seal_only_must_not_move_science": {
+   "applicable": true,
+   "comparator": {
+    "n_differing": 0,
+    "ran": true
+   },
+   "detected": true,
+   "file": "supply_chain/arm_runner.py",
+   "live_arm_runner_drift": true,
+   "manifest_moved": true,
+   "note": "a seal-only edit must break the manifest and leave the downstream scientific payload identical; if this file's drift moved the chain replay it would be a physics change wearing an infrastructure label",
+   "science_expected_to_move": false,
+   "science_unchanged": true
+  },
+  "source_drift_classification": {
+   "scripts/build_transfer_confirmation_cache_v1.py": {
+    "classification": "SOURCE_DRIFT__OBSERVATIONALLY_EQUIVALENT",
+    "current_sha256": "f84c4ae2a4d2fe0c3784e09d83ddde3beb3a6a5665208190d7b0208555be8dc2",
+    "declared_sha256": "ccb85cbfa0f12636f9852f4ed002b6f803105cce374726c28b0db8d3c9a56cbd"
+   },
+   "scripts/run_grid_transfer_v1.py": {
+    "classification": "SOURCE_DRIFT__OBSERVATIONALLY_EQUIVALENT",
+    "current_sha256": "c08a170dc7f5f6903178b680754518eda971a78130db4616ef62dc68df5419f3",
+    "declared_sha256": "727a8d7d2d5ed6fd65eecea60378005bfcd1ecba412c14c9b5370b06ac4d44a3"
+   },
+   "supply_chain/arm_runner.py": {
+    "classification": "SOURCE_DRIFT__OBSERVATIONALLY_EQUIVALENT",
+    "current_sha256": "1afea4fa248db5beb2d86c6ab2033d6f24a95115ea544b08966b7a538456ac99",
+    "declared_sha256": "35135c537d9260832677ab6b4e344229d6b9f4810df8bdef9efd51b58fcac68a"
+   },
+   "supply_chain/config.py": {
+    "classification": "SOURCE_HASH_MATCH",
+    "current_sha256": "ae702a4991966504eaa1036106fa5f4b9c11e913d376dfb67e3f3c83147904cc",
+    "declared_sha256": "ae702a4991966504eaa1036106fa5f4b9c11e913d376dfb67e3f3c83147904cc"
+   },
+   "supply_chain/episode_metrics.py": {
+    "classification": "SOURCE_HASH_MATCH",
+    "current_sha256": "e09199d48a747f67aef600e9482b812fc1be16e337167d7dfc7215bcb57fb55e",
+    "declared_sha256": "e09199d48a747f67aef600e9482b812fc1be16e337167d7dfc7215bcb57fb55e"
+   },
+   "supply_chain/seed_custody.py": {
+    "classification": "SOURCE_HASH_MATCH",
+    "current_sha256": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd",
+    "declared_sha256": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd"
+   },
+   "supply_chain/supply_chain.py": {
+    "classification": "SOURCE_DRIFT__OBSERVATIONALLY_EQUIVALENT",
+    "current_sha256": "d9095439271d27e279bd460bbaf280ac405032d619d9fd2fec137621f5f22092",
+    "declared_sha256": "2f348e5922cbbecf167b45cf0045765010beaaecdcb0fe6de88f259c989460f6"
+   }
+  }
+ },
+ "n_base_configs": 288,
+ "n_ext_configs": 4608,
+ "preregistration": "docs/ENMIENDA_REGISTRO_DE_EVIDENCIA_2026-08-07.md",
+ "reference_path": "/Users/thom/Projects/research/scres-ia/results/grid_transfer_confirmation_v2/result.json",
+ "reference_sha256": "eceb9ee97613e172130b7175a79cf6c7d5ddfb54f0ec5435b1174842c20b0f5a",
+ "schema_version": "frozen_path_equivalence_v2",
+ "scope": "PROVENANCE_ONLY_NO_SCIENTIFIC_CLAIM_NO_NEW_SEEDS",
+ "seed_block": {
+  "derived_from": "seeds",
+  "end": 8200060,
+  "n": 60,
+  "start": 8200001
+ },
+ "seeds": [
+  8200001,
+  8200002,
+  8200003,
+  8200004,
+  8200005,
+  8200006,
+  8200007,
+  8200008,
+  8200009,
+  8200010,
+  8200011,
+  8200012,
+  8200013,
+  8200014,
+  8200015,
+  8200016,
+  8200017,
+  8200018,
+  8200019,
+  8200020,
+  8200021,
+  8200022,
+  8200023,
+  8200024,
+  8200025,
+  8200026,
+  8200027,
+  8200028,
+  8200029,
+  8200030,
+  8200031,
+  8200032,
+  8200033,
+  8200034,
+  8200035,
+  8200036,
+  8200037,
+  8200038,
+  8200039,
+  8200040,
+  8200041,
+  8200042,
+  8200043,
+  8200044,
+  8200045,
+  8200046,
+  8200047,
+  8200048,
+  8200049,
+  8200050,
+  8200051,
+  8200052,
+  8200053,
+  8200054,
+  8200055,
+  8200056,
+  8200057,
+  8200058,
+  8200059,
+  8200060
+ ],
+ "self_sha256": "5ad348e5ef88c6f1f252ab62de66326a2b5fbc9c08bb7c5a4c1ffb4229348b69",
+ "supersedes": [
+  "18a4174:scripts/verify_frozen_path_equivalence_v1.py",
+  "f99ba5f:scripts/verify_frozen_path_equivalence_v1.py"
+ ],
+ "surface": {
+  "base": {
+   "cells": 103680,
+   "contexts": [
+    "R1r",
+    "R1r+R2r",
+    "R1r+R2r|esc",
+    "R1r|esc",
+    "R2r",
+    "R2r|esc"
+   ],
+   "max_abs_delta": 0.0,
+   "mismatches": 0,
+   "seeds": [
+    8200001,
+    8200002,
+    8200003,
+    8200004,
+    8200005,
+    8200006,
+    8200007,
+    8200008,
+    8200009,
+    8200010,
+    8200011,
+    8200012,
+    8200013,
+    8200014,
+    8200015,
+    8200016,
+    8200017,
+    8200018,
+    8200019,
+    8200020,
+    8200021,
+    8200022,
+    8200023,
+    8200024,
+    8200025,
+    8200026,
+    8200027,
+    8200028,
+    8200029,
+    8200030,
+    8200031,
+    8200032,
+    8200033,
+    8200034,
+    8200035,
+    8200036,
+    8200037,
+    8200038,
+    8200039,
+    8200040,
+    8200041,
+    8200042,
+    8200043,
+    8200044,
+    8200045,
+    8200046,
+    8200047,
+    8200048,
+    8200049,
+    8200050,
+    8200051,
+    8200052,
+    8200053,
+    8200054,
+    8200055,
+    8200056,
+    8200057,
+    8200058,
+    8200059,
+    8200060
+   ],
+   "slices": 360,
+   "worst": null
+  },
+  "ext": {
+   "cells": 1658880,
+   "contexts": [
+    "R1r",
+    "R1r+R2r",
+    "R1r+R2r|esc",
+    "R1r|esc",
+    "R2r",
+    "R2r|esc"
+   ],
+   "max_abs_delta": 0.0,
+   "mismatches": 0,
+   "seeds": [
+    8200001,
+    8200002,
+    8200003,
+    8200004,
+    8200005,
+    8200006,
+    8200007,
+    8200008,
+    8200009,
+    8200010,
+    8200011,
+    8200012,
+    8200013,
+    8200014,
+    8200015,
+    8200016,
+    8200017,
+    8200018,
+    8200019,
+    8200020,
+    8200021,
+    8200022,
+    8200023,
+    8200024,
+    8200025,
+    8200026,
+    8200027,
+    8200028,
+    8200029,
+    8200030,
+    8200031,
+    8200032,
+    8200033,
+    8200034,
+    8200035,
+    8200036,
+    8200037,
+    8200038,
+    8200039,
+    8200040,
+    8200041,
+    8200042,
+    8200043,
+    8200044,
+    8200045,
+    8200046,
+    8200047,
+    8200048,
+    8200049,
+    8200050,
+    8200051,
+    8200052,
+    8200053,
+    8200054,
+    8200055,
+    8200056,
+    8200057,
+    8200058,
+    8200059,
+    8200060
+   ],
+   "slices": 360,
+   "worst": null
+  }
+ },
+ "verdict_a_historical_identity": "HISTORICAL_SOURCE_RECOVERED_AND_REPRODUCES",
+ "verdict_b_forward_equivalence": "CURRENT_HEAD_BEHAVIOURALLY_EQUIVALENT",
+ "what_this_does_not_certify": "Only the two caches Paper 2 cites, only the confirmation's own seed block, and only the behaviour of the current tree on the FROZEN path. It says nothing about future runs that enable the code paths the 2026-08-07 edits added."
+}

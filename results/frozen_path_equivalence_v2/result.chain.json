@@ -5,14 +5,14 @@
    "found": true,
    "commit": "857241381de84d2691897d1a6b367b2c4b65dcaf",
    "sha256": "ccb85cbfa0f12636f9852f4ed002b6f803105cce374726c28b0db8d3c9a56cbd",
-   "current_matches": true
+   "current_matches": false
   },
   {
    "path": "scripts/run_grid_transfer_v1.py",
    "found": true,
    "commit": "ed16b9e38ddc0ace67f59b421554d25f899aa68a",
    "sha256": "727a8d7d2d5ed6fd65eecea60378005bfcd1ecba412c14c9b5370b06ac4d44a3",
-   "current_matches": true
+   "current_matches": false
   },
   {
    "path": "supply_chain/arm_runner.py",
@@ -51,30 +51,36 @@
   }
  ],
  "chain": {
-  "ran": false,
-  "returncode": 1,
-  "stderr": "",
-  "cmd": [
-   "/Users/thom/Projects/research/scres-ia/.venv/bin/python",
-   "scripts/run_grid_transfer_v1.py",
-   "--base-cache",
-   "results/surface_cache/garrido_transfer_confirmation_v2_base",
-   "--ext-cache",
-   "results/surface_cache/garrido_transfer_confirmation_v2_ext",
-   "--budget",
-   "24",
-   "--contract",
-   "docs/ENMIENDA_CONFIRMACION_BLOQUE_LIMPIO_2026-08-05.md",
-   "--reference",
-   "results/grid_transfer_ordered_v1/result.json",
-   "--confirmation",
-   "--expected-seed-start",
-   "8200001",
-   "--expected-seeds",
-   "60",
-   "--output",
-   "/var/folders/_j/xv6ylwmx1w726ptqztl7xq080000gn/T/tmphdrhymn6/chain_result.json"
-  ]
+  "ran": true,
+  "elapsed_seconds": 3828.7736269999878,
+  "compared_keys": [
+   "contrasts",
+   "transfers",
+   "mean_auc",
+   "per_arm",
+   "claim_status",
+   "n_base_configs",
+   "n_ext_configs",
+   "budget",
+   "contexts",
+   "seeds"
+  ],
+  "n_differing": 0,
+  "differing": {},
+  "verdict_sealed": "GRID_TRANSFER_CONFIRMED__UCB1",
+  "verdict_replayed": "GRID_TRANSFER_ESTABLISHED__UCB1",
+  "transfers_sealed": {
+   "gp": false,
+   "neuron": false,
+   "ofat": false,
+   "ucb1": true
+  },
+  "transfers_replayed": {
+   "gp": false,
+   "neuron": false,
+   "ofat": false,
+   "ucb1": true
+  }
  },
  "controls": {
   "m1_physics": {
@@ -86,18 +92,53 @@
    "detected": true,
    "injected": 1e-12,
    "on": "cached cell of the 4,608-wide surface",
-   "clean_cell_still_matches": true
+   "clean_cell_still_matches": true,
+   "comparator": {
+    "path": "/var/folders/_j/xv6ylwmx1w726ptqztl7xq080000gn/T/tmp2t0mj3x1/corrupted.json",
+    "kind": "ext",
+    "context": "R1r",
+    "seed": 8200001,
+    "cells": 4608,
+    "mismatches": 1,
+    "max_abs_delta": 1.0000004296850662e-12,
+    "worst_cell": {
+     "cell_index": 0,
+     "config": {
+      "buffer_hours": 0.0,
+      "shifts": 1,
+      "op9_rop": 12.0,
+      "op12_rop": 12.0,
+      "op3_rm": 0.0,
+      "op5_rm": 0.0
+     }
+    }
+   }
   },
   "m3_auc_contrast": {
    "detected": true,
    "injected": 1e-12,
-   "on": "contrasts[gp].vs_marginal_replay.mean"
+   "on": "contrasts[gp].vs_marginal_replay.mean",
+   "comparator": {
+    "ran": true,
+    "n_differing": 1,
+    "differing_keys": [
+     "contrasts"
+    ]
+   }
   },
   "m4_seal_only_must_not_move_science": {
    "file": "supply_chain/arm_runner.py",
+   "applicable": true,
    "manifest_moved": true,
+   "science_unchanged": true,
+   "detected": true,
+   "live_arm_runner_drift": true,
+   "comparator": {
+    "ran": true,
+    "n_differing": 0
+   },
    "science_expected_to_move": false,
-   "note": "a seal-only edit must break the manifest and leave the payload identical; if this file's drift moved the chain replay it would be a physics change wearing an infrastructure label"
+   "note": "a seal-only edit must break the manifest and leave the downstream scientific payload identical; if this file's drift moved the chain replay it would be a physics change wearing an infrastructure label"
   }
  },
  "declared_manifests": {
