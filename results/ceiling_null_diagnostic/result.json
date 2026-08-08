@@ -1,0 +1,584 @@
+{
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "CEILING_IS_A_MINIMUM_OVER_NOISE_HEADROOM_WITHDRAWN",
+ "contract_path": "docs/ENMIENDA_COSTE_BUFFER_DECLARADO_2026-08-08.md",
+ "contract_sha256": "c30c824317e41e94622045c1a69538231e18a767f6312542e8535dcab5dfcd2d",
+ "created_at": "2026-08-08T22:21:02.237633+00:00",
+ "elapsed_seconds": 1.802434874989558,
+ "falsifier_summary": {
+  "all_passed": false,
+  "disclosures": [
+   "d1_no_new_episodes_for_the_null"
+  ],
+  "failed": [
+   "f2_observed_gap_exceeds_the_null"
+  ],
+  "n_computed": 4,
+  "n_disclosures": 1,
+  "n_failed": 1,
+  "n_not_applicable": 1,
+  "not_applicable": [
+   "d2_no_fresh_seeds"
+  ]
+ },
+ "falsifiers": {
+  "d1_no_new_episodes_for_the_null": {
+   "computed": false,
+   "disclosure": true,
+   "evidence": {
+    "source": "results/priced_clairvoyant_ceiling/result.json",
+    "source_sha": "118fa95fa320ca741dd44f2b0841efcc077c048c9a54159519ed56a029dba8ef",
+    "statement": "the null re-prices the sealed matrix; only the 12 feature probes touch the simulator"
+   },
+   "passed": null
+  },
+  "d2_no_fresh_seeds": {
+   "computed": false,
+   "evidence": {
+    "custody": {
+     "evidence": {
+      "n_sealed_artifact_overlap": 12,
+      "n_seeds": 12,
+      "note": "deliberate re-execution of registry block 'reconciled_8600001'; these seeds are NOT virgin and are not meant to be",
+      "registry_conflicts": [
+       {
+        "id": "reconciled_8600001",
+        "n_overlapping": 12,
+        "range": [
+         8600001,
+         8600012
+        ],
+        "source": "results/demand_process/result.json",
+        "status": "USED_DEVELOPMENT_NOT_VIRGIN"
+       }
+      ],
+      "registry_is_complete": false,
+      "registry_status": "BASELINE_INVENTORY_INCOMPLETE_NO_NEW_SEEDS_AUTHORIZED",
+      "replay_of": "reconciled_8600001",
+      "sealed_artifact_overlap": [
+       8600001,
+       8600002,
+       8600003,
+       8600004,
+       8600005,
+       8600006,
+       8600007,
+       8600008,
+       8600009,
+       8600010,
+       8600011,
+       8600012
+      ],
+      "seeds": [
+       8600001,
+       8600002,
+       8600003,
+       8600004,
+       8600005,
+       8600006,
+       8600007,
+       8600008,
+       8600009,
+       8600010,
+       8600011,
+       8600012
+      ],
+      "status": "DECLARED_REPLAY",
+      "why_it_can_fail": "it cannot: this is a declared custody replay of registry block 'reconciled_8600001', so the seeds are used on purpose. Counted in neither column."
+     },
+     "not_applicable": true,
+     "passed": null
+    },
+    "reason": "declared replay of an already-consumed development block"
+   },
+   "not_applicable": true,
+   "passed": null
+  },
+  "f1_null_preserves_the_selection_bias": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": 0.0654095257305136,
+     "threshold": 0.0
+    },
+    "n_draws": 20000,
+    "null_mean": 0.0654095257305136,
+    "why_it_can_fail": "the permutation null must itself produce a POSITIVE gap, because a minimum over 27 draws is biased downward whatever the truth; a null centred at zero would mean the permutation destroyed the very bias it exists to measure"
+   },
+   "passed": true
+  },
+  "f2_observed_gap_exceeds_the_null": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": 0.8895,
+     "threshold": 0.05
+    },
+    "null_mean": 0.0654095257305136,
+    "null_p95": 0.09438679040204294,
+    "observed_gap": 0.04510303513633616,
+    "p_value": 0.8895,
+    "why_it_can_fail": "THE test of my own positive claim. If the observed gap sits inside the distribution produced by shuffling schedule labels, the ceiling is an artifact of taking a minimum over 27 noisy options and HEADROOM_ESTABLISHED must be withdrawn"
+   },
+   "passed": false
+  },
+  "f3_optima_actually_differ_across_tapes": {
+   "computed": true,
+   "evidence": {
+    "best_by_tape": {
+     "8600001": [
+      0,
+      0
+     ],
+     "8600002": [
+      0,
+      0
+     ],
+     "8600003": [
+      0,
+      4
+     ],
+     "8600004": [
+      4,
+      8
+     ],
+     "8600005": [
+      0,
+      8
+     ],
+     "8600006": [
+      8,
+      4
+     ],
+     "8600007": [
+      4,
+      8
+     ],
+     "8600008": [
+      0,
+      13
+     ],
+     "8600009": [
+      4,
+      8
+     ],
+     "8600010": [
+      0,
+      13
+     ],
+     "8600011": [
+      4,
+      13
+     ],
+     "8600012": [
+      0,
+      13
+     ]
+    },
+    "computed_from": {
+     "observed": 7.0,
+     "threshold": 2.0
+    },
+    "n_distinct": 7,
+    "why_it_can_fail": "if one schedule were optimal on every tape the gap would be zero by construction and there would be nothing to diagnose"
+   },
+   "passed": true
+  },
+  "f4_probe_features_vary": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": 2085.113208051173,
+     "threshold": 0.0
+    },
+    "n_features": 14,
+    "why_it_can_fail": "tape features that are constant cannot explain which schedule wins; a fully degenerate probe would leave the diagnostic empty"
+   },
+   "passed": true
+  }
+ },
+ "feature_correlations": {
+  "backlog_max": {
+   "corr_with_optimal_K": -0.24778810836850446,
+   "corr_with_optimal_start": -0.07030694965346761,
+   "sd": 1495.5809905111082
+  },
+  "backlog_mean": {
+   "corr_with_optimal_K": -0.16340642597584815,
+   "corr_with_optimal_start": -0.28706676270209924,
+   "sd": 2085.113208051173
+  },
+  "demand_total": {
+   "corr_with_optimal_K": 0.10058658092273665,
+   "corr_with_optimal_start": 0.2719842907293891,
+   "sd": 1766.0816542656532
+  },
+  "events_R11": {
+   "corr_with_optimal_K": -0.1577642020429365,
+   "corr_with_optimal_start": -0.6546536707079771,
+   "sd": 0.4930066485916347
+  },
+  "events_R12": {
+   "corr_with_optimal_K": -0.43152212018178804,
+   "corr_with_optimal_start": -1.5202354861220293e-17,
+   "sd": 0.4714045207910317
+  },
+  "events_R13": {
+   "corr_with_optimal_K": -0.1566092543142642,
+   "corr_with_optimal_start": -0.08739511798611885,
+   "sd": 2.2157893000513886
+  },
+  "events_R14": {
+   "corr_with_optimal_K": -0.3087541682094064,
+   "corr_with_optimal_start": 0.21038606199548296,
+   "sd": 1.8408935028645437
+  },
+  "events_R21": {
+   "corr_with_optimal_K": 0.43152212018178804,
+   "corr_with_optimal_start": -3.0404709722440586e-17,
+   "sd": 0.47140452079103173
+  },
+  "events_R22": {
+   "corr_with_optimal_K": 0.1334927863440232,
+   "corr_with_optimal_start": -0.3927922024247862,
+   "sd": 0.4930066485916347
+  },
+  "events_R23": {
+   "corr_with_optimal_K": 0.08290266722896775,
+   "corr_with_optimal_start": 0.14907119849998596,
+   "sd": 0.4330127018922193
+  },
+  "events_R24": {
+   "corr_with_optimal_K": -0.1243540008434518,
+   "corr_with_optimal_start": 0.14907119849998596,
+   "sd": 0.4330127018922193
+  },
+  "events_total": {
+   "corr_with_optimal_K": -0.3361200039305306,
+   "corr_with_optimal_start": -0.06885492631586446,
+   "sd": 2.812422838447701
+  },
+  "initial_phase": {
+   "corr_with_optimal_K": -0.3463560476086551,
+   "corr_with_optimal_start": -0.23354968324845685,
+   "sd": 0.27638539919628335
+  },
+  "warmup_end_hours": {
+   "corr_with_optimal_K": -0.3759604481662324,
+   "corr_with_optimal_start": -0.2656612258532263,
+   "sd": 29.88624265443885
+  }
+ },
+ "lambda": 0.35,
+ "module_manifest": {
+  "entry_script": "scripts/run_ceiling_null_diagnostic_v1.py",
+  "entry_script_sha256": "bb49ffda9b6505e79373f06d6cea09f3ac323a40954aa1b73aa9dffe39a3d31b",
+  "missing": [],
+  "modules": {
+   "supply_chain/arm_runner.py": "1afea4fa248db5beb2d86c6ab2033d6f24a95115ea544b08966b7a538456ac99",
+   "supply_chain/falsifiers.py": "a152144589e58bc1a658b002c39ff5c0332cd3a2796cb9cf443cd0de36443788",
+   "supply_chain/seed_custody.py": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "n_distinct_optima": 7,
+ "null": {
+  "mean": 0.0654095257305136,
+  "method": "schedule labels permuted independently within each tape; whole pipeline rerun, comparator selected on permuted train",
+  "n_draws": 20000,
+  "p50": 0.06466037577353859,
+  "p95": 0.09438679040204294,
+  "p99": 0.10682193072753306,
+  "p_value": 0.8895
+ },
+ "observed_gap": 0.04510303513633616,
+ "per_tape_optimum": {
+  "8600001": [
+   0,
+   0
+  ],
+  "8600002": [
+   0,
+   0
+  ],
+  "8600003": [
+   0,
+   4
+  ],
+  "8600004": [
+   4,
+   8
+  ],
+  "8600005": [
+   0,
+   8
+  ],
+  "8600006": [
+   8,
+   4
+  ],
+  "8600007": [
+   4,
+   8
+  ],
+  "8600008": [
+   0,
+   13
+  ],
+  "8600009": [
+   4,
+   8
+  ],
+  "8600010": [
+   0,
+   13
+  ],
+  "8600011": [
+   4,
+   13
+  ],
+  "8600012": [
+   0,
+   13
+  ]
+ },
+ "ranked_features": [
+  "events_R12",
+  "events_R21",
+  "warmup_end_hours",
+  "initial_phase",
+  "events_total",
+  "events_R14",
+  "backlog_max",
+  "backlog_mean",
+  "events_R11",
+  "events_R13",
+  "events_R22",
+  "events_R24",
+  "demand_total",
+  "events_R23"
+ ],
+ "reference_path": "results/priced_clairvoyant_ceiling/result.json",
+ "reference_sha256": "118fa95fa320ca741dd44f2b0841efcc077c048c9a54159519ed56a029dba8ef",
+ "replay_of": "reconciled_8600001",
+ "run_role": "PERMUTATION_NULL_AND_TAPE_FEATURES",
+ "schema_version": "ceiling_null_diagnostic_v1",
+ "scope": "DEVELOPMENT_DIAGNOSTIC_TESTS_OUR_OWN_POSITIVE_CLAIM",
+ "self_sha256": "b13f06ceb7dea7634986a19149251c842292fd51f3028704ba2fa702ef9810b1",
+ "tape_features": {
+  "8600001": {
+   "backlog_max": 163985.8818181818,
+   "backlog_mean": 148919.78531468532,
+   "demand_total": 409722.9545454546,
+   "events_R11": 32,
+   "events_R12": 1,
+   "events_R13": 21,
+   "events_R14": 158,
+   "events_R21": 0,
+   "events_R22": 1,
+   "events_R23": 1,
+   "events_R24": 8,
+   "events_total": 222,
+   "initial_phase": 5,
+   "warmup_end_hours": 943.8
+  },
+  "8600002": {
+   "backlog_max": 162978.90909090912,
+   "backlog_mean": 145877.36923076923,
+   "demand_total": 403967.8318181817,
+   "events_R11": 32,
+   "events_R12": 1,
+   "events_R13": 23,
+   "events_R14": 158,
+   "events_R21": 0,
+   "events_R22": 2,
+   "events_R23": 0,
+   "events_R24": 7,
+   "events_total": 223,
+   "initial_phase": 5,
+   "warmup_end_hours": 943.8
+  },
+  "8600003": {
+   "backlog_max": 160923.56818181812,
+   "backlog_mean": 148374.44230769228,
+   "demand_total": 406186.768181818,
+   "events_R11": 31,
+   "events_R12": 1,
+   "events_R13": 22,
+   "events_R14": 159,
+   "events_R21": 0,
+   "events_R22": 1,
+   "events_R23": 1,
+   "events_R24": 8,
+   "events_total": 223,
+   "initial_phase": 5,
+   "warmup_end_hours": 961.8
+  },
+  "8600004": {
+   "backlog_max": 160390.84545454543,
+   "backlog_mean": 145835.66748251746,
+   "demand_total": 408769.7545454547,
+   "events_R11": 31,
+   "events_R12": 1,
+   "events_R13": 21,
+   "events_R14": 158,
+   "events_R21": 0,
+   "events_R22": 2,
+   "events_R23": 1,
+   "events_R24": 8,
+   "events_total": 222,
+   "initial_phase": 5,
+   "warmup_end_hours": 943.8
+  },
+  "8600005": {
+   "backlog_max": 163570.70909090916,
+   "backlog_mean": 148990.9543706294,
+   "demand_total": 408524.81363636366,
+   "events_R11": 32,
+   "events_R12": 0,
+   "events_R13": 18,
+   "events_R14": 156,
+   "events_R21": 1,
+   "events_R22": 2,
+   "events_R23": 1,
+   "events_R24": 8,
+   "events_total": 218,
+   "initial_phase": 5,
+   "warmup_end_hours": 943.8
+  },
+  "8600006": {
+   "backlog_max": 163186.20909090916,
+   "backlog_mean": 148190.39947552452,
+   "demand_total": 410663.34090909135,
+   "events_R11": 31,
+   "events_R12": 1,
+   "events_R13": 20,
+   "events_R14": 158,
+   "events_R21": 0,
+   "events_R22": 1,
+   "events_R23": 1,
+   "events_R24": 8,
+   "events_total": 220,
+   "initial_phase": 5,
+   "warmup_end_hours": 943.8
+  },
+  "8600007": {
+   "backlog_max": 159865.53636363638,
+   "backlog_mean": 149451.87692307692,
+   "demand_total": 406848.7272727271,
+   "events_R11": 31,
+   "events_R12": 1,
+   "events_R13": 24,
+   "events_R14": 158,
+   "events_R21": 0,
+   "events_R22": 1,
+   "events_R23": 1,
+   "events_R24": 8,
+   "events_total": 224,
+   "initial_phase": 5,
+   "warmup_end_hours": 943.8
+  },
+  "8600008": {
+   "backlog_max": 163416.7045454545,
+   "backlog_mean": 148108.06346153846,
+   "demand_total": 409248.80454545456,
+   "events_R11": 31,
+   "events_R12": 1,
+   "events_R13": 22,
+   "events_R14": 158,
+   "events_R21": 0,
+   "events_R22": 2,
+   "events_R23": 1,
+   "events_R24": 8,
+   "events_total": 223,
+   "initial_phase": 5,
+   "warmup_end_hours": 943.8
+  },
+  "8600009": {
+   "backlog_max": 161637.66363636358,
+   "backlog_mean": 146824.97482517478,
+   "demand_total": 406249.7272727272,
+   "events_R11": 31,
+   "events_R12": 0,
+   "events_R13": 25,
+   "events_R14": 156,
+   "events_R21": 1,
+   "events_R22": 1,
+   "events_R23": 0,
+   "events_R24": 8,
+   "events_total": 222,
+   "initial_phase": 5,
+   "warmup_end_hours": 943.8
+  },
+  "8600010": {
+   "backlog_max": 162047.8454545455,
+   "backlog_mean": 148642.811013986,
+   "demand_total": 407892.231818182,
+   "events_R11": 32,
+   "events_R12": 0,
+   "events_R13": 23,
+   "events_R14": 158,
+   "events_R21": 0,
+   "events_R22": 2,
+   "events_R23": 1,
+   "events_R24": 8,
+   "events_total": 224,
+   "initial_phase": 5,
+   "warmup_end_hours": 943.8
+  },
+  "8600011": {
+   "backlog_max": 163500.98636363633,
+   "backlog_mean": 141680.93986013986,
+   "demand_total": 406603.37272727274,
+   "events_R11": 31,
+   "events_R12": 0,
+   "events_R13": 17,
+   "events_R14": 159,
+   "events_R21": 1,
+   "events_R22": 1,
+   "events_R23": 1,
+   "events_R24": 7,
+   "events_total": 217,
+   "initial_phase": 4,
+   "warmup_end_hours": 838.8
+  },
+  "8600012": {
+   "backlog_max": 159659.0136363636,
+   "backlog_mean": 148724.1872377622,
+   "demand_total": 407476.70454545453,
+   "events_R11": 32,
+   "events_R12": 1,
+   "events_R13": 21,
+   "events_R14": 152,
+   "events_R21": 1,
+   "events_R22": 1,
+   "events_R23": 0,
+   "events_R24": 7,
+   "events_total": 215,
+   "initial_phase": 5,
+   "warmup_end_hours": 943.8
+  }
+ },
+ "tests": {
+  "claim": "HEADROOM_ESTABLISHED_IN_A_PRICE_BAND",
+  "path": "results/lambda_refinement/result.json"
+ }
+}
