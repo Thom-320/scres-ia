@@ -1,0 +1,341 @@
+{
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "THE_BEST_MEAN_ARM_IS_A_MARGINAL_REPLAY_AND_THE_TOP_FOUR_ARE_INDISTINGUISHABLE",
+ "contract_path": "/Users/thom/Projects/research/scres-ia/docs/ENMIENDA_REGISTRO_DE_EVIDENCIA_2026-08-07.md",
+ "contract_sha256": "8e78b344536e8c6440d29ff4e437a0ea9b84c5fe73980d0b40c842aa90947ff5",
+ "created_at": "2026-08-08T04:31:54.542364+00:00",
+ "endpoint": "auc_regret_norm",
+ "estimand": "paired per-seed (arm - best-mean arm); lower AUC is better, so positive = worse",
+ "falsifiers": {
+  "all_passed": true,
+  "f1_the_source_means_reproduce": {
+   "evidence": {
+    "max_abs_delta": 0.0,
+    "why_it_can_fail": "if per_arm did not average to the sealed mean_auc, this script would be re-reading something other than the confirmation"
+   },
+   "passed": true
+  },
+  "f2_all_arms_share_the_seed_vector": {
+   "evidence": {
+    "lengths": {
+     "gp_cold": 60,
+     "gp_marginal": 60,
+     "gp_transfer": 60,
+     "neuron_cold": 60,
+     "neuron_marginal": 60,
+     "neuron_transfer": 60,
+     "ofat_cold": 60,
+     "ofat_marginal": 60,
+     "ofat_transfer": 60,
+     "ucb1_cold": 60,
+     "ucb1_marginal": 60,
+     "ucb1_transfer": 60
+    },
+    "n_seeds": 60,
+    "why_it_can_fail": "the contrast is paired positionally; an arm of a different length would be paired against the wrong seeds"
+   },
+   "passed": true
+  },
+  "f3_the_incumbent_is_not_assumed": {
+   "evidence": {
+    "incumbent": "neuron_marginal",
+    "incumbent_mean": 0.06802129501597692,
+    "manuscript_recommended_arm": "ucb1_transfer",
+    "rank_of_recommended_arm": 4,
+    "why_it_can_fail": "naming the incumbent in advance -- especially naming the arm the manuscript recommends -- would rebuild the concealment this analysis exists to remove; it is read off the ranking"
+   },
+   "passed": true
+  },
+  "f4_a_difference_of_means_is_not_a_verdict": {
+   "evidence": {
+    "indistinguishable_from_incumbent": [
+     "ofat_marginal",
+     "gp_marginal",
+     "ucb1_transfer"
+    ],
+    "why_it_can_fail": "if every arm were distinguishable from the incumbent this falsifier would fail and the ranking WOULD be a verdict; it exists so the ranking cannot be read as one by default"
+   },
+   "passed": true
+  },
+  "f5_no_seed_is_opened": {
+   "evidence": {
+    "seed_block": [
+     8200001,
+     8200060
+    ],
+    "why_it_can_fail": "it cannot -- this script reads one sealed artifact and runs no simulation; recorded so the scope is explicit"
+   },
+   "passed": true
+  }
+ },
+ "governing_contract": "docs/ENMIENDA_REGISTRO_DE_EVIDENCIA_2026-08-07.md",
+ "incumbent": "neuron_marginal",
+ "mean_auc": {
+  "gp_cold": 0.10774015502016045,
+  "gp_marginal": 0.0718187658074316,
+  "gp_transfer": 0.09341379718626547,
+  "neuron_cold": 0.1341979079737767,
+  "neuron_marginal": 0.06802129501597692,
+  "neuron_transfer": 0.07980427883032978,
+  "ofat_cold": 0.10825992083985228,
+  "ofat_marginal": 0.06936889006996547,
+  "ofat_transfer": 0.09404105138601099,
+  "ucb1_cold": 0.130121681672472,
+  "ucb1_marginal": 0.10341660017457327,
+  "ucb1_transfer": 0.07268348890154588
+ },
+ "module_manifest": {
+  "entry_script": "scripts/run_best_arm_reanalysis_v1.py",
+  "entry_script_sha256": "6a941f9b61775c0a9ac0161dd1419e9a4ee2e7dbb8fa783100d9dc983ff44658",
+  "missing": [],
+  "modules": {
+   "supply_chain/arm_runner.py": "1afea4fa248db5beb2d86c6ab2033d6f24a95115ea544b08966b7a538456ac99",
+   "supply_chain/seed_custody.py": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "n_seeds": 60,
+ "ranking_best_first": [
+  "neuron_marginal",
+  "ofat_marginal",
+  "gp_marginal",
+  "ucb1_transfer",
+  "neuron_transfer",
+  "gp_transfer",
+  "ofat_transfer",
+  "ucb1_marginal",
+  "gp_cold",
+  "ofat_cold",
+  "ucb1_cold",
+  "neuron_cold"
+ ],
+ "reference_path": "/Users/thom/Projects/research/scres-ia/results/grid_transfer_confirmation_v2/result.json",
+ "reference_sha256": "eceb9ee97613e172130b7175a79cf6c7d5ddfb54f0ec5435b1174842c20b0f5a",
+ "registration_status": "POST_HOC_REREAD_PROMPTED_BY_EXTERNAL_REVIEW_NOT_PREREGISTERED",
+ "schema_version": "best_arm_reanalysis_v1",
+ "scope": "REREAD_OF_ONE_SEALED_CONFIRMATION_NO_SEEDS_NO_NEW_RUN",
+ "self_sha256": "fd9ebac07be576a5cd719b5cf8d53420e5f2bee4f995bbb3e1db7bbc64ee9e02",
+ "source": "results/grid_transfer_confirmation_v2/result.json",
+ "source_self_sha256": "eceb9ee97613e172130b7175a79cf6c7d5ddfb54f0ec5435b1174842c20b0f5a",
+ "structure": {
+  "all_cold_arms_are_the_worst": true,
+  "cold_arms_ranks": {
+   "gp_cold": 9,
+   "neuron_cold": 12,
+   "ofat_cold": 10,
+   "ucb1_cold": 11
+  },
+  "n_indistinguishable_from_incumbent": 3,
+  "n_marginal_replays_in_top_four": 3
+ },
+ "vs_incumbent": {
+  "gp_cold": {
+   "distinguishable_from_incumbent": true,
+   "holm": {
+    "p_raw": 0.0,
+    "rejected_at_05": true,
+    "threshold": 0.00625
+   },
+   "lcb95": 0.026947355678312114,
+   "mean": 0.03971886000418354,
+   "n": 60,
+   "p_two_sided": 0.0,
+   "seeds_where_arm_is_better": 13,
+   "ucb95": 0.052176895677820065
+  },
+  "gp_marginal": {
+   "distinguishable_from_incumbent": false,
+   "holm": {
+    "p_raw": 0.172,
+    "rejected_at_05": false,
+    "threshold": 0.016666666666666666
+   },
+   "lcb95": -0.0015823728619459541,
+   "mean": 0.0037974707914546677,
+   "n": 60,
+   "p_two_sided": 0.172,
+   "seeds_where_arm_is_better": 29,
+   "ucb95": 0.009504594310373938
+  },
+  "gp_transfer": {
+   "distinguishable_from_incumbent": true,
+   "holm": {
+    "p_raw": 0.0,
+    "rejected_at_05": true,
+    "threshold": 0.004545454545454546
+   },
+   "lcb95": 0.016644491497047477,
+   "mean": 0.025392502170288513,
+   "n": 60,
+   "p_two_sided": 0.0,
+   "seeds_where_arm_is_better": 14,
+   "ucb95": 0.0342923217070568
+  },
+  "neuron_cold": {
+   "distinguishable_from_incumbent": true,
+   "holm": {
+    "p_raw": 0.0,
+    "rejected_at_05": true,
+    "threshold": 0.01
+   },
+   "lcb95": 0.05095728371475778,
+   "mean": 0.06617661295779978,
+   "n": 60,
+   "p_two_sided": 0.0,
+   "seeds_where_arm_is_better": 5,
+   "ucb95": 0.08226731033488408
+  },
+  "neuron_transfer": {
+   "distinguishable_from_incumbent": true,
+   "holm": {
+    "p_raw": 0.0016,
+    "rejected_at_05": true,
+    "threshold": 0.0125
+   },
+   "lcb95": 0.004897004289942578,
+   "mean": 0.011782983814352867,
+   "n": 60,
+   "p_two_sided": 0.0016,
+   "seeds_where_arm_is_better": 17,
+   "ucb95": 0.01834449385752977
+  },
+  "ofat_cold": {
+   "distinguishable_from_incumbent": true,
+   "holm": {
+    "p_raw": 0.0,
+    "rejected_at_05": true,
+    "threshold": 0.0071428571428571435
+   },
+   "lcb95": 0.03309571021597509,
+   "mean": 0.04023862582387537,
+   "n": 60,
+   "p_two_sided": 0.0,
+   "seeds_where_arm_is_better": 2,
+   "ucb95": 0.04711998008402946
+  },
+  "ofat_marginal": {
+   "distinguishable_from_incumbent": false,
+   "holm": {
+    "p_raw": 0.668,
+    "rejected_at_05": false,
+    "threshold": 0.05
+   },
+   "lcb95": -0.004470490690861106,
+   "mean": 0.0013475950539885467,
+   "n": 60,
+   "p_two_sided": 0.668,
+   "seeds_where_arm_is_better": 34,
+   "ucb95": 0.007490344572953551
+  },
+  "ofat_transfer": {
+   "distinguishable_from_incumbent": true,
+   "holm": {
+    "p_raw": 0.0,
+    "rejected_at_05": true,
+    "threshold": 0.005
+   },
+   "lcb95": 0.017286543071004346,
+   "mean": 0.02601975637003405,
+   "n": 60,
+   "p_two_sided": 0.0,
+   "seeds_where_arm_is_better": 9,
+   "ucb95": 0.03491996727755448
+  },
+  "ucb1_cold": {
+   "distinguishable_from_incumbent": true,
+   "holm": {
+    "p_raw": 0.0,
+    "rejected_at_05": true,
+    "threshold": 0.008333333333333333
+   },
+   "lcb95": 0.05298959011069018,
+   "mean": 0.06210038665649509,
+   "n": 60,
+   "p_two_sided": 0.0,
+   "seeds_where_arm_is_better": 3,
+   "ucb95": 0.0711293498694332
+  },
+  "ucb1_marginal": {
+   "distinguishable_from_incumbent": true,
+   "holm": {
+    "p_raw": 0.0,
+    "rejected_at_05": true,
+    "threshold": 0.005555555555555556
+   },
+   "lcb95": 0.024335133721016488,
+   "mean": 0.03539530515859632,
+   "n": 60,
+   "p_two_sided": 0.0,
+   "seeds_where_arm_is_better": 11,
+   "ucb95": 0.04670976323732447
+  },
+  "ucb1_transfer": {
+   "distinguishable_from_incumbent": false,
+   "holm": {
+    "p_raw": 0.2124,
+    "rejected_at_05": false,
+    "threshold": 0.025
+   },
+   "lcb95": -0.002606326312703337,
+   "mean": 0.004662193885568932,
+   "n": 60,
+   "p_two_sided": 0.2124,
+   "seeds_where_arm_is_better": 27,
+   "ucb95": 0.012064929679284735
+  }
+ },
+ "what_this_changes": "The manuscript's headline rests on a within-family contrast. Across arms, the retained arm it recommends ranks fourth and is not distinguishable from the three replays above it. The transferable object in this contract is a level-frequency prior over the design space, not a sequential search strategy.",
+ "what_this_does_not_say": "It does not say a state-blind replay beats retained state: the paired intervals against the incumbent straddle zero. Reading the mean ranking as a verdict would repeat, in the opposite direction, the error this repository already forbids for the ofat contrast.",
+ "within_family_retention_vs_own_marginal": {
+  "gp": {
+   "lcb95": -0.030669572556488323,
+   "mean": -0.021595031378833847,
+   "n": 60,
+   "retention_loses": true,
+   "retention_wins": false,
+   "ucb95": -0.01228466907614214
+  },
+  "neuron": {
+   "lcb95": -0.018281893692688924,
+   "mean": -0.011782983814352867,
+   "n": 60,
+   "retention_loses": true,
+   "retention_wins": false,
+   "ucb95": -0.004640461192514599
+  },
+  "ofat": {
+   "lcb95": -0.033095199701732955,
+   "mean": -0.024672161316045497,
+   "n": 60,
+   "retention_loses": true,
+   "retention_wins": false,
+   "ucb95": -0.016506877862795408
+  },
+  "ucb1": {
+   "lcb95": 0.01967892337650148,
+   "mean": 0.03073311127302739,
+   "n": 60,
+   "retention_loses": false,
+   "retention_wins": true,
+   "ucb95": 0.04194741426268322
+  }
+ }
+}
