@@ -5834,7 +5834,8 @@ class MFSCSimulation:
         """Sample the event offset for the risk's declared occurrence family.
 
         The source family is the thesis's uniform window on [a, b]. An alternative family is
-        MOMENT-MATCHED on the mean inter-arrival, (a + b) / 2, so mean frequency is held and only
+        MOMENT-MATCHED on the mean inter-arrival -- which is `b` under `thesis_window`, not
+        (a + b) / 2 -- so long-run mean frequency is held by construction and only
         the SHAPE moves: the exponential is memoryless and bursty in the tail, the lognormal is
         right-skewed with long quiet stretches. Both are renewal processes, so they return a window
         equal to their own delay and `_tail_after_uniform_occurrence` yields zero -- the loop then
