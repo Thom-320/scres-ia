@@ -69,7 +69,8 @@ CLAIMS: list[dict] = [
         "why_forbidden": ("'policy' would conflate the outer loop with within-episode control; and "
                           "'best arm' is false -- RQ2C ranks ucb1_transfer fourth of twelve and "
                           "indistinguishable from the three above it"),
-        "must_be_cited_with": ["RQ2C_THE_TOP_FOUR_ARMS_ARE_INDISTINGUISHABLE"],
+        "must_be_cited_with": ["RQ2C_THE_TOP_FOUR_ARMS_ARE_INDISTINGUISHABLE",
+                               "COMPARATOR_IS_NOT_FIXED_DURING_THE_RUN"],
     },
     {
         "claim_id": "RQ2B_SECONDARY_CARRIERS_SHOW_NO_SUCH_ADVANTAGE",
@@ -82,12 +83,20 @@ CLAIMS: list[dict] = [
         "endpoint": "auc_regret_norm",
         "estimand": "each secondary carrier's transfer vs its own state-blind marginal replay",
         "allowed": ("Prespecified secondary analyses found no corresponding advantage for the "
-                    "evaluated neural, GP-EI or OFAT carriers; the neural carrier's contrast fell "
-                    "on the wrong side of zero (-0.01178, [-0.01849, -0.00484])."),
+                    "evaluated neural, GP-EI or OFAT carriers over the full run; the neural "
+                    "carrier's contrast averaged -0.01178 [-0.01849, -0.00484]. This average is not "
+                    "stationary: over the first twenty seeds the neural contrast was +0.00032, and "
+                    "it reaches -0.02146 over the last twenty as the comparator accumulates visits "
+                    "(rho = -0.378 with run order, permutation p = 0.003). The secondary negative "
+                    "is therefore contingent on the comparator's accumulated strength."),
         "forbidden": ["the neuron has no memory", "neural carriers cannot transfer",
-                      "this confirms the neural carrier fails", "a confirmatory negative"],
-        "why_forbidden": ("the preregistration declares these arms secondary and exploratory; a "
-                          "prospective negative at secondary grade is not a confirmed negative"),
+                      "this confirms the neural carrier fails", "a confirmatory negative",
+                      "the neural carrier did not transfer"],
+        "why_forbidden": ("the preregistration declares these arms secondary and exploratory, so a "
+                          "prospective negative at secondary grade is not a confirmed negative; and "
+                          "the negative is not present in the first third of the run, so an "
+                          "unqualified 'did not transfer' misstates a non-stationary contrast"),
+        "must_be_cited_with": ["COMPARATOR_IS_NOT_FIXED_DURING_THE_RUN"],
     },
     {
         "claim_id": "RQ2C_THE_TOP_FOUR_ARMS_ARE_INDISTINGUISHABLE",
@@ -103,7 +112,11 @@ CLAIMS: list[dict] = [
                     "in three."),
         "forbidden": ["the state-blind control wins", "marginal replay is the best procedure",
                       "retention does not help", "this was preregistered",
-                      "the ranking selects a new winner"],
+                      "the ranking selects a new winner",
+                      "three of the four discard the carrier entirely",
+                      "the transferable object is a level-frequency prior",
+                      "a visit histogram is enough", "state-blind marginal replay"],
+        "must_be_cited_with": ["COMPARATOR_IS_NOT_FIXED_DURING_THE_RUN"],
         "why_forbidden": ("the three paired contrasts against the incumbent all cross zero, so "
                           "reading the mean ranking as a verdict is the same defect ENMIENDA_1 "
                           "forbids for ofat; and the preregistration forbids selecting a different "
@@ -133,6 +146,33 @@ CLAIMS: list[dict] = [
         "why_forbidden": ("the analysis is a sealed-tape reanalysis with no new seeds or "
                           "adjudication; its estimand is within-family AUC, not a prospective "
                           "confirmation or a context-specific effect"),
+    },
+    {
+        "claim_id": "COMPARATOR_IS_NOT_FIXED_DURING_THE_RUN",
+        "artifact": "results/comparator_drift/result.json",
+        "section": "RQ2 limitation, and Methods where the comparator is defined",
+        "endpoint": "auc_regret_norm",
+        "estimand": "per-seed contrast and per-arm regret regressed on run order",
+        "allow_failed_falsifiers": True,
+        "allowed": ("The marginal-replay comparator is built from a visit histogram that is created "
+                    "once and updated throughout the run, including with the transferred arm's "
+                    "visits on the case being scored. It is therefore not carrier-independent and "
+                    "not fixed: at the first evaluation it holds 24 real visits against 4,608 "
+                    "pseudocounts and samples almost uniformly, and by the last it holds 8,640, 65% "
+                    "of the mass. The four marginal arms are the four most strongly "
+                    "negatively-correlated with run order of all twelve, ahead of every cold and "
+                    "transfer arm, resolved at p < 0.05 in three of four; no cold arm drifts in any "
+                    "family. The current case contributes between 0.52% and 0.18% of the histogram "
+                    "mass. Declared falsifier f2, which asked the same question of the contrast "
+                    "rather than of the comparator, required resolution in at least three of four "
+                    "families and returned two; it is reported failed and its bar was not moved."),
+        "forbidden": ["state-blind marginal replay", "the comparator is a fixed control",
+                      "an ex-ante transportable prior", "the histogram can be deployed alone",
+                      "this invalidates the confirmation"],
+        "why_forbidden": ("the accurate name is a carrier-state-blind, sequence-blind ONLINE "
+                          "frequency replay; and the UCB1 contrast stays positive across the whole "
+                          "run including its last window, so the confirmation is qualified rather "
+                          "than withdrawn"),
     },
     {
         "claim_id": "RQ1_SIMULTANEOUS_AND_THE_DEPLOYED_ENDPOINT",

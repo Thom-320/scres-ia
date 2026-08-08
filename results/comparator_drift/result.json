@@ -1,0 +1,370 @@
+{
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "COMPARATOR_DRIFT_DIRECTIONAL_IN_4_OF_4_RESOLVED_IN_2_OF_4",
+ "contract_path": "/Users/thom/Projects/research/scres-ia/docs/ENMIENDA_REGISTRO_DE_EVIDENCIA_2026-08-07.md",
+ "contract_sha256": "8e78b344536e8c6440d29ff4e437a0ea9b84c5fe73980d0b40c842aa90947ff5",
+ "created_at": "2026-08-08T05:16:25.929232+00:00",
+ "endpoint": "auc_regret_norm",
+ "estimand": "per-seed contrast (comparator - transfer) regressed on run order; the cold comparator is the internal control",
+ "falsifiers": {
+  "all_passed": false,
+  "f0_stored_seed_order_is_run_order": {
+   "passed": true,
+   "seeds_first": [
+    8200001,
+    8200002
+   ],
+   "seeds_last": [
+    8200059,
+    8200060
+   ],
+   "why_it_can_fail": "if the artifact stored seeds sorted differently from the loop that produced them, every correlation below would be meaningless"
+  },
+  "f1_the_cold_comparator_does_not_drift": {
+   "n_families_drifting": 0,
+   "passed": true,
+   "per_family_p": {
+    "gp": 0.9848,
+    "neuron": 0.3902,
+    "ofat": 0.2997,
+    "ucb1": 0.4779
+   },
+   "why_it_can_fail": "the cold arm is rebuilt per case and carries nothing, so it cannot drift from accumulation. If it drifts anyway the trend belongs to the seed block and this whole diagnosis is wrong"
+  },
+  "f2_the_marginal_comparator_drifts_in_most_families": {
+   "is_substantive_not_integrity": true,
+   "mis_specification_disclosed": "tests the contrast, not the comparator; see per_arm_trend for the correctly-posed quantity",
+   "n_families_drifting": 2,
+   "n_families_drifting_in_direction": 4,
+   "passed": false,
+   "per_family_p": {
+    "gp": 0.1662,
+    "neuron": 0.003,
+    "ofat": 0.0061,
+    "ucb1": 0.089
+   },
+   "why_it_can_fail": "a single drifting family would be a fluke, not a mechanism"
+  },
+  "f3_the_sealed_contrast_means_reproduce_exactly": {
+   "detail": {
+    "gp": {
+     "exact": true,
+     "recomputed": -0.021595031378833847,
+     "sealed": -0.021595031378833847
+    },
+    "neuron": {
+     "exact": true,
+     "recomputed": -0.011782983814352867,
+     "sealed": -0.011782983814352867
+    },
+    "ofat": {
+     "exact": true,
+     "recomputed": -0.024672161316045497,
+     "sealed": -0.024672161316045497
+    },
+    "ucb1": {
+     "exact": true,
+     "recomputed": 0.03073311127302739,
+     "sealed": 0.03073311127302739
+    }
+   },
+   "passed": true,
+   "why_it_can_fail": "a different orientation or arm map would give different means"
+  },
+  "f4_the_permutation_null_is_centred_on_zero": {
+   "null_means": {
+    "gp": 0.0002808648326077366,
+    "neuron": 0.0002871435977925738,
+    "ofat": 0.002264834909887129,
+    "ucb1": -0.0008915484163164424
+   },
+   "passed": true,
+   "why_it_can_fail": "a permutation that failed to shuffle would reproduce the observed rho and every p-value would collapse to zero"
+  },
+  "f5_arrays_are_aligned_with_the_seed_list": {
+   "lengths": {
+    "gp_cold": 60,
+    "gp_marginal": 60,
+    "gp_transfer": 60,
+    "neuron_cold": 60,
+    "neuron_marginal": 60,
+    "neuron_transfer": 60,
+    "ofat_cold": 60,
+    "ofat_marginal": 60,
+    "ofat_transfer": 60,
+    "ucb1_cold": 60,
+    "ucb1_marginal": 60,
+    "ucb1_transfer": 60
+   },
+   "n_seeds": 60,
+   "passed": true
+  }
+ },
+ "head_tail_window": 20,
+ "histogram_mass_accounting": {
+  "comparator_at_first_evaluation": "essentially uniform sampling: 24 real visits against 4608 pseudocounts",
+  "current_case_share_first_evaluation": 0.0051813471502590676,
+  "current_case_share_last_evaluation": 0.0018115942028985507,
+  "histogram_initial_pseudocounts": 4608,
+  "n_evaluations_per_arm": 360,
+  "real_visit_share_of_mass_at_end": 0.6521739130434783,
+  "visits_added_per_evaluation": 24
+ },
+ "integrity_falsifiers_passed": true,
+ "module_manifest": {
+  "entry_script": "scripts/run_comparator_drift_diagnostic_v1.py",
+  "entry_script_sha256": "a98ddc0159a70847285b4a0081eb7179903d029a1709e43a5ed0e515f6fb7f3f",
+  "missing": [],
+  "modules": {
+   "supply_chain/arm_runner.py": "1afea4fa248db5beb2d86c6ab2033d6f24a95115ea544b08966b7a538456ac99",
+   "supply_chain/seed_custody.py": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "n_perm": 10000,
+ "per_arm_trend": {
+  "gp_cold": {
+   "drift_last_minus_first": -0.004732484748512136,
+   "mean": 0.10774015502016045,
+   "mean_first_20": 0.11101760639551816,
+   "mean_last_20": 0.10628512164700603,
+   "null_mean_rho": -0.0010875901643414266,
+   "null_sd_rho": 0.13025010213880195,
+   "p_permutation_two_sided": 0.56,
+   "rho_with_run_order": -0.07815584813283802
+  },
+  "gp_marginal": {
+   "drift_last_minus_first": -0.02156208345379875,
+   "mean": 0.0718187658074316,
+   "mean_first_20": 0.0810725905556034,
+   "mean_last_20": 0.059510507101804645,
+   "null_mean_rho": -0.0009803409910497845,
+   "null_sd_rho": 0.13019400844138493,
+   "p_permutation_two_sided": 0.0496,
+   "rho_with_run_order": -0.25690876218255343
+  },
+  "gp_transfer": {
+   "drift_last_minus_first": -0.0051920962859025865,
+   "mean": 0.09341379718626547,
+   "mean_first_20": 0.09459582086387844,
+   "mean_last_20": 0.08940372457797585,
+   "null_mean_rho": -0.0014230373236544097,
+   "null_sd_rho": 0.13074994282373742,
+   "p_permutation_two_sided": 0.3942,
+   "rho_with_run_order": -0.1123167718925228
+  },
+  "neuron_cold": {
+   "drift_last_minus_first": -0.010392396665600656,
+   "mean": 0.1341979079737767,
+   "mean_first_20": 0.1409881234288394,
+   "mean_last_20": 0.13059572676323875,
+   "null_mean_rho": -0.0013056196227481623,
+   "null_sd_rho": 0.13080394003168624,
+   "p_permutation_two_sided": 0.5065,
+   "rho_with_run_order": -0.0879389790353947
+  },
+  "neuron_marginal": {
+   "drift_last_minus_first": -0.02138341470602769,
+   "mean": 0.06802129501597692,
+   "mean_first_20": 0.07778891440790307,
+   "mean_last_20": 0.05640549970187538,
+   "null_mean_rho": -0.00013341250911477157,
+   "null_sd_rho": 0.13021979090361288,
+   "p_permutation_two_sided": 0.0213,
+   "rho_with_run_order": -0.297232946461663
+  },
+  "neuron_transfer": {
+   "drift_last_minus_first": 0.00039499843485923947,
+   "mean": 0.07980427883032978,
+   "mean_first_20": 0.0774708512677546,
+   "mean_last_20": 0.07786584970261384,
+   "null_mean_rho": -0.001423922725399935,
+   "null_sd_rho": 0.13100445464504432,
+   "p_permutation_two_sided": 0.9446,
+   "rho_with_run_order": 0.008819277037995066
+  },
+  "ofat_cold": {
+   "drift_last_minus_first": 0.0027668034419806586,
+   "mean": 0.10825992083985228,
+   "mean_first_20": 0.10507230476841205,
+   "mean_last_20": 0.1078391082103927,
+   "null_mean_rho": 0.0016590102360309756,
+   "null_sd_rho": 0.13139624598443045,
+   "p_permutation_two_sided": 0.6121,
+   "rho_with_run_order": 0.06708739706918018
+  },
+  "ofat_marginal": {
+   "drift_last_minus_first": -0.027664933555494646,
+   "mean": 0.06936889006996547,
+   "mean_first_20": 0.0836971208581476,
+   "mean_last_20": 0.05603218730265295,
+   "null_mean_rho": -0.0015519981287965168,
+   "null_sd_rho": 0.12989097439102454,
+   "p_permutation_two_sided": 0.0045,
+   "rho_with_run_order": -0.35879153448670675
+  },
+  "ofat_transfer": {
+   "drift_last_minus_first": -0.002387069188948973,
+   "mean": 0.09404105138601099,
+   "mean_first_20": 0.08930268881237473,
+   "mean_last_20": 0.08691561962342575,
+   "null_mean_rho": -0.0006570925932659112,
+   "null_sd_rho": 0.13096747285207244,
+   "p_permutation_two_sided": 0.7502,
+   "rho_with_run_order": -0.043378820078438636
+  },
+  "ucb1_cold": {
+   "drift_last_minus_first": -0.0022330021828669555,
+   "mean": 0.130121681672472,
+   "mean_first_20": 0.13120207526778052,
+   "mean_last_20": 0.12896907308491357,
+   "null_mean_rho": -0.0005430572979090582,
+   "null_sd_rho": 0.1309809235498204,
+   "p_permutation_two_sided": 0.8276,
+   "rho_with_run_order": -0.029103383827096978
+  },
+  "ucb1_marginal": {
+   "drift_last_minus_first": -0.011523725091336812,
+   "mean": 0.10341660017457327,
+   "mean_first_20": 0.11367947004088005,
+   "mean_last_20": 0.10215574494954324,
+   "null_mean_rho": 0.0008940781968229569,
+   "null_sd_rho": 0.13142861482813228,
+   "p_permutation_two_sided": 0.1558,
+   "rho_with_run_order": -0.1883774102737572
+  },
+  "ucb1_transfer": {
+   "drift_last_minus_first": 0.0027195470286081047,
+   "mean": 0.07268348890154588,
+   "mean_first_20": 0.07066172507377848,
+   "mean_last_20": 0.07338127210238658,
+   "null_mean_rho": 0.0019065575552845828,
+   "null_sd_rho": 0.130781085616255,
+   "p_permutation_two_sided": 0.6983,
+   "rho_with_run_order": 0.051487958202812774
+  }
+ },
+ "perm_seed": 20260808,
+ "preregistration": null,
+ "reference_path": "/Users/thom/Projects/research/scres-ia/results/grid_transfer_confirmation_v2/result.json",
+ "reference_sha256": "eceb9ee97613e172130b7175a79cf6c7d5ddfb54f0ec5435b1174842c20b0f5a",
+ "registration_status": "POST_HOC_DIAGNOSTIC_PROMPTED_BY_EXTERNAL_REVIEW_NOT_PREREGISTERED",
+ "run_role": "POST_HOC_REREAD",
+ "schema_version": "comparator_drift_v1",
+ "scope": "REREAD_OF_ONE_SEALED_CONFIRMATION_NO_SEEDS_NO_NEW_RUN",
+ "self_sha256": "d5681adfc14c3a80c39d5acf102d0984a0f2f0f613fecc619c564a355a917c75",
+ "source": "results/grid_transfer_confirmation_v2/result.json",
+ "source_self_sha256": "eceb9ee97613e172130b7175a79cf6c7d5ddfb54f0ec5435b1174842c20b0f5a",
+ "vs_cold_start": {
+  "gp": {
+   "drift_last_minus_first": 0.00045961153739047106,
+   "mean": 0.01432635783389502,
+   "mean_first_20": 0.016421785531639744,
+   "mean_last_20": 0.016881397069030215,
+   "null_mean_rho": 0.0027714723949345157,
+   "null_sd_rho": 0.12991197386516024,
+   "p_permutation_two_sided": 0.9848,
+   "rho_with_run_order": -0.0022340840455965364
+  },
+  "neuron": {
+   "drift_last_minus_first": -0.01078739510045991,
+   "mean": 0.054393629143446906,
+   "mean_first_20": 0.0635172721610848,
+   "mean_last_20": 0.05272987706062489,
+   "null_mean_rho": -0.0019359520522568125,
+   "null_sd_rho": 0.1308311680016029,
+   "p_permutation_two_sided": 0.3902,
+   "rho_with_run_order": -0.11348225588982826
+  },
+  "ofat": {
+   "drift_last_minus_first": 0.005153872630929625,
+   "mean": 0.014218869453841312,
+   "mean_first_20": 0.015769615956037302,
+   "mean_last_20": 0.020923488586966927,
+   "null_mean_rho": -0.0003134083739053402,
+   "null_sd_rho": 0.13086795566213758,
+   "p_permutation_two_sided": 0.2997,
+   "rho_with_run_order": 0.13961092544737724
+  },
+  "ucb1": {
+   "drift_last_minus_first": -0.004952549211475053,
+   "mean": 0.05743819277092614,
+   "mean_first_20": 0.06054035019400202,
+   "mean_last_20": 0.05558780098252697,
+   "null_mean_rho": 0.0018662139153719558,
+   "null_sd_rho": 0.12830244307103958,
+   "p_permutation_two_sided": 0.4779,
+   "rho_with_run_order": -0.09230673696638422
+  }
+ },
+ "vs_marginal_replay": {
+  "gp": {
+   "drift_last_minus_first": -0.016369987167896158,
+   "mean": -0.021595031378833847,
+   "mean_first_20": -0.013523230308275033,
+   "mean_last_20": -0.029893217476171192,
+   "null_mean_rho": 0.0002808648326077366,
+   "null_sd_rho": 0.13105601466293257,
+   "p_permutation_two_sided": 0.1662,
+   "rho_with_run_order": -0.18236330393629915
+  },
+  "neuron": {
+   "drift_last_minus_first": -0.021778413140886934,
+   "mean": -0.011782983814352867,
+   "mean_first_20": 0.0003180631401484696,
+   "mean_last_20": -0.021460350000738464,
+   "null_mean_rho": 0.0002871435977925738,
+   "null_sd_rho": 0.1309431653469862,
+   "p_permutation_two_sided": 0.003,
+   "rho_with_run_order": -0.3778590775601521
+  },
+  "ofat": {
+   "drift_last_minus_first": -0.02527786436654567,
+   "mean": -0.024672161316045497,
+   "mean_first_20": -0.005605567954227138,
+   "mean_last_20": -0.030883432320772806,
+   "null_mean_rho": 0.002264834909887129,
+   "null_sd_rho": 0.13088434348705394,
+   "p_permutation_two_sided": 0.0061,
+   "rho_with_run_order": -0.35233555931250204
+  },
+  "ucb1": {
+   "drift_last_minus_first": -0.014243272119944916,
+   "mean": 0.03073311127302739,
+   "mean_first_20": 0.04301774496710158,
+   "mean_last_20": 0.028774472847156667,
+   "null_mean_rho": -0.0008915484163164424,
+   "null_sd_rho": 0.13002723075027264,
+   "p_permutation_two_sided": 0.089,
+   "rho_with_run_order": -0.22060331367818847
+  }
+ },
+ "what_this_changes": [
+  "'state-blind marginal replay' is the wrong name: the histogram contains visits the carrier chose adaptively on the target case. 'carrier-state-blind, sequence-blind online frequency replay' is accurate.",
+  "the comparator cannot be deployed without first running the carrier on the same case, so it is not an ex-ante transportable prior and no claim of the form 'a level-frequency prior is what transfers' is identified by this artifact",
+  "the paired bootstrap treats the 60 seeds as exchangeable replicates of one contrast; with a trend in the contrast they are not"
+ ],
+ "what_this_does_not_change": [
+  "the sealed confirmatory verdict stands: the UCB1 contrast is positive across the whole run, and remains positive in the last window where the comparator is strongest",
+  "the cold-start comparisons are untouched -- the cold arm carries nothing and f1 shows it does not drift",
+  "nothing here re-grades a sealed artifact; it adds a limitation that can now be cited"
+ ]
+}

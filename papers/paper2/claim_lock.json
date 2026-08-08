@@ -21,7 +21,8 @@
    ],
    "missing_top_level_fields": [],
    "must_be_cited_with": [
-    "RQ2C_THE_TOP_FOUR_ARMS_ARE_INDISTINGUISHABLE"
+    "RQ2C_THE_TOP_FOUR_ARMS_ARE_INDISTINGUISHABLE",
+    "COMPARATOR_IS_NOT_FIXED_DURING_THE_RUN"
    ],
    "paper_id": "P2",
    "registration_status": null,
@@ -32,7 +33,7 @@
    "why_forbidden": "'policy' would conflate the outer loop with within-episode control; and 'best arm' is false -- RQ2C ranks ucb1_transfer fourth of twelve and indistinguishable from the three above it"
   },
   {
-   "allowed": "Prespecified secondary analyses found no corresponding advantage for the evaluated neural, GP-EI or OFAT carriers; the neural carrier's contrast fell on the wrong side of zero (-0.01178, [-0.01849, -0.00484]).",
+   "allowed": "Prespecified secondary analyses found no corresponding advantage for the evaluated neural, GP-EI or OFAT carriers over the full run; the neural carrier's contrast averaged -0.01178 [-0.01849, -0.00484]. This average is not stationary: over the first twenty seeds the neural contrast was +0.00032, and it reaches -0.02146 over the last twenty as the comparator accumulates visits (rho = -0.378 with run order, permutation p = 0.003). The secondary negative is therefore contingent on the comparator's accumulated strength.",
    "artifact": "results/grid_transfer_confirmation_v2/result.json",
    "claim_id": "RQ2B_SECONDARY_CARRIERS_SHOW_NO_SUCH_ADVANTAGE",
    "claim_status": "GRID_TRANSFER_CONFIRMED__UCB1",
@@ -47,9 +48,13 @@
     "the neuron has no memory",
     "neural carriers cannot transfer",
     "this confirms the neural carrier fails",
-    "a confirmatory negative"
+    "a confirmatory negative",
+    "the neural carrier did not transfer"
    ],
    "missing_top_level_fields": [],
+   "must_be_cited_with": [
+    "COMPARATOR_IS_NOT_FIXED_DURING_THE_RUN"
+   ],
    "paper_id": "P2",
    "registration_status": null,
    "run_role": "CONFIRMATION",
@@ -57,7 +62,7 @@
    "secondary_estimand_declared_in": "docs/PREREGISTRO_CONFIRMACION_TRANSFERENCIA_REJILLA_2026-08-05.md lines 15 and 39-41: UCB1 factor-wise is named the confirmatory arm, and neuron, OFAT and GP-EI are 'secundarios y exploratorios en esta confirmacion'",
    "section": "RQ2b (prespecified secondary, prospective)",
    "self_sha256": "eceb9ee97613e172130b7175a79cf6c7d5ddfb54f0ec5435b1174842c20b0f5a",
-   "why_forbidden": "the preregistration declares these arms secondary and exploratory; a prospective negative at secondary grade is not a confirmed negative"
+   "why_forbidden": "the preregistration declares these arms secondary and exploratory, so a prospective negative at secondary grade is not a confirmed negative; and the negative is not present in the first third of the run, so an unqualified 'did not transfer' misstates a non-stationary contrast"
   },
   {
    "allowed": "Re-read as twelve arms rather than four within-family contrasts, the four cold-start arms occupy ranks 9-12 without exception, the four lowest-regret arms are mutually indistinguishable under Holm, and three of those four are frequency-matched replays of a carrier's visit marginals; retention beat a carrier's own marginal replay in one of four families and lost distinguishably in three.",
@@ -76,9 +81,16 @@
     "marginal replay is the best procedure",
     "retention does not help",
     "this was preregistered",
-    "the ranking selects a new winner"
+    "the ranking selects a new winner",
+    "three of the four discard the carrier entirely",
+    "the transferable object is a level-frequency prior",
+    "a visit histogram is enough",
+    "state-blind marginal replay"
    ],
    "missing_top_level_fields": [],
+   "must_be_cited_with": [
+    "COMPARATOR_IS_NOT_FIXED_DURING_THE_RUN"
+   ],
    "paper_id": "P2",
    "registration_status": "POST_HOC_REREAD_PROMPTED_BY_EXTERNAL_REVIEW_NOT_PREREGISTERED",
    "run_role": "POST_HOC_REREAD",
@@ -116,6 +128,35 @@
    "section": "RQ1 (development/replay reanalysis)",
    "self_sha256": "d818321d399b9dc430210cd7cf49b9b3356cbf06b343f932d837ba7f9cd563e5",
    "why_forbidden": "the analysis is a sealed-tape reanalysis with no new seeds or adjudication; its estimand is within-family AUC, not a prospective confirmation or a context-specific effect"
+  },
+  {
+   "allow_failed_falsifiers": true,
+   "allowed": "The marginal-replay comparator is built from a visit histogram that is created once and updated throughout the run, including with the transferred arm's visits on the case being scored. It is therefore not carrier-independent and not fixed: at the first evaluation it holds 24 real visits against 4,608 pseudocounts and samples almost uniformly, and by the last it holds 8,640, 65% of the mass. The four marginal arms are the four most strongly negatively-correlated with run order of all twelve, ahead of every cold and transfer arm, resolved at p < 0.05 in three of four; no cold arm drifts in any family. The current case contributes between 0.52% and 0.18% of the histogram mass. Declared falsifier f2, which asked the same question of the contrast rather than of the comparator, required resolution in at least three of four families and returned two; it is reported failed and its bar was not moved.",
+   "artifact": "results/comparator_drift/result.json",
+   "claim_id": "COMPARATOR_IS_NOT_FIXED_DURING_THE_RUN",
+   "claim_status": "COMPARATOR_DRIFT_DIRECTIONAL_IN_4_OF_4_RESOLVED_IN_2_OF_4",
+   "contract_sha256": "8e78b344536e8c6440d29ff4e437a0ea9b84c5fe73980d0b40c842aa90947ff5",
+   "endpoint": "auc_regret_norm",
+   "estimand": "per-seed contrast and per-arm regret regressed on run order",
+   "evidence_grade": "POST_HOC_ON_PROSPECTIVE_DATA",
+   "exists": true,
+   "falsifiers_all_passed": false,
+   "file_sha256": "0ec8f3e75420d167d605de80104f946b29c000d3c560ebf64b3fd65ad24ad383",
+   "forbidden": [
+    "state-blind marginal replay",
+    "the comparator is a fixed control",
+    "an ex-ante transportable prior",
+    "the histogram can be deployed alone",
+    "this invalidates the confirmation"
+   ],
+   "missing_top_level_fields": [],
+   "paper_id": "P2",
+   "registration_status": "POST_HOC_DIAGNOSTIC_PROMPTED_BY_EXTERNAL_REVIEW_NOT_PREREGISTERED",
+   "run_role": "POST_HOC_REREAD",
+   "scope": "REREAD_OF_ONE_SEALED_CONFIRMATION_NO_SEEDS_NO_NEW_RUN",
+   "section": "RQ2 limitation, and Methods where the comparator is defined",
+   "self_sha256": "d5681adfc14c3a80c39d5acf102d0984a0f2f0f613fecc619c564a355a917c75",
+   "why_forbidden": "the accurate name is a carrier-state-blind, sequence-blind ONLINE frequency replay; and the UCB1 contrast stays positive across the whole run including its last window, so the confirmation is qualified rather than withdrawn"
   },
   {
    "allowed": "Treated as one inferential family with a shared bootstrap index matrix, all six contrasts survive max-T simultaneous intervals and Holm on the preregistered AUC endpoint (simultaneous critical value 2.591 against a 1.906 marginal reference), and the sign of each lower bound is stable across 40 resampling seeds. On the simple regret of the recommendation actually deployed at budget 24, all six point estimates keep the same sign but the joint resolution collapses: one of six retains a simultaneous lower bound above zero, and the family ordering is not preserved between the two endpoints.",
@@ -485,7 +526,7 @@
    "why_forbidden": "unique_profile_optima is 1, 2 or 3 by row; and the screen varied PROFILES, not the within-episode realisation"
   }
  ],
- "generated_at_commit": "b7e3d08be810a08040da77fe1c740f87d143be96",
+ "generated_at_commit": "bc7a67212d5d1cc2f15061bdd2bcefb19d038e17",
  "grader_self_test": {
   "a_real_confirmation_still_grades_confirmatory": {
    "passed": true,
@@ -496,7 +537,7 @@
    "returned": "POST_HOC_ON_PROSPECTIVE_DATA"
   }
  },
- "n_claims": 17,
+ "n_claims": 18,
  "portfolio_map": "papers/PORTFOLIO_MAP.json",
  "portfolio_map_sha256": "22c106e8c4d9754000f993f95c82b7d39f06b45bf063a84d0c7c5443d365593e",
  "problems": [],
