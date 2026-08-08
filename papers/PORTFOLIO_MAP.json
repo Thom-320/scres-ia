@@ -1,0 +1,67 @@
+{
+ "schema_version": "portfolio_map_v1",
+ "purpose": "Ownership and status only. This file answers WHICH manuscript owns a finding and WHETHER work on it is authorised. It answers nothing about what the finding says.",
+ "why_it_carries_no_numbers": "A global lock repeating the figures of papers/paper2/claim_lock.json would be a second place a number can live, and two copies of a number stay equal only until one of them is edited. build_paper2_claim_lock_v1.py refuses to build if any numeric value appears below, so this constraint is enforced rather than requested.",
+ "manuscripts": {
+  "P2_RETAINED_SEARCH_STATE": {
+   "status": "ACTIVE_SOLE_MANUSCRIPT",
+   "work_authorized": true,
+   "claim_lock": "papers/paper2/claim_lock.json",
+   "target": "Computers & Industrial Engineering",
+   "owns": [
+    "retention of outer-loop search state across DES runs",
+    "prospective transfer beyond cold start and state-blind marginal replay",
+    "the twelve-arm ranking and the marginal-replay tie",
+    "carrier specificity: neural versus non-neural",
+    "non-anticipative prefix normalisation and the twin-surface falsifier",
+    "Fig. 5 as an algebraic identity",
+    "the bounded seasonal demand sensitivity"
+   ],
+   "does_not_own": [
+    "population closure and abandonment",
+    "horizon censoring and restricted TTR",
+    "evaluation-mesh and cadence coherence",
+    "the exhaustion certificate and risk-profile headroom"
+   ]
+  },
+  "P1_MEASUREMENT_BEFORE_LEARNING": {
+   "status": "CONCEPT_NOTE_ONLY",
+   "work_authorized": false,
+   "work_authorized_after": "P2_SUBMISSION_RECEIPT",
+   "artifact": "papers/paper1_unobserved_frontier/CONCEPT_NOTE.md",
+   "page_budget": 3,
+   "owns": [
+    "population closure under abandonment and omitted claimants",
+    "estimability under horizon censoring, with restricted TTR as its own estimand",
+    "evaluation-mesh coherence: cadence changes the estimand, not the precision",
+    "construct sensitivity of the resilience index"
+   ],
+   "explicitly_reassigned_to_P2": {
+    "finding": "non-anticipative normalisation / prefix normaliser leak",
+    "why": "it justifies P2's primary endpoint directly; stating the general principle in P1 is permitted, restating the case, the table or the headline is not",
+    "consequence": "the P1 title no longer carries 'Normalisation'"
+   }
+  },
+  "P3_NEGATIVE_METHODS": {
+   "status": "ICEBOX",
+   "work_authorized": false,
+   "next_decision_after": "P2_SUBMISSION_RECEIPT",
+   "why_icebox": "A three-gate dossier designed now would compete with the least entertaining phase of P2, which is writing it. The material does not decay; the submission window does.",
+   "owns": [
+    "the preregistered exhaustion certificate",
+    "Program O contention headroom and its failure to convert to observable value",
+    "risk-profile tailoring buying nothing against its bar"
+   ],
+   "not_authorised_now": [
+    "re-adjudicating endpoints of the exhaustion certificate",
+    "preparing the Garrido domain package",
+    "writing any section"
+   ]
+  }
+ },
+ "standing_rules": [
+  "one active manuscript, one claim lock, two provenance certificates, one bounded sensitivity, zero new programs before submission",
+  "a finding has exactly one primary owner; a second manuscript may cite it but never headline it",
+  "GSA and the evidence registry are census material and are never the spine of any manuscript"
+ ]
+}

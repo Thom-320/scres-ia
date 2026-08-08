@@ -37,7 +37,11 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 OUT = Path("papers/paper2/claim_lock.json")
-PORTFOLIO_LOCK = Path("papers/PORTFOLIO_CLAIM_LOCK.json")
+
+#: Ownership and status ONLY. Renamed from PORTFOLIO_CLAIM_LOCK because the old name invited exactly
+#: what `numbers_in()` below now forbids: a second file where a figure can live. Two copies of a
+#: number stay equal only until one of them is edited.
+PORTFOLIO_MAP = Path("papers/PORTFOLIO_MAP.json")
 
 # One row per claim the manuscript cites. `allowed` and `forbidden` are the wording contract; every
 # forbidden phrase here was actually written somewhere and had to be retracted.
@@ -374,6 +378,26 @@ def grade(meta: dict, row: dict) -> tuple[str, list[str]]:
     return "DEVELOPMENT", []
 
 
+def numbers_in(node, path: str = "") -> list[str]:
+    """Every numeric leaf in the portfolio map, by path. Booleans are not numbers here.
+
+    The rule this enforces: ownership lives in one file, figures live in another, and the build
+    fails rather than letting a number appear in both. `page_budget` is the sole allowance, because
+    it is a policy limit and not a result.
+    """
+    hits = []
+    if isinstance(node, dict):
+        for k, v in node.items():
+            hits += numbers_in(v, f"{path}.{k}" if path else k)
+    elif isinstance(node, list):
+        for i, v in enumerate(node):
+            hits += numbers_in(v, f"{path}[{i}]")
+    elif isinstance(node, (int, float)) and not isinstance(node, bool):
+        if not path.endswith("page_budget"):
+            hits.append(path)
+    return hits
+
+
 def validate_grader() -> dict:
     """Run the grader against the case that fooled it, and against a control that must still pass.
 
@@ -403,6 +427,12 @@ def main() -> int:
 
     commit = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
     rows, problems = [], []
+    if PORTFOLIO_MAP.exists():
+        stray = numbers_in(json.loads(PORTFOLIO_MAP.read_text()))
+        if stray:
+            problems.append(f"PORTFOLIO_MAP carries numeric values at {stray} -- ownership only")
+    else:
+        problems.append(f"{PORTFOLIO_MAP} is missing; claim ownership is undeclared")
     grader = validate_grader()
     for name, chk in grader.items():
         if not chk["passed"]:
@@ -424,9 +454,9 @@ def main() -> int:
 
     payload = {
         "schema_version": "paper2_claim_lock_v1",
-        "portfolio_lock": str(PORTFOLIO_LOCK),
-        "portfolio_lock_sha256": sha256(PORTFOLIO_LOCK.read_bytes()).hexdigest()
-        if PORTFOLIO_LOCK.exists() else None,
+        "portfolio_map": str(PORTFOLIO_MAP),
+        "portfolio_map_sha256": sha256(PORTFOLIO_MAP.read_bytes()).hexdigest()
+        if PORTFOLIO_MAP.exists() else None,
         "generated_at_commit": commit,
         "n_claims": len(rows),
         "supersedes_for_citation": [

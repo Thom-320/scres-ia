@@ -4,11 +4,8 @@
 > Program O conversion ladder before that programme closed
 > (`STOP_PROGRAM_O_AFTER_CORRECTIVE_VALIDATION`). That draft is retained unedited as a record.
 >
-> Every number below carries its artifact and file digest. Evidence grade follows
-> `GARRIDO_Q1_Q2_CLAIM_FREEZE_2026-08-07` and its amendments 1–3: **two prospective confirmations
-> are usable here**; a third (`gsa_confirmation`, `1f487d91900e2ea4`) exists, ran on a *repurposed*
-> virgin block, and was downgraded by its own corrective to a one-bit calendar choice — it is
-> declared in the census and enters no claim.
+> Every number below carries its artifact and file digest. The claim lock and evidence registry
+> govern admissibility; internal confirmation counts are not manuscript evidence.
 
 ---
 
@@ -28,8 +25,16 @@ Two consequences we state rather than bury. First, the process is neither static
 variability, so the common characterisation of this benchmark as "almost deterministic demand" is
 not accurate at the weekly decision cadence. Second, the memory it does carry is **negative, weak
 and undirected** — consistent with anti-clustering of contingent surges — which is not the kind of
-state a conditioned policy can exploit. Whether the findings below survive strongly non-stationary
-or seasonal demand is **not established here** and is the subject of a separate study.
+state a conditioned controller can exploit. Whether the findings below survive strongly non-stationary
+or seasonal demand is **not established by the inherited-process results**. A bounded development
+sensitivity is reported separately after the transfer results and cannot regrade Confirmation 2.
+
+The source-faithful seasonal generator produces weekly CV **0.177** and lag-12 ACF **0.839** in
+`results/demand_seasonal_engine/result.json`. Its original 12-episode sampler test and forecast
+correlation test failed, so these numbers establish trajectory structure only. Holt-Winters is a
+researcher-defined observable extension, not a repair of Garrido's equation; the amended protocol
+defines forecast scoring at t+1 against naive and seasonal-naive baselines, synthetic phase tests
+and a shuffled placebo. No forecast-skill claim is made here before that bounded sensitivity run.
 
 ---
 
@@ -65,12 +70,12 @@ abandoning claimants.
 > resource interventions in the frozen thesis-grounded reconstructed DES; it does not establish
 > learner, feedback, or architectural value."*
 
-This section validates the instrument. It establishes nothing about learning, and we do not use it
-to.
+This section establishes targeted physical correspondence. It establishes nothing about learning,
+and it is not used as evidence for retention or architecture.
 
 ---
 
-## 3.3 The literal Fig. 5 neuron has nothing to learn
+## 3.3 The literal Fig. 5 mapping is an identity
 
 Garrido et al. (2024) propose a neuron whose dendrites are the four SCRES drivers `d_i`, weighted
 by `ρ`, with the resilience metric as its axon. Taken literally, that mapping is not a learning
@@ -107,21 +112,59 @@ area under the normalised regret curve; lower is better.
 | 6 | `thompson_transfer` | 0.08908 | ✔ |
 | 7–15 | `ucb1`, `ofat`, `gp_ei`, `thompson`, `lhs_local`, **`neuron_reset`**, `lookahead_kg`, `random`, `annealing` | 0.0966 – 0.1742 | ✘ |
 
-**The six methods that retain state occupy the six top positions**, and the same neural
-approximator falls from rank 2 to rank 12 when its memory is removed. Paired against
-`neuron_memory` (n = 12), the retention contrast within that family is **+0.0607 [LCB95 +0.0457]**,
-while `ucb1_transfer` is **−0.0070 [−0.0243, +0.0141]** and `ofat_transfer` **+0.0107 [+0.0000356,
-+0.0217]** — the latter excludes zero by roughly thirty-six millionths and establishes no practical
-importance.
+The rank display is diagnostic. The adjudicated development/replay estimand is the within-family
+paired contrast in `results/retention_contrasts/result.json` (`RETENTION_LOWERS_REGRET_IN_6_OF_6_FAMILIES`):
+
+| Family | Memoryless − retained AUC | n |
+|---|---:|---:|
+| neuron | +0.06070 [+0.04568, +0.07953] | 12 |
+| UCB1 | +0.05153 [+0.03583, +0.06593] | 12 |
+| OFAT | +0.03750 [+0.02920, +0.04675] | 12 |
+| KG | +0.03461 [+0.02610, +0.04315] | 12 |
+| GP-EI | +0.02271 [+0.01276, +0.03410] | 12 |
+| Thompson | +0.01985 [+0.01022, +0.02956] | 12 |
+
+Positive values mean that retaining search state lowered regret. The artifact is a sealed-tape
+reanalysis with no new seeds and no prospective adjudication; context-level effects cannot be
+recovered because contexts were averaged before storage.
+
+Six intervals computed from the same twelve tapes are six correlated looks, not six adjudications,
+so the six contrasts are treated as **one inferential family**
+(`results/retention_simultaneous/result.json`). A single bootstrap index matrix is shared across all
+six, preserving their correlation; the resulting max-*T* simultaneous critical value is **2.591**
+against a 1.906 marginal reference. All six simultaneous lower bounds remain above zero, Holm
+rejects all six, and the sign of every bound holds in **40 of 40** resampling seeds — a stability
+check this project has learned to run, since `ofat_lcb_reconciliation` measured a bound whose sign
+depended on the resampling seed.
+
+The same artifact reports the endpoint the deployment argument actually implies. `search_ladder_v5`
+stores, alongside AUC, the **simple regret of the recommendation carried forward at budget 24**, and
+under that endpoint the picture is weaker and differently ordered: all six point estimates keep
+their sign, but only **one of six** retains a simultaneous lower bound above zero, and the family
+ordering is not preserved — `lookahead_kg` leads under final regret and is fourth under AUC. Holm
+and max-*T* also disagree there (four rejections against one bound above zero), which at n = 12 is
+itself the finding. We report both and choose neither. Section 5 returns to this: a paper that
+argues only the final recommendation is deployed, and then scores the area under the regret curve,
+owes the reader that comparison.
 
 This is **development evidence on previously opened tapes** and adjudicates nothing. It motivates
 the mechanism; it does not confirm it.
 
-We also report the surface property that constrains this comparison: the value of knowing the
-regime is `H_regime = 0.00380` [LCB95 ≈ 0] against a preregistered bar of 0.05, so the reference
-gate returns `NON_SEPARABLE_BUT_CONTEXT_INVARIANT`. Retention here is buying **the avoided cost of
-rediscovering a near-common good configuration**, not regime-tailored adaptation. Search-transfer
-value and operational adaptation value are distinct quantities, and only the first is measured.
+We also report the surface property that constrains this comparison
+(`results/surface_gates/result.json`, `e95b1495fb04dc95`, `run_role: CACHE_ANALYSIS`): the value of
+knowing the regime is `H_regime = 0.00380` [LCB95 1.08e-16, UCB95 0.01441; 1,000 bootstrap
+replicates] against a preregistered bar of 0.05, under **per-context min-max normalisation of the
+seed-averaged surface**. The gate returns `NON_SEPARABLE_BUT_CONTEXT_INVARIANT`. Retention here is
+buying **the avoided cost of rediscovering a near-common good configuration**, not regime-tailored
+adaptation. Search-transfer value and operational adaptation value are distinct quantities, and only
+the first is measured.
+
+The normaliser has to be stated because the statistic is not invariant to it. On the extended grid a
+smooth monotone rescaling of the same surface, with the ordering left intact, moves *H* from 0.0195
+to 0.0742 — past the 0.05 bar (`results/monotone_transform_ceiling/result.json`,
+`6a9346fd1c66c7f7`). So `H_regime` bounds regime value **under a declared normalisation**, and a
+reader is entitled to know that a different monotone scale would report a different number from the
+same ordering.
 
 ---
 
@@ -142,17 +185,28 @@ structure can beat it. n = 60.
 | `gp` | +0.01433, +0.00879 | −0.02160, −0.03051, −0.01227 ✘ |
 | `ofat` | +0.01422, +0.00800 | −0.02467, −0.03258, −0.01666 ✘ |
 
-**Every family beats a cold start. Only `ucb1_transfer` beats its own marginal replay.** The neural
-carrier fails that contrast with its confidence interval entirely on the unfavourable side, as do
-the Gaussian-process and one-factor-at-a-time carriers. Frozen verdict:
-`GRID_TRANSFER_CONFIRMED__UCB1`.
+**Every family beats a cold start.** The preregistered confirmatory arm — factorized UCB search —
+outperformed both cold start and a state-blind replay of its own search marginals. Prespecified
+secondary analyses found no corresponding advantage for the evaluated neural, GP-EI or OFAT
+carriers; the neural contrast fell on the wrong side of zero. The secondary negative is not a
+confirmatory negative. Frozen verdict: `GRID_TRANSFER_CONFIRMED__UCB1`.
+
+A post-hoc re-read of the same prospective artifact as twelve arms rather than four within-family
+contrasts found that the four cold-start arms occupied ranks 9–12, while the four lowest-regret
+arms were mutually indistinguishable under Holm correction. Three of those four were
+frequency-matched replays of a carrier's visit marginals; retention beat its own marginal replay
+in one family and lost distinguishably in three. This re-read does not select a new winner and was
+not preregistered.
 
 This is the central result. It licenses a narrower and more useful statement than the ladder alone
 would support:
 
-> **State retention ranked above memoryless search during development, but prospective transfer was
-> carrier-specific: factor-level UCB1 outperformed both cold start and a state-blind replay of its
-> own search marginals, whereas the neural carrier did not.**
+> **Under simultaneous inference, retaining search state lowered development regret in all six
+> matched families, and the prespecified factorized-UCB arm met the prospective transfer criterion
+> beyond cold start and state-blind marginal replay. Secondary carrier contrasts showed no
+> corresponding neural advantage under this contract. Re-read as twelve arms, however, the four
+> lowest-regret arms are indistinguishable and three of them discard the carrier entirely — so what
+> reliably transfers is a first-order visit distribution, not a sequential search procedure.**
 
 The mechanism that transfers is a **factorised statistic over design levels**, not a learned
 distributed representation. Whether other neural carriers transfer under this contract is not
@@ -162,21 +216,20 @@ established; what is established is that the one evaluated here does not.
 
 ## 3.6 Predictive fit does not imply search quality
 
-If the neural carrier's difficulty were insufficient capacity, better function approximation should
-help. It does not.
+Search efficiency and supervised fit are separate estimands.
 
 At matched parameter budgets (KAN 532, MLP 529) over the same six contexts
-(`results/surrogate_architecture_bakeoff/result.json`, `f96e5b6ff0489932`), the KAN attains better
-supervised fit on held-out partitions yet **searches worse**: `kan − mlp_matched` = **+0.01037,
-CI95 [+0.00302, +0.01893]**, *p* = 0.0012, with lower AUC regret being better — the interval lies
-entirely against the KAN. Status: `KAN_SEARCHES_WORSE_THAN_A_MATCHED_MLP`.
+(`results/surrogate_architecture_bakeoff/result.json`, `f96e5b6ff0489932`), the KAN search arm has
+higher AUC regret than its matched MLP by **+0.01037, CI95 [+0.00302, +0.01893]**, *p* = 0.0012,
+with lower AUC regret being better. This bakeoff adjudicates search; its fit evidence comes from
+different contracts and is not combined with this number.
 
 The best searcher of the seven-architecture bake-off is the **five-parameter neuron** (AUC 0.0520),
 ahead of the matched MLP (0.0885), the KAN (0.0989), a spline-polynomial (0.0975), gradient-boosted
 trees (0.1083) and a Matérn GP (0.1138).
 
-Separately, a neural premium requires the surface's curvature to exceed the noise obscuring it. On
-a deliberately curved surface (`results/headroom/buffer_prediction_premium/result.json`,
+Separately, an architecture-specific gain requires the surface's curvature to exceed the noise
+obscuring it. On a deliberately curved surface (`results/headroom/buffer_prediction_premium/result.json`,
 `54bf5fa2594262bd`; 1,530 episodes, seed-grouped cross-validation, six falsifiers), curvature
 recomputed in situ is **0.0763** against **0.3174** of unexplained episode-level variance. Held-out
 R² is 0.6826 for a linear model, 0.7163 for the KAN (+0.034 [−0.079, +0.146]) and **0.5548 for the
@@ -192,11 +245,11 @@ quantities, and improving the first does not deliver the second or third.
 
 Stated as prohibitions rather than hedges:
 
-- **No organisational learning.** The loop closes *between* simulation runs. No routine of a real
+- **No learning by the physical chain.** The loop closes *between* simulation runs. No routine of a real
   organisation was updated and the physical chain retains nothing across a campaign.
 - **No within-episode adaptive control.** The retained state selects the next configuration; it
   does not act on the event stream inside a replication.
-- **No neural premium.** None is confirmed anywhere in this study, and the one carrier tested
+- **No architecture-specific transfer advantage.** None is confirmed anywhere in this study, and the one carrier tested
   prospectively fails the marginal-replay contrast.
 - **No regime-tailored adaptation.** `H_regime` = 0.0038 fails its 0.05 bar; retention buys
   rediscovery cost, not tailoring.
