@@ -164,6 +164,17 @@ def rerun_chain(target: dict, workdir: Path) -> dict:
 
     Reads the frozen caches; simulates nothing. This is the part of A2's claim -- visit sequences,
     AUC, marginal replay, contrasts, verdict -- that no amount of cell-level replay can reach.
+
+    IT IS INVOKED AS A REPLAY, NOT AS A CONFIRMATION, AND THAT WAS THE 2026-08-07 FAILURE. Passing
+    `--confirmation` makes `_seed_custody_falsifier` ask the confirmation question: are these seeds
+    exactly the declared block, and does NO sealed artifact consume them? Measured directly rather
+    than by re-running for an hour: `check_seeds(8200001..8200060)` now returns all sixty seeds under
+    `sealed_artifact_overlap`, because `grid_transfer_confirmation_v2/result.json` -- the very
+    artifact being reproduced -- consumes them. The confirmation branch therefore CANNOT pass on a
+    reproduction, by construction, whatever else is true. Adding `--seed-block` fixes only half of it
+    (it clears the registry conflict and leaves the sealed overlap), which is why the fix is the run
+    mode and not a missing flag: reproducing a sealed artifact is the definition of a replay, and
+    `--replay-of` asks the question a replay can answer.
     """
     out = workdir / "chain_result.json"
     cmd = [sys.executable, "scripts/run_grid_transfer_v1.py",
@@ -171,9 +182,7 @@ def rerun_chain(target: dict, workdir: Path) -> dict:
            "--budget", str(target["budget"]),
            "--contract", target["contract_path"],
            "--reference", target["reference_path"],
-           "--confirmation",
-           "--expected-seed-start", str(min(target["seeds"])),
-           "--expected-seeds", str(len(target["seeds"])),
+           "--replay-of", str(TARGET),
            "--output", str(out)]
     started = time.perf_counter()
     proc = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, check=False)
@@ -188,7 +197,12 @@ def rerun_chain(target: dict, workdir: Path) -> dict:
                 "output_file_written": out.exists(), "cmd": cmd}
     fresh = json.loads(out.read_text())
     differing = {}
-    for key in SCIENTIFIC:
+    # `claim_status` encodes the RUN MODE as well as the science ("GRID_TRANSFER_CONFIRMED__UCB1" is
+    # a confirmation verdict), so a faithful replay legitimately reports a different string. Diffing
+    # it with the numbers would manufacture a failure out of the very fix above. It is reported
+    # beside them instead, and `transfers` -- the dict of per-family boolean verdicts -- carries the
+    # scientific content of the verdict and IS diffed.
+    for key in (k for k in SCIENTIFIC if k != "claim_status"):
         if json.dumps(target.get(key), sort_keys=True) != json.dumps(fresh.get(key), sort_keys=True):
             differing[key] = {"sealed": target.get(key), "replayed": fresh.get(key)}
     return {"ran": True, "elapsed_seconds": time.perf_counter() - started,

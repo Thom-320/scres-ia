@@ -18,7 +18,7 @@ target case, does not accumulate during evaluation, and can be deployed WITHOUT 
 on the case being scored. It is, literally, the transportable level-frequency prior whose sufficiency
 this project claimed and then had to retract for lack of identification. This arm identifies it.
 
-`loo_marginal` is the original comparator with `visits += 1` moved to AFTER the replay instead of
+`causal_prefix` is the original comparator with `visits += 1` moved to AFTER the replay instead of
 before. It keeps cross-case accumulation and removes exactly the current-case contamination, so the
 pair separates the two defects instead of confounding them.
 
@@ -53,7 +53,7 @@ MODULES = ("supply_chain/arm_runner.py", "supply_chain/seed_custody.py",
            "scripts/run_grid_transfer_v1.py")
 BURNED_BLOCK = (8_200_001, 8_200_060)
 N_BOOT, BOOT_SEED = 5_000, 20260808
-MODES = ("transfer", "cold", "marginal", "loo_marginal", "frozen_prior")
+MODES = ("transfer", "cold", "marginal", "causal_prefix", "frozen_prior")
 
 
 def level_prior(base_visits: list[int]) -> np.ndarray:
@@ -102,8 +102,8 @@ def main() -> int:
 
     rows = {f"{a}_{m}": [] for a in G.ARMS for m in MODES}
     visits_orig = {a: np.ones(len(G.EXT_CONFIGS)) for a in G.ARMS}
-    visits_loo = {a: np.ones(len(G.EXT_CONFIGS)) for a in G.ARMS}
-    frozen_mass_zero, budget_failures = [], []
+    visits_prefix = {a: np.ones(len(G.EXT_CONFIGS)) for a in G.ARMS}
+    frozen_mass_zero, budget_failures, tv_observed = [], [], []
     started = time.perf_counter()
 
     for r, seed in enumerate(seeds):
@@ -135,9 +135,9 @@ def main() -> int:
 
                 # loo FIRST, on the histogram that does NOT yet contain this case.
                 s4 = G.Surface(ext[(ctx, seed)])
-                G.marginal_replay(visits_loo[kind], s4,
+                G.marginal_replay(visits_prefix[kind], s4,
                                   np.random.default_rng(70_000 + r), args.budget)
-                aucs["loo_marginal"].append(s4.auc(args.budget))
+                aucs["causal_prefix"].append(s4.auc(args.budget))
 
                 s5 = G.Surface(ext[(ctx, seed)])
                 G.marginal_replay(prior, s5, np.random.default_rng(70_000 + r), args.budget)
@@ -146,15 +146,20 @@ def main() -> int:
                 # Original ordering, reproduced exactly: the transfer visits enter first.
                 for i in s.visited:
                     visits_orig[kind][i] += 1.0
+                # Measured here, where the two histograms differ by EXACTLY the current case: the
+                # original already holds this case's 24 visits and the prefix does not yet.
+                po = visits_orig[kind] / visits_orig[kind].sum()
+                pp = visits_prefix[kind] / visits_prefix[kind].sum()
+                tv_observed.append(0.5 * float(np.abs(po - pp).sum()))
                 s3 = G.Surface(ext[(ctx, seed)])
                 G.marginal_replay(visits_orig[kind], s3,
                                   np.random.default_rng(70_000 + r), args.budget)
                 aucs["marginal"].append(s3.auc(args.budget))
                 for i in s.visited:
-                    visits_loo[kind][i] += 1.0        # loo catches up AFTER its own replay
+                    visits_prefix[kind][i] += 1.0        # loo catches up AFTER its own replay
 
                 for m, surf in (("transfer", s), ("cold", s2), ("marginal", s3),
-                                ("loo_marginal", s4), ("frozen_prior", s5)):
+                                ("causal_prefix", s4), ("frozen_prior", s5)):
                     if len(surf.visited) != args.budget:
                         budget_failures.append((kind, m, ctx, seed, len(surf.visited)))
             for m in MODES:
@@ -170,14 +175,42 @@ def main() -> int:
 
     order = np.arange(len(seeds), dtype=float)
 
-    def rho(v: np.ndarray) -> float:
-        return float(np.corrcoef(order, v)[0, 1]) if len(v) > 2 else float("nan")
+    # None, never NaN. `float("nan")` serialises as the bare token NaN, which Python accepts and
+    # strict JSON does not -- the stdlib-only verifier that must read this file without importing
+    # supply_chain would choke on it. And a correlation over fewer than twenty seeds is not a weak
+    # estimate, it is not an estimate; the drift falsifiers declare themselves inapplicable rather
+    # than failing for a reason unrelated to what they exist to catch.
+    DRIFT_MIN_SEEDS = 20
+    drift_evaluable = len(seeds) >= DRIFT_MIN_SEEDS
 
-    contrasts, drift = {}, {}
+    def rho(v: np.ndarray):
+        return float(np.corrcoef(order, v)[0, 1]) if drift_evaluable else None
+
+    # AN I.I.D. PAIRED BOOTSTRAP ASSUMES THE 60 SEEDS ARE EXCHANGEABLE REPLICATES OF ONE CONTRAST.
+    # For `cold` and `frozen_prior` they are: both comparators are rebuilt per seed and carry
+    # nothing across cases. For `marginal` and `causal_prefix` they are NOT -- those histograms
+    # accumulate over the run, which is the defect this campaign exists to measure, and putting an
+    # interval on a trending series would repeat the original error with a repaired arm. Those two
+    # get the trajectory instead, and no interval.
+    EXCHANGEABLE = ("cold", "frozen_prior")
+    ACCUMULATING = ("marginal", "causal_prefix")
+    contrasts, drift, trajectory = {}, {}, {}
     for kind in G.ARMS:
         t = np.asarray(rows[f"{kind}_transfer"])
         contrasts[kind] = {f"vs_{m}": boot(np.asarray(rows[f"{kind}_{m}"]) - t)
-                           for m in ("cold", "marginal", "loo_marginal", "frozen_prior")}
+                           for m in EXCHANGEABLE}
+        trajectory[kind] = {}
+        for m in ACCUMULATING:
+            d = np.asarray(rows[f"{kind}_{m}"]) - t
+            w = min(20, len(d) // 3) or len(d)
+            trajectory[kind][f"vs_{m}"] = {
+                "mean": float(d.mean()), "n": int(d.size),
+                "mean_first_window": float(d[:w].mean()),
+                "mean_middle_window": float(d[len(d) // 2 - w // 2: len(d) // 2 + w - w // 2].mean()),
+                "mean_last_window": float(d[-w:].mean()), "window": int(w),
+                "no_interval_reported": ("the comparator accumulates across cases, so the seeds are "
+                                         "not exchangeable and an i.i.d. bootstrap would not mean "
+                                         "what its label says")}
         drift[kind] = {m: rho(np.asarray(rows[f"{kind}_{m}"])) for m in MODES}
 
     src = json.loads((ROOT / SOURCE).read_text()) if (ROOT / SOURCE).exists() else {}
@@ -191,10 +224,20 @@ def main() -> int:
                 b = [round(x, 12) for x in rows[f"{kind}_{m}"]]
                 reproduced[f"{kind}_{m}"] = a == b
 
-    n_frozen_drifting = sum(1 for k in G.ARMS if abs(drift[k]["frozen_prior"]) > 0.25)
-    n_loo_drifting = sum(1 for k in G.ARMS if drift[k]["loo_marginal"] < -0.15)
-    loo_gap = {k: abs(float(np.mean(rows[f"{k}_loo_marginal"]))
-                      - float(np.mean(rows[f"{k}_marginal"]))) for k in G.ARMS}
+    n_frozen_drifting = sum(1 for k in G.ARMS if drift_evaluable
+                            and abs(drift[k]["frozen_prior"]) > 0.25)
+    n_prefix_drifting = sum(1 for k in G.ARMS if drift_evaluable
+                         and drift[k]["causal_prefix"] < -0.15)
+    # DERIVED, NOT ASSERTED. The old bound compared two MEAN AUCs against 0.01 and called it "the
+    # mass bound". Nothing about 0.18-0.52% of probability mass implies an AUC difference of 0.01 --
+    # that threshold was a number chosen to look small. What the mass DOES bound is the total
+    # variation distance between the two sampling distributions, and that is measured directly at
+    # every replay: TV = 0.5*sum|p_orig - p_prefix|, which cannot exceed budget/(n_cfg + budget*q).
+    # The only bound the mass arithmetic actually licenses. The two histograms differ by the current
+    # case's `budget` counts, so their total variation distance cannot exceed budget over the
+    # smaller total mass, which is the first evaluation's.
+    tv_bound = args.budget / (len(G.EXT_CONFIGS) + args.budget)
+    tv_max = max(tv_observed) if tv_observed else 0.0
 
     falsifiers = {
         "f1_transfer_and_cold_reproduce_the_sealed_values_exactly": {
@@ -203,17 +246,23 @@ def main() -> int:
             "why_it_can_fail": ("adding arms would have perturbed the existing ones if any RNG "
                                 "stream were shared; each arm draws its own default_rng")},
         "f2_frozen_prior_does_not_drift_with_run_order": {
-            "passed": n_frozen_drifting == 0, "rho": {k: drift[k]["frozen_prior"] for k in G.ARMS},
+            "passed": (not drift_evaluable) or n_frozen_drifting == 0,
+            "applicable": drift_evaluable, "min_seeds": DRIFT_MIN_SEEDS, "rho": {k: drift[k]["frozen_prior"] for k in G.ARMS},
             "threshold_abs_rho": 0.25,
             "why_it_can_fail": "if the frozen prior drifts it is not frozen and the arm is not what it claims"},
-        "f3_loo_still_drifts_with_run_order": {
-            "passed": n_loo_drifting >= 2, "rho": {k: drift[k]["loo_marginal"] for k in G.ARMS},
-            "threshold_rho": -0.15, "n_drifting": n_loo_drifting,
+        "f3_prefix_still_drifts_with_run_order": {
+            "passed": (not drift_evaluable) or n_prefix_drifting >= 2,
+            "applicable": drift_evaluable, "min_seeds": DRIFT_MIN_SEEDS, "rho": {k: drift[k]["causal_prefix"] for k in G.ARMS},
+            "threshold_rho": -0.15, "n_drifting": n_prefix_drifting,
             "why_it_can_fail": ("removing the current case would have removed the drift, which "
                                 "would refute the cross-case-accumulation diagnosis outright")},
-        "f4_loo_differs_from_the_original_by_no_more_than_the_mass_bound": {
-            "passed": all(v < 0.01 for v in loo_gap.values()), "gap": loo_gap, "bound": 0.01,
-            "why_it_can_fail": "a large gap would mean the 0.18-0.52% mass arithmetic is wrong"},
+        "f4_prefix_differs_from_the_original_within_the_derived_total_variation_bound": {
+            "passed": tv_max <= tv_bound + 1e-12,
+            "total_variation_max_observed": tv_max, "derived_bound": tv_bound,
+            "n_measurements": len(tv_observed),
+            "why_it_can_fail": ("if the two histograms ever differ by more than the current case's "
+                                "own counts, then one of them is carrying something the other is "
+                                "not and the pair no longer isolates current-case contamination")},
         "f5_frozen_prior_puts_mass_on_every_extended_configuration": {
             "passed": not frozen_mass_zero, "zero_mass_cases": frozen_mass_zero[:5],
             "why_it_can_fail": "a prior with zeros cannot reach 4,320 of the 4,608 configurations"},
@@ -225,7 +274,8 @@ def main() -> int:
     falsifiers["all_passed"] = all(v["passed"] for v in falsifiers.values() if isinstance(v, dict))
 
     primary = contrasts["ucb1"]["vs_frozen_prior"]
-    verdict = ("HALTED_FALSIFIER_FAILED" if not falsifiers["all_passed"] else
+    verdict = ("SMOKE_RUN_NOT_ADJUDICATING" if not drift_evaluable else
+               "HALTED_FALSIFIER_FAILED" if not falsifiers["all_passed"] else
                "UCB1_BEATS_A_FROZEN_EX_ANTE_LEVEL_PRIOR" if primary["lcb95"] > 0 else
                "A_FROZEN_LEVEL_PRIOR_BEATS_UCB1" if primary["ucb95"] < 0 else
                "UCB1_INDISTINGUISHABLE_FROM_A_FROZEN_EX_ANTE_LEVEL_PRIOR")
@@ -243,10 +293,14 @@ def main() -> int:
         "preregistration": str(args.contract),
         "source": str(SOURCE), "source_self_sha256": src.get("self_sha256"),
         "seeds": seeds, "contexts": contexts, "budget": args.budget,
+        "drift_falsifiers_evaluable": drift_evaluable,
         "n_ext_configs": len(G.EXT_CONFIGS), "modes": list(MODES),
         "mean_auc": {k: float(np.mean(v)) for k, v in rows.items()},
         "per_arm": rows,
         "contrasts": contrasts,
+        "accumulating_comparator_trajectory": trajectory,
+        "total_variation": {"max_observed": tv_max, "derived_bound": tv_bound,
+                            "n_measurements": len(tv_observed)},
         "drift_rho_with_run_order": drift,
         "reproduces_sealed_arms": reproduced,
         "what_this_cannot_do": [
@@ -262,9 +316,12 @@ def main() -> int:
     print(f"\n{'familia':10}{'vs cold':>22}{'vs marginal':>22}{'vs loo':>22}{'vs frozen':>22}")
     for k in G.ARMS:
         c = contrasts[k]
-        cells = "".join(f"{c[f'vs_{m}']['mean']:>+10.5f}[{c[f'vs_{m}']['lcb95']:>+9.5f}]"
-                        for m in ("cold", "marginal", "loo_marginal", "frozen_prior"))
-        print(f"{k:10}{cells}")
+        tj = trajectory[k]
+        print(f"{k:10}"
+              f"{c['vs_cold']['mean']:>+10.5f}[{c['vs_cold']['lcb95']:>+9.5f}]"
+              f"{tj['vs_marginal']['mean']:>+10.5f}[  sin IC ]"
+              f"{tj['vs_causal_prefix']['mean']:>+10.5f}[  sin IC ]"
+              f"{c['vs_frozen_prior']['mean']:>+10.5f}[{c['vs_frozen_prior']['lcb95']:>+9.5f}]")
     print(f"\nveredicto: {verdict}")
     print(f"falsadores: {'todos pasan' if falsifiers['all_passed'] else 'FALLO'}")
     for n, v in falsifiers.items():
