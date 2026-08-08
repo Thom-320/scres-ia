@@ -1,0 +1,1036 @@
+{
+ "arm_A_beats_fixed_at": [],
+ "arms": {
+  "A": "phase only -- deterministic in t, OPEN-LOOP, cannot convert",
+  "B": "phase AND last week's demand vs its seasonal expectation -- reads state"
+ },
+ "band": [
+  0.275,
+  0.3,
+  0.325,
+  0.35,
+  0.375,
+  0.4,
+  0.425,
+  0.45,
+  0.475,
+  0.5
+ ],
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "ceiling_source": {
+  "path": "results/priced_clairvoyant_ceiling/result.json",
+  "self_sha256": "118fa95fa320ca741dd44f2b0841efcc077c048c9a54159519ed56a029dba8ef"
+ },
+ "claim_status": "BLOCKED_INSTRUMENT",
+ "contract_path": "docs/ENMIENDA_SENAL_FASE_ESTACIONAL_2026-08-08.md",
+ "contract_sha256": "5d436c6976135b201c72b2c093fd90288139b944991ec3dc2571a947b724e523",
+ "converts_at": [],
+ "created_at": "2026-08-08T22:10:51.266076+00:00",
+ "elapsed_seconds": 302.5565059159999,
+ "falsifier_summary": {
+  "all_passed": false,
+  "disclosures": [
+   "d1_arm_A_is_open_loop_by_construction",
+   "d2_lambda_was_selected_on_these_tapes"
+  ],
+  "failed": [
+   "f7_phase_is_deterministic_across_tapes",
+   "f8_arm_A_cannot_convert_per_tape_headroom"
+  ],
+  "n_computed": 5,
+  "n_disclosures": 2,
+  "n_failed": 2,
+  "n_not_applicable": 1,
+  "not_applicable": [
+   "d3_no_fresh_seeds"
+  ]
+ },
+ "falsifiers": {
+  "d1_arm_A_is_open_loop_by_construction": {
+   "computed": false,
+   "disclosure": true,
+   "evidence": {
+    "period": 12,
+    "statement": "arm A reads only week mod 12, so it is a deterministic schedule; a win by arm A says the contiguous-block class was too narrow, NOT that observable control converts",
+    "trough_phase": 11
+   },
+   "passed": null
+  },
+  "d2_lambda_was_selected_on_these_tapes": {
+   "computed": false,
+   "disclosure": true,
+   "evidence": {
+    "band": [
+     0.275,
+     0.3,
+     0.325,
+     0.35,
+     0.375,
+     0.4,
+     0.425,
+     0.45,
+     0.475,
+     0.5
+    ],
+    "headline": 0.35,
+    "statement": "lambda = 0.35 is the peak of a sweep run on these same tapes; the whole band is reported beside it"
+   },
+   "passed": null
+  },
+  "d3_no_fresh_seeds": {
+   "computed": false,
+   "evidence": {
+    "custody": {
+     "evidence": {
+      "n_sealed_artifact_overlap": 12,
+      "n_seeds": 12,
+      "note": "deliberate re-execution of registry block 'reconciled_8600001'; these seeds are NOT virgin and are not meant to be",
+      "registry_conflicts": [
+       {
+        "id": "reconciled_8600001",
+        "n_overlapping": 12,
+        "range": [
+         8600001,
+         8600012
+        ],
+        "source": "results/demand_process/result.json",
+        "status": "USED_DEVELOPMENT_NOT_VIRGIN"
+       }
+      ],
+      "registry_is_complete": false,
+      "registry_status": "BASELINE_INVENTORY_INCOMPLETE_NO_NEW_SEEDS_AUTHORIZED",
+      "replay_of": "reconciled_8600001",
+      "sealed_artifact_overlap": [
+       8600001,
+       8600002,
+       8600003,
+       8600004,
+       8600005,
+       8600006,
+       8600007,
+       8600008,
+       8600009,
+       8600010,
+       8600011,
+       8600012
+      ],
+      "seeds": [
+       8600001,
+       8600002,
+       8600003,
+       8600004,
+       8600005,
+       8600006,
+       8600007,
+       8600008,
+       8600009,
+       8600010,
+       8600011,
+       8600012
+      ],
+      "status": "DECLARED_REPLAY",
+      "why_it_can_fail": "it cannot: this is a declared custody replay of registry block 'reconciled_8600001', so the seeds are used on purpose. Counted in neither column."
+     },
+     "not_applicable": true,
+     "passed": null
+    },
+    "reason": "declared replay of an already-consumed development block"
+   },
+   "not_applicable": true,
+   "passed": null
+  },
+  "f10_policy_does_not_exceed_the_ceiling": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": 0.018350103017565955,
+     "threshold": -1e-09
+    },
+    "slack": 0.018350103017565955,
+    "why_it_can_fail": "no policy may beat a tape-knowing chooser; exceeding the ceiling means it saw something it should not have"
+   },
+   "passed": true
+  },
+  "f11_ceiling_still_positive_here": {
+   "computed": true,
+   "evidence": {
+    "ceiling_by_lambda": {
+     "0.275": 0.00443020751215036,
+     "0.3": 0.005216247878330527,
+     "0.325": 0.00506739874528217,
+     "0.35": 0.04510303513633616,
+     "0.375": 0.042525461220905524,
+     "0.4": 0.03256501643394599,
+     "0.425": 0.02358180278937851,
+     "0.45": 0.015876977239535368,
+     "0.475": 0.010582284593275001,
+     "0.5": 0.005847436108426492
+    },
+    "computed_from": {
+     "observed": 0.04510303513633616,
+     "threshold": 0.0
+    },
+    "why_it_can_fail": "conversion is undefined where there is nothing to convert"
+   },
+   "passed": true
+  },
+  "f7_phase_is_deterministic_across_tapes": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": 0.0,
+     "threshold": 1.0
+    },
+    "phase_sequence": [
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     0,
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "why_it_can_fail": "if the phase varied across tapes, arm A would not be open-loop and the whole framing of the amendment collapses; it is checked, not assumed"
+   },
+   "passed": false
+  },
+  "f8_arm_A_cannot_convert_per_tape_headroom": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": 0.0,
+     "threshold": 1.0
+    },
+    "identical_at_every_lambda": false,
+    "why_it_can_fail": "arm A's realised calendar must be IDENTICAL on every tape. If it differs, either the phase is not deterministic or the runner leaked state into a policy declared open-loop"
+   },
+   "passed": false
+  },
+  "f9_arm_B_signal_varies_across_tapes": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": 2634.826298580334,
+     "threshold": 0.0
+    },
+    "mean_cross_tape_sd": 2634.826298580334,
+    "why_it_can_fail": "if the demand deviation were constant across tapes, arm B would be open-loop in disguise and could not convert either -- the property backlog had and failed to use"
+   },
+   "passed": true
+  }
+ },
+ "headline": {
+  "arms": {
+   "A": {
+    "arm_J": 0.6320160685092556,
+    "placebo_J": 0.6358379183542366,
+    "policy": [
+     2,
+     8
+    ],
+    "schedules_identical_across_tapes": false,
+    "vs_open_loop": {
+     "lcb95": -0.03311460508973977,
+     "mean": -0.01897320152065522,
+     "ucb95": -0.00554418317020126
+    },
+    "vs_placebo": {
+     "lcb95": -0.013836773865591364,
+     "mean": 0.0038218498449809992,
+     "ucb95": 0.019170962821384457
+    },
+    "weeks_held": [
+     4,
+     4,
+     4,
+     4,
+     4,
+     4
+    ]
+   },
+   "B": {
+    "arm_J": 0.6280915456601152,
+    "placebo_J": 0.6236764114790243,
+    "policy": [
+     2,
+     10
+    ],
+    "schedules_identical_across_tapes": false,
+    "vs_open_loop": {
+     "lcb95": -0.032579041153071586,
+     "mean": -0.015048678671514751,
+     "ucb95": 0.003399618691627045
+    },
+    "vs_placebo": {
+     "lcb95": -0.01093494212074179,
+     "mean": -0.004415134181090796,
+     "ucb95": 0.0011585973510473968
+    },
+    "weeks_held": [
+     1,
+     1,
+     1,
+     1,
+     1,
+     1
+    ]
+   }
+  },
+  "ceiling_gap": 0.04510303513633616,
+  "clairvoyant_J": 0.5679398318522642,
+  "fixed_option": [
+   0,
+   4
+  ],
+  "lambda": 0.35,
+  "open_loop_J": 0.6130428669886004
+ },
+ "headline_lambda": 0.35,
+ "module_manifest": {
+  "entry_script": "scripts/run_phase_signal_conversion_v1.py",
+  "entry_script_sha256": "280af6dd78abfc86a533f321d766d40f2ff27a18954006040c4ddc76522661d6",
+  "missing": [],
+  "modules": {
+   "supply_chain/arm_runner.py": "1afea4fa248db5beb2d86c6ab2033d6f24a95115ea544b08966b7a538456ac99",
+   "supply_chain/continuous_its_env.py": "9600402e8cdef496a548628a41cd6bb974ae83d9ef66dbe78db1c5dce07d16ca",
+   "supply_chain/falsifiers.py": "a152144589e58bc1a658b002c39ff5c0332cd3a2796cb9cf443cd0de36443788",
+   "supply_chain/seed_custody.py": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd",
+   "supply_chain/supply_chain.py": "7706aa26e65ce8498f30d896180914a57c7f9710373347331cbd93cd9fb1026a"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "policy_family": {
+  "offsets": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11
+  ],
+  "selected_on": "train tapes only",
+  "widths": [
+   2,
+   4,
+   6,
+   8
+  ]
+ },
+ "reference_path": "results/priced_clairvoyant_ceiling/result.json",
+ "reference_sha256": "118fa95fa320ca741dd44f2b0841efcc077c048c9a54159519ed56a029dba8ef",
+ "replay_of": "reconciled_8600001",
+ "results": {
+  "0.275": {
+   "arms": {
+    "A": {
+     "arm_J": 0.5982982102357336,
+     "placebo_J": 0.6267390175805795,
+     "policy": [
+      4,
+      6
+     ],
+     "schedules_identical_across_tapes": false,
+     "vs_open_loop": {
+      "lcb95": -0.0886489807483379,
+      "mean": -0.07134217151951895,
+      "ucb95": -0.0573851694627888
+     },
+     "vs_placebo": {
+      "lcb95": 0.017440114748086266,
+      "mean": 0.028440807344845942,
+      "ucb95": 0.03675832761065375
+     },
+     "weeks_held": [
+      9,
+      9,
+      9,
+      9,
+      8,
+      9
+     ]
+    },
+    "B": {
+     "arm_J": 0.6158948374458514,
+     "placebo_J": 0.623449190026544,
+     "policy": [
+      4,
+      7
+     ],
+     "schedules_identical_across_tapes": false,
+     "vs_open_loop": {
+      "lcb95": -0.10658625590402042,
+      "mean": -0.08893879872963677,
+      "ucb95": -0.07221268916599856
+     },
+     "vs_placebo": {
+      "lcb95": -0.004817924624870407,
+      "mean": 0.007554352580692499,
+      "ucb95": 0.01949884765113578
+     },
+     "weeks_held": [
+      7,
+      6,
+      5,
+      4,
+      5,
+      4
+     ]
+    }
+   },
+   "ceiling_gap": 0.00443020751215036,
+   "clairvoyant_J": 0.5225258312040643,
+   "fixed_option": [
+    0,
+    18
+   ],
+   "lambda": 0.275,
+   "open_loop_J": 0.5269560387162145
+  },
+  "0.3": {
+   "arms": {
+    "A": {
+     "arm_J": 0.6229251594183466,
+     "placebo_J": 0.6258376117367008,
+     "policy": [
+      2,
+      8
+     ],
+     "schedules_identical_across_tapes": false,
+     "vs_open_loop": {
+      "lcb95": -0.1009565629271783,
+      "mean": -0.07756944397231536,
+      "ucb95": -0.05677845618588382
+     },
+     "vs_placebo": {
+      "lcb95": -0.013898809212361399,
+      "mean": 0.002912452318354223,
+      "ucb95": 0.018337938323918793
+     },
+     "weeks_held": [
+      4,
+      4,
+      4,
+      4,
+      4,
+      4
+     ]
+    },
+    "B": {
+     "arm_J": 0.6217660495670636,
+     "placebo_J": 0.6293393591604767,
+     "policy": [
+      4,
+      7
+     ],
+     "schedules_identical_across_tapes": false,
+     "vs_open_loop": {
+      "lcb95": -0.09775209850128498,
+      "mean": -0.07641033412103237,
+      "ucb95": -0.0592867712003858
+     },
+     "vs_placebo": {
+      "lcb95": -0.006150292255895418,
+      "mean": 0.007573309593413162,
+      "ucb95": 0.02217247027835591
+     },
+     "weeks_held": [
+      7,
+      6,
+      5,
+      4,
+      5,
+      4
+     ]
+    }
+   },
+   "ceiling_gap": 0.005216247878330527,
+   "clairvoyant_J": 0.5401394675677007,
+   "fixed_option": [
+    0,
+    13
+   ],
+   "lambda": 0.3,
+   "open_loop_J": 0.5453557154460312
+  },
+  "0.325": {
+   "arms": {
+    "A": {
+     "arm_J": 0.6274706139638011,
+     "placebo_J": 0.6305401525425207,
+     "policy": [
+      2,
+      8
+     ],
+     "schedules_identical_across_tapes": false,
+     "vs_open_loop": {
+      "lcb95": -0.08961359942213315,
+      "mean": -0.06734217124504256,
+      "ucb95": -0.046551183458611
+     },
+     "vs_placebo": {
+      "lcb95": -0.00974436081455556,
+      "mean": 0.0030695385787197216,
+      "ucb95": 0.015321966678975748
+     },
+     "weeks_held": [
+      4,
+      4,
+      4,
+      4,
+      4,
+      4
+     ]
+    },
+    "B": {
+     "arm_J": 0.6276372616882757,
+     "placebo_J": 0.6330537693788868,
+     "policy": [
+      4,
+      7
+     ],
+     "schedules_identical_across_tapes": false,
+     "vs_open_loop": {
+      "lcb95": -0.0889653669786629,
+      "mean": -0.06750881896951717,
+      "ucb95": -0.05036662116246182
+     },
+     "vs_placebo": {
+      "lcb95": -0.006400971746669759,
+      "mean": 0.005416507690611065,
+      "ucb95": 0.01790229312015969
+     },
+     "weeks_held": [
+      7,
+      6,
+      5,
+      4,
+      5,
+      4
+     ]
+    }
+   },
+   "ceiling_gap": 0.00506739874528217,
+   "clairvoyant_J": 0.5550610439734763,
+   "fixed_option": [
+    0,
+    13
+   ],
+   "lambda": 0.325,
+   "open_loop_J": 0.5601284427187585
+  },
+  "0.35": {
+   "arms": {
+    "A": {
+     "arm_J": 0.6320160685092556,
+     "placebo_J": 0.6358379183542366,
+     "policy": [
+      2,
+      8
+     ],
+     "schedules_identical_across_tapes": false,
+     "vs_open_loop": {
+      "lcb95": -0.03311460508973977,
+      "mean": -0.01897320152065522,
+      "ucb95": -0.00554418317020126
+     },
+     "vs_placebo": {
+      "lcb95": -0.013836773865591364,
+      "mean": 0.0038218498449809992,
+      "ucb95": 0.019170962821384457
+     },
+     "weeks_held": [
+      4,
+      4,
+      4,
+      4,
+      4,
+      4
+     ]
+    },
+    "B": {
+     "arm_J": 0.6280915456601152,
+     "placebo_J": 0.6236764114790243,
+     "policy": [
+      2,
+      10
+     ],
+     "schedules_identical_across_tapes": false,
+     "vs_open_loop": {
+      "lcb95": -0.032579041153071586,
+      "mean": -0.015048678671514751,
+      "ucb95": 0.003399618691627045
+     },
+     "vs_placebo": {
+      "lcb95": -0.01093494212074179,
+      "mean": -0.004415134181090796,
+      "ucb95": 0.0011585973510473968
+     },
+     "weeks_held": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ]
+    }
+   },
+   "ceiling_gap": 0.04510303513633616,
+   "clairvoyant_J": 0.5679398318522642,
+   "fixed_option": [
+    0,
+    4
+   ],
+   "lambda": 0.35,
+   "open_loop_J": 0.6130428669886004
+  },
+  "0.375": {
+   "arms": {
+    "A": {
+     "arm_J": 0.6365615230547103,
+     "placebo_J": 0.642539343792562,
+     "policy": [
+      2,
+      8
+     ],
+     "schedules_identical_across_tapes": false,
+     "vs_open_loop": {
+      "lcb95": -0.029790599345673765,
+      "mean": -0.014154462485552707,
+      "ucb95": 0.0026255412526613084
+     },
+     "vs_placebo": {
+      "lcb95": -0.011078739044701006,
+      "mean": 0.0059778207378518395,
+      "ucb95": 0.02147162984415585
+     },
+     "weeks_held": [
+      4,
+      4,
+      4,
+      4,
+      4,
+      4
+     ]
+    },
+    "B": {
+     "arm_J": 0.6292279092964789,
+     "placebo_J": 0.6237576397181903,
+     "policy": [
+      2,
+      10
+     ],
+     "schedules_identical_across_tapes": false,
+     "vs_open_loop": {
+      "lcb95": -0.009260210483830448,
+      "mean": -0.006820848727321342,
+      "ucb95": -0.004011624816570691
+     },
+     "vs_placebo": {
+      "lcb95": -0.01209840881535002,
+      "mean": -0.0054702695782885,
+      "ucb95": 0.0008706762126801659
+     },
+     "weeks_held": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ]
+    }
+   },
+   "ceiling_gap": 0.042525461220905524,
+   "clairvoyant_J": 0.5798815993482519,
+   "fixed_option": [
+    0,
+    0
+   ],
+   "lambda": 0.375,
+   "open_loop_J": 0.6224070605691575
+  },
+  "0.4": {
+   "arms": {
+    "A": {
+     "arm_J": 0.6411069776001648,
+     "placebo_J": 0.6466507127130624,
+     "policy": [
+      2,
+      8
+     ],
+     "schedules_identical_across_tapes": false,
+     "vs_open_loop": {
+      "lcb95": -0.03430226467168829,
+      "mean": -0.018699917031007245,
+      "ucb95": -0.002494182415120468
+     },
+     "vs_placebo": {
+      "lcb95": -0.01064803677632938,
+      "mean": 0.005543735112897574,
+      "ucb95": 0.019733965389115038
+     },
+     "weeks_held": [
+      4,
+      4,
+      4,
+      4,
+      4,
+      4
+     ]
+    },
+    "B": {
+     "arm_J": 0.6303642729328424,
+     "placebo_J": 0.6270494931148161,
+     "policy": [
+      2,
+      10
+     ],
+     "schedules_identical_across_tapes": false,
+     "vs_open_loop": {
+      "lcb95": -0.010537022824134656,
+      "mean": -0.007957212363684943,
+      "ucb95": -0.004964305663992321
+     },
+     "vs_placebo": {
+      "lcb95": -0.010230864061773377,
+      "mean": -0.003314779818026433,
+      "ucb95": 0.0025326927524174834
+     },
+     "weeks_held": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ]
+    }
+   },
+   "ceiling_gap": 0.03256501643394599,
+   "clairvoyant_J": 0.5898420441352116,
+   "fixed_option": [
+    0,
+    0
+   ],
+   "lambda": 0.4,
+   "open_loop_J": 0.6224070605691575
+  },
+  "0.425": {
+   "arms": {
+    "A": {
+     "arm_J": 0.6456524321456193,
+     "placebo_J": 0.6517843260790722,
+     "policy": [
+      2,
+      8
+     ],
+     "schedules_identical_across_tapes": false,
+     "vs_open_loop": {
+      "lcb95": -0.038847719217142807,
+      "mean": -0.023245371576461765,
+      "ucb95": -0.006465367838247786
+     },
+     "vs_placebo": {
+      "lcb95": -0.008161482945217229,
+      "mean": 0.006131893933453018,
+      "ucb95": 0.01839800697870786
+     },
+     "weeks_held": [
+      4,
+      4,
+      4,
+      4,
+      4,
+      4
+     ]
+    },
+    "B": {
+     "arm_J": 0.6315006365692061,
+     "placebo_J": 0.6265127383567796,
+     "policy": [
+      2,
+      10
+     ],
+     "schedules_identical_across_tapes": false,
+     "vs_open_loop": {
+      "lcb95": -0.011673431690427921,
+      "mean": -0.009093576000048545,
+      "ucb95": -0.0062843520892978955
+     },
+     "vs_placebo": {
+      "lcb95": -0.010359624740735077,
+      "mean": -0.00498789821242653,
+      "ucb95": 0.00034363703161806775
+     },
+     "weeks_held": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ]
+    }
+   },
+   "ceiling_gap": 0.02358180278937851,
+   "clairvoyant_J": 0.5988252577797789,
+   "fixed_option": [
+    0,
+    0
+   ],
+   "lambda": 0.425,
+   "open_loop_J": 0.6224070605691575
+  },
+  "0.45": {
+   "arms": {
+    "A": {
+     "arm_J": 0.6501978866910737,
+     "placebo_J": 0.6530980083178165,
+     "policy": [
+      2,
+      8
+     ],
+     "schedules_identical_across_tapes": false,
+     "vs_open_loop": {
+      "lcb95": -0.04391595383227039,
+      "mean": -0.027790826121916284,
+      "ucb95": -0.011010822383702304
+     },
+     "vs_placebo": {
+      "lcb95": -0.012507570869349264,
+      "mean": 0.0029001216267426724,
+      "ucb95": 0.015832331286779855
+     },
+     "weeks_held": [
+      4,
+      4,
+      4,
+      4,
+      4,
+      4
+     ]
+    },
+    "B": {
+     "arm_J": 0.6326370002055698,
+     "placebo_J": 0.6280917475909775,
+     "policy": [
+      2,
+      10
+     ],
+     "schedules_identical_across_tapes": false,
+     "vs_open_loop": {
+      "lcb95": -0.012809750096861972,
+      "mean": -0.010229939636412258,
+      "ucb95": -0.007308635403738513
+     },
+     "vs_placebo": {
+      "lcb95": -0.009770277982050287,
+      "mean": -0.004545252614592284,
+      "ucb95": 0.0007445357337571641
+     },
+     "weeks_held": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ]
+    }
+   },
+   "ceiling_gap": 0.015876977239535368,
+   "clairvoyant_J": 0.6065300833296221,
+   "fixed_option": [
+    0,
+    0
+   ],
+   "lambda": 0.45,
+   "open_loop_J": 0.6224070605691575
+  },
+  "0.475": {
+   "arms": {
+    "A": {
+     "arm_J": 0.6547433412365283,
+     "placebo_J": 0.6588289053013479,
+     "policy": [
+      2,
+      8
+     ],
+     "schedules_identical_across_tapes": false,
+     "vs_open_loop": {
+      "lcb95": -0.047938628308051845,
+      "mean": -0.03233628066737082,
+      "ucb95": -0.015556276929156879
+     },
+     "vs_placebo": {
+      "lcb95": -0.010910767182645553,
+      "mean": 0.004085564064819432,
+      "ucb95": 0.017979741952377726
+     },
+     "weeks_held": [
+      4,
+      4,
+      4,
+      4,
+      4,
+      4
+     ]
+    },
+    "B": {
+     "arm_J": 0.6337733638419333,
+     "placebo_J": 0.6291710232388517,
+     "policy": [
+      2,
+      10
+     ],
+     "schedules_identical_across_tapes": false,
+     "vs_open_loop": {
+      "lcb95": -0.013805822207759175,
+      "mean": -0.01136630327277586,
+      "ucb95": -0.008414821460898095
+     },
+     "vs_placebo": {
+      "lcb95": -0.01126101600866869,
+      "mean": -0.004602340603081678,
+      "ucb95": 0.0010550784878716006
+     },
+     "weeks_held": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ]
+    }
+   },
+   "ceiling_gap": 0.010582284593275001,
+   "clairvoyant_J": 0.6118247759758825,
+   "fixed_option": [
+    0,
+    0
+   ],
+   "lambda": 0.475,
+   "open_loop_J": 0.6224070605691575
+  },
+  "0.5": {
+   "arms": {
+    "A": {
+     "arm_J": 0.659288795781983,
+     "placebo_J": 0.6643518130829169,
+     "policy": [
+      2,
+      8
+     ],
+     "schedules_identical_across_tapes": false,
+     "vs_open_loop": {
+      "lcb95": -0.05250919681556213,
+      "mean": -0.03688173521282543,
+      "ucb95": -0.020731493540415664
+     },
+     "vs_placebo": {
+      "lcb95": -0.010093498052576108,
+      "mean": 0.005063017300934003,
+      "ucb95": 0.018619978409394815
+     },
+     "weeks_held": [
+      4,
+      4,
+      4,
+      4,
+      4,
+      4
+     ]
+    },
+    "B": {
+     "arm_J": 0.634909727478297,
+     "placebo_J": 0.6307646243430679,
+     "policy": [
+      2,
+      10
+     ],
+     "schedules_identical_across_tapes": false,
+     "vs_open_loop": {
+      "lcb95": -0.015099198245416964,
+      "mean": -0.012502666909139462,
+      "ucb95": -0.009580608236985614
+     },
+     "vs_placebo": {
+      "lcb95": -0.009946720432133571,
+      "mean": -0.004145103135228996,
+      "ucb95": 0.0014099103504084016
+     },
+     "weeks_held": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ]
+    }
+   },
+   "ceiling_gap": 0.005847436108426492,
+   "clairvoyant_J": 0.6165596244607311,
+   "fixed_option": [
+    0,
+    0
+   ],
+   "lambda": 0.5,
+   "open_loop_J": 0.6224070605691575
+  }
+ },
+ "run_role": "PHASE_SIGNAL_CONVERSION",
+ "schema_version": "phase_signal_conversion_v1",
+ "scope": "DEVELOPMENT_ON_DECLARED_REPLAY_NO_LEARNER_AUTHORIZED",
+ "self_sha256": "aa7311e5bae8ea221e6c69bb4e1e1f9f8a106d8d417426fbed05276d5143c619",
+ "splits": {
+  "test": [
+   8600007,
+   8600008,
+   8600009,
+   8600010,
+   8600011,
+   8600012
+  ],
+  "train": [
+   8600001,
+   8600002,
+   8600003,
+   8600004,
+   8600005,
+   8600006
+  ]
+ }
+}
