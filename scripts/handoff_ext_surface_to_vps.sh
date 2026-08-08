@@ -50,13 +50,21 @@ ssh $VPS 'cd scres-ia && for s in 30,35 31,36 32,37 33,38 34,39; do
 done; echo "  VPS lanzado: 5 procesos"'
 
 # Keep pulling the VPS shards back so a dropped link never costs finished work.
-while pgrep -f "phase surface --surface ext" > /dev/null || \
-      ssh -o ConnectTimeout=10 $VPS 'pgrep -f "phase surface --surface ext"' > /dev/null 2>&1; do
+#
+# STOP FILE, BECAUSE "WHILE THERE ARE PROCESSES" IS THE WRONG CONDITION. On 2026-08-08 this loop was
+# still alive hours after its job was done and RESTORED three slices that had just been quarantined
+# for cross-platform divergence -- silently, because rsync succeeding is not an error. It was caught
+# by their mtimes, not by any log. A sync loop that can undo a decision needs a way to be told the
+# decision was made.
+STOP="$REPO/results/frozen_path_equivalence_v2/.stop_handoff"
+rm -f "$STOP"
+while [ ! -e "$STOP" ] && { pgrep -f "phase surface --surface ext" > /dev/null || \
+      ssh -o ConnectTimeout=10 $VPS 'pgrep -f "phase surface --surface ext"' > /dev/null 2>&1; }; do
   sleep 300
   rsync -az $VPS:scres-ia/results/frozen_path_equivalence_v2/shards/ \
     results/frozen_path_equivalence_v2/shards/ 2>/dev/null
   echo "  [$(date +%H:%M)] ext: $(ls results/frozen_path_equivalence_v2/shards | grep -c '^ext__')/360"
 done
-rsync -az $VPS:scres-ia/results/frozen_path_equivalence_v2/shards/ \
+[ -e "$STOP" ] || rsync -az $VPS:scres-ia/results/frozen_path_equivalence_v2/shards/ \
   results/frozen_path_equivalence_v2/shards/ 2>/dev/null
 echo "[$(date +%H:%M)] SUPERFICIE COMPLETA · ext $(ls results/frozen_path_equivalence_v2/shards | grep -c '^ext__')/360 · base $(ls results/frozen_path_equivalence_v2/shards | grep -c '^base__')/360"
