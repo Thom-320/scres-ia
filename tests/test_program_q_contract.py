@@ -130,9 +130,18 @@ def test_seed_custody_scan_allows_contract_declaration_only(tmp_path: Path) -> N
 
 
 def test_live_program_q_seed_custody_declarations_do_not_fake_a_collision() -> None:
+    """CORRECTED 2026-08-07: this asserted PROGRAM_Q_SEEDS_VIRGIN, which is false as a fact.
+
+    `research/seed_custody_registry.json` declares the block BURNED with source commit f2dfe35 --
+    Program Q's terminal confirmation consumed it, legitimately and on the record. The old
+    assertion could only have gone green again by un-burning a block that was already spent, so
+    the test was red for telling the truth. What must hold now is that the burn is declared with
+    its source, and that nothing reuses the block as though it were still virgin.
+    """
     payload = scan(ROOT)
-    assert payload["pass"]
-    assert payload["status"] == "PROGRAM_Q_SEEDS_VIRGIN"
+    assert payload["pass"], payload["suspicious"]
+    assert payload["status"] == "PROGRAM_Q_BLOCK_BURNED_AND_DECLARED"
+    assert payload["block_declaration"]["source"], "the burn must name the commit that spent it"
     assert not payload["suspicious"]
 
 

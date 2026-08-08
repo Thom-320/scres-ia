@@ -92,7 +92,7 @@ value."*
 > **Queda UN bloque virgen en todo el proyecto**: `g3a_v2_development`, **7700001–7700120**,
 > `RESERVED_NOT_OPENED`, condicionado a `submission_a_receipt_required_before_g3a_open`.
 
-Quemados por confirmación: 8200001–060, 7490001–256. En cuarentena (intento sin artefacto sellado,
+Quemados por confirmación: 8200001–8200060, 7490001–7490256. La forma abreviada «7490001–256» que estuvo aquí no declara el rango: el escáner de custodia sólo reconoce una declaración cuando los dos extremos aparecen completos y juntos. En cuarentena (intento sin artefacto sellado,
 no reutilizables como vírgenes): 8100001–060, 7900001–140.
 
 ---

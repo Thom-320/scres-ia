@@ -96,6 +96,50 @@ def classify_text(text: str) -> dict[str, list[int]]:
     return {key: sorted(values) for key, values in out.items()}
 
 
+REGISTRY = "research/seed_custody_registry.json"
+
+
+def block_declaration(root: Path) -> dict | None:
+    """The canonical registry's entry for this namespace, or None if it declares nothing.
+
+    CORRECTED 2026-08-07. The guard was written to fail closed if a RESERVED namespace appeared
+    opened, and it kept firing after the block was legitimately opened, consumed and recorded:
+    `research/seed_custody_registry.json` carries `{"start": 7490001, "end": 7490256, "status":
+    "BURNED", "source": "f2dfe35"}`. The scanner could not see that declaration for two compounding
+    reasons -- its constants still call the block reserved, and even as text the two endpoints sit
+    ~180 characters apart because JSON keys sort `end` … `start`, well outside BOUNDS_WINDOW.
+
+    So the guard was permanently red for a correct, recorded event. That is worse than no guard: a
+    red that never goes green teaches the reader to skip it, and a real reuse would hide behind the
+    same failure -- the exact lesson the 2026-07-31 correction above already recorded once.
+
+    The residual risk after a burn is not opening the block. It is REUSING it as though it were
+    still virgin. So once the registry declares the burn, that is what gets enforced.
+    """
+    path = root / REGISTRY
+    if not path.exists():
+        return None
+    try:
+        payload = json.loads(path.read_text())
+    except (OSError, json.JSONDecodeError):
+        return None
+
+    found: list[dict] = []
+
+    def walk(node) -> None:
+        if isinstance(node, dict):
+            if node.get("start") == RESERVED_LOW and node.get("end") == RESERVED_HIGH:
+                found.append(node)
+            for value in node.values():
+                walk(value)
+        elif isinstance(node, list):
+            for value in node:
+                walk(value)
+
+    walk(payload)
+    return found[0] if found else None
+
+
 def scan(root: Path) -> dict:
     suspicious = []
     declarations = []
@@ -129,9 +173,33 @@ def scan(root: Path) -> dict:
                 suspicious.append(row)
             else:
                 declarations.append(row)
+
+    declared = block_declaration(root)
+    burned = bool(declared) and declared.get("status") == "BURNED"
+    if burned:
+        # The burn is recorded, so naming these seeds in prose or in the custody record is history,
+        # not a violation. What stays fatal is a seed in a FILENAME: an artifact named after one of
+        # these seeds is a run that treated a burned block as virgin. That check is untouched.
+        reclassified = [row for row in suspicious if not row["seed_in_filename"]]
+        suspicious = [row for row in suspicious if row["seed_in_filename"]]
+        declarations = declarations + reclassified
+        missing_source = not declared.get("source")
+        status = ("STOP_PROGRAM_Q_BURNED_BLOCK_REUSED" if suspicious else
+                  "STOP_PROGRAM_Q_BURN_DECLARATION_INCOMPLETE" if missing_source else
+                  "PROGRAM_Q_BLOCK_BURNED_AND_DECLARED")
+        return {
+            "schema_version": "program_q_seed_custody_audit_v1",
+            "reserved": [RESERVED_LOW, RESERVED_HIGH],
+            "block_declaration": declared,
+            "declarations": declarations,
+            "suspicious": suspicious,
+            "pass": not suspicious and not missing_source,
+            "status": status,
+        }
     return {
         "schema_version": "program_q_seed_custody_audit_v1",
         "reserved": [RESERVED_LOW, RESERVED_HIGH],
+        "block_declaration": declared,
         "declarations": declarations,
         "suspicious": suspicious,
         "pass": not suspicious,

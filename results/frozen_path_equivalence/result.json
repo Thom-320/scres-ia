@@ -1,0 +1,345 @@
+{
+ "by_cache": {
+  "grid_transfer_confirmation_v2": {
+   "cache_root": "results/surface_cache/garrido_transfer_confirmation_v2_ext",
+   "contexts": [
+    "R1r",
+    "R1r+R2r",
+    "R1r+R2r|esc",
+    "R1r|esc",
+    "R2r",
+    "R2r|esc"
+   ],
+   "differing": [],
+   "feeds": "results/grid_transfer_confirmation_v2/result.json",
+   "n_cells": 300,
+   "n_differing": 0,
+   "n_distinct_configs": 290,
+   "n_distinct_seeds": 60,
+   "n_identical": 300
+  },
+  "search_ladder_v5": {
+   "cache_root": "results/surface_cache/wrap288_v1",
+   "contexts": [
+    "R1r",
+    "R1r+R2r",
+    "R1r+R2r|esc",
+    "R1r|esc",
+    "R2r",
+    "R2r|esc"
+   ],
+   "differing": [],
+   "feeds": "results/search_ladder_v5/result.json",
+   "n_cells": 300,
+   "n_differing": 0,
+   "n_distinct_configs": 198,
+   "n_distinct_seeds": 12,
+   "n_identical": 300
+  }
+ },
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "FROZEN_PATH_EQUIVALENT_UNDER_CURRENT_SOURCE",
+ "contract_path": "docs/ENMIENDA_REGISTRO_DE_EVIDENCIA_2026-08-07.md",
+ "contract_sha256": "8e78b344536e8c6440d29ff4e437a0ea9b84c5fe73980d0b40c842aa90947ff5",
+ "created_at": "2026-08-08T01:49:25.345279+00:00",
+ "declared_drift": [
+  "supply_chain/supply_chain.py",
+  "supply_chain/arm_runner.py"
+ ],
+ "elapsed_seconds": 56.69036966700514,
+ "endpoint": "cell_level_exact_reproduction",
+ "falsifiers": {
+  "all_passed": true,
+  "f1_every_sampled_cell_reproduces_exactly": {
+   "evidence": {
+    "by_cache": {
+     "grid_transfer_confirmation_v2": {
+      "n_cells": 300,
+      "n_differing": 0
+     },
+     "search_ladder_v5": {
+      "n_cells": 300,
+      "n_differing": 0
+     }
+    },
+    "why_it_can_fail": "if either 2026-08-07 edit changed the frozen path, a re-run under the current tree returns a different number and the confirmation cannot be cited without rebuilding its surface"
+   },
+   "passed": true
+  },
+  "f2_the_sample_spans_the_grid": {
+   "evidence": {
+    "by_cache": {
+     "grid_transfer_confirmation_v2": {
+      "configs": 290,
+      "contexts": [
+       "R1r",
+       "R1r+R2r",
+       "R1r+R2r|esc",
+       "R1r|esc",
+       "R2r",
+       "R2r|esc"
+      ],
+      "seeds": 60
+     },
+     "search_ladder_v5": {
+      "configs": 198,
+      "contexts": [
+       "R1r",
+       "R1r+R2r",
+       "R1r+R2r|esc",
+       "R1r|esc",
+       "R2r",
+       "R2r|esc"
+      ],
+      "seeds": 12
+     }
+    },
+    "why_it_can_fail": "a sample concentrated in one context or one corner could be identical while the physics moved elsewhere; this demands the six contexts, several seeds and many configurations"
+   },
+   "passed": true
+  },
+  "f3_the_comparator_detects_a_planted_difference": {
+   "evidence": {
+    "controls": {
+     "grid_transfer_confirmation_v2": {
+      "clean_cell_still_matches": true,
+      "config_index": 1230,
+      "panel_key_mutated": "delivered_rations",
+      "panel_mutation_detected": true,
+      "perturbation": 1e-09,
+      "slice": "results/surface_cache/garrido_transfer_confirmation_v2_ext/R1r/8200049.json",
+      "value_mutation_detected": true
+     },
+     "search_ladder_v5": {
+      "clean_cell_still_matches": true,
+      "config_index": 145,
+      "panel_key_mutated": "delivered_rations",
+      "panel_mutation_detected": true,
+      "perturbation": 1e-09,
+      "slice": "results/surface_cache/wrap288_v1/R1r/5300003.json",
+      "value_mutation_detected": true
+     }
+    },
+    "why_it_can_fail": "a comparator blind to a 1e-9 perturbation would report equivalence for any tree at all; this repository has already shipped a falsifier hardcoded to passed:True"
+   },
+   "passed": true
+  },
+  "f4_the_measured_drift_is_the_declared_drift": {
+   "evidence": {
+    "declared": [
+     "supply_chain/supply_chain.py",
+     "supply_chain/arm_runner.py"
+    ],
+    "drifted": [
+     "supply_chain/arm_runner.py",
+     "supply_chain/supply_chain.py"
+    ],
+    "undeclared": [],
+    "why_it_can_fail": "a third file could have moved without anyone noticing; clearing only the two named edits would then certify less than it appears to"
+   },
+   "passed": true
+  },
+  "f5_no_seed_outside_the_burned_blocks": {
+   "evidence": {
+    "seeds_touched": [
+     5300001,
+     5300002,
+     5300003,
+     5300004,
+     5300005,
+     5300006,
+     5300007,
+     5300008,
+     5300009,
+     5300010,
+     5300011,
+     5300012,
+     8200001,
+     8200002,
+     8200003,
+     8200004,
+     8200005,
+     8200006,
+     8200007,
+     8200008,
+     8200009,
+     8200010,
+     8200011,
+     8200012,
+     8200013,
+     8200014,
+     8200015,
+     8200016,
+     8200017,
+     8200018,
+     8200019,
+     8200020,
+     8200021,
+     8200022,
+     8200023,
+     8200024,
+     8200025,
+     8200026,
+     8200027,
+     8200028,
+     8200029,
+     8200030,
+     8200031,
+     8200032,
+     8200033,
+     8200034,
+     8200035,
+     8200036,
+     8200037,
+     8200038,
+     8200039,
+     8200040,
+     8200041,
+     8200042,
+     8200043,
+     8200044,
+     8200045,
+     8200046,
+     8200047,
+     8200048,
+     8200049,
+     8200050,
+     8200051,
+     8200052,
+     8200053,
+     8200054,
+     8200055,
+     8200056,
+     8200057,
+     8200058,
+     8200059,
+     8200060
+    ],
+    "why_it_can_fail": "re-evaluating a cell outside the blocks these caches already burned would consume custody this certificate never declared"
+   },
+   "passed": true
+  }
+ },
+ "manifest_drift": {
+  "drifted_files": [
+   "supply_chain/arm_runner.py",
+   "supply_chain/supply_chain.py"
+  ],
+  "grid_transfer_confirmation_v2": {
+   "entry_script": "scripts/build_transfer_confirmation_cache_v1.py",
+   "entry_script_match": true,
+   "modules": {
+    "supply_chain/config.py": {
+     "current": "ae702a4991966504eaa1036106fa5f4b9c11e913d376dfb67e3f3c83147904cc",
+     "manifest": "ae702a4991966504eaa1036106fa5f4b9c11e913d376dfb67e3f3c83147904cc",
+     "match": true
+    },
+    "supply_chain/episode_metrics.py": {
+     "current": "e09199d48a747f67aef600e9482b812fc1be16e337167d7dfc7215bcb57fb55e",
+     "manifest": "e09199d48a747f67aef600e9482b812fc1be16e337167d7dfc7215bcb57fb55e",
+     "match": true
+    },
+    "supply_chain/seed_custody.py": {
+     "current": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd",
+     "manifest": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd",
+     "match": true
+    },
+    "supply_chain/supply_chain.py": {
+     "current": "74ed0909950c377f9ddce2d0e464a177c09c66ef417628bf11d5acbd81724515",
+     "manifest": "2f348e5922cbbecf167b45cf0045765010beaaecdcb0fe6de88f259c989460f6",
+     "match": false
+    }
+   }
+  },
+  "search_ladder_v5": {
+   "entry_script": "scripts/run_meta_learner_normaliser_audit_v1.py",
+   "entry_script_match": true,
+   "modules": {
+    "supply_chain/arm_runner.py": {
+     "current": "1afea4fa248db5beb2d86c6ab2033d6f24a95115ea544b08966b7a538456ac99",
+     "manifest": "35135c537d9260832677ab6b4e344229d6b9f4810df8bdef9efd51b58fcac68a",
+     "match": false
+    },
+    "supply_chain/config.py": {
+     "current": "ae702a4991966504eaa1036106fa5f4b9c11e913d376dfb67e3f3c83147904cc",
+     "manifest": "ae702a4991966504eaa1036106fa5f4b9c11e913d376dfb67e3f3c83147904cc",
+     "match": true
+    },
+    "supply_chain/episode_metrics.py": {
+     "current": "e09199d48a747f67aef600e9482b812fc1be16e337167d7dfc7215bcb57fb55e",
+     "manifest": "e09199d48a747f67aef600e9482b812fc1be16e337167d7dfc7215bcb57fb55e",
+     "match": true
+    },
+    "supply_chain/seed_custody.py": {
+     "current": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd",
+     "manifest": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd",
+     "match": true
+    },
+    "supply_chain/supply_chain.py": {
+     "current": "74ed0909950c377f9ddce2d0e464a177c09c66ef417628bf11d5acbd81724515",
+     "manifest": "2f348e5922cbbecf167b45cf0045765010beaaecdcb0fe6de88f259c989460f6",
+     "match": false
+    }
+   }
+  },
+  "undeclared_drift": []
+ },
+ "module_manifest": {
+  "entry_script": "scripts/verify_frozen_path_equivalence_v1.py",
+  "entry_script_sha256": "ea724f7435c14646e1abfbdc9a7af8b4e87db025476e82168f234672f4a04b2d",
+  "missing": [],
+  "modules": {
+   "supply_chain/arm_runner.py": "1afea4fa248db5beb2d86c6ab2033d6f24a95115ea544b08966b7a538456ac99",
+   "supply_chain/config.py": "ae702a4991966504eaa1036106fa5f4b9c11e913d376dfb67e3f3c83147904cc",
+   "supply_chain/episode_metrics.py": "e09199d48a747f67aef600e9482b812fc1be16e337167d7dfc7215bcb57fb55e",
+   "supply_chain/seed_custody.py": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd",
+   "supply_chain/supply_chain.py": "74ed0909950c377f9ddce2d0e464a177c09c66ef417628bf11d5acbd81724515"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "mutation_controls": {
+  "grid_transfer_confirmation_v2": {
+   "clean_cell_still_matches": true,
+   "config_index": 1230,
+   "panel_key_mutated": "delivered_rations",
+   "panel_mutation_detected": true,
+   "perturbation": 1e-09,
+   "slice": "results/surface_cache/garrido_transfer_confirmation_v2_ext/R1r/8200049.json",
+   "value_mutation_detected": true
+  },
+  "search_ladder_v5": {
+   "clean_cell_still_matches": true,
+   "config_index": 145,
+   "panel_key_mutated": "delivered_rations",
+   "panel_mutation_detected": true,
+   "perturbation": 1e-09,
+   "slice": "results/surface_cache/wrap288_v1/R1r/5300003.json",
+   "value_mutation_detected": true
+  }
+ },
+ "preregistration": "docs/ENMIENDA_REGISTRO_DE_EVIDENCIA_2026-08-07.md",
+ "reference_path": "results/grid_transfer_confirmation_v2/result.json",
+ "reference_sha256": "eceb9ee97613e172130b7175a79cf6c7d5ddfb54f0ec5435b1174842c20b0f5a",
+ "schema_version": "frozen_path_equivalence_v1",
+ "scope": "PROVENANCE_ONLY_NO_SCIENTIFIC_CLAIM_NO_NEW_SEEDS",
+ "self_sha256": "15bf9f046ba92af31f027b935ac61a82deaccf9da43291529178b5b9d2a066f1",
+ "what_this_does_not_certify": "This certifies that the sampled cells of these caches reproduce under the current tree. It does not certify unsampled cells, nor any artifact whose surface is not one of these caches, nor that the 2026-08-07 edits are harmless for FUTURE runs that enable the paths they added."
+}
