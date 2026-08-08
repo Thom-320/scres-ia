@@ -198,6 +198,28 @@ CLAIMS: list[dict] = [
                           "opposite directions"),
     },
     {
+        "claim_id": "EXPANSION_ADDS_REACHABLE_OPTIMA",
+        "artifact": "results/expansion_difficulty/result.json",
+        "section": "RQ2 methods (why the expanded grid is the right test)",
+        "endpoint": "expected simple regret of a uniform 24-draw, by order statistics",
+        "estimand": "E[best of a uniform n-subset] on 288 and on 4,608 of the same sealed surfaces",
+        "allowed": ("The expansion from 288 to 4,608 configurations adds reachable improvement "
+                    "rather than diluting a uniform starting policy: the extended optimum is "
+                    "strictly better in 136 of 360 cells, 0.97% of the 4,320 added configurations "
+                    "exceed the base optimum, and the expected simple regret of a uniform 24-draw "
+                    "falls from 0.07429 to 0.06755 against each grid's own optimum and from 0.10284 "
+                    "to 0.06755 against a common reference. Computed exactly by order statistics "
+                    "and checked against a 20,000-draw Monte Carlo control."),
+        "forbidden": ["the expansion dilutes cold start",
+                      "the new factors move the endpoint 18x less than the contrasts",
+                      "the expansion hardens the problem",
+                      "the expanded grid is a harder benchmark"],
+        "why_forbidden": ("the dilution claim is measured false under both normalisers; the 18x "
+                          "ratio has no single value (7.0x, 30.5x and 67.5x for the three canonical "
+                          "choices, and 18x is none of them); and 'harder' is not established "
+                          "either -- uniform search does BETTER on the larger grid"),
+    },
+    {
         "claim_id": "V0_HYPOTHESES_ADJUDICATED",
         "artifact": "results/v0_adjudication_matrix/result.json",
         "section": "Appendix A (reconciliation with the v0 hypotheses)",

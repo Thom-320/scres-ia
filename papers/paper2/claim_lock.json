@@ -187,6 +187,33 @@
    "why_forbidden": "the direction holds in all six under BOTH endpoints -- what changes is resolution, not sign, and reporting either half alone misleads in opposite directions"
   },
   {
+   "allowed": "The expansion from 288 to 4,608 configurations adds reachable improvement rather than diluting a uniform starting policy: the extended optimum is strictly better in 136 of 360 cells, 0.97% of the 4,320 added configurations exceed the base optimum, and the expected simple regret of a uniform 24-draw falls from 0.07429 to 0.06755 against each grid's own optimum and from 0.10284 to 0.06755 against a common reference. Computed exactly by order statistics and checked against a 20,000-draw Monte Carlo control.",
+   "artifact": "results/expansion_difficulty/result.json",
+   "claim_id": "EXPANSION_ADDS_REACHABLE_OPTIMA",
+   "claim_status": "EXPANSION_MOVES_THE_OPTIMUM_IN_SOME_CELLS",
+   "contract_sha256": "8e78b344536e8c6440d29ff4e437a0ea9b84c5fe73980d0b40c842aa90947ff5",
+   "endpoint": "expected simple regret of a uniform 24-draw, by order statistics",
+   "estimand": "E[best of a uniform n-subset] on 288 and on 4,608 of the same sealed surfaces",
+   "evidence_grade": "POST_HOC_ON_DEVELOPMENT_DATA",
+   "exists": true,
+   "falsifiers_all_passed": true,
+   "file_sha256": "f7ac1477f17f22276264cb86db1da17c48151b7a72ec2e3c22fed4967e525bb3",
+   "forbidden": [
+    "the expansion dilutes cold start",
+    "the new factors move the endpoint 18x less than the contrasts",
+    "the expansion hardens the problem",
+    "the expanded grid is a harder benchmark"
+   ],
+   "missing_top_level_fields": [],
+   "paper_id": "P2",
+   "registration_status": "POST_HOC_AUDIT_REPLACING_A_WITHDRAWN_RATIO_NOT_PREREGISTERED",
+   "run_role": "POST_HOC_REREAD",
+   "scope": "REREAD_OF_SEALED_CACHES_NO_SEEDS_NO_SIMULATION",
+   "section": "RQ2 methods (why the expanded grid is the right test)",
+   "self_sha256": "e99bc6c1c2da8a6c0b37a1f2b27b4b036de220e100878d3f5175fb987e7c3a40",
+   "why_forbidden": "the dilution claim is measured false under both normalisers; the 18x ratio has no single value (7.0x, 30.5x and 67.5x for the three canonical choices, and 18x is none of them); and 'harder' is not established either -- uniform search does BETTER on the larger grid"
+  },
+  {
    "allowed": "Of the four v0 hypotheses, three are supported on development evidence and none is confirmatory: H1 on a redefined endpoint (restricted TTR, +125.99 h [+98.35, +154.54]) whose companion recovery gate returned no learning headroom, H2 on a context ordinal (+0.04220 [+0.03466, +0.04992]) rather than successive within-run disruptions, H4 for search cost rather than delivered resilience. H3 is not supported with a live estimand of the wrong sign (-1.109e15, p = 0.821). Of the two research questions, dynamic operationalization is answered only for an outer loop and predictive accuracy is not answered at all.",
    "artifact": "results/v0_adjudication_matrix/result.json",
    "claim_id": "V0_HYPOTHESES_ADJUDICATED",
@@ -556,7 +583,7 @@
    "why_forbidden": "unique_profile_optima is 1, 2 or 3 by row; and the screen varied PROFILES, not the within-episode realisation"
   }
  ],
- "generated_at_commit": "c41dcff897a0f51b8bc44e40d68adf91865625d4",
+ "generated_at_commit": "9cd824d4cfe999871e8177f9106c93f6e2a06697",
  "grader_self_test": {
   "a_real_confirmation_still_grades_confirmatory": {
    "passed": true,
@@ -567,7 +594,7 @@
    "returned": "POST_HOC_ON_PROSPECTIVE_DATA"
   }
  },
- "n_claims": 19,
+ "n_claims": 20,
  "portfolio_map": "papers/PORTFOLIO_MAP.json",
  "portfolio_map_sha256": "22c106e8c4d9754000f993f95c82b7d39f06b45bf063a84d0c7c5443d365593e",
  "problems": [],
