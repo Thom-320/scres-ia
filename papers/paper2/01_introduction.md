@@ -10,10 +10,16 @@ search procedure: information acquired in one discrete-event simulation run is d
 next configuration is selected. We study the outer-loop alternative in which only search state is
 retained across runs. The physical DES, random realization and within-run state remain reset.
 
+The endpoint is normalized **area under the regret curve** over the search budget, and it is named
+here because the choice matters: on the simple regret of the recommendation actually deployed at
+budget 24, all six retention contrasts keep the same sign but the joint resolution collapses to one
+of six with a simultaneous lower bound above zero, and the family ordering is not preserved between
+the two endpoints. AUC rewards getting there sooner; final regret asks only where you ended.
+
 Within the evaluated contract, development point estimates favour state retention in all six matched
 families relative to their memoryless twins. In a prospective expansion from 288 to 4,608
 configurations, the prespecified factorized UCB arm meets the confirmatory transfer criterion
-against both cold start and a state-blind replay of its own visit marginals. Secondary carrier
+against both cold start and an online cumulative replay of its own visit marginals. Secondary carrier
 contrasts show no corresponding advantage for the evaluated neural, GP-EI or OFAT arms.
 The result separates retained search state from neural architecture and from learning inside the
 physical chain.
@@ -40,5 +46,5 @@ The central claim is:
 > Within the evaluated outer-loop contract and the inherited demand process, development point
 > estimates favoured state retention in all six matched families. In a prospective expansion from
 > 288 to 4,608 configurations, the prespecified factorized UCB search strategy met the
-> confirmatory transfer criterion against both cold start and a state-blind replay of its own
-> search marginals; secondary carrier contrasts showed no corresponding neural-specific advantage.
+> confirmatory transfer criterion against both cold start and an online cumulative replay of its
+> own search marginals; secondary carrier contrasts showed no corresponding neural-specific advantage.

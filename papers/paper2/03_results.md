@@ -22,8 +22,9 @@ capacity. Weekly demand is **not i.i.d.**: lag-1 autocorrelation is −0.228 (SE
 i.i.d. band of ±0.065, decaying through −0.170 at lag 2 to −0.015 at lag 4.
 
 Two consequences we state rather than bury. First, the process is neither static nor negligible in
-variability, so the common characterisation of this benchmark as "almost deterministic demand" is
-not accurate at the weekly decision cadence. Second, the memory it does carry is **negative, weak
+variability, so the characterisation of this benchmark found in the
+surrounding literature — "almost deterministic demand" — is not accurate at the weekly decision
+cadence, and we do not use it. Second, the memory it does carry is **negative, weak
 and undirected** — consistent with anti-clustering of contingent surges — which is not the kind of
 state a conditioned controller can exploit. Whether the findings below survive strongly non-stationary
 or seasonal demand is **not established by the inherited-process results**. A bounded development
@@ -178,7 +179,7 @@ The ladder cannot distinguish transferred structure from a method simply revisit
 that worked before. `grid_transfer_confirmation_v2` (`7bc33823ccd90b5e`, `run_role: CONFIRMATION`,
 `scope: CONFIRMATION_ON_RESERVED_VIRGIN_BLOCK`) separates them by expanding the design space from
 288 to 4,608 configurations — sixteen-fold — and scoring each family against **two** comparators:
-a cold start, and a **state-blind replay of its own visit marginals**. The second preserves each
+a cold start, and an **online cumulative replay of its own visit marginals**. The second preserves each
 method's marginal sampling frequencies while destroying the retained structure, so only transferred
 structure can beat it. n = 60.
 
@@ -206,16 +207,18 @@ it is larger, not smaller, against one that does not grow. The secondary negativ
 confirmatory negative. Frozen verdict: `GRID_TRANSFER_CONFIRMED__UCB1`.
 
 A post-hoc re-read of the same prospective artifact as twelve arms rather than four within-family
-contrasts found that the four cold-start arms occupied ranks 9–12, while the four lowest-regret
-arms were mutually indistinguishable under Holm correction. Three of those four were
-frequency-matched replays of a carrier's visit marginals; retention beat its own marginal replay
-in one family and lost distinguishably in three. This re-read does not select a new winner and was
-not preregistered.
+contrasts found that the four cold-start arms occupied ranks 9–12 without exception, and that three
+of the four lowest-mean arms were frequency-matched replays of a carrier's visit marginals. The
+pairwise comparisons among those low-mean arms crossed zero, but their i.i.d. bootstrap reading is
+**quarantined, not reported as a tie**: the replays accumulate across the ordered cases, so the
+sixty seeds are not exchangeable replicates and Holm over them does not mean what its label says.
+What this row records is a ranking pattern. It selects no new winner and was not preregistered.
 
 ### The comparator, repaired
 
-The state-blind label was wrong twice over, and a preregistered repair
-(`results/comparator_repair/result.json`, replay on the burned block, seven falsifiers passing)
+The "state-blind" label — the one used in the original run, and retired here — was wrong twice over, and a preregistered repair
+(`results/comparator_repair_v2/result.json`, replay on the burned block, seven falsifiers passing,
+with the frozen prior digested per seed)
 measures both defects instead of arguing about them. The visit histogram that defines the comparator
 is created once and updated throughout the run, including with the transferred arm's own visits on
 the case being scored. Removing that current case changes each contrast by about 0.001 and leaves
@@ -235,8 +238,8 @@ at all. It does not drift (ρ −0.070 to +0.148). Against it:
 | `gp` | −0.02097 [−0.02872, −0.01294] ✘ |
 | `ofat` | −0.04284 [−0.04963, −0.03720] ✘ |
 
-**A transportable visit prior replaces the transferred state of three of four carriers and fails
-only against factorized UCB** — whose advantage over it is *larger* than over the online comparator.
+**This one researcher-defined frozen prior replaces the transferred state of three of four carriers
+and fails only against factorized UCB** — whose advantage over it is *larger* than over the online comparator.
 The neural negative is not an artifact of a strengthening comparator: against one that does not
 strengthen, the same carrier loses by more. Both arms reproduce the sealed `transfer` and `cold`
 values exactly, so the two additions perturbed nothing. Burned seeds, replay grade: this qualifies
@@ -292,7 +295,17 @@ Stated as prohibitions rather than hedges:
 - **No learning by the physical chain.** The loop closes *between* simulation runs. No routine of a real
   organisation was updated and the physical chain retains nothing across a campaign.
 - **No within-episode adaptive control.** The retained state selects the next configuration; it
-  does not act on the event stream inside a replication.
+  does not act on the event stream inside a replication. This is a measured absence and not only a
+  scope restriction. The one within-episode arm carried far enough to have a ceiling — a priced
+  buffer-release schedule, `J(λ) = L* + λ·(inventory-hours / max inventory-hours)` at λ = 0.35 —
+  does **not** reproduce that ceiling on 48 previously unopened seeds: the clairvoyant per-tape gap
+  is **+0.024054** against an interaction null whose **mean** is **+0.026641** and whose 95th
+  percentile is +0.032964, *p* = **0.7482**, where twelve reused tapes had given +0.045103 at
+  *p* = 0.0132 (`results/expanded_signal_search/result.json`,
+  `CEILING_DID_NOT_REPLICATE`). The observed gap is smaller than the average of its own null, which
+  is the downward bias of a minimum taken over 27 noisy options. By the reading rule frozen in the
+  authorisation before the block was opened, the 26 feature-by-map tests beneath the ceiling are
+  **not read**; they are retained for custody and declared unread here.
 - **No architecture-specific transfer advantage.** None is confirmed anywhere in this study, and the one carrier tested
   prospectively fails the marginal-replay contrast.
 - **The absence of headroom is not an artifact of the scoring metric, and tuning does not recover

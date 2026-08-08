@@ -20,8 +20,10 @@ The primary endpoint is normalized AUC regret, where lower is better. RQ1 uses p
 replicates within each family and the 12-seed replay block declared in the retention artifact. The
 six contrasts are reported as development/replay evidence, not as a new confirmation.
 
-RQ2 uses the 288-to-4,608 expansion and compares retained transfer, cold start, and state-blind
-replay of each method's own marginal visit distribution. The state-blind comparator preserves
+RQ2 uses the 288-to-4,608 expansion and compares retained transfer, cold start, and an online
+cumulative replay of each method's own marginal visit distribution. That replay is carrier-state-
+blind and sequence-blind, but it is not fixed: the histogram accumulates across cases as the run
+proceeds, which is why it is named for what it does rather than for what it lacks. It preserves
 marginal sampling frequencies while removing retained ordering structure. The confirmation is
 limited to the reserved block, frozen caches, inherited demand process, and the declared source
 manifests.

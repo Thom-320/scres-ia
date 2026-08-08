@@ -43,6 +43,69 @@ OUT = Path("papers/paper2/claim_lock.json")
 #: number stay equal only until one of them is edited.
 PORTFOLIO_MAP = Path("papers/PORTFOLIO_MAP.json")
 
+# GARRIDO'S Q1 IS TWO QUESTIONS, AND ONLY ONE OF THEM HAS AN ANSWER.
+#
+# "What category of AI algorithms best mimics the supply-chain-learning attribute?" can be asked of
+# the OUTER loop -- does search state carried across runs reduce development regret, which is the
+# Fig. 2 closure between nodes (3) and (8) -- or of the INNER loop -- does conditioning a
+# within-episode decision on observed state beat a fixed policy. Different experiments, different
+# endpoints, different verdicts; and until now both were filed as "Q1", so a reader could slide from
+# one to the other without noticing.
+#
+# On 2026-08-08 that stopped being cosmetic. A preregistered replication on 48 virgin seeds found
+# the operational-adaptation ceiling does NOT replicate (gap +0.024054 against a null whose MEAN is
+# +0.026641, p = 0.7482), while the search-transfer result stands on its own confirmation. What
+# replicated is the first; what died is the second. A lock that cannot tell them apart reports that
+# as a wash -- or lets the surviving half cover for the dead one.
+Q1_SCOPES = {
+    "Q1_SEARCH_TRANSFER": (
+        "the outer loop: state retained ACROSS runs of the search over configurations. Answers "
+        "Garrido's Fig. 2 closure and the Alzheimer effect. Never evidence that a controller "
+        "adapts within an episode"),
+    "Q1_OPERATIONAL_ADAPTATION": (
+        "the inner loop: a decision conditioned on observed state WITHIN an episode, against a "
+        "fixed policy and an uninformed placebo. Every measurement in this scope is negative or "
+        "did not replicate. Never evidence about search"),
+    "INSTRUMENT_OR_SCOPE": (
+        "neither question -- reproduction, validation, metric labelling, demand-process scope. "
+        "Carries no Q1 answer in either direction"),
+}
+
+# Which question each row answers. One table rather than a field per row, so the split can be read
+# in ten seconds -- the only form in which it survives contact with an author in a hurry.
+Q1_SCOPE_OF: dict[str, str] = {
+    "RQ2A1_UCB1_BEATS_COLD_START": "Q1_SEARCH_TRANSFER",
+    "RQ2A2_UCB1_VS_THE_ONLINE_CUMULATIVE_REPLAY": "Q1_SEARCH_TRANSFER",
+    "RQ2B_SECONDARY_CARRIERS_SHOW_NO_SUCH_ADVANTAGE": "Q1_SEARCH_TRANSFER",
+    "RQ2C_THE_TOP_FOUR_ARMS_ARE_INDISTINGUISHABLE": "Q1_SEARCH_TRANSFER",
+    "RQ2D_A_TRANSPORTABLE_PRIOR_BEATS_THREE_OF_FOUR_CARRIERS": "Q1_SEARCH_TRANSFER",
+    "RQ1_RETENTION_SIX_FAMILIES": "Q1_SEARCH_TRANSFER",
+    "COMPARATOR_IS_NOT_FIXED_DURING_THE_RUN": "Q1_SEARCH_TRANSFER",
+    "RQ1_SIMULTANEOUS_AND_THE_DEPLOYED_ENDPOINT": "Q1_SEARCH_TRANSFER",
+    "EXPANSION_ADDS_REACHABLE_OPTIMA": "Q1_SEARCH_TRANSFER",
+    "FIG5_IS_AN_IDENTITY": "Q1_SEARCH_TRANSFER",
+    "LADDER_STATEFUL_ARMS_LEAD": "Q1_SEARCH_TRANSFER",
+    "RETENTION_NEURON_VS_RESET": "Q1_SEARCH_TRANSFER",
+    "OFAT_CONTRAST_IS_RESAMPLING_UNSTABLE": "Q1_SEARCH_TRANSFER",
+    "KAN_FIT_DOES_NOT_CONVERT_TO_SEARCH": "Q1_SEARCH_TRANSFER",
+    "KAN_LATENT_UNDERPERFORMS_UNDER_MATCHED_CONTRACT": "Q1_SEARCH_TRANSFER",
+    "NEURAL_PREMIUM_NEEDS_CURVATURE_ABOVE_NOISE": "Q1_SEARCH_TRANSFER",
+    # H_regime asks whether conditioning the CHOICE on the regime pays. That is adaptation to state,
+    # not carriage of state across runs, and it belongs on the side that keeps coming back empty.
+    "H_REGIME_MUST_BE_LABELLED_BY_METRIC": "Q1_OPERATIONAL_ADAPTATION",
+    "H_REGIME_IS_NOT_CURVATURE_INVARIANT": "Q1_OPERATIONAL_ADAPTATION",
+    "THE_NEGATIVE_SURVIVES_A_SOUND_METRIC": "Q1_OPERATIONAL_ADAPTATION",
+    "RISK_PROFILE_TAILORING_BUYS_NOTHING": "Q1_OPERATIONAL_ADAPTATION",
+    "OPERATIONAL_ADAPTATION_CEILING_DID_NOT_REPLICATE": "Q1_OPERATIONAL_ADAPTATION",
+    "SURFACE_IS_MATERIALLY_NONLINEAR": "INSTRUMENT_OR_SCOPE",
+    "SURFACE_REPRODUCES_UNDER_TODAYS_CODE": "INSTRUMENT_OR_SCOPE",
+    "CROSS_PLATFORM_DIVERGENCE_IS_REAL_AND_NARROW": "INSTRUMENT_OR_SCOPE",
+    "V0_HYPOTHESES_ADJUDICATED": "INSTRUMENT_OR_SCOPE",
+    "VALIDATION_SIX_THESIS_PANELS": "INSTRUMENT_OR_SCOPE",
+    "DEMAND_PROCESS_SCOPE": "INSTRUMENT_OR_SCOPE",
+    "DEMAND_PROCESS_LITERAL_GENERATOR": "INSTRUMENT_OR_SCOPE",
+}
+
 # One row per claim the manuscript cites. `allowed` and `forbidden` are the wording contract; every
 # forbidden phrase here was actually written somewhere and had to be retracted.
 CLAIMS: list[dict] = [
@@ -291,11 +354,38 @@ CLAIMS: list[dict] = [
                       "the 288 zero is transform-proof",
                       "a single configuration is optimal in every context",
                       "H_regime is 0.0038 against a bar of 0.05"],
+        "must_be_cited_with": ["H_REGIME_IS_NOT_CURVATURE_INVARIANT"],
         "why_forbidden": ("an unlabelled figure conflates two metrics; the transform-proof zero and "
                           "the universal argmax belong to the Cobb-Douglas surface and may not be "
                           "transferred to the one the manuscript cites; and no bar comparison "
                           "survives a statistic that moves under a rescaling that preserves every "
                           "ordering"),
+    },
+    # The row above quotes 0.27764, the 661-transform family and the 29 passers -- all of them
+    # numbers that live in `monotone_transform_family_v4`, which no row cited. The supersession
+    # registry caught it: an artifact SUPERSEDED_IN_PART whose successor appears nowhere in the lock
+    # is a partial supersession that reads as none. This row is that successor.
+    {
+        "claim_id": "H_REGIME_IS_NOT_CURVATURE_INVARIANT",
+        "artifact": "results/monotone_transform_family_v4/result.json",
+        "section": "Results 3.4, immediately after the H_regime figure it qualifies",
+        "endpoint": "H_regime under a declared family of monotone rescalings",
+        "estimand": "H_regime after each of 661 strictly increasing transforms, Holm-corrected",
+        "allowed": ("H_regime is not invariant to the curvature of the metric. Over a declared "
+                    "family of 661 strictly increasing transforms -- each of which leaves every "
+                    "ordering of configurations untouched -- 29 clear an LCB requirement, a signal "
+                    "floor and Holm correction on the extended grid, and the deciding transform "
+                    "takes H from 0.019501 to 0.27764 [LCB95 0.25713] against a 0.05 gate. On the "
+                    "288 grid 0 of 661 pass, which is the negative control: that zero is "
+                    "transform-proof and the extended-grid figure is not."),
+        "forbidden": ["H_regime is a scale-free property of the surface",
+                      "a rescaling that preserves the ordering cannot change the conclusion",
+                      "the extended-grid H_regime is transform-proof",
+                      "the transform family creates headroom"],
+        "why_forbidden": ("the family moves the statistic without moving a single rank, so any "
+                          "bar comparison must name its transform; and a transform that lifts H "
+                          "does not lift the optimum -- the ordering it preserves is the same "
+                          "ordering that has one configuration ahead in every context"),
     },
     {
         "claim_id": "EXPANSION_ADDS_REACHABLE_OPTIMA",
@@ -611,6 +701,39 @@ CLAIMS: list[dict] = [
         "why_forbidden": ("unique_profile_optima is 1, 2 or 3 by row; and the screen varied "
                           "PROFILES, not the within-episode realisation"),
     },
+    # The only row in this file whose falsifier is SUPPOSED to fail. f5 asked the ceiling to
+    # replicate; it did not; that failure IS the finding, and `allow_failed_falsifiers` says so
+    # rather than letting the builder flag a red that is actually the result.
+    {
+        "claim_id": "OPERATIONAL_ADAPTATION_CEILING_DID_NOT_REPLICATE",
+        "artifact": "results/expanded_signal_search/result.json",
+        "allow_failed_falsifiers": True,
+        "section": "Results -- the within-episode arm, and Limitations",
+        "endpoint": "priced objective J(lambda=0.35) on the buffer schedule class",
+        "estimand": ("the clairvoyant per-tape gap against an interaction null: additive "
+                     "mu + a_i + b_j retained, residuals permuted, 20,000 draws"),
+        "allowed": ("The within-episode ceiling this arm was built to convert does not survive a "
+                    "preregistered replication. On 48 virgin seeds (24 train, 24 test) across the "
+                    "same 27 schedules, the clairvoyant gap is +0.024054 against an interaction "
+                    "null whose mean is +0.026641 and whose 95th percentile is +0.032964, "
+                    "p = 0.7482 -- the observed gap is smaller than the average of its own null, "
+                    "which is the downward bias of a minimum over 27 noisy options. On twelve "
+                    "reused tapes the same quantity was +0.045103 at p = 0.0132. By the frozen "
+                    "reading rule of the authorisation, the 26 feature-by-map tests below the "
+                    "ceiling are NOT read; they are retained for custody and declared unread."),
+        "forbidden": ["no observable signal captures the ceiling",
+                      "the best prefix feature was prefix_events_R23",
+                      "the signal search was underpowered",
+                      "a richer feature set would convert it",
+                      "the ceiling was smaller than expected",
+                      "state-conditioned control loses narrowly here"],
+        "why_forbidden": ("every one of these reads the feature table, which the preregistered "
+                          "order forbids once the ceiling fails; and 'underpowered' inverts the "
+                          "finding -- 24 training tapes is the larger design, and what it shows is "
+                          "that there was no ceiling to capture, not that the search missed one"),
+        "must_be_cited_with": ["THE_NEGATIVE_SURVIVES_A_SOUND_METRIC"],
+        "supersession": "docs/RETRACTACION_TECHO_CLARIVIDENTE_2026-08-08.md",
+    },
 ]
 
 
@@ -756,15 +879,38 @@ def main() -> int:
             problems.append(f"{c['claim_id']}: artifact missing at {p}")
         if meta.get("falsifiers_all_passed") is False and not c.get("allow_failed_falsifiers"):
             problems.append(f"{c['claim_id']}: falsifiers did not all pass -- cite WITH the failure")
+        scope = Q1_SCOPE_OF.get(c["claim_id"])
+        if scope is None:
+            problems.append(
+                f"{c['claim_id']}: no Q1 scope declared. Every row must say whether it answers "
+                "search transfer, operational adaptation, or neither -- an undeclared row is how "
+                "the surviving half covers for the dead one")
+        elif scope not in Q1_SCOPES:
+            problems.append(f"{c['claim_id']}: unknown Q1 scope {scope!r}")
         row = dict(c)
-        row.update({"paper_id": "P2", "evidence_grade": g,
+        row.update({"paper_id": "P2", "evidence_grade": g, "q1_scope": scope,
                     "missing_top_level_fields": missing, **meta})
         if c.get("sibling_receipt"):
             row["sibling_receipt_file_sha256"] = digests(Path(c["sibling_receipt"]))["file_sha256"]
         rows.append(row)
 
+    stale = sorted(set(Q1_SCOPE_OF) - {c["claim_id"] for c in CLAIMS})
+    if stale:
+        problems.append(f"Q1_SCOPE_OF names rows that no longer exist: {', '.join(stale)}")
+    by_scope: dict[str, list[str]] = {k: [] for k in Q1_SCOPES}
+    for r in rows:
+        if r.get("q1_scope") in by_scope:
+            by_scope[r["q1_scope"]].append(r["claim_id"])
+
     payload = {
         "schema_version": "paper2_claim_lock_v1",
+        "q1_scopes": Q1_SCOPES,
+        "q1_scope_index": by_scope,
+        "q1_split_note": (
+            "Garrido's Q1 is asked of two loops. The search-transfer rows carry the positive; "
+            "every operational-adaptation row is negative or did not replicate. No row may be "
+            "cited across the split, and the manuscript must not state a Q1 answer without saying "
+            "which loop it answers"),
         "portfolio_map": str(PORTFOLIO_MAP),
         "portfolio_map_sha256": sha256(PORTFOLIO_MAP.read_bytes()).hexdigest()
         if PORTFOLIO_MAP.exists() else None,
