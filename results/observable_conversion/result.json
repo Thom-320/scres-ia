@@ -1,0 +1,731 @@
+{
+ "band": [
+  0.275,
+  0.3,
+  0.325,
+  0.35,
+  0.375,
+  0.4,
+  0.425,
+  0.45,
+  0.475,
+  0.5
+ ],
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "ceiling_source": {
+  "path": "results/priced_clairvoyant_ceiling/result.json",
+  "self_sha256": "118fa95fa320ca741dd44f2b0841efcc077c048c9a54159519ed56a029dba8ef"
+ },
+ "claim_status": "BLOCKED_INSTRUMENT",
+ "contract_path": "docs/ENMIENDA_COSTE_BUFFER_DECLARADO_2026-08-08.md",
+ "contract_sha256": "c30c824317e41e94622045c1a69538231e18a767f6312542e8535dcab5dfcd2d",
+ "converts_at": [],
+ "created_at": "2026-08-08T21:31:46.276479+00:00",
+ "elapsed_seconds": 141.21670191700105,
+ "falsifier_summary": {
+  "all_passed": false,
+  "disclosures": [
+   "d1_lambda_was_selected_on_these_tapes",
+   "d2_fidelity_price"
+  ],
+  "failed": [
+   "f3_rule_beats_the_uninformed_placebo"
+  ],
+  "n_computed": 5,
+  "n_disclosures": 2,
+  "n_failed": 1,
+  "n_not_applicable": 1,
+  "not_applicable": [
+   "d3_no_fresh_seeds"
+  ]
+ },
+ "falsifiers": {
+  "d1_lambda_was_selected_on_these_tapes": {
+   "computed": false,
+   "disclosure": true,
+   "evidence": {
+    "band": [
+     0.275,
+     0.3,
+     0.325,
+     0.35,
+     0.375,
+     0.4,
+     0.425,
+     0.45,
+     0.475,
+     0.5
+    ],
+    "headline": 0.35,
+    "statement": "lambda = 0.35 is the PEAK of a 31-price sweep run on these same tapes, so fixing it here inherits that selection; the whole detectable band is reported beside it"
+   },
+   "passed": null
+  },
+  "d2_fidelity_price": {
+   "computed": false,
+   "disclosure": true,
+   "evidence": {
+    "statement": "release and the 336 h lead time are OUR extensions with no source event; nothing here reproduces Garrido-Rios (2017)"
+   },
+   "passed": null
+  },
+  "d3_no_fresh_seeds": {
+   "computed": false,
+   "evidence": {
+    "custody": {
+     "evidence": {
+      "n_sealed_artifact_overlap": 12,
+      "n_seeds": 12,
+      "note": "deliberate re-execution of registry block 'reconciled_8600001'; these seeds are NOT virgin and are not meant to be",
+      "registry_conflicts": [
+       {
+        "id": "reconciled_8600001",
+        "n_overlapping": 12,
+        "range": [
+         8600001,
+         8600012
+        ],
+        "source": "results/demand_process/result.json",
+        "status": "USED_DEVELOPMENT_NOT_VIRGIN"
+       }
+      ],
+      "registry_is_complete": false,
+      "registry_status": "BASELINE_INVENTORY_INCOMPLETE_NO_NEW_SEEDS_AUTHORIZED",
+      "replay_of": "reconciled_8600001",
+      "sealed_artifact_overlap": [
+       8600001,
+       8600002,
+       8600003,
+       8600004,
+       8600005,
+       8600006,
+       8600007,
+       8600008,
+       8600009,
+       8600010,
+       8600011,
+       8600012
+      ],
+      "seeds": [
+       8600001,
+       8600002,
+       8600003,
+       8600004,
+       8600005,
+       8600006,
+       8600007,
+       8600008,
+       8600009,
+       8600010,
+       8600011,
+       8600012
+      ],
+      "status": "DECLARED_REPLAY",
+      "why_it_can_fail": "it cannot: this is a declared custody replay of registry block 'reconciled_8600001', so the seeds are used on purpose. Counted in neither column."
+     },
+     "not_applicable": true,
+     "passed": null
+    },
+    "reason": "declared replay of an already-consumed development block"
+   },
+   "not_applicable": true,
+   "passed": null
+  },
+  "f1_rule_is_causal": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": 6.0,
+     "threshold": 6.0
+    },
+    "never_reads": [
+     "future weeks",
+     "own L*",
+     "test tapes"
+    ],
+    "reads": [
+     "pending_backorder_qty at the current step"
+    ],
+    "why_it_can_fail": "the rule reads the backlog standing at the current week and nothing later; if it could see a future week or its own L*, a positive result would be the leak that voided the meta-learner"
+   },
+   "passed": true
+  },
+  "f2_threshold_and_comparator_selected_on_train": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": 1.0,
+     "threshold": 1.0
+    },
+    "test": [
+     8600007,
+     8600008,
+     8600009,
+     8600010,
+     8600011,
+     8600012
+    ],
+    "theta_by_lambda": {
+     "0.275": 200000.0,
+     "0.3": 200000.0,
+     "0.325": 200000.0,
+     "0.35": 200000.0,
+     "0.375": 200000.0,
+     "0.4": 200000.0,
+     "0.425": 200000.0,
+     "0.45": 200000.0,
+     "0.475": 200000.0,
+     "0.5": 200000.0
+    },
+    "train": [
+     8600001,
+     8600002,
+     8600003,
+     8600004,
+     8600005,
+     8600006
+    ],
+    "why_it_can_fail": "selecting either on the test tapes optimises them against the data they are scored on, which is the defect the benchmark shipped"
+   },
+   "passed": true
+  },
+  "f3_rule_beats_the_uninformed_placebo": {
+   "computed": true,
+   "evidence": {
+    "by_lambda": {
+     "0.275": {
+      "lcb95": 0.0,
+      "mean": 0.0,
+      "ucb95": 0.0
+     },
+     "0.3": {
+      "lcb95": 0.0,
+      "mean": 0.0,
+      "ucb95": 0.0
+     },
+     "0.325": {
+      "lcb95": 0.0,
+      "mean": 0.0,
+      "ucb95": 0.0
+     },
+     "0.35": {
+      "lcb95": 0.0,
+      "mean": 0.0,
+      "ucb95": 0.0
+     },
+     "0.375": {
+      "lcb95": 0.0,
+      "mean": 0.0,
+      "ucb95": 0.0
+     },
+     "0.4": {
+      "lcb95": 0.0,
+      "mean": 0.0,
+      "ucb95": 0.0
+     },
+     "0.425": {
+      "lcb95": 0.0,
+      "mean": 0.0,
+      "ucb95": 0.0
+     },
+     "0.45": {
+      "lcb95": 0.0,
+      "mean": 0.0,
+      "ucb95": 0.0
+     },
+     "0.475": {
+      "lcb95": 0.0,
+      "mean": 0.0,
+      "ucb95": 0.0
+     },
+     "0.5": {
+      "lcb95": 0.0,
+      "mean": 0.0,
+      "ucb95": 0.0
+     }
+    },
+    "computed_from": {
+     "observed": 0.0,
+     "threshold": 0.0
+    },
+    "placebo_draws": 40,
+    "why_it_can_fail": "at op12 the uninformed placebo beat the state-conditioned rule, so a gain over the open-loop schedule is not information value until the placebo is beaten too"
+   },
+   "passed": false
+  },
+  "f4_ceiling_still_positive_here": {
+   "computed": true,
+   "evidence": {
+    "ceiling_by_lambda": {
+     "0.275": 0.00443020751215036,
+     "0.3": 0.005216247878330527,
+     "0.325": 0.00506739874528217,
+     "0.35": 0.04510303513633616,
+     "0.375": 0.042525461220905524,
+     "0.4": 0.03256501643394599,
+     "0.425": 0.02358180278937851,
+     "0.45": 0.015876977239535368,
+     "0.475": 0.010582284593275001,
+     "0.5": 0.005847436108426492
+    },
+    "computed_from": {
+     "observed": 0.04510303513633616,
+     "threshold": 0.0
+    },
+    "why_it_can_fail": "conversion is meaningless where there is nothing to convert; if the ceiling gap vanished on these test tapes the contrast would be undefined"
+   },
+   "passed": true
+  },
+  "f5_rule_does_not_exceed_the_ceiling": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": 0.005847436108426492,
+     "threshold": -1e-09
+    },
+    "slack_by_lambda": {
+     "0.275": 0.09988122936509315,
+     "0.3": 0.08226759300145682,
+     "0.325": 0.06734601659568115,
+     "0.35": 0.05446722871689328,
+     "0.375": 0.042525461220905524,
+     "0.4": 0.03256501643394599,
+     "0.425": 0.02358180278937851,
+     "0.45": 0.015876977239535368,
+     "0.475": 0.010582284593275001,
+     "0.5": 0.005847436108426492
+    },
+    "why_it_can_fail": "an observable policy cannot beat a tape-knowing chooser; exceeding the ceiling means the rule saw something it should not have"
+   },
+   "passed": true
+  }
+ },
+ "headline": {
+  "ceiling_gap": 0.04510303513633616,
+  "clairvoyant_J": 0.5679398318522642,
+  "conversion_share": -0.20761781446085187,
+  "fixed_option": [
+   0,
+   4
+  ],
+  "lambda": 0.35,
+  "open_loop_J": 0.6130428669886004,
+  "placebo_J": 0.6224070605691575,
+  "rule_J": 0.6224070605691575,
+  "rule_vs_open_loop": {
+   "lcb95": -0.027896240132834833,
+   "mean": -0.009364193580557123,
+   "ucb95": 0.008467540078887115
+  },
+  "rule_vs_placebo": {
+   "lcb95": 0.0,
+   "mean": 0.0,
+   "ucb95": 0.0
+  },
+  "theta": 200000.0,
+  "weeks_held_by_tape": [
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ]
+ },
+ "headline_lambda": 0.35,
+ "module_manifest": {
+  "entry_script": "scripts/run_observable_conversion_v1.py",
+  "entry_script_sha256": "507d6d56d84137aa95c40b4a3654fb2f7d596fcf9199754b226e4f0e5eab94a5",
+  "missing": [],
+  "modules": {
+   "supply_chain/arm_runner.py": "1afea4fa248db5beb2d86c6ab2033d6f24a95115ea544b08966b7a538456ac99",
+   "supply_chain/continuous_its_env.py": "9600402e8cdef496a548628a41cd6bb974ae83d9ef66dbe78db1c5dce07d16ca",
+   "supply_chain/falsifiers.py": "a152144589e58bc1a658b002c39ff5c0332cd3a2796cb9cf443cd0de36443788",
+   "supply_chain/seed_custody.py": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd",
+   "supply_chain/supply_chain.py": "7706aa26e65ce8498f30d896180914a57c7f9710373347331cbd93cd9fb1026a"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "policy_class": {
+  "rule": "hold while pending backlog > theta, decided each week",
+  "selected_on": "train tapes only",
+  "theta_grid": [
+   0.0,
+   25000.0,
+   50000.0,
+   100000.0,
+   200000.0,
+   400000.0
+  ]
+ },
+ "reference_path": "results/priced_clairvoyant_ceiling/result.json",
+ "reference_sha256": "118fa95fa320ca741dd44f2b0841efcc077c048c9a54159519ed56a029dba8ef",
+ "replay_of": "reconciled_8600001",
+ "results": {
+  "0.275": {
+   "ceiling_gap": 0.00443020751215036,
+   "clairvoyant_J": 0.5225258312040643,
+   "conversion_share": -21.5454968172839,
+   "fixed_option": [
+    0,
+    18
+   ],
+   "lambda": 0.275,
+   "open_loop_J": 0.5269560387162145,
+   "placebo_J": 0.6224070605691575,
+   "rule_J": 0.6224070605691575,
+   "rule_vs_open_loop": {
+    "lcb95": -0.11280774575660205,
+    "mean": -0.0954510218529428,
+    "ucb95": -0.0812437933003955
+   },
+   "rule_vs_placebo": {
+    "lcb95": 0.0,
+    "mean": 0.0,
+    "ucb95": 0.0
+   },
+   "theta": 200000.0,
+   "weeks_held_by_tape": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  "0.3": {
+   "ceiling_gap": 0.005216247878330527,
+   "clairvoyant_J": 0.5401394675677007,
+   "conversion_share": -14.771411735093151,
+   "fixed_option": [
+    0,
+    13
+   ],
+   "lambda": 0.3,
+   "open_loop_J": 0.5453557154460312,
+   "placebo_J": 0.6224070605691575,
+   "rule_J": 0.6224070605691575,
+   "rule_vs_open_loop": {
+    "lcb95": -0.09963282596104638,
+    "mean": -0.0770513451231263,
+    "ucb95": -0.05681978748062194
+   },
+   "rule_vs_placebo": {
+    "lcb95": 0.0,
+    "mean": 0.0,
+    "ucb95": 0.0
+   },
+   "theta": 200000.0,
+   "weeks_held_by_tape": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  "0.325": {
+   "ceiling_gap": 0.00506739874528217,
+   "clairvoyant_J": 0.5550610439734763,
+   "conversion_share": -12.290056690009127,
+   "fixed_option": [
+    0,
+    13
+   ],
+   "lambda": 0.325,
+   "open_loop_J": 0.5601284427187585,
+   "placebo_J": 0.6224070605691575,
+   "rule_J": 0.6224070605691575,
+   "rule_vs_open_loop": {
+    "lcb95": -0.08333503221248197,
+    "mean": -0.06227861785039899,
+    "ucb95": -0.042047060207894636
+   },
+   "rule_vs_placebo": {
+    "lcb95": 0.0,
+    "mean": 0.0,
+    "ucb95": 0.0
+   },
+   "theta": 200000.0,
+   "weeks_held_by_tape": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  "0.35": {
+   "ceiling_gap": 0.04510303513633616,
+   "clairvoyant_J": 0.5679398318522642,
+   "conversion_share": -0.20761781446085187,
+   "fixed_option": [
+    0,
+    4
+   ],
+   "lambda": 0.35,
+   "open_loop_J": 0.6130428669886004,
+   "placebo_J": 0.6224070605691575,
+   "rule_J": 0.6224070605691575,
+   "rule_vs_open_loop": {
+    "lcb95": -0.027896240132834833,
+    "mean": -0.009364193580557123,
+    "ucb95": 0.008467540078887115
+   },
+   "rule_vs_placebo": {
+    "lcb95": 0.0,
+    "mean": 0.0,
+    "ucb95": 0.0
+   },
+   "theta": 200000.0,
+   "weeks_held_by_tape": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  "0.375": {
+   "ceiling_gap": 0.042525461220905524,
+   "clairvoyant_J": 0.5798815993482519,
+   "conversion_share": 0.0,
+   "fixed_option": [
+    0,
+    0
+   ],
+   "lambda": 0.375,
+   "open_loop_J": 0.6224070605691575,
+   "placebo_J": 0.6224070605691575,
+   "rule_J": 0.6224070605691575,
+   "rule_vs_open_loop": {
+    "lcb95": 0.0,
+    "mean": 0.0,
+    "ucb95": 0.0
+   },
+   "rule_vs_placebo": {
+    "lcb95": 0.0,
+    "mean": 0.0,
+    "ucb95": 0.0
+   },
+   "theta": 200000.0,
+   "weeks_held_by_tape": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  "0.4": {
+   "ceiling_gap": 0.03256501643394599,
+   "clairvoyant_J": 0.5898420441352116,
+   "conversion_share": 0.0,
+   "fixed_option": [
+    0,
+    0
+   ],
+   "lambda": 0.4,
+   "open_loop_J": 0.6224070605691575,
+   "placebo_J": 0.6224070605691575,
+   "rule_J": 0.6224070605691575,
+   "rule_vs_open_loop": {
+    "lcb95": 0.0,
+    "mean": 0.0,
+    "ucb95": 0.0
+   },
+   "rule_vs_placebo": {
+    "lcb95": 0.0,
+    "mean": 0.0,
+    "ucb95": 0.0
+   },
+   "theta": 200000.0,
+   "weeks_held_by_tape": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  "0.425": {
+   "ceiling_gap": 0.02358180278937851,
+   "clairvoyant_J": 0.5988252577797789,
+   "conversion_share": 0.0,
+   "fixed_option": [
+    0,
+    0
+   ],
+   "lambda": 0.425,
+   "open_loop_J": 0.6224070605691575,
+   "placebo_J": 0.6224070605691575,
+   "rule_J": 0.6224070605691575,
+   "rule_vs_open_loop": {
+    "lcb95": 0.0,
+    "mean": 0.0,
+    "ucb95": 0.0
+   },
+   "rule_vs_placebo": {
+    "lcb95": 0.0,
+    "mean": 0.0,
+    "ucb95": 0.0
+   },
+   "theta": 200000.0,
+   "weeks_held_by_tape": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  "0.45": {
+   "ceiling_gap": 0.015876977239535368,
+   "clairvoyant_J": 0.6065300833296221,
+   "conversion_share": 0.0,
+   "fixed_option": [
+    0,
+    0
+   ],
+   "lambda": 0.45,
+   "open_loop_J": 0.6224070605691575,
+   "placebo_J": 0.6224070605691575,
+   "rule_J": 0.6224070605691575,
+   "rule_vs_open_loop": {
+    "lcb95": 0.0,
+    "mean": 0.0,
+    "ucb95": 0.0
+   },
+   "rule_vs_placebo": {
+    "lcb95": 0.0,
+    "mean": 0.0,
+    "ucb95": 0.0
+   },
+   "theta": 200000.0,
+   "weeks_held_by_tape": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  "0.475": {
+   "ceiling_gap": 0.010582284593275001,
+   "clairvoyant_J": 0.6118247759758825,
+   "conversion_share": 0.0,
+   "fixed_option": [
+    0,
+    0
+   ],
+   "lambda": 0.475,
+   "open_loop_J": 0.6224070605691575,
+   "placebo_J": 0.6224070605691575,
+   "rule_J": 0.6224070605691575,
+   "rule_vs_open_loop": {
+    "lcb95": 0.0,
+    "mean": 0.0,
+    "ucb95": 0.0
+   },
+   "rule_vs_placebo": {
+    "lcb95": 0.0,
+    "mean": 0.0,
+    "ucb95": 0.0
+   },
+   "theta": 200000.0,
+   "weeks_held_by_tape": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  "0.5": {
+   "ceiling_gap": 0.005847436108426492,
+   "clairvoyant_J": 0.6165596244607311,
+   "conversion_share": 0.0,
+   "fixed_option": [
+    0,
+    0
+   ],
+   "lambda": 0.5,
+   "open_loop_J": 0.6224070605691575,
+   "placebo_J": 0.6224070605691575,
+   "rule_J": 0.6224070605691575,
+   "rule_vs_open_loop": {
+    "lcb95": 0.0,
+    "mean": 0.0,
+    "ucb95": 0.0
+   },
+   "rule_vs_placebo": {
+    "lcb95": 0.0,
+    "mean": 0.0,
+    "ucb95": 0.0
+   },
+   "theta": 200000.0,
+   "weeks_held_by_tape": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ]
+  }
+ },
+ "run_role": "OBSERVABLE_CONVERSION",
+ "scenario": {
+  "demand_process": "garrido_seasonal_v1",
+  "inventory_replenishment_lead_time": 336.0,
+  "strategic_buffer_release_mode": "immediate"
+ },
+ "schema_version": "observable_conversion_v1",
+ "scope": "DEVELOPMENT_ON_DECLARED_REPLAY_NO_LEARNER_AUTHORIZED",
+ "self_sha256": "39e6047d9c6b262e4cbd10a4eb3250ab9580419cd2c0df3427cdff313aa2501d",
+ "splits": {
+  "test": [
+   8600007,
+   8600008,
+   8600009,
+   8600010,
+   8600011,
+   8600012
+  ],
+  "train": [
+   8600001,
+   8600002,
+   8600003,
+   8600004,
+   8600005,
+   8600006
+  ]
+ }
+}
