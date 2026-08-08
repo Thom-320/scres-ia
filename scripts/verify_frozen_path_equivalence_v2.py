@@ -83,6 +83,29 @@ VOLATILE = {"created_at", "elapsed_seconds", "self_sha256", "module_manifest",
 SCIENTIFIC = ("contrasts", "transfers", "mean_auc", "per_arm", "claim_status",
               "n_base_configs", "n_ext_configs", "budget", "contexts", "seeds")
 
+DRIFT_CLASSES = (
+    "SOURCE_HASH_MATCH",
+    "SOURCE_DRIFT__NO_SCIENTIFIC_PATH_EFFECT",
+    "SOURCE_DRIFT__OBSERVATIONALLY_EQUIVALENT",
+    "SOURCE_DRIFT__SCIENTIFICALLY_MATERIAL",
+)
+
+# The v2 certificate is deliberately about the complete contracted surface, not a convenient
+# sample.  Six contexts x sixty burned seeds gives 360 slices per surface.
+EXPECTED_CONTEXTS = 6
+EXPECTED_SEEDS = 60
+EXPECTED_SLICES = EXPECTED_CONTEXTS * EXPECTED_SEEDS
+EXPECTED_CELLS = {
+    "base": EXPECTED_SLICES * len(BASE_CONFIGS),
+    "ext": EXPECTED_SLICES * len(EXT_CONFIGS),
+}
+
+# These files can change the envelope/custody without changing the scientific path.  All other
+# declared modules/scripts are adjudicated by the cache replay and downstream chain.
+NON_SCIENTIFIC_PATHS = {
+    "supply_chain/seed_custody.py",
+}
+
 
 def file_sha(path: str) -> str:
     p = ROOT / path
@@ -155,8 +178,14 @@ def rerun_chain(target: dict, workdir: Path) -> dict:
     started = time.perf_counter()
     proc = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, check=False)
     if proc.returncode != 0 or not out.exists():
+        # STDOUT IS THE DIAGNOSIS, AND THIS BRANCH USED TO THROW IT AWAY. `run_grid_transfer_v1.py`
+        # reports a failed falsifier by printing to stdout and returning 1, so a failure captured as
+        # `{"returncode": 1, "stderr": ""}` says only that something went wrong -- which is the least
+        # useful thing a failure report can say. The 2026-08-07 chain failure cost a re-run to
+        # rediscover a message that had already been printed once.
         return {"ran": False, "returncode": proc.returncode,
-                "stderr": proc.stderr[-2000:], "cmd": cmd}
+                "stdout": proc.stdout[-4000:], "stderr": proc.stderr[-2000:],
+                "output_file_written": out.exists(), "cmd": cmd}
     fresh = json.loads(out.read_text())
     differing = {}
     for key in SCIENTIFIC:
@@ -256,10 +285,46 @@ def read_shards() -> dict:
     return out
 
 
+def surface_is_complete(surface: dict) -> bool:
+    """Require both contracted surfaces, all contexts/seeds, and every expected cell."""
+    return all(
+        isinstance(row, dict)
+        and row.get("slices") == EXPECTED_SLICES
+        and row.get("cells") == EXPECTED_CELLS[kind]
+        and len(row.get("contexts", [])) == EXPECTED_CONTEXTS
+        and len(row.get("seeds", [])) == EXPECTED_SEEDS
+        and row.get("mismatches") == 0
+        for kind, row in ((kind, surface.get(kind, {})) for kind in ("base", "ext"))
+    )
+
+
+def classify_source_drift(declared: dict[str, str], chain: dict, surface: dict) -> dict[str, dict]:
+    """Name the provenance state of every declared file without collapsing distinct cases."""
+    chain_ok = bool(chain.get("ran") and chain.get("n_differing") == 0)
+    complete = surface_is_complete(surface)
+    out = {}
+    for path, expected in sorted(declared.items()):
+        current = file_sha(path)
+        if current == expected:
+            classification = "SOURCE_HASH_MATCH"
+        elif path in NON_SCIENTIFIC_PATHS:
+            classification = "SOURCE_DRIFT__NO_SCIENTIFIC_PATH_EFFECT"
+        elif chain_ok and complete:
+            classification = "SOURCE_DRIFT__OBSERVATIONALLY_EQUIVALENT"
+        else:
+            classification = "SOURCE_DRIFT__SCIENTIFICALLY_MATERIAL"
+        out[path] = {
+            "declared_sha256": expected,
+            "current_sha256": current,
+            "classification": classification,
+        }
+    return out
+
+
 # --------------------------------------------------------------------------- mutation controls
 
 
-def mutation_controls(target: dict) -> dict:
+def mutation_controls(target: dict, chain: dict | None = None) -> dict:
     """Four planted defects, each on a path this certificate actually consumes.
 
     A comparator that cannot fail on a corruption is not evidence that the clean run agrees. Three
@@ -277,30 +342,69 @@ def mutation_controls(target: dict) -> dict:
     m1 = {"detected": abs((live["value"] + 1e-12) - float(payload["cells"][0]["value"])) > 0.0,
           "injected": 1e-12, "on": "value returned by the simulator"}
 
-    # M2 -- a corrupted extended-cache cell.
-    corrupted = float(payload["cells"][0]["value"]) + 1e-12
-    m2 = {"detected": corrupted != float(live["value"]),
+    # M2 -- a corrupted extended-cache cell.  Run the actual slice comparator against the
+    # temporary corruption; a direct `corrupted != live` check would only test Python arithmetic.
+    corrupted_payload = json.loads(json.dumps(payload))
+    corrupted_payload["cells"][0]["value"] = float(corrupted_payload["cells"][0]["value"]) + 1e-12
+    with tempfile.TemporaryDirectory() as td:
+        corrupted_path = Path(td) / "corrupted.json"
+        corrupted_path.write_text(json.dumps(corrupted_payload))
+        replayed_corruption = replay_slice((str(corrupted_path), "ext"))
+    m2 = {"detected": replayed_corruption["mismatches"] > 0,
           "injected": 1e-12, "on": "cached cell of the 4,608-wide surface",
-          "clean_cell_still_matches": float(payload["cells"][0]["value"]) == float(live["value"])}
+          "clean_cell_still_matches": float(payload["cells"][0]["value"]) == float(live["value"]),
+          "comparator": replayed_corruption}
 
     # M3 -- a corrupted AUC array: the chain comparator must see a moved contrast.
     sealed = json.dumps(target.get("contrasts"), sort_keys=True)
     bumped = json.loads(sealed)
     first = sorted(bumped)[0]
     bumped[first]["vs_marginal_replay"]["mean"] += 1e-12
-    m3 = {"detected": json.dumps(bumped, sort_keys=True) != sealed,
-          "injected": 1e-12, "on": f"contrasts[{first}].vs_marginal_replay.mean"}
+    mutated_target = dict(target)
+    mutated_target["contrasts"] = bumped
+    with tempfile.TemporaryDirectory() as td:
+        mutated_chain = rerun_chain(mutated_target, Path(td))
+    m3 = {
+        "detected": bool(mutated_chain.get("ran")
+                          and "contrasts" in mutated_chain.get("differing", {})),
+        "injected": 1e-12,
+        "on": f"contrasts[{first}].vs_marginal_replay.mean",
+        "comparator": {"ran": mutated_chain.get("ran"),
+                        "n_differing": mutated_chain.get("n_differing"),
+                        "differing_keys": list(mutated_chain.get("differing", {}))},
+    }
 
-    # M4 -- the inverse control. arm_runner.py drifted; if the science had moved with it, the chain
-    # replay would differ. It does not, which is what separates a sealing change from a physics one.
+    # M4 -- the inverse control. Inject a manifest-only change and rerun the downstream chain. The
+    # falsifier is always active: it explicitly requires the manifest to move while science stays
+    # identical. The live arm_runner drift is reported separately for the release classification.
     declared = declared_manifests(target)
-    m4 = {"file": "supply_chain/arm_runner.py",
-          "manifest_moved": declared.get("supply_chain/arm_runner.py") != file_sha(
-              "supply_chain/arm_runner.py"),
-          "science_expected_to_move": False,
-          "note": ("a seal-only edit must break the manifest and leave the payload identical; if "
-                   "this file's drift moved the chain replay it would be a physics change wearing "
-                   "an infrastructure label")}
+    live_arm_runner_drift = declared.get("supply_chain/arm_runner.py") != file_sha(
+        "supply_chain/arm_runner.py")
+    mutated_manifest = json.loads(json.dumps(target.get("module_manifest", {})))
+    old_entry_hash = mutated_manifest.get("entry_script_sha256", "")
+    mutated_manifest["entry_script_sha256"] = "0" * 64 if old_entry_hash != "0" * 64 else "1" * 64
+    mutated_target = dict(target)
+    mutated_target["module_manifest"] = mutated_manifest
+    with tempfile.TemporaryDirectory() as td:
+        mutated_manifest_chain = rerun_chain(mutated_target, Path(td))
+    manifest_moved = mutated_manifest != target.get("module_manifest", {})
+    scientific_unchanged = bool(
+        mutated_manifest_chain.get("ran")
+        and mutated_manifest_chain.get("n_differing") == 0
+    )
+    m4 = {
+        "file": "supply_chain/arm_runner.py",
+        "applicable": True,
+        "manifest_moved": manifest_moved,
+        "science_unchanged": scientific_unchanged,
+        "detected": bool(manifest_moved and scientific_unchanged),
+        "live_arm_runner_drift": live_arm_runner_drift,
+        "comparator": {"ran": mutated_manifest_chain.get("ran"),
+                        "n_differing": mutated_manifest_chain.get("n_differing")},
+        "science_expected_to_move": False,
+        "note": ("a seal-only edit must break the manifest and leave the downstream scientific "
+                 "payload identical; if this file's drift moved the chain replay it would be a "
+                 "physics change wearing an infrastructure label")}
     return {"m1_physics": m1, "m2_extended_cache": m2, "m3_auc_contrast": m3,
             "m4_seal_only_must_not_move_science": m4}
 
@@ -346,7 +450,7 @@ def main() -> int:
         print(f"  cadena: {'re-ejecutada' if chain['ran'] else 'FALLO'} · "
               f"{chain.get('n_differing','?')} claves científicas difieren · "
               f"veredicto {chain.get('verdict_replayed')}")
-        controls = mutation_controls(target)
+        controls = mutation_controls(target, chain)
         for k, v in controls.items():
             print(f"    control {k}: {v}")
         (ROOT / args.out).parent.mkdir(parents=True, exist_ok=True)
@@ -363,14 +467,19 @@ def main() -> int:
 
     a_ok = all(h["found"] for h in hist)
     chain_ok = bool(chain.get("ran") and chain.get("n_differing") == 0)
-    surface_ok = all(v["mismatches"] == 0 for v in surface.values() if v["slices"])
+    surface_ok = surface_is_complete(surface)
+    m4_ok = (not controls["m4_seal_only_must_not_move_science"]["applicable"]
+             or controls["m4_seal_only_must_not_move_science"]["detected"])
     controls_ok = (controls["m1_physics"]["detected"]
                    and controls["m2_extended_cache"]["detected"]
                    and controls["m2_extended_cache"]["clean_cell_still_matches"]
-                   and controls["m3_auc_contrast"]["detected"])
+                   and controls["m3_auc_contrast"]["detected"]
+                   and m4_ok)
     seeds_ok = all(SEED_LOW <= s <= SEED_HIGH for v in surface.values() for s in v["seeds"])
-    spread_ok = all(len(v["contexts"]) >= 6 and len(v["seeds"]) >= 60
-                    for v in surface.values() if v["slices"])
+    spread_ok = surface_ok
+    source_drift = classify_source_drift(partial["declared_manifests"], chain, surface)
+    controls = dict(controls)
+    controls["source_drift_classification"] = source_drift
 
     falsifiers = {
         "f1_every_cell_of_both_surfaces_reproduces": {
@@ -428,6 +537,11 @@ def main() -> int:
         "verdict_b_forward_equivalence": verdict_b,
         "scope": "PROVENANCE_ONLY_NO_SCIENTIFIC_CLAIM_NO_NEW_SEEDS",
         "endpoint": "cell_and_verdict_level_exact_reproduction",
+        "budget": target["budget"],
+        "contexts": target["contexts"],
+        "seeds": target["seeds"],
+        "n_base_configs": target["n_base_configs"],
+        "n_ext_configs": target["n_ext_configs"],
         "created_at": datetime.now(timezone.utc).isoformat(),
         "module_manifest": module_manifest(
             ("supply_chain/arm_runner.py", "supply_chain/seed_custody.py",
