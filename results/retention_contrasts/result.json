@@ -1,0 +1,305 @@
+{
+ "bootstrap": {
+  "n_boot": 5000,
+  "recipe": "run_search_comparator_ladder_v5.py:226-231, percentile",
+  "rng_seed": 20260806
+ },
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "RETENTION_LOWERS_REGRET_IN_6_OF_6_FAMILIES",
+ "contract_path": "/Users/thom/Projects/research/scres-ia/docs/ENMIENDA_REGISTRO_DE_EVIDENCIA_2026-08-07.md",
+ "contract_sha256": "8e78b344536e8c6440d29ff4e437a0ea9b84c5fe73980d0b40c842aa90947ff5",
+ "contrasts": {
+  "gp_ei": {
+   "excludes_zero": true,
+   "lcb95": 0.012764700492337935,
+   "mean": 0.02270862990192948,
+   "mean_auc_reset": 0.10661346477746912,
+   "mean_auc_retained": 0.08390483487553962,
+   "n": 12,
+   "reset_arm": "gp_ei",
+   "retained_arm": "gp_ei_transfer",
+   "seeds_favouring_retention": 12,
+   "ucb95": 0.034099512485183496
+  },
+  "lookahead_kg": {
+   "excludes_zero": true,
+   "lcb95": 0.02609869898961568,
+   "mean": 0.034612878306637375,
+   "mean_auc_reset": 0.11479477721224257,
+   "mean_auc_retained": 0.08018189890560519,
+   "n": 12,
+   "reset_arm": "lookahead_kg",
+   "retained_arm": "lookahead_kg_transfer",
+   "seeds_favouring_retention": 12,
+   "ucb95": 0.04314644488751498
+  },
+  "neuron": {
+   "excludes_zero": true,
+   "lcb95": 0.04568372925950388,
+   "mean": 0.06070331006303109,
+   "mean_auc_reset": 0.11273605766343564,
+   "mean_auc_retained": 0.05203274760040456,
+   "n": 12,
+   "reset_arm": "neuron_reset",
+   "retained_arm": "neuron_memory",
+   "seeds_favouring_retention": 12,
+   "ucb95": 0.07952764953166233
+  },
+  "ofat": {
+   "excludes_zero": true,
+   "lcb95": 0.02919537000775833,
+   "mean": 0.03749890993104145,
+   "mean_auc_reset": 0.10024197702481123,
+   "mean_auc_retained": 0.06274306709376977,
+   "n": 12,
+   "reset_arm": "ofat",
+   "retained_arm": "ofat_transfer",
+   "seeds_favouring_retention": 12,
+   "ucb95": 0.046747871800931845
+  },
+  "thompson": {
+   "excludes_zero": true,
+   "lcb95": 0.01021780840209468,
+   "mean": 0.019853644086004468,
+   "mean_auc_reset": 0.10893184647329195,
+   "mean_auc_retained": 0.08907820238728746,
+   "n": 12,
+   "reset_arm": "thompson",
+   "retained_arm": "thompson_transfer",
+   "seeds_favouring_retention": 10,
+   "ucb95": 0.029558465192416398
+  },
+  "ucb1": {
+   "excludes_zero": true,
+   "lcb95": 0.03583075965748686,
+   "mean": 0.051528458376757603,
+   "mean_auc_reset": 0.09655146536034616,
+   "mean_auc_retained": 0.04502300698358852,
+   "n": 12,
+   "reset_arm": "ucb1",
+   "retained_arm": "ucb1_transfer",
+   "seeds_favouring_retention": 11,
+   "ucb95": 0.06593053388065225
+  }
+ },
+ "created_at": "2026-08-08T02:54:20.241636+00:00",
+ "endpoint": "auc_regret_norm",
+ "estimand": "paired per-seed AUC(reset) - AUC(retained), positive means retention helps",
+ "falsifiers": {
+  "all_passed": true,
+  "f1_the_twins_are_labelled_the_way_the_source_labels_them": {
+   "evidence": {
+    "memory_arms_declared_by_source": [
+     "gp_ei_transfer",
+     "lookahead_kg_transfer",
+     "neuron_memory",
+     "ofat_transfer",
+     "thompson_transfer",
+     "ucb1_transfer"
+    ],
+    "pairs": {
+     "gp_ei": {
+      "reset": "gp_ei",
+      "reset_is_declared_stateless": true,
+      "retained": "gp_ei_transfer",
+      "retained_is_declared_stateful": true
+     },
+     "lookahead_kg": {
+      "reset": "lookahead_kg",
+      "reset_is_declared_stateless": true,
+      "retained": "lookahead_kg_transfer",
+      "retained_is_declared_stateful": true
+     },
+     "neuron": {
+      "reset": "neuron_reset",
+      "reset_is_declared_stateless": true,
+      "retained": "neuron_memory",
+      "retained_is_declared_stateful": true
+     },
+     "ofat": {
+      "reset": "ofat",
+      "reset_is_declared_stateless": true,
+      "retained": "ofat_transfer",
+      "retained_is_declared_stateful": true
+     },
+     "thompson": {
+      "reset": "thompson",
+      "reset_is_declared_stateless": true,
+      "retained": "thompson_transfer",
+      "retained_is_declared_stateful": true
+     },
+     "ucb1": {
+      "reset": "ucb1",
+      "reset_is_declared_stateless": true,
+      "retained": "ucb1_transfer",
+      "retained_is_declared_stateful": true
+     }
+    },
+    "why_it_can_fail": "if a pair is inverted, or an arm the source does not count as stateful is used as the retained side, every Delta flips or compares the wrong things"
+   },
+   "passed": true
+  },
+  "f2_every_arm_is_aligned_to_the_same_seed_vector": {
+   "evidence": {
+    "halted_before_arithmetic": false,
+    "lengths": {
+     "gp_ei": 12,
+     "gp_ei_transfer": 12,
+     "lookahead_kg": 12,
+     "lookahead_kg_transfer": 12,
+     "neuron_memory": 12,
+     "neuron_reset": 12,
+     "ofat": 12,
+     "ofat_transfer": 12,
+     "thompson": 12,
+     "thompson_transfer": 12,
+     "ucb1": 12,
+     "ucb1_transfer": 12
+    },
+    "n_seeds": 12,
+    "why_it_can_fail": "the pairing is POSITIONAL; an arm with a different array length would be silently paired against the wrong seeds and the contrast would be meaningless"
+   },
+   "passed": true
+  },
+  "f3_the_already_sealed_contrast_reproduces_exactly": {
+   "evidence": {
+    "bitwise_identical": true,
+    "interval_note": "the intervals differ in the last decimals because the bootstrap stream position differs; the point estimate is deterministic arithmetic and must match exactly",
+    "recomputed_interval": [
+     0.04568372925950388,
+     0.07952764953166233
+    ],
+    "recomputed_mean": 0.06070331006303109,
+    "sealed_interval": [
+     0.04590626893881853,
+     0.07997188775380663
+    ],
+    "sealed_mean": 0.06070331006303109,
+    "why_it_can_fail": "if this script's estimand differed from the source's -- wrong orientation, unpaired means, a different array -- the point estimate would not be bit-identical"
+   },
+   "passed": true
+  },
+  "f4_the_pairing_carries_information": {
+   "evidence": {
+    "detail": {
+     "gp_ei": {
+      "interval_width_paired": 0.02133481199284556,
+      "interval_width_shuffled": 0.04307754080851866,
+      "mean": 0.022708629901929483
+     },
+     "lookahead_kg": {
+      "interval_width_paired": 0.017047745897899296,
+      "interval_width_shuffled": 0.035016342011722934,
+      "mean": 0.034612878306637375
+     },
+     "neuron": {
+      "interval_width_paired": 0.03384392027215845,
+      "interval_width_shuffled": 0.03936260797046642,
+      "mean": 0.060703310063031084
+     },
+     "ofat": {
+      "interval_width_paired": 0.017552501793173515,
+      "interval_width_shuffled": 0.022127032742202152,
+      "mean": 0.03749890993104145
+     },
+     "thompson": {
+      "interval_width_paired": 0.019340656790321716,
+      "interval_width_shuffled": 0.037601108450063425,
+      "mean": 0.01985364408600447
+     },
+     "ucb1": {
+      "interval_width_paired": 0.030099774223165385,
+      "interval_width_shuffled": 0.026742099303340608,
+      "mean": 0.051528458376757603
+     }
+    },
+    "families_whose_interval_widened_when_shuffled": 5,
+    "of": 6,
+    "why_it_can_fail": "if breaking the seed pairing left the intervals unchanged, the common random numbers would be doing nothing and a paired estimator would be an unpaired one wearing a better name"
+   },
+   "passed": true
+  },
+  "f5_no_seed_outside_the_declared_replay_block": {
+   "evidence": {
+    "replay_of": "garrido_q2_des288",
+    "seeds": [
+     5300001,
+     5300002,
+     5300003,
+     5300004,
+     5300005,
+     5300006,
+     5300007,
+     5300008,
+     5300009,
+     5300010,
+     5300011,
+     5300012
+    ],
+    "why_it_can_fail": "a seed outside the block the source declares as a replay would mean this analysis consumed custody it never declared"
+   },
+   "passed": true
+  }
+ },
+ "limits_that_travel_with_this_result": [
+  "The six contexts are averaged inside each seed before storage (run_search_comparator_ladder_v5.py:218), so a within-context contrast is NOT recoverable from this artifact and would require a re-run.",
+  "The twelve seeds are a declared re-execution of the burned block garrido_q2_des288. This is REPLAY evidence and cannot be reported as a prospective confirmation.",
+  "Six families is not a random sample of search methods; the claim is about the families tested under this budget and contract."
+ ],
+ "module_manifest": {
+  "entry_script": "scripts/run_retention_contrasts_v1.py",
+  "entry_script_sha256": "b86d330138d3a9ee44ea6fa7dfd64e3fe4eab34ecae6c5c22c6a638b192457a3",
+  "missing": [],
+  "modules": {
+   "supply_chain/arm_runner.py": "1afea4fa248db5beb2d86c6ab2033d6f24a95115ea544b08966b7a538456ac99",
+   "supply_chain/seed_custody.py": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "preregistration": "docs/ENMIENDA_REGISTRO_DE_EVIDENCIA_2026-08-07.md",
+ "reference_path": "/Users/thom/Projects/research/scres-ia/results/search_ladder_v5/result.json",
+ "reference_sha256": "f7dfb1e8bc1c036bcac28c83535e7a5dd8ebd723dd01d3ec604e8228c20cc511",
+ "schema_version": "retention_contrasts_v1",
+ "scope": "DEVELOPMENT_REANALYSIS_OF_A_SEALED_REPLAY_NO_SEEDS_NO_ADJUDICATION",
+ "seed_block": {
+  "derived_from": "seeds",
+  "end": 5300012,
+  "n": 12,
+  "start": 5300001
+ },
+ "seeds": [
+  5300001,
+  5300002,
+  5300003,
+  5300004,
+  5300005,
+  5300006,
+  5300007,
+  5300008,
+  5300009,
+  5300010,
+  5300011,
+  5300012
+ ],
+ "self_sha256": "e9132c95c4dda0bc29b3db67c4feb82f1175c2cefc102eff800cecdf6369355d",
+ "source": "results/search_ladder_v5/result.json",
+ "source_self_sha256": "f7dfb1e8bc1c036bcac28c83535e7a5dd8ebd723dd01d3ec604e8228c20cc511"
+}
