@@ -187,6 +187,35 @@
    "why_forbidden": "the direction holds in all six under BOTH endpoints -- what changes is resolution, not sign, and reporting either half alone misleads in opposite directions"
   },
   {
+   "allow_failed_falsifiers": true,
+   "allowed": "No H_regime figure is cited. Two sealed artifacts disagree on its value: recomputing the runners' estimator reproduces surface_gates_v2 to the last digit (0.003802243800697269) and reproduces monotone_transform_ceiling at no seed subset of the same cache. The statistic is also not scale-invariant -- a strictly increasing rescaling moves it on both grids, 0.003802 to 0.010776 on the 288 and 0.028294 to 0.067539 on the extended -- while every ordinal statistic stays bit-identical under the same transform. What may be said is ordinal: contextual rankings exist, mean pairwise rank correlation is +0.844 on the 288 grid and +0.909 on the extended, and top-25 sets overlap 91.7% and 23.5% respectively.",
+   "artifact": "results/h_regime_crosswalk/result.json",
+   "claim_id": "H_REGIME_IS_NOT_CITABLE_UNTIL_ITS_ESTIMATORS_AGREE",
+   "claim_status": "H_REGIME_ESTIMATORS_DISAGREE__NO_FIGURE_MAY_BE_CITED",
+   "contract_sha256": "8e78b344536e8c6440d29ff4e437a0ea9b84c5fe73980d0b40c842aa90947ff5",
+   "endpoint": "H_regime and its transform-invariant ordinal companions",
+   "estimand": "the same statistic on two grids under identity and monotone rescaling",
+   "evidence_grade": "POST_HOC_ON_DEVELOPMENT_DATA",
+   "exists": true,
+   "falsifiers_all_passed": false,
+   "file_sha256": "e38cab884f739702b8bc68b7cf89419289fa6949285e3fc39593ad960fec688c",
+   "forbidden": [
+    "H_regime = 0.0038",
+    "H_regime is 0.0038 against a bar of 0.05",
+    "no context-conditioned architecture can pay",
+    "the 288 zero is transform-proof",
+    "a single configuration is optimal in every context"
+   ],
+   "missing_top_level_fields": [],
+   "paper_id": "P2",
+   "registration_status": "POST_HOC_CROSSWALK_REPLACING_AN_OVERCLAIM_NOT_PREREGISTERED",
+   "run_role": "POST_HOC_REREAD",
+   "scope": "REREAD_OF_SEALED_CACHES_AND_ARTIFACTS_NO_SEEDS_NO_SIMULATION",
+   "section": "Results 3.4 -- the H_regime sentence is suspended, not softened",
+   "self_sha256": "06e9ae3f9a73a975eff0e0bf432a0b23b4c9139b1a1e5187a958aa0db176d4fc",
+   "why_forbidden": "the value is disputed between two sealed artifacts, the statistic is not invariant to the declared utility scale, and the universal-argmax claim does not reproduce from the cache at any seed subset"
+  },
+  {
    "allowed": "The expansion from 288 to 4,608 configurations adds reachable improvement rather than diluting a uniform starting policy: the extended optimum is strictly better in 136 of 360 cells, 0.97% of the 4,320 added configurations exceed the base optimum, and the expected simple regret of a uniform 24-draw falls from 0.07429 to 0.06755 against each grid's own optimum and from 0.10284 to 0.06755 against a common reference. Computed exactly by order statistics and checked against a 20,000-draw Monte Carlo control.",
    "artifact": "results/expansion_difficulty/result.json",
    "claim_id": "EXPANSION_ADDS_REACHABLE_OPTIMA",
@@ -583,7 +612,7 @@
    "why_forbidden": "unique_profile_optima is 1, 2 or 3 by row; and the screen varied PROFILES, not the within-episode realisation"
   }
  ],
- "generated_at_commit": "9cd824d4cfe999871e8177f9106c93f6e2a06697",
+ "generated_at_commit": "d75f042beb26d44437fc3a6bae6423871d8d3d82",
  "grader_self_test": {
   "a_real_confirmation_still_grades_confirmatory": {
    "passed": true,
@@ -594,7 +623,7 @@
    "returned": "POST_HOC_ON_PROSPECTIVE_DATA"
   }
  },
- "n_claims": 20,
+ "n_claims": 21,
  "portfolio_map": "papers/PORTFOLIO_MAP.json",
  "portfolio_map_sha256": "22c106e8c4d9754000f993f95c82b7d39f06b45bf063a84d0c7c5443d365593e",
  "problems": [],

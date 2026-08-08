@@ -198,6 +198,31 @@ CLAIMS: list[dict] = [
                           "opposite directions"),
     },
     {
+        "claim_id": "H_REGIME_IS_NOT_CITABLE_UNTIL_ITS_ESTIMATORS_AGREE",
+        "artifact": "results/h_regime_crosswalk/result.json",
+        "section": "Results 3.4 -- the H_regime sentence is suspended, not softened",
+        "endpoint": "H_regime and its transform-invariant ordinal companions",
+        "allow_failed_falsifiers": True,
+        "estimand": "the same statistic on two grids under identity and monotone rescaling",
+        "allowed": ("No H_regime figure is cited. Two sealed artifacts disagree on its value: "
+                    "recomputing the runners' estimator reproduces surface_gates_v2 to the last "
+                    "digit (0.003802243800697269) and reproduces monotone_transform_ceiling at no "
+                    "seed subset of the same cache. The statistic is also not scale-invariant -- a "
+                    "strictly increasing rescaling moves it on both grids, 0.003802 to 0.010776 on "
+                    "the 288 and 0.028294 to 0.067539 on the extended -- while every ordinal "
+                    "statistic stays bit-identical under the same transform. What may be said is "
+                    "ordinal: contextual rankings exist, mean pairwise rank correlation is +0.844 "
+                    "on the 288 grid and +0.909 on the extended, and top-25 sets overlap 91.7% and "
+                    "23.5% respectively."),
+        "forbidden": ["H_regime = 0.0038", "H_regime is 0.0038 against a bar of 0.05",
+                      "no context-conditioned architecture can pay",
+                      "the 288 zero is transform-proof",
+                      "a single configuration is optimal in every context"],
+        "why_forbidden": ("the value is disputed between two sealed artifacts, the statistic is "
+                          "not invariant to the declared utility scale, and the universal-argmax "
+                          "claim does not reproduce from the cache at any seed subset"),
+    },
+    {
         "claim_id": "EXPANSION_ADDS_REACHABLE_OPTIMA",
         "artifact": "results/expansion_difficulty/result.json",
         "section": "RQ2 methods (why the expanded grid is the right test)",
