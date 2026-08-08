@@ -66,8 +66,26 @@ def verify_payload(path: Path, root: Path | None = None,
             continue
         if not dep.exists():
             errors.append(f"missing {key}: {rel}")
+        elif key == "reference_path":
+            # The repository's sealed-payload convention stores reference_sha256 as
+            # the referenced JSON payload's *self* hash, not as the file-byte hash.
+            # A future producer may add reference_file_sha256 when byte identity is
+            # also required; keep that check separate and unambiguous.
+            reference_file_expected = payload.get("reference_file_sha256")
+            if isinstance(reference_file_expected, str):
+                if _sha_bytes(dep.read_bytes()) != reference_file_expected:
+                    errors.append(f"reference file_sha256 mismatch: {rel}")
+            else:
+                try:
+                    reference_payload = json.loads(dep.read_text())
+                except (OSError, json.JSONDecodeError) as exc:
+                    errors.append(f"cannot read referenced payload: {rel}: {exc}")
+                else:
+                    reference_self = reference_payload.get("self_sha256")
+                    if reference_self != expected:
+                        errors.append(f"reference self_sha256 mismatch: {rel}")
         elif _sha_bytes(dep.read_bytes()) != expected:
-            errors.append(f"{key} hash mismatch: {rel}")
+            errors.append(f"{key} file hash mismatch: {rel}")
 
     manifests: list[tuple[str, dict[str, Any]]] = []
     manifest = payload.get("module_manifest")

@@ -1,0 +1,403 @@
+{
+ "absence_within_exact_class_in": [
+  "R24_current|exact_class",
+  "R24_increased|exact_class"
+ ],
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "cells": {
+  "R24_current": {
+   "L_levels": {
+    "exact_best_fixed": 0.236575869132311,
+    "placebo": 0.24560087505680436,
+    "ranked": 0.236575869132311,
+    "rule": 0.236575869132311
+   },
+   "L_range": [
+    0.17950635196304973,
+    0.38592216768311205
+   ],
+   "enriched_class": {
+    "best_fixed_index": 0,
+    "clairvoyant_L": 0.23581900173077966,
+    "lcb95": 0.0,
+    "mean": 0.0007568674015312587,
+    "n_schedules": 178,
+    "openloop_L": 0.236575869132311,
+    "ucb95": 0.0017860452262728097
+   },
+   "exact_class": {
+    "best_fixed_index": 0,
+    "clairvoyant_L": 0.23606407293777054,
+    "enumerated": true,
+    "lcb95": 0.0,
+    "mean": 0.0005117961945403879,
+    "n_schedules": 26,
+    "openloop_L": 0.236575869132311,
+    "ucb95": 0.001535388583621164
+   },
+   "exact_spread": 0.08325281811969926,
+   "overrides": {},
+   "paired_stderr": 0.008934043440811815,
+   "rule_vs_placebo": {
+    "lcb95": 0.006312575154183687,
+    "mean": 0.00902500592449341
+   },
+   "surge_weeks_by_class": {
+    "placebo": [
+     13
+    ],
+    "ranked": [
+     13
+    ],
+    "rule": [
+     13
+    ],
+    "schedules": [
+     13
+    ]
+   }
+  },
+  "R24_increased": {
+   "L_levels": {
+    "exact_best_fixed": 0.2623004121080263,
+    "placebo": 0.27014161190234326,
+    "ranked": 0.2623004121080263,
+    "rule": 0.2623004121080263
+   },
+   "L_range": [
+    0.22326377367871345,
+    0.3966600018563899
+   ],
+   "enriched_class": {
+    "best_fixed_index": 0,
+    "clairvoyant_L": 0.2619506066066326,
+    "lcb95": 0.0,
+    "mean": 0.00034980550139361116,
+    "n_schedules": 178,
+    "openloop_L": 0.2623004121080263,
+    "ucb95": 0.0008224554697327385
+   },
+   "exact_class": {
+    "best_fixed_index": 0,
+    "clairvoyant_L": 0.2620958047379145,
+    "enumerated": true,
+    "lcb95": 0.0,
+    "mean": 0.00020460737011172847,
+    "n_schedules": 26,
+    "openloop_L": 0.2623004121080263,
+    "ucb95": 0.0006026452781670022
+   },
+   "exact_spread": 0.07544224487319201,
+   "overrides": {
+    "R24": "increased"
+   },
+   "paired_stderr": 0.008189368110544479,
+   "rule_vs_placebo": {
+    "lcb95": 0.005735414183842238,
+    "mean": 0.007841199794316989
+   },
+   "surge_weeks_by_class": {
+    "placebo": [
+     13
+    ],
+    "ranked": [
+     13
+    ],
+    "rule": [
+     13
+    ],
+    "schedules": [
+     13
+    ]
+   }
+  }
+ },
+ "claim_status": "NO_MATERIAL_HEADROOM_WITHIN_EXACT_CLASS",
+ "contract_path": "docs/ENMIENDA_BLOQUEO_V1_Y_PREREGISTRO_V2_TIMING_2026-08-08.md",
+ "contract_sha256": "12e8711c70a0ef01b8f9bc9203eebefac4229436849351b73dbaf73b3cd73cfb",
+ "created_at": "2026-08-08T18:42:55.713237+00:00",
+ "decision_rule": {
+  "absence": "UCB95 < delta AND the class was enumerated",
+  "delta": 0.01,
+  "established": "LCB95 >= delta",
+  "no_stop_branch": "failing to clear a bar from below is not absence, so the vocabulary has no STOP",
+  "units": "fraction of maximum possible exposure"
+ },
+ "design": {
+  "K_surge_weeks": 13,
+  "S3_excluded_to_isolate_timing": true,
+  "cells": [
+   "R24_current",
+   "R24_increased"
+  ],
+  "k_holm": 4,
+  "max_steps": 26,
+  "n_enriched": 178,
+  "n_exact": 26,
+  "seeds": [
+   8600001,
+   8600002,
+   8600003,
+   8600004,
+   8600005,
+   8600006,
+   8600007,
+   8600008,
+   8600009,
+   8600010,
+   8600011,
+   8600012
+  ],
+  "shift_levels": [
+   1,
+   2
+  ]
+ },
+ "elapsed_seconds": 281.2391371250269,
+ "endpoint": {
+  "denominator_is_policy_invariant": true,
+  "dimensionless": true,
+  "direction": "lower_is_better",
+  "formula": "sum q_i [e_i - (OPT_i + LT_i)]+ / sum q_i [T - (OPT_i + LT_i)]+"
+ },
+ "falsifiers": {
+  "all_passed": true,
+  "f1_exactly_K_surge_weeks": {
+   "evidence": {
+    "K": 13,
+    "per_cell": {
+     "R24_current": {
+      "placebo": [
+       13
+      ],
+      "ranked": [
+       13
+      ],
+      "rule": [
+       13
+      ],
+      "schedules": [
+       13
+      ]
+     },
+     "R24_increased": {
+      "placebo": [
+       13
+      ],
+      "ranked": [
+       13
+      ],
+      "rule": [
+       13
+      ],
+      "schedules": [
+       13
+      ]
+     }
+    },
+    "why_it_can_fail": "if any policy plays a different number of surge weeks, budget and intensity are not identical and the contrast mixes policy with resource -- the defect that invalidated the previous two gates"
+   },
+   "passed": true
+  },
+  "f2_endpoint_is_dimensionless": {
+   "evidence": {
+    "per_cell": {
+     "R24_current": [
+      0.17950635196304973,
+      0.38592216768311205
+     ],
+     "R24_increased": [
+      0.22326377367871345,
+      0.3966600018563899
+     ]
+    },
+    "why_it_can_fail": "L* must lie in [0,1]; outside that range the denominator is not maximum possible exposure and the 0.01 bar loses its meaning, which is exactly how V1's bar came to mean thirty-six seconds"
+   },
+   "passed": true
+  },
+  "f3_exact_class_is_exhaustive": {
+   "evidence": {
+    "n_starts": 26,
+    "why_it_can_fail": "enumerating fewer than all 26 starts turns the exact class into another heuristic, and then nothing here can support an absence claim"
+   },
+   "passed": true
+  },
+  "f4_search_contains_the_exact_class": {
+   "evidence": {
+    "per_cell": {
+     "R24_current": {
+      "enriched": 178,
+      "exact": 26
+     },
+     "R24_increased": {
+      "enriched": 178,
+      "exact": 26
+     }
+    },
+    "why_it_can_fail": "if the enriched search did not strictly contain the exact class, 'not found by search' could not be compared with 'absent within the class'"
+   },
+   "passed": true
+  },
+  "f5_placebo_does_not_match_the_rule": {
+   "evidence": {
+    "per_cell": {
+     "R24_current": {
+      "lcb95": 0.006312575154183687,
+      "mean": 0.00902500592449341
+     },
+     "R24_increased": {
+      "lcb95": 0.005735414183842238,
+      "mean": 0.007841199794316989
+     }
+    },
+    "why_it_can_fail": "same budget, same K surge weeks, only WHEN differs. If a permuted calendar matches the rule, the value is in spending and not in spending well -- how op12 failed"
+   },
+   "passed": true
+  },
+  "f6_clairvoyant_dominates": {
+   "evidence": {
+    "per_cell": {
+     "R24_current": {
+      "enriched_class": 0.0007568674015312587,
+      "exact_class": 0.0005117961945403879
+     },
+     "R24_increased": {
+      "enriched_class": 0.00034980550139361116,
+      "exact_class": 0.00020460737011172847
+     }
+    },
+    "why_it_can_fail": "the per-tape minimum cannot exceed a fixed column, so a negative gap means the estimator is misindexed"
+   },
+   "passed": true
+  },
+  "f7_endpoint_discriminates": {
+   "evidence": {
+    "per_cell": {
+     "R24_current": {
+      "spread": 0.08325281811969926,
+      "two_paired_se": 0.01786808688162363
+     },
+     "R24_increased": {
+      "spread": 0.07544224487319201,
+      "two_paired_se": 0.016378736221088958
+     }
+    },
+    "why_it_can_fail": "measured against the PAIRED standard error of the differences, not the standard error of the best schedule -- V1 used the wrong one. If the 26 exact calendars do not separate above paired noise, there is no timing surface to have a value"
+   },
+   "passed": true
+  },
+  "f8_falsifiers_block_the_claim": {
+   "evidence": {
+    "all_falsifiers_passed": true,
+    "claim_status": "NO_MATERIAL_HEADROOM_WITHIN_EXACT_CLASS",
+    "why_it_can_fail": "self-referential control. V1 computed claim_status before all_passed, so its artifact read STOP while f3 was red"
+   },
+   "passed": true
+  },
+  "f9_no_fresh_seeds": {
+   "evidence": {
+    "n_sealed_artifact_overlap": 12,
+    "n_seeds": 12,
+    "note": "deliberate re-execution of registry block 'reconciled_8600001'; these seeds are NOT virgin and are not meant to be",
+    "registry_conflicts": [
+     {
+      "id": "reconciled_8600001",
+      "n_overlapping": 12,
+      "range": [
+       8600001,
+       8600012
+      ],
+      "source": "results/demand_process/result.json",
+      "status": "USED_DEVELOPMENT_NOT_VIRGIN"
+     }
+    ],
+    "registry_is_complete": false,
+    "registry_status": "BASELINE_INVENTORY_INCOMPLETE_NO_NEW_SEEDS_AUTHORIZED",
+    "replay_of": "reconciled_8600001",
+    "sealed_artifact_overlap": [
+     8600001,
+     8600002,
+     8600003,
+     8600004,
+     8600005,
+     8600006,
+     8600007,
+     8600008,
+     8600009,
+     8600010,
+     8600011,
+     8600012
+    ],
+    "seeds": [
+     8600001,
+     8600002,
+     8600003,
+     8600004,
+     8600005,
+     8600006,
+     8600007,
+     8600008,
+     8600009,
+     8600010,
+     8600011,
+     8600012
+    ],
+    "status": "DECLARED_REPLAY",
+    "why_it_can_fail": "it cannot: this is a declared custody replay of registry block 'reconciled_8600001', so the seeds are used on purpose. Counted in neither column."
+   },
+   "not_applicable": true,
+   "passed": null
+  }
+ },
+ "headroom_established_in": [],
+ "module_manifest": {
+  "entry_script": "scripts/run_exact_timing_headroom_v2.py",
+  "entry_script_sha256": "0d46a3f56744a58c11bad575e66e2c5d6b0cd5eca52dabae8db1a0b48ce1b83f",
+  "missing": [],
+  "modules": {
+   "supply_chain/arm_runner.py": "1afea4fa248db5beb2d86c6ab2033d6f24a95115ea544b08966b7a538456ac99",
+   "supply_chain/continuous_its_env.py": "a1d7771e6f4f52dfc11c1b272eedf9eb31f45d44e92efcba1acd69709e2553f3",
+   "supply_chain/episode_metrics.py": "e09199d48a747f67aef600e9482b812fc1be16e337167d7dfc7215bcb57fb55e",
+   "supply_chain/seed_custody.py": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "reference_path": "results/budgeted_timing_headroom/result.json",
+ "reference_sha256": "c3f0497c4d3723a5fb4fb680bae83be22530a11c7050f5453ac55627a4743b50",
+ "replay_of": "reconciled_8600001",
+ "risk_estimand": {
+  "formula": "Delta(R24 increased) - Delta(R24 current)",
+  "note": "R22/R23 are no longer decisive negative controls: the source does not establish they are causally immune to an upstream shift change",
+  "value": {
+   "enriched_class": -0.00040706190013764754,
+   "exact_class": -0.00030718882442865947
+  }
+ },
+ "run_role": "EXACT_CLASS_TIMING_GATE",
+ "schema_version": "exact_timing_headroom_v2",
+ "scope": "DEVELOPMENT_ON_DECLARED_REPLAY_NO_LEARNER_AUTHORIZED",
+ "self_sha256": "b857ac0bb1f67dc1a21d4e39299815dbb7fc0c4cd3d946627f0ed2f2bcadc3a7",
+ "supersedes": {
+  "path": "results/budgeted_timing_headroom/result.json",
+  "relabelled": "BLOCKED_BY_DESIGN_AUDIT_DEVELOPMENT_ONLY",
+  "retained": true
+ }
+}

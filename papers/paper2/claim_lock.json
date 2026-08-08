@@ -140,16 +140,16 @@
   },
   {
    "allowed": "In the corrective development replay, a researcher-defined factor-level prior was generated from base-grid visits, Laplace-smoothed, and frozen before the target grid was touched. Against this prior, factorized UCB search retained an advantage of +0.04179 [+0.03221, +0.05188], while the neural, GP-EI, and OFAT transfers were lower than their corresponding frozen-prior replays by -0.02204 [-0.02599, -0.01829], -0.02097 [-0.02872, -0.01294], and -0.04284 [-0.04963, -0.03720]. This is a carrier- and contract-specific development comparison; it does not establish that a level-frequency prior is generally sufficient or that the carrier can be discarded in the original experiment.",
-   "artifact": "results/comparator_repair/result.json",
+   "artifact": "results/comparator_repair_v2/result.json",
    "claim_id": "RQ2D_A_TRANSPORTABLE_PRIOR_BEATS_THREE_OF_FOUR_CARRIERS",
    "claim_status": "UCB1_BEATS_A_FROZEN_EX_ANTE_LEVEL_PRIOR",
-   "contract_sha256": "51458ca77903d1a40a173ce4fec33f21a42d0227a2021dd69563a57b12bc703a",
+   "contract_sha256": "5f0228d4c512f078d0f16735370d2c1e4573f4f2b3aac8e3bf90ad89dafc3605",
    "endpoint": "auc_regret_norm",
    "estimand": "each carrier's transferred state against a frozen ex-ante level prior",
    "evidence_grade": "REPLAY",
    "exists": true,
    "falsifiers_all_passed": true,
-   "file_sha256": "4b19a5a9fb31706bb511ffba527188885371df654bef1a1395baa1217776ccf4",
+   "file_sha256": "548f01fd307dbcf68705ce26ec64df91f1aee3efa81a5353dffa27935aab4739",
    "forbidden": [
     "this confirms UCB1",
     "the frozen prior is the best comparator overall",
@@ -163,12 +163,12 @@
     "RQ2A1_UCB1_BEATS_COLD_START"
    ],
    "paper_id": "P2",
-   "registration_status": "PREREGISTERED_REPAIR_ON_BURNED_SEEDS_CANNOT_RAISE_RQ2A",
+   "predecessor_artifact": "results/comparator_repair/result.json",
+   "registration_status": "CORRECTIVE_V2_AFTER_LEGACY_REPLAY_NO_GRADE_CHANGE",
    "run_role": "REPLAY_REANALYSIS",
    "scope": "REPLAY_ON_THE_BURNED_CONFIRMATION_BLOCK_NO_NEW_SEEDS_NO_ADJUDICATION",
    "section": "RQ2d (corrective comparator replay on the burned block)",
-   "self_sha256": "cbb2e559283db7846073453577e0759f87093626bc1ae95a5fb18d68f44a2aaa",
-   "successor_when_sealed": "results/comparator_repair_v2/result.json",
+   "self_sha256": "f325d21349a762a6f3865513e3db8dd3e7ee29997af2ae49e4ab96082aeded8c",
    "why_forbidden": "the seeds are burned and the run is a replay, so no grade improves; and the result identifies a comparison under one researcher-defined prior, not a generic sufficiency theorem"
   },
   {
@@ -778,7 +778,7 @@
    "why_forbidden": "unique_profile_optima is 1, 2 or 3 by row; and the screen varied PROFILES, not the within-episode realisation"
   }
  ],
- "generated_at_commit": "71de444a09c093ceac0a95e84cd554f7f5ec1070",
+ "generated_at_commit": "5dccdab9eb56b36844b87622dbe51859c36043d9",
  "grader_self_test": {
   "a_provenance_artifact_is_not_graded_as_evidence": {
    "passed": true,

@@ -162,12 +162,10 @@ CLAIMS: list[dict] = [
     },
     {
         "claim_id": "RQ2D_A_TRANSPORTABLE_PRIOR_BEATS_THREE_OF_FOUR_CARRIERS",
-        # POINTS AT WHAT EXISTS. A concurrent session repointed this row to a v2 that is
-        # still running, which left the lock reporting a missing artifact -- a claim lock
-        # whose own build says "artifact missing" cannot govern a sentence. It returns to
-        # the sealed v1 and moves to v2 when v2 is sealed, not when it is announced.
-        "artifact": "results/comparator_repair/result.json",
-        "successor_when_sealed": "results/comparator_repair_v2/result.json",
+        # v2 is now sealed. Keep v1 as an explicit predecessor for provenance, but make
+        # the active paper-facing row resolve to the corrected comparator result.
+        "artifact": "results/comparator_repair_v2/result.json",
+        "predecessor_artifact": "results/comparator_repair/result.json",
         "section": "RQ2d (corrective comparator replay on the burned block)",
         "endpoint": "auc_regret_norm",
         "estimand": "each carrier's transferred state against a frozen ex-ante level prior",
