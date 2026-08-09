@@ -531,6 +531,11 @@ INERT_FROZEN_FIELDS = {
     "loc_arcs_down",
     "loc_graph",
     "strategic_buffer_released_units",
+    # Added 2026-08-08 with the conservative buffer successor. A monotone accumulator of
+    # physical quantity-time, written by the replenishment tick and read by nothing inside
+    # the simulator -- the exact sibling of the counter above, and folded into the key with
+    # it rather than argued about.
+    "strategic_inventory_unit_hours",
     "cssu_action_events",
     "cssu_demand_events",
     "cssu_delivery_events",

@@ -1,0 +1,942 @@
+{
+ "best_lambda": "0.0",
+ "by_lambda": {
+  "0.0": {
+   "J_test": 0.273828068547663,
+   "L_test": 0.273828068547663,
+   "chosen_on_train": [
+    0,
+    4
+   ],
+   "cost_norm": 0.30277921732295043
+  },
+  "0.25": {
+   "J_test": 0.3495228728784006,
+   "L_test": 0.273828068547663,
+   "chosen_on_train": [
+    0,
+    4
+   ],
+   "cost_norm": 0.30277921732295043
+  },
+  "0.5": {
+   "J_test": 0.3677160797991452,
+   "L_test": 0.3677160797991452,
+   "chosen_on_train": [
+    0,
+    0
+   ],
+   "cost_norm": 0.0
+  },
+  "1.0": {
+   "J_test": 0.3677160797991452,
+   "L_test": 0.3677160797991452,
+   "chosen_on_train": [
+    0,
+    0
+   ],
+   "cost_norm": 0.0
+  },
+  "2.0": {
+   "J_test": 0.3677160797991452,
+   "L_test": 0.3677160797991452,
+   "chosen_on_train": [
+    0,
+    0
+   ],
+   "cost_norm": 0.0
+  },
+  "4.0": {
+   "J_test": 0.3677160797991452,
+   "L_test": 0.3677160797991452,
+   "chosen_on_train": [
+    0,
+    0
+   ],
+   "cost_norm": 0.0
+  }
+ },
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "STATIC_TRADE_OFF_ONLY__NO_SEQUENTIAL_HEADROOM",
+ "clairvoyant_gap": {
+  "0.0": {
+   "lcb95": 0.0,
+   "mean": 0.0,
+   "ucb95": 0.0
+  },
+  "0.25": {
+   "lcb95": 0.0,
+   "mean": 0.0004031609117004231,
+   "ucb95": 0.0012094827351012694
+  },
+  "0.5": {
+   "lcb95": 0.0,
+   "mean": 0.0,
+   "ucb95": 0.0
+  },
+  "1.0": {
+   "lcb95": 0.0,
+   "mean": 0.0,
+   "ucb95": 0.0
+  },
+  "2.0": {
+   "lcb95": 0.0,
+   "mean": 0.0,
+   "ucb95": 0.0
+  },
+  "4.0": {
+   "lcb95": 0.0,
+   "mean": 0.0,
+   "ucb95": 0.0
+  }
+ },
+ "contract_path": "docs/RETRACTACION_LIBERACION_BUFFER_2026-08-08.md",
+ "contract_sha256": "f248019a6ddb8f5d1f9e57b929475f7edf1cba078baf34e3dff0ede548981cd0",
+ "created_at": "2026-08-09T01:44:17.525490+00:00",
+ "distinct_cost_levels": 22,
+ "endpoint": "L_star_priced_by_replenished_units",
+ "falsifier_summary": {
+  "all_passed": false,
+  "disclosures": [
+   "d1_cost_is_our_assumption",
+   "d2_development_replay"
+  ],
+  "failed": [
+   "f6_clairvoyant_gap_is_material"
+  ],
+  "n_computed": 6,
+  "n_disclosures": 2,
+  "n_failed": 1,
+  "n_not_applicable": 0,
+  "not_applicable": []
+ },
+ "falsifiers": {
+  "custody": {
+   "evidence": {
+    "n_sealed_artifact_overlap": 12,
+    "n_seeds": 24,
+    "note": "seeds already consumed by a registry block or sealed artifact",
+    "registry_conflicts": [
+     {
+      "id": "reconciled_8600001",
+      "n_overlapping": 12,
+      "range": [
+       8600001,
+       8600012
+      ],
+      "source": "results/demand_process/result.json",
+      "status": "USED_DEVELOPMENT_NOT_VIRGIN"
+     }
+    ],
+    "registry_is_complete": false,
+    "registry_status": "BASELINE_INVENTORY_INCOMPLETE_NO_NEW_SEEDS_AUTHORIZED",
+    "replay_of": null,
+    "sealed_artifact_overlap": [
+     8600001,
+     8600002,
+     8600003,
+     8600004,
+     8600005,
+     8600006,
+     8600007,
+     8600008,
+     8600009,
+     8600010,
+     8600011,
+     8600012
+    ],
+    "seeds": [
+     8600001,
+     8600002,
+     8600003,
+     8600004,
+     8600005,
+     8600006,
+     8600007,
+     8600008,
+     8600009,
+     8600010,
+     8600011,
+     8600012,
+     8600013,
+     8600014,
+     8600015,
+     8600016,
+     8600017,
+     8600018,
+     8600019,
+     8600020,
+     8600021,
+     8600022,
+     8600023,
+     8600024
+    ],
+    "status": "COLLISION",
+    "why_it_can_fail": "a seed already consumed by a registry block or a sealed artifact would make this run a re-use rather than an independent one"
+   },
+   "not_applicable": false,
+   "passed": false
+  },
+  "d1_cost_is_our_assumption": {
+   "computed": false,
+   "disclosure": true,
+   "evidence": {
+    "evidence": {
+     "max_replenished": 490043.5416666667,
+     "unit_hours_range": [
+      19089051030.0,
+      25462442901.0
+     ]
+    },
+    "statement": "cost is kit-equivalent units actually replenished (raw/12 + rations); physical quantity-time is reported as a sensitivity, not as the price. Neither is a monetary rate and neither comes from Garrido-Rios (2017)"
+   },
+   "passed": null
+  },
+  "d2_development_replay": {
+   "computed": false,
+   "disclosure": true,
+   "evidence": {
+    "evidence": {
+     "test": [
+      8600013,
+      8600024
+     ],
+     "train": [
+      8600001,
+      8600012
+     ]
+    },
+    "statement": "development replay on already-burned seeds; no virgin block opened"
+   },
+   "passed": null
+  },
+  "f1_no_stock_was_destroyed": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": 0.0,
+     "threshold": 1e-09
+    },
+    "why_it_can_fail": "the retracted path destroyed operating stock; if any unit leaves a container here the successor reproduced the defect it exists to remove"
+   },
+   "passed": true
+  },
+  "f2_an_off_window_costs_exactly_zero": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": 0.0,
+     "threshold": 1e-09
+    },
+    "why_it_can_fail": "a schedule that never raises the target must spend nothing; a non-zero cost would mean the accumulator is charging operating replenishment to the buffer"
+   },
+   "passed": true
+  },
+  "f3_cost_separates_the_class": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": 22.0,
+     "threshold": 3.0
+    },
+    "why_it_can_fail": "if every window spends the same, holding duration is not a decision and pricing it prices nothing -- which is exactly what was true before the retracted release"
+   },
+   "passed": true
+  },
+  "f4_longer_window_spends_more": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": 490043.5416666667,
+     "threshold": 148375.0
+    },
+    "why_it_can_fail": "more weeks on must mean more top-ups; if not, the cost is not measuring the schedule"
+   },
+   "passed": true
+  },
+  "f5_control_selected_on_train_only": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "n_lambdas": 6,
+     "n_options": 22
+    },
+    "why_it_can_fail": "the predecessor selected its comparator on the same trajectories where it measured the gap, which inflates every gap it reported"
+   },
+   "passed": true
+  },
+  "f6_clairvoyant_gap_is_material": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": 0.0,
+     "threshold": 0.01
+    },
+    "why_it_can_fail": "the environment may have a static trade-off and no sequential value at all, in which case this fails and no learner is authorized"
+   },
+   "passed": false
+  }
+ },
+ "lambdas": [
+  0.0,
+  0.25,
+  0.5,
+  1.0,
+  2.0,
+  4.0
+ ],
+ "max_replenished_units": 490043.5416666667,
+ "module_manifest": {
+  "missing": [],
+  "modules": {
+   "supply_chain/arm_runner.py": "1afea4fa248db5beb2d86c6ab2033d6f24a95115ea544b08966b7a538456ac99",
+   "supply_chain/continuous_its_env.py": "9600402e8cdef496a548628a41cd6bb974ae83d9ef66dbe78db1c5dce07d16ca",
+   "supply_chain/falsifiers.py": "99a64c66b62ee43ab9cf532a34932dc27ff4b4fae72d9b331fcf2a8f2a554fb7",
+   "supply_chain/seed_custody.py": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd",
+   "supply_chain/supply_chain.py": "92be322bb9f9c272ea7ddd99fd55596cdafcf58018d51ee7aceb8d461376d2bc"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "n_options": 22,
+ "pareto_front": [
+  "(0, 0)",
+  "(0, 4)",
+  "(8, 4)",
+  "(16, 4)"
+ ],
+ "reference_path": "results/priced_buffer_gate/result.json",
+ "reference_sha256": "7a21380c0be5abf0aeb358568357194f544814226e8c696e241f209d6d09cc62",
+ "rows": {
+  "(0, 0)": {
+   "L_test": 0.3677160797991452,
+   "L_test_per_seed": [
+    0.3364022102590637,
+    0.3827807087556798,
+    0.3506978844298037,
+    0.3596493143636618,
+    0.36819688551248625,
+    0.3712424856019871,
+    0.35742643981219047,
+    0.3671105658960345,
+    0.39352840135532624,
+    0.3423886917155454,
+    0.3656107770038662,
+    0.4175585928840978
+   ],
+   "L_train": 0.35573361669187653,
+   "cost_norm": 0.0,
+   "destroyed": 0.0,
+   "option": [
+    0,
+    0
+   ],
+   "replenished": 0.0,
+   "unit_hours": 19089051030.0
+  },
+  "(0, 13)": {
+   "L_test": 0.273828068547663,
+   "L_test_per_seed": [
+    0.2542079816330924,
+    0.30325431572050904,
+    0.2606637709464841,
+    0.25674478266031014,
+    0.2899680684425781,
+    0.2890068611308722,
+    0.2757385147082526,
+    0.2589328449483961,
+    0.2686926820651467,
+    0.2715318183252129,
+    0.2501554060458165,
+    0.30703977594528553
+   ],
+   "L_train": 0.26066782334496824,
+   "cost_norm": 0.5701949529144732,
+   "destroyed": 0.0,
+   "option": [
+    0,
+    13
+   ],
+   "replenished": 279420.3541666667,
+   "unit_hours": 23237127312.0
+  },
+  "(0, 18)": {
+   "L_test": 0.273828068547663,
+   "L_test_per_seed": [
+    0.2542079816330924,
+    0.30325431572050904,
+    0.2606637709464841,
+    0.25674478266031014,
+    0.2899680684425781,
+    0.2890068611308722,
+    0.2757385147082526,
+    0.2589328449483961,
+    0.2686926820651467,
+    0.2715318183252129,
+    0.2501554060458165,
+    0.30703977594528553
+   ],
+   "L_train": 0.26066782334496824,
+   "cost_norm": 0.7360316196392412,
+   "destroyed": 0.0,
+   "option": [
+    0,
+    18
+   ],
+   "replenished": 360687.5416666667,
+   "unit_hours": 24438573873.0
+  },
+  "(0, 22)": {
+   "L_test": 0.273828068547663,
+   "L_test_per_seed": [
+    0.2542079816330924,
+    0.30325431572050904,
+    0.2606637709464841,
+    0.25674478266031014,
+    0.2899680684425781,
+    0.2890068611308722,
+    0.2757385147082526,
+    0.2589328449483961,
+    0.2686926820651467,
+    0.2715318183252129,
+    0.2501554060458165,
+    0.30703977594528553
+   ],
+   "L_train": 0.26066782334496824,
+   "cost_norm": 0.8697228860190569,
+   "destroyed": 0.0,
+   "option": [
+    0,
+    22
+   ],
+   "replenished": 426202.0833333333,
+   "unit_hours": 25189018673.0
+  },
+  "(0, 26)": {
+   "L_test": 0.273828068547663,
+   "L_test_per_seed": [
+    0.2542079816330924,
+    0.30325431572050904,
+    0.2606637709464841,
+    0.25674478266031014,
+    0.2899680684425781,
+    0.2890068611308722,
+    0.2757385147082526,
+    0.2589328449483961,
+    0.2686926820651467,
+    0.2715318183252129,
+    0.2501554060458165,
+    0.30703977594528553
+   ],
+   "L_train": 0.26066782334496824,
+   "cost_norm": 1.0,
+   "destroyed": 0.0,
+   "option": [
+    0,
+    26
+   ],
+   "replenished": 490043.5416666667,
+   "unit_hours": 25462442901.0
+  },
+  "(0, 4)": {
+   "L_test": 0.273828068547663,
+   "L_test_per_seed": [
+    0.2542079816330924,
+    0.30325431572050904,
+    0.2606637709464841,
+    0.25674478266031014,
+    0.2899680684425781,
+    0.2890068611308722,
+    0.2757385147082526,
+    0.2589328449483961,
+    0.2686926820651467,
+    0.2715318183252129,
+    0.2501554060458165,
+    0.30703977594528553
+   ],
+   "L_train": 0.26066782334496824,
+   "cost_norm": 0.30277921732295043,
+   "destroyed": 0.0,
+   "option": [
+    0,
+    4
+   ],
+   "replenished": 148375.0,
+   "unit_hours": 20953191791.0
+  },
+  "(0, 8)": {
+   "L_test": 0.273828068547663,
+   "L_test_per_seed": [
+    0.2542079816330924,
+    0.30325431572050904,
+    0.2606637709464841,
+    0.25674478266031014,
+    0.2899680684425781,
+    0.2890068611308722,
+    0.2757385147082526,
+    0.2589328449483961,
+    0.2686926820651467,
+    0.2715318183252129,
+    0.2501554060458165,
+    0.30703977594528553
+   ],
+   "L_train": 0.26066782334496824,
+   "cost_norm": 0.41790572181298513,
+   "destroyed": 0.0,
+   "option": [
+    0,
+    8
+   ],
+   "replenished": 204792.0,
+   "unit_hours": 22098610688.0
+  },
+  "(12, 13)": {
+   "L_test": 0.34596630255115474,
+   "L_test_per_seed": [
+    0.3151316408218855,
+    0.3753964822964368,
+    0.34446453147448997,
+    0.33113976974163334,
+    0.3402379721641604,
+    0.36440383161772333,
+    0.334955503164915,
+    0.3386417784460145,
+    0.37113470301966034,
+    0.31060740092289507,
+    0.3359857606089593,
+    0.38949625633508317
+   ],
+   "L_train": 0.3316925406327204,
+   "cost_norm": 0.5901481118387013,
+   "destroyed": 0.0,
+   "option": [
+    12,
+    13
+   ],
+   "replenished": 289198.2708333333,
+   "unit_hours": 22017171645.0
+  },
+  "(12, 4)": {
+   "L_test": 0.34596630255115474,
+   "L_test_per_seed": [
+    0.3151316408218855,
+    0.3753964822964368,
+    0.34446453147448997,
+    0.33113976974163334,
+    0.3402379721641604,
+    0.36440383161772333,
+    0.334955503164915,
+    0.3386417784460145,
+    0.37113470301966034,
+    0.31060740092289507,
+    0.3359857606089593,
+    0.38949625633508317
+   ],
+   "L_train": 0.3316925406327204,
+   "cost_norm": 0.30127998830035935,
+   "destroyed": 0.0,
+   "option": [
+    12,
+    4
+   ],
+   "replenished": 147640.3125,
+   "unit_hours": 20672939805.0
+  },
+  "(12, 8)": {
+   "L_test": 0.34596630255115474,
+   "L_test_per_seed": [
+    0.3151316408218855,
+    0.3753964822964368,
+    0.34446453147448997,
+    0.33113976974163334,
+    0.3402379721641604,
+    0.36440383161772333,
+    0.334955503164915,
+    0.3386417784460145,
+    0.37113470301966034,
+    0.31060740092289507,
+    0.3359857606089593,
+    0.38949625633508317
+   ],
+   "L_train": 0.3316925406327204,
+   "cost_norm": 0.4226865894994875,
+   "destroyed": 0.0,
+   "option": [
+    12,
+    8
+   ],
+   "replenished": 207134.83333333334,
+   "unit_hours": 21446792941.0
+  },
+  "(16, 4)": {
+   "L_test": 0.35889222154867956,
+   "L_test_per_seed": [
+    0.32600191424969577,
+    0.3788620963712239,
+    0.3452682937872008,
+    0.3505048314147104,
+    0.3557752863183017,
+    0.36724268047386965,
+    0.34924460128649626,
+    0.35036271745302344,
+    0.3819093853182481,
+    0.33472965964027435,
+    0.3551398540150886,
+    0.4116653382560209
+   ],
+   "L_train": 0.3434753245708875,
+   "cost_norm": 0.296506220323109,
+   "destroyed": 0.0,
+   "option": [
+    16,
+    4
+   ],
+   "replenished": 145300.95833333334,
+   "unit_hours": 20417855990.0
+  },
+  "(16, 8)": {
+   "L_test": 0.35889222154867956,
+   "L_test_per_seed": [
+    0.32600191424969577,
+    0.3788620963712239,
+    0.3452682937872008,
+    0.3505048314147104,
+    0.3557752863183017,
+    0.36724268047386965,
+    0.34924460128649626,
+    0.35036271745302344,
+    0.3819093853182481,
+    0.33472965964027435,
+    0.3551398540150886,
+    0.4116653382560209
+   ],
+   "L_train": 0.3434753245708875,
+   "cost_norm": 0.3970084716111536,
+   "destroyed": 0.0,
+   "option": [
+    16,
+    8
+   ],
+   "replenished": 194551.4375,
+   "unit_hours": 20820964500.0
+  },
+  "(20, 4)": {
+   "L_test": 0.36626446879369406,
+   "L_test_per_seed": [
+    0.33539992284148695,
+    0.3827807087556798,
+    0.348486360109455,
+    0.3581851052391183,
+    0.36604648263505213,
+    0.36963955372139334,
+    0.35614736641389094,
+    0.3648554248127551,
+    0.391291433242664,
+    0.3421628222173792,
+    0.36340728320557325,
+    0.4167711623298813
+   ],
+   "L_train": 0.3533360877145019,
+   "cost_norm": 0.2989139570505852,
+   "destroyed": 0.0,
+   "option": [
+    20,
+    4
+   ],
+   "replenished": 146480.85416666666,
+   "unit_hours": 19788304879.0
+  },
+  "(4, 13)": {
+   "L_test": 0.2983122618594571,
+   "L_test_per_seed": [
+    0.2779474163205387,
+    0.3346120275515016,
+    0.2837698739406829,
+    0.2798069957282921,
+    0.3141137455785917,
+    0.321551094265984,
+    0.28929678389950403,
+    0.3008737524638339,
+    0.30299555214107526,
+    0.2738814099395724,
+    0.2727412031964323,
+    0.328157287287476
+   ],
+   "L_train": 0.28826682537466697,
+   "cost_norm": 0.6020006300460545,
+   "destroyed": 0.0,
+   "option": [
+    4,
+    13
+   ],
+   "replenished": 295006.5208333333,
+   "unit_hours": 23093594615.0
+  },
+  "(4, 18)": {
+   "L_test": 0.2983122618594571,
+   "L_test_per_seed": [
+    0.2779474163205387,
+    0.3346120275515016,
+    0.2837698739406829,
+    0.2798069957282921,
+    0.3141137455785917,
+    0.321551094265984,
+    0.28929678389950403,
+    0.3008737524638339,
+    0.30299555214107526,
+    0.2738814099395724,
+    0.2727412031964323,
+    0.328157287287476
+   ],
+   "L_train": 0.28826682537466697,
+   "cost_norm": 0.7697977518154212,
+   "destroyed": 0.0,
+   "option": [
+    4,
+    18
+   ],
+   "replenished": 377234.4166666667,
+   "unit_hours": 24064775427.0
+  },
+  "(4, 22)": {
+   "L_test": 0.2983122618594571,
+   "L_test_per_seed": [
+    0.2779474163205387,
+    0.3346120275515016,
+    0.2837698739406829,
+    0.2798069957282921,
+    0.3141137455785917,
+    0.321551094265984,
+    0.28929678389950403,
+    0.3008737524638339,
+    0.30299555214107526,
+    0.2738814099395724,
+    0.2727412031964323,
+    0.328157287287476
+   ],
+   "L_train": 0.28826682537466697,
+   "cost_norm": 0.904135559382691,
+   "destroyed": 0.0,
+   "option": [
+    4,
+    22
+   ],
+   "replenished": 443065.7916666667,
+   "unit_hours": 24351666941.0
+  },
+  "(4, 4)": {
+   "L_test": 0.2983122618594571,
+   "L_test_per_seed": [
+    0.2779474163205387,
+    0.3346120275515016,
+    0.2837698739406829,
+    0.2798069957282921,
+    0.3141137455785917,
+    0.321551094265984,
+    0.28929678389950403,
+    0.3008737524638339,
+    0.30299555214107526,
+    0.2738814099395724,
+    0.2727412031964323,
+    0.328157287287476
+   ],
+   "L_train": 0.28826682537466697,
+   "cost_norm": 0.30503837031488273,
+   "destroyed": 0.0,
+   "option": [
+    4,
+    4
+   ],
+   "replenished": 149482.08333333334,
+   "unit_hours": 20905107013.0
+  },
+  "(4, 8)": {
+   "L_test": 0.2983122618594571,
+   "L_test_per_seed": [
+    0.2779474163205387,
+    0.3346120275515016,
+    0.2837698739406829,
+    0.2798069957282921,
+    0.3141137455785917,
+    0.321551094265984,
+    0.28929678389950403,
+    0.3008737524638339,
+    0.30299555214107526,
+    0.2738814099395724,
+    0.2727412031964323,
+    0.328157287287476
+   ],
+   "L_train": 0.28826682537466697,
+   "cost_norm": 0.4322860341066631,
+   "destroyed": 0.0,
+   "option": [
+    4,
+    8
+   ],
+   "replenished": 211838.97916666666,
+   "unit_hours": 21837776065.0
+  },
+  "(8, 13)": {
+   "L_test": 0.32781103592424493,
+   "L_test_per_seed": [
+    0.298411761594111,
+    0.3738307475431021,
+    0.31574494529711206,
+    0.30765140387446543,
+    0.3313899493623274,
+    0.3448434171996048,
+    0.31033876103929037,
+    0.31613938113211565,
+    0.3565473467396585,
+    0.2952274555492703,
+    0.32162384228825563,
+    0.3619834194716253
+   ],
+   "L_train": 0.3150479448684386,
+   "cost_norm": 0.5546440813720209,
+   "destroyed": 0.0,
+   "option": [
+    8,
+    13
+   ],
+   "replenished": 271799.75,
+   "unit_hours": 22710406474.0
+  },
+  "(8, 18)": {
+   "L_test": 0.32781103592424493,
+   "L_test_per_seed": [
+    0.298411761594111,
+    0.3738307475431021,
+    0.31574494529711206,
+    0.30765140387446543,
+    0.3313899493623274,
+    0.3448434171996048,
+    0.31033876103929037,
+    0.31613938113211565,
+    0.3565473467396585,
+    0.2952274555492703,
+    0.32162384228825563,
+    0.3619834194716253
+   ],
+   "L_train": 0.3150479448684386,
+   "cost_norm": 0.7208919360481998,
+   "destroyed": 0.0,
+   "option": [
+    8,
+    18
+   ],
+   "replenished": 353268.4375,
+   "unit_hours": 23133310158.0
+  },
+  "(8, 4)": {
+   "L_test": 0.32781103592424493,
+   "L_test_per_seed": [
+    0.298411761594111,
+    0.3738307475431021,
+    0.31574494529711206,
+    0.30765140387446543,
+    0.3313899493623274,
+    0.3448434171996048,
+    0.31033876103929037,
+    0.31613938113211565,
+    0.3565473467396585,
+    0.2952274555492703,
+    0.32162384228825563,
+    0.3619834194716253
+   ],
+   "L_train": 0.3150479448684386,
+   "cost_norm": 0.2979495869627231,
+   "destroyed": 0.0,
+   "option": [
+    8,
+    4
+   ],
+   "replenished": 146008.27083333334,
+   "unit_hours": 20776586159.0
+  },
+  "(8, 8)": {
+   "L_test": 0.32781103592424493,
+   "L_test_per_seed": [
+    0.298411761594111,
+    0.3738307475431021,
+    0.31574494529711206,
+    0.30765140387446543,
+    0.3313899493623274,
+    0.3448434171996048,
+    0.31033876103929037,
+    0.31613938113211565,
+    0.3565473467396585,
+    0.2952274555492703,
+    0.32162384228825563,
+    0.3619834194716253
+   ],
+   "L_train": 0.3150479448684386,
+   "cost_norm": 0.39789440479141097,
+   "destroyed": 0.0,
+   "option": [
+    8,
+    8
+   ],
+   "replenished": 194985.58333333334,
+   "unit_hours": 21753009789.0
+  }
+ },
+ "run_role": "DEVELOPMENT",
+ "schema_version": "conservative_buffer_gate_v1",
+ "scope": "DEVELOPMENT_REPLAY_ON_BURNED_SEEDS_NO_VIRGIN_BLOCK",
+ "seed_block": {
+  "derived_from": "seeds",
+  "end": 8600024,
+  "n": 24,
+  "start": 8600001
+ },
+ "seeds": [
+  8600001,
+  8600002,
+  8600003,
+  8600004,
+  8600005,
+  8600006,
+  8600007,
+  8600008,
+  8600009,
+  8600010,
+  8600011,
+  8600012,
+  8600013,
+  8600014,
+  8600015,
+  8600016,
+  8600017,
+  8600018,
+  8600019,
+  8600020,
+  8600021,
+  8600022,
+  8600023,
+  8600024
+ ],
+ "self_sha256": "2d06b8f8c4d068b8f9f97e62264413af23950450bba365266786c85dfd431a8e",
+ "supersedes": {
+  "path": "results/priced_buffer_gate/result.json",
+  "retained": true,
+  "why": "its release freed zero with a target set and destroyed operating stock without one, and its cost counted switch-weeks rather than inventory"
+ }
+}

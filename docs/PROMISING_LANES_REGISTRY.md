@@ -1051,3 +1051,41 @@ ni con un instrumento mejor.
 **Reapertura posible, y puede fallar:** el nulo se aplica al hueco *clarividente*, no al espacio
 priced. Si una fisica nueva -no un instrumento nuevo- hace que el optimo por tape se separe mas alla
 del ruido de seleccion, el techo se vuelve a medir con bloque nuevo. Bajo la fisica de hoy, no.
+
+---
+
+## Lane del buffer, SUCESOR CONSERVATIVO: hay trade-off estatico y NO hay valor secuencial (2026-08-08)
+
+**Estado: `STATIC_TRADE_OFF_ONLY__NO_SEQUENTIAL_HEADROOM`.** Artefacto
+`results/conservative_buffer_gate/result.json`; contrato y retractacion del predecesor en
+`docs/RETRACTACION_LIBERACION_BUFFER_2026-08-08.md`.
+
+**Por que hubo sucesor.** El gate anterior (`PRICED_DECISION_SPACE_ELIGIBLE`, `46e94f2d`, y el techo
+con precio `b901789`) media un trade-off producido por **destruir inventario**: con objetivos activos
+la "liberacion" recorria las CLAVES del contrato con getattr y liberaba exactamente 0, y sin
+objetivos vaciaba `rations_al/sb/cssu` a cero -- 2.688 unidades de stock operativo en una corrida de
+26 semanas. El coste `inventory_hours` contaba semanas con el interruptor encendido, sin tocar
+inventario. Ambos artefactos se conservan y se etiquetan.
+
+**Fisica del sucesor:** bajar el objetivo **detiene la reposicion** y no evapora nada; el stock se
+consume por la via normal. **Coste exacto y atribuible:** unidades kit-equivalentes realmente
+repuestas (`raw/12 + raciones`), con cantidad-tiempo fisica al lado **como sensibilidad, no como
+precio**. Control fijo elegido **solo en train** (8600001-12) y evaluado en test (8600013-24).
+
+**El resultado, y es doble:**
+
+* **El trade-off estatico es real:** 22 opciones, **22 niveles de coste distintos**, **4 puntos no
+  dominados**, cero unidades destruidas. La clase NO colapsa.
+* **El valor secuencial es practicamente cero:** el hueco clarividente por tape maximo es
+  **+0,000403 con LCB95 +0,000000** (lambda 0,25), contra una barra de 0,01. Dos ordenes de magnitud
+  por debajo. En todos los demas lambda es exactamente 0.
+
+**Lectura:** el entorno tiene una decision de DISENO (cuanto reponer) y no una de OPERACION (cuando,
+segun el estado). Entrenar aqui seria optimizar ruido. Una auditoria externa independiente llego al
+mismo orden de magnitud (0,000409) por una ruta distinta.
+
+**Mecanismo causal:** con lead time de 336 h las ventanas de 1-2 semanas no llegan a inyectar nada,
+y como el stock temprano permanece y se consume normalmente, empezar en la semana 0 casi siempre
+domina. Para que exista valor de memoria haria falta una razon FISICA para no preposicionar todo al
+principio: presupuesto o capacidad compartida, caducidad, o riesgos localizados que cambien de
+regimen.
