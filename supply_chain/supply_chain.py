@@ -296,6 +296,8 @@ class MFSCSimulation:
         # See `cssu_allocation.allocate_shared_capacity` for why this is the mechanism knob.
         cssu_reallocate_unused: bool = True,
         cssu_global_pool: bool = False,
+        supplier_portfolio_mode: str = "none",
+        supplier_yield_schedule: Optional[list] = None,
         cssu_destination_weight_schedule: Optional[list[float]] = None,
         loc_topology_mode: str = "serial_v1",
         cssu_storage_capacity: Mapping[str, float] | None = None,
@@ -521,6 +523,25 @@ class MFSCSimulation:
         # demand magnitudes and the same draw order whichever schedule is in force. That is what
         # makes the cells comparable at all.
         self.cssu_global_pool = bool(cssu_global_pool)
+        # PROGRAM V PORT. OUR declared extension, inert by default. Op2's contracted volume is
+        # multiplied by the yield the committed supplier allocation actually earns. What a
+        # degraded supplier fails to deliver NEVER ENTERS the system: it is a rejection, not
+        # inventory removed after the fact. That distinction is the whole reason the release path
+        # was retracted this morning, so it is enforced here rather than assumed.
+        #
+        # Yields come from a hash-keyed schedule, not from a simulator RNG stream, so the same
+        # tape keeps the same risks, the same demand and the same draw order under every policy.
+        if supplier_portfolio_mode not in ("none", "v1"):
+            raise ValueError("supplier_portfolio_mode must be 'none' or 'v1'")
+        self.supplier_portfolio_mode = str(supplier_portfolio_mode)
+        self.supplier_yield_schedule = (None if supplier_yield_schedule is None
+                                        else [tuple(float(y) for y in row)
+                                              for row in supplier_yield_schedule])
+        #: week -> allocation committed FOR that week, written strictly before it starts.
+        self._supplier_allocation_by_week: dict[int, tuple] = {}
+        self.supplier_ordered_units = 0.0
+        self.supplier_received_units = 0.0
+        self.supplier_rejected_units = 0.0
         self.cssu_destination_weight_schedule = (
             None if cssu_destination_weight_schedule is None
             else [float(w) for w in cssu_destination_weight_schedule])
@@ -4166,6 +4187,10 @@ class MFSCSimulation:
                 yield self.env.timeout(1)
                 pt_remaining -= 1
             total_delivery = self.params["op2_q"] * NUM_RAW_MATERIALS
+            if self.supplier_portfolio_mode == "v1":
+                total_delivery = self._apply_supplier_portfolio(total_delivery)
+                if total_delivery <= 0.0:
+                    continue
             if self.raw_material_flow_mode == "bom_total_units_order_up_to":
                 target = self._target_for_raw_node("op3_rm", total_delivery)
                 total_delivery = max(0.0, target - float(self.raw_material_wdc.level))
@@ -4183,6 +4208,37 @@ class MFSCSimulation:
             self.supplier_delivery_events.append(
                 (float(self.env.now), float(total_delivery))
             )
+
+    def commit_supplier_allocation(self, week: int, allocation) -> None:
+        """Commit an allocation FOR a future week. Writing into the current or a past week is
+        refused, because that is precisely the lead the mechanism is about: the decision must be
+        made before the yield it is trying to anticipate is observable."""
+        current = int(float(self.env.now) // HOURS_PER_WEEK)
+        if int(week) <= current:
+            raise ValueError(
+                f"supplier allocation for week {week} must be committed before it starts "
+                f"(now in week {current}); committing inside the week defeats the lead")
+        alloc = tuple(float(a) for a in allocation)
+        if abs(sum(alloc) - 1.0) > 1e-9 or any(a < -1e-12 for a in alloc):
+            raise ValueError("supplier allocation must be non-negative and sum to one")
+        self._supplier_allocation_by_week[int(week)] = alloc
+
+    def _apply_supplier_portfolio(self, contracted: float) -> float:
+        """Scale a contracted delivery by what the committed portfolio actually yields."""
+        week = int(float(self.env.now) // HOURS_PER_WEEK)
+        schedule = self.supplier_yield_schedule or []
+        if not schedule:
+            return contracted
+        yields = schedule[min(week, len(schedule) - 1)]
+        # An uncommitted week falls back to an equal split rather than to a favourable one: the
+        # default must never be better than what a policy could have chosen.
+        alloc = self._supplier_allocation_by_week.get(week, tuple([1.0 / len(yields)] * len(yields)))
+        realised = float(sum(a * y for a, y in zip(alloc, yields)))
+        received = max(0.0, contracted * realised)
+        self.supplier_ordered_units += float(contracted)
+        self.supplier_received_units += received
+        self.supplier_rejected_units += float(contracted) - received
+        return received
 
     def _op3_wdc_dispatch(self):
         next_eligible_start = 0.0
