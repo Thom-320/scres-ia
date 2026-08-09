@@ -41,17 +41,18 @@ MODULES = ("supply_chain/supply_chain.py", "supply_chain/program_v_supplier_memo
            "supply_chain/falsifiers.py", "supply_chain/arm_runner.py")
 
 
-def _sim(seed: int, tape, mode: str = "v1") -> MFSCSimulation:
+def _sim(seed: int, tape, mode: str = "v1", cap: float | None = None) -> MFSCSimulation:
     return MFSCSimulation(
         seed=seed, horizon=HORIZON * HOURS_PER_WEEK,
         risks_enabled=True, risk_level="current",
         supplier_portfolio_mode=mode,
-        supplier_yield_schedule=[tuple(y) for y in tape.yields])
+        supplier_yield_schedule=[tuple(y) for y in tape.yields],
+        raw_material_storage_cap=cap)
 
 
-def play(policy, seed: int) -> dict:
+def play(policy, seed: int, cap: float | None = None) -> dict:
     tape = make_tape(seed)
-    sim = _sim(seed, tape)
+    sim = _sim(seed, tape, cap=cap)
     sim._start_processes()
 
     posterior = np.full(3, 1.0 / 3.0)
@@ -92,6 +93,7 @@ def play(policy, seed: int) -> dict:
         "received": float(sim.supplier_received_units),
         "rejected": float(sim.supplier_rejected_units),
         "orders": len(sim.orders),
+        "blocked": float(sim.raw_material_blocked_units),
         "switches": switches,
         "mass_residual_rel": max(abs(float(ledger["raw_residual"])),
                                  abs(float(ledger["ration_residual"]))) / scale,

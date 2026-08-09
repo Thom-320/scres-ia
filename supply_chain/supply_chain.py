@@ -297,6 +297,7 @@ class MFSCSimulation:
         cssu_reallocate_unused: bool = True,
         cssu_global_pool: bool = False,
         supplier_portfolio_mode: str = "none",
+        raw_material_storage_cap: Optional[float] = None,
         supplier_yield_schedule: Optional[list] = None,
         cssu_destination_weight_schedule: Optional[list[float]] = None,
         loc_topology_mode: str = "serial_v1",
@@ -534,6 +535,18 @@ class MFSCSimulation:
         if supplier_portfolio_mode not in ("none", "v1"):
             raise ValueError("supplier_portfolio_mode must be 'none' or 'v1'")
         self.supplier_portfolio_mode = str(supplier_portfolio_mode)
+        # FINITE UPSTREAM STORAGE. OUR declared extension, inert by default, and its ONLY
+        # justification is the source's: Garrido-Rios declares unlimited WDC/AL/SB capacity as an
+        # explicit model simplification rather than as a fact about the MFSC. A real depot has a
+        # roof.
+        #
+        # What does not fit is BLOCKED at the door and never enters -- it is not stock removed
+        # after the fact. The distinction is the one that cost a retraction on 2026-08-08, so the
+        # blocked quantity is accounted rather than dropped.
+        self.raw_material_storage_cap = (None if raw_material_storage_cap is None
+                                         else max(0.0, float(raw_material_storage_cap)))
+        self.raw_material_blocked_units = 0.0
+        self.raw_material_block_events = 0
         self.supplier_yield_schedule = (None if supplier_yield_schedule is None
                                         else [tuple(float(y) for y in row)
                                               for row in supplier_yield_schedule])
@@ -4189,6 +4202,15 @@ class MFSCSimulation:
             total_delivery = self.params["op2_q"] * NUM_RAW_MATERIALS
             if self.supplier_portfolio_mode == "v1":
                 total_delivery = self._apply_supplier_portfolio(total_delivery)
+                if total_delivery <= 0.0:
+                    continue
+            if self.raw_material_storage_cap is not None:
+                room = max(0.0, self.raw_material_storage_cap
+                           - float(self.raw_material_wdc.level))
+                if total_delivery > room:
+                    self.raw_material_blocked_units += float(total_delivery) - room
+                    self.raw_material_block_events += 1
+                    total_delivery = room
                 if total_delivery <= 0.0:
                     continue
             if self.raw_material_flow_mode == "bom_total_units_order_up_to":

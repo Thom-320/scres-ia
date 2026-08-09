@@ -1254,3 +1254,43 @@ puesto ahi estaria ajustando ruido con una buena historia detras.
 **Sucesor posible, y puede fallar:** el mecanismo solo puede pagar si la materia prima se vuelve la
 restriccion activa — capacidad de almacen finita aguas arriba, o un consumo que agote la holgura.
 Eso es fisica nueva y exige su propio preregistro. No se abre bloque virgen.
+
+---
+
+## Escasez de almacenamiento aguas arriba: ata, y el contraste sigue en cero (2026-08-09)
+
+**Estado: `SCARCITY_DOES_NOT_CREATE_PHYSICAL_HEADROOM`.** Artefacto
+`results/raw_scarcity_boundary/result.json`; contrato
+`docs/PREREGISTRO_ESCASEZ_MATERIA_PRIMA_2026-08-09.md`, congelado antes del runner con el nivel
+fijado en **dias de suministro** —la unidad en que la doctrina dimensiona un deposito— y no donde
+un aprendiz empiece a ganar.
+
+| celda | servicio del mejor constante | bloqueado | H_priv | H_ret |
+|---|---|---|---|---|
+| ilimitado | 0,7415 | 0 | +0,0000 | +0,0000 |
+| 180 dias | 0,7415 | 2.731.913 | +0,0000 | +0,0000 |
+| 90 dias | 0,7415 | 6.290.783 | +0,0000 | +0,0000 |
+| 60 dias | 0,7412 | 7.256.865 | +0,0000 | +0,0000 |
+| 30 dias | 0,6482 | 8.205.325 | +0,0000 | +0,0000 |
+| 14 dias | 0,5523 | 9.233.870 | +0,0000 | +0,0000 |
+
+**La tapa ata de verdad** —el servicio cae 19 puntos de ilimitado a 14 dias— y **los seis
+contrastes siguen exactamente en cero en las seis celdas**. El control inerte sale plano, la masa
+cierra, y el recuento de pedidos no se mueve con la politica.
+
+**El diagnostico, medido:** Op2 contrata **15,96M de unidades contra 4,26M consumidas, un 3,75x**.
+La cartera absorbe hasta un **73%** de perdida de yield antes de que falte una sola unidad, y el
+peor yield alcanzable de la cartera es 0,40. Por eso da igual a que proveedor se asigne.
+
+**Y por eso mi propio mecanismo de escasez era el equivocado:** limitar el ALMACENAMIENTO no hace
+escasa la MATERIA. Con tapa, lo que ata es la tapa, no las llegadas; perder yield sólo significa que
+se bloquea menos. Escasez de estanteria no es escasez de material.
+
+**Lo que haria falta, y exige su propio contrato:** que las LLEGADAS sean la restriccion activa —
+volumen contratado proximo al consumo, o consumo que agote el flujo— no un techo de almacen. Eso es
+un mecanismo distinto y no una celda mas de este barrido.
+
+**Prediccion externa corroborada de forma independiente:** un informe de Program W (commits no
+publicados, no verificable) predijo `H_ret` exactamente 0 bajo escasez. Se escribio en el
+preregistro **antes** de correr y aqui sale 0 en las seis celdas — aunque por una razon distinta a
+la que ese informe propone: aqui no hay ni siquiera `H_priv` que retener.
