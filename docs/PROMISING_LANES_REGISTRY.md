@@ -1154,3 +1154,67 @@ precio ni otra rejilla, con preregistracion y autorizacion propias.
 
 **No cierra la contencion en general:** Program O midio 0,1515 con nulo fungible exactamente 0, y
 `contention_v1` lo reprodujo sobre verdad conocida. Cierra ESTE actuador.
+
+### Enmienda de alcance del cierre (2026-08-08)
+
+**La etiqueta anterior queda superseded en alcance.** La auditoria
+`results/budget_expiry_priced/scope_audit_v1.json` comprobo que el runner enumera 27 posturas
+constantes y repite cada una en los 26 pasos; no enumera secuencias ni reglas de feedback. Tambien
+usa `max(cost)` sobre train+test para normalizar el endpoint y no persiste la matriz cruda
+`tape x postura`.
+
+La lectura que sobrevive es:
+
+**`STATIC_BUFFER_POSTURE_CLASS_CLOSED__NO_TAPE_HETEROGENEITY_ON_27_CONSTANTS`.** El precio mueve
+la postura estatica, pero las doce tapes coinciden dentro de esa clase. No hay prueba de un teorema
+sobre todas las politicas secuenciales del actuador. Documento vinculante:
+`docs/ENMIENDA_ALCANCE_CIERRE_BUFFER_ESTATICO_2026-08-08.md`.
+
+---
+
+## Program V: memoria de proveedores aguas arriba (2026-08-08)
+
+**Estado: `STRUCTURED_BELIEF_SUFFICIENT_FOR_QUALITY`.** Contrato congelado antes de la primera
+corrida en `contracts/program_v_supplier_memory_v1.json`; resultado y 780 filas crudas en
+`results/program_v/prelearner_gate_v1/`.
+
+El mecanismo cambia el derecho de decision: una bolsa fija de compra se compromete entre tres
+proveedores antes de conocer sus yields. El regimen degradado es persistente y latente, el warning
+es imperfecto y los yields de entregas anteriores son evidencia retardada. Demanda estacional,
+lead de una semana y common random numbers. La masa cierra y el gasto pedido es identico.
+
+Sobre 30 seeds de evaluacion separadas de 30 de seleccion:
+
+* `H_priv` privilegiado−constante: **+0,180130**, IC95 [+0,163761,+0,196499];
+* `H_obs` Bayes retenido−constante: **+0,179366**, IC95 [+0,162989,+0,195743];
+* `H_ret` Bayes retenido−reset: **+0,041320**, IC95 [+0,026572,+0,056068];
+* retained vence delayed y shuffled;
+* residual privilegiado−Bayes: +0,000764, UCB95 **+0,002326**.
+
+**Lectura:** existe valor causal de `L_(t-1)`, pero un filtro estructurado absorbe el headroom de
+calidad en esta celda. No se autoriza una prima neural de calidad. El unico sucesor permitido es un
+gate de planner combinatorio en el DES completo y una prueba separada de amortizacion
+`MPC vs spline-GAM/MLP/KAN`, con no inferioridad operativa. Respuesta completa a Garrido en
+`docs/RESPUESTA_A_GARRIDO_Y_RUTA_PRIMA_NEURAL_PROGRAM_V_2026-08-08.md`.
+
+---
+
+## Incidente G3a y reproduccion forense (2026-08-08)
+
+**Estado: `ORIGINAL_G3A_RUNNER_AND_RAW_ROWS_NOT_RECOVERABLE`.** El contrato efectivo tampoco
+sobrevivio: el contrato versionado reserva otras seeds y otro factorial que el manuscrito. Por ello,
+ningun runner nuevo puede llamarse el productor exacto.
+
+Se conserva una reproduccion forense, explicitamente no confirmatoria, con las 18.360 filas que
+describe el manuscrito, runner, contrato, pruebas y hashes en
+`results/g3a_forensic_reconstruction_v1/`. Reproduce la jerarquia cualitativa (hard quota positivo,
+spare cercano a cero, FIFO exactamente nulo), no las magnitudes publicadas. El incidente y la regla
+de evidencia estan en
+`docs/INCIDENTE_REPRODUCIBILIDAD_G3A_Y_PLAN_DE_RECONSTRUCCION_2026-08-08.md`.
+
+**Adjudicacion posterior y dominante:** `results/g3a_boundary_v2/result.full34.json`, sobre el bloque
+de desarrollo nuevo `8800001–8800060`, devuelve `G3A_DID_NOT_REPRODUCE` incluso despues de restaurar
+los 34 controladores. En persistente/uniforme con cuota rigida, `H_obs=+0,002789`, IC95
+`[-0,007635,+0,012373]`; el mejor placebo no pierde. Pooling FIFO permanece exactamente nulo y la
+accion esta viva. Por tanto, la asignacion A/B entre CSSU queda cerrada como via a un learner; el
+replay forense se conserva para custodia, no para contradecir este resultado.

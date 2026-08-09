@@ -1,0 +1,41 @@
+{
+  "schema_version": "g3a_forensic_reconstruction_v1",
+  "status": "FROZEN_FORENSIC_RECONSTRUCTION_BEFORE_REPLAY",
+  "frozen_on": "2026-08-08",
+  "role": "FORENSIC_DEVELOPMENT_REPLAY",
+  "source_of_specification": "deliverables/final/When_Does_Learning_Add_Resilience_CIE_Development_Manuscript_v1_1.docx",
+  "nonclaim": "This is not the lost producer and cannot restore or confirm the manuscript aggregates.",
+  "episode": {
+    "weeks": 16,
+    "days_per_week": 7,
+    "daily_dispatch_capacity": 2500.0,
+    "delivery_delay_hours": 54.0,
+    "deadline_hours": 48.0
+  },
+  "latent_process": {
+    "states": ["B", "N", "A"],
+    "persistent_self_transition": 0.78,
+    "warning_accuracy": 0.72,
+    "r24_probability": 0.55,
+    "r24_quantity": 2500.0
+  },
+  "factorial": {
+    "processes": ["iid_uniform", "persistent_uniform", "persistent_seasonal"],
+    "capacity_contracts": ["hard_quota", "spare_reallocation", "global_fifo"],
+    "policies": 34,
+    "cells": 9
+  },
+  "seeds": {
+    "selection": [8701001, 8701030],
+    "evaluation": [8701031, 8701060],
+    "classification": "BURNED_DEVELOPMENT_REPLAY"
+  },
+  "primary": "worst_claimant_late_exposure_service_v1",
+  "inference": "paired marginal t interval, development only, no multiplicity correction",
+  "required_outputs": [
+    "results/g3a_forensic_reconstruction_v1/raw_rows.csv.gz",
+    "results/g3a_forensic_reconstruction_v1/result.json"
+  ],
+  "neural_training_authorized": false,
+  "confirmation_authorized": false
+}

@@ -1,0 +1,476 @@
+{
+  "artifacts": {
+    "raw_row_count": 780,
+    "raw_rows": "results/program_v/prelearner_gate_v1/raw_rows.csv.gz",
+    "raw_rows_sha256": "5c355bd200d92df1ad0019c5f1a0ddc9d873b8072d4541b860ee50e76a46c396"
+  },
+  "decision": "STRUCTURED_BELIEF_SUFFICIENT_FOR_QUALITY",
+  "effects_evaluation": {
+    "H_obs": {
+      "lcb95": 0.16298939723920858,
+      "lhs": "bayes_retained",
+      "mean": 0.17936632254199697,
+      "metric": "service",
+      "n_pairs": 30,
+      "p_one_sided_gt_zero": 3.724249011034023e-20,
+      "rhs": "constant_1",
+      "ucb95": 0.19574324784478536
+    },
+    "H_priv": {
+      "lcb95": 0.1637610430941874,
+      "lhs": "privileged_true_state",
+      "mean": 0.1801302527836645,
+      "metric": "service",
+      "n_pairs": 30,
+      "p_one_sided_gt_zero": 3.271201075786113e-20,
+      "rhs": "constant_1",
+      "ucb95": 0.19649946247314162
+    },
+    "H_ret": {
+      "lcb95": 0.026572283688821398,
+      "lhs": "bayes_retained",
+      "mean": 0.04132023109186356,
+      "metric": "service",
+      "n_pairs": 30,
+      "p_one_sided_gt_zero": 1.6732934326911355e-06,
+      "rhs": "bayes_reset",
+      "ucb95": 0.05606817849490572
+    },
+    "privileged_residual_over_bayes": {
+      "lcb95": -0.0007984825331125498,
+      "lhs": "privileged_true_state",
+      "mean": 0.000763930241667569,
+      "metric": "service",
+      "n_pairs": 30,
+      "p_one_sided_gt_zero": 0.162790994008098,
+      "rhs": "bayes_retained",
+      "ucb95": 0.0023263430164476876
+    },
+    "privileged_residual_over_selected": {
+      "lcb95": -0.0007984825331125498,
+      "lhs": "privileged_true_state",
+      "mean": 0.000763930241667569,
+      "metric": "service",
+      "n_pairs": 30,
+      "p_one_sided_gt_zero": 0.162790994008098,
+      "rhs": "bayes_retained",
+      "ucb95": 0.0023263430164476876
+    },
+    "retained_vs_delayed": {
+      "lcb95": 0.055373552801693794,
+      "lhs": "bayes_retained",
+      "mean": 0.07389398801740506,
+      "metric": "service",
+      "n_pairs": 30,
+      "p_one_sided_gt_zero": 2.6757078672320244e-09,
+      "rhs": "placebo_delayed",
+      "ucb95": 0.09241442323311633
+    },
+    "retained_vs_shuffled": {
+      "lcb95": 0.1631816820757346,
+      "lhs": "bayes_retained",
+      "mean": 0.18632861900509565,
+      "metric": "service",
+      "n_pairs": 30,
+      "p_one_sided_gt_zero": 1.4856845751052833e-16,
+      "rhs": "placebo_shuffled",
+      "ucb95": 0.2094755559344567
+    }
+  },
+  "elapsed_seconds": 0.8670431450009346,
+  "falsifiers": {
+    "all_passed": true,
+    "crn_one_tape_per_seed": {
+      "max_distinct_tapes": 1,
+      "passed": true
+    },
+    "expected_raw_rows": {
+      "observed": 780,
+      "passed": true,
+      "required": 780
+    },
+    "fixed_order_rights": {
+      "observed": [
+        134400.0
+      ],
+      "passed": true,
+      "required": 134400.0
+    },
+    "mass_conservation": {
+      "max_abs_residual": 8.731149137020111e-11,
+      "passed": true,
+      "tolerance": 1e-09
+    },
+    "oracle_action_reversal_live": {
+      "actions": [
+        [
+          0.0,
+          0.5,
+          0.5
+        ],
+        [
+          0.5,
+          0.0,
+          0.5
+        ],
+        [
+          0.5,
+          0.5,
+          0.0
+        ]
+      ],
+      "dominant_on_every_evaluation_tape_week": true,
+      "passed": true
+    },
+    "policy_library_fixed": {
+      "passed": true,
+      "policies": [
+        "constant_0",
+        "constant_1",
+        "constant_2",
+        "constant_3",
+        "constant_4",
+        "constant_5",
+        "warning_lookup",
+        "placebo_delayed",
+        "placebo_shuffled",
+        "last_yield",
+        "bayes_retained",
+        "bayes_reset",
+        "privileged_true_state"
+      ]
+    },
+    "privileged_policy_not_deployable": {
+      "passed": true
+    },
+    "seasonal_demand_nonflat": {
+      "passed": true,
+      "std_weekly_mean": 453.14834193049666
+    },
+    "selected_policy_guardrails": {
+      "backlog_final_constant": 21234.422950148684,
+      "backlog_final_selected": 90.19590069659459,
+      "passed": true,
+      "recovery_constant": 7.5,
+      "recovery_selected": 1.6976190476190476,
+      "selected": "bayes_retained"
+    },
+    "selection_evaluation_disjoint": {
+      "evaluation": [
+        8701031,
+        8701060
+      ],
+      "passed": true,
+      "selection": [
+        8701001,
+        8701030
+      ]
+    },
+    "supplier_yield_mechanism_moves": {
+      "degraded_mean": 0.10015305162127239,
+      "healthy_mean": 0.9902585634588094,
+      "passed": true
+    },
+    "warning_imperfect_but_informative": {
+      "observed_accuracy": 0.659375,
+      "passed": true
+    }
+  },
+  "interpretation": "Retained history is causally useful, but a structured belief/last-yield comparator absorbs the quality headroom. Proceed only to a preregistered planner timing and amortization gate; this result is not a neural quality premium.",
+  "mechanism_gate_passed": true,
+  "neural_training_authorized": false,
+  "policy_means": {
+    "evaluation": {
+      "bayes_reset": {
+        "action_switches": 15.833333333333334,
+        "backlog_auc": 81662.10215268165,
+        "backlog_final": 4969.369872955209,
+        "mean_recovery_weeks": 4.036111111111111,
+        "received": 109138.48400909109,
+        "rejected": 21061.51599090894,
+        "service": 0.9579158386664689,
+        "unique_actions": 3.0
+      },
+      "bayes_retained": {
+        "action_switches": 4.966666666666667,
+        "backlog_auc": 9767.972064642126,
+        "backlog_final": 90.19590069659459,
+        "mean_recovery_weeks": 1.6976190476190476,
+        "received": 120377.56981714671,
+        "rejected": 9822.43018285329,
+        "service": 0.9992360697583325,
+        "unique_actions": 3.7666666666666666
+      },
+      "constant_0": {
+        "action_switches": 0.0,
+        "backlog_auc": 345286.6854564567,
+        "backlog_final": 23377.315883265484,
+        "mean_recovery_weeks": 6.583333333333332,
+        "received": 90260.85481742336,
+        "rejected": 39939.145182576656,
+        "service": 0.8017162089773664,
+        "unique_actions": 1.0
+      },
+      "constant_1": {
+        "action_switches": 0.0,
+        "backlog_auc": 324900.634080917,
+        "backlog_final": 21234.422950148684,
+        "mean_recovery_weeks": 7.5,
+        "received": 92403.74775054016,
+        "rejected": 37796.25224945986,
+        "service": 0.8198697472163357,
+        "unique_actions": 1.0
+      },
+      "constant_2": {
+        "action_switches": 0.0,
+        "backlog_auc": 391911.32015725283,
+        "backlog_final": 25456.618899304296,
+        "mean_recovery_weeks": 7.616666666666666,
+        "received": 88181.55180138456,
+        "rejected": 42018.448198615464,
+        "service": 0.7840294935044526,
+        "unique_actions": 1.0
+      },
+      "constant_3": {
+        "action_switches": 0.0,
+        "backlog_auc": 333710.8132146295,
+        "backlog_final": 19522.327643143304,
+        "mean_recovery_weeks": 4.983333333333333,
+        "received": 94546.64068365695,
+        "rejected": 35653.35931634307,
+        "service": 0.8343773989220779,
+        "unique_actions": 1.0
+      },
+      "constant_4": {
+        "action_switches": 0.0,
+        "backlog_auc": 379549.6786085308,
+        "backlog_final": 23313.7259661875,
+        "mean_recovery_weeks": 7.383333333333334,
+        "received": 90324.44473450133,
+        "rejected": 39875.55526549867,
+        "service": 0.8021830317434215,
+        "unique_actions": 1.0
+      },
+      "constant_5": {
+        "action_switches": 0.0,
+        "backlog_auc": 447769.844354415,
+        "backlog_final": 27535.921915343104,
+        "mean_recovery_weeks": 6.51111111111111,
+        "received": 86102.24878534573,
+        "rejected": 44097.75121465428,
+        "service": 0.7663427780315388,
+        "unique_actions": 1.0
+      },
+      "last_yield": {
+        "action_switches": 29.5,
+        "backlog_auc": 217287.77905163507,
+        "backlog_final": 13525.559229201717,
+        "mean_recovery_weeks": 7.133333333333334,
+        "received": 100112.61147148711,
+        "rejected": 30087.38852851289,
+        "service": 0.8853117144390149,
+        "unique_actions": 3.0
+      },
+      "placebo_delayed": {
+        "action_switches": 15.433333333333334,
+        "backlog_auc": 135315.37649478737,
+        "backlog_final": 8808.528945828955,
+        "mean_recovery_weeks": 4.938888888888888,
+        "received": 105123.25503326193,
+        "rejected": 25076.744966738104,
+        "service": 0.9253420817409274,
+        "unique_actions": 3.0
+      },
+      "placebo_shuffled": {
+        "action_switches": 15.833333333333334,
+        "backlog_auc": 348611.689429401,
+        "backlog_final": 22050.238226118305,
+        "mean_recovery_weeks": 6.65,
+        "received": 91587.93247457051,
+        "rejected": 38612.06752542949,
+        "service": 0.812907450753237,
+        "unique_actions": 3.0
+      },
+      "privileged_true_state": {
+        "action_switches": 4.066666666666666,
+        "backlog_auc": 0.0,
+        "backlog_final": 0.0,
+        "mean_recovery_weeks": 1.0,
+        "received": 128931.12476958561,
+        "rejected": 1268.8752304143914,
+        "service": 1.0,
+        "unique_actions": 2.7666666666666666
+      },
+      "warning_lookup": {
+        "action_switches": 15.833333333333334,
+        "backlog_auc": 81662.10215268165,
+        "backlog_final": 4969.369872955209,
+        "mean_recovery_weeks": 4.036111111111111,
+        "received": 109138.48400909109,
+        "rejected": 21061.51599090894,
+        "service": 0.9579158386664689,
+        "unique_actions": 3.0
+      }
+    },
+    "selection": {
+      "bayes_reset": {
+        "action_switches": 16.5,
+        "backlog_auc": 93759.35199356655,
+        "backlog_final": 6019.868885167874,
+        "mean_recovery_weeks": 5.5744444444444445,
+        "received": 108082.99681773674,
+        "rejected": 22117.003182263255,
+        "service": 0.9487859452434289,
+        "unique_actions": 3.0
+      },
+      "bayes_retained": {
+        "action_switches": 4.366666666666666,
+        "backlog_auc": 7751.263079612146,
+        "backlog_final": 0.0,
+        "mean_recovery_weeks": 1.5027777777777778,
+        "received": 121302.37950891576,
+        "rejected": 8897.620491084246,
+        "service": 1.0,
+        "unique_actions": 3.7
+      },
+      "constant_0": {
+        "action_switches": 0.0,
+        "backlog_auc": 377165.61909499776,
+        "backlog_final": 22900.60085100861,
+        "mean_recovery_weeks": 6.311111111111112,
+        "received": 91043.1337399179,
+        "rejected": 39156.866260082104,
+        "service": 0.8056880753342255,
+        "unique_actions": 1.0
+      },
+      "constant_1": {
+        "action_switches": 0.0,
+        "backlog_auc": 344848.0374153189,
+        "backlog_final": 21874.778157413995,
+        "mean_recovery_weeks": 8.333333333333334,
+        "received": 91697.50631790319,
+        "rejected": 38502.493682096814,
+        "service": 0.8143115963904836,
+        "unique_actions": 1.0
+      },
+      "constant_2": {
+        "action_switches": 0.0,
+        "backlog_auc": 382907.8721693183,
+        "backlog_final": 24346.20036430457,
+        "mean_recovery_weeks": 8.333333333333334,
+        "received": 89226.08411101262,
+        "rejected": 40973.91588898738,
+        "service": 0.7933617970382805,
+        "unique_actions": 1.0
+      },
+      "constant_3": {
+        "action_switches": 0.0,
+        "backlog_auc": 352926.3468649808,
+        "backlog_final": 22359.662093887757,
+        "mean_recovery_weeks": 6.675,
+        "received": 92351.87889588847,
+        "rejected": 37848.12110411153,
+        "service": 0.8101124874416167,
+        "unique_actions": 1.0
+      },
+      "constant_4": {
+        "action_switches": 0.0,
+        "backlog_auc": 365846.46158003766,
+        "backlog_final": 23691.82778631928,
+        "mean_recovery_weeks": 8.333333333333334,
+        "received": 89880.45668899789,
+        "rejected": 40319.5433110021,
+        "service": 0.7988142025092562,
+        "unique_actions": 1.0
+      },
+      "constant_5": {
+        "action_switches": 0.0,
+        "backlog_auc": 412249.8591926451,
+        "backlog_final": 26163.24999320985,
+        "mean_recovery_weeks": 7.225,
+        "received": 87409.03448210732,
+        "rejected": 42790.96551789267,
+        "service": 0.7778644031570531,
+        "unique_actions": 1.0
+      },
+      "last_yield": {
+        "action_switches": 29.366666666666667,
+        "backlog_auc": 208852.37393858793,
+        "backlog_final": 13120.548045112626,
+        "mean_recovery_weeks": 8.333333333333334,
+        "received": 100451.73643020458,
+        "rejected": 29748.263569795443,
+        "service": 0.8886655187816886,
+        "unique_actions": 3.0
+      },
+      "placebo_delayed": {
+        "action_switches": 15.9,
+        "backlog_auc": 129383.06755944592,
+        "backlog_final": 8597.78644979894,
+        "mean_recovery_weeks": 6.847222222222222,
+        "received": 105242.94931645662,
+        "rejected": 24957.05068354337,
+        "service": 0.9269051220664045,
+        "unique_actions": 3.0
+      },
+      "placebo_shuffled": {
+        "action_switches": 16.633333333333333,
+        "backlog_auc": 279899.79954070837,
+        "backlog_final": 18088.40365446713,
+        "mean_recovery_weeks": 8.25,
+        "received": 95483.88082085007,
+        "rejected": 34716.119179149944,
+        "service": 0.8464315934613355,
+        "unique_actions": 3.0
+      },
+      "privileged_true_state": {
+        "action_switches": 3.466666666666667,
+        "backlog_auc": 1.3447879706562464,
+        "backlog_final": 0.0,
+        "mean_recovery_weeks": 0.9666666666666667,
+        "received": 128841.77216131127,
+        "rejected": 1358.2278386887417,
+        "service": 1.0,
+        "unique_actions": 2.7
+      },
+      "warning_lookup": {
+        "action_switches": 16.5,
+        "backlog_auc": 93759.35199356655,
+        "backlog_final": 6019.868885167874,
+        "mean_recovery_weeks": 5.5744444444444445,
+        "received": 108082.99681773674,
+        "rejected": 22117.003182263255,
+        "service": 0.9487859452434289,
+        "unique_actions": 3.0
+      }
+    }
+  },
+  "schema_version": "program_v_supplier_memory_prelearner_gate_v1",
+  "seed_custody": {
+    "evaluation": [
+      8701031,
+      8701060
+    ],
+    "fresh_confirmation_seeds_used": false,
+    "selection": [
+      8701001,
+      8701030
+    ]
+  },
+  "selection": {
+    "best_constant": "constant_1",
+    "best_observable": "bayes_retained",
+    "observable_candidates": [
+      "warning_lookup",
+      "last_yield",
+      "bayes_retained"
+    ]
+  },
+  "source_manifest_sha256": {
+    "contracts/program_v_supplier_memory_v1.json": "223364c54af5e39dba5f78aeb4ae110ffcd9e915fcd5f0443835047b883a8886",
+    "docs/PREREGISTRO_PROGRAM_V_MEMORIA_CARTERA_PROVEEDORES_2026-08-08.md": "42a06ee69142441d90a288b86dc0d7c89bb85b9e8528a35054509eb2846e22a7",
+    "scripts/run_program_v_prelearner_gate_v1.py": "b1cab7cd0d84912502e9495f5bef7e6cce6f3e95f4c8b6eaa86fd83e4cc74e4c",
+    "supply_chain/program_v_supplier_memory.py": "88793ff301401e82c816360d790ac7465fc3eef9bd85ddfefaed32971792667b",
+    "tests/test_program_v_supplier_memory.py": "8546ff378fd87c6b6e0967994a5caf663a484f1068d6e61f2769f62c60540585"
+  }
+}

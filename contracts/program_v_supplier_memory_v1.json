@@ -1,0 +1,50 @@
+{
+  "schema_version": "program_v_supplier_memory_v1",
+  "status": "FROZEN_BURNED_PRELEARNER_MECHANISM_GATE",
+  "frozen_on": "2026-08-08",
+  "role": "BURNED_PRELEARNER_MECHANISM_GATE",
+  "physics": {
+    "suppliers": ["S0", "S1", "S2"],
+    "weekly_total_order": 4200.0,
+    "allocation_grid": "quarters summing to one, each supplier capped at 0.5",
+    "commitment_lead_weeks": 1,
+    "initial_inventory": 4200.0,
+    "degraded_yield_mean": 0.10,
+    "healthy_yield_mean": 1.00,
+    "regime_self_transition": 0.88,
+    "warning_accuracy": 0.65,
+    "horizon_weeks": 32,
+    "seasonal_demand": "declared sinusoidal mean 3600, amplitude 0.18 plus policy-invariant noise",
+    "attribution": "researcher-introduced upstream supplier portfolio; not a thesis parameter"
+  },
+  "information": {
+    "allowed": ["inventory", "backlog", "pipeline", "current warning", "past realized supplier yields", "week phase"],
+    "forbidden": ["true regime", "future yields", "future demand noise", "seed", "oracle action"],
+    "learning_state": "posterior over degraded supplier retained from t-1"
+  },
+  "policies": [
+    "six constants", "warning lookup", "delayed warning placebo", "shuffled warning placebo",
+    "last-yield rule", "Bayes retained", "Bayes reset", "privileged true-state diagnostic"
+  ],
+  "seeds": {
+    "selection": [8701001, 8701030],
+    "evaluation": [8701031, 8701060],
+    "classification": "BURNED_REPLAY_NO_CONFIRMATION"
+  },
+  "gates": {
+    "H_priv_lcb95": 0.02,
+    "H_obs_lcb95": 0.01,
+    "H_ret_lcb95_strictly_positive": true,
+    "mass_tolerance": 1e-9,
+    "ordered_placebos_required": true
+  },
+  "next_states": [
+    "STOP_PROGRAM_V_NO_PHYSICAL_HEADROOM",
+    "STOP_PROGRAM_V_HEADROOM_NOT_OBSERVABLE",
+    "STOP_PROGRAM_V_NO_RETAINED_HISTORY_VALUE",
+    "STRUCTURED_BELIEF_SUFFICIENT_FOR_QUALITY",
+    "AUTHORIZE_PROGRAM_V_PLANNER_TIMING_GATE"
+  ],
+  "neural_training_authorized": false,
+  "fresh_seeds_authorized": false
+}

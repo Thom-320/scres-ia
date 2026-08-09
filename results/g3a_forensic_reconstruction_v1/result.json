@@ -1,0 +1,742 @@
+{
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "cells": {
+  "iid_uniform__global_fifo": {
+   "H_obs_structured_minus_fixed": {
+    "lcb95": 0.0,
+    "mean": 0.0,
+    "n": 30,
+    "ucb95": 0.0
+   },
+   "H_priv_privileged_minus_fixed": {
+    "lcb95": 0.0,
+    "mean": 0.0,
+    "n": 30,
+    "ucb95": 0.0
+   },
+   "H_res_privileged_minus_structured": {
+    "lcb95": 0.0,
+    "mean": 0.0,
+    "n": 30,
+    "ucb95": 0.0
+   },
+   "H_ret_stateful_minus_reset": {
+    "lcb95": 0.0,
+    "mean": 0.0,
+    "n": 30,
+    "ucb95": 0.0
+   },
+   "capacity_contract": "global_fifo",
+   "fixed_evaluation": {
+    "lcb95": 0.9952926308169638,
+    "mean": 0.9953739308324547,
+    "n": 30,
+    "ucb95": 0.9954552308479456
+   },
+   "max_abs_flow_residual": 1.1641532182693481e-10,
+   "process": "iid_uniform",
+   "selected_fixed_on_selection": "constant_0.1",
+   "selected_structured_on_selection": "warning_lookup_0.1",
+   "structured_evaluation": {
+    "lcb95": 0.9952926308169638,
+    "mean": 0.9953739308324547,
+    "n": 30,
+    "ucb95": 0.9954552308479456
+   },
+   "structured_mean_forfeiture": 1.8189894035458566e-13
+  },
+  "iid_uniform__hard_quota": {
+   "H_obs_structured_minus_fixed": {
+    "lcb95": 0.0035980435060867654,
+    "mean": 0.0058892576408090275,
+    "n": 30,
+    "ucb95": 0.00818047177553129
+   },
+   "H_priv_privileged_minus_fixed": {
+    "lcb95": 0.003993096719050492,
+    "mean": 0.0058654026223792155,
+    "n": 30,
+    "ucb95": 0.007737708525707939
+   },
+   "H_res_privileged_minus_structured": {
+    "lcb95": -0.0012111085291738556,
+    "mean": -2.3855018429811785e-05,
+    "n": 30,
+    "ucb95": 0.0011633984923142319
+   },
+   "H_ret_stateful_minus_reset": {
+    "lcb95": -0.0048533115213602665,
+    "mean": -0.0023382828192515764,
+    "n": 30,
+    "ucb95": 0.00017674588285711322
+   },
+   "capacity_contract": "hard_quota",
+   "fixed_evaluation": {
+    "lcb95": 0.985569662860279,
+    "mean": 0.9878507553923657,
+    "n": 30,
+    "ucb95": 0.9901318479244523
+   },
+   "max_abs_flow_residual": 2.4783730623312294e-10,
+   "process": "iid_uniform",
+   "selected_fixed_on_selection": "constant_0.5",
+   "selected_structured_on_selection": "belief_backlog_0.8",
+   "structured_evaluation": {
+    "lcb95": 0.9931318565794568,
+    "mean": 0.9937400130331745,
+    "n": 30,
+    "ucb95": 0.9943481694868922
+   },
+   "structured_mean_forfeiture": 27413.87765655948
+  },
+  "iid_uniform__spare_reallocation": {
+   "H_obs_structured_minus_fixed": {
+    "lcb95": -4.914723949307709e-06,
+    "mean": -1.9683535709173286e-06,
+    "n": 30,
+    "ucb95": 9.78016807473052e-07
+   },
+   "H_priv_privileged_minus_fixed": {
+    "lcb95": -4.452606549655773e-06,
+    "mean": -1.8023031352528325e-06,
+    "n": 30,
+    "ucb95": 8.48000279150108e-07
+   },
+   "H_res_privileged_minus_structured": {
+    "lcb95": -3.4186439206617346e-06,
+    "mean": 1.6605043566449613e-07,
+    "n": 30,
+    "ucb95": 3.7507447919907265e-06
+   },
+   "H_ret_stateful_minus_reset": {
+    "lcb95": 0.0,
+    "mean": 0.0,
+    "n": 30,
+    "ucb95": 0.0
+   },
+   "capacity_contract": "spare_reallocation",
+   "fixed_evaluation": {
+    "lcb95": 0.9952993049071355,
+    "mean": 0.9953813879522146,
+    "n": 30,
+    "ucb95": 0.9954634709972938
+   },
+   "max_abs_flow_residual": 1.7462298274040222e-10,
+   "process": "iid_uniform",
+   "selected_fixed_on_selection": "constant_0.1",
+   "selected_structured_on_selection": "warning_lookup_0.4",
+   "structured_evaluation": {
+    "lcb95": 0.995297055896852,
+    "mean": 0.9953794195986437,
+    "n": 30,
+    "ucb95": 0.9954617833004354
+   },
+   "structured_mean_forfeiture": 0.0
+  },
+  "persistent_seasonal__global_fifo": {
+   "H_obs_structured_minus_fixed": {
+    "lcb95": 0.0,
+    "mean": 0.0,
+    "n": 30,
+    "ucb95": 0.0
+   },
+   "H_priv_privileged_minus_fixed": {
+    "lcb95": 0.0,
+    "mean": 0.0,
+    "n": 30,
+    "ucb95": 0.0
+   },
+   "H_res_privileged_minus_structured": {
+    "lcb95": 0.0,
+    "mean": 0.0,
+    "n": 30,
+    "ucb95": 0.0
+   },
+   "H_ret_stateful_minus_reset": {
+    "lcb95": 0.0,
+    "mean": 0.0,
+    "n": 30,
+    "ucb95": 0.0
+   },
+   "capacity_contract": "global_fifo",
+   "fixed_evaluation": {
+    "lcb95": 0.9950958674379001,
+    "mean": 0.9952552538387395,
+    "n": 30,
+    "ucb95": 0.9954146402395788
+   },
+   "max_abs_flow_residual": 1.20508047984913e-10,
+   "process": "persistent_seasonal",
+   "selected_fixed_on_selection": "constant_0.1",
+   "selected_structured_on_selection": "warning_lookup_0.1",
+   "structured_evaluation": {
+    "lcb95": 0.9950958674379001,
+    "mean": 0.9952552538387395,
+    "n": 30,
+    "ucb95": 0.9954146402395788
+   },
+   "structured_mean_forfeiture": 1.2126596023639043e-13
+  },
+  "persistent_seasonal__hard_quota": {
+   "H_obs_structured_minus_fixed": {
+    "lcb95": 0.01656793731774181,
+    "mean": 0.025886161844272917,
+    "n": 30,
+    "ucb95": 0.035204386370804024
+   },
+   "H_priv_privileged_minus_fixed": {
+    "lcb95": -0.006296330186051362,
+    "mean": 0.007035816564194205,
+    "n": 30,
+    "ucb95": 0.020367963314439772
+   },
+   "H_res_privileged_minus_structured": {
+    "lcb95": -0.03626776066107164,
+    "mean": -0.018850345280078715,
+    "n": 30,
+    "ucb95": -0.001432929899085788
+   },
+   "H_ret_stateful_minus_reset": {
+    "lcb95": -0.008571681020763314,
+    "mean": -0.0017294883033148337,
+    "n": 30,
+    "ucb95": 0.005112704414133647
+   },
+   "capacity_contract": "hard_quota",
+   "fixed_evaluation": {
+    "lcb95": 0.9587765897529299,
+    "mean": 0.9682589806212654,
+    "n": 30,
+    "ucb95": 0.9777413714896008
+   },
+   "max_abs_flow_residual": 4.065441316924989e-10,
+   "process": "persistent_seasonal",
+   "selected_fixed_on_selection": "constant_0.5",
+   "selected_structured_on_selection": "lagged_demand_0.5",
+   "structured_evaluation": {
+    "lcb95": 0.9932908380290779,
+    "mean": 0.9941451424655383,
+    "n": 30,
+    "ucb95": 0.9949994469019987
+   },
+   "structured_mean_forfeiture": 18712.605192080977
+  },
+  "persistent_seasonal__spare_reallocation": {
+   "H_obs_structured_minus_fixed": {
+    "lcb95": -1.8875752648451479e-06,
+    "mean": 2.2580304553931896e-06,
+    "n": 30,
+    "ucb95": 6.403636175631527e-06
+   },
+   "H_priv_privileged_minus_fixed": {
+    "lcb95": -3.7216522710633077e-06,
+    "mean": 5.994702462123561e-06,
+    "n": 30,
+    "ucb95": 1.571105719531043e-05
+   },
+   "H_res_privileged_minus_structured": {
+    "lcb95": -4.602220124552696e-06,
+    "mean": 3.736672006730372e-06,
+    "n": 30,
+    "ucb95": 1.2075564138013441e-05
+   },
+   "H_ret_stateful_minus_reset": {
+    "lcb95": -1.8875752648451479e-06,
+    "mean": 2.2580304553931896e-06,
+    "n": 30,
+    "ucb95": 6.403636175631527e-06
+   },
+   "capacity_contract": "spare_reallocation",
+   "fixed_evaluation": {
+    "lcb95": 0.9950905930477436,
+    "mean": 0.9952501844300442,
+    "n": 30,
+    "ucb95": 0.9954097758123448
+   },
+   "max_abs_flow_residual": 1.7462298274040222e-10,
+   "process": "persistent_seasonal",
+   "selected_fixed_on_selection": "constant_0.2",
+   "selected_structured_on_selection": "belief_stateful",
+   "structured_evaluation": {
+    "lcb95": 0.9950929332542197,
+    "mean": 0.9952524424604996,
+    "n": 30,
+    "ucb95": 0.9954119516667795
+   },
+   "structured_mean_forfeiture": 1.0610771520684163e-13
+  },
+  "persistent_uniform__global_fifo": {
+   "H_obs_structured_minus_fixed": {
+    "lcb95": 0.0,
+    "mean": 0.0,
+    "n": 30,
+    "ucb95": 0.0
+   },
+   "H_priv_privileged_minus_fixed": {
+    "lcb95": 0.0,
+    "mean": 0.0,
+    "n": 30,
+    "ucb95": 0.0
+   },
+   "H_res_privileged_minus_structured": {
+    "lcb95": 0.0,
+    "mean": 0.0,
+    "n": 30,
+    "ucb95": 0.0
+   },
+   "H_ret_stateful_minus_reset": {
+    "lcb95": 0.0,
+    "mean": 0.0,
+    "n": 30,
+    "ucb95": 0.0
+   },
+   "capacity_contract": "global_fifo",
+   "fixed_evaluation": {
+    "lcb95": 0.9949632134211015,
+    "mean": 0.9951283695386205,
+    "n": 30,
+    "ucb95": 0.9952935256561395
+   },
+   "max_abs_flow_residual": 1.6848389350343496e-10,
+   "process": "persistent_uniform",
+   "selected_fixed_on_selection": "constant_0.1",
+   "selected_structured_on_selection": "warning_lookup_0.1",
+   "structured_evaluation": {
+    "lcb95": 0.9949632134211015,
+    "mean": 0.9951283695386205,
+    "n": 30,
+    "ucb95": 0.9952935256561395
+   },
+   "structured_mean_forfeiture": 1.6674069532503683e-13
+  },
+  "persistent_uniform__hard_quota": {
+   "H_obs_structured_minus_fixed": {
+    "lcb95": 0.017046070612790547,
+    "mean": 0.025931553654679373,
+    "n": 30,
+    "ucb95": 0.0348170366965682
+   },
+   "H_priv_privileged_minus_fixed": {
+    "lcb95": -0.006574958229856338,
+    "mean": 0.006499151359093703,
+    "n": 30,
+    "ucb95": 0.019573260948043743
+   },
+   "H_res_privileged_minus_structured": {
+    "lcb95": -0.036859615249611684,
+    "mean": -0.019432402295585672,
+    "n": 30,
+    "ucb95": -0.00200518934155966
+   },
+   "H_ret_stateful_minus_reset": {
+    "lcb95": -0.009193605249797595,
+    "mean": -0.00227610369276053,
+    "n": 30,
+    "ucb95": 0.004641397864276534
+   },
+   "capacity_contract": "hard_quota",
+   "fixed_evaluation": {
+    "lcb95": 0.9585904020077252,
+    "mean": 0.9676013511819099,
+    "n": 30,
+    "ucb95": 0.9766123003560947
+   },
+   "max_abs_flow_residual": 3.2014213502407074e-10,
+   "process": "persistent_uniform",
+   "selected_fixed_on_selection": "constant_0.5",
+   "selected_structured_on_selection": "lagged_demand_0.5",
+   "structured_evaluation": {
+    "lcb95": 0.9925758654447894,
+    "mean": 0.9935329048365892,
+    "n": 30,
+    "ucb95": 0.994489944228389
+   },
+   "structured_mean_forfeiture": 20230.7627593486
+  },
+  "persistent_uniform__spare_reallocation": {
+   "H_obs_structured_minus_fixed": {
+    "lcb95": -4.187456051058279e-06,
+    "mean": 4.544455410463814e-06,
+    "n": 30,
+    "ucb95": 1.3276366871985909e-05
+   },
+   "H_priv_privileged_minus_fixed": {
+    "lcb95": -8.615891289332335e-06,
+    "mean": 7.093892972024711e-06,
+    "n": 30,
+    "ucb95": 2.280367723338176e-05
+   },
+   "H_res_privileged_minus_structured": {
+    "lcb95": -1.060866952809541e-05,
+    "mean": 2.5494375615608966e-06,
+    "n": 30,
+    "ucb95": 1.5707544651217204e-05
+   },
+   "H_ret_stateful_minus_reset": {
+    "lcb95": -4.187456051058279e-06,
+    "mean": 4.544455410463814e-06,
+    "n": 30,
+    "ucb95": 1.3276366871985909e-05
+   },
+   "capacity_contract": "spare_reallocation",
+   "fixed_evaluation": {
+    "lcb95": 0.9949519332873783,
+    "mean": 0.9951176054148583,
+    "n": 30,
+    "ucb95": 0.9952832775423383
+   },
+   "max_abs_flow_residual": 1.7462298274040222e-10,
+   "process": "persistent_uniform",
+   "selected_fixed_on_selection": "constant_0.2",
+   "selected_structured_on_selection": "belief_stateful",
+   "structured_evaluation": {
+    "lcb95": 0.9949569882126788,
+    "mean": 0.9951221498702687,
+    "n": 30,
+    "ucb95": 0.9952873115278587
+   },
+   "structured_mean_forfeiture": 1.0610771520684163e-13
+  }
+ },
+ "claim_status": "FORENSIC_RECONSTRUCTION_COMPLETE_NOT_ORIGINAL_NOT_CONFIRMATORY",
+ "contract_path": "/workspace/scratch/0dfcd0c1efe7/scres-ia/contracts/g3a_forensic_reconstruction_v1.json",
+ "contract_sha256": "56b61889c86193568a0202b579953e928669d0a36a9efdd84c83cd5ed09f2913",
+ "created_at": "2026-08-09T04:31:55.284443+00:00",
+ "evaluation_seeds": [
+  8701031,
+  8701032,
+  8701033,
+  8701034,
+  8701035,
+  8701036,
+  8701037,
+  8701038,
+  8701039,
+  8701040,
+  8701041,
+  8701042,
+  8701043,
+  8701044,
+  8701045,
+  8701046,
+  8701047,
+  8701048,
+  8701049,
+  8701050,
+  8701051,
+  8701052,
+  8701053,
+  8701054,
+  8701055,
+  8701056,
+  8701057,
+  8701058,
+  8701059,
+  8701060
+ ],
+ "falsifier_summary": {
+  "all_passed": true,
+  "disclosures": [],
+  "failed": [],
+  "n_computed": 12,
+  "n_disclosures": 0,
+  "n_failed": 0,
+  "n_not_applicable": 0,
+  "not_applicable": []
+ },
+ "falsifiers": {
+  "f10_action_library_moves_allocation": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": 0.8000000000000016,
+     "threshold": 0.5
+    },
+    "why_it_can_fail": "a nominal policy library whose actions collapse is not a control benchmark"
+   },
+   "passed": true
+  },
+  "f11_deployable_interface_excludes_privileged": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "n_deployable_families": 8,
+     "n_policies": 34
+    },
+    "why_it_can_fail": "a true-state policy marked deployable leaks the latent regime into H_obs"
+   },
+   "passed": true
+  },
+  "f12_selection_and_evaluation_are_disjoint": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "n_evaluation": 30,
+     "n_selection": 30
+    },
+    "why_it_can_fail": "selecting a controller on its evaluation tapes biases every reported difference"
+   },
+   "passed": true
+  },
+  "f1_expected_18360_rows": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "expected": 18360,
+     "observed": 18360
+    },
+    "why_it_can_fail": "a missing policy/tape/cell silently changes the selected frontier"
+   },
+   "passed": true
+  },
+  "f2_exactly_34_unique_policies": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "expected": 34,
+     "observed": 34
+    },
+    "why_it_can_fail": "a reconstructed library of another width is not the manuscript factorial"
+   },
+   "passed": true
+  },
+  "f3_one_exogenous_tape_per_cell_seed": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "expected": 1,
+     "max_distinct_hashes": 1
+    },
+    "why_it_can_fail": "policy-dependent demand or risk would invalidate common-random-number comparisons"
+   },
+   "passed": true
+  },
+  "f4_flow_ledger_closes": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": 4.333742253948003e-10,
+     "threshold": 1e-08
+    },
+    "why_it_can_fail": "unaccounted flow can manufacture service or resource advantages"
+   },
+   "passed": true
+  },
+  "f5_global_fifo_action_invariant": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": 0.0,
+     "threshold": 1e-12
+    },
+    "why_it_can_fail": "global pooling is the action-invariant null and must not respond to allocation"
+   },
+   "passed": true
+  },
+  "f6_hard_quota_forfeits_capacity": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": 45565.09762427233,
+     "threshold": 0.0
+    },
+    "why_it_can_fail": "without forfeiture the hard-quota mechanism is mislabeled"
+   },
+   "passed": true
+  },
+  "f7_spare_reallocation_work_conserving": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": 3.183231456205249e-12,
+     "threshold": 1e-08
+    },
+    "why_it_can_fail": "unused capacity in the reallocation arm would recreate the hard-quota artefact"
+   },
+   "passed": true
+  },
+  "f8_global_fifo_work_conserving": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": 2.7284841053187847e-12,
+     "threshold": 1e-08
+    },
+    "why_it_can_fail": "unused pooled capacity while backlog exists would make the FIFO null invalid"
+   },
+   "passed": true
+  },
+  "f9_both_pressure_directions_realized": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "n_processes": 3,
+     "n_rows": 18360
+    },
+    "why_it_can_fail": "a one-sided pressure process cannot test claimant-specific adaptation"
+   },
+   "passed": true
+  }
+ },
+ "module_manifest": {
+  "entry_script": "scripts/run_g3a_forensic_reconstruction_v1.py",
+  "entry_script_sha256": "21bcaca01c3f0b036257b9960e66de897cb81ffe38929003c0d643cb392f9df9",
+  "missing": [],
+  "modules": {
+   "supply_chain/arm_runner.py": "1afea4fa248db5beb2d86c6ab2033d6f24a95115ea544b08966b7a538456ac99",
+   "supply_chain/falsifiers.py": "99a64c66b62ee43ab9cf532a34932dc27ff4b4fae72d9b331fcf2a8f2a554fb7",
+   "supply_chain/g3a_forensic.py": "fd6c4bf904d0e665ef55228eee02d665c0994c12df580bcc60640ea4d3e6d44c",
+   "supply_chain/seed_custody.py": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "n_cells": 9,
+ "n_policies": 34,
+ "n_rows": 18360,
+ "nonclaim": "Agreement or disagreement with rounded manuscript aggregates cannot validate this reconstruction.",
+ "raw_rows": {
+  "compression": "gzip mtime=0",
+  "path": "results/g3a_forensic_reconstruction_v1/raw_rows.csv.gz",
+  "sha256": "09c95960f6c9939a93ec830fd8e0afcda7dddc48df47f43415c06d7fd4305396"
+ },
+ "reference_path": "/workspace/scratch/0dfcd0c1efe7/scres-ia/contracts/g3a_asymmetric_claimants_v2.json",
+ "reference_sha256": null,
+ "run_role": "FORENSIC_DEVELOPMENT_REPLAY",
+ "schema_version": "g3a_forensic_reconstruction_result_v1",
+ "seed_block": {
+  "derived_from": "seeds",
+  "end": 8701060,
+  "n": 60,
+  "start": 8701001
+ },
+ "seeds": [
+  8701001,
+  8701002,
+  8701003,
+  8701004,
+  8701005,
+  8701006,
+  8701007,
+  8701008,
+  8701009,
+  8701010,
+  8701011,
+  8701012,
+  8701013,
+  8701014,
+  8701015,
+  8701016,
+  8701017,
+  8701018,
+  8701019,
+  8701020,
+  8701021,
+  8701022,
+  8701023,
+  8701024,
+  8701025,
+  8701026,
+  8701027,
+  8701028,
+  8701029,
+  8701030,
+  8701031,
+  8701032,
+  8701033,
+  8701034,
+  8701035,
+  8701036,
+  8701037,
+  8701038,
+  8701039,
+  8701040,
+  8701041,
+  8701042,
+  8701043,
+  8701044,
+  8701045,
+  8701046,
+  8701047,
+  8701048,
+  8701049,
+  8701050,
+  8701051,
+  8701052,
+  8701053,
+  8701054,
+  8701055,
+  8701056,
+  8701057,
+  8701058,
+  8701059,
+  8701060
+ ],
+ "selection_seeds": [
+  8701001,
+  8701002,
+  8701003,
+  8701004,
+  8701005,
+  8701006,
+  8701007,
+  8701008,
+  8701009,
+  8701010,
+  8701011,
+  8701012,
+  8701013,
+  8701014,
+  8701015,
+  8701016,
+  8701017,
+  8701018,
+  8701019,
+  8701020,
+  8701021,
+  8701022,
+  8701023,
+  8701024,
+  8701025,
+  8701026,
+  8701027,
+  8701028,
+  8701029,
+  8701030
+ ],
+ "self_sha256": "0fa5ee41014af0818d0adc4207a9fdec2265af63bdac87ee9cf0efda8f41f933",
+ "surviving_aggregates_are_not_acceptance_targets": {
+  "persistent_uniform_global_FIFO_H_obs": [
+   0.0,
+   0.0,
+   0.0
+  ],
+  "persistent_uniform_hard_quota_H_obs": [
+   0.0963,
+   0.0682,
+   0.1245
+  ],
+  "persistent_uniform_spare_reallocation_H_obs": [
+   0.00126,
+   -0.00012,
+   0.00264
+  ]
+ }
+}
