@@ -1,0 +1,61 @@
+{
+ "claim_status": "SOURCE_CHANGE_IS_BEHAVIOURALLY_INERT_ON_THE_TESTED_PATHS",
+ "configurations": [
+  "thesis_default",
+  "S2",
+  "S3",
+  "risks_current",
+  "risks_increased",
+  "risks_current_S2",
+  "buffered"
+ ],
+ "current_sha256": "7706aa26e65ce8498f30d896180914a57c7f9710373347331cbd93cd9fb1026a",
+ "differences": [],
+ "falsifiers": {
+  "f1_every_cell_ran_under_both_trees": {
+   "computed_from": {
+    "cells": 21,
+    "errors": []
+   },
+   "passed": true
+  },
+  "f2_no_moment_differs": {
+   "computed_from": {
+    "differences": [],
+    "n_differences": 0,
+    "tolerance": 0.0
+   },
+   "passed": true
+  },
+  "f3_the_two_trees_are_actually_different_files": {
+   "computed_from": {
+    "current": "7706aa26e65ce8498f30d896180914a57c7f9710373347331cbd93cd9fb1026a",
+    "pinned": "d8fd93475b3904bcc48206b803cc842c5f2ad05f9c97a775e4eedf5c5ca8401a"
+   },
+   "passed": true,
+   "why_this_can_fail": "comparing a tree with itself reports perfect agreement"
+  },
+  "f4_the_comparator_can_see_a_difference": {
+   "computed_from": {
+    "control": "shifts 1 vs 3 on the current tree",
+    "differs": true
+   },
+   "passed": true,
+   "why_this_can_fail": "a harness that runs nothing agrees with everything"
+  }
+ },
+ "horizon": 4368.0,
+ "n_cells": 21,
+ "n_moments_compared": 126,
+ "pinned_commit": "5cb8fb82e9d05f35b1d2673fd546e188667616e8",
+ "pinned_sha256": "d8fd93475b3904bcc48206b803cc842c5f2ad05f9c97a775e4eedf5c5ca8401a",
+ "schema_version": "source_pin_inertness_v1",
+ "scope": "provenance check over DEFAULT-path behaviour; it does not certify a gated feature switched ON, only that leaving it at its default reproduces the attested tree",
+ "seeds": [
+  8600001,
+  8600002,
+  8600003
+ ],
+ "source": "supply_chain/supply_chain.py",
+ "tolerance": 0.0
+}

@@ -377,6 +377,20 @@ IMMUTABLE_CONTRACT_FIELDS = {
     # other risk-configuration fields rather than in the Markov key.
     "risk_occurrence_family_by_id",
     "risk_attribution_source",
+    # Added 2026-08-08 with the features that introduced them. Each is a scalar or a string bound
+    # once in __init__ and never rebound -- verified by walking the class AST for assignments,
+    # augmented assignments and in-place method calls outside __init__ -- so none can distinguish
+    # two states WITHIN a run, which is the only thing the Markov key has to separate. Their
+    # mutated siblings go to INERT_FROZEN_FIELDS instead, where they are folded into the key.
+    "cssu_min_dwell_days",
+    "cssu_switch_cost_rations",
+    "demand_forecast_visibility",
+    "demand_process",
+    "expedite_budget_hours",
+    "expedite_charge_hours",
+    "expedite_reduction_hours",
+    "loc_topology_mode",
+    "strategic_buffer_release_mode",
     "risk_event_tape",
     "enabled_risks",
     "risk_overrides",
@@ -497,6 +511,26 @@ INERT_FROZEN_FIELDS = {
     # counters above, and classified with them so they are folded into the key conservatively.
     "cssu_forfeited_epochs",
     "cssu_forfeited_rations",
+    # Added 2026-08-08. Every one of these is either mutated after __init__ or is an OBJECT whose
+    # internal state changes without the attribute being rebound -- a ledger that admits, a graph
+    # that loses arcs, a seasonal engine carrying its own phase. An AST scan for rebinding alone
+    # would have called the second group immutable, which is why the object cases are listed here
+    # rather than beside the scalars: being unable to prove a field cannot separate two states is
+    # a reason to KEEP it in the key, never to drop it.
+    "_cssu_capacity_ledger",
+    "_cssu_last_switch_at",
+    "_pending_expeditions",
+    "cssu_blocked_by_dwell_count",
+    "cssu_switch_cost_paid",
+    "cssu_switch_cost_unpaid",
+    "cssu_switch_count",
+    "demand_seasonal",
+    "expedite_budget_remaining",
+    "expedite_events",
+    "loc_arc_down_events",
+    "loc_arcs_down",
+    "loc_graph",
+    "strategic_buffer_released_units",
     "cssu_action_events",
     "cssu_demand_events",
     "cssu_delivery_events",
