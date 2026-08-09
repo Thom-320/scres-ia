@@ -442,6 +442,12 @@ IMMUTABLE_CONTRACT_FIELDS = {
     # the other destination, so it is contract rather than state: it cannot distinguish two
     # states WITHIN a run, and across runs the contract is bound separately.
     "cssu_reallocate_unused",
+    # Added 2026-08-08 with the G3a reconstruction. Both are bound once in __init__
+    # and never rebound: the pooling flag and the weekly A/B destination schedule are
+    # the CONFIGURATION of the claimant mechanism, not its state, so neither can
+    # separate two states within a run.
+    "cssu_global_pool",
+    "cssu_destination_weight_schedule",
     "op8_dispatch_mode",
     "op8_convoy_capacity",
     "op8_convoy_outbound_hours",

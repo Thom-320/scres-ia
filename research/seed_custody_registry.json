@@ -577,9 +577,21 @@
     {
       "end": 8701060,
       "id": "g3a_recurrent_risk_boundary_external_package",
-      "lifecycle": "consumed by a campaign whose runner, contract and raw results were deleted before they were pushed -- the manifest itself records g3a_code_and_raw_results_in_remote_head: false -- so the seeds are spent and there is nothing to audit. A successor must use a different block.",
+      "lifecycle": "consumed by a campaign whose runner, contract and raw results were deleted before they were pushed -- the manifest itself records g3a_code_and_raw_results_in_remote_head: false -- so the seeds are spent and there is nothing to audit. A successor must use a different block. Now also re-used by two later development artifacts, recorded above: reuse of a spent block is legitimate for development and can never produce a confirmation.",
       "purpose": "G3a recurrent-risk boundary map, 18,360 episodes, described in When_Does_Learning_Add_Resilience_CIE_Development_Manuscript_v1_1. Registered so the block cannot be handed out again as virgin.",
       "registered_by": "manual reconciliation 2026-08-08 against the external package",
+      "reused_by": [
+        {
+          "artifact": "results/program_v/prelearner_gate_v1/result.json",
+          "note": "Program V re-uses this spent block, 30 selection / 30 evaluation. Declared in its own preregistration, so this is a development gate and its evaluation half is NOT fresh: no confirmatory grade can come from it.",
+          "role": "BURNED_PRELEARNER_MECHANISM_GATE"
+        },
+        {
+          "artifact": "results/g3a_forensic_reconstruction_v1/",
+          "note": "forensic replay of the lost campaign on the same spent seeds",
+          "role": "FORENSIC_DEVELOPMENT_REPLAY"
+        }
+      ],
       "source": "Garrido_CIE_development_package_v1_1 (MANIFEST_Garrido_CIE_v1_1.json, 2026-08-08)",
       "start": 8701001,
       "status": "ATTEMPTED_NO_SEALED_ARTIFACT"
