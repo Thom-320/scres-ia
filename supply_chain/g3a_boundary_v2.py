@@ -27,6 +27,10 @@ REGIMES = ("A_PRESSURE", "NEUTRAL", "B_PRESSURE")
 SELF_TRANSITION = 0.78
 PRESSURED_SHARE = 0.75
 WARNING_ACCURACY = 0.72
+#: The belief arms' OWN transition model. Deliberately NOT `SELF_TRANSITION`: a
+#: deployable controller does not know the matrix that generated its cell, and reading
+#: it is the leak the package's internal audit found in its own first analysis.
+BELIEF_COMMON_SELF_TRANSITION = 0.70
 WEEKS = 16
 HOURS_PER_WEEK = 168.0
 
@@ -160,8 +164,8 @@ class Controller:
             # ONE common transition model in every cell -- never the cell's generating matrix,
             # which is the leak the package's internal audit found in its own first analysis.
             belief = np.array([1 / 3, 1 / 3, 1 / 3])
-            common = np.full((3, 3), (1 - 0.7) / 2)
-            np.fill_diagonal(common, 0.7)
+            common = np.full((3, 3), (1 - BELIEF_COMMON_SELF_TRANSITION) / 2)
+            np.fill_diagonal(common, BELIEF_COMMON_SELF_TRANSITION)
             out = []
             for week in range(WEEKS):
                 like = np.array([WARNING_ACCURACY if r == warn[week]

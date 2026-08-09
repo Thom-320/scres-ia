@@ -23,7 +23,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from supply_chain.arm_runner import seal_and_write                              # noqa: E402
 from supply_chain import falsifiers as F                                        # noqa: E402
 from supply_chain.g3a_boundary_v2 import (                                      # noqa: E402
-    HOURS_PER_WEEK, LIBRARY, WEEKS, Cell, regime_tape, share_schedule,
+    BELIEF_COMMON_SELF_TRANSITION, HOURS_PER_WEEK, LIBRARY, SELF_TRANSITION, WEEKS, Cell,
+    regime_tape, share_schedule,
     warning_tape, worst_claimant_late_exposure_service)
 from supply_chain.seed_custody import custody_falsifier, module_manifest        # noqa: E402
 from supply_chain.supply_chain import MFSCSimulation                            # noqa: E402
@@ -84,10 +85,37 @@ def play(cell: Cell, controller, seed: int) -> dict:
             sim.cssu_allocation_a = float(np.clip(shares[week], 0.05, 0.95))
         sim.env.run(until=min((week + 1) * HOURS_PER_WEEK, sim.horizon))
     service = worst_claimant_late_exposure_service(sim)
+    ledger = sim.flow_ledger()
+    scale = max(abs(float(ledger.get("raw_sources", 0.0))),
+                abs(float(ledger.get("ration_sources", 0.0))), 1.0)
     return {"worst": service["worst"], "A": service["A"], "B": service["B"],
-            "forfeited": float(getattr(sim, "cssu_forfeited_rations", 0.0)),
+            # `forfeited` is read with a hard failure rather than a default, because
+            # `getattr(..., 0.0)` made f9 pass on a MISSING attribute -- a falsifier that cannot
+            # fail, which is the defect this project keeps writing tests against.
+            "forfeited": float(sim.cssu_forfeited_rations),
+            "mass_residual_rel": max(abs(float(ledger["raw_residual"])),
+                                     abs(float(ledger["ration_residual"]))) / scale,
             "orders": len([o for o in sim.orders if o.cssu_destination in ("A", "B")]),
             "switches": int(len({round(s, 4) for s in shares}) - 1)}
+
+
+def _belief_probe() -> dict:
+    """Isolate the MODEL from the SIGNAL.
+
+    A first version of this compared the belief arm's actions across cells and found two variants,
+    which proves nothing: the cells generate different warnings, so different actions are exactly
+    what a correct controller produces. The question is whether the arm's own transition model
+    depends on the cell. So: hand ONE tape to the arm under two different cells and require
+    identical output, and require the arm's self-transition to differ from the generating one.
+    """
+    belief = next(c for c in LIBRARY if c.kind == "belief")
+    tape = build_tape(SELECT[0], CELLS[0])
+    same_tape_variants = len({tuple(round(x, 12) for x in belief.shares(tape)) for _ in CELLS})
+    return {"same_tape_variants": same_tape_variants,
+            "belief_self_transition": BELIEF_COMMON_SELF_TRANSITION,
+            "generating_self_transition": SELF_TRANSITION,
+            "cell_independent": same_tape_variants == 1
+            and abs(BELIEF_COMMON_SELF_TRANSITION - SELF_TRANSITION) > 1e-12}
 
 
 def run_cell(cell: Cell) -> dict:
@@ -101,6 +129,10 @@ def run_cell(cell: Cell) -> dict:
             "held": [float(r["worst"]) for r in held],
             "held_mean": float(np.mean([r["worst"] for r in held])),
             "forfeited": float(np.mean([r["forfeited"] for r in held])),
+            "mass_residual_rel": float(max(r["mass_residual_rel"] for r in held)),
+            # Per-seed selection outcomes, not just their mean: without them the selection cannot
+            # be re-derived from the artifact and "chosen on train" is unauditable.
+            "select": [float(v) for v in sel],
         }
     deployable = {k: v for k, v in rows.items()
                   if not v["privileged"] and not k.startswith("placebo")}
@@ -171,10 +203,30 @@ def main() -> int:
             worst_gp["h_obs"]["lcb95"], SESOI,
             "if pooling ALSO shows headroom, the proposed causal mechanism -- that the premium is "
             "the price of idle capacity -- is false"),
-        "f9_forfeiture_is_measured": F.ge(
-            float(best_hq["adaptive_forfeited"]), 0.0,
-            "without forfeiture on the page, a premium for not wasting the truck reads as "
-            "adaptation"),
+        # f9 used to ask `forfeited >= 0`, which is true of every number a counter can hold and
+        # also true when the attribute is missing. The real content is that forfeiture is what
+        # SEPARATES the contracts: positive under a hard quota, exactly zero when work is
+        # conserved. That can fail.
+        "f9_forfeiture_separates_the_contracts": F.gt(
+            float(best_hq["adaptive_forfeited"])
+            - max(float(v["adaptive_forfeited"]) for k, v in cells.items()
+                  if not k.endswith("hard_quota")),
+            0.0,
+            "if a work-conserving contract forfeits as much as a hard quota, the idle-capacity "
+            "mechanism this whole map rests on is not there"),
+        "f3_mass_conserves": F.lt(
+            max(v["rows"][c]["mass_residual_rel"] for v in cells.values() for c in v["rows"]),
+            1e-6,
+            "the release path retracted this morning destroyed stock silently; a relative flow "
+            "residual is the check that would have caught it"),
+        "f5_belief_uses_one_common_model": F.check(
+            bool(_belief_probe()["cell_independent"]),
+            "using the cell's generating transition matrix is the leak the package's own internal "
+            "audit found in its first analysis; a belief arm that reads it is scoring against a "
+            "world it was told the answer to",
+            computed_from={"same_tape_variants": _belief_probe()["same_tape_variants"],
+                           "belief_self_transition": BELIEF_COMMON_SELF_TRANSITION,
+                           "generating_self_transition": SELF_TRANSITION}),
     }
     checks["d1_endpoint_is_post_hoc"] = F.disclosure(
         "worst_claimant_late_exposure_service_v1 was defined after the 54 h vs 48 h timing "
