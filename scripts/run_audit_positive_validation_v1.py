@@ -30,15 +30,18 @@ from supply_chain.contention_bench_v1 import (                                  
     BenchSpec, belief_mpc_policy, clairvoyant_actions, draw_tape, fixed_policy,
     history_features, oracle_model_mpc_policy, serve, signal_threshold_policy)
 
-OUT = Path("results/audit_positive_validation/result.json")
+OUT = Path("results/audit_positive_validation/result.powered.json")
 CONTRACT = Path("docs/PREREGISTRO_VALIDACION_POSITIVA_AUDIT_2026-08-08.md")
 SESOI = 0.01
 HEADROOM_BAR = 0.02
 GRID = np.linspace(0.0, 1.0, 21)
 WINDOW = 4
 
-TRAIN_SEEDS = list(range(9100001, 9100061))
-TEST_SEEDS = list(range(9100061, 9100121))
+# Powered per docs/ENMIENDA_POTENCIA_VALIDACION_POSITIVA_2026-08-08.md: resolution
+# SESOI/10, which needs n >= 331 at the measured spread. Fresh, disjoint seeds; the
+# 9100001-9100120 block is consumed and its artifact retained.
+TRAIN_SEEDS = list(range(9100121, 9100461))
+TEST_SEEDS = list(range(9100461, 9100801))
 
 CELLS = {
     "null": BenchSpec(alpha=1.0, rho=0.90, min_dwell=4, signal_accuracy=0.85, label="null"),
