@@ -30,6 +30,7 @@ from .cssu_allocation import (
     SERVICE_RULES,
     allocate_shared_capacity,
     stable_cssu_destination,
+    stable_cssu_destination_weighted,
     validate_allocation_a,
 )
 
@@ -294,6 +295,8 @@ class MFSCSimulation:
         # pool effectively fungible and the share nearly moot. False makes the shares hard.
         # See `cssu_allocation.allocate_shared_capacity` for why this is the mechanism knob.
         cssu_reallocate_unused: bool = True,
+        cssu_global_pool: bool = False,
+        cssu_destination_weight_schedule: Optional[list[float]] = None,
         loc_topology_mode: str = "serial_v1",
         cssu_storage_capacity: Mapping[str, float] | None = None,
         cssu_min_dwell_days: float = 1.0,
@@ -506,6 +509,21 @@ class MFSCSimulation:
             None if cssu_daily_capacity is None else float(cssu_daily_capacity)
         )
         self.cssu_reallocate_unused = bool(cssu_reallocate_unused)
+        # G3a v2, OUR declared extension, both inert by default.
+        #
+        # `cssu_global_pool` serves ONE queue by age across both claimants, so the allocation
+        # action cannot change anything -- the causal null the boundary map needs, invariant by
+        # construction rather than by measurement.
+        #
+        # `cssu_destination_weight_schedule` is a per-week share of demand routed to A. It is
+        # applied through the event-keyed helper, which transforms a hash of (seed, order) and
+        # therefore consumes NO simulator RNG: the same tape keeps the same risks, the same
+        # demand magnitudes and the same draw order whichever schedule is in force. That is what
+        # makes the cells comparable at all.
+        self.cssu_global_pool = bool(cssu_global_pool)
+        self.cssu_destination_weight_schedule = (
+            None if cssu_destination_weight_schedule is None
+            else [float(w) for w in cssu_destination_weight_schedule])
         if float(cssu_min_dwell_days) < 1.0:
             raise ValueError('cssu_min_dwell_days must be >= 1.0 (1 = the shipped, inert value)')
         if float(cssu_switch_cost_rations) < 0.0:
@@ -5291,9 +5309,20 @@ class MFSCSimulation:
             self.cssu_allocation_moot_epochs += 1
 
         dispatched_any = False
-        for cssu in ("A", "B"):
-            budget = float(budgets[cssu])
-            for order in queues[cssu]:
+        # GLOBAL FIFO POOL: one queue over both claimants, served oldest-first against ONE shared
+        # budget, with the allocation share never consulted. It reuses the delivery body below
+        # rather than duplicating it -- two copies of a dispatch path are how a null quietly stops
+        # matching the arm it is the null for. Invariance to the action is then true by
+        # construction, and the falsifier can only fail if the code stops matching this sentence.
+        if self.cssu_global_pool:
+            groups = [(None, sorted(queues["A"] + queues["B"], key=self._cssu_order_key),
+                       float(available))]
+        else:
+            groups = [(c, queues[c], float(budgets[c])) for c in ("A", "B")]
+        for group_cssu, group_orders, group_budget in groups:
+            budget = float(group_budget)
+            for order in group_orders:
+                cssu = group_cssu or str(order.cssu_destination)
                 remaining = float(order.remaining_qty)
                 if budget <= 1e-9:
                     break
@@ -5520,9 +5549,17 @@ class MFSCSimulation:
                 order.cssu_destination = self._contingent_cssu_destination_pending
                 self._contingent_cssu_destination_pending = None
             elif order.cssu_destination is None:
-                order.cssu_destination = stable_cssu_destination(
-                    simulation_seed=int(self.seed or 0), order_id=int(order.j)
-                )
+                schedule = self.cssu_destination_weight_schedule
+                if schedule:
+                    week = int(float(self.env.now) // HOURS_PER_WEEK)
+                    share_a = float(schedule[min(week, len(schedule) - 1)])
+                    order.cssu_destination = stable_cssu_destination_weighted(
+                        simulation_seed=int(self.seed or 0), event_id=int(order.j),
+                        weights={"A": share_a, "B": 1.0 - share_a})
+                else:
+                    order.cssu_destination = stable_cssu_destination(
+                        simulation_seed=int(self.seed or 0), order_id=int(order.j)
+                    )
             if order.cssu_destination not in {"A", "B"}:
                 raise ValueError("split_v1 orders require CSSU destination A or B")
             self.cssu_demanded[order.cssu_destination] += float(order.quantity)

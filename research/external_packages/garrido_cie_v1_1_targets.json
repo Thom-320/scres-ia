@@ -1,0 +1,26 @@
+{
+  "schema_version": "external_package_targets_v1",
+  "package": "Garrido_CIE_development_package_v1_1",
+  "received_at": "2026-08-08",
+  "status": "TARGETS_TO_REPRODUCE_NOT_EVIDENCE",
+  "why_not_evidence": "the package's own manifest records g3a_code_and_raw_results_in_remote_head: false -- the runner, contract and raw results were deleted before they were pushed, so the numbers exist only as prose and cannot be replayed, audited or superseded",
+  "seeds_consumed": {"start": 8701001, "end": 8701060, "registry_status": "ATTEMPTED_NO_SEALED_ARTIFACT"},
+  "declared_results": [
+    {"cell": "persistent_uniform_hard_quota", "estimand": "H_obs", "estimate": 0.0963,
+     "ci95": [0.0682, 0.1245], "classification": "STRUCTURED_SUFFICIENT",
+     "note": "hard quota forfeits spare capacity"},
+    {"cell": "persistent_uniform_spare_reallocation", "estimand": "H_obs", "estimate": 0.00126,
+     "ci95": [-0.00012, 0.00264], "classification": "INELIGIBLE"},
+    {"cell": "persistent_uniform_global_FIFO", "estimand": "H_obs", "estimate": 0.0,
+     "ci95": [0.0, 0.0], "classification": "INELIGIBLE",
+     "note": "allocation action invariant"},
+    {"cell": "irreversible_physical_screen", "estimand": "max_mean_finite_class_hindsight_gap",
+     "estimate": 0.000409, "classification": "INELIGIBLE",
+     "note": "352 schedules; interval crossed zero"}
+  ],
+  "reported_service_levels": {
+    "persistent_uniform_hard_quota": {"best_fixed": 0.8181, "best_structured": 0.9144, "forfeited": 32982},
+    "persistent_uniform_spare_reallocation": {"best_fixed": 0.9565, "best_structured": 0.9577, "forfeited": 0},
+    "persistent_uniform_global_FIFO": {"best_fixed": 0.9571, "best_structured": 0.9571, "forfeited": 0}
+  }
+}
