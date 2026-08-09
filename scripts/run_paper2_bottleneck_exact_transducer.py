@@ -391,6 +391,11 @@ IMMUTABLE_CONTRACT_FIELDS = {
     "expedite_reduction_hours",
     "loc_topology_mode",
     "strategic_buffer_release_mode",
+    # Added 2026-08-08 with the shared budget and shelf life. Both are bound once in
+    # __init__ and never rebound -- they are the CONFIGURATION of the two mechanisms,
+    # not their state -- so neither can separate two states within a run.
+    "strategic_budget_per_period",
+    "strategic_shelf_life_hours",
     "risk_event_tape",
     "enabled_risks",
     "risk_overrides",
@@ -536,6 +541,17 @@ INERT_FROZEN_FIELDS = {
     # the simulator -- the exact sibling of the counter above, and folded into the key with
     # it rather than argued about.
     "strategic_inventory_unit_hours",
+    # The STATE of those two mechanisms, all of it mutated after __init__: the lot
+    # ledger and its period index genuinely gate what happens next, and the three
+    # counters are telemetry. They go together into the bucket that is serialized
+    # INTO the key, because a ledger that decides when stock expires is exactly the
+    # kind of field it would be wrong to guess is inert.
+    "_strategic_lots",
+    "_strategic_period_index",
+    "strategic_budget_spent_this_period",
+    "strategic_budget_binding_periods",
+    "strategic_budget_refused_units",
+    "strategic_expired_units",
     "cssu_action_events",
     "cssu_demand_events",
     "cssu_delivery_events",
