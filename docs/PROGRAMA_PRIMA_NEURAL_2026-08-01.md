@@ -1,5 +1,9 @@
 # Programa de prima neural — estado canónico 2026-08-01
 
+> **Supersedido como estado canónico el 2026-08-09.** Se conserva como historia de decisiones.
+> Program Q ya cerró, Program V fue portado y Program X/O-Scale es el sucesor prospectivo. Véase
+> `docs/AUDITORIA_PRIMA_NEURAL_Y_REAPERTURAS_2026-08-09.md`.
+
 Este documento reemplaza la narrativa anterior de “seguir encendiendo generadores hasta que una
 red gane”. La pregunta vigente es:
 
@@ -75,7 +79,9 @@ falsadores y la custodia. No se interpretan ni combinan.
 Program Q mostró valor state-dependent frente a la frontera completa open-loop y equivalencia
 práctica con la mejor familia estructurada probada. No demostró una prima neural, seguridad por
 peor producto ni superioridad sobre un belief-MPC específico. La formulación autorizada es
-“mejor familia estructurada probada”. Q no es un banco de rescate para WRAP.
+“mejor familia estructurada probada”. Su veredicto compuesto terminal es
+`STOP_Q_NO_REPLICATED_LEARNED_ADAPTATION` por el guardarraíl de peor producto. Q no es un banco de
+rescate para WRAP.
 
 ## G3a: primer screen prospectivo
 

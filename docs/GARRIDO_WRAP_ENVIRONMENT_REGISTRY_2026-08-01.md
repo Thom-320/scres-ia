@@ -1,5 +1,12 @@
 # Registro de entornos Garrido–WRAP — 2026-08-01
 
+> **Enmienda dominante 2026-08-09:** este registro conserva el mapa WRAP de su fecha, pero quedó
+> atrás frente a Q, V, la corrección fuente de Op2 y Program X. Q es terminal: ventaja ReT sobre
+> open-loop, equivalencia frente al mejor clásico y compound STOP. La auditoría vigente es scoped y
+> su registro de artefactos es parcial: `docs/AUDITORIA_PRIMA_NEURAL_Y_REAPERTURAS_2026-08-09.md`.
+> Program X es sólo un diseño candidato, sin seeds; su paridad N=2 está pendiente:
+> `docs/PREREGISTRO_PROGRAM_X_O_SCALE_2026-08-09.md`. No se reescriben aquí los estados históricos.
+
 Este registro evita transferir resultados entre físicas, métricas o contratos que no son el
 mismo experimento. La prima neural sólo es interpretable dentro del entorno que la produjo.
 

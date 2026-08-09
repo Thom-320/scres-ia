@@ -1,0 +1,293 @@
+{
+  "schema_version": "program_x_o_scale_amortized_control_v1",
+  "program_id": "PROGRAM_X_O_SCALE",
+  "status": "CANDIDATE_DESIGN_DIAGNOSTIC_NOT_EXECUTABLE_NO_SEEDS_AUTHORIZED",
+  "design_date": "2026-08-09",
+  "purpose": "Prospectively test whether a neural policy can amortize a structured belief planner in a scaled version of the best-supported observable-feedback mechanism in the repository, but only after physical liveness, observable value and an operationally binding planning cost are established without a learner.",
+  "scientific_scope": {
+    "source_locked_anchor": "Garrido MFSC aggregate totals and resource ledgers; Program O N=2 is an intended executable anchor that remains pending G0 parity.",
+    "current_n2_evidence": "The deterministic design preflight establishes only four weekly actions and 4^8 calendar cardinality at N=2. It does not establish transition, observation, metric, comparator or outcome parity with Program O/Q.",
+    "researcher_extension": "N nonfungible products sharing a fixed batch bottleneck under a persistent, partially observed demand-mix regime.",
+    "attribution_rule": "Every N>2 product, product-specific BOM or yield, hidden regime, warning channel and scaled action is a declared researcher extension, not a Garrido parameter.",
+    "forbidden_interpretation": "A positive result is not evidence that the published MFSC itself requires neural control. Calendar cardinality is not evidence that belief-MPC is operationally expensive."
+  },
+  "mechanism": {
+    "product_scales": [2, 4, 8],
+    "decision_weeks": 8,
+    "batches_per_week": 3,
+    "batch_size_rations": 5000,
+    "action_definition": "A weak composition of exactly three batches among N nonfungible products.",
+    "action_count_formula": "C(N + B - 1, B)",
+    "action_decoder": {
+      "output_semantics": "integer weak composition over N products",
+      "implementation_class": "three sequential product allocations or an exact constrained integer decoder",
+      "nonnegative_integer": true,
+      "sum_equals_batches_per_week": true,
+      "forbidden": "Independent unconstrained product outputs, clipping or renormalization that can change the three-batch entitlement."
+    },
+    "expected_action_counts": {
+      "2": 4,
+      "4": 20,
+      "8": 120
+    },
+    "expected_open_loop_calendar_counts": {
+      "2": 65536,
+      "4": 25600000000,
+      "8": 42998169600000000
+    },
+    "resource_invariants": [
+      "same realized aggregate demand times and quantities for all paired policies within a tape",
+      "same total expected demand and same initial aggregate physical endowment at every product scale",
+      "same three weekly batch rights and same charged production capacity for every policy",
+      "same scheduled transport rights, payload capacity and charged vehicle-hour endowment for every policy",
+      "no action creates inventory or deletes backlog",
+      "aggregate and per-product conservation close"
+    ],
+    "endogenous_resource_outcomes": [
+      "actual loaded departures",
+      "actual payload",
+      "actual vehicle-hours",
+      "actual line and transport utilization"
+    ],
+    "resource_interpretation": "Entitlements and capacities are policy-invariant. Actual utilization is an outcome and must not be forced equal."
+  },
+  "demand_and_information": {
+    "primary_factorial": {
+      "regime_persistence_rho": [0.75, 0.90],
+      "dominant_product_share_s": [0.75, 0.90],
+      "warning_accuracy_q": [0.70, 0.85],
+      "rule": "The executable amendment must state whether every Cartesian-product cell is primary and how multiplicity is controlled before opening a tape."
+    },
+    "latent_regime": {
+      "state_space": "Z_t in {1,...,N}, the dominant product",
+      "initial_prior": "P(Z_0=i)=1/N for every i",
+      "initialization_timing": "Draw Z_0 from the uniform prior before the first warning; there is no unobserved pre-t0 transition.",
+      "transition_kernel": {
+        "same_state": "P(Z_{t+1}=i | Z_t=i)=rho",
+        "different_state": "P(Z_{t+1}=j | Z_t=i)=(1-rho)/(N-1) for j!=i"
+      },
+      "demand_kernel": "Conditional on Z_t=i, product i receives share s and every j!=i receives share (1-s)/(N-1); aggregate order times and quantities are unchanged by product labels."
+    },
+    "warning_kernel": {
+      "signal_space": "W_t in {1,...,N}",
+      "correct_label": "P(W_t=i | Z_t=i)=q",
+      "incorrect_label": "P(W_t=j | Z_t=i)=(1-q)/(N-1) for j!=i",
+      "independence_null": "At q=1/N every row is uniform, so W_t is independent of Z_t. Accuracy alone is not accepted as proof of independence."
+    },
+    "causal_event_order": [
+      "clone the predecision physical state and RNG state for all paired arms",
+      "at t=0 draw Z_0 from the prior; otherwise enter with the previously transitioned Z_t",
+      "emit the current warning",
+      "construct a strictly half-open observation with no same-time demand outcome",
+      "choose and lock the three-batch allocation",
+      "realize current demand and physical events",
+      "update the posterior from realized demand and transition to Z_{t+1} for the next decision"
+    ],
+    "iid_regime_null": {
+      "definition": "P(Z_{t+1}=j | Z_t=i)=1/N for all i,j",
+      "equivalent_symmetric_parameter": "rho=1/N",
+      "expected_result": "Retained regime history cannot beat reset beyond a prospectively frozen Monte Carlo tolerance when physical state and current warning are matched."
+    },
+    "n2_program_o_anchor": {
+      "status": "PENDING_EXECUTABLE_G0_PARITY",
+      "warning_accuracy": "q=1/N",
+      "warning_consumed_by_controller": false,
+      "required_checks": [
+        "event-by-event transition parity",
+        "strictly half-open observation parity",
+        "metric-vector parity",
+        "complete 65,536-calendar frontier parity",
+        "classical comparator identity and outcome parity"
+      ]
+    },
+    "primary_markov_scope": "For the amortization branch, planner and learner receive the same decision-sufficient physical ledger, public phase and explicit posterior. If an age-resolved backlog or another decision-relevant ledger field is hidden or compressed, that is a separately declared POMDP arm.",
+    "retained_state": "Posterior over the dominant-product regime carried across weeks and, only in the H4 branch, across disruption cycles.",
+    "h4_identification": "At every cycle boundary, retained and reset/delayed/shuffled arms start from byte-identical physical inventory, backlog, age ledger, pipeline and RNG state. Only the knowledge state is intervened on.",
+    "forbidden_observations": [
+      "current latent regime",
+      "future demand or processing-time draws",
+      "future warning",
+      "seed or tape identifier",
+      "oracle action or outcome"
+    ],
+    "mandatory_placebos": [
+      "belief reset",
+      "one-period delayed history",
+      "within-tape shuffled history",
+      "warning-shuffled observation preserving its marginal",
+      "regime-IID null"
+    ],
+    "null_cells": [
+      "fungible products with identical costs, yields and lead times, zero setup and full substitution: exact H_PI=H_obs=0 on the aggregate physical endpoint",
+      "IID regime: retained history must not beat reset beyond a prospectively frozen Monte Carlo tolerance",
+      "symmetric warning at q=1/N: warning-aware must not beat warning-blind beyond that tolerance"
+    ],
+    "action_liveness_scope": "Every action must be live in the primary nonfungible cells. Action collapse is required, not a failure, in the fungible null.",
+    "secondary_ood_only": [
+      "seasonal total demand",
+      "stochastic processing times",
+      "product-specific yield shocks",
+      "unseen N"
+    ],
+    "confounding_rule": "Secondary OOD factors remain off in the primary mechanism test and enter only after the relevant branch-specific gates close. Unseen topology is not an OOD claim until a real graph/BOM extension is separately frozen."
+  },
+  "comparator_ladder": [
+    "all constants and all 4^8 open-loop calendars at the executable N=2 anchor",
+    "bounded or exact open-loop search at N=4 and N=8, with optimization uncertainty propagated into H_obs",
+    "product-specific base-stock and (s,S)",
+    "max-pressure with hysteresis",
+    "robust stationary allocation",
+    "compatibility-aware min-cost flow",
+    "rolling deterministic MILP",
+    "scenario MPC",
+    "belief DP where exact",
+    "high-budget belief-MPC teacher",
+    "budget-matched structured planner under the operational SLA"
+  ],
+  "planner_roles": {
+    "teacher_high_budget": "Best frozen same-information planner run to its preregistered convergence/gap rule. It supplies labels and the quality reference; its natural online cost is measured, not artificially capped to the neural budget.",
+    "operational_budget_matched": "Best structured controller under the same predeclared deployment SLA. It is a separate comparator and cannot replace the high-budget teacher in the noninferiority test.",
+    "optimization_uncertainty": "Open-loop and structured-family selection, family reselection and any certified optimization gap must be propagated through inference."
+  },
+  "learner_ladder": {
+    "stage_1": "Distil the frozen high-budget belief-MPC action/value map by behavioral cloning for an amortization claim only.",
+    "stage_2": "Correct covariate shift with DAgger on burned development tapes for an amortization claim only.",
+    "stage_3": "Only after the quality branch demonstrates same-information observable residual above a frozen SESOI may bounded residual RL be considered.",
+    "imitation_claim_boundary": "Behavioral cloning and DAgger cannot establish quality superiority over their teacher; they can establish fidelity, generalization and amortization.",
+    "primary_architecture": {
+      "encoder": "DeepSets",
+      "policy_symmetry": "permutation-equivariant over product labels",
+      "value_symmetry": "permutation-invariant over product labels",
+      "accepts_variable_n": true,
+      "decoder": "mechanism.action_decoder"
+    },
+    "fixed_n_baseline": "Parameter- and training-budget-matched MLP fit separately at each N.",
+    "recurrent_candidate": "Small GRU; LSTM only as a sensitivity analysis.",
+    "recurrent_gate": "A GRU is prohibited unless a model-independent conditional-history test shows that causal raw history changes optimal action or predictive Bayes risk beyond the current decision-sufficient snapshot plus explicit posterior, and the effect beats reset, delayed and shuffled controls out of sample. Under the exact known HMM, the posterior is the sufficient-statistic null.",
+    "residual_rl_constraint": "Any residual action is decoded through the same exact three-batch constraint and compared with zero-residual, linear, tree and other simple residual baselines.",
+    "gnn_gate": "A GNN is prohibited until the action-relevant input contains a real variable graph/BOM topology rather than a relabeled set.",
+    "offline_rl_role": "Not primary while a simulator and online teacher queries are available; narrow logged support cannot substitute for the structured ladder.",
+    "kan_role": "Architecture sidecar only, never a promotion path without a separate prospective contract.",
+    "ppo_end_to_end_first": false,
+    "neural_training_authorized": false
+  },
+  "metric_panel": {
+    "primary_physical_endpoint": {
+      "id": "service_resilience_auc_normalized",
+      "formula": "V_service = 1 - sum_k[delta_t_k * (1-service_level_k)] / horizon",
+      "service_level_domain": "service_level_k is frozen from the causal physical ledger in [0,1] before any tape opens",
+      "range": [0.0, 1.0],
+      "direction": "higher_is_better",
+      "normalization": "native epoch widths sum to the fixed campaign horizon"
+    },
+    "secondary_status": "PRESPECIFIED_REPORT_ONLY_CANNOT_PROMOTE_RESCUE_OR_BLOCK_THE_PRIMARY_PHYSICAL_CLAIM",
+    "source_fidelity_endpoints": [
+      "ret_excel_request_snapshot_v2",
+      "ret_excel_full_ledger"
+    ],
+    "second_resilience_construct": [
+      "cobb_douglas_source_exponents_fixed_reference_set",
+      "cobb_douglas_o_scale_recalibrated_sensitivity"
+    ],
+    "secondary_freeze_requirements": [
+      "exact MFSC-to-Cobb-Douglas component map",
+      "positive log-domain floors",
+      "comparison-set-independent frozen cost reference",
+      "source-exponent result separated from O-Scale recalibration",
+      "multiplicity family for every inferential secondary contrast"
+    ],
+    "interpretation": {
+      "ret_excel": "Report the exact workbook-compatible value and flags for values outside [0,1]; never clip silently and never use it as the sole dense reward.",
+      "cobb_douglas": "Report separately with a comparison-set-independent cost reference. Published exponents are a source sensitivity; any O-Scale recalibration is an explicitly new metric.",
+      "selection": "Never choose whichever of ReT or Cobb-Douglas favors the learner after results. Disagreement is reported, not adjudicated post hoc."
+    },
+    "mandatory_outcomes": [
+      "mean and worst-product fill with a frozen zero-demand-product convention",
+      "lost and unresolved orders overall and by product",
+      "service-level variance",
+      "recovery time after each shock",
+      "adaptation slope across disruption cycles",
+      "backlog age and normalized service-shortfall AUC",
+      "cost level and volatility",
+      "aggregate and per-product conservation",
+      "online p50/p95 latency, DES calls and peak memory"
+    ]
+  },
+  "estimands": {
+    "value_convention": "Every V uses the [0,1] primary physical endpoint and higher is better.",
+    "H_PI": "V(privileged state planner) - V(best open-loop), including open-loop optimization uncertainty",
+    "H_obs": "V(best nonanticipative structured controller) - V(best open-loop), including family selection and optimization uncertainty",
+    "H_ret": "V(retained belief controller) - V(reset controller) with byte-identical physical/RNG state",
+    "Delta_N_quality": "V(neural controller) - V(high-budget best structured controller), paired on untouched tapes",
+    "Delta_N_amortization": "Natural online p95 latency and lifecycle break-even reduction conditional on noninferiority to the high-budget teacher",
+    "Delta_N_generalization": "Frozen neural minus the prospectively designated frozen or reoptimized structured reference on each explicitly frozen OOD family; the comparator treatment must be stated before training"
+  },
+  "prospective_thresholds": {
+    "status": "MUST_BE_DOMAIN_JUSTIFIED_POWERED_AND_VERSION_FROZEN_BEFORE_ANY_STOCHASTIC_TAPE",
+    "quality_sesoi": null,
+    "noninferiority_margin": null,
+    "operational_sla_seconds": null,
+    "planner_break_even_query_count": null,
+    "latency_ratio_minimum": 10.0,
+    "des_calls_role": "reported diagnostic; cannot substitute for the absolute SLA and p95 latency gate"
+  },
+  "claim_tiers": {
+    "T0_feedback_value": "Simultaneous LCB95(H_obs)>0 under the frozen multiplicity family. This may be satisfied by a classical policy and is not a neural premium.",
+    "T1_neural_quality": "Statistical superiority requires simultaneous LCB95(Delta_N_quality)>0; material quality additionally requires LCB95 at or above the prospectively frozen quality SESOI. Imitation alone is ineligible for this tier. ReT and Cobb-Douglas remain frozen secondary reports.",
+    "T2_neural_amortization": "Only after the amortization branch proves the high-budget planner breaches an absolute operational SLA or a binding repeated-query break-even: simultaneous LCB95(Delta_N_quality) must be at least minus the frozen noninferiority margin, neural p95 must satisfy the SLA and be at least 10x lower on fixed hardware at both N=4 and N=8. DES-call reduction is reported but cannot replace either latency condition.",
+    "T3_neural_generalization": "Quality and amortization generalization are adjudicated separately on explicitly frozen OOD families without neural retraining; no generic unseen-topology claim is allowed in this version.",
+    "deployment_safety": "Worst-product and tail guardrails are a separate deployability adjudication. Failure qualifies or blocks deployment but does not erase a correctly estimated feedback effect.",
+    "offline_cost_disclosure": "Training, expert-data generation, planner compilation and belief-update costs are reported and included in break-even analysis."
+  },
+  "shared_prelearner_gates_in_order": [
+    "G0: executable N=2 event, observation, metric, complete-frontier and classical-outcome parity with Program O/Q in the warning-disabled anchor",
+    "G1: exact mass, product-label and policy-invariant entitlement/capacity conservation; endogenous utilization reported separately",
+    "G2: every action is live in primary nonfungible cells and the scoped fungible/IID/warning nulls behave as preregistered",
+    "G3: material privileged information value H_PI under a prospectively frozen SESOI",
+    "G4: material observable feedback value H_obs after propagating comparator and optimization uncertainty",
+    "G5: the complete structured ladder and replacement tests match information, resources, cadence and horizon"
+  ],
+  "authorization_branches": {
+    "amortization": [
+      "A1: G0-G5 pass; H_ret is not required",
+      "A2: high-budget planner breaches the frozen absolute SLA or binding lifecycle break-even at N=4 and N=8",
+      "A3: noninferiority margin, power, hardware, warm-up, caching and latency protocol are frozen",
+      "A4: authorizes behavioral cloning/DAgger only"
+    ],
+    "recurrent_representation": [
+      "R1: model-independent conditional-history value beyond current sufficient snapshot plus explicit belief",
+      "R2: retained beats reset, delayed and shuffled out of sample while the exact-belief sufficient-statistic null does not spuriously pass",
+      "R3: authorizes one small GRU primary candidate; LSTM remains sensitivity only"
+    ],
+    "quality_residual_rl": [
+      "Q1: same-information observable headroom over the high-budget best structured controller exceeds the frozen quality SESOI",
+      "Q2: bounded residual action, reward, simple residual baselines and total compute accounting are frozen",
+      "Q3: authorizes residual RL only; failure does not block the amortization branch"
+    ]
+  },
+  "execution_policy": {
+    "seed_registry_state": "BASELINE_INVENTORY_INCOMPLETE_NO_NEW_SEEDS_AUTHORIZED",
+    "fresh_seeds_opened": false,
+    "seed_ranges_assigned": false,
+    "scientific_execution_authorized": false,
+    "allowed_now": [
+      "candidate contract and documentation",
+      "deterministic action-space cardinality consistency checks",
+      "runner construction and deterministic synthetic unit tests without opening stochastic tapes"
+    ],
+    "forbidden_now": [
+      "claiming N=2 executable parity from cardinality",
+      "opening development, evaluation or confirmation seeds",
+      "training any neural policy",
+      "reporting a scientific gate as passed"
+    ],
+    "next_authorization": "Complete the seed-custody inventory, obtain PI authorization, version-freeze the executable N=2 parity kernel, exact metric implementations, cell/multiplicity family, SESOI/power, compute/SLA protocol, seed namespace and dependency hashes before opening any stochastic development tape.",
+    "versioning_rule": "This candidate design may change only before seed opening; every material change requires a new version and hashes."
+  },
+  "reopening_policy": {
+    "historical_verdicts_immutable": true,
+    "program_q": "May be extended only as a new fairness-aware or scaled-compute contract; its absent quality premium remains absent.",
+    "program_w": "May not be cited or reopened as the original until its commit and artifacts are recovered; a reconstruction must be labeled forensic.",
+    "program_x": "This is a new prospective mechanism/amortization question, not a post-hoc continuation of a failed seed block."
+  }
+}

@@ -1,0 +1,151 @@
+{
+  "claim_status": "SOURCE_EXPLICIT_PER_RAW_MATERIAL__INDEPENDENTLY_CONFIRMED",
+  "contract_path": "docs/CORRECCION_FUENTE_OP2_190K_2026-08-09.md",
+  "contract_sha256": "8bd8938f04056148cf2555969f9e9f7a7458400edc4e68e83fd3d1097871ee8c",
+  "created_at": "2026-08-09T19:26:03.756228+00:00",
+  "derived": {
+    "mean_s1_demand_components_week": 180000.0,
+    "op2_over_mean_s1_demand": 3.1666666666666665,
+    "op2_per_rm_week": 47500.0,
+    "op2_per_rm_week_over_op3_s3": 1.0106382978723405,
+    "op2_procurement_components_week": 570000.0,
+    "op2_reorder_period_weeks": 4.0,
+    "op3_distribution_components_week_s1": 186000.0,
+    "op3_distribution_components_week_s3": 564000.0,
+    "op3_s1_over_mean_s1_demand": 1.0333333333333334
+  },
+  "falsifier_summary": {
+    "all_passed": true,
+    "disclosures": [
+      "d1_relationship_to_canonical_v1"
+    ],
+    "failed": [],
+    "n_computed": 5,
+    "n_disclosures": 1,
+    "n_failed": 0
+  },
+  "falsifiers": {
+    "d1_relationship_to_canonical_v1": {
+      "computed": false,
+      "disclosure": true,
+      "evidence": {
+        "evidence": {
+          "canonical_v1_d5_status": "MATCHES-PUBLISHED",
+          "canonical_v1_result": "results/procurement_overorder_source/result.json",
+          "companion_audit_addition": "bounded independent checks of the Op2 and Table 6.20 text"
+        },
+        "statement": "This source-only audit is complementary to and independent of canonical v1.  It does not supersede v1, rerun its simulation, or adjudicate its simulation claims."
+      },
+      "passed": null
+    },
+    "f1_operation_2_enumerates_rm1_through_rm12": {
+      "computed": true,
+      "evidence": {
+        "computed_from": {
+          "observed": true,
+          "threshold": true
+        },
+        "why_it_can_fail": "if the operation description did not enumerate rm1 through rm12, the prose could still support a total-across-materials interpretation"
+      },
+      "evidence_class": "DIRECT_TEXTUAL_EVIDENCE",
+      "passed": true,
+      "textual_status_gate": true
+    },
+    "f2_table_6_20_repeats_each_rm_for_all_three_shift_levels": {
+      "computed": true,
+      "evidence": {
+        "computed_from": {
+          "observed": 3,
+          "threshold": 3
+        },
+        "why_it_can_fail": "if Table 6.20 did not explicitly say 'each rm' at S=1, S=2 and S=3, the interpretation would still depend on the operation prose alone"
+      },
+      "evidence_class": "DIRECT_TEXTUAL_EVIDENCE",
+      "passed": true,
+      "textual_status_gate": true
+    },
+    "f3_table_6_20_contains_the_shift_scaled_op3_levels": {
+      "computed": true,
+      "evidence": {
+        "computed_from": {
+          "observed": true,
+          "threshold": true
+        },
+        "why_it_can_fail": "if the table did not show 15,500/31,000/47,000 for Op3, the design inference that Op2 is held at an S=3-sized ceiling would lack its contextual premise; the per-rm textual status is unaffected"
+      },
+      "evidence_class": "DERIVED_CONTEXT__NOT_TEXTUAL_STATUS_GATE",
+      "passed": true,
+      "textual_status_gate": false
+    },
+    "f4_published_op2_exceeds_mean_s1_demand_threefold": {
+      "computed": true,
+      "evidence": {
+        "computed_from": {
+          "observed": 3.1666666666666665,
+          "threshold": 3.0
+        },
+        "why_it_can_fail": "if the derived ratio were below three, the threefold-flow claim would fail; the per-rm textual status is unaffected"
+      },
+      "evidence_class": "DERIVED_ARITHMETIC__NOT_TEXTUAL_STATUS_GATE",
+      "passed": true,
+      "textual_status_gate": false
+    },
+    "f5_op2_weekly_rate_is_close_to_the_published_s3_flow": {
+      "computed": true,
+      "evidence": {
+        "computed_from": {
+          "observed": 0.010638297872340425,
+          "threshold": 0.02
+        },
+        "why_it_can_fail": "if the monthly Op2 rate were not close to the S=3 weekly Op3 rate, the numerical premise for the capacity-ceiling design inference would fail; the per-rm textual status is unaffected"
+      },
+      "evidence_class": "DERIVED_ARITHMETIC__NOT_TEXTUAL_STATUS_GATE",
+      "passed": true,
+      "textual_status_gate": false
+    }
+  },
+  "interpretation": {
+    "design_inference": "Holding Op2 at 47,500 units per raw material per week while Op3 scales from 15,500 to 47,000 is consistent with procurement being sized to the S=3 experiment ceiling; this is an inference, not an author quotation.",
+    "extension_boundary": "Reducing Op2 enough to make supplier yield binding is permissible only as a researcher-declared extension with a measured fidelity price.",
+    "source_fact": "Op2 supplies 190,000 units of every one of the 12 raw materials every 672 hours."
+  },
+  "published_parameters": {
+    "days_per_week": 6,
+    "mean_rations_per_day": 2500.0,
+    "op2_quantity_per_rm_month": 190000.0,
+    "op2_reorder_period_hours": 672.0,
+    "op3_quantity_per_rm_week_s1": 15500.0,
+    "op3_quantity_per_rm_week_s2": 31000.0,
+    "op3_quantity_per_rm_week_s3": 47000.0,
+    "raw_material_count": 12
+  },
+  "reference_path": "results/procurement_overorder_source/result.json",
+  "reference_sha256": "90e427a2f27898b37abca2e416b9d6fb173aaca59344a9de4b699637dd29f69f",
+  "relationship_to_canonical_v1": {
+    "artifact": "results/procurement_overorder_source/result.json",
+    "canonical_v1_d5_status": "MATCHES-PUBLISHED",
+    "does_not_rerun_v1_simulation": true,
+    "does_not_supersede_v1": true,
+    "relationship": "COMPLEMENTARY_INDEPENDENT_SOURCE_ONLY_AUDIT"
+  },
+  "run_role": "DIAGNOSTIC_SOURCE_AUDIT",
+  "schema_version": "procurement_overorder_source_v2",
+  "scope": "DIAGNOSTIC_SOURCE_TEXT_AND_ARITHMETIC_NO_SEEDS_NO_SIMULATION_NO_LEARNER",
+  "self_sha256": "23748e93a62888c8b9a395e1cf51789a9fb14b07ce08773035e50e0d99378521",
+  "source_evidence": {
+    "operation_2_enumerates_rm1_through_rm12": true,
+    "table_6_20_op2_each_rm_occurrences": 3,
+    "table_6_20_op3_shift_levels_present": true,
+    "textual_evidence_all_passed": true,
+    "textual_status_depends_only_on": [
+      "f1_operation_2_enumerates_rm1_through_rm12",
+      "f2_table_6_20_repeats_each_rm_for_all_three_shift_levels"
+    ]
+  },
+  "source_locations": {
+    "capacity_table": "Garrido-Rios thesis, Table 6.20, printed page 108",
+    "operation_2": "Garrido-Rios thesis, printed page 84"
+  },
+  "source_path": "thesis.txt",
+  "source_sha256": "c0b1671cc8548a19e9b19a53c49c02c7bf6c80912b7af0ebb9a42051c72da1c7"
+}
