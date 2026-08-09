@@ -1089,3 +1089,40 @@ y como el stock temprano permanece y se consume normalmente, empezar en la seman
 domina. Para que exista valor de memoria haria falta una razon FISICA para no preposicionar todo al
 principio: presupuesto o capacidad compartida, caducidad, o riesgos localizados que cambien de
 regimen.
+
+---
+
+## Presupuesto compartido y caducidad: los mecanismos muerden y el endpoint NO los ve (2026-08-08)
+
+**Estado: `NO_SEQUENTIAL_HEADROOM_UNDER_BUDGET_AND_EXPIRY`.** Artefacto
+`results/budget_expiry_boundary/result.json`; contrato
+`docs/PREREGISTRO_PRESUPUESTO_COMPARTIDO_Y_CADUCIDAD_2026-08-08.md` + enmienda de la constante de
+presupuesto.
+
+**Las dos razones fisicas que faltaban, anadidas y medidas.** Presupuesto compartido por periodo
+entre op3/op5/op9 (sin arrastre) y caducidad por lotes. Ambas inertes por defecto. La vida util
+**se barre**, no se asume: la tesis dice racion no perecedera a tres anos, y 156 semanas sobre un
+horizonte de 26 es inerte por construccion -- esa es la celda de control fiel.
+
+**Los mecanismos funcionan fisicamente:** `expiry_only` retira **352.352** unidades kit-equivalentes,
+`both` **354.536**, y el presupuesto se activa. El control fiel no caduca nada (f2 PASA) y reproduce
+el resultado de hoy (f1 PASA).
+
+**Y el resultado es que no cambian nada:** hueco clarividente **exactamente 0,000000** en las cuatro
+celdas, **un unico optimo distinto** sobre las 12 tapes de test en cada celda, y la MISMA postura
+fija `[0, 0, 0.5]` con el MISMO `L_test = 0,3051` en las cuatro. Reponer 313.002 o 667.386 unidades
+da el mismo endpoint.
+
+**LIMITACION QUE HAY QUE DECIR, y que limita el negativo.** El endpoint congelado es `L*`, que mide
+retraso y **no ve coste**. Bajo un endpoint ciego al coste, mas buffer nunca perjudica, el optimo es
+maximal-asequible por construccion y no puede existir decision secuencial. El contrato congelo ese
+endpoint, asi que el veredicto es el que dice -- pero **la lectura correcta no es «anadir contencion
+y caducidad no crea headroom»**, sino **«no lo crea cuando el endpoint no cobra por ellas»**.
+
+**Lo que si establece, y es util:** op3/op5 son irrelevantes para el retraso (postura optima 0 en
+ambos), coherente con el hallazgo previo de que la materia prima mueve 4,56M unidades por
+exactamente cero ReT. Solo op9 importa, y a media capacidad.
+
+**Sucesor natural, con la evidencia en contra ya conocida:** endpoint con precio `J(lambda)` que
+incluya unidades repuestas y caducadas. El gate conservativo ya midio esa familia y dio +0,000403.
+No se abre bloque virgen para esto.

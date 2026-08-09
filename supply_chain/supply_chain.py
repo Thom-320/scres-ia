@@ -225,6 +225,8 @@ class MFSCSimulation:
         inventory_replenishment_period: Optional[float] = None,
         inventory_replenishment_lead_time: float = 0.0,
         strategic_buffer_release_mode: str = "none",
+        strategic_budget_per_period: Optional[float] = None,
+        strategic_shelf_life_hours: Optional[float] = None,
         raw_material_flow_mode: str = "kit_equivalent_order_up_to",
         raw_material_order_up_to_multiplier: float = 2.0,
         demand_mean_multiplier: float = 1.0,
@@ -955,6 +957,28 @@ class MFSCSimulation:
         self.strategic_buffer_release_mode = str(strategic_buffer_release_mode)
         self.strategic_buffer_released_units = 0.0
         self.strategic_inventory_unit_hours = 0.0
+        # SHARED BUDGET AND SHELF LIFE. Both OUR declared extensions, both inert by default, and
+        # both here for one measured reason: without them nothing stops the policy prepositioning
+        # everything in week 0, so there is no sequential decision to make and the gate closed at
+        # a clairvoyant gap of 0.0004.
+        #
+        # The budget is shared across op3_rm/op5_rm/op9_rations and does NOT carry over, so
+        # spending on one node precludes another in the same period -- the non-fungible contention
+        # that is the only mechanism in which this project has ever measured material headroom.
+        #
+        # Shelf life is sensitive and is NOT a free parameter: the thesis ration is non-perishable
+        # at three years (Ch. 6), so any short value contradicts the source and must be swept and
+        # priced, never assumed. `None` means inert, which is what the frozen physics gets.
+        self.strategic_budget_per_period = (None if strategic_budget_per_period is None
+                                            else max(0.0, float(strategic_budget_per_period)))
+        self.strategic_shelf_life_hours = (None if strategic_shelf_life_hours is None
+                                           else max(0.0, float(strategic_shelf_life_hours)))
+        self.strategic_budget_spent_this_period = 0.0
+        self._strategic_period_index = 0
+        self.strategic_budget_refused_units = 0.0
+        self.strategic_budget_binding_periods = 0
+        self.strategic_expired_units = 0.0
+        self._strategic_lots: list[tuple[float, str, float]] = []
         self.hours_per_year = resolve_hours_per_year(year_basis)
         downstream_ranges = THESIS_DOWNSTREAM_Q_RANGES[downstream_q_source]
         op9_q = downstream_ranges["op9"]
@@ -1140,16 +1164,22 @@ class MFSCSimulation:
                 self._record_material_availability("raw_material_wdc", op3_rm)
                 self._lineage_put("raw_material_wdc", op3_rm, source_stage="strategic")
                 self.total_strategic_raw_injected += op3_rm
+                if self.strategic_shelf_life_hours is not None:
+                    self._strategic_lots.append((0.0, "op3_rm", op3_rm))
             if op5_rm > 0:
                 self.raw_material_al.put(op5_rm)
                 self._record_material_availability("raw_material_al", op5_rm)
                 self._lineage_put("raw_material_al", op5_rm, source_stage="strategic")
                 self.total_strategic_raw_injected += op5_rm
+                if self.strategic_shelf_life_hours is not None:
+                    self._strategic_lots.append((0.0, "op5_rm", op5_rm))
             if op9_rations > 0:
                 self.rations_sb.put(op9_rations)
                 self._record_material_availability("rations_sb", op9_rations)
                 self._lineage_put("rations_sb", op9_rations, source_stage="strategic")
                 self.total_strategic_rations_injected += op9_rations
+                if self.strategic_shelf_life_hours is not None:
+                    self._strategic_lots.append((0.0, "op9_rations", op9_rations))
         # Cache the original Op5 buffer target as a separate attribute (do not pollute
         # inventory_buffer_targets, which other tests compare as a strict dict).
         # See Table 6.16 (Op5,j) — the agent's a5 multiplier scales this baseline.
@@ -1544,8 +1574,25 @@ class MFSCSimulation:
             container = self.rations_sb
         else:
             return None
+        self._advance_strategic_period()
         shortfall = max(0.0, float(target) - float(container.level))
+        # THE BUDGET BINDS HERE, at the only door strategic units come through, so no other path
+        # can spend around it. Refused units are counted rather than silently clipped: a
+        # constraint that never reports being hit cannot be shown to bind.
+        if shortfall > 0.0 and self.strategic_budget_per_period is not None:
+            per_ration = float(getattr(self, "_raw_units_per_ration", 12.0)) or 12.0
+            unit_cost = (1.0 / per_ration) if key in {"op3_rm", "op5_rm"} else 1.0
+            remaining = max(0.0, self.strategic_budget_per_period
+                            - self.strategic_budget_spent_this_period)
+            affordable = remaining / unit_cost if unit_cost > 0 else shortfall
+            if affordable < shortfall:
+                self.strategic_budget_refused_units += (shortfall - affordable)
+                self.strategic_budget_binding_periods += 1
+                shortfall = max(0.0, affordable)
+            self.strategic_budget_spent_this_period += shortfall * unit_cost
         if shortfall > 0.0:
+            if self.strategic_shelf_life_hours is not None:
+                self._strategic_lots.append((float(self.env.now), key, shortfall))
             if key in {"op3_rm", "op5_rm"}:
                 self.total_strategic_raw_injected += shortfall
             elif key == "op9_rations":
@@ -1581,6 +1628,8 @@ class MFSCSimulation:
                 return
             yield self.env.timeout(period)
             self._accrue_strategic_inventory_time(period)
+            self._expire_strategic_lots()
+            self.strategic_budget_spent_this_period = 0.0
             lead = float(self.inventory_replenishment_lead_time)
             if lead > 0.0:
                 # Refill arrives `lead` hours later, without shifting the period clock.
@@ -1609,6 +1658,51 @@ class MFSCSimulation:
                 held += float(container.level)
         self.strategic_inventory_unit_hours += held * float(elapsed)
         return self.strategic_inventory_unit_hours
+
+    def _advance_strategic_period(self) -> None:
+        """Roll the budget period and age the lots, driven by simulation time rather than by a
+        loop that some environments never start."""
+        period = float(self.inventory_replenishment_period or 0.0)
+        if period <= 0.0:
+            return
+        index = int(float(self.env.now) // period)
+        if index != self._strategic_period_index:
+            self._strategic_period_index = index
+            self.strategic_budget_spent_this_period = 0.0
+            self._expire_strategic_lots()
+
+    def _expire_strategic_lots(self) -> float:
+        """Retire strategic stock older than the shelf life. It was paid for and it does NOT
+        refund the budget -- otherwise expiry would be free and prepositioning early would still
+        cost nothing, which is the whole reason this parameter exists.
+
+        Retirement is capped by what the node actually holds, so consumption that already drew the
+        stock down cannot be double-counted as spoilage.
+        """
+        if self.strategic_shelf_life_hours is None or not self._strategic_lots:
+            return 0.0
+        node_of = {"op3_rm": "raw_material_wdc", "op5_rm": "raw_material_al",
+                   "op9_rations": "rations_sb"}
+        now = float(self.env.now)
+        expired, keep = 0.0, []
+        for stamped, key, qty in self._strategic_lots:
+            if now - stamped < self.strategic_shelf_life_hours:
+                keep.append((stamped, key, qty))
+                continue
+            container = getattr(self, node_of.get(key, ""), None)
+            if container is None:
+                continue
+            take = min(float(qty), float(container.level))
+            if take > 1e-9:
+                container.get(take)
+                per_ration = float(getattr(self, "_raw_units_per_ration", 12.0)) or 12.0
+                # Kit-equivalent, the SAME unit `strategic_replenishment_units` reports. Counting
+                # raw units here while dividing raw by the kit size there made expiry look larger
+                # than the replenishment that caused it.
+                expired += take / per_ration if key in {"op3_rm", "op5_rm"} else take
+        self._strategic_lots = keep
+        self.strategic_expired_units += expired
+        return expired
 
     def strategic_replenishment_units(self) -> float:
         """Kit-equivalent units the strategic policy actually put into the system.

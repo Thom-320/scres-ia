@@ -422,6 +422,8 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         initial_shifts: int = 1,
         inventory_replenishment_period: float | None = None,
         inventory_replenishment_lead_time: float = 0.0,
+        strategic_budget_per_period: float | None = None,
+        strategic_shelf_life_hours: float | None = None,
         enabled_risks: set[str] | tuple[str, ...] | list[str] | None = None,
         risk_overrides: dict[str, str] | None = None,
         campaign_config: dict[str, Any] | None = None,
@@ -570,6 +572,8 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
         self.initial_inventory_replenishment_lead_time = float(
             inventory_replenishment_lead_time
         )
+        self.initial_strategic_budget_per_period = strategic_budget_per_period
+        self.initial_strategic_shelf_life_hours = strategic_shelf_life_hours
         self.enabled_risks = set(enabled_risks) if enabled_risks is not None else None
         self.risk_overrides = dict(risk_overrides or {})
         self.campaign_config = dict(campaign_config) if campaign_config else None
@@ -2593,6 +2597,8 @@ class MFSCGymEnvShifts(gym.Env[np.ndarray, np.ndarray]):
             risk_overrides=self.risk_overrides,
             inventory_replenishment_period=inventory_replenishment_period,
             inventory_replenishment_lead_time=inventory_replenishment_lead_time,
+            strategic_budget_per_period=self.initial_strategic_budget_per_period,
+            strategic_shelf_life_hours=self.initial_strategic_shelf_life_hours,
             campaign_config=self.campaign_config,
             replenishment_route_aware=self.replenishment_route_aware,
             procurement_contract_mode=self.procurement_contract_mode,

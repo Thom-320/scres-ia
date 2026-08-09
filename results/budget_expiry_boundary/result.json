@@ -1,0 +1,389 @@
+{
+ "bar": 0.01,
+ "best_cell": "faithful_control",
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "cells": {
+  "both": {
+   "L_test_mean": 0.3051240722981571,
+   "binding_periods": 2.962962962962963,
+   "budget": 73240.0,
+   "clairvoyant_gap": {
+    "favourable": 0,
+    "lcb95": 0.0,
+    "mean": 0.0,
+    "n": 12,
+    "ucb95": 0.0
+   },
+   "distinct_optima_on_test": 1,
+   "expired_units": 354535.80555555556,
+   "fixed_posture_from_train": [
+    0.0,
+    0.0,
+    0.5
+   ],
+   "interaction_null": {
+    "gap_observed": 0.0,
+    "n_draws": 20000,
+    "null_mean": 0.019936638811311264,
+    "null_model": "additive mu + a_i + b_j retained; residuals permuted",
+    "null_p50": 0.019901459289097263,
+    "null_p95": 0.02582646559149921,
+    "p_value": 1.0
+   },
+   "refused_units": 70948.19444444444,
+   "replenished": 667386.1666666666,
+   "shelf": 1344.0
+  },
+  "budget_only": {
+   "L_test_mean": 0.3051240722981571,
+   "binding_periods": 0.7592592592592593,
+   "budget": 73240.0,
+   "clairvoyant_gap": {
+    "favourable": 0,
+    "lcb95": 0.0,
+    "mean": 0.0,
+    "n": 12,
+    "ucb95": 0.0
+   },
+   "distinct_optima_on_test": 1,
+   "expired_units": 0.0,
+   "fixed_posture_from_train": [
+    0.0,
+    0.0,
+    0.5
+   ],
+   "interaction_null": {
+    "gap_observed": 0.0,
+    "n_draws": 20000,
+    "null_mean": 0.019944363574089425,
+    "null_model": "additive mu + a_i + b_j retained; residuals permuted",
+    "null_p50": 0.019911987304082467,
+    "null_p95": 0.025784676818268855,
+    "p_value": 1.0
+   },
+   "refused_units": 23953.14814814815,
+   "replenished": 313002.25,
+   "shelf": 26208.0
+  },
+  "expiry_only": {
+   "L_test_mean": 0.3051240722981571,
+   "binding_periods": 0.0,
+   "budget": null,
+   "clairvoyant_gap": {
+    "favourable": 0,
+    "lcb95": 0.0,
+    "mean": 0.0,
+    "n": 12,
+    "ucb95": 0.0
+   },
+   "distinct_optima_on_test": 1,
+   "expired_units": 352352.0833333333,
+   "fixed_posture_from_train": [
+    0.0,
+    0.0,
+    0.5
+   ],
+   "interaction_null": {
+    "gap_observed": 0.0,
+    "n_draws": 20000,
+    "null_mean": 0.0198790113975928,
+    "null_model": "additive mu + a_i + b_j retained; residuals permuted",
+    "null_p50": 0.01982658837813602,
+    "null_p95": 0.02574851693290218,
+    "p_value": 1.0
+   },
+   "refused_units": 0.0,
+   "replenished": 665202.4444444445,
+   "shelf": 1344.0
+  },
+  "faithful_control": {
+   "L_test_mean": 0.3051240722981571,
+   "binding_periods": 0.0,
+   "budget": null,
+   "clairvoyant_gap": {
+    "favourable": 0,
+    "lcb95": 0.0,
+    "mean": 0.0,
+    "n": 12,
+    "ucb95": 0.0
+   },
+   "distinct_optima_on_test": 1,
+   "expired_units": 0.0,
+   "fixed_posture_from_train": [
+    0.0,
+    0.0,
+    0.5
+   ],
+   "interaction_null": {
+    "gap_observed": 0.0,
+    "n_draws": 20000,
+    "null_mean": 0.019944105005541325,
+    "null_model": "additive mu + a_i + b_j retained; residuals permuted",
+    "null_p50": 0.019900981714169513,
+    "null_p95": 0.02590079036993851,
+    "p_value": 1.0
+   },
+   "refused_units": 0.0,
+   "replenished": 313002.25,
+   "shelf": 26208.0
+  }
+ },
+ "claim_status": "NO_SEQUENTIAL_HEADROOM_UNDER_BUDGET_AND_EXPIRY",
+ "contract_path": "docs/PREREGISTRO_PRESUPUESTO_COMPARTIDO_Y_CADUCIDAD_2026-08-08.md",
+ "contract_sha256": "2167fc10b317ff40260465568b002280385febfecdfcd5fe58a147968b26a2ed",
+ "created_at": "2026-08-09T03:08:09.648873+00:00",
+ "endpoint": "L_star_under_shared_budget_and_shelf_life",
+ "falsifier_summary": {
+  "all_passed": false,
+  "disclosures": [
+   "d1_fidelity_price"
+  ],
+  "failed": [
+   "f6_clairvoyant_gap_is_material",
+   "f7_gap_survives_the_interaction_null"
+  ],
+  "n_computed": 7,
+  "n_disclosures": 1,
+  "n_failed": 2,
+  "n_not_applicable": 0,
+  "not_applicable": []
+ },
+ "falsifiers": {
+  "custody": {
+   "evidence": {
+    "n_sealed_artifact_overlap": 24,
+    "n_seeds": 24,
+    "note": "seeds already consumed by a registry block or sealed artifact",
+    "registry_conflicts": [
+     {
+      "id": "reconciled_8600001",
+      "n_overlapping": 12,
+      "range": [
+       8600001,
+       8600012
+      ],
+      "source": "results/demand_process/result.json",
+      "status": "USED_DEVELOPMENT_NOT_VIRGIN"
+     }
+    ],
+    "registry_is_complete": false,
+    "registry_status": "BASELINE_INVENTORY_INCOMPLETE_NO_NEW_SEEDS_AUTHORIZED",
+    "replay_of": null,
+    "sealed_artifact_overlap": [
+     8600001,
+     8600002,
+     8600003,
+     8600004,
+     8600005,
+     8600006,
+     8600007,
+     8600008,
+     8600009,
+     8600010,
+     8600011,
+     8600012,
+     8600013,
+     8600014,
+     8600015,
+     8600016,
+     8600017,
+     8600018,
+     8600019,
+     8600020,
+     8600021,
+     8600022,
+     8600023,
+     8600024
+    ],
+    "seeds": [
+     8600001,
+     8600002,
+     8600003,
+     8600004,
+     8600005,
+     8600006,
+     8600007,
+     8600008,
+     8600009,
+     8600010,
+     8600011,
+     8600012,
+     8600013,
+     8600014,
+     8600015,
+     8600016,
+     8600017,
+     8600018,
+     8600019,
+     8600020,
+     8600021,
+     8600022,
+     8600023,
+     8600024
+    ],
+    "status": "COLLISION",
+    "why_it_can_fail": "a seed already consumed by a registry block or a sealed artifact would make this run a re-use rather than an independent one"
+   },
+   "not_applicable": false,
+   "passed": false
+  },
+  "d1_fidelity_price": {
+   "computed": false,
+   "disclosure": true,
+   "evidence": {
+    "evidence": {
+     "inert_shelf_hours": 26208.0,
+     "short_shelf_hours": 1344.0,
+     "tight_budget_per_period": 73240.0
+    },
+    "statement": "shelf life and shared budget are OUR extensions with no source event: the thesis ration is non-perishable at three years and no common procurement bag is modelled. The 156-week cell is the faithful control, and no result here is presented as reproducing Garrido-Rios (2017)"
+   },
+   "passed": null
+  },
+  "f1_faithful_cell_reproduces_today": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": 0.0,
+     "threshold": 0.01
+    },
+    "why_it_can_fail": "if headroom appears where expiry is inert and the budget unlimited, the instrument manufactured it and every cell below is unreadable"
+   },
+   "passed": true
+  },
+  "f2_shelf_life_expires_nothing_when_inert": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": 0.0,
+     "threshold": 1e-09
+    },
+    "why_it_can_fail": "a 156-week shelf life cannot bite inside 26 weeks; removing stock there is a bookkeeping defect, not physics"
+   },
+   "passed": true
+  },
+  "f3_budget_binds_when_tight": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": 0.7592592592592593,
+     "threshold": 0.0
+    },
+    "why_it_can_fail": "a budget that is never hit is not contention, and the cell would be mislabelled"
+   },
+   "passed": true
+  },
+  "f4_expiry_removes_stock_when_short": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": 352352.0833333333,
+     "threshold": 0.0
+    },
+    "why_it_can_fail": "an 8-week shelf life that expires nothing means the lot ledger never aged"
+   },
+   "passed": true
+  },
+  "f5_control_selected_on_train_only": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "n_cells": 4,
+     "n_postures": 27
+    },
+    "why_it_can_fail": "selecting the comparator on the tapes where the gap is measured inflates every gap"
+   },
+   "passed": true
+  },
+  "f6_clairvoyant_gap_is_material": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": 0.0,
+     "threshold": 0.01
+    },
+    "why_it_can_fail": "all four cells may come back flat, and that is the result rather than a setback"
+   },
+   "passed": false
+  },
+  "f7_gap_survives_the_interaction_null": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": 1.0,
+     "threshold": 0.05
+    },
+    "why_it_can_fail": "a per-tape minimum over 27 noisy postures is biased upward; a ceiling died on virgin seeds this morning for exactly this reason"
+   },
+   "passed": false
+  }
+ },
+ "module_manifest": {
+  "missing": [],
+  "modules": {
+   "supply_chain/arm_runner.py": "1afea4fa248db5beb2d86c6ab2033d6f24a95115ea544b08966b7a538456ac99",
+   "supply_chain/continuous_its_env.py": "ca9d0c5110f3196c64b7329c3a31994bb5bcd1acc83e16c58ad17820f55e5b18",
+   "supply_chain/falsifiers.py": "99a64c66b62ee43ab9cf532a34932dc27ff4b4fae72d9b331fcf2a8f2a554fb7",
+   "supply_chain/seed_custody.py": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd",
+   "supply_chain/supply_chain.py": "aa8d1ac81562679477fbfe981ca1bc218561e64bf71e8d852aaf2423f5568fba"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "n_postures": 27,
+ "reference_path": "results/conservative_buffer_gate/result.json",
+ "reference_sha256": "2d06b8f8c4d068b8f9f97e62264413af23950450bba365266786c85dfd431a8e",
+ "run_role": "DEVELOPMENT",
+ "schema_version": "budget_expiry_boundary_v1",
+ "scope": "DEVELOPMENT_REPLAY_ON_BURNED_SEEDS_NO_VIRGIN_BLOCK",
+ "seed_block": {
+  "derived_from": "seeds",
+  "end": 8600024,
+  "n": 24,
+  "start": 8600001
+ },
+ "seeds": [
+  8600001,
+  8600002,
+  8600003,
+  8600004,
+  8600005,
+  8600006,
+  8600007,
+  8600008,
+  8600009,
+  8600010,
+  8600011,
+  8600012,
+  8600013,
+  8600014,
+  8600015,
+  8600016,
+  8600017,
+  8600018,
+  8600019,
+  8600020,
+  8600021,
+  8600022,
+  8600023,
+  8600024
+ ],
+ "self_sha256": "b448d6676066b1c66f0395ce434ef95e0a6e24733a51d98bc4134cdd0a6aafe1"
+}
