@@ -1,0 +1,150 @@
+{
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "OVERORDER_IS_SOURCE_IMPLIED_NOT_A_RECONSTRUCTION_ARTIFACT",
+ "contract_path": "docs/THESIS_INTERPRETATION_DECISIONS_2026-06-24.md",
+ "contract_sha256": "6c48a0104132024d88b485af699db976f5782940f11681d912916ecf8b0149fc",
+ "created_at": "2026-08-09T18:18:14.267161+00:00",
+ "derived": {
+  "demand_raw_per_week": 180000.0,
+  "distribution_over_demand": 1.0333333333333334,
+  "op2_supply_raw_per_week": 570000.0,
+  "op3_raw_per_week": 186000.0,
+  "procurement_over_demand": 3.1666666666666665
+ },
+ "endpoint": "not applicable -- attributes a parameter, measures no headroom",
+ "falsifier_summary": {
+  "all_passed": true,
+  "disclosures": [
+   "d1_ambiguity_is_declared"
+  ],
+  "failed": [],
+  "n_computed": 5,
+  "n_disclosures": 1,
+  "n_failed": 0,
+  "n_not_applicable": 0,
+  "not_applicable": []
+ },
+ "falsifiers": {
+  "d1_ambiguity_is_declared": {
+   "computed": false,
+   "disclosure": true,
+   "evidence": {
+    "evidence": {
+     "contract": "docs/THESIS_INTERPRETATION_DECISIONS_2026-06-24.md",
+     "decision": "D5"
+    },
+    "statement": "D5 marks the per-raw-material reading CHOSEN-AMBIGUOUS. This verification does not remove the ambiguity from the sentence; it shows the alternative is refuted by the physics, which is a weaker and more honest claim"
+   },
+   "passed": null
+  },
+  "f1_overorder_is_implied_by_published_parameters": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": 3.1666666666666665,
+     "threshold": 3.0
+    },
+    "why_it_can_fail": "if Garrido's own Op2 quantity and reorder period implied supply near demand, the over-order would be an artifact of our reconstruction and shrinking it would be a repair rather than an intervention"
+   },
+   "passed": true
+  },
+  "f2_distribution_is_sized_to_demand": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": 0.03333333333333344,
+     "threshold": 0.1
+    },
+    "why_it_can_fail": "if Op3 were also oversized, the ratio would be a global scaling error of ours rather than a deliberate asymmetry between procurement and distribution"
+   },
+   "passed": true
+  },
+  "f3_alternative_reading_starves_the_chain": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": 0.0,
+     "threshold": 1.0
+    },
+    "why_it_can_fail": "if reading 190,000 as the total across twelve raw materials ALSO left stock on hand, both readings would be viable and the attribution would be undecidable here"
+   },
+   "passed": true
+  },
+  "f4_alternative_reading_loses_service": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": 0.27621313938833036,
+     "threshold": 0.1
+    },
+    "why_it_can_fail": "if the alternative served as well, it could not be rejected on physical grounds and the choice would rest on the ambiguous sentence alone"
+   },
+   "passed": true
+  },
+  "f5_reading_in_use_never_binds": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": 4085910.0,
+     "threshold": 0.0
+    },
+    "why_it_can_fail": "this is the fact the Program V port ran into; if raw material did bind under the reading in use, the zero contrasts would need a different explanation"
+   },
+   "passed": true
+  }
+ },
+ "published_parameters": {
+  "days_per_week": 6,
+  "n_raw_materials": 12,
+  "op2_q_per_rm": 190000.0,
+  "op2_rop_hours": 672.0,
+  "op3_q_per_rm": 15500.0,
+  "rations_per_day": 2500.0
+ },
+ "readings": {
+  "per_raw_material_D5": {
+   "consumed_raw": 4258416.0,
+   "delivered_raw": 8686326.0,
+   "on_hand_close": 4085910.0,
+   "service": 0.6777177994931299
+  },
+  "total_across_twelve": {
+   "consumed_raw": 2586648.0,
+   "delivered_raw": 2660000.0,
+   "on_hand_close": 0.0,
+   "service": 0.40150466010479957
+  }
+ },
+ "reference_path": "results/raw_scarcity_boundary/result.json",
+ "reference_sha256": "3e59d2d2d27c2c192baa3bfdd16f04119efc415bbb42a6e31d7266a368c0373b",
+ "run_role": "DEVELOPMENT",
+ "schema_version": "procurement_overorder_source_v1",
+ "scope": "SOURCE_ATTRIBUTION_ONE_BURNED_TAPE_NO_LEARNER",
+ "seed_block": {
+  "derived_from": "seeds",
+  "end": 8600001,
+  "n": 1,
+  "start": 8600001
+ },
+ "seeds": [
+  8600001
+ ],
+ "self_sha256": "92aadf6d419453981887ef5ae60364a3dfa87f892d98b7b0ba20f664b59a5beb"
+}

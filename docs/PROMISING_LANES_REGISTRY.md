@@ -1294,3 +1294,35 @@ un mecanismo distinto y no una celda mas de este barrido.
 publicados, no verificable) predijo `H_ret` exactamente 0 bajo escasez. Se escribio en el
 preregistro **antes** de correr y aqui sale 0 en las seis celdas — aunque por una razon distinta a
 la que ese informe propone: aqui no hay ni siquiera `H_priv` que retener.
+
+---
+
+## El sobre-pedido de aprovisionamiento es de la FUENTE, no de la reconstruccion (2026-08-09)
+
+**Estado: `OVERORDER_IS_SOURCE_IMPLIED_NOT_A_RECONSTRUCTION_ARTIFACT`.** Artefacto
+`results/procurement_overorder_source/result.json`. Cinco falsadores computados, cero fallidos.
+
+Aritmetica directa de los parametros publicados, antes de simular nada:
+
+| cantidad | unidades crudas/semana | vs demanda |
+|---|---|---|
+| demanda (2.500 raciones/dia x 6 dias x 12 rm) | 180.000 | 1,00x |
+| **Op2 aprovisionamiento** (190.000/rm mensual x 12) | **570.000** | **3,17x** |
+| Op3 distribucion (15.500/rm semanal x 12) | 186.000 | 1,03x |
+
+**La asimetria es deliberada en la fuente:** la distribucion esta dimensionada a la demanda y el
+aprovisionamiento a mas del triple. Por eso ninguna decision que solo mueva materia prima puede
+mover el servicio, y por eso el port de Program V y el barrido de escasez cerraron en cero exacto.
+
+**La lectura alternativa esta refutada por la fisica.** `D5` marca CHOSEN-AMBIGUOUS leer los 190.000
+como *por cada* materia prima. La alternativa —190.000 como TOTAL entre las doce— se prueba
+dividiendo entre 12 y sin tocar nada mas: el servicio cae de **0,6777 a 0,4015** y la cadena termina
+con **cero unidades en mano**. No es viable contra los resultados que la tesis reporta.
+
+**Consecuencia para el diseno:** reducir el volumen contratado hasta que el proveedor importe seria
+**alterar un parametro de la fuente**, no eliminar una simplificacion declarada. Es exactamente la
+distincion entre extension declarada e ingenieria del resultado, y aqui cae del lado prohibido salvo
+que se declare como cambio de la fuente con su precio de fidelidad medido.
+
+**Lo que la verificacion NO hace:** no elimina la ambiguedad de la frase. Muestra que la lectura
+alternativa esta refutada por la fisica, que es una afirmacion mas debil y mas honesta.
