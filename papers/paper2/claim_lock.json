@@ -836,7 +836,7 @@
   },
   {
    "allow_failed_falsifiers": true,
-   "allowed": "The within-episode ceiling this arm was built to convert does not survive a preregistered replication. On 48 virgin seeds (24 train, 24 test) across the same 27 schedules, the clairvoyant gap is +0.024054 against an interaction null whose mean is +0.026641 and whose 95th percentile is +0.032964, p = 0.7482 -- the observed gap is smaller than the average of its own null, which is the downward bias of a minimum over 27 noisy options. On twelve reused tapes the same quantity was +0.045103 at p = 0.0132. By the frozen reading rule of the authorisation, the 26 feature-by-map tests below the ceiling are NOT read; they are retained for custody and declared unread.",
+   "allowed": "The within-episode ceiling this arm was built to convert does not survive a preregistered replication. On 48 virgin seeds (24 train, 24 test) across the same 27 schedules, the clairvoyant gap is +0.024054 against an interaction null whose mean is +0.026641 and whose 95th percentile is +0.032964, p = 0.7482. The observed gap is smaller than the average of its own null, so it does not exceed the interaction null and is consistent with the bias of selecting a minimum over 27 noisy options rather than with state-dependent headroom. On twelve reused tapes the same quantity was +0.045103 at p = 0.0132. By the frozen reading rule of the authorisation, the 26 feature-by-map tests below the ceiling were not used for inference, selection or adjudication.",
    "artifact": "results/expanded_signal_search/result.json",
    "claim_id": "OPERATIONAL_ADAPTATION_CEILING_DID_NOT_REPLICATE",
    "claim_status": "CEILING_DID_NOT_REPLICATE",
@@ -848,6 +848,8 @@
    "falsifiers_all_passed": null,
    "file_sha256": "32f24e30711b5cd0edbdf56d93c92eda749085a5ba5a7cee59d043947ea83597",
    "forbidden": [
+    "the gap is exactly Jensen bias and nothing more",
+    "the feature table was never read",
     "no observable signal captures the ceiling",
     "the best prefix feature was prefix_events_R23",
     "the signal search was underpowered",
@@ -867,10 +869,10 @@
    "section": "Results -- the within-episode arm, and Limitations",
    "self_sha256": "4607522c500b78949ace802f93b7e1214764b34a4fb9cb2ddf9eaf0641f81d53",
    "supersession": "docs/RETRACTACION_TECHO_CLARIVIDENTE_2026-08-08.md",
-   "why_forbidden": "every one of these reads the feature table, which the preregistered order forbids once the ceiling fails; and 'underpowered' inverts the finding -- 24 training tapes is the larger design, and what it shows is that there was no ceiling to capture, not that the search missed one"
+   "why_forbidden": "every one of these reads the feature table, which the preregistered order forbids once the ceiling fails; 'underpowered' inverts the finding, since 24 training tapes is the larger design and what it shows is that there was no ceiling to capture; the Jensen phrasing asserts an exhaustive causal decomposition the test does not produce -- it measures no excess over the null, not that the whole effect IS Jensen; and 'never read' is false and self-contradicting, since the artifact prints the table. The defensible statement is that it was not used for inference, selection or adjudication"
   }
  ],
- "generated_at_commit": "23f9e405bfd508d6f19595b97ba780bf9f8da6fa",
+ "generated_at_commit": "748cf89fcc103f8e854c58b3c50d69c9d160868a",
  "grader_self_test": {
   "a_provenance_artifact_is_not_graded_as_evidence": {
    "passed": true,

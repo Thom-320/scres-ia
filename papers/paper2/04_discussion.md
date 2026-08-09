@@ -25,9 +25,10 @@ We separate them because the report is asymmetric and the asymmetry is easy to l
 replication of the within-episode arm on 48 previously unopened seeds does not reproduce its own
 ceiling: the clairvoyant per-tape gap is +0.024054 against an interaction null whose mean is
 +0.026641 (p = 0.7482), where twelve reused tapes had given +0.045103 at p = 0.0132. The observed
-gap is smaller than the average of its own null — the downward bias of a minimum taken over 27 noisy
-options. By the frozen reading rule of that authorisation, the feature-level tests beneath the
-ceiling are not read; they are retained and declared unread.
+gap is smaller than the average of its own null: it does not exceed the interaction null and is
+consistent with selection-induced minimum bias rather than state-dependent headroom. By the frozen
+reading rule of that authorisation, the feature-level tests beneath the ceiling were not used for
+inference, selection or adjudication.
 
 The consequence for the framing is direct. A result about carrying search state across runs is not
 evidence that a controller adapts within an episode, and the surviving half must not be allowed to

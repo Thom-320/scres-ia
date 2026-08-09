@@ -716,21 +716,30 @@ CLAIMS: list[dict] = [
                     "preregistered replication. On 48 virgin seeds (24 train, 24 test) across the "
                     "same 27 schedules, the clairvoyant gap is +0.024054 against an interaction "
                     "null whose mean is +0.026641 and whose 95th percentile is +0.032964, "
-                    "p = 0.7482 -- the observed gap is smaller than the average of its own null, "
-                    "which is the downward bias of a minimum over 27 noisy options. On twelve "
-                    "reused tapes the same quantity was +0.045103 at p = 0.0132. By the frozen "
-                    "reading rule of the authorisation, the 26 feature-by-map tests below the "
-                    "ceiling are NOT read; they are retained for custody and declared unread."),
-        "forbidden": ["no observable signal captures the ceiling",
+                    "p = 0.7482. The observed gap is smaller than the average of its own null, so "
+                    "it does not exceed the interaction null and is consistent with the bias of "
+                    "selecting a minimum over 27 noisy options rather than with state-dependent "
+                    "headroom. On twelve reused tapes the same quantity was +0.045103 at "
+                    "p = 0.0132. By the frozen reading rule of the authorisation, the 26 "
+                    "feature-by-map tests below the ceiling were not used for inference, selection "
+                    "or adjudication."),
+        "forbidden": ["the gap is exactly Jensen bias and nothing more",
+                      "the feature table was never read",
+                      "no observable signal captures the ceiling",
                       "the best prefix feature was prefix_events_R23",
                       "the signal search was underpowered",
                       "a richer feature set would convert it",
                       "the ceiling was smaller than expected",
                       "state-conditioned control loses narrowly here"],
         "why_forbidden": ("every one of these reads the feature table, which the preregistered "
-                          "order forbids once the ceiling fails; and 'underpowered' inverts the "
-                          "finding -- 24 training tapes is the larger design, and what it shows is "
-                          "that there was no ceiling to capture, not that the search missed one"),
+                          "order forbids once the ceiling fails; 'underpowered' inverts the "
+                          "finding, since 24 training tapes is the larger design and what it shows "
+                          "is that there was no ceiling to capture; the Jensen phrasing asserts an "
+                          "exhaustive causal decomposition the test does not produce -- it measures "
+                          "no excess over the null, not that the whole effect IS Jensen; and "
+                          "'never read' is false and self-contradicting, since the artifact prints "
+                          "the table. The defensible statement is that it was not used for "
+                          "inference, selection or adjudication"),
         "must_be_cited_with": ["THE_NEGATIVE_SURVIVES_A_SOUND_METRIC"],
         "supersession": "docs/RETRACTACION_TECHO_CLARIVIDENTE_2026-08-08.md",
     },

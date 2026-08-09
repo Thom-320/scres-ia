@@ -18,8 +18,14 @@ Sobre 48 semillas vírgenes (`8700001–8700048`, 24 entrenamiento / 24 test), 2
 
 **El hueco medido es menor que la media de su propio nulo.** No es que quede corto de
 significación: está por debajo de lo que produce la permutación de residuos sobre el modelo
-aditivo. Es exactamente el sesgo de Jensen — un mínimo sobre 27 opciones ruidosas es un mínimo
-sesgado a la baja — y nada más.
+aditivo.
+
+La lectura defendible, y no más: **el hueco aparente no supera el nulo de interacción en el bloque
+nuevo, y es por tanto consistente con el sesgo de seleccionar el mínimo entre 27 alternativas
+ruidosas, no con headroom dependiente del estado.** Una versión anterior de este documento decía
+«es exactamente el sesgo de Jensen y nada más». Eso afirmaba una descomposición causal exhaustiva
+que el experimento **no** produce: mide que no queda exceso sobre el nulo, no que el 100 % del
+fenómeno sea literalmente Jensen.
 
 ## 2. Qué queda retractado
 
@@ -41,7 +47,9 @@ La regla de lectura estaba fijada en la §4 de la autorización, en orden, antes
 > nuevo, […] **todo lo de abajo se detiene** […]. Nada sobre señales se lee en ese caso.
 
 Por tanto **la tabla de 26 rasgos×mapas del artefacto no se interpreta**. Se conserva en el sello
-por custodia, y se declara aquí que **no se leyó**: el mejor candidato aparente
+por custodia, y se declara aquí que **no se usó para inferencia, selección ni adjudicación** — no
+que nadie la mirara, porque este mismo documento la cita abajo y decir «no se leyó» se
+contradiría solo. El mejor candidato aparente
 (`prefix_events_R23|k1`, ganancia 0,007454) tiene `LCB95 = −0,003512` y Holm p = 0,260, y aun si
 fuera limpio sería la cuota de un techo inexistente. `f5_ceiling_replicates_on_the_new_block`
 **FALLA**, y ésa es la única lectura.

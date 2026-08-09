@@ -302,10 +302,12 @@ Stated as prohibitions rather than hedges:
   is **+0.024054** against an interaction null whose **mean** is **+0.026641** and whose 95th
   percentile is +0.032964, *p* = **0.7482**, where twelve reused tapes had given +0.045103 at
   *p* = 0.0132 (`results/expanded_signal_search/result.json`,
-  `CEILING_DID_NOT_REPLICATE`). The observed gap is smaller than the average of its own null, which
-  is the downward bias of a minimum taken over 27 noisy options. By the reading rule frozen in the
-  authorisation before the block was opened, the 26 feature-by-map tests beneath the ceiling are
-  **not read**; they are retained for custody and declared unread here.
+  `CEILING_DID_NOT_REPLICATE`). The observed gap is smaller than the average of its own null, so it
+  does not exceed the interaction null and is consistent with the bias of selecting a minimum over
+  27 noisy options rather than with state-dependent headroom — a statement about excess over a
+  null, not an exhaustive causal decomposition. By the reading rule frozen in the authorisation
+  before the block was opened, the 26 feature-by-map tests beneath the ceiling were **not used for
+  inference, selection or adjudication**.
 - **No architecture-specific transfer advantage.** None is confirmed anywhere in this study, and the one carrier tested
   prospectively fails the marginal-replay contrast.
 - **The absence of headroom is not an artifact of the scoring metric, and tuning does not recover

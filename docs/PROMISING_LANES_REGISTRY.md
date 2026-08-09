@@ -1026,8 +1026,9 @@ abrir una semilla. Retractacion completa en `docs/RETRACTACION_TECHO_CLARIVIDENT
 
 Sobre 48 semillas virgenes (24 train / 24 test), 27 calendarios, lambda 0,35: hueco **+0,024054**
 contra un nulo de interaccion de media **+0,026641**, **p = 0,7482**. El hueco medido esta **por
-debajo** de la media de su propio nulo. Con doce tapes reutilizadas daba +0,045103 y p = 0,0132:
-doce tapes no separaban el techo del sesgo de Jensen del minimo sobre 27 opciones ruidosas.
+debajo** de la media de su propio nulo: no supera el nulo de interaccion y es consistente con el
+sesgo de seleccionar el minimo entre 27 alternativas ruidosas, no con headroom dependiente del
+estado. Con doce tapes reutilizadas daba +0,045103 y p = 0,0132.
 
 **Lo que retracta:** `results/ceiling_null_diagnostic/result.json`
 (`CEILING_SURVIVES_THE_PERMUTATION_NULL`) queda superado por replicacion fallida - se conserva y se
@@ -1036,7 +1037,7 @@ un techo inexistente. Los cuatro intentos de conversion de esta semana (regla de
 fase+desviacion, busqueda de 13 rasgos) perseguian un artefacto de doce tapes.
 
 **Lo que NO se lee, por la regla congelada §4:** la tabla de 26 rasgos x mapas del artefacto. Se
-conserva por custodia y se declara no leida.
+conserva por custodia y se declara **no usada para inferencia, seleccion ni adjudicacion**.
 
 **Lo que sigue en pie y no depende del techo:** el espacio de decision del buffer **si** esta priced
 y tiene estructura - 21 niveles distintos, 6 puntos no dominados, optimo que se mueve con lambda
