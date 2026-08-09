@@ -30,7 +30,7 @@ from supply_chain.supply_chain import MFSCSimulation                            
 
 SELECT = tuple(range(8800001, 8800031))
 HELD = tuple(range(8800031, 8800061))
-OUT = Path("results/g3a_boundary_v2/result.json")
+OUT = Path("results/g3a_boundary_v2/result.full34.json")
 CONTRACT = Path("docs/PREREGISTRO_G3A_V2_RECONSTRUCCION_2026-08-08.md")
 MODULES = ("supply_chain/supply_chain.py", "supply_chain/g3a_boundary_v2.py",
            "supply_chain/cssu_allocation.py", "supply_chain/falsifiers.py")
@@ -139,9 +139,13 @@ def main() -> int:
     best_hq = max(hq, key=lambda v: v["h_obs"]["lcb95"])
     worst_gp = max(gp, key=lambda v: v["h_obs"]["lcb95"])
 
-    placebo_gap = min(
-        v["rows"]["warning_lookup"]["held_mean"] - v["rows"]["placebo_shuffled"]["held_mean"]
-        for k, v in cells.items() if k.endswith("hard_quota"))
+    def _best(rows, prefix):
+        keys = [k for k in rows if k.startswith(prefix)]
+        return max(rows[k]["held_mean"] for k in keys)
+
+    # With four placebos, comparing against the worst would be a gift to the falsifier.
+    placebo_gap = min(_best(v["rows"], "warning_") - _best(v["rows"], "placebo_")
+                      for k, v in cells.items() if k.endswith("hard_quota"))
 
     checks = {
         "f1_pooling_is_action_invariant": F.lt(
@@ -209,6 +213,7 @@ def main() -> int:
             "global_pool_h_obs": 0.0,
             "note": "targets to reproduce, never evidence"},
         "sesoi": SESOI, "n_cells": len(CELLS), "n_controllers": len(LIBRARY),
+        "library_amendment": "docs/ENMIENDA_BIBLIOTECA_34_CONTROLADORES_2026-08-08.md",
         "cells": cells,
         "module_manifest": module_manifest(MODULES),
         "falsifiers": checks, "falsifier_summary": summary,

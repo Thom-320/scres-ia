@@ -129,9 +129,11 @@ def worst_claimant_late_exposure_service(sim) -> dict[str, float]:
 # a week given ONLY what its interface is allowed to see.
 # ---------------------------------------------------------------------------------------------
 
-def _from_signal(signal: str, *, inverted: bool = False) -> float:
-    share = {"A_PRESSURE": 0.7, "NEUTRAL": 0.5, "B_PRESSURE": 0.3}[signal]
-    return 1.0 - share if inverted else share
+def _from_signal(signal: str, *, inverted: bool = False, gain: float = 0.2) -> float:
+    """Map a regime label to an allocation share. `gain` is how far from 0.5 the arm commits."""
+    offset = {"A_PRESSURE": gain, "NEUTRAL": 0.0, "B_PRESSURE": -gain}[signal]
+    share = 0.5 + (-offset if inverted else offset)
+    return float(min(max(share, 0.05), 0.95))
 
 
 class Controller:
@@ -146,12 +148,14 @@ class Controller:
         if k == "constant":
             return [cfg["level"]] * WEEKS
         if k == "warning":
-            return [_from_signal(w, inverted=cfg.get("inverted", False)) for w in warn]
+            return [_from_signal(w, inverted=cfg.get("inverted", False), gain=cfg["gain"])
+                    for w in warn]
         if k == "warning_shuffled":          # placebo: mechanism kept, information destroyed
             order = np.random.default_rng(cfg["salt"]).permutation(WEEKS)
-            return [_from_signal(warn[int(i)]) for i in order]
-        if k == "warning_delayed":           # placebo: the signal arrives one week too late
-            return [0.5] + [_from_signal(w) for w in warn[:-1]]
+            return [_from_signal(warn[int(i)], gain=cfg["gain"]) for i in order]
+        if k == "warning_delayed":           # placebo: the signal arrives too late to be used
+            lag = int(cfg["lag"])
+            return [0.5] * lag + [_from_signal(w, gain=cfg["gain"]) for w in warn[:WEEKS - lag]]
         if k == "belief":
             # ONE common transition model in every cell -- never the cell's generating matrix,
             # which is the leak the package's internal audit found in its own first analysis.
@@ -164,27 +168,49 @@ class Controller:
                                  else (1 - WARNING_ACCURACY) / 2 for r in REGIMES])
                 post = belief * like
                 post = post / max(post.sum(), 1e-12)
-                out.append(float(0.7 * post[0] + 0.5 * post[1] + 0.3 * post[2]))
+                g = float(cfg.get("gain", 0.2))
+                out.append(float(min(max(0.5 + g * (post[0] - post[2]), 0.05), 0.95)))
                 belief = post @ common if cfg.get("stateful", True) else np.array([1/3, 1/3, 1/3])
             return out
         if k == "lagged_demand":
-            return [0.5] + [0.7 if d > 0 else 0.3 for d in tape["lagged_a_minus_b"][:-1]]
+            eps = float(cfg["eps"])
+            return [0.5] + [0.7 if d > eps else 0.3 if d < -eps else 0.5
+                            for d in tape["lagged_a_minus_b"][:-1]]
         if k == "backlog_threshold":
-            return [0.7 if b > cfg["theta"] else 0.5 for b in tape["backlog_a_share"]]
+            return [0.7 if b > cfg["theta"] else 0.3 if b < 1.0 - cfg["theta"] else 0.5
+                    for b in tape["backlog_a_share"]]
+        if k == "belief_backlog":
+            # Composite: convex blend of the belief share and the backlog rule, so the family
+            # spans the space between "trust the signal" and "trust what is already queued".
+            belief = Controller("_", "belief", stateful=True, gain=0.2).shares(tape)
+            thresh = Controller("_", "backlog_threshold", theta=0.5).shares(tape)
+            w = float(cfg["w"])
+            return [w * b + (1.0 - w) * t for b, t in zip(belief, thresh)]
         if k == "true_state":                # PRIVILEGED diagnostic: not deployable, not a bound
-            return [_from_signal(r) for r in regimes]
+            return [_from_signal(r, gain=0.2) for r in regimes]
         raise ValueError(k)
 
 
+#: The full 34 of the original, enumerated in
+#: docs/ENMIENDA_BIBLIOTECA_34_CONTROLADORES_2026-08-08.md and closed. Nine constants, four warning
+#: lookups, four placebos, four belief arms, three lagged-demand rules, four backlog thresholds,
+#: five belief-backlog composites, and one privileged true-state diagnostic.
 LIBRARY: list[Controller] = (
-    [Controller(f"const_{lvl:.1f}", "constant", level=lvl) for lvl in (0.3, 0.4, 0.5, 0.6, 0.7)]
-    + [Controller("warning_lookup", "warning"),
-       Controller("warning_inverted", "warning", inverted=True),
-       Controller("placebo_shuffled", "warning_shuffled", salt=20260808),
-       Controller("placebo_delayed", "warning_delayed"),
-       Controller("belief_stateful", "belief", stateful=True),
-       Controller("belief_reset", "belief", stateful=False),
-       Controller("lagged_demand", "lagged_demand"),
-       Controller("backlog_threshold", "backlog_threshold", theta=0.5),
-       Controller("privileged_true_state", "true_state", privileged=True)]
+    [Controller(f"const_{lvl:.2f}", "constant", level=lvl)
+     for lvl in (0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90)]
+    + [Controller(f"warning_{'inv' if inv else 'dir'}_g{g:.1f}", "warning", inverted=inv, gain=g)
+       for inv in (False, True) for g in (0.2, 0.3)]
+    + [Controller(f"placebo_shuffled_{salt}", "warning_shuffled", salt=salt, gain=0.2)
+       for salt in (20260808, 20260809)]
+    + [Controller(f"placebo_delayed_{lag}", "warning_delayed", lag=lag, gain=0.2)
+       for lag in (1, 2)]
+    + [Controller(f"belief_{'stateful' if st else 'reset'}_g{g:.1f}", "belief",
+                  stateful=st, gain=g)
+       for st in (True, False) for g in (0.2, 0.3)]
+    + [Controller(f"lagged_demand_e{e:.1f}", "lagged_demand", eps=e) for e in (0.0, 0.5, 1.0)]
+    + [Controller(f"backlog_theta{t:.2f}", "backlog_threshold", theta=t)
+       for t in (0.45, 0.50, 0.55, 0.60)]
+    + [Controller(f"belief_backlog_w{w:.1f}", "belief_backlog", w=w)
+       for w in (0.2, 0.35, 0.5, 0.65, 0.8)]
+    + [Controller("privileged_true_state", "true_state", privileged=True)]
 )
