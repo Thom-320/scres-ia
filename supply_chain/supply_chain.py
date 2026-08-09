@@ -937,12 +937,24 @@ class MFSCSimulation:
         #
         # Fidelity price: the thesis has no release event, so `immediate` is an extension and any
         # result under it is OURS, never presented as reproducing Garrido-Rios (2017).
-        if strategic_buffer_release_mode not in ("none", "immediate"):
+        # RETRACTED 2026-08-08, and the value is refused rather than quietly repaired. The
+        # "immediate" mode shipped this morning did the opposite of what it claimed in BOTH
+        # directions: with real targets present it walked the target KEYS (`op3_rm`, `op5_rm`,
+        # `op9_rations`) through getattr, and those are not container attributes, so it released
+        # exactly zero; with no target declared it fell back to draining `rations_al`,
+        # `rations_sb` and `rations_cssu` to zero -- operational stock that was never strategic
+        # buffer. Any priced trade-off measured under it came from destroying inventory rather
+        # than from declining to hold it. See docs/RETRACTACION_LIBERACION_BUFFER_2026-08-08.md.
+        if strategic_buffer_release_mode != "none":
             raise ValueError(
-                "strategic_buffer_release_mode must be 'none' or 'immediate', got "
-                f"{strategic_buffer_release_mode!r}")
+                "strategic_buffer_release_mode='immediate' is RETRACTED: it released zero when a "
+                "target was set and destroyed operational stock when none was. The conservative "
+                "successor lowers the target to stop replenishment and never removes delivered "
+                "units. Only 'none' is accepted; see "
+                "docs/RETRACTACION_LIBERACION_BUFFER_2026-08-08.md")
         self.strategic_buffer_release_mode = str(strategic_buffer_release_mode)
         self.strategic_buffer_released_units = 0.0
+        self.strategic_inventory_unit_hours = 0.0
         self.hours_per_year = resolve_hours_per_year(year_basis)
         downstream_ranges = THESIS_DOWNSTREAM_Q_RANGES[downstream_q_source]
         op9_q = downstream_ranges["op9"]
@@ -1568,8 +1580,7 @@ class MFSCSimulation:
             if period <= 0.0:
                 return
             yield self.env.timeout(period)
-            if self.strategic_buffer_release_mode == "immediate":
-                self._release_strategic_buffer()
+            self._accrue_strategic_inventory_time(period)
             lead = float(self.inventory_replenishment_lead_time)
             if lead > 0.0:
                 # Refill arrives `lead` hours later, without shifting the period clock.
@@ -1580,33 +1591,36 @@ class MFSCSimulation:
                     if event is not None:
                         yield event
 
-    def _release_strategic_buffer(self) -> float:
-        """Draw stock back down to the CURRENT target, so lowering it actually frees inventory.
+    def _accrue_strategic_inventory_time(self, elapsed: float) -> float:
+        """Integrate PHYSICAL strategic stock over time: sum(level) * hours, sampled each tick.
 
-        Released units leave the container; they are not re-issued anywhere, because the strategic
-        buffer is prepositioned stock and releasing it means declining to hold it, not consuming
-        it. A node with no target left is drawn to its operating level, never below zero.
+        This replaces `inventory_hours`, which counted weeks with the switch ON and multiplied by
+        the step length. That proxy never touched inventory: it charged the same amount whether a
+        node held ten units or a hundred thousand, and it charged nothing at all for stock still
+        on hand after the switch went off. Quantity-time is what holding actually costs.
+
+        Only the three nodes a strategic target can name are integrated, so operating stock the
+        buffer never delivered is not billed to the buffer.
         """
-        released = 0.0
-        for key in list(self._buffer_container_keys()):
-            container = getattr(self, key, None)
-            if container is None:
-                continue
-            target = float(self.inventory_buffer_targets.get(key, 0.0))
-            excess = float(container.level) - target
-            if excess > 1e-9:
-                container.get(excess)
-                released += excess
-        self.strategic_buffer_released_units += released
-        return released
+        held = 0.0
+        for node in ("raw_material_wdc", "raw_material_al", "rations_sb"):
+            container = getattr(self, node, None)
+            if container is not None:
+                held += float(container.level)
+        self.strategic_inventory_unit_hours += held * float(elapsed)
+        return self.strategic_inventory_unit_hours
 
-    def _buffer_container_keys(self):
-        """Containers a strategic target can name. Read from the declared targets when present so
-        the release cannot touch a node the buffer never filled."""
-        keys = set(self.inventory_buffer_targets)
-        if not keys:
-            keys = {"rations_al", "rations_sb", "rations_cssu"}
-        return [k for k in keys if getattr(self, k, None) is not None]
+    def strategic_replenishment_units(self) -> float:
+        """Kit-equivalent units the strategic policy actually put into the system.
+
+        Raw material is divided by the kit size so raw and finished rations add in one unit. This
+        is EXACT and attributable -- it is what the schedule spent -- which is why it is the
+        headline cost while quantity-time travels beside it as a sensitivity rather than as the
+        price. No monetary rate is claimed and none of it comes from the thesis.
+        """
+        per_ration = float(getattr(self, "_raw_units_per_ration", 12.0)) or 12.0
+        return (float(self.total_strategic_raw_injected) / per_ration
+                + float(self.total_strategic_rations_injected))
 
     def _delayed_buffer_top_up(self, lead: float):
         """Strategic-buffer refill that arrives after a rebuild lead time (Ed.2)."""
