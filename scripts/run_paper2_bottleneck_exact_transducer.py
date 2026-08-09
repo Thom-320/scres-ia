@@ -453,6 +453,9 @@ IMMUTABLE_CONTRACT_FIELDS = {
     # rather than carrying its state.
     "supplier_portfolio_mode",
     "supplier_yield_schedule",
+    # Added 2026-08-09 with the finite upstream storage sweep: a roof bound once in
+    # __init__ and never rebound.
+    "raw_material_storage_cap",
     "op8_dispatch_mode",
     "op8_convoy_capacity",
     "op8_convoy_outbound_hours",
@@ -570,6 +573,10 @@ INERT_FROZEN_FIELDS = {
     "supplier_ordered_units",
     "supplier_received_units",
     "supplier_rejected_units",
+    # Its telemetry: monotone counters of what the roof refused, written by the
+    # delivery loop and read by nothing inside the simulator.
+    "raw_material_blocked_units",
+    "raw_material_block_events",
     "cssu_action_events",
     "cssu_demand_events",
     "cssu_delivery_events",
