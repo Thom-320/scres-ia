@@ -448,6 +448,11 @@ IMMUTABLE_CONTRACT_FIELDS = {
     # separate two states within a run.
     "cssu_global_pool",
     "cssu_destination_weight_schedule",
+    # Added 2026-08-09 with the Program V port. The mode and the yield schedule are
+    # bound once in __init__ and never rebound: they configure the supplier layer
+    # rather than carrying its state.
+    "supplier_portfolio_mode",
+    "supplier_yield_schedule",
     "op8_dispatch_mode",
     "op8_convoy_capacity",
     "op8_convoy_outbound_hours",
@@ -558,6 +563,13 @@ INERT_FROZEN_FIELDS = {
     "strategic_budget_binding_periods",
     "strategic_budget_refused_units",
     "strategic_expired_units",
+    # The Program V port's STATE. The committed-allocation ledger genuinely gates
+    # what arrives next, so it goes into the bucket the key serializes rather than
+    # being guessed inert; the three counters are its telemetry and travel with it.
+    "_supplier_allocation_by_week",
+    "supplier_ordered_units",
+    "supplier_received_units",
+    "supplier_rejected_units",
     "cssu_action_events",
     "cssu_demand_events",
     "cssu_delivery_events",

@@ -1218,3 +1218,39 @@ los 34 controladores. En persistente/uniforme con cuota rigida, `H_obs=+0,002789
 `[-0,007635,+0,012373]`; el mejor placebo no pierde. Pooling FIFO permanece exactamente nulo y la
 accion esta viva. Por tanto, la asignacion A/B entre CSSU queda cerrada como via a un learner; el
 replay forense se conserva para custodia, no para contradecir este resultado.
+
+---
+
+## Program V portado al DES completo: el mecanismo vive y NO llega al endpoint (2026-08-09)
+
+**Estado: `STOP_NO_PHYSICAL_HEADROOM_IN_THE_FULL_DES`.** Artefacto
+`results/program_v/des_port_v1/result.json`; contrato
+`docs/PREREGISTRO_PROGRAM_V_DES_PORT_2026-08-09.md`, congelado antes del runner.
+
+**Mismas tapes y mismas trece politicas, IMPORTADAS del modulo de la abstraccion**, no
+reimplementadas: una diferencia de resultado no puede ser una diferencia de codigo.
+
+**El mecanismo funciona exactamente como se especifico:** las llegadas se mueven con la asignacion
+(11,7M unidades bajo la regla de aviso contra 14,8M bajo el privilegiado), el compromiso con una
+semana de antelacion **lanza excepcion** si se intenta decidir dentro de la semana que gobierna,
+lo que un proveedor no entrega **nunca entra al sistema**, la masa cierra, y con yields unitarios la
+extension entrega exactamente lo que entrega el DES congelado.
+
+**Y los seis contrastes son EXACTAMENTE cero:** `H_priv`, `H_obs`, `H_ret` y los dos placebos,
+`+0,000000` en las treinta tapes retenidas. Perder tres millones de unidades de materia prima no
+mueve el fill rate de teatro ni un digito.
+
+**La razon esta medida, no supuesta:** la cadena termina con **2,75M de unidades crudas en mano
+contra 4,26M consumidas** — mas de medio horizonte de holgura — asi que la materia prima **no es la
+restriccion activa** y una decision que solo mueve materia prima no puede mover el servicio. Es el
+mismo muro que el hallazgo previo de que la materia prima mueve 4,56M unidades por exactamente cero
+ReT.
+
+**Esto ACOTA el hallazgo de la abstraccion, no lo anula.** El `H_ret = +0,0413` sigue siendo cierto
+en su propio contrato, donde el inventario era escalar y cada unidad contaba. Lo que el port muestra
+es que **el contrato hacia el trabajo**: la memoria es real, el endpoint no la ve, y un aprendiz
+puesto ahi estaria ajustando ruido con una buena historia detras.
+
+**Sucesor posible, y puede fallar:** el mecanismo solo puede pagar si la materia prima se vuelve la
+restriccion activa — capacidad de almacen finita aguas arriba, o un consumo que agote la holgura.
+Eso es fisica nueva y exige su propio preregistro. No se abre bloque virgen.
