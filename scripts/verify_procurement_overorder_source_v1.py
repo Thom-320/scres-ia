@@ -1,16 +1,25 @@
 #!/usr/bin/env python3
-"""Is the 3.75x procurement over-order ours, or Garrido's?
+"""Is the 3.75x procurement over-order ours, or Garrido's? Table 6.20 answers it outright.
 
 The Program V port and the scarcity sweep both closed at exactly zero because raw material is never
 the binding constraint: Op2 contracts far more than the chain consumes, so which supplier you pick
 cannot matter. Before proposing to shrink the contracted volume -- which would be outcome
 engineering if the volume is a source fact -- the number has to be attributed.
 
-TWO READINGS OF ONE SENTENCE. The thesis says Op2 handles 190,000 units of each raw material
-monthly. `docs/THESIS_INTERPRETATION_DECISIONS_2026-06-24.md` D5 records that we read this as PER
-raw material and marks the choice CHOSEN-AMBIGUOUS. The alternative -- 190,000 as the TOTAL across
-all twelve -- is equally consistent with the sentence and is tested here by dividing by twelve and
-changing nothing else.
+THE SOURCE IS EXPLICIT, AND D5 WAS OVER-CAUTIOUS. Table 6.20 of Garrido-Rios (2017) reads
+"190,000 units of each rm" in those words, in a table that also writes Op3 as "15,500 units of each
+rm". D5 marked the per-raw-material reading CHOSEN-AMBIGUOUS; the table is not ambiguous. The
+alternative reading -- 190,000 as the total across twelve -- is nonetheless run here, by dividing
+by twelve and changing nothing else, because a refutation by physics is worth more than a reading
+of a sentence.
+
+AND THE SURPLUS IS A CONTROL VARIABLE, NOT AN OVERSIGHT. In Table 6.20 Op2 is IDENTICAL at S = 1,
+2 and 3 while Op3 and Op4 scale with the shift count: 15,500 / 31,000 / 47,000 units of each rm.
+Procurement is therefore sized to feed FULL three-shift capacity and held fixed while S is the
+treatment. At S = 3 the two match almost exactly; at S = 1 the same fixed procurement is
+necessarily about three times what one shift can consume. The surplus is a consequence of holding
+a control constant across the design, which is why it cannot be tuned away without breaking the
+experiment it belongs to.
 
 Development verification. No seeds beyond one already-burned tape, no learner, no claim about
 headroom.
@@ -36,6 +45,10 @@ CONTRACT = Path("docs/THESIS_INTERPRETATION_DECISIONS_2026-06-24.md")
 RATIONS_PER_DAY, DAYS_PER_WEEK = 2500.0, 6
 
 
+def supply_raw_week_of(op2_q: float) -> float:
+    return op2_q * NUM_RAW_MATERIALS / (float(OPERATIONS[2]["rop"]) / HOURS_PER_WEEK)
+
+
 def episode(op2_q: float) -> dict:
     sim = MFSCSimulation(seed=SEED, horizon=WEEKS * HOURS_PER_WEEK,
                          risks_enabled=True, risk_level="current")
@@ -55,8 +68,12 @@ def main() -> int:
     # Arithmetic straight from the published parameters, before any simulation.
     op2_q, op2_rop = float(OPERATIONS[2]["q"]), float(OPERATIONS[2]["rop"])
     op3_q = float(OPERATIONS[3]["q"])
+    #: Table 6.20: Op3/Op4 scale with the shift count while Op2 does not.
+    op3_by_shift = {1: 15_500.0, 2: 31_000.0, 3: 47_000.0}
+    procurement_over_distribution = {
+        s: supply_raw_week_of(op2_q) / (q * NUM_RAW_MATERIALS) for s, q in op3_by_shift.items()}
     demand_raw_week = RATIONS_PER_DAY * DAYS_PER_WEEK * NUM_RAW_MATERIALS
-    supply_raw_week = op2_q * NUM_RAW_MATERIALS / (op2_rop / HOURS_PER_WEEK)
+    supply_raw_week = supply_raw_week_of(op2_q)
     op3_raw_week = op3_q * NUM_RAW_MATERIALS
     supply_ratio = supply_raw_week / demand_raw_week
     op3_ratio = op3_raw_week / demand_raw_week
@@ -74,6 +91,11 @@ def main() -> int:
             abs(op3_ratio - 1.0), 0.10,
             "if Op3 were also oversized, the ratio would be a global scaling error of ours rather "
             "than a deliberate asymmetry between procurement and distribution"),
+        "f6_procurement_is_sized_for_full_capacity": F.lt(
+            abs(procurement_over_distribution[3] - 1.0), 0.05,
+            "this is the claim that the surplus is a CONTROL rather than an oversight: if fixed "
+            "procurement did not match three-shift distribution, the S=1 surplus would need "
+            "another explanation and might be ours after all"),
         "f3_alternative_reading_starves_the_chain": F.lt(
             alternative["on_hand_close"], 1.0,
             "if reading 190,000 as the total across twelve raw materials ALSO left stock on hand, "
@@ -115,7 +137,9 @@ def main() -> int:
                     "op2_supply_raw_per_week": supply_raw_week,
                     "op3_raw_per_week": op3_raw_week,
                     "procurement_over_demand": supply_ratio,
-                    "distribution_over_demand": op3_ratio},
+                    "distribution_over_demand": op3_ratio,
+                    "procurement_over_distribution_by_shift": procurement_over_distribution,
+                    "op3_q_per_rm_by_shift": op3_by_shift},
         "readings": {"per_raw_material_D5": in_use, "total_across_twelve": alternative},
         "falsifiers": checks, "falsifier_summary": summary,
     }
@@ -126,6 +150,8 @@ def main() -> int:
     print(f"  demanda            {demand_raw_week:>12,.0f} unidades crudas/sem")
     print(f"  Op2 (publicado)    {supply_raw_week:>12,.0f}  = {supply_ratio:.2f}x la demanda")
     print(f"  Op3 (publicado)    {op3_raw_week:>12,.0f}  = {op3_ratio:.2f}x la demanda")
+    for shift, ratio in procurement_over_distribution.items():
+        print(f"  Op2/Op3 con S={shift}                    {ratio:.2f}x")
     for name, row in payload["readings"].items():
         print(f"  {name:24} servicio {row['service']:.4f}  en mano al cierre "
               f"{row['on_hand_close']:>12,.0f}")
