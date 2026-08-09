@@ -1126,3 +1126,31 @@ exactamente cero ReT. Solo op9 importa, y a media capacidad.
 **Sucesor natural, con la evidencia en contra ya conocida:** endpoint con precio `J(lambda)` que
 incluya unidades repuestas y caducadas. El gate conservativo ya midio esa familia y dio +0,000403.
 No se abre bloque virgen para esto.
+
+---
+
+## CIERRE de la familia del buffer estrategico (2026-08-08)
+
+**`STRATEGIC_BUFFER_FAMILY_CLOSED__NO_PRICED_SEQUENTIAL_HEADROOM`** —
+`results/budget_expiry_priced/result.json`. Regla de cierre fijada antes de correr en
+`docs/ENMIENDA_ENDPOINT_CON_PRECIO_2026-08-08.md` §4. Cierre completo en
+`docs/CIERRE_FAMILIA_BUFFER_ESTRATEGICO_2026-08-08.md`.
+
+**Cuatro celdas x seis lambda = 24 combinaciones. Hueco clarividente exactamente +0,000000 en
+TODAS, p del nulo 1,0000, y UN unico optimo distinto sobre las doce tapes.** Ninguna tape quiere
+una postura distinta de la que quiere cualquier otra.
+
+**El instrumento esta vivo y por eso el negativo es fuerte:** el coste separa la clase, el control
+fiel se mantiene plano, y **el precio SI mueve la decision** — la postura elegida pasa de
+`[0, 0, 0.5]` a `[0, 0, 0]` en lambda 0,5 en las cuatro celdas. Solo fallan los dos falsadores que
+piden headroom.
+
+Condiciones simultaneas bajo las que se cierra: fisica conservativa (cero destruido), coste exacto
+atribuible, presupuesto compartido que se activa, caducidad que retira 352.352 unidades con el
+control fiel de 156 semanas inerte, y endpoint con precio leido sobre todo el frente de lambda.
+
+**No hay cuarta variante sobre este actuador.** Un sucesor exige un MECANISMO distinto, no otro
+precio ni otra rejilla, con preregistracion y autorizacion propias.
+
+**No cierra la contencion en general:** Program O midio 0,1515 con nulo fungible exactamente 0, y
+`contention_v1` lo reprodujo sobre verdad conocida. Cierra ESTE actuador.
