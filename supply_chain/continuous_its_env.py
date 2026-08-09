@@ -174,8 +174,6 @@ class ContinuousItsTrackAEnv(gym.Wrapper):
             # fires exactly when the policy switches the buffer off -- measured at zero
             # released units before this line existed. Under the shipped `none` mode nothing
             # happens, so the frozen physics is untouched.
-            if getattr(sim, "strategic_buffer_release_mode", "none") == "immediate":
-                sim._release_strategic_buffer()
             return {}
         targets = {k: frac * float(_I1344[k]) for k in _BUFFER_KEYS}
         if hasattr(sim, "_normalize_inventory_buffer_targets"):
@@ -184,8 +182,6 @@ class ContinuousItsTrackAEnv(gym.Wrapper):
             internal = dict(targets)
         sim.inventory_buffer_targets = dict(internal)
         sim.inventory_replenishment_period = self.replenishment_period
-        if getattr(sim, "strategic_buffer_release_mode", "none") == "immediate":
-            sim._release_strategic_buffer()
         lead = float(getattr(sim, "inventory_replenishment_lead_time", 0.0) or 0.0)
         if lead > 0.0:
             # Realistic rebuild: the higher target is not free/instant. The
@@ -359,8 +355,6 @@ class PerOpBufferTrackAEnv(ContinuousItsTrackAEnv):
             # fires exactly when the policy switches the buffer off -- measured at zero
             # released units before this line existed. Under the shipped `none` mode nothing
             # happens, so the frozen physics is untouched.
-            if getattr(sim, "strategic_buffer_release_mode", "none") == "immediate":
-                sim._release_strategic_buffer()
             return {}
         if hasattr(sim, "_normalize_inventory_buffer_targets"):
             internal = sim._normalize_inventory_buffer_targets(targets)
@@ -368,8 +362,6 @@ class PerOpBufferTrackAEnv(ContinuousItsTrackAEnv):
             internal = dict(targets)
         sim.inventory_buffer_targets = dict(internal)
         sim.inventory_replenishment_period = self.replenishment_period
-        if getattr(sim, "strategic_buffer_release_mode", "none") == "immediate":
-            sim._release_strategic_buffer()
         lead = float(getattr(sim, "inventory_replenishment_lead_time", 0.0) or 0.0)
         if lead > 0.0:
             sim.env.process(sim._delayed_buffer_top_up(lead))
