@@ -56,6 +56,10 @@ RELATIONS = {
         "claim about anything; it is neither positive nor negative evidence"),
     "RELABELLED_BLOCKED_INSTRUMENT": (
         "the run completed but the instrument was defective; retained, and never evidence"),
+    "SUPERSEDED_BY_A_WIDENED_COMPARATOR_CLASS": (
+        "the result is arithmetically intact and its advantage over the comparators it HAD is "
+        "real; a later run widened the comparator class and the advantage did not survive it. The "
+        "number may be cited only against the narrow class it beat, never as a premium"),
     "LINEAGE_NOT_SUPERSESSION": (
         "the successor was BUILT ON this artifact but answers a different question, so nothing is "
         "withdrawn; recorded for provenance and never enforced against a citation"),
@@ -117,6 +121,48 @@ CURATED: list[dict] = [
             "it searched for an observable signal capturing a ceiling that no longer replicates. "
             "Its negative is neither strengthened nor weakened; it stops being a statement about "
             "anything"),
+        "retained": True,
+    },
+    {
+        "superseded": "results/headroom/cd_surface_prediction_premium/result.json",
+        "successor": "results/program_n/gate_b_confirmation_v3/result.json",
+        "relation": "SUPERSEDED_IN_PART",
+        "evidence": "docs/CORRECCION_TECHO_SUPERFICIE_CD_2026-08-09.md",
+        "why": (
+            "two components go and the rest stands. The NOT_CAPTURED half is superseded: on a "
+            "virgin block the repaired fit captures the margin, mlp +0.1081 [+0.0601, +0.1561] "
+            "against the best classical arm of its information class. And its "
+            "train_cell_mean_comparator was never a ceiling -- neural arms beat it in all four "
+            "Gate B runs including this one -- so '+0.0625 of available margin' has no upper "
+            "bound to subtract from and may not be quoted. What stands is the finding itself: "
+            "there was margin over the linear baseline and its networks did not take it"),
+        "retained": True,
+    },
+    {
+        "superseded": "results/program_n/gate_b_confirmation_v2/result.json",
+        "successor": "results/program_n/gate_b_confirmation_v3/result.json",
+        "relation": "RELABELLED_BLOCKED_INSTRUMENT",
+        "evidence": "docs/ENMIENDA_F2_SIN_CLAUSULA_DE_ORDEN_2026-08-09.md",
+        "why": (
+            "f2 demanded the classical ranking be preserved exactly and burned the block on a "
+            "0.0153 swap whose own paired CI was [-0.0388, +0.0082] -- a sign test on a quantity "
+            "that straddles zero. The defect is the falsifier's, not the data's, and the repaired "
+            "form was shown to pass on this very artifact. Retained as development evidence; it "
+            "is not a confirmation and its seeds are spent"),
+        "retained": True,
+    },
+    {
+        "superseded": "results/track_b_nonneural/result.json",
+        "successor": "results/program_n/gate_a2_track_b/result.json",
+        "relation": "SUPERSEDED_BY_A_WIDENED_COMPARATOR_CLASS",
+        "evidence": "docs/CORRECCION_TECHO_SUPERFICIE_CD_2026-08-09.md",
+        "why": (
+            "NEURAL_PREMIUM_LIKELY_IN_TRACK_B rested on beating a constant and a threshold rule. "
+            "Gate A2 added a linear feedback policy and an EWMA rule on the same block, paired by "
+            "seed: the MLP still beats the threshold rule (+0.472 [+0.275, +0.658], 37/48) and "
+            "both history placebos, so its memory does something -- but linear feedback beats the "
+            "MLP (-0.559 [-0.748, -0.386], 7/48 favourable). The +1.60 headline also shrinks to "
+            "+0.47 once paired by seed. The premium was real against the class we had"),
         "retained": True,
     },
 ]

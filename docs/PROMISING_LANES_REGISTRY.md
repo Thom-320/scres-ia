@@ -1326,3 +1326,49 @@ que se declare como cambio de la fuente con su precio de fidelidad medido.
 
 **Lo que la verificacion NO hace:** no elimina la ambiguedad de la frase. Muestra que la lectura
 alternativa esta refutada por la fisica, que es una afirmacion mas debil y mas honesta.
+
+---
+
+## Track B reclasificado (2026-08-09) — de lane de calidad a lane de mecanismo
+
+**No se cierra y no se borra.** Cambia de qué es evidencia.
+
+**Qué era.** `results/track_b_nonneural` (`NEURAL_PREMIUM_LIKELY_IN_TRACK_B`) era la **única prima
+de calidad del repositorio contra un comparador no neuronal**: MLP 98,743 frente a regla de umbral
+97,142 y mejor constante 96,567, es decir **+1,60** sobre la regla. Su propio alcance ya avisaba:
+`DEVELOPMENT_NO_CUSTODY_SEEDS_NO_ADJUDICATION`.
+
+**Qué la mató.** La Puerta A2 (`results/program_n/gate_a2_track_b`,
+`NO_QUALITY_PREMIUM_AGAINST_THE_WIDENED_CLASS`) ensanchó la clase no neuronal con una
+**realimentación lineal** y una **regla EWMA**, sobre bloque 9300001–9300120, pareando por semilla:
+
+```
+linear_feedback  99.127          <- comparador nuevo, no neuronal
+mlp              98.567
+threshold_rule   98.095
+constant_best    98.016
+
+mlp vs mejor no-neuronal  -0.559 [-0.748, -0.386]   7/48 tapas favorables
+mlp vs threshold_rule     +0.472 [+0.275, +0.658]   37/48
+```
+
+El `+1,60` se reduce a **+0,47** al parear por semilla. Parte del titular original era el
+emparejamiento que faltaba.
+
+**Lo que sigue vivo, y por qué el lane no se cierra.** El MLP **sí** bate a la regla de umbral y
+**sí** bate a los dos placebos de historia —barajada y congelada— con la misma red. Es decir: la
+memoria hace algo real y medible. Lo que no hace es batir a cuatro líneas de realimentación lineal.
+
+Reclasificación: **de «lane de prima de calidad» a «lane de mecanismo»**. Su valor es que localiza
+dónde vive la señal —en la historia ordenada, no en el instante— y ese hallazgo alimenta el diseño
+del entorno de Fase 4. No es citable como prima neural en ningún manuscrito.
+
+**Qué lo reabriría, escrito por adelantado.** Un entorno donde la creencia exacta **no sea
+calculable en forma cerrada** —régimen semi-Markov con permanencia mínima, o suficientes fuentes
+correlacionadas para que el posterior sea intratable—, que es la única condición bajo la que este
+banco vio ganar a un aprendiz (`contention_v1`, +0,0136 [+0,0124] sobre belief-MPC). Contra un
+filtro bien especificado, una red sólo puede empatar, y eso ya está medido tres veces.
+
+**Precedencia.** `results/track_b_nonneural` queda como
+`SUPERSEDED_BY_A_WIDENED_COMPARATOR_CLASS` en `research/supersession_registry.json`: su número
+puede citarse **contra la clase estrecha que batió**, nunca como prima.

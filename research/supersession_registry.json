@@ -165,6 +165,29 @@
   },
   {
    "cited_by_claim_lock": [],
+   "evidence": "docs/CORRECCION_TECHO_SUPERFICIE_CD_2026-08-09.md",
+   "reading_rule": "one component is replaced and the rest stands; the artifact stays citable, but only together with its successor, and never for the replaced component",
+   "relation": "SUPERSEDED_IN_PART",
+   "retained": true,
+   "source": "CURATED",
+   "successor": "results/program_n/gate_b_confirmation_v3/result.json",
+   "successor_digest": {
+    "claim_status": "SURFACE_PREMIUM_CAPTURED",
+    "exists": true,
+    "file_sha256": "a07b6e738704268e32e0c2489b1e84023f2caa314a534a4817c42e53e5ef2aa4",
+    "self_sha256": "d800c3dd82c333913a962a76293f046be0cdbcaf2f98305504b86fecb44374f5"
+   },
+   "superseded": "results/headroom/cd_surface_prediction_premium/result.json",
+   "superseded_digest": {
+    "claim_status": "PREMIUM_WAS_AVAILABLE_AND_NOT_CAPTURED",
+    "exists": true,
+    "file_sha256": "b0167c135a66f68992cb5e764464e8236beba41868cd2582fcce11f7e47a9e98",
+    "self_sha256": "527227bd96eb8d8d9ed534aebea410da79efb91bb2d1e2aa365e85b5a9f43a99"
+   },
+   "why": "two components go and the rest stands. The NOT_CAPTURED half is superseded: on a virgin block the repaired fit captures the margin, mlp +0.1081 [+0.0601, +0.1561] against the best classical arm of its information class. And its train_cell_mean_comparator was never a ceiling -- neural arms beat it in all four Gate B runs including this one -- so '+0.0625 of available margin' has no upper bound to subtract from and may not be quoted. What stands is the finding itself: there was margin over the linear baseline and its networks did not take it"
+  },
+  {
+   "cited_by_claim_lock": [],
    "evidence": "results/kan_mlp_r2_benchmark_v2/result.json#supersedes",
    "reading_rule": "a defect was found and the corrected run replaces it; the old number may be cited only as the defective one, next to the defect",
    "relation": "SUPERSEDED_BY_CORRECTIVE_RERUN",
@@ -375,6 +398,29 @@
    "why": "its release freed zero with a target set and destroyed operating stock without one, and its cost counted switch-weeks rather than inventory"
   },
   {
+   "cited_by_claim_lock": [],
+   "evidence": "docs/ENMIENDA_F2_SIN_CLAUSULA_DE_ORDEN_2026-08-09.md",
+   "reading_rule": "the run completed but the instrument was defective; retained, and never evidence",
+   "relation": "RELABELLED_BLOCKED_INSTRUMENT",
+   "retained": true,
+   "source": "CURATED",
+   "successor": "results/program_n/gate_b_confirmation_v3/result.json",
+   "successor_digest": {
+    "claim_status": "SURFACE_PREMIUM_CAPTURED",
+    "exists": true,
+    "file_sha256": "a07b6e738704268e32e0c2489b1e84023f2caa314a534a4817c42e53e5ef2aa4",
+    "self_sha256": "d800c3dd82c333913a962a76293f046be0cdbcaf2f98305504b86fecb44374f5"
+   },
+   "superseded": "results/program_n/gate_b_confirmation_v2/result.json",
+   "superseded_digest": {
+    "claim_status": "BLOCKED_INSTRUMENT",
+    "exists": true,
+    "file_sha256": "8985221c1cc1d026b59739ec5aeb8dc2174e5c96974720b254dce63c880613dc",
+    "self_sha256": "d94eb4c9fdb38e52f62e392ad08c345a6c66c70adb70d8d715aca66e3e94750b"
+   },
+   "why": "f2 demanded the classical ranking be preserved exactly and burned the block on a 0.0153 swap whose own paired CI was [-0.0388, +0.0082] -- a sign test on a quantity that straddles zero. The defect is the falsifier's, not the data's, and the repaired form was shown to pass on this very artifact. Retained as development evidence; it is not a confirmation and its seeds are spent"
+  },
+  {
    "cited_by_claim_lock": [
     "RQ1_RETENTION_SIX_FAMILIES"
    ],
@@ -444,17 +490,41 @@
     "self_sha256": "7cec336e2939338f03d21f0c74cd8402eda6508352b7be49f1aca3bbcca54282"
    },
    "why": "it searched for an observable signal capturing a ceiling that no longer replicates. Its negative is neither strengthened nor weakened; it stops being a statement about anything"
+  },
+  {
+   "cited_by_claim_lock": [],
+   "evidence": "docs/CORRECCION_TECHO_SUPERFICIE_CD_2026-08-09.md",
+   "reading_rule": "the result is arithmetically intact and its advantage over the comparators it HAD is real; a later run widened the comparator class and the advantage did not survive it. The number may be cited only against the narrow class it beat, never as a premium",
+   "relation": "SUPERSEDED_BY_A_WIDENED_COMPARATOR_CLASS",
+   "retained": true,
+   "source": "CURATED",
+   "successor": "results/program_n/gate_a2_track_b/result.json",
+   "successor_digest": {
+    "claim_status": "NO_QUALITY_PREMIUM_AGAINST_THE_WIDENED_CLASS",
+    "exists": true,
+    "file_sha256": "bab5ac3287f2d5b158dc38c81bdbd90dc01e50ebf6665f418f20adf85fb3be5f",
+    "self_sha256": "72ccd1a202f6f850beedc5e3d078dae7252171c5545cb2bfd515b34dc4914fd4"
+   },
+   "superseded": "results/track_b_nonneural/result.json",
+   "superseded_digest": {
+    "claim_status": "NEURAL_PREMIUM_LIKELY_IN_TRACK_B",
+    "exists": true,
+    "file_sha256": "12e5f2562684655a5a3bec7251bed14b2d055792aa6d6a5fa04cf51c34804d7a",
+    "self_sha256": "0c5304b1eb3b0a23d2b38a8997bce05cfac08319bb769df487846b5bc289034b"
+   },
+   "why": "NEURAL_PREMIUM_LIKELY_IN_TRACK_B rested on beating a constant and a threshold rule. Gate A2 added a linear feedback policy and an EWMA rule on the same block, paired by seed: the MLP still beats the threshold rule (+0.472 [+0.275, +0.658], 37/48) and both history placebos, so its memory does something -- but linear feedback beats the MLP (-0.559 [-0.748, -0.386], 7/48 favourable). The +1.60 headline also shrinks to +0.47 once paired by seed. The premium was real against the class we had"
   }
  ],
- "generated_at_commit": "93589c443352d9c059eba4b13065e237c19d47d4",
- "n_curated": 2,
- "n_edges": 19,
+ "generated_at_commit": "fe072025784921778898617c7af8637f99d8da63",
+ "n_curated": 5,
+ "n_edges": 22,
  "policy": "a withdrawn result is retained and labelled, never deleted; this file is the single machine-readable index of which seals are withdrawn and how far",
  "problems": [],
  "relations": {
   "LINEAGE_NOT_SUPERSESSION": "the successor was BUILT ON this artifact but answers a different question, so nothing is withdrawn; recorded for provenance and never enforced against a citation",
   "PREDECESSOR_IN_A_VERSION_CHAIN": "the successor is the citable version; the predecessor is retained for provenance and is not independent evidence",
   "RELABELLED_BLOCKED_INSTRUMENT": "the run completed but the instrument was defective; retained, and never evidence",
+  "SUPERSEDED_BY_A_WIDENED_COMPARATOR_CLASS": "the result is arithmetically intact and its advantage over the comparators it HAD is real; a later run widened the comparator class and the advantage did not survive it. The number may be cited only against the narrow class it beat, never as a premium",
   "SUPERSEDED_BY_CORRECTIVE_RERUN": "a defect was found and the corrected run replaces it; the old number may be cited only as the defective one, next to the defect",
   "SUPERSEDED_BY_FAILED_REPLICATION": "a preregistered replication on fresh seeds did not reproduce it; the artifact is retained as the record of what was believed, and its number may not be cited as a live estimate",
   "SUPERSEDED_IN_PART": "one component is replaced and the rest stands; the artifact stays citable, but only together with its successor, and never for the replaced component",
