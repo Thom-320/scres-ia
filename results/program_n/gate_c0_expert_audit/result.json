@@ -1,0 +1,205 @@
+{
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "candidates": {
+  "estar_direct_des_mpc": {
+   "amortizer_cost": {
+    "mean_seconds": 3.3642356866039336e-06,
+    "p50_seconds": 3.2910029403865337e-06,
+    "p95_seconds": 3.500026650726795e-06,
+    "repetitions": 2000
+   },
+   "artifact": "results/estar_hcompute_preflight_v1/result.json",
+   "cost_ratio_expert_over_net": 44358.852801222354,
+   "mean_ret_order_replayed": null,
+   "online_cost": {
+    "p95_seconds": 0.15525716699994518,
+    "source": "sealed engineering preflight, not re-measured here"
+   },
+   "plans": {
+    "candidate_evaluations": null,
+    "decisions": null,
+    "functional_form": "DirectDESMPC -- enumerative receding horizon, one fresh DES rollout per candidate",
+    "same_family_as": null,
+    "selected_parameters": null,
+    "simulator_calls": 192
+   },
+   "quality_vs_cheap_heuristic": {
+    "baseline": null,
+    "ci95_high": null,
+    "ci95_low": null,
+    "lcb_positive": null,
+    "mean": null,
+    "measured": false,
+    "metric": null,
+    "note": "the preflight is engineering_only with learner_trained=false and compares the planner against no heuristic at all"
+   }
+  },
+  "k3_strong_mpc": {
+   "amortizer_cost": {
+    "mean_seconds": 3.3642356866039336e-06,
+    "p50_seconds": 3.2910029403865337e-06,
+    "p95_seconds": 3.500026650726795e-06,
+    "repetitions": 2000
+   },
+   "artifact": "results/k3/strong_mpc_terminal.json",
+   "cost_ratio_expert_over_net": 0.050743734413413746,
+   "mean_ret_order_replayed": 0.934375,
+   "online_cost": {
+    "mean_seconds": 1.6789560322649777e-07,
+    "p50_seconds": 1.66997779160738e-07,
+    "p95_seconds": 2.0797597244381905e-07,
+    "repetitions": 2000
+   },
+   "plans": {
+    "candidate_evaluations": 0,
+    "decisions": 320,
+    "functional_form": "paced_policy(alpha, beta, gamma) -- budget pace plus forecast and inventory feedback; its own docstring says 'no latent state'",
+    "same_family_as": "inventory_paced, which is paced_policy with alpha fixed at 0.0; the two arms differ only by that grid",
+    "selected_parameters": [
+     1.25,
+     0.0,
+     1.5
+    ],
+    "simulator_calls": 0
+   },
+   "quality_vs_cheap_heuristic": {
+    "baseline": "budgeted_sS",
+    "ci95_high": 0.019284226190476192,
+    "ci95_low": 0.005456324404761906,
+    "lcb_positive": true,
+    "mean": 0.012423115079365079,
+    "measured": true,
+    "metric": "ret_order"
+   }
+  }
+ },
+ "claim_status": "NO_QUALIFYING_EXPERT",
+ "contract_path": "docs/PREREGISTRO_PUERTA_C_AMORTIZACION_2026-08-09.md",
+ "contract_sha256": "ab2d18173be84e9445d22e6992bce300350c4944515c8059e6fcff6beb7bb878",
+ "created_at": "2026-08-10T04:11:07.419882+00:00",
+ "falsifier_summary": {
+  "all_passed": false,
+  "disclosures": [],
+  "failed": [
+   "c1_the_expert_actually_plans",
+   "c2_the_expert_is_more_expensive_than_its_amortizer",
+   "c3_the_expert_beats_the_cheap_heuristic"
+  ],
+  "n_computed": 4,
+  "n_disclosures": 0,
+  "n_failed": 3,
+  "n_not_applicable": 1,
+  "not_applicable": [
+   "custody"
+  ]
+ },
+ "falsifiers": {
+  "c1_the_expert_actually_plans": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "n_candidates": 2,
+     "n_that_plan": 1
+    },
+    "per_candidate": {
+     "estar_direct_des_mpc": true,
+     "k3_strong_mpc": false
+    },
+    "why_it_can_fail": "a policy named for the role it was expected to play, with no measurement that it plays it, is the defect this project already shipped once as a 'ceiling'. Zero candidate evaluations and zero simulator calls means a closed-form rule"
+   },
+   "passed": false
+  },
+  "c2_the_expert_is_more_expensive_than_its_amortizer": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "n_candidates": 2,
+     "n_expensive": 1
+    },
+    "cost_ratios": {
+     "estar_direct_des_mpc": 44358.852801222354,
+     "k3_strong_mpc": 0.050743734413413746
+    },
+    "why_it_can_fail": "a linear rule is cheaper than any network forward pass, which makes the amortization estimand NEGATIVE by construction rather than merely small"
+   },
+   "passed": false
+  },
+  "c3_the_expert_beats_the_cheap_heuristic": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "n_better": 1,
+     "n_candidates": 2
+    },
+    "measured": {
+     "estar_direct_des_mpc": false,
+     "k3_strong_mpc": true
+    },
+    "why_it_can_fail": "amortizing a planner nobody measured against a heuristic buys an unknown; this fails explicitly when the quality comparison was never run, which is not the same as it having been run and lost"
+   },
+   "passed": false
+  },
+  "c4_a_control_must_separate_the_candidates": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "n_candidates": 2,
+     "n_distinct_verdicts": 2
+    },
+    "why_it_can_fail": "if both candidates get the identical verdict on all three conditions, C0 does not discriminate and the audit measures nothing"
+   },
+   "passed": true
+  },
+  "custody": {
+   "evidence": {
+    "artifacts_read": [
+     "results/k3/strong_mpc_terminal.json",
+     "results/estar_hcompute_preflight_v1/result.json"
+    ],
+    "networks_trained": 0,
+    "seeds_opened": 0,
+    "why_it_can_fail": "it cannot: C0 opens no seed and trains nothing. It replays declared K3 test tapes to instrument a policy and times code; the quality numbers are read from sealed artifacts."
+   },
+   "not_applicable": true,
+   "passed": null
+  }
+ },
+ "per_candidate_verdicts": {
+  "estar_direct_des_mpc": {
+   "better": false,
+   "expensive": true,
+   "plans": true
+  },
+  "k3_strong_mpc": {
+   "better": true,
+   "expensive": false,
+   "plans": false
+  }
+ },
+ "qualifying_experts": [],
+ "reference_path": "results/k3/strong_mpc_terminal.json",
+ "reference_sha256": null,
+ "run_role": "EXPERT_AUDIT_BEFORE_TRAINING",
+ "schema_version": "program_n_gate_c0_v1",
+ "scope": "NO_SEEDS_OPENED_NO_NETWORK_TRAINED_STOP_RULE_ONLY",
+ "self_sha256": "0abfd374a4bf291b3a19f2f512030a00f42ad073e8e28842159fa0e21cd68148",
+ "sesoi": 0.01,
+ "training_authorized_by_this_run": false
+}
