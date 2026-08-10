@@ -684,6 +684,15 @@
       "source": "results/garrido_h2_h3_confirmation_v1/result.json",
       "start": 96111336,
       "status": "BURNED_CONFIRMATION_COMPLETE"
+    },
+    {
+      "end": 9600008,
+      "id": "program_n_gate_b_confirmation_v3",
+      "lifecycle": "RESERVED_NOT_OPENED until the run consumes it; one-way door",
+      "purpose": "confirm the CD-surface premium with f2 stripped of its ordering clause",
+      "registered_by": "manual PI exception 2026-08-09",
+      "start": 9600001,
+      "status": "RESERVED_NOT_OPENED"
     }
   ],
   "inventory_limitations": [
@@ -767,6 +776,13 @@
         "garrido_written_approval_required"
       ],
       "note": "editorial gate, not a scientific one -- recorded as such in docs/DONDE_PODEMOS_SER_LAXOS_2026-08-02.md. NO scientific gate is lifted: H_compute, service/resource non-inferiority, r2_is_not_a_control_gate and the quality authorisation all stand. Gate C is authorised in its AMORTIZATION lane only."
+    },
+    {
+      "action": "OPEN_VIRGIN_BLOCK",
+      "at": "2026-08-09T22:00:00+00:00",
+      "authorisation": "docs/ENMIENDA_F2_SIN_CLAUSULA_DE_ORDEN_2026-08-09.md",
+      "block": "9600001-9600008",
+      "note": "third block for the same hypothesis. Two predecessors (9400001-8, 9500001-8) were burned by falsifier defects of mine, not by the data. f2's ordering clause is removed; a reversal must now have its own CI excluding zero. If this block is also lost to instrument, Gate B closes."
     }
   ],
   "reconciled_at": "2026-08-08T15:57:32.987028+00:00",

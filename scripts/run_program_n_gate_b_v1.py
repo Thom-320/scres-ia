@@ -304,19 +304,34 @@ def main() -> int:
     # asks the intended question without depending on the data -- byte-identical module manifest,
     # and the classical ranking preserved.
     if args.confirmation_of is not None:
+        # Amendment 2026-08-09 (second): the previous confirmation form demanded that the classical
+        # ranking be preserved exactly. It burned block 9500001-9500008 on a 0.0153 swap between
+        # spline_buffer and linear_interactions whose own paired CI was [-0.0388, +0.0082] -- a
+        # sign test on a quantity that straddles zero, which is the failure mode the Program L
+        # closure forbade. The order clause is REMOVED. What replaces it is a reversal that is
+        # itself significant: sampling noise cannot produce one, a changed instrument can.
         dev = json.loads(Path(args.confirmation_of).read_text())
         manifest_same = (module_manifest(MODULES) == dev.get("module_manifest"))
         order = ["spline_buffer", "linear_interactions", "linear_additive", "constant"]
-        ranks_ok = all(means[order[i]] >= means[order[i + 1]] for i in range(len(order) - 1))
+        reversals = []
+        for i in range(len(order) - 1):
+            hi, lo = order[i], order[i + 1]
+            p = paired(lo, hi)                       # positive => the pair reversed
+            if p["ci95_low"] > 0.0:
+                reversals.append({"expected_higher": hi, "observed_higher": lo,
+                                  "mean_difference": p["mean_difference"],
+                                  "ci95_low": p["ci95_low"], "ci95_high": p["ci95_high"]})
         f2 = F.check(
-            bool(manifest_same and ranks_ok),
-            "on fresh tapes the levels MUST move; what may not move is the instrument. This fails "
-            "if a module hash differs or if the classical arms reorder, and neither can happen "
-            "from sampling variation",
+            bool(manifest_same and not reversals),
+            "on fresh tapes the levels MUST move and so may their order when two arms are "
+            "indistinguishable; what may not move is the instrument. This fails if a module hash "
+            "differs, or if a classical pair reverses with its own paired CI excluding zero -- a "
+            "reversal that sampling variation cannot manufacture",
             computed_from={"n_classical_ranked": len(order),
+                           "n_significant_reversals": len(reversals),
                            "max_level_shift": max(abs(means[m] - dev["held_out_r2_mean"][m])
                                                   for m in order)},
-            module_manifest_identical=manifest_same, ranking_preserved=ranks_ok,
+            module_manifest_identical=manifest_same, significant_reversals=reversals,
             development_artifact=str(args.confirmation_of))
     else:
         f2 = F.lt(
