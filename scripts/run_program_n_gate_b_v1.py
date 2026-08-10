@@ -151,6 +151,14 @@ def main() -> int:
     ap.add_argument("--horizon-weeks", type=int, default=52)
     ap.add_argument("--folds", type=int, default=5)
     ap.add_argument("--skip-kan", action="store_true")
+    ap.add_argument("--endpoint", choices=("cobb_douglas", "ret_excel"), default="cobb_douglas",
+                    help="ret_excel is the LEGACY SENSITIVITY surface. It is a prediction target "
+                         "here and never a training reward: ret_excel is measured to reward "
+                         "abandonment, so a policy fitted to it is forbidden. Predicting it asks "
+                         "whether the premium is a property of the method or of one metric.")
+    ap.add_argument("--replay-of", type=str, default=None,
+                    help="registry block id whose tapes this run re-reads. A sensitivity on the "
+                         "same tapes is a declared replay, not an independent confirmation.")
     ap.add_argument("--confirmation-of", type=Path, default=None,
                     help="path to the development artifact. Switches f2 from the DEVELOPMENT check "
                          "(same tapes, so levels must match) to the CONFIRMATION check (different "
@@ -162,13 +170,14 @@ def main() -> int:
     base = args.seed_base if args.seed_base is not None else SEED_BASE
     seeds = [base + i for i in range(args.seeds)]
 
-    cells, index = {}, []
+    cells, index, legacy_ret = {}, [], {}
     for family in FAMILIES:
         for escalation, mult in ESCALATIONS.items():
             for buf in BUFFER_HOURS:
                 for seed in seeds:
-                    agg, _ = episode(FAMILY_RISKS[family], mult, buf, seed, horizon)
+                    agg, ret = episode(FAMILY_RISKS[family], mult, buf, seed, horizon)
                     cells[(family, escalation, buf, seed)] = agg
+                    legacy_ret[(family, escalation, buf, seed)] = float(ret)
                     index.append((family, escalation, buf, seed))
         print(f"  {family} listo ({time.perf_counter() - started:.0f}s)", flush=True)
 
@@ -178,7 +187,13 @@ def main() -> int:
     g = np.array([s for (_, _, _, s) in index])
     cell_key = [(f, e, b) for (f, e, b, _) in index]
 
+    ret_vector = np.array([legacy_ret[k] for k in index])
+
     def target_from_training(train_idx):
+        if args.endpoint == "ret_excel":
+            # No train-dependent calibration: ret_excel carries its own scale, so the target does
+            # not move with the fold. The fold structure still governs fitting and evaluation.
+            return ret_vector
         maxima = {v: max(max(aggs[i][v] for i in train_idx), 1.0 + 1e-9)
                   for v in ("zeta", "epsilon", "phi", "tau")}
         maxima["kappa_dot"] = float(len(train_idx))
@@ -303,7 +318,24 @@ def main() -> int:
     # arms are deterministic given the data and move because the data moved. The confirmation form
     # asks the intended question without depending on the data -- byte-identical module manifest,
     # and the classical ranking preserved.
-    if args.confirmation_of is not None:
+    if args.endpoint != "cobb_douglas":
+        # The target changed, so neither the levels nor their order have any reason to reproduce
+        # the Cobb-Douglas run, and testing them would be the same category error that burned two
+        # blocks. What still must hold, and is the whole point of a sensitivity, is that the
+        # instrument is the same one.
+        dev = json.loads(Path(args.confirmation_of).read_text()) if args.confirmation_of else {}
+        manifest_same = (module_manifest(MODULES) == dev.get("module_manifest")) if dev else None
+        f2 = F.check(
+            bool(manifest_same) if dev else False,
+            "a sensitivity is only a sensitivity if the code is byte-identical to the run it is a "
+            "sensitivity OF. This fails if any module hash differs, or if no reference run was "
+            "given at all -- in which case nothing is being varied but the target",
+            computed_from={"n_modules": len(MODULES),
+                           "reference_given": float(bool(dev))},
+            module_manifest_identical=manifest_same,
+            levels_not_compared="the endpoint differs; level and order reproduction are undefined",
+            reference_artifact=str(args.confirmation_of) if args.confirmation_of else None)
+    elif args.confirmation_of is not None:
         # Amendment 2026-08-09 (second): the previous confirmation form demanded that the classical
         # ranking be preserved exactly. It burned block 9500001-9500008 on a 0.0153 swap between
         # spline_buffer and linear_interactions whose own paired CI was [-0.0388, +0.0082] -- a
@@ -375,11 +407,16 @@ def main() -> int:
         "linear_lagged, a classical model with the same input, and never against the arms that "
         "lack it",
         evidence={"recurrent_vs_linear_lagged": vs_lagged["recurrent"]})
-    checks["custody"] = custody_falsifier(seeds)
+    checks["custody"] = custody_falsifier(seeds, replay_of=args.replay_of)
     summary = F.summarise(checks)
 
     if not checks["f2_classical_arms_reproduce"]["passed"]:
         status = "BLOCKED_INSTRUMENT"
+    elif args.endpoint == "ret_excel":
+        # A sensitivity never earns the confirmatory label, whichever way it comes out.
+        status = ("SENSITIVITY_PREMIUM_HOLDS_ON_LEGACY_SURFACE"
+                  if checks["f5_neural_premium_over_the_primary"]["passed"]
+                  else "SENSITIVITY_PREMIUM_DOES_NOT_HOLD_ON_LEGACY_SURFACE")
     elif not checks["f4_networks_now_reach_the_linear"]["passed"]:
         status = "NETWORKS_WERE_NOT_THE_PROBLEM"
     elif checks["f5_neural_premium_over_the_primary"]["passed"]:
@@ -390,8 +427,12 @@ def main() -> int:
     payload = {
         "schema_version": "program_n_gate_b_v1", "claim_status": status,
         "created_at": datetime.now(timezone.utc).isoformat(),
-        "run_role": "DEVELOPMENT", "scope": "DEVELOPMENT_REANALYSIS_NO_NEW_SEEDS",
-        "endpoint": "held_out_r2_on_R_cobb_douglas", "seeds": seeds,
+        "run_role": "DEVELOPMENT",
+        "scope": ("SENSITIVITY_REPLAY_SAME_TAPES_DIFFERENT_TARGET_NOT_A_CONFIRMATION"
+                  if args.endpoint == "ret_excel" else "DEVELOPMENT_REANALYSIS_NO_NEW_SEEDS"),
+        "endpoint": ("held_out_r2_on_R_cobb_douglas" if args.endpoint == "cobb_douglas"
+                     else "held_out_r2_on_ret_excel_risk_conditional__LEGACY_SENSITIVITY"),
+        "seeds": seeds,
         "sesoi": SESOI, "primary_baseline": PRIMARY,
         "grid": GRID, "init_seeds": INIT_SEEDS, "max_steps": MAX_STEPS, "patience": PATIENCE,
         "held_out_r2_mean": means, "per_fold": per_fold, "chosen_hyperparameters": chosen,
