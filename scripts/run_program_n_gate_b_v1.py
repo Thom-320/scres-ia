@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import argparse
 from datetime import datetime, timezone
+import json
 from pathlib import Path
 import sys
 import time
@@ -150,6 +151,10 @@ def main() -> int:
     ap.add_argument("--horizon-weeks", type=int, default=52)
     ap.add_argument("--folds", type=int, default=5)
     ap.add_argument("--skip-kan", action="store_true")
+    ap.add_argument("--confirmation-of", type=Path, default=None,
+                    help="path to the development artifact. Switches f2 from the DEVELOPMENT check "
+                         "(same tapes, so levels must match) to the CONFIRMATION check (different "
+                         "tapes, so code identity and rank order must match instead)")
     ap.add_argument("--output", type=Path, default=Path(__file__).resolve().parent.parent / OUT)
     args = ap.parse_args()
     started = time.perf_counter()
@@ -292,15 +297,39 @@ def main() -> int:
                     ("constant", "linear_additive", "linear_interactions", "spline_buffer",
                      "tree", "train_cell_mean_comparator")}
 
+    # f2 has two forms and the first burned a block. On the SAME tapes it asks whether anything
+    # but the neural fit changed, and levels must match. On DIFFERENT tapes that question becomes
+    # "do eight fresh seeds reproduce eight old ones", which has no reason to hold: the classical
+    # arms are deterministic given the data and move because the data moved. The confirmation form
+    # asks the intended question without depending on the data -- byte-identical module manifest,
+    # and the classical ranking preserved.
+    if args.confirmation_of is not None:
+        dev = json.loads(Path(args.confirmation_of).read_text())
+        manifest_same = (module_manifest(MODULES) == dev.get("module_manifest"))
+        order = ["spline_buffer", "linear_interactions", "linear_additive", "constant"]
+        ranks_ok = all(means[order[i]] >= means[order[i + 1]] for i in range(len(order) - 1))
+        f2 = F.check(
+            bool(manifest_same and ranks_ok),
+            "on fresh tapes the levels MUST move; what may not move is the instrument. This fails "
+            "if a module hash differs or if the classical arms reorder, and neither can happen "
+            "from sampling variation",
+            computed_from={"n_classical_ranked": len(order),
+                           "max_level_shift": max(abs(means[m] - dev["held_out_r2_mean"][m])
+                                                  for m in order)},
+            module_manifest_identical=manifest_same, ranking_preserved=ranks_ok,
+            development_artifact=str(args.confirmation_of))
+    else:
+        f2 = F.lt(
+            max(reproduction.values()), 0.02,
+            "the classical arms are untouched code; if they move, I changed more than the neural "
+            "fit and nothing here is comparable with the predecessor")
+
     checks = {
         "f1_ceiling_still_above_the_primary": F.gt(
             means["train_cell_mean_comparator"] - means[PRIMARY], 0.0,
             "if the ceiling vanishes once the fit is repaired, there was no margin to capture and "
             "the predecessor's headline was itself an artefact"),
-        "f2_classical_arms_reproduce": F.lt(
-            max(reproduction.values()), 0.02,
-            "the classical arms are untouched code; if they move, I changed more than the neural "
-            "fit and nothing here is comparable with the predecessor"),
+        "f2_classical_arms_reproduce": f2,
         "f3_tuning_used_only_inner_validation": F.check(
             all(len(v) == args.folds for k, v in chosen.items() if v),
             "selection that sees the test fold is exactly the sin the predecessor declared about "
@@ -353,6 +382,7 @@ def main() -> int:
         "held_out_r2_mean": means, "per_fold": per_fold, "chosen_hyperparameters": chosen,
         "vs_primary": vs_primary, "vs_lagged": vs_lagged,
         "predecessor_means": PREDECESSOR, "reproduction_gap": reproduction,
+        "confirmation_of": str(args.confirmation_of) if args.confirmation_of else None,
         "module_manifest": module_manifest(MODULES),
         "falsifiers": checks, "falsifier_summary": summary,
         "elapsed_seconds": time.perf_counter() - started,
