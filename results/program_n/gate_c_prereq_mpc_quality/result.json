@@ -1,0 +1,235 @@
+{
+ "best_constant_by_ledger": 0.125,
+ "best_constant_by_objective": 0.0,
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "PLANNER_OBJECTIVE_IS_FLAT_NO_QUALITY_TO_MEASURE",
+ "comparisons": {
+  "lost_vs_best_constant": {
+   "ci95_high": -48.29773435029548,
+   "ci95_low": -52.61893231637119,
+   "favourable": 0,
+   "lcb_positive": false,
+   "mean": -50.458333333333336,
+   "n": 24
+  },
+  "lost_vs_random": {
+   "ci95_high": -13.328418404827115,
+   "ci95_low": -18.504914928506217,
+   "favourable": 0,
+   "lcb_positive": false,
+   "mean": -15.916666666666666,
+   "n": 24
+  },
+  "objective_vs_best_constant": {
+   "ci95_high": 0.0,
+   "ci95_low": 0.0,
+   "favourable": 0,
+   "lcb_positive": false,
+   "mean": 0.0,
+   "n": 24
+  },
+  "objective_vs_random": {
+   "ci95_high": 0.0,
+   "ci95_low": 0.0,
+   "favourable": 0,
+   "lcb_positive": false,
+   "mean": 0.0,
+   "n": 24
+  }
+ },
+ "contract_path": "docs/PREREGISTRO_PUERTA_C_AMORTIZACION_2026-08-09.md",
+ "contract_sha256": "ab2d18173be84e9445d22e6992bce300350c4944515c8059e6fcff6beb7bb878",
+ "created_at": "2026-08-10T05:21:50.137668+00:00",
+ "elapsed_seconds": 217.43288133305032,
+ "epochs": 52,
+ "falsifier_summary": {
+  "all_passed": false,
+  "disclosures": [],
+  "failed": [
+   "p1_the_objective_responds_to_the_action",
+   "p2_the_planner_beats_the_best_constant_on_its_own_objective",
+   "p3_the_planner_beats_the_best_constant_on_the_physical_ledger",
+   "p4_a_control_must_be_worse",
+   "p5_the_plan_is_not_degenerate"
+  ],
+  "n_computed": 5,
+  "n_disclosures": 0,
+  "n_failed": 5,
+  "n_not_applicable": 1,
+  "not_applicable": [
+   "custody"
+  ]
+ },
+ "falsifiers": {
+  "custody": {
+   "evidence": {
+    "n_tapes": 24,
+    "seeds_opened": 0,
+    "shards": [
+     "step3_s1_r1r_a",
+     "step3_s2_r1r_b",
+     "step3_s3_r2r_a",
+     "step3_s4_r2r_b"
+    ],
+    "why_it_can_fail": "it cannot: these are already-consumed step-3 development tapes, replayed on purpose. No seed is opened and the run carries no confirmatory grade."
+   },
+   "not_applicable": true,
+   "passed": null
+  },
+  "p1_the_objective_responds_to_the_action": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "n_levels": 8,
+     "objective_spread": 0.0
+    },
+    "ledger_by_frac": {
+     "0.0": 251.0,
+     "0.125": 200.54166666666666,
+     "0.25": 225.16666666666666,
+     "0.375": 233.625,
+     "0.5": 237.16666666666666,
+     "0.625": 238.83333333333334,
+     "0.75": 239.45833333333334,
+     "1.0": 242.91666666666666
+    },
+    "ledger_spread_n_lost": 50.45833333333334,
+    "objective_by_frac": {
+     "0.0": -3100.0,
+     "0.125": -3100.0,
+     "0.25": -3100.0,
+     "0.375": -3100.0,
+     "0.5": -3100.0,
+     "0.625": -3100.0,
+     "0.75": -3100.0,
+     "1.0": -3100.0
+    },
+    "why_it_can_fail": "a planner that scores every candidate on a flat objective is not a better decision maker; it is N evaluations of a constant, and nothing downstream of this is interpretable. This fails if the eight constant arms return the identical objective"
+   },
+   "passed": false
+  },
+  "p2_the_planner_beats_the_best_constant_on_its_own_objective": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "ci95_low": 0.0,
+     "mean": 0.0
+    },
+    "why_it_can_fail": "the planner may simply not beat a well-searched constant, which is the outcome this project has measured in every other decision class"
+   },
+   "passed": false
+  },
+  "p3_the_planner_beats_the_best_constant_on_the_physical_ledger": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "ci95_low": -52.61893231637119,
+     "mean": -50.458333333333336
+    },
+    "why_it_can_fail": "winning an engineering reward while losing more orders would make the objective the wrong one, and this separates those two outcomes instead of conflating them"
+   },
+   "passed": false
+  },
+  "p4_a_control_must_be_worse": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "lost_lcb": -18.504914928506217,
+     "objective_lcb": 0.0
+    },
+    "why_it_can_fail": "if a random action sequence matches the planner on both endpoints, the comparison has no resolution and neither does the planner"
+   },
+   "passed": false
+  },
+  "p5_the_plan_is_not_degenerate": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "n_tapes": 24,
+     "n_unique_plans": 1
+    },
+    "plans_are_all_constant": true,
+    "why_it_can_fail": "a planner whose chosen sequence is a single repeated level IS a constant policy, however expensively it arrived there"
+   },
+   "passed": false
+  }
+ },
+ "grid": [
+  0.0,
+  0.125,
+  0.25,
+  0.375,
+  0.5,
+  0.625,
+  0.75,
+  1.0
+ ],
+ "mask": "M111",
+ "mpc_mean": {
+  "n_lost": 251.0,
+  "n_served": 0.0,
+  "objective": -3100.0,
+  "ret_full_ledger": 0.0
+ },
+ "n_lost_by_constant": {
+  "0.0": 251.0,
+  "0.125": 200.54166666666666,
+  "0.25": 225.16666666666666,
+  "0.375": 233.625,
+  "0.5": 237.16666666666666,
+  "0.625": 238.83333333333334,
+  "0.75": 239.45833333333334,
+  "1.0": 242.91666666666666
+ },
+ "n_tapes": 24,
+ "n_unique_plans": 1,
+ "objective_by_constant": {
+  "0.0": -3100.0,
+  "0.125": -3100.0,
+  "0.25": -3100.0,
+  "0.375": -3100.0,
+  "0.5": -3100.0,
+  "0.625": -3100.0,
+  "0.75": -3100.0,
+  "1.0": -3100.0
+ },
+ "planner_seconds_per_episode": {
+  "mean": 7.468955941039894,
+  "p95": 8.128485533897765
+ },
+ "planner_work": {
+  "candidate_evaluations": 9984,
+  "decisions": 1248,
+  "des_calls": 9984,
+  "replay_steps": 254592
+ },
+ "random_mean": {
+  "n_lost": 235.08333333333334,
+  "n_served": 0.0,
+  "objective": -3100.0,
+  "ret_full_ledger": 0.0
+ },
+ "reference_path": "results/program_n/gate_c0_expert_audit/result.json",
+ "reference_sha256": "0abfd374a4bf291b3a19f2f512030a00f42ad073e8e28842159fa0e21cd68148",
+ "run_role": "PREREQUISITE_QUALITY_MEASUREMENT",
+ "schema_version": "program_n_gate_c_prereq_v1",
+ "scope": "REPLAY_OF_CONSUMED_STEP3_TAPES_NO_SEEDS_OPENED_NO_CONFIRMATORY_GRADE",
+ "self_sha256": "63977c3c620d93a649bf6cdfd8311a576689b8ed4fc67429e1cd8c42010a9618"
+}
