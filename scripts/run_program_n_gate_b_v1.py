@@ -144,6 +144,9 @@ def tuned_predict(kind, x_tr, y_tr, x_te, fold_seed, rng):
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--seeds", type=int, default=8)
+    ap.add_argument("--seed-base", type=int, default=None,
+                    help="override the seed base; used by the confirmation on a "
+                         "virgin block, which changes ONLY the seed values")
     ap.add_argument("--horizon-weeks", type=int, default=52)
     ap.add_argument("--folds", type=int, default=5)
     ap.add_argument("--skip-kan", action="store_true")
@@ -151,7 +154,8 @@ def main() -> int:
     args = ap.parse_args()
     started = time.perf_counter()
     horizon = float(args.horizon_weeks * HOURS_PER_WEEK)
-    seeds = [SEED_BASE + i for i in range(args.seeds)]
+    base = args.seed_base if args.seed_base is not None else SEED_BASE
+    seeds = [base + i for i in range(args.seeds)]
 
     cells, index = {}, []
     for family in FAMILIES:
