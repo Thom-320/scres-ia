@@ -1,0 +1,498 @@
+{
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "chosen_hyperparameters": {
+  "kan_tuned": [
+   {
+    "lr": 0.003,
+    "wd": 0.0,
+    "width": 16
+   },
+   {
+    "lr": 0.003,
+    "wd": 0.0001,
+    "width": 64
+   },
+   {
+    "lr": 0.003,
+    "wd": 0.0,
+    "width": 64
+   },
+   {
+    "lr": 0.003,
+    "wd": 0.0,
+    "width": 64
+   },
+   {
+    "lr": 0.01,
+    "wd": 0.0,
+    "width": 64
+   }
+  ],
+  "mlp_tuned": [
+   {
+    "lr": 0.003,
+    "wd": 0.0,
+    "width": 16
+   },
+   {
+    "lr": 0.003,
+    "wd": 0.0001,
+    "width": 64
+   },
+   {
+    "lr": 0.003,
+    "wd": 0.0001,
+    "width": 16
+   },
+   {
+    "lr": 0.003,
+    "wd": 0.0001,
+    "width": 16
+   },
+   {
+    "lr": 0.01,
+    "wd": 0.0001,
+    "width": 16
+   }
+  ],
+  "recurrent": [
+   {
+    "lr": 0.01,
+    "wd": 0.0001,
+    "width": 64
+   },
+   {
+    "lr": 0.003,
+    "wd": 0.0,
+    "width": 64
+   },
+   {
+    "lr": 0.003,
+    "wd": 0.0001,
+    "width": 16
+   },
+   {
+    "lr": 0.01,
+    "wd": 0.0001,
+    "width": 64
+   },
+   {
+    "lr": 0.003,
+    "wd": 0.0001,
+    "width": 64
+   }
+  ]
+ },
+ "claim_status": "SENSITIVITY_PREMIUM_HOLDS_ON_LEGACY_SURFACE",
+ "confirmation_of": "results/program_n/gate_b_confirmation_v3/result.json",
+ "contract_path": "docs/PREREGISTRO_PUERTA_B_SUPERFICIE_CD_2026-08-09.md",
+ "contract_sha256": "916786f2995e7af18a4cbff09d2aed4f7f031e5ca1d326794291796c8d306e0a",
+ "created_at": "2026-08-10T03:40:04.952796+00:00",
+ "elapsed_seconds": 479.0958569999784,
+ "endpoint": "held_out_r2_on_ret_excel_risk_conditional__LEGACY_SENSITIVITY",
+ "falsifier_summary": {
+  "all_passed": false,
+  "disclosures": [
+   "d1_recurrent_information_set"
+  ],
+  "failed": [
+   "f4_networks_now_reach_the_linear"
+  ],
+  "n_computed": 7,
+  "n_disclosures": 1,
+  "n_failed": 1,
+  "n_not_applicable": 1,
+  "not_applicable": [
+   "custody"
+  ]
+ },
+ "falsifiers": {
+  "custody": {
+   "evidence": {
+    "n_sealed_artifact_overlap": 8,
+    "n_seeds": 8,
+    "note": "deliberate re-execution of registry block 'program_n_gate_b_confirmation_v3'; these seeds are NOT virgin and are not meant to be",
+    "registry_conflicts": [
+     {
+      "id": "program_n_gate_b_confirmation_v3",
+      "n_overlapping": 8,
+      "range": [
+       9600001,
+       9600008
+      ],
+      "source": null,
+      "status": "BURNED_CONFIRMATION_COMPLETE"
+     }
+    ],
+    "registry_is_complete": false,
+    "registry_status": "BASELINE_INVENTORY_INCOMPLETE_NO_NEW_SEEDS_AUTHORIZED",
+    "replay_of": "program_n_gate_b_confirmation_v3",
+    "sealed_artifact_overlap": [
+     9600001,
+     9600002,
+     9600003,
+     9600004,
+     9600005,
+     9600006,
+     9600007,
+     9600008
+    ],
+    "seeds": [
+     9600001,
+     9600002,
+     9600003,
+     9600004,
+     9600005,
+     9600006,
+     9600007,
+     9600008
+    ],
+    "status": "DECLARED_REPLAY",
+    "why_it_can_fail": "it cannot: this is a declared custody replay of registry block 'program_n_gate_b_confirmation_v3', so the seeds are used on purpose. Counted in neither column."
+   },
+   "not_applicable": true,
+   "passed": null
+  },
+  "d1_recurrent_information_set": {
+   "computed": false,
+   "disclosure": true,
+   "evidence": {
+    "evidence": {
+     "recurrent_vs_linear_lagged": {
+      "baseline": "linear_lagged",
+      "ci95_high": 0.03235117674450771,
+      "ci95_low": -0.10297760668520264,
+      "mean_difference": -0.03531321497034747,
+      "passes_sesoi_and_ci": false,
+      "sesoi": 0.05
+     }
+    },
+    "statement": "the recurrent arm sees the PREVIOUS configuration's resilience, which no other arm does, because Fig. 5's activation compares x with x-1. It is therefore judged against linear_lagged, a classical model with the same input, and never against the arms that lack it"
+   },
+   "passed": null
+  },
+  "f1_ceiling_still_above_the_primary": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": 0.10369394343525573,
+     "threshold": 0.0
+    },
+    "why_it_can_fail": "if the ceiling vanishes once the fit is repaired, there was no margin to capture and the predecessor's headline was itself an artefact"
+   },
+   "passed": true
+  },
+  "f2_classical_arms_reproduce": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "n_modules": 3,
+     "reference_given": 1.0
+    },
+    "levels_not_compared": "the endpoint differs; level and order reproduction are undefined",
+    "module_manifest_identical": true,
+    "reference_artifact": "results/program_n/gate_b_confirmation_v3/result.json",
+    "why_it_can_fail": "a sensitivity is only a sensitivity if the code is byte-identical to the run it is a sensitivity OF. This fails if any module hash differs, or if no reference run was given at all -- in which case nothing is being varied but the target"
+   },
+   "passed": true
+  },
+  "f3_tuning_used_only_inner_validation": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "folds": 5,
+     "grid_size": 8
+    },
+    "why_it_can_fail": "selection that sees the test fold is exactly the sin the predecessor declared about its own spline baseline"
+   },
+   "passed": true
+  },
+  "f4_networks_now_reach_the_linear": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": -0.06975488032238675,
+     "threshold": 0.0
+    },
+    "why_it_can_fail": "H_B may simply be false: if the repaired networks still lose to OLS, the fit was not the problem and the surface does not admit a better approximator here"
+   },
+   "passed": false
+  },
+  "f5_neural_premium_over_the_primary": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "n_compared": 4,
+     "sesoi": 0.05
+    },
+    "why_it_can_fail": "reaching the linear model is not beating it; the margin may exist and stay uncaptured even with the fit repaired"
+   },
+   "passed": true
+  },
+  "f6_recurrent_arm_is_reported": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": 5.0,
+     "threshold": 0.0
+    },
+    "why_it_can_fail": "without it Garrido's Fig. 5 as a PREDICTOR is not answered at all"
+   },
+   "passed": true
+  },
+  "f7_budgets_are_matched": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "grid": 8,
+     "init_seeds": 5,
+     "max_steps": 5000
+    },
+    "why_it_can_fail": "an unequal grid or seed count between architectures measures budget, not architecture"
+   },
+   "passed": true
+  }
+ },
+ "grid": [
+  {
+   "lr": 0.003,
+   "wd": 0.0,
+   "width": 16
+  },
+  {
+   "lr": 0.003,
+   "wd": 0.0001,
+   "width": 16
+  },
+  {
+   "lr": 0.01,
+   "wd": 0.0,
+   "width": 16
+  },
+  {
+   "lr": 0.01,
+   "wd": 0.0001,
+   "width": 16
+  },
+  {
+   "lr": 0.003,
+   "wd": 0.0,
+   "width": 64
+  },
+  {
+   "lr": 0.003,
+   "wd": 0.0001,
+   "width": 64
+  },
+  {
+   "lr": 0.01,
+   "wd": 0.0,
+   "width": 64
+  },
+  {
+   "lr": 0.01,
+   "wd": 0.0001,
+   "width": 64
+  }
+ ],
+ "held_out_r2_mean": {
+  "constant": -0.006793179781933034,
+  "kan_tuned": 0.8582300023173095,
+  "linear_additive": 0.6936497578072489,
+  "linear_interactions": 0.7905943603594956,
+  "linear_lagged": 0.9316236108313916,
+  "mlp_tuned": 0.7208394800371088,
+  "recurrent": 0.8963103958610441,
+  "spline_buffer": 0.7081970652448041,
+  "train_cell_mean_comparator": 0.8942883037947513,
+  "tree": 0.8611070330267969
+ },
+ "init_seeds": 5,
+ "max_steps": 5000,
+ "module_manifest": {
+  "missing": [],
+  "modules": {
+   "supply_chain/cobb_douglas_resilience.py": "d9d88376d666115c8dab4018b903c45986a43811649c3b57ebe5770e57204884",
+   "supply_chain/falsifiers.py": "99a64c66b62ee43ab9cf532a34932dc27ff4b4fae72d9b331fcf2a8f2a554fb7",
+   "supply_chain/supply_chain.py": "b10f5c8a1bb2bd201c7a736565c6a5af953b9f95f7cae75a56fff6ac289f6965"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "patience": 300,
+ "per_fold": {
+  "constant": [
+   -0.004180703209305303,
+   -0.011808026512496905,
+   -0.002570589226427833,
+   -0.01455018078576531,
+   -0.0008563991756698197
+  ],
+  "kan_tuned": [
+   0.8658966691592564,
+   0.818074008460476,
+   0.8587104269385286,
+   0.856489894321239,
+   0.8919790127070476
+  ],
+  "linear_additive": [
+   0.7143867032735738,
+   0.6614574720045348,
+   0.7127096765523739,
+   0.7046431517986288,
+   0.6750517854071333
+  ],
+  "linear_interactions": [
+   0.8281983606504864,
+   0.6954557264484089,
+   0.832643020765027,
+   0.8141239120203991,
+   0.7825507819131565
+  ],
+  "linear_lagged": [
+   0.9538346711457377,
+   0.8687079801418051,
+   0.9398764759796904,
+   0.9460265484267582,
+   0.9496723784629665
+  ],
+  "mlp_tuned": [
+   0.7007439741006216,
+   0.7496602799941334,
+   0.7476245401860725,
+   0.7235368774891913,
+   0.6826317284155254
+  ],
+  "recurrent": [
+   0.9234373585289278,
+   0.889542180052358,
+   0.8147718481481369,
+   0.9143360824749006,
+   0.9394645101008972
+  ],
+  "spline_buffer": [
+   0.7285228540068718,
+   0.6774656135079766,
+   0.725282567680217,
+   0.7213124794724832,
+   0.6884018115564716
+  ],
+  "train_cell_mean_comparator": [
+   0.9608859035141204,
+   0.7434857235156493,
+   0.9271203238630819,
+   0.9054570645971529,
+   0.9344925034837518
+  ],
+  "tree": [
+   0.9228589971429997,
+   0.7086376798510325,
+   0.8964126727751556,
+   0.8739802448381638,
+   0.9036455705266327
+  ]
+ },
+ "predecessor_means": {
+  "backprop": 0.5841,
+  "constant": -0.0167,
+  "kan": 0.6019,
+  "linear_additive": 0.6062,
+  "linear_interactions": 0.6306,
+  "spline_buffer": 0.6365,
+  "train_cell_mean_comparator": 0.6931,
+  "tree": 0.6225
+ },
+ "primary_baseline": "linear_interactions",
+ "reference_path": "results/headroom/cd_surface_prediction_premium/result.json",
+ "reference_sha256": "527227bd96eb8d8d9ed534aebea410da79efb91bb2d1e2aa365e85b5a9f43a99",
+ "reproduction_gap": {
+  "constant": 0.009906820218066966,
+  "linear_additive": 0.08744975780724895,
+  "linear_interactions": 0.15999436035949555,
+  "spline_buffer": 0.07169706524480413,
+  "train_cell_mean_comparator": 0.20118830379475128,
+  "tree": 0.23860703302679687
+ },
+ "run_role": "DEVELOPMENT",
+ "schema_version": "program_n_gate_b_v1",
+ "scope": "SENSITIVITY_REPLAY_SAME_TAPES_DIFFERENT_TARGET_NOT_A_CONFIRMATION",
+ "seed_block": {
+  "derived_from": "seeds",
+  "end": 9600008,
+  "n": 8,
+  "start": 9600001
+ },
+ "seeds": [
+  9600001,
+  9600002,
+  9600003,
+  9600004,
+  9600005,
+  9600006,
+  9600007,
+  9600008
+ ],
+ "self_sha256": "1e4422af16ffbd5b7e353296d063722cf54e4fd82ab15c60f5cf3ab435f69f7e",
+ "sesoi": 0.05,
+ "vs_lagged": {
+  "recurrent": {
+   "baseline": "linear_lagged",
+   "ci95_high": 0.03235117674450771,
+   "ci95_low": -0.10297760668520264,
+   "mean_difference": -0.03531321497034747,
+   "passes_sesoi_and_ci": false,
+   "sesoi": 0.05
+  }
+ },
+ "vs_primary": {
+  "kan_tuned": {
+   "baseline": "linear_interactions",
+   "ci95_high": 0.12326805694873881,
+   "ci95_low": 0.01200322696688906,
+   "mean_difference": 0.06763564195781394,
+   "passes_sesoi_and_ci": true,
+   "sesoi": 0.05
+  },
+  "mlp_tuned": {
+   "baseline": "linear_interactions",
+   "ci95_high": 0.018624885344452988,
+   "ci95_low": -0.1581346459892265,
+   "mean_difference": -0.06975488032238675,
+   "passes_sesoi_and_ci": false,
+   "sesoi": 0.05
+  },
+  "spline_buffer": {
+   "baseline": "linear_interactions",
+   "ci95_high": -0.037136842973029556,
+   "ci95_low": -0.12765774725635354,
+   "mean_difference": -0.08239729511469154,
+   "passes_sesoi_and_ci": false,
+   "sesoi": 0.05
+  },
+  "tree": {
+   "baseline": "linear_interactions",
+   "ci95_high": 0.12089348549057102,
+   "ci95_low": 0.020131859844031534,
+   "mean_difference": 0.07051267266730128,
+   "passes_sesoi_and_ci": true,
+   "sesoi": 0.05
+  }
+ }
+}

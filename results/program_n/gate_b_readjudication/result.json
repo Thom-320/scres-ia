@@ -1,0 +1,485 @@
+{
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "SURFACE_PREMIUM_SURVIVES_THE_BEST_NONNEURAL_COMPARATOR",
+ "contract_path": "docs/ENMIENDA_PUERTA_B_MEJOR_NO_NEURONAL_2026-08-09.md",
+ "contract_sha256": "376f6182b598aee61044e9d9e69e17e6a9b27b441c1865eeab962a90a078e8a9",
+ "created_at": "2026-08-10T03:44:36.977551+00:00",
+ "falsifier_summary": {
+  "all_passed": true,
+  "disclosures": [],
+  "failed": [],
+  "n_computed": 4,
+  "n_disclosures": 0,
+  "n_failed": 0,
+  "n_not_applicable": 1,
+  "not_applicable": [
+   "custody"
+  ]
+ },
+ "falsifiers": {
+  "custody": {
+   "evidence": {
+    "artifacts_read": [
+     "results/program_n/gate_b_cd_surface/result.json",
+     "results/program_n/gate_b_confirmation_v2/result.json",
+     "results/program_n/gate_b_confirmation_v3/result.json",
+     "results/program_n/gate_b_sensitivity_ret_excel/result.json"
+    ],
+    "n_episodes_run": 0,
+    "why_it_can_fail": "it cannot: no seed is opened and no episode is run. Every quantity is read from per_fold arrays already sealed in the four cited artifacts."
+   },
+   "not_applicable": true,
+   "passed": null
+  },
+  "g1_the_partition_is_by_information_set": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "n_class_a_classical": 5,
+     "n_class_b_classical": 1
+    },
+    "excluded_arm": "train_cell_mean_comparator",
+    "why_it_can_fail": "a class-B comparator judging a class-A arm, or the cell-mean comparator appearing at all, is exactly the substitution that makes a network win by construction"
+   },
+   "passed": true
+  },
+  "g2_every_artifact_contributes_its_own_folds": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "n_distinct_fold_arrays": 4,
+     "n_runs": 4
+    },
+    "why_it_can_fail": "two identical per_fold arrays would mean I read one artifact twice and reported it as two independent runs"
+   },
+   "passed": true
+  },
+  "g3_the_criterion_is_the_frozen_one": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "rule": 1.0,
+     "sesoi": 0.05
+    },
+    "why_it_can_fail": "re-adjudication is the ideal moment to quietly loosen the threshold; if SESOI or the CI rule differ from the original preregistration, the comparison is not the same one"
+   },
+   "passed": true
+  },
+  "g4_a_control_must_change_the_verdict": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "n_runs": 4,
+     "n_verdicts_changed": 1
+    },
+    "runs_whose_verdict_changed": [
+     "gate_b_sensitivity_ret_excel"
+    ],
+    "why_it_can_fail": "the same adjudication under the ORIGINAL primary-only comparator must differ somewhere; if it never does, this amendment measures nothing and the defect it claims to repair was not a defect"
+   },
+   "passed": true
+  }
+ },
+ "partition": {
+  "class_a_classical": [
+   "constant",
+   "linear_additive",
+   "linear_interactions",
+   "spline_buffer",
+   "tree"
+  ],
+  "class_a_neural": [
+   "mlp_tuned",
+   "kan_tuned"
+  ],
+  "class_b_classical": [
+   "linear_lagged"
+  ],
+  "class_b_neural": [
+   "recurrent"
+  ],
+  "excluded_from_both": "train_cell_mean_comparator"
+ },
+ "primary_baseline_control": "linear_interactions",
+ "reference_path": "results/program_n/gate_b_confirmation_v3/result.json",
+ "reference_sha256": "d800c3dd82c333913a962a76293f046be0cdbcaf2f98305504b86fecb44374f5",
+ "run_role": "READJUDICATION",
+ "runs": {
+  "gate_b_cd_surface": {
+   "arms_that_pass_vs_best_nonneural": [
+    "kan_tuned",
+    "recurrent"
+   ],
+   "artifact": "results/program_n/gate_b_cd_surface/result.json",
+   "best_nonneural_comparator": {
+    "kan_tuned": "spline_buffer",
+    "mlp_tuned": "spline_buffer",
+    "recurrent": "linear_lagged"
+   },
+   "ceiling_is_not_a_ceiling": [
+    "kan_tuned",
+    "mlp_tuned",
+    "recurrent"
+   ],
+   "claim_status_as_sealed": "SURFACE_PREMIUM_CAPTURED",
+   "endpoint": "held_out_r2_on_R_cobb_douglas",
+   "grade": "DEVELOPMENT",
+   "premium_under_primary_only": true,
+   "readjudicated_premium": true,
+   "seeds": [
+    6900001,
+    6900002,
+    6900003,
+    6900004,
+    6900005,
+    6900006,
+    6900007,
+    6900008
+   ],
+   "vs_best_nonneural": {
+    "kan_tuned": {
+     "baseline": "spline_buffer",
+     "ci95_high": 0.20512733908259995,
+     "ci95_low": 0.010950413753835903,
+     "mean_difference": 0.10803887641821792,
+     "n_folds": 5,
+     "passes_sesoi_and_ci": true,
+     "sesoi": 0.05
+    },
+    "mlp_tuned": {
+     "baseline": "spline_buffer",
+     "ci95_high": 0.26017639357938993,
+     "ci95_low": -0.14289665377103275,
+     "mean_difference": 0.058639869904178576,
+     "n_folds": 5,
+     "passes_sesoi_and_ci": false,
+     "sesoi": 0.05
+    },
+    "recurrent": {
+     "baseline": "linear_lagged",
+     "ci95_high": 0.3055899187579959,
+     "ci95_low": 0.10508623036667442,
+     "mean_difference": 0.20533807456233516,
+     "n_folds": 5,
+     "passes_sesoi_and_ci": true,
+     "sesoi": 0.05
+    }
+   },
+   "vs_primary_control": {
+    "kan_tuned": {
+     "baseline": "linear_interactions",
+     "ci95_high": 0.16650362775254485,
+     "ci95_low": 0.061427328752759344,
+     "mean_difference": 0.11396547825265209,
+     "n_folds": 5,
+     "passes_sesoi_and_ci": true,
+     "sesoi": 0.05
+    },
+    "mlp_tuned": {
+     "baseline": "linear_interactions",
+     "ci95_high": 0.21738952862089675,
+     "ci95_low": -0.08825658514367127,
+     "mean_difference": 0.06456647173861274,
+     "n_folds": 5,
+     "passes_sesoi_and_ci": false,
+     "sesoi": 0.05
+    },
+    "recurrent": {
+     "baseline": "linear_interactions",
+     "ci95_high": 0.32472698128442146,
+     "ci95_low": 0.21022534213824265,
+     "mean_difference": 0.26747616171133204,
+     "n_folds": 5,
+     "passes_sesoi_and_ci": true,
+     "sesoi": 0.05
+    }
+   }
+  },
+  "gate_b_confirmation_v2": {
+   "arms_that_pass_vs_best_nonneural": [
+    "kan_tuned"
+   ],
+   "artifact": "results/program_n/gate_b_confirmation_v2/result.json",
+   "best_nonneural_comparator": {
+    "kan_tuned": "linear_interactions",
+    "mlp_tuned": "linear_interactions",
+    "recurrent": "linear_lagged"
+   },
+   "ceiling_is_not_a_ceiling": [
+    "kan_tuned",
+    "linear_lagged",
+    "recurrent"
+   ],
+   "claim_status_as_sealed": "BLOCKED_INSTRUMENT",
+   "endpoint": "held_out_r2_on_R_cobb_douglas",
+   "grade": "DEVELOPMENT_BLOCKED_INSTRUMENT",
+   "premium_under_primary_only": true,
+   "readjudicated_premium": true,
+   "seeds": [
+    9500001,
+    9500002,
+    9500003,
+    9500004,
+    9500005,
+    9500006,
+    9500007,
+    9500008
+   ],
+   "vs_best_nonneural": {
+    "kan_tuned": {
+     "baseline": "linear_interactions",
+     "ci95_high": 0.1004722727290564,
+     "ci95_low": 0.029593190688554434,
+     "mean_difference": 0.06503273170880541,
+     "n_folds": 5,
+     "passes_sesoi_and_ci": true,
+     "sesoi": 0.05
+    },
+    "mlp_tuned": {
+     "baseline": "linear_interactions",
+     "ci95_high": 0.05739838423530702,
+     "ci95_low": -0.08284456333327281,
+     "mean_difference": -0.01272308954898289,
+     "n_folds": 5,
+     "passes_sesoi_and_ci": false,
+     "sesoi": 0.05
+    },
+    "recurrent": {
+     "baseline": "linear_lagged",
+     "ci95_high": 0.24267674536907835,
+     "ci95_low": -0.02638576384366835,
+     "mean_difference": 0.10814549076270501,
+     "n_folds": 5,
+     "passes_sesoi_and_ci": false,
+     "sesoi": 0.05
+    }
+   },
+   "vs_primary_control": {
+    "kan_tuned": {
+     "baseline": "linear_interactions",
+     "ci95_high": 0.1004722727290564,
+     "ci95_low": 0.029593190688554434,
+     "mean_difference": 0.06503273170880541,
+     "n_folds": 5,
+     "passes_sesoi_and_ci": true,
+     "sesoi": 0.05
+    },
+    "mlp_tuned": {
+     "baseline": "linear_interactions",
+     "ci95_high": 0.05739838423530702,
+     "ci95_low": -0.08284456333327281,
+     "mean_difference": -0.01272308954898289,
+     "n_folds": 5,
+     "passes_sesoi_and_ci": false,
+     "sesoi": 0.05
+    },
+    "recurrent": {
+     "baseline": "linear_interactions",
+     "ci95_high": 0.3929075507042037,
+     "ci95_low": 0.003905279105014564,
+     "mean_difference": 0.19840641490460914,
+     "n_folds": 5,
+     "passes_sesoi_and_ci": true,
+     "sesoi": 0.05
+    }
+   }
+  },
+  "gate_b_confirmation_v3": {
+   "arms_that_pass_vs_best_nonneural": [
+    "mlp_tuned",
+    "recurrent"
+   ],
+   "artifact": "results/program_n/gate_b_confirmation_v3/result.json",
+   "best_nonneural_comparator": {
+    "kan_tuned": "linear_interactions",
+    "mlp_tuned": "linear_interactions",
+    "recurrent": "linear_lagged"
+   },
+   "ceiling_is_not_a_ceiling": [
+    "kan_tuned",
+    "mlp_tuned",
+    "recurrent"
+   ],
+   "claim_status_as_sealed": "SURFACE_PREMIUM_CAPTURED",
+   "endpoint": "held_out_r2_on_R_cobb_douglas",
+   "grade": "CONFIRMATION",
+   "premium_under_primary_only": true,
+   "readjudicated_premium": true,
+   "seeds": [
+    9600001,
+    9600002,
+    9600003,
+    9600004,
+    9600005,
+    9600006,
+    9600007,
+    9600008
+   ],
+   "vs_best_nonneural": {
+    "kan_tuned": {
+     "baseline": "linear_interactions",
+     "ci95_high": 0.19042022015627952,
+     "ci95_low": -0.008229607878547651,
+     "mean_difference": 0.09109530613886593,
+     "n_folds": 5,
+     "passes_sesoi_and_ci": false,
+     "sesoi": 0.05
+    },
+    "mlp_tuned": {
+     "baseline": "linear_interactions",
+     "ci95_high": 0.15608259391002616,
+     "ci95_low": 0.060147818858579435,
+     "mean_difference": 0.1081152063843028,
+     "n_folds": 5,
+     "passes_sesoi_and_ci": true,
+     "sesoi": 0.05
+    },
+    "recurrent": {
+     "baseline": "linear_lagged",
+     "ci95_high": 0.1904869363957969,
+     "ci95_low": 0.1068639399376879,
+     "mean_difference": 0.1486754381667424,
+     "n_folds": 5,
+     "passes_sesoi_and_ci": true,
+     "sesoi": 0.05
+    }
+   },
+   "vs_primary_control": {
+    "kan_tuned": {
+     "baseline": "linear_interactions",
+     "ci95_high": 0.19042022015627952,
+     "ci95_low": -0.008229607878547651,
+     "mean_difference": 0.09109530613886593,
+     "n_folds": 5,
+     "passes_sesoi_and_ci": false,
+     "sesoi": 0.05
+    },
+    "mlp_tuned": {
+     "baseline": "linear_interactions",
+     "ci95_high": 0.15608259391002616,
+     "ci95_low": 0.060147818858579435,
+     "mean_difference": 0.1081152063843028,
+     "n_folds": 5,
+     "passes_sesoi_and_ci": true,
+     "sesoi": 0.05
+    },
+    "recurrent": {
+     "baseline": "linear_interactions",
+     "ci95_high": 0.2933443081842534,
+     "ci95_low": 0.12911384814689814,
+     "mean_difference": 0.21122907816557576,
+     "n_folds": 5,
+     "passes_sesoi_and_ci": true,
+     "sesoi": 0.05
+    }
+   }
+  },
+  "gate_b_sensitivity_ret_excel": {
+   "arms_that_pass_vs_best_nonneural": [],
+   "artifact": "results/program_n/gate_b_sensitivity_ret_excel/result.json",
+   "best_nonneural_comparator": {
+    "kan_tuned": "tree",
+    "mlp_tuned": "tree",
+    "recurrent": "linear_lagged"
+   },
+   "ceiling_is_not_a_ceiling": [
+    "linear_lagged",
+    "recurrent"
+   ],
+   "claim_status_as_sealed": "SENSITIVITY_PREMIUM_HOLDS_ON_LEGACY_SURFACE",
+   "endpoint": "held_out_r2_on_ret_excel_risk_conditional__LEGACY_SENSITIVITY",
+   "grade": "SENSITIVITY_REPLAY",
+   "premium_under_primary_only": true,
+   "readjudicated_premium": false,
+   "seeds": [
+    9600001,
+    9600002,
+    9600003,
+    9600004,
+    9600005,
+    9600006,
+    9600007,
+    9600008
+   ],
+   "vs_best_nonneural": {
+    "kan_tuned": {
+     "baseline": "tree",
+     "ci95_high": 0.0781591370401062,
+     "ci95_low": -0.08391319845908089,
+     "mean_difference": -0.002877030709487349,
+     "n_folds": 5,
+     "passes_sesoi_and_ci": false,
+     "sesoi": 0.05
+    },
+    "mlp_tuned": {
+     "baseline": "tree",
+     "ci95_high": -0.006757769250885726,
+     "ci95_low": -0.2737773367284903,
+     "mean_difference": -0.14026755298968802,
+     "n_folds": 5,
+     "passes_sesoi_and_ci": false,
+     "sesoi": 0.05
+    },
+    "recurrent": {
+     "baseline": "linear_lagged",
+     "ci95_high": 0.03235117674450771,
+     "ci95_low": -0.10297760668520264,
+     "mean_difference": -0.03531321497034747,
+     "n_folds": 5,
+     "passes_sesoi_and_ci": false,
+     "sesoi": 0.05
+    }
+   },
+   "vs_primary_control": {
+    "kan_tuned": {
+     "baseline": "linear_interactions",
+     "ci95_high": 0.12326805694873881,
+     "ci95_low": 0.01200322696688906,
+     "mean_difference": 0.06763564195781394,
+     "n_folds": 5,
+     "passes_sesoi_and_ci": true,
+     "sesoi": 0.05
+    },
+    "mlp_tuned": {
+     "baseline": "linear_interactions",
+     "ci95_high": 0.018624885344452988,
+     "ci95_low": -0.1581346459892265,
+     "mean_difference": -0.06975488032238675,
+     "n_folds": 5,
+     "passes_sesoi_and_ci": false,
+     "sesoi": 0.05
+    },
+    "recurrent": {
+     "baseline": "linear_interactions",
+     "ci95_high": 0.20550617631689377,
+     "ci95_low": 0.005925894686203206,
+     "mean_difference": 0.10571603550154848,
+     "n_folds": 5,
+     "passes_sesoi_and_ci": true,
+     "sesoi": 0.05
+    }
+   }
+  }
+ },
+ "schema_version": "program_n_gate_b_readjudication_v1",
+ "scope": "READJUDICATION_OF_SEALED_PER_FOLD_NO_SEEDS_OPENED_NO_EPISODES_RUN",
+ "self_sha256": "735b351ee3db07a5260ef939411b47a83ff5a1c338ba8925765b94c376413d25",
+ "sesoi": 0.05
+}
