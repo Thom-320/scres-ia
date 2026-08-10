@@ -1,0 +1,490 @@
+{
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "chosen_hyperparameters": {
+  "kan_tuned": [
+   {
+    "lr": 0.01,
+    "wd": 0.0,
+    "width": 64
+   },
+   {
+    "lr": 0.003,
+    "wd": 0.0,
+    "width": 64
+   },
+   {
+    "lr": 0.003,
+    "wd": 0.0,
+    "width": 16
+   },
+   {
+    "lr": 0.003,
+    "wd": 0.0001,
+    "width": 64
+   },
+   {
+    "lr": 0.01,
+    "wd": 0.0001,
+    "width": 64
+   }
+  ],
+  "mlp_tuned": [
+   {
+    "lr": 0.01,
+    "wd": 0.0,
+    "width": 64
+   },
+   {
+    "lr": 0.003,
+    "wd": 0.0,
+    "width": 64
+   },
+   {
+    "lr": 0.01,
+    "wd": 0.0001,
+    "width": 64
+   },
+   {
+    "lr": 0.01,
+    "wd": 0.0001,
+    "width": 16
+   },
+   {
+    "lr": 0.01,
+    "wd": 0.0,
+    "width": 16
+   }
+  ],
+  "recurrent": [
+   {
+    "lr": 0.01,
+    "wd": 0.0001,
+    "width": 64
+   },
+   {
+    "lr": 0.003,
+    "wd": 0.0,
+    "width": 64
+   },
+   {
+    "lr": 0.01,
+    "wd": 0.0,
+    "width": 64
+   },
+   {
+    "lr": 0.003,
+    "wd": 0.0001,
+    "width": 64
+   },
+   {
+    "lr": 0.01,
+    "wd": 0.0,
+    "width": 64
+   }
+  ]
+ },
+ "claim_status": "SURFACE_PREMIUM_CAPTURED",
+ "contract_path": "docs/PREREGISTRO_PUERTA_B_SUPERFICIE_CD_2026-08-09.md",
+ "contract_sha256": "916786f2995e7af18a4cbff09d2aed4f7f031e5ca1d326794291796c8d306e0a",
+ "created_at": "2026-08-09T22:35:29.808582+00:00",
+ "elapsed_seconds": 617.3667229579878,
+ "endpoint": "held_out_r2_on_R_cobb_douglas",
+ "falsifier_summary": {
+  "all_passed": true,
+  "disclosures": [
+   "d1_recurrent_information_set"
+  ],
+  "failed": [],
+  "n_computed": 7,
+  "n_disclosures": 1,
+  "n_failed": 0,
+  "n_not_applicable": 0,
+  "not_applicable": []
+ },
+ "falsifiers": {
+  "custody": {
+   "evidence": {
+    "n_sealed_artifact_overlap": 8,
+    "n_seeds": 8,
+    "note": "seeds already consumed by a registry block or sealed artifact",
+    "registry_conflicts": [
+     {
+      "id": "reconciled_6900001",
+      "n_overlapping": 8,
+      "range": [
+       6900001,
+       6900008
+      ],
+      "source": "results/headroom/cd_surface_prediction_premium/result.json",
+      "status": "USED_DEVELOPMENT_NOT_VIRGIN"
+     }
+    ],
+    "registry_is_complete": false,
+    "registry_status": "BASELINE_INVENTORY_INCOMPLETE_NO_NEW_SEEDS_AUTHORIZED",
+    "replay_of": null,
+    "sealed_artifact_overlap": [
+     6900001,
+     6900002,
+     6900003,
+     6900004,
+     6900005,
+     6900006,
+     6900007,
+     6900008
+    ],
+    "seeds": [
+     6900001,
+     6900002,
+     6900003,
+     6900004,
+     6900005,
+     6900006,
+     6900007,
+     6900008
+    ],
+    "status": "COLLISION",
+    "why_it_can_fail": "a seed already consumed by a registry block or a sealed artifact would make this run a re-use rather than an independent one"
+   },
+   "not_applicable": false,
+   "passed": false
+  },
+  "d1_recurrent_information_set": {
+   "computed": false,
+   "disclosure": true,
+   "evidence": {
+    "evidence": {
+     "recurrent_vs_linear_lagged": {
+      "baseline": "linear_lagged",
+      "ci95_high": 0.3055899187579959,
+      "ci95_low": 0.10508623036667442,
+      "mean_difference": 0.20533807456233516,
+      "passes_sesoi_and_ci": true,
+      "sesoi": 0.05
+     }
+    },
+    "statement": "the recurrent arm sees the PREVIOUS configuration's resilience, which no other arm does, because Fig. 5's activation compares x with x-1. It is therefore judged against linear_lagged, a classical model with the same input, and never against the arms that lack it"
+   },
+   "passed": null
+  },
+  "f1_ceiling_still_above_the_primary": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": 0.062480352207529344,
+     "threshold": 0.0
+    },
+    "why_it_can_fail": "if the ceiling vanishes once the fit is repaired, there was no margin to capture and the predecessor's headline was itself an artefact"
+   },
+   "passed": true
+  },
+  "f2_classical_arms_reproduce": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": 4.890430513382685e-05,
+     "threshold": 0.02
+    },
+    "why_it_can_fail": "the classical arms are untouched code; if they move, I changed more than the neural fit and nothing here is comparable with the predecessor"
+   },
+   "passed": true
+  },
+  "f3_tuning_used_only_inner_validation": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "folds": 5,
+     "grid_size": 8
+    },
+    "why_it_can_fail": "selection that sees the test fold is exactly the sin the predecessor declared about its own spline baseline"
+   },
+   "passed": true
+  },
+  "f4_networks_now_reach_the_linear": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": 0.06456647173861274,
+     "threshold": 0.0
+    },
+    "why_it_can_fail": "H_B may simply be false: if the repaired networks still lose to OLS, the fit was not the problem and the surface does not admit a better approximator here"
+   },
+   "passed": true
+  },
+  "f5_neural_premium_over_the_primary": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "n_compared": 4,
+     "sesoi": 0.05
+    },
+    "why_it_can_fail": "reaching the linear model is not beating it; the margin may exist and stay uncaptured even with the fit repaired"
+   },
+   "passed": true
+  },
+  "f6_recurrent_arm_is_reported": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": 5.0,
+     "threshold": 0.0
+    },
+    "why_it_can_fail": "without it Garrido's Fig. 5 as a PREDICTOR is not answered at all"
+   },
+   "passed": true
+  },
+  "f7_budgets_are_matched": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "grid": 8,
+     "init_seeds": 5,
+     "max_steps": 5000
+    },
+    "why_it_can_fail": "an unequal grid or seed count between architectures measures budget, not architecture"
+   },
+   "passed": true
+  }
+ },
+ "grid": [
+  {
+   "lr": 0.003,
+   "wd": 0.0,
+   "width": 16
+  },
+  {
+   "lr": 0.003,
+   "wd": 0.0001,
+   "width": 16
+  },
+  {
+   "lr": 0.01,
+   "wd": 0.0,
+   "width": 16
+  },
+  {
+   "lr": 0.01,
+   "wd": 0.0001,
+   "width": 16
+  },
+  {
+   "lr": 0.003,
+   "wd": 0.0,
+   "width": 64
+  },
+  {
+   "lr": 0.003,
+   "wd": 0.0001,
+   "width": 64
+  },
+  {
+   "lr": 0.01,
+   "wd": 0.0,
+   "width": 64
+  },
+  {
+   "lr": 0.01,
+   "wd": 0.0001,
+   "width": 64
+  }
+ ],
+ "held_out_r2_mean": {
+  "constant": -0.016748904305133826,
+  "kan_tuned": 0.7445603610614481,
+  "linear_additive": 0.6061981378422423,
+  "linear_interactions": 0.6305948828087959,
+  "linear_lagged": 0.6927329699577929,
+  "mlp_tuned": 0.6951613545474087,
+  "recurrent": 0.8980710445201281,
+  "spline_buffer": 0.6365214846432302,
+  "train_cell_mean_comparator": 0.6930752350163253,
+  "tree": 0.6224682485333719
+ },
+ "init_seeds": 5,
+ "max_steps": 5000,
+ "module_manifest": {
+  "missing": [],
+  "modules": {
+   "supply_chain/cobb_douglas_resilience.py": "d9d88376d666115c8dab4018b903c45986a43811649c3b57ebe5770e57204884",
+   "supply_chain/falsifiers.py": "99a64c66b62ee43ab9cf532a34932dc27ff4b4fae72d9b331fcf2a8f2a554fb7",
+   "supply_chain/supply_chain.py": "b10f5c8a1bb2bd201c7a736565c6a5af953b9f95f7cae75a56fff6ac289f6965"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "patience": 300,
+ "per_fold": {
+  "constant": [
+   -0.003226749853441291,
+   -0.02516535424395827,
+   -0.017338706347831412,
+   -0.03801324463575706,
+   -4.664446811020184e-07
+  ],
+  "kan_tuned": [
+   0.7652506716051545,
+   0.7110158583734612,
+   0.7739673484209342,
+   0.7208378037320424,
+   0.7517301231756481
+  ],
+  "linear_additive": [
+   0.5259008463103825,
+   0.6410082118681728,
+   0.5616027440900941,
+   0.7399391825593193,
+   0.562539704383243
+  ],
+  "linear_interactions": [
+   0.6035512965759467,
+   0.6001044799889992,
+   0.6398420145881958,
+   0.6736970259290347,
+   0.6357795969618035
+  ],
+  "linear_lagged": [
+   0.6591991170220622,
+   0.7127592151216335,
+   0.6566387928614142,
+   0.769543254905908,
+   0.6655244698779463
+  ],
+  "mlp_tuned": [
+   0.7442605571958374,
+   0.4592779872448801,
+   0.7896600737972373,
+   0.7133924305162154,
+   0.7692157239828734
+  ],
+  "recurrent": [
+   0.9300545916339891,
+   0.8192223858079135,
+   0.9110103994778969,
+   0.8981660155068565,
+   0.9319018301739843
+  ],
+  "spline_buffer": [
+   0.573666336495543,
+   0.6588013339563954,
+   0.618432148664938,
+   0.718536203922282,
+   0.6131714001769923
+  ],
+  "train_cell_mean_comparator": [
+   0.7285931189916401,
+   0.5171471538409229,
+   0.7889948764588328,
+   0.6761825538035706,
+   0.7544584719866599
+  ],
+  "tree": [
+   0.669854289268865,
+   0.42013034707984154,
+   0.7107450197738105,
+   0.5726349793565069,
+   0.7389766071878358
+  ]
+ },
+ "predecessor_means": {
+  "backprop": 0.5841,
+  "constant": -0.0167,
+  "kan": 0.6019,
+  "linear_additive": 0.6062,
+  "linear_interactions": 0.6306,
+  "spline_buffer": 0.6365,
+  "train_cell_mean_comparator": 0.6931,
+  "tree": 0.6225
+ },
+ "primary_baseline": "linear_interactions",
+ "reference_path": "results/headroom/cd_surface_prediction_premium/result.json",
+ "reference_sha256": "527227bd96eb8d8d9ed534aebea410da79efb91bb2d1e2aa365e85b5a9f43a99",
+ "reproduction_gap": {
+  "constant": 4.890430513382685e-05,
+  "linear_additive": 1.8621577576594106e-06,
+  "linear_interactions": 5.11719120410703e-06,
+  "spline_buffer": 2.148464323026289e-05,
+  "train_cell_mean_comparator": 2.4764983674763208e-05,
+  "tree": 3.1751466628149316e-05
+ },
+ "run_role": "DEVELOPMENT",
+ "schema_version": "program_n_gate_b_v1",
+ "scope": "DEVELOPMENT_REANALYSIS_NO_NEW_SEEDS",
+ "seed_block": {
+  "derived_from": "seeds",
+  "end": 6900008,
+  "n": 8,
+  "start": 6900001
+ },
+ "seeds": [
+  6900001,
+  6900002,
+  6900003,
+  6900004,
+  6900005,
+  6900006,
+  6900007,
+  6900008
+ ],
+ "self_sha256": "136c9787913718290dd6cb46514f001c178bba909a101130ecbb927c4da8f247",
+ "sesoi": 0.05,
+ "vs_lagged": {
+  "recurrent": {
+   "baseline": "linear_lagged",
+   "ci95_high": 0.3055899187579959,
+   "ci95_low": 0.10508623036667442,
+   "mean_difference": 0.20533807456233516,
+   "passes_sesoi_and_ci": true,
+   "sesoi": 0.05
+  }
+ },
+ "vs_primary": {
+  "kan_tuned": {
+   "baseline": "linear_interactions",
+   "ci95_high": 0.16650362775254485,
+   "ci95_low": 0.061427328752759344,
+   "mean_difference": 0.11396547825265209,
+   "passes_sesoi_and_ci": true,
+   "sesoi": 0.05
+  },
+  "mlp_tuned": {
+   "baseline": "linear_interactions",
+   "ci95_high": 0.21738952862089675,
+   "ci95_low": -0.08825658514367127,
+   "mean_difference": 0.06456647173861274,
+   "passes_sesoi_and_ci": false,
+   "sesoi": 0.05
+  },
+  "spline_buffer": {
+   "baseline": "linear_interactions",
+   "ci95_high": 0.058388129882382955,
+   "ci95_low": -0.04653492621351463,
+   "mean_difference": 0.005926601834434164,
+   "passes_sesoi_and_ci": false,
+   "sesoi": 0.05
+  },
+  "tree": {
+   "baseline": "linear_interactions",
+   "ci95_high": 0.14686637405719016,
+   "ci95_low": -0.16311964260803824,
+   "mean_difference": -0.008126634275424038,
+   "passes_sesoi_and_ci": false,
+   "sesoi": 0.05
+  }
+ }
+}
