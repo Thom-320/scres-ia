@@ -1,0 +1,340 @@
+{
+  "claim_boundary": {
+    "fresh_seeds_opened": false,
+    "headroom_established": false,
+    "history_value_established": false,
+    "n2_cardinality_established": true,
+    "n2_physical_parity_established": false,
+    "neural_premium_established": false,
+    "neural_training_authorized": false
+  },
+  "claim_status": "DESIGN_CONSISTENCY_PASS__NO_SCIENTIFIC_GATE_OPENED",
+  "computed": {
+    "action_counts": {
+      "2": 4,
+      "4": 20,
+      "8": 120
+    },
+    "open_loop_calendar_counts": {
+      "2": 65536,
+      "4": 25600000000,
+      "8": 42998169600000000
+    },
+    "sample_actions": {
+      "2": [
+        [
+          0,
+          3
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          3,
+          0
+        ]
+      ],
+      "4": [
+        [
+          0,
+          0,
+          0,
+          3
+        ],
+        [
+          0,
+          0,
+          1,
+          2
+        ],
+        [
+          0,
+          0,
+          2,
+          1
+        ],
+        [
+          0,
+          0,
+          3,
+          0
+        ],
+        [
+          0,
+          1,
+          0,
+          2
+        ]
+      ],
+      "8": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          3
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          2
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          3,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          2
+        ]
+      ]
+    }
+  },
+  "consistency_checks": {
+    "c1_action_counts_match_stars_and_bars": {
+      "computed": true,
+      "evidence": {
+        "expected": {
+          "2": 4,
+          "4": 20,
+          "8": 120
+        },
+        "observed": {
+          "2": 4,
+          "4": 20,
+          "8": 120
+        },
+        "why_it_can_fail": "A mismatch would invalidate the declared action-space cardinality."
+      },
+      "passed": true
+    },
+    "c2_enumeration_is_unique_and_complete": {
+      "computed": true,
+      "evidence": {
+        "expected": {
+          "2": 4,
+          "4": 20,
+          "8": 120
+        },
+        "observed": {
+          "2": {
+            "enumerated": 4,
+            "unique": true
+          },
+          "4": {
+            "enumerated": 20,
+            "unique": true
+          },
+          "8": {
+            "enumerated": 120,
+            "unique": true
+          }
+        },
+        "why_it_can_fail": "Duplicate or missing allocations would corrupt the cardinality check."
+      },
+      "passed": true
+    },
+    "c3_actions_decoder_and_resource_rights_are_consistent": {
+      "computed": true,
+      "evidence": {
+        "expected": {
+          "actual_use_is_endogenous": true,
+          "all_enumerated_actions_conserve_batches": true,
+          "decoder_exact_sum": true,
+          "decoder_nonnegative_integer": true,
+          "entitlements_not_use_are_invariant": true
+        },
+        "observed": {
+          "actual_use_is_endogenous": true,
+          "all_enumerated_actions_conserve_batches": true,
+          "decoder_exact_sum": true,
+          "decoder_nonnegative_integer": true,
+          "entitlements_not_use_are_invariant": true
+        },
+        "why_it_can_fail": "The design must conserve three batch rights exactly while treating actual utilization as an endogenous outcome."
+      },
+      "passed": true
+    },
+    "c4_calendar_counts_are_arithmetically_consistent": {
+      "computed": true,
+      "evidence": {
+        "expected": {
+          "2": 65536,
+          "4": 25600000000,
+          "8": 42998169600000000
+        },
+        "observed": {
+          "2": 65536,
+          "4": 25600000000,
+          "8": 42998169600000000
+        },
+        "why_it_can_fail": "Calendar cardinality is a complexity descriptor, not evidence of planner runtime."
+      },
+      "passed": true
+    },
+    "c5_n2_has_cardinality_only_and_parity_remains_pending": {
+      "computed": true,
+      "evidence": {
+        "expected": {
+          "anchor_status": "PENDING_EXECUTABLE_G0_PARITY",
+          "calendar_count": 65536,
+          "claim": "cardinality only; no physical parity"
+        },
+        "observed": {
+          "anchor_status": "PENDING_EXECUTABLE_G0_PARITY",
+          "calendar_count": 65536,
+          "required_executable_checks": [
+            "event-by-event transition parity",
+            "strictly half-open observation parity",
+            "metric-vector parity",
+            "complete 65,536-calendar frontier parity",
+            "classical comparator identity and outcome parity"
+          ],
+          "warning_consumed": false
+        },
+        "why_it_can_fail": "Matching 4^8 does not certify transition, observation, metric, comparator or outcome parity with Program O/Q."
+      },
+      "passed": true
+    },
+    "c6_hmm_warning_causality_and_h4_are_explicit": {
+      "computed": true,
+      "evidence": {
+        "expected": {
+          "causal_order": true,
+          "h4_clones_physics_and_rng": true,
+          "iid_null_is_uniform": true,
+          "symmetric_transition_stay": true,
+          "symmetric_transition_switch": true,
+          "symmetric_warning_correct": true,
+          "symmetric_warning_error": true,
+          "uniform_prior": true,
+          "warning_null_is_independence": true
+        },
+        "observed": {
+          "causal_order": true,
+          "h4_clones_physics_and_rng": true,
+          "iid_null_is_uniform": true,
+          "symmetric_transition_stay": true,
+          "symmetric_transition_switch": true,
+          "symmetric_warning_correct": true,
+          "symmetric_warning_error": true,
+          "uniform_prior": true,
+          "warning_null_is_independence": true
+        },
+        "why_it_can_fail": "An accuracy scalar without a symmetric kernel, or unmatched physical state in H4, would not identify information retention."
+      },
+      "passed": true
+    },
+    "c7_architecture_metrics_and_compute_claims_are_bounded": {
+      "computed": true,
+      "evidence": {
+        "expected": {
+          "architecture": {
+            "amortization_does_not_require_hret": true,
+            "decoder_bound": true,
+            "gru_has_conditional_history_gate": true,
+            "imitation_not_quality": true,
+            "policy_equivariant": true,
+            "quality_requires_structured_residual": true,
+            "teacher_is_high_budget": true,
+            "value_invariant": true
+          },
+          "metric_and_compute": {
+            "absolute_sla_required": true,
+            "des_calls_cannot_substitute": true,
+            "p95_ratio_required": true,
+            "primary_higher_is_better": true,
+            "secondary_report_only": true,
+            "thresholds_unopened": true
+          }
+        },
+        "observed": {
+          "architecture": {
+            "amortization_does_not_require_hret": true,
+            "decoder_bound": true,
+            "gru_has_conditional_history_gate": true,
+            "imitation_not_quality": true,
+            "policy_equivariant": true,
+            "quality_requires_structured_residual": true,
+            "teacher_is_high_budget": true,
+            "value_invariant": true
+          },
+          "metric_and_compute": {
+            "absolute_sla_required": true,
+            "des_calls_cannot_substitute": true,
+            "p95_ratio_required": true,
+            "primary_higher_is_better": true,
+            "secondary_report_only": true,
+            "thresholds_unopened": true
+          }
+        },
+        "why_it_can_fail": "Equivariance, branch-specific authorization, a high-budget teacher, secondary metric roles and an absolute latency gate prevent a manufactured neural premium."
+      },
+      "passed": true
+    },
+    "c8_no_seed_or_scientific_execution_is_authorized": {
+      "computed": true,
+      "evidence": {
+        "expected": "candidate status plus all execution/training flags false",
+        "observed": {
+          "contract_status": "CANDIDATE_DESIGN_DIAGNOSTIC_NOT_EXECUTABLE_NO_SEEDS_AUTHORIZED",
+          "fresh_seeds_opened": false,
+          "neural_training_authorized": false,
+          "scientific_execution_authorized": false,
+          "seed_ranges_assigned": false,
+          "seed_registry_state": "BASELINE_INVENTORY_INCOMPLETE_NO_NEW_SEEDS_AUTHORIZED"
+        },
+        "why_it_can_fail": "The live custody registry forbids new seeds until its inventory and PI authorization are complete."
+      },
+      "passed": true
+    }
+  },
+  "consistency_summary": {
+    "all_passed": true,
+    "failed": [],
+    "n_computed": 8,
+    "n_failed": 0
+  },
+  "contract_path": "contracts/program_x_o_scale_amortized_control_v2.json",
+  "contract_sha256": "b6a8c8b61b4e9ef87b35643b1bd6be8dda54b9c48897ff80347ce76b4ccc0942",
+  "created_at": "2026-08-12T03:15:17.428091+00:00",
+  "run_role": "DETERMINISTIC_DESIGN_CONSISTENCY_PREFLIGHT",
+  "schema_version": "program_x_o_scale_design_consistency_preflight_v2",
+  "scope": "DIAGNOSTIC_NO_SEEDS_NO_STOCHASTIC_TAPES_NO_SIMULATION_NO_LEARNER_NO_N2_PHYSICAL_PARITY_CLAIM",
+  "self_sha256": "0073a28f824b2a165a7f8a1e904bf34ea3eff7f2926ffee1aeab9b16a482a750"
+}
