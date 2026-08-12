@@ -1,5 +1,12 @@
 # Repository Source of Truth
 
+> **Superseded-status notice (2026-08-09).** This file remains the authority for the historical
+> Track B implementation and paper-facing commands, but it predates Programs Q–X and is no longer
+> the repository-wide scientific status. For current neural-premium adjudication, reopen/close
+> decisions and the prospective successor, use
+> `docs/AUDITORIA_PRIMA_NEURAL_Y_REAPERTURAS_2026-08-09.md`. Historical verdicts below remain
+> immutable.
+
 This note freezes the current paper-facing repository story. Treat it as the
 primary reference for README examples, manuscript edits, benchmark commands,
 and reviewer-facing explanations unless a later note explicitly supersedes it.
@@ -174,14 +181,15 @@ value relative to open-loop scheduling.
 - Correct claim boundary: positive calibration evidence of learned adaptation over open-loop;
   neural premium, independent replication, tail-safe deployment and retained-learning value are
   not established.
-- Program Q is a separate prospective frozen-policy replication. CVaR10 is secondary there, while
-  resource equality, demand preservation, anti-shed/product floors, feedback and information
-  placebos remain fail-closed identification gates. Its primary learner is now unconditionally the
-  ten-checkpoint historical RecurrentPPO population frozen by SHA-256; collaborator architecture
-  sandboxes are non-promotable sidecars and cannot delay or replace Program Q.
+- Program Q is terminal and immutable. It showed a state-dependent ReT advantage over the complete
+  open-loop frontier and practical equivalence within ±0.01 versus the best classical controller,
+  but its compound verdict is `STOP_Q_NO_REPLICATED_LEARNED_ADAPTATION` because the worst-product
+  guardrail failed. No `PASS_Q_*` remains pending.
+- Program X/O-Scale is a separate candidate design. No seed or learner is authorized, and its
+  cardinality preflight does not establish N=2 transition, observation, metric, comparator or
+  outcome parity, nor that the planner is operationally difficult.
 
 Authoritative artifacts are `docs/PROGRAM_O_R_TERMINAL_VERDICT_2026-07-17.md`,
 `research/paper2_exhaustive_search/program_o_ret_calibration_v12_terminal_audit_20260717.json`, and
-`contracts/program_q_frozen_policy_replication_v1.json`. Paper 3 remains unauthorized until Program
-Q returns either `PASS_Q_NEURAL_PREMIUM` or
-`PASS_Q_LEARNED_ADAPTATION_CLASSICALLY_EQUIVALENT`.
+`contracts/program_q_frozen_policy_replication_v1.json`, plus the terminal Q authority
+`docs/PROGRAM_Q_TERMINAL_VERDICT_2026-07-18.md@f2dfe356`.

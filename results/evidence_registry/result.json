@@ -1,11 +1,11 @@
 {
  "by_evidence_grade": {
   "CONFIRMATORY": 3,
-  "DEVELOPMENT": 87,
-  "DIAGNOSTIC": 5,
-  "NEGATIVE_OR_HALTED": 20,
-  "REPLAY": 39,
-  "UNCONTRACTED": 57
+  "DEVELOPMENT": 103,
+  "DIAGNOSTIC": 11,
+  "NEGATIVE_OR_HALTED": 25,
+  "REPLAY": 60,
+  "UNCONTRACTED": 59
  },
  "calibration_provenance": {
   "apj_overlap_mode": "union",
@@ -33,7 +33,7 @@
  ],
  "contract_path": "docs/ENMIENDA_REGISTRO_DE_EVIDENCIA_2026-08-07.md",
  "contract_sha256": "8e78b344536e8c6440d29ff4e437a0ea9b84c5fe73980d0b40c842aa90947ff5",
- "created_at": "2026-08-07T22:53:51.663292+00:00",
+ "created_at": "2026-08-09T19:26:05.202424+00:00",
  "dedup_key": [
   "contract_sha256",
   "execution_fingerprint",
@@ -63,7 +63,7 @@
    "evidence": {
     "merged_by_identity": 2,
     "merged_by_key": 3,
-    "n_incomplete": 191,
+    "n_incomplete": 224,
     "why_it_can_fail": "treating a missing field as equal to another missing field fuses unrelated runs, which is the exact failure this registry exists to end. Merging on an IDENTICAL content hash is a different, exact check and is permitted"
    },
    "passed": true
@@ -71,10 +71,10 @@
   "f4_the_grade_is_derived_not_copied": {
    "evidence": {
     "examples": [
+     "results/g3a_forensic_reconstruction_v1/result.json",
      "results/gsa_confirmation_corrective/result.json",
      "results/headroom/g3_obs_conversion_v2_replay_20260803/result.json",
-     "results/metric_audit/ret_metric_repair_confirmation_v1/adjudication.json",
-     "results/metric_audit/ret_metric_repair_confirmation_v1/result.json"
+     "results/metric_audit/ret_metric_repair_confirmation_v1/adjudication.json"
     ],
     "why_it_can_fail": "if no artifact authored as CONFIRM is graded anything else, the grade is just echoing claim_status and certifies nothing"
    },
@@ -96,15 +96,15 @@
   "entry_script_sha256": "7b2400c3071c8bc9f3e0ae5bf4086a38af3b4a2bb67ff64fe64d2fd0f9aa992a",
   "missing": [],
   "modules": {
-   "supply_chain/arm_runner.py": "35135c537d9260832677ab6b4e344229d6b9f4810df8bdef9efd51b58fcac68a",
+   "supply_chain/arm_runner.py": "1afea4fa248db5beb2d86c6ab2033d6f24a95115ea544b08966b7a538456ac99",
    "supply_chain/seed_custody.py": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd"
   },
   "schema": "module_manifest_v2",
   "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
  },
- "n_artifacts": 216,
+ "n_artifacts": 266,
  "n_collapsed_as_rereport": 5,
- "n_distinct_experiments": 211,
+ "n_distinct_experiments": 261,
  "n_skipped_no_verdict": 41,
  "preregistration": "docs/ENMIENDA_REGISTRO_DE_EVIDENCIA_2026-08-07.md",
  "reference_path": "results/step3_split_pooled/result.json",
@@ -112,5 +112,5 @@
  "registry_path": "research/evidence_registry.jsonl",
  "schema_version": "evidence_registry_v1",
  "scope": "INDEX_ONLY_NO_SCIENTIFIC_CLAIM_NO_SEEDS",
- "self_sha256": "6286c409718840983e555e5f70c0ef245144fa187dcaf98c0b00a77c9ac11f47"
+ "self_sha256": "0554d74ab3bc5712d7edd555093813599f726b5d680c384ed5debd0d28288267"
 }

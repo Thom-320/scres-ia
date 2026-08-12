@@ -123,7 +123,7 @@ and is retained for provenance only --- it is NOT the manuscript lane.
 Artifacts are saved under `outputs/`: models, normalization statistics,
 training curves, CSV files, and JSON summaries.
 
-For the paper-facing benchmark lane and artifact map, see:
+For the historical paper-facing benchmark lane and artifact map, see:
 
 - `docs/REPOSITORY_SOURCE_OF_TRUTH.md`
 - `docs/REPRODUCIBILITY.md`
@@ -152,7 +152,22 @@ ruff check . --fix
 mypy supply_chain/
 ```
 
-## Current Benchmark Defaults (Track B canonical)
+## Current research decision (2026-08-09)
+
+The scoped cross-branch audit finds a state-dependent ReT advantage over open loop in Program Q, but
+equivalence rather than a neural quality premium over the best structured controller; Q's compound
+verdict remains STOP.  The prospective successor is Program X / O-Scale: scale the nonfungible
+shared-bottleneck mechanism and test quality, amortization, and generalization as separate claims.
+No new seed or learner is authorized by the design preflight. The generated artifact registry is a
+partial checkout/off-HEAD index, not a cryptographically exhaustive census of every Git object.
+
+- Audit and reopen/close decisions: `docs/AUDITORIA_PRIMA_NEURAL_Y_REAPERTURAS_2026-08-09.md`
+- Candidate Program X design: `docs/PREREGISTRO_PROGRAM_X_O_SCALE_2026-08-09.md`
+- Canonical Op2/D5 correction: `docs/THESIS_INTERPRETATION_DECISIONS_2026-06-24.md@c09cd2d`;
+  complementary source-only audit: `docs/CORRECCION_FUENTE_OP2_190K_2026-08-09.md`
+- Program W evidence incident: `docs/INCIDENTE_PROGRAM_W_NO_PUBLICADO_2026-08-09.md`
+
+## Historical Benchmark Defaults (Track B canonical)
 
 - Action contract: `track_b_v1` (8D) via `make_track_b_env`
 - Training reward: `control_v1`

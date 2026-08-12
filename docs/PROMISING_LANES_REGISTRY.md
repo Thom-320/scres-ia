@@ -1290,34 +1290,34 @@ se bloquea menos. Escasez de estanteria no es escasez de material.
 volumen contratado proximo al consumo, o consumo que agote el flujo— no un techo de almacen. Eso es
 un mecanismo distinto y no una celda mas de este barrido.
 
-**Prediccion externa corroborada de forma independiente:** un informe de Program W (commits no
-publicados, no verificable) predijo `H_ret` exactamente 0 bajo escasez. Se escribio en el
-preregistro **antes** de correr y aqui sale 0 en las seis celdas — aunque por una razon distinta a
-la que ese informe propone: aqui no hay ni siquiera `H_priv` que retener.
+**Procedencia narrativa no verificable:** una nota atribuida a Program W predijo `H_ret=0`. El
+barrido posterior obtuvo cero en su propio artefacto, pero no confirma W; en ese barrido `H_priv`
+tambien fue cero. La nota se conserva como memoria del proyecto, no como evidencia cuantitativa.
 
 ---
 
 ## El sobre-pedido de aprovisionamiento es de la FUENTE, no de la reconstruccion (2026-08-09)
 
 **Estado: `OVERORDER_IS_SOURCE_IMPLIED_NOT_A_RECONSTRUCTION_ARTIFACT`.** Artefacto
-`results/procurement_overorder_source/result.json`. Cinco falsadores computados, cero fallidos.
+`results/procurement_overorder_source/result.json`; autoridad canónica
+`docs/THESIS_INTERPRETATION_DECISIONS_2026-06-24.md@c09cd2d`. Seis falsadores computados, cero
+fallidos; D5 está corregida a `MATCHES-PUBLISHED`.
 
 Aritmetica directa de los parametros publicados, antes de simular nada:
 
 | cantidad | unidades crudas/semana | vs demanda |
 |---|---|---|
 | demanda (2.500 raciones/dia x 6 dias x 12 rm) | 180.000 | 1,00x |
-| **Op2 aprovisionamiento** (190.000/rm mensual x 12) | **570.000** | **3,17x** |
+| **Op2 aprovisionamiento** (190.000/rm ÷ (672/168=4 semanas) × 12) | **570.000** | **3,17x** |
 | Op3 distribucion (15.500/rm semanal x 12) | 186.000 | 1,03x |
 
-**La asimetria es deliberada en la fuente:** la distribucion esta dimensionada a la demanda y el
-aprovisionamiento a mas del triple. Por eso ninguna decision que solo mueva materia prima puede
-mover el servicio, y por eso el port de Program V y el barrido de escasez cerraron en cero exacto.
+**La asimetria pertenece al diseño fuente:** Op2 se mantiene fijo entre S=1,2,3 y casi coincide con
+el flujo de Op3 en S=3. En las cintas auditadas de Program V y del barrido de escasez, la acción que
+solo movía materia prima no alcanzó el endpoint y los contrastes cerraron en cero exacto.
 
-**La lectura alternativa esta refutada por la fisica.** `D5` marca CHOSEN-AMBIGUOUS leer los 190.000
-como *por cada* materia prima. La alternativa —190.000 como TOTAL entre las doce— se prueba
-dividiendo entre 12 y sin tocar nada mas: el servicio cae de **0,6777 a 0,4015** y la cadena termina
-con **cero unidades en mano**. No es viable contra los resultados que la tesis reporta.
+**La lectura textual ya no es ambigua.** La tesis dice *each rm* y D5 marca `MATCHES-PUBLISHED`.
+La alternativa —190.000 como total entre las doce— se conserva sólo como sensibilidad: al dividir
+entre 12, el servicio cae de **0,6777 a 0,4015** y la cadena termina con **cero unidades en mano**.
 
 **Consecuencia para el diseno:** reducir el volumen contratado hasta que el proveedor importe seria
 **alterar un parametro de la fuente**, no eliminar una simplificacion declarada. Es exactamente la
@@ -1326,6 +1326,69 @@ que se declare como cambio de la fuente con su precio de fidelidad medido.
 
 **Lo que la verificacion NO hace:** no elimina la ambiguedad de la frase. Muestra que la lectura
 alternativa esta refutada por la fisica, que es una afirmacion mas debil y mas honesta.
+
+**Alcance:** el artefacto v1 combina aritmética fuente y una cinta de desarrollo. Sus resultados
+físicos no se generalizan fuera de esa parametrización.
+
+---
+
+## Auditoria source-only complementaria e independiente del 190.000 (2026-08-09)
+
+**Estado: `SOURCE_EXPLICIT_PER_RAW_MATERIAL__INDEPENDENTLY_CONFIRMED`.** Este diagnóstico no
+supersede c09/v1 ni reejecuta su simulación. Acota y comprueba de forma independiente el texto de
+Op2 y Tabla 6.20. Artefacto: `results/procurement_overorder_source_v2/result.json`.
+
+La descripcion de Op2 (pagina impresa 84) enumera `190,000 rm1 ... 190,000 rm12`. La Tabla 6.20
+(pagina impresa 108) dice tres veces **`190,000 units of each rm`**, para S=1, S=2 y S=3. Tambien
+muestra que Op3 escala 15.500/31.000/47.000 por rm/semana. Op2 equivale a 47.500/rm/semana, casi
+exactamente el techo S=3 de 47.000.
+
+Por tanto, la interpretacion por materia prima es explicita; no depende de refutar la alternativa
+por simulacion. Reducir Op2 sigue siendo una extension investigadora valida si se declara, pero no
+una reparacion del port fuente. Detalle: `docs/CORRECCION_FUENTE_OP2_190K_2026-08-09.md`.
+
+---
+
+## Program W: incidente de evidencia no publicada (2026-08-09)
+
+**Estado: `ORIGINAL_PROGRAM_W_OBJECTS_NOT_LOCATED_IN_CURRENT_CLONE_OR_INVENTORIED_REMOTE_REFS`.**
+El objeto `e761ef4` mencionado en la conversacion no se localizó en el clon actual ni en las refs
+remotas inventariadas. Dentro de ese alcance tampoco se localizaron runner, contrato, filas crudas
+y artefacto sellado. Program W queda fuera del inventario cuantitativo verificable de esta
+auditoría y no se recreará retrospectivamente.
+
+Puede recuperarse desde otro clon/bundle si aparece el SHA completo, o reconstruirse con etiqueta
+forense. Detalle: `docs/INCIDENTE_PROGRAM_W_NO_PUBLICADO_2026-08-09.md`.
+
+---
+
+## Program X / O-Scale: sucesor prospectivo de amortizacion (2026-08-09)
+
+**Estado: `DESIGN_CONSISTENCY_PASS__NO_SCIENTIFIC_GATE_OPENED`.** Contrato candidato
+`contracts/program_x_o_scale_amortized_control_v1.json`; preregistro
+`docs/PREREGISTRO_PROGRAM_X_O_SCALE_2026-08-09.md`; preflight
+`results/program_x/o_scale_design_preflight_v1/result.json`.
+
+Program X escala el mecanismo mejor respaldado para valor adaptativo material: productos no
+fungibles que comparten tres lotes semanales. N=2 tiene cuatro acciones semanales y 65.536
+calendarios —sólo la misma cardinalidad que O/Q; no conserva ni certifica todavía paridad
+ejecutable—. N=4 produce 20 acciones y 25.600 millones de calendarios; N=8 produce 120 acciones y
+42.998.169.600.000.000 calendarios.
+
+Estas son cardinalidades, no evidencia de dificultad operacional ni de prima. La paridad completa
+de transicion, observacion, metrica y frontier con O/Q en N=2 queda pendiente del gate G0.
+
+La pregunta ya no es PPO contra estatico. Es neural contra belief-MPC bajo el mismo contrato, con
+tres claims separados: calidad, amortizacion y generalizacion. La ruta primaria es
+belief-MPC -> distilacion/DAgger -> DeepSets; GRU queda detras del gate de aliasing y PPO residual
+queda detras del residual estructurado. ReT y Cobb-Douglas se reportan por separado; servicio y peor
+producto conservan la interpretacion fisica.
+
+El preflight tiene ocho comprobaciones deterministas de consistencia, todas pasan, y no abre seed,
+simulacion, learner ni claim cientifico. El registro de custodia vigente prohibe semillas nuevas
+hasta completar el inventario, asignar un namespace nuevo y obtener autorizacion escrita del PI
+despues de commitear preregistro y runner. El siguiente trabajo de ingenieria es implementar paridad
+N=2, conservacion y nulos antes de medir H_PI/H_obs/H_ret.
 
 ---
 

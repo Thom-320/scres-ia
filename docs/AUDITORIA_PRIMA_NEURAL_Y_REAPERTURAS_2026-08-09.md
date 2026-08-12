@@ -4,7 +4,7 @@
 
 **Rama de auditoría:** `agent/neural-premium-audit`
 
-**Decisión prospectiva de sucesor:** Program X / O-Scale (`bbb35be`)
+**Decisión prospectiva de sucesor:** Program X / O-Scale (`PENDING_COMMIT`)
 
 **Alcance:** árbol `HEAD`, refs históricas/off-HEAD localizadas, borrador v.0, tesis/artículos de
 Garrido y workbooks ReT. No es un censo criptográficamente completo de todos los objetos Git.
@@ -16,8 +16,8 @@ globs del checkout y sólo incorpora dos familias off-HEAD de forma explícita. 
 la confirmación terminal de Q y varias ramas Q2/T/U. Por eso estos conteos describen el snapshot
 indexado; las adjudicaciones de abajo citan además la autoridad concreta `ruta@SHA`. Los grados
 provienen del registro de evidencia cuando éste cubre el artefacto, no del `claim_status` escrito por
-cada runner. Autoridad del índice: `scripts/build_evidence_registry_v1.py@8ddf6f7` y recibo
-regenerado `results/evidence_registry/result.json@bbb35be`.
+cada runner. Autoridad del índice: `scripts/build_evidence_registry_v1.py@8ddf6f7` y
+`results/evidence_registry/result.json@8ddf6f7`.
 
 ## Adjudicación ejecutiva
 
@@ -153,8 +153,8 @@ off-HEAD sigue siendo autoridad Git, pero no lo cubre el registro de evidencia d
 | V abstracto | Bayes retained−constant +0,179366 [0,162989,0,195743]; retained−reset +0,041320 [0,026572,0,056068]; privileged−Bayes +0,000764 [−0,000798,0,002326] | Desarrollo/abstracto; memoria causal, pero Bayes absorbe el residual neuronal | sólo amortización/escalado | `results/program_v/prelearner_gate_v1/result.json@a4f1a6f` |
 | V full DES | seis contrastes exactamente 0 | Replay de desarrollo; acción de proveedor no llega al cuello y colisiona con custodia previa | sólo física declarada nueva | `results/program_v/des_port_v1/result.json@5a2922f` |
 | V storage | servicio 0,7415→0,5523; todos los headrooms siguen 0 | Desarrollo; estantería ata servicio, no material | cerrar | `results/raw_scarcity_boundary/result.json@fab2566` |
-| W | objeto/artefacto original no localizado en el clon y refs remotas inventariadas; `git cat-file e761ef4` falla | Incidente sin autoridad publicada dentro de ese alcance | recuperar objeto original o reconstrucción explícitamente forense | `docs/INCIDENTE_PROGRAM_W_NO_PUBLICADO_2026-08-09.md@bbb35be` |
-| X / O-Scale | preflight: 4/20/120 acciones y 65.536/25.600.000.000/42.998.169.600.000.000 calendarios; headroom/historia/premium aún no medidos | **Prospectivo, diseño-only**; `DESIGN_CONSISTENCY_PASS__NO_SCIENTIFIC_GATE_OPENED`; sin rangos, seeds, learner ni autorización científica | no “reabrir”: primero diagnóstico causal y perfil real del planner | `contracts/program_x_o_scale_amortized_control_v1.json@bbb35be`; `results/program_x/o_scale_design_preflight_v1/result.json@bbb35be` |
+| W | objeto/artefacto original no localizado en el clon y refs remotas inventariadas; `git cat-file e761ef4` falla | Incidente sin autoridad publicada dentro de ese alcance | recuperar objeto original o reconstrucción explícitamente forense | `docs/INCIDENTE_PROGRAM_W_NO_PUBLICADO_2026-08-09.md@PENDING_COMMIT` |
+| X / O-Scale | preflight: 4/20/120 acciones y 65.536/25.600.000.000/42.998.169.600.000.000 calendarios; headroom/historia/premium aún no medidos | **Prospectivo, diseño-only**; `DESIGN_CONSISTENCY_PASS__NO_SCIENTIFIC_GATE_OPENED`; sin rangos, seeds, learner ni autorización científica | no “reabrir”: primero diagnóstico causal y perfil real del planner | `contracts/program_x_o_scale_amortized_control_v1.json@PENDING_COMMIT`; `results/program_x/o_scale_design_preflight_v1/result.json@PENDING_COMMIT` |
 
 ### Inventario de arquitecturas neuronales
 
@@ -388,8 +388,9 @@ aproximación/generalización sin exigir superioridad de calidad sobre su teache
 
 ## Próximo punto de decisión
 
-El contrato y su preflight determinista están versionados en `bbb35be`; no se abrió ninguna seed y
-no existe autorización científica. El siguiente incremento debe implementar sólo:
+El contrato y su preflight determinista están redactados y validados localmente, pero su autoridad
+es `PENDING_COMMIT`; no se abrió ninguna seed y no existe autorización científica. Después de
+publicarlos, el siguiente incremento debe implementar sólo:
 
 1. kernel N-producto con paridad N=2;
 2. conservación y nulos fungible/IID/señal-azar;
