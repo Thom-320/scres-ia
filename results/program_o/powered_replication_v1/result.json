@@ -1,0 +1,843 @@
+{
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "OBSERVABLE_CONVERSION_SURVIVES_AT_ADEQUATE_POWER",
+ "contract_path": "docs/EXCEPCION_PI_Y_PREREGISTRO_REPLICA_CON_POTENCIA_2026-08-12.md",
+ "contract_sha256": "83d8bed09cc12469c8aeaa48f23f61fc4825af8f5b48476ccbba6b763337c63b",
+ "created_at": "2026-08-12T16:00:28.404321+00:00",
+ "falsifier_summary": {
+  "all_passed": true,
+  "disclosures": [],
+  "failed": [],
+  "n_computed": 6,
+  "n_disclosures": 0,
+  "n_failed": 0,
+  "n_not_applicable": 0,
+  "not_applicable": []
+ },
+ "falsifiers": {
+  "custody": {
+   "evidence": {
+    "block_ranges": [
+     [
+      7500001,
+      7500048
+     ],
+     [
+      7500049,
+      7500096
+     ],
+     [
+      7500097,
+      7500144
+     ],
+     [
+      7500145,
+      7500192
+     ],
+     [
+      7500193,
+      7500240
+     ],
+     [
+      7500241,
+      7500288
+     ]
+    ],
+    "n_sub_blocks": 6,
+    "n_tapes_per_cell": 288,
+    "single_opening": true,
+    "why_it_can_fail": "a sub-block reusing seeds, or the six overlapping, would make this one block reported as six"
+   },
+   "not_applicable": false,
+   "passed": true
+  },
+  "x1_the_pooling_reproduces_a_single_sub_block": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "n_estimands": 69,
+     "probe_gap": 0.0
+    },
+    "why_it_can_fail": "pooling is code I had to write because the frozen bootstrap hardcodes 48 tapes; if it cannot return one sub-block unchanged it is not pooling, it is a new estimator"
+   },
+   "passed": true
+  },
+  "x2_the_frozen_runner_was_not_touched": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "sha_matches": 1.0
+    },
+    "expected": "bf8de3674333e9150fbd6e8b3b835754c736d150369d0c4994cfee5ee74a4161",
+    "sha256": "bf8de3674333e9150fbd6e8b3b835754c736d150369d0c4994cfee5ee74a4161",
+    "why_it_can_fail": "if the runner's bytes changed between registering the exception and pooling, the six sub-blocks were not produced by the same instrument and this is not a replication"
+   },
+   "passed": true
+  },
+  "x3_the_frozen_comparator_is_identical_across_sub_blocks": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "n_cells": 3,
+     "n_cells_with_one_static": 3
+    },
+    "static_indices": {
+     "rho75_share90": [
+      39599
+     ],
+     "rho90_share75": [
+      39599
+     ],
+     "rho90_share90": [
+      31743
+     ]
+    },
+    "why_it_can_fail": "a static index that moved between sub-blocks would mean each block was measured against a different comparator, and pooling them would be meaningless"
+   },
+   "passed": true
+  },
+  "x4_the_effect_replicates_in_point": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "n_cells": 3,
+     "n_positive": 3
+    },
+    "per_sub_block": {
+     "rho75_share90": [
+      0.020429375393033723,
+      0.05858930299727333,
+      0.021655867400148677,
+      0.06760765737015,
+      0.021776113710653383,
+      0.04265489989590967
+     ],
+     "rho90_share75": [
+      0.005829128997245594,
+      0.031173148025839453,
+      0.023518247499592675,
+      0.042070958985007824,
+      0.014733138571274127,
+      0.02930848194408524
+     ],
+     "rho90_share90": [
+      0.10436702005918445,
+      0.1437544776265939,
+      0.0902021586455282,
+      0.1590586424331318,
+      0.12022075965102348,
+      0.1462761778615244
+     ]
+    },
+    "pooled_tail": {
+     "rho75_share90": 0.03878553612786146,
+     "rho90_share75": 0.024438850670507484,
+     "rho90_share90": 0.1273132060461644
+    },
+    "why_it_can_fail": "the point estimates came from a block already used, so they may be optimistic; if the sign does not survive on 288 virgin tapes the earlier effect was noise"
+   },
+   "passed": true
+  },
+  "x5_the_simultaneous_lcb_clears_zero_in_every_cell": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "critical": 2.8770115901422257,
+     "n_cells_clearing": 3
+    },
+    "pooled_lcb": {
+     "rho75_share90": 0.02159092331769497,
+     "rho90_share75": 0.010935795899999372,
+     "rho90_share90": 0.10398912776674037
+    },
+    "why_it_can_fail": "THE HEADLINE, at the ORIGINAL critical value with no threshold moved. It fails if the true effect is below about 73 percent of what the previous block observed"
+   },
+   "passed": true
+  },
+  "x6_the_other_guardrails_stay_noninferior": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "n_other_guardrails": 36,
+     "n_violating": 0
+    },
+    "why_it_can_fail": "fixing the tail does not license breaking fairness; worst_product_fill and the rest of the vector must still hold"
+   },
+   "passed": true
+  }
+ },
+ "n_sub_blocks": 6,
+ "n_tapes_per_cell": 288,
+ "per_sub_block_tail_estimates": {
+  "rho75_share90": [
+   0.020429375393033723,
+   0.05858930299727333,
+   0.021655867400148677,
+   0.06760765737015,
+   0.021776113710653383,
+   0.04265489989590967
+  ],
+  "rho90_share75": [
+   0.005829128997245594,
+   0.031173148025839453,
+   0.023518247499592675,
+   0.042070958985007824,
+   0.014733138571274127,
+   0.02930848194408524
+  ],
+  "rho90_share90": [
+   0.10436702005918445,
+   0.1437544776265939,
+   0.0902021586455282,
+   0.1590586424331318,
+   0.12022075965102348,
+   0.1462761778615244
+  ]
+ },
+ "pooled_estimates": {
+  "rho75_share90::guardrail::lost_orders": {
+   "estimate": 0.0,
+   "kind": "guardrail",
+   "metric_or_mode": "lost_orders",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.0,
+   "simultaneous_lcb95": 0.0
+  },
+  "rho75_share90::guardrail::lost_quantity": {
+   "estimate": 0.0,
+   "kind": "guardrail",
+   "metric_or_mode": "lost_quantity",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.0,
+   "simultaneous_lcb95": 0.0
+  },
+  "rho75_share90::guardrail::max_backlog_age": {
+   "estimate": 1185.0208333333333,
+   "kind": "guardrail",
+   "metric_or_mode": "max_backlog_age",
+   "n_sub_blocks": 6,
+   "pooled_se": 65.08057597934256,
+   "simultaneous_lcb95": 997.783261947633
+  },
+  "rho75_share90::guardrail::omitted_quantity": {
+   "estimate": 25610.14930555556,
+   "kind": "guardrail",
+   "metric_or_mode": "omitted_quantity",
+   "n_sub_blocks": 6,
+   "pooled_se": 1313.456714643009,
+   "simultaneous_lcb95": 21831.31911437749
+  },
+  "rho75_share90::guardrail::omitted_rows": {
+   "estimate": 10.125,
+   "kind": "guardrail",
+   "metric_or_mode": "omitted_rows",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.5206836254033563,
+   "simultaneous_lcb95": 8.626987174917272
+  },
+  "rho75_share90::guardrail::quantity_ret_full": {
+   "estimate": 0.0,
+   "kind": "guardrail",
+   "metric_or_mode": "quantity_ret_full",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.0,
+   "simultaneous_lcb95": 0.0
+  },
+  "rho75_share90::guardrail::ration_ret_visible": {
+   "estimate": 0.09103392575772173,
+   "kind": "guardrail",
+   "metric_or_mode": "ration_ret_visible",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.004825229107105465,
+   "simultaneous_lcb95": 0.07715168569148768
+  },
+  "rho75_share90::guardrail::ret_full": {
+   "estimate": 0.0,
+   "kind": "guardrail",
+   "metric_or_mode": "ret_full",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.0,
+   "simultaneous_lcb95": 0.0
+  },
+  "rho75_share90::guardrail::ret_visible_cvar10": {
+   "estimate": 0.03878553612786146,
+   "kind": "guardrail",
+   "metric_or_mode": "ret_visible_cvar10",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.005976553194669776,
+   "simultaneous_lcb95": 0.02159092331769497
+  },
+  "rho75_share90::guardrail::service_loss_auc": {
+   "estimate": 44705534.815972224,
+   "kind": "guardrail",
+   "metric_or_mode": "service_loss_auc",
+   "n_sub_blocks": 6,
+   "pooled_se": 2212152.387190603,
+   "simultaneous_lcb95": 38341146.75886407
+  },
+  "rho75_share90::guardrail::unresolved_orders": {
+   "estimate": 10.125,
+   "kind": "guardrail",
+   "metric_or_mode": "unresolved_orders",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.5206836254033563,
+   "simultaneous_lcb95": 8.626987174917272
+  },
+  "rho75_share90::guardrail::unresolved_quantity": {
+   "estimate": 25610.14930555556,
+   "kind": "guardrail",
+   "metric_or_mode": "unresolved_quantity",
+   "n_sub_blocks": 6,
+   "pooled_se": 1313.456714643009,
+   "simultaneous_lcb95": 21831.31911437749
+  },
+  "rho75_share90::guardrail::worst_product_fill": {
+   "estimate": 0.2925509160920366,
+   "kind": "guardrail",
+   "metric_or_mode": "worst_product_fill",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.0130223035611522,
+   "simultaneous_lcb95": 0.25508559781625134
+  },
+  "rho75_share90::placebo::belief_given_current_operational_state::current_operational_stale_belief": {
+   "estimate": 0.018327867089242143,
+   "kind": "placebo",
+   "metric_or_mode": "current_operational_stale_belief",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.0011054668922492264,
+   "simultaneous_lcb95": 0.015147426027722611
+  },
+  "rho75_share90::placebo::belief_given_current_operational_state::operational_only": {
+   "estimate": 0.016572937509596767,
+   "kind": "placebo",
+   "metric_or_mode": "operational_only",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.0011033213202897246,
+   "simultaneous_lcb95": 0.013398669283472206
+  },
+  "rho75_share90::placebo::operational_state_given_current_belief::belief_only": {
+   "estimate": 0.05002753816354419,
+   "kind": "placebo",
+   "metric_or_mode": "belief_only",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.002502976175419645,
+   "simultaneous_lcb95": 0.04282644669701201
+  },
+  "rho75_share90::placebo::operational_state_given_current_belief::stale_operational_current_belief": {
+   "estimate": 0.042891953555696714,
+   "kind": "placebo",
+   "metric_or_mode": "stale_operational_current_belief",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.0018900179770814198,
+   "simultaneous_lcb95": 0.03745434993005631
+  },
+  "rho75_share90::placebo::operational_state_given_current_belief::swapped_operational_current_belief": {
+   "estimate": 0.1277439310345316,
+   "kind": "placebo",
+   "metric_or_mode": "swapped_operational_current_belief",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.005489993647767384,
+   "simultaneous_lcb95": 0.11194915568009764
+  },
+  "rho75_share90::placebo::total_information::cross_tape_shift17": {
+   "estimate": 0.10831844842219718,
+   "kind": "placebo",
+   "metric_or_mode": "cross_tape_shift17",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.005216924307023097,
+   "simultaneous_lcb95": 0.09330929672599703
+  },
+  "rho75_share90::placebo::total_information::no_state": {
+   "estimate": 0.08552711861061535,
+   "kind": "placebo",
+   "metric_or_mode": "no_state",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.004362044869357646,
+   "simultaneous_lcb95": 0.07297746496475298
+  },
+  "rho75_share90::placebo::total_information::stale_t2": {
+   "estimate": 0.06918546797011084,
+   "kind": "placebo",
+   "metric_or_mode": "stale_t2",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.0028860350708510446,
+   "simultaneous_lcb95": 0.060882311621715444
+  },
+  "rho75_share90::placebo::total_information::swapped_state": {
+   "estimate": 0.18924513355858227,
+   "kind": "placebo",
+   "metric_or_mode": "swapped_state",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.0064404793370135965,
+   "simultaneous_lcb95": 0.17071579985992263
+  },
+  "rho75_share90::primary::ret_visible": {
+   "estimate": 0.09101648428612913,
+   "kind": "primary",
+   "metric_or_mode": "ret_visible",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.004826417247673628,
+   "simultaneous_lcb95": 0.07713082592570976
+  },
+  "rho90_share75::guardrail::lost_orders": {
+   "estimate": 0.0,
+   "kind": "guardrail",
+   "metric_or_mode": "lost_orders",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.0,
+   "simultaneous_lcb95": 0.0
+  },
+  "rho90_share75::guardrail::lost_quantity": {
+   "estimate": 0.0,
+   "kind": "guardrail",
+   "metric_or_mode": "lost_quantity",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.0,
+   "simultaneous_lcb95": 0.0
+  },
+  "rho90_share75::guardrail::max_backlog_age": {
+   "estimate": 1349.0208333333333,
+   "kind": "guardrail",
+   "metric_or_mode": "max_backlog_age",
+   "n_sub_blocks": 6,
+   "pooled_se": 68.67470285535033,
+   "simultaneous_lcb95": 1151.442917268917
+  },
+  "rho90_share75::guardrail::omitted_quantity": {
+   "estimate": 22443.121527777777,
+   "kind": "guardrail",
+   "metric_or_mode": "omitted_quantity",
+   "n_sub_blocks": 6,
+   "pooled_se": 1179.9553516588478,
+   "simultaneous_lcb95": 19048.376305204925
+  },
+  "rho90_share75::guardrail::omitted_rows": {
+   "estimate": 8.874999999999998,
+   "kind": "guardrail",
+   "metric_or_mode": "omitted_rows",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.46760845150871355,
+   "simultaneous_lcb95": 7.529685065360971
+  },
+  "rho90_share75::guardrail::quantity_ret_full": {
+   "estimate": 0.0,
+   "kind": "guardrail",
+   "metric_or_mode": "quantity_ret_full",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.0,
+   "simultaneous_lcb95": 0.0
+  },
+  "rho90_share75::guardrail::ration_ret_visible": {
+   "estimate": 0.07624986227158007,
+   "kind": "guardrail",
+   "metric_or_mode": "ration_ret_visible",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.004122787666147327,
+   "simultaneous_lcb95": 0.0643885543723788
+  },
+  "rho90_share75::guardrail::ret_full": {
+   "estimate": 0.0,
+   "kind": "guardrail",
+   "metric_or_mode": "ret_full",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.0,
+   "simultaneous_lcb95": 0.0
+  },
+  "rho90_share75::guardrail::ret_visible_cvar10": {
+   "estimate": 0.024438850670507484,
+   "kind": "guardrail",
+   "metric_or_mode": "ret_visible_cvar10",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.004693430786575519,
+   "simultaneous_lcb95": 0.010935795899999372
+  },
+  "rho90_share75::guardrail::service_loss_auc": {
+   "estimate": 39002466.95486111,
+   "kind": "guardrail",
+   "metric_or_mode": "service_loss_auc",
+   "n_sub_blocks": 6,
+   "pooled_se": 1953621.0593127517,
+   "simultaneous_lcb95": 33381876.524472393
+  },
+  "rho90_share75::guardrail::unresolved_orders": {
+   "estimate": 8.874999999999998,
+   "kind": "guardrail",
+   "metric_or_mode": "unresolved_orders",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.46760845150871355,
+   "simultaneous_lcb95": 7.529685065360971
+  },
+  "rho90_share75::guardrail::unresolved_quantity": {
+   "estimate": 22443.121527777777,
+   "kind": "guardrail",
+   "metric_or_mode": "unresolved_quantity",
+   "n_sub_blocks": 6,
+   "pooled_se": 1179.9553516588478,
+   "simultaneous_lcb95": 19048.376305204925
+  },
+  "rho90_share75::guardrail::worst_product_fill": {
+   "estimate": 0.27528427104694625,
+   "kind": "guardrail",
+   "metric_or_mode": "worst_product_fill",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.013217426156926441,
+   "simultaneous_lcb95": 0.23725758280161985
+  },
+  "rho90_share75::placebo::belief_given_current_operational_state::current_operational_stale_belief": {
+   "estimate": 0.013423134798490484,
+   "kind": "placebo",
+   "metric_or_mode": "current_operational_stale_belief",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.000953757305991022,
+   "simultaneous_lcb95": 0.010679163974971487
+  },
+  "rho90_share75::placebo::belief_given_current_operational_state::operational_only": {
+   "estimate": 0.016621644689509267,
+   "kind": "placebo",
+   "metric_or_mode": "operational_only",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.0010865323654790247,
+   "simultaneous_lcb95": 0.013495678480961464
+  },
+  "rho90_share75::placebo::operational_state_given_current_belief::belief_only": {
+   "estimate": 0.03502180235611491,
+   "kind": "placebo",
+   "metric_or_mode": "belief_only",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.002045296593029641,
+   "simultaneous_lcb95": 0.029137460352690228
+  },
+  "rho90_share75::placebo::operational_state_given_current_belief::stale_operational_current_belief": {
+   "estimate": 0.027858201020299882,
+   "kind": "placebo",
+   "metric_or_mode": "stale_operational_current_belief",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.0015158440713525113,
+   "simultaneous_lcb95": 0.02349710005817033
+  },
+  "rho90_share75::placebo::operational_state_given_current_belief::swapped_operational_current_belief": {
+   "estimate": 0.11532185530382898,
+   "kind": "placebo",
+   "metric_or_mode": "swapped_operational_current_belief",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.005325394900323631,
+   "simultaneous_lcb95": 0.1000006324535136
+  },
+  "rho90_share75::placebo::total_information::cross_tape_shift17": {
+   "estimate": 0.08447899504089074,
+   "kind": "placebo",
+   "metric_or_mode": "cross_tape_shift17",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.004577088111944443,
+   "simultaneous_lcb95": 0.07131065949372438
+  },
+  "rho90_share75::placebo::total_information::no_state": {
+   "estimate": 0.08127677621443592,
+   "kind": "placebo",
+   "metric_or_mode": "no_state",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.004468932167129137,
+   "simultaneous_lcb95": 0.06841960657404599
+  },
+  "rho90_share75::placebo::total_information::stale_t2": {
+   "estimate": 0.05798670473930803,
+   "kind": "placebo",
+   "metric_or_mode": "stale_t2",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.002697089705137977,
+   "simultaneous_lcb95": 0.050227146397972794
+  },
+  "rho90_share75::placebo::total_information::swapped_state": {
+   "estimate": 0.1876888814989807,
+   "kind": "placebo",
+   "metric_or_mode": "swapped_state",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.00531874123731122,
+   "simultaneous_lcb95": 0.17238680131426892
+  },
+  "rho90_share75::primary::ret_visible": {
+   "estimate": 0.07621073147557172,
+   "kind": "primary",
+   "metric_or_mode": "ret_visible",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.0041205205222479046,
+   "simultaneous_lcb95": 0.0643559461756456
+  },
+  "rho90_share90::guardrail::lost_orders": {
+   "estimate": 0.0,
+   "kind": "guardrail",
+   "metric_or_mode": "lost_orders",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.0,
+   "simultaneous_lcb95": 0.0
+  },
+  "rho90_share90::guardrail::lost_quantity": {
+   "estimate": 0.0,
+   "kind": "guardrail",
+   "metric_or_mode": "lost_quantity",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.0,
+   "simultaneous_lcb95": 0.0
+  },
+  "rho90_share90::guardrail::max_backlog_age": {
+   "estimate": 1237.5,
+   "kind": "guardrail",
+   "metric_or_mode": "max_backlog_age",
+   "n_sub_blocks": 6,
+   "pooled_se": 68.6530018399961,
+   "simultaneous_lcb95": 1039.9845180082757
+  },
+  "rho90_share90::guardrail::omitted_quantity": {
+   "estimate": 41230.086805555555,
+   "kind": "guardrail",
+   "metric_or_mode": "omitted_quantity",
+   "n_sub_blocks": 6,
+   "pooled_se": 2027.6398345826956,
+   "simultaneous_lcb95": 35396.54350082707
+  },
+  "rho90_share90::guardrail::omitted_rows": {
+   "estimate": 16.45138888888889,
+   "kind": "guardrail",
+   "metric_or_mode": "omitted_rows",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.80938438955911,
+   "simultaneous_lcb95": 14.12278061924714
+  },
+  "rho90_share90::guardrail::quantity_ret_full": {
+   "estimate": 0.0,
+   "kind": "guardrail",
+   "metric_or_mode": "quantity_ret_full",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.0,
+   "simultaneous_lcb95": 0.0
+  },
+  "rho90_share90::guardrail::ration_ret_visible": {
+   "estimate": 0.11738473119421884,
+   "kind": "guardrail",
+   "metric_or_mode": "ration_ret_visible",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.006004703486532262,
+   "simultaneous_lcb95": 0.1001091296680981
+  },
+  "rho90_share90::guardrail::ret_full": {
+   "estimate": 0.0,
+   "kind": "guardrail",
+   "metric_or_mode": "ret_full",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.0,
+   "simultaneous_lcb95": 0.0
+  },
+  "rho90_share90::guardrail::ret_visible_cvar10": {
+   "estimate": 0.1273132060461644,
+   "kind": "guardrail",
+   "metric_or_mode": "ret_visible_cvar10",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.008107050510099264,
+   "simultaneous_lcb95": 0.10398912776674037
+  },
+  "rho90_share90::guardrail::service_loss_auc": {
+   "estimate": 72506011.92013888,
+   "kind": "guardrail",
+   "metric_or_mode": "service_loss_auc",
+   "n_sub_blocks": 6,
+   "pooled_se": 3610857.176335305,
+   "simultaneous_lcb95": 62117533.97347398
+  },
+  "rho90_share90::guardrail::unresolved_orders": {
+   "estimate": 16.45138888888889,
+   "kind": "guardrail",
+   "metric_or_mode": "unresolved_orders",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.80938438955911,
+   "simultaneous_lcb95": 14.12278061924714
+  },
+  "rho90_share90::guardrail::unresolved_quantity": {
+   "estimate": 41230.086805555555,
+   "kind": "guardrail",
+   "metric_or_mode": "unresolved_quantity",
+   "n_sub_blocks": 6,
+   "pooled_se": 2027.6398345826956,
+   "simultaneous_lcb95": 35396.54350082707
+  },
+  "rho90_share90::guardrail::worst_product_fill": {
+   "estimate": 0.47743018160834855,
+   "kind": "guardrail",
+   "metric_or_mode": "worst_product_fill",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.0186754955029072,
+   "simultaneous_lcb95": 0.4237005645948355
+  },
+  "rho90_share90::placebo::belief_given_current_operational_state::current_operational_stale_belief": {
+   "estimate": 0.02407744969678599,
+   "kind": "placebo",
+   "metric_or_mode": "current_operational_stale_belief",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.0011171629514297068,
+   "simultaneous_lcb95": 0.020863358937445228
+  },
+  "rho90_share90::placebo::belief_given_current_operational_state::operational_only": {
+   "estimate": 0.026526672596437026,
+   "kind": "placebo",
+   "metric_or_mode": "operational_only",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.001030481112213547,
+   "simultaneous_lcb95": 0.023561966493176
+  },
+  "rho90_share90::placebo::operational_state_given_current_belief::belief_only": {
+   "estimate": 0.07927600719451362,
+   "kind": "placebo",
+   "metric_or_mode": "belief_only",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.002480367502689407,
+   "simultaneous_lcb95": 0.07213996114146407
+  },
+  "rho90_share90::placebo::operational_state_given_current_belief::stale_operational_current_belief": {
+   "estimate": 0.05818799845488276,
+   "kind": "placebo",
+   "metric_or_mode": "stale_operational_current_belief",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.0014894243696467208,
+   "simultaneous_lcb95": 0.053902907280768866
+  },
+  "rho90_share90::placebo::operational_state_given_current_belief::swapped_operational_current_belief": {
+   "estimate": 0.14887886603446884,
+   "kind": "placebo",
+   "metric_or_mode": "swapped_operational_current_belief",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.005177391635080242,
+   "simultaneous_lcb95": 0.1339834502936376
+  },
+  "rho90_share90::placebo::total_information::cross_tape_shift17": {
+   "estimate": 0.1169132299832425,
+   "kind": "placebo",
+   "metric_or_mode": "cross_tape_shift17",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.0062528438502784806,
+   "simultaneous_lcb95": 0.09892372575464177
+  },
+  "rho90_share90::placebo::total_information::no_state": {
+   "estimate": 0.1264778419693903,
+   "kind": "placebo",
+   "metric_or_mode": "no_state",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.004829479999301607,
+   "simultaneous_lcb95": 0.11258337203703951
+  },
+  "rho90_share90::placebo::total_information::stale_t2": {
+   "estimate": 0.09398953157307754,
+   "kind": "placebo",
+   "metric_or_mode": "stale_t2",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.0028897677447081074,
+   "simultaneous_lcb95": 0.08567563627873316
+  },
+  "rho90_share90::placebo::total_information::swapped_state": {
+   "estimate": 0.20525835174786877,
+   "kind": "placebo",
+   "metric_or_mode": "swapped_state",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.0058625312281287345,
+   "simultaneous_lcb95": 0.18839178145697166
+  },
+  "rho90_share90::primary::ret_visible": {
+   "estimate": 0.11720677325049778,
+   "kind": "primary",
+   "metric_or_mode": "ret_visible",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.005988444891123626,
+   "simultaneous_lcb95": 0.09997794789180711
+  }
+ },
+ "pooled_primary": {
+  "rho75_share90": {
+   "estimate": 0.09101648428612913,
+   "kind": "primary",
+   "metric_or_mode": "ret_visible",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.004826417247673628,
+   "simultaneous_lcb95": 0.07713082592570976
+  },
+  "rho90_share75": {
+   "estimate": 0.07621073147557172,
+   "kind": "primary",
+   "metric_or_mode": "ret_visible",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.0041205205222479046,
+   "simultaneous_lcb95": 0.0643559461756456
+  },
+  "rho90_share90": {
+   "estimate": 0.11720677325049778,
+   "kind": "primary",
+   "metric_or_mode": "ret_visible",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.005988444891123626,
+   "simultaneous_lcb95": 0.09997794789180711
+  }
+ },
+ "pooled_tail": {
+  "rho75_share90": {
+   "estimate": 0.03878553612786146,
+   "kind": "guardrail",
+   "metric_or_mode": "ret_visible_cvar10",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.005976553194669776,
+   "simultaneous_lcb95": 0.02159092331769497
+  },
+  "rho90_share75": {
+   "estimate": 0.024438850670507484,
+   "kind": "guardrail",
+   "metric_or_mode": "ret_visible_cvar10",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.004693430786575519,
+   "simultaneous_lcb95": 0.010935795899999372
+  },
+  "rho90_share90": {
+   "estimate": 0.1273132060461644,
+   "kind": "guardrail",
+   "metric_or_mode": "ret_visible_cvar10",
+   "n_sub_blocks": 6,
+   "pooled_se": 0.008107050510099264,
+   "simultaneous_lcb95": 0.10398912776674037
+  }
+ },
+ "reference_path": "results/program_o/r1_tail_in_the_objective_v1/result.json",
+ "reference_sha256": "b2e6c688fc133b28d2f7a23974aa392f3dd3359444b33c6094b90330da8925f3",
+ "run_role": "POWERED_REPLICATION_ON_A_VIRGIN_BLOCK",
+ "schema_version": "program_o_powered_replication_v1",
+ "scope": "NEW_PROGRAMME_INHERITING_PROGRAM_O_PHYSICS_CANNOT_PROMOTE_PROGRAM_O_ONLY_THE_SAMPLE_SIZE_DIFFERS",
+ "self_sha256": "f7a0c92c4a2ce529e5313e05e703421bf641d5a1209fafbda12c1239cbdb999c",
+ "simultaneous_critical_used": 2.8770115901422257,
+ "sub_block_criticals": [
+  2.8422109964638596,
+  2.8507065217689607,
+  2.813919947903799,
+  2.834114308655657,
+  2.8770115901422257,
+  2.811028333372801
+ ],
+ "sub_block_statuses": [
+  "STOP_PROGRAM_O_AFTER_CORRECTIVE_VALIDATION",
+  "STOP_PROGRAM_O_AFTER_CORRECTIVE_VALIDATION",
+  "STOP_PROGRAM_O_AFTER_CORRECTIVE_VALIDATION",
+  "PASS_PROGRAM_O_CLASSICAL_HOBS_CORRECTIVE_VALIDATION",
+  "STOP_PROGRAM_O_AFTER_CORRECTIVE_VALIDATION",
+  "STOP_PROGRAM_O_AFTER_CORRECTIVE_VALIDATION"
+ ]
+}
