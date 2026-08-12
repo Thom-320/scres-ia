@@ -1,0 +1,475 @@
+{
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "chosen_hyperparameters": {
+  "kan_tuned": [
+   {
+    "lr": 0.01,
+    "wd": 0.0,
+    "width": 64
+   },
+   {
+    "lr": 0.003,
+    "wd": 0.0,
+    "width": 64
+   },
+   {
+    "lr": 0.01,
+    "wd": 0.0,
+    "width": 64
+   },
+   {
+    "lr": 0.01,
+    "wd": 0.0001,
+    "width": 64
+   },
+   {
+    "lr": 0.003,
+    "wd": 0.0,
+    "width": 64
+   }
+  ],
+  "mlp_tuned": [
+   {
+    "lr": 0.003,
+    "wd": 0.0,
+    "width": 64
+   },
+   {
+    "lr": 0.01,
+    "wd": 0.0001,
+    "width": 16
+   },
+   {
+    "lr": 0.003,
+    "wd": 0.0001,
+    "width": 64
+   },
+   {
+    "lr": 0.003,
+    "wd": 0.0,
+    "width": 64
+   },
+   {
+    "lr": 0.003,
+    "wd": 0.0,
+    "width": 64
+   }
+  ],
+  "recurrent": [
+   {
+    "lr": 0.01,
+    "wd": 0.0,
+    "width": 64
+   },
+   {
+    "lr": 0.003,
+    "wd": 0.0,
+    "width": 64
+   },
+   {
+    "lr": 0.003,
+    "wd": 0.0001,
+    "width": 64
+   },
+   {
+    "lr": 0.01,
+    "wd": 0.0,
+    "width": 64
+   },
+   {
+    "lr": 0.003,
+    "wd": 0.0001,
+    "width": 64
+   }
+  ]
+ },
+ "claim_status": "SURFACE_PREMIUM_CAPTURED",
+ "confirmation_of": "results/program_n/gate_b_cd_surface/result.json",
+ "contract_path": "docs/PREREGISTRO_PUERTA_B_SUPERFICIE_CD_2026-08-09.md",
+ "contract_sha256": "916786f2995e7af18a4cbff09d2aed4f7f031e5ca1d326794291796c8d306e0a",
+ "created_at": "2026-08-10T03:21:54.444138+00:00",
+ "elapsed_seconds": 540.0748592080199,
+ "endpoint": "held_out_r2_on_R_cobb_douglas",
+ "falsifier_summary": {
+  "all_passed": true,
+  "disclosures": [
+   "d1_recurrent_information_set"
+  ],
+  "failed": [],
+  "n_computed": 7,
+  "n_disclosures": 1,
+  "n_failed": 0,
+  "n_not_applicable": 0,
+  "not_applicable": []
+ },
+ "falsifiers": {
+  "custody": {
+   "evidence": {
+    "n_sealed_artifact_overlap": 0,
+    "n_seeds": 8,
+    "note": "no recorded collision. This is NOT proof of virginity: the registry declares itself incomplete and its own rules state that a missing result file is not virginity evidence",
+    "registry_conflicts": [],
+    "registry_is_complete": false,
+    "registry_status": "BASELINE_INVENTORY_INCOMPLETE_NO_NEW_SEEDS_AUTHORIZED",
+    "replay_of": null,
+    "sealed_artifact_overlap": [],
+    "seeds": [
+     9600001,
+     9600002,
+     9600003,
+     9600004,
+     9600005,
+     9600006,
+     9600007,
+     9600008
+    ],
+    "status": "NO_KNOWN_COLLISION",
+    "why_it_can_fail": "a seed already consumed by a registry block or a sealed artifact would make this run a re-use rather than an independent one"
+   },
+   "not_applicable": false,
+   "passed": true
+  },
+  "d1_recurrent_information_set": {
+   "computed": false,
+   "disclosure": true,
+   "evidence": {
+    "evidence": {
+     "recurrent_vs_linear_lagged": {
+      "baseline": "linear_lagged",
+      "ci95_high": 0.1904869363957969,
+      "ci95_low": 0.1068639399376879,
+      "mean_difference": 0.1486754381667424,
+      "passes_sesoi_and_ci": true,
+      "sesoi": 0.05
+     }
+    },
+    "statement": "the recurrent arm sees the PREVIOUS configuration's resilience, which no other arm does, because Fig. 5's activation compares x with x-1. It is therefore judged against linear_lagged, a classical model with the same input, and never against the arms that lack it"
+   },
+   "passed": null
+  },
+  "f1_ceiling_still_above_the_primary": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": 0.06529831883145198,
+     "threshold": 0.0
+    },
+    "why_it_can_fail": "if the ceiling vanishes once the fit is repaired, there was no margin to capture and the predecessor's headline was itself an artefact"
+   },
+   "passed": true
+  },
+  "f2_classical_arms_reproduce": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "max_level_shift": 0.05883038424845588,
+     "n_classical_ranked": 4,
+     "n_significant_reversals": 0
+    },
+    "development_artifact": "results/program_n/gate_b_cd_surface/result.json",
+    "module_manifest_identical": true,
+    "significant_reversals": [],
+    "why_it_can_fail": "on fresh tapes the levels MUST move and so may their order when two arms are indistinguishable; what may not move is the instrument. This fails if a module hash differs, or if a classical pair reverses with its own paired CI excluding zero -- a reversal that sampling variation cannot manufacture"
+   },
+   "passed": true
+  },
+  "f3_tuning_used_only_inner_validation": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "folds": 5,
+     "grid_size": 8
+    },
+    "why_it_can_fail": "selection that sees the test fold is exactly the sin the predecessor declared about its own spline baseline"
+   },
+   "passed": true
+  },
+  "f4_networks_now_reach_the_linear": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": 0.09109530613886596,
+     "threshold": 0.0
+    },
+    "why_it_can_fail": "H_B may simply be false: if the repaired networks still lose to OLS, the fit was not the problem and the surface does not admit a better approximator here"
+   },
+   "passed": true
+  },
+  "f5_neural_premium_over_the_primary": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "n_compared": 4,
+     "sesoi": 0.05
+    },
+    "why_it_can_fail": "reaching the linear model is not beating it; the margin may exist and stay uncaptured even with the fit repaired"
+   },
+   "passed": true
+  },
+  "f6_recurrent_arm_is_reported": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": 5.0,
+     "threshold": 0.0
+    },
+    "why_it_can_fail": "without it Garrido's Fig. 5 as a PREDICTOR is not answered at all"
+   },
+   "passed": true
+  },
+  "f7_budgets_are_matched": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "grid": 8,
+     "init_seeds": 5,
+     "max_steps": 5000
+    },
+    "why_it_can_fail": "an unequal grid or seed count between architectures measures budget, not architecture"
+   },
+   "passed": true
+  }
+ },
+ "grid": [
+  {
+   "lr": 0.003,
+   "wd": 0.0,
+   "width": 16
+  },
+  {
+   "lr": 0.003,
+   "wd": 0.0001,
+   "width": 16
+  },
+  {
+   "lr": 0.01,
+   "wd": 0.0,
+   "width": 16
+  },
+  {
+   "lr": 0.01,
+   "wd": 0.0001,
+   "width": 16
+  },
+  {
+   "lr": 0.003,
+   "wd": 0.0,
+   "width": 64
+  },
+  {
+   "lr": 0.003,
+   "wd": 0.0001,
+   "width": 64
+  },
+  {
+   "lr": 0.01,
+   "wd": 0.0,
+   "width": 64
+  },
+  {
+   "lr": 0.01,
+   "wd": 0.0001,
+   "width": 64
+  }
+ ],
+ "held_out_r2_mean": {
+  "constant": -0.009184268414185848,
+  "kan_tuned": 0.7805205731961178,
+  "linear_additive": 0.6626302065324214,
+  "linear_interactions": 0.6894252670572518,
+  "linear_lagged": 0.7519789070560852,
+  "mlp_tuned": 0.7975404734415547,
+  "recurrent": 0.9006543452228275,
+  "spline_buffer": 0.6812090418025996,
+  "train_cell_mean_comparator": 0.7547235858887038,
+  "tree": 0.6889926809852671
+ },
+ "init_seeds": 5,
+ "max_steps": 5000,
+ "module_manifest": {
+  "missing": [],
+  "modules": {
+   "supply_chain/cobb_douglas_resilience.py": "d9d88376d666115c8dab4018b903c45986a43811649c3b57ebe5770e57204884",
+   "supply_chain/falsifiers.py": "99a64c66b62ee43ab9cf532a34932dc27ff4b4fae72d9b331fcf2a8f2a554fb7",
+   "supply_chain/supply_chain.py": "b10f5c8a1bb2bd201c7a736565c6a5af953b9f95f7cae75a56fff6ac289f6965"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "patience": 300,
+ "per_fold": {
+  "constant": [
+   -0.005339155159426845,
+   -3.617379656328801e-05,
+   -0.0015307308453380575,
+   -0.021554345432150734,
+   -0.017460936837450314
+  ],
+  "kan_tuned": [
+   0.552255142792875,
+   0.8220346778349276,
+   0.7429074244164928,
+   0.9337168684703798,
+   0.8516887524659135
+  ],
+  "linear_additive": [
+   0.4611977797317228,
+   0.7336439906128873,
+   0.6404896573666108,
+   0.7358472513122756,
+   0.7419723536386102
+  ],
+  "linear_interactions": [
+   0.5261298233164831,
+   0.7885728243279976,
+   0.7041287510629379,
+   0.7515754831890085,
+   0.676719453389832
+  ],
+  "linear_lagged": [
+   0.6858976384594414,
+   0.7448889935201579,
+   0.7347374919405247,
+   0.7633804729783675,
+   0.8309899383819342
+  ],
+  "mlp_tuned": [
+   0.5980769850699625,
+   0.905197726180812,
+   0.7677412156971164,
+   0.8976217600986482,
+   0.8190646801612339
+  ],
+  "recurrent": [
+   0.8243832151547895,
+   0.91311389563783,
+   0.8903876904633657,
+   0.9478721122086508,
+   0.9275148126495019
+  ],
+  "spline_buffer": [
+   0.47977732477642476,
+   0.7683852346607329,
+   0.672836532334985,
+   0.7635988105359365,
+   0.7214473067049186
+  ],
+  "train_cell_mean_comparator": [
+   0.6444620976972051,
+   0.9399508907567704,
+   0.8377520657638475,
+   0.7521427996282726,
+   0.5993100755974241
+  ],
+  "tree": [
+   0.6034342334139793,
+   0.8436815808558599,
+   0.7480638072119333,
+   0.6613696593546028,
+   0.5884141240899599
+  ]
+ },
+ "predecessor_means": {
+  "backprop": 0.5841,
+  "constant": -0.0167,
+  "kan": 0.6019,
+  "linear_additive": 0.6062,
+  "linear_interactions": 0.6306,
+  "spline_buffer": 0.6365,
+  "train_cell_mean_comparator": 0.6931,
+  "tree": 0.6225
+ },
+ "primary_baseline": "linear_interactions",
+ "reference_path": "results/headroom/cd_surface_prediction_premium/result.json",
+ "reference_sha256": "527227bd96eb8d8d9ed534aebea410da79efb91bb2d1e2aa365e85b5a9f43a99",
+ "reproduction_gap": {
+  "constant": 0.007515731585814152,
+  "linear_additive": 0.05643020653242148,
+  "linear_interactions": 0.05882526705725177,
+  "spline_buffer": 0.0447090418025996,
+  "train_cell_mean_comparator": 0.06162358588870376,
+  "tree": 0.06649268098526706
+ },
+ "run_role": "DEVELOPMENT",
+ "schema_version": "program_n_gate_b_v1",
+ "scope": "DEVELOPMENT_REANALYSIS_NO_NEW_SEEDS",
+ "seed_block": {
+  "derived_from": "seeds",
+  "end": 9600008,
+  "n": 8,
+  "start": 9600001
+ },
+ "seeds": [
+  9600001,
+  9600002,
+  9600003,
+  9600004,
+  9600005,
+  9600006,
+  9600007,
+  9600008
+ ],
+ "self_sha256": "d800c3dd82c333913a962a76293f046be0cdbcaf2f98305504b86fecb44374f5",
+ "sesoi": 0.05,
+ "vs_lagged": {
+  "recurrent": {
+   "baseline": "linear_lagged",
+   "ci95_high": 0.1904869363957969,
+   "ci95_low": 0.1068639399376879,
+   "mean_difference": 0.1486754381667424,
+   "passes_sesoi_and_ci": true,
+   "sesoi": 0.05
+  }
+ },
+ "vs_primary": {
+  "kan_tuned": {
+   "baseline": "linear_interactions",
+   "ci95_high": 0.19042022015627952,
+   "ci95_low": -0.008229607878547651,
+   "mean_difference": 0.09109530613886593,
+   "passes_sesoi_and_ci": false,
+   "sesoi": 0.05
+  },
+  "mlp_tuned": {
+   "baseline": "linear_interactions",
+   "ci95_high": 0.15608259391002616,
+   "ci95_low": 0.060147818858579435,
+   "mean_difference": 0.1081152063843028,
+   "passes_sesoi_and_ci": true,
+   "sesoi": 0.05
+  },
+  "spline_buffer": {
+   "baseline": "linear_interactions",
+   "ci95_high": 0.037156326355677595,
+   "ci95_low": -0.053588776864982084,
+   "mean_difference": -0.008216225254652243,
+   "passes_sesoi_and_ci": false,
+   "sesoi": 0.05
+  },
+  "tree": {
+   "baseline": "linear_interactions",
+   "ci95_high": 0.10133199635426914,
+   "ci95_low": -0.10219716849823869,
+   "mean_difference": -0.0004325860719847752,
+   "passes_sesoi_and_ci": false,
+   "sesoi": 0.05
+  }
+ }
+}

@@ -1,0 +1,477 @@
+{
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "chosen_hyperparameters": {
+  "kan_tuned": [
+   {
+    "lr": 0.003,
+    "wd": 0.0,
+    "width": 16
+   },
+   {
+    "lr": 0.003,
+    "wd": 0.0001,
+    "width": 64
+   },
+   {
+    "lr": 0.003,
+    "wd": 0.0,
+    "width": 16
+   },
+   {
+    "lr": 0.003,
+    "wd": 0.0001,
+    "width": 16
+   },
+   {
+    "lr": 0.01,
+    "wd": 0.0001,
+    "width": 64
+   }
+  ],
+  "mlp_tuned": [
+   {
+    "lr": 0.003,
+    "wd": 0.0001,
+    "width": 16
+   },
+   {
+    "lr": 0.003,
+    "wd": 0.0,
+    "width": 64
+   },
+   {
+    "lr": 0.01,
+    "wd": 0.0,
+    "width": 16
+   },
+   {
+    "lr": 0.01,
+    "wd": 0.0001,
+    "width": 16
+   },
+   {
+    "lr": 0.003,
+    "wd": 0.0,
+    "width": 64
+   }
+  ],
+  "recurrent": [
+   {
+    "lr": 0.003,
+    "wd": 0.0,
+    "width": 64
+   },
+   {
+    "lr": 0.003,
+    "wd": 0.0001,
+    "width": 64
+   },
+   {
+    "lr": 0.01,
+    "wd": 0.0,
+    "width": 64
+   },
+   {
+    "lr": 0.003,
+    "wd": 0.0001,
+    "width": 64
+   },
+   {
+    "lr": 0.01,
+    "wd": 0.0001,
+    "width": 64
+   }
+  ]
+ },
+ "claim_status": "BLOCKED_INSTRUMENT",
+ "confirmation_of": "results/program_n/gate_b_cd_surface/result.json",
+ "contract_path": "docs/PREREGISTRO_PUERTA_B_SUPERFICIE_CD_2026-08-09.md",
+ "contract_sha256": "916786f2995e7af18a4cbff09d2aed4f7f031e5ca1d326794291796c8d306e0a",
+ "created_at": "2026-08-10T01:36:09.484599+00:00",
+ "elapsed_seconds": 508.159885583038,
+ "endpoint": "held_out_r2_on_R_cobb_douglas",
+ "falsifier_summary": {
+  "all_passed": false,
+  "disclosures": [
+   "d1_recurrent_information_set"
+  ],
+  "failed": [
+   "f2_classical_arms_reproduce",
+   "f4_networks_now_reach_the_linear"
+  ],
+  "n_computed": 7,
+  "n_disclosures": 1,
+  "n_failed": 2,
+  "n_not_applicable": 0,
+  "not_applicable": []
+ },
+ "falsifiers": {
+  "custody": {
+   "evidence": {
+    "n_sealed_artifact_overlap": 0,
+    "n_seeds": 8,
+    "note": "no recorded collision. This is NOT proof of virginity: the registry declares itself incomplete and its own rules state that a missing result file is not virginity evidence",
+    "registry_conflicts": [],
+    "registry_is_complete": false,
+    "registry_status": "BASELINE_INVENTORY_INCOMPLETE_NO_NEW_SEEDS_AUTHORIZED",
+    "replay_of": null,
+    "sealed_artifact_overlap": [],
+    "seeds": [
+     9500001,
+     9500002,
+     9500003,
+     9500004,
+     9500005,
+     9500006,
+     9500007,
+     9500008
+    ],
+    "status": "NO_KNOWN_COLLISION",
+    "why_it_can_fail": "a seed already consumed by a registry block or a sealed artifact would make this run a re-use rather than an independent one"
+   },
+   "not_applicable": false,
+   "passed": true
+  },
+  "d1_recurrent_information_set": {
+   "computed": false,
+   "disclosure": true,
+   "evidence": {
+    "evidence": {
+     "recurrent_vs_linear_lagged": {
+      "baseline": "linear_lagged",
+      "ci95_high": 0.24267674536907835,
+      "ci95_low": -0.02638576384366835,
+      "mean_difference": 0.10814549076270501,
+      "passes_sesoi_and_ci": false,
+      "sesoi": 0.05
+     }
+    },
+    "statement": "the recurrent arm sees the PREVIOUS configuration's resilience, which no other arm does, because Fig. 5's activation compares x with x-1. It is therefore judged against linear_lagged, a classical model with the same input, and never against the arms that lack it"
+   },
+   "passed": null
+  },
+  "f1_ceiling_still_above_the_primary": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": 0.03353539062189159,
+     "threshold": 0.0
+    },
+    "why_it_can_fail": "if the ceiling vanishes once the fit is repaired, there was no margin to capture and the predecessor's headline was itself an artefact"
+   },
+   "passed": true
+  },
+  "f2_classical_arms_reproduce": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "max_level_shift": 0.057809220344436696,
+     "n_classical_ranked": 4
+    },
+    "development_artifact": "results/program_n/gate_b_cd_surface/result.json",
+    "module_manifest_identical": true,
+    "ranking_preserved": false,
+    "why_it_can_fail": "on fresh tapes the levels MUST move; what may not move is the instrument. This fails if a module hash differs or if the classical arms reorder, and neither can happen from sampling variation"
+   },
+   "passed": false
+  },
+  "f3_tuning_used_only_inner_validation": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "folds": 5,
+     "grid_size": 8
+    },
+    "why_it_can_fail": "selection that sees the test fold is exactly the sin the predecessor declared about its own spline baseline"
+   },
+   "passed": true
+  },
+  "f4_networks_now_reach_the_linear": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": -0.012723089548982824,
+     "threshold": 0.0
+    },
+    "why_it_can_fail": "H_B may simply be false: if the repaired networks still lose to OLS, the fit was not the problem and the surface does not admit a better approximator here"
+   },
+   "passed": false
+  },
+  "f5_neural_premium_over_the_primary": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "n_compared": 4,
+     "sesoi": 0.05
+    },
+    "why_it_can_fail": "reaching the linear model is not beating it; the margin may exist and stay uncaptured even with the fit repaired"
+   },
+   "passed": true
+  },
+  "f6_recurrent_arm_is_reported": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "observed": 5.0,
+     "threshold": 0.0
+    },
+    "why_it_can_fail": "without it Garrido's Fig. 5 as a PREDICTOR is not answered at all"
+   },
+   "passed": true
+  },
+  "f7_budgets_are_matched": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "grid": 8,
+     "init_seeds": 5,
+     "max_steps": 5000
+    },
+    "why_it_can_fail": "an unequal grid or seed count between architectures measures budget, not architecture"
+   },
+   "passed": true
+  }
+ },
+ "grid": [
+  {
+   "lr": 0.003,
+   "wd": 0.0,
+   "width": 16
+  },
+  {
+   "lr": 0.003,
+   "wd": 0.0001,
+   "width": 16
+  },
+  {
+   "lr": 0.01,
+   "wd": 0.0,
+   "width": 16
+  },
+  {
+   "lr": 0.01,
+   "wd": 0.0001,
+   "width": 16
+  },
+  {
+   "lr": 0.003,
+   "wd": 0.0,
+   "width": 64
+  },
+  {
+   "lr": 0.003,
+   "wd": 0.0001,
+   "width": 64
+  },
+  {
+   "lr": 0.01,
+   "wd": 0.0,
+   "width": 64
+  },
+  {
+   "lr": 0.01,
+   "wd": 0.0001,
+   "width": 64
+  }
+ ],
+ "held_out_r2_mean": {
+  "constant": -0.011602384290195911,
+  "kan_tuned": 0.7534368348620379,
+  "linear_additive": 0.6624329402770046,
+  "linear_interactions": 0.6884041031532326,
+  "linear_lagged": 0.7786650272951368,
+  "mlp_tuned": 0.6756810136042498,
+  "recurrent": 0.8868105180578416,
+  "spline_buffer": 0.6730957950064322,
+  "train_cell_mean_comparator": 0.7219394937751242,
+  "tree": 0.662446264419996
+ },
+ "init_seeds": 5,
+ "max_steps": 5000,
+ "module_manifest": {
+  "missing": [],
+  "modules": {
+   "supply_chain/cobb_douglas_resilience.py": "d9d88376d666115c8dab4018b903c45986a43811649c3b57ebe5770e57204884",
+   "supply_chain/falsifiers.py": "99a64c66b62ee43ab9cf532a34932dc27ff4b4fae72d9b331fcf2a8f2a554fb7",
+   "supply_chain/supply_chain.py": "b10f5c8a1bb2bd201c7a736565c6a5af953b9f95f7cae75a56fff6ac289f6965"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "patience": 300,
+ "per_fold": {
+  "constant": [
+   -0.005039829583268984,
+   -0.0017709974180966093,
+   -0.02194287416141605,
+   -0.028195408598649774,
+   -0.0010628116895481377
+  ],
+  "kan_tuned": [
+   0.85245528250219,
+   0.809497315311883,
+   0.39557255834563576,
+   0.7702112547426655,
+   0.9394477634078158
+  ],
+  "linear_additive": [
+   0.7640243520291208,
+   0.7170853140905513,
+   0.31430410522563734,
+   0.7435626773655148,
+   0.7731882526741992
+  ],
+  "linear_interactions": [
+   0.7893678258928503,
+   0.7714225121732246,
+   0.3423084873464619,
+   0.7128024407160328,
+   0.8261192496375934
+  ],
+  "linear_lagged": [
+   0.8042834759881141,
+   0.7670754297219288,
+   0.6437686394700535,
+   0.8869381839748259,
+   0.7912594073207613
+  ],
+  "mlp_tuned": [
+   0.8004137197151663,
+   0.808649532931303,
+   0.2855209379593686,
+   0.6247545365334823,
+   0.8590663408819282
+  ],
+  "recurrent": [
+   0.9338456305330203,
+   0.931027246284713,
+   0.8171108913195004,
+   0.8034443644423999,
+   0.948624457709575
+  ],
+  "spline_buffer": [
+   0.7775168777847795,
+   0.7412713914445683,
+   0.3267836017975574,
+   0.7271312688217972,
+   0.7927758351834586
+  ],
+  "train_cell_mean_comparator": [
+   0.839014799036888,
+   0.8485847125548603,
+   0.3787004622466297,
+   0.6259639327173905,
+   0.917433562319853
+  ],
+  "tree": [
+   0.7609840253189685,
+   0.770951172663208,
+   0.3600714586882646,
+   0.5652315901861051,
+   0.8549930752434337
+  ]
+ },
+ "predecessor_means": {
+  "backprop": 0.5841,
+  "constant": -0.0167,
+  "kan": 0.6019,
+  "linear_additive": 0.6062,
+  "linear_interactions": 0.6306,
+  "spline_buffer": 0.6365,
+  "train_cell_mean_comparator": 0.6931,
+  "tree": 0.6225
+ },
+ "primary_baseline": "linear_interactions",
+ "reference_path": "results/headroom/cd_surface_prediction_premium/result.json",
+ "reference_sha256": "527227bd96eb8d8d9ed534aebea410da79efb91bb2d1e2aa365e85b5a9f43a99",
+ "reproduction_gap": {
+  "constant": 0.0050976157098040886,
+  "linear_additive": 0.05623294027700465,
+  "linear_interactions": 0.05780410315323259,
+  "spline_buffer": 0.036595795006432286,
+  "train_cell_mean_comparator": 0.02883949377512418,
+  "tree": 0.039946264419995936
+ },
+ "run_role": "DEVELOPMENT",
+ "schema_version": "program_n_gate_b_v1",
+ "scope": "DEVELOPMENT_REANALYSIS_NO_NEW_SEEDS",
+ "seed_block": {
+  "derived_from": "seeds",
+  "end": 9500008,
+  "n": 8,
+  "start": 9500001
+ },
+ "seeds": [
+  9500001,
+  9500002,
+  9500003,
+  9500004,
+  9500005,
+  9500006,
+  9500007,
+  9500008
+ ],
+ "self_sha256": "d94eb4c9fdb38e52f62e392ad08c345a6c66c70adb70d8d715aca66e3e94750b",
+ "sesoi": 0.05,
+ "vs_lagged": {
+  "recurrent": {
+   "baseline": "linear_lagged",
+   "ci95_high": 0.24267674536907835,
+   "ci95_low": -0.02638576384366835,
+   "mean_difference": 0.10814549076270501,
+   "passes_sesoi_and_ci": false,
+   "sesoi": 0.05
+  }
+ },
+ "vs_primary": {
+  "kan_tuned": {
+   "baseline": "linear_interactions",
+   "ci95_high": 0.1004722727290564,
+   "ci95_low": 0.029593190688554434,
+   "mean_difference": 0.06503273170880541,
+   "passes_sesoi_and_ci": true,
+   "sesoi": 0.05
+  },
+  "mlp_tuned": {
+   "baseline": "linear_interactions",
+   "ci95_high": 0.05739838423530702,
+   "ci95_low": -0.08284456333327281,
+   "mean_difference": -0.01272308954898289,
+   "passes_sesoi_and_ci": false,
+   "sesoi": 0.05
+  },
+  "spline_buffer": {
+   "baseline": "linear_interactions",
+   "ci95_high": 0.008213556080003565,
+   "ci95_low": -0.03883017237360432,
+   "mean_difference": -0.015308308146800375,
+   "passes_sesoi_and_ci": false,
+   "sesoi": 0.05
+  },
+  "tree": {
+   "baseline": "linear_interactions",
+   "ci95_high": 0.06262047214643572,
+   "ci95_low": -0.11453614961290894,
+   "mean_difference": -0.025957838733236604,
+   "passes_sesoi_and_ci": false,
+   "sesoi": 0.05
+  }
+ }
+}
