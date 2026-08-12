@@ -104,7 +104,16 @@ def summarise(falsifiers: Mapping[str, Any]) -> dict:
                    if isinstance(v, dict) and v.get("disclosure")]
     na = [k for k, v in falsifiers.items()
           if isinstance(v, dict) and v.get("not_applicable")]
-    failed = [k for k, v in computed.items() if not v["passed"]]
+    # A falsifier that is neither a disclosure nor not-applicable and that FAILED must count,
+    # whether or not it carries `computed`. Guarding only against OVER-counting opened a hole for
+    # UNDER-counting: `custody_falsifier` returns {passed, not_applicable, evidence} with no
+    # `computed` key, so a red custody check was invisible here. It shipped that way in
+    # `results/program_n/gate_b_cd_surface/result.json`, which seals `all_passed: true` next to
+    # `custody.passed: false`. Found 2026-08-12 by an external review, not by us.
+    failed = sorted({k for k, v in computed.items() if not v["passed"]}
+                    | {k for k, v in falsifiers.items()
+                       if isinstance(v, dict) and v.get("passed") is False
+                       and not v.get("not_applicable") and not v.get("disclosure")})
     return {"all_passed": not failed and bool(computed),
             "n_computed": len(computed), "n_failed": len(failed), "failed": failed,
             "n_disclosures": len(disclosures), "disclosures": disclosures,

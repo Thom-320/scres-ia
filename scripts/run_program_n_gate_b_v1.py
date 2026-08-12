@@ -424,12 +424,31 @@ def main() -> int:
     else:
         status = "NETWORKS_REACH_THE_LINEAR_BUT_DO_NOT_BEAT_IT"
 
+    # Grade is DERIVED, not hardcoded. Both fields were frozen strings from the first version and
+    # `--seed-base` was added later without touching them, so `gate_b_confirmation_v3` ran on a
+    # fresh block and still sealed run_role=DEVELOPMENT / scope=..._NO_NEW_SEEDS. The artifact then
+    # contradicted every document that called it a confirmation. Note the ceiling on what may be
+    # claimed: the registry declares itself incomplete, so the strongest honest grade is
+    # "no known collision", never "virgin".
+    opened_a_block = args.seed_base is not None and args.endpoint == "cobb_douglas"
+    custody_clean = checks["custody"].get("passed") is True
+    if args.endpoint == "ret_excel":
+        run_role, scope = ("SENSITIVITY_REPLAY",
+                           "SENSITIVITY_REPLAY_SAME_TAPES_DIFFERENT_TARGET_NOT_A_CONFIRMATION")
+    elif opened_a_block and custody_clean:
+        run_role, scope = ("PROSPECTIVE",
+                           "PROSPECTIVE_FRESH_BLOCK_NO_KNOWN_COLLISION_VIRGINITY_NOT_PROVEN")
+    elif opened_a_block:
+        run_role, scope = ("PROSPECTIVE_WITH_CUSTODY_CONFLICT",
+                           "PROSPECTIVE_BLOCK_WITH_A_RECORDED_CUSTODY_CONFLICT")
+    else:
+        run_role, scope = "DEVELOPMENT", "DEVELOPMENT_REANALYSIS_NO_NEW_SEEDS"
+
     payload = {
         "schema_version": "program_n_gate_b_v1", "claim_status": status,
         "created_at": datetime.now(timezone.utc).isoformat(),
-        "run_role": "DEVELOPMENT",
-        "scope": ("SENSITIVITY_REPLAY_SAME_TAPES_DIFFERENT_TARGET_NOT_A_CONFIRMATION"
-                  if args.endpoint == "ret_excel" else "DEVELOPMENT_REANALYSIS_NO_NEW_SEEDS"),
+        "run_role": run_role,
+        "scope": scope,
         "endpoint": ("held_out_r2_on_R_cobb_douglas" if args.endpoint == "cobb_douglas"
                      else "held_out_r2_on_ret_excel_risk_conditional__LEGACY_SENSITIVITY"),
         "seeds": seeds,

@@ -1,0 +1,207 @@
+{
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "GRADE_AND_SUMMARY_CORRECTED",
+ "contract_path": "docs/RETRACTACION_CONTENTION_V1_Y_ENMIENDA_X_2026-08-12.md",
+ "contract_sha256": "4ccb43ce3d66d1f2fd820ad1138ef127810a1a79a18222d0c3979fe4412e1dba",
+ "created_at": "2026-08-12T04:15:19.864065+00:00",
+ "falsifier_summary": {
+  "all_passed": true,
+  "disclosures": [],
+  "failed": [],
+  "n_computed": 4,
+  "n_disclosures": 0,
+  "n_failed": 0,
+  "n_not_applicable": 1,
+  "not_applicable": [
+   "custody"
+  ]
+ },
+ "falsifiers": {
+  "custody": {
+   "evidence": {
+    "artifacts_read": [
+     "results/program_n/gate_b_cd_surface/result.json",
+     "results/program_n/gate_b_confirmation/result.json",
+     "results/program_n/gate_b_confirmation_v2/result.json",
+     "results/program_n/gate_b_confirmation_v3/result.json",
+     "results/program_n/gate_b_sensitivity_ret_excel/result.json"
+    ],
+    "episodes_run": 0,
+    "seeds_opened": 0,
+    "why_it_can_fail": "it cannot: no seed is opened and no episode is run. Every field is read from artifacts already sealed."
+   },
+   "not_applicable": true,
+   "passed": null
+  },
+  "g1_the_grade_rule_is_applied_to_every_gate_b_run": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "n_corrected": 5,
+     "n_runs": 5
+    },
+    "why_it_can_fail": "a Gate B run left out of this correction keeps a grade nobody re-derived, which is exactly how the defect survived three weeks"
+   },
+   "passed": true
+  },
+  "g2_the_correction_changes_something": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "n_grade_changed": 4,
+     "n_summary_changed": 1
+    },
+    "grade_changed": [
+     "gate_b_confirmation",
+     "gate_b_confirmation_v2",
+     "gate_b_confirmation_v3",
+     "gate_b_sensitivity_ret_excel"
+    ],
+    "summary_changed": [
+     "gate_b_cd_surface"
+    ],
+    "why_it_can_fail": "if no grade and no summary moves, the two defects were not defects and this artifact measures nothing"
+   },
+   "passed": true
+  },
+  "g3_no_run_is_promoted_to_virgin": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "n_prospective": 3,
+     "n_runs": 5
+    },
+    "why_it_can_fail": "the registry declares itself incomplete, so any scope asserting virginity would be claiming more than custody can support -- the failure this whole correction repairs"
+   },
+   "passed": true
+  },
+  "g4_no_claim_status_is_touched": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "n_runs": 5
+    },
+    "why_it_can_fail": "this artifact corrects GRADE and SUMMARY only. Changing a claim_status here would be re-adjudicating science from a bookkeeping run"
+   },
+   "passed": true
+  }
+ },
+ "grade_changed": [
+  "gate_b_confirmation",
+  "gate_b_confirmation_v2",
+  "gate_b_confirmation_v3",
+  "gate_b_sensitivity_ret_excel"
+ ],
+ "reference_path": "results/program_n/gate_b_confirmation_v3/result.json",
+ "reference_sha256": "d800c3dd82c333913a962a76293f046be0cdbcaf2f98305504b86fecb44374f5",
+ "run_role": "BOOKKEEPING_CORRECTION",
+ "runs": {
+  "gate_b_cd_surface": {
+   "artifact": "results/program_n/gate_b_cd_surface/result.json",
+   "claim_status_unchanged": "SURFACE_PREMIUM_CAPTURED",
+   "corrected_run_role": "DEVELOPMENT",
+   "corrected_scope": "DEVELOPMENT_REANALYSIS_NO_NEW_SEEDS",
+   "custody_not_applicable": false,
+   "custody_passed": false,
+   "endpoint_arg": "cobb_douglas",
+   "repaired_all_passed": false,
+   "repaired_failed": [
+    "custody"
+   ],
+   "sealed_all_passed": true,
+   "sealed_run_role": "DEVELOPMENT",
+   "sealed_scope": "DEVELOPMENT_REANALYSIS_NO_NEW_SEEDS",
+   "seed_base_arg": null
+  },
+  "gate_b_confirmation": {
+   "artifact": "results/program_n/gate_b_confirmation/result.json",
+   "claim_status_unchanged": "BLOCKED_INSTRUMENT",
+   "corrected_run_role": "PROSPECTIVE",
+   "corrected_scope": "PROSPECTIVE_FRESH_BLOCK_NO_KNOWN_COLLISION_VIRGINITY_NOT_PROVEN",
+   "custody_not_applicable": false,
+   "custody_passed": true,
+   "endpoint_arg": "cobb_douglas",
+   "repaired_all_passed": false,
+   "repaired_failed": [
+    "f2_classical_arms_reproduce"
+   ],
+   "sealed_all_passed": false,
+   "sealed_run_role": "DEVELOPMENT",
+   "sealed_scope": "DEVELOPMENT_REANALYSIS_NO_NEW_SEEDS",
+   "seed_base_arg": 9400001
+  },
+  "gate_b_confirmation_v2": {
+   "artifact": "results/program_n/gate_b_confirmation_v2/result.json",
+   "claim_status_unchanged": "BLOCKED_INSTRUMENT",
+   "corrected_run_role": "PROSPECTIVE",
+   "corrected_scope": "PROSPECTIVE_FRESH_BLOCK_NO_KNOWN_COLLISION_VIRGINITY_NOT_PROVEN",
+   "custody_not_applicable": false,
+   "custody_passed": true,
+   "endpoint_arg": "cobb_douglas",
+   "repaired_all_passed": false,
+   "repaired_failed": [
+    "f2_classical_arms_reproduce",
+    "f4_networks_now_reach_the_linear"
+   ],
+   "sealed_all_passed": false,
+   "sealed_run_role": "DEVELOPMENT",
+   "sealed_scope": "DEVELOPMENT_REANALYSIS_NO_NEW_SEEDS",
+   "seed_base_arg": 9500001
+  },
+  "gate_b_confirmation_v3": {
+   "artifact": "results/program_n/gate_b_confirmation_v3/result.json",
+   "claim_status_unchanged": "SURFACE_PREMIUM_CAPTURED",
+   "corrected_run_role": "PROSPECTIVE",
+   "corrected_scope": "PROSPECTIVE_FRESH_BLOCK_NO_KNOWN_COLLISION_VIRGINITY_NOT_PROVEN",
+   "custody_not_applicable": false,
+   "custody_passed": true,
+   "endpoint_arg": "cobb_douglas",
+   "repaired_all_passed": true,
+   "repaired_failed": [],
+   "sealed_all_passed": true,
+   "sealed_run_role": "DEVELOPMENT",
+   "sealed_scope": "DEVELOPMENT_REANALYSIS_NO_NEW_SEEDS",
+   "seed_base_arg": 9600001
+  },
+  "gate_b_sensitivity_ret_excel": {
+   "artifact": "results/program_n/gate_b_sensitivity_ret_excel/result.json",
+   "claim_status_unchanged": "SENSITIVITY_PREMIUM_HOLDS_ON_LEGACY_SURFACE",
+   "corrected_run_role": "SENSITIVITY_REPLAY",
+   "corrected_scope": "SENSITIVITY_REPLAY_SAME_TAPES_DIFFERENT_TARGET_NOT_A_CONFIRMATION",
+   "custody_not_applicable": true,
+   "custody_passed": null,
+   "endpoint_arg": "ret_excel",
+   "repaired_all_passed": false,
+   "repaired_failed": [
+    "f4_networks_now_reach_the_linear"
+   ],
+   "sealed_all_passed": false,
+   "sealed_run_role": "DEVELOPMENT",
+   "sealed_scope": "SENSITIVITY_REPLAY_SAME_TAPES_DIFFERENT_TARGET_NOT_A_CONFIRMATION",
+   "seed_base_arg": 9600001
+  }
+ },
+ "schema_version": "program_n_gate_b_grade_correction_v1",
+ "scope": "CORRECTS_GRADE_AND_FALSIFIER_SUMMARY_ONLY_NO_SEEDS_NO_EPISODES_NO_SCIENCE",
+ "self_sha256": "dc0dabfbca68d9df419c7989730fa21dd4a6a91dd1415d40aca412317cd22b55",
+ "summary_changed": [
+  "gate_b_cd_surface"
+ ]
+}

@@ -137,3 +137,33 @@ def test_permutation_null_ACCEPTS_a_genuine_per_tape_advantage():
                                     n_draws=300, rng=rng)
     assert out["passed"] is True
     assert out["evidence"]["gap_observed"] > out["evidence"]["null_p95"]
+
+
+def test_summarise_counts_a_failed_child_that_carries_no_computed_key():
+    """The 2026-08-12 hole: `summarise` filtered on `computed is True` before scoring, and
+    `custody_falsifier` returns {passed, not_applicable, evidence} with no such key. A red custody
+    check was therefore invisible, and `results/program_n/gate_b_cd_surface/result.json` shipped
+    `all_passed: true` beside `custody.passed: false`. Guarding against OVER-counting had opened a
+    hole for UNDER-counting."""
+    checks = {
+        "f1": gt(1.0, 0.0, "it can fail if the observed value drops below the threshold"),
+        "custody": {"passed": False, "not_applicable": False,
+                    "evidence": {"why_it_can_fail": "a seed already consumed elsewhere"}},
+    }
+    out = summarise(checks)
+    assert out["all_passed"] is False
+    assert "custody" in out["failed"]
+
+
+def test_summarise_still_ignores_not_applicable_and_disclosures():
+    """The repair must not swing the other way: a declared replay is counted in neither column."""
+    checks = {
+        "f1": gt(1.0, 0.0, "it can fail if the observed value drops below the threshold"),
+        "custody": {"passed": None, "not_applicable": True, "evidence": {}},
+        "d1": disclosure("the recurrent arm sees the previous configuration's resilience"),
+    }
+    out = summarise(checks)
+    assert out["all_passed"] is True
+    assert out["failed"] == []
+    assert out["not_applicable"] == ["custody"]
+    assert out["disclosures"] == ["d1"]

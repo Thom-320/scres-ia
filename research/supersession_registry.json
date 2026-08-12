@@ -2,6 +2,29 @@
  "edges": [
   {
    "cited_by_claim_lock": [],
+   "evidence": "docs/RETRACTACION_CONTENTION_V1_Y_ENMIENDA_X_2026-08-12.md",
+   "reading_rule": "the artifact is a DESIGN, not a measurement, and the evidence it was built on does not say what its author claimed. Nothing inside it was run or refuted; its reason to exist was. It is retained as the record of a proposal and may never be cited as a live design",
+   "relation": "SUPERSEDED_BY_FAILED_PREMISE",
+   "retained": true,
+   "source": "CURATED",
+   "successor": "contracts/program_x_o_scale_amortized_control_v1.json",
+   "successor_digest": {
+    "claim_status": null,
+    "exists": true,
+    "file_sha256": "49647c52d7ed00c3f3e888e1a69fd452002a6c01e280caac44be14225d2ab85e",
+    "self_sha256": null
+   },
+   "superseded": "contracts/program_x_o_scale_amortized_control_v2.json",
+   "superseded_digest": {
+    "claim_status": null,
+    "exists": true,
+    "file_sha256": "b6a8c8b61b4e9ef87b35643b1bd6be8dda54b9c48897ff80347ce76b4ccc0942",
+    "self_sha256": null
+   },
+   "why": "v2 gave the latent regime a minimum dwell on the stated ground that contention_v1 was the one place a learner beat a belief planner, at +0.0136 [LCB95 +0.0124]. That number appears in no artifact. The real contrast is +0.011477 [+0.009135] against a SESOI of 0.010, so it does not clear, and the artifact says so: AUDIT_STOPS_CORRECTLY_BUT_POSITIVE_DIRECTION_NOT_DEMONSTRATED. The direction also inverts -- the learner's edge over the true-model arm is LARGER in the min_dwell=1 cell (+0.019374) than in the min_dwell=4 one (+0.010323) -- min_dwell is confounded with rho across the only two cells, and v2's own G4b gate already fails on existing data: the true-model filter beats the first-order one by 0.001154, an order of magnitude under the SESOI. v1 is the live contract again"
+  },
+  {
+   "cited_by_claim_lock": [],
    "evidence": "results/lever_redundancy_diagnostic/result.json#supersedes",
    "reading_rule": "a defect was found and the corrected run replaces it; the old number may be cited only as the defective one, next to the defect",
    "relation": "SUPERSEDED_BY_CORRECTIVE_RERUN",
@@ -515,9 +538,9 @@
    "why": "NEURAL_PREMIUM_LIKELY_IN_TRACK_B rested on beating a constant and a threshold rule. Gate A2 added a linear feedback policy and an EWMA rule on the same block, paired by seed: the MLP still beats the threshold rule (+0.472 [+0.275, +0.658], 37/48) and both history placebos, so its memory does something -- but linear feedback beats the MLP (-0.559 [-0.748, -0.386], 7/48 favourable). The +1.60 headline also shrinks to +0.47 once paired by seed. The premium was real against the class we had"
   }
  ],
- "generated_at_commit": "fe072025784921778898617c7af8637f99d8da63",
- "n_curated": 5,
- "n_edges": 22,
+ "generated_at_commit": "1573b9bcfded2d7bad3d226db34a743a1c6fa573",
+ "n_curated": 6,
+ "n_edges": 23,
  "policy": "a withdrawn result is retained and labelled, never deleted; this file is the single machine-readable index of which seals are withdrawn and how far",
  "problems": [],
  "relations": {
@@ -526,6 +549,7 @@
   "RELABELLED_BLOCKED_INSTRUMENT": "the run completed but the instrument was defective; retained, and never evidence",
   "SUPERSEDED_BY_A_WIDENED_COMPARATOR_CLASS": "the result is arithmetically intact and its advantage over the comparators it HAD is real; a later run widened the comparator class and the advantage did not survive it. The number may be cited only against the narrow class it beat, never as a premium",
   "SUPERSEDED_BY_CORRECTIVE_RERUN": "a defect was found and the corrected run replaces it; the old number may be cited only as the defective one, next to the defect",
+  "SUPERSEDED_BY_FAILED_PREMISE": "the artifact is a DESIGN, not a measurement, and the evidence it was built on does not say what its author claimed. Nothing inside it was run or refuted; its reason to exist was. It is retained as the record of a proposal and may never be cited as a live design",
   "SUPERSEDED_BY_FAILED_REPLICATION": "a preregistered replication on fresh seeds did not reproduce it; the artifact is retained as the record of what was believed, and its number may not be cited as a live estimate",
   "SUPERSEDED_IN_PART": "one component is replaced and the rest stands; the artifact stays citable, but only together with its successor, and never for the replaced component",
   "VOIDED_OF_OBJECT": "the artifact is internally sound but the thing it measured was withdrawn, so it makes no claim about anything; it is neither positive nor negative evidence"

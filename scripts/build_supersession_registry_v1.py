@@ -60,6 +60,10 @@ RELATIONS = {
         "the result is arithmetically intact and its advantage over the comparators it HAD is "
         "real; a later run widened the comparator class and the advantage did not survive it. The "
         "number may be cited only against the narrow class it beat, never as a premium"),
+    "SUPERSEDED_BY_FAILED_PREMISE": (
+        "the artifact is a DESIGN, not a measurement, and the evidence it was built on does not "
+        "say what its author claimed. Nothing inside it was run or refuted; its reason to exist "
+        "was. It is retained as the record of a proposal and may never be cited as a live design"),
     "LINEAGE_NOT_SUPERSESSION": (
         "the successor was BUILT ON this artifact but answers a different question, so nothing is "
         "withdrawn; recorded for provenance and never enforced against a citation"),
@@ -163,6 +167,24 @@ CURATED: list[dict] = [
             "both history placebos, so its memory does something -- but linear feedback beats the "
             "MLP (-0.559 [-0.748, -0.386], 7/48 favourable). The +1.60 headline also shrinks to "
             "+0.47 once paired by seed. The premium was real against the class we had"),
+        "retained": True,
+    },
+    {
+        "superseded": "contracts/program_x_o_scale_amortized_control_v2.json",
+        "successor": "contracts/program_x_o_scale_amortized_control_v1.json",
+        "relation": "SUPERSEDED_BY_FAILED_PREMISE",
+        "evidence": "docs/RETRACTACION_CONTENTION_V1_Y_ENMIENDA_X_2026-08-12.md",
+        "why": (
+            "v2 gave the latent regime a minimum dwell on the stated ground that contention_v1 was "
+            "the one place a learner beat a belief planner, at +0.0136 [LCB95 +0.0124]. That "
+            "number appears in no artifact. The real contrast is +0.011477 [+0.009135] against a "
+            "SESOI of 0.010, so it does not clear, and the artifact says so: "
+            "AUDIT_STOPS_CORRECTLY_BUT_POSITIVE_DIRECTION_NOT_DEMONSTRATED. The direction also "
+            "inverts -- the learner's edge over the true-model arm is LARGER in the min_dwell=1 "
+            "cell (+0.019374) than in the min_dwell=4 one (+0.010323) -- min_dwell is confounded "
+            "with rho across the only two cells, and v2's own G4b gate already fails on existing "
+            "data: the true-model filter beats the first-order one by 0.001154, an order of "
+            "magnitude under the SESOI. v1 is the live contract again"),
         "retained": True,
     },
 ]
