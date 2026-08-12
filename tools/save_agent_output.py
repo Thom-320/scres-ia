@@ -50,8 +50,15 @@ TRANSCRIPT_KEYS = ("agent_transcript_path", "transcript_path")
 #: A tracked markdown file may not carry a developer's home directory: `test_repo_portability.py`
 #: forbids it, and the first batch of saved transcripts broke that test. Sanitising here is the fix
 #: at the source rather than a cleanup pass that has to be remembered.
+#: The tilde form was missing and a transcript failed the guardrail on 2026-08-12: the absolute
+#: spelling of a home directory was rewritten and the tilde spelling of one on the SAME LINE was
+#: not, which is what a rule that redacts the spelling instead of the referent gets you. A
+#: tilde-slash IS a home directory and is redacted like one; a bare tilde in prose, an
+#: approximation, and a tilde mid-path are all left alone. This comment carries none of the
+#: forbidden literals on purpose -- the first version of it failed the very test it explains.
 _REDACTIONS = ((re.compile(r"/Users/[A-Za-z0-9_.-]+"), "<HOME>"),
                (re.compile(r"/home/[A-Za-z0-9_.-]+"), "<HOME>"),
+               (re.compile(r"(?<![\w./~])~/(?=[\w.])"), "<HOME>/"),
                (re.compile(r"/private/tmp/claude-\d+"), "<TMP>"))
 
 #: Every saved transcript is a raw agent log, not adjudicated evidence, and says so in its own text
