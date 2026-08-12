@@ -226,3 +226,26 @@ supply_chain/contention_bench_v1.py                el banco con verdad conocida 
 
 Los `claim_status` de cada `result.json` son la fuente de verdad; los documentos narran, los
 artefactos deciden.
+
+---
+
+> ## ⚠ ENMENDADO EL 2026-08-12 — LEER ANTES QUE NADA DE LO ANTERIOR
+>
+> Cinco revisiones externas auditaron este documento y **tres de sus afirmaciones son falsas**.
+> Verificado contra los artefactos. Autoridad: `docs/RETRACTACION_CONTENTION_V1_Y_ENMIENDA_X_2026-08-12.md`.
+>
+> 1. **`contention_v1` NO es un positivo.** El `+0,0136 [+0,0124]` que este documento cita
+>    **no existe en ningún artefacto**. El real es `+0,011477 [+0,009135]` contra SESOI 0,010: no
+>    cruza. `claim_status: AUDIT_STOPS_CORRECTLY_BUT_POSITIVE_DIRECTION_NOT_DEMONSTRATED`. La
+>    dirección además se invierte, y la enmienda `d_min` a Program X queda **retractada**.
+> 2. **«Bloque virgen» es incorrecto.** El registro se declara incompleto: lo demostrado es
+>    `NO_KNOWN_COLLISION`. El grado corregido de `gate_b_confirmation_v3` es `PROSPECTIVE`
+>    (`results/program_n/gate_b_grade_correction/result.json`), nunca «virgen».
+> 3. **El bucle externo:** la familia que sobrevive en regret simple final es `lookahead_kg`, **NO
+>    la neurona**; y en la métrica primaria del ladder `ucb1_transfer` (0,045023) bate en punto a
+>    `neuron_memory` (0,052033). Es un resultado de **retención**, no de **neurona**.
+>
+> **Lo que sí resiste:** los números de Gate B —`+0,1081 [+0,0601, +0,1561]` y
+> `+0,1487 [+0,1069, +0,1905]`— y el rechazo, con evidencia de código, de la acusación de que la
+> superficie sea analíticamente predecible: ningún brazo recibe los drivers, sólo siete números de
+> configuración, y el mapa configuración → drivers pasa por un DES SimPy completo.

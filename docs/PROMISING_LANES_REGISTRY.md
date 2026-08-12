@@ -1435,3 +1435,42 @@ filtro bien especificado, una red sólo puede empatar, y eso ya está medido tre
 **Precedencia.** `results/track_b_nonneural` queda como
 `SUPERSEDED_BY_A_WIDENED_COMPARATOR_CLASS` en `research/supersession_registry.json`: su número
 puede citarse **contra la clase estrecha que batió**, nunca como prima.
+
+---
+
+## Enmienda del 2026-08-12 — lo que cinco revisiones externas corrigieron
+
+**Verificado contra los artefactos antes de aceptarlo.** Detalle en
+`docs/RETRACTACION_CONTENTION_V1_Y_ENMIENDA_X_2026-08-12.md`,
+`docs/ENMIENDA_NOMBRES_Y_LENGUAJE_PERMITIDO_2026-08-12.md` y
+`docs/RESPUESTA_2_AL_AUDITOR_2026-08-12.md`.
+
+**`contention_v1` deja de ser un positivo.** El `+0,0136 [+0,0124]` que este registro y el briefing
+citaban **no existe en ningún artefacto**. El real es `+0,011477 [+0,009135]` contra un SESOI de
+0,010: no cruza. Y la dirección se invierte — el aprendiz también «gana» en la celda `min_dwell=1`
+con más tapas favorables (58/60 vs 51/60), `min_dwell` y `rho` están confundidos, y la ventaja sobre
+el brazo de modelo verdadero es **mayor sin dwell** (+0,019374 vs +0,010323).
+
+**Consecuencia para la lane de contención:** sigue viva por su `H_PI = 0,156425 [+0,147734]` con
+nulo fungible exactamente 0, que es lo que el banco fue construido para validar. **Muere** como
+«el único sitio donde un aprendiz batió a un planificador», porque los dos brazos llamados
+`belief_mpc` y `oracle_model_mpc` llaman ambos a `_myopic_split`: son filtro más reparto de un
+periodo, sin horizonte. **Nadie ha resuelto el problema de control multiperiodo en este banco.**
+
+**Consecuencia para la lane del bucle externo:** se desdobla en dos.
+
+* **retención** — viva y sólida: baja el AUC de regret en **6/6 familias bajo inferencia
+  simultánea**;
+* **portador neural** — **abierta y nunca medida**: en regret simple final la familia que sobrevive
+  es `lookahead_kg`, **no la neurona** (`neuron` simultaneous_lcb95 −0,0035, cruza cero), y en la
+  métrica primaria del ladder `ucb1_transfer` (0,045023) bate en punto a `neuron_memory` (0,052033).
+  El estimando `neurona − mejor portador clásico` es el que hay que medir.
+
+**Consecuencia para Program X:** el contrato **v2 queda superado por premisa fallida**; `v1` vuelve
+a ser el vigente. Su rama de calidad sigue cerrada por la razón original —con el HMM exacto
+conocido el posterior es suficiente— no por la enmienda que retiro.
+
+**Lane nueva declarada, no autorizada:** *surrogate orientado a decisión + optimizador exacto*. Es
+el único sitio donde la evidencia deja hueco: la red gana en **predicción** (+0,1081 y +0,1487) y
+**nadie ha medido si eso elige mejor configuración**. `grep` de pérdida orientada a decisión en el
+árbol: **0 resultados**.
