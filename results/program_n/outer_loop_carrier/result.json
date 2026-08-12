@@ -1,0 +1,158 @@
+{
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "carrier_premium": {
+  "arms_in_pool": [
+   "gp_ei_transfer",
+   "lookahead_kg_transfer",
+   "ofat_transfer",
+   "thompson_transfer",
+   "ucb1_transfer"
+  ],
+  "hardest_arm": "ucb1_transfer",
+  "lcb95": -0.024398747104404105,
+  "mean": -0.007009740616816028,
+  "n_boot": 20000,
+  "n_seeds": 12,
+  "ucb95": 0.013954874478469917
+ },
+ "claim_status": "RETENTION_YES_NEURAL_CARRIER_NO",
+ "classical_memory_pool": [
+  "gp_ei_transfer",
+  "ucb1_transfer",
+  "ofat_transfer",
+  "lookahead_kg_transfer",
+  "thompson_transfer"
+ ],
+ "contract_path": "docs/ENMIENDA_NOMBRES_Y_LENGUAJE_PERMITIDO_2026-08-12.md",
+ "contract_sha256": "0544fc4c0baf4db5efa0e50631cef4691fa7e96552a5a27854f1f7086b0be6ee",
+ "created_at": "2026-08-12T04:36:42.659664+00:00",
+ "endpoint": "auc_regret_norm__lower_is_better__signed_so_positive_favours_the_neuron",
+ "falsifier_summary": {
+  "all_passed": false,
+  "disclosures": [],
+  "failed": [
+   "h3_the_neural_carrier_beats_its_class"
+  ],
+  "n_computed": 4,
+  "n_disclosures": 0,
+  "n_failed": 1,
+  "n_not_applicable": 1,
+  "not_applicable": [
+   "custody"
+  ]
+ },
+ "falsifiers": {
+  "custody": {
+   "evidence": {
+    "searches_run": 0,
+    "seeds_opened": 0,
+    "source": "results/search_ladder_v5/result.json",
+    "why_it_can_fail": "it cannot: the per-seed AUC arrays are read from a sealed declared replay. No seed is opened and no search runs."
+   },
+   "not_applicable": true,
+   "passed": null
+  },
+  "h1_the_pool_comes_from_the_artifact": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "n_classical": 5,
+     "n_memory_arms": 6
+    },
+    "pool": [
+     "gp_ei_transfer",
+     "ucb1_transfer",
+     "ofat_transfer",
+     "lookahead_kg_transfer",
+     "thompson_transfer"
+    ],
+    "why_it_can_fail": "a hand-curated pool is how a comparator class gets quietly narrowed; this reads `memory_arms` from the sealed ladder and removes only the neural entry"
+   },
+   "passed": true
+  },
+  "h2_selection_happens_inside_the_bootstrap": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "n_arms": 5,
+     "n_boot": 20000
+    },
+    "why_it_can_fail": "choosing the best classical carrier on the full sample and then testing against it on that same sample inflates the neuron's margin by the winner's curse"
+   },
+   "passed": true
+  },
+  "h3_the_neural_carrier_beats_its_class": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "lcb95": -0.024398747104404105,
+     "mean": -0.007009740616816028
+    },
+    "why_it_can_fail": "this is the estimand a neural premium in the outer loop requires, and the sealed ladder already shows ucb1_transfer ahead of neuron_memory on point estimate, so it can fail and is expected to"
+   },
+   "passed": false
+  },
+  "h4_retention_and_carrier_are_reported_apart": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "carrier_mean": -0.007009740616816028,
+     "retention_mean": 0.06070331006303109
+    },
+    "why_it_can_fail": "if the two estimands were the same number, narrating them as one would have been harmless; they are not, and conflating them is what this artifact exists to stop"
+   },
+   "passed": true
+  }
+ },
+ "mean_auc_by_arm_best_first": {
+  "annealing": 0.1742042148688457,
+  "gp_ei": 0.10661346477746912,
+  "gp_ei_transfer": 0.08390483487553962,
+  "lhs_local": 0.10948882277743688,
+  "lookahead_kg": 0.11479477721224257,
+  "lookahead_kg_transfer": 0.08018189890560519,
+  "neuron_memory": 0.05203274760040456,
+  "neuron_reset": 0.11273605766343564,
+  "ofat": 0.10024197702481123,
+  "ofat_transfer": 0.06274306709376977,
+  "oracle": 0.0,
+  "random": 0.1397945613431999,
+  "thompson": 0.10893184647329195,
+  "thompson_transfer": 0.08907820238728746,
+  "ucb1": 0.09655146536034616,
+  "ucb1_transfer": 0.04502300698358852
+ },
+ "neural_carrier": "neuron_memory",
+ "neuron_rank_of": [
+  3,
+  16
+ ],
+ "reference_path": "results/search_ladder_v5/result.json",
+ "reference_sha256": "f7dfb1e8bc1c036bcac28c83535e7a5dd8ebd723dd01d3ec604e8228c20cc511",
+ "retention_contrast": {
+  "mean": 0.06070331006303109,
+  "n_seeds": 12,
+  "note": "neuron_reset - neuron_memory on the same tapes; positive means retention helps. This is the estimand that survives 6/6 in results/retention_simultaneous, and it is NOT a neural claim."
+ },
+ "run_role": "READJUDICATION_OF_A_SEALED_REPLAY",
+ "schema_version": "program_n_outer_loop_carrier_v1",
+ "scope": "SPLITS_RETENTION_FROM_NEURAL_CARRIER_NO_SEEDS_NO_SEARCHES",
+ "self_sha256": "9aa1c56a3ea2345b6d671b93717ec1dc51af17d8effef42d483bec1fed70183a"
+}

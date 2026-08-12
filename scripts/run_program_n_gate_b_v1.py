@@ -67,11 +67,57 @@ PREDECESSOR = {"constant": -0.0167, "linear_additive": 0.6062, "linear_interacti
                "kan": 0.6019, "backprop": 0.5841}
 
 
+#: The widened non-neural class, added 2026-08-12 after five external reviews said the declared
+#: class was too narrow to support the words "best non-neural comparator". Same features, same
+#: folds; only the family differs. Fixed hyperparameters, deliberately: searching them would need a
+#: budget-matching argument, and leaving them fixed understates these arms, which is the direction
+#: that cannot manufacture a neural premium.
+WIDENED = ("gbdt", "random_forest", "gaussian_process", "kernel_ridge")
+#: The same families given the lagged information set, so the recurrent arm faces its own class.
+WIDENED_LAGGED = tuple(f"{m}_lagged" for m in WIDENED)
+
+
 def standardise(train, *others):
     """Fit on TRAIN only and apply everywhere. The predecessor standardised nothing."""
     mu, sd = train.mean(axis=0), train.std(axis=0)
     sd = np.where(sd < 1e-12, 1.0, sd)
     return [(a - mu) / sd for a in (train, *others)], (mu, sd)
+
+
+def widened_predict(kind: str, x_tr, y_tr, x_te):
+    """One fit per fold from a fixed configuration. No tuning, no access to the test fold.
+
+    Distance-based families are STANDARDISED on train first. Without it an RBF with gamma=1 over
+    raw one-hots scored -1.08 in the smoke run -- and a straw-man comparator proves nothing, which
+    is the whole reason this widened class exists. Trees are scale-free and get the raw features.
+    """
+    from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
+    from sklearn.gaussian_process import GaussianProcessRegressor
+    from sklearn.gaussian_process.kernels import RBF, ConstantKernel, WhiteKernel
+    from sklearn.kernel_ridge import KernelRidge
+    if kind in ("gaussian_process", "kernel_ridge"):
+        (x_tr, x_te), _ = standardise(x_tr, x_te)
+    if kind == "gbdt":
+        model = GradientBoostingRegressor(n_estimators=300, max_depth=3, learning_rate=0.05,
+                                          subsample=0.9, random_state=20260812)
+    elif kind == "random_forest":
+        model = RandomForestRegressor(n_estimators=400, min_samples_leaf=2, n_jobs=1,
+                                      random_state=20260812)
+    elif kind == "gaussian_process":
+        kernel = ConstantKernel(1.0) * RBF(length_scale=1.0) + WhiteKernel(1e-3)
+        model = GaussianProcessRegressor(kernel=kernel, normalize_y=True, alpha=1e-8,
+                                         random_state=20260812)
+    elif kind == "kernel_ridge":
+        # KernelRidge does not centre the target, so with y in [0,1] and alpha=1 it shrinks every
+        # prediction toward zero and scored -6.90 in the smoke run. Centre on train and add back,
+        # which is what `normalize_y` does for the GP. Same reason as the standardisation above:
+        # a comparator that loses because I mis-specified it proves nothing.
+        mu_y = float(np.mean(y_tr))
+        model = KernelRidge(alpha=1.0, kernel="rbf", gamma=1.0)
+        return model.fit(x_tr, y_tr - mu_y).predict(x_te) + mu_y
+    else:                                                              # pragma: no cover
+        raise ValueError(f"unknown widened arm {kind!r}")
+    return model.fit(x_tr, y_tr).predict(x_te)
 
 
 def _torch_fit(kind, x_tr, y_tr, x_va, y_va, x_te, cfg, seed):
@@ -219,6 +265,8 @@ def main() -> int:
             "train_cell_mean_comparator", "mlp_tuned", "linear_lagged", "recurrent"]
     if not args.skip_kan:
         arms.append("kan_tuned")
+    arms.extend(WIDENED)
+    arms.extend(WIDENED_LAGGED)
     per_fold = {m: [] for m in arms}
     chosen = {"mlp_tuned": [], "kan_tuned": [], "recurrent": []}
     rng = np.random.default_rng(20260809)
@@ -270,6 +318,16 @@ def main() -> int:
         per_fold["tree"].append(r2(y[te], tree_predict(x_base[tr], y[tr], x_base[te])))
         per_fold["train_cell_mean_comparator"].append(r2(y[te], y_cm))
 
+        # The widened non-neural class. Five reviews independently said the declared class --
+        # constant, additive, interactions, spline, hand-rolled tree -- was too narrow to support
+        # "beats the best non-neural comparator". These get the SAME seven configuration features
+        # and the same folds, so only the model family differs. Their hyperparameters are fixed
+        # here, not searched, which UNDERSTATES them and is the conservative direction.
+        for name in WIDENED:
+            per_fold[name].append(r2(y[te], widened_predict(name, x_base[tr], y[tr], x_base[te])))
+        for name in WIDENED_LAGGED:
+            pass  # filled below, once the lagged design matrix exists
+
         pred, cfg = tuned_predict("mlp", x_base[tr], y[tr], x_base[te], 3000 + fi, rng)
         per_fold["mlp_tuned"].append(r2(y[te], pred))
         chosen["mlp_tuned"].append(cfg)
@@ -288,6 +346,9 @@ def main() -> int:
                         for i in range(len(index))]).reshape(-1, 1)
         x_lag = np.hstack([x_base, lag])
         per_fold["linear_lagged"].append(r2(y[te], ols(x_lag[tr], y[tr], x_lag[te])))
+        for name in WIDENED_LAGGED:
+            base = name.replace("_lagged", "")
+            per_fold[name].append(r2(y[te], widened_predict(base, x_lag[tr], y[tr], x_lag[te])))
         pr, cr = tuned_predict("mlp", x_lag[tr], y[tr], x_lag[te], 5000 + fi, rng)
         per_fold["recurrent"].append(r2(y[te], pr))
         chosen["recurrent"].append(cr)
@@ -432,7 +493,10 @@ def main() -> int:
     # "no known collision", never "virgin".
     opened_a_block = args.seed_base is not None and args.endpoint == "cobb_douglas"
     custody_clean = checks["custody"].get("passed") is True
-    if args.endpoint == "ret_excel":
+    if args.replay_of is not None:
+        run_role, scope = ("DECLARED_REPLAY",
+                           "DECLARED_REPLAY_OF_CONSUMED_TAPES_NO_NEW_SEEDS")
+    elif args.endpoint == "ret_excel":
         run_role, scope = ("SENSITIVITY_REPLAY",
                            "SENSITIVITY_REPLAY_SAME_TAPES_DIFFERENT_TARGET_NOT_A_CONFIRMATION")
     elif opened_a_block and custody_clean:

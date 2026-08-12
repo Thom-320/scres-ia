@@ -35,9 +35,14 @@ OUT = Path("results/program_n/gate_b_readjudication/result.json")
 
 #: Declared in the amendment BEFORE any number was computed. Partition is by information set.
 CLASS_A_NEURAL = ("mlp_tuned", "kan_tuned")
-CLASS_A_CLASSICAL = ("constant", "linear_additive", "linear_interactions", "spline_buffer", "tree")
+#: Widened 2026-08-12. Five external reviews said a class of {constant, additive, interactions,
+#: spline, hand-rolled tree} cannot support the words "best non-neural comparator". Arms absent
+#: from an artifact are skipped, so this file still adjudicates the older runs unchanged.
+CLASS_A_CLASSICAL = ("constant", "linear_additive", "linear_interactions", "spline_buffer", "tree",
+                     "gbdt", "random_forest", "gaussian_process", "kernel_ridge")
 CLASS_B_NEURAL = ("recurrent",)
-CLASS_B_CLASSICAL = ("linear_lagged",)
+CLASS_B_CLASSICAL = ("linear_lagged", "gbdt_lagged", "random_forest_lagged",
+                     "gaussian_process_lagged", "kernel_ridge_lagged")
 #: Sees the cell identity no other arm receives. Never a comparator, never a judged arm.
 EXCLUDED = "train_cell_mean_comparator"
 PRIMARY = "linear_interactions"
@@ -47,6 +52,7 @@ RUNS = [
     ("gate_b_confirmation_v2", "DEVELOPMENT_BLOCKED_INSTRUMENT"),
     ("gate_b_confirmation_v3", "CONFIRMATION"),
     ("gate_b_sensitivity_ret_excel", "SENSITIVITY_REPLAY"),
+    ("gate_b_widened_class", "DECLARED_REPLAY_WIDENED_CLASS"),
 ]
 
 
