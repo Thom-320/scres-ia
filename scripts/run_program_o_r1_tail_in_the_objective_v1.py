@@ -44,7 +44,7 @@ CONTRACT = Path("docs/PREREGISTRO_R1_RESTRICCION_DENTRO_DEL_OBJETIVO_2026-08-12.
 OUT = Path("results/program_o/r1_tail_in_the_objective_v1/result.json")
 FIT_ROOT = ROOT / "outputs/program_o_runs/program-o-hobs-fit-v1-20260715/artifacts/fit"
 SEALED_FIT = FIT_ROOT / "result.json"
-CELL_CONTRACT = ROOT / "contracts/program_o_state_rich_hobs_prelearner_v1.json"
+CELL_CONTRACT = ROOT / "contracts/program_o_hobs_prelearner_v1.json"
 TAIL_KEY = "ret_visible_cvar10"
 MEAN_KEY = "ret_visible"
 #: t(47) one-sided 95%. 48 tapes per cell.
@@ -65,7 +65,7 @@ def main() -> int:
 
     sealed = json.loads(SEALED_FIT.read_text())
     shipped = sealed["selected_config"]
-    cells = json.loads(CELL_CONTRACT.read_text())["cells"]
+    cells = json.loads(CELL_CONTRACT.read_text())["stability_cells"]
     seeds = sorted(int(p.stem.split("_")[1])
                    for p in (FIT_ROOT / "skeletons" / cells[0]["id"]).glob("tape_*.json"))
     configs = configurations()
