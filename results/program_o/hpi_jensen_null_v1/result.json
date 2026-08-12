@@ -1,0 +1,149 @@
+{
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "H_PI_SURVIVES_ITS_JENSEN_NULL",
+ "contract_path": "docs/PREREGISTRO_NULO_JENSEN_SOBRE_H_PI_DE_PROGRAM_O_2026-08-12.md",
+ "contract_sha256": "e32572b67069bcfc6e0b9afa4c45885bcc9c41d9a635136ee1312d6db69bb400",
+ "created_at": "2026-08-12T05:59:49.651873+00:00",
+ "elapsed_seconds": 338.8705651659984,
+ "endpoint": "safe_h_pi__mean_of_per_tape_maxima_minus_best_single_calendar",
+ "falsifier_summary": {
+  "all_passed": true,
+  "disclosures": [],
+  "failed": [],
+  "n_computed": 4,
+  "n_disclosures": 0,
+  "n_failed": 0,
+  "n_not_applicable": 1,
+  "not_applicable": [
+   "custody"
+  ]
+ },
+ "falsifiers": {
+  "custody": {
+   "evidence": {
+    "episodes_run": 0,
+    "matrix_root": "outputs/program_o_runs/program-o-full-des-validation-v2-20260715/artifacts/validation/raw_calendar_matrix",
+    "seeds_opened": 0,
+    "why_it_can_fail": "it cannot: the calendar matrices were written by a sealed run and are read here. No seed is opened, no episode runs."
+   },
+   "not_applicable": true,
+   "passed": null
+  },
+  "n1_the_observed_beats_its_null": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "null_mean": 0.11443122395102276,
+     "null_p95": 0.1203522083925667,
+     "observed": 0.15151378920653932,
+     "p_value": 0.0
+    },
+    "why_it_can_fail": "this can fail, and if it fails it withdraws the only material headroom figure the project has. That is the point of running it"
+   },
+   "passed": true
+  },
+  "n2_the_reproduction_is_exact": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "raw_gap": 0.0,
+     "safe_gap": 0.0
+    },
+    "reproduction": {
+     "raw_h_pi": {
+      "recomputed": 0.15275340823389597,
+      "sealed": 0.15275340823389597
+     },
+     "safe_h_pi": {
+      "recomputed": 0.15151378920653932,
+      "sealed": 0.15151378920653932
+     }
+    },
+    "why_it_can_fail": "if the sealed figure cannot be recomputed from the raw matrices to 1e-12 then I am reading the data wrong and nothing else in this artifact means anything"
+   },
+   "passed": true
+  },
+  "n3_the_null_is_not_degenerate": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "n_draws": 1000,
+     "sd": 0.004190590761391607
+    },
+    "why_it_can_fail": "a permutation that moves nothing tests nothing; the null must have spread"
+   },
+   "passed": true
+  },
+  "n4_the_fungible_null_is_degenerate_as_claimed": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "fungible_safe_h_pi": 0.0,
+     "mean_within_tape_variance": 0.0
+    },
+    "why_it_can_fail": "the diagnosis says the fungible null returns exactly 0 because calendar variance vanishes, so it cannot price selection bias. If there IS variance and H_PI is still exactly 0, that diagnosis is wrong and the fungible null did control something"
+   },
+   "passed": true
+  }
+ },
+ "fungible_profile_check": {
+  "mean_within_tape_variance": 0.0,
+  "safe_h_pi": 0.0
+ },
+ "jensen_null_raw": {
+  "mean": 0.11465625188140269,
+  "n_draws": 1000,
+  "observed": 0.15275340823389597,
+  "p95": 0.12040147237952001,
+  "p_value": 0.0,
+  "sd": 0.004094778508677202
+ },
+ "jensen_null_safe": {
+  "mean": 0.11443122395102276,
+  "n_draws": 1000,
+  "observed": 0.15151378920653932,
+  "p95": 0.1203522083925667,
+  "p_value": 0.0,
+  "sd": 0.004190590761391607
+ },
+ "n_calendars": 65536,
+ "n_tapes": 24,
+ "observed": {
+  "raw_h_pi": 0.15275340823389597,
+  "safe_h_pi": 0.15151378920653932
+ },
+ "profile": "rho75_share90__centered_minority_v1",
+ "reference_path": "results/program_o/full_des_hpi_translation_v1/validation_custody_verdict_v1.json",
+ "reference_sha256": null,
+ "reproduction": {
+  "raw_h_pi": {
+   "recomputed": 0.15275340823389597,
+   "sealed": 0.15275340823389597
+  },
+  "safe_h_pi": {
+   "recomputed": 0.15151378920653932,
+   "sealed": 0.15151378920653932
+  }
+ },
+ "run_role": "REANALYSIS_OF_SEALED_CALENDAR_MATRICES",
+ "schema_version": "program_o_hpi_jensen_null_v1",
+ "scope": "CAN_ONLY_WITHDRAW_PROGRAM_O_NEVER_PROMOTE_IT_NO_SEEDS_NO_EPISODES",
+ "self_sha256": "bbf369b99ffd487af6bf72d88e65a5c9923ebc380b13aa28cb3558e5090d7c72"
+}
